@@ -37,7 +37,7 @@ jobs:
       - name: 📥 Download APK from Expo
         run: |
           # On récupère l'URL du dernier build fini pour le profil preview
-          URL=$(eas build:list --platform android --profile preview --status finished --limit 1 --json | jq -r '.[0].artifacts.buildUrl')
+          URL=$(eas build:list --platform android --profile preview --status finished --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
           echo "Téléchargement de l'APK depuis : $URL"
           curl -L "$URL" -o ukit-release.apk
 
