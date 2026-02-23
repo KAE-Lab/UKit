@@ -1,11 +1,11 @@
 import React from 'react';
 import { Linking, Text, TouchableOpacity, View } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { Polygon, Svg } from 'react-native-svg';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import style from '../Style';
+import style, { tokens } from '../Style';
 import CourseRow from '../components/CourseRow';
 import { getLocations, getLocationsInText } from '../utils';
 import { AppContext } from '../utils/DeviceUtils';
@@ -88,21 +88,32 @@ class Course extends React.Component {
 		let locations = [];
 		this.props.navigation.setParams({ title: this.state.data.schedule });
 
-		if (this.state.data.room && this.state.data.room !== 'N/C') {
-			locations = getLocations(this.state.data.room);
-			locations = locations.concat(getLocationsInText(this.state.data.room));
+		const descLines = (this.state.data.description ?? '').split('\n');
+
+		const roomLine = descLines[2] ?? '';
+
+		if (roomLine.trim()) {
+			locations = getLocations(roomLine.trim());
+			if (locations.length < 1) {
+				locations = getLocationsInText(roomLine.trim());
+			}
 		}
+		
 		if (locations.length < 1) {
-			locations = getLocationsInText(this.state.data.description);
+			locations = getLocationsInText(this.state.data.subject ?? '');
 		}
 
 		if (locations.length > 0) {
 			this.setState({ locations });
 		}
+
+		console.log('description:', this.state.data.description);
+		console.log('locations:', locations);
 	}
 
 	render() {
-		const theme = style.Theme[this.context.themeName];
+		const themeName = this.context.themeName ?? 'light';
+		const theme = style.Theme[themeName];
 
 		let map = null;
 		if (this.state.locations.length > 0) {
@@ -121,56 +132,61 @@ class Course extends React.Component {
 						showsMyLocationButton={false}
 						loadingEnabled={true}
 						showsCompass={true}>
-						{this.state.locations.map((location, index) => {
-							return (
-								<MapView.Marker
-									key={index}
-									coordinate={{
-										latitude: location.lat,
-										longitude: location.lng,
+						{this.state.locations.map((location, index) => (
+							<Marker
+								key={index}
+								coordinate={{
+									latitude: location.lat,
+									longitude: location.lng,
+								}}>
+								{/* Marqueur modernisé */}
+								<View
+									style={{
+										flexDirection: 'column',
+										alignItems: 'center',
+										paddingBottom: tokens.space.sm,
 									}}>
 									<View
 										style={{
-											flexDirection: 'column',
-											justifyContent: 'flex-start',
-											alignItems: 'center',
-											paddingBottom: 10,
+											backgroundColor: theme.primary,
+											paddingHorizontal: tokens.space.sm,
+											paddingVertical: tokens.space.xs,
+											borderRadius: tokens.radius.sm,
+											...tokens.shadow.md,
 										}}>
-										<View
+										<Text
 											style={{
-												backgroundColor: '#E57373',
-												padding: 4,
+												color: '#FFFFFF',
+												fontWeight: tokens.fontWeight.bold,
+												fontSize: tokens.fontSize.sm,
 											}}>
-											<Text style={{ color: 'white', fontWeight: 'bold' }}>
-												{location.title}
-											</Text>
-										</View>
-										<View style={{ backgroundColor: 'transparent' }}>
-											<Svg height={12} width={12}>
-												<Polygon points="0,0 6,12 12,0" fill="#E57373" />
-											</Svg>
-										</View>
+											{location.title}
+										</Text>
 									</View>
-								</MapView.Marker>
-							);
-						})}
+									<Svg height={10} width={12}>
+										<Polygon points="0,0 6,10 12,0" fill={theme.primary} />
+									</Svg>
+								</View>
+							</Marker>
+						))}
 					</MapView>
-					<View style={{ position: 'absolute', top: 0, right: 0 }}>
+
+					{/* Bouton Google Maps modernisé */}
+					<View
+						style={{
+							position: 'absolute',
+							top: tokens.space.sm,
+							right: tokens.space.sm,
+						}}>
 						<TouchableOpacity
 							onPress={this.onPressGoogleMaps}
 							style={{
-								alignSelf: 'stretch',
-								backgroundColor: 'rgba(255,255,255,0.5)',
-								margin: 8,
-								padding: 4,
+								backgroundColor: theme.cardBackground,
+								borderRadius: tokens.radius.md,
+								padding: tokens.space.sm,
+								...tokens.shadow.md,
 							}}>
-							<View style={{ backgroundColor: '#FFF', padding: 0 }}>
-								<MaterialCommunityIcons
-									name="google-maps"
-									size={32}
-									style={{ width: 32, height: 32, color: '#5f9ea0' }}
-								/>
-							</View>
+							<MaterialCommunityIcons name="google-maps" size={28} color="#4285F4" />
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -179,10 +195,42 @@ class Course extends React.Component {
 
 		return (
 			<SafeAreaView style={{ flex: 1, backgroundColor: theme.greyBackground }}>
-				<View>
-					<CourseRow data={this.state.data} theme={theme} />
+				{/* Card du cours */}
+				<View
+					style={{
+						backgroundColor: theme.cardBackground,
+						marginHorizontal: tokens.space.md,
+						flex: 0,
+						// minHeight: 120,
+						marginTop: tokens.space.md,
+						marginBottom:
+							this.state.locations.length > 0 ? tokens.space.sm : tokens.space.md,
+						borderRadius: tokens.radius.lg,
+						borderWidth: 1,
+						borderColor: theme.border,
+						...tokens.shadow.sm,
+						flexShrink: 0,
+						zIndex: 10,
+					}}>
+					<CourseRow data={this.state.data} theme={theme} readOnly={true} />
 				</View>
-				{map}
+
+				{/* Carte */}
+				{map && (
+					<View
+						style={{
+							flex: 1,
+							marginHorizontal: tokens.space.md,
+							marginBottom: tokens.space.md,
+							borderRadius: tokens.radius.lg,
+							overflow: 'hidden',
+							borderWidth: 1,
+							borderColor: theme.border,
+							...tokens.shadow.sm,
+						}}>
+						{map}
+					</View>
+				)}
 			</SafeAreaView>
 		);
 	}

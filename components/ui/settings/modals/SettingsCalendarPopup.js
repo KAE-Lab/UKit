@@ -86,7 +86,7 @@ export default ({ theme, popupVisible, popupClose, selectedCalendar, setCalendar
 											size={24}
 											color={theme.popup.radioIconColor}
 										/>
-										<Text style={theme.popup.radioText}>{calendar.title}</Text>
+										<Text style={theme.popup.radioText}>{calendar.title + '  '}</Text>
 									</TouchableOpacity>
 								);
 							})}

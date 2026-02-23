@@ -72,6 +72,7 @@ export default {
 	SAVE: 'Guardar',
 	SETTINGS: 'Ajustes',
 	SETTINGS_TO_MAKE: 'Antes de usar la aplicación, tenemos que hacer unos ajustes.',
+	SEARCH: "Buscar",
 	SPANISH: 'Español',
 	SPRING: 'Primavera',
 	START: 'Empezar',

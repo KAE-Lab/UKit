@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import PropTypes from 'prop-types';
+import { tokens } from '../../Style'
 
 export default class Split extends React.PureComponent {
     static propTypes = {
@@ -16,26 +17,29 @@ export default class Split extends React.PureComponent {
     }
 
     render() {
+        const { noMargin, onlyBottomMargin, lineColor, title, color } = this.props;
+
         return (
-            <View
-                style={{
-                    marginVertical: this.props.noMargin || this.props.onlyBottomMargin ? 0 : 8,
-                }}>
-                <View
-                    style={{
-                        borderBottomWidth: 1,
-                        borderColor: this.props.lineColor,
-                        marginBottom: this.props.noMargin ? 0 : 8,
-                    }}
-                />
-                {this.props.title && (
-                    <Text
-                        style={{
-                            color: this.props.color,
-                            paddingLeft: 16,
-                            fontWeight: 'bold',
-                        }}>
-                        {this.props.title}
+            <View style={{
+                marginTop: noMargin || onlyBottomMargin ? 0 : tokens.space.md,
+                marginBotton: noMargin ? 0 : tokens.space.xs,
+            }}>
+                <View style={{
+                    borderBottomWidth: 1,
+                    borderColor: lineColor ?? '#E0E4EA',
+                }} />
+                {title && (
+                    <Text style={{
+                        color: color,
+                        paddingLeft: tokens.space.md,
+                        paddingTop: tokens.space.sm,
+                        fontSize: tokens.fontSize.xs,
+                        fontWeight: tokens.fontWeight.semibold,
+                        letterSpacing: 1,
+                        textTransform: 'uppercase',
+                        opacity: 0.7,
+                    }}>
+                        {title}
                     </Text>
                 )}
             </View>

@@ -1,19 +1,23 @@
 import React from 'react';
-import { ActivityIndicator, SectionList, Text, TouchableOpacity, View } from 'react-native';
+import {
+	ActivityIndicator,
+	SectionList,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { Hideo } from 'react-native-textinput-effects';
 import moment from 'moment';
-import { FontAwesome } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Toast from 'react-native-root-toast';
 
 import SectionListHeader from '../components/ui/SectionListHeader';
 import Split from '../components/ui/Split';
 import GroupRow from '../components/GroupRow';
-import style from '../Style';
+import style, { tokens } from '../Style';
 import Translator from '../utils/translator';
 import DeviceUtils, { AppContext } from '../utils/DeviceUtils';
-import URL from '../utils/URL';
 import FetchManager from '../utils/FetchManager';
 
 class Home extends React.Component {
@@ -28,6 +32,7 @@ class Home extends React.Component {
 			emptySearchResults: false,
 			refreshing: false,
 			cacheDate: null,
+			searchText: '',
 		};
 	}
 
@@ -180,97 +185,160 @@ class Home extends React.Component {
 	render() {
 		const theme = style.Theme[this.context.themeName];
 
-		let content = null,
-			cache = null;
-		let searchInput = (
-			<Hideo
-				iconClass={FontAwesome}
-				iconName={'search'}
-				iconColor={theme.icon}
-				iconBackgroundColor={theme.field}
-				inputStyle={{ color: theme.font, backgroundColor: theme.field }}
-				onChangeText={(text) => this.search(text)}
-				style={style.list.searchInputView}
-			/>
-		);
-		if (this.state.emptySearchResults) {
-			content = (
-				<View
-					style={[
-						style.schedule.course.noCourse,
-						{ backgroundColor: theme.greyBackground },
-					]}>
-					<Text style={[style.schedule.course.noCourseText, { color: theme.font }]}>
-						{Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
-					</Text>
-				</View>
-			);
-		} else if (this.state.sections === null) {
-			content = (
-				<View style={{ flex: 1, backgroundColor: theme.background }}>
-					<ActivityIndicator
-						style={[style.containerView]}
-						size="large"
-						animating={true}
-					/>
-				</View>
-			);
-		} else {
-			if (this.state.cacheDate !== null) {
-				cache = (
-					<View>
-						<Text style={style.offline.groups.text}>
-							{Translator.get(
-								'OFFLINE_DISPLAY_FROM_DATE',
-								moment(this.state.cacheDate).format('DD/MM/YYYY HH:mm'),
-							)}
-						</Text>
-					</View>
-				);
-			}
-			content = (
-				<SectionList
-					renderItem={({ item, j, index }) => {
-						return (
-							<GroupRow
-								name={item.name}
-								cleanName={item.cleanName}
-								sectionStyle={item.sectionStyle}
-								key={index}
-								color={theme.sections[item.colorIndex]}
-								fontColor={theme.font}
-								openGroup={this.openGroup}
-							/>
-						);
-					}}
-					renderSectionHeader={({ section }) => (
-						<SectionListHeader
-							title={section.key}
-							key={section.key}
-							sectionIndex={section.sectionIndex}
-							color={theme.sections[section.colorIndex]}
-							headerColor={theme.sectionsHeaders[section.colorIndex]}
-						/>
-					)}
-					sections={this.state.sections}
-					keyExtractor={(item, index) => index}
-					initialNumToRender={20}
-					onEndReachedThreshold={0.1}
-					style={[style.list.sectionList, { backgroundColor: theme.greyBackground }]}
-					onRefresh={this.refreshList}
-					refreshing={this.state.refreshing}
-					stickySectionHeadersEnabled={true}
-				/>
-			);
-		}
-		return (
-			<View style={style.list.homeView}>
-				{searchInput}
-				<Split lineColor={theme.border} noMargin={true} />
-				{cache}
-				{content}
-			</View>
-		);
+		let content = null;
+
+		// ── Barre de recherche modernisée ─────────────────────────────
+        const searchInput = (
+            <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: theme.field,
+                borderRadius: tokens.radius.lg,
+                borderWidth: 1.5,
+                borderColor: theme.fieldBorder,
+                paddingHorizontal: tokens.space.md,
+                marginHorizontal: tokens.space.md,
+                marginVertical: tokens.space.md,
+                ...tokens.shadow.sm,
+            }}>
+                <MaterialCommunityIcons
+                    name="magnify"
+                    size={20}
+                    color={theme.icon}
+                    style={{ marginRight: tokens.space.sm }}
+                />
+                <TextInput
+                    style={{
+                        flex: 1,
+                        paddingVertical: tokens.space.sm,
+                        fontSize: tokens.fontSize.md,
+                        color: theme.font,
+                    }}
+                    placeholder={Translator.get('SEARCH')}
+                    placeholderTextColor={theme.fontSecondary}
+                    onChangeText={(text) => {
+                        this.setState({ searchText: text });
+                        this.search(text);
+                    }}
+                    value={this.state.searchText}
+                    autoCorrect={false}
+                />
+                {this.state.searchText.length > 0 && (
+                    <TouchableOpacity onPress={() => {
+                        this.setState({ searchText: '' });
+                        this.search('');
+                    }}>
+                        <MaterialCommunityIcons
+                            name="close-circle"
+                            size={18}
+                            color={theme.fontSecondary}
+                        />
+                    </TouchableOpacity>
+                )}
+            </View>
+        );
+
+        // ── Message cache ─────────────────────────────────────────────
+        const cache = this.state.cacheDate ? (
+            <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: theme.greyBackground,
+                paddingHorizontal: tokens.space.md,
+                paddingVertical: tokens.space.sm,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.border,
+            }}>
+                <MaterialCommunityIcons
+                    name="clock-outline"
+                    size={14}
+                    color={theme.fontSecondary}
+                    style={{ marginRight: tokens.space.xs }}
+                />
+                <Text style={{
+                    fontSize: tokens.fontSize.xs,
+                    color: theme.fontSecondary,
+                }}>
+                    {Translator.get(
+                        'OFFLINE_DISPLAY_FROM_DATE',
+                        moment(this.state.cacheDate).format('DD/MM/YYYY HH:mm'),
+                    )}
+                </Text>
+            </View>
+        ) : null;
+
+        // ── Contenu principal ─────────────────────────────────────────
+        if (this.state.emptySearchResults) {
+            content = (
+                <View style={[
+                    style.schedule.course.noCourse,
+                    { backgroundColor: theme.greyBackground },
+                ]}>
+                    <MaterialCommunityIcons
+                        name="magnify-close"
+                        size={48}
+                        color={theme.fontSecondary}
+                        style={{ marginBottom: tokens.space.md, opacity: 0.4 }}
+                    />
+                    <Text style={[style.schedule.course.noCourseText, { color: theme.font }]}>
+                        {Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
+                    </Text>
+                </View>
+            );
+        } else if (this.state.sections === null) {
+            content = (
+                <View style={{ flex: 1, justifyContent: 'center', backgroundColor: theme.background }}>
+                    <ActivityIndicator
+                        size="large"
+                        color={theme.primary}
+                        animating={true}
+                    />
+                </View>
+            );
+        } else {
+            content = (
+                <SectionList
+                    renderItem={({ item, index }) => (
+                        <GroupRow
+                            name={item.name}
+                            cleanName={item.cleanName}
+                            sectionStyle={item.sectionStyle}
+                            key={index}
+                            color={theme.sections[item.colorIndex]}
+                            fontColor={theme.font}
+                            openGroup={this.openGroup}
+                        />
+                    )}
+                    renderSectionHeader={({ section }) => (
+                        <SectionListHeader
+                            title={section.key}
+                            key={section.key}
+                            sectionIndex={section.sectionIndex}
+                            color={theme.sections[section.colorIndex]}
+                            headerColor={theme.sectionsHeaders[section.colorIndex]}
+                        />
+                    )}
+                    sections={this.state.sections}
+                    keyExtractor={(item, index) => index.toString()}
+                    initialNumToRender={20}
+                    onEndReachedThreshold={0.1}
+                    style={[style.list.sectionList, { backgroundColor: theme.greyBackground }]}
+                    onRefresh={this.refreshList}
+                    refreshing={this.state.refreshing}
+                    stickySectionHeadersEnabled={true}
+                    showsVerticalScrollIndicator={false}
+                />
+            );
+        }
+
+        return (
+            <View style={[style.list.homeView, { backgroundColor: theme.background }]}>
+                {searchInput}
+                <Split lineColor={theme.border} noMargin={true} />
+                {cache}
+                {content}
+            </View>
+        );
 	}
 }
 

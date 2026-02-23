@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import PropTypes from 'prop-types';
-
+import { tokens } from '../../Style';
 import style from '../../Style';
 
 export default class SectionListHeader extends React.PureComponent {
@@ -9,6 +9,7 @@ export default class SectionListHeader extends React.PureComponent {
         color: PropTypes.string,
         headerColor: PropTypes.string,
         sectionIndex: PropTypes.number.isRequired,
+        title: PropTypes.string,
     };
 
     constructor(props) {
@@ -27,9 +28,36 @@ export default class SectionListHeader extends React.PureComponent {
 
     render() {
         return (
-            <View style={[this.getBackgroundSectionStyle(), { backgroundColor: this.props.color }]}>
-                <View style={[style.list.sectionHeaderView, this.getSectionStyle(), { backgroundColor: this.props.headerColor }]}>
-                    <Text style={style.list.sectionHeaderTitle}>{this.props.title}</Text>
+            <View style={[
+                this.getBackgroundSectionStyle(),
+                {
+                    backgroundColor: this.props.color,
+                    paddingHorizontal: tokens.space.md,
+                    paddingVertical: tokens.space.xs,
+                },
+            ]}>
+                <View style={[
+                    style.list.sectionHeaderView,
+                    this.getSectionStyle(),
+                    {
+                        backgroundColor: this.props.headerColor,
+                        borderRadius: tokens.radius.md,
+                        paddingHorizontal: tokens.space.md,
+                        paddingVertical: tokens.space.sm,
+                        ...tokens.shadow.sm,
+                    },
+                ]}>
+                    <Text style={[
+                        style.list.sectionHeaderTitle,
+                        {
+                            fontSize: tokens.fontSize.sm,
+                            fontWeight: tokens.fontWeight.bold,
+                            letterSpacing: 0.5,
+                            color: '#FFFFFF',
+                        },
+                    ]}>
+                        {this.props.title}
+                    </Text>
                 </View>
             </View>
         );

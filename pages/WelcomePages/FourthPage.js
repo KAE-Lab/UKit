@@ -2,47 +2,75 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import WelcomeButton from '../../components/buttons/WelcomeButton';
 import styles from '../../StyleWelcome';
+import { tokens } from '../../Style';
 import Translator from '../../utils/translator';
 import SettingsManager from '../../utils/SettingsManager';
 import WelcomePagination from '../../components/ui/WelcomePagination';
 import WelcomeBackButton from '../../components/buttons/WelcomeBackButton';
 
 class FourthWelcomePage extends React.Component {
-	finishWelcome = () => {
-		SettingsManager.setFirstLoad(false);
-	};
+    finishWelcome = () => {
+        SettingsManager.setFirstLoad(false);
+    };
 
-	render() {
-		const { navigation } = this.props;
-		const theme = this.props.navigatorState.theme;
-		return (
-			<LinearGradient
-				style={{ flex: 1 }}
-				colors={styles[theme].gradientColor}
-				start={{ x: 0.05, y: 0.05 }}
-				end={{ x: 0.95, y: 0.95 }}>
-				<SafeAreaView style={{ flex: 1 }}>
-					<WelcomeBackButton onPress={navigation.goBack} visible={true}/>
-					<View style={{ flexGrow: 1 }}>
+    render() {
+        const { navigation } = this.props;
+        const theme = this.props.navigatorState.theme;
+        return (
+            <LinearGradient
+                style={{ flex: 1 }}
+                colors={styles[theme].gradientColor}
+                start={{ x: 0.05, y: 0.05 }}
+                end={{ x: 0.95, y: 0.95 }}>
+                <SafeAreaView style={{ flex: 1 }}>
+                    <WelcomeBackButton onPress={navigation.goBack} visible={true} />
 
-						<Text style={styles[theme].mainText}>{Translator.get('WELL_DONE')}</Text>
-						<Text style={styles[theme].secondaryText}>{Translator.get('APP_READY')}</Text>
-					</View>
+                    {/* ── Zone centrale ─────────────────────────────────── */}
+                    <View style={{
+                        flexGrow: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: tokens.space.xl,
+                    }}>
+                        {/* Icône de succès */}
+                        <View style={{
+                            width: 100,
+                            height: 100,
+                            borderRadius: tokens.radius.pill,
+                            backgroundColor: '#FFFFFF22',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginBottom: tokens.space.xl,
+                        }}>
+                            <MaterialCommunityIcons
+                                name="check-circle-outline"
+                                size={60}
+                                color="#FFFFFF"
+                            />
+                        </View>
 
-					<WelcomeButton
-						onPress={this.finishWelcome}
-						buttonText={Translator.get('FINISH')}
-						theme={theme}
-					/>
+                        <Text style={styles[theme].mainText}>
+                            {Translator.get('WELL_DONE')}
+                        </Text>
+                        <Text style={styles[theme].secondaryText}>
+                            {Translator.get('APP_READY')}
+                        </Text>
+                    </View>
 
-					<WelcomePagination pageNumber={4} maxPage={4} theme={theme}/>
-				</SafeAreaView>
-			</LinearGradient>
-		);
-	}
+                    <WelcomeButton
+                        onPress={this.finishWelcome}
+                        buttonText={Translator.get('FINISH')}
+                        theme={theme}
+                    />
+                    <WelcomePagination pageNumber={4} maxPage={4} theme={theme} />
+                </SafeAreaView>
+            </LinearGradient>
+        );
+    }
 }
 
 export default FourthWelcomePage;

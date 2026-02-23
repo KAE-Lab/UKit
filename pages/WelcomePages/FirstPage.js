@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,46 +8,64 @@ import WelcomeButton from '../../components/buttons/WelcomeButton';
 import WelcomeBackButton from '../../components/buttons/WelcomeBackButton';
 import Translator from '../../utils/translator';
 import styles from '../../StyleWelcome';
+import { tokens } from '../../Style';
 
 class FirstWelcomePage extends React.Component {
-	constructor(props) {
-		super(props);
-	}
+    constructor(props) {
+        super(props);
+    }
 
-	navigateToNextPage = () => {
-		const { navigation } = this.props;
-		navigation.navigate('SecondWelcomePage');
-	};
+    navigateToNextPage = () => {
+        const { navigation } = this.props;
+        navigation.navigate('SecondWelcomePage');
+    };
 
-	render() {
-		const { navigation } = this.props;
-		const theme = this.props.navigatorState.theme;
-		return (
-			<LinearGradient
-				style={{ flex: 1, display: 'flex' }}
-				colors={styles[theme].gradientColor}
-				start={{ x: 0.05, y: 0.05 }}
-				end={{ x: 0.95, y: 0.95 }}>
-				<SafeAreaView style={{ flex: 1 }}>
-					<WelcomeBackButton onPress={() => {}} visible={false} />
-					<View style={{ flexGrow: 1 }}>
-						<Text style={styles[theme].mainText}>{Translator.get('WELCOME')}</Text>
-						<Text style={styles[theme].secondaryText}>
-							{Translator.get('SETTINGS_TO_MAKE')}
-						</Text>
-					</View>
+    render() {
+        const theme = this.props.navigatorState.theme;
+        return (
+            <LinearGradient
+                style={{ flex: 1 }}
+                colors={styles[theme].gradientColor}
+                start={{ x: 0.05, y: 0.05 }}
+                end={{ x: 0.95, y: 0.95 }}>
+                <SafeAreaView style={{ flex: 1 }}>
+                    <WelcomeBackButton onPress={() => {}} visible={false} />
 
-					<WelcomeButton
-						onPress={this.navigateToNextPage}
-						buttonText={Translator.get('START')}
-						theme={theme}
-					/>
+                    {/* ── Zone centrale ─────────────────────────────────── */}
+                    <View style={{
+                        flexGrow: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: tokens.space.xl,
+                    }}>
+                        <Image
+                            source={require('../../assets/icons/app.png')}
+                            style={{
+                                width: 100,
+                                height: 100,
+                                resizeMode: 'contain',
+                                marginBottom: tokens.space.xl,
+                                opacity: 0.95,
+                            }}
+                        />
+                        <Text style={styles[theme].mainText}>
+                            {Translator.get('WELCOME')}
+                        </Text>
+                        <Text style={styles[theme].secondaryText}>
+                            {Translator.get('SETTINGS_TO_MAKE')}
+                        </Text>
+                    </View>
 
-					<WelcomePagination pageNumber={1} maxPage={4} theme={theme} />
-				</SafeAreaView>
-			</LinearGradient>
-		);
-	}
+                    <WelcomeButton
+                        onPress={this.navigateToNextPage}
+                        buttonText={Translator.get('START')}
+                        theme={theme}
+                    />
+                    <WelcomePagination pageNumber={1} maxPage={4} theme={theme} />
+                </SafeAreaView>
+            </LinearGradient>
+        );
+    }
 }
 
 export default FirstWelcomePage;

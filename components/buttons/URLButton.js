@@ -1,5 +1,7 @@
 import React from 'react';
-import { Linking, Text, TouchableOpacity } from 'react-native';
+import { Linking, Text, TouchableOpacity, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { tokens } from '../../Style';
 
 export default class URLButton extends React.PureComponent {
     openURL() {
@@ -18,8 +20,37 @@ export default class URLButton extends React.PureComponent {
         const { theme } = this.props;
 
         return (
-            <TouchableOpacity style={{ alignSelf: 'flex-start' }} onPress={() => this.openURL()}>
-                <Text style={{ color: theme.link }}>{this.props.title}</Text>
+            <TouchableOpacity
+                onPress={() => this.openURL()}
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: tokens.space.sm,
+                    borderBottomWidth: 1,
+                    borderBottomColor: theme.border,
+                }}>
+                <MaterialCommunityIcons
+                    name="open-in-new"
+                    size={16}
+                    color={theme.link}
+                    style={{ marginRight: tokens.space.sm }}
+                />
+                <Text style={{
+                    color: theme.link,
+                    fontSize: tokens.fontSize.sm,
+                    flex: 1,
+                }}>
+                    {this.props.title}
+                </Text>
+                <Text style={{
+                    color: theme.fontSecondary,
+                    fontSize: tokens.fontSize.xs,
+                    flex: 1,
+                }}
+                numberOfLines={1}
+                ellipsizeMode="tail">
+                    {this.props.url}
+                </Text>
             </TouchableOpacity>
         );
     }

@@ -3,8 +3,9 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import moment from 'moment';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import style from '../Style';
+import style, { tokens } from '../Style';
 import DayWeek from './ui/DayWeek';
 import { isArraysEquals } from '../utils';
 import ErrorAlert from './alerts/ErrorAlert';
@@ -131,61 +132,86 @@ class Week extends React.Component {
 	}
 
 	render() {
-		const { theme } = this.props;
-		let content,
-			cacheMessage = null;
+        const { theme } = this.props;
+        let content, cacheMessage = null;
 
-		if (this.state.schedule === null) {
-			content = (
-				<ActivityIndicator style={style.containerView} size="large" animating={true} />
-			);
-		} else if (this.state.schedule instanceof Array) {
-			let isFavorite = this.state.groupName === this.state.groupName;
+        if (this.state.schedule === null) {
+            content = (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color={theme.primary} animating={true} />
+                </View>
+            );
+        } else if (this.state.schedule instanceof Array) {
+            const isFavorite = this.state.groupName === this.state.groupName;
 
-			if (this.state.cacheDate !== null) {
-				cacheMessage = (
-					<View>
-						<Text style={style.offline.groups.text}>
-							{Translator.get(
-								'OFFLINE_DISPLAY_FROM_DATE',
-								moment(this.state.cacheDate).format('lll'),
-							)}
-						</Text>
-					</View>
-				);
-			}
+            // ── Message cache ────────────────────────────────────────
+            if (this.state.cacheDate !== null) {
+                cacheMessage = (
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: theme.greyBackground,
+                        paddingHorizontal: tokens.space.md,
+                        paddingVertical: tokens.space.sm,
+                        borderBottomWidth: 1,
+                        borderBottomColor: theme.border,
+                    }}>
+                        <MaterialCommunityIcons
+                            name="clock-outline"
+                            size={14}
+                            color={theme.fontSecondary}
+                            style={{ marginRight: tokens.space.xs }}
+                        />
+                        <Text style={{
+                            fontSize: tokens.fontSize.xs,
+                            color: theme.fontSecondary,
+                        }}>
+                            {Translator.get(
+                                'OFFLINE_DISPLAY_FROM_DATE',
+                                moment(this.state.cacheDate).format('lll'),
+                            )}
+                        </Text>
+                    </View>
+                );
+            }
 
-			content = (
-				<ScrollView>
-					{this.state.schedule.map((schedule, index) => {
-						return (
-							<DayWeek
-								key={index}
-								schedule={this.computeSchedule(schedule, isFavorite)}
-								navigation={this.props.navigation}
-								theme={theme}
-							/>
-						);
-					})}
-				</ScrollView>
-			);
-		}
+            // ── Contenu semaine ──────────────────────────────────────
+            content = (
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+                    {this.state.schedule.map((schedule, index) => (
+                        <DayWeek
+                            key={index}
+                            schedule={this.computeSchedule(schedule, isFavorite)}
+                            navigation={this.props.navigation}
+                            theme={theme}
+                        />
+                    ))}
+                </ScrollView>
+            );
+        }
 
-		return (
-			<View
-				style={[style.schedule.containerView, { backgroundColor: theme.courseBackground }]}>
-				<View style={style.schedule.titleView}>
-					<View style={style.schedule.titleTextView}>
-						<Text style={[style.schedule.titleText, { color: theme.font }]}>
-							{this.displayWeek()}
-						</Text>
-					</View>
-				</View>
-				{cacheMessage}
-				<View style={style.schedule.contentView}>{content}</View>
-			</View>
-		);
-	}
+        return (
+            <View style={[
+                style.schedule.containerView,
+                { backgroundColor: theme.courseBackground },
+            ]}>
+                {/* ── Header semaine ───────────────────────────────── */}
+                <View style={[
+                    style.schedule.titleView,
+                    { borderBottomColor: theme.border },
+                ]}>
+                    <Text style={[style.schedule.titleText, { color: theme.font }]}>
+                        {this.displayWeek()}
+                    </Text>
+                </View>
+
+                {cacheMessage}
+                <View style={style.schedule.contentView}>{content}</View>
+            </View>
+        );
+    }
 }
 
 export default Week;

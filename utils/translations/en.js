@@ -70,6 +70,7 @@ export default {
 	SAVE: 'Save',
 	SETTINGS: 'Settings',
 	SETTINGS_TO_MAKE: 'Before using the app, we have some settings to make.',
+	SEARCH: "Search",
 	SPANISH: 'Spanish',
 	SPRING: 'Spring',
 	START: 'Start',

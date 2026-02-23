@@ -1,11 +1,14 @@
 import React from 'react';
 import { Text, TouchableOpacity, Switch } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default ({ theme, leftIcon, leftText, switchOnValueChange, switchValue }) => {
+
+	const isMaterialIcon = ['settings', 'language', 'filter-list', 'sync-disabled'].includes(leftIcon);
+	const IconComponent = isMaterialIcon ? MaterialIcons : MaterialCommunityIcons;
 	return (
 		<TouchableOpacity onPress={switchOnValueChange} style={theme.button}>
-			<MaterialIcons name={leftIcon} size={24} style={theme.leftIcon} />
+			<IconComponent name={leftIcon} size={24} style={theme.leftIcon} />
 			<Text style={theme.buttonMainText}>{leftText}</Text>
 			<Switch
 				onValueChange={switchOnValueChange}
@@ -15,11 +18,8 @@ export default ({ theme, leftIcon, leftText, switchOnValueChange, switchValue })
 					marginLeft: 'auto',
 					marginRight: 8,
 				}}
-				trackColor={theme.switchTrackColor}
-				ios_backgroundColor={theme.switchTrackColor.false}
-				thumbColor={
-					switchValue ? theme.switchThumbColor.true : theme.switchThumbColor.false
-				}
+				trackColor={theme.switchTrack}
+				ios_backgroundColor={theme.switchTrack.false}
 			/>
 		</TouchableOpacity>
 	);

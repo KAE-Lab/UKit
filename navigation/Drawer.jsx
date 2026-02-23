@@ -9,156 +9,197 @@ import DrawerButton from '../components/buttons/DrawerButton';
 import MyGroupButton from '../components/buttons/MyGroupButton';
 import Split from '../components/ui/Split';
 import StackNavigator from './StackNavigator';
-import style from '../Style';
+import style, { tokens } from '../Style';
 import Translator from '../utils/translator';
 import SettingsManager from '../utils/SettingsManager';
 import { AppContext } from '../utils/DeviceUtils';
 
 const CustomDrawerContentComponent = (props) => {
-	const AppContextValues = useContext(AppContext);
-	const { navigate } = props.navigation;
-	const theme = style.Theme[AppContextValues.themeName];
+    const AppContextValues = useContext(AppContext);
+    const { navigate } = props.navigation;
+    const theme = style.Theme[AppContextValues.themeName];
 
-	return (
-		<View style={{ flex: 1, backgroundColor: theme.primary }}>
-			<SafeAreaView style={{ flex: 1 }}>
-				<View
-					style={{
-						backgroundColor: theme.primary,
-						flexDirection: 'row',
-						justifyContent: 'flex-start',
-						alignItems: 'center',
-						alignContent: 'center',
-						height: 120,
-					}}>
-					<Image
-						style={{ width: 170, height: 75, marginLeft: 8, marginTop: 16 }}
-						source={require('../assets/icons/app.png')}
-					/>
-				</View>
-				<ScrollView style={{ backgroundColor: theme.background }}>
-					<View>
-						<Split lineColor={theme.border} onlyBottomMargin={true} />
-						<DrawerButton
-							title={Translator.get('GROUPS')}
-							size={28}
-							textSize={14}
-							icon={'list'}
-							color={theme.icon}
-							fontColor={theme.font}
-							onPress={props.navigation.closeDrawer}
-						/>
-						<Split
-							title={Translator.get('MY_GROUP')}
-							lineColor={theme.border}
-							color={theme.icon}
-						/>
-						{AppContextValues.groupName ? (
-							<MyGroupButton
-								navigate={navigate}
-								themeName={AppContextValues.themeName}
-								groupName={AppContextValues.groupName}
-							/>
-						) : (
-							<View style={{ paddingLeft: 24, paddingVertical: 4 }}>
-								<Text style={{ color: theme.font }}>{Translator.get('NONE')}</Text>
-							</View>
-						)}
-						<Split
-							title={Translator.get('NAVIGATION')}
-							lineColor={theme.border}
-							color={theme.icon}
-						/>
-						<DrawerButton
-							title={'ENT'}
-							size={28}
-							textSize={14}
-							icon={'dashboard'}
-							color={theme.icon}
-							fontColor={theme.font}
-							onPress={() => navigate('WebBrowser', { entrypoint: 'ent' })}
-						/>
-						<DrawerButton
-							title={Translator.get('MAILBOX')}
-							size={28}
-							textSize={14}
-							icon={'mail-outline'}
-							color={theme.icon}
-							fontColor={theme.font}
-							onPress={() => navigate('WebBrowser', { entrypoint: 'email' })}
-						/>
-						<DrawerButton
-							title={'Apogée'}
-							size={28}
-							textSize={14}
-							icon={'school'}
-							color={theme.icon}
-							fontColor={theme.font}
-							onPress={() => navigate('WebBrowser', { entrypoint: 'apogee' })}
-						/>
-						<Split
-							title={Translator.get('APPLICATION')}
-							lineColor={theme.border}
-							color={theme.icon}
-						/>
-						<DrawerButton
-							title={Translator.get('SETTINGS')}
-							size={28}
-							textSize={14}
-							icon={'settings'}
-							color={theme.icon}
-							fontColor={theme.font}
-							onPress={() => navigate('Settings')}
-						/>
-						<DrawerButton
-							title={Translator.get('ABOUT')}
-							size={28}
-							textSize={14}
-							icon={'info'}
-							color={theme.icon}
-							fontColor={theme.font}
-							onPress={() => navigate('About')}
-						/>
-					</View>
-				</ScrollView>
-				<View
-					style={{
-						paddingVertical: 8,
-						paddingHorizontal: 16,
-						borderTopColor: theme.border,
-						borderTopWidth: 1,
-						backgroundColor: theme.background,
-					}}>
-					<TouchableOpacity onPress={SettingsManager.switchTheme}>
-						<MaterialCommunityIcons
-							name="theme-light-dark"
-							size={32}
-							style={{ width: 32, height: 32, color: theme.icon }}
-						/>
-					</TouchableOpacity>
-				</View>
-			</SafeAreaView>
-		</View>
-	);
+    return (
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
+            <SafeAreaView style={{ flex: 1 }}>
+
+                {/* ── Header ───────────────────────────────────────────── */}
+                <View style={{
+                    backgroundColor: theme.background,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingHorizontal: tokens.space.md,
+                    paddingVertical: tokens.space.lg,
+                    borderBottomWidth: 1,
+                    borderBottomColor: theme.border,
+                }}>
+                    <Image
+                        style={{ width: 140, height: 60, resizeMode: 'contain', tintColor: theme.accent ?? theme.primary }}
+                        source={require('../assets/icons/app.png')}
+                    />
+                    <TouchableOpacity
+                        onPress={SettingsManager.switchTheme}
+                        style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: tokens.radius.pill,
+                            backgroundColor: theme.greyBackground,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}>
+                        <MaterialCommunityIcons
+                            name="theme-light-dark"
+                            size={22}
+                            color={theme.icon}
+                        />
+                    </TouchableOpacity>
+                </View>
+
+                {/* ── Contenu scrollable ───────────────────────────────── */}
+                <ScrollView
+                    style={{ flex: 1, backgroundColor: theme.background }}
+                    showsVerticalScrollIndicator={false}>
+
+                    {/* Mon groupe */}
+                    <View style={{ paddingTop: tokens.space.md }}>
+                        <Split
+                            title={Translator.get('MY_GROUP')}
+                            lineColor={theme.border}
+                            color={theme.icon}
+                        />
+                        {AppContextValues.groupName ? (
+                            <MyGroupButton
+                                navigate={navigate}
+                                themeName={AppContextValues.themeName}
+                                groupName={AppContextValues.groupName}
+                            />
+                        ) : (
+                            <View style={{
+                                paddingHorizontal: tokens.space.lg,
+                                paddingVertical: tokens.space.sm,
+                            }}>
+                                <Text style={{
+                                    color: theme.fontSecondary ?? theme.font,
+                                    fontSize: tokens.fontSize.sm,
+                                }}>
+                                    {Translator.get('NONE')}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+
+                    {/* Emplois du temps */}
+                    <Split
+                        title={Translator.get('GROUPS')}
+                        lineColor={theme.border}
+                        color={theme.icon}
+                    />
+                    <DrawerButton
+                        title={Translator.get('GROUPS')}
+                        size={22}
+                        textSize={tokens.fontSize.sm}
+                        icon={'list'}
+                        color={theme.icon}
+                        fontColor={theme.font}
+                        onPress={props.navigation.closeDrawer}
+                    />
+
+                    {/* Navigation ENT */}
+                    <Split
+                        title={Translator.get('NAVIGATION')}
+                        lineColor={theme.border}
+                        color={theme.icon}
+                    />
+                    <DrawerButton
+                        title={'ENT'}
+                        size={22}
+                        textSize={tokens.fontSize.sm}
+                        icon={'dashboard'}
+                        color={theme.icon}
+                        fontColor={theme.font}
+                        onPress={() => props.navigation.navigate('Stack', {
+                            screen: 'WebBrowser',
+                            params: { entrypoint: 'ent' },
+                        })}
+                    />
+                    <DrawerButton
+                        title={Translator.get('MAILBOX')}
+                        size={22}
+                        textSize={tokens.fontSize.sm}
+                        icon={'mail-outline'}
+                        color={theme.icon}
+                        fontColor={theme.font}
+                        onPress={() => props.navigation.navigate('Stack', {
+                            screen: 'WebBrowser',
+                            params: { entrypoint: 'email' },
+                        })}
+                    />
+                    <DrawerButton
+                        title={'Apogée'}
+                        size={22}
+                        textSize={tokens.fontSize.sm}
+                        icon={'school'}
+                        color={theme.icon}
+                        fontColor={theme.font}
+                        onPress={() => props.navigation.navigate('Stack', {
+                            screen: 'WebBrowser',
+                            params: { entrypoint: 'apogee' },
+                        })}
+                    />
+
+                    {/* Application */}
+                    <Split
+                        title={Translator.get('APPLICATION')}
+                        lineColor={theme.border}
+                        color={theme.icon}
+                    />
+                    <DrawerButton
+                        title={Translator.get('SETTINGS')}
+                        size={22}
+                        textSize={tokens.fontSize.sm}
+                        icon={'settings'}
+                        color={theme.icon}
+                        fontColor={theme.font}
+                        onPress={() => props.navigation.navigate('Stack', { screen: 'Settings' })}
+                    />
+                    <DrawerButton
+                        title={Translator.get('ABOUT')}
+                        size={22}
+                        textSize={tokens.fontSize.sm}
+                        icon={'info'}
+                        color={theme.icon}
+                        fontColor={theme.font}
+                        onPress={() => props.navigation.navigate('Stack', { screen: 'About' })}
+                    />
+
+                    {/* Espace en bas */}
+                    <View style={{ height: tokens.space.xl }} />
+                </ScrollView>
+
+            </SafeAreaView>
+        </View>
+    );
 };
 
 const Drawer = createDrawerNavigator();
 
 export default ({ background }) => {
-	const customTheme = {
-		...DefaultTheme,
-		colors: {
-			...DefaultTheme.colors,
-			background: background || DefaultTheme.colors.background,
-		},
-	};
-	
-	return (
-		<NavigationContainer theme={customTheme}>
-			<Drawer.Navigator drawerContent={(props) => <CustomDrawerContentComponent {...props} />}
-				screenOptions={{ headerShown: false }}>
-				<Drawer.Screen name="Home" component={StackNavigator} />
-			</Drawer.Navigator>
-		</NavigationContainer>
-	);
+    const customTheme = {
+        ...DefaultTheme,
+        colors: {
+            ...DefaultTheme.colors,
+            background: background || DefaultTheme.colors.background,
+        },
+    };
+
+    return (
+        <NavigationContainer theme={customTheme}>
+            <Drawer.Navigator
+                drawerContent={(props) => <CustomDrawerContentComponent {...props} />}
+                screenOptions={{ headerShown: false }}>
+                <Drawer.Screen name="Stack" component={StackNavigator} />
+            </Drawer.Navigator>
+        </NavigationContainer>
+    );
 };

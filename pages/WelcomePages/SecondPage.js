@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, TouchableOpacity } from 'react-native';
+import { Text, View, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,96 +13,85 @@ import Translator from '../../utils/translator';
 import SettingsManager from '../../utils/SettingsManager';
 
 const THEME_LIST = [
-	{ id: 'light', title: 'LIGHT_THEME' },
-	{ id: 'dark', title: 'DARK_THEME' },
+    { id: 'light', title: 'LIGHT_THEME' },
+    { id: 'dark', title: 'DARK_THEME' },
 ];
 
 const LANGUAGE_LIST = [
-	{ id: 'fr', title: 'FRENCH' },
-	{ id: 'en', title: 'ENGLISH' },
-	{ id: 'es', title: 'SPANISH' },
+    { id: 'fr', title: 'FRENCH' },
+    { id: 'en', title: 'ENGLISH' },
+    { id: 'es', title: 'SPANISH' },
 ];
 
 class SecondWelcomePage extends React.Component {
-	constructor(props) {
-		super(props);
-	}
+    getLanguage = () => this.props.navigatorState.language;
+    getTheme    = () => this.props.navigatorState.theme;
 
-	getLanguage = () => {
-		return this.props.navigatorState.language;
-	};
+    selectLanguage = (newLang)  => SettingsManager.setLanguage(newLang.id);
+    selectTheme    = (newTheme) => SettingsManager.setTheme(newTheme.id);
 
-	selectLanguage = (newLang) => {
-		SettingsManager.setLanguage(newLang.id);
-	};
+    navigateToNextPage = () => {
+        this.props.navigation.navigate('ThirdWelcomePage');
+    };
 
-	getTheme = () => {
-		return this.props.navigatorState.theme;
-	};
+    render() {
+        const { navigation } = this.props;
+        const theme = this.props.navigatorState.theme;
+        return (
+            <LinearGradient
+                style={{ flex: 1 }}
+                colors={styles[theme].gradientColor}
+                start={{ x: 0.05, y: 0.05 }}
+                end={{ x: 0.95, y: 0.95 }}>
+                <SafeAreaView style={{ flex: 1 }}>
+                    <WelcomeBackButton onPress={navigation.goBack} visible={true} />
 
-	selectTheme = (newTheme) => {
-		SettingsManager.setTheme(newTheme.id);
-	};
+                    {/* ── Cards scrollables ──────────────────────────── */}
+                    <ScrollView
+                        style={{ flexGrow: 1 }}
+                        contentContainerStyle={{ paddingBottom: 0 }}
+                        showsVerticalScrollIndicator={false}>
+                        <View style={styles[theme].whiteCard}>
+                            <Text style={styles[theme].whiteCardText}>
+                                {Translator.get('YOUR_THEME')}
+                            </Text>
+                            {THEME_LIST.map((themeEntry) => (
+                                <WelcomeThemeButton
+                                    key={themeEntry.id}
+                                    themeEntry={themeEntry}
+                                    selectTheme={this.selectTheme}
+                                    getCurrentTheme={this.getTheme}
+                                    theme={theme}
+                                />
+                            ))}
+                        </View>
 
-	navigateToNextPage = () => {
-		const { navigation } = this.props;
-		navigation.navigate('ThirdWelcomePage');
-	};
+                        <View style={styles[theme].whiteCard}>
+                            <Text style={styles[theme].whiteCardText}>
+                                {Translator.get('YOUR_LANGUAGE')}
+                            </Text>
+                            {LANGUAGE_LIST.map((languageEntry) => (
+                                <WelcomeLanguageButton
+                                    key={languageEntry.id}
+                                    languageEntry={languageEntry}
+                                    selectLanguage={this.selectLanguage}
+                                    getCurrentLanguage={this.getLanguage}
+                                    theme={theme}
+                                />
+                            ))}
+                        </View>
+                    </ScrollView>
 
-	render() {
-		const { navigation } = this.props;
-		const theme = this.props.navigatorState.theme;
-		return (
-			<LinearGradient
-				style={{ flex: 1 }}
-				colors={styles[theme].gradientColor}
-				start={{ x: 0.05, y: 0.05 }}
-				end={{ x: 0.95, y: 0.95 }}>
-				<SafeAreaView style={{ flex: 1 }}>
-					<WelcomeBackButton onPress={navigation.goBack} visible={true} />
-					<View style={styles[theme].whiteCardContainer} style={{ flexGrow: 1 }}>
-						<View style={styles[theme].whiteCard}>
-							<Text style={styles[theme].whiteCardText}>
-								{Translator.get('YOUR_THEME')}
-							</Text>
-							{THEME_LIST.map((themeEntry) => (
-								<WelcomeThemeButton
-									key={themeEntry.id}
-									themeEntry={themeEntry}
-									selectTheme={this.selectTheme}
-									getCurrentTheme={this.getTheme}
-									theme={theme}
-								/>
-							))}
-						</View>
-
-						<View style={styles[theme].whiteCard}>
-							<Text style={styles[theme].whiteCardText}>
-								{Translator.get('YOUR_LANGUAGE')}
-							</Text>
-							{LANGUAGE_LIST.map((languageEntry) => (
-								<WelcomeLanguageButton
-									key={languageEntry.id}
-									languageEntry={languageEntry}
-									selectLanguage={this.selectLanguage}
-									getCurrentLanguage={this.getLanguage}
-									theme={theme}
-								/>
-							))}
-						</View>
-					</View>
-
-					<WelcomeButton
-						onPress={this.navigateToNextPage}
-						buttonText={Translator.get('NEXT')}
-						theme={theme}
-					/>
-
-					<WelcomePagination pageNumber={2} maxPage={4} theme={theme} />
-				</SafeAreaView>
-			</LinearGradient>
-		);
-	}
+                    <WelcomeButton
+                        onPress={this.navigateToNextPage}
+                        buttonText={Translator.get('NEXT')}
+                        theme={theme}
+                    />
+                    <WelcomePagination pageNumber={2} maxPage={4} theme={theme} />
+                </SafeAreaView>
+            </LinearGradient>
+        );
+    }
 }
 
 export default SecondWelcomePage;

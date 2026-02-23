@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CalendarDay from '../components/CalendarDay';
 import DayComponent from '../components/Day';
-import style from '../Style';
+import style, { tokens } from '../Style';
 import Translator from '../utils/translator';
 import { AppContext } from '../utils/DeviceUtils';
 
@@ -132,115 +132,120 @@ class DayView extends React.Component {
 		const theme = style.Theme[this.context.themeName];
 
 		return (
-			<SafeAreaView style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-				<View style={{ flex: 1 }}>
-					<DayComponent
-						key={`${this.state.days[0].dayOfYear()}-${this.context.themeName}`}
-						day={this.state.selectedDay}
-						groupName={this.state.groupName}
-						theme={theme}
-						navigation={this.props.navigation}
-						filtersList={this.context.filters}
-					/>
-					<View
-						style={{
-							flexGrow: 0,
-							backgroundColor: 'white',
-							borderTopColor: theme.border,
-							borderTopWidth: 1,
-						}}>
-						<View
-							style={{
-								flexDirection: 'row',
-								justifyContent: 'space-between',
-								alignItems: 'stretch',
-								height: 38,
-								backgroundColor: theme.courseBackground,
-							}}>
-							<View style={{ position: 'absolute', top: 0, right: 0, left: 0 }}>
-								<Text
-									style={{
-										textAlign: 'center',
-										fontSize: 18,
-										marginVertical: 8,
-										color: theme.font,
-									}}>
-									{this.state.shownMonth.string}
-								</Text>
-							</View>
-							<TouchableOpacity
-								style={{ flexDirection: 'row', alignItems: 'center' }}
-								onPress={this.onTodayPress}>
-								<View
-									style={{
-										flexDirection: 'row',
-										alignItems: 'center',
-										marginHorizontal: 16,
-										paddingRight: 8,
-									}}>
-									<MaterialIcons
-										name="event-note"
-										size={18}
-										style={{ color: theme.icon }}
-									/>
-									<Text
-										style={{
-											// textAlign: 'center',
-											fontSize: 12,
-											marginLeft: 8,
-											// paddingRight: 4,
-											color: theme.font,
-										}}>
-										{Translator.get('TODAY') + ' '}
-									</Text>
-								</View>
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={{ flexDirection: 'row', alignItems: 'center' }}
-								onPress={this.onWeekPress}>
-								<View
-									style={{
-										flexDirection: 'row',
-										alignItems: 'center',
-										marginHorizontal: 16,
-										paddingLeft: 8,
-									}}>
-									<Text
-										style={{
-											// textAlign: 'center',
-											fontSize: 12,
-											marginRight: 8,
-											// paddingLeft: 4,
-											color: theme.font,
-										}}>
-										{Translator.get('WEEK') + ' '}
-									</Text>
-									<MaterialCommunityIcons
-										name="calendar-range"
-										size={18}
-										style={{ color: theme.icon }}
-									/>
-								</View>
-							</TouchableOpacity>
-						</View>
-						<FlatList
-							ref={(list) => (this.calendarList = list)}
-							showsHorizontalScrollIndicator={false}
-							data={this.state.days}
-							horizontal={true}
-							keyExtractor={this.extractCalendarListItemKey}
-							viewabilityConfig={this.viewability}
-							onViewableItemsChanged={this.checkViewableItems}
-							initialScrollIndex={this.state.currentDayIndex}
-							getItemLayout={DayView.getCalendarListItemLayout}
-							extraData={this.state}
-							renderItem={this.renderCalendarListItem}
-							style={{ backgroundColor: theme.courseBackground }}
-						/>
-					</View>
-				</View>
-			</SafeAreaView>
-		);
+            <SafeAreaView style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+                <View style={{ flex: 1 }}>
+                    <DayComponent
+                        key={`${this.state.days[0].dayOfYear()}-${this.context.themeName}`}
+                        day={this.state.selectedDay}
+                        groupName={this.state.groupName}
+                        theme={theme}
+                        navigation={this.props.navigation}
+                        filtersList={this.context.filters}
+                    />
+
+                    {/* ── Barre de navigation calendrier ────────────────── */}
+                    <View style={{
+                        flexGrow: 0,
+                        backgroundColor: theme.cardBackground,
+                        borderTopWidth: 1,
+                        borderTopColor: theme.border,
+                    }}>
+                        {/* Header : mois + boutons */}
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            height: 44,
+                            backgroundColor: theme.cardBackground,
+                            paddingHorizontal: tokens.space.xs,
+                        }}>
+                            {/* Bouton Aujourd'hui */}
+                            <TouchableOpacity
+                                onPress={this.onTodayPress}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    paddingHorizontal: tokens.space.md,
+                                    paddingVertical: tokens.space.sm,
+                                    borderRadius: tokens.radius.md,
+                                    backgroundColor: theme.greyBackground,
+                                }}>
+                                <MaterialIcons
+                                    name="event-note"
+                                    size={16}
+                                    color={theme.accent ?? theme.primary}
+                                />
+                                <Text style={{
+                                    fontSize: tokens.fontSize.sm,
+                                    marginLeft: tokens.space.xs,
+                                    color: theme.accent ?? theme.primary,
+                                    fontWeight: tokens.fontWeight.medium,
+                                }}>
+                                    {Translator.get('TODAY')}
+                                </Text>
+                            </TouchableOpacity>
+
+                            {/* Mois affiché */}
+                            <Text style={{
+                                fontSize: tokens.fontSize.md,
+                                fontWeight: tokens.fontWeight.semibold,
+                                color: theme.font,
+                                flex: 1,
+                                textAlign: 'center',
+                            }}>
+                                {this.state.shownMonth.string}
+                            </Text>
+
+                            {/* Bouton Semaine */}
+                            <TouchableOpacity
+                                onPress={this.onWeekPress}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    paddingHorizontal: tokens.space.md,
+                                    paddingVertical: tokens.space.sm,
+                                    borderRadius: tokens.radius.md,
+                                    backgroundColor: theme.greyBackground,
+                                    
+                                }}>
+                                <Text style={{
+                                    fontSize: tokens.fontSize.sm,
+                                    marginRight: tokens.space.xs,
+                                    color: theme.accent ?? theme.primary,
+                                    fontWeight: tokens.fontWeight.medium,
+                                }}>
+                                    {Translator.get('WEEK')}
+                                </Text>
+                                <MaterialCommunityIcons
+                                    name="calendar-range"
+                                    size={16}
+                                    color={theme.accent ?? theme.primary}
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Liste des jours */}
+                        <FlatList
+                            ref={(list) => (this.calendarList = list)}
+                            showsHorizontalScrollIndicator={false}
+                            data={this.state.days}
+                            horizontal={true}
+                            keyExtractor={this.extractCalendarListItemKey}
+                            viewabilityConfig={this.viewability}
+                            onViewableItemsChanged={this.checkViewableItems}
+                            initialScrollIndex={this.state.currentDayIndex}
+                            getItemLayout={DayView.getCalendarListItemLayout}
+                            extraData={this.state}
+                            renderItem={this.renderCalendarListItem}
+                            style={{
+                                backgroundColor: theme.cardBackground,
+                                paddingBottom: tokens.space.xs,
+                            }}
+                        />
+                    </View>
+                </View>
+            </SafeAreaView>
+        );
 	}
 }
 

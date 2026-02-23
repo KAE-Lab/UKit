@@ -41,7 +41,7 @@ class FilterRemoveButton extends React.Component {
 						<MaterialCommunityIcons
 							name="filter-variant-remove"
 							size={30}
-							style={{ color: '#FFFFFF', height: 32, width: 32 }}
+							style={{ color: theme.icon, height: 32, width: 32 }}
 						/>
 					</View>
 				</TouchableOpacity>

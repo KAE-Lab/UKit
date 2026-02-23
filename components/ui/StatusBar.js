@@ -7,7 +7,7 @@ const CustomStatusBar = () => {
 	const theme = AppContextValues.themeName;
 	return (
 		<StatusBar
-			barStyle="light-content"
+			barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
 			backgroundColor={theme === 'light' ? '#006F9F' : '#000000'}
 		/>
 	);

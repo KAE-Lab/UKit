@@ -3,10 +3,10 @@ import { ActivityIndicator, Linking, Platform, TouchableOpacity, View } from 're
 import { WebView } from 'react-native-webview';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import URL from '../utils/URL';
 
-import style from '../Style';
+import style, { tokens } from '../Style';
 import { AppContext } from '../utils/DeviceUtils';
+import URL from '../utils/URL';
 
 const entrypoints = {
 	ent: 'https://ent.u-bordeaux.fr',
@@ -17,75 +17,77 @@ const entrypoints = {
 
 export default function WebBrowser({ navigation, route }) {
 	const { themeName } = useContext(AppContext);
+
 	const webViewRef = useRef(null);
 
-	// Détermination de l'URL initiale
 	let initialUri = URL.UKIT_WEBSITE;
 	if (route.params) {
 		const { entrypoint, href } = route.params;
-		if (entrypoint && entrypoints[entrypoint]) {
-			initialUri = entrypoints[entrypoint];
-		} else if (href) {
-			initialUri = href;
-		}
+		if (entrypoint && entrypoints[entrypoint]) initialUri = entrypoints[entrypoint];
+		else if (href) initialUri = href;
 	}
 
-	// Gestion des états
 	const [uri] = useState(initialUri);
 	const [url, setUrl] = useState(initialUri);
 	const [canGoBack, setCanGoBack] = useState(false);
 	const [canGoForward, setCanGoForward] = useState(false);
 	const [loading, setLoading] = useState(true);
 
-	const onRefresh = () => {
-		if (webViewRef.current) webViewRef.current.reload();
-	};
-
-	const onBack = () => {
-		if (webViewRef.current) webViewRef.current.goBack();
-	};
-
-	const onForward = () => {
-		if (webViewRef.current) webViewRef.current.goForward();
-	};
+	const onRefresh = () => webViewRef.current?.reload();
+	const onBack = () => webViewRef.current?.goBack();
+	const onForward = () => webViewRef.current?.goForward();
 
 	const openURL = async () => {
 		try {
 			const supported = await Linking.canOpenURL(url);
-			if (!supported) {
-				console.warn("Can't handle url: " + url);
-			} else {
-				await Linking.openURL(url);
-			}
+			if (supported) await Linking.openURL(url);
 		} catch (err) {
 			console.error('An error occurred', err);
 		}
 	};
 
-	const renderLoading = () => {
-		const theme = style.Theme[themeName];
+	const theme = style.Theme[themeName];
+
+	const renderLoading = () => (
+		<View
+			style={{
+				flex: 1,
+				justifyContent: 'center',
+				alignItems: 'center',
+				backgroundColor: theme.background,
+			}}>
+			<ActivityIndicator size="large" color={theme.primary} />
+		</View>
+	);
+
+	if (!uri) return renderLoading();
+
+	const javascript = Platform.OS !== 'ios' ? 'window.scrollTo(0,0);' : null;
+
+	// ── Bouton de la barre de navigation ──────────────────────────────────────
+	const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24 }) => {
+		const color = disabled ? theme.border : theme.icon;
+		const Icon = iconLib === 'community' ? MaterialCommunityIcons : MaterialIcons;
+
 		return (
-			<View
+			<TouchableOpacity
+				onPress={onPress}
+				disabled={disabled}
 				style={{
-					flex: 1,
+					width: 44,
+					height: 44,
+					borderRadius: tokens.radius.md,
 					justifyContent: 'center',
-					backgroundColor: theme.greyBackground,
+					alignItems: 'center',
+					backgroundColor: disabled ? 'transparent' : theme.greyBackground,
 				}}>
-				<ActivityIndicator size="large" color={theme.iconColor} />
-			</View>
+				<Icon name={iconName} size={size} color={color} />
+			</TouchableOpacity>
 		);
 	};
 
-	if (!uri) {
-		return renderLoading();
-	}
-
-	const theme = style.Theme[themeName];
-	const javascript = Platform.OS !== 'ios' ? 'window.scrollTo(0,0);' : null;
-
 	return (
-		<SafeAreaView
-			style={{ flex: 1, flexDirection: 'column', backgroundColor: theme.background }}>
+		<SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
 			<WebView
 				ref={webViewRef}
 				javaScriptEnabled={true}
@@ -99,81 +101,44 @@ export default function WebBrowser({ navigation, route }) {
 						setCanGoBack(e.canGoBack);
 						setCanGoForward(e.canGoForward);
 						setLoading(e.loading);
-						
-						if (e.title) {
-							navigation.setParams({ title: e.title });
-						}
+						if (e.title) navigation.setParams({ title: e.title });
 					}
 				}}
 				source={{ uri }}
 			/>
+
+			{/* ── Barre de navigation ───────────────────────────────── */}
 			<View
 				style={{
 					flexDirection: 'row',
-					justifyContent: 'space-between',
-					paddingHorizontal: 10,
-					paddingVertical: 5,
-					backgroundColor: theme.background,
+					justifyContent: 'space-around',
+					alignItems: 'center',
+					paddingHorizontal: tokens.space.sm,
+					paddingVertical: tokens.space.xs,
+					backgroundColor: theme.cardBackground,
+					borderTopWidth: 1,
+					borderTopColor: theme.border,
 				}}>
-				<TouchableOpacity disabled={!canGoBack} onPress={onBack}>
-					<MaterialIcons
-						name="navigate-before"
-						size={30}
-						style={{
-							color: canGoBack ? theme.icon : 'grey',
-							height: 30,
-							width: 30,
-						}}
-					/>
-				</TouchableOpacity>
-				<TouchableOpacity disabled={!canGoForward} onPress={onForward}>
-					<MaterialIcons
-						name="navigate-next"
-						size={30}
-						style={{
-							color: canGoForward ? theme.icon : 'grey',
-							height: 30,
-							width: 30,
-						}}
-					/>
-				</TouchableOpacity>
-
-				<TouchableOpacity disabled={loading} onPress={onRefresh}>
-					<MaterialIcons
-						name="refresh"
-						size={30}
-						style={{
-							color: loading ? 'grey' : theme.icon,
-							height: 30,
-							width: 30,
-						}}
-					/>
-				</TouchableOpacity>
-
-				<TouchableOpacity
+				<NavButton
+					onPress={onBack}
+					disabled={!canGoBack}
+					iconName="navigate-before"
+					size={28}
+				/>
+				<NavButton
+					onPress={onForward}
+					disabled={!canGoForward}
+					iconName="navigate-next"
+					size={28}
+				/>
+				<NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
+				<NavButton
 					onPress={openURL}
-					style={{
-						paddingRight: 16,
-						flexDirection: 'row',
-						justifyContent: 'center',
-						alignItems: 'center',
-					}}>
-					<View>
-						{Platform.OS === 'ios' ? (
-							<MaterialCommunityIcons
-								name="apple-safari"
-								size={25}
-								style={{ color: theme.icon, height: 25, width: 25 }}
-							/>
-						) : (
-							<MaterialCommunityIcons
-								name="google-chrome"
-								size={25}
-								style={{ color: theme.icon, height: 25, width: 25 }}
-							/>
-						)}
-					</View>
-				</TouchableOpacity>
+					disabled={false}
+					iconName={Platform.OS === 'ios' ? 'apple-safari' : 'google-chrome'}
+					iconLib="community"
+					size={22}
+				/>
 			</View>
 		</SafeAreaView>
 	);

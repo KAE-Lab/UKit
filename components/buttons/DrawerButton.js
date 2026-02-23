@@ -1,36 +1,49 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, View, Pressable } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { tokens } from '../../Style';
 
 export default (props) => {
-    let icon = <View />;
-    if (props.icon !== null) {
-        icon = <MaterialIcons name={props.icon} size={props.size} style={{ color: props.color }} />;
-    }
-    return (
-        <TouchableOpacity
-            onPress={() => {
-                props.onPress();
-            }}>
-            <View
-                style={{
-                    justifyContent: 'space-around',
-                    paddingLeft: 15,
-                    height: 42,
-                    paddingVertical: 3,
-                    backgroundColor: props.tintColor,
-                }}>
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                    }}>
-                    {icon}
-                    <View style={{ paddingLeft: 30, flex: 1, paddingRight: 10 }}>
-                        <Text style={{ fontSize: props.textSize, color: props.fontColor }}>{props.title}</Text>
-                    </View>
-                </View>
-            </View>
-        </TouchableOpacity>
+	let icon = props.icon ? (
+		<MaterialIcons name={props.icon} size={props.size} style={{ color: props.color }} />
+	) : (
+		<View />
     );
+    
+	return (
+		<Pressable
+			onPress={props.onPress}
+			style={({ pressed }) => ({
+				opacity: pressed ? 0.6 : 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: tokens.space.md,
+                paddingVertical: tokens.space.sm,
+                marginHorizontal: tokens.space.sm,
+                marginVertical: tokens.space.xs,
+                borderRadius: tokens.radius.md,
+                backgroundColor: pressed ? props.pressedColor ?? 'transparent' : 'transparent'
+			})}>
+			<View style={{
+                width: 36,
+                height: 36,
+                borderRadius: tokens.radius.sm,
+                backgroundColor: props.iconBackground ?? `${props.color}18`,
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}>
+                {icon}
+            </View>
+            
+            <Text style={{
+                fontSize: props.textSize ?? tokens.fontSize.md,
+                color: props.fontColor,
+                marginLeft: tokens.space.md,
+                fontWeight: tokens.fontWeight.medium,
+                flex: 1,
+            }}>
+                {props.title}
+            </Text>
+		</Pressable>
+	);
 };

@@ -11,7 +11,7 @@ class MyGroupButton extends React.PureComponent {
 
 	componentDidMount() {
 		if (this.props.groupName !== null && SettingsManager.getOpenAppOnFavoriteGroup()) {
-			this.props.navigate('Home', {
+			this.props.navigate('Stack', {
 				screen: 'Group',
 				params: {
 					name: this.props.groupName,
@@ -21,7 +21,7 @@ class MyGroupButton extends React.PureComponent {
 	}
 
 	_onPress = () => {
-		this.props.navigate('Home', {
+		this.props.navigate('Stack', {
 			screen: 'Group',
 			params: {
 				name: this.props.groupName,

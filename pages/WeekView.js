@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CalendarWeek from '../components/CalendarWeek';
 import WeekComponent from '../components/Week';
-import style from '../Style';
+import style, { tokens } from '../Style';
 import Translator from '../utils/translator';
 import { AppContext } from '../utils/DeviceUtils';
 
@@ -135,109 +135,118 @@ class WeekView extends React.Component {
 		const theme = style.Theme[this.context.themeName];
 
 		return (
-			<SafeAreaView style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-				<WeekComponent
-					key={`weekComponent-${this.context.themeName}`}
-					week={this.state.selectedWeek}
-					groupName={this.state.groupName}
-					theme={theme}
-					navigation={this.props.navigation}
-					filtersList={this.context.filters}
-				/>
-				<View
-					style={{
-						flexGrow: 0,
-						backgroundColor: 'white',
-						borderTopColor: theme.border,
-						borderTopWidth: 1,
-					}}>
-					<View
-						style={{
-							flexDirection: 'row',
-							justifyContent: 'space-between',
-							alignItems: 'stretch',
-							height: 38,
-							backgroundColor: theme.courseBackground,
-						}}>
-						<View style={{ position: 'absolute', top: 0, right: 0, left: 0 }}>
-							<Text
-								style={{
-									textAlign: 'center',
-									fontSize: 18,
-									marginVertical: 8,
-									color: theme.font,
-								}}>
-								{Translator.get('WEEK')}
-							</Text>
-						</View>
-						<TouchableOpacity
-							style={{ flexDirection: 'row', alignItems: 'center' }}
-							onPress={this.onTodayPress}>
-							<View
-								style={{
-									flexDirection: 'row',
-									alignItems: 'center',
-									marginHorizontal: 16,
-								}}>
-								<MaterialIcons
-									name="event-note"
-									size={18}
-									style={{ color: theme.icon }}
-								/>
-								<Text
-									style={{
-										textAlign: 'center',
-										fontSize: 12,
-										marginLeft: 8,
-										color: theme.font,
-									}}>
-									{Translator.get('THIS_WEEK')}
-								</Text>
-							</View>
-						</TouchableOpacity>
+            <SafeAreaView style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+                <WeekComponent
+                    key={`weekComponent-${this.context.themeName}`}
+                    week={this.state.selectedWeek}
+                    groupName={this.state.groupName}
+                    theme={theme}
+                    navigation={this.props.navigation}
+                    filtersList={this.context.filters}
+                />
 
-						<TouchableOpacity
-							style={{ flexDirection: 'row', alignItems: 'center' }}
-							onPress={this.onDayButton}>
-							<View
-								style={{
-									flexDirection: 'row',
-									alignItems: 'center',
-									marginHorizontal: 16,
-								}}>
-								<Text
-									style={{
-										textAlign: 'center',
-										fontSize: 12,
-										marginRight: 8,
-										color: theme.font,
-									}}>
-									{Translator.get('DAY')}
-								</Text>
-								<MaterialCommunityIcons
-									name="calendar"
-									size={18}
-									style={{ color: theme.icon }}
-								/>
-							</View>
-						</TouchableOpacity>
-					</View>
-					<FlatList
-						ref={(list) => (this.calendarList = list)}
-						showsHorizontalScrollIndicator={false}
-						data={this.state.weeks}
-						horizontal={true}
-						keyExtractor={this.extractCalendarListItemKey}
-						viewabilityConfig={this.viewability}
-						initialScrollIndex={this.state.currentWeekIndex}
-						getItemLayout={WeekView.getCalendarListItemLayout}
-						extraData={this.state}
-						renderItem={this.renderCalendarListItem}
-						style={{ backgroundColor: theme.courseBackground }}
-					/>
-				</View>
-			</SafeAreaView>
-		);
+                {/* ── Barre de navigation calendrier ────────────────────── */}
+                <View style={{
+                    flexGrow: 0,
+                    backgroundColor: theme.cardBackground,
+                    borderTopWidth: 1,
+                    borderTopColor: theme.border,
+                }}>
+                    {/* Header : label + boutons */}
+                    <View style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        height: 44,
+                        backgroundColor: theme.cardBackground,
+                        paddingHorizontal: tokens.space.xs,
+                    }}>
+                        {/* Bouton Cette semaine */}
+                        <TouchableOpacity
+                            onPress={this.onTodayPress}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: tokens.space.md,
+                                paddingVertical: tokens.space.sm,
+                                borderRadius: tokens.radius.md,
+                                backgroundColor: theme.greyBackground,
+                            }}>
+                            <MaterialIcons
+                                name="event-note"
+                                size={16}
+                                color={theme.accent ?? theme.primary}
+                            />
+                            <Text style={{
+                                fontSize: tokens.fontSize.sm,
+                                marginLeft: tokens.space.xs,
+                                color: theme.accent ?? theme.primary,
+                                fontWeight: tokens.fontWeight.medium,
+                            }}>
+                                {Translator.get('THIS_WEEK')}
+                            </Text>
+                        </TouchableOpacity>
+
+                        {/* Label semaine */}
+                        <Text style={{
+                            fontSize: tokens.fontSize.md,
+                            fontWeight: tokens.fontWeight.semibold,
+                            color: theme.font,
+                            position: 'absolute',
+                            left: 0,
+                            right: 0,
+                            textAlign: 'center',
+                        }}>
+                            {Translator.get('WEEK')}
+                        </Text>
+
+                        {/* Bouton Jour */}
+                        <TouchableOpacity
+                            onPress={this.onDayButton}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: tokens.space.md,
+                                paddingVertical: tokens.space.sm,
+                                borderRadius: tokens.radius.md,
+                                backgroundColor: theme.greyBackground,
+                            }}>
+                            <Text style={{
+                                fontSize: tokens.fontSize.sm,
+                                marginRight: tokens.space.xs,
+                                color: theme.accent ?? theme.primary,
+                                fontWeight: tokens.fontWeight.medium,
+                            }}>
+                                {Translator.get('DAY')}
+                            </Text>
+                            <MaterialCommunityIcons
+                                name="calendar"
+                                size={16}
+                                color={theme.accent ?? theme.primary}
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Liste des semaines */}
+                    <FlatList
+                        ref={(list) => (this.calendarList = list)}
+                        showsHorizontalScrollIndicator={false}
+                        data={this.state.weeks}
+                        horizontal={true}
+                        keyExtractor={this.extractCalendarListItemKey}
+                        viewabilityConfig={this.viewability}
+                        initialScrollIndex={this.state.currentWeekIndex}
+                        getItemLayout={WeekView.getCalendarListItemLayout}
+                        extraData={this.state}
+                        renderItem={this.renderCalendarListItem}
+                        style={{
+                            backgroundColor: theme.cardBackground,
+                            paddingBottom: tokens.space.xs,
+                        }}
+                    />
+                </View>
+            </SafeAreaView>
+        );
 	}
 }
 

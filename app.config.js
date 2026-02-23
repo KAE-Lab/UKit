@@ -5,13 +5,13 @@ export default {
 	description: 'Ukit, a companion app for student of University of Bordeaux',
 	slug: 'Ukit',
 	privacy: 'public',
-	githubUrl: 'https://github.com/kb-dev/UKit',
+	githubUrl: 'https://github.com/illumye/UKit',
 	platforms: ['ios', 'android'],
-	version: '4.1.2',
+	version: '5.0.0',
 	orientation: 'portrait',
 	primaryColor: '#006F9F',
 	icon: './assets/icons/ios.png',
-	owner: 'kbdev',
+	owner: 'illumye',
 	splash: {
 		image: './assets/icons/splash.png',
 		backgroundColor: '#009de0',
@@ -34,7 +34,7 @@ export default {
 		},
 	},
 	android: {
-		package: 'com.bordeaux1.emplois',
+		package: 'me.illumye.ukit',
 		config: {
 			googleMaps: {
 				apiKey: 'AIzaSyD8qcNLeWqiyS5KK4hWiCkznZkD3GbhFrI',
@@ -56,9 +56,9 @@ export default {
 		enabled: false,
 	},
 	extra: {
-		eas: {
-			projectId: '2a05b568-4dc7-4e7b-bcec-eb00ed808aee',
-		},
+		"eas": {
+        	"projectId": "77596c7c-87fc-4c86-9189-3a70fd839abf"
+      	},
 		sentryDSN: process.env.SENTRY_DSN,
 	},
 	plugins: [],

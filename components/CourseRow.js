@@ -1,210 +1,316 @@
 import React from 'react';
-import { Text, TouchableHighlight, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 import CalendarNewEventPrompt from './buttons/CalendarNewEventPrompt';
-import style from '../Style';
+import style, { tokens } from '../Style';
 import Translator from '../utils/translator';
 
-export default class CourseRow extends React.PureComponent {
+class CourseRow extends React.Component {
 	constructor(props) {
 		super(props);
-		let backgroundColor = props.theme.eventBackground;
-		let borderColor = props.theme.eventBorder;
-		let lineColor = '#FFF';
+		const lineColor = props.theme.courses[props.data?.color] ?? props.theme.courses.default;
 
-		if (props.theme.courses[props.data.color]) {
-			lineColor = props.theme.courses[props.data.color];
-		} else {
-			lineColor = props.theme.courses.default;
+		this.state = {
+			backgroundColor: props.theme.eventBackground,
+			borderColor: props.theme.eventBorder,
+			lineColor,
+			popupVisible: false,
+		};
+	}
+
+	static getDerivedStateFromProps(nextProps, prevState) {
+		const lineColor =
+			nextProps.theme.courses[nextProps.data?.color] ?? nextProps.theme.courses.default;
+
+		const backgroundColor = nextProps.theme.eventBackground;
+		const borderColor = nextProps.theme.eventBorder;
+
+		if (
+			lineColor !== prevState.lineColor ||
+			backgroundColor !== prevState.backgroundColor ||
+			borderColor !== prevState.borderColor
+		) {
+			return { lineColor, backgroundColor, borderColor };
 		}
 
-		this.state = { backgroundColor, borderColor, lineColor, popupVisible: false };
+		return null;
 	}
 
 	closePopup = () => this.setState({ popupVisible: false });
-
 	openPopup = () => this.setState({ popupVisible: true });
 
 	_onPress = () => {
+		if (!this.props.navigation) return;
 		requestAnimationFrame(() => {
-			this.props.navigation.navigate('Course', {
-				data: this.props.data,
-			});
+			this.props.navigation.navigate('Course', { data: this.props.data });
 		});
 	};
 
 	render() {
 		const { theme } = this.props;
 
+		// ── Pas de cours ──────────────────────────────────────────────
 		if (this.props.data.category === 'nocourse') {
 			return (
 				<View style={style.schedule.course.noCourse}>
-					<Text style={[style.schedule.course.noCourseText, { color: theme.font }]}>
+					<MaterialCommunityIcons
+						name="calendar-blank-outline"
+						size={36}
+						color={theme.fontSecondary}
+						style={{ opacity: 0.4, marginBottom: tokens.space.sm }}
+					/>
+					<Text
+						style={[
+							style.schedule.course.noCourseText,
+							{ color: theme.fontSecondary },
+						]}>
 						{Translator.get('NO_CLASS_THIS_DAY')}
 					</Text>
 				</View>
 			);
-		} else if (this.props.data.category === 'masked') {
+		}
+
+		if (this.props.data.category === 'masked') {
 			return null;
-		} else {
-			let annotations = null,
-				subject = null,
-				ue = null,
-				ueTitle = null;
+		}
 
-			if (this.props.data.UE) {
-				ueTitle = (
-					<View style={style.schedule.course.iconHeader}>
-						<MaterialIcons
-							name="code"
-							size={18}
-							style={{ width: 18, height: 18, color: theme.font }}
+		const isLargeMode = this.props.readOnly === true;
+
+		// ── UE ────────────────────────────────────────────────────────
+		const ue = this.props.data.UE ? (
+			<View style={[style.schedule.course.line, { alignItems: 'center' }]}>
+				<MaterialIcons
+					name="code"
+					size={14}
+					color={theme.fontSecondary}
+					style={{ marginRight: tokens.space.xs }}
+				/>
+				<Text
+					style={{
+						fontSize: tokens.fontSize.xs,
+						color: theme.fontSecondary,
+						fontWeight: tokens.fontWeight.medium,
+					}}>
+					{this.props.data.UE}
+				</Text>
+			</View>
+		) : null;
+
+		// ── Sujet ─────────────────────────────────────────────────────
+		const subject =
+			this.props.data.subject !== 'N/C' ? (
+				<Text style={[style.schedule.course.title, { color: theme.font, flex: 1 }]}>
+					{this.props.data.subject}
+				</Text>
+			) : null;
+
+		// ── Annotations ───────────────────────────────────────────────
+		const annotations =
+			!isLargeMode && this.props.data.description?.length > 0
+				? this.props.data.description.split('\n').map((annotation, index) => {
+						if (!annotation.trim()) return null;
+
+						let iconName = 'info-outline';
+						if (index === 0) iconName = 'group';
+						else if (index === 1) iconName = 'person';
+						else if (index === 2) iconName = 'room';
+						else if (index === 3) iconName = 'date-range';
+
+						return (
+							<View
+								key={index}
+								style={[
+									style.schedule.course.line,
+									{ alignItems: 'flex-start', marginTop: tokens.space.xs },
+								]}>
+								<MaterialIcons
+									name={iconName}
+									size={12} // 👈 Taille légèrement réduite pour la liste
+									color={theme.fontSecondary}
+									style={{ marginRight: tokens.space.xs, marginTop: 1 }}
+								/>
+								<Text
+									style={{
+										fontSize: tokens.fontSize.xs,
+										color: theme.fontSecondary,
+										flex: 1,
+									}}>
+									{annotation.trim()}
+								</Text>
+							</View>
+						);
+				  })
+				: null;
+
+		// ── Carte du cours ────────────────────────────────────────────
+		const content = (
+			<View
+				style={[
+					style.schedule.course.root,
+					{
+						flex: 0,
+						minHeight: 120,
+						backgroundColor: this.state.backgroundColor,
+						marginHorizontal: tokens.space.md,
+						marginVertical: tokens.space.xs,
+						borderRadius: tokens.radius.lg,
+						borderLeftWidth: 4,
+						borderLeftColor: this.state.lineColor,
+						borderWidth: 1,
+						borderColor: this.state.borderColor,
+						overflow: 'hidden',
+						...tokens.shadow.sm,
+						// flexShrink: 0,
+					},
+				]}>
+				<View style={style.schedule.course.row}>
+					{/* ── Colonne heures ──────────────────────────────── */}
+					<View
+						style={[
+							style.schedule.course.hours,
+							{
+								backgroundColor: `${this.state.lineColor}18`,
+								borderRightWidth: 1,
+								borderRightColor: `${this.state.lineColor}44`,
+							},
+						]}>
+						<Text style={[style.schedule.course.hoursText, { color: theme.font }]}>
+							{this.props.data.starttime}
+						</Text>
+						<View
+							style={{
+								width: 4,
+								height: 4,
+								borderRadius: tokens.radius.pill,
+								backgroundColor: this.state.lineColor,
+								opacity: 0.6,
+								marginVertical: tokens.space.xs,
+							}}
 						/>
-					</View>
-				);
-
-				ue = <Text style={{ color: theme.font }}>{this.props.data.UE}</Text>;
-			}
-
-			if (this.props.data.subject !== 'N/C') {
-				subject = (
-					<View style={{ flex: 1 }}>
 						<Text
 							style={[
-								style.schedule.course.content,
-								style.schedule.course.title,
-								{
-									textAlign: 'left',
-									color: theme.font,
-								},
+								style.schedule.course.hoursText,
+								{ color: theme.fontSecondary },
 							]}>
-							{this.props.data.subject}
+							{this.props.data.endtime}
 						</Text>
 					</View>
-				);
-			}
-			if (this.props.data.description?.length > 0) {
-				annotations = this.props.data.description.split('\n').map((annotation, key) => {
-					return (
-						<Text key={key} style={{ color: theme.font }}>
-							{annotation}
-						</Text>
-					);
-				});
-			}
 
-			let isLargeMode = true;
-			let actions = null;
-			if (this.props.navigation) {
-				actions = null;
-				isLargeMode = false;
-			}
-
-			const content = (
-				<View
-					style={[
-						style.schedule.course.root,
-						{
-							backgroundColor: this.state.backgroundColor,
-							marginHorizontal: isLargeMode ? 0 : 12,
-							borderRadius: isLargeMode ? 0 : 8,
-							shadowColor: '#000',
-							shadowOffset: {
-								width: 0,
-								height: 2,
-							},
-							shadowOpacity: 0.23,
-							shadowRadius: 2.62,
-							elevation: 4,
-
-							borderLeftWidth: 12,
-							borderLeftColor: this.state.lineColor,
-						},
-					]}>
-					<View style={style.schedule.course.row}>
-						<View
-							style={[
-								style.schedule.course.hours,
-								{ borderColor: this.state.lineColor },
-							]}>
-							<View>
-								<Text
-									style={[
-										style.schedule.course.hoursText,
-										{ color: theme.font },
-									]}>
-									{this.props.data.starttime}
-								</Text>
-							</View>
-							<View>
-								<Text
-									style={[
-										style.schedule.course.hoursText,
-										{ color: theme.font },
-									]}>
-									{this.props.data.endtime}
-								</Text>
-							</View>
-						</View>
-
-						<View style={style.schedule.course.contentBlock}>
-							<View style={style.schedule.course.contentType}>
-								{subject}
-								<View>
+					{/* ── Contenu ─────────────────────────────────────── */}
+					<View
+						style={[style.schedule.course.contentBlock, { padding: tokens.space.sm }]}>
+						{/* Titre + catégorie */}
+						<View style={style.schedule.course.contentType}>
+							{subject}
+							{this.props.data.category !== this.props.data.subject && (
+								<View
+									style={{
+										backgroundColor: `${this.state.lineColor}22`,
+										borderRadius: tokens.radius.pill,
+										paddingHorizontal: tokens.space.sm,
+										paddingVertical: 2,
+										marginLeft: tokens.space.xs,
+									}}>
 									<Text
-										style={[
-											style.schedule.course.title,
-											{ color: theme.font },
-										]}>
-										{this.props.data.category !== this.props.data.subject ? (
-											this.props.data.category
-										) : (
-											<></>
-										)}
+										style={{
+											fontSize: tokens.fontSize.xs,
+											color: this.state.lineColor,
+											fontWeight: tokens.fontWeight.semibold,
+										}}>
+										{this.props.data.category}
 									</Text>
 								</View>
-							</View>
-
-							<View style={style.schedule.course.line}>
-								{ueTitle}
-								<View style={style.schedule.course.container}>{ue}</View>
-							</View>
-							<View style={{ marginBottom: 16 }} />
-
-							<View style={style.schedule.course.groupsContainer}>
-								<View style={style.schedule.course.groupsContent}>
-									{annotations}
-								</View>
-							</View>
+							)}
 						</View>
+
+						{/* UE */}
+						{ue}
+
+						{isLargeMode && (
+							<View style={{ marginTop: tokens.space.sm }}>
+								{(this.props.data.description || '')
+									.split('\n')
+									.map((line, index) => {
+										if (!line.trim()) return null;
+
+										let iconName = 'info-outline';
+										if (index === 0) iconName = 'group';
+										else if (index === 1) iconName = 'person';
+										else if (index === 2) iconName = 'room';
+										else if (index === 3) iconName = 'date-range';
+
+										return (
+											<View
+												key={index}
+												style={[
+													style.schedule.course.line,
+													{ alignItems: 'flex-start' },
+												]}>
+												<MaterialIcons
+													name={iconName}
+													size={14}
+													color={theme.fontSecondary}
+													style={{
+														marginRight: tokens.space.xs,
+														marginTop: 2,
+													}}
+												/>
+												<Text
+													style={{
+														fontSize: tokens.fontSize.sm,
+														color: theme.fontSecondary,
+														flex: 1,
+													}}>
+													{line.trim()}
+												</Text>
+											</View>
+										);
+									})}
+							</View>
+						)}
+
+						{/* Annotations */}
+						{annotations}
 					</View>
-					{actions}
+				</View>
+			</View>
+		);
+
+		if (isLargeMode) {
+			return (
+				<View
+					style={{
+						flex: 0,
+						width: '100%',
+					}}>
+					{content}
 				</View>
 			);
-
-			let body = content;
-			if (this.props.navigation) {
-				body = (
-					<View>
-						<TouchableHighlight
-							onPress={this._onPress}
-							onLongPress={this.openPopup}
-							underlayColor={theme.selection}>
-							{content}
-						</TouchableHighlight>
-						<CalendarNewEventPrompt
-							popupVisible={this.state.popupVisible}
-							closePopup={this.closePopup}
-							openPopup={this.openPopup}
-							theme={theme}
-							data={this.props.data}
-						/>
-					</View>
-				);
-			}
-
-			return <View style={{ marginVertical: 4 }}>{body}</View>;
 		}
+
+		return (
+			<View>
+				<TouchableOpacity
+					onPress={this._onPress}
+					onLongPress={this.openPopup}
+					activeOpacity={0.7}>
+					{content}
+				</TouchableOpacity>
+				<CalendarNewEventPrompt
+					popupVisible={this.state.popupVisible}
+					closePopup={this.closePopup}
+					openPopup={this.openPopup}
+					theme={theme}
+					data={this.props.data}
+				/>
+			</View>
+		);
 	}
+}
+
+export default function CourseRowWithNavigation(props) {
+	const navigation = useNavigation();
+	return <CourseRow {...props} navigation={navigation} />;
 }

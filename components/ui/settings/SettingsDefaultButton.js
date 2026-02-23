@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
-import { Animated, Text, TouchableOpacity } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Animated, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
-export default ({ theme, onPress, leftIcon, leftIconAnimation, leftText, rightText, disabled }) => {
+export default ({ theme, onPress, leftIcon, leftIconAnimation, leftText, rightText, disabled, switchValue, onSwitchToggle }) => {
 	const rotatingAnimation = useRef(new Animated.Value(0)).current;
 
 	React.useEffect(() => {
@@ -20,30 +20,57 @@ export default ({ theme, onPress, leftIcon, leftIconAnimation, leftText, rightTe
 		}
 	}, [leftIconAnimation]);
 
+	const rotate = rotatingAnimation.interpolate({
+		inputRange: [0, 1],
+		outputRange: ['0deg', '360deg'],
+	});
+
+	if (!theme?.button) return null;
+
+	const isMaterialIcon = ['settings', 'language', 'filter-list', 'sync-disabled'].includes(leftIcon);
+	const IconComponent = isMaterialIcon ? MaterialIcons : MaterialCommunityIcons;
+
+
 	return (
-		<TouchableOpacity
-			style={[theme.button, disabled ? { backgroundColor: 'transparent' } : {}]}
-			onPress={disabled ? undefined : onPress}>
-			<Animated.View
-				style={{
-					transform: [
-						{
-							rotateX: rotatingAnimation.interpolate({
-								inputRange: [0, 360],
-								outputRange: ['0deg', '360deg'],
-							}),
-						},
-					],
-				}}>
-				<MaterialIcons name={leftIcon} size={24} style={theme.leftIcon} />
-			</Animated.View>
-			<Text style={theme.buttonMainText}>{leftText}</Text>
-			<Text numberOfLines={1} style={[theme.buttonSecondaryText, { flexShrink: 1 }]}>
-				{rightText}
-			</Text>
-			{!disabled && (
-				<MaterialIcons name="keyboard-arrow-right" size={24} style={theme.rightIcon} />
-			)}
-		</TouchableOpacity>
-	);
+        <TouchableOpacity
+            onPress={onPress}
+            disabled={disabled}
+            style={[theme.button, disabled && { opacity: 0.5 }]}>
+
+            {/* Icône gauche */}
+            {leftIcon && (
+                <Animated.View style={{ transform: leftIconAnimation ? [{ rotate }] : [] }}>
+                    <IconComponent
+                        name={leftIcon}
+                        size={24}
+                        style={theme.leftIcon}
+                    />
+                </Animated.View>
+            )}
+
+            {/* Texte principal */}
+            <Text style={theme.buttonMainText}>{leftText}</Text>
+
+            {/* Switch ou texte secondaire */}
+            {onSwitchToggle !== undefined ? (
+                <Switch
+                    style={{ marginLeft: 'auto', marginRight: theme.leftIcon?.marginLeft }}
+                    trackColor={theme.switchTrack}
+                    value={switchValue}
+                    onValueChange={onSwitchToggle}
+                />
+            ) : (
+                <Text style={theme.buttonSecondaryText}>{rightText}</Text>
+            )}
+
+            {/* Chevron droit */}
+            {!onSwitchToggle && (
+                <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={22}
+                    style={theme.rightIcon}
+                />
+            )}
+        </TouchableOpacity>
+    );
 };

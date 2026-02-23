@@ -9,11 +9,13 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatList, TextInput } from 'react-native-gesture-handler';
+import { TextInput } from 'react-native-gesture-handler';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import SettingsManager from '../../utils/SettingsManager';
 import Translator from '../../utils/translator';
 import styles from '../../StyleWelcome';
+import { tokens } from '../../Style';
 import WelcomeButton from '../../components/buttons/WelcomeButton';
 import WelcomePagination from '../../components/ui/WelcomePagination';
 import WelcomeBackButton from '../../components/buttons/WelcomeBackButton';
@@ -216,23 +218,27 @@ class ThirdWelcomePage extends React.Component {
 		const theme = this.props.navigatorState.theme;
 		return (
 			<LinearGradient
-				style={{ flex: 1, display: 'flex' }}
+				style={{ flex: 1 }}
 				colors={styles[theme].gradientColor}
 				start={{ x: 0.05, y: 0.05 }}
 				end={{ x: 0.95, y: 0.95 }}>
 				<SafeAreaView style={{ flex: 1 }}>
 					<KeyboardAvoidingView
 						style={{ flex: 1 }}
-						behavior={Platform.OS === 'ios' ? 'height' : ''}>
+						behavior={Platform.OS === 'ios' ? 'height' : undefined}>
 						<WelcomeBackButton onPress={navigation.goBack} visible={true} />
-						<ScrollView style={styles[theme].whiteCardContainer}>
+
+						<ScrollView
+							style={styles[theme].whiteCardContainer}
+							showsVerticalScrollIndicator={false}
+							keyboardShouldPersistTaps="handled">
+							{/* ── Année ───────────────────────────────── */}
 							<View style={styles[theme].whiteCard}>
 								<Text style={styles[theme].whiteCardText}>
 									{Translator.get('YOUR_YEAR')}
 								</Text>
 								<View
 									style={{
-										display: 'flex',
 										flexDirection: 'row',
 										flexWrap: 'wrap',
 										justifyContent: 'flex-start',
@@ -249,6 +255,7 @@ class ThirdWelcomePage extends React.Component {
 								</View>
 							</View>
 
+							{/* ── Semestre ────────────────────────────── */}
 							<View style={styles[theme].whiteCard}>
 								<Text style={styles[theme].whiteCardText}>
 									{Translator.get('YOUR_SEMESTER')}
@@ -263,33 +270,61 @@ class ThirdWelcomePage extends React.Component {
 									/>
 								))}
 							</View>
+
+							{/* ── Groupe ──────────────────────────────── */}
 							<View style={styles[theme].whiteCard}>
 								<Text style={styles[theme].whiteCardText}>
 									{Translator.get('YOUR_GROUP')}
 								</Text>
-								<TextInput
-									autoCorrect={false}
-									style={[
-										styles[theme].whiteCardGroupButton,
-										styles[theme].whiteCardGroupText,
-									]}
-									defaultValue={this.getTextFilter()}
-									placeholder={Translator.get('GROUP_NAME')}
-									placeholderTextColor={styles[theme].placeholderTextColor}
-									onChangeText={this.onChangeText}
-								/>
-								<FlatList
-									data={this.getGroupListFiltered()}
-									renderItem={this.renderGroupListItem}
-									keyExtractor={this.extractGroupListItemId}
-									extraData={this.groupSelected}
-									initialScrollIndex={0}
-									initialNumToRender={5}
-									viewabilityConfig={{
-										itemVisiblePercentThreshold: 0,
-									}}
-									ListFooterComponent={this.footerTextComponent}
-								/>
+
+								<View
+									style={{
+										flexDirection: 'row',
+										alignItems: 'center',
+										backgroundColor: theme === 'dark' ? '#2D1A2E' : '#F5F7FA',
+										borderRadius: tokens.radius.md,
+										borderWidth: 1.5,
+										borderColor: theme === 'dark' ? '#5A3A5C' : '#E0E4EA',
+										paddingHorizontal: tokens.space.sm,
+										marginBottom: tokens.space.sm,
+									}}>
+									<MaterialCommunityIcons
+										name="magnify"
+										size={20}
+										color={styles[theme].placeholderTextColor}
+										style={{ marginRight: tokens.space.xs }}
+									/>
+									<TextInput
+										autoCorrect={false}
+										style={[
+											styles[theme].whiteCardGroupButton,
+											styles[theme].whiteCardGroupText,
+										]}
+										defaultValue={this.getTextFilter()}
+										placeholder={Translator.get('GROUP_NAME')}
+										placeholderTextColor={styles[theme].placeholderTextColor}
+										onChangeText={this.onChangeText}
+									/>
+								</View>
+								<View
+									style={{
+										flexDirection: 'row',
+										flexWrap: 'wrap',
+									}}>
+									{this.getGroupListFiltered()
+										.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1)
+										.map((item, index) => (
+											<GroupItem
+												key={item}
+												item={item}
+												index={index}
+												selected={this.getGroup() === item}
+												selectGroup={this.selectGroup}
+												theme={theme}
+											/>
+										))}
+								</View>
+								{this.footerTextComponent()}
 							</View>
 						</ScrollView>
 

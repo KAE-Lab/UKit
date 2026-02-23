@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import moment from 'moment';
 
-import style from '../Style';
+import style, { tokens } from '../Style';
 import CourseRow from './CourseRow';
 import { isArraysEquals, upperCaseFirstLetter } from '../utils';
 import ErrorAlert from './alerts/ErrorAlert';
@@ -140,18 +140,38 @@ class Day extends React.Component {
 
 		let content = null,
 			cacheMessage = null;
+
 		if (this.state.schedule === null) {
 			content = (
-				<ActivityIndicator style={style.containerView} size="large" animating={true} />
+				<ActivityIndicator
+					style={{ margin: tokens.space.lg }}
+					size="large"
+					color={theme.primary}
+					animating={true}
+				/>
 			);
 		} else if (this.state.schedule instanceof Array) {
 			if (this.state.day.day() === 0 || this.state.schedule.length === 0) {
 				this.state.schedule = [{ schedule: 0, category: 'nocourse' }];
 			}
+
 			if (this.state.cacheDate !== null) {
 				cacheMessage = (
-					<View>
-						<Text style={style.offline.groups.text}>
+					<View
+						style={{
+							flexDirection: 'row',
+							alignItems: 'center',
+							backgroundColor: theme.greyBackground,
+							paddingHorizontal: tokens.space.md,
+							paddingVertical: tokens.space.sm,
+							borderBottomWidth: 1,
+							borderBottomColor: theme.border,
+						}}>
+						<Text
+							style={{
+								fontSize: tokens.fontSize.xs,
+								color: theme.fontSecondary,
+							}}>
 							{Translator.get(
 								'OFFLINE_DISPLAY_FROM_DATE',
 								moment(this.state.cacheDate).format('lll'),
@@ -160,6 +180,7 @@ class Day extends React.Component {
 					</View>
 				);
 			}
+
 			content = (
 				<FlatList
 					data={this.state.schedule}
@@ -168,7 +189,6 @@ class Day extends React.Component {
 						<CourseRow
 							data={item.item}
 							theme={theme}
-							navigation={this.props.navigation}
 						/>
 					)}
 					keyExtractor={(item, index) => item.schedule + String(index)}
@@ -179,14 +199,16 @@ class Day extends React.Component {
 
 		return (
 			<View
-				style={[style.schedule.containerView, { backgroundColor: theme.courseBackground }]}>
-				<View style={style.schedule.titleView}>
+				style={[style.schedule.containerView, { flex: 1, backgroundColor: theme.courseBackground }]}>
+				<View style={[style.schedule.titleView, { borderBottomColor: theme.border }]}>
 					<Text style={[style.schedule.titleText, { color: theme.font }]}>
 						{this.displayDate()}
 					</Text>
 				</View>
 				{cacheMessage}
-				<View style={style.schedule.contentView}>{content}</View>
+				<View style={{ flex: 1 }}>
+					<View style={style.schedule.contentView}>{content}</View>
+				</View>
 			</View>
 		);
 	}
