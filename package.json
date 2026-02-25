@@ -10,7 +10,14 @@
     "ios": "expo start --ios",
     "build:android": "eas build -p android --profile preview",
     "build:ios": "eas build -p ios --profile preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prepare": "husky",
+    "commit": "cz"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   },
   "main": "node_modules/expo/AppEntry.js",
   "dependencies": {
@@ -57,7 +64,12 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
     "babel-preset-expo": "^54.0.10",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^9.1.7",
     "prettier": "^1.14.2"
   }
 }
