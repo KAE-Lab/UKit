@@ -1,14 +1,14 @@
 import React from 'react';
-import { Text, View, ScrollView, Image } from 'react-native';
+import { Text, View, ScrollView, Image, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import style, { tokens } from '../../shared/theme/Theme';
-import URLButton from '../../../components/buttons/URLButton';
-import Translator from '../../../utils/translator';
-import { AppContext } from '../../../utils/DeviceUtils';
-import URL from '../../../utils/URL';
+import Translator from '../../shared/i18n/Translator';
+import { AppContext } from '../../shared/services/AppCore';
+import { URL } from '../../shared/services/DataService';
+
 
 const Section = ({ title, icon, theme, children }) => (
 	<View style={{
@@ -45,6 +45,34 @@ const Section = ({ title, icon, theme, children }) => (
 		</View>
 	</View>
 );
+
+const URLButton = ({ url, title, theme }) => {
+    const openURL = () => {
+        Linking.canOpenURL(url).then((supported) => {
+            if (supported) Linking.openURL(url);
+        });
+    };
+
+    return (
+        <TouchableOpacity onPress={openURL} style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: tokens.space.sm,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border + '44', 
+        }}>
+            <Text style={{
+                flex: 1,
+                fontSize: tokens.fontSize.md,
+                color: theme.font,
+                fontWeight: tokens.fontWeight.medium,
+            }}>
+                {title}
+            </Text>
+            <MaterialCommunityIcons name="open-in-new" size={20} color={theme.fontSecondary} />
+        </TouchableOpacity>
+    );
+};
 
 class AboutScreen extends React.Component {
 	static contextType = AppContext;

@@ -5,8 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import style, { tokens } from '../../shared/theme/Theme';
-import { AppContext } from '../../../utils/DeviceUtils';
-import URL from '../../../utils/URL';
+import { AppContext } from '../../shared/services/AppCore';
+import { URL } from '../../shared/services/DataService';
 
 const entrypoints = {
 	ent: 'https://ent.u-bordeaux.fr',

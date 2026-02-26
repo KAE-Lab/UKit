@@ -1,1 +1,0 @@
-export { CourseRowWithNavigation as default } from '../src/features/Schedule/CourseCard';

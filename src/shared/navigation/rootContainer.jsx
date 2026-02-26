@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { AppState, View } from 'react-native';
 
-import StatusBar from '../../../components/ui/StatusBar';
 import Drawer from './Drawer';
-import { AppContextProvider } from '../../../utils/DeviceUtils';
-import SettingsManager from '../../../utils/SettingsManager';
+import { AppContextProvider } from '../services/AppCore';
+import { SettingsManager } from '../services/AppCore';
 import WelcomeScreen from '../../features/Onboarding/WelcomeScreen'; 
 import Style from '../theme/Theme';
-import UpdateAlert from '../../../components/UpdateAlert';
+import { StatusBar, UpdateAlert } from '../ui/AppUI';
 
 export default (props) => {
 	const [isFirstLoad, setFirstLoad] = useState(SettingsManager.isFirstLoad());

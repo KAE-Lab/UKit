@@ -6,13 +6,13 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Button from '../ui/Button';
-import MyGroupButton from '../../../components/buttons/MyGroupButton';
-import Split from '../../../components/ui/Split';
+import { MyGroupButton } from './NavHelpers';
+import { Split } from '../ui/AppUI';
 import StackNavigator from './StackNavigator';
 import style, { tokens } from '../theme/Theme';
-import Translator from '../../../utils/translator';
-import SettingsManager from '../../../utils/SettingsManager';
-import { AppContext } from '../../../utils/DeviceUtils';
+import Translator from '../i18n/Translator';
+import { SettingsManager } from '../services/AppCore';
+import { AppContext } from '../services/AppCore';
 
 const CustomDrawerContentComponent = (props) => {
     const AppContextValues = useContext(AppContext);

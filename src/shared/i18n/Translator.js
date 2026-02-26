@@ -2,16 +2,15 @@ import * as moment from 'moment';
 import 'moment/locale/fr';
 import 'moment/locale/es';
 
-import SettingsManager from '../utils/SettingsManager';
-import EN from './translations/en';
-import FR from './translations/fr';
-import ES from './translations/es';
+import { SettingsManager } from '../services/AppCore'; 
+import EN from './en';
+import FR from './fr';
+import ES from './es';
 
-// ISO-8601, Europe
 moment.updateLocale('en', {
 	week: {
-		dow: 1, // First day of week is Monday
-		doy: 4, // First week of year must contain 4 January (7 + 1 - 4)
+		dow: 1,
+		doy: 4,
 	},
 });
 
@@ -21,7 +20,7 @@ const Translations = {
 	fr: FR,
 };
 
-class Translator {
+class TranslatorService {
 	constructor() {
 		this.setLanguage(SettingsManager.getLanguage());
 	}
@@ -34,21 +33,14 @@ class Translator {
 	get(str, ...args) {
 		const result = Translations[this._language][str];
 
-		if (!result) {
-			return str;
-		}
-
-		if (!args.length) {
-			return result;
-		}
+		if (!result) return str;
+		if (!args.length) return result;
 
 		let currentArg = 0;
-
 		return result.replace('$-', () => {
 			if (args[currentArg] !== undefined && args[currentArg] !== null) {
 				return args[currentArg++];
 			}
-
 			return '';
 		});
 	}
@@ -59,22 +51,18 @@ class Translator {
 
 	getLanguageString() {
 		switch (this._language) {
-			case 'fr':
-				return 'Français';
-			case 'en':
-				return 'English';
-			case 'es':
-				return 'Español';
-			default:
-				return '';
+			case 'fr': return 'Français';
+			case 'en': return 'English';
+			case 'es': return 'Español';
+			default: return '';
 		}
 	}
 }
 
-const translator = new Translator();
+const Translator = new TranslatorService();
 
 SettingsManager.on('language', (newLang) => {
-	translator.setLanguage(newLang);
+	Translator.setLanguage(newLang);
 });
 
-export default translator;
+export default Translator;

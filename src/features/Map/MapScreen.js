@@ -3,10 +3,10 @@ import { ActivityIndicator, View, Text } from 'react-native';
 import WebView from 'react-native-webview';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { AppContext } from '../../../utils/DeviceUtils';
+import { AppContext } from '../../shared/services/AppCore';
 import style, { tokens } from '../../shared/theme/Theme';
-import URL from '../../../utils/URL';
-import Translator from '../../../utils/translator';
+import { URL } from '../../shared/services/DataService';
+import Translator from '../../shared/i18n/Translator';
 
 const locations = require('../../../assets/locations.json');
 

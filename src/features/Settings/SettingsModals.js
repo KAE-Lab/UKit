@@ -5,8 +5,8 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import Translator from '../../../utils/translator';
-import SettingsManager from '../../../utils/SettingsManager';
+import Translator from '../../shared/i18n/Translator';
+import { SettingsManager } from '../../shared/services/AppCore';
 
 // ── Utilitaire Clavier ──────────────────────────────────────────────────
 export const SettingsDismissKeyboard = ({ children }) => (

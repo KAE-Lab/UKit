@@ -14,12 +14,10 @@ import Course from '../../features/Schedule/CourseCard';
 import DayView from '../../features/Schedule/DayView';
 import WeekView from '../../features/Schedule/WeekView';
 
-import NavBarHelper from '../../../components/NavBarHelper';
 import { BackButton } from '../ui/Button'; 
-import SaveButton from '../../../components/buttons/SaveGroupButton';
-import FilterRemoveButton from '../../../components/buttons/FilterRemoveButton';
-import { AppContext, treatTitle } from '../../../utils/DeviceUtils';
-import Translator from '../../../utils/translator';
+import { AppContext, treatTitle } from '../services/AppCore';
+import Translator from '../i18n/Translator';
+import { NavBarHelper, SaveGroupButton as SaveButton, FilterRemoveButton } from './NavHelpers';
 
 const Stack = createStackNavigator();
 

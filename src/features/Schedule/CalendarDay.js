@@ -1,9 +1,9 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity } from 'react-native';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 
-import { tokens } from '../Style';
+import { tokens } from '../../shared/theme/Theme';
 
 class CalendarDay extends React.Component {
     static propTypes = {

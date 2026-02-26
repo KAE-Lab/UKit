@@ -1,6 +1,7 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { tokens } from '../Style';
+import { Text, TouchableOpacity } from 'react-native';
+
+import { tokens } from '../../shared/theme/Theme';
 
 class CalendarWeek extends React.Component {
     _onPress = () => {

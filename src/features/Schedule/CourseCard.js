@@ -10,10 +10,10 @@ import { useNavigation } from '@react-navigation/native';
 
 import style, { tokens } from '../../shared/theme/Theme';
 
-import Translator from '../../../utils/translator';
-import { getLocations, getLocationsInText } from '../../../utils';
-import { AppContext } from '../../../utils/DeviceUtils';
-import URL from '../../../utils/URL';
+import Translator from '../../shared/i18n/Translator';
+import { getLocations, getLocationsInText } from '../../shared/services/AppCore';
+import { AppContext } from '../../shared/services/AppCore';
+import { URL } from '../../shared/services/DataService';
 
 // ── MODALE D'AJOUT AU CALENDRIER ─────────────────────────────────────────
 export class CalendarNewEventPrompt extends React.Component {

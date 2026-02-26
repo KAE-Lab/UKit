@@ -4,11 +4,11 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import CalendarDay from '../../../components/CalendarDay';
-import DayComponent from '../../../components/Day';
-import style, { tokens } from '../../../Style';
-import Translator from '../../../utils/translator';
-import { AppContext } from '../../../utils/DeviceUtils';
+import CalendarDay from './CalendarDay';
+import { DayComponent } from './ScheduleList'; 
+import style, { tokens } from '../../shared/theme/Theme'; 
+import Translator from '../../shared/i18n/Translator';
+import { AppContext } from '../../shared/services/AppCore';
 
 function capitalize(str) {
 	return `${str.charAt(0).toUpperCase()}${str.substr(1)}`;

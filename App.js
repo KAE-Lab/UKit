@@ -17,10 +17,9 @@ import {
 import { Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 
 import RootContainer from './src/shared/navigation/rootContainer';
-import SettingsManager from './utils/SettingsManager';
-import DataManager from './utils/DataManager';
+import { SettingsManager } from './src/shared/services/AppCore'
+import { DataManager } from './src/shared/services/DataService';
 
-// Garder le splash screen visible pendant le chargement
 SplashScreen.preventAutoHideAsync();
 
 function AnimatedAppLoader({ children }) {
@@ -89,7 +88,6 @@ function AnimatedSplashScreen({ children, image }) {
 		}
 	}, []);
 
-	// Correction de Constants.manifest vers Constants.expoConfig
 	const splashConfig = Constants.expoConfig?.splash || {};
 
 	return (

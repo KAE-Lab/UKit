@@ -1,1 +1,0 @@
-export { CalendarNewEventPrompt as default } from '../../src/features/Schedule/CourseCard';

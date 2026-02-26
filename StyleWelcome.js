@@ -1,1 +1,0 @@
-export { StyleWelcome as default } from './src/shared/theme/Theme';

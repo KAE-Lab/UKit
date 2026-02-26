@@ -1,1 +1,0 @@
-export { DayWeek as default } from '../../src/features/Schedule/ScheduleList';

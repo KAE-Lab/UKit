@@ -10,12 +10,11 @@ import PropTypes from 'prop-types';
 import style, { tokens } from '../../shared/theme/Theme';
 import { CourseRowWithNavigation as CourseRow } from './CourseCard';
 
-import { isArraysEquals, upperCaseFirstLetter } from '../../../utils';
-import ErrorAlert from '../../../components/alerts/ErrorAlert';
-import Translator from '../../../utils/translator';
-import DeviceUtils from '../../../utils/DeviceUtils';
-import FetchManager from '../../../utils/FetchManager';
-import CourseManager from '../../../utils/CourseManager';
+import { ErrorAlert } from '../../shared/ui/Alerts';
+import Translator from '../../shared/i18n/Translator';
+import { isConnected } from '../../shared/services/AppCore'
+import { FetchManager } from '../../shared/services/DataService';
+import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../shared/services/AppCore';
 
 // ── COMPOSANT COLLAPSIBLE POUR LA SEMAINE ─────────────
 export class DayWeek extends React.Component {
@@ -195,7 +194,7 @@ export default class ScheduleList extends React.Component {
             let fetchedData = null;
             let cacheDate = null;
 
-            if (await DeviceUtils.isConnected()) {
+            if (await isConnected()) {
                 try {
                     if (mode === 'day') {
                         const dateStr = moment(this.state.target).format('YYYY/MM/DD').replace(/\//g, '-');

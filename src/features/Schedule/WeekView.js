@@ -4,11 +4,11 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import CalendarWeek from '../../../components/CalendarWeek';
-import WeekComponent from '../../../components/Week';
-import style, { tokens } from '../../../Style';
-import Translator from '../../../utils/translator';
-import { AppContext } from '../../../utils/DeviceUtils';
+import CalendarWeek from './CalendarWeek';
+import { WeekComponent } from './ScheduleList'; 
+import style, { tokens } from '../../shared/theme/Theme'; 
+import Translator from '../../shared/i18n/Translator';
+import { AppContext } from '../../shared/services/AppCore';
 
 const isEqualsObject = (obj1, ojb2) => {
 	// objects must be in the same order

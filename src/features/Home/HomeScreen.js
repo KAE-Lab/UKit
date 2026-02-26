@@ -6,11 +6,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Toast from 'react-native-root-toast';
 import PropTypes from 'prop-types';
 
-import Split from '../../../components/ui/Split';
+import { Split } from '../../shared/ui/AppUI';
 import style, { tokens } from '../../shared/theme/Theme';
-import Translator from '../../../utils/translator';
-import DeviceUtils, { AppContext } from '../../../utils/DeviceUtils';
-import FetchManager from '../../../utils/FetchManager';
+import Translator from '../../shared/i18n/Translator';
+import { AppContext, isConnected } from '../../shared/services/AppCore'
+import { FetchManager } from '../../shared/services/DataService'; 
 
 // ── COMPOSANT HEADER DE SECTION ─────────────────────────────────────────
 class SectionListHeader extends React.PureComponent {
@@ -206,7 +206,7 @@ class HomeScreen extends React.Component {
 	fetchList = async () => {
 		let list = null;
 
-		if (await DeviceUtils.isConnected()) {
+		if (await isConnected()) {
 			try {
 				const groupList = await FetchManager.fetchGroupList();
 				if (groupList === null) throw 'network error';

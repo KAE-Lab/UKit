@@ -1,1 +1,0 @@
-export { DayComponent as default } from '../src/features/Schedule/ScheduleList';

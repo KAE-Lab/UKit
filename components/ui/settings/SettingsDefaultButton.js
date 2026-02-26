@@ -1,1 +1,0 @@
-export { SettingsButton as default } from '../../../src/shared/ui/Button';

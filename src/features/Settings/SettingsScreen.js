@@ -3,9 +3,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Linking, ScrollView, Text, View } from 'react-native';
 import * as Calendar from 'expo-calendar';
 
-import { AppContext } from '../../../utils/DeviceUtils';
-import SettingsManager from '../../../utils/SettingsManager';
-import Translator from '../../../utils/translator';
+import { AppContext, SettingsManager } from '../../shared/services/AppCore';
+import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
 import Button from '../../shared/ui/Button';
 

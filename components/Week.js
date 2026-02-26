@@ -1,1 +1,0 @@
-export { WeekComponent as default } from '../src/features/Schedule/ScheduleList';

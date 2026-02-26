@@ -1,1 +1,0 @@
-export { WelcomeButton as default } from '../../src/shared/ui/Button';
