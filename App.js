@@ -16,7 +16,7 @@ import {
 } from '@expo/vector-icons';
 import { Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 
-import RootContainer from './containers/rootContainer';
+import RootContainer from './src/shared/navigation/rootContainer';
 import SettingsManager from './utils/SettingsManager';
 import DataManager from './utils/DataManager';
 
