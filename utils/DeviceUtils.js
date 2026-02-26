@@ -3,10 +3,11 @@ import NetInfo from '@react-native-community/netinfo';
 import { NativeModules, Platform } from 'react-native';
 
 export function deviceLanguage() {
-	return Platform.OS === 'ios'
-		? NativeModules.SettingsManager.settings.AppleLocale ||
-				NativeModules.SettingsManager.settings.AppleLanguages[0]
-		: NativeModules.I18nManager.localeIdentifier;
+	if (Platform.OS === 'ios') {
+		const settings = NativeModules.SettingsManager?.settings;
+		return settings?.AppleLocale || settings?.AppleLanguages[0] || 'en_US';
+	} 
+	return NativeModules.I18nManager?.localeIdentifier || 'en_US';
 }
 
 export function languageFromDevice() {
