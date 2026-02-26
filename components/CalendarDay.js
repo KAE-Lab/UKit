@@ -59,9 +59,6 @@ class CalendarDay extends React.Component {
                     justifyContent: 'center',
                     borderRadius: tokens.radius.md,
                     backgroundColor: bgColor,
-                    // Indicateur sélection
-                    borderBottomWidth: selected ? 3 : 0,
-                    borderBottomColor: selected ? theme.primary : 'transparent',
                 }}>
                 <Text style={{
                     textAlign: 'center',

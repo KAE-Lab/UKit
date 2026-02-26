@@ -51,9 +51,6 @@ class CalendarWeek extends React.Component {
                     justifyContent: 'center',
                     borderRadius: tokens.radius.md,
                     backgroundColor: bgColor,
-                    // Indicateur sélection
-                    borderBottomWidth: selected ? 3 : 0,
-                    borderBottomColor: selected ? theme.primary : 'transparent',
                 }}>
                 {/* Numéro de semaine */}
                 <Text style={{
