@@ -4,6 +4,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { Polygon, Svg } from 'react-native-svg';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Platform } from 'react-native';
 
 import style, { tokens } from '../Style';
 import CourseRow from '../components/CourseRow';
@@ -194,22 +195,16 @@ class Course extends React.Component {
 		}
 
 		return (
-			<SafeAreaView style={{ flex: 1, backgroundColor: theme.greyBackground }}>
+			<SafeAreaView 
+			edges={['bottom', 'left', 'right']}
+			style={{ flex: 1, backgroundColor: theme.greyBackground }}
+			>
 				{/* Card du cours */}
 				<View
 					style={{
-						backgroundColor: theme.cardBackground,
-						marginHorizontal: tokens.space.md,
 						flex: 0,
-						// minHeight: 120,
-						marginTop: tokens.space.md,
-						marginBottom:
-							this.state.locations.length > 0 ? tokens.space.sm : tokens.space.md,
-						borderRadius: tokens.radius.lg,
-						borderWidth: 1,
-						borderColor: theme.border,
-						...tokens.shadow.sm,
-						flexShrink: 0,
+						marginTop: tokens.space.sm,
+						marginBottom: this.state.locations.length > 0 ? tokens.space.sm : tokens.space.md,
 						zIndex: 10,
 					}}>
 					<CourseRow data={this.state.data} theme={theme} readOnly={true} />

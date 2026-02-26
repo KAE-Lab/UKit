@@ -18,7 +18,7 @@ export default (props) => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 paddingHorizontal: tokens.space.md,
-                paddingVertical: tokens.space.sm,
+                paddingVertical: 3,
                 marginHorizontal: tokens.space.sm,
                 marginVertical: tokens.space.xs,
                 borderRadius: tokens.radius.md,

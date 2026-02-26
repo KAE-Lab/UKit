@@ -97,4 +97,5 @@ export default {
 	WELL_DONE: 'Bravo !',
 	WEEK: 'Semaine',
 	WEB_BROWSER: 'Navigateur web',
+	GROUPS_LIST: 'Liste des groupes',
 };

@@ -37,6 +37,7 @@ class SaveGroupButton extends React.Component {
                     flexDirection: 'row',
                     justifyContent: 'center',
                     alignItems: 'center',
+                    marginRight: 16,
                 }}>
                 <View>
                     <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={30} style={{ color: '#FFFFFF', height: 32, width: 32 }} />

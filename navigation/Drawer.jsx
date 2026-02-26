@@ -63,11 +63,16 @@ const CustomDrawerContentComponent = (props) => {
 
                     {/* Mon groupe */}
                     <View style={{ paddingTop: tokens.space.md }}>
-                        <Split
-                            title={Translator.get('MY_GROUP')}
-                            lineColor={theme.border}
-                            color={theme.icon}
-                        />
+                        <Text style={{
+                            color: theme.icon,
+                            fontSize: tokens.fontSize.md,
+                            fontWeight: 'bold',
+                            paddingTop: tokens.space.xs,
+                            paddingBottom: tokens.space.sm,
+                            paddingHorizontal: tokens.space.lg,
+                        }}>
+                            {Translator.get('GROUPS')}
+                        </Text>
                         {AppContextValues.groupName ? (
                             <MyGroupButton
                                 navigate={navigate}
@@ -87,16 +92,9 @@ const CustomDrawerContentComponent = (props) => {
                                 </Text>
                             </View>
                         )}
-                    </View>
-
-                    {/* Emplois du temps */}
-                    <Split
-                        title={Translator.get('GROUPS')}
-                        lineColor={theme.border}
-                        color={theme.icon}
-                    />
-                    <DrawerButton
-                        title={Translator.get('GROUPS')}
+                        {/* Emplois du temps */}
+                        <DrawerButton
+                        title={Translator.get('GROUPS_LIST')}
                         size={22}
                         textSize={tokens.fontSize.sm}
                         icon={'list'}
@@ -104,13 +102,19 @@ const CustomDrawerContentComponent = (props) => {
                         fontColor={theme.font}
                         onPress={props.navigation.closeDrawer}
                     />
-
+                    </View>
+                    
                     {/* Navigation ENT */}
-                    <Split
-                        title={Translator.get('NAVIGATION')}
-                        lineColor={theme.border}
-                        color={theme.icon}
-                    />
+                    <Text style={{
+                            color: theme.icon,
+                            fontSize: tokens.fontSize.md,
+                            fontWeight: 'bold',
+                            paddingTop: tokens.space.lg,
+                            paddingBottom: tokens.space.sm,
+                            paddingHorizontal: tokens.space.lg,
+                        }}>
+                            {Translator.get('NAVIGATION')}
+                        </Text>
                     <DrawerButton
                         title={'ENT'}
                         size={22}
@@ -149,11 +153,16 @@ const CustomDrawerContentComponent = (props) => {
                     />
 
                     {/* Application */}
-                    <Split
-                        title={Translator.get('APPLICATION')}
-                        lineColor={theme.border}
-                        color={theme.icon}
-                    />
+                    <Text style={{
+                            color: theme.icon,
+                            fontSize: tokens.fontSize.md,
+                            fontWeight: 'bold',
+                            paddingTop: tokens.space.lg,
+                            paddingBottom: tokens.space.sm,
+                            paddingHorizontal: tokens.space.lg,
+                        }}>
+                            {Translator.get('APPLICATION')}
+                        </Text>
                     <DrawerButton
                         title={Translator.get('SETTINGS')}
                         size={22}

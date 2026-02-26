@@ -95,4 +95,5 @@ export default {
 	WELL_DONE: 'Well done!',
 	WEEK: 'Week',
 	WEB_BROWSER: 'Web browser',
+	GROUPS_LIST: 'Groups list',
 };

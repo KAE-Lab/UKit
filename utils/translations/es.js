@@ -1,3 +1,5 @@
+import { G } from "react-native-svg";
+
 export default {
 	ABOUT: 'Acerca de la aplicación',
 	ADD_TO_CALENDAR: 'Añadir el evento al calendario',
@@ -97,4 +99,5 @@ export default {
 	WELL_DONE: '¡Muy bien!',
 	WEEK: 'Semana',
 	WEB_BROWSER: 'Navegador web',
+	GROUPS_LIST: 'Lista de grupos',
 };

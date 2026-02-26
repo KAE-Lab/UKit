@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { DrawerActions } from '@react-navigation/native';
 
 import Home from '../pages/Home';
 import Group from '../pages/Group';
@@ -78,26 +79,26 @@ export default function StackNavigator() {
 					<Stack.Screen
 						name="Group"
 						component={Group}
-						options={({ route }) => {
-							const groupName = route.params.name;
-							const title = groupName.replace(/_/g, ' ');
-							const rightButton = (
-								<View
-									style={{
-										justifyContent: 'space-around',
-										paddingRight: 16,
-										flexDirection: 'row',
-									}}>
-									<SaveButton groupName={groupName} />
-								</View>
-							);
+						options={({ navigation, route }) => {
+						const title = treatTitle(route.params.name);
+						const rightButton = <SaveButton groupName={route.params.name} />;
+						
+						const leftButton = (
+							<TouchableOpacity 
+								onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} 
+								style={{ justifyContent: 'space-around', paddingLeft: 10 }}
+							>
+								<MaterialCommunityIcons name="menu" size={32} color="#F0F0F0" />
+							</TouchableOpacity>
+						);
 
-							return NavBarHelper({
-								title,
-								headerRight: () => rightButton,
-								themeName,
-							});
-						}}
+						return NavBarHelper({
+							headerLeft: () => leftButton, 
+							headerRight: () => rightButton,
+							title,
+							themeName,
+						});
+					}}
 					/>
 					<Stack.Screen
 						name="Week"
