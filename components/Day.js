@@ -200,16 +200,34 @@ class Day extends React.Component {
 		return (
 			<View
 				style={[style.schedule.containerView, { flex: 1, backgroundColor: theme.courseBackground }]}>
-				<View style={[style.schedule.titleView, { borderBottomColor: theme.border }]}>
-					<Text style={[style.schedule.titleText, { color: theme.font }]}>
+				{/* ── En-tête de la date ───────────────────────────────── */}
+				<View style={[
+					style.schedule.titleView, 
+					{ 
+						borderBottomColor: theme.border,
+						paddingTop: 10, 
+						paddingBottom: 10,
+						marginBottom: 3, 
+						justifyContent: 'center', 
+						alignItems: 'center' 
+					}
+				]}>
+					<Text style={[
+						style.schedule.titleText, 
+						{ 
+							color: theme.font,
+							textAlign: 'center' 
+						}
+					]}>
 						{this.displayDate()}
 					</Text>
 				</View>
+				
 				{cacheMessage}
 				<View style={{ flex: 1 }}>
 					<View style={style.schedule.contentView}>{content}</View>
 				</View>
-			</View>
+					</View>
 		);
 	}
 }

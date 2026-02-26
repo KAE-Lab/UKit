@@ -198,18 +198,31 @@ class Week extends React.Component {
                 { backgroundColor: theme.courseBackground },
             ]}>
                 {/* ── Header semaine ───────────────────────────────── */}
-                <View style={[
-                    style.schedule.titleView,
-                    { borderBottomColor: theme.border },
-                ]}>
-                    <Text style={[style.schedule.titleText, { color: theme.font }]}>
-                        {this.displayWeek()}
-                    </Text>
-                </View>
+				<View style={[
+					style.schedule.titleView,
+					{ 
+						borderBottomColor: theme.border,
+						paddingTop: 10, 
+						paddingBottom: 10,
+						marginBottom: 3,
+						justifyContent: 'center',
+						alignItems: 'center'
+					},
+				]}>
+					<Text style={[
+						style.schedule.titleText, 
+						{ 
+							color: theme.font,
+							textAlign: 'center' // <-- Centre le texte
+						}
+					]}>
+						{this.displayWeek()}
+					</Text>
+				</View>
 
-                {cacheMessage}
-                <View style={style.schedule.contentView}>{content}</View>
-            </View>
+				{cacheMessage}
+				<View style={style.schedule.contentView}>{content}</View>
+			</View>
         );
     }
 }

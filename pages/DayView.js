@@ -132,7 +132,10 @@ class DayView extends React.Component {
 		const theme = style.Theme[this.context.themeName];
 
 		return (
-            <SafeAreaView style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <SafeAreaView 
+            edges={['bottom', 'left', 'right']} 
+            style={{ flex: 1, backgroundColor: theme.courseBackground }}
+        >
                 <View style={{ flex: 1 }}>
                     <DayComponent
                         key={`${this.state.days[0].dayOfYear()}-${this.context.themeName}`}
