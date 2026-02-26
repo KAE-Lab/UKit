@@ -7,7 +7,7 @@ export default {
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
-	version: '5.0.0',
+	version: '5.1.0',
 	orientation: 'portrait',
 	primaryColor: '#006F9F',
 	icon: './assets/icons/ios.png',
@@ -20,7 +20,7 @@ export default {
 	ios: {
 		icon: './assets/icons/ios.png',
 		supportsTablet: true,
-		bundleIdentifier: 'com.bordeaux.ukit',
+		bundleIdentifier: 'org.kaelab.ukit',
 		config: {
 			googleMapsApiKey: 'AIzaSyB5JDcHP9k40e0ozKCSA9ObjPYusnhETBI',
 			usesNonExemptEncryption: false,
@@ -34,7 +34,7 @@ export default {
 		},
 	},
 	android: {
-		package: 'me.illumye.ukit',
+		package: 'org.kaelab.ukit',
 		config: {
 			googleMaps: {
 				apiKey: 'AIzaSyD8qcNLeWqiyS5KK4hWiCkznZkD3GbhFrI',
