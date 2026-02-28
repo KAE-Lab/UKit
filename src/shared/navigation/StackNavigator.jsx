@@ -13,7 +13,10 @@ import Geolocation from '../../features/Map/MapScreen';
 import Course from '../../features/Schedule/CourseCard';
 import DayView from '../../features/Schedule/DayView';
 import WeekView from '../../features/Schedule/WeekView';
+import CrousScreen from '../../features/Crous/CrousScreen';
+import CrousMenuScreen from '../../features/Crous/CrousMenuScreen';
 
+import style from '../theme/Theme';
 import { BackButton } from '../ui/Button'; 
 import { AppContext, treatTitle } from '../services/AppCore';
 import Translator from '../i18n/Translator';
@@ -85,6 +88,40 @@ export default function StackNavigator() {
 					/>
 					<Stack.Screen name="About" component={About} options={{ title: Translator.get('ABOUT') }} />
 					<Stack.Screen name="Settings" component={Settings} options={{ title: Translator.get('SETTINGS') }} />
+					
+					{/* ── CROUS ── */}
+					<Stack.Screen 
+						name="Crous" 
+						component={CrousScreen} 
+						options={{ title: Translator.get('RESTAURANTS_U') }} 
+					/>
+
+					{/* ── MENU DU CROUS ── */}
+					<Stack.Screen 
+						name="CrousMenu" 
+						component={CrousMenuScreen} 
+						options={({ route, navigation }) => {
+							const title = route.params?.restaurantName ?? Translator.get('MENU');
+							
+							const rightButton = (
+								<TouchableOpacity 
+									onPress={() => {
+										navigation.navigate('Geolocation', { 
+											title: route.params?.restaurantName,
+											location: route.params?.location 
+										});
+									}} 
+									style={{ marginRight: 16 }}
+								>
+									<MaterialCommunityIcons name="map-marker-radius" size={28} color="#FFFFFF" />
+								</TouchableOpacity>
+							);
+
+							const leftButton = <BackButton backAction={navigation.goBack} />;
+							return NavBarHelper({ headerLeft: () => leftButton, headerRight: () => rightButton, title, themeName });
+						}} 
+					/>
+										
 					<Stack.Screen
 						name="WebBrowser"
 						component={WebBrowser}

@@ -1,6 +1,7 @@
 import React from 'react';
-import { ActivityIndicator, View, Text } from 'react-native';
-import WebView from 'react-native-webview';
+import { View, Text, TouchableOpacity, Linking, Platform, ActivityIndicator } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import { Polygon, Svg } from 'react-native-svg';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppContext } from '../../shared/services/AppCore';
@@ -10,13 +11,23 @@ import Translator from '../../shared/i18n/Translator';
 
 const locations = require('../../../assets/locations.json');
 
+const mapStyle = [
+	{ featureType: 'landscape.man_made', elementType: 'geometry.stroke', stylers: [{ color: '#ff0000' }] },
+	{ featureType: 'landscape.man_made', elementType: 'labels', stylers: [{ color: '#ff0000' }] },
+	{ featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#000000' }] },
+	{ featureType: 'poi', elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+];
+
 export default class MapScreen extends React.Component {
     static contextType = AppContext;
 
     constructor(props) {
         super(props);
+        const { location, title } = this.props.route.params;
+        
         this.state = {
-            location: this.props.location,
+            location: location,
+            title: title || 'Destination',
             lat: null,
             lng: null,
         };
@@ -27,61 +38,101 @@ export default class MapScreen extends React.Component {
     }
 
     getLatLng() {
-        let data = this.state.location.split('/');
-        let house = data[0];
-        if (locations.hasOwnProperty(house)) {
-            this.setState({
-                lat: locations[house].lat,
-                lng: locations[house].lng,
-            });
+        const loc = this.state.location;
+        if (!loc) return;
+
+        // Restaurant CROUS 
+        if (typeof loc === 'object' && loc.lat) {
+            this.setState({ lat: loc.lat, lng: loc.lon || loc.lng });
+        } 
+        // Bâtiment de cours
+        else if (typeof loc === 'string') {
+            let house = loc.split('/')[0];
+            if (locations.hasOwnProperty(house)) {
+                this.setState({
+                    lat: locations[house].lat,
+                    lng: locations[house].lng,
+                });
+            }
         }
     }
 
-    render() {
-        const theme = style.Theme[this.context.themeName];
+    onPressGoogleMaps = () => {
+        const { lat, lng } = this.state;
+        const link = URL.MAP + `search/?api=1&query=${lat},${lng}`;
 
-        if (this.state.lat === null || this.state.lng === null) {
+        Linking.canOpenURL(link)
+            .then((supported) => {
+                if (supported) {
+                    return Linking.openURL(link);
+                }
+            })
+            .catch((err) => console.error('An error occurred', err));
+    };
+
+    render() {
+        const themeName = this.context.themeName ?? 'light';
+        const theme = style.Theme[themeName];
+        const { lat, lng, title } = this.state;
+
+        if (lat === null || lng === null) {
             return (
-                <View style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: theme.background,
-                    padding: tokens.space.xl,
-                }}>
-                    <MaterialCommunityIcons
-                        name="map-marker-off-outline"
-                        size={48}
-                        color={theme.fontSecondary}
-                        style={{ opacity: 0.4, marginBottom: tokens.space.md }}
-                    />
-                    <Text style={{
-                        fontSize: tokens.fontSize.md,
-                        fontWeight: tokens.fontWeight.medium,
-                        color: theme.fontSecondary,
-                        textAlign: 'center',
-                    }}>
-                        {Translator.get('LOCATION_NOT_FOUND')}
-                    </Text>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }}>
+                    <ActivityIndicator size="large" color={theme.primary} />
                 </View>
             );
         }
 
         return (
             <View style={{ flex: 1, backgroundColor: theme.background }}>
-                <View style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    justifyContent: 'center', alignItems: 'center',
-                    backgroundColor: theme.background, zIndex: 0,
-                }}>
-                    <ActivityIndicator size="large" color={theme.primary} />
+                <MapView
+                    style={{ flex: 1 }}
+                    provider={Platform.OS === 'android' ? MapView.PROVIDER_GOOGLE : undefined}
+                    initialRegion={{
+                        latitude: lat,
+                        longitude: lng,
+                        latitudeDelta: 0.005,
+                        longitudeDelta: 0.005,
+                    }}
+                    customMapStyle={mapStyle}
+                    showsMyLocationButton={true}
+                    loadingEnabled={true}
+                    showsCompass={true}>
+                    
+                    {/* Marqueur */}
+                    <Marker coordinate={{ latitude: lat, longitude: lng }}>
+                        <View style={{ flexDirection: 'column', alignItems: 'center', paddingBottom: tokens.space.sm }}>
+                            <View style={{
+                                backgroundColor: theme.primary,
+                                paddingHorizontal: tokens.space.sm,
+                                paddingVertical: tokens.space.xs,
+                                borderRadius: tokens.radius.sm,
+                                ...tokens.shadow.md,
+                            }}>
+                                <Text style={{ color: '#FFFFFF', fontWeight: tokens.fontWeight.bold, fontSize: tokens.fontSize.sm }}>
+                                    {title}
+                                </Text>
+                            </View>
+                            <Svg height={10} width={12}>
+                                <Polygon points="0,0 6,10 12,0" fill={theme.primary} />
+                            </Svg>
+                        </View>
+                    </Marker>
+                </MapView>
+
+                {/* Bouton Google Maps */}
+                <View style={{ position: 'absolute', top: tokens.space.sm, right: tokens.space.sm }}>
+                    <TouchableOpacity
+                        onPress={this.onPressGoogleMaps}
+                        style={{
+                            backgroundColor: theme.cardBackground,
+                            borderRadius: tokens.radius.md,
+                            padding: tokens.space.sm,
+                            ...tokens.shadow.md,
+                        }}>
+                        <MaterialCommunityIcons name="google-maps" size={32} color="#4285F4" />
+                    </TouchableOpacity>
                 </View>
-                <WebView
-                    style={{ flex: 1, zIndex: 1 }}
-                    source={{ uri: `${URL.MAP}?q=${this.state.lat},${this.state.lng}` }}
-                    startInLoadingState={true}
-                    renderLoading={() => <View />}
-                />
             </View>
         );
     }

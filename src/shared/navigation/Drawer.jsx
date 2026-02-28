@@ -100,6 +100,20 @@ const CustomDrawerContentComponent = (props) => {
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'apogee' } })}
                     />
 
+                    {/* ── CROUS ── */}
+                    <Text style={{
+                            color: theme.icon, fontSize: tokens.fontSize.md, fontWeight: 'bold',
+                            paddingTop: tokens.space.lg, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
+                        }}>
+                            CROUS
+                    </Text>
+                    <Button
+                        title={Translator.get('RESTAURANTS_U')}
+                        size={22} textSize={tokens.fontSize.sm} icon={'restaurant'} 
+                        color={theme.icon} fontColor={theme.font}
+                        onPress={() => props.navigation.navigate('Stack', { screen: 'Crous' })}
+                    />
+
                     {/* Application */}
                     <Text style={{
                             color: theme.icon, fontSize: tokens.fontSize.md, fontWeight: 'bold',

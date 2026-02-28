@@ -31,6 +31,7 @@ export default {
 			NSRemindersUsageDescription:
 				'This app needs access to the calendar in order to create events from your schedule',
 			UIBackgroundModes: ['fetch'],
+			NSLocationWhenInUseUsageDescription: "This app needs your location to show the nearest CROUS restaurants.",
 		},
 	},
 	android: {
@@ -44,7 +45,7 @@ export default {
 			foregroundImage: './assets/icons/android_foreground.png',
 			backgroundImage: './assets/icons/android_background.png',
 		},
-		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR'],
+		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
 		versionCode: 63,
 	},
 	androidStatusBar: {
