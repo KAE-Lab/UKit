@@ -67,7 +67,7 @@
     "@commitlint/cli": "^20.4.2",
     "@commitlint/config-conventional": "^20.4.2",
     "babel-preset-expo": "^54.0.10",
-    "commitizen": "^4.3.1",
+    "commitizen": "^4.2.4",
     "cz-conventional-changelog": "^3.3.0",
     "husky": "^9.1.7",
     "prettier": "^1.14.2"
