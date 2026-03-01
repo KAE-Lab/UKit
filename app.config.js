@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { version } from 'react';
 
 export default {
 	name: 'Ukit',
@@ -7,7 +8,8 @@ export default {
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
-	version: '5.2.1',
+	version: '5.3.0',
+	versionCode: 530,
 	orientation: 'portrait',
 	primaryColor: '#006F9F',
 	icon: './assets/icons/ios.png',
