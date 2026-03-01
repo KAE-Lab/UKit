@@ -56,16 +56,22 @@ jobs:
           URL=$(eas build:list --platform android --profile preview --status finished --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
           echo "Téléchargement de l'APK depuis : $URL"
           curl -L "$URL" -o ukit-release.apk
+    
+      - name: Determine Release Tag
+        id: get_tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "RELEASE_TAG=${{ github.event.inputs.target_tag }}" >> $GITHUB_ENV
+          else
+            echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
 
       - name: 📥 Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: ./ukit-release.apk
-          tag_name: ${{ github.ref_name != '' && github.ref_name || github.event.inputs.target_tag }}
-          name: Release ${{ github.ref_name != '' && github.ref_name || github.event.inputs.target_tag }}
-          body: |
-            ## Nouvelle version ${{ github.ref_name }}
-            Compilation automatique effectuée via EAS Build (Cloud).
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: Release ${{ env.RELEASE_TAG }}
           draft: false
           prerelease: false
           generate_release_notes: true
