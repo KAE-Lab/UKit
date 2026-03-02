@@ -93,6 +93,18 @@ export default function WebBrowserScreen({ navigation, route }) {
 				startInLoadingState={true}
 				renderLoading={renderLoading}
 				injectedJavaScript={javascript}
+				originWhitelist={['*']}
+				onShouldStartLoadWithRequest={(event) => {
+					if (event.url.startsWith('http://') || event.url.startsWith('https://') || event.url === 'about:blank') {
+						return true;
+					}
+
+					Linking.canOpenURL(event.url).then((supported) => {
+						if (supported) Linking.openURL(event.url);
+					}).catch(() => { });
+
+					return false;
+				}}
 				onNavigationStateChange={(e) => {
 					if (!e.loading) {
 						setUrl(e.url);

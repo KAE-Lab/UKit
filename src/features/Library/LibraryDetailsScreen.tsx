@@ -1,5 +1,3 @@
-// src/features/Library/LibraryDetailsScreen.tsx
-
 import React, { useEffect, useState, useContext, useRef } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,7 +7,6 @@ import LibraryService, { TimetableEntry } from './LibraryService';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
-import Button from '../../shared/ui/Button'
 
 export default function LibraryDetailsScreen({ route, navigation }: any) {
     const { library, affluence } = route.params;
@@ -226,7 +223,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                 <TouchableOpacity 
                     onPress={() => {
                         navigation.navigate('WebBrowser', { 
-                            href: `https://affluences.com/sites/${library.slug}/reservation`, // <-- Remplacer 'url' par 'href' ici
+                            href: `https://affluences.com/sites/${library.slug}/reservation`,
                             title: `Réservation - ${library.name}`
                         });
                     }}

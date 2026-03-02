@@ -1,7 +1,3 @@
-// src/features/Library/LibraryService.ts
-
-import { PanResponder } from "react-native";
-
 export interface LibraryInfo {
     id: string;
     name: string;
