@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
@@ -7,6 +7,7 @@ import * as Location from 'expo-location';
 import { CrousService, CrousRestaurant } from './CrousService';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
+import { getCrousImage } from './CrousImages';
 
 export default function CrousScreen({ navigation }: any) {
     const AppContextValues = useContext(AppContext) as any;
@@ -74,82 +75,103 @@ export default function CrousScreen({ navigation }: any) {
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingVertical: tokens.space.sm }}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity 
-                            onPress={() => navigation.navigate('CrousMenu', { restaurantId: item.id, restaurantName: item.title, location: { lat: item.lat, lon: item.lon } })}
-                            style={[
-                                style.schedule.course.root, 
-                                { 
-                                    backgroundColor: theme.eventBackground,
+                    renderItem={({ item }) => {
+                        const imageSource = getCrousImage(item.title);
+
+                        return (
+                            <TouchableOpacity 
+                                activeOpacity={0.9}
+                                onPress={() => navigation.navigate('CrousMenu', { 
+                                    restaurantId: item.id, 
+                                    restaurantName: item.title, 
+                                    location: { lat: item.lat, lon: item.lon } 
+                                })}
+                                style={{
+                                    backgroundColor: theme.cardBackground,
+                                    borderRadius: tokens.radius.xl, 
+                                    marginBottom: tokens.space.lg, 
                                     marginHorizontal: tokens.space.md,
-                                    marginVertical: tokens.space.xs,
-                                    borderRadius: tokens.radius.lg,
-                                    borderLeftWidth: 4,
-                                    borderLeftColor: theme.accent ?? theme.primary,
-                                    borderWidth: 1,
-                                    borderColor: theme.eventBorder,
-                                    overflow: 'hidden',
-                                    ...tokens.shadow.sm,
-                                }
-                            ] as any}
-                        >
-                            <View style={style.schedule.course.row as any}>
-                                <View style={[style.schedule.course.contentBlock, { padding: tokens.space.sm, paddingLeft: tokens.space.md }] as any}>
+                                    ...tokens.shadow.md, 
+                                    overflow: 'hidden', 
+                                }}
+                            >
+                                {/* IMAGE */}
+                                <Image 
+                                    source={imageSource}
+                                    style={{
+                                        width: '100%',
+                                        height: 180, 
+                                        resizeMode: 'cover',
+                                        backgroundColor: theme.greyBackground 
+                                    }}
+                                />
+
+                                {/* LES INFOS */}
+                                <View style={{ padding: tokens.space.md }}>
                                     
-                                    {/* En-tête : Titre et icône */}
-                                    <View style={style.schedule.course.contentType as any}>
-                                        <Text style={[style.schedule.course.title, { color: theme.font, flex: 1 }] as any}>
-                                            {item.title}
-                                        </Text>
-                                        <MaterialCommunityIcons 
-                                            name="silverware-fork-knife" 
-                                            size={16} 
-                                            color={theme.accent ?? theme.primary} 
-                                        />
-                                    </View>
+                                    {/* Titre */}
+                                    <Text style={{ 
+                                        fontSize: tokens.fontSize.lg, 
+                                        fontWeight: tokens.fontWeight.bold as any, 
+                                        color: theme.font,
+                                        marginBottom: tokens.space.xs
+                                    }}>
+                                        {item.title}
+                                    </Text>
                                     
-                                    {/* Ville */}
-                                    <View style={[style.schedule.course.line, { alignItems: 'center' }] as any}>
-                                        <MaterialIcons
-                                            name="room"
-                                            size={14}
-                                            color={theme.fontSecondary}
-                                            style={{ marginRight: tokens.space.xs }}
-                                        />
-                                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.medium as any }}>
+                                    {/* Ligne : Ville + Badge de Distance */}
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
+                                        <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
+                                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
                                             {item.short_desc}
                                         </Text>
+
+                                        {/* Badge de Distance */}
+                                        {item.distance !== undefined && (
+                                            <View style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                backgroundColor: `${theme.primary}15`, 
+                                                paddingHorizontal: tokens.space.sm,
+                                                paddingVertical: 4,
+                                                borderRadius: tokens.radius.pill,
+                                            }}>
+                                                <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
+                                                <Text style={{
+                                                    fontSize: tokens.fontSize.sm,
+                                                    fontWeight: tokens.fontWeight.bold as any,
+                                                    color: theme.primary,
+                                                    marginLeft: 4
+                                                }}>
+                                                    {item.distance < 1 
+                                                        ? `${Math.round(item.distance * 1000)} m` 
+                                                        : `${item.distance.toFixed(1)} km`}
+                                                </Text>
+                                            </View>
+                                        )}
                                     </View>
 
-                                    {/* Horaires */}
-                                    <View style={[style.schedule.course.line, { alignItems: 'center' }] as any}>
-                                        <MaterialIcons
-                                            name="date-range"
-                                            size={14}
-                                            color={theme.fontSecondary}
-                                            style={{ marginRight: tokens.space.xs }}
-                                        />
-                                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.medium as any }}>
+                                    {/* Ligne : Horaires */}
+                                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                                        <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
+                                        <Text 
+                                            style={{ 
+                                                fontSize: tokens.fontSize.sm, 
+                                                color: theme.fontSecondary, 
+                                                marginLeft: 6, 
+                                                flex: 1, 
+                                                lineHeight: 20 
+                                            }}
+                                            numberOfLines={2} 
+                                        >
                                             {item.opening}
                                         </Text>
                                     </View>
 
-                                    {/* Distance */}
-                                    {item.distance !== undefined && (
-                                        <View style={[style.schedule.course.line as any, { alignItems: 'center' }]}>
-                                            <MaterialIcons name="directions-walk" size={14} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.xs }} />
-                                            <Text style={{ fontSize: tokens.fontSize.xs, color: theme.accent ?? theme.primary, fontWeight: tokens.fontWeight.bold as any }}>
-                                                {item.distance < 1 
-                                                    ? `${Math.round(item.distance * 1000)} m` 
-                                                    : `${item.distance.toFixed(1)} km`}
-                                            </Text>
-                                        </View>
-                                    )}
-
                                 </View>
-                            </View>
-                        </TouchableOpacity>
-                    )}
+                            </TouchableOpacity>
+                        );
+                    }}
                 />
             </View>
         </SafeAreaView>

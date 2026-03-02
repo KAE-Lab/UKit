@@ -77,9 +77,10 @@ class CrousServiceManager {
                     opening: Array.isArray(resto.horaires) ? resto.horaires.join(' | ') : 'Horaires non spécifiés',
                     distance: distance
                 };
-            });
-
-            // Tri par distance (plus proche en premier)
+            })
+            
+            // Tri par distance (du plus proche au plus loin et max 10km)
+            .filter((resto: CrousRestaurant) => resto.distance === undefined || resto.distance <= 10);
             if (userLat !== undefined && userLon !== undefined) {
                 restaurants.sort((a, b) => (a.distance || 0) - (b.distance || 0));
             }
