@@ -1,7 +1,5 @@
 import { Platform } from 'react-native';
 
-// ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
-
 const tokens = {
     space: {
         xs: 4,
@@ -36,39 +34,32 @@ const tokens = {
     shadow: {
         sm: {
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.06,
-            shadowRadius: 4,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.04,
+            shadowRadius: 6,
             elevation: 2,
         },
         md: {
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.10,
-            shadowRadius: 12,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.06,
+            shadowRadius: 14,
             elevation: 5,
         },
         lg: {
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.14,
-            shadowRadius: 20,
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.08,
+            shadowRadius: 24,
             elevation: 10,
         },
     },
 };
 
-// ─── COULEURS DE BASE ─────────────────────────────────────────────────────────
-
 const colors = {
-    // Marque
     brand:      '#009ee0',
     brandDark:  '#007ab8',
     brandLight: '#33b5e8',
-
-    // Neutres
-    // white: '#FFFFFF',
-    // black: '#000000',
     gray50:  '#F8F9FA',
     gray100: '#F1F3F5',
     gray200: '#E9ECEF',
@@ -79,8 +70,6 @@ const colors = {
     gray700: '#495057',
     gray800: '#343A40',
     gray900: '#212529',
-
-    // Compatibilité cours
     gray:        '#454545',
     lightblue:   '#40C4FF',
     blue:        '#006F9F',
@@ -93,8 +82,6 @@ const hintColors = {
     green: '#55da59',
     gray: '#9499a1AA',
 };
-
-// ─── PALETTES MATERIAL (sections de liste) ────────────────────────────────────
 
 const colors200 = {
     red:        '#EF9A9A',
@@ -140,64 +127,51 @@ const colors50 = {
     blueGrey:   '#ECEFF1',
 };
 
-// ─── THÈME GLOBAL ─────────────────────────────────────────────────────────────
-
 const AppTheme = {
-    primary:   '#009ee0',
-    secondary: '#0098c5',
+    primary:   '#007AFF',
+    secondary: '#34C759',
 };
-
-// ─── THÈMES CLAIR / SOMBRE ────────────────────────────────────────────────────
 
 const Theme = {
     light: {
-        primary:    '#009ee0',
-        primarySoft: '#E8F6FD',
-
-        secondary:  '#0098c5',
-        selection:  '#F0F4F8',
-
-        accentFont:    '#C62828',
-        font:          '#1A1D23',
-        fontSecondary: '#6C757D',
-        lightFont:     '#F8F9FA',
-
-        link:   '#1565C0',
-        icon:   '#4C5464',
-        border: '#E0E4EA',
-
-        background:              '#F5F7FA',
-        cardBackground:          '#FFFFFF',
-        greyBackground:          '#F0F4F8',
-        collapsableBackground:   '#00000008',
-        field:                   '#FFFFFF',
-        fieldBorder:             '#DEE2E6',
-
-        courseBackground: '#F5F7FA',
+        primary:       '#007AFF',
+        primarySoft:   '#007AFF15',
+        secondary:     '#5856D6',
+        selection:     '#F2F2F7',
+        accentFont:    '#FF3B30',
+        font:          '#1C1C1E',
+        fontSecondary: '#8E8E93',
+        lightFont:     '#FFFFFF',
+        link:          '#007AFF',
+        icon:          '#1C1C1E',
+        border:        '#E5E5EA',
+        background:            '#F2F2F7',
+        cardBackground:        '#FFFFFF',
+        greyBackground:        '#E5E5EA',
+        collapsableBackground: '#00000008',
+        field:                 '#F2F2F7',
+        fieldBorder:           '#E5E5EA',
+        courseBackground: '#F2F2F7',
         eventBackground:  '#FFFFFF',
-        eventBorder:      '#E0E4EA',
-
-        sections:       ['#E8F6FD', '#E3F5F9', '#E8F5E9', '#FFF8E1', '#FCE4EC', '#EDE7F6'],
-        sectionsHeaders: ['#009ee0', '#00ACC1', '#43A047', '#F9A825', '#E91E63', '#7E57C2'],
-        
+        eventBorder:      '#E5E5EA',
+        sections:       ['#007AFF10', '#34C75910', '#FF950010', '#FF3B3010', '#5856D610', '#5AC8FA10'],
+        sectionsHeaders: ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#5856D6', '#5AC8FA'],
         calendar: {
-            selection: '#009ee0',
-            currentDay: '#e8f6fd',
-            sunday: '#fff3f3'
+            selection: '#007AFF',
+            currentDay: '#007AFF15',
+            sunday: '#FF3B3010'
         },
-
-        // ── Settings ─────────────────────────────────────────────────
         settings: {
             switchTrack: {
-                false: '#DEE2E6',
-                true:  '#009ee0',
+                false: '#E5E5EA',
+                true:  '#007AFF',
             },
             background: {
                 flex: 1,
-                backgroundColor: '#F5F7FA',
+                backgroundColor: '#F2F2F7',
             },
             separationText: {
-                color:      '#6C757D',
+                color:      '#8E8E93',
                 fontSize:   tokens.fontSize.sm,
                 fontWeight: tokens.fontWeight.semibold,
                 marginTop:  tokens.space.lg,
@@ -217,26 +191,26 @@ const Theme = {
             },
             buttonMainText: {
                 fontWeight:      tokens.fontWeight.medium,
-                color:           '#1A1D23',
+                color:           '#1C1C1E',
                 fontSize:        tokens.fontSize.md,
                 marginHorizontal: tokens.space.md,
                 alignSelf:       'center',
             },
             buttonSecondaryText: {
                 fontWeight: tokens.fontWeight.regular,
-                color:      '#6C757D',
+                color:      '#8E8E93',
                 fontSize:   tokens.fontSize.md,
                 marginLeft: 'auto',
                 alignSelf:  'center',
             },
             leftIcon: {
                 marginLeft: tokens.space.md,
-                color:      '#009ee0',
+                color:      '#007AFF',
                 alignSelf:  'center',
             },
             rightIcon: {
                 alignSelf:       'center',
-                color:           '#ADB5BD',
+                color:           '#C7C7CC',
                 marginHorizontal: tokens.space.xs,
             },
             popup: {
@@ -255,7 +229,7 @@ const Theme = {
                         marginTop:      tokens.space.sm,
                     },
                     button: {
-                        backgroundColor: '#E8F6FD',
+                        backgroundColor: '#007AFF15',
                         padding:         tokens.space.sm,
                         borderRadius:    tokens.radius.lg,
                         margin:          tokens.space.sm,
@@ -265,9 +239,9 @@ const Theme = {
                     buttonText: {
                         fontSize:   tokens.fontSize.lg,
                         fontWeight: tokens.fontWeight.bold,
-                        color:      '#009ee0',
+                        color:      '#007AFF',
                     },
-                    iconColor: '#009ee0',
+                    iconColor: '#007AFF',
                     footer: {
                         marginTop:      tokens.space.md,
                         justifyContent: 'flex-end',
@@ -297,12 +271,12 @@ const Theme = {
                 textHeader: {
                     fontWeight: tokens.fontWeight.bold,
                     fontSize:   tokens.fontSize.lg,
-                    color:      '#1A1D23',
+                    color:      '#1C1C1E',
                 },
                 textDescription: {
                     marginVertical: tokens.space.sm,
                     fontSize:       tokens.fontSize.md,
-                    color:          '#6C757D',
+                    color:          '#8E8E93',
                 },
                 buttonContainer: {
                     flexDirection:  'row',
@@ -311,7 +285,7 @@ const Theme = {
                 },
                 buttonSecondary: {
                     flex:            1,
-                    backgroundColor: '#F0F4F8',
+                    backgroundColor: '#F2F2F7',
                     borderRadius:    tokens.radius.md,
                     paddingVertical: tokens.space.sm,
                     marginHorizontal: tokens.space.xs,
@@ -319,7 +293,7 @@ const Theme = {
                 },
                 buttonMain: {
                     flex:            1,
-                    backgroundColor: '#009ee0',
+                    backgroundColor: '#007AFF',
                     borderRadius:    tokens.radius.md,
                     paddingVertical: tokens.space.sm,
                     marginHorizontal: tokens.space.xs,
@@ -327,25 +301,25 @@ const Theme = {
                 },
                 buttonTextSecondary: {
                     fontSize: tokens.fontSize.lg,
-                    color:    '#6C757D',
+                    color:    '#8E8E93',
                 },
                 buttonTextMain: {
                     fontSize: tokens.fontSize.lg,
                     color:    '#FFFFFF',
                 },
                 closeIcon: {
-                    color: '#ADB5BD',
+                    color: '#C7C7CC',
                 },
                 radioContainer: {
                     flexDirection:  'row',
                     alignContent:   'center',
                     marginTop:      tokens.space.md,
                 },
-                radioIconColor: '#009ee0',
+                radioIconColor: '#007AFF',
                 radioText: {
                     fontSize:  tokens.fontSize.lg,
                     marginLeft: tokens.space.md,
-                    color:     '#1A1D23',
+                    color:     '#1C1C1E',
                 },
                 filterListContainer: {
                     flex:           1,
@@ -361,84 +335,71 @@ const Theme = {
                 },
                 textInput: {
                     borderWidth:  1.5,
-                    borderColor:  '#DEE2E6',
+                    borderColor:  '#E5E5EA',
                     borderRadius: tokens.radius.md,
                     padding:      tokens.space.sm,
                     paddingVertical: Platform.OS === 'ios' ? tokens.space.sm : tokens.space.xs,
                     flex:         1,
                     marginRight:  tokens.space.xs,
-                    color:        '#1A1D23',
+                    color:        '#1C1C1E',
                     backgroundColor: '#F8F9FA',
                 },
-                textInputIconColor:        '#009ee0',
-                textInputPlaceholderColor: '#ADB5BD',
+                textInputIconColor:        '#007AFF',
+                textInputPlaceholderColor: '#C7C7CC',
             },
         },
-
-        // ── Couleurs des cours ────────────────────────────────────────
         courses: {
-            '#FFFF00': '#c0ca33',
-            '#00FFFF': '#00acc1',
-            '#800040': '#546e7a',
-            '#808000': '#546e7a',
-            '#800000': '#e53935',
-            '#8000FF': '#fb8c00',
-            '#00FF00': '#43a047',
-            '#400080': '#5c6bc0',
-            default:   '#5c6bc0',
+            '#FFFF00': '#FFCC00',
+            '#00FFFF': '#5AC8FA',
+            '#800040': '#5856D6',
+            '#808000': '#A2845E',
+            '#800000': '#FF3B30',
+            '#8000FF': '#FF9500',
+            '#00FF00': '#34C759',
+            '#400080': '#007AFF',
+            default:   '#007AFF',
         },
     },
-
     dark: {
-        primary:    '#1A0D1B',
-        primarySoft: '#2D1A2E',
-
-        accent: '#C48FE0',
-
-        secondary:  '#200F21',
-        selection:  '#3D2540',
-
-        accentFont:    '#EF9A9A',
-        font:          '#F0EAF1',
-        fontSecondary: '#B1A5B2',
-        lightFont:     '#F0EAF1',
-
-        link:   '#82B1FF',
-        icon:   '#C48FE0',
-        border: '#5A3A5C',
-
-        background:            '#120912',
-        cardBackground:        '#2D1A2E',
-        greyBackground:        '#1A0D1B',
+        primary:       '#5E5CE6',
+        primarySoft:   '#0A84FF20',
+        accent:        '#5E5CE6',
+        secondary:     '#30D158',
+        selection:     '#2C2C2E',
+        accentFont:    '#FF453A',
+        font:          '#FFFFFF',
+        fontSecondary: '#8E8E93',
+        lightFont:     '#FFFFFF',
+        link:          '#64D2FF',
+        icon:          '#FFFFFF',
+        border:        '#38383A',
+        background:            '#000000',
+        cardBackground:        '#1C1C1E',
+        greyBackground:        '#121212',
         collapsableBackground: '#FFFFFF0A',
-        field:                 '#3D2540',
-        fieldBorder:           '#5A3A5C',
-
-        courseBackground: '#2D1A2E',
-        eventBackground:  '#3D2540',
-        eventBorder:      '#5A3A5C',
-
-        sections:        ['#1A2744', '#1A2E30', '#1A2E1B', '#2E2710', '#2E1520', '#21192E'],
-        sectionsHeaders: ['#1565C0', '#00838F', '#2E7D32', '#F57F17', '#880E4F', '#4527A0'],
-        
+        field:                 '#2C2C2E',
+        fieldBorder:           '#38383A',
+        courseBackground: '#000000',
+        eventBackground:  '#1C1C1E',
+        eventBorder:      '#2C2C2E',
+        sections:        ['#0A84FF15', '#30D15815', '#FF9F0A15', '#FF453A15', '#5E5CE615', '#64D2FF15'],
+        sectionsHeaders: ['#5E5CE6', '#30D158', '#FF9F0A', '#FF453A', '#5E5CE6', '#64D2FF'],
         calendar: {
-            selection: '#7b3f9e',
-            currentDay: '#2d1a2e',
-            sunday: '#2e1520',
+            selection: '#5E5CE6',
+            currentDay: '#1C1C1E',
+            sunday: '#FF453A15',
         },
-
-        // ── Settings ─────────────────────────────────────────────────
         settings: {
             switchTrack: {
-                false: '#5A3A5C',
-                true:  '#7B3F9E',
+                false: '#38383A',
+                true:  '#5E5CE6',
             },
             background: {
                 flex: 1,
-                backgroundColor: '#120912',
+                backgroundColor: '#000000',
             },
             separationText: {
-                color:      '#B1A5B2',
+                color:      '#8E8E93',
                 fontSize:   tokens.fontSize.sm,
                 fontWeight: tokens.fontWeight.semibold,
                 marginTop:  tokens.space.lg,
@@ -447,7 +408,7 @@ const Theme = {
                 textTransform: 'uppercase',
             },
             button: {
-                backgroundColor: '#2D1A2E',
+                backgroundColor: '#1C1C1E',
                 borderRadius:    tokens.radius.lg,
                 marginHorizontal: tokens.space.md,
                 marginTop:       tokens.space.sm,
@@ -458,26 +419,26 @@ const Theme = {
             },
             buttonMainText: {
                 fontWeight:      tokens.fontWeight.medium,
-                color:           '#F0EAF1',
+                color:           '#FFFFFF',
                 fontSize:        tokens.fontSize.md,
                 marginHorizontal: tokens.space.md,
                 alignSelf:       'center',
             },
             buttonSecondaryText: {
                 fontWeight: tokens.fontWeight.regular,
-                color:      '#B1A5B2',
+                color:      '#8E8E93',
                 fontSize:   tokens.fontSize.md,
                 marginLeft: 'auto',
                 alignSelf:  'center',
             },
             leftIcon: {
                 marginLeft: tokens.space.md,
-                color:      '#C48FE0',
+                color:      '#5E5CE6',
                 alignSelf:  'center',
             },
             rightIcon: {
                 alignSelf:        'center',
-                color:            '#B1A5B2',
+                color:            '#8E8E93',
                 marginHorizontal: tokens.space.xs,
             },
             popup: {
@@ -485,7 +446,7 @@ const Theme = {
                     container: {
                         flex:            1,
                         flexGrow:        1,
-                        backgroundColor: '#2D1A2E',
+                        backgroundColor: '#1C1C1E',
                         padding:         tokens.space.md,
                         justifyContent:  'space-between',
                     },
@@ -496,7 +457,7 @@ const Theme = {
                         marginTop:      tokens.space.sm,
                     },
                     button: {
-                        backgroundColor: '#3D2540',
+                        backgroundColor: '#2C2C2E',
                         padding:         tokens.space.sm,
                         borderRadius:    tokens.radius.lg,
                         margin:          tokens.space.sm,
@@ -506,9 +467,9 @@ const Theme = {
                     buttonText: {
                         fontSize:   tokens.fontSize.lg,
                         fontWeight: tokens.fontWeight.bold,
-                        color:      '#C48FE0',
+                        color:      '#5E5CE6',
                     },
-                    iconColor: '#C48FE0',
+                    iconColor: '#5E5CE6',
                     footer: {
                         marginTop:      tokens.space.md,
                         justifyContent: 'flex-end',
@@ -521,7 +482,7 @@ const Theme = {
                     backgroundColor: '#00000080',
                 },
                 container: {
-                    backgroundColor: '#2D1A2E',
+                    backgroundColor: '#1C1C1E',
                     borderRadius:    tokens.radius.xl,
                     padding:         tokens.space.md,
                     marginHorizontal: tokens.space.md,
@@ -538,12 +499,12 @@ const Theme = {
                 textHeader: {
                     fontWeight: tokens.fontWeight.bold,
                     fontSize:   tokens.fontSize.lg,
-                    color:      '#F0EAF1',
+                    color:      '#FFFFFF',
                 },
                 textDescription: {
                     marginVertical: tokens.space.sm,
                     fontSize:       tokens.fontSize.md,
-                    color:          '#B1A5B2',
+                    color:          '#8E8E93',
                 },
                 buttonContainer: {
                     flexDirection:  'row',
@@ -552,7 +513,7 @@ const Theme = {
                 },
                 buttonSecondary: {
                     flex:            1,
-                    backgroundColor: '#3D2540',
+                    backgroundColor: '#2C2C2E',
                     borderRadius:    tokens.radius.md,
                     paddingVertical: tokens.space.sm,
                     marginHorizontal: tokens.space.xs,
@@ -560,7 +521,7 @@ const Theme = {
                 },
                 buttonMain: {
                     flex:            1,
-                    backgroundColor: '#7B3F9E',
+                    backgroundColor: '#5E5CE6',
                     borderRadius:    tokens.radius.md,
                     paddingVertical: tokens.space.sm,
                     marginHorizontal: tokens.space.xs,
@@ -568,25 +529,25 @@ const Theme = {
                 },
                 buttonTextSecondary: {
                     fontSize: tokens.fontSize.lg,
-                    color:    '#B1A5B2',
+                    color:    '#8E8E93',
                 },
                 buttonTextMain: {
                     fontSize: tokens.fontSize.lg,
-                    color:    '#F0EAF1',
+                    color:    '#FFFFFF',
                 },
                 closeIcon: {
-                    color: '#B1A5B2',
+                    color: '#8E8E93',
                 },
                 radioContainer: {
                     flexDirection: 'row',
                     alignContent:  'center',
                     marginTop:     tokens.space.md,
                 },
-                radioIconColor: '#C48FE0',
+                radioIconColor: '#5E5CE6',
                 radioText: {
                     fontSize:   tokens.fontSize.lg,
                     marginLeft: tokens.space.md,
-                    color:      '#F0EAF1',
+                    color:      '#FFFFFF',
                 },
                 filterListContainer: {
                     flex:           1,
@@ -602,38 +563,35 @@ const Theme = {
                 },
                 textInput: {
                     borderWidth:  1.5,
-                    borderColor:  '#5A3A5C',
+                    borderColor:  '#38383A',
                     borderRadius: tokens.radius.md,
                     padding:      tokens.space.sm,
                     paddingVertical: Platform.OS === 'ios' ? tokens.space.sm : tokens.space.xs,
                     flex:         1,
                     marginRight:  tokens.space.xs,
-                    color:        '#F0EAF1',
-                    backgroundColor: '#3D2540',
+                    color:        '#FFFFFF',
+                    backgroundColor: '#2C2C2E',
                 },
-                textInputIconColor:        '#C48FE0',
-                textInputPlaceholderColor: '#5A3A5C',
+                textInputIconColor:        '#5E5CE6',
+                textInputPlaceholderColor: '#8E8E93',
             },
         },
-
-        // ── Couleurs des cours ────────────────────────────────────────
         courses: {
-            '#FFFF00': '#7c8500',
-            '#00FFFF': '#006064',
-            '#800040': '#37474f',
-            '#808000': '#37474f',
-            '#800000': '#b71c1c',
-            '#8000FF': '#e65100',
-            '#00FF00': '#1b5e20',
-            '#400080': '#283593',
-            default:   '#283593',
+            '#FFFF00': '#FFD60A',
+            '#00FFFF': '#64D2FF',
+            '#800040': '#BF5AF2',
+            '#808000': '#8E8E93',
+            '#800000': '#FF453A',
+            '#8000FF': '#FF9F0A',
+            '#00FF00': '#30D158',
+            '#400080': '#5E5CE6',
+            default:   '#5E5CE6',
         },
     },
 };
 
 const StyleWelcome = {
     light: {
-        // ── Bouton principal ──────────────────────────────────────────
         buttonContainer: {
             backgroundColor: '#FFFFFF',
             borderRadius: tokens.radius.pill,
@@ -646,12 +604,10 @@ const StyleWelcome = {
         buttonText: {
             fontFamily: 'Montserrat_600SemiBold',
             fontSize: tokens.fontSize.md,
-            color: '#009ee0',
+            color: '#5E5CE6',
             alignSelf: 'center',
             letterSpacing: 0.5,
         },
-
-        // ── Textes principaux ─────────────────────────────────────────
         mainText: {
             fontFamily: 'Montserrat_700Bold',
             fontSize: tokens.fontSize.hero,
@@ -671,8 +627,6 @@ const StyleWelcome = {
             marginTop: tokens.space.lg,
             lineHeight: 28,
         },
-
-        // ── Pagination ────────────────────────────────────────────────
         pageDots: {
             flexDirection: 'row',
             justifyContent: 'center',
@@ -693,8 +647,6 @@ const StyleWelcome = {
             marginHorizontal: tokens.space.xs,
             backgroundColor: '#FFFFFF44',
         },
-
-        // ── Card blanche ──────────────────────────────────────────────
         whiteCardContainer: {
             flexShrink: 1,
         },
@@ -713,8 +665,6 @@ const StyleWelcome = {
             color: '#1A1D23',
             letterSpacing: 0.1,
         },
-
-        // ── Boutons de sélection ──────────────────────────────────────
         whiteCardButton: {
             backgroundColor: '#F5F7FA',
             borderRadius: tokens.radius.md,
@@ -726,9 +676,9 @@ const StyleWelcome = {
             marginBottom: tokens.space.sm,
         },
         whiteCardButtonSelected: {
-            backgroundColor: '#009ee0',
+            backgroundColor: '#5E5CE6',
             borderRadius: tokens.radius.md,
-            borderColor: '#009ee0',
+            borderColor: '#5E5CE6',
             borderWidth: 1.5,
             paddingVertical: tokens.space.sm,
             paddingHorizontal: tokens.space.md,
@@ -747,8 +697,6 @@ const StyleWelcome = {
             alignSelf: 'center',
             color: '#FFFFFF',
         },
-
-        // ── Boutons de groupe ─────────────────────────────────────────
         whiteCardGroupButton: {
             backgroundColor: '#F5F7FA',
             borderRadius: tokens.radius.md,
@@ -765,8 +713,6 @@ const StyleWelcome = {
             fontSize: tokens.fontSize.sm,
             color: '#495057',
         },
-
-        // ── Divers ────────────────────────────────────────────────────
         greyBottomText: {
             fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.xs,
@@ -775,13 +721,11 @@ const StyleWelcome = {
             color: '#00000066',
             lineHeight: 18,
         },
-        gradientColor: ['#009ee0', '#33b5e8', '#45D7E8'],
+        gradientColor: ['#5E5CE6', '#33b5e8', '#45D7E8'],
         placeholderTextColor: '#00000066',
-        welcomeButtonIconColor: '#009ee0',
+        welcomeButtonIconColor: '#5E5CE6',
     },
-
     dark: {
-        // ── Bouton principal ──────────────────────────────────────────
         buttonContainer: {
             backgroundColor: '#3D2540',
             borderRadius: tokens.radius.pill,
@@ -798,8 +742,6 @@ const StyleWelcome = {
             alignSelf: 'center',
             letterSpacing: 0.5,
         },
-
-        // ── Textes principaux ─────────────────────────────────────────
         mainText: {
             fontFamily: 'Montserrat_700Bold',
             fontSize: tokens.fontSize.hero,
@@ -819,8 +761,6 @@ const StyleWelcome = {
             marginTop: tokens.space.lg,
             lineHeight: 28,
         },
-
-        // ── Pagination ────────────────────────────────────────────────
         pageDots: {
             flexDirection: 'row',
             justifyContent: 'center',
@@ -841,8 +781,6 @@ const StyleWelcome = {
             marginHorizontal: tokens.space.xs,
             backgroundColor: '#FFFFFF33',
         },
-
-        // ── Card ──────────────────────────────────────────────────────
         whiteCardContainer: {
             flexShrink: 1,
         },
@@ -861,8 +799,6 @@ const StyleWelcome = {
             color: '#F0EAF1',
             letterSpacing: 0.1,
         },
-
-        // ── Boutons de sélection ──────────────────────────────────────
         whiteCardButton: {
             backgroundColor: '#2D1A2E',
             borderRadius: tokens.radius.md,
@@ -895,8 +831,6 @@ const StyleWelcome = {
             alignSelf: 'center',
             color: '#2D1A2E',
         },
-
-        // ── Boutons de groupe ─────────────────────────────────────────
         whiteCardGroupButton: {
             backgroundColor: '#2D1A2E',
             borderRadius: tokens.radius.md,
@@ -913,8 +847,6 @@ const StyleWelcome = {
             fontSize: tokens.fontSize.sm,
             color: '#B1A5B2',
         },
-
-        // ── Divers ────────────────────────────────────────────────────
         greyBottomText: {
             fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.xs,
@@ -934,102 +866,103 @@ const style = {
     colors,
     hintColors,
 
-	schedule: {
-		containerView: {
-			flex: 1,
-		},
-		titleView: {
-			paddingHorizontal: tokens.space.md,
-			paddingVertical: tokens.space.sm,
-			borderBottomWidth: 1,
-			borderBottomColor: '#E0E4EA',
-		},
-		titleText: {
-			fontSize: tokens.fontSize.lg,
-			fontWeight: tokens.fontWeight.semibold,
-		},
-		contentView: {
-			flex: 1,
-		},
+    schedule: {
+        containerView: {
+            flex: 1,
+        },
+        titleView: {
+            paddingHorizontal: tokens.space.md,
+            paddingVertical: tokens.space.sm,
+            borderBottomWidth: 1,
+            borderBottomColor: 'transparent',
+        },
+        titleText: {
+            fontSize: tokens.fontSize.lg,
+            fontWeight: tokens.fontWeight.bold,
+        },
+        contentView: {
+            flex: 1,
+        },
+        course: {
+            root: {
+                flex: 1,
+                flexDirection: 'column',
+                marginVertical: tokens.space.sm,
+                marginHorizontal: tokens.space.sm,
+            },
+            row: {
+                flex: 1,
+                flexDirection: 'row',
+            },
+            hours: {
+                flexDirection: 'column',
+                justifyContent: 'space-around',
+                alignItems: 'center',
+                paddingHorizontal: tokens.space.sm,
+                paddingVertical: tokens.space.sm,
+                minWidth: 64,
+            },
+            hoursText: {
+                fontSize: tokens.fontSize.sm,
+                fontWeight: tokens.fontWeight.bold,
+                textAlign: 'center',
+            },
+            contentBlock: {
+                flex: 1,
+                flexDirection: 'column',
+                paddingVertical: tokens.space.md,
+                paddingRight: tokens.space.md,
+            },
+            contentType: {
+                flex: 1,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: 4,
+            },
+            content: {
+                fontSize: tokens.fontSize.sm,
+            },
+            title: {
+                fontSize: tokens.fontSize.md,
+                fontWeight: tokens.fontWeight.bold,
+            },
+            iconHeader: {
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: tokens.space.xs,
+            },
+            line: {
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: 6,
+            },
+            container: {
+                flex: 1,
+                marginLeft: tokens.space.xs,
+            },
+            groupsContainer: {
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+            },
+            groupsContent: {
+                flex: 1,
+            },
+            noCourse: {
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingVertical: tokens.space.xxl,
+            },
+            noCourseText: {
+                fontSize: tokens.fontSize.md,
+                fontWeight: tokens.fontWeight.medium,
+                opacity: 0.5,
+            },
+        },
+    },
 
-		course: {
-			root: {
-				flex: 1,
-				flexDirection: 'column',
-				marginVertical: tokens.space.xs,
-			},
-			row: {
-				flex: 1,
-				flexDirection: 'row',
-			},
-			hours: {
-				flexDirection: 'column',
-				justifyContent: 'space-around',
-				alignItems: 'center',
-				paddingHorizontal: tokens.space.sm,
-				paddingVertical: tokens.space.sm,
-				minWidth: 64,
-			},
-			hoursText: {
-				fontSize: tokens.fontSize.sm,
-				fontWeight: tokens.fontWeight.medium,
-				textAlign: 'center',
-			},
-			contentBlock: {
-				flex: 1,
-				flexDirection: 'column',
-				paddingVertical: tokens.space.sm,
-				paddingRight: tokens.space.sm,
-			},
-			contentType: {
-				flex: 1,
-				flexDirection: 'row',
-				justifyContent: 'space-between',
-				alignItems: 'flex-start',
-			},
-			content: {
-				fontSize: tokens.fontSize.sm,
-			},
-			title: {
-				fontSize: tokens.fontSize.sm,
-				fontWeight: tokens.fontWeight.semibold,
-			},
-			iconHeader: {
-				flexDirection: 'row',
-				alignItems: 'center',
-				marginTop: tokens.space.xs,
-			},
-			line: {
-				flexDirection: 'row',
-				alignItems: 'center',
-				marginTop: tokens.space.xs,
-			},
-			container: {
-				flex: 1,
-				marginLeft: tokens.space.xs,
-			},
-			groupsContainer: {
-				flexDirection: 'row',
-				flexWrap: 'wrap',
-			},
-			groupsContent: {
-				flex: 1,
-			},
-			noCourse: {
-				flex: 1,
-				justifyContent: 'center',
-				alignItems: 'center',
-				paddingVertical: tokens.space.xl,
-			},
-			noCourseText: {
-				fontSize: tokens.fontSize.md,
-				fontWeight: tokens.fontWeight.medium,
-				opacity: 0.5,
-			},
-		},
-	},
-
-	offline: {
+    offline: {
         container: {
             flex: 1,
             justifyContent: 'center',
@@ -1051,9 +984,9 @@ const style = {
             textAlign: 'center',
             opacity: 0.6,
         },
-	},
-	
-	course: {
+    },
+
+    course: {
         container: {
             flex: 1,
         },
@@ -1101,7 +1034,6 @@ const style = {
         },
     },
 
-    // ── Calendar ──────────────────────────────────────────────────────────────
     calendar: {
         container: {
             flex: 1,
@@ -1133,7 +1065,7 @@ const style = {
             width: 6,
             height: 6,
             borderRadius: tokens.radius.pill,
-            backgroundColor: '#009ee0',
+            backgroundColor: '#007AFF',
             marginTop: tokens.space.xs,
         },
     },
@@ -1192,23 +1124,21 @@ const style = {
         },
         sectionList: { flex: 0 },
 
-        // Fonds de sections (couleurs pastel)
         sections: [
-            { backgroundColor: colors50.deepOrange },
-            { backgroundColor: colors50.pink },
-            { backgroundColor: colors50.lightBlue },
-            { backgroundColor: colors50.blueGrey },
-            { backgroundColor: colors50.green },
-            { backgroundColor: colors50.purple },
+            { backgroundColor: 'rgba(0, 122, 255, 0.1)' },
+            { backgroundColor: 'rgba(52, 199, 89, 0.1)' },
+            { backgroundColor: 'rgba(255, 149, 0, 0.1)' },
+            { backgroundColor: 'rgba(255, 59, 48, 0.1)' },
+            { backgroundColor: 'rgba(88, 86, 214, 0.1)' },
+            { backgroundColor: 'rgba(90, 200, 250, 0.1)' },
         ],
-        // Headers de sections
         sectionHeaders: [
-            { backgroundColor: colors200.deepOrange },
-            { backgroundColor: colors200.pink },
-            { backgroundColor: colors200.lightBlue },
-            { backgroundColor: colors200.blueGrey },
-            { backgroundColor: colors200.green },
-            { backgroundColor: colors200.purple },
+            { backgroundColor: '#007AFF' },
+            { backgroundColor: '#34C759' },
+            { backgroundColor: '#FF9500' },
+            { backgroundColor: '#FF3B30' },
+            { backgroundColor: '#5856D6' },
+            { backgroundColor: '#5AC8FA' },
         ],
 
         homeView: {
@@ -1224,7 +1154,6 @@ const style = {
             justifyContent:   'space-between',
         },
         sectionHeaderView: {
-            // backgroundColor: 'white',
             height:          40,
             flex:            1,
             flexDirection:   'column',
