@@ -63,7 +63,6 @@ export default class LibraryService {
             return libraries.map((lib: any) => {
                 const city = lib.location?.address?.city;
                 const secondary = lib.secondary_name;
-                // Concaténation propre : "BU Droit-Lettres - Pessac"
                 const campusStr = city;
 
                 return {

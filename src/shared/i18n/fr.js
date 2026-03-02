@@ -119,4 +119,6 @@ export default {
 	ATTENDANCE: 'Affluence en direct',
 	CLOSED_ALL_DAY: 'Fermé toute la journée',
 	BOOK_SEAT: 'Réserver',
+	OPENING_HOURS: 'Horaires d\'ouverture',
+	OCCUPANCY_RATE: 'Taux d\'occupation',
 };

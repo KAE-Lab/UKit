@@ -91,7 +91,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                 {rate !== null && (
                     <View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: tokens.space.xs }}>
-                            <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>Taux d'occupation</Text>
+                            <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{Translator.get('OCCUPANCY_RATE')}</Text>
                             <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any }}>{rate}%</Text>
                         </View>
                         <View style={{ height: 8, borderRadius: 4, backgroundColor: theme.border, overflow: 'hidden' }}>
@@ -163,7 +163,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                 {renderLiveAttendance()}
 
                 <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, marginBottom: tokens.space.md }}>
-                    Horaires d'ouverture
+                    {Translator.get('OPENING_HOURS')}
                 </Text>
 
                 {/* Si on charge une autre semaine, on affiche le spinner juste ici */}
@@ -205,7 +205,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                                 flexWrap: 'wrap',
                                 width: '100%'
                             }}>
-                                Fermée toute la journée
+                                {Translator.get('CLOSED_ALL_DAY')}
                             </Text>
                         </View>
                     )
@@ -243,7 +243,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                         fontWeight: tokens.fontWeight.bold as any, 
                         marginLeft: tokens.space.sm 
                     }}>
-                        {Translator.get('BOOK_SEAT') ?? 'Réserver une place'}
+                        {Translator.get('BOOK_SEAT')}
                     </Text>
                 </TouchableOpacity>
             </View>

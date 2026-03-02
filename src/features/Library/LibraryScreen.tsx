@@ -53,8 +53,6 @@ export default function LibraryScreen({ navigation }: any) {
 
             const fetchedLibs = await LibraryService.fetchNearbyLibraries(userLat, userLng);
 
-            // On retire le filtre de 20km pour les tests, pour être sûr de voir des résultats
-            // Tu pourras le remettre plus tard : .filter(lib => (lib.distance || 0) < 20)
             const nearbyLibs = fetchedLibs.slice(0, 15);
             setLibraries(nearbyLibs);
 
@@ -73,7 +71,7 @@ export default function LibraryScreen({ navigation }: any) {
         } catch (error) {
             console.error("Erreur critique dans loadLibraries:", error);
         } finally {
-            setLoading(false); // Garantit que le spinner disparaît même en cas de crash
+            setLoading(false);
         }
     };
 
@@ -156,28 +154,30 @@ export default function LibraryScreen({ navigation }: any) {
 
                         {/* Jauge d'affluence */}
                         <View style={{ marginTop: tokens.space.xs }}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                                <Text
-                                    numberOfLines={1}
-                                    ellipsizeMode='tail'
-                                    style={{
-                                        flex: 1,
-                                        fontSize: tokens.fontSize.xs,
-                                        fontWeight: tokens.fontWeight.semibold as any,
-                                        color: statusColor
-                                    }}>
-                                    {statusText} 
-                                </Text>
-                                {rate !== null && (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: tokens.space.xs }}>
+                                <View style={{ flex: 1, paddingRight: tokens.space.sm }}>
                                     <Text
+                                        numberOfLines={1}
+                                        ellipsizeMode='tail'
                                         style={{
-                                            flexShrink: 0,
-                                            marginLeft: tokens.space.sm,
                                             fontSize: tokens.fontSize.xs,
-                                            color: theme.font
+                                            fontWeight: tokens.fontWeight.semibold as any,
+                                            color: statusColor
                                         }}>
-                                        {rate + '%'}
+                                        {statusText} 
                                     </Text>
+                                </View>
+                                {rate !== null && (
+                                    <View style={{ flexShrink: 0, minWidth: 35, alignItems: 'flex-end', paddingRight: 2 }}>
+                                        <Text
+                                        style={{
+                                            fontSize: tokens.fontSize.xs,
+                                            color: theme.font,
+                                            fontWeight: tokens.fontWeight.semibold as any
+                                        }}>
+                                        {rate}%
+                                    </Text>
+                                    </View>
                                 )}
                             </View>
                             <View style={{ height: 6, borderRadius: 3, backgroundColor: theme.border, overflow: 'hidden' }}>
@@ -222,7 +222,7 @@ export default function LibraryScreen({ navigation }: any) {
                                 width: '100%',
                                 lineHeight: 22,
                             }}>
-                                Aucune bibliothèque à proximité.
+                                {Translator.get('NO_BU_NEARBY')}
                             </Text>
                         </View>
                     }

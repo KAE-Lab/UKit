@@ -117,4 +117,6 @@ export default {
 	ATTENDANCE: 'Live attendance',
 	CLOSED_ALL_DAY: 'Closed all day',
 	BOOK_SEAT: 'Book a seat',
+	OPENING_HOURS: 'Opening hours',
+	OCCUPANCY_RATE: 'Occupancy rate',
 };

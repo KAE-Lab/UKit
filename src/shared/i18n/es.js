@@ -121,4 +121,6 @@ export default {
 	ATTENDANCE: 'Asistencia en vivo',
 	CLOSED_ALL_DAY: 'Cerrada todo el día',
 	BOOK_SEAT: 'Reservar',
+	OPENING_HOURS: 'Horario de apertura',
+	OCCUPANCY_RATE: 'Tasa de ocupación',
 };
