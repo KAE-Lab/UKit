@@ -44,7 +44,8 @@ export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selecte
                             <TouchableOpacity onPress={setDefaultCalendar} style={theme.popup.radioContainer}>
                                 <MaterialIcons
                                     name={selectedCalendar === 'UKit' || selectedCalendar === ukitCalendar?.id ? 'radio-button-on' : 'radio-button-off'}
-                                    size={24} color={theme.popup.radioIconColor}
+                                    size={24}
+                                    color={selectedCalendar === 'UKit' || selectedCalendar === ukitCalendar?.id ? '#4caf50' : theme.popup.radioIconColor}
                                 />
                                 <Text style={theme.popup.radioText}>{Translator.get('UKIT_CALENDAR')}</Text>
                             </TouchableOpacity>
@@ -52,12 +53,14 @@ export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selecte
                             <Text style={theme.popup.textDescription}>{Translator.get('EXISTING_CALENDARS')}</Text>
 
                             {calendars.map((calendar, i) => {
+                                const isSelected = selectedCalendar === calendar.id;
                                 const _setCalendar = () => setCalendar(calendar);
                                 return (
                                     <TouchableOpacity key={calendar.id} onPress={_setCalendar} style={theme.popup.radioContainer}>
                                         <MaterialIcons
-                                            name={selectedCalendar === calendar.id ? 'radio-button-on' : 'radio-button-off'}
-                                            size={24} color={theme.popup.radioIconColor}
+                                            name={isSelected ? 'radio-button-on' : 'radio-button-off'}
+                                            size={24}
+                                            color={isSelected ? '#4caf50' : theme.popup.radioIconColor}
                                         />
                                         <Text style={theme.popup.radioText}>{calendar.title + '  '}</Text>
                                     </TouchableOpacity>
@@ -155,15 +158,15 @@ export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, languag
                         <View style={{ marginVertical: 8 }}>
                             <TouchableOpacity onPress={setLanguageToFrench} style={theme.popup.radioContainer}>
                                 <MaterialIcons name={language === 'fr' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
-                                <Text style={theme.popup.radioText}>{Translator.get('FRENCH')}</Text>
+                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: 8, fontWeight: '600' }]}>{Translator.get('FRENCH')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={setLanguageToEnglish} style={theme.popup.radioContainer}>
                                 <MaterialIcons name={language === 'en' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
-                                <Text style={theme.popup.radioText}>{Translator.get('ENGLISH')}</Text>
+                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: 8, fontWeight: '600' }]}>{Translator.get('ENGLISH')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={setLanguageToSpanish} style={theme.popup.radioContainer}>
                                 <MaterialIcons name={language === 'es' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
-                                <Text style={theme.popup.radioText}>{Translator.get('SPANISH')}</Text>
+                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: 8, fontWeight: '600' }]}>{Translator.get('SPANISH')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -189,10 +192,10 @@ export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }
                         <Text style={theme.popup.textDescription}>{Translator.get('RESET_APP_CONFIRMATION')}</Text>
                         <View style={theme.popup.buttonContainer}>
                             <TouchableOpacity style={theme.popup.buttonSecondary} onPress={popupClose}>
-                                <Text style={theme.popup.buttonTextSecondary}>{Translator.get('CANCEL')}</Text>
+                                <Text style={[theme.popup.buttonTextSecondary, { fontWeight: '600' }]}>{Translator.get('CANCEL')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={theme.popup.buttonMain} onPress={resetApp}>
-                                <Text style={theme.popup.buttonTextMain}>{Translator.get('RESET')}</Text>
+                                <Text style={[theme.popup.buttonTextMain, { fontWeight: '600' }]}>{Translator.get('RESET')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

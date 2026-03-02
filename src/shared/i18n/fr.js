@@ -10,7 +10,7 @@ export default {
 		"L'application est maintenant prête, vous pouvez dès à présent consulter votre emploi du temps !",
 	APPLICATION: 'Application',
 	APPLICATION_HISTORY:
-		"Cette application est un fork de UKit v4.1.2, modernisé et maintenu par Angy S.\n\nPropulsé par React Navigation 6.",
+		"Cette application est un fork de UKit v4.1.2, modernisé et maintenu par la team KAELab.\n\nPropulsé par React Navigation 6.",
 	AUTO_SYNC_DESCRIPTION:
 		"La synchronisation automatique s'active tous les 12 heures pour rafraîchir les données du calendrier.",
 	AUTUMN: 'Automne',

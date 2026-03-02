@@ -116,17 +116,18 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
         <TouchableOpacity
             onPress={onPress}
             disabled={disabled}
-            style={[theme.button, disabled && { opacity: 0.5 }]}>
+            style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}]}>
             {leftIcon && (
                 <Animated.View style={{ transform: leftIconAnimation ? [{ rotate }] : [] }}>
                     <IconComponent name={leftIcon} size={24} style={theme.leftIcon} />
                 </Animated.View>
             )}
-            <Text style={theme.buttonMainText}>{leftText}</Text>
+            <Text style={[theme.buttonMainText, { flex: 1 }]}>{leftText}</Text>
             {onSwitchToggle !== undefined ? (
                 <Switch
                     style={{ marginLeft: 'auto', marginRight: theme.leftIcon?.marginLeft }}
                     trackColor={theme.switchTrack}
+                    thumbColor={'#FFFFFF'}
                     value={switchValue}
                     onValueChange={onSwitchToggle}
                 />
