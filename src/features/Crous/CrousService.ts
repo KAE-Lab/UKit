@@ -24,6 +24,7 @@ export interface CrousRestaurant {
     opening: string;
     menus?: CrousMenu[];
     distance?: number;
+    image_url?: string;
 }
 
 export interface CrousDayMenu {
@@ -75,7 +76,8 @@ class CrousServiceManager {
                     lat: resto.latitude,
                     lon: resto.longitude,
                     opening: Array.isArray(resto.horaires) ? resto.horaires.join(' | ') : 'Horaires non spécifiés',
-                    distance: distance
+                    distance: distance,
+                    image_url: `https://api.croustillant.menu/v1/restaurants/${resto.code}/preview`
                 };
             })
             

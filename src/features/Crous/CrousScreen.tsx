@@ -7,7 +7,8 @@ import * as Location from 'expo-location';
 import { CrousService, CrousRestaurant } from './CrousService';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
-import { getCrousImage } from './CrousImages';
+
+const defaultImage = require('../../../assets/images/default_resto.png');
 
 export default function CrousScreen({ navigation }: any) {
     const AppContextValues = useContext(AppContext) as any;
@@ -76,7 +77,7 @@ export default function CrousScreen({ navigation }: any) {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingVertical: tokens.space.sm }}
                     renderItem={({ item }) => {
-                        const imageSource = getCrousImage(item.title);
+                        const imageSource = item.image_url ? { uri: item.image_url } : defaultImage;
 
                         return (
                             <TouchableOpacity 
