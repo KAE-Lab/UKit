@@ -761,7 +761,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 				{/* ── CARTE DE DÉTAILS DÉDIÉE ── */}
 				<View
 					style={{
-						maxHeight: '33%', 
+						flex: 0,
 						marginTop: tokens.space.md,
 						marginBottom: this.state.locations.length > 0 ? tokens.space.sm : tokens.space.md,
 						marginHorizontal: tokens.space.md,
@@ -771,44 +771,37 @@ class Course extends React.Component<CourseProps, CourseState> {
 						borderTopColor: lineColor,
 						borderWidth: 1,
 						borderColor: theme.border,
+						padding: tokens.space.md,
 						...(tokens.shadow.sm as any),
 						zIndex: 10,
 					}}>
-					<ScrollView
-						contentContainerStyle={{ padding: tokens.space.lg }}
-						showsVerticalScrollIndicator={false}
-					>
 					
-					{/* Titre et Catégorie */}
-					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.space.md }}>
-						<Text style={{ fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
+					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.space.sm }}>
+						<Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
 							{this.state.data.subject !== 'N/C' ? this.state.data.subject : (Translator.get('UNKNOWN_SUBJECT') ?? 'Cours inconnu')}
 						</Text>
 						{this.state.data.category !== this.state.data.subject && (
-							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.pill, paddingHorizontal: tokens.space.sm, paddingVertical: 4 }}>
-								<Text style={{ fontSize: tokens.fontSize.sm, color: lineColor, fontWeight: tokens.fontWeight.bold as any }}>
+							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.pill, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>
+								<Text style={{ fontSize: tokens.fontSize.xs, color: lineColor, fontWeight: tokens.fontWeight.bold as any }}>
 									{this.state.data.category}
 								</Text>
 							</View>
 						)}
 					</View>
 
-					{/* Horaires */}
-					<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.md }}>
-						<MaterialCommunityIcons name="clock-outline" size={20} color={lineColor} style={{ marginRight: tokens.space.sm }} />
-						<Text style={{ fontSize: tokens.fontSize.md, color: lineColor, fontWeight: tokens.fontWeight.semibold as any }}>
+					<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
+						<MaterialCommunityIcons name="clock-outline" size={18} color={lineColor} style={{ marginRight: tokens.space.sm }} />
+						<Text style={{ fontSize: tokens.fontSize.sm, color: lineColor, fontWeight: tokens.fontWeight.semibold as any }}>
 							{this.state.data.starttime} - {this.state.data.endtime}
 						</Text>
 					</View>
 
-					{/* Séparateur */}
-					<View style={{ height: 1, backgroundColor: theme.border, marginBottom: tokens.space.md }} />
+					<View style={{ height: 1, backgroundColor: theme.border, marginBottom: tokens.space.sm }} />
 
-					{/* Détails complémentaires */}
 					{this.state.data.UE && (
-						<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
-							<MaterialIcons name="code" size={18} color={theme.fontSecondary} style={{ marginRight: tokens.space.md }} />
-							<Text style={{ fontSize: tokens.fontSize.md, color: theme.fontSecondary, fontWeight: '600' }}>{this.state.data.UE}</Text>
+						<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
+							<MaterialIcons name="code" size={16} color={theme.fontSecondary} style={{ marginRight: tokens.space.md }} />
+							<Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontWeight: '600' }}>{this.state.data.UE}</Text>
 						</View>
 					)}
 
@@ -819,10 +812,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 						let iconName: any = 'info-outline';
 						const lowerLine = trimmedLine.toLowerCase();
 						
-						// Détection formelle des semaines (que des chiffres, tirets, virgules et espaces)
 						const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedLine);
-						
-						// Détection de la salle par mots-clés
 						const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
 
 						if (isWeeks) {
@@ -834,19 +824,18 @@ class Course extends React.Component<CourseProps, CourseState> {
 						} else if (index === 1) {
 							iconName = 'person';
 						} else if (index === 2) {
-							iconName = 'room'; // Fallback au cas où le nom de la salle est atypique
+							iconName = 'room';
 						} else {
 							iconName = 'date-range';
 						}
 
 						return (
-							<View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.sm }}>
-								<MaterialIcons name={iconName} size={18} color={theme.fontSecondary} style={{ marginRight: tokens.space.md, marginTop: 2 }} />
-								<Text style={{ fontSize: tokens.fontSize.md, color: theme.fontSecondary, flex: 1 }}>{trimmedLine}</Text>
+							<View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
+								<MaterialIcons name={iconName} size={16} color={theme.fontSecondary} style={{ marginRight: tokens.space.md, marginTop: 1 }} />
+								<Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, flex: 1 }}>{trimmedLine}</Text>
 							</View>
 						);
 					})}
-					</ScrollView>
 				</View>
 
 				{/* ── CARTE GÉOGRAPHIQUE ── */}
