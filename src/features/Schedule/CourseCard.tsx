@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Linking, Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback, Platform, FlatList, Dimensions } from 'react-native';
+import { Linking, Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback, Platform, FlatList, Dimensions, ScrollView} from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -284,13 +284,28 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		const annotations =
 			!isLargeMode && this.props.data.description?.length > 0
 				? this.props.data.description.split('\n').map((annotation, index) => {
-						if (!annotation.trim()) return null;
+						const trimmedAnnotation = annotation.trim();
+						if (!trimmedAnnotation) return null;
 
 						let iconName: any = 'info-outline';
-						if (index === 0) iconName = 'group';
-						else if (index === 1) iconName = 'person';
-						else if (index === 2) iconName = 'room';
-						else if (index === 3) iconName = 'date-range';
+						const lowerLine = trimmedAnnotation.toLowerCase();
+						
+						const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedAnnotation);
+						const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
+
+						if (isWeeks) {
+							iconName = 'date-range';
+						} else if (isRoom) {
+							iconName = 'room';
+						} else if (index === 0) {
+							iconName = 'group';
+						} else if (index === 1) {
+							iconName = 'person';
+						} else if (index === 2) {
+							iconName = 'room';
+						} else {
+							iconName = 'date-range';
+						}
 
 						return (
 							<View
@@ -311,7 +326,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 										color: theme.fontSecondary,
 										flex: 1,
 									}}>
-									{annotation.trim()}
+									{trimmedAnnotation}
 								</Text>
 							</View>
 						);
@@ -401,13 +416,28 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 								{(this.props.data.description || '')
 									.split('\n')
 									.map((line, index) => {
-										if (!line.trim()) return null;
+										const trimmedLine = line.trim();
+										if (!trimmedLine) return null;
 
 										let iconName: any = 'info-outline';
-										if (index === 0) iconName = 'group';
-										else if (index === 1) iconName = 'person';
-										else if (index === 2) iconName = 'room';
-										else if (index === 3) iconName = 'date-range';
+										const lowerLine = trimmedLine.toLowerCase();
+										
+										const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedLine);
+										const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
+
+										if (isWeeks) {
+											iconName = 'date-range';
+										} else if (isRoom) {
+											iconName = 'room';
+										} else if (index === 0) {
+											iconName = 'group';
+										} else if (index === 1) {
+											iconName = 'person';
+										} else if (index === 2) {
+											iconName = 'room';
+										} else {
+											iconName = 'date-range';
+										}
 
 										return (
 											<View
@@ -431,7 +461,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 														color: theme.fontSecondary,
 														flex: 1,
 													}}>
-													{line.trim()}
+													{trimmedLine}
 												</Text>
 											</View>
 										);
@@ -604,13 +634,22 @@ class Course extends React.Component<CourseProps, CourseState> {
 		let locations: any[] = [];
 		this.props.navigation.setParams({ title: this.state.data.schedule });
 
-		const descLines = (this.state.data.description ?? '').split('\n');
-		const roomLine = descLines[2] ?? '';
+		// On nettoie les lignes vides
+		const descLines = (this.state.data.description ?? '').split('\n').map(l => l.trim()).filter(l => l);
+		
+		let roomLine = '';
+		// On cherche une ligne de salle potentielle (à partir de la 3ème ligne)
+		// On exclut formellement la ligne si elle correspond au format des semaines
+		const potentialRooms = descLines.slice(2).filter(line => !/^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(line));
+		
+		if (potentialRooms.length > 0) {
+			roomLine = potentialRooms[0];
+		}
 
-		if (roomLine.trim()) {
-			locations = getLocations(roomLine.trim());
+		if (roomLine) {
+			locations = getLocations(roomLine);
 			if (locations.length < 1) {
-				locations = getLocationsInText(roomLine.trim());
+				locations = getLocationsInText(roomLine);
 			}
 		}
 		
@@ -627,6 +666,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 		const appContext = this.context as any;
 		const themeName = appContext?.themeName ?? 'light';
 		const theme = (style.Theme as any)[themeName];
+		const lineColor = theme.courses[this.state.data.color ?? 'default'] ?? theme.courses.default;
 
 		let map = null;
 		if (this.state.locations.length > 0) {
@@ -716,25 +756,96 @@ class Course extends React.Component<CourseProps, CourseState> {
 		return (
 			<SafeAreaView 
 				edges={['bottom', 'left', 'right']}
-				style={{ flex: 1, backgroundColor: theme.greyBackground }}
+				style={{ flex: 1, backgroundColor: theme.courseBackground }}
 			>
+				{/* ── CARTE DE DÉTAILS DÉDIÉE ── */}
 				<View
 					style={{
 						flex: 0,
-						marginTop: tokens.space.sm,
+						marginTop: tokens.space.md,
 						marginBottom: this.state.locations.length > 0 ? tokens.space.sm : tokens.space.md,
+						marginHorizontal: tokens.space.md,
+						backgroundColor: theme.cardBackground,
+						borderRadius: tokens.radius.xl,
+						borderTopWidth: 5,
+						borderTopColor: lineColor,
+						borderWidth: 1,
+						borderColor: theme.border,
+						padding: tokens.space.md,
+						...(tokens.shadow.sm as any),
 						zIndex: 10,
 					}}>
-					<CourseRow data={this.state.data} theme={theme} readOnly={true} />
+					
+					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.space.sm }}>
+						<Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
+							{this.state.data.subject !== 'N/C' ? this.state.data.subject : (Translator.get('UNKNOWN_SUBJECT') ?? 'Cours inconnu')}
+						</Text>
+						{this.state.data.category !== this.state.data.subject && (
+							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.pill, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>
+								<Text style={{ fontSize: tokens.fontSize.xs, color: lineColor, fontWeight: tokens.fontWeight.bold as any }}>
+									{this.state.data.category}
+								</Text>
+							</View>
+						)}
+					</View>
+
+					<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
+						<MaterialCommunityIcons name="clock-outline" size={18} color={lineColor} style={{ marginRight: tokens.space.sm }} />
+						<Text style={{ fontSize: tokens.fontSize.sm, color: lineColor, fontWeight: tokens.fontWeight.semibold as any }}>
+							{this.state.data.starttime} - {this.state.data.endtime}
+						</Text>
+					</View>
+
+					<View style={{ height: 1, backgroundColor: theme.border, marginBottom: tokens.space.sm }} />
+
+					{this.state.data.UE && (
+						<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
+							<MaterialIcons name="code" size={16} color={theme.fontSecondary} style={{ marginRight: tokens.space.md }} />
+							<Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontWeight: '600' }}>{this.state.data.UE}</Text>
+						</View>
+					)}
+
+					{(this.state.data.description || '').split('\n').map((line, index) => {
+						const trimmedLine = line.trim();
+						if (!trimmedLine) return null;
+
+						let iconName: any = 'info-outline';
+						const lowerLine = trimmedLine.toLowerCase();
+						
+						const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedLine);
+						const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
+
+						if (isWeeks) {
+							iconName = 'date-range';
+						} else if (isRoom) {
+							iconName = 'room';
+						} else if (index === 0) {
+							iconName = 'group';
+						} else if (index === 1) {
+							iconName = 'person';
+						} else if (index === 2) {
+							iconName = 'room';
+						} else {
+							iconName = 'date-range';
+						}
+
+						return (
+							<View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
+								<MaterialIcons name={iconName} size={16} color={theme.fontSecondary} style={{ marginRight: tokens.space.md, marginTop: 1 }} />
+								<Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, flex: 1 }}>{trimmedLine}</Text>
+							</View>
+						);
+					})}
 				</View>
 
+				{/* ── CARTE GÉOGRAPHIQUE ── */}
 				{map && (
 					<View
 						style={{
 							flex: 1,
 							marginHorizontal: tokens.space.md,
 							marginBottom: tokens.space.md,
-							borderRadius: tokens.radius.lg,
+							borderRadius: tokens.radius.xl,
 							overflow: 'hidden',
 							borderWidth: 1,
 							borderColor: theme.border,
