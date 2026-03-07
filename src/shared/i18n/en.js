@@ -119,4 +119,5 @@ export default {
 	BOOK_SEAT: 'Book a seat',
 	OPENING_HOURS: 'Opening hours',
 	OCCUPANCY_RATE: 'Occupancy rate',
+	COURSES: 'Courses',
 };

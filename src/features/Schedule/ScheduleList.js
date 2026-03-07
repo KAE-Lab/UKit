@@ -8,13 +8,48 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PropTypes from 'prop-types';
 
 import style, { tokens } from '../../shared/theme/Theme';
-import { CourseRowWithNavigation as CourseRow } from './CourseCard';
+import { CourseRowWithNavigation as CourseRow, CourseGroupCarousel } from './CourseCard';
 
 import { ErrorAlert } from '../../shared/ui/Alerts';
 import Translator from '../../shared/i18n/Translator';
 import { isConnected } from '../../shared/services/AppCore'
 import { FetchManager } from '../../shared/services/DataService';
 import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../shared/services/AppCore';
+
+export const groupOverlappingCourses = (courses) => {
+    if (!courses || courses.length === 0) return [];
+    if (courses.length === 1 && courses[0].category === 'nocourse') return [courses];
+
+    const timeToMinutes = (timeStr) => {
+        if (!timeStr) return 0;
+        const parts = timeStr.split(':');
+        if (parts.length !== 2) return 0;
+        return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    };
+
+    const sorted = [...courses].sort((a, b) => timeToMinutes(a.starttime) - timeToMinutes(b.starttime));
+
+    const groups = [];
+    let currentGroup = [sorted[0]];
+    let groupEnd = timeToMinutes(sorted[0].endtime);
+
+    for (let i = 1; i < sorted.length; i++) {
+        const course = sorted[i];
+        const start = timeToMinutes(course.starttime);
+        const end = timeToMinutes(course.endtime);
+
+        if (start < groupEnd) {
+            currentGroup.push(course);
+            groupEnd = Math.max(groupEnd, end);
+        } else {
+            groups.push(currentGroup);
+            currentGroup = [course];
+            groupEnd = end;
+        }
+    }
+    if (currentGroup.length > 0) groups.push(currentGroup);
+    return groups;
+}
 
 // ── COMPOSANT COLLAPSIBLE POUR LA SEMAINE ─────────────
 export class DayWeek extends React.Component {
@@ -59,12 +94,13 @@ export class DayWeek extends React.Component {
                 </View>
             );
         } else if (expand) {
+            const groupedCourses = groupOverlappingCourses(schedule.courses);
             content = (
                 <View key={schedule.dayNumber}>
-                    {schedule.courses.map((item, index) => (
-                        <CourseRow
-                            key={String(item.dayNumber) + String(index)}
-                            data={item}
+                    {groupedCourses.map((group, index) => (
+                        <CourseGroupCarousel
+                            key={String(schedule.dayNumber) + String(index)}
+                            coursesGroup={group}
                             theme={theme}
                         />
                     ))}
@@ -273,12 +309,14 @@ export default class ScheduleList extends React.Component {
                 daySchedule = [{ schedule: 0, category: 'nocourse' }];
             }
 
+            const groupedDaySchedule = groupOverlappingCourses(daySchedule);
+
             content = (
                 <FlatList
-                    data={daySchedule}
+                    data={groupedDaySchedule}
                     extraData={this.state}
-                    renderItem={({ item }) => <CourseRow data={item} theme={theme} />}
-                    keyExtractor={(item, index) => item.schedule + String(index)}
+                    renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item} theme={theme} />}
+                    keyExtractor={(item, index) => String(index)}
                     style={{ backgroundColor: theme.courseBackground }}
                 />
             );

@@ -123,4 +123,5 @@ export default {
 	BOOK_SEAT: 'Reservar',
 	OPENING_HOURS: 'Horario de apertura',
 	OCCUPANCY_RATE: 'Tasa de ocupación',
+	COURSES: 'Cursos',
 };
