@@ -76,103 +76,96 @@ export default function CrousScreen({ navigation }: any) {
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingVertical: tokens.space.sm }}
-                    renderItem={({ item }) => {
-                        const imageSource = item.image_url ? { uri: item.image_url } : defaultImage;
-
-                        return (
-                            <TouchableOpacity 
-                                activeOpacity={0.9}
-                                onPress={() => navigation.navigate('CrousMenu', { 
-                                    restaurantId: item.id, 
-                                    restaurantName: item.title, 
-                                    location: { lat: item.lat, lon: item.lon } 
-                                })}
-                                style={{
-                                    backgroundColor: theme.cardBackground,
-                                    borderRadius: tokens.radius.xl, 
-                                    marginBottom: tokens.space.lg, 
-                                    marginHorizontal: tokens.space.md,
-                                    ...tokens.shadow.md, 
-                                    overflow: 'hidden', 
-                                }}
-                            >
-                                {/* IMAGE */}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity 
+                            activeOpacity={0.9}
+                            onPress={() => navigation.navigate('CrousMenu', { 
+                                restaurantId: item.id, 
+                                restaurantName: item.title, 
+                                location: { lat: item.lat, lon: item.lon } 
+                            })}
+                            style={{
+                                backgroundColor: theme.cardBackground,
+                                borderRadius: tokens.radius.xl, 
+                                marginBottom: tokens.space.lg, 
+                                marginHorizontal: tokens.space.md,
+                                ...tokens.shadow.md, 
+                                overflow: 'hidden', 
+                            }}
+                        >
+                            {/* Superposition des images pour gérer les 404 silencieusement sans state */}
+                            <View style={{ width: '100%', height: 180, backgroundColor: theme.greyBackground }}>
                                 <Image 
-                                    source={imageSource}
-                                    style={{
-                                        width: '100%',
-                                        height: 180, 
-                                        resizeMode: 'cover',
-                                        backgroundColor: theme.greyBackground 
-                                    }}
+                                    source={defaultImage}
+                                    style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
                                 />
+                                
+                                {item.image_url && (
+                                    <Image 
+                                        source={{ uri: item.image_url }}
+                                        style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
+                                    />
+                                )}
+                            </View>
 
-                                {/* LES INFOS */}
-                                <View style={{ padding: tokens.space.md }}>
-                                    
-                                    {/* Titre */}
-                                    <Text style={{ 
-                                        fontSize: tokens.fontSize.lg, 
-                                        fontWeight: tokens.fontWeight.bold as any, 
-                                        color: theme.font,
-                                        marginBottom: tokens.space.xs
-                                    }}>
-                                        {item.title}
+                            <View style={{ padding: tokens.space.md }}>
+                                <Text style={{ 
+                                    fontSize: tokens.fontSize.lg, 
+                                    fontWeight: tokens.fontWeight.bold as any, 
+                                    color: theme.font,
+                                    marginBottom: tokens.space.xs
+                                }}>
+                                    {item.title}
+                                </Text>
+                                
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
+                                    <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
+                                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
+                                        {item.short_desc}
                                     </Text>
-                                    
-                                    {/* Ligne : Ville + Badge de Distance */}
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
-                                        <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
-                                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
-                                            {item.short_desc}
-                                        </Text>
 
-                                        {/* Badge de Distance */}
-                                        {item.distance !== undefined && (
-                                            <View style={{
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                backgroundColor: `${theme.primary}15`, 
-                                                paddingHorizontal: tokens.space.sm,
-                                                paddingVertical: 4,
-                                                borderRadius: tokens.radius.pill,
+                                    {item.distance !== undefined && (
+                                        <View style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            backgroundColor: `${theme.primary}15`, 
+                                            paddingHorizontal: tokens.space.sm,
+                                            paddingVertical: 4,
+                                            borderRadius: tokens.radius.pill,
+                                        }}>
+                                            <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
+                                            <Text style={{
+                                                fontSize: tokens.fontSize.sm,
+                                                fontWeight: tokens.fontWeight.bold as any,
+                                                color: theme.primary,
+                                                marginLeft: 4
                                             }}>
-                                                <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
-                                                <Text style={{
-                                                    fontSize: tokens.fontSize.sm,
-                                                    fontWeight: tokens.fontWeight.bold as any,
-                                                    color: theme.primary,
-                                                    marginLeft: 4
-                                                }}>
-                                                    {item.distance < 1 
-                                                        ? `${Math.round(item.distance * 1000)} m` 
-                                                        : `${item.distance.toFixed(1)} km`}
-                                                </Text>
-                                            </View>
-                                        )}
-                                    </View>
-
-                                    {/* Ligne : Horaires */}
-                                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                                        <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
-                                        <Text 
-                                            style={{ 
-                                                fontSize: tokens.fontSize.sm, 
-                                                color: theme.fontSecondary, 
-                                                marginLeft: 6, 
-                                                flex: 1, 
-                                                lineHeight: 20 
-                                            }}
-                                            numberOfLines={2} 
-                                        >
-                                            {item.opening}
-                                        </Text>
-                                    </View>
-
+                                                {item.distance < 1 
+                                                    ? `${Math.round(item.distance * 1000)} m` 
+                                                    : `${item.distance.toFixed(1)} km`}
+                                            </Text>
+                                        </View>
+                                    )}
                                 </View>
-                            </TouchableOpacity>
-                        );
-                    }}
+
+                                <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                                    <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
+                                    <Text 
+                                        style={{ 
+                                            fontSize: tokens.fontSize.sm, 
+                                            color: theme.fontSecondary, 
+                                            marginLeft: 6, 
+                                            flex: 1, 
+                                            lineHeight: 20 
+                                        }}
+                                        numberOfLines={2} 
+                                    >
+                                        {item.opening}
+                                    </Text>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    )}
                 />
             </View>
         </SafeAreaView>
