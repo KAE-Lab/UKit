@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Linking, Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback, Platform, FlatList, Dimensions } from 'react-native';
+import { Linking, Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback, Platform, FlatList, Dimensions, ScrollView} from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -627,6 +627,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 		const appContext = this.context as any;
 		const themeName = appContext?.themeName ?? 'light';
 		const theme = (style.Theme as any)[themeName];
+		const lineColor = theme.courses[this.state.data.color ?? 'default'] ?? theme.courses.default;
 
 		let map = null;
 		if (this.state.locations.length > 0) {
@@ -716,25 +717,88 @@ class Course extends React.Component<CourseProps, CourseState> {
 		return (
 			<SafeAreaView 
 				edges={['bottom', 'left', 'right']}
-				style={{ flex: 1, backgroundColor: theme.greyBackground }}
+				style={{ flex: 1, backgroundColor: theme.courseBackground }}
 			>
+				{/* ── CARTE DE DÉTAILS DÉDIÉE ── */}
 				<View
 					style={{
-						flex: 0,
-						marginTop: tokens.space.sm,
+						maxHeight: '33%', 
+						marginTop: tokens.space.md,
 						marginBottom: this.state.locations.length > 0 ? tokens.space.sm : tokens.space.md,
+						marginHorizontal: tokens.space.md,
+						backgroundColor: theme.cardBackground,
+						borderRadius: tokens.radius.xl,
+						borderTopWidth: 5,
+						borderTopColor: lineColor,
+						borderWidth: 1,
+						borderColor: theme.border,
+						...(tokens.shadow.sm as any),
 						zIndex: 10,
 					}}>
-					<CourseRow data={this.state.data} theme={theme} readOnly={true} />
+					<ScrollView
+						contentContainerStyle={{ padding: tokens.space.lg }}
+						showsVerticalScrollIndicator={false}
+					>
+					
+					{/* Titre et Catégorie */}
+					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.space.md }}>
+						<Text style={{ fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
+							{this.state.data.subject !== 'N/C' ? this.state.data.subject : (Translator.get('UNKNOWN_SUBJECT') ?? 'Cours inconnu')}
+						</Text>
+						{this.state.data.category !== this.state.data.subject && (
+							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.pill, paddingHorizontal: tokens.space.sm, paddingVertical: 4 }}>
+								<Text style={{ fontSize: tokens.fontSize.sm, color: lineColor, fontWeight: tokens.fontWeight.bold as any }}>
+									{this.state.data.category}
+								</Text>
+							</View>
+						)}
+					</View>
+
+					{/* Horaires */}
+					<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.md }}>
+						<MaterialCommunityIcons name="clock-outline" size={20} color={lineColor} style={{ marginRight: tokens.space.sm }} />
+						<Text style={{ fontSize: tokens.fontSize.md, color: lineColor, fontWeight: tokens.fontWeight.semibold as any }}>
+							{this.state.data.starttime} - {this.state.data.endtime}
+						</Text>
+					</View>
+
+					{/* Séparateur */}
+					<View style={{ height: 1, backgroundColor: theme.border, marginBottom: tokens.space.md }} />
+
+					{/* Détails complémentaires */}
+					{this.state.data.UE && (
+						<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
+							<MaterialIcons name="code" size={18} color={theme.fontSecondary} style={{ marginRight: tokens.space.md }} />
+							<Text style={{ fontSize: tokens.fontSize.md, color: theme.fontSecondary }}>{this.state.data.UE}</Text>
+						</View>
+					)}
+
+					{(this.state.data.description || '').split('\n').map((line, index) => {
+						if (!line.trim()) return null;
+						let iconName: any = 'info-outline';
+						if (index === 0) iconName = 'group';
+						else if (index === 1) iconName = 'person';
+						else if (index === 2) iconName = 'room';
+						else if (index === 3) iconName = 'date-range';
+
+						return (
+							<View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.sm }}>
+								<MaterialIcons name={iconName} size={18} color={theme.fontSecondary} style={{ marginRight: tokens.space.md, marginTop: 2 }} />
+								<Text style={{ fontSize: tokens.fontSize.md, color: theme.fontSecondary, flex: 1 }}>{line.trim()}</Text>
+							</View>
+						);
+					})}
+					</ScrollView>
 				</View>
 
+				{/* ── CARTE GÉOGRAPHIQUE ── */}
 				{map && (
 					<View
 						style={{
 							flex: 1,
 							marginHorizontal: tokens.space.md,
 							marginBottom: tokens.space.md,
-							borderRadius: tokens.radius.lg,
+							borderRadius: tokens.radius.xl,
 							overflow: 'hidden',
 							borderWidth: 1,
 							borderColor: theme.border,
