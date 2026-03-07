@@ -63,24 +63,79 @@ export default function CrousMenuScreen({ route }: any) {
 
     const currentMenu = menus[selectedIndex];
 
-    const renderMeal = (mealName: string, categories: any[]) => {
+    const getDishIcon = (dishName: string) => {
+        const str = dishName.toLowerCase();
+
+        // 1. Infos, menus et signalétiques
+        if (/(fermé|ferme\b|fermée|non communiqué|modification|^ou$|structure|réserve|exceptionnel|formule|le menu)/.test(str)) return 'information-outline';
+
+        // 2. Végétarien strict (intercepte avant les viandes pour les "tartes veggie", "sans porc", etc.)
+        if (/(bretonne|sans viande|sans porc|végé|veggie|vegan|steak végétal|tofu|soja|falafel)/.test(str)) return 'leaf';
+
+        // 3. Boissons
+        if (/(boisson|soda|coca|fanta|sprite)/.test(str) || /(^|\s|')(eau|jus|thé|the|café|cafe)(s)?(\s|$|[.,])/i.test(str)) return 'bottle-soda';
+
+        // 4. Fast-Food, Sandwicherie & Snack
+        if (/(pizza|pasta box)/.test(str)) return 'pizza';
+        if (/(frite|chips|snack)/.test(str)) return 'french-fries';
+        if (/(burger|hamburger)/.test(str)) return 'hamburger';
+        if (/(tacos|fajita)/.test(str)) return 'taco';
+        if (/(sandwich|baguette|panini|wrap|croque|hot-dog)/.test(str)) return 'baguette';
+
+        // 5. Protéines (Viandes, Poissons, Oeufs)
+        if (/(poulet|boeuf|bœuf|porc|veau|agneau|saucisse|viande|steak|lardon|chorizo|dinde|canard|merguez|filet|rôti|haché|kebab|jambon|bacon|cordon bleu|boulette|escalope|pâté|charcuterie)/.test(str)) return 'food-drumstick';
+        if (/(poisson|saumon|cabillaud|colin|merlu|crevette|calamar|thon|truite|lieu|moule|fruit de mer|hoki|encornet|surimi)/.test(str)) return 'fish';
+        if (/(oeuf|œuf|omelette)/.test(str)) return 'egg';
+
+        // 6. Entrées & Soupes
+        if (/(entrée|soupe|potage|velouté|bouillon|gaspacho|crudité|hors d)/.test(str)) return 'bowl-mix';
+
+        // 7. Fromages
+        if (/(fromage|brie|camembert|chèvre|chevre|mozza|emmental|cantal|gruyère|parmesan|kiri|roquefort)/.test(str)) return 'cheese';
+
+        // 8. Desserts, Fruits, Yaourts et Viennoiseries
+        if (/(viennoiserie|croissant|chocolatine|brioche)/.test(str)) return 'food-croissant';
+        
+        // Fruits (intercepte avant les desserts pour les "compotes de fruits", "tarte aux pommes", etc.)
+        if (/(pomme(?!s?\s+de\s+terre)|banane|orange|kiwi|ananas|poire|fraise|framboise|pêche|abricot|raisin|mangue|melon|pastèque|citron|clémentine|compote)/.test(str)) return 'food-apple';
+        
+        // Yaourts et desserts lactés
+        if (/(yaourt|lacté|petit suisse|fromage blanc|skyr|faisselle|glace|crème)/.test(str)) return 'silverware-spoon';
+        
+        // Vrais gâteaux et confiseries
+        if (/(dessert|tarte|pâtisserie|gâteau|cookie|muffin|brownie|entremet|flan|caramel|vanille|chocolat|bonbon|barre|confiserie|macaron|gaufre|crêpe)/.test(str)) return 'cupcake';
+        
+        // 9. Accompagnements : Légumes & Salades
+        if (/(salade|légume|haricot|lentille|pois|carotte|brocoli|chou|courgette|aubergine|épinard|poireau|champignon|céleri|ratatouille|tomate|concombre|maïs)/.test(str)) return 'leaf';
+
+        // 10. Accompagnements : Féculents
+        if (/(coquillettes|riz|pâte|spaghetti|macaroni|penne|ravioli|semoule|boulgour|blé|quinoa|pomme de terre|purée|gnocchi|nouille)/.test(str)) return 'pasta';
+
+        // Fallback propre et discret
+        return 'circle-medium';
+    };
+
+    const renderMeal = (mealTitle: string, categories: any[], mealType: 'midi' | 'soir') => {
         if (!categories || categories.length === 0) return null;
+
+        // Le soleil pour le midi, la lune pour le soir
+        const iconHeader = mealType === 'midi' ? 'white-balance-sunny' : 'moon-waning-crescent';
 
         return (
             <View style={{ marginBottom: tokens.space.xl }}>
-                {/* Titre du repas (Midi / Soir) */}
+                {/* Titre du repas */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}>
                     <MaterialCommunityIcons 
-                        name={mealName === 'Midi' ? 'white-balance-sunny' : 'moon-waning-crescent'} 
+                        name={iconHeader} 
                         size={20} 
                         color={theme.accent ?? theme.primary} 
                     />
                     <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, marginLeft: tokens.space.sm }}>
-                        {mealName}
+                        {mealTitle}
                     </Text>
                 </View>
 
-                {/* Liste des catégories (Entrées, Plats, Desserts...) */}
+                {/* Liste des catégories */}
                 {categories.map((cat, index) => (
                     <View key={index} style={[style.course.card as any, { 
                         backgroundColor: theme.cardBackground, 
@@ -92,9 +147,15 @@ export default function CrousMenuScreen({ route }: any) {
                         </Text>
                         
                         {cat.dishes.length > 0 ? cat.dishes.map((dish: string, dIdx: number) => (
-                            <View key={dIdx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 }}>
-                                <Text style={{ color: theme.fontSecondary, marginRight: 6 }}>•</Text>
-                                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, flex: 1 }}>{dish}</Text>
+                            <View key={dIdx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 }}>
+                                {/* Utilisation de l'icône intelligente au lieu du point classique */}
+                                <MaterialCommunityIcons 
+                                    name={getDishIcon(dish)} 
+                                    size={16} 
+                                    color={getDishIcon(dish) === 'leaf' ? '#4caf50' : theme.fontSecondary} 
+                                    style={{ marginRight: 6, marginTop: 2 }} 
+                                />
+                                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, flex: 1, lineHeight: 20 }}>{dish}</Text>
                             </View>
                         )) : (
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontStyle: 'italic' }}>Non précisé</Text>
@@ -150,8 +211,8 @@ export default function CrousMenuScreen({ route }: any) {
                     </Text>
                 ) : (
                     <>
-                        {renderMeal(Translator.get('LUNCH'), currentMenu.midi)}
-                        {renderMeal(Translator.get('DINNER'), currentMenu.soir)}
+                        {renderMeal(Translator.get('LUNCH'), currentMenu.midi, 'midi')}
+                        {renderMeal(Translator.get('DINNER'), currentMenu.soir, 'soir')}
                     </>
                 )}
                 <View style={{ height: tokens.space.xxl }} />
