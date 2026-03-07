@@ -6,6 +6,7 @@ export interface LibraryInfo {
     lng: number;
     slug: string; 
     distance?: number;
+    imageUrl?: string;
 }
 
 export interface AffluencesData {
@@ -62,8 +63,9 @@ export default class LibraryService {
 
             return libraries.map((lib: any) => {
                 const city = lib.location?.address?.city;
-                const secondary = lib.secondary_name;
                 const campusStr = city;
+
+                const imageUrl = (lib.images && lib.images.length > 0 ? lib.images[0] : lib.poster_image) || null;
 
                 return {
                     id: lib.id,
@@ -72,7 +74,8 @@ export default class LibraryService {
                     lat: lib.location?.coordinates?.latitude,
                     lng: lib.location?.coordinates?.longitude,
                     slug: lib.slug,
-                    distance: lib.estimated_distance / 1000 
+                    distance: lib.estimated_distance / 1000,
+                    imageUrl: imageUrl
                 };
             });
         } catch (error) {

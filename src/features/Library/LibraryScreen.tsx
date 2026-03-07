@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
@@ -8,6 +8,8 @@ import { AppContext } from '../../shared/services/AppCore';
 import style, { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
 import LibraryService, { LibraryInfo, AffluencesData } from './LibraryService';
+
+const defaultLibraryImage = require('../../../assets/images/default_resto.png');
 
 export default function LibraryScreen({ navigation }: any) {
     const AppContextValues = useContext(AppContext) as any;
@@ -86,108 +88,125 @@ export default function LibraryScreen({ navigation }: any) {
         const affluenceData = affluences[item.id];
         const rate = affluenceData?.occupancyRate ?? null;
         const isOpen = affluenceData?.isOpen ?? true; 
-        const statusColor = isOpen ? '#4caf50' : '#f44336';
+
+        let statusColor = '#f44336';
+        if (isOpen) {
+            if (rate === null || rate < 50) statusColor = '#4caf50';
+            else if (rate < 80) statusColor = '#ff9800';
+            else statusColor = '#ff4436';
+        }
 
         let statusText = isOpen ? (Translator.get('BU_OPEN')) : (Translator.get('BU_CLOSED'));
         if (!isOpen && affluenceData?.openingText) { 
             statusText = `${statusText} - ${affluenceData.openingText}`;
         }
+
+        const imageSource = item.imageUrl ? { uri: item.imageUrl } : defaultLibraryImage;
         
         return (
             <TouchableOpacity 
+                activeOpacity={0.9}
                 onPress={() => navigation.navigate('LibraryDetails', { library: item, affluence: affluenceData })}
-                style={[
-                    style.schedule.course.root, 
-                    { 
-                        backgroundColor: theme.eventBackground,
-                        marginHorizontal: tokens.space.md,
-                        marginVertical: tokens.space.xs,
-                        borderRadius: tokens.radius.lg,
-                        borderLeftWidth: 4,
-                        borderLeftColor: theme.accent ?? theme.primary,
-                        borderWidth: 1,
-                        borderColor: theme.eventBorder,
-                        overflow: 'hidden',
-                        ...tokens.shadow.sm,
-                    }
-                ] as any}
+                style={{
+                    backgroundColor: theme.cardBackground,
+                    borderRadius: tokens.radius.xl, 
+                    marginBottom: tokens.space.lg, 
+                    marginHorizontal: tokens.space.md,
+                    ...tokens.shadow.md, 
+                    overflow: 'hidden', 
+                }}
             >
-                <View style={style.schedule.course.row as any}>
-                    <View style={[style.schedule.course.contentBlock, { padding: tokens.space.sm, paddingLeft: tokens.space.md }] as any}>
-                        
-                        {/* En-tête : Titre et icône */}
-                        <View style={style.schedule.course.contentType as any}>
-                            <Text style={[style.schedule.course.title, { color: theme.font, flex: 1 }] as any}>
-                                {item.name}
-                            </Text>
-                            <MaterialCommunityIcons 
-                                name="bookshelf" 
-                                size={16} 
-                                color={theme.accent ?? theme.primary} 
-                            />
-                        </View>
-                        
-                        {/* Campus */}
-                        <View style={[style.schedule.course.line, { alignItems: 'center' }] as any}>
-                            <MaterialIcons
-                                name="room"
-                                size={14}
-                                color={theme.fontSecondary}
-                                style={{ marginRight: tokens.space.xs }}
-                            />
-                            <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.medium as any }}>
-                                {item.campus}
-                            </Text>
-                        </View>
+                {/* LA GRANDE IMAGE (Comme pour les RUs) */}
+                <Image 
+                    source={imageSource}
+                    style={{
+                        width: '100%',
+                        height: 180, 
+                        resizeMode: 'cover',
+                        backgroundColor: theme.greyBackground 
+                    }}
+                />
 
-                        {/* Distance */}
+                {/* LES INFOS EN DESSOUS */}
+                <View style={{ padding: tokens.space.md }}>
+                    
+                    {/* Titre */}
+                    <Text style={{ 
+                        fontSize: tokens.fontSize.lg, 
+                        fontWeight: tokens.fontWeight.bold as any, 
+                        color: theme.font,
+                        marginBottom: tokens.space.xs
+                    }}>
+                        {item.name}
+                    </Text>
+                    
+                    {/* Ligne : Ville + Badge de Distance */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
+                        <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
+                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
+                            {item.campus}
+                        </Text>
+
+                        {/* Badge de Distance style RU */}
                         {item.distance !== undefined && (
-                            <View style={[style.schedule.course.line as any, { alignItems: 'center', marginBottom: tokens.space.sm }]}>
-                                <MaterialIcons name="directions-walk" size={14} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.xs }} />
-                                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.accent ?? theme.primary, fontWeight: tokens.fontWeight.bold as any }}>
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: `${theme.primary}15`, 
+                                paddingHorizontal: tokens.space.sm,
+                                paddingVertical: 4,
+                                borderRadius: tokens.radius.pill,
+                            }}>
+                                <MaterialIcons name="directions-walk" size={14} color={theme.primary} />
+                                <Text style={{
+                                    fontSize: tokens.fontSize.sm,
+                                    fontWeight: tokens.fontWeight.bold as any,
+                                    color: theme.primary,
+                                    marginLeft: 4
+                                }}>
                                     {item.distance < 1 
                                         ? `${Math.round(item.distance * 1000)} m` 
                                         : `${item.distance.toFixed(1)} km`}
                                 </Text>
                             </View>
                         )}
-
-                        {/* Jauge d'affluence */}
-                        <View style={{ marginTop: tokens.space.xs }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: tokens.space.xs }}>
-                                <View style={{ flex: 1, paddingRight: tokens.space.sm }}>
-                                    <Text
-                                        numberOfLines={1}
-                                        ellipsizeMode='tail'
-                                        style={{
-                                            fontSize: tokens.fontSize.xs,
-                                            fontWeight: tokens.fontWeight.semibold as any,
-                                            color: statusColor
-                                        }}>
-                                        {statusText} 
-                                    </Text>
-                                </View>
-                                {rate !== null && (
-                                    <View style={{ flexShrink: 0, minWidth: 35, alignItems: 'flex-end', paddingRight: 2 }}>
-                                        <Text
-                                        style={{
-                                            fontSize: tokens.fontSize.xs,
-                                            color: theme.font,
-                                            fontWeight: tokens.fontWeight.semibold as any
-                                        }}>
-                                        {rate}%
-                                    </Text>
-                                    </View>
-                                )}
-                            </View>
-                            <View style={{ height: 6, borderRadius: 3, backgroundColor: theme.border, overflow: 'hidden' }}>
-                                {rate !== null && (
-                                    <View style={{ height: '100%', borderRadius: 3, width: `${rate}%`, backgroundColor: getOccupancyColor(rate) }} />
-                                )}
-                            </View>
-                        </View>
-
                     </View>
+
+                    {/* Jauge d'affluence avec son fix flexbox */}
+                    <View style={{ marginTop: tokens.space.xs }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                            <View style={{ flex: 1, paddingRight: tokens.space.sm }}>
+                                <Text
+                                    numberOfLines={1}
+                                    ellipsizeMode='tail'
+                                    style={{
+                                        fontSize: tokens.fontSize.xs,
+                                        fontWeight: tokens.fontWeight.semibold as any,
+                                        color: statusColor
+                                    }}>
+                                    {statusText} 
+                                </Text>
+                            </View>
+                            {rate !== null && (
+                                <View style={{ flexShrink: 0, minWidth: 35, alignItems: 'flex-end', paddingRight: 2 }}>
+                                    <Text
+                                    style={{
+                                        fontSize: tokens.fontSize.xs,
+                                        color: theme.font,
+                                        fontWeight: tokens.fontWeight.semibold as any
+                                    }}>
+                                    {rate}%
+                                </Text>
+                                </View>
+                            )}
+                        </View>
+                        <View style={{ height: 6, borderRadius: 3, backgroundColor: theme.border, overflow: 'hidden' }}>
+                            {rate !== null && (
+                                <View style={{ height: '100%', borderRadius: 3, width: `${rate}%`, backgroundColor: statusColor }} />
+                            )}
+                        </View>
+                    </View>
+
                 </View>
             </TouchableOpacity>
         );

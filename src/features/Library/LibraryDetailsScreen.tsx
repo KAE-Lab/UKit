@@ -67,11 +67,19 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
     }, [selectedIndex, timetable]);
 
     const renderLiveAttendance = () => {
+        if (!affluence) return null;
+
         const isOpen = affluence?.isOpen ?? false;
         const rate = affluence?.occupancyRate ?? null;
-        const statusColor = isOpen ? '#4caf50' : '#f44336';
 
-        let statusText = isOpen ? (Translator.get('BU_OPEN') ?? 'Ouverte') : (Translator.get('BU_CLOSED') ?? 'Fermée');
+        let statusColor = '#f44336';
+        if (isOpen) {
+            if (rate === null || rate < 50) statusColor = '#4caf50';
+            else if (rate < 80) statusColor = '#ff9800';
+            else statusColor = '#f44336';
+        }
+
+        let statusText = isOpen ? (Translator.get('BU_OPEN')) : (Translator.get('BU_CLOSED'));
         if (!isOpen && affluence?.openingText) {
             statusText = `${statusText} - ${affluence.openingText}`;
         }
@@ -79,7 +87,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
         return (
             <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.md, marginBottom: tokens.space.lg, borderRadius: tokens.radius.lg, borderWidth: 1, borderColor: theme.border }}>
                 <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any, color: theme.fontSecondary, marginBottom: tokens.space.sm, textTransform: 'uppercase' }}>
-                    {Translator.get('ATTENDANCE') ?? 'Affluence en direct'}
+                    {Translator.get('ATTENDANCE')}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: rate !== null ? tokens.space.md : 0 }}>
                     <MaterialCommunityIcons name={isOpen ? 'door-open' : 'door-closed'} size={24} color={statusColor} />
@@ -95,7 +103,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                             <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any }}>{rate}%</Text>
                         </View>
                         <View style={{ height: 8, borderRadius: 4, backgroundColor: theme.border, overflow: 'hidden' }}>
-                            <View style={{ height: '100%', borderRadius: 4, width: `${rate}%`, backgroundColor: rate < 50 ? '#4caf50' : (rate < 80 ? '#ff9800' : '#f44336') }} />
+                            <View style={{ height: '100%', borderRadius: 4, width: `${rate}%`, backgroundColor: statusColor }} />
                         </View>
                     </View>
                 )}
