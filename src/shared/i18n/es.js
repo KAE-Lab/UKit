@@ -11,7 +11,7 @@ export default {
 	APP_READY: '¡La aplicación está ahora lista, puedes ahora consultar tu horario!',
 	APPLICATION: 'Aplicación',
 	APPLICATION_HISTORY:
-		'Esta aplicación ha sido desarrollada por Jean B. para el concurso de HackeTaFac 2017. Hoy en día, está mantenida por KBDev SARL.\nMuchas gracias a Thomas Clément (Github @thclmnt) por su energía, su entusiasmo y su tiempo, permitiendo a UKit ser siempre más agradable para todos.\nGracias a Iñigo Diaz Iribarnegaray (Github @Gogotron) por la traducción en español.',
+		'Esta aplicación es un fork de UKit v4.1.2, modernizada y mantenida por el equipo KAE-Lab.\n\nImpulsado por React Navigation 6.',
 	AUTO_SYNC_DESCRIPTION:
 		'La sincronización automática se activa cada 12 horas para actualizar los datos de la agenda.',
 	AUTUMN: 'Otoño',
@@ -124,4 +124,7 @@ export default {
 	OPENING_HOURS: 'Horario de apertura',
 	OCCUPANCY_RATE: 'Tasa de ocupación',
 	COURSES: 'Cursos',
+	DATA_SOURCE_TITLE: 'Fuente de los datos',
+	DATA_SOURCE_TEXT: "Los horarios se recuperan desde el ENT de la Universidad de Burdeos. Esta aplicación es un proyecto independiente y no está afiliada oficialmente a la institución.",
+	LEGAL_MENTION: 'Este proyecto se distribuye bajo licencia libre. Las dependencias utilizan las licencias MIT y Apache 2.0.',
 };

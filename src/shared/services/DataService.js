@@ -12,8 +12,8 @@ moment.locale('fr');
 export const URL = {
     MAP: 'https://www.google.com/maps/',
     TWITTER: 'https://twitter.com/HackJack_',
-    UKIT_WEBSITE: 'https://ukit-bordeaux.fr',
-    KBDEV_WEBSITE: 'https://kbdev.io',
+    UKIT_WEBSITE: 'https://ukit.illumye.me', // https://ukit-bordeaux.fr
+    KAELAB_WEBSITE: 'https://kaelab.dev',
     LEGAL_NOTICE: 'https://ukit-bordeaux.fr/policies/privacy',
     VERSION_STORE: 'https://raw.githubusercontent.com/kb-dev/UKit/master/VERSION',
     GOOGLE_APP: 'https://play.google.com/store/apps/details?id=com.bordeaux1.emplois',

@@ -9,7 +9,7 @@ export default {
 	APP_READY: 'The app is now ready, you can now check your class schedule!',
 	APPLICATION: 'Application',
 	APPLICATION_HISTORY:
-		'This application has been developed by Jean B. for the HackeTaFac contest. App is now maintained by KBDev SARL.\nMany thanks to Thomas Clément (Github @thclmnt) for his energy, his enthusiasm and his time. With his help, UKit is a better application for everyone.\nThanks to Iñigo Diaz Iribarnegaray (Github @Gogotron) for the spanish translation.',
+		'This application is a fork of UKit v4.1.2, modernized and maintained by the KAE-Lab team.\n\nPowered by React Navigation 6.',
 	AUTO_SYNC_DESCRIPTION:
 		'Auto sync. is triggered every 12 hours to refresh data in the calendar.',
 	AUTUMN: 'Autumn',
@@ -120,4 +120,7 @@ export default {
 	OPENING_HOURS: 'Opening hours',
 	OCCUPANCY_RATE: 'Occupancy rate',
 	COURSES: 'Courses',
+	DATA_SOURCE_TITLE: 'Data source',
+	DATA_SOURCE_TEXT: "Schedules are retrieved from the ENT of the University of Bordeaux. This application is an independent project and is not officially affiliated with the institution.",
+	LEGAL_MENTION: 'This project is distributed under free license. Dependencies use MIT and Apache 2.0 licenses.',
 };

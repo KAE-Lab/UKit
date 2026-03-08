@@ -118,21 +118,21 @@ class AboutScreen extends React.Component {
                         </Text>
                     </Section>
 
-                    <Section title={'Source des données'} icon="database-outline" theme={theme}>
+                    <Section title={Translator.get('DATA_SOURCE_TITLE')} icon="database-outline" theme={theme}>
                         <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 22 }}>
-                            {"Les emplois du temps proviennent de l'ENT de l'Université de Bordeaux. Cette application n'est pas affiliée officiellement à l'établissement."}
+                            {Translator.get('DATA_SOURCE_TEXT')}
                         </Text>
                     </Section>
 
                     <Section title={Translator.get('CONTACT_US')} icon="email-outline" theme={theme}>
                         <URLButton url={URL.TWITTER} title="Twitter" theme={theme} />
                         <URLButton url={URL.UKIT_WEBSITE} title={Translator.get('WEBSITE')} theme={theme} />
-                        <URLButton url={URL.KBDEV_WEBSITE} title={Translator.get('COMPANY_WEBSITE')} theme={theme} />
+                        <URLButton url={URL.KAELAB_WEBSITE} title={Translator.get('COMPANY_WEBSITE')} theme={theme} />
                     </Section>
 
                     <Section title={Translator.get('LEGAL_NOTICE')} icon="shield-outline" theme={theme}>
                         <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 22, marginBottom: tokens.space.sm }}>
-                            {'Ce projet est distribué sous licence libre. Les dépendances utilisent les licences MIT et Apache 2.0.'}
+                            {Translator.get('LEGAL_MENTION')}
                         </Text>
                         <URLButton url={URL.LEGAL_NOTICE} title={Translator.get('CONFIDENTIALITY_POLITIC')} theme={theme} />
                     </Section>

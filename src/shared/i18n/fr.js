@@ -10,7 +10,7 @@ export default {
 		"L'application est maintenant prête, vous pouvez dès à présent consulter votre emploi du temps !",
 	APPLICATION: 'Application',
 	APPLICATION_HISTORY:
-		"Cette application est un fork de UKit v4.1.2, modernisé et maintenu par la team KAELab.\n\nPropulsé par React Navigation 6.",
+		"Cette application est un fork de UKit v4.1.2, modernisé et activement maintenu par la team KAELab.\n\nPropulsé par React Navigation 6.",
 	AUTO_SYNC_DESCRIPTION:
 		"La synchronisation automatique s'active tous les 12 heures pour rafraîchir les données du calendrier.",
 	AUTUMN: 'Automne',
@@ -122,4 +122,7 @@ export default {
 	OPENING_HOURS: 'Horaires d\'ouverture',
 	OCCUPANCY_RATE: 'Taux d\'occupation',
 	COURSES: 'Cours',
+	DATA_SOURCE_TITLE: 'Source des données',
+	DATA_SOURCE_TEXT: "Les emplois du temps sont récupérés depuis l'ENT de l'Université de Bordeaux. Cette application est un projet indépendant et n'est pas affiliée officiellement à l'établissement.",
+	LEGAL_MENTION: 'Ce projet est distribué sous licence libre. Les dépendances utilisent les licences MIT et Apache 2.0.',
 };
