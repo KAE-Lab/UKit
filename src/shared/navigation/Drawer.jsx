@@ -30,8 +30,6 @@ const CustomDrawerContentComponent = (props) => {
                     alignItems: 'center',
                     paddingHorizontal: tokens.space.md,
                     paddingVertical: tokens.space.lg,
-                    borderBottomWidth: 1,
-                    borderBottomColor: theme.border,
                 }}>
                     <Image
                         style={{ width: 140, height: 60, resizeMode: 'contain', tintColor: theme.accent ?? theme.primary }}

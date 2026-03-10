@@ -873,8 +873,6 @@ const style = {
         titleView: {
             paddingHorizontal: tokens.space.md,
             paddingVertical: tokens.space.sm,
-            borderBottomWidth: 1,
-            borderBottomColor: 'transparent',
         },
         titleText: {
             fontSize: tokens.fontSize.lg,
