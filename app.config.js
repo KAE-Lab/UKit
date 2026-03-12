@@ -55,5 +55,7 @@ export default {
       	},
 		sentryDSN: process.env.SENTRY_DSN,
 	},
-	plugins: [],
+	plugins: [
+		"expo-web-browser",
+	],
 };

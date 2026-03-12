@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext, useRef } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-
+import * as WebBrowser from 'expo-web-browser';
 import LibraryService, { TimetableEntry } from './LibraryService';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
@@ -229,11 +229,12 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                 borderTopColor: theme.border,
             }}>
                 <TouchableOpacity 
-                    onPress={() => {
-                        navigation.navigate('WebBrowser', { 
-                            href: `https://affluences.com/sites/${library.slug}/reservation`,
-                            title: `Réservation - ${library.name}`
-                        });
+                    onPress={async () => {
+                        try {
+                            await WebBrowser.openBrowserAsync(`https://affluences.com/sites/${library.slug}/reservation`);
+                        } catch (error) {
+                            console.error("Erreur d'ouverture du navigateur:", error);
+                        }
                     }}
                     style={{
                         backgroundColor: theme.accent ?? theme.primary,

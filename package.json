@@ -45,6 +45,7 @@
     "expo-splash-screen": "~31.0.13",
     "expo-task-manager": "~14.0.9",
     "expo-updates": "~29.0.16",
+    "expo-web-browser": "~15.0.10",
     "html-entities": "^2.3.2",
     "moment": "^2.22.2",
     "prop-types": "^15.6.2",
