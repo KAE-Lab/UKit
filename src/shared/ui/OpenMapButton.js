@@ -27,11 +27,13 @@ export default class OpenMapButton extends React.Component {
         return URL.MAP + `search/?api=1&query=${location.lat},${location.lng}`;
     }
 
-    openURL = () => {
+    openURL = async () => {
         const url = this.getGMapsLocation();
-        Linking.canOpenURL(url).then((supported) => {
-            if (supported) Linking.openURL(url);
-        });
+        try {
+            await Linking.openURL(url);
+        } catch (error) {
+            console.error('Error opening URL:', error);
+        }
     };
 
     render() {
