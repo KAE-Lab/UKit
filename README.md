@@ -32,6 +32,17 @@ Le projet suit une stratégie de migration "Feature-first" :
    npx expo start
    ```
 
+## Crédits
+
+UKit a été initialement pensé et développé par ses créateurs originaux. Un grand merci à eux pour leur travail sur les premières versions de l'application :
+* [Jean](https://github.com/HackJack-101)
+* [Thomas](https://github.com/thclmnt)
+* [Florian](https://github.com/AamuLumi)
+* [Gogotron](https://github.com/Gogotron)
+* [Clément](https://github.com/Shapeqs)
+
+Le projet est aujourd'hui repris, maintenu et développé par l'organisation KAE Lab. Un remerciement particulier à Jean pour sa confiance et pour nous avoir transmis les clés de l'application.
+
 ## Licence
 
 Distribué sous licence Apache 2.0. Voir [LICENSE](LICENSE) pour plus de détails.
