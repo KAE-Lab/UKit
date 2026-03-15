@@ -229,7 +229,7 @@ export default function LibraryScreen({ navigation }: any) {
                     data={libraries}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingVertical: tokens.space.sm, flexGrow: 1 }}
+                    contentContainerStyle={{ paddingTop: 110, paddingVertical: tokens.space.sm, flexGrow: 1 }}
                     renderItem={renderLibraryCard}
                     ListEmptyComponent={
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.lg, marginTop: tokens.space.xxl }}>

@@ -85,7 +85,7 @@ class AboutScreen extends React.Component {
             <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
                 <ScrollView
                     style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingBottom: tokens.space.xl }}
+                    contentContainerStyle={{ paddingTop: 70, paddingBottom: tokens.space.xl }}
                     showsVerticalScrollIndicator={false}>
 
                     <View style={{ alignItems: 'center', paddingVertical: tokens.space.xl }}>
@@ -128,6 +128,28 @@ class AboutScreen extends React.Component {
                         <URLButton url={URL.TWITTER} title="Twitter" theme={theme} />
                         <URLButton url={URL.UKIT_WEBSITE} title={Translator.get('WEBSITE')} theme={theme} />
                         <URLButton url={URL.KAELAB_WEBSITE} title={Translator.get('COMPANY_WEBSITE')} theme={theme} />
+                    </Section>
+
+                    <Section title="Crédits & API" icon="api" theme={theme}>
+                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 22 }}>
+                            Cette application utilise des services tiers pour fournir des données en temps réel aux étudiants :
+                        </Text>
+                        <View style={{ marginTop: tokens.space.sm }}>
+                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: 'bold' }}>
+                                • API Affluences
+                            </Text>
+                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginLeft: tokens.space.sm }}>
+                                Horaires et affluence en temps réel des bibliothèques (BU).
+                            </Text>
+                        </View>
+                        <View style={{ marginTop: tokens.space.sm }}>
+                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: 'bold' }}>
+                                • API CROUStillant
+                            </Text>
+                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginLeft: tokens.space.sm }}>
+                                Menus quotidiens et images des restaurants universitaires.
+                            </Text>
+                        </View>
                     </Section>
 
                     <Section title={Translator.get('LEGAL_NOTICE')} icon="shield-outline" theme={theme}>

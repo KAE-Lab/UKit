@@ -30,7 +30,7 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, scroll
 
     return {
         headerTitle: () => (
-            <Animated.View style={{ opacity: titleOpacity, backgroundColor: theme.primary, paddingHorizontal: tokens.space.md, paddingVertical: 6, borderRadius: tokens.radius.pill }}>
+            <Animated.View style={{ opacity: titleOpacity, backgroundColor: theme.primary, paddingHorizontal: tokens.space.md, paddingVertical: 8, borderRadius: tokens.radius.pill }}>
                 <Text style={{ color: '#FFFFFF', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>{title}</Text>
             </Animated.View>
         ),

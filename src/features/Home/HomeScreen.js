@@ -397,7 +397,7 @@ class HomeScreen extends React.Component {
         }
 
         return (
-            <View style={[style.list.homeView, { backgroundColor: theme.background }]}>
+            <View style={[style.list.homeView, { backgroundColor: theme.background, paddingTop: 100 }]}>
                 {searchInput}
                 <Split lineColor={theme.border} noMargin={true} />
                 {cache}

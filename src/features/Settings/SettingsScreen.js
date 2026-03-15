@@ -143,7 +143,7 @@ class Settings extends React.Component {
             <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
                 <ScrollView
                     style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingBottom: tokens.space.xl }}
+                    contentContainerStyle={{ paddingTop: 50, paddingBottom: tokens.space.xl }}
                     showsVerticalScrollIndicator={false}>
 
                     {/* ── Affichage ─────────────────────────────────────── */}

@@ -75,7 +75,7 @@ export default function CrousScreen({ navigation }: any) {
                     data={restaurants}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingVertical: tokens.space.sm }}
+                    contentContainerStyle={{ paddingTop: 110, paddingVertical: tokens.space.sm }}
                     renderItem={({ item }) => (
                         <TouchableOpacity 
                             activeOpacity={0.9}
