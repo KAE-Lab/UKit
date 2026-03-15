@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
@@ -21,7 +21,10 @@ export default function LibraryScreen({ navigation }: any) {
     const [affluences, setAffluences] = useState<Record<string, AffluencesData>>({});
     const [locationError, setLocationError] = useState(false);
 
+    const scrollY = useRef(new Animated.Value(0)).current;
+
     useEffect(() => {
+        navigation.setParams({ scrollY });
         loadLibraries();
     }, []);
 
@@ -225,11 +228,16 @@ export default function LibraryScreen({ navigation }: any) {
     return (
         <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
-                <FlatList
+                <Animated.FlatList
                     data={libraries}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        { useNativeDriver: false }
+                    )}
+                    scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingVertical: tokens.space.sm, flexGrow: 1 }}
+                    contentContainerStyle={{ paddingTop: 110, paddingVertical: tokens.space.sm, flexGrow: 1 }}
                     renderItem={renderLibraryCard}
                     ListEmptyComponent={
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.lg, marginTop: tokens.space.xxl }}>

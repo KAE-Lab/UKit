@@ -44,8 +44,8 @@ export default function StackNavigator() {
 							const title = Translator.get('GROUPS');
 							const leftButton = (
 								<TouchableOpacity onPress={() => navigation.openDrawer()} style={{ paddingLeft: tokens.space.md }}>
-									<View style={{ backgroundColor: style.Theme[themeName].primary, padding: 6, borderRadius: tokens.radius.pill }}>
-										<MaterialCommunityIcons name="menu" size={22} color="#FFFFFF" />
+									<View style={{ backgroundColor: style.Theme[themeName].primary, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
+										<MaterialCommunityIcons name="menu" size={26} color="#FFFFFF" />
 									</View>
 								</TouchableOpacity>
 							);
@@ -60,8 +60,8 @@ export default function StackNavigator() {
 							const rightButton = <SaveButton groupName={route.params.name} themeName={themeName} />;
 							const leftButton = (
 								<TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={{ paddingLeft: tokens.space.md }}>
-									<View style={{ backgroundColor: style.Theme[themeName].primary, padding: 6, borderRadius: tokens.radius.pill }}>
-										<MaterialCommunityIcons name="menu" size={22} color="#FFFFFF" />
+									<View style={{ backgroundColor: style.Theme[themeName].primary, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
+										<MaterialCommunityIcons name="menu" size={26} color="#FFFFFF" />
 									</View>
 								</TouchableOpacity>
 							);
@@ -90,14 +90,35 @@ export default function StackNavigator() {
 							tabBarIcon: ({ tintColor }) => <MaterialCommunityIcons name="calendar" size={24} style={{ color: tintColor }} />
 						}}
 					/>
-					<Stack.Screen name="About" component={About} options={{ title: Translator.get('ABOUT') }} />
-					<Stack.Screen name="Settings" component={Settings} options={{ title: Translator.get('SETTINGS') }} />
+					<Stack.Screen
+						name="About"
+						component={About}
+						options={({ navigation }) => {
+							const title = Translator.get('ABOUT');
+							const leftButton = <BackButton backAction={navigation.goBack} />;
+							return NavBarHelper({ headerLeft: () => leftButton, title, themeName });
+						}}
+					/>
+					<Stack.Screen
+						name="Settings"
+						component={Settings}
+						options={({ navigation }) => {
+							const title = Translator.get('SETTINGS');
+							const leftButton = <BackButton backAction={navigation.goBack} />;
+							return NavBarHelper({ headerLeft: () => leftButton, title, themeName });
+						}}
+					/>
 					
 					{/* ── CROUS ── */}
 					<Stack.Screen 
 						name="Crous" 
 						component={CrousScreen} 
-						options={{ title: Translator.get('RESTAURANTS_U') }} 
+						options={({ navigation, route }) => {
+							const title = Translator.get('RESTAURANTS_U');
+
+							const leftButton = <BackButton backAction={navigation.goBack} />;
+							return NavBarHelper({ headerLeft: () => leftButton, title, themeName });
+						}} 
 					/>
 
 					{/* ── MENU DU CROUS ── */}
@@ -130,8 +151,10 @@ export default function StackNavigator() {
 					<Stack.Screen
 						name="Library"
 						component={LibraryScreen}
-						options={{
-							title: Translator.get('LIBRARIES') ?? 'Bibliothèques'
+						options={({ navigation }) => {
+							const title = Translator.get('LIBRARIES');
+							const leftButton = <BackButton backAction={navigation.goBack} />;
+							return NavBarHelper({ headerLeft: () => leftButton, title, themeName });
 						}}
 					/>
 					<Stack.Screen 

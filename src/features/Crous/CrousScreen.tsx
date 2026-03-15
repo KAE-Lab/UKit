@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useState, useContext, useRef } from 'react';
+import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
@@ -17,8 +17,11 @@ export default function CrousScreen({ navigation }: any) {
     const [restaurants, setRestaurants] = useState<CrousRestaurant[]>([]);
     const [loading, setLoading] = useState(true);
     const [locationError, setLocationError] = useState(false);
+    
+    const scrollY = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
+        navigation.setParams({ scrollY });
         loadData();
     }, []);
 
@@ -71,11 +74,16 @@ export default function CrousScreen({ navigation }: any) {
     return (
         <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
-                <FlatList
+                <Animated.FlatList
                     data={restaurants}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        { useNativeDriver: false }
+                    )}
+                    scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingVertical: tokens.space.sm }}
+                    contentContainerStyle={{ paddingTop: 110, paddingVertical: tokens.space.sm }}
                     renderItem={({ item }) => (
                         <TouchableOpacity 
                             activeOpacity={0.9}

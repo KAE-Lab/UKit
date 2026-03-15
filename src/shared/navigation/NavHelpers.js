@@ -28,22 +28,12 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, scroll
         extrapolate: 'clamp',
     });
 
-    return {
+    const options = {
         headerTitle: () => (
-            <Animated.View style={{ opacity: titleOpacity, backgroundColor: theme.primary, paddingHorizontal: tokens.space.md, paddingVertical: 6, borderRadius: tokens.radius.pill }}>
-                <Text style={{ color: '#FFFFFF', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>{title}</Text>
+            <Animated.View style={{ opacity: titleOpacity, backgroundColor: theme.primary, paddingHorizontal: tokens.space.md, paddingVertical: 8, borderRadius: tokens.radius.pill, maxWidth: 220 }}>
+                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: '#FFFFFF', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>{title}</Text>
             </Animated.View>
         ),
-        headerLeft: headerLeft ? () => (
-            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-                {headerLeft()}
-            </Animated.View>
-        ) : undefined,
-        headerRight: headerRight ? () => (
-            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-                {headerRight()}
-            </Animated.View>
-        ) : undefined,
         headerTransparent: true, 
         headerStyle: {
             backgroundColor: 'transparent',
@@ -53,6 +43,20 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, scroll
         },
         headerTitleAlign: 'center',
     };
+
+    // Sécurité : on n'écrase les boutons QUE si on les passe explicitement
+    if (headerLeft !== undefined) {
+        options.headerLeft = headerLeft ? () => (
+            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>{headerLeft()}</Animated.View>
+        ) : undefined;
+    }
+    if (headerRight !== undefined) {
+        options.headerRight = headerRight ? () => (
+            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>{headerRight()}</Animated.View>
+        ) : undefined;
+    }
+
+    return options;
 };
 
 // ── BOUTON SAUVEGARDER GROUPE ───────────────────────────────────────────
@@ -79,7 +83,7 @@ export class SaveGroupButton extends React.Component {
         const theme = style.Theme[this.props.themeName] || style.Theme.light;
         return (
             <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: tokens.space.md }}>
-                <View style={{ backgroundColor: theme.primary, padding: 6, borderRadius: tokens.radius.pill }}>
+                <View style={{ backgroundColor: theme.primary, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
                     <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={22} color="#FFFFFF" />
                 </View>
             </TouchableOpacity>

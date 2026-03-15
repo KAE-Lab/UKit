@@ -170,7 +170,7 @@ export default function CrousMenuScreen({ route }: any) {
         <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             
             {/* ── Bandeau des dates défilant horizontalement ── */}
-            <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm }}>
+            <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm, paddingTop: 110 }}>
                 <FlatList
                     horizontal
                     showsHorizontalScrollIndicator={false}
