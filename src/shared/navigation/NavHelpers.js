@@ -8,16 +8,26 @@ import style, { tokens } from '../theme/Theme';
 import Button from '../ui/Button';
 
 // ── GESTIONNAIRE DE HEADER ──────────────────────────────────────────────
-export const NavBarHelper = ({ title, headerLeft, headerRight, themeName }) => ({
-    title,
-    headerLeft,
-    headerRight,
-    headerStyle: {
-        backgroundColor: style.Theme[themeName].primary,
-        borderBottomColor: 'transparent',
-    },
-    headerTintColor: style.Theme[themeName].lightFont,
-});
+export const NavBarHelper = ({ title, headerLeft, headerRight, themeName }) => {
+    const theme = style.Theme[themeName];
+    return {
+        // Le titre encapsulé dans une pilule flottante
+        headerTitle: () => (
+            <View style={{ backgroundColor: theme.primary, paddingHorizontal: tokens.space.md, paddingVertical: 6, borderRadius: tokens.radius.pill }}>
+                <Text style={{ color: '#FFFFFF', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>{title}</Text>
+            </View>
+        ),
+        headerLeft,
+        headerRight,
+        headerStyle: {
+            backgroundColor: theme.background, // Le header se fond avec l'arrière-plan de l'app
+            elevation: 0, 
+            shadowOpacity: 0, 
+            borderBottomWidth: 0,
+        },
+        headerTitleAlign: 'center',
+    };
+};
 
 // ── BOUTON SAUVEGARDER GROUPE ───────────────────────────────────────────
 export class SaveGroupButton extends React.Component {
@@ -39,9 +49,13 @@ export class SaveGroupButton extends React.Component {
         return !(this.state.savedGroup === null || this.state.savedGroup !== this.state.displayedGroup);
     }
     render() {
+        // On récupère le thème passé en props depuis le StackNavigator
+        const theme = style.Theme[this.props.themeName] || style.Theme.light;
         return (
-            <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
-                <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={30} style={{ color: '#FFFFFF', height: 32, width: 32 }} />
+            <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: tokens.space.md }}>
+                <View style={{ backgroundColor: theme.primary, padding: 6, borderRadius: tokens.radius.pill }}>
+                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={22} color="#FFFFFF" />
+                </View>
             </TouchableOpacity>
         );
     }

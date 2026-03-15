@@ -1,22 +1,25 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useContext } from 'react';
 import { Animated, Switch, Text, TouchableOpacity, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
-
+import { AppContext } from '../services/AppCore';
 import style, { tokens, StyleWelcome } from '../theme/Theme';
 
 // ── Bouton de Retour ───────────────────────────────────────────
 export const BackButton = ({ backAction }) => {
+    const AppContextValues = useContext(AppContext);
+    const theme = style.Theme[AppContextValues.themeName];
+
     const _onPress = () => {
         requestAnimationFrame(() => backAction());
     };
     return (
-        <GHTouchableOpacity onPress={_onPress} style={style.backButton}>
-            <View>
+        <GHTouchableOpacity onPress={_onPress} style={[style.backButton, { paddingLeft: tokens.space.md }]}>
+            <View style={{ backgroundColor: theme.primary, padding: 6, borderRadius: tokens.radius.pill }}>
                 <Ionicons
                     name="arrow-back"
-                    size={32}
-                    style={{ color: '#F0F0F0', height: 32, width: 32 }}
+                    size={22}
+                    color="#FFFFFF"
                 />
             </View>
         </GHTouchableOpacity>

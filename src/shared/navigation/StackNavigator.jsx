@@ -18,7 +18,7 @@ import CrousMenuScreen from '../../features/Crous/CrousMenuScreen';
 import LibraryScreen from '../../features/Library/LibraryScreen';
 import LibraryDetailsScreen from '../../features/Library/LibraryDetailsScreen';
 
-import style from '../theme/Theme';
+import style, { tokens } from '../theme/Theme';
 import { BackButton } from '../ui/Button'; 
 import { AppContext, treatTitle } from '../services/AppCore';
 import Translator from '../i18n/Translator';
@@ -43,9 +43,9 @@ export default function StackNavigator() {
 						options={({ navigation }) => {
 							const title = Translator.get('GROUPS');
 							const leftButton = (
-								<TouchableOpacity onPress={() => navigation.openDrawer()} style={{ justifyContent: 'space-around', paddingLeft: 16 }}>
-									<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-										<MaterialCommunityIcons name="menu" size={32} style={{ color: '#F0F0F0', height: 32, width: 32 }} />
+								<TouchableOpacity onPress={() => navigation.openDrawer()} style={{ paddingLeft: tokens.space.md }}>
+									<View style={{ backgroundColor: style.Theme[themeName].primary, padding: 6, borderRadius: tokens.radius.pill }}>
+										<MaterialCommunityIcons name="menu" size={22} color="#FFFFFF" />
 									</View>
 								</TouchableOpacity>
 							);
@@ -57,10 +57,12 @@ export default function StackNavigator() {
 						component={Group}
 						options={({ navigation, route }) => {
 							const title = treatTitle(route.params.name);
-							const rightButton = <SaveButton groupName={route.params.name} />;
+							const rightButton = <SaveButton groupName={route.params.name} themeName={themeName} />;
 							const leftButton = (
-								<TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={{ justifyContent: 'space-around', paddingLeft: 10 }}>
-									<MaterialCommunityIcons name="menu" size={32} color="#F0F0F0" />
+								<TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={{ paddingLeft: tokens.space.md }}>
+									<View style={{ backgroundColor: style.Theme[themeName].primary, padding: 6, borderRadius: tokens.radius.pill }}>
+										<MaterialCommunityIcons name="menu" size={22} color="#FFFFFF" />
+									</View>
 								</TouchableOpacity>
 							);
 							return NavBarHelper({ headerLeft: () => leftButton, headerRight: () => rightButton, title, themeName });
@@ -73,8 +75,8 @@ export default function StackNavigator() {
 							const groupName = route.params.groupName;
 							const title = groupName.replace(/_/g, ' ');
 							const rightButton = (
-								<View style={{ justifyContent: 'space-around', paddingRight: 16, flexDirection: 'row' }}>
-									<SaveButton groupName={groupName} />
+								<View style={{ justifyContent: 'space-around', paddingRight: tokens.space.md, flexDirection: 'row' }}>
+									<SaveButton groupName={groupName} themeName={themeName} />
 								</View>
 							);
 							return NavBarHelper({ headerRight: () => rightButton, title, themeName });

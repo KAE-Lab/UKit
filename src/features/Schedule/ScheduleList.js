@@ -70,80 +70,78 @@ export class DayWeek extends React.Component {
     };
 
     render() {
-        const { theme, schedule } = this.props;
-        const { expand } = this.state;
-        const hasCourses = schedule.courses.length > 0;
+        const { theme, mode, navigation } = this.props;
+        let content = null, cacheMessage = null;
 
-        let content = null;
-
-        if (!hasCourses) {
-            content = (
-                <View style={[
-                    style.schedule.course.noCourse,
-                    { backgroundColor: theme.courseBackground },
-                ]}>
-                    <MaterialCommunityIcons
-                        name="calendar-blank-outline"
-                        size={28}
-                        color={theme.fontSecondary}
-                        style={{ opacity: 0.4, marginBottom: tokens.space.xs }}
-                    />
-                    <Text style={[style.schedule.course.noCourseText, { color: theme.fontSecondary }]}>
-                        {Translator.get('NO_CLASS_THIS_DAY')}
+        if (this.state.cacheDate !== null) {
+            cacheMessage = (
+                <View style={{
+                    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.greyBackground,
+                    paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
+                    borderRadius: tokens.radius.md, marginBottom: tokens.space.md, marginHorizontal: tokens.space.md
+                }}>
+                    {mode === 'week' && <MaterialCommunityIcons name="clock-outline" size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
+                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
+                        {Translator.get('OFFLINE_DISPLAY_FROM_DATE', moment(this.state.cacheDate).format('lll'))}
                     </Text>
-                </View>
-            );
-        } else if (expand) {
-            const groupedCourses = groupOverlappingCourses(schedule.courses);
-            content = (
-                <View key={schedule.dayNumber}>
-                    {groupedCourses.map((group, index) => (
-                        <CourseGroupCarousel
-                            key={String(schedule.dayNumber) + String(index)}
-                            coursesGroup={group}
-                            theme={theme}
-                        />
-                    ))}
                 </View>
             );
         }
 
+        const listHeader = (
+            <View style={{ paddingBottom: tokens.space.md, paddingTop: tokens.space.sm }}>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', color: theme.font, textAlign: 'center', marginBottom: cacheMessage ? tokens.space.sm : 0 }}>
+                    {this.displayTitle()}
+                </Text>
+                {cacheMessage}
+            </View>
+        );
+
+        if (this.state.schedule === null) {
+            content = (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator style={{ margin: tokens.space.lg }} size="large" color={theme.primary} animating={true} />
+                </View>
+            );
+        } else if (this.state.schedule instanceof Array && mode === 'day') {
+            let daySchedule = this.state.schedule;
+            if (moment(this.state.target).day() === 0 || daySchedule.length === 0) {
+                daySchedule = [{ schedule: 0, category: 'nocourse' }];
+            }
+
+            const groupedDaySchedule = groupOverlappingCourses(daySchedule);
+
+            content = (
+                <FlatList
+                    data={groupedDaySchedule}
+                    extraData={this.state}
+                    ListHeaderComponent={listHeader}
+                    renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item} theme={theme} />}
+                    keyExtractor={(item, index) => String(index)}
+                    style={{ backgroundColor: theme.courseBackground }}
+                    showsVerticalScrollIndicator={false}
+                />
+            );
+        } else if (this.state.schedule instanceof Array && mode === 'week') {
+            const isFavorite = this.state.groupName === this.state.groupName;
+            content = (
+                <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+                    {listHeader}
+                    {this.state.schedule.map((scheduleItem, index) => (
+                        <DayWeek
+                            key={index}
+                            schedule={this.computeScheduleWeek(scheduleItem, isFavorite)}
+                            navigation={navigation}
+                            theme={theme}
+                        />
+                    ))}
+                </ScrollView>
+            );
+        }
+
         return (
-            <View style={{ marginBottom: tokens.space.xs, borderBottomWidth: 1, borderBottomColor: theme.border }}>
-                <TouchableOpacity
-                    onPress={this.toggleExpand}
-                    activeOpacity={0.7}
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        paddingHorizontal: tokens.space.md,
-                        paddingVertical: tokens.space.md,
-                        backgroundColor: expand ? theme.cardBackground : theme.greyBackground,
-                    }}>
-                    <MaterialCommunityIcons name={expand ? 'chevron-up' : 'chevron-down'} size={22} color={expand ? theme.primary : theme.fontSecondary} />
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'center' }}>
-                        <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.semibold, color: theme.font }}>
-                            {upperCaseFirstLetter(moment.unix(schedule.dayTimestamp).format('dddd L'))}
-                        </Text>
-                        {hasCourses && (
-                            <View style={{
-                                backgroundColor: expand ? theme.primary : theme.greyBackground,
-                                borderRadius: tokens.radius.pill, paddingHorizontal: tokens.space.sm,
-                                paddingVertical: 2, marginLeft: tokens.space.sm, borderWidth: 1,
-                                borderColor: expand ? theme.primary : theme.border,
-                            }}>
-                                <Text style={{ fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.semibold, color: expand ? '#FFFFFF' : theme.fontSecondary }}>
-                                    {schedule.courses.length}
-                                </Text>
-                            </View>
-                        )}
-                    </View>
-                    <MaterialCommunityIcons name={expand ? 'chevron-up' : 'chevron-down'} size={22} color={expand ? theme.primary : theme.fontSecondary} />
-                </TouchableOpacity>
-                <Collapsible collapsed={!expand} align="top">
-                    {content}
-                </Collapsible>
+            <View style={[style.schedule.containerView, { flex: 1, backgroundColor: theme.courseBackground, marginTop: 0 }]}>
+                <View style={style.schedule.contentView}>{content}</View>
             </View>
         );
     }
