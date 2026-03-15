@@ -68,7 +68,7 @@ const CustomDrawerContentComponent = (props) => {
                             title={Translator.get('GROUPS_LIST')}
                             size={22} textSize={tokens.fontSize.sm} icon={'list'}
                             color={theme.icon} fontColor={theme.font}
-                            onPress={props.navigation.closeDrawer}
+                            onPress={() => props.navigation.navigate('Stack', { screen: 'Home' })}
                         />
                     </View>
                     
