@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, View, Modal, Text } from 'react-native';
+import { TouchableOpacity, View, Modal, Text, Animated } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import { SettingsManager } from '../services/AppCore';
@@ -8,16 +8,52 @@ import style, { tokens } from '../theme/Theme';
 import Button from '../ui/Button';
 
 // ── GESTIONNAIRE DE HEADER ──────────────────────────────────────────────
-export const NavBarHelper = ({ title, headerLeft, headerRight, themeName }) => ({
-    title,
-    headerLeft,
-    headerRight,
-    headerStyle: {
-        backgroundColor: style.Theme[themeName].primary,
-        borderBottomColor: 'transparent',
-    },
-    headerTintColor: style.Theme[themeName].lightFont,
-});
+export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, scrollY }) => {
+    const theme = style.Theme[themeName];
+
+    // Si on n'a pas de scrollY (sur les pages statiques), on bloque l'animation à 0
+    const safeScrollY = scrollY || new Animated.Value(0);
+
+    // Le titre disparaît progressivement entre 0 et 60px de scroll
+    const titleOpacity = safeScrollY.interpolate({
+        inputRange: [0, 60],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+    });
+
+    // Les boutons passent d'une échelle de 1.15 (plus gros) à 0.9 (plus discrets)
+    const buttonScale = safeScrollY.interpolate({
+        inputRange: [0, 60],
+        outputRange: [1.15, 0.9],
+        extrapolate: 'clamp',
+    });
+
+    return {
+        headerTitle: () => (
+            <Animated.View style={{ opacity: titleOpacity, backgroundColor: theme.primary, paddingHorizontal: tokens.space.md, paddingVertical: 6, borderRadius: tokens.radius.pill }}>
+                <Text style={{ color: '#FFFFFF', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>{title}</Text>
+            </Animated.View>
+        ),
+        headerLeft: headerLeft ? () => (
+            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+                {headerLeft()}
+            </Animated.View>
+        ) : undefined,
+        headerRight: headerRight ? () => (
+            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+                {headerRight()}
+            </Animated.View>
+        ) : undefined,
+        headerTransparent: true, 
+        headerStyle: {
+            backgroundColor: 'transparent',
+            elevation: 0, 
+            shadowOpacity: 0, 
+            borderBottomWidth: 0,
+        },
+        headerTitleAlign: 'center',
+    };
+};
 
 // ── BOUTON SAUVEGARDER GROUPE ───────────────────────────────────────────
 export class SaveGroupButton extends React.Component {
@@ -39,9 +75,13 @@ export class SaveGroupButton extends React.Component {
         return !(this.state.savedGroup === null || this.state.savedGroup !== this.state.displayedGroup);
     }
     render() {
+        // On récupère le thème passé en props depuis le StackNavigator
+        const theme = style.Theme[this.props.themeName] || style.Theme.light;
         return (
-            <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
-                <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={30} style={{ color: '#FFFFFF', height: 32, width: 32 }} />
+            <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: tokens.space.md }}>
+                <View style={{ backgroundColor: theme.primary, padding: 6, borderRadius: tokens.radius.pill }}>
+                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={22} color="#FFFFFF" />
+                </View>
             </TouchableOpacity>
         );
     }
