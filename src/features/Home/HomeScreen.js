@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import style, { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
 import { AppContext, isConnected } from '../../shared/services/AppCore'
 import { FetchManager } from '../../shared/services/DataService'; 
+import { NavBarHelper } from '../../shared/navigation/NavHelpers';
 
 // ── COMPOSANT HEADER DE SECTION ─────────────────────────────────────────
 class SectionListHeader extends React.PureComponent {
@@ -131,7 +132,8 @@ class HomeScreen extends React.Component {
 	static contextType = AppContext;
 
 	constructor(props) {
-		super(props);
+        super(props);
+        this.scrollY = new Animated.Value(0);
 		this.state = {
 			completeList: null,
 			sections: null,
@@ -143,7 +145,14 @@ class HomeScreen extends React.Component {
 		};
 	}
 
-	async componentDidMount() {
+    async componentDidMount() {
+        this.props.navigation.setOptions(
+            NavBarHelper({
+                title: Translator.get('GROUPS'),
+                themeName: this.context.themeName,
+                scrollY: this.scrollY,
+            })
+        );
 		await this.getList();
 	}
 
@@ -343,12 +352,7 @@ class HomeScreen extends React.Component {
         if (this.state.emptySearchResults) {
             content = (
                 <View style={[style.schedule.course.noCourse, { backgroundColor: theme.greyBackground }]}>
-                    <MaterialCommunityIcons
-                        name="magnify-close"
-                        size={48}
-                        color={theme.fontSecondary}
-                        style={{ marginBottom: tokens.space.md, opacity: 0.4 }}
-                    />
+                    <MaterialCommunityIcons name="magnify-close" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.md, opacity: 0.4 }} />
                     <Text style={[style.schedule.course.noCourseText, { color: theme.font }]}>
                         {Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
                     </Text>
@@ -362,26 +366,19 @@ class HomeScreen extends React.Component {
             );
         } else {
             content = (
-                <SectionList
+                <Animated.SectionList
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: this.scrollY } } }],
+                        { useNativeDriver: false }
+                    )}
+                    scrollEventThrottle={16}
+                    contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.xxl }}
+                    scrollIndicatorInsets={{ top: 0 }}
                     renderItem={({ item, index }) => (
-                        <GroupRow
-                            name={item.name}
-                            cleanName={item.cleanName}
-                            sectionStyle={item.sectionStyle}
-                            key={index}
-                            color={theme.sections[item.colorIndex]}
-                            fontColor={theme.font}
-                            openGroup={this.openGroup}
-                        />
+                        <GroupRow name={item.name} cleanName={item.cleanName} sectionStyle={item.sectionStyle} key={index} color={theme.sections[item.colorIndex]} fontColor={theme.font} openGroup={this.openGroup} />
                     )}
                     renderSectionHeader={({ section }) => (
-                        <SectionListHeader
-                            title={section.key}
-                            key={section.key}
-                            sectionIndex={section.sectionIndex}
-                            color={theme.sections[section.colorIndex]}
-                            headerColor={theme.sectionsHeaders[section.colorIndex]}
-                        />
+                        <SectionListHeader title={section.key} key={section.key} sectionIndex={section.sectionIndex} color={theme.sections[section.colorIndex]} headerColor={theme.sectionsHeaders[section.colorIndex]} />
                     )}
                     sections={this.state.sections}
                     keyExtractor={(item, index) => index.toString()}
@@ -397,10 +394,12 @@ class HomeScreen extends React.Component {
         }
 
         return (
-            <View style={[style.list.homeView, { backgroundColor: theme.background, paddingTop: 100 }]}>
-                {searchInput}
-                <Split lineColor={theme.border} noMargin={true} />
-                {cache}
+            <View style={[style.list.homeView, { backgroundColor: theme.background }]}>
+                <View style={{ paddingTop: 110 }}>
+                    {searchInput}
+                    <Split lineColor={theme.border} noMargin={true} />
+                    {cache}
+                </View>
                 {content}
             </View>
         );

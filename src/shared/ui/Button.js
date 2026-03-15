@@ -15,7 +15,7 @@ export const BackButton = ({ backAction }) => {
     };
     return (
         <GHTouchableOpacity onPress={_onPress} style={[style.backButton, { paddingLeft: tokens.space.md }]}>
-            <View style={{ backgroundColor: theme.primary, padding: 6, borderRadius: tokens.radius.pill }}>
+            <View style={{ backgroundColor: theme.primary, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
                 <Ionicons
                     name="arrow-back"
                     size={22}

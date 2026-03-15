@@ -117,7 +117,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
         <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             
             {/* Bandeau des dates avec navigation par semaine */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.xs }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.xs, paddingTop: 110 }}>
                 <TouchableOpacity onPress={() => setWeekOffset(w => w - 1)} style={{ padding: tokens.space.sm }}>
                     <MaterialIcons name="chevron-left" size={28} color={theme.fontSecondary} />
                 </TouchableOpacity>

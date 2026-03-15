@@ -82,7 +82,7 @@ class AboutScreen extends React.Component {
         const appVersion = Constants.expoConfig?.version || Constants.manifest?.version || '?';
 
         return (
-            <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+            <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
                 <ScrollView
                     style={{ flex: 1 }}
                     contentContainerStyle={{ paddingTop: 70, paddingBottom: tokens.space.xl }}
