@@ -11,7 +11,6 @@ import Button from '../ui/Button';
 export const NavBarHelper = ({ title, headerLeft, headerRight, themeName }) => {
     const theme = style.Theme[themeName];
     return {
-        // Le titre encapsulé dans une pilule flottante
         headerTitle: () => (
             <View style={{ backgroundColor: theme.primary, paddingHorizontal: tokens.space.md, paddingVertical: 6, borderRadius: tokens.radius.pill }}>
                 <Text style={{ color: '#FFFFFF', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>{title}</Text>
@@ -19,8 +18,9 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName }) => {
         ),
         headerLeft,
         headerRight,
+        headerTransparent: true, 
         headerStyle: {
-            backgroundColor: theme.background, // Le header se fond avec l'arrière-plan de l'app
+            backgroundColor: 'transparent',
             elevation: 0, 
             shadowOpacity: 0, 
             borderBottomWidth: 0,

@@ -70,78 +70,35 @@ export class DayWeek extends React.Component {
     };
 
     render() {
-        const { theme, mode, navigation } = this.props;
-        let content = null, cacheMessage = null;
-
-        if (this.state.cacheDate !== null) {
-            cacheMessage = (
-                <View style={{
-                    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.greyBackground,
-                    paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
-                    borderRadius: tokens.radius.md, marginBottom: tokens.space.md, marginHorizontal: tokens.space.md
-                }}>
-                    {mode === 'week' && <MaterialCommunityIcons name="clock-outline" size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
-                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
-                        {Translator.get('OFFLINE_DISPLAY_FROM_DATE', moment(this.state.cacheDate).format('lll'))}
-                    </Text>
-                </View>
-            );
-        }
-
-        const listHeader = (
-            <View style={{ paddingBottom: tokens.space.md, paddingTop: tokens.space.sm }}>
-                <Text style={{ fontSize: 22, fontWeight: 'bold', color: theme.font, textAlign: 'center', marginBottom: cacheMessage ? tokens.space.sm : 0 }}>
-                    {this.displayTitle()}
-                </Text>
-                {cacheMessage}
-            </View>
-        );
-
-        if (this.state.schedule === null) {
-            content = (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator style={{ margin: tokens.space.lg }} size="large" color={theme.primary} animating={true} />
-                </View>
-            );
-        } else if (this.state.schedule instanceof Array && mode === 'day') {
-            let daySchedule = this.state.schedule;
-            if (moment(this.state.target).day() === 0 || daySchedule.length === 0) {
-                daySchedule = [{ schedule: 0, category: 'nocourse' }];
-            }
-
-            const groupedDaySchedule = groupOverlappingCourses(daySchedule);
-
-            content = (
-                <FlatList
-                    data={groupedDaySchedule}
-                    extraData={this.state}
-                    ListHeaderComponent={listHeader}
-                    renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item} theme={theme} />}
-                    keyExtractor={(item, index) => String(index)}
-                    style={{ backgroundColor: theme.courseBackground }}
-                    showsVerticalScrollIndicator={false}
-                />
-            );
-        } else if (this.state.schedule instanceof Array && mode === 'week') {
-            const isFavorite = this.state.groupName === this.state.groupName;
-            content = (
-                <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-                    {listHeader}
-                    {this.state.schedule.map((scheduleItem, index) => (
-                        <DayWeek
-                            key={index}
-                            schedule={this.computeScheduleWeek(scheduleItem, isFavorite)}
-                            navigation={navigation}
-                            theme={theme}
-                        />
-                    ))}
-                </ScrollView>
-            );
-        }
+        const { schedule, theme, navigation } = this.props;
+        const title = upperCaseFirstLetter(moment(schedule.date).format('dddd DD/MM'));
 
         return (
-            <View style={[style.schedule.containerView, { flex: 1, backgroundColor: theme.courseBackground, marginTop: 0 }]}>
-                <View style={style.schedule.contentView}>{content}</View>
+            <View style={{ marginBottom: tokens.space.sm }}>
+                <TouchableOpacity 
+                    onPress={this.toggleExpand} 
+                    style={{ 
+                        paddingHorizontal: tokens.space.md, 
+                        paddingVertical: tokens.space.sm, 
+                        flexDirection: 'row', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between' 
+                    }}
+                >
+                    <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: theme.font }}>{title}</Text>
+                    <MaterialCommunityIcons name={this.state.expand ? 'chevron-up' : 'chevron-down'} size={24} color={theme.fontSecondary} />
+                </TouchableOpacity>
+                <Collapsible collapsed={!this.state.expand}>
+                    {schedule.courses.length === 0 ? (
+                        <View style={{ padding: tokens.space.md, alignItems: 'center' }}>
+                            <Text style={{ color: theme.fontSecondary }}>{Translator.get('NO_CLASS_THIS_DAY')}</Text>
+                        </View>
+                    ) : (
+                        schedule.courses.map((course, index) => (
+                            <CourseRow key={index} data={course} theme={theme} navigation={navigation} />
+                        ))
+                    )}
+                </Collapsible>
             </View>
         );
     }
@@ -295,9 +252,33 @@ export default class ScheduleList extends React.Component {
         const { theme, mode, navigation } = this.props;
         let content = null, cacheMessage = null;
 
+        if (this.state.cacheDate !== null) {
+            cacheMessage = (
+                <View style={{
+                    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.greyBackground,
+                    paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
+                    borderRadius: tokens.radius.md, marginBottom: tokens.space.md, marginHorizontal: tokens.space.md
+                }}>
+                    {mode === 'week' && <MaterialCommunityIcons name="clock-outline" size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
+                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
+                        {Translator.get('OFFLINE_DISPLAY_FROM_DATE', moment(this.state.cacheDate).format('lll'))}
+                    </Text>
+                </View>
+            );
+        }
+
+        const listHeader = (
+            <View style={{ paddingBottom: tokens.space.md }}>
+                <Text style={{ fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold, color: theme.font, textAlign: 'center', marginBottom: cacheMessage ? tokens.space.sm : 0 }}>
+                    {this.displayTitle()}
+                </Text>
+                {cacheMessage}
+            </View>
+        );
+
         if (this.state.schedule === null) {
             content = (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 110 }}>
                     <ActivityIndicator style={{ margin: tokens.space.lg }} size="large" color={theme.primary} animating={true} />
                 </View>
             );
@@ -313,15 +294,23 @@ export default class ScheduleList extends React.Component {
                 <FlatList
                     data={groupedDaySchedule}
                     extraData={this.state}
+                    ListHeaderComponent={listHeader}
                     renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item} theme={theme} />}
                     keyExtractor={(item, index) => String(index)}
                     style={{ backgroundColor: theme.courseBackground }}
+                    contentContainerStyle={{ paddingTop: 110, paddingBottom: tokens.space.xxl }}
+                    showsVerticalScrollIndicator={false}
                 />
             );
         } else if (this.state.schedule instanceof Array && mode === 'week') {
             const isFavorite = this.state.groupName === this.state.groupName;
             content = (
-                <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+                <ScrollView 
+                    showsVerticalScrollIndicator={false} 
+                    style={{ flex: 1, backgroundColor: theme.courseBackground }}
+                    contentContainerStyle={{ paddingTop: 110, paddingBottom: tokens.space.xxl }}
+                >
+                    {listHeader}
                     {this.state.schedule.map((scheduleItem, index) => (
                         <DayWeek
                             key={index}
@@ -334,31 +323,9 @@ export default class ScheduleList extends React.Component {
             );
         }
 
-        if (this.state.cacheDate !== null) {
-            cacheMessage = (
-                <View style={{
-                    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.greyBackground,
-                    paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
-                    borderBottomWidth: 1, borderBottomColor: theme.border,
-                }}>
-                    {mode === 'week' && <MaterialCommunityIcons name="clock-outline" size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
-                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
-                        {Translator.get('OFFLINE_DISPLAY_FROM_DATE', moment(this.state.cacheDate).format('lll'))}
-                    </Text>
-                </View>
-            );
-        }
-
         return (
-            <View style={[style.schedule.containerView, { flex: 1, backgroundColor: theme.courseBackground }]}>
-                <View style={[style.schedule.titleView, { borderBottomColor: theme.border, paddingTop: 10, paddingBottom: 10, marginBottom: 3, justifyContent: 'center', alignItems: 'center' }]}>
-                    <Text style={[style.schedule.titleText, { color: theme.font, textAlign: 'center' }]}>
-                        {this.displayTitle()}
-                    </Text>
-                </View>
-
-                {cacheMessage}
-                <View style={style.schedule.contentView}>{content}</View>
+            <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+                {content}
             </View>
         );
     }
