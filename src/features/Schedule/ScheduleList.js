@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, ScrollView, Text, View, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, Text, View, TouchableOpacity, Animated } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import moment from 'moment';
@@ -108,6 +108,7 @@ export class DayWeek extends React.Component {
 export default class ScheduleList extends React.Component {
     constructor(props) {
         super(props);
+        this.scrollY = new Animated.Value(0); 
         this.state = {
             cancelToken: null,
             groupName: this.props.groupName,
@@ -119,6 +120,13 @@ export default class ScheduleList extends React.Component {
     }
 
     componentDidMount() {
+        // On retarde légèrement l'envoi pour éviter le crash du SET_PARAMS
+        if (this.props.navigation) {
+            setTimeout(() => {
+                this.props.navigation.setParams({ scrollY: this.scrollY });
+            }, 50);
+        }
+        
         this.fetchSchedule();
         if (this.props.mode === 'day' && this.props.navigation) {
             this._unsubscribe = this.props.navigation.addListener('focus', () => {
@@ -252,6 +260,11 @@ export default class ScheduleList extends React.Component {
         const { theme, mode, navigation } = this.props;
         let content = null, cacheMessage = null;
 
+        const onScroll = Animated.event(
+            [{ nativeEvent: { contentOffset: { y: this.scrollY } } }],
+            { useNativeDriver: true }
+        );
+
         if (this.state.cacheDate !== null) {
             cacheMessage = (
                 <View style={{
@@ -291,7 +304,7 @@ export default class ScheduleList extends React.Component {
             const groupedDaySchedule = groupOverlappingCourses(daySchedule);
 
             content = (
-                <FlatList
+                <Animated.FlatList
                     data={groupedDaySchedule}
                     extraData={this.state}
                     ListHeaderComponent={listHeader}
@@ -300,15 +313,19 @@ export default class ScheduleList extends React.Component {
                     style={{ backgroundColor: theme.courseBackground }}
                     contentContainerStyle={{ paddingTop: 110, paddingBottom: tokens.space.xxl }}
                     showsVerticalScrollIndicator={false}
+                    onScroll={onScroll}
+                    scrollEventThrottle={16}
                 />
             );
         } else if (this.state.schedule instanceof Array && mode === 'week') {
             const isFavorite = this.state.groupName === this.state.groupName;
             content = (
-                <ScrollView 
+                <Animated.ScrollView 
                     showsVerticalScrollIndicator={false} 
                     style={{ flex: 1, backgroundColor: theme.courseBackground }}
                     contentContainerStyle={{ paddingTop: 110, paddingBottom: tokens.space.xxl }}
+                    onScroll={onScroll}
+                    scrollEventThrottle={16}
                 >
                     {listHeader}
                     {this.state.schedule.map((scheduleItem, index) => (
@@ -319,7 +336,7 @@ export default class ScheduleList extends React.Component {
                             theme={theme}
                         />
                     ))}
-                </ScrollView>
+                </Animated.ScrollView>
             );
         }
 

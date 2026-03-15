@@ -65,7 +65,7 @@ export default function StackNavigator() {
 									</View>
 								</TouchableOpacity>
 							);
-							return NavBarHelper({ headerLeft: () => leftButton, headerRight: () => rightButton, title, themeName });
+							return NavBarHelper({ headerLeft: () => leftButton, headerRight: () => rightButton, title, themeName, scrollY: route.params?.scrollY });
 						}}
 					/>
 					<Stack.Screen
@@ -79,7 +79,7 @@ export default function StackNavigator() {
 									<SaveButton groupName={groupName} themeName={themeName} />
 								</View>
 							);
-							return NavBarHelper({ headerRight: () => rightButton, title, themeName });
+							return NavBarHelper({ headerRight: () => rightButton, title, themeName, scrollY: route.params?.scrollY });
 						}}
 					/>
 					<Stack.Screen
