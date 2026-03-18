@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PropTypes from 'prop-types';
 
 import style, { tokens } from '../../shared/theme/Theme';
+import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
 import { CourseRowWithNavigation as CourseRow, CourseGroupCarousel } from './CourseCard';
 
 import { ErrorAlert } from '../../shared/ui/Alerts';
@@ -105,10 +106,9 @@ export class DayWeek extends React.Component {
 }
 
 // ── LISTE DES COURS ──────
-export default class ScheduleList extends React.Component {
+export class ScheduleList extends React.Component {
     constructor(props) {
         super(props);
-        this.scrollY = new Animated.Value(0); 
         this.state = {
             cancelToken: null,
             groupName: this.props.groupName,
@@ -120,13 +120,6 @@ export default class ScheduleList extends React.Component {
     }
 
     componentDidMount() {
-        // On retarde légèrement l'envoi pour éviter le crash du SET_PARAMS
-        if (this.props.navigation) {
-            setTimeout(() => {
-                this.props.navigation.setParams({ scrollY: this.scrollY });
-            }, 50);
-        }
-        
         this.fetchSchedule();
         if (this.props.mode === 'day' && this.props.navigation) {
             this._unsubscribe = this.props.navigation.addListener('focus', () => {
@@ -147,6 +140,16 @@ export default class ScheduleList extends React.Component {
         } else if (!isArraysEquals(this.props.filtersList, prevProps.filtersList)) {
             this.fetchSchedule();
         }
+    }
+
+    static getDerivedStateFromProps(nextProps, prevState) {
+        const nextState = {};
+        if (nextProps.mode === 'day' && nextProps.target !== prevState.target) {
+            nextState.target = nextProps.target;
+        } else if (nextProps.mode === 'week' && nextProps.target.week !== prevState.target.week) {
+            nextState.target = nextProps.target;
+        }
+        return Object.keys(nextState).length > 0 ? nextState : null;
     }
 
     componentWillUnmount() {
@@ -260,11 +263,6 @@ export default class ScheduleList extends React.Component {
         const { theme, mode, navigation } = this.props;
         let content = null, cacheMessage = null;
 
-        const onScroll = Animated.event(
-            [{ nativeEvent: { contentOffset: { y: this.scrollY } } }],
-            { useNativeDriver: true }
-        );
-
         if (this.state.cacheDate !== null) {
             cacheMessage = (
                 <View style={{
@@ -311,9 +309,9 @@ export default class ScheduleList extends React.Component {
                     renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item} theme={theme} />}
                     keyExtractor={(item, index) => String(index)}
                     style={{ backgroundColor: theme.courseBackground }}
-                    contentContainerStyle={{ paddingTop: 110, paddingBottom: tokens.space.xxl }}
+                    contentContainerStyle={this.props.headerPadding}
                     showsVerticalScrollIndicator={false}
-                    onScroll={onScroll}
+                    onScroll={this.props.onAnimatedScroll}
                     scrollEventThrottle={16}
                 />
             );
@@ -323,8 +321,8 @@ export default class ScheduleList extends React.Component {
                 <Animated.ScrollView 
                     showsVerticalScrollIndicator={false} 
                     style={{ flex: 1, backgroundColor: theme.courseBackground }}
-                    contentContainerStyle={{ paddingTop: 110, paddingBottom: tokens.space.xxl }}
-                    onScroll={onScroll}
+                    contentContainerStyle={this.props.headerPadding}
+                    onScroll={this.props.onAnimatedScroll}
                     scrollEventThrottle={16}
                 >
                     {listHeader}
@@ -348,5 +346,7 @@ export default class ScheduleList extends React.Component {
     }
 }
 
-export const DayComponent = (props) => <ScheduleList mode="day" target={props.day} {...props} />;
-export const WeekComponent = (props) => <ScheduleList mode="week" target={props.week} {...props} />;
+const AnimatedScheduleList = withHeaderAnimation(ScheduleList);
+
+export const DayComponent = (props) => <AnimatedScheduleList mode="day" target={props.day} {...props} />;
+export const WeekComponent = (props) => <AnimatedScheduleList mode="week" target={props.week} {...props} />;

@@ -7,10 +7,11 @@ import * as Location from 'expo-location';
 import { CrousService, CrousRestaurant } from './CrousService';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
+import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
 
 const defaultImage = require('../../../assets/images/default_resto.png');
 
-export default function CrousScreen({ navigation }: any) {
+function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const AppContextValues = useContext(AppContext) as any;
     const theme = style.Theme[AppContextValues.themeName];
 
@@ -18,10 +19,8 @@ export default function CrousScreen({ navigation }: any) {
     const [loading, setLoading] = useState(true);
     const [locationError, setLocationError] = useState(false);
     
-    const scrollY = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        navigation.setParams({ scrollY });
         loadData();
     }, []);
 
@@ -76,10 +75,7 @@ export default function CrousScreen({ navigation }: any) {
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
                     data={restaurants}
-                    onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: false }
-                    )}
+                    onScroll={onAnimatedScroll}
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
@@ -179,3 +175,5 @@ export default function CrousScreen({ navigation }: any) {
         </SafeAreaView>
     );
 }
+
+export default withHeaderAnimation(CrousScreen);

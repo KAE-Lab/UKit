@@ -8,10 +8,11 @@ import { AppContext } from '../../shared/services/AppCore';
 import style, { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
 import LibraryService, { LibraryInfo, AffluencesData } from './LibraryService';
+import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
 
 const defaultLibraryImage = require('../../../assets/images/default_resto.png');
 
-export default function LibraryScreen({ navigation }: any) {
+function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const AppContextValues = useContext(AppContext) as any;
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
@@ -21,10 +22,8 @@ export default function LibraryScreen({ navigation }: any) {
     const [affluences, setAffluences] = useState<Record<string, AffluencesData>>({});
     const [locationError, setLocationError] = useState(false);
 
-    const scrollY = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        navigation.setParams({ scrollY });
         loadLibraries();
     }, []);
 
@@ -230,10 +229,7 @@ export default function LibraryScreen({ navigation }: any) {
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
                     data={libraries}
-                    onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: false }
-                    )}
+                    onScroll={onAnimatedScroll}
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
@@ -258,3 +254,5 @@ export default function LibraryScreen({ navigation }: any) {
         </SafeAreaView>
     );
 }
+
+export default withHeaderAnimation(LibraryScreen);

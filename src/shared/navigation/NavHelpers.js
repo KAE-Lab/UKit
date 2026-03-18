@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { TouchableOpacity, View, Modal, Text, Animated } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 import { SettingsManager } from '../services/AppCore';
 import Translator from '../i18n/Translator';
@@ -160,3 +161,32 @@ export class MyGroupButton extends React.PureComponent {
         );
     }
 }
+
+// ── ENGLOBEUR D'ANIMATION (HOC) CENTRALISÉ ──────────────────────────────
+export const withHeaderAnimation = (WrappedComponent) => {
+    return function AnimatedHeaderWrapper(props) {
+        const scrollY = useRef(new Animated.Value(0)).current;
+        const navigation = useNavigation();
+
+        useEffect(() => {
+            let isMounted = true;
+            // On retarde l'envoi pour laisser la page se monter tranquillement
+            setTimeout(() => {
+                if (isMounted && navigation) {
+                    navigation.setParams({ scrollY });
+                }
+            }, 50);
+            return () => { isMounted = false; };
+        }, [navigation]);
+
+        const onAnimatedScroll = Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false } // false permet une compatibilité avec toutes les listes de l'app
+        );
+
+        // Padding de 110 en haut pour compenser la disparition du header (90) + un peu de marge (20)
+        const headerPadding = { paddingTop: 110, paddingBottom: tokens.space.xxl };
+
+        return <WrappedComponent {...props} onAnimatedScroll={onAnimatedScroll} headerPadding={headerPadding} />;
+    };
+};
