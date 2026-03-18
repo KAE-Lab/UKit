@@ -169,7 +169,7 @@ export class MyGroupButton extends React.PureComponent {
                 size={28}
                 textSize={14}
                 icon="star"
-                color={theme.icon}
+                color={theme.accent}
                 fontColor={theme.font}
                 onPress={this._onPress}
             />

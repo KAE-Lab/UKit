@@ -41,7 +41,7 @@ const CustomDrawerContentComponent = (props) => {
                             width: 40, height: 40, borderRadius: tokens.radius.pill,
                             backgroundColor: theme.greyBackground, justifyContent: 'center', alignItems: 'center',
                         }}>
-                        <MaterialCommunityIcons name="theme-light-dark" size={22} color={theme.icon} />
+                        <MaterialCommunityIcons name="theme-light-dark" size={22} color={theme.accent} />
                     </TouchableOpacity>
                 </View>
 
@@ -72,7 +72,7 @@ const CustomDrawerContentComponent = (props) => {
                         <Button
                             title={Translator.get('GROUPS_LIST')}
                             size={22} textSize={tokens.fontSize.sm} icon={'list'}
-                            color={theme.icon} fontColor={theme.font}
+                            color={theme.accent} fontColor={theme.font}
                             onPress={() => props.navigation.navigate('Stack', { screen: 'Home' })}
                         />
                     </View>
@@ -87,13 +87,13 @@ const CustomDrawerContentComponent = (props) => {
                     <Button
                         title={Translator.get('RESTAURANTS_U')}
                         size={22} textSize={tokens.fontSize.sm} icon={'restaurant'} 
-                        color={theme.icon} fontColor={theme.font}
+                        color={theme.accent} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'Crous' })}
                     />
                     <Button
                         title={Translator.get('LIBRARIES')}
                         size={22} textSize={tokens.fontSize.sm} icon={'local-library'}
-                        color={theme.icon} fontColor={theme.font}
+                        color={theme.accent} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'Library' })}
                     />
                     
@@ -107,19 +107,19 @@ const CustomDrawerContentComponent = (props) => {
                     <Button
                         title={'ENT'}
                         size={22} textSize={tokens.fontSize.sm} icon={'dashboard'}
-                        color={theme.icon} fontColor={theme.font}
+                        color={theme.accent} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'ent' } })}
                     />
                     <Button
                         title={Translator.get('MAILBOX')}
                         size={22} textSize={tokens.fontSize.sm} icon={'mail-outline'}
-                        color={theme.icon} fontColor={theme.font}
+                        color={theme.accent} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'email' } })}
                     />
                     <Button
                         title={'Apogée'}
                         size={22} textSize={tokens.fontSize.sm} icon={'school'}
-                        color={theme.icon} fontColor={theme.font}
+                        color={theme.accent} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'apogee' } })}
                     />
     
@@ -133,13 +133,13 @@ const CustomDrawerContentComponent = (props) => {
                     <Button
                         title={Translator.get('SETTINGS')}
                         size={22} textSize={tokens.fontSize.sm} icon={'settings'}
-                        color={theme.icon} fontColor={theme.font}
+                        color={theme.accent} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'Settings' })}
                     />
                     <Button
                         title={Translator.get('ABOUT')}
                         size={22} textSize={tokens.fontSize.sm} icon={'info'}
-                        color={theme.icon} fontColor={theme.font}
+                        color={theme.accent} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'About' })}
                     />
 
