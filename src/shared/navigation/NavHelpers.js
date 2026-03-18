@@ -32,8 +32,8 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route 
 
     const options = {
         headerTitle: () => (
-            <Animated.View style={{ opacity: safeScrollY._titleOpacity, backgroundColor: theme.primary, paddingHorizontal: tokens.space.md, paddingVertical: 6, borderRadius: tokens.radius.pill, maxWidth: 220 }}>
-                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: '#FFFFFF', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>{title}</Text>
+            <Animated.View style={{ opacity: safeScrollY._titleOpacity, backgroundColor: theme.primary, paddingHorizontal: tokens.space.lg, paddingVertical: 10, borderRadius: tokens.radius.pill, maxWidth: 250 }}>
+                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: '#FFFFFF', fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold }}>{title}</Text>
             </Animated.View>
         ),
         headerTransparent: true, 
@@ -194,5 +194,14 @@ export const withHeaderAnimation = (WrappedComponent) => {
         const headerPadding = { paddingTop: 110, paddingBottom: tokens.space.xxl };
 
         return <WrappedComponent {...props} onAnimatedScroll={onAnimatedScroll} headerPadding={headerPadding} />;
+    };
+};
+
+// ENGLOBEUR STATIQUE CENTRALISÉ (Pour les pages sans scroll)
+export const withStaticHeader = (WrappedComponent) => {
+    return function StaticHeaderWrapper(props) {
+        // On renvoie exactement le même espacement que l'animation, mais sans la logique de défilement
+        const headerPadding = { paddingTop: 110, paddingBottom: tokens.space.xxl };
+        return <WrappedComponent {...props} headerPadding={headerPadding} />;
     };
 };
