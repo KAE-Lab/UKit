@@ -147,7 +147,7 @@ export default function WelcomeScreen() {
             start={{ x: 0.05, y: 0.05 }}
             end={{ x: 0.95, y: 0.95 }}>
             <SafeAreaView style={{ flex: 1 }}>
-                <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'height' : undefined}>
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, paddingTop: 60 }}>
                     
                     <WelcomeBackButton onPress={handleBack} visible={step > 1} />
 

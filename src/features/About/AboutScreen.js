@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, ScrollView, Image, TouchableOpacity, Linking } from 'react-native';
+import { Text, View, ScrollView, Image, TouchableOpacity, Linking, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,7 +8,7 @@ import style, { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
 import { AppContext } from '../../shared/services/AppCore';
 import { URL } from '../../shared/services/DataService';
-
+import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
 
 const Section = ({ title, icon, theme, children }) => (
 	<View style={{
@@ -83,10 +83,12 @@ class AboutScreen extends React.Component {
 
         return (
             <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
-                <ScrollView
-                    style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingTop: 70, paddingBottom: tokens.space.xl }}
-                    showsVerticalScrollIndicator={false}>
+                <Animated.ScrollView 
+                    contentContainerStyle={this.props.headerPadding}
+                    onScroll={this.props.onAnimatedScroll}
+                    scrollEventThrottle={16}
+                    showsVerticalScrollIndicator={false}
+                >
 
                     <View style={{ alignItems: 'center', paddingVertical: tokens.space.xl }}>
 						<View style={{
@@ -159,10 +161,10 @@ class AboutScreen extends React.Component {
                         <URLButton url={URL.LEGAL_NOTICE} title={Translator.get('CONFIDENTIALITY_POLITIC')} theme={theme} />
                     </Section>
 
-                </ScrollView>
+                </Animated.ScrollView>
             </SafeAreaView>
         );
     }
 }
 
-export default AboutScreen;
+export default withHeaderAnimation(AboutScreen);

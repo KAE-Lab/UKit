@@ -13,6 +13,7 @@ import Translator from '../../shared/i18n/Translator';
 import { getLocations, getLocationsInText } from '../../shared/services/AppCore';
 import { AppContext } from '../../shared/services/AppCore';
 import { URL } from '../../shared/services/DataService';
+import { withStaticHeader } from '../../shared/navigation/NavHelpers';
 
 // ── TYPESCRIPT INTERFACES ───────────────────────────────────────────────
 export interface CourseData {
@@ -596,6 +597,7 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 interface CourseProps {
 	route: { params: { data: CourseData } };
 	navigation: any;
+	headerPadding?: any;
 }
 
 interface CourseState {
@@ -756,7 +758,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 		return (
 			<SafeAreaView 
 				edges={['bottom', 'left', 'right']}
-				style={{ flex: 1, backgroundColor: theme.courseBackground }}
+				style={[{ flex: 1, backgroundColor: theme.courseBackground }, this.props.headerPadding]}
 			>
 				{/* ── CARTE DE DÉTAILS DÉDIÉE ── */}
 				<View
@@ -859,4 +861,4 @@ class Course extends React.Component<CourseProps, CourseState> {
 	}
 }
 
-export default Course;
+export default withStaticHeader(Course);

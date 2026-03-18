@@ -7,6 +7,7 @@ import { AppContext, SettingsManager } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
 import Button from '../../shared/ui/Button';
+import { withStaticHeader } from '../../shared/navigation/NavHelpers';
 
 import {
     SettingsLanguagePopup,
@@ -143,8 +144,9 @@ class Settings extends React.Component {
             <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
                 <ScrollView
                     style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingTop: 50, paddingBottom: tokens.space.xl }}
-                    showsVerticalScrollIndicator={false}>
+                    contentContainerStyle={[this.props.headerPadding, { paddingBottom: tokens.space.xl }]}
+                    showsVerticalScrollIndicator={false}
+                >
 
                     {/* ── Affichage ─────────────────────────────────────── */}
                     <SettingsTextHeader theme={themeSettings} text={Translator.get('DISPLAY')} />
@@ -248,4 +250,4 @@ class Settings extends React.Component {
     }
 }
 
-export default Settings;
+export default withStaticHeader(Settings);

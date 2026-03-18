@@ -7,6 +7,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import { URL } from '../../shared/services/DataService';
+import { withStaticHeader } from '../../shared/navigation/NavHelpers';
 
 const entrypoints = {
 	ent: 'https://ent.u-bordeaux.fr',
@@ -15,7 +16,7 @@ const entrypoints = {
 	apogee: 'https://apogee.u-bordeaux.fr',
 };
 
-export default function WebBrowserScreen({ navigation, route }) {
+function WebBrowserScreen({ navigation, route, headerPadding }) {
 	const { themeName } = useContext(AppContext);
 	const webViewRef = useRef(null);
 
@@ -86,12 +87,14 @@ export default function WebBrowserScreen({ navigation, route }) {
 
 	return (
 		<SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-			<WebView
+            <View style={[{ flex: 1 }, { paddingTop: 60, paddingBottom: 0 }]}>
+                <WebView
 				ref={webViewRef}
-				javaScriptEnabled={true}
-				domStorageEnabled={true}
+				style={{ flex: 1, backgroundColor: theme.background }}
 				startInLoadingState={true}
 				renderLoading={renderLoading}
+				javaScriptEnabled={true}
+				domStorageEnabled={true}
 				injectedJavaScript={javascript}
 				originWhitelist={['*']}
 				onShouldStartLoadWithRequest={(event) => {
@@ -133,6 +136,9 @@ export default function WebBrowserScreen({ navigation, route }) {
 				<NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
 				<NavButton onPress={openURL} disabled={false} iconName={Platform.OS === 'ios' ? 'apple-safari' : 'google-chrome'} iconLib="community" size={22} />
 			</View>
+		</View>
 		</SafeAreaView>
 	);
 }
+
+export default withStaticHeader(WebBrowserScreen);
