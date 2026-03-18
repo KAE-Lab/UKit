@@ -25,15 +25,26 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route 
         });
         safeScrollY._buttonScale = safeScrollY.interpolate({
             inputRange: [0, 60],
-            outputRange: [1.15, 0.9],
+            outputRange: [1.14, 1],
             extrapolate: 'clamp',
         });
     }
 
     const options = {
         headerTitle: () => (
-            <Animated.View style={{ opacity: safeScrollY._titleOpacity, backgroundColor: theme.primary, paddingHorizontal: tokens.space.lg, paddingVertical: 10, borderRadius: tokens.radius.pill, maxWidth: 250 }}>
-                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: '#FFFFFF', fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold }}>{title}</Text>
+            <Animated.View style={{ 
+                opacity: safeScrollY._titleOpacity, 
+                backgroundColor: theme.primary, 
+                paddingHorizontal: tokens.space.lg, 
+                height: 45, // On fige la hauteur pour correspondre aux boutons latéraux
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: tokens.radius.pill, 
+                maxWidth: 300 
+            }}>
+                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: '#FFFFFF', fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold }}>
+                    {title}
+                </Text>
             </Animated.View>
         ),
         headerTransparent: true, 
@@ -48,12 +59,16 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route 
 
     if (headerLeft !== undefined) {
         options.headerLeft = headerLeft ? () => (
-            <Animated.View style={{ transform: [{ scale: safeScrollY._buttonScale }] }}>{headerLeft()}</Animated.View>
+            <Animated.View style={{ transform: [{ scale: safeScrollY._buttonScale }], height: 45, justifyContent: 'center' }}>
+                {headerLeft()}
+            </Animated.View>
         ) : undefined;
     }
     if (headerRight !== undefined) {
         options.headerRight = headerRight ? () => (
-            <Animated.View style={{ transform: [{ scale: safeScrollY._buttonScale }] }}>{headerRight()}</Animated.View>
+            <Animated.View style={{ transform: [{ scale: safeScrollY._buttonScale }], height: 45, justifyContent: 'center' }}>
+                {headerRight()}
+            </Animated.View>
         ) : undefined;
     }
 
