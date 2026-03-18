@@ -144,8 +144,10 @@ class Settings extends React.Component {
             <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
                 <ScrollView
                     style={{ flex: 1 }}
-                    contentContainerStyle={[this.props.headerPadding, { paddingBottom: tokens.space.xl }]}
+                    contentContainerStyle={{ paddingTop: 50 }}
                     showsVerticalScrollIndicator={false}
+                    bounces={false}
+                    overScrollMode="never"
                 >
 
                     {/* ── Affichage ─────────────────────────────────────── */}

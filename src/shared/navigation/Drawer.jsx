@@ -46,11 +46,16 @@ const CustomDrawerContentComponent = (props) => {
                 </View>
 
                 {/* ── Contenu scrollable ───────────────────────────────── */}
-                <ScrollView style={{ flex: 1, backgroundColor: theme.background }} showsVerticalScrollIndicator={false}>
+                <ScrollView 
+                    style={{ flex: 1, backgroundColor: theme.background }} 
+                    showsVerticalScrollIndicator={false}
+                    bounces={false}
+                    overScrollMode="never"
+                >
                     {/* Mon groupe */}
                     <View style={{ paddingTop: tokens.space.md }}>
                         <Text style={{
-                            color: theme.icon, fontSize: tokens.fontSize.md, fontWeight: 'bold',
+                            color: theme.font, fontSize: tokens.fontSize.md, fontWeight: 'bold',
                             paddingTop: tokens.space.xs, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
                         }}>
                             {Translator.get('GROUPS')}
@@ -71,10 +76,30 @@ const CustomDrawerContentComponent = (props) => {
                             onPress={() => props.navigation.navigate('Stack', { screen: 'Home' })}
                         />
                     </View>
+
+                    {/* ── CROUS ── */}
+                    <Text style={{
+                            color: theme.font, fontSize: tokens.fontSize.md, fontWeight: 'bold',
+                            paddingTop: tokens.space.lg, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
+                        }}>
+                            {Translator.get('CAMPUS') ?? 'Campus'}
+                    </Text>
+                    <Button
+                        title={Translator.get('RESTAURANTS_U')}
+                        size={22} textSize={tokens.fontSize.sm} icon={'restaurant'} 
+                        color={theme.icon} fontColor={theme.font}
+                        onPress={() => props.navigation.navigate('Stack', { screen: 'Crous' })}
+                    />
+                    <Button
+                        title={Translator.get('LIBRARIES')}
+                        size={22} textSize={tokens.fontSize.sm} icon={'local-library'}
+                        color={theme.icon} fontColor={theme.font}
+                        onPress={() => props.navigation.navigate('Stack', { screen: 'Library' })}
+                    />
                     
                     {/* Navigation ENT */}
                     <Text style={{
-                            color: theme.icon, fontSize: tokens.fontSize.md, fontWeight: 'bold',
+                            color: theme.font, fontSize: tokens.fontSize.md, fontWeight: 'bold',
                             paddingTop: tokens.space.lg, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
                         }}>
                             {Translator.get('NAVIGATION')}
@@ -97,30 +122,10 @@ const CustomDrawerContentComponent = (props) => {
                         color={theme.icon} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'apogee' } })}
                     />
-
-                    {/* ── CROUS ── */}
-                    <Text style={{
-                            color: theme.icon, fontSize: tokens.fontSize.md, fontWeight: 'bold',
-                            paddingTop: tokens.space.lg, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
-                        }}>
-                            {Translator.get('CAMPUS') ?? 'Campus'}
-                    </Text>
-                    <Button
-                        title={Translator.get('RESTAURANTS_U')}
-                        size={22} textSize={tokens.fontSize.sm} icon={'restaurant'} 
-                        color={theme.icon} fontColor={theme.font}
-                        onPress={() => props.navigation.navigate('Stack', { screen: 'Crous' })}
-                    />
-                    <Button
-                        title={Translator.get('LIBRARIES')}
-                        size={22} textSize={tokens.fontSize.sm} icon={'local-library'}
-                        color={theme.icon} fontColor={theme.font}
-                        onPress={() => props.navigation.navigate('Stack', { screen: 'Library' })}
-                    />
     
                     {/* Application */}
                     <Text style={{
-                            color: theme.icon, fontSize: tokens.fontSize.md, fontWeight: 'bold',
+                            color: theme.font, fontSize: tokens.fontSize.md, fontWeight: 'bold',
                             paddingTop: tokens.space.lg, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
                         }}>
                             {Translator.get('APPLICATION')}
@@ -138,7 +143,6 @@ const CustomDrawerContentComponent = (props) => {
                         onPress={() => props.navigation.navigate('Stack', { screen: 'About' })}
                     />
 
-                    <View style={{ height: tokens.space.xl }} />
                 </ScrollView>
             </SafeAreaView>
         </View>
