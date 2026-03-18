@@ -34,7 +34,7 @@ export default function StackNavigator() {
 					screenOptions={({ navigation, route }) => {
 						const leftButton = <BackButton backAction={navigation.goBack} />;
 						const title = route.name;
-						return NavBarHelper({ headerLeft: () => leftButton, title, themeName, scrollY: route.params?.scrollY });
+						return NavBarHelper({ headerLeft: () => leftButton, title, themeName, route });
 					}}>
 					<Stack.Screen
 						name="Home"
@@ -48,7 +48,7 @@ export default function StackNavigator() {
 									</View>
 								</TouchableOpacity>
 							);
-							return NavBarHelper({ headerLeft: () => leftButton, title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ headerLeft: () => leftButton, title, themeName, route });
 						}}
 					/>
 					<Stack.Screen
@@ -64,7 +64,7 @@ export default function StackNavigator() {
 									</View>
 								</TouchableOpacity>
 							);
-							return NavBarHelper({ headerLeft: () => leftButton, headerRight: () => rightButton, title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ headerLeft: () => leftButton, headerRight: () => rightButton, title, themeName, route });
 						}}
 					/>
 					<Stack.Screen
@@ -78,7 +78,7 @@ export default function StackNavigator() {
 									<SaveButton groupName={groupName} themeName={themeName} />
 								</View>
 							);
-							return NavBarHelper({ headerRight: () => rightButton, title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ headerRight: () => rightButton, title, themeName, route });
 						}}
 					/>
 					<Stack.Screen name="Day" component={DayView} options={{ tabBarLabel: Translator.get('DAY'), tabBarIcon: ({ tintColor }) => <MaterialCommunityIcons name="calendar" size={24} style={{ color: tintColor }} /> }} />
@@ -88,7 +88,7 @@ export default function StackNavigator() {
 						options={({ navigation, route }) => {
 							const title = Translator.get('ABOUT');
 							const leftButton = <BackButton backAction={navigation.goBack} />;
-							return NavBarHelper({ headerLeft: () => leftButton, title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ headerLeft: () => leftButton, title, themeName, route });
 						}}
 					/>
 					<Stack.Screen
@@ -97,7 +97,7 @@ export default function StackNavigator() {
 						options={({ navigation, route }) => {
 							const title = Translator.get('SETTINGS');
 							const leftButton = <BackButton backAction={navigation.goBack} />;
-							return NavBarHelper({ headerLeft: () => leftButton, title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ headerLeft: () => leftButton, title, themeName, route });
 						}}
 					/>
 					<Stack.Screen 
@@ -106,7 +106,7 @@ export default function StackNavigator() {
 						options={({ navigation, route }) => {
 							const title = Translator.get('RESTAURANTS_U');
 							const leftButton = <BackButton backAction={navigation.goBack} />;
-							return NavBarHelper({ headerLeft: () => leftButton, title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ headerLeft: () => leftButton, title, themeName, route });
 						}} 
 					/>
 					<Stack.Screen 
@@ -120,7 +120,7 @@ export default function StackNavigator() {
 								</TouchableOpacity>
 							);
 							const leftButton = <BackButton backAction={navigation.goBack} />;
-							return NavBarHelper({ headerLeft: () => leftButton, headerRight: () => rightButton, title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ headerLeft: () => leftButton, headerRight: () => rightButton, title, themeName, route });
 						}} 
 					/>
 					<Stack.Screen
@@ -129,7 +129,7 @@ export default function StackNavigator() {
 						options={({ navigation, route }) => {
 							const title = Translator.get('LIBRARIES');
 							const leftButton = <BackButton backAction={navigation.goBack} />;
-							return NavBarHelper({ headerLeft: () => leftButton, title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ headerLeft: () => leftButton, title, themeName, route });
 						}}
 					/>
 					<Stack.Screen 
@@ -143,7 +143,7 @@ export default function StackNavigator() {
 								</TouchableOpacity>
 							);
 							const leftButton = <BackButton backAction={navigation.goBack} />;
-							return NavBarHelper({ headerLeft: () => leftButton, headerRight: () => rightButton, title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ headerLeft: () => leftButton, headerRight: () => rightButton, title, themeName, route });
 						}} 
 					/>
 					<Stack.Screen
@@ -151,7 +151,7 @@ export default function StackNavigator() {
 						component={WebBrowser}
 						options={({ route }) => {
 							const title = treatTitle(route.params?.title ?? Translator.get('WEB_BROWSER'));
-							return NavBarHelper({ title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ title, themeName, route });
 						}}
 					/>
 					<Stack.Screen name="Geolocation" component={Geolocation} />
@@ -165,7 +165,7 @@ export default function StackNavigator() {
 									<FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} />
 								</View>
 							);
-							return NavBarHelper({ headerRight: () => rightButton, title, themeName, scrollY: route.params?.scrollY });
+							return NavBarHelper({ headerRight: () => rightButton, title, themeName, route });
 						}}
 					/>
 				</Stack.Navigator>

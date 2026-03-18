@@ -1,37 +1,38 @@
 import React, { useRef, useEffect } from 'react';
 import { TouchableOpacity, View, Modal, Text, Animated } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 import { SettingsManager } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import style, { tokens } from '../theme/Theme';
 import Button from '../ui/Button';
 
-// ── GESTIONNAIRE DE HEADER ──────────────────────────────────────────────
-export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, scrollY }) => {
+
+// GESTIONNAIRE DE HEADER
+export const globalScrollValues = {};
+export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route }) => {
     const theme = style.Theme[themeName];
+    
+    // La variable est lue depuis le dictionnaire externe pour survivre aux mises à jour
+    const safeScrollY = (route && globalScrollValues[route.key]) ? globalScrollValues[route.key] : new Animated.Value(0);
 
-    // Si on n'a pas de scrollY (sur les pages statiques), on bloque l'animation à 0
-    const safeScrollY = scrollY || new Animated.Value(0);
-
-    // Le titre disparaît progressivement entre 0 et 60px de scroll
-    const titleOpacity = safeScrollY.interpolate({
-        inputRange: [0, 60],
-        outputRange: [1, 0],
-        extrapolate: 'clamp',
-    });
-
-    // Les boutons passent d'une échelle de 1.15 (plus gros) à 0.9 (plus discrets)
-    const buttonScale = safeScrollY.interpolate({
-        inputRange: [0, 60],
-        outputRange: [1.15, 0.9],
-        extrapolate: 'clamp',
-    });
+    if (!safeScrollY._titleOpacity) {
+        safeScrollY._titleOpacity = safeScrollY.interpolate({
+            inputRange: [0, 60],
+            outputRange: [1, 0],
+            extrapolate: 'clamp',
+        });
+        safeScrollY._buttonScale = safeScrollY.interpolate({
+            inputRange: [0, 60],
+            outputRange: [1.15, 0.9],
+            extrapolate: 'clamp',
+        });
+    }
 
     const options = {
         headerTitle: () => (
-            <Animated.View style={{ opacity: titleOpacity, backgroundColor: theme.primary, paddingHorizontal: tokens.space.md, paddingVertical: 8, borderRadius: tokens.radius.pill, maxWidth: 220 }}>
+            <Animated.View style={{ opacity: safeScrollY._titleOpacity, backgroundColor: theme.primary, paddingHorizontal: tokens.space.md, paddingVertical: 6, borderRadius: tokens.radius.pill, maxWidth: 220 }}>
                 <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: '#FFFFFF', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>{title}</Text>
             </Animated.View>
         ),
@@ -45,15 +46,14 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, scroll
         headerTitleAlign: 'center',
     };
 
-    // Sécurité : on n'écrase les boutons QUE si on les passe explicitement
     if (headerLeft !== undefined) {
         options.headerLeft = headerLeft ? () => (
-            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>{headerLeft()}</Animated.View>
+            <Animated.View style={{ transform: [{ scale: safeScrollY._buttonScale }] }}>{headerLeft()}</Animated.View>
         ) : undefined;
     }
     if (headerRight !== undefined) {
         options.headerRight = headerRight ? () => (
-            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>{headerRight()}</Animated.View>
+            <Animated.View style={{ transform: [{ scale: safeScrollY._buttonScale }] }}>{headerRight()}</Animated.View>
         ) : undefined;
     }
 
@@ -162,29 +162,35 @@ export class MyGroupButton extends React.PureComponent {
     }
 }
 
-// ── ENGLOBEUR D'ANIMATION (HOC) CENTRALISÉ ──────────────────────────────
+// ENGLOBEUR D'ANIMATION (HOC) CENTRALISÉ
 export const withHeaderAnimation = (WrappedComponent) => {
     return function AnimatedHeaderWrapper(props) {
         const scrollY = useRef(new Animated.Value(0)).current;
         const navigation = useNavigation();
+        const route = useRoute();
 
         useEffect(() => {
-            let isMounted = true;
-            // On retarde l'envoi pour laisser la page se monter tranquillement
+            // On planque la variable hors de React Navigation
+            globalScrollValues[route.key] = scrollY;
+            
+            // On force un rafraîchissement avec un paramètre simple (sérialisable)
             setTimeout(() => {
-                if (isMounted && navigation) {
-                    navigation.setParams({ scrollY });
-                }
+                if (navigation) navigation.setParams({ animatedReady: true });
             }, 50);
-            return () => { isMounted = false; };
-        }, [navigation]);
 
-        const onAnimatedScroll = Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false } // false permet une compatibilité avec toutes les listes de l'app
-        );
+            return () => {
+                // Nettoyage pour éviter les fuites de mémoire
+                delete globalScrollValues[route.key]; 
+            };
+        }, [route.key, navigation]);
 
-        // Padding de 110 en haut pour compenser la disparition du header (90) + un peu de marge (20)
+        const onAnimatedScroll = useRef(
+            Animated.event(
+                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                { useNativeDriver: false } 
+            )
+        ).current;
+
         const headerPadding = { paddingTop: 110, paddingBottom: tokens.space.xxl };
 
         return <WrappedComponent {...props} onAnimatedScroll={onAnimatedScroll} headerPadding={headerPadding} />;
