@@ -7,7 +7,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Button from '../ui/Button';
 import { MyGroupButton } from './NavHelpers';
-import { Split } from '../ui/AppUI';
 import StackNavigator from './StackNavigator';
 import style, { tokens } from '../theme/Theme';
 import Translator from '../i18n/Translator';
@@ -32,7 +31,7 @@ const CustomDrawerContentComponent = (props) => {
                     paddingVertical: tokens.space.lg,
                 }}>
                     <Image
-                        style={{ width: 140, height: 60, resizeMode: 'contain', tintColor: theme.accent ?? theme.primary }}
+                        style={{ width: 140, height: 60, resizeMode: 'contain', tintColor: theme.primary }}
                         source={require('../../../assets/icons/app.png')}
                     />
                     <TouchableOpacity
@@ -41,7 +40,7 @@ const CustomDrawerContentComponent = (props) => {
                             width: 40, height: 40, borderRadius: tokens.radius.pill,
                             backgroundColor: theme.greyBackground, justifyContent: 'center', alignItems: 'center',
                         }}>
-                        <MaterialCommunityIcons name="theme-light-dark" size={22} color={theme.accent} />
+                        <MaterialCommunityIcons name="theme-light-dark" size={22} color={theme.primary} />
                     </TouchableOpacity>
                 </View>
 
@@ -55,16 +54,17 @@ const CustomDrawerContentComponent = (props) => {
                     {/* Mon groupe */}
                     <View style={{ paddingTop: tokens.space.md }}>
                         <Text style={{
-                            color: theme.font, fontSize: tokens.fontSize.md, fontWeight: 'bold',
+                            color: theme.fontSecondary, fontSize: tokens.fontSize.md, fontWeight: 'bold',
                             paddingTop: tokens.space.xs, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
                         }}>
                             {Translator.get('GROUPS')}
                         </Text>
+                        
                         {AppContextValues.groupName ? (
                             <MyGroupButton navigate={navigate} themeName={AppContextValues.themeName} groupName={AppContextValues.groupName} />
                         ) : (
                             <View style={{ paddingHorizontal: tokens.space.lg, paddingVertical: tokens.space.sm }}>
-                                <Text style={{ color: theme.fontSecondary ?? theme.font, fontSize: tokens.fontSize.sm }}>
+                                <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm }}>
                                     {Translator.get('NONE')}
                                 </Text>
                             </View>
@@ -72,14 +72,14 @@ const CustomDrawerContentComponent = (props) => {
                         <Button
                             title={Translator.get('GROUPS_LIST')}
                             size={22} textSize={tokens.fontSize.sm} icon={'list'}
-                            color={theme.accent} fontColor={theme.font}
+                            color={theme.primary} fontColor={theme.font}
                             onPress={() => props.navigation.navigate('Stack', { screen: 'Home' })}
                         />
                     </View>
 
                     {/* ── CROUS ── */}
                     <Text style={{
-                            color: theme.font, fontSize: tokens.fontSize.md, fontWeight: 'bold',
+                            color: theme.fontSecondary, fontSize: tokens.fontSize.md, fontWeight: 'bold',
                             paddingTop: tokens.space.lg, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
                         }}>
                             {Translator.get('CAMPUS') ?? 'Campus'}
@@ -87,59 +87,59 @@ const CustomDrawerContentComponent = (props) => {
                     <Button
                         title={Translator.get('RESTAURANTS_U')}
                         size={22} textSize={tokens.fontSize.sm} icon={'restaurant'} 
-                        color={theme.accent} fontColor={theme.font}
+                        color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'Crous' })}
                     />
                     <Button
                         title={Translator.get('LIBRARIES')}
                         size={22} textSize={tokens.fontSize.sm} icon={'local-library'}
-                        color={theme.accent} fontColor={theme.font}
+                        color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'Library' })}
                     />
                     
                     {/* Navigation ENT */}
                     <Text style={{
-                            color: theme.font, fontSize: tokens.fontSize.md, fontWeight: 'bold',
+                            color: theme.fontSecondary, fontSize: tokens.fontSize.md, fontWeight: 'bold',
                             paddingTop: tokens.space.lg, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
                         }}>
                             {Translator.get('NAVIGATION')}
-                        </Text>
+                    </Text>
                     <Button
                         title={'ENT'}
                         size={22} textSize={tokens.fontSize.sm} icon={'dashboard'}
-                        color={theme.accent} fontColor={theme.font}
+                        color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'ent' } })}
                     />
                     <Button
                         title={Translator.get('MAILBOX')}
                         size={22} textSize={tokens.fontSize.sm} icon={'mail-outline'}
-                        color={theme.accent} fontColor={theme.font}
+                        color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'email' } })}
                     />
                     <Button
                         title={'Apogée'}
                         size={22} textSize={tokens.fontSize.sm} icon={'school'}
-                        color={theme.accent} fontColor={theme.font}
+                        color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'apogee' } })}
                     />
     
                     {/* Application */}
                     <Text style={{
-                            color: theme.font, fontSize: tokens.fontSize.md, fontWeight: 'bold',
+                            color: theme.fontSecondary, fontSize: tokens.fontSize.md, fontWeight: 'bold',
                             paddingTop: tokens.space.lg, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
                         }}>
                             {Translator.get('APPLICATION')}
-                        </Text>
+                    </Text>
                     <Button
                         title={Translator.get('SETTINGS')}
                         size={22} textSize={tokens.fontSize.sm} icon={'settings'}
-                        color={theme.accent} fontColor={theme.font}
+                        color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'Settings' })}
                     />
                     <Button
                         title={Translator.get('ABOUT')}
                         size={22} textSize={tokens.fontSize.sm} icon={'info'}
-                        color={theme.accent} fontColor={theme.font}
+                        color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'About' })}
                     />
 
