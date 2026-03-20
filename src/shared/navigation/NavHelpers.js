@@ -99,8 +99,8 @@ export class SaveGroupButton extends React.Component {
         const theme = style.Theme[this.props.themeName] || style.Theme.light;
         return (
             <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: tokens.space.md }}>
-                <View style={{ backgroundColor: theme.primary, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
-                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={22} color="#FFFFFF" />
+                <View style={{ backgroundColor: theme.greyBackground, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
+                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={22} color={theme.primary} />
                 </View>
             </TouchableOpacity>
         );
@@ -121,11 +121,11 @@ export class FilterRemoveButton extends React.Component {
         this.props.backAction();
     };
     render() {
-        const theme = style.Theme[this.props.themeName].settings;
+        const theme = style.Theme[this.props.themeName];
         return (
             <View>
-                <TouchableOpacity onPress={this.openPopup} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                    <MaterialCommunityIcons name="filter-variant-remove" size={30} style={{ color: theme.icon, height: 32, width: 32 }} />
+                <TouchableOpacity onPress={this.openPopup} style={{ backgroundColor: theme.greyBackground, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill }}>
+                    <MaterialCommunityIcons name="filter-variant-remove" size={22} color={theme.primary} />
                 </TouchableOpacity>
                 <Modal animationType="fade" transparent={true} visible={this.state.popupVisible} onRequestClose={this.popupClose}>
                     <View style={theme.popup.background}>
@@ -169,7 +169,7 @@ export class MyGroupButton extends React.PureComponent {
                 size={28}
                 textSize={14}
                 icon="star"
-                color={theme.accent}
+                color={theme.primary}
                 fontColor={theme.font}
                 onPress={this._onPress}
             />
