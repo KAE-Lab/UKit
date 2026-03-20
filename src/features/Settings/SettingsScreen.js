@@ -190,7 +190,8 @@ class Settings extends React.Component {
 
                     {this.state.hasCalendarPermission ? (
                         <>
-                            <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginBottom: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
+                            {/* Remplacement du marginBottom par un marginTop */}
+                            <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
                                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginBottom: tokens.space.xs }}>
                                     {Translator.get('AUTO_SYNC_DESCRIPTION')}
                                 </Text>
@@ -227,7 +228,7 @@ class Settings extends React.Component {
                         </>
                     ) : (
                         <>
-                            <View style={{ backgroundColor: `${tokens.colors?.orange ?? '#E65100'}18`, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginBottom: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: `${tokens.colors?.orange ?? '#E65100'}40`, flexDirection: 'row', alignItems: 'flex-start' }}>
+                            <View style={{ backgroundColor: `${tokens.colors?.orange ?? '#E65100'}18`, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: `${tokens.colors?.orange ?? '#E65100'}40`, flexDirection: 'row', alignItems: 'flex-start' }}>
                                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, lineHeight: 20, flex: 1 }}>
                                     {Translator.get('ENABLE_CALENDAR_PERMISSION_DESCRIPTION')}
                                 </Text>
