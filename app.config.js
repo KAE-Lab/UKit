@@ -8,8 +8,8 @@ export default {
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
-	version: '5.4.0',
-	versionCode: 540,
+	version: '5.4.1',
+	versionCode: 541,
 	orientation: 'portrait',
 	primaryColor: '#006F9F',
 	icon: './assets/icons/ios.png',
@@ -33,13 +33,13 @@ export default {
 		},
 	},
 	android: {
-		package: 'org.kaelab.ukit',
+		package: 'com.bordeaux1.emplois',
 		adaptiveIcon: {
 			foregroundImage: './assets/icons/android_foreground.png',
 			backgroundImage: './assets/icons/android_background.png',
 		},
 		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
-		versionCode: 63,
+		versionCode: 541,
 	},
 	androidStatusBar: {
 		barStyle: 'light-content',
