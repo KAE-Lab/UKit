@@ -280,7 +280,7 @@ export class ScheduleList extends React.Component {
 
         const listHeader = (
             <View style={{ paddingBottom: tokens.space.md }}>
-                <Text style={{ fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold, color: theme.font, textAlign: 'center', marginBottom: cacheMessage ? tokens.space.sm : 0 }}>
+                <Text style={{ fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold, color: theme.fontSecondary, textAlign: 'center', marginBottom: cacheMessage ? tokens.space.sm : 0 }}>
                     {this.displayTitle()}
                 </Text>
                 {cacheMessage}

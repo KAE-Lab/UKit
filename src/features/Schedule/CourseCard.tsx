@@ -525,7 +525,7 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 	}
 
 	return (
-        <View style={{ marginBottom: tokens.space.xs }}>
+        <View>
             <FlatList
                 horizontal
                 pagingEnabled

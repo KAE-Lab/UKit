@@ -51,11 +51,10 @@ export default function StackNavigator() {
                 return (
                     <Stack.Navigator
                         screenOptions={{
-                            // FLECHE RETOUR GLOBALE (s'applique si on ne met pas de headerLeft et qu'on peut reculer)
                             headerLeft: (props) => props.canGoBack ? (
                                 <TouchableOpacity onPress={props.onPress} style={{ paddingLeft: tokens.space.md }}>
-                                    <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill }}>
-                                        <MaterialIcons name="arrow-back" size={26} color={theme.primary} />
+                                    <View style={{ backgroundColor: theme.greyBackground, width: 50, height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill }}>
+                                        <MaterialIcons name="arrow-back" size={28} color={theme.primary} />
                                     </View>
                                 </TouchableOpacity>
                             ) : undefined,

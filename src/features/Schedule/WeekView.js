@@ -135,10 +135,7 @@ class WeekView extends React.Component {
 		const theme = style.Theme[this.context.themeName];
 
 		return (
-            <SafeAreaView 
-            edges={['bottom', 'left', 'right']} 
-            style={{ flex: 1, backgroundColor: theme.courseBackground }}
-        >
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
                 <WeekComponent
                     key={`weekComponent-${this.context.themeName}`}
                     week={this.state.selectedWeek}
@@ -148,8 +145,7 @@ class WeekView extends React.Component {
                     filtersList={this.context.filters}
                 />
 
-                {/* ── Barre de navigation calendrier ────────────────────── */}
-                <View style={{
+                <SafeAreaView edges={['bottom']} style={{
                     flexGrow: 0,
                     backgroundColor: theme.cardBackground,
                     borderTopWidth: 1,
@@ -247,7 +243,7 @@ class WeekView extends React.Component {
                             paddingBottom: tokens.space.xs,
                         }}
                     />
-                </View>
+                </SafeAreaView>
             </SafeAreaView>
         );
 	}

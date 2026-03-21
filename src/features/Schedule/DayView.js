@@ -132,10 +132,7 @@ class DayView extends React.Component {
 		const theme = style.Theme[this.context.themeName];
 
 		return (
-            <SafeAreaView 
-            edges={['bottom', 'left', 'right']} 
-            style={{ flex: 1, backgroundColor: theme.courseBackground }}
-        >
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
                 <View style={{ flex: 1 }}>
                     <DayComponent
                         key={`${this.state.days[0].dayOfYear()}-${this.context.themeName}`}
@@ -146,8 +143,7 @@ class DayView extends React.Component {
                         filtersList={this.context.filters}
                     />
 
-                    {/* ── Barre de navigation calendrier ────────────────── */}
-                    <View style={{
+                    <SafeAreaView edges={['bottom']} style={{
                         flexGrow: 0,
                         backgroundColor: theme.cardBackground,
                         borderTopWidth: 1,
@@ -245,7 +241,7 @@ class DayView extends React.Component {
                                 paddingBottom: tokens.space.xs,
                             }}
                         />
-                    </View>
+                    </SafeAreaView>
                 </View>
             </SafeAreaView>
         );
