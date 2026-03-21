@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,6 +16,19 @@ export default function CrousMenuScreen({ route }: any) {
     const [menus, setMenus] = useState<CrousDayMenu[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const flatListRef = useRef<FlatList>(null);
+
+    useEffect(() => {
+        if (menus.length > 0 && flatListRef.current) {
+            setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                    index: selectedIndex,
+                    animated: true,
+                    viewPosition: 0.5 
+                });
+            }, 100);
+        }
+    }, [selectedIndex, menus]);
 
     useEffect(() => {
         loadMenu();
@@ -172,13 +185,21 @@ export default function CrousMenuScreen({ route }: any) {
             {/* ── Bandeau des dates défilant horizontalement ── */}
             <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm, paddingTop: 110 }}>
                 <FlatList
+                    ref={flatListRef}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     data={menus}
                     keyExtractor={(item) => item.date}
                     contentContainerStyle={{ paddingHorizontal: tokens.space.sm }}
+                    onScrollToIndexFailed={(info) => {
+                        setTimeout(() => {
+                            flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
+                        }, 500);
+                    }}
                     renderItem={({ item, index }) => {
                         const isSelected = index === selectedIndex;
+                        const primaryColor = theme.accent ?? theme.primary;
+
                         return (
                             <TouchableOpacity 
                                 onPress={() => setSelectedIndex(index)}
@@ -187,11 +208,14 @@ export default function CrousMenuScreen({ route }: any) {
                                     paddingVertical: tokens.space.sm,
                                     marginHorizontal: tokens.space.xs,
                                     borderRadius: tokens.radius.pill,
-                                    backgroundColor: isSelected ? (theme.accent ?? theme.primary) : theme.greyBackground,
+                                    backgroundColor: theme.greyBackground,
+                                    // On fixe la bordure à 2 de manière permanente pour éviter que le texte saute
+                                    borderWidth: 2,
+                                    borderColor: isSelected ? primaryColor : 'transparent',
                                 }}
                             >
                                 <Text style={{ 
-                                    color: isSelected ? '#FFFFFF' : theme.fontSecondary,
+                                    color: isSelected ? primaryColor : theme.fontSecondary,
                                     fontWeight: isSelected ? (tokens.fontWeight.bold as any) : (tokens.fontWeight.medium as any),
                                     fontSize: tokens.fontSize.sm
                                 }}>

@@ -114,21 +114,17 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
     const currentDay = timetable[selectedIndex];
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             
-            {/* Bandeau des dates avec navigation par semaine */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.xs, paddingTop: 110 }}>
-                <TouchableOpacity onPress={() => setWeekOffset(w => w - 1)} style={{ padding: tokens.space.sm }}>
-                    <MaterialIcons name="chevron-left" size={28} color={theme.fontSecondary} />
-                </TouchableOpacity>
-
+            {/* Bandeau des dates */}
+            <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm, paddingTop: 110 }}>
                 <FlatList
                     ref={flatListRef}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     data={timetable}
                     keyExtractor={(item) => item.day}
-                    contentContainerStyle={{ paddingHorizontal: tokens.space.xs, alignItems: 'center' }}
+                    contentContainerStyle={{ paddingHorizontal: tokens.space.sm }}
                     onScrollToIndexFailed={(info) => {
                         setTimeout(() => {
                             flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
@@ -136,6 +132,8 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                     }}
                     renderItem={({ item, index }) => {
                         const isSelected = index === selectedIndex;
+                        const primaryColor = theme.accent ?? theme.primary;
+
                         return (
                             <TouchableOpacity 
                                 onPress={() => setSelectedIndex(index)}
@@ -144,11 +142,13 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                                     paddingVertical: tokens.space.sm,
                                     marginHorizontal: tokens.space.xs,
                                     borderRadius: tokens.radius.pill,
-                                    backgroundColor: isSelected ? (theme.accent ?? theme.primary) : theme.greyBackground,
+                                    backgroundColor: theme.greyBackground,
+                                    borderWidth: 2,
+                                    borderColor: isSelected ? primaryColor : 'transparent',
                                 }}
                             >
                                 <Text style={{ 
-                                    color: isSelected ? '#FFFFFF' : theme.fontSecondary,
+                                    color: isSelected ? primaryColor : theme.fontSecondary,
                                     fontWeight: isSelected ? (tokens.fontWeight.bold as any) : (tokens.fontWeight.medium as any),
                                     fontSize: tokens.fontSize.sm
                                 }}>
@@ -158,10 +158,6 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                         );
                     }}
                 />
-
-                <TouchableOpacity onPress={() => setWeekOffset(w => w + 1)} style={{ padding: tokens.space.sm }}>
-                    <MaterialIcons name="chevron-right" size={28} color={theme.fontSecondary} />
-                </TouchableOpacity>
             </View>
 
             {/* Contenu principal */}
@@ -222,12 +218,15 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                 <View style={{ height: tokens.space.xxl }} />
             </ScrollView>
 
-            <View style={{ 
-                padding: tokens.space.md, 
-                backgroundColor: theme.cardBackground,
-                borderTopWidth: 1,
-                borderTopColor: theme.border,
-            }}>
+            <SafeAreaView 
+                edges={['bottom']}
+                style={{ 
+                    padding: tokens.space.md, 
+                    backgroundColor: theme.cardBackground,
+                    borderTopWidth: 1,
+                    borderTopColor: theme.border,
+                }}
+            >
                 <TouchableOpacity 
                     onPress={async () => {
                         try {
@@ -237,7 +236,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                         }
                     }}
                     style={{
-                        backgroundColor: theme.accent ?? theme.primary,
+                        backgroundColor: theme.greyBackground,
                         paddingVertical: 14,
                         borderRadius: tokens.radius.md,
                         flexDirection: 'row',
@@ -245,9 +244,9 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                         alignItems: 'center'
                     }}
                 >
-                    <MaterialCommunityIcons name="calendar-check" size={22} color="#FFFFFF" />
+                    <MaterialCommunityIcons name="calendar-check" size={22} color={theme.accent ?? theme.primary} />
                     <Text style={{ 
-                        color: '#FFFFFF', 
+                        color: theme.accent ?? theme.primary, 
                         fontSize: tokens.fontSize.md, 
                         fontWeight: tokens.fontWeight.bold as any, 
                         marginLeft: tokens.space.sm 
@@ -255,7 +254,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                         {Translator.get('BOOK_SEAT')}
                     </Text>
                 </TouchableOpacity>
-            </View>
+            </SafeAreaView>
 
         </SafeAreaView>
     );
