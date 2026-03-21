@@ -33,8 +33,7 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route 
     const options = {
         headerTitle: () => (
             <Animated.View style={{ 
-                opacity: safeScrollY._titleOpacity, 
-                backgroundColor: theme.primary, 
+                opacity: safeScrollY._titleOpacity,  
                 paddingHorizontal: tokens.space.lg, 
                 height: 45, // On fige la hauteur pour correspondre aux boutons latéraux
                 justifyContent: 'center',
@@ -42,7 +41,7 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route 
                 borderRadius: tokens.radius.pill, 
                 maxWidth: 300 
             }}>
-                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: '#FFFFFF', fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold }}>
+                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold }}>
                     {title}
                 </Text>
             </Animated.View>
@@ -98,9 +97,9 @@ export class SaveGroupButton extends React.Component {
         // On récupère le thème passé en props depuis le StackNavigator
         const theme = style.Theme[this.props.themeName] || style.Theme.light;
         return (
-            <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginRight: tokens.space.md }}>
-                <View style={{ backgroundColor: theme.greyBackground, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
-                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={22} color={theme.primary} />
+            <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
+                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={26} color={theme.primary} />
                 </View>
             </TouchableOpacity>
         );
@@ -121,28 +120,30 @@ export class FilterRemoveButton extends React.Component {
         this.props.backAction();
     };
     render() {
-        const theme = style.Theme[this.props.themeName];
+        const theme = style.Theme[this.props.themeName] || style.Theme.light;
+        const popupTheme = theme.settings.popup;
+
         return (
             <View>
-                <TouchableOpacity onPress={this.openPopup} style={{ backgroundColor: theme.greyBackground, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill }}>
-                    <MaterialCommunityIcons name="filter-variant-remove" size={22} color={theme.primary} />
+                <TouchableOpacity onPress={this.openPopup} style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill }}>
+                    <MaterialCommunityIcons name="filter-variant-remove" size={24} color={theme.primary} />
                 </TouchableOpacity>
                 <Modal animationType="fade" transparent={true} visible={this.state.popupVisible} onRequestClose={this.popupClose}>
-                    <View style={theme.popup.background}>
-                        <View style={theme.popup.container}>
-                            <View style={theme.popup.header}>
-                                <Text style={theme.popup.textHeader}>{Translator.get('FILTERS_UE').toUpperCase()}</Text>
+                    <View style={popupTheme.background}>
+                        <View style={popupTheme.container}>
+                            <View style={popupTheme.header}>
+                                <Text style={popupTheme.textHeader}>{Translator.get('FILTERS_UE').toUpperCase()}</Text>
                                 <TouchableOpacity onPress={this.popupClose}>
-                                    <MaterialIcons name="close" size={32} style={theme.popup.closeIcon} />
+                                    <MaterialIcons name="close" size={32} style={popupTheme.closeIcon} />
                                 </TouchableOpacity>
                             </View>
-                            <Text style={theme.popup.textDescription}>{Translator.get('FILTERS_CONFIRMATION')}</Text>
-                            <View style={theme.popup.buttonContainer}>
-                                <TouchableOpacity style={theme.popup.buttonSecondary} onPress={this.popupClose}>
-                                    <Text style={theme.popup.buttonTextSecondary}>{Translator.get('CANCEL')}</Text>
+                            <Text style={popupTheme.textDescription}>{Translator.get('FILTERS_CONFIRMATION')}</Text>
+                            <View style={popupTheme.buttonContainer}>
+                                <TouchableOpacity style={popupTheme.buttonSecondary} onPress={this.popupClose}>
+                                    <Text style={popupTheme.buttonTextSecondary}>{Translator.get('CANCEL')}</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={theme.popup.buttonMain} onPress={this.filterOutUE}>
-                                    <Text style={theme.popup.buttonTextMain}>{Translator.get('CONFIRM')}</Text>
+                                <TouchableOpacity style={popupTheme.buttonMain} onPress={this.filterOutUE}>
+                                    <Text style={popupTheme.buttonTextMain}>{Translator.get('CONFIRM')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
