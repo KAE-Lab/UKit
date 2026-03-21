@@ -97,6 +97,7 @@ export default {
 	WEB_BROWSER: 'Web browser',
 	GROUPS_LIST: 'Groups list',
 	RESTAURANTS_U: 'University restaurants',
+	RESTAURANTS: 'Restaurants',
 	MENU: 'Menu',
 	LUNCH: 'Lunch',
 	DINNER: 'Dinner',

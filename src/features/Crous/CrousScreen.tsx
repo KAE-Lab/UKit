@@ -50,11 +50,6 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
             setLocationError(true);
         }
 
-        // Coordonnées du A22 en dur si la localisation échoue (pour les tests sur émulateur)
-        userLat = 44.8048;
-        userLon = -0.5954;
-
-
         const data = await CrousService.fetchRestaurantsBordeaux(userLat, userLon);
         setRestaurants(data);
         setLoading(false);

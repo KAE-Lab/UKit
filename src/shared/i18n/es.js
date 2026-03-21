@@ -101,6 +101,7 @@ export default {
 	WEB_BROWSER: 'Navegador web',
 	GROUPS_LIST: 'Lista de grupos',
 	RESTAURANTS_U: 'Restaurantes universitarios',
+	RESTAURANTS: 'Restaurantes',
 	MENU: 'Menú',
 	LUNCH: 'Mediodía',
 	DINNER: 'Noche',

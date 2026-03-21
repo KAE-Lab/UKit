@@ -99,6 +99,7 @@ export default {
 	WEB_BROWSER: 'Navigateur web',
 	GROUPS_LIST: 'Liste des groupes',
 	RESTAURANTS_U: 'Restaurants universitaires',
+	RESTAURANTS: 'Restaurants',
 	MENU: 'Menu',
 	LUNCH: 'Midi',
 	DINNER: 'Soir',

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, TouchableOpacity, Linking, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Linking, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -19,9 +19,10 @@ interface MapScreenProps {
     route: {
         params: MapScreenRouteParams;
     };
+    navigation: any;
 }
 
-export default function MapScreen({ route }: MapScreenProps) {
+export default function MapScreen({ route, navigation }: MapScreenProps) {
     const AppContextValues = useContext(AppContext) as any;
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
@@ -57,6 +58,30 @@ export default function MapScreen({ route }: MapScreenProps) {
             })
             .catch((err) => console.error('An error occurred', err));
     };
+
+    useEffect(() => {
+        if (lat !== null && lng !== null) {
+            navigation.setOptions({
+                headerTransparent: true, // On laisse le header flotter
+                title: title || 'Carte', // On donne juste le texte, ton NavBarHelper s'occupe du design !
+                headerRight: () => (
+                    <TouchableOpacity
+                        onPress={onPressExternalMap}
+                        style={{
+                            backgroundColor: theme.greyBackground,
+                            width: 45,
+                            height: 45,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: tokens.radius.pill,
+                            marginRight: tokens.space.md
+                        }}>
+                        <MaterialCommunityIcons name="map-search-outline" size={26} color={theme.accent ?? theme.primary} />
+                    </TouchableOpacity>
+                ),
+            });
+        }
+    }, [navigation, lat, lng, theme, title]);
 
     if (lat === null || lng === null) {
         return (
@@ -116,31 +141,25 @@ export default function MapScreen({ route }: MapScreenProps) {
     `;
 
     return (
-        <View style={{ flex: 1, backgroundColor: theme.background }}>
+        <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            
+            {/* Le bandeau est maintenant 100% vide, il sert juste de fond au header natif */}
+            <View style={{ 
+                height: 110, 
+                backgroundColor: theme.cardBackground, 
+                borderBottomWidth: 1, 
+                borderBottomColor: theme.border,
+                zIndex: 10 
+            }} />
+
             <WebView
                 originWhitelist={['*']}
                 source={{ html: mapHtml }}
-                style={{ flex: 1, backgroundColor: theme.background }}
+                style={{ flex: 1, backgroundColor: theme.courseBackground }}
                 scrollEnabled={false}
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
             />
-
-            <View style={styles.floatingButtonContainer}>
-                <TouchableOpacity
-                    onPress={onPressExternalMap}
-                    style={[
-                        styles.floatingButton,
-                        {
-                            backgroundColor: theme.cardBackground,
-                            borderColor: theme.border,
-                            borderWidth: 1,
-                            ...tokens.shadow.md as any
-                        }
-                    ]}>
-                    <MaterialCommunityIcons name="map-search-outline" size={28} color={theme.accent} />
-                </TouchableOpacity>
-            </View>
         </View>
     );
 }

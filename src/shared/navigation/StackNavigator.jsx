@@ -82,7 +82,7 @@ export default function StackNavigator() {
                         
                         <Stack.Screen name="Settings" component={Settings} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('SETTINGS'), themeName, route })} />
                         
-                        <Stack.Screen name="Crous" component={CrousScreen} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('RESTAURANTS_U'), themeName, route })} />
+                        <Stack.Screen name="Crous" component={CrousScreen} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('RESTAURANTS'), themeName, route })} />
                         
                         <Stack.Screen name="CrousMenu" component={CrousMenuScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.restaurantName, route.params?.location), title: route.params?.restaurantName ?? Translator.get('MENU'), themeName, route })} />
                         
