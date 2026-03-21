@@ -278,7 +278,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		const subject =
 			this.props.data.subject !== 'N/C' ? (
 				<Text style={[style.schedule.course.title as any, { color: theme.font, flex: 1 }]}>
-					{this.props.data.subject}
+					{this.props.data.subject.trim()}
 				</Text>
 			) : null;
 
@@ -342,7 +342,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 						flex: 0,
 						minHeight: 120,
 						backgroundColor: this.state.backgroundColor,
-						marginHorizontal: tokens.space.md,
+						marginHorizontal: tokens.space.sm,
 						marginVertical: tokens.space.xs,
 						borderRadius: tokens.radius.lg,
 						borderLeftWidth: 4,
@@ -634,7 +634,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 
 	componentDidMount() {
 		let locations: any[] = [];
-		this.props.navigation.setParams({ title: this.state.data.schedule });
+		this.props.navigation.setParams({ title: this.state.data.UE || 'Détails' });
 
 		// On nettoie les lignes vides
 		const descLines = (this.state.data.description ?? '').split('\n').map(l => l.trim()).filter(l => l);
@@ -766,7 +766,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 						flex: 0,
 						marginTop: tokens.space.md,
 						marginBottom: this.state.locations.length > 0 ? tokens.space.sm : tokens.space.md,
-						marginHorizontal: tokens.space.md,
+						marginHorizontal: tokens.space.sm,
 						backgroundColor: theme.cardBackground,
 						borderRadius: tokens.radius.xl,
 						borderTopWidth: 5,
@@ -780,7 +780,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 					
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.space.sm }}>
 						<Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
-							{this.state.data.subject !== 'N/C' ? this.state.data.subject : (Translator.get('UNKNOWN_SUBJECT') ?? 'Cours inconnu')}
+							{this.state.data.subject !== 'N/C' ? this.state.data.subject.trim() : (Translator.get('UNKNOWN_SUBJECT') ?? 'Cours inconnu')}
 						</Text>
 						{this.state.data.category !== this.state.data.subject && (
 							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.pill, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>
@@ -845,7 +845,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 					<View
 						style={{
 							flex: 1,
-							marginHorizontal: tokens.space.md,
+							marginHorizontal: tokens.space.sm,
 							marginBottom: tokens.space.md,
 							borderRadius: tokens.radius.xl,
 							overflow: 'hidden',

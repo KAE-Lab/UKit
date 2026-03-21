@@ -19,6 +19,18 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [weekOffset, setWeekOffset] = useState(0); // 0 = semaine en cours, -1 = semaine dernière, 1 = semaine pro
     const flatListRef = useRef<FlatList>(null);
+    
+
+    useEffect(() => {
+        navigation.setOptions({
+            headerTitle: () => (
+                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any }}>
+                    Infos
+                </Text>
+            ),
+            headerTitleAlign: 'center'
+        });
+    }, [navigation, theme]);
 
     useEffect(() => {
         loadTimetable(weekOffset);
@@ -118,6 +130,21 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
             
             {/* Bandeau des dates */}
             <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm, paddingTop: 110 }}>
+                
+                <Text 
+                    style={{
+                        fontSize: tokens.fontSize.xl,
+                        fontWeight: tokens.fontWeight.bold as any,
+                        color: theme.fontSecondary,
+                        textAlign: 'left',
+                        paddingHorizontal: tokens.space.md,
+                        marginBottom: tokens.space.md,
+                    }} 
+                    numberOfLines={2}
+                >
+                    {library.name || 'Bibliothèque'}
+                </Text>
+                
                 <FlatList
                     ref={flatListRef}
                     horizontal

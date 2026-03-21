@@ -53,6 +53,9 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route 
             shadowOpacity: 0, 
             borderBottomWidth: 0,
         },
+        headerTitleContainerStyle: { paddingTop: 10 },
+        headerLeftContainerStyle: { paddingTop: 10 },
+        headerRightContainerStyle: { paddingTop: 10 },
         headerTitleAlign: 'center',
     };
 
@@ -211,7 +214,7 @@ export const withHeaderAnimation = (WrappedComponent) => {
             )
         ).current;
 
-        const headerPadding = { paddingTop: 110, paddingBottom: tokens.space.sm };
+        const headerPadding = { paddingTop: 120, paddingBottom: tokens.space.sm };
 
         return <WrappedComponent {...props} onAnimatedScroll={onAnimatedScroll} headerPadding={headerPadding} />;
     };
@@ -221,7 +224,7 @@ export const withHeaderAnimation = (WrappedComponent) => {
 export const withStaticHeader = (WrappedComponent) => {
     return function StaticHeaderWrapper(props) {
         // On renvoie exactement le même espacement que l'animation, mais sans la logique de défilement
-        const headerPadding = { paddingTop: 110, paddingBottom: tokens.space.sm };
+        const headerPadding = { paddingTop: 120, paddingBottom: tokens.space.sm };
         return <WrappedComponent {...props} headerPadding={headerPadding} />;
     };
 };

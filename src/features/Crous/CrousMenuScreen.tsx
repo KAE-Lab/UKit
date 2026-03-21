@@ -8,8 +8,8 @@ import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
 
-export default function CrousMenuScreen({ route }: any) {
-    const { restaurantId } = route.params;
+export default function CrousMenuScreen({ route, navigation }: any) {
+    const { restaurantId, restaurantName } = route.params;
     const AppContextValues = useContext(AppContext) as any;
     const theme = style.Theme[AppContextValues.themeName];
 
@@ -19,16 +19,16 @@ export default function CrousMenuScreen({ route }: any) {
     const flatListRef = useRef<FlatList>(null);
 
     useEffect(() => {
-        if (menus.length > 0 && flatListRef.current) {
-            setTimeout(() => {
-                flatListRef.current?.scrollToIndex({
-                    index: selectedIndex,
-                    animated: true,
-                    viewPosition: 0.5 
-                });
-            }, 100);
-        }
-    }, [selectedIndex, menus]);
+        navigation.setOptions({
+            headerTitle: () => (
+                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any }}>
+                    Menu
+                </Text>
+            ),
+            headerTitleAlign: 'center'
+        });
+        loadMenu();
+    }, [navigation, theme]);
 
     useEffect(() => {
         loadMenu();
@@ -110,7 +110,7 @@ export default function CrousMenuScreen({ route }: any) {
         if (/(viennoiserie|croissant|chocolatine|brioche)/.test(str)) return 'food-croissant';
         
         // Fruits (intercepte avant les desserts pour les "compotes de fruits", "tarte aux pommes", etc.)
-        if (/(pomme(?!s?\s+de\s+terre)|banane|orange|kiwi|ananas|poire|fraise|framboise|pêche|abricot|raisin|mangue|melon|pastèque|citron|clémentine|compote)/.test(str)) return 'food-apple';
+        if (/(fruit|pomme(?!s?\s+de\s+terre)|banane|orange|kiwi|ananas|poire|fraise|framboise|pêche|abricot|raisin|mangue|melon|pastèque|citron|clémentine|compote)/.test(str)) return 'food-apple';
         
         // Yaourts et desserts lactés
         if (/(yaourt|lacté|petit suisse|fromage blanc|skyr|faisselle|glace|crème)/.test(str)) return 'silverware-spoon';
@@ -137,7 +137,7 @@ export default function CrousMenuScreen({ route }: any) {
         return (
             <View style={{ marginBottom: tokens.space.xl }}>
                 {/* Titre du repas */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.sm, marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}>
                     <MaterialCommunityIcons 
                         name={iconHeader} 
                         size={20} 
@@ -184,6 +184,21 @@ export default function CrousMenuScreen({ route }: any) {
             
             {/* ── Bandeau des dates défilant horizontalement ── */}
             <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm, paddingTop: 110 }}>
+                
+                <Text 
+                    style={{
+                        fontSize: tokens.fontSize.xl,
+                        fontWeight: tokens.fontWeight.bold as any,
+                        color: theme.fontSecondary,
+                        textAlign: 'left',
+                        paddingHorizontal: tokens.space.md,
+                        marginBottom: tokens.space.md,
+                    }} 
+                    numberOfLines={1}
+                >
+                    {restaurantName || 'Restaurant Universitaire'}
+                </Text>
+
                 <FlatList
                     ref={flatListRef}
                     horizontal
