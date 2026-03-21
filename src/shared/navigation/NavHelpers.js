@@ -186,6 +186,10 @@ export const withHeaderAnimation = (WrappedComponent) => {
         const route = useRoute();
 
         useEffect(() => {
+            scrollY.setValue(0);
+        }, [props.target]);
+
+        useEffect(() => {
             // On planque la variable hors de React Navigation
             globalScrollValues[route.key] = scrollY;
             

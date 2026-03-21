@@ -24,7 +24,7 @@ class CalendarDay extends React.Component {
 
     static getBackgroundColor(props) {
         if (props.item.isSame(props.currentDay, 'day')) return props.theme.primary + '26';
-        if (props.item.day() === 0) return props.theme.calendar.sunday;
+        if (props.item.day() === 0) return props.theme.greyBackground + '80';
         return 'transparent';
     }
 
