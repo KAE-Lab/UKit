@@ -43,13 +43,13 @@ const CustomDrawerContentComponent = (props) => {
                     paddingBottom: tokens.space.lg,
                 }}>
                     <Image
-                        style={{ width: 110, height: 45, resizeMode: 'contain' }}
+                        style={{ width: 120, height: 50, resizeMode: 'contain' }}
                         source={require('../../../assets/icons/logo.png')}
                     />
                     <TouchableOpacity
                         onPress={SettingsManager.switchTheme}
                         style={{
-                            width: 40, height: 40, borderRadius: tokens.radius.pill,
+                            width: 45, height: 45, borderRadius: tokens.radius.pill,
                             backgroundColor: theme.greyBackground, justifyContent: 'center', alignItems: 'center',
                         }}>
                         <MaterialCommunityIcons name="theme-light-dark" size={22} color={theme.primary} />

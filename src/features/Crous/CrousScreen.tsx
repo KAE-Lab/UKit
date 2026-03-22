@@ -74,7 +74,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingTop: 120, paddingVertical: tokens.space.sm }}
+                    contentContainerStyle={{ paddingTop: 115, paddingVertical: tokens.space.sm }}
                     renderItem={({ item }) => (
                         <TouchableOpacity 
                             activeOpacity={0.9}
