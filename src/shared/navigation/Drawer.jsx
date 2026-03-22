@@ -18,6 +18,17 @@ const CustomDrawerContentComponent = (props) => {
     const { navigate } = props.navigation;
     const theme = style.Theme[AppContextValues.themeName];
 
+    const stackState = props.state.routes[0].state;
+    // Par défaut, la première page est Home
+    const activeRoute = stackState ? stackState.routes[stackState.index] : { name: 'Home' };
+
+    const isRouteActive = (routeName, entrypoint) => {
+        if (activeRoute.name !== routeName) return false;
+        // Permet de différencier ENT, Mail et Apogée qui utilisent tous WebBrowser
+        if (entrypoint && activeRoute.params?.entrypoint !== entrypoint) return false;
+        return true;
+    };
+
     return (
         <View style={{ flex: 1, backgroundColor: theme.background }}>
             <SafeAreaView style={{ flex: 1 }}>
@@ -62,7 +73,7 @@ const CustomDrawerContentComponent = (props) => {
                         </Text>
                         
                         {AppContextValues.groupName ? (
-                            <MyGroupButton navigate={navigate} themeName={AppContextValues.themeName} groupName={AppContextValues.groupName} />
+                            <MyGroupButton navigate={navigate} themeName={AppContextValues.themeName} groupName={AppContextValues.groupName} isActive={isRouteActive('Group')} />
                         ) : (
                             <View style={{ paddingHorizontal: tokens.space.lg, paddingVertical: tokens.space.sm }}>
                                 <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm }}>
@@ -75,6 +86,7 @@ const CustomDrawerContentComponent = (props) => {
                             size={22} textSize={tokens.fontSize.sm} icon={'list'}
                             color={theme.primary} fontColor={theme.font}
                             onPress={() => props.navigation.navigate('Stack', { screen: 'Home' })}
+                            isActive={isRouteActive('Home')}
                         />
                     </View>
 
@@ -90,12 +102,15 @@ const CustomDrawerContentComponent = (props) => {
                         size={22} textSize={tokens.fontSize.sm} icon={'restaurant'} 
                         color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'Crous' })}
+                        isActive={isRouteActive('Crous')}
                     />
                     <Button
                         title={Translator.get('LIBRARIES')}
                         size={22} textSize={tokens.fontSize.sm} icon={'local-library'}
                         color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'Library' })}
+                        isActive={isRouteActive('Library')}
+
                     />
                     
                     {/* Navigation ENT */}
@@ -110,18 +125,21 @@ const CustomDrawerContentComponent = (props) => {
                         size={22} textSize={tokens.fontSize.sm} icon={'dashboard'}
                         color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'ent', title: 'ENT' } })}
+                        isActive={isRouteActive('WebBrowser', 'ent')}
                     />
                     <Button
                         title={Translator.get('MAILBOX')}
                         size={22} textSize={tokens.fontSize.sm} icon={'mail-outline'}
                         color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'email', title: Translator.get('MAILBOX') } })}
+                        isActive={isRouteActive('WebBrowser', 'email')}
                     />
                     <Button
                         title={'Apogée'}
                         size={22} textSize={tokens.fontSize.sm} icon={'school'}
                         color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'apogee', title: 'Apogée' } })}
+                        isActive={isRouteActive('WebBrowser', 'apogee')}
                     />
     
                     {/* Application */}
@@ -136,12 +154,14 @@ const CustomDrawerContentComponent = (props) => {
                         size={22} textSize={tokens.fontSize.sm} icon={'settings'}
                         color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'Settings' })}
+                        isActive={isRouteActive('Settings')}
                     />
                     <Button
                         title={Translator.get('ABOUT')}
                         size={22} textSize={tokens.fontSize.sm} icon={'info'}
                         color={theme.primary} fontColor={theme.font}
                         onPress={() => props.navigation.navigate('Stack', { screen: 'About' })}
+                        isActive={isRouteActive('About')}
                     />
 
                 </ScrollView>

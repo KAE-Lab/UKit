@@ -177,6 +177,7 @@ export class MyGroupButton extends React.PureComponent {
                 color={theme.primary}
                 fontColor={theme.font}
                 onPress={this._onPress}
+                isActive={this.props.isActive}
             />
         );
     }

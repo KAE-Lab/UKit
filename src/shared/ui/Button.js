@@ -64,7 +64,7 @@ export const DrawerButton = (props) => {
                 marginHorizontal: tokens.space.sm,
                 marginVertical: tokens.space.xs,
                 borderRadius: tokens.radius.md,
-                backgroundColor: pressed ? theme.greyBackground : 'transparent'
+                backgroundColor: props.isActive || pressed ? theme.greyBackground : 'transparent'
             })}>
             <View style={{
                 width: 36,
@@ -78,7 +78,7 @@ export const DrawerButton = (props) => {
             </View>
             <Text style={{
                 fontSize: props.textSize ?? tokens.fontSize.md,
-                color: props.fontColor,
+                color: props.isActive ? theme.primary : props.fontColor,
                 marginLeft: tokens.space.md,
                 fontWeight: tokens.fontWeight.medium,
                 flex: 1,
