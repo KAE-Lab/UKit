@@ -14,7 +14,7 @@ const Section = ({ title, icon, theme, children }) => (
 	<View style={{
 		backgroundColor: theme.cardBackground,
 		borderRadius: tokens.radius.lg,
-		marginHorizontal: tokens.space.md,
+		marginHorizontal: tokens.space.sm,
 		marginBottom: tokens.space.md,
 		overflow: 'hidden',
 		borderWidth: 1,
@@ -93,7 +93,7 @@ class AboutScreen extends React.Component {
                     <View style={{ alignItems: 'center', paddingVertical: tokens.space.xl }}>
 						<View style={{
 							width: 90, height: 90, borderRadius: tokens.radius.lg, overflow: 'hidden',
-							marginBottom: tokens.space.md, backgroundColor: theme.themeName === 'dark' ? '#2D1A2E' : '#E8F6FD'
+							marginBottom: tokens.space.md, backgroundColor: '#ffffff'
 						}}>
 							<Image
                                 source={require('../../../assets/icons/app.png')}
@@ -104,7 +104,7 @@ class AboutScreen extends React.Component {
                             UKit
                         </Text>
                         <View style={{
-                            backgroundColor: theme.primarySoft, borderRadius: tokens.radius.pill,
+                            backgroundColor: theme.greyBackground, borderRadius: tokens.radius.pill,
                             paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.xs, marginTop: tokens.space.xs,
                         }}>
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontWeight: tokens.fontWeight.medium }}>

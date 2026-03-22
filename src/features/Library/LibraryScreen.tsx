@@ -113,7 +113,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     backgroundColor: theme.cardBackground,
                     borderRadius: tokens.radius.xl, 
                     marginBottom: tokens.space.lg, 
-                    marginHorizontal: tokens.space.md,
+                    marginHorizontal: tokens.space.sm,
                     ...tokens.shadow.md, 
                     overflow: 'hidden', 
                 }}

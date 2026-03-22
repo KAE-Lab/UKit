@@ -101,7 +101,7 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 
 	return (
 		<SafeAreaView edges={['left', 'right','top']} style={{ flex: 1, backgroundColor: theme.background }}>
-            <View style={[{ flex: 1 }, { paddingTop: 60}]}>
+            <View style={[{ flex: 1 }, { paddingTop: 65}]}>
                 <WebView
 				ref={webViewRef}
 				style={{ flex: 1, backgroundColor: theme.background }}
