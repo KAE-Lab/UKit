@@ -93,11 +93,12 @@ class AboutScreen extends React.Component {
                     <View style={{ alignItems: 'center', paddingVertical: tokens.space.xl }}>
 						<View style={{
 							width: 90, height: 90, borderRadius: tokens.radius.lg, overflow: 'hidden',
-							marginBottom: tokens.space.md, backgroundColor: '#ffffff'
+							marginBottom: tokens.space.md, backgroundColor: '#ffffff',
+                            justifyContent: 'center', alignItems: 'center'
 						}}>
-							<Image
-                                source={require('../../../assets/icons/app.png')}
-                                style={{ width: 90, height: 90, resizeMode: 'contain', tintColor: theme.primary }}
+                            <Image
+                                source={require('../../../assets/icons/logo.png')}
+                                style={{ width: 70, height: 70, resizeMode: 'contain' }}
                             />
 						</View>
                         <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: theme.font }}>

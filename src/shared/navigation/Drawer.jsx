@@ -28,11 +28,12 @@ const CustomDrawerContentComponent = (props) => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     paddingHorizontal: tokens.space.md,
-                    paddingVertical: tokens.space.lg,
+                    paddingTop: tokens.space.xl,
+                    paddingBottom: tokens.space.lg,
                 }}>
                     <Image
-                        style={{ width: 140, height: 60, resizeMode: 'contain', tintColor: theme.primary }}
-                        source={require('../../../assets/icons/app.png')}
+                        style={{ width: 110, height: 45, resizeMode: 'contain' }}
+                        source={require('../../../assets/icons/logo.png')}
                     />
                     <TouchableOpacity
                         onPress={SettingsManager.switchTheme}
