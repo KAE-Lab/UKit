@@ -12,15 +12,15 @@ export default {
 	versionCode: 540,
 	orientation: 'portrait',
 	primaryColor: '#006F9F',
-	icon: './assets/icons/ios.png',
+	icon: './assets/icons/icon.png',
 	owner: 'kaelab',
 	splash: {
-		image: './assets/icons/splash.png',
-		backgroundColor: '#009de0',
+		image: './assets/icons/icon.png',
+		backgroundColor: '#ffffff',
 		resizeMode: 'contain',
 	},
 	ios: {
-		icon: './assets/icons/ios.png',
+		icon: './assets/icons/icon.png',
 		supportsTablet: true,
 		bundleIdentifier: 'org.kaelab.ukit',
 		infoPlist: {
@@ -34,16 +34,12 @@ export default {
 	},
 	android: {
 		package: 'org.kaelab.ukit',
-		adaptiveIcon: {
-			foregroundImage: './assets/icons/android_foreground.png',
-			backgroundImage: './assets/icons/android_background.png',
-		},
 		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
 		versionCode: 63,
 	},
 	androidStatusBar: {
 		barStyle: 'light-content',
-		backgroundColor: '#009ee0',
+		backgroundColor: '#006F9F',
 	},
 	assetBundlePatterns: ['**/*'],
 	updates: {
