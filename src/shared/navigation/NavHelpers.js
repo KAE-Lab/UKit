@@ -136,9 +136,6 @@ export class FilterRemoveButton extends React.Component {
                         <View style={popupTheme.container}>
                             <View style={popupTheme.header}>
                                 <Text style={popupTheme.textHeader}>{Translator.get('FILTERS_UE').toUpperCase()}</Text>
-                                <TouchableOpacity onPress={this.popupClose}>
-                                    <MaterialIcons name="close" size={32} style={popupTheme.closeIcon} />
-                                </TouchableOpacity>
                             </View>
                             <Text style={popupTheme.textDescription}>{Translator.get('FILTERS_CONFIRMATION')}</Text>
                             <View style={popupTheme.buttonContainer}>
