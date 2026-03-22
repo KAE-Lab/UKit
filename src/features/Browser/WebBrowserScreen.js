@@ -79,7 +79,7 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 	const javascript = Platform.OS !== 'ios' ? 'window.scrollTo(0,0);' : null;
 
 	const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24 }) => {
-		const color = disabled ? theme.icon + '44' : theme.icon;
+		const color = disabled ? theme.primary + '44' : theme.primary;
 		const Icon = iconLib === 'community' ? MaterialCommunityIcons : MaterialIcons;
 
 		return (

@@ -70,14 +70,14 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
                         onPress={onPressExternalMap}
                         style={{
                             backgroundColor: theme.greyBackground,
-                            width: 45,
-                            height: 45,
+                            width: 51,
+                            height: 51,
                             justifyContent: 'center',
                             alignItems: 'center',
                             borderRadius: tokens.radius.pill,
-                            marginRight: tokens.space.md
+                            marginRight: 13
                         }}>
-                        <MaterialCommunityIcons name="map-search-outline" size={26} color={theme.accent ?? theme.primary} />
+                        <MaterialCommunityIcons name="map-search-outline" size={28} color={theme.accent ?? theme.primary} />
                     </TouchableOpacity>
                 ),
             });
