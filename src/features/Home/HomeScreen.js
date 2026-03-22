@@ -285,25 +285,23 @@ class HomeScreen extends React.Component {
             <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: theme.field,
-                borderRadius: tokens.radius.lg,
-                borderWidth: 1.5,
-                borderColor: theme.fieldBorder,
+                backgroundColor: theme.greyBackground,
+                borderRadius: tokens.radius.md,
                 paddingHorizontal: tokens.space.md,
                 marginHorizontal: tokens.space.md,
-                marginVertical: tokens.space.md,
-                ...tokens.shadow.sm,
+                marginTop: tokens.space.xs,      
+                marginBottom: tokens.space.md,
+                height: 40,
             }}>
                 <MaterialCommunityIcons
                     name="magnify"
-                    size={20}
-                    color={theme.icon}
+                    size={22}
+                    color={theme.fontSecondary}
                     style={{ marginRight: tokens.space.sm }}
                 />
                 <TextInput
                     style={{
                         flex: 1,
-                        paddingVertical: tokens.space.sm,
                         fontSize: tokens.fontSize.md,
                         color: theme.font,
                     }}
@@ -317,10 +315,13 @@ class HomeScreen extends React.Component {
                     autoCorrect={false}
                 />
                 {this.state.searchText.length > 0 && (
-                    <TouchableOpacity onPress={() => {
-                        this.setState({ searchText: '' });
-                        this.search('');
-                    }}>
+                    <TouchableOpacity 
+                        onPress={() => {
+                            this.setState({ searchText: '' });
+                            this.search('');
+                        }}
+                        style={{ padding: tokens.space.xs }}
+                    >
                         <MaterialCommunityIcons name="close-circle" size={18} color={theme.fontSecondary} />
                     </TouchableOpacity>
                 )}
@@ -372,7 +373,7 @@ class HomeScreen extends React.Component {
                         { useNativeDriver: false }
                     )}
                     scrollEventThrottle={16}
-                    contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.xxl }}
+                    contentContainerStyle={{ paddingTop: 0, paddingBottom: tokens.space.xxl }}
                     scrollIndicatorInsets={{ top: 0 }}
                     renderItem={({ item, index }) => (
                         <GroupRow name={item.name} cleanName={item.cleanName} sectionStyle={item.sectionStyle} key={index} color={theme.sections[item.colorIndex]} fontColor={theme.font} openGroup={this.openGroup} />
