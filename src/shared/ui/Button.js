@@ -43,6 +43,9 @@ export const WelcomeButton = ({ onPress, buttonText, theme }) => {
 
 // ── Bouton du Menu (Drawer) ────────────────────────────────────
 export const DrawerButton = (props) => {
+    const AppContextValues = useContext(AppContext);
+    const theme = style.Theme[AppContextValues.themeName];
+
     let icon = props.icon ? (
         <MaterialIcons name={props.icon} size={props.size} style={{ color: props.color }} />
     ) : (
@@ -61,13 +64,13 @@ export const DrawerButton = (props) => {
                 marginHorizontal: tokens.space.sm,
                 marginVertical: tokens.space.xs,
                 borderRadius: tokens.radius.md,
-                backgroundColor: pressed ? props.pressedColor ?? 'transparent' : 'transparent'
+                backgroundColor: pressed ? theme.greyBackground : 'transparent'
             })}>
             <View style={{
                 width: 36,
                 height: 36,
-                borderRadius: tokens.radius.sm,
-                backgroundColor: props.iconBackground ?? `${props.color}18`,
+                borderRadius: tokens.radius.md,
+                backgroundColor: theme.greyBackground,
                 justifyContent: 'center',
                 alignItems: 'center',
             }}>

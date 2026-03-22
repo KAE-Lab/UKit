@@ -1,3 +1,5 @@
+import Translator from "../../shared/i18n/Translator";
+
 export interface LibraryInfo {
     id: string;
     name: string;
@@ -70,7 +72,7 @@ export default class LibraryService {
                 return {
                     id: lib.id,
                     name: lib.primary_name,
-                    campus: campusStr || 'Campus',
+                    campus: campusStr || Translator.get('CAMPUS'),
                     lat: lib.location?.coordinates?.latitude,
                     lng: lib.location?.coordinates?.longitude,
                     slug: lib.slug,

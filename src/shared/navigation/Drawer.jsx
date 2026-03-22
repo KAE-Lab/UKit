@@ -83,7 +83,7 @@ const CustomDrawerContentComponent = (props) => {
                             color: theme.fontSecondary, fontSize: tokens.fontSize.md, fontWeight: 'bold',
                             paddingTop: tokens.space.lg, paddingBottom: tokens.space.sm, paddingHorizontal: tokens.space.lg,
                         }}>
-                            {Translator.get('CAMPUS') ?? 'Campus'}
+                            {Translator.get('CAMPUS')}
                     </Text>
                     <Button
                         title={Translator.get('RESTAURANTS_U')}

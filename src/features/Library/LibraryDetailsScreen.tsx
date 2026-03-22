@@ -25,7 +25,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
         navigation.setOptions({
             headerTitle: () => (
                 <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any }}>
-                    Infos
+                    {Translator.get('DETAILS')}
                 </Text>
             ),
             headerTitleAlign: 'center'
@@ -53,7 +53,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
     };
 
     const formatDate = (dateString: string) => {
-        if (!dateString) return '?';
+        if (!dateString) return Translator.get('UNKNOWN');
         const d = new Date(dateString);
         if (isNaN(d.getTime())) return dateString;
         const dayKeys = ['DAY_SUN', 'DAY_MON', 'DAY_TUE', 'DAY_WED', 'DAY_THU', 'DAY_FRI', 'DAY_SAT'];
@@ -63,7 +63,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
 
     const formatTime = (dateTimeString: string) => {
         if (!dateTimeString) return '';
-        return dateTimeString.substring(11, 16).replace(':', 'h');
+        return dateTimeString.substring(11, 16).replace(':', Translator.get('TIME_SEPARATOR'));
     };
 
     useEffect(() => {
@@ -142,7 +142,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                     }} 
                     numberOfLines={2}
                 >
-                    {library.name || 'Bibliothèque'}
+                    {library.name || Translator.get('LIBRARY')}
                 </Text>
                 
                 <FlatList

@@ -40,7 +40,11 @@ const Section = ({ title, icon, theme, children }) => (
 				{title}
 			</Text>
 		</View>
-		<View style={{ padding: tokens.space.md }}>
+		<View style={{ 
+            paddingHorizontal: tokens.space.md, 
+            paddingBottom: tokens.space.sm + 2, 
+            paddingTop: tokens.space.sm + 1
+         }}>
 			{children}
 		</View>
 	</View>
@@ -84,13 +88,13 @@ class AboutScreen extends React.Component {
         return (
             <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
                 <Animated.ScrollView 
-                    contentContainerStyle={this.props.headerPadding}
+                    contentContainerStyle={[this.props.headerPadding, {paddingTop: 95}]}
                     onScroll={this.props.onAnimatedScroll}
                     scrollEventThrottle={16}
                     showsVerticalScrollIndicator={false}
                 >
 
-                    <View style={{ alignItems: 'center', paddingVertical: tokens.space.xl }}>
+                    <View style={{ alignItems: 'center', paddingVertical: tokens.space.lg }}>
 						<View style={{
 							width: 90, height: 90, borderRadius: tokens.radius.lg, overflow: 'hidden',
 							marginBottom: tokens.space.md, backgroundColor: '#ffffff',
@@ -133,24 +137,26 @@ class AboutScreen extends React.Component {
                         <URLButton url={URL.KAELAB_WEBSITE} title={Translator.get('COMPANY_WEBSITE')} theme={theme} />
                     </Section>
 
-                    <Section title="Crédits & API" icon="api" theme={theme}>
+                    <Section title={Translator.get('CREDITS_API')} icon="api" theme={theme}>
                         <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 22 }}>
-                            Cette application utilise des services tiers pour fournir des données en temps réel aux étudiants :
+                            {Translator.get('THIRD_PARTY_DESC')}
                         </Text>
+                        
                         <View style={{ marginTop: tokens.space.sm }}>
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: 'bold' }}>
                                 • API Affluences
                             </Text>
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginLeft: tokens.space.sm }}>
-                                Horaires et affluence en temps réel des bibliothèques (BU).
+                                {Translator.get('AFFLUENCES_DESC')}
                             </Text>
                         </View>
+                        
                         <View style={{ marginTop: tokens.space.sm }}>
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: 'bold' }}>
                                 • API CROUStillant
                             </Text>
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginLeft: tokens.space.sm }}>
-                                Menus quotidiens et images des restaurants universitaires.
+                                {Translator.get('CROUSTILLANT_DESC')}
                             </Text>
                         </View>
                     </Section>

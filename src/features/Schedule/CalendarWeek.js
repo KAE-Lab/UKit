@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, TouchableOpacity } from 'react-native';
+import Translator from '../../shared/i18n/Translator';
 
 import { tokens } from '../../shared/theme/Theme';
 
@@ -72,7 +73,7 @@ class CalendarWeek extends React.Component {
                     textTransform: 'uppercase',
                     letterSpacing: 0.5,
                 }}>
-                    {`S.${this.props.week.week}`}
+                    {`${Translator.get('WEEK_SHORT')}${this.props.week.week}`}
                 </Text>
             </TouchableOpacity>
         );

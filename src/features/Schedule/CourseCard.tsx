@@ -97,7 +97,7 @@ export class CalendarNewEventPrompt extends React.Component<CalendarNewEventProm
 			});
 		} catch (error) {
 			console.warn(error);
-			Toast.show(Translator.get('ERROR_WITH_MESSAGE', "Couldn't add event to calendar"), {
+			Toast.show(Translator.get('CALENDAR_ERROR'), {
 				duration: Toast.durations.LONG,
 				position: Toast.positions.BOTTOM,
 			});
@@ -634,7 +634,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 
 	componentDidMount() {
 		let locations: any[] = [];
-		this.props.navigation.setParams({ title: this.state.data.UE || 'Détails' });
+		this.props.navigation.setParams({ title: this.state.data.UE || Translator.get('DETAILS') });
 
 		// On nettoie les lignes vides
 		const descLines = (this.state.data.description ?? '').split('\n').map(l => l.trim()).filter(l => l);
@@ -677,7 +677,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 
 			// Génération du code Leaflet pour tes marqueurs customisés SVG
             const markersJs = this.state.locations.map((location: any) => {
-                const title = location.title || 'Salle';
+                const title = location.title || Translator.get('ROOM');
                 return `
                     var iconHTML = \`
                         <div style="display: flex; flex-direction: column; align-items: center; padding-bottom: 8px;">
@@ -780,7 +780,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 					
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.space.sm }}>
 						<Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
-							{this.state.data.subject !== 'N/C' ? this.state.data.subject.trim() : (Translator.get('UNKNOWN_SUBJECT') ?? 'Cours inconnu')}
+							{this.state.data.subject !== 'N/C' ? this.state.data.subject.trim() : Translator.get('UNKNOWN_SUBJECT')}
 						</Text>
 						{this.state.data.category !== this.state.data.subject && (
 							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.pill, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>

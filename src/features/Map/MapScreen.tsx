@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { View, TouchableOpacity, Linking, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Translator from '../../shared/i18n/Translator';
 
 import { AppContext } from '../../shared/services/AppCore';
 import style, { tokens } from '../../shared/theme/Theme';
@@ -27,7 +28,7 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
 
-    const [title, setTitle] = useState<string>(route.params.title || 'Destination');
+    const [title, setTitle] = useState<string>(route.params.title || Translator.get('DESTINATION'));
     const [lat, setLat] = useState<number | null>(null);
     const [lng, setLng] = useState<number | null>(null);
 
@@ -62,8 +63,8 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
     useEffect(() => {
         if (lat !== null && lng !== null) {
             navigation.setOptions({
-                headerTransparent: true, // On laisse le header flotter
-                title: title || 'Carte', // On donne juste le texte, ton NavBarHelper s'occupe du design !
+                headerTransparent: true, 
+                title: title || Translator.get('MAP'), 
                 headerRight: () => (
                     <TouchableOpacity
                         onPress={onPressExternalMap}
@@ -91,7 +92,6 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
         );
     }
 
-    // Le code Leaflet injecté dans la WebView avec le marqueur SVG personnalisé
     const mapHtml = `
         <!DOCTYPE html>
         <html>
@@ -143,7 +143,6 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
     return (
         <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             
-            {/* Le bandeau est maintenant 100% vide, il sert juste de fond au header natif */}
             <View style={{ 
                 height: 110, 
                 backgroundColor: theme.cardBackground, 

@@ -22,7 +22,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
         navigation.setOptions({
             headerTitle: () => (
                 <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any }}>
-                    Menu
+                    {Translator.get('MENU')}
                 </Text>
             ),
             headerTitleAlign: 'center'
@@ -42,10 +42,12 @@ export default function CrousMenuScreen({ route, navigation }: any) {
     };
 
     // "2024-03-25" -> "Lun 25"
-    const formatDate = (dateString: string) => {
-        if (!dateString || dateString === 'Inconnue') return '?';
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return Translator.get('UNKNOWN');
+
         const d = new Date(dateString);
         if (isNaN(d.getTime())) return dateString;
+
         const dayKeys = ['DAY_SUN', 'DAY_MON', 'DAY_TUE', 'DAY_WED', 'DAY_THU', 'DAY_FRI', 'DAY_SAT'];
         const translatedDay = Translator.get(dayKeys[d.getDay()]);
         return `${translatedDay} ${d.getDate()}`;
@@ -67,7 +69,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: tokens.space.xl }}>
                     <MaterialCommunityIcons name="food-off" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.md }} />
                     <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center' }}>
-                        Aucun menu publié pour ce restaurant actuellement.
+                        {Translator.get('NO_MENU_PUBLISHED')}
                     </Text>
                 </View>
             </SafeAreaView>
@@ -171,7 +173,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
                                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, flex: 1, lineHeight: 20 }}>{dish}</Text>
                             </View>
                         )) : (
-                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontStyle: 'italic' }}>Non précisé</Text>
+                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontStyle: 'italic' }}>{Translator.get('NOT_SPECIFIED')}</Text>
                         )}
                     </View>
                 ))}
@@ -196,7 +198,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
                     }} 
                     numberOfLines={1}
                 >
-                    {restaurantName || 'Restaurant Universitaire'}
+                    {restaurantName || Translator.get('RESTAURANT_U')}
                 </Text>
 
                 <FlatList
@@ -246,7 +248,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
             <ScrollView style={{ flex: 1, paddingTop: tokens.space.md }}>
                 {currentMenu.midi?.length === 0 && currentMenu.soir?.length === 0 ? (
                     <Text style={{ textAlign: 'center', color: theme.fontSecondary, marginTop: tokens.space.xl }}>
-                        Aucun plat renseigné pour cette journée.
+                        {Translator.get('NO_DISH_INFO')}
                     </Text>
                 ) : (
                     <>
