@@ -79,7 +79,7 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 	const javascript = Platform.OS !== 'ios' ? 'window.scrollTo(0,0);' : null;
 
 	const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24 }) => {
-		const color = disabled ? theme.border : theme.icon;
+		const color = disabled ? theme.icon + '44' : theme.icon;
 		const Icon = iconLib === 'community' ? MaterialCommunityIcons : MaterialIcons;
 
 		return (
@@ -92,7 +92,7 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 					borderRadius: tokens.radius.md,
 					justifyContent: 'center',
 					alignItems: 'center',
-					backgroundColor: disabled ? 'transparent' : theme.greyBackground,
+					backgroundColor: disabled ? 'transparent' : theme.cardBackground,
 				}}>
 				<Icon name={iconName} size={size} color={color} />
 			</TouchableOpacity>
@@ -137,14 +137,14 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 				source={{ uri }}
 			/>
 
-			<SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.greyBackground }}>
+			<SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.background }}>
 				<View
 					style={{
 						flexDirection: 'row',
 						justifyContent: 'space-around',
 						alignItems: 'center',
 						paddingHorizontal: tokens.space.sm,
-						paddingTop: tokens.space.xs,
+						paddingTop: tokens.space.sm + 2,
 						backgroundColor: 'transparent',
 						borderTopWidth: 1,
 						borderTopColor: theme.border,
