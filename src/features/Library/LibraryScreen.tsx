@@ -216,7 +216,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
 
     if (loading) {
         return (
-            <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
                 </View>
@@ -225,7 +225,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     }
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
                     data={libraries}

@@ -86,8 +86,8 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 	};
 
 	return (
-		<SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-            <View style={[{ flex: 1 }, { paddingTop: 60, paddingBottom: 0 }]}>
+		<SafeAreaView edges={['left', 'right','top']} style={{ flex: 1, backgroundColor: theme.background }}>
+            <View style={[{ flex: 1 }, { paddingTop: 60}]}>
                 <WebView
 				ref={webViewRef}
 				style={{ flex: 1, backgroundColor: theme.background }}
@@ -120,22 +120,24 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 				source={{ uri }}
 			/>
 
-			<View
-				style={{
-					flexDirection: 'row',
-					justifyContent: 'space-around',
-					alignItems: 'center',
-					paddingHorizontal: tokens.space.sm,
-					paddingVertical: tokens.space.xs,
-					backgroundColor: theme.cardBackground,
-					borderTopWidth: 1,
-					borderTopColor: theme.border,
-				}}>
-				<NavButton onPress={onBack} disabled={!canGoBack} iconName="navigate-before" size={28} />
-				<NavButton onPress={onForward} disabled={!canGoForward} iconName="navigate-next" size={28} />
-				<NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
-				<NavButton onPress={openURL} disabled={false} iconName={Platform.OS === 'ios' ? 'apple-safari' : 'google-chrome'} iconLib="community" size={22} />
-			</View>
+			<SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.greyBackground }}>
+				<View
+					style={{
+						flexDirection: 'row',
+						justifyContent: 'space-around',
+						alignItems: 'center',
+						paddingHorizontal: tokens.space.sm,
+						paddingTop: tokens.space.xs,
+						backgroundColor: 'transparent',
+						borderTopWidth: 1,
+						borderTopColor: theme.border,
+					}}>
+					<NavButton onPress={onBack} disabled={!canGoBack} iconName="navigate-before" size={28} />
+					<NavButton onPress={onForward} disabled={!canGoForward} iconName="navigate-next" size={28} />
+					<NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
+					<NavButton onPress={openURL} disabled={false} iconName={Platform.OS === 'ios' ? 'apple-safari' : 'google-chrome'} iconLib="community" size={22} />
+				</View>
+			</SafeAreaView>
 		</View>
 		</SafeAreaView>
 	);

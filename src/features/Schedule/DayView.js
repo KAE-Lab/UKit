@@ -156,7 +156,7 @@ class DayView extends React.Component {
                             alignItems: 'center',
                             height: 44,
                             backgroundColor: theme.cardBackground,
-                            paddingHorizontal: tokens.space.xs,
+                            paddingHorizontal: tokens.space.xs + 2,
                         }}>
                             {/* Bouton Aujourd'hui */}
                             <TouchableOpacity
@@ -188,7 +188,7 @@ class DayView extends React.Component {
                             <Text style={{
                                 fontSize: tokens.fontSize.md,
                                 fontWeight: tokens.fontWeight.semibold,
-                                color: theme.font,
+                                color: theme.fontSecondary,
                                 flex: 1,
                                 textAlign: 'center',
                             }}>
@@ -238,7 +238,6 @@ class DayView extends React.Component {
                             renderItem={this.renderCalendarListItem}
                             style={{
                                 backgroundColor: theme.cardBackground,
-                                paddingBottom: tokens.space.xs,
                             }}
                         />
                     </SafeAreaView>

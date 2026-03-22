@@ -248,7 +248,8 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
             <SafeAreaView 
                 edges={['bottom']}
                 style={{ 
-                    padding: tokens.space.md, 
+                    paddingTop: tokens.space.md,
+                    paddingHorizontal: tokens.space.md,
                     backgroundColor: theme.cardBackground,
                     borderTopWidth: 1,
                     borderTopColor: theme.border,
