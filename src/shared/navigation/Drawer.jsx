@@ -108,19 +108,19 @@ const CustomDrawerContentComponent = (props) => {
                         title={'ENT'}
                         size={22} textSize={tokens.fontSize.sm} icon={'dashboard'}
                         color={theme.primary} fontColor={theme.font}
-                        onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'ent' } })}
+                        onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'ent', title: 'ENT' } })}
                     />
                     <Button
                         title={Translator.get('MAILBOX')}
                         size={22} textSize={tokens.fontSize.sm} icon={'mail-outline'}
                         color={theme.primary} fontColor={theme.font}
-                        onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'email' } })}
+                        onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'email', title: Translator.get('MAILBOX') } })}
                     />
                     <Button
                         title={'Apogée'}
                         size={22} textSize={tokens.fontSize.sm} icon={'school'}
                         color={theme.primary} fontColor={theme.font}
-                        onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'apogee' } })}
+                        onPress={() => props.navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'apogee', title: 'Apogée' } })}
                     />
     
                     {/* Application */}
@@ -159,7 +159,11 @@ export default ({ background }) => {
 
     return (
         <NavigationContainer theme={customTheme}>
-            <Drawer.Navigator drawerContent={(props) => <CustomDrawerContentComponent {...props} />} screenOptions={{ headerShown: false }}>
+            <Drawer.Navigator 
+                drawerContent={(props) => <CustomDrawerContentComponent {...props} />} 
+                screenOptions={{ headerShown: false, swipeEdgeWidth: 70 }}
+                backBehavior="history"
+            >
                 <Drawer.Screen name="Stack" component={StackNavigator} />
             </Drawer.Navigator>
         </NavigationContainer>

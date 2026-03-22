@@ -27,11 +27,25 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 		else if (href) initialUri = href;
 	}
 
-	const [uri] = useState(initialUri);
+	const [uri, setUri] = useState(initialUri);
 	const [url, setUrl] = useState(initialUri);
 	const [canGoBack, setCanGoBack] = useState(false);
 	const [canGoForward, setCanGoForward] = useState(false);
 	const [loading, setLoading] = useState(true);
+
+	// Force la mise à jour de l'URL si React Navigation recycle le composant
+	React.useEffect(() => {
+		let newUri = URL.UKIT_WEBSITE;
+		if (route.params) {
+			const { entrypoint, href } = route.params;
+			if (entrypoint && entrypoints[entrypoint]) newUri = entrypoints[entrypoint];
+			else if (href) newUri = href;
+		}
+		if (newUri !== uri) {
+			setUri(newUri);
+			setUrl(newUri);
+		}
+	}, [route.params?.entrypoint, route.params?.href]);
 
 	const onRefresh = () => webViewRef.current?.reload();
 	const onBack = () => webViewRef.current?.goBack();
@@ -114,7 +128,10 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 						setCanGoBack(e.canGoBack);
 						setCanGoForward(e.canGoForward);
 						setLoading(e.loading);
-						if (e.title) navigation.setParams({ title: e.title });
+                        
+						if (e.title && !route.params?.entrypoint) {
+							navigation.setParams({ title: e.title });
+						}
 					}
 				}}
 				source={{ uri }}

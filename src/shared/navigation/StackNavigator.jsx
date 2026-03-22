@@ -60,7 +60,7 @@ export default function StackNavigator() {
                             ) : undefined,
                         }}>
                         
-                        <Stack.Screen name="Home" component={Home} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('GROUPS'), themeName, route })} />
+                        <Stack.Screen name="Home" component={Home} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('GROUPS'), themeName, route, gestureEnabled: false })} />
                         
                         <Stack.Screen 
                             name="Group" 
@@ -70,32 +70,33 @@ export default function StackNavigator() {
                                 headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.name} themeName={themeName} /></View>, 
                                 title: treatTitle(route.params.name), 
                                 themeName, 
-                                route 
+                                route,
+                                gestureEnabled: false
                             })} 
                         />
-
-                        <Stack.Screen name="Week" component={WeekView} options={({ route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.groupName} themeName={themeName} /></View>, title: route.params.groupName.replace(/_/g, ' '), themeName, route })} />
                         
-                        <Stack.Screen name="Day" component={DayView} options={{ tabBarLabel: Translator.get('DAY'), tabBarIcon: ({ tintColor }) => <MaterialCommunityIcons name="calendar" size={24} style={{ color: tintColor }} /> }} />
+                        <Stack.Screen name="About" component={About} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('ABOUT'), themeName, route, gestureEnabled: false })} />
                         
-                        <Stack.Screen name="About" component={About} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('ABOUT'), themeName, route })} />
+                        <Stack.Screen name="Settings" component={Settings} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: false })} />
                         
-                        <Stack.Screen name="Settings" component={Settings} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('SETTINGS'), themeName, route })} />
+                        <Stack.Screen name="Crous" component={CrousScreen} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('RESTAURANTS'), themeName, route, gestureEnabled: false })} />
                         
-                        <Stack.Screen name="Crous" component={CrousScreen} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('RESTAURANTS'), themeName, route })} />
-                        
-                        <Stack.Screen name="CrousMenu" component={CrousMenuScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.restaurantName, route.params?.location), title: route.params?.restaurantName ?? Translator.get('MENU'), themeName, route })} />
-                        
-                        <Stack.Screen name="Library" component={LibraryScreen} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('LIBRARIES'), themeName, route })} />
-                        
-                        <Stack.Screen name="LibraryDetails" component={LibraryDetailsScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.library?.name, { lat: route.params?.library?.lat, lng: route.params?.library?.lng }), title: treatTitle(route.params?.library?.name ?? Translator.get('LIBRARY_DETAILS')), themeName, route })} />
+                        <Stack.Screen name="Library" component={LibraryScreen} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('LIBRARIES'), themeName, route, gestureEnabled: false })} />
                         
                         <Stack.Screen name="WebBrowser" component={WebBrowser} options={({ navigation, route }) => {
                             const hasMenu = route.params?.entrypoint ? true : false;
                             const leftButton = hasMenu ? () => renderMenuButton(navigation) : undefined;
-                            return NavBarHelper({ headerLeft: leftButton, title: treatTitle(route.params?.title ?? Translator.get('WEB_BROWSER')), themeName, route });
+                            return NavBarHelper({ headerLeft: leftButton, title: treatTitle(route.params?.title ?? Translator.get('WEB_BROWSER')), themeName, route, gestureEnabled: !hasMenu });
                         }} />
                         
+                        <Stack.Screen name="Week" component={WeekView} options={({ route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.groupName} themeName={themeName} /></View>, title: route.params.groupName.replace(/_/g, ' '), themeName, route })} />
+                        
+                        <Stack.Screen name="Day" component={DayView} options={{ tabBarLabel: Translator.get('DAY'), tabBarIcon: ({ tintColor }) => <MaterialCommunityIcons name="calendar" size={24} style={{ color: tintColor }} /> }} />
+                        
+                        <Stack.Screen name="CrousMenu" component={CrousMenuScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.restaurantName, route.params?.location), title: route.params?.restaurantName ?? Translator.get('MENU'), themeName, route })} />
+                        
+                        <Stack.Screen name="LibraryDetails" component={LibraryDetailsScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.library?.name, { lat: route.params?.library?.lat, lng: route.params?.library?.lng }), title: treatTitle(route.params?.library?.name ?? Translator.get('LIBRARY_DETAILS')), themeName, route })} />
+                    
                         <Stack.Screen name="Geolocation" component={Geolocation} options={({ route }) => NavBarHelper({ title: Translator.get('MAP') ?? 'Map', themeName, route })} />
                         
                         <Stack.Screen name="Course" component={Course} options={({ navigation, route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />

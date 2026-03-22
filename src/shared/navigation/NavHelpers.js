@@ -11,7 +11,7 @@ import Button from '../ui/Button';
 
 // GESTIONNAIRE DE HEADER
 export const globalScrollValues = {};
-export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route }) => {
+export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route, gestureEnabled }) => {
     const theme = style.Theme[themeName];
     
     // La variable est lue depuis le dictionnaire externe pour survivre aux mises à jour
@@ -72,6 +72,10 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route 
                 {headerRight()}
             </Animated.View>
         ) : undefined;
+    }
+
+    if (gestureEnabled !== undefined) {
+        options.gestureEnabled = gestureEnabled;
     }
 
     return options;
