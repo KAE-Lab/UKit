@@ -15,7 +15,7 @@ export const BackButton = ({ backAction }) => {
     };
     return (
         <GHTouchableOpacity onPress={_onPress} style={[style.backButton, { paddingLeft: tokens.space.md }]}>
-            <View style={{ backgroundColor: theme.primary, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
+            <View style={{ backgroundColor: theme.primary, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
                 <Ionicons
                     name="arrow-back"
                     size={22}
@@ -43,6 +43,9 @@ export const WelcomeButton = ({ onPress, buttonText, theme }) => {
 
 // ── Bouton du Menu (Drawer) ────────────────────────────────────
 export const DrawerButton = (props) => {
+    const AppContextValues = useContext(AppContext);
+    const theme = style.Theme[AppContextValues.themeName];
+
     let icon = props.icon ? (
         <MaterialIcons name={props.icon} size={props.size} style={{ color: props.color }} />
     ) : (
@@ -61,13 +64,13 @@ export const DrawerButton = (props) => {
                 marginHorizontal: tokens.space.sm,
                 marginVertical: tokens.space.xs,
                 borderRadius: tokens.radius.md,
-                backgroundColor: pressed ? props.pressedColor ?? 'transparent' : 'transparent'
+                backgroundColor: props.isActive || pressed ? theme.greyBackground : 'transparent'
             })}>
             <View style={{
                 width: 36,
                 height: 36,
-                borderRadius: tokens.radius.sm,
-                backgroundColor: props.iconBackground ?? `${props.color}18`,
+                borderRadius: tokens.radius.md,
+                backgroundColor: theme.greyBackground,
                 justifyContent: 'center',
                 alignItems: 'center',
             }}>
@@ -75,7 +78,7 @@ export const DrawerButton = (props) => {
             </View>
             <Text style={{
                 fontSize: props.textSize ?? tokens.fontSize.md,
-                color: props.fontColor,
+                color: props.isActive ? theme.primary : props.fontColor,
                 marginLeft: tokens.space.md,
                 fontWeight: tokens.fontWeight.medium,
                 flex: 1,

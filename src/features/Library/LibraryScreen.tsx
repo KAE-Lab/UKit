@@ -113,7 +113,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     backgroundColor: theme.cardBackground,
                     borderRadius: tokens.radius.xl, 
                     marginBottom: tokens.space.lg, 
-                    marginHorizontal: tokens.space.md,
+                    marginHorizontal: tokens.space.sm,
                     ...tokens.shadow.md, 
                     overflow: 'hidden', 
                 }}
@@ -157,7 +157,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 backgroundColor: `${theme.primary}15`, 
                                 paddingHorizontal: tokens.space.sm,
                                 paddingVertical: 4,
-                                borderRadius: tokens.radius.pill,
+                                borderRadius: tokens.radius.md,
                             }}>
                                 <MaterialIcons name="directions-walk" size={14} color={theme.primary} />
                                 <Text style={{
@@ -216,7 +216,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
 
     if (loading) {
         return (
-            <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
                 </View>
@@ -225,7 +225,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     }
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
                     data={libraries}
@@ -233,7 +233,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingTop: 110, paddingVertical: tokens.space.sm, flexGrow: 1 }}
+                    contentContainerStyle={{ paddingTop: 115, paddingVertical: tokens.space.sm, flexGrow: 1 }}
                     renderItem={renderLibraryCard}
                     ListEmptyComponent={
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.lg, marginTop: tokens.space.xxl }}>

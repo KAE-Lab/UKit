@@ -1,3 +1,5 @@
+import Translator from "../../shared/i18n/Translator";
+
 // ─── INTERFACES ─────────────────────────────────────────────────────────────
 
 export interface CrousDish {
@@ -28,7 +30,7 @@ export interface CrousRestaurant {
 }
 
 export interface CrousDayMenu {
-    date: string;
+    date: string | null;
     midi: { name: string, dishes: string[] }[];
     soir: { name: string, dishes: string[] }[];
 }
@@ -75,7 +77,7 @@ class CrousServiceManager {
                     short_desc: resto.zone || resto.adresse,
                     lat: resto.latitude,
                     lon: resto.longitude,
-                    opening: Array.isArray(resto.horaires) ? resto.horaires.join(' | ') : 'Horaires non spécifiés',
+                    opening: Array.isArray(resto.horaires) ? resto.horaires.join(' | ') : Translator.get('UNSPECIFIED_HOURS'),
                     distance: distance,
                     image_url: `https://api.croustillant.menu/v1/restaurants/${resto.code}/preview`
                 };
@@ -109,7 +111,7 @@ class CrousServiceManager {
             return rawMenus.map((day: any) => {
                 
                 // "DD-MM-YYYY" -> "YYYY-MM-DD" 
-                let formattedDate = day.date || 'Inconnue';
+                let formattedDate = day.date || null;
                 if (formattedDate.includes('-') && formattedDate.length === 10) {
                     const [d, m, y] = formattedDate.split('-');
                     if (y.length === 4) {
@@ -124,7 +126,7 @@ class CrousServiceManager {
                     if (!mealData || !Array.isArray(mealData.categories)) return [];
                     
                     return mealData.categories.map((cat: any) => ({
-                        name: cat.libelle || 'Catégorie', // "Entrées", "Plats du jour"...
+                        name: cat.libelle || Translator.get('CATEGORY'), // "Entrées", "Plats du jour"...
                         dishes: Array.isArray(cat.plats) ? cat.plats.map((p:any) => p.libelle || '') : []
                     }));
                 };

@@ -24,14 +24,14 @@ SplashScreen.preventAutoHideAsync();
 
 function AnimatedAppLoader({ children }) {
 	const [appIsReady, setAppIsReady] = useState(false);
-	const imageSrc = require('./assets/icons/splash.png');
+	const imageSrc = require('./assets/icons/icon.png');
 
 	useEffect(() => {
 		async function prepare() {
 			try {
 				await Font.loadAsync({ Montserrat_500Medium });
 
-				const imageAssets = cacheImages([require('./assets/icons/app.png')]);
+				const imageAssets = cacheImages([require('./assets/icons/logo.png')]);
 
 				const fontAssets = cacheFonts([
 					FontAwesome.font,

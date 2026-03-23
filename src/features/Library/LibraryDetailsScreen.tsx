@@ -19,6 +19,18 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [weekOffset, setWeekOffset] = useState(0); // 0 = semaine en cours, -1 = semaine dernière, 1 = semaine pro
     const flatListRef = useRef<FlatList>(null);
+    
+
+    useEffect(() => {
+        navigation.setOptions({
+            headerTitle: () => (
+                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any }}>
+                    {Translator.get('DETAILS')}
+                </Text>
+            ),
+            headerTitleAlign: 'center'
+        });
+    }, [navigation, theme]);
 
     useEffect(() => {
         loadTimetable(weekOffset);
@@ -41,7 +53,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
     };
 
     const formatDate = (dateString: string) => {
-        if (!dateString) return '?';
+        if (!dateString) return Translator.get('UNKNOWN');
         const d = new Date(dateString);
         if (isNaN(d.getTime())) return dateString;
         const dayKeys = ['DAY_SUN', 'DAY_MON', 'DAY_TUE', 'DAY_WED', 'DAY_THU', 'DAY_FRI', 'DAY_SAT'];
@@ -51,7 +63,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
 
     const formatTime = (dateTimeString: string) => {
         if (!dateTimeString) return '';
-        return dateTimeString.substring(11, 16).replace(':', 'h');
+        return dateTimeString.substring(11, 16).replace(':', Translator.get('TIME_SEPARATOR'));
     };
 
     useEffect(() => {
@@ -114,21 +126,32 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
     const currentDay = timetable[selectedIndex];
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             
-            {/* Bandeau des dates avec navigation par semaine */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.xs, paddingTop: 110 }}>
-                <TouchableOpacity onPress={() => setWeekOffset(w => w - 1)} style={{ padding: tokens.space.sm }}>
-                    <MaterialIcons name="chevron-left" size={28} color={theme.fontSecondary} />
-                </TouchableOpacity>
-
+            {/* Bandeau des dates */}
+            <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm, paddingTop: 110 }}>
+                
+                <Text 
+                    style={{
+                        fontSize: tokens.fontSize.xl,
+                        fontWeight: tokens.fontWeight.bold as any,
+                        color: theme.fontSecondary,
+                        textAlign: 'left',
+                        paddingHorizontal: tokens.space.md,
+                        marginBottom: tokens.space.md,
+                    }} 
+                    numberOfLines={2}
+                >
+                    {library.name || Translator.get('LIBRARY')}
+                </Text>
+                
                 <FlatList
                     ref={flatListRef}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     data={timetable}
                     keyExtractor={(item) => item.day}
-                    contentContainerStyle={{ paddingHorizontal: tokens.space.xs, alignItems: 'center' }}
+                    contentContainerStyle={{ paddingHorizontal: tokens.space.sm }}
                     onScrollToIndexFailed={(info) => {
                         setTimeout(() => {
                             flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
@@ -136,6 +159,8 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                     }}
                     renderItem={({ item, index }) => {
                         const isSelected = index === selectedIndex;
+                        const primaryColor = theme.accent ?? theme.primary;
+
                         return (
                             <TouchableOpacity 
                                 onPress={() => setSelectedIndex(index)}
@@ -143,12 +168,14 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                                     paddingHorizontal: tokens.space.md,
                                     paddingVertical: tokens.space.sm,
                                     marginHorizontal: tokens.space.xs,
-                                    borderRadius: tokens.radius.pill,
-                                    backgroundColor: isSelected ? (theme.accent ?? theme.primary) : theme.greyBackground,
+                                    borderRadius: tokens.radius.md,
+                                    backgroundColor: theme.greyBackground,
+                                    borderWidth: 2,
+                                    borderColor: isSelected ? primaryColor : 'transparent',
                                 }}
                             >
                                 <Text style={{ 
-                                    color: isSelected ? '#FFFFFF' : theme.fontSecondary,
+                                    color: isSelected ? primaryColor : theme.fontSecondary,
                                     fontWeight: isSelected ? (tokens.fontWeight.bold as any) : (tokens.fontWeight.medium as any),
                                     fontSize: tokens.fontSize.sm
                                 }}>
@@ -158,10 +185,6 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                         );
                     }}
                 />
-
-                <TouchableOpacity onPress={() => setWeekOffset(w => w + 1)} style={{ padding: tokens.space.sm }}>
-                    <MaterialIcons name="chevron-right" size={28} color={theme.fontSecondary} />
-                </TouchableOpacity>
             </View>
 
             {/* Contenu principal */}
@@ -222,12 +245,16 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                 <View style={{ height: tokens.space.xxl }} />
             </ScrollView>
 
-            <View style={{ 
-                padding: tokens.space.md, 
-                backgroundColor: theme.cardBackground,
-                borderTopWidth: 1,
-                borderTopColor: theme.border,
-            }}>
+            <SafeAreaView 
+                edges={['bottom']}
+                style={{ 
+                    paddingTop: tokens.space.md,
+                    paddingHorizontal: tokens.space.md,
+                    backgroundColor: theme.cardBackground,
+                    borderTopWidth: 1,
+                    borderTopColor: theme.border,
+                }}
+            >
                 <TouchableOpacity 
                     onPress={async () => {
                         try {
@@ -237,7 +264,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                         }
                     }}
                     style={{
-                        backgroundColor: theme.accent ?? theme.primary,
+                        backgroundColor: theme.greyBackground,
                         paddingVertical: 14,
                         borderRadius: tokens.radius.md,
                         flexDirection: 'row',
@@ -245,9 +272,9 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                         alignItems: 'center'
                     }}
                 >
-                    <MaterialCommunityIcons name="calendar-check" size={22} color="#FFFFFF" />
+                    <MaterialCommunityIcons name="calendar-check" size={22} color={theme.accent ?? theme.primary} />
                     <Text style={{ 
-                        color: '#FFFFFF', 
+                        color: theme.accent ?? theme.primary, 
                         fontSize: tokens.fontSize.md, 
                         fontWeight: tokens.fontWeight.bold as any, 
                         marginLeft: tokens.space.sm 
@@ -255,7 +282,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                         {Translator.get('BOOK_SEAT')}
                     </Text>
                 </TouchableOpacity>
-            </View>
+            </SafeAreaView>
 
         </SafeAreaView>
     );

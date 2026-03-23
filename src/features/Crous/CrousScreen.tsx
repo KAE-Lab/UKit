@@ -50,11 +50,6 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
             setLocationError(true);
         }
 
-        // Coordonnées du A22 en dur si la localisation échoue (pour les tests sur émulateur)
-        userLat = 44.8048;
-        userLon = -0.5954;
-
-
         const data = await CrousService.fetchRestaurantsBordeaux(userLat, userLon);
         setRestaurants(data);
         setLoading(false);
@@ -62,7 +57,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
 
     if (loading) {
         return (
-            <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
                 </View>
@@ -71,7 +66,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     }
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
                     data={restaurants}
@@ -79,7 +74,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingTop: 110, paddingVertical: tokens.space.sm }}
+                    contentContainerStyle={{ paddingTop: 115, paddingVertical: tokens.space.sm }}
                     renderItem={({ item }) => (
                         <TouchableOpacity 
                             activeOpacity={0.9}
@@ -92,7 +87,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 backgroundColor: theme.cardBackground,
                                 borderRadius: tokens.radius.xl, 
                                 marginBottom: tokens.space.lg, 
-                                marginHorizontal: tokens.space.md,
+                                marginHorizontal: tokens.space.sm,
                                 ...tokens.shadow.md, 
                                 overflow: 'hidden', 
                             }}
@@ -135,7 +130,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                             backgroundColor: `${theme.primary}15`, 
                                             paddingHorizontal: tokens.space.sm,
                                             paddingVertical: 4,
-                                            borderRadius: tokens.radius.pill,
+                                            borderRadius: tokens.radius.md,
                                         }}>
                                             <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
                                             <Text style={{

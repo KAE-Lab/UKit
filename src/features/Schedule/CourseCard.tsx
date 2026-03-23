@@ -97,7 +97,7 @@ export class CalendarNewEventPrompt extends React.Component<CalendarNewEventProm
 			});
 		} catch (error) {
 			console.warn(error);
-			Toast.show(Translator.get('ERROR_WITH_MESSAGE', "Couldn't add event to calendar"), {
+			Toast.show(Translator.get('CALENDAR_ERROR'), {
 				duration: Toast.durations.LONG,
 				position: Toast.positions.BOTTOM,
 			});
@@ -278,7 +278,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		const subject =
 			this.props.data.subject !== 'N/C' ? (
 				<Text style={[style.schedule.course.title as any, { color: theme.font, flex: 1 }]}>
-					{this.props.data.subject}
+					{this.props.data.subject.trim()}
 				</Text>
 			) : null;
 
@@ -342,7 +342,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 						flex: 0,
 						minHeight: 120,
 						backgroundColor: this.state.backgroundColor,
-						marginHorizontal: tokens.space.md,
+						marginHorizontal: tokens.space.sm,
 						marginVertical: tokens.space.xs,
 						borderRadius: tokens.radius.lg,
 						borderLeftWidth: 4,
@@ -370,7 +370,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 							style={{
 								width: 4,
 								height: 4,
-								borderRadius: tokens.radius.pill,
+								borderRadius: tokens.radius.md,
 								backgroundColor: this.state.lineColor,
 								opacity: 0.6,
 								marginVertical: tokens.space.xs,
@@ -393,7 +393,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 								<View
 									style={{
 										backgroundColor: `${this.state.lineColor}22`,
-										borderRadius: tokens.radius.pill,
+										borderRadius: tokens.radius.md,
 										paddingHorizontal: tokens.space.sm,
 										paddingVertical: 2,
 										marginLeft: tokens.space.xs,
@@ -525,7 +525,7 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 	}
 
 	return (
-        <View style={{ marginBottom: tokens.space.xs }}>
+        <View>
             <FlatList
                 horizontal
                 pagingEnabled
@@ -634,7 +634,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 
 	componentDidMount() {
 		let locations: any[] = [];
-		this.props.navigation.setParams({ title: this.state.data.schedule });
+		this.props.navigation.setParams({ title: this.state.data.UE || Translator.get('DETAILS') });
 
 		// On nettoie les lignes vides
 		const descLines = (this.state.data.description ?? '').split('\n').map(l => l.trim()).filter(l => l);
@@ -677,7 +677,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 
 			// Génération du code Leaflet pour tes marqueurs customisés SVG
             const markersJs = this.state.locations.map((location: any) => {
-                const title = location.title || 'Salle';
+                const title = location.title || Translator.get('ROOM');
                 return `
                     var iconHTML = \`
                         <div style="display: flex; flex-direction: column; align-items: center; padding-bottom: 8px;">
@@ -766,7 +766,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 						flex: 0,
 						marginTop: tokens.space.md,
 						marginBottom: this.state.locations.length > 0 ? tokens.space.sm : tokens.space.md,
-						marginHorizontal: tokens.space.md,
+						marginHorizontal: tokens.space.sm,
 						backgroundColor: theme.cardBackground,
 						borderRadius: tokens.radius.xl,
 						borderTopWidth: 5,
@@ -780,10 +780,10 @@ class Course extends React.Component<CourseProps, CourseState> {
 					
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.space.sm }}>
 						<Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
-							{this.state.data.subject !== 'N/C' ? this.state.data.subject : (Translator.get('UNKNOWN_SUBJECT') ?? 'Cours inconnu')}
+							{this.state.data.subject !== 'N/C' ? this.state.data.subject.trim() : Translator.get('UNKNOWN_SUBJECT')}
 						</Text>
 						{this.state.data.category !== this.state.data.subject && (
-							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.pill, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>
+							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>
 								<Text style={{ fontSize: tokens.fontSize.xs, color: lineColor, fontWeight: tokens.fontWeight.bold as any }}>
 									{this.state.data.category}
 								</Text>
@@ -845,7 +845,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 					<View
 						style={{
 							flex: 1,
-							marginHorizontal: tokens.space.md,
+							marginHorizontal: tokens.space.sm,
 							marginBottom: tokens.space.md,
 							borderRadius: tokens.radius.xl,
 							overflow: 'hidden',
