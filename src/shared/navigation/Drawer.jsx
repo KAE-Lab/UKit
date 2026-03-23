@@ -49,7 +49,7 @@ const CustomDrawerContentComponent = (props) => {
                     <TouchableOpacity
                         onPress={SettingsManager.switchTheme}
                         style={{
-                            width: 45, height: 45, borderRadius: tokens.radius.pill,
+                            width: 45, height: 45, borderRadius: tokens.radius.md,
                             backgroundColor: theme.greyBackground, justifyContent: 'center', alignItems: 'center',
                         }}>
                         <MaterialCommunityIcons name="theme-light-dark" size={22} color={theme.primary} />

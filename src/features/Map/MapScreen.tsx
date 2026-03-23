@@ -74,7 +74,7 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
                             height: 51,
                             justifyContent: 'center',
                             alignItems: 'center',
-                            borderRadius: tokens.radius.pill,
+                            borderRadius: tokens.radius.md,
                             marginRight: 13
                         }}>
                         <MaterialCommunityIcons name="map-search-outline" size={28} color={theme.accent ?? theme.primary} />

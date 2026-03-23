@@ -34,7 +34,7 @@ export default function StackNavigator() {
                 // BOUTONS REUTILISABLES
                 const renderMenuButton = (navigation) => (
                     <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={{ paddingLeft: tokens.space.md }}>
-                        <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
+                        <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
                             <MaterialCommunityIcons name="menu" size={26} color={theme.primary} />
                         </View>
                     </TouchableOpacity>
@@ -42,7 +42,7 @@ export default function StackNavigator() {
 
                 const renderMapButton = (navigation, title, location) => (
                     <TouchableOpacity onPress={() => navigation.navigate('Geolocation', { title, location })} style={{ paddingRight: tokens.space.md }}>
-                        <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill, flexShrink: 0 }}>
+                        <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
                             <MaterialCommunityIcons name="map-marker-radius" size={24} color={theme.primary} />
                         </View>
                     </TouchableOpacity>
@@ -53,7 +53,7 @@ export default function StackNavigator() {
                         screenOptions={{
                             headerLeft: (props) => props.canGoBack ? (
                                 <TouchableOpacity onPress={props.onPress} style={{ paddingLeft: tokens.space.md }}>
-                                    <View style={{ backgroundColor: theme.greyBackground, width: 50, height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.pill }}>
+                                    <View style={{ backgroundColor: theme.greyBackground, width: 50, height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md }}>
                                         <MaterialIcons name="arrow-back" size={28} color={theme.primary} />
                                     </View>
                                 </TouchableOpacity>

@@ -168,7 +168,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                                     paddingHorizontal: tokens.space.md,
                                     paddingVertical: tokens.space.sm,
                                     marginHorizontal: tokens.space.xs,
-                                    borderRadius: tokens.radius.pill,
+                                    borderRadius: tokens.radius.md,
                                     backgroundColor: theme.greyBackground,
                                     borderWidth: 2,
                                     borderColor: isSelected ? primaryColor : 'transparent',

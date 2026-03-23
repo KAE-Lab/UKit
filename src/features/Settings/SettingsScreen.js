@@ -196,7 +196,7 @@ class Settings extends React.Component {
                                     {Translator.get('AUTO_SYNC_DESCRIPTION')}
                                 </Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.xs }}>
-                                    <View style={{ width: 8, height: 8, borderRadius: tokens.radius.pill, backgroundColor: lastSyncDate ? '#43A047' : theme.fontSecondary, marginRight: tokens.space.sm }} />
+                                    <View style={{ width: 8, height: 8, borderRadius: tokens.radius.md, backgroundColor: lastSyncDate ? '#43A047' : theme.fontSecondary, marginRight: tokens.space.sm }} />
                                     <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
                                         {lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}
                                     </Text>

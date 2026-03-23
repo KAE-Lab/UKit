@@ -224,7 +224,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
                                     paddingHorizontal: tokens.space.md,
                                     paddingVertical: tokens.space.sm,
                                     marginHorizontal: tokens.space.xs,
-                                    borderRadius: tokens.radius.pill,
+                                    borderRadius: tokens.radius.md,
                                     backgroundColor: theme.greyBackground,
                                     // On fixe la bordure à 2 de manière permanente pour éviter que le texte saute
                                     borderWidth: 2,

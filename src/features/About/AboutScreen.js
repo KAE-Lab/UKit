@@ -109,7 +109,7 @@ class AboutScreen extends React.Component {
                             UKit
                         </Text>
                         <View style={{
-                            backgroundColor: theme.greyBackground, borderRadius: tokens.radius.pill,
+                            backgroundColor: theme.greyBackground, borderRadius: tokens.radius.md,
                             paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.xs, marginTop: tokens.space.xs,
                         }}>
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontWeight: tokens.fontWeight.medium }}>

@@ -157,7 +157,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 backgroundColor: `${theme.primary}15`, 
                                 paddingHorizontal: tokens.space.sm,
                                 paddingVertical: 4,
-                                borderRadius: tokens.radius.pill,
+                                borderRadius: tokens.radius.md,
                             }}>
                                 <MaterialIcons name="directions-walk" size={14} color={theme.primary} />
                                 <Text style={{

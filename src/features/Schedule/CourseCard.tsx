@@ -370,7 +370,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 							style={{
 								width: 4,
 								height: 4,
-								borderRadius: tokens.radius.pill,
+								borderRadius: tokens.radius.md,
 								backgroundColor: this.state.lineColor,
 								opacity: 0.6,
 								marginVertical: tokens.space.xs,
@@ -393,7 +393,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 								<View
 									style={{
 										backgroundColor: `${this.state.lineColor}22`,
-										borderRadius: tokens.radius.pill,
+										borderRadius: tokens.radius.md,
 										paddingHorizontal: tokens.space.sm,
 										paddingVertical: 2,
 										marginLeft: tokens.space.xs,
@@ -783,7 +783,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 							{this.state.data.subject !== 'N/C' ? this.state.data.subject.trim() : Translator.get('UNKNOWN_SUBJECT')}
 						</Text>
 						{this.state.data.category !== this.state.data.subject && (
-							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.pill, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>
+							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>
 								<Text style={{ fontSize: tokens.fontSize.xs, color: lineColor, fontWeight: tokens.fontWeight.bold as any }}>
 									{this.state.data.category}
 								</Text>

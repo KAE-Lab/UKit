@@ -52,8 +52,8 @@ const filterSeason = {
 
 const WelcomePagination = ({ pageNumber, maxPage, themeObj }) => (
     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: tokens.space.md }}>
-        {Array.from({ length: pageNumber }).map((_, i) => <View key={`f-${i}`} style={{ width: 24, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.pill, backgroundColor: themeObj.primary }} />)}
-        {Array.from({ length: maxPage - pageNumber }).map((_, i) => <View key={`e-${i}`} style={{ width: 8, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.pill, backgroundColor: themeObj.greyBackground }} />)}
+        {Array.from({ length: pageNumber }).map((_, i) => <View key={`f-${i}`} style={{ width: 24, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.md, backgroundColor: themeObj.primary }} />)}
+        {Array.from({ length: maxPage - pageNumber }).map((_, i) => <View key={`e-${i}`} style={{ width: 8, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.md, backgroundColor: themeObj.greyBackground }} />)}
     </View>
 );
 
@@ -168,7 +168,7 @@ export default function WelcomeScreen() {
                                 {THEME_LIST.map((themeEntry) => {
                                     const selected = navigatorState.theme === themeEntry.id;
                                     return (
-                                        <TouchableOpacity key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.pill, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                                        <TouchableOpacity key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
                                             <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(themeEntry.title)}</Text>
                                         </TouchableOpacity>
                                     );
@@ -181,7 +181,7 @@ export default function WelcomeScreen() {
                                 {LANGUAGE_LIST.map((langEntry) => {
                                     const selected = navigatorState.language === langEntry.id;
                                     return (
-                                        <TouchableOpacity key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.pill, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                                        <TouchableOpacity key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
                                             <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(langEntry.title)}</Text>
                                         </TouchableOpacity>
                                     );
@@ -212,7 +212,7 @@ export default function WelcomeScreen() {
                                                 borderWidth: 2, 
                                                 borderColor: selected ? themeObj.primary : 'transparent', 
                                                 paddingVertical: tokens.space.sm, 
-                                                borderRadius: tokens.radius.pill, 
+                                                borderRadius: tokens.radius.md, 
                                                 marginBottom: tokens.space.sm 
                                             }}
                                         >
@@ -230,7 +230,7 @@ export default function WelcomeScreen() {
                                 {UNIVERSITY_SEASON_LIST.map((seasonEntry) => {
                                     const selected = navigatorState.season?.id === seasonEntry.id;
                                     return (
-                                        <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.pill, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                                        <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
                                             <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title)}</Text>
                                         </TouchableOpacity>
                                     );
@@ -248,7 +248,7 @@ export default function WelcomeScreen() {
                                 {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
                                     const selected = navigatorState.group === item;
                                     return (
-                                        <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.pill, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                                        <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
                                             <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{item}</Text>
                                         </TouchableOpacity>
                                     )

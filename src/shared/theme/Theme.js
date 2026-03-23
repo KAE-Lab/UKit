@@ -602,7 +602,7 @@ const StyleWelcome = {
     light: {
         buttonContainer: {
             backgroundColor: '#FFFFFF',
-            borderRadius: tokens.radius.pill,
+            borderRadius: tokens.radius.md,
             paddingVertical: tokens.space.md,
             marginHorizontal: tokens.space.xl,
             marginVertical: tokens.space.md,
@@ -640,13 +640,13 @@ const StyleWelcome = {
             width: 24,
             height: 8,
             marginHorizontal: tokens.space.xs,
-            borderRadius: tokens.radius.pill,
+            borderRadius: tokens.radius.md,
             backgroundColor: '#FFFFFF',
         },
         circleEmpty: {
             width: 8,
             height: 8,
-            borderRadius: tokens.radius.pill,
+            borderRadius: tokens.radius.md,
             marginHorizontal: tokens.space.xs,
             backgroundColor: '#FFFFFF44',
         },
@@ -731,7 +731,7 @@ const StyleWelcome = {
     dark: {
         buttonContainer: {
             backgroundColor: '#3D2540',
-            borderRadius: tokens.radius.pill,
+            borderRadius: tokens.radius.md,
             paddingVertical: tokens.space.md,
             marginHorizontal: tokens.space.xl,
             marginVertical: tokens.space.md,
@@ -769,13 +769,13 @@ const StyleWelcome = {
             width: 24,
             height: 8,
             marginHorizontal: tokens.space.xs,
-            borderRadius: tokens.radius.pill,
+            borderRadius: tokens.radius.md,
             backgroundColor: '#FFFFFF',
         },
         circleEmpty: {
             width: 8,
             height: 8,
-            borderRadius: tokens.radius.pill,
+            borderRadius: tokens.radius.md,
             marginHorizontal: tokens.space.xs,
             backgroundColor: '#FFFFFF33',
         },
@@ -1010,7 +1010,7 @@ const style = {
             opacity: 0.7,
         },
         badge: {
-            borderRadius: tokens.radius.pill,
+            borderRadius: tokens.radius.md,
             paddingHorizontal: tokens.space.sm,
             paddingVertical: tokens.space.xs,
         },
@@ -1060,7 +1060,7 @@ const style = {
         todayIndicator: {
             width: 6,
             height: 6,
-            borderRadius: tokens.radius.pill,
+            borderRadius: tokens.radius.md,
             backgroundColor: '#007AFF',
             marginTop: tokens.space.xs,
         },

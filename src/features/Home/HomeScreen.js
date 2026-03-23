@@ -103,7 +103,7 @@ class GroupRow extends React.PureComponent {
                 <View style={{
                     width: 8,
                     height: 8,
-                    borderRadius: tokens.radius.pill,
+                    borderRadius: tokens.radius.md,
                     backgroundColor: this.props.fontColor,
                     opacity: 0.5,
                     marginRight: tokens.space.md,
