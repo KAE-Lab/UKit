@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,14 +8,27 @@ import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
 
-export default function CrousMenuScreen({ route }: any) {
-    const { restaurantId } = route.params;
+export default function CrousMenuScreen({ route, navigation }: any) {
+    const { restaurantId, restaurantName } = route.params;
     const AppContextValues = useContext(AppContext) as any;
     const theme = style.Theme[AppContextValues.themeName];
 
     const [menus, setMenus] = useState<CrousDayMenu[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const flatListRef = useRef<FlatList>(null);
+
+    useEffect(() => {
+        navigation.setOptions({
+            headerTitle: () => (
+                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any }}>
+                    {Translator.get('MENU')}
+                </Text>
+            ),
+            headerTitleAlign: 'center'
+        });
+        loadMenu();
+    }, [navigation, theme]);
 
     useEffect(() => {
         loadMenu();
@@ -29,10 +42,12 @@ export default function CrousMenuScreen({ route }: any) {
     };
 
     // "2024-03-25" -> "Lun 25"
-    const formatDate = (dateString: string) => {
-        if (!dateString || dateString === 'Inconnue') return '?';
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return Translator.get('UNKNOWN');
+
         const d = new Date(dateString);
         if (isNaN(d.getTime())) return dateString;
+
         const dayKeys = ['DAY_SUN', 'DAY_MON', 'DAY_TUE', 'DAY_WED', 'DAY_THU', 'DAY_FRI', 'DAY_SAT'];
         const translatedDay = Translator.get(dayKeys[d.getDay()]);
         return `${translatedDay} ${d.getDate()}`;
@@ -40,7 +55,7 @@ export default function CrousMenuScreen({ route }: any) {
 
     if (loading) {
         return (
-            <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
                 </View>
@@ -50,11 +65,11 @@ export default function CrousMenuScreen({ route }: any) {
 
     if (menus.length === 0) {
         return (
-            <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: tokens.space.xl }}>
                     <MaterialCommunityIcons name="food-off" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.md }} />
                     <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center' }}>
-                        Aucun menu publié pour ce restaurant actuellement.
+                        {Translator.get('NO_MENU_PUBLISHED')}
                     </Text>
                 </View>
             </SafeAreaView>
@@ -97,7 +112,7 @@ export default function CrousMenuScreen({ route }: any) {
         if (/(viennoiserie|croissant|chocolatine|brioche)/.test(str)) return 'food-croissant';
         
         // Fruits (intercepte avant les desserts pour les "compotes de fruits", "tarte aux pommes", etc.)
-        if (/(pomme(?!s?\s+de\s+terre)|banane|orange|kiwi|ananas|poire|fraise|framboise|pêche|abricot|raisin|mangue|melon|pastèque|citron|clémentine|compote)/.test(str)) return 'food-apple';
+        if (/(fruit|pomme(?!s?\s+de\s+terre)|banane|orange|kiwi|ananas|poire|fraise|framboise|pêche|abricot|raisin|mangue|melon|pastèque|citron|clémentine|compote)/.test(str)) return 'food-apple';
         
         // Yaourts et desserts lactés
         if (/(yaourt|lacté|petit suisse|fromage blanc|skyr|faisselle|glace|crème)/.test(str)) return 'silverware-spoon';
@@ -124,7 +139,7 @@ export default function CrousMenuScreen({ route }: any) {
         return (
             <View style={{ marginBottom: tokens.space.xl }}>
                 {/* Titre du repas */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.sm, marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}>
                     <MaterialCommunityIcons 
                         name={iconHeader} 
                         size={20} 
@@ -158,7 +173,7 @@ export default function CrousMenuScreen({ route }: any) {
                                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, flex: 1, lineHeight: 20 }}>{dish}</Text>
                             </View>
                         )) : (
-                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontStyle: 'italic' }}>Non précisé</Text>
+                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontStyle: 'italic' }}>{Translator.get('NOT_SPECIFIED')}</Text>
                         )}
                     </View>
                 ))}
@@ -167,18 +182,41 @@ export default function CrousMenuScreen({ route }: any) {
     };
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             
             {/* ── Bandeau des dates défilant horizontalement ── */}
-            <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm }}>
+            <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm, paddingTop: 110 }}>
+                
+                <Text 
+                    style={{
+                        fontSize: tokens.fontSize.xl,
+                        fontWeight: tokens.fontWeight.bold as any,
+                        color: theme.fontSecondary,
+                        textAlign: 'left',
+                        paddingHorizontal: tokens.space.md,
+                        marginBottom: tokens.space.md,
+                    }} 
+                    numberOfLines={1}
+                >
+                    {restaurantName || Translator.get('RESTAURANT_U')}
+                </Text>
+
                 <FlatList
+                    ref={flatListRef}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     data={menus}
                     keyExtractor={(item) => item.date}
                     contentContainerStyle={{ paddingHorizontal: tokens.space.sm }}
+                    onScrollToIndexFailed={(info) => {
+                        setTimeout(() => {
+                            flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
+                        }, 500);
+                    }}
                     renderItem={({ item, index }) => {
                         const isSelected = index === selectedIndex;
+                        const primaryColor = theme.accent ?? theme.primary;
+
                         return (
                             <TouchableOpacity 
                                 onPress={() => setSelectedIndex(index)}
@@ -186,12 +224,15 @@ export default function CrousMenuScreen({ route }: any) {
                                     paddingHorizontal: tokens.space.md,
                                     paddingVertical: tokens.space.sm,
                                     marginHorizontal: tokens.space.xs,
-                                    borderRadius: tokens.radius.pill,
-                                    backgroundColor: isSelected ? (theme.accent ?? theme.primary) : theme.greyBackground,
+                                    borderRadius: tokens.radius.md,
+                                    backgroundColor: theme.greyBackground,
+                                    // On fixe la bordure à 2 de manière permanente pour éviter que le texte saute
+                                    borderWidth: 2,
+                                    borderColor: isSelected ? primaryColor : 'transparent',
                                 }}
                             >
                                 <Text style={{ 
-                                    color: isSelected ? '#FFFFFF' : theme.fontSecondary,
+                                    color: isSelected ? primaryColor : theme.fontSecondary,
                                     fontWeight: isSelected ? (tokens.fontWeight.bold as any) : (tokens.fontWeight.medium as any),
                                     fontSize: tokens.fontSize.sm
                                 }}>
@@ -207,7 +248,7 @@ export default function CrousMenuScreen({ route }: any) {
             <ScrollView style={{ flex: 1, paddingTop: tokens.space.md }}>
                 {currentMenu.midi?.length === 0 && currentMenu.soir?.length === 0 ? (
                     <Text style={{ textAlign: 'center', color: theme.fontSecondary, marginTop: tokens.space.xl }}>
-                        Aucun plat renseigné pour cette journée.
+                        {Translator.get('NO_DISH_INFO')}
                     </Text>
                 ) : (
                     <>

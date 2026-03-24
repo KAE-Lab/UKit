@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useState, useContext, useRef } from 'react';
+import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
@@ -7,16 +7,18 @@ import * as Location from 'expo-location';
 import { CrousService, CrousRestaurant } from './CrousService';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
+import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
 
 const defaultImage = require('../../../assets/images/default_resto.png');
 
-export default function CrousScreen({ navigation }: any) {
+function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const AppContextValues = useContext(AppContext) as any;
     const theme = style.Theme[AppContextValues.themeName];
 
     const [restaurants, setRestaurants] = useState<CrousRestaurant[]>([]);
     const [loading, setLoading] = useState(true);
     const [locationError, setLocationError] = useState(false);
+    
 
     useEffect(() => {
         loadData();
@@ -48,11 +50,6 @@ export default function CrousScreen({ navigation }: any) {
             setLocationError(true);
         }
 
-        // Coordonnées du A22 en dur si la localisation échoue (pour les tests sur émulateur)
-        userLat = 44.8048;
-        userLon = -0.5954;
-
-
         const data = await CrousService.fetchRestaurantsBordeaux(userLat, userLon);
         setRestaurants(data);
         setLoading(false);
@@ -60,7 +57,7 @@ export default function CrousScreen({ navigation }: any) {
 
     if (loading) {
         return (
-            <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
                 </View>
@@ -69,13 +66,15 @@ export default function CrousScreen({ navigation }: any) {
     }
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
-                <FlatList
+                <Animated.FlatList
                     data={restaurants}
+                    onScroll={onAnimatedScroll}
+                    scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingVertical: tokens.space.sm }}
+                    contentContainerStyle={{ paddingTop: 115, paddingVertical: tokens.space.sm }}
                     renderItem={({ item }) => (
                         <TouchableOpacity 
                             activeOpacity={0.9}
@@ -88,7 +87,7 @@ export default function CrousScreen({ navigation }: any) {
                                 backgroundColor: theme.cardBackground,
                                 borderRadius: tokens.radius.xl, 
                                 marginBottom: tokens.space.lg, 
-                                marginHorizontal: tokens.space.md,
+                                marginHorizontal: tokens.space.sm,
                                 ...tokens.shadow.md, 
                                 overflow: 'hidden', 
                             }}
@@ -131,7 +130,7 @@ export default function CrousScreen({ navigation }: any) {
                                             backgroundColor: `${theme.primary}15`, 
                                             paddingHorizontal: tokens.space.sm,
                                             paddingVertical: 4,
-                                            borderRadius: tokens.radius.pill,
+                                            borderRadius: tokens.radius.md,
                                         }}>
                                             <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
                                             <Text style={{
@@ -171,3 +170,5 @@ export default function CrousScreen({ navigation }: any) {
         </SafeAreaView>
     );
 }
+
+export default withHeaderAnimation(CrousScreen);

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, TouchableOpacity, Linking, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Linking, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Translator from '../../shared/i18n/Translator';
 
 import { AppContext } from '../../shared/services/AppCore';
 import style, { tokens } from '../../shared/theme/Theme';
@@ -19,14 +20,15 @@ interface MapScreenProps {
     route: {
         params: MapScreenRouteParams;
     };
+    navigation: any;
 }
 
-export default function MapScreen({ route }: MapScreenProps) {
+export default function MapScreen({ route, navigation }: MapScreenProps) {
     const AppContextValues = useContext(AppContext) as any;
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
 
-    const [title, setTitle] = useState<string>(route.params.title || 'Destination');
+    const [title, setTitle] = useState<string>(route.params.title || Translator.get('DESTINATION'));
     const [lat, setLat] = useState<number | null>(null);
     const [lng, setLng] = useState<number | null>(null);
 
@@ -58,6 +60,30 @@ export default function MapScreen({ route }: MapScreenProps) {
             .catch((err) => console.error('An error occurred', err));
     };
 
+    useEffect(() => {
+        if (lat !== null && lng !== null) {
+            navigation.setOptions({
+                headerTransparent: true, 
+                title: title || Translator.get('MAP'), 
+                headerRight: () => (
+                    <TouchableOpacity
+                        onPress={onPressExternalMap}
+                        style={{
+                            backgroundColor: theme.greyBackground,
+                            width: 51,
+                            height: 51,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: tokens.radius.md,
+                            marginRight: 13
+                        }}>
+                        <MaterialCommunityIcons name="map-search-outline" size={28} color={theme.accent ?? theme.primary} />
+                    </TouchableOpacity>
+                ),
+            });
+        }
+    }, [navigation, lat, lng, theme, title]);
+
     if (lat === null || lng === null) {
         return (
             <View style={[styles.loaderContainer, { backgroundColor: theme.background }]}>
@@ -66,7 +92,6 @@ export default function MapScreen({ route }: MapScreenProps) {
         );
     }
 
-    // Le code Leaflet injecté dans la WebView avec le marqueur SVG personnalisé
     const mapHtml = `
         <!DOCTYPE html>
         <html>
@@ -116,31 +141,24 @@ export default function MapScreen({ route }: MapScreenProps) {
     `;
 
     return (
-        <View style={{ flex: 1, backgroundColor: theme.background }}>
+        <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            
+            <View style={{ 
+                height: 110, 
+                backgroundColor: theme.cardBackground, 
+                borderBottomWidth: 1, 
+                borderBottomColor: theme.border,
+                zIndex: 10 
+            }} />
+
             <WebView
                 originWhitelist={['*']}
                 source={{ html: mapHtml }}
-                style={{ flex: 1, backgroundColor: theme.background }}
+                style={{ flex: 1, backgroundColor: theme.courseBackground }}
                 scrollEnabled={false}
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
             />
-
-            <View style={styles.floatingButtonContainer}>
-                <TouchableOpacity
-                    onPress={onPressExternalMap}
-                    style={[
-                        styles.floatingButton,
-                        {
-                            backgroundColor: theme.cardBackground,
-                            borderColor: theme.border,
-                            borderWidth: 1,
-                            ...tokens.shadow.md as any
-                        }
-                    ]}>
-                    <MaterialCommunityIcons name="map-search-outline" size={28} color={theme.accent} />
-                </TouchableOpacity>
-            </View>
         </View>
     );
 }

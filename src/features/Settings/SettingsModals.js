@@ -185,9 +185,6 @@ export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }
                     <View style={theme.popup.container}>
                         <View style={theme.popup.header}>
                             <Text style={theme.popup.textHeader}>{Translator.get('RESET_APP').toUpperCase()}</Text>
-                            <TouchableOpacity onPress={popupClose}>
-                                <MaterialIcons name="close" size={32} style={theme.popup.closeIcon} />
-                            </TouchableOpacity>
                         </View>
                         <Text style={theme.popup.textDescription}>{Translator.get('RESET_APP_CONFIRMATION')}</Text>
                         <View style={theme.popup.buttonContainer}>

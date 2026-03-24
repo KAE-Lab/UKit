@@ -3,18 +3,15 @@ import {
     Text, View, Image, TouchableOpacity, ScrollView,
     KeyboardAvoidingView, Platform
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
-import { SettingsManager, isConnected, languageFromDevice } from '../../shared/services/AppCore';
+import { SettingsManager, languageFromDevice } from '../../shared/services/AppCore';
 import { DataManager } from '../../shared/services/DataService';
 import Translator from '../../shared/i18n/Translator';
-import { tokens, StyleWelcome } from '../../shared/theme/Theme';
-import Button from '../../shared/ui/Button';
+import style, { tokens } from '../../shared/theme/Theme';
 
-// ── CONSTANTES ─────────────────────────────────────────────────────────────
 const MAXIMUM_NUMBER_ITEMS_GROUPLIST = 10;
 
 const THEME_LIST = [
@@ -29,12 +26,12 @@ const LANGUAGE_LIST = [
 ];
 
 const UNIVERSITY_YEARS_LIST = [
-    { id: 'L1', title: Translator.get('BACHELORS') + ' 1' },
-    { id: 'L2', title: Translator.get('BACHELORS') + ' 2' },
-    { id: 'L3', title: Translator.get('BACHELORS') + ' 3' },
-    { id: 'M1', title: Translator.get('MASTERS') + ' 1' },
-    { id: 'M2', title: Translator.get('MASTERS') + ' 2' },
-    { id: 'AUTRE', title: Translator.get('OTHER') },
+    { id: 'L1', title: 'BACHELORS', suffix: '1' },
+    { id: 'L2', title: 'BACHELORS', suffix: '2' },
+    { id: 'L3', title: 'BACHELORS', suffix: '3' },
+    { id: 'M1', title: 'MASTERS', suffix: '1' },
+    { id: 'M2', title: 'MASTERS', suffix: '2' },
+    { id: 'AUTRE', title: 'OTHER', suffix: '' },
 ];
 
 const UNIVERSITY_SEASON_LIST = [
@@ -53,23 +50,31 @@ const filterSeason = {
     },
 };
 
-// ── MINI-COMPOSANTS INTERNES ───────────────────────────────────────────────
-const WelcomePagination = ({ pageNumber, maxPage, theme }) => (
-    <View style={StyleWelcome[theme].pageDots}>
-        {Array.from({ length: pageNumber }).map((_, i) => <View key={`f-${i}`} style={StyleWelcome[theme].circleFill} />)}
-        {Array.from({ length: maxPage - pageNumber }).map((_, i) => <View key={`e-${i}`} style={StyleWelcome[theme].circleEmpty} />)}
+const WelcomePagination = ({ pageNumber, maxPage, themeObj }) => (
+    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: tokens.space.md }}>
+        {Array.from({ length: pageNumber }).map((_, i) => <View key={`f-${i}`} style={{ width: 24, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.md, backgroundColor: themeObj.primary }} />)}
+        {Array.from({ length: maxPage - pageNumber }).map((_, i) => <View key={`e-${i}`} style={{ width: 8, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.md, backgroundColor: themeObj.greyBackground }} />)}
     </View>
 );
 
-const WelcomeBackButton = ({ onPress, visible }) => (
-    <TouchableOpacity onPress={onPress} disabled={!visible} style={{ opacity: visible ? 1 : 0, alignSelf: 'flex-start' }}>
-        <MaterialIcons style={{ paddingTop: 8, paddingLeft: 4 }} name={'arrow-back'} size={32} color={'white'} />
+const WelcomeBackButton = ({ onPress, visible, themeObj }) => (
+    <TouchableOpacity 
+        onPress={onPress} 
+        disabled={!visible} 
+        style={{ 
+            position: 'absolute', 
+            top: tokens.space.xl, 
+            left: tokens.space.md, 
+            zIndex: 10, 
+            opacity: visible ? 1 : 0, 
+            padding: tokens.space.xs 
+        }}
+    >
+        <MaterialIcons name="arrow-back" size={28} color={themeObj.font} />
     </TouchableOpacity>
 );
 
-// ── COMPOSANT PRINCIPAL ────────────────────────────────────────────────────
 export default function WelcomeScreen() {
-    // État local qui remplace la navigation
     const [step, setStep] = useState(1);
     const [navigatorState, setNavigatorState] = useState({
         language: 'fr',
@@ -98,8 +103,8 @@ export default function WelcomeScreen() {
     }, []);
 
     const theme = navigatorState.theme;
+    const themeObj = style.Theme[theme];
 
-    // ── LOGIQUE METIER ───────────────────────────────────────────────────────
     const handleNext = () => setStep((prev) => prev + 1);
     const handleBack = () => setStep((prev) => prev - 1);
     const finishWelcome = () => SettingsManager.setFirstLoad(false);
@@ -125,140 +130,167 @@ export default function WelcomeScreen() {
         if (navigatorState.textFilter) {
             if (navigatorState.groupListFiltered.length > MAXIMUM_NUMBER_ITEMS_GROUPLIST) {
                 return (
-                    <>
-                        <Text style={StyleWelcome[theme].greyBottomText}>
+                    <View style={{ marginTop: tokens.space.sm }}>
+                        <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, textAlign: 'center' }}>
                             {Translator.get('HIDDEN_RESULT', navigatorState.groupListFiltered.length - MAXIMUM_NUMBER_ITEMS_GROUPLIST)}
                         </Text>
-                        <Text style={StyleWelcome[theme].greyBottomText}>{Translator.get('USE_SEARCH_BAR')}</Text>
-                    </>
+                        <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, textAlign: 'center', marginTop: 4 }}>
+                            {Translator.get('USE_SEARCH_BAR')}
+                        </Text>
+                    </View>
                 );
             } else if (!navigatorState.groupListFiltered.length) {
-                return <Text style={StyleWelcome[theme].greyBottomText}>{Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}</Text>;
+                return <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.sm, textAlign: 'center' }}>{Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}</Text>;
             }
         }
-        return <Text style={StyleWelcome[theme].greyBottomText}>{Translator.get('USE_SEARCH_BAR')}</Text>;
+        return <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.sm, textAlign: 'center' }}>{Translator.get('USE_SEARCH_BAR')}</Text>;
     };
 
-    // ── RENDU ────────────────────────────────────────────────────────────────
     return (
-        <LinearGradient
-            style={{ flex: 1 }}
-            colors={StyleWelcome[theme].gradientColor}
-            start={{ x: 0.05, y: 0.05 }}
-            end={{ x: 0.95, y: 0.95 }}>
-            <SafeAreaView style={{ flex: 1 }}>
-                <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'height' : undefined}>
-                    
-                    <WelcomeBackButton onPress={handleBack} visible={step > 1} />
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: themeObj.background, paddingTop: 20}}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+                
+                <WelcomeBackButton onPress={handleBack} visible={step > 1} themeObj={themeObj} />
 
-                    {/* ÉTAPE 1 */}
-                    {step === 1 && (
-                        <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl }}>
-                            <Image source={require('../../../assets/icons/app.png')} style={{ width: 100, height: 100, resizeMode: 'contain', marginBottom: tokens.space.xl, opacity: 0.95 }} />
-                            <Text style={StyleWelcome[theme].mainText}>{Translator.get('WELCOME')}</Text>
-                            <Text style={StyleWelcome[theme].secondaryText}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
-                        </View>
-                    )}
+                {step === 1 && (
+                    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
+                        <Image source={require('../../../assets/icons/logo.png')} style={{ width: 200, height: 100, resizeMode: 'contain', marginBottom: tokens.space.xl }} />
+                        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELCOME')}</Text>
+                        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
+                    </View>
+                )}
 
-                    {/* ÉTAPE 2 */}
-                    {step === 2 && (
-                        <ScrollView style={{ flexGrow: 1 }} contentContainerStyle={{ paddingBottom: 0 }} showsVerticalScrollIndicator={false}>
-                            <View style={StyleWelcome[theme].whiteCard}>
-                                <Text style={StyleWelcome[theme].whiteCardText}>{Translator.get('YOUR_THEME')}</Text>
+                {step === 2 && (
+                    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2 }} showsVerticalScrollIndicator={false}>
+                        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, marginBottom: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
+                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_THEME')}</Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                                 {THEME_LIST.map((themeEntry) => {
                                     const selected = navigatorState.theme === themeEntry.id;
                                     return (
-                                        <TouchableOpacity key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={selected ? StyleWelcome[theme].whiteCardButtonSelected : StyleWelcome[theme].whiteCardButton}>
-                                            <Text style={selected ? StyleWelcome[theme].whiteCardButtonTextSelected : StyleWelcome[theme].whiteCardButtonText}>{Translator.get(themeEntry.title)}</Text>
+                                        <TouchableOpacity key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(themeEntry.title)}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
                             </View>
-                            <View style={StyleWelcome[theme].whiteCard}>
-                                <Text style={StyleWelcome[theme].whiteCardText}>{Translator.get('YOUR_LANGUAGE')}</Text>
+                        </View>
+                        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, marginBottom: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
+                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_LANGUAGE')}</Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                                 {LANGUAGE_LIST.map((langEntry) => {
                                     const selected = navigatorState.language === langEntry.id;
                                     return (
-                                        <TouchableOpacity key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={selected ? StyleWelcome[theme].whiteCardButtonSelected : StyleWelcome[theme].whiteCardButton}>
-                                            <Text style={selected ? StyleWelcome[theme].whiteCardButtonTextSelected : StyleWelcome[theme].whiteCardButtonText}>{Translator.get(langEntry.title)}</Text>
+                                        <TouchableOpacity key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(langEntry.title)}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
                             </View>
-                        </ScrollView>
-                    )}
+                        </View>
+                    </ScrollView>
+                )}
 
-                    {/* ÉTAPE 3 */}
-                    {step === 3 && (
-                        <ScrollView style={StyleWelcome[theme].whiteCardContainer} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                            <View style={StyleWelcome[theme].whiteCard}>
-                                <Text style={StyleWelcome[theme].whiteCardText}>{Translator.get('YOUR_YEAR')}</Text>
-                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
-                                    {UNIVERSITY_YEARS_LIST.map((yearEntry) => {
-                                        const selected = navigatorState.year?.id === yearEntry.id;
-                                        return (
-                                            <TouchableOpacity key={yearEntry.id} onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)} style={selected ? StyleWelcome[theme].whiteCardButtonSelected : StyleWelcome[theme].whiteCardButton}>
-                                                <Text style={selected ? StyleWelcome[theme].whiteCardButtonTextSelected : StyleWelcome[theme].whiteCardButtonText}>{Translator.get(yearEntry.title)}</Text>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </View>
+                {step === 3 && (
+                    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: 140 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        {/* Grande case unique pour toute l'étape */}
+                        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
+                            
+                            {/* Section Année */}
+                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_YEAR')}</Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: tokens.space.lg }}>
+                                {UNIVERSITY_YEARS_LIST.map((yearEntry) => {
+                                    const selected = navigatorState.year?.id === yearEntry.id;
+                                    return (
+                                        <TouchableOpacity 
+                                            key={yearEntry.id} 
+                                            onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)} 
+                                            style={{ 
+                                                width: '48%', 
+                                                alignItems: 'center', 
+                                                backgroundColor: themeObj.greyBackground, 
+                                                borderWidth: 2, 
+                                                borderColor: selected ? themeObj.primary : 'transparent', 
+                                                paddingVertical: tokens.space.sm, 
+                                                borderRadius: tokens.radius.md, 
+                                                marginBottom: tokens.space.sm 
+                                            }}
+                                        >
+                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>
+                                                {Translator.get(yearEntry.title)} {yearEntry.suffix}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
                             </View>
 
-                            <View style={StyleWelcome[theme].whiteCard}>
-                                <Text style={StyleWelcome[theme].whiteCardText}>{Translator.get('YOUR_SEMESTER')}</Text>
+                            {/* Section Semestre */}
+                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_SEMESTER')}</Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: tokens.space.lg }}>
                                 {UNIVERSITY_SEASON_LIST.map((seasonEntry) => {
                                     const selected = navigatorState.season?.id === seasonEntry.id;
                                     return (
-                                        <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={selected ? StyleWelcome[theme].whiteCardButtonSelected : StyleWelcome[theme].whiteCardButton}>
-                                            <Text style={selected ? StyleWelcome[theme].whiteCardButtonTextSelected : StyleWelcome[theme].whiteCardButtonText}>{Translator.get(seasonEntry.title)}</Text>
+                                        <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title)}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
                             </View>
 
-                            <View style={StyleWelcome[theme].whiteCard}>
-                                <Text style={StyleWelcome[theme].whiteCardText}>{Translator.get('YOUR_GROUP')}</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme === 'dark' ? '#2D1A2E' : '#F5F7FA', borderRadius: tokens.radius.md, borderWidth: 1.5, borderColor: theme === 'dark' ? '#5A3A5C' : '#E0E4EA', paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                                    <MaterialCommunityIcons name="magnify" size={20} color={StyleWelcome[theme].placeholderTextColor} style={{ marginRight: tokens.space.xs }} />
-                                    <TextInput autoCorrect={false} style={[StyleWelcome[theme].whiteCardGroupButton, StyleWelcome[theme].whiteCardGroupText]} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={StyleWelcome[theme].placeholderTextColor} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
-                                </View>
-                                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                                    {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
-                                        const selected = navigatorState.group === item;
-                                        return (
-                                            <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={selected ? StyleWelcome[theme].whiteCardButtonSelected : StyleWelcome[theme].whiteCardButton}>
-                                                <Text style={selected ? StyleWelcome[theme].whiteCardButtonTextSelected : StyleWelcome[theme].whiteCardButtonText}>{item}</Text>
-                                            </TouchableOpacity>
-                                        )
-                                    })}
-                                </View>
-                                {footerTextComponent()}
+                            {/* Section Groupe */}
+                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_GROUP')}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
+                                <MaterialCommunityIcons name="magnify" size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
+                                <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.OS === 'ios' ? tokens.space.md : tokens.space.sm, color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
                             </View>
-                        </ScrollView>
-                    )}
 
-                    {/* ÉTAPE 4 */}
-                    {step === 4 && (
-                        <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl }}>
-                            <View style={{ width: 100, height: 100, borderRadius: tokens.radius.pill, backgroundColor: '#FFFFFF22', justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
-                                <MaterialCommunityIcons name="check-circle-outline" size={60} color="#FFFFFF" />
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
+                                    const selected = navigatorState.group === item;
+                                    return (
+                                        <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{item}</Text>
+                                        </TouchableOpacity>
+                                    )
+                                })}
                             </View>
-                            <Text style={StyleWelcome[theme].mainText}>{Translator.get('WELL_DONE')}</Text>
-                            <Text style={StyleWelcome[theme].secondaryText}>{Translator.get('APP_READY')}</Text>
+                            {footerTextComponent()}
                         </View>
-                    )}
+                    </ScrollView>
+                )}
 
-                    <Button
-                        buttonText={step === 4 ? Translator.get('FINISH') : (step === 1 ? Translator.get('START') : Translator.get('NEXT'))}
-                        onPress={step === 4 ? finishWelcome : handleNext}
-                        theme={theme}
-                    />
+                {step === 4 && (
+                    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
+                        <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
+                            <MaterialCommunityIcons name="check-circle-outline" size={100} color={themeObj.primary} />
+                        </View>
+                        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELL_DONE')}</Text>
+                        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
+                    </View>
+                )}
 
-                    <WelcomePagination pageNumber={step} maxPage={4} theme={theme} />
+                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: tokens.space.sm }}>
+                    <View style={{ paddingHorizontal: tokens.space.xl, marginBottom: tokens.space.xs }}>
+                        <TouchableOpacity
+                            onPress={step === 4 ? finishWelcome : handleNext}
+                            style={{
+                                backgroundColor: themeObj.primary,
+                                borderRadius: tokens.radius.md,
+                                paddingVertical: tokens.space.md,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <Text style={{ color: '#ffffff', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
+                                {step === 4 ? Translator.get('FINISH') : (step === 1 ? Translator.get('START') : Translator.get('NEXT'))}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
 
-                </KeyboardAvoidingView>
-            </SafeAreaView>
-        </LinearGradient>
+                    <WelcomePagination pageNumber={step} maxPage={4} themeObj={themeObj} />
+                </View>
+
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 }

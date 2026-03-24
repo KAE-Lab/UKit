@@ -8,19 +8,19 @@ export default {
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
-	version: '5.4.1',
-	versionCode: 541,
+	version: '5.5.0',
+	versionCode: 550,
 	orientation: 'portrait',
 	primaryColor: '#006F9F',
-	icon: './assets/icons/ios.png',
+	icon: './assets/icons/icon.png',
 	owner: 'kaelab',
 	splash: {
-		image: './assets/icons/splash.png',
-		backgroundColor: '#009de0',
+		image: './assets/icons/icon.png',
+		backgroundColor: '#ffffff',
 		resizeMode: 'contain',
 	},
 	ios: {
-		icon: './assets/icons/ios.png',
+		icon: './assets/icons/icon.png',
 		supportsTablet: true,
 		bundleIdentifier: 'org.kaelab.ukit',
 		infoPlist: {
@@ -43,7 +43,7 @@ export default {
 	},
 	androidStatusBar: {
 		barStyle: 'light-content',
-		backgroundColor: '#009ee0',
+		backgroundColor: '#006F9F',
 	},
 	assetBundlePatterns: ['**/*'],
 	updates: {

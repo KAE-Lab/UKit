@@ -135,10 +135,7 @@ class WeekView extends React.Component {
 		const theme = style.Theme[this.context.themeName];
 
 		return (
-            <SafeAreaView 
-            edges={['bottom', 'left', 'right']} 
-            style={{ flex: 1, backgroundColor: theme.courseBackground }}
-        >
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
                 <WeekComponent
                     key={`weekComponent-${this.context.themeName}`}
                     week={this.state.selectedWeek}
@@ -148,8 +145,7 @@ class WeekView extends React.Component {
                     filtersList={this.context.filters}
                 />
 
-                {/* ── Barre de navigation calendrier ────────────────────── */}
-                <View style={{
+                <SafeAreaView edges={['bottom']} style={{
                     flexGrow: 0,
                     backgroundColor: theme.cardBackground,
                     borderTopWidth: 1,
@@ -162,7 +158,7 @@ class WeekView extends React.Component {
                         alignItems: 'center',
                         height: 44,
                         backgroundColor: theme.cardBackground,
-                        paddingHorizontal: tokens.space.xs,
+                        paddingHorizontal: tokens.space.xs + 2,
                     }}>
                         {/* Bouton Cette semaine */}
                         <TouchableOpacity
@@ -194,7 +190,7 @@ class WeekView extends React.Component {
                         <Text style={{
                             fontSize: tokens.fontSize.md,
                             fontWeight: tokens.fontWeight.semibold,
-                            color: theme.font,
+                            color: theme.fontSecondary,
                             position: 'absolute',
                             left: 0,
                             right: 0,
@@ -244,10 +240,9 @@ class WeekView extends React.Component {
                         renderItem={this.renderCalendarListItem}
                         style={{
                             backgroundColor: theme.cardBackground,
-                            paddingBottom: tokens.space.xs,
                         }}
                     />
-                </View>
+                </SafeAreaView>
             </SafeAreaView>
         );
 	}

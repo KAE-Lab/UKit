@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, TouchableOpacity } from 'react-native';
+import Translator from '../../shared/i18n/Translator';
 
 import { tokens } from '../../shared/theme/Theme';
 
@@ -13,13 +14,8 @@ class CalendarWeek extends React.Component {
     };
 
     static getBackgroundColor(props) {
-        return props.week.week === props.selectedWeek.week &&
-            props.week.year === props.selectedWeek.year
-            ? props.theme.calendar.selection
-            : props.week.week === props.currentWeek.week &&
-              props.week.year === props.currentWeek.year
-            ? props.theme.calendar.currentDay
-            : 'transparent';
+        if (props.week.week === props.currentWeek.week && props.week.year === props.currentWeek.year) return props.theme.primary + '26';
+        return 'transparent';
     }
 
     static isSelected(props) {
@@ -31,8 +27,8 @@ class CalendarWeek extends React.Component {
 
     shouldComponentUpdate(nextProps) {
         return (
-            CalendarWeek.getBackgroundColor(nextProps) !==
-            CalendarWeek.getBackgroundColor(this.props)
+            CalendarWeek.getBackgroundColor(nextProps) !== CalendarWeek.getBackgroundColor(this.props) ||
+            CalendarWeek.isSelected(nextProps) !== CalendarWeek.isSelected(this.props)
         );
     }
 
@@ -40,7 +36,7 @@ class CalendarWeek extends React.Component {
         const { theme } = this.props;
         const selected = CalendarWeek.isSelected(this.props);
         const bgColor  = CalendarWeek.getBackgroundColor(this.props);
-        const color    = selected ? theme.lightFont : theme.font;
+        const color    = selected ? theme.primary : theme.font;
 
         return (
             <TouchableOpacity
@@ -52,6 +48,8 @@ class CalendarWeek extends React.Component {
                     justifyContent: 'center',
                     borderRadius: tokens.radius.md,
                     backgroundColor: bgColor,
+                    borderWidth: selected ? 2 : 0,
+                    borderColor: selected ? theme.primary : 'transparent',
                 }}>
                 {/* Numéro de semaine */}
                 <Text style={{
@@ -75,7 +73,7 @@ class CalendarWeek extends React.Component {
                     textTransform: 'uppercase',
                     letterSpacing: 0.5,
                 }}>
-                    {`S.${this.props.week.week}`}
+                    {`${Translator.get('WEEK_SHORT')}${this.props.week.week}`}
                 </Text>
             </TouchableOpacity>
         );

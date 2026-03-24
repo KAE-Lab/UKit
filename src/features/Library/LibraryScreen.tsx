@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
@@ -8,10 +8,11 @@ import { AppContext } from '../../shared/services/AppCore';
 import style, { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
 import LibraryService, { LibraryInfo, AffluencesData } from './LibraryService';
+import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
 
 const defaultLibraryImage = require('../../../assets/images/default_resto.png');
 
-export default function LibraryScreen({ navigation }: any) {
+function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const AppContextValues = useContext(AppContext) as any;
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
@@ -20,6 +21,7 @@ export default function LibraryScreen({ navigation }: any) {
     const [loading, setLoading] = useState<boolean>(true);
     const [affluences, setAffluences] = useState<Record<string, AffluencesData>>({});
     const [locationError, setLocationError] = useState(false);
+
 
     useEffect(() => {
         loadLibraries();
@@ -111,7 +113,7 @@ export default function LibraryScreen({ navigation }: any) {
                     backgroundColor: theme.cardBackground,
                     borderRadius: tokens.radius.xl, 
                     marginBottom: tokens.space.lg, 
-                    marginHorizontal: tokens.space.md,
+                    marginHorizontal: tokens.space.sm,
                     ...tokens.shadow.md, 
                     overflow: 'hidden', 
                 }}
@@ -155,7 +157,7 @@ export default function LibraryScreen({ navigation }: any) {
                                 backgroundColor: `${theme.primary}15`, 
                                 paddingHorizontal: tokens.space.sm,
                                 paddingVertical: 4,
-                                borderRadius: tokens.radius.pill,
+                                borderRadius: tokens.radius.md,
                             }}>
                                 <MaterialIcons name="directions-walk" size={14} color={theme.primary} />
                                 <Text style={{
@@ -214,7 +216,7 @@ export default function LibraryScreen({ navigation }: any) {
 
     if (loading) {
         return (
-            <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
                 </View>
@@ -223,13 +225,15 @@ export default function LibraryScreen({ navigation }: any) {
     }
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
-                <FlatList
+                <Animated.FlatList
                     data={libraries}
+                    onScroll={onAnimatedScroll}
+                    scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingVertical: tokens.space.sm, flexGrow: 1 }}
+                    contentContainerStyle={{ paddingTop: 115, paddingVertical: tokens.space.sm, flexGrow: 1 }}
                     renderItem={renderLibraryCard}
                     ListEmptyComponent={
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.lg, marginTop: tokens.space.xxl }}>
@@ -250,3 +254,5 @@ export default function LibraryScreen({ navigation }: any) {
         </SafeAreaView>
     );
 }
+
+export default withHeaderAnimation(LibraryScreen);

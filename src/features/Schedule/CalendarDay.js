@@ -23,13 +23,9 @@ class CalendarDay extends React.Component {
     };
 
     static getBackgroundColor(props) {
-        return props.item.isSame(props.selectedDay, 'day')
-            ? props.theme.calendar.selection
-            : props.item.isSame(props.currentDay, 'day')
-            ? props.theme.calendar.currentDay
-            : props.item.day() === 0
-            ? props.theme.calendar.sunday
-            : 'transparent';
+        if (props.item.isSame(props.currentDay, 'day')) return props.theme.primary + '26';
+        if (props.item.day() === 0) return props.theme.greyBackground + '80';
+        return 'transparent';
     }
 
     static isSelected(props) {
@@ -38,8 +34,8 @@ class CalendarDay extends React.Component {
 
     shouldComponentUpdate(nextProps) {
         return (
-            CalendarDay.getBackgroundColor(nextProps) !==
-            CalendarDay.getBackgroundColor(this.props)
+            CalendarDay.getBackgroundColor(nextProps) !== CalendarDay.getBackgroundColor(this.props) ||
+            CalendarDay.isSelected(nextProps) !== CalendarDay.isSelected(this.props)
         );
     }
 
@@ -47,7 +43,7 @@ class CalendarDay extends React.Component {
         const { theme } = this.props;
         const selected = CalendarDay.isSelected(this.props);
         const bgColor  = CalendarDay.getBackgroundColor(this.props);
-        const color    = selected ? theme.lightFont : theme.font;
+        const color    = selected ? theme.primary : theme.font;
 
         return (
             <TouchableOpacity
@@ -59,6 +55,8 @@ class CalendarDay extends React.Component {
                     justifyContent: 'center',
                     borderRadius: tokens.radius.md,
                     backgroundColor: bgColor,
+                    borderWidth: selected ? 2 : 0, 
+                    borderColor: selected ? theme.primary : 'transparent', 
                 }}>
                 <Text style={{
                     textAlign: 'center',

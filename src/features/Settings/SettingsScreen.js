@@ -7,6 +7,7 @@ import { AppContext, SettingsManager } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
 import Button from '../../shared/ui/Button';
+import { withStaticHeader } from '../../shared/navigation/NavHelpers';
 
 import {
     SettingsLanguagePopup,
@@ -143,8 +144,11 @@ class Settings extends React.Component {
             <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
                 <ScrollView
                     style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingBottom: tokens.space.xl }}
-                    showsVerticalScrollIndicator={false}>
+                    contentContainerStyle={{ paddingTop: 50 }}
+                    showsVerticalScrollIndicator={false}
+                    bounces={false}
+                    overScrollMode="never"
+                >
 
                     {/* ── Affichage ─────────────────────────────────────── */}
                     <SettingsTextHeader theme={themeSettings} text={Translator.get('DISPLAY')} />
@@ -186,12 +190,13 @@ class Settings extends React.Component {
 
                     {this.state.hasCalendarPermission ? (
                         <>
-                            <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginBottom: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
+                            {/* Remplacement du marginBottom par un marginTop */}
+                            <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
                                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginBottom: tokens.space.xs }}>
                                     {Translator.get('AUTO_SYNC_DESCRIPTION')}
                                 </Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.xs }}>
-                                    <View style={{ width: 8, height: 8, borderRadius: tokens.radius.pill, backgroundColor: lastSyncDate ? '#43A047' : theme.fontSecondary, marginRight: tokens.space.sm }} />
+                                    <View style={{ width: 8, height: 8, borderRadius: tokens.radius.md, backgroundColor: lastSyncDate ? '#43A047' : theme.fontSecondary, marginRight: tokens.space.sm }} />
                                     <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
                                         {lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}
                                     </Text>
@@ -223,7 +228,7 @@ class Settings extends React.Component {
                         </>
                     ) : (
                         <>
-                            <View style={{ backgroundColor: `${tokens.colors?.orange ?? '#E65100'}18`, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginBottom: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: `${tokens.colors?.orange ?? '#E65100'}40`, flexDirection: 'row', alignItems: 'flex-start' }}>
+                            <View style={{ backgroundColor: `${tokens.colors?.orange ?? '#E65100'}18`, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: `${tokens.colors?.orange ?? '#E65100'}40`, flexDirection: 'row', alignItems: 'flex-start' }}>
                                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, lineHeight: 20, flex: 1 }}>
                                     {Translator.get('ENABLE_CALENDAR_PERMISSION_DESCRIPTION')}
                                 </Text>
@@ -248,4 +253,4 @@ class Settings extends React.Component {
     }
 }
 
-export default Settings;
+export default withStaticHeader(Settings);

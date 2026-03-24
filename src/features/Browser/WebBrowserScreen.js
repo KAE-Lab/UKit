@@ -7,6 +7,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import { URL } from '../../shared/services/DataService';
+import { withStaticHeader } from '../../shared/navigation/NavHelpers';
 
 const entrypoints = {
 	ent: 'https://ent.u-bordeaux.fr',
@@ -15,7 +16,7 @@ const entrypoints = {
 	apogee: 'https://apogee.u-bordeaux.fr',
 };
 
-export default function WebBrowserScreen({ navigation, route }) {
+function WebBrowserScreen({ navigation, route, headerPadding }) {
 	const { themeName } = useContext(AppContext);
 	const webViewRef = useRef(null);
 
@@ -26,11 +27,25 @@ export default function WebBrowserScreen({ navigation, route }) {
 		else if (href) initialUri = href;
 	}
 
-	const [uri] = useState(initialUri);
+	const [uri, setUri] = useState(initialUri);
 	const [url, setUrl] = useState(initialUri);
 	const [canGoBack, setCanGoBack] = useState(false);
 	const [canGoForward, setCanGoForward] = useState(false);
 	const [loading, setLoading] = useState(true);
+
+	// Force la mise à jour de l'URL si React Navigation recycle le composant
+	React.useEffect(() => {
+		let newUri = URL.UKIT_WEBSITE;
+		if (route.params) {
+			const { entrypoint, href } = route.params;
+			if (entrypoint && entrypoints[entrypoint]) newUri = entrypoints[entrypoint];
+			else if (href) newUri = href;
+		}
+		if (newUri !== uri) {
+			setUri(newUri);
+			setUrl(newUri);
+		}
+	}, [route.params?.entrypoint, route.params?.href]);
 
 	const onRefresh = () => webViewRef.current?.reload();
 	const onBack = () => webViewRef.current?.goBack();
@@ -64,7 +79,7 @@ export default function WebBrowserScreen({ navigation, route }) {
 	const javascript = Platform.OS !== 'ios' ? 'window.scrollTo(0,0);' : null;
 
 	const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24 }) => {
-		const color = disabled ? theme.border : theme.icon;
+		const color = disabled ? theme.primary + '44' : theme.primary;
 		const Icon = iconLib === 'community' ? MaterialCommunityIcons : MaterialIcons;
 
 		return (
@@ -77,7 +92,7 @@ export default function WebBrowserScreen({ navigation, route }) {
 					borderRadius: tokens.radius.md,
 					justifyContent: 'center',
 					alignItems: 'center',
-					backgroundColor: disabled ? 'transparent' : theme.greyBackground,
+					backgroundColor: disabled ? 'transparent' : theme.cardBackground,
 				}}>
 				<Icon name={iconName} size={size} color={color} />
 			</TouchableOpacity>
@@ -85,13 +100,15 @@ export default function WebBrowserScreen({ navigation, route }) {
 	};
 
 	return (
-		<SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-			<WebView
+		<SafeAreaView edges={['left', 'right','top']} style={{ flex: 1, backgroundColor: theme.background }}>
+            <View style={[{ flex: 1 }, { paddingTop: 65}]}>
+                <WebView
 				ref={webViewRef}
-				javaScriptEnabled={true}
-				domStorageEnabled={true}
+				style={{ flex: 1, backgroundColor: theme.background }}
 				startInLoadingState={true}
 				renderLoading={renderLoading}
+				javaScriptEnabled={true}
+				domStorageEnabled={true}
 				injectedJavaScript={javascript}
 				originWhitelist={['*']}
 				onShouldStartLoadWithRequest={(event) => {
@@ -111,28 +128,36 @@ export default function WebBrowserScreen({ navigation, route }) {
 						setCanGoBack(e.canGoBack);
 						setCanGoForward(e.canGoForward);
 						setLoading(e.loading);
-						if (e.title) navigation.setParams({ title: e.title });
+                        
+						if (e.title && !route.params?.entrypoint) {
+							navigation.setParams({ title: e.title });
+						}
 					}
 				}}
 				source={{ uri }}
 			/>
 
-			<View
-				style={{
-					flexDirection: 'row',
-					justifyContent: 'space-around',
-					alignItems: 'center',
-					paddingHorizontal: tokens.space.sm,
-					paddingVertical: tokens.space.xs,
-					backgroundColor: theme.cardBackground,
-					borderTopWidth: 1,
-					borderTopColor: theme.border,
-				}}>
-				<NavButton onPress={onBack} disabled={!canGoBack} iconName="navigate-before" size={28} />
-				<NavButton onPress={onForward} disabled={!canGoForward} iconName="navigate-next" size={28} />
-				<NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
-				<NavButton onPress={openURL} disabled={false} iconName={Platform.OS === 'ios' ? 'apple-safari' : 'google-chrome'} iconLib="community" size={22} />
-			</View>
+			<SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.background }}>
+				<View
+					style={{
+						flexDirection: 'row',
+						justifyContent: 'space-around',
+						alignItems: 'center',
+						paddingHorizontal: tokens.space.sm,
+						paddingTop: tokens.space.sm + 2,
+						backgroundColor: 'transparent',
+						borderTopWidth: 1,
+						borderTopColor: theme.border,
+					}}>
+					<NavButton onPress={onBack} disabled={!canGoBack} iconName="navigate-before" size={28} />
+					<NavButton onPress={onForward} disabled={!canGoForward} iconName="navigate-next" size={28} />
+					<NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
+					<NavButton onPress={openURL} disabled={false} iconName={Platform.OS === 'ios' ? 'apple-safari' : 'google-chrome'} iconLib="community" size={22} />
+				</View>
+			</SafeAreaView>
+		</View>
 		</SafeAreaView>
 	);
 }
+
+export default withStaticHeader(WebBrowserScreen);
