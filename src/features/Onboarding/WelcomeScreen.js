@@ -3,7 +3,7 @@ import {
     Text, View, Image, TouchableOpacity, ScrollView,
     KeyboardAvoidingView, Platform
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
@@ -57,13 +57,13 @@ const WelcomePagination = ({ pageNumber, maxPage, themeObj }) => (
     </View>
 );
 
-const WelcomeBackButton = ({ onPress, visible, themeObj }) => (
+const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
     <TouchableOpacity 
         onPress={onPress} 
         disabled={!visible} 
         style={{ 
             position: 'absolute', 
-            top: tokens.space.xl, 
+            top: (topInset || 0), 
             left: tokens.space.md, 
             zIndex: 10, 
             opacity: visible ? 1 : 0, 
@@ -76,6 +76,7 @@ const WelcomeBackButton = ({ onPress, visible, themeObj }) => (
 
 export default function WelcomeScreen() {
     const [step, setStep] = useState(1);
+    const insets = useSafeAreaInsets();
     const [navigatorState, setNavigatorState] = useState({
         language: 'fr',
         theme: 'light',
@@ -147,10 +148,10 @@ export default function WelcomeScreen() {
     };
 
     return (
-        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: themeObj.background, paddingTop: 20}}>
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: themeObj.background, paddingTop: (insets.top || 0) - tokens.space.lg }}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
                 
-                <WelcomeBackButton onPress={handleBack} visible={step > 1} themeObj={themeObj} />
+                <WelcomeBackButton onPress={handleBack} visible={step > 1} themeObj={themeObj} topInset={insets.top} />
 
                 {step === 1 && (
                     <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
@@ -269,7 +270,7 @@ export default function WelcomeScreen() {
                     </View>
                 )}
 
-                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: tokens.space.sm }}>
+                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: (insets.bottom || 0) }}>
                     <View style={{ paddingHorizontal: tokens.space.xl, marginBottom: tokens.space.xs }}>
                         <TouchableOpacity
                             onPress={step === 4 ? finishWelcome : handleNext}

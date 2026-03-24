@@ -5,6 +5,7 @@ import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Toast from 'react-native-root-toast';
 import PropTypes from 'prop-types';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { Split } from '../../shared/ui/AppUI';
 import style, { tokens } from '../../shared/theme/Theme';
@@ -395,14 +396,18 @@ class HomeScreen extends React.Component {
         }
 
         return (
-            <View style={[style.list.homeView, { backgroundColor: theme.background }]}>
-                <View style={{ paddingTop: 110 }}>
-                    {searchInput}
-                    <Split lineColor={theme.border} noMargin={true} />
-                    {cache}
-                </View>
-                {content}
-            </View>
+            <SafeAreaInsetsContext.Consumer>
+                {(insets) => (
+                    <View style={[style.list.homeView, { backgroundColor: theme.background }]}>
+                        <View style={{ paddingTop: (insets?.top || 0) + 65 }}>
+                            {searchInput}
+                            <Split lineColor={theme.border} noMargin={true} />
+                            {cache}
+                        </View>
+                        {content}
+                    </View>
+                )}
+            </SafeAreaInsetsContext.Consumer>
         );
 	}
 }

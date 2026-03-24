@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { CrousService, CrousDayMenu } from './CrousService';
@@ -12,6 +12,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
     const { restaurantId, restaurantName } = route.params;
     const AppContextValues = useContext(AppContext) as any;
     const theme = style.Theme[AppContextValues.themeName];
+    const insets = useSafeAreaInsets();
 
     const [menus, setMenus] = useState<CrousDayMenu[]>([]);
     const [loading, setLoading] = useState(true);
@@ -185,7 +186,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             
             {/* ── Bandeau des dates défilant horizontalement ── */}
-            <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm, paddingTop: 110 }}>
+            <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm, paddingTop: (insets.top || 0) + 65 }}>
                 
                 <Text 
                     style={{

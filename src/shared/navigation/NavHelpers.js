@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { TouchableOpacity, View, Modal, Text, Animated } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SettingsManager } from '../services/AppCore';
 import Translator from '../i18n/Translator';
@@ -189,6 +190,7 @@ export const withHeaderAnimation = (WrappedComponent) => {
         const scrollY = useRef(new Animated.Value(0)).current;
         const navigation = useNavigation();
         const route = useRoute();
+        const insets = useSafeAreaInsets();
 
         useEffect(() => {
             scrollY.setValue(0);
@@ -216,7 +218,7 @@ export const withHeaderAnimation = (WrappedComponent) => {
             )
         ).current;
 
-        const headerPadding = { paddingTop: 115, paddingBottom: tokens.space.sm };
+        const headerPadding = { paddingTop: (insets.top || 0) + 70, paddingBottom: tokens.space.sm };
 
         return <WrappedComponent {...props} onAnimatedScroll={onAnimatedScroll} headerPadding={headerPadding} />;
     };
@@ -225,8 +227,9 @@ export const withHeaderAnimation = (WrappedComponent) => {
 // ENGLOBEUR STATIQUE CENTRALISÉ (Pour les pages sans scroll)
 export const withStaticHeader = (WrappedComponent) => {
     return function StaticHeaderWrapper(props) {
+        const insets = useSafeAreaInsets();
         // On renvoie exactement le même espacement que l'animation, mais sans la logique de défilement
-        const headerPadding = { paddingTop: 115, paddingBottom: tokens.space.sm };
+        const headerPadding = { paddingTop: (insets.top || 0) + 70, paddingBottom: tokens.space.sm };
         return <WrappedComponent {...props} headerPadding={headerPadding} />;
     };
 };

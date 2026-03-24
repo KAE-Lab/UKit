@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, View, ScrollView, Image, TouchableOpacity, Linking, Animated } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -87,12 +87,14 @@ class AboutScreen extends React.Component {
 
         return (
             <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
-                <Animated.ScrollView 
-                    contentContainerStyle={[this.props.headerPadding, {paddingTop: 95}]}
-                    onScroll={this.props.onAnimatedScroll}
-                    scrollEventThrottle={16}
-                    showsVerticalScrollIndicator={false}
-                >
+                <SafeAreaInsetsContext.Consumer>
+                    {(insets) => (
+                        <Animated.ScrollView 
+                            contentContainerStyle={[this.props.headerPadding, { paddingTop: (insets?.top || 0) + 50 }]}
+                            onScroll={this.props.onAnimatedScroll}
+                            scrollEventThrottle={16}
+                            showsVerticalScrollIndicator={false}
+                        >
 
                     <View style={{ alignItems: 'center', paddingVertical: tokens.space.lg }}>
 						<View style={{
@@ -169,6 +171,8 @@ class AboutScreen extends React.Component {
                     </Section>
 
                 </Animated.ScrollView>
+                    )}
+                </SafeAreaInsetsContext.Consumer>
             </SafeAreaView>
         );
     }
