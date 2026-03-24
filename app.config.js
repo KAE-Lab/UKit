@@ -34,10 +34,6 @@ export default {
 	},
 	android: {
 		package: 'com.bordeaux1.emplois',
-		adaptiveIcon: {
-			foregroundImage: './assets/icons/android_foreground.png',
-			backgroundImage: './assets/icons/android_background.png',
-		},
 		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
 		versionCode: 541,
 	},
