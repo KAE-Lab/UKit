@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Linking, ActivityIndicator, StyleSheet, Text } 
 import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Translator from '../../shared/i18n/Translator';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppContext } from '../../shared/services/AppCore';
 import style, { tokens } from '../../shared/theme/Theme';
@@ -27,6 +28,7 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
     const AppContextValues = useContext(AppContext) as any;
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
+    const insets = useSafeAreaInsets();
 
     const [title, setTitle] = useState<string>(route.params.title || Translator.get('DESTINATION'));
     const [lat, setLat] = useState<number | null>(null);
@@ -53,11 +55,7 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
         if (lat === null || lng === null) return;
         const link = URL.MAP + `search/?api=1&query=${lat},${lng}`;
 
-        Linking.canOpenURL(link)
-            .then((supported) => {
-                if (supported) Linking.openURL(link);
-            })
-            .catch((err) => console.error('An error occurred', err));
+        Linking.openURL(link).catch((err) => console.error('An error occurred', err));
     };
 
     useEffect(() => {
@@ -144,11 +142,10 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
         <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             
             <View style={{ 
-                height: 110, 
+                height: (insets.top || 0) + 65, 
                 backgroundColor: theme.cardBackground, 
                 borderBottomWidth: 1, 
                 borderBottomColor: theme.border,
-                zIndex: 10 
             }} />
 
             <WebView

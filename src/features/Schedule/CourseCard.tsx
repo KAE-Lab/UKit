@@ -621,15 +621,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 	onPressExternalMap = () => {
 		let link = URL.MAP + `search/?api=1&query=${this.state.locations[0].lat},${this.state.locations[0].lng}`;
 
-		Linking.canOpenURL(link)
-			.then((supported) => {
-				if (!supported) {
-					console.warn("Can't handle url: " + link);
-				} else {
-					return Linking.openURL(link);
-				}
-			})
-			.catch((err) => console.error('An error occurred', err));
+		Linking.openURL(link).catch((err) => console.error('An error occurred', err));
 	};
 
 	componentDidMount() {
