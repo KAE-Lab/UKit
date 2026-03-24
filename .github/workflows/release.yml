@@ -110,6 +110,7 @@ jobs:
           files: ./ukit-release.apk
           tag_name: ${{ env.RELEASE_TAG }}
           name: Release ${{ env.RELEASE_TAG }}
+          body: ${{ github.event.inputs.release_notes }}
           draft: false
           prerelease: false
           fail_on_unmatched_files: false
