@@ -1,6 +1,8 @@
 {
   "build": {
-    "production": {},
+    "production": {
+      "autoIncrement": true
+    },
     "preview": {
       "android": {
         "buildType": "apk"
@@ -9,6 +11,20 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal"
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "track": "production",
+        "releaseStatus": "draft",
+        "releaseNotes": [
+          {
+            "language": "fr-FR",
+            "text": ""
+          }
+        ]
+      }
     }
   }
 }

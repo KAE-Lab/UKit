@@ -8,55 +8,73 @@ on:
   workflow_dispatch:
     inputs:
       skip_build:
-        description: 'Sauter le build EAS (récupérer le dernier APK fini) ?'
+        description: 'Skip preview build ?'
+        type: boolean
+        default: false
+      build_production:
+        description: 'Build and submit production to Google Play ?'
         type: boolean
         default: false
       target_tag:
-        description: 'Tag à utiliser pour la release (ex: v5.1.0)'
+        description: 'Tag (ex: v5.4.1)'
         type: string
         required: true
         default: ''
+      release_notes:
+        description: 'Release notes for Google Play'
+        type: string
+        required: true
+        default: 'Améliorations de la stabilité et corrections de bugs.'
 
 permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build and Release APK
+  build_and_release:
+    name: Build, Release and Submit
     runs-on: ubuntu-latest
     steps:
-      - name: 🏗 Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Node
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: 🏗 Setup Expo and EAS
+      - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
         with:
           expo-version: latest
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: 📦 Install dependencies
+      - name: Update version files and push
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.target_tag != ''
+        run: |
+          TAG="${{ github.event.inputs.target_tag }}"
+          CLEAN_VERSION=${TAG#v}
+
+          npm version $CLEAN_VERSION --no-git-tag-version
+
+          if [ -f "app.config.js" ]; then
+            sed -i -E "s/version: ['\"][0-9]+\.[0-9]+\.[0-9]+['\"]/version: '$CLEAN_VERSION'/g" app.config.js
+          fi
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add package.json package-lock.json app.config.js
+          
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "chore: bump version to $CLEAN_VERSION"
+            git push origin HEAD:${{ github.ref }}
+          fi
+
+      - name: Install dependencies
         run: npm install
 
-      - name: 🚀 Build APK on EAS (Cloud)
-        id: build_eas
-        # On lance le build sans --output car c'est un build Cloud
-        if: github.event.inputs.skip_build != 'true'
-        run: eas build --platform android --profile preview --non-interactive --wait
-
-      - name: 📥 Download APK from Expo
-        run: |
-          # On récupère l'URL du dernier build fini pour le profil preview
-          URL=$(eas build:list --platform android --profile preview --status finished --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
-          echo "Téléchargement de l'APK depuis : $URL"
-          curl -L "$URL" -o ukit-release.apk
-    
       - name: Determine Release Tag
         id: get_tag
         run: |
@@ -66,14 +84,33 @@ jobs:
             echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
           fi
 
-      - name: 📥 Create GitHub Release
+      - name: Inject Release Notes into eas.json
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.build_production == 'true'
+        run: |
+          jq --arg notes "${{ github.event.inputs.release_notes }}" '.submit.production.android.releaseNotes[0].text = $notes' eas.json > eas.tmp.json && mv eas.tmp.json eas.json
+
+      - name: Build and Auto-Submit to Google Play
+        if: github.event.inputs.build_production == 'true'
+        run: eas build --platform android --profile production --non-interactive --auto-submit
+
+      - name: Build APK for GitHub Release
+        id: build_eas_preview
+        if: github.event.inputs.skip_build != 'true'
+        run: eas build --platform android --profile preview --non-interactive --wait
+
+      - name: Download APK from Expo
+        if: github.event.inputs.skip_build != 'true'
+        run: |
+          URL=$(eas build:list --platform android --profile preview --status finished --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
+          curl -L "$URL" -o ukit-release.apk
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: ./ukit-release.apk
           tag_name: ${{ env.RELEASE_TAG }}
           name: Release ${{ env.RELEASE_TAG }}
+          body: ${{ github.event.inputs.release_notes }}
           draft: false
           prerelease: false
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          fail_on_unmatched_files: false
