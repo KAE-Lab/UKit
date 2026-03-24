@@ -107,7 +107,7 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
             <div id="map"></div>
             <script>
                 var map = L.map('map', {zoomControl: false}).setView([${lat}, ${lng}], 16);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                     maxZoom: 19
                 }).addTo(map);
 
