@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
@@ -16,6 +16,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const AppContextValues = useContext(AppContext) as any;
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
+    const insets = useSafeAreaInsets();
 
     const [libraries, setLibraries] = useState<LibraryInfo[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -233,7 +234,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingTop: 115, paddingVertical: tokens.space.sm, flexGrow: 1 }}
+                    contentContainerStyle={{ paddingTop: (insets.top || 0) + 70, paddingVertical: tokens.space.sm, flexGrow: 1 }}
                     renderItem={renderLibraryCard}
                     ListEmptyComponent={
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.lg, marginTop: tokens.space.xxl }}>

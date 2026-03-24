@@ -6,6 +6,7 @@ import moment from 'moment';
 import Collapsible from 'react-native-collapsible';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PropTypes from 'prop-types';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../shared/theme/Theme';
 import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
@@ -289,9 +290,13 @@ export class ScheduleList extends React.Component {
 
         if (this.state.schedule === null) {
             content = (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 110 }}>
-                    <ActivityIndicator style={{ margin: tokens.space.lg }} size="large" color={theme.primary} animating={true} />
-                </View>
+                <SafeAreaInsetsContext.Consumer>
+                    {(insets) => (
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: (insets?.top || 0) + 65 }}>
+                            <ActivityIndicator style={{ margin: tokens.space.lg }} size="large" color={theme.primary} animating={true} />
+                        </View>
+                    )}
+                </SafeAreaInsetsContext.Consumer>
             );
         } else if (this.state.schedule instanceof Array && mode === 'day') {
             let daySchedule = this.state.schedule;

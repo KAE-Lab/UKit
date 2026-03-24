@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
 import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 
 import { CrousService, CrousRestaurant } from './CrousService';
@@ -14,6 +14,7 @@ const defaultImage = require('../../../assets/images/default_resto.png');
 function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const AppContextValues = useContext(AppContext) as any;
     const theme = style.Theme[AppContextValues.themeName];
+    const insets = useSafeAreaInsets();
 
     const [restaurants, setRestaurants] = useState<CrousRestaurant[]>([]);
     const [loading, setLoading] = useState(true);
@@ -74,7 +75,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingTop: 115, paddingVertical: tokens.space.sm }}
+                    contentContainerStyle={{ paddingTop: (insets.top || 0) + 70, paddingVertical: tokens.space.sm }}
                     renderItem={({ item }) => (
                         <TouchableOpacity 
                             activeOpacity={0.9}
