@@ -17,13 +17,7 @@
     "production": {
       "android": {
         "track": "production",
-        "releaseStatus": "draft",
-        "releaseNotes": [
-          {
-            "language": "fr-FR",
-            "text": ""
-          }
-        ]
+        "releaseStatus": "draft"
       }
     }
   }

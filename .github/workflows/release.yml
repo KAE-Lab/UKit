@@ -84,11 +84,6 @@ jobs:
             echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
           fi
 
-      - name: Inject Release Notes into eas.json
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.build_production == 'true'
-        run: |
-          jq --arg notes "${{ github.event.inputs.release_notes }}" '.submit.production.android.releaseNotes[0].text = $notes' eas.json > eas.tmp.json && mv eas.tmp.json eas.json
-
       - name: Build and Auto-Submit to Google Play
         if: github.event.inputs.build_production == 'true'
         run: eas build --platform android --profile production --non-interactive --auto-submit
