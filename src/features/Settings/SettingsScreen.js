@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, SafeAreaInsetsContext} from 'react-native-safe-area-context';
 import { Linking, ScrollView, Text, View } from 'react-native';
 import * as Calendar from 'expo-calendar';
 
@@ -141,14 +141,16 @@ class Settings extends React.Component {
         const lastSyncDate = SettingsManager.getLastSyncDate();
 
         return (
-            <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-                <ScrollView
-                    style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingTop: 50 }}
-                    showsVerticalScrollIndicator={false}
-                    bounces={false}
-                    overScrollMode="never"
-                >
+            <SafeAreaInsetsContext.Consumer>
+                {(insets) => (
+                    <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
+                        <ScrollView
+                            style={{ flex: 1 }}
+                            contentContainerStyle={{ paddingTop: (insets?.top || 0) + 50 }}
+                            showsVerticalScrollIndicator={false}
+                            bounces={false}
+                            overScrollMode="never"
+                        >
 
                     {/* ── Affichage ─────────────────────────────────────── */}
                     <SettingsTextHeader theme={themeSettings} text={Translator.get('DISPLAY')} />
@@ -249,6 +251,8 @@ class Settings extends React.Component {
                     <SettingsCalendarPopup theme={themeSettings} popupVisible={this.state.calendarDialogVisible} popupClose={this.closeCalendarDialog} setCalendar={this.setCalendar} selectedCalendar={this.state.selectedCalendar} />
                 </ScrollView>
             </SafeAreaView>
+                )}
+            </SafeAreaInsetsContext.Consumer>
         );
     }
 }

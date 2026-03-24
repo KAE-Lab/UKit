@@ -1,7 +1,7 @@
 import React, { useState, useRef, useContext } from 'react';
 import { ActivityIndicator, Linking, Platform, TouchableOpacity, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import style, { tokens } from '../../shared/theme/Theme';
@@ -19,6 +19,7 @@ const entrypoints = {
 function WebBrowserScreen({ navigation, route, headerPadding }) {
 	const { themeName } = useContext(AppContext);
 	const webViewRef = useRef(null);
+	const insets = useSafeAreaInsets();
 
 	let initialUri = URL.UKIT_WEBSITE;
 	if (route.params) {
@@ -100,8 +101,8 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 	};
 
 	return (
-		<SafeAreaView edges={['left', 'right','top']} style={{ flex: 1, backgroundColor: theme.background }}>
-            <View style={[{ flex: 1 }, { paddingTop: 65}]}>
+		<SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
+            <View style={{ flex: 1, paddingTop: (insets.top || 0) + 65 }}>
                 <WebView
 				ref={webViewRef}
 				style={{ flex: 1, backgroundColor: theme.background }}

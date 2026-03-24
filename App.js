@@ -19,6 +19,7 @@ import { Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
 import { DataManager } from './src/shared/services/DataService';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -136,10 +137,12 @@ function cacheImages(images) {
 
 export default function App() {
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <AnimatedAppLoader>
-                <RootContainer />
-            </AnimatedAppLoader>
-        </GestureHandlerRootView>
+		<SafeAreaProvider>
+			<GestureHandlerRootView style={{ flex: 1 }}>
+				<AnimatedAppLoader>
+					<RootContainer />
+				</AnimatedAppLoader>
+			</GestureHandlerRootView>
+		</SafeAreaProvider>
     );
 }

@@ -34,7 +34,7 @@ export default (props) => {
 	const theme = Style.Theme[themeName];
 
 	return (
-		<View style={{ flex: 1, marginTop: StatusBar.currentHeight }}>
+		<View style={{ flex: 1 }}>
 			<AppContextProvider value={{ themeName, groupName, filters }}>
 				<StatusBar />
 				{isFirstLoad ? <WelcomeScreen /> : <Drawer background={theme.background} />}
