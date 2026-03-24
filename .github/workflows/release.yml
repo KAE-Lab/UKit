@@ -56,7 +56,7 @@ jobs:
           TAG="${{ github.event.inputs.target_tag }}"
           CLEAN_VERSION=${TAG#v}
 
-          npm version $CLEAN_VERSION --no-git-tag-version
+          npm version $CLEAN_VERSION --no-git-tag-version --allow-same-version
 
           if [ -f "app.config.js" ]; then
             sed -i -E "s/version: ['\"][0-9]+\.[0-9]+\.[0-9]+['\"]/version: '$CLEAN_VERSION'/g" app.config.js
