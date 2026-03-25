@@ -58,6 +58,7 @@ export class DayWeek extends React.Component {
     static propTypes = {
         schedule: PropTypes.object.isRequired,
         theme: PropTypes.object.isRequired,
+        fallbackDate: PropTypes.object,
     };
 
     constructor(props) {
@@ -73,7 +74,33 @@ export class DayWeek extends React.Component {
 
     render() {
         const { schedule, theme, navigation } = this.props;
-        const title = upperCaseFirstLetter(moment(schedule.date).format('dddd DD/MM'));
+
+        let dateStr = schedule.date || schedule.day || schedule.dateString || schedule.name;
+        
+        if (!dateStr && schedule.courses && schedule.courses.length > 0) {
+            const firstCourse = schedule.courses[0];
+            if (firstCourse.date && firstCourse.date.start) {
+                dateStr = firstCourse.date.start;
+            }
+        }
+
+        let parsedDate = moment.invalid();
+        if (dateStr) {
+            parsedDate = moment(dateStr, ['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY/MM/DD', moment.ISO_8601]);
+        }
+        
+        if (!parsedDate.isValid() && this.props.fallbackDate) {
+            parsedDate = moment(this.props.fallbackDate);
+        }
+
+        const title = parsedDate.isValid() 
+            ? upperCaseFirstLetter(parsedDate.format('dddd DD/MM')) 
+            : 'Date inconnue';
+
+        const activeCourses = schedule.courses ? schedule.courses.filter(c => c.category !== 'nocourse') : [];
+        const courseCount = activeCourses.length;
+
+        const groupedCourses = groupOverlappingCourses(activeCourses);
 
         return (
             <View style={{ marginBottom: tokens.space.sm }}>
@@ -87,17 +114,35 @@ export class DayWeek extends React.Component {
                         justifyContent: 'space-between' 
                     }}
                 >
-                    <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: theme.font }}>{title}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: theme.font }}>
+                            {title}
+                        </Text>
+                        {courseCount > 0 && (
+                            <View style={{
+                                backgroundColor: theme.accent ? theme.accent + '20' : theme.primary + '20',
+                                borderRadius: tokens.radius.pill,
+                                paddingHorizontal: 8,
+                                paddingVertical: 2,
+                                marginLeft: tokens.space.sm
+                            }}>
+                                <Text style={{ color: theme.accent ?? theme.primary, fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.bold }}>
+                                    {courseCount} cours
+                                </Text>
+                            </View>
+                        )}
+                    </View>
                     <MaterialCommunityIcons name={this.state.expand ? 'chevron-up' : 'chevron-down'} size={24} color={theme.fontSecondary} />
                 </TouchableOpacity>
+                
                 <Collapsible collapsed={!this.state.expand}>
-                    {schedule.courses.length === 0 ? (
+                    {groupedCourses.length === 0 ? (
                         <View style={{ padding: tokens.space.md, alignItems: 'center' }}>
                             <Text style={{ color: theme.fontSecondary }}>{Translator.get('NO_CLASS_THIS_DAY')}</Text>
                         </View>
                     ) : (
-                        schedule.courses.map((course, index) => (
-                            <CourseRow key={index} data={course} theme={theme} navigation={navigation} />
+                        groupedCourses.map((group, index) => (
+                            <CourseGroupCarousel key={index} coursesGroup={group} theme={theme} />
                         ))
                     )}
                 </Collapsible>
@@ -322,6 +367,9 @@ export class ScheduleList extends React.Component {
             );
         } else if (this.state.schedule instanceof Array && mode === 'week') {
             const isFavorite = this.state.groupName === this.state.groupName;
+            const targetYear = this.state.target.year || moment().year();
+            const targetWeek = this.state.target.week;
+
             content = (
                 <Animated.ScrollView 
                     showsVerticalScrollIndicator={false} 
@@ -331,14 +379,18 @@ export class ScheduleList extends React.Component {
                     scrollEventThrottle={16}
                 >
                     {listHeader}
-                    {this.state.schedule.map((scheduleItem, index) => (
-                        <DayWeek
-                            key={index}
-                            schedule={this.computeScheduleWeek(scheduleItem, isFavorite)}
-                            navigation={navigation}
-                            theme={theme}
-                        />
-                    ))}
+                    {this.state.schedule.map((scheduleItem, index) => {
+                        const fallbackDate = moment().year(targetYear).isoWeek(targetWeek).isoWeekday(index + 1);
+                        return (
+                            <DayWeek
+                                key={index}
+                                schedule={this.computeScheduleWeek(scheduleItem, isFavorite)}
+                                navigation={navigation}
+                                theme={theme}
+                                fallbackDate={fallbackDate}
+                            />
+                        );
+                    })}
                 </Animated.ScrollView>
             );
         }
