@@ -35,6 +35,18 @@ export default function CrousMenuScreen({ route, navigation }: any) {
         loadMenu();
     }, []);
 
+    useEffect(() => {
+        if (menus.length > 0 && flatListRef.current) {
+            setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                    index: selectedIndex,
+                    animated: true,
+                    viewPosition: 0.5
+                });
+            }, 100);
+        }
+    }, [selectedIndex, menus])
+
     const loadMenu = async () => {
         setLoading(true);
         const data = await CrousService.fetchRestaurantMenu(restaurantId);
