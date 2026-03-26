@@ -94,52 +94,39 @@ export default function CrousMenuScreen({ route, navigation }: any) {
     const getDishIcon = (dishName: string) => {
         const str = dishName.toLowerCase();
 
-        // 1. Infos, menus et signalétiques
-        if (/(fermé|ferme\b|fermée|non communiqué|modification|^ou$|structure|réserve|exceptionnel|formule|le menu)/.test(str)) return 'information-outline';
+        const has = (words: string) => {
+            return new RegExp(`(^|[\\s'’\\-])(${words})(s|x)?([\\s'’.,;!?:\\-]|$)`, 'i').test(str);
+        };
 
-        // 2. Végétarien strict (intercepte avant les viandes pour les "tartes veggie", "sans porc", etc.)
-        if (/(bretonne|sans viande|sans porc|végé|veggie|vegan|steak végétal|tofu|soja|falafel)/.test(str)) return 'leaf';
+        if (has('fermé|ferme|fermée|non communiqué|modification|ou|structure|réserve|exceptionnel|formule|le menu')) return 'information-outline';
 
-        // 3. Boissons
-        if (/(boisson|soda|coca|fanta|sprite)/.test(str) || /(^|\s|')(eau|jus|thé|the|café|cafe)(s)?(\s|$|[.,])/i.test(str)) return 'bottle-soda';
+        if (has('bretonne|sans viande|sans porc|végé|veggie|vegan|steak végétal|tofu|soja|falafel')) return 'leaf';
 
-        // 4. Fast-Food, Sandwicherie & Snack
-        if (/(pizza|pasta box)/.test(str)) return 'pizza';
-        if (/(frite|chips|snack)/.test(str)) return 'french-fries';
-        if (/(burger|hamburger)/.test(str)) return 'hamburger';
-        if (/(tacos|fajita)/.test(str)) return 'taco';
-        if (/(sandwich|baguette|panini|wrap|croque|hot-dog)/.test(str)) return 'baguette';
+        if (has('boisson|soda|coca|fanta|sprite|eau|jus|thé|the|café|cafe')) return 'bottle-soda';
 
-        // 5. Protéines (Viandes, Poissons, Oeufs)
-        if (/(poulet|boeuf|bœuf|porc|veau|agneau|saucisse|viande|steak|lardon|chorizo|dinde|canard|merguez|filet|rôti|haché|kebab|jambon|bacon|cordon bleu|boulette|escalope|pâté|charcuterie)/.test(str)) return 'food-drumstick';
-        if (/(poisson|saumon|cabillaud|colin|merlu|crevette|calamar|thon|truite|lieu|moule|fruit de mer|hoki|encornet|surimi)/.test(str)) return 'fish';
-        if (/(oeuf|œuf|omelette)/.test(str)) return 'egg';
+        if (has('pizza|pasta box')) return 'pizza';
+        if (has('frite|chips|snack')) return 'french-fries';
+        if (has('burger|hamburger')) return 'hamburger';
+        if (has('tacos|fajita')) return 'taco';
+        if (has('sandwich|baguette|panini|wrap|croque|hot-dog')) return 'baguette';
 
-        // 6. Entrées & Soupes
-        if (/(entrée|soupe|potage|velouté|bouillon|gaspacho|crudité|hors d)/.test(str)) return 'bowl-mix';
+        if (has('poulet|boeuf|bœuf|porc|veau|agneau|saucisse|viande|steak|lardon|chorizo|dinde|canard|merguez|filet|rôti|haché|kebab|jambon|bacon|cordon bleu|boulette|escalope|pâté|charcuterie')) return 'food-drumstick';
+        if (has('poisson|saumon|cabillaud|colin|merlu|crevette|calamar|thon|truite|lieu|moule|fruit de mer|hoki|encornet|surimi')) return 'fish';
+        if (has('oeuf|œuf|omelette')) return 'egg';
 
-        // 7. Fromages
-        if (/(fromage|brie|camembert|chèvre|chevre|mozza|emmental|cantal|gruyère|parmesan|kiri|roquefort)/.test(str)) return 'cheese';
+        if (has('entrée|soupe|potage|velouté|bouillon|gaspacho|crudité|hors d')) return 'bowl-mix';
 
-        // 8. Desserts, Fruits, Yaourts et Viennoiseries
-        if (/(viennoiserie|croissant|chocolatine|brioche)/.test(str)) return 'food-croissant';
-        
-        // Fruits (intercepte avant les desserts pour les "compotes de fruits", "tarte aux pommes", etc.)
-        if (/(fruit|pomme(?!s?\s+de\s+terre)|banane|orange|kiwi|ananas|poire|fraise|framboise|pêche|abricot|raisin|mangue|melon|pastèque|citron|clémentine|compote)/.test(str)) return 'food-apple';
-        
-        // Yaourts et desserts lactés
-        if (/(yaourt|lacté|petit suisse|fromage blanc|skyr|faisselle|glace|crème)/.test(str)) return 'silverware-spoon';
-        
-        // Vrais gâteaux et confiseries
-        if (/(dessert|tarte|pâtisserie|gâteau|cookie|muffin|brownie|entremet|flan|caramel|vanille|chocolat|bonbon|barre|confiserie|macaron|gaufre|crêpe)/.test(str)) return 'cupcake';
-        
-        // 9. Accompagnements : Légumes & Salades
-        if (/(salade|légume|haricot|lentille|pois|carotte|brocoli|chou|courgette|aubergine|épinard|poireau|champignon|céleri|ratatouille|tomate|concombre|maïs)/.test(str)) return 'leaf';
+        if (has('fromage|brie|camembert|chèvre|chevre|mozza|emmental|cantal|gruyère|parmesan|kiri|roquefort')) return 'cheese';
 
-        // 10. Accompagnements : Féculents
-        if (/(coquillettes|riz|pâte|spaghetti|macaroni|penne|ravioli|semoule|boulgour|blé|quinoa|pomme de terre|purée|gnocchi|nouille)/.test(str)) return 'pasta';
+        if (has('viennoiserie|croissant|chocolatine|brioche')) return 'food-croissant';
+        if (has('fruit|pomme|banane|orange|kiwi|ananas|poire|fraise|framboise|pêche|abricot|raisin|mangue|melon|pastèque|citron|clémentine|compote') && !has('pomme de terre')) return 'food-apple';
+        if (has('yaourt|lacté|petit suisse|fromage blanc|skyr|faisselle|glace|crème')) return 'silverware-spoon';
+        if (has('dessert|tarte|pâtisserie|gâteau|cookie|muffin|brownie|entremet|flan|caramel|vanille|chocolat|bonbon|barre|confiserie|macaron|gaufre|crêpe')) return 'cupcake';
 
-        // Fallback propre et discret
+        if (has('salade|légume|haricot|lentille|pois|carotte|brocoli|chou|courgette|aubergine|épinard|poireau|champignon|céleri|ratatouille|tomate|concombre|maïs')) return 'leaf';
+
+        if (has('coquillette|riz|pâte|spaghetti|macaroni|penne|ravioli|semoule|boulgour|blé|quinoa|pomme de terre|purée|gnocchi|nouille')) return 'pasta';
+
         return 'circle-medium';
     };
 
