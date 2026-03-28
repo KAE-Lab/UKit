@@ -43,6 +43,15 @@ UKit a été initialement pensé et développé par ses créateurs originaux. Un
 
 Le projet est aujourd'hui repris, maintenu et développé par l'organisation KAE Lab. Un remerciement particulier à Jean pour sa confiance et pour nous avoir transmis les clés de l'application.
 
+## Contact
+
+Pour toute question sur le projet, un bug à remonter ou une proposition d'amélioration, vous pouvez passer par :
+
+* **Email** : contact@kaelab.dev
+* **GitHub Issues** : Ouvrir un ticket directement sur le dépôt pour un suivi public.
+
+L'organisation KAE Lab centralise la maintenance et les retours techniques.
+
 ## Licence
 
 Distribué sous licence Apache 2.0. Voir [LICENSE](LICENSE) pour plus de détails.
