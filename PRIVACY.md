@@ -8,4 +8,5 @@ L'application UKit Bordeaux est gérée par l'organisation **KAE Lab**.
     * **OpenStreetMap** : Pour l'affichage des fonds de carte.
     * **Affluence** : Pour consulter l'occupation des bibliothèques en temps réel.
     * **Croustillant** : Pour la récupération des menus des restaurants universitaires (CROUS).
+* **Conservation des données** : Puisqu'aucune donnée n'est collectée, aucune donnée n'est conservée par nos services.
 * **Contact** : Pour toute question relative à cette politique, vous pouvez nous contacter à l'adresse : **contact@kaelab.dev**.
