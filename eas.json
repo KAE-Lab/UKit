@@ -6,6 +6,9 @@
     "preview": {
       "android": {
         "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
       }
     },
     "development": {
@@ -18,7 +21,14 @@
       "android": {
         "track": "production",
         "releaseStatus": "draft"
+      },
+      "ios": {
+        "appleId": "kylian-mltre@gmail.com",
+        "ascAppId": "1394708917"
       }
     }
+  },
+  "cli": {
+    "appVersionSource": "remote"
   }
 }

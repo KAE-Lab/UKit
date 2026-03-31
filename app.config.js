@@ -22,7 +22,7 @@ export default {
 	ios: {
 		icon: './assets/icons/icon.png',
 		supportsTablet: true,
-		bundleIdentifier: 'org.kaelab.ukit',
+		bundleIdentifier: 'com.bordeaux.ukit',
 		infoPlist: {
 			NSCalendarsUsageDescription:
 				'This app use calendar access to synchronize your group calendar to a external calendar (only if the feature is enabled in Settings).',
