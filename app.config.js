@@ -8,7 +8,7 @@ export default {
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
-	version: '5.5.1',
+	version: '5.5.2',
 	versionCode: 550,
 	orientation: 'portrait',
 	primaryColor: '#006F9F',
