@@ -12,7 +12,7 @@ on:
         type: boolean
         default: false
       build_production:
-        description: 'Build and submit production to Google Play ?'
+        description: 'Build production for iOS & Android ?'
         type: boolean
         default: false
       target_tag:
@@ -21,7 +21,7 @@ on:
         required: true
         default: ''
       release_notes:
-        description: 'Release notes for Google Play'
+        description: 'Release notes for GitHub Release'
         type: string
         required: true
         default: 'Améliorations de la stabilité et corrections de bugs.'
@@ -84,9 +84,9 @@ jobs:
             echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
           fi
 
-      - name: Build and Auto-Submit to Google Play
+      - name: Build for Production (iOS & Android)
         if: github.event.inputs.build_production == 'true'
-        run: eas build --platform android --profile production --non-interactive --auto-submit
+        run: eas build --platform all --profile production --non-interactive --auto-submit
 
       - name: Build APK for GitHub Release
         id: build_eas_preview
