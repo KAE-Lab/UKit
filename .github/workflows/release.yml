@@ -83,6 +83,9 @@ jobs:
           else
             echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
           fi
+      
+      - name: Create Google Play Key File
+        run: echo '${{ secrets.GOOGLE_PLAY_KEY }}' > google-play-key.json
 
       - name: Build for Production (iOS & Android)
         if: github.event.inputs.build_production == 'true'

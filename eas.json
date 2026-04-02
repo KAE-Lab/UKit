@@ -20,7 +20,8 @@
     "production": {
       "android": {
         "track": "production",
-        "releaseStatus": "draft"
+        "releaseStatus": "draft",
+        "serviceAccountKeyPath": "google-play-key.json"
       },
       "ios": {
         "appleId": "kylian-mltre@gmail.com",
