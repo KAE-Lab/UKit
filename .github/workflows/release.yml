@@ -33,6 +33,11 @@ jobs:
   build_and_release:
     name: Build, Release and Submit
     runs-on: ubuntu-latest
+    env:
+      _JAVA_OPTIONS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m"
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+      CI: 1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
