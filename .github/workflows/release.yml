@@ -43,6 +43,12 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
       - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
         with:
@@ -87,20 +93,21 @@ jobs:
       - name: Create Google Play Key File
         run: echo '${{ secrets.GOOGLE_PLAY_KEY }}' > google-play-key.json
 
-      - name: Build for Production (iOS & Android)
+      - name: Build and Auto-Submit Production iOS
         if: github.event.inputs.build_production == 'true'
-        run: eas build --platform all --profile production --non-interactive --auto-submit
+        run: eas build --platform ios --profile production --non-interactive --auto-submit --no-wait
+
+      - name: Build Production Android
+        if: github.event.inputs.build_production == 'true'
+        run: eas build --platform android --profile production --local --non-interactive --output ./app-production.aab
+
+      - name: Submit Production Android
+        if: github.event.inputs.build_production == 'true'
+        run: eas submit --platform android --profile production --path ./app-production.aab --non-interactive
 
       - name: Build APK for GitHub Release
-        id: build_eas_preview
         if: github.event.inputs.skip_build != 'true'
-        run: eas build --platform android --profile preview --non-interactive --wait
-
-      - name: Download APK from Expo
-        if: github.event.inputs.skip_build != 'true'
-        run: |
-          URL=$(eas build:list --platform android --profile preview --status finished --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
-          curl -L "$URL" -o ukit-release.apk
+        run: eas build --platform android --profile preview --local --non-interactive --output ./ukit-release.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
