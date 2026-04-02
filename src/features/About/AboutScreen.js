@@ -134,7 +134,7 @@ class AboutScreen extends React.Component {
                     </Section>
 
                     <Section title={Translator.get('CONTACT_US')} icon="email-outline" theme={theme}>
-                        <URLButton url={URL.TWITTER} title="Twitter" theme={theme} />
+                        <URLButton url={URL.CONTACT_EMAIL} title="contact@kaelab.dev" theme={theme} />
                         <URLButton url={URL.UKIT_WEBSITE} title={Translator.get('WEBSITE')} theme={theme} />
                         <URLButton url={URL.KAELAB_WEBSITE} title={Translator.get('COMPANY_WEBSITE')} theme={theme} />
                     </Section>
