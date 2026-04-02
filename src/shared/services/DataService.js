@@ -11,11 +11,11 @@ moment.locale('fr');
 
 export const URL = {
     MAP: 'https://www.google.com/maps/',
-    TWITTER: 'https://twitter.com/HackJack_',
-    UKIT_WEBSITE: 'https://ukit.illumye.me', // https://ukit-bordeaux.fr
+    CONTACT_EMAIL: 'mailto:contact@kaelab.dev',
+    UKIT_WEBSITE: 'https://ukit-bordeaux.fr',
     KAELAB_WEBSITE: 'https://kaelab.dev',
-    LEGAL_NOTICE: 'https://ukit-bordeaux.fr/policies/privacy',
-    VERSION_STORE: 'https://raw.githubusercontent.com/kb-dev/UKit/master/VERSION',
+    LEGAL_NOTICE: 'https://github.com/KAE-Lab/UKit/blob/master/PRIVACY.md',
+    VERSION_STORE: 'https://raw.githubusercontent.com/KAE-Lab/UKit/master/VERSION',
     GOOGLE_APP: 'https://play.google.com/store/apps/details?id=com.bordeaux1.emplois',
     APPLE_APP: 'https://apps.apple.com/fr/app/ukit-bordeaux/id1394708917',
 };
@@ -96,7 +96,7 @@ class FetchManagerService {
             },
             data: qs.stringify(data),
         };
-        
+
         try {
             const response = await axios.request(options);
             if (response?.status !== 200) return null;
@@ -173,11 +173,11 @@ class FetchManagerService {
             },
             data: qs.stringify(data),
         };
-        
+
         try {
             const response = await axios.request(options);
             if (response?.status !== 200) return null;
-            
+
             const eventList = Array.from({ length: 6 }).map((_, i) => ({
                 dayNumber: String(i + 1),
                 dayTimestamp: searchDate.clone().startOf('week').add(i, 'day').unix(),
@@ -191,8 +191,8 @@ class FetchManagerService {
                 const endDate = moment(event.end);
                 const day = upperCaseFirstLetter(moment(startDate).format('dddd L'));
                 const dayNumberInt = moment(startDate).isoWeekday();
-                
-                if(dayNumberInt < 1 || dayNumberInt > 6) continue;
+
+                if (dayNumberInt < 1 || dayNumberInt > 6) continue;
 
                 const dayNumber = String(dayNumberInt);
                 const starttime = startDate.format('HH:mm');
