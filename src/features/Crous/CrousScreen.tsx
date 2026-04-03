@@ -3,6 +3,7 @@ import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Im
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
+import Translator from '../../shared/i18n/Translator';
 
 import { CrousService, CrousRestaurant } from './CrousService';
 import style, { tokens } from '../../shared/theme/Theme';
@@ -75,7 +76,28 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingTop: (insets.top || 0) + 70, paddingVertical: tokens.space.sm }}
+                    contentContainerStyle={{ paddingTop: (insets.top || 0) + 70, paddingVertical: tokens.space.sm, flexGrow: 1 }}
+                    ListEmptyComponent={() => (
+                        <View style={{ 
+                            alignItems: 'center', 
+                            paddingVertical: tokens.space.xl, 
+                            paddingHorizontal: tokens.space.lg,
+                            marginHorizontal: tokens.space.sm,
+                            backgroundColor: theme.cardBackground, 
+                            borderRadius: tokens.radius.lg, 
+                            borderWidth: 1, 
+                            borderColor: theme.border 
+                        }}>
+                            <MaterialCommunityIcons name="store-off-outline" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.sm }} />
+                            <Text style={{ 
+                                color: theme.fontSecondary, 
+                                fontSize: tokens.fontSize.md,
+                                textAlign: 'center'
+                            }}>
+                                {Translator.get('NO_RU_NEARBY')}
+                            </Text>
+                        </View>
+                    )}
                     renderItem={({ item }) => (
                         <TouchableOpacity 
                             activeOpacity={0.9}

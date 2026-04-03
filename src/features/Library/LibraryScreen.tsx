@@ -236,20 +236,27 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingTop: (insets.top || 0) + 70, paddingVertical: tokens.space.sm, flexGrow: 1 }}
                     renderItem={renderLibraryCard}
-                    ListEmptyComponent={
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.lg, marginTop: tokens.space.xxl }}>
-                            <MaterialCommunityIcons name="bookshelf" size={48} color={theme.border} />
+                    ListEmptyComponent={() => (
+                        <View style={{ 
+                            alignItems: 'center', 
+                            paddingVertical: tokens.space.xl, 
+                            paddingHorizontal: tokens.space.lg,
+                            marginHorizontal: tokens.space.sm,
+                            backgroundColor: theme.cardBackground, 
+                            borderRadius: tokens.radius.lg, 
+                            borderWidth: 1, 
+                            borderColor: theme.border 
+                        }}>
+                            <MaterialCommunityIcons name="bookshelf" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.sm }} />
                             <Text style={{ 
                                 color: theme.fontSecondary, 
-                                marginTop: tokens.space.md, 
-                                textAlign: 'center',
-                                width: '100%',
-                                lineHeight: 22,
+                                fontSize: tokens.fontSize.md,
+                                textAlign: 'center'
                             }}>
                                 {Translator.get('NO_BU_NEARBY')}
                             </Text>
                         </View>
-                    }
+                    )}
                 />
             </View>
         </SafeAreaView>

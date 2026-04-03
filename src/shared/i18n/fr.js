@@ -160,4 +160,5 @@ export default {
 	ROOM: 'Salle',
 	UNKNOWN_SUBJECT: 'Cours inconnu',
 	SETTINGS_LOAD_ERROR: 'Impossible de charger les paramètres',
+	NO_RU_NEARBY: 'Aucun restaurant universitaire proche.',
 };
