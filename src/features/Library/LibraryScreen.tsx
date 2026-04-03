@@ -55,10 +55,9 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                 userLng = -0.5954;
             }
 
-
             const fetchedLibs = await LibraryService.fetchNearbyLibraries(userLat, userLng);
 
-            const nearbyLibs = fetchedLibs.slice(0, 15);
+            const nearbyLibs = fetchedLibs;
             setLibraries(nearbyLibs);
 
             const affluencesPromises = nearbyLibs.map(async (lib) => {
