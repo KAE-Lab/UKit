@@ -2,9 +2,9 @@ import 'dotenv/config';
 import { version } from 'react';
 
 export default {
-	name: 'Ukit',
-	description: 'Ukit, a companion app for student of University of Bordeaux',
-	slug: 'Ukit',
+	name: 'UKit',
+	description: 'UKit, a companion app for student of University of Bordeaux',
+	slug: 'UKit',
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
