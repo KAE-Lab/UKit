@@ -3,6 +3,9 @@ import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Im
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 import { AppContext } from '../../shared/services/AppCore';
 import style, { tokens } from '../../shared/theme/Theme';
@@ -23,6 +26,46 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const [affluences, setAffluences] = useState<Record<string, AffluencesData>>({});
     const [locationError, setLocationError] = useState(false);
 
+    const [favorites, setFavorites] = useState<string[]>([]);
+
+    useFocusEffect(
+        useCallback(() => {
+            const loadFavorites = async () => {
+                try {
+                    const savedFavs = await AsyncStorage.getItem('library_favorites');
+                    if (savedFavs) {
+                        setFavorites(JSON.parse(savedFavs));
+                    }
+                } catch (e) {
+                    console.error("Erreur de lecture des favoris", e);
+                }
+            };
+            loadFavorites();
+        }, [])
+    );
+
+    const toggleFavorite = async (id: string) => {
+        try {
+            let newFavs = [...favorites];
+            if (newFavs.includes(id)) {
+                newFavs = newFavs.filter(favId => favId !== id);
+            } else {
+                newFavs.push(id);
+            }
+            setFavorites(newFavs);
+            await AsyncStorage.setItem('library_favorites', JSON.stringify(newFavs));
+        } catch (e) {
+            console.error("Erreur de sauvegarde des favoris", e);
+        }
+    };
+
+    const sortedLibraries = [...libraries].sort((a, b) => {
+        const aFav = favorites.includes(a.id);
+        const bFav = favorites.includes(b.id);
+        if (aFav && !bFav) return -1;
+        if (!aFav && bFav) return 1;
+        return (a.distance || 0) - (b.distance || 0);
+    });
 
     useEffect(() => {
         loadLibraries();
@@ -133,14 +176,27 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                 <View style={{ padding: tokens.space.md }}>
                     
                     {/* Titre */}
-                    <Text style={{ 
-                        fontSize: tokens.fontSize.lg, 
-                        fontWeight: tokens.fontWeight.bold as any, 
-                        color: theme.font,
-                        marginBottom: tokens.space.xs
-                    }}>
-                        {item.name}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
+                        <Text style={{ 
+                            fontSize: tokens.fontSize.lg, 
+                            fontWeight: tokens.fontWeight.bold as any, 
+                            color: theme.font,
+                            flexShrink: 1
+                        }}>
+                            {item.name}
+                        </Text>
+                        <TouchableOpacity 
+                            onPress={() => toggleFavorite(item.id)}
+                            hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }}
+                            style={{ marginLeft: 6 }}
+                        >
+                            <MaterialCommunityIcons 
+                                name={favorites.includes(item.id) ? "star" : "star-outline"} 
+                                size={22} 
+                                color={favorites.includes(item.id) ? theme.primary : theme.fontSecondary} 
+                            />
+                        </TouchableOpacity>
+                    </View>
                     
                     {/* Ligne : Ville + Badge de Distance */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
@@ -228,7 +284,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
-                    data={libraries}
+                    data={sortedLibraries}
                     onScroll={onAnimatedScroll}
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
