@@ -6,6 +6,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
 import { AppContext } from '../../shared/services/AppCore';
 import style, { tokens } from '../../shared/theme/Theme';
@@ -149,6 +150,10 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
         const imageSource = item.imageUrl ? { uri: item.imageUrl } : defaultLibraryImage;
         
         return (
+            <Reanimated.View 
+                entering={FadeIn}
+                layout={LinearTransition.springify()}
+            >
             <TouchableOpacity 
                 activeOpacity={0.9}
                 onPress={() => navigation.navigate('LibraryDetails', { library: item, affluence: affluenceData })}
@@ -267,6 +272,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
 
                 </View>
             </TouchableOpacity>
+        </Reanimated.View>
         );
     };
 

@@ -6,6 +6,7 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
 import Translator from '../../shared/i18n/Translator';
 import { CrousService, CrousRestaurant } from './CrousService';
@@ -149,6 +150,10 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                         </View>
                     )}
                     renderItem={({ item }) => (
+                        <Reanimated.View 
+                            entering={FadeIn}
+                            layout={LinearTransition.springify()}
+                        >
                         <TouchableOpacity 
                             activeOpacity={0.9}
                             onPress={() => navigation.navigate('CrousMenu', { 
@@ -254,6 +259,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 </View>
                             </View>
                         </TouchableOpacity>
+                    </Reanimated.View>
                     )}
                 />
             </View>
