@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
     Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback,
     ScrollView, Platform, FlatList, TextInput, KeyboardAvoidingView, Keyboard, SafeAreaView
@@ -7,6 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../../shared/i18n/Translator';
 import { SettingsManager } from '../../shared/services/AppCore';
+import { DataManager } from '../../shared/services/DataService';
 
 // ── Utilitaire Clavier ──────────────────────────────────────────────────
 export const SettingsDismissKeyboard = ({ children }) => (
@@ -77,12 +78,32 @@ export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selecte
 // ── Popup Filtres ───────────────────────────────────────────────────────
 export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterList, filterTextInput, setFilterTextInput, submitFilterTextInput }) => {
     const flatListRef = useRef(null);
-    const scrollToEnd = () => flatListRef.current.scrollToEnd();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [availableUEs, setAvailableUEs] = useState(DataManager.getAvailableUEs());
+    const scrollToEnd = () => flatListRef.current?.scrollToEnd();
+
+    // Subscribe to UE updates
+    React.useEffect(() => {
+        const updateUEs = (ues) => setAvailableUEs([...ues]);
+        DataManager.on('availableUEs', updateUEs);
+        // Refresh on open
+        setAvailableUEs(DataManager.getAvailableUEs());
+    }, [popupVisible]);
     
+    // Filter available UEs based on search query, excluding already-added ones
+    const filteredSuggestions = searchQuery.length > 0
+        ? availableUEs.filter(ue => 
+            ue.toUpperCase().includes(searchQuery.toUpperCase()) && 
+            !filterList.includes(ue)
+          )
+        : [];
+
     const renderFilterItem = ({ item }) => {
-        const removeFilters = () => SettingsManager.removeFilters(item);
+        const removeFilter = () => {
+            SettingsManager.removeFilters(item);
+        };
         return (
-            <TouchableOpacity key={item} onLongPress={removeFilters} style={theme.popup.filters.button}>
+            <TouchableOpacity key={item} onLongPress={removeFilter} style={theme.popup.filters.button}>
                 <Text style={theme.popup.filters.buttonText}>{item}</Text>
             </TouchableOpacity>
         );
@@ -90,6 +111,12 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
 
     const addFilterTextInput = () => {
         submitFilterTextInput();
+        setTimeout(() => scrollToEnd(), 500);
+    };
+
+    const onSuggestionPress = (ue) => {
+        SettingsManager.addFilters(ue);
+        setSearchQuery('');
         setTimeout(() => scrollToEnd(), 500);
     };
 
@@ -105,7 +132,12 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
                                     <MaterialIcons name="close" size={32} style={theme.popup.closeIcon} />
                                 </TouchableOpacity>
                             </View>
-                            <Text style={theme.popup.textDescription}>{Translator.get('REMOVE_FILTER')}</Text>
+
+                            <Text style={theme.popup.textDescription}>
+                                {Translator.get('REMOVE_FILTER')}
+                            </Text>
+
+                            {/* ── Active filters list ── */}
                             <View style={theme.popup.filterListContainer}>
                                 <FlatList
                                     ref={flatListRef}
@@ -118,6 +150,61 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
                                     }
                                 />
                             </View>
+
+                            {/* ── Search / Suggestions ── */}
+                            {availableUEs.length > 0 && (
+                                <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
+                                    <TextInput
+                                        style={[theme.popup.textInput, { marginHorizontal: 0, marginBottom: 8 }]}
+                                        onChangeText={setSearchQuery}
+                                        value={searchQuery}
+                                        placeholder={Translator.get('SEARCH_UE')}
+                                        placeholderTextColor={theme.popup.textInputPlaceholderColor}
+                                        autoCorrect={false}
+                                        keyboardType={Platform.OS === 'ios' ? 'default' : 'visible-password'}
+                                    />
+                                    {filteredSuggestions.length > 0 && (
+                                        <ScrollView
+                                            horizontal
+                                            showsHorizontalScrollIndicator={false}
+                                            style={{ marginBottom: 4 }}
+                                            contentContainerStyle={{ paddingVertical: 4 }}
+                                            keyboardShouldPersistTaps="handled"
+                                        >
+                                            {filteredSuggestions.map((ue) => (
+                                                <TouchableOpacity
+                                                    key={ue}
+                                                    onPress={() => onSuggestionPress(ue)}
+                                                    style={{
+                                                        paddingHorizontal: 12,
+                                                        paddingVertical: 6,
+                                                        borderRadius: 8,
+                                                        marginRight: 8,
+                                                        borderWidth: 1,
+                                                        borderColor: theme.popup.filters.button?.backgroundColor || '#009ee0',
+                                                        backgroundColor: 'transparent',
+                                                    }}
+                                                >
+                                                    <Text style={{
+                                                        fontSize: 12,
+                                                        fontWeight: '600',
+                                                        color: theme.popup.filters.button?.backgroundColor || '#009ee0',
+                                                    }}>
+                                                        {ue}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    )}
+                                    {searchQuery.length > 0 && filteredSuggestions.length === 0 && (
+                                        <Text style={[theme.popup.textDescription, { fontSize: 12, marginBottom: 4 }]}>
+                                            {Translator.get('NO_UE_FOUND')}
+                                        </Text>
+                                    )}
+                                </View>
+                            )}
+
+                            {/* ── Manual input ── */}
                             <View style={theme.popup.filters.footer}>
                                 <TextInput
                                     style={theme.popup.textInput}
@@ -132,7 +219,9 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
                                     <MaterialIcons name="add" size={32} color={theme.popup.textInputIconColor} />
                                 </TouchableOpacity>
                             </View>
-                            <Text style={theme.popup.textDescription}>{Translator.get('FILTERS_ENTER_CODE')}</Text>
+                            <Text style={theme.popup.textDescription}>
+                                {Translator.get('FILTERS_ENTER_CODE')}
+                            </Text>
                         </View>
                     </SettingsDismissKeyboard>
                 </SafeAreaView>

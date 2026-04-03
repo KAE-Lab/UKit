@@ -94,7 +94,7 @@ class FetchManagerService {
                 Accept: 'application/json',
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             },
-            data: qs.stringify(data),
+            data: qs.stringify(data, { arrayFormat: 'repeat' }),
         };
 
         try {
@@ -171,7 +171,7 @@ class FetchManagerService {
                 Accept: 'application/json',
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             },
-            data: qs.stringify(data),
+            data: qs.stringify(data, { arrayFormat: 'repeat' }),
         };
 
         try {
@@ -335,6 +335,7 @@ export const FetchManager = new FetchManagerService();
 class DataManagerService {
     constructor() {
         this._groupList = [];
+        this._availableUEs = [];
         this._subscribers = {};
         this._cacheTimeLimit = 7 * 24 * 60 * 60 * 1000;
     }
@@ -357,6 +358,31 @@ class DataManagerService {
     setGroupList = (newList) => {
         this._groupList = [...newList];
         this.notify('groupList', this._groupList);
+    };
+
+    getAvailableUEs = () => this._availableUEs;
+
+    extractUEsFromCourses = (courses) => {
+        const regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
+        const ueSet = new Set(this._availableUEs);
+        const flatCourses = Array.isArray(courses) ? courses : [];
+
+        for (const item of flatCourses) {
+            // Handle both day courses (flat array) and week courses (array of { courses: [] })
+            const coursesToScan = item.courses ? item.courses : [item];
+            for (const course of coursesToScan) {
+                if (course.subject && course.subject !== 'N/C') {
+                    const match = regexUE.exec(course.subject);
+                    if (match && match.length === 3) {
+                        ueSet.add(match[1]);
+                    }
+                }
+            }
+        }
+
+        const newUEs = [...ueSet].sort();
+        this._availableUEs = newUEs;
+        this.notify('availableUEs', this._availableUEs);
     };
 
     fetchGroupList = async () => {

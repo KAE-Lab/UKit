@@ -24,7 +24,6 @@ class DayView extends React.Component {
 		const days = DayView.generateDays();
 
 		this.state = {
-			groupName: this.props.groupName,
 			currentDay: currentDay,
 			currentDayIndex: days.findIndex((e) => e.isSame(currentDay, 'day')),
 			shownMonth: {
@@ -81,7 +80,7 @@ class DayView extends React.Component {
 	};
 
 	onWeekPress = () => {
-		this.props.navigation.navigate('Week', { groupName: this.state.groupName });
+		this.props.navigation.navigate('Week', { groupName: this.props.groupName });
 	};
 
 	onDayPress = (dayItem) => {
@@ -137,7 +136,7 @@ class DayView extends React.Component {
                     <DayComponent
                         key={`${this.state.days[0].dayOfYear()}-${this.context.themeName}`}
                         day={this.state.selectedDay}
-                        groupName={this.state.groupName}
+                        groupName={this.props.groupName}
                         theme={theme}
                         navigation={this.props.navigation}
                         filtersList={this.context.filters}

@@ -38,6 +38,10 @@ export async function isConnected() {
 
 // ── UTILITAIRES DIVERS ───────────────────────────────────
 export function treatTitle(str) {
+    if (Array.isArray(str)) {
+        return 'Mon Planning';
+    }
+    str = str.replace(/_/g, ' ');
     if (str.length > 18) {
         return str.charAt(18) === ' ' ? `${str.substr(0, 18)}…` : `${str.substr(0, 18)} …`;
     }
@@ -97,7 +101,8 @@ export const CourseManager = {
         return course;
     },
     filterCourse: (isFavorite, course, filtersList) => {
-        if (isFavorite && course.UE !== null && filtersList instanceof Array && filtersList.includes(course.UE)) {
+        if (!isFavorite) return true;
+        if (course.UE !== null && filtersList instanceof Array && filtersList.includes(course.UE)) {
             return false;
         }
         return true;
@@ -171,7 +176,7 @@ class SettingsManagerService {
         this._calendars = [];
         this._firstload = true;
         this._theme = 'light';
-        this._groupName = null;
+        this._favoriteGroups = [];
         this._language = 'fr';
         this._openAppOnFavoriteGroup = true;
         this._filters = [];
@@ -209,8 +214,20 @@ class SettingsManagerService {
     switchFirstLoad = () => { this.setFirstLoad(!this.isFirstLoad()); };
 
     isSynchronizingCalendar = () => this._isSynchronizingCalendar;
-    getGroup = () => this._groupName;
-    setGroup = (newGroup) => { this._groupName = newGroup; this.notify('group', this._groupName); };
+    getFavoriteGroups = () => this._favoriteGroups;
+    addFavoriteGroup = (newGroup) => {
+        if (newGroup && !this._favoriteGroups.includes(newGroup)) {
+            this._favoriteGroups = [...this._favoriteGroups, newGroup];
+            this.notify('favoriteGroups', this._favoriteGroups);
+        }
+    };
+    removeFavoriteGroup = (groupToRemove) => {
+        if (groupToRemove) {
+            this._favoriteGroups = this._favoriteGroups.filter((g) => g !== groupToRemove);
+            this.notify('favoriteGroups', this._favoriteGroups);
+        }
+    };
+    isFavoriteGroup = (group) => this._favoriteGroups.includes(group);
     
     getLanguage = () => this._language;
     setLanguage = (newLang) => { this._language = newLang; this.notify('language', this._language); };
@@ -342,7 +359,8 @@ class SettingsManagerService {
     resetSettings = () => {
         this.setTheme('light');
         this.setLanguage('fr');
-        this.setGroup(null);
+        this._favoriteGroups = [];
+        this.notify('favoriteGroups', this._favoriteGroups);
         this.setOpenAppOnFavoriteGroup(true);
         this.resetFilter();
         this.setFirstLoad(true);
@@ -351,7 +369,7 @@ class SettingsManagerService {
     saveSettings = () => {
         AsyncStorage.setItem('firstload', JSON.stringify(this._firstload));
         AsyncStorage.setItem('settings', JSON.stringify({
-            calendar: this._calendar, theme: this._theme, groupName: this._groupName,
+            calendar: this._calendar, theme: this._theme, favoriteGroups: this._favoriteGroups,
             language: this._language, openAppOnFavoriteGroup: this._openAppOnFavoriteGroup,
             filters: this._filters, calendarSyncEnabled: this._calendarSyncEnabled,
         }));
@@ -372,7 +390,14 @@ class SettingsManagerService {
         try {
             const settings = JSON.parse(await AsyncStorage.getItem('settings'));
             if (settings?.theme) this._theme = settings.theme;
-            if (settings?.groupName) this._groupName = settings.groupName;
+            
+            // Migration for legacy groupName to favoriteGroups
+            if (settings?.groupName && !settings?.favoriteGroups) {
+                this._favoriteGroups = [settings.groupName];
+            } else if (settings?.favoriteGroups) {
+                this._favoriteGroups = [...settings.favoriteGroups];
+            }
+            
             if (settings?.openAppOnFavoriteGroup !== null) this._openAppOnFavoriteGroup = settings.openAppOnFavoriteGroup;
             if (settings?.filters) this._filters = [...settings.filters];
             if (settings?.calendar !== undefined) this._calendar = settings?.calendar;

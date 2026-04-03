@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, View, Modal, Text, Animated } from 'react-native';
+import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, TouchableWithoutFeedback } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -87,23 +87,83 @@ export class SaveGroupButton extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            displayedGroup: this.props.groupName,
-            savedGroup: SettingsManager.getGroup(),
+            favoriteGroups: SettingsManager.getFavoriteGroups(),
+            modalVisible: false
         };
     }
+    componentDidMount() {
+        SettingsManager.on('favoriteGroups', this.handleFavoriteGroupsUpdate);
+    }
+    componentWillUnmount() {
+        SettingsManager.unsubscribe('favoriteGroups', this.handleFavoriteGroupsUpdate);
+    }
+    handleFavoriteGroupsUpdate = (groups) => {
+        this.setState({ favoriteGroups: [...groups] });
+    };
     saveGroup() {
+        // If we are viewing multiple groups at once (aggregated), we can't 'save' the aggregate.
+        // It's mostly when viewing a single group.
+        if (Array.isArray(this.props.groupName)) return; 
+
         if (this.isSaved()) {
-            this.setState({ savedGroup: null }, () => SettingsManager.setGroup(null));
+            SettingsManager.removeFavoriteGroup(this.props.groupName);
         } else {
-            this.setState({ savedGroup: this.state.displayedGroup }, () => SettingsManager.setGroup(this.state.displayedGroup));
+            SettingsManager.addFavoriteGroup(this.props.groupName);
         }
     }
     isSaved() {
-        return !(this.state.savedGroup === null || this.state.savedGroup !== this.state.displayedGroup);
+        if (Array.isArray(this.props.groupName)) return true;
+        return this.state.favoriteGroups.includes(this.props.groupName);
     }
     render() {
-        // On récupère le thème passé en props depuis le StackNavigator
         const theme = style.Theme[this.props.themeName] || style.Theme.light;
+        
+        if (Array.isArray(this.props.groupName)) {
+            return (
+                <View>
+                    <TouchableOpacity onPress={() => this.setState({ modalVisible: true })} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
+                            <MaterialCommunityIcons name="format-list-bulleted" size={26} color={theme.primary} />
+                        </View>
+                    </TouchableOpacity>
+                    <Modal animationType="fade" transparent={true} visible={this.state.modalVisible} onRequestClose={() => this.setState({ modalVisible: false })}>
+                        <TouchableWithoutFeedback onPress={() => this.setState({ modalVisible: false })}>
+                            <View style={theme.settings.popup.background}>
+                                <View style={theme.settings.popup.container}>
+                                    <View style={theme.settings.popup.header}>
+                                        <Text style={theme.settings.popup.textHeader}>{Translator.get('MY_PLANNING') || 'Mon Planning'}</Text>
+                                        <TouchableOpacity onPress={() => this.setState({ modalVisible: false })}>
+                                            <MaterialIcons name="close" size={32} style={theme.settings.popup.closeIcon} />
+                                        </TouchableOpacity>
+                                    </View>
+                                    
+                                    <Text style={[theme.settings.popup.textDescription, { marginBottom: 15 }]}>
+                                        {Translator.get('FAVORITES_MANAGE') || "Gérez vos groupes favoris :"}
+                                    </Text>
+                                    
+                                    <ScrollView style={{ maxHeight: 300 }}>
+                                        {this.state.favoriteGroups.length === 0 && (
+                                            <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm, fontStyle: 'italic', paddingBottom: tokens.space.lg }}>
+                                                {Translator.get('FAVORITES_EMPTY') || "Votre liste de favoris est vide. Recherchez un groupe de l'Université pour l'ajouter à un de vos favoris !"}
+                                            </Text>
+                                        )}
+                                        {this.state.favoriteGroups.map((group) => (
+                                            <View key={group} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.greyBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginBottom: tokens.space.sm }}>
+                                                <Text style={{ color: theme.font, fontSize: tokens.fontSize.md, flex: 1 }}>{group.replace(/_/g, ' ')}</Text>
+                                                <TouchableOpacity onPress={() => SettingsManager.removeFavoriteGroup(group)} style={{ padding: tokens.space.xs, paddingHorizontal: 10 }}>
+                                                    <MaterialIcons name="delete" size={24} color={'#E53935'} />
+                                                </TouchableOpacity>
+                                            </View>
+                                        ))}
+                                    </ScrollView>
+                                </View>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </Modal>
+                </View>
+            );
+        }
+
         return (
             <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                 <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
@@ -162,19 +222,20 @@ export class FilterRemoveButton extends React.Component {
 // ── BOUTON MON GROUPE ──────────────────────────────────
 export class MyGroupButton extends React.PureComponent {
     componentDidMount() {
-        if (this.props.groupName !== null && SettingsManager.getOpenAppOnFavoriteGroup()) {
-            this.props.navigate('Stack', { screen: 'Group', params: { name: this.props.groupName } });
+        if (this.props.favoriteGroups && this.props.favoriteGroups.length > 0 && SettingsManager.getOpenAppOnFavoriteGroup()) {
+            this.props.navigate('Stack', { screen: 'Group', params: { name: this.props.favoriteGroups } });
         }
     }
-    _onPress = () => this.props.navigate('Stack', { screen: 'Group', params: { name: this.props.groupName } });
+    _onPress = () => this.props.navigate('Stack', { screen: 'Group', params: { name: this.props.favoriteGroups } });
     render() {
         const theme = style.Theme[this.props.themeName];
+        let title = Translator.get('MY_PLANNING') || "Mon Planning";
         return (
             <Button
-                title={this.props.groupName.replace('_', ' ')}
-                size={28}
+                title={title}
+                size={22}
                 textSize={14}
-                icon="star"
+                icon="calendar-today"
                 color={theme.primary}
                 fontColor={theme.font}
                 onPress={this._onPress}
