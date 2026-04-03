@@ -158,4 +158,5 @@ export default {
 	ROOM: 'Room',
 	UNKNOWN_SUBJECT: 'Unknown course',
 	SETTINGS_LOAD_ERROR: "Settings couldn't be loaded",
+	NO_RU_NEARBY: 'No university restaurant nearby.',
 };

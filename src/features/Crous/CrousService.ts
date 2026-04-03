@@ -83,8 +83,7 @@ class CrousServiceManager {
                 };
             })
             
-            // Tri par distance (du plus proche au plus loin et max 10km)
-            .filter((resto: CrousRestaurant) => resto.distance === undefined || resto.distance <= 10);
+            // Tri par distance (du plus proche au plus loin)
             if (userLat !== undefined && userLon !== undefined) {
                 restaurants.sort((a, b) => (a.distance || 0) - (b.distance || 0));
             }
