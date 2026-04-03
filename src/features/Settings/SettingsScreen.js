@@ -49,7 +49,7 @@ class Settings extends React.Component {
         };
 
         SettingsManager.on('filter', () => {
-            this.refreshFiltersList();
+            this.setState({ filterList: SettingsManager.getFilters() });
         });
     }
 
@@ -100,7 +100,11 @@ class Settings extends React.Component {
     openSystemAppSettings = () => Linking.openSettings();
     setIsSynchronizingCalendar = (newState) => this.setState({ isSynchronizingCalendar: newState });
     setFilterTextInput = (input) => this.setState({ filterTextInput: input.toUpperCase() });
-    submitFilterTextInput = () => { if (this.state.filterTextInput) this.addFilters(this.state.filterTextInput); };
+    submitFilterTextInput = () => {
+        if (this.state.filterTextInput) {
+            this.addFilters(this.state.filterTextInput);
+        }
+    };
 
     openLanguageDialog = () => this.setState({ languageDialogVisible: true });
     closeLanguageDialog = () => this.setState({ languageDialogVisible: false });

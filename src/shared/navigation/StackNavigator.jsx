@@ -68,7 +68,7 @@ export default function StackNavigator() {
                             options={({ navigation, route }) => NavBarHelper({ 
                                 headerLeft: () => renderMenuButton(navigation), 
                                 headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.name} themeName={themeName} /></View>, 
-                                title: treatTitle(route.params.name), 
+                                title: Array.isArray(route.params.name) ? (Translator.get('MY_PLANNING') || 'Mon Planning') : treatTitle(route.params.name), 
                                 themeName, 
                                 route,
                                 gestureEnabled: false
@@ -89,7 +89,7 @@ export default function StackNavigator() {
                             return NavBarHelper({ headerLeft: leftButton, title: treatTitle(route.params?.title ?? Translator.get('WEB_BROWSER')), themeName, route, gestureEnabled: !hasMenu });
                         }} />
                         
-                        <Stack.Screen name="Week" component={WeekView} options={({ route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.groupName} themeName={themeName} /></View>, title: route.params.groupName.replace(/_/g, ' '), themeName, route })} />
+                        <Stack.Screen name="Week" component={WeekView} options={({ route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.groupName} themeName={themeName} /></View>, title: Array.isArray(route.params.groupName) ? (Translator.get('MY_PLANNING') || 'Mon Planning') : treatTitle(route.params.groupName), themeName, route })} />
                         
                         <Stack.Screen name="Day" component={DayView} options={{ tabBarLabel: Translator.get('DAY'), tabBarIcon: ({ tintColor }) => <MaterialCommunityIcons name="calendar" size={24} style={{ color: tintColor }} /> }} />
                         

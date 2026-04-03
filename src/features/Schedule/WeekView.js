@@ -33,11 +33,9 @@ class WeekView extends React.Component {
 
 		const currentDate = moment();
 		const currentWeek = { week: currentDate.isoWeek(), year: currentDate.year() };
-		const groupName = this.props.route.params.groupName;
-		const weeks = WeekView.generateWeeks();
+		const weeks = WeekView.generateDays ? WeekView.generateDays() : WeekView.generateWeeks();
 
 		this.state = {
-			groupName,
 			currentWeek: currentWeek,
 			currentWeekIndex: findIndexOfObject(weeks, currentWeek),
 			weeks,
@@ -47,6 +45,32 @@ class WeekView extends React.Component {
 		this.viewability = {
 			itemVisiblePercentThreshold: 50,
 		};
+	}
+
+	getGroupName() {
+		let groupName = this.props.route.params.groupName;
+		if (Array.isArray(groupName)) {
+			groupName = this.context.favoriteGroups;
+		}
+		return groupName;
+	}
+
+	componentDidMount() {
+		this._lastTitle = null;
+		this.updateTitle();
+	}
+
+	componentDidUpdate() {
+		this.updateTitle();
+	}
+
+	updateTitle() {
+		const { treatTitle } = require('../../shared/services/AppCore');
+		const title = treatTitle(this.getGroupName());
+		if (title !== this._lastTitle) {
+			this._lastTitle = title;
+			this.props.navigation.setOptions({ title });
+		}
 	}
 
 	static getCalendarListItemLayout = (data, index) => {
@@ -139,7 +163,7 @@ class WeekView extends React.Component {
                 <WeekComponent
                     key={`weekComponent-${this.context.themeName}`}
                     week={this.state.selectedWeek}
-                    groupName={this.state.groupName}
+                    groupName={this.getGroupName()}
                     theme={theme}
                     navigation={this.props.navigation}
                     filtersList={this.context.filters}

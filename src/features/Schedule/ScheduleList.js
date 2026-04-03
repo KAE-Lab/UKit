@@ -15,7 +15,7 @@ import { CourseRowWithNavigation as CourseRow, CourseGroupCarousel } from './Cou
 import { ErrorAlert } from '../../shared/ui/Alerts';
 import Translator from '../../shared/i18n/Translator';
 import { isConnected } from '../../shared/services/AppCore'
-import { FetchManager } from '../../shared/services/DataService';
+import { FetchManager, DataManager } from '../../shared/services/DataService';
 import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../shared/services/AppCore';
 
 export const groupOverlappingCourses = (courses) => {
@@ -175,15 +175,13 @@ export class ScheduleList extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.groupName !== prevProps.groupName) {
-            if (this.props.filtersList && this.props.filtersList.length > 0) {
-                this.fetchSchedule();
-            }
+        if (this.state.groupName !== prevState.groupName) {
+            this.fetchSchedule();
         } else if (this.props.mode === 'day' && this.state.target !== prevState.target) {
             this.fetchSchedule();
         } else if (this.props.mode === 'week' && this.state.target.week !== prevState.target.week) {
             this.fetchSchedule();
-        } else if (!isArraysEquals(this.props.filtersList, prevProps.filtersList)) {
+        } else if (!isArraysEquals(this.props.filtersList || [], prevProps.filtersList || [])) {
             this.fetchSchedule();
         }
     }
@@ -195,6 +193,19 @@ export class ScheduleList extends React.Component {
         } else if (nextProps.mode === 'week' && nextProps.target.week !== prevState.target.week) {
             nextState.target = nextProps.target;
         }
+
+        const isArrayNext = Array.isArray(nextProps.groupName);
+        const isArrayPrev = Array.isArray(prevState.groupName);
+        if (isArrayNext !== isArrayPrev) {
+            nextState.groupName = nextProps.groupName;
+        } else if (isArrayNext && isArrayPrev) {
+            if (!isArraysEquals(nextProps.groupName, prevState.groupName)) {
+                nextState.groupName = nextProps.groupName;
+            }
+        } else if (nextProps.groupName !== prevState.groupName) {
+            nextState.groupName = nextProps.groupName;
+        }
+
         return Object.keys(nextState).length > 0 ? nextState : null;
     }
 
@@ -203,16 +214,6 @@ export class ScheduleList extends React.Component {
             this.state.cancelToken.cancel('Operation canceled due component being unmounted.');
         }
         if (this._unsubscribe) this._unsubscribe();
-    }
-
-    static getDerivedStateFromProps(nextProps, prevState) {
-        const nextState = {};
-        if (nextProps.mode === 'day' && nextProps.target !== prevState.target) {
-            nextState.target = nextProps.target;
-        } else if (nextProps.mode === 'week' && nextProps.target.week !== prevState.target.week) {
-            nextState.target = nextProps.target;
-        }
-        return Object.keys(nextState).length > 0 ? nextState : null;
     }
 
     getCache = async (id) => {
@@ -228,14 +229,21 @@ export class ScheduleList extends React.Component {
 
         const cancelToken = axios.CancelToken.source();
         const groupName = this.state.groupName;
+        
+        if (Array.isArray(groupName) && groupName.length === 0) {
+            this.setState({ schedule: [], loading: false, cancelToken: null });
+            return;
+        }
+
         const mode = this.props.mode;
 
+        const groupPrefix = Array.isArray(groupName) ? groupName.join('+') : groupName;
         let id;
         if (mode === 'day') {
             const date = moment(this.state.target).format('YYYY/MM/DD');
-            id = `${groupName}@${date}`;
+            id = `${groupPrefix}@${date}`;
         } else {
-            id = `${groupName}@Week${this.state.target.week}`;
+            id = `${groupPrefix}@Week${this.state.target.week}`;
         }
 
         this.setState({ schedule: null, loading: true, cancelToken }, async () => {
@@ -271,6 +279,13 @@ export class ScheduleList extends React.Component {
             }
 
             if (fetchedData != null) {
+                // Extract available UEs from fetched data for search suggestions
+                try {
+                    DataManager.extractUEsFromCourses(fetchedData);
+                } catch (e) {
+                    console.warn('Failed to extract UEs:', e);
+                }
+
                 let schedule;
                 if (mode === 'day') {
                     schedule = this.computeScheduleDay(fetchedData, this.state.groupName === this.state.groupName);
@@ -333,7 +348,26 @@ export class ScheduleList extends React.Component {
             </View>
         );
 
-        if (this.state.schedule === null) {
+        if (Array.isArray(this.state.groupName) && this.state.groupName.length === 0) {
+            content = (
+                <SafeAreaInsetsContext.Consumer>
+                    {(insets) => (
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: (insets?.top || 0) + 65, paddingHorizontal: 40 }}>
+                            <MaterialCommunityIcons name="star-outline" size={60} color={theme.fontSecondary} style={{ marginBottom: tokens.space.lg }} />
+                            <Text style={{ color: theme.font, fontSize: tokens.fontSize.lg, fontWeight: 'bold', textAlign: 'center', marginBottom: tokens.space.md }}>
+                                {Translator.get('FAVORITES_EMPTY_TITLE') || "Votre planning est vide"}
+                            </Text>
+                            <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center', lineHeight: 22 }}>
+                                {Translator.get('FAVORITES_EMPTY') || "Votre liste de favoris est vide. Recherchez un groupe dans la liste pour l'ajouter à un de vos favoris !"}
+                            </Text>
+                            <TouchableOpacity style={{ marginTop: 30, backgroundColor: theme.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }} onPress={() => navigation.navigate('Home')}>
+                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{Translator.get('GROUPS_LIST') || "Groupes"}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </SafeAreaInsetsContext.Consumer>
+            );
+        } else if (this.state.schedule === null) {
             content = (
                 <SafeAreaInsetsContext.Consumer>
                     {(insets) => (

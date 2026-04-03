@@ -82,7 +82,7 @@ export default function WelcomeScreen() {
         theme: 'light',
         year: null,
         season: null,
-        group: null,
+        groups: [],
         groupList: DataManager.getGroupList(),
         groupListFiltered: [],
         textFilter: '',
@@ -93,7 +93,7 @@ export default function WelcomeScreen() {
     useEffect(() => {
         SettingsManager.on('theme', (newTheme) => changeState({ theme: newTheme }));
         SettingsManager.on('language', (newLang) => changeState({ language: newLang }));
-        SettingsManager.on('group', (newGroup) => changeState({ group: newGroup }));
+        SettingsManager.on('favoriteGroups', (newGroups) => changeState({ groups: newGroups }));
         DataManager.on('groupList', (newGroupList) => changeState({ groupList: newGroupList }));
 
         const langSystem = languageFromDevice();
@@ -112,7 +112,13 @@ export default function WelcomeScreen() {
 
     const selectTheme = (newTheme) => SettingsManager.setTheme(newTheme.id);
     const selectLanguage = (newLang) => SettingsManager.setLanguage(newLang.id);
-    const selectGroup = (group) => SettingsManager.setGroup(navigatorState.group === group ? null : group);
+    const selectGroup = (group) => {
+        if (navigatorState.groups.includes(group)) {
+            SettingsManager.removeFavoriteGroup(group);
+        } else {
+            SettingsManager.addFavoriteGroup(group);
+        }
+    };
 
     const filterList = (year, season, textFilter) => {
         let newList = [];
@@ -247,7 +253,7 @@ export default function WelcomeScreen() {
 
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                                 {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
-                                    const selected = navigatorState.group === item;
+                                    const selected = navigatorState.groups.includes(item);
                                     return (
                                         <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
                                             <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{item}</Text>

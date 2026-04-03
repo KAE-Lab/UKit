@@ -11,7 +11,7 @@ import { StatusBar, UpdateAlert } from '../ui/AppUI';
 export default (props) => {
 	const [isFirstLoad, setFirstLoad] = useState(SettingsManager.isFirstLoad());
 	const [themeName, setThemeName] = useState(SettingsManager.getTheme());
-	const [groupName, setGroupName] = useState(SettingsManager.getGroup());
+	const [favoriteGroups, setFavoriteGroups] = useState(SettingsManager.getFavoriteGroups());
 	const [language, setLanguage] = useState(SettingsManager.getLanguage());
 	const [filters, setFilters] = useState(SettingsManager.getFilters());
 
@@ -21,7 +21,7 @@ export default (props) => {
 
 	useEffect(() => {
 		SettingsManager.on('theme', (newTheme) => setThemeName(newTheme));
-		SettingsManager.on('group', (newGroup) => setGroupName(newGroup));
+		SettingsManager.on('favoriteGroups', (newGroups) => setFavoriteGroups(newGroups));
 		SettingsManager.on('firstload', (newFistLoad) => setFirstLoad(newFistLoad));
 		SettingsManager.on('language', (newLang) => setLanguage(newLang));
 		SettingsManager.on('filter', (newFilter) => setFilters(newFilter));
@@ -35,7 +35,7 @@ export default (props) => {
 
 	return (
 		<View style={{ flex: 1 }}>
-			<AppContextProvider value={{ themeName, groupName, filters }}>
+			<AppContextProvider value={{ themeName, favoriteGroups, filters }}>
 				<StatusBar />
 				{isFirstLoad ? <WelcomeScreen /> : <Drawer background={theme.background} />}
 			</AppContextProvider>

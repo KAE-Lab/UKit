@@ -22,10 +22,15 @@ const CustomDrawerContentComponent = (props) => {
     // Par défaut, la première page est Home
     const activeRoute = stackState ? stackState.routes[stackState.index] : { name: 'Home' };
 
-    const isRouteActive = (routeName, entrypoint) => {
+    const isRouteActive = (routeName, checkParams) => {
         if (activeRoute.name !== routeName) return false;
-        // Permet de différencier ENT, Mail et Apogée qui utilisent tous WebBrowser
-        if (entrypoint && activeRoute.params?.entrypoint !== entrypoint) return false;
+        
+        if (typeof checkParams === 'function') {
+            return checkParams(activeRoute.params);
+        } else if (checkParams) {
+            // Permet de différencier ENT, Mail et Apogée qui utilisent tous WebBrowser
+            if (activeRoute.params?.entrypoint !== checkParams) return false;
+        }
         return true;
     };
 
@@ -71,16 +76,7 @@ const CustomDrawerContentComponent = (props) => {
                         }}>
                             {Translator.get('GROUPS')}
                         </Text>
-                        
-                        {AppContextValues.groupName ? (
-                            <MyGroupButton navigate={navigate} themeName={AppContextValues.themeName} groupName={AppContextValues.groupName} isActive={isRouteActive('Group')} />
-                        ) : (
-                            <View style={{ paddingHorizontal: tokens.space.lg, paddingVertical: tokens.space.sm }}>
-                                <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm }}>
-                                    {Translator.get('NONE')}
-                                </Text>
-                            </View>
-                        )}
+                        <MyGroupButton navigate={navigate} themeName={AppContextValues.themeName} favoriteGroups={AppContextValues.favoriteGroups} isActive={isRouteActive('Group', (params) => Array.isArray(params?.name))} />
                         <Button
                             title={Translator.get('GROUPS_LIST')}
                             size={22} textSize={tokens.fontSize.sm} icon={'list'}
