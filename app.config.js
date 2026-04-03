@@ -4,7 +4,7 @@ import { version } from 'react';
 export default {
 	name: 'UKit',
 	description: 'UKit, a companion app for student of University of Bordeaux',
-	slug: 'UKit',
+	slug: 'Ukit',
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
