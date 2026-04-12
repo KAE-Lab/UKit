@@ -140,7 +140,7 @@ export default {
 	API_AFFLUENCES: '• API Affluences',
 	AFFLUENCES_DESC: 'Real-time schedules and attendance for libraries (BU).',
 	API_CROUSTILLANT: '• API CROUStillant',
-	CROUSTILLANT_DESC: 'Daily menus and images for university restaurants.',
+	CROUSTILLANT_DESC: 'Daily menus and images for university restaurants provided by',
 	NO_MENU_PUBLISHED: 'No menu published for this restaurant currently.',
     NOT_SPECIFIED: 'Not specified',
     NO_DISH_INFO: 'No dish information for this day.',

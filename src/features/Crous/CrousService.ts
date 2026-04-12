@@ -65,7 +65,7 @@ class CrousServiceManager {
             const jsonResponse = await response.json();
             if (!jsonResponse.data) return [];
 
-            let restaurants: CrousRestaurant[] = jsonResponse.data.map((resto: any) => {
+            let restaurants: CrousRestaurant[] = jsonResponse.data.filter((resto: any) => resto.type?.code !== 4).map((resto: any) => {
                 let distance = undefined;
                 if (userLat !== undefined && userLon !== undefined) {
                     distance = getDistanceInKm(userLat, userLon, resto.latitude, resto.longitude);

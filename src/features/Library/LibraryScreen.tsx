@@ -28,6 +28,8 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const [locationError, setLocationError] = useState(false);
 
     const [favorites, setFavorites] = useState<string[]>([]);
+    const mountedRef = useRef(true);
+    useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
     useFocusEffect(
         useCallback(() => {
@@ -90,7 +92,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     userLng = location.coords.longitude;
                 }
             } else {
-                setLocationError(true);
+                if (mountedRef.current) setLocationError(true);
             }
 
             // Fallback sur le campus de Talence si le GPS de l'émulateur échoue
@@ -100,6 +102,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
             }
 
             const fetchedLibs = await LibraryService.fetchNearbyLibraries(userLat, userLng);
+            if (!mountedRef.current) return;
 
             const nearbyLibs = fetchedLibs;
             setLibraries(nearbyLibs);
@@ -110,6 +113,8 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
             });
 
             const results = await Promise.all(affluencesPromises);
+            if (!mountedRef.current) return;
+
             const newAffluences: Record<string, AffluencesData> = {};
             results.forEach(res => {
                 if (res.data) newAffluences[res.id] = res.data;
@@ -119,7 +124,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
         } catch (error) {
             console.error("Erreur critique dans loadLibraries:", error);
         } finally {
-            setLoading(false);
+            if (mountedRef.current) setLoading(false);
         }
     };
 

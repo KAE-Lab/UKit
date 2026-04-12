@@ -33,7 +33,7 @@ export default function ScheduleScreen(props) {
                 headerRight: helper.headerRight
             });
         }
-    }, [groupName, props.navigation, context.themeName]);
+    }, [groupName, props.navigation, context.themeName, props.route?.params?.animatedReady]);
     
     return <DayView {...props} groupName={groupName} />;
 }

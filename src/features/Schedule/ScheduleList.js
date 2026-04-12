@@ -288,7 +288,7 @@ export class ScheduleList extends React.Component {
 
                 let schedule;
                 if (mode === 'day') {
-                    schedule = this.computeScheduleDay(fetchedData, this.state.groupName === this.state.groupName);
+                    schedule = this.computeScheduleDay(fetchedData, Array.isArray(this.state.groupName));
                 } else {
                     schedule = fetchedData;
                 }
@@ -400,7 +400,7 @@ export class ScheduleList extends React.Component {
                 />
             );
         } else if (this.state.schedule instanceof Array && mode === 'week') {
-            const isFavorite = this.state.groupName === this.state.groupName;
+            const isFavorite = Array.isArray(this.state.groupName);
             const targetYear = this.state.target.year || moment().year();
             const targetWeek = this.state.target.week;
 

@@ -18,6 +18,14 @@ export default function CrousMenuScreen({ route, navigation }: any) {
     const [loading, setLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const flatListRef = useRef<FlatList>(null);
+    const mountedRef = useRef(true);
+    const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        return () => {
+            mountedRef.current = false;
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        };
+    }, []);
 
     useEffect(() => {
         navigation.setOptions({
@@ -37,19 +45,21 @@ export default function CrousMenuScreen({ route, navigation }: any) {
 
     useEffect(() => {
         if (menus.length > 0 && flatListRef.current) {
-            setTimeout(() => {
+            const timerId = setTimeout(() => {
                 flatListRef.current?.scrollToIndex({
                     index: selectedIndex,
                     animated: true,
                     viewPosition: 0.5
                 });
             }, 100);
+            return () => clearTimeout(timerId);
         }
     }, [selectedIndex, menus])
 
     const loadMenu = async () => {
         setLoading(true);
         const data = await CrousService.fetchRestaurantMenu(restaurantId);
+        if (!mountedRef.current) return;
         setMenus(data);
         setLoading(false);
     };
@@ -209,7 +219,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
                     keyExtractor={(item) => item.date}
                     contentContainerStyle={{ paddingHorizontal: tokens.space.sm }}
                     onScrollToIndexFailed={(info) => {
-                        setTimeout(() => {
+                        scrollTimeoutRef.current = setTimeout(() => {
                             flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
                         }, 500);
                     }}

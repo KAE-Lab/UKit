@@ -223,7 +223,9 @@ class HomeScreen extends React.Component {
 
 				this.setState({ cacheDate: null });
 				list = groupList.map((e) => ({ name: e }));
-				AsyncStorage.setItem('groups', JSON.stringify({ list, date: moment() }));
+				AsyncStorage.setItem('groups', JSON.stringify({ list, date: moment() })).catch((e) =>
+					console.warn('Échec de la mise en cache des groupes :', e)
+				);
 			} catch (error) {
 				if (error.response) {
 					Toast.show(Translator.get('ERROR_WITH_CODE'), {
