@@ -20,15 +20,28 @@ export default (props) => {
 	}
 
 	useEffect(() => {
-		SettingsManager.on('theme', (newTheme) => setThemeName(newTheme));
-		SettingsManager.on('favoriteGroups', (newGroups) => setFavoriteGroups(newGroups));
-		SettingsManager.on('firstload', (newFistLoad) => setFirstLoad(newFistLoad));
-		SettingsManager.on('language', (newLang) => setLanguage(newLang));
-		SettingsManager.on('filter', (newFilter) => setFilters(newFilter));
+		const onTheme = (newTheme) => setThemeName(newTheme);
+		const onFavoriteGroups = (newGroups) => setFavoriteGroups(newGroups);
+		const onFirstLoad = (newFirstLoad) => setFirstLoad(newFirstLoad);
+		const onLanguage = (newLang) => setLanguage(newLang);
+		const onFilter = (newFilter) => setFilters(newFilter);
+
+		SettingsManager.on('theme', onTheme);
+		SettingsManager.on('favoriteGroups', onFavoriteGroups);
+		SettingsManager.on('firstload', onFirstLoad);
+		SettingsManager.on('language', onLanguage);
+		SettingsManager.on('filter', onFilter);
 
 		const eventSubscription = AppState.addEventListener('change', reloadData);
 
-		return () => eventSubscription.remove();
+		return () => {
+			SettingsManager.unsubscribe('theme', onTheme);
+			SettingsManager.unsubscribe('favoriteGroups', onFavoriteGroups);
+			SettingsManager.unsubscribe('firstload', onFirstLoad);
+			SettingsManager.unsubscribe('language', onLanguage);
+			SettingsManager.unsubscribe('filter', onFilter);
+			eventSubscription.remove();
+		};
 	}, []);
 
 	const theme = Style.Theme[themeName];
