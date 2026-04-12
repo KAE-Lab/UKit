@@ -26,6 +26,8 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const [locationError, setLocationError] = useState(false);
 
     const [favorites, setFavorites] = useState<string[]>([]);
+    const mountedRef = useRef(true);
+    useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
     /* * On recharge les favoris a chaque fois que l'ecran est au premier plan.
      * C'est indispensable pour synchroniser l'etat si l'utilisateur a clique 
@@ -97,13 +99,14 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     userLon = location.coords.longitude;
                 }
             } else {
-                setLocationError(true);
+                if (mountedRef.current) setLocationError(true);
             }
         } catch (e) {
-            setLocationError(true);
+            if (mountedRef.current) setLocationError(true);
         }
 
         const data = await CrousService.fetchRestaurantsBordeaux(userLat, userLon);
+        if (!mountedRef.current) return;
         setRestaurants(data);
         setLoading(false);
     };
