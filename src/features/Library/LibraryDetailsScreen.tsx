@@ -20,6 +20,14 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [weekOffset, setWeekOffset] = useState(0); // 0 = semaine en cours, -1 = semaine dernière, 1 = semaine pro
     const flatListRef = useRef<FlatList>(null);
+    const mountedRef = useRef(true);
+    const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        return () => {
+            mountedRef.current = false;
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        };
+    }, []);
     
 
     useEffect(() => {
@@ -40,8 +48,9 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
     const loadTimetable = async (offset: number) => {
         setLoading(true);
         const data = await LibraryService.fetchLibraryTimetable(library.slug, offset);
+        if (!mountedRef.current) return;
         setTimetable(data);
-        
+
         // Si on est sur la semaine actuelle, on sélectionne aujourd'hui. Sinon, on sélectionne le lundi (index 0).
         if (offset === 0) {
             const todayIndex = data.findIndex(entry => entry.isToday);
@@ -49,7 +58,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
         } else {
             setSelectedIndex(0);
         }
-        
+
         setLoading(false);
     };
 
@@ -69,13 +78,14 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
 
     useEffect(() => {
         if (timetable.length > 0 && flatListRef.current) {
-            setTimeout(() => {
+            const timerId = setTimeout(() => {
                 flatListRef.current?.scrollToIndex({
                     index: selectedIndex,
                     animated: true,
                     viewPosition: 0.5
                 });
             }, 100);
+            return () => clearTimeout(timerId);
         }
     }, [selectedIndex, timetable]);
 
@@ -154,7 +164,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                     keyExtractor={(item) => item.day}
                     contentContainerStyle={{ paddingHorizontal: tokens.space.sm }}
                     onScrollToIndexFailed={(info) => {
-                        setTimeout(() => {
+                        scrollTimeoutRef.current = setTimeout(() => {
                             flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
                         }, 500);
                     }}
