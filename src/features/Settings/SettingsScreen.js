@@ -48,9 +48,6 @@ class Settings extends React.Component {
             selectedCalendar: SettingsManager.getSyncCalendar(),
         };
 
-        SettingsManager.on('filter', () => {
-            this.setState({ filterList: SettingsManager.getFilters() });
-        });
     }
 
     setCalendar = (calendar) => {
@@ -130,10 +127,12 @@ class Settings extends React.Component {
             this.toggleCalendarSync();
         }
         SettingsManager.on('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
+        SettingsManager.on('filter', this.refreshFiltersList);
     };
 
     componentWillUnmount = () => {
         SettingsManager.unsubscribe('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
+        SettingsManager.unsubscribe('filter', this.refreshFiltersList);
     };
 
     render() {
