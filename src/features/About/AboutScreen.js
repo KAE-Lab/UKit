@@ -158,7 +158,13 @@ class AboutScreen extends React.Component {
                                 • API CROUStillant
                             </Text>
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginLeft: tokens.space.sm }}>
-                                {Translator.get('CROUSTILLANT_DESC')}
+                                {Translator.get('CROUSTILLANT_DESC')}{' '}
+                                <Text
+                                    style={{ color: theme.primary, textDecorationLine: 'underline' }}
+                                    onPress={() => Linking.openURL(URL.CROUSTILLANT_WEBSITE)}
+                                >
+                                    CROUStillant.menu
+                                </Text>
                             </Text>
                         </View>
                     </Section>

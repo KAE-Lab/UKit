@@ -18,6 +18,7 @@ export const URL = {
     VERSION_STORE: 'https://raw.githubusercontent.com/KAE-Lab/UKit/master/VERSION',
     GOOGLE_APP: 'https://play.google.com/store/apps/details?id=com.bordeaux1.emplois',
     APPLE_APP: 'https://apps.apple.com/fr/app/ukit-bordeaux/id1394708917',
+    CROUSTILLANT_WEBSITE: 'https://croustillant.menu',
 };
 
 export const WebApiURL = {

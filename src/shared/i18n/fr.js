@@ -142,7 +142,7 @@ export default {
 	API_AFFLUENCES: '• API Affluences',
 	AFFLUENCES_DESC: 'Horaires et affluence en temps réel des bibliothèques (BU).',
 	API_CROUSTILLANT: '• API CROUStillant',
-	CROUSTILLANT_DESC: 'Menus quotidiens et images des restaurants universitaires.',
+	CROUSTILLANT_DESC: 'Menus quotidiens et images des restaurants universitaires fournis par',
 	NO_MENU_PUBLISHED: 'Aucun menu publié pour ce restaurant actuellement.',
     NOT_SPECIFIED: 'Non précisé',
     NO_DISH_INFO: 'Aucun plat renseigné pour cette journée.',
