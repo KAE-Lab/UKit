@@ -1,109 +1,120 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, Animated, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Animated, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
-import WidgetCard from './components/WidgetCard';
 import NextCourseWidget from './components/NextCourseWidget';
 import CrousWidget from './components/CrousWidget';
 import LibraryWidget from './components/LibraryWidget';
 import BdeWidget from './components/BdeWidget';
+import WidgetCard from './components/WidgetCard';
+
+const ShortcutTile = ({ title, icon, color, onPress, theme, style }) => {
+    return (
+        <TouchableOpacity 
+            style={[{
+                backgroundColor: theme.cardBackground,
+                borderRadius: tokens.radius.xl,
+                padding: tokens.space.md,
+                alignItems: 'center',
+                ...tokens.shadow.sm,
+            }, style]}
+            onPress={onPress}
+            activeOpacity={0.7}
+        >
+            <View style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: `${color}15`,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: tokens.space.sm,
+            }}>
+                <MaterialCommunityIcons name={icon} size={24} color={color} />
+            </View>
+            <Text 
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={{ 
+                    fontSize: tokens.fontSize.xs, 
+                    fontWeight: tokens.fontWeight.bold, 
+                    color: theme.font, 
+                    textAlign: 'center',
+                    fontFamily: 'Montserrat_600SemiBold',
+                }}
+            >
+                {title}
+            </Text>
+        </TouchableOpacity>
+    );
+};
 
 const DashboardScreen = ({ navigation }) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     const scrollY = React.useRef(new Animated.Value(0)).current;
 
-    // Calcul de l'opacité du header pour l'effet "glassmorphism"
     const headerOpacity = scrollY.interpolate({
-        inputRange: [0, 50],
+        inputRange: [0, 15],
         outputRange: [0, 1],
         extrapolate: 'clamp',
     });
 
     const renderHeader = (insets) => {
-        // Fallback for glassmorphism without native blur dependency
-        const backgroundColor = themeName === 'dark' 
-            ? 'rgba(0, 0, 0, 0.85)' 
-            : 'rgba(242, 242, 247, 0.85)';
-
+        const topPadding = (insets?.top || 0) + 10;
+        
         return (
-            <Animated.View style={[
+            <View style={[
                 styles.headerContainer, 
                 { 
-                    paddingTop: Math.max(insets?.top || 20, 20),
-                    backgroundColor: backgroundColor,
-                    borderBottomColor: theme.border,
-                    borderBottomWidth: headerOpacity.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, StyleSheet.hairlineWidth]
-                    }),
+                    paddingTop: topPadding,
+                    paddingBottom: 10,
                 }
             ]}>
-                <View style={styles.headerContent}>
+                {/* Background opaque animé avec native driver */}
+                <Animated.View style={[
+                    StyleSheet.absoluteFill,
+                    { 
+                        backgroundColor: themeName === 'dark' ? '#000000' : '#F2F2F7',
+                        opacity: headerOpacity,
+                    }
+                ]} />
+                
+                <View style={[styles.headerContent, { paddingHorizontal: tokens.space.sm }]}>
                     <Image
                         style={styles.logo}
                         source={require('../../../assets/icons/logo.png')}
                     />
                     <Text style={[styles.greetingText, { color: theme.font }]}>
-                        Bonjour !
+                        {Translator.get('HELLO_USER') || 'Bonjour !'}
                     </Text>
                 </View>
-            </Animated.View>
+                
+                {/* Brouillard très discret qui déborde en dessous du header */}
+                <Animated.View style={{ 
+                    opacity: headerOpacity, 
+                    height: 8, 
+                    width: '100%', 
+                    position: 'absolute', 
+                    bottom: -8, 
+                    left: 0 
+                }}>
+                    <LinearGradient
+                        colors={[
+                            themeName === 'dark' ? 'rgba(0,0,0,1)' : 'rgba(242,242,247,1)', 
+                            themeName === 'dark' ? 'rgba(0,0,0,0)' : 'rgba(242,242,247,0)'
+                        ]}
+                        style={{ flex: 1 }}
+                    />
+                </Animated.View>
+            </View>
         );
     };
-
-    const renderBentoGrid = () => (
-        <View style={styles.bentoContainer}>
-            {/* Ligne 1 */}
-            <View style={styles.bentoRow}>
-                <WidgetCard 
-                    title="ENT" 
-                    icon="dashboard" 
-                    onPress={() => navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'ent', title: 'ENT' } })}
-                    color={theme.sectionsHeaders[4] || theme.primary}
-                />
-                <WidgetCard 
-                    title={Translator.get('MAILBOX')} 
-                    icon="mail-outline" 
-                    onPress={() => navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'email', title: Translator.get('MAILBOX') } })}
-                    color={theme.sectionsHeaders[5] || theme.secondary}
-                />
-            </View>
-            {/* Ligne 2 */}
-            <View style={styles.bentoRow}>
-                <WidgetCard 
-                    title="Apogée" 
-                    icon="school" 
-                    onPress={() => navigation.navigate('Stack', { screen: 'WebBrowser', params: { entrypoint: 'apogee', title: 'Apogée' } })}
-                    color={theme.sectionsHeaders[0] || theme.primary}
-                />
-                <WidgetCard 
-                    title={Translator.get('GROUPS')} 
-                    icon="magnify" 
-                    onPress={() => navigation.navigate('Stack', { screen: 'GroupSearch' })}
-                    color={theme.sectionsHeaders[1] || theme.secondary}
-                />
-            </View>
-            {/* Ligne 3 */}
-            <View style={styles.bentoRow}>
-                <WidgetCard 
-                    title={Translator.get('SETTINGS')} 
-                    icon="settings" 
-                    onPress={() => navigation.navigate('Stack', { screen: 'Settings' })}
-                    color={theme.fontSecondary}
-                />
-                <WidgetCard 
-                    title={Translator.get('ABOUT')} 
-                    icon="info" 
-                    onPress={() => navigation.navigate('Stack', { screen: 'About' })}
-                    color={theme.fontSecondary}
-                />
-            </View>
-        </View>
-    );
 
     return (
         <SafeAreaInsetsContext.Consumer>
@@ -114,28 +125,146 @@ const DashboardScreen = ({ navigation }) => {
                     <Animated.ScrollView
                         onScroll={Animated.event(
                             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                            { useNativeDriver: false }
+                            { useNativeDriver: true }
                         )}
                         scrollEventThrottle={16}
                         contentContainerStyle={[
                             styles.scrollContent, 
-                            { paddingTop: (insets?.top || 20) + 70 }
+                            { paddingTop: (insets?.top || 0) + 80 }
                         ]}
                         showsVerticalScrollIndicator={false}
                     >
-                        {/* Widgets Principaux (Full Width) */}
                         <NextCourseWidget navigation={navigation} />
                         <CrousWidget navigation={navigation} />
                         <LibraryWidget navigation={navigation} />
                         <BdeWidget />
                         
-                        {/* Grille Bento (Tuiles secondaires) */}
-                        <Text style={[styles.sectionTitle, { color: theme.fontSecondary }]}>
-                            Raccourcis
-                        </Text>
-                        {renderBentoGrid()}
+                        {/* SECTION MON ESPACE (Profil + Groupes) */}
+                        <WidgetCard
+                            title={Translator.get('MY_SPACE') || 'Mon Espace'}
+                            icon="account-circle-outline"
+                            transparent={true}
+                            fullWidth
+                            color={theme.sectionsHeaders[3] || theme.primary}
+                        >
+                            <View style={{ paddingHorizontal: tokens.space.sm, flexDirection: 'row' }}>
+                                <TouchableOpacity 
+                                    activeOpacity={0.8}
+                                    onPress={() => {}}
+                                    style={{
+                                        flex: 2,
+                                        backgroundColor: theme.cardBackground,
+                                        borderRadius: tokens.radius.xl,
+                                        padding: tokens.space.md,
+                                        marginRight: tokens.space.xs,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        ...tokens.shadow.sm,
+                                    }}
+                                >
+                                    <View style={{
+                                        width: 48,
+                                        height: 48,
+                                        borderRadius: 24,
+                                        backgroundColor: `${theme.primary}15`,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        marginRight: tokens.space.sm,
+                                    }}>
+                                        <MaterialCommunityIcons name="card-account-details-outline" size={24} color={theme.primary} />
+                                    </View>
+                                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                                        <Text style={{ 
+                                            fontSize: tokens.fontSize.sm, 
+                                            fontWeight: tokens.fontWeight.bold, 
+                                            color: theme.font, 
+                                            fontFamily: 'Montserrat_600SemiBold',
+                                            marginBottom: 2,
+                                        }}>
+                                            {Translator.get('PROFILE') || 'Profil'}
+                                        </Text>
+                                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }} numberOfLines={1}>
+                                            {Translator.get('DOCUMENTS') || 'Documents'}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+
+                                <ShortcutTile 
+                                    title={Translator.get('GROUPS') || 'Groupes'} 
+                                    icon="format-list-bulleted" 
+                                    onPress={() => navigation.navigate('GroupSearch')}
+                                    color={theme.sectionsHeaders[1] || theme.secondary}
+                                    theme={theme}
+                                    style={{ flex: 1, marginLeft: tokens.space.xs }}
+                                />
+                            </View>
+                        </WidgetCard>
+
+                        {/* SECTION OUTILS UNIVERSITAIRES */}
+                        <WidgetCard
+                            title={Translator.get('UNIVERSITY_TOOLS') || 'Outils Universitaires'}
+                            icon="toolbox-outline"
+                            transparent={true}
+                            fullWidth
+                            color={theme.sectionsHeaders[4] || theme.primary}
+                        >
+                            <View style={{ paddingHorizontal: tokens.space.sm, flexDirection: 'row' }}>
+                                <ShortcutTile 
+                                    title="ENT" 
+                                    icon="view-dashboard" 
+                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'ent', title: 'ENT' })}
+                                    color={theme.sectionsHeaders[4] || theme.primary}
+                                    theme={theme}
+                                    style={{ flex: 1, marginRight: tokens.space.xs }}
+                                />
+                                <ShortcutTile 
+                                    title={Translator.get('MAILBOX') || 'Boîte Mail'} 
+                                    icon="email-outline" 
+                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email', title: Translator.get('MAILBOX') })}
+                                    color={theme.sectionsHeaders[5] || theme.secondary}
+                                    theme={theme}
+                                    style={{ flex: 1, marginHorizontal: tokens.space.xs }}
+                                />
+                                <ShortcutTile 
+                                    title="Apogée" 
+                                    icon="school" 
+                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'apogee', title: 'Apogée' })}
+                                    color={theme.sectionsHeaders[0] || theme.primary}
+                                    theme={theme}
+                                    style={{ flex: 1, marginLeft: tokens.space.xs }}
+                                />
+                            </View>
+                        </WidgetCard>
+
+                        {/* SECTION AUTRES */}
+                        <WidgetCard
+                            title={Translator.get('OTHER') || 'Autres'}
+                            icon="dots-horizontal-circle-outline"
+                            transparent={true}
+                            fullWidth
+                            color={theme.fontSecondary}
+                        >
+                            <View style={{ paddingHorizontal: tokens.space.sm, flexDirection: 'row' }}>
+                                <ShortcutTile 
+                                    title={Translator.get('SETTINGS') || 'Paramètres'} 
+                                    icon="cog" 
+                                    onPress={() => navigation.navigate('Settings')}
+                                    color={theme.fontSecondary}
+                                    theme={theme}
+                                    style={{ flex: 1, marginRight: tokens.space.xs }}
+                                />
+                                <ShortcutTile 
+                                    title={Translator.get('ABOUT') || 'À propos'} 
+                                    icon="information" 
+                                    onPress={() => navigation.navigate('About')}
+                                    color={theme.fontSecondary}
+                                    theme={theme}
+                                    style={{ flex: 1, marginLeft: tokens.space.xs, marginRight: tokens.space.xs }}
+                                />
+                                <View style={{ flex: 1, marginLeft: tokens.space.xs }} />
+                            </View>
+                        </WidgetCard>
                         
-                        {/* Espace en bas */}
                         <View style={{ height: tokens.space.xxl }} />
                     </Animated.ScrollView>
                 </View>
@@ -154,13 +283,12 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         zIndex: 10,
+        elevation: 10,
     },
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: tokens.space.md,
-        paddingBottom: tokens.space.sm,
     },
     logo: {
         width: 100,
@@ -173,7 +301,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Montserrat_600SemiBold',
     },
     scrollContent: {
-        paddingHorizontal: tokens.space.md,
         paddingBottom: tokens.space.xxl,
     },
     sectionTitle: {

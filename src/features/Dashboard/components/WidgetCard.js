@@ -12,17 +12,20 @@ const WidgetCard = ({
     icon, 
     color, 
     fullWidth = false, 
-    style: customStyle 
+    transparent = false,
+    style: customStyle,
+    contentStyle
 }) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
     const cardStyle = [
-        styles.card,
-        {
+        !transparent && styles.card,
+        !transparent && {
             backgroundColor: theme.cardBackground,
             shadowColor: themeName === 'dark' ? '#000' : '#000',
         },
+        transparent && styles.transparentCard,
         fullWidth ? styles.fullWidth : styles.halfWidth,
         customStyle
     ];
@@ -30,7 +33,7 @@ const WidgetCard = ({
     const Content = () => (
         <>
             {(title || icon) && (
-                <View style={styles.header}>
+                <View style={[styles.header, transparent && { marginBottom: tokens.space.xs, paddingHorizontal: tokens.space.sm }]}>
                     <View style={styles.titleContainer}>
                         {icon && (
                             <MaterialCommunityIcons 
@@ -55,7 +58,7 @@ const WidgetCard = ({
                     )}
                 </View>
             )}
-            <View style={styles.content}>
+            <View style={[styles.content, contentStyle]}>
                 {children}
             </View>
         </>
@@ -86,6 +89,9 @@ const styles = StyleSheet.create({
         padding: tokens.space.md,
         marginBottom: tokens.space.md,
         ...tokens.shadow.md,
+    },
+    transparentCard: {
+        marginBottom: tokens.space.md,
     },
     fullWidth: {
         width: '100%',
