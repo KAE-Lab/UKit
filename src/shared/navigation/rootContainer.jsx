@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { AppState, View } from 'react-native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 
-import Drawer from './Drawer';
+import StackNavigator from './StackNavigator';
 import { AppContextProvider } from '../services/AppCore';
 import { SettingsManager } from '../services/AppCore';
 import WelcomeScreen from '../../features/Onboarding/WelcomeScreen'; 
@@ -45,12 +46,20 @@ export default (props) => {
 	}, []);
 
 	const theme = Style.Theme[themeName];
+    const customTheme = {
+        ...DefaultTheme,
+        colors: { ...DefaultTheme.colors, background: theme.background || DefaultTheme.colors.background },
+    };
 
 	return (
 		<View style={{ flex: 1 }}>
 			<AppContextProvider value={{ themeName, favoriteGroups, filters }}>
 				<StatusBar />
-				{isFirstLoad ? <WelcomeScreen /> : <Drawer background={theme.background} />}
+				{isFirstLoad ? <WelcomeScreen /> : (
+                    <NavigationContainer theme={customTheme}>
+                        <StackNavigator />
+                    </NavigationContainer>
+                )}
 			</AppContextProvider>
 		</View>
 	);

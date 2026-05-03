@@ -2,9 +2,9 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { DrawerActions } from '@react-navigation/native';
 
-import Home from '../../features/Home/HomeScreen';
+import Dashboard from '../../features/Dashboard/DashboardScreen';
+import GroupSearch from '../../features/Home/HomeScreen';
 import Group from '../../features/Schedule/ScheduleScreen';
 import About from '../../features/About/AboutScreen';
 import Settings from '../../features/Settings/SettingsScreen';
@@ -31,15 +31,6 @@ export default function StackNavigator() {
             {({ themeName }) => {
                 const theme = style.Theme[themeName];
 
-                // BOUTONS REUTILISABLES
-                const renderMenuButton = (navigation) => (
-                    <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={{ paddingLeft: tokens.space.md }}>
-                        <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
-                            <MaterialCommunityIcons name="menu" size={26} color={theme.primary} />
-                        </View>
-                    </TouchableOpacity>
-                );
-
                 const renderMapButton = (navigation, title, location) => (
                     <TouchableOpacity onPress={() => navigation.navigate('Geolocation', { title, location })} style={{ paddingRight: tokens.space.md }}>
                         <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
@@ -50,6 +41,7 @@ export default function StackNavigator() {
 
                 return (
                     <Stack.Navigator
+                        initialRouteName="Dashboard"
                         screenOptions={{
                             headerLeft: (props) => props.canGoBack ? (
                                 <TouchableOpacity onPress={props.onPress} style={{ paddingLeft: tokens.space.md }}>
@@ -60,33 +52,32 @@ export default function StackNavigator() {
                             ) : undefined,
                         }}>
                         
-                        <Stack.Screen name="Home" component={Home} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('GROUPS'), themeName, route, gestureEnabled: false })} />
+                        <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
+
+                        <Stack.Screen name="GroupSearch" component={GroupSearch} options={({ route }) => NavBarHelper({ title: Translator.get('GROUPS'), themeName, route, gestureEnabled: true })} />
                         
                         <Stack.Screen 
                             name="Group" 
                             component={Group} 
-                            options={({ navigation, route }) => NavBarHelper({ 
-                                headerLeft: () => renderMenuButton(navigation), 
+                            options={({ route }) => NavBarHelper({ 
                                 headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.name} themeName={themeName} /></View>, 
                                 title: Array.isArray(route.params.name) ? (Translator.get('MY_PLANNING') || 'Mon Planning') : treatTitle(route.params.name), 
                                 themeName, 
                                 route,
-                                gestureEnabled: false
+                                gestureEnabled: true
                             })} 
                         />
                         
-                        <Stack.Screen name="About" component={About} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('ABOUT'), themeName, route, gestureEnabled: false })} />
+                        <Stack.Screen name="About" component={About} options={({ route }) => NavBarHelper({ title: Translator.get('ABOUT'), themeName, route, gestureEnabled: true })} />
                         
-                        <Stack.Screen name="Settings" component={Settings} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: false })} />
+                        <Stack.Screen name="Settings" component={Settings} options={({ route }) => NavBarHelper({ title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: true })} />
                         
-                        <Stack.Screen name="Crous" component={CrousScreen} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('RESTAURANTS'), themeName, route, gestureEnabled: false })} />
+                        <Stack.Screen name="Crous" component={CrousScreen} options={({ route }) => NavBarHelper({ title: Translator.get('RESTAURANTS'), themeName, route, gestureEnabled: true })} />
                         
-                        <Stack.Screen name="Library" component={LibraryScreen} options={({ navigation, route }) => NavBarHelper({ headerLeft: () => renderMenuButton(navigation), title: Translator.get('LIBRARIES'), themeName, route, gestureEnabled: false })} />
+                        <Stack.Screen name="Library" component={LibraryScreen} options={({ route }) => NavBarHelper({ title: Translator.get('LIBRARIES'), themeName, route, gestureEnabled: true })} />
                         
-                        <Stack.Screen name="WebBrowser" component={WebBrowser} options={({ navigation, route }) => {
-                            const hasMenu = route.params?.entrypoint ? true : false;
-                            const leftButton = hasMenu ? () => renderMenuButton(navigation) : undefined;
-                            return NavBarHelper({ headerLeft: leftButton, title: treatTitle(route.params?.title ?? Translator.get('WEB_BROWSER')), themeName, route, gestureEnabled: !hasMenu });
+                        <Stack.Screen name="WebBrowser" component={WebBrowser} options={({ route }) => {
+                            return NavBarHelper({ title: treatTitle(route.params?.title ?? Translator.get('WEB_BROWSER')), themeName, route, gestureEnabled: true });
                         }} />
                         
                         <Stack.Screen name="Week" component={WeekView} options={({ route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.groupName} themeName={themeName} /></View>, title: Array.isArray(route.params.groupName) ? (Translator.get('MY_PLANNING') || 'Mon Planning') : treatTitle(route.params.groupName), themeName, route })} />
