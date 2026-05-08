@@ -2,7 +2,7 @@ import React from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import CalendarDay from './CalendarDay';
 import { DayComponent } from './ScheduleList'; 
@@ -131,117 +131,121 @@ class DayView extends React.Component {
 		const theme = style.Theme[this.context.themeName];
 
 		return (
-            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-                <View style={{ flex: 1 }}>
-                    <DayComponent
-                        key={`${this.state.days[0].dayOfYear()}-${this.context.themeName}`}
-                        day={this.state.selectedDay}
-                        groupName={this.props.groupName}
-                        theme={theme}
-                        navigation={this.props.navigation}
-                        filtersList={this.context.filters}
-                    />
-
-                    <SafeAreaView edges={['bottom']} style={{
-                        flexGrow: 0,
-                        backgroundColor: theme.cardBackground,
-                        borderTopWidth: 1,
-                        borderTopColor: theme.border,
-                    }}>
-                        {/* Header : mois + boutons */}
+            <SafeAreaInsetsContext.Consumer>
+                {(insets) => (
+                    <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+                        {/* Barre de navigation haute (Slider) */}
                         <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            height: 44,
                             backgroundColor: theme.cardBackground,
-                            paddingHorizontal: tokens.space.xs + 2,
+                            borderBottomWidth: 1,
+                            borderBottomColor: theme.border,
+                            paddingTop: tokens.space.xs,
+                            paddingBottom: tokens.space.sm,
+                            ...tokens.shadow.sm,
                         }}>
-                            {/* Bouton Aujourd'hui */}
-                            <TouchableOpacity
-                                onPress={this.onTodayPress}
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    paddingHorizontal: tokens.space.md,
-                                    paddingVertical: tokens.space.sm,
-                                    borderRadius: tokens.radius.md,
-                                    backgroundColor: theme.greyBackground,
-                                }}>
-                                <MaterialIcons
-                                    name="event-note"
-                                    size={16}
-                                    color={theme.accent ?? theme.primary}
-                                />
-                                <Text style={{
-                                    fontSize: tokens.fontSize.sm,
-                                    marginLeft: tokens.space.xs,
-                                    color: theme.accent ?? theme.primary,
-                                    fontWeight: tokens.fontWeight.medium,
-                                }}>
-                                    {Translator.get('TODAY')}
-                                </Text>
-                            </TouchableOpacity>
-
-                            {/* Mois affiché */}
-                            <Text style={{
-                                fontSize: tokens.fontSize.md,
-                                fontWeight: tokens.fontWeight.semibold,
-                                color: theme.fontSecondary,
-                                flex: 1,
-                                textAlign: 'center',
+                            {/* Header : mois + boutons */}
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                height: 44,
+                                paddingHorizontal: tokens.space.xs + 2,
+                                marginBottom: tokens.space.xs,
                             }}>
-                                {this.state.shownMonth.string}
-                            </Text>
+                                {/* Bouton Aujourd'hui */}
+                                <TouchableOpacity
+                                    onPress={this.onTodayPress}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingHorizontal: tokens.space.md,
+                                        paddingVertical: tokens.space.sm,
+                                        borderRadius: tokens.radius.md,
+                                        backgroundColor: theme.greyBackground,
+                                    }}>
+                                    <MaterialIcons
+                                        name="event-note"
+                                        size={16}
+                                        color={theme.accent ?? theme.primary}
+                                    />
+                                    <Text style={{
+                                        fontSize: tokens.fontSize.sm,
+                                        marginLeft: tokens.space.xs,
+                                        color: theme.accent ?? theme.primary,
+                                        fontWeight: tokens.fontWeight.medium,
+                                    }}>
+                                        {Translator.get('TODAY')}
+                                    </Text>
+                                </TouchableOpacity>
 
-                            {/* Bouton Semaine */}
-                            <TouchableOpacity
-                                onPress={this.onWeekPress}
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    paddingHorizontal: tokens.space.md,
-                                    paddingVertical: tokens.space.sm,
-                                    borderRadius: tokens.radius.md,
-                                    backgroundColor: theme.greyBackground,
-                                    
-                                }}>
+                                {/* Mois affiché */}
                                 <Text style={{
-                                    fontSize: tokens.fontSize.sm,
-                                    marginRight: tokens.space.xs,
-                                    color: theme.accent ?? theme.primary,
-                                    fontWeight: tokens.fontWeight.medium,
+                                    fontSize: tokens.fontSize.md,
+                                    fontWeight: tokens.fontWeight.semibold,
+                                    color: theme.fontSecondary,
+                                    flex: 1,
+                                    textAlign: 'center',
                                 }}>
-                                    {Translator.get('WEEK')}
+                                    {this.state.shownMonth.string}
                                 </Text>
-                                <MaterialCommunityIcons
-                                    name="calendar-range"
-                                    size={16}
-                                    color={theme.accent ?? theme.primary}
-                                />
-                            </TouchableOpacity>
+
+                                {/* Bouton Semaine */}
+                                <TouchableOpacity
+                                    onPress={this.onWeekPress}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingHorizontal: tokens.space.md,
+                                        paddingVertical: tokens.space.sm,
+                                        borderRadius: tokens.radius.md,
+                                        backgroundColor: theme.greyBackground,
+                                    }}>
+                                    <Text style={{
+                                        fontSize: tokens.fontSize.sm,
+                                        marginRight: tokens.space.xs,
+                                        color: theme.accent ?? theme.primary,
+                                        fontWeight: tokens.fontWeight.medium,
+                                    }}>
+                                        {Translator.get('WEEK')}
+                                    </Text>
+                                    <MaterialCommunityIcons
+                                        name="calendar-range"
+                                        size={16}
+                                        color={theme.accent ?? theme.primary}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Liste des jours */}
+                            <FlatList
+                                ref={(list) => (this.calendarList = list)}
+                                showsHorizontalScrollIndicator={false}
+                                data={this.state.days}
+                                horizontal={true}
+                                keyExtractor={this.extractCalendarListItemKey}
+                                viewabilityConfig={this.viewability}
+                                onViewableItemsChanged={this.checkViewableItems}
+                                initialScrollIndex={this.state.currentDayIndex}
+                                getItemLayout={DayView.getCalendarListItemLayout}
+                                extraData={this.state}
+                                renderItem={this.renderCalendarListItem}
+                            />
                         </View>
 
-                        {/* Liste des jours */}
-                        <FlatList
-                            ref={(list) => (this.calendarList = list)}
-                            showsHorizontalScrollIndicator={false}
-                            data={this.state.days}
-                            horizontal={true}
-                            keyExtractor={this.extractCalendarListItemKey}
-                            viewabilityConfig={this.viewability}
-                            onViewableItemsChanged={this.checkViewableItems}
-                            initialScrollIndex={this.state.currentDayIndex}
-                            getItemLayout={DayView.getCalendarListItemLayout}
-                            extraData={this.state}
-                            renderItem={this.renderCalendarListItem}
-                            style={{
-                                backgroundColor: theme.cardBackground,
-                            }}
-                        />
-                    </SafeAreaView>
-                </View>
-            </SafeAreaView>
+                        {/* Contenu principal : liste des cours */}
+                        <View style={{ flex: 1 }}>
+                            <DayComponent
+                                key={`${this.state.days[0].dayOfYear()}-${this.context.themeName}`}
+                                day={this.state.selectedDay}
+                                groupName={this.props.groupName}
+                                theme={theme}
+                                navigation={this.props.navigation}
+                                filtersList={this.context.filters}
+                            />
+                        </View>
+                    </View>
+                )}
+            </SafeAreaInsetsContext.Consumer>
         );
 	}
 }

@@ -63,7 +63,7 @@ export default {
 	MAILBOX: 'Buzón',
 	MASTERS: 'Master',
 	MY_GROUP: 'Mi grupo',
-    MY_PLANNING: 'Mi Horario',
+    MY_PLANNING: 'Horario',
 	NAVIGATION: 'Navegacíon',
 	NEXT: 'Siguiente',
 	NONE: 'Ninguno',

@@ -21,7 +21,7 @@ const BdeWidget = () => {
             <View style={[styles.container, { 
                 backgroundColor: theme.cardBackground,
                 borderRadius: tokens.radius.xl,
-                marginHorizontal: tokens.space.sm,
+                marginHorizontal: tokens.space.md,
                 ...tokens.shadow.md,
                 padding: tokens.space.md
             }]}>

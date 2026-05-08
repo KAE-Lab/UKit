@@ -60,7 +60,7 @@ export default {
 	MAILBOX: 'Mailbox',
 	MASTERS: "Master's",
 	MY_GROUP: 'My group',
-    MY_PLANNING: 'My Planning',
+    MY_PLANNING: 'Planning',
 	NAVIGATION: 'Navigation',
 	NEXT: 'Next',
 	NONE: 'None',

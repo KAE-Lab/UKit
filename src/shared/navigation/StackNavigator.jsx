@@ -3,7 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
-import Dashboard from '../../features/Dashboard/DashboardScreen';
+import MainTabNavigator from './MainTabNavigator';
 import GroupSearch from '../../features/Home/HomeScreen';
 import Group from '../../features/Schedule/ScheduleScreen';
 import About from '../../features/About/AboutScreen';
@@ -41,7 +41,7 @@ export default function StackNavigator() {
 
                 return (
                     <Stack.Navigator
-                        initialRouteName="Dashboard"
+                        initialRouteName="MainTabs"
                         screenOptions={{
                             headerLeft: (props) => props.canGoBack ? (
                                 <TouchableOpacity onPress={props.onPress} style={{ paddingLeft: tokens.space.md }}>
@@ -52,7 +52,7 @@ export default function StackNavigator() {
                             ) : undefined,
                         }}>
                         
-                        <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
+                        <Stack.Screen name="MainTabs" component={MainTabNavigator} options={{ headerShown: false }} />
 
                         <Stack.Screen name="GroupSearch" component={GroupSearch} options={({ route }) => NavBarHelper({ title: Translator.get('GROUPS'), themeName, route, gestureEnabled: true })} />
                         
