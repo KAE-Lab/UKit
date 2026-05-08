@@ -201,7 +201,7 @@ function PlanningStackScreen() {
                 name="ScheduleInternal" 
                 component={ScheduleScreen} 
                 initialParams={{ name: [] }} 
-                options={{ headerShown: true }} // Le header natif de React Navigation est géré par ScheduleScreen
+                options={{ headerShown: false }} // DayView gère son propre header sticky avec safe area
             />
         </PlanningStack.Navigator>
     );

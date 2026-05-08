@@ -328,7 +328,7 @@ const CampusDashboard = ({ navigation }) => {
                         )}
                         scrollEventThrottle={16}
                         ListHeaderComponent={() => (
-                            <View style={{ paddingTop: (insets?.top || 0) + 65 }}>
+                            <View style={{ paddingTop: (insets?.top || 0) + 60 }}>
                                 {/* BDE Widget */}
                                 <BdeWidget />
 

@@ -339,43 +339,39 @@ export class ScheduleList extends React.Component {
             );
         }
 
-        const listHeader = (
+        // En mode 'day', le titre de la date est géré par le sticky header du DayView
+        // En mode 'week', on conserve le titre dans le listHeader
+        const listHeader = mode === 'week' ? (
             <View style={{ paddingBottom: tokens.space.md }}>
                 <Text style={{ fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold, color: theme.fontSecondary, textAlign: 'center', marginBottom: cacheMessage ? tokens.space.sm : 0 }}>
                     {this.displayTitle()}
                 </Text>
                 {cacheMessage}
             </View>
-        );
+        ) : cacheMessage ? (
+            <View style={{ paddingBottom: tokens.space.sm }}>{cacheMessage}</View>
+        ) : null;
 
         if (Array.isArray(this.state.groupName) && this.state.groupName.length === 0) {
             content = (
-                <SafeAreaInsetsContext.Consumer>
-                    {(insets) => (
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: (insets?.top || 0) + 65, paddingHorizontal: 40 }}>
-                            <MaterialCommunityIcons name="star-outline" size={60} color={theme.fontSecondary} style={{ marginBottom: tokens.space.lg }} />
-                            <Text style={{ color: theme.font, fontSize: tokens.fontSize.lg, fontWeight: 'bold', textAlign: 'center', marginBottom: tokens.space.md }}>
-                                {Translator.get('FAVORITES_EMPTY_TITLE') || "Votre planning est vide"}
-                            </Text>
-                            <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center', lineHeight: 22 }}>
-                                {Translator.get('FAVORITES_EMPTY') || "Votre liste de favoris est vide. Recherchez un groupe dans la liste pour l'ajouter à un de vos favoris !"}
-                            </Text>
-                            <TouchableOpacity style={{ marginTop: 30, backgroundColor: theme.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }} onPress={() => navigation.navigate('Home')}>
-                                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{Translator.get('GROUPS_LIST') || "Groupes"}</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </SafeAreaInsetsContext.Consumer>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 }}>
+                    <MaterialCommunityIcons name="star-outline" size={60} color={theme.fontSecondary} style={{ marginBottom: tokens.space.lg }} />
+                    <Text style={{ color: theme.font, fontSize: tokens.fontSize.lg, fontWeight: 'bold', textAlign: 'center', marginBottom: tokens.space.md }}>
+                        {Translator.get('FAVORITES_EMPTY_TITLE') || "Votre planning est vide"}
+                    </Text>
+                    <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center', lineHeight: 22 }}>
+                        {Translator.get('FAVORITES_EMPTY') || "Votre liste de favoris est vide. Recherchez un groupe dans la liste pour l'ajouter \u00e0 un de vos favoris !"}
+                    </Text>
+                    <TouchableOpacity style={{ marginTop: 30, backgroundColor: theme.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }} onPress={() => navigation.navigate('Home')}>
+                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{Translator.get('GROUPS_LIST') || "Groupes"}</Text>
+                    </TouchableOpacity>
+                </View>
             );
         } else if (this.state.schedule === null) {
             content = (
-                <SafeAreaInsetsContext.Consumer>
-                    {(insets) => (
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: (insets?.top || 0) + 65 }}>
-                            <ActivityIndicator style={{ margin: tokens.space.lg }} size="large" color={theme.primary} animating={true} />
-                        </View>
-                    )}
-                </SafeAreaInsetsContext.Consumer>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator style={{ margin: tokens.space.lg }} size="large" color={theme.primary} animating={true} />
+                </View>
             );
         } else if (this.state.schedule instanceof Array && mode === 'day') {
             let daySchedule = this.state.schedule;
@@ -393,7 +389,7 @@ export class ScheduleList extends React.Component {
                     renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item} theme={theme} />}
                     keyExtractor={(item, index) => String(index)}
                     style={{ backgroundColor: theme.courseBackground }}
-                    contentContainerStyle={this.props.headerPadding}
+                    contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.sm }}
                     showsVerticalScrollIndicator={false}
                     onScroll={this.props.onAnimatedScroll}
                     scrollEventThrottle={16}

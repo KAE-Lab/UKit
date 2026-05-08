@@ -2,13 +2,14 @@ import React from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
-import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import CalendarDay from './CalendarDay';
 import { DayComponent } from './ScheduleList'; 
 import style, { tokens } from '../../shared/theme/Theme'; 
 import Translator from '../../shared/i18n/Translator';
 import { AppContext } from '../../shared/services/AppCore';
+import { SaveGroupButton } from '../../shared/navigation/NavHelpers';
 
 function capitalize(str) {
 	return `${str.charAt(0).toUpperCase()}${str.substr(1)}`;
@@ -129,28 +130,50 @@ class DayView extends React.Component {
 
 	render() {
 		const theme = style.Theme[this.context.themeName];
+		const primaryColor = theme.accent ?? theme.primary;
 
 		return (
             <SafeAreaInsetsContext.Consumer>
                 {(insets) => (
                     <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-                        {/* Barre de navigation haute (Slider) */}
+                        {/* ── Header sticky (même pattern que CampusDashboard) ── */}
                         <View style={{
                             backgroundColor: theme.cardBackground,
                             borderBottomWidth: 1,
                             borderBottomColor: theme.border,
-                            paddingTop: tokens.space.xs,
+                            paddingTop: (insets?.top || 0),
                             paddingBottom: tokens.space.sm,
                             ...tokens.shadow.sm,
                         }}>
-                            {/* Header : mois + boutons */}
+                            {/* Ligne 1 : Titre "Planning" + bouton favoris — style identique à greetingText/Campus */}
                             <View style={{
                                 flexDirection: 'row',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                height: 44,
-                                paddingHorizontal: tokens.space.xs + 2,
-                                marginBottom: tokens.space.xs,
+                                paddingHorizontal: tokens.space.md,
+                            }}>
+                                <Text style={{
+                                    fontSize: 34,
+                                    fontWeight: tokens.fontWeight.bold,
+                                    fontFamily: 'Montserrat_600SemiBold',
+                                    color: theme.font,
+                                    marginBottom: tokens.space.md,
+                                }}>
+                                    {Translator.get('MY_PLANNING') || 'Planning'}
+                                </Text>
+                                <SaveGroupButton
+                                    groupName={this.props.groupName}
+                                    themeName={this.context.themeName}
+                                />
+                            </View>
+
+                            {/* Ligne 2 : boutons Today / Mois / Week */}
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                paddingHorizontal: tokens.space.md,
+                                marginBottom: tokens.space.sm,
                             }}>
                                 {/* Bouton Aujourd'hui */}
                                 <TouchableOpacity
@@ -166,19 +189,19 @@ class DayView extends React.Component {
                                     <MaterialIcons
                                         name="event-note"
                                         size={16}
-                                        color={theme.accent ?? theme.primary}
+                                        color={primaryColor}
                                     />
                                     <Text style={{
                                         fontSize: tokens.fontSize.sm,
                                         marginLeft: tokens.space.xs,
-                                        color: theme.accent ?? theme.primary,
+                                        color: primaryColor,
                                         fontWeight: tokens.fontWeight.medium,
                                     }}>
                                         {Translator.get('TODAY')}
                                     </Text>
                                 </TouchableOpacity>
 
-                                {/* Mois affiché */}
+                                {/* Mois affiché (comme avant) */}
                                 <Text style={{
                                     fontSize: tokens.fontSize.md,
                                     fontWeight: tokens.fontWeight.semibold,
@@ -203,7 +226,7 @@ class DayView extends React.Component {
                                     <Text style={{
                                         fontSize: tokens.fontSize.sm,
                                         marginRight: tokens.space.xs,
-                                        color: theme.accent ?? theme.primary,
+                                        color: primaryColor,
                                         fontWeight: tokens.fontWeight.medium,
                                     }}>
                                         {Translator.get('WEEK')}
@@ -211,12 +234,12 @@ class DayView extends React.Component {
                                     <MaterialCommunityIcons
                                         name="calendar-range"
                                         size={16}
-                                        color={theme.accent ?? theme.primary}
+                                        color={primaryColor}
                                     />
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Liste des jours */}
+                            {/* Slider des jours */}
                             <FlatList
                                 ref={(list) => (this.calendarList = list)}
                                 showsHorizontalScrollIndicator={false}
