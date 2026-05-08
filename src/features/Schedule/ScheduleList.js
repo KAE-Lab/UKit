@@ -98,9 +98,9 @@ export class DayWeek extends React.Component {
             : 'Date inconnue';
 
         const activeCourses = schedule.courses ? schedule.courses.filter(c => c.category !== 'nocourse') : [];
-        const courseCount = activeCourses.length;
-
         const groupedCourses = groupOverlappingCourses(activeCourses);
+        // Le compteur = nombre de cartes visibles (après fusion des cours qui se chevauchent)
+        const courseCount = groupedCourses.length;
 
         return (
             <View style={{ marginBottom: tokens.space.sm }}>
@@ -339,16 +339,9 @@ export class ScheduleList extends React.Component {
             );
         }
 
-        // En mode 'day', le titre de la date est géré par le sticky header du DayView
-        // En mode 'week', on conserve le titre dans le listHeader
-        const listHeader = mode === 'week' ? (
-            <View style={{ paddingBottom: tokens.space.md }}>
-                <Text style={{ fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold, color: theme.fontSecondary, textAlign: 'center', marginBottom: cacheMessage ? tokens.space.sm : 0 }}>
-                    {this.displayTitle()}
-                </Text>
-                {cacheMessage}
-            </View>
-        ) : cacheMessage ? (
+        // En mode 'day', le titre est géré par le sticky header du DayView
+        // En mode 'week', le titre de semaine est dans le slider — seul le cacheMessage subsiste
+        const listHeader = cacheMessage ? (
             <View style={{ paddingBottom: tokens.space.sm }}>{cacheMessage}</View>
         ) : null;
 
