@@ -123,7 +123,7 @@ export class SaveGroupButton extends React.Component {
                 <View>
                     <TouchableOpacity onPress={() => this.setState({ modalVisible: true })} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
-                            <MaterialCommunityIcons name="format-list-bulleted" size={26} color={theme.primary} />
+                        <MaterialCommunityIcons name="filter-variant-remove" size={26} color={theme.primary} />
                         </View>
                     </TouchableOpacity>
                     <Modal animationType="fade" transparent={true} visible={this.state.modalVisible} onRequestClose={() => this.setState({ modalVisible: false })}>

@@ -10,7 +10,6 @@ import { DayComponent, WeekComponent } from './ScheduleList';
 import style, { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
 import { AppContext } from '../../shared/services/AppCore';
-import { SaveGroupButton } from '../../shared/navigation/NavHelpers';
 
 function capitalize(str) {
 	return `${str.charAt(0).toUpperCase()}${str.substr(1)}`;
@@ -206,12 +205,10 @@ class DayView extends React.Component {
 							paddingBottom: tokens.space.sm,
 							...tokens.shadow.sm,
 						}}>
-							{/* Ligne 1 : Titre + favoris — identique à greetingText Campus */}
+							{/* Ligne 1 : Titre "Planning" — visible en vue favoris, invisible (mais occupe l'espace) en vue groupe spécifique */}
 							<View style={{
-								flexDirection: 'row',
-								justifyContent: 'space-between',
-								alignItems: 'center',
 								paddingHorizontal: tokens.space.md,
+								opacity: Array.isArray(this.props.groupName) ? 1 : 0,
 							}}>
 								<Text style={{
 									fontSize: 34,
@@ -222,10 +219,6 @@ class DayView extends React.Component {
 								}}>
 									{Translator.get('MY_PLANNING') || 'Planning'}
 								</Text>
-								<SaveGroupButton
-									groupName={this.props.groupName}
-									themeName={this.context.themeName}
-								/>
 							</View>
 
 							{/* Ligne 2 : Today/ThisWeek | Label | Week/Day */}

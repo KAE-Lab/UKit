@@ -382,7 +382,7 @@ export class ScheduleList extends React.Component {
                     renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item} theme={theme} />}
                     keyExtractor={(item, index) => String(index)}
                     style={{ backgroundColor: theme.courseBackground }}
-                    contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.sm }}
+                    contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.xxl + 80 }}
                     showsVerticalScrollIndicator={false}
                     onScroll={this.props.onAnimatedScroll}
                     scrollEventThrottle={16}
@@ -397,7 +397,7 @@ export class ScheduleList extends React.Component {
                 <Animated.ScrollView 
                     showsVerticalScrollIndicator={false} 
                     style={{ flex: 1, backgroundColor: theme.courseBackground }}
-                    contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.sm }}
+                    contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.xxl + 80 }}
                     onScroll={this.props.onAnimatedScroll}
                     scrollEventThrottle={16}
                 >

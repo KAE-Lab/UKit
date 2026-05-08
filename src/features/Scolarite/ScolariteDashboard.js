@@ -81,16 +81,14 @@ const ScolariteDashboard = ({ navigation }) => {
                             fullWidth
                             color={theme.sectionsHeaders[3] || theme.primary}
                         >
-                            <View style={{ paddingHorizontal: tokens.space.sm, flexDirection: 'row' }}>
+                            <View style={{ paddingHorizontal: tokens.space.sm }}>
                                 <TouchableOpacity 
                                     activeOpacity={0.8}
                                     onPress={() => {}}
                                     style={{
-                                        flex: 2,
                                         backgroundColor: theme.cardBackground,
                                         borderRadius: tokens.radius.md,
                                         padding: tokens.space.md,
-                                        marginRight: tokens.space.xs,
                                         flexDirection: 'row',
                                         alignItems: 'center',
                                         ...tokens.shadow.sm,
@@ -122,15 +120,6 @@ const ScolariteDashboard = ({ navigation }) => {
                                         </Text>
                                     </View>
                                 </TouchableOpacity>
-
-                                <ShortcutTile 
-                                    title={Translator.get('GROUPS') || 'Groupes'} 
-                                    icon="format-list-bulleted" 
-                                    onPress={() => navigation.navigate('GroupSearch')}
-                                    color={theme.sectionsHeaders[1] || theme.secondary}
-                                    theme={theme}
-                                    style={{ flex: 1, marginLeft: tokens.space.xs }}
-                                />
                             </View>
                         </WidgetCard>
 

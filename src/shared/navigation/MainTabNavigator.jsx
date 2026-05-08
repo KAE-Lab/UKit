@@ -89,8 +89,24 @@ function CustomTabBar({ state, descriptors, navigation, theme }) {
                                 );
                             })}
                         </View>
-                        {/* Espace vide à droite pour recréer l'effet décalé d'Apple Music */}
-                        <View style={styles.searchPlaceholder} />
+                        {/* Bouton accès groupes — séparé de la tab bar pour signaler une action distincte */}
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('GroupSearch')}
+                            activeOpacity={0.85}
+                            style={[
+                                styles.groupButton,
+                                {
+                                    backgroundColor: theme.cardBackground,
+                                    borderColor: theme.border,
+                                }
+                            ]}
+                        >
+                            <MaterialCommunityIcons
+                                name="account-search-outline"
+                                size={26}
+                                color={theme.accent ?? theme.primary}
+                            />
+                        </TouchableOpacity>
                     </View>
                 );
             }}
@@ -169,9 +185,18 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         marginRight: tokens.space.xl, // C'est ici qu'on recrée le décalage sur la gauche
     },
-    searchPlaceholder: {
-        // Cet espace vide représente l'endroit où serait la loupe de recherche
+    groupButton: {
         width: 65,
+        height: 75,
+        borderRadius: tokens.radius.md,
+        borderWidth: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
     },
     tabItem: {
         flex: 1,
