@@ -163,4 +163,6 @@ export default {
 	UNKNOWN_SUBJECT: 'Curso desconocido',
 	SETTINGS_LOAD_ERROR: 'No se han podido cargar los ajustes',
 	NO_RU_NEARBY: 'No hay restaurante universitario cerca.',
+	SCOLARITY: "Escolaridad",
+	STUDENT_LIFE: "Vida estudiantil",
 };

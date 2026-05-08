@@ -404,7 +404,7 @@ export class ScheduleList extends React.Component {
                 <Animated.ScrollView 
                     showsVerticalScrollIndicator={false} 
                     style={{ flex: 1, backgroundColor: theme.courseBackground }}
-                    contentContainerStyle={this.props.headerPadding}
+                    contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.sm }}
                     onScroll={this.props.onAnimatedScroll}
                     scrollEventThrottle={16}
                 >

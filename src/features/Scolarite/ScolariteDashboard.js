@@ -136,7 +136,7 @@ const ScolariteDashboard = ({ navigation }) => {
 
                         {/* SECTION OUTILS UNIVERSITAIRES */}
                         <WidgetCard
-                            title={Translator.get('UNIVERSITY_TOOLS') || 'Outils Universitaires'}
+                            title={Translator.get('NAVIGATION') || 'Navigation'}
                             icon="toolbox-outline"
                             transparent={true}
                             fullWidth

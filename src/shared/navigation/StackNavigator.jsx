@@ -12,7 +12,6 @@ import WebBrowser from '../../features/Browser/WebBrowserScreen';
 import Geolocation from '../../features/Map/MapScreen';
 import Course from '../../features/Schedule/CourseCard';
 import DayView from '../../features/Schedule/DayView';
-import WeekView from '../../features/Schedule/WeekView';
 import CrousScreen from '../../features/Crous/CrousScreen';
 import CrousMenuScreen from '../../features/Crous/CrousMenuScreen';
 import LibraryScreen from '../../features/Library/LibraryScreen';
@@ -79,8 +78,6 @@ export default function StackNavigator() {
                         <Stack.Screen name="WebBrowser" component={WebBrowser} options={({ route }) => {
                             return NavBarHelper({ title: treatTitle(route.params?.title ?? Translator.get('WEB_BROWSER')), themeName, route, gestureEnabled: true });
                         }} />
-                        
-                        <Stack.Screen name="Week" component={WeekView} options={({ route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.groupName} themeName={themeName} /></View>, title: Array.isArray(route.params.groupName) ? (Translator.get('MY_PLANNING') || 'Mon Planning') : treatTitle(route.params.groupName), themeName, route })} />
                         
                         <Stack.Screen name="Day" component={DayView} options={{ tabBarLabel: Translator.get('DAY'), tabBarIcon: ({ tintColor }) => <MaterialCommunityIcons name="calendar" size={24} style={{ color: tintColor }} /> }} />
                         
