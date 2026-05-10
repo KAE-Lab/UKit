@@ -109,7 +109,7 @@ export default {
 	WEEK: 'Semaine',
 	WEB_BROWSER: 'Navigateur web',
 	GROUPS_LIST: 'Liste des groupes',
-	RESTAURANTS_U: 'Restaurants universitaires',
+	RESTAURANTS_U: 'Restaurants Universitaires',
 	RESTAURANTS: 'Restaurants',
 	MENU: 'Menu',
 	LUNCH: 'Midi',
@@ -162,5 +162,7 @@ export default {
 	SETTINGS_LOAD_ERROR: 'Impossible de charger les paramètres',
 	NO_RU_NEARBY: 'Aucun restaurant universitaire proche.',
 	SCOLARITY: "Scolarité",
-	STUDENT_LIFE: "Vie étudiante",
+	STUDENT_LIFE: "Vie Étudiante",
+	SEE_ALL: "Voir tout",
+	UNIVERSITY_LIBRARY: "Bibliothèque Universitaire",
 };

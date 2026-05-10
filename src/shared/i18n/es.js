@@ -111,7 +111,7 @@ export default {
 	WEEK: 'Semana',
 	WEB_BROWSER: 'Navegador web',
 	GROUPS_LIST: 'Lista de grupos',
-	RESTAURANTS_U: 'Restaurantes universitarios',
+	RESTAURANTS_U: 'Restaurantes Universitarios',
 	RESTAURANTS: 'Restaurantes',
 	MENU: 'Menú',
 	LUNCH: 'Mediodía',
@@ -164,5 +164,7 @@ export default {
 	SETTINGS_LOAD_ERROR: 'No se han podido cargar los ajustes',
 	NO_RU_NEARBY: 'No hay restaurante universitario cerca.',
 	SCOLARITY: "Escolaridad",
-	STUDENT_LIFE: "Vida estudiantil",
+	STUDENT_LIFE: "Vida Estudiantil",
+	SEE_ALL: "Ver todo",
+	UNIVERSITY_LIBRARY: "Bibliotecas Universitarias",
 };

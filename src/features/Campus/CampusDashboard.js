@@ -216,7 +216,7 @@ const CampusDashboard = ({ navigation }) => {
                         </TouchableOpacity>
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
                         <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
                         <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }} numberOfLines={1}>
                             {item.short_desc}
@@ -291,7 +291,7 @@ const CampusDashboard = ({ navigation }) => {
                             </TouchableOpacity>
                         </View>
 
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
                             <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }} numberOfLines={1}>
                                 {item.campus}
@@ -307,23 +307,22 @@ const CampusDashboard = ({ navigation }) => {
                             )}
                         </View>
 
-                        <View style={{ marginTop: tokens.space.xs }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                                <View style={{ flex: 1, paddingRight: tokens.space.sm }}>
-                                    <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold, color: statusColor }}>
-                                        {statusText}
-                                    </Text>
-                                </View>
-                                {rate !== null && (
-                                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <MaterialCommunityIcons name={isOpen ? 'door-open' : 'door-closed'} size={16} color={statusColor} />
+                            <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold, color: statusColor, marginLeft: 4, flexShrink: 1 }}>
+                                {statusText}
+                            </Text>
+                            
+                            {isOpen && rate !== null && (
+                                <>
+                                    <View style={{ flex: 1, height: 6, backgroundColor: theme.greyBackground, borderRadius: 3, overflow: 'hidden', marginHorizontal: tokens.space.sm }}>
+                                        <View style={{ width: `${rate}%`, height: '100%', backgroundColor: statusColor, borderRadius: 3 }} />
+                                    </View>
+                                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.bold }}>
                                         {`${rate}%`}
                                     </Text>
-                                )}
-                            </View>
-
-                            <View style={{ height: 6, backgroundColor: theme.greyBackground, borderRadius: 3, overflow: 'hidden' }}>
-                                <View style={{ width: `${rate ?? 0}%`, height: '100%', backgroundColor: statusColor, borderRadius: 3 }} />
-                            </View>
+                                </>
+                            )}
                         </View>
                     </View>
                 </TouchableOpacity>
@@ -398,22 +397,14 @@ const CampusDashboard = ({ navigation }) => {
                         {(loadingBde || annonces.length > 0) ? (
                             <View style={{ marginTop: tokens.space.md }}>
                                 <TouchableOpacity 
-                                    style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+                                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
                                     onPress={() => navigation.navigate('Bde')}
                                     activeOpacity={0.7}
                                 >
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <MaterialCommunityIcons name="party-popper" size={18} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.xs }} />
-                                        <Text style={[styles.sectionTitle, { color: theme.font, marginBottom: 0 }]}>
-                                            {Translator.get('STUDENT_LIFE') || 'Student life'}
-                                        </Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}20`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
-                                        <Text style={{ fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginRight: 2 }}>
-                                            {Translator.get('SEE_ALL') || 'Tout voir'}
-                                        </Text>
-                                        <MaterialCommunityIcons name="chevron-right" size={14} color={theme.primary} />
-                                    </View>
+                                    <Text style={[styles.sectionTitle, { color: theme.font }]}>
+                                        {Translator.get('STUDENT_LIFE') || 'Student life'}
+                                    </Text>
+                                    <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
                                 </TouchableOpacity>
 
                                 {loadingBde ? (
@@ -436,22 +427,14 @@ const CampusDashboard = ({ navigation }) => {
                         {/* Restaurants */}
                         <View style={{ marginTop: tokens.space.md }}>
                         <TouchableOpacity
-                                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+                                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
                                 onPress={() => navigation.navigate('Crous')}
                                 activeOpacity={0.7}
                             >
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <MaterialCommunityIcons name="silverware-fork-knife" size={18} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.xs }} />
-                                    <Text style={[styles.sectionTitle, { color: theme.font, marginBottom: 0 }]}>
-                                        {Translator.get('RESTAURANT_U') || 'Restaurants Universitaires'}
-                                    </Text>
-                                </View>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}20`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
-                                    <Text style={{ fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginRight: 2 }}>
-                                        {Translator.get('SEE_ALL') || 'Tout voir'}
-                                    </Text>
-                                    <MaterialCommunityIcons name="chevron-right" size={14} color={theme.primary} />
-                                </View>
+                                <Text style={[styles.sectionTitle, { color: theme.font }]}>
+                                    {Translator.get('RESTAURANT_U') || 'Restaurants Universitaires'}
+                                </Text>
+                                <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
                             </TouchableOpacity>
 
                             {loadingRu ? (
@@ -473,22 +456,14 @@ const CampusDashboard = ({ navigation }) => {
                         {/* Bibliothèques */}
                         <View style={{ marginTop: tokens.space.md }}>
                         <TouchableOpacity
-                                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+                                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
                                 onPress={() => navigation.navigate('Library')}
                                 activeOpacity={0.7}
                             >
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <MaterialCommunityIcons name="book-open-variant" size={18} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.xs }} />
-                                    <Text style={[styles.sectionTitle, { color: theme.font, marginBottom: 0 }]}>
-                                        {Translator.get('UNIVERSITY_LIBRARY') || 'Bibliothèques Universitaires'}
-                                    </Text>
-                                </View>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}20`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
-                                    <Text style={{ fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginRight: 2 }}>
-                                        {Translator.get('SEE_ALL') || 'Tout voir'}
-                                    </Text>
-                                    <MaterialCommunityIcons name="chevron-right" size={14} color={theme.primary} />
-                                </View>
+                                <Text style={[styles.sectionTitle, { color: theme.font }]}>
+                                    {Translator.get('UNIVERSITY_LIBRARY') || 'Bibliothèques Universitaires'}
+                                </Text>
+                                <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
                             </TouchableOpacity>
 
                             {loadingBu ? (
@@ -536,9 +511,8 @@ const styles = StyleSheet.create({
         marginBottom: tokens.space.md,
     },
     sectionTitle: {
-        fontSize: tokens.fontSize.md,
+        fontSize: 22,
         fontWeight: tokens.fontWeight.bold,
-        marginLeft: tokens.space.xs,
         fontFamily: 'Montserrat_600SemiBold',
     },
 });

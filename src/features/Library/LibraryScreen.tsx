@@ -209,7 +209,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     </View>
                     
                     {/* Ligne : Ville + Badge de Distance */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
                         <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
                         <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
                             {item.campus}
@@ -240,39 +240,23 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                         )}
                     </View>
 
-                    {/* Jauge d'affluence avec son fix flexbox */}
-                    <View style={{ marginTop: tokens.space.xs }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <View style={{ flex: 1, paddingRight: tokens.space.sm }}>
-                                <Text
-                                    numberOfLines={1}
-                                    ellipsizeMode='tail'
-                                    style={{
-                                        fontSize: tokens.fontSize.xs,
-                                        fontWeight: tokens.fontWeight.semibold as any,
-                                        color: statusColor
-                                    }}>
-                                    {statusText} 
-                                </Text>
-                            </View>
-                            {rate !== null && (
-                                <View style={{ flexShrink: 0, minWidth: 35, alignItems: 'flex-end', paddingRight: 2 }}>
-                                    <Text
-                                    style={{
-                                        fontSize: tokens.fontSize.xs,
-                                        color: theme.font,
-                                        fontWeight: tokens.fontWeight.semibold as any
-                                    }}>
-                                    {rate}%
-                                </Text>
+                    {/* Jauge d'affluence en une ligne */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialCommunityIcons name={isOpen ? 'door-open' : 'door-closed'} size={16} color={statusColor} />
+                        <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold as any, color: statusColor, marginLeft: 4, flexShrink: 1 }}>
+                            {statusText}
+                        </Text>
+                        
+                        {isOpen && rate !== null && (
+                            <>
+                                <View style={{ flex: 1, height: 6, backgroundColor: theme.greyBackground, borderRadius: 3, overflow: 'hidden', marginHorizontal: tokens.space.sm }}>
+                                    <View style={{ width: `${rate}%`, height: '100%', backgroundColor: statusColor, borderRadius: 3 }} />
                                 </View>
-                            )}
-                        </View>
-                        <View style={{ height: 6, borderRadius: 3, backgroundColor: theme.border, overflow: 'hidden' }}>
-                            {rate !== null && (
-                                <View style={{ height: '100%', borderRadius: 3, width: `${rate}%`, backgroundColor: statusColor }} />
-                            )}
-                        </View>
+                                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.bold as any }}>
+                                    {`${rate}%`}
+                                </Text>
+                            </>
+                        )}
                     </View>
 
                 </View>

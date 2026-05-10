@@ -214,7 +214,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 </View>
                                 
                                 {/* 2. LOCALISATION ET BADGE DISTANCE (restaure) */}
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
                                     <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
                                     <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
                                         {item.short_desc}
