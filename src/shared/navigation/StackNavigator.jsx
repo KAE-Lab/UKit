@@ -4,7 +4,7 @@ import { TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import MainTabNavigator from './MainTabNavigator';
-import GroupSearch from '../../features/Home/HomeScreen';
+import GroupSearch from '../../features/Schedule/GroupSelectionScreen';
 import Group from '../../features/Schedule/ScheduleScreen';
 import About from '../../features/About/AboutScreen';
 import Settings from '../../features/Settings/SettingsScreen';

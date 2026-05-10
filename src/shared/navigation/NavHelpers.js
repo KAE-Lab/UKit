@@ -166,8 +166,8 @@ export class SaveGroupButton extends React.Component {
 
         return (
             <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
-                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={26} color={theme.primary} />
+                <View style={{ backgroundColor: theme.primary, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
+                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={26} color={'#FFFFFF'} />
                 </View>
             </TouchableOpacity>
         );

@@ -104,9 +104,12 @@ function CustomTabBar({ state, descriptors, navigation, theme }) {
                             >
                                 <MaterialCommunityIcons
                                     name="account-search-outline"
-                                    size={26}
+                                    size={24}
                                     color={theme.accent ?? theme.primary}
                                 />
+                                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                                    {Translator.get('GROUPS')}
+                                </Text>
                             </TouchableOpacity>
                         ) : (
                             /* Placeholder invisible — maintient la largeur de la tab bar sans afficher de contour */
