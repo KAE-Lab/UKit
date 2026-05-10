@@ -163,4 +163,6 @@ export default {
 	STUDENT_LIFE: "Student Life",
 	SEE_ALL: "See all",
 	UNIVERSITY_LIBRARY: "University Libraries",
+	FREE_ROOMS: "Free Rooms",
+	AVAILABLE_UNTIL: "Available until",
 };

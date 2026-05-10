@@ -18,6 +18,8 @@ import LibraryScreen from '../../features/Library/LibraryScreen';
 import LibraryDetailsScreen from '../../features/Library/LibraryDetailsScreen';
 import BdeDetailsScreen from '../../features/Bde/BdeDetailsScreen';
 import BdeScreen from '../../features/Bde/BdeScreen';
+import FreeRoomScreen from '../../features/FreeRoom/FreeRoomScreen';
+import FreeRoomDetailsScreen from '../../features/FreeRoom/FreeRoomDetailsScreen';
 
 import style, { tokens } from '../theme/Theme';
 import { AppContext, treatTitle } from '../services/AppCore';
@@ -91,6 +93,9 @@ export default function StackNavigator() {
 
                         <Stack.Screen name="BdeDetail" component={BdeDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS') || 'Détails', themeName, route, gestureEnabled: true })} />
                     
+                        <Stack.Screen name="FreeRoomScreen" component={FreeRoomScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FREE_ROOMS') || 'Salles Libres', themeName, route, gestureEnabled: true })} />
+                        <Stack.Screen name="FreeRoomDetails" component={FreeRoomDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS') || 'Détails', themeName, route, gestureEnabled: true })} />
+
                         <Stack.Screen name="Geolocation" component={Geolocation} options={({ route }) => NavBarHelper({ title: Translator.get('MAP'), themeName, route })} />
                         
                         <Stack.Screen name="Course" component={Course} options={({ navigation, route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />

@@ -10,9 +10,11 @@ import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
+import { DataManager } from '../../shared/services/DataService';
 import { CrousService, CrousRestaurant } from '../Crous/CrousService';
 import LibraryService from '../Library/LibraryService';
 import BdeService from '../Bde/BdeService';
+import { getDistanceInKm } from '../FreeRoom/FreeRoomService';
 
 const defaultRuImage = require('../../../assets/images/default_resto.png');
 const defaultBuImage = require('../../../assets/images/default_resto.png');
@@ -26,14 +28,17 @@ const CampusDashboard = ({ navigation }) => {
 
     const [restaurants, setRestaurants] = useState([]);
     const [libraries, setLibraries] = useState([]);
+    const [buildings, setBuildings] = useState([]);
     const [affluences, setAffluences] = useState({});
     const [loadingRu, setLoadingRu] = useState(true);
     const [loadingBu, setLoadingBu] = useState(true);
+    const [loadingBuildings, setLoadingBuildings] = useState(true);
     const [annonces, setAnnonces] = useState([]);
     const [loadingBde, setLoadingBde] = useState(true);
 
     const [favRu, setFavRu] = useState([]);
     const [favBu, setFavBu] = useState([]);
+    const [favBuildings, setFavBuildings] = useState([]);
     const mountedRef = useRef(true);
     const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -48,6 +53,9 @@ const CampusDashboard = ({ navigation }) => {
 
                     const savedFavBu = await AsyncStorage.getItem('library_favorites');
                     if (savedFavBu) setFavBu(JSON.parse(savedFavBu));
+
+                    const savedFavBuildings = await AsyncStorage.getItem('freeroom_favorites');
+                    if (savedFavBuildings) setFavBuildings(JSON.parse(savedFavBuildings));
                 } catch (e) { }
             };
             loadFavorites();
@@ -67,6 +75,14 @@ const CampusDashboard = ({ navigation }) => {
             let newFavs = favBu.includes(id) ? favBu.filter(favId => favId !== id) : [...favBu, id];
             setFavBu(newFavs);
             await AsyncStorage.setItem('library_favorites', JSON.stringify(newFavs));
+        } catch (e) { }
+    };
+
+    const toggleFavBuilding = async (id) => {
+        try {
+            let newFavs = favBuildings.includes(id) ? favBuildings.filter(favId => favId !== id) : [...favBuildings, id];
+            setFavBuildings(newFavs);
+            await AsyncStorage.setItem('freeroom_favorites', JSON.stringify(newFavs));
         } catch (e) { }
     };
 
@@ -140,6 +156,30 @@ const CampusDashboard = ({ navigation }) => {
             console.error('Erreur chargement BUs', e);
             if (mountedRef.current) setLoadingBu(false);
         }
+
+        // Load Buildings
+        setLoadingBuildings(true);
+        try {
+            let bList = DataManager.getBuildingList();
+            if (!bList || bList.length === 0) {
+                await DataManager.fetchBuildingList();
+                bList = DataManager.getBuildingList();
+            }
+            if (mountedRef.current) {
+                if (bList) {
+                    bList = bList.map(b => {
+                        if (userLat !== undefined && userLon !== undefined && b.lat && b.lng) {
+                            b.distance = getDistanceInKm(userLat, userLon, b.lat, b.lng);
+                        }
+                        return b;
+                    });
+                }
+                setBuildings(bList || []);
+                setLoadingBuildings(false);
+            }
+        } catch (e) {
+            if (mountedRef.current) setLoadingBuildings(false);
+        }
     };
 
     const sortedRestaurants = [...restaurants].sort((a, b) => {
@@ -153,6 +193,14 @@ const CampusDashboard = ({ navigation }) => {
     const sortedLibraries = [...libraries].sort((a, b) => {
         const aFav = favBu.includes(a.id);
         const bFav = favBu.includes(b.id);
+        if (aFav && !bFav) return -1;
+        if (!aFav && bFav) return 1;
+        return (a.distance || 0) - (b.distance || 0);
+    });
+
+    const sortedBuildings = [...buildings].sort((a, b) => {
+        const aFav = favBuildings.includes(a.id);
+        const bFav = favBuildings.includes(b.id);
         if (aFav && !bFav) return -1;
         if (!aFav && bFav) return 1;
         return (a.distance || 0) - (b.distance || 0);
@@ -330,6 +378,78 @@ const CampusDashboard = ({ navigation }) => {
         );
     };
 
+    const renderBuildingCard = ({ item }) => {
+        const imageSource = item.imageUrl ? { uri: item.imageUrl } : defaultRuImage;
+        const totalRooms = item.rooms ? item.rooms.length : 0;
+        
+        let hoursText = Translator.get('UNKNOWN') || 'Non communiqué';
+        if (item.schedule) {
+            const currentDay = new Date().getDay() || 7; // 1-7
+            const daySchedule = item.schedule[String(currentDay)];
+            if (daySchedule) {
+                hoursText = `${daySchedule.open} - ${daySchedule.close}`;
+            } else {
+                hoursText = Translator.get('BU_CLOSED') || 'Fermé';
+            }
+        }
+        
+        return (
+            <Reanimated.View 
+                entering={FadeIn}
+                layout={LinearTransition.springify()}
+            >
+                <TouchableOpacity 
+                    activeOpacity={0.9}
+                    onPress={() => navigation.navigate('FreeRoomDetails', { building: item })}
+                    style={{
+                        width: CARD_WIDTH,
+                        backgroundColor: theme.cardBackground,
+                        borderRadius: tokens.radius.xl, 
+                        marginRight: tokens.space.md,
+                        ...tokens.shadow.md, 
+                        overflow: 'hidden', 
+                    }}
+                >
+                    <Image source={imageSource} style={{ width: '100%', height: 160, resizeMode: 'cover', backgroundColor: theme.greyBackground }} />
+
+                    <View style={{ padding: tokens.space.md }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
+                            <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1 }} numberOfLines={1}>
+                                {item.name}
+                            </Text>
+                            <TouchableOpacity onPress={() => toggleFavBuilding(item.id)} hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }} style={{ marginLeft: 6 }}>
+                                <MaterialCommunityIcons name={favBuildings.includes(item.id) ? "star" : "star-outline"} size={22} color={favBuildings.includes(item.id) ? theme.primary : theme.fontSecondary} />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
+                            <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
+                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }} numberOfLines={1}>
+                                {item.campus || 'Talence'}
+                            </Text>
+
+                            {item.distance !== undefined && (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
+                                    <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
+                                    <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginLeft: 4 }}>
+                                        {item.distance < 1 ? `${Math.round(item.distance * 1000)} m` : `${item.distance.toFixed(1)} km`}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <MaterialCommunityIcons name="clock-outline" size={16} color={theme.fontSecondary} />
+                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
+                                {hoursText} • {totalRooms} {Translator.get('ROOMS') || 'Salles'}
+                            </Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </Reanimated.View>
+        );
+    };
+
     const renderBdeCard = ({ item }) => (
         <Reanimated.View
             entering={FadeIn}
@@ -473,6 +593,35 @@ const CampusDashboard = ({ navigation }) => {
                                     horizontal
                                     data={sortedLibraries}
                                     renderItem={renderBuCard}
+                                    keyExtractor={item => item.id}
+                                    showsHorizontalScrollIndicator={false}
+                                    snapToInterval={CARD_WIDTH + tokens.space.md}
+                                    decelerationRate="fast"
+                                    contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
+                                />
+                            )}
+                        </View>
+
+                        {/* Salles Libres (Bâtiments) */}
+                        <View style={{ marginTop: tokens.space.md }}>
+                            <TouchableOpacity
+                                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+                                onPress={() => navigation.navigate('FreeRoomScreen')}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={[styles.sectionTitle, { color: theme.font }]}>
+                                    {Translator.get('FREE_ROOMS') || 'Salles Libres'}
+                                </Text>
+                                <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
+                            </TouchableOpacity>
+
+                            {loadingBuildings ? (
+                                <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+                            ) : (
+                                <FlatList
+                                    horizontal
+                                    data={sortedBuildings}
+                                    renderItem={renderBuildingCard}
                                     keyExtractor={item => item.id}
                                     showsHorizontalScrollIndicator={false}
                                     snapToInterval={CARD_WIDTH + tokens.space.md}

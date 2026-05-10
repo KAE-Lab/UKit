@@ -81,12 +81,21 @@
   },
   "A22": {
     "lat": 44.807202,
-    "lng": -0.598968,
-    "placeID": "ChIJb7eyh34nVQ0RRmgM3arqkCM"
+    "lng": -0.598968
   },
   "A28": {
-    "lat": 44.807755,
-    "lng": -0.597381
+  "lat": 44.807755,
+  "lng": -0.597381,
+  "freeAccess": true,
+  "image": "https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/images/cremi.jpg",
+  "schedule": {
+    "1": { "open": "07:45", "close": "22:00" },
+    "2": { "open": "07:45", "close": "22:00" },
+    "3": { "open": "07:45", "close": "22:00" },
+    "4": { "open": "07:45", "close": "22:00" },
+    "5": { "open": "07:45", "close": "22:00" },
+    "6": { "open": "07:45", "close": "18:00" }
+  }
   },
   "A29": {
     "lat": 44.807789,

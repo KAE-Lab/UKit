@@ -409,9 +409,14 @@ class HomeScreen extends React.Component {
             <SafeAreaInsetsContext.Consumer>
                 {(insets) => (
                     <View style={[style.list.homeView, { backgroundColor: theme.background }]}>
-                        <View style={{ paddingTop: (insets?.top || 0) + 65 }}>
+                        <View style={{ 
+                            paddingTop: (insets?.top || 0) + 65,
+                            backgroundColor: theme.cardBackground,
+                            borderBottomWidth: 1,
+                            borderBottomColor: theme.border,
+                            ...tokens.shadow.sm,
+                        }}>
                             {searchInput}
-                            <Split lineColor={theme.border} noMargin={true} />
                             {cache}
                         </View>
                         {content}

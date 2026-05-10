@@ -165,4 +165,6 @@ export default {
 	STUDENT_LIFE: "Vie Étudiante",
 	SEE_ALL: "Voir tout",
 	UNIVERSITY_LIBRARY: "Bibliothèque Universitaire",
+	FREE_ROOMS: "Salles Libres",
+	AVAILABLE_UNTIL: "Disponible jusqu'à",
 };
