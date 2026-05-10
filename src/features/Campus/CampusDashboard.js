@@ -11,8 +11,8 @@ import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
 import { CrousService, CrousRestaurant } from '../Crous/CrousService';
-import { LibraryService, LibraryInfo } from '../Library/LibraryService';
-import BdeWidget from '../Dashboard/components/BdeWidget'; // On réutilise le widget BDE tel quel pour l'instant
+import LibraryService from '../Library/LibraryService';
+import BdeService from '../Bde/BdeService';
 
 const defaultRuImage = require('../../../assets/images/default_resto.png');
 const defaultBuImage = require('../../../assets/images/default_resto.png');
@@ -29,6 +29,8 @@ const CampusDashboard = ({ navigation }) => {
     const [affluences, setAffluences] = useState({});
     const [loadingRu, setLoadingRu] = useState(true);
     const [loadingBu, setLoadingBu] = useState(true);
+    const [annonces, setAnnonces] = useState([]);
+    const [loadingBde, setLoadingBde] = useState(true);
 
     const [favRu, setFavRu] = useState([]);
     const [favBu, setFavBu] = useState([]);
@@ -92,6 +94,18 @@ const CampusDashboard = ({ navigation }) => {
         if (userLat === undefined || userLon === undefined) {
             userLat = 44.8048;
             userLon = -0.5954;
+        }
+
+        // Load BDE
+        setLoadingBde(true);
+        try {
+            const bdeData = await BdeService.fetchAnnonces();
+            if (mountedRef.current) {
+                setAnnonces(bdeData);
+                setLoadingBde(false);
+            }
+        } catch (e) {
+            if (mountedRef.current) setLoadingBde(false);
         }
 
         // Load RUs
@@ -164,7 +178,7 @@ const CampusDashboard = ({ navigation }) => {
         );
     };
 
-    const renderRuCard = useCallback(({ item }) => (
+    const renderRuCard = ({ item }) => (
         <Reanimated.View
             entering={FadeIn}
             layout={LinearTransition.springify()}
@@ -194,7 +208,7 @@ const CampusDashboard = ({ navigation }) => {
 
                 <View style={{ padding: tokens.space.md }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                        <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1 }}>
+                        <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1 }} numberOfLines={1}>
                             {item.title}
                         </Text>
                         <TouchableOpacity onPress={() => toggleFavRu(item.id)} hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }} style={{ marginLeft: 6 }}>
@@ -227,9 +241,9 @@ const CampusDashboard = ({ navigation }) => {
                 </View>
             </TouchableOpacity>
         </Reanimated.View>
-    ), [favRu, theme]);
+    );
 
-    const renderBuCard = useCallback(({ item }) => {
+    const renderBuCard = ({ item }) => {
         const affluenceData = affluences[item.id];
         const rate = affluenceData?.occupancyRate ?? null;
         const isOpen = affluenceData?.isOpen ?? true;
@@ -300,9 +314,11 @@ const CampusDashboard = ({ navigation }) => {
                                         {statusText}
                                     </Text>
                                 </View>
-                                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
-                                    {rate !== null ? `${rate}%` : (Translator.get('NO_AFFLUENCE_DATA') || 'Pas de données')}
-                                </Text>
+                                {rate !== null && (
+                                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
+                                        {`${rate}%`}
+                                    </Text>
+                                )}
                             </View>
 
                             <View style={{ height: 6, backgroundColor: theme.greyBackground, borderRadius: 3, overflow: 'hidden' }}>
@@ -313,7 +329,55 @@ const CampusDashboard = ({ navigation }) => {
                 </TouchableOpacity>
             </Reanimated.View>
         );
-    }, [favBu, affluences, theme]);
+    };
+
+    const renderBdeCard = ({ item }) => (
+        <Reanimated.View
+            entering={FadeIn}
+            layout={LinearTransition.springify()}
+        >
+            <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => navigation.navigate('BdeDetail', { annonce: item })}
+                style={{
+                    width: CARD_WIDTH,
+                    backgroundColor: theme.cardBackground,
+                    borderRadius: tokens.radius.xl,
+                    marginRight: tokens.space.md,
+                    ...tokens.shadow.md,
+                    overflow: 'hidden',
+                }}
+            >
+                <View style={{ width: '100%', height: 160, backgroundColor: theme.greyBackground }}>
+                    {item.image_url ? (
+                        <Image source={{ uri: item.image_url }} style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }} />
+                    ) : null}
+                </View>
+
+                <View style={{ padding: tokens.space.md }}>
+                    <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1, marginBottom: 4 }} numberOfLines={1}>
+                        {item.title}
+                    </Text>
+                    
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: item.info_label ? 4 : 0 }}>
+                        <MaterialCommunityIcons name="account" size={16} color={theme.fontSecondary} />
+                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }} numberOfLines={1}>
+                            {item.issuer_name}
+                        </Text>
+                    </View>
+
+                    {item.info_label ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                            <MaterialCommunityIcons name="information-outline" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
+                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1, lineHeight: 20 }} numberOfLines={2}>
+                                {item.info_label}
+                            </Text>
+                        </View>
+                    ) : null}
+                </View>
+            </TouchableOpacity>
+        </Reanimated.View>
+    );
 
     return (
         <SafeAreaInsetsContext.Consumer>
@@ -321,79 +385,128 @@ const CampusDashboard = ({ navigation }) => {
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
                     {renderHeader(insets)}
 
-                    <Animated.FlatList
+                    <Animated.ScrollView
                         onScroll={Animated.event(
                             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
                             { useNativeDriver: true }
                         )}
                         scrollEventThrottle={16}
-                        ListHeaderComponent={() => (
-                            <View style={{ paddingTop: (insets?.top || 0) + 60 }}>
-                                {/* BDE Widget */}
-                                <BdeWidget />
-
-                                {/* Restaurants */}
-                                <View style={{ marginTop: tokens.space.md }}>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}>
-                                        <Text style={[styles.sectionTitle, { color: theme.fontSecondary, marginBottom: 0 }]}>
-                                            {Translator.get('RESTAURANT_U') || 'Restaurants Universitaires'}
-                                        </Text>
-                                        <TouchableOpacity onPress={() => navigation.navigate('Crous')}>
-                                            <MaterialCommunityIcons name="chevron-right" size={24} color={theme.fontSecondary} />
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    {loadingRu ? (
-                                        <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
-                                    ) : (
-                                        <FlatList
-                                            horizontal
-                                            data={sortedRestaurants}
-                                            renderItem={renderRuCard}
-                                            keyExtractor={item => item.id}
-                                            extraData={favRu}
-                                            showsHorizontalScrollIndicator={false}
-                                            snapToInterval={CARD_WIDTH + tokens.space.md}
-                                            decelerationRate="fast"
-                                            contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
-                                        />
-                                    )}
-                                </View>
-
-                                {/* Bibliothèques */}
-                                <View style={{ marginTop: tokens.space.md }}>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}>
-                                        <Text style={[styles.sectionTitle, { color: theme.fontSecondary, marginBottom: 0 }]}>
-                                            {Translator.get('UNIVERSITY_LIBRARY') || 'Bibliothèques Universitaires'}
-                                        </Text>
-                                        <TouchableOpacity onPress={() => navigation.navigate('Library')}>
-                                            <MaterialCommunityIcons name="chevron-right" size={24} color={theme.fontSecondary} />
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    {loadingBu ? (
-                                        <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
-                                    ) : (
-                                        <FlatList
-                                            horizontal
-                                            data={sortedLibraries}
-                                            renderItem={renderBuCard}
-                                            keyExtractor={item => item.id}
-                                            extraData={[favBu, affluences]}
-                                            showsHorizontalScrollIndicator={false}
-                                            snapToInterval={CARD_WIDTH + tokens.space.md}
-                                            decelerationRate="fast"
-                                            contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
-                                        />
-                                    )}
-                                </View>
-                            </View>
-                        )}
-                        data={[]} // On utilise ListHeaderComponent pour tout le contenu afin de gérer le scroll principal proprement
-                        renderItem={() => null}
                         showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ paddingBottom: tokens.space.xxl + 80 }} // Espace pour la tab bar
-                    />
+                        contentContainerStyle={{ paddingTop: (insets?.top || 0) + 60, paddingBottom: tokens.space.xxl + 80 }}
+                    >
+                        {/* Student life */}
+                        {(loadingBde || annonces.length > 0) ? (
+                            <View style={{ marginTop: tokens.space.md }}>
+                                <TouchableOpacity 
+                                    style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+                                    onPress={() => navigation.navigate('Bde')}
+                                    activeOpacity={0.7}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <MaterialCommunityIcons name="party-popper" size={18} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.xs }} />
+                                        <Text style={[styles.sectionTitle, { color: theme.font, marginBottom: 0 }]}>
+                                            {Translator.get('STUDENT_LIFE') || 'Student life'}
+                                        </Text>
+                                    </View>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}20`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
+                                        <Text style={{ fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginRight: 2 }}>
+                                            {Translator.get('SEE_ALL') || 'Tout voir'}
+                                        </Text>
+                                        <MaterialCommunityIcons name="chevron-right" size={14} color={theme.primary} />
+                                    </View>
+                                </TouchableOpacity>
+
+                                {loadingBde ? (
+                                    <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+                                ) : (
+                                    <FlatList
+                                        horizontal
+                                        data={annonces}
+                                        renderItem={renderBdeCard}
+                                        keyExtractor={item => item.id}
+                                        showsHorizontalScrollIndicator={false}
+                                        snapToInterval={CARD_WIDTH + tokens.space.md}
+                                        decelerationRate="fast"
+                                        contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
+                                    />
+                                )}
+                            </View>
+                        ) : null}
+
+                        {/* Restaurants */}
+                        <View style={{ marginTop: tokens.space.md }}>
+                        <TouchableOpacity
+                                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+                                onPress={() => navigation.navigate('Crous')}
+                                activeOpacity={0.7}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommunityIcons name="silverware-fork-knife" size={18} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.xs }} />
+                                    <Text style={[styles.sectionTitle, { color: theme.font, marginBottom: 0 }]}>
+                                        {Translator.get('RESTAURANT_U') || 'Restaurants Universitaires'}
+                                    </Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}20`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
+                                    <Text style={{ fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginRight: 2 }}>
+                                        {Translator.get('SEE_ALL') || 'Tout voir'}
+                                    </Text>
+                                    <MaterialCommunityIcons name="chevron-right" size={14} color={theme.primary} />
+                                </View>
+                            </TouchableOpacity>
+
+                            {loadingRu ? (
+                                <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+                            ) : (
+                                <FlatList
+                                    horizontal
+                                    data={sortedRestaurants}
+                                    renderItem={renderRuCard}
+                                    keyExtractor={item => item.id}
+                                    showsHorizontalScrollIndicator={false}
+                                    snapToInterval={CARD_WIDTH + tokens.space.md}
+                                    decelerationRate="fast"
+                                    contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
+                                />
+                            )}
+                        </View>
+
+                        {/* Bibliothèques */}
+                        <View style={{ marginTop: tokens.space.md }}>
+                        <TouchableOpacity
+                                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+                                onPress={() => navigation.navigate('Library')}
+                                activeOpacity={0.7}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommunityIcons name="book-open-variant" size={18} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.xs }} />
+                                    <Text style={[styles.sectionTitle, { color: theme.font, marginBottom: 0 }]}>
+                                        {Translator.get('UNIVERSITY_LIBRARY') || 'Bibliothèques Universitaires'}
+                                    </Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}20`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
+                                    <Text style={{ fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginRight: 2 }}>
+                                        {Translator.get('SEE_ALL') || 'Tout voir'}
+                                    </Text>
+                                    <MaterialCommunityIcons name="chevron-right" size={14} color={theme.primary} />
+                                </View>
+                            </TouchableOpacity>
+
+                            {loadingBu ? (
+                                <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+                            ) : (
+                                <FlatList
+                                    horizontal
+                                    data={sortedLibraries}
+                                    renderItem={renderBuCard}
+                                    keyExtractor={item => item.id}
+                                    showsHorizontalScrollIndicator={false}
+                                    snapToInterval={CARD_WIDTH + tokens.space.md}
+                                    decelerationRate="fast"
+                                    contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
+                                />
+                            )}
+                        </View>
+                    </Animated.ScrollView>
                 </View>
             )}
         </SafeAreaInsetsContext.Consumer>

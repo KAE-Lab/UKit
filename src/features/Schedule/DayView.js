@@ -28,6 +28,8 @@ const findIndexOfObject = (objectList, object) => {
 
 class DayView extends React.Component {
 	static contextType = AppContext;
+	static lastSelectedDay = null;
+	static lastSelectedWeek = null;
 
 	constructor(props) {
 		super(props);
@@ -40,36 +42,66 @@ class DayView extends React.Component {
 		const currentWeek = { week: currentDay.isoWeek(), year: currentDay.year() };
 		const weeks = DayView.generateWeeks();
 
+		// Persistance de la sélection
+		const selectedDay = DayView.lastSelectedDay || currentDay;
+		const selectedWeek = DayView.lastSelectedWeek || currentWeek;
+
+		const selectedDayIndex = days.findIndex((e) => e.isSame(selectedDay, 'day'));
+		const selectedWeekIndex = findIndexOfObject(weeks, selectedWeek);
+
 		this.state = {
 			// Day mode
 			currentDay,
 			currentDayIndex: days.findIndex((e) => e.isSame(currentDay, 'day')),
+			selectedDayIndex: selectedDayIndex >= 0 ? selectedDayIndex : 0,
 			shownMonth: {
-				number: currentDay.month(),
-				string: capitalize(currentDay.format('MMMM')),
+				number: selectedDay.month(),
+				string: capitalize(selectedDay.format('MMMM')),
 			},
 			days,
-			selectedDay: currentDay,
+			selectedDay,
 			// Week mode
 			currentWeek,
 			currentWeekIndex: findIndexOfObject(weeks, currentWeek),
+			selectedWeekIndex: selectedWeekIndex >= 0 ? selectedWeekIndex : 0,
 			weeks,
-			selectedWeek: currentWeek,
+			selectedWeek,
 			// Mode
 			mode: 'day',
 		};
 
 		this.viewability = { itemVisiblePercentThreshold: 50 };
+		this.scrollTimeout = null;
 	}
 
 	// ── Layout helper (partagé day/week, même itemSize) ──────────
-	static getCalendarListItemLayout(data, index) {
-		return {
-			length: style.calendarList.itemSize,
-			offset: style.calendarList.itemSize * index,
-			index,
-		};
+	componentDidMount() {
+		// Centrer la sélection au chargement initial
+		this.scrollToSelection(false);
 	}
+
+	scrollToSelection = (animated = true) => {
+		this.scrollTimeout = setTimeout(() => {
+			const index = this.state.mode === 'day' ? this.state.selectedDayIndex : this.state.selectedWeekIndex;
+			if (index >= 0) {
+				this.calendarList?.scrollToIndex({
+					index,
+					animated,
+					viewPosition: 0.5,
+				});
+			}
+		}, 50);
+	};
+
+	componentWillUnmount() {
+		if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+	}
+
+	static getCalendarListItemLayout = (data, index) => ({
+		length: style.calendarList.itemSize,
+		offset: style.calendarList.itemSize * index + tokens.space.md,
+		index,
+	});
 
 	// ── Generators ───────────────────────────────────────────────
 	static generateDays() {
@@ -116,7 +148,19 @@ class DayView extends React.Component {
 		`${item.date()}-${item.month()}-${this.context.themeName}`;
 
 	onDayItemPress = (dayItem) => {
-		this.setState({ selectedDay: dayItem });
+		const index = this.state.days.findIndex((d) => d.isSame(dayItem, 'day'));
+		DayView.lastSelectedDay = dayItem;
+		this.setState({ selectedDay: dayItem, selectedDayIndex: index }, () => {
+			if (index >= 0) {
+				this.scrollTimeout = setTimeout(() => {
+					this.calendarList?.scrollToIndex({
+						index,
+						animated: true,
+						viewPosition: 0.5,
+					});
+				}, 50);
+			}
+		});
 	};
 
 	checkViewableItems = (info) => {
@@ -147,30 +191,40 @@ class DayView extends React.Component {
 		`S${item.week}-${this.context.themeName}`;
 
 	onWeekItemPress = (item) => {
-		this.setState({ selectedWeek: item });
+		const index = findIndexOfObject(this.state.weeks, item);
+		DayView.lastSelectedWeek = item;
+		this.setState({ selectedWeek: item, selectedWeekIndex: index }, () => {
+			if (index >= 0) {
+				this.scrollTimeout = setTimeout(() => {
+					this.calendarList?.scrollToIndex({
+						index,
+						animated: true,
+						viewPosition: 0.5,
+					});
+				}, 50);
+			}
+		});
 	};
 
 	// ── Shared / mode-toggle ─────────────────────────────────────
 	onTodayPress = () => {
 		if (this.state.mode === 'day') {
-			this.setState({ selectedDay: this.state.currentDay }, () => {
-				this.calendarList?.scrollToIndex({
-					index: this.state.currentDayIndex,
-					animated: true,
-				});
+			const index = this.state.currentDayIndex;
+			DayView.lastSelectedDay = this.state.currentDay;
+			this.setState({ selectedDay: this.state.currentDay, selectedDayIndex: index }, () => {
+				this.scrollToSelection(true);
 			});
 		} else {
-			this.setState({ selectedWeek: this.state.currentWeek }, () => {
-				this.calendarList?.scrollToIndex({
-					index: this.state.currentWeekIndex,
-					animated: true,
-				});
+			const index = this.state.currentWeekIndex;
+			DayView.lastSelectedWeek = this.state.currentWeek;
+			this.setState({ selectedWeek: this.state.currentWeek, selectedWeekIndex: index }, () => {
+				this.scrollToSelection(true);
 			});
 		}
 	};
 
-	onSwitchToWeek = () => this.setState({ mode: 'week' });
-	onSwitchToDay  = () => this.setState({ mode: 'day' });
+	onSwitchToWeek = () => this.setState({ mode: 'week' }, () => this.scrollToSelection(false));
+	onSwitchToDay = () => this.setState({ mode: 'day' }, () => this.scrollToSelection(false));
 
 	render() {
 		const theme = style.Theme[this.context.themeName];
@@ -189,7 +243,7 @@ class DayView extends React.Component {
 
 		// Bouton droit (switch de mode)
 		const rightLabel = mode === 'day' ? Translator.get('WEEK') : Translator.get('DAY');
-		const rightIcon  = mode === 'day' ? 'calendar-range' : 'calendar';
+		const rightIcon = mode === 'day' ? 'calendar-range' : 'calendar';
 		const onRightPress = mode === 'day' ? this.onSwitchToWeek : this.onSwitchToDay;
 
 		return (
@@ -306,10 +360,16 @@ class DayView extends React.Component {
 									keyExtractor={this.extractCalendarDayKey}
 									viewabilityConfig={this.viewability}
 									onViewableItemsChanged={this.checkViewableItems}
-									initialScrollIndex={this.state.currentDayIndex}
+									initialScrollIndex={this.state.selectedDayIndex}
 									getItemLayout={DayView.getCalendarListItemLayout}
 									extraData={this.state}
 									renderItem={this.renderCalendarDayItem}
+									contentContainerStyle={{ paddingHorizontal: tokens.space.md }}
+									onScrollToIndexFailed={(info) => {
+										this.scrollTimeout = setTimeout(() => {
+											this.calendarList?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
+										}, 500);
+									}}
 								/>
 							) : (
 								<FlatList
@@ -320,10 +380,16 @@ class DayView extends React.Component {
 									horizontal
 									keyExtractor={this.extractCalendarWeekKey}
 									viewabilityConfig={this.viewability}
-									initialScrollIndex={this.state.currentWeekIndex}
+									initialScrollIndex={this.state.selectedWeekIndex}
 									getItemLayout={DayView.getCalendarListItemLayout}
 									extraData={this.state}
 									renderItem={this.renderCalendarWeekItem}
+									contentContainerStyle={{ paddingHorizontal: tokens.space.md }}
+									onScrollToIndexFailed={(info) => {
+										this.scrollTimeout = setTimeout(() => {
+											this.calendarList?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
+										}, 500);
+									}}
 								/>
 							)}
 						</View>

@@ -16,6 +16,8 @@ import CrousScreen from '../../features/Crous/CrousScreen';
 import CrousMenuScreen from '../../features/Crous/CrousMenuScreen';
 import LibraryScreen from '../../features/Library/LibraryScreen';
 import LibraryDetailsScreen from '../../features/Library/LibraryDetailsScreen';
+import BdeDetailsScreen from '../../features/Bde/BdeDetailsScreen';
+import BdeScreen from '../../features/Bde/BdeScreen';
 
 import style, { tokens } from '../theme/Theme';
 import { AppContext, treatTitle } from '../services/AppCore';
@@ -84,6 +86,10 @@ export default function StackNavigator() {
                         <Stack.Screen name="CrousMenu" component={CrousMenuScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.restaurantName, route.params?.location), title: route.params?.restaurantName ?? Translator.get('MENU'), themeName, route })} />
                         
                         <Stack.Screen name="LibraryDetails" component={LibraryDetailsScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.library?.name, { lat: route.params?.library?.lat, lng: route.params?.library?.lng }), title: treatTitle(route.params?.library?.name ?? Translator.get('LIBRARY_DETAILS')), themeName, route })} />
+                    
+                        <Stack.Screen name="Bde" component={BdeScreen} options={({ route }) => NavBarHelper({ title: Translator.get('STUDENT_LIFE') || 'Student life', themeName, route, gestureEnabled: true })} />
+
+                        <Stack.Screen name="BdeDetail" component={BdeDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS') || 'Détails', themeName, route, gestureEnabled: true })} />
                     
                         <Stack.Screen name="Geolocation" component={Geolocation} options={({ route }) => NavBarHelper({ title: Translator.get('MAP'), themeName, route })} />
                         

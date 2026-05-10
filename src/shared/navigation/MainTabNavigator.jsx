@@ -89,24 +89,29 @@ function CustomTabBar({ state, descriptors, navigation, theme }) {
                                 );
                             })}
                         </View>
-                        {/* Bouton accès groupes — séparé de la tab bar pour signaler une action distincte */}
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate('GroupSearch')}
-                            activeOpacity={0.85}
-                            style={[
-                                styles.groupButton,
-                                {
-                                    backgroundColor: theme.cardBackground,
-                                    borderColor: theme.border,
-                                }
-                            ]}
-                        >
-                            <MaterialCommunityIcons
-                                name="account-search-outline"
-                                size={26}
-                                color={theme.accent ?? theme.primary}
-                            />
-                        </TouchableOpacity>
+                        {/* Bouton accès groupes — visible uniquement sur l'onglet Planning */}
+                        {state.routes[state.index].name === 'PlanningTab' ? (
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate('GroupSearch')}
+                                activeOpacity={0.85}
+                                style={[
+                                    styles.groupButton,
+                                    {
+                                        backgroundColor: theme.cardBackground,
+                                        borderColor: theme.border,
+                                    }
+                                ]}
+                            >
+                                <MaterialCommunityIcons
+                                    name="account-search-outline"
+                                    size={26}
+                                    color={theme.accent ?? theme.primary}
+                                />
+                            </TouchableOpacity>
+                        ) : (
+                            /* Placeholder invisible — maintient la largeur de la tab bar sans afficher de contour */
+                            <View style={{ width: 65, height: 75 }} />
+                        )}
                     </View>
                 );
             }}

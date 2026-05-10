@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Linking, Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback, Platform, FlatList, Dimensions, ScrollView} from 'react-native';
+import { Linking, Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback, Platform, FlatList, Dimensions, ScrollView } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -285,53 +285,53 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		const annotations =
 			!isLargeMode && this.props.data.description?.length > 0
 				? this.props.data.description.split('\n').map((annotation, index) => {
-						const trimmedAnnotation = annotation.trim();
-						if (!trimmedAnnotation) return null;
+					const trimmedAnnotation = annotation.trim();
+					if (!trimmedAnnotation) return null;
 
-						let iconName: any = 'info-outline';
-						const lowerLine = trimmedAnnotation.toLowerCase();
-						
-						const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedAnnotation);
-						const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
+					let iconName: any = 'info-outline';
+					const lowerLine = trimmedAnnotation.toLowerCase();
 
-						if (isWeeks) {
-							iconName = 'date-range';
-						} else if (isRoom) {
-							iconName = 'room';
-						} else if (index === 0) {
-							iconName = 'group';
-						} else if (index === 1) {
-							iconName = 'person';
-						} else if (index === 2) {
-							iconName = 'room';
-						} else {
-							iconName = 'date-range';
-						}
+					const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedAnnotation);
+					const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
 
-						return (
-							<View
-								key={index}
-								style={[
-									style.schedule.course.line as any,
-									{ alignItems: 'flex-start', marginTop: tokens.space.xs },
-								]}>
-								<MaterialIcons
-									name={iconName}
-									size={12}
-									color={theme.fontSecondary}
-									style={{ marginRight: tokens.space.xs, marginTop: 1 }}
-								/>
-								<Text
-									style={{
-										fontSize: tokens.fontSize.xs,
-										color: theme.fontSecondary,
-										flex: 1,
-									}}>
-									{trimmedAnnotation}
-								</Text>
-							</View>
-						);
-				  })
+					if (isWeeks) {
+						iconName = 'date-range';
+					} else if (isRoom) {
+						iconName = 'room';
+					} else if (index === 0) {
+						iconName = 'group';
+					} else if (index === 1) {
+						iconName = 'person';
+					} else if (index === 2) {
+						iconName = 'room';
+					} else {
+						iconName = 'date-range';
+					}
+
+					return (
+						<View
+							key={index}
+							style={[
+								style.schedule.course.line as any,
+								{ alignItems: 'flex-start', marginTop: tokens.space.xs },
+							]}>
+							<MaterialIcons
+								name={iconName}
+								size={12}
+								color={theme.fontSecondary}
+								style={{ marginRight: tokens.space.xs, marginTop: 1 }}
+							/>
+							<Text
+								style={{
+									fontSize: tokens.fontSize.xs,
+									color: theme.fontSecondary,
+									flex: 1,
+								}}>
+								{trimmedAnnotation}
+							</Text>
+						</View>
+					);
+				})
 				: null;
 
 		const content = (
@@ -386,7 +386,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 					</View>
 
 					<View
-						style={[style.schedule.course.contentBlock as any, { padding: tokens.space.sm }]}>
+						style={[style.schedule.course.contentBlock as any, { paddingLeft: tokens.space.sm }]}>
 						<View style={style.schedule.course.contentType as any}>
 							{subject}
 							{this.props.data.category !== this.props.data.subject && (
@@ -422,7 +422,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 
 										let iconName: any = 'info-outline';
 										const lowerLine = trimmedLine.toLowerCase();
-										
+
 										const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedLine);
 										const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
 
@@ -471,6 +471,9 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 						)}
 
 						{annotations}
+
+						{/* Espace réservé pour les dots du carousel si activé */}
+						{this.props.carouselMode && <View style={{ height: 8 }} />}
 					</View>
 				</View>
 			</View>
@@ -525,72 +528,74 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 	}
 
 	return (
-        <View>
-            <FlatList
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                data={coursesGroup}
-                keyExtractor={(item, index) => (item.schedule || '') + String(index)}
-                initialScrollIndex={initialIndex}
-                getItemLayout={(data, index) => ({
-                    length: screenWidth,
-                    offset: screenWidth * index,
-                    index,
-                })}
-                onMomentumScrollEnd={(event) => {
-                    const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
-                    setCurrentIndex(index);
-                    savedCarouselIndices.set(groupKey, index);
-                }}
-                renderItem={({ item, index: cardIndex }) => (
-                    <View style={{ width: screenWidth, justifyContent: 'flex-start' }}>
-                        <View style={{ width: '100%', alignSelf: 'flex-start', position: 'relative' }}>
-                            <CourseRowWithNavigation data={item} theme={theme} />
-                            
-                            <View 
-                                style={{ 
-                                    position: 'absolute', 
-                                    bottom: 11, 
-                                    right: 28,  
-                                    flexDirection: 'row', 
-                                    justifyContent: 'center', 
-                                    alignItems: 'center',
-                                    pointerEvents: 'none' 
-                                }}
-                            >
-                                <View 
-                                    style={{
-                                        flexDirection: 'row',
-                                        backgroundColor: theme.eventBackground,
-                                        paddingHorizontal: 6,
-                                        paddingVertical: 4,
-                                        borderRadius: 8,
-                                        borderWidth: 1,
-                                        borderColor: theme.eventBorder,
-                                    }}
-                                >
-                                    {coursesGroup.map((_, dotIndex) => (
-                                        <View
-                                            key={dotIndex}
-                                            style={{
-                                                height: 5,
-                                                width: cardIndex === dotIndex ? 12 : 5,
-                                                borderRadius: 3,
-                                                backgroundColor: cardIndex === dotIndex ? (theme.accent ?? theme.primary) : theme.fontSecondary,
-                                                opacity: cardIndex === dotIndex ? 1 : 0.4,
-                                                marginHorizontal: 2,
-                                            }}
-                                        />
-                                    ))}
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                )}
-            />
-        </View>
-    );
+		<View>
+			<FlatList
+				horizontal
+				pagingEnabled
+				showsHorizontalScrollIndicator={false}
+				data={coursesGroup}
+				keyExtractor={(item, index) => (item.schedule || '') + String(index)}
+				initialScrollIndex={initialIndex}
+				getItemLayout={(data, index) => ({
+					length: screenWidth,
+					offset: screenWidth * index,
+					index,
+				})}
+				onMomentumScrollEnd={(event) => {
+					const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+					setCurrentIndex(index);
+					savedCarouselIndices.set(groupKey, index);
+				}}
+				renderItem={({ item, index: cardIndex }) => (
+					<View style={{ width: screenWidth, justifyContent: 'flex-start' }}>
+						<View style={{ width: '100%', alignSelf: 'flex-start', position: 'relative' }}>
+							<CourseRowWithNavigation data={item} theme={theme} carouselMode={true} />
+
+							<View
+								style={{
+									position: 'absolute',
+									bottom: 10,
+									right: 28,
+									flexDirection: 'row',
+									justifyContent: 'center',
+									alignItems: 'center',
+									pointerEvents: 'none',
+									zIndex: 10,
+									elevation: 5,
+								}}
+							>
+								<View
+									style={{
+										flexDirection: 'row',
+										backgroundColor: theme.eventBackground,
+										paddingHorizontal: 6,
+										paddingVertical: 4,
+										borderRadius: 8,
+										borderWidth: 1,
+										borderColor: theme.eventBorder,
+									}}
+								>
+									{coursesGroup.map((_, dotIndex) => (
+										<View
+											key={dotIndex}
+											style={{
+												height: 5,
+												width: cardIndex === dotIndex ? 12 : 5,
+												borderRadius: 3,
+												backgroundColor: cardIndex === dotIndex ? (theme.accent ?? theme.primary) : theme.fontSecondary,
+												opacity: cardIndex === dotIndex ? 1 : 0.4,
+												marginHorizontal: 2,
+											}}
+										/>
+									))}
+								</View>
+							</View>
+						</View>
+					</View>
+				)}
+			/>
+		</View>
+	);
 }
 
 // ── PAGE DÉTAILS DU COURS (Avec la Map) ──────────────────────────────────
@@ -630,12 +635,12 @@ class Course extends React.Component<CourseProps, CourseState> {
 
 		// On nettoie les lignes vides
 		const descLines = (this.state.data.description ?? '').split('\n').map(l => l.trim()).filter(l => l);
-		
+
 		let roomLine = '';
 		// On cherche une ligne de salle potentielle (à partir de la 3ème ligne)
 		// On exclut formellement la ligne si elle correspond au format des semaines
 		const potentialRooms = descLines.slice(2).filter(line => !/^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(line));
-		
+
 		if (potentialRooms.length > 0) {
 			roomLine = potentialRooms[0];
 		}
@@ -646,7 +651,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 				locations = getLocationsInText(roomLine);
 			}
 		}
-		
+
 		if (locations.length < 1) {
 			locations = getLocationsInText(this.state.data.subject ?? '');
 		}
@@ -664,13 +669,13 @@ class Course extends React.Component<CourseProps, CourseState> {
 
 		let map = null;
 		if (this.state.locations.length > 0) {
-            const centerLat = this.state.locations[0].lat;
-            const centerLng = this.state.locations[0].lng;
+			const centerLat = this.state.locations[0].lat;
+			const centerLng = this.state.locations[0].lng;
 
 			// Génération du code Leaflet pour tes marqueurs customisés SVG
-            const markersJs = this.state.locations.map((location: any) => {
-                const title = location.title || Translator.get('ROOM');
-                return `
+			const markersJs = this.state.locations.map((location: any) => {
+				const title = location.title || Translator.get('ROOM');
+				return `
                     var iconHTML = \`
                         <div style="display: flex; flex-direction: column; align-items: center; padding-bottom: 8px;">
                             <div style="background-color: ${theme.primary}; padding: 4px 8px; border-radius: 4px; box-shadow: 0px 4px 6px rgba(0,0,0,0.3);">
@@ -691,10 +696,10 @@ class Course extends React.Component<CourseProps, CourseState> {
                     });
                     L.marker([${location.lat}, ${location.lng}], {icon: customIcon}).addTo(map);
                 `;
-            }).join('\n');
+			}).join('\n');
 
 			// Le code HTML complet embarqué dans l'application
-            const mapHtml = `
+			const mapHtml = `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -722,14 +727,14 @@ class Course extends React.Component<CourseProps, CourseState> {
 
 			map = (
 				<View style={{ flex: 1 }}>
-                    <WebView
-                        originWhitelist={['*']}
-                        source={{ html: mapHtml }}
-                        style={{ flex: 1, backgroundColor: theme.greyBackground }}
-                        scrollEnabled={false} // Empêche le webview de scroller, c'est la carte qui prend le relais
-                        showsVerticalScrollIndicator={false}
-                        showsHorizontalScrollIndicator={false}
-                    />
+					<WebView
+						originWhitelist={['*']}
+						source={{ html: mapHtml }}
+						style={{ flex: 1, backgroundColor: theme.greyBackground }}
+						scrollEnabled={false} // Empêche le webview de scroller, c'est la carte qui prend le relais
+						showsVerticalScrollIndicator={false}
+						showsHorizontalScrollIndicator={false}
+					/>
 
 					<View style={{ position: 'absolute', top: tokens.space.sm, right: tokens.space.sm }}>
 						<TouchableOpacity
@@ -748,7 +753,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 		}
 
 		return (
-			<SafeAreaView 
+			<SafeAreaView
 				edges={['bottom', 'left', 'right']}
 				style={[{ flex: 1, backgroundColor: theme.courseBackground }, this.props.headerPadding]}
 			>
@@ -769,7 +774,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 						...(tokens.shadow.sm as any),
 						zIndex: 10,
 					}}>
-					
+
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.space.sm }}>
 						<Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
 							{this.state.data.subject !== 'N/C' ? this.state.data.subject.trim() : Translator.get('UNKNOWN_SUBJECT')}
@@ -805,7 +810,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 
 						let iconName: any = 'info-outline';
 						const lowerLine = trimmedLine.toLowerCase();
-						
+
 						const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedLine);
 						const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
 
