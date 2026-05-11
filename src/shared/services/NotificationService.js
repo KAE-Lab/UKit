@@ -55,21 +55,11 @@ class NotificationManagerService {
             const courseStart = moment(course.date.start);
             const triggerTime = courseStart.clone().subtract(delayInMinutes, 'minutes');
 
-            // En temps normal, on planifie si le trigger est dans le futur
-            // Si on est en mode Dev (Mock), on accepte même si on a légèrement dépassé le trigger (pour un déclenchement immédiat)
-            const isMock = TimeMockService.isMockActive();
-            if (triggerTime.isAfter(now) || (isMock && courseStart.isAfter(now))) {
-                
-                // Si on est en mock et qu'on a dépassé le temps de trigger (ex: il est 9h16 pour un cours à 9h30, notif à 15min)
-                // on déclenche la notification dans 2 secondes pour valider le test.
-                let finalTriggerTime = triggerTime;
-                if (isMock && !triggerTime.isAfter(now)) {
-                    finalTriggerTime = now.clone().add(2, 'seconds');
-                }
-
+            // Only schedule if the trigger time is in the future
+            if (triggerTime.isAfter(now)) {
                 futureCourses.push({
                     course,
-                    triggerTime: finalTriggerTime.toDate(),
+                    triggerTime: triggerTime.toDate(),
                 });
             }
         }
@@ -81,36 +71,29 @@ class NotificationManagerService {
         for (const item of coursesToSchedule) {
             const { course, triggerTime } = item;
             
-            // Extract room information using the same logic as CourseCard
+            const subject = course.subject !== 'N/C' ? course.subject.trim() : 'Cours';
+            
             let roomText = '';
             if (course.description) {
-                const descLines = course.description.split('\n').map(l => l.trim()).filter(l => l);
-                const potentialRooms = descLines.slice(2).filter(line => !/^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(line));
-                if (potentialRooms.length > 0) {
-                    roomText = potentialRooms[0];
+                const annotations = course.description.split('\n').map(l => l.trim()).filter(l => l);
+                
+                // Recherche d'une ligne correspondant à une salle (comme dans CourseCard)
+                const rooms = annotations.filter(line => {
+                    const lowerLine = line.toLowerCase();
+                    return lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
+                });
+                
+                if (rooms.length > 0) {
+                    roomText = rooms.join(' - ');
+                } else {
+                    // Si aucune salle explicite n'est trouvée, on cherche la localisation typique
+                    const nonWeekLines = annotations.filter(line => !/^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(line));
+                    if (nonWeekLines.length > 2) roomText = nonWeekLines[2]; // Index typique d'une salle sur un cours classique
+                    else if (nonWeekLines.length > 0) roomText = nonWeekLines[nonWeekLines.length - 1];
                 }
             }
 
-            // Fallback for location Extraction
-            let locations = [];
-            if (roomText) {
-                locations = getLocations(roomText);
-                if (locations.length < 1) locations = getLocationsInText(roomText);
-            }
-            if (locations.length < 1) {
-                locations = getLocationsInText(course.subject ?? '');
-            }
-
-            let locationString = '';
-            if (locations.length > 0 && locations[0].title) {
-                locationString = `${roomText} (Bât. ${locations[0].title})`;
-            } else if (roomText) {
-                locationString = roomText;
-            } else {
-                locationString = 'Lieu inconnu';
-            }
-
-            const subject = course.subject !== 'N/C' ? course.subject : 'Cours';
+            let locationString = roomText || 'Localisation inconnue';
             
             // Translate the triggerTime to real time for the OS clock
             let realTriggerTime = triggerTime;
@@ -126,7 +109,7 @@ class NotificationManagerService {
             await Notifications.scheduleNotificationAsync({
                 content: {
                     title: `Cours dans ${delayInMinutes} min`,
-                    body: `${subject} - ${locationString}`,
+                    body: `${subject}\n${locationString}`,
                     data: { courseId: course.id },
                 },
                 trigger: { 
