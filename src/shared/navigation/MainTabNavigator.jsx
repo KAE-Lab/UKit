@@ -8,7 +8,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import ScheduleScreen from '../../features/Schedule/ScheduleScreen';
 import CampusDashboard from '../../features/Campus/CampusDashboard';
 import ScolariteDashboard from '../../features/Scolarite/ScolariteDashboard';
-import AutresDashboard from '../../features/Autres/AutresDashboard';
+import SettingsScreen from '../../features/Settings/SettingsScreen';
 
 import style, { tokens } from '../theme/Theme';
 import { AppContext } from '../services/AppCore';
@@ -111,6 +111,27 @@ function CustomTabBar({ state, descriptors, navigation, theme }) {
                                     {Translator.get('GROUPS')}
                                 </Text>
                             </TouchableOpacity>
+                        ) : state.routes[state.index].name === 'SettingsTab' ? (
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate('About')}
+                                activeOpacity={0.85}
+                                style={[
+                                    styles.groupButton,
+                                    {
+                                        backgroundColor: theme.cardBackground,
+                                        borderColor: theme.border,
+                                    }
+                                ]}
+                            >
+                                <MaterialCommunityIcons
+                                    name="information-outline"
+                                    size={24}
+                                    color={theme.accent ?? theme.primary}
+                                />
+                                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                                    {Translator.get('ABOUT')}
+                                </Text>
+                            </TouchableOpacity>
                         ) : (
                             /* Placeholder invisible — maintient la largeur de la tab bar sans afficher de contour */
                             <View style={{ width: 65, height: 75 }} />
@@ -159,11 +180,11 @@ export default function MainTabNavigator() {
                 }}
             />
             <Tab.Screen 
-                name="AutresTab" 
-                component={AutresDashboard} 
+                name="SettingsTab" 
+                component={SettingsScreen} 
                 options={{
-                    tabBarLabel: Translator.get('OTHER') || 'Autres',
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="dots-horizontal-circle-outline" size={24} color={color} />
+                    tabBarLabel: Translator.get('SETTINGS') || 'Paramètres',
+                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="cog-outline" size={24} color={color} />
                 }}
             />
         </Tab.Navigator>
