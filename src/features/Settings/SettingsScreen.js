@@ -2,6 +2,10 @@ import React from 'react';
 import { SafeAreaView, SafeAreaInsetsContext} from 'react-native-safe-area-context';
 import { Linking, Text, View, Animated, StyleSheet } from 'react-native';
 import * as Calendar from 'expo-calendar';
+import Slider from '@react-native-community/slider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import moment from 'moment';
+import { NotificationManager } from '../../shared/services/NotificationService';
 
 import { AppContext, SettingsManager } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
@@ -47,6 +51,8 @@ class Settings extends React.Component {
             resetDialogVisible: false,
             selectedCalendar: SettingsManager.getSyncCalendar(),
             isDarkMode: SettingsManager.getTheme() === 'dark',
+            courseNotificationsEnabled: SettingsManager.getCourseNotificationsEnabled(),
+            courseNotificationDelay: SettingsManager.getCourseNotificationDelay(),
         };
         this.scrollY = new Animated.Value(0);
 
@@ -83,6 +89,53 @@ class Settings extends React.Component {
     toggleTheme = () => {
         SettingsManager.switchTheme();
         this.setState({ isDarkMode: SettingsManager.getTheme() === 'dark' });
+    };
+
+    toggleCourseNotifications = async () => {
+        const newValue = !this.state.courseNotificationsEnabled;
+        if (newValue) {
+            await NotificationManager.requestPermissionsAsync();
+        }
+        this.setState({ courseNotificationsEnabled: newValue }, async () => {
+            SettingsManager.setCourseNotificationsEnabled(newValue);
+            
+            const favGroups = SettingsManager.getFavoriteGroups();
+            if (favGroups && favGroups.length > 0) {
+                const groupPrefix = favGroups.join('+');
+                const currentWeek = moment().isoWeek();
+                const id = `${groupPrefix}@Week${currentWeek}`;
+                const cache = await AsyncStorage.getItem(id);
+                if (cache) {
+                    const parsed = JSON.parse(cache);
+                    if (parsed && parsed.data) {
+                        NotificationManager.scheduleCourseNotifications(parsed.data).catch(() => {});
+                    }
+                }
+            }
+        });
+    };
+
+    onNotificationDelayChange = (value) => {
+        this.setState({ courseNotificationDelay: value });
+    };
+
+    onNotificationDelaySlidingComplete = async (value) => {
+        SettingsManager.setCourseNotificationDelay(value);
+        if (this.state.courseNotificationsEnabled) {
+            const favGroups = SettingsManager.getFavoriteGroups();
+            if (favGroups && favGroups.length > 0) {
+                const groupPrefix = favGroups.join('+');
+                const currentWeek = moment().isoWeek();
+                const id = `${groupPrefix}@Week${currentWeek}`;
+                const cache = await AsyncStorage.getItem(id);
+                if (cache) {
+                    const parsed = JSON.parse(cache);
+                    if (parsed && parsed.data) {
+                        NotificationManager.scheduleCourseNotifications(parsed.data).catch(() => {});
+                    }
+                }
+            }
+        }
     };
 
     toggleCalendarSync = async () => {
@@ -213,6 +266,45 @@ class Settings extends React.Component {
                         onSwitchToggle={this.toggleTheme}
                         switchValue={this.state.isDarkMode}
                     />
+
+                    {/* ── Notifications ─────────────────────────────────────── */}
+                    <SettingsTextHeader theme={themeSettings} text={Translator.get('NOTIFICATIONS') || 'Notifications'} />
+                    
+                    <Button
+                        theme={themeSettings}
+                        leftIcon="bell-outline"
+                        leftText={Translator.get('COURSE_NOTIFICATIONS') || 'Notifications de cours'}
+                        onSwitchToggle={this.toggleCourseNotifications}
+                        switchValue={this.state.courseNotificationsEnabled}
+                    />
+
+                    {this.state.courseNotificationsEnabled && (
+                        <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.sm }}>
+                                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: tokens.fontWeight.semibold }}>
+                                    {Translator.get('NOTIFICATION_DELAY') || 'Délai avant le cours'}
+                                </Text>
+                                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.primary, fontWeight: tokens.fontWeight.bold }}>
+                                    {this.state.courseNotificationDelay} min
+                                </Text>
+                            </View>
+                            <Slider
+                                style={{ width: '100%', height: 40 }}
+                                minimumValue={5}
+                                maximumValue={60}
+                                step={5}
+                                value={this.state.courseNotificationDelay}
+                                onValueChange={this.onNotificationDelayChange}
+                                onSlidingComplete={this.onNotificationDelaySlidingComplete}
+                                minimumTrackTintColor={theme.primary}
+                                maximumTrackTintColor={theme.border}
+                                thumbTintColor={theme.primary}
+                            />
+                            <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginTop: tokens.space.xs }}>
+                                {Translator.get('NOTIFICATION_DELAY_DESC') || 'Ajustez combien de minutes avant le début du cours vous souhaitez être notifié.'}
+                            </Text>
+                        </View>
+                    )}
 
                     {/* ── Lancement ─────────────────────────────────────── */}
                     <SettingsTextHeader theme={themeSettings} text={Translator.get('APP_LAUNCHING')} />

@@ -169,4 +169,5 @@ export default {
 	UNIVERSITY_LIBRARY: "Bibliotecas Universitarias",
 	FREE_ROOMS: "Salas Libres",
 	AVAILABLE_UNTIL: "Disponible hasta",
+	DARK_MODE: "Modo oscuro",
 };

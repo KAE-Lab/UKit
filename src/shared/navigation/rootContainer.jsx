@@ -8,6 +8,7 @@ import { SettingsManager } from '../services/AppCore';
 import WelcomeScreen from '../../features/Onboarding/WelcomeScreen'; 
 import Style from '../theme/Theme';
 import { StatusBar, UpdateAlert } from '../ui/AppUI';
+import ModMenu from '../ui/ModMenu';
 
 export default (props) => {
 	const [isFirstLoad, setFirstLoad] = useState(SettingsManager.isFirstLoad());
@@ -60,6 +61,7 @@ export default (props) => {
                         <StackNavigator />
                     </NavigationContainer>
                 )}
+                <ModMenu />
 			</AppContextProvider>
 		</View>
 	);

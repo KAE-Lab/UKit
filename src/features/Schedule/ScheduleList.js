@@ -17,6 +17,7 @@ import Translator from '../../shared/i18n/Translator';
 import { isConnected } from '../../shared/services/AppCore'
 import { FetchManager, DataManager } from '../../shared/services/DataService';
 import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../shared/services/AppCore';
+import { NotificationManager } from '../../shared/services/NotificationService';
 
 export const groupOverlappingCourses = (courses) => {
     if (!courses || courses.length === 0) return [];
@@ -292,6 +293,13 @@ export class ScheduleList extends React.Component {
                 } else {
                     schedule = fetchedData;
                 }
+                
+                // If this is the user's favorite group, schedule notifications
+                if (Array.isArray(this.state.groupName)) {
+                    // Call the notification manager to handle scheduling
+                    NotificationManager.scheduleCourseNotifications(schedule).catch(e => console.warn('Notification scheduling error:', e));
+                }
+
                 this.setState({ schedule, loading: false, cancelToken: null, cacheDate });
             }
         });
