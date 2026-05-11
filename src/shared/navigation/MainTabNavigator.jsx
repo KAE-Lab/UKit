@@ -82,7 +82,7 @@ function CustomTabBar({ state, descriptors, navigation, theme }) {
                                         ]}>
                                             {options.tabBarIcon && options.tabBarIcon({ color, size: 24, focused: isFocused })}
                                         </View>
-                                        <Text style={[styles.tabLabel, { color, fontWeight: isFocused ? '700' : '500' }]}>
+                                        <Text style={[styles.tabLabel, { color, fontWeight: Platform.OS === 'ios' ? (isFocused ? '700' : '500') : '500' }]}>
                                             {label}
                                         </Text>
                                     </TouchableOpacity>
@@ -240,6 +240,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: tokens.radius.md,
         marginBottom: 2,
+        overflow: 'hidden',
     },
     tabLabel: {
         fontSize: 10,
