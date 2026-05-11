@@ -33,7 +33,7 @@ const WidgetCard = ({
     const Content = () => (
         <>
             {(title || icon) && (
-                <View style={[styles.header, transparent && { marginBottom: tokens.space.xs, paddingHorizontal: tokens.space.sm }]}>
+                <View style={[styles.header, transparent && { marginBottom: tokens.space.xs, paddingHorizontal: tokens.space.md }]}>
                     <View style={styles.titleContainer}>
                         {icon && (
                             <MaterialCommunityIcons 

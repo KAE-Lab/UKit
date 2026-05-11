@@ -1169,7 +1169,7 @@ const style = {
     },
 
     calendarList: {
-        itemSize: 60,
+        itemSize: 64,
     },
 
     Theme,

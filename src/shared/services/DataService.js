@@ -327,6 +327,128 @@ class FetchManagerService {
             return null;
         }
     };
+
+    fetchRoomList = async () => {
+        const options = {
+            method: 'GET',
+            url: WebApiURL.DOMAIN + WebApiURL.GROUPS,
+            params: { searchTerm: '_', pageSize: '10000', resType: '102' },
+        };
+        try {
+            const results = await axios.request(options);
+            if (results?.status !== 200) return null;
+            if (!results.data) return null;
+
+            return results.data.results
+                .filter((e) => e.text && e.text.length > 2)
+                .map((e) => ({ id: e.id, name: e.text }));
+        } catch (error) {
+            return null;
+        }
+    };
+
+    extractBuildingsFromRooms = (rooms) => {
+        const locationsData = require('../../../assets/locations.json');
+        
+        // Find which buildings have freeAccess: true
+        const freeAccessBuildings = Object.keys(locationsData).filter(key => locationsData[key].freeAccess === true);
+        
+        const buildingsMap = new Map();
+
+        for (const buildingKey of freeAccessBuildings) {
+            const loc = locationsData[buildingKey];
+            buildingsMap.set(buildingKey, {
+                id: 'bat_' + buildingKey.toLowerCase(),
+                name: buildingKey,
+                rooms: [],
+                imageUrl: loc.image,
+                lat: loc.lat,
+                lng: loc.lng,
+                campus: loc.campus || 'Talence',
+                schedule: loc.schedule
+            });
+        }
+
+        for (const room of rooms) {
+            if (room.name.toLowerCase().includes('en attente')) continue;
+
+            for (const buildingKey of freeAccessBuildings) {
+                // Match the building key strictly
+                const regex = new RegExp(`\\b${buildingKey}\\b`, 'i');
+                if (regex.test(room.name) || room.name.includes(buildingKey)) {
+                    // Nettoyage: retirer le nom du bâtiment et ne garder que "Salle XXX"
+                    let cleanName = room.name.replace(/\s*\([^)]*\)$/, '').trim();
+                    let finalName = cleanName;
+                    const salleIndex = cleanName.toLowerCase().indexOf('salle');
+                    if (salleIndex !== -1) {
+                        finalName = cleanName.substring(salleIndex).trim();
+                    }
+
+                    if (finalName.toLowerCase() === 'salle' || finalName.trim() === '') {
+                        break;
+                    }
+
+                    buildingsMap.get(buildingKey).rooms.push({
+                        id: room.id,
+                        name: finalName,
+                        fullName: room.name
+                    });
+                    break;
+                }
+            }
+        }
+        
+        return Array.from(buildingsMap.values()).filter(b => b.rooms.length > 0).sort((a, b) => a.name.localeCompare(b.name));
+    };
+
+    fetchRoomsScheduleDay = async (roomIds, date) => {
+        const endQueryDate = moment(date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD');
+        const data = {
+            start: date,
+            end: endQueryDate,
+            resType: '102',
+            calView: 'agendaDay',
+            'federationIds[]': roomIds,
+            colourScheme: '3',
+        };
+        const options = {
+            method: 'POST',
+            url: WebApiURL.DOMAIN + WebApiURL.CALENDARDATA,
+            headers: {
+                Connection: 'keep-alive',
+                Pragma: 'no-cache',
+                'Cache-Control': 'no-cache',
+                Accept: 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            },
+            data: qs.stringify(data, { arrayFormat: 'repeat' }),
+        };
+
+        try {
+            const response = await axios.request(options);
+            if (response?.status !== 200) return null;
+
+            const eventList = [];
+            for (const event of response.data) {
+                if (moment(event.start).format('YYYY-MM-DD') !== date) continue;
+
+                const startDate = moment(event.start);
+                const endDate = moment(event.end);
+                
+                eventList.push({
+                    id: event.id,
+                    starttime: startDate.format('HH:mm'),
+                    endtime: endDate.format('HH:mm'),
+                    date: { start: startDate.toISOString(), end: endDate.toISOString() },
+                    description: formatDescription(event.description),
+                    isVacances: event.eventCategory === 'Vacances' || (event.description && event.description.toLowerCase().includes('vacances'))
+                });
+            }
+            return eventList;
+        } catch (error) {
+            return null;
+        }
+    };
 }
 
 export const FetchManager = new FetchManagerService();
@@ -336,6 +458,7 @@ export const FetchManager = new FetchManagerService();
 class DataManagerService {
     constructor() {
         this._groupList = [];
+        this._buildingList = [];
         this._availableUEs = [];
         this._subscribers = {};
         this._cacheTimeLimit = 7 * 24 * 60 * 60 * 1000;
@@ -359,6 +482,13 @@ class DataManagerService {
     setGroupList = (newList) => {
         this._groupList = [...newList];
         this.notify('groupList', this._groupList);
+    };
+
+    getBuildingList = () => this._buildingList;
+
+    setBuildingList = (newList) => {
+        this._buildingList = [...newList];
+        this.notify('buildingList', this._buildingList);
     };
 
     getAvailableUEs = () => this._availableUEs;
@@ -394,6 +524,15 @@ class DataManagerService {
         }
     };
 
+    fetchBuildingList = async () => {
+        const roomList = await FetchManager.fetchRoomList();
+        if (roomList) {
+            const buildings = FetchManager.extractBuildingsFromRooms(roomList);
+            await AsyncStorage.setItem('buildingListTimestamp', String(Date.now()));
+            this.setBuildingList(buildings);
+        }
+    };
+
     saveData = () => {
         AsyncStorage.setItem('groupList', JSON.stringify(this._groupList));
     };
@@ -409,6 +548,17 @@ class DataManagerService {
                 this.setGroupList(groupList);
             } else {
                 await this.fetchGroupList();
+            }
+
+            const buildingListRaw = await AsyncStorage.getItem('buildingList');
+            const buildingList = buildingListRaw ? JSON.parse(buildingListRaw) : null;
+            const buildingTimestamp = await AsyncStorage.getItem('buildingListTimestamp');
+            const buildingDiff = Date.now() - parseInt(buildingTimestamp || '0');
+
+            if (buildingList && buildingDiff < this._cacheTimeLimit) {
+                this.setBuildingList(buildingList);
+            } else {
+                await this.fetchBuildingList();
             }
         } catch (error) {
             console.warn('COULDNT RETRIEVE GROUP LIST...');

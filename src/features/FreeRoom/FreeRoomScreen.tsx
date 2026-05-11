@@ -1,41 +1,40 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Location from 'expo-location';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
+
+import * as Location from 'expo-location';
 
 import { AppContext } from '../../shared/services/AppCore';
 import style, { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
-import LibraryService, { LibraryInfo, AffluencesData } from './LibraryService';
+import { DataManager } from '../../shared/services/DataService';
+import { BuildingInfo, getDistanceInKm } from './FreeRoomService';
 import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
 
-const defaultLibraryImage = require('../../../assets/images/default_resto.png');
+const defaultImage = require('../../../assets/images/default_resto.png');
 
-function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
+function FreeRoomScreen({ navigation, onAnimatedScroll }: any) {
     const AppContextValues = useContext(AppContext) as any;
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
     const insets = useSafeAreaInsets();
 
-    const [libraries, setLibraries] = useState<LibraryInfo[]>([]);
+    const [buildings, setBuildings] = useState<BuildingInfo[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [affluences, setAffluences] = useState<Record<string, AffluencesData>>({});
-    const [locationError, setLocationError] = useState(false);
-
     const [favorites, setFavorites] = useState<string[]>([]);
     const mountedRef = useRef(true);
+
     useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
     useFocusEffect(
         useCallback(() => {
             const loadFavorites = async () => {
                 try {
-                    const savedFavs = await AsyncStorage.getItem('library_favorites');
+                    const savedFavs = await AsyncStorage.getItem('freeroom_favorites');
                     if (savedFavs) {
                         setFavorites(JSON.parse(savedFavs));
                     }
@@ -56,13 +55,13 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                 newFavs.push(id);
             }
             setFavorites(newFavs);
-            await AsyncStorage.setItem('library_favorites', JSON.stringify(newFavs));
+            await AsyncStorage.setItem('freeroom_favorites', JSON.stringify(newFavs));
         } catch (e) {
             console.error("Erreur de sauvegarde des favoris", e);
         }
     };
 
-    const sortedLibraries = [...libraries].sort((a, b) => {
+    const sortedBuildings = [...buildings].sort((a, b) => {
         const aFav = favorites.includes(a.id);
         const bFav = favorites.includes(b.id);
         if (aFav && !bFav) return -1;
@@ -71,88 +70,63 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     });
 
     useEffect(() => {
-        loadLibraries();
+        loadBuildings();
     }, []);
 
-    const loadLibraries = async () => {
+    const loadBuildings = async () => {
         setLoading(true);
         try {
-            let userLat: number | undefined = undefined;
-            let userLng: number | undefined = undefined;
-
-            const { status } = await Location.requestForegroundPermissionsAsync();
-
-            if (status === 'granted') {
-                let location = await Location.getLastKnownPositionAsync({});
-                if (!location) {
-                    location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-                }
-                if (location) {
-                    userLat = location.coords.latitude;
-                    userLng = location.coords.longitude;
-                }
-            } else {
-                if (mountedRef.current) setLocationError(true);
+            let bList = DataManager.getBuildingList();
+            if (!bList || bList.length === 0) {
+                await DataManager.fetchBuildingList();
+                bList = DataManager.getBuildingList();
             }
+            if (mountedRef.current) {
+                let userLat = undefined;
+                let userLon = undefined;
+                try {
+                    let { status } = await Location.requestForegroundPermissionsAsync();
+                    if (status === 'granted') {
+                        let location = await Location.getLastKnownPositionAsync({});
+                        if (!location) location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+                        if (location) {
+                            userLat = location.coords.latitude;
+                            userLon = location.coords.longitude;
+                        }
+                    }
+                } catch (e) { }
 
-            // Fallback sur le campus de Talence si le GPS de l'émulateur échoue
-            if (userLat === undefined || userLng === undefined) {
-                userLat = 44.8048;
-                userLng = -0.5954;
+                if (bList) {
+                    bList = bList.map((b: BuildingInfo) => {
+                        if (userLat !== undefined && userLon !== undefined && b.lat && b.lng) {
+                            b.distance = getDistanceInKm(userLat, userLon, b.lat, b.lng);
+                        }
+                        return b;
+                    });
+                }
+
+                setBuildings(bList || []);
+                setLoading(false);
             }
-
-            const fetchedLibs = await LibraryService.fetchNearbyLibraries(userLat, userLng);
-            if (!mountedRef.current) return;
-
-            const nearbyLibs = fetchedLibs;
-            setLibraries(nearbyLibs);
-
-            const affluencesPromises = nearbyLibs.map(async (lib) => {
-                const data = await LibraryService.getAffluencesData(lib.slug);
-                return { id: lib.id, data };
-            });
-
-            const results = await Promise.all(affluencesPromises);
-            if (!mountedRef.current) return;
-
-            const newAffluences: Record<string, AffluencesData> = {};
-            results.forEach(res => {
-                if (res.data) newAffluences[res.id] = res.data;
-            });
-            setAffluences(newAffluences);
-
         } catch (error) {
-            console.error("Erreur critique dans loadLibraries:", error);
-        } finally {
             if (mountedRef.current) setLoading(false);
         }
     };
 
-    const getOccupancyColor = (rate: number | null) => {
-        if (rate === null) return theme.border;
-        if (rate < 50) return '#4caf50'; 
-        if (rate < 80) return '#ff9800'; 
-        return '#f44336'; 
-    };
+    const renderBuildingCard = ({ item }: { item: BuildingInfo }) => {
+        const imageSource = item.imageUrl ? { uri: item.imageUrl } : defaultImage;
+        const totalRooms = item.rooms ? item.rooms.length : 0;
 
-    const renderLibraryCard = ({ item }: { item: LibraryInfo }) => {
-        const affluenceData = affluences[item.id];
-        const rate = affluenceData?.occupancyRate ?? null;
-        const isOpen = affluenceData?.isOpen ?? true; 
-
-        let statusColor = '#f44336';
-        if (isOpen) {
-            if (rate === null || rate < 50) statusColor = '#4caf50';
-            else if (rate < 80) statusColor = '#ff9800';
-            else statusColor = '#ff4436';
+        let hoursText = Translator.get('UNKNOWN') || 'Non communiqué';
+        if (item.schedule) {
+            const currentDay = new Date().getDay() || 7; // 1-7
+            const daySchedule = item.schedule[String(currentDay)];
+            if (daySchedule) {
+                hoursText = `${daySchedule.open} - ${daySchedule.close}`;
+            } else {
+                hoursText = Translator.get('BU_CLOSED') || 'Fermé';
+            }
         }
-
-        let statusText = isOpen ? (Translator.get('BU_OPEN')) : (Translator.get('BU_CLOSED'));
-        if (!isOpen && affluenceData?.openingText) { 
-            statusText = `${statusText} - ${affluenceData.openingText}`;
-        }
-
-        const imageSource = item.imageUrl ? { uri: item.imageUrl } : defaultLibraryImage;
         
         return (
             <Reanimated.View 
@@ -161,7 +135,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
             >
             <TouchableOpacity 
                 activeOpacity={0.9}
-                onPress={() => navigation.navigate('LibraryDetails', { library: item, affluence: affluenceData })}
+                onPress={() => navigation.navigate('FreeRoomDetails', { building: item })}
                 style={{
                     backgroundColor: theme.cardBackground,
                     borderRadius: tokens.radius.xl, 
@@ -171,7 +145,6 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     overflow: 'hidden', 
                 }}
             >
-                {/* LA GRANDE IMAGE (Comme pour les RUs) */}
                 <Image 
                     source={imageSource}
                     style={{
@@ -182,10 +155,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     }}
                 />
 
-                {/* LES INFOS EN DESSOUS */}
                 <View style={{ padding: tokens.space.md }}>
-                    
-                    {/* Titre */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
                         <Text style={{ 
                             fontSize: tokens.fontSize.lg, 
@@ -208,57 +178,28 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                         </TouchableOpacity>
                     </View>
                     
-                    {/* Ligne : Ville + Badge de Distance */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
                         <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
-                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
-                            {item.campus}
+                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }} numberOfLines={1}>
+                            {item.campus || 'Talence'}
                         </Text>
 
-                        {/* Badge de Distance style RU */}
                         {item.distance !== undefined && (
-                            <View style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                backgroundColor: `${theme.primary}15`, 
-                                paddingHorizontal: tokens.space.sm,
-                                paddingVertical: 4,
-                                borderRadius: tokens.radius.md,
-                            }}>
-                                <MaterialIcons name="directions-walk" size={14} color={theme.primary} />
-                                <Text style={{
-                                    fontSize: tokens.fontSize.sm,
-                                    fontWeight: tokens.fontWeight.bold as any,
-                                    color: theme.primary,
-                                    marginLeft: 4
-                                }}>
-                                    {item.distance < 1 
-                                        ? `${Math.round(item.distance * 1000)} m` 
-                                        : `${item.distance.toFixed(1)} km`}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
+                                <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
+                                <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any, color: theme.primary, marginLeft: 4 }}>
+                                    {item.distance < 1 ? `${Math.round(item.distance * 1000)} m` : `${item.distance.toFixed(1)} km`}
                                 </Text>
                             </View>
                         )}
                     </View>
 
-                    {/* Jauge d'affluence en une ligne */}
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <MaterialCommunityIcons name={isOpen ? 'door-open' : 'door-closed'} size={16} color={statusColor} />
-                        <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold as any, color: statusColor, marginLeft: 4, flexShrink: 1 }}>
-                            {statusText}
+                        <MaterialCommunityIcons name="clock-outline" size={16} color={theme.fontSecondary} />
+                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
+                            {hoursText} • {totalRooms} {Translator.get('ROOMS') || 'Salles'}
                         </Text>
-                        
-                        {isOpen && rate !== null && (
-                            <>
-                                <View style={{ flex: 1, height: 6, backgroundColor: theme.greyBackground, borderRadius: 3, overflow: 'hidden', marginHorizontal: tokens.space.sm }}>
-                                    <View style={{ width: `${rate}%`, height: '100%', backgroundColor: statusColor, borderRadius: 3 }} />
-                                </View>
-                                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.bold as any }}>
-                                    {`${rate}%`}
-                                </Text>
-                            </>
-                        )}
                     </View>
-
                 </View>
             </TouchableOpacity>
         </Reanimated.View>
@@ -279,13 +220,13 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
-                    data={sortedLibraries}
+                    data={sortedBuildings}
                     onScroll={onAnimatedScroll}
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingTop: (insets.top || 0) + 70, paddingVertical: tokens.space.sm, flexGrow: 1 }}
-                    renderItem={renderLibraryCard}
+                    renderItem={renderBuildingCard}
                     ListEmptyComponent={() => (
                         <View style={{ 
                             alignItems: 'center', 
@@ -297,13 +238,13 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                             borderWidth: 1, 
                             borderColor: theme.border 
                         }}>
-                            <MaterialCommunityIcons name="bookshelf" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.sm }} />
+                            <MaterialCommunityIcons name="domain" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.sm }} />
                             <Text style={{ 
                                 color: theme.fontSecondary, 
                                 fontSize: tokens.fontSize.md,
                                 textAlign: 'center'
                             }}>
-                                {Translator.get('NO_BU_NEARBY')}
+                                {Translator.get('NO_BUILDING_FOUND') || 'Aucun bâtiment trouvé'}
                             </Text>
                         </View>
                     )}
@@ -313,4 +254,4 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     );
 }
 
-export default withHeaderAnimation(LibraryScreen);
+export default withHeaderAnimation(FreeRoomScreen);

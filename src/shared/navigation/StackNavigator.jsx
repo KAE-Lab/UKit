@@ -3,8 +3,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
-import Dashboard from '../../features/Dashboard/DashboardScreen';
-import GroupSearch from '../../features/Home/HomeScreen';
+import MainTabNavigator from './MainTabNavigator';
+import GroupSearch from '../../features/Schedule/GroupSelectionScreen';
 import Group from '../../features/Schedule/ScheduleScreen';
 import About from '../../features/About/AboutScreen';
 import Settings from '../../features/Settings/SettingsScreen';
@@ -12,11 +12,14 @@ import WebBrowser from '../../features/Browser/WebBrowserScreen';
 import Geolocation from '../../features/Map/MapScreen';
 import Course from '../../features/Schedule/CourseCard';
 import DayView from '../../features/Schedule/DayView';
-import WeekView from '../../features/Schedule/WeekView';
 import CrousScreen from '../../features/Crous/CrousScreen';
 import CrousMenuScreen from '../../features/Crous/CrousMenuScreen';
 import LibraryScreen from '../../features/Library/LibraryScreen';
 import LibraryDetailsScreen from '../../features/Library/LibraryDetailsScreen';
+import BdeDetailsScreen from '../../features/Bde/BdeDetailsScreen';
+import BdeScreen from '../../features/Bde/BdeScreen';
+import FreeRoomScreen from '../../features/FreeRoom/FreeRoomScreen';
+import FreeRoomDetailsScreen from '../../features/FreeRoom/FreeRoomDetailsScreen';
 
 import style, { tokens } from '../theme/Theme';
 import { AppContext, treatTitle } from '../services/AppCore';
@@ -41,7 +44,7 @@ export default function StackNavigator() {
 
                 return (
                     <Stack.Navigator
-                        initialRouteName="Dashboard"
+                        initialRouteName="MainTabs"
                         screenOptions={{
                             headerLeft: (props) => props.canGoBack ? (
                                 <TouchableOpacity onPress={props.onPress} style={{ paddingLeft: tokens.space.md }}>
@@ -52,7 +55,7 @@ export default function StackNavigator() {
                             ) : undefined,
                         }}>
                         
-                        <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
+                        <Stack.Screen name="MainTabs" component={MainTabNavigator} options={{ headerShown: false }} />
 
                         <Stack.Screen name="GroupSearch" component={GroupSearch} options={({ route }) => NavBarHelper({ title: Translator.get('GROUPS'), themeName, route, gestureEnabled: true })} />
                         
@@ -80,14 +83,19 @@ export default function StackNavigator() {
                             return NavBarHelper({ title: treatTitle(route.params?.title ?? Translator.get('WEB_BROWSER')), themeName, route, gestureEnabled: true });
                         }} />
                         
-                        <Stack.Screen name="Week" component={WeekView} options={({ route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.groupName} themeName={themeName} /></View>, title: Array.isArray(route.params.groupName) ? (Translator.get('MY_PLANNING') || 'Mon Planning') : treatTitle(route.params.groupName), themeName, route })} />
-                        
                         <Stack.Screen name="Day" component={DayView} options={{ tabBarLabel: Translator.get('DAY'), tabBarIcon: ({ tintColor }) => <MaterialCommunityIcons name="calendar" size={24} style={{ color: tintColor }} /> }} />
                         
                         <Stack.Screen name="CrousMenu" component={CrousMenuScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.restaurantName, route.params?.location), title: route.params?.restaurantName ?? Translator.get('MENU'), themeName, route })} />
                         
                         <Stack.Screen name="LibraryDetails" component={LibraryDetailsScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.library?.name, { lat: route.params?.library?.lat, lng: route.params?.library?.lng }), title: treatTitle(route.params?.library?.name ?? Translator.get('LIBRARY_DETAILS')), themeName, route })} />
                     
+                        <Stack.Screen name="Bde" component={BdeScreen} options={({ route }) => NavBarHelper({ title: Translator.get('STUDENT_LIFE') || 'Student life', themeName, route, gestureEnabled: true })} />
+
+                        <Stack.Screen name="BdeDetail" component={BdeDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS') || 'Détails', themeName, route, gestureEnabled: true })} />
+                    
+                        <Stack.Screen name="FreeRoomScreen" component={FreeRoomScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FREE_ROOMS') || 'Salles Libres', themeName, route, gestureEnabled: true })} />
+                        <Stack.Screen name="FreeRoomDetails" component={FreeRoomDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS') || 'Détails', themeName, route, gestureEnabled: true })} />
+
                         <Stack.Screen name="Geolocation" component={Geolocation} options={({ route }) => NavBarHelper({ title: Translator.get('MAP'), themeName, route })} />
                         
                         <Stack.Screen name="Course" component={Course} options={({ navigation, route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />

@@ -11,8 +11,8 @@ import { Split } from '../../shared/ui/AppUI';
 import style, { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
 import { AppContext, isConnected } from '../../shared/services/AppCore'
-import { FetchManager } from '../../shared/services/DataService'; 
-import { NavBarHelper } from '../../shared/navigation/NavHelpers';
+import { FetchManager } from '../../shared/services/DataService';
+import { NavBarHelper, SaveGroupButton } from '../../shared/navigation/NavHelpers';
 
 // ── COMPOSANT HEADER DE SECTION ─────────────────────────────────────────
 class SectionListHeader extends React.PureComponent {
@@ -130,21 +130,21 @@ class GroupRow extends React.PureComponent {
 
 // ── ÉCRAN PRINCIPAL ─────────────────────────────────────────────────────
 class HomeScreen extends React.Component {
-	static contextType = AppContext;
+    static contextType = AppContext;
 
-	constructor(props) {
+    constructor(props) {
         super(props);
         this.scrollY = new Animated.Value(0);
-		this.state = {
-			completeList: null,
-			sections: null,
-			list: null,
-			emptySearchResults: false,
-			refreshing: false,
-			cacheDate: null,
-			searchText: '',
-		};
-	}
+        this.state = {
+            completeList: null,
+            sections: null,
+            list: null,
+            emptySearchResults: false,
+            refreshing: false,
+            cacheDate: null,
+            searchText: '',
+        };
+    }
 
     async componentDidMount() {
         this.props.navigation.setOptions(
@@ -152,137 +152,145 @@ class HomeScreen extends React.Component {
                 title: Translator.get('GROUPS'),
                 themeName: this.context.themeName,
                 scrollY: this.scrollY,
+                headerRight: () => (
+                    <View style={{ paddingRight: tokens.space.md }}>
+                        <SaveGroupButton
+                            groupName={[]}
+                            themeName={this.context.themeName}
+                        />
+                    </View>
+                ),
             })
         );
-		await this.getList();
-	}
+        await this.getList();
+    }
 
-	generateSections(list, save = false) {
-		let sections = [];
-		let sectionContent = null;
-		let previousSection = null;
-		let sectionIndex = -1;
+    generateSections(list, save = false) {
+        let sections = [];
+        let sectionContent = null;
+        let previousSection = null;
+        let sectionIndex = -1;
 
-		list.forEach((e) => {
-			let splitName = e.name.substring(0, 3);
-			e.cleanName = e.name;
+        list.forEach((e) => {
+            let splitName = e.name.substring(0, 3);
+            e.cleanName = e.name;
 
-			if (splitName !== previousSection) {
-				if (previousSection !== null) {
-					sections.push(sectionContent);
-				}
-				previousSection = splitName;
-				sectionContent = {
-					key: previousSection,
-					data: [],
-					sectionIndex: ++sectionIndex,
-					colorIndex: sectionIndex % style.Theme[this.context.themeName].sections.length,
-				};
-			}
+            if (splitName !== previousSection) {
+                if (previousSection !== null) {
+                    sections.push(sectionContent);
+                }
+                previousSection = splitName;
+                sectionContent = {
+                    key: previousSection,
+                    data: [],
+                    sectionIndex: ++sectionIndex,
+                    colorIndex: sectionIndex % style.Theme[this.context.themeName].sections.length,
+                };
+            }
 
-			e.colorIndex = sectionContent.colorIndex;
-			e.sectionStyle = style.list.sections[sectionIndex % style.list.sections.length];
-			sectionContent.data.push(e);
-		});
+            e.colorIndex = sectionContent.colorIndex;
+            e.sectionStyle = style.list.sections[sectionIndex % style.list.sections.length];
+            sectionContent.data.push(e);
+        });
 
-		sections.push(sectionContent);
+        sections.push(sectionContent);
 
-		if (save) {
-			this.setState({ list, sections, completeList: list, refreshing: false });
-		} else {
-			this.setState({ list, sections });
-		}
-	}
+        if (save) {
+            this.setState({ list, sections, completeList: list, refreshing: false });
+        } else {
+            this.setState({ list, sections });
+        }
+    }
 
-	refreshList = async () => {
-		this.setState({ refreshing: true });
-		await this.fetchList();
-	};
+    refreshList = async () => {
+        this.setState({ refreshing: true });
+        await this.fetchList();
+    };
 
-	getList = async () => {
-		await this.fetchList();
-	};
+    getList = async () => {
+        await this.fetchList();
+    };
 
-	getCache = async () => {
-		let cache = await AsyncStorage.getItem('groups');
-		if (cache !== null) {
-			cache = JSON.parse(cache);
-			this.setState({ cacheDate: cache.date });
-			return cache.list;
-		}
-		return null;
-	};
+    getCache = async () => {
+        let cache = await AsyncStorage.getItem('groups');
+        if (cache !== null) {
+            cache = JSON.parse(cache);
+            this.setState({ cacheDate: cache.date });
+            return cache.list;
+        }
+        return null;
+    };
 
-	fetchList = async () => {
-		let list = null;
+    fetchList = async () => {
+        let list = null;
 
-		if (await isConnected()) {
-			try {
-				const groupList = await FetchManager.fetchGroupList();
-				if (groupList === null) throw 'network error';
+        if (await isConnected()) {
+            try {
+                const groupList = await FetchManager.fetchGroupList();
+                if (groupList === null) throw 'network error';
 
-				this.setState({ cacheDate: null });
-				list = groupList.map((e) => ({ name: e }));
-				AsyncStorage.setItem('groups', JSON.stringify({ list, date: moment() })).catch((e) =>
-					console.warn('Échec de la mise en cache des groupes :', e)
-				);
-			} catch (error) {
-				if (error.response) {
-					Toast.show(Translator.get('ERROR_WITH_CODE'), {
-						duration: Toast.durations.LONG,
-						position: Toast.positions.BOTTOM,
-					});
-				} else if (error.request) {
-					Toast.show(Translator.get('NO_CONNECTION'), {
-						duration: Toast.durations.SHORT,
-						position: Toast.positions.BOTTOM,
-					});
-				} else {
-					Toast.show(Translator.get('ERROR_WITH_MESSAGE', error.message), {
-						duration: Toast.durations.LONG,
-						position: Toast.positions.BOTTOM,
-					});
-				}
-				list = await this.getCache();
-			}
-		} else {
-			Toast.show(Translator.get('NO_CONNECTION'), {
-				duration: Toast.durations.SHORT,
-				position: Toast.positions.BOTTOM,
-			});
-			list = await this.getCache();
-		}
+                this.setState({ cacheDate: null });
+                list = groupList.map((e) => ({ name: e }));
+                AsyncStorage.setItem('groups', JSON.stringify({ list, date: moment() })).catch((e) =>
+                    console.warn('Échec de la mise en cache des groupes :', e)
+                );
+            } catch (error) {
+                if (error.response) {
+                    Toast.show(Translator.get('ERROR_WITH_CODE'), {
+                        duration: Toast.durations.LONG,
+                        position: Toast.positions.BOTTOM,
+                    });
+                } else if (error.request) {
+                    Toast.show(Translator.get('NO_CONNECTION'), {
+                        duration: Toast.durations.SHORT,
+                        position: Toast.positions.BOTTOM,
+                    });
+                } else {
+                    Toast.show(Translator.get('ERROR_WITH_MESSAGE', error.message), {
+                        duration: Toast.durations.LONG,
+                        position: Toast.positions.BOTTOM,
+                    });
+                }
+                list = await this.getCache();
+            }
+        } else {
+            Toast.show(Translator.get('NO_CONNECTION'), {
+                duration: Toast.durations.SHORT,
+                position: Toast.positions.BOTTOM,
+            });
+            list = await this.getCache();
+        }
 
-		if (list !== null) {
-			this.generateSections(list, true);
-		}
-	};
+        if (list !== null) {
+            this.generateSections(list, true);
+        }
+    };
 
-	openGroup = (name) => {
-		const { navigate } = this.props.navigation;
-		navigate('Group', { name });
-	};
+    openGroup = (name) => {
+        const { navigate } = this.props.navigation;
+        navigate('Group', { name });
+    };
 
-	search(input) {
-		this.setState({ sections: null, emptySearchResults: false });
-		let list = this.state.completeList;
-		if (input.length !== 0) {
-			let regex = new RegExp(input, 'gi');
-			list = list.filter((e) => {
-				return e.name.replace(/_/g, ' ').match(regex);
-			});
-		}
-		if (list.length > 0) {
-			this.setState({ emptySearchResults: false });
-			this.generateSections(list, false);
-		} else {
-			this.setState({ emptySearchResults: true });
-		}
-	}
+    search(input) {
+        this.setState({ sections: null, emptySearchResults: false });
+        let list = this.state.completeList;
+        if (input.length !== 0) {
+            let regex = new RegExp(input, 'gi');
+            list = list.filter((e) => {
+                return e.name.replace(/_/g, ' ').match(regex);
+            });
+        }
+        if (list.length > 0) {
+            this.setState({ emptySearchResults: false });
+            this.generateSections(list, false);
+        } else {
+            this.setState({ emptySearchResults: true });
+        }
+    }
 
-	render() {
-		const theme = style.Theme[this.context.themeName];
-		let content = null;
+    render() {
+        const theme = style.Theme[this.context.themeName];
+        let content = null;
 
         const searchInput = (
             <View style={{
@@ -292,7 +300,7 @@ class HomeScreen extends React.Component {
                 borderRadius: tokens.radius.md,
                 paddingHorizontal: tokens.space.md,
                 marginHorizontal: tokens.space.md,
-                marginTop: tokens.space.xs,      
+                marginTop: tokens.space.xs,
                 marginBottom: tokens.space.md,
                 height: 40,
             }}>
@@ -318,7 +326,7 @@ class HomeScreen extends React.Component {
                     autoCorrect={false}
                 />
                 {this.state.searchText.length > 0 && (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         onPress={() => {
                             this.setState({ searchText: '' });
                             this.search('');
@@ -401,9 +409,14 @@ class HomeScreen extends React.Component {
             <SafeAreaInsetsContext.Consumer>
                 {(insets) => (
                     <View style={[style.list.homeView, { backgroundColor: theme.background }]}>
-                        <View style={{ paddingTop: (insets?.top || 0) + 65 }}>
+                        <View style={{ 
+                            paddingTop: (insets?.top || 0) + 65,
+                            backgroundColor: theme.cardBackground,
+                            borderBottomWidth: 1,
+                            borderBottomColor: theme.border,
+                            ...tokens.shadow.sm,
+                        }}>
                             {searchInput}
-                            <Split lineColor={theme.border} noMargin={true} />
                             {cache}
                         </View>
                         {content}
@@ -411,7 +424,7 @@ class HomeScreen extends React.Component {
                 )}
             </SafeAreaInsetsContext.Consumer>
         );
-	}
+    }
 }
 
 export default HomeScreen;
