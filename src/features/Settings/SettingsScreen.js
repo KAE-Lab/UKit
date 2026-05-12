@@ -1,13 +1,17 @@
 import React from 'react';
 import { SafeAreaView, SafeAreaInsetsContext} from 'react-native-safe-area-context';
-import { Linking, ScrollView, Text, View } from 'react-native';
+import { Linking, Text, View, Animated, StyleSheet } from 'react-native';
 import * as Calendar from 'expo-calendar';
+import Slider from '@react-native-community/slider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import moment from 'moment';
+import { NotificationManager } from '../../shared/services/NotificationService';
 
 import { AppContext, SettingsManager } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
 import Button from '../../shared/ui/Button';
-import { withStaticHeader } from '../../shared/navigation/NavHelpers';
+
 
 import {
     SettingsLanguagePopup,
@@ -46,7 +50,11 @@ class Settings extends React.Component {
             openFavSwitchValue: SettingsManager.getOpenAppOnFavoriteGroup(),
             resetDialogVisible: false,
             selectedCalendar: SettingsManager.getSyncCalendar(),
+            isDarkMode: SettingsManager.getTheme() === 'dark',
+            courseNotificationsEnabled: SettingsManager.getCourseNotificationsEnabled(),
+            courseNotificationDelay: SettingsManager.getCourseNotificationDelay(),
         };
+        this.scrollY = new Animated.Value(0);
 
     }
 
@@ -76,6 +84,58 @@ class Settings extends React.Component {
         this.setState({ openFavSwitchValue: !this.state.openFavSwitchValue }, () => {
             SettingsManager.setOpenAppOnFavoriteGroup(this.state.openFavSwitchValue);
         });
+    };
+
+    toggleTheme = () => {
+        SettingsManager.switchTheme();
+        this.setState({ isDarkMode: SettingsManager.getTheme() === 'dark' });
+    };
+
+    toggleCourseNotifications = async () => {
+        const newValue = !this.state.courseNotificationsEnabled;
+        if (newValue) {
+            await NotificationManager.requestPermissionsAsync();
+        }
+        this.setState({ courseNotificationsEnabled: newValue }, async () => {
+            SettingsManager.setCourseNotificationsEnabled(newValue);
+            
+            const favGroups = SettingsManager.getFavoriteGroups();
+            if (favGroups && favGroups.length > 0) {
+                const groupPrefix = favGroups.join('+');
+                const currentWeek = moment().isoWeek();
+                const id = `${groupPrefix}@Week${currentWeek}`;
+                const cache = await AsyncStorage.getItem(id);
+                if (cache) {
+                    const parsed = JSON.parse(cache);
+                    if (parsed && parsed.data) {
+                        NotificationManager.scheduleCourseNotifications(parsed.data).catch(() => {});
+                    }
+                }
+            }
+        });
+    };
+
+    onNotificationDelayChange = (value) => {
+        this.setState({ courseNotificationDelay: value });
+    };
+
+    onNotificationDelaySlidingComplete = async (value) => {
+        SettingsManager.setCourseNotificationDelay(value);
+        if (this.state.courseNotificationsEnabled) {
+            const favGroups = SettingsManager.getFavoriteGroups();
+            if (favGroups && favGroups.length > 0) {
+                const groupPrefix = favGroups.join('+');
+                const currentWeek = moment().isoWeek();
+                const id = `${groupPrefix}@Week${currentWeek}`;
+                const cache = await AsyncStorage.getItem(id);
+                if (cache) {
+                    const parsed = JSON.parse(cache);
+                    if (parsed && parsed.data) {
+                        NotificationManager.scheduleCourseNotifications(parsed.data).catch(() => {});
+                    }
+                }
+            }
+        }
     };
 
     toggleCalendarSync = async () => {
@@ -143,16 +203,40 @@ class Settings extends React.Component {
         const calendarName = !!calendar ? calendar.title : this.state.selectedCalendar === 'UKit' ? 'UKit' : Translator.get('NOT_FOUND');
         const lastSyncDate = SettingsManager.getLastSyncDate();
 
+        const renderHeader = (insets) => {
+            const topPadding = (insets?.top || 0);
+
+            const opacity = this.scrollY.interpolate({
+                inputRange: [0, 50],
+                outputRange: [1, 0],
+                extrapolate: 'clamp'
+            });
+
+            return (
+                <Animated.View style={[styles.headerContainer, { paddingTop: topPadding, backgroundColor: 'transparent', opacity }]}>
+                    <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
+                        <Text style={[styles.greetingText, { color: theme.font }]}>
+                            {Translator.get('SETTINGS') || 'Paramètres'}
+                        </Text>
+                    </View>
+                </Animated.View>
+            );
+        };
+
         return (
             <SafeAreaInsetsContext.Consumer>
                 {(insets) => (
                     <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
-                        <ScrollView
+                        {renderHeader(insets)}
+                        <Animated.ScrollView
                             style={{ flex: 1 }}
-                            contentContainerStyle={{ paddingTop: (insets?.top || 0) + 50 }}
+                            contentContainerStyle={{ paddingTop: (insets?.top || 0) + 60, paddingBottom: tokens.space.xxl + 80 }}
                             showsVerticalScrollIndicator={false}
-                            bounces={false}
-                            overScrollMode="never"
+                            onScroll={Animated.event(
+                                [{ nativeEvent: { contentOffset: { y: this.scrollY } } }],
+                                { useNativeDriver: true }
+                            )}
+                            scrollEventThrottle={16}
                         >
 
                     {/* ── Affichage ─────────────────────────────────────── */}
@@ -172,6 +256,55 @@ class Settings extends React.Component {
                         leftText={Translator.get('FILTERS')}
                         rightText="..."
                     />
+
+                    {/* ── Thème ─────────────────────────────────────── */}
+                    <SettingsTextHeader theme={themeSettings} text={Translator.get('THEME') || 'Thème'} />
+                    <Button
+                        theme={themeSettings}
+                        leftIcon="theme-light-dark"
+                        leftText={Translator.get('DARK_MODE') || 'Mode Sombre'}
+                        onSwitchToggle={this.toggleTheme}
+                        switchValue={this.state.isDarkMode}
+                    />
+
+                    {/* ── Notifications ─────────────────────────────────────── */}
+                    <SettingsTextHeader theme={themeSettings} text={Translator.get('NOTIFICATIONS') || 'Notifications'} />
+                    
+                    <Button
+                        theme={themeSettings}
+                        leftIcon="bell-outline"
+                        leftText={Translator.get('COURSE_NOTIFICATIONS') || 'Notifications de cours'}
+                        onSwitchToggle={this.toggleCourseNotifications}
+                        switchValue={this.state.courseNotificationsEnabled}
+                    />
+
+                    {this.state.courseNotificationsEnabled && (
+                        <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.sm }}>
+                                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: tokens.fontWeight.semibold }}>
+                                    {Translator.get('NOTIFICATION_DELAY') || 'Délai avant le cours'}
+                                </Text>
+                                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.primary, fontWeight: tokens.fontWeight.bold }}>
+                                    {this.state.courseNotificationDelay} min
+                                </Text>
+                            </View>
+                            <Slider
+                                style={{ width: '100%', height: 40 }}
+                                minimumValue={5}
+                                maximumValue={60}
+                                step={5}
+                                value={this.state.courseNotificationDelay}
+                                onValueChange={this.onNotificationDelayChange}
+                                onSlidingComplete={this.onNotificationDelaySlidingComplete}
+                                minimumTrackTintColor={theme.primary}
+                                maximumTrackTintColor={theme.border}
+                                thumbTintColor={theme.primary}
+                            />
+                            <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginTop: tokens.space.xs }}>
+                                {Translator.get('NOTIFICATION_DELAY_DESC') || 'Ajustez combien de minutes avant le début du cours vous souhaitez être notifié.'}
+                            </Text>
+                        </View>
+                    )}
 
                     {/* ── Lancement ─────────────────────────────────────── */}
                     <SettingsTextHeader theme={themeSettings} text={Translator.get('APP_LAUNCHING')} />
@@ -252,7 +385,7 @@ class Settings extends React.Component {
                     <SettingsFiltersPopup theme={themeSettings} popupVisible={this.state.filtersDialogVisible} popupClose={this.closeFiltersDialog} filterList={this.state.filterList} filterTextInput={this.state.filterTextInput} setFilterTextInput={this.setFilterTextInput} submitFilterTextInput={this.submitFilterTextInput} />
                     <SettingsResetPopup theme={themeSettings} popupVisible={this.state.resetDialogVisible} popupClose={this.closeResetDialog} resetApp={this.resetApp} />
                     <SettingsCalendarPopup theme={themeSettings} popupVisible={this.state.calendarDialogVisible} popupClose={this.closeCalendarDialog} setCalendar={this.setCalendar} selectedCalendar={this.state.selectedCalendar} />
-                </ScrollView>
+                </Animated.ScrollView>
             </SafeAreaView>
                 )}
             </SafeAreaInsetsContext.Consumer>
@@ -260,4 +393,25 @@ class Settings extends React.Component {
     }
 }
 
-export default withStaticHeader(Settings);
+const styles = StyleSheet.create({
+    headerContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 10,
+        paddingBottom: tokens.space.sm,
+    },
+    headerContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    greetingText: {
+        fontSize: 34,
+        fontWeight: tokens.fontWeight.bold,
+        fontFamily: 'Montserrat_600SemiBold',
+        marginBottom: tokens.space.md,
+    },
+});
+
+export default Settings;

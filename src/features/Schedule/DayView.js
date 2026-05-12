@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Text, TouchableOpacity, View, DeviceEventEmitter } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
@@ -78,7 +78,43 @@ class DayView extends React.Component {
 	componentDidMount() {
 		// Centrer la sélection au chargement initial
 		this.scrollToSelection(false);
+
+		this.mockListener = DeviceEventEmitter.addListener('timeMockChanged', () => {
+			this.reinitializeDates();
+		});
 	}
+
+	reinitializeDates = () => {
+		const currentDay = moment();
+		const days = DayView.generateDays();
+		const currentWeek = { week: currentDay.isoWeek(), year: currentDay.year() };
+		const weeks = DayView.generateWeeks();
+
+		const selectedDayIndex = days.findIndex((e) => e.isSame(currentDay, 'day'));
+		const selectedWeekIndex = findIndexOfObject(weeks, currentWeek);
+
+		DayView.lastSelectedDay = currentDay;
+		DayView.lastSelectedWeek = currentWeek;
+
+		this.setState({
+			currentDay,
+			currentDayIndex: selectedDayIndex,
+			selectedDayIndex: Math.max(0, selectedDayIndex),
+			shownMonth: {
+				number: currentDay.month(),
+				string: capitalize(currentDay.format('MMMM')),
+			},
+			days,
+			selectedDay: currentDay,
+			currentWeek,
+			currentWeekIndex: selectedWeekIndex,
+			selectedWeekIndex: Math.max(0, selectedWeekIndex),
+			weeks,
+			selectedWeek: currentWeek,
+		}, () => {
+			this.scrollToSelection(true);
+		});
+	};
 
 	scrollToSelection = (animated = true) => {
 		this.scrollTimeout = setTimeout(() => {
@@ -95,6 +131,7 @@ class DayView extends React.Component {
 
 	componentWillUnmount() {
 		if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+		if (this.mockListener) this.mockListener.remove();
 	}
 
 	static getCalendarListItemLayout = (data, index) => ({

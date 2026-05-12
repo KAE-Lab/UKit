@@ -184,6 +184,8 @@ class SettingsManagerService {
         this._calendarSyncEnabled = false;
         this._isSynchronizingCalendar = false;
         this._lastSyncDate = null;
+        this._courseNotificationsEnabled = true;
+        this._courseNotificationDelay = 15;
     }
 
     on = (event, callback) => {
@@ -336,6 +338,20 @@ class SettingsManagerService {
     getOpenAppOnFavoriteGroup = () => this._openAppOnFavoriteGroup;
     setOpenAppOnFavoriteGroup = (newOpenAppBool) => { this._openAppOnFavoriteGroup = newOpenAppBool; this.saveSettings(); };
 
+    getCourseNotificationsEnabled = () => this._courseNotificationsEnabled;
+    setCourseNotificationsEnabled = (state) => { 
+        this._courseNotificationsEnabled = state; 
+        this.saveSettings(); 
+        this.notify('courseNotificationsEnabled', state); 
+    };
+
+    getCourseNotificationDelay = () => this._courseNotificationDelay;
+    setCourseNotificationDelay = (delay) => { 
+        this._courseNotificationDelay = delay; 
+        this.saveSettings(); 
+        this.notify('courseNotificationDelay', delay); 
+    };
+
     getFilters = () => this._filters;
     resetFilter = () => { this._filters = []; this.notify('filter', this._filters); };
     addFilters = (filter) => {
@@ -372,6 +388,7 @@ class SettingsManagerService {
             calendar: this._calendar, theme: this._theme, favoriteGroups: this._favoriteGroups,
             language: this._language, openAppOnFavoriteGroup: this._openAppOnFavoriteGroup,
             filters: this._filters, calendarSyncEnabled: this._calendarSyncEnabled,
+            courseNotificationsEnabled: this._courseNotificationsEnabled, courseNotificationDelay: this._courseNotificationDelay,
         }));
     };
 
@@ -403,6 +420,8 @@ class SettingsManagerService {
             if (settings?.calendar !== undefined) this._calendar = settings?.calendar;
             if (settings?.calendarSyncEnabled) this._calendarSyncEnabled = true;
             if (settings?.language) this.setLanguage(settings.language);
+            if (settings?.courseNotificationsEnabled !== undefined) this._courseNotificationsEnabled = settings.courseNotificationsEnabled;
+            if (settings?.courseNotificationDelay !== undefined) this._courseNotificationDelay = settings.courseNotificationDelay;
         } catch (error) {
             new ErrorAlert("Settings couldn't be loaded").show();
         }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, ScrollView, Image, TouchableOpacity, Linking, Animated } from 'react-native';
+import { Text, View, ScrollView, Image, TouchableOpacity, Linking, Animated, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -80,6 +80,15 @@ const URLButton = ({ url, title, theme }) => {
 
 class AboutScreen extends React.Component {
 	static contextType = AppContext;
+	tapCount = 0;
+
+	handleVersionTap = () => {
+		this.tapCount++;
+		if (this.tapCount === 7) {
+			this.tapCount = 0;
+			DeviceEventEmitter.emit('toggleModMenu');
+		}
+	}
 
 	render() {
         const theme = style.Theme[this.context.themeName];
@@ -110,14 +119,18 @@ class AboutScreen extends React.Component {
                         <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: theme.font }}>
                             UKit
                         </Text>
-                        <View style={{
-                            backgroundColor: theme.greyBackground, borderRadius: tokens.radius.md,
-                            paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.xs, marginTop: tokens.space.xs,
-                        }}>
+                        <TouchableOpacity 
+                            activeOpacity={1} 
+                            onPress={this.handleVersionTap}
+                            style={{
+                                backgroundColor: theme.greyBackground, borderRadius: tokens.radius.md,
+                                paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.xs, marginTop: tokens.space.xs,
+                            }}
+                        >
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontWeight: tokens.fontWeight.medium }}>
                                 v{appVersion}
                             </Text>
-                        </View>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Sections */}
