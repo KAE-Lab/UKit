@@ -132,6 +132,27 @@ function CustomTabBar({ state, descriptors, navigation, theme }) {
                                     {Translator.get('ABOUT')}
                                 </Text>
                             </TouchableOpacity>
+                        ) : state.routes[state.index].name === 'ScolariteTab' ? (
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate('CredentialsSettings')}
+                                activeOpacity={0.85}
+                                style={[
+                                    styles.groupButton,
+                                    {
+                                        backgroundColor: theme.cardBackground,
+                                        borderColor: theme.border,
+                                    }
+                                ]}
+                            >
+                                <MaterialCommunityIcons
+                                    name="account-key-outline"
+                                    size={24}
+                                    color={theme.accent ?? theme.primary}
+                                />
+                                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                                    {Translator.get('LOGS')}
+                                </Text>
+                            </TouchableOpacity>
                         ) : (
                             /* Placeholder invisible — maintient la largeur de la tab bar sans afficher de contour */
                             <View style={{ width: 65, height: 75 }} />

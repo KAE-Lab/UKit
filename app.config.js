@@ -55,5 +55,6 @@ export default {
 	},
 	plugins: [
 		"expo-web-browser",
+		"expo-secure-store",
 	],
 };
