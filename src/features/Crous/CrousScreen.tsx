@@ -228,7 +228,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 textAlign: 'center'
                             }}>
                                 {searchText.length > 0 || selectedFilter !== 'all' 
-                                    ? (Translator.get('NO_RESULTS_FOUND') || "Aucun résultat trouvé") 
+                                    ? Translator.get('NO_RESULTS_FOUND') 
                                     : Translator.get('NO_RU_NEARBY')}
                             </Text>
                         </View>
@@ -389,7 +389,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 color: theme.font,
                                 padding: 0
                             }}
-                            placeholder={Translator.get('SEARCH') || 'Rechercher un resto, une ville...'}
+                            placeholder={Translator.get('SEARCH_RESTO_CITY')}
                             placeholderTextColor={theme.fontSecondary}
                             onChangeText={setSearchText}
                             value={searchText}
@@ -415,7 +415,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                             <View style={theme.settings?.popup?.container || { backgroundColor: theme.cardBackground, width: '85%', borderRadius: tokens.radius.xl, padding: tokens.space.lg }}>
                                 <View style={theme.settings?.popup?.header || { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.md }}>
                                     <Text style={theme.settings?.popup?.textHeader || { fontSize: tokens.fontSize.lg, fontWeight: 'bold', color: theme.font }}>
-                                        Filtres
+                                        {Translator.get('FILTERS')}
                                     </Text>
                                     <TouchableOpacity onPress={() => setFilterVisible(false)}>
                                         <MaterialIcons name="close" size={28} color={theme.fontSecondary} />
@@ -424,17 +424,17 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
 
                                 <TouchableOpacity onPress={() => { updateFilter('all'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, borderBottomWidth: 1, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommunityIcons name={selectedFilter === 'all' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'all' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
-                                    <Text style={{ color: selectedFilter === 'all' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'all' ? 'bold' : 'normal' }}>Tous les établissements</Text>
+                                    <Text style={{ color: selectedFilter === 'all' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'all' ? 'bold' : 'normal' }}>{Translator.get('ALL_ESTABLISHMENTS')}</Text>
                                 </TouchableOpacity>
                                 
                                 <TouchableOpacity onPress={() => { updateFilter('resto'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, borderBottomWidth: 1, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommunityIcons name={selectedFilter === 'resto' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'resto' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
-                                    <Text style={{ color: selectedFilter === 'resto' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'resto' ? 'bold' : 'normal' }}>Resto U</Text>
+                                    <Text style={{ color: selectedFilter === 'resto' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'resto' ? 'bold' : 'normal' }}>{Translator.get('RESTO_U')}</Text>
                                 </TouchableOpacity>
                                 
                                 <TouchableOpacity onPress={() => { updateFilter('market'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommunityIcons name={selectedFilter === 'market' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'market' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
-                                    <Text style={{ color: selectedFilter === 'market' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'market' ? 'bold' : 'normal' }}>Crous Market</Text>
+                                    <Text style={{ color: selectedFilter === 'market' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'market' ? 'bold' : 'normal' }}>{Translator.get('CROUS_MARKET')}</Text>
                                 </TouchableOpacity>
                                 
                             </View>

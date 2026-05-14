@@ -39,6 +39,8 @@ const CampusDashboard = ({ navigation }) => {
     const [favRu, setFavRu] = useState([]);
     const [favBu, setFavBu] = useState([]);
     const [favBuildings, setFavBuildings] = useState([]);
+    const [crousFilter, setCrousFilter] = useState('all');
+    
     const mountedRef = useRef(true);
     const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -56,6 +58,9 @@ const CampusDashboard = ({ navigation }) => {
 
                     const savedFavBuildings = await AsyncStorage.getItem('freeroom_favorites');
                     if (savedFavBuildings) setFavBuildings(JSON.parse(savedFavBuildings));
+                    
+                    const savedFilter = await AsyncStorage.getItem('crous_filter');
+                    if (savedFilter) setCrousFilter(savedFilter);
                 } catch (e) { }
             };
             loadFavorites();
@@ -182,7 +187,16 @@ const CampusDashboard = ({ navigation }) => {
         }
     };
 
-    const sortedRestaurants = [...restaurants].sort((a, b) => {
+    const filteredRestaurants = [...restaurants].filter(item => {
+        if (crousFilter !== 'all') {
+            const isRestoU = item.title.includes("Crous Cafet") || item.title.includes("Resto U");
+            const isMarket = item.title.includes("Crous Moovy Market") || item.title.includes("Crous Market");
+            
+            if (crousFilter === 'resto' && !isRestoU) return false;
+            if (crousFilter === 'market' && !isMarket) return false;
+        }
+        return true;
+    }).sort((a, b) => {
         const aFav = favRu.includes(a.id);
         const bFav = favRu.includes(b.id);
         if (aFav && !bFav) return -1;
@@ -562,7 +576,7 @@ const CampusDashboard = ({ navigation }) => {
                             ) : (
                                 <FlatList
                                     horizontal
-                                    data={sortedRestaurants}
+                                    data={filteredRestaurants}
                                     renderItem={renderRuCard}
                                     keyExtractor={item => item.id}
                                     showsHorizontalScrollIndicator={false}
