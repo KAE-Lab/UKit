@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
-import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
+import { Animated, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image, TextInput, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { useCallback } from 'react';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
@@ -12,7 +12,7 @@ import Translator from '../../shared/i18n/Translator';
 import { CrousService, CrousRestaurant } from './CrousService';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
-import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
+import { withHeaderAnimation, globalScrollValues } from '../../shared/navigation/NavHelpers';
 
 const defaultImage = require('../../../assets/images/default_resto.png');
 
@@ -26,8 +26,38 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const [locationError, setLocationError] = useState(false);
 
     const [favorites, setFavorites] = useState<string[]>([]);
+    
+    // Nouveaux états pour la recherche et le filtre
+    const [searchText, setSearchText] = useState('');
+    const [selectedFilter, setSelectedFilter] = useState('all'); // 'all', 'resto', 'market'
+    const [filterVisible, setFilterVisible] = useState(false);
+    
+    const route = useRoute();
     const mountedRef = useRef(true);
     useEffect(() => { return () => { mountedRef.current = false; }; }, []);
+
+    useEffect(() => {
+        const loadFilter = async () => {
+            try {
+                const savedFilter = await AsyncStorage.getItem('crous_filter');
+                if (savedFilter) {
+                    setSelectedFilter(savedFilter);
+                }
+            } catch (e) {
+                console.error("Erreur de lecture du filtre", e);
+            }
+        };
+        loadFilter();
+    }, []);
+
+    const updateFilter = async (filter: string) => {
+        setSelectedFilter(filter);
+        try {
+            await AsyncStorage.setItem('crous_filter', filter);
+        } catch (e) {
+            console.error("Erreur de sauvegarde du filtre", e);
+        }
+    };
 
     /* * On recharge les favoris a chaque fois que l'ecran est au premier plan.
      * C'est indispensable pour synchroniser l'etat si l'utilisateur a clique 
@@ -74,6 +104,55 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
         if (!aFav && bFav) return 1;
         return (a.distance || 0) - (b.distance || 0);
     });
+
+    const filteredRestaurants = sortedRestaurants.filter(item => {
+        // Filtrer par catégorie (Resto U / Crous Market)
+        if (selectedFilter !== 'all') {
+            const isRestoU = item.title.includes("Crous Cafet") || item.title.includes("Resto U");
+            const isMarket = item.title.includes("Crous Moovy Market") || item.title.includes("Crous Market");
+            
+            if (selectedFilter === 'resto' && !isRestoU) return false;
+            if (selectedFilter === 'market' && !isMarket) return false;
+        }
+
+        // Filtrer par texte (nom ou ville)
+        if (searchText.trim().length > 0) {
+            const query = searchText.toLowerCase().trim();
+            const matchName = item.title.toLowerCase().includes(query);
+            const matchCity = item.short_desc && item.short_desc.toLowerCase().includes(query);
+            if (!matchName && !matchCity) return false;
+        }
+
+        return true;
+    });
+
+    useEffect(() => {
+        const safeScrollY = globalScrollValues[route.key];
+        const scale = safeScrollY ? safeScrollY._buttonScale : 1;
+
+        navigation.setOptions({
+            headerRight: () => (
+                <Animated.View style={{ transform: [{ scale: scale || 1 }], height: 45, justifyContent: 'center' }}>
+                    <TouchableOpacity onPress={() => setFilterVisible(true)} style={{ paddingRight: tokens.space.md }}>
+                        <View style={{ 
+                            backgroundColor: theme.greyBackground, 
+                            width: 45, height: 45, 
+                            justifyContent: 'center', 
+                            alignItems: 'center', 
+                            borderRadius: tokens.radius.md, 
+                            flexShrink: 0
+                        }}>
+                            <MaterialCommunityIcons 
+                                name="filter-variant"
+                                size={26} 
+                                color={selectedFilter !== 'all' ? theme.primary : theme.fontSecondary} 
+                            />
+                        </View>
+                    </TouchableOpacity>
+                </Animated.View>
+            )
+        });
+    }, [navigation, theme, route.key, selectedFilter]);
 
     useEffect(() => {
         loadData();
@@ -125,12 +204,12 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
-                    data={sortedRestaurants}
+                    data={filteredRestaurants}
                     onScroll={onAnimatedScroll}
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingTop: (insets.top || 0) + 70, paddingVertical: tokens.space.sm, flexGrow: 1 }}
+                    contentContainerStyle={{ paddingTop: (insets.top || 0) + 70, paddingBottom: Math.max(tokens.space.sm, (insets?.bottom || 0)) + 80, flexGrow: 1 }}
                     ListEmptyComponent={() => (
                         <View style={{ 
                             alignItems: 'center', 
@@ -148,7 +227,9 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 fontSize: tokens.fontSize.md,
                                 textAlign: 'center'
                             }}>
-                                {Translator.get('NO_RU_NEARBY')}
+                                {searchText.length > 0 || selectedFilter !== 'all' 
+                                    ? (Translator.get('NO_RESULTS_FOUND') || "Aucun résultat trouvé") 
+                                    : Translator.get('NO_RU_NEARBY')}
                             </Text>
                         </View>
                     )}
@@ -266,6 +347,101 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     )}
                 />
             </View>
+
+            {/* SEARCH BAR */}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'position' : undefined}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+                style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                }}
+            >
+                <View style={{
+                    paddingBottom: Math.max(tokens.space.sm, (insets?.bottom || 0)),
+                }}>
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: theme.greyBackground,
+                        borderRadius: tokens.radius.md,
+                        paddingHorizontal: tokens.space.md,
+                        marginHorizontal: tokens.space.md,
+                        height: 45,
+                        elevation: 5,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                    }}>
+                        <MaterialCommunityIcons
+                            name="magnify"
+                            size={22}
+                            color={theme.fontSecondary}
+                            style={{ marginRight: tokens.space.sm }}
+                        />
+                        <TextInput
+                            style={{
+                                flex: 1,
+                                fontSize: tokens.fontSize.md,
+                                color: theme.font,
+                                padding: 0
+                            }}
+                            placeholder={Translator.get('SEARCH') || 'Rechercher un resto, une ville...'}
+                            placeholderTextColor={theme.fontSecondary}
+                            onChangeText={setSearchText}
+                            value={searchText}
+                            autoCorrect={false}
+                        />
+                        {searchText.length > 0 && (
+                            <TouchableOpacity
+                                onPress={() => setSearchText('')}
+                                style={{ padding: tokens.space.xs }}
+                            >
+                                <MaterialCommunityIcons name="close-circle" size={18} color={theme.fontSecondary} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
+            </KeyboardAvoidingView>
+
+            {/* FILTER MODAL */}
+            <Modal animationType="fade" transparent={true} visible={filterVisible} onRequestClose={() => setFilterVisible(false)}>
+                <TouchableWithoutFeedback onPress={() => setFilterVisible(false)}>
+                    <View style={theme.settings?.popup?.background || { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                        <TouchableWithoutFeedback>
+                            <View style={theme.settings?.popup?.container || { backgroundColor: theme.cardBackground, width: '85%', borderRadius: tokens.radius.xl, padding: tokens.space.lg }}>
+                                <View style={theme.settings?.popup?.header || { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.md }}>
+                                    <Text style={theme.settings?.popup?.textHeader || { fontSize: tokens.fontSize.lg, fontWeight: 'bold', color: theme.font }}>
+                                        Filtres
+                                    </Text>
+                                    <TouchableOpacity onPress={() => setFilterVisible(false)}>
+                                        <MaterialIcons name="close" size={28} color={theme.fontSecondary} />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <TouchableOpacity onPress={() => { updateFilter('all'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, borderBottomWidth: 1, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommunityIcons name={selectedFilter === 'all' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'all' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
+                                    <Text style={{ color: selectedFilter === 'all' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'all' ? 'bold' : 'normal' }}>Tous les établissements</Text>
+                                </TouchableOpacity>
+                                
+                                <TouchableOpacity onPress={() => { updateFilter('resto'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, borderBottomWidth: 1, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommunityIcons name={selectedFilter === 'resto' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'resto' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
+                                    <Text style={{ color: selectedFilter === 'resto' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'resto' ? 'bold' : 'normal' }}>Resto U</Text>
+                                </TouchableOpacity>
+                                
+                                <TouchableOpacity onPress={() => { updateFilter('market'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, flexDirection: 'row', alignItems: 'center' }}>
+                                    <MaterialCommunityIcons name={selectedFilter === 'market' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'market' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
+                                    <Text style={{ color: selectedFilter === 'market' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'market' ? 'bold' : 'normal' }}>Crous Market</Text>
+                                </TouchableOpacity>
+                                
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
         </SafeAreaView>
     );
 }
