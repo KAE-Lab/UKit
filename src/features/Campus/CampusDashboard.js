@@ -40,6 +40,7 @@ const CampusDashboard = ({ navigation }) => {
     const [favBu, setFavBu] = useState([]);
     const [favBuildings, setFavBuildings] = useState([]);
     const [crousFilter, setCrousFilter] = useState('all');
+    const [libraryFilter, setLibraryFilter] = useState('all');
     
     const mountedRef = useRef(true);
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -61,6 +62,9 @@ const CampusDashboard = ({ navigation }) => {
                     
                     const savedFilter = await AsyncStorage.getItem('crous_filter');
                     if (savedFilter) setCrousFilter(savedFilter);
+
+                    const savedLibFilter = await AsyncStorage.getItem('library_filter');
+                    if (savedLibFilter) setLibraryFilter(savedLibFilter);
                 } catch (e) { }
             };
             loadFavorites();
@@ -204,7 +208,14 @@ const CampusDashboard = ({ navigation }) => {
         return (a.distance || 0) - (b.distance || 0);
     });
 
-    const sortedLibraries = [...libraries].sort((a, b) => {
+    const filteredLibraries = [...libraries].filter(item => {
+        if (libraryFilter === 'open') {
+            const affluenceData = affluences[item.id];
+            const isOpen = affluenceData?.isOpen ?? true;
+            if (!isOpen) return false;
+        }
+        return true;
+    }).sort((a, b) => {
         const aFav = favBu.includes(a.id);
         const bFav = favBu.includes(b.id);
         if (aFav && !bFav) return -1;
@@ -605,7 +616,7 @@ const CampusDashboard = ({ navigation }) => {
                             ) : (
                                 <FlatList
                                     horizontal
-                                    data={sortedLibraries}
+                                    data={filteredLibraries}
                                     renderItem={renderBuCard}
                                     keyExtractor={item => item.id}
                                     showsHorizontalScrollIndicator={false}

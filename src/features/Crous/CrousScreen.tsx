@@ -26,12 +26,12 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
     const [locationError, setLocationError] = useState(false);
 
     const [favorites, setFavorites] = useState<string[]>([]);
-    
+
     // Nouveaux états pour la recherche et le filtre
     const [searchText, setSearchText] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('all'); // 'all', 'resto', 'market'
     const [filterVisible, setFilterVisible] = useState(false);
-    
+
     const route = useRoute();
     const mountedRef = useRef(true);
     useEffect(() => { return () => { mountedRef.current = false; }; }, []);
@@ -110,7 +110,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
         if (selectedFilter !== 'all') {
             const isRestoU = item.title.includes("Crous Cafet") || item.title.includes("Resto U");
             const isMarket = item.title.includes("Crous Moovy Market") || item.title.includes("Crous Market");
-            
+
             if (selectedFilter === 'resto' && !isRestoU) return false;
             if (selectedFilter === 'market' && !isMarket) return false;
         }
@@ -128,24 +128,24 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
 
     useEffect(() => {
         const safeScrollY = globalScrollValues[route.key];
-        const scale = safeScrollY ? safeScrollY._buttonScale : 1;
+        const scale = safeScrollY?._buttonScale || 1.14;
 
         navigation.setOptions({
             headerRight: () => (
-                <Animated.View style={{ transform: [{ scale: scale || 1 }], height: 45, justifyContent: 'center' }}>
+                <Animated.View style={{ transform: [{ scale }], height: 45, justifyContent: 'center' }}>
                     <TouchableOpacity onPress={() => setFilterVisible(true)} style={{ paddingRight: tokens.space.md }}>
-                        <View style={{ 
-                            backgroundColor: theme.greyBackground, 
-                            width: 45, height: 45, 
-                            justifyContent: 'center', 
-                            alignItems: 'center', 
-                            borderRadius: tokens.radius.md, 
+                        <View style={{
+                            backgroundColor: theme.greyBackground,
+                            width: 45, height: 45,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: tokens.radius.md,
                             flexShrink: 0
                         }}>
-                            <MaterialCommunityIcons 
+                            <MaterialCommunityIcons
                                 name="filter-variant"
-                                size={26} 
-                                color={selectedFilter !== 'all' ? theme.primary : theme.fontSecondary} 
+                                size={26}
+                                color={selectedFilter !== 'all' ? theme.primary : theme.fontSecondary}
                             />
                         </View>
                     </TouchableOpacity>
@@ -165,10 +165,10 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
 
         try {
             let { status } = await Location.requestForegroundPermissionsAsync();
-            
+
             if (status === 'granted') {
                 let location = await Location.getLastKnownPositionAsync({});
-                
+
                 if (!location) {
                     location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
                 }
@@ -211,139 +211,139 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingTop: (insets.top || 0) + 70, paddingBottom: Math.max(tokens.space.sm, (insets?.bottom || 0)) + 80, flexGrow: 1 }}
                     ListEmptyComponent={() => (
-                        <View style={{ 
-                            alignItems: 'center', 
-                            paddingVertical: tokens.space.xl, 
+                        <View style={{
+                            alignItems: 'center',
+                            paddingVertical: tokens.space.xl,
                             paddingHorizontal: tokens.space.lg,
                             marginHorizontal: tokens.space.sm,
-                            backgroundColor: theme.cardBackground, 
-                            borderRadius: tokens.radius.lg, 
-                            borderWidth: 1, 
-                            borderColor: theme.border 
+                            backgroundColor: theme.cardBackground,
+                            borderRadius: tokens.radius.lg,
+                            borderWidth: 1,
+                            borderColor: theme.border
                         }}>
                             <MaterialCommunityIcons name="store-off-outline" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.sm }} />
-                            <Text style={{ 
-                                color: theme.fontSecondary, 
+                            <Text style={{
+                                color: theme.fontSecondary,
                                 fontSize: tokens.fontSize.md,
                                 textAlign: 'center'
                             }}>
-                                {searchText.length > 0 || selectedFilter !== 'all' 
-                                    ? Translator.get('NO_RESULTS_FOUND') 
+                                {searchText.length > 0 || selectedFilter !== 'all'
+                                    ? Translator.get('NO_RESULTS_FOUND')
                                     : Translator.get('NO_RU_NEARBY')}
                             </Text>
                         </View>
                     )}
                     renderItem={({ item }) => (
-                        <Reanimated.View 
+                        <Reanimated.View
                             entering={FadeIn}
                             layout={LinearTransition.springify()}
                         >
-                        <TouchableOpacity 
-                            activeOpacity={0.9}
-                            onPress={() => navigation.navigate('CrousMenu', { 
-                                restaurantId: item.id, 
-                                restaurantName: item.title, 
-                                location: { lat: item.lat, lon: item.lon } 
-                            })}
-                            style={{
-                                backgroundColor: theme.cardBackground,
-                                borderRadius: tokens.radius.xl, 
-                                marginBottom: tokens.space.lg, 
-                                marginHorizontal: tokens.space.sm,
-                                ...tokens.shadow.md, 
-                                overflow: 'hidden', 
-                            }}
-                        >
-                            {/* Superposition des images pour gérer les 404 silencieusement sans state */}
-                            <View style={{ width: '100%', height: 180, backgroundColor: theme.greyBackground }}>
-                                <Image 
-                                    source={defaultImage}
-                                    style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
-                                />
-                                
-                                {item.image_url && (
-                                    <Image 
-                                        source={{ uri: item.image_url }}
+                            <TouchableOpacity
+                                activeOpacity={0.9}
+                                onPress={() => navigation.navigate('CrousMenu', {
+                                    restaurantId: item.id,
+                                    restaurantName: item.title,
+                                    location: { lat: item.lat, lon: item.lon }
+                                })}
+                                style={{
+                                    backgroundColor: theme.cardBackground,
+                                    borderRadius: tokens.radius.xl,
+                                    marginBottom: tokens.space.lg,
+                                    marginHorizontal: tokens.space.sm,
+                                    ...tokens.shadow.md,
+                                    overflow: 'hidden',
+                                }}
+                            >
+                                {/* Superposition des images pour gérer les 404 silencieusement sans state */}
+                                <View style={{ width: '100%', height: 180, backgroundColor: theme.greyBackground }}>
+                                    <Image
+                                        source={defaultImage}
                                         style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
                                     />
-                                )}
-                            </View>
 
-                            <View style={{ padding: tokens.space.md }}>
-                                
-                                {/* 1. TITRE ET ETOILE */}
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                                    <Text style={{ 
-                                        fontSize: tokens.fontSize.lg, 
-                                        fontWeight: tokens.fontWeight.bold as any, 
-                                        color: theme.font,
-                                        flexShrink: 1
-                                    }}>
-                                        {item.title}
-                                    </Text>
-                                    <TouchableOpacity 
-                                        onPress={() => toggleFavorite(item.id)}
-                                        hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }}
-                                        style={{ marginLeft: 6 }}
-                                    >
-                                        <MaterialCommunityIcons 
-                                            name={favorites.includes(item.id) ? "star" : "star-outline"} 
-                                            size={22} 
-                                            color={favorites.includes(item.id) ? theme.primary : theme.fontSecondary} 
+                                    {item.image_url && (
+                                        <Image
+                                            source={{ uri: item.image_url }}
+                                            style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
                                         />
-                                    </TouchableOpacity>
-                                </View>
-                                
-                                {/* 2. LOCALISATION ET BADGE DISTANCE (restaure) */}
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                                    <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
-                                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
-                                        {item.short_desc}
-                                    </Text>
-
-                                    {item.distance !== undefined && (
-                                        <View style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            backgroundColor: `${theme.primary}15`, 
-                                            paddingHorizontal: tokens.space.sm,
-                                            paddingVertical: 4,
-                                            borderRadius: tokens.radius.md,
-                                        }}>
-                                            <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
-                                            <Text style={{
-                                                fontSize: tokens.fontSize.sm,
-                                                fontWeight: tokens.fontWeight.bold as any,
-                                                color: theme.primary,
-                                                marginLeft: 4
-                                            }}>
-                                                {item.distance < 1 
-                                                    ? `${Math.round(item.distance * 1000)} m` 
-                                                    : `${item.distance.toFixed(1)} km`}
-                                            </Text>
-                                        </View>
                                     )}
                                 </View>
 
-                                {/* 3. HORAIRES */}
-                                <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                                    <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
-                                    <Text 
-                                        style={{ 
-                                            fontSize: tokens.fontSize.sm, 
-                                            color: theme.fontSecondary, 
-                                            marginLeft: 6, 
-                                            flex: 1, 
-                                            lineHeight: 20 
-                                        }}
-                                        numberOfLines={2} 
-                                    >
-                                        {item.opening}
-                                    </Text>
+                                <View style={{ padding: tokens.space.md }}>
+
+                                    {/* 1. TITRE ET ETOILE */}
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
+                                        <Text style={{
+                                            fontSize: tokens.fontSize.lg,
+                                            fontWeight: tokens.fontWeight.bold as any,
+                                            color: theme.font,
+                                            flexShrink: 1
+                                        }}>
+                                            {item.title}
+                                        </Text>
+                                        <TouchableOpacity
+                                            onPress={() => toggleFavorite(item.id)}
+                                            hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }}
+                                            style={{ marginLeft: 6 }}
+                                        >
+                                            <MaterialCommunityIcons
+                                                name={favorites.includes(item.id) ? "star" : "star-outline"}
+                                                size={22}
+                                                color={favorites.includes(item.id) ? theme.primary : theme.fontSecondary}
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {/* 2. LOCALISATION ET BADGE DISTANCE (restaure) */}
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
+                                        <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
+                                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
+                                            {item.short_desc}
+                                        </Text>
+
+                                        {item.distance !== undefined && (
+                                            <View style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                backgroundColor: `${theme.primary}15`,
+                                                paddingHorizontal: tokens.space.sm,
+                                                paddingVertical: 4,
+                                                borderRadius: tokens.radius.md,
+                                            }}>
+                                                <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
+                                                <Text style={{
+                                                    fontSize: tokens.fontSize.sm,
+                                                    fontWeight: tokens.fontWeight.bold as any,
+                                                    color: theme.primary,
+                                                    marginLeft: 4
+                                                }}>
+                                                    {item.distance < 1
+                                                        ? `${Math.round(item.distance * 1000)} m`
+                                                        : `${item.distance.toFixed(1)} km`}
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
+
+                                    {/* 3. HORAIRES */}
+                                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                                        <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
+                                        <Text
+                                            style={{
+                                                fontSize: tokens.fontSize.sm,
+                                                color: theme.fontSecondary,
+                                                marginLeft: 6,
+                                                flex: 1,
+                                                lineHeight: 20
+                                            }}
+                                            numberOfLines={2}
+                                        >
+                                            {item.opening}
+                                        </Text>
+                                    </View>
                                 </View>
-                            </View>
-                        </TouchableOpacity>
-                    </Reanimated.View>
+                            </TouchableOpacity>
+                        </Reanimated.View>
                     )}
                 />
             </View>
@@ -360,7 +360,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                 }}
             >
                 <View style={{
-                    paddingBottom: Math.max(tokens.space.sm, (insets?.bottom || 0)),
+                    paddingBottom: Math.max(tokens.space.sm, (insets?.bottom || 0) - 15)
                 }}>
                     <View style={{
                         flexDirection: 'row',
@@ -426,17 +426,17 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                     <MaterialCommunityIcons name={selectedFilter === 'all' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'all' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
                                     <Text style={{ color: selectedFilter === 'all' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'all' ? 'bold' : 'normal' }}>{Translator.get('ALL_ESTABLISHMENTS')}</Text>
                                 </TouchableOpacity>
-                                
+
                                 <TouchableOpacity onPress={() => { updateFilter('resto'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, borderBottomWidth: 1, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommunityIcons name={selectedFilter === 'resto' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'resto' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
                                     <Text style={{ color: selectedFilter === 'resto' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'resto' ? 'bold' : 'normal' }}>{Translator.get('RESTO_U')}</Text>
                                 </TouchableOpacity>
-                                
+
                                 <TouchableOpacity onPress={() => { updateFilter('market'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommunityIcons name={selectedFilter === 'market' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'market' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
                                     <Text style={{ color: selectedFilter === 'market' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'market' ? 'bold' : 'normal' }}>{Translator.get('CROUS_MARKET')}</Text>
                                 </TouchableOpacity>
-                                
+
                             </View>
                         </TouchableWithoutFeedback>
                     </View>
