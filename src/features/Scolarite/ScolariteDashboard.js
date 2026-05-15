@@ -1,164 +1,142 @@
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useContext, useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
-import WidgetCard from '../Dashboard/components/WidgetCard';
+import SecureStoreService from '../../shared/services/SecureStoreService';
+import PortalPreviewWidget from './components/PortalPreviewWidget';
 
-export const ShortcutTile = ({ title, icon, color, onPress, theme, style }) => {
-    return (
-        <TouchableOpacity 
-            activeOpacity={0.8}
-            onPress={onPress}
-            style={[{
-                backgroundColor: theme.cardBackground,
-                borderRadius: tokens.radius.md,
-                padding: tokens.space.md,
-                alignItems: 'center',
-                justifyContent: 'center',
-                ...tokens.shadow.sm,
-            }, style]}
-        >
-            <View style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: `${color}15`,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: tokens.space.xs,
-            }}>
-                <MaterialCommunityIcons name={icon} size={24} color={color} />
-            </View>
-            <Text style={{ 
-                fontSize: tokens.fontSize.sm, 
-                fontWeight: tokens.fontWeight.bold, 
-                color: theme.font, 
-                textAlign: 'center',
-                fontFamily: 'Montserrat_600SemiBold',
-            }} numberOfLines={1}>
-                {title}
-            </Text>
-        </TouchableOpacity>
-    );
-};
+// ─── Portal definitions ───────────────────────────────────────────────────────
+
+const PORTALS = [
+    {
+        key: 'ent',
+        entrypoint: 'ent',
+        url: 'https://ent.u-bordeaux.fr',
+        title: 'ENT',
+        icon: 'view-dashboard-outline',
+        colorIndex: 4,
+    },
+    {
+        key: 'email',
+        entrypoint: 'email',
+        url: 'https://webmel.u-bordeaux.fr',
+        title: () => Translator.get('MAILBOX') || 'Boîte mail',
+        icon: 'email-outline',
+        colorIndex: 5,
+    },
+    {
+        key: 'apogee',
+        entrypoint: 'apogee',
+        url: 'https://apogee.u-bordeaux.fr',
+        title: 'Apogée',
+        icon: 'school-outline',
+        colorIndex: 0,
+    },
+];
+
+// ─── Main screen ─────────────────────────────────────────────────────────────
 
 const ScolariteDashboard = ({ navigation }) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
+    const [credentials, setCredentials] = useState(null);
+    const [credentialsLoaded, setCredentialsLoaded] = useState(false);
+
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const portalRefs = useRef({});
+
+    useEffect(() => {
+        SecureStoreService.getCredentials().then((creds) => {
+            setCredentials(creds);
+            setCredentialsLoaded(true);
+        });
+    }, []);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            SecureStoreService.getCredentials().then((creds) => {
+                setCredentials(creds);
+                setCredentialsLoaded(true);
+            });
+        });
+        return unsubscribe;
+    }, [navigation]);
+
     const renderHeader = (insets) => {
-        const topPadding = (insets?.top || 0);
+        const topPadding = insets?.top || 0;
+
+        const opacity = scrollY.interpolate({
+            inputRange: [0, 50],
+            outputRange: [1, 0],
+            extrapolate: 'clamp',
+        });
+
         return (
-            <View style={[styles.headerContainer, { paddingTop: topPadding, backgroundColor: 'transparent' }]}>
-                <View style={[styles.headerContent, { paddingHorizontal: tokens.space.sm }]}>
-                    <Text style={[styles.greetingText, { color: theme.font }]}>
+            <Animated.View style={[styles.headerContainer, { paddingTop: topPadding, opacity }]}>
+                <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
+                    <Text style={[styles.greetingText, { color: theme.font, fontFamily: 'Montserrat_600SemiBold' }]}>
                         {Translator.get('SCOLARITY') || 'Scolarité'}
                     </Text>
                 </View>
-            </View>
+            </Animated.View>
         );
     };
+
+    if (!credentialsLoaded) return null;
 
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
-                    <ScrollView
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ paddingBottom: tokens.space.xxl + 80 }}
-                    >
-                        {renderHeader(insets)}
-                        
-                        {/* SECTION MON ESPACE */}
-                        <WidgetCard
-                            title={Translator.get('MY_SPACE') || 'Mon Espace'}
-                            icon="account-circle-outline"
-                            transparent={true}
-                            fullWidth
-                            color={theme.sectionsHeaders[3] || theme.primary}
-                        >
-                            <View style={{ paddingHorizontal: tokens.space.sm }}>
-                                <TouchableOpacity 
-                                    activeOpacity={0.8}
-                                    onPress={() => {}}
-                                    style={{
-                                        backgroundColor: theme.cardBackground,
-                                        borderRadius: tokens.radius.md,
-                                        padding: tokens.space.md,
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        ...tokens.shadow.sm,
-                                    }}
-                                >
-                                    <View style={{
-                                        width: 48,
-                                        height: 48,
-                                        borderRadius: 24,
-                                        backgroundColor: `${theme.primary}15`,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        marginRight: tokens.space.sm,
-                                    }}>
-                                        <MaterialCommunityIcons name="card-account-details-outline" size={24} color={theme.primary} />
-                                    </View>
-                                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                                        <Text style={{ 
-                                            fontSize: tokens.fontSize.sm, 
-                                            fontWeight: tokens.fontWeight.bold, 
-                                            color: theme.font, 
-                                            fontFamily: 'Montserrat_600SemiBold',
-                                            marginBottom: 2,
-                                        }}>
-                                            {Translator.get('PROFILE') || 'Profil'}
-                                        </Text>
-                                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }} numberOfLines={1}>
-                                            {Translator.get('DOCUMENTS') || 'Documents'}
-                                        </Text>
-                                    </View>
-                                </TouchableOpacity>
-                            </View>
-                        </WidgetCard>
+                    {renderHeader(insets)}
 
-                        {/* SECTION OUTILS UNIVERSITAIRES */}
-                        <WidgetCard
-                            title={Translator.get('NAVIGATION') || 'Navigation'}
-                            icon="toolbox-outline"
-                            transparent={true}
-                            fullWidth
-                            color={theme.sectionsHeaders[4] || theme.primary}
-                        >
-                            <View style={{ paddingHorizontal: tokens.space.sm, flexDirection: 'row' }}>
-                                <ShortcutTile 
-                                    title="ENT" 
-                                    icon="view-dashboard" 
-                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'ent', title: 'ENT' })}
-                                    color={theme.sectionsHeaders[4] || theme.primary}
-                                    theme={theme}
-                                    style={{ flex: 1, marginRight: tokens.space.xs }}
-                                />
-                                <ShortcutTile 
-                                    title={Translator.get('MAILBOX') || 'Boîte Mail'} 
-                                    icon="email-outline" 
-                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email', title: Translator.get('MAILBOX') })}
-                                    color={theme.sectionsHeaders[5] || theme.secondary}
-                                    theme={theme}
-                                    style={{ flex: 1, marginHorizontal: tokens.space.xs }}
-                                />
-                                <ShortcutTile 
-                                    title="Apogée" 
-                                    icon="school" 
-                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'apogee', title: 'Apogée' })}
-                                    color={theme.sectionsHeaders[0] || theme.primary}
-                                    theme={theme}
-                                    style={{ flex: 1, marginLeft: tokens.space.xs }}
-                                />
-                            </View>
-                        </WidgetCard>
-                    </ScrollView>
+                    <Animated.ScrollView
+                        onScroll={Animated.event(
+                            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                            { useNativeDriver: true }
+                        )}
+                        scrollEventThrottle={16}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{
+                            paddingTop: (insets?.top || 0) + 60,
+                            paddingBottom: tokens.space.xxl + 80,
+                        }}
+                    >
+                        {PORTALS.map((portal) => {
+                            const portalTitle = typeof portal.title === 'function' ? portal.title() : portal.title;
+                            return (
+                                <View key={portal.key} style={{ marginTop: tokens.space.md }}>
+                                    {/* Titre de section cliquable — ouvre la modale */}
+                                    <TouchableOpacity
+                                        onPress={() => portalRefs.current[portal.key]?.open()}
+                                        activeOpacity={0.7}
+                                        style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+                                    >
+                                        <Text style={[styles.sectionTitle, { color: theme.font }]}>
+                                            {portalTitle}
+                                        </Text>
+                                        <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
+                                    </TouchableOpacity>
+
+                                    <PortalPreviewWidget
+                                        ref={(r) => { portalRefs.current[portal.key] = r; }}
+                                        title={portalTitle}
+                                        icon={portal.icon}
+                                        entrypoint={portal.entrypoint}
+                                        url={portal.url}
+                                        color={theme.sectionsHeaders[portal.colorIndex] || theme.primary}
+                                        credentials={credentials}
+                                        navigation={navigation}
+                                    />
+                                </View>
+                            );
+                        })}
+                    </Animated.ScrollView>
                 </View>
             )}
         </SafeAreaInsetsContext.Consumer>
@@ -170,6 +148,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     headerContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
         zIndex: 10,
         paddingBottom: tokens.space.sm,
     },
@@ -180,8 +162,12 @@ const styles = StyleSheet.create({
     greetingText: {
         fontSize: 34,
         fontWeight: tokens.fontWeight.bold,
-        fontFamily: 'Montserrat_600SemiBold',
         marginBottom: tokens.space.md,
+    },
+    sectionTitle: {
+        fontSize: 22,
+        fontWeight: tokens.fontWeight.bold,
+        fontFamily: 'Montserrat_600SemiBold',
     },
 });
 

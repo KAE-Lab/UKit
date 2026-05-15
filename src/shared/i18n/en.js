@@ -180,4 +180,10 @@ export default {
 	CONFIRM_DELETE_CREDENTIALS: "Are you sure you want to delete these credentials?",
 	YES: "Yes",
 	NO: "No",
+	PORTAL_NO_CREDENTIALS_TITLE: "Credentials required",
+	PORTAL_NO_CREDENTIALS_DESC: "Save your ENT credentials to access this feature.",
+	PORTAL_ADD_CREDENTIALS: "Add my credentials",
+	PORTAL_CONNECTING: "Connecting...",
+	PORTAL_TAP_TO_OPEN: "Tap to open",
+	PORTAL_SECTION_TITLE: "University portals",
 };

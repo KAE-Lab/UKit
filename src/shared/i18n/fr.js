@@ -182,4 +182,10 @@ export default {
 	CONFIRM_DELETE_CREDENTIALS: "Êtes-vous sûr de vouloir supprimer ces identifiants ?",
 	YES: "Oui",
 	NO: "Non",
+	PORTAL_NO_CREDENTIALS_TITLE: "Identifiants requis",
+	PORTAL_NO_CREDENTIALS_DESC: "Enregistrez vos identifiants ENT pour accéder à cette fonctionnalité.",
+	PORTAL_ADD_CREDENTIALS: "Ajouter mes identifiants",
+	PORTAL_CONNECTING: "Connexion en cours...",
+	PORTAL_TAP_TO_OPEN: "Appuyer pour ouvrir",
+	PORTAL_SECTION_TITLE: "Portails universitaires",
 };

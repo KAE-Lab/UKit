@@ -184,4 +184,10 @@ export default {
 	CONFIRM_DELETE_CREDENTIALS: "¿Estás seguro de que quieres eliminar estas credenciales?",
 	YES: "Sí",
 	NO: "No",
+	PORTAL_NO_CREDENTIALS_TITLE: "Credenciales requeridas",
+	PORTAL_NO_CREDENTIALS_DESC: "Guarda tus credenciales ENT para acceder a esta función.",
+	PORTAL_ADD_CREDENTIALS: "Añadir mis credenciales",
+	PORTAL_CONNECTING: "Conectando...",
+	PORTAL_TAP_TO_OPEN: "Pulsar para abrir",
+	PORTAL_SECTION_TITLE: "Portales universitarios",
 };

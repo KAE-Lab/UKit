@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
-import { ActivityIndicator, Linking, Platform, TouchableOpacity, View, Modal, Text, StyleSheet } from 'react-native';
+import { ActivityIndicator, Linking, Platform, TouchableOpacity, View, Modal, Text, StyleSheet, BackHandler } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
@@ -20,7 +20,7 @@ const entrypoints = {
 };
 
 const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openURL, onQuit, canGoBack, canGoForward, loading }) => {
-    const buttonContainerWidth = 260; 
+    const buttonContainerWidth = 290; 
     const translateX = useSharedValue(0); // Start open
 
     const context = useSharedValue({ startX: 0 });
@@ -78,7 +78,7 @@ const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openUR
                     borderRadius: tokens.radius.md,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    marginHorizontal: 4,
+                    marginHorizontal: 5,
                     backgroundColor: disabled ? 'transparent' : `${color}15`,
                 }}>
                 <Icon name={iconName} size={size} color={color} />
@@ -115,7 +115,7 @@ const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openUR
     );
 };
 
-function WebBrowserScreen({ navigation, route }) {
+function WebBrowserScreen({ navigation, route, onDismiss }) {
 	const { themeName } = useContext(AppContext);
 	const webViewRef = useRef(null);
 	const insets = useSafeAreaInsets();
@@ -136,6 +136,7 @@ function WebBrowserScreen({ navigation, route }) {
 	const [savedCredentials, setSavedCredentials] = useState(null);
 	const [showSaveModal, setShowSaveModal] = useState(false);
 	const [tempCredentials, setTempCredentials] = useState(null);
+	const [dismissing, setDismissing] = useState(false);
 
 	useEffect(() => {
 		loadCredentials();
@@ -159,10 +160,40 @@ function WebBrowserScreen({ navigation, route }) {
 		}
 	}, [route.params?.entrypoint, route.params?.href]);
 
+    useEffect(() => {
+        // En mode modal (onDismiss fourni), on ne touche pas aux options de navigation
+        if (onDismiss) return;
+
+        // Pour iOS : Désactive le swipe-back global de l'app si la WebView a un historique,
+        // pour laisser le swipe-back natif de la WebView prendre le relais.
+        navigation.setOptions({ gestureEnabled: !canGoBack });
+
+        // Pour Android : Intercepte le bouton physique/geste de retour
+        const onBackPress = () => {
+            if (canGoBack && webViewRef.current) {
+                webViewRef.current.goBack();
+                return true; // Bloque la fermeture de l'écran
+            }
+            return false; // Laisse l'écran se fermer
+        };
+
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+        return () => backHandler.remove();
+    }, [canGoBack, navigation, onDismiss]);
+
 	const onRefresh = () => webViewRef.current?.reload();
 	const onBack = () => webViewRef.current?.goBack();
 	const onForward = () => webViewRef.current?.goForward();
-    const onQuit = () => navigation.goBack();
+    const onQuit = () => {
+        // Cache la FloatingBar immédiatement pour qu'elle ne reste pas visible
+        // pendant l'animation de fermeture du widget
+        setDismissing(true);
+        if (onDismiss) {
+            onDismiss();
+        } else {
+            navigation.goBack();
+        }
+    };
 
 	const openURL = async () => {
 		try {
@@ -211,75 +242,63 @@ function WebBrowserScreen({ navigation, route }) {
 
 	if (!uri) return renderLoading();
 
-	const getInjectedJavaScriptBeforeContentLoaded = () => {
-		let script = '';
-
-		if (Platform.OS !== 'ios') {
-			script += `
-				(function() {
-					try {
-						let scale = 1;
-						// Calculer le vrai scale si la page n'est pas optimisée mobile (ex: viewport 980px)
-						if (window.innerWidth > 0 && window.screen.width > 0 && window.innerWidth > window.screen.width) {
-							scale = window.innerWidth / window.screen.width;
-						}
-						const paddingTop = (${insets.top || 0}) * scale;
-						const style = document.createElement('style');
-						style.innerHTML = 'html { padding-top: ' + paddingTop + 'px !important; }';
-						document.documentElement.appendChild(style);
-					} catch (e) {}
-				})();
-			`;
-		}
-
-		script += `
+	const getCASInjectedScript = () => {
+		// Ce script se relance à chaque chargement de page dans la WebView (navigations internes comprises).
+		// Il ne gère QUE la logique CAS — le décalage haut est géré nativement (contentInset iOS / SafeAreaView Android).
+		return `
 			(function() {
+                if (!window.location.href.includes('cas.u-bordeaux.fr/cas/login')) return;
+
                 let attempts = 0;
                 const checkInterval = setInterval(function() {
                     attempts++;
                     if (attempts > 50) { clearInterval(checkInterval); return; }
 
-                    if (window.location.href.includes('cas.u-bordeaux.fr/cas/login')) {
-                        const usernameInput = document.getElementById('username');
-                        const passwordInput = document.getElementById('password');
-                        const form = document.getElementById('fm1');
+                    const usernameInput = document.getElementById('username');
+                    const passwordInput = document.getElementById('password');
+                    const form = document.getElementById('fm1');
+
+                    if (usernameInput && passwordInput && form) {
+                        clearInterval(checkInterval);
                         const errorElement = document.querySelector('.alert-danger') || document.querySelector('#msg.errors') || document.querySelector('.errors');
 
-                        if (usernameInput && passwordInput && form) {
-                            clearInterval(checkInterval);
-
-                            if (!errorElement && '${savedCredentials?.username || ''}' !== '') {
-                                usernameInput.value = '${savedCredentials?.username || ''}';
-                                passwordInput.value = '${savedCredentials?.password || ''}';
-                                const submitBtn = document.querySelector('input[name="submit"], button[name="submit"], input[type="submit"], button[type="submit"], .btn-submit');
-                                if (submitBtn) {
-                                    submitBtn.click();
-                                } else {
-                                    form.submit();
-                                }
+                        if (!errorElement && '${savedCredentials?.username || ''}' !== '') {
+                            usernameInput.value = '${savedCredentials?.username || ''}';
+                            passwordInput.value = '${savedCredentials?.password || ''}';
+                            const submitBtn = document.querySelector('input[name="submit"], button[name="submit"], input[type="submit"], button[type="submit"], .btn-submit');
+                            if (submitBtn) {
+                                submitBtn.click();
                             } else {
-                                form.addEventListener('submit', function(e) {
-                                    window.ReactNativeWebView.postMessage(JSON.stringify({
-                                        type: 'CAS_CREDENTIALS',
-                                        username: usernameInput.value,
-                                        password: passwordInput.value
-                                    }));
-                                });
+                                form.submit();
                             }
+                        } else {
+                            form.addEventListener('submit', function(e) {
+                                window.ReactNativeWebView.postMessage(JSON.stringify({
+                                    type: 'CAS_CREDENTIALS',
+                                    username: usernameInput.value,
+                                    password: passwordInput.value
+                                }));
+                            });
                         }
-                    } else {
-                        clearInterval(checkInterval);
                     }
                 }, 100);
 			})();
 			true;
 		`;
-		return script;
 	};
+	
+
 
 	return (
 		<View style={{ flex: 1, backgroundColor: theme.background }}>
-            <SafeAreaView edges={['left', 'right']} style={{ flex: 1 }}>
+            <SafeAreaView
+                edges={onDismiss
+                    ? ['top', 'left', 'right']           // mode modal : SafeAreaView gère le top
+                    : (Platform.OS === 'ios'
+                        ? ['left', 'right']              // mode normal iOS : contentInset gère le top
+                        : ['top', 'left', 'right'])}
+                style={{ flex: 1 }}
+            >
                 <WebView
                     ref={webViewRef}
                     style={{ flex: 1, backgroundColor: theme.background }}
@@ -287,10 +306,12 @@ function WebBrowserScreen({ navigation, route }) {
                     renderLoading={renderLoading}
                     javaScriptEnabled={true}
                     domStorageEnabled={true}
-                    contentInset={Platform.OS === 'ios' ? { top: insets.top || 0, left: 0, bottom: 0, right: 0 } : undefined}
+                    pullToRefreshEnabled={true}
+                    // Désactiver le swipe-back iOS en mode modal (c'est le widget qui gère le dismiss)
+                    allowsBackForwardNavigationGestures={onDismiss ? canGoBack : true}
+                    contentInset={(!onDismiss && Platform.OS === 'ios') ? { top: insets.top || 0, left: 0, bottom: 0, right: 0 } : undefined}
                     contentInsetAdjustmentBehavior="never"
-                    injectedJavaScript={Platform.OS !== 'ios' ? 'window.scrollTo(0,0); true;' : null}
-                    injectedJavaScriptBeforeContentLoaded={getInjectedJavaScriptBeforeContentLoaded()}
+                    injectedJavaScript={getCASInjectedScript()}
                     onMessage={handleMessage}
                     originWhitelist={['*']}
                     onShouldStartLoadWithRequest={(event) => {
@@ -316,18 +337,20 @@ function WebBrowserScreen({ navigation, route }) {
                 />
             </SafeAreaView>
 
-            <FloatingActionBar 
-                theme={theme} 
-                insets={insets}
-                onBack={onBack} 
-                onForward={onForward} 
-                onRefresh={onRefresh} 
-                openURL={openURL} 
-                onQuit={onQuit}
-                canGoBack={canGoBack} 
-                canGoForward={canGoForward} 
-                loading={loading} 
-            />
+            {!dismissing && (
+                <FloatingActionBar 
+                    theme={theme} 
+                    insets={insets}
+                    onBack={onBack} 
+                    onForward={onForward} 
+                    onRefresh={onRefresh} 
+                    openURL={openURL} 
+                    onQuit={onQuit}
+                    canGoBack={canGoBack} 
+                    canGoForward={canGoForward} 
+                    loading={loading} 
+                />
+            )}
 
 			<Modal
 				animationType="fade"
