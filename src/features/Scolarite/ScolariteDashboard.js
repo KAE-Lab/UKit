@@ -19,6 +19,8 @@ const PORTALS = [
         title: 'ENT',
         icon: 'view-dashboard-outline',
         colorIndex: 4,
+        scrollTarget: '.container-content',
+        scrollMargin: 15,
     },
     {
         key: 'email',
@@ -27,6 +29,8 @@ const PORTALS = [
         title: () => Translator.get('MAILBOX') || 'Boîte mail',
         icon: 'email-outline',
         colorIndex: 5,
+        scrollTarget: '.zimbra-client_mail-pane_mailListPane',
+        scrollMargin: 0,
     },
     {
         key: 'apogee',
@@ -35,6 +39,8 @@ const PORTALS = [
         title: 'Apogée',
         icon: 'school-outline',
         colorIndex: 0,
+        scrollTarget: '#contenu',
+        scrollMargin: -20,
     },
 ];
 
@@ -132,6 +138,8 @@ const ScolariteDashboard = ({ navigation }) => {
                                         color={theme.sectionsHeaders[portal.colorIndex] || theme.primary}
                                         credentials={credentials}
                                         navigation={navigation}
+                                        scrollTarget={portal.scrollTarget}
+                                        scrollMargin={portal.scrollMargin}
                                     />
                                 </View>
                             );

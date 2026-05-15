@@ -183,9 +183,22 @@ const getCASScript = (credentials) => `
     true;
 `;
 
+// ─── Scroll-to-target script ──────────────────────────────────────────────────
+
+const buildScrollScript = (selector, margin = 0) => `
+    (function() {
+        var el = document.querySelector('${selector}');
+        if (!el) return;
+        var top = el.getBoundingClientRect().top + window.pageYOffset + (${margin});
+        document.body.style.transform = 'translateY(-' + top + 'px)';
+        document.body.style.transformOrigin = 'top left';
+    })();
+    true;
+`;
+
 // ─── Main Widget Component ────────────────────────────────────────────────────
 
-const PortalPreviewWidget = forwardRef(({ title, icon, entrypoint, url, color, credentials, navigation }, ref) => {
+const PortalPreviewWidget = forwardRef(({ title, icon, entrypoint, url, color, credentials, navigation, scrollTarget, scrollMargin = 0 }, ref) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
@@ -194,6 +207,7 @@ const PortalPreviewWidget = forwardRef(({ title, icon, entrypoint, url, color, c
     const [modalVisible, setModalVisible] = useState(false);
 
     const widgetRef = useRef(null);
+    const previewWebViewRef = useRef(null);
     const widgetLayout = useRef({ x: 0, y: 0, width: 0, height: 0 });
     const closeTimerRef = useRef(null);
 
@@ -225,10 +239,19 @@ const PortalPreviewWidget = forwardRef(({ title, icon, entrypoint, url, color, c
         }
     }, []);
 
+    const handlePreviewLoadEnd = useCallback((e) => {
+        const loadedUrl = e.nativeEvent.url;
+        if (!scrollTarget || !loadedUrl || loadedUrl.includes('cas.u-bordeaux.fr')) return;
+        // Petit délai pour laisser le JS de la page finir de positionner les éléments
+        setTimeout(() => {
+            previewWebViewRef.current?.injectJavaScript(buildScrollScript(scrollTarget, scrollMargin));
+        }, 300);
+    }, [scrollTarget, scrollMargin]);
+
     // ── Expand ────────────────────────────────────────────────────────────────
 
     const openPortal = useCallback(() => {
-        widgetRef.current?.measure((fx, fy, w, h, px, py) => {
+        widgetRef.current?.measure((_fx, _fy, w, h, px, py) => {
             widgetLayout.current = { x: px, y: py, width: w, height: h };
 
             animX.setValue(px);
@@ -296,6 +319,7 @@ const PortalPreviewWidget = forwardRef(({ title, icon, entrypoint, url, color, c
                             {/* WebView preview */}
                             <View style={StyleSheet.absoluteFill}>
                                 <WebView
+                                    ref={previewWebViewRef}
                                     style={[widgetStyles.webview, { opacity: webviewReady ? 1 : 0 }]}
                                     source={{ uri: url }}
                                     javaScriptEnabled
@@ -304,6 +328,7 @@ const PortalPreviewWidget = forwardRef(({ title, icon, entrypoint, url, color, c
                                     scrollEnabled={false}
                                     injectedJavaScript={getCASScript(credentials)}
                                     onNavigationStateChange={handleNavigationChange}
+                                    onLoadEnd={handlePreviewLoadEnd}
                                     pointerEvents="none"
                                     injectedJavaScriptAfterDocumentCreation={`
                                         (function() {
