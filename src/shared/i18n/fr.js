@@ -168,7 +168,7 @@ export default {
 	FREE_ROOMS: "Salles Libres",
 	AVAILABLE_UNTIL: "Disponible jusqu'à",
 	LOGS: "Identifiants",
-	CREDENTIALS_SETTINGS: "Gestion des identifiants",
+	CREDENTIALS_SETTINGS: "Identifiants",
 	USERNAME: "Nom d'utilisateur",
 	PASSWORD: "Mot de passe",
 	DELETE_CREDENTIALS: "Supprimer les identifiants",

@@ -166,7 +166,7 @@ export default {
 	FREE_ROOMS: "Free Rooms",
 	AVAILABLE_UNTIL: "Available until",
 	LOGS: "Logs",
-	CREDENTIALS_SETTINGS: "Credentials Management",
+	CREDENTIALS_SETTINGS: "Credentials",
 	USERNAME: "Username",
 	PASSWORD: "Password",
 	DELETE_CREDENTIALS: "Delete credentials",

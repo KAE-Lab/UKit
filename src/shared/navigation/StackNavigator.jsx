@@ -82,9 +82,7 @@ export default function StackNavigator() {
                         
                         <Stack.Screen name="Library" component={LibraryScreen} options={({ route }) => NavBarHelper({ title: Translator.get('LIBRARIES'), themeName, route, gestureEnabled: true })} />
                         
-                        <Stack.Screen name="WebBrowser" component={WebBrowser} options={({ route }) => {
-                            return NavBarHelper({ title: treatTitle(route.params?.title ?? Translator.get('WEB_BROWSER')), themeName, route, gestureEnabled: true });
-                        }} />
+                        <Stack.Screen name="WebBrowser" component={WebBrowser} options={{ headerShown: false, gestureEnabled: true }} />
                         
                         <Stack.Screen name="Day" component={DayView} options={{ tabBarLabel: Translator.get('DAY'), tabBarIcon: ({ tintColor }) => <MaterialCommunityIcons name="calendar" size={24} style={{ color: tintColor }} /> }} />
                         

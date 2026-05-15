@@ -1,13 +1,14 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
-import { ActivityIndicator, Linking, Platform, TouchableOpacity, View, Modal, Text } from 'react-native';
+import { ActivityIndicator, Linking, Platform, TouchableOpacity, View, Modal, Text, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, runOnJS } from 'react-native-reanimated';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import { URL } from '../../shared/services/DataService';
-import { withStaticHeader } from '../../shared/navigation/NavHelpers';
 import SecureStoreService from '../../shared/services/SecureStoreService';
 import Translator from '../../shared/i18n/Translator';
 
@@ -18,7 +19,103 @@ const entrypoints = {
 	apogee: 'https://apogee.u-bordeaux.fr',
 };
 
-function WebBrowserScreen({ navigation, route, headerPadding }) {
+const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openURL, onQuit, canGoBack, canGoForward, loading }) => {
+    const buttonContainerWidth = 260; 
+    const translateX = useSharedValue(0); // Start open
+
+    const context = useSharedValue({ startX: 0 });
+    const panGesture = Gesture.Pan()
+        .onStart(() => {
+            context.value = { startX: translateX.value };
+        })
+        .onUpdate((e) => {
+            let nextX = context.value.startX + e.translationX;
+            nextX = Math.max(0, Math.min(nextX, buttonContainerWidth));
+            translateX.value = nextX;
+        })
+        .onEnd((e) => {
+            if (e.velocityX > 500 || translateX.value > buttonContainerWidth / 2) {
+                // Swipe right or passed halfway -> close
+                translateX.value = withTiming(buttonContainerWidth, { duration: 250 });
+            } else {
+                // Swipe left or didn't pass halfway -> open
+                translateX.value = withTiming(0, { duration: 250 });
+            }
+        });
+
+    const toggleOpen = () => {
+        if (translateX.value > 0) {
+            translateX.value = withTiming(0, { duration: 250 });
+        } else {
+            translateX.value = withTiming(buttonContainerWidth, { duration: 250 });
+        }
+    };
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ translateX: translateX.value }]
+        };
+    });
+
+    const chevronStyle = useAnimatedStyle(() => {
+        const rotate = (buttonContainerWidth - translateX.value) / buttonContainerWidth * 180;
+        return {
+            transform: [{ rotate: `${rotate}deg` }]
+        };
+    });
+
+    const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24, colorOverride }) => {
+        const color = disabled ? theme.primary + '44' : (colorOverride || theme.primary);
+        const Icon = iconLib === 'community' ? MaterialCommunityIcons : MaterialIcons;
+
+        return (
+            <TouchableOpacity
+                onPress={onPress}
+                disabled={disabled}
+                style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: tokens.radius.md,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginHorizontal: 4,
+                    backgroundColor: disabled ? 'transparent' : `${color}15`,
+                }}>
+                <Icon name={iconName} size={size} color={color} />
+            </TouchableOpacity>
+        );
+    };
+
+    return (
+        <GestureDetector gesture={panGesture}>
+            <Animated.View style={[
+                styles.floatingBar, 
+                { 
+                    backgroundColor: theme.cardBackground, 
+                    borderColor: theme.border, 
+                    bottom: Math.max(tokens.space.sm, (insets?.bottom || 0) - 15) 
+                }, 
+                animatedStyle
+            ]}>
+                <TouchableOpacity onPress={toggleOpen} style={styles.handle}>
+                    <Animated.View style={chevronStyle}>
+                        <MaterialCommunityIcons name="chevron-left" size={28} color={theme.fontSecondary} />
+                    </Animated.View>
+                </TouchableOpacity>
+
+                <View style={styles.buttonsContainer}>
+                    <NavButton onPress={onQuit} iconName="door-open" iconLib="community" size={26} colorOverride="#EF5350" />
+                    <NavButton onPress={onBack} disabled={!canGoBack} iconName="navigate-before" size={28} />
+                    <NavButton onPress={onForward} disabled={!canGoForward} iconName="navigate-next" size={28} />
+                    <NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
+                    <NavButton onPress={openURL} iconName={Platform.OS === 'ios' ? 'apple-safari' : 'google-chrome'} iconLib="community" size={22} />
+                </View>
+            </Animated.View>
+        </GestureDetector>
+    );
+};
+
+function WebBrowserScreen({ navigation, route }) {
 	const { themeName } = useContext(AppContext);
 	const webViewRef = useRef(null);
 	const insets = useSafeAreaInsets();
@@ -49,7 +146,6 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 		setSavedCredentials(creds);
 	};
 
-	// Force la mise à jour de l'URL si React Navigation recycle le composant
 	useEffect(() => {
 		let newUri = URL.UKIT_WEBSITE;
 		if (route.params) {
@@ -66,6 +162,7 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 	const onRefresh = () => webViewRef.current?.reload();
 	const onBack = () => webViewRef.current?.goBack();
 	const onForward = () => webViewRef.current?.goForward();
+    const onQuit = () => navigation.goBack();
 
 	const openURL = async () => {
 		try {
@@ -88,7 +185,6 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 		try {
 			const data = JSON.parse(event.nativeEvent.data);
 			if (data.type === 'CAS_CREDENTIALS') {
-				// Prevent saving if we already have these exact credentials saved
 				if (savedCredentials && savedCredentials.username === data.username && savedCredentials.password === data.password) {
 					return;
 				}
@@ -96,7 +192,6 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 				setShowSaveModal(true);
 			}
 		} catch (e) {
-			// Not JSON
 		}
 	};
 
@@ -118,8 +213,23 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 
 	const getInjectedJavaScriptBeforeContentLoaded = () => {
 		let script = '';
+
 		if (Platform.OS !== 'ios') {
-			// No scrollTo here as DOM might not exist yet
+			script += `
+				(function() {
+					try {
+						let scale = 1;
+						// Calculer le vrai scale si la page n'est pas optimisée mobile (ex: viewport 980px)
+						if (window.innerWidth > 0 && window.screen.width > 0 && window.innerWidth > window.screen.width) {
+							scale = window.innerWidth / window.screen.width;
+						}
+						const paddingTop = (${insets.top || 0}) * scale;
+						const style = document.createElement('style');
+						style.innerHTML = 'html { padding-top: ' + paddingTop + 'px !important; }';
+						document.documentElement.appendChild(style);
+					} catch (e) {}
+				})();
+			`;
 		}
 
 		script += `
@@ -127,7 +237,7 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
                 let attempts = 0;
                 const checkInterval = setInterval(function() {
                     attempts++;
-                    if (attempts > 50) { clearInterval(checkInterval); return; } // Stop after 5 seconds
+                    if (attempts > 50) { clearInterval(checkInterval); return; }
 
                     if (window.location.href.includes('cas.u-bordeaux.fr/cas/login')) {
                         const usernameInput = document.getElementById('username');
@@ -167,66 +277,57 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 		return script;
 	};
 
-	const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24 }) => {
-		const color = disabled ? theme.primary + '44' : theme.primary;
-		const Icon = iconLib === 'community' ? MaterialCommunityIcons : MaterialIcons;
-
-		return (
-			<TouchableOpacity
-				onPress={onPress}
-				disabled={disabled}
-				style={{
-					width: 44,
-					height: 44,
-					borderRadius: tokens.radius.md,
-					justifyContent: 'center',
-					alignItems: 'center',
-					backgroundColor: disabled ? 'transparent' : theme.cardBackground,
-				}}>
-				<Icon name={iconName} size={size} color={color} />
-			</TouchableOpacity>
-		);
-	};
-
 	return (
-		<SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
-            <View style={{ flex: 1, paddingTop: (insets.top || 0) + 65 }}>
+		<View style={{ flex: 1, backgroundColor: theme.background }}>
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1 }}>
                 <WebView
-				ref={webViewRef}
-				style={{ flex: 1, backgroundColor: theme.background }}
-				startInLoadingState={true}
-				renderLoading={renderLoading}
-				javaScriptEnabled={true}
-				domStorageEnabled={true}
-				injectedJavaScript={Platform.OS !== 'ios' ? 'window.scrollTo(0,0); true;' : null}
-				injectedJavaScriptBeforeContentLoaded={getInjectedJavaScriptBeforeContentLoaded()}
-				onMessage={handleMessage}
-				originWhitelist={['*']}
-				onShouldStartLoadWithRequest={(event) => {
-					if (event.url.startsWith('http://') || event.url.startsWith('https://') || event.url === 'about:blank') {
-						return true;
-					}
+                    ref={webViewRef}
+                    style={{ flex: 1, backgroundColor: theme.background }}
+                    startInLoadingState={true}
+                    renderLoading={renderLoading}
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    contentInset={Platform.OS === 'ios' ? { top: insets.top || 0, left: 0, bottom: 0, right: 0 } : undefined}
+                    contentInsetAdjustmentBehavior="never"
+                    injectedJavaScript={Platform.OS !== 'ios' ? 'window.scrollTo(0,0); true;' : null}
+                    injectedJavaScriptBeforeContentLoaded={getInjectedJavaScriptBeforeContentLoaded()}
+                    onMessage={handleMessage}
+                    originWhitelist={['*']}
+                    onShouldStartLoadWithRequest={(event) => {
+                        if (event.url.startsWith('http://') || event.url.startsWith('https://') || event.url === 'about:blank') {
+                            return true;
+                        }
 
-					Linking.canOpenURL(event.url).then((supported) => {
-						if (supported) Linking.openURL(event.url);
-					}).catch(() => { });
+                        Linking.canOpenURL(event.url).then((supported) => {
+                            if (supported) Linking.openURL(event.url);
+                        }).catch(() => { });
 
-					return false;
-				}}
-				onNavigationStateChange={(e) => {
-					if (!e.loading) {
-						setUrl(e.url);
-						setCanGoBack(e.canGoBack);
-						setCanGoForward(e.canGoForward);
-						setLoading(e.loading);
-                        
-						if (e.title && !route.params?.entrypoint) {
-							navigation.setParams({ title: e.title });
-						}
-					}
-				}}
-				source={{ uri }}
-			/>
+                        return false;
+                    }}
+                    onNavigationStateChange={(e) => {
+                        if (!e.loading) {
+                            setUrl(e.url);
+                            setCanGoBack(e.canGoBack);
+                            setCanGoForward(e.canGoForward);
+                            setLoading(e.loading);
+                        }
+                    }}
+                    source={{ uri }}
+                />
+            </SafeAreaView>
+
+            <FloatingActionBar 
+                theme={theme} 
+                insets={insets}
+                onBack={onBack} 
+                onForward={onForward} 
+                onRefresh={onRefresh} 
+                openURL={openURL} 
+                onQuit={onQuit}
+                canGoBack={canGoBack} 
+                canGoForward={canGoForward} 
+                loading={loading} 
+            />
 
 			<Modal
 				animationType="fade"
@@ -257,28 +358,41 @@ function WebBrowserScreen({ navigation, route, headerPadding }) {
 					</View>
 				</View>
 			</Modal>
-
-			<SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.background }}>
-				<View
-					style={{
-						flexDirection: 'row',
-						justifyContent: 'space-around',
-						alignItems: 'center',
-						paddingHorizontal: tokens.space.sm,
-						paddingTop: tokens.space.sm + 2,
-						backgroundColor: 'transparent',
-						borderTopWidth: 1,
-						borderTopColor: theme.border,
-					}}>
-					<NavButton onPress={onBack} disabled={!canGoBack} iconName="navigate-before" size={28} />
-					<NavButton onPress={onForward} disabled={!canGoForward} iconName="navigate-next" size={28} />
-					<NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
-					<NavButton onPress={openURL} disabled={false} iconName={Platform.OS === 'ios' ? 'apple-safari' : 'google-chrome'} iconLib="community" size={22} />
-				</View>
-			</SafeAreaView>
 		</View>
-		</SafeAreaView>
 	);
 }
 
-export default withStaticHeader(WebBrowserScreen);
+const styles = StyleSheet.create({
+    floatingBar: {
+        position: 'absolute',
+        right: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderTopLeftRadius: tokens.radius.md,
+        borderBottomLeftRadius: tokens.radius.md,
+        borderWidth: 1,
+        borderRightWidth: 0,
+        height: 75,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        paddingLeft: tokens.space.xs,
+    },
+    handle: {
+        paddingHorizontal: tokens.space.xs,
+        paddingVertical: tokens.space.sm,
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100%',
+    },
+    buttonsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingRight: tokens.space.sm,
+        height: '100%',
+    }
+});
+
+export default WebBrowserScreen;
