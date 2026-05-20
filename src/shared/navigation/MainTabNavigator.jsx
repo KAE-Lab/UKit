@@ -14,11 +14,13 @@ import style, { tokens } from '../theme/Theme';
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { NavBarHelper, SaveGroupButton } from './NavHelpers';
+import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
 
 const Tab = createBottomTabNavigator();
 
 // Composant Custom Tab Bar pour reproduire l'effet Apple Music (décalé à gauche, ratio icon/text, bords arrondis)
 function CustomTabBar({ state, descriptors, navigation, theme }) {
+    const { credentials } = useCredentials();
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => {
@@ -132,7 +134,7 @@ function CustomTabBar({ state, descriptors, navigation, theme }) {
                                     {Translator.get('ABOUT')}
                                 </Text>
                             </TouchableOpacity>
-                        ) : state.routes[state.index].name === 'ScolariteTab' ? (
+                        ) : (state.routes[state.index].name === 'ScolariteTab' && credentials) ? (
                             <TouchableOpacity
                                 onPress={() => navigation.navigate('CredentialsSettings')}
                                 activeOpacity={0.85}
@@ -145,12 +147,12 @@ function CustomTabBar({ state, descriptors, navigation, theme }) {
                                 ]}
                             >
                                 <MaterialCommunityIcons
-                                    name="account-key-outline"
+                                    name="logout"
                                     size={24}
                                     color={theme.accent ?? theme.primary}
                                 />
                                 <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
-                                    {Translator.get('LOGS')}
+                                    {Translator.get('LOGOUT')}
                                 </Text>
                             </TouchableOpacity>
                         ) : (

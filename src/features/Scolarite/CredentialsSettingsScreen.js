@@ -1,197 +1,158 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
-import Button from '../../shared/ui/Button';
-import SecureStoreService from '../../shared/services/SecureStoreService';
+import { useCredentials } from './services/CredentialsContext';
 
-const SettingsTextHeader = ({ theme, text }) => {
-    if (!theme?.separationText) return null;
-    return <Text style={theme.separationText}>{text.toUpperCase()}</Text>;
-};
+const InfoRow = ({ label, value, theme }) => (
+    <View style={styles.infoRow}>
+        <Text style={[styles.infoLabel, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}>
+            {label}
+        </Text>
+        <Text style={[styles.infoValue, { color: theme.font, fontFamily: 'Montserrat_600SemiBold' }]} numberOfLines={1}>
+            {value || '—'}
+        </Text>
+    </View>
+);
+
+const SectionCard = ({ title, children, theme }) => (
+    <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.fontSecondary }]}>
+            {title.toUpperCase()}
+        </Text>
+        <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+            {children}
+        </View>
+    </View>
+);
 
 const CredentialsSettingsScreen = () => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
-    const themeSettings = theme.settings;
     const navigation = useNavigation();
 
-    const [loading, setLoading] = useState(true);
-    const [savedUsername, setSavedUsername] = useState(null);
-    const [hasCredentials, setHasCredentials] = useState(false);
+    const { credentials, coldData, logout } = useCredentials();
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [passwordVisible, setPasswordVisible] = useState(false);
 
-    const [usernameInput, setUsernameInput] = useState('');
-    const [passwordInput, setPasswordInput] = useState('');
-    const [message, setMessage] = useState('');
-
-    const [showSaveModal, setShowSaveModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-    useEffect(() => {
-        loadCredentials();
-    }, []);
-
-    const loadCredentials = async () => {
-        setLoading(true);
-        const credentials = await SecureStoreService.getCredentials();
-        if (credentials && credentials.username && credentials.password) {
-            setSavedUsername(credentials.username);
-            setHasCredentials(true);
-            setUsernameInput('');
-            setPasswordInput('');
-        } else {
-            setSavedUsername(null);
-            setHasCredentials(false);
+    const handleShowPassword = async () => {
+        if (passwordVisible) {
+            setPasswordVisible(false);
+            return;
         }
-        setLoading(false);
+        try {
+            const result = await LocalAuthentication.authenticateAsync({
+                promptMessage: Translator.get('BIOMETRY_PROMPT'),
+                fallbackLabel: Translator.get('BIOMETRY_FALLBACK'),
+                disableDeviceFallback: false,
+            });
+            if (result.success) setPasswordVisible(true);
+        } catch {
+            // biométrie non disponible, ignorer
+        }
     };
 
-    const confirmSave = async () => {
-        setShowSaveModal(false);
-        if (!usernameInput || !passwordInput) return;
-        setLoading(true);
-        const success = await SecureStoreService.saveCredentials(usernameInput, passwordInput);
-        if (success) {
-            setMessage(Translator.get('CREDENTIALS_SAVED_SUCCESS'));
-            await loadCredentials();
-        } else {
-            setMessage('Erreur lors de la sauvegarde.');
-        }
-        setLoading(false);
-        setTimeout(() => setMessage(''), 3000);
-    };
-
-    const confirmDelete = async () => {
-        setShowDeleteModal(false);
-        setLoading(true);
-        const success = await SecureStoreService.deleteCredentials();
-        if (success) {
-            setMessage(Translator.get('CREDENTIALS_DELETED_SUCCESS'));
-            await loadCredentials();
-        } else {
-            setMessage('Erreur lors de la suppression.');
-        }
-        setLoading(false);
-        setTimeout(() => setMessage(''), 3000);
+    const confirmLogout = async () => {
+        setShowLogoutModal(false);
+        await logout();
+        navigation.goBack();
     };
 
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
                 <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
-                    <KeyboardAvoidingView 
-                        style={{ flex: 1 }} 
-                        behavior={Platform.OS === 'ios' ? 'padding' : null}
-                        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+                    <ScrollView
+                        style={{ flex: 1 }}
+                        contentContainerStyle={{ paddingTop: (insets?.top || 0) + 65, paddingBottom: tokens.space.xxl + 80 }}
+                        showsVerticalScrollIndicator={false}
                     >
-                        <ScrollView
-                            style={{ flex: 1 }}
-                            contentContainerStyle={{ paddingTop: (insets?.top || 0) + 65, paddingBottom: tokens.space.xxl + 80 }}
-                            showsVerticalScrollIndicator={false}
-                            keyboardShouldPersistTaps="handled"
-                        >
-                            <SettingsTextHeader theme={themeSettings} text={Translator.get('LOGS')} />
+                        <View style={{ marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, gap: tokens.space.sm }}>
 
-                            {loading ? (
-                                <View style={{ padding: tokens.space.md, alignItems: 'center' }}>
-                                    <Text style={{ color: theme.fontSecondary }}>Chargement...</Text>
-                                </View>
-                            ) : hasCredentials ? (
-                                <View style={{ marginHorizontal: tokens.space.md, marginTop: tokens.space.sm }}>
-                                    <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border, marginBottom: tokens.space.md }}>
-                                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginBottom: tokens.space.xs }}>
-                                            {Translator.get('USERNAME')}
+                            {/* Section Profil */}
+                            <SectionCard title={Translator.get('PROFILE')} theme={theme}>
+                                <InfoRow label={Translator.get('USERNAME')} value={credentials?.username} theme={theme} />
+                                <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                                <InfoRow label={coldData?.firstName ? 'Prénom' : ''} value={coldData?.firstName} theme={theme} />
+                                <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                                <InfoRow label={Translator.get('DATE_OF_BIRTH')} value={coldData?.dateOfBirth} theme={theme} />
+                            </SectionCard>
+
+                            {/* Section Dossier */}
+                            <SectionCard title={Translator.get('DOSSIER')} theme={theme}>
+                                <InfoRow label={Translator.get('STUDENT_NUMBER')} value={coldData?.studentNumber} theme={theme} />
+                                <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                                <InfoRow label={Translator.get('STUDENT_INE')} value={coldData?.ine} theme={theme} />
+                                <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                                <InfoRow label={Translator.get('STUDENT_EMAIL')} value={coldData?.emailAddress} theme={theme} />
+                            </SectionCard>
+
+                            {/* Section Identifiants */}
+                            <SectionCard title={Translator.get('CREDENTIALS_SETTINGS')} theme={theme}>
+                                <InfoRow label={Translator.get('USERNAME')} value={credentials?.username} theme={theme} />
+                                <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                                <View style={styles.infoRow}>
+                                    <Text style={[styles.infoLabel, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}>
+                                        {Translator.get('PASSWORD')}
+                                    </Text>
+                                    <View style={styles.passwordRow}>
+                                        <Text style={[styles.infoValue, { color: theme.font, fontFamily: 'Montserrat_600SemiBold', flex: 1 }]} numberOfLines={1}>
+                                            {passwordVisible ? credentials?.password : '••••••••'}
                                         </Text>
-                                        <Text style={{ fontSize: tokens.fontSize.lg, color: theme.font, fontWeight: tokens.fontWeight.bold }}>
-                                            {savedUsername}
-                                        </Text>
-                                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginTop: tokens.space.md, marginBottom: tokens.space.xs }}>
-                                            {Translator.get('PASSWORD')}
-                                        </Text>
-                                        <Text style={{ fontSize: tokens.fontSize.lg, color: theme.font, fontWeight: tokens.fontWeight.bold }}>
-                                            ••••••••••••
-                                        </Text>
+                                        <TouchableOpacity onPress={handleShowPassword} hitSlop={8}>
+                                            <MaterialCommunityIcons
+                                                name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
+                                                size={20}
+                                                color={theme.fontSecondary}
+                                            />
+                                        </TouchableOpacity>
                                     </View>
-
-                                    <Button
-                                        theme={themeSettings}
-                                        onPress={() => setShowDeleteModal(true)}
-                                        leftIcon="delete-outline"
-                                        leftText={Translator.get('DELETE_CREDENTIALS')}
-                                    />
-                                    {message ? <Text style={{ color: '#43A047', textAlign: 'center', marginTop: tokens.space.sm }}>{message}</Text> : null}
                                 </View>
-                            ) : (
-                                <View style={{ marginHorizontal: tokens.space.md, marginTop: tokens.space.sm }}>
-                                    <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border, marginBottom: tokens.space.md }}>
-                                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginBottom: tokens.space.md }}>
-                                            {Translator.get('ENTER_CREDENTIALS_DESC')}
-                                        </Text>
-                                        
-                                        <TextInput
-                                            style={[styles.textInput, { backgroundColor: theme.background, color: theme.font, borderColor: theme.border }]}
-                                            placeholder={Translator.get('USERNAME')}
-                                            placeholderTextColor={theme.fontSecondary}
-                                            value={usernameInput}
-                                            onChangeText={setUsernameInput}
-                                            autoCapitalize="none"
-                                            autoCorrect={false}
-                                        />
-                                        
-                                        <TextInput
-                                            style={[styles.textInput, { backgroundColor: theme.background, color: theme.font, borderColor: theme.border, marginTop: tokens.space.sm }]}
-                                            placeholder={Translator.get('PASSWORD')}
-                                            placeholderTextColor={theme.fontSecondary}
-                                            value={passwordInput}
-                                            onChangeText={setPasswordInput}
-                                            secureTextEntry
-                                            autoCapitalize="none"
-                                            autoCorrect={false}
-                                        />
-                                    </View>
+                            </SectionCard>
 
-                                    <Button
-                                        theme={themeSettings}
-                                        onPress={() => setShowSaveModal(true)}
-                                        leftIcon="content-save-outline"
-                                        leftText={Translator.get('SAVE')}
-                                        disabled={!usernameInput || !passwordInput}
-                                    />
-                                    {message ? <Text style={{ color: '#43A047', textAlign: 'center', marginTop: tokens.space.sm }}>{message}</Text> : null}
-                                </View>
-                            )}
+                            {/* Bouton déconnexion */}
+                            <TouchableOpacity
+                                style={[styles.logoutButton, { borderColor: '#EF5350' }]}
+                                onPress={() => setShowLogoutModal(true)}
+                                activeOpacity={0.8}
+                            >
+                                <MaterialCommunityIcons name="logout" size={20} color="#EF5350" />
+                                <Text style={[styles.logoutText, { fontFamily: 'Montserrat_600SemiBold' }]}>
+                                    {Translator.get('LOGOUT')}
+                                </Text>
+                            </TouchableOpacity>
 
-                        </ScrollView>
-                    </KeyboardAvoidingView>
+                        </View>
+                    </ScrollView>
 
-                    {/* Modal Save */}
                     <Modal
                         animationType="fade"
-                        transparent={true}
-                        visible={showSaveModal}
-                        onRequestClose={() => setShowSaveModal(false)}
+                        transparent
+                        visible={showLogoutModal}
+                        onRequestClose={() => setShowLogoutModal(false)}
                     >
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                            <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.lg, borderRadius: tokens.radius.lg, width: '85%', alignItems: 'center', ...tokens.shadow.lg }}>
-                                <MaterialCommunityIcons name="content-save" size={48} color={theme.primary} style={{ marginBottom: tokens.space.md }} />
-                                <Text style={{ fontSize: tokens.fontSize.md, color: theme.font, textAlign: 'center', marginBottom: tokens.space.lg, fontFamily: 'Montserrat_500Medium' }}>
-                                    {Translator.get('CONFIRM_SAVE_CREDENTIALS')}
+                        <View style={styles.modalOverlay}>
+                            <View style={[styles.modalBox, { backgroundColor: theme.cardBackground }]}>
+                                <MaterialCommunityIcons name="logout" size={48} color="#EF5350" style={{ marginBottom: tokens.space.md }} />
+                                <Text style={[styles.modalText, { color: theme.font }]}>
+                                    {Translator.get('CONFIRM_LOGOUT')}
                                 </Text>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                                    <TouchableOpacity 
-                                        style={{ flex: 1, padding: tokens.space.md, alignItems: 'center', backgroundColor: theme.background, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, borderWidth: 1, borderColor: theme.border }}
-                                        onPress={() => setShowSaveModal(false)}
+                                <View style={styles.modalActions}>
+                                    <TouchableOpacity
+                                        style={[styles.modalButton, { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, marginRight: tokens.space.sm }]}
+                                        onPress={() => setShowLogoutModal(false)}
                                     >
                                         <Text style={{ color: theme.fontSecondary, fontWeight: 'bold' }}>{Translator.get('CANCEL')}</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity 
-                                        style={{ flex: 1, padding: tokens.space.md, alignItems: 'center', backgroundColor: theme.primary, borderRadius: tokens.radius.md, marginLeft: tokens.space.sm }}
-                                        onPress={confirmSave}
+                                    <TouchableOpacity
+                                        style={[styles.modalButton, { backgroundColor: '#EF5350', marginLeft: tokens.space.sm }]}
+                                        onPress={confirmLogout}
                                     >
                                         <Text style={{ color: 'white', fontWeight: 'bold' }}>{Translator.get('CONFIRM')}</Text>
                                     </TouchableOpacity>
@@ -199,38 +160,6 @@ const CredentialsSettingsScreen = () => {
                             </View>
                         </View>
                     </Modal>
-
-                    {/* Modal Delete */}
-                    <Modal
-                        animationType="fade"
-                        transparent={true}
-                        visible={showDeleteModal}
-                        onRequestClose={() => setShowDeleteModal(false)}
-                    >
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                            <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.lg, borderRadius: tokens.radius.lg, width: '85%', alignItems: 'center', ...tokens.shadow.lg }}>
-                                <MaterialCommunityIcons name="delete-alert" size={48} color="#EF5350" style={{ marginBottom: tokens.space.md }} />
-                                <Text style={{ fontSize: tokens.fontSize.md, color: theme.font, textAlign: 'center', marginBottom: tokens.space.lg, fontFamily: 'Montserrat_500Medium' }}>
-                                    {Translator.get('CONFIRM_DELETE_CREDENTIALS')}
-                                </Text>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                                    <TouchableOpacity 
-                                        style={{ flex: 1, padding: tokens.space.md, alignItems: 'center', backgroundColor: theme.background, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, borderWidth: 1, borderColor: theme.border }}
-                                        onPress={() => setShowDeleteModal(false)}
-                                    >
-                                        <Text style={{ color: theme.fontSecondary, fontWeight: 'bold' }}>{Translator.get('CANCEL')}</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity 
-                                        style={{ flex: 1, padding: tokens.space.md, alignItems: 'center', backgroundColor: '#EF5350', borderRadius: tokens.radius.md, marginLeft: tokens.space.sm }}
-                                        onPress={confirmDelete}
-                                    >
-                                        <Text style={{ color: 'white', fontWeight: 'bold' }}>{Translator.get('CONFIRM')}</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </View>
-                    </Modal>
-
                 </SafeAreaView>
             )}
         </SafeAreaInsetsContext.Consumer>
@@ -238,14 +167,93 @@ const CredentialsSettingsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    textInput: {
-        height: 50,
-        borderRadius: tokens.radius.md,
+    section: {
+        gap: tokens.space.xs,
+    },
+    sectionTitle: {
+        fontSize: tokens.fontSize.xs,
+        fontFamily: 'Montserrat_600SemiBold',
+        letterSpacing: 0.8,
+        marginLeft: tokens.space.sm,
+        marginBottom: 2,
+    },
+    card: {
+        borderRadius: tokens.radius.lg,
         borderWidth: 1,
+        overflow: 'hidden',
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: tokens.space.md,
+        paddingVertical: tokens.space.sm + 2,
+        gap: tokens.space.md,
+    },
+    infoLabel: {
+        fontSize: tokens.fontSize.sm,
+        flexShrink: 0,
+    },
+    infoValue: {
+        fontSize: tokens.fontSize.sm,
+        textAlign: 'right',
+        flex: 1,
+    },
+    passwordRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        gap: tokens.space.sm,
+        justifyContent: 'flex-end',
+    },
+    divider: {
+        height: StyleSheet.hairlineWidth,
+        marginLeft: tokens.space.md,
+    },
+    logoutButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: tokens.space.sm,
+        borderWidth: 1,
+        borderRadius: tokens.radius.lg,
+        paddingVertical: tokens.space.md,
+        marginTop: tokens.space.sm,
+    },
+    logoutText: {
+        color: '#EF5350',
         fontSize: tokens.fontSize.md,
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalBox: {
+        padding: tokens.space.lg,
+        borderRadius: tokens.radius.lg,
+        width: '85%',
+        alignItems: 'center',
+        ...tokens.shadow.lg,
+    },
+    modalText: {
+        fontSize: tokens.fontSize.md,
+        textAlign: 'center',
+        marginBottom: tokens.space.lg,
         fontFamily: 'Montserrat_500Medium',
-    }
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    modalButton: {
+        flex: 1,
+        padding: tokens.space.md,
+        alignItems: 'center',
+        borderRadius: tokens.radius.md,
+    },
 });
 
 export default CredentialsSettingsScreen;

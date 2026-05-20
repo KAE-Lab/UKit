@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 
 const CAS_CREDENTIALS_KEY = 'UKIT_CAS_CREDENTIALS';
+const COLD_DATA_KEY = 'UKIT_COLD_DATA';
 
 export default class SecureStoreService {
     static async saveCredentials(username, password) {
@@ -33,6 +34,36 @@ export default class SecureStoreService {
             return true;
         } catch (error) {
             console.error('Error deleting credentials from SecureStore', error);
+            return false;
+        }
+    }
+
+    static async saveColdData(data) {
+        try {
+            await SecureStore.setItemAsync(COLD_DATA_KEY, JSON.stringify(data));
+            return true;
+        } catch (error) {
+            console.error('Error saving cold data to SecureStore', error);
+            return false;
+        }
+    }
+
+    static async getColdData() {
+        try {
+            const data = await SecureStore.getItemAsync(COLD_DATA_KEY);
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error('Error retrieving cold data from SecureStore', error);
+            return null;
+        }
+    }
+
+    static async deleteColdData() {
+        try {
+            await SecureStore.deleteItemAsync(COLD_DATA_KEY);
+            return true;
+        } catch (error) {
+            console.error('Error deleting cold data from SecureStore', error);
             return false;
         }
     }
