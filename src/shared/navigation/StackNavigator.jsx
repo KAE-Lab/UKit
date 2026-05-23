@@ -8,6 +8,8 @@ import GroupSearch from '../../features/Schedule/GroupSelectionScreen';
 import Group from '../../features/Schedule/ScheduleScreen';
 import About from '../../features/About/AboutScreen';
 import Settings from '../../features/Settings/SettingsScreen';
+import CredentialsSettingsScreen from '../../features/Scolarite/CredentialsSettingsScreen';
+import { CredentialsProvider } from '../../features/Scolarite/services/CredentialsContext';
 import WebBrowser from '../../features/Browser/WebBrowserScreen';
 import Geolocation from '../../features/Map/MapScreen';
 import Course from '../../features/Schedule/CourseCard';
@@ -43,6 +45,7 @@ export default function StackNavigator() {
                 );
 
                 return (
+                  <CredentialsProvider>
                     <Stack.Navigator
                         initialRouteName="MainTabs"
                         screenOptions={{
@@ -75,13 +78,13 @@ export default function StackNavigator() {
                         
                         <Stack.Screen name="Settings" component={Settings} options={({ route }) => NavBarHelper({ title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: true })} />
                         
+                        <Stack.Screen name="CredentialsSettings" component={CredentialsSettingsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('LOGOUT'), themeName, route, gestureEnabled: true })} />
+                        
                         <Stack.Screen name="Crous" component={CrousScreen} options={({ route }) => NavBarHelper({ title: Translator.get('RESTAURANTS'), themeName, route, gestureEnabled: true })} />
                         
                         <Stack.Screen name="Library" component={LibraryScreen} options={({ route }) => NavBarHelper({ title: Translator.get('LIBRARIES'), themeName, route, gestureEnabled: true })} />
                         
-                        <Stack.Screen name="WebBrowser" component={WebBrowser} options={({ route }) => {
-                            return NavBarHelper({ title: treatTitle(route.params?.title ?? Translator.get('WEB_BROWSER')), themeName, route, gestureEnabled: true });
-                        }} />
+                        <Stack.Screen name="WebBrowser" component={WebBrowser} options={{ headerShown: false, gestureEnabled: true }} />
                         
                         <Stack.Screen name="Day" component={DayView} options={{ tabBarLabel: Translator.get('DAY'), tabBarIcon: ({ tintColor }) => <MaterialCommunityIcons name="calendar" size={24} style={{ color: tintColor }} /> }} />
                         
@@ -100,6 +103,7 @@ export default function StackNavigator() {
                         
                         <Stack.Screen name="Course" component={Course} options={({ navigation, route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />
                     </Stack.Navigator>
+                  </CredentialsProvider>
                 );
             }}
         </AppContext.Consumer>

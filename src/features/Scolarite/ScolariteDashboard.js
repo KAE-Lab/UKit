@@ -1,164 +1,99 @@
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useContext, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
-import WidgetCard from '../Dashboard/components/WidgetCard';
+import { useCredentials } from './services/CredentialsContext';
+import ScolariteLoginView from './components/ScolariteLoginView';
+import GreetingBlock from './components/GreetingBlock';
+import MailboxRow from './components/MailboxRow';
+import BiometryGate from './components/BiometryGate';
+import ScolariteLoadingScreen from './components/ScolariteLoadingScreen';
 
-export const ShortcutTile = ({ title, icon, color, onPress, theme, style }) => {
-    return (
-        <TouchableOpacity 
-            activeOpacity={0.8}
-            onPress={onPress}
-            style={[{
-                backgroundColor: theme.cardBackground,
-                borderRadius: tokens.radius.md,
-                padding: tokens.space.md,
-                alignItems: 'center',
-                justifyContent: 'center',
-                ...tokens.shadow.sm,
-            }, style]}
-        >
-            <View style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: `${color}15`,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: tokens.space.xs,
-            }}>
-                <MaterialCommunityIcons name={icon} size={24} color={color} />
-            </View>
-            <Text style={{ 
-                fontSize: tokens.fontSize.sm, 
-                fontWeight: tokens.fontWeight.bold, 
-                color: theme.font, 
-                textAlign: 'center',
-                fontFamily: 'Montserrat_600SemiBold',
-            }} numberOfLines={1}>
-                {title}
-            </Text>
-        </TouchableOpacity>
-    );
-};
+const SectionHeader = ({ title, theme }) => (
+    <Text style={[styles.sectionHeader, { color: theme.fontSecondary }]}>
+        {title.toUpperCase()}
+    </Text>
+);
 
 const ScolariteDashboard = ({ navigation }) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
+    const accent = theme.accent ?? theme.primary;
+
+    const { credentials, credentialsLoaded, coldData, mailData, scrapeStatus, scrapeProgress, sessionMode } = useCredentials();
+
+    const scrollY = useRef(new Animated.Value(0)).current;
 
     const renderHeader = (insets) => {
-        const topPadding = (insets?.top || 0);
+        const opacity = scrollY.interpolate({
+            inputRange: [0, 50],
+            outputRange: [1, 0],
+            extrapolate: 'clamp',
+        });
         return (
-            <View style={[styles.headerContainer, { paddingTop: topPadding, backgroundColor: 'transparent' }]}>
-                <View style={[styles.headerContent, { paddingHorizontal: tokens.space.sm }]}>
-                    <Text style={[styles.greetingText, { color: theme.font }]}>
-                        {Translator.get('SCOLARITY') || 'Scolarité'}
+            <Animated.View style={[styles.headerContainer, { paddingTop: insets?.top || 0, opacity }]}>
+                <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
+                    <Text style={[styles.greetingText, { color: theme.font, fontFamily: 'Montserrat_600SemiBold' }]}>
+                        {Translator.get('SCOLARITY')}
                     </Text>
                 </View>
-            </View>
+            </Animated.View>
         );
     };
+
+    if (!credentialsLoaded) return null;
+
+    const isColdLoading = sessionMode === 'cold' && (scrapeStatus === 'connecting' || scrapeStatus === 'scraping');
 
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
-                    <ScrollView
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ paddingBottom: tokens.space.xxl + 80 }}
-                    >
-                        {renderHeader(insets)}
-                        
-                        {/* SECTION MON ESPACE */}
-                        <WidgetCard
-                            title={Translator.get('MY_SPACE') || 'Mon Espace'}
-                            icon="account-circle-outline"
-                            transparent={true}
-                            fullWidth
-                            color={theme.sectionsHeaders[3] || theme.primary}
-                        >
-                            <View style={{ paddingHorizontal: tokens.space.sm }}>
-                                <TouchableOpacity 
-                                    activeOpacity={0.8}
-                                    onPress={() => {}}
-                                    style={{
-                                        backgroundColor: theme.cardBackground,
-                                        borderRadius: tokens.radius.md,
-                                        padding: tokens.space.md,
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        ...tokens.shadow.sm,
-                                    }}
-                                >
-                                    <View style={{
-                                        width: 48,
-                                        height: 48,
-                                        borderRadius: 24,
-                                        backgroundColor: `${theme.primary}15`,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        marginRight: tokens.space.sm,
-                                    }}>
-                                        <MaterialCommunityIcons name="card-account-details-outline" size={24} color={theme.primary} />
-                                    </View>
-                                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                                        <Text style={{ 
-                                            fontSize: tokens.fontSize.sm, 
-                                            fontWeight: tokens.fontWeight.bold, 
-                                            color: theme.font, 
-                                            fontFamily: 'Montserrat_600SemiBold',
-                                            marginBottom: 2,
-                                        }}>
-                                            {Translator.get('PROFILE') || 'Profil'}
-                                        </Text>
-                                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }} numberOfLines={1}>
-                                            {Translator.get('DOCUMENTS') || 'Documents'}
-                                        </Text>
-                                    </View>
-                                </TouchableOpacity>
-                            </View>
-                        </WidgetCard>
+                    {renderHeader(insets)}
 
-                        {/* SECTION OUTILS UNIVERSITAIRES */}
-                        <WidgetCard
-                            title={Translator.get('NAVIGATION') || 'Navigation'}
-                            icon="toolbox-outline"
-                            transparent={true}
-                            fullWidth
-                            color={theme.sectionsHeaders[4] || theme.primary}
-                        >
-                            <View style={{ paddingHorizontal: tokens.space.sm, flexDirection: 'row' }}>
-                                <ShortcutTile 
-                                    title="ENT" 
-                                    icon="view-dashboard" 
-                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'ent', title: 'ENT' })}
-                                    color={theme.sectionsHeaders[4] || theme.primary}
+                    {!credentials ? (
+                        <ScolariteLoginView
+                            theme={theme}
+                            color={accent}
+                            topPadding={insets?.top || 0}
+                        />
+                    ) : isColdLoading ? (
+                        <ScolariteLoadingScreen
+                            scrapeProgress={scrapeProgress}
+                            theme={theme}
+                            color={accent}
+                        />
+                    ) : (
+                        <BiometryGate theme={theme} color={accent}>
+                            <Animated.ScrollView
+                                onScroll={Animated.event(
+                                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                                    { useNativeDriver: true }
+                                )}
+                                scrollEventThrottle={16}
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={{
+                                    paddingTop: (insets?.top || 0) + 70,
+                                    paddingBottom: tokens.space.xxl + 80,
+                                }}
+                            >
+                                <GreetingBlock coldData={coldData} color={accent} theme={theme} />
+
+                                <SectionHeader title={Translator.get('MESSAGING')} theme={theme} />
+                                <MailboxRow
+                                    mailData={mailData}
+                                    coldData={coldData}
+                                    status={scrapeStatus}
+                                    color={theme.sectionsHeaders[5] || accent}
                                     theme={theme}
-                                    style={{ flex: 1, marginRight: tokens.space.xs }}
+                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email' })}
                                 />
-                                <ShortcutTile 
-                                    title={Translator.get('MAILBOX') || 'Boîte Mail'} 
-                                    icon="email-outline" 
-                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email', title: Translator.get('MAILBOX') })}
-                                    color={theme.sectionsHeaders[5] || theme.secondary}
-                                    theme={theme}
-                                    style={{ flex: 1, marginHorizontal: tokens.space.xs }}
-                                />
-                                <ShortcutTile 
-                                    title="Apogée" 
-                                    icon="school" 
-                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'apogee', title: 'Apogée' })}
-                                    color={theme.sectionsHeaders[0] || theme.primary}
-                                    theme={theme}
-                                    style={{ flex: 1, marginLeft: tokens.space.xs }}
-                                />
-                            </View>
-                        </WidgetCard>
-                    </ScrollView>
+                            </Animated.ScrollView>
+                        </BiometryGate>
+                    )}
                 </View>
             )}
         </SafeAreaInsetsContext.Consumer>
@@ -170,6 +105,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     headerContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
         zIndex: 10,
         paddingBottom: tokens.space.sm,
     },
@@ -180,8 +119,15 @@ const styles = StyleSheet.create({
     greetingText: {
         fontSize: 34,
         fontWeight: tokens.fontWeight.bold,
-        fontFamily: 'Montserrat_600SemiBold',
         marginBottom: tokens.space.md,
+    },
+    sectionHeader: {
+        fontSize: tokens.fontSize.sm,
+        fontWeight: tokens.fontWeight.semibold,
+        letterSpacing: 0.8,
+        marginLeft: tokens.space.md,
+        marginBottom: tokens.space.sm,
+        fontFamily: 'Montserrat_600SemiBold',
     },
 });
 

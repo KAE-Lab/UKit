@@ -39,6 +39,9 @@ const CampusDashboard = ({ navigation }) => {
     const [favRu, setFavRu] = useState([]);
     const [favBu, setFavBu] = useState([]);
     const [favBuildings, setFavBuildings] = useState([]);
+    const [crousFilter, setCrousFilter] = useState('all');
+    const [libraryFilter, setLibraryFilter] = useState('all');
+    
     const mountedRef = useRef(true);
     const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -56,6 +59,12 @@ const CampusDashboard = ({ navigation }) => {
 
                     const savedFavBuildings = await AsyncStorage.getItem('freeroom_favorites');
                     if (savedFavBuildings) setFavBuildings(JSON.parse(savedFavBuildings));
+                    
+                    const savedFilter = await AsyncStorage.getItem('crous_filter');
+                    if (savedFilter) setCrousFilter(savedFilter);
+
+                    const savedLibFilter = await AsyncStorage.getItem('library_filter');
+                    if (savedLibFilter) setLibraryFilter(savedLibFilter);
                 } catch (e) { }
             };
             loadFavorites();
@@ -182,7 +191,16 @@ const CampusDashboard = ({ navigation }) => {
         }
     };
 
-    const sortedRestaurants = [...restaurants].sort((a, b) => {
+    const filteredRestaurants = [...restaurants].filter(item => {
+        if (crousFilter !== 'all') {
+            const isRestoU = item.title.includes("Crous Cafet") || item.title.includes("Resto U");
+            const isMarket = item.title.includes("Crous Moovy Market") || item.title.includes("Crous Market");
+            
+            if (crousFilter === 'resto' && !isRestoU) return false;
+            if (crousFilter === 'market' && !isMarket) return false;
+        }
+        return true;
+    }).sort((a, b) => {
         const aFav = favRu.includes(a.id);
         const bFav = favRu.includes(b.id);
         if (aFav && !bFav) return -1;
@@ -190,7 +208,14 @@ const CampusDashboard = ({ navigation }) => {
         return (a.distance || 0) - (b.distance || 0);
     });
 
-    const sortedLibraries = [...libraries].sort((a, b) => {
+    const filteredLibraries = [...libraries].filter(item => {
+        if (libraryFilter === 'open') {
+            const affluenceData = affluences[item.id];
+            const isOpen = affluenceData?.isOpen ?? true;
+            if (!isOpen) return false;
+        }
+        return true;
+    }).sort((a, b) => {
         const aFav = favBu.includes(a.id);
         const bFav = favBu.includes(b.id);
         if (aFav && !bFav) return -1;
@@ -562,7 +587,7 @@ const CampusDashboard = ({ navigation }) => {
                             ) : (
                                 <FlatList
                                     horizontal
-                                    data={sortedRestaurants}
+                                    data={filteredRestaurants}
                                     renderItem={renderRuCard}
                                     keyExtractor={item => item.id}
                                     showsHorizontalScrollIndicator={false}
@@ -591,7 +616,7 @@ const CampusDashboard = ({ navigation }) => {
                             ) : (
                                 <FlatList
                                     horizontal
-                                    data={sortedLibraries}
+                                    data={filteredLibraries}
                                     renderItem={renderBuCard}
                                     keyExtractor={item => item.id}
                                     showsHorizontalScrollIndicator={false}

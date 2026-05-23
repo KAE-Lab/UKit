@@ -32,6 +32,7 @@ export default {
 				'UKit Bordeaux requires access to your reminders to create alerts for your upcoming university classes and events.',
 			UIBackgroundModes: ['fetch'],
 			NSLocationWhenInUseUsageDescription: "UKit Bordeaux uses your device's location to calculate the distance to the nearest CROUS university restaurants and libraries. Your location is never stored or transmitted to our servers.",
+			NSFaceIDUsageDescription: "UKit Bordeaux utilise Face ID pour protéger l'accès à vos informations universitaires.",
 		},
 	},
 	android: {
@@ -55,5 +56,12 @@ export default {
 	},
 	plugins: [
 		"expo-web-browser",
+		"expo-secure-store",
+		[
+			"expo-local-authentication",
+			{
+				"faceIDPermission": "UKit Bordeaux utilise Face ID pour protéger l'accès à vos informations universitaires."
+			}
+		],
 	],
 };
