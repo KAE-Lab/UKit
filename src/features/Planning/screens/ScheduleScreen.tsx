@@ -1,9 +1,9 @@
 import React, { useContext, useLayoutEffect } from 'react';
 import { View } from 'react-native';
-import { AppContext, treatTitle } from '../../shared/services/AppCore';
-import { NavBarHelper, SaveGroupButton } from '../../shared/navigation/NavHelpers';
-import Translator from '../../shared/i18n/Translator';
-import DayView from './DayView';
+import { AppContext, treatTitle } from '../../../shared/services/AppCore';
+import { NavBarHelper, SaveGroupButton } from '../../../shared/navigation/NavHelpers';
+import Translator from '../../../shared/i18n/Translator';
+import DayView from '../views/DayView';
 
 export default function ScheduleScreen(props) {
     const context = useContext(AppContext);

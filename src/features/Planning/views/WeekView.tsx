@@ -4,11 +4,11 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import CalendarWeek from './CalendarWeek';
-import { WeekComponent } from './ScheduleList'; 
-import style, { tokens } from '../../shared/theme/Theme'; 
-import Translator from '../../shared/i18n/Translator';
-import { AppContext } from '../../shared/services/AppCore';
+import CalendarWeek from '../components/CalendarWeek';
+import { WeekComponent } from '../components/ScheduleList'; 
+import style, { tokens } from '../../../shared/theme/Theme'; 
+import Translator from '../../../shared/i18n/Translator';
+import { AppContext } from '../../../shared/services/AppCore';
 
 const isEqualsObject = (obj1, ojb2) => {
 	// objects must be in the same order
@@ -82,7 +82,7 @@ class WeekView extends React.Component<WeekViewProps, WeekViewState> {
 	}
 
 	updateTitle() {
-		const { treatTitle } = require('../../shared/services/AppCore');
+		const { treatTitle } = require('../../../shared/services/AppCore');
 		const title = treatTitle(this.getGroupName());
 		if (title !== this._lastTitle) {
 			this._lastTitle = title;

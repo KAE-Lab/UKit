@@ -7,12 +7,12 @@ import Toast from 'react-native-root-toast';
 import PropTypes from 'prop-types';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
-import { Split } from '../../shared/ui/AppUI';
-import style, { tokens } from '../../shared/theme/Theme';
-import Translator from '../../shared/i18n/Translator';
-import { AppContext, isConnected } from '../../shared/services/AppCore'
-import { FetchManager } from '../../shared/services/DataService';
-import { NavBarHelper, SaveGroupButton } from '../../shared/navigation/NavHelpers';
+import { Split } from '../../../shared/ui/AppUI';
+import style, { tokens } from '../../../shared/theme/Theme';
+import Translator from '../../../shared/i18n/Translator';
+import { AppContext, isConnected } from '../../../shared/services/AppCore'
+import { FetchManager } from '../../../shared/services/DataService';
+import { NavBarHelper, SaveGroupButton } from '../../../shared/navigation/NavHelpers';
 
 // ── COMPOSANT HEADER DE SECTION ─────────────────────────────────────────
 export interface SectionListHeaderProps {

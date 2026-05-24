@@ -3,14 +3,14 @@ import { Text, TouchableOpacity } from 'react-native';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 
-import { tokens } from '../../shared/theme/Theme';
+import { tokens } from '../../../shared/theme/Theme';
 
 export interface CalendarDayProps {
     currentDay: moment.Moment;
     item: moment.Moment;
     onPressItem?: (item: moment.Moment) => void;
     selectedDay: moment.Moment;
-    theme: import('../../shared/theme/Theme').AppThemeType;
+    theme: import('../../../shared/theme/Theme').AppThemeType;
 }
 
 class CalendarDay extends React.Component<CalendarDayProps> {

@@ -7,13 +7,13 @@ import Toast from 'react-native-root-toast';
 import * as Calendar from 'expo-calendar';
 import { useNavigation } from '@react-navigation/native';
 
-import style, { tokens } from '../../shared/theme/Theme';
+import style, { tokens } from '../../../shared/theme/Theme';
 
-import Translator from '../../shared/i18n/Translator';
-import { getLocations, getLocationsInText } from '../../shared/services/AppCore';
-import { AppContext } from '../../shared/services/AppCore';
-import { URL } from '../../shared/services/DataService';
-import { withStaticHeader } from '../../shared/navigation/NavHelpers';
+import Translator from '../../../shared/i18n/Translator';
+import { getLocations, getLocationsInText } from '../../../shared/services/AppCore';
+import { AppContext } from '../../../shared/services/AppCore';
+import { URL } from '../../../shared/services/DataService';
+import { withStaticHeader } from '../../../shared/navigation/NavHelpers';
 
 // ── TYPESCRIPT INTERFACES ───────────────────────────────────────────────
 export interface CourseData {
@@ -32,7 +32,7 @@ interface CalendarNewEventPromptProps {
 	popupVisible: boolean;
 	closePopup: () => void;
 	openPopup: () => void;
-	theme: import('../../shared/theme/Theme').AppThemeType;
+	theme: import('../../../shared/theme/Theme').AppThemeType;
 	data: CourseData;
 }
 
@@ -174,7 +174,7 @@ export class CalendarNewEventPrompt extends React.Component<CalendarNewEventProm
 // ── COMPOSANT LIGNE DE COURS ─────────────────────────────
 interface CourseRowProps {
 	data: CourseData;
-	theme: import('../../shared/theme/Theme').AppThemeType;
+	theme: import('../../../shared/theme/Theme').AppThemeType;
 	readOnly?: boolean;
 	navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
 	carouselMode?: boolean;
@@ -516,7 +516,7 @@ export function CourseRowWithNavigation(props: Omit<CourseRowProps, 'navigation'
 const screenWidth = Dimensions.get('window').width;
 const savedCarouselIndices = new Map<string, number>();
 
-export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: CourseData[], theme: import('../../shared/theme/Theme').AppThemeType }) {
+export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: CourseData[], theme: import('../../../shared/theme/Theme').AppThemeType }) {
 	const groupKey = coursesGroup.length > 0 ? `${coursesGroup[0].starttime}-${coursesGroup[0].subject}` : 'default';
 	const initialIndex = savedCarouselIndices.get(groupKey) || 0;
 

@@ -8,16 +8,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PropTypes from 'prop-types';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
-import style, { tokens } from '../../shared/theme/Theme';
-import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { CourseRowWithNavigation as CourseRow, CourseGroupCarousel } from './CourseCard';
 
-import { ErrorAlert } from '../../shared/ui/Alerts';
-import Translator from '../../shared/i18n/Translator';
-import { isConnected } from '../../shared/services/AppCore'
-import { FetchManager, DataManager } from '../../shared/services/DataService';
-import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../shared/services/AppCore';
-import { NotificationManager } from '../../shared/services/NotificationService';
+import { ErrorAlert } from '../../../shared/ui/Alerts';
+import Translator from '../../../shared/i18n/Translator';
+import { isConnected } from '../../../shared/services/AppCore'
+import { FetchManager, DataManager } from '../../../shared/services/DataService';
+import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../../shared/services/AppCore';
+import { NotificationManager } from '../../../shared/services/NotificationService';
 
 export const groupOverlappingCourses = (courses) => {
     if (!courses || courses.length === 0) return [];
@@ -57,7 +57,7 @@ export const groupOverlappingCourses = (courses) => {
 // ── COMPOSANT COLLAPSIBLE POUR LA SEMAINE ─────────────
 export interface DayWeekProps {
     schedule: any;
-    theme: import('../../shared/theme/Theme').AppThemeType;
+    theme: import('../../../shared/theme/Theme').AppThemeType;
     fallbackDate?: moment.MomentInput;
     navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
 }
@@ -170,7 +170,7 @@ export interface ScheduleListProps {
     target: moment.MomentInput | { week: number; year: number };
     navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
     filtersList?: string[];
-    theme: import('../../shared/theme/Theme').AppThemeType;
+    theme: import('../../../shared/theme/Theme').AppThemeType;
     onAnimatedScroll?: (event: import('react-native').NativeSyntheticEvent<import('react-native').NativeScrollEvent>) => void;
 }
 

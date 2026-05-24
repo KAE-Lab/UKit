@@ -1,15 +1,15 @@
 import React from 'react';
 import { Text, TouchableOpacity } from 'react-native';
-import Translator from '../../shared/i18n/Translator';
+import Translator from '../../../shared/i18n/Translator';
 
-import { tokens } from '../../shared/theme/Theme';
+import { tokens } from '../../../shared/theme/Theme';
 
 export interface CalendarWeekProps {
     currentWeek: { week: number; year: number };
     week: { week: number; year: number };
     onPressItem?: (week: { week: number; year: number }) => void;
     selectedWeek: { week: number; year: number };
-    theme: import('../../shared/theme/Theme').AppThemeType;
+    theme: import('../../../shared/theme/Theme').AppThemeType;
 }
 
 class CalendarWeek extends React.Component<CalendarWeekProps> {
