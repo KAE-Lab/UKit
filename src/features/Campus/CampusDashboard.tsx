@@ -178,7 +178,7 @@ const CampusDashboard = ({ navigation }) => {
                 if (bList) {
                     bList = bList.map(b => {
                         if (userLat !== undefined && userLon !== undefined && b.lat && b.lng) {
-                            b.distance = getDistanceInKm(userLat, userLon, b.lat, b.lng);
+                            b.distance = getDistanceInKm(userLat, userLon, b.lat as number, b.lng as number);
                         }
                         return b;
                     });
@@ -466,7 +466,7 @@ const CampusDashboard = ({ navigation }) => {
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <MaterialCommunityIcons name="clock-outline" size={16} color={theme.fontSecondary} />
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
-                                {hoursText} • {totalRooms} {Translator.get('ROOMS') || 'Salles'}
+                                {hoursText} • {totalRooms} {Translator.get('ROOMS' as Parameters<typeof Translator.get>[0]) || 'Salles'}
                             </Text>
                         </View>
                     </View>

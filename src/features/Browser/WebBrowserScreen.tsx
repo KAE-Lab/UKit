@@ -19,7 +19,20 @@ const entrypoints = {
 	apogee: 'https://apogee.u-bordeaux.fr',
 };
 
-const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openURL, onQuit, canGoBack, canGoForward, loading }) => {
+interface FloatingActionBarProps {
+    theme: import('../../shared/theme/Theme').AppThemeType;
+    insets: import('react-native-safe-area-context').EdgeInsets | null;
+    onBack: () => void;
+    onForward: () => void;
+    onRefresh: () => void;
+    openURL: () => void;
+    onQuit: () => void;
+    canGoBack: boolean;
+    canGoForward: boolean;
+    loading: boolean;
+}
+
+const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openURL, onQuit, canGoBack, canGoForward, loading }: FloatingActionBarProps) => {
     const buttonContainerWidth = 290; 
     const translateX = useSharedValue(0); // Start open
 
@@ -64,7 +77,16 @@ const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openUR
         };
     });
 
-    const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24, colorOverride }) => {
+    interface NavButtonProps {
+        onPress: () => void;
+        disabled?: boolean;
+        iconName: React.ComponentProps<typeof MaterialIcons>['name'] | React.ComponentProps<typeof MaterialCommunityIcons>['name'] | string;
+        iconLib?: 'material' | 'community';
+        size?: number;
+        colorOverride?: string;
+    }
+
+    const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24, colorOverride }: NavButtonProps) => {
         const color = disabled ? theme.primary + '44' : (colorOverride || theme.primary);
         const Icon = iconLib === 'community' ? MaterialCommunityIcons : MaterialIcons;
 
@@ -81,7 +103,7 @@ const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openUR
                     marginHorizontal: 5,
                     backgroundColor: disabled ? 'transparent' : `${color}15`,
                 }}>
-                <Icon name={iconName} size={size} color={color} />
+                <Icon name={iconName as never} size={size} color={color} />
             </TouchableOpacity>
         );
     };
@@ -115,7 +137,13 @@ const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openUR
     );
 };
 
-function WebBrowserScreen({ navigation, route, onDismiss }) {
+export interface WebBrowserScreenProps {
+	navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void };
+	route: { params?: { entrypoint?: 'ent' | 'email' | 'cas' | 'apogee'; href?: string } };
+	onDismiss?: () => void;
+}
+
+function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProps) {
 	const { themeName } = useContext(AppContext);
 	const webViewRef = useRef(null);
 	const insets = useSafeAreaInsets();
@@ -212,7 +240,7 @@ function WebBrowserScreen({ navigation, route, onDismiss }) {
 		setShowSaveModal(false);
 	};
 
-	const handleMessage = (event) => {
+	const handleMessage = (event: import('react-native-webview').WebViewMessageEvent) => {
 		try {
 			const data = JSON.parse(event.nativeEvent.data);
 			if (data.type === 'CAS_CREDENTIALS') {

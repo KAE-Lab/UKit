@@ -16,8 +16,8 @@ import { withHeaderAnimation, globalScrollValues } from '../../shared/navigation
 
 const defaultLibraryImage = require('../../../assets/images/default_resto.png');
 
-function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
-    const AppContextValues = useContext(AppContext) as any;
+function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void }; onAnimatedScroll?: unknown; headerPadding?: unknown }) {
+    const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
     const insets = useSafeAreaInsets();
@@ -260,7 +260,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
                         <Text style={{ 
                             fontSize: tokens.fontSize.lg, 
-                            fontWeight: tokens.fontWeight.bold as any, 
+                            fontWeight: tokens.fontWeight.bold as never, 
                             color: theme.font,
                             flexShrink: 1
                         }}>
@@ -299,7 +299,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 <MaterialIcons name="directions-walk" size={14} color={theme.primary} />
                                 <Text style={{
                                     fontSize: tokens.fontSize.sm,
-                                    fontWeight: tokens.fontWeight.bold as any,
+                                    fontWeight: tokens.fontWeight.bold as never,
                                     color: theme.primary,
                                     marginLeft: 4
                                 }}>
@@ -314,7 +314,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                     {/* Jauge d'affluence en une ligne */}
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialCommunityIcons name={isOpen ? 'door-open' : 'door-closed'} size={16} color={statusColor} />
-                        <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold as any, color: statusColor, marginLeft: 4, flexShrink: 1 }}>
+                        <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold as never, color: statusColor, marginLeft: 4, flexShrink: 1 }}>
                             {statusText}
                         </Text>
                         
@@ -323,7 +323,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 <View style={{ flex: 1, height: 6, backgroundColor: theme.greyBackground, borderRadius: 3, overflow: 'hidden', marginHorizontal: tokens.space.sm }}>
                                     <View style={{ width: `${rate}%`, height: '100%', backgroundColor: statusColor, borderRadius: 3 }} />
                                 </View>
-                                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.bold as any }}>
+                                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.bold as never }}>
                                     {`${rate}%`}
                                 </Text>
                             </>
@@ -351,7 +351,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
                     data={filteredLibraries}
-                    onScroll={onAnimatedScroll}
+                    onScroll={onAnimatedScroll as never}
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
@@ -375,7 +375,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 textAlign: 'center'
                             }}>
                                 {searchText.length > 0 || selectedFilter !== 'all' 
-                                    ? Translator.get('NO_RESULTS_FOUND') 
+                                    ? Translator.get('NO_RESULTS_FOUND' as Parameters<typeof Translator.get>[0]) 
                                     : Translator.get('NO_BU_NEARBY')}
                             </Text>
                         </View>
@@ -424,7 +424,7 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 color: theme.font,
                                 padding: 0
                             }}
-                            placeholder={Translator.get('SEARCH_BU_CITY')}
+                            placeholder={Translator.get('SEARCH_BU_CITY' as Parameters<typeof Translator.get>[0])}
                             placeholderTextColor={theme.fontSecondary}
                             onChangeText={setSearchText}
                             value={searchText}
@@ -445,10 +445,10 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
             {/* FILTER MODAL */}
             <Modal animationType="fade" transparent={true} visible={filterVisible} onRequestClose={() => setFilterVisible(false)}>
                 <TouchableWithoutFeedback onPress={() => setFilterVisible(false)}>
-                    <View style={theme.settings?.popup?.background || { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                    <View style={(theme.settings?.popup?.background || { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }) as never}>
                         <TouchableWithoutFeedback>
-                            <View style={theme.settings?.popup?.container || { backgroundColor: theme.cardBackground, width: '85%', borderRadius: tokens.radius.xl, padding: tokens.space.lg }}>
-                                <View style={theme.settings?.popup?.header || { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.md }}>
+                            <View style={(theme.settings?.popup?.container || { backgroundColor: theme.cardBackground, width: "85%", borderRadius: tokens.radius.xl, padding: tokens.space.lg }) as never}>
+                                <View style={(theme.settings?.popup?.header || { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: tokens.space.md }) as never}>
                                     <Text style={theme.settings?.popup?.textHeader || { fontSize: tokens.fontSize.lg, fontWeight: 'bold', color: theme.font }}>
                                         {Translator.get('FILTERS')}
                                     </Text>
@@ -459,12 +459,12 @@ function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
 
                                 <TouchableOpacity onPress={() => { updateFilter('all'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, borderBottomWidth: 1, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommunityIcons name={selectedFilter === 'all' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'all' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
-                                    <Text style={{ color: selectedFilter === 'all' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'all' ? 'bold' : 'normal' }}>{Translator.get('ALL_LIBRARIES')}</Text>
+                                    <Text style={{ color: selectedFilter === 'all' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'all' ? 'bold' : 'normal' }}>{Translator.get('ALL_LIBRARIES' as Parameters<typeof Translator.get>[0])}</Text>
                                 </TouchableOpacity>
                                 
                                 <TouchableOpacity onPress={() => { updateFilter('open'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommunityIcons name={selectedFilter === 'open' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'open' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
-                                    <Text style={{ color: selectedFilter === 'open' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'open' ? 'bold' : 'normal' }}>{Translator.get('OPEN_LIBRARIES')}</Text>
+                                    <Text style={{ color: selectedFilter === 'open' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'open' ? 'bold' : 'normal' }}>{Translator.get('OPEN_LIBRARIES' as Parameters<typeof Translator.get>[0])}</Text>
                                 </TouchableOpacity>
                                 
                             </View>

@@ -6,8 +6,19 @@ import { SafeAreaInsetsContext, SafeAreaView } from 'react-native-safe-area-cont
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
+import { BdeAnnonce } from './BdeService';
 
-const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }) => {
+export interface BdeDetailsRouteParams {
+    annonce?: BdeAnnonce;
+}
+
+export interface BdeDetailsScreenProps {
+    route: { params: BdeDetailsRouteParams };
+    navigation: { goBack: () => void; navigate?: (screen: string) => void; [key: string]: unknown };
+    onAnimatedScroll?: (event: unknown) => void;
+}
+
+const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScreenProps) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     const { annonce } = route.params || {};

@@ -8,9 +8,9 @@ import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
 
-export default function LibraryDetailsScreen({ route, navigation }: any) {
+export default function LibraryDetailsScreen({ route, navigation }: { route: any; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
     const { library, affluence } = route.params;
-    const AppContextValues = useContext(AppContext) as any;
+    const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
     const insets = useSafeAreaInsets();
@@ -33,7 +33,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
     useEffect(() => {
         navigation.setOptions({
             headerTitle: () => (
-                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any }}>
+                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as never }}>
                     {Translator.get('DETAILS')}
                 </Text>
             ),
@@ -67,7 +67,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
         const d = new Date(dateString);
         if (isNaN(d.getTime())) return dateString;
         const dayKeys = ['DAY_SUN', 'DAY_MON', 'DAY_TUE', 'DAY_WED', 'DAY_THU', 'DAY_FRI', 'DAY_SAT'];
-        const translatedDay = Translator.get(dayKeys[d.getDay()]);
+        const translatedDay = Translator.get(dayKeys[d.getDay()] as Parameters<typeof Translator.get>[0]);
         return `${translatedDay} ${d.getDate()}`;
     };
 
@@ -109,12 +109,12 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
 
         return (
             <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.md, marginBottom: tokens.space.lg, borderRadius: tokens.radius.lg, borderWidth: 1, borderColor: theme.border }}>
-                <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any, color: theme.fontSecondary, marginBottom: tokens.space.sm, textTransform: 'uppercase' }}>
+                <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as never, color: theme.fontSecondary, marginBottom: tokens.space.sm, textTransform: 'uppercase' }}>
                     {Translator.get('ATTENDANCE')}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: rate !== null ? tokens.space.md : 0 }}>
                     <MaterialCommunityIcons name={isOpen ? 'door-open' : 'door-closed'} size={24} color={statusColor} />
-                    <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as any, color: statusColor, marginLeft: tokens.space.sm, flex: 1 }}>
+                    <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as never, color: statusColor, marginLeft: tokens.space.sm, flex: 1 }}>
                         {statusText}
                     </Text>
                 </View>
@@ -123,7 +123,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                     <View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: tokens.space.xs }}>
                             <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{Translator.get('OCCUPANCY_RATE')}</Text>
-                            <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any }}>{rate}%</Text>
+                            <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as never }}>{rate}%</Text>
                         </View>
                         <View style={{ height: 8, borderRadius: 4, backgroundColor: theme.border, overflow: 'hidden' }}>
                             <View style={{ height: '100%', borderRadius: 4, width: `${rate}%`, backgroundColor: statusColor }} />
@@ -145,7 +145,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                 <Text 
                     style={{
                         fontSize: tokens.fontSize.xl,
-                        fontWeight: tokens.fontWeight.bold as any,
+                        fontWeight: tokens.fontWeight.bold as never,
                         color: theme.fontSecondary,
                         textAlign: 'left',
                         paddingHorizontal: tokens.space.md,
@@ -187,7 +187,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                             >
                                 <Text style={{ 
                                     color: isSelected ? primaryColor : theme.fontSecondary,
-                                    fontWeight: isSelected ? (tokens.fontWeight.bold as any) : (tokens.fontWeight.medium as any),
+                                    fontWeight: isSelected ? (tokens.fontWeight.bold as never) : (tokens.fontWeight.medium as never),
                                     fontSize: tokens.fontSize.sm
                                 }}>
                                     {formatDate(item.day)}
@@ -204,7 +204,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                 {/* Widget Affluence (Toujours visible, donne le statut en temps réel) */}
                 {renderLiveAttendance()}
 
-                <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, marginBottom: tokens.space.md }}>
+                <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as never, color: theme.font, marginBottom: tokens.space.md }}>
                     {Translator.get('OPENING_HOURS')}
                 </Text>
 
@@ -224,7 +224,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                                 marginBottom: tokens.space.sm
                             }]}>
                                 <MaterialIcons name="schedule" size={24} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.md }} />
-                                <Text style={{ fontSize: tokens.fontSize.md, color: theme.font, fontWeight: tokens.fontWeight.medium as any }}>
+                                <Text style={{ fontSize: tokens.fontSize.md, color: theme.font, fontWeight: tokens.fontWeight.medium as never }}>
                                     {formatTime(slot.openingHour)} - {formatTime(slot.closingHour)}
                                 </Text>
                             </View>
@@ -287,7 +287,7 @@ export default function LibraryDetailsScreen({ route, navigation }: any) {
                     <Text style={{ 
                         color: theme.accent ?? theme.primary, 
                         fontSize: tokens.fontSize.md, 
-                        fontWeight: tokens.fontWeight.bold as any, 
+                        fontWeight: tokens.fontWeight.bold as never, 
                         marginLeft: tokens.space.sm 
                     }}>
                         {Translator.get('BOOK_SEAT')}

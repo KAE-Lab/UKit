@@ -5,20 +5,25 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
 import Translator from '../../shared/i18n/Translator';
-import BdeService from './BdeService';
+import BdeService, { BdeAnnonce } from './BdeService';
 import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
 
-function BdeScreen({ navigation, onAnimatedScroll }) {
+export interface BdeScreenProps {
+    navigation: { navigate: (screen: string, params?: Record<string, unknown>) => void };
+    onAnimatedScroll?: (event: unknown) => void;
+}
+
+function BdeScreen({ navigation, onAnimatedScroll }: BdeScreenProps) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     const insets = useSafeAreaInsets();
 
-    const [annonces, setAnnonces] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [annonces, setAnnonces] = useState<BdeAnnonce[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
 
-    const mountedRef = useRef(true);
+    const mountedRef = useRef<boolean>(true);
     useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
     useEffect(() => {
@@ -70,7 +75,7 @@ function BdeScreen({ navigation, onAnimatedScroll }) {
                                 fontSize: tokens.fontSize.md,
                                 textAlign: 'center'
                             }}>
-                                {Translator.get('NO_RESULTS') || 'Aucune annonce'}
+                                {Translator.get('NO_RESULTS' as Parameters<typeof Translator.get>[0]) || 'Aucune annonce'}
                             </Text>
                         </View>
                     )}

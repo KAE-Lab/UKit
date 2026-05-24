@@ -10,7 +10,14 @@ import { AppContext } from '../../shared/services/AppCore';
 import { URL } from '../../shared/services/DataService';
 import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
 
-const Section = ({ title, icon, theme, children }) => (
+export interface SectionProps {
+    title: string;
+    icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+    theme: Record<string, string>;
+    children: React.ReactNode;
+}
+
+const Section = ({ title, icon, theme, children }: SectionProps) => (
 	<View style={{
 		backgroundColor: theme.cardBackground,
 		borderRadius: tokens.radius.lg,
@@ -50,7 +57,13 @@ const Section = ({ title, icon, theme, children }) => (
 	</View>
 );
 
-const URLButton = ({ url, title, theme }) => {
+export interface URLButtonProps {
+    url: string;
+    title: string;
+    theme: Record<string, string>;
+}
+
+const URLButton = ({ url, title, theme }: URLButtonProps) => {
     const openURL = () => {
         Linking.canOpenURL(url).then((supported) => {
             if (supported) Linking.openURL(url);
@@ -78,7 +91,12 @@ const URLButton = ({ url, title, theme }) => {
     );
 };
 
-class AboutScreen extends React.Component {
+export interface AboutScreenProps {
+    headerPadding?: Record<string, unknown>;
+    onAnimatedScroll?: (event: unknown) => void;
+}
+
+class AboutScreen extends React.Component<AboutScreenProps> {
 	static contextType = AppContext;
 	tapCount = 0;
 
@@ -91,8 +109,9 @@ class AboutScreen extends React.Component {
 	}
 
 	render() {
-        const theme = style.Theme[this.context.themeName];
-        const appVersion = Constants.expoConfig?.version || Constants.manifest?.version || '?';
+        const themeName = (this.context as { themeName: string }).themeName;
+        const theme = style.Theme[themeName];
+        const appVersion = Constants.expoConfig?.version || (Constants.manifest as unknown as { version?: string })?.version || '?';
 
         return (
             <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>

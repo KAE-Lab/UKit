@@ -8,9 +8,9 @@ import style, { tokens } from '../../shared/theme/Theme';
 import { AppContext } from '../../shared/services/AppCore';
 import Translator from '../../shared/i18n/Translator';
 
-export default function CrousMenuScreen({ route, navigation }: any) {
+export default function CrousMenuScreen({ route, navigation }: { route: any; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
     const { restaurantId, restaurantName } = route.params;
-    const AppContextValues = useContext(AppContext) as any;
+    const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const theme = style.Theme[AppContextValues.themeName];
     const insets = useSafeAreaInsets();
 
@@ -30,7 +30,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
     useEffect(() => {
         navigation.setOptions({
             headerTitle: () => (
-                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any }}>
+                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as never }}>
                     {Translator.get('MENU')}
                 </Text>
             ),
@@ -72,7 +72,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
         if (isNaN(d.getTime())) return dateString;
 
         const dayKeys = ['DAY_SUN', 'DAY_MON', 'DAY_TUE', 'DAY_WED', 'DAY_THU', 'DAY_FRI', 'DAY_SAT'];
-        const translatedDay = Translator.get(dayKeys[d.getDay()]);
+        const translatedDay = Translator.get(dayKeys[d.getDay()] as Parameters<typeof Translator.get>[0]);
         return `${translatedDay} ${d.getDate()}`;
     };
 
@@ -140,7 +140,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
         return 'circle-medium';
     };
 
-    const renderMeal = (mealTitle: string, categories: any[], mealType: 'midi' | 'soir') => {
+    const renderMeal = (mealTitle: string, categories: { name: string, dishes: string[] }[], mealType: 'midi' | 'soir') => {
         if (!categories || categories.length === 0) return null;
 
         // Le soleil pour le midi, la lune pour le soir
@@ -155,19 +155,19 @@ export default function CrousMenuScreen({ route, navigation }: any) {
                         size={20} 
                         color={theme.accent ?? theme.primary} 
                     />
-                    <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, marginLeft: tokens.space.sm }}>
+                    <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as never, color: theme.font, marginLeft: tokens.space.sm }}>
                         {mealTitle}
                     </Text>
                 </View>
 
                 {/* Liste des catégories */}
                 {categories.map((cat, index) => (
-                    <View key={index} style={[style.course.card as any, { 
+                    <View key={index} style={[style.course.card as never, { 
                         backgroundColor: theme.cardBackground, 
                         borderColor: theme.border, 
                         borderWidth: 1 
                     }]}>
-                        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as any, color: theme.accent ?? theme.primary, marginBottom: tokens.space.sm }}>
+                        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as never, color: theme.accent ?? theme.primary, marginBottom: tokens.space.sm }}>
                             {cat.name}
                         </Text>
                         
@@ -200,7 +200,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
                 <Text 
                     style={{
                         fontSize: tokens.fontSize.xl,
-                        fontWeight: tokens.fontWeight.bold as any,
+                        fontWeight: tokens.fontWeight.bold as never,
                         color: theme.fontSecondary,
                         textAlign: 'left',
                         paddingHorizontal: tokens.space.md,
@@ -243,7 +243,7 @@ export default function CrousMenuScreen({ route, navigation }: any) {
                             >
                                 <Text style={{ 
                                     color: isSelected ? primaryColor : theme.fontSecondary,
-                                    fontWeight: isSelected ? (tokens.fontWeight.bold as any) : (tokens.fontWeight.medium as any),
+                                    fontWeight: isSelected ? (tokens.fontWeight.bold as never) : (tokens.fontWeight.medium as never),
                                     fontSize: tokens.fontSize.sm
                                 }}>
                                     {formatDate(item.date)}

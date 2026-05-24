@@ -21,11 +21,11 @@ interface MapScreenProps {
     route: {
         params: MapScreenRouteParams;
     };
-    navigation: any;
+    navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void };
 }
 
 export default function MapScreen({ route, navigation }: MapScreenProps) {
-    const AppContextValues = useContext(AppContext) as any;
+    const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
     const insets = useSafeAreaInsets();
