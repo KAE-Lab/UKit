@@ -13,10 +13,10 @@ import { FetchManager } from './DataService';
 const locations = require('../../../assets/locations.json');
 
 // ── CONTEXTE & DEVICE ─────────────────────────────────
-export const AppContext = React.createContext({});
+export const AppContext = React.createContext<{ themeName?: string; favoriteGroups?: string[]; filters?: string[] }>({});
 export const AppContextProvider = AppContext.Provider;
 
-export function deviceLanguage() {
+export function deviceLanguage(): string {
     if (Platform.OS === 'ios') {
         const settings = NativeModules.SettingsManager?.settings;
         return settings?.AppleLocale || settings?.AppleLanguages[0] || 'en_US';
@@ -24,20 +24,20 @@ export function deviceLanguage() {
     return NativeModules.I18nManager?.localeIdentifier || 'en_US';
 }
 
-export function languageFromDevice() {
+export function languageFromDevice(): string {
     const lang = deviceLanguage();
     if (lang.startsWith('fr')) return 'fr';
     if (lang.startsWith('es')) return 'es';
     return 'en';
 }
 
-export async function isConnected() {
+export async function isConnected(): Promise<boolean | null> {
     const netInfo = await NetInfo.fetch();
     return netInfo.isConnected;
 }
 
 // ── UTILITAIRES DIVERS ───────────────────────────────────
-export function treatTitle(str) {
+export function treatTitle(str: string | string[]): string {
     if (Array.isArray(str)) {
         return 'Mon Planning';
     }
@@ -48,11 +48,11 @@ export function treatTitle(str) {
     return str;
 }
 
-export function upperCaseFirstLetter(string) {
+export function upperCaseFirstLetter(string: string): string {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-export function isArraysEquals(a, b) {
+export function isArraysEquals(a: any[], b: any[]): boolean {
     if (a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) {
         if (a[i] !== b[i]) return false;
@@ -60,11 +60,11 @@ export function isArraysEquals(a, b) {
     return true;
 }
 
-function getLocation(house) {
+function getLocation(house: string): any {
     return locations[house] ? { title: house, ...locations[house] } : null;
 }
 
-export function getLocations(str) {
+export function getLocations(str: string): any[] {
     let lines = str.split(' | ');
     let locs = [];
     lines.forEach((line) => {
@@ -75,7 +75,7 @@ export function getLocations(str) {
     return locs;
 }
 
-export function getLocationsInText(str) {
+export function getLocationsInText(str: string): any[] {
     let regexBuilding = RegExp('([A-Z][0-9]+)', 'im');
     let match = regexBuilding.exec(str);
     if (match && match.length === 2) {
@@ -87,7 +87,7 @@ export function getLocationsInText(str) {
 
 // ── GESTION DES COURS ───────────────────────────────
 export const CourseManager = {
-    computeCourseUE: (course) => {
+    computeCourseUE: (course: any): any => {
         let regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
         if (course.subject && course.subject !== 'N/C') {
             let match = regexUE.exec(course.subject);
@@ -100,7 +100,7 @@ export const CourseManager = {
         }
         return course;
     },
-    filterCourse: (isFavorite, course, filtersList) => {
+    filterCourse: (isFavorite: boolean, course: any, filtersList: any): boolean => {
         if (!isFavorite) return true;
         if (course.UE !== null && filtersList instanceof Array && filtersList.includes(course.UE)) {
             return false;
@@ -115,10 +115,10 @@ const BACKGROUND_FETCH_TASK = 'background-fetch';
 
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     await SettingsManager.syncCalendar();
-    return BackgroundFetch.Result.NewData;
+    return BackgroundFetch.BackgroundFetchResult.NewData;
 });
 
-function formatCalendarEventData(event) {
+function formatCalendarEventData(event: any): any {
     return {
         title: event.subject,
         startDate: new Date(event.date.start),
@@ -129,8 +129,8 @@ function formatCalendarEventData(event) {
     };
 }
 
-async function createUKitCalendar(calendars) {
-    let calendar = {
+async function createUKitCalendar(calendars: any[]): Promise<string> {
+    let calendar: any = {
         title: `UKit`,
         name: `UKit`,
         color: '#009ee0',
@@ -167,10 +167,26 @@ async function createUKitCalendar(calendars) {
             sourceId: local[0].source.id,
         };
     }
-    return await Calendar.createCalendarAsync(calendar);
+    return await Calendar.createCalendarAsync(calendar as any);
 }
 
 class SettingsManagerService {
+    _calendar: any;
+    _calendars: any[];
+    _firstload: boolean;
+    _theme: string;
+    _favoriteGroups: string[];
+    _language: string;
+    _openAppOnFavoriteGroup: boolean;
+    _filters: string[];
+    _subscribers: Record<string, Function[]>;
+    _calendarSyncEnabled: boolean;
+    _isSynchronizingCalendar: boolean;
+    _lastSyncDate: moment.Moment | null;
+    _courseNotificationsEnabled: boolean;
+    _courseNotificationDelay: number;
+    _groupName?: string;
+
     constructor() {
         this._calendar = -1;
         this._calendars = [];
@@ -188,25 +204,25 @@ class SettingsManagerService {
         this._courseNotificationDelay = 15;
     }
 
-    on = (event, callback) => {
+    on = (event: string, callback: Function) => {
         if (!this._subscribers[event]) this._subscribers[event] = [];
         this._subscribers[event].push(callback);
     };
 
-    unsubscribe = (event, callback) => {
+    unsubscribe = (event: string, callback: Function) => {
         if (!this._subscribers[event]?.length) return;
         const index = this._subscribers[event]?.indexOf(callback);
         if (index !== -1) this._subscribers[event].splice(index, 1);
     };
 
-    notify = (event, ...args) => {
+    notify = (event: string, ...args: any[]) => {
         this.saveSettings();
         if (!this._subscribers[event] || !args) return;
         this._subscribers[event].filter((e) => e !== null).forEach((fn) => fn(...args));
     };
 
-    getTheme = () => this._theme;
-    setTheme = (newTheme) => { this._theme = newTheme; this.notify('theme', this._theme); };
+    getTheme = (): string => this._theme;
+    setTheme = (newTheme: string) => { this._theme = newTheme; this.notify('theme', this._theme); };
     switchTheme = () => { this.setTheme(this._theme === 'light' ? 'dark' : 'light'); };
     setAutomaticTheme = () => { this.setTheme(Appearance.getColorScheme() === 'dark' ? 'dark' : 'light'); };
     getAutomaticTheme = () => Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
@@ -217,32 +233,32 @@ class SettingsManagerService {
 
     isSynchronizingCalendar = () => this._isSynchronizingCalendar;
     getFavoriteGroups = () => this._favoriteGroups;
-    addFavoriteGroup = (newGroup) => {
+    addFavoriteGroup = (newGroup: string) => {
         if (newGroup && !this._favoriteGroups.includes(newGroup)) {
             this._favoriteGroups = [...this._favoriteGroups, newGroup];
             this.notify('favoriteGroups', this._favoriteGroups);
         }
     };
-    removeFavoriteGroup = (groupToRemove) => {
+    removeFavoriteGroup = (groupToRemove: string) => {
         if (groupToRemove) {
             this._favoriteGroups = this._favoriteGroups.filter((g) => g !== groupToRemove);
             this.notify('favoriteGroups', this._favoriteGroups);
         }
     };
-    isFavoriteGroup = (group) => this._favoriteGroups.includes(group);
+    isFavoriteGroup = (group: string) => this._favoriteGroups.includes(group);
     
     getLanguage = () => this._language;
-    setLanguage = (newLang) => { this._language = newLang; this.notify('language', this._language); };
+    setLanguage = (newLang: string) => { this._language = newLang; this.notify('language', this._language); };
     
     getLastSyncDate = () => this._lastSyncDate;
     getSyncCalendar = () => this._calendar;
-    setSyncCalendar = (newCalendar) => {
+    setSyncCalendar = (newCalendar: any) => {
         if (this._calendar !== -1) this.deleteAllPreviousCalendarEntries(this._calendar);
         this._calendar = newCalendar;
         this.notify('calendar', this._calendar);
     };
 
-    deleteAllPreviousCalendarEntries = async (calendar) => {
+    deleteAllPreviousCalendarEntries = async (calendar: any) => {
         if (calendar === -1) return;
         if (calendar === 'UKit') {
             const ukitCalendar = this._calendars.find((cal) => cal.title === 'UKit');
@@ -259,7 +275,7 @@ class SettingsManagerService {
         } catch (e) { existingCalendarEvents = {}; }
 
         const existingInternalCalendarEvents = Object.values(existingCalendarEvents);
-        await Promise.all(existingInternalCalendarEvents.map((id) => Calendar.deleteEventAsync(id)));
+        await Promise.all(existingInternalCalendarEvents.map((id) => Calendar.deleteEventAsync(id as string)));
         await AsyncStorage.removeItem('previousSyncData');
         await AsyncStorage.removeItem('previousSyncTime');
         this._lastSyncDate = null;
@@ -276,8 +292,9 @@ class SettingsManagerService {
             this._calendar = !ukitCalendar ? await createUKitCalendar(this._calendars) : ukitCalendar.id;
         }
 
-        const events = await FetchManager.fetchCalendarForSynchronization(this._groupName);
-        let existingCalendarEvents = {};
+        const events = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups[0]);
+        if (!events) return;
+        let existingCalendarEvents: Record<string, string> = {};
 
         try {
             const data = await AsyncStorage.getItem('previousSyncData');
@@ -286,7 +303,7 @@ class SettingsManagerService {
 
         const existingInternalCalendarEvents = Object.values(existingCalendarEvents);
         const updatedEvents = [];
-        const nextExistingCalendarEvents = {};
+        const nextExistingCalendarEvents: Record<string, string> = {};
 
         await events.reduce((p, event) => {
             return p.then(async () => {
@@ -309,7 +326,7 @@ class SettingsManagerService {
             });
         }, Promise.resolve());
 
-        const internalEventsToDelete = existingInternalCalendarEvents.filter((id) => updatedEvents.indexOf(id) === -1);
+        const internalEventsToDelete = (existingInternalCalendarEvents as string[]).filter((id) => updatedEvents.indexOf(id) === -1);
         if (internalEventsToDelete.length) {
             await Promise.all(internalEventsToDelete.map((id) => Calendar.deleteEventAsync(id)));
         }
@@ -325,7 +342,7 @@ class SettingsManagerService {
     getCalendars = () => this._calendars;
     getCalendarSyncEnabled = () => this._calendarSyncEnabled;
     
-    setCalendarSyncEnabled = (state) => {
+    setCalendarSyncEnabled = (state: boolean) => {
         this._calendarSyncEnabled = state;
         this.notify('calendarSyncEnabled', state);
         if (state === true) {
@@ -336,17 +353,17 @@ class SettingsManagerService {
     };
 
     getOpenAppOnFavoriteGroup = () => this._openAppOnFavoriteGroup;
-    setOpenAppOnFavoriteGroup = (newOpenAppBool) => { this._openAppOnFavoriteGroup = newOpenAppBool; this.saveSettings(); };
+    setOpenAppOnFavoriteGroup = (newOpenAppBool: boolean) => { this._openAppOnFavoriteGroup = newOpenAppBool; this.saveSettings(); };
 
     getCourseNotificationsEnabled = () => this._courseNotificationsEnabled;
-    setCourseNotificationsEnabled = (state) => { 
+    setCourseNotificationsEnabled = (state: boolean) => { 
         this._courseNotificationsEnabled = state; 
         this.saveSettings(); 
         this.notify('courseNotificationsEnabled', state); 
     };
 
     getCourseNotificationDelay = () => this._courseNotificationDelay;
-    setCourseNotificationDelay = (delay) => { 
+    setCourseNotificationDelay = (delay: number) => { 
         this._courseNotificationDelay = delay; 
         this.saveSettings(); 
         this.notify('courseNotificationDelay', delay); 
@@ -354,11 +371,11 @@ class SettingsManagerService {
 
     getFilters = () => this._filters;
     resetFilter = () => { this._filters = []; this.notify('filter', this._filters); };
-    addFilters = (filter) => {
+    addFilters = (filter: string) => {
         if (filter && !this._filters.includes(filter)) this._filters.push(filter);
         this.notify('filter', this._filters);
     };
-    removeFilters = (filter) => {
+    removeFilters = (filter: string) => {
         if (filter) {
             const index = this._filters.indexOf(filter);
             if (index > -1) this._filters = this._filters.filter((e) => e !== filter);

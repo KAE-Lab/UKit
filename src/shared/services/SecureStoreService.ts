@@ -4,7 +4,7 @@ const CAS_CREDENTIALS_KEY = 'UKIT_CAS_CREDENTIALS';
 const COLD_DATA_KEY = 'UKIT_COLD_DATA';
 
 export default class SecureStoreService {
-    static async saveCredentials(username, password) {
+    static async saveCredentials(username: string, password: string): Promise<boolean> {
         try {
             const credentials = JSON.stringify({ username, password });
             await SecureStore.setItemAsync(CAS_CREDENTIALS_KEY, credentials);
@@ -15,7 +15,7 @@ export default class SecureStoreService {
         }
     }
 
-    static async getCredentials() {
+    static async getCredentials(): Promise<{ username: string; password: string } | null> {
         try {
             const credentials = await SecureStore.getItemAsync(CAS_CREDENTIALS_KEY);
             if (credentials) {
@@ -28,7 +28,7 @@ export default class SecureStoreService {
         }
     }
 
-    static async deleteCredentials() {
+    static async deleteCredentials(): Promise<boolean> {
         try {
             await SecureStore.deleteItemAsync(CAS_CREDENTIALS_KEY);
             return true;
@@ -38,7 +38,7 @@ export default class SecureStoreService {
         }
     }
 
-    static async saveColdData(data) {
+    static async saveColdData(data: unknown): Promise<boolean> {
         try {
             await SecureStore.setItemAsync(COLD_DATA_KEY, JSON.stringify(data));
             return true;
@@ -48,7 +48,7 @@ export default class SecureStoreService {
         }
     }
 
-    static async getColdData() {
+    static async getColdData(): Promise<any> {
         try {
             const data = await SecureStore.getItemAsync(COLD_DATA_KEY);
             return data ? JSON.parse(data) : null;
@@ -58,7 +58,7 @@ export default class SecureStoreService {
         }
     }
 
-    static async deleteColdData() {
+    static async deleteColdData(): Promise<boolean> {
         try {
             await SecureStore.deleteItemAsync(COLD_DATA_KEY);
             return true;

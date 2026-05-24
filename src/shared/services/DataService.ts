@@ -29,16 +29,16 @@ export const WebApiURL = {
 };
 
 // Utilitaires internes
-const upperCaseFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
+const upperCaseFirstLetter = (string: string): string => string.charAt(0).toUpperCase() + string.slice(1);
 
-const formatDescription = (string) => {
+const formatDescription = (string: string): string => {
     return decode(string.replace(/\r/g, '').replace(/<br \/>/g, '').replace(/\n\n\n\n/g, ';'));
 };
 
 // ── FETCH MANAGER (Requêtes API) ────────────────────────────────────────
 
 class FetchManagerService {
-    fetchGroupList = async () => {
+    fetchGroupList = async (): Promise<string[] | null> => {
         const options = {
             method: 'GET',
             url: WebApiURL.DOMAIN + WebApiURL.GROUPS,
@@ -58,7 +58,7 @@ class FetchManagerService {
         }
     };
 
-    sortFunctionGroup = (a, b) => {
+    sortFunctionGroup = (a: any, b: any): number => {
         const regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
         let subectA = a.subject.toUpperCase();
         let subectB = b.subject.toUpperCase();
@@ -75,7 +75,7 @@ class FetchManagerService {
         return 0;
     };
 
-    fetchCalendarDay = async (group, date) => {
+    fetchCalendarDay = async (group: string, date: string): Promise<any[] | null> => {
         const endQueryDate = moment(date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD');
         const data = {
             start: date,
@@ -150,7 +150,7 @@ class FetchManagerService {
         }
     };
 
-    fetchCalendarWeek = async (group, week) => {
+    fetchCalendarWeek = async (group: string, week: { year: number; week: number }): Promise<any[] | null> => {
         const searchDate = moment().year(week.year).isoWeek(week.week);
         const begin = searchDate.startOf('week').format('YYYY-MM-DD');
         const end = searchDate.endOf('week').format('YYYY-MM-DD');
@@ -244,10 +244,10 @@ class FetchManagerService {
         }
     };
 
-    fetchCalendarForSynchronization = async (group) => {
+    fetchCalendarForSynchronization = async (group: string): Promise<any[] | null | void> => {
         const currentDate = moment();
-        const begin = moment().set('month', 'August').startOf('month');
-        const end = moment().set('month', 'August').startOf('month').add(1, 'year');
+        const begin = moment().set('month', 7).startOf('month');
+        const end = moment().set('month', 7).startOf('month').add(1, 'year');
 
         if (currentDate.isBefore(begin)) {
             begin.subtract(1, 'year');
@@ -328,7 +328,7 @@ class FetchManagerService {
         }
     };
 
-    fetchRoomList = async () => {
+    fetchRoomList = async (): Promise<any[] | null> => {
         const options = {
             method: 'GET',
             url: WebApiURL.DOMAIN + WebApiURL.GROUPS,
@@ -347,7 +347,7 @@ class FetchManagerService {
         }
     };
 
-    extractBuildingsFromRooms = (rooms) => {
+    extractBuildingsFromRooms = (rooms: any[]): any[] => {
         const locationsData = require('../../../assets/locations.json');
         
         // Find which buildings have freeAccess: true
@@ -401,7 +401,7 @@ class FetchManagerService {
         return Array.from(buildingsMap.values()).filter(b => b.rooms.length > 0).sort((a, b) => a.name.localeCompare(b.name));
     };
 
-    fetchRoomsScheduleDay = async (roomIds, date) => {
+    fetchRoomsScheduleDay = async (roomIds: string[], date: string): Promise<any[] | null> => {
         const endQueryDate = moment(date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD');
         const data = {
             start: date,
@@ -456,6 +456,12 @@ export const FetchManager = new FetchManagerService();
 // ── DATA MANAGER (Cache & Gestion) ──────────────────────────────────────
 
 class DataManagerService {
+    _groupList: string[];
+    _buildingList: any[];
+    _availableUEs: string[];
+    _subscribers: Record<string, Function[]>;
+    _cacheTimeLimit: number;
+
     constructor() {
         this._groupList = [];
         this._buildingList = [];
@@ -464,36 +470,36 @@ class DataManagerService {
         this._cacheTimeLimit = 7 * 24 * 60 * 60 * 1000;
     }
 
-    on = (event, callback) => {
+    on = (event: string, callback: Function) => {
         if (!this._subscribers[event]) {
             this._subscribers[event] = [];
         }
         this._subscribers[event].push(callback);
     };
 
-    notify = (event, ...args) => {
+    notify = (event: string, ...args: any[]) => {
         if (!this._subscribers[event]) return;
         this._subscribers[event].forEach((fn) => fn(...args));
         this.saveData();
     };
 
-    getGroupList = () => this._groupList;
+    getGroupList = (): string[] => this._groupList;
 
-    setGroupList = (newList) => {
+    setGroupList = (newList: string[]) => {
         this._groupList = [...newList];
         this.notify('groupList', this._groupList);
     };
 
-    getBuildingList = () => this._buildingList;
+    getBuildingList = (): any[] => this._buildingList;
 
-    setBuildingList = (newList) => {
+    setBuildingList = (newList: any[]) => {
         this._buildingList = [...newList];
         this.notify('buildingList', this._buildingList);
     };
 
-    getAvailableUEs = () => this._availableUEs;
+    getAvailableUEs = (): string[] => this._availableUEs;
 
-    extractUEsFromCourses = (courses) => {
+    extractUEsFromCourses = (courses: any[]) => {
         const regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
         const ueSet = new Set(this._availableUEs);
         const flatCourses = Array.isArray(courses) ? courses : [];

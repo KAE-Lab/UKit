@@ -10,11 +10,11 @@ Notifications.setNotificationHandler({
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
-    }),
+    } as any),
 });
 
 class NotificationManagerService {
-    async requestPermissionsAsync() {
+    async requestPermissionsAsync(): Promise<boolean> {
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
         let finalStatus = existingStatus;
         if (existingStatus !== 'granted') {
@@ -24,7 +24,7 @@ class NotificationManagerService {
         return finalStatus === 'granted';
     }
 
-    async scheduleCourseNotifications(scheduleData) {
+    async scheduleCourseNotifications(scheduleData: any[]): Promise<void> {
         // Cancel all existing scheduled notifications first
         await Notifications.cancelAllScheduledNotificationsAsync();
 
@@ -34,11 +34,11 @@ class NotificationManagerService {
 
         const delayInMinutes = SettingsManager.getCourseNotificationDelay() || 15;
         const now = moment();
-        const futureCourses = [];
+        const futureCourses: any[] = [];
 
         // Flatten scheduleData to a simple list of courses
         // scheduleData can be a flat array (day mode) or an array of objects with .courses (week mode)
-        let courses = [];
+        let courses: any[] = [];
         if (Array.isArray(scheduleData)) {
             for (const item of scheduleData) {
                 if (item && Array.isArray(item.courses)) {
@@ -113,9 +113,9 @@ class NotificationManagerService {
                     data: { courseId: course.id },
                 },
                 trigger: { 
-                    type: 'date', 
+                    type: Notifications.SchedulableTriggerInputTypes.DATE, 
                     date: realTriggerTime.getTime() 
-                },
+                } as any,
             });
         }
 

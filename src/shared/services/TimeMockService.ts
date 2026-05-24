@@ -3,13 +3,17 @@ import { DeviceEventEmitter } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 class TimeMockManager {
+    offset: number;
+    isActive: boolean;
+    originalMomentNow: () => number;
+
     constructor() {
         this.offset = 0;
         this.isActive = false;
         this.originalMomentNow = moment.now;
     }
 
-    async setFakeTime(date) {
+    async setFakeTime(date: Date | string | number): Promise<void> {
         const fakeMs = moment(date).valueOf();
         const realMs = Date.now();
         this.offset = fakeMs - realMs;
@@ -23,7 +27,7 @@ class TimeMockManager {
         DeviceEventEmitter.emit('timeMockChanged', this.isActive);
     }
 
-    async resetFakeTime() {
+    async resetFakeTime(): Promise<void> {
         this.offset = 0;
         this.isActive = false;
         
@@ -35,7 +39,7 @@ class TimeMockManager {
         DeviceEventEmitter.emit('timeMockChanged', this.isActive);
     }
 
-    async clearCalendarCache() {
+    async clearCalendarCache(): Promise<void> {
         try {
             const keys = await AsyncStorage.getAllKeys();
             // Clear calendar/schedule caches matching @Week or @YYYY/MM/DD
@@ -48,11 +52,11 @@ class TimeMockManager {
         }
     }
 
-    isMockActive() {
+    isMockActive(): boolean {
         return this.isActive;
     }
 
-    getFakeDate() {
+    getFakeDate(): Date {
         if (!this.isActive) return new Date();
         return new Date(Date.now() + this.offset);
     }
