@@ -1,7 +1,15 @@
 import Toast from 'react-native-root-toast';
 
 export class ErrorAlert {
-    constructor(message, duration = Toast.durations.LONG, position = Toast.positions.BOTTOM, shadow = true, animation = true, hideOnPress = true, delay = 0) {
+    _delay: number;
+    _message: string;
+    _duration: number;
+    _position: number;
+    _shadow: boolean;
+    _animation: boolean;
+    _hideOnPress: boolean;
+
+    constructor(message: string, duration = Toast.durations.LONG, position = Toast.positions.BOTTOM, shadow = true, animation = true, hideOnPress = true, delay = 0) {
         this._delay = delay;
         this._message = message;
         this._duration = duration;
@@ -11,7 +19,7 @@ export class ErrorAlert {
         this._hideOnPress = hideOnPress;
     }
 
-    show() {
+    show(): void {
         Toast.show(this._message, {
             duration: this._duration,
             position: this._position,
@@ -27,7 +35,7 @@ export class ErrorAlert {
 }
 
 export const RequestError = {
-    handle: (error) => {
+    handle: (error: any) => {
         let errorDialog;
         if (error.response) {
             errorDialog = new ErrorAlert(`Le serveur a répondu par une erreur ${error.response.status}`);

@@ -6,7 +6,10 @@ import { AppContext } from '../services/AppCore';
 import style, { tokens, StyleWelcome } from '../theme/Theme';
 
 // ── Bouton de Retour ───────────────────────────────────────────
-export const BackButton = ({ backAction }) => {
+export interface BackButtonProps {
+    backAction: () => void;
+}
+export const BackButton = ({ backAction }: BackButtonProps) => {
     const AppContextValues = useContext(AppContext);
     const theme = style.Theme[AppContextValues.themeName];
 
@@ -27,7 +30,12 @@ export const BackButton = ({ backAction }) => {
 };
 
 // ── Bouton d'Onboarding ────────────────────────────────────────
-export const WelcomeButton = ({ onPress, buttonText, theme }) => {
+export interface WelcomeButtonProps {
+    onPress: () => void;
+    buttonText: string;
+    theme: string;
+}
+export const WelcomeButton = ({ onPress, buttonText, theme }: WelcomeButtonProps) => {
     return (
         <TouchableOpacity onPress={onPress} style={StyleWelcome[theme].buttonContainer}>
             <Text style={StyleWelcome[theme].buttonText}>{buttonText}</Text>
@@ -42,7 +50,17 @@ export const WelcomeButton = ({ onPress, buttonText, theme }) => {
 };
 
 // ── Bouton du Menu (Drawer) ────────────────────────────────────
-export const DrawerButton = (props) => {
+export interface DrawerButtonProps {
+    icon?: keyof typeof MaterialIcons.glyphMap;
+    size?: number;
+    color?: string;
+    onPress?: () => void;
+    isActive?: boolean;
+    textSize?: number;
+    fontColor?: string;
+    title: string;
+}
+export const DrawerButton = (props: DrawerButtonProps) => {
     const AppContextValues = useContext(AppContext);
     const theme = style.Theme[AppContextValues.themeName];
 
@@ -90,7 +108,18 @@ export const DrawerButton = (props) => {
 };
 
 // ── Bouton des Paramètres ──────────────────────────────────────
-export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, leftText, rightText, disabled, switchValue, onSwitchToggle }) => {
+export interface SettingsButtonProps {
+    theme?: any;
+    onPress?: () => void;
+    leftIcon?: keyof typeof MaterialIcons.glyphMap | keyof typeof MaterialCommunityIcons.glyphMap;
+    leftIconAnimation?: string;
+    leftText?: string;
+    rightText?: string;
+    disabled?: boolean;
+    switchValue?: boolean;
+    onSwitchToggle?: (value: boolean) => void;
+}
+export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, leftText, rightText, disabled, switchValue, onSwitchToggle }: SettingsButtonProps) => {
     const rotatingAnimation = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -103,7 +132,7 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
                 }),
             ).start();
         } else {
-            Animated.timing(rotatingAnimation).stop();
+            rotatingAnimation.stopAnimation();
             rotatingAnimation.setValue(0);
         }
     }, [leftIconAnimation]);
@@ -125,7 +154,7 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
             style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}]}>
             {leftIcon && (
                 <Animated.View style={{ transform: leftIconAnimation ? [{ rotate }] : [] }}>
-                    <IconComponent name={leftIcon} size={24} style={theme.leftIcon} />
+                    <IconComponent name={leftIcon as any} size={24} style={theme.leftIcon} />
                 </Animated.View>
             )}
             <Text style={[theme.buttonMainText, { flex: 1 }]}>{leftText}</Text>
@@ -148,7 +177,7 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
 };
 
 // ── COMPOSANT UNIVERSEL ─────────────────────────────────
-export default function Button(props) {
+export default function Button(props: any) {
     if (props.backAction) return <BackButton {...props} />;
     if (props.buttonText) return <WelcomeButton {...props} />;
     if (props.title) return <DrawerButton {...props} />;

@@ -7,19 +7,27 @@ import { tokens } from '../theme/Theme';
 
 const locations = require('../../../assets/locations.json');
 
-export default class OpenMapButton extends React.Component {
-    constructor(props) {
+export interface OpenMapButtonProps {
+    location: string;
+    theme: any;
+}
+export interface OpenMapButtonState {
+    location: string;
+}
+
+export default class OpenMapButton extends React.Component<OpenMapButtonProps, OpenMapButtonState> {
+    constructor(props: OpenMapButtonProps) {
         super(props);
         this.state = {
             location: this.props.location.split('/')[0],
         };
     }
 
-    isLocationKnown() {
+    isLocationKnown(): boolean {
         return locations.hasOwnProperty(this.state.location);
     }
 
-    getGMapsLocation() {
+    getGMapsLocation(): string {
         let location = locations[this.state.location];
         if (location.hasOwnProperty('placeID')) {
             return URL.MAP + `search/?api=1&query=${location.lat},${location.lng}&query_place_id=${location.placeID}`;

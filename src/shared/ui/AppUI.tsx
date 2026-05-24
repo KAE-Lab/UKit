@@ -9,7 +9,15 @@ import { URL } from '../services/DataService';
 import { tokens } from '../theme/Theme';
 
 // ── SÉPARATEUR VISUEL ───────────────────────────────────────────
-export class Split extends React.PureComponent {
+export interface SplitProps {
+    noMargin?: boolean;
+    onlyBottomMargin?: boolean;
+    lineColor?: string;
+    title?: string;
+    color?: string;
+}
+
+export class Split extends React.PureComponent<SplitProps> {
     render() {
         const { noMargin, onlyBottomMargin, lineColor, title, color } = this.props;
         return (
@@ -53,7 +61,7 @@ export const UpdateAlert = () => {
 
     const openURL = () => Linking.openURL(Platform.OS === 'ios' ? URL.APPLE_APP : URL.GOOGLE_APP);
 
-    const getCurrentVersion = () => String(Constants.expoConfig?.version || Constants.manifest?.version || '1.0.0').trim();
+    const getCurrentVersion = () => String(Constants.expoConfig?.version || (Constants as any).manifest?.version || '1.0.0').trim();
 
     useEffect(() => {
         const checkVersionDiff = async () => {

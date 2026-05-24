@@ -12,9 +12,27 @@ const { width, height } = Dimensions.get('window');
 const ICON_SIZE = 60;
 const MENU_WIDTH = 300;
 
-export default class ModMenu extends Component {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ModMenuProps {}
+export interface ModMenuState {
+    isVisible: boolean;
+    isExpanded: boolean;
+    isActive: boolean;
+    currentTime: moment.Moment;
+    selectedDate: Date;
+    showPicker: boolean;
+    pickerMode: any;
+}
+
+export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     static contextType = AppContext;
-    constructor(props) {
+    pan: Animated.ValueXY;
+    panResponder: any;
+    toggleListener: any;
+    mockListener: any;
+    clockInterval: any;
+
+    constructor(props: ModMenuProps) {
         super(props);
 
         this.state = {
@@ -36,8 +54,8 @@ export default class ModMenu extends Component {
             },
             onPanResponderGrant: () => {
                 this.pan.setOffset({
-                    x: this.pan.x._value,
-                    y: this.pan.y._value,
+                    x: (this.pan.x as any)._value,
+                    y: (this.pan.y as any)._value,
                 });
                 this.pan.setValue({ x: 0, y: 0 });
             },
@@ -51,8 +69,8 @@ export default class ModMenu extends Component {
                 // Optional: Snap to edges
                 Animated.spring(this.pan, {
                     toValue: {
-                        x: Math.max(0, Math.min(this.pan.x._value, width - (this.state.isExpanded ? MENU_WIDTH : ICON_SIZE))),
-                        y: Math.max(0, Math.min(this.pan.y._value, height - 100)),
+                        x: Math.max(0, Math.min((this.pan.x as any)._value, width - (this.state.isExpanded ? MENU_WIDTH : ICON_SIZE))),
+                        y: Math.max(0, Math.min((this.pan.y as any)._value, height - 100)),
                     },
                     useNativeDriver: false,
                 }).start();
@@ -104,11 +122,11 @@ export default class ModMenu extends Component {
         this.setState({ selectedDate: new Date() });
     }
 
-    showPicker = (mode) => {
+    showPicker = (mode: string) => {
         this.setState({ showPicker: true, pickerMode: Platform.OS === 'ios' ? 'datetime' : mode });
     }
 
-    onPickerChange = (event, selectedDate) => {
+    onPickerChange = (event: any, selectedDate?: Date) => {
         if (Platform.OS === 'android') {
             this.setState({ showPicker: false });
         }
@@ -117,7 +135,7 @@ export default class ModMenu extends Component {
         }
     }
 
-    renderIndicator = (isActive, customStyle = {}) => {
+    renderIndicator = (isActive: boolean, customStyle = {}) => {
         return (
             <View style={[{
                 width: 14, height: 14, borderRadius: 7,
@@ -130,7 +148,7 @@ export default class ModMenu extends Component {
         if (!this.state.isVisible) return null;
 
         const { isExpanded, isActive, currentTime, selectedDate } = this.state;
-        const theme = style.Theme[this.context?.themeName || 'light'];
+        const theme = style.Theme[(this.context as any)?.themeName || 'light'];
 
         if (!isExpanded) {
             return (
