@@ -26,15 +26,41 @@ const LANGUAGE_LIST = {
     es: 'SPANISH',
 };
 
-const SettingsTextHeader = ({ theme, text }) => {
+const SettingsTextHeader = ({ theme, text }: { theme: import('../../shared/theme/Theme').AppThemeType['settings']; text: string }) => {
     if (!theme?.separationText) return null;
-    return <Text style={theme.separationText}>{text.toUpperCase()}</Text>;
+    return <Text style={theme.separationText as never}>{text.toUpperCase()}</Text>;
 };
 
-class Settings extends React.Component {
-    static contextType = AppContext;
+export interface SettingsProps {
+    navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
+}
 
-    constructor(props) {
+export interface SettingsState {
+    calendarDialogVisible: boolean;
+    calendarSyncEnabled: boolean;
+    calendars: import('expo-calendar').Calendar[];
+    filterList: string[];
+    filterTextInput: string | null;
+    filtersDialogVisible: boolean;
+    hasCalendarPermission: boolean;
+    isSynchronizingCalendar: boolean;
+    language: string;
+    languageDialogVisible: boolean;
+    openFavSwitchValue: boolean;
+    resetDialogVisible: boolean;
+    selectedCalendar: string | number;
+    isDarkMode: boolean;
+    courseNotificationsEnabled: boolean;
+    courseNotificationDelay: number;
+}
+
+class Settings extends React.Component<SettingsProps, SettingsState> {
+    static contextType = AppContext;
+    // @ts-ignore
+    context!: React.ContextType<typeof AppContext>;
+    scrollY: Animated.Value;
+
+    constructor(props: SettingsProps) {
         super(props);
         this.state = {
             calendarDialogVisible: false,
@@ -58,7 +84,7 @@ class Settings extends React.Component {
 
     }
 
-    setCalendar = (calendar) => {
+    setCalendar = (calendar: import('expo-calendar').Calendar | 'UKit') => {
         if (calendar === 'UKit') {
             this.setState({ selectedCalendar: calendar });
             SettingsManager.setSyncCalendar(calendar);
@@ -68,7 +94,7 @@ class Settings extends React.Component {
         }
     };
 
-    setSelectedLanguage = (newLang) => {
+    setSelectedLanguage = (newLang: string) => {
         this.setState({ language: newLang });
         SettingsManager.setLanguage(newLang);
     };
@@ -78,7 +104,7 @@ class Settings extends React.Component {
     setLanguageToSpanish = () => { if (this.state.language !== 'es') this.setSelectedLanguage('es'); };
 
     refreshFiltersList = () => this.setState({ filterList: SettingsManager.getFilters() });
-    addFilters = (filter) => SettingsManager.addFilters(filter.toUpperCase());
+    addFilters = (filter: string) => SettingsManager.addFilters(filter.toUpperCase());
 
     toggleOpenFavSwitchValue = () => {
         this.setState({ openFavSwitchValue: !this.state.openFavSwitchValue }, () => {
@@ -115,11 +141,11 @@ class Settings extends React.Component {
         });
     };
 
-    onNotificationDelayChange = (value) => {
+    onNotificationDelayChange = (value: number) => {
         this.setState({ courseNotificationDelay: value });
     };
 
-    onNotificationDelaySlidingComplete = async (value) => {
+    onNotificationDelaySlidingComplete = async (value: number) => {
         SettingsManager.setCourseNotificationDelay(value);
         if (this.state.courseNotificationsEnabled) {
             const favGroups = SettingsManager.getFavoriteGroups();
@@ -155,8 +181,8 @@ class Settings extends React.Component {
     };
 
     openSystemAppSettings = () => Linking.openSettings();
-    setIsSynchronizingCalendar = (newState) => this.setState({ isSynchronizingCalendar: newState });
-    setFilterTextInput = (input) => this.setState({ filterTextInput: input.toUpperCase() });
+    setIsSynchronizingCalendar = (newState: boolean) => this.setState({ isSynchronizingCalendar: newState });
+    setFilterTextInput = (input: string) => this.setState({ filterTextInput: input.toUpperCase() });
     submitFilterTextInput = () => {
         if (this.state.filterTextInput) {
             this.addFilters(this.state.filterTextInput);
@@ -366,7 +392,7 @@ class Settings extends React.Component {
                         </>
                     ) : (
                         <>
-                            <View style={{ backgroundColor: `${tokens.colors?.orange ?? '#E65100'}18`, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: `${tokens.colors?.orange ?? '#E65100'}40`, flexDirection: 'row', alignItems: 'flex-start' }}>
+                            <View style={{ backgroundColor: `#E6510018`, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: `#E6510040`, flexDirection: 'row', alignItems: 'flex-start' }}>
                                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, lineHeight: 20, flex: 1 }}>
                                     {Translator.get('ENABLE_CALENDAR_PERMISSION_DESCRIPTION')}
                                 </Text>

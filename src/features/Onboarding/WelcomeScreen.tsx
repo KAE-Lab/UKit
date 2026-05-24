@@ -176,7 +176,7 @@ export default function WelcomeScreen() {
                                     const selected = navigatorState.theme === themeEntry.id;
                                     return (
                                         <TouchableOpacity key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(themeEntry.title)}</Text>
+                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(themeEntry.title as Parameters<typeof Translator.get>[0])}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
@@ -189,7 +189,7 @@ export default function WelcomeScreen() {
                                     const selected = navigatorState.language === langEntry.id;
                                     return (
                                         <TouchableOpacity key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(langEntry.title)}</Text>
+                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(langEntry.title as Parameters<typeof Translator.get>[0])}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
@@ -224,7 +224,7 @@ export default function WelcomeScreen() {
                                             }}
                                         >
                                             <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>
-                                                {Translator.get(yearEntry.title)} {yearEntry.suffix}
+                                                {Translator.get(yearEntry.title as Parameters<typeof Translator.get>[0])} {yearEntry.suffix}
                                             </Text>
                                         </TouchableOpacity>
                                     );
@@ -238,7 +238,7 @@ export default function WelcomeScreen() {
                                     const selected = navigatorState.season?.id === seasonEntry.id;
                                     return (
                                         <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title)}</Text>
+                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title as Parameters<typeof Translator.get>[0])}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
