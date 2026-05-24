@@ -4,11 +4,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import moment from 'moment';
 
-import style, { tokens } from '../../shared/theme/Theme';
-import { AppContext } from '../../shared/services/AppCore';
-import Translator from '../../shared/i18n/Translator';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { AppContext } from '../../../shared/services/AppCore';
+import Translator from '../../../shared/i18n/Translator';
 import { BuildingInfo, FreeRoomSlot, RoomInfo } from './FreeRoomService';
-import { FetchManager } from '../../shared/services/DataService';
+import { FetchManager } from '../../../shared/services/DataService';
 
 export default function FreeRoomDetailsScreen({ route, navigation }: any) {
     const { building } = route.params as { building: BuildingInfo };

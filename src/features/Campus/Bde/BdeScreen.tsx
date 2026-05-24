@@ -4,11 +4,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
-import Translator from '../../shared/i18n/Translator';
+import Translator from '../../../shared/i18n/Translator';
 import BdeService, { BdeAnnonce } from './BdeService';
-import style, { tokens } from '../../shared/theme/Theme';
-import { AppContext } from '../../shared/services/AppCore';
-import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { AppContext } from '../../../shared/services/AppCore';
+import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 export interface BdeScreenProps {
     navigation: { navigate: (screen: string, params?: Record<string, unknown>) => void };

@@ -4,9 +4,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import LibraryService, { TimetableEntry } from './LibraryService';
-import style, { tokens } from '../../shared/theme/Theme';
-import { AppContext } from '../../shared/services/AppCore';
-import Translator from '../../shared/i18n/Translator';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { AppContext } from '../../../shared/services/AppCore';
+import Translator from '../../../shared/i18n/Translator';
 
 export default function LibraryDetailsScreen({ route, navigation }: { route: any; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
     const { library, affluence } = route.params;

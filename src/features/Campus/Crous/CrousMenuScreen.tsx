@@ -4,9 +4,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { CrousService, CrousDayMenu } from './CrousService';
-import style, { tokens } from '../../shared/theme/Theme';
-import { AppContext } from '../../shared/services/AppCore';
-import Translator from '../../shared/i18n/Translator';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { AppContext } from '../../../shared/services/AppCore';
+import Translator from '../../../shared/i18n/Translator';
 
 export default function CrousMenuScreen({ route, navigation }: { route: any; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
     const { restaurantId, restaurantName } = route.params;

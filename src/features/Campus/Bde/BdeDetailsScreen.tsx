@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, Image, Animated, TouchableOpacity, Linking } fr
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext, SafeAreaView } from 'react-native-safe-area-context';
 
-import style, { tokens } from '../../shared/theme/Theme';
-import { AppContext } from '../../shared/services/AppCore';
-import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { AppContext } from '../../../shared/services/AppCore';
+import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { BdeAnnonce } from './BdeService';
 
 export interface BdeDetailsRouteParams {

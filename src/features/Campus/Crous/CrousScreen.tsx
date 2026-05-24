@@ -8,13 +8,13 @@ import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { useCallback } from 'react';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
-import Translator from '../../shared/i18n/Translator';
+import Translator from '../../../shared/i18n/Translator';
 import { CrousService, CrousRestaurant } from './CrousService';
-import style, { tokens } from '../../shared/theme/Theme';
-import { AppContext } from '../../shared/services/AppCore';
-import { withHeaderAnimation, globalScrollValues } from '../../shared/navigation/NavHelpers';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { AppContext } from '../../../shared/services/AppCore';
+import { withHeaderAnimation, globalScrollValues } from '../../../shared/navigation/NavHelpers';
 
-const defaultImage = require('../../../assets/images/default_resto.png');
+const defaultImage = require('../../../../assets/images/default_resto.png');
 
 function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void }; onAnimatedScroll?: unknown; headerPadding?: unknown }) {
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };

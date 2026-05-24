@@ -7,17 +7,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
-import style, { tokens } from '../../shared/theme/Theme';
-import { AppContext } from '../../shared/services/AppCore';
-import Translator from '../../shared/i18n/Translator';
-import { DataManager } from '../../shared/services/DataService';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { AppContext } from '../../../shared/services/AppCore';
+import Translator from '../../../shared/i18n/Translator';
+import { DataManager } from '../../../shared/services/DataService';
 import { CrousService, CrousRestaurant } from '../Crous/CrousService';
 import LibraryService from '../Library/LibraryService';
 import BdeService from '../Bde/BdeService';
 import { getDistanceInKm } from '../FreeRoom/FreeRoomService';
 
-const defaultRuImage = require('../../../assets/images/default_resto.png');
-const defaultBuImage = require('../../../assets/images/default_resto.png');
+const defaultRuImage = require('../../../../assets/images/default_resto.png');
+const defaultBuImage = require('../../../../assets/images/default_resto.png');
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85; // Pour laisser dépasser la carte suivante

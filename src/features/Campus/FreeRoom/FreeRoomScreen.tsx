@@ -8,14 +8,14 @@ import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
 import * as Location from 'expo-location';
 
-import { AppContext } from '../../shared/services/AppCore';
-import style, { tokens } from '../../shared/theme/Theme';
-import Translator from '../../shared/i18n/Translator';
-import { DataManager } from '../../shared/services/DataService';
+import { AppContext } from '../../../shared/services/AppCore';
+import style, { tokens } from '../../../shared/theme/Theme';
+import Translator from '../../../shared/i18n/Translator';
+import { DataManager } from '../../../shared/services/DataService';
 import { BuildingInfo, getDistanceInKm } from './FreeRoomService';
-import { withHeaderAnimation } from '../../shared/navigation/NavHelpers';
+import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
-const defaultImage = require('../../../assets/images/default_resto.png');
+const defaultImage = require('../../../../assets/images/default_resto.png');
 
 function FreeRoomScreen({ navigation, onAnimatedScroll }: any) {
     const AppContextValues = useContext(AppContext) as any;

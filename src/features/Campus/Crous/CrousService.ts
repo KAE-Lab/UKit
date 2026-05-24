@@ -1,4 +1,4 @@
-import Translator from "../../shared/i18n/Translator";
+import Translator from "../../../shared/i18n/Translator";
 
 // ─── INTERFACES ─────────────────────────────────────────────────────────────
 

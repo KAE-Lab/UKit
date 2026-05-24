@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import ScheduleScreen from '../../features/Planning/screens/ScheduleScreen';
-import CampusDashboard from '../../features/Campus/CampusDashboard';
+import CampusDashboard from '../../features/Campus/Dashboard/CampusDashboard';
 import ScolariteDashboard from '../../features/Scolarite/ScolariteDashboard';
 import SettingsScreen from '../../features/Settings/SettingsScreen';
 

@@ -8,13 +8,13 @@ import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { useCallback } from 'react';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
-import { AppContext } from '../../shared/services/AppCore';
-import style, { tokens } from '../../shared/theme/Theme';
-import Translator from '../../shared/i18n/Translator';
+import { AppContext } from '../../../shared/services/AppCore';
+import style, { tokens } from '../../../shared/theme/Theme';
+import Translator from '../../../shared/i18n/Translator';
 import LibraryService, { LibraryInfo, AffluencesData } from './LibraryService';
-import { withHeaderAnimation, globalScrollValues } from '../../shared/navigation/NavHelpers';
+import { withHeaderAnimation, globalScrollValues } from '../../../shared/navigation/NavHelpers';
 
-const defaultLibraryImage = require('../../../assets/images/default_resto.png');
+const defaultLibraryImage = require('../../../../assets/images/default_resto.png');
 
 function LibraryScreen({ navigation, onAnimatedScroll, headerPadding }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void }; onAnimatedScroll?: unknown; headerPadding?: unknown }) {
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };

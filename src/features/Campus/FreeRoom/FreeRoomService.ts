@@ -1,4 +1,4 @@
-import { FetchManager } from '../../shared/services/DataService';
+import { FetchManager } from '../../../shared/services/DataService';
 
 export interface RoomInfo {
     id: string;
