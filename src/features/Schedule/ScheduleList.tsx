@@ -55,14 +55,25 @@ export const groupOverlappingCourses = (courses) => {
 }
 
 // ── COMPOSANT COLLAPSIBLE POUR LA SEMAINE ─────────────
-export class DayWeek extends React.Component {
+export interface DayWeekProps {
+    schedule: any;
+    theme: import('../../shared/theme/Theme').AppThemeType;
+    fallbackDate?: moment.MomentInput;
+    navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
+}
+
+export interface DayWeekState {
+    expand: boolean;
+}
+
+export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
     static propTypes = {
         schedule: PropTypes.object.isRequired,
         theme: PropTypes.object.isRequired,
         fallbackDate: PropTypes.object,
     };
 
-    constructor(props) {
+    constructor(props: DayWeekProps) {
         super(props);
         this.state = { expand: false };
     }
@@ -153,8 +164,29 @@ export class DayWeek extends React.Component {
 }
 
 // ── LISTE DES COURS ──────
-export class ScheduleList extends React.Component {
-    constructor(props) {
+export interface ScheduleListProps {
+    groupName: string | string[];
+    mode: 'day' | 'week';
+    target: moment.MomentInput | { week: number; year: number };
+    navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
+    filtersList?: string[];
+    theme: import('../../shared/theme/Theme').AppThemeType;
+    onAnimatedScroll?: (event: import('react-native').NativeSyntheticEvent<import('react-native').NativeScrollEvent>) => void;
+}
+
+export interface ScheduleListState {
+    cancelToken: import('axios').CancelTokenSource | null;
+    groupName: string | string[];
+    target: any;
+    schedule: any;
+    cacheDate: moment.MomentInput | null;
+    loading: boolean;
+}
+
+export class ScheduleList extends React.Component<ScheduleListProps, ScheduleListState> {
+    _unsubscribe?: () => void;
+
+    constructor(props: ScheduleListProps) {
         super(props);
         this.state = {
             cancelToken: null,
@@ -187,11 +219,11 @@ export class ScheduleList extends React.Component {
         }
     }
 
-    static getDerivedStateFromProps(nextProps, prevState) {
-        const nextState = {};
+    static getDerivedStateFromProps(nextProps: ScheduleListProps, prevState: ScheduleListState) {
+        const nextState: Partial<ScheduleListState> = {};
         if (nextProps.mode === 'day' && nextProps.target !== prevState.target) {
             nextState.target = nextProps.target;
-        } else if (nextProps.mode === 'week' && nextProps.target.week !== prevState.target.week) {
+        } else if (nextProps.mode === 'week' && (nextProps.target as any).week !== (prevState.target as any).week) {
             nextState.target = nextProps.target;
         }
 
@@ -200,7 +232,7 @@ export class ScheduleList extends React.Component {
         if (isArrayNext !== isArrayPrev) {
             nextState.groupName = nextProps.groupName;
         } else if (isArrayNext && isArrayPrev) {
-            if (!isArraysEquals(nextProps.groupName, prevState.groupName)) {
+            if (!isArraysEquals(nextProps.groupName as any, prevState.groupName as any)) {
                 nextState.groupName = nextProps.groupName;
             }
         } else if (nextProps.groupName !== prevState.groupName) {
@@ -255,9 +287,9 @@ export class ScheduleList extends React.Component {
                 try {
                     if (mode === 'day') {
                         const dateStr = moment(this.state.target).format('YYYY/MM/DD').replace(/\//g, '-');
-                        fetchedData = await FetchManager.fetchCalendarDay(groupName, dateStr);
+                        fetchedData = await FetchManager.fetchCalendarDay(groupName as any, dateStr);
                     } else {
-                        fetchedData = await FetchManager.fetchCalendarWeek(groupName, this.state.target);
+                        fetchedData = await FetchManager.fetchCalendarWeek(groupName as any, this.state.target);
                     }
                     if (fetchedData === null) throw 'network error';
                     AsyncStorage.setItem(id, JSON.stringify({ data: fetchedData, date: moment() }));

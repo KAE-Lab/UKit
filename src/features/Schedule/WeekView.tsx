@@ -25,15 +25,32 @@ const findIndexOfObject = (objectList, object) => {
 	return -1;
 };
 
-class WeekView extends React.Component {
-	static contextType = AppContext;
+export interface WeekViewProps {
+    navigation: any;
+    route: any;
+    groupName?: any;
+}
 
-	constructor(props) {
+export interface WeekViewState {
+    currentWeek: { week: number; year: number };
+    currentWeekIndex: number;
+    weeks: { week: number; year: number }[];
+    selectedWeek: { week: number; year: number };
+}
+
+class WeekView extends React.Component<WeekViewProps, WeekViewState> {
+	static contextType = AppContext;
+	declare context: React.ContextType<typeof AppContext>;
+    viewability: any;
+    calendarList: any;
+    _lastTitle: string | null = null;
+
+	constructor(props: WeekViewProps) {
 		super(props);
 
 		const currentDate = moment();
 		const currentWeek = { week: currentDate.isoWeek(), year: currentDate.year() };
-		const weeks = WeekView.generateDays ? WeekView.generateDays() : WeekView.generateWeeks();
+		const weeks = WeekView.generateWeeks();
 
 		this.state = {
 			currentWeek: currentWeek,
@@ -252,7 +269,7 @@ class WeekView extends React.Component {
 
                     {/* Liste des semaines */}
                     <FlatList
-                        ref={(list) => (this.calendarList = list)}
+                        ref={(list) => { this.calendarList = list; }}
                         showsHorizontalScrollIndicator={false}
                         data={this.state.weeks}
                         horizontal={true}

@@ -1,41 +1,56 @@
 import React from 'react';
 import { Text, TouchableOpacity } from 'react-native';
-import Translator from '../../shared/i18n/Translator';
+import PropTypes from 'prop-types';
+import moment from 'moment';
 
 import { tokens } from '../../shared/theme/Theme';
 
-class CalendarWeek extends React.Component {
+export interface CalendarDayProps {
+    currentDay: moment.Moment;
+    item: moment.Moment;
+    onPressItem?: (item: moment.Moment) => void;
+    selectedDay: moment.Moment;
+    theme: import('../../shared/theme/Theme').AppThemeType;
+}
+
+class CalendarDay extends React.Component<CalendarDayProps> {
+    static propTypes = {
+        currentDay: PropTypes.instanceOf(moment),
+        item: PropTypes.instanceOf(moment),
+        onPressItem: PropTypes.func,
+        selectedDay: PropTypes.instanceOf(moment),
+        theme: PropTypes.object,
+    };
+
     _onPress = () => {
         if (this.props.onPressItem) {
             requestAnimationFrame(() => {
-                this.props.onPressItem(this.props.week);
+                this.props.onPressItem(this.props.item);
             });
         }
     };
 
-    static getBackgroundColor(props) {
-        if (props.week.week === props.currentWeek.week && props.week.year === props.currentWeek.year) return props.theme.primary + '26';
+    static getBackgroundColor(props: CalendarDayProps) {
+        if (props.item.isSame(props.currentDay, 'day')) return props.theme.primary + '26';
+        if (props.item.day() === 0) return props.theme.greyBackground + '80';
         return 'transparent';
     }
 
-    static isSelected(props) {
-        return (
-            props.week.week === props.selectedWeek.week &&
-            props.week.year === props.selectedWeek.year
-        );
+    static isSelected(props: CalendarDayProps) {
+        return props.item.isSame(props.selectedDay, 'day');
     }
 
-    shouldComponentUpdate(nextProps) {
+    shouldComponentUpdate(nextProps: CalendarDayProps) {
         return (
-            CalendarWeek.getBackgroundColor(nextProps) !== CalendarWeek.getBackgroundColor(this.props) ||
-            CalendarWeek.isSelected(nextProps) !== CalendarWeek.isSelected(this.props)
+            CalendarDay.getBackgroundColor(nextProps) !== CalendarDay.getBackgroundColor(this.props) ||
+            CalendarDay.isSelected(nextProps) !== CalendarDay.isSelected(this.props)
         );
     }
 
     render() {
         const { theme } = this.props;
-        const selected = CalendarWeek.isSelected(this.props);
-        const bgColor  = CalendarWeek.getBackgroundColor(this.props);
+        const selected = CalendarDay.isSelected(this.props);
+        const bgColor  = CalendarDay.getBackgroundColor(this.props);
         const color    = selected ? theme.primary : theme.font;
 
         return (
@@ -48,10 +63,9 @@ class CalendarWeek extends React.Component {
                     justifyContent: 'center',
                     borderRadius: tokens.radius.md,
                     backgroundColor: bgColor,
-                    borderWidth: selected ? 2 : 0,
-                    borderColor: selected ? theme.primary : 'transparent',
+                    borderWidth: selected ? 2 : 0, 
+                    borderColor: selected ? theme.primary : 'transparent', 
                 }}>
-                {/* Numéro de semaine */}
                 <Text style={{
                     textAlign: 'center',
                     fontSize: tokens.fontSize.xl,
@@ -61,9 +75,8 @@ class CalendarWeek extends React.Component {
                     color,
                     marginBottom: tokens.space.xs,
                 }}>
-                    {this.props.week.week}
+                    {this.props.item.date()}
                 </Text>
-                {/* Label "S.XX" */}
                 <Text style={{
                     textAlign: 'center',
                     fontSize: tokens.fontSize.xs,
@@ -73,11 +86,11 @@ class CalendarWeek extends React.Component {
                     textTransform: 'uppercase',
                     letterSpacing: 0.5,
                 }}>
-                    {`${Translator.get('WEEK_SHORT')}${this.props.week.week}`}
+                    {this.props.item.format('ddd')}
                 </Text>
             </TouchableOpacity>
         );
     }
 }
 
-export default CalendarWeek;
+export default CalendarDay;

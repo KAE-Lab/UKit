@@ -32,7 +32,7 @@ interface CalendarNewEventPromptProps {
 	popupVisible: boolean;
 	closePopup: () => void;
 	openPopup: () => void;
-	theme: any;
+	theme: import('../../shared/theme/Theme').AppThemeType;
 	data: CourseData;
 }
 
@@ -132,21 +132,21 @@ export class CalendarNewEventPrompt extends React.Component<CalendarNewEventProm
 				visible={this.props.popupVisible}
 				onRequestClose={this.closePopup}>
 				<TouchableWithoutFeedback onPress={this.closePopup} accessible={false}>
-					<View style={theme.popup.background as any}>
+					<View style={theme.popup.background as never}>
 						<TouchableWithoutFeedback accessible={false}>
-							<View style={theme.popup.container as any}>
-								<View style={theme.popup.header as any}>
-									<Text style={theme.popup.textHeader as any}>
+							<View style={theme.popup.container as never}>
+								<View style={theme.popup.header as never}>
+									<Text style={theme.popup.textHeader as never}>
 										{Translator.get('ADD_TO_CALENDAR').toUpperCase()}
 									</Text>
 								</View>
-								<Text style={theme.popup.textDescription as any}>
+								<Text style={theme.popup.textDescription as never}>
 									{Translator.get(
 										'ADD_TO_CALENDAR_DESCRIPTION',
 										this.props.data.subject,
 									)}
 								</Text>
-								<View style={theme.popup.buttonContainer as any}>
+								<View style={theme.popup.buttonContainer as never}>
 									<TouchableOpacity
 										style={theme.popup.buttonSecondary as any}
 										onPress={this.closePopup}>
@@ -174,9 +174,10 @@ export class CalendarNewEventPrompt extends React.Component<CalendarNewEventProm
 // ── COMPOSANT LIGNE DE COURS ─────────────────────────────
 interface CourseRowProps {
 	data: CourseData;
-	theme: any;
+	theme: import('../../shared/theme/Theme').AppThemeType;
 	readOnly?: boolean;
-	navigation?: any;
+	navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
+	carouselMode?: boolean;
 }
 
 interface CourseRowState {
@@ -232,7 +233,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 
 		if (this.props.data.category === 'nocourse') {
 			return (
-				<View style={style.schedule.course.noCourse as any}>
+				<View style={style.schedule.course.noCourse as never}>
 					<MaterialCommunityIcons
 						name="calendar-blank-outline"
 						size={36}
@@ -241,7 +242,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 					/>
 					<Text
 						style={[
-							style.schedule.course.noCourseText as any,
+							style.schedule.course.noCourseText as never,
 							{ color: theme.fontSecondary },
 						]}>
 						{Translator.get('NO_CLASS_THIS_DAY')}
@@ -257,7 +258,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		const isLargeMode = this.props.readOnly === true;
 
 		const ue = this.props.data.UE ? (
-			<View style={[style.schedule.course.line as any, { alignItems: 'center' }]}>
+			<View style={[style.schedule.course.line as never, { alignItems: 'center' }]}>
 				<MaterialIcons
 					name="code"
 					size={14}
@@ -268,7 +269,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 					style={{
 						fontSize: tokens.fontSize.xs,
 						color: theme.fontSecondary,
-						fontWeight: tokens.fontWeight.medium as any,
+						fontWeight: tokens.fontWeight.medium as never,
 					}}>
 					{this.props.data.UE}
 				</Text>
@@ -277,7 +278,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 
 		const subject =
 			this.props.data.subject !== 'N/C' ? (
-				<Text style={[style.schedule.course.title as any, { color: theme.font, flex: 1 }]}>
+				<Text style={[style.schedule.course.title as never, { color: theme.font, flex: 1 }]}>
 					{this.props.data.subject.trim()}
 				</Text>
 			) : null;
@@ -288,7 +289,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 					const trimmedAnnotation = annotation.trim();
 					if (!trimmedAnnotation) return null;
 
-					let iconName: any = 'info-outline';
+					let iconName: 'info-outline' | 'date-range' | 'room' | 'group' | 'person' = 'info-outline';
 					const lowerLine = trimmedAnnotation.toLowerCase();
 
 					const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedAnnotation);
@@ -312,7 +313,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 						<View
 							key={index}
 							style={[
-								style.schedule.course.line as any,
+								style.schedule.course.line as never,
 								{ alignItems: 'flex-start', marginTop: tokens.space.xs },
 							]}>
 							<MaterialIcons
@@ -337,7 +338,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		const content = (
 			<View
 				style={[
-					style.schedule.course.root as any,
+					style.schedule.course.root as never,
 					{
 						flex: 0,
 						minHeight: 120,
@@ -350,20 +351,20 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 						borderWidth: 1,
 						borderColor: this.state.borderColor,
 						overflow: 'hidden',
-						...(tokens.shadow.sm as any),
+						...tokens.shadow.sm as object as object,
 					},
 				]}>
-				<View style={style.schedule.course.row as any}>
+				<View style={style.schedule.course.row as never}>
 					<View
 						style={[
-							style.schedule.course.hours as any,
+							style.schedule.course.hours as never,
 							{
 								backgroundColor: `${this.state.lineColor}18`,
 								borderRightWidth: 1,
 								borderRightColor: `${this.state.lineColor}44`,
 							},
 						]}>
-						<Text style={[style.schedule.course.hoursText as any, { color: theme.font }]}>
+						<Text style={[style.schedule.course.hoursText as never, { color: theme.font }]}>
 							{this.props.data.starttime}
 						</Text>
 						<View
@@ -378,7 +379,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 						/>
 						<Text
 							style={[
-								style.schedule.course.hoursText as any,
+								style.schedule.course.hoursText as never,
 								{ color: theme.fontSecondary },
 							]}>
 							{this.props.data.endtime}
@@ -386,8 +387,8 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 					</View>
 
 					<View
-						style={[style.schedule.course.contentBlock as any, { paddingLeft: tokens.space.sm }]}>
-						<View style={style.schedule.course.contentType as any}>
+						style={[style.schedule.course.contentBlock as never, { paddingLeft: tokens.space.sm }]}>
+						<View style={style.schedule.course.contentType as never}>
 							{subject}
 							{this.props.data.category !== this.props.data.subject && (
 								<View
@@ -402,7 +403,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 										style={{
 											fontSize: tokens.fontSize.xs,
 											color: this.state.lineColor,
-											fontWeight: tokens.fontWeight.semibold as any,
+											fontWeight: tokens.fontWeight.semibold as never,
 										}}>
 										{this.props.data.category}
 									</Text>
@@ -420,7 +421,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 										const trimmedLine = line.trim();
 										if (!trimmedLine) return null;
 
-										let iconName: any = 'info-outline';
+										let iconName: 'info-outline' | 'date-range' | 'room' | 'group' | 'person' = 'info-outline';
 										const lowerLine = trimmedLine.toLowerCase();
 
 										const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedLine);
@@ -444,7 +445,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 											<View
 												key={index}
 												style={[
-													style.schedule.course.line as any,
+													style.schedule.course.line as never,
 													{ alignItems: 'flex-start' },
 												]}>
 												<MaterialIcons
@@ -507,7 +508,7 @@ class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 	}
 }
 
-export function CourseRowWithNavigation(props: any) {
+export function CourseRowWithNavigation(props: Omit<CourseRowProps, 'navigation'>) {
 	const navigation = useNavigation();
 	return <CourseRow {...props} navigation={navigation} />;
 }
@@ -515,7 +516,7 @@ export function CourseRowWithNavigation(props: any) {
 const screenWidth = Dimensions.get('window').width;
 const savedCarouselIndices = new Map<string, number>();
 
-export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: CourseData[], theme: any }) {
+export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: CourseData[], theme: import('../../shared/theme/Theme').AppThemeType }) {
 	const groupKey = coursesGroup.length > 0 ? `${coursesGroup[0].starttime}-${coursesGroup[0].subject}` : 'default';
 	const initialIndex = savedCarouselIndices.get(groupKey) || 0;
 
@@ -601,13 +602,13 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 // ── PAGE DÉTAILS DU COURS (Avec la Map) ──────────────────────────────────
 interface CourseProps {
 	route: { params: { data: CourseData } };
-	navigation: any;
-	headerPadding?: any;
+	navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setParams: (params: unknown) => void };
+	headerPadding?: import('react-native').ViewStyle;
 }
 
 interface CourseState {
 	data: CourseData;
-	locations: any[];
+	locations: Record<string, unknown>[];
 }
 
 class Course extends React.Component<CourseProps, CourseState> {
@@ -630,7 +631,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 	};
 
 	componentDidMount() {
-		let locations: any[] = [];
+		let locations: Record<string, unknown>[] = [];
 		this.props.navigation.setParams({ title: this.state.data.UE || Translator.get('DETAILS') });
 
 		// On nettoie les lignes vides
@@ -662,9 +663,9 @@ class Course extends React.Component<CourseProps, CourseState> {
 	}
 
 	render() {
-		const appContext = this.context as any;
+		const appContext = this.context as { themeName: 'light' | 'dark' };
 		const themeName = appContext?.themeName ?? 'light';
-		const theme = (style.Theme as any)[themeName];
+		const theme = style.Theme[themeName];
 		const lineColor = theme.courses[this.state.data.color ?? 'default'] ?? theme.courses.default;
 
 		let map = null;
@@ -673,7 +674,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 			const centerLng = this.state.locations[0].lng;
 
 			// Génération du code Leaflet pour tes marqueurs customisés SVG
-			const markersJs = this.state.locations.map((location: any) => {
+			const markersJs = this.state.locations.map((location: Record<string, unknown>) => {
 				const title = location.title || Translator.get('ROOM');
 				return `
                     var iconHTML = \`
@@ -743,7 +744,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 								backgroundColor: theme.cardBackground,
 								borderRadius: tokens.radius.md,
 								padding: tokens.space.sm,
-								...(tokens.shadow.md as any),
+								...tokens.shadow.md as object as object,
 							}}>
 							<MaterialCommunityIcons name="map-search-outline" size={28} color={theme.accent} />
 						</TouchableOpacity>
@@ -771,17 +772,17 @@ class Course extends React.Component<CourseProps, CourseState> {
 						borderWidth: 1,
 						borderColor: theme.border,
 						padding: tokens.space.md,
-						...(tokens.shadow.sm as any),
+						...tokens.shadow.sm as object as object,
 						zIndex: 10,
 					}}>
 
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.space.sm }}>
-						<Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
+						<Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as never, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
 							{this.state.data.subject !== 'N/C' ? this.state.data.subject.trim() : Translator.get('UNKNOWN_SUBJECT')}
 						</Text>
 						{this.state.data.category !== this.state.data.subject && (
 							<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>
-								<Text style={{ fontSize: tokens.fontSize.xs, color: lineColor, fontWeight: tokens.fontWeight.bold as any }}>
+								<Text style={{ fontSize: tokens.fontSize.xs, color: lineColor, fontWeight: tokens.fontWeight.bold as never }}>
 									{this.state.data.category}
 								</Text>
 							</View>
@@ -790,7 +791,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 
 					<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
 						<MaterialCommunityIcons name="clock-outline" size={18} color={lineColor} style={{ marginRight: tokens.space.sm }} />
-						<Text style={{ fontSize: tokens.fontSize.sm, color: lineColor, fontWeight: tokens.fontWeight.semibold as any }}>
+						<Text style={{ fontSize: tokens.fontSize.sm, color: lineColor, fontWeight: tokens.fontWeight.semibold as never }}>
 							{this.state.data.starttime} - {this.state.data.endtime}
 						</Text>
 					</View>
@@ -808,7 +809,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 						const trimmedLine = line.trim();
 						if (!trimmedLine) return null;
 
-						let iconName: any = 'info-outline';
+						let iconName: 'info-outline' | 'date-range' | 'room' | 'group' | 'person' = 'info-outline';
 						const lowerLine = trimmedLine.toLowerCase();
 
 						const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedLine);
@@ -848,7 +849,7 @@ class Course extends React.Component<CourseProps, CourseState> {
 							overflow: 'hidden',
 							borderWidth: 1,
 							borderColor: theme.border,
-							...(tokens.shadow.sm as any),
+							...tokens.shadow.sm as object as object,
 						}}>
 						{map}
 					</View>

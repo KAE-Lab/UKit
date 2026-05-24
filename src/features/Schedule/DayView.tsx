@@ -26,12 +26,38 @@ const findIndexOfObject = (objectList, object) => {
 	return -1;
 };
 
-class DayView extends React.Component {
-	static contextType = AppContext;
-	static lastSelectedDay = null;
-	static lastSelectedWeek = null;
+export interface DayViewProps {
+    navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
+    groupName: string | string[];
+}
 
-	constructor(props) {
+export interface DayViewState {
+    currentDay: moment.Moment;
+    currentDayIndex: number;
+    selectedDayIndex: number;
+    shownMonth: { number: number; string: string };
+    days: moment.Moment[];
+    selectedDay: moment.Moment;
+    currentWeek: { week: number; year: number };
+    currentWeekIndex: number;
+    selectedWeekIndex: number;
+    weeks: { week: number; year: number }[];
+    selectedWeek: { week: number; year: number };
+    mode: 'day' | 'week';
+}
+
+class DayView extends React.Component<DayViewProps, DayViewState> {
+	static contextType = AppContext;
+	// @ts-ignore
+	context!: React.ContextType<typeof AppContext>;
+	static lastSelectedDay: moment.Moment | null = null;
+	static lastSelectedWeek: { week: number; year: number } | null = null;
+    viewability: { itemVisiblePercentThreshold: number };
+    scrollTimeout: NodeJS.Timeout | null = null;
+    mockListener: import('react-native').EmitterSubscription | null = null;
+    calendarList: FlatList<any> | null = null;
+
+	constructor(props: DayViewProps) {
 		super(props);
 
 		// ── Day state ──────────────────────────────────────
@@ -390,7 +416,7 @@ class DayView extends React.Component {
 							{mode === 'day' ? (
 								<FlatList
 									key="slider-day"
-									ref={(list) => (this.calendarList = list)}
+									ref={(list) => { this.calendarList = list; }}
 									showsHorizontalScrollIndicator={false}
 									data={this.state.days}
 									horizontal
@@ -411,7 +437,7 @@ class DayView extends React.Component {
 							) : (
 								<FlatList
 									key="slider-week"
-									ref={(list) => (this.calendarList = list)}
+									ref={(list) => { this.calendarList = list; }}
 									showsHorizontalScrollIndicator={false}
 									data={this.state.weeks}
 									horizontal

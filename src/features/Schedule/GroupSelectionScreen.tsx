@@ -15,7 +15,14 @@ import { FetchManager } from '../../shared/services/DataService';
 import { NavBarHelper, SaveGroupButton } from '../../shared/navigation/NavHelpers';
 
 // ── COMPOSANT HEADER DE SECTION ─────────────────────────────────────────
-class SectionListHeader extends React.PureComponent {
+export interface SectionListHeaderProps {
+    color: string;
+    headerColor: string;
+    sectionIndex: number;
+    title: string;
+}
+
+class SectionListHeader extends React.PureComponent<SectionListHeaderProps> {
     static propTypes = {
         color: PropTypes.string,
         headerColor: PropTypes.string,
@@ -44,7 +51,7 @@ class SectionListHeader extends React.PureComponent {
                 },
             ]}>
                 <View style={[
-                    style.list.sectionHeaderView,
+                    (style.list.sectionHeaderView as never),
                     this.getSectionStyle(),
                     {
                         backgroundColor: this.props.headerColor,
@@ -72,7 +79,16 @@ class SectionListHeader extends React.PureComponent {
 }
 
 // ── COMPOSANT LIGNE DE GROUPE ───────────────────────────────────────────
-class GroupRow extends React.PureComponent {
+export interface GroupRowProps {
+    cleanName: string;
+    color: string;
+    fontColor: string;
+    name: string;
+    sectionStyle: Record<string, unknown>;
+    openGroup: (name: string) => void;
+}
+
+class GroupRow extends React.PureComponent<GroupRowProps> {
     static propTypes = {
         cleanName: PropTypes.string.isRequired,
         color: PropTypes.string,
@@ -129,10 +145,27 @@ class GroupRow extends React.PureComponent {
 }
 
 // ── ÉCRAN PRINCIPAL ─────────────────────────────────────────────────────
-class HomeScreen extends React.Component {
-    static contextType = AppContext;
+export interface HomeScreenProps {
+    navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
+}
 
-    constructor(props) {
+export interface HomeScreenState {
+    completeList: any[] | null;
+    sections: any[] | null;
+    list: any[] | null;
+    emptySearchResults: boolean;
+    refreshing: boolean;
+    cacheDate: moment.MomentInput | null;
+    searchText: string;
+}
+
+class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
+    static contextType = AppContext;
+    // @ts-ignore
+    context!: React.ContextType<typeof AppContext>;
+    scrollY: Animated.Value;
+
+    constructor(props: HomeScreenProps) {
         super(props);
         this.scrollY = new Animated.Value(0);
         this.state = {
@@ -160,7 +193,7 @@ class HomeScreen extends React.Component {
                         />
                     </View>
                 ),
-            })
+            } as never)
         );
         await this.getList();
     }
@@ -212,9 +245,9 @@ class HomeScreen extends React.Component {
     };
 
     getCache = async () => {
-        let cache = await AsyncStorage.getItem('groups');
-        if (cache !== null) {
-            cache = JSON.parse(cache);
+        let cacheStr = await AsyncStorage.getItem('groups');
+        if (cacheStr !== null) {
+            const cache = JSON.parse(cacheStr) as { date: string; list: any[] };
             this.setState({ cacheDate: cache.date });
             return cache.list;
         }
@@ -363,7 +396,7 @@ class HomeScreen extends React.Component {
 
         if (this.state.emptySearchResults) {
             content = (
-                <View style={[style.schedule.course.noCourse, { backgroundColor: theme.greyBackground }]}>
+                <View style={[(style.schedule.course.noCourse as never), { backgroundColor: theme.greyBackground }]}>
                     <MaterialCommunityIcons name="magnify-close" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.md, opacity: 0.4 }} />
                     <Text style={[style.schedule.course.noCourseText, { color: theme.font }]}>
                         {Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
