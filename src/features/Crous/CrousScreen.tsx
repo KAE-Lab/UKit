@@ -16,8 +16,8 @@ import { withHeaderAnimation, globalScrollValues } from '../../shared/navigation
 
 const defaultImage = require('../../../assets/images/default_resto.png');
 
-function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
-    const AppContextValues = useContext(AppContext) as any;
+function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void }; onAnimatedScroll?: unknown; headerPadding?: unknown }) {
+    const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const theme = style.Theme[AppContextValues.themeName];
     const insets = useSafeAreaInsets();
 
@@ -205,7 +205,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
                     data={filteredRestaurants}
-                    onScroll={onAnimatedScroll}
+                    onScroll={onAnimatedScroll as never}
                     scrollEventThrottle={16}
                     keyExtractor={(item) => item.id}
                     showsVerticalScrollIndicator={false}
@@ -228,7 +228,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 textAlign: 'center'
                             }}>
                                 {searchText.length > 0 || selectedFilter !== 'all'
-                                    ? Translator.get('NO_RESULTS_FOUND')
+                                    ? Translator.get('NO_RESULTS_FOUND' as Parameters<typeof Translator.get>[0])
                                     : Translator.get('NO_RU_NEARBY')}
                             </Text>
                         </View>
@@ -275,7 +275,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
                                         <Text style={{
                                             fontSize: tokens.fontSize.lg,
-                                            fontWeight: tokens.fontWeight.bold as any,
+                                            fontWeight: tokens.fontWeight.bold as never,
                                             color: theme.font,
                                             flexShrink: 1
                                         }}>
@@ -313,7 +313,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                                 <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
                                                 <Text style={{
                                                     fontSize: tokens.fontSize.sm,
-                                                    fontWeight: tokens.fontWeight.bold as any,
+                                                    fontWeight: tokens.fontWeight.bold as never,
                                                     color: theme.primary,
                                                     marginLeft: 4
                                                 }}>
@@ -389,7 +389,7 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
                                 color: theme.font,
                                 padding: 0
                             }}
-                            placeholder={Translator.get('SEARCH_RESTO_CITY')}
+                            placeholder={Translator.get('SEARCH_RESTO_CITY' as Parameters<typeof Translator.get>[0])}
                             placeholderTextColor={theme.fontSecondary}
                             onChangeText={setSearchText}
                             value={searchText}
@@ -410,10 +410,10 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
             {/* FILTER MODAL */}
             <Modal animationType="fade" transparent={true} visible={filterVisible} onRequestClose={() => setFilterVisible(false)}>
                 <TouchableWithoutFeedback onPress={() => setFilterVisible(false)}>
-                    <View style={theme.settings?.popup?.background || { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                    <View style={(theme.settings?.popup?.background || { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }) as never}>
                         <TouchableWithoutFeedback>
-                            <View style={theme.settings?.popup?.container || { backgroundColor: theme.cardBackground, width: '85%', borderRadius: tokens.radius.xl, padding: tokens.space.lg }}>
-                                <View style={theme.settings?.popup?.header || { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.md }}>
+                            <View style={(theme.settings?.popup?.container || { backgroundColor: theme.cardBackground, width: "85%", borderRadius: tokens.radius.xl, padding: tokens.space.lg }) as never}>
+                                <View style={(theme.settings?.popup?.header || { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: tokens.space.md }) as never}>
                                     <Text style={theme.settings?.popup?.textHeader || { fontSize: tokens.fontSize.lg, fontWeight: 'bold', color: theme.font }}>
                                         {Translator.get('FILTERS')}
                                     </Text>
@@ -424,17 +424,17 @@ function CrousScreen({ navigation, onAnimatedScroll, headerPadding }: any) {
 
                                 <TouchableOpacity onPress={() => { updateFilter('all'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, borderBottomWidth: 1, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommunityIcons name={selectedFilter === 'all' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'all' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
-                                    <Text style={{ color: selectedFilter === 'all' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'all' ? 'bold' : 'normal' }}>{Translator.get('ALL_ESTABLISHMENTS')}</Text>
+                                    <Text style={{ color: selectedFilter === 'all' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'all' ? 'bold' : 'normal' }}>{Translator.get('ALL_ESTABLISHMENTS' as Parameters<typeof Translator.get>[0])}</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity onPress={() => { updateFilter('resto'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, borderBottomWidth: 1, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommunityIcons name={selectedFilter === 'resto' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'resto' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
-                                    <Text style={{ color: selectedFilter === 'resto' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'resto' ? 'bold' : 'normal' }}>{Translator.get('RESTO_U')}</Text>
+                                    <Text style={{ color: selectedFilter === 'resto' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'resto' ? 'bold' : 'normal' }}>{Translator.get('RESTO_U' as Parameters<typeof Translator.get>[0])}</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity onPress={() => { updateFilter('market'); setFilterVisible(false); }} style={{ paddingVertical: tokens.space.md, flexDirection: 'row', alignItems: 'center' }}>
                                     <MaterialCommunityIcons name={selectedFilter === 'market' ? "radiobox-marked" : "radiobox-blank"} size={22} color={selectedFilter === 'market' ? theme.primary : theme.fontSecondary} style={{ marginRight: tokens.space.sm }} />
-                                    <Text style={{ color: selectedFilter === 'market' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'market' ? 'bold' : 'normal' }}>{Translator.get('CROUS_MARKET')}</Text>
+                                    <Text style={{ color: selectedFilter === 'market' ? theme.primary : theme.font, fontSize: tokens.fontSize.md, fontWeight: selectedFilter === 'market' ? 'bold' : 'normal' }}>{Translator.get('CROUS_MARKET' as Parameters<typeof Translator.get>[0])}</Text>
                                 </TouchableOpacity>
 
                             </View>

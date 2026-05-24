@@ -97,15 +97,15 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: any) {
                 } catch (e) { }
 
                 if (bList) {
-                    bList = bList.map((b: BuildingInfo) => {
+                    bList = (bList as any[]).map((b: BuildingInfo) => {
                         if (userLat !== undefined && userLon !== undefined && b.lat && b.lng) {
                             b.distance = getDistanceInKm(userLat, userLon, b.lat, b.lng);
                         }
                         return b;
-                    });
+                    }) as any;
                 }
 
-                setBuildings(bList || []);
+                setBuildings(bList as any || []);
                 setLoading(false);
             }
         } catch (error) {
@@ -197,7 +197,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: any) {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialCommunityIcons name="clock-outline" size={16} color={theme.fontSecondary} />
                         <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
-                            {hoursText} • {totalRooms} {Translator.get('ROOMS') || 'Salles'}
+                            {hoursText} • {totalRooms} {Translator.get('ROOMS' as Parameters<typeof Translator.get>[0]) || 'Salles'}
                         </Text>
                     </View>
                 </View>
@@ -244,7 +244,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: any) {
                                 fontSize: tokens.fontSize.md,
                                 textAlign: 'center'
                             }}>
-                                {Translator.get('NO_BUILDING_FOUND') || 'Aucun bâtiment trouvé'}
+                                {Translator.get('NO_BUILDING_FOUND' as Parameters<typeof Translator.get>[0]) || 'Aucun bâtiment trouvé'}
                             </Text>
                         </View>
                     )}

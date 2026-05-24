@@ -278,7 +278,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: any) {
 
                         {freeRooms.length === 0 ? (
                             <Text style={{ textAlign: 'center', color: theme.fontSecondary, marginTop: tokens.space.xl }}>
-                                {Translator.get('NO_FREE_ROOMS') || 'Aucune salle libre à cette heure.'}
+                                {Translator.get('NO_FREE_ROOMS' as Parameters<typeof Translator.get>[0]) || 'Aucune salle libre à cette heure.'}
                             </Text>
                         ) : (
                             freeRooms.map((slot, index) => (
