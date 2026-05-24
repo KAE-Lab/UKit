@@ -3,7 +3,7 @@ import { Animated, Switch, Text, TouchableOpacity, View, Pressable } from 'react
 import { MaterialCommunityIcons, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { AppContext } from '../services/AppCore';
-import style, { tokens, StyleWelcome } from '../theme/Theme';
+import style, { tokens, StyleWelcome, AppThemeType } from '../theme/Theme';
 
 // ── Bouton de Retour ───────────────────────────────────────────
 export interface BackButtonProps {
@@ -17,7 +17,7 @@ export const BackButton = ({ backAction }: BackButtonProps) => {
         requestAnimationFrame(() => backAction());
     };
     return (
-        <GHTouchableOpacity onPress={_onPress} style={[style.backButton, { paddingLeft: tokens.space.md }]}>
+        <GHTouchableOpacity onPress={_onPress} style={[style.backButton as never, { paddingLeft: tokens.space.md }]}>
             <View style={{ backgroundColor: theme.primary, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
                 <Ionicons
                     name="arrow-back"
@@ -31,9 +31,9 @@ export const BackButton = ({ backAction }: BackButtonProps) => {
 
 // ── Bouton d'Onboarding ────────────────────────────────────────
 export interface WelcomeButtonProps {
-    onPress: () => void;
-    buttonText: string;
-    theme: string;
+    onPress?: () => void;
+    buttonText?: string;
+    theme?: any;
 }
 export const WelcomeButton = ({ onPress, buttonText, theme }: WelcomeButtonProps) => {
     return (
@@ -51,6 +51,7 @@ export const WelcomeButton = ({ onPress, buttonText, theme }: WelcomeButtonProps
 
 // ── Bouton du Menu (Drawer) ────────────────────────────────────
 export interface DrawerButtonProps {
+    title?: string;
     icon?: keyof typeof MaterialIcons.glyphMap;
     size?: number;
     color?: string;
@@ -58,7 +59,6 @@ export interface DrawerButtonProps {
     isActive?: boolean;
     textSize?: number;
     fontColor?: string;
-    title: string;
 }
 export const DrawerButton = (props: DrawerButtonProps) => {
     const AppContextValues = useContext(AppContext);
@@ -151,35 +151,37 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
         <TouchableOpacity
             onPress={onPress}
             disabled={disabled}
-            style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}]}>
+            style={[(theme as any).button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}]}>
             {leftIcon && (
                 <Animated.View style={{ transform: leftIconAnimation ? [{ rotate }] : [] }}>
-                    <IconComponent name={leftIcon as any} size={24} style={theme.leftIcon} />
+                    <IconComponent name={leftIcon as never} size={24} style={(theme as any).leftIcon} />
                 </Animated.View>
             )}
-            <Text style={[theme.buttonMainText, { flex: 1 }]}>{leftText}</Text>
+            <Text style={[(theme as any).buttonMainText, { flex: 1 }]}>{leftText}</Text>
             {onSwitchToggle !== undefined ? (
                 <Switch
-                    style={{ marginLeft: 'auto', marginRight: theme.leftIcon?.marginLeft }}
-                    trackColor={theme.switchTrack}
+                    style={{ marginLeft: 'auto', marginRight: (theme as any).leftIcon?.marginLeft }}
+                    trackColor={(theme as any).switchTrack}
                     thumbColor={'#FFFFFF'}
                     value={switchValue}
                     onValueChange={onSwitchToggle}
                 />
             ) : (
-                <Text style={theme.buttonSecondaryText}>{rightText}</Text>
+                <Text style={(theme as any).buttonSecondaryText}>{rightText}</Text>
             )}
             {!onSwitchToggle && (
-                <MaterialCommunityIcons name="chevron-right" size={22} style={theme.rightIcon} />
+                <MaterialCommunityIcons name="chevron-right" size={22} style={(theme as any).rightIcon} />
             )}
         </TouchableOpacity>
     );
 };
 
 // ── COMPOSANT UNIVERSEL ─────────────────────────────────
-export default function Button(props: any) {
-    if (props.backAction) return <BackButton {...props} />;
-    if (props.buttonText) return <WelcomeButton {...props} />;
-    if (props.title) return <DrawerButton {...props} />;
-    return <SettingsButton {...props} />;
+export type ButtonProps = Partial<BackButtonProps & WelcomeButtonProps & DrawerButtonProps & SettingsButtonProps>;
+
+export default function Button(props: ButtonProps) {
+    if (props.backAction) return <BackButton {...props as BackButtonProps} />;
+    if (props.buttonText) return <WelcomeButton {...props as WelcomeButtonProps} />;
+    if (props.title) return <DrawerButton {...props as DrawerButtonProps} />;
+    return <SettingsButton {...props as SettingsButtonProps} />;
 }

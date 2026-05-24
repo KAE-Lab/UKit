@@ -48,7 +48,7 @@ export default class SecureStoreService {
         }
     }
 
-    static async getColdData(): Promise<any> {
+    static async getColdData(): Promise<unknown> {
         try {
             const data = await SecureStore.getItemAsync(COLD_DATA_KEY);
             return data ? JSON.parse(data) : null;

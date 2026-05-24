@@ -35,14 +35,15 @@ export class ErrorAlert {
 }
 
 export const RequestError = {
-    handle: (error: any) => {
+    handle: (error: unknown) => {
+        const err = error as { response?: { status: number }, request?: unknown, message?: string };
         let errorDialog;
-        if (error.response) {
-            errorDialog = new ErrorAlert(`Le serveur a répondu par une erreur ${error.response.status}`);
-        } else if (error.request) {
+        if (err.response) {
+            errorDialog = new ErrorAlert(`Le serveur a répondu par une erreur ${err.response.status}`);
+        } else if (err.request) {
             errorDialog = new ErrorAlert(`Pas de connexion internet`, ErrorAlert.durations.SHORT);
         } else {
-            errorDialog = new ErrorAlert(`Erreur : ${error.message}`);
+            errorDialog = new ErrorAlert(`Erreur : ${err.message}`);
         }
         errorDialog.show();
     }

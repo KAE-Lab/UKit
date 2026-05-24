@@ -61,7 +61,7 @@ export const UpdateAlert = () => {
 
     const openURL = () => Linking.openURL(Platform.OS === 'ios' ? URL.APPLE_APP : URL.GOOGLE_APP);
 
-    const getCurrentVersion = () => String(Constants.expoConfig?.version || (Constants as any).manifest?.version || '1.0.0').trim();
+    const getCurrentVersion = () => String(Constants.expoConfig?.version || (Constants as unknown as { manifest?: { version?: string } }).manifest?.version || '1.0.0').trim();
 
     useEffect(() => {
         const checkVersionDiff = async () => {

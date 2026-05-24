@@ -58,7 +58,7 @@ class FetchManagerService {
         }
     };
 
-    sortFunctionGroup = (a: any, b: any): number => {
+    sortFunctionGroup = (a: { subject: string; starttime: string }, b: { subject: string; starttime: string }): number => {
         const regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
         let subectA = a.subject.toUpperCase();
         let subectB = b.subject.toUpperCase();
@@ -75,7 +75,7 @@ class FetchManagerService {
         return 0;
     };
 
-    fetchCalendarDay = async (group: string, date: string): Promise<any[] | null> => {
+    fetchCalendarDay = async (group: string, date: string): Promise<Record<string, unknown>[] | null> => {
         const endQueryDate = moment(date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD');
         const data = {
             start: date,
@@ -150,7 +150,7 @@ class FetchManagerService {
         }
     };
 
-    fetchCalendarWeek = async (group: string, week: { year: number; week: number }): Promise<any[] | null> => {
+    fetchCalendarWeek = async (group: string, week: { year: number; week: number }): Promise<Record<string, unknown>[] | null> => {
         const searchDate = moment().year(week.year).isoWeek(week.week);
         const begin = searchDate.startOf('week').format('YYYY-MM-DD');
         const end = searchDate.endOf('week').format('YYYY-MM-DD');
@@ -244,7 +244,7 @@ class FetchManagerService {
         }
     };
 
-    fetchCalendarForSynchronization = async (group: string): Promise<any[] | null | void> => {
+    fetchCalendarForSynchronization = async (group: string): Promise<Record<string, unknown>[] | null | void> => {
         const currentDate = moment();
         const begin = moment().set('month', 7).startOf('month');
         const end = moment().set('month', 7).startOf('month').add(1, 'year');
@@ -328,7 +328,7 @@ class FetchManagerService {
         }
     };
 
-    fetchRoomList = async (): Promise<any[] | null> => {
+    fetchRoomList = async (): Promise<{ id: string; name: string }[] | null> => {
         const options = {
             method: 'GET',
             url: WebApiURL.DOMAIN + WebApiURL.GROUPS,
@@ -347,7 +347,7 @@ class FetchManagerService {
         }
     };
 
-    extractBuildingsFromRooms = (rooms: any[]): any[] => {
+    extractBuildingsFromRooms = (rooms: { id: string; name: string }[]): Record<string, unknown>[] => {
         const locationsData = require('../../../assets/locations.json');
         
         // Find which buildings have freeAccess: true
@@ -401,7 +401,7 @@ class FetchManagerService {
         return Array.from(buildingsMap.values()).filter(b => b.rooms.length > 0).sort((a, b) => a.name.localeCompare(b.name));
     };
 
-    fetchRoomsScheduleDay = async (roomIds: string[], date: string): Promise<any[] | null> => {
+    fetchRoomsScheduleDay = async (roomIds: string[], date: string): Promise<Record<string, unknown>[] | null> => {
         const endQueryDate = moment(date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD');
         const data = {
             start: date,
@@ -457,7 +457,7 @@ export const FetchManager = new FetchManagerService();
 
 class DataManagerService {
     _groupList: string[];
-    _buildingList: any[];
+    _buildingList: Record<string, unknown>[];
     _availableUEs: string[];
     _subscribers: Record<string, Function[]>;
     _cacheTimeLimit: number;
@@ -477,7 +477,7 @@ class DataManagerService {
         this._subscribers[event].push(callback);
     };
 
-    notify = (event: string, ...args: any[]) => {
+    notify = (event: string, ...args: unknown[]) => {
         if (!this._subscribers[event]) return;
         this._subscribers[event].forEach((fn) => fn(...args));
         this.saveData();
@@ -490,16 +490,16 @@ class DataManagerService {
         this.notify('groupList', this._groupList);
     };
 
-    getBuildingList = (): any[] => this._buildingList;
+    getBuildingList = (): Record<string, unknown>[] => this._buildingList;
 
-    setBuildingList = (newList: any[]) => {
+    setBuildingList = (newList: Record<string, unknown>[]) => {
         this._buildingList = [...newList];
         this.notify('buildingList', this._buildingList);
     };
 
     getAvailableUEs = (): string[] => this._availableUEs;
 
-    extractUEsFromCourses = (courses: any[]) => {
+    extractUEsFromCourses = (courses: Array<{ courses?: { subject?: string }[], subject?: string }>) => {
         const regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
         const ueSet = new Set(this._availableUEs);
         const flatCourses = Array.isArray(courses) ? courses : [];

@@ -212,6 +212,12 @@ const fr: TranslationDict = {
 	STUDENT_EMAIL: "Email universitaire",
 	PROFILE: "Profil",
 	DOSSIER: "Dossier",
+	THEME: "Thème",
+	DARK_MODE: "Mode Sombre",
+	NOTIFICATIONS: "Notifications",
+	COURSE_NOTIFICATIONS: "Notifications de cours",
+	NOTIFICATION_DELAY: "Délai avant le cours",
+	NOTIFICATION_DELAY_DESC: "Ajustez combien de minutes avant le début du cours vous souhaitez être notifié.",
 };
 
 export default fr;

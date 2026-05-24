@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, Text, TouchableOpacity, PanResponder, Animated, Dimensions, Image, Platform, DeviceEventEmitter } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import moment from 'moment';
 
 import style, { tokens } from '../theme/Theme';
@@ -21,16 +21,18 @@ export interface ModMenuState {
     currentTime: moment.Moment;
     selectedDate: Date;
     showPicker: boolean;
-    pickerMode: any;
+    pickerMode: 'date' | 'time' | 'datetime';
 }
 
 export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     static contextType = AppContext;
+    // @ts-ignore
+    context!: React.ContextType<typeof AppContext>;
     pan: Animated.ValueXY;
-    panResponder: any;
-    toggleListener: any;
-    mockListener: any;
-    clockInterval: any;
+    panResponder: import('react-native').PanResponderInstance;
+    toggleListener: import('react-native').EmitterSubscription | null = null;
+    mockListener: import('react-native').EmitterSubscription | null = null;
+    clockInterval: NodeJS.Timeout | null = null;
 
     constructor(props: ModMenuProps) {
         super(props);
@@ -42,7 +44,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             currentTime: moment(),
             selectedDate: new Date(),
             showPicker: false,
-            pickerMode: 'date',
+            pickerMode: "date" as "date",
         };
 
         this.pan = new Animated.ValueXY({ x: width - ICON_SIZE - 20, y: height / 2 });
@@ -54,8 +56,8 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             },
             onPanResponderGrant: () => {
                 this.pan.setOffset({
-                    x: (this.pan.x as any)._value,
-                    y: (this.pan.y as any)._value,
+                    x: (this.pan.x as unknown as { _value: number })._value,
+                    y: (this.pan.y as unknown as { _value: number })._value,
                 });
                 this.pan.setValue({ x: 0, y: 0 });
             },
@@ -69,8 +71,8 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                 // Optional: Snap to edges
                 Animated.spring(this.pan, {
                     toValue: {
-                        x: Math.max(0, Math.min((this.pan.x as any)._value, width - (this.state.isExpanded ? MENU_WIDTH : ICON_SIZE))),
-                        y: Math.max(0, Math.min((this.pan.y as any)._value, height - 100)),
+                        x: Math.max(0, Math.min((this.pan.x as unknown as { _value: number })._value, width - (this.state.isExpanded ? MENU_WIDTH : ICON_SIZE))),
+                        y: Math.max(0, Math.min((this.pan.y as unknown as { _value: number })._value, height - 100)),
                     },
                     useNativeDriver: false,
                 }).start();
@@ -123,10 +125,10 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     }
 
     showPicker = (mode: string) => {
-        this.setState({ showPicker: true, pickerMode: Platform.OS === 'ios' ? 'datetime' : mode });
+        this.setState({ showPicker: true, pickerMode: Platform.OS === 'ios' ? 'datetime' : mode as any });
     }
 
-    onPickerChange = (event: any, selectedDate?: Date) => {
+    onPickerChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
         if (Platform.OS === 'android') {
             this.setState({ showPicker: false });
         }
@@ -148,7 +150,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         if (!this.state.isVisible) return null;
 
         const { isExpanded, isActive, currentTime, selectedDate } = this.state;
-        const theme = style.Theme[(this.context as any)?.themeName || 'light'];
+        const theme = style.Theme[this.context?.themeName || 'light'];
 
         if (!isExpanded) {
             return (

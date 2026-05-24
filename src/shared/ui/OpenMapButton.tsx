@@ -3,13 +3,13 @@ import { Text, TouchableOpacity, Linking } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { URL } from '../services/DataService';
-import { tokens } from '../theme/Theme';
+import { tokens, AppThemeType } from '../theme/Theme';
 
 const locations = require('../../../assets/locations.json');
 
 export interface OpenMapButtonProps {
     location: string;
-    theme: any;
+    theme: AppThemeType;
 }
 export interface OpenMapButtonState {
     location: string;

@@ -208,6 +208,12 @@ const en = {
 	STUDENT_EMAIL: "University email",
 	PROFILE: "Profile",
 	DOSSIER: "Record",
+	THEME: "Theme",
+	DARK_MODE: "Dark Mode",
+	NOTIFICATIONS: "Notifications",
+	COURSE_NOTIFICATIONS: "Course Notifications",
+	NOTIFICATION_DELAY: "Notification delay",
+	NOTIFICATION_DELAY_DESC: "Adjust how many minutes before the start of the course you want to be notified.",
 };
 
 export default en;

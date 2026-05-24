@@ -52,7 +52,7 @@ export function upperCaseFirstLetter(string: string): string {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-export function isArraysEquals(a: any[], b: any[]): boolean {
+export function isArraysEquals(a: unknown[], b: unknown[]): boolean {
     if (a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) {
         if (a[i] !== b[i]) return false;
@@ -60,11 +60,11 @@ export function isArraysEquals(a: any[], b: any[]): boolean {
     return true;
 }
 
-function getLocation(house: string): any {
+function getLocation(house: string): Record<string, unknown> | null {
     return locations[house] ? { title: house, ...locations[house] } : null;
 }
 
-export function getLocations(str: string): any[] {
+export function getLocations(str: string): Record<string, unknown>[] {
     let lines = str.split(' | ');
     let locs = [];
     lines.forEach((line) => {
@@ -75,7 +75,7 @@ export function getLocations(str: string): any[] {
     return locs;
 }
 
-export function getLocationsInText(str: string): any[] {
+export function getLocationsInText(str: string): Record<string, unknown>[] {
     let regexBuilding = RegExp('([A-Z][0-9]+)', 'im');
     let match = regexBuilding.exec(str);
     if (match && match.length === 2) {
@@ -87,10 +87,10 @@ export function getLocationsInText(str: string): any[] {
 
 // ── GESTION DES COURS ───────────────────────────────
 export const CourseManager = {
-    computeCourseUE: (course: any): any => {
+    computeCourseUE: (course: Record<string, unknown>): Record<string, unknown> => {
         let regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
         if (course.subject && course.subject !== 'N/C') {
-            let match = regexUE.exec(course.subject);
+            let match = regexUE.exec(course.subject as string);
             if (match && match.length === 3) {
                 course.UE = match[1];
                 course.subject = `${match[2]}`;
@@ -100,7 +100,7 @@ export const CourseManager = {
         }
         return course;
     },
-    filterCourse: (isFavorite: boolean, course: any, filtersList: any): boolean => {
+    filterCourse: (isFavorite: boolean, course: Record<string, unknown>, filtersList: unknown): boolean => {
         if (!isFavorite) return true;
         if (course.UE !== null && filtersList instanceof Array && filtersList.includes(course.UE)) {
             return false;
@@ -118,19 +118,19 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     return BackgroundFetch.BackgroundFetchResult.NewData;
 });
 
-function formatCalendarEventData(event: any): any {
+function formatCalendarEventData(event: Record<string, unknown>): Record<string, unknown> {
     return {
         title: event.subject,
-        startDate: new Date(event.date.start),
-        endDate: new Date(event.date.end),
+        startDate: new Date((event.date as { start: string }).start),
+        endDate: new Date((event.date as { end: string }).end),
         timeZone: 'Europe/Paris',
         endTimeZone: 'Europe/Paris',
         notes: event.schedule + '\n' + event.description,
     };
 }
 
-async function createUKitCalendar(calendars: any[]): Promise<string> {
-    let calendar: any = {
+async function createUKitCalendar(calendars: Calendar.Calendar[]): Promise<string> {
+    let calendar: Partial<Calendar.Calendar> | Record<string, unknown> = {
         title: `UKit`,
         name: `UKit`,
         color: '#009ee0',
@@ -167,12 +167,12 @@ async function createUKitCalendar(calendars: any[]): Promise<string> {
             sourceId: local[0].source.id,
         };
     }
-    return await Calendar.createCalendarAsync(calendar as any);
+    return await Calendar.createCalendarAsync(calendar as Calendar.Calendar);
 }
 
 class SettingsManagerService {
-    _calendar: any;
-    _calendars: any[];
+    _calendar: string | number;
+    _calendars: Calendar.Calendar[];
     _firstload: boolean;
     _theme: string;
     _favoriteGroups: string[];
@@ -215,7 +215,7 @@ class SettingsManagerService {
         if (index !== -1) this._subscribers[event].splice(index, 1);
     };
 
-    notify = (event: string, ...args: any[]) => {
+    notify = (event: string, ...args: unknown[]) => {
         this.saveSettings();
         if (!this._subscribers[event] || !args) return;
         this._subscribers[event].filter((e) => e !== null).forEach((fn) => fn(...args));
@@ -252,13 +252,13 @@ class SettingsManagerService {
     
     getLastSyncDate = () => this._lastSyncDate;
     getSyncCalendar = () => this._calendar;
-    setSyncCalendar = (newCalendar: any) => {
+    setSyncCalendar = (newCalendar: string | number) => {
         if (this._calendar !== -1) this.deleteAllPreviousCalendarEntries(this._calendar);
         this._calendar = newCalendar;
         this.notify('calendar', this._calendar);
     };
 
-    deleteAllPreviousCalendarEntries = async (calendar: any) => {
+    deleteAllPreviousCalendarEntries = async (calendar: string | number) => {
         if (calendar === -1) return;
         if (calendar === 'UKit') {
             const ukitCalendar = this._calendars.find((cal) => cal.title === 'UKit');
@@ -316,11 +316,11 @@ class SettingsManagerService {
                         updatedEvents.push(existingInternalEventId);
                         nextExistingCalendarEvents[String(event.id)] = existingInternalEventId;
                     } catch (e) {
-                        const id = await Calendar.createEventAsync(this._calendar, eventToCreate);
+                        const id = await Calendar.createEventAsync(this._calendar as string, eventToCreate);
                         nextExistingCalendarEvents[String(event.id)] = id;
                     }
                 } else {
-                    const id = await Calendar.createEventAsync(this._calendar, eventToCreate);
+                    const id = await Calendar.createEventAsync(this._calendar as string, eventToCreate);
                     nextExistingCalendarEvents[String(event.id)] = id;
                 }
             });

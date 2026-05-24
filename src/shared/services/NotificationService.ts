@@ -10,7 +10,7 @@ Notifications.setNotificationHandler({
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
-    } as any),
+    } as Notifications.NotificationBehavior),
 });
 
 class NotificationManagerService {
@@ -24,7 +24,7 @@ class NotificationManagerService {
         return finalStatus === 'granted';
     }
 
-    async scheduleCourseNotifications(scheduleData: any[]): Promise<void> {
+    async scheduleCourseNotifications(scheduleData: Array<{ courses?: Array<Record<string, unknown>>, category?: string, [key: string]: unknown } | Record<string, unknown>>): Promise<void> {
         // Cancel all existing scheduled notifications first
         await Notifications.cancelAllScheduledNotificationsAsync();
 
@@ -34,11 +34,11 @@ class NotificationManagerService {
 
         const delayInMinutes = SettingsManager.getCourseNotificationDelay() || 15;
         const now = moment();
-        const futureCourses: any[] = [];
+        const futureCourses: Array<{ course: Record<string, unknown>, triggerTime: Date }> = [];
 
         // Flatten scheduleData to a simple list of courses
         // scheduleData can be a flat array (day mode) or an array of objects with .courses (week mode)
-        let courses: any[] = [];
+        let courses: Array<Record<string, unknown>> = [];
         if (Array.isArray(scheduleData)) {
             for (const item of scheduleData) {
                 if (item && Array.isArray(item.courses)) {
@@ -50,9 +50,9 @@ class NotificationManagerService {
         }
 
         for (const course of courses) {
-            if (!course.date || !course.date.start) continue;
+            if (!(course as any).date || !(course as any).date.start) continue;
 
-            const courseStart = moment(course.date.start);
+            const courseStart = moment((course as any).date.start);
             const triggerTime = courseStart.clone().subtract(delayInMinutes, 'minutes');
 
             // Only schedule if the trigger time is in the future
@@ -71,11 +71,11 @@ class NotificationManagerService {
         for (const item of coursesToSchedule) {
             const { course, triggerTime } = item;
             
-            const subject = course.subject !== 'N/C' ? course.subject.trim() : 'Cours';
+            const subject = (course as any).subject !== 'N/C' ? (course as any).subject.trim() : 'Cours';
             
             let roomText = '';
             if (course.description) {
-                const annotations = course.description.split('\n').map(l => l.trim()).filter(l => l);
+                const annotations = (course as any).description.split('\n').map((l: string) => l.trim()).filter((l: string) => l);
                 
                 // Recherche d'une ligne correspondant à une salle (comme dans CourseCard)
                 const rooms = annotations.filter(line => {
@@ -115,7 +115,7 @@ class NotificationManagerService {
                 trigger: { 
                     type: Notifications.SchedulableTriggerInputTypes.DATE, 
                     date: realTriggerTime.getTime() 
-                } as any,
+                } as Notifications.DateTriggerInput,
             });
         }
 

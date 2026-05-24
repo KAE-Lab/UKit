@@ -140,6 +140,7 @@ const Theme = {
         primarySoft:   '#007AFF15',
         secondary:     '#5856D6',
         selection:     '#F2F2F7',
+        accent:        '#007AFF',
         accentFont:    '#FF3B30',
         font:          '#1C1C1E',
         fontSecondary: '#8E8E93',
@@ -1181,4 +1182,4 @@ export type AppThemeType = typeof Theme.light;
 export type ThemeKey = 'light' | 'dark';
 
 export { tokens, StyleWelcome };
-export default style as Record<string, any> & { Theme: Record<ThemeKey, AppThemeType> };
+export default style as typeof style & { Theme: Record<ThemeKey, AppThemeType> };

@@ -84,7 +84,7 @@ function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarPro
                                         accessibilityRole="button"
                                         accessibilityState={isFocused ? { selected: true } : {}}
                                         accessibilityLabel={options.tabBarAccessibilityLabel}
-                                        testID={(options as any).tabBarTestID as string}
+                                        testID={(options as { tabBarTestID?: string }).tabBarTestID}
                                         onPress={onPress}
                                         onLongPress={onLongPress}
                                         style={styles.tabItem}

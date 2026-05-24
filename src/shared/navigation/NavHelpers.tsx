@@ -34,13 +34,13 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
     // La variable est lue depuis le dictionnaire externe pour survivre aux mises à jour
     const safeScrollY = (route && globalScrollValues[route.key]) ? globalScrollValues[route.key] : new Animated.Value(0);
 
-    if (!(safeScrollY as any)._titleOpacity) {
-        (safeScrollY as any)._titleOpacity = safeScrollY.interpolate({
+    if (!(safeScrollY as ScrollValueWithInterps)._titleOpacity) {
+        (safeScrollY as ScrollValueWithInterps)._titleOpacity = safeScrollY.interpolate({
             inputRange: [0, 60],
             outputRange: [1, 0],
             extrapolate: 'clamp',
         });
-        (safeScrollY as any)._buttonScale = safeScrollY.interpolate({
+        (safeScrollY as ScrollValueWithInterps)._buttonScale = safeScrollY.interpolate({
             inputRange: [0, 60],
             outputRange: [1.14, 1],
             extrapolate: 'clamp',
@@ -50,7 +50,7 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
     const options: StackNavigationOptions = {
         headerTitle: () => (
             <Animated.View style={{ 
-                opacity: (safeScrollY as any)._titleOpacity,  
+                opacity: (safeScrollY as ScrollValueWithInterps)._titleOpacity,  
                 paddingHorizontal: tokens.space.lg, 
                 height: 45, // On fige la hauteur pour correspondre aux boutons latéraux
                 justifyContent: 'center',
@@ -78,14 +78,14 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
 
     if (headerLeft !== undefined) {
         options.headerLeft = headerLeft ? () => (
-            <Animated.View style={{ transform: [{ scale: (safeScrollY as any)._buttonScale }], height: 45, justifyContent: 'center' }}>
+            <Animated.View style={{ transform: [{ scale: (safeScrollY as ScrollValueWithInterps)._buttonScale }], height: 45, justifyContent: 'center' }}>
                 {headerLeft()}
             </Animated.View>
         ) : undefined;
     }
     if (headerRight !== undefined) {
         options.headerRight = headerRight ? () => (
-            <Animated.View style={{ transform: [{ scale: (safeScrollY as any)._buttonScale }], height: 45, justifyContent: 'center' }}>
+            <Animated.View style={{ transform: [{ scale: (safeScrollY as ScrollValueWithInterps)._buttonScale }], height: 45, justifyContent: 'center' }}>
                 {headerRight()}
             </Animated.View>
         ) : undefined;
@@ -306,7 +306,7 @@ export const withHeaderAnimation = <P extends object>(WrappedComponent: React.Co
             
             // On force un rafraîchissement avec un paramètre simple (sérialisable)
             setTimeout(() => {
-                if (navigation) navigation.setParams({ animatedReady: true } as any);
+                if (navigation) navigation.setParams({ animatedReady: true } as never);
             }, 50);
 
             return () => {
