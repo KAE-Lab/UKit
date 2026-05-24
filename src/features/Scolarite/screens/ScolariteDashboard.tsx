@@ -2,15 +2,15 @@ import React, { useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
-import style, { tokens } from '../../shared/theme/Theme';
-import { AppContext } from '../../shared/services/AppCore';
-import Translator from '../../shared/i18n/Translator';
-import { useCredentials } from './services/CredentialsContext';
-import ScolariteLoginView from './components/ScolariteLoginView';
-import GreetingBlock from './components/GreetingBlock';
-import MailboxRow from './components/MailboxRow';
-import BiometryGate from './components/BiometryGate';
-import ScolariteLoadingScreen from './components/ScolariteLoadingScreen';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { AppContext } from '../../../shared/services/AppCore';
+import Translator from '../../../shared/i18n/Translator';
+import { useCredentials } from '../services/CredentialsContext';
+import ScolariteLoginView from '../components/ScolariteLoginView';
+import GreetingBlock from '../components/GreetingBlock';
+import MailboxRow from '../components/MailboxRow';
+import BiometryGate from '../components/BiometryGate';
+import ScolariteLoadingScreen from '../components/ScolariteLoadingScreen';
 
 const SectionHeader = ({ title, theme }) => (
     <Text style={[styles.sectionHeader, { color: theme.fontSecondary }]}>

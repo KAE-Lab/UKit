@@ -6,21 +6,21 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, runOnJS } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 
-import style, { tokens } from '../../shared/theme/Theme';
-import { AppContext } from '../../shared/services/AppCore';
-import { URL } from '../../shared/services/DataService';
-import SecureStoreService from '../../shared/services/SecureStoreService';
-import Translator from '../../shared/i18n/Translator';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { AppContext } from '../../../shared/services/AppCore';
+import { URL } from '../../../shared/services/DataService';
+import SecureStoreService from '../../../shared/services/SecureStoreService';
+import Translator from '../../../shared/i18n/Translator';
 
 const entrypoints = {
-	ent: 'https://ent.u-bordeaux.fr',
-	email: 'https://webmel.u-bordeaux.fr',
-	cas: 'https://cas.u-bordeaux.fr',
-	apogee: 'https://apogee.u-bordeaux.fr',
+    ent: 'https://ent.u-bordeaux.fr',
+    email: 'https://webmel.u-bordeaux.fr',
+    cas: 'https://cas.u-bordeaux.fr',
+    apogee: 'https://apogee.u-bordeaux.fr',
 };
 
 interface FloatingActionBarProps {
-    theme: import('../../shared/theme/Theme').AppThemeType;
+    theme: import('../../../shared/theme/Theme').AppThemeType;
     insets: import('react-native-safe-area-context').EdgeInsets | null;
     onBack: () => void;
     onForward: () => void;
@@ -33,7 +33,7 @@ interface FloatingActionBarProps {
 }
 
 const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openURL, onQuit, canGoBack, canGoForward, loading }: FloatingActionBarProps) => {
-    const buttonContainerWidth = 290; 
+    const buttonContainerWidth = 290;
     const translateX = useSharedValue(0); // Start open
 
     const context = useSharedValue({ startX: 0 });
@@ -111,12 +111,12 @@ const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openUR
     return (
         <GestureDetector gesture={panGesture}>
             <Animated.View style={[
-                styles.floatingBar, 
-                { 
-                    backgroundColor: theme.cardBackground, 
-                    borderColor: theme.border, 
-                    bottom: Math.max(tokens.space.sm, (insets?.bottom || 0) - 15) 
-                }, 
+                styles.floatingBar,
+                {
+                    backgroundColor: theme.cardBackground,
+                    borderColor: theme.border,
+                    bottom: Math.max(tokens.space.sm, (insets?.bottom || 0) - 15)
+                },
                 animatedStyle
             ]}>
                 <TouchableOpacity onPress={toggleOpen} style={styles.handle}>
@@ -138,55 +138,55 @@ const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openUR
 };
 
 export interface WebBrowserScreenProps {
-	navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void };
-	route: { params?: { entrypoint?: 'ent' | 'email' | 'cas' | 'apogee'; href?: string } };
-	onDismiss?: () => void;
+    navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void };
+    route: { params?: { entrypoint?: 'ent' | 'email' | 'cas' | 'apogee'; href?: string } };
+    onDismiss?: () => void;
 }
 
 function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProps) {
-	const { themeName } = useContext(AppContext);
-	const webViewRef = useRef(null);
-	const insets = useSafeAreaInsets();
+    const { themeName } = useContext(AppContext);
+    const webViewRef = useRef(null);
+    const insets = useSafeAreaInsets();
 
-	let initialUri = URL.UKIT_WEBSITE;
-	if (route.params) {
-		const { entrypoint, href } = route.params;
-		if (entrypoint && entrypoints[entrypoint]) initialUri = entrypoints[entrypoint];
-		else if (href) initialUri = href;
-	}
+    let initialUri = URL.UKIT_WEBSITE;
+    if (route.params) {
+        const { entrypoint, href } = route.params;
+        if (entrypoint && entrypoints[entrypoint]) initialUri = entrypoints[entrypoint];
+        else if (href) initialUri = href;
+    }
 
-	const [uri, setUri] = useState(initialUri);
-	const [url, setUrl] = useState(initialUri);
-	const [canGoBack, setCanGoBack] = useState(false);
-	const [canGoForward, setCanGoForward] = useState(false);
-	const [loading, setLoading] = useState(true);
+    const [uri, setUri] = useState(initialUri);
+    const [url, setUrl] = useState(initialUri);
+    const [canGoBack, setCanGoBack] = useState(false);
+    const [canGoForward, setCanGoForward] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-	const [savedCredentials, setSavedCredentials] = useState(null);
-	const [showSaveModal, setShowSaveModal] = useState(false);
-	const [tempCredentials, setTempCredentials] = useState(null);
-	const [dismissing, setDismissing] = useState(false);
+    const [savedCredentials, setSavedCredentials] = useState(null);
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [tempCredentials, setTempCredentials] = useState(null);
+    const [dismissing, setDismissing] = useState(false);
 
-	useEffect(() => {
-		loadCredentials();
-	}, []);
+    useEffect(() => {
+        loadCredentials();
+    }, []);
 
-	const loadCredentials = async () => {
-		const creds = await SecureStoreService.getCredentials();
-		setSavedCredentials(creds);
-	};
+    const loadCredentials = async () => {
+        const creds = await SecureStoreService.getCredentials();
+        setSavedCredentials(creds);
+    };
 
-	useEffect(() => {
-		let newUri = URL.UKIT_WEBSITE;
-		if (route.params) {
-			const { entrypoint, href } = route.params;
-			if (entrypoint && entrypoints[entrypoint]) newUri = entrypoints[entrypoint];
-			else if (href) newUri = href;
-		}
-		if (newUri !== uri) {
-			setUri(newUri);
-			setUrl(newUri);
-		}
-	}, [route.params?.entrypoint, route.params?.href]);
+    useEffect(() => {
+        let newUri = URL.UKIT_WEBSITE;
+        if (route.params) {
+            const { entrypoint, href } = route.params;
+            if (entrypoint && entrypoints[entrypoint]) newUri = entrypoints[entrypoint];
+            else if (href) newUri = href;
+        }
+        if (newUri !== uri) {
+            setUri(newUri);
+            setUrl(newUri);
+        }
+    }, [route.params?.entrypoint, route.params?.href]);
 
     useEffect(() => {
         // En mode modal (onDismiss fourni), on ne touche pas aux options de navigation
@@ -209,9 +209,9 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
         return () => backHandler.remove();
     }, [canGoBack, navigation, onDismiss]);
 
-	const onRefresh = () => webViewRef.current?.reload();
-	const onBack = () => webViewRef.current?.goBack();
-	const onForward = () => webViewRef.current?.goForward();
+    const onRefresh = () => webViewRef.current?.reload();
+    const onBack = () => webViewRef.current?.goBack();
+    const onForward = () => webViewRef.current?.goForward();
     const onQuit = () => {
         // Cache la FloatingBar immédiatement pour qu'elle ne reste pas visible
         // pendant l'animation de fermeture du widget
@@ -223,57 +223,57 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
         }
     };
 
-	const openURL = async () => {
-		try {
-			const supported = await Linking.canOpenURL(url);
-			if (supported) await Linking.openURL(url);
-		} catch (err) {
-			console.error('An error occurred', err);
-		}
-	};
+    const openURL = async () => {
+        try {
+            const supported = await Linking.canOpenURL(url);
+            if (supported) await Linking.openURL(url);
+        } catch (err) {
+            console.error('An error occurred', err);
+        }
+    };
 
-	const saveCredentials = async () => {
-		if (tempCredentials) {
-			await SecureStoreService.saveCredentials(tempCredentials.username, tempCredentials.password);
-			setSavedCredentials(tempCredentials);
-		}
-		setShowSaveModal(false);
-	};
+    const saveCredentials = async () => {
+        if (tempCredentials) {
+            await SecureStoreService.saveCredentials(tempCredentials.username, tempCredentials.password);
+            setSavedCredentials(tempCredentials);
+        }
+        setShowSaveModal(false);
+    };
 
-	const handleMessage = (event: import('react-native-webview').WebViewMessageEvent) => {
-		try {
-			const data = JSON.parse(event.nativeEvent.data);
-			if (data.type === 'CAS_CREDENTIALS') {
-				if (savedCredentials && savedCredentials.username === data.username && savedCredentials.password === data.password) {
-					return;
-				}
-				setTempCredentials({ username: data.username, password: data.password });
-				setShowSaveModal(true);
-			}
-		} catch (e) {
-		}
-	};
+    const handleMessage = (event: import('react-native-webview').WebViewMessageEvent) => {
+        try {
+            const data = JSON.parse(event.nativeEvent.data);
+            if (data.type === 'CAS_CREDENTIALS') {
+                if (savedCredentials && savedCredentials.username === data.username && savedCredentials.password === data.password) {
+                    return;
+                }
+                setTempCredentials({ username: data.username, password: data.password });
+                setShowSaveModal(true);
+            }
+        } catch (e) {
+        }
+    };
 
-	const theme = style.Theme[themeName];
+    const theme = style.Theme[themeName];
 
-	const renderLoading = () => (
-		<View
-			style={{
-				flex: 1,
-				justifyContent: 'center',
-				alignItems: 'center',
-				backgroundColor: theme.background,
-			}}>
-			<ActivityIndicator size="large" color={theme.primary} />
-		</View>
-	);
+    const renderLoading = () => (
+        <View
+            style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: theme.background,
+            }}>
+            <ActivityIndicator size="large" color={theme.primary} />
+        </View>
+    );
 
-	if (!uri) return renderLoading();
+    if (!uri) return renderLoading();
 
-	const getCASInjectedScript = () => {
-		// Ce script se relance à chaque chargement de page dans la WebView (navigations internes comprises).
-		// Il ne gère QUE la logique CAS — le décalage haut est géré nativement (contentInset iOS / SafeAreaView Android).
-		return `
+    const getCASInjectedScript = () => {
+        // Ce script se relance à chaque chargement de page dans la WebView (navigations internes comprises).
+        // Il ne gère QUE la logique CAS — le décalage haut est géré nativement (contentInset iOS / SafeAreaView Android).
+        return `
 			(function() {
                 if (!window.location.href.includes('cas.u-bordeaux.fr/cas/login')) return;
 
@@ -313,12 +313,12 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
 			})();
 			true;
 		`;
-	};
-	
+    };
 
 
-	return (
-		<View style={{ flex: 1, backgroundColor: theme.background }}>
+
+    return (
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
             <SafeAreaView
                 edges={onDismiss
                     ? ['top', 'left', 'right']           // mode modal : SafeAreaView gère le top
@@ -366,51 +366,51 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
             </SafeAreaView>
 
             {!dismissing && (
-                <FloatingActionBar 
-                    theme={theme} 
+                <FloatingActionBar
+                    theme={theme}
                     insets={insets}
-                    onBack={onBack} 
-                    onForward={onForward} 
-                    onRefresh={onRefresh} 
-                    openURL={openURL} 
+                    onBack={onBack}
+                    onForward={onForward}
+                    onRefresh={onRefresh}
+                    openURL={openURL}
                     onQuit={onQuit}
-                    canGoBack={canGoBack} 
-                    canGoForward={canGoForward} 
-                    loading={loading} 
+                    canGoBack={canGoBack}
+                    canGoForward={canGoForward}
+                    loading={loading}
                 />
             )}
 
-			<Modal
-				animationType="fade"
-				transparent={true}
-				visible={showSaveModal}
-				onRequestClose={() => setShowSaveModal(false)}
-			>
-				<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-					<View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.lg, borderRadius: tokens.radius.lg, width: '85%', alignItems: 'center', ...tokens.shadow.lg }}>
-						<MaterialCommunityIcons name="shield-check" size={48} color={theme.primary} style={{ marginBottom: tokens.space.md }} />
-						<Text style={{ fontSize: tokens.fontSize.md, color: theme.font, textAlign: 'center', marginBottom: tokens.space.lg, fontFamily: 'Montserrat_500Medium' }}>
-							{Translator.get('SAVE_CREDENTIALS_PROMPT')}
-						</Text>
-						<View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-							<TouchableOpacity 
-								style={{ flex: 1, padding: tokens.space.md, alignItems: 'center', backgroundColor: theme.background, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, borderWidth: 1, borderColor: theme.border }}
-								onPress={() => setShowSaveModal(false)}
-							>
-								<Text style={{ color: theme.fontSecondary, fontWeight: 'bold' }}>{Translator.get('NO')}</Text>
-							</TouchableOpacity>
-							<TouchableOpacity 
-								style={{ flex: 1, padding: tokens.space.md, alignItems: 'center', backgroundColor: theme.primary, borderRadius: tokens.radius.md, marginLeft: tokens.space.sm }}
-								onPress={saveCredentials}
-							>
-								<Text style={{ color: 'white', fontWeight: 'bold' }}>{Translator.get('YES')}</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
-				</View>
-			</Modal>
-		</View>
-	);
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={showSaveModal}
+                onRequestClose={() => setShowSaveModal(false)}
+            >
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.lg, borderRadius: tokens.radius.lg, width: '85%', alignItems: 'center', ...tokens.shadow.lg }}>
+                        <MaterialCommunityIcons name="shield-check" size={48} color={theme.primary} style={{ marginBottom: tokens.space.md }} />
+                        <Text style={{ fontSize: tokens.fontSize.md, color: theme.font, textAlign: 'center', marginBottom: tokens.space.lg, fontFamily: 'Montserrat_500Medium' }}>
+                            {Translator.get('SAVE_CREDENTIALS_PROMPT')}
+                        </Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                            <TouchableOpacity
+                                style={{ flex: 1, padding: tokens.space.md, alignItems: 'center', backgroundColor: theme.background, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, borderWidth: 1, borderColor: theme.border }}
+                                onPress={() => setShowSaveModal(false)}
+                            >
+                                <Text style={{ color: theme.fontSecondary, fontWeight: 'bold' }}>{Translator.get('NO')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{ flex: 1, padding: tokens.space.md, alignItems: 'center', backgroundColor: theme.primary, borderRadius: tokens.radius.md, marginLeft: tokens.space.sm }}
+                                onPress={saveCredentials}
+                            >
+                                <Text style={{ color: 'white', fontWeight: 'bold' }}>{Translator.get('YES')}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({

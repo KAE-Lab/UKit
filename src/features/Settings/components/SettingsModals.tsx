@@ -5,9 +5,9 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import Translator from '../../shared/i18n/Translator';
-import { SettingsManager } from '../../shared/services/AppCore';
-import { DataManager } from '../../shared/services/DataService';
+import Translator from '../../../shared/i18n/Translator';
+import { SettingsManager } from '../../../shared/services/AppCore';
+import { DataManager } from '../../../shared/services/DataService';
 
 // ── Utilitaire Clavier ──────────────────────────────────────────────────
 export const SettingsDismissKeyboard = ({ children }: { children: React.ReactNode }) => (
@@ -17,7 +17,7 @@ export const SettingsDismissKeyboard = ({ children }: { children: React.ReactNod
 );
 
 // ── Popup Calendrier ────────────────────────────────────────────────────
-export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selectedCalendar, setCalendar }: { theme: import('../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; selectedCalendar: string | number; setCalendar: (cal: import('expo-calendar').Calendar | 'UKit') => void }) => {
+export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selectedCalendar, setCalendar }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; selectedCalendar: string | number; setCalendar: (cal: import('expo-calendar').Calendar | 'UKit') => void }) => {
     function setDefaultCalendar() {
         setCalendar('UKit');
     }
@@ -76,7 +76,7 @@ export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selecte
 };
 
 // ── Popup Filtres ───────────────────────────────────────────────────────
-export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterList, filterTextInput, setFilterTextInput, submitFilterTextInput }: { theme: import('../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; filterList: string[]; filterTextInput: string | null; setFilterTextInput: (input: string) => void; submitFilterTextInput: () => void }) => {
+export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterList, filterTextInput, setFilterTextInput, submitFilterTextInput }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; filterList: string[]; filterTextInput: string | null; setFilterTextInput: (input: string) => void; submitFilterTextInput: () => void }) => {
     const flatListRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [availableUEs, setAvailableUEs] = useState(DataManager.getAvailableUEs());
@@ -89,13 +89,13 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
         // Refresh on open
         setAvailableUEs(DataManager.getAvailableUEs());
     }, [popupVisible]);
-    
+
     // Filter available UEs based on search query, excluding already-added ones
     const filteredSuggestions = searchQuery.length > 0
-        ? availableUEs.filter(ue => 
-            ue.toUpperCase().includes(searchQuery.toUpperCase()) && 
+        ? availableUEs.filter(ue =>
+            ue.toUpperCase().includes(searchQuery.toUpperCase()) &&
             !filterList.includes(ue)
-          )
+        )
         : [];
 
     const renderFilterItem = ({ item }: { item: string }) => {
@@ -231,7 +231,7 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
 };
 
 // ── Popup Langue ────────────────────────────────────────────────────────
-export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, language, setLanguageToFrench, setLanguageToEnglish, setLanguageToSpanish }: { theme: import('../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; language: string; setLanguageToFrench: () => void; setLanguageToEnglish: () => void; setLanguageToSpanish: () => void }) => {
+export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, language, setLanguageToFrench, setLanguageToEnglish, setLanguageToSpanish }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; language: string; setLanguageToFrench: () => void; setLanguageToEnglish: () => void; setLanguageToSpanish: () => void }) => {
     return (
         <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={popupClose}>
             <TouchableWithoutFeedback onPress={popupClose}>
@@ -266,7 +266,7 @@ export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, languag
 };
 
 // ── Popup Réinitialisation ──────────────────────────────────────────────
-export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }: { theme: import('../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; resetApp: () => void }) => {
+export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; resetApp: () => void }) => {
     return (
         <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={popupClose}>
             <TouchableWithoutFeedback onPress={popupClose}>

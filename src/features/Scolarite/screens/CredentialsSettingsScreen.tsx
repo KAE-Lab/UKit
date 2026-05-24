@@ -5,10 +5,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as LocalAuthentication from 'expo-local-authentication';
 
-import { AppContext } from '../../shared/services/AppCore';
-import Translator from '../../shared/i18n/Translator';
-import style, { tokens } from '../../shared/theme/Theme';
-import { useCredentials } from './services/CredentialsContext';
+import { AppContext } from '../../../shared/services/AppCore';
+import Translator from '../../../shared/i18n/Translator';
+import style, { tokens } from '../../../shared/theme/Theme';
+import { useCredentials } from '../services/CredentialsContext';
 
 const InfoRow = ({ label, value, theme }) => (
     <View style={styles.infoRow}>

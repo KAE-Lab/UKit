@@ -7,8 +7,8 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import ScheduleScreen from '../../features/Planning/screens/ScheduleScreen';
 import CampusDashboard from '../../features/Campus/Dashboard/CampusDashboard';
-import ScolariteDashboard from '../../features/Scolarite/ScolariteDashboard';
-import SettingsScreen from '../../features/Settings/SettingsScreen';
+import ScolariteDashboard from '../../features/Scolarite/screens/ScolariteDashboard';
+import SettingsScreen from '../../features/Settings/screens/SettingsScreen';
 
 import style, { tokens } from '../theme/Theme';
 import { AppContext } from '../services/AppCore';
@@ -36,13 +36,13 @@ function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarPro
         <SafeAreaInsetsContext.Consumer>
             {(insets) => {
                 const bottomPadding = Math.max(tokens.space.sm, (insets?.bottom || 0) - 15);
-                
+
                 return (
                     <View style={[styles.tabBarWrapper, { paddingBottom: bottomPadding }]}>
                         <View style={[
-                            styles.tabBarContainer, 
-                            { 
-                                backgroundColor: theme.cardBackground, 
+                            styles.tabBarContainer,
+                            {
+                                backgroundColor: theme.cardBackground,
                                 borderColor: theme.border,
                             }
                         ]}>
@@ -189,34 +189,34 @@ export default function MainTabNavigator() {
                 headerShown: false,
             }}
         >
-            <Tab.Screen 
-                name="PlanningTab" 
-                component={PlanningStackScreen} 
+            <Tab.Screen
+                name="PlanningTab"
+                component={PlanningStackScreen}
                 options={{
                     tabBarLabel: Translator.get('MY_PLANNING') || 'Planning',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="calendar-month-outline" size={24} color={color} />,
                     headerShown: false
                 }}
             />
-            <Tab.Screen 
-                name="CampusTab" 
-                component={CampusDashboard} 
+            <Tab.Screen
+                name="CampusTab"
+                component={CampusDashboard}
                 options={{
                     tabBarLabel: Translator.get('CAMPUS') || 'Campus',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="domain" size={24} color={color} />
                 }}
             />
-            <Tab.Screen 
-                name="ScolariteTab" 
-                component={ScolariteDashboard} 
+            <Tab.Screen
+                name="ScolariteTab"
+                component={ScolariteDashboard}
                 options={{
                     tabBarLabel: Translator.get('SCOLARITY') || 'Scolarité',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="toolbox-outline" size={24} color={color} />
                 }}
             />
-            <Tab.Screen 
-                name="SettingsTab" 
-                component={SettingsScreen} 
+            <Tab.Screen
+                name="SettingsTab"
+                component={SettingsScreen}
                 options={{
                     tabBarLabel: Translator.get('SETTINGS') || 'Paramètres',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="cog-outline" size={24} color={color} />
@@ -291,10 +291,10 @@ const PlanningStack = createStackNavigator<PlanningStackParamList>();
 function PlanningStackScreen() {
     return (
         <PlanningStack.Navigator id="PlanningStack">
-            <PlanningStack.Screen 
-                name="ScheduleInternal" 
-                component={ScheduleScreen} 
-                initialParams={{ name: [] }} 
+            <PlanningStack.Screen
+                name="ScheduleInternal"
+                component={ScheduleScreen}
+                initialParams={{ name: [] }}
                 options={{ headerShown: false }} // DayView gère son propre header sticky avec safe area
             />
         </PlanningStack.Navigator>
