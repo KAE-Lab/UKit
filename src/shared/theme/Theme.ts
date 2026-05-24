@@ -26,10 +26,10 @@ const tokens = {
         hero: 36,
     },
     fontWeight: {
-        regular: '400',
-        medium: '500',
-        semibold: '600',
-        bold: '700',
+        regular: '400' as const,
+        medium: '500' as const,
+        semibold: '600' as const,
+        bold: '700' as const,
     },
     shadow: {
         sm: {
@@ -76,6 +76,8 @@ const colors = {
     darkblue:    '#0D47A1',
     darkred:     '#D50000',
     backgroundGrey: '#E9E9EF',
+    white:       '#FFFFFF',
+    black:       '#000000',
 };
 
 const hintColors = {
@@ -1175,5 +1177,8 @@ const style = {
     Theme,
 };
 
+export type AppThemeType = typeof Theme.light;
+export type ThemeKey = 'light' | 'dark';
+
 export { tokens, StyleWelcome };
-export default style;
+export default style as Record<string, any> & { Theme: Record<ThemeKey, AppThemeType> };
