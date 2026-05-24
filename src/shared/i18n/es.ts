@@ -1,6 +1,6 @@
-import { G } from "react-native-svg";
+import type { TranslationDict } from './Translator';
 
-export default {
+const es: TranslationDict = {
 	ABOUT: 'Acerca de la aplicación',
 	ADD_TO_CALENDAR: 'Añadir el evento al calendario',
 	ADD_TO_CALENDAR_DESCRIPTION: '¿Quieres añadir el evento "$-" al calendario?',
@@ -154,7 +154,6 @@ export default {
 	UNKNOWN: 'Desconocido',
 	LIBRARY: 'Biblioteca',
 	TIME_SEPARATOR: ':',
-	DETAILS: 'Detalles',
 	MAP: 'Mapa',
 	DESTINATION: 'Destino',
 	WEEK_SHORT: 'S.',
@@ -214,3 +213,5 @@ export default {
 	PROFILE: "Perfil",
 	DOSSIER: "Expediente",
 };
+
+export default es;

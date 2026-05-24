@@ -1,4 +1,6 @@
-export default {
+import type { TranslationDict } from './Translator';
+
+const fr: TranslationDict = {
 	ABOUT: 'À propos',
 	ADD_TO_CALENDAR: "Ajouter l'événement au calendrier",
 	ADD_TO_CALENDAR_DESCRIPTION: 'Voulez vous ajouter l\'événement "$-" au calendrier ?',
@@ -152,7 +154,6 @@ export default {
 	UNKNOWN: 'Inconnue',
 	LIBRARY: 'Bibliothèque',
 	TIME_SEPARATOR: 'h',
-	DETAILS: 'Détails',
 	MAP: 'Carte',
 	DESTINATION: 'Destination',
 	WEEK_SHORT: 'S.',
@@ -212,3 +213,5 @@ export default {
 	PROFILE: "Profil",
 	DOSSIER: "Dossier",
 };
+
+export default fr;

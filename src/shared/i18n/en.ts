@@ -1,4 +1,4 @@
-export default {
+const en = {
 	ABOUT: 'About',
 	ADD_TO_CALENDAR: 'Add event to calendar',
 	ADD_TO_CALENDAR_DESCRIPTION: 'Would you like to add the event "$-" to calendar?',
@@ -150,7 +150,6 @@ export default {
 	UNKNOWN: 'Unknown',
 	LIBRARY: 'Library',
 	TIME_SEPARATOR: ':',
-	DETAILS: 'Details',
 	MAP: 'Map',
 	DESTINATION: 'Destination',
 	WEEK_SHORT: 'W-',
@@ -210,3 +209,5 @@ export default {
 	PROFILE: "Profile",
 	DOSSIER: "Record",
 };
+
+export default en;
