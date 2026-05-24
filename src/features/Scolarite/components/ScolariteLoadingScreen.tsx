@@ -10,7 +10,7 @@ const STEPS = [
     { key: 'profile',    labelKey: 'LOADING_PROFILE',    icon: 'account-outline' },
     { key: 'dossier',    labelKey: 'LOADING_DOSSIER',    icon: 'folder-account-outline' },
     { key: 'mailbox',    labelKey: 'LOADING_MAILBOX',    icon: 'email-outline' },
-];
+] as const;
 
 const stepIndex = (step) => STEPS.findIndex((s) => s.key === step);
 
