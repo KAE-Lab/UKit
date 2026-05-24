@@ -1,7 +1,8 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
 import { TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { RouteProp } from '@react-navigation/native';
 
 import MainTabNavigator from './MainTabNavigator';
 import GroupSearch from '../../features/Schedule/GroupSelectionScreen';
@@ -28,7 +29,28 @@ import { AppContext, treatTitle } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { NavBarHelper, SaveGroupButton as SaveButton, FilterRemoveButton } from './NavHelpers';
 
-const Stack = createStackNavigator();
+export type RootStackParamList = {
+    MainTabs: undefined;
+    GroupSearch: undefined;
+    Group: { name: string | string[] };
+    About: undefined;
+    Settings: undefined;
+    CredentialsSettings: undefined;
+    Crous: undefined;
+    Library: undefined;
+    WebBrowser: { entrypoint?: string };
+    Day: undefined;
+    CrousMenu: { restaurantName?: string; location?: { lat: number, lng: number } };
+    LibraryDetails: { library?: { name: string; lat: number; lng: number } };
+    Bde: undefined;
+    BdeDetail: { annonce?: Record<string, unknown> };
+    FreeRoomScreen: undefined;
+    FreeRoomDetails: { building?: Record<string, unknown> };
+    Geolocation: { title?: string; location?: { lat: number; lng: number } };
+    Course: { title?: string; data?: { UE?: string } };
+};
+
+const Stack = createStackNavigator<RootStackParamList>();
 
 export default function StackNavigator() {
     return (
@@ -36,7 +58,7 @@ export default function StackNavigator() {
             {({ themeName }) => {
                 const theme = style.Theme[themeName];
 
-                const renderMapButton = (navigation, title, location) => (
+                const renderMapButton = (navigation: StackNavigationProp<RootStackParamList>, title?: string, location?: { lat: number, lng: number }) => (
                     <TouchableOpacity onPress={() => navigation.navigate('Geolocation', { title, location })} style={{ paddingRight: tokens.space.md }}>
                         <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
                             <MaterialCommunityIcons name="map-marker-radius" size={24} color={theme.primary} />
@@ -47,6 +69,7 @@ export default function StackNavigator() {
                 return (
                   <CredentialsProvider>
                     <Stack.Navigator
+                        id="RootStack"
                         initialRouteName="MainTabs"
                         screenOptions={{
                             headerLeft: (props) => props.canGoBack ? (
@@ -86,7 +109,7 @@ export default function StackNavigator() {
                         
                         <Stack.Screen name="WebBrowser" component={WebBrowser} options={{ headerShown: false, gestureEnabled: true }} />
                         
-                        <Stack.Screen name="Day" component={DayView} options={{ tabBarLabel: Translator.get('DAY'), tabBarIcon: ({ tintColor }) => <MaterialCommunityIcons name="calendar" size={24} style={{ color: tintColor }} /> }} />
+                        <Stack.Screen name="Day" component={DayView} options={({ route }) => NavBarHelper({ title: Translator.get('DAY'), themeName, route })} />
                         
                         <Stack.Screen name="CrousMenu" component={CrousMenuScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.restaurantName, route.params?.location), title: route.params?.restaurantName ?? Translator.get('MENU'), themeName, route })} />
                         

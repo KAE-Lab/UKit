@@ -10,7 +10,7 @@ import Style from '../theme/Theme';
 import { StatusBar, UpdateAlert } from '../ui/AppUI';
 import ModMenu from '../ui/ModMenu';
 
-export default (props) => {
+export default function RootContainer() {
 	const [isFirstLoad, setFirstLoad] = useState(SettingsManager.isFirstLoad());
 	const [themeName, setThemeName] = useState(SettingsManager.getTheme());
 	const [favoriteGroups, setFavoriteGroups] = useState(SettingsManager.getFavoriteGroups());

@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, TouchableWithoutFeedback } from 'react-native';
+import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, TouchableWithoutFeedback, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { StackNavigationOptions } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SettingsManager } from '../services/AppCore';
@@ -11,30 +12,45 @@ import Button from '../ui/Button';
 
 
 // GESTIONNAIRE DE HEADER
-export const globalScrollValues = {};
-export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route, gestureEnabled }) => {
+export type ScrollValueWithInterps = Animated.Value & {
+    _titleOpacity?: Animated.AnimatedInterpolation<number | string>;
+    _buttonScale?: Animated.AnimatedInterpolation<number | string>;
+};
+
+export const globalScrollValues: Record<string, ScrollValueWithInterps> = {};
+
+export interface NavBarHelperProps {
+    title?: string;
+    headerLeft?: () => React.ReactNode;
+    headerRight?: () => React.ReactNode;
+    themeName: string;
+    route?: RouteProp<Record<string, object | undefined>, string>;
+    gestureEnabled?: boolean;
+}
+
+export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route, gestureEnabled }: NavBarHelperProps): StackNavigationOptions => {
     const theme = style.Theme[themeName];
     
     // La variable est lue depuis le dictionnaire externe pour survivre aux mises à jour
     const safeScrollY = (route && globalScrollValues[route.key]) ? globalScrollValues[route.key] : new Animated.Value(0);
 
-    if (!safeScrollY._titleOpacity) {
-        safeScrollY._titleOpacity = safeScrollY.interpolate({
+    if (!(safeScrollY as any)._titleOpacity) {
+        (safeScrollY as any)._titleOpacity = safeScrollY.interpolate({
             inputRange: [0, 60],
             outputRange: [1, 0],
             extrapolate: 'clamp',
         });
-        safeScrollY._buttonScale = safeScrollY.interpolate({
+        (safeScrollY as any)._buttonScale = safeScrollY.interpolate({
             inputRange: [0, 60],
             outputRange: [1.14, 1],
             extrapolate: 'clamp',
         });
     }
 
-    const options = {
+    const options: StackNavigationOptions = {
         headerTitle: () => (
             <Animated.View style={{ 
-                opacity: safeScrollY._titleOpacity,  
+                opacity: (safeScrollY as any)._titleOpacity,  
                 paddingHorizontal: tokens.space.lg, 
                 height: 45, // On fige la hauteur pour correspondre aux boutons latéraux
                 justifyContent: 'center',
@@ -62,14 +78,14 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
 
     if (headerLeft !== undefined) {
         options.headerLeft = headerLeft ? () => (
-            <Animated.View style={{ transform: [{ scale: safeScrollY._buttonScale }], height: 45, justifyContent: 'center' }}>
+            <Animated.View style={{ transform: [{ scale: (safeScrollY as any)._buttonScale }], height: 45, justifyContent: 'center' }}>
                 {headerLeft()}
             </Animated.View>
         ) : undefined;
     }
     if (headerRight !== undefined) {
         options.headerRight = headerRight ? () => (
-            <Animated.View style={{ transform: [{ scale: safeScrollY._buttonScale }], height: 45, justifyContent: 'center' }}>
+            <Animated.View style={{ transform: [{ scale: (safeScrollY as any)._buttonScale }], height: 45, justifyContent: 'center' }}>
                 {headerRight()}
             </Animated.View>
         ) : undefined;
@@ -83,8 +99,18 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
 };
 
 // ── BOUTON SAUVEGARDER GROUPE ───────────────────────────────────────────
-export class SaveGroupButton extends React.Component {
-    constructor(props) {
+export interface SaveGroupButtonProps {
+    groupName: string | string[];
+    themeName: string;
+}
+
+export interface SaveGroupButtonState {
+    favoriteGroups: string[];
+    modalVisible: boolean;
+}
+
+export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveGroupButtonState> {
+    constructor(props: SaveGroupButtonProps) {
         super(props);
         this.state = {
             favoriteGroups: SettingsManager.getFavoriteGroups(),
@@ -97,7 +123,7 @@ export class SaveGroupButton extends React.Component {
     componentWillUnmount() {
         SettingsManager.unsubscribe('favoriteGroups', this.handleFavoriteGroupsUpdate);
     }
-    handleFavoriteGroupsUpdate = (groups) => {
+    handleFavoriteGroupsUpdate = (groups: string[]) => {
         this.setState({ favoriteGroups: [...groups] });
     };
     saveGroup() {
@@ -175,8 +201,18 @@ export class SaveGroupButton extends React.Component {
 }
 
 // ── BOUTON RETIRER FILTRES UE ───────────────────────────────────────────
-export class FilterRemoveButton extends React.Component {
-    constructor(props) {
+export interface FilterRemoveButtonProps {
+    UE?: string;
+    themeName: string;
+    backAction: () => void;
+}
+
+export interface FilterRemoveButtonState {
+    popupVisible: boolean;
+}
+
+export class FilterRemoveButton extends React.Component<FilterRemoveButtonProps, FilterRemoveButtonState> {
+    constructor(props: FilterRemoveButtonProps) {
         super(props);
         this.state = { popupVisible: false };
     }
@@ -220,7 +256,14 @@ export class FilterRemoveButton extends React.Component {
 }
 
 // ── BOUTON MON GROUPE ──────────────────────────────────
-export class MyGroupButton extends React.PureComponent {
+export interface MyGroupButtonProps {
+    favoriteGroups: string[];
+    themeName: string;
+    isActive?: boolean;
+    navigate: (route: string, params?: object) => void;
+}
+
+export class MyGroupButton extends React.PureComponent<MyGroupButtonProps> {
     componentDidMount() {
         if (this.props.favoriteGroups && this.props.favoriteGroups.length > 0 && SettingsManager.getOpenAppOnFavoriteGroup()) {
             this.props.navigate('Stack', { screen: 'Group', params: { name: this.props.favoriteGroups } });
@@ -246,8 +289,8 @@ export class MyGroupButton extends React.PureComponent {
 }
 
 // ENGLOBEUR D'ANIMATION (HOC) CENTRALISÉ
-export const withHeaderAnimation = (WrappedComponent) => {
-    return function AnimatedHeaderWrapper(props) {
+export const withHeaderAnimation = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
+    return function AnimatedHeaderWrapper(props: P & { target?: unknown }) {
         const scrollY = useRef(new Animated.Value(0)).current;
         const navigation = useNavigation();
         const route = useRoute();
@@ -263,7 +306,7 @@ export const withHeaderAnimation = (WrappedComponent) => {
             
             // On force un rafraîchissement avec un paramètre simple (sérialisable)
             setTimeout(() => {
-                if (navigation) navigation.setParams({ animatedReady: true });
+                if (navigation) navigation.setParams({ animatedReady: true } as any);
             }, 50);
 
             return () => {
@@ -286,8 +329,8 @@ export const withHeaderAnimation = (WrappedComponent) => {
 };
 
 // ENGLOBEUR STATIQUE CENTRALISÉ (Pour les pages sans scroll)
-export const withStaticHeader = (WrappedComponent) => {
-    return function StaticHeaderWrapper(props) {
+export const withStaticHeader = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
+    return function StaticHeaderWrapper(props: P) {
         const insets = useSafeAreaInsets();
         // On renvoie exactement le même espacement que l'animation, mais sans la logique de défilement
         const headerPadding = { paddingTop: (insets.top || 0) + 70, paddingBottom: tokens.space.sm };

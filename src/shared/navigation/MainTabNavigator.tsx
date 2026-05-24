@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
@@ -16,10 +16,21 @@ import Translator from '../i18n/Translator';
 import { NavBarHelper, SaveGroupButton } from './NavHelpers';
 import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
 
-const Tab = createBottomTabNavigator();
+export type MainTabParamList = {
+    PlanningTab: undefined;
+    CampusTab: undefined;
+    ScolariteTab: undefined;
+    SettingsTab: undefined;
+};
+
+const Tab = createBottomTabNavigator<MainTabParamList>();
+
+export interface CustomTabBarProps extends BottomTabBarProps {
+    theme: Record<string, any>;
+}
 
 // Composant Custom Tab Bar pour reproduire l'effet Apple Music (décalé à gauche, ratio icon/text, bords arrondis)
-function CustomTabBar({ state, descriptors, navigation, theme }) {
+function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarProps) {
     const { credentials } = useCredentials();
     return (
         <SafeAreaInsetsContext.Consumer>
@@ -37,8 +48,8 @@ function CustomTabBar({ state, descriptors, navigation, theme }) {
                         ]}>
                             {state.routes.map((route, index) => {
                                 const { options } = descriptors[route.key];
-                                const label = options.tabBarLabel !== undefined
-                                    ? options.tabBarLabel
+                                const label = (options.tabBarLabel as string) !== undefined
+                                    ? (options.tabBarLabel as string)
                                     : options.title !== undefined
                                         ? options.title
                                         : route.name;
@@ -73,7 +84,7 @@ function CustomTabBar({ state, descriptors, navigation, theme }) {
                                         accessibilityRole="button"
                                         accessibilityState={isFocused ? { selected: true } : {}}
                                         accessibilityLabel={options.tabBarAccessibilityLabel}
-                                        testID={options.tabBarTestID}
+                                        testID={(options as any).tabBarTestID as string}
                                         onPress={onPress}
                                         onLongPress={onLongPress}
                                         style={styles.tabItem}
@@ -172,6 +183,7 @@ export default function MainTabNavigator() {
 
     return (
         <Tab.Navigator
+            id="MainTabs"
             tabBar={props => <CustomTabBar {...props} theme={theme} />}
             screenOptions={{
                 headerShown: false,
@@ -271,10 +283,14 @@ const styles = StyleSheet.create({
     }
 });
 
-const PlanningStack = createStackNavigator();
+export type PlanningStackParamList = {
+    ScheduleInternal: { name: string[] };
+};
+
+const PlanningStack = createStackNavigator<PlanningStackParamList>();
 function PlanningStackScreen() {
     return (
-        <PlanningStack.Navigator>
+        <PlanningStack.Navigator id="PlanningStack">
             <PlanningStack.Screen 
                 name="ScheduleInternal" 
                 component={ScheduleScreen} 
