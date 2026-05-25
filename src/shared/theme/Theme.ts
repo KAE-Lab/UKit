@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Platform } from 'react-native';
 
 const tokens = {
