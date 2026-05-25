@@ -18,7 +18,8 @@ import { Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 
 import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
-import { DataManager } from './src/shared/services/DataService';
+import { PlanningDataManager } from './src/features/Planning/services/PlanningDataManager';
+import { CampusDataManager } from './src/features/Campus/services/CampusDataManager';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 SplashScreen.preventAutoHideAsync();
@@ -43,7 +44,8 @@ function AnimatedAppLoader({ children }) {
 					SimpleLineIcons.font,
 					Entypo.font,
 				]);
-				await DataManager.loadData();
+				await PlanningDataManager.loadData();
+				await CampusDataManager.loadData();
 				await SettingsManager.loadSettings();
 
 				await Promise.all([...imageAssets, ...fontAssets]);

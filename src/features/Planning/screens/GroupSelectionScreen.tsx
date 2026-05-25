@@ -11,7 +11,7 @@ import { Split } from '../../../shared/ui/AppUI';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext, isConnected } from '../../../shared/services/AppCore'
-import { FetchManager } from '../../../shared/services/DataService';
+import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
 import { NavBarHelper, SaveGroupButton } from '../../../shared/navigation/NavHelpers';
 
 // ── COMPOSANT HEADER DE SECTION ─────────────────────────────────────────

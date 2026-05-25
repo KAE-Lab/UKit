@@ -6,7 +6,7 @@ import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
-import { DataManager } from '../../../../shared/services/DataService';
+import { CampusDataManager as DataManager } from '../../services/CampusDataManager';
 import { getDistanceInKm, BuildingInfo } from '../../services/FreeRoomService';
 import { useFavorites } from '../../hooks/useFavorites';
 

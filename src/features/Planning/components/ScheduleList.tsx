@@ -15,7 +15,8 @@ import { CourseRowWithNavigation as CourseRow, CourseGroupCarousel } from './Cou
 import { ErrorAlert } from '../../../shared/ui/Alerts';
 import Translator from '../../../shared/i18n/Translator';
 import { isConnected } from '../../../shared/services/AppCore'
-import { FetchManager, DataManager } from '../../../shared/services/DataService';
+import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
+import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
 import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../../shared/services/AppCore';
 import { NotificationManager } from '../../../shared/services/NotificationService';
 

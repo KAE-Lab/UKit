@@ -5,7 +5,7 @@ import axios from 'axios';
 
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
-import { URL } from '../services/DataService';
+import { URL } from '../constants/urls';
 import { tokens } from '../theme/Theme';
 
 // ── SÉPARATEUR VISUEL ───────────────────────────────────────────

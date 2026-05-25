@@ -8,7 +8,7 @@ import { TextInput } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import { SettingsManager, languageFromDevice } from '../../shared/services/AppCore';
-import { DataManager } from '../../shared/services/DataService';
+import { PlanningDataManager as DataManager } from '../Planning/services/PlanningDataManager';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
 

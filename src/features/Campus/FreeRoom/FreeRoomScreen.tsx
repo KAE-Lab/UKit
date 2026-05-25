@@ -5,7 +5,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { AppContext } from '../../../shared/services/AppCore';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import { DataManager } from '../../../shared/services/DataService';
+import { CampusDataManager as DataManager } from '../services/CampusDataManager';
 import { BuildingInfo, getDistanceInKm } from '../services/FreeRoomService';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 

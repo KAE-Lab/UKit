@@ -8,7 +8,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import { BuildingInfo, FreeRoomSlot, RoomInfo } from '../services/FreeRoomService';
-import { FetchManager } from '../../../shared/services/DataService';
+import { CampusApiService as FetchManager } from '../services/CampusApiService';
 
 export default function FreeRoomDetailsScreen({ route, navigation }: any) {
     const { building } = route.params as { building: BuildingInfo };

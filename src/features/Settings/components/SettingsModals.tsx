@@ -7,7 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
 import { SettingsManager } from '../../../shared/services/AppCore';
-import { DataManager } from '../../../shared/services/DataService';
+import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
 
 // ── Utilitaire Clavier ──────────────────────────────────────────────────
 export const SettingsDismissKeyboard = ({ children }: { children: React.ReactNode }) => (

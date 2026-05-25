@@ -1,43 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import qs from 'qs';
 import moment from 'moment';
 import 'moment/locale/fr';
-import { decode } from 'html-entities';
+import { WebApiURL } from '../../../shared/constants/urls';
+import { formatDescription, upperCaseFirstLetter } from '../../../shared/utils/formatUtils';
 
 moment.locale('fr');
 
-// ── CONFIGURATION ET CONSTANTES ─────────────────────────────────────────
-
-export const URL = {
-    MAP: 'https://www.google.com/maps/',
-    CONTACT_EMAIL: 'mailto:contact@kaelab.dev',
-    UKIT_WEBSITE: 'https://ukit-bordeaux.fr',
-    KAELAB_WEBSITE: 'https://kaelab.dev',
-    LEGAL_NOTICE: 'https://github.com/KAE-Lab/UKit/blob/master/PRIVACY.md',
-    VERSION_STORE: 'https://raw.githubusercontent.com/KAE-Lab/UKit/master/VERSION',
-    GOOGLE_APP: 'https://play.google.com/store/apps/details?id=com.bordeaux1.emplois',
-    APPLE_APP: 'https://apps.apple.com/fr/app/ukit-bordeaux/id1394708917',
-    CROUSTILLANT_WEBSITE: 'https://croustillant.menu',
-};
-
-export const WebApiURL = {
-    DOMAIN: 'https://ukit.kbdev.io/Home/',
-    GROUPS: 'ReadResourceListItems',
-    CALENDARDATA: 'GetCalendarData',
-    SIDEBAR: 'GetSideBarEvent',
-};
-
-// Utilitaires internes
-const upperCaseFirstLetter = (string: string): string => string.charAt(0).toUpperCase() + string.slice(1);
-
-const formatDescription = (string: string): string => {
-    return decode(string.replace(/\r/g, '').replace(/<br \/>/g, '').replace(/\n\n\n\n/g, ';'));
-};
-
-// ── FETCH MANAGER (Requêtes API) ────────────────────────────────────────
-
-class FetchManagerService {
+class PlanningApiServiceClass {
     fetchGroupList = async (): Promise<string[] | null> => {
         const options = {
             method: 'GET',
@@ -50,8 +20,8 @@ class FetchManagerService {
             if (!results.data) return null;
 
             return results.data.results
-                .map((e) => e.id)
-                .filter((e) => e.length > 2)
+                .map((e: any) => e.id)
+                .filter((e: string) => e.length > 2)
                 .sort();
         } catch (error) {
             return null;
@@ -182,7 +152,7 @@ class FetchManagerService {
             const eventList = Array.from({ length: 6 }).map((_, i) => ({
                 dayNumber: String(i + 1),
                 dayTimestamp: searchDate.clone().startOf('week').add(i, 'day').unix(),
-                courses: [],
+                courses: [] as Record<string, unknown>[],
             }));
 
             for (const event of response.data) {
@@ -327,249 +297,6 @@ class FetchManagerService {
             return null;
         }
     };
-
-    fetchRoomList = async (): Promise<{ id: string; name: string }[] | null> => {
-        const options = {
-            method: 'GET',
-            url: WebApiURL.DOMAIN + WebApiURL.GROUPS,
-            params: { searchTerm: '_', pageSize: '10000', resType: '102' },
-        };
-        try {
-            const results = await axios.request(options);
-            if (results?.status !== 200) return null;
-            if (!results.data) return null;
-
-            return results.data.results
-                .filter((e) => e.text && e.text.length > 2)
-                .map((e) => ({ id: e.id, name: e.text }));
-        } catch (error) {
-            return null;
-        }
-    };
-
-    extractBuildingsFromRooms = (rooms: { id: string; name: string }[]): Record<string, unknown>[] => {
-        const locationsData = require('../../../assets/locations.json');
-        
-        // Find which buildings have freeAccess: true
-        const freeAccessBuildings = Object.keys(locationsData).filter(key => locationsData[key].freeAccess === true);
-        
-        const buildingsMap = new Map();
-
-        for (const buildingKey of freeAccessBuildings) {
-            const loc = locationsData[buildingKey];
-            buildingsMap.set(buildingKey, {
-                id: 'bat_' + buildingKey.toLowerCase(),
-                name: buildingKey,
-                rooms: [],
-                imageUrl: loc.image,
-                lat: loc.lat,
-                lng: loc.lng,
-                campus: loc.campus || 'Talence',
-                schedule: loc.schedule
-            });
-        }
-
-        for (const room of rooms) {
-            if (room.name.toLowerCase().includes('en attente')) continue;
-
-            for (const buildingKey of freeAccessBuildings) {
-                // Match the building key strictly
-                const regex = new RegExp(`\\b${buildingKey}\\b`, 'i');
-                if (regex.test(room.name) || room.name.includes(buildingKey)) {
-                    // Nettoyage: retirer le nom du bâtiment et ne garder que "Salle XXX"
-                    let cleanName = room.name.replace(/\s*\([^)]*\)$/, '').trim();
-                    let finalName = cleanName;
-                    const salleIndex = cleanName.toLowerCase().indexOf('salle');
-                    if (salleIndex !== -1) {
-                        finalName = cleanName.substring(salleIndex).trim();
-                    }
-
-                    if (finalName.toLowerCase() === 'salle' || finalName.trim() === '') {
-                        break;
-                    }
-
-                    buildingsMap.get(buildingKey).rooms.push({
-                        id: room.id,
-                        name: finalName,
-                        fullName: room.name
-                    });
-                    break;
-                }
-            }
-        }
-        
-        return Array.from(buildingsMap.values()).filter(b => b.rooms.length > 0).sort((a, b) => a.name.localeCompare(b.name));
-    };
-
-    fetchRoomsScheduleDay = async (roomIds: string[], date: string): Promise<Record<string, unknown>[] | null> => {
-        const endQueryDate = moment(date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD');
-        const data = {
-            start: date,
-            end: endQueryDate,
-            resType: '102',
-            calView: 'agendaDay',
-            'federationIds[]': roomIds,
-            colourScheme: '3',
-        };
-        const options = {
-            method: 'POST',
-            url: WebApiURL.DOMAIN + WebApiURL.CALENDARDATA,
-            headers: {
-                Connection: 'keep-alive',
-                Pragma: 'no-cache',
-                'Cache-Control': 'no-cache',
-                Accept: 'application/json',
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            },
-            data: qs.stringify(data, { arrayFormat: 'repeat' }),
-        };
-
-        try {
-            const response = await axios.request(options);
-            if (response?.status !== 200) return null;
-
-            const eventList = [];
-            for (const event of response.data) {
-                if (moment(event.start).format('YYYY-MM-DD') !== date) continue;
-
-                const startDate = moment(event.start);
-                const endDate = moment(event.end);
-                
-                eventList.push({
-                    id: event.id,
-                    starttime: startDate.format('HH:mm'),
-                    endtime: endDate.format('HH:mm'),
-                    date: { start: startDate.toISOString(), end: endDate.toISOString() },
-                    description: formatDescription(event.description),
-                    isVacances: event.eventCategory === 'Vacances' || (event.description && event.description.toLowerCase().includes('vacances'))
-                });
-            }
-            return eventList;
-        } catch (error) {
-            return null;
-        }
-    };
 }
 
-export const FetchManager = new FetchManagerService();
-
-// ── DATA MANAGER (Cache & Gestion) ──────────────────────────────────────
-
-class DataManagerService {
-    _groupList: string[];
-    _buildingList: Record<string, unknown>[];
-    _availableUEs: string[];
-    _subscribers: Record<string, Function[]>;
-    _cacheTimeLimit: number;
-
-    constructor() {
-        this._groupList = [];
-        this._buildingList = [];
-        this._availableUEs = [];
-        this._subscribers = {};
-        this._cacheTimeLimit = 7 * 24 * 60 * 60 * 1000;
-    }
-
-    on = (event: string, callback: Function) => {
-        if (!this._subscribers[event]) {
-            this._subscribers[event] = [];
-        }
-        this._subscribers[event].push(callback);
-    };
-
-    notify = (event: string, ...args: unknown[]) => {
-        if (!this._subscribers[event]) return;
-        this._subscribers[event].forEach((fn) => fn(...args));
-        this.saveData();
-    };
-
-    getGroupList = (): string[] => this._groupList;
-
-    setGroupList = (newList: string[]) => {
-        this._groupList = [...newList];
-        this.notify('groupList', this._groupList);
-    };
-
-    getBuildingList = (): Record<string, unknown>[] => this._buildingList;
-
-    setBuildingList = (newList: Record<string, unknown>[]) => {
-        this._buildingList = [...newList];
-        this.notify('buildingList', this._buildingList);
-    };
-
-    getAvailableUEs = (): string[] => this._availableUEs;
-
-    extractUEsFromCourses = (courses: Array<{ courses?: { subject?: string }[], subject?: string }>) => {
-        const regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
-        const ueSet = new Set(this._availableUEs);
-        const flatCourses = Array.isArray(courses) ? courses : [];
-
-        for (const item of flatCourses) {
-            // Handle both day courses (flat array) and week courses (array of { courses: [] })
-            const coursesToScan = item.courses ? item.courses : [item];
-            for (const course of coursesToScan) {
-                if (course.subject && course.subject !== 'N/C') {
-                    const match = regexUE.exec(course.subject);
-                    if (match && match.length === 3) {
-                        ueSet.add(match[1]);
-                    }
-                }
-            }
-        }
-
-        const newUEs = [...ueSet].sort();
-        this._availableUEs = newUEs;
-        this.notify('availableUEs', this._availableUEs);
-    };
-
-    fetchGroupList = async () => {
-        const groupList = await FetchManager.fetchGroupList();
-        if (groupList) {
-            await AsyncStorage.setItem('groupListTimestamp', String(Date.now()));
-            this.setGroupList(groupList);
-        }
-    };
-
-    fetchBuildingList = async () => {
-        const roomList = await FetchManager.fetchRoomList();
-        if (roomList) {
-            const buildings = FetchManager.extractBuildingsFromRooms(roomList);
-            await AsyncStorage.setItem('buildingListTimestamp', String(Date.now()));
-            this.setBuildingList(buildings);
-        }
-    };
-
-    saveData = () => {
-        AsyncStorage.setItem('groupList', JSON.stringify(this._groupList));
-    };
-
-    loadData = async () => {
-        try {
-            const groupListRaw = await AsyncStorage.getItem('groupList');
-            const groupList = groupListRaw ? JSON.parse(groupListRaw) : null;
-            const timestamp = await AsyncStorage.getItem('groupListTimestamp');
-            const difference = Date.now() - parseInt(timestamp || '0');
-
-            if (groupList && difference < this._cacheTimeLimit) {
-                this.setGroupList(groupList);
-            } else {
-                await this.fetchGroupList();
-            }
-
-            const buildingListRaw = await AsyncStorage.getItem('buildingList');
-            const buildingList = buildingListRaw ? JSON.parse(buildingListRaw) : null;
-            const buildingTimestamp = await AsyncStorage.getItem('buildingListTimestamp');
-            const buildingDiff = Date.now() - parseInt(buildingTimestamp || '0');
-
-            if (buildingList && buildingDiff < this._cacheTimeLimit) {
-                this.setBuildingList(buildingList);
-            } else {
-                await this.fetchBuildingList();
-            }
-        } catch (error) {
-            console.warn('COULDNT RETRIEVE GROUP LIST...');
-        }
-    };
-}
-
-export const DataManager = new DataManagerService();
+export const PlanningApiService = new PlanningApiServiceClass();

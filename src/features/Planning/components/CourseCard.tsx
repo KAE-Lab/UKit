@@ -12,7 +12,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { getLocations, getLocationsInText } from '../../../shared/services/AppCore';
 import { AppContext } from '../../../shared/services/AppCore';
-import { URL } from '../../../shared/services/DataService';
+import { URL } from '../../../shared/constants/urls';
 import { withStaticHeader } from '../../../shared/navigation/NavHelpers';
 
 // ── TYPESCRIPT INTERFACES ───────────────────────────────────────────────

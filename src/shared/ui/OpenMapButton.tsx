@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, TouchableOpacity, Linking } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { URL } from '../services/DataService';
+import { URL } from '../constants/urls';
 import { tokens, AppThemeType } from '../theme/Theme';
 
 const locations = require('../../../assets/locations.json');

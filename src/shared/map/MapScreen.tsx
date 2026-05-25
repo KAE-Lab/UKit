@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppContext } from '../services/AppCore';
 import style, { tokens } from '../theme/Theme';
-import { URL } from '../services/DataService';
+import { URL } from '../constants/urls';
 
 // Import du JSON 
 const locations: Record<string, { lat: number; lng: number }> = require('../../../assets/locations.json');

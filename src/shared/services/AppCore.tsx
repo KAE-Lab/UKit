@@ -8,7 +8,7 @@ import * as TaskManager from 'expo-task-manager';
 import NetInfo from '@react-native-community/netinfo';
 
 import { ErrorAlert } from '../ui/Alerts';
-import { FetchManager } from './DataService';
+import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
 
 const locations = require('../../../assets/locations.json');
 
