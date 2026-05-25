@@ -7,7 +7,7 @@ import moment from 'moment';
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
-import { BuildingInfo, FreeRoomSlot, RoomInfo } from './FreeRoomService';
+import { BuildingInfo, FreeRoomSlot, RoomInfo } from '../services/FreeRoomService';
 import { FetchManager } from '../../../shared/services/DataService';
 
 export default function FreeRoomDetailsScreen({ route, navigation }: any) {

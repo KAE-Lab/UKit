@@ -6,7 +6,7 @@ import { SafeAreaInsetsContext, SafeAreaView } from 'react-native-safe-area-cont
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
-import { BdeAnnonce } from './BdeService';
+import { BdeAnnonce } from '../services/BdeService';
 
 export interface BdeDetailsRouteParams {
     annonce?: BdeAnnonce;
