@@ -148,16 +148,16 @@ export class CalendarNewEventPrompt extends React.Component<CalendarNewEventProm
 								</Text>
 								<View style={theme.popup.buttonContainer as never}>
 									<TouchableOpacity
-										style={theme.popup.buttonSecondary as any}
+										style={theme.popup.buttonSecondary as import('react-native').ViewStyle}
 										onPress={this.closePopup}>
-										<Text style={theme.popup.buttonTextSecondary as any}>
+										<Text style={theme.popup.buttonTextSecondary as import('react-native').TextStyle}>
 											{Translator.get('CANCEL')}
 										</Text>
 									</TouchableOpacity>
 									<TouchableOpacity
-										style={theme.popup.buttonMain as any}
+										style={theme.popup.buttonMain as import('react-native').ViewStyle}
 										onPress={this.addCalendarEvent}>
-										<Text style={theme.popup.buttonTextMain as any}>
+										<Text style={theme.popup.buttonTextMain as import('react-native').TextStyle}>
 											{Translator.get('CONFIRM')}
 										</Text>
 									</TouchableOpacity>

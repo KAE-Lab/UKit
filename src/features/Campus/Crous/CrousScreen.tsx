@@ -14,7 +14,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import { useCampusLocation } from '../hooks/useCampusLocation';
 import { useSavedFilter } from '../hooks/useSavedFilter';
 
-function CrousScreen({ navigation, onAnimatedScroll }: any) {
+function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>; onAnimatedScroll?: (event: unknown) => void }) {
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
@@ -54,8 +54,9 @@ function CrousScreen({ navigation, onAnimatedScroll }: any) {
 
         return result.filter(item => {
             if (selectedFilter !== 'all') {
-                const isRestoU = item.title.includes("Crous Cafet") || item.title.includes("Resto U");
-                const isMarket = item.title.includes("Crous Moovy Market") || item.title.includes("Crous Market");
+                const titleLower = item.title.toLowerCase();
+                const isRestoU = titleLower.includes("crous cafet") || titleLower.includes("resto u");
+                const isMarket = titleLower.includes("crous moovy market") || titleLower.includes("crous market");
 
                 if (selectedFilter === 'resto' && !isRestoU) return false;
                 if (selectedFilter === 'market' && !isMarket) return false;
@@ -108,7 +109,7 @@ function CrousScreen({ navigation, onAnimatedScroll }: any) {
                         <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
                         <Text style={{
                             fontSize: tokens.fontSize.sm,
-                            fontWeight: tokens.fontWeight.bold as never,
+                            fontWeight: tokens.fontWeight.bold,
                             color: theme.primary,
                             marginLeft: 4
                         }}>

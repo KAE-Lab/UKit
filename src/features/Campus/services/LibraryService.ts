@@ -27,6 +27,24 @@ export interface TimetableEntry {
     }[];
 }
 
+interface AffluencesApiCategory {
+    id: number;
+}
+
+interface AffluencesApiSite {
+    id: string;
+    categories?: AffluencesApiCategory[];
+    location?: {
+        address?: { city?: string };
+        coordinates?: { latitude?: number; longitude?: number };
+    };
+    images?: string[];
+    poster_image?: string;
+    estimated_distance?: number;
+    primary_name: string;
+    slug: string;
+}
+
 function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371; 
     const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -82,9 +100,9 @@ export default class LibraryService {
             
             allResponses.forEach(json => {
                 const results = json.data?.results || [];
-                results.forEach((site: any) => {
+                results.forEach((site: AffluencesApiSite) => {
                     // Filtrage sur les categories BU classiques et universitaires
-                    if (site.categories?.some((cat: any) => cat.id === 1 || cat.id === 20)) {
+                    if (site.categories?.some((cat: AffluencesApiCategory) => cat.id === 1 || cat.id === 20)) {
                         if (!uniqueLibraries.has(site.id)) {
                             uniqueLibraries.set(site.id, site);
                         }
@@ -92,7 +110,7 @@ export default class LibraryService {
                 });
             });
 
-            const formattedLibraries = Array.from(uniqueLibraries.values()).map((lib: any) => {
+            const formattedLibraries = Array.from(uniqueLibraries.values()).map((lib: AffluencesApiSite) => {
                 const city = lib.location?.address?.city;
                 const imageUrl = (lib.images && lib.images.length > 0 ? lib.images[0] : lib.poster_image) || null;
                 const siteLat = lib.location?.coordinates?.latitude;

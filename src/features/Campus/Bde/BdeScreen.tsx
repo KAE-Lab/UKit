@@ -12,7 +12,7 @@ import { CampusListLayout } from '../components/CampusListLayout';
 import { CampusCard } from '../components/CampusCard';
 
 export interface BdeScreenProps {
-    navigation: { navigate: (screen: string, params?: Record<string, unknown>) => void; setOptions?: any };
+    navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions?: (options: unknown) => void };
     onAnimatedScroll?: (event: unknown) => void;
 }
 

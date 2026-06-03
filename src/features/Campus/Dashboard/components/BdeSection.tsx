@@ -11,7 +11,7 @@ import BdeService, { BdeAnnonce } from '../../services/BdeService';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
-export function BdeSection({ navigation }: { navigation: any }) {
+export function BdeSection({ navigation }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
@@ -56,7 +56,7 @@ export function BdeSection({ navigation }: { navigation: any }) {
                 </View>
 
                 <View style={{ padding: tokens.space.md }}>
-                    <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flexShrink: 1, marginBottom: 4 }} numberOfLines={1}>
+                    <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1, marginBottom: 4 }} numberOfLines={1}>
                         {item.title}
                     </Text>
                     
@@ -89,7 +89,7 @@ export function BdeSection({ navigation }: { navigation: any }) {
                 onPress={() => navigation.navigate('Bde')}
                 activeOpacity={0.7}
             >
-                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold as any, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
+                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
                     {Translator.get('STUDENT_LIFE') || 'Student life'}
                 </Text>
                 <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CampusApiService } from './CampusApiService';
 
 class CampusDataManagerService {
-    _buildingList: Record<string, unknown>[];
+    _buildingList: import('./CampusApiService').CelcatBuilding[];
     _subscribers: Record<string, Function[]>;
     _cacheTimeLimit: number;
 
@@ -24,9 +24,9 @@ class CampusDataManagerService {
         this._subscribers[event].forEach((fn) => fn(...args));
     };
 
-    getBuildingList = (): Record<string, unknown>[] => this._buildingList;
+    getBuildingList = (): import('./CampusApiService').CelcatBuilding[] => this._buildingList;
 
-    setBuildingList = (newList: Record<string, unknown>[]) => {
+    setBuildingList = (newList: import('./CampusApiService').CelcatBuilding[]) => {
         this._buildingList = [...newList];
         this.notify('buildingList', this._buildingList);
     };

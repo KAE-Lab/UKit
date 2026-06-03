@@ -57,7 +57,7 @@ export const groupOverlappingCourses = (courses) => {
 
 // ── COMPOSANT COLLAPSIBLE POUR LA SEMAINE ─────────────
 export interface DayWeekProps {
-    schedule: any;
+    schedule: { date?: string; day?: string; dateString?: string; name?: string; courses?: import('../services/PlanningApiService').PlanningEvent[] } & Record<string, unknown>;
     theme: import('../../../shared/theme/Theme').AppThemeType;
     fallbackDate?: moment.MomentInput;
     navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
@@ -178,8 +178,8 @@ export interface ScheduleListProps {
 export interface ScheduleListState {
     cancelToken: import('axios').CancelTokenSource | null;
     groupName: string | string[];
-    target: any;
-    schedule: any;
+    target: moment.MomentInput | { week: number; year: number };
+    schedule: import('../services/PlanningApiService').PlanningEvent[] | import('../services/PlanningApiService').PlanningWeekDay[] | null;
     cacheDate: moment.MomentInput | null;
     loading: boolean;
 }
@@ -224,7 +224,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         const nextState: Partial<ScheduleListState> = {};
         if (nextProps.mode === 'day' && nextProps.target !== prevState.target) {
             nextState.target = nextProps.target;
-        } else if (nextProps.mode === 'week' && (nextProps.target as any).week !== (prevState.target as any).week) {
+        } else if (nextProps.mode === 'week' && (nextProps.target as { week: number }).week !== (prevState.target as { week: number }).week) {
             nextState.target = nextProps.target;
         }
 
@@ -233,7 +233,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         if (isArrayNext !== isArrayPrev) {
             nextState.groupName = nextProps.groupName;
         } else if (isArrayNext && isArrayPrev) {
-            if (!isArraysEquals(nextProps.groupName as any, prevState.groupName as any)) {
+            if (!isArraysEquals(nextProps.groupName as string[], prevState.groupName as string[])) {
                 nextState.groupName = nextProps.groupName;
             }
         } else if (nextProps.groupName !== prevState.groupName) {
@@ -288,9 +288,9 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                 try {
                     if (mode === 'day') {
                         const dateStr = moment(this.state.target).format('YYYY/MM/DD').replace(/\//g, '-');
-                        fetchedData = await FetchManager.fetchCalendarDay(groupName as any, dateStr);
+                        fetchedData = await FetchManager.fetchCalendarDay(groupName as string, dateStr);
                     } else {
-                        fetchedData = await FetchManager.fetchCalendarWeek(groupName as any, this.state.target);
+                        fetchedData = await FetchManager.fetchCalendarWeek(groupName as string, this.state.target as { week: number; year: number });
                     }
                     if (fetchedData === null) throw 'network error';
                     AsyncStorage.setItem(id, JSON.stringify({ data: fetchedData, date: moment() }));

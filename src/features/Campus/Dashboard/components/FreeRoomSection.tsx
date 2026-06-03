@@ -14,7 +14,7 @@ const defaultImage = require('../../../../../assets/images/default_resto.png');
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
-export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: any, userLat?: number, userLon?: number }) {
+export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
@@ -31,21 +31,21 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
         const loadBuildings = async () => {
             setLoading(true);
             try {
-                let bList = DataManager.getBuildingList();
+                let bList: import('../../FreeRoom/services/FreeRoomService').BuildingInfo[] = DataManager.getBuildingList() as import('../../FreeRoom/services/FreeRoomService').BuildingInfo[];
                 if (!bList || bList.length === 0) {
                     await DataManager.fetchBuildingList();
-                    bList = DataManager.getBuildingList();
+                    bList = DataManager.getBuildingList() as import('../../FreeRoom/services/FreeRoomService').BuildingInfo[];
                 }
                 if (mountedRef.current) {
                     if (bList) {
-                        bList = (bList as any[]).map(b => {
+                        bList = bList.map(b => {
                             if (userLat !== undefined && userLon !== undefined && b.lat && b.lng) {
                                 b.distance = getDistanceInKm(userLat, userLon, b.lat, b.lng);
                             }
                             return b;
-                        }) as any;
+                        });
                     }
-                    setBuildings((bList as any) || []);
+                    setBuildings(bList || []);
                     setLoading(false);
                 }
             } catch (e) {
@@ -103,7 +103,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
 
                     <View style={{ padding: tokens.space.md }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                            <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flexShrink: 1 }} numberOfLines={1}>
+                            <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1 }} numberOfLines={1}>
                                 {item.name}
                             </Text>
                             <TouchableOpacity onPress={() => toggleFavBuilding(item.id)} hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }} style={{ marginLeft: 6 }}>
@@ -120,7 +120,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
                             {item.distance !== undefined && (
                                 <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
                                     <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
-                                    <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any, color: theme.primary, marginLeft: 4 }}>
+                                    <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginLeft: 4 }}>
                                         {item.distance < 1 ? `${Math.round(item.distance * 1000)} m` : `${item.distance.toFixed(1)} km`}
                                     </Text>
                                 </View>
@@ -147,7 +147,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
                 // Let's keep it 'FreeRoomScreen' to match original file
                 activeOpacity={0.7}
             >
-                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold as any, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
+                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
                     {Translator.get('FREE_ROOMS') || 'Salles Libres'}
                 </Text>
                 <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />

@@ -18,7 +18,7 @@ export interface CampusListLayoutProps<T> {
     data: T[];
     loading: boolean;
     renderItem: (info: { item: T }) => React.ReactElement;
-    onAnimatedScroll?: any;
+    onAnimatedScroll?: (event: unknown) => void;
     
     // Search
     hasSearch?: boolean;
@@ -32,11 +32,11 @@ export interface CampusListLayoutProps<T> {
     onFilterChange?: (id: string) => void;
     
     // Empty State
-    emptyIcon?: any; // MaterialCommunityIcons name
+    emptyIcon?: keyof typeof import('@expo/vector-icons').MaterialCommunityIcons.glyphMap;
     emptyMessage?: string;
     
     // Navigation for setting header filter icon
-    navigation?: any;
+    navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
 }
 
 export function CampusListLayout<T>({
@@ -113,7 +113,10 @@ export function CampusListLayout<T>({
                     data={data}
                     onScroll={onAnimatedScroll as never}
                     scrollEventThrottle={16}
-                    keyExtractor={(item: any, index) => item.id ? item.id.toString() : index.toString()}
+                    keyExtractor={(item: T, index) => {
+                        const id = (item as unknown as { id?: string | number }).id;
+                        return id ? id.toString() : index.toString();
+                    }}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ 
                         paddingTop: (insets.top || 0) + 70, 

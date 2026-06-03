@@ -14,7 +14,7 @@ const defaultBuImage = require('../../../../../assets/images/default_resto.png')
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
-export function LibrarySection({ navigation, userLat, userLon }: { navigation: any, userLat?: number, userLon?: number }) {
+export function LibrarySection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
@@ -112,7 +112,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: a
 
                     <View style={{ padding: tokens.space.md }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                            <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flexShrink: 1 }} numberOfLines={1}>
+                            <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1 }} numberOfLines={1}>
                                 {item.name}
                             </Text>
                             <TouchableOpacity onPress={() => toggleFavBu(item.id)} hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }} style={{ marginLeft: 6 }}>
@@ -129,7 +129,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: a
                             {item.distance !== undefined && (
                                 <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
                                     <MaterialIcons name="directions-walk" size={14} color={theme.primary} />
-                                    <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any, color: theme.primary, marginLeft: 4 }}>
+                                    <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginLeft: 4 }}>
                                         {item.distance < 1 ? `${Math.round(item.distance * 1000)} m` : `${item.distance.toFixed(1)} km`}
                                     </Text>
                                 </View>
@@ -138,7 +138,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: a
 
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <MaterialCommunityIcons name={isOpen ? 'door-open' : 'door-closed'} size={16} color={statusColor} />
-                            <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold as any, color: statusColor, marginLeft: 4, flexShrink: 1 }}>
+                            <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold, color: statusColor, marginLeft: 4, flexShrink: 1 }}>
                                 {statusText}
                             </Text>
                             
@@ -147,7 +147,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: a
                                     <View style={{ flex: 1, height: 6, backgroundColor: theme.greyBackground, borderRadius: 3, overflow: 'hidden', marginHorizontal: tokens.space.sm }}>
                                         <View style={{ width: `${rate}%`, height: '100%', backgroundColor: statusColor, borderRadius: 3 }} />
                                     </View>
-                                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.bold as any }}>
+                                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.bold }}>
                                         {`${rate}%`}
                                     </Text>
                                 </>
@@ -166,7 +166,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: a
                 onPress={() => navigation.navigate('Library')}
                 activeOpacity={0.7}
             >
-                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold as any, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
+                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
                     {Translator.get('UNIVERSITY_LIBRARY') || 'Bibliothèques Universitaires'}
                 </Text>
                 <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />

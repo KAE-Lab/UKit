@@ -150,9 +150,9 @@ export interface HomeScreenProps {
 }
 
 export interface HomeScreenState {
-    completeList: any[] | null;
-    sections: any[] | null;
-    list: any[] | null;
+    completeList: string[] | null;
+    sections: { title: string; data: string[] }[] | null;
+    list: { title: string; data: string[] }[] | null;
     emptySearchResults: boolean;
     refreshing: boolean;
     cacheDate: moment.MomentInput | null;
@@ -247,7 +247,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     getCache = async () => {
         let cacheStr = await AsyncStorage.getItem('groups');
         if (cacheStr !== null) {
-            const cache = JSON.parse(cacheStr) as { date: string; list: any[] };
+            const cache = JSON.parse(cacheStr) as { date: string; list: string[] };
             this.setState({ cacheDate: cache.date });
             return cache.list;
         }

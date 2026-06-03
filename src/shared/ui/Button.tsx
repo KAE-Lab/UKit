@@ -33,9 +33,9 @@ export const BackButton = ({ backAction }: BackButtonProps) => {
 export interface WelcomeButtonProps {
     onPress?: () => void;
     buttonText?: string;
-    theme?: any;
+    theme?: 'light' | 'dark';
 }
-export const WelcomeButton = ({ onPress, buttonText, theme }: WelcomeButtonProps) => {
+export const WelcomeButton = ({ onPress, buttonText, theme = 'light' }: WelcomeButtonProps) => {
     return (
         <TouchableOpacity onPress={onPress} style={StyleWelcome[theme].buttonContainer}>
             <Text style={StyleWelcome[theme].buttonText}>{buttonText}</Text>
@@ -109,7 +109,7 @@ export const DrawerButton = (props: DrawerButtonProps) => {
 
 // ── Bouton des Paramètres ──────────────────────────────────────
 export interface SettingsButtonProps {
-    theme?: any;
+    theme?: AppThemeType['settings'];
     onPress?: () => void;
     leftIcon?: keyof typeof MaterialIcons.glyphMap | keyof typeof MaterialCommunityIcons.glyphMap;
     leftIconAnimation?: string;
@@ -151,26 +151,26 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
         <TouchableOpacity
             onPress={onPress}
             disabled={disabled}
-            style={[(theme as any).button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}]}>
+            style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}] as import('react-native').ViewStyle}>
             {leftIcon && (
                 <Animated.View style={{ transform: leftIconAnimation ? [{ rotate }] : [] }}>
-                    <IconComponent name={leftIcon as never} size={24} style={(theme as any).leftIcon} />
+                    <IconComponent name={leftIcon as never} size={24} style={theme.leftIcon as import('react-native').TextStyle} />
                 </Animated.View>
             )}
-            <Text style={[(theme as any).buttonMainText, { flex: 1 }]}>{leftText}</Text>
+            <Text style={[theme.buttonMainText, { flex: 1 }] as import('react-native').TextStyle}>{leftText}</Text>
             {onSwitchToggle !== undefined ? (
                 <Switch
-                    style={{ marginLeft: 'auto', marginRight: (theme as any).leftIcon?.marginLeft }}
-                    trackColor={(theme as any).switchTrack}
+                    style={{ marginLeft: 'auto', marginRight: theme.leftIcon?.marginLeft }}
+                    trackColor={theme.switchTrack}
                     thumbColor={'#FFFFFF'}
                     value={switchValue}
                     onValueChange={onSwitchToggle}
                 />
             ) : (
-                <Text style={(theme as any).buttonSecondaryText}>{rightText}</Text>
+                <Text style={theme.buttonSecondaryText as import('react-native').TextStyle}>{rightText}</Text>
             )}
             {!onSwitchToggle && (
-                <MaterialCommunityIcons name="chevron-right" size={22} style={(theme as any).rightIcon} />
+                <MaterialCommunityIcons name="chevron-right" size={22} style={theme.rightIcon as import('react-native').TextStyle} />
             )}
         </TouchableOpacity>
     );

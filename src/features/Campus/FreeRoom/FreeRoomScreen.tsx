@@ -14,8 +14,8 @@ import { CampusCard } from '../components/CampusCard';
 import { useFavorites } from '../hooks/useFavorites';
 import { useCampusLocation } from '../hooks/useCampusLocation';
 
-function FreeRoomScreen({ navigation, onAnimatedScroll }: any) {
-    const AppContextValues = useContext(AppContext) as any;
+function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, onAnimatedScroll?: (event: unknown) => void }) {
+    const AppContextValues = useContext(AppContext);
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
 
@@ -31,25 +31,25 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: any) {
         const loadBuildings = async () => {
             setLoading(true);
             try {
-                let bList = DataManager.getBuildingList();
+                let bList: BuildingInfo[] = DataManager.getBuildingList() as BuildingInfo[];
                 if (!bList || bList.length === 0) {
                     await DataManager.fetchBuildingList();
-                    bList = DataManager.getBuildingList();
+                    bList = DataManager.getBuildingList() as BuildingInfo[];
                 }
 
                 if (mounted) {
                     const { lat, lon } = await fetchLocation();
 
                     if (bList) {
-                        bList = (bList as any[]).map((b: BuildingInfo) => {
+                        bList = bList.map((b: BuildingInfo) => {
                             if (lat !== undefined && lon !== undefined && b.lat && b.lng) {
                                 b.distance = getDistanceInKm(lat, lon, b.lat, b.lng);
                             }
                             return b;
-                        }) as any;
+                        });
                     }
 
-                    setBuildings(bList as any || []);
+                    setBuildings(bList || []);
                 }
             } catch (error) {
                 console.error(error);
@@ -114,7 +114,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: any) {
                     {item.distance !== undefined && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
                             <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
-                            <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any, color: theme.primary, marginLeft: 4 }}>
+                            <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginLeft: 4 }}>
                                 {item.distance < 1 ? `${Math.round(item.distance * 1000)} m` : `${item.distance.toFixed(1)} km`}
                             </Text>
                         </View>

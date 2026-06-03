@@ -125,7 +125,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     }
 
     showPicker = (mode: string) => {
-        this.setState({ showPicker: true, pickerMode: Platform.OS === 'ios' ? 'datetime' : mode as any });
+        this.setState({ showPicker: true, pickerMode: Platform.OS === 'ios' ? 'datetime' : mode as 'date' | 'time' });
     }
 
     onPickerChange = (event: DateTimePickerEvent, selectedDate?: Date) => {

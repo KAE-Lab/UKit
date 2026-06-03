@@ -8,7 +8,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 
-export default function LibraryDetailsScreen({ route, navigation }: { route: any; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
+export default function LibraryDetailsScreen({ route, navigation }: { route: { params: { library: import('../services/LibraryService').LibraryInfo; affluence: number | null } }; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
     const { library, affluence } = route.params;
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const themeName = AppContextValues.themeName ?? 'light';
@@ -214,7 +214,7 @@ export default function LibraryDetailsScreen({ route, navigation }: { route: any
                 ) : (
                     currentDay && currentDay.openingHours.length > 0 ? (
                         currentDay.openingHours.map((slot, index) => (
-                            <View key={index} style={[style.course.card as any, { 
+                            <View key={index} style={[style.course.card, {
                                 backgroundColor: theme.cardBackground, 
                                 borderColor: theme.border, 
                                 borderWidth: 1,

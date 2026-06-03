@@ -35,6 +35,36 @@ export interface CrousDayMenu {
     soir: { name: string, dishes: string[] }[];
 }
 
+interface CrousApiRestaurant {
+    code: number;
+    nom: string;
+    zone?: string;
+    adresse?: string;
+    latitude: number;
+    longitude: number;
+    horaires?: string[];
+    type?: { code: number };
+}
+
+interface CrousApiMealItem {
+    libelle?: string;
+}
+
+interface CrousApiMealCategory {
+    libelle?: string;
+    plats?: CrousApiMealItem[];
+}
+
+interface CrousApiMeal {
+    type: string;
+    categories?: CrousApiMealCategory[];
+}
+
+interface CrousApiDayMenu {
+    date?: string;
+    repas?: CrousApiMeal[];
+}
+
 
 // ─── OUTILS ─────────────────────────────────────────────────────────────────
 
@@ -65,7 +95,7 @@ class CrousServiceManager {
             const jsonResponse = await response.json();
             if (!jsonResponse.data) return [];
 
-            let restaurants: CrousRestaurant[] = jsonResponse.data.filter((resto: any) => resto.type?.code !== 4).map((resto: any) => {
+            let restaurants: CrousRestaurant[] = jsonResponse.data.filter((resto: CrousApiRestaurant) => resto.type?.code !== 4).map((resto: CrousApiRestaurant) => {
                 let distance = undefined;
                 if (userLat !== undefined && userLon !== undefined) {
                     distance = getDistanceInKm(userLat, userLon, resto.latitude, resto.longitude);
@@ -107,7 +137,7 @@ class CrousServiceManager {
             
             const rawMenus = Array.isArray(jsonResponse.data) ? jsonResponse.data : [jsonResponse.data];
             
-            return rawMenus.map((day: any) => {
+            return rawMenus.map((day: CrousApiDayMenu) => {
                 
                 // "DD-MM-YYYY" -> "YYYY-MM-DD" 
                 let formattedDate = day.date || null;
@@ -118,15 +148,15 @@ class CrousServiceManager {
                     }
                 }
 
-                const repasMidi = (day.repas || []).find((r: any) => r.type === 'midi');
-                const repasSoir = (day.repas || []).find((r: any) => r.type === 'soir');
+                const repasMidi = (day.repas || []).find((r: CrousApiMeal) => r.type === 'midi');
+                const repasSoir = (day.repas || []).find((r: CrousApiMeal) => r.type === 'soir');
 
-                const parseMeal = (mealData: any) => {
+                const parseMeal = (mealData?: CrousApiMeal) => {
                     if (!mealData || !Array.isArray(mealData.categories)) return [];
                     
-                    return mealData.categories.map((cat: any) => ({
+                    return mealData.categories.map((cat: CrousApiMealCategory) => ({
                         name: cat.libelle || Translator.get('CATEGORY'), // "Entrées", "Plats du jour"...
-                        dishes: Array.isArray(cat.plats) ? cat.plats.map((p:any) => p.libelle || '') : []
+                        dishes: Array.isArray(cat.plats) ? cat.plats.map((p: CrousApiMealItem) => p.libelle || '') : []
                     }));
                 };
 

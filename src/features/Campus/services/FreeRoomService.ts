@@ -1,4 +1,4 @@
-import { CampusApiService as FetchManager } from './CampusApiService';
+import { CampusApiService as FetchManager, CampusEvent } from './CampusApiService';
 
 export interface RoomInfo {
     id: string;
@@ -15,7 +15,7 @@ export interface BuildingInfo {
     campus?: string;
     lat?: number;
     lng?: number;
-    schedule?: any;
+    schedule?: CampusEvent[];
 }
 
 export interface FreeRoomSlot {

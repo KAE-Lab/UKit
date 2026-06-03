@@ -26,9 +26,9 @@ const findIndexOfObject = (objectList, object) => {
 };
 
 export interface WeekViewProps {
-    navigation: any;
-    route: any;
-    groupName?: any;
+    navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void };
+    route: { params: Record<string, unknown> };
+    groupName?: string | string[];
 }
 
 export interface WeekViewState {
@@ -41,8 +41,8 @@ export interface WeekViewState {
 class WeekView extends React.Component<WeekViewProps, WeekViewState> {
 	static contextType = AppContext;
 	declare context: React.ContextType<typeof AppContext>;
-    viewability: any;
-    calendarList: any;
+    viewability: import('react-native').ViewToken[];
+    calendarList: import('react-native').FlatList | null;
     _lastTitle: string | null = null;
 
 	constructor(props: WeekViewProps) {

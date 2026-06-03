@@ -7,6 +7,29 @@ import { formatDescription, upperCaseFirstLetter } from '../../../shared/utils/f
 
 moment.locale('fr');
 
+export interface PlanningEvent {
+    id: string;
+    style: string;
+    color: string;
+    schedule: string;
+    starttime: string;
+    endtime: string;
+    date: { start: string; end: string };
+    subject: string;
+    description: string;
+    category: string;
+    group: string;
+    toFilter?: string | null;
+    day?: string;
+    dayNumber?: string;
+}
+
+export interface PlanningWeekDay {
+    dayNumber: string;
+    dayTimestamp: number;
+    courses: PlanningEvent[];
+}
+
 class PlanningApiServiceClass {
     fetchGroupList = async (): Promise<string[] | null> => {
         const options = {
@@ -20,7 +43,7 @@ class PlanningApiServiceClass {
             if (!results.data) return null;
 
             return results.data.results
-                .map((e: any) => e.id)
+                .map((e: { id: string }) => e.id)
                 .filter((e: string) => e.length > 2)
                 .sort();
         } catch (error) {
@@ -45,7 +68,7 @@ class PlanningApiServiceClass {
         return 0;
     };
 
-    fetchCalendarDay = async (group: string, date: string): Promise<Record<string, unknown>[] | null> => {
+    fetchCalendarDay = async (group: string, date: string): Promise<PlanningEvent[] | null> => {
         const endQueryDate = moment(date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD');
         const data = {
             start: date,
@@ -120,7 +143,7 @@ class PlanningApiServiceClass {
         }
     };
 
-    fetchCalendarWeek = async (group: string, week: { year: number; week: number }): Promise<Record<string, unknown>[] | null> => {
+    fetchCalendarWeek = async (group: string, week: { year: number; week: number }): Promise<PlanningWeekDay[] | null> => {
         const searchDate = moment().year(week.year).isoWeek(week.week);
         const begin = searchDate.startOf('week').format('YYYY-MM-DD');
         const end = searchDate.endOf('week').format('YYYY-MM-DD');
@@ -149,10 +172,10 @@ class PlanningApiServiceClass {
             const response = await axios.request(options);
             if (response?.status !== 200) return null;
 
-            const eventList = Array.from({ length: 6 }).map((_, i) => ({
+            const eventList: PlanningWeekDay[] = Array.from({ length: 6 }).map((_, i) => ({
                 dayNumber: String(i + 1),
                 dayTimestamp: searchDate.clone().startOf('week').add(i, 'day').unix(),
-                courses: [] as Record<string, unknown>[],
+                courses: [],
             }));
 
             for (const event of response.data) {
@@ -214,7 +237,7 @@ class PlanningApiServiceClass {
         }
     };
 
-    fetchCalendarForSynchronization = async (group: string): Promise<Record<string, unknown>[] | null | void> => {
+    fetchCalendarForSynchronization = async (group: string): Promise<PlanningEvent[] | null | void> => {
         const currentDate = moment();
         const begin = moment().set('month', 7).startOf('month');
         const end = moment().set('month', 7).startOf('month').add(1, 'year');

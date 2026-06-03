@@ -12,7 +12,7 @@ import { CrousSection } from './components/CrousSection';
 import { LibrarySection } from './components/LibrarySection';
 import { FreeRoomSection } from './components/FreeRoomSection';
 
-const CampusDashboard = ({ navigation }: { navigation: any }) => {
+const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
@@ -30,7 +30,7 @@ const CampusDashboard = ({ navigation }: { navigation: any }) => {
 
     const scrollY = useRef(new Animated.Value(0)).current;
 
-    const renderHeader = (insets: any) => {
+    const renderHeader = (insets: import('react-native-safe-area-context').EdgeInsets | null) => {
         const topPadding = (insets?.top || 0);
 
         const opacity = scrollY.interpolate({
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     },
     greetingText: {
         fontSize: 34,
-        fontWeight: tokens.fontWeight.bold as any,
+        fontWeight: tokens.fontWeight.bold as '700',
         fontFamily: 'Montserrat_600SemiBold',
         marginBottom: tokens.space.md,
     },

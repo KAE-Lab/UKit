@@ -10,16 +10,16 @@ import Translator from '../../../shared/i18n/Translator';
 import { BuildingInfo, FreeRoomSlot, RoomInfo } from '../services/FreeRoomService';
 import { CampusApiService as FetchManager } from '../services/CampusApiService';
 
-export default function FreeRoomDetailsScreen({ route, navigation }: any) {
-    const { building } = route.params as { building: BuildingInfo };
-    const AppContextValues = useContext(AppContext) as any;
+export default function FreeRoomDetailsScreen({ route, navigation }: { route: { params: { building: BuildingInfo } }; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) {
+    const { building } = route.params;
+    const AppContextValues = useContext(AppContext);
     const theme = style.Theme[AppContextValues.themeName];
     const insets = useSafeAreaInsets();
 
     const [loading, setLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [freeRooms, setFreeRooms] = useState<FreeRoomSlot[]>([]);
-    const [allEvents, setAllEvents] = useState<any[]>([]);
+    const [allEvents, setAllEvents] = useState<{ roomId: string, events: import('../services/CampusApiService').CampusEvent[] }[]>([]);
     
     const [isClosed, setIsClosed] = useState(false);
     const [hoursList, setHoursList] = useState<string[]>([]);
@@ -39,7 +39,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: any) {
     useEffect(() => {
         navigation.setOptions({
             headerTitle: () => (
-                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as any }}>
+                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold }}>
                     {Translator.get('DETAILS') || 'Détails'}
                 </Text>
             ),
@@ -103,7 +103,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: any) {
 
     useEffect(() => {
         if (!loading && allEvents && allEvents.length > 0) {
-            if (allEvents.some(r => r.events.some((e: any) => e.isVacances))) {
+            if (allEvents.some(r => r.events.some((e: import('../services/CampusApiService').CampusEvent) => e.isVacances))) {
                 setIsClosed(true);
             } else if (!isClosed && hoursList.length > 0) {
                 computeFreeRooms();
@@ -210,7 +210,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: any) {
                         <Text 
                             style={{
                                 fontSize: tokens.fontSize.xl,
-                                fontWeight: tokens.fontWeight.bold as any,
+                                fontWeight: tokens.fontWeight.bold,
                                 color: theme.fontSecondary,
                                 textAlign: 'left',
                                 paddingHorizontal: tokens.space.md,
@@ -252,7 +252,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: any) {
                                     >
                                         <Text style={{ 
                                             color: isSelected ? primaryColor : theme.fontSecondary,
-                                            fontWeight: isSelected ? (tokens.fontWeight.bold as any) : (tokens.fontWeight.medium as any),
+                                            fontWeight: isSelected ? tokens.fontWeight.bold : tokens.fontWeight.medium,
                                             fontSize: tokens.fontSize.sm
                                         }}>
                                             {item}
@@ -271,7 +271,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: any) {
                                 size={20} 
                                 color={theme.accent ?? theme.primary} 
                             />
-                            <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, marginLeft: tokens.space.sm }}>
+                            <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, marginLeft: tokens.space.sm }}>
                                 {Translator.get('FREE_ROOMS') || 'Salles libres'} ({freeRooms.length})
                             </Text>
                         </View>
@@ -282,7 +282,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: any) {
                             </Text>
                         ) : (
                             freeRooms.map((slot, index) => (
-                                <View key={index} style={[style.course.card as any, { 
+                                <View key={index} style={[style.course.card, { 
                                     backgroundColor: theme.cardBackground, 
                                     borderColor: theme.border, 
                                     borderWidth: 1,
@@ -292,7 +292,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: any) {
                                     marginBottom: tokens.space.sm
                                 }]}>
                                     <View style={{ flex: 1 }}>
-                                        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as any, color: theme.accent ?? theme.primary, marginBottom: 2 }}>
+                                        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold, color: theme.accent ?? theme.primary, marginBottom: 2 }}>
                                             {slot.room.name}
                                         </Text>
                                         <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary }}>
@@ -300,7 +300,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: any) {
                                         </Text>
                                     </View>
                                     <View style={{ backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
-                                        <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any, color: theme.primary }}>
+                                        <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary }}>
                                             {Math.floor(slot.durationMinutes / 60)}h{slot.durationMinutes % 60 > 0 ? (slot.durationMinutes % 60).toString().padStart(2, '0') : ''}
                                         </Text>
                                     </View>

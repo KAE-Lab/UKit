@@ -55,7 +55,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
     viewability: { itemVisiblePercentThreshold: number };
     scrollTimeout: NodeJS.Timeout | null = null;
     mockListener: import('react-native').EmitterSubscription | null = null;
-    calendarList: FlatList<any> | null = null;
+    calendarList: FlatList<moment.MomentInput> | null = null;
 
 	constructor(props: DayViewProps) {
 		super(props);

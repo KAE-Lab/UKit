@@ -10,7 +10,7 @@ import CampusDashboard from '../../features/Campus/Dashboard/CampusDashboard';
 import ScolariteDashboard from '../../features/Scolarite/screens/ScolariteDashboard';
 import SettingsScreen from '../../features/Settings/screens/SettingsScreen';
 
-import style, { tokens } from '../theme/Theme';
+import style, { tokens, AppThemeType } from '../theme/Theme';
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { NavBarHelper, SaveGroupButton } from './NavHelpers';
@@ -26,7 +26,7 @@ export type MainTabParamList = {
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export interface CustomTabBarProps extends BottomTabBarProps {
-    theme: Record<string, any>;
+    theme: AppThemeType;
 }
 
 // Composant Custom Tab Bar pour reproduire l'effet Apple Music (décalé à gauche, ratio icon/text, bords arrondis)

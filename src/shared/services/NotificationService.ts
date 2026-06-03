@@ -3,6 +3,7 @@ import moment from 'moment';
 import Toast from 'react-native-root-toast';
 import { SettingsManager, getLocations, getLocationsInText } from './AppCore';
 import { TimeMockService } from './TimeMockService';
+import { PlanningEvent, PlanningWeekDay } from '../../features/Planning/services/PlanningApiService';
 
 // Define how notifications should be handled when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -24,7 +25,7 @@ class NotificationManagerService {
         return finalStatus === 'granted';
     }
 
-    async scheduleCourseNotifications(scheduleData: Array<{ courses?: Array<Record<string, unknown>>, category?: string, [key: string]: unknown } | Record<string, unknown>>): Promise<void> {
+    async scheduleCourseNotifications(scheduleData: (PlanningEvent | PlanningWeekDay)[]): Promise<void> {
         // Cancel all existing scheduled notifications first
         await Notifications.cancelAllScheduledNotificationsAsync();
 
@@ -34,25 +35,25 @@ class NotificationManagerService {
 
         const delayInMinutes = SettingsManager.getCourseNotificationDelay() || 15;
         const now = moment();
-        const futureCourses: Array<{ course: Record<string, unknown>, triggerTime: Date }> = [];
+        const futureCourses: Array<{ course: PlanningEvent, triggerTime: Date }> = [];
 
         // Flatten scheduleData to a simple list of courses
         // scheduleData can be a flat array (day mode) or an array of objects with .courses (week mode)
-        let courses: Array<Record<string, unknown>> = [];
+        let courses: PlanningEvent[] = [];
         if (Array.isArray(scheduleData)) {
             for (const item of scheduleData) {
-                if (item && Array.isArray(item.courses)) {
-                    courses.push(...item.courses);
-                } else if (item && item.category !== 'nocourse') {
-                    courses.push(item);
+                if (item && Array.isArray((item as PlanningWeekDay).courses)) {
+                    courses.push(...(item as PlanningWeekDay).courses);
+                } else if (item && (item as PlanningEvent).category !== 'nocourse') {
+                    courses.push(item as PlanningEvent);
                 }
             }
         }
 
         for (const course of courses) {
-            if (!(course as any).date || !(course as any).date.start) continue;
+            if (!course.date || !course.date.start) continue;
 
-            const courseStart = moment((course as any).date.start);
+            const courseStart = moment(course.date.start);
             const triggerTime = courseStart.clone().subtract(delayInMinutes, 'minutes');
 
             // Only schedule if the trigger time is in the future
@@ -71,11 +72,11 @@ class NotificationManagerService {
         for (const item of coursesToSchedule) {
             const { course, triggerTime } = item;
             
-            const subject = (course as any).subject !== 'N/C' ? (course as any).subject.trim() : 'Cours';
+            const subject = course.subject !== 'N/C' ? course.subject.trim() : 'Cours';
             
             let roomText = '';
             if (course.description) {
-                const annotations = (course as any).description.split('\n').map((l: string) => l.trim()).filter((l: string) => l);
+                const annotations = course.description.split('\n').map((l: string) => l.trim()).filter((l: string) => l);
                 
                 // Recherche d'une ligne correspondant à une salle (comme dans CourseCard)
                 const rooms = annotations.filter(line => {

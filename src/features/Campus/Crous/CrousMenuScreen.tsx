@@ -8,7 +8,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 
-export default function CrousMenuScreen({ route, navigation }: { route: any; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
+export default function CrousMenuScreen({ route, navigation }: { route: { params: { restaurantId: string; restaurantName: string } }; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
     const { restaurantId, restaurantName } = route.params;
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const theme = style.Theme[AppContextValues.themeName];
@@ -30,7 +30,7 @@ export default function CrousMenuScreen({ route, navigation }: { route: any; nav
     useEffect(() => {
         navigation.setOptions({
             headerTitle: () => (
-                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as never }}>
+                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold }}>
                     {Translator.get('MENU')}
                 </Text>
             ),
@@ -155,19 +155,19 @@ export default function CrousMenuScreen({ route, navigation }: { route: any; nav
                         size={20} 
                         color={theme.accent ?? theme.primary} 
                     />
-                    <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as never, color: theme.font, marginLeft: tokens.space.sm }}>
+                    <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, marginLeft: tokens.space.sm }}>
                         {mealTitle}
                     </Text>
                 </View>
 
                 {/* Liste des catégories */}
                 {categories.map((cat, index) => (
-                    <View key={index} style={[style.course.card as never, { 
+                    <View key={index} style={[style.course.card, { 
                         backgroundColor: theme.cardBackground, 
                         borderColor: theme.border, 
                         borderWidth: 1 
                     }]}>
-                        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as never, color: theme.accent ?? theme.primary, marginBottom: tokens.space.sm }}>
+                        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold, color: theme.accent ?? theme.primary, marginBottom: tokens.space.sm }}>
                             {cat.name}
                         </Text>
                         
@@ -200,7 +200,7 @@ export default function CrousMenuScreen({ route, navigation }: { route: any; nav
                 <Text 
                     style={{
                         fontSize: tokens.fontSize.xl,
-                        fontWeight: tokens.fontWeight.bold as never,
+                        fontWeight: tokens.fontWeight.bold,
                         color: theme.fontSecondary,
                         textAlign: 'left',
                         paddingHorizontal: tokens.space.md,
@@ -243,7 +243,7 @@ export default function CrousMenuScreen({ route, navigation }: { route: any; nav
                             >
                                 <Text style={{ 
                                     color: isSelected ? primaryColor : theme.fontSecondary,
-                                    fontWeight: isSelected ? (tokens.fontWeight.bold as never) : (tokens.fontWeight.medium as never),
+                                    fontWeight: isSelected ? tokens.fontWeight.bold : tokens.fontWeight.medium,
                                     fontSize: tokens.fontSize.sm
                                 }}>
                                     {formatDate(item.date)}

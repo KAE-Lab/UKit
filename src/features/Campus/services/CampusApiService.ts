@@ -7,8 +7,34 @@ import { formatDescription } from '../../../shared/utils/formatUtils';
 
 moment.locale('fr');
 
+export interface CelcatRoom {
+    id: string;
+    name: string;
+    fullName?: string;
+}
+
+export interface CelcatBuilding {
+    id: string;
+    name: string;
+    rooms: CelcatRoom[];
+    imageUrl?: string;
+    lat?: number;
+    lng?: number;
+    campus?: string;
+    schedule?: string | null;
+}
+
+export interface CampusEvent {
+    id: string;
+    starttime: string;
+    endtime: string;
+    date: { start: string; end: string };
+    description: string;
+    isVacances: boolean;
+}
+
 class CampusApiServiceClass {
-    fetchRoomList = async (): Promise<{ id: string; name: string }[] | null> => {
+    fetchRoomList = async (): Promise<CelcatRoom[] | null> => {
         const options = {
             method: 'GET',
             url: WebApiURL.DOMAIN + WebApiURL.GROUPS,
@@ -20,14 +46,14 @@ class CampusApiServiceClass {
             if (!results.data) return null;
 
             return results.data.results
-                .filter((e: any) => e.text && e.text.length > 2)
-                .map((e: any) => ({ id: e.id, name: e.text }));
+                .filter((e: { text?: string }) => e.text && e.text.length > 2)
+                .map((e: { id: string; text: string }) => ({ id: e.id, name: e.text }));
         } catch (error) {
             return null;
         }
     };
 
-    extractBuildingsFromRooms = (rooms: { id: string; name: string }[]): Record<string, unknown>[] => {
+    extractBuildingsFromRooms = (rooms: CelcatRoom[]): CelcatBuilding[] => {
         const locationsData = require('../../../../assets/locations.json');
         
         // Find which buildings have freeAccess: true
@@ -78,10 +104,10 @@ class CampusApiServiceClass {
             }
         }
         
-        return Array.from(buildingsMap.values()).filter((b: any) => b.rooms.length > 0).sort((a: any, b: any) => a.name.localeCompare(b.name));
+        return Array.from(buildingsMap.values()).filter((b: CelcatBuilding) => b.rooms.length > 0).sort((a: CelcatBuilding, b: CelcatBuilding) => a.name.localeCompare(b.name));
     };
 
-    fetchRoomsScheduleDay = async (roomIds: string[], date: string): Promise<Record<string, unknown>[] | null> => {
+    fetchRoomsScheduleDay = async (roomIds: string[], date: string): Promise<CampusEvent[] | null> => {
         const endQueryDate = moment(date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD');
         const data = {
             start: date,

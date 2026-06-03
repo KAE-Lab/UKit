@@ -14,7 +14,7 @@ const defaultRuImage = require('../../../../../assets/images/default_resto.png')
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
-export function CrousSection({ navigation, userLat, userLon }: { navigation: any, userLat?: number, userLon?: number }) {
+export function CrousSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
@@ -44,8 +44,9 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: any
     const filteredRestaurants = useMemo(() => {
         return [...restaurants].filter(item => {
             if (crousFilter !== 'all') {
-                const isRestoU = item.title.includes("Crous Cafet") || item.title.includes("Resto U");
-                const isMarket = item.title.includes("Crous Moovy Market") || item.title.includes("Crous Market");
+                const titleLower = item.title.toLowerCase();
+                const isRestoU = titleLower.includes("crous cafet") || titleLower.includes("resto u");
+                const isMarket = titleLower.includes("crous moovy market") || titleLower.includes("crous market");
                 
                 if (crousFilter === 'resto' && !isRestoU) return false;
                 if (crousFilter === 'market' && !isMarket) return false;
@@ -90,7 +91,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: any
 
                 <View style={{ padding: tokens.space.md }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                        <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as any, color: theme.font, flexShrink: 1 }} numberOfLines={1}>
+                        <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1 }} numberOfLines={1}>
                             {item.title}
                         </Text>
                         <TouchableOpacity onPress={() => toggleFavRu(item.id)} hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }} style={{ marginLeft: 6 }}>
@@ -107,7 +108,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: any
                         {item.distance !== undefined && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
                                 <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
-                                <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as any, color: theme.primary, marginLeft: 4 }}>
+                                <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginLeft: 4 }}>
                                     {item.distance < 1 ? `${Math.round(item.distance * 1000)} m` : `${item.distance.toFixed(1)} km`}
                                 </Text>
                             </View>
@@ -117,7 +118,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: any
                     <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                         <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
                         <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1, lineHeight: 20 }} numberOfLines={2}>
-                            {item.opening_desc || Translator.get('UNKNOWN')}
+                            {item.opening || Translator.get('UNKNOWN')}
                         </Text>
                     </View>
                 </View>
@@ -132,7 +133,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: any
                 onPress={() => navigation.navigate('Crous')}
                 activeOpacity={0.7}
             >
-                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold as any, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
+                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
                     {Translator.get('RESTAURANT_U') || 'Restaurants Universitaires'}
                 </Text>
                 <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
