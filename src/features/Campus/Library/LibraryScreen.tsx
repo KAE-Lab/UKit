@@ -9,7 +9,7 @@ import LibraryService, { LibraryInfo, AffluencesData } from '../services/Library
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 import { CampusListLayout } from '../components/CampusListLayout';
-import { CampusCard } from '../components/CampusCard';
+import { LibraryListItem } from './components/LibraryListItem';
 import { useFavorites } from '../hooks/useFavorites';
 import { useCampusLocation } from '../hooks/useCampusLocation';
 import { useSavedFilter } from '../hooks/useSavedFilter';
@@ -95,80 +95,14 @@ function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@
     ];
 
     const renderItem = ({ item }: { item: LibraryInfo }) => {
-        const affluenceData = affluences[item.id];
-        const rate = affluenceData?.occupancyRate ?? null;
-        const isOpen = affluenceData?.isOpen ?? true; 
-
-        let statusColor = '#f44336';
-        if (isOpen) {
-            if (rate === null || rate < 50) statusColor = '#4caf50';
-            else if (rate < 80) statusColor = '#ff9800';
-            else statusColor = '#ff4436';
-        }
-
-        let statusText = isOpen ? (Translator.get('BU_OPEN')) : (Translator.get('BU_CLOSED'));
-        if (!isOpen && affluenceData?.openingText) { 
-            statusText = `${statusText} - ${affluenceData.openingText}`;
-        }
-
         return (
-            <CampusCard
-                title={item.name}
-                imageUrl={item.imageUrl}
+            <LibraryListItem
+                item={item}
+                affluenceData={affluences[item.id]}
                 isFavorite={favorites.includes(item.id)}
                 onToggleFavorite={() => toggleFavorite(item.id)}
-                onPress={() => navigation.navigate('LibraryDetails', { library: item, affluence: affluenceData })}
-            >
-                {/* Ligne : Ville + Badge de Distance */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                    <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
-                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
-                        {item.campus}
-                    </Text>
-
-                    {item.distance !== undefined && (
-                        <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            backgroundColor: `${theme.primary}15`, 
-                            paddingHorizontal: tokens.space.sm,
-                            paddingVertical: 4,
-                            borderRadius: tokens.radius.md,
-                        }}>
-                            <MaterialIcons name="directions-walk" size={14} color={theme.primary} />
-                            <Text style={{
-                                fontSize: tokens.fontSize.sm,
-                                fontWeight: tokens.fontWeight.bold as never,
-                                color: theme.primary,
-                                marginLeft: 4
-                            }}>
-                                {item.distance < 1 
-                                    ? `${Math.round(item.distance * 1000)} m` 
-                                    : `${item.distance.toFixed(1)} km`}
-                            </Text>
-                        </View>
-                    )}
-                </View>
-
-                {/* Jauge d'affluence en une ligne */}
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <MaterialCommunityIcons name={isOpen ? 'door-open' : 'door-closed'} size={16} color={statusColor} />
-                    <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold as never, color: statusColor, marginLeft: 4, flexShrink: 1 }}>
-                        {statusText}
-                    </Text>
-                    
-                    {isOpen && rate !== null && (
-                        <>
-                            <View style={{ flex: 1, height: 6, backgroundColor: theme.greyBackground, borderRadius: 3, overflow: 'hidden', marginHorizontal: tokens.space.sm }}>
-                                <View style={{ width: `${rate}%`, height: '100%', backgroundColor: statusColor, borderRadius: 3 }} />
-                            </View>
-                            <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, fontWeight: tokens.fontWeight.bold as never }}>
-                                {`${rate}%`}
-                            </Text>
-                        </>
-                    )}
-                </View>
-            </CampusCard>
+                onPress={() => navigation.navigate('LibraryDetails', { library: item, affluence: affluences[item.id] })}
+            />
         );
     };
 

@@ -27,6 +27,25 @@ export interface TimetableEntry {
     }[];
 }
 
+export function getLibraryStatus(affluenceData?: AffluencesData) {
+    const rate = affluenceData?.occupancyRate ?? null;
+    const isOpen = affluenceData?.isOpen ?? true;
+
+    let statusColor = '#f44336';
+    if (isOpen) {
+        if (rate === null || rate < 50) statusColor = '#4caf50';
+        else if (rate < 80) statusColor = '#ff9800';
+        else statusColor = '#ff4436';
+    }
+
+    let statusText = isOpen ? (Translator.get('BU_OPEN')) : (Translator.get('BU_CLOSED'));
+    if (!isOpen && affluenceData?.openingText) {
+        statusText = `${statusText} - ${affluenceData.openingText}`;
+    }
+
+    return { isOpen, rate, statusColor, statusText };
+}
+
 interface AffluencesApiCategory {
     id: number;
 }

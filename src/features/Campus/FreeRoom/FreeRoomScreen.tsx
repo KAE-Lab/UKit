@@ -10,7 +10,7 @@ import { BuildingInfo, getDistanceInKm } from '../services/FreeRoomService';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 import { CampusListLayout } from '../components/CampusListLayout';
-import { CampusCard } from '../components/CampusCard';
+import { FreeRoomListItem } from './components/FreeRoomListItem';
 import { useFavorites } from '../hooks/useFavorites';
 import { useCampusLocation } from '../hooks/useCampusLocation';
 
@@ -84,50 +84,13 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
     }, [buildings, favorites, searchText]);
 
     const renderItem = ({ item }: { item: BuildingInfo }) => {
-        const totalRooms = item.rooms ? item.rooms.length : 0;
-
-        let hoursText = Translator.get('UNKNOWN') || 'Non communiqué';
-        if (item.schedule) {
-            const currentDay = new Date().getDay() || 7;
-            const daySchedule = item.schedule[String(currentDay)];
-            if (daySchedule) {
-                hoursText = `${daySchedule.open} - ${daySchedule.close}`;
-            } else {
-                hoursText = Translator.get('BU_CLOSED') || 'Fermé';
-            }
-        }
-        
         return (
-            <CampusCard
-                title={item.name}
-                imageUrl={item.imageUrl}
+            <FreeRoomListItem
+                item={item}
                 isFavorite={favorites.includes(item.id)}
                 onToggleFavorite={() => toggleFavorite(item.id)}
                 onPress={() => navigation.navigate('FreeRoomDetails', { building: item })}
-            >
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                    <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
-                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }} numberOfLines={1}>
-                        {item.campus || 'Talence'}
-                    </Text>
-
-                    {item.distance !== undefined && (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
-                            <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
-                            <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginLeft: 4 }}>
-                                {item.distance < 1 ? `${Math.round(item.distance * 1000)} m` : `${item.distance.toFixed(1)} km`}
-                            </Text>
-                        </View>
-                    )}
-                </View>
-
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <MaterialCommunityIcons name="clock-outline" size={16} color={theme.fontSecondary} />
-                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
-                        {hoursText} • {totalRooms} {Translator.get('ROOMS' as Parameters<typeof Translator.get>[0]) || 'Salles'}
-                    </Text>
-                </View>
-            </CampusCard>
+            />
         );
     };
 
