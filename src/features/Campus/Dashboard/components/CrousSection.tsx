@@ -9,10 +9,9 @@ import Translator from '../../../../shared/i18n/Translator';
 import { CrousService, CrousRestaurant } from '../../services/CrousService';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useSavedFilter } from '../../hooks/useSavedFilter';
+import { CrousSectionCard, CARD_WIDTH } from './CrousSectionCard';
 
-const defaultRuImage = require('../../../../../assets/images/default_resto.png');
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.85;
 
 export function CrousSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -62,68 +61,17 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
     }, [restaurants, favRu, crousFilter]);
 
     const renderCard = ({ item }: { item: CrousRestaurant }) => (
-        <Reanimated.View
-            entering={FadeIn}
-            layout={LinearTransition.springify()}
-        >
-            <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => navigation.navigate('CrousMenu', {
-                    restaurantId: item.id,
-                    restaurantName: item.title,
-                    location: { lat: item.lat, lon: item.lon }
-                })}
-                style={{
-                    width: CARD_WIDTH,
-                    backgroundColor: theme.cardBackground,
-                    borderRadius: tokens.radius.xl,
-                    marginRight: tokens.space.md,
-                    ...tokens.shadow.md,
-                    overflow: 'hidden',
-                }}
-            >
-                <View style={{ width: '100%', height: 160, backgroundColor: theme.greyBackground }}>
-                    <Image source={defaultRuImage} style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }} />
-                    {item.image_url && (
-                        <Image source={{ uri: item.image_url }} style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }} />
-                    )}
-                </View>
-
-                <View style={{ padding: tokens.space.md }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                        <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1 }} numberOfLines={1}>
-                            {item.title}
-                        </Text>
-                        <TouchableOpacity onPress={() => toggleFavRu(item.id)} hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }} style={{ marginLeft: 6 }}>
-                            <MaterialCommunityIcons name={favRu.includes(item.id) ? "star" : "star-outline"} size={22} color={favRu.includes(item.id) ? theme.primary : theme.fontSecondary} />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                        <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
-                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }} numberOfLines={1}>
-                            {item.short_desc}
-                        </Text>
-
-                        {item.distance !== undefined && (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
-                                <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
-                                <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginLeft: 4 }}>
-                                    {item.distance < 1 ? `${Math.round(item.distance * 1000)} m` : `${item.distance.toFixed(1)} km`}
-                                </Text>
-                            </View>
-                        )}
-                    </View>
-
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                        <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
-                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1, lineHeight: 20 }} numberOfLines={2}>
-                            {item.opening || Translator.get('UNKNOWN')}
-                        </Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
-        </Reanimated.View>
+        <CrousSectionCard
+            item={item}
+            theme={theme}
+            isFavorite={favRu.includes(item.id)}
+            onToggleFavorite={toggleFavRu}
+            onPress={() => navigation.navigate('CrousMenu', {
+                restaurantId: item.id,
+                restaurantName: item.title,
+                location: { lat: item.lat, lon: item.lon }
+            })}
+        />
     );
 
     return (

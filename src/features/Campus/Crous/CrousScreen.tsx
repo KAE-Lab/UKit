@@ -9,7 +9,7 @@ import { CrousService, CrousRestaurant } from '../services/CrousService';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 import { CampusListLayout } from '../components/CampusListLayout';
-import { CampusCard } from '../components/CampusCard';
+import { CrousRestaurantListItem } from './components/CrousRestaurantListItem';
 import { useFavorites } from '../hooks/useFavorites';
 import { useCampusLocation } from '../hooks/useCampusLocation';
 import { useSavedFilter } from '../hooks/useSavedFilter';
@@ -80,9 +80,9 @@ function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@re
     ];
 
     const renderItem = ({ item }: { item: CrousRestaurant }) => (
-        <CampusCard
-            title={item.title}
-            imageUrl={item.image_url}
+        <CrousRestaurantListItem
+            item={item}
+            theme={theme}
             isFavorite={favorites.includes(item.id)}
             onToggleFavorite={() => toggleFavorite(item.id)}
             onPress={() => navigation.navigate('CrousMenu', {
@@ -90,53 +90,7 @@ function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@re
                 restaurantName: item.title,
                 location: { lat: item.lat, lon: item.lon }
             })}
-        >
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
-                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
-                    {item.short_desc}
-                </Text>
-
-                {item.distance !== undefined && (
-                    <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: `${theme.primary}15`,
-                        paddingHorizontal: tokens.space.sm,
-                        paddingVertical: 4,
-                        borderRadius: tokens.radius.md,
-                    }}>
-                        <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
-                        <Text style={{
-                            fontSize: tokens.fontSize.sm,
-                            fontWeight: tokens.fontWeight.bold,
-                            color: theme.primary,
-                            marginLeft: 4
-                        }}>
-                            {item.distance < 1
-                                ? `${Math.round(item.distance * 1000)} m`
-                                : `${item.distance.toFixed(1)} km`}
-                        </Text>
-                    </View>
-                )}
-            </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
-                <Text
-                    style={{
-                        fontSize: tokens.fontSize.sm,
-                        color: theme.fontSecondary,
-                        marginLeft: 6,
-                        flex: 1,
-                        lineHeight: 20
-                    }}
-                    numberOfLines={2}
-                >
-                    {item.opening}
-                </Text>
-            </View>
-        </CampusCard>
+        />
     );
 
     return (
