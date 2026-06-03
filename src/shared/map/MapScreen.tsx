@@ -90,53 +90,7 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
         );
     }
 
-    const mapHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-            <style>
-                body { padding: 0; margin: 0; background-color: ${theme.background}; }
-                html, body, #map { height: 100%; width: 100%; }
-                .leaflet-control-attribution { display: none; }
-            </style>
-        </head>
-        <body>
-            <div id="map"></div>
-            <script>
-                var map = L.map('map', {zoomControl: false}).setView([${lat}, ${lng}], 16);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    maxZoom: 19
-                }).addTo(map);
-
-                // Code HTML reproduisant le design du composant SVG
-                var iconHTML = \`
-                    <div style="display: flex; flex-direction: column; align-items: center; padding-bottom: 8px;">
-                        <div style="background-color: ${theme.primary}; padding: 4px 8px; border-radius: 4px; box-shadow: 0px 4px 6px rgba(0,0,0,0.3);">
-                            <span style="color: #FFFFFF; font-weight: bold; font-size: 12px; font-family: sans-serif;">
-                                ${title}
-                            </span>
-                        </div>
-                        <svg height="10" width="12" style="margin-top: -1px;">
-                            <polygon points="0,0 6,10 12,0" fill="${theme.primary}" />
-                        </svg>
-                    </div>
-                \`;
-
-                var customIcon = L.divIcon({
-                    className: 'custom-marker',
-                    html: iconHTML,
-                    iconSize: [100, 50],
-                    iconAnchor: [50, 45] // Centre parfaitement la pointe de la flèche
-                });
-                
-                L.marker([${lat}, ${lng}], {icon: customIcon}).addTo(map);
-            </script>
-        </body>
-        </html>
-    `;
+    const mapHtml = generateMapHtml(lat, lng, title, theme);
 
     return (
         <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>
@@ -176,3 +130,51 @@ const styles = StyleSheet.create({
         padding: tokens.space.sm,
     },
 });
+
+const generateMapHtml = (lat: number, lng: number, title: string, theme: import('../theme/Theme').AppThemeType) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+            body { padding: 0; margin: 0; background-color: ${theme.background}; }
+            html, body, #map { height: 100%; width: 100%; }
+            .leaflet-control-attribution { display: none; }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script>
+            var map = L.map('map', {zoomControl: false}).setView([${lat}, ${lng}], 16);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            // Code HTML reproduisant le design du composant SVG
+            var iconHTML = \`
+                <div style="display: flex; flex-direction: column; align-items: center; padding-bottom: 8px;">
+                    <div style="background-color: ${theme.primary}; padding: 4px 8px; border-radius: 4px; box-shadow: 0px 4px 6px rgba(0,0,0,0.3);">
+                        <span style="color: #FFFFFF; font-weight: bold; font-size: 12px; font-family: sans-serif;">
+                            ${title}
+                        </span>
+                    </div>
+                    <svg height="10" width="12" style="margin-top: -1px;">
+                        <polygon points="0,0 6,10 12,0" fill="${theme.primary}" />
+                    </svg>
+                </div>
+            \`;
+
+            var customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: iconHTML,
+                iconSize: [100, 50],
+                iconAnchor: [50, 45] // Centre parfaitement la pointe de la flèche
+            });
+            
+            L.marker([${lat}, ${lng}], {icon: customIcon}).addTo(map);
+        </script>
+    </body>
+    </html>
+`;

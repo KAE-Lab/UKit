@@ -29,6 +29,157 @@ export interface CustomTabBarProps extends BottomTabBarProps {
     theme: AppThemeType;
 }
 
+interface TabBarRouteItemProps {
+    route: { key: string; name: string };
+    index: number;
+    state: import('@react-navigation/native').TabNavigationState<import('@react-navigation/native').ParamListBase>;
+    descriptors: import('@react-navigation/bottom-tabs').BottomTabBarProps['descriptors'];
+    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/bottom-tabs').BottomTabNavigationEventMap>;
+    theme: AppThemeType;
+}
+
+function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }: TabBarRouteItemProps) {
+    const { options } = descriptors[route.key];
+    const label = (options.tabBarLabel as string) !== undefined
+        ? (options.tabBarLabel as string)
+        : options.title !== undefined
+            ? options.title
+            : route.name;
+
+    const isFocused = state.index === index;
+
+    const onPress = () => {
+        const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+        });
+
+        if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name as never);
+        }
+    };
+
+    const onLongPress = () => {
+        navigation.emit({
+            type: 'tabLongPress',
+            target: route.key,
+        });
+    };
+
+    const color = isFocused ? (theme.accent ?? theme.primary) : theme.fontSecondary;
+
+    return (
+        <TouchableOpacity
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel}
+            testID={(options as { tabBarTestID?: string }).tabBarTestID}
+            onPress={onPress}
+            onLongPress={onLongPress}
+            style={styles.tabItem}
+        >
+            <View style={[
+                styles.iconContainer,
+                isFocused && { backgroundColor: `${theme.primary}15` }
+            ]}>
+                {options.tabBarIcon && options.tabBarIcon({ color, size: 24, focused: isFocused })}
+            </View>
+            <Text style={[styles.tabLabel, { color, fontWeight: Platform.OS === 'ios' ? (isFocused ? '700' : '500') : '500' }]}>
+                {label}
+            </Text>
+        </TouchableOpacity>
+    );
+}
+
+interface TabBarActionItemProps {
+    currentRouteName: string;
+    theme: AppThemeType;
+    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/bottom-tabs').BottomTabNavigationEventMap>;
+    credentials: unknown;
+}
+
+function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: TabBarActionItemProps) {
+    if (currentRouteName === 'PlanningTab') {
+        return (
+            <TouchableOpacity
+                onPress={() => navigation.navigate('GroupSearch' as never)}
+                activeOpacity={0.85}
+                style={[
+                    styles.groupButton,
+                    {
+                        backgroundColor: theme.cardBackground,
+                        borderColor: theme.border,
+                    }
+                ]}
+            >
+                <MaterialCommunityIcons
+                    name="account-search-outline"
+                    size={24}
+                    color={theme.accent ?? theme.primary}
+                />
+                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                    {Translator.get('GROUPS')}
+                </Text>
+            </TouchableOpacity>
+        );
+    }
+    
+    if (currentRouteName === 'SettingsTab') {
+        return (
+            <TouchableOpacity
+                onPress={() => navigation.navigate('About' as never)}
+                activeOpacity={0.85}
+                style={[
+                    styles.groupButton,
+                    {
+                        backgroundColor: theme.cardBackground,
+                        borderColor: theme.border,
+                    }
+                ]}
+            >
+                <MaterialCommunityIcons
+                    name="information-outline"
+                    size={24}
+                    color={theme.accent ?? theme.primary}
+                />
+                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                    {Translator.get('ABOUT')}
+                </Text>
+            </TouchableOpacity>
+        );
+    }
+    
+    if (currentRouteName === 'ScolariteTab' && credentials) {
+        return (
+            <TouchableOpacity
+                onPress={() => navigation.navigate('CredentialsSettings' as never)}
+                activeOpacity={0.85}
+                style={[
+                    styles.groupButton,
+                    {
+                        backgroundColor: theme.cardBackground,
+                        borderColor: theme.border,
+                    }
+                ]}
+            >
+                <MaterialCommunityIcons
+                    name="logout"
+                    size={24}
+                    color={theme.accent ?? theme.primary}
+                />
+                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                    {Translator.get('LOGOUT')}
+                </Text>
+            </TouchableOpacity>
+        );
+    }
+    
+    // Placeholder invisible — maintient la largeur de la tab bar sans afficher de contour
+    return <View style={{ width: 65, height: 75 }} />;
+}
+
 // Composant Custom Tab Bar pour reproduire l'effet Apple Music (décalé à gauche, ratio icon/text, bords arrondis)
 function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarProps) {
     const { credentials } = useCredentials();
@@ -46,130 +197,26 @@ function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarPro
                                 borderColor: theme.border,
                             }
                         ]}>
-                            {state.routes.map((route, index) => {
-                                const { options } = descriptors[route.key];
-                                const label = (options.tabBarLabel as string) !== undefined
-                                    ? (options.tabBarLabel as string)
-                                    : options.title !== undefined
-                                        ? options.title
-                                        : route.name;
-
-                                const isFocused = state.index === index;
-
-                                const onPress = () => {
-                                    const event = navigation.emit({
-                                        type: 'tabPress',
-                                        target: route.key,
-                                        canPreventDefault: true,
-                                    });
-
-                                    if (!isFocused && !event.defaultPrevented) {
-                                        navigation.navigate(route.name);
-                                    }
-                                };
-
-                                const onLongPress = () => {
-                                    navigation.emit({
-                                        type: 'tabLongPress',
-                                        target: route.key,
-                                    });
-                                };
-
-                                const color = isFocused ? (theme.accent ?? theme.primary) : theme.fontSecondary;
-
-                                return (
-                                    <TouchableOpacity
-                                        key={index}
-                                        activeOpacity={0.8}
-                                        accessibilityRole="button"
-                                        accessibilityState={isFocused ? { selected: true } : {}}
-                                        accessibilityLabel={options.tabBarAccessibilityLabel}
-                                        testID={(options as { tabBarTestID?: string }).tabBarTestID}
-                                        onPress={onPress}
-                                        onLongPress={onLongPress}
-                                        style={styles.tabItem}
-                                    >
-                                        <View style={[
-                                            styles.iconContainer,
-                                            isFocused && { backgroundColor: `${theme.primary}15` }
-                                        ]}>
-                                            {options.tabBarIcon && options.tabBarIcon({ color, size: 24, focused: isFocused })}
-                                        </View>
-                                        <Text style={[styles.tabLabel, { color, fontWeight: Platform.OS === 'ios' ? (isFocused ? '700' : '500') : '500' }]}>
-                                            {label}
-                                        </Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
+                            {state.routes.map((route, index) => (
+                                <TabBarRouteItem 
+                                    key={index} 
+                                    route={route} 
+                                    index={index} 
+                                    state={state} 
+                                    descriptors={descriptors} 
+                                    navigation={navigation} 
+                                    theme={theme} 
+                                />
+                            ))}
                         </View>
+                        
                         {/* Bouton accès groupes — visible uniquement sur l'onglet Planning */}
-                        {state.routes[state.index].name === 'PlanningTab' ? (
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate('GroupSearch')}
-                                activeOpacity={0.85}
-                                style={[
-                                    styles.groupButton,
-                                    {
-                                        backgroundColor: theme.cardBackground,
-                                        borderColor: theme.border,
-                                    }
-                                ]}
-                            >
-                                <MaterialCommunityIcons
-                                    name="account-search-outline"
-                                    size={24}
-                                    color={theme.accent ?? theme.primary}
-                                />
-                                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
-                                    {Translator.get('GROUPS')}
-                                </Text>
-                            </TouchableOpacity>
-                        ) : state.routes[state.index].name === 'SettingsTab' ? (
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate('About')}
-                                activeOpacity={0.85}
-                                style={[
-                                    styles.groupButton,
-                                    {
-                                        backgroundColor: theme.cardBackground,
-                                        borderColor: theme.border,
-                                    }
-                                ]}
-                            >
-                                <MaterialCommunityIcons
-                                    name="information-outline"
-                                    size={24}
-                                    color={theme.accent ?? theme.primary}
-                                />
-                                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
-                                    {Translator.get('ABOUT')}
-                                </Text>
-                            </TouchableOpacity>
-                        ) : (state.routes[state.index].name === 'ScolariteTab' && credentials) ? (
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate('CredentialsSettings')}
-                                activeOpacity={0.85}
-                                style={[
-                                    styles.groupButton,
-                                    {
-                                        backgroundColor: theme.cardBackground,
-                                        borderColor: theme.border,
-                                    }
-                                ]}
-                            >
-                                <MaterialCommunityIcons
-                                    name="logout"
-                                    size={24}
-                                    color={theme.accent ?? theme.primary}
-                                />
-                                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
-                                    {Translator.get('LOGOUT')}
-                                </Text>
-                            </TouchableOpacity>
-                        ) : (
-                            /* Placeholder invisible — maintient la largeur de la tab bar sans afficher de contour */
-                            <View style={{ width: 65, height: 75 }} />
-                        )}
+                        <TabBarActionItem 
+                            currentRouteName={state.routes[state.index].name} 
+                            theme={theme} 
+                            navigation={navigation} 
+                            credentials={credentials} 
+                        />
                     </View>
                 );
             }}

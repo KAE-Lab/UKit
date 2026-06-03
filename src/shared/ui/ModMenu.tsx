@@ -12,7 +12,6 @@ const { width, height } = Dimensions.get('window');
 const ICON_SIZE = 60;
 const MENU_WIDTH = 300;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ModMenuProps {}
 export interface ModMenuState {
     isVisible: boolean;
@@ -146,6 +145,110 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         );
     }
 
+    renderExpandedHeader = (theme: import('../theme/Theme').AppThemeType, isActive: boolean) => (
+        // Navbar (Draggable Area)
+        <View 
+            {...this.panResponder.panHandlers}
+            style={{
+                flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+                backgroundColor: theme.greyBackground, paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
+                borderBottomWidth: 1, borderBottomColor: theme.border
+            }}
+        >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {this.renderIndicator(isActive, { marginRight: tokens.space.sm })}
+                <Text style={{ color: theme.font, fontWeight: 'bold', fontSize: tokens.fontSize.sm }}>Dev Menu</Text>
+            </View>
+            <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity onPress={this.minimizeMenu} style={{ padding: 4, marginRight: 8 }}>
+                    <MaterialCommunityIcons name="minus" size={20} color={theme.fontSecondary} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={this.closeMenu} style={{ padding: 4 }}>
+                    <MaterialCommunityIcons name="close" size={20} color={theme.fontSecondary} />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+
+    renderLiveClock = (theme: import('../theme/Theme').AppThemeType, isActive: boolean, currentTime: moment.Moment) => (
+        // Live Clock
+        <View style={{ alignItems: 'center', marginBottom: tokens.space.md, backgroundColor: theme.cardBackground, padding: tokens.space.md, borderRadius: tokens.radius.md, borderWidth: 1, borderColor: theme.border }}>
+            <Text style={{ color: isActive ? '#4ade80' : theme.fontSecondary, fontWeight: 'bold', marginBottom: tokens.space.xs }}>
+                {isActive ? 'FAKE TIME ACTIVE' : 'REAL TIME'}
+            </Text>
+            <Text style={{ color: theme.font, fontSize: 32, fontWeight: 'bold', fontVariant: ['tabular-nums'], textAlign: 'center', width: '100%' }}>
+                {currentTime.format('HH:mm:ss')}
+            </Text>
+            <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm, marginTop: 4, textAlign: 'center' }}>
+                {currentTime.format('dddd DD MMMM YYYY')}
+            </Text>
+        </View>
+    );
+
+    renderTimeSelectors = (theme: import('../theme/Theme').AppThemeType, selectedDate: Date) => (
+        <>
+            <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginBottom: tokens.space.xs, fontWeight: 'bold' }}>SET FAKE TIME</Text>
+            
+            {/* DateTime selectors */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: tokens.space.md }}>
+                <TouchableOpacity 
+                    onPress={() => this.showPicker('date')}
+                    style={{ flex: 1, backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
+                >
+                    <MaterialCommunityIcons name="calendar" size={20} color={theme.primary} style={{ marginBottom: 4 }} />
+                    <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{moment(selectedDate).format('DD/MM/YYYY')}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    onPress={() => this.showPicker('time')}
+                    style={{ flex: 1, backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
+                >
+                    <MaterialCommunityIcons name="clock" size={20} color={theme.primary} style={{ marginBottom: 4 }} />
+                    <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{moment(selectedDate).format('HH:mm')}</Text>
+                </TouchableOpacity>
+            </View>
+        </>
+    );
+
+    renderActionButtons = (theme: import('../theme/Theme').AppThemeType) => (
+        // Actions
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <TouchableOpacity 
+                onPress={this.resetTime}
+                style={{ flex: 1, backgroundColor: '#ef4444', paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center' }}
+            >
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Reset</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+                onPress={this.applyFakeTime}
+                style={{ flex: 1, backgroundColor: theme.primary, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center' }}
+            >
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Apply</Text>
+            </TouchableOpacity>
+        </View>
+    );
+
+    renderDateTimePicker = (theme: import('../theme/Theme').AppThemeType) => {
+        if (!this.state.showPicker) return null;
+        return (
+            <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginTop: tokens.space.md, borderWidth: 1, borderColor: theme.border, alignItems: 'center' }}>
+                <DateTimePicker
+                    value={this.state.selectedDate}
+                    mode={this.state.pickerMode}
+                    is24Hour={true}
+                    display={Platform.OS === 'ios' ? "spinner" : "default"}
+                    onChange={this.onPickerChange}
+                    style={{ width: Platform.OS === 'ios' ? 240 : 'auto', height: Platform.OS === 'ios' ? 120 : 'auto' }}
+                />
+                {Platform.OS === 'ios' && (
+                    <TouchableOpacity onPress={() => this.setState({ showPicker: false })} style={{ alignItems: 'center', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.lg, backgroundColor: theme.primary, borderRadius: tokens.radius.md, marginTop: tokens.space.md }}>
+                        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Valider</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+        );
+    }
+
     render() {
         if (!this.state.isVisible) return null;
 
@@ -190,100 +293,14 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     borderWidth: 1, borderColor: theme.border
                 }]}
             >
-                {/* Navbar (Draggable Area) */}
-                <View 
-                    {...this.panResponder.panHandlers}
-                    style={{
-                        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-                        backgroundColor: theme.greyBackground, paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
-                        borderBottomWidth: 1, borderBottomColor: theme.border
-                    }}
-                >
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        {this.renderIndicator(isActive, { marginRight: tokens.space.sm })}
-                        <Text style={{ color: theme.font, fontWeight: 'bold', fontSize: tokens.fontSize.sm }}>Dev Menu</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row' }}>
-                        <TouchableOpacity onPress={this.minimizeMenu} style={{ padding: 4, marginRight: 8 }}>
-                            <MaterialCommunityIcons name="minus" size={20} color={theme.fontSecondary} />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={this.closeMenu} style={{ padding: 4 }}>
-                            <MaterialCommunityIcons name="close" size={20} color={theme.fontSecondary} />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                {this.renderExpandedHeader(theme, isActive)}
 
                 {/* Content */}
                 <View style={{ padding: tokens.space.md }}>
-                    
-                    {/* Live Clock */}
-                    <View style={{ alignItems: 'center', marginBottom: tokens.space.md, backgroundColor: theme.cardBackground, padding: tokens.space.md, borderRadius: tokens.radius.md, borderWidth: 1, borderColor: theme.border }}>
-                        <Text style={{ color: isActive ? '#4ade80' : theme.fontSecondary, fontWeight: 'bold', marginBottom: tokens.space.xs }}>
-                            {isActive ? 'FAKE TIME ACTIVE' : 'REAL TIME'}
-                        </Text>
-                        <Text style={{ color: theme.font, fontSize: 32, fontWeight: 'bold', fontVariant: ['tabular-nums'], textAlign: 'center', width: '100%' }}>
-                            {currentTime.format('HH:mm:ss')}
-                        </Text>
-                        <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm, marginTop: 4, textAlign: 'center' }}>
-                            {currentTime.format('dddd DD MMMM YYYY')}
-                        </Text>
-                    </View>
-
-                    <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginBottom: tokens.space.xs, fontWeight: 'bold' }}>SET FAKE TIME</Text>
-                    
-                    {/* DateTime selectors */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: tokens.space.md }}>
-                        <TouchableOpacity 
-                            onPress={() => this.showPicker('date')}
-                            style={{ flex: 1, backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
-                        >
-                            <MaterialCommunityIcons name="calendar" size={20} color={theme.primary} style={{ marginBottom: 4 }} />
-                            <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{moment(selectedDate).format('DD/MM/YYYY')}</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity 
-                            onPress={() => this.showPicker('time')}
-                            style={{ flex: 1, backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
-                        >
-                            <MaterialCommunityIcons name="clock" size={20} color={theme.primary} style={{ marginBottom: 4 }} />
-                            <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{moment(selectedDate).format('HH:mm')}</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Actions */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <TouchableOpacity 
-                            onPress={this.resetTime}
-                            style={{ flex: 1, backgroundColor: '#ef4444', paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center' }}
-                        >
-                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Reset</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                            onPress={this.applyFakeTime}
-                            style={{ flex: 1, backgroundColor: theme.primary, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center' }}
-                        >
-                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Apply</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {this.state.showPicker && (
-                        <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginTop: tokens.space.md, borderWidth: 1, borderColor: theme.border, alignItems: 'center' }}>
-                            <DateTimePicker
-                                value={this.state.selectedDate}
-                                mode={this.state.pickerMode}
-                                is24Hour={true}
-                                display={Platform.OS === 'ios' ? "spinner" : "default"}
-                                onChange={this.onPickerChange}
-                                style={{ width: Platform.OS === 'ios' ? 240 : 'auto', height: Platform.OS === 'ios' ? 120 : 'auto' }}
-                            />
-                            {Platform.OS === 'ios' && (
-                                <TouchableOpacity onPress={() => this.setState({ showPicker: false })} style={{ alignItems: 'center', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.lg, backgroundColor: theme.primary, borderRadius: tokens.radius.md, marginTop: tokens.space.md }}>
-                                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Valider</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    )}
-
+                    {this.renderLiveClock(theme, isActive, currentTime)}
+                    {this.renderTimeSelectors(theme, selectedDate)}
+                    {this.renderActionButtons(theme)}
+                    {this.renderDateTimePicker(theme)}
                 </View>
             </Animated.View>
         );

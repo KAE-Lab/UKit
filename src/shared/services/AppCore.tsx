@@ -118,11 +118,11 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     return BackgroundFetch.BackgroundFetchResult.NewData;
 });
 
-function formatCalendarEventData(event: Record<string, unknown>): Record<string, unknown> {
+function formatCalendarEventData(event: import('../../features/Planning/services/PlanningApiService').PlanningEvent): Record<string, unknown> {
     return {
         title: event.subject,
-        startDate: new Date((event.date as { start: string }).start),
-        endDate: new Date((event.date as { end: string }).end),
+        startDate: event.date && event.date.start ? new Date(event.date.start) : new Date(),
+        endDate: event.date && event.date.end ? new Date(event.date.end) : new Date(),
         timeZone: 'Europe/Paris',
         endTimeZone: 'Europe/Paris',
         notes: event.schedule + '\n' + event.description,
@@ -409,10 +409,38 @@ class SettingsManagerService {
         }));
     };
 
+    applySettingsData = (settings: Record<string, unknown> | null) => {
+        if (!settings) return;
+        
+        if (settings.theme) this._theme = settings.theme as string;
+        
+        // Migration for legacy groupName to favoriteGroups
+        if (settings.groupName && !settings.favoriteGroups) {
+            this._favoriteGroups = [settings.groupName as string];
+        } else if (settings.favoriteGroups) {
+            this._favoriteGroups = [...(settings.favoriteGroups as string[])];
+        }
+        
+        if (settings.openAppOnFavoriteGroup !== null && settings.openAppOnFavoriteGroup !== undefined) {
+            this._openAppOnFavoriteGroup = settings.openAppOnFavoriteGroup as boolean;
+        }
+        if (settings.filters) this._filters = [...(settings.filters as string[])];
+        if (settings.calendar !== undefined) this._calendar = settings.calendar as string | number;
+        if (settings.calendarSyncEnabled) this._calendarSyncEnabled = true;
+        if (settings.language) this.setLanguage(settings.language as string);
+        if (settings.courseNotificationsEnabled !== undefined) {
+            this._courseNotificationsEnabled = settings.courseNotificationsEnabled as boolean;
+        }
+        if (settings.courseNotificationDelay !== undefined) {
+            this._courseNotificationDelay = settings.courseNotificationDelay as number;
+        }
+    };
+
     loadSettings = async () => {
         await this.loadCalendars();
         try {
-            const isFirstLoad = JSON.parse(await AsyncStorage.getItem('firstload'));
+            const data = await AsyncStorage.getItem('firstload');
+            const isFirstLoad = data ? JSON.parse(data) : null;
             this._firstload = isFirstLoad === null ? true : isFirstLoad;
         } catch (error) { this._firstload = true; }
 
@@ -422,23 +450,9 @@ class SettingsManagerService {
         if (lastSyncDateItem !== null) this._lastSyncDate = moment(parseInt(lastSyncDateItem, 10));
 
         try {
-            const settings = JSON.parse(await AsyncStorage.getItem('settings'));
-            if (settings?.theme) this._theme = settings.theme;
-            
-            // Migration for legacy groupName to favoriteGroups
-            if (settings?.groupName && !settings?.favoriteGroups) {
-                this._favoriteGroups = [settings.groupName];
-            } else if (settings?.favoriteGroups) {
-                this._favoriteGroups = [...settings.favoriteGroups];
-            }
-            
-            if (settings?.openAppOnFavoriteGroup !== null) this._openAppOnFavoriteGroup = settings.openAppOnFavoriteGroup;
-            if (settings?.filters) this._filters = [...settings.filters];
-            if (settings?.calendar !== undefined) this._calendar = settings?.calendar;
-            if (settings?.calendarSyncEnabled) this._calendarSyncEnabled = true;
-            if (settings?.language) this.setLanguage(settings.language);
-            if (settings?.courseNotificationsEnabled !== undefined) this._courseNotificationsEnabled = settings.courseNotificationsEnabled;
-            if (settings?.courseNotificationDelay !== undefined) this._courseNotificationDelay = settings.courseNotificationDelay;
+            const data = await AsyncStorage.getItem('settings');
+            const settings = data ? JSON.parse(data) : null;
+            this.applySettingsData(settings);
         } catch (error) {
             new ErrorAlert("Settings couldn't be loaded").show();
         }
