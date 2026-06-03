@@ -1,16 +1,15 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, ScrollView, Text, View, TouchableOpacity, Animated } from 'react-native';
+import { ActivityIndicator, Animated, Text, View, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import moment from 'moment';
-import Collapsible from 'react-native-collapsible';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import PropTypes from 'prop-types';
-import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
-import { CourseRowWithNavigation as CourseRow, CourseGroupCarousel } from './CourseCard';
+import { CourseGroupCarousel } from './CourseCard';
+import { DayWeek } from './DayWeekCollapsible';
+import { groupOverlappingCourses } from './ScheduleListUtils';
 
 import { ErrorAlert } from '../../../shared/ui/Alerts';
 import Translator from '../../../shared/i18n/Translator';
@@ -20,151 +19,6 @@ import { PlanningDataManager as DataManager } from '../services/PlanningDataMana
 import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../../shared/services/AppCore';
 import { NotificationManager } from '../../../shared/services/NotificationService';
 
-export const groupOverlappingCourses = (courses) => {
-    if (!courses || courses.length === 0) return [];
-    if (courses.length === 1 && courses[0].category === 'nocourse') return [courses];
-
-    const timeToMinutes = (timeStr) => {
-        if (!timeStr) return 0;
-        const parts = timeStr.split(':');
-        if (parts.length !== 2) return 0;
-        return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
-    };
-
-    const sorted = [...courses].sort((a, b) => timeToMinutes(a.starttime) - timeToMinutes(b.starttime));
-
-    const groups = [];
-    let currentGroup = [sorted[0]];
-    let groupEnd = timeToMinutes(sorted[0].endtime);
-
-    for (let i = 1; i < sorted.length; i++) {
-        const course = sorted[i];
-        const start = timeToMinutes(course.starttime);
-        const end = timeToMinutes(course.endtime);
-
-        if (start < groupEnd) {
-            currentGroup.push(course);
-            groupEnd = Math.max(groupEnd, end);
-        } else {
-            groups.push(currentGroup);
-            currentGroup = [course];
-            groupEnd = end;
-        }
-    }
-    if (currentGroup.length > 0) groups.push(currentGroup);
-    return groups;
-}
-
-// ── COMPOSANT COLLAPSIBLE POUR LA SEMAINE ─────────────
-export interface DayWeekProps {
-    schedule: { date?: string; day?: string; dateString?: string; name?: string; courses?: import('../services/PlanningApiService').PlanningEvent[] } & Record<string, unknown>;
-    theme: import('../../../shared/theme/Theme').AppThemeType;
-    fallbackDate?: moment.MomentInput;
-    navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
-}
-
-export interface DayWeekState {
-    expand: boolean;
-}
-
-export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
-    static propTypes = {
-        schedule: PropTypes.object.isRequired,
-        theme: PropTypes.object.isRequired,
-        fallbackDate: PropTypes.object,
-    };
-
-    constructor(props: DayWeekProps) {
-        super(props);
-        this.state = { expand: false };
-    }
-
-    toggleExpand = () => {
-        requestAnimationFrame(() => {
-            this.setState({ expand: !this.state.expand });
-        });
-    };
-
-    render() {
-        const { schedule, theme, navigation } = this.props;
-
-        let dateStr = schedule.date || schedule.day || schedule.dateString || schedule.name;
-        
-        if (!dateStr && schedule.courses && schedule.courses.length > 0) {
-            const firstCourse = schedule.courses[0];
-            if (firstCourse.date && firstCourse.date.start) {
-                dateStr = firstCourse.date.start;
-            }
-        }
-
-        let parsedDate = moment.invalid();
-        if (dateStr) {
-            parsedDate = moment(dateStr, ['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY/MM/DD', moment.ISO_8601]);
-        }
-        
-        if (!parsedDate.isValid() && this.props.fallbackDate) {
-            parsedDate = moment(this.props.fallbackDate);
-        }
-
-        const title = parsedDate.isValid() 
-            ? upperCaseFirstLetter(parsedDate.format('dddd DD/MM')) 
-            : 'Date inconnue';
-
-        const activeCourses = schedule.courses ? schedule.courses.filter(c => c.category !== 'nocourse') : [];
-        const groupedCourses = groupOverlappingCourses(activeCourses);
-        // Le compteur = nombre de cartes visibles (après fusion des cours qui se chevauchent)
-        const courseCount = groupedCourses.length;
-
-        return (
-            <View style={{ marginBottom: tokens.space.sm }}>
-                <TouchableOpacity 
-                    onPress={this.toggleExpand} 
-                    style={{ 
-                        paddingHorizontal: tokens.space.md, 
-                        paddingVertical: tokens.space.sm, 
-                        flexDirection: 'row', 
-                        alignItems: 'center', 
-                        justifyContent: 'space-between' 
-                    }}
-                >
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: theme.font }}>
-                            {title}
-                        </Text>
-                        {courseCount > 0 && (
-                            <View style={{
-                                backgroundColor: theme.accent ? theme.accent + '20' : theme.primary + '20',
-                                borderRadius: tokens.radius.pill,
-                                paddingHorizontal: 8,
-                                paddingVertical: 2,
-                                marginLeft: tokens.space.sm
-                            }}>
-                                <Text style={{ color: theme.accent ?? theme.primary, fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.bold }}>
-                                    {courseCount} cours
-                                </Text>
-                            </View>
-                        )}
-                    </View>
-                    <MaterialCommunityIcons name={this.state.expand ? 'chevron-up' : 'chevron-down'} size={24} color={theme.fontSecondary} />
-                </TouchableOpacity>
-                
-                <Collapsible collapsed={!this.state.expand}>
-                    {groupedCourses.length === 0 ? (
-                        <View style={{ padding: tokens.space.md, alignItems: 'center' }}>
-                            <Text style={{ color: theme.fontSecondary }}>{Translator.get('NO_CLASS_THIS_DAY')}</Text>
-                        </View>
-                    ) : (
-                        groupedCourses.map((group, index) => (
-                            <CourseGroupCarousel key={index} coursesGroup={group} theme={theme} />
-                        ))
-                    )}
-                </Collapsible>
-            </View>
-        );
-    }
-}
-
-// ── LISTE DES COURS ──────
 export interface ScheduleListProps {
     groupName: string | string[];
     mode: 'day' | 'week';
@@ -208,12 +62,12 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         }
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    componentDidUpdate(prevProps: ScheduleListProps, prevState: ScheduleListState) {
         if (this.state.groupName !== prevState.groupName) {
             this.fetchSchedule();
         } else if (this.props.mode === 'day' && this.state.target !== prevState.target) {
             this.fetchSchedule();
-        } else if (this.props.mode === 'week' && this.state.target.week !== prevState.target.week) {
+        } else if (this.props.mode === 'week' && (this.state.target as { week: number }).week !== (prevState.target as { week: number }).week) {
             this.fetchSchedule();
         } else if (!isArraysEquals(this.props.filtersList || [], prevProps.filtersList || [])) {
             this.fetchSchedule();
@@ -250,7 +104,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         if (this._unsubscribe) this._unsubscribe();
     }
 
-    getCache = async (id) => {
+    getCache = async (id: string) => {
         let cache = await AsyncStorage.getItem(id);
         if (cache !== null) return JSON.parse(cache);
         return null;
@@ -277,7 +131,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             const date = moment(this.state.target).format('YYYY/MM/DD');
             id = `${groupPrefix}@${date}`;
         } else {
-            id = `${groupPrefix}@Week${this.state.target.week}`;
+            id = `${groupPrefix}@Week${(this.state.target as { week: number }).week}`;
         }
 
         this.setState({ schedule: null, loading: true, cancelToken }, async () => {
@@ -338,13 +192,13 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         });
     };
 
-    computeScheduleDay(schedule, isFavorite) {
+    computeScheduleDay(schedule: import('../services/PlanningApiService').PlanningEvent[], isFavorite: boolean) {
         return schedule
             .map((course) => CourseManager.computeCourseUE(course))
             .filter((course) => CourseManager.filterCourse(isFavorite, course, this.props.filtersList));
     }
 
-    computeScheduleWeek(schedule, isFavorite) {
+    computeScheduleWeek(schedule: import('../services/PlanningApiService').PlanningWeekDay, isFavorite: boolean) {
         return {
             ...schedule,
             courses: schedule.courses
@@ -353,115 +207,130 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         };
     }
 
-    displayTitle() {
-        if (this.props.mode === 'day') {
-            return upperCaseFirstLetter(moment(this.state.target).format('dddd L'));
-        } else {
-            return Translator.get('WEEK') + ' ' + this.state.target.week;
+    renderCacheMessage() {
+        const { theme, mode } = this.props;
+        if (this.state.cacheDate === null) return null;
+        return (
+            <View style={{
+                flexDirection: 'row', alignItems: 'center', backgroundColor: theme.greyBackground,
+                paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
+                borderRadius: tokens.radius.md, marginBottom: tokens.space.md, marginHorizontal: tokens.space.md
+            }}>
+                {mode === 'week' && <MaterialCommunityIcons name="clock-outline" size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
+                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
+                    {Translator.get('OFFLINE_DISPLAY_FROM_DATE', moment(this.state.cacheDate).format('lll'))}
+                </Text>
+            </View>
+        );
+    }
+
+    renderEmptyFavorites() {
+        const { theme, navigation } = this.props;
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, paddingBottom: 80 }}>
+                <MaterialCommunityIcons name="star-outline" size={60} color={theme.fontSecondary} style={{ marginBottom: tokens.space.lg }} />
+                <Text style={{ color: theme.font, fontSize: tokens.fontSize.lg, fontWeight: 'bold', textAlign: 'center', marginBottom: tokens.space.md }}>
+                    {Translator.get('FAVORITES_EMPTY_TITLE') || "Votre planning est vide"}
+                </Text>
+                <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center', lineHeight: 22 }}>
+                    {Translator.get('FAVORITES_EMPTY') || "Votre liste de favoris est vide. Recherchez un groupe dans la liste pour l'ajouter \u00e0 un de vos favoris !"}
+                </Text>
+                <TouchableOpacity style={{ marginTop: 30, backgroundColor: theme.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }} onPress={() => navigation?.navigate('GroupSearch')}>
+                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{Translator.get('GROUPS_LIST') || "Groupes"}</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+    renderLoading() {
+        const { theme } = this.props;
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator style={{ margin: tokens.space.lg }} size="large" color={theme.primary} animating={true} />
+            </View>
+        );
+    }
+
+    renderDayMode(listHeader: React.ReactNode) {
+        const { theme } = this.props;
+        let daySchedule = this.state.schedule as import('../services/PlanningApiService').PlanningEvent[];
+        if (moment(this.state.target).day() === 0 || daySchedule.length === 0) {
+            daySchedule = [{ schedule: 0, category: 'nocourse' }];
         }
+        const groupedDaySchedule = groupOverlappingCourses(daySchedule);
+
+        return (
+            <Animated.FlatList
+                data={groupedDaySchedule}
+                extraData={this.state}
+                ListHeaderComponent={listHeader as never}
+                renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item as import('../services/PlanningApiService').PlanningEvent[]} theme={theme} />}
+                keyExtractor={(item, index) => String(index)}
+                style={{ backgroundColor: theme.courseBackground }}
+                contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.xxl + 80 }}
+                showsVerticalScrollIndicator={false}
+                onScroll={this.props.onAnimatedScroll}
+                scrollEventThrottle={16}
+            />
+        );
+    }
+
+    renderWeekMode(listHeader: React.ReactNode) {
+        const { theme, navigation } = this.props;
+        const isFavorite = Array.isArray(this.state.groupName);
+        const targetObject = this.state.target as { week: number; year: number };
+        const targetYear = targetObject.year || moment().year();
+        const targetWeek = targetObject.week;
+        const weekSchedule = this.state.schedule as import('../services/PlanningApiService').PlanningWeekDay[];
+
+        return (
+            <Animated.ScrollView 
+                showsVerticalScrollIndicator={false} 
+                style={{ flex: 1, backgroundColor: theme.courseBackground }}
+                contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.xxl + 80 }}
+                onScroll={this.props.onAnimatedScroll}
+                scrollEventThrottle={16}
+            >
+                {listHeader}
+                {weekSchedule.map((scheduleItem, index) => {
+                    const fallbackDate = moment().year(targetYear).isoWeek(targetWeek).isoWeekday(index + 1);
+                    return (
+                        <DayWeek
+                            key={index}
+                            schedule={this.computeScheduleWeek(scheduleItem, isFavorite)}
+                            navigation={navigation}
+                            theme={theme}
+                            fallbackDate={fallbackDate}
+                        />
+                    );
+                })}
+            </Animated.ScrollView>
+        );
+    }
+
+    renderContent(listHeader: React.ReactNode) {
+        if (Array.isArray(this.state.groupName) && this.state.groupName.length === 0) {
+            return this.renderEmptyFavorites();
+        } else if (this.state.schedule === null) {
+            return this.renderLoading();
+        } else if (this.state.schedule instanceof Array && this.props.mode === 'day') {
+            return this.renderDayMode(listHeader);
+        } else if (this.state.schedule instanceof Array && this.props.mode === 'week') {
+            return this.renderWeekMode(listHeader);
+        }
+        return null;
     }
 
     render() {
-        const { theme, mode, navigation } = this.props;
-        let content = null, cacheMessage = null;
-
-        if (this.state.cacheDate !== null) {
-            cacheMessage = (
-                <View style={{
-                    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.greyBackground,
-                    paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
-                    borderRadius: tokens.radius.md, marginBottom: tokens.space.md, marginHorizontal: tokens.space.md
-                }}>
-                    {mode === 'week' && <MaterialCommunityIcons name="clock-outline" size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
-                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
-                        {Translator.get('OFFLINE_DISPLAY_FROM_DATE', moment(this.state.cacheDate).format('lll'))}
-                    </Text>
-                </View>
-            );
-        }
-
-        // En mode 'day', le titre est géré par le sticky header du DayView
-        // En mode 'week', le titre de semaine est dans le slider — seul le cacheMessage subsiste
+        const { theme } = this.props;
+        const cacheMessage = this.renderCacheMessage();
         const listHeader = cacheMessage ? (
             <View style={{ paddingBottom: tokens.space.sm }}>{cacheMessage}</View>
         ) : null;
 
-        if (Array.isArray(this.state.groupName) && this.state.groupName.length === 0) {
-            content = (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, paddingBottom: 80 }}>
-                    <MaterialCommunityIcons name="star-outline" size={60} color={theme.fontSecondary} style={{ marginBottom: tokens.space.lg }} />
-                    <Text style={{ color: theme.font, fontSize: tokens.fontSize.lg, fontWeight: 'bold', textAlign: 'center', marginBottom: tokens.space.md }}>
-                        {Translator.get('FAVORITES_EMPTY_TITLE') || "Votre planning est vide"}
-                    </Text>
-                    <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center', lineHeight: 22 }}>
-                        {Translator.get('FAVORITES_EMPTY') || "Votre liste de favoris est vide. Recherchez un groupe dans la liste pour l'ajouter \u00e0 un de vos favoris !"}
-                    </Text>
-                    <TouchableOpacity style={{ marginTop: 30, backgroundColor: theme.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }} onPress={() => navigation.navigate('GroupSearch')}>
-                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{Translator.get('GROUPS_LIST') || "Groupes"}</Text>
-                    </TouchableOpacity>
-                </View>
-            );
-        } else if (this.state.schedule === null) {
-            content = (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator style={{ margin: tokens.space.lg }} size="large" color={theme.primary} animating={true} />
-                </View>
-            );
-        } else if (this.state.schedule instanceof Array && mode === 'day') {
-            let daySchedule = this.state.schedule;
-            if (moment(this.state.target).day() === 0 || daySchedule.length === 0) {
-                daySchedule = [{ schedule: 0, category: 'nocourse' }];
-            }
-
-            const groupedDaySchedule = groupOverlappingCourses(daySchedule);
-
-            content = (
-                <Animated.FlatList
-                    data={groupedDaySchedule}
-                    extraData={this.state}
-                    ListHeaderComponent={listHeader}
-                    renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item} theme={theme} />}
-                    keyExtractor={(item, index) => String(index)}
-                    style={{ backgroundColor: theme.courseBackground }}
-                    contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.xxl + 80 }}
-                    showsVerticalScrollIndicator={false}
-                    onScroll={this.props.onAnimatedScroll}
-                    scrollEventThrottle={16}
-                />
-            );
-        } else if (this.state.schedule instanceof Array && mode === 'week') {
-            const isFavorite = Array.isArray(this.state.groupName);
-            const targetYear = this.state.target.year || moment().year();
-            const targetWeek = this.state.target.week;
-
-            content = (
-                <Animated.ScrollView 
-                    showsVerticalScrollIndicator={false} 
-                    style={{ flex: 1, backgroundColor: theme.courseBackground }}
-                    contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.xxl + 80 }}
-                    onScroll={this.props.onAnimatedScroll}
-                    scrollEventThrottle={16}
-                >
-                    {listHeader}
-                    {this.state.schedule.map((scheduleItem, index) => {
-                        const fallbackDate = moment().year(targetYear).isoWeek(targetWeek).isoWeekday(index + 1);
-                        return (
-                            <DayWeek
-                                key={index}
-                                schedule={this.computeScheduleWeek(scheduleItem, isFavorite)}
-                                navigation={navigation}
-                                theme={theme}
-                                fallbackDate={fallbackDate}
-                            />
-                        );
-                    })}
-                </Animated.ScrollView>
-            );
-        }
-
         return (
             <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-                {content}
+                {this.renderContent(listHeader)}
             </View>
         );
     }
@@ -469,5 +338,5 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
 const AnimatedScheduleList = withHeaderAnimation(ScheduleList);
 
-export const DayComponent = (props) => <AnimatedScheduleList mode="day" target={props.day} {...props} />;
-export const WeekComponent = (props) => <AnimatedScheduleList mode="week" target={props.week} {...props} />;
+export const DayComponent = (props: Omit<ScheduleListProps, 'mode' | 'target'> & { day: moment.MomentInput }) => <AnimatedScheduleList mode="day" target={props.day} {...props} />;
+export const WeekComponent = (props: Omit<ScheduleListProps, 'mode' | 'target'> & { week: { week: number; year: number } }) => <AnimatedScheduleList mode="week" target={props.week} {...props} />;

@@ -13,7 +13,7 @@ import CredentialsSettingsScreen from '../../features/Scolarite/screens/Credenti
 import { CredentialsProvider } from '../../features/Scolarite/services/CredentialsContext';
 import WebBrowser from '../../features/Scolarite/screens/WebBrowserScreen';
 import Geolocation from '../map/MapScreen';
-import Course from '../../features/Planning/components/CourseCard';
+import { CourseScreen } from '../../features/Planning/screens/CourseScreen';
 import DayView from '../../features/Planning/views/DayView';
 import CrousScreen from '../../features/Campus/Crous/CrousScreen';
 import CrousMenuScreen from '../../features/Campus/Crous/CrousMenuScreen';
@@ -124,7 +124,7 @@ export default function StackNavigator() {
 
                             <Stack.Screen name="Geolocation" component={Geolocation} options={({ route }) => NavBarHelper({ title: Translator.get('MAP'), themeName, route })} />
 
-                            <Stack.Screen name="Course" component={Course} options={({ navigation, route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />
+                            <Stack.Screen name="Course" component={CourseScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />
                         </Stack.Navigator>
                     </CredentialsProvider>
                 );

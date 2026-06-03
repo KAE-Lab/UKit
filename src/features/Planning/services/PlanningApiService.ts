@@ -24,6 +24,16 @@ export interface PlanningEvent {
     dayNumber?: string;
 }
 
+export interface RawPlanningEvent {
+    id: string;
+    eventCategory: string;
+    start: string;
+    end: string;
+    backgroundColor: string;
+    description: string;
+    modules: string[] | null;
+}
+
 export interface PlanningWeekDay {
     dayNumber: string;
     dayTimestamp: number;
@@ -68,6 +78,45 @@ class PlanningApiServiceClass {
         return 0;
     };
 
+    parseEvent(event: RawPlanningEvent, group: string, separator: string = '\n'): PlanningEvent {
+        const startDate = moment(event.start);
+        const endDate = moment(event.end);
+        const starttime = startDate.format('HH:mm');
+        const endtime = endDate.format('HH:mm');
+
+        let subject = event.eventCategory;
+        if (event.modules !== null) subject = event.modules.shift();
+
+        const unfilteredDescription = formatDescription(event.description).split(separator);
+        const description = [];
+        for (const field of unfilteredDescription) {
+            if (!field.includes(event.eventCategory) && !field.includes(subject)) {
+                description.push(field.trim());
+            }
+        }
+
+        let toFilter = null;
+        if (description[0]?.includes(group)) {
+            let filter = description[0].replace(group, '').replace('-', '').trim();
+            toFilter = filter !== '' ? filter : null;
+        }
+
+        return {
+            id: event.id,
+            style: 'style="background-color:' + event.backgroundColor + '"',
+            color: event.backgroundColor,
+            schedule: starttime + '-' + endtime + ' ' + event.eventCategory,
+            starttime,
+            endtime,
+            date: { start: startDate.toISOString(), end: endDate.toISOString() },
+            subject,
+            description: description.filter((e) => e != '').join('\n'),
+            category: event.eventCategory,
+            group,
+            toFilter,
+        };
+    }
+
     fetchCalendarDay = async (group: string, date: string): Promise<PlanningEvent[] | null> => {
         const endQueryDate = moment(date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD');
         const data = {
@@ -100,42 +149,7 @@ class PlanningApiServiceClass {
                 if (event.eventCategory === 'Vacances') continue;
                 if (moment(event.start).format('YYYY-MM-DD') !== date) continue;
 
-                const startDate = moment(event.start);
-                const endDate = moment(event.end);
-                const starttime = startDate.format('HH:mm');
-                const endtime = endDate.format('HH:mm');
-
-                let subject = event.eventCategory;
-                if (event.modules !== null) subject = event.modules.shift();
-
-                const unfilteredDescription = formatDescription(event.description).split(';');
-                const description = [];
-                for (const field of unfilteredDescription) {
-                    if (!field.includes(event.eventCategory) && !field.includes(subject)) {
-                        description.push(field.trim());
-                    }
-                }
-
-                let toFilter = null;
-                if (description[0]?.includes(group)) {
-                    let filter = description[0].replace(group, '').replace('-', '').trim();
-                    toFilter = filter !== '' ? filter : null;
-                }
-
-                eventList.push({
-                    id: event.id,
-                    style: 'style="background-color:' + event.backgroundColor + '"',
-                    color: event.backgroundColor,
-                    schedule: starttime + '-' + endtime + ' ' + event.eventCategory,
-                    starttime,
-                    endtime,
-                    date: { start: startDate.toISOString(), end: endDate.toISOString() },
-                    subject,
-                    description: description.filter((e) => e != '').join('\n'),
-                    category: event.eventCategory,
-                    group,
-                    toFilter,
-                });
+                eventList.push(this.parseEvent(event, group, ';'));
             }
             return eventList.sort(this.sortFunctionGroup);
         } catch (error) {
@@ -182,49 +196,16 @@ class PlanningApiServiceClass {
                 if (event.eventCategory === 'Vacances') continue;
 
                 const startDate = moment(event.start);
-                const endDate = moment(event.end);
                 const day = upperCaseFirstLetter(moment(startDate).format('dddd L'));
                 const dayNumberInt = moment(startDate).isoWeekday();
 
                 if (dayNumberInt < 1 || dayNumberInt > 6) continue;
 
-                const dayNumber = String(dayNumberInt);
-                const starttime = startDate.format('HH:mm');
-                const endtime = endDate.format('HH:mm');
+                const parsedEvent = this.parseEvent(event, group, '\n');
+                parsedEvent.day = day;
+                parsedEvent.dayNumber = String(dayNumberInt);
 
-                let subject = event.eventCategory;
-                if (event.modules !== null) subject = event.modules.shift();
-
-                const unfilteredDescription = formatDescription(event.description).split('\n');
-                const description = [];
-                for (const field of unfilteredDescription) {
-                    if (!field.includes(event.eventCategory) && !field.includes(subject)) {
-                        description.push(field.trim());
-                    }
-                }
-
-                let toFilter = null;
-                if (description[0]?.includes(group)) {
-                    let filter = description[0].replace(group, '').replace('-', '').trim();
-                    toFilter = filter !== '' ? filter : null;
-                }
-
-                eventList[dayNumberInt - 1].courses.push({
-                    id: event.id,
-                    style: 'style="background-color:' + event.backgroundColor + '"',
-                    color: event.backgroundColor,
-                    schedule: starttime + '-' + endtime + ' ' + event.eventCategory,
-                    starttime,
-                    endtime,
-                    date: { start: startDate.toISOString(), end: endDate.toISOString() },
-                    subject,
-                    description: description.filter((e) => e != '').join('\n'),
-                    category: event.eventCategory,
-                    group,
-                    day,
-                    dayNumber,
-                    toFilter,
-                });
+                eventList[dayNumberInt - 1].courses.push(parsedEvent);
             }
 
             for (const day of eventList) {
@@ -278,41 +259,14 @@ class PlanningApiServiceClass {
                 if (event.eventCategory === 'Vacances') continue;
 
                 const startDate = moment(event.start);
-                const endDate = moment(event.end);
                 const day = upperCaseFirstLetter(moment(startDate).format('dddd L'));
                 const dayNumberInt = moment(startDate).isoWeekday();
-                const dayNumber = String(dayNumberInt);
 
-                const starttime = startDate.format('HH:mm');
-                const endtime = endDate.format('HH:mm');
+                const parsedEvent = this.parseEvent(event, group, ';');
+                parsedEvent.day = day;
+                parsedEvent.dayNumber = String(dayNumberInt);
 
-                let subject = event.eventCategory;
-                if (event.modules !== null) subject = event.modules.shift();
-
-                const unfilteredDescription = formatDescription(event.description).split(';');
-                const description = [];
-
-                for (const field of unfilteredDescription) {
-                    if (!field.includes(event.eventCategory) && !field.includes(subject)) {
-                        description.push(field.trim());
-                    }
-                }
-
-                events.push({
-                    id: event.id,
-                    style: 'style="background-color:' + event.backgroundColor + '"',
-                    color: event.backgroundColor,
-                    schedule: starttime + '-' + endtime + ' ' + event.eventCategory,
-                    starttime,
-                    endtime,
-                    date: { start: startDate.toISOString(), end: endDate.toISOString() },
-                    subject,
-                    description: description.filter((e) => e != '').join('\n'),
-                    category: event.eventCategory,
-                    group,
-                    day,
-                    dayNumber,
-                });
+                events.push(parsedEvent);
             }
 
             return events.sort(this.sortFunctionGroup);

@@ -4,155 +4,30 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Toast from 'react-native-root-toast';
-import PropTypes from 'prop-types';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
-import { Split } from '../../../shared/ui/AppUI';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext, isConnected } from '../../../shared/services/AppCore'
 import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
 import { NavBarHelper, SaveGroupButton } from '../../../shared/navigation/NavHelpers';
+import { SectionListHeader, GroupRow } from '../components/GroupSelectionComponents';
 
-// ── COMPOSANT HEADER DE SECTION ─────────────────────────────────────────
-export interface SectionListHeaderProps {
-    color: string;
-    headerColor: string;
-    sectionIndex: number;
-    title: string;
-}
-
-class SectionListHeader extends React.PureComponent<SectionListHeaderProps> {
-    static propTypes = {
-        color: PropTypes.string,
-        headerColor: PropTypes.string,
-        sectionIndex: PropTypes.number.isRequired,
-        title: PropTypes.string,
-    };
-
-    getBackgroundSectionStyle() {
-        let indexStyle = this.props.sectionIndex % style.list.sectionHeaders.length;
-        return style.list.sections[indexStyle];
-    }
-
-    getSectionStyle() {
-        let indexStyle = this.props.sectionIndex % style.list.sectionHeaders.length;
-        return style.list.sectionHeaders[indexStyle];
-    }
-
-    render() {
-        return (
-            <View style={[
-                this.getBackgroundSectionStyle(),
-                {
-                    backgroundColor: this.props.color,
-                    paddingHorizontal: tokens.space.md,
-                    paddingVertical: tokens.space.xs,
-                },
-            ]}>
-                <View style={[
-                    (style.list.sectionHeaderView as never),
-                    this.getSectionStyle(),
-                    {
-                        backgroundColor: this.props.headerColor,
-                        borderRadius: tokens.radius.md,
-                        paddingHorizontal: tokens.space.md,
-                        paddingVertical: tokens.space.sm,
-                        ...tokens.shadow.sm,
-                    },
-                ]}>
-                    <Text style={[
-                        style.list.sectionHeaderTitle,
-                        {
-                            fontSize: tokens.fontSize.sm,
-                            fontWeight: tokens.fontWeight.bold,
-                            letterSpacing: 0.5,
-                            color: '#FFFFFF',
-                        },
-                    ]}>
-                        {this.props.title}
-                    </Text>
-                </View>
-            </View>
-        );
-    }
-}
-
-// ── COMPOSANT LIGNE DE GROUPE ───────────────────────────────────────────
-export interface GroupRowProps {
-    cleanName: string;
-    color: string;
-    fontColor: string;
-    name: string;
-    sectionStyle: Record<string, unknown>;
-    openGroup: (name: string) => void;
-}
-
-class GroupRow extends React.PureComponent<GroupRowProps> {
-    static propTypes = {
-        cleanName: PropTypes.string.isRequired,
-        color: PropTypes.string,
-        fontColor: PropTypes.string,
-        name: PropTypes.string.isRequired,
-        sectionStyle: PropTypes.object,
-        openGroup: PropTypes.func.isRequired,
-    };
-
-    _onPress = () => {
-        requestAnimationFrame(() => {
-            this.props.openGroup(this.props.name);
-        });
-    };
-
-    render() {
-        return (
-            <TouchableOpacity
-                onPress={this._onPress}
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: tokens.space.md,
-                    paddingVertical: tokens.space.md,
-                    backgroundColor: this.props.color,
-                    borderBottomWidth: 1,
-                    borderBottomColor: `${this.props.color}44`,
-                }}>
-                <View style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: tokens.radius.md,
-                    backgroundColor: this.props.fontColor,
-                    opacity: 0.5,
-                    marginRight: tokens.space.md,
-                }} />
-                <Text style={{
-                    flex: 1,
-                    color: this.props.fontColor,
-                    fontSize: tokens.fontSize.md,
-                    fontWeight: tokens.fontWeight.medium,
-                }}>
-                    {this.props.cleanName}
-                </Text>
-                <MaterialCommunityIcons
-                    name="chevron-right"
-                    size={20}
-                    color={this.props.fontColor}
-                    style={{ opacity: 0.6 }}
-                />
-            </TouchableOpacity>
-        );
-    }
-}
-
-// ── ÉCRAN PRINCIPAL ─────────────────────────────────────────────────────
 export interface HomeScreenProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
 }
 
+export interface GroupItem {
+    name: string;
+    cleanName?: string;
+    colorIndex?: number;
+    sectionStyle?: Record<string, unknown>;
+}
+
 export interface HomeScreenState {
-    completeList: string[] | null;
-    sections: { title: string; data: string[] }[] | null;
-    list: { title: string; data: string[] }[] | null;
+    completeList: GroupItem[] | null;
+    sections: { title: string; data: GroupItem[] }[] | null;
+    list: GroupItem[] | null;
     emptySearchResults: boolean;
     refreshing: boolean;
     cacheDate: moment.MomentInput | null;
@@ -161,7 +36,6 @@ export interface HomeScreenState {
 
 class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     static contextType = AppContext;
-    // @ts-ignore
     context!: React.ContextType<typeof AppContext>;
     scrollY: Animated.Value;
 
@@ -198,10 +72,10 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
         await this.getList();
     }
 
-    generateSections(list, save = false) {
-        let sections = [];
-        let sectionContent = null;
-        let previousSection = null;
+    generateSections(list: GroupItem[], save = false) {
+        let sections: { key: string; data: GroupItem[]; sectionIndex: number; colorIndex: number }[] = [];
+        let sectionContent: { key: string; data: GroupItem[]; sectionIndex: number; colorIndex: number } | null = null;
+        let previousSection: string | null = null;
         let sectionIndex = -1;
 
         list.forEach((e) => {
@@ -226,7 +100,9 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
             sectionContent.data.push(e);
         });
 
-        sections.push(sectionContent);
+        if (sectionContent) {
+            sections.push(sectionContent);
+        }
 
         if (save) {
             this.setState({ list, sections, completeList: list, refreshing: false });
@@ -267,19 +143,20 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                 AsyncStorage.setItem('groups', JSON.stringify({ list, date: moment() })).catch((e) =>
                     console.warn('Échec de la mise en cache des groupes :', e)
                 );
-            } catch (error) {
-                if (error.response) {
+            } catch (error: unknown) {
+                if (error && typeof error === 'object' && 'response' in error) {
                     Toast.show(Translator.get('ERROR_WITH_CODE'), {
                         duration: Toast.durations.LONG,
                         position: Toast.positions.BOTTOM,
                     });
-                } else if (error.request) {
+                } else if (error && typeof error === 'object' && 'request' in error) {
                     Toast.show(Translator.get('NO_CONNECTION'), {
                         duration: Toast.durations.SHORT,
                         position: Toast.positions.BOTTOM,
                     });
                 } else {
-                    Toast.show(Translator.get('ERROR_WITH_MESSAGE', error.message), {
+                    const msg = error instanceof Error ? error.message : String(error);
+                    Toast.show(Translator.get('ERROR_WITH_MESSAGE', msg), {
                         duration: Toast.durations.LONG,
                         position: Toast.positions.BOTTOM,
                     });
@@ -299,17 +176,19 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
         }
     };
 
-    openGroup = (name) => {
+    openGroup = (name: string) => {
         const { navigate } = this.props.navigation;
         navigate('Group', { name });
     };
 
-    search(input) {
+    search(input: string) {
         this.setState({ sections: null, emptySearchResults: false });
         let list = this.state.completeList;
+        if (!list) return;
+
         if (input.length !== 0) {
             let regex = new RegExp(input, 'gi');
-            list = list.filter((e) => {
+            list = list.filter((e: GroupItem) => {
                 return e.name.replace(/_/g, ' ').match(regex);
             });
         }
@@ -321,11 +200,8 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
         }
     }
 
-    render() {
-        const theme = style.Theme[this.context.themeName];
-        let content = null;
-
-        const searchInput = (
+    renderSearchInput(theme: import('../../../shared/theme/Theme').AppThemeType) {
+        return (
             <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -371,8 +247,11 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                 )}
             </View>
         );
+    }
 
-        const cache = this.state.cacheDate ? (
+    renderCacheDate(theme: import('../../../shared/theme/Theme').AppThemeType) {
+        if (!this.state.cacheDate) return null;
+        return (
             <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -392,67 +271,85 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                     {Translator.get('OFFLINE_DISPLAY_FROM_DATE', moment(this.state.cacheDate).format('DD/MM/YYYY HH:mm'))}
                 </Text>
             </View>
-        ) : null;
+        );
+    }
 
+    renderEmptyState(theme: import('../../../shared/theme/Theme').AppThemeType) {
+        return (
+            <View style={[(style.schedule.course.noCourse as never), { backgroundColor: theme.greyBackground }]}>
+                <MaterialCommunityIcons name="magnify-close" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.md, opacity: 0.4 }} />
+                <Text style={[style.schedule.course.noCourseText as never, { color: theme.font }]}>
+                    {Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
+                </Text>
+            </View>
+        );
+    }
+
+    renderLoading(theme: import('../../../shared/theme/Theme').AppThemeType) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', backgroundColor: theme.background }}>
+                <ActivityIndicator size="large" color={theme.primary} animating={true} />
+            </View>
+        );
+    }
+
+    renderList(theme: import('../../../shared/theme/Theme').AppThemeType) {
+        return (
+            <Animated.SectionList
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: this.scrollY } } }],
+                    { useNativeDriver: false }
+                )}
+                scrollEventThrottle={16}
+                contentContainerStyle={{ paddingTop: 0, paddingBottom: tokens.space.xxl }}
+                scrollIndicatorInsets={{ top: 0 }}
+                renderItem={({ item, index }: { item: GroupItem; index: number }) => (
+                    <GroupRow name={item.name} cleanName={item.cleanName!} sectionStyle={item.sectionStyle!} key={index} color={theme.sections[item.colorIndex!]} fontColor={theme.font} openGroup={this.openGroup} />
+                )}
+                renderSectionHeader={({ section }: { section: { key: string; sectionIndex: number; colorIndex: number } }) => (
+                    <SectionListHeader title={section.key} key={section.key} sectionIndex={section.sectionIndex} color={theme.sections[section.colorIndex]} headerColor={theme.sectionsHeaders[section.colorIndex]} />
+                )}
+                sections={this.state.sections as { title: string; data: GroupItem[]; sectionIndex: number; colorIndex: number }[]}
+                keyExtractor={(item, index) => index.toString()}
+                initialNumToRender={20}
+                onEndReachedThreshold={0.1}
+                style={[style.list.sectionList as never, { backgroundColor: theme.greyBackground }]}
+                onRefresh={this.refreshList}
+                refreshing={this.state.refreshing}
+                stickySectionHeadersEnabled={true}
+                showsVerticalScrollIndicator={false}
+            />
+        );
+    }
+
+    renderContent(theme: import('../../../shared/theme/Theme').AppThemeType) {
         if (this.state.emptySearchResults) {
-            content = (
-                <View style={[(style.schedule.course.noCourse as never), { backgroundColor: theme.greyBackground }]}>
-                    <MaterialCommunityIcons name="magnify-close" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.md, opacity: 0.4 }} />
-                    <Text style={[style.schedule.course.noCourseText, { color: theme.font }]}>
-                        {Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
-                    </Text>
-                </View>
-            );
+            return this.renderEmptyState(theme);
         } else if (this.state.sections === null) {
-            content = (
-                <View style={{ flex: 1, justifyContent: 'center', backgroundColor: theme.background }}>
-                    <ActivityIndicator size="large" color={theme.primary} animating={true} />
-                </View>
-            );
+            return this.renderLoading(theme);
         } else {
-            content = (
-                <Animated.SectionList
-                    onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: this.scrollY } } }],
-                        { useNativeDriver: false }
-                    )}
-                    scrollEventThrottle={16}
-                    contentContainerStyle={{ paddingTop: 0, paddingBottom: tokens.space.xxl }}
-                    scrollIndicatorInsets={{ top: 0 }}
-                    renderItem={({ item, index }) => (
-                        <GroupRow name={item.name} cleanName={item.cleanName} sectionStyle={item.sectionStyle} key={index} color={theme.sections[item.colorIndex]} fontColor={theme.font} openGroup={this.openGroup} />
-                    )}
-                    renderSectionHeader={({ section }) => (
-                        <SectionListHeader title={section.key} key={section.key} sectionIndex={section.sectionIndex} color={theme.sections[section.colorIndex]} headerColor={theme.sectionsHeaders[section.colorIndex]} />
-                    )}
-                    sections={this.state.sections}
-                    keyExtractor={(item, index) => index.toString()}
-                    initialNumToRender={20}
-                    onEndReachedThreshold={0.1}
-                    style={[style.list.sectionList, { backgroundColor: theme.greyBackground }]}
-                    onRefresh={this.refreshList}
-                    refreshing={this.state.refreshing}
-                    stickySectionHeadersEnabled={true}
-                    showsVerticalScrollIndicator={false}
-                />
-            );
+            return this.renderList(theme);
         }
+    }
+
+    render() {
+        const theme = style.Theme[this.context.themeName];
 
         return (
             <SafeAreaInsetsContext.Consumer>
                 {(insets) => (
-                    <View style={[style.list.homeView, { backgroundColor: theme.background }]}>
+                    <View style={[style.list.homeView as never, { backgroundColor: theme.background }]}>
                         <View style={{ 
                             paddingTop: (insets?.top || 0) + 65,
                             backgroundColor: theme.cardBackground,
                             borderBottomWidth: 1,
                             borderBottomColor: theme.border,
-                            ...tokens.shadow.sm,
+                            ...tokens.shadow.sm as object,
                         }}>
-                            {searchInput}
-                            {cache}
+                            {this.renderSearchInput(theme)}
+                            {this.renderCacheDate(theme)}
                         </View>
-                        {content}
+                        {this.renderContent(theme)}
                     </View>
                 )}
             </SafeAreaInsetsContext.Consumer>

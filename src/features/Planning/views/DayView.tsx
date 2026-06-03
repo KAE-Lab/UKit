@@ -1,8 +1,8 @@
 import React from 'react';
-import { FlatList, Text, TouchableOpacity, View, DeviceEventEmitter } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { DeviceEventEmitter } from 'react-native';
 import moment from 'moment';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 
 import CalendarDay from '../components/CalendarDay';
 import CalendarWeek from '../components/CalendarWeek';
@@ -10,16 +10,16 @@ import { DayComponent, WeekComponent } from '../components/ScheduleList';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext } from '../../../shared/services/AppCore';
+import { DayViewHeader } from '../components/DayViewHeader';
 
-function capitalize(str) {
+function capitalize(str: string) {
 	return `${str.charAt(0).toUpperCase()}${str.substr(1)}`;
 }
 
-// Utilitaires repris de WeekView (inchangés)
-const isEqualsObject = (obj1, obj2) =>
+const isEqualsObject = (obj1: Record<string, unknown>, obj2: Record<string, unknown>) =>
 	Object.entries(obj1).toString() === Object.entries(obj2).toString();
 
-const findIndexOfObject = (objectList, object) => {
+const findIndexOfObject = (objectList: Record<string, unknown>[], object: Record<string, unknown>) => {
 	for (let i = 0; i < objectList.length; i++) {
 		if (isEqualsObject(objectList[i], object)) return i;
 	}
@@ -48,35 +48,30 @@ export interface DayViewState {
 
 class DayView extends React.Component<DayViewProps, DayViewState> {
 	static contextType = AppContext;
-	// @ts-ignore
 	context!: React.ContextType<typeof AppContext>;
 	static lastSelectedDay: moment.Moment | null = null;
 	static lastSelectedWeek: { week: number; year: number } | null = null;
     viewability: { itemVisiblePercentThreshold: number };
     scrollTimeout: NodeJS.Timeout | null = null;
     mockListener: import('react-native').EmitterSubscription | null = null;
-    calendarList: FlatList<moment.MomentInput> | null = null;
+    calendarList: import('react-native').FlatList<unknown> | null = null;
 
 	constructor(props: DayViewProps) {
 		super(props);
 
-		// ── Day state ──────────────────────────────────────
 		const currentDay = moment();
 		const days = DayView.generateDays();
 
-		// ── Week state ─────────────────────────────────────
 		const currentWeek = { week: currentDay.isoWeek(), year: currentDay.year() };
 		const weeks = DayView.generateWeeks();
 
-		// Persistance de la sélection
 		const selectedDay = DayView.lastSelectedDay || currentDay;
 		const selectedWeek = DayView.lastSelectedWeek || currentWeek;
 
-		const selectedDayIndex = days.findIndex((e) => e.isSame(selectedDay, 'day'));
+		const selectedDayIndex = days.findIndex((e: moment.Moment) => e.isSame(selectedDay, 'day'));
 		const selectedWeekIndex = findIndexOfObject(weeks, selectedWeek);
 
 		this.state = {
-			// Day mode
 			currentDay,
 			currentDayIndex: days.findIndex((e) => e.isSame(currentDay, 'day')),
 			selectedDayIndex: selectedDayIndex >= 0 ? selectedDayIndex : 0,
@@ -86,13 +81,11 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 			},
 			days,
 			selectedDay,
-			// Week mode
 			currentWeek,
 			currentWeekIndex: findIndexOfObject(weeks, currentWeek),
 			selectedWeekIndex: selectedWeekIndex >= 0 ? selectedWeekIndex : 0,
 			weeks,
 			selectedWeek,
-			// Mode
 			mode: 'day',
 		};
 
@@ -100,11 +93,8 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		this.scrollTimeout = null;
 	}
 
-	// ── Layout helper (partagé day/week, même itemSize) ──────────
 	componentDidMount() {
-		// Centrer la sélection au chargement initial
 		this.scrollToSelection(false);
-
 		this.mockListener = DeviceEventEmitter.addListener('timeMockChanged', () => {
 			this.reinitializeDates();
 		});
@@ -160,13 +150,12 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		if (this.mockListener) this.mockListener.remove();
 	}
 
-	static getCalendarListItemLayout = (data, index) => ({
+	static getCalendarListItemLayout = (data: unknown[] | null | undefined, index: number) => ({
 		length: style.calendarList.itemSize,
 		offset: style.calendarList.itemSize * index + tokens.space.md,
 		index,
 	});
 
-	// ── Generators ───────────────────────────────────────────────
 	static generateDays() {
 		const currentDate = moment();
 		const start = moment().date(1).month(7);
@@ -196,8 +185,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		return weeks;
 	};
 
-	// ── Day mode ─────────────────────────────────────────────────
-	renderCalendarDayItem = ({ item }) => (
+	renderCalendarDayItem = ({ item }: { item: moment.Moment }) => (
 		<CalendarDay
 			item={item}
 			selectedDay={this.state.selectedDay}
@@ -207,10 +195,10 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		/>
 	);
 
-	extractCalendarDayKey = (item) =>
+	extractCalendarDayKey = (item: moment.Moment) =>
 		`${item.date()}-${item.month()}-${this.context.themeName}`;
 
-	onDayItemPress = (dayItem) => {
+	onDayItemPress = (dayItem: moment.Moment) => {
 		const index = this.state.days.findIndex((d) => d.isSame(dayItem, 'day'));
 		DayView.lastSelectedDay = dayItem;
 		this.setState({ selectedDay: dayItem, selectedDayIndex: index }, () => {
@@ -226,7 +214,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		});
 	};
 
-	checkViewableItems = (info) => {
+	checkViewableItems = (info: { viewableItems: import('react-native').ViewToken[] }) => {
 		if (!info.viewableItems.length) return;
 		const date = moment(info.viewableItems[0].item);
 		if (date.month() !== this.state.shownMonth.number) {
@@ -239,8 +227,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		}
 	};
 
-	// ── Week mode ─────────────────────────────────────────────────
-	renderCalendarWeekItem = ({ item }) => (
+	renderCalendarWeekItem = ({ item }: { item: { week: number; year: number } }) => (
 		<CalendarWeek
 			week={item}
 			selectedWeek={this.state.selectedWeek}
@@ -250,10 +237,10 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		/>
 	);
 
-	extractCalendarWeekKey = (item) =>
+	extractCalendarWeekKey = (item: { week: number; year: number }) =>
 		`S${item.week}-${this.context.themeName}`;
 
-	onWeekItemPress = (item) => {
+	onWeekItemPress = (item: { week: number; year: number }) => {
 		const index = findIndexOfObject(this.state.weeks, item);
 		DayView.lastSelectedWeek = item;
 		this.setState({ selectedWeek: item, selectedWeekIndex: index }, () => {
@@ -269,7 +256,6 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		});
 	};
 
-	// ── Shared / mode-toggle ─────────────────────────────────────
 	onTodayPress = () => {
 		if (this.state.mode === 'day') {
 			const index = this.state.currentDayIndex;
@@ -289,22 +275,24 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 	onSwitchToWeek = () => this.setState({ mode: 'week' }, () => this.scrollToSelection(false));
 	onSwitchToDay = () => this.setState({ mode: 'day' }, () => this.scrollToSelection(false));
 
+	onDayScrollToIndexFailed = (info: { index: number; highestMeasuredFrameIndex: number; averageItemLength: number }) => {
+		this.scrollTimeout = setTimeout(() => {
+			this.calendarList?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
+		}, 500);
+	};
+
 	render() {
 		const theme = style.Theme[this.context.themeName];
-		const primaryColor = theme.accent ?? theme.primary;
 		const { mode } = this.state;
 
-		// Label centre : mois en jour, "Semaine XX" en semaine
 		const centerLabel = mode === 'day'
 			? this.state.shownMonth.string
 			: `${Translator.get('WEEK')} ${this.state.selectedWeek.week}`;
 
-		// Bouton gauche
 		const leftLabel = mode === 'day'
 			? Translator.get('TODAY')
 			: Translator.get('THIS_WEEK');
 
-		// Bouton droit (switch de mode)
 		const rightLabel = mode === 'day' ? Translator.get('WEEK') : Translator.get('DAY');
 		const rightIcon = mode === 'day' ? 'calendar-range' : 'calendar';
 		const onRightPress = mode === 'day' ? this.onSwitchToWeek : this.onSwitchToDay;
@@ -313,149 +301,34 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 			<SafeAreaInsetsContext.Consumer>
 				{(insets) => (
 					<View style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-						{/* ── Header sticky (même pattern que CampusDashboard) ── */}
-						<View style={{
-							backgroundColor: theme.cardBackground,
-							borderBottomWidth: 1,
-							borderBottomColor: theme.border,
-							paddingTop: (insets?.top || 0),
-							paddingBottom: tokens.space.sm,
-							...tokens.shadow.sm,
-						}}>
-							{/* Ligne 1 : Titre "Planning" — visible en vue favoris, invisible (mais occupe l'espace) en vue groupe spécifique */}
-							<View style={{
-								paddingHorizontal: tokens.space.md,
-								opacity: Array.isArray(this.props.groupName) ? 1 : 0,
-							}}>
-								<Text style={{
-									fontSize: 34,
-									fontWeight: tokens.fontWeight.bold,
-									fontFamily: 'Montserrat_600SemiBold',
-									color: theme.font,
-									marginBottom: tokens.space.md,
-								}}>
-									{Translator.get('MY_PLANNING') || 'Planning'}
-								</Text>
-							</View>
-
-							{/* Ligne 2 : Today/ThisWeek | Label | Week/Day */}
-							<View style={{
-								flexDirection: 'row',
-								justifyContent: 'space-between',
-								alignItems: 'center',
-								paddingHorizontal: tokens.space.md,
-								marginBottom: tokens.space.sm,
-							}}>
-								{/* Bouton gauche */}
-								<TouchableOpacity
-									onPress={this.onTodayPress}
-									style={{
-										flexDirection: 'row',
-										alignItems: 'center',
-										paddingHorizontal: tokens.space.md,
-										paddingVertical: tokens.space.sm,
-										borderRadius: tokens.radius.md,
-										backgroundColor: theme.greyBackground,
-									}}>
-									<MaterialIcons name="event-note" size={16} color={primaryColor} />
-									<Text style={{
-										fontSize: tokens.fontSize.sm,
-										marginLeft: tokens.space.xs,
-										color: primaryColor,
-										fontWeight: tokens.fontWeight.medium,
-									}}>
-										{leftLabel}
-									</Text>
-								</TouchableOpacity>
-
-								{/* Label central */}
-								<Text style={{
-									fontSize: tokens.fontSize.md,
-									fontWeight: tokens.fontWeight.semibold,
-									color: theme.fontSecondary,
-									flex: 1,
-									textAlign: 'center',
-								}}>
-									{centerLabel}
-								</Text>
-
-								{/* Bouton droit : switch mode */}
-								<TouchableOpacity
-									onPress={onRightPress}
-									style={{
-										flexDirection: 'row',
-										alignItems: 'center',
-										paddingHorizontal: tokens.space.md,
-										paddingVertical: tokens.space.sm,
-										borderRadius: tokens.radius.md,
-										backgroundColor: theme.greyBackground,
-									}}>
-									{mode === 'week' && (
-										<MaterialCommunityIcons
-											name={rightIcon}
-											size={16}
-											color={primaryColor}
-											style={{ marginRight: tokens.space.xs }}
-										/>
-									)}
-									<Text style={{
-										fontSize: tokens.fontSize.sm,
-										color: primaryColor,
-										fontWeight: tokens.fontWeight.medium,
-										marginRight: mode === 'day' ? tokens.space.xs : 0,
-									}}>
-										{rightLabel}
-									</Text>
-									{mode === 'day' && (
-										<MaterialCommunityIcons name={rightIcon} size={16} color={primaryColor} />
-									)}
-								</TouchableOpacity>
-							</View>
-
-							{/* Ligne 3 : Slider (jours ou semaines selon mode) */}
-							{mode === 'day' ? (
-								<FlatList
-									key="slider-day"
-									ref={(list) => { this.calendarList = list; }}
-									showsHorizontalScrollIndicator={false}
-									data={this.state.days}
-									horizontal
-									keyExtractor={this.extractCalendarDayKey}
-									viewabilityConfig={this.viewability}
-									onViewableItemsChanged={this.checkViewableItems}
-									initialScrollIndex={this.state.selectedDayIndex}
-									getItemLayout={DayView.getCalendarListItemLayout}
-									extraData={this.state}
-									renderItem={this.renderCalendarDayItem}
-									contentContainerStyle={{ paddingHorizontal: tokens.space.md }}
-									onScrollToIndexFailed={(info) => {
-										this.scrollTimeout = setTimeout(() => {
-											this.calendarList?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
-										}, 500);
-									}}
-								/>
-							) : (
-								<FlatList
-									key="slider-week"
-									ref={(list) => { this.calendarList = list; }}
-									showsHorizontalScrollIndicator={false}
-									data={this.state.weeks}
-									horizontal
-									keyExtractor={this.extractCalendarWeekKey}
-									viewabilityConfig={this.viewability}
-									initialScrollIndex={this.state.selectedWeekIndex}
-									getItemLayout={DayView.getCalendarListItemLayout}
-									extraData={this.state}
-									renderItem={this.renderCalendarWeekItem}
-									contentContainerStyle={{ paddingHorizontal: tokens.space.md }}
-									onScrollToIndexFailed={(info) => {
-										this.scrollTimeout = setTimeout(() => {
-											this.calendarList?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
-										}, 500);
-									}}
-								/>
-							)}
-						</View>
+						<DayViewHeader 
+                            insets={insets} 
+                            theme={theme} 
+                            mode={mode} 
+                            groupName={this.props.groupName}
+                            centerLabel={centerLabel}
+                            leftLabel={leftLabel}
+                            rightLabel={rightLabel}
+                            rightIcon={rightIcon}
+                            onTodayPress={this.onTodayPress}
+                            onRightPress={onRightPress}
+                            days={this.state.days}
+                            extractCalendarDayKey={this.extractCalendarDayKey}
+                            viewability={this.viewability}
+                            checkViewableItems={this.checkViewableItems}
+                            selectedDayIndex={this.state.selectedDayIndex}
+                            getCalendarListItemLayout={DayView.getCalendarListItemLayout}
+                            renderCalendarDayItem={this.renderCalendarDayItem}
+                            onDayScrollToIndexFailed={this.onDayScrollToIndexFailed}
+                            setDayListRef={(list) => { this.calendarList = list; }}
+                            weeks={this.state.weeks}
+                            extractCalendarWeekKey={this.extractCalendarWeekKey}
+                            selectedWeekIndex={this.state.selectedWeekIndex}
+                            renderCalendarWeekItem={this.renderCalendarWeekItem}
+                            onWeekScrollToIndexFailed={this.onDayScrollToIndexFailed}
+                            setWeekListRef={(list) => { this.calendarList = list; }}
+                            extraData={this.state}
+                        />
 
 						{/* Contenu principal */}
 						<View style={{ flex: 1 }}>
