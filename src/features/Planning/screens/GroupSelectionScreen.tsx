@@ -36,7 +36,7 @@ export interface HomeScreenState {
 
 class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     static contextType = AppContext;
-    declare context: React.ContextType<typeof AppContext>;
+    context!: React.ContextType<typeof AppContext>;
     scrollY: Animated.Value;
 
     constructor(props: HomeScreenProps) {
