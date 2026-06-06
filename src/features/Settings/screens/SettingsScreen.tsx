@@ -20,16 +20,13 @@ import {
     SettingsCalendarPopup
 } from '../components/SettingsModals';
 
-const LANGUAGE_LIST = {
-    fr: 'FRENCH',
-    en: 'ENGLISH',
-    es: 'SPANISH',
-};
-
-const SettingsTextHeader = ({ theme, text }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; text: string }) => {
-    if (!theme?.separationText) return null;
-    return <Text style={theme.separationText as never}>{text.toUpperCase()}</Text>;
-};
+import {
+    DisplaySection,
+    ThemeSection,
+    NotificationsSection,
+    AppLaunchingSection,
+    CalendarSection
+} from '../components/SettingsSections';
 
 export interface SettingsProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
@@ -221,6 +218,19 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         SettingsManager.unsubscribe('filter', this.refreshFiltersList);
     };
 
+
+
+    renderPopups(themeSettings: import('../../../shared/theme/Theme').AppThemeType['settings']) {
+        return (
+            <>
+                <SettingsLanguagePopup theme={themeSettings} popupVisible={this.state.languageDialogVisible} popupClose={this.closeLanguageDialog} language={this.state.language} setLanguageToFrench={this.setLanguageToFrench} setLanguageToEnglish={this.setLanguageToEnglish} setLanguageToSpanish={this.setLanguageToSpanish} />
+                <SettingsFiltersPopup theme={themeSettings} popupVisible={this.state.filtersDialogVisible} popupClose={this.closeFiltersDialog} filterList={this.state.filterList} filterTextInput={this.state.filterTextInput} setFilterTextInput={this.setFilterTextInput} submitFilterTextInput={this.submitFilterTextInput} />
+                <SettingsResetPopup theme={themeSettings} popupVisible={this.state.resetDialogVisible} popupClose={this.closeResetDialog} resetApp={this.resetApp} />
+                <SettingsCalendarPopup theme={themeSettings} popupVisible={this.state.calendarDialogVisible} popupClose={this.closeCalendarDialog} setCalendar={this.setCalendar} selectedCalendar={this.state.selectedCalendar} />
+            </>
+        );
+    }
+
     render() {
         const themeName = this.context.themeName ?? 'light';
         const theme = style.Theme[themeName];
@@ -229,7 +239,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         const calendarName = !!calendar ? calendar.title : this.state.selectedCalendar === 'UKit' ? 'UKit' : Translator.get('NOT_FOUND');
         const lastSyncDate = SettingsManager.getLastSyncDate();
 
-        const renderHeader = (insets) => {
+        const renderHeader = (insets: import('react-native-safe-area-context').EdgeInsets | null) => {
             const topPadding = (insets?.top || 0);
 
             const opacity = this.scrollY.interpolate({
@@ -249,169 +259,65 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             );
         };
 
+        const renderScrollContent = (insets: import('react-native-safe-area-context').EdgeInsets | null) => (
+            <Animated.ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingTop: (insets?.top || 0) + 60, paddingBottom: tokens.space.xxl + 80 }}
+                showsVerticalScrollIndicator={false}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: this.scrollY } } }],
+                    { useNativeDriver: true }
+                )}
+                scrollEventThrottle={16}
+            >
+                <DisplaySection
+                    themeSettings={themeSettings}
+                    language={this.state.language}
+                    openLanguageDialog={this.openLanguageDialog}
+                    openFiltersDialog={this.openFiltersDialog}
+                />
+                <ThemeSection
+                    themeSettings={themeSettings}
+                    isDarkMode={this.state.isDarkMode}
+                    toggleTheme={this.toggleTheme}
+                />
+                <NotificationsSection
+                    themeSettings={themeSettings}
+                    theme={theme}
+                    courseNotificationsEnabled={this.state.courseNotificationsEnabled}
+                    toggleCourseNotifications={this.toggleCourseNotifications}
+                    courseNotificationDelay={this.state.courseNotificationDelay}
+                    onNotificationDelayChange={this.onNotificationDelayChange}
+                    onNotificationDelaySlidingComplete={this.onNotificationDelaySlidingComplete}
+                />
+                <AppLaunchingSection
+                    themeSettings={themeSettings}
+                    openFavSwitchValue={this.state.openFavSwitchValue}
+                    toggleOpenFavSwitchValue={this.toggleOpenFavSwitchValue}
+                    openResetDialog={this.openResetDialog}
+                />
+                <CalendarSection
+                    themeSettings={themeSettings}
+                    theme={theme}
+                    hasCalendarPermission={this.state.hasCalendarPermission}
+                    lastSyncDate={lastSyncDate}
+                    calendarSyncEnabled={this.state.calendarSyncEnabled}
+                    toggleCalendarSync={this.toggleCalendarSync}
+                    calendarName={calendarName}
+                    openCalendarDialog={this.openCalendarDialog}
+                    isSynchronizingCalendar={this.state.isSynchronizingCalendar}
+                    selectedCalendar={this.state.selectedCalendar}
+                />
+                {this.renderPopups(themeSettings)}
+            </Animated.ScrollView>
+        );
+
         return (
             <SafeAreaInsetsContext.Consumer>
                 {(insets) => (
                     <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
                         {renderHeader(insets)}
-                        <Animated.ScrollView
-                            style={{ flex: 1 }}
-                            contentContainerStyle={{ paddingTop: (insets?.top || 0) + 60, paddingBottom: tokens.space.xxl + 80 }}
-                            showsVerticalScrollIndicator={false}
-                            onScroll={Animated.event(
-                                [{ nativeEvent: { contentOffset: { y: this.scrollY } } }],
-                                { useNativeDriver: true }
-                            )}
-                            scrollEventThrottle={16}
-                        >
-
-                            {/* ── Affichage ─────────────────────────────────────── */}
-                            <SettingsTextHeader theme={themeSettings} text={Translator.get('DISPLAY')} />
-
-                            <Button
-                                theme={themeSettings}
-                                onPress={this.openLanguageDialog}
-                                leftIcon="language"
-                                leftText={Translator.get('LANGUAGE')}
-                                rightText={Translator.get(LANGUAGE_LIST[this.state.language])}
-                            />
-                            <Button
-                                theme={themeSettings}
-                                onPress={this.openFiltersDialog}
-                                leftIcon="filter-list"
-                                leftText={Translator.get('FILTERS')}
-                                rightText="..."
-                            />
-
-                            {/* ── Thème ─────────────────────────────────────── */}
-                            <SettingsTextHeader theme={themeSettings} text={Translator.get('THEME') || 'Thème'} />
-                            <Button
-                                theme={themeSettings}
-                                leftIcon="theme-light-dark"
-                                leftText={Translator.get('DARK_MODE') || 'Mode Sombre'}
-                                onSwitchToggle={this.toggleTheme}
-                                switchValue={this.state.isDarkMode}
-                            />
-
-                            {/* ── Notifications ─────────────────────────────────────── */}
-                            <SettingsTextHeader theme={themeSettings} text={Translator.get('NOTIFICATIONS') || 'Notifications'} />
-
-                            <Button
-                                theme={themeSettings}
-                                leftIcon="bell-outline"
-                                leftText={Translator.get('COURSE_NOTIFICATIONS') || 'Notifications de cours'}
-                                onSwitchToggle={this.toggleCourseNotifications}
-                                switchValue={this.state.courseNotificationsEnabled}
-                            />
-
-                            {this.state.courseNotificationsEnabled && (
-                                <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.sm }}>
-                                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: tokens.fontWeight.semibold }}>
-                                            {Translator.get('NOTIFICATION_DELAY') || 'Délai avant le cours'}
-                                        </Text>
-                                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.primary, fontWeight: tokens.fontWeight.bold }}>
-                                            {this.state.courseNotificationDelay} min
-                                        </Text>
-                                    </View>
-                                    <Slider
-                                        style={{ width: '100%', height: 40 }}
-                                        minimumValue={5}
-                                        maximumValue={60}
-                                        step={5}
-                                        value={this.state.courseNotificationDelay}
-                                        onValueChange={this.onNotificationDelayChange}
-                                        onSlidingComplete={this.onNotificationDelaySlidingComplete}
-                                        minimumTrackTintColor={theme.primary}
-                                        maximumTrackTintColor={theme.border}
-                                        thumbTintColor={theme.primary}
-                                    />
-                                    <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginTop: tokens.space.xs }}>
-                                        {Translator.get('NOTIFICATION_DELAY_DESC') || 'Ajustez combien de minutes avant le début du cours vous souhaitez être notifié.'}
-                                    </Text>
-                                </View>
-                            )}
-
-                            {/* ── Lancement ─────────────────────────────────────── */}
-                            <SettingsTextHeader theme={themeSettings} text={Translator.get('APP_LAUNCHING')} />
-
-                            <Button
-                                theme={themeSettings}
-                                leftIcon="star"
-                                leftText={Translator.get('OPEN_ON_FAVOURITE_GROUP')}
-                                onSwitchToggle={this.toggleOpenFavSwitchValue}
-                                switchValue={this.state.openFavSwitchValue}
-                            />
-                            <Button
-                                theme={themeSettings}
-                                onPress={this.openResetDialog}
-                                leftIcon="autorenew"
-                                leftText={Translator.get('RESET_APP')}
-                            />
-
-                            {/* ── Calendrier ────────────────────────────────────── */}
-                            <SettingsTextHeader theme={themeSettings} text={Translator.get('CALENDAR_SYNCHRONIZATION')} />
-
-                            {this.state.hasCalendarPermission ? (
-                                <>
-                                    {/* Remplacement du marginBottom par un marginTop */}
-                                    <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
-                                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginBottom: tokens.space.xs }}>
-                                            {Translator.get('AUTO_SYNC_DESCRIPTION')}
-                                        </Text>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.xs }}>
-                                            <View style={{ width: 8, height: 8, borderRadius: tokens.radius.md, backgroundColor: lastSyncDate ? '#43A047' : theme.fontSecondary, marginRight: tokens.space.sm }} />
-                                            <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
-                                                {lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}
-                                            </Text>
-                                        </View>
-                                    </View>
-
-                                    <Button
-                                        theme={themeSettings}
-                                        leftIcon="sync-disabled"
-                                        leftText={Translator.get('SYNC_ENABLED')}
-                                        onSwitchToggle={this.toggleCalendarSync}
-                                        switchValue={this.state.calendarSyncEnabled}
-                                    />
-                                    <Button
-                                        theme={themeSettings}
-                                        onPress={this.openCalendarDialog}
-                                        leftIcon="calendar-today"
-                                        leftText={Translator.get('CALENDAR')}
-                                        rightText={calendarName}
-                                    />
-                                    <Button
-                                        theme={themeSettings}
-                                        onPress={SettingsManager.syncCalendar}
-                                        disabled={this.state.selectedCalendar !== -1 && this.state.isSynchronizingCalendar}
-                                        leftIconAnimation={this.state.isSynchronizingCalendar ? 'rotate' : ''}
-                                        leftIcon="sync"
-                                        leftText={this.state.isSynchronizingCalendar ? Translator.get('SYNCHRONIZING') : Translator.get('FORCE_SYNC')}
-                                    />
-                                </>
-                            ) : (
-                                <>
-                                    <View style={{ backgroundColor: `#E6510018`, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: `#E6510040`, flexDirection: 'row', alignItems: 'flex-start' }}>
-                                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, lineHeight: 20, flex: 1 }}>
-                                            {Translator.get('ENABLE_CALENDAR_PERMISSION_DESCRIPTION')}
-                                        </Text>
-                                    </View>
-                                    <Button
-                                        theme={themeSettings}
-                                        onPress={this.openSystemAppSettings}
-                                        leftIcon="settings"
-                                        leftText={Translator.get('OPEN_SYSTEM_SETTINGS')}
-                                    />
-                                </>
-                            )}
-
-                            {/* ── Popups ────────────────────────────────────────── */}
-                            <SettingsLanguagePopup theme={themeSettings} popupVisible={this.state.languageDialogVisible} popupClose={this.closeLanguageDialog} language={this.state.language} setLanguageToFrench={this.setLanguageToFrench} setLanguageToEnglish={this.setLanguageToEnglish} setLanguageToSpanish={this.setLanguageToSpanish} />
-                            <SettingsFiltersPopup theme={themeSettings} popupVisible={this.state.filtersDialogVisible} popupClose={this.closeFiltersDialog} filterList={this.state.filterList} filterTextInput={this.state.filterTextInput} setFilterTextInput={this.setFilterTextInput} submitFilterTextInput={this.submitFilterTextInput} />
-                            <SettingsResetPopup theme={themeSettings} popupVisible={this.state.resetDialogVisible} popupClose={this.closeResetDialog} resetApp={this.resetApp} />
-                            <SettingsCalendarPopup theme={themeSettings} popupVisible={this.state.calendarDialogVisible} popupClose={this.closeCalendarDialog} setCalendar={this.setCalendar} selectedCalendar={this.state.selectedCalendar} />
-                        </Animated.ScrollView>
+                        {renderScrollContent(insets)}
                     </SafeAreaView>
                 )}
             </SafeAreaInsetsContext.Consumer>

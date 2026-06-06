@@ -152,57 +152,14 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
                             </View>
 
                             {/* ── Search / Suggestions ── */}
-                            {availableUEs.length > 0 && (
-                                <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
-                                    <TextInput
-                                        style={[theme.popup.textInput, { marginHorizontal: 0, marginBottom: 8 }]}
-                                        onChangeText={setSearchQuery}
-                                        value={searchQuery}
-                                        placeholder={Translator.get('SEARCH_UE')}
-                                        placeholderTextColor={theme.popup.textInputPlaceholderColor}
-                                        autoCorrect={false}
-                                        keyboardType={Platform.OS === 'ios' ? 'default' : 'visible-password'}
-                                    />
-                                    {filteredSuggestions.length > 0 && (
-                                        <ScrollView
-                                            horizontal
-                                            showsHorizontalScrollIndicator={false}
-                                            style={{ marginBottom: 4 }}
-                                            contentContainerStyle={{ paddingVertical: 4 }}
-                                            keyboardShouldPersistTaps="handled"
-                                        >
-                                            {filteredSuggestions.map((ue) => (
-                                                <TouchableOpacity
-                                                    key={ue}
-                                                    onPress={() => onSuggestionPress(ue)}
-                                                    style={{
-                                                        paddingHorizontal: 12,
-                                                        paddingVertical: 6,
-                                                        borderRadius: 8,
-                                                        marginRight: 8,
-                                                        borderWidth: 1,
-                                                        borderColor: theme.popup.filters.button?.backgroundColor || '#009ee0',
-                                                        backgroundColor: 'transparent',
-                                                    }}
-                                                >
-                                                    <Text style={{
-                                                        fontSize: 12,
-                                                        fontWeight: '600',
-                                                        color: theme.popup.filters.button?.backgroundColor || '#009ee0',
-                                                    }}>
-                                                        {ue}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            ))}
-                                        </ScrollView>
-                                    )}
-                                    {searchQuery.length > 0 && filteredSuggestions.length === 0 && (
-                                        <Text style={[theme.popup.textDescription, { fontSize: 12, marginBottom: 4 }]}>
-                                            {Translator.get('NO_UE_FOUND')}
-                                        </Text>
-                                    )}
-                                </View>
-                            )}
+                            <SearchAndSuggestions 
+                                availableUEs={availableUEs} 
+                                searchQuery={searchQuery} 
+                                setSearchQuery={setSearchQuery} 
+                                filteredSuggestions={filteredSuggestions} 
+                                onSuggestionPress={onSuggestionPress} 
+                                theme={theme} 
+                            />
 
                             {/* ── Manual input ── */}
                             <View style={theme.popup.filters.footer as never}>
@@ -227,6 +184,61 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
                 </SafeAreaView>
             </KeyboardAvoidingView>
         </Modal>
+    );
+};
+
+const SearchAndSuggestions = ({ availableUEs, searchQuery, setSearchQuery, filteredSuggestions, onSuggestionPress, theme }) => {
+    if (availableUEs.length === 0) return null;
+    return (
+        <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
+            <TextInput
+                style={[theme.popup.textInput, { marginHorizontal: 0, marginBottom: 8 }]}
+                onChangeText={setSearchQuery}
+                value={searchQuery}
+                placeholder={Translator.get('SEARCH_UE')}
+                placeholderTextColor={theme.popup.textInputPlaceholderColor}
+                autoCorrect={false}
+                keyboardType={Platform.OS === 'ios' ? 'default' : 'visible-password'}
+            />
+            {filteredSuggestions.length > 0 && (
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ marginBottom: 4 }}
+                    contentContainerStyle={{ paddingVertical: 4 }}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    {filteredSuggestions.map((ue) => (
+                        <TouchableOpacity
+                            key={ue}
+                            onPress={() => onSuggestionPress(ue)}
+                            style={{
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                borderRadius: 8,
+                                marginRight: 8,
+                                borderWidth: 1,
+                                borderColor: theme.popup.filters.button?.backgroundColor || '#009ee0',
+                                backgroundColor: 'transparent',
+                            }}
+                        >
+                            <Text style={{
+                                fontSize: 12,
+                                fontWeight: '600',
+                                color: theme.popup.filters.button?.backgroundColor || '#009ee0',
+                            }}>
+                                {ue}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            )}
+            {searchQuery.length > 0 && filteredSuggestions.length === 0 && (
+                <Text style={[theme.popup.textDescription, { fontSize: 12, marginBottom: 4 }]}>
+                    {Translator.get('NO_UE_FOUND')}
+                </Text>
+            )}
+        </View>
     );
 };
 

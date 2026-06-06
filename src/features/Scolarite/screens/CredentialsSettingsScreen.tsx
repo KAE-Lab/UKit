@@ -131,40 +131,49 @@ const CredentialsSettingsScreen = () => {
                         </View>
                     </ScrollView>
 
-                    <Modal
-                        animationType="fade"
-                        transparent
+                    <LogoutModal
+                        theme={theme}
                         visible={showLogoutModal}
-                        onRequestClose={() => setShowLogoutModal(false)}
-                    >
-                        <View style={styles.modalOverlay}>
-                            <View style={[styles.modalBox, { backgroundColor: theme.cardBackground }]}>
-                                <MaterialCommunityIcons name="logout" size={48} color="#EF5350" style={{ marginBottom: tokens.space.md }} />
-                                <Text style={[styles.modalText, { color: theme.font }]}>
-                                    {Translator.get('CONFIRM_LOGOUT')}
-                                </Text>
-                                <View style={styles.modalActions}>
-                                    <TouchableOpacity
-                                        style={[styles.modalButton, { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, marginRight: tokens.space.sm }]}
-                                        onPress={() => setShowLogoutModal(false)}
-                                    >
-                                        <Text style={{ color: theme.fontSecondary, fontWeight: 'bold' }}>{Translator.get('CANCEL')}</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={[styles.modalButton, { backgroundColor: '#EF5350', marginLeft: tokens.space.sm }]}
-                                        onPress={confirmLogout}
-                                    >
-                                        <Text style={{ color: 'white', fontWeight: 'bold' }}>{Translator.get('CONFIRM')}</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </View>
-                    </Modal>
+                        onClose={() => setShowLogoutModal(false)}
+                        onConfirm={confirmLogout}
+                    />
                 </SafeAreaView>
             )}
         </SafeAreaInsetsContext.Consumer>
     );
 };
+
+const LogoutModal = ({ theme, visible, onClose, onConfirm }) => (
+    <Modal
+        animationType="fade"
+        transparent
+        visible={visible}
+        onRequestClose={onClose}
+    >
+        <View style={styles.modalOverlay}>
+            <View style={[styles.modalBox, { backgroundColor: theme.cardBackground }]}>
+                <MaterialCommunityIcons name="logout" size={48} color="#EF5350" style={{ marginBottom: tokens.space.md }} />
+                <Text style={[styles.modalText, { color: theme.font }]}>
+                    {Translator.get('CONFIRM_LOGOUT')}
+                </Text>
+                <View style={styles.modalActions}>
+                    <TouchableOpacity
+                        style={[styles.modalButton, { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, marginRight: tokens.space.sm }]}
+                        onPress={onClose}
+                    >
+                        <Text style={{ color: theme.fontSecondary, fontWeight: 'bold' }}>{Translator.get('CANCEL')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.modalButton, { backgroundColor: '#EF5350', marginLeft: tokens.space.sm }]}
+                        onPress={onConfirm}
+                    >
+                        <Text style={{ color: 'white', fontWeight: 'bold' }}>{Translator.get('CONFIRM')}</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </View>
+    </Modal>
+);
 
 const styles = StyleSheet.create({
     section: {

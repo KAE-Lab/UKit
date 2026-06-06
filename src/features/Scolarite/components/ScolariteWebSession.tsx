@@ -220,53 +220,53 @@ const ScolariteWebSession = ({ credentials, sessionKey, mode = 'cold', onEvent }
         loginReportedRef.current = false;
     }, [sessionKey]);
 
+    const handleCasHost = useCallback(() => {
+        webViewRef.current?.injectJavaScript(buildCASScript(credentials.username, credentials.password));
+    }, [credentials]);
+
+    const handleEntHost = useCallback(() => {
+        if (!loginReportedRef.current) {
+            loginReportedRef.current = true;
+            onEvent({ type: 'LOGIN_SUCCESS' });
+            onEvent({ type: 'PROGRESS', step: 'profile' });
+        }
+        if (mode === 'hot') {
+            if (phaseRef.current === 'login') {
+                phaseRef.current = 'mail';
+                onEvent({ type: 'PROGRESS', step: 'mailbox' });
+                webViewRef.current?.injectJavaScript(`window.location.href = 'https://${WEBMEL_HOST}'; true;`);
+            }
+            return;
+        }
+        if (phaseRef.current === 'login' || phaseRef.current === 'ent') {
+            phaseRef.current = 'ent';
+            webViewRef.current?.injectJavaScript(ENT_SCRAPE);
+        }
+    }, [mode, onEvent]);
+
+    const handleDossierHost = useCallback(() => {
+        if (phaseRef.current === 'dossier') {
+            onEvent({ type: 'PROGRESS', step: 'dossier' });
+            webViewRef.current?.injectJavaScript(DOSSIER_SCRAPE);
+        }
+    }, [onEvent]);
+
+    const handleWebmelHost = useCallback(() => {
+        if (phaseRef.current === 'mail') {
+            webViewRef.current?.injectJavaScript(MAIL_SCRAPE);
+        }
+    }, []);
+
     const handleLoadEnd = useCallback((e) => {
         if (!credentials) return;
         const url = e.nativeEvent.url || '';
         console.log('[Scolarite] onLoadEnd url:', url, '| phase:', phaseRef.current, '| mode:', mode);
 
-        if (url.includes(CAS_HOST)) {
-            webViewRef.current?.injectJavaScript(buildCASScript(credentials.username, credentials.password));
-            return;
-        }
-
-        if (url.includes(INTRANET_HOST) || url.includes(ENT_HOST)) {
-            if (!loginReportedRef.current) {
-                loginReportedRef.current = true;
-                onEvent({ type: 'LOGIN_SUCCESS' });
-                onEvent({ type: 'PROGRESS', step: 'profile' });
-            }
-            if (mode === 'hot') {
-                // Mode chaud : aller directement au webmel
-                if (phaseRef.current === 'login') {
-                    phaseRef.current = 'mail';
-                    onEvent({ type: 'PROGRESS', step: 'mailbox' });
-                    webViewRef.current?.injectJavaScript(`window.location.href = 'https://${WEBMEL_HOST}'; true;`);
-                }
-                return;
-            }
-            // Mode froid : scraper le prénom
-            if (phaseRef.current === 'login' || phaseRef.current === 'ent') {
-                phaseRef.current = 'ent';
-                webViewRef.current?.injectJavaScript(ENT_SCRAPE);
-            }
-            return;
-        }
-
-        if (url.includes(MONDOSSIERWEB_HOST)) {
-            if (phaseRef.current === 'dossier') {
-                onEvent({ type: 'PROGRESS', step: 'dossier' });
-                webViewRef.current?.injectJavaScript(DOSSIER_SCRAPE);
-            }
-            return;
-        }
-
-        if (url.includes(WEBMEL_HOST)) {
-            if (phaseRef.current === 'mail') {
-                webViewRef.current?.injectJavaScript(MAIL_SCRAPE);
-            }
-        }
-    }, [credentials, mode, onEvent]);
+        if (url.includes(CAS_HOST)) return handleCasHost();
+        if (url.includes(INTRANET_HOST) || url.includes(ENT_HOST)) return handleEntHost();
+        if (url.includes(MONDOSSIERWEB_HOST)) return handleDossierHost();
+        if (url.includes(WEBMEL_HOST)) return handleWebmelHost();
+    }, [credentials, mode, handleCasHost, handleEntHost, handleDossierHost, handleWebmelHost]);
 
     const handleMessage = useCallback((e) => {
         let data;

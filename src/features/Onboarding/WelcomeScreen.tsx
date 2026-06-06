@@ -74,6 +74,118 @@ const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
     </TouchableOpacity>
 );
 
+const Step1 = ({ themeObj }) => (
+    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
+        <Image source={require('../../../assets/icons/logo.png')} style={{ width: 200, height: 100, resizeMode: 'contain', marginBottom: tokens.space.xl }} />
+        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELCOME')}</Text>
+        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
+    </View>
+);
+
+const Step2 = ({ themeObj, navigatorState, selectTheme, selectLanguage }) => (
+    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2 }} showsVerticalScrollIndicator={false}>
+        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, marginBottom: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
+            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_THEME')}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                {THEME_LIST.map((themeEntry) => {
+                    const selected = navigatorState.theme === themeEntry.id;
+                    return (
+                        <TouchableOpacity key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(themeEntry.title as Parameters<typeof Translator.get>[0])}</Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
+        </View>
+        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, marginBottom: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
+            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_LANGUAGE')}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                {LANGUAGE_LIST.map((langEntry) => {
+                    const selected = navigatorState.language === langEntry.id;
+                    return (
+                        <TouchableOpacity key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(langEntry.title as Parameters<typeof Translator.get>[0])}</Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
+        </View>
+    </ScrollView>
+);
+
+const Step3 = ({ themeObj, navigatorState, filterList, selectGroup, footerTextComponent }) => (
+    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: 140 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
+            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_YEAR')}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: tokens.space.lg }}>
+                {UNIVERSITY_YEARS_LIST.map((yearEntry) => {
+                    const selected = navigatorState.year?.id === yearEntry.id;
+                    return (
+                        <TouchableOpacity 
+                            key={yearEntry.id} 
+                            onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)} 
+                            style={{ 
+                                width: '48%', 
+                                alignItems: 'center', 
+                                backgroundColor: themeObj.greyBackground, 
+                                borderWidth: 2, 
+                                borderColor: selected ? themeObj.primary : 'transparent', 
+                                paddingVertical: tokens.space.sm, 
+                                borderRadius: tokens.radius.md, 
+                                marginBottom: tokens.space.sm 
+                            }}
+                        >
+                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>
+                                {Translator.get(yearEntry.title as Parameters<typeof Translator.get>[0])} {yearEntry.suffix}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
+
+            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_SEMESTER')}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: tokens.space.lg }}>
+                {UNIVERSITY_SEASON_LIST.map((seasonEntry) => {
+                    const selected = navigatorState.season?.id === seasonEntry.id;
+                    return (
+                        <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title as Parameters<typeof Translator.get>[0])}</Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
+
+            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_GROUP')}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
+                <MaterialCommunityIcons name="magnify" size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
+                <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.OS === 'ios' ? tokens.space.md : tokens.space.sm, color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
+            </View>
+
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
+                    const selected = navigatorState.groups.includes(item);
+                    return (
+                        <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{item}</Text>
+                        </TouchableOpacity>
+                    )
+                })}
+            </View>
+            {footerTextComponent()}
+        </View>
+    </ScrollView>
+);
+
+const Step4 = ({ themeObj }) => (
+    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
+        <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
+            <MaterialCommunityIcons name="check-circle-outline" size={100} color={themeObj.primary} />
+        </View>
+        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELL_DONE')}</Text>
+        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
+    </View>
+);
+
 export default function WelcomeScreen() {
     const [step, setStep] = useState(1);
     const insets = useSafeAreaInsets();
@@ -159,122 +271,10 @@ export default function WelcomeScreen() {
                 
                 <WelcomeBackButton onPress={handleBack} visible={step > 1} themeObj={themeObj} topInset={insets.top} />
 
-                {step === 1 && (
-                    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
-                        <Image source={require('../../../assets/icons/logo.png')} style={{ width: 200, height: 100, resizeMode: 'contain', marginBottom: tokens.space.xl }} />
-                        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELCOME')}</Text>
-                        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
-                    </View>
-                )}
-
-                {step === 2 && (
-                    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2 }} showsVerticalScrollIndicator={false}>
-                        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, marginBottom: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
-                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_THEME')}</Text>
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                                {THEME_LIST.map((themeEntry) => {
-                                    const selected = navigatorState.theme === themeEntry.id;
-                                    return (
-                                        <TouchableOpacity key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(themeEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-                        </View>
-                        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, marginBottom: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
-                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_LANGUAGE')}</Text>
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                                {LANGUAGE_LIST.map((langEntry) => {
-                                    const selected = navigatorState.language === langEntry.id;
-                                    return (
-                                        <TouchableOpacity key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(langEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-                        </View>
-                    </ScrollView>
-                )}
-
-                {step === 3 && (
-                    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: 140 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                        {/* Grande case unique pour toute l'étape */}
-                        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
-                            
-                            {/* Section Année */}
-                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_YEAR')}</Text>
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: tokens.space.lg }}>
-                                {UNIVERSITY_YEARS_LIST.map((yearEntry) => {
-                                    const selected = navigatorState.year?.id === yearEntry.id;
-                                    return (
-                                        <TouchableOpacity 
-                                            key={yearEntry.id} 
-                                            onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)} 
-                                            style={{ 
-                                                width: '48%', 
-                                                alignItems: 'center', 
-                                                backgroundColor: themeObj.greyBackground, 
-                                                borderWidth: 2, 
-                                                borderColor: selected ? themeObj.primary : 'transparent', 
-                                                paddingVertical: tokens.space.sm, 
-                                                borderRadius: tokens.radius.md, 
-                                                marginBottom: tokens.space.sm 
-                                            }}
-                                        >
-                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>
-                                                {Translator.get(yearEntry.title as Parameters<typeof Translator.get>[0])} {yearEntry.suffix}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-
-                            {/* Section Semestre */}
-                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_SEMESTER')}</Text>
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: tokens.space.lg }}>
-                                {UNIVERSITY_SEASON_LIST.map((seasonEntry) => {
-                                    const selected = navigatorState.season?.id === seasonEntry.id;
-                                    return (
-                                        <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-
-                            {/* Section Groupe */}
-                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_GROUP')}</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
-                                <MaterialCommunityIcons name="magnify" size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
-                                <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.OS === 'ios' ? tokens.space.md : tokens.space.sm, color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
-                            </View>
-
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                                {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
-                                    const selected = navigatorState.groups.includes(item);
-                                    return (
-                                        <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{item}</Text>
-                                        </TouchableOpacity>
-                                    )
-                                })}
-                            </View>
-                            {footerTextComponent()}
-                        </View>
-                    </ScrollView>
-                )}
-
-                {step === 4 && (
-                    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
-                        <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
-                            <MaterialCommunityIcons name="check-circle-outline" size={100} color={themeObj.primary} />
-                        </View>
-                        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELL_DONE')}</Text>
-                        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
-                    </View>
-                )}
+                {step === 1 && <Step1 themeObj={themeObj} />}
+                {step === 2 && <Step2 themeObj={themeObj} navigatorState={navigatorState} selectTheme={selectTheme} selectLanguage={selectLanguage} />}
+                {step === 3 && <Step3 themeObj={themeObj} navigatorState={navigatorState} filterList={filterList} selectGroup={selectGroup} footerTextComponent={footerTextComponent} />}
+                {step === 4 && <Step4 themeObj={themeObj} />}
 
                 <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: (insets.bottom || 0) }}>
                     <View style={{ paddingHorizontal: tokens.space.xl, marginBottom: tokens.space.xs }}>
