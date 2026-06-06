@@ -194,16 +194,16 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
     computeScheduleDay(schedule: import('../services/PlanningApiService').PlanningEvent[], isFavorite: boolean) {
         return schedule
-            .map((course) => CourseManager.computeCourseUE(course))
-            .filter((course) => CourseManager.filterCourse(isFavorite, course, this.props.filtersList));
+            .map((course) => CourseManager.computeCourseUE(course as unknown as Record<string, unknown>) as unknown as import('../services/PlanningApiService').PlanningEvent)
+            .filter((course) => CourseManager.filterCourse(isFavorite, course as any, this.props.filtersList));
     }
 
     computeScheduleWeek(schedule: import('../services/PlanningApiService').PlanningWeekDay, isFavorite: boolean) {
         return {
             ...schedule,
             courses: schedule.courses
-                .map((course) => CourseManager.computeCourseUE(course))
-                .filter((course) => CourseManager.filterCourse(isFavorite, course, this.props.filtersList))
+                .map((course) => CourseManager.computeCourseUE(course as unknown as Record<string, unknown>) as unknown as import('../services/PlanningApiService').PlanningEvent)
+                .filter((course) => CourseManager.filterCourse(isFavorite, course as any, this.props.filtersList))
         };
     }
 
@@ -255,7 +255,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         const { theme } = this.props;
         let daySchedule = this.state.schedule as import('../services/PlanningApiService').PlanningEvent[];
         if (moment(this.state.target).day() === 0 || daySchedule.length === 0) {
-            daySchedule = [{ schedule: 0, category: 'nocourse' }];
+            daySchedule = [{ schedule: '0', category: 'nocourse' } as unknown as import('../services/PlanningApiService').PlanningEvent];
         }
         const groupedDaySchedule = groupOverlappingCourses(daySchedule);
 
@@ -297,7 +297,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                     return (
                         <DayWeek
                             key={index}
-                            schedule={this.computeScheduleWeek(scheduleItem, isFavorite)}
+                            schedule={this.computeScheduleWeek(scheduleItem, isFavorite) as any}
                             navigation={navigation}
                             theme={theme}
                             fallbackDate={fallbackDate}

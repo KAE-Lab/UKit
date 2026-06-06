@@ -37,8 +37,8 @@ export interface WelcomeButtonProps {
 }
 export const WelcomeButton = ({ onPress, buttonText, theme = 'light' }: WelcomeButtonProps) => {
     return (
-        <TouchableOpacity onPress={onPress} style={StyleWelcome[theme].buttonContainer}>
-            <Text style={StyleWelcome[theme].buttonText}>{buttonText}</Text>
+        <TouchableOpacity onPress={onPress} style={StyleWelcome[theme].buttonContainer as any}>
+            <Text style={StyleWelcome[theme].buttonText as any}>{buttonText}</Text>
             <MaterialIcons
                 name={'chevron-right'}
                 size={32}
@@ -151,13 +151,13 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
         <TouchableOpacity
             onPress={onPress}
             disabled={disabled}
-            style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}] as import('react-native').ViewStyle}>
+            style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}] as any}>
             {leftIcon && (
                 <Animated.View style={{ transform: leftIconAnimation ? [{ rotate }] : [] }}>
                     <IconComponent name={leftIcon as never} size={24} style={theme.leftIcon as import('react-native').TextStyle} />
                 </Animated.View>
             )}
-            <Text style={[theme.buttonMainText, { flex: 1 }] as import('react-native').TextStyle}>{leftText}</Text>
+            <Text style={[theme.buttonMainText, { flex: 1 }] as any}>{leftText}</Text>
             {onSwitchToggle !== undefined ? (
                 <Switch
                     style={{ marginLeft: 'auto', marginRight: theme.leftIcon?.marginLeft }}
@@ -177,7 +177,9 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
 };
 
 // ── COMPOSANT UNIVERSEL ─────────────────────────────────
-export type ButtonProps = Partial<BackButtonProps & WelcomeButtonProps & DrawerButtonProps & SettingsButtonProps>;
+export type ButtonProps = Partial<Omit<WelcomeButtonProps, 'theme'> & Omit<SettingsButtonProps, 'theme'> & BackButtonProps & DrawerButtonProps> & {
+    theme?: AppThemeType['settings'] | 'light' | 'dark';
+};
 
 export default function Button(props: ButtonProps) {
     if (props.backAction) return <BackButton {...props as BackButtonProps} />;

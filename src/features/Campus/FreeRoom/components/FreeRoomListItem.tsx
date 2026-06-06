@@ -4,7 +4,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Translator from '../../../../shared/i18n/Translator';
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
-import { BuildingInfo } from '../services/FreeRoomService';
+import { BuildingInfo } from '../../services/FreeRoomService';
 import { CampusCard } from '../../components/CampusCard';
 
 interface FreeRoomListItemProps {

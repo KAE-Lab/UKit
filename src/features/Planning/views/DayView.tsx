@@ -48,7 +48,7 @@ export interface DayViewState {
 
 class DayView extends React.Component<DayViewProps, DayViewState> {
 	static contextType = AppContext;
-	context!: React.ContextType<typeof AppContext>;
+	declare context: React.ContextType<typeof AppContext>;
 	static lastSelectedDay: moment.Moment | null = null;
 	static lastSelectedWeek: { week: number; year: number } | null = null;
     viewability: { itemVisiblePercentThreshold: number };

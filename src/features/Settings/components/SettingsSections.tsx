@@ -33,7 +33,7 @@ export const DisplaySection = ({ themeSettings, language, openLanguageDialog, op
             onPress={openLanguageDialog}
             leftIcon="language"
             leftText={Translator.get('LANGUAGE')}
-            rightText={Translator.get(LANGUAGE_LIST[language as keyof typeof LANGUAGE_LIST])}
+            rightText={Translator.get(LANGUAGE_LIST[language as keyof typeof LANGUAGE_LIST] as Parameters<typeof Translator.get>[0])}
         />
         <Button
             theme={themeSettings}

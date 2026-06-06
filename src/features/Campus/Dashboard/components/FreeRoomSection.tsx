@@ -32,10 +32,10 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
         const loadBuildings = async () => {
             setLoading(true);
             try {
-                let bList: import('../../FreeRoom/services/FreeRoomService').BuildingInfo[] = DataManager.getBuildingList() as import('../../FreeRoom/services/FreeRoomService').BuildingInfo[];
+                let bList: BuildingInfo[] = DataManager.getBuildingList() as unknown as BuildingInfo[];
                 if (!bList || bList.length === 0) {
                     await DataManager.fetchBuildingList();
-                    bList = DataManager.getBuildingList() as import('../../FreeRoom/services/FreeRoomService').BuildingInfo[];
+                    bList = DataManager.getBuildingList() as unknown as BuildingInfo[];
                 }
                 if (mountedRef.current) {
                     if (bList) {

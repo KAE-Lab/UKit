@@ -25,7 +25,7 @@ export interface CourseState {
 
 class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	static contextType = AppContext;
-	context!: React.ContextType<typeof AppContext>;
+	declare context: React.ContextType<typeof AppContext>;
 
 	constructor(props: CourseProps) {
 		super(props);

@@ -31,10 +31,10 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
         const loadBuildings = async () => {
             setLoading(true);
             try {
-                let bList: BuildingInfo[] = DataManager.getBuildingList() as BuildingInfo[];
+                let bList: BuildingInfo[] = DataManager.getBuildingList() as unknown as BuildingInfo[];
                 if (!bList || bList.length === 0) {
                     await DataManager.fetchBuildingList();
-                    bList = DataManager.getBuildingList() as BuildingInfo[];
+                    bList = DataManager.getBuildingList() as unknown as BuildingInfo[];
                 }
 
                 if (mounted) {

@@ -26,7 +26,7 @@ export interface GroupItem {
 
 export interface HomeScreenState {
     completeList: GroupItem[] | null;
-    sections: { title: string; data: GroupItem[] }[] | null;
+    sections: { key: string; data: GroupItem[]; sectionIndex: number; colorIndex: number }[] | null;
     list: GroupItem[] | null;
     emptySearchResults: boolean;
     refreshing: boolean;
@@ -36,7 +36,7 @@ export interface HomeScreenState {
 
 class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     static contextType = AppContext;
-    context!: React.ContextType<typeof AppContext>;
+    declare context: React.ContextType<typeof AppContext>;
     scrollY: Animated.Value;
 
     constructor(props: HomeScreenProps) {
@@ -309,7 +309,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                 renderSectionHeader={({ section }: { section: { key: string; sectionIndex: number; colorIndex: number } }) => (
                     <SectionListHeader title={section.key} key={section.key} sectionIndex={section.sectionIndex} color={theme.sections[section.colorIndex]} headerColor={theme.sectionsHeaders[section.colorIndex]} />
                 )}
-                sections={this.state.sections as { title: string; data: GroupItem[]; sectionIndex: number; colorIndex: number }[]}
+                sections={this.state.sections as any}
                 keyExtractor={(item, index) => index.toString()}
                 initialNumToRender={20}
                 onEndReachedThreshold={0.1}
