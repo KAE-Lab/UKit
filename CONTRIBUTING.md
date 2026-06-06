@@ -20,7 +20,7 @@ We enforce the Conventional Commits specification:
 
 ## Development Standards
 
-- **TypeScript First**: Every new file must be created using TypeScript (`.ts` or `.tsx`).
+- **TypeScript**: The codebase is 100% TypeScript. Every new file must be created using TypeScript (`.ts` or `.tsx`). No `.js` or `.jsx` files should be introduced.
 - **Functional Components**: Favor functional components and Hooks over class components.
 - **Map Integration**: Do not use `react-native-maps`. All maps must be implemented using a WebView with Leaflet and OpenStreetMap.
 - **Styling**: Always use the Design Tokens from `src/shared/theme/Theme.js`. Avoid hardcoded colors or spacing values.
@@ -44,9 +44,18 @@ src/
 
 ```
 
+## Code Quality & Linting
+
+All code must comply with the strict rules defined in `eslint.config.mjs`.
+Before submitting a PR, ensure there are no linting warnings or errors by running:
+```bash
+npx eslint .
+```
+
 ## Checklist before PR
 
 * [ ] Code compiles without TypeScript errors.
+* [ ] No ESLint warnings or errors (verified by running `npx eslint .`).
 * [ ] No hardcoded strings (all translated).
 * [ ] Design tokens used for all styles.
 * [ ] No `any` types unless strictly necessary.
