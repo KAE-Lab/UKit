@@ -25,7 +25,74 @@ export const useCredentials = () => useContext(CredentialsContext);
 
 const SESSION_TIMEOUT_MS = 60000;
 
-export const CredentialsProvider = ({ children }) => {
+const createEventHandler = ({
+    setScrapeStatus,
+    validationResolver,
+    validationCandidate,
+    setCredentials,
+    setActiveCreds,
+    setScrapeProgress,
+    setColdData,
+    setMailData
+}) => (data) => {
+    switch (data.type) {
+        case 'LOGIN_SUCCESS': {
+            setScrapeStatus('scraping');
+            if (validationResolver.current) {
+                const candidate = validationCandidate.current;
+                SecureStoreService.saveCredentials(candidate.username, candidate.password).then(() => {
+                    setCredentials(candidate);
+                });
+                validationResolver.current({ success: true });
+                validationResolver.current = null;
+                validationCandidate.current = null;
+            }
+            break;
+        }
+        case 'LOGIN_FAILED': {
+            setScrapeStatus('error');
+            if (validationResolver.current) {
+                validationResolver.current({ success: false, error: Translator.get('LOGIN_FAILED') });
+                validationResolver.current = null;
+                validationCandidate.current = null;
+            }
+            setActiveCreds(null);
+            break;
+        }
+        case 'PROGRESS':
+            setScrapeProgress(data.step);
+            break;
+        case 'ENT_DATA':
+            setColdData((prev) => ({ ...prev, firstName: data.firstName || '' }));
+            break;
+        case 'DOSSIER_DATA': {
+            setColdData((prev) => {
+                const merged = {
+                    ...prev,
+                    studentNumber: data.studentNumber,
+                    ine: data.ine,
+                    emailAddress: data.emailAddress,
+                    dateOfBirth: data.dateOfBirth,
+                };
+                SecureStoreService.saveColdData(merged);
+                return merged;
+            });
+            break;
+        }
+        case 'MAILBOX_DATA':
+            setMailData({ unreadCount: data.unreadCount });
+            setScrapeStatus('done');
+            setScrapeProgress(null);
+            break;
+        case 'DEBUG':
+            if (__DEV__) console.log('[Scolarite]', data.message);
+            break;
+        default:
+            break;
+    }
+};
+
+const useCredentialsSession = () => {
     const [credentials, setCredentials] = useState(null);
     const [credentialsLoaded, setCredentialsLoaded] = useState(false);
 
@@ -86,66 +153,16 @@ export const CredentialsProvider = ({ children }) => {
         return () => clearTimeout(timeoutRef.current);
     }, [scrapeStatus, sessionKey]);
 
-    const handleEvent = useCallback((data) => {
-        switch (data.type) {
-            case 'LOGIN_SUCCESS': {
-                setScrapeStatus('scraping');
-                if (validationResolver.current) {
-                    const candidate = validationCandidate.current;
-                    SecureStoreService.saveCredentials(candidate.username, candidate.password).then(() => {
-                        setCredentials(candidate);
-                    });
-                    validationResolver.current({ success: true });
-                    validationResolver.current = null;
-                    validationCandidate.current = null;
-                }
-                break;
-            }
-            case 'LOGIN_FAILED': {
-                setScrapeStatus('error');
-                if (validationResolver.current) {
-                    validationResolver.current({ success: false, error: Translator.get('LOGIN_FAILED') });
-                    validationResolver.current = null;
-                    validationCandidate.current = null;
-                }
-                setActiveCreds(null);
-                break;
-            }
-            case 'PROGRESS':
-                setScrapeProgress(data.step);
-                break;
-            case 'ENT_DATA':
-                setColdData((prev) => ({ ...prev, firstName: data.firstName || '' }));
-                break;
-            case 'DOSSIER_DATA': {
-                setColdData((prev) => {
-                    const merged = {
-                        ...prev,
-                        studentNumber: data.studentNumber,
-                        ine: data.ine,
-                        emailAddress: data.emailAddress,
-                        dateOfBirth: data.dateOfBirth,
-                    };
-                    SecureStoreService.saveColdData(merged);
-                    return merged;
-                });
-                break;
-            }
-            case 'MAILBOX_DATA':
-                setMailData({ unreadCount: data.unreadCount });
-                setScrapeStatus('done');
-                setScrapeProgress(null);
-                break;
-            case 'DEBUG':
-                if (__DEV__) console.log('[Scolarite]', data.message);
-                break;
-            default:
-                break;
-        }
-    }, []);
-
-    // DOSSIER_DATA n'inclut pas firstName (scrappé séparément via ENT_DATA).
-    // On fusionne proprement dans le handler DOSSIER_DATA via setColdData avec prev.
+    const handleEvent = useCallback(createEventHandler({
+        setScrapeStatus,
+        validationResolver,
+        validationCandidate,
+        setCredentials,
+        setActiveCreds,
+        setScrapeProgress,
+        setColdData,
+        setMailData
+    }), []);
 
     const validateAndSave = useCallback((username, password) => {
         return new Promise((resolve) => {
@@ -167,6 +184,20 @@ export const CredentialsProvider = ({ children }) => {
         setScrapeStatus('idle');
         setScrapeProgress(null);
     }, []);
+
+    return {
+        credentials, credentialsLoaded, activeCreds, sessionKey, sessionMode,
+        coldData, mailData, scrapeStatus, scrapeProgress,
+        handleEvent, validateAndSave, logout
+    };
+};
+
+export const CredentialsProvider = ({ children }) => {
+    const {
+        credentials, credentialsLoaded, activeCreds, sessionKey, sessionMode,
+        coldData, mailData, scrapeStatus, scrapeProgress,
+        handleEvent, validateAndSave, logout
+    } = useCredentialsSession();
 
     const value = {
         credentials,

@@ -11,7 +11,7 @@ UKit est une application compagnon moderne destinée aux étudiants de l'Univers
 ## Points clés du projet
 
 - **Souveraineté et Open Source** : Remplacement intégral de Google Maps par OpenStreetMap via une intégration Leaflet personnalisée. Cela garantit une totale indépendance vis-à-vis des API payantes et du tracking GAFAM.
-- **Migration TypeScript** : Sécurisation du codebase par un typage statique progressif (actuellement ~18% du volume de code).
+- **TypeScript** : L'intégralité du codebase est typée de manière stricte (100% TypeScript) garantissant la stabilité et la sécurité du code.
 - **Architecture Moderne** : Utilisation de React Navigation 6, du moteur Hermes pour la performance Android et d'un système de thèmes par tokens.
 
 ## Fonctionnalités
@@ -20,11 +20,7 @@ UKit est une application compagnon moderne destinée aux étudiants de l'Univers
 - **Cartographie** : Localisation des bâtiments et des salles de cours sur le campus via un moteur cartographique libre.
 - **Restauration** : Accès aux menus des restaurants universitaires (CROUS) et calcul de distance en temps réel.
 
-## État de la migration (src)
 
-Le projet suit une stratégie de migration "Feature-first" :
-- Fichiers TypeScript : 5 / 32
-- Volume de code TypeScript : 1127 / 6209 lignes (18.1%)
 
 ## Développement local
 

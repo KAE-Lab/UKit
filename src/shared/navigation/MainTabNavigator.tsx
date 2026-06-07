@@ -5,12 +5,12 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
-import ScheduleScreen from '../../features/Schedule/ScheduleScreen';
-import CampusDashboard from '../../features/Campus/CampusDashboard';
-import ScolariteDashboard from '../../features/Scolarite/ScolariteDashboard';
-import SettingsScreen from '../../features/Settings/SettingsScreen';
+import ScheduleScreen from '../../features/Planning/screens/ScheduleScreen';
+import CampusDashboard from '../../features/Campus/Dashboard/CampusDashboard';
+import ScolariteDashboard from '../../features/Scolarite/screens/ScolariteDashboard';
+import SettingsScreen from '../../features/Settings/screens/SettingsScreen';
 
-import style, { tokens } from '../theme/Theme';
+import style, { tokens, AppThemeType } from '../theme/Theme';
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { NavBarHelper, SaveGroupButton } from './NavHelpers';
@@ -26,7 +26,158 @@ export type MainTabParamList = {
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export interface CustomTabBarProps extends BottomTabBarProps {
-    theme: Record<string, any>;
+    theme: AppThemeType;
+}
+
+interface TabBarRouteItemProps {
+    route: { key: string; name: string };
+    index: number;
+    state: import('@react-navigation/native').TabNavigationState<import('@react-navigation/native').ParamListBase>;
+    descriptors: import('@react-navigation/bottom-tabs').BottomTabBarProps['descriptors'];
+    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/bottom-tabs').BottomTabNavigationEventMap>;
+    theme: AppThemeType;
+}
+
+function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }: TabBarRouteItemProps) {
+    const { options } = descriptors[route.key];
+    const label = (options.tabBarLabel as string) !== undefined
+        ? (options.tabBarLabel as string)
+        : options.title !== undefined
+            ? options.title
+            : route.name;
+
+    const isFocused = state.index === index;
+
+    const onPress = () => {
+        const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+        });
+
+        if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name as never);
+        }
+    };
+
+    const onLongPress = () => {
+        navigation.emit({
+            type: 'tabLongPress',
+            target: route.key,
+        });
+    };
+
+    const color = isFocused ? (theme.accent ?? theme.primary) : theme.fontSecondary;
+
+    return (
+        <TouchableOpacity
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel}
+            testID={(options as { tabBarTestID?: string }).tabBarTestID}
+            onPress={onPress}
+            onLongPress={onLongPress}
+            style={styles.tabItem}
+        >
+            <View style={[
+                styles.iconContainer,
+                isFocused && { backgroundColor: `${theme.primary}15` }
+            ]}>
+                {options.tabBarIcon && options.tabBarIcon({ color, size: 24, focused: isFocused })}
+            </View>
+            <Text style={[styles.tabLabel, { color, fontWeight: Platform.OS === 'ios' ? (isFocused ? '700' : '500') : '500' }]}>
+                {label}
+            </Text>
+        </TouchableOpacity>
+    );
+}
+
+interface TabBarActionItemProps {
+    currentRouteName: string;
+    theme: AppThemeType;
+    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/bottom-tabs').BottomTabNavigationEventMap>;
+    credentials: unknown;
+}
+
+function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: TabBarActionItemProps) {
+    if (currentRouteName === 'PlanningTab') {
+        return (
+            <TouchableOpacity
+                onPress={() => navigation.navigate('GroupSearch' as never)}
+                activeOpacity={0.85}
+                style={[
+                    styles.groupButton,
+                    {
+                        backgroundColor: theme.cardBackground,
+                        borderColor: theme.border,
+                    }
+                ]}
+            >
+                <MaterialCommunityIcons
+                    name="account-search-outline"
+                    size={24}
+                    color={theme.accent ?? theme.primary}
+                />
+                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                    {Translator.get('GROUPS')}
+                </Text>
+            </TouchableOpacity>
+        );
+    }
+    
+    if (currentRouteName === 'SettingsTab') {
+        return (
+            <TouchableOpacity
+                onPress={() => navigation.navigate('About' as never)}
+                activeOpacity={0.85}
+                style={[
+                    styles.groupButton,
+                    {
+                        backgroundColor: theme.cardBackground,
+                        borderColor: theme.border,
+                    }
+                ]}
+            >
+                <MaterialCommunityIcons
+                    name="information-outline"
+                    size={24}
+                    color={theme.accent ?? theme.primary}
+                />
+                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                    {Translator.get('ABOUT')}
+                </Text>
+            </TouchableOpacity>
+        );
+    }
+    
+    if (currentRouteName === 'ScolariteTab' && credentials) {
+        return (
+            <TouchableOpacity
+                onPress={() => navigation.navigate('CredentialsSettings' as never)}
+                activeOpacity={0.85}
+                style={[
+                    styles.groupButton,
+                    {
+                        backgroundColor: theme.cardBackground,
+                        borderColor: theme.border,
+                    }
+                ]}
+            >
+                <MaterialCommunityIcons
+                    name="logout"
+                    size={24}
+                    color={theme.accent ?? theme.primary}
+                />
+                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                    {Translator.get('LOGOUT')}
+                </Text>
+            </TouchableOpacity>
+        );
+    }
+    
+    // Placeholder invisible — maintient la largeur de la tab bar sans afficher de contour
+    return <View style={{ width: 65, height: 75 }} />;
 }
 
 // Composant Custom Tab Bar pour reproduire l'effet Apple Music (décalé à gauche, ratio icon/text, bords arrondis)
@@ -36,140 +187,36 @@ function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarPro
         <SafeAreaInsetsContext.Consumer>
             {(insets) => {
                 const bottomPadding = Math.max(tokens.space.sm, (insets?.bottom || 0) - 15);
-                
+
                 return (
                     <View style={[styles.tabBarWrapper, { paddingBottom: bottomPadding }]}>
                         <View style={[
-                            styles.tabBarContainer, 
-                            { 
-                                backgroundColor: theme.cardBackground, 
+                            styles.tabBarContainer,
+                            {
+                                backgroundColor: theme.cardBackground,
                                 borderColor: theme.border,
                             }
                         ]}>
-                            {state.routes.map((route, index) => {
-                                const { options } = descriptors[route.key];
-                                const label = (options.tabBarLabel as string) !== undefined
-                                    ? (options.tabBarLabel as string)
-                                    : options.title !== undefined
-                                        ? options.title
-                                        : route.name;
-
-                                const isFocused = state.index === index;
-
-                                const onPress = () => {
-                                    const event = navigation.emit({
-                                        type: 'tabPress',
-                                        target: route.key,
-                                        canPreventDefault: true,
-                                    });
-
-                                    if (!isFocused && !event.defaultPrevented) {
-                                        navigation.navigate(route.name);
-                                    }
-                                };
-
-                                const onLongPress = () => {
-                                    navigation.emit({
-                                        type: 'tabLongPress',
-                                        target: route.key,
-                                    });
-                                };
-
-                                const color = isFocused ? (theme.accent ?? theme.primary) : theme.fontSecondary;
-
-                                return (
-                                    <TouchableOpacity
-                                        key={index}
-                                        activeOpacity={0.8}
-                                        accessibilityRole="button"
-                                        accessibilityState={isFocused ? { selected: true } : {}}
-                                        accessibilityLabel={options.tabBarAccessibilityLabel}
-                                        testID={(options as { tabBarTestID?: string }).tabBarTestID}
-                                        onPress={onPress}
-                                        onLongPress={onLongPress}
-                                        style={styles.tabItem}
-                                    >
-                                        <View style={[
-                                            styles.iconContainer,
-                                            isFocused && { backgroundColor: `${theme.primary}15` }
-                                        ]}>
-                                            {options.tabBarIcon && options.tabBarIcon({ color, size: 24, focused: isFocused })}
-                                        </View>
-                                        <Text style={[styles.tabLabel, { color, fontWeight: Platform.OS === 'ios' ? (isFocused ? '700' : '500') : '500' }]}>
-                                            {label}
-                                        </Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
+                            {state.routes.map((route, index) => (
+                                <TabBarRouteItem 
+                                    key={index} 
+                                    route={route} 
+                                    index={index} 
+                                    state={state} 
+                                    descriptors={descriptors} 
+                                    navigation={navigation} 
+                                    theme={theme} 
+                                />
+                            ))}
                         </View>
+                        
                         {/* Bouton accès groupes — visible uniquement sur l'onglet Planning */}
-                        {state.routes[state.index].name === 'PlanningTab' ? (
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate('GroupSearch')}
-                                activeOpacity={0.85}
-                                style={[
-                                    styles.groupButton,
-                                    {
-                                        backgroundColor: theme.cardBackground,
-                                        borderColor: theme.border,
-                                    }
-                                ]}
-                            >
-                                <MaterialCommunityIcons
-                                    name="account-search-outline"
-                                    size={24}
-                                    color={theme.accent ?? theme.primary}
-                                />
-                                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
-                                    {Translator.get('GROUPS')}
-                                </Text>
-                            </TouchableOpacity>
-                        ) : state.routes[state.index].name === 'SettingsTab' ? (
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate('About')}
-                                activeOpacity={0.85}
-                                style={[
-                                    styles.groupButton,
-                                    {
-                                        backgroundColor: theme.cardBackground,
-                                        borderColor: theme.border,
-                                    }
-                                ]}
-                            >
-                                <MaterialCommunityIcons
-                                    name="information-outline"
-                                    size={24}
-                                    color={theme.accent ?? theme.primary}
-                                />
-                                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
-                                    {Translator.get('ABOUT')}
-                                </Text>
-                            </TouchableOpacity>
-                        ) : (state.routes[state.index].name === 'ScolariteTab' && credentials) ? (
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate('CredentialsSettings')}
-                                activeOpacity={0.85}
-                                style={[
-                                    styles.groupButton,
-                                    {
-                                        backgroundColor: theme.cardBackground,
-                                        borderColor: theme.border,
-                                    }
-                                ]}
-                            >
-                                <MaterialCommunityIcons
-                                    name="logout"
-                                    size={24}
-                                    color={theme.accent ?? theme.primary}
-                                />
-                                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
-                                    {Translator.get('LOGOUT')}
-                                </Text>
-                            </TouchableOpacity>
-                        ) : (
-                            /* Placeholder invisible — maintient la largeur de la tab bar sans afficher de contour */
-                            <View style={{ width: 65, height: 75 }} />
-                        )}
+                        <TabBarActionItem 
+                            currentRouteName={state.routes[state.index].name} 
+                            theme={theme} 
+                            navigation={navigation} 
+                            credentials={credentials} 
+                        />
                     </View>
                 );
             }}
@@ -189,34 +236,34 @@ export default function MainTabNavigator() {
                 headerShown: false,
             }}
         >
-            <Tab.Screen 
-                name="PlanningTab" 
-                component={PlanningStackScreen} 
+            <Tab.Screen
+                name="PlanningTab"
+                component={PlanningStackScreen}
                 options={{
                     tabBarLabel: Translator.get('MY_PLANNING') || 'Planning',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="calendar-month-outline" size={24} color={color} />,
                     headerShown: false
                 }}
             />
-            <Tab.Screen 
-                name="CampusTab" 
-                component={CampusDashboard} 
+            <Tab.Screen
+                name="CampusTab"
+                component={CampusDashboard}
                 options={{
                     tabBarLabel: Translator.get('CAMPUS') || 'Campus',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="domain" size={24} color={color} />
                 }}
             />
-            <Tab.Screen 
-                name="ScolariteTab" 
-                component={ScolariteDashboard} 
+            <Tab.Screen
+                name="ScolariteTab"
+                component={ScolariteDashboard}
                 options={{
                     tabBarLabel: Translator.get('SCOLARITY') || 'Scolarité',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="toolbox-outline" size={24} color={color} />
                 }}
             />
-            <Tab.Screen 
-                name="SettingsTab" 
-                component={SettingsScreen} 
+            <Tab.Screen
+                name="SettingsTab"
+                component={SettingsScreen}
                 options={{
                     tabBarLabel: Translator.get('SETTINGS') || 'Paramètres',
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="cog-outline" size={24} color={color} />
@@ -291,10 +338,10 @@ const PlanningStack = createStackNavigator<PlanningStackParamList>();
 function PlanningStackScreen() {
     return (
         <PlanningStack.Navigator id="PlanningStack">
-            <PlanningStack.Screen 
-                name="ScheduleInternal" 
-                component={ScheduleScreen} 
-                initialParams={{ name: [] }} 
+            <PlanningStack.Screen
+                name="ScheduleInternal"
+                component={ScheduleScreen}
+                initialParams={{ name: [] }}
                 options={{ headerShown: false }} // DayView gère son propre header sticky avec safe area
             />
         </PlanningStack.Navigator>
