@@ -23,6 +23,7 @@
   "dependencies": {
     "@expo-google-fonts/montserrat": "^0.1.0",
     "@expo/vector-icons": "^15.0.3",
+    "@gorhom/bottom-sheet": "^5.2.14",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "^8.4.4",
     "@react-native-community/netinfo": "11.4.1",
@@ -53,6 +54,7 @@
     "expo-updates": "~29.0.16",
     "expo-web-browser": "~15.0.10",
     "html-entities": "^2.3.2",
+    "ical.js": "^2.2.1",
     "moment": "^2.22.2",
     "prop-types": "^15.6.2",
     "qs": "^6.10.1",
@@ -74,6 +76,7 @@
   "devDependencies": {
     "@commitlint/cli": "^20.4.2",
     "@commitlint/config-conventional": "^20.4.2",
+    "@types/ical": "^0.8.3",
     "@typescript-eslint/eslint-plugin": "^8.60.0",
     "@typescript-eslint/parser": "^8.60.0",
     "babel-preset-expo": "^54.0.10",
