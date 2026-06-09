@@ -12,7 +12,10 @@ import { PlanningApiService as FetchManager } from '../../features/Planning/serv
 
 const locations = require('../../../assets/locations.json');
 
-// ── CONTEXTE & DEVICE ─────────────────────────────────
+export type ScheduleSource = 
+  | { type: 'celcat_groups'; groups: string[] }
+  | { type: 'ical_url'; url: string };
+
 export const AppContext = React.createContext<{ themeName?: string; favoriteGroups?: string[]; filters?: string[] }>({});
 export const AppContextProvider = AppContext.Provider;
 
@@ -186,6 +189,7 @@ class SettingsManagerService {
     _courseNotificationsEnabled: boolean;
     _courseNotificationDelay: number;
     _groupName?: string;
+    _scheduleSource: ScheduleSource | null;
 
     constructor() {
         this._calendar = -1;
@@ -202,6 +206,7 @@ class SettingsManagerService {
         this._lastSyncDate = null;
         this._courseNotificationsEnabled = true;
         this._courseNotificationDelay = 15;
+        this._scheduleSource = null;
     }
 
     on = (event: string, callback: Function) => {
@@ -232,6 +237,14 @@ class SettingsManagerService {
     switchFirstLoad = () => { this.setFirstLoad(!this.isFirstLoad()); };
 
     isSynchronizingCalendar = () => this._isSynchronizingCalendar;
+
+    getScheduleSource = () => this._scheduleSource;
+    setScheduleSource = (source: ScheduleSource | null) => {
+        this._scheduleSource = source;
+        this.saveSettings();
+        this.notify('scheduleSource', source);
+    };
+
     getFavoriteGroups = () => this._favoriteGroups;
     addFavoriteGroup = (newGroup: string) => {
         if (newGroup && !this._favoriteGroups.includes(newGroup)) {
@@ -406,6 +419,7 @@ class SettingsManagerService {
             language: this._language, openAppOnFavoriteGroup: this._openAppOnFavoriteGroup,
             filters: this._filters, calendarSyncEnabled: this._calendarSyncEnabled,
             courseNotificationsEnabled: this._courseNotificationsEnabled, courseNotificationDelay: this._courseNotificationDelay,
+            scheduleSource: this._scheduleSource,
         }));
     };
 
@@ -433,6 +447,9 @@ class SettingsManagerService {
         }
         if (settings.courseNotificationDelay !== undefined) {
             this._courseNotificationDelay = settings.courseNotificationDelay as number;
+        }
+        if (settings.scheduleSource) {
+            this._scheduleSource = settings.scheduleSource as ScheduleSource;
         }
     };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     Text, View, Image, TouchableOpacity, ScrollView,
     KeyboardAvoidingView, Platform
@@ -11,6 +11,9 @@ import { SettingsManager, languageFromDevice } from '../../shared/services/AppCo
 import { PlanningDataManager as DataManager } from '../Planning/services/PlanningDataManager';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
+import OnboardingScheduleView from './OnboardingScheduleView';
+import ICalTutorialModal from './ICalTutorialModal';
+import { BottomSheetModalProvider, BottomSheetModal } from '@gorhom/bottom-sheet';
 
 const MAXIMUM_NUMBER_ITEMS_GROUPLIST = 10;
 
@@ -83,7 +86,7 @@ const Step1 = ({ themeObj }) => (
 );
 
 const Step2 = ({ themeObj, navigatorState, selectTheme, selectLanguage }) => (
-    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2 }} showsVerticalScrollIndicator={false}>
+    <View style={{ flexGrow: 1, paddingHorizontal: tokens.space.md, paddingTop: tokens.space.xxl * 2 }}>
         <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, marginBottom: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
             <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_THEME')}</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
@@ -110,71 +113,103 @@ const Step2 = ({ themeObj, navigatorState, selectTheme, selectLanguage }) => (
                 })}
             </View>
         </View>
-    </ScrollView>
+    </View>
 );
 
-const Step3 = ({ themeObj, navigatorState, filterList, selectGroup, footerTextComponent }) => (
-    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: 140 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
-            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_YEAR')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: tokens.space.lg }}>
-                {UNIVERSITY_YEARS_LIST.map((yearEntry) => {
-                    const selected = navigatorState.year?.id === yearEntry.id;
-                    return (
-                        <TouchableOpacity 
-                            key={yearEntry.id} 
-                            onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)} 
-                            style={{ 
-                                width: '48%', 
-                                alignItems: 'center', 
-                                backgroundColor: themeObj.greyBackground, 
-                                borderWidth: 2, 
-                                borderColor: selected ? themeObj.primary : 'transparent', 
-                                paddingVertical: tokens.space.sm, 
-                                borderRadius: tokens.radius.md, 
-                                marginBottom: tokens.space.sm 
-                            }}
-                        >
-                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>
-                                {Translator.get(yearEntry.title as Parameters<typeof Translator.get>[0])} {yearEntry.suffix}
-                            </Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
+const Step3 = ({ themeObj, navigatorState, filterList, selectGroup, footerTextComponent, changeState, handleNext, onOpenTutorial }) => {
+    const isCelcat = navigatorState.scheduleSourceType === 'celcat';
 
-            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_SEMESTER')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: tokens.space.lg }}>
-                {UNIVERSITY_SEASON_LIST.map((seasonEntry) => {
-                    const selected = navigatorState.season?.id === seasonEntry.id;
-                    return (
-                        <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
-
-            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_GROUP')}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
-                <MaterialCommunityIcons name="magnify" size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
-                <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.OS === 'ios' ? tokens.space.md : tokens.space.sm, color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
-            </View>
-
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
-                    const selected = navigatorState.groups.includes(item);
-                    return (
-                        <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{item}</Text>
-                        </TouchableOpacity>
-                    )
-                })}
-            </View>
-            {footerTextComponent()}
+    return (
+    <View style={{ flexGrow: 1, paddingHorizontal: tokens.space.md, paddingTop: tokens.space.xxl * 2, paddingBottom: tokens.space.xxl }}>
+        
+        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>
+            {Translator.get('SCHEDULE_SOURCE')}
+        </Text>
+        <View style={{ flexDirection: 'row', marginBottom: tokens.space.lg }}>
+            <TouchableOpacity 
+                onPress={() => changeState({ scheduleSourceType: 'celcat' })}
+                style={{ flex: 1, backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: isCelcat ? themeObj.primary : 'transparent', paddingVertical: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center' }}
+            >
+                <Text style={{ color: isCelcat ? themeObj.primary : themeObj.fontSecondary, fontWeight: isCelcat ? tokens.fontWeight.bold : tokens.fontWeight.medium }}>Celcat</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+                onPress={() => changeState({ scheduleSourceType: 'ical' })}
+                style={{ flex: 1, backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: !isCelcat ? themeObj.primary : 'transparent', paddingVertical: tokens.space.md, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center' }}
+            >
+                <Text style={{ color: !isCelcat ? themeObj.primary : themeObj.fontSecondary, fontWeight: !isCelcat ? tokens.fontWeight.bold : tokens.fontWeight.medium }}>{Translator.get('ICAL_LINK')}</Text>
+            </TouchableOpacity>
         </View>
-    </ScrollView>
-);
+
+        {isCelcat ? (
+            <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
+                <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_YEAR')}</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: tokens.space.lg }}>
+                    {UNIVERSITY_YEARS_LIST.map((yearEntry) => {
+                        const selected = navigatorState.year?.id === yearEntry.id;
+                        return (
+                            <TouchableOpacity 
+                                key={yearEntry.id} 
+                                onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)} 
+                                style={{ 
+                                    width: '48%', 
+                                    alignItems: 'center', 
+                                    backgroundColor: themeObj.greyBackground, 
+                                    borderWidth: 2, 
+                                    borderColor: selected ? themeObj.primary : 'transparent', 
+                                    paddingVertical: tokens.space.sm, 
+                                    borderRadius: tokens.radius.md, 
+                                    marginBottom: tokens.space.sm 
+                                }}
+                            >
+                                <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>
+                                    {Translator.get(yearEntry.title as Parameters<typeof Translator.get>[0])} {yearEntry.suffix}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+
+                <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_SEMESTER')}</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: tokens.space.lg }}>
+                    {UNIVERSITY_SEASON_LIST.map((seasonEntry) => {
+                        const selected = navigatorState.season?.id === seasonEntry.id;
+                        return (
+                            <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                                <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title as Parameters<typeof Translator.get>[0])}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+
+                <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_GROUP')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
+                    <MaterialCommunityIcons name="magnify" size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
+                    <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.OS === 'ios' ? tokens.space.md : tokens.space.sm, color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
+                </View>
+
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                    {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
+                        const selected = navigatorState.groups.includes(item);
+                        return (
+                            <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                                <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{item}</Text>
+                            </TouchableOpacity>
+                        )
+                    })}
+                </View>
+                {footerTextComponent()}
+            </View>
+        ) : (
+            <OnboardingScheduleView 
+                themeObj={themeObj} 
+                onComplete={() => {
+                    handleNext();
+                }} 
+                onOpenTutorial={onOpenTutorial}
+            />
+        )}
+    </View>
+)};
 
 const Step4 = ({ themeObj }) => (
     <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
@@ -189,6 +224,7 @@ const Step4 = ({ themeObj }) => (
 export default function WelcomeScreen() {
     const [step, setStep] = useState(1);
     const insets = useSafeAreaInsets();
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const [navigatorState, setNavigatorState] = useState({
         language: 'fr',
         theme: 'light',
@@ -198,6 +234,7 @@ export default function WelcomeScreen() {
         groupList: DataManager.getGroupList(),
         groupListFiltered: [],
         textFilter: '',
+        scheduleSourceType: 'celcat',
     });
 
     const changeState = (newState) => setNavigatorState((prev) => ({ ...prev, ...newState }));
@@ -218,7 +255,12 @@ export default function WelcomeScreen() {
     const theme = navigatorState.theme;
     const themeObj = style.Theme[theme];
 
-    const handleNext = () => setStep((prev) => prev + 1);
+    const handleNext = () => {
+        if (step === 3 && navigatorState.scheduleSourceType === 'celcat' && navigatorState.groups.length > 0) {
+            SettingsManager.setScheduleSource({ type: 'celcat_groups', groups: navigatorState.groups });
+        }
+        setStep((prev) => prev + 1);
+    };
     const handleBack = () => setStep((prev) => prev - 1);
     const finishWelcome = () => SettingsManager.setFirstLoad(false);
 
@@ -266,38 +308,42 @@ export default function WelcomeScreen() {
     };
 
     return (
-        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: themeObj.background, paddingTop: (insets.top || 0) - tokens.space.lg }}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <BottomSheetModalProvider>
+            <SafeAreaView edges={['left', 'right', 'bottom', 'top']} style={{ flex: 1, backgroundColor: themeObj.background }}>
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
                 
                 <WelcomeBackButton onPress={handleBack} visible={step > 1} themeObj={themeObj} topInset={insets.top} />
 
-                {step === 1 && <Step1 themeObj={themeObj} />}
-                {step === 2 && <Step2 themeObj={themeObj} navigatorState={navigatorState} selectTheme={selectTheme} selectLanguage={selectLanguage} />}
-                {step === 3 && <Step3 themeObj={themeObj} navigatorState={navigatorState} filterList={filterList} selectGroup={selectGroup} footerTextComponent={footerTextComponent} />}
-                {step === 4 && <Step4 themeObj={themeObj} />}
+                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                    {step === 1 && <Step1 themeObj={themeObj} />}
+                    {step === 2 && <Step2 themeObj={themeObj} navigatorState={navigatorState} selectTheme={selectTheme} selectLanguage={selectLanguage} />}
+                    {step === 3 && <Step3 themeObj={themeObj} navigatorState={navigatorState} filterList={filterList} selectGroup={selectGroup} footerTextComponent={footerTextComponent} changeState={changeState} handleNext={handleNext} onOpenTutorial={() => bottomSheetModalRef.current?.present()} />}
+                    {step === 4 && <Step4 themeObj={themeObj} />}
+                </ScrollView>
 
-                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: (insets.bottom || 0) }}>
-                    <View style={{ paddingHorizontal: tokens.space.xl, marginBottom: tokens.space.xs }}>
-                        <TouchableOpacity
-                            onPress={step === 4 ? finishWelcome : handleNext}
-                            style={{
-                                backgroundColor: themeObj.primary,
-                                borderRadius: tokens.radius.md,
-                                paddingVertical: tokens.space.md,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text style={{ color: '#ffffff', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
-                                {step === 4 ? Translator.get('FINISH') : (step === 1 ? Translator.get('START') : Translator.get('NEXT'))}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-
+                <View style={{ paddingHorizontal: tokens.space.xl, paddingBottom: tokens.space.md, paddingTop: tokens.space.sm }}>
+                        {!(step === 3 && navigatorState.scheduleSourceType === 'ical') && (
+                            <TouchableOpacity
+                                onPress={step === 4 ? finishWelcome : handleNext}
+                                style={{
+                                    backgroundColor: themeObj.primary,
+                                    borderRadius: tokens.radius.md,
+                                    paddingVertical: tokens.space.md,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Text style={{ color: '#ffffff', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
+                                    {step === 4 ? Translator.get('FINISH') : (step === 1 ? Translator.get('START') : Translator.get('NEXT'))}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     <WelcomePagination pageNumber={step} maxPage={4} themeObj={themeObj} />
                 </View>
 
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+                </KeyboardAvoidingView>
+                <ICalTutorialModal ref={bottomSheetModalRef} themeObj={themeObj} />
+            </SafeAreaView>
+        </BottomSheetModalProvider>
     );
 }
