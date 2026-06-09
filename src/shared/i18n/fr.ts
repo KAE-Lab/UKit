@@ -218,6 +218,28 @@ const fr: TranslationDict = {
 	COURSE_NOTIFICATIONS: "Notifications de cours",
 	NOTIFICATION_DELAY: "Délai avant le cours",
 	NOTIFICATION_DELAY_DESC: "Ajustez combien de minutes avant le début du cours vous souhaitez être notifié.",
+	SCHEDULE_SOURCE: "Source de l'emploi du temps",
+	ICAL_LINK: "Lien iCal",
+	ICAL_LINK_TITLE: "Lien iCalendar (iCal)",
+	HOW_TO_FIND_LINK: "Comment trouver mon lien ?",
+	VALIDATE_LINK: "Valider le lien",
+	ERROR: "Erreur",
+	ENTER_VALID_URL: "Veuillez entrer une URL valide.",
+	INVALID_ICAL_URL: "Le lien fourni n'a retourné aucun événement valide.",
+	ICAL_FETCH_ERROR: "Impossible de récupérer l'emploi du temps depuis ce lien.",
+	TUTORIAL_SATELLYS_TITLE: "Intranet Satellys",
+	TUTORIAL_SATELLYS_STEP_1: "Connectez-vous à votre espace Satellys depuis le navigateur de votre téléphone.",
+	TUTORIAL_SATELLYS_STEP_2: "Accédez à votre emploi du temps.",
+	TUTORIAL_SATELLYS_STEP_3: "Cherchez le bouton d'export",
+	TUTORIAL_SATELLYS_STEP_4: "Faites un",
+	TUTORIAL_SATELLYS_STEP_4_BOLD: "appui long",
+	TUTORIAL_SATELLYS_STEP_4_END: "sur ce bouton.",
+	TUTORIAL_SATELLYS_STEP_5: "Sélectionnez",
+	TUTORIAL_SATELLYS_STEP_5_BOLD: "\"Copier l'adresse du lien\"",
+	TUTORIAL_SATELLYS_STEP_6: "Revenez sur l'application et collez le lien.",
+	TUTORIAL_OTHER_TITLE: "Autres (ADE, Hyperplanning, etc.)",
+	TUTORIAL_OTHER_DESC_1: "Sur la plupart des plateformes universitaires, vous trouverez un bouton \"Exporter\" ou une icône de calendrier (iCal, iCalendar, ICS).",
+	TUTORIAL_OTHER_DESC_2: "Il suffit généralement de faire un clic droit ou un appui long sur ce lien d'exportation et de choisir \"Copier le lien\"."
 };
 
 export default fr;
