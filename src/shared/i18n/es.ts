@@ -239,7 +239,25 @@ const es: TranslationDict = {
 	TUTORIAL_SATELLYS_STEP_6: "Vuelve a la aplicación y pega el enlace.",
 	TUTORIAL_OTHER_TITLE: "Otros (ADE, Hyperplanning, etc.)",
 	TUTORIAL_OTHER_DESC_1: "En la mayoría de las plataformas universitarias, encontrarás un botón \"Exportar\" o un icono de calendario (iCal, iCalendar, ICS).",
-	TUTORIAL_OTHER_DESC_2: "Por lo general, basta con hacer clic derecho o presionar prolongadamente este enlace de exportación y seleccionar \"Copiar enlace\"."
+	TUTORIAL_OTHER_DESC_2: "Por lo general, basta con hacer clic derecho o presionar prolongadamente este enlace de exportación y seleccionar \"Copiar enlace\".",
+	COLLEGE_SELECTION_TITLE: "¿Cuál es tu colegio de estudios?",
+	SSO_LOGIN_TITLE: "Autenticación Universitaria",
+	AUTO_LOGIN_LOADING: "Conectando...",
+	FALLBACK_ICAL_HINT: "Para asegurarse de que todos sus cursos estén presentes, le recomendamos que seleccione un rango de fechas de septiembre a junio/julio al generar su enlace en la intranet.",
+	SCIENCES_TECH: "Collège Sciences et technologies",
+	DROIT_ECO_GESTION: "Collège Droit, sciences politiques, économie et gestion",
+	SANTE: "Collège Sciences de la santé",
+	SCIENCES_HOMME: "Collège Sciences de l'Homme",
+	IUT_BORDEAUX: "IUT de Bordeaux (Gradignan, Bastide, Agen, Périgueux)",
+	BORDEAUX_MONTAIGNE: "Bordeaux Montaigne",
+	BORDEAUX_INP: "Bordeaux INP",
+	LOADING_AUTHENTICATING: "Verificando credenciales...",
+	LOADING_SCHEDULE: "Obteniendo horario...",
+	SKIP: "Omitir",
+	SKIP_LOGIN: "Omitir inicio de sesión",
+	SKIP_WARNING_TITLE: "Atención",
+	SKIP_WARNING_DESC: "Al omitir este paso, solo tendrá acceso a los grupos de Ciencias y Tecnologías. Además, no tendrá acceso a las funciones de Escolaridad (que requieren inicio de sesión).",
+	SKIP_ANYWAY: "Omitir de todos modos",
 };
 
 export default es;

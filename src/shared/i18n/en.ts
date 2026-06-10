@@ -235,7 +235,25 @@ const en = {
 	TUTORIAL_SATELLYS_STEP_6: "Return to the app and paste the link.",
 	TUTORIAL_OTHER_TITLE: "Others (ADE, Hyperplanning, etc.)",
 	TUTORIAL_OTHER_DESC_1: "On most university platforms, you'll find an \"Export\" button or a calendar icon (iCal, iCalendar, ICS).",
-	TUTORIAL_OTHER_DESC_2: "Usually, you just need to right-click or long-press this export link and select \"Copy link\"."
+	TUTORIAL_OTHER_DESC_2: "Usually, you just need to right-click or long-press this export link and select \"Copy link\".",
+	COLLEGE_SELECTION_TITLE: "What is your college of study?",
+	SSO_LOGIN_TITLE: "University Authentication",
+	AUTO_LOGIN_LOADING: "Connecting...",
+	FALLBACK_ICAL_HINT: "To ensure all your courses are present, we advise you to select a date range from September to June/July when generating your link on the intranet.",
+	SCIENCES_TECH: "Collège Sciences et technologies",
+	DROIT_ECO_GESTION: "Collège Droit, sciences politiques, économie et gestion",
+	SANTE: "Collège Sciences de la santé",
+	SCIENCES_HOMME: "Collège Sciences de l'Homme",
+	IUT_BORDEAUX: "IUT de Bordeaux (Gradignan, Bastide, Agen, Périgueux)",
+	BORDEAUX_MONTAIGNE: "Bordeaux Montaigne",
+	BORDEAUX_INP: "Bordeaux INP",
+	LOADING_AUTHENTICATING: "Verifying credentials...",
+	LOADING_SCHEDULE: "Fetching schedule...",
+	SKIP: "Skip",
+	SKIP_LOGIN: "Skip login",
+	SKIP_WARNING_TITLE: "Warning",
+	SKIP_WARNING_DESC: "By skipping this step, you will only have access to Sciences and Technologies groups. Additionally, you won't have access to Scolarité features (which require login).",
+	SKIP_ANYWAY: "Skip anyway",
 };
 
 export default en;

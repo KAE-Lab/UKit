@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
     Text, View, Image, ScrollView,
-    KeyboardAvoidingView, Platform
+    KeyboardAvoidingView, Platform, ActivityIndicator
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native-gesture-handler';
@@ -15,8 +15,8 @@ import OnboardingScheduleView from './OnboardingScheduleView';
 import ICalTutorialModal from './ICalTutorialModal';
 import { BottomSheetModalProvider, BottomSheetModal } from '@gorhom/bottom-sheet';
 import { UnifiedTouchable } from '../../shared/ui/UnifiedTouchable';
-
-const MAXIMUM_NUMBER_ITEMS_GROUPLIST = 10;
+import { AuthenticationService } from './services/AuthenticationService';
+import type { InstitutionDomain } from './services/AuthenticationService';
 
 const THEME_LIST = [
     { id: 'light', title: 'LIGHT_THEME' },
@@ -29,35 +29,33 @@ const LANGUAGE_LIST = [
     { id: 'es', title: 'SPANISH' },
 ];
 
-const UNIVERSITY_YEARS_LIST = [
-    { id: 'L1', title: 'BACHELORS', suffix: '1' },
-    { id: 'L2', title: 'BACHELORS', suffix: '2' },
-    { id: 'L3', title: 'BACHELORS', suffix: '3' },
-    { id: 'M1', title: 'MASTERS', suffix: '1' },
-    { id: 'M2', title: 'MASTERS', suffix: '2' },
-    { id: 'AUTRE', title: 'OTHER', suffix: '' },
+const COLLEGE_LIST: { id: InstitutionDomain; title: string }[] = [
+    { id: 'SCIENCES_TECH', title: 'SCIENCES_TECH' },
+    { id: 'DROIT_ECO_GESTION', title: 'DROIT_ECO_GESTION' },
+    { id: 'SANTE', title: 'SANTE' },
+    { id: 'SCIENCES_HOMME', title: 'SCIENCES_HOMME' },
+    { id: 'IUT_BORDEAUX', title: 'IUT_BORDEAUX' },
+    { id: 'BORDEAUX_MONTAIGNE', title: 'BORDEAUX_MONTAIGNE' },
+    { id: 'BORDEAUX_INP', title: 'BORDEAUX_INP' },
 ];
-
-const UNIVERSITY_SEASON_LIST = [
-    { id: 'autumn', title: 'AUTUMN' },
-    { id: 'spring', title: 'SPRING' },
-];
-
-const filterSeason = {
-    autumn: {
-        L1: ['10', 'MIASHS1'], L2: ['30', 'MIASHS3'], L3: ['50', 'MIASHS5'],
-        M1: ['M1', '70'], M2: ['M2', '90'], AUTRE: [''],
-    },
-    spring: {
-        L1: ['20', 'MIASHS2'], L2: ['40', 'MIASHS4'], L3: ['60', 'MIASHS6'],
-        M1: ['M1', '80'], M2: ['M2', '000', '001', '002', '003', '004'], AUTRE: [''],
-    },
-};
 
 const WelcomePagination = ({ pageNumber, maxPage, themeObj }) => (
     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: tokens.space.md }}>
-        {Array.from({ length: pageNumber }).map((_, i) => <View key={`f-${i}`} style={{ width: 24, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.md, backgroundColor: themeObj.primary }} />)}
-        {Array.from({ length: maxPage - pageNumber }).map((_, i) => <View key={`e-${i}`} style={{ width: 8, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.md, backgroundColor: themeObj.greyBackground }} />)}
+        {Array.from({ length: maxPage }).map((_, i) => {
+            const isActive = i + 1 <= pageNumber;
+            return (
+                <View 
+                    key={`dot-${i}`} 
+                    style={{ 
+                        width: isActive ? 24 : 8, 
+                        height: 8, 
+                        marginHorizontal: tokens.space.xs, 
+                        borderRadius: tokens.radius.md, 
+                        backgroundColor: isActive ? themeObj.primary : themeObj.greyBackground 
+                    }} 
+                />
+            );
+        })}
     </View>
 );
 
@@ -117,125 +115,177 @@ const Step2 = ({ themeObj, navigatorState, selectTheme, selectLanguage }) => (
     </View>
 );
 
-const Step3 = ({ themeObj, navigatorState, filterList, selectGroup, footerTextComponent, changeState, handleNext, onOpenTutorial }) => {
-    const isCelcat = navigatorState.scheduleSourceType === 'celcat';
-
-    return (
-    <View style={{ flexGrow: 1, paddingHorizontal: tokens.space.md, paddingTop: tokens.space.xxl * 2, paddingBottom: tokens.space.xxl }}>
-        
-        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>
-            {Translator.get('SCHEDULE_SOURCE')}
-        </Text>
-        <View style={{ flexDirection: 'row', marginBottom: tokens.space.lg }}>
-            <UnifiedTouchable 
-                onPress={() => changeState({ scheduleSourceType: 'celcat' })}
-                style={{ flex: 1, backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: isCelcat ? themeObj.primary : 'transparent', paddingVertical: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center' }}
-            >
-                <Text style={{ color: isCelcat ? themeObj.primary : themeObj.fontSecondary, fontWeight: isCelcat ? tokens.fontWeight.bold : tokens.fontWeight.medium }}>Celcat</Text>
-            </UnifiedTouchable>
-            <UnifiedTouchable 
-                onPress={() => changeState({ scheduleSourceType: 'ical' })}
-                style={{ flex: 1, backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: !isCelcat ? themeObj.primary : 'transparent', paddingVertical: tokens.space.md, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center' }}
-            >
-                <Text style={{ color: !isCelcat ? themeObj.primary : themeObj.fontSecondary, fontWeight: !isCelcat ? tokens.fontWeight.bold : tokens.fontWeight.medium }}>{Translator.get('ICAL_LINK')}</Text>
-            </UnifiedTouchable>
-        </View>
-
-        {isCelcat ? (
-            <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
-                <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_YEAR')}</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: tokens.space.lg }}>
-                    {UNIVERSITY_YEARS_LIST.map((yearEntry) => {
-                        const selected = navigatorState.year?.id === yearEntry.id;
-                        return (
-                            <UnifiedTouchable 
-                                key={yearEntry.id} 
-                                onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)} 
-                                style={{ 
-                                    width: '48%', 
-                                    alignItems: 'center', 
-                                    backgroundColor: themeObj.greyBackground, 
-                                    borderWidth: 2, 
-                                    borderColor: selected ? themeObj.primary : 'transparent', 
-                                    paddingVertical: tokens.space.sm, 
-                                    borderRadius: tokens.radius.md, 
-                                    marginBottom: tokens.space.sm 
-                                }}
-                            >
-                                <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>
-                                    {Translator.get(yearEntry.title as Parameters<typeof Translator.get>[0])} {yearEntry.suffix}
-                                </Text>
-                            </UnifiedTouchable>
-                        );
-                    })}
-                </View>
-
-                <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_SEMESTER')}</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: tokens.space.lg }}>
-                    {UNIVERSITY_SEASON_LIST.map((seasonEntry) => {
-                        const selected = navigatorState.season?.id === seasonEntry.id;
-                        return (
-                            <UnifiedTouchable key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                                <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                            </UnifiedTouchable>
-                        );
-                    })}
-                </View>
-
-                <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_GROUP')}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
-                    <MaterialCommunityIcons name="magnify" size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
-                    <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.select({ ios: tokens.space.md, android: tokens.space.sm, default: tokens.space.sm }), color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
-                </View>
-
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                    {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
-                        const selected = navigatorState.groups.includes(item);
-                        return (
-                            <UnifiedTouchable key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                                <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{item}</Text>
-                            </UnifiedTouchable>
-                        )
-                    })}
-                </View>
-                {footerTextComponent()}
-            </View>
-        ) : (
-            <OnboardingScheduleView 
-                themeObj={themeObj} 
-                onComplete={() => {
-                    handleNext();
-                }} 
-                onOpenTutorial={onOpenTutorial}
-            />
-        )}
-    </View>
-)};
-
-const Step4 = ({ themeObj }) => (
-    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
-        <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
-            <MaterialCommunityIcons name="check-circle-outline" size={100} color={themeObj.primary} />
-        </View>
-        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELL_DONE')}</Text>
-        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
+const Step3 = ({ themeObj, navigatorState, selectCollege }) => (
+    <View style={{ flexGrow: 1, paddingHorizontal: tokens.space.md, paddingTop: tokens.space.xxl * 2, paddingBottom: tokens.space.xl }}>
+        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('COLLEGE_SELECTION_TITLE')}</Text>
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: tokens.space.xxl }}>
+            {COLLEGE_LIST.map((collegeEntry) => {
+                const selected = navigatorState.collegeId === collegeEntry.id;
+                return (
+                    <UnifiedTouchable 
+                        key={collegeEntry.id} 
+                        onPress={() => selectCollege(collegeEntry.id)} 
+                        style={{ 
+                            backgroundColor: themeObj.cardBackground, 
+                            borderWidth: 2, 
+                            borderColor: selected ? themeObj.primary : themeObj.border, 
+                            paddingVertical: tokens.space.lg, 
+                            paddingHorizontal: tokens.space.md, 
+                            borderRadius: tokens.radius.lg, 
+                            marginBottom: tokens.space.sm,
+                            ...tokens.shadow.sm
+                        }}
+                    >
+                        <Text style={{ color: selected ? themeObj.primary : themeObj.font, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.md }}>
+                            {Translator.get(collegeEntry.title as Parameters<typeof Translator.get>[0])}
+                        </Text>
+                    </UnifiedTouchable>
+                );
+            })}
+        </ScrollView>
     </View>
 );
 
+const Step4 = ({ themeObj, navigatorState, changeState, setStep }) => (
+    <View style={{ flexGrow: 1, paddingTop: tokens.space.xxl * 2 }}>
+        <View style={{ alignItems: 'center', paddingHorizontal: tokens.space.lg, marginBottom: tokens.space.lg }}>
+            <View style={{ width: 72, height: 72, borderRadius: tokens.radius.lg, justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.md, backgroundColor: themeObj.primary + '1A' }}>
+                <MaterialCommunityIcons name="school-outline" size={36} color={themeObj.primary} />
+            </View>
+            <Text style={{ fontSize: tokens.fontSize.xl, fontWeight: '600', marginBottom: tokens.space.xs, color: themeObj.font }}>
+                {Translator.get('SSO_LOGIN_TITLE')}
+            </Text>
+            <Text style={{ fontSize: tokens.fontSize.sm, textAlign: 'center', lineHeight: 20, color: themeObj.fontSecondary }}>
+                {Translator.get('ENTER_CREDENTIALS_DESC')}
+            </Text>
+        </View>
+
+        <View style={{ marginHorizontal: tokens.space.md, padding: tokens.space.md, borderRadius: tokens.radius.lg, borderWidth: 1, backgroundColor: themeObj.cardBackground, borderColor: themeObj.border }}>
+            <TextInput
+                style={{ height: 50, borderRadius: tokens.radius.md, borderWidth: 1, paddingHorizontal: tokens.space.md, fontSize: tokens.fontSize.md, backgroundColor: themeObj.background, color: themeObj.font, borderColor: themeObj.border }}
+                placeholder={Translator.get('USERNAME')}
+                placeholderTextColor={themeObj.fontSecondary}
+                value={navigatorState.username}
+                onChangeText={(t) => changeState({ username: t })}
+                autoCapitalize="none"
+                autoCorrect={false}
+            />
+            <TextInput
+                style={{ height: 50, borderRadius: tokens.radius.md, borderWidth: 1, paddingHorizontal: tokens.space.md, fontSize: tokens.fontSize.md, backgroundColor: themeObj.background, color: themeObj.font, borderColor: themeObj.border, marginTop: tokens.space.sm }}
+                placeholder={Translator.get('PASSWORD')}
+                placeholderTextColor={themeObj.fontSecondary}
+                value={navigatorState.password}
+                onChangeText={(t) => changeState({ password: t })}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+            />
+        </View>
+
+        <UnifiedTouchable 
+            onPress={() => {
+                changeState({ loginState: 'failed' });
+                setStep(5);
+            }} 
+            style={{ marginTop: tokens.space.xl, alignItems: 'center' }}
+        >
+            <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.sm, fontWeight: '600' }}>
+                {Translator.get('SKIP_LOGIN')}
+            </Text>
+        </UnifiedTouchable>
+    </View>
+);
+
+const LOADING_STEPS = [
+    { key: 'connecting', labelKey: 'LOADING_CONNECTING', icon: 'shield-lock-outline' },
+    { key: 'authenticating', labelKey: 'LOADING_AUTHENTICATING', icon: 'account-key-outline' },
+    { key: 'fetching', labelKey: 'LOADING_SCHEDULE', icon: 'calendar-sync-outline' },
+] as const;
+
+const stepIndex = (step) => LOADING_STEPS.findIndex((s) => s.key === step);
+
+const Step5 = ({ themeObj, navigatorState, onOpenTutorial, handleNext }) => {
+    if (navigatorState.loginState === 'loading') {
+        const currentIdx = stepIndex(navigatorState.loginProgress ?? 'connecting');
+        return (
+            <View style={{ flexGrow: 1, paddingHorizontal: tokens.space.xl, paddingTop: tokens.space.xxl * 2, alignItems: 'center' }}>
+                <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.xl, textAlign: 'center' }}>
+                    {Translator.get('SSO_LOGIN_TITLE')}
+                </Text>
+                <View style={{ width: '100%', gap: tokens.space.md }}>
+                    {LOADING_STEPS.map((step, idx) => {
+                        const isDone = idx < currentIdx;
+                        const isCurrent = idx === currentIdx;
+                        const isPending = idx > currentIdx;
+
+                        return (
+                            <View key={step.key} style={{ flexDirection: 'row', alignItems: 'center', gap: tokens.space.md }}>
+                                <View style={{
+                                    width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
+                                    backgroundColor: isDone ? themeObj.primary + '22' : isCurrent ? themeObj.primary + '11' : themeObj.cardBackground + '55',
+                                }}>
+                                    {isDone ? (
+                                        <MaterialCommunityIcons name="check-circle" size={22} color={themeObj.primary} />
+                                    ) : isCurrent ? (
+                                        <ActivityIndicator size="small" color={themeObj.primary} />
+                                    ) : (
+                                        <MaterialCommunityIcons name={step.icon} size={22} color={themeObj.fontSecondary} />
+                                    )}
+                                </View>
+                                <Text style={[
+                                    { flex: 1, fontSize: tokens.fontSize.md },
+                                    { fontWeight: isCurrent ? tokens.fontWeight.bold : tokens.fontWeight.medium },
+                                    { color: isDone ? themeObj.primary : isCurrent ? themeObj.font : themeObj.fontSecondary },
+                                    isPending && { opacity: 0.4 },
+                                ]}>
+                                    {Translator.get(step.labelKey)}
+                                </Text>
+                            </View>
+                        );
+                    })}
+                </View>
+            </View>
+        );
+    }
+    
+    if (navigatorState.loginState === 'success') {
+        return (
+            <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
+                <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
+                    <MaterialCommunityIcons name="check-circle-outline" size={100} color={themeObj.primary} />
+                </View>
+                <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELL_DONE')}</Text>
+                <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
+            </View>
+        );
+    }
+
+    if (navigatorState.loginState === 'failed') {
+        return (
+            <View style={{ flexGrow: 1, paddingHorizontal: tokens.space.md, paddingTop: tokens.space.xxl }}>
+                <OnboardingScheduleView 
+                    themeObj={themeObj} 
+                    onComplete={handleNext} 
+                    onOpenTutorial={onOpenTutorial}
+                />
+            </View>
+        );
+    }
+
+    return null;
+};
+
 export default function WelcomeScreen() {
     const [step, setStep] = useState(1);
-    const insets = useSafeAreaInsets();
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const [navigatorState, setNavigatorState] = useState({
         language: 'fr',
         theme: 'light',
-        year: null,
-        season: null,
-        groups: [],
-        groupList: DataManager.getGroupList(),
-        groupListFiltered: [],
-        textFilter: '',
-        scheduleSourceType: 'celcat',
+        collegeId: 'SCIENCES_TECH' as InstitutionDomain,
+        username: '',
+        password: '',
+        loginState: 'idle', // 'idle' | 'loading' | 'success' | 'failed'
+        loginProgress: 'connecting',
     });
 
     const changeState = (newState) => setNavigatorState((prev) => ({ ...prev, ...newState }));
@@ -243,8 +293,6 @@ export default function WelcomeScreen() {
     useEffect(() => {
         SettingsManager.on('theme', (newTheme) => changeState({ theme: newTheme }));
         SettingsManager.on('language', (newLang) => changeState({ language: newLang }));
-        SettingsManager.on('favoriteGroups', (newGroups) => changeState({ groups: newGroups }));
-        DataManager.on('groupList', (newGroupList) => changeState({ groupList: newGroupList }));
 
         const langSystem = languageFromDevice();
         const themeSystem = SettingsManager.getAutomaticTheme();
@@ -256,91 +304,96 @@ export default function WelcomeScreen() {
     const theme = navigatorState.theme;
     const themeObj = style.Theme[theme];
 
-    const handleNext = () => {
-        if (step === 3 && navigatorState.scheduleSourceType === 'celcat' && navigatorState.groups.length > 0) {
-            SettingsManager.setScheduleSource({ type: 'celcat_groups', groups: navigatorState.groups });
+    const performLogin = async () => {
+        changeState({ loginState: 'loading', loginProgress: 'connecting' });
+        const result = await AuthenticationService.login(
+            navigatorState.collegeId, 
+            navigatorState.username, 
+            navigatorState.password,
+            (step) => changeState({ loginProgress: step })
+        );
+        if (result.success) {
+            SettingsManager.setScheduleSource({ type: 'ical_url', url: result.data.scheduleUrl });
+            changeState({ loginState: 'success' });
+        } else {
+            changeState({ loginState: 'failed' });
+        }
+    };
+
+    const handleNext = async () => {
+        if (step === 4) {
+            setStep(5);
+            await performLogin();
+            return;
+        }
+        if (step === 5 && navigatorState.loginState === 'failed') {
+            // If they complete the fallback, it handles completion
+            SettingsManager.setFirstLoad(false);
+            return;
         }
         setStep((prev) => prev + 1);
     };
-    const handleBack = () => setStep((prev) => prev - 1);
+
+    const handleBack = () => {
+        if (step === 5 && navigatorState.loginState === 'failed') {
+            setStep(4);
+            changeState({ loginState: 'idle' });
+            return;
+        }
+        setStep((prev) => prev - 1);
+    };
+    
     const finishWelcome = () => SettingsManager.setFirstLoad(false);
 
     const selectTheme = (newTheme) => SettingsManager.setTheme(newTheme.id);
     const selectLanguage = (newLang) => SettingsManager.setLanguage(newLang.id);
-    const selectGroup = (group) => {
-        if (navigatorState.groups.includes(group)) {
-            SettingsManager.removeFavoriteGroup(group);
-        } else {
-            SettingsManager.addFavoriteGroup(group);
-        }
+    const selectCollege = (collegeId) => changeState({ collegeId });
+
+    // Determine if next button should be disabled
+    const isNextDisabled = () => {
+        if (step === 3 && !navigatorState.collegeId) return true;
+        if (step === 4 && (!navigatorState.username || !navigatorState.password)) return true;
+        return false;
     };
 
-    const filterList = (year, season, textFilter) => {
-        let newList = [];
-        if (year && season) {
-            newList = navigatorState.groupList.filter((e) => {
-                const groupName = e.toUpperCase();
-                return filterSeason[season.id][year.id].some((filter) =>
-                    groupName.includes(filter.toUpperCase()) && groupName.includes(textFilter.toUpperCase())
-                );
-            });
-        }
-        changeState({ groupListFiltered: newList, year, season, textFilter });
-    };
-
-    const footerTextComponent = () => {
-        if (navigatorState.textFilter) {
-            if (navigatorState.groupListFiltered.length > MAXIMUM_NUMBER_ITEMS_GROUPLIST) {
-                return (
-                    <View style={{ marginTop: tokens.space.sm }}>
-                        <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, textAlign: 'center' }}>
-                            {Translator.get('HIDDEN_RESULT', navigatorState.groupListFiltered.length - MAXIMUM_NUMBER_ITEMS_GROUPLIST)}
-                        </Text>
-                        <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, textAlign: 'center', marginTop: 4 }}>
-                            {Translator.get('USE_SEARCH_BAR')}
-                        </Text>
-                    </View>
-                );
-            } else if (!navigatorState.groupListFiltered.length) {
-                return <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.sm, textAlign: 'center' }}>{Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}</Text>;
-            }
-        }
-        return <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.sm, textAlign: 'center' }}>{Translator.get('USE_SEARCH_BAR')}</Text>;
-    };
+    // Determine if bottom navigation should be shown
+    const showBottomNavigation = step < 5 || (step === 5 && navigatorState.loginState === 'success');
 
     return (
         <BottomSheetModalProvider>
             <SafeAreaView edges={['left', 'right', 'bottom', 'top']} style={{ flex: 1, backgroundColor: themeObj.background }}>
                 <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', default: undefined })} style={{ flex: 1 }}>
                 
-                <WelcomeBackButton onPress={handleBack} visible={step > 1} themeObj={themeObj} />
+                <WelcomeBackButton onPress={handleBack} visible={step > 1 && !(step === 5 && navigatorState.loginState === 'loading') && !(step === 5 && navigatorState.loginState === 'success')} themeObj={themeObj} />
 
                 <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                     {step === 1 && <Step1 themeObj={themeObj} />}
                     {step === 2 && <Step2 themeObj={themeObj} navigatorState={navigatorState} selectTheme={selectTheme} selectLanguage={selectLanguage} />}
-                    {step === 3 && <Step3 themeObj={themeObj} navigatorState={navigatorState} filterList={filterList} selectGroup={selectGroup} footerTextComponent={footerTextComponent} changeState={changeState} handleNext={handleNext} onOpenTutorial={() => bottomSheetModalRef.current?.present()} />}
-                    {step === 4 && <Step4 themeObj={themeObj} />}
+                    {step === 3 && <Step3 themeObj={themeObj} navigatorState={navigatorState} selectCollege={selectCollege} />}
+                    {step === 4 && <Step4 themeObj={themeObj} navigatorState={navigatorState} changeState={changeState} setStep={setStep} />}
+                    {step === 5 && <Step5 themeObj={themeObj} navigatorState={navigatorState} onOpenTutorial={() => bottomSheetModalRef.current?.present()} handleNext={finishWelcome} />}
                 </ScrollView>
 
-                <View style={{ paddingHorizontal: tokens.space.xl, paddingBottom: tokens.space.md, paddingTop: tokens.space.sm }}>
-                        {!(step === 3 && navigatorState.scheduleSourceType === 'ical') && (
-                            <UnifiedTouchable
-                                onPress={step === 4 ? finishWelcome : handleNext}
-                                style={{
-                                    backgroundColor: themeObj.primary,
-                                    borderRadius: tokens.radius.md,
-                                    paddingVertical: tokens.space.md,
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <Text style={{ color: '#ffffff', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
-                                    {step === 4 ? Translator.get('FINISH') : (step === 1 ? Translator.get('START') : Translator.get('NEXT'))}
-                                </Text>
-                            </UnifiedTouchable>
-                        )}
-                    <WelcomePagination pageNumber={step} maxPage={4} themeObj={themeObj} />
-                </View>
+                {showBottomNavigation && (
+                    <View style={{ paddingHorizontal: tokens.space.xl, paddingBottom: tokens.space.md, paddingTop: tokens.space.sm }}>
+                        <UnifiedTouchable
+                            onPress={(step === 5 && navigatorState.loginState === 'success') ? finishWelcome : handleNext}
+                            disabled={isNextDisabled()}
+                            style={{
+                                backgroundColor: isNextDisabled() ? themeObj.greyBackground : themeObj.primary,
+                                borderRadius: tokens.radius.md,
+                                paddingVertical: tokens.space.md,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <Text style={{ color: isNextDisabled() ? themeObj.fontSecondary : '#ffffff', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
+                                {(step === 5 && navigatorState.loginState === 'success') ? Translator.get('FINISH') : (step === 1 ? Translator.get('START') : Translator.get('NEXT'))}
+                            </Text>
+                        </UnifiedTouchable>
+                        <WelcomePagination pageNumber={step} maxPage={5} themeObj={themeObj} />
+                    </View>
+                )}
 
                 </KeyboardAvoidingView>
                 <ICalTutorialModal ref={bottomSheetModalRef} themeObj={themeObj} />

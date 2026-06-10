@@ -239,7 +239,25 @@ const fr: TranslationDict = {
 	TUTORIAL_SATELLYS_STEP_6: "Revenez sur l'application et collez le lien.",
 	TUTORIAL_OTHER_TITLE: "Autres (ADE, Hyperplanning, etc.)",
 	TUTORIAL_OTHER_DESC_1: "Sur la plupart des plateformes universitaires, vous trouverez un bouton \"Exporter\" ou une icône de calendrier (iCal, iCalendar, ICS).",
-	TUTORIAL_OTHER_DESC_2: "Il suffit généralement de faire un clic droit ou un appui long sur ce lien d'exportation et de choisir \"Copier le lien\"."
+	TUTORIAL_OTHER_DESC_2: "Il suffit généralement de faire un clic droit ou un appui long sur ce lien d'exportation et de choisir \"Copier le lien\".",
+	COLLEGE_SELECTION_TITLE: "Quel est ton collège d'études ?",
+	SSO_LOGIN_TITLE: "Authentification Universitaire",
+	AUTO_LOGIN_LOADING: "Connexion en cours...",
+	FALLBACK_ICAL_HINT: "Afin de garantir que l'intégralité de vos cours soit présente, nous vous conseillons de sélectionner une plage de dates allant de septembre à juin/juillet lors de la génération de votre lien sur l'intranet.",
+	SCIENCES_TECH: "Collège Sciences et technologies",
+	DROIT_ECO_GESTION: "Collège Droit, sciences politiques, économie et gestion",
+	SANTE: "Collège Sciences de la santé",
+	SCIENCES_HOMME: "Collège Sciences de l'Homme",
+	IUT_BORDEAUX: "IUT de Bordeaux (Gradignan, Bastide, Agen, Périgueux)",
+	BORDEAUX_MONTAIGNE: "Bordeaux Montaigne",
+	BORDEAUX_INP: "Bordeaux INP",
+	LOADING_AUTHENTICATING: "Vérification des identifiants...",
+	LOADING_SCHEDULE: "Récupération de l'emploi du temps...",
+	SKIP: "Passer",
+	SKIP_LOGIN: "Passer la connexion",
+	SKIP_WARNING_TITLE: "Attention",
+	SKIP_WARNING_DESC: "En passant cette étape, vous n'aurez accès qu'aux groupes du collège Sciences et Technologies. De plus, vous n'aurez pas accès aux fonctionnalités de la Scolarité (qui nécessitent une connexion).",
+	SKIP_ANYWAY: "Passer quand même",
 };
 
 export default fr;
