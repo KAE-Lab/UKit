@@ -26,7 +26,7 @@ export interface CourseState {
 
 class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	static contextType = AppContext;
-	context!: React.ContextType<typeof AppContext>;
+
 
 	constructor(props: CourseProps) {
 		super(props);
@@ -249,7 +249,8 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	}
 
 	render() {
-		const theme = style.Theme[this.context.themeName];
+		const ctx = this.context as React.ContextType<typeof AppContext>;
+		const theme = style.Theme[ctx.themeName!];
 		const lineColor = theme.courses[this.state.data.color ?? 'default'] ?? theme.courses.default;
 
 		const map = this.renderMap(theme);

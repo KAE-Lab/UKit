@@ -88,11 +88,11 @@ export function CampusListLayout<T>({
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
                 <Animated.FlatList
-                    data={data as any}
+                    data={data as unknown[]}
                     onScroll={onAnimatedScroll as never}
                     scrollEventThrottle={16}
-                    keyExtractor={(item: any, index) => {
-                        const id = (item as unknown as { id?: string | number }).id;
+                    keyExtractor={(item: unknown, index) => {
+                        const id = (item as { id?: string | number }).id;
                         return id ? id.toString() : index.toString();
                     }}
                     showsVerticalScrollIndicator={false}
@@ -101,7 +101,7 @@ export function CampusListLayout<T>({
                         paddingBottom: Math.max(tokens.space.sm, (insets?.bottom || 0)) + (hasSearch ? 80 : 20), 
                         flexGrow: 1 
                     }}
-                    renderItem={renderItem as any}
+                    renderItem={renderItem as never}
                     ListEmptyComponent={() => (
                         <CampusListEmptyState 
                             isFiltering={isFiltering} 

@@ -196,7 +196,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     computeScheduleDay(schedule: import('../services/PlanningApiService').PlanningEvent[], isFavorite: boolean) {
         return schedule
             .map((course) => CourseManager.computeCourseUE(course as unknown as Record<string, unknown>) as unknown as import('../services/PlanningApiService').PlanningEvent)
-            .filter((course) => CourseManager.filterCourse(isFavorite, course as any, this.props.filtersList));
+            .filter((course) => CourseManager.filterCourse(isFavorite, course as unknown as Record<string, unknown>, this.props.filtersList));
     }
 
     computeScheduleWeek(schedule: import('../services/PlanningApiService').PlanningWeekDay, isFavorite: boolean) {
@@ -204,7 +204,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             ...schedule,
             courses: schedule.courses
                 .map((course) => CourseManager.computeCourseUE(course as unknown as Record<string, unknown>) as unknown as import('../services/PlanningApiService').PlanningEvent)
-                .filter((course) => CourseManager.filterCourse(isFavorite, course as any, this.props.filtersList))
+                .filter((course) => CourseManager.filterCourse(isFavorite, course as unknown as Record<string, unknown>, this.props.filtersList))
         };
     }
 
@@ -298,7 +298,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                     return (
                         <DayWeek
                             key={index}
-                            schedule={this.computeScheduleWeek(scheduleItem, isFavorite) as any}
+                            schedule={this.computeScheduleWeek(scheduleItem, isFavorite) as never}
                             navigation={navigation}
                             theme={theme}
                             fallbackDate={fallbackDate}

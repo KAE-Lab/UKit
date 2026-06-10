@@ -6,14 +6,14 @@ import { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
 
 interface ICalTutorialModalProps {
-    themeObj: any;
+    themeObj: Record<string, string>;
 }
 
 const ICalTutorialModal = forwardRef<BottomSheetModal, ICalTutorialModalProps>(({ themeObj }, ref) => {
     const snapPoints = useMemo(() => ['50%', '90%'], []);
 
     const renderBackdrop = useCallback(
-        (props: any) => (
+        (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
             <BottomSheetBackdrop
                 {...props}
                 appearsOnIndex={0}

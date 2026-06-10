@@ -5,7 +5,7 @@ export interface UnifiedTouchableProps extends PressableProps {
     onPress?: () => void;
     disabled?: boolean;
     style?: StyleProp<ViewStyle>;
-    themeObj?: any; // To get primary color for the ripple effect on Android
+    themeObj?: { primary?: string }; // To get primary color for the ripple effect on Android
     activeOpacity?: number; // Kept for compatibility with legacy TouchableOpacity props
     children?: React.ReactNode;
 }

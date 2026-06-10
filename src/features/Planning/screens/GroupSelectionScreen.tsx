@@ -37,7 +37,7 @@ export interface HomeScreenState {
 
 class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     static contextType = AppContext;
-    context!: React.ContextType<typeof AppContext>;
+
     scrollY: Animated.Value;
 
     constructor(props: HomeScreenProps) {
@@ -58,13 +58,13 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
         this.props.navigation.setOptions(
             NavBarHelper({
                 title: Translator.get('GROUPS'),
-                themeName: this.context.themeName,
+                themeName: (this.context as React.ContextType<typeof AppContext>).themeName,
                 scrollY: this.scrollY,
                 headerRight: () => (
                     <View style={{ paddingRight: tokens.space.md }}>
                         <SaveGroupButton
                             groupName={[]}
-                            themeName={this.context.themeName}
+                            themeName={(this.context as React.ContextType<typeof AppContext>).themeName}
                         />
                     </View>
                 ),
@@ -92,7 +92,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                     key: previousSection,
                     data: [],
                     sectionIndex: ++sectionIndex,
-                    colorIndex: sectionIndex % style.Theme[this.context.themeName].sections.length,
+                    colorIndex: sectionIndex % style.Theme[(this.context as React.ContextType<typeof AppContext>).themeName!].sections.length,
                 };
             }
 
@@ -310,7 +310,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                 renderSectionHeader={({ section }: { section: { key: string; sectionIndex: number; colorIndex: number } }) => (
                     <SectionListHeader title={section.key} key={section.key} sectionIndex={section.sectionIndex} color={theme.sections[section.colorIndex]} headerColor={theme.sectionsHeaders[section.colorIndex]} />
                 )}
-                sections={this.state.sections as any}
+                sections={this.state.sections as never}
                 keyExtractor={(item, index) => index.toString()}
                 initialNumToRender={20}
                 onEndReachedThreshold={0.1}
@@ -334,7 +334,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     }
 
     render() {
-        const theme = style.Theme[this.context.themeName];
+        const theme = style.Theme[(this.context as React.ContextType<typeof AppContext>).themeName!];
 
         return (
             <SafeAreaInsetsContext.Consumer>

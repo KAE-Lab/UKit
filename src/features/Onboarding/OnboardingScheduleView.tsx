@@ -7,6 +7,7 @@ import { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
 import { UnifiedTouchable } from '../../shared/ui/UnifiedTouchable';
 
+// eslint-disable-next-line max-lines-per-function
 export default function OnboardingScheduleView({ themeObj, onComplete, onOpenTutorial }) {
     const [icalUrl, setIcalUrl] = useState('');
     const [loading, setLoading] = useState(false);
@@ -126,7 +127,7 @@ export default function OnboardingScheduleView({ themeObj, onComplete, onOpenTut
                             <UnifiedTouchable 
                                 onPress={() => {
                                     setShowSkipWarning(false);
-                                    SettingsManager.setScheduleSource({ type: 'celcat', url: '' });
+                                    SettingsManager.setScheduleSource({ type: 'celcat_groups', groups: [] });
                                     onComplete();
                                 }} 
                                 style={{ flex: 1, paddingVertical: tokens.space.md, borderRadius: tokens.radius.md, backgroundColor: themeObj.accentFont || '#e74c3c', alignItems: 'center' }}

@@ -48,7 +48,7 @@ export interface DayViewState {
 
 class DayView extends React.Component<DayViewProps, DayViewState> {
 	static contextType = AppContext;
-	context!: React.ContextType<typeof AppContext>;
+
 	static lastSelectedDay: moment.Moment | null = null;
 	static lastSelectedWeek: { week: number; year: number } | null = null;
     viewability: { itemVisiblePercentThreshold: number };
@@ -191,12 +191,12 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 			selectedDay={this.state.selectedDay}
 			currentDay={this.state.currentDay}
 			onPressItem={this.onDayItemPress}
-			theme={style.Theme[this.context.themeName]}
+			theme={style.Theme[(this.context as React.ContextType<typeof AppContext>).themeName!]}
 		/>
 	);
 
 	extractCalendarDayKey = (item: moment.Moment) =>
-		`${item.date()}-${item.month()}-${this.context.themeName}`;
+		`${item.date()}-${item.month()}-${(this.context as React.ContextType<typeof AppContext>).themeName}`;
 
 	onDayItemPress = (dayItem: moment.Moment) => {
 		const index = this.state.days.findIndex((d) => d.isSame(dayItem, 'day'));
@@ -233,12 +233,12 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 			selectedWeek={this.state.selectedWeek}
 			currentWeek={this.state.currentWeek}
 			onPressItem={this.onWeekItemPress}
-			theme={style.Theme[this.context.themeName]}
+			theme={style.Theme[(this.context as React.ContextType<typeof AppContext>).themeName!]}
 		/>
 	);
 
 	extractCalendarWeekKey = (item: { week: number; year: number }) =>
-		`S${item.week}-${this.context.themeName}`;
+		`S${item.week}-${(this.context as React.ContextType<typeof AppContext>).themeName}`;
 
 	onWeekItemPress = (item: { week: number; year: number }) => {
 		const index = findIndexOfObject(this.state.weeks, item);
@@ -282,7 +282,8 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 	};
 
 	render() {
-		const theme = style.Theme[this.context.themeName];
+		const ctx = this.context as React.ContextType<typeof AppContext>;
+		const theme = style.Theme[ctx.themeName!];
 		const { mode } = this.state;
 
 		const centerLabel = mode === 'day'
@@ -334,21 +335,21 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 						<View style={{ flex: 1 }}>
 							{mode === 'day' ? (
 								<DayComponent
-									key={`day-${this.state.days[0].dayOfYear()}-${this.context.themeName}`}
+									key={`day-${this.state.days[0].dayOfYear()}-${ctx.themeName}`}
 									day={this.state.selectedDay}
 									groupName={this.props.groupName}
 									theme={theme}
 									navigation={this.props.navigation}
-									filtersList={this.context.filters}
+									filtersList={ctx.filters}
 								/>
 							) : (
 								<WeekComponent
-									key={`week-${this.state.selectedWeek.week}-${this.context.themeName}`}
+									key={`week-${this.state.selectedWeek.week}-${ctx.themeName}`}
 									week={this.state.selectedWeek}
 									groupName={this.props.groupName}
 									theme={theme}
 									navigation={this.props.navigation}
-									filtersList={this.context.filters}
+									filtersList={ctx.filters}
 								/>
 							)}
 						</View>
