@@ -78,9 +78,11 @@ const CredentialsSettingsScreen = () => {
 
                             {/* Section Profil */}
                             <SectionCard title={Translator.get('PROFILE')} theme={theme}>
-                                <InfoRow label={Translator.get('USERNAME')} value={credentials?.username} theme={theme} />
+                                <InfoRow label={Translator.get('USERNAME') || "Nom d'utilisateur"} value={credentials?.username} theme={theme} />
                                 <View style={[styles.divider, { backgroundColor: theme.border }]} />
-                                <InfoRow label={coldData?.firstName ? 'Prénom' : ''} value={coldData?.firstName} theme={theme} />
+                                <InfoRow label={Translator.get('LAST_NAME') || 'Nom'} value={coldData?.lastName} theme={theme} />
+                                <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                                <InfoRow label={Translator.get('FIRST_NAME') || 'Prénom'} value={coldData?.firstName} theme={theme} />
                                 <View style={[styles.divider, { backgroundColor: theme.border }]} />
                                 <InfoRow label={Translator.get('DATE_OF_BIRTH')} value={coldData?.dateOfBirth} theme={theme} />
                             </SectionCard>

@@ -183,10 +183,14 @@ const buildDossierScrapeINP = (dossierHost) => `
         window._inpScrapeState = { phase: 'etatcivil', data: {} };
     }
     
+    function debug(msg) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'DEBUG', message: '[Scraper] ' + msg }));
+    }
+    
     function extractLabel(title) {
         var titles = document.querySelectorAll('label.label-titre');
         for (var i = 0; i < titles.length; i++) {
-            if (titles[i].textContent.trim() === title) {
+            if (titles[i].textContent.trim().indexOf(title) !== -1) {
                 var parent = titles[i].parentElement;
                 if(parent) {
                     var val = parent.querySelector('label.label-valeur');
@@ -197,10 +201,24 @@ const buildDossierScrapeINP = (dossierHost) => `
         return null;
     }
     
-    function extractStudentNumber() {
+    function extractStudentNumberFallback() {
         var labels = document.querySelectorAll('label');
         for (var i=0; i<labels.length; i++) {
             if (labels[i].textContent.match(/^\\d{8}$/)) return labels[i].textContent.trim();
+        }
+        return null;
+    }
+    
+    function extractFromDrawer() {
+        var layouts = document.querySelectorAll('vaadin-vertical-layout[slot="drawer"]');
+        for (var l = 0; l < layouts.length; l++) {
+            var labels = layouts[l].querySelectorAll('label');
+            if (labels.length >= 2) {
+                return {
+                    fullName: labels[0].textContent.trim(),
+                    studentNumber: labels[1].textContent.trim()
+                };
+            }
         }
         return null;
     }
@@ -210,26 +228,62 @@ const buildDossierScrapeINP = (dossierHost) => `
         if (state.phase === 'done') return;
         
         if (state.phase === 'etatcivil') {
-            if (window.location.pathname.indexOf('etatcivil') === -1 && window.location.pathname !== '/') {
+            if (window.location.href.indexOf('etatcivil') === -1 && window.location.pathname !== '/') {
                 var link = document.querySelector('a[href="etatcivil"]');
                 if (link) link.click();
                 return;
             }
-            var nom = extractLabel('Nom de famille');
-            var prenom = extractLabel('Prénom');
-            var dob = extractLabel('Date de naissance');
-            if (nom && dob) {
-                state.data.lastName = nom;
-                state.data.firstName = prenom;
+            
+            var drawerData = extractFromDrawer();
+            var nomComplet = drawerData ? drawerData.fullName : (extractLabel('Nom de famille') || extractLabel('Nom'));
+            var prenomExistant = extractLabel('Prénom');
+            var dob = extractLabel('Date de naissance') || extractLabel('naissance');
+            
+            debug('etatcivil - nomComplet: ' + nomComplet + ' | dob: ' + dob + ' | prenomExistant: ' + prenomExistant);
+            
+            if (nomComplet && dob) {
+                var lastName = nomComplet;
+                var firstName = prenomExistant || '';
+                
+                // Si le prénom est vide ou un placeholder comme "-", on essaie de le déduire depuis le nom complet
+                if (!firstName || !/[A-Za-z]/.test(firstName)) {
+                    var cleanName = nomComplet.replace(/[\\u00A0\\u200B\\u200C\\u200D\\uFEFF]/g, ' ');
+                    var parts = cleanName.split(/\\s+/).filter(Boolean);
+                    var lastArr = [], firstArr = [];
+                    for (var i = 0; i < parts.length; i++) {
+                        var p = parts[i];
+                        if (p === p.toUpperCase() && /[A-Za-z\\u00C0-\\u017E]/.test(p)) {
+                            lastArr.push(p);
+                        } else {
+                            firstArr.push(p);
+                        }
+                    }
+                    if (lastArr.length > 0 && firstArr.length > 0) {
+                        lastName = lastArr.join(' ');
+                        firstName = firstArr.join(' ');
+                    } else if (parts.length > 1) {
+                        // Fallback si la casse n'est pas fiable
+                        lastName = parts[0];
+                        firstName = parts.slice(1).join(' ');
+                    } else {
+                        firstName = '';
+                    }
+                } else if (nomComplet.indexOf(firstName) !== -1 && nomComplet !== firstName) {
+                    lastName = nomComplet.replace(firstName, '').trim();
+                }
+                
+                state.data.lastName = lastName;
+                state.data.firstName = firstName;
                 state.data.dateOfBirth = dob;
+                
                 state.phase = 'coordonnees';
                 var nextLink = document.querySelector('a[href="coordonnees"]');
                 if (nextLink) nextLink.click();
             }
         }
         else if (state.phase === 'coordonnees') {
-            var emailPerso = extractLabel('Adresse électronique personnelle');
-            var emailEtab = extractLabel('Adresse électronique établissement');
+            var emailPerso = extractLabel('personnelle');
+            var emailEtab = extractLabel('établissement');
             if (emailPerso || emailEtab) {
                 state.data.emailAddress = emailEtab || emailPerso;
                 state.phase = 'acces';
@@ -238,10 +292,10 @@ const buildDossierScrapeINP = (dossierHost) => `
             }
         }
         else if (state.phase === 'acces') {
-            var ine = extractLabel('Code INE');
+            var ine = extractLabel('INE');
             if (ine) {
                 state.data.ine = ine;
-                state.data.studentNumber = extractStudentNumber();
+                state.data.studentNumber = state.data.studentNumber || drawerData?.studentNumber || extractStudentNumberFallback() || '';
                 state.phase = 'done';
                 obs.disconnect();
                 window.ReactNativeWebView.postMessage(JSON.stringify({
@@ -266,7 +320,7 @@ const buildDossierScrapeINP = (dossierHost) => `
                 obs.disconnect();
                 window.ReactNativeWebView.postMessage(JSON.stringify({
                     type: 'DOSSIER_DATA',
-                    studentNumber: window._inpScrapeState.data.studentNumber || '',
+                    studentNumber: window._inpScrapeState.data.studentNumber || (extractFromDrawer() ? extractFromDrawer().studentNumber : extractStudentNumberFallback()) || '',
                     ine: window._inpScrapeState.data.ine || '',
                     emailAddress: window._inpScrapeState.data.emailAddress || '',
                     dateOfBirth: window._inpScrapeState.data.dateOfBirth || '',

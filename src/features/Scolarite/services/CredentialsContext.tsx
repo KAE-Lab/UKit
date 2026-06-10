@@ -74,6 +74,8 @@ const createEventHandler = ({
                     ine: data.ine,
                     emailAddress: data.emailAddress,
                     dateOfBirth: data.dateOfBirth,
+                    firstName: data.firstName || prev?.firstName,
+                    lastName: data.lastName || prev?.lastName,
                 };
                 SecureStoreService.saveColdData(merged);
                 return merged;
