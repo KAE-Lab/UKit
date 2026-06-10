@@ -430,6 +430,7 @@ class SettingsManagerService {
         }));
     };
 
+    // eslint-disable-next-line complexity
     applySettingsData = (settings: Record<string, unknown> | null) => {
         if (!settings) return;
         

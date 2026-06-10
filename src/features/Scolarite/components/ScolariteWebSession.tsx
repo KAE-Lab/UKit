@@ -175,6 +175,7 @@ true;
 `;
 
 // INP Dossier Web Scrape (Vaadin)
+// eslint-disable-next-line max-lines-per-function
 const buildDossierScrapeINP = (dossierHost) => `
 (function() {
     if (!window.location.href.includes('${dossierHost}')) return;

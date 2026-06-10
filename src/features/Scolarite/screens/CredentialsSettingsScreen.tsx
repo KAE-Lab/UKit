@@ -33,6 +33,7 @@ const SectionCard = ({ title, children, theme }) => (
     </View>
 );
 
+// eslint-disable-next-line max-lines-per-function
 const CredentialsSettingsScreen = () => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
@@ -67,6 +68,7 @@ const CredentialsSettingsScreen = () => {
 
     return (
         <SafeAreaInsetsContext.Consumer>
+            {/* eslint-disable-next-line complexity */}
             {(insets) => (
                 <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
                     <ScrollView

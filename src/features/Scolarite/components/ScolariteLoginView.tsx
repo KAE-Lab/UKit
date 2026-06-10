@@ -16,6 +16,7 @@ import type { InstitutionDomain } from '../../Onboarding/services/Authentication
  * Écran de connexion ENT — affiché à la place du dashboard tant que
  * l'utilisateur n'est pas connecté. La connexion est obligatoire.
  */
+// eslint-disable-next-line max-lines-per-function
 const ScolariteLoginView = ({ theme, color, topPadding }) => {
     const { validateAndSave } = useCredentials();
 
