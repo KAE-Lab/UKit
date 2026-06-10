@@ -55,6 +55,8 @@ export default {
 		sentryDSN: process.env.SENTRY_DSN,
 	},
 	plugins: [
+		"expo-asset",
+		"expo-font",
 		"expo-web-browser",
 		"expo-secure-store",
 		[

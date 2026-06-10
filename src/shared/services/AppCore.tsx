@@ -448,7 +448,7 @@ class SettingsManagerService {
         if (settings.filters) this._filters = [...(settings.filters as string[])];
         if (settings.calendar !== undefined) this._calendar = settings.calendar as string | number;
         if (settings.calendarSyncEnabled) this._calendarSyncEnabled = true;
-        if (settings.language) this.setLanguage(settings.language as string);
+        if (settings.language) this._language = settings.language as string;
         if (settings.courseNotificationsEnabled !== undefined) {
             this._courseNotificationsEnabled = settings.courseNotificationsEnabled as boolean;
         }

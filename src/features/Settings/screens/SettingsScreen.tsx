@@ -11,6 +11,7 @@ import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Button from '../../../shared/ui/Button';
+import SecureStoreService from '../../../shared/services/SecureStoreService';
 
 
 import {
@@ -198,8 +199,10 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     openCalendarDialog = () => this.setState({ calendarDialogVisible: true });
     closeCalendarDialog = () => this.setState({ calendarDialogVisible: false });
 
-    resetApp = () => {
+    resetApp = async () => {
         this.closeResetDialog();
+        await SecureStoreService.deleteCredentials();
+        await SecureStoreService.deleteColdData();
         SettingsManager.resetSettings();
     };
 
