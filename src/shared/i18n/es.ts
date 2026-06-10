@@ -258,6 +258,8 @@ const es: TranslationDict = {
 	SKIP_WARNING_TITLE: "Atención",
 	SKIP_WARNING_DESC: "Al omitir este paso, solo tendrá acceso a los grupos de Ciencias y Tecnologías. Además, no tendrá acceso a las funciones de Escolaridad (que requieren inicio de sesión).",
 	SKIP_ANYWAY: "Omitir de todos modos",
+	FIRST_NAME: "Nombre",
+	LAST_NAME: "Apellido",
 };
 
 export default es;

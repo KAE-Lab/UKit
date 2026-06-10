@@ -254,6 +254,8 @@ const en = {
 	SKIP_WARNING_TITLE: "Warning",
 	SKIP_WARNING_DESC: "By skipping this step, you will only have access to Sciences and Technologies groups. Additionally, you won't have access to Scolarité features (which require login).",
 	SKIP_ANYWAY: "Skip anyway",
+	FIRST_NAME: "First name",
+	LAST_NAME: "Last name",
 };
 
 export default en;

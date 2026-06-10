@@ -258,6 +258,8 @@ const fr: TranslationDict = {
 	SKIP_WARNING_TITLE: "Attention",
 	SKIP_WARNING_DESC: "En passant cette étape, vous n'aurez accès qu'aux groupes du collège Sciences et Technologies. De plus, vous n'aurez pas accès aux fonctionnalités de la Scolarité (qui nécessitent une connexion).",
 	SKIP_ANYWAY: "Passer quand même",
+	FIRST_NAME: "Prénom",
+	LAST_NAME: "Nom",
 };
 
 export default fr;
