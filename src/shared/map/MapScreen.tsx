@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, TouchableOpacity, Linking, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { View, Linking, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Translator from '../i18n/Translator';
@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppContext } from '../services/AppCore';
 import style, { tokens } from '../theme/Theme';
 import { URL } from '../constants/urls';
+import { UnifiedTouchable } from '../ui/UnifiedTouchable';
 
 // Import du JSON 
 const locations: Record<string, { lat: number; lng: number }> = require('../../../assets/locations.json');
@@ -64,7 +65,7 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
                 headerTransparent: true,
                 title: title || Translator.get('MAP'),
                 headerRight: () => (
-                    <TouchableOpacity
+                    <UnifiedTouchable
                         onPress={onPressExternalMap}
                         style={{
                             backgroundColor: theme.greyBackground,
@@ -76,7 +77,7 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
                             marginRight: 13
                         }}>
                         <MaterialCommunityIcons name="map-search-outline" size={28} color={theme.accent ?? theme.primary} />
-                    </TouchableOpacity>
+                    </UnifiedTouchable>
                 ),
             });
         }

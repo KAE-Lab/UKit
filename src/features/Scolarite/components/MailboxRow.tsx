@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import { tokens } from '../../../shared/theme/Theme';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 /**
  * Rangée de section « Messagerie », style liste groupée native.
@@ -15,7 +16,7 @@ const MailboxRow = ({ mailData, coldData, status, color, theme, onPress }) => {
     const emailAddress = coldData?.emailAddress;
 
     return (
-        <TouchableOpacity
+        <UnifiedTouchable
             activeOpacity={0.7}
             onPress={onPress}
             style={[styles.row, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
@@ -52,7 +53,7 @@ const MailboxRow = ({ mailData, coldData, status, color, theme, onPress }) => {
                     <MaterialIcons name="chevron-right" size={24} color={theme.fontSecondary} />
                 </>
             )}
-        </TouchableOpacity>
+        </UnifiedTouchable>
     );
 };
 

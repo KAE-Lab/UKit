@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
-    View, Text, TextInput, TouchableOpacity, ActivityIndicator,
+    View, Text, TextInput, ActivityIndicator,
     StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { useCredentials } from '../services/CredentialsContext';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 /**
  * Écran de connexion ENT — affiché à la place du dashboard tant que
@@ -39,7 +40,7 @@ const ScolariteLoginView = ({ theme, color, topPadding }) => {
     return (
         <KeyboardAvoidingView
             style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            behavior={Platform.select({ ios: 'padding', default: undefined })}
         >
             <ScrollView
                 contentContainerStyle={{ paddingTop: topPadding + 70, paddingBottom: tokens.space.xxl }}
@@ -88,7 +89,7 @@ const ScolariteLoginView = ({ theme, color, topPadding }) => {
                         </View>
                     ) : null}
 
-                    <TouchableOpacity
+                    <UnifiedTouchable
                         onPress={onSubmit}
                         disabled={disabled}
                         activeOpacity={0.85}
@@ -102,7 +103,7 @@ const ScolariteLoginView = ({ theme, color, topPadding }) => {
                         ) : (
                             <Text style={styles.buttonText}>{Translator.get('CONNECT')}</Text>
                         )}
-                    </TouchableOpacity>
+                    </UnifiedTouchable>
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>

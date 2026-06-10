@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, AppThemeType } from '../../../shared/theme/Theme';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 interface CampusSearchBarProps {
     searchText: string;
@@ -16,8 +17,8 @@ interface CampusSearchBarProps {
 export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder, theme, insets }: CampusSearchBarProps) {
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'position' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+            behavior={Platform.select({ ios: 'position', default: undefined })}
+            keyboardVerticalOffset={Platform.select({ ios: 0, default: 0 })}
             style={{
                 position: 'absolute',
                 bottom: 0,
@@ -62,12 +63,12 @@ export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder,
                         autoCorrect={false}
                     />
                     {searchText.length > 0 && onSearchChange && (
-                        <TouchableOpacity
+                        <UnifiedTouchable
                             onPress={() => onSearchChange('')}
                             style={{ padding: tokens.space.xs }}
                         >
                             <MaterialCommunityIcons name="close-circle" size={18} color={theme.fontSecondary} />
-                        </TouchableOpacity>
+                        </UnifiedTouchable>
                     )}
                 </View>
             </View>
@@ -100,13 +101,13 @@ export function CampusFilterModal({ visible, setVisible, filterOptions, selected
                                 <Text style={theme.settings?.popup?.textHeader || { fontSize: tokens.fontSize.lg, fontWeight: 'bold', color: theme.font }}>
                                     {Translator.get('FILTERS')}
                                 </Text>
-                                <TouchableOpacity onPress={() => setVisible(false)}>
+                                <UnifiedTouchable onPress={() => setVisible(false)}>
                                     <MaterialIcons name="close" size={28} color={theme.fontSecondary} />
-                                </TouchableOpacity>
+                                </UnifiedTouchable>
                             </View>
 
                             {filterOptions.map((option) => (
-                                <TouchableOpacity 
+                                <UnifiedTouchable 
                                     key={option.id}
                                     onPress={() => { onFilterChange(option.id); setVisible(false); }} 
                                     style={{ 
@@ -130,7 +131,7 @@ export function CampusFilterModal({ visible, setVisible, filterOptions, selected
                                     }}>
                                         {option.label}
                                     </Text>
-                                </TouchableOpacity>
+                                </UnifiedTouchable>
                             ))}
                         </View>
                     </TouchableWithoutFeedback>

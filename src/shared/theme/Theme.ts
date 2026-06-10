@@ -33,27 +33,60 @@ const tokens = {
         bold: '700' as const,
     },
     shadow: {
-        sm: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.04,
-            shadowRadius: 6,
-            elevation: 2,
-        },
-        md: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.06,
-            shadowRadius: 14,
-            elevation: 5,
-        },
-        lg: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.08,
-            shadowRadius: 24,
-            elevation: 10,
-        },
+        sm: Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.04,
+                shadowRadius: 6,
+            },
+            android: {
+                elevation: 2,
+            },
+            default: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.04,
+                shadowRadius: 6,
+                elevation: 2,
+            }
+        }),
+        md: Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.06,
+                shadowRadius: 14,
+            },
+            android: {
+                elevation: 5,
+            },
+            default: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.06,
+                shadowRadius: 14,
+                elevation: 5,
+            }
+        }),
+        lg: Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.08,
+                shadowRadius: 24,
+            },
+            android: {
+                elevation: 10,
+            },
+            default: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.08,
+                shadowRadius: 24,
+                elevation: 10,
+            }
+        }),
     },
 };
 
@@ -346,7 +379,7 @@ const Theme = {
                     borderColor:  '#E5E5EA',
                     borderRadius: tokens.radius.md,
                     padding:      tokens.space.sm,
-                    paddingVertical: Platform.OS === 'ios' ? tokens.space.sm : tokens.space.xs,
+                    paddingVertical: Platform.select({ ios: tokens.space.sm, default: tokens.space.xs }),
                     flex:         1,
                     marginRight:  tokens.space.xs,
                     color:        '#1C1C1E',
@@ -578,7 +611,7 @@ const Theme = {
                     borderColor:  '#38383A',
                     borderRadius: tokens.radius.md,
                     padding:      tokens.space.sm,
-                    paddingVertical: Platform.OS === 'ios' ? tokens.space.sm : tokens.space.xs,
+                    paddingVertical: Platform.select({ ios: tokens.space.sm, default: tokens.space.xs }),
                     flex:         1,
                     marginRight:  tokens.space.xs,
                     color:        '#FFFFFF',

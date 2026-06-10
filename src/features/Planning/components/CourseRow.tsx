@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -7,6 +7,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { CourseData } from './CourseCard';
 import { CalendarNewEventPrompt } from './CalendarNewEventPrompt';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface CourseRowProps {
 	data: CourseData;
@@ -307,12 +308,12 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 
 		return (
 			<View>
-				<TouchableOpacity
+				<UnifiedTouchable
 					onPress={this._onPress}
 					onLongPress={this.openPopup}
 					activeOpacity={0.7}>
 					{content}
-				</TouchableOpacity>
+				</UnifiedTouchable>
 				<CalendarNewEventPrompt
 					popupVisible={this.state.popupVisible}
 					closePopup={this.closePopup}

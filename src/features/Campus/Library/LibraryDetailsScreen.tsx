@@ -1,5 +1,5 @@
 import React, { useEffect, useContext } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
@@ -8,6 +8,7 @@ import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import { useLibraryTimetableData } from './hooks/useLibraryTimetableData';
 import { LibraryLiveAttendance, LibraryDatesHeader, LibraryOpeningHoursList } from './components/LibraryDetailsComponents';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export default function LibraryDetailsScreen({ route, navigation }: { route: { params: { library: import('../services/LibraryService').LibraryInfo; affluence: import('../services/LibraryService').AffluencesData | null } }; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
     const { library, affluence } = route.params;
@@ -71,7 +72,7 @@ export default function LibraryDetailsScreen({ route, navigation }: { route: { p
                     borderTopColor: theme.border,
                 }}
             >
-                <TouchableOpacity 
+                <UnifiedTouchable 
                     onPress={async () => {
                         try {
                             await WebBrowser.openBrowserAsync(`https://affluences.com/sites/${library.slug}/reservation`);
@@ -97,7 +98,7 @@ export default function LibraryDetailsScreen({ route, navigation }: { route: { p
                     }}>
                         {Translator.get('BOOK_SEAT')}
                     </Text>
-                </TouchableOpacity>
+                </UnifiedTouchable>
             </SafeAreaView>
 
         </SafeAreaView>

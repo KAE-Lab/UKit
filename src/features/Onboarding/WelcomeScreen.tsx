@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
-    Text, View, Image, TouchableOpacity, ScrollView,
+    Text, View, Image, ScrollView,
     KeyboardAvoidingView, Platform
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +14,7 @@ import style, { tokens } from '../../shared/theme/Theme';
 import OnboardingScheduleView from './OnboardingScheduleView';
 import ICalTutorialModal from './ICalTutorialModal';
 import { BottomSheetModalProvider, BottomSheetModal } from '@gorhom/bottom-sheet';
+import { UnifiedTouchable } from '../../shared/ui/UnifiedTouchable';
 
 const MAXIMUM_NUMBER_ITEMS_GROUPLIST = 10;
 
@@ -60,13 +61,13 @@ const WelcomePagination = ({ pageNumber, maxPage, themeObj }) => (
     </View>
 );
 
-const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
-    <TouchableOpacity 
+const WelcomeBackButton = ({ onPress, visible, themeObj }: any) => (
+    <UnifiedTouchable 
         onPress={onPress} 
         disabled={!visible} 
         style={{ 
             position: 'absolute', 
-            top: (topInset || 0), 
+            top: tokens.space.md, 
             left: tokens.space.md, 
             zIndex: 10, 
             opacity: visible ? 1 : 0, 
@@ -74,7 +75,7 @@ const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
         }}
     >
         <MaterialIcons name="arrow-back" size={28} color={themeObj.font} />
-    </TouchableOpacity>
+    </UnifiedTouchable>
 );
 
 const Step1 = ({ themeObj }) => (
@@ -93,9 +94,9 @@ const Step2 = ({ themeObj, navigatorState, selectTheme, selectLanguage }) => (
                 {THEME_LIST.map((themeEntry) => {
                     const selected = navigatorState.theme === themeEntry.id;
                     return (
-                        <TouchableOpacity key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                        <UnifiedTouchable key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
                             <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(themeEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                        </TouchableOpacity>
+                        </UnifiedTouchable>
                     );
                 })}
             </View>
@@ -106,9 +107,9 @@ const Step2 = ({ themeObj, navigatorState, selectTheme, selectLanguage }) => (
                 {LANGUAGE_LIST.map((langEntry) => {
                     const selected = navigatorState.language === langEntry.id;
                     return (
-                        <TouchableOpacity key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                        <UnifiedTouchable key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
                             <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(langEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                        </TouchableOpacity>
+                        </UnifiedTouchable>
                     );
                 })}
             </View>
@@ -126,18 +127,18 @@ const Step3 = ({ themeObj, navigatorState, filterList, selectGroup, footerTextCo
             {Translator.get('SCHEDULE_SOURCE')}
         </Text>
         <View style={{ flexDirection: 'row', marginBottom: tokens.space.lg }}>
-            <TouchableOpacity 
+            <UnifiedTouchable 
                 onPress={() => changeState({ scheduleSourceType: 'celcat' })}
                 style={{ flex: 1, backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: isCelcat ? themeObj.primary : 'transparent', paddingVertical: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center' }}
             >
                 <Text style={{ color: isCelcat ? themeObj.primary : themeObj.fontSecondary, fontWeight: isCelcat ? tokens.fontWeight.bold : tokens.fontWeight.medium }}>Celcat</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
+            </UnifiedTouchable>
+            <UnifiedTouchable 
                 onPress={() => changeState({ scheduleSourceType: 'ical' })}
                 style={{ flex: 1, backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: !isCelcat ? themeObj.primary : 'transparent', paddingVertical: tokens.space.md, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center' }}
             >
                 <Text style={{ color: !isCelcat ? themeObj.primary : themeObj.fontSecondary, fontWeight: !isCelcat ? tokens.fontWeight.bold : tokens.fontWeight.medium }}>{Translator.get('ICAL_LINK')}</Text>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         </View>
 
         {isCelcat ? (
@@ -147,7 +148,7 @@ const Step3 = ({ themeObj, navigatorState, filterList, selectGroup, footerTextCo
                     {UNIVERSITY_YEARS_LIST.map((yearEntry) => {
                         const selected = navigatorState.year?.id === yearEntry.id;
                         return (
-                            <TouchableOpacity 
+                            <UnifiedTouchable 
                                 key={yearEntry.id} 
                                 onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)} 
                                 style={{ 
@@ -164,7 +165,7 @@ const Step3 = ({ themeObj, navigatorState, filterList, selectGroup, footerTextCo
                                 <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>
                                     {Translator.get(yearEntry.title as Parameters<typeof Translator.get>[0])} {yearEntry.suffix}
                                 </Text>
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
                         );
                     })}
                 </View>
@@ -174,9 +175,9 @@ const Step3 = ({ themeObj, navigatorState, filterList, selectGroup, footerTextCo
                     {UNIVERSITY_SEASON_LIST.map((seasonEntry) => {
                         const selected = navigatorState.season?.id === seasonEntry.id;
                         return (
-                            <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                            <UnifiedTouchable key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
                                 <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
                         );
                     })}
                 </View>
@@ -184,16 +185,16 @@ const Step3 = ({ themeObj, navigatorState, filterList, selectGroup, footerTextCo
                 <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_GROUP')}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
                     <MaterialCommunityIcons name="magnify" size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
-                    <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.OS === 'ios' ? tokens.space.md : tokens.space.sm, color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
+                    <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.select({ ios: tokens.space.md, android: tokens.space.sm, default: tokens.space.sm }), color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
                 </View>
 
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                     {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
                         const selected = navigatorState.groups.includes(item);
                         return (
-                            <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
+                            <UnifiedTouchable key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
                                 <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{item}</Text>
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
                         )
                     })}
                 </View>
@@ -310,9 +311,9 @@ export default function WelcomeScreen() {
     return (
         <BottomSheetModalProvider>
             <SafeAreaView edges={['left', 'right', 'bottom', 'top']} style={{ flex: 1, backgroundColor: themeObj.background }}>
-                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+                <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', default: undefined })} style={{ flex: 1 }}>
                 
-                <WelcomeBackButton onPress={handleBack} visible={step > 1} themeObj={themeObj} topInset={insets.top} />
+                <WelcomeBackButton onPress={handleBack} visible={step > 1} themeObj={themeObj} />
 
                 <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                     {step === 1 && <Step1 themeObj={themeObj} />}
@@ -323,7 +324,7 @@ export default function WelcomeScreen() {
 
                 <View style={{ paddingHorizontal: tokens.space.xl, paddingBottom: tokens.space.md, paddingTop: tokens.space.sm }}>
                         {!(step === 3 && navigatorState.scheduleSourceType === 'ical') && (
-                            <TouchableOpacity
+                            <UnifiedTouchable
                                 onPress={step === 4 ? finishWelcome : handleNext}
                                 style={{
                                     backgroundColor: themeObj.primary,
@@ -336,7 +337,7 @@ export default function WelcomeScreen() {
                                 <Text style={{ color: '#ffffff', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
                                     {step === 4 ? Translator.get('FINISH') : (step === 1 ? Translator.get('START') : Translator.get('NEXT'))}
                                 </Text>
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
                         )}
                     <WelcomePagination pageNumber={step} maxPage={4} themeObj={themeObj} />
                 </View>

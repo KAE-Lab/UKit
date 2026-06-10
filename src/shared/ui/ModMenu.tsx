@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, TouchableOpacity, PanResponder, Animated, Dimensions, Image, Platform, DeviceEventEmitter } from 'react-native';
+import { View, Text, PanResponder, Animated, Dimensions, Image, Platform, DeviceEventEmitter } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import moment from 'moment';
@@ -7,6 +7,7 @@ import moment from 'moment';
 import style, { tokens } from '../theme/Theme';
 import { TimeMockService } from '../services/TimeMockService';
 import { AppContext } from '../services/AppCore';
+import { UnifiedTouchable } from './UnifiedTouchable';
 
 const { width, height } = Dimensions.get('window');
 const ICON_SIZE = 60;
@@ -160,12 +161,12 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                 <Text style={{ color: theme.font, fontWeight: 'bold', fontSize: tokens.fontSize.sm }}>Dev Menu</Text>
             </View>
             <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity onPress={this.minimizeMenu} style={{ padding: 4, marginRight: 8 }}>
+                <UnifiedTouchable onPress={this.minimizeMenu} style={{ padding: 4, marginRight: 8 }}>
                     <MaterialCommunityIcons name="minus" size={20} color={theme.fontSecondary} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={this.closeMenu} style={{ padding: 4 }}>
+                </UnifiedTouchable>
+                <UnifiedTouchable onPress={this.closeMenu} style={{ padding: 4 }}>
                     <MaterialCommunityIcons name="close" size={20} color={theme.fontSecondary} />
-                </TouchableOpacity>
+                </UnifiedTouchable>
             </View>
         </View>
     );
@@ -191,21 +192,21 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             
             {/* DateTime selectors */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: tokens.space.md }}>
-                <TouchableOpacity 
+                <UnifiedTouchable 
                     onPress={() => this.showPicker('date')}
                     style={{ flex: 1, backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
                 >
                     <MaterialCommunityIcons name="calendar" size={20} color={theme.primary} style={{ marginBottom: 4 }} />
                     <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{moment(selectedDate).format('DD/MM/YYYY')}</Text>
-                </TouchableOpacity>
+                </UnifiedTouchable>
 
-                <TouchableOpacity 
+                <UnifiedTouchable 
                     onPress={() => this.showPicker('time')}
                     style={{ flex: 1, backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
                 >
                     <MaterialCommunityIcons name="clock" size={20} color={theme.primary} style={{ marginBottom: 4 }} />
                     <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{moment(selectedDate).format('HH:mm')}</Text>
-                </TouchableOpacity>
+                </UnifiedTouchable>
             </View>
         </>
     );
@@ -213,18 +214,18 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     renderActionButtons = (theme: import('../theme/Theme').AppThemeType) => (
         // Actions
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <TouchableOpacity 
+            <UnifiedTouchable 
                 onPress={this.resetTime}
                 style={{ flex: 1, backgroundColor: '#ef4444', paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center' }}
             >
                 <Text style={{ color: '#fff', fontWeight: 'bold' }}>Reset</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
+            </UnifiedTouchable>
+            <UnifiedTouchable 
                 onPress={this.applyFakeTime}
                 style={{ flex: 1, backgroundColor: theme.primary, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center' }}
             >
                 <Text style={{ color: '#fff', fontWeight: 'bold' }}>Apply</Text>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         </View>
     );
 
@@ -241,9 +242,9 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     style={{ width: Platform.OS === 'ios' ? 240 : 'auto', height: Platform.OS === 'ios' ? 120 : 'auto' }}
                 />
                 {Platform.OS === 'ios' && (
-                    <TouchableOpacity onPress={() => this.setState({ showPicker: false })} style={{ alignItems: 'center', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.lg, backgroundColor: theme.primary, borderRadius: tokens.radius.md, marginTop: tokens.space.md }}>
+                    <UnifiedTouchable onPress={() => this.setState({ showPicker: false })} style={{ alignItems: 'center', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.lg, backgroundColor: theme.primary, borderRadius: tokens.radius.md, marginTop: tokens.space.md }}>
                         <Text style={{ color: '#fff', fontWeight: 'bold' }}>Valider</Text>
-                    </TouchableOpacity>
+                    </UnifiedTouchable>
                 )}
             </View>
         );
@@ -271,10 +272,10 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                         borderWidth: 1, borderColor: theme.border
                     }]}
                 >
-                    <TouchableOpacity onPress={this.expandMenu} style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                    <UnifiedTouchable onPress={this.expandMenu} style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
                         {this.renderIndicator(isActive, { position: 'absolute', top: -4, right: -4, borderWidth: 2, borderColor: theme.cardBackground, zIndex: 10 })}
                         <Image source={require('../../../assets/icons/logo.png')} style={{ width: 40, height: 40, resizeMode: 'contain' }} />
-                    </TouchableOpacity>
+                    </UnifiedTouchable>
                 </Animated.View>
             );
         }

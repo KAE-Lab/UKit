@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Translator from '../../../../shared/i18n/Translator';
 import style, { tokens, AppThemeType } from '../../../../shared/theme/Theme';
 import { LibraryInfo, TimetableEntry, AffluencesData, getLibraryStatus } from '../../services/LibraryService';
+import { UnifiedTouchable } from '../../../../shared/ui/UnifiedTouchable';
 
 interface LibraryLiveAttendanceProps {
     affluence: AffluencesData | null;
@@ -97,7 +98,7 @@ export function LibraryDatesHeader({ library, timetable, selectedIndex, setSelec
                     const primaryColor = theme.accent ?? theme.primary;
 
                     return (
-                        <TouchableOpacity 
+                        <UnifiedTouchable 
                             onPress={() => setSelectedIndex(index)}
                             style={{
                                 paddingHorizontal: tokens.space.md,
@@ -116,7 +117,7 @@ export function LibraryDatesHeader({ library, timetable, selectedIndex, setSelec
                             }}>
                                 {formatDate(item.day)}
                             </Text>
-                        </TouchableOpacity>
+                        </UnifiedTouchable>
                     );
                 }}
             />

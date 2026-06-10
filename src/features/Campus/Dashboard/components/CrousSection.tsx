@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, FlatList, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
@@ -10,6 +10,7 @@ import { CrousService, CrousRestaurant } from '../../services/CrousService';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useSavedFilter } from '../../hooks/useSavedFilter';
 import { CrousSectionCard, CARD_WIDTH } from './CrousSectionCard';
+import { UnifiedTouchable } from '../../../../shared/ui/UnifiedTouchable';
 
 const { width } = Dimensions.get('window');
 
@@ -76,7 +77,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
 
     return (
         <View style={{ marginTop: tokens.space.md }}>
-            <TouchableOpacity
+            <UnifiedTouchable
                 style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
                 onPress={() => navigation.navigate('Crous')}
                 activeOpacity={0.7}
@@ -85,7 +86,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
                     {Translator.get('RESTAURANT_U') || 'Restaurants Universitaires'}
                 </Text>
                 <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
+            </UnifiedTouchable>
 
             {loading ? (
                 <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />

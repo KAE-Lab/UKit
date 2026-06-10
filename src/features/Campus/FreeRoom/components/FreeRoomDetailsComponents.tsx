@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, FlatList, ScrollView } from 'react-native';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Translator from '../../../../shared/i18n/Translator';
 import style, { tokens, AppThemeType } from '../../../../shared/theme/Theme';
 import { BuildingInfo, FreeRoomSlot } from '../../services/FreeRoomService';
+import { UnifiedTouchable } from '../../../../shared/ui/UnifiedTouchable';
 
 interface FreeRoomHoursHeaderProps {
     building: BuildingInfo;
@@ -51,7 +52,7 @@ export function FreeRoomHoursHeader({ building, hoursList, selectedIndex, setSel
                     const primaryColor = theme.accent ?? theme.primary;
 
                     return (
-                        <TouchableOpacity 
+                        <UnifiedTouchable 
                             onPress={() => setSelectedIndex(index)}
                             style={{
                                 paddingHorizontal: tokens.space.md,
@@ -70,7 +71,7 @@ export function FreeRoomHoursHeader({ building, hoursList, selectedIndex, setSel
                             }}>
                                 {item}
                             </Text>
-                        </TouchableOpacity>
+                        </UnifiedTouchable>
                     );
                 }}
             />

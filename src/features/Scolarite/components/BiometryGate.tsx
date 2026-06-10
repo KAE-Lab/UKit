@@ -1,10 +1,11 @@
 import React, { useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import * as LocalAuthentication from 'expo-local-authentication';
 
 import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 /**
  * Porte biométrique : protège son contenu par une authentification locale.
@@ -52,7 +53,7 @@ const BiometryGate = ({ children, theme, color }) => {
                 {Translator.get('BIOMETRY_PROMPT')}
             </Text>
             {failed && (
-                <TouchableOpacity
+                <UnifiedTouchable
                     style={[styles.button, { backgroundColor: color }]}
                     onPress={authenticate}
                     activeOpacity={0.8}
@@ -60,7 +61,7 @@ const BiometryGate = ({ children, theme, color }) => {
                     <Text style={[styles.buttonText, { fontFamily: 'Montserrat_600SemiBold' }]}>
                         {Translator.get('BIOMETRY_RETRY')}
                     </Text>
-                </TouchableOpacity>
+                </UnifiedTouchable>
             )}
         </View>
     );

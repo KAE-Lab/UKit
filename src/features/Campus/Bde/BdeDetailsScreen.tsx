@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, Image, Animated, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, Image, Animated, Linking } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,6 +7,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { BdeAnnonce } from '../services/BdeService';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface BdeDetailsRouteParams {
     annonce?: BdeAnnonce;
@@ -92,7 +93,7 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                                 borderTopColor: theme.border,
                             }}
                         >
-                            <TouchableOpacity
+                            <UnifiedTouchable
                                 activeOpacity={0.8}
                                 onPress={handlePressCTA}
                                 style={{
@@ -107,7 +108,7 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                                 <Text style={{ color: 'white', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
                                     {annonce.cta_text}
                                 </Text>
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
                         </SafeAreaView>
                     ) : null}
                 </View>

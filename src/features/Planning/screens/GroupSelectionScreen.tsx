@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Animated, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, SectionList, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ import { AppContext, isConnected } from '../../../shared/services/AppCore'
 import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
 import { NavBarHelper, SaveGroupButton } from '../../../shared/navigation/NavHelpers';
 import { SectionListHeader, GroupRow } from '../components/GroupSelectionComponents';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface HomeScreenProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
@@ -235,7 +236,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                     autoCorrect={false}
                 />
                 {this.state.searchText.length > 0 && (
-                    <TouchableOpacity
+                    <UnifiedTouchable
                         onPress={() => {
                             this.setState({ searchText: '' });
                             this.search('');
@@ -243,7 +244,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                         style={{ padding: tokens.space.xs }}
                     >
                         <MaterialCommunityIcons name="close-circle" size={18} color={theme.fontSecondary} />
-                    </TouchableOpacity>
+                    </UnifiedTouchable>
                 )}
             </View>
         );

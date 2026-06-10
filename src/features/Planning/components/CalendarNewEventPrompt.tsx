@@ -1,10 +1,11 @@
 import React from 'react';
-import { Modal, Platform, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Modal, Platform, Text, TouchableWithoutFeedback, View } from 'react-native';
 import * as Calendar from 'expo-calendar';
 import Toast from 'react-native-root-toast';
 
 import Translator from '../../../shared/i18n/Translator';
 import { CourseData } from './CourseCard';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 interface CalendarNewEventPromptProps {
 	popupVisible: boolean;
@@ -124,20 +125,20 @@ export class CalendarNewEventPrompt extends React.Component<CalendarNewEventProm
 									)}
 								</Text>
 								<View style={theme.popup.buttonContainer as never}>
-									<TouchableOpacity
+									<UnifiedTouchable
 										style={theme.popup.buttonSecondary as import('react-native').ViewStyle}
 										onPress={this.closePopup}>
 										<Text style={theme.popup.buttonTextSecondary as import('react-native').TextStyle}>
 											{Translator.get('CANCEL')}
 										</Text>
-									</TouchableOpacity>
-									<TouchableOpacity
+									</UnifiedTouchable>
+									<UnifiedTouchable
 										style={theme.popup.buttonMain as import('react-native').ViewStyle}
 										onPress={this.addCalendarEvent}>
 										<Text style={theme.popup.buttonTextMain as import('react-native').TextStyle}>
 											{Translator.get('CONFIRM')}
 										</Text>
-									</TouchableOpacity>
+									</UnifiedTouchable>
 								</View>
 							</View>
 						</TouchableWithoutFeedback>

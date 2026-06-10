@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, TouchableOpacity, Modal, Text, StyleSheet, Platform } from 'react-native';
+import { View, Modal, Text, StyleSheet, Platform } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens } from '../../../shared/theme/Theme';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 interface FloatingActionBarProps {
     theme: import('../../../shared/theme/Theme').AppThemeType;
@@ -76,7 +77,7 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
         const Icon = iconLib === 'community' ? MaterialCommunityIcons : MaterialIcons;
 
         return (
-            <TouchableOpacity
+            <UnifiedTouchable
                 onPress={onPress}
                 disabled={disabled}
                 style={{
@@ -89,7 +90,7 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
                     backgroundColor: disabled ? 'transparent' : `${color}15`,
                 }}>
                 <Icon name={iconName as never} size={size} color={color} />
-            </TouchableOpacity>
+            </UnifiedTouchable>
         );
     };
 
@@ -104,11 +105,11 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
                 },
                 animatedStyle
             ]}>
-                <TouchableOpacity onPress={toggleOpen} style={styles.handle}>
+                <UnifiedTouchable onPress={toggleOpen} style={styles.handle}>
                     <Animated.View style={chevronStyle}>
                         <MaterialCommunityIcons name="chevron-left" size={28} color={theme.fontSecondary} />
                     </Animated.View>
-                </TouchableOpacity>
+                </UnifiedTouchable>
 
                 <View style={styles.buttonsContainer}>
                     <NavButton onPress={onQuit} iconName="door-open" iconLib="community" size={26} colorOverride="#EF5350" />
@@ -136,18 +137,18 @@ export const SaveCredentialsModal = ({ theme, visible, onClose, onSave }: { them
                     {Translator.get('SAVE_CREDENTIALS_PROMPT')}
                 </Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                    <TouchableOpacity
+                    <UnifiedTouchable
                         style={{ flex: 1, padding: tokens.space.md, alignItems: 'center', backgroundColor: theme.background, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, borderWidth: 1, borderColor: theme.border }}
                         onPress={onClose}
                     >
                         <Text style={{ color: theme.fontSecondary, fontWeight: 'bold' }}>{Translator.get('NO')}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </UnifiedTouchable>
+                    <UnifiedTouchable
                         style={{ flex: 1, padding: tokens.space.md, alignItems: 'center', backgroundColor: theme.primary, borderRadius: tokens.radius.md, marginLeft: tokens.space.sm }}
                         onPress={onSave}
                     >
                         <Text style={{ color: 'white', fontWeight: 'bold' }}>{Translator.get('YES')}</Text>
-                    </TouchableOpacity>
+                    </UnifiedTouchable>
                 </View>
             </View>
         </View>

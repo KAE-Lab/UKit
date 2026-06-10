@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -15,6 +15,7 @@ import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { NavBarHelper, SaveGroupButton } from './NavHelpers';
 import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
+import { UnifiedTouchable } from '../ui/UnifiedTouchable';
 
 export type MainTabParamList = {
     PlanningTab: undefined;
@@ -70,7 +71,7 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
     const color = isFocused ? (theme.accent ?? theme.primary) : theme.fontSecondary;
 
     return (
-        <TouchableOpacity
+        <UnifiedTouchable
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
@@ -89,7 +90,7 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
             <Text style={[styles.tabLabel, { color, fontWeight: Platform.OS === 'ios' ? (isFocused ? '700' : '500') : '500' }]}>
                 {label}
             </Text>
-        </TouchableOpacity>
+        </UnifiedTouchable>
     );
 }
 
@@ -103,7 +104,7 @@ interface TabBarActionItemProps {
 function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: TabBarActionItemProps) {
     if (currentRouteName === 'PlanningTab') {
         return (
-            <TouchableOpacity
+            <UnifiedTouchable
                 onPress={() => navigation.navigate('GroupSearch' as never)}
                 activeOpacity={0.85}
                 style={[
@@ -122,13 +123,13 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                 <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
                     {Translator.get('GROUPS')}
                 </Text>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         );
     }
     
     if (currentRouteName === 'SettingsTab') {
         return (
-            <TouchableOpacity
+            <UnifiedTouchable
                 onPress={() => navigation.navigate('About' as never)}
                 activeOpacity={0.85}
                 style={[
@@ -147,13 +148,13 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                 <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
                     {Translator.get('ABOUT')}
                 </Text>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         );
     }
     
     if (currentRouteName === 'ScolariteTab' && credentials) {
         return (
-            <TouchableOpacity
+            <UnifiedTouchable
                 onPress={() => navigation.navigate('CredentialsSettings' as never)}
                 activeOpacity={0.85}
                 style={[
@@ -172,7 +173,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                 <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
                     {Translator.get('LOGOUT')}
                 </Text>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         );
     }
     

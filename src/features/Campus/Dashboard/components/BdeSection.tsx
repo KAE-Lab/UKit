@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, FlatList, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
@@ -7,6 +7,7 @@ import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
 import BdeService, { BdeAnnonce } from '../../services/BdeService';
+import { UnifiedTouchable } from '../../../../shared/ui/UnifiedTouchable';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
@@ -37,7 +38,7 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
             entering={FadeIn}
             layout={LinearTransition.springify()}
         >
-            <TouchableOpacity
+            <UnifiedTouchable
                 activeOpacity={0.9}
                 onPress={() => navigation.navigate('BdeDetail', { annonce: item })}
                 style={{
@@ -76,7 +77,7 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
                         </View>
                     ) : null}
                 </View>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         </Reanimated.View>
     );
 
@@ -84,7 +85,7 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
 
     return (
         <View style={{ marginTop: tokens.space.md }}>
-            <TouchableOpacity 
+            <UnifiedTouchable 
                 style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
                 onPress={() => navigation.navigate('Bde')}
                 activeOpacity={0.7}
@@ -93,7 +94,7 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
                     {Translator.get('STUDENT_LIFE') || 'Student life'}
                 </Text>
                 <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
+            </UnifiedTouchable>
 
             {loading ? (
                 <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />

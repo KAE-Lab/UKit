@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -9,6 +9,7 @@ import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
 import { useCredentials } from '../services/CredentialsContext';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 const InfoRow = ({ label, value, theme }) => (
     <View style={styles.infoRow}>
@@ -105,19 +106,19 @@ const CredentialsSettingsScreen = () => {
                                         <Text style={[styles.infoValue, { color: theme.font, fontFamily: 'Montserrat_600SemiBold', flex: 1 }]} numberOfLines={1}>
                                             {passwordVisible ? credentials?.password : '••••••••'}
                                         </Text>
-                                        <TouchableOpacity onPress={handleShowPassword} hitSlop={8}>
+                                        <UnifiedTouchable onPress={handleShowPassword} hitSlop={8}>
                                             <MaterialCommunityIcons
                                                 name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
                                                 size={20}
                                                 color={theme.fontSecondary}
                                             />
-                                        </TouchableOpacity>
+                                        </UnifiedTouchable>
                                     </View>
                                 </View>
                             </SectionCard>
 
                             {/* Bouton déconnexion */}
-                            <TouchableOpacity
+                            <UnifiedTouchable
                                 style={[styles.logoutButton, { borderColor: '#EF5350' }]}
                                 onPress={() => setShowLogoutModal(true)}
                                 activeOpacity={0.8}
@@ -126,7 +127,7 @@ const CredentialsSettingsScreen = () => {
                                 <Text style={[styles.logoutText, { fontFamily: 'Montserrat_600SemiBold' }]}>
                                     {Translator.get('LOGOUT')}
                                 </Text>
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
 
                         </View>
                     </ScrollView>
@@ -157,18 +158,18 @@ const LogoutModal = ({ theme, visible, onClose, onConfirm }) => (
                     {Translator.get('CONFIRM_LOGOUT')}
                 </Text>
                 <View style={styles.modalActions}>
-                    <TouchableOpacity
+                    <UnifiedTouchable
                         style={[styles.modalButton, { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, marginRight: tokens.space.sm }]}
                         onPress={onClose}
                     >
                         <Text style={{ color: theme.fontSecondary, fontWeight: 'bold' }}>{Translator.get('CANCEL')}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </UnifiedTouchable>
+                    <UnifiedTouchable
                         style={[styles.modalButton, { backgroundColor: '#EF5350', marginLeft: tokens.space.sm }]}
                         onPress={onConfirm}
                     >
                         <Text style={{ color: 'white', fontWeight: 'bold' }}>{Translator.get('CONFIRM')}</Text>
-                    </TouchableOpacity>
+                    </UnifiedTouchable>
                 </View>
             </View>
         </View>

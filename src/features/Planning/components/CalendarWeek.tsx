@@ -1,8 +1,9 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { Text } from 'react-native';
 import Translator from '../../../shared/i18n/Translator';
 
 import { tokens } from '../../../shared/theme/Theme';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface CalendarWeekProps {
     currentWeek: { week: number; year: number };
@@ -47,7 +48,7 @@ class CalendarWeek extends React.Component<CalendarWeekProps> {
         const color    = selected ? theme.primary : theme.font;
 
         return (
-            <TouchableOpacity
+            <UnifiedTouchable
                 onPress={this._onPress}
                 style={{
                     width: 64,
@@ -83,7 +84,7 @@ class CalendarWeek extends React.Component<CalendarWeekProps> {
                 }}>
                     {`${Translator.get('WEEK_SHORT')}${this.props.week.week}`}
                 </Text>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         );
     }
 }

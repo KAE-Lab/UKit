@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, FlatList, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
@@ -14,6 +14,7 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
 import { FreeRoomSectionCard } from './FreeRoomSectionCard';
+import { UnifiedTouchable } from '../../../../shared/ui/UnifiedTouchable';
 
 export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -81,7 +82,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
 
     return (
         <View style={{ marginTop: tokens.space.md }}>
-            <TouchableOpacity
+            <UnifiedTouchable
                 style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
                 onPress={() => navigation.navigate('FreeRoomScreen')} // Wait, navigation key in Dashboard was 'FreeRoomScreen'? 
                 // Let's keep it 'FreeRoomScreen' to match original file
@@ -91,7 +92,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
                     {Translator.get('FREE_ROOMS') || 'Salles Libres'}
                 </Text>
                 <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
+            </UnifiedTouchable>
 
             {loading ? (
                 <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />

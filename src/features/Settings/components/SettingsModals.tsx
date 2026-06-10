@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import {
-    Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback,
+    Text, View, Modal, TouchableWithoutFeedback,
     ScrollView, Platform, FlatList, TextInput, KeyboardAvoidingView, Keyboard, SafeAreaView
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import Translator from '../../../shared/i18n/Translator';
 import { SettingsManager } from '../../../shared/services/AppCore';
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 // ── Utilitaire Clavier ──────────────────────────────────────────────────
 export const SettingsDismissKeyboard = ({ children }: { children: React.ReactNode }) => (
@@ -34,22 +35,22 @@ export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selecte
                             <Text style={theme.popup.textHeader}>
                                 {Translator.get('CALENDAR').toUpperCase()}
                             </Text>
-                            <TouchableOpacity onPress={popupClose}>
+                            <UnifiedTouchable onPress={popupClose}>
                                 <MaterialIcons name="close" size={32} style={theme.popup.closeIcon} />
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
                         </View>
                         <Text style={theme.popup.textDescription}>
                             {Translator.get('YOUR_CALENDAR')}
                         </Text>
                         <ScrollView style={{ marginVertical: 8 }}>
-                            <TouchableOpacity onPress={setDefaultCalendar} style={theme.popup.radioContainer as never}>
+                            <UnifiedTouchable onPress={setDefaultCalendar} style={theme.popup.radioContainer as never}>
                                 <MaterialIcons
                                     name={selectedCalendar === 'UKit' || selectedCalendar === ukitCalendar?.id ? 'radio-button-on' : 'radio-button-off'}
                                     size={24}
                                     color={selectedCalendar === 'UKit' || selectedCalendar === ukitCalendar?.id ? '#4caf50' : theme.popup.radioIconColor}
                                 />
                                 <Text style={theme.popup.radioText}>{Translator.get('UKIT_CALENDAR')}</Text>
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
 
                             <Text style={theme.popup.textDescription}>{Translator.get('EXISTING_CALENDARS')}</Text>
 
@@ -57,14 +58,14 @@ export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selecte
                                 const isSelected = selectedCalendar === calendar.id;
                                 const _setCalendar = () => setCalendar(calendar);
                                 return (
-                                    <TouchableOpacity key={calendar.id} onPress={_setCalendar} style={theme.popup.radioContainer as never}>
+                                    <UnifiedTouchable key={calendar.id} onPress={_setCalendar} style={theme.popup.radioContainer as never}>
                                         <MaterialIcons
                                             name={isSelected ? 'radio-button-on' : 'radio-button-off'}
                                             size={24}
                                             color={isSelected ? '#4caf50' : theme.popup.radioIconColor}
                                         />
                                         <Text style={theme.popup.radioText}>{calendar.title + '  '}</Text>
-                                    </TouchableOpacity>
+                                    </UnifiedTouchable>
                                 );
                             })}
                         </ScrollView>
@@ -103,9 +104,9 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
             SettingsManager.removeFilters(item);
         };
         return (
-            <TouchableOpacity key={item} onLongPress={removeFilter} style={theme.popup.filters.button as never}>
+            <UnifiedTouchable key={item} onLongPress={removeFilter} style={theme.popup.filters.button as never}>
                 <Text style={theme.popup.filters.buttonText}>{item}</Text>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         );
     };
 
@@ -122,15 +123,15 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
 
     return (
         <Modal animationType="slide" transparent={true} visible={popupVisible} onRequestClose={popupClose}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+            <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', default: undefined })} style={{ flex: 1 }}>
                 <SafeAreaView style={{ flex: 1 }}>
                     <SettingsDismissKeyboard>
                         <View style={theme.popup.filters.container as never}>
                             <View style={theme.popup.filters.header as never}>
                                 <Text style={theme.popup.textHeader}>{Translator.get('FILTERS').toUpperCase()}</Text>
-                                <TouchableOpacity onPress={popupClose}>
+                                <UnifiedTouchable onPress={popupClose}>
                                     <MaterialIcons name="close" size={32} style={theme.popup.closeIcon} />
-                                </TouchableOpacity>
+                                </UnifiedTouchable>
                             </View>
 
                             <Text style={theme.popup.textDescription}>
@@ -172,9 +173,9 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
                                     autoCorrect={false}
                                     keyboardType={Platform.OS === 'ios' ? 'default' : 'visible-password'}
                                 />
-                                <TouchableOpacity onPress={addFilterTextInput}>
+                                <UnifiedTouchable onPress={addFilterTextInput}>
                                     <MaterialIcons name="add" size={32} color={theme.popup.textInputIconColor} />
-                                </TouchableOpacity>
+                                </UnifiedTouchable>
                             </View>
                             <Text style={theme.popup.textDescription}>
                                 {Translator.get('FILTERS_ENTER_CODE')}
@@ -209,7 +210,7 @@ const SearchAndSuggestions = ({ availableUEs, searchQuery, setSearchQuery, filte
                     keyboardShouldPersistTaps="handled"
                 >
                     {filteredSuggestions.map((ue) => (
-                        <TouchableOpacity
+                        <UnifiedTouchable
                             key={ue}
                             onPress={() => onSuggestionPress(ue)}
                             style={{
@@ -229,7 +230,7 @@ const SearchAndSuggestions = ({ availableUEs, searchQuery, setSearchQuery, filte
                             }}>
                                 {ue}
                             </Text>
-                        </TouchableOpacity>
+                        </UnifiedTouchable>
                     ))}
                 </ScrollView>
             )}
@@ -251,24 +252,24 @@ export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, languag
                     <View style={theme.popup.container as never}>
                         <View style={theme.popup.header as never}>
                             <Text style={theme.popup.textHeader}>{Translator.get('LANGUAGE').toUpperCase()}</Text>
-                            <TouchableOpacity onPress={popupClose}>
+                            <UnifiedTouchable onPress={popupClose}>
                                 <MaterialIcons name="close" size={32} style={theme.popup.closeIcon} />
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
                         </View>
                         <Text style={theme.popup.textDescription}>{Translator.get('YOUR_LANGUAGE')}</Text>
                         <View style={{ marginVertical: 8 }}>
-                            <TouchableOpacity onPress={setLanguageToFrench} style={theme.popup.radioContainer as never}>
+                            <UnifiedTouchable onPress={setLanguageToFrench} style={theme.popup.radioContainer as never}>
                                 <MaterialIcons name={language === 'fr' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
                                 <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: 8, fontWeight: '600' }]}>{Translator.get('FRENCH')}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={setLanguageToEnglish} style={theme.popup.radioContainer as never}>
+                            </UnifiedTouchable>
+                            <UnifiedTouchable onPress={setLanguageToEnglish} style={theme.popup.radioContainer as never}>
                                 <MaterialIcons name={language === 'en' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
                                 <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: 8, fontWeight: '600' }]}>{Translator.get('ENGLISH')}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={setLanguageToSpanish} style={theme.popup.radioContainer as never}>
+                            </UnifiedTouchable>
+                            <UnifiedTouchable onPress={setLanguageToSpanish} style={theme.popup.radioContainer as never}>
                                 <MaterialIcons name={language === 'es' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
                                 <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: 8, fontWeight: '600' }]}>{Translator.get('SPANISH')}</Text>
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
                         </View>
                     </View>
                 </View>
@@ -289,12 +290,12 @@ export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }
                         </View>
                         <Text style={theme.popup.textDescription}>{Translator.get('RESET_APP_CONFIRMATION')}</Text>
                         <View style={theme.popup.buttonContainer as never}>
-                            <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={popupClose}>
+                            <UnifiedTouchable style={theme.popup.buttonSecondary as never} onPress={popupClose}>
                                 <Text style={[theme.popup.buttonTextSecondary, { fontWeight: '600' }]}>{Translator.get('CANCEL')}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={theme.popup.buttonMain as never} onPress={resetApp}>
+                            </UnifiedTouchable>
+                            <UnifiedTouchable style={theme.popup.buttonMain as never} onPress={resetApp}>
                                 <Text style={[theme.popup.buttonTextMain, { fontWeight: '600' }]}>{Translator.get('RESET')}</Text>
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
                         </View>
                     </View>
                 </View>

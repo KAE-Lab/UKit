@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ICalParserService } from '../Planning/services/ICalParserService';
 import { SettingsManager } from '../../shared/services/AppCore';
 import { tokens } from '../../shared/theme/Theme';
 import Translator from '../../shared/i18n/Translator';
+import { UnifiedTouchable } from '../../shared/ui/UnifiedTouchable';
 
 export default function OnboardingScheduleView({ themeObj, onComplete, onOpenTutorial }) {
     const [icalUrl, setIcalUrl] = useState('');
@@ -54,13 +55,13 @@ export default function OnboardingScheduleView({ themeObj, onComplete, onOpenTut
                     />
                 </View>
 
-                <TouchableOpacity onPress={onOpenTutorial} style={{ marginBottom: tokens.space.lg }}>
+                <UnifiedTouchable onPress={onOpenTutorial} style={{ marginBottom: tokens.space.lg }}>
                     <Text style={{ color: themeObj.primary, fontSize: tokens.fontSize.sm, textDecorationLine: 'underline' }}>
                         {Translator.get('HOW_TO_FIND_LINK')}
                     </Text>
-                </TouchableOpacity>
+                </UnifiedTouchable>
 
-                <TouchableOpacity 
+                <UnifiedTouchable 
                     onPress={handleIcalSubmit}
                     disabled={loading || !icalUrl.trim()}
                     style={{
@@ -79,7 +80,7 @@ export default function OnboardingScheduleView({ themeObj, onComplete, onOpenTut
                             {Translator.get('VALIDATE_LINK')}
                         </Text>
                     )}
-                </TouchableOpacity>
+                </UnifiedTouchable>
             </View>
         </View>
     );

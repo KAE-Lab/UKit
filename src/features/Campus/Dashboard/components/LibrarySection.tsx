@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, FlatList, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
@@ -14,6 +14,7 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
 import { LibrarySectionCard } from './LibrarySectionCard';
+import { UnifiedTouchable } from '../../../../shared/ui/UnifiedTouchable';
 
 export function LibrarySection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -87,7 +88,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
 
     return (
         <View style={{ marginTop: tokens.space.md }}>
-            <TouchableOpacity
+            <UnifiedTouchable
                 style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
                 onPress={() => navigation.navigate('Library')}
                 activeOpacity={0.7}
@@ -96,7 +97,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
                     {Translator.get('UNIVERSITY_LIBRARY') || 'Bibliothèques Universitaires'}
                 </Text>
                 <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
+            </UnifiedTouchable>
 
             {loading ? (
                 <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />

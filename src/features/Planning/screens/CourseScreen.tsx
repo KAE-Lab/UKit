@@ -1,5 +1,5 @@
 import React from 'react';
-import { Linking, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { AppContext } from '../../../shared/services/AppCore';
 import { URL } from '../../../shared/constants/urls';
 import { withStaticHeader } from '../../../shared/navigation/NavHelpers';
 import { CourseData } from '../components/CourseCard';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface CourseProps {
 	route: { params: { data: CourseData } };
@@ -145,7 +146,7 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 				/>
 
 				<View style={{ position: 'absolute', top: tokens.space.sm, right: tokens.space.sm }}>
-					<TouchableOpacity
+					<UnifiedTouchable
 						onPress={this.onPressExternalMap}
 						style={{
 							backgroundColor: theme.cardBackground,
@@ -154,7 +155,7 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 							...tokens.shadow.md as object as object,
 						}}>
 						<MaterialCommunityIcons name="map-search-outline" size={28} color={theme.accent} />
-					</TouchableOpacity>
+					</UnifiedTouchable>
 				</View>
 			</View>
 		);

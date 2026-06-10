@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, Text, Image, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
@@ -7,6 +7,7 @@ import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
 import { BuildingInfo } from '../../services/FreeRoomService';
+import { UnifiedTouchable } from '../../../../shared/ui/UnifiedTouchable';
 
 const defaultImage = require('../../../../../assets/images/default_resto.png');
 const { width } = Dimensions.get('window');
@@ -42,7 +43,7 @@ export function FreeRoomSectionCard({ item, navigation, isFavorite, onToggleFavo
             entering={FadeIn}
             layout={LinearTransition.springify()}
         >
-            <TouchableOpacity 
+            <UnifiedTouchable 
                 activeOpacity={0.9}
                 onPress={() => navigation.navigate('FreeRoomDetails', { building: item })}
                 style={{
@@ -61,9 +62,9 @@ export function FreeRoomSectionCard({ item, navigation, isFavorite, onToggleFavo
                         <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1 }} numberOfLines={1}>
                             {item.name}
                         </Text>
-                        <TouchableOpacity onPress={() => onToggleFavorite(item.id)} hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }} style={{ marginLeft: 6 }}>
+                        <UnifiedTouchable onPress={() => onToggleFavorite(item.id)} hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }} style={{ marginLeft: 6 }}>
                             <MaterialCommunityIcons name={isFavorite ? "star" : "star-outline"} size={22} color={isFavorite ? theme.primary : theme.fontSecondary} />
-                        </TouchableOpacity>
+                        </UnifiedTouchable>
                     </View>
                     
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
@@ -89,7 +90,7 @@ export function FreeRoomSectionCard({ item, navigation, isFavorite, onToggleFavo
                         </Text>
                     </View>
                 </View>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         </Reanimated.View>
     );
 }

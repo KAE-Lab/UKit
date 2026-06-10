@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Animated, Text, View, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Animated, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import moment from 'moment';
@@ -18,6 +18,7 @@ import { PlanningApiService as FetchManager } from '../services/PlanningApiServi
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
 import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../../shared/services/AppCore';
 import { NotificationManager } from '../../../shared/services/NotificationService';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface ScheduleListProps {
     groupName: string | string[];
@@ -235,9 +236,9 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                 <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center', lineHeight: 22 }}>
                     {Translator.get('FAVORITES_EMPTY') || "Votre liste de favoris est vide. Recherchez un groupe dans la liste pour l'ajouter \u00e0 un de vos favoris !"}
                 </Text>
-                <TouchableOpacity style={{ marginTop: 30, backgroundColor: theme.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }} onPress={() => navigation?.navigate('GroupSearch')}>
+                <UnifiedTouchable style={{ marginTop: 30, backgroundColor: theme.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }} onPress={() => navigation?.navigate('GroupSearch')}>
                     <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{Translator.get('GROUPS_LIST') || "Groupes"}</Text>
-                </TouchableOpacity>
+                </UnifiedTouchable>
             </View>
         );
     }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, FlatList } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -9,6 +9,7 @@ import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import { CrousMealCard } from './components/CrousMealCard';
 import { CrousDateHeader } from './components/CrousDateHeader';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 // "2024-03-25" -> "Lun 25"
 const formatDate = (dateString: string | null) => {

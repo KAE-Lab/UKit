@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useContext } from 'react';
-import { Animated, Switch, Text, TouchableOpacity, View, Pressable } from 'react-native';
+import { Animated, Switch, Text, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { AppContext } from '../services/AppCore';
 import style, { tokens, StyleWelcome, AppThemeType } from '../theme/Theme';
+import { UnifiedTouchable } from './UnifiedTouchable';
 
 // ── Bouton de Retour ───────────────────────────────────────────
 export interface BackButtonProps {
@@ -37,7 +38,7 @@ export interface WelcomeButtonProps {
 }
 export const WelcomeButton = ({ onPress, buttonText, theme = 'light' }: WelcomeButtonProps) => {
     return (
-        <TouchableOpacity onPress={onPress} style={StyleWelcome[theme].buttonContainer as any}>
+        <UnifiedTouchable onPress={onPress} style={StyleWelcome[theme].buttonContainer as any}>
             <Text style={StyleWelcome[theme].buttonText as any}>{buttonText}</Text>
             <MaterialIcons
                 name={'chevron-right'}
@@ -45,7 +46,7 @@ export const WelcomeButton = ({ onPress, buttonText, theme = 'light' }: WelcomeB
                 color={StyleWelcome[theme].welcomeButtonIconColor}
                 style={{ position: 'absolute', alignSelf: 'center', right: 8 }}
             />
-        </TouchableOpacity>
+        </UnifiedTouchable>
     );
 };
 
@@ -148,7 +149,7 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
     const IconComponent = isMaterialIcon ? MaterialIcons : MaterialCommunityIcons;
 
     return (
-        <TouchableOpacity
+        <UnifiedTouchable
             onPress={onPress}
             disabled={disabled}
             style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}] as any}>
@@ -172,7 +173,7 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
             {!onSwitchToggle && (
                 <MaterialCommunityIcons name="chevron-right" size={22} style={theme.rightIcon as import('react-native').TextStyle} />
             )}
-        </TouchableOpacity>
+        </UnifiedTouchable>
     );
 };
 

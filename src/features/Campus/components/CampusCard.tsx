@@ -1,10 +1,11 @@
 import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 const defaultImage = require('../../../../assets/images/default_resto.png');
 
@@ -34,7 +35,7 @@ export function CampusCard({
             entering={FadeIn}
             layout={LinearTransition.springify()}
         >
-            <TouchableOpacity 
+            <UnifiedTouchable 
                 activeOpacity={0.9}
                 onPress={onPress}
                 style={{
@@ -76,7 +77,7 @@ export function CampusCard({
                         </Text>
                         
                         {onToggleFavorite && (
-                            <TouchableOpacity 
+                            <UnifiedTouchable 
                                 onPress={onToggleFavorite}
                                 hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }}
                                 style={{ marginLeft: 6 }}
@@ -86,14 +87,14 @@ export function CampusCard({
                                     size={22} 
                                     color={isFavorite ? theme.primary : theme.fontSecondary} 
                                 />
-                            </TouchableOpacity>
+                            </UnifiedTouchable>
                         )}
                     </View>
                     
                     {/* Specific content injected here (location, distance, hours, etc.) */}
                     {children}
                 </View>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         </Reanimated.View>
     );
 }

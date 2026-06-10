@@ -1,9 +1,10 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PropTypes from 'prop-types';
 
 import style, { tokens } from '../../../shared/theme/Theme';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface SectionListHeaderProps {
     color: string;
@@ -95,7 +96,7 @@ export class GroupRow extends React.PureComponent<GroupRowProps> {
 
     render() {
         return (
-            <TouchableOpacity
+            <UnifiedTouchable
                 onPress={this._onPress}
                 style={{
                     flexDirection: 'row',
@@ -128,7 +129,7 @@ export class GroupRow extends React.PureComponent<GroupRowProps> {
                     color={this.props.fontColor}
                     style={{ opacity: 0.6 }}
                 />
-            </TouchableOpacity>
+            </UnifiedTouchable>
         );
     }
 }

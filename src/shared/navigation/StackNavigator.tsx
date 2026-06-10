@@ -1,6 +1,6 @@
 import React from 'react';
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
-import { TouchableOpacity, View } from 'react-native';
+import {  View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { RouteProp } from '@react-navigation/native';
 
@@ -28,6 +28,7 @@ import style, { tokens } from '../theme/Theme';
 import { AppContext, treatTitle } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { NavBarHelper, SaveGroupButton as SaveButton, FilterRemoveButton } from './NavHelpers';
+import { UnifiedTouchable } from '../ui/UnifiedTouchable';
 
 export type RootStackParamList = {
     MainTabs: undefined;
@@ -59,11 +60,11 @@ export default function StackNavigator() {
                 const theme = style.Theme[themeName];
 
                 const renderMapButton = (navigation: StackNavigationProp<RootStackParamList>, title?: string, location?: { lat: number, lng: number }) => (
-                    <TouchableOpacity onPress={() => navigation.navigate('Geolocation', { title, location })} style={{ paddingRight: tokens.space.md }}>
+                    <UnifiedTouchable onPress={() => navigation.navigate('Geolocation', { title, location })} style={{ paddingRight: tokens.space.md }}>
                         <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
                             <MaterialCommunityIcons name="map-marker-radius" size={24} color={theme.primary} />
                         </View>
-                    </TouchableOpacity>
+                    </UnifiedTouchable>
                 );
 
                 return (
@@ -73,11 +74,11 @@ export default function StackNavigator() {
                             initialRouteName="MainTabs"
                             screenOptions={{
                                 headerLeft: (props) => props.canGoBack ? (
-                                    <TouchableOpacity onPress={props.onPress} style={{ paddingLeft: tokens.space.md }}>
+                                    <UnifiedTouchable onPress={props.onPress} style={{ paddingLeft: tokens.space.md }}>
                                         <View style={{ backgroundColor: theme.greyBackground, width: 50, height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md }}>
                                             <MaterialIcons name="arrow-back" size={28} color={theme.primary} />
                                         </View>
-                                    </TouchableOpacity>
+                                    </UnifiedTouchable>
                                 ) : undefined,
                             }}>
 

@@ -1,8 +1,9 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import style, { tokens } from '../../../../shared/theme/Theme';
 import Translator from '../../../../shared/i18n/Translator';
 import { CrousDayMenu } from '../../services/CrousService';
+import { UnifiedTouchable } from '../../../../shared/ui/UnifiedTouchable';
 
 interface CrousDateHeaderProps {
     menus: CrousDayMenu[];
@@ -70,7 +71,7 @@ export function CrousDateHeader({ menus, selectedIndex, setSelectedIndex, theme,
                     const primaryColor = theme.accent ?? theme.primary;
 
                     return (
-                        <TouchableOpacity 
+                        <UnifiedTouchable 
                             onPress={() => setSelectedIndex(index)}
                             style={{
                                 paddingHorizontal: tokens.space.md,
@@ -89,7 +90,7 @@ export function CrousDateHeader({ menus, selectedIndex, setSelectedIndex, theme,
                             }}>
                                 {formatDate(item.date)}
                             </Text>
-                        </TouchableOpacity>
+                        </UnifiedTouchable>
                     );
                 }}
             />

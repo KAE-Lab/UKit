@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, TouchableWithoutFeedback, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import {  View, Modal, Text, Animated, ScrollView, TouchableWithoutFeedback, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
@@ -9,6 +9,7 @@ import { SettingsManager } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import style, { tokens } from '../theme/Theme';
 import Button from '../ui/Button';
+import { UnifiedTouchable } from '../ui/UnifiedTouchable';
 
 
 // GESTIONNAIRE DE HEADER
@@ -147,20 +148,20 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
         if (Array.isArray(this.props.groupName)) {
             return (
                 <View>
-                    <TouchableOpacity onPress={() => this.setState({ modalVisible: true })} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                    <UnifiedTouchable onPress={() => this.setState({ modalVisible: true })} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
                         <MaterialCommunityIcons name="filter-variant-remove" size={26} color={theme.primary} />
                         </View>
-                    </TouchableOpacity>
+                    </UnifiedTouchable>
                     <Modal animationType="fade" transparent={true} visible={this.state.modalVisible} onRequestClose={() => this.setState({ modalVisible: false })}>
                         <TouchableWithoutFeedback onPress={() => this.setState({ modalVisible: false })}>
                             <View style={theme.settings.popup.background}>
                                 <View style={theme.settings.popup.container}>
                                     <View style={theme.settings.popup.header}>
                                         <Text style={theme.settings.popup.textHeader}>{Translator.get('MY_PLANNING') || 'Mon Planning'}</Text>
-                                        <TouchableOpacity onPress={() => this.setState({ modalVisible: false })}>
+                                        <UnifiedTouchable onPress={() => this.setState({ modalVisible: false })}>
                                             <MaterialIcons name="close" size={32} style={theme.settings.popup.closeIcon} />
-                                        </TouchableOpacity>
+                                        </UnifiedTouchable>
                                     </View>
                                     
                                     <Text style={[theme.settings.popup.textDescription, { marginBottom: 15 }]}>
@@ -176,9 +177,9 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
                                         {this.state.favoriteGroups.map((group) => (
                                             <View key={group} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.greyBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginBottom: tokens.space.sm }}>
                                                 <Text style={{ color: theme.font, fontSize: tokens.fontSize.md, flex: 1 }}>{group.replace(/_/g, ' ')}</Text>
-                                                <TouchableOpacity onPress={() => SettingsManager.removeFavoriteGroup(group)} style={{ padding: tokens.space.xs, paddingHorizontal: 10 }}>
+                                                <UnifiedTouchable onPress={() => SettingsManager.removeFavoriteGroup(group)} style={{ padding: tokens.space.xs, paddingHorizontal: 10 }}>
                                                     <MaterialIcons name="delete" size={24} color={'#E53935'} />
-                                                </TouchableOpacity>
+                                                </UnifiedTouchable>
                                             </View>
                                         ))}
                                     </ScrollView>
@@ -191,11 +192,11 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
         }
 
         return (
-            <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+            <UnifiedTouchable onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                 <View style={{ backgroundColor: theme.primary, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
                     <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={26} color={'#FFFFFF'} />
                 </View>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         );
     }
 }
@@ -229,9 +230,9 @@ export class FilterRemoveButton extends React.Component<FilterRemoveButtonProps,
 
         return (
             <View>
-                <TouchableOpacity onPress={this.openPopup} style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md }}>
+                <UnifiedTouchable onPress={this.openPopup} style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md }}>
                     <MaterialCommunityIcons name="filter-variant-remove" size={24} color={theme.primary} />
-                </TouchableOpacity>
+                </UnifiedTouchable>
                 <Modal animationType="fade" transparent={true} visible={this.state.popupVisible} onRequestClose={this.popupClose}>
                     <View style={popupTheme.background}>
                         <View style={popupTheme.container}>
@@ -240,12 +241,12 @@ export class FilterRemoveButton extends React.Component<FilterRemoveButtonProps,
                             </View>
                             <Text style={popupTheme.textDescription}>{Translator.get('FILTERS_CONFIRMATION')}</Text>
                             <View style={popupTheme.buttonContainer}>
-                                <TouchableOpacity style={popupTheme.buttonSecondary} onPress={this.popupClose}>
+                                <UnifiedTouchable style={popupTheme.buttonSecondary} onPress={this.popupClose}>
                                     <Text style={popupTheme.buttonTextSecondary}>{Translator.get('CANCEL')}</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={popupTheme.buttonMain} onPress={this.filterOutUE}>
+                                </UnifiedTouchable>
+                                <UnifiedTouchable style={popupTheme.buttonMain} onPress={this.filterOutUE}>
                                     <Text style={popupTheme.buttonTextMain}>{Translator.get('CONFIRM')}</Text>
-                                </TouchableOpacity>
+                                </UnifiedTouchable>
                             </View>
                         </View>
                     </View>

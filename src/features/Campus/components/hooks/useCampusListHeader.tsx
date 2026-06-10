@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import React from 'react';
-import { Animated, TouchableOpacity, View } from 'react-native';
+import { Animated, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { globalScrollValues } from '../../../../shared/navigation/NavHelpers';
 import { tokens } from '../../../../shared/theme/Theme';
 import { FilterOption } from '../CampusListLayout';
+import { UnifiedTouchable } from '../../../../shared/ui/UnifiedTouchable';
 
 export function useCampusListHeader({
     navigation,
@@ -30,7 +31,7 @@ export function useCampusListHeader({
         navigation.setOptions({
             headerRight: () => (
                 <Animated.View style={{ transform: [{ scale }], height: 45, justifyContent: 'center' }}>
-                    <TouchableOpacity onPress={() => setFilterVisible(true)} style={{ paddingRight: tokens.space.md }}>
+                    <UnifiedTouchable onPress={() => setFilterVisible(true)} style={{ paddingRight: tokens.space.md }}>
                         <View style={{ 
                             backgroundColor: theme.greyBackground, 
                             width: 45, height: 45, 
@@ -45,7 +46,7 @@ export function useCampusListHeader({
                                 color={selectedFilter !== 'all' && selectedFilter !== undefined ? theme.primary : theme.fontSecondary} 
                             />
                         </View>
-                    </TouchableOpacity>
+                    </UnifiedTouchable>
                 </Animated.View>
             )
         });

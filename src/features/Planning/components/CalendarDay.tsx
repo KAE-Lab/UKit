@@ -1,9 +1,10 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { Text } from 'react-native';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 
 import { tokens } from '../../../shared/theme/Theme';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface CalendarDayProps {
     currentDay: moment.Moment;
@@ -54,7 +55,7 @@ class CalendarDay extends React.Component<CalendarDayProps> {
         const color    = selected ? theme.primary : theme.font;
 
         return (
-            <TouchableOpacity
+            <UnifiedTouchable
                 onPress={this._onPress}
                 style={{
                     width: 64,
@@ -88,7 +89,7 @@ class CalendarDay extends React.Component<CalendarDayProps> {
                 }}>
                     {this.props.item.format('ddd')}
                 </Text>
-            </TouchableOpacity>
+            </UnifiedTouchable>
         );
     }
 }

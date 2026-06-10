@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Collapsible from 'react-native-collapsible';
 import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { upperCaseFirstLetter } from '../../../shared/services/AppCore';
 import { CourseGroupCarousel } from './CourseCard';
 import { groupOverlappingCourses } from './ScheduleListUtils';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface DayWeekProps {
 	schedule: { date?: string; day?: string; dateString?: string; name?: string; courses?: import('../services/PlanningApiService').PlanningEvent[] } & Record<string, unknown>;
@@ -79,7 +80,7 @@ export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
 	renderHeader(title: string, courseCount: number) {
 		const { theme } = this.props;
 		return (
-			<TouchableOpacity
+			<UnifiedTouchable
 				onPress={this.toggleExpand}
 				style={{
 					paddingHorizontal: tokens.space.md,
@@ -108,7 +109,7 @@ export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
 					)}
 				</View>
 				<MaterialCommunityIcons name={this.state.expand ? 'chevron-up' : 'chevron-down'} size={24} color={theme.fontSecondary} />
-			</TouchableOpacity>
+			</UnifiedTouchable>
 		);
 	}
 

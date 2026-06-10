@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, ScrollView, Image, TouchableOpacity, Linking, Animated, DeviceEventEmitter } from 'react-native';
+import { Text, View, ScrollView, Image, Linking, Animated, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { AppContext } from '../../../shared/services/AppCore';
 import { URL } from '../../../shared/constants/urls';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface SectionProps {
     title: string;
@@ -71,7 +72,7 @@ const URLButton = ({ url, title, theme }: URLButtonProps) => {
     };
 
     return (
-        <TouchableOpacity onPress={openURL} style={{
+        <UnifiedTouchable onPress={openURL} style={{
             flexDirection: 'row',
             alignItems: 'center',
             paddingVertical: tokens.space.sm,
@@ -87,7 +88,7 @@ const URLButton = ({ url, title, theme }: URLButtonProps) => {
                 {title}
             </Text>
             <MaterialCommunityIcons name="open-in-new" size={20} color={theme.fontSecondary} />
-        </TouchableOpacity>
+        </UnifiedTouchable>
     );
 };
 
@@ -138,7 +139,7 @@ class AboutScreen extends React.Component<AboutScreenProps> {
                         <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: theme.font }}>
                             UKit
                         </Text>
-                        <TouchableOpacity 
+                        <UnifiedTouchable 
                             activeOpacity={1} 
                             onPress={this.handleVersionTap}
                             style={{
@@ -149,7 +150,7 @@ class AboutScreen extends React.Component<AboutScreenProps> {
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontWeight: tokens.fontWeight.medium }}>
                                 v{appVersion}
                             </Text>
-                        </TouchableOpacity>
+                        </UnifiedTouchable>
                     </View>
 
                     {/* Sections */}

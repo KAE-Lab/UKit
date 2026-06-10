@@ -1,10 +1,11 @@
 import React from 'react';
-import { FlatList, Text, TouchableOpacity, View, ViewabilityConfig, ViewToken, ListRenderItemInfo } from 'react-native';
+import { FlatList, Text, View, ViewabilityConfig, ViewToken, ListRenderItemInfo } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface DayViewHeaderProps {
     insets: { top: number } | null;
@@ -83,7 +84,7 @@ const renderNavigation = (
             marginBottom: tokens.space.sm,
         }}>
             {/* Bouton gauche */}
-            <TouchableOpacity
+            <UnifiedTouchable
                 onPress={onTodayPress}
                 style={{
                     flexDirection: 'row',
@@ -102,7 +103,7 @@ const renderNavigation = (
                 }}>
                     {leftLabel}
                 </Text>
-            </TouchableOpacity>
+            </UnifiedTouchable>
 
             {/* Label central */}
             <Text style={{
@@ -116,7 +117,7 @@ const renderNavigation = (
             </Text>
 
             {/* Bouton droit : switch mode */}
-            <TouchableOpacity
+            <UnifiedTouchable
                 onPress={onRightPress}
                 style={{
                     flexDirection: 'row',
@@ -145,7 +146,7 @@ const renderNavigation = (
                 {mode === 'day' && (
                     <MaterialCommunityIcons name={rightIcon} size={16} color={primaryColor} />
                 )}
-            </TouchableOpacity>
+            </UnifiedTouchable>
         </View>
     );
 };

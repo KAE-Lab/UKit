@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
-import { ActivityIndicator, Linking, Platform, TouchableOpacity, View, Modal, Text, StyleSheet, BackHandler } from 'react-native';
+import { ActivityIndicator, Linking, Platform, View, Modal, Text, StyleSheet, BackHandler } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
@@ -20,6 +20,7 @@ const entrypoints = {
 };
 
 import { FloatingActionBar, SaveCredentialsModal, getCASInjectedScript } from '../components/WebBrowserComponents';
+import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
 
 export interface WebBrowserScreenProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void };

@@ -1,9 +1,10 @@
 import React from 'react';
-import { Text, TouchableOpacity, Linking } from 'react-native';
+import { Text, Linking } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { URL } from '../constants/urls';
 import { tokens, AppThemeType } from '../theme/Theme';
+import { UnifiedTouchable } from './UnifiedTouchable';
 
 const locations = require('../../../assets/locations.json');
 
@@ -49,12 +50,12 @@ export default class OpenMapButton extends React.Component<OpenMapButtonProps, O
 
         if (this.isLocationKnown()) {
             return (
-                <TouchableOpacity onPress={this.openURL} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <UnifiedTouchable onPress={this.openURL} style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ color: theme.primary, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.medium, marginRight: tokens.space.xs }}>
                         {this.props.location}
                     </Text>
                     <MaterialCommunityIcons name="open-in-new" size={16} color={theme.primary} />
-                </TouchableOpacity>
+                </UnifiedTouchable>
             );
         }
 
