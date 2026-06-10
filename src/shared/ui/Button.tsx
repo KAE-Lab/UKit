@@ -38,8 +38,8 @@ export interface WelcomeButtonProps {
 }
 export const WelcomeButton = ({ onPress, buttonText, theme = 'light' }: WelcomeButtonProps) => {
     return (
-        <UnifiedTouchable onPress={onPress} style={StyleWelcome[theme].buttonContainer as any}>
-            <Text style={StyleWelcome[theme].buttonText as any}>{buttonText}</Text>
+        <UnifiedTouchable onPress={onPress} style={StyleWelcome[theme].buttonContainer as never}>
+            <Text style={StyleWelcome[theme].buttonText as never}>{buttonText}</Text>
             <MaterialIcons
                 name={'chevron-right'}
                 size={32}
@@ -152,13 +152,13 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
         <UnifiedTouchable
             onPress={onPress}
             disabled={disabled}
-            style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}] as any}>
+            style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}] as never}>
             {leftIcon && (
                 <Animated.View style={{ transform: leftIconAnimation ? [{ rotate }] : [] }}>
                     <IconComponent name={leftIcon as never} size={24} style={theme.leftIcon as import('react-native').TextStyle} />
                 </Animated.View>
             )}
-            <Text style={[theme.buttonMainText, { flex: 1 }] as any}>{leftText}</Text>
+            <Text style={[theme.buttonMainText, { flex: 1 }] as never}>{leftText}</Text>
             {onSwitchToggle !== undefined ? (
                 <Switch
                     style={{ marginLeft: 'auto', marginRight: theme.leftIcon?.marginLeft }}

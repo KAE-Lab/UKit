@@ -9,11 +9,52 @@ export type InstitutionDomain =
     | 'BORDEAUX_MONTAIGNE'
     | 'BORDEAUX_INP';
 
+export interface InstitutionEndpoints {
+    casHost: string;
+    entHost?: string;
+    intranet?: string;
+    intranetSpecific?: string;
+    dossierWeb?: string;
+    apogee?: string;
+    documents?: string;
+    schedule?: string;
+    webmel?: string;
+}
+
+export const INSTITUTION_ENDPOINTS: Record<string, InstitutionEndpoints> = {
+    U_BORDEAUX: {
+        casHost: 'cas.u-bordeaux.fr',
+        entHost: 'ent.u-bordeaux.fr',
+        intranet: 'intranet.u-bordeaux.fr',
+        intranetSpecific: 'intranet.iut.u-bordeaux.fr/main/doku.php?id=etudiant:start',
+        dossierWeb: 'mondossierweb.u-bordeaux.fr',
+        apogee: 'apogee.u-bordeaux.fr',
+        documents: 'renard.u-bordeaux.fr',
+        schedule: 'celcat.u-bordeaux.fr',
+        webmel: 'webmel.u-bordeaux.fr'
+    },
+    BORDEAUX_MONTAIGNE: {
+        casHost: 'sso.u-bordeaux-montaigne.fr/cas/login',
+        entHost: 'etu.u-bordeaux-montaigne.fr/fr/outils/mon-compte.html',
+        intranet: 'intranet.iut.u-bordeaux-montaigne.fr/moncompte/',
+        webmel: 'carbonio.u-bordeaux-montaigne.fr',
+        schedule: 'edt.iut.u-bordeaux-montaigne.fr/portal'
+    },
+    BORDEAUX_INP: {
+        casHost: 'cas.bordeaux-inp.fr',
+        entHost: 'ent.bordeaux-inp.fr',
+        dossierWeb: 'mondossierweb.bordeaux-inp.fr',
+        documents: 'spagobi.bordeaux-inp.fr',
+        webmel: 'partage.bordeaux-inp.fr',
+        schedule: 'ade.bordeaux-inp.fr'
+    }
+};
+
 export type LoginProgressStep = 'connecting' | 'authenticating' | 'fetching';
 
 export interface AuthenticationResult {
     success: boolean;
-    data?: any;
+    data?: unknown;
     error?: string;
 }
 
@@ -21,8 +62,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const mockLogin = async (
     domain: string,
-    casHost: string,
-    entHost: string,
+    endpoints: InstitutionEndpoints,
     username?: string,
     password?: string,
     onProgress?: (step: LoginProgressStep) => void
@@ -59,11 +99,11 @@ export class AuthenticationService {
             case 'SANTE':
             case 'SCIENCES_HOMME':
             case 'IUT_BORDEAUX':
-                return mockLogin('u_bordeaux', 'cas.u-bordeaux.fr', 'ent.u-bordeaux.fr', username, password, onProgress);
+                return mockLogin('u_bordeaux', INSTITUTION_ENDPOINTS.U_BORDEAUX, username, password, onProgress);
             case 'BORDEAUX_MONTAIGNE':
-                return mockLogin('montaigne', 'cas.u-bordeaux-montaigne.fr', 'ent.u-bordeaux-montaigne.fr', username, password, onProgress);
+                return mockLogin('montaigne', INSTITUTION_ENDPOINTS.BORDEAUX_MONTAIGNE, username, password, onProgress);
             case 'BORDEAUX_INP':
-                return mockLogin('inp', 'cas.bordeaux-inp.fr', 'ent.bordeaux-inp.fr', username, password, onProgress);
+                return mockLogin('inp', INSTITUTION_ENDPOINTS.BORDEAUX_INP, username, password, onProgress);
             default:
                 return { success: false, error: 'INVALID_DOMAIN' };
         }

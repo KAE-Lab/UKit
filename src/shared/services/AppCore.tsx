@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import React from 'react';
 import { Appearance, Platform, NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -190,6 +191,7 @@ class SettingsManagerService {
     _courseNotificationDelay: number;
     _groupName?: string;
     _scheduleSource: ScheduleSource | null;
+    _collegeId: string;
 
     constructor() {
         this._calendar = -1;
@@ -207,6 +209,7 @@ class SettingsManagerService {
         this._courseNotificationsEnabled = true;
         this._courseNotificationDelay = 15;
         this._scheduleSource = null;
+        this._collegeId = 'SCIENCES_TECH';
     }
 
     on = (event: string, callback: Function) => {
@@ -262,6 +265,9 @@ class SettingsManagerService {
     
     getLanguage = () => this._language;
     setLanguage = (newLang: string) => { this._language = newLang; this.notify('language', this._language); };
+    
+    getCollegeId = () => this._collegeId;
+    setCollegeId = (newCollegeId: string) => { this._collegeId = newCollegeId; this.saveSettings(); this.notify('collegeId', this._collegeId); };
     
     getLastSyncDate = () => this._lastSyncDate;
     getSyncCalendar = () => this._calendar;
@@ -405,6 +411,7 @@ class SettingsManagerService {
     resetSettings = () => {
         this.setTheme('light');
         this.setLanguage('fr');
+        this.setCollegeId('SCIENCES_TECH');
         this._favoriteGroups = [];
         this.notify('favoriteGroups', this._favoriteGroups);
         this.setOpenAppOnFavoriteGroup(true);
@@ -419,7 +426,7 @@ class SettingsManagerService {
             language: this._language, openAppOnFavoriteGroup: this._openAppOnFavoriteGroup,
             filters: this._filters, calendarSyncEnabled: this._calendarSyncEnabled,
             courseNotificationsEnabled: this._courseNotificationsEnabled, courseNotificationDelay: this._courseNotificationDelay,
-            scheduleSource: this._scheduleSource,
+            scheduleSource: this._scheduleSource, collegeId: this._collegeId,
         }));
     };
 
@@ -451,6 +458,7 @@ class SettingsManagerService {
         if (settings.scheduleSource) {
             this._scheduleSource = settings.scheduleSource as ScheduleSource;
         }
+        if (settings.collegeId) this._collegeId = settings.collegeId as string;
     };
 
     loadSettings = async () => {

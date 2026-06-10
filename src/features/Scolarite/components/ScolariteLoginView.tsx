@@ -9,6 +9,8 @@ import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { useCredentials } from '../services/CredentialsContext';
 import { UnifiedTouchable } from '../../../shared/ui/UnifiedTouchable';
+import { SettingsManager } from '../../../shared/services/AppCore';
+import type { InstitutionDomain } from '../../Onboarding/services/AuthenticationService';
 
 /**
  * Écran de connexion ENT — affiché à la place du dashboard tant que
@@ -19,13 +21,25 @@ const ScolariteLoginView = ({ theme, color, topPadding }) => {
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [domain, setDomain] = useState<InstitutionDomain>(SettingsManager.getCollegeId() as InstitutionDomain);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
+
+    const COLLEGE_LIST: { id: InstitutionDomain; title: string }[] = [
+        { id: 'SCIENCES_TECH', title: 'SCIENCES_TECH' },
+        { id: 'DROIT_ECO_GESTION', title: 'DROIT_ECO_GESTION' },
+        { id: 'SANTE', title: 'SANTE' },
+        { id: 'SCIENCES_HOMME', title: 'SCIENCES_HOMME' },
+        { id: 'IUT_BORDEAUX', title: 'IUT_BORDEAUX' },
+        { id: 'BORDEAUX_MONTAIGNE', title: 'BORDEAUX_MONTAIGNE' },
+        { id: 'BORDEAUX_INP', title: 'BORDEAUX_INP' },
+    ];
 
     const onSubmit = useCallback(async () => {
         if (!username || !password || submitting) return;
         setError('');
         setSubmitting(true);
+        SettingsManager.setCollegeId(domain);
         const result = await validateAndSave(username.trim(), password);
         if (!result.success) {
             setError(result.error || Translator.get('LOGIN_FAILED'));
@@ -57,6 +71,36 @@ const ScolariteLoginView = ({ theme, color, topPadding }) => {
                     <Text style={[styles.subtitle, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}>
                         {Translator.get('ENTER_CREDENTIALS_DESC')}
                     </Text>
+                </View>
+
+                <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border, marginBottom: tokens.space.md }]}>
+                    <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: 'bold', color: theme.font, marginBottom: tokens.space.sm }}>
+                        {Translator.get('COLLEGE_SELECTION_TITLE') || 'Établissement'}
+                    </Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        {COLLEGE_LIST.map((college) => {
+                            const selected = domain === college.id;
+                            return (
+                                <UnifiedTouchable
+                                    key={college.id}
+                                    onPress={() => setDomain(college.id)}
+                                    style={{
+                                        backgroundColor: selected ? theme.primary + '22' : theme.greyBackground,
+                                        borderWidth: 2,
+                                        borderColor: selected ? theme.primary : 'transparent',
+                                        paddingVertical: tokens.space.sm,
+                                        paddingHorizontal: tokens.space.md,
+                                        borderRadius: tokens.radius.md,
+                                        marginRight: tokens.space.sm,
+                                    }}
+                                >
+                                    <Text style={{ color: selected ? theme.primary : theme.fontSecondary, fontWeight: selected ? 'bold' : '500', fontSize: tokens.fontSize.sm }}>
+                                        {Translator.get(college.title as Parameters<typeof Translator.get>[0])}
+                                    </Text>
+                                </UnifiedTouchable>
+                            );
+                        })}
+                    </ScrollView>
                 </View>
 
                 <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>

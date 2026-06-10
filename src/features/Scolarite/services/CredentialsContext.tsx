@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
 import ScolariteWebSession from '../components/ScolariteWebSession';
+import { SettingsManager } from '../../../shared/services/AppCore';
 
 /**
  * Contexte central de l'onglet Scolarité.
@@ -199,6 +200,13 @@ export const CredentialsProvider = ({ children }) => {
         handleEvent, validateAndSave, logout
     } = useCredentialsSession();
 
+    const [domain, setDomain] = useState(SettingsManager.getCollegeId());
+
+    useEffect(() => {
+        SettingsManager.on('collegeId', setDomain);
+        return () => SettingsManager.unsubscribe('collegeId', setDomain);
+    }, []);
+
     const value = {
         credentials,
         credentialsLoaded,
@@ -215,6 +223,7 @@ export const CredentialsProvider = ({ children }) => {
         <CredentialsContext.Provider value={value}>
             {children}
             <ScolariteWebSession
+                domain={domain}
                 credentials={activeCreds}
                 sessionKey={sessionKey}
                 mode={sessionMode}

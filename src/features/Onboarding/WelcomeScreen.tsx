@@ -15,8 +15,10 @@ import OnboardingScheduleView from './OnboardingScheduleView';
 import ICalTutorialModal from './ICalTutorialModal';
 import { BottomSheetModalProvider, BottomSheetModal } from '@gorhom/bottom-sheet';
 import { UnifiedTouchable } from '../../shared/ui/UnifiedTouchable';
-import { AuthenticationService } from './services/AuthenticationService';
+import { AuthenticationService, INSTITUTION_ENDPOINTS } from './services/AuthenticationService';
 import type { InstitutionDomain } from './services/AuthenticationService';
+import ScolariteWebSession from '../Scolarite/components/ScolariteWebSession';
+import SecureStoreService from '../../shared/services/SecureStoreService';
 
 const THEME_LIST = [
     { id: 'light', title: 'LIGHT_THEME' },
@@ -59,7 +61,7 @@ const WelcomePagination = ({ pageNumber, maxPage, themeObj }) => (
     </View>
 );
 
-const WelcomeBackButton = ({ onPress, visible, themeObj }: any) => (
+const WelcomeBackButton = ({ onPress, visible, themeObj }: { onPress: () => void; visible: boolean; themeObj: Record<string, string> }) => (
     <UnifiedTouchable 
         onPress={onPress} 
         disabled={!visible} 
@@ -275,6 +277,7 @@ const Step5 = ({ themeObj, navigatorState, onOpenTutorial, handleNext }) => {
     return null;
 };
 
+// eslint-disable-next-line max-lines-per-function, complexity
 export default function WelcomeScreen() {
     const [step, setStep] = useState(1);
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -286,6 +289,7 @@ export default function WelcomeScreen() {
         password: '',
         loginState: 'idle', // 'idle' | 'loading' | 'success' | 'failed'
         loginProgress: 'connecting',
+        coldData: null,
     });
 
     const changeState = (newState) => setNavigatorState((prev) => ({ ...prev, ...newState }));
@@ -306,17 +310,39 @@ export default function WelcomeScreen() {
 
     const performLogin = async () => {
         changeState({ loginState: 'loading', loginProgress: 'connecting' });
-        const result = await AuthenticationService.login(
-            navigatorState.collegeId, 
-            navigatorState.username, 
-            navigatorState.password,
-            (step) => changeState({ loginProgress: step })
-        );
-        if (result.success) {
-            SettingsManager.setScheduleSource({ type: 'ical_url', url: result.data.scheduleUrl });
-            changeState({ loginState: 'success' });
-        } else {
+        // The actual login will be handled by ScolariteWebSession which mounts when loginState === 'loading'
+    };
+
+    const handleScolariteEvent = async (data: Record<string, unknown>) => {
+        if (data.type === 'LOGIN_FAILED') {
             changeState({ loginState: 'failed' });
+        } else if (data.type === 'PROGRESS') {
+            if (data.step === 'profile') changeState({ loginProgress: 'authenticating' });
+            if (data.step === 'mailbox') changeState({ loginProgress: 'fetching' });
+        } else if (data.type === 'ENT_DATA') {
+            changeState({ coldData: { ...navigatorState.coldData, firstName: data.firstName } });
+        } else if (data.type === 'DOSSIER_DATA') {
+            changeState({ coldData: { 
+                ...navigatorState.coldData, 
+                studentNumber: data.studentNumber,
+                ine: data.ine,
+                emailAddress: data.emailAddress,
+                dateOfBirth: data.dateOfBirth,
+                lastName: data.lastName
+            } });
+        } else if (data.type === 'MAILBOX_DATA') {
+            await SecureStoreService.saveCredentials(navigatorState.username, navigatorState.password);
+            
+            // Save the coldData so the scolarite section skips the long scraping phase
+            if (navigatorState.coldData) {
+                await SecureStoreService.saveColdData(navigatorState.coldData);
+            }
+            
+            // Set a default schedule source depending on the domain.
+            SettingsManager.setScheduleSource({ type: 'ical_url', url: `https://mock.schedule.url/${navigatorState.collegeId}` });
+            SettingsManager.setCollegeId(navigatorState.collegeId);
+            
+            changeState({ loginState: 'success' });
         }
     };
 
@@ -328,6 +354,7 @@ export default function WelcomeScreen() {
         }
         if (step === 5 && navigatorState.loginState === 'failed') {
             // If they complete the fallback, it handles completion
+            SettingsManager.setCollegeId(navigatorState.collegeId);
             SettingsManager.setFirstLoad(false);
             return;
         }
@@ -393,6 +420,16 @@ export default function WelcomeScreen() {
                         </UnifiedTouchable>
                         <WelcomePagination pageNumber={step} maxPage={5} themeObj={themeObj} />
                     </View>
+                )}
+
+                {navigatorState.loginState === 'loading' && (
+                    <ScolariteWebSession
+                        domain={navigatorState.collegeId}
+                        credentials={{ username: navigatorState.username, password: navigatorState.password }}
+                        sessionKey="onboarding_login"
+                        mode="cold"
+                        onEvent={handleScolariteEvent}
+                    />
                 )}
 
                 </KeyboardAvoidingView>
