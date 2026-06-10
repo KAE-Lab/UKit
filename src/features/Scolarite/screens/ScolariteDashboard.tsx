@@ -11,6 +11,16 @@ import GreetingBlock from '../components/GreetingBlock';
 import MailboxRow from '../components/MailboxRow';
 import BiometryGate from '../components/BiometryGate';
 import ScolariteLoadingScreen from '../components/ScolariteLoadingScreen';
+import { INSTITUTION_ENDPOINTS } from '../../Onboarding/services/AuthenticationService';
+import { SettingsManager } from '../../../shared/services/AppCore';
+
+const getEndpoints = (domain) => {
+    switch (domain) {
+        case 'BORDEAUX_MONTAIGNE': return INSTITUTION_ENDPOINTS.BORDEAUX_MONTAIGNE;
+        case 'BORDEAUX_INP': return INSTITUTION_ENDPOINTS.BORDEAUX_INP;
+        default: return INSTITUTION_ENDPOINTS.U_BORDEAUX;
+    }
+};
 
 const SectionHeader = ({ title, theme }) => (
     <Text style={[styles.sectionHeader, { color: theme.fontSecondary }]}>
@@ -89,7 +99,13 @@ const ScolariteDashboard = ({ navigation }) => {
                                     status={scrapeStatus}
                                     color={theme.sectionsHeaders[5] || accent}
                                     theme={theme}
-                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email' })}
+                                    onPress={() => {
+                                        const domain = SettingsManager.getCollegeId();
+                                        const endpoints = getEndpoints(domain);
+                                        navigation.navigate('WebBrowser', { 
+                                            href: endpoints.webmel ? `https://${endpoints.webmel}` : undefined 
+                                        });
+                                    }}
                                 />
                             </Animated.ScrollView>
                         </BiometryGate>
