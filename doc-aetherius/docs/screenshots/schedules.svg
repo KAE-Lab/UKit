@@ -1,0 +1,144 @@
+<svg class="rich-terminal" viewBox="0 0 1507 635.5999999999999" xmlns="http://www.w3.org/2000/svg">
+    <!-- Generated with Rich https://www.textualize.io -->
+    <style>
+
+    
+    
+
+    .terminal-schedules-matrix {
+        font-family: Fira Code, monospace;
+        font-size: 20px;
+        line-height: 24.4px;
+        font-variant-east-asian: full-width;
+    }
+
+    .terminal-schedules-title {
+        font-size: 18px;
+        font-weight: bold;
+        font-family: arial;
+    }
+
+    .terminal-schedules-r1 { fill: #c5c8c6 }
+.terminal-schedules-r2 { fill: #dcd7e8 }
+.terminal-schedules-r3 { fill: #9e98b0 }
+.terminal-schedules-r4 { fill: #d4af37;font-weight: bold }
+.terminal-schedules-r5 { fill: #dcd7e8;font-weight: bold }
+.terminal-schedules-r6 { fill: #a19fa5 }
+.terminal-schedules-r7 { fill: #7f7a90 }
+.terminal-schedules-r8 { fill: #140f1c;font-weight: bold }
+.terminal-schedules-r9 { fill: #4e8a5a;font-weight: bold }
+.terminal-schedules-r10 { fill: #4c4465 }
+    </style>
+
+    <defs>
+    <clipPath id="terminal-schedules-clip-terminal">
+      <rect x="0" y="0" width="1487.3999999999999" height="584.5999999999999" />
+    </clipPath>
+    <clipPath id="terminal-schedules-line-0">
+    <rect x="0" y="1.5" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-1">
+    <rect x="0" y="25.9" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-2">
+    <rect x="0" y="50.3" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-3">
+    <rect x="0" y="74.7" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-4">
+    <rect x="0" y="99.1" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-5">
+    <rect x="0" y="123.5" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-6">
+    <rect x="0" y="147.9" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-7">
+    <rect x="0" y="172.3" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-8">
+    <rect x="0" y="196.7" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-9">
+    <rect x="0" y="221.1" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-10">
+    <rect x="0" y="245.5" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-11">
+    <rect x="0" y="269.9" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-12">
+    <rect x="0" y="294.3" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-13">
+    <rect x="0" y="318.7" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-14">
+    <rect x="0" y="343.1" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-15">
+    <rect x="0" y="367.5" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-16">
+    <rect x="0" y="391.9" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-17">
+    <rect x="0" y="416.3" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-18">
+    <rect x="0" y="440.7" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-19">
+    <rect x="0" y="465.1" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-20">
+    <rect x="0" y="489.5" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-21">
+    <rect x="0" y="513.9" width="1488.4" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-schedules-line-22">
+    <rect x="0" y="538.3" width="1488.4" height="24.65"/>
+            </clipPath>
+    </defs>
+
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1505" height="633.6" rx="8"/><text class="terminal-schedules-title" fill="#c5c8c6" text-anchor="middle" x="752" y="27">Aetherius</text>
+            <g transform="translate(26,22)">
+            <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
+            <circle cx="22" cy="0" r="7" fill="#febc2e"/>
+            <circle cx="44" cy="0" r="7" fill="#28c840"/>
+            </g>
+        
+    <g transform="translate(9, 41)" clip-path="url(#terminal-schedules-clip-terminal)">
+    <rect fill="#282045" x="0" y="1.5" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="12.2" y="1.5" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="24.4" y="1.5" width="61" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="85.4" y="1.5" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="97.6" y="1.5" width="512.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="610" y="1.5" width="109.8" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="719.8" y="1.5" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="756.4" y="1.5" width="85.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="841.8" y="1.5" width="524.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="1366.4" y="1.5" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="1378.6" y="1.5" width="0" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="1378.6" y="1.5" width="97.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="1476.2" y="1.5" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="25.9" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="25.9" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="25.9" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="50.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="50.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="48.8" y="50.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="73.2" y="50.3" width="109.8" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="183" y="50.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="207.4" y="50.3" width="1232.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1439.6" y="50.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="50.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="74.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="74.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="48.8" y="74.7" width="1354.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1403" y="74.7" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1439.6" y="74.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="74.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="99.1" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="99.1" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="99.1" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="123.5" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="123.5" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="48.8" y="123.5" width="939.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="988.2" y="123.5" width="451.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1439.6" y="123.5" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="123.5" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="147.9" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="147.9" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="147.9" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="172.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#31294d" x="24.4" y="172.3" width="170.8" height="24.65" shape-rendering="crispEdges"/><rect fill="#31294d" x="195.2" y="172.3" width="414.8" height="24.65" shape-rendering="crispEdges"/><rect fill="#31294d" x="610" y="172.3" width="256.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#31294d" x="866.2" y="172.3" width="122" height="24.65" shape-rendering="crispEdges"/><rect fill="#31294d" x="988.2" y="172.3" width="219.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#31294d" x="1207.8" y="172.3" width="219.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#31294d" x="1427.4" y="172.3" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="172.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="196.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#9d7bd8" x="24.4" y="196.7" width="170.8" height="24.65" shape-rendering="crispEdges"/><rect fill="#9d7bd8" x="195.2" y="196.7" width="414.8" height="24.65" shape-rendering="crispEdges"/><rect fill="#9d7bd8" x="610" y="196.7" width="256.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#9d7bd8" x="866.2" y="196.7" width="122" height="24.65" shape-rendering="crispEdges"/><rect fill="#9d7bd8" x="988.2" y="196.7" width="219.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#9d7bd8" x="1207.8" y="196.7" width="219.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#9d7bd8" x="1427.4" y="196.7" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="196.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="221.1" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#252039" x="24.4" y="221.1" width="170.8" height="24.65" shape-rendering="crispEdges"/><rect fill="#252039" x="195.2" y="221.1" width="414.8" height="24.65" shape-rendering="crispEdges"/><rect fill="#252039" x="610" y="221.1" width="256.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#252039" x="866.2" y="221.1" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#252039" x="878.4" y="221.1" width="97.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#252039" x="976" y="221.1" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#252039" x="988.2" y="221.1" width="219.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#252039" x="1207.8" y="221.1" width="219.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#252039" x="1427.4" y="221.1" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="221.1" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="245.5" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="245.5" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="245.5" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="269.9" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="269.9" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="269.9" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="294.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="294.3" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="294.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="318.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="318.7" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="318.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="343.1" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="343.1" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="343.1" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="367.5" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="367.5" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="367.5" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="391.9" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="391.9" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="391.9" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="416.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="416.3" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="416.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="440.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="440.7" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="440.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="465.1" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="465.1" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="465.1" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="489.5" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="489.5" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="489.5" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="513.9" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="513.9" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="513.9" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="0" y="538.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="24.4" y="538.3" width="1439.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#141020" x="1464" y="538.3" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="0" y="562.7" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="36.6" y="562.7" width="48.8" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="85.4" y="562.7" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="122" y="562.7" width="158.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="280.6" y="562.7" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="317.2" y="562.7" width="85.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="402.6" y="562.7" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="439.2" y="562.7" width="97.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="536.8" y="562.7" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="573.4" y="562.7" width="61" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="634.4" y="562.7" width="61" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="695.4" y="562.7" width="61" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="756.4" y="562.7" width="36.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="793" y="562.7" width="61" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="854" y="562.7" width="488" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="1342" y="562.7" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="1354.2" y="562.7" width="24.4" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="1378.6" y="562.7" width="97.6" height="24.65" shape-rendering="crispEdges"/><rect fill="#282045" x="1476.2" y="562.7" width="12.2" height="24.65" shape-rendering="crispEdges"/>
+    <g class="terminal-schedules-matrix">
+    <text class="terminal-schedules-r2" x="12.2" y="20" textLength="12.2" clip-path="url(#terminal-schedules-line-0)">⭘</text><text class="terminal-schedules-r2" x="610" y="20" textLength="109.8" clip-path="url(#terminal-schedules-line-0)">Aetherius</text><text class="terminal-schedules-r3" x="719.8" y="20" textLength="36.6" clip-path="url(#terminal-schedules-line-0)">&#160;—&#160;</text><text class="terminal-schedules-r3" x="756.4" y="20" textLength="85.4" clip-path="url(#terminal-schedules-line-0)">Console</text><text class="terminal-schedules-r1" x="1488.4" y="20" textLength="12.2" clip-path="url(#terminal-schedules-line-0)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="44.4" textLength="12.2" clip-path="url(#terminal-schedules-line-1)">
+</text><text class="terminal-schedules-r4" x="48.8" y="68.8" textLength="24.4" clip-path="url(#terminal-schedules-line-2)">✦&#160;</text><text class="terminal-schedules-r5" x="73.2" y="68.8" textLength="109.8" clip-path="url(#terminal-schedules-line-2)">Schedules</text><text class="terminal-schedules-r4" x="183" y="68.8" textLength="24.4" clip-path="url(#terminal-schedules-line-2)">&#160;✦</text><text class="terminal-schedules-r1" x="1488.4" y="68.8" textLength="12.2" clip-path="url(#terminal-schedules-line-2)">
+</text><text class="terminal-schedules-r6" x="48.8" y="93.2" textLength="1354.2" clip-path="url(#terminal-schedules-line-3)">Enter&#160;opens&#160;a&#160;schedule&#160;(history,&#160;manual&#160;fire).&#160;&#x27;n&#x27;&#160;creates&#160;one,&#160;&#x27;p&#x27;&#160;pauses/resumes,&#160;&#x27;d&#x27;&#160;deletes,&#160;&#x27;r&#x27;&#160;refreshes.</text><text class="terminal-schedules-r1" x="1488.4" y="93.2" textLength="12.2" clip-path="url(#terminal-schedules-line-3)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="117.6" textLength="12.2" clip-path="url(#terminal-schedules-line-4)">
+</text><text class="terminal-schedules-r7" x="48.8" y="142" textLength="939.4" clip-path="url(#terminal-schedules-line-5)">○&#160;no&#160;daemon&#160;—&#160;schedules&#160;only&#160;fire&#160;while&#160;`aetherius&#160;serve`&#160;runs&#160;(see&#160;Settings)</text><text class="terminal-schedules-r1" x="1488.4" y="142" textLength="12.2" clip-path="url(#terminal-schedules-line-5)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="166.4" textLength="12.2" clip-path="url(#terminal-schedules-line-6)">
+</text><text class="terminal-schedules-r5" x="24.4" y="190.8" textLength="170.8" clip-path="url(#terminal-schedules-line-7)">&#160;Name&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-schedules-r5" x="195.2" y="190.8" textLength="414.8" clip-path="url(#terminal-schedules-line-7)">&#160;Trigger&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-schedules-r5" x="610" y="190.8" textLength="256.2" clip-path="url(#terminal-schedules-line-7)">&#160;Notify&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-schedules-r5" x="866.2" y="190.8" textLength="122" clip-path="url(#terminal-schedules-line-7)">&#160;Status&#160;&#160;&#160;</text><text class="terminal-schedules-r5" x="988.2" y="190.8" textLength="219.6" clip-path="url(#terminal-schedules-line-7)">&#160;Next&#160;run&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-schedules-r5" x="1207.8" y="190.8" textLength="219.6" clip-path="url(#terminal-schedules-line-7)">&#160;Last&#160;run&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-schedules-r1" x="1488.4" y="190.8" textLength="12.2" clip-path="url(#terminal-schedules-line-7)">
+</text><text class="terminal-schedules-r8" x="24.4" y="215.2" textLength="170.8" clip-path="url(#terminal-schedules-line-8)">&#160;stock-watch&#160;&#160;</text><text class="terminal-schedules-r8" x="195.2" y="215.2" textLength="414.8" clip-path="url(#terminal-schedules-line-8)">&#160;cron&#160;0&#160;0,3&#160;*&#160;*&#160;*&#160;(misfire:&#160;skip)&#160;</text><text class="terminal-schedules-r8" x="610" y="215.2" textLength="256.2" clip-path="url(#terminal-schedules-line-8)">&#160;ntfy&#160;·&#160;on&#160;change&#160;&#160;&#160;&#160;</text><text class="terminal-schedules-r8" x="866.2" y="215.2" textLength="122" clip-path="url(#terminal-schedules-line-8)">&#160;paused&#160;&#160;&#160;</text><text class="terminal-schedules-r8" x="988.2" y="215.2" textLength="219.6" clip-path="url(#terminal-schedules-line-8)">&#160;-&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-schedules-r8" x="1207.8" y="215.2" textLength="219.6" clip-path="url(#terminal-schedules-line-8)">&#160;2026-07-10&#160;03:00&#160;</text><text class="terminal-schedules-r1" x="1488.4" y="215.2" textLength="12.2" clip-path="url(#terminal-schedules-line-8)">
+</text><text class="terminal-schedules-r2" x="24.4" y="239.6" textLength="170.8" clip-path="url(#terminal-schedules-line-9)">&#160;quotes-watch&#160;</text><text class="terminal-schedules-r2" x="195.2" y="239.6" textLength="414.8" clip-path="url(#terminal-schedules-line-9)">&#160;every&#160;3600s&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-schedules-r2" x="610" y="239.6" textLength="256.2" clip-path="url(#terminal-schedules-line-9)">&#160;webhook&#160;·&#160;on&#160;change&#160;</text><text class="terminal-schedules-r9" x="878.4" y="239.6" textLength="97.6" clip-path="url(#terminal-schedules-line-9)">✦&#160;active</text><text class="terminal-schedules-r2" x="988.2" y="239.6" textLength="219.6" clip-path="url(#terminal-schedules-line-9)">&#160;2026-07-14&#160;17:00&#160;</text><text class="terminal-schedules-r2" x="1207.8" y="239.6" textLength="219.6" clip-path="url(#terminal-schedules-line-9)">&#160;2026-07-14&#160;16:00&#160;</text><text class="terminal-schedules-r1" x="1488.4" y="239.6" textLength="12.2" clip-path="url(#terminal-schedules-line-9)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="264" textLength="12.2" clip-path="url(#terminal-schedules-line-10)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="288.4" textLength="12.2" clip-path="url(#terminal-schedules-line-11)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="312.8" textLength="12.2" clip-path="url(#terminal-schedules-line-12)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="337.2" textLength="12.2" clip-path="url(#terminal-schedules-line-13)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="361.6" textLength="12.2" clip-path="url(#terminal-schedules-line-14)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="386" textLength="12.2" clip-path="url(#terminal-schedules-line-15)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="410.4" textLength="12.2" clip-path="url(#terminal-schedules-line-16)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="434.8" textLength="12.2" clip-path="url(#terminal-schedules-line-17)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="459.2" textLength="12.2" clip-path="url(#terminal-schedules-line-18)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="483.6" textLength="12.2" clip-path="url(#terminal-schedules-line-19)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="508" textLength="12.2" clip-path="url(#terminal-schedules-line-20)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="532.4" textLength="12.2" clip-path="url(#terminal-schedules-line-21)">
+</text><text class="terminal-schedules-r1" x="1488.4" y="556.8" textLength="12.2" clip-path="url(#terminal-schedules-line-22)">
+</text><text class="terminal-schedules-r4" x="0" y="581.2" textLength="36.6" clip-path="url(#terminal-schedules-line-23)">&#160;n&#160;</text><text class="terminal-schedules-r2" x="36.6" y="581.2" textLength="48.8" clip-path="url(#terminal-schedules-line-23)">New&#160;</text><text class="terminal-schedules-r4" x="85.4" y="581.2" textLength="36.6" clip-path="url(#terminal-schedules-line-23)">&#160;p&#160;</text><text class="terminal-schedules-r2" x="122" y="581.2" textLength="158.6" clip-path="url(#terminal-schedules-line-23)">Pause/Resume&#160;</text><text class="terminal-schedules-r4" x="280.6" y="581.2" textLength="36.6" clip-path="url(#terminal-schedules-line-23)">&#160;d&#160;</text><text class="terminal-schedules-r2" x="317.2" y="581.2" textLength="85.4" clip-path="url(#terminal-schedules-line-23)">Delete&#160;</text><text class="terminal-schedules-r4" x="402.6" y="581.2" textLength="36.6" clip-path="url(#terminal-schedules-line-23)">&#160;r&#160;</text><text class="terminal-schedules-r2" x="439.2" y="581.2" textLength="97.6" clip-path="url(#terminal-schedules-line-23)">Refresh&#160;</text><text class="terminal-schedules-r4" x="536.8" y="581.2" textLength="36.6" clip-path="url(#terminal-schedules-line-23)">&#160;q&#160;</text><text class="terminal-schedules-r2" x="573.4" y="581.2" textLength="61" clip-path="url(#terminal-schedules-line-23)">Quit&#160;</text><text class="terminal-schedules-r4" x="634.4" y="581.2" textLength="61" clip-path="url(#terminal-schedules-line-23)">&#160;esc&#160;</text><text class="terminal-schedules-r2" x="695.4" y="581.2" textLength="61" clip-path="url(#terminal-schedules-line-23)">Back&#160;</text><text class="terminal-schedules-r4" x="756.4" y="581.2" textLength="36.6" clip-path="url(#terminal-schedules-line-23)">&#160;h&#160;</text><text class="terminal-schedules-r2" x="793" y="581.2" textLength="61" clip-path="url(#terminal-schedules-line-23)">Home&#160;</text><text class="terminal-schedules-r10" x="1342" y="581.2" textLength="12.2" clip-path="url(#terminal-schedules-line-23)">▏</text><text class="terminal-schedules-r4" x="1354.2" y="581.2" textLength="24.4" clip-path="url(#terminal-schedules-line-23)">^p</text><text class="terminal-schedules-r2" x="1378.6" y="581.2" textLength="97.6" clip-path="url(#terminal-schedules-line-23)">&#160;palette</text>
+    </g>
+    </g>
+</svg>

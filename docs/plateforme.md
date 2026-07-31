@@ -1,0 +1,163 @@
+# Plateforme, permissions et publication
+
+UKit est une application **Expo** (SDK 54, React Native 0.81, React 19) publiée sur l'App Store et le
+Play Store. Ce document couvre la configuration native, les permissions, la construction et la
+publication.
+
+## Identité de l'application
+
+Déclarée dans [`app.config.ts`](../app.config.ts), qui charge `dotenv/config` au démarrage pour rendre
+les variables d'environnement disponibles.
+
+| Champ | Valeur |
+|---|---|
+| Nom | UKit |
+| Slug Expo | `Ukit` (propriétaire `kaelab`) |
+| Identifiant iOS | `com.bordeaux.ukit` |
+| Paquet Android | `com.bordeaux1.emplois` |
+| Orientation | portrait uniquement |
+| Couleur principale | `#006F9F` |
+| Projet EAS | `77596c7c-87fc-4c86-9189-3a70fd839abf` |
+| Mises à jour OTA | désactivées (`updates.enabled: false`) |
+
+Le paquet Android conserve son identifiant historique : le changer ferait perdre la continuité de
+l'installation pour tous les utilisateurs existants. Ne pas y toucher.
+
+`extra.sentryDSN` lit `process.env.SENTRY_DSN`, mais **aucun code de l'application n'exploite cette
+valeur** : il n'y a pas de rapport d'erreur en production.
+
+## Plugins Expo
+
+```ts
+plugins: [
+  'expo-web-browser',
+  'expo-secure-store',
+  ['expo-local-authentication', { faceIDPermission: '…' }],
+]
+```
+
+Ces trois plugins servent l'onglet [Scolarité](features/scolarite.md) : navigateur intégré, stockage
+chiffré des identifiants, déverrouillage biométrique.
+
+## Permissions
+
+Chaque permission est justifiée par une fonctionnalité précise. Le texte iOS est celui que voit
+l'utilisateur : il doit rester explicite sur la finalité et sur le fait que la donnée ne quitte pas
+l'appareil.
+
+| Permission | Plateforme | Utilisée par |
+|---|---|---|
+| Calendriers (lecture / écriture) | iOS `NSCalendarsUsageDescription`, `NSCalendarsFullAccessUsageDescription` · Android `READ_CALENDAR`, `WRITE_CALENDAR` | synchronisation de l'emploi du temps ([features/settings.md](features/settings.md)) |
+| Rappels | iOS `NSRemindersUsageDescription` | déclaré, non utilisé par le code actuel |
+| Localisation | iOS `NSLocationWhenInUseUsageDescription` · Android `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | distance aux restaurants CROUS et aux BU ([features/campus.md](features/campus.md)) |
+| Face ID / biométrie | iOS `NSFaceIDUsageDescription` + option du plugin | protection de l'onglet Scolarité |
+| Tâches en arrière-plan | iOS `UIBackgroundModes: ['fetch']` | synchronisation périodique du calendrier |
+| Notifications | demandée à l'exécution | rappels avant les cours |
+
+Les permissions sont demandées **au moment de l'usage**, jamais au lancement : la localisation à
+l'ouverture d'un écran Campus, le calendrier à l'activation de la synchronisation, les notifications
+à l'activation des rappels, la biométrie à l'entrée dans Scolarité.
+
+## Tâche de fond
+
+`SettingsManager` enregistre une tâche `background-fetch` quand la synchronisation calendrier est
+activée :
+
+```ts
+BackgroundFetch.registerTaskAsync('background-fetch', {
+    minimumInterval: 12 * 60 * 60,   // 12 heures
+    stopOnTerminate: false,
+    startOnBoot: true,
+});
+```
+
+La tâche appelle `SettingsManager.syncCalendar()`. `minimumInterval` est un **plancher**, pas une
+garantie : les deux systèmes décident de la fréquence réelle selon l'usage et la batterie. Désactiver
+la synchronisation désenregistre la tâche.
+
+## Ressources
+
+| Fichier | Rôle |
+|---|---|
+| [`assets/icons/icon.png`](../assets/icons/icon.png) | icône de l'application (iOS et Android) |
+| [`assets/icons/splash.png`](../assets/icons/splash.png) | écran de démarrage, fond blanc, `resizeMode: contain` |
+| [`assets/icons/logo.png`](../assets/icons/logo.png) | logo affiché dans l'onboarding |
+| [`assets/images/default_resto.png`](../assets/images/default_resto.png) | visuel de repli des fiches restaurant |
+| [`assets/locations.json`](../assets/locations.json) | référentiel des bâtiments ([cartographie.md](cartographie.md)) |
+
+`assetBundlePatterns: ['**/*']` embarque toutes les ressources dans le binaire.
+
+## Construction
+
+Profils dans [`eas.json`](../eas.json) :
+
+| Profil | Sortie | Usage |
+|---|---|---|
+| `development` | client de développement, distribution interne | débogage sur appareil |
+| `preview` | APK Android, simulateur iOS | test interne, APK publié en Release GitHub |
+| `production` | AAB Android, build iOS, `autoIncrement` | stores |
+
+```bash
+npm run build:android     # eas build -p android --profile preview
+npm run build:ios         # eas build -p ios --profile preview
+```
+
+`cli.appVersionSource: "remote"` : c'est **EAS qui fait autorité sur le numéro de build**, pas les
+`versionCode` du fichier de configuration.
+
+## Publication
+
+Un seul workflow : [`.github/workflows/release.yml`](../.github/workflows/release.yml), déclenché par
+un tag `v*` ou manuellement (`workflow_dispatch`) avec trois entrées — `target_tag`, `release_notes`,
+et les interrupteurs `skip_build` / `build_production`.
+
+Enchaînement :
+
+1. Mise à jour de version : `npm version <tag sans v>` sans tag git, puis commit et push du bump.
+2. `npm install`.
+3. Si `build_production` : iOS `eas build --profile production --auto-submit --no-wait`, puis Android
+   construit localement en AAB et soumis par `eas submit`.
+4. Si `skip_build` n'est pas coché : APK `preview` construit localement et attaché à une Release
+   GitHub.
+
+Secrets requis : `EXPO_TOKEN`, `GOOGLE_PLAY_KEY` (écrit dans `google-play-key.json` à l'exécution).
+
+> **Le workflow tente de modifier `app.config.js`**, un fichier qui n'existe pas — la configuration est
+> dans `app.config.ts`. Le `sed` de mise à jour de version et le `git add` correspondant sont donc
+> sans effet : **le champ `version` de `app.config.ts` n'est pas mis à jour automatiquement** et doit
+> être modifié à la main avant de poser un tag.
+
+## Les numéros de version
+
+Quatre endroits portent une version, et ils ne s'accordent pas aujourd'hui :
+
+| Emplacement | Valeur actuelle | Rôle |
+|---|---|---|
+| [`package.json`](../package.json) | `5.6.1` | version npm, mise à jour par le workflow |
+| [`app.config.ts`](../app.config.ts) `version` | `5.6.1` | version affichée et comparée par l'alerte de mise à jour |
+| [`app.config.ts`](../app.config.ts) `versionCode` | `550` (racine) et `541` (bloc `android`) | deux valeurs divergentes ; seule celle du bloc `android` est lue, et `appVersionSource: remote` la rend de toute façon inopérante |
+| [`VERSION`](../VERSION) | `4.0.4` | fichier lu à distance pour proposer une mise à jour |
+
+Conséquence sur l'alerte de mise à jour : `UpdateAlert` ([`AppUI.tsx`](../src/shared/ui/AppUI.tsx))
+compare la version du manifeste au contenu distant de `VERSION`. Avec `5.6.1` d'un côté et `4.0.4` de
+l'autre, la comparaison serait toujours différente — donc l'alerte s'afficherait à chaque lancement.
+Elle ne le fait pas, car **`UpdateAlert` est importé dans
+[`rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) mais jamais rendu**. Le mécanisme
+est inactif. Le rebrancher exige d'abord de réaligner `VERSION`.
+
+## Vérifier
+
+- Après un changement de permission : désinstaller l'application, la réinstaller, et vérifier que la
+  demande apparaît au bon moment avec le bon texte.
+- Après un changement de configuration native : construire un profil `preview` (une modification de
+  `app.config.ts` n'est pas prise en compte par un simple rechargement).
+- Avant de poser un tag : vérifier que `package.json`, `app.config.ts` et `VERSION` sont cohérents.
+
+## Limites connues
+
+- **`VERSION` est désynchronisé** de deux versions majeures par rapport au reste.
+- **Le workflow cible `app.config.js`** au lieu de `app.config.ts` (voir ci-dessus).
+- **`versionCode` est déclaré deux fois** avec deux valeurs.
+- **Aucun rapport d'erreur en production** malgré la présence de `extra.sentryDSN`.
+- **Les mises à jour OTA sont désactivées** : toute correction passe par une publication de store.
+- **`expo-updates` figure dans les dépendances** mais n'est ni configuré ni utilisé.
