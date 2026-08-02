@@ -233,6 +233,7 @@ document.
 | [docs/qualite.md](docs/qualite.md) | portes de qualité, vérification manuelle, simulation temporelle |
 | [docs/features/](docs/features/) | une documentation par domaine fonctionnel |
 | [docs/screenshots/](docs/screenshots/README.md) | captures attendues et convention |
+| [docs-aetherius/](docs-aetherius/) | Aetherius, le moteur d'automatisation — doc complète sur son dépôt |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | workflow, définition de « terminé », principes de code |
 | [CHANGELOG.md](CHANGELOG.md) | évolutions notables, version par version |
 | [PRIVACY.md](PRIVACY.md) | politique de confidentialité |
