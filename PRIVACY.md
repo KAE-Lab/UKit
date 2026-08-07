@@ -23,6 +23,9 @@ Afin de vous fournir des informations actualisées, UKit Bordeaux effectue des r
 *   **Croustillant :** Pour synchroniser les menus des restaurants universitaires. 
 *   **Affluence :** Pour récupérer le taux d'occupation des bibliothèques en temps réel.
 *   **OpenStreetMap :** Utilisé pour afficher le fond de carte concernant la localisation des campus universitaires. 
+*   **Base de publication UKit :** Pour récupérer le contenu que nous publions — annonces de vie étudiante, référentiel des bâtiments, catalogue des établissements, et les fichiers d'instructions qui décrivent comment interroger les sources ci-dessus. Ces requêtes sont **en lecture seule et anonymes** : elles ne portent ni identifiant d'appareil, ni compte, ni donnée vous concernant, et rien ne nous est envoyé. L'application fonctionne sans cette base : tout ce qu'elle publie existe déjà dans l'application installée, et n'y est que mis à jour.
+
+**Vos identifiants universitaires :** ils sont chiffrés par le trousseau de votre système d'exploitation, ne sont envoyés **qu'au service d'authentification de votre université**, et ne transitent par aucun serveur — ni le nôtre, ni celui d'un tiers. C'est la raison pour laquelle l'application se connecte directement depuis votre appareil plutôt que de déléguer cette connexion à un service distant.
 
 **Diagnostic et suivi de bugs :** Aucun outil de suivi (tracking), d'analyse de comportement, ou de diagnostic de crash (comme Sentry ou Firebase Analytics) n'est actif dans le code source de l'application, assurant un total anonymat lors de l'utilisation.
 

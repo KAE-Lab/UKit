@@ -1,0 +1,92 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.celcat.semaine",
+  "description": "REFERENCE (jalon 3-G) : le serveur d'emplois du temps de l'universite, tel que UKit le consomme (PlanningApiService et CampusApiService). Zero configuration. Il vise le service de l'universite DIRECTEMENT, la ou l'application d'origine passe par un point d'entree dedie : ce relais existe pour contourner une contrainte de navigateur (une page ne peut pas appeler un autre domaine sans son accord), et une requete emise nativement depuis l'appareil n'y est pas soumise. Un morceau d'infrastructure disparait donc avec la migration — voir docs/mobile-migration.md. Les constantes magiques du code d'origine sont ici des vars nommees (res_type 103 = groupes, 102 = salles ; cal_view ; colour_scheme), et la borne de fin EXCLUSIVE, qui etait un '+1 jour' implicite, s'ecrit add_days. Le nettoyage de la description (regex, entites HTML, separateur selon la vue) et le code d'UE reste applicatif : voir docs/mobile-migration.md.",
+  "act": "vector",
+  "inputs": {
+    "groupe": {
+      "type": "string",
+      "required": true,
+      "default": "INF601A5",
+      "description": "Identifiant de federation du groupe d'etudiants."
+    },
+    "lundi": {
+      "type": "string",
+      "format": "date",
+      "required": true,
+      "default": "2026-02-02",
+      "description": "Premier jour de la semaine demandee (ISO)."
+    },
+    "recherche": {
+      "type": "string",
+      "required": true,
+      "default": "INF",
+      "description": "Filtre de recherche pour la liste des groupes."
+    }
+  },
+  "vars": {
+    "domaine": "https://celcat.u-bordeaux.fr/calendar",
+    "res_type": "103",
+    "cal_view": "agendaWeek",
+    "colour_scheme": "3",
+    "taille_de_page": "50"
+  },
+  "steps": [
+    {
+      "id": "groupes",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.domaine }}/Home/ReadResourceListItems",
+      "headers": { "Accept": "application/json" },
+      "params": {
+        "searchTerm": "{{ inputs.recherche }}",
+        "pageSize": "{{ vars.taille_de_page }}",
+        "resType": "{{ vars.res_type }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "identifiants": { "from": "json", "path": "$.results[*].id" }
+      }
+    },
+    {
+      "id": "semaine",
+      "action": "http.request",
+      "method": "POST",
+      "url": "{{ vars.domaine }}/Home/GetCalendarData",
+      "headers": {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Accept": "application/json"
+      },
+      "form": {
+        "start": "{{ inputs.lundi }}",
+        "end": "{{ inputs.lundi | add_days(7) }}",
+        "resType": "{{ vars.res_type }}",
+        "calView": "{{ vars.cal_view }}",
+        "federationIds[]": "{{ inputs.groupe }}",
+        "colourScheme": "{{ vars.colour_scheme }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "cours": {
+          "from": "json",
+          "path": "$[*]",
+          "where": "item.eventCategory != 'Vacances'",
+          "fields": {
+            "id": "$.id",
+            "debut": "$.start",
+            "fin": "$.end",
+            "categorie": "$.eventCategory",
+            "couleur": "$.backgroundColor",
+            "modules": "$.modules[*]",
+            "description": "$.description"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "groupes": "{{ steps.groupes.identifiants }}",
+    "cours": "{{ steps.semaine.cours }}",
+    "nombre_de_cours": "{{ steps.semaine.cours | length }}"
+  }
+}

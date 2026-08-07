@@ -61,6 +61,11 @@ assets/
 4. **Services distants** — la seule couche qui parle au réseau. Une feature ne fait jamais d'appel
    HTTP depuis un composant : tout passe par un service, ce qui rend la surface externe
    inventoriable en un seul endroit ([sources-externes.md](sources-externes.md)).
+5. **Le moteur** — [`shared/aetherius/`](../src/shared/aetherius/) : depuis la
+   [Phase 6](phase-6/README.md), un service n'émet plus de requête lui-même. Il demande au registre
+   le [Blueprint](blueprints.md) correspondant à l'appel, le fait jouer, et travaille la donnée
+   reçue. Ce qui reste du service est ce qui doit y rester : le cache, les conversions, le calcul,
+   la traduction d'un échec en écran.
 
 ## Séquence de démarrage
 
@@ -123,6 +128,13 @@ consommateurs hors React (tâche de fond, planificateur de notifications). Déta
   propager une exception. C'est un choix assumé (l'application reste utilisable hors ligne grâce au
   cache) dont la contrepartie est qu'une erreur réseau et une réponse vide sont indistinguables côté
   appelant. Voir [sources-externes.md](sources-externes.md).
+  **Cet invariant est en cours de remplacement** par la [Phase 6](phase-6/README.md) : un échec est
+  désormais typé et rangé dans une famille d'écran, et une liste vide redevient une liste vide. Il
+  disparaîtra du document quand la dernière source aura migré ([blueprints.md](blueprints.md)).
+- **Le comportement distant est de la donnée.** Ce qu'on demande à une source et ce qu'on en retient
+  vit dans [`blueprints/`](../blueprints/), pas dans le binaire — donc corrigeable sans release. Le
+  calcul, le cache, l'internationalisation et l'heure courante n'y descendent jamais
+  ([blueprints.md](blueprints.md)).
 
 ## Dépendances entre features
 
@@ -150,6 +162,13 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 18 écrans |
 | [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | barre d'onglets personnalisée et son bouton d'action contextuel |
 | [`shared/navigation/NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) | `NavBarHelper`, `withHeaderAnimation`, `withStaticHeader`, boutons d'en-tête |
+| [`shared/aetherius/client.ts`](../src/shared/aetherius/client.ts) | la façade du moteur, instanciée une fois pour toute l'application |
+| [`shared/aetherius/secrets.ts`](../src/shared/aetherius/secrets.ts) | résolution des secrets depuis le document unique de `SecureStore` |
+| [`shared/aetherius/registry.ts`](../src/shared/aetherius/registry.ts) | résolution d'un Blueprint entre socle embarqué et surcouche publiée |
+| [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | un échec de run traduit en famille d'écran et en clé de traduction |
+| [`shared/aetherius/runBlueprint.ts`](../src/shared/aetherius/runBlueprint.ts) | l'appel type : résoudre, jouer, rendre des sorties ou un échec décrit |
+| [`shared/supabase/client.ts`](../src/shared/supabase/client.ts) | client anonyme de la base de publication ([backend.md](backend.md)) |
+| [`shared/supabase/types.ts`](../src/shared/supabase/types.ts) | types des tables, tels que la base les rend |
 | [`shared/services/AppCore.tsx`](../src/shared/services/AppCore.tsx) | `AppContext`, `SettingsManager`, synchronisation calendrier, tâche de fond, utilitaires de lieux et de cours |
 | [`shared/services/NotificationService.ts`](../src/shared/services/NotificationService.ts) | planification des rappels de cours ([features/settings.md](features/settings.md)) |
 | [`shared/services/SecureStoreService.ts`](../src/shared/services/SecureStoreService.ts) | stockage chiffré des identifiants et des données étudiant |
@@ -174,6 +193,9 @@ racine et de [`src/shared/`](../src/shared/).
 | Routes, navigateurs, en-têtes | [navigation.md](navigation.md) |
 | Managers, caches, clés de stockage | [donnees-et-persistance.md](donnees-et-persistance.md) |
 | Tout ce que l'application appelle à l'extérieur | [sources-externes.md](sources-externes.md) |
+| Les fichiers d'instructions et leur publication | [blueprints.md](blueprints.md) |
+| La base de publication | [backend.md](backend.md) |
+| La migration vers les Blueprints, jalon par jalon | [phase-6/README.md](phase-6/README.md) |
 | Tokens et thèmes | [theme.md](theme.md) |
 | Localisation | [i18n.md](i18n.md) |
 | Cartes | [cartographie.md](cartographie.md) |

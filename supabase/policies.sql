@@ -1,0 +1,93 @@
+-- UKit — politiques d'acces.
+--
+-- La cle `anon` est publique par conception : elle est lisible dans n'importe quel binaire. Ce n'est
+-- pas un secret mal garde, c'est un identifiant. **La frontiere de securite, ce sont ces
+-- politiques** ; les traiter comme un detail serait l'erreur du jalon.
+--
+-- RLS est active sur **toutes** les tables, y compris celles qui n'ont rien de sensible : une table
+-- sans politique est une table qu'on oubliera de proteger le jour ou elle en aura besoin.
+--
+-- Trois regles, sans exception :
+--   1. lecture publique restreinte aux lignes **publiees** ;
+--   2. aucune ecriture pour `anon` ;
+--   3. ecriture par `service_role` uniquement — le script de publication et la console d'admin.
+--
+-- Le jour ou la partie sociale arrivera, elle ajoutera ses tables et ses politiques adossees a
+-- auth.uid(). Rien de ce qui est ecrit ici ne devra etre defait.
+--
+-- Voir docs/backend.md.
+
+alter table public.annonces         enable row level security;
+alter table public.service_messages enable row level security;
+alter table public.batiments        enable row level security;
+alter table public.etablissements   enable row level security;
+alter table public.blueprints       enable row level security;
+alter table public.app_release      enable row level security;
+
+-- -----------------------------------------------------------------------------
+-- Lecture publique
+-- -----------------------------------------------------------------------------
+
+-- Une annonce inactive ou expiree ne sort pas de la base. Elle n'est pas filtree cote application :
+-- ce qui n'a pas a etre lu n'est pas envoye.
+create policy "annonces publiees lisibles"
+    on public.annonces for select
+    to anon
+    using (active and (expire_le is null or expire_le > now()));
+
+create policy "messages de service actifs lisibles"
+    on public.service_messages for select
+    to anon
+    using (actif and (expire_le is null or expire_le > now()));
+
+create policy "batiments lisibles"
+    on public.batiments for select
+    to anon
+    using (true);
+
+create policy "etablissements actifs lisibles"
+    on public.etablissements for select
+    to anon
+    using (actif);
+
+create policy "app_release lisible"
+    on public.app_release for select
+    to anon
+    using (true);
+
+-- L'index de livraison n'est pas lu par l'application : elle lit manifest.json dans le bucket.
+-- Aucune politique de lecture pour `anon`, donc — ouvrir un acces dont personne n'a besoin serait
+-- une surface offerte pour rien.
+
+-- -----------------------------------------------------------------------------
+-- Ecriture
+-- -----------------------------------------------------------------------------
+--
+-- Aucune politique d'ecriture n'est declaree : sous RLS, ce qui n'est pas autorise est refuse.
+-- `service_role` contourne RLS par nature, ce qui suffit au script de publication et a la console.
+-- Ecrire une politique d'ecriture « pour plus tard » serait le meilleur moyen de l'oublier ouverte.
+--
+-- Verification attendue au jalon 6-B, et elle se joue vraiment plutot qu'elle ne se suppose : une
+-- tentative d'insertion avec la cle `anon` doit **echouer**.
+
+-- -----------------------------------------------------------------------------
+-- Buckets
+-- -----------------------------------------------------------------------------
+--
+-- `blueprints` et `media` sont publics en lecture. C'est assume : un Blueprint ne contient jamais
+-- d'identifiant (il les **declare**, le trousseau les fournit), et l'integrite de ce qui est servi
+-- est garantie par l'empreinte SHA-256 du manifeste, revenue a chaque lecture — pas par le secret de
+-- l'URL.
+--
+-- L'ecriture reste reservee a `service_role`. La cle qui la porte est la cle de la production : qui
+-- la detient peut publier un Blueprint que tous les appareils joueront.
+
+create policy "blueprints lisibles"
+    on storage.objects for select
+    to anon
+    using (bucket_id = 'blueprints');
+
+create policy "media lisible"
+    on storage.objects for select
+    to anon
+    using (bucket_id = 'media');

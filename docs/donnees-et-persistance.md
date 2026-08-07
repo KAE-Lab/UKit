@@ -1,8 +1,14 @@
 # Données et persistance
 
 Tout l'état durable de UKit vit sur l'appareil : il n'y a **aucun serveur applicatif, aucun compte
-UKit, aucune base distante**. L'application lit des sources publiques ou universitaires
-([sources-externes.md](sources-externes.md)) et conserve localement ce dont elle a besoin.
+UKit, et rien de ce qui appartient à l'utilisateur n'est stocké ailleurs**. L'application lit des
+sources publiques ou universitaires ([sources-externes.md](sources-externes.md)) et conserve
+localement ce dont elle a besoin.
+
+La [base de publication](backend.md) introduite par la [Phase 6](phase-6/README.md) ne change pas
+cette phrase : elle porte ce que **l'équipe** publie — annonces, référentiels,
+[Blueprints](blueprints.md) — jamais ce qui appartient à l'utilisateur. Chacune de ces publications a
+un socle embarqué dans le binaire, et l'application fonctionne sans jamais la joindre.
 
 Deux supports :
 

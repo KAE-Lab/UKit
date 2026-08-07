@@ -15,6 +15,15 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **Cadrage et squelette de la Phase 6** — la façon d'atteindre les sources distantes va quitter le
+  binaire pour devenir des [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué,
+  publiés depuis une base et corrigeables sans release. Ce changement pose la documentation de phase
+  ([docs/phase-6/](docs/phase-6/README.md), huit jalons spécifiés), les deux documents transverses
+  ([blueprints.md](docs/blueprints.md), [backend.md](docs/backend.md)), le socle de code
+  (`src/shared/aetherius/`, `src/shared/supabase/`), les six Blueprints de référence dans
+  [`blueprints/`](blueprints/), le schéma et les politiques de la base ([`supabase/`](supabase/)) et
+  le [harnais de parité](tools/parity/README.md). Aucun comportement de l'application ne change
+  encore.
 - **Onglet Campus et son tableau de bord** — quatre sections indépendantes (annonces, restaurants,
   bibliothèques, salles libres) au-dessus d'un socle de liste commun : recherche, filtres persistés,
   favoris, tri par distance, états vides. La position de l'utilisateur est résolue une seule fois pour

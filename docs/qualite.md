@@ -6,11 +6,12 @@ manque. La discipline de contribution qui s'appuie dessus est dans
 
 ## Les portes automatiques
 
-Deux commandes, à jouer avant toute demande de fusion :
+À jouer avant toute demande de fusion :
 
 ```bash
 npx tsc --noEmit      # typage
 npx eslint .          # règles d'architecture et de style
+npm run parity        # sources migrées vers un Blueprint
 ```
 
 ### Base de référence
@@ -25,6 +26,20 @@ régression d'un héritage :
 
 La règle de contribution est donc : **ne pas augmenter ces compteurs**, et les réduire quand on
 travaille dans un fichier concerné.
+
+### La parité
+
+[`tools/parity/`](../tools/parity/README.md), introduit par la [Phase 6](phase-6/README.md), rejoue
+chaque [Blueprint](blueprints.md) sous Node et compare sa sortie à celle du service historique, sur
+la **vraie** source. C'est la seule porte de ce dépôt qui vérifie un comportement plutôt qu'une
+forme, et c'est ce qui autorise à retirer un repli.
+
+Ce qu'elle ne couvre pas, et qui reste de la vérification manuelle : la WebView, le cache, la
+concurrence et l'affichage. Un cas de parité vert et un écran cassé sont parfaitement compatibles.
+
+Un cas peut aussi échouer parce que la source est en panne. C'est une information, pas un faux
+positif — c'est même la seule façon d'apprendre qu'une source a changé avant que les utilisateurs ne
+le fassent.
 
 ### Ce que vérifient les règles ESLint
 

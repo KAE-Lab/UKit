@@ -7,7 +7,14 @@ pour rejouer chaque appel sans lire le code.
 
 UKit **n'a pas de serveur applicatif** : il n'existe aucun intermédiaire entre l'application et ces
 sources. Voir [donnees-et-persistance.md](donnees-et-persistance.md) pour ce qui est conservé
-localement.
+localement, et [backend.md](backend.md) pour la base de publication — qui porte notre contenu, et ne
+relaie aucune de ces sources.
+
+> **Migration en cours.** La [Phase 6](phase-6/README.md) déplace la façon d'atteindre ces sources
+> depuis le code vers des [Blueprints](blueprints.md) : ce document reste **le** document à lire
+> avant toute intervention réseau, et il gagne, source par source, le nom du Blueprint qui la porte
+> et ce qui est resté applicatif. Ce qui est décrit ci-dessous est l'état du code ; chaque jalon de
+> migration met à jour la section concernée.
 
 ## Vue d'ensemble
 
@@ -369,6 +376,12 @@ C'est un choix cohérent avec le fonctionnement hors ligne (l'appelant retombe s
 état vide), mais il a une conséquence : **une panne du fournisseur et une réponse légitimement vide
 sont indistinguables**. Un écran affichant « aucun résultat » peut donc masquer une source
 indisponible. Toute évolution de ce modèle doit être décidée globalement, pas service par service.
+
+C'est exactement ce que fait la [Phase 6](phase-6/README.md), et c'est son changement le plus
+structurant : un échec devient **typé** et rangé dans une famille d'écran — source en panne, réponse
+inattendue, contenu introuvable, identifiants manquants, échec nommé par le Blueprint — et une liste
+vide redevient une liste vide. Le tableau ci-dessus disparaîtra source par source, au rythme de la
+migration ([blueprints.md](blueprints.md#les-erreurs-cessent-dêtre-avalées)).
 
 ## Vérifier
 

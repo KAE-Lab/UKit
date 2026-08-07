@@ -1,0 +1,50 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.scolarite.messagerie",
+  "description": "REFERENCE (jalon 3-G) : le parcours authentifiant, mode 'chaud' — le nombre de messages non lus, seul. IDENTIFIANTS REQUIS (secrets bordeaux_user / bordeaux_pass dans .env). Ouvrir la messagerie suffit : elle rebondit d'elle-meme sur le CAS avec son parametre service, et la redirection de retour ramene sur la boite. Trois points de conception y sont deliberes. Le user-agent desktop : avec un UA mobile, ce service rend /modern/, un DOM ou le selecteur n'existe pas. La PAUSE apres le clic : l'authentification unifiee enchaine plusieurs sauts puis le client pose son fragment, et une operation emise pendant cette cascade se perd sur un appareil — on laisse donc la page arriver avant de l'interroger (voir docs/embedded.md, sondes du jalon 3-G). La lecture enfin : elle porte son PROPRE timeout_ms, court, parce qu'un wait_for vient de prouver que l'element est la.",
+  "act": "continuum",
+  "secrets": ["bordeaux_user", "bordeaux_pass"],
+  "vars": {
+    "messagerie": "https://webmel.u-bordeaux.fr"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+  },
+  "steps": [
+    { "action": "navigate", "url": "{{ vars.messagerie }}" },
+    {
+      "action": "wait_for",
+      "selector": "#username",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:CAS_INDISPONIBLE"
+    },
+    { "action": "fill", "selector": "#username", "value": "{{ secrets.bordeaux_user }}" },
+    { "action": "fill", "selector": "#password", "value": "{{ secrets.bordeaux_pass }}" },
+    { "action": "click", "selector": "input[type=submit]" },
+    { "action": "wait", "ms": 15000 },
+    {
+      "action": "wait_for",
+      "selector": "#zti__main_Mail__2_textCell",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:MESSAGERIE_INDISPONIBLE"
+    },
+    { "action": "emit", "event": "LOGIN_SUCCESS" },
+    {
+      "id": "messagerie",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "boite": { "selector": "#zti__main_Mail__2_textCell", "as": "text" },
+        "non_lus": { "selector": "#zti__main_Mail__2_textCell", "as": "number" }
+      }
+    }
+  ],
+  "outputs": {
+    "boite_de_reception": "{{ steps.messagerie.boite }}",
+    "non_lus": "{{ steps.messagerie.non_lus }}"
+  }
+}

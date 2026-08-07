@@ -11,6 +11,9 @@
     "build:android": "eas build -p android --profile preview",
     "build:ios": "eas build -p ios --profile preview",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "parity": "node tools/parity/run.mjs",
+    "blueprints:publish": "node tools/publish-blueprints.mjs",
     "prepare": "husky",
     "commit": "cz"
   },

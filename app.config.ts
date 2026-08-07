@@ -53,6 +53,13 @@ export default {
 			"projectId": "77596c7c-87fc-4c86-9189-3a70fd839abf"
 		},
 		sentryDSN: process.env.SENTRY_DSN,
+		// La base de publication (docs/backend.md). La cle `anon` est publique par conception : elle
+		// est lisible dans n'importe quel binaire, et la frontiere de securite ce sont les politiques
+		// RLS. La cle `service_role`, elle, ne doit jamais approcher ce fichier.
+		// Absentes, l'application demarre et s'utilise sur son socle embarque : la base est un point
+		// de publication, pas un intermediaire.
+		supabaseUrl: process.env.SUPABASE_URL,
+		supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
 	},
 	plugins: [
 		"expo-web-browser",

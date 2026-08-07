@@ -1,0 +1,40 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.campus.annonces",
+  "description": "REFERENCE (jalon 3-G) : le fichier editorial servi par CDN, tel que UKit le consomme (BdeService). Zero configuration. Le plus court des cinq ports : une requete, un filtre declaratif, des champs nommes. La regle 'expires_at posterieur a maintenant' reste applicative — un predicat where ne connait que son item, jamais l'heure courante ; voir docs/mobile-migration.md.",
+  "act": "vector",
+  "vars": {
+    "cdn": "https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main"
+  },
+  "steps": [
+    {
+      "id": "annonces",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.cdn }}/annonces.json",
+      "headers": { "Accept": "application/json" },
+      "expect": { "status": 200 },
+      "extract": {
+        "publiees": {
+          "from": "json",
+          "path": "$.annonces[*]",
+          "where": "item.is_active == true",
+          "fields": {
+            "id": "$.id",
+            "titre": "$.title",
+            "emetteur": "$.issuer_name",
+            "expire_le": "$.expires_at",
+            "accroche": "$.info_label",
+            "image": "$.image_url",
+            "cta_texte": "$.cta_text",
+            "cta_lien": "$.cta_link"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "annonces": "{{ steps.annonces.publiees }}",
+    "nombre": "{{ steps.annonces.publiees | length }}"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.scolarite.sso",
+  "description": "REFERENCE (jalon 3-G) : le parcours authentifiant, mode 'froid' — celui que UKit joue aujourd'hui dans une WebView cachee pilotee par du JavaScript injecte (ScolariteWebSession). IDENTIFIANTS REQUIS (secrets bordeaux_user / bordeaux_pass dans .env, jamais dans le fichier) : ce Blueprint ne compte donc pas comme l'exemple zero configuration. Il part du service et non du portail — ouvrir mondossierweb declenche la redirection CAS, et la redirection de retour ramene le fragment #!etatCivilView. La messagerie fait l'objet d'un second Blueprint (ukit-scolarite-messagerie), comme l'application d'origine distingue son parcours froid de son parcours chaud. Les identifiants de champ GWT restent positionnels : la migration ne les rend pas robustes, elle en fait une ligne de donnees corrigeable a distance — et les libelles voisins sont lus puis asserts, de sorte qu'un decalage devienne un echec nomme au lieu d'une donnee fausse.",
+  "act": "continuum",
+  "secrets": ["bordeaux_user", "bordeaux_pass"],
+  "vars": {
+    "dossier": "https://mondossierweb.u-bordeaux.fr/"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+  },
+  "steps": [
+    { "action": "navigate", "url": "{{ vars.dossier }}" },
+    {
+      "action": "wait_for",
+      "selector": "#username",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:CAS_INDISPONIBLE"
+    },
+    { "action": "fill", "selector": "#username", "value": "{{ secrets.bordeaux_user }}" },
+    { "action": "fill", "selector": "#password", "value": "{{ secrets.bordeaux_pass }}" },
+    { "action": "click", "selector": "input[type=submit]" },
+    {
+      "action": "wait_for",
+      "selector": "#gwt-uid-41",
+      "timeout_ms": 45000,
+      "on_timeout": "fail:LOGIN_FAILED"
+    },
+    { "action": "emit", "event": "LOGIN_SUCCESS" },
+    {
+      "id": "dossier",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "numero_etudiant": { "selector": "#gwt-uid-41", "as": "text" },
+        "ine": { "selector": "#gwt-uid-43", "as": "text" },
+        "identite": { "selector": "#gwt-uid-45", "as": "text" },
+        "email": { "selector": "#gwt-uid-47", "as": "text" },
+        "naissance": { "selector": "#gwt-uid-51", "as": "text" },
+        "libelle_numero": { "selector": "#gwt-uid-40", "as": "text" },
+        "libelle_ine": { "selector": "#gwt-uid-42", "as": "text" },
+        "libelle_email": { "selector": "#gwt-uid-46", "as": "text" }
+      }
+    },
+    {
+      "action": "assert",
+      "condition": "{{ steps.dossier.libelle_numero == 'Dossier' and steps.dossier.libelle_ine == 'NNE' and steps.dossier.libelle_email == 'Email' }}",
+      "message": "Les libelles du dossier ont bouge : les identifiants GWT sont positionnels, donc les valeurs lues ne sont plus celles qu'on croit. Corriger les selecteurs du Blueprint."
+    }
+  ],
+  "outputs": {
+    "numero_etudiant": "{{ steps.dossier.numero_etudiant }}",
+    "ine": "{{ steps.dossier.ine }}",
+    "identite": "{{ steps.dossier.identite }}",
+    "email": "{{ steps.dossier.email }}",
+    "naissance": "{{ steps.dossier.naissance }}"
+  }
+}

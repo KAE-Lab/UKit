@@ -31,11 +31,17 @@ Trois principes portent le projet :
 
 - **Souveraineté.** Aucune dépendance à un service propriétaire payant. Les cartes sont rendues par
   Leaflet sur des données OpenStreetMap, jamais par un fournisseur qui trace l'utilisateur.
-- **Aucun serveur.** UKit n'a pas de dorsale applicative, pas de compte UKit, pas de base distante.
-  L'application interroge directement les sources et conserve tout localement. Ce qui relève du
-  compte universitaire est chiffré par le trousseau de l'appareil et ne le quitte jamais.
+- **Rien ne transite.** Aucun compte UKit, aucun intermédiaire : l'application interroge les sources
+  **directement depuis l'appareil**, avec la connexion de l'utilisateur, et conserve tout localement.
+  Ce qui relève du compte universitaire est chiffré par le trousseau de l'appareil et ne le quitte
+  jamais — c'est d'ailleurs la raison pour laquelle le moteur d'automatisation est *embarqué* plutôt
+  qu'hébergé. UKit publie du contenu (annonces, référentiels, fichiers d'instructions) sur une base
+  distante, et fonctionne sans jamais la joindre : c'est un point de publication, pas une dorsale.
 - **Un socle lisible.** Découpage par domaine de navigation, TypeScript partout, tokens de design,
   aucune chaîne en dur : le code doit pouvoir être repris sans contexte oral.
+- **Le comportement est de la donnée.** Ce qu'il faut demander à une source, et ce qu'il faut en
+  retenir, vit dans des [Blueprints](docs/blueprints.md) versionnés — pas dans le binaire. Une source
+  qui change se corrige par une publication de fichier, pas par une release.
 
 <p align="center"><sub>· · ·</sub></p>
 
@@ -86,6 +92,12 @@ Endpoints, charges utiles, transformations et fragilités connues sont détaill�
 **[docs/sources-externes.md](docs/sources-externes.md)** — le document à lire avant toute
 intervention touchant au réseau.
 
+À cela s'ajoute, depuis la [Phase 6](docs/phase-6/README.md), une **base de publication** (Supabase)
+qui porte ce que l'équipe publie : les [Blueprints](docs/blueprints.md), les annonces, le référentiel
+des bâtiments et le catalogue des établissements. Elle ne relaie aucune source et ne voit passer
+aucune donnée personnelle ; l'application fonctionne sans elle, sur son socle embarqué.
+→ [docs/backend.md](docs/backend.md)
+
 <p align="center"><sub>· · ·</sub></p>
 
 ## Architecture du dépôt
@@ -101,6 +113,8 @@ src/
     Settings/          réglages et à propos
     Onboarding/        premier lancement
   shared/            socle transverse
+    aetherius/         le moteur : façade, registre de Blueprints, secrets, modèle d'erreur
+    supabase/          la base de publication : client anonyme et types du schéma
     navigation/        conteneur racine, navigateurs, helpers d'en-tête
     services/          contexte et réglages, notifications, stockage chiffré, mock temporel
     theme/             tokens de design et thèmes clair / sombre
@@ -109,6 +123,9 @@ src/
     ui/                composants atomiques
     constants/         URLs externes
     utils/             utilitaires de formatage
+blueprints/          les fichiers d'instructions embarqués (le socle hors ligne)
+supabase/            schéma et politiques d'accès de la base de publication
+tools/               publication des Blueprints, harnais de parité
 assets/              icônes, visuels, référentiel des bâtiments du campus
 docs/                cette documentation
 ```
@@ -180,7 +197,12 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Publication** — profils EAS (développement, aperçu, production) et chaîne de release GitHub
   Actions vers les deux stores. [docs/plateforme.md](docs/plateforme.md)
 - [ ] **Tests automatisés** — aucun harnais n'est en place ; la vérification est manuelle, et
-  l'intégration continue ne joue que la publication. [docs/qualite.md](docs/qualite.md)
+  l'intégration continue ne joue que la publication. Le [harnais de parité](tools/parity/README.md)
+  arrive avec la Phase 6. [docs/qualite.md](docs/qualite.md)
+- [ ] **Le comportement en données** — l'accès aux sources migre vers des
+  [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
+  et corrigeables sans release. Phase en cours, jalon par jalon :
+  [docs/phase-6/README.md](docs/phase-6/README.md).
 
 ### Fonctionnalités
 
@@ -226,6 +248,9 @@ document.
 | [docs/navigation.md](docs/navigation.md) | navigateurs, routes et paramètres, en-têtes animés |
 | [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md) | managers observables, clés de stockage, stratégies de cache |
 | [docs/sources-externes.md](docs/sources-externes.md) | inventaire complet des sources distantes, endpoints et fragilités |
+| [docs/blueprints.md](docs/blueprints.md) | les fichiers d'instructions : frontière, écriture, publication d'une correction |
+| [docs/backend.md](docs/backend.md) | la base de publication : schéma, politiques, clés, limites |
+| [docs/phase-6/](docs/phase-6/README.md) | le cadrage de la migration vers les Blueprints, jalon par jalon |
 | [docs/theme.md](docs/theme.md) | tokens, palettes, usage du thème |
 | [docs/i18n.md](docs/i18n.md) | Translator, dictionnaires, ajout d'une chaîne |
 | [docs/cartographie.md](docs/cartographie.md) | Leaflet et OpenStreetMap, `locations.json` |

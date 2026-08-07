@@ -1,0 +1,78 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.campus.restaurants",
+  "description": "REFERENCE (jalon 3-G) : le service de restauration universitaire, tel que UKit le consomme (CrousService). Zero configuration. Deux points de migration s'y voient : la categorie ecartee devient un predicat where sur un champ imbrique, et la conversion de date DD-MM-YYYY que le code faisait a la main devient un filtre format_date. La distance de Haversine et le tri par proximite restent applicatifs — ils n'ont pas leur place dans un fichier d'instructions.",
+  "act": "vector",
+  "inputs": {
+    "restaurant": {
+      "type": "integer",
+      "required": true,
+      "default": 1,
+      "description": "Code du restaurant dont on lit le menu (1 = Resto U' Cap Sud)."
+    },
+    "jour": {
+      "type": "string",
+      "format": "date",
+      "required": true,
+      "default": "2026-03-03",
+      "description": "Jour du menu, en ISO. L'API le veut en DD-MM-YYYY : c'est format_date qui traduit."
+    }
+  },
+  "vars": {
+    "api": "https://api.croustillant.menu/v1",
+    "region": "1",
+    "type_ecarte": 4
+  },
+  "steps": [
+    {
+      "id": "lieux",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.api }}/regions/{{ vars.region }}/restaurants",
+      "headers": { "Accept": "application/json" },
+      "expect": { "status": 200 },
+      "extract": {
+        "restaurants": {
+          "from": "json",
+          "path": "$.data[*]",
+          "where": "item.type.code != 4",
+          "fields": {
+            "code": "$.code",
+            "nom": "$.nom",
+            "type": "$.type.libelle",
+            "zone": "$.zone",
+            "adresse": "$.adresse",
+            "lat": "$.latitude",
+            "lon": "$.longitude",
+            "ouvert": "$.ouvert"
+          }
+        }
+      }
+    },
+    {
+      "id": "menu",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.api }}/restaurants/{{ inputs.restaurant }}/menu/{{ inputs.jour | format_date('%d-%m-%Y') }}",
+      "headers": { "Accept": "application/json" },
+      "expect": { "status": 200 },
+      "extract": {
+        "repas": {
+          "from": "json",
+          "path": "$.data.repas[*]",
+          "fields": { "service": "$.type", "categories": "$.categories[*].libelle" }
+        },
+        "plats": {
+          "from": "json",
+          "path": "$.data.repas[*].categories[*].plats[*].libelle"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "restaurants": "{{ steps.lieux.restaurants }}",
+    "nombre_de_restaurants": "{{ steps.lieux.restaurants | length }}",
+    "repas": "{{ steps.menu.repas }}",
+    "plats": "{{ steps.menu.plats }}"
+  }
+}

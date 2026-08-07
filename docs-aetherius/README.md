@@ -13,7 +13,18 @@ elle est maintenue sur son propre dépôt.
 | Moteur embarqué pour React Native | [docs/embedded.md](https://github.com/kln-mltre/Aetherius/blob/HEAD/docs/embedded.md) |
 | Act I — Vector (HTTP/API) | [docs/acts/vector.md](https://github.com/kln-mltre/Aetherius/blob/HEAD/docs/acts/vector.md) |
 | Act II — Continuum (navigateur) | [docs/acts/continuum.md](https://github.com/kln-mltre/Aetherius/blob/HEAD/docs/acts/continuum.md) |
+| Porter un service ou une WebView en Blueprints | [docs/mobile-migration.md](https://github.com/kln-mltre/Aetherius/blob/HEAD/docs/mobile-migration.md) |
 | Workflow et sondes réalistes | [CONTRIBUTING.md](https://github.com/kln-mltre/Aetherius/blob/HEAD/CONTRIBUTING.md) |
+
+Le guide de migration a été écrit **contre nos sources** : le jalon 3-G d'Aetherius a porté six
+d'entre elles en Blueprints et les a jouées sur un vrai téléphone. Ces fichiers sont le point de
+départ de notre [`blueprints/`](../blueprints/README.md), et le guide dit ce qui descend dans un
+Blueprint et ce qui n'y descend pas.
+
+Un seul jalon d'Aetherius reste ouvert pour nous, et notre jalon 6-G en dépend :
+[3-h-portails.md](https://github.com/kln-mltre/Aetherius/blob/HEAD/docs/phase-3/3-h-portails.md) —
+autoriser un manifeste à *ajouter* un Blueprint sous un préfixe réservé, ce qui est ce qui permettra
+d'ajouter le portail d'une faculté sans publier sur les stores.
 
 Ce dossier ne contient volontairement aucune copie : la version qui vivait ici était déjà périmée
 (antérieure à la Phase 3 et au moteur embarqué).

@@ -57,13 +57,18 @@ Une capacité utilisateur — un écran, une source de données, une option — 
    capacité touchant une source distante, jouer **aussi le chemin dégradé** — hors ligne, source
    injoignable, réponse vide. Un échec propre et explicable est un résultat valide ; un comportement
    surprenant est un correctif à faire, ou une limite à écrire dans la doc avant de clore.
-6. **Prise en main visuelle** pour une capacité liée à l'interface et non triviale : une capture
+   Ces chemins doivent produire des écrans **différents** : s'ils affichent tous « aucun résultat »,
+   la vérification n'a rien vérifié.
+6. **Parité verte** pour toute source migrée vers un Blueprint : `npm run parity`. C'est la seule
+   preuve rejouable que la bascule ne change rien pour l'utilisateur, et c'est ce qui autorise à
+   retirer un repli ([tools/parity/README.md](tools/parity/README.md)).
+7. **Prise en main visuelle** pour une capacité liée à l'interface et non triviale : une capture
    ajoutée dans [`docs/screenshots/`](docs/screenshots/README.md) et intégrée à la documentation
    concernée. **Uniquement si l'outillage disponible le permet** — un appareil, un émulateur Android
    ou un simulateur iOS accessible. À défaut, le signaler dans la Pull Request plutôt que de
    l'inventer : la capacité reste livrable, la capture se rattrape. Une interaction rudimentaire
    (ajouter une ligne à une liste existante) n'en a pas besoin.
-7. **Commits conformes** à la convention.
+8. **Commits conformes** à la convention.
 
 ## Principes de code
 
@@ -75,7 +80,9 @@ Une capacité utilisateur — un écran, une source de données, une option — 
 - **La logique vit dans un hook ou un service**, pas dans un écran. Un écran compose, branche la
   navigation, lit le thème.
 - **Le réseau est confiné aux services** de `features/*/services/` ou `shared/services/`. Un
-  composant n'appelle jamais `axios` ni `fetch`.
+  composant n'appelle jamais `axios` ni `fetch` — et, depuis la
+  [Phase 6](docs/phase-6/README.md), un service n'en appelle plus non plus : il joue un
+  [Blueprint](docs/blueprints.md). La base de publication se lit avec la même règle.
 - **Pas de `any`** sans justification écrite.
 - **Pas de dépendance cartographique propriétaire.** Les cartes passent par Leaflet et OpenStreetMap
   dans une WebView ([docs/cartographie.md](docs/cartographie.md)).
@@ -87,16 +94,29 @@ Détail des conventions, du nommage et de l'anatomie d'un module :
 
 ## Ajouter une source de données
 
-Une source distante est la surface la plus fragile du projet. Le chemin attendu :
+Une source distante est la surface la plus fragile du projet. Depuis la
+[Phase 6](docs/phase-6/README.md), on n'écrit plus le code qui l'atteint : on écrit un
+**[Blueprint](docs/blueprints.md)**, joué par le moteur embarqué. Le chemin attendu :
 
-1. Écrire le service dans `features/<Domaine>/services/`, avec ses interfaces de contrat.
-2. Gérer l'échec **par valeur de repli** (`null` ou `[]`), jamais par exception propagée — c'est la
-   convention de tous les services existants.
-3. Décider de la stratégie de cache et la documenter dans
-   [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md).
-4. Ajouter l'entrée dans [docs/sources-externes.md](docs/sources-externes.md) : endpoint, charge
-   utile, forme de la réponse, transformation appliquée, **fragilité connue**.
-5. Créditer le fournisseur dans l'écran À propos si la source est publique.
+1. **Inventorier la source d'abord**, dans [docs/sources-externes.md](docs/sources-externes.md) :
+   endpoint, méthode, en-têtes indispensables, charge utile, constantes **et leur signification**,
+   forme de la réponse, transformation appliquée, **fragilité connue**. L'écrire révèle déjà la
+   moitié du travail.
+2. **Écrire le Blueprint** dans [`blueprints/`](blueprints/) — un par appel réellement joué, pas un
+   par source — et le jouer depuis un poste avant de toucher à l'application.
+3. **Écrire le service** dans `features/<Domaine>/services/`, avec ses interfaces de contrat. Il
+   orchestre le Blueprint et travaille la donnée reçue ; il n'émet pas de requête.
+4. **Gérer l'échec par famille**, pas par valeur de repli : une source en panne et une réponse
+   légitimement vide doivent produire deux écrans différents
+   ([docs/blueprints.md](docs/blueprints.md#les-erreurs-cessent-dêtre-avalées)).
+5. **Ajouter le cas de parité** dans [`tools/parity/`](tools/parity/README.md) et le rendre vert.
+6. Décider de la stratégie de cache et la documenter dans
+   [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md). Le cache reste applicatif : il
+   ne descend jamais dans un Blueprint.
+7. Créditer le fournisseur dans l'écran À propos si la source est publique.
+
+Ce qui descend dans un Blueprint et ce qui n'y descend jamais — le calcul, l'heure courante, la
+position, l'internationalisation — est écrit dans [docs/blueprints.md](docs/blueprints.md).
 
 ## Documentation
 
@@ -135,13 +155,16 @@ Un nouvel écran arrive avec **son emplacement marqué**, même si la capture es
 
 ## Vérification
 
-Il n'y a **pas de test automatisé** dans le dépôt, et l'intégration continue ne joue que la
-publication. Les deux commandes de qualité doivent donc être lancées en local :
+L'intégration continue ne joue que la publication : les commandes de qualité se lancent en local.
 
 ```bash
 npx tsc --noEmit
 npx eslint .
+npm run parity        # sources migrees vers un Blueprint (voir tools/parity/README.md)
 ```
+
+En dehors du harnais de parité, il n'y a **pas de test automatisé** dans le dépôt ; la vérification
+manuelle sur l'application réelle reste la porte principale.
 
 Pour les comportements dépendant de l'heure — notifications, salles libres, menus du jour, horaires —
 utiliser le menu flottant de simulation temporelle décrit dans [docs/qualite.md](docs/qualite.md)
@@ -159,6 +182,7 @@ manuellement. Avant de poser un tag, vérifier la cohérence de `package.json`, 
 
 * [ ] `npx tsc --noEmit` sans nouvelle erreur.
 * [ ] `npx eslint .` sans nouveau warning.
+* [ ] `npm run parity` vert, si une source migrée est touchée.
 * [ ] Aucune chaîne en dur ; les trois dictionnaires sont à jour.
 * [ ] Aucune valeur de style en dur ; tokens utilisés.
 * [ ] Aucun `any` ajouté sans justification.

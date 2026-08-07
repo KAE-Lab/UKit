@@ -1,0 +1,93 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.campus.affluence",
+  "description": "REFERENCE (jalon 3-G) : l'API d'affluence des bibliotheques, telle que UKit la consomme (LibraryService). Zero configuration. C'est le port qui montre le mieux la frontiere : les en-tetes imites, le corps JSON et les chemins d'extraction deviennent des donnees, mais le balayage geographique en douze points, la deduplication, la distance de Haversine et le filtre de categorie (1 ou 20, quelque part dans une liste) restent applicatifs — un predicat where n'indexe pas une liste, des deux cotes et volontairement. Voir docs/mobile-migration.md.",
+  "act": "vector",
+  "inputs": {
+    "latitude": {
+      "type": "number",
+      "required": true,
+      "default": 44.7963,
+      "description": "Point de balayage (defaut : campus Talence/Pessac/Gradignan)."
+    },
+    "longitude": { "type": "number", "required": true, "default": -0.6277 },
+    "site": {
+      "type": "string",
+      "required": true,
+      "default": "bu-droit-lettres-pessac",
+      "description": "Identifiant lisible du site dont on lit l'affluence en direct."
+    }
+  },
+  "vars": {
+    "api": "https://api.affluences.com",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  },
+  "steps": [
+    {
+      "id": "carte",
+      "action": "http.request",
+      "method": "POST",
+      "url": "{{ vars.api }}/app/v3/sites/map",
+      "headers": {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "fr",
+        "Content-Type": "application/json",
+        "x-service-name": "website",
+        "Origin": "https://affluences.com",
+        "Referer": "https://affluences.com/",
+        "User-Agent": "{{ vars.user_agent }}"
+      },
+      "json": {
+        "latitude": "{{ inputs.latitude }}",
+        "longitude": "{{ inputs.longitude }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "sites": {
+          "from": "json",
+          "path": "$.data.results[*]",
+          "fields": {
+            "id": "$.id",
+            "nom": "$.primary_name",
+            "slug": "$.slug",
+            "ville": "$.location.address.city",
+            "lat": "$.location.coordinates.latitude",
+            "lon": "$.location.coordinates.longitude",
+            "categories": "$.categories[*].id",
+            "image": "$.poster_image"
+          }
+        }
+      }
+    },
+    {
+      "id": "direct",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.api }}/app/v4/sites/{{ inputs.site }}/live-data",
+      "headers": {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "fr",
+        "x-service-name": "website",
+        "Origin": "https://affluences.com",
+        "Referer": "https://affluences.com/",
+        "User-Agent": "{{ vars.user_agent }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "ouvert": { "from": "json", "path": "$.data.status.isOpen" },
+        "ferme_a": { "from": "json", "path": "$.data.status.closingAt" },
+        "texte_ouverture": { "from": "json", "path": "$.data.status.openingText" },
+        "occupation": { "from": "json", "path": "$.data.liveAttendance.percentage" }
+      }
+    }
+  ],
+  "outputs": {
+    "sites": "{{ steps.carte.sites }}",
+    "nombre_de_sites": "{{ steps.carte.sites | length }}",
+    "site_regarde": "{{ inputs.site }}",
+    "ouvert": "{{ steps.direct.ouvert | first }}",
+    "ferme_a": "{{ steps.direct.ferme_a | first | default('', true) }}",
+    "texte_ouverture": "{{ steps.direct.texte_ouverture | first | default('', true) }}",
+    "occupation": "{{ steps.direct.occupation | first | default(none, true) }}"
+  }
+}
