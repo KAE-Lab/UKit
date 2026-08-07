@@ -161,11 +161,13 @@ Avant de proposer un changement :
 ```bash
 npx tsc --noEmit      # typage
 npx eslint .          # règles d'architecture
+npm test              # socle du moteur
+npm run parity        # sources migrées, comparées aux services historiques
 ```
 
-Ces deux commandes ne sont pas encore vertes ; la base de référence à ne pas dégrader est décrite
-dans [docs/qualite.md](docs/qualite.md). Il n'y a pas de test automatisé : **la vérification manuelle
-sur l'application réelle fait partie de la définition de « terminé »**
+Les deux premières ne sont pas encore vertes ; la base de référence à ne pas dégrader est décrite
+dans [docs/qualite.md](docs/qualite.md). Les deux dernières le sont. Aucune ne couvre l'interface :
+**la vérification manuelle sur l'application réelle fait partie de la définition de « terminé »**
 ([CONTRIBUTING.md](CONTRIBUTING.md)).
 
 <p align="center"><sub>· · ·</sub></p>
@@ -186,7 +188,7 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Thème** — tokens de design (espacements, rayons, typographie, ombres), thèmes clair et sombre
   complets, alignement sur la préférence système au premier lancement.
   [docs/theme.md](docs/theme.md)
-- [x] **Internationalisation** — français, anglais, espagnol ; 209 clés par dictionnaire, typage de
+- [x] **Internationalisation** — français, anglais, espagnol ; 215 clés par dictionnaire, typage de
   la clé, locale des dates alignée. Treize libellés d'écrans Campus restent non traduits.
   [docs/i18n.md](docs/i18n.md)
 - [x] **Persistance locale** — managers observables, caches à expiration pour les listes de
@@ -196,12 +198,14 @@ livré ; elle est mise à jour à chaque contribution.
   l'application, référentiel local de 73 bâtiments. [docs/cartographie.md](docs/cartographie.md)
 - [x] **Publication** — profils EAS (développement, aperçu, production) et chaîne de release GitHub
   Actions vers les deux stores. [docs/plateforme.md](docs/plateforme.md)
-- [ ] **Tests automatisés** — aucun harnais n'est en place ; la vérification est manuelle, et
-  l'intégration continue ne joue que la publication. Le [harnais de parité](tools/parity/README.md)
-  arrive avec la Phase 6. [docs/qualite.md](docs/qualite.md)
+- [ ] **Tests automatisés** — un premier harnais existe, borné : `npm test` couvre le socle du moteur
+  (résolution des secrets, registre, modèle d'erreur) et le [harnais de parité](tools/parity/README.md)
+  rejoue les sources migrées contre les vraies. Aucun test d'écran ni de composant, et l'intégration
+  continue ne joue toujours que la publication. [docs/qualite.md](docs/qualite.md)
 - [ ] **Le comportement en données** — l'accès aux sources migre vers des
   [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
-  et corrigeables sans release. Phase en cours, jalon par jalon :
+  et corrigeables sans release. Le socle est en place et **une première source y passe** (les
+  annonces de vie étudiante) ; les six autres suivent, jalon par jalon :
   [docs/phase-6/README.md](docs/phase-6/README.md).
 
 ### Fonctionnalités
@@ -222,7 +226,7 @@ livré ; elle est mise à jour à chaque contribution.
   avec les horaires d'ouverture, créneaux libres par heure. Un seul bâtiment est déclaré en accès
   libre à ce jour. [docs/features/campus-salles-libres.md](docs/features/campus-salles-libres.md)
 - [x] **Campus — vie étudiante** — annonces éditoriales publiées sans mise à jour de l'application,
-  avec activation et expiration.
+  avec activation et expiration. Première source jouée par un [Blueprint](docs/blueprints.md).
   [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
 - [x] **Scolarité** — connexion CAS, récupération de l'identité au premier login puis rafraîchissement
   léger, compteur de messages non lus, verrou biométrique, navigateur intégré avec remplissage

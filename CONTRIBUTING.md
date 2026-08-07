@@ -51,7 +51,7 @@ Une capacité utilisateur — un écran, une source de données, une option — 
 4. **`npx tsc --noEmit` et `npx eslint .` sans régression** — zéro nouvelle erreur, zéro nouveau
    warning. La base de référence actuelle (3 erreurs de typage, 11 warnings `no-explicit-any`) est
    décrite dans [docs/qualite.md](docs/qualite.md) : ne pas l'augmenter, la réduire quand on passe à
-   proximité.
+   proximité. **`npm test` vert**, sans exception : lui l'est déjà.
 5. **Flux vérifié à la main au moins une fois** sur l'application réelle, pas seulement relu. Chaque
    documentation de partie porte une section « Vérifier » décrivant le parcours attendu. Pour toute
    capacité touchant une source distante, jouer **aussi le chemin dégradé** — hors ligne, source
@@ -160,11 +160,13 @@ L'intégration continue ne joue que la publication : les commandes de qualité s
 ```bash
 npx tsc --noEmit
 npx eslint .
+npm test              # tests unitaires du socle Aetherius (voir docs/qualite.md)
 npm run parity        # sources migrees vers un Blueprint (voir tools/parity/README.md)
 ```
 
-En dehors du harnais de parité, il n'y a **pas de test automatisé** dans le dépôt ; la vérification
-manuelle sur l'application réelle reste la porte principale.
+Les tests automatiques s'arrêtent au socle Aetherius et à la parité des sources migrées : il n'y a
+**aucun test d'écran ni de composant**, et la vérification manuelle sur l'application réelle reste la
+porte principale.
 
 Pour les comportements dépendant de l'heure — notifications, salles libres, menus du jour, horaires —
 utiliser le menu flottant de simulation temporelle décrit dans [docs/qualite.md](docs/qualite.md)
@@ -182,6 +184,7 @@ manuellement. Avant de poser un tag, vérifier la cohérence de `package.json`, 
 
 * [ ] `npx tsc --noEmit` sans nouvelle erreur.
 * [ ] `npx eslint .` sans nouveau warning.
+* [ ] `npm test` vert.
 * [ ] `npm run parity` vert, si une source migrée est touchée.
 * [ ] Aucune chaîne en dur ; les trois dictionnaires sont à jour.
 * [ ] Aucune valeur de style en dur ; tokens utilisés.

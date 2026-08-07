@@ -6,38 +6,37 @@
  * « une panne du fournisseur et une reponse legitimement vide sont indistinguables ». Un ecran
  * « aucun resultat » pouvait donc masquer une source morte.
  *
- * Le moteur leve des erreurs **typees** et ne decide pas a la place de l'application ; `describeFailure`
- * les range dans neuf familles. Ce fichier dit ce que chaque famille veut dire **pour un ecran de
- * UKit** : quel message, et si l'on propose de reessayer.
+ * Le moteur leve des erreurs **typees** et ne decide pas a la place de l'application ;
+ * `describeFailure` les range dans neuf familles. Ce fichier dit ce que chaque famille veut dire
+ * **pour un ecran de UKit** : quel message, et si l'on propose de reessayer.
  *
  * Le pendant, qui est la moitie du sujet : **une liste vide n'est pas une erreur**. Un run reussi
  * dont les sorties portent une liste vide a reellement trouve une liste vide.
  *
+ * Ce module importe `describeFailure` du **moteur** et non du paquet React Native, qui le
+ * re-exporte : le modele d'erreur ne depend d'aucune plateforme, et c'est ce qui le rend jouable
+ * hors appareil (failures.test.ts).
+ *
  * Voir docs/blueprints.md et docs/phase-6/6-a-socle.md.
  */
 
-/**
- * Les familles d'echec, telles que le moteur les rend.
- *
- * Reproduites ici pour que le squelette compile avant l'installation de la dependance ; le jalon 6-A
- * remplace cette union par le type `FailureKind` du paquet, pour qu'une famille ajoutee un jour
- * casse la compilation plutot que de tomber dans un cas par defaut.
- */
-export type UkitFailureKind =
-    | 'blueprint'
-    | 'unavailable'
-    | 'rejected'
-    | 'blocked'
-    | 'data'
-    | 'config'
-    | 'cancelled'
-    | 'unsupported'
-    | 'engine';
+import { describeFailure, type FailureKind } from '@aetherius/engine';
+
+import type { BlueprintName } from '../../../blueprints';
+import type { TranslationKey } from '../i18n/Translator';
+
+/** Les familles d'echec, telles que le moteur les rend. */
+export type UkitFailureKind = FailureKind;
 
 /** Ce qu'un ecran a besoin de savoir, et rien de plus. */
 export interface FailurePresentation {
-    /** Cle de traduction du message affiche. Les trois dictionnaires la portent. */
-    readonly messageKey: string;
+    /**
+     * Cle de traduction du message affiche.
+     *
+     * Typee `TranslationKey` : la presence de la cle dans les trois dictionnaires devient une
+     * garantie du compilateur plutot qu'une ligne de checklist.
+     */
+    readonly messageKey: TranslationKey;
     /** Proposer un bouton Reessayer n'a de sens que si reessayer peut changer quelque chose. */
     readonly retryable: boolean;
     /** Ne rien afficher : l'utilisateur est deja parti, ou le run a ete remplace. */
@@ -47,18 +46,22 @@ export interface FailurePresentation {
 /**
  * La table de correspondance.
  *
- * Deux distinctions valent d'etre lues avant d'etre « simplifiees » :
+ * Trois distinctions valent d'etre lues avant d'etre « simplifiees » :
  *
  *   - `config` n'est pas `data`. Un secret absent du trousseau n'est pas une page qui a change : les
  *     deux appellent des ecrans opposes, l'un dit « on s'en occupe », l'autre « saisis tes
  *     identifiants ». C'est une campagne sur appareil qui a tranche, cote Aetherius.
  *   - `blocked` porte le nom que le Blueprint a donne a son echec (`fail:LOGIN_FAILED`). L'ecran
  *     branche dessus au lieu de deviner ; c'est le seul cas ou le message vient du fichier.
+ *   - `rejected` est **non reessayable ici**, alors que le moteur le marque reessayable. L'ecart est
+ *     voulu : le moteur parle d'un statut HTTP qui peut etre transitoire, UKit parle d'une source
+ *     qui a change de contrat. Rejouer la meme requete redonnera la meme reponse, et un bouton
+ *     Reessayer qui ne repare rien est pire qu'aucun bouton.
  */
 export const FAILURE_PRESENTATION: Readonly<Record<UkitFailureKind, FailurePresentation>> = {
     // La source est en panne : la seule famille qu'il est utile de reessayer.
     unavailable: { messageKey: 'ERROR_SERVICE_UNAVAILABLE', retryable: true, silent: false },
-    // La source a repondu, mais pas comme `expect` l'exigeait : elle a change.
+    // La source a repondu, mais pas comme `expect` ou `assert` l'exigeait : elle a change.
     rejected: { messageKey: 'ERROR_UNEXPECTED_RESPONSE', retryable: false, silent: false },
     // La page ou la reponse n'est plus celle que le Blueprint decrit : fichier a corriger.
     data: { messageKey: 'ERROR_CONTENT_NOT_FOUND', retryable: false, silent: false },
@@ -91,10 +94,49 @@ export interface UkitFailure extends FailurePresentation {
  * Accepte les deux canaux de sortie du moteur — un `Result` en echec ou une exception levee —
  * precisement pour qu'un service n'ait pas a savoir lequel a parle.
  *
- * TODO(6-A) : deleguer a `describeFailure` de `@aetherius/react-native` des que la dependance est
- * installee. La table ci-dessus est le seul morceau qui restera propre a UKit.
+ * Un sujet que le moteur ne reconnait pas comme un echec est range en `engine` : appeler cette
+ * fonction sur un succes est un defaut d'appelant, et le taire rendrait un objet qui pretendrait
+ * qu'il n'y a rien a signaler.
  */
-export function describeUkitFailure(_failure: unknown): UkitFailure {
-    const presentation = FAILURE_PRESENTATION.engine;
-    return { kind: 'engine', ...presentation };
+export function describeUkitFailure(subject: unknown): UkitFailure {
+    const failure = describeFailure(subject);
+    if (failure === undefined) {
+        return { kind: 'engine', detail: 'echec sans cause identifiable', ...FAILURE_PRESENTATION.engine };
+    }
+
+    return {
+        kind: failure.kind,
+        ...(failure.code !== undefined ? { code: failure.code } : {}),
+        detail: failure.message,
+        ...FAILURE_PRESENTATION[failure.kind],
+    };
+}
+
+/**
+ * Fabrique un echec que le moteur n'a pas leve.
+ *
+ * Un run peut reussir et rendre autre chose que ce que le service attendait — une sortie qui n'est
+ * pas la liste promise, par exemple. C'est un Blueprint a corriger, et le dire vaut mieux que rendre
+ * une liste vide qui passerait pour une absence de donnees.
+ *
+ * Passer par ce constructeur plutot que d'ecrire l'objet au point d'appel : la table reste le seul
+ * endroit qui decide de ce qu'un ecran fait d'une famille.
+ */
+export function ukitFailure(kind: UkitFailureKind, detail: string): UkitFailure {
+    return { kind, detail, ...FAILURE_PRESENTATION[kind] };
+}
+
+/**
+ * Journalise un echec, sans le masquer.
+ *
+ * C'est le seul canal d'observation du modele d'erreur tant que les ecrans n'y sont pas branches
+ * (jalon 6-A : la chaine est prouvee, l'experience ne change pas). La ligne nomme le Blueprint et
+ * la famille, ce qui suffit a distinguer les chemins degrades les uns des autres sur un appareil.
+ *
+ * Les valeurs de secrets sont deja masquees par la facade quand elle rend l'echec : ce qui arrive
+ * ici est publiable dans un journal.
+ */
+export function reportFailure(name: BlueprintName, failure: UkitFailure): void {
+    const code = failure.code !== undefined ? ` [${failure.code}]` : '';
+    console.warn(`[aetherius] ${name} : ${failure.kind}${code} — ${failure.detail ?? 'sans detail'}`);
 }

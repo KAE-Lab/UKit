@@ -16,36 +16,34 @@
  * Deux canaux de sortie, et il faut les traiter tous les deux : un `Result` (echec de run trace
  * dedans) et une exception (Blueprint refuse avant le demarrage, dependance absente, bug du moteur).
  * `describeUkitFailure` accepte les deux, precisement pour qu'un service n'ait pas a savoir lequel a
- * parle.
+ * parle — c'est `runBlueprint` qui s'en charge, et aucun service n'appelle cette facade en direct.
+ *
+ * Ce fichier est le **seul** du socle a importer le paquet React Native et le trousseau : c'est ce
+ * qui garde le reste (registre, secrets, modele d'erreur) jouable hors appareil.
  *
  * Voir docs/phase-6/6-a-socle.md.
  */
 
+import { Aetherius } from '@aetherius/react-native';
+
+import SecureStoreService from '../services/SecureStoreService';
+import { ukitSecrets } from './secrets';
+
+let client: Aetherius | null = null;
+
 /**
- * TODO(6-A) : brancher le moteur.
+ * La facade de l'application, instanciee a la premiere demande.
  *
- * ```ts
- * import { Aetherius } from '@aetherius/react-native';
- * import { ukitSecrets } from './secrets';
+ * Paresseuse et non au niveau du module : le socle charge ses managers **avant** le premier rendu
+ * (voir docs/architecture.md), et rien de ce jalon ne doit s'ajouter a ce chemin. Une application
+ * qui ne joue aucun Blueprint ne construit jamais de moteur.
  *
- * let client: Aetherius | null = null;
- *
- * export function getAetheriusClient(): Aetherius {
- *     if (!client) client = new Aetherius({ secrets: ukitSecrets() });
- *     return client;
- * }
- * ```
- *
- * Et, une fois, haut dans l'arbre (rootContainer.tsx) : `<AetheriusWebView />` et
- * `<AetheriusConfirm />`. Les deux vivent avec l'application, pas avec un run — la WebView cachee
- * sert tous les Blueprints navigateur successivement, et le modal doit exister au moment ou une
- * question est posee. Personne qui ecoute veut dire question jamais montree, donc refus immediat :
- * c'est voulu, garer un run devant un ecran muet serait un blocage sans cause visible.
- *
- * Premier risque a lever du jalon, avant toute autre ligne : verifier que Metro resout les deux
- * paquets (ESM avec champ `exports`). Un import qui rend `undefined` se diagnostique en trente
- * secondes le premier jour et en une soiree le troisieme.
+ * Le masquage des valeurs de secrets reste actif : `redact: false` n'a de sens qu'en deboguant le
+ * moteur lui-meme, et un journal d'application finit souvent ailleurs que sur l'appareil.
  */
-export function getAetheriusClient(): never {
-    throw new Error('Aetherius: le moteur est branche au jalon 6-A (voir docs/phase-6/6-a-socle.md)');
+export function getAetheriusClient(): Aetherius {
+    if (client === null) {
+        client = new Aetherius({ secrets: ukitSecrets(SecureStoreService) });
+    }
+    return client;
 }

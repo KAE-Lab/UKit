@@ -12,6 +12,8 @@
  * Voir docs/blueprints.md et docs/phase-6/6-c-livraison.md.
  */
 
+import type { BundledBlueprint } from '@aetherius/react-native';
+
 import campusAffluence from './ukit-campus-affluence.blueprint.json';
 import campusAnnonces from './ukit-campus-annonces.blueprint.json';
 import campusRestaurants from './ukit-campus-restaurants.blueprint.json';
@@ -20,17 +22,13 @@ import scolariteMessagerie from './ukit-scolarite-messagerie.blueprint.json';
 import scolariteSso from './ukit-scolarite-sso.blueprint.json';
 
 /**
- * Une entree du socle.
+ * Une entree du socle : `{ version, document }`.
  *
- * Le type sera celui du paquet (`BundledBlueprint`) des le jalon 6-A ; il est decrit ici pour que le
- * squelette compile avant que la dependance ne soit installee, et parce qu'il n'a que deux champs.
+ * Le type vient du paquet, et l'import est volontairement `import type` — il disparait a la
+ * compilation, donc ce fichier reste lisible par Node sans tirer React Native (le harnais de parite
+ * en depend).
  */
-export interface BundledBlueprint {
-    /** Chaine numerique pointee, ordonnee : "1", "1.4", "2". Pas de SemVer, volontairement. */
-    readonly version: string;
-    /** Le document, tel qu'importe. Il est valide par le moteur avant d'etre joue. */
-    readonly document: unknown;
-}
+export type { BundledBlueprint };
 
 /** Les noms, en un seul endroit : c'est par eux qu'un service demande un Blueprint au registre. */
 export const BLUEPRINT = {
@@ -47,12 +45,15 @@ export type BlueprintName = (typeof BLUEPRINT)[keyof typeof BLUEPRINT];
 /**
  * La table livree avec le binaire.
  *
- * Les six fichiers sont ceux du jalon 3-G d'Aetherius, repris tels quels parce qu'ils ont ete joues
- * contre les vraies sources et verifies sur un telephone. Chaque jalon de migration les decoupe
- * selon les appels que l'application joue reellement — voir blueprints/README.md.
+ * Les six fichiers viennent du jalon 3-G d'Aetherius, joues contre les vraies sources et verifies
+ * sur un telephone. Chaque jalon de migration les decoupe selon les appels que l'application joue
+ * reellement, et corrige ce que le branchement revele — voir blueprints/README.md.
+ *
+ * `ukit.campus.annonces` est en version 2 : le jalon 6-A y a ajoute l'extraction de `long_desc`
+ * (que la fiche affiche) et un `assert` de forme.
  */
 export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
-    [BLUEPRINT.CAMPUS_ANNONCES]: { version: '1', document: campusAnnonces },
+    [BLUEPRINT.CAMPUS_ANNONCES]: { version: '2', document: campusAnnonces },
     [BLUEPRINT.CAMPUS_RESTAURANTS]: { version: '1', document: campusRestaurants },
     [BLUEPRINT.CAMPUS_AFFLUENCE]: { version: '1', document: campusAffluence },
     [BLUEPRINT.CELCAT_SEMAINE]: { version: '1', document: celcatSemaine },

@@ -17,30 +17,33 @@
  * Voir docs/blueprints.md et docs/phase-6/6-c-livraison.md.
  */
 
+import { validateBlueprintData } from '@aetherius/engine';
+import type { BlueprintOrigin, ResolvedBlueprint } from '@aetherius/react-native';
+
 import { BUNDLED, type BlueprintName } from '../../../blueprints';
 
-/** D'ou vient le document resolu — l'information que l'ecran de diagnostic affiche. */
-export type BlueprintOrigin = 'bundled' | 'remote';
-
-export interface ResolvedBlueprint {
-    readonly name: BlueprintName;
-    readonly version: string;
-    readonly origin: BlueprintOrigin;
-    readonly document: unknown;
-}
+export type { BlueprintOrigin, ResolvedBlueprint };
 
 /**
  * Rend le Blueprint a jouer.
  *
  * Au jalon 6-A il n'existe qu'une source, et cette fonction rend donc toujours l'embarque. Les
  * services l'appellent quand meme, au lieu d'importer le document directement : sans cela, le jalon
- * 6-C devrait repasser sur chaque appelant. C'est un detail d'implementation, pas d'interface.
+ * 6-C devrait repasser sur chaque appelant. C'est un detail d'implementation, pas d'interface — la
+ * forme rendue est deja celle du `BlueprintRegistry` du paquet.
+ *
+ * La validation a lieu **ici**, et pas seulement dans la facade : un document embarque casse doit
+ * echouer a la resolution, ou le diagnostic du jalon 6-C ne saurait pas distinguer un fichier faux
+ * d'un run rate.
+ *
+ * @throws {BlueprintError} le document embarque n'est pas un Blueprint valide.
  *
  * TODO(6-C) : deleguer a `BlueprintRegistry` (socle + manifeste Supabase + cache AsyncStorage).
  */
 export async function resolveBlueprint(name: BlueprintName): Promise<ResolvedBlueprint> {
     const bundled = BUNDLED[name];
-    return { name, version: bundled.version, origin: 'bundled', document: bundled.document };
+    const blueprint = validateBlueprintData(bundled.document, `${name}.blueprint.json`);
+    return { name, version: bundled.version, origin: 'bundled', blueprint };
 }
 
 /**

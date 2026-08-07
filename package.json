@@ -12,6 +12,7 @@
     "build:ios": "eas build -p ios --profile preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "parity": "node tools/parity/run.mjs",
     "blueprints:publish": "node tools/publish-blueprints.mjs",
     "prepare": "husky",
@@ -24,6 +25,8 @@
   },
   "main": "node_modules/expo/AppEntry.js",
   "dependencies": {
+    "@aetherius/engine": "^0.5.2",
+    "@aetherius/react-native": "^0.5.2",
     "@expo-google-fonts/montserrat": "^0.1.0",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -84,6 +87,7 @@
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^10.4.0",
     "husky": "^9.1.7",
-    "prettier": "^1.14.2"
+    "prettier": "^1.14.2",
+    "vitest": "^3.2.7"
   }
 }

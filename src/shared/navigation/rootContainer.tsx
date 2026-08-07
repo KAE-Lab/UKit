@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { AppState, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { AetheriusConfirm, AetheriusWebView } from '@aetherius/react-native';
 
 import StackNavigator from './StackNavigator';
 import { AppContextProvider } from '../services/AppCore';
 import { SettingsManager } from '../services/AppCore';
-import WelcomeScreen from '../../features/Onboarding/WelcomeScreen'; 
+import WelcomeScreen from '../../features/Onboarding/WelcomeScreen';
 import Style from '../theme/Theme';
+import Translator from '../i18n/Translator';
 import { StatusBar, UpdateAlert } from '../ui/AppUI';
 import ModMenu from '../ui/ModMenu';
 
@@ -62,6 +64,21 @@ export default function RootContainer() {
                     </NavigationContainer>
                 )}
                 <ModMenu />
+
+                {/*
+                  * Le moteur Aetherius (docs/blueprints.md). Les deux vivent avec l'application, pas
+                  * avec un run : la WebView cachee sert tous les Blueprints navigateur
+                  * successivement, et le modal doit exister au moment ou une question est posee —
+                  * personne qui ecoute veut dire refus immediat.
+                  *
+                  * La WebView ne cree sa vue native qu'au premier run navigateur, jamais au montage :
+                  * le demarrage n'en porte rien.
+                  */}
+                <AetheriusWebView />
+                <AetheriusConfirm
+                    approveLabel={Translator.get('CONFIRM')}
+                    rejectLabel={Translator.get('CANCEL')}
+                />
 			</AppContextProvider>
 		</View>
 	);

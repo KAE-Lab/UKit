@@ -20,19 +20,19 @@
  * Voir docs/phase-6/6-a-socle.md.
  */
 
-import SecureStoreService from '../services/SecureStoreService';
+import type { SecretResolver } from '@aetherius/react-native';
 
 /**
- * Ce que le moteur attend d'un resolver : une methode, qui rend `undefined` pour un secret absent.
+ * Le magasin d'identifiants, **declare** plutot qu'importe.
  *
- * Un secret introuvable est **omis** plutot qu'errone : c'est le rendu du step qui le lit qui
- * signalera l'erreur, la ou elle a un sens.
- *
- * Reproduit ici pour que le squelette compile avant l'installation de la dependance ; le jalon 6-A
- * importe `SecretResolver` du paquet.
+ * Meme posture que le `SecretStore` du paquet, et pour la meme raison : ce module n'a besoin que
+ * d'une methode, et l'importer ferait entrer `expo-secure-store` — donc un module natif — dans un
+ * fichier qui n'est que de la projection de champs. Le typage structurel fait que
+ * `SecureStoreService` satisfait ce contrat sans rien declarer, et le socle reste jouable hors
+ * appareil (voir secrets.test.ts). C'est `client.ts` qui branche le vrai magasin.
  */
-export interface SecretResolver {
-    resolve(name: string): Promise<string | undefined>;
+export interface CredentialStore {
+    getCredentials(): Promise<{ username: string; password: string } | null>;
 }
 
 /**
@@ -57,14 +57,20 @@ const SECRET_FIELD: Readonly<Record<string, 'username' | 'password'>> = {
  * et laisser echapper une erreur de plateforme ferait mourir un run qui n'avait peut-etre pas besoin
  * de ce secret.
  */
-export function ukitSecrets(): SecretResolver {
+export function ukitSecrets(store: CredentialStore): SecretResolver {
     return {
         async resolve(name: string): Promise<string | undefined> {
             const field = SECRET_FIELD[name];
             if (!field) return undefined;
 
-            const credentials = await SecureStoreService.getCredentials();
-            return credentials?.[field] || undefined;
+            try {
+                const credentials = await store.getCredentials();
+                return credentials?.[field] || undefined;
+            } catch {
+                return undefined;
+            }
         },
     };
 }
+
+export type { SecretResolver };

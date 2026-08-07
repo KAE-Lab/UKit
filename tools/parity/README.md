@@ -17,6 +17,11 @@ lui, « ça marche » veut dire « je n'ai pas vu la différence ».
 `@aetherius/engine` est neutre plateforme : le même moteur, le même code, hors appareil. Le cycle est
 de quelques secondes au lieu de quelques minutes, et il n'y a rien à simuler.
 
+Un cas joue le moteur nu (`RunEngine`) et non la façade `Aetherius` : celle-ci vit dans
+`@aetherius/react-native` et n'est pas jouable sous Node. C'est la seule différence avec ce que fait
+l'application, et elle ne porte ni la requête, ni l'extraction, ni les expressions — ce que la parité
+compare, donc, est bien joué par le même code.
+
 Ce que ça ne couvre pas, et qui reste de la vérification manuelle : la WebView (Act II vit dans le
 paquet React Native), le cache, la concurrence, et l'affichage. Un cas de parité vert et un écran
 cassé sont parfaitement compatibles.
@@ -44,6 +49,10 @@ La comparaison porte sur la donnée **après** transformation applicative — c'
 et c'est donc la seule égalité qui compte. Comparer les réponses brutes ferait échouer un cas pour
 une clé renommée qui n'a jamais atteint personne.
 
+La projection (`project`) doit couvrir **tous** les champs que les écrans lisent, pas un échantillon
+lisible. Le premier cas l'a appris à ses dépens : le Blueprint des annonces n'extrayait pas
+`long_desc`, que la fiche affiche, et une projection sur trois champs n'aurait rien vu.
+
 Trois pièges rencontrés, à traiter dans le cas plutôt qu'à découvrir :
 
 - **l'arité de l'extraction** : un chemin qui ne correspond à rien rend `null`, une seule
@@ -63,5 +72,9 @@ spécification.
 
 ## État
 
-> Le harnais est posé au jalon [6-A](../../docs/phase-6/6-a-socle.md) avec son premier cas, les
-> annonces. Chaque jalon de migration ajoute les siens.
+| Cas | Source | Jalon |
+|---|---|---|
+| `annonces` | jsDelivr / `ukit-data` | [6-A](../../docs/phase-6/6-a-socle.md) |
+
+Le harnais a été posé au jalon 6-A avec son premier cas, qui sert de gabarit aux suivants. Chaque
+jalon de migration ajoute les siens.

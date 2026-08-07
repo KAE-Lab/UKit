@@ -32,6 +32,13 @@ const es: TranslationDict = {
 	ENGLISH: 'Inglés',
 	ERROR_WITH_CODE: 'El servidor a devuelto un error $-',
 	ERROR_WITH_MESSAGE: 'Error: $-',
+	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
+	ERROR_SERVICE_UNAVAILABLE: 'Servicio no disponible. Comprueba tu conexión e inténtalo de nuevo.',
+	ERROR_UNEXPECTED_RESPONSE: 'Respuesta inesperada de la fuente. Estamos en ello.',
+	ERROR_CONTENT_NOT_FOUND: 'Contenido no encontrado. La fuente ha cambiado, estamos en ello.',
+	ERROR_BLOCKED: 'No se ha podido completar la solicitud.',
+	ERROR_MISSING_CREDENTIALS: 'Falta información para realizar esta solicitud.',
+	ERROR_INTERNAL: 'Se ha producido un problema por nuestra parte.',
 	EXISTING_CALENDARS: 'Calendarios existentes:',
 	FILTERS: 'Filtros',
 	FILTERS_CONFIRMATION:

@@ -15,6 +15,23 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **Le socle du moteur Aetherius et la première source migrée** (jalon
+  [6-A](docs/phase-6/6-a-socle.md)). L'application embarque `@aetherius/engine` et
+  `@aetherius/react-native`, sait jouer un [Blueprint](docs/blueprints.md) depuis n'importe quel
+  service, et **les annonces de vie étudiante y passent déjà**, derrière la signature inchangée de
+  `BdeService.fetchAnnonces` — l'ancien chemin reste en repli jusqu'au jalon 6-H. Rien ne change
+  pour l'utilisateur : c'est la fondation des sept jalons suivants.
+
+  Le vrai apport est le **modèle d'erreur**. Les services rendaient `null` ou `[]`, ce qui rendait
+  une panne du fournisseur et une réponse légitimement vide indistinguables ; un échec est désormais
+  rangé dans l'une des neuf familles du moteur, traduite en message dans les trois dictionnaires.
+  Le Blueprint des annonces a gagné au passage l'extraction de la description longue, qu'il oubliait,
+  et une assertion sur la forme de la réponse — sans elle, une clé disparue produirait un succès à
+  liste vide.
+- **Un premier harnais de test automatisé**, borné au socle du moteur : `npm test`
+  ([vitest](https://vitest.dev)) couvre la résolution des secrets, le registre de Blueprints et la
+  table du modèle d'erreur. `npm run parity` rejoue le Blueprint des annonces contre la vraie source
+  et le compare au service historique. [docs/qualite.md](docs/qualite.md)
 - **Cadrage et squelette de la Phase 6** — la façon d'atteindre les sources distantes va quitter le
   binaire pour devenir des [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué,
   publiés depuis une base et corrigeables sans release. Ce changement pose la documentation de phase
@@ -22,8 +39,7 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   ([blueprints.md](docs/blueprints.md), [backend.md](docs/backend.md)), le socle de code
   (`src/shared/aetherius/`, `src/shared/supabase/`), les six Blueprints de référence dans
   [`blueprints/`](blueprints/), le schéma et les politiques de la base ([`supabase/`](supabase/)) et
-  le [harnais de parité](tools/parity/README.md). Aucun comportement de l'application ne change
-  encore.
+  le [harnais de parité](tools/parity/README.md).
 - **Onglet Campus et son tableau de bord** — quatre sections indépendantes (annonces, restaurants,
   bibliothèques, salles libres) au-dessus d'un socle de liste commun : recherche, filtres persistés,
   favoris, tri par distance, états vides. La position de l'utilisateur est résolue une seule fois pour

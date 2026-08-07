@@ -11,13 +11,14 @@ manque. La discipline de contribution qui s'appuie dessus est dans
 ```bash
 npx tsc --noEmit      # typage
 npx eslint .          # règles d'architecture et de style
+npm test              # tests unitaires du socle Aetherius
 npm run parity        # sources migrées vers un Blueprint
 ```
 
 ### Base de référence
 
-Ces deux commandes ne sont pas encore vertes. L'état actuel du dépôt, à connaître pour distinguer une
-régression d'un héritage :
+Les deux premières commandes ne sont pas encore vertes. L'état actuel du dépôt, à connaître pour
+distinguer une régression d'un héritage :
 
 | Commande | État | Détail |
 |---|---|---|
@@ -26,6 +27,27 @@ régression d'un héritage :
 
 La règle de contribution est donc : **ne pas augmenter ces compteurs**, et les réduire quand on
 travaille dans un fichier concerné.
+
+### Les tests unitaires
+
+Introduits par le jalon [6-A](phase-6/6-a-socle.md), et **bornés au socle Aetherius** :
+`npm test` joue [vitest](https://vitest.dev) sur les fichiers `*.test.ts` colocalisés de
+[`src/shared/aetherius/`](../src/shared/aetherius/). Ils doivent être verts.
+
+Ce qui y est couvert est ce qui porte de la logique UKit et rien d'autre : la projection des secrets
+du trousseau, la résolution du registre (dont « ne touche jamais au réseau » et « aucun Blueprint ne
+déclare un secret hors périmètre »), et la table du modèle d'erreur.
+
+Ce qui n'y est **pas** : la façade et `runBlueprint`, qui importent React Native et ne sont pas
+jouables hors appareil — leur comportement appartient à la suite de tests du paquet, et la preuve de
+bout en bout est la parité. Aucun écran, aucun composant : le dépôt n'a pas de harnais de rendu, et
+ce jalon n'avait pas à en décider un.
+
+> **Pourquoi vitest et non le lanceur de Node.** `package.json` n'a pas `"type": "module"` — et ne
+> peut pas l'avoir, `babel.config.js` et `commitlint.config.js` étant en CommonJS. Tout `.ts` est
+> donc chargé en CommonJS par les transpileurs à la volée, et un module CommonJS ne peut pas
+> `require()` `@aetherius/engine`, publié en ESM pur. `vitest` résout la condition `import` quel que
+> soit le format du projet, sans fichier de configuration.
 
 ### La parité
 
@@ -78,8 +100,9 @@ convention est refusé localement — il n'y a pas de rattrapage côté CI.
 
 ## Vérification manuelle
 
-C'est aujourd'hui **le seul filet de sécurité fonctionnel** : il n'y a pas de test automatisé. Une
-contribution n'est pas terminée tant que le parcours n'a pas été joué sur l'application réelle.
+C'est **le filet de sécurité principal** : les tests automatiques ne couvrent que le socle Aetherius
+et la parité des sources migrées. Une contribution n'est pas terminée tant que le parcours n'a pas
+été joué sur l'application réelle.
 
 ```bash
 npm install
@@ -141,8 +164,8 @@ barrière ne les rejouera.
 
 ## Limites connues
 
-- **Aucun test automatisé** dans le dépôt : ni unitaire, ni composant, ni bout en bout. Aucun
-  harnais n'est configuré.
+- **La couverture de test est étroite** : elle s'arrête au socle Aetherius. Ni composant, ni écran,
+  ni bout en bout — la vérification manuelle sur l'application réelle reste la porte principale.
 - **Aucune vérification en intégration continue.** Un code qui ne compile pas peut être fusionné.
 - **La base de référence n'est pas verte** (3 erreurs de typage), ce qui rend la lecture d'un
   résultat de `tsc` moins immédiate : il faut comparer aux trois erreurs connues.

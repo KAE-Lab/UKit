@@ -84,6 +84,30 @@ Un Blueprint échoue, et `describeFailure` range l'échec dans une famille d'éc
 Et son pendant : **une liste vide n'est pas une erreur.** Un run réussi dont les sorties portent une
 liste vide a réellement trouvé une liste vide.
 
+Tant qu'un écran n'est pas branché sur une famille, elle reste observable : `reportFailure` écrit une
+ligne nommant le Blueprint et la famille. C'est ce qui rend les chemins dégradés distinguables sur un
+appareil avant même que l'interface les distingue.
+
+### Affirmer la forme, pour que « rien trouvé » ne se confonde pas avec « rien à trouver »
+
+Une extraction qui ne correspond à rien rend **une liste vide**, pas une erreur. C'est le bon
+comportement — une source peut légitimement ne rien avoir — mais il ouvre un angle mort : si la
+réponse change de forme au point que le chemin d'extraction ne correspond plus, le run **réussit**
+avec zéro élément, et l'écran affiche « aucun résultat » pour une source cassée.
+
+Le remède est déclaratif et tient en un step :
+
+```jsonc
+{ "id": "forme", "action": "assert",
+  "condition": "{{ steps.annonces.racine | length > 0 }}",
+  "message": "la reponse ne porte pas de tableau 'annonces'" }
+```
+
+en extrayant à côté la **racine** attendue (`{ "from": "json", "path": "$.annonces" }`) : elle
+correspond une fois si la clé existe — même vide — et zéro fois si elle a disparu. L'échec est rangé
+en `rejected`. Un Blueprint dont l'extraction peut légitimement être vide devrait porter cette
+assertion ; celui des annonces l'a gagnée au jalon [6-A](phase-6/6-a-socle.md), après mesure.
+
 ## Écrire un Blueprint
 
 1. **Inventorier la source d'abord**, dans [sources-externes.md](sources-externes.md) : l'URL exacte,
@@ -178,6 +202,7 @@ et l'affirmer, pour qu'un décalage devienne un échec nommé au lieu d'une donn
 ## Vérifier
 
 ```bash
+npm test                    # le socle : resolution des secrets, registre, modele d'erreur
 npm run parity              # rejoue les Blueprints sous Node, compare aux services historiques
 ```
 

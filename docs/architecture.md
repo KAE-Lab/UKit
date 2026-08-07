@@ -35,6 +35,8 @@ src/
     Settings/       réglages, synchronisation calendrier, notifications, à propos
     Onboarding/     parcours de premier lancement
   shared/
+    aetherius/      le moteur : façade, registre, secrets, modèle d'erreur, et leurs tests
+    supabase/       la base de publication : client anonyme et types du schéma
     constants/      URLs externes centralisées
     i18n/           Translator + dictionnaires fr / en / es
     map/            écran carte (Leaflet + OpenStreetMap en WebView)
@@ -88,6 +90,22 @@ Conséquence à connaître : **les données de démarrage sont chargées avant l
 peut donc supposer que `SettingsManager` et les managers de listes sont déjà peuplés. En contrepartie,
 un `loadData()` lent retarde l'apparition de l'application.
 
+Le coût est réel, et il est **proportionnel à la latence du réseau** quand les caches ont expiré. Les
+deux `loadData()` retombent sur le réseau au-delà de sept jours de cache — liste des groupes Celcat
+pour l'un, liste des bâtiments pour l'autre — et ils sont `await`és **l'un après l'autre**, donc
+leurs latences s'additionnent avant le premier pixel. Sur une connexion lente, un démarrage à cache
+froid attend deux allers-retours en série, puis le fondu d'une seconde par-dessus.
+
+Le socle a pourtant tout ce qu'il faut pour ne pas payer ça : les deux managers sont observables et
+persistent leur état. Rendre depuis le cache et rafraîchir en arrière-plan rendrait le démarrage
+indépendant du réseau. Ce n'est pas fait, ce n'est pas un défaut de la [Phase 6](phase-6/README.md),
+et c'est un chantier à part entière — il change la garantie que les écrans tiennent aujourd'hui pour
+acquise (« les managers sont déjà peuplés »), donc il se traite avec eux, pas à côté.
+
+La seconde cause de lenteur au démarrage est indépendante de celle-ci et vit ailleurs : la session
+universitaire démarre elle aussi à chaque lancement
+([features/scolarite.md](features/scolarite.md#limites-connues)).
+
 ## Diffusion de l'état
 
 Deux mécanismes coexistent, chacun avec son rôle :
@@ -131,6 +149,7 @@ consommateurs hors React (tâche de fond, planificateur de notifications). Déta
   **Cet invariant est en cours de remplacement** par la [Phase 6](phase-6/README.md) : un échec est
   désormais typé et rangé dans une famille d'écran, et une liste vide redevient une liste vide. Il
   disparaîtra du document quand la dernière source aura migré ([blueprints.md](blueprints.md)).
+  Première source sortie : `BdeService` ([6-A](phase-6/6-a-socle.md)).
 - **Le comportement distant est de la donnée.** Ce qu'on demande à une source et ce qu'on en retient
   vit dans [`blueprints/`](../blueprints/), pas dans le binaire — donc corrigeable sans release. Le
   calcul, le cache, l'internationalisation et l'heure courante n'y descendent jamais
@@ -167,6 +186,8 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/aetherius/registry.ts`](../src/shared/aetherius/registry.ts) | résolution d'un Blueprint entre socle embarqué et surcouche publiée |
 | [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | un échec de run traduit en famille d'écran et en clé de traduction |
 | [`shared/aetherius/runBlueprint.ts`](../src/shared/aetherius/runBlueprint.ts) | l'appel type : résoudre, jouer, rendre des sorties ou un échec décrit |
+| [`shared/aetherius/index.ts`](../src/shared/aetherius/index.ts) | la porte d'entrée du socle : un service importe d'ici, jamais des paquets |
+| [`shared/aetherius/secrets.test.ts`](../src/shared/aetherius/secrets.test.ts) · [`registry.test.ts`](../src/shared/aetherius/registry.test.ts) · [`failures.test.ts`](../src/shared/aetherius/failures.test.ts) | les tests du socle, joués par `npm test` ([qualite.md](qualite.md)) |
 | [`shared/supabase/client.ts`](../src/shared/supabase/client.ts) | client anonyme de la base de publication ([backend.md](backend.md)) |
 | [`shared/supabase/types.ts`](../src/shared/supabase/types.ts) | types des tables, tels que la base les rend |
 | [`shared/services/AppCore.tsx`](../src/shared/services/AppCore.tsx) | `AppContext`, `SettingsManager`, synchronisation calendrier, tâche de fond, utilitaires de lieux et de cours |
@@ -175,7 +196,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/services/TimeMockService.ts`](../src/shared/services/TimeMockService.ts) | simulation temporelle pour la vérification manuelle ([qualite.md](qualite.md)) |
 | [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | tokens, thèmes clair et sombre, styles partagés ([theme.md](theme.md)) |
 | [`shared/i18n/Translator.ts`](../src/shared/i18n/Translator.ts) | service de traduction, langue courante, locale moment ([i18n.md](i18n.md)) |
-| [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 209 clés chacun |
+| [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 215 clés chacun |
 | [`shared/map/MapScreen.tsx`](../src/shared/map/MapScreen.tsx) | écran carte Leaflet ([cartographie.md](cartographie.md)) |
 | [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème), `Split` (séparateur), `UpdateAlert` (contrôle de version, non rendu) |
 | [`shared/ui/Button.tsx`](../src/shared/ui/Button.tsx) | boutons partagés : retour, accueil, tiroir, ligne de réglage |

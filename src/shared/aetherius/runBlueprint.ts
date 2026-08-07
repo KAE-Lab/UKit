@@ -11,26 +11,39 @@
  * ```ts
  * async function fetchAnnonces(): Promise<BdeAnnonce[]> {
  *     const run = await runBlueprint(BLUEPRINT.CAMPUS_ANNONCES);
- *     if (run.ok) return run.outputs.annonces as BdeAnnonce[];
- *     report(run.failure);          // journalise, ne masque pas
- *     return legacyFetchAnnonces(); // repli, le temps de la verification — retire au jalon 6-H
+ *     if (run.ok === false) {
+ *         reportFailure(BLUEPRINT.CAMPUS_ANNONCES, run.failure);  // journalise, ne masque pas
+ *         return legacyFetchAnnonces();                           // repli — retire au jalon 6-H
+ *     }
+ *     return projeter(run.outputs.annonces);
  * }
  * ```
  *
  * Voir docs/phase-6/6-a-socle.md et docs/blueprints.md.
  */
 
+import { describeFailure, type RunEventHandler } from '@aetherius/engine';
+
 import type { BlueprintName } from '../../../blueprints';
+import { getAetheriusClient } from './client';
 import { describeUkitFailure, type UkitFailure } from './failures';
-import { resolveBlueprint } from './registry';
+import { resolveBlueprint, type BlueprintOrigin } from './registry';
 
 export interface RunInputs {
     readonly [key: string]: unknown;
 }
 
-/** Un run reussi porte des sorties ; un run echoue porte un echec deja traduit pour un ecran. */
+/**
+ * Un run reussi porte des sorties ; un run echoue porte un echec deja traduit pour un ecran.
+ *
+ * **Se teste avec `run.ok === false`, jamais avec `!run.ok`.** `tsconfig.json` etend
+ * `expo/tsconfig.base` sans activer `strict` (voir docs/qualite.md), et sans `strictNullChecks`
+ * TypeScript ne restreint pas une union discriminee sur la simple veracite du discriminant : le
+ * compilateur rendrait alors « Property 'failure' does not exist ». La comparaison explicite au
+ * litteral, elle, restreint correctement.
+ */
 export type BlueprintRun =
-    | { readonly ok: true; readonly outputs: Record<string, unknown>; readonly origin: string }
+    | { readonly ok: true; readonly outputs: Readonly<Record<string, unknown>>; readonly origin: BlueprintOrigin }
     | { readonly ok: false; readonly failure: UkitFailure };
 
 export interface RunBlueprintOptions {
@@ -40,20 +53,37 @@ export interface RunBlueprintOptions {
      * ecrans longs affichent — c'est ce qui remplace les messages `PROGRESS` que la WebView cachee
      * postait a la main.
      */
-    readonly onEvent?: (event: unknown) => void;
+    readonly onEvent?: RunEventHandler;
 }
 
 /**
  * Joue un Blueprint et rend un resultat exploitable par un ecran.
  *
- * TODO(6-A) : brancher `getAetheriusClient().run(...)`, attraper les deux canaux, et passer par
- * `describeUkitFailure`. Le squelette rend deja la forme finale pour que les services puissent etre
- * ecrits contre elle.
+ * Le verdict de succes est celui du **moteur** (`describeFailure` rend `undefined`), pas une lecture
+ * de `status === 'success'` : un run `partial` a produit des sorties, et les jeter au motif que le
+ * statut n'est pas exactement celui qu'on attendait ferait perdre de la donnee valide.
+ *
+ * Ne leve jamais. Les deux canaux du moteur arrivent au meme endroit, ce qui est precisement ce que
+ * les services n'ont pas a savoir.
  */
 export async function runBlueprint(
     name: BlueprintName,
-    _options: RunBlueprintOptions = {},
+    options: RunBlueprintOptions = {},
 ): Promise<BlueprintRun> {
-    await resolveBlueprint(name);
-    return { ok: false, failure: describeUkitFailure(new Error('moteur non branche (jalon 6-A)')) };
+    try {
+        const resolved = await resolveBlueprint(name);
+        const result = await getAetheriusClient().run(resolved.blueprint, {
+            inputs: options.inputs ?? {},
+            ...(options.onEvent !== undefined ? { onEvent: options.onEvent } : {}),
+        });
+
+        // Le verdict vient du moteur, pas d'une comparaison de statut : `describeFailure` rend
+        // `undefined` exactement quand il n'y a rien a traduire.
+        if (describeFailure(result) !== undefined) {
+            return { ok: false, failure: describeUkitFailure(result) };
+        }
+        return { ok: true, outputs: result.outputs, origin: resolved.origin };
+    } catch (error) {
+        return { ok: false, failure: describeUkitFailure(error) };
+    }
 }

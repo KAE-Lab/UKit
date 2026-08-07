@@ -33,6 +33,13 @@ const fr: TranslationDict = {
 	ENGLISH: 'Anglais',
 	ERROR_WITH_CODE: 'Le serveur a renvoyé une erreur $-',
 	ERROR_WITH_MESSAGE: 'Erreur : $-',
+	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
+	ERROR_SERVICE_UNAVAILABLE: 'Service indisponible. Vérifie ta connexion et réessaie.',
+	ERROR_UNEXPECTED_RESPONSE: 'Réponse inattendue de la source. On s’en occupe.',
+	ERROR_CONTENT_NOT_FOUND: 'Contenu introuvable. La source a changé, on s’en occupe.',
+	ERROR_BLOCKED: 'La demande n’a pas pu aboutir.',
+	ERROR_MISSING_CREDENTIALS: 'Il manque une information pour effectuer cette demande.',
+	ERROR_INTERNAL: 'Un problème est survenu de notre côté.',
 	EXISTING_CALENDARS: 'Calendriers existants :',
 	FILTERS: 'Filtres',
 	FILTERS_CONFIRMATION:

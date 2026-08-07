@@ -9,16 +9,27 @@ Ce que ces fichiers portent, comment on en écrit un et comment on publie une co
 
 ## Provenance
 
-Les six fichiers présents aujourd'hui sont **repris tels quels** du jalon 3-G d'Aetherius, où ils ont
-été écrits contre nos vraies sources, joués sur les deux moteurs et vérifiés sur un téléphone. Leurs
-descriptions y font encore référence : c'est volontaire. Ce sont des fichiers **mesurés**, et les
-retoucher avant de les brancher reviendrait à perdre ce qui les rend fiables.
+Les six fichiers présents aujourd'hui viennent du jalon 3-G d'Aetherius, où ils ont été écrits contre
+nos vraies sources, joués sur les deux moteurs et vérifiés sur un téléphone. Leurs descriptions y font
+encore référence pour la plupart : c'est volontaire. Ce sont des fichiers **mesurés**, et les
+retoucher sans raison mesurée reviendrait à perdre ce qui les rend fiables.
+
+La règle est donc : **on ne les retouche pas par confort, on les corrige quand le branchement révèle
+un manque** — et la correction s'accompagne d'une montée de version. C'est arrivé une fois :
+
+| Fichier | Correction | Version | Jalon |
+|---|---|---|---|
+| `ukit-campus-annonces` | extraction de `long_desc`, que la fiche affiche et que le fichier oubliait ; `assert` sur la présence du tableau `annonces` | 1 → **2** | [6-A](../docs/phase-6/6-a-socle.md) |
+
+Le second ajout mérite d'être connu avant d'écrire le suivant : sans lui, une réponse valide dont la
+clé attendue a disparu rend un **succès à liste vide**, indistinguable d'une liste légitimement vide.
+Voir [docs/blueprints.md](../docs/blueprints.md#affirmer-la-forme-pour-que--rien-trouvé--ne-se-confonde-pas-avec--rien-à-trouver-).
 
 Ils sont un point de départ démontré, pas le jeu final :
 
 | Fichier repris | Ce qu'il deviendra | Jalon |
 |---|---|---|
-| `ukit-campus-annonces` | conservé comme témoin — la source réelle passe en base | [6-A](../docs/phase-6/6-a-socle.md), [6-B](../docs/phase-6/6-b-supabase.md) |
+| `ukit-campus-annonces` | **branché** ; conservé comme témoin — la source réelle passe en base | [6-A](../docs/phase-6/6-a-socle.md), [6-B](../docs/phase-6/6-b-supabase.md) |
 | `ukit-campus-restaurants` | découpé en `restaurants` et `restaurant-menu` | [6-D](../docs/phase-6/6-d-campus.md) |
 | `ukit-campus-affluence` | découpé en `bibliotheques`, `bibliotheque-affluence`, `bibliotheque-horaires` | [6-D](../docs/phase-6/6-d-campus.md) |
 | `ukit-celcat-semaine` | découpé en `groupes`, `jour`, `semaine`, `annee`, `salles`, `occupation` | [6-E](../docs/phase-6/6-e-planning.md) |

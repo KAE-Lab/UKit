@@ -8,13 +8,13 @@
  */
 
 export { getAetheriusClient } from './client';
-export { describeUkitFailure, FAILURE_PRESENTATION } from './failures';
+export { describeUkitFailure, reportFailure, ukitFailure, FAILURE_PRESENTATION } from './failures';
 export type { FailurePresentation, UkitFailure, UkitFailureKind } from './failures';
 export { refreshBlueprints, resolveBlueprint, revertBlueprints } from './registry';
 export type { BlueprintOrigin, ResolvedBlueprint } from './registry';
 export { runBlueprint } from './runBlueprint';
 export type { BlueprintRun, RunBlueprintOptions, RunInputs } from './runBlueprint';
 export { ukitSecrets } from './secrets';
-export type { SecretResolver } from './secrets';
+export type { CredentialStore, SecretResolver } from './secrets';
 export { BLUEPRINT } from '../../../blueprints';
 export type { BlueprintName } from '../../../blueprints';

@@ -205,6 +205,21 @@ c'est le seul moyen fiable de repartir d'une session propre après un échec ou 
 - **Le point d'entrée `apogee` du navigateur intégré n'est atteint par aucun appel** de navigation.
 - **Aucune reprise automatique après échec** : un `LOGIN_FAILED` laisse l'onglet sur son dernier état
   jusqu'à une action de l'utilisateur.
+- **La session rallonge le splash de démarrage.** `CredentialsProvider` enveloppe toute la pile
+  ([`StackNavigator.tsx`](../../src/shared/navigation/StackNavigator.tsx)) et lance la session dès
+  que le trousseau a rendu des identifiants, donc **à chaque lancement**. Le fondu du splash
+  ([`App.tsx`](../../App.tsx)) tourne bien sur le thread natif, mais son overlay n'est démonté que
+  par un callback JavaScript : pendant que la WebView cachée pilonne le pont avec ses messages de
+  script injecté, ce callback arrive en retard et le splash s'attarde — jusqu'à
+  `SESSION_TIMEOUT_MS` (60 s) dans le pire cas. Constaté sur appareil pendant la vérification du
+  jalon [6-A](../phase-6/6-a-socle.md), et reproduit à l'identique sur `master` : le comportement
+  est antérieur à la Phase 6.
+
+  À ne pas confondre avec ce que corrige le jalon [6-F](../phase-6/6-f-scolarite.md) : celui-ci
+  remplace le JavaScript injecté par deux Blueprints, donc change **comment** la session tourne, pas
+  **quand** elle démarre. Rendre le démarrage plus court demande de retarder la session jusqu'à la
+  fin du splash, ou de la déclencher à l'entrée dans l'onglet — une décision de produit (on perdrait
+  le compteur de messages à jour dès l'ouverture), pas un correctif technique.
 
 ## Carte des fichiers
 

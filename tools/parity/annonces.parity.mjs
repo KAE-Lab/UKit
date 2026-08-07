@@ -8,6 +8,7 @@
  * Voir tools/parity/README.md.
  */
 
+import { RunEngine, describeFailure, validateBlueprintData } from '@aetherius/engine';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,24 +20,43 @@ export const NAME = 'annonces';
 /**
  * Le chemin migre : joue le Blueprint et rend la donnee **au format applicatif**.
  *
- * Le filtre d'expiration est applique **ici**, pas dans le Blueprint : un predicat d'extraction ne
- * connait que son element, jamais l'heure de l'appareil. Ce n'est pas un manque — la meme donnee
- * peut ainsi etre affichee grisee plutot que masquee, ce qu'un filtre cote extraction interdirait.
+ * On joue le moteur neutre (`RunEngine`) et non la facade `Aetherius` : celle-ci vit dans
+ * `@aetherius/react-native` et importe React Native, donc n'est pas jouable sous Node. C'est la
+ * seule difference avec ce que fait l'application, et elle ne porte ni la requete ni l'extraction.
  *
- * TODO(6-A) :
- *
- * ```js
- * import { Aetherius } from '@aetherius/engine';
- *
- * const document = JSON.parse(readFileSync(join(ROOT, 'blueprints/ukit-campus-annonces.blueprint.json'), 'utf8'));
- * const result = await new Aetherius().run(document, {});
- * return result.outputs.annonces.filter((item) => new Date(item.expire_le) > new Date());
- * ```
+ * La projection et le filtre d'expiration sont **recopies** de BdeService plutot qu'importes : le
+ * service est en TypeScript et va evoluer, et un cas de parite qui suivrait ses evolutions cesserait
+ * de comparer quoi que ce soit. Le filtre reste applicatif des deux cotes — un predicat d'extraction
+ * ne connait que son element, jamais l'heure de l'appareil.
  */
 export async function viaBlueprint() {
-    void readFileSync;
-    void ROOT;
-    throw new Error('parite : branchee au jalon 6-A (voir docs/phase-6/6-a-socle.md)');
+    const source = readFileSync(join(ROOT, 'blueprints', 'ukit-campus-annonces.blueprint.json'), 'utf8');
+    const blueprint = validateBlueprintData(JSON.parse(source), 'ukit-campus-annonces.blueprint.json');
+
+    const result = await new RunEngine().run(blueprint, { inputs: {} });
+    const failure = describeFailure(result);
+    if (failure !== undefined) throw new Error(`blueprint: ${failure.kind} — ${failure.message}`);
+
+    const now = new Date();
+    return result.outputs.annonces
+        .map((item) => ({
+            id: String(item.id ?? ''),
+            is_active: true,
+            expires_at: typeof item.expire_le === 'string' ? item.expire_le : '',
+            title: texte(item.titre) ?? '',
+            issuer_name: texte(item.emetteur) ?? '',
+            image_url: texte(item.image),
+            info_label: texte(item.accroche),
+            long_desc: texte(item.desc_longue),
+            cta_text: texte(item.cta_texte),
+            cta_link: texte(item.cta_lien),
+        }))
+        .filter((annonce) => new Date(annonce.expires_at) > now);
+}
+
+/** Une extraction qui ne trouve pas un champ rend `null` ; le contrat applicatif, lui, l'omet. */
+function texte(value) {
+    return typeof value === 'string' && value !== '' ? value : undefined;
 }
 
 /**
@@ -55,14 +75,24 @@ export async function viaLegacy() {
 /**
  * Ce que la comparaison regarde : la donnee que l'ecran verrait, pas la reponse brute.
  *
- * Les deux chemins nomment leurs champs differemment (le Blueprint les renomme en francais) : la
- * projection est donc explicite, et c'est elle qui dit ce qui compte reellement pour l'affichage.
+ * Tous les champs que les trois ecrans lisent y sont — la liste, le carrousel du tableau de bord et
+ * la fiche. Comparer moins laisserait passer exactement le defaut que ce jalon a trouve : un champ
+ * affiche que le Blueprint n'extrayait pas.
+ *
+ * Les deux chemins nomment leurs champs differemment cote source (le Blueprint les renomme en
+ * francais), mais les deux `viaX` rendent deja le contrat applicatif : la projection normalise donc
+ * surtout l'absence — `undefined`, `null` et chaine vide disent la meme chose a un ecran.
  */
 export function project(item) {
     return {
-        id: String(item.id ?? item.id),
-        titre: item.titre ?? item.title,
-        emetteur: item.emetteur ?? item.issuer_name,
-        lien: item.cta_lien ?? item.cta_link ?? null,
+        id: String(item.id ?? ''),
+        title: item.title ?? null,
+        issuer_name: item.issuer_name ?? null,
+        expires_at: item.expires_at ?? null,
+        info_label: item.info_label || null,
+        long_desc: item.long_desc || null,
+        image_url: item.image_url || null,
+        cta_text: item.cta_text || null,
+        cta_link: item.cta_link || null,
     };
 }

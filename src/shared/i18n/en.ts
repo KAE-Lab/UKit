@@ -30,6 +30,13 @@ const en = {
 	ENGLISH: 'English',
 	ERROR_WITH_CODE: 'Server send an error $-',
 	ERROR_WITH_MESSAGE: 'Error : $-',
+	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
+	ERROR_SERVICE_UNAVAILABLE: 'Service unavailable. Check your connection and try again.',
+	ERROR_UNEXPECTED_RESPONSE: 'Unexpected response from the source. We are on it.',
+	ERROR_CONTENT_NOT_FOUND: 'Content not found. The source has changed, we are on it.',
+	ERROR_BLOCKED: 'The request could not be completed.',
+	ERROR_MISSING_CREDENTIALS: 'Missing information to complete the request.',
+	ERROR_INTERNAL: 'Something went wrong on our side.',
 	EXISTING_CALENDARS: 'Existing calendars:',
 	FILTERS: 'Filters',
 	FILTERS_CONFIRMATION:

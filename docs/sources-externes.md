@@ -314,11 +314,23 @@ Le site du fournisseur est crédité dans l'écran À propos (`URL.CROUSTILLANT_
 
 ## 5. jsDelivr — données éditoriales
 
+> **Migrée.** Cette source est portée par le Blueprint
+> [`ukit.campus.annonces`](../blueprints/ukit-campus-annonces.blueprint.json) depuis le jalon
+> [6-A](phase-6/6-a-socle.md). Le Blueprint porte l'URL, l'en-tête, le statut attendu, la sélection
+> des champs, le filtre `is_active` et une **assertion de forme** sur la présence du tableau.
+> Restent applicatifs, dans [`BdeService.ts`](../src/features/Campus/services/BdeService.ts) : la
+> projection sur le contrat ci-dessous, le filtre d'expiration (une extraction ne connaît pas
+> l'heure de l'appareil) et le repli sur l'ancien chemin, retiré en
+> [6-H](phase-6/6-h-livraison-finale.md).
+
 Dépôt de données maîtrisé par l'équipe, servi par le CDN jsDelivr :
 
 ```http
 GET https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/annonces.json
 ```
+
+L'URL vit désormais dans les `vars` du Blueprint, ce qui la rend corrigeable sans release — et
+permet aussi de la détourner pour éprouver les chemins dégradés.
 
 Contrat, dans [`BdeService.ts`](../src/features/Campus/services/BdeService.ts) :
 
@@ -365,12 +377,12 @@ Détails et raison de ce choix dans [cartographie.md](cartographie.md).
 
 ## Modèle d'erreur commun
 
-Aucun service ne propage d'exception. Les conventions de repli sont :
+Les services non migrés ne propagent aucune exception. Les conventions de repli sont :
 
 | Service | Valeur en cas d'échec |
 |---|---|
 | `PlanningApiService`, `CampusApiService` | `null` |
-| `CrousService`, `LibraryService`, `BdeService` | `[]` ou `null` selon la méthode |
+| `CrousService`, `LibraryService` | `[]` ou `null` selon la méthode |
 
 C'est un choix cohérent avec le fonctionnement hors ligne (l'appelant retombe sur le cache ou sur un
 état vide), mais il a une conséquence : **une panne du fournisseur et une réponse légitimement vide
@@ -380,8 +392,14 @@ indisponible. Toute évolution de ce modèle doit être décidée globalement, p
 C'est exactement ce que fait la [Phase 6](phase-6/README.md), et c'est son changement le plus
 structurant : un échec devient **typé** et rangé dans une famille d'écran — source en panne, réponse
 inattendue, contenu introuvable, identifiants manquants, échec nommé par le Blueprint — et une liste
-vide redevient une liste vide. Le tableau ci-dessus disparaîtra source par source, au rythme de la
+vide redevient une liste vide. Le tableau ci-dessus rétrécit source par source, au rythme de la
 migration ([blueprints.md](blueprints.md#les-erreurs-cessent-dêtre-avalées)).
+
+**`BdeService` en est sorti** au jalon [6-A](phase-6/6-a-socle.md) : son échec est désormais rangé
+dans une famille et journalisé. Nuance à connaître tant que le repli existe : l'écran, lui, voit
+encore une liste vide, parce que le service retombe sur l'ancien chemin. La distinction est réelle
+et observable dans le journal ; elle atteindra l'interface quand l'écran sera branché sur le modèle
+d'erreur.
 
 ## Vérifier
 
