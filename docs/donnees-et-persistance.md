@@ -70,16 +70,18 @@ Un contexte ne serait pas accessible depuis ces points.
 | `crous_filter` | [`useSavedFilter`](../src/features/Campus/hooks/useSavedFilter.ts) | filtre actif (`all` / `resto` / `market`) | permanent |
 | `library_filter` | `useSavedFilter` | filtre actif (`all` / `open`) | permanent |
 | `aetherius/blueprints@1` | le registre du moteur, via [`registry.ts`](../src/shared/aetherius/registry.ts) | la **surcouche** des Blueprints publiés : un document unique portant, par nom, le texte servi et son empreinte | jusqu'à la prochaine publication ou un retour à l'embarqué |
+| `batiments@1` | [`shared/locations`](../src/shared/locations/index.ts) | la **surcouche** du référentiel des lieux : un document unique portant, par code, les champs publiés | jusqu'au prochain rafraîchissement |
 
 Le préfixe `<groupes>` est le nom du groupe, ou la concaténation des groupes favoris jointe par `+`
 quand la vue affiche le planning agrégé.
 
-La clé de livraison est la seule du tableau qui porte **un document unique pour plusieurs entrées**,
-et c'est délibéré : un document illisible fait perdre la surcouche entière et l'application retombe
-sur son socle embarqué. C'est le sens du repli, et c'est préférable à un index réparti sur plusieurs
-clés qui pourrait se contredire. L'empreinte de chaque entrée est d'ailleurs **revérifiée à chaque
-lecture** — un cache local n'est pas plus digne de confiance qu'un CDN
-([blueprints.md](blueprints.md)).
+Les deux clés de surcouche sont les seules du tableau à porter **un document unique pour plusieurs
+entrées**, et c'est délibéré : un document illisible fait perdre la surcouche entière et l'application
+retombe sur son socle embarqué. C'est le sens du repli, et c'est préférable à un index réparti sur
+plusieurs clés qui pourrait se contredire. Pour les Blueprints, l'empreinte de chaque entrée est
+d'ailleurs **revérifiée à chaque lecture** — un cache local n'est pas plus digne de confiance qu'un
+CDN ([blueprints.md](blueprints.md)). Le référentiel des lieux n'a pas cette garde, et n'en a pas
+besoin : ce sont des coordonnées, pas de la donnée exécutable.
 
 ## Clés SecureStore
 
@@ -114,6 +116,14 @@ Restaurants et menus CROUS, affluence et horaires des BU, annonces de vie étudi
 salles : ces données sont rechargées à chaque montage d'écran. Les mettre en cache n'aurait pas de
 sens (une affluence de bibliothèque périmée est pire qu'un chargement).
 
+Le jalon [6-D](phase-6/6-d-campus.md) a fait passer les restaurants et les bibliothèques derrière le
+moteur et **n'a pas touché à cette décision** : il l'écrit simplement là où on la cherche. Elle mérite
+d'être relue avant d'être « corrigée », parce que les cinq appels n'ont pas la même volatilité — la
+liste des restaurants change quelques fois par an, une affluence toutes les cinq minutes. Ce qui les
+range ensemble n'est pas la volatilité mais la **conséquence d'une donnée périmée** : un horaire de
+BU faux envoie quelqu'un devant une porte fermée. La contrepartie est assumée et désormais visible :
+hors ligne, ces écrans sont vides, mais ils disent **pourquoi**.
+
 Les annonces sont le cas limite de ce régime, et il vaut d'être dit : elles viennent désormais de
 notre [base de publication](backend.md), qui les sert en quelques kilo-octets et change quelques fois
 par mois. Un cache y aurait du sens — c'est ce qui leur permettrait de survivre hors ligne, et ce qui
@@ -133,10 +143,17 @@ quoi que ce soit.
 
 | Publication | Socle embarqué | Surcouche | Branchée |
 |---|---|---|---|
-| Blueprints | [`blueprints/`](../blueprints/) | bucket `blueprints` + manifeste | 6-C |
-| Référentiel des bâtiments | [`assets/locations.json`](../assets/locations.json) | table `batiments` | 6-D |
+| Blueprints | [`blueprints/`](../blueprints/) | bucket `blueprints` + manifeste | **6-C** |
+| Référentiel des bâtiments | [`assets/locations.json`](../assets/locations.json) | table `batiments` | **6-D** |
 | Établissements | l'établissement historique, en dur | table `etablissements` | 6-G |
 | Annonces de vie étudiante | *aucun* | table `annonces` | **6-B** |
+
+Les deux surcouches livrées suivent la même mécanique et le même rythme : rafraîchies au démarrage et
+au retour au premier plan, jamais dans le chemin d'un run ni d'un rendu, jamais bloquantes, et
+toujours réductibles au socle. Elles diffèrent sur un point, et c'est ce qui justifie que le
+référentiel n'ait pas repris les neuf gardes du registre : un Blueprint est de la **donnée
+exécutable** — il ne peut donc pas ajouter un nom absent du binaire — là où un bâtiment est une
+coordonnée, qu'une publication a le droit d'ajouter.
 
 Les annonces sont l'exception, et volontairement : une annonce n'a pas de valeur par défaut
 raisonnable, et en figer une dans le binaire reviendrait à livrer un contenu éditorial périmé à

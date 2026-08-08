@@ -1,0 +1,67 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.campus.bibliotheque-horaires",
+  "description": "Les horaires d'une semaine pour un site Affluences. 'semaine' est un decalage relatif a la semaine courante, negatif vers le passe : c'est la source qui compte les semaines, l'appareil ne fournit aucune date. Le sous-arbre 'openingHours' descend tel quel — une journee porte des paires ouverture/fermeture, et 'fields' ne sait pas rendre une liste de couples.",
+  "act": "vector",
+  "inputs": {
+    "site": {
+      "type": "string",
+      "required": true,
+      "default": "bu-droit-lettres-pessac",
+      "description": "Identifiant lisible du site (slug rendu par ukit.campus.bibliotheques)."
+    },
+    "semaine": {
+      "type": "integer",
+      "required": true,
+      "default": 0,
+      "description": "Decalage de semaine : 0 pour la semaine courante, -1 pour la precedente."
+    }
+  },
+  "vars": {
+    "api": "https://api.affluences.com",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  },
+  "steps": [
+    {
+      "id": "horaires",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.api }}/app/v4/sites/{{ inputs.site }}/timetables",
+      "params": { "weekOffset": "{{ inputs.semaine }}" },
+      "headers": {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "fr",
+        "x-service-name": "website",
+        "Origin": "https://affluences.com",
+        "Referer": "https://affluences.com/",
+        "User-Agent": "{{ vars.user_agent }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "racine": {
+          "from": "json",
+          "path": "$.data.entries"
+        },
+        "entrees": {
+          "from": "json",
+          "path": "$.data.entries[*]",
+          "fields": {
+            "jour": "$.day",
+            "aujourdhui": "$.isToday",
+            "ouvertures": "$.openingHours"
+          }
+        }
+      }
+    },
+    {
+      "id": "forme",
+      "action": "assert",
+      "condition": "{{ steps.horaires.racine | length > 0 }}",
+      "message": "la reponse ne porte pas de tableau 'data.entries' : la source a change de forme"
+    }
+  ],
+  "outputs": {
+    "entrees": "{{ steps.horaires.entrees }}",
+    "nombre": "{{ steps.horaires.entrees | length }}"
+  }
+}

@@ -5,7 +5,7 @@ import { useRoute } from '@react-navigation/native';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
-import { CampusSearchBar, CampusFilterModal, CampusListEmptyState } from './CampusLayoutComponents';
+import { CampusSearchBar, CampusFilterModal, CampusListEmptyState, CampusPartialNotice } from './CampusLayoutComponents';
 import { useCampusListHeader } from './hooks/useCampusListHeader';
 import type { UkitFailure } from '../../../shared/aetherius';
 
@@ -40,6 +40,10 @@ export interface CampusListLayoutProps<T> {
     failure?: UkitFailure;
     onRetry?: () => void;
 
+    // La donnee est la, mais incomplete : une source interrogee en plusieurs points n'a pas repondu
+    // partout. Le bandeau le dit au-dessus de la liste, sans la masquer.
+    partial?: boolean;
+
     // Navigation for setting header filter icon
     navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
 }
@@ -61,6 +65,7 @@ export function CampusListLayout<T>({
     emptyMessage = 'Aucun résultat',
     failure,
     onRetry,
+    partial = false,
     navigation
 }: CampusListLayoutProps<T>) {
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
@@ -110,6 +115,7 @@ export function CampusListLayout<T>({
                         flexGrow: 1 
                     }}
                     renderItem={renderItem as any}
+                    ListHeaderComponent={partial ? <CampusPartialNotice theme={theme} onRetry={onRetry} /> : null}
                     ListEmptyComponent={() => (
                         <CampusListEmptyState
                             isFiltering={isFiltering}

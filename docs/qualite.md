@@ -45,11 +45,20 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | la table du modèle d'erreur du moteur |
 | [`shared/supabase/failures.ts`](../src/shared/supabase/failures.ts) | la table d'erreurs de la base — dont « une clé fausse n'est pas `config` » |
 | [`features/Campus/services/BdeMapping.ts`](../src/features/Campus/services/BdeMapping.ts) | la projection des annonces et leur péremption |
+| [`features/Campus/services/CrousMapping.ts`](../src/features/Campus/services/CrousMapping.ts) | la date du fournisseur, les horaires servis en chaîne JSON, le regroupement midi/soir |
+| [`features/Campus/services/LibraryMapping.ts`](../src/features/Campus/services/LibraryMapping.ts) | l'arité d'une extraction, le choix du visuel, un site fermé sans taux |
+| [`shared/locations/referentiel.ts`](../src/shared/locations/referentiel.ts) | la fusion champ par champ du socle et de la surcouche |
 
-Ce dernier est le premier module **de feature** couvert, et il l'est pour une raison précise : c'est
-là qu'une erreur ne se voit pas. Un champ omis rend une fiche incomplète sans rien casser, et une
-date mal traitée fait disparaître du contenu publié — c'est arrivé, et le test existe parce que le
-correctif existe.
+`BdeMapping` a été le premier module **de feature** couvert, et il l'est pour une raison précise :
+c'est là qu'une erreur ne se voit pas. Un champ omis rend une fiche incomplète sans rien casser, et
+une date mal traitée fait disparaître du contenu publié — c'est arrivé, et le test existe parce que
+le correctif existe.
+
+Les trois modules ajoutés au jalon [6-D](phase-6/6-d-campus.md) sont là pour la même raison, et
+chacun verrouille un défaut **mesuré** plutôt qu'imaginé : une date absente qui vidait un menu entier,
+des horaires devenus invisibles parce que la source a changé de forme, une extraction qui rend `20` et
+non `[20]`, et une colonne nulle qui pourrait effacer une coordonnée embarquée. Aucun des quatre ne
+se voit à la relecture.
 
 Ce qui n'y est **pas** : les façades et les clients (`aetherius/client.ts`,
 `aetherius/registry.ts`, `supabase/client.ts`, `runBlueprint`), qui importent React Native,

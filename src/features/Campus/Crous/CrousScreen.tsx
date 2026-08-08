@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
-import { View, Text } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import React, { useState, useContext, useMemo } from 'react';
 
 import { AppContext } from '../../../shared/services/AppCore';
-import style, { tokens } from '../../../shared/theme/Theme';
+import style from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import { CrousService, CrousRestaurant } from '../services/CrousService';
+import type { CrousRestaurant } from '../services/CrousService';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 import { CampusListLayout } from '../components/CampusListLayout';
 import { CrousRestaurantListItem } from './components/CrousRestaurantListItem';
 import { useFavorites } from '../hooks/useFavorites';
-import { useCampusLocation } from '../hooks/useCampusLocation';
+import { useCampusPosition } from '../hooks/useCampusPosition';
+import { useCrousRestaurants } from '../hooks/useCrousRestaurants';
 import { useSavedFilter } from '../hooks/useSavedFilter';
 
 function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>; onAnimatedScroll?: (event: unknown) => void }) {
@@ -19,29 +18,12 @@ function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@re
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
 
-    const { fetchLocation } = useCampusLocation();
+    const { lat, lon } = useCampusPosition();
     const { favorites, toggleFavorite } = useFavorites('crous_favorites');
     const [selectedFilter, setSelectedFilter] = useSavedFilter('crous_filter', 'all');
-    
+
     const [searchText, setSearchText] = useState('');
-    const [restaurants, setRestaurants] = useState<CrousRestaurant[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-
-    useEffect(() => {
-        let mounted = true;
-        const loadData = async () => {
-            setLoading(true);
-            const { lat, lon } = await fetchLocation();
-            
-            const data = await CrousService.fetchRestaurantsBordeaux(lat, lon);
-            if (!mounted) return;
-            setRestaurants(data);
-            setLoading(false);
-        };
-
-        loadData();
-        return () => { mounted = false; };
-    }, [fetchLocation]);
+    const { restaurants, failure, loading, retry } = useCrousRestaurants(lat, lon);
 
     const filteredData = useMemo(() => {
         let result = [...restaurants].sort((a, b) => {
@@ -112,6 +94,8 @@ function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@re
             
             emptyIcon="store-off-outline"
             emptyMessage={Translator.get('NO_RU_NEARBY')}
+            failure={failure}
+            onRetry={retry}
         />
     );
 }

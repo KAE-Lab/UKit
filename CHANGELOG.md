@@ -15,6 +15,34 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **Les sources de campus jouées par le moteur** (jalon [6-D](docs/phase-6/6-d-campus.md)).
+  `CrousService` et `LibraryService` n'émettent plus aucune requête : cinq
+  [Blueprints](docs/blueprints.md) portent les cinq appels que l'application joue réellement —
+  restaurants, menu d'un restaurant, sites d'un point de balayage, affluence, horaires d'une semaine.
+  Les URLs, les en-têtes imités du client web Affluences et les constantes de protocole deviennent des
+  fichiers corrigeables à distance ; `axios`, `qs` et `fetch` disparaissent des deux services.
+
+  **La frontière s'écrit ici, en pratique.** Le balayage géographique en douze points reste
+  applicatif, et pour trois raisons dont aucune n'est un manque du moteur : la liste des villes
+  couvertes est une décision produit, le filtre de catégorie demanderait d'indexer une liste dans un
+  prédicat — refusé par les deux moteurs, volontairement — et Haversine est du calcul, qu'il faudrait
+  sinon réimplémenter à l'identique deux fois.
+
+  **Les écrans distinguent enfin les échecs.** Une source injoignable affiche « Service
+  indisponible » avec Réessayer, une réponse inattendue le dit sans proposer de rejouer, et une liste
+  légitimement vide garde son état vide. Trois écrans différents là où il n'y en avait qu'un.
+
+  Et une nuance que l'ancien code ne savait pas exprimer : **une couverture partielle se dit**. Deux
+  points de balayage muets sur douze n'emportent plus les dix autres — la liste s'affiche, avec un
+  bandeau qui signale qu'elle est peut-être incomplète.
+
+- **Le référentiel des bâtiments gagne sa surcouche distante** (jalon
+  [6-D](docs/phase-6/6-d-campus.md)). `assets/locations.json` reste le socle embarqué — l'application
+  doit être complète hors ligne et au premier lancement — et la table `batiments` le corrige **champ
+  par champ**, sans jamais écraser une valeur avec du vide. Un horaire faux, une coordonnée décalée ou
+  un visuel à remplacer se corrigent désormais sans release, ce qui est le défaut le plus banal de ce
+  référentiel.
+
 - **La livraison des Blueprints** (jalon [6-C](docs/phase-6/6-c-livraison.md)). C'est le jalon où la
   phase commence à payer : **corriger une source devient une publication de fichier, pas une
   release**. Le registre résout chaque [Blueprint](docs/blueprints.md) entre le socle embarqué dans
@@ -135,6 +163,17 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Corrigé
 
+- **Les horaires des restaurants CROUS étaient invisibles.** La source a cessé de servir `horaires`
+  comme un tableau pour le servir comme une chaîne JSON ; le test `Array.isArray` était donc faux
+  pour les 41 établissements de la région, et l'écran affichait « horaires non spécifiés » partout.
+  Les deux formes sont désormais acceptées. Défaut trouvé en mesurant la source pour écrire son
+  Blueprint, pas à la relecture.
+- **Une réponse de menu sans date vidait le menu entier.** La normalisation appelait `.includes()`
+  avant de vérifier que la valeur n'était pas nulle ; l'exception était rattrapée par le service, qui
+  rendait alors une liste vide sans rien signaler.
+- **Un restaurant qui ne publie aucun menu n'est plus confondu avec une panne.** 24 des 41
+  établissements répondent `404` sur cette route, ce qui veut dire « rien à publier » : le Blueprint
+  l'accepte explicitement et refuse tout autre statut.
 - Comptage des cours dans la vue semaine.
 - Doublons de notifications lors de replanifications successives.
 - Apparence de la section active de la barre de navigation sur Android.
@@ -142,6 +181,10 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Retiré
 
+- `CrousMenu`, `CrousMenuCategory` et `CrousDish` : trois interfaces qu'aucun écran ne lisait, et le
+  champ `CrousRestaurant.menus` qui n'était jamais rempli.
+- Le Blueprint de référence `ukit.campus.affluence`, remplacé par les trois documents que les écrans
+  demandent réellement.
 - Fichiers de journalisation d'erreurs laissés dans le dépôt.
 
 ## [5.6.1] - 2026-04-13

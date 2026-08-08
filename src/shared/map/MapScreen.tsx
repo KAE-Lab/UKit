@@ -6,11 +6,9 @@ import Translator from '../i18n/Translator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppContext } from '../services/AppCore';
+import { getBuildingRef } from '../locations/referentiel';
 import style, { tokens } from '../theme/Theme';
 import { URL } from '../constants/urls';
-
-// Import du JSON 
-const locations: Record<string, { lat: number; lng: number }> = require('../../../assets/locations.json');
 
 interface MapScreenRouteParams {
     location: string | { lat: number; lon?: number; lng?: number };
@@ -43,10 +41,10 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
             setLng(loc.lon || loc.lng || null);
         }
         else if (typeof loc === 'string') {
-            let house = loc.split('/')[0];
-            if (locations.hasOwnProperty(house)) {
-                setLat(locations[house].lat);
-                setLng(locations[house].lng);
+            const lieu = getBuildingRef(loc.split('/')[0]);
+            if (lieu) {
+                setLat(lieu.lat ?? null);
+                setLng(lieu.lng ?? null);
             }
         }
     }, [route.params.location]);

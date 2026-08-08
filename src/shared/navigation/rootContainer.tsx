@@ -5,6 +5,7 @@ import { AetheriusConfirm, AetheriusWebView } from '@aetherius/react-native';
 
 import StackNavigator from './StackNavigator';
 import { refreshBlueprints } from '../aetherius';
+import { refreshBuildings } from '../locations';
 import { AppContextProvider } from '../services/AppCore';
 import { SettingsManager } from '../services/AppCore';
 import WelcomeScreen from '../../features/Onboarding/WelcomeScreen';
@@ -28,12 +29,16 @@ export default function RootContainer() {
 	 * Le retour au premier plan, et lui seul.
 	 *
 	 * `reloadData` se declenche sur **toutes** les transitions et continue de le faire — c'est son
-	 * comportement depuis toujours. Le rafraichissement de la livraison, lui, n'a de sens qu'au
-	 * retour : le declencher en passant en arriere-plan ferait une requete que personne ne regarde.
+	 * comportement depuis toujours. Les deux rafraichissements de donnee publiee, eux, n'ont de sens
+	 * qu'au retour : les declencher en passant en arriere-plan ferait des requetes que personne ne
+	 * regarde.
 	 */
 	function onAppStateChange(nextAppState) {
 		reloadData();
-		if (nextAppState === 'active') void refreshBlueprints();
+		if (nextAppState === 'active') {
+			void refreshBlueprints();
+			void refreshBuildings();
+		}
 	}
 
 	useEffect(() => {
@@ -51,10 +56,12 @@ export default function RootContainer() {
 
 		const eventSubscription = AppState.addEventListener('change', onAppStateChange);
 
-		// Les deux declencheurs de la livraison : le demarrage, et le retour au premier plan.
-		// Jamais dans le chemin d'un run — `refreshBlueprints` ne leve pas et n'est pas attendue,
-		// donc un point de publication en panne ne retarde ni ne casse le demarrage.
+		// Les deux declencheurs de la donnee publiee : le demarrage, et le retour au premier plan.
+		// Jamais dans le chemin d'un run ni d'un rendu — aucune des deux ne leve, aucune n'est
+		// attendue, donc un point de publication en panne ne retarde ni ne casse le demarrage. Le
+		// socle embarque a deja repondu avant que ces requetes ne partent.
 		void refreshBlueprints();
+		void refreshBuildings();
 
 		return () => {
 			SettingsManager.unsubscribe('theme', onTheme);

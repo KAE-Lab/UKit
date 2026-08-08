@@ -1,44 +1,27 @@
-import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
+import React, { useContext, useMemo } from 'react';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
-import { CrousService, CrousRestaurant } from '../../services/CrousService';
+import type { CrousRestaurant } from '../../services/CrousService';
+import { useCrousRestaurants } from '../../hooks/useCrousRestaurants';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useSavedFilter } from '../../hooks/useSavedFilter';
 import { CrousSectionCard, CARD_WIDTH } from './CrousSectionCard';
-
-const { width } = Dimensions.get('window');
 
 export function CrousSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
-    const [restaurants, setRestaurants] = useState<CrousRestaurant[]>([]);
-    const [loading, setLoading] = useState(true);
-    const mountedRef = useRef(true);
+    // Meme hook que la liste complete : un echec y reste discret — le carrousel disparait et la ligne
+    // de journal du service dit pourquoi. Le tableau de bord n'est pas l'endroit ou l'on explique une
+    // panne, l'ecran dedie l'est.
+    const { restaurants, loading } = useCrousRestaurants(userLat, userLon);
 
     const { favorites: favRu, toggleFavorite: toggleFavRu } = useFavorites('crous_favorites');
     const [crousFilter] = useSavedFilter('crous_filter', 'all');
-
-    useEffect(() => {
-        mountedRef.current = true;
-        if (userLat === undefined || userLon === undefined) return;
-
-        setLoading(true);
-        CrousService.fetchRestaurantsBordeaux(userLat, userLon).then(data => {
-            if (mountedRef.current) {
-                setRestaurants(data);
-                setLoading(false);
-            }
-        }).catch(() => {
-            if (mountedRef.current) setLoading(false);
-        });
-        return () => { mountedRef.current = false; };
-    }, [userLat, userLon]);
 
     const filteredRestaurants = useMemo(() => {
         return [...restaurants].filter(item => {

@@ -1,0 +1,49 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.campus.bibliotheque-affluence",
+  "description": "L'affluence en direct d'un site Affluences. Le taux se lit a deux emplacements selon les sites : les deux sont extraits, et le choix de l'un ou de l'autre reste applicatif — un '??' n'est pas exprimable dans une specification d'extraction. Un site ferme rend 'liveAttendance' nul, donc les deux chemins ne correspondent a rien : c'est un resultat, pas un echec.",
+  "act": "vector",
+  "inputs": {
+    "site": {
+      "type": "string",
+      "required": true,
+      "default": "bu-droit-lettres-pessac",
+      "description": "Identifiant lisible du site (slug rendu par ukit.campus.bibliotheques)."
+    }
+  },
+  "vars": {
+    "api": "https://api.affluences.com",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  },
+  "steps": [
+    {
+      "id": "direct",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.api }}/app/v4/sites/{{ inputs.site }}/live-data",
+      "headers": {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "fr",
+        "x-service-name": "website",
+        "Origin": "https://affluences.com",
+        "Referer": "https://affluences.com/",
+        "User-Agent": "{{ vars.user_agent }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "ouvert": { "from": "json", "path": "$.data.status.isOpen" },
+        "ferme_a": { "from": "json", "path": "$.data.status.closingAt" },
+        "texte_ouverture": { "from": "json", "path": "$.data.status.openingText" },
+        "pourcentage": { "from": "json", "path": "$.data.liveAttendance.percentage" },
+        "occupation": { "from": "json", "path": "$.data.liveAttendance.occupancy" }
+      }
+    }
+  ],
+  "outputs": {
+    "ouvert": "{{ steps.direct.ouvert | first | default(false, true) }}",
+    "ferme_a": "{{ steps.direct.ferme_a | first | default(none, true) }}",
+    "texte_ouverture": "{{ steps.direct.texte_ouverture | first | default(none, true) }}",
+    "pourcentage": "{{ steps.direct.pourcentage | first | default(none, true) }}",
+    "occupation": "{{ steps.direct.occupation | first | default(none, true) }}"
+  }
+}

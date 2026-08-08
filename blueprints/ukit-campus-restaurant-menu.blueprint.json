@@ -1,0 +1,46 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.campus.restaurant-menu",
+  "description": "Le menu d'un restaurant CROUS, tel que CrousMenuScreen le demande : tous les jours publies d'un coup, l'ecran choisissant ensuite le jour affiche. Pas d'expect, et un assert a la place : plus de la moitie des restaurants de la region rendent 404 sur cette route, ce qui veut dire 'ce restaurant ne publie pas de menu' et non 'la source est en panne'. Un expect n'accepte qu'un seul statut ; l'assert en accepte deux et refuse tout le reste. Le sous-arbre 'repas' descend tel quel — un jour porte des services, qui portent des categories, qui portent des plats, et la grammaire de 'fields' est plate. La conversion de la date recue (DD-MM-YYYY) reste applicative : les filtres de date produisent un format attendu par une source, ils n'en interpretent pas un.",
+  "act": "vector",
+  "inputs": {
+    "restaurant": {
+      "type": "string",
+      "required": true,
+      "default": "1",
+      "description": "Code du restaurant dont on lit le menu (1 = Resto U' Cap Sud)."
+    }
+  },
+  "vars": {
+    "api": "https://api.croustillant.menu/v1"
+  },
+  "steps": [
+    {
+      "id": "menu",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.api }}/restaurants/{{ inputs.restaurant }}/menu",
+      "headers": { "Accept": "application/json" },
+      "extract": {
+        "jours": {
+          "from": "json",
+          "path": "$.data[*]",
+          "fields": {
+            "date": "$.date",
+            "repas": "$.repas"
+          }
+        }
+      }
+    },
+    {
+      "id": "statut",
+      "action": "assert",
+      "condition": "{{ steps.menu.status_code == 200 or steps.menu.status_code == 404 }}",
+      "message": "statut inattendu sur le menu : la source a change"
+    }
+  ],
+  "outputs": {
+    "jours": "{{ steps.menu.jours }}",
+    "nombre": "{{ steps.menu.jours | length }}"
+  }
+}

@@ -70,23 +70,42 @@ identifiants réels dans un harnais, et on ne met pas d'identifiants réels dans
 vérification est manuelle, sur appareil, avec un compte de test, et son plan est écrit dans sa
 spécification.
 
+## Un champ peut être exclu, mais jamais en silence
+
+La règle reste « la projection couvre tous les champs que les écrans lisent ». Il existe une
+exception, et elle a un coût qu'il faut payer explicitement : quand la migration **corrige** un
+défaut, les deux chemins cessent légitimement de rendre la même chose sur ce champ.
+
+Le cas se traite alors ainsi, et pas autrement : le champ sort de `project()`, **avec un commentaire
+qui le nomme, dit pourquoi, et renvoie à la documentation de la source**. Un champ écarté sans
+justification écrite est un défaut caché ; un champ comparé alors qu'on l'a volontairement changé est
+une porte rouge qu'on apprendra à ignorer.
+
+Un seul champ est dans ce cas aujourd'hui : `opening` de `crous-restaurants` — voir
+[campus-crous.md](../../docs/features/campus-crous.md).
+
 ## État
 
 | Cas | Source | Jalon |
 |---|---|---|
-| *(aucun)* | — | — |
+| [`crous-restaurants`](crous-restaurants.parity.mjs) | Croustillant — la liste régionale | [6-D](../../docs/phase-6/6-d-campus.md) |
+| [`crous-menu`](crous-menu.parity.mjs) | Croustillant — les menus, dont deux restaurants en `404` | [6-D](../../docs/phase-6/6-d-campus.md) |
+| [`bu-sites`](bu-sites.parity.mjs) | Affluences — un point de balayage | [6-D](../../docs/phase-6/6-d-campus.md) |
+| [`bu-affluence`](bu-affluence.parity.mjs) | Affluences — deux sites, ouvert et fermé | [6-D](../../docs/phase-6/6-d-campus.md) |
+| [`bu-horaires`](bu-horaires.parity.mjs) | Affluences — semaine courante et semaine décalée | [6-D](../../docs/phase-6/6-d-campus.md) |
 
-**Le harnais est vide, et c'est un état légitime.** Il a été posé au jalon
-[6-A](../../docs/phase-6/6-a-socle.md) avec le cas `annonces`, qui a servi de gabarit ; ce cas est
-sorti au jalon [6-B](../../docs/phase-6/6-b-supabase.md) avec la bascule de la source vers la
-[base de publication](../../docs/backend.md) — il comparait le Blueprint à l'ancien chemin jsDelivr,
-et les deux ont quitté la production. Les prochains cas arrivent au jalon
-[6-D](../../docs/phase-6/6-d-campus.md).
+[`commun.mjs`](commun.mjs) n'est pas un cas : il porte le harnais partagé — jouer un Blueprint avec le
+moteur nu, les en-têtes imités du chemin historique, les libellés de repli. Il ne porte **aucune**
+projection, et c'est délibéré : chaque cas recopie la sienne des deux côtés.
 
-`npm run parity` sans cas **réussit** en le disant. Un harnais vide entre deux jalons de migration ne
-doit pas rougir une porte de qualité : une porte rouge pour une raison normale est une porte qu'on
-apprend à ignorer, ce qui coûte plus cher que la porte elle-même. Un filtre explicite qui ne désigne
-rien (`npm run parity -- typo`) reste un échec, parce que c'est une faute de frappe.
+Le harnais a été posé au jalon [6-A](../../docs/phase-6/6-a-socle.md) avec le cas `annonces`, qui a
+servi de gabarit ; ce cas est sorti au jalon [6-B](../../docs/phase-6/6-b-supabase.md) avec la
+bascule de la source vers la [base de publication](../../docs/backend.md). Il est récupérable par
+`git show f9e4a9b:tools/parity/annonces.parity.mjs`.
 
-Le gabarit d'un cas reste écrit ci-dessus : trois exports, `NAME`, `viaBlueprint()`, `viaLegacy()` et
+`npm run parity` sans aucun cas **réussit** en le disant : un harnais vide entre deux jalons de
+migration ne doit pas rougir une porte de qualité. Un filtre explicite qui ne désigne rien
+(`npm run parity -- typo`) reste un échec, parce que c'est une faute de frappe.
+
+Le gabarit d'un cas reste écrit ci-dessus : `NAME`, `viaBlueprint()`, `viaLegacy()` et
 `project(item)`.

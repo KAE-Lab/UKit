@@ -52,6 +52,10 @@ Quatre limites reviennent souvent, et il vaut mieux les connaître avant de bute
   masquée, ce qu'un filtre d'extraction interdirait ;
 - **pas d'indexation dans un filtre.** « L'un des éléments de cette liste vaut X » n'est pas
   exprimable. On extrait le champ et on filtre côté application ;
+- **pas de reconstruction d'un arbre.** `fields` est plat : il nomme des champs relatifs à un élément,
+  pas une hiérarchie. Quand l'application a besoin de l'arbre entier — un jour de menu qui porte des
+  services, qui portent des catégories, qui portent des plats — le chemin d'un champ désigne le
+  **sous-arbre**, qui descend tel quel, et la projection reste applicative ;
 - **pas de reformatage d'une date reçue.** Les filtres de date lisent `YYYY-MM-DD` et refusent le
   reste : ils servent à *produire* un format attendu par une source, pas à en interpréter un ;
 - **pas de calcul.** Il faudrait le réimplémenter à l'identique dans deux moteurs.
@@ -113,6 +117,28 @@ en extrayant à côté la **racine** attendue (`{ "from": "json", "path": "$.ann
 correspond une fois si la clé existe — même vide — et zéro fois si elle a disparu. L'échec est rangé
 en `rejected`. Un Blueprint dont l'extraction peut légitimement être vide devrait porter cette
 assertion ; celui des annonces l'a gagnée au jalon [6-A](phase-6/6-a-socle.md), après mesure.
+
+### Accepter deux statuts, sans accepter n'importe lequel
+
+`expect.status` ne prend **qu'un** entier. Or une source rend parfois un statut d'erreur pour dire
+quelque chose de parfaitement normal : plus de la moitié des restaurants CROUS répondent `404` sur
+leur menu, ce qui veut dire « ce restaurant ne publie rien » et non « la source est en panne ». Un
+`expect: {status: 200}` transformerait alors un état vide fréquent en message d'erreur ; retirer
+l'`expect` tout court ferait passer un `500` pour une liste vide, ce qui est précisément le défaut que
+cette phase supprime.
+
+Le remède est le même step qu'au-dessus, appliqué au statut plutôt qu'à la forme :
+
+```jsonc
+{ "id": "statut", "action": "assert",
+  "condition": "{{ steps.menu.status_code == 200 or steps.menu.status_code == 404 }}",
+  "message": "statut inattendu sur le menu : la source a change" }
+```
+
+Le step `http.request` publie `status_code` dans ses sorties, et l'échec d'un `assert` est rangé en
+`rejected` comme celui d'un `expect`. La règle à retenir : **un statut d'erreur qui fait partie du
+contrat se nomme**, il ne se subit pas et ne s'ignore pas. Livré au jalon
+[6-D](phase-6/6-d-campus.md), après mesure sur les 41 établissements de la région.
 
 ## Écrire un Blueprint
 
@@ -213,6 +239,15 @@ L'état de repos est celui de la capture : le bucket sert exactement ce que le b
 chaque entrée est `ignored : version … is not newer than the bundled …`. C'est ce qu'on doit voir
 quand il n'y a **rien à corriger** — et non un panneau vide, qui ne dirait pas la différence avec un
 manifeste jamais lu.
+
+> **Le rapport ne survit pas à un rechargement, la surcouche si.** Le rapport du dernier
+> rafraîchissement vit en mémoire ; la surcouche, elle, vit dans le magasin local. Après un
+> rechargement — un `r` dans Metro, une reprise à chaud pendant qu'on développe — le panneau affiche
+> donc `manifeste pas encore lu` **en gris**, tout en montrant des lignes `distant` parfaitement
+> résolues depuis le cache. Ce n'est pas une panne, et il ne faut pas le confondre avec
+> `manifeste non lu : …`, qui s'affiche **en ambre** et signale un vrai échec de lecture. Le bouton
+> **Rafraichir** du panneau lève le doute en une seconde. Constaté en vérifiant le jalon
+> [6-D](phase-6/6-d-campus.md) sur appareil.
 
 ## Ce qu'un Blueprint distant ne peut pas faire
 

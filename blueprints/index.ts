@@ -14,8 +14,11 @@
 
 import type { BundledBlueprint } from '@aetherius/react-native';
 
-import campusAffluence from './ukit-campus-affluence.blueprint.json';
 import campusAnnonces from './ukit-campus-annonces.blueprint.json';
+import campusBibliothequeAffluence from './ukit-campus-bibliotheque-affluence.blueprint.json';
+import campusBibliothequeHoraires from './ukit-campus-bibliotheque-horaires.blueprint.json';
+import campusBibliotheques from './ukit-campus-bibliotheques.blueprint.json';
+import campusRestaurantMenu from './ukit-campus-restaurant-menu.blueprint.json';
 import campusRestaurants from './ukit-campus-restaurants.blueprint.json';
 import celcatSemaine from './ukit-celcat-semaine.blueprint.json';
 import scolariteMessagerie from './ukit-scolarite-messagerie.blueprint.json';
@@ -35,7 +38,10 @@ export type { BundledBlueprint };
 export const BLUEPRINT = {
     CAMPUS_ANNONCES: 'ukit.campus.annonces',
     CAMPUS_RESTAURANTS: 'ukit.campus.restaurants',
-    CAMPUS_AFFLUENCE: 'ukit.campus.affluence',
+    CAMPUS_RESTAURANT_MENU: 'ukit.campus.restaurant-menu',
+    CAMPUS_BIBLIOTHEQUES: 'ukit.campus.bibliotheques',
+    CAMPUS_BIBLIOTHEQUE_AFFLUENCE: 'ukit.campus.bibliotheque-affluence',
+    CAMPUS_BIBLIOTHEQUE_HORAIRES: 'ukit.campus.bibliotheque-horaires',
     CELCAT_SEMAINE: 'ukit.celcat.semaine',
     SCOLARITE_SSO: 'ukit.scolarite.sso',
     SCOLARITE_MESSAGERIE: 'ukit.scolarite.messagerie',
@@ -46,9 +52,11 @@ export type BlueprintName = (typeof BLUEPRINT)[keyof typeof BLUEPRINT];
 /**
  * La table livree avec le binaire.
  *
- * Les six fichiers viennent du jalon 3-G d'Aetherius, joues contre les vraies sources et verifies
- * sur un telephone. Chaque jalon de migration les decoupe selon les appels que l'application joue
- * reellement, et corrige ce que le branchement revele — voir blueprints/README.md.
+ * Les fichiers viennent du jalon 3-G d'Aetherius, joues contre les vraies sources et verifies sur un
+ * telephone. Chaque jalon de migration les decoupe selon les appels que l'application joue
+ * reellement, et corrige ce que le branchement revele — voir blueprints/README.md. Le jalon 6-D a
+ * ainsi remplace le fichier de reference `ukit.campus.affluence`, qui tenait la carte **et**
+ * l'affluence, par les deux Blueprints que deux ecrans demandent a deux moments.
  *
  * Les versions vivent dans `versions.json` et non ici : le script de publication est un module Node
  * qui ne sait pas lire un fichier TypeScript, et une version que le publieur recopierait a la main
@@ -64,9 +72,21 @@ export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
         version: versions[BLUEPRINT.CAMPUS_RESTAURANTS].version,
         document: campusRestaurants,
     },
-    [BLUEPRINT.CAMPUS_AFFLUENCE]: {
-        version: versions[BLUEPRINT.CAMPUS_AFFLUENCE].version,
-        document: campusAffluence,
+    [BLUEPRINT.CAMPUS_RESTAURANT_MENU]: {
+        version: versions[BLUEPRINT.CAMPUS_RESTAURANT_MENU].version,
+        document: campusRestaurantMenu,
+    },
+    [BLUEPRINT.CAMPUS_BIBLIOTHEQUES]: {
+        version: versions[BLUEPRINT.CAMPUS_BIBLIOTHEQUES].version,
+        document: campusBibliotheques,
+    },
+    [BLUEPRINT.CAMPUS_BIBLIOTHEQUE_AFFLUENCE]: {
+        version: versions[BLUEPRINT.CAMPUS_BIBLIOTHEQUE_AFFLUENCE].version,
+        document: campusBibliothequeAffluence,
+    },
+    [BLUEPRINT.CAMPUS_BIBLIOTHEQUE_HORAIRES]: {
+        version: versions[BLUEPRINT.CAMPUS_BIBLIOTHEQUE_HORAIRES].version,
+        document: campusBibliothequeHoraires,
     },
     [BLUEPRINT.CELCAT_SEMAINE]: {
         version: versions[BLUEPRINT.CELCAT_SEMAINE].version,

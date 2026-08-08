@@ -196,14 +196,15 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Thème** — tokens de design (espacements, rayons, typographie, ombres), thèmes clair et sombre
   complets, alignement sur la préférence système au premier lancement.
   [docs/theme.md](docs/theme.md)
-- [x] **Internationalisation** — français, anglais, espagnol ; 216 clés par dictionnaire, typage de
+- [x] **Internationalisation** — français, anglais, espagnol ; 217 clés par dictionnaire, typage de
   la clé, locale des dates alignée. Treize libellés d'écrans Campus restent non traduits.
   [docs/i18n.md](docs/i18n.md)
 - [x] **Persistance locale** — managers observables, caches à expiration pour les listes de
   référence, cache de repli hors ligne pour l'emploi du temps, stockage chiffré pour le compte
   universitaire. [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md)
 - [x] **Cartographie libre** — Leaflet et OpenStreetMap en WebView, marqueur au thème de
-  l'application, référentiel local de 73 bâtiments. [docs/cartographie.md](docs/cartographie.md)
+  l'application, référentiel de 73 bâtiments embarqué dans le binaire et corrigeable à distance.
+  [docs/cartographie.md](docs/cartographie.md)
 - [x] **Publication** — profils EAS (développement, aperçu, production) et chaîne de release GitHub
   Actions vers les deux stores. [docs/plateforme.md](docs/plateforme.md)
 - [ ] **Tests automatisés** — un premier harnais existe, borné : `npm test` couvre le socle du moteur
@@ -215,8 +216,9 @@ livré ; elle est mise à jour à chaque contribution.
   [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
   et corrigeables sans release. Le socle est en place (6-A), **la base de publication existe** (6-B),
   et **le canal de correction est branché** (6-C) : une source qui change se répare par une
-  publication de fichier, reçue au retour au premier plan, avec trois interrupteurs d'arrêt. Les
-  sources universitaires suivent, jalon par jalon :
+  publication de fichier, reçue au retour au premier plan, avec trois interrupteurs d'arrêt. **Les
+  deux sources de campus sont migrées** (6-D) — restaurants et bibliothèques, cinq Blueprints, cinq
+  cas de parité sur données réelles. Les sources universitaires suivent, jalon par jalon :
   [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
@@ -236,9 +238,12 @@ livré ; elle est mise à jour à chaque contribution.
   socle de liste commun (recherche, filtres persistés, favoris, états vides).
   [docs/features/campus.md](docs/features/campus.md)
 - [x] **Campus — restaurants** — liste régionale triée par distance, filtres par type, menus du jour
-  et des jours suivants par service. [docs/features/campus-crous.md](docs/features/campus-crous.md)
+  et des jours suivants par service. Source jouée par deux [Blueprints](docs/blueprints.md) : une
+  panne, une source qui a changé et un restaurant qui ne publie rien produisent trois écrans
+  différents. [docs/features/campus-crous.md](docs/features/campus-crous.md)
 - [x] **Campus — bibliothèques** — découverte régionale par balayage géographique, affluence en temps
-  réel, horaires semaine par semaine.
+  réel, horaires semaine par semaine. Trois [Blueprints](docs/blueprints.md), et une couverture
+  partielle du balayage se **dit** au lieu d'amputer la liste en silence.
   [docs/features/campus-bibliotheques.md](docs/features/campus-bibliotheques.md)
 - [x] **Campus — salles libres** — reconstruction des bâtiments depuis les salles Celcat, croisement
   avec les horaires d'ouverture, créneaux libres par heure. Un seul bâtiment est déclaré en accès

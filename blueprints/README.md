@@ -19,29 +19,30 @@ Ce que ces fichiers portent, comment on en écrit un et comment on publie une co
 
 ## Provenance
 
-Les six fichiers présents aujourd'hui viennent du jalon 3-G d'Aetherius, où ils ont été écrits contre
-nos vraies sources, joués sur les deux moteurs et vérifiés sur un téléphone. Leurs descriptions y font
-encore référence pour la plupart : c'est volontaire. Ce sont des fichiers **mesurés**, et les
-retoucher sans raison mesurée reviendrait à perdre ce qui les rend fiables.
+Les fichiers d'origine viennent du jalon 3-G d'Aetherius, où ils ont été écrits contre nos vraies
+sources, joués sur les deux moteurs et vérifiés sur un téléphone. Ce sont des fichiers **mesurés**, et
+les retoucher sans raison mesurée reviendrait à perdre ce qui les rend fiables.
 
 La règle est donc : **on ne les retouche pas par confort, on les corrige quand le branchement révèle
-un manque** — et la correction s'accompagne d'une montée de version. C'est arrivé une fois :
+un manque** — et la correction s'accompagne d'une montée de version.
 
 | Fichier | Correction | Version | Jalon |
 |---|---|---|---|
 | `ukit-campus-annonces` | extraction de `long_desc`, que la fiche affiche et que le fichier oubliait ; `assert` sur la présence du tableau `annonces` | 1 → **2** | [6-A](../docs/phase-6/6-a-socle.md) |
+| `ukit-campus-restaurants` | réduit au **seul** appel de liste, `assert` de forme, extraction de `horaires` | 1 → **2** | [6-D](../docs/phase-6/6-d-campus.md) |
 
-Le second ajout mérite d'être connu avant d'écrire le suivant : sans lui, une réponse valide dont la
-clé attendue a disparu rend un **succès à liste vide**, indistinguable d'une liste légitimement vide.
+Le second ajout du jalon 6-A mérite d'être connu avant d'écrire le suivant : sans lui, une réponse
+valide dont la clé attendue a disparu rend un **succès à liste vide**, indistinguable d'une liste
+légitimement vide.
 Voir [docs/blueprints.md](../docs/blueprints.md#affirmer-la-forme-pour-que--rien-trouvé--ne-se-confonde-pas-avec--rien-à-trouver-).
 
 Ils sont un point de départ démontré, pas le jeu final :
 
-| Fichier repris | Ce qu'il deviendra | Jalon |
+| Fichier repris | Ce qu'il est devenu, ou deviendra | Jalon |
 |---|---|---|
 | `ukit-campus-annonces` | **plus joué** ; conservé comme témoin du format — la source est passée en base | [6-A](../docs/phase-6/6-a-socle.md), [6-B](../docs/phase-6/6-b-supabase.md) |
-| `ukit-campus-restaurants` | découpé en `restaurants` et `restaurant-menu` | [6-D](../docs/phase-6/6-d-campus.md) |
-| `ukit-campus-affluence` | découpé en `bibliotheques`, `bibliotheque-affluence`, `bibliotheque-horaires` | [6-D](../docs/phase-6/6-d-campus.md) |
+| `ukit-campus-restaurants` | **fait** : découpé en `restaurants` et `restaurant-menu` | [6-D](../docs/phase-6/6-d-campus.md) |
+| `ukit-campus-affluence` | **fait** : remplacé par `bibliotheques`, `bibliotheque-affluence` et `bibliotheque-horaires` ; le fichier d'origine est supprimé | [6-D](../docs/phase-6/6-d-campus.md) |
 | `ukit-celcat-semaine` | découpé en `groupes`, `jour`, `semaine`, `annee`, `salles`, `occupation` | [6-E](../docs/phase-6/6-e-planning.md) |
 | `ukit-scolarite-sso` | renommé `ukit.portail.<code>.dossier` | [6-F](../docs/phase-6/6-f-scolarite.md), [6-G](../docs/phase-6/6-g-etablissements.md) |
 | `ukit-scolarite-messagerie` | renommé `ukit.portail.<code>.messagerie` | [6-F](../docs/phase-6/6-f-scolarite.md), [6-G](../docs/phase-6/6-g-etablissements.md) |
@@ -50,6 +51,14 @@ La règle qui explique ce tableau : **un Blueprint par appel réellement joué p
 un par source. Les fichiers d'origine regroupent plusieurs requêtes parce qu'ils devaient démontrer
 une chaîne en une exécution ; l'application, elle, les appelle à des moments différents, pour des
 écrans différents.
+
+### Un fichier supprimé ne se retire pas du bucket
+
+Le manifeste est régénéré depuis ce dossier : une entrée qui en disparaît ramène simplement son
+Blueprint au socle embarqué sur les appareils qui la connaissaient. L'objet, lui, **reste** dans le
+bucket — le script ne supprime rien. C'est sans conséquence (plus aucun manifeste ne le désigne, et
+l'appareil ne lit que ce que le manifeste nomme) et c'est délibéré : supprimer un objet référencé par
+un manifeste encore en cache quelque part serait le seul geste vraiment irréversible du dispositif.
 
 ## Convention de nommage
 

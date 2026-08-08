@@ -1,32 +1,103 @@
-import Translator from "../../../shared/i18n/Translator";
+/**
+ * Les bibliotheques universitaires, jouees par le moteur embarque.
+ *
+ * Ce service n'emet plus aucune requete : il joue trois Blueprints — les sites autour d'un point, une
+ * affluence, une semaine d'horaires — et travaille la donnee recue.
+ *
+ * **Le balayage reste applicatif, et c'est le point du jalon.** L'endpoint de decouverte ne rend que
+ * les sites proches du point interroge ; couvrir la region demande douze requetes. De tout cela, une
+ * seule chose descend dans un fichier : la requete. La liste des douze points est une decision
+ * produit, le filtre de categorie demanderait d'indexer une liste dans un predicat — refuse par les
+ * deux moteurs, volontairement — et Haversine est du calcul.
+ *
+ * Voir docs/features/campus-bibliotheques.md et docs/phase-6/6-d-campus.md.
+ */
 
-export interface LibraryInfo {
-    id: string;
-    name: string;
-    campus: string;
-    lat: number;
-    lng: number;
-    slug: string; 
-    distance?: number;
-    imageUrl?: string;
-}
+import Translator from '../../../shared/i18n/Translator';
+import { BLUEPRINT, reportFailure, runBlueprint, type UkitFailure } from '../../../shared/aetherius';
+import {
+    estBibliotheque,
+    projeterAffluence,
+    projeterHoraire,
+    projeterSite,
+    type AffluenceExtraite,
+    type AffluencesData,
+    type HoraireExtrait,
+    type LibraryInfo,
+    type SiteExtrait,
+    type SiteProjete,
+    type TimetableEntry,
+} from './LibraryMapping';
+import { getDistanceInKm } from './FreeRoomService';
 
-export interface AffluencesData {
-    isOpen: boolean;
-    occupancyRate: number | null; 
-    closingTime?: string;
-    openingText?: string;
-}
+export type { AffluencesData, LibraryInfo, TimetableEntry } from './LibraryMapping';
 
-export interface TimetableEntry {
-    day: string;
-    isToday: boolean;
-    openingHours: {
-        openingHour: string;
-        closingHour: string;
-    }[];
-}
+/**
+ * Les douze points de balayage : la position de l'utilisateur, plus onze points fixes couvrant la
+ * region.
+ *
+ * Ils restent en dur ici parce que ce sont des **decisions produit** — quelles villes on couvre — et
+ * non une propriete de la source. Ils rejoindront la base avec le catalogue des etablissements
+ * (jalon 6-G), qui est le bon endroit pour eux.
+ *
+ * **Mesure du 2026-08-08, a lire avant d'y toucher.** Les onze points rendent 14 bibliotheques, et
+ * la repartition n'est pas celle qu'on croit : Bordeaux Centre et Talence/Pessac voient les **memes**
+ * 8 sites, aucun des deux n'ayant d'exclusivite ; cinq points — Poitiers, Perigueux, Agen, Angouleme,
+ * Niort — n'en rendent **aucun** ; et seuls Pau, La Rochelle, Limoges et Bayonne portent des sites
+ * que personne d'autre ne voit. Reduire la liste est donc tentant, et ce serait un changement de
+ * comportement produit : un point muet aujourd'hui peut cesser de l'etre le jour ou une bibliotheque
+ * s'inscrit chez le fournisseur. La decision se prend avec ses propres mesures, pas ici.
+ */
+const POINTS_FIXES = [
+    { lat: 44.8377, lng: -0.5791 }, // Bordeaux Centre (Victoire, Bastide, Chartrons)
+    { lat: 44.7963, lng: -0.6277 }, // Campus Talence / Pessac / Gradignan
+    { lat: 43.2951, lng: -0.3707 }, // Pau
+    { lat: 46.1603, lng: -1.1511 }, // La Rochelle
+    { lat: 45.8336, lng: 1.2611 },  // Limoges
+    { lat: 46.5802, lng: 0.3403 },  // Poitiers
+    { lat: 43.4929, lng: -1.4748 }, // Bayonne / Anglet
+    { lat: 45.1920, lng: 0.7194 },  // Perigueux
+    { lat: 44.2031, lng: 0.6163 },  // Agen
+    { lat: 45.6483, lng: 0.1562 },  // Angouleme
+    { lat: 46.3237, lng: -0.4647 }, // Niort
+];
 
+/**
+ * Ce qu'un ecran recoit.
+ *
+ * `secteursMuets` est la reponse a une question que l'ancien code ne se posait pas : que fait-on
+ * quand deux points de balayage sur douze echouent ? Il repondait « rien, on n'en sait rien ».
+ * Desormais on le sait, et l'ecran affiche ce qu'on a **en le disant**.
+ *
+ * **Se teste avec `resultat.ok === false`** (voir shared/aetherius/runBlueprint.ts).
+ */
+export type LibrariesResult =
+    | {
+          readonly ok: true;
+          readonly libraries: LibraryInfo[];
+          readonly secteursMuets: number;
+          readonly secteurs: number;
+      }
+    | { readonly ok: false; readonly failure: UkitFailure };
+
+export type AffluenceResult =
+    | { readonly ok: true; readonly affluence: AffluencesData }
+    | { readonly ok: false; readonly failure: UkitFailure };
+
+export type TimetableResult =
+    | { readonly ok: true; readonly entries: TimetableEntry[] }
+    | { readonly ok: false; readonly failure: UkitFailure };
+
+/**
+ * La couleur et le libelle d'un etat d'affluence.
+ *
+ * Reste dans le service et non dans le module de projection : c'est de la presentation, elle lit la
+ * langue choisie, et les composants l'importent d'ici depuis toujours. Seule source de verite de
+ * cette semantique — ne pas la reimplementer dans un composant.
+ *
+ * Un taux inconnu est traite comme « de la place » : afficher un avertissement sans donnee serait
+ * trompeur.
+ */
 export function getLibraryStatus(affluenceData?: AffluencesData) {
     const rate = affluenceData?.occupancyRate ?? null;
     const isOpen = affluenceData?.isOpen ?? true;
@@ -38,7 +109,7 @@ export function getLibraryStatus(affluenceData?: AffluencesData) {
         else statusColor = '#ff4436';
     }
 
-    let statusText = isOpen ? (Translator.get('BU_OPEN')) : (Translator.get('BU_CLOSED'));
+    let statusText = isOpen ? Translator.get('BU_OPEN') : Translator.get('BU_CLOSED');
     if (!isOpen && affluenceData?.openingText) {
         statusText = `${statusText} - ${affluenceData.openingText}`;
     }
@@ -46,184 +117,106 @@ export function getLibraryStatus(affluenceData?: AffluencesData) {
     return { isOpen, rate, statusColor, statusText };
 }
 
-interface AffluencesApiCategory {
-    id: number;
+function commeListe(valeur: unknown): unknown[] {
+    return Array.isArray(valeur) ? valeur : [];
 }
 
-interface AffluencesApiSite {
-    id: string;
-    categories?: AffluencesApiCategory[];
-    location?: {
-        address?: { city?: string };
-        coordinates?: { latitude?: number; longitude?: number };
-    };
-    images?: string[];
-    poster_image?: string;
-    estimated_distance?: number;
-    primary_name: string;
-    slug: string;
-}
-
-function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; 
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+/**
+ * La distance reellement affichee.
+ *
+ * Celle du fournisseur est relative au **point de balayage**, pas a l'etudiant : elle ne sert que de
+ * repli quand le site ne porte pas ses coordonnees.
+ */
+function distanceDepuis(site: SiteProjete, userLat: number, userLng: number): number | undefined {
+    if (site.lat !== undefined && site.lng !== undefined && userLat !== undefined && userLng !== undefined) {
+        return getDistanceInKm(userLat, userLng, site.lat, site.lng);
+    }
+    return site.distanceEstimee === undefined ? undefined : site.distanceEstimee / 1000;
 }
 
 export default class LibraryService {
-    
-    static async fetchNearbyLibraries(userLat: number, userLng: number): Promise<LibraryInfo[]> {
-        try {
-            const scanPoints = [
-                { lat: userLat, lng: userLng }, 
-                { lat: 44.8377, lng: -0.5791 }, // Bordeaux Centre (Victoire, Bastide, Chartrons)
-                { lat: 44.7963, lng: -0.6277 }, // Campus Talence / Pessac / Gradignan
-                { lat: 43.2951, lng: -0.3707 }, // Pau
-                { lat: 46.1603, lng: -1.1511 }, // La Rochelle
-                { lat: 45.8336, lng: 1.2611 },  // Limoges
-                { lat: 46.5802, lng: 0.3403 },  // Poitiers
-                { lat: 43.4929, lng: -1.4748 }, // Bayonne / Anglet
-                { lat: 45.1920, lng: 0.7194 },  // Perigueux
-                { lat: 44.2031, lng: 0.6163 },  // Agen
-                { lat: 45.6483, lng: 0.1562 },  // Angouleme
-                { lat: 46.3237, lng: -0.4647 }  // Niort
-            ];
+    /**
+     * Les bibliotheques de la region, dedoublonnees et triees par distance reelle.
+     *
+     * Douze runs concurrents — les runs Act I n'ont aucun etat partage. Un point muet n'emporte pas
+     * les autres : on garde ce qui a repondu et on compte le reste. Zero reponse, en revanche, est un
+     * echec plein, avec la famille du premier run en erreur.
+     */
+    static async fetchNearbyLibraries(userLat: number, userLng: number): Promise<LibrariesResult> {
+        const points = [{ lat: userLat, lng: userLng }, ...POINTS_FIXES];
 
-            const fetchPromises = scanPoints.map(point => 
-                fetch('https://api.affluences.com/app/v3/sites/map', {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json, text/plain, */*',
-                        'Accept-Language': 'fr',
-                        'Content-Type': 'application/json',
-                        'x-service-name': 'website',
-                        'Origin': 'https://affluences.com',
-                        'Referer': 'https://affluences.com/',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    },
-                    body: JSON.stringify({
-                        latitude: point.lat,
-                        longitude: point.lng,
-                    })
-                }).then(res => res.ok ? res.json() : { data: { results: [] } })
-            );
+        const runs = await Promise.all(
+            points.map((point) =>
+                runBlueprint(BLUEPRINT.CAMPUS_BIBLIOTHEQUES, {
+                    inputs: { latitude: point.lat, longitude: point.lng },
+                }),
+            ),
+        );
 
-            const allResponses = await Promise.all(fetchPromises);
-            
-            const uniqueLibraries = new Map();
-            
-            allResponses.forEach(json => {
-                const results = json.data?.results || [];
-                results.forEach((site: AffluencesApiSite) => {
-                    // Filtrage sur les categories BU classiques et universitaires
-                    if (site.categories?.some((cat: AffluencesApiCategory) => cat.id === 1 || cat.id === 20)) {
-                        if (!uniqueLibraries.has(site.id)) {
-                            uniqueLibraries.set(site.id, site);
-                        }
-                    }
-                });
-            });
-
-            const formattedLibraries = Array.from(uniqueLibraries.values()).map((lib: AffluencesApiSite) => {
-                const city = lib.location?.address?.city;
-                const imageUrl = (lib.images && lib.images.length > 0 ? lib.images[0] : lib.poster_image) || null;
-                const siteLat = lib.location?.coordinates?.latitude;
-                const siteLng = lib.location?.coordinates?.longitude;
-                
-                // Recalcul strict de la distance par rapport au vrai GPS de l'utilisateur
-                let trueDistance = undefined;
-                if (siteLat !== undefined && siteLng !== undefined && userLat !== undefined && userLng !== undefined) {
-                    trueDistance = getDistanceInKm(userLat, userLng, siteLat, siteLng);
-                } else {
-                    trueDistance = lib.estimated_distance / 1000;
-                }
-
-                return {
-                    id: lib.id,
-                    name: lib.primary_name,
-                    campus: city || Translator.get('CAMPUS'),
-                    lat: siteLat,
-                    lng: siteLng,
-                    slug: lib.slug,
-                    distance: trueDistance,
-                    imageUrl: imageUrl
-                };
-            });
-
-            formattedLibraries.sort((a, b) => (a.distance || 0) - (b.distance || 0));
-
-            return formattedLibraries;
-        } catch (error) {
-            console.error("Erreur lors de la récupération de la liste des BUs", error);
-            return [];
+        const echecs = runs.filter((run) => run.ok === false);
+        if (echecs.length === runs.length) {
+            const failure = (echecs[0] as { failure: UkitFailure }).failure;
+            reportFailure(BLUEPRINT.CAMPUS_BIBLIOTHEQUES, failure);
+            return { ok: false, failure };
         }
-    }
+        if (echecs.length > 0) {
+            reportFailure(BLUEPRINT.CAMPUS_BIBLIOTHEQUES, (echecs[0] as { failure: UkitFailure }).failure);
+        }
 
-    // Récupère les données en temps réel pour une BU spécifique
-    static async getAffluencesData(slug: string): Promise<AffluencesData | null> {
-        try {
-            const response = await fetch(`https://api.affluences.com/app/v4/sites/${slug}/live-data`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'Accept-Language': 'fr',
-                    'x-service-name': 'website',
-                    'Origin': 'https://affluences.com',
-                    'Referer': 'https://affluences.com/',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-            });
-            
-            if (!response.ok) return null;
+        const repliCampus = Translator.get('CAMPUS');
+        const uniques = new Map<string, SiteProjete>();
 
-            const json = await response.json();
-            const payload = json.data;
+        for (const run of runs) {
+            if (run.ok === false) continue;
+            for (const brut of commeListe(run.outputs.sites)) {
+                const site = brut as SiteExtrait;
+                if (!estBibliotheque(site)) continue;
 
-            const isOpen = payload?.status?.isOpen ?? false;
-            let occupancyRate = null;
-            
-            if (payload?.liveAttendance) {
-                occupancyRate = payload.liveAttendance.percentage ?? payload.liveAttendance.occupancy ?? null;
+                const projete = projeterSite(site, repliCampus);
+                if (!uniques.has(projete.id)) uniques.set(projete.id, projete);
             }
-            
-            return {
-                isOpen: isOpen,
-                occupancyRate: occupancyRate,
-                closingTime: payload?.status?.closingAt,
-                openingText: payload?.status?.openingText
-            };
-        } catch (error) {
-            console.error(`Erreur lors de la récupération des données Affluences pour ${slug}:`, error);
-            return null;
         }
+
+        const libraries: LibraryInfo[] = Array.from(uniques.values())
+            .map((site) => ({
+                id: site.id,
+                name: site.name,
+                campus: site.campus,
+                lat: site.lat,
+                lng: site.lng,
+                slug: site.slug,
+                imageUrl: site.imageUrl,
+                distance: distanceDepuis(site, userLat, userLng),
+            }))
+            .sort((gauche, droite) => (gauche.distance || 0) - (droite.distance || 0));
+
+        return { ok: true, libraries, secteursMuets: echecs.length, secteurs: runs.length };
     }
 
-    static async fetchLibraryTimetable(slug: string, weekOffset: number = 0): Promise<TimetableEntry[]> {
-        try {
-            const response = await fetch(`https://api.affluences.com/app/v4/sites/${slug}/timetables?weekOffset=${weekOffset}`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'Accept-Language': 'fr',
-                    'x-service-name': 'website',
-                    'Origin': 'https://affluences.com',
-                    'Referer': 'https://affluences.com/',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-            });
-
-            if (!response.ok) return [];
-
-            const json = await response.json();
-            return json.data?.entries || [];
-        } catch (error) {
-            console.error(`Erreur lors de la récupération des horaires pour ${slug}:`, error);
-            return [];
+    /** L'affluence en direct d'un site. Un site ferme est un resultat, pas un echec. */
+    static async getAffluencesData(slug: string): Promise<AffluenceResult> {
+        const run = await runBlueprint(BLUEPRINT.CAMPUS_BIBLIOTHEQUE_AFFLUENCE, { inputs: { site: slug } });
+        if (run.ok === false) {
+            reportFailure(BLUEPRINT.CAMPUS_BIBLIOTHEQUE_AFFLUENCE, run.failure);
+            return { ok: false, failure: run.failure };
         }
+
+        return { ok: true, affluence: projeterAffluence(run.outputs as AffluenceExtraite) };
+    }
+
+    /** Les horaires d'une semaine. `weekOffset` vaut 0 pour la semaine courante, et se decale. */
+    static async fetchLibraryTimetable(slug: string, weekOffset: number = 0): Promise<TimetableResult> {
+        const run = await runBlueprint(BLUEPRINT.CAMPUS_BIBLIOTHEQUE_HORAIRES, {
+            inputs: { site: slug, semaine: weekOffset },
+        });
+        if (run.ok === false) {
+            reportFailure(BLUEPRINT.CAMPUS_BIBLIOTHEQUE_HORAIRES, run.failure);
+            return { ok: false, failure: run.failure };
+        }
+
+        return {
+            ok: true,
+            entries: commeListe(run.outputs.entrees).map((entree) => projeterHoraire(entree as HoraireExtrait)),
+        };
     }
 }

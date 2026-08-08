@@ -18,6 +18,7 @@ import { Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 
 import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
+import { loadBuildings } from './src/shared/locations';
 import { PlanningDataManager } from './src/features/Planning/services/PlanningDataManager';
 import { CampusDataManager } from './src/features/Campus/services/CampusDataManager';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -44,6 +45,10 @@ function AnimatedAppLoader({ children }) {
 					SimpleLineIcons.font,
 					Entypo.font,
 				]);
+				// La derniere surcouche connue du referentiel des lieux, depuis le cache et sans
+				// reseau : les batiments doivent etre complets des le premier rendu, y compris hors
+				// ligne. Le rafraichissement distant, lui, vient apres (rootContainer).
+				await loadBuildings();
 				await PlanningDataManager.loadData();
 				await CampusDataManager.loadData();
 				await SettingsManager.loadSettings();

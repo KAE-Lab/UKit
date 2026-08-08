@@ -7,6 +7,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import { useLibraryTimetableData } from './hooks/useLibraryTimetableData';
+import { CampusFailureNotice } from '../components/CampusLayoutComponents';
 import { LibraryLiveAttendance, LibraryDatesHeader, LibraryOpeningHoursList } from './components/LibraryDetailsComponents';
 
 export default function LibraryDetailsScreen({ route, navigation }: { route: { params: { library: import('../services/LibraryService').LibraryInfo; affluence: import('../services/LibraryService').AffluencesData | null } }; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
@@ -18,11 +19,13 @@ export default function LibraryDetailsScreen({ route, navigation }: { route: { p
 
     const {
         timetable,
+        failure,
         loading,
         selectedIndex,
         setSelectedIndex,
         flatListRef,
-        scrollTimeoutRef
+        scrollTimeoutRef,
+        retry
     } = useLibraryTimetableData(library);
 
     useEffect(() => {
@@ -56,8 +59,14 @@ export default function LibraryDetailsScreen({ route, navigation }: { route: { p
                 
                 <LibraryLiveAttendance affluence={affluence} theme={theme} />
 
-                <LibraryOpeningHoursList loading={loading} currentDay={currentDay} theme={theme} />
-                
+                {/* L'affluence vient de la liste et reste affichee : seuls les horaires ont echoue.
+                    Remplacer toute la fiche par un message effacerait une donnee qu'on a. */}
+                {failure !== undefined && failure.silent !== true ? (
+                    <CampusFailureNotice failure={failure} theme={theme} onRetry={retry} />
+                ) : (
+                    <LibraryOpeningHoursList loading={loading} currentDay={currentDay} theme={theme} />
+                )}
+
                 <View style={{ height: tokens.space.xxl }} />
             </ScrollView>
 

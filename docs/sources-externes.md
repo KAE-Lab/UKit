@@ -26,8 +26,8 @@ fragilité, extraction, contrat non versionné — ne s'y applique. Ce document 
 |---|---|---|---|---|
 | 1 | Celcat (`ukit.kbdev.io`) | emplois du temps, groupes, salles | aucune | moyenne — API interne non documentée |
 | 2 | CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires | **élevée** — extraction de pages HTML |
-| 3 | Affluences | bibliothèques, affluence, horaires | aucune (en-têtes imités) | moyenne — API privée d'une application web |
-| 4 | Croustillant | restaurants CROUS et menus | aucune | faible — API publique documentée |
+| 3 | Affluences | bibliothèques, affluence, horaires | aucune (en-têtes imités) | moyenne — API privée d'une application web. **Trois Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
+| 4 | Croustillant | restaurants CROUS et menus | aucune | faible — API publique documentée. **Deux Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
 | 5 | ~~jsDelivr / `ukit-data`~~ | ~~annonces de vie étudiante~~ | — | **sortie de l'inventaire** — passée en base au jalon [6-B](phase-6/6-b-supabase.md) |
 | 6 | GitHub raw | fichier de version applicative | aucune | faible |
 | 7 | CDN de rendu de carte | tuiles OpenStreetMap, bibliothèque Leaflet | aucune | faible |
@@ -231,8 +231,15 @@ aucun serveur tiers, et sont stockés uniquement en SecureStore chiffré.
 
 ## 3. Affluences — bibliothèques universitaires
 
-API privée de l'application web `affluences.com`. Consommée par
-[`LibraryService.ts`](../src/features/Campus/services/LibraryService.ts).
+API privée de l'application web `affluences.com`. **Migrée en Blueprints** au jalon
+[6-D](phase-6/6-d-campus.md) : [`LibraryService.ts`](../src/features/Campus/services/LibraryService.ts)
+n'émet plus de requête, il joue trois Blueprints et travaille la donnée reçue.
+
+| Appel | Blueprint | Ce qui est resté applicatif |
+|---|---|---|
+| découverte des sites autour d'**un** point | [`ukit.campus.bibliotheques`](../blueprints/ukit-campus-bibliotheques.blueprint.json) | le balayage en douze points, le dédoublonnage, le filtre de catégorie, Haversine, le tri |
+| affluence en direct | [`ukit.campus.bibliotheque-affluence`](../blueprints/ukit-campus-bibliotheque-affluence.blueprint.json) | le choix entre `percentage` et `occupancy`, la couleur et le libellé d'état |
+| horaires d'une semaine | [`ukit.campus.bibliotheque-horaires`](../blueprints/ukit-campus-bibliotheque-horaires.blueprint.json) | la sélection du jour affiché, le défilement |
 
 Tous les appels portent les mêmes en-têtes, qui imitent le client web officiel :
 
@@ -255,16 +262,32 @@ Content-Type: application/json
 ```
 
 L'endpoint ne renvoie que les sites proches du point demandé. Pour couvrir toute la région, le service
-lance **douze requêtes en parallèle** : la position réelle de l'utilisateur, plus onze points fixes
+joue **douze runs concurrents** : la position réelle de l'utilisateur, plus onze points fixes
 (Bordeaux centre, campus Talence/Pessac/Gradignan, Pau, La Rochelle, Limoges, Poitiers,
 Bayonne/Anglet, Périgueux, Agen, Angoulême, Niort). Les résultats sont dédoublonnés par `site.id`.
 
+De tout cela, **une seule chose est descendue dans le Blueprint** : la requête. La liste des douze
+points est une décision produit (quelles villes on couvre), pas une propriété de la source ; le filtre
+de catégorie demanderait d'indexer une liste dans un prédicat, ce que la grammaire refuse des deux
+côtés et volontairement ; et Haversine est du calcul, qui n'entre pas dans un Blueprint.
+
 Seuls les sites dont `categories` contient l'identifiant **1** ou **20** sont retenus : ce sont les
-catégories de bibliothèques classiques et universitaires.
+catégories de bibliothèques classiques et universitaires. Le Blueprint extrait donc
+`$.categories[*].id`, et l'application filtre.
+
+> **Piège d'arité.** Un chemin d'extraction qui ne correspond à rien rend `null`, une seule
+> correspondance rend **la valeur**, plusieurs rendent **la liste**. Tous les sites de la région
+> n'ayant qu'une catégorie, l'extraction rend `20` et **jamais** `[20]` : c'est le cas nominal, pas
+> le cas limite. `commeListe`
+> ([`LibraryMapping.ts`](../src/features/Campus/services/LibraryMapping.ts)) normalise, et un test
+> le verrouille.
 
 La distance renvoyée par l'API (`estimated_distance`, relative au point de balayage) est **recalculée**
 depuis la position réelle par une formule de Haversine ; elle ne sert de repli que si les coordonnées
 du site manquent.
+
+**Un point de balayage muet n'emporte plus les autres.** Les onze qui ont répondu s'affichent, et un
+bandeau dit que la couverture est incomplète. Zéro réponse reste un échec plein.
 
 ### Affluence en temps réel
 
@@ -272,9 +295,14 @@ du site manquent.
 GET https://api.affluences.com/app/v4/sites/{slug}/live-data
 ```
 
-On en extrait `status.isOpen`, `status.closingAt`, `status.openingText`, et un taux d'occupation lu
-successivement dans `liveAttendance.percentage` puis `liveAttendance.occupancy` (les deux formes
-existent selon les sites).
+On en extrait `status.isOpen`, `status.closingAt`, `status.openingText`, et **les deux** chemins de
+taux d'occupation — `liveAttendance.percentage` et `liveAttendance.occupancy`, dont les deux formes
+existent selon les sites. Le choix de l'un ou de l'autre reste applicatif : un `??` n'est pas
+exprimable dans une spécification d'extraction.
+
+Un site fermé rend `liveAttendance: null` : les deux chemins ne correspondent alors à rien, et
+l'extraction rend `null`. C'est un **résultat**, pas une absence de réponse. Un slug inconnu, lui,
+rend un statut 404 que `expect` refuse : l'échec est rangé en `rejected`.
 
 ### Horaires
 
@@ -282,37 +310,59 @@ existent selon les sites).
 GET https://api.affluences.com/app/v4/sites/{slug}/timetables?weekOffset=<n>
 ```
 
-`weekOffset` vaut 0 pour la semaine courante, et se décale pour naviguer. La réponse est utilisée
-telle quelle (`data.entries`), sous le contrat `TimetableEntry`.
+`weekOffset` vaut 0 pour la semaine courante, et se décale pour naviguer — un **entier signé**, passé
+par `params` et donc encodé par le moteur. La réponse est utilisée telle quelle (`data.entries`), sous
+le contrat `TimetableEntry` : le Blueprint fait descendre le sous-arbre `openingHours` sans le mettre
+à plat, parce qu'une journée porte des **paires** ouverture/fermeture et que `fields` ne sait rendre
+que des champs plats.
 
 ### Fragilité
 
 API non publique : ni contrat, ni versionnement annoncé, ni garantie de disponibilité pour un client
-tiers. Les identifiants de catégorie (1 et 20) et le nom d'en-tête `x-service-name` sont des valeurs
-observées, pas documentées.
+tiers. Les identifiants de catégorie (1 et 20) restent une **constante applicative**. Le nom d'en-tête
+`x-service-name`, l'`Origin`, le `Referer` et l'agent utilisateur sont des valeurs observées, pas
+documentées — et c'est exactement pourquoi elles ont désormais leur place dans un fichier corrigeable
+à distance plutôt que dans un binaire en attente de publication.
 
 ## 4. Croustillant — restaurants CROUS
 
-API publique communautaire (`https://api.croustillant.menu/v1`), consommée par
-[`CrousService.ts`](../src/features/Campus/services/CrousService.ts). C'est la source la plus saine du
-lot : publique, stable, versionnée dans son chemin.
+API publique communautaire (`https://api.croustillant.menu/v1`). C'est la source la plus saine du
+lot : publique, stable, versionnée dans son chemin. **Migrée en Blueprints** au jalon
+[6-D](phase-6/6-d-campus.md) : [`CrousService.ts`](../src/features/Campus/services/CrousService.ts)
+n'émet plus de requête.
 
-```http
-GET /regions/1/restaurants          # région 1 = Nouvelle-Aquitaine
-GET /restaurants/{code}/menu
-GET /restaurants/{code}/preview     # image, utilisée directement comme URL
-```
+| Appel | Blueprint | Ce qui est resté applicatif |
+|---|---|---|
+| `GET /regions/1/restaurants` | [`ukit.campus.restaurants`](../blueprints/ukit-campus-restaurants.blueprint.json) | Haversine, le tri, la lecture des horaires, l'URL de visuel |
+| `GET /restaurants/{code}/menu` | [`ukit.campus.restaurant-menu`](../blueprints/ukit-campus-restaurant-menu.blueprint.json) | la relecture de la date, le regroupement midi/soir, les libellés de repli |
+| `GET /restaurants/{code}/preview` | *aucun* — c'est une URL construite, posée dans une balise image, jamais une requête que le service émet |
 
 Traitement appliqué :
 
-- les établissements de `type.code === 4` sont écartés (catégorie non pertinente pour l'application) ;
-- `horaires` (tableau) est aplati en une chaîne jointe par ` | `, avec repli sur
-  `UNSPECIFIED_HOURS` ;
+- les établissements de `type.code === 4` sont écartés par un **prédicat `where`** dans le Blueprint
+  (catégorie non pertinente pour l'application) — 12 des 41 établissements de la région ;
+- `horaires` est aplati en une chaîne jointe par ` | `, avec repli sur `UNSPECIFIED_HOURS` ;
 - la distance est calculée par Haversine quand la position de l'utilisateur est connue, puis la liste
   est triée du plus proche au plus lointain ;
-- **les dates sont converties** : l'API renvoie `DD-MM-YYYY`, l'application manipule `YYYY-MM-DD` ;
+- **la date reçue est convertie** : l'API renvoie `DD-MM-YYYY`, l'application manipule `YYYY-MM-DD`.
+  Cette conversion-là reste applicative, et ce n'est pas un oubli : les filtres de date du moteur
+  **produisent** un format attendu par une source, ils refusent d'en interpréter un ;
 - les repas sont regroupés par `type` (`midi` / `soir`), chaque catégorie devenant
-  `{ name: libelle, dishes: [libelle…] }`.
+  `{ name: libelle, dishes: [libelle…] }`. Le sous-arbre `repas` descend du Blueprint **tel quel** :
+  un jour porte des services, qui portent des catégories, qui portent des plats, et la grammaire de
+  `fields` est plate.
+
+> **`horaires` n'est plus un tableau.** La source le sert désormais comme une **chaîne JSON**
+> (`"[\"du lundi au vendredi\", \"12h-13h45\"]"`). Le test `Array.isArray` d'origine était donc faux
+> pour les 41 restaurants, et l'application affichait « horaires non spécifiés » partout. Mesuré et
+> corrigé au jalon [6-D](phase-6/6-d-campus.md) : les deux formes sont acceptées, une troisième
+> retombe sur le libellé.
+
+> **Plus de la moitié des restaurants rendent `404` sur `/menu`.** 24 des 41, dont 8 que
+> l'application affiche. Ce n'est pas une panne, c'est « ce restaurant ne publie pas de menu » — donc
+> le Blueprint ne porte **pas** d'`expect`, et un step `assert` accepte 200 **ou** 404 en refusant
+> tout le reste. Un `expect: {status: 200}` aurait transformé un état vide fréquent en message
+> d'erreur.
 
 Le site du fournisseur est crédité dans l'écran À propos (`URL.CROUSTILLANT_WEBSITE`).
 
@@ -335,10 +385,11 @@ GET https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/annonces.json
 GET https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/images/…
 ```
 
-Le champ `image` de [`locations.json`](../assets/locations.json) pointe toujours vers ce dépôt : le
-fichier embarqué reste le socle hors ligne du référentiel des bâtiments, et il n'est repointé sur le
-bucket `media` qu'au jalon [6-D](phase-6/6-d-campus.md), avec la table qui le surcouche. Les copies
-des trois visuels sont déjà dans le bucket depuis 6-B.
+> **Le dernier lien est coupé.** Le champ `image` de [`locations.json`](../assets/locations.json)
+> pointait encore vers ce dépôt ; il est repointé sur le bucket `media` au jalon
+> [6-D](phase-6/6-d-campus.md), avec la table `batiments` qui surcouche désormais le fichier. Le
+> fichier embarqué reste le socle hors ligne du référentiel — c'est le distant qui le met à jour, et
+> jamais l'inverse.
 
 Le Blueprint [`ukit.campus.annonces`](../blueprints/ukit-campus-annonces.blueprint.json), qui portait
 cette source au jalon [6-A](phase-6/6-a-socle.md), reste dans le dépôt comme témoin du format. Il
@@ -371,7 +422,6 @@ Les services non migrés ne propagent aucune exception. Les conventions de repli
 | Service | Valeur en cas d'échec |
 |---|---|
 | `PlanningApiService`, `CampusApiService` | `null` |
-| `CrousService`, `LibraryService` | `[]` ou `null` selon la méthode |
 
 C'est un choix cohérent avec le fonctionnement hors ligne (l'appelant retombe sur le cache ou sur un
 état vide), mais il a une conséquence : **une panne du fournisseur et une réponse légitimement vide
@@ -390,6 +440,13 @@ gabarit aux suivants. Son échec n'est plus seulement journalisé : il est **ren
 Réessayer quand réessayer peut réparer quelque chose. Le repli qui masquait tout a été retiré en même
 temps ; c'est lui qui rendait la distinction invisible.
 
+**`CrousService` et `LibraryService` en sont sortis** au jalon [6-D](phase-6/6-d-campus.md), sur le
+même gabarit. Leurs cinq méthodes rendent une union `{ ok: true, … } | { ok: false, failure }` ; les
+types de données (`CrousRestaurant`, `CrousDayMenu`, `LibraryInfo`, `AffluencesData`,
+`TimetableEntry`) n'ont **pas** bougé. Une nuance de plus y apparaît, propre au balayage en douze
+points : une couverture **partielle** n'est ni un succès muet ni un échec, elle se dit par un bandeau
+au-dessus de la liste.
+
 La forme du résultat est calquée sur `BlueprintRun` du socle, délibérément : qu'une donnée vienne
 d'un Blueprint ou d'une table, l'écran voit la même grammaire d'échec.
 
@@ -397,7 +454,13 @@ d'un Blueprint ou d'une table, l'écran voit la même grammaire d'échec.
 
 Pour chaque source touchée par un changement, jouer le chemin nominal **et** le chemin dégradé :
 
-- Mode avion : l'écran doit afficher le cache daté (planning) ou un état vide explicite (Campus).
+- Mode avion : l'écran doit afficher le cache daté (planning) ou un état explicite (Campus).
 - Source injoignable : couper le réseau après le lancement, naviguer, vérifier l'absence de plantage.
 - Session universitaire : tester un mot de passe erroné (`LOGIN_FAILED` attendu) et un compte valide
   sans données froides (parcours `cold` complet).
+
+Pour une source **migrée en Blueprint**, il y a mieux que le mode avion, et c'est la démonstration du
+dispositif : modifier le fichier de [`blueprints/`](../blueprints/) — un hôte en `.invalid`, un
+`expect` impossible, un chemin d'extraction faux — produit chacune des familles d'échec à la demande,
+sans toucher à la connectivité de l'appareil ni casser Metro. `npm run parity` couvre le nominal en
+quelques secondes et sur les vraies sources ; c'est le chemin dégradé qui mérite l'appareil.

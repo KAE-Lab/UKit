@@ -8,9 +8,10 @@ import * as TaskManager from 'expo-task-manager';
 import NetInfo from '@react-native-community/netinfo';
 
 import { ErrorAlert } from '../ui/Alerts';
+// Le module pur, et non la porte d'entree `../locations` : celle-ci tire AsyncStorage et la base,
+// que ce fichier — charge avant le premier rendu — n'a aucune raison de mettre sur son chemin.
+import { getBuildingRef } from '../locations/referentiel';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
-
-const locations = require('../../../assets/locations.json');
 
 // ── CONTEXTE & DEVICE ─────────────────────────────────
 export const AppContext = React.createContext<{ themeName?: string; favoriteGroups?: string[]; filters?: string[] }>({});
@@ -61,7 +62,8 @@ export function isArraysEquals(a: unknown[], b: unknown[]): boolean {
 }
 
 function getLocation(house: string): Record<string, unknown> | null {
-    return locations[house] ? { title: house, ...locations[house] } : null;
+    const lieu = getBuildingRef(house);
+    return lieu ? { title: house, ...lieu } : null;
 }
 
 export function getLocations(str: string): Record<string, unknown>[] {

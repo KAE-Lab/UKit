@@ -3,6 +3,7 @@ import qs from 'qs';
 import moment from 'moment';
 import 'moment/locale/fr';
 import { WebApiURL } from '../../../shared/constants/urls';
+import { allBuildingRefs } from '../../../shared/locations/referentiel';
 import { formatDescription } from '../../../shared/utils/formatUtils';
 
 moment.locale('fr');
@@ -54,8 +55,10 @@ class CampusApiServiceClass {
     };
 
     extractBuildingsFromRooms = (rooms: CelcatRoom[]): CelcatBuilding[] => {
-        const locationsData = require('../../../../assets/locations.json');
-        
+        // Le referentiel, socle embarque et surcouche publiee confondus : un batiment ouvert en acces
+        // libre, un horaire corrige ou un visuel remplace arrive ici sans release (docs/blueprints.md).
+        const locationsData = allBuildingRefs();
+
         // Find which buildings have freeAccess: true
         const freeAccessBuildings = Object.keys(locationsData).filter(key => locationsData[key].freeAccess === true);
         

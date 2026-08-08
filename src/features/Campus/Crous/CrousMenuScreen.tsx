@@ -7,8 +7,21 @@ import { CrousService, CrousDayMenu } from '../services/CrousService';
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
+import type { UkitFailure } from '../../../shared/aetherius';
+import { CampusFailureNotice } from '../components/CampusLayoutComponents';
 import { CrousMealCard } from './components/CrousMealCard';
 import { CrousDateHeader } from './components/CrousDateHeader';
+
+/** Un ecran de menu qui n'a rien a lister : un etat, centre, sur le fond de l'ecran. */
+function MenuPleinePage({ theme, children }: { theme: import('../../../shared/theme/Theme').AppThemeType; children: React.ReactNode }) {
+    return (
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: tokens.space.md }}>
+                {children}
+            </View>
+        </SafeAreaView>
+    );
+}
 
 // "2024-03-25" -> "Lun 25"
 const formatDate = (dateString: string | null) => {
@@ -29,6 +42,7 @@ export default function CrousMenuScreen({ route, navigation }: { route: { params
     const insets = useSafeAreaInsets();
 
     const [menus, setMenus] = useState<CrousDayMenu[]>([]);
+    const [failure, setFailure] = useState<UkitFailure | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const mountedRef = useRef(true);
@@ -57,32 +71,48 @@ export default function CrousMenuScreen({ route, navigation }: { route: { params
 
     const loadMenu = async () => {
         setLoading(true);
-        const data = await CrousService.fetchRestaurantMenu(restaurantId);
+        const resultat = await CrousService.fetchRestaurantMenu(restaurantId);
         if (!mountedRef.current) return;
-        setMenus(data);
+
+        // `=== false` et non `!resultat.ok` : sans `strictNullChecks`, la seconde forme ne restreint
+        // pas l'union. Voir shared/aetherius/runBlueprint.ts.
+        if (resultat.ok === false) {
+            setMenus([]);
+            setFailure(resultat.failure);
+        } else {
+            setMenus(resultat.menus);
+            setFailure(undefined);
+        }
         setLoading(false);
     };
 
     if (loading) {
         return (
-            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
-                </View>
-            </SafeAreaView>
+            <MenuPleinePage theme={theme}>
+                <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
+            </MenuPleinePage>
+        );
+    }
+
+    // Une source en panne et un restaurant qui ne publie rien produisent deux ecrans differents. Le
+    // second est frequent — plus de la moitie des restaurants de la region sont dans ce cas — et
+    // n'est pas une erreur : le Blueprint accepte explicitement ce statut.
+    if (failure !== undefined && failure.silent !== true) {
+        return (
+            <MenuPleinePage theme={theme}>
+                <CampusFailureNotice failure={failure} theme={theme} onRetry={loadMenu} />
+            </MenuPleinePage>
         );
     }
 
     if (menus.length === 0) {
         return (
-            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: tokens.space.xl }}>
-                    <MaterialCommunityIcons name="food-off" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.md }} />
-                    <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center' }}>
-                        {Translator.get('NO_MENU_PUBLISHED')}
-                    </Text>
-                </View>
-            </SafeAreaView>
+            <MenuPleinePage theme={theme}>
+                <MaterialCommunityIcons name="food-off" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.md }} />
+                <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center' }}>
+                    {Translator.get('NO_MENU_PUBLISHED')}
+                </Text>
+            </MenuPleinePage>
         );
     }
 

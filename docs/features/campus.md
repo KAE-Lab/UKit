@@ -32,9 +32,9 @@ les coordonnées à ses sections.
 CampusDashboard
   ├─ useCampusLocation().fetchLocation()      une requête GPS pour tout l'onglet
   └─ Animated.ScrollView
-       ├─ BdeSection                          BdeService.fetchAnnonces()
-       ├─ CrousSection      (lat, lon)        CrousService.fetchRestaurantsBordeaux()
-       ├─ LibrarySection    (lat, lon)        LibraryService.fetchNearbyLibraries() + affluences
+       ├─ BdeSection                          useBdeAnnonces()
+       ├─ CrousSection      (lat, lon)        useCrousRestaurants()
+       ├─ LibrarySection    (lat, lon)        useNearbyLibraries()   + bandeau si partiel
        └─ FreeRoomSection   (lat, lon)        CampusDataManager.getBuildingList()
 ```
 
@@ -42,6 +42,13 @@ CampusDashboard
 ne va pas chercher ses données » ([conventions.md](../conventions.md)) : elle rend les sections
 indépendantes et permet à l'une d'échouer sans priver l'utilisateur des trois autres. La position,
 elle, est mutualisée — c'est la ressource coûteuse et intrusive, on ne la demande qu'une fois.
+
+**Une section et sa liste complète partagent leur hook.** Le carrousel du tableau de bord et l'écran
+dédié lisent la même source avec la même machinerie — chargement, échec, nouvel essai. L'écrire une
+fois évite qu'ils divergent : c'est le motif posé par `useBdeAnnonces` en
+[6-B](../phase-6/6-b-supabase.md), étendu aux restaurants et aux bibliothèques en
+[6-D](../phase-6/6-d-campus.md). Un échec reste **discret** sur le tableau de bord — le carrousel
+disparaît, le journal dit pourquoi — et **explicite** sur l'écran dédié, qui a la place de le dire.
 
 Chaque section suit le même gabarit : un titre, un bouton « voir tout », une liste horizontale de
 cartes, et un état de chargement propre.
@@ -173,10 +180,13 @@ temps de chargement.
 | [`Dashboard/components/FreeRoomSection.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSection.tsx) | section salles libres : déclenche le chargement des bâtiments si le cache est vide |
 | [`Dashboard/components/FreeRoomSectionCard.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSectionCard.tsx) | carte d'un bâtiment |
 | [`components/CampusListLayout.tsx`](../../src/features/Campus/components/CampusListLayout.tsx) | socle générique des écrans de liste : liste, recherche, filtres, états |
-| [`components/CampusLayoutComponents.tsx`](../../src/features/Campus/components/CampusLayoutComponents.tsx) | `CampusSearchBar`, `CampusFilterModal`, `CampusListEmptyState` |
+| [`components/CampusLayoutComponents.tsx`](../../src/features/Campus/components/CampusLayoutComponents.tsx) | `CampusSearchBar`, `CampusFilterModal`, `CampusListEmptyState`, `CampusFailureNotice`, `CampusPartialNotice` |
 | [`components/CampusCard.tsx`](../../src/features/Campus/components/CampusCard.tsx) | carte de base commune aux quatre types d'éléments |
 | [`components/hooks/useCampusListHeader.tsx`](../../src/features/Campus/components/hooks/useCampusListHeader.tsx) | installe l'icône de filtre animée dans l'en-tête de l'écran |
 | [`hooks/useCampusLocation.ts`](../../src/features/Campus/hooks/useCampusLocation.ts) | position de l'utilisateur, avec repli sur Talence |
+| [`hooks/useCampusPosition.ts`](../../src/features/Campus/hooks/useCampusPosition.ts) | la même position, résolue une fois et rendue en état, pour les écrans de liste |
+| [`hooks/useCrousRestaurants.ts`](../../src/features/Campus/hooks/useCrousRestaurants.ts) | restaurants : chargement, échec, nouvel essai — partagés par la liste et le carrousel |
+| [`hooks/useNearbyLibraries.ts`](../../src/features/Campus/hooks/useNearbyLibraries.ts) | bibliothèques et affluences, plus la couverture du balayage |
 | [`hooks/useFavorites.ts`](../../src/features/Campus/hooks/useFavorites.ts) | favoris persistés, rechargés au focus |
 | [`hooks/useSavedFilter.ts`](../../src/features/Campus/hooks/useSavedFilter.ts) | filtre de liste persisté |
 | [`services/CampusApiService.ts`](../../src/features/Campus/services/CampusApiService.ts) | Celcat salles : liste, reconstruction des bâtiments, occupation journalière |

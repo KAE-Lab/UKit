@@ -4,8 +4,9 @@ Trouver une salle inoccupée dans un bâtiment en accès libre, à une heure don
 l'occupation Celcat avec les horaires d'ouverture du bâtiment.
 
 Socle commun : [campus.md](campus.md). Sources : Celcat (section 1 de
-[sources-externes.md](../sources-externes.md)) et
-[`assets/locations.json`](../../assets/locations.json) ([cartographie.md](../cartographie.md)).
+[sources-externes.md](../sources-externes.md)) et le **référentiel des bâtiments** —
+[`assets/locations.json`](../../assets/locations.json) surcouché par la table `batiments`
+([cartographie.md](../cartographie.md)).
 
 ## Parcours utilisateur
 
@@ -48,8 +49,10 @@ FreeRoomDetailsScreen (params : building)
 
 Celcat expose des salles, pas des bâtiments. `extractBuildingsFromRooms` reconstitue la hiérarchie :
 
-1. Sélection des clés de `locations.json` portant `freeAccess: true` — c'est le **référentiel des
-   bâtiments éligibles**, pas Celcat.
+1. Sélection des clés du **référentiel** portant `freeAccess: true` — pas Celcat. Depuis le jalon
+   [6-D](../phase-6/6-d-campus.md), ce référentiel est le fichier embarqué **surcouché** par la table
+   `batiments` : ouvrir un bâtiment à l'accès libre, corriger ses horaires ou remplacer son visuel se
+   fait donc par une publication de données, pas par une release.
 2. Pour chaque salle Celcat, recherche du code de bâtiment dans son nom, par expression régulière de
    mot entier (`\bA28\b`, insensible à la casse) avec repli sur une inclusion simple.
 3. Nettoyage du nom : retrait du suffixe entre parenthèses, puis troncature à partir du mot « salle »
@@ -115,9 +118,11 @@ interface CampusEvent {         // CampusApiService
 
 ## Décisions de conception
 
-**Le référentiel d'éligibilité est local, pas distant.** Un bâtiment n'apparaît que si
-`locations.json` le déclare `freeAccess`. C'est un choix de responsabilité : Celcat sait quelles
-salles existent, seule l'équipe sait lesquelles sont réellement accessibles librement aux étudiants.
+**Le référentiel d'éligibilité est le nôtre, pas celui de Celcat.** Un bâtiment n'apparaît que si le
+référentiel le déclare `freeAccess`. C'est un choix de responsabilité : Celcat sait quelles salles
+existent, seule l'équipe sait lesquelles sont réellement accessibles librement aux étudiants. Il est
+**embarqué d'abord** — l'écran doit être complet hors ligne et au premier lancement — et corrigeable
+à distance ensuite.
 
 **Une requête d'occupation par salle**, lancées en parallèle par `Promise.all`. L'API accepterait
 plusieurs identifiants dans `federationIds[]`, mais le découpage par salle permet à un échec isolé de
@@ -136,18 +141,22 @@ est testable et réutilisable indépendamment du hook.
 - Pendant les vacances universitaires : l'état « fermé » doit s'afficher via la détection
   `isVacances`.
 - Mode avion : la liste des bâtiments doit rester disponible (cache 7 jours), l'occupation vide.
+- Sans base joignable (`SUPABASE_URL` sur un hôte `.invalid`) : la fiche du bâtiment doit rester
+  **complète** — visuel, horaires, coordonnées. C'est la promesse du socle embarqué : si l'écran se
+  vide, la surcouche est devenue une dépendance, ce qu'elle ne doit jamais être.
 
 ## Limites connues
 
-- **Un seul bâtiment est éligible aujourd'hui.** `locations.json` compte 73 entrées, dont **une
-  seule** porte `freeAccess: true` (`A28`, le CREMI). La fonctionnalité est donc opérationnelle mais
-  son périmètre est minimal ; l'étendre ne demande que d'enrichir le fichier
-  ([cartographie.md](../cartographie.md)).
+- **Un seul bâtiment est éligible aujourd'hui.** Le référentiel compte 73 entrées, dont **une seule**
+  porte `freeAccess: true` (`A28`, le CREMI). La fonctionnalité est donc opérationnelle mais son
+  périmètre est minimal ; l'étendre demande d'enrichir le fichier — ou, depuis le jalon
+  [6-D](../phase-6/6-d-campus.md), la table ([cartographie.md](../cartographie.md)).
 - **`BuildingInfo.schedule` est typé `CampusEvent[]`** alors que le code y accède comme à un
   dictionnaire indexé par jour (`building.schedule[String(currentDay)]`, puis `.open` / `.close`). Le
-  type ne décrit pas la donnée réelle, qui vient de `locations.json`.
+  type ne décrit pas la donnée réelle, décrite elle par `BuildingSchedule`
+  ([`referentiel.ts`](../../src/shared/locations/referentiel.ts)).
 - **`campus` vaut toujours `'Talence'`** : `extractBuildingsFromRooms` lit `loc.campus || 'Talence'`,
-  or aucune entrée de `locations.json` ne porte ce champ.
+  et la colonne `campus` de la table porte cette même valeur par défaut pour les 73 lignes.
 - **Le jour est lu via `new Date()`**, que le [mock temporel](../qualite.md) ne modifie pas. Simuler
   une date ne change donc pas le jour d'ouverture retenu, seulement les données Celcat interrogées.
 - **Les libellés de recherche et d'état vide s'affichent en majuscules brutes** (`SEARCH_BUILDING`,

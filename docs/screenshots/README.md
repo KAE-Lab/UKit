@@ -85,15 +85,17 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `crous-liste.png` | liste des restaurants avec distances | essentielle |
-| `crous-menu.png` | menu d'un restaurant, midi et soir | essentielle |
+| `crous-liste.png` | liste des restaurants avec distances **et horaires** | **livrée** |
+| `crous-menu.png` | menu d'un restaurant, midi et soir | **livrée** |
+| `crous-menu-absent.png` | restaurant qui ne publie pas de menu — l'état vide, à contraster avec l'état d'échec | **livrée** |
 
 ### Campus — bibliothèques · [features/campus-bibliotheques.md](../features/campus-bibliotheques.md)
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `bu-liste.png` | liste avec pastilles d'affluence | essentielle |
-| `bu-detail.png` | fiche, jauge d'affluence et horaires | essentielle |
+| `bu-liste.png` | liste avec pastilles d'affluence | **livrée** |
+| `bu-detail.png` | fiche, jauge d'affluence et horaires | **livrée** |
+| `bu-couverture-partielle.png` | le bandeau de couverture partielle au-dessus d'une liste réelle — la seule interface que le jalon 6-D ajoute | **livrée** |
 
 ### Campus — salles libres · [features/campus-salles-libres.md](../features/campus-salles-libres.md)
 

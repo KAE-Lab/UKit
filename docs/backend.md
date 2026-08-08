@@ -6,11 +6,11 @@ UKit s'appuie sur un projet **Supabase** pour publier ce qu'il publie : les
 
 > **État actuel.** Le projet existe, son schéma et ses politiques sont appliqués, ses deux buckets
 > sont créés, **les annonces de vie étudiante y sont lues** depuis le jalon
-> [6-B](phase-6/6-b-supabase.md), et **le bucket de livraison sert les six Blueprints et leur
-> manifeste** depuis le jalon [6-C](phase-6/6-c-livraison.md). Le référentiel des bâtiments est
-> peuplé mais pas encore lu par l'application (jalon [6-D](phase-6/6-d-campus.md)) ; le catalogue des
-> établissements est rempli et branché au jalon [6-G](phase-6/6-g-etablissements.md). Ce qui est
-> écrit ici avant d'exister est marqué comme tel.
+> [6-B](phase-6/6-b-supabase.md), **le bucket de livraison sert les Blueprints et leur manifeste**
+> depuis le jalon [6-C](phase-6/6-c-livraison.md), et **le référentiel des bâtiments surcouche le
+> fichier embarqué** depuis le jalon [6-D](phase-6/6-d-campus.md). Le catalogue des établissements
+> est rempli et branché au jalon [6-G](phase-6/6-g-etablissements.md). Ce qui est écrit ici avant
+> d'exister est marqué comme tel.
 
 ## Ce que la base est, et ce qu'elle n'est pas
 
@@ -72,15 +72,24 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | Table | Contenu | Lue par | Depuis | Socle embarqué |
 |---|---|---|---|---|
 | `annonces` | contenu éditorial de vie étudiante | [`BdeService`](../src/features/Campus/services/BdeService.ts) | **6-B** | — |
-| `batiments` | coordonnées, horaires, accès libre, visuel | `CampusDataManager` | 6-D | [`assets/locations.json`](../assets/locations.json) |
+| `batiments` | coordonnées, horaires, accès libre, visuel | [`shared/locations`](../src/shared/locations/index.ts) | **6-D** | [`assets/locations.json`](../assets/locations.json) |
 | `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | 6-G | l'établissement historique |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | bandeau de service : maintenance, incident | rien aujourd'hui | — | — |
 | `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal, `desactive` | le script de publication | **6-C** | [`blueprints/`](../blueprints/) |
 
-`batiments` est **peuplée depuis le jalon 6-B mais lue par personne** : ses 73 lignes viennent de
-`locations.json`, et l'application continue de lire le fichier embarqué. La surcouche est branchée en
-6-D, où elle a un écran pour la montrer.
+`batiments` est **lue depuis le jalon [6-D](phase-6/6-d-campus.md)**, par
+[`shared/locations`](../src/shared/locations/index.ts), et elle est une **surcouche** :
+`assets/locations.json` reste le socle, la table le corrige **champ par champ**. Une colonne nulle
+n'efface donc jamais une valeur embarquée — c'est ce qui permet de publier une ligne partielle pour
+corriger un seul horaire sans risquer de faire disparaître une carte. Un code absent du fichier est en
+revanche **ajouté** : contrairement aux Blueprints, un bâtiment n'est pas de la donnée exécutable,
+c'est une coordonnée.
+
+Le rafraîchissement suit le même rythme que la livraison des Blueprints — démarrage et retour au
+premier plan, jamais dans le chemin d'un rendu — et son résultat est mis en cache local pour que la
+dernière correction connue survive au mode hors ligne
+([donnees-et-persistance.md](donnees-et-persistance.md)).
 
 `app_release` et `service_messages` sont créées vides, et rien ne les lit : il n'existe aucun écran
 de mise à jour ni de bandeau de service dans l'application. Les créer maintenant coûte deux tables et

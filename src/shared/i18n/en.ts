@@ -37,6 +37,9 @@ const en = {
 	ERROR_BLOCKED: 'The request could not be completed.',
 	ERROR_MISSING_CREDENTIALS: 'Missing information to complete the request.',
 	ERROR_INTERNAL: 'Something went wrong on our side.',
+	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
+	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
+	PARTIAL_COVERAGE: 'Some areas did not respond: this list may be incomplete.',
 	EXISTING_CALENDARS: 'Existing calendars:',
 	FILTERS: 'Filters',
 	FILTERS_CONFIRMATION:

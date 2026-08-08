@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
-import { View, Text } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import React, { useState, useContext, useMemo } from 'react';
 
 import { AppContext } from '../../../shared/services/AppCore';
-import style, { tokens } from '../../../shared/theme/Theme';
+import style from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import LibraryService, { LibraryInfo, AffluencesData } from '../services/LibraryService';
+import type { LibraryInfo } from '../services/LibraryService';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 import { CampusListLayout } from '../components/CampusListLayout';
 import { LibraryListItem } from './components/LibraryListItem';
 import { useFavorites } from '../hooks/useFavorites';
-import { useCampusLocation } from '../hooks/useCampusLocation';
+import { useCampusPosition } from '../hooks/useCampusPosition';
+import { useNearbyLibraries } from '../hooks/useNearbyLibraries';
 import { useSavedFilter } from '../hooks/useSavedFilter';
 
 function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>; onAnimatedScroll?: (event: unknown) => void }) {
@@ -19,49 +18,12 @@ function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
 
-    const { fetchLocation } = useCampusLocation();
+    const { lat, lon } = useCampusPosition();
     const { favorites, toggleFavorite } = useFavorites('library_favorites');
     const [selectedFilter, setSelectedFilter] = useSavedFilter('library_filter', 'all');
-    
+
     const [searchText, setSearchText] = useState('');
-    const [libraries, setLibraries] = useState<LibraryInfo[]>([]);
-    const [affluences, setAffluences] = useState<Record<string, AffluencesData>>({});
-    const [loading, setLoading] = useState<boolean>(true);
-
-    useEffect(() => {
-        let mounted = true;
-        const loadLibraries = async () => {
-            setLoading(true);
-            try {
-                const { lat, lon } = await fetchLocation();
-                
-                const nearbyLibs = await LibraryService.fetchNearbyLibraries(lat, lon);
-                if (!mounted) return;
-                setLibraries(nearbyLibs);
-
-                const affluencesPromises = nearbyLibs.map(async (lib) => {
-                    const data = await LibraryService.getAffluencesData(lib.slug);
-                    return { id: lib.id, data };
-                });
-
-                const results = await Promise.all(affluencesPromises);
-                if (!mounted) return;
-
-                const newAffluences: Record<string, AffluencesData> = {};
-                results.forEach(res => {
-                    if (res.data) newAffluences[res.id] = res.data;
-                });
-                setAffluences(newAffluences);
-            } catch (error) {
-                console.error("Erreur critique dans loadLibraries:", error);
-            } finally {
-                if (mounted) setLoading(false);
-            }
-        };
-
-        loadLibraries();
-        return () => { mounted = false; };
-    }, [fetchLocation]);
+    const { libraries, affluences, failure, secteursMuets, loading, retry } = useNearbyLibraries(lat, lon);
 
     const filteredData = useMemo(() => {
         let result = [...libraries].sort((a, b) => {
@@ -125,6 +87,9 @@ function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@
             
             emptyIcon="bookshelf"
             emptyMessage={Translator.get('NO_BU_NEARBY')}
+            failure={failure}
+            onRetry={retry}
+            partial={secteursMuets > 0}
         />
     );
 }

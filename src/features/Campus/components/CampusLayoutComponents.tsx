@@ -160,12 +160,14 @@ interface CampusListEmptyStateProps {
 /**
  * L'etat vide d'une liste Campus, et son etat d'erreur.
  *
- * Le bouton Reessayer n'apparait que si la famille est reessayable : le proposer sur un echec que
- * rejouer ne repare pas — une source qui a change de contrat — serait pire que de ne rien proposer.
- * C'est la table de shared/aetherius/failures.ts qui decide, pas cet ecran.
+ * Le rendu de l'echec est delegue a `CampusFailureNotice`, qui sert aussi les ecrans sans liste — la
+ * fiche d'un restaurant, les horaires d'une bibliotheque. Un seul message et un seul bouton pour un
+ * meme echec, quel que soit l'ecran qui le montre.
  */
 export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, theme, failure, onRetry }: CampusListEmptyStateProps) {
-    const enEchec = failure !== undefined && failure.silent !== true;
+    if (failure !== undefined && failure.silent !== true) {
+        return <CampusFailureNotice failure={failure} theme={theme} onRetry={onRetry} />;
+    }
 
     return (
         <View style={{
@@ -179,7 +181,7 @@ export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, the
             borderColor: theme.border
         }}>
             <MaterialCommunityIcons
-                name={enEchec ? 'cloud-off-outline' : emptyIcon}
+                name={emptyIcon}
                 size={48}
                 color={theme.fontSecondary}
                 style={{ marginBottom: tokens.space.sm }}
@@ -189,12 +191,52 @@ export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, the
                 fontSize: tokens.fontSize.md,
                 textAlign: 'center'
             }}>
-                {enEchec
-                    ? Translator.get(failure!.messageKey)
-                    : isFiltering ? Translator.get('NO_RESULTS_FOUND' as Parameters<typeof Translator.get>[0]) : emptyMessage}
+                {isFiltering ? Translator.get('NO_RESULTS_FOUND' as Parameters<typeof Translator.get>[0]) : emptyMessage}
+            </Text>
+        </View>
+    );
+}
+
+interface CampusFailureNoticeProps {
+    failure: UkitFailure;
+    theme: AppThemeType;
+    onRetry?: () => void;
+}
+
+/**
+ * Un echec de source, tel qu'un ecran Campus le montre.
+ *
+ * Le bouton Reessayer n'apparait que si la famille est reessayable : le proposer sur un echec que
+ * rejouer ne repare pas — une source qui a change de contrat — serait pire que de ne rien proposer.
+ * C'est la table de shared/aetherius/failures.ts qui decide, pas ce composant.
+ */
+export function CampusFailureNotice({ failure, theme, onRetry }: CampusFailureNoticeProps) {
+    return (
+        <View style={{
+            alignItems: 'center',
+            paddingVertical: tokens.space.xl,
+            paddingHorizontal: tokens.space.lg,
+            marginHorizontal: tokens.space.sm,
+            backgroundColor: theme.cardBackground,
+            borderRadius: tokens.radius.lg,
+            borderWidth: 1,
+            borderColor: theme.border
+        }}>
+            <MaterialCommunityIcons
+                name="cloud-off-outline"
+                size={48}
+                color={theme.fontSecondary}
+                style={{ marginBottom: tokens.space.sm }}
+            />
+            <Text style={{
+                color: theme.fontSecondary,
+                fontSize: tokens.fontSize.md,
+                textAlign: 'center'
+            }}>
+                {Translator.get(failure.messageKey)}
             </Text>
 
-            {enEchec && failure!.retryable && onRetry ? (
+            {failure.retryable && onRetry ? (
                 <TouchableOpacity
                     onPress={onRetry}
                     activeOpacity={0.8}
@@ -212,6 +254,51 @@ export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, the
                         d'erreur (ScolariteLoginView), illisible sur le fond `primary` du bouton. */}
                     <MaterialCommunityIcons name="refresh" size={18} color={theme.lightFont} />
                     <Text style={{ color: theme.lightFont, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, marginLeft: tokens.space.xs }}>
+                        {Translator.get('RETRY')}
+                    </Text>
+                </TouchableOpacity>
+            ) : null}
+        </View>
+    );
+}
+
+interface CampusPartialNoticeProps {
+    theme: AppThemeType;
+    onRetry?: () => void;
+}
+
+/**
+ * Le bandeau de couverture partielle.
+ *
+ * Il repond a une question que l'ancien code ne se posait pas : que fait-on quand deux points de
+ * balayage sur douze echouent ? La reponse etait « rien, on n'en sait rien ». Elle est desormais
+ * « on affiche ce qu'on a, **en le disant** » — une liste incomplete qui se presente comme complete
+ * est un mensonge silencieux, et c'est exactement le defaut que la Phase 6 supprime.
+ *
+ * Discret par construction : la donnee est la, seule sa completude est en doute.
+ */
+export function CampusPartialNotice({ theme, onRetry }: CampusPartialNoticeProps) {
+    return (
+        <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginHorizontal: tokens.space.md,
+            marginBottom: tokens.space.sm,
+            paddingVertical: tokens.space.sm,
+            paddingHorizontal: tokens.space.md,
+            backgroundColor: theme.cardBackground,
+            borderRadius: tokens.radius.md,
+            borderWidth: 1,
+            borderColor: theme.border,
+        }}>
+            <MaterialCommunityIcons name="alert-outline" size={18} color={theme.fontSecondary} />
+            <Text style={{ flex: 1, marginLeft: tokens.space.sm, color: theme.fontSecondary, fontSize: tokens.fontSize.sm }}>
+                {Translator.get('PARTIAL_COVERAGE')}
+            </Text>
+
+            {onRetry ? (
+                <TouchableOpacity onPress={onRetry} activeOpacity={0.7} style={{ paddingLeft: tokens.space.sm }}>
+                    <Text style={{ color: theme.primary, fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold }}>
                         {Translator.get('RETRY')}
                     </Text>
                 </TouchableOpacity>

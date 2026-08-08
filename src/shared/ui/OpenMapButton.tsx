@@ -3,9 +3,8 @@ import { Text, TouchableOpacity, Linking } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { URL } from '../constants/urls';
+import { getBuildingRef } from '../locations/referentiel';
 import { tokens, AppThemeType } from '../theme/Theme';
-
-const locations = require('../../../assets/locations.json');
 
 export interface OpenMapButtonProps {
     location: string;
@@ -24,12 +23,12 @@ export default class OpenMapButton extends React.Component<OpenMapButtonProps, O
     }
 
     isLocationKnown(): boolean {
-        return locations.hasOwnProperty(this.state.location);
+        return getBuildingRef(this.state.location) !== null;
     }
 
     getGMapsLocation(): string {
-        let location = locations[this.state.location];
-        if (location.hasOwnProperty('placeID')) {
+        const location = getBuildingRef(this.state.location);
+        if (location.placeID !== undefined) {
             return URL.MAP + `search/?api=1&query=${location.lat},${location.lng}&query_place_id=${location.placeID}`;
         }
         return URL.MAP + `search/?api=1&query=${location.lat},${location.lng}`;

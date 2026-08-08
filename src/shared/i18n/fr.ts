@@ -40,6 +40,9 @@ const fr: TranslationDict = {
 	ERROR_BLOCKED: 'La demande n’a pas pu aboutir.',
 	ERROR_MISSING_CREDENTIALS: 'Il manque une information pour effectuer cette demande.',
 	ERROR_INTERNAL: 'Un problème est survenu de notre côté.',
+	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
+	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
+	PARTIAL_COVERAGE: 'Certaines zones n’ont pas répondu : la liste est peut-être incomplète.',
 	EXISTING_CALENDARS: 'Calendriers existants :',
 	FILTERS: 'Filtres',
 	FILTERS_CONFIRMATION:
