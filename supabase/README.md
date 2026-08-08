@@ -55,7 +55,9 @@ européenne — les utilisateurs sont en France.
 4. Ranger la clé `service_role` là où vivent les secrets de publication — **jamais** dans le dépôt,
    jamais dans `app.config.ts`, jamais dans un fichier versionné.
 5. Migrer le contenu : `npm run content:import`
-   ([`tools/import-ukit-data.mjs`](../tools/import-ukit-data.mjs)).
+   ([`tools/import-ukit-data.mjs`](../tools/import-ukit-data.mjs)), puis publier les Blueprints :
+   `npm run blueprints:publish` ([`tools/publish-blueprints.mjs`](../tools/publish-blueprints.mjs)).
+   Le second est rejouable à volonté ; rejoué à vide, il ne change rien.
 6. Vérifier, en le jouant plutôt qu'en le supposant : une insertion avec la clé publiable doit
    **échouer**.
 

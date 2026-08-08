@@ -60,6 +60,10 @@ export default {
 		// de publication, pas un intermediaire.
 		supabaseUrl: process.env.SUPABASE_URL,
 		supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+		// Le troisieme interrupteur d'arret de la livraison (docs/blueprints.md) : `false` fait
+		// ignorer durablement la surcouche publiee, sans la detruire. Absent, la livraison est
+		// active — une application doit recevoir ses corrections sans qu'on ait pense a le demander.
+		blueprintsRemote: process.env.BLUEPRINTS_REMOTE !== 'false',
 	},
 	plugins: [
 		"expo-web-browser",

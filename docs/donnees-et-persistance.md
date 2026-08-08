@@ -69,9 +69,17 @@ Un contexte ne serait pas accessible depuis ces points.
 | `freeroom_favorites` | `useFavorites` | identifiants de bâtiments favoris | permanent |
 | `crous_filter` | [`useSavedFilter`](../src/features/Campus/hooks/useSavedFilter.ts) | filtre actif (`all` / `resto` / `market`) | permanent |
 | `library_filter` | `useSavedFilter` | filtre actif (`all` / `open`) | permanent |
+| `aetherius/blueprints@1` | le registre du moteur, via [`registry.ts`](../src/shared/aetherius/registry.ts) | la **surcouche** des Blueprints publiés : un document unique portant, par nom, le texte servi et son empreinte | jusqu'à la prochaine publication ou un retour à l'embarqué |
 
 Le préfixe `<groupes>` est le nom du groupe, ou la concaténation des groupes favoris jointe par `+`
 quand la vue affiche le planning agrégé.
+
+La clé de livraison est la seule du tableau qui porte **un document unique pour plusieurs entrées**,
+et c'est délibéré : un document illisible fait perdre la surcouche entière et l'application retombe
+sur son socle embarqué. C'est le sens du repli, et c'est préférable à un index réparti sur plusieurs
+clés qui pourrait se contredire. L'empreinte de chaque entrée est d'ailleurs **revérifiée à chaque
+lecture** — un cache local n'est pas plus digne de confiance qu'un CDN
+([blueprints.md](blueprints.md)).
 
 ## Clés SecureStore
 

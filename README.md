@@ -207,18 +207,24 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Publication** — profils EAS (développement, aperçu, production) et chaîne de release GitHub
   Actions vers les deux stores. [docs/plateforme.md](docs/plateforme.md)
 - [ ] **Tests automatisés** — un premier harnais existe, borné : `npm test` couvre le socle du moteur
-  (résolution des secrets, registre, modèle d'erreur) et le [harnais de parité](tools/parity/README.md)
-  rejoue les sources migrées contre les vraies. Aucun test d'écran ni de composant, et l'intégration
-  continue ne joue toujours que la publication. [docs/qualite.md](docs/qualite.md)
+  (résolution des secrets, livraison des Blueprints et ses gardes, modèle d'erreur) et le
+  [harnais de parité](tools/parity/README.md) rejoue les sources migrées contre les vraies. Aucun
+  test d'écran ni de composant, et l'intégration continue ne joue toujours que la publication.
+  [docs/qualite.md](docs/qualite.md)
 - [ ] **Le comportement en données** — l'accès aux sources migre vers des
   [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
-  et corrigeables sans release. Le socle est en place (6-A) et **la base de publication existe**
-  (6-B) : son schéma et ses politiques vivent dans [`supabase/`](supabase/), les annonces de vie
-  étudiante y sont lues, et l'échec d'une source atteint enfin un écran. Les sources universitaires
-  suivent, jalon par jalon : [docs/phase-6/README.md](docs/phase-6/README.md).
+  et corrigeables sans release. Le socle est en place (6-A), **la base de publication existe** (6-B),
+  et **le canal de correction est branché** (6-C) : une source qui change se répare par une
+  publication de fichier, reçue au retour au premier plan, avec trois interrupteurs d'arrêt. Les
+  sources universitaires suivent, jalon par jalon :
+  [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
   et l'application démarre et s'utilise sans jamais la joindre. [docs/backend.md](docs/backend.md)
+- [x] **Livraison des Blueprints** — le registre résout entre le socle embarqué et une surcouche
+  publiée, vérifiée à l'empreinte à chaque lecture ; le rafraîchissement est hors du chemin d'un run,
+  et un panneau de diagnostic dit d'où vient chaque Blueprint.
+  [docs/blueprints.md](docs/blueprints.md)
 
 ### Fonctionnalités
 

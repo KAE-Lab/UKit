@@ -1,7 +1,12 @@
 /**
  * Publie les Blueprints de `blueprints/` vers la base, et regenere le manifeste.
  *
- *   npm run blueprints:publish
+ *   npm run blueprints:publish                                  # publier l'etat du depot
+ *   npm run blueprints:publish -- --dry-run                     # montrer, sans rien toucher
+ *   npm run blueprints:publish -- --arret                       # tout revient a l'embarque
+ *   npm run blueprints:publish -- --desactiver <nom>            # une entree revient a l'embarque
+ *   npm run blueprints:publish -- --reactiver <nom>
+ *   npm run blueprints:publish -- --force                       # retelever tout
  *
  * Publier, c'est deux gestes : deposer les fichiers corriges, et republier le manifeste qui les
  * designe **avec leur empreinte**. Le second se fait ici plutot qu'a la main : une empreinte
@@ -10,84 +15,138 @@
  *
  * Le manifeste est un **artefact**, jamais un fichier qu'on edite.
  *
+ * L'ordre compte, et il n'est pas negociable : le manifeste est ecrit **en dernier**. C'est lui le
+ * plan de controle — le publier avant les fichiers qu'il designe ferait pointer une empreinte valide
+ * vers un fichier absent, et l'appareil rejetterait une correction pourtant correcte.
+ *
  * Voir docs/blueprints.md et docs/phase-6/6-c-livraison.md.
  */
 
-import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import 'dotenv/config';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const BLUEPRINTS = join(ROOT, 'blueprints');
+import { config, lirePublic, rest, televerser } from './blueprints/base.mjs';
+import { construireManifeste, lireSocle, memeManifeste, MANIFEST_OBJET } from './blueprints/socle.mjs';
 
-/** La version du **format** de manifeste. Toute autre valeur fait ignorer le manifeste entier. */
-const MANIFEST_FORMAT = '1';
+const TABLE = 'blueprints';
 
-/**
- * Construit le manifeste a partir des fichiers presents.
- *
- * Deux gardes se jouent ici plutot que sur l'appareil, ou la correction serait bien plus couteuse :
- *
- *   - un fichier livre sous un nom qui n'est pas le sien remplacerait un Blueprint par un autre ;
- *   - une version qui ne bat pas celle du socle embarque n'atteindrait jamais un appareil, et le
- *     seul endroit ou ca se verrait est l'ecran de diagnostic.
- */
-function buildManifest(entries) {
-    const blueprints = {};
-    for (const entry of entries) {
-        const text = readFileSync(join(BLUEPRINTS, entry.file), 'utf8');
-        const declared = JSON.parse(text).name;
-        if (declared !== entry.name) {
-            throw new Error(`${entry.file} declare le nom '${declared}', publie comme '${entry.name}'`);
+function arguments_() {
+    const argv = process.argv.slice(2);
+    const valeur = (drapeau) => {
+        const index = argv.indexOf(drapeau);
+        if (index < 0) return null;
+        const suivant = argv[index + 1];
+        if (suivant === undefined || suivant.startsWith('--')) {
+            throw new Error(`${drapeau} attend un nom de Blueprint`);
         }
-        blueprints[entry.name] = {
-            version: entry.version,
-            url: entry.file,
-            sha256: createHash('sha256').update(text, 'utf8').digest('hex'),
-            disabled: false,
-        };
-        if (entry.min_engine) blueprints[entry.name].min_engine = entry.min_engine;
-    }
+        return suivant;
+    };
+
     return {
-        manifest: MANIFEST_FORMAT,
-        generated_at: new Date().toISOString(),
-        disabled: false,
-        blueprints,
+        dryRun: argv.includes('--dry-run'),
+        arret: argv.includes('--arret'),
+        force: argv.includes('--force'),
+        desactiver: valeur('--desactiver'),
+        reactiver: valeur('--reactiver'),
     };
 }
 
 /**
- * TODO(6-C) : le corps du script.
+ * Les noms desactives, tels que la table les porte.
  *
- *   1. lire les versions publiees dans la table `blueprints` ;
- *   2. **valider** chaque fichier avec le moteur — un Blueprint invalide ne doit pas atteindre le
- *      bucket, encore moins un appareil ;
- *   3. televerser les fichiers qui ont change dans le bucket `blueprints` ;
- *   4. mettre la table a jour et ecrire `manifest.json` a cote des fichiers.
- *
- * L'ordre compte : le manifeste est ecrit **en dernier**. C'est lui le plan de controle — le
- * publier avant les fichiers qu'il designe ferait pointer une empreinte valide vers un fichier
- * absent, et l'appareil rejetterait une correction pourtant correcte.
- *
- * La cle utilisee est `service_role`, lue de l'environnement. Elle ne s'ecrit dans aucun fichier
- * versionne : qui la detient peut publier un Blueprint que tous les appareils joueront.
+ * La table est la **surface d'edition** du publieur : basculer `desactive` depuis la console
+ * d'administration puis rejouer le script suffit a ramener une entree au socle embarque. Les
+ * arguments `--desactiver` / `--reactiver` font le meme geste depuis un terminal.
  */
-function main() {
-    const files = readdirSync(BLUEPRINTS).filter((name) => name.endsWith('.blueprint.json'));
+async function accorderDesactivations(base, options, socle) {
+    const noms = new Set(socle.map((entree) => entree.nom));
+    for (const [drapeau, nom] of [['--desactiver', options.desactiver], ['--reactiver', options.reactiver]]) {
+        if (nom !== null && !noms.has(nom)) {
+            throw new Error(`${drapeau} ${nom} : ce Blueprint n existe pas dans blueprints/`);
+        }
+    }
 
-    // Tant que la publication n'est pas branchee, le script fait deja la moitie utile du travail :
-    // il montre le manifeste qui serait produit. Un manifeste qu'on peut lire avant de le publier
-    // est un manifeste dont on repere l'erreur avant qu'un appareil ne la rejette.
-    const entries = files.map((file) => ({
-        file,
-        name: JSON.parse(readFileSync(join(BLUEPRINTS, file), 'utf8')).name,
-        version: '1',
-    }));
+    const lignes = await rest(base, `${TABLE}?select=nom,desactive`);
+    const desactives = new Set(lignes.filter((ligne) => ligne.desactive).map((ligne) => ligne.nom));
 
-    console.log(JSON.stringify(buildManifest(entries), null, 2));
-    console.log(`\n${files.length} Blueprint(s) — televersement et mise a jour de la table : jalon 6-C`);
-    console.log('(voir docs/phase-6/6-c-livraison.md)');
+    if (options.desactiver !== null) desactives.add(options.desactiver);
+    if (options.reactiver !== null) desactives.delete(options.reactiver);
+    return desactives;
 }
 
-main();
+/** Les fichiers a deposer : ceux que le manifeste servi ne decrit pas avec la meme empreinte. */
+function aTeleverser(socle, servi, force) {
+    if (force || servi === null) return socle;
+    return socle.filter((entree) => servi.blueprints?.[entree.nom]?.sha256 !== entree.sha256);
+}
+
+function raconter(socle, manifeste, depots) {
+    for (const entree of socle) {
+        const etat = manifeste.blueprints[entree.nom].disabled ? 'desactive' : 'actif';
+        const depot = depots.includes(entree) ? 'a televerser' : 'inchange';
+        console.log(`  ${entree.nom.padEnd(28)} v${entree.version.padEnd(4)} ${etat.padEnd(10)} ${depot}`);
+    }
+    if (manifeste.disabled) {
+        console.log('\n  ARRET GLOBAL : le manifeste ramene tous les Blueprints au socle embarque.');
+    }
+}
+
+async function main() {
+    const options = arguments_();
+    const base = config();
+
+    // Les gardes du depot d'abord : validation du moteur, coherence des noms et des versions.
+    const socle = lireSocle();
+
+    const desactives = await accorderDesactivations(base, options, socle);
+    const manifeste = construireManifeste(socle, { arret: options.arret, desactives });
+
+    const texteServi = await lirePublic(base, MANIFEST_OBJET);
+    const servi = texteServi === null ? null : JSON.parse(texteServi);
+    const depots = aTeleverser(socle, servi, options.force);
+
+    console.log(`${socle.length} Blueprint(s) valides :\n`);
+    raconter(socle, manifeste, depots);
+
+    if (depots.length === 0 && memeManifeste(servi, manifeste)) {
+        // « Rejoue a vide, le script ne change rien » est une propriete, pas une politesse : c'est
+        // elle qui rend un manifeste perime visible en une commande.
+        console.log('\nRien a publier : le bucket sert deja cet etat.');
+        return;
+    }
+
+    if (options.dryRun) {
+        console.log(`\n${JSON.stringify(manifeste, null, 2)}`);
+        console.log('\n--dry-run : rien n a ete televerse.');
+        return;
+    }
+
+    for (const entree of depots) {
+        await televerser(base, entree.fichier, entree.texte);
+        console.log(`\n  depose  ${entree.fichier} (${entree.texte.length} octets)`);
+    }
+
+    await rest(base, TABLE, {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify(
+            socle.map((entree) => ({
+                nom: entree.nom,
+                version: entree.version,
+                chemin: entree.fichier,
+                sha256: entree.sha256,
+                min_engine: entree.min_engine ?? null,
+                desactive: desactives.has(entree.nom),
+            })),
+        ),
+    });
+    console.log(`  table   ${socle.length} ligne(s) a jour`);
+
+    await televerser(base, MANIFEST_OBJET, JSON.stringify(manifeste, null, 2));
+    console.log(`  manifeste ecrit en dernier — ${manifeste.generated_at}`);
+    console.log('\nLa correction atteindra les appareils au prochain retour au premier plan.');
+}
+
+main().catch((error) => {
+    console.error(`\nEchec de la publication : ${error.message}`);
+    process.exit(1);
+});

@@ -6,8 +6,8 @@
  * et un manifeste distant ne fait que le mettre a jour.
  *
  * La `version` decide de tout : le distant ne gagne que s'il est **strictement** superieur. Elle
- * s'incremente donc ici a chaque fois qu'un fichier change, sans quoi la correction embarquee et la
- * correction publiee ne pourraient plus etre departagees.
+ * s'incremente donc dans `versions.json` a chaque fois qu'un fichier change, sans quoi la correction
+ * embarquee et la correction publiee ne pourraient plus etre departagees.
  *
  * Voir docs/blueprints.md et docs/phase-6/6-c-livraison.md.
  */
@@ -20,6 +20,7 @@ import campusRestaurants from './ukit-campus-restaurants.blueprint.json';
 import celcatSemaine from './ukit-celcat-semaine.blueprint.json';
 import scolariteMessagerie from './ukit-scolarite-messagerie.blueprint.json';
 import scolariteSso from './ukit-scolarite-sso.blueprint.json';
+import versions from './versions.json';
 
 /**
  * Une entree du socle : `{ version, document }`.
@@ -49,16 +50,36 @@ export type BlueprintName = (typeof BLUEPRINT)[keyof typeof BLUEPRINT];
  * sur un telephone. Chaque jalon de migration les decoupe selon les appels que l'application joue
  * reellement, et corrige ce que le branchement revele — voir blueprints/README.md.
  *
- * `ukit.campus.annonces` est en version 2 : le jalon 6-A y a ajoute l'extraction de `long_desc`
- * (que la fiche affiche) et un `assert` de forme.
+ * Les versions vivent dans `versions.json` et non ici : le script de publication est un module Node
+ * qui ne sait pas lire un fichier TypeScript, et une version que le publieur recopierait a la main
+ * serait fausse un jour sur deux. Un manque dans ce fichier est une erreur de compilation, pas une
+ * surprise a l'execution.
  */
 export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
-    [BLUEPRINT.CAMPUS_ANNONCES]: { version: '2', document: campusAnnonces },
-    [BLUEPRINT.CAMPUS_RESTAURANTS]: { version: '1', document: campusRestaurants },
-    [BLUEPRINT.CAMPUS_AFFLUENCE]: { version: '1', document: campusAffluence },
-    [BLUEPRINT.CELCAT_SEMAINE]: { version: '1', document: celcatSemaine },
-    [BLUEPRINT.SCOLARITE_SSO]: { version: '1', document: scolariteSso },
-    [BLUEPRINT.SCOLARITE_MESSAGERIE]: { version: '1', document: scolariteMessagerie },
+    [BLUEPRINT.CAMPUS_ANNONCES]: {
+        version: versions[BLUEPRINT.CAMPUS_ANNONCES].version,
+        document: campusAnnonces,
+    },
+    [BLUEPRINT.CAMPUS_RESTAURANTS]: {
+        version: versions[BLUEPRINT.CAMPUS_RESTAURANTS].version,
+        document: campusRestaurants,
+    },
+    [BLUEPRINT.CAMPUS_AFFLUENCE]: {
+        version: versions[BLUEPRINT.CAMPUS_AFFLUENCE].version,
+        document: campusAffluence,
+    },
+    [BLUEPRINT.CELCAT_SEMAINE]: {
+        version: versions[BLUEPRINT.CELCAT_SEMAINE].version,
+        document: celcatSemaine,
+    },
+    [BLUEPRINT.SCOLARITE_SSO]: {
+        version: versions[BLUEPRINT.SCOLARITE_SSO].version,
+        document: scolariteSso,
+    },
+    [BLUEPRINT.SCOLARITE_MESSAGERIE]: {
+        version: versions[BLUEPRINT.SCOLARITE_MESSAGERIE].version,
+        document: scolariteMessagerie,
+    },
 };
 
 /**

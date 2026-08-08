@@ -10,8 +10,21 @@
 export { getAetheriusClient } from './client';
 export { describeUkitFailure, reportFailure, ukitFailure, FAILURE_PRESENTATION } from './failures';
 export type { FailurePresentation, UkitFailure, UkitFailureKind } from './failures';
-export { refreshBlueprints, resolveBlueprint, revertBlueprints } from './registry';
-export type { BlueprintOrigin, ResolvedBlueprint } from './registry';
+export {
+    describeDelivery,
+    lastRefreshReport,
+    listBlueprints,
+    refreshBlueprints,
+    resolveBlueprint,
+    revertBlueprints,
+} from './registry';
+export type {
+    BlueprintLine,
+    BlueprintOrigin,
+    BlueprintStatus,
+    RefreshReport,
+    ResolvedBlueprint,
+} from './registry';
 export { runBlueprint } from './runBlueprint';
 export type { BlueprintRun, RunBlueprintOptions, RunInputs } from './runBlueprint';
 export { ukitSecrets } from './secrets';

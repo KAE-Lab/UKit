@@ -5,12 +5,12 @@ UKit s'appuie sur un projet **Supabase** pour publier ce qu'il publie : les
 établissements.
 
 > **État actuel.** Le projet existe, son schéma et ses politiques sont appliqués, ses deux buckets
-> sont créés, et **les annonces de vie étudiante y sont lues** depuis le jalon
-> [6-B](phase-6/6-b-supabase.md). Le bucket de livraison reçoit son manifeste au jalon
-> [6-C](phase-6/6-c-livraison.md) ; le référentiel des bâtiments est peuplé mais pas encore lu par
-> l'application (jalon [6-D](phase-6/6-d-campus.md)) ; le catalogue des établissements est rempli et
-> branché au jalon [6-G](phase-6/6-g-etablissements.md). Ce qui est écrit ici avant d'exister est
-> marqué comme tel.
+> sont créés, **les annonces de vie étudiante y sont lues** depuis le jalon
+> [6-B](phase-6/6-b-supabase.md), et **le bucket de livraison sert les six Blueprints et leur
+> manifeste** depuis le jalon [6-C](phase-6/6-c-livraison.md). Le référentiel des bâtiments est
+> peuplé mais pas encore lu par l'application (jalon [6-D](phase-6/6-d-campus.md)) ; le catalogue des
+> établissements est rempli et branché au jalon [6-G](phase-6/6-g-etablissements.md). Ce qui est
+> écrit ici avant d'exister est marqué comme tel.
 
 ## Ce que la base est, et ce qu'elle n'est pas
 
@@ -40,6 +40,10 @@ La procédure de création et d'application du schéma est dans
 |---|---|---|
 | `anon` | dans le binaire, via [`app.config.ts`](../app.config.ts) → `extra` | exactement ce que les politiques autorisent : lire le contenu publié |
 | `service_role` | secret de CI et poste du publieur, **jamais** dans l'application | tout, politiques contournées |
+
+Une troisième variable passe par le même chemin sans être une clé : `BLUEPRINTS_REMOTE`. À `false`,
+elle fait ignorer durablement la surcouche publiée — le troisième interrupteur d'arrêt, le seul qui
+se pose à la construction du binaire ([blueprints.md](blueprints.md#revenir-en-arrière)).
 
 La clé `anon` est **publique par conception** : elle est lisible dans n'importe quel binaire. Ce n'est
 pas un secret mal gardé, c'est un identifiant. La frontière de sécurité, ce sont les politiques.
@@ -72,7 +76,7 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | 6-G | l'établissement historique |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | bandeau de service : maintenance, incident | rien aujourd'hui | — | — |
-| `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal | le script de publication | 6-C | [`blueprints/`](../blueprints/) |
+| `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal, `desactive` | le script de publication | **6-C** | [`blueprints/`](../blueprints/) |
 
 `batiments` est **peuplée depuis le jalon 6-B mais lue par personne** : ses 73 lignes viennent de
 `locations.json`, et l'application continue de lire le fichier embarqué. La surcouche est branchée en
@@ -82,11 +86,16 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 de mise à jour ni de bandeau de service dans l'application. Les créer maintenant coûte deux tables et
 évite une migration le jour où ces écrans arriveront ; les remplir sans écran ne servirait personne.
 
+La table `blueprints` n'est **pas lue par l'application** : l'appareil lit `manifest.json` dans le
+bucket, et la table n'a d'ailleurs aucune politique de lecture pour `anon`. Elle sert deux choses au
+publieur — la trace de ce qui est en ligne, et la colonne `desactive`, qui est la surface d'édition
+du premier interrupteur d'arrêt ([blueprints.md](blueprints.md#revenir-en-arrière)).
+
 Deux buckets :
 
 | Bucket | Contenu | Accès |
 |---|---|---|
-| `blueprints` | les fichiers d'instructions et `manifest.json` | lecture publique |
+| `blueprints` | les six fichiers d'instructions et `manifest.json` | lecture publique |
 | `media` | visuels des annonces (`annonces/`) et des bâtiments (`batiments/`) | lecture publique |
 
 **Rien de tout cela ne porte de logique.** Pas de fonction, pas de déclencheur métier, pas de vue qui
@@ -181,11 +190,14 @@ dans `image_url`.
 ### Des Blueprints
 
 ```bash
-npm run blueprints:publish
+npm run blueprints:publish              # publier l'etat du depot
+npm run blueprints:publish -- --dry-run # montrer le plan, sans rien televerser
 ```
 
-Le script valide, téléverse, calcule les empreintes, met la table à jour et régénère le manifeste.
-Détail et retours en arrière : [blueprints.md](blueprints.md#publier-une-correction).
+Le script valide chaque fichier avec le moteur, téléverse ceux dont l'empreinte a changé, met la
+table à jour et régénère le manifeste **en dernier**. Rejoué à vide, il ne change rien : c'est ce qui
+rend un manifeste périmé visible en une commande. Détail, gardes et retours en arrière :
+[blueprints.md](blueprints.md#publier-une-correction).
 
 ## Ce qu'il faut savoir avant d'être surpris
 

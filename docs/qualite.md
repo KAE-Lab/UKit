@@ -41,7 +41,7 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | Module | Ce qui est couvert |
 |---|---|
 | [`shared/aetherius/secrets.ts`](../src/shared/aetherius/secrets.ts) | la projection du trousseau vers les noms de secrets |
-| [`shared/aetherius/registry.ts`](../src/shared/aetherius/registry.ts) | la résolution, « ne touche jamais au réseau », le périmètre des secrets |
+| [`shared/aetherius/delivery.ts`](../src/shared/aetherius/delivery.ts) | la résolution socle/surcouche, « ne touche jamais au réseau », les neuf gardes et les trois interrupteurs d'arrêt |
 | [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | la table du modèle d'erreur du moteur |
 | [`shared/supabase/failures.ts`](../src/shared/supabase/failures.ts) | la table d'erreurs de la base — dont « une clé fausse n'est pas `config` » |
 | [`features/Campus/services/BdeMapping.ts`](../src/features/Campus/services/BdeMapping.ts) | la projection des annonces et leur péremption |
@@ -51,11 +51,11 @@ là qu'une erreur ne se voit pas. Un champ omis rend une fiche incomplète sans 
 date mal traitée fait disparaître du contenu publié — c'est arrivé, et le test existe parce que le
 correctif existe.
 
-Ce qui n'y est **pas** : les façades et les clients (`aetherius/client.ts`, `supabase/client.ts`,
-`runBlueprint`), qui importent React Native ou `expo-constants` et ne sont pas jouables hors
-appareil. C'est aussi ce qui explique la forme de ces modules — le code testable est systématiquement
-séparé du code de plateforme, et un fichier de test qui cesse de se lancer est le signal que la
-frontière a été franchie.
+Ce qui n'y est **pas** : les façades et les clients (`aetherius/client.ts`,
+`aetherius/registry.ts`, `supabase/client.ts`, `runBlueprint`), qui importent React Native,
+`AsyncStorage` ou `expo-constants` et ne sont pas jouables hors appareil. C'est aussi ce qui explique
+la forme de ces modules — le code testable est systématiquement séparé du code de plateforme, et un
+fichier de test qui cesse de se lancer est le signal que la frontière a été franchie.
 
 Aucun écran, aucun composant : le dépôt n'a pas de harnais de rendu, et la vérification manuelle sur
 appareil reste la porte principale.
@@ -64,7 +64,20 @@ appareil reste la porte principale.
 > peut pas l'avoir, `babel.config.js` et `commitlint.config.js` étant en CommonJS. Tout `.ts` est
 > donc chargé en CommonJS par les transpileurs à la volée, et un module CommonJS ne peut pas
 > `require()` `@aetherius/engine`, publié en ESM pur. `vitest` résout la condition `import` quel que
-> soit le format du projet, sans fichier de configuration.
+> soit le format du projet.
+
+### Le seul réglage de vitest, et pourquoi il existe
+
+[`vitest.config.ts`](../vitest.config.ts) ne porte qu'un alias, introduit par le jalon
+[6-C](phase-6/6-c-livraison.md). `BlueprintRegistry` — tout le mécanisme de livraison — est publié
+dans `@aetherius/react-native`, dont la **racine** monte une WebView : sous Node, l'import échoue
+avant la première ligne de test. Le sous-module qui porte le registre, lui, n'importe que le moteur
+et `globalThis.setTimeout` ; il ne dépend d'aucune plateforme, le paquet ne l'expose simplement pas
+en sous-chemin. L'alias le résout directement, **sous test uniquement**.
+
+Sans lui, les neuf gardes du registre ne seraient vérifiables qu'en publiant neuf manifestes cassés
+en production. Ce qu'il ne couvre pas, et qu'il ne faut pas essayer de lui faire couvrir : un module
+qui importe autre chose du paquet reste injouable hors appareil, et c'est toujours le bon signal.
 
 ### La parité
 
@@ -145,9 +158,16 @@ horaires de BU, jour sélectionné dans le planning. Les attendre en temps réel
 Le projet embarque donc un **menu de développement flottant** :
 [`ModMenu.tsx`](../src/shared/ui/ModMenu.tsx), monté en permanence par
 [`rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx), et
-[`TimeMockService.ts`](../src/shared/services/TimeMockService.ts) qui porte la logique.
+[`TimeMockService.ts`](../src/shared/services/TimeMockService.ts) qui porte la logique. Il s'ouvre
+par **sept tapes sur le numéro de version** de l'écran À propos, et porte deux onglets : *Temps*, et
+*Blueprints* — le diagnostic de la livraison, décrit dans
+[blueprints.md](blueprints.md#quand-une-correction--narrive-pas-).
 
-Fonctionnement :
+Ses libellés sont volontairement **hors des dictionnaires** : ce n'est pas une capacité utilisateur,
+et lui ouvrir les trois traductions ferait porter à l'internationalisation un écran que personne
+n'ouvre par hasard.
+
+Fonctionnement de la simulation temporelle :
 
 - `setFakeTime(date)` calcule un décalage entre la date voulue et l'heure réelle, puis **remplace
   `moment.now`** par une fonction qui applique ce décalage. Tout le code qui date via `moment()` voit

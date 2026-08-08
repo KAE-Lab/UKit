@@ -15,6 +15,28 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **La livraison des Blueprints** (jalon [6-C](docs/phase-6/6-c-livraison.md)). C'est le jalon où la
+  phase commence à payer : **corriger une source devient une publication de fichier, pas une
+  release**. Le registre résout chaque [Blueprint](docs/blueprints.md) entre le socle embarqué dans
+  le binaire et une surcouche publiée sur la base ; `npm run blueprints:publish` valide, téléverse,
+  calcule les empreintes et régénère le manifeste, et la correction atteint les appareils au retour
+  au premier plan suivant.
+
+  Les deux propriétés qui décident du reste : la résolution **ne touche jamais au réseau** — un run
+  n'attend pas un CDN pour savoir quoi jouer — et le rafraîchissement **ne lève jamais**, il rend un
+  rapport. Un point de publication en panne ne devient pas une application en panne.
+
+  Un Blueprint distant est de la donnée exécutable, et il est traité comme telle : empreinte SHA-256
+  revérifiée à **chaque lecture**, validation complète avant mise en cache, périmètre de secrets
+  fermé, version strictement supérieure, et un nom absent du binaire reste refusé. Ces neuf gardes
+  sont couvertes par des tests unitaires jouant le vrai registre.
+
+  Et parce qu'un mécanisme de déploiement sans retour arrière n'en est pas un, trois interrupteurs
+  d'arrêt : `--desactiver` ou `--arret` côté publieur, un bouton « Embarqué » dans l'application, et
+  `BLUEPRINTS_REMOTE=false` à la construction. Le menu de développement gagne un onglet
+  **Blueprints** qui dit, pour chacun, sa version, son origine et la raison du dernier
+  rafraîchissement — la question « pourquoi ma correction n'arrive pas » se répond en trois secondes.
+
 - **La base de publication, et les annonces qui y passent** (jalon
   [6-B](docs/phase-6/6-b-supabase.md)). UKit a désormais un dos : un projet Supabase mince, dont le
   schéma et les politiques d'accès vivent dans [`supabase/`](supabase/) et s'appliquent depuis ces

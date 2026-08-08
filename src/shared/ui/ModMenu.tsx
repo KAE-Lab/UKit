@@ -7,6 +7,7 @@ import moment from 'moment';
 import style, { tokens } from '../theme/Theme';
 import { TimeMockService } from '../services/TimeMockService';
 import { AppContext } from '../services/AppCore';
+import ModMenuBlueprints from './ModMenuBlueprints';
 
 const { width, height } = Dimensions.get('window');
 const ICON_SIZE = 60;
@@ -21,6 +22,8 @@ export interface ModMenuState {
     selectedDate: Date;
     showPicker: boolean;
     pickerMode: 'date' | 'time' | 'datetime';
+    /** L'onglet affiche : la simulation temporelle, ou le diagnostic de la livraison. */
+    panel: 'time' | 'blueprints';
 }
 
 export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
@@ -44,6 +47,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             selectedDate: new Date(),
             showPicker: false,
             pickerMode: "date" as "date",
+            panel: 'time',
         };
 
         this.pan = new Animated.ValueXY({ x: width - ICON_SIZE - 20, y: height / 2 });
@@ -135,6 +139,22 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             this.setState({ selectedDate });
         }
     }
+
+    renderTabs = (theme: import('../theme/Theme').AppThemeType, panel: 'time' | 'blueprints') => (
+        <View style={{ flexDirection: 'row', marginBottom: tokens.space.md, backgroundColor: theme.greyBackground, borderRadius: tokens.radius.md, padding: 2 }}>
+            {(['time', 'blueprints'] as const).map((cible) => (
+                <TouchableOpacity
+                    key={cible}
+                    onPress={() => this.setState({ panel: cible })}
+                    style={{ flex: 1, paddingVertical: tokens.space.xs, borderRadius: tokens.radius.sm, alignItems: 'center', backgroundColor: panel === cible ? theme.cardBackground : 'transparent' }}
+                >
+                    <Text style={{ color: panel === cible ? theme.font : theme.fontSecondary, fontSize: tokens.fontSize.xs, fontWeight: 'bold' }}>
+                        {cible === 'time' ? 'Temps' : 'Blueprints'}
+                    </Text>
+                </TouchableOpacity>
+            ))}
+        </View>
+    );
 
     renderIndicator = (isActive: boolean, customStyle = {}) => {
         return (
@@ -252,7 +272,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     render() {
         if (!this.state.isVisible) return null;
 
-        const { isExpanded, isActive, currentTime, selectedDate } = this.state;
+        const { isExpanded, isActive, currentTime, selectedDate, panel } = this.state;
         const theme = style.Theme[this.context?.themeName || 'light'];
 
         if (!isExpanded) {
@@ -297,10 +317,17 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
 
                 {/* Content */}
                 <View style={{ padding: tokens.space.md }}>
-                    {this.renderLiveClock(theme, isActive, currentTime)}
-                    {this.renderTimeSelectors(theme, selectedDate)}
-                    {this.renderActionButtons(theme)}
-                    {this.renderDateTimePicker(theme)}
+                    {this.renderTabs(theme, panel)}
+                    {panel === 'blueprints' ? (
+                        <ModMenuBlueprints theme={theme} />
+                    ) : (
+                        <>
+                            {this.renderLiveClock(theme, isActive, currentTime)}
+                            {this.renderTimeSelectors(theme, selectedDate)}
+                            {this.renderActionButtons(theme)}
+                            {this.renderDateTimePicker(theme)}
+                        </>
+                    )}
                 </View>
             </Animated.View>
         );

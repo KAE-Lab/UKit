@@ -142,6 +142,7 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 | `theme-clair-sombre.png` | un même écran dans les deux thèmes | [theme.md](../theme.md) | essentielle |
 | `carte.png` | écran carte, marqueur au thème de l'application | [cartographie.md](../cartographie.md) | essentielle |
 | `modmenu.png` | menu flottant de simulation temporelle | [qualite.md](../qualite.md) | complémentaire |
+| `modmenu-blueprints.png` | panneau de livraison : origine, version et raison par Blueprint — **déposée** (jalon 6-C) | [blueprints.md](../blueprints.md) | essentielle |
 
 ## Mettre à jour
 

@@ -70,7 +70,9 @@ assets/
    [Phase 6](phase-6/README.md), un service n'émet plus de requête lui-même. Il demande au registre
    le [Blueprint](blueprints.md) correspondant à l'appel, le fait jouer, et travaille la donnée
    reçue. Ce qui reste du service est ce qui doit y rester : le cache, les conversions, le calcul,
-   la traduction d'un échec en écran.
+   la traduction d'un échec en écran. Le registre résout entre le socle embarqué et la surcouche
+   publiée **sans jamais toucher au réseau** ; le rafraîchissement est un geste séparé, déclenché par
+   le conteneur racine, jamais sur le chemin d'un run.
 
 ## Séquence de démarrage
 
@@ -180,17 +182,18 @@ racine et de [`src/shared/`](../src/shared/).
 |---|---|
 | [`App.tsx`](../App.tsx) | point d'entrée : préchargement des ressources, chargement des managers, splash animé |
 | [`app.config.ts`](../app.config.ts) | configuration Expo ([plateforme.md](plateforme.md)) |
-| [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation |
+| [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement de la livraison au démarrage et au retour au premier plan |
 | [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 18 écrans |
 | [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | barre d'onglets personnalisée et son bouton d'action contextuel |
 | [`shared/navigation/NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) | `NavBarHelper`, `withHeaderAnimation`, `withStaticHeader`, boutons d'en-tête |
 | [`shared/aetherius/client.ts`](../src/shared/aetherius/client.ts) | la façade du moteur, instanciée une fois pour toute l'application |
 | [`shared/aetherius/secrets.ts`](../src/shared/aetherius/secrets.ts) | résolution des secrets depuis le document unique de `SecureStore` |
-| [`shared/aetherius/registry.ts`](../src/shared/aetherius/registry.ts) | résolution d'un Blueprint entre socle embarqué et surcouche publiée |
+| [`shared/aetherius/delivery.ts`](../src/shared/aetherius/delivery.ts) | le cadrage du registre : socle, périmètre des secrets, URL du manifeste ([blueprints.md](blueprints.md)) |
+| [`shared/aetherius/registry.ts`](../src/shared/aetherius/registry.ts) | le registre branché : magasin de cache, rafraîchissement, retour à l'embarqué, diagnostic |
 | [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | un échec de run traduit en famille d'écran et en clé de traduction |
 | [`shared/aetherius/runBlueprint.ts`](../src/shared/aetherius/runBlueprint.ts) | l'appel type : résoudre, jouer, rendre des sorties ou un échec décrit |
 | [`shared/aetherius/index.ts`](../src/shared/aetherius/index.ts) | la porte d'entrée du socle : un service importe d'ici, jamais des paquets |
-| [`shared/aetherius/secrets.test.ts`](../src/shared/aetherius/secrets.test.ts) · [`registry.test.ts`](../src/shared/aetherius/registry.test.ts) · [`failures.test.ts`](../src/shared/aetherius/failures.test.ts) | les tests du socle, joués par `npm test` ([qualite.md](qualite.md)) |
+| [`shared/aetherius/secrets.test.ts`](../src/shared/aetherius/secrets.test.ts) · [`delivery.test.ts`](../src/shared/aetherius/delivery.test.ts) · [`failures.test.ts`](../src/shared/aetherius/failures.test.ts) | les tests du socle, joués par `npm test` ([qualite.md](qualite.md)) |
 | [`shared/supabase/client.ts`](../src/shared/supabase/client.ts) | client anonyme de la base de publication, construit au premier usage ([backend.md](backend.md)) |
 | [`shared/supabase/types.ts`](../src/shared/supabase/types.ts) | types des tables, tels que la base les rend, et le schéma en lecture seule |
 | [`shared/supabase/failures.ts`](../src/shared/supabase/failures.ts) | un échec de lecture traduit dans le même vocabulaire que ceux du moteur |
@@ -207,7 +210,8 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème), `Split` (séparateur), `UpdateAlert` (contrôle de version, non rendu) |
 | [`shared/ui/Button.tsx`](../src/shared/ui/Button.tsx) | boutons partagés : retour, accueil, tiroir, ligne de réglage |
 | [`shared/ui/Alerts.ts`](../src/shared/ui/Alerts.ts) | `ErrorAlert` (messages éphémères) et `RequestError` (non utilisé) |
-| [`shared/ui/ModMenu.tsx`](../src/shared/ui/ModMenu.tsx) | menu flottant de simulation temporelle ([qualite.md](qualite.md)) |
+| [`shared/ui/ModMenu.tsx`](../src/shared/ui/ModMenu.tsx) | menu flottant de développement : simulation temporelle et livraison ([qualite.md](qualite.md)) |
+| [`shared/ui/ModMenuBlueprints.tsx`](../src/shared/ui/ModMenuBlueprints.tsx) | son panneau de diagnostic de la livraison ([blueprints.md](blueprints.md)) |
 | [`shared/ui/OpenMapButton.tsx`](../src/shared/ui/OpenMapButton.tsx) | bouton d'ouverture de carte — non importé ([cartographie.md](cartographie.md)) |
 | [`shared/constants/urls.ts`](../src/shared/constants/urls.ts) | URLs externes : liens applicatifs (`URL`) et points d'entrée Celcat (`WebApiURL`) |
 | [`shared/utils/formatUtils.ts`](../src/shared/utils/formatUtils.ts) | `upperCaseFirstLetter` et `formatDescription` (nettoyage des descriptions Celcat) |

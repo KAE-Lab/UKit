@@ -1,0 +1,8 @@
+{
+    "ukit.campus.annonces": { "version": "2" },
+    "ukit.campus.restaurants": { "version": "1" },
+    "ukit.campus.affluence": { "version": "1" },
+    "ukit.celcat.semaine": { "version": "1" },
+    "ukit.scolarite.sso": { "version": "1" },
+    "ukit.scolarite.messagerie": { "version": "1" }
+}

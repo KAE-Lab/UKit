@@ -4,6 +4,7 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { AetheriusConfirm, AetheriusWebView } from '@aetherius/react-native';
 
 import StackNavigator from './StackNavigator';
+import { refreshBlueprints } from '../aetherius';
 import { AppContextProvider } from '../services/AppCore';
 import { SettingsManager } from '../services/AppCore';
 import WelcomeScreen from '../../features/Onboarding/WelcomeScreen';
@@ -23,6 +24,18 @@ export default function RootContainer() {
 		SettingsManager.loadCalendars();
 	}
 
+	/**
+	 * Le retour au premier plan, et lui seul.
+	 *
+	 * `reloadData` se declenche sur **toutes** les transitions et continue de le faire — c'est son
+	 * comportement depuis toujours. Le rafraichissement de la livraison, lui, n'a de sens qu'au
+	 * retour : le declencher en passant en arriere-plan ferait une requete que personne ne regarde.
+	 */
+	function onAppStateChange(nextAppState) {
+		reloadData();
+		if (nextAppState === 'active') void refreshBlueprints();
+	}
+
 	useEffect(() => {
 		const onTheme = (newTheme) => setThemeName(newTheme);
 		const onFavoriteGroups = (newGroups) => setFavoriteGroups(newGroups);
@@ -36,7 +49,12 @@ export default function RootContainer() {
 		SettingsManager.on('language', onLanguage);
 		SettingsManager.on('filter', onFilter);
 
-		const eventSubscription = AppState.addEventListener('change', reloadData);
+		const eventSubscription = AppState.addEventListener('change', onAppStateChange);
+
+		// Les deux declencheurs de la livraison : le demarrage, et le retour au premier plan.
+		// Jamais dans le chemin d'un run — `refreshBlueprints` ne leve pas et n'est pas attendue,
+		// donc un point de publication en panne ne retarde ni ne casse le demarrage.
+		void refreshBlueprints();
 
 		return () => {
 			SettingsManager.unsubscribe('theme', onTheme);

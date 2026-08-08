@@ -4,6 +4,16 @@ Les fichiers d'instructions joués par le moteur Aetherius. C'est la **source de
 relus en revue, versionnés avec le code qui les consomme, importés dans le binaire par
 [`index.ts`](index.ts), et publiés vers la base par `npm run blueprints:publish`.
 
+| Fichier | Rôle |
+|---|---|
+| `*.blueprint.json` | les documents eux-mêmes |
+| [`index.ts`](index.ts) | le socle embarqué : les noms, la table `BUNDLED`, le périmètre des secrets |
+| [`versions.json`](versions.json) | la **version** de chaque document, et son `min_engine` s'il en a un |
+
+`versions.json` existe parce que le script de publication est un module Node : il ne sait pas lire
+`index.ts`. Les deux côtés lisent donc le même fichier de données, et une version recopiée à la main
+ne peut pas diverger de celle qui est embarquée.
+
 Ce que ces fichiers portent, comment on en écrit un et comment on publie une correction :
 [docs/blueprints.md](../docs/blueprints.md).
 
@@ -63,6 +73,7 @@ Le nom du fichier reprend le nom du Blueprint, points remplacés par des tirets,
 
 - **Aucun identifiant dans un fichier.** Les secrets sont **déclarés** (`secrets`) et fournis au
   runtime par le trousseau de l'appareil. Un fichier de ce dossier est publié sur un CDN public.
-- **La version s'incrémente à chaque correction publiée.** Le distant ne gagne que s'il est
-  strictement plus récent que l'embarqué ; une correction publiée sans montée de version n'atteint
-  jamais un appareil, et le diagnostic est le seul endroit où ça se voit.
+- **La version s'incrémente dans [`versions.json`](versions.json) à chaque correction publiée.** Le
+  distant ne gagne que s'il est strictement plus récent que l'embarqué ; une correction publiée sans
+  montée de version n'atteint jamais un appareil, et le panneau de diagnostic du menu de
+  développement est le seul endroit où ça se voit.

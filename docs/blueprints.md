@@ -17,11 +17,17 @@ chez Aetherius ; elle n'est pas recopiée ici, parce qu'une copie périmée est 
 | Endroit | Rôle |
 |---|---|
 | [`blueprints/`](../blueprints/) | **la source de vérité.** Les fichiers sont relus en revue, versionnés avec le code qui les consomme, et importés dans le binaire |
-| [`blueprints/index.ts`](../blueprints/index.ts) | le **socle embarqué** : la table des noms et des versions livrées avec l'application |
+| [`blueprints/index.ts`](../blueprints/index.ts) | le **socle embarqué** : la table des noms livrés avec l'application |
+| [`blueprints/versions.json`](../blueprints/versions.json) | la **version** de chaque fichier, et son `min_engine` s'il en a un |
 | Bucket `blueprints` de Supabase | la **surcouche distante** : les mêmes fichiers, plus récents, publiés entre deux releases |
 
 Le socle embarqué n'est jamais optionnel. Une application doit fonctionner au premier lancement, hors
 ligne, sans avoir jamais contacté le réseau ; le distant ne fait que le mettre à jour.
+
+Les versions vivent dans un fichier de données plutôt que dans `index.ts` pour une raison
+mécanique : le script de publication est un module Node, il ne sait pas lire du TypeScript. Un
+fichier que les deux côtés lisent tel quel vaut mieux qu'une version recopiée à la main — elle serait
+fausse un jour sur deux, et c'est précisément la valeur qui décide de tout.
 
 ## Ce qui descend dans un Blueprint, et ce qui n'y descend pas
 
@@ -136,8 +142,8 @@ runtime par le trousseau de l'appareil.
 Deux gestes, et le second n'est pas optionnel :
 
 ```bash
-# 1. corriger le fichier dans blueprints/ et incrementer sa version
-# 2. publier : valide, televerse, recalcule les empreintes, regenere le manifeste
+# 1. corriger le fichier dans blueprints/ et incrementer sa version dans blueprints/versions.json
+# 2. publier : valide, televerse, recalcule les empreintes, met la table a jour, regenere le manifeste
 npm run blueprints:publish
 ```
 
@@ -148,20 +154,65 @@ que l'appareil rejette : on passerait la soirée à déboguer une garde qui fonc
 La correction arrive sur les appareils au rafraîchissement suivant — au démarrage, ou au retour au
 premier plan. Le distant ne gagne que s'il est **plus récent, entier et valide**.
 
+### Ce que le script refuse de publier
+
+[`tools/publish-blueprints.mjs`](../tools/publish-blueprints.mjs) joue les gardes qui n'ont aucune
+raison d'attendre le téléphone. Chacune arrête la publication, aucune n'est rattrapable après coup :
+
+| Garde | Ce qu'elle évite |
+|---|---|
+| Le document est validé par le moteur (`validateBlueprintData` + `validateForAct`) | un fichier invalide qui traverserait le réseau pour être refusé à l'arrivée |
+| Le `name` déclaré dans le fichier correspond à sa clé de `versions.json` | livrer un Blueprint à la place d'un autre |
+| Toute entrée a son fichier, tout fichier a son entrée | annoncer une URL qui ne répond pas |
+| La version est une chaîne numérique pointée | une comparaison que personne ne saurait faire de tête |
+
+Trois propriétés du script valent d'être connues avant de s'en servir :
+
+- **le manifeste est écrit en dernier**, après les fichiers qu'il désigne — l'inverse ferait pointer
+  une empreinte valide vers un fichier absent ;
+- **seuls les fichiers dont l'empreinte a changé sont téléversés**, en comparant au manifeste
+  réellement servi, pas à un état supposé ;
+- **rejoué à vide, il ne change rien** et le dit. C'est ce qui rend un manifeste périmé visible en une
+  commande. `--force` republie tout, `--dry-run` montre le plan sans rien toucher.
+
 ### Revenir en arrière
+
+Trois interrupteurs, et ils n'ont ni la même portée ni le même délai.
 
 | Geste | Qui | Effet |
 |---|---|---|
-| `disabled` sur une entrée du manifeste, ou entrée retirée | le publieur | l'embarqué reprend la main au rafraîchissement suivant |
-| Bouton « revenir à l'embarqué » du menu de développement | l'application | purge la surcouche tout de suite, sans réseau |
-| `disabled` à la racine du manifeste | le publieur | **tout** revient à l'embarqué |
+| `npm run blueprints:publish -- --desactiver <nom>` (ou `desactive` dans la table, puis republier) | le publieur | l'embarqué reprend la main sur ce Blueprint, au rafraîchissement suivant |
+| `npm run blueprints:publish -- --arret` | le publieur | **tout** revient à l'embarqué. Le geste inverse est une publication ordinaire |
+| Bouton « Embarqué » du menu de développement | l'application | purge la surcouche tout de suite, sans réseau. Non durable : un rafraîchissement peut la ramener |
+| `BLUEPRINTS_REMOTE=false` à la construction | l'application | la surcouche est ignorée durablement, **sans être détruite** |
+
+Une entrée simplement **retirée** du manifeste a le même effet qu'un `disabled` : le manifeste décrit
+l'état voulu, pas un différentiel, et l'interprétation la plus sûre d'un manifeste partiel est
+toujours le socle.
+
+Un mécanisme de déploiement sans mécanisme de retour arrière n'en est pas un — c'est ce qui rend
+acceptable qu'une correction publiée soit en production immédiatement, sans environnement de recette.
 
 ### Quand une correction « n'arrive pas »
 
-Les causes se ressemblent toutes vues de l'écran principal. L'écran de diagnostic du menu de
-développement répond en trois secondes : version pas strictement supérieure, empreinte fausse, entrée
-désactivée, moteur minimal trop élevé, document refusé à la validation, ou simplement pas encore
-rafraîchi.
+Les causes se ressemblent toutes vues de l'écran principal. Le panneau **Blueprints** du menu de
+développement ([`ModMenuBlueprints.tsx`](../src/shared/ui/ModMenuBlueprints.tsx), sept tapes sur le
+numéro de version dans À propos) répond en trois secondes : il donne, par Blueprint, sa version, son
+origine — embarqué ou distant — et la raison que le dernier rafraîchissement lui a attribuée.
+
+Il porte aussi un bouton **jouer**, et c'est ce qui rend le parcours de correction vérifiable de bout
+en bout : voir une ligne passer à « distant » prouve que le document publié est en place, le jouer
+prouve qu'il s'exécute. Le bouton n'apparaît que sur les Blueprints qui n'ont **rien à demander** —
+aucune entrée obligatoire sans valeur par défaut — et surtout **rien à engager** : un parcours
+déclarant des `secrets` n'est pas jouable depuis ce panneau, parce que vérifier une livraison ne
+justifie pas une tentative de connexion réelle sur le compte de l'utilisateur.
+
+![Le panneau de livraison : le rapport du dernier rafraîchissement, une ligne par Blueprint avec sa version, son origine et la raison retenue, et le résultat d'un run joué depuis le panneau](screenshots/modmenu-blueprints.png)
+
+L'état de repos est celui de la capture : le bucket sert exactement ce que le binaire embarque, donc
+chaque entrée est `ignored : version … is not newer than the bundled …`. C'est ce qu'on doit voir
+quand il n'y a **rien à corriger** — et non un panneau vide, qui ne dirait pas la différence avec un
+manifeste jamais lu.
 
 ## Ce qu'un Blueprint distant ne peut pas faire
 
@@ -202,9 +253,16 @@ et l'affirmer, pour qu'un décalage devienne un échec nommé au lieu d'une donn
 ## Vérifier
 
 ```bash
-npm test                    # le socle : resolution des secrets, registre, modele d'erreur
+npm test                    # le socle, et les gardes de la livraison
 npm run parity              # rejoue les Blueprints sous Node, compare aux services historiques
 ```
+
+Les neuf gardes du registre — empreinte fausse, fichier substitué après publication, version qui ne
+bat pas le socle, `min_engine` trop élevé, manifeste malformé, secret hors périmètre, document
+invalide, bucket injoignable, cache local corrompu — sont couvertes par
+[`delivery.test.ts`](../src/shared/aetherius/delivery.test.ts), qui les joue contre le **vrai**
+registre. Les vérifier sur un appareil demanderait de publier neuf manifestes cassés en production ;
+l'appareil garde ce qu'il est seul à pouvoir dire, à savoir que la correction arrive et se joue.
 
 La question n'est pas « est-ce que ça tourne » mais « est-ce que ça rend **la même chose** ». Puis le
 chemin dégradé, qui est celui qu'on ne teste jamais et qui décide de l'expérience réelle : mode
