@@ -38,9 +38,20 @@ async function runCase(file) {
 async function main() {
     const filter = process.argv[2];
     const files = discover(filter);
-    if (files.length === 0) {
-        console.error(filter ? `aucun cas nomme '${filter}'` : 'aucun cas de parite');
+
+    if (files.length === 0 && filter) {
+        // Un filtre qui ne designe rien est une faute de frappe : le taire ferait croire a un succes.
+        console.error(`aucun cas nomme '${filter}'`);
         process.exit(1);
+    }
+
+    if (files.length === 0) {
+        // Un harnais vide est un etat legitime entre deux jalons de migration : le premier cas est
+        // sorti avec la bascule des annonces sur la base (6-B), les suivants arrivent en 6-D. Sortir
+        // en erreur pour cette raison ferait d'une porte de qualite une porte qu'on apprend a
+        // ignorer, ce qui coute bien plus cher que la porte elle-meme.
+        console.log('  aucun cas de parite — aucune source n est en cours de migration');
+        process.exit(0);
     }
 
     let failed = 0;

@@ -74,7 +74,19 @@ spécification.
 
 | Cas | Source | Jalon |
 |---|---|---|
-| `annonces` | jsDelivr / `ukit-data` | [6-A](../../docs/phase-6/6-a-socle.md) |
+| *(aucun)* | — | — |
 
-Le harnais a été posé au jalon 6-A avec son premier cas, qui sert de gabarit aux suivants. Chaque
-jalon de migration ajoute les siens.
+**Le harnais est vide, et c'est un état légitime.** Il a été posé au jalon
+[6-A](../../docs/phase-6/6-a-socle.md) avec le cas `annonces`, qui a servi de gabarit ; ce cas est
+sorti au jalon [6-B](../../docs/phase-6/6-b-supabase.md) avec la bascule de la source vers la
+[base de publication](../../docs/backend.md) — il comparait le Blueprint à l'ancien chemin jsDelivr,
+et les deux ont quitté la production. Les prochains cas arrivent au jalon
+[6-D](../../docs/phase-6/6-d-campus.md).
+
+`npm run parity` sans cas **réussit** en le disant. Un harnais vide entre deux jalons de migration ne
+doit pas rougir une porte de qualité : une porte rouge pour une raison normale est une porte qu'on
+apprend à ignorer, ce qui coûte plus cher que la porte elle-même. Un filtre explicite qui ne désigne
+rien (`npm run parity -- typo`) reste un échec, parce que c'est une faute de frappe.
+
+Le gabarit d'un cas reste écrit ci-dessus : trois exports, `NAME`, `viaBlueprint()`, `viaLegacy()` et
+`project(item)`.

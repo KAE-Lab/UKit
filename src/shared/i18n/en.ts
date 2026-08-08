@@ -83,6 +83,8 @@ const en = {
 	OTHER: 'Other',
 	REMOVE_FILTER: 'Hold down the button of an UE to remove it from the filters.',
 	RESET: 'Reset',
+	// Bouton d'un ecran en echec, quand la famille est reessayable (shared/aetherius/failures.ts).
+	RETRY: 'Retry',
 	RESET_APP: 'Reset application',
 	RESET_APP_CONFIRMATION: 'Do you want to reset the application? You cannot undo this action.',
 	SAVE: 'Save',

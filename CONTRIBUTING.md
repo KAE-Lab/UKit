@@ -118,6 +118,14 @@ Une source distante est la surface la plus fragile du projet. Depuis la
 Ce qui descend dans un Blueprint et ce qui n'y descend jamais — le calcul, l'heure courante, la
 position, l'internationalisation — est écrit dans [docs/blueprints.md](docs/blueprints.md).
 
+**Une exception, et une seule : notre propre base.** Ce qui vient de la
+[base de publication](docs/backend.md) se lit avec son client, pas avec un Blueprint. Un Blueprint
+sert à parler à une source **tierce** dont on ne contrôle ni le format ni la disponibilité ; pour nos
+propres tables, l'indirection n'achèterait rien — le schéma et l'application changent dans le même
+commit — et coûterait un aller-retour de plus à chaque correction. La règle de couche ne change pas
+pour autant : la base se lit **depuis un service**, jamais depuis un composant, et par le client
+unique de `shared/supabase/`.
+
 ## Documentation
 
 La documentation évolue **avec** le code, dans le même changement — jamais « plus tard ». Un autre
@@ -164,9 +172,13 @@ npm test              # tests unitaires du socle Aetherius (voir docs/qualite.md
 npm run parity        # sources migrees vers un Blueprint (voir tools/parity/README.md)
 ```
 
-Les tests automatiques s'arrêtent au socle Aetherius et à la parité des sources migrées : il n'y a
-**aucun test d'écran ni de composant**, et la vérification manuelle sur l'application réelle reste la
-porte principale.
+Les tests automatiques couvrent ce qui porte de la logique UKit **et ne dépend d'aucune plateforme** :
+le socle Aetherius, la lecture de la base, et les projections de contrat. Il n'y a **aucun test
+d'écran ni de composant**, et la vérification manuelle sur l'application réelle reste la porte
+principale. Périmètre exact : [docs/qualite.md](docs/qualite.md#les-tests-unitaires).
+
+`npm run parity` **réussit sans aucun cas** : le harnais est légitimement vide entre deux jalons de
+migration.
 
 Pour les comportements dépendant de l'heure — notifications, salles libres, menus du jour, horaires —
 utiliser le menu flottant de simulation temporelle décrit dans [docs/qualite.md](docs/qualite.md)

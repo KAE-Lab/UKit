@@ -30,18 +30,35 @@ travaille dans un fichier concerné.
 
 ### Les tests unitaires
 
-Introduits par le jalon [6-A](phase-6/6-a-socle.md), et **bornés au socle Aetherius** :
-`npm test` joue [vitest](https://vitest.dev) sur les fichiers `*.test.ts` colocalisés de
-[`src/shared/aetherius/`](../src/shared/aetherius/). Ils doivent être verts.
+Introduits par le jalon [6-A](phase-6/6-a-socle.md) : `npm test` joue [vitest](https://vitest.dev)
+sur les fichiers `*.test.ts` colocalisés au module qu'ils couvrent. Ils doivent être verts.
 
-Ce qui y est couvert est ce qui porte de la logique UKit et rien d'autre : la projection des secrets
-du trousseau, la résolution du registre (dont « ne touche jamais au réseau » et « aucun Blueprint ne
-déclare un secret hors périmètre »), et la table du modèle d'erreur.
+Le critère n'est pas un dossier, c'est une propriété : **est testé ce qui porte de la logique UKit et
+ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
+[`src/shared/aetherius/`](../src/shared/aetherius/) ; le jalon [6-B](phase-6/6-b-supabase.md) l'a
+étendu, parce que la règle vaut mieux que le dossier.
 
-Ce qui n'y est **pas** : la façade et `runBlueprint`, qui importent React Native et ne sont pas
-jouables hors appareil — leur comportement appartient à la suite de tests du paquet, et la preuve de
-bout en bout est la parité. Aucun écran, aucun composant : le dépôt n'a pas de harnais de rendu, et
-ce jalon n'avait pas à en décider un.
+| Module | Ce qui est couvert |
+|---|---|
+| [`shared/aetherius/secrets.ts`](../src/shared/aetherius/secrets.ts) | la projection du trousseau vers les noms de secrets |
+| [`shared/aetherius/registry.ts`](../src/shared/aetherius/registry.ts) | la résolution, « ne touche jamais au réseau », le périmètre des secrets |
+| [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | la table du modèle d'erreur du moteur |
+| [`shared/supabase/failures.ts`](../src/shared/supabase/failures.ts) | la table d'erreurs de la base — dont « une clé fausse n'est pas `config` » |
+| [`features/Campus/services/BdeMapping.ts`](../src/features/Campus/services/BdeMapping.ts) | la projection des annonces et leur péremption |
+
+Ce dernier est le premier module **de feature** couvert, et il l'est pour une raison précise : c'est
+là qu'une erreur ne se voit pas. Un champ omis rend une fiche incomplète sans rien casser, et une
+date mal traitée fait disparaître du contenu publié — c'est arrivé, et le test existe parce que le
+correctif existe.
+
+Ce qui n'y est **pas** : les façades et les clients (`aetherius/client.ts`, `supabase/client.ts`,
+`runBlueprint`), qui importent React Native ou `expo-constants` et ne sont pas jouables hors
+appareil. C'est aussi ce qui explique la forme de ces modules — le code testable est systématiquement
+séparé du code de plateforme, et un fichier de test qui cesse de se lancer est le signal que la
+frontière a été franchie.
+
+Aucun écran, aucun composant : le dépôt n'a pas de harnais de rendu, et la vérification manuelle sur
+appareil reste la porte principale.
 
 > **Pourquoi vitest et non le lanceur de Node.** `package.json` n'a pas `"type": "module"` — et ne
 > peut pas l'avoir, `babel.config.js` et `commitlint.config.js` étant en CommonJS. Tout `.ts` est

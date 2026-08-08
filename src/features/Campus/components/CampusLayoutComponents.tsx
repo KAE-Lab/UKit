@@ -4,6 +4,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, AppThemeType } from '../../../shared/theme/Theme';
+import type { UkitFailure } from '../../../shared/aetherius';
 
 interface CampusSearchBarProps {
     searchText: string;
@@ -145,28 +146,76 @@ interface CampusListEmptyStateProps {
     emptyIcon: keyof typeof import('@expo/vector-icons').MaterialCommunityIcons.glyphMap;
     emptyMessage: string;
     theme: AppThemeType;
+    /**
+     * L'echec, quand il y en a un.
+     *
+     * Sa presence est ce qui distingue « la source est morte » de « il n'y a rien a afficher ». Les
+     * deux produisaient le meme ecran avant la Phase 6, et c'est exactement le defaut qu'elle
+     * supprime : une liste vide n'est pas une erreur, et une erreur n'est pas une liste vide.
+     */
+    failure?: UkitFailure;
+    onRetry?: () => void;
 }
 
-export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, theme }: CampusListEmptyStateProps) {
+/**
+ * L'etat vide d'une liste Campus, et son etat d'erreur.
+ *
+ * Le bouton Reessayer n'apparait que si la famille est reessayable : le proposer sur un echec que
+ * rejouer ne repare pas — une source qui a change de contrat — serait pire que de ne rien proposer.
+ * C'est la table de shared/aetherius/failures.ts qui decide, pas cet ecran.
+ */
+export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, theme, failure, onRetry }: CampusListEmptyStateProps) {
+    const enEchec = failure !== undefined && failure.silent !== true;
+
     return (
-        <View style={{ 
-            alignItems: 'center', 
-            paddingVertical: tokens.space.xl, 
+        <View style={{
+            alignItems: 'center',
+            paddingVertical: tokens.space.xl,
             paddingHorizontal: tokens.space.lg,
             marginHorizontal: tokens.space.sm,
-            backgroundColor: theme.cardBackground, 
-            borderRadius: tokens.radius.lg, 
-            borderWidth: 1, 
-            borderColor: theme.border 
+            backgroundColor: theme.cardBackground,
+            borderRadius: tokens.radius.lg,
+            borderWidth: 1,
+            borderColor: theme.border
         }}>
-            <MaterialCommunityIcons name={emptyIcon} size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.sm }} />
-            <Text style={{ 
-                color: theme.fontSecondary, 
+            <MaterialCommunityIcons
+                name={enEchec ? 'cloud-off-outline' : emptyIcon}
+                size={48}
+                color={theme.fontSecondary}
+                style={{ marginBottom: tokens.space.sm }}
+            />
+            <Text style={{
+                color: theme.fontSecondary,
                 fontSize: tokens.fontSize.md,
                 textAlign: 'center'
             }}>
-                {isFiltering ? Translator.get('NO_RESULTS_FOUND' as Parameters<typeof Translator.get>[0]) : emptyMessage}
+                {enEchec
+                    ? Translator.get(failure!.messageKey)
+                    : isFiltering ? Translator.get('NO_RESULTS_FOUND' as Parameters<typeof Translator.get>[0]) : emptyMessage}
             </Text>
+
+            {enEchec && failure!.retryable && onRetry ? (
+                <TouchableOpacity
+                    onPress={onRetry}
+                    activeOpacity={0.8}
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginTop: tokens.space.md,
+                        paddingVertical: tokens.space.sm,
+                        paddingHorizontal: tokens.space.lg,
+                        borderRadius: tokens.radius.md,
+                        backgroundColor: theme.primary,
+                    }}
+                >
+                    {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif des messages
+                        d'erreur (ScolariteLoginView), illisible sur le fond `primary` du bouton. */}
+                    <MaterialCommunityIcons name="refresh" size={18} color={theme.lightFont} />
+                    <Text style={{ color: theme.lightFont, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, marginLeft: tokens.space.xs }}>
+                        {Translator.get('RETRY')}
+                    </Text>
+                </TouchableOpacity>
+            ) : null}
         </View>
     );
 }

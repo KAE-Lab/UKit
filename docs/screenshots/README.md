@@ -109,6 +109,7 @@ peuvent attendre.
 |---|---|---|
 | `annonces-liste.png` | liste des annonces actives | essentielle |
 | `annonce-detail.png` | fiche d'une annonce avec bouton d'action | essentielle |
+| `annonces-erreur.png` | la liste en échec : service indisponible et bouton Réessayer — **déposée** (jalon 6-B) | essentielle |
 
 ### Scolarité — [features/scolarite.md](../features/scolarite.md)
 

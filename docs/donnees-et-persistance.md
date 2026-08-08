@@ -1,9 +1,9 @@
 # Données et persistance
 
-Tout l'état durable de UKit vit sur l'appareil : il n'y a **aucun serveur applicatif, aucun compte
-UKit, et rien de ce qui appartient à l'utilisateur n'est stocké ailleurs**. L'application lit des
-sources publiques ou universitaires ([sources-externes.md](sources-externes.md)) et conserve
-localement ce dont elle a besoin.
+Tout l'état durable de UKit vit sur l'appareil : il n'y a **aucun compte UKit, et rien de ce qui
+appartient à l'utilisateur n'est stocké ailleurs**. L'application lit des sources publiques ou
+universitaires ([sources-externes.md](sources-externes.md)) et conserve localement ce dont elle a
+besoin.
 
 La [base de publication](backend.md) introduite par la [Phase 6](phase-6/README.md) ne change pas
 cette phrase : elle porte ce que **l'équipe** publie — annonces, référentiels,
@@ -102,9 +102,37 @@ ou si l'appareil est hors ligne. Quand le cache est servi, un bandeau affiche la
 (`OFFLINE_DISPLAY_FROM_DATE`). Ce cache n'expire jamais et n'est jamais purgé : voir les limites.
 
 **3. Pas de cache — données temps réel.**
-Restaurants et menus CROUS, affluence et horaires des BU, annonces BDE, occupation des salles : ces
-données sont rechargées à chaque montage d'écran. Les mettre en cache n'aurait pas de sens (une
-affluence de bibliothèque périmée est pire qu'un chargement).
+Restaurants et menus CROUS, affluence et horaires des BU, annonces de vie étudiante, occupation des
+salles : ces données sont rechargées à chaque montage d'écran. Les mettre en cache n'aurait pas de
+sens (une affluence de bibliothèque périmée est pire qu'un chargement).
+
+Les annonces sont le cas limite de ce régime, et il vaut d'être dit : elles viennent désormais de
+notre [base de publication](backend.md), qui les sert en quelques kilo-octets et change quelques fois
+par mois. Un cache y aurait du sens — c'est ce qui leur permettrait de survivre hors ligne, et ce qui
+réduirait la bande passante quand le parc grandira. Il n'est pas fait, délibérément : le jalon 6-B a
+préféré rendre l'échec **visible** plutôt que de le masquer derrière une donnée d'hier. Le jour où il
+arrivera, le filtre d'expiration applicatif de
+[`BdeMapping`](../src/features/Campus/services/BdeMapping.ts) sera exactement ce qui empêchera
+d'afficher une annonce périmée sortie du cache — c'est pour ça qu'il est doublé avec la politique de
+lecture.
+
+### 4. Socle embarqué et surcouche distante — la donnée publiée
+
+Ce que l'équipe publie suit un régime à part, et c'est celui qui porte la promesse du
+[dos applicatif](backend.md) : **le binaire porte un socle, la base ne fait que le mettre à jour**.
+L'application doit démarrer et s'utiliser au premier lancement, hors ligne, sans avoir jamais joint
+quoi que ce soit.
+
+| Publication | Socle embarqué | Surcouche | Branchée |
+|---|---|---|---|
+| Blueprints | [`blueprints/`](../blueprints/) | bucket `blueprints` + manifeste | 6-C |
+| Référentiel des bâtiments | [`assets/locations.json`](../assets/locations.json) | table `batiments` | 6-D |
+| Établissements | l'établissement historique, en dur | table `etablissements` | 6-G |
+| Annonces de vie étudiante | *aucun* | table `annonces` | **6-B** |
+
+Les annonces sont l'exception, et volontairement : une annonce n'a pas de valeur par défaut
+raisonnable, et en figer une dans le binaire reviendrait à livrer un contenu éditorial périmé à
+chaque installation. Leur absence produit une section vide, pas une application cassée.
 
 ## Invalidation
 

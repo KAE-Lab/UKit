@@ -62,7 +62,10 @@ assets/
    consomme un hook ou un service du même dossier, jamais le service d'une autre feature.
 4. **Services distants** — la seule couche qui parle au réseau. Une feature ne fait jamais d'appel
    HTTP depuis un composant : tout passe par un service, ce qui rend la surface externe
-   inventoriable en un seul endroit ([sources-externes.md](sources-externes.md)).
+   inventoriable en un seul endroit ([sources-externes.md](sources-externes.md)). **La
+   [base de publication](backend.md) se lit avec la même règle** : depuis un service, jamais depuis
+   un composant, et par le client unique de [`shared/supabase/`](../src/shared/supabase/) — aucun
+   service ne construit le sien.
 5. **Le moteur** — [`shared/aetherius/`](../src/shared/aetherius/) : depuis la
    [Phase 6](phase-6/README.md), un service n'émet plus de requête lui-même. Il demande au registre
    le [Blueprint](blueprints.md) correspondant à l'appel, le fait jouer, et travaille la donnée
@@ -188,15 +191,18 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/aetherius/runBlueprint.ts`](../src/shared/aetherius/runBlueprint.ts) | l'appel type : résoudre, jouer, rendre des sorties ou un échec décrit |
 | [`shared/aetherius/index.ts`](../src/shared/aetherius/index.ts) | la porte d'entrée du socle : un service importe d'ici, jamais des paquets |
 | [`shared/aetherius/secrets.test.ts`](../src/shared/aetherius/secrets.test.ts) · [`registry.test.ts`](../src/shared/aetherius/registry.test.ts) · [`failures.test.ts`](../src/shared/aetherius/failures.test.ts) | les tests du socle, joués par `npm test` ([qualite.md](qualite.md)) |
-| [`shared/supabase/client.ts`](../src/shared/supabase/client.ts) | client anonyme de la base de publication ([backend.md](backend.md)) |
-| [`shared/supabase/types.ts`](../src/shared/supabase/types.ts) | types des tables, tels que la base les rend |
+| [`shared/supabase/client.ts`](../src/shared/supabase/client.ts) | client anonyme de la base de publication, construit au premier usage ([backend.md](backend.md)) |
+| [`shared/supabase/types.ts`](../src/shared/supabase/types.ts) | types des tables, tels que la base les rend, et le schéma en lecture seule |
+| [`shared/supabase/failures.ts`](../src/shared/supabase/failures.ts) | un échec de lecture traduit dans le même vocabulaire que ceux du moteur |
+| [`shared/supabase/index.ts`](../src/shared/supabase/index.ts) | la porte d'entrée de la base : un service importe d'ici |
+| [`shared/supabase/failures.test.ts`](../src/shared/supabase/failures.test.ts) | la table d'erreurs de la base, jouée par `npm test` |
 | [`shared/services/AppCore.tsx`](../src/shared/services/AppCore.tsx) | `AppContext`, `SettingsManager`, synchronisation calendrier, tâche de fond, utilitaires de lieux et de cours |
 | [`shared/services/NotificationService.ts`](../src/shared/services/NotificationService.ts) | planification des rappels de cours ([features/settings.md](features/settings.md)) |
 | [`shared/services/SecureStoreService.ts`](../src/shared/services/SecureStoreService.ts) | stockage chiffré des identifiants et des données étudiant |
 | [`shared/services/TimeMockService.ts`](../src/shared/services/TimeMockService.ts) | simulation temporelle pour la vérification manuelle ([qualite.md](qualite.md)) |
 | [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | tokens, thèmes clair et sombre, styles partagés ([theme.md](theme.md)) |
 | [`shared/i18n/Translator.ts`](../src/shared/i18n/Translator.ts) | service de traduction, langue courante, locale moment ([i18n.md](i18n.md)) |
-| [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 215 clés chacun |
+| [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 216 clés chacun |
 | [`shared/map/MapScreen.tsx`](../src/shared/map/MapScreen.tsx) | écran carte Leaflet ([cartographie.md](cartographie.md)) |
 | [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème), `Split` (séparateur), `UpdateAlert` (contrôle de version, non rendu) |
 | [`shared/ui/Button.tsx`](../src/shared/ui/Button.tsx) | boutons partagés : retour, accueil, tiroir, ligne de réglage |

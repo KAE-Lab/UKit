@@ -5,10 +5,14 @@ projet : ces sources appartiennent à des tiers, aucune n'offre de contrat versi
 sont consommées par extraction de page plutôt que par API. Ce document doit contenir assez de détail
 pour rejouer chaque appel sans lire le code.
 
-UKit **n'a pas de serveur applicatif** : il n'existe aucun intermédiaire entre l'application et ces
-sources. Voir [donnees-et-persistance.md](donnees-et-persistance.md) pour ce qui est conservé
-localement, et [backend.md](backend.md) pour la base de publication — qui porte notre contenu, et ne
-relaie aucune de ces sources.
+**Il n'existe aucun intermédiaire entre l'application et ces sources** : chacune est jointe
+directement depuis l'appareil. Voir [donnees-et-persistance.md](donnees-et-persistance.md) pour ce
+qui est conservé localement.
+
+Notre [base de publication](backend.md) n'est pas dans cet inventaire, et c'est délibéré : elle
+porte notre propre contenu, elle ne relaie aucune de ces sources, et rien de ce qui est écrit ici —
+fragilité, extraction, contrat non versionné — ne s'y applique. Ce document reste celui des sources
+**tierces**.
 
 > **Migration en cours.** La [Phase 6](phase-6/README.md) déplace la façon d'atteindre ces sources
 > depuis le code vers des [Blueprints](blueprints.md) : ce document reste **le** document à lire
@@ -24,7 +28,7 @@ relaie aucune de ces sources.
 | 2 | CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires | **élevée** — extraction de pages HTML |
 | 3 | Affluences | bibliothèques, affluence, horaires | aucune (en-têtes imités) | moyenne — API privée d'une application web |
 | 4 | Croustillant | restaurants CROUS et menus | aucune | faible — API publique documentée |
-| 5 | jsDelivr / `ukit-data` | annonces de vie étudiante, images | aucune | faible — dépôt maîtrisé par l'équipe |
+| 5 | ~~jsDelivr / `ukit-data`~~ | ~~annonces de vie étudiante~~ | — | **sortie de l'inventaire** — passée en base au jalon [6-B](phase-6/6-b-supabase.md) |
 | 6 | GitHub raw | fichier de version applicative | aucune | faible |
 | 7 | CDN de rendu de carte | tuiles OpenStreetMap, bibliothèque Leaflet | aucune | faible |
 
@@ -312,48 +316,33 @@ Traitement appliqué :
 
 Le site du fournisseur est crédité dans l'écran À propos (`URL.CROUSTILLANT_WEBSITE`).
 
-## 5. jsDelivr — données éditoriales
+## 5. jsDelivr — données éditoriales (sortie de l'inventaire)
 
-> **Migrée.** Cette source est portée par le Blueprint
-> [`ukit.campus.annonces`](../blueprints/ukit-campus-annonces.blueprint.json) depuis le jalon
-> [6-A](phase-6/6-a-socle.md). Le Blueprint porte l'URL, l'en-tête, le statut attendu, la sélection
-> des champs, le filtre `is_active` et une **assertion de forme** sur la présence du tableau.
-> Restent applicatifs, dans [`BdeService.ts`](../src/features/Campus/services/BdeService.ts) : la
-> projection sur le contrat ci-dessous, le filtre d'expiration (une extraction ne connaît pas
-> l'heure de l'appareil) et le repli sur l'ancien chemin, retiré en
-> [6-H](phase-6/6-h-livraison-finale.md).
+> **Cette source n'en est plus une.** Les annonces de vie étudiante sont lues dans la table
+> `annonces` de notre [base de publication](backend.md) depuis le jalon
+> [6-B](phase-6/6-b-supabase.md), et le dépôt `KAE-Lab/ukit-data` **cesse d'être écrit**. Le contrat,
+> la façon de publier et les chemins dégradés sont décrits dans
+> [features/campus-vie-etudiante.md](features/campus-vie-etudiante.md).
+>
+> La section est conservée parce que le dépôt n'est **pas supprimé** : il continue de servir les
+> visuels référencés par les versions de l'application déjà installées, qui ne se mettent pas à jour
+> toutes seules.
 
-Dépôt de données maîtrisé par l'équipe, servi par le CDN jsDelivr :
+Ce que le dépôt sert encore, et qui n'est plus lu par le code actuel :
 
 ```http
 GET https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/annonces.json
+GET https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/images/…
 ```
 
-L'URL vit désormais dans les `vars` du Blueprint, ce qui la rend corrigeable sans release — et
-permet aussi de la détourner pour éprouver les chemins dégradés.
+Le champ `image` de [`locations.json`](../assets/locations.json) pointe toujours vers ce dépôt : le
+fichier embarqué reste le socle hors ligne du référentiel des bâtiments, et il n'est repointé sur le
+bucket `media` qu'au jalon [6-D](phase-6/6-d-campus.md), avec la table qui le surcouche. Les copies
+des trois visuels sont déjà dans le bucket depuis 6-B.
 
-Contrat, dans [`BdeService.ts`](../src/features/Campus/services/BdeService.ts) :
-
-```ts
-interface BdeAnnonce {
-    id: string;
-    is_active: boolean;
-    expires_at: string;     // date ISO
-    title: string;
-    issuer_name: string;
-    image_url?: string;
-    info_label?: string;
-    long_desc?: string;
-    cta_text?: string;      // libellé du bouton d'action
-    cta_link?: string;      // URL ouverte au clic
-}
-```
-
-Filtrage côté application : `is_active` doit être vrai **et** `expires_at` postérieur à maintenant.
-Une annonce se retire donc sans publier de nouvelle version de l'application.
-
-Le même dépôt sert les visuels de bâtiments référencés dans
-[`locations.json`](../assets/locations.json) (champ `image`).
+Le Blueprint [`ukit.campus.annonces`](../blueprints/ukit-campus-annonces.blueprint.json), qui portait
+cette source au jalon [6-A](phase-6/6-a-socle.md), reste dans le dépôt comme témoin du format. Il
+n'est plus joué.
 
 ## 6. GitHub raw — version applicative
 
@@ -395,11 +384,14 @@ inattendue, contenu introuvable, identifiants manquants, échec nommé par le Bl
 vide redevient une liste vide. Le tableau ci-dessus rétrécit source par source, au rythme de la
 migration ([blueprints.md](blueprints.md#les-erreurs-cessent-dêtre-avalées)).
 
-**`BdeService` en est sorti** au jalon [6-A](phase-6/6-a-socle.md) : son échec est désormais rangé
-dans une famille et journalisé. Nuance à connaître tant que le repli existe : l'écran, lui, voit
-encore une liste vide, parce que le service retombe sur l'ancien chemin. La distinction est réelle
-et observable dans le journal ; elle atteindra l'interface quand l'écran sera branché sur le modèle
-d'erreur.
+**`BdeService` en est sorti pour de bon** au jalon [6-B](phase-6/6-b-supabase.md), et il sert de
+gabarit aux suivants. Son échec n'est plus seulement journalisé : il est **rendu** à l'appelant
+(`{ ok: false, failure }`), et l'écran de vie étudiante l'affiche — message de la famille, et bouton
+Réessayer quand réessayer peut réparer quelque chose. Le repli qui masquait tout a été retiré en même
+temps ; c'est lui qui rendait la distinction invisible.
+
+La forme du résultat est calquée sur `BlueprintRun` du socle, délibérément : qu'une donnée vienne
+d'un Blueprint ou d'une table, l'écran voit la même grammaire d'échec.
 
 ## Vérifier
 

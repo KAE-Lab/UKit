@@ -125,4 +125,10 @@ create table if not exists public.app_release (
 --   blueprints  les fichiers d'instructions et manifest.json  — lecture publique
 --   media       visuels des annonces et des batiments         — lecture publique
 --
--- Les deux se creent depuis la console ou la CLI ; leurs politiques sont dans policies.sql.
+-- Crees ici plutot que depuis la console : la regle de ce fichier vaut aussi pour eux, et un bucket
+-- cree a la main est un bucket qu'on ne saura pas recreer. `public` autorise la lecture par URL
+-- directe ; l'ecriture reste gouvernee par les politiques de policies.sql.
+insert into storage.buckets (id, name, public)
+values ('blueprints', 'blueprints', true),
+       ('media',      'media',      true)
+on conflict (id) do update set public = excluded.public;

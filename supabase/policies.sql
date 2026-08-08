@@ -15,6 +15,10 @@
 -- Le jour ou la partie sociale arrivera, elle ajoutera ses tables et ses politiques adossees a
 -- auth.uid(). Rien de ce qui est ecrit ici ne devra etre defait.
 --
+-- Chaque politique est precedee d'un `drop policy if exists` : Postgres n'a pas de
+-- `create policy if not exists`, et un fichier qu'on ne peut rejouer qu'une fois n'est pas
+-- reproductible — c'est precisement ce que ce dossier existe pour eviter.
+--
 -- Voir docs/backend.md.
 
 alter table public.annonces         enable row level security;
@@ -30,26 +34,31 @@ alter table public.app_release      enable row level security;
 
 -- Une annonce inactive ou expiree ne sort pas de la base. Elle n'est pas filtree cote application :
 -- ce qui n'a pas a etre lu n'est pas envoye.
+drop policy if exists "annonces publiees lisibles" on public.annonces;
 create policy "annonces publiees lisibles"
     on public.annonces for select
     to anon
     using (active and (expire_le is null or expire_le > now()));
 
+drop policy if exists "messages de service actifs lisibles" on public.service_messages;
 create policy "messages de service actifs lisibles"
     on public.service_messages for select
     to anon
     using (actif and (expire_le is null or expire_le > now()));
 
+drop policy if exists "batiments lisibles" on public.batiments;
 create policy "batiments lisibles"
     on public.batiments for select
     to anon
     using (true);
 
+drop policy if exists "etablissements actifs lisibles" on public.etablissements;
 create policy "etablissements actifs lisibles"
     on public.etablissements for select
     to anon
     using (actif);
 
+drop policy if exists "app_release lisible" on public.app_release;
 create policy "app_release lisible"
     on public.app_release for select
     to anon
@@ -82,11 +91,13 @@ create policy "app_release lisible"
 -- L'ecriture reste reservee a `service_role`. La cle qui la porte est la cle de la production : qui
 -- la detient peut publier un Blueprint que tous les appareils joueront.
 
+drop policy if exists "blueprints lisibles" on storage.objects;
 create policy "blueprints lisibles"
     on storage.objects for select
     to anon
     using (bucket_id = 'blueprints');
 
+drop policy if exists "media lisible" on storage.objects;
 create policy "media lisible"
     on storage.objects for select
     to anon

@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext } from 'react';
 import { View, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppContext } from '../../../shared/services/AppCore';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import BdeService, { BdeAnnonce } from '../services/BdeService';
+import type { BdeAnnonce } from '../services/BdeService';
+import { useBdeAnnonces } from '../hooks/useBdeAnnonces';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 import { CampusListLayout } from '../components/CampusListLayout';
@@ -20,22 +21,7 @@ function BdeScreen({ navigation, onAnimatedScroll }: BdeScreenProps) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
-    const [annonces, setAnnonces] = useState<BdeAnnonce[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-
-    useEffect(() => {
-        let mounted = true;
-        const loadData = async () => {
-            setLoading(true);
-            const data = await BdeService.fetchAnnonces();
-            if (!mounted) return;
-            setAnnonces(data);
-            setLoading(false);
-        };
-
-        loadData();
-        return () => { mounted = false; };
-    }, []);
+    const { annonces, failure, loading, retry } = useBdeAnnonces();
 
     const renderItem = ({ item }: { item: BdeAnnonce }) => (
         <CampusCard
@@ -71,6 +57,8 @@ function BdeScreen({ navigation, onAnimatedScroll }: BdeScreenProps) {
             
             emptyIcon="party-popper"
             emptyMessage={Translator.get('NO_RESULTS' as Parameters<typeof Translator.get>[0]) || 'Aucune annonce'}
+            failure={failure}
+            onRetry={retry}
         />
     );
 }

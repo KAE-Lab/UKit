@@ -7,6 +7,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { CampusSearchBar, CampusFilterModal, CampusListEmptyState } from './CampusLayoutComponents';
 import { useCampusListHeader } from './hooks/useCampusListHeader';
+import type { UkitFailure } from '../../../shared/aetherius';
 
 export interface FilterOption {
     id: string;
@@ -33,7 +34,12 @@ export interface CampusListLayoutProps<T> {
     // Empty State
     emptyIcon?: keyof typeof import('@expo/vector-icons').MaterialCommunityIcons.glyphMap;
     emptyMessage?: string;
-    
+
+    // Echec de la source. Absent, la liste se comporte exactement comme avant : les ecrans Campus
+    // qui n'y sont pas encore branches n'ont rien a changer.
+    failure?: UkitFailure;
+    onRetry?: () => void;
+
     // Navigation for setting header filter icon
     navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
 }
@@ -53,6 +59,8 @@ export function CampusListLayout<T>({
     onFilterChange,
     emptyIcon = 'layers-search',
     emptyMessage = 'Aucun résultat',
+    failure,
+    onRetry,
     navigation
 }: CampusListLayoutProps<T>) {
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
@@ -103,11 +111,13 @@ export function CampusListLayout<T>({
                     }}
                     renderItem={renderItem as any}
                     ListEmptyComponent={() => (
-                        <CampusListEmptyState 
-                            isFiltering={isFiltering} 
-                            emptyIcon={emptyIcon} 
-                            emptyMessage={emptyMessage} 
-                            theme={theme} 
+                        <CampusListEmptyState
+                            isFiltering={isFiltering}
+                            emptyIcon={emptyIcon}
+                            emptyMessage={emptyMessage}
+                            theme={theme}
+                            failure={failure}
+                            onRetry={onRetry}
                         />
                     )}
                 />

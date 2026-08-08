@@ -1,137 +1,89 @@
 /**
- * Les annonces de vie etudiante.
+ * Les annonces de vie etudiante, lues dans la base de publication.
  *
- * Premiere source migree vers un Blueprint (jalon 6-A) : la plus simple du lot — un fichier
- * statique, une requete, un filtre declaratif — donc celle dont l'echec ne peut venir que du socle.
+ * Premiere fonctionnalite alimentee par la base (jalon 6-B). Elle etait, au jalon 6-A, la premiere
+ * source migree vers un Blueprint : le fichier reste dans blueprints/ comme temoin du format, mais il
+ * n'est plus le chemin de production. **Ce qui vient de notre base se lit avec le client de notre
+ * base** — un Blueprint sert a parler a une source *tierce* dont on ne controle ni le format ni la
+ * disponibilite, et pour notre propre table l'indirection n'acheterait rien.
  *
- * La signature ne bouge pas : les ecrans ne savent pas ce qui se passe derriere, et c'est ce qui
- * garde la migration reversible. L'ancien chemin reste en repli jusqu'a ce que la parite soit verte
- * sur des donnees reelles ; il sort au jalon 6-H, pas avant et pas plus tard.
+ * Le repli sur jsDelivr est parti avec la bascule, et c'est une decision : le depot `ukit-data` cesse
+ * d'etre ecrit, donc un repli servirait du contenu perime — et surtout il masquait toute panne, ce
+ * qui rendait « la source est morte » et « il n'y a rien a afficher » indistinguables a l'ecran. La
+ * parite du cas annonces est retiree du harnais en meme temps.
  *
- * Voir docs/features/campus-vie-etudiante.md et docs/phase-6/6-a-socle.md.
+ * Voir docs/features/campus-vie-etudiante.md et docs/phase-6/6-b-supabase.md.
  */
 
-import { BLUEPRINT, reportFailure, runBlueprint, ukitFailure } from '../../../shared/aetherius';
+import {
+    baseNonConfiguree,
+    describeSupabaseFailure,
+    getSupabase,
+    reportSupabaseFailure,
+} from '../../../shared/supabase';
+import type { UkitFailure } from '../../../shared/aetherius';
+import { estValide, projeterAnnonce, type BdeAnnonce } from './BdeMapping';
 
-export interface BdeAnnonce {
-    id: string;
-    is_active: boolean;
-    expires_at: string;
-    title: string;
-    issuer_name: string;
-    image_url?: string;
-    info_label?: string;
-    long_desc?: string;
-    cta_text?: string;
-    cta_link?: string;
-}
+export type { BdeAnnonce } from './BdeMapping';
 
-/** Une annonce telle que le Blueprint la rend : champs nommes en francais, `is_active` deja filtre. */
-interface AnnoncePubliee {
-    id?: unknown;
-    titre?: unknown;
-    emetteur?: unknown;
-    expire_le?: unknown;
-    accroche?: unknown;
-    desc_longue?: unknown;
-    image?: unknown;
-    cta_texte?: unknown;
-    cta_lien?: unknown;
-}
+const TABLE = 'annonces';
 
-/** Une extraction qui ne trouve pas un champ rend `null` ; le contrat applicatif, lui, l'omet. */
-function texte(value: unknown): string | undefined {
-    return typeof value === 'string' && value !== '' ? value : undefined;
-}
+/** Les colonnes que les ecrans lisent, nommees plutot que `*` : le schema peut grossir sans cout. */
+const COLONNES = 'id,titre,emetteur,accroche,description,image_url,cta_texte,cta_lien,publiee_le,expire_le,active,creee_le';
 
 /**
- * Projette une annonce publiee sur le contrat applicatif.
+ * Ce qu'un ecran recoit : une liste, ou un echec deja traduit.
  *
- * `is_active` est vrai par construction : le predicat `where` du Blueprint ne laisse passer que les
- * annonces actives. Le champ reste dans le contrat parce que les ecrans le lisent, et le mentir
- * serait pire que le calculer.
+ * Forme calquee sur `BlueprintRun` du socle Aetherius — meme union discriminee, meme `UkitFailure`.
+ * Une seule grammaire d'echec dans l'application, quel que soit ce qui a echoue.
+ *
+ * **Se teste avec `resultat.ok === false`, jamais avec `!resultat.ok`** : sans `strictNullChecks`,
+ * TypeScript ne restreint pas une union sur la simple veracite du discriminant. Voir
+ * shared/aetherius/runBlueprint.ts.
  */
-function projeter(item: AnnoncePubliee): BdeAnnonce {
-    return {
-        id: String(item.id ?? ''),
-        is_active: true,
-        expires_at: typeof item.expire_le === 'string' ? item.expire_le : '',
-        title: texte(item.titre) ?? '',
-        issuer_name: texte(item.emetteur) ?? '',
-        image_url: texte(item.image),
-        info_label: texte(item.accroche),
-        long_desc: texte(item.desc_longue),
-        cta_text: texte(item.cta_texte),
-        cta_link: texte(item.cta_lien),
-    };
-}
+export type BdeAnnoncesResult =
+    | { readonly ok: true; readonly annonces: BdeAnnonce[] }
+    | { readonly ok: false; readonly failure: UkitFailure };
 
-/**
- * La peremption est appliquee **ici**, jamais dans le Blueprint.
- *
- * Un predicat d'extraction ne connait que son element, jamais l'heure de l'appareil. Ce n'est pas un
- * manque : la meme donnee peut ainsi etre affichee grisee plutot que masquee, ce qu'un filtre cote
- * extraction interdirait.
- */
-function estValide(annonce: BdeAnnonce, now: Date): boolean {
-    return new Date(annonce.expires_at) > now;
-}
-
-/**
- * Le chemin historique, conserve **tel quel** en repli — URL en dur comprise.
- *
- * Le centraliser dans `constants/urls.ts` etalerait sur deux fichiers du code qui doit disparaitre
- * d'un bloc ; l'URL vit desormais dans les `vars` du Blueprint, qui est son bon endroit.
- *
- * TODO(6-H) : retirer cette fonction et son appel.
- */
-async function legacyFetchAnnonces(): Promise<BdeAnnonce[]> {
-    try {
-        const response = await fetch('https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/annonces.json');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-
-        const now = new Date();
-
-        if (data && data.annonces) {
-            return data.annonces.filter((item: BdeAnnonce) => {
-                if (!item.is_active) return false;
-                const expiresAt = new Date(item.expires_at);
-                return expiresAt > now;
-            });
-        }
-        return [];
-    } catch (error) {
-        console.error('Error fetching annonces:', error);
-        return [];
-    }
+function echec(failure: UkitFailure): BdeAnnoncesResult {
+    reportSupabaseFailure(TABLE, failure);
+    return { ok: false, failure };
 }
 
 const BdeService = {
-    fetchAnnonces: async (): Promise<BdeAnnonce[]> => {
-        const run = await runBlueprint(BLUEPRINT.CAMPUS_ANNONCES);
-
-        // `=== false` et non `!run.ok` : sans `strictNullChecks`, la seconde forme ne restreint pas
-        // l'union. Voir runBlueprint.ts.
-        if (run.ok === false) {
-            reportFailure(BLUEPRINT.CAMPUS_ANNONCES, run.failure);
-            return legacyFetchAnnonces();
+    /**
+     * Les annonces publiees, les plus recentes d'abord.
+     *
+     * Le tri est explicite : une table n'a pas d'ordre, et s'en remettre a celui que la base rend
+     * ferait varier l'affichage sans raison. `id` departage a horodatage egal, pour que deux lectures
+     * successives donnent la meme liste.
+     *
+     * La peremption est filtree deux fois — par la politique de lecture, qui protege la donnee, et
+     * par `estValide`, qui protegera l'affichage le jour ou la donnee viendra d'un cache local.
+     */
+    fetchAnnonces: async (): Promise<BdeAnnoncesResult> => {
+        const supabase = getSupabase();
+        if (supabase === null) {
+            return echec(baseNonConfiguree());
         }
 
-        const publiees = run.outputs.annonces;
-        if (!Array.isArray(publiees)) {
-            // Le moteur rend toujours une liste pour une extraction JSON ; si ce n'est pas le cas,
-            // c'est le Blueprint qui a change de forme, pas la source. On le dit plutot que de
-            // rendre une liste vide qui passerait pour une absence d'annonces.
-            const echec = ukitFailure('blueprint', "la sortie 'annonces' n'est pas une liste");
-            reportFailure(BLUEPRINT.CAMPUS_ANNONCES, echec);
-            return legacyFetchAnnonces();
+        const { data, error } = await supabase
+            .from(TABLE)
+            .select(COLONNES)
+            .order('publiee_le', { ascending: false })
+            .order('id', { ascending: true });
+
+        if (error) {
+            return echec(describeSupabaseFailure(error));
         }
 
+        // Une liste vide est un resultat, pas un echec : la base a bien repondu, elle n'a rien a
+        // publier aujourd'hui. C'est la distinction que toute la Phase 6 existe pour rendre visible.
         const now = new Date();
-        return publiees.map(projeter).filter((annonce) => estValide(annonce, now));
+        return {
+            ok: true,
+            annonces: (data ?? []).map(projeterAnnonce).filter((annonce) => estValide(annonce, now)),
+        };
     },
 };
 

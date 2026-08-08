@@ -31,12 +31,18 @@ Trois principes portent le projet :
 
 - **Souveraineté.** Aucune dépendance à un service propriétaire payant. Les cartes sont rendues par
   Leaflet sur des données OpenStreetMap, jamais par un fournisseur qui trace l'utilisateur.
-- **Rien ne transite.** Aucun compte UKit, aucun intermédiaire : l'application interroge les sources
-  **directement depuis l'appareil**, avec la connexion de l'utilisateur, et conserve tout localement.
-  Ce qui relève du compte universitaire est chiffré par le trousseau de l'appareil et ne le quitte
-  jamais — c'est d'ailleurs la raison pour laquelle le moteur d'automatisation est *embarqué* plutôt
-  qu'hébergé. UKit publie du contenu (annonces, référentiels, fichiers d'instructions) sur une base
-  distante, et fonctionne sans jamais la joindre : c'est un point de publication, pas une dorsale.
+- **Rien de vous ne transite.** Aucun compte UKit n'est requis, aucune donnée personnelle ne quitte
+  l'appareil : l'application interroge les sources **directement depuis l'appareil**, avec la
+  connexion de l'utilisateur, et conserve tout localement. Ce qui relève du compte universitaire est
+  chiffré par le trousseau de l'appareil et ne le quitte jamais — c'est d'ailleurs la raison pour
+  laquelle le moteur d'automatisation est *embarqué* plutôt qu'hébergé.
+
+  UKit a bien une base distante, et il faut dire laquelle : elle porte **ce que nous publions** —
+  annonces, référentiels, fichiers d'instructions — jamais ce qui appartient à l'utilisateur. Les
+  requêtes qui l'atteignent sont anonymes et en lecture seule, et l'application **fonctionne sans
+  jamais la joindre** : tout ce qu'elle publie existe déjà dans le binaire, et n'y est que mis à
+  jour. C'est un point de publication, pas une dorsale.
+  → [docs/backend.md](docs/backend.md)
 - **Un socle lisible.** Découpage par domaine de navigation, TypeScript partout, tokens de design,
   aucune chaîne en dur : le code doit pouvoir être repris sans contexte oral.
 - **Le comportement est de la donnée.** Ce qu'il faut demander à une source, et ce qu'il faut en
@@ -77,7 +83,8 @@ thème, la langue et le premier groupe favori.
 
 ## Les sources de données
 
-Toutes les données proviennent de systèmes tiers, interrogés directement par l'application.
+Les données universitaires proviennent de systèmes **tiers**, interrogés directement par
+l'application — sans intermédiaire.
 
 | Source | Ce qu'elle fournit | Accès |
 |---|---|---|
@@ -85,17 +92,18 @@ Toutes les données proviennent de systèmes tiers, interrogés directement par 
 | CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires, extraction de pages |
 | Affluences | bibliothèques, affluence temps réel, horaires | API privée |
 | Croustillant | restaurants CROUS et menus | API publique |
-| jsDelivr / `ukit-data` | annonces de vie étudiante, visuels | fichier JSON sur CDN |
 | OpenStreetMap / CartoDB | fonds de carte | tuiles publiques |
 
 Endpoints, charges utiles, transformations et fragilités connues sont détaillés dans
 **[docs/sources-externes.md](docs/sources-externes.md)** — le document à lire avant toute
 intervention touchant au réseau.
 
-À cela s'ajoute, depuis la [Phase 6](docs/phase-6/README.md), une **base de publication** (Supabase)
-qui porte ce que l'équipe publie : les [Blueprints](docs/blueprints.md), les annonces, le référentiel
-des bâtiments et le catalogue des établissements. Elle ne relaie aucune source et ne voit passer
-aucune donnée personnelle ; l'application fonctionne sans elle, sur son socle embarqué.
+À côté de ces sources tierces, et à ne pas confondre avec elles, UKit a sa propre **base de
+publication** (Supabase) : elle porte ce que l'équipe publie — les [Blueprints](docs/blueprints.md),
+les annonces de vie étudiante, le référentiel des bâtiments, le catalogue des établissements. Elle ne
+relaie aucune de ces sources et ne voit passer aucune donnée personnelle ; l'application fonctionne
+sans elle, sur son socle embarqué. Les annonces y sont lues depuis le jalon 6-B ; le dépôt
+`ukit-data` qui les servait par jsDelivr cesse d'être écrit.
 → [docs/backend.md](docs/backend.md)
 
 <p align="center"><sub>· · ·</sub></p>
@@ -188,7 +196,7 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Thème** — tokens de design (espacements, rayons, typographie, ombres), thèmes clair et sombre
   complets, alignement sur la préférence système au premier lancement.
   [docs/theme.md](docs/theme.md)
-- [x] **Internationalisation** — français, anglais, espagnol ; 215 clés par dictionnaire, typage de
+- [x] **Internationalisation** — français, anglais, espagnol ; 216 clés par dictionnaire, typage de
   la clé, locale des dates alignée. Treize libellés d'écrans Campus restent non traduits.
   [docs/i18n.md](docs/i18n.md)
 - [x] **Persistance locale** — managers observables, caches à expiration pour les listes de
@@ -204,9 +212,13 @@ livré ; elle est mise à jour à chaque contribution.
   continue ne joue toujours que la publication. [docs/qualite.md](docs/qualite.md)
 - [ ] **Le comportement en données** — l'accès aux sources migre vers des
   [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
-  et corrigeables sans release. Le socle est en place et **une première source y passe** (les
-  annonces de vie étudiante) ; les six autres suivent, jalon par jalon :
-  [docs/phase-6/README.md](docs/phase-6/README.md).
+  et corrigeables sans release. Le socle est en place (6-A) et **la base de publication existe**
+  (6-B) : son schéma et ses politiques vivent dans [`supabase/`](supabase/), les annonces de vie
+  étudiante y sont lues, et l'échec d'une source atteint enfin un écran. Les sources universitaires
+  suivent, jalon par jalon : [docs/phase-6/README.md](docs/phase-6/README.md).
+- [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
+  les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
+  et l'application démarre et s'utilise sans jamais la joindre. [docs/backend.md](docs/backend.md)
 
 ### Fonctionnalités
 
@@ -225,8 +237,9 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Campus — salles libres** — reconstruction des bâtiments depuis les salles Celcat, croisement
   avec les horaires d'ouverture, créneaux libres par heure. Un seul bâtiment est déclaré en accès
   libre à ce jour. [docs/features/campus-salles-libres.md](docs/features/campus-salles-libres.md)
-- [x] **Campus — vie étudiante** — annonces éditoriales publiées sans mise à jour de l'application,
-  avec activation et expiration. Première source jouée par un [Blueprint](docs/blueprints.md).
+- [x] **Campus — vie étudiante** — annonces éditoriales publiées depuis la
+  [base](docs/backend.md) sans mise à jour de l'application, avec activation et expiration. Premier
+  écran où une panne de la source **se dit** au lieu d'afficher une liste vide.
   [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
 - [x] **Scolarité** — connexion CAS, récupération de l'identité au premier login puis rafraîchissement
   léger, compteur de messages non lus, verrou biométrique, navigateur intégré avec remplissage

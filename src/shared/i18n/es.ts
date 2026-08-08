@@ -87,6 +87,8 @@ const es: TranslationDict = {
 	OTHER: 'Otro',
 	REMOVE_FILTER: 'Manten sujetado el botón de una UE para eliminarla de los filtros.',
 	RESET: 'Reiniciar',
+	// Bouton d'un ecran en echec, quand la famille est reessayable (shared/aetherius/failures.ts).
+	RETRY: 'Reintentar',
 	RESET_APP: 'Reiniciar la aplicación',
 	RESET_APP_CONFIRMATION: '¿Quieres reiniciar la aplicación? No podrás volver atrás.',
 	SAVE: 'Guardar',

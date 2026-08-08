@@ -6,9 +6,11 @@
  * quelle source distante. Confondre les deux ferait remonter la forme du schema jusqu'aux
  * composants, et rendrait toute evolution de table visible a l'ecran.
  *
- * TODO(6-B) : generer ce fichier depuis le schema plutot que l'ecrire
- * (`supabase gen types typescript`), et le regenerer a chaque migration. Les formes ci-dessous sont
- * celles de supabase/schema.sql ; elles servent a ecrire les services avant que le projet existe.
+ * **Ecrits a la main, et c'est une decision.** Le TODO du jalon 6-A prevoyait de les generer par
+ * `supabase gen types typescript` ; la CLI Supabase est une dependance permanente pour six tables
+ * que nous ecrivons nous-memes, dans le meme depot, revues dans le meme commit que le schema. La
+ * commande reste notee dans supabase/README.md pour verifier ponctuellement l'accord des deux apres
+ * une migration.
  *
  * Voir docs/backend.md.
  */
@@ -26,6 +28,7 @@ export interface AnnonceRow {
     readonly publiee_le: string;
     readonly expire_le: string | null;
     readonly active: boolean;
+    readonly creee_le: string;
 }
 
 /**
@@ -91,4 +94,43 @@ export interface BlueprintRow {
     readonly min_engine: string | null;
     readonly desactive: boolean;
     readonly publie_le: string;
+}
+
+/**
+ * Une table, vue par une application qui ne fait que lire.
+ *
+ * `Insert` et `Update` a `never` n'est pas un raccourci : c'est la meme frontiere que les politiques,
+ * exprimee au compilateur. `supabase.from(...).insert(...)` ne compile pas, et l'ecriture reste ce
+ * qu'elle doit etre — le script de publication et la console d'administration, avec la cle secrete.
+ * Les inventer donnerait l'illusion d'une capacite que la base refuse de toute facon.
+ */
+interface TableEnLecture<Row> {
+    Row: Row;
+    Insert: never;
+    Update: never;
+    Relationships: [];
+}
+
+/**
+ * Le schema, tel que le client le connait.
+ *
+ * Toutes les tables y figurent, y compris celles qu'aucun service ne lit encore : `blueprints` est
+ * branchee au jalon 6-C, `batiments` au 6-D, `etablissements` au 6-G. Les declarer maintenant coute
+ * six lignes et evite que le premier appelant ait a decider seul de leur forme.
+ */
+export interface Database {
+    public: {
+        Tables: {
+            annonces: TableEnLecture<AnnonceRow>;
+            batiments: TableEnLecture<BatimentRow>;
+            etablissements: TableEnLecture<EtablissementRow>;
+            app_release: TableEnLecture<AppReleaseRow>;
+            service_messages: TableEnLecture<ServiceMessageRow>;
+            blueprints: TableEnLecture<BlueprintRow>;
+        };
+        Views: Record<string, never>;
+        Functions: Record<string, never>;
+        Enums: Record<string, never>;
+        CompositeTypes: Record<string, never>;
+    };
 }

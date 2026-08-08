@@ -15,6 +15,25 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **La base de publication, et les annonces qui y passent** (jalon
+  [6-B](docs/phase-6/6-b-supabase.md)). UKit a désormais un dos : un projet Supabase mince, dont le
+  schéma et les politiques d'accès vivent dans [`supabase/`](supabase/) et s'appliquent depuis ces
+  fichiers. Les annonces de vie étudiante y sont lues, visuels compris ; le dépôt `ukit-data` servi
+  par jsDelivr cesse d'être écrit, et son repli est retiré. Le référentiel des 73 bâtiments y est
+  migré mais pas encore lu — c'est le jalon 6-D qui le branchera.
+
+  Ce que la base **ne** change **pas** mérite d'être dit aussi clairement : aucun compte n'est
+  requis, aucune donnée personnelle ne la traverse, et l'application démarre et s'utilise
+  entièrement sans jamais la joindre. C'est un point de publication, pas un intermédiaire — le
+  [README](README.md) et [PRIVACY](PRIVACY.md) sont reformulés dans ce sens.
+
+  Et le gain visible, enfin : **le modèle d'erreur atteint son premier écran**. Une panne de la
+  source affiche « Service indisponible » et un bouton Réessayer, là où elle produisait une liste
+  vide indistinguable d'une absence d'annonces ; le carrousel du tableau de bord ne disparaît plus
+  en silence. Le bouton n'apparaît que si réessayer peut réparer quelque chose. Au passage, une
+  annonce sans date d'expiration ne disparaît plus de l'écran — la base la publie, le code la
+  masquait.
+
 - **Le socle du moteur Aetherius et la première source migrée** (jalon
   [6-A](docs/phase-6/6-a-socle.md)). L'application embarque `@aetherius/engine` et
   `@aetherius/react-native`, sait jouer un [Blueprint](docs/blueprints.md) depuis n'importe quel
@@ -50,8 +69,9 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   [docs/features/campus-salles-libres.md](docs/features/campus-salles-libres.md)
 - **Recherche et filtres** sur les listes de restaurants et de bibliothèques, avec persistance du
   filtre choisi, propagée aux sections du tableau de bord.
-- **Annonces de vie étudiante** — contenu éditorial servi depuis le dépôt `ukit-data` via jsDelivr,
-  publiable sans mise à jour de l'application, avec activation et date d'expiration.
+- **Annonces de vie étudiante** — contenu éditorial publiable sans mise à jour de l'application, avec
+  activation et date d'expiration. Servi à l'origine depuis le dépôt `ukit-data` via jsDelivr, puis
+  depuis la [base de publication](docs/backend.md) au jalon 6-B.
   [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
 - **Onglet Scolarité** — connexion au compte universitaire par CAS dans une WebView invisible,
   récupération de l'identité de l'étudiant au premier login puis rafraîchissement léger de la

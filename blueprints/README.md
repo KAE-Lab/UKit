@@ -29,7 +29,7 @@ Ils sont un point de départ démontré, pas le jeu final :
 
 | Fichier repris | Ce qu'il deviendra | Jalon |
 |---|---|---|
-| `ukit-campus-annonces` | **branché** ; conservé comme témoin — la source réelle passe en base | [6-A](../docs/phase-6/6-a-socle.md), [6-B](../docs/phase-6/6-b-supabase.md) |
+| `ukit-campus-annonces` | **plus joué** ; conservé comme témoin du format — la source est passée en base | [6-A](../docs/phase-6/6-a-socle.md), [6-B](../docs/phase-6/6-b-supabase.md) |
 | `ukit-campus-restaurants` | découpé en `restaurants` et `restaurant-menu` | [6-D](../docs/phase-6/6-d-campus.md) |
 | `ukit-campus-affluence` | découpé en `bibliotheques`, `bibliotheque-affluence`, `bibliotheque-horaires` | [6-D](../docs/phase-6/6-d-campus.md) |
 | `ukit-celcat-semaine` | découpé en `groupes`, `jour`, `semaine`, `annee`, `salles`, `occupation` | [6-E](../docs/phase-6/6-e-planning.md) |

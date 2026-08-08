@@ -8,14 +8,14 @@ L'application ne collecte, ne stocke, ni ne transmet aucune donnée personnelle 
 **2. Utilisation du Calendrier de l'appareil (Autorisations iOS / Android)**
 *   **Pourquoi nous le demandons :** UKit Bordeaux propose une fonctionnalité optionnelle permettant de synchroniser votre emploi du temps universitaire (ex: "Cours de Mathématiques à 8h00") directement avec le calendrier personnel de votre appareil.
 *   **Utilisation des données :** L'application a besoin de lire la liste de vos calendriers existants afin que vous puissiez choisir le calendrier de destination via les Paramètres. Ensuite, elle écrit les événements de cours dans ce calendrier précis. 
-*   **Confidentialité garantie :** Toutes les opérations de lecture et d'écriture du calendrier sont effectuées **exclusivement en local sur votre appareil**. Aucune donnée de votre calendrier personnel n'est envoyée vers les serveurs de UKit, KAE Lab, ou tout autre serveur tiers.
+*   **Confidentialité garantie :** Toutes les opérations de lecture et d'écriture du calendrier sont effectuées **exclusivement en local sur votre appareil**. Aucune donnée de votre calendrier personnel n'est envoyée vers notre base de publication (voir le point 5), vers KAE Lab, ou vers un quelconque serveur tiers.
 
 **3. Géolocalisation**
 *   **Pourquoi nous la demandons :** Votre position géographique (si vous l'autorisez) est utilisée uniquement pour calculer la distance entre vous et les restaurants universitaires (CROUS) ou les bibliothèques (BU) les plus proches. 
 *   **Confidentialité garantie :** Cette donnée est traitée instantanément et localement sur l'appareil. Nous ne conservons aucun historique de position et vos coordonnées GPS ne quittent jamais votre téléphone.
 
 **4. Sauvegarde locale des préférences (App Storage)**
-UKit mémorise vos choix (langue préférée, favoris de groupes de TD/TP, identifiant du calendrier sélectionné pour la synchronisation, etc.) pour améliorer votre expérience utilisateur. Ces préférences sont stockées de manière robuste via votre système d'exploitation avec l'outil de mémoire locale et ne sont jamais téléversées sur nos serveurs.
+UKit mémorise vos choix (langue préférée, favoris de groupes de TD/TP, identifiant du calendrier sélectionné pour la synchronisation, etc.) pour améliorer votre expérience utilisateur. Ces préférences sont stockées de manière robuste via votre système d'exploitation avec l'outil de mémoire locale et ne sont jamais téléversées : notre base de publication (point 5) ne reçoit **aucune** écriture de l'application, par construction.
 
 **5. Appels réseau et services tiers**
 Afin de vous fournir des informations actualisées, UKit Bordeaux effectue des requêtes anonymisées vers les services suivants :
@@ -25,12 +25,12 @@ Afin de vous fournir des informations actualisées, UKit Bordeaux effectue des r
 *   **OpenStreetMap :** Utilisé pour afficher le fond de carte concernant la localisation des campus universitaires. 
 *   **Base de publication UKit :** Pour récupérer le contenu que nous publions — annonces de vie étudiante, référentiel des bâtiments, catalogue des établissements, et les fichiers d'instructions qui décrivent comment interroger les sources ci-dessus. Ces requêtes sont **en lecture seule et anonymes** : elles ne portent ni identifiant d'appareil, ni compte, ni donnée vous concernant, et rien ne nous est envoyé. L'application fonctionne sans cette base : tout ce qu'elle publie existe déjà dans l'application installée, et n'y est que mis à jour.
 
-**Vos identifiants universitaires :** ils sont chiffrés par le trousseau de votre système d'exploitation, ne sont envoyés **qu'au service d'authentification de votre université**, et ne transitent par aucun serveur — ni le nôtre, ni celui d'un tiers. C'est la raison pour laquelle l'application se connecte directement depuis votre appareil plutôt que de déléguer cette connexion à un service distant.
+**Vos identifiants universitaires :** ils sont chiffrés par le trousseau de votre système d'exploitation, ne sont envoyés **qu'au service d'authentification de votre université**, et ne transitent par aucun intermédiaire — ni notre base de publication, ni un service tiers. C'est la raison pour laquelle l'application se connecte directement depuis votre appareil plutôt que de déléguer cette connexion à un service distant.
 
 **Diagnostic et suivi de bugs :** Aucun outil de suivi (tracking), d'analyse de comportement, ou de diagnostic de crash (comme Sentry ou Firebase Analytics) n'est actif dans le code source de l'application, assurant un total anonymat lors de l'utilisation.
 
 **6. Conservation des données**
-Puisqu'aucune donnée de télémétrie ou de profil n'est collectée, aucune information n'est conservée par nos services après utilisation de l'application.
+Puisqu'aucune donnée de télémétrie ou de profil n'est collectée, aucune information vous concernant n'est conservée après utilisation de l'application. Notre base de publication ne porte que du contenu que **nous** publions, et n'a aucune table où une donnée d'utilisateur pourrait être écrite.
 
 **7. Contact**
 Pour toute question relative à cette politique de confidentialité ou au fonctionnement de notre code open-source, vous pouvez nous contacter à l'adresse : **contact@kaelab.dev** ou consulter le code source sur notre GitHub public.
