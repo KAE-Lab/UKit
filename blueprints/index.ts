@@ -26,8 +26,8 @@ import celcatJour from './ukit-celcat-jour.blueprint.json';
 import celcatOccupation from './ukit-celcat-occupation.blueprint.json';
 import celcatSalles from './ukit-celcat-salles.blueprint.json';
 import celcatSemaine from './ukit-celcat-semaine.blueprint.json';
+import scolariteDossier from './ukit-scolarite-dossier.blueprint.json';
 import scolariteMessagerie from './ukit-scolarite-messagerie.blueprint.json';
-import scolariteSso from './ukit-scolarite-sso.blueprint.json';
 import versions from './versions.json';
 
 /**
@@ -53,7 +53,7 @@ export const BLUEPRINT = {
     CELCAT_SEMAINE: 'ukit.celcat.semaine',
     CELCAT_ANNEE: 'ukit.celcat.annee',
     CELCAT_OCCUPATION: 'ukit.celcat.occupation',
-    SCOLARITE_SSO: 'ukit.scolarite.sso',
+    SCOLARITE_DOSSIER: 'ukit.scolarite.dossier',
     SCOLARITE_MESSAGERIE: 'ukit.scolarite.messagerie',
 } as const;
 
@@ -68,7 +68,10 @@ export type BlueprintName = (typeof BLUEPRINT)[keyof typeof BLUEPRINT];
  * ainsi remplace le fichier de reference `ukit.campus.affluence`, qui tenait la carte **et**
  * l'affluence, par les deux Blueprints que deux ecrans demandent a deux moments. Le jalon 6-E a fait
  * de meme avec `ukit.celcat.semaine`, qui portait la liste des groupes en plus de la semaine : il est
- * desormais reduit a son seul appel, et cinq freres portent les cinq autres.
+ * desormais reduit a son seul appel, et cinq freres portent les cinq autres. Le jalon 6-F a renomme
+ * `ukit.scolarite.sso` en `ukit.scolarite.dossier` — `sso` nommait un mecanisme, `dossier` nomme
+ * l'appel — et les deux fichiers de scolarite ont gagne la garde qui distingue un mot de passe
+ * refuse d'une page qui n'arrive pas.
  *
  * Les versions vivent dans `versions.json` et non ici : le script de publication est un module Node
  * qui ne sait pas lire un fichier TypeScript, et une version que le publieur recopierait a la main
@@ -124,9 +127,9 @@ export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
         version: versions[BLUEPRINT.CELCAT_OCCUPATION].version,
         document: celcatOccupation,
     },
-    [BLUEPRINT.SCOLARITE_SSO]: {
-        version: versions[BLUEPRINT.SCOLARITE_SSO].version,
-        document: scolariteSso,
+    [BLUEPRINT.SCOLARITE_DOSSIER]: {
+        version: versions[BLUEPRINT.SCOLARITE_DOSSIER].version,
+        document: scolariteDossier,
     },
     [BLUEPRINT.SCOLARITE_MESSAGERIE]: {
         version: versions[BLUEPRINT.SCOLARITE_MESSAGERIE].version,

@@ -291,7 +291,15 @@ change est ailleurs, et c'est déjà beaucoup : ils deviennent une ligne de donn
 distance en quelques minutes, au lieu d'une constante compilée en attente de publication.
 
 Et le format déclaratif permet un filet que le code d'origine n'avait pas : lire le **libellé voisin**
-et l'affirmer, pour qu'un décalage devienne un échec nommé au lieu d'une donnée fausse.
+et l'affirmer, pour qu'un décalage devienne un échec nommé au lieu d'une donnée fausse. Livré au
+jalon [6-F](phase-6/6-f-scolarite.md) sur les **cinq** champs du dossier, et il rend un service de
+plus qu'attendu : le libellé `Prénom et Nom` est ce qui autorise l'application à prendre le premier
+mot de l'identité comme prénom. Sans lui, l'ordre des deux serait une supposition — et une
+supposition sur un nom propre s'affiche en toutes lettres sur un écran d'accueil.
+
+La même campagne a montré l'autre visage de la fragilité : le script d'origine testait `#msg.success`
+et `#msg.errors`, or **il n'existe aucun `#msg`** sur ce CAS. Deux branches mortes, sans erreur, sans
+symptôme. Un sélecteur compilé ne se relit jamais ; une ligne de fichier, si.
 
 ## Vérifier
 

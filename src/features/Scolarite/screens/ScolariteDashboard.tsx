@@ -5,6 +5,8 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
+import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
+import { presenterEchec } from '../services/ScolariteMapping';
 import { useCredentials } from '../services/CredentialsContext';
 import ScolariteLoginView from '../components/ScolariteLoginView';
 import GreetingBlock from '../components/GreetingBlock';
@@ -23,7 +25,10 @@ const ScolariteDashboard = ({ navigation }) => {
     const theme = style.Theme[themeName];
     const accent = theme.accent ?? theme.primary;
 
-    const { credentials, credentialsLoaded, coldData, mailData, scrapeStatus, scrapeProgress, sessionMode } = useCredentials();
+    const {
+        credentials, credentialsLoaded, coldData, mailData,
+        scrapeStatus, scrapeProgress, sessionMode, sessionFailure, retrySession,
+    } = useCredentials();
 
     const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -48,6 +53,17 @@ const ScolariteDashboard = ({ navigation }) => {
 
     const isColdLoading = sessionMode === 'cold' && (scrapeStatus === 'connecting' || scrapeStatus === 'scraping');
 
+    /**
+     * L'echec qui prend tout l'ecran : la session a echoue **et** il n'y a aucune identite a
+     * afficher. Quand des donnees froides existent — deja en trousseau, ou lues a un lancement
+     * precedent — le tableau de bord reste montrable et c'est la ligne de messagerie qui porte
+     * l'echec. Un run annule ne montre rien : l'utilisateur est deja parti.
+     */
+    const echecBloquant = scrapeStatus === 'error' && coldData === null
+        && sessionFailure !== null && !sessionFailure.silent
+        ? presenterEchec(sessionFailure)
+        : null;
+
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
@@ -66,6 +82,14 @@ const ScolariteDashboard = ({ navigation }) => {
                             theme={theme}
                             color={accent}
                         />
+                    ) : echecBloquant ? (
+                        <View style={{ flex: 1, justifyContent: 'center', paddingTop: (insets?.top || 0) + 70 }}>
+                            <SourceFailureNotice
+                                failure={echecBloquant}
+                                theme={theme}
+                                onRetry={retrySession}
+                            />
+                        </View>
                     ) : (
                         <BiometryGate theme={theme} color={accent}>
                             <Animated.ScrollView
@@ -87,6 +111,7 @@ const ScolariteDashboard = ({ navigation }) => {
                                     mailData={mailData}
                                     coldData={coldData}
                                     status={scrapeStatus}
+                                    failure={sessionFailure}
                                     color={theme.sectionsHeaders[5] || accent}
                                     theme={theme}
                                     onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email' })}

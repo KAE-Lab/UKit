@@ -49,6 +49,20 @@ export type BlueprintRun =
 export interface RunBlueprintOptions {
     readonly inputs?: RunInputs;
     /**
+     * Des secrets fournis a l'appel, qui **gagnent** sur ceux du trousseau.
+     *
+     * Le chemin nominal ne s'en sert pas : un Blueprint **declare** ses secrets et le resolver les
+     * fournit depuis `SecureStore` (voir secrets.ts). Ce champ existe pour le seul cas ou le
+     * trousseau ne peut pas repondre — **valider un couple identifiant / mot de passe que
+     * l'utilisateur vient de saisir**. L'ecrire d'abord pour que le resolver le trouve romprait la
+     * promesse qui tient tout le module : les identifiants ne sont ecrits qu'une fois valides par le
+     * CAS, et un mot de passe errone ne laisse aucune trace.
+     *
+     * Le masquage s'applique a ces valeurs comme a celles du trousseau : la facade masque ce qu'elle
+     * a **resolu**, quelle qu'en soit la provenance.
+     */
+    readonly secrets?: Readonly<Record<string, string>>;
+    /**
      * Le flux d'evenements du run. Il porte la progression (`step_started`, `progress`) que les
      * ecrans longs affichent — c'est ce qui remplace les messages `PROGRESS` que la WebView cachee
      * postait a la main.
@@ -84,6 +98,7 @@ export async function runBlueprint(
         const resolved = await resolveBlueprint(name);
         const result = await getAetheriusClient().run(resolved.blueprint, {
             inputs: options.inputs ?? {},
+            ...(options.secrets !== undefined ? { secrets: options.secrets } : {}),
             ...(options.onEvent !== undefined ? { onEvent: options.onEvent } : {}),
             ...(options.signal !== undefined ? { signal: options.signal } : {}),
         });

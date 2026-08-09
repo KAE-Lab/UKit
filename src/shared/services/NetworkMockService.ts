@@ -15,8 +15,12 @@
  *     Blueprint et lisent son échec.
  *
  * Ce qu'il ne couvre **pas**, et qu'il faut savoir avant de conclure : la WebView de l'Act II, qui
- * navigue par elle-même et ne passe pas par ce `fetch`. Le jour où la scolarité sera migrée
- * (jalon 6-F), son chemin hors ligne devra être vérifié autrement.
+ * navigue par elle-même et ne passe pas par ce `fetch`. C'est le cas de la scolarité depuis le jalon
+ * 6-F : son chemin dégradé se vérifie en pointant une `vars` d'hôte sur `https://127.0.0.1:1/` puis
+ * en rechargeant Metro. Une adresse qui refuse la connexion plutôt qu'un nom qui ne résout pas, et
+ * ce n'est pas un détail : mesuré sur appareil, la première produit un échec **nommé** par le
+ * Blueprint, la seconde ne produit aucun document et retombe en « problème interne »
+ * (docs/qualite.md).
  *
  * Purement destiné à la vérification manuelle : rien dans l'application ne l'active, et il ne survit
  * pas à un rechargement. Voir docs/qualite.md.

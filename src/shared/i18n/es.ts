@@ -37,6 +37,11 @@ const es: TranslationDict = {
 	ERROR_BLOCKED: 'No se ha podido completar la solicitud.',
 	ERROR_MISSING_CREDENTIALS: 'Falta información para realizar esta solicitud.',
 	ERROR_INTERNAL: 'Se ha producido un problema por nuestra parte.',
+	// Les echecs que les Blueprints de scolarite se donnent eux-memes (`fail:CODE`). Ils sont plus
+	// precis que la famille dont ils relevent : « bloque » ne dirait pas lequel des deux services a
+	// manque (features/Scolarite/services/ScolariteMapping.ts).
+	ERROR_CAS_UNAVAILABLE: 'El portal de la universidad no responde. Inténtalo de nuevo más tarde.',
+	ERROR_MAILBOX_UNAVAILABLE: 'El buzón no ha respondido. Tu conexión sí ha funcionado.',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
 	PARTIAL_COVERAGE: 'Algunas zonas no han respondido: puede que la lista esté incompleta.',
@@ -187,6 +192,9 @@ const es: TranslationDict = {
 	CONFIRM_LOGOUT: "¿Seguro que quiere cerrar sesión?",
 	CONNECTED_AS: "Conectado como",
 	MESSAGING: "Buzón",
+	MAILBOX_NO_UNREAD: "Ningún mensaje sin leer",
+	MAILBOX_UNREAD_ONE: "$- mensaje sin leer",
+	MAILBOX_UNREAD_MANY: "$- mensajes sin leer",
 	CREDENTIALS_SETTINGS: "Credenciales",
 	USERNAME: "Nombre de usuario",
 	PASSWORD: "Contraseña",

@@ -120,12 +120,18 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `scolarite-login.png` | écran de connexion universitaire | essentielle |
-| `scolarite-dashboard.png` | salutation et ligne de messagerie | essentielle |
-| `scolarite-progression.png` | écran de progression du parcours froid | complémentaire |
-| `scolarite-biometrie.png` | verrou biométrique | complémentaire |
-| `scolarite-compte.png` | réglages du compte et déconnexion | complémentaire |
+| `scolarite-login.png` | écran de connexion universitaire — **déposée** (jalon 6-F) | essentielle |
+| `scolarite-dashboard.png` | salutation et ligne de messagerie — **différée** : l'habillage de ces écrans doit changer, et une capture périmée renseigne moins bien qu'une absence signalée | essentielle |
+| `scolarite-progression.png` | écran de progression du parcours froid — **déposée** (jalon 6-F) | complémentaire |
+| `scolarite-echec.png` | un échec de session nommé, message et bouton Réessayer — l'écran que le module n'avait pas avant le jalon 6-F — **déposée** | essentielle |
+| `scolarite-login-echec.png` | le refus d'identifiants sur le formulaire, distinct de l'échec de session — **déposée** (jalon 6-F) | complémentaire |
+| `scolarite-biometrie.png` | verrou biométrique — **différée** (refonte d'habillage à venir) | complémentaire |
+| `scolarite-compte.png` | réglages du compte et déconnexion — **différée** (idem) | complémentaire |
 | `scolarite-navigateur.png` | navigateur intégré et sa barre flottante | complémentaire |
+
+> La première version de `scolarite-echec.png` montrait un identifiant universitaire réel et a été
+> retirée. C'est le piège de cette section : on teste avec son propre compte, donc on capture son
+> propre compte. Un identifiant de connexion est une donnée personnelle au même titre qu'un nom.
 
 ### Réglages — [features/settings.md](../features/settings.md)
 

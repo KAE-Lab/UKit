@@ -1,0 +1,73 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.scolarite.dossier",
+  "description": "Le parcours FROID de la scolarite : ouvrir le dossier administratif, subir la redirection CAS, et lire l'identite complete de l'etudiant. Joue une fois, au premier login (CredentialsContext). Il part du SERVICE et non du portail : mondossierweb redirige lui-meme vers le CAS avec son parametre service, et la redirection de retour ramene le fragment #!etatCivilView — l'hote du portail historique, lui, ne resout plus. Les identifiants de champ GWT sont POSITIONNELS : la migration ne les rend pas robustes, elle en fait une ligne de donnees corrigeable a distance. Le filet est ailleurs : les cinq libelles voisins sont lus puis asserts, de sorte qu'un decalage devienne un echec nomme au lieu d'une donnee fausse ecrite dans le trousseau. Deux steps meritent d'etre lus avant d'etre 'simplifies'. La PAUSE apres le clic : l'authentification unifiee enchaine plusieurs sauts puis le client GWT pose son fragment, et une operation emise pendant cette cascade se perd en silence sur un appareil (limite du moteur, docs/embedded.md, sondes du jalon 3-G) — on laisse donc la page arriver avant de l'interroger. La GARDE #loginErrorsPanel ensuite : ce panneau est ABSENT de la page de connexion propre et PRESENT des que le CAS refuse, mesure le 2026-08-09 ; c'est le seul noeud qui discrimine, #msg2 et .errors existant deja vides avec une boite de hauteur nulle. Sans elle, un mot de passe faux couterait le plafond entier du selecteur suivant. Mettre options.debug a true rend la WebView visible sur l'appareil : c'est l'outil de diagnostic quand un step echoue.",
+  "act": "continuum",
+  "secrets": ["bordeaux_user", "bordeaux_pass"],
+  "vars": {
+    "dossier": "https://mondossierweb.u-bordeaux.fr/"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+  },
+  "steps": [
+    { "action": "navigate", "url": "{{ vars.dossier }}" },
+    {
+      "action": "wait_for",
+      "selector": "#username",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:CAS_INDISPONIBLE"
+    },
+    { "action": "fill", "selector": "#username", "value": "{{ secrets.bordeaux_user }}" },
+    { "action": "fill", "selector": "#password", "value": "{{ secrets.bordeaux_pass }}" },
+    { "action": "click", "selector": "input[type=submit]" },
+    { "action": "wait", "ms": 8000 },
+    {
+      "action": "wait_for",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED"
+    },
+    {
+      "action": "wait_for",
+      "selector": "#gwt-uid-41",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:LOGIN_FAILED"
+    },
+    { "action": "emit", "event": "LOGIN_SUCCESS" },
+    {
+      "id": "dossier",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "numero_etudiant": { "selector": "#gwt-uid-41", "as": "text" },
+        "ine": { "selector": "#gwt-uid-43", "as": "text" },
+        "identite": { "selector": "#gwt-uid-45", "as": "text" },
+        "email": { "selector": "#gwt-uid-47", "as": "text" },
+        "naissance": { "selector": "#gwt-uid-51", "as": "text" },
+        "libelle_numero": { "selector": "#gwt-uid-40", "as": "text" },
+        "libelle_ine": { "selector": "#gwt-uid-42", "as": "text" },
+        "libelle_identite": { "selector": "#gwt-uid-44", "as": "text" },
+        "libelle_email": { "selector": "#gwt-uid-46", "as": "text" },
+        "libelle_naissance": { "selector": "#gwt-uid-50", "as": "text" }
+      }
+    },
+    {
+      "action": "assert",
+      "condition": "{{ steps.dossier.libelle_numero == 'Dossier' and steps.dossier.libelle_ine == 'NNE' and steps.dossier.libelle_identite == 'Prénom et Nom' and steps.dossier.libelle_email == 'Email' and steps.dossier.libelle_naissance == 'Date de naissance' }}",
+      "message": "Les libelles du dossier ont bouge : les identifiants GWT sont positionnels, donc les valeurs lues ne sont plus celles qu'on croit. Corriger les selecteurs de ce Blueprint et republier."
+    }
+  ],
+  "outputs": {
+    "numero_etudiant": "{{ steps.dossier.numero_etudiant }}",
+    "ine": "{{ steps.dossier.ine }}",
+    "identite": "{{ steps.dossier.identite }}",
+    "email": "{{ steps.dossier.email }}",
+    "naissance": "{{ steps.dossier.naissance }}"
+  }
+}

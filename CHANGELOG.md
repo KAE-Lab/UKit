@@ -15,6 +15,53 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **La session universitaire jouée par le moteur** (jalon
+  [6-F](docs/phase-6/6-f-scolarite.md)). `ScolariteWebSession.tsx` est **supprimé** : 323 lignes de
+  WebView cachée pilotée par du JavaScript en gabarits de chaîne, quatre scripts déclenchés selon
+  l'URL de fin de chargement, trois `MutationObserver` avec trois plafonds différents et un garde-fou
+  global de 60 s deviennent deux [Blueprints](docs/blueprints.md) — `ukit.scolarite.dossier` pour le
+  parcours froid, `ukit.scolarite.messagerie` pour le parcours chaud.
+
+  **Les identifiants ne traversent plus la source d'un script.** Ils sont encodés en JSON et
+  transmis par une communication corrélée avec l'agent injecté : un mot de passe contenant une
+  apostrophe ne peut plus casser le remplissage, par construction. Le même défaut existait dans le
+  remplissage automatique du **navigateur intégré**, hors périmètre du jalon mais corrigé au passage.
+
+  **Un décalage des sélecteurs GWT devient une erreur, plus une donnée fausse.** Les cinq libellés
+  voisins du dossier sont lus et affirmés ; s'ils bougent, la session échoue avec un message
+  explicite et **rien n'est écrit** dans le trousseau. C'est le seul endroit où la version migrée est
+  franchement meilleure que l'originale, et elle ne le doit qu'au fait que la description est de la
+  donnée. Le libellé `Prénom et Nom` rend d'ailleurs un service de plus : c'est lui qui autorise à
+  prendre le premier mot de l'identité comme prénom, la lecture du prénom sur l'ENT ayant disparu
+  avec la page qui la portait.
+
+  **Les échecs se distinguent enfin.** Identifiants refusés, portail injoignable, messagerie muette,
+  libellés décalés et sélecteur introuvable produisent cinq écrans différents au lieu d'un onglet qui
+  restait sur son dernier état. Un mot de passe faux est nommé en **13 s** au lieu de 41, grâce à une
+  garde sur le panneau d'erreur du CAS — mesurée, parce que les deux sélecteurs que le code d'origine
+  interrogeait (`#msg.success`, `#msg.errors`) ne correspondaient **plus à rien** depuis un moment,
+  sans que rien ne le signale.
+
+  **Une session à la fois, et elle ne survit pas à l'écran qui l'a demandée** : la seconde demande
+  est refusée explicitement, l'application qui passe en arrière-plan annule le run — et reprend au
+  retour —, et une session annulée n'écrit rien, ce qui évite qu'une déconnexion en cours de route
+  remette dans le trousseau l'identité qu'elle vient d'effacer.
+
+  **Un portail muet propose de réessayer**, alors que sa famille d'échec ne le prévoit pas. C'est une
+  décision d'écran prise après mesure : sur un appareil, une source injoignable n'est **jamais**
+  rangée en « service indisponible », donc le bouton n'apparaissait sur aucune panne réseau. La
+  limite est celle du moteur et elle est écrite ; l'application en corrige la conséquence pour les
+  deux codes qui décrivent un service absent, et laisse un refus d'identifiants sans bouton — rejouer
+  le même mot de passe donnerait le même refus.
+
+  **Vérifié sur iPhone**, parcours froid et chaud, avec les chemins dégradés joués un par un et
+  produisant chacun un écran distinct. La livraison à chaud a été jouée en conditions réelles sur le
+  bucket de production : une version volontairement cassée publiée, reçue et jouée par l'appareil,
+  puis la correction publiée et reçue — **sans que rien ne soit réinstallé entre les deux**.
+
+  Ce qui **ne change pas** : le verrou biométrique, le stockage chiffré, le navigateur intégré, la
+  distinction froid/chaud, et la promesse que les identifiants ne vont qu'au CAS de l'université.
+
 - **L'emploi du temps joué par le moteur, et un serveur en moins** (jalon
   [6-E](docs/phase-6/6-e-planning.md)). `PlanningApiService` et `CampusApiService` n'émettent plus
   aucune requête : six [Blueprints](docs/blueprints.md) portent les six appels que l'application joue

@@ -25,7 +25,7 @@ fragilité, extraction, contrat non versionné — ne s'y applique. Ce document 
 | # | Source | Rôle | Authentification | Fragilité |
 |---|---|---|---|---|
 | 1 | Celcat (`celcat.u-bordeaux.fr`) | emplois du temps, groupes, salles | aucune | moyenne — API interne non documentée. **Six Blueprints** depuis [6-E](phase-6/6-e-planning.md), et le relais `ukit.kbdev.io` est sorti de l'architecture |
-| 2 | CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires | **élevée** — extraction de pages HTML |
+| 2 | CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires | **élevée** — extraction de pages HTML, sélecteurs positionnels. **Deux Blueprints** depuis [6-F](phase-6/6-f-scolarite.md) |
 | 3 | Affluences | bibliothèques, affluence, horaires | aucune (en-têtes imités) | moyenne — API privée d'une application web. **Trois Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
 | 4 | Croustillant | restaurants CROUS et menus | aucune | faible — API publique documentée. **Deux Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
 | 5 | ~~jsDelivr / `ukit-data`~~ | ~~annonces de vie étudiante~~ | — | **sortie de l'inventaire** — passée en base au jalon [6-B](phase-6/6-b-supabase.md) |
@@ -193,12 +193,22 @@ inattendu en échec nommé, et l'`assert` des deux listes rattrape une clé disp
 
 ## 2. CAS / ENT Université de Bordeaux — identité et messagerie
 
-La source la plus fragile : il n'y a **pas d'API**. UKit ouvre une WebView invisible, se connecte au
+La source la plus fragile : il n'y a **pas d'API**. UKit ouvre une WebView cachée, se connecte au
 CAS, puis extrait les informations des pages rendues.
 
-Implémentation : [`ScolariteWebSession.tsx`](../src/features/Scolarite/components/ScolariteWebSession.tsx)
-(la session), [`CredentialsContext.tsx`](../src/features/Scolarite/services/CredentialsContext.tsx)
-(l'état). Parcours utilisateur détaillé dans [features/scolarite.md](features/scolarite.md).
+**Migrée en Blueprints** au jalon [6-F](phase-6/6-f-scolarite.md) : les 323 lignes de WebView pilotée
+par du JavaScript injecté ont disparu, et deux fichiers portent les deux parcours que l'application
+joue réellement.
+
+| Parcours | Blueprint | Ce qui est resté applicatif |
+|---|---|---|
+| froid — premier login | [`ukit.scolarite.dossier`](../blueprints/ukit-scolarite-dossier.blueprint.json) | le trousseau, le choix froid/chaud, la projection `identité → prénom`, l'affichage |
+| chaud — chaque lancement | [`ukit.scolarite.messagerie`](../blueprints/ukit-scolarite-messagerie.blueprint.json) | la décision « pas de parenthèse = zéro non lu », le verrou biométrique |
+
+Implémentation applicative : [`ScolariteSession.ts`](../src/features/Scolarite/services/ScolariteSession.ts)
+(la séquence), [`CredentialsContext.tsx`](../src/features/Scolarite/services/CredentialsContext.tsx)
+(l'état), [`ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) (la
+projection). Parcours utilisateur détaillé dans [features/scolarite.md](features/scolarite.md).
 
 ### Hôtes traversés
 
@@ -210,96 +220,103 @@ Implémentation : [`ScolariteWebSession.tsx`](../src/features/Scolarite/componen
 | `webmel.u-bordeaux.fr` | messagerie — nombre de messages non lus |
 | `apogee.u-bordeaux.fr` | notes et résultats — atteignable via le navigateur intégré, non extrait |
 
-### Enchaînement
+`ent.u-bordeaux.fr` **n'est plus traversé par la session** : chaque Blueprint ouvre directement son
+service, qui rebondit lui-même sur le CAS avec son paramètre `service=`. Le portail reste une
+destination du navigateur intégré, rien de plus. C'est ce qui rend le parcours plus court, et ce qui
+le fait survivre à une refonte de la page d'accueil.
 
-La WebView démarre sur `https://ent.u-bordeaux.fr`, ce qui provoque une redirection vers le CAS. Une
-machine à états portée par `phaseRef` pilote la suite, en réagissant à l'URL de chaque fin de
-chargement :
+### Enchaînement, tel que les fichiers le décrivent
+
+Les deux Blueprints ont la même forme, et chaque step y est une décision qu'on peut relire :
 
 ```text
-mode "cold" (premier login) :  login → ent → dossier → mail → done
-mode "hot"  (lancements suivants) :  login → mail → done
+navigate <service>                        le service redirige vers le CAS
+wait_for #username        20 s            fail:CAS_INDISPONIBLE
+fill     #username / #password            secrets bordeaux_user / bordeaux_pass
+click    input[type=submit]
+wait     8 s (dossier) / 15 s (messagerie)   laisser la cascade d'authentification arriver
+wait_for #loginErrorsPanel  detached, 2 s    fail:LOGIN_FAILED
+wait_for <cible>          30 s            fail:LOGIN_FAILED | MESSAGERIE_INDISPONIBLE
+emit     LOGIN_SUCCESS                    c'est ce qui autorise a ecrire les identifiants
+extract  …                 5 s            une lecture n'a rien a attendre
+assert   les libelles voisins             dossier seulement
 ```
 
-Le mode est choisi par `CredentialsContext` : `hot` si des données froides sont déjà en SecureStore,
-`cold` sinon. Le mode `hot` évite de re-parcourir des pages lourdes à chaque lancement.
+Trois de ces lignes sont contre-intuitives et **mesurées**, pas supposées :
 
-### Étape 1 — connexion CAS
+- **la pause après le clic.** L'authentification unifiée enchaîne plusieurs sauts, puis le client pose
+  son propre fragment ; une opération émise pendant cette cascade **se perd en silence** sur un
+  appareil. C'est une limite du moteur, écrite chez lui, et le contournement est visible dans le
+  fichier plutôt que déguisé en délai généreux ;
+- **la garde `#loginErrorsPanel`.** Ce panneau est **absent** de la page de connexion propre et
+  **présent** dès que le CAS refuse (mesuré le 2026-08-09). `#msg2` et `.errors`, eux, existent déjà
+  vides avec une boîte de hauteur nulle : ils ne discriminent rien. Sans cette garde, un mot de passe
+  faux coûte le plafond entier du sélecteur suivant — **41 s mesurées, contre 13 s avec** ;
+- **le `timeout_ms` court de l'`extract`.** Un `extract` réarme sa propre auto-attente ; sur un
+  téléphone, les minuteurs d'une WebView hors écran sont ralentis alors que l'appelant compte en temps
+  réel. Un budget court garantit que la page réponde avant l'appelant, donc qu'un échec soit lisible
+  au lieu d'être un silence rapporté comme « la page a changé ».
 
-Script injecté sur `cas.u-bordeaux.fr` :
+Au passage, la migration a trouvé du **code mort** dans le script d'origine : il testait `#msg.success`
+et `#msg.errors`, or **il n'existe aucun `#msg`** sur ce CAS. Ces deux branches ne matchaient plus
+rien, et personne ne pouvait le savoir.
 
-- si `#msg.success` est présent, la session est déjà ouverte : redirection vers l'ENT ;
-- si `.alert-danger`, `#msg.errors` ou `.errors` contient du texte, un événement `LOGIN_FAILED` est
-  émis ;
-- sinon, remplissage de `#username` et `#password`, puis clic sur le bouton de soumission
-  (`input[type=submit]`, `button[type=submit]` ou `.btn-submit`), avec repli sur `form#fm1.submit()`.
+### Le dossier administratif
 
-Les identifiants sont injectés via `JSON.stringify` pour échapper correctement les caractères
-spéciaux du mot de passe.
+La page est une application GWT, et les champs sont lus **par identifiant DOM positionnel** :
 
-### Étape 2 — prénom depuis l'ENT
-
-Cinq sélecteurs sont essayés dans l'ordre (`.text-brand.home-title-alt`, `.home-title-alt`,
-`[class*="home-title-alt"]`, `.home-hero-title .text-brand`, `[class*="hero-title"] [class*="brand"]`),
-avec un dernier recours par expression régulière sur le texte de la page
-(`/(?:Bonjour|Bonsoir)[\s,]*([A-Za-zÀ-ž'-]{2,26})\s*!/`). Le résultat n'est retenu que s'il fait moins
-de 40 caractères.
-
-Le portail étant rendu progressivement, un `MutationObserver` réessaie jusqu'à obtenir une valeur,
-avec un plafond de **18 s** au-delà duquel un prénom vide est émis plutôt que de bloquer la session.
-
-### Étape 3 — dossier administratif
-
-La page est une application GWT. Le hash `#!etatCivilView` est restauré s'il a été perdu pendant la
-redirection CAS, puis quatre champs sont lus **par identifiant DOM positionnel** :
-
-| Identifiant | Donnée |
-|---|---|
-| `gwt-uid-41` | numéro étudiant |
-| `gwt-uid-43` | INE |
-| `gwt-uid-47` | adresse mail |
-| `gwt-uid-51` | date de naissance |
-
-Même mécanisme d'observation, plafond de **20 s**, après quoi les valeurs disponibles sont émises même
-incomplètes (accompagnées d'un événement de débogage).
+| Valeur | Libellé voisin | Donnée |
+|---|---|---|
+| `gwt-uid-41` | `gwt-uid-40` = `Dossier` | numéro étudiant |
+| `gwt-uid-43` | `gwt-uid-42` = `NNE` | INE |
+| `gwt-uid-45` | `gwt-uid-44` = `Prénom et Nom` | identité complète |
+| `gwt-uid-47` | `gwt-uid-46` = `Email` | adresse mail |
+| `gwt-uid-51` | `gwt-uid-50` = `Date de naissance` | date de naissance |
 
 > Ces identifiants sont attribués par GWT selon l'ordre de construction du DOM. Toute modification de
-> la page côté université les décale silencieusement : l'extraction renverra alors des champs vides ou
-> mélangés, sans erreur. C'est la fragilité la plus sérieuse du projet.
+> la page côté université les décale silencieusement. C'est la fragilité la plus sérieuse du projet,
+> et **la migration ne la supprime pas** — elle en fait une ligne de données corrigeable à distance.
 
-### Étape 4 — messagerie
+Ce qu'elle ajoute, en revanche, le code d'origine ne l'avait pas : **les cinq libellés voisins sont
+lus et affirmés**. Un décalage produit un échec nommé au lieu d'une donnée fausse écrite dans le
+trousseau. Le libellé `Prénom et Nom` sert deux fois — il garde l'extraction, et c'est lui qui
+autorise à prendre le premier mot de l'identité comme prénom.
 
-Lecture de `#zti__main_Mail__2_textCell`, dont le texte a la forme `Réception (760)`. Le nombre est
-extrait par `/\((\d+)\)/` ; l'absence de parenthèses est interprétée comme zéro non lu. Plafond de
-**18 s**, après quoi `unreadCount: null` est émis.
+Corollaire de « partir du service » : la lecture du prénom sur l'ENT — cinq sélecteurs en cascade plus
+une expression régulière — **n'a plus de page où se faire**, et n'existe plus. L'identité vient du
+dossier.
 
-### Événements remontés
+### La messagerie
 
-La WebView communique avec React par `window.ReactNativeWebView.postMessage` :
+Lecture de `#zti__main_Mail__2_textCell`, dont le texte a la forme `Réception (789)`. L'expression
+régulière `/\((\d+)\)/` a disparu : `as: "number"` extrait le premier nombre du libellé et rend un
+**entier**, identiquement sur les deux moteurs. Le libellé brut descend en sortie à côté du nombre,
+parce que c'est lui qui permet de distinguer une boîte sans parenthèse (zéro non lu) d'une lecture qui
+n'a rien trouvé.
 
-| Type | Charge utile | Effet |
+Le **user-agent de Chrome desktop** est déclaré dans les deux fichiers (`options.stealth.user_agent`)
+et il est porteur : avec un UA mobile, ce service rend `/modern/`, un DOM entièrement différent où le
+sélecteur du compteur **n'existe pas**. C'est la seule bribe de discrétion du périmètre embarqué, et
+elle est passée d'une constante compilée à une ligne de donnée corrigeable.
+
+### Ce que l'application distingue désormais
+
+| Ce qui s'est passé | Famille | Ce que l'écran affiche |
 |---|---|---|
-| `LOGIN_SUCCESS` | — | validation des identifiants, écriture en SecureStore |
-| `LOGIN_FAILED` | — | rejet, session interrompue |
-| `PROGRESS` | `step` : `connecting`, `profile`, `dossier`, `mailbox` | avancement affiché |
-| `ENT_DATA` | `firstName` | fusion dans les données froides |
-| `DOSSIER_DATA` | `studentNumber`, `ine`, `emailAddress`, `dateOfBirth` | fusion + écriture en SecureStore |
-| `MAILBOX_DATA` | `unreadCount` | données chaudes, fin de session |
-| `DEBUG` | `message` | journalisé uniquement si `__DEV__` |
-
-Un garde-fou global de **60 s** (`SESSION_TIMEOUT_MS`) clôt la session si elle n'a pas abouti.
-
-### Configuration de la WebView
-
-`incognito` (aucune persistance de cookie entre sessions), `javaScriptEnabled`, `domStorageEnabled`,
-`originWhitelist: ['*']`, et un **user-agent de Chrome desktop** — nécessaire pour obtenir la version
-desktop de la messagerie, la version mobile n'exposant pas le même DOM. La vue est positionnée hors
-écran (`left: -width - 200`, `opacity: 0`, `pointerEvents="none"`) : elle travaille sans être visible.
+| CAS injoignable, réseau coupé | `unavailable` | « Service indisponible », avec Réessayer |
+| `fail:CAS_INDISPONIBLE` | `blocked` | « Le portail de l'université ne répond pas » |
+| `fail:LOGIN_FAILED` | `blocked` | « Identifiants incorrects » |
+| `fail:MESSAGERIE_INDISPONIBLE` | `blocked` | « La messagerie n'a pas répondu » — distinct de l'échec de login |
+| libellés décalés (`assert`) | `rejected` | « Réponse inattendue » — **et rien n'est écrit** |
+| sélecteur introuvable | `data` | « Contenu introuvable » — Blueprint à corriger |
 
 ### Ce qui n'est jamais fait
 
 Les identifiants ne sont **jamais** envoyés ailleurs qu'au CAS de l'université, ne transitent par
-aucun serveur tiers, et sont stockés uniquement en SecureStore chiffré.
+aucun serveur tiers, et sont stockés uniquement en SecureStore chiffré. Ils ne traversent pas non plus
+la **source d'un script** : le moteur les encode en JSON et les transmet par une communication
+corrélée avec l'agent injecté, ce qui rend impossible par construction la classe de bug où un mot de
+passe contenant une apostrophe casse le remplissage.
 
 ## 3. Affluences — bibliothèques universitaires
 

@@ -154,7 +154,22 @@ export const SaveCredentialsModal = ({ theme, visible, onClose, onSave }: { them
     </Modal>
 );
 
+/**
+ * Le remplissage automatique du formulaire CAS, dans le navigateur **visible**.
+ *
+ * Cet écran n'est pas concerné par le jalon 6-F — c'est une WebView que l'utilisateur pilote, pas du
+ * scraping — mais il portait la même classe de bug que la session : les identifiants étaient
+ * interpolés entre apostrophes simples, sans échappement, donc un mot de passe contenant `'` cassait
+ * le script. Pas l'authentification : **le script**, silencieusement.
+ *
+ * `JSON.stringify` produit un littéral JavaScript valide quel que soit le contenu. C'est la même
+ * garantie que la session obtient désormais par construction, le moteur ne concaténant jamais un
+ * paramètre dans une source de script.
+ */
 export const getCASInjectedScript = (savedCredentials: { username?: string; password?: string } | null) => {
+    const identifiant = JSON.stringify(savedCredentials?.username || '');
+    const secret = JSON.stringify(savedCredentials?.password || '');
+
     return `
         (function() {
             if (!window.location.href.includes('cas.u-bordeaux.fr/cas/login')) return;
@@ -172,9 +187,9 @@ export const getCASInjectedScript = (savedCredentials: { username?: string; pass
                     clearInterval(checkInterval);
                     const errorElement = document.querySelector('.alert-danger') || document.querySelector('#msg.errors') || document.querySelector('.errors');
 
-                    if (!errorElement && '${savedCredentials?.username || ''}' !== '') {
-                        usernameInput.value = '${savedCredentials?.username || ''}';
-                        passwordInput.value = '${savedCredentials?.password || ''}';
+                    if (!errorElement && ${identifiant} !== '') {
+                        usernameInput.value = ${identifiant};
+                        passwordInput.value = ${secret};
                         const submitBtn = document.querySelector('input[name="submit"], button[name="submit"], input[type="submit"], button[type="submit"], .btn-submit');
                         if (submitBtn) {
                             submitBtn.click();

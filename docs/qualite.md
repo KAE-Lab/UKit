@@ -50,6 +50,7 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`shared/locations/referentiel.ts`](../src/shared/locations/referentiel.ts) | la fusion champ par champ du socle et de la surcouche |
 | [`features/Planning/services/PlanningApiMapping.ts`](../src/features/Planning/services/PlanningApiMapping.ts) | l'arité de `modules`, le séparateur qui change avec la vue, une fin d'événement nulle, le tri double |
 | [`features/Campus/services/CampusApiMapping.ts`](../src/features/Campus/services/CampusApiMapping.ts) | la correspondance textuelle salle vers bâtiment, la détection des vacances, le refiltrage sur la date |
+| [`features/Scolarite/services/ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) | la casse de l'identité criée par la source, le compteur `null` contre `0`, la table des échecs nommés |
 
 `BdeMapping` a été le premier module **de feature** couvert, et il l'est pour une raison précise :
 c'est là qu'une erreur ne se voit pas. Un champ omis rend une fiche incomplète sans rien casser, et
@@ -225,8 +226,21 @@ l'**application** seulement. Il fait deux choses, et il faut les deux :
 | le `fetch` du moteur échoue | tout run part en famille `unavailable` — sans ce volet, les écrans Campus ne verraient rien, ils ne consultent pas `NetInfo` |
 
 Ce qu'il **ne couvre pas**, et qu'il faut savoir avant de conclure : la WebView de l'Act II, qui
-navigue par elle-même et ne passe pas par ce `fetch`. La scolarité (jalon
-[6-F](phase-6/6-f-scolarite.md)) devra vérifier son chemin hors ligne autrement.
+navigue par elle-même et ne passe pas par ce `fetch`. La scolarité est dans ce cas depuis le jalon
+[6-F](phase-6/6-f-scolarite.md), et son chemin dégradé se vérifie donc par la seconde méthode
+ci-dessous — pointer une `vars` d'hôte sur une adresse injoignable, puis recharger.
+
+> **Une source injoignable ne produit pas `unavailable` sur un appareil**, contrairement à ce que
+> laisse attendre le modèle d'erreur. Mesuré sur iPhone au jalon 6-F, et il y a **deux** cas :
+> une adresse qui **refuse la connexion** (`https://127.0.0.1:1/`) fait rendre à iOS sa propre page
+> d'erreur, dans laquelle l'agent s'injecte et s'annonce — la navigation « réussit » donc, et c'est
+> l'attente suivante qui échoue, avec le nom que le Blueprint lui a donné (`blocked`) ; un nom qui
+> **ne résout pas** (`.invalid`) ne produit aucun document, et le run retombe en `engine`,
+> c'est-à-dire « un problème de notre côté » affiché à quelqu'un dont la source est simplement
+> morte. Préférer `https://127.0.0.1:1/` pour sonder : l'échec y est **nommé**, donc lisible.
+> La limite est celle du moteur ; côté application, la scolarité la corrige en rendant ses codes de
+> service absent explicitement réessayables
+> ([features/scolarite.md](features/scolarite.md#limites-connues)).
 
 Fermer le menu remet le réseau **et** l'heure à leur état réel : une simulation qu'on oublie active
 est un faux bug qu'on cherchera longtemps. La pastille de l'icône réduite reste allumée tant que l'une

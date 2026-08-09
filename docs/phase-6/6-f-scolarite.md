@@ -1,5 +1,11 @@
 # 6-F — Act II : la session universitaire
 
+> **Jalon livré** — 2026-08-09. `ScolariteWebSession.tsx` est supprimé, les deux Blueprints sont
+> publiés et joués, et les portes locales sont à leur base de référence. Les écarts entre ce qui
+> était prévu ici et ce que la réalité a imposé sont consignés dans
+> [Écarts constatés](#écarts-constatés), en bas de page — ils vont tous dans le même sens : la
+> mesure a rendu le fichier plus court et l'échec plus rapide que le texte ne l'imaginait.
+
 > Le morceau qui justifie la phase. 323 lignes de WebView cachée pilotée par du JavaScript injecté
 > deviennent deux Blueprints, et la fragilité la plus sérieuse du projet devient corrigeable en
 > quelques minutes.
@@ -40,7 +46,7 @@ authentifiant derrière une chaîne jamais éprouvée.
 | Blueprint | Quand | Ce qu'il rend |
 |---|---|---|
 | `ukit.scolarite.dossier` | premier login (parcours *froid*) | numéro étudiant, INE, identité, adresse mail, date de naissance |
-| `ukit.scolarite.messagerie` | à chaque lancement (parcours *chaud*) | nombre de messages non lus |
+| `ukit.scolarite.messagerie` | à chaque lancement (parcours *chaud*), et fin du parcours froid | nombre de messages non lus |
 
 Le composant d'origine enchaîne quatre pages dans une seule session. La traduction fidèle serait un
 Blueprint de douze steps — et ce serait une erreur. L'application **distingue déjà** deux parcours
@@ -221,3 +227,82 @@ démonstration de toute la phase**. Elle mérite d'être jouée devant témoin.
 - **Apogée n'est pas extrait**, pas plus qu'avant : il reste accessible par le navigateur intégré.
 - **Pas de parité automatisée** pour ce jalon. C'est la conséquence assumée de ne jamais mettre
   d'identifiants réels dans un harnais.
+
+## Écarts constatés
+
+Ce que la mesure a corrigé dans le texte ci-dessus. Sondé depuis un poste avec le moteur Python
+avant d'écrire la moindre ligne d'application — le cycle est de quelques secondes là où il est de
+quelques minutes sur un téléphone, et c'est ce qui a permis d'en trouver autant.
+
+| Prévu ici | Constaté | Ce qui a été fait |
+|---|---|---|
+| `wait_for` du dossier à **45 s** | le dossier apparaît **1,3 s** après le clic ; 45 s ne bornait que le chemin d'échec | plafond ramené à **30 s** |
+| `assert` sur **deux** libellés (`Dossier`, `NNE`) | les cinq champs ont chacun leur libellé voisin, et `gwt-uid-44` vaut `Prénom et Nom` | `assert` étendu aux **cinq**, et ce libellé sert en plus à justifier la projection `identité → prénom` |
+| la pause après le clic est décrite pour **la messagerie** | le dossier subit la même cascade (`CAS → mondossierweb → pose du fragment #!etatCivilView`), et n'avait pas été vérifié sur appareil au jalon 3-G | pause de **8 s** ajoutée au dossier aussi |
+| un mot de passe faux est nommé, mais au prix du plafond | mesuré à **41 s** — inacceptable sur un écran de connexion | garde `wait_for #loginErrorsPanel state: detached` après la pause : **13 s**. Posée *après* la pause, donc hors de la cascade : c'est ce qui la rend sûre, là où la spéc renonçait par crainte de ce risque |
+| le script d'origine lit `#msg.success` / `#msg.errors` | **il n'existe aucun `#msg`** sur ce CAS ; le bloc est `div#msg2.errors` dans `div#loginErrorsPanel`. Deux branches mortes, sans symptôme | garde posée sur `#loginErrorsPanel`, seul nœud qui **discrimine** : `#msg2` et `.errors` existent déjà vides, avec une boîte de hauteur nulle |
+| sonde « mode avion pendant la session » | le mode avion coupe aussi Metro | remplacée par une `vars` d'hôte pointée sur `https://127.0.0.1:1/`. Le TLD `.invalid`, essayé d'abord, s'est révélé **le mauvais choix** — voir ci-dessous |
+| sonde du sélecteur faux : « **rien** n'est écrit en `SecureStore` » | ambigu : l'`assert` se déclenche **après** `LOGIN_SUCCESS`, donc après que le CAS a validé les identifiants | la règle retenue est explicite et vaut mieux que l'ambiguïté : **les identifiants** s'écrivent sur `LOGIN_SUCCESS` (ils sont prouvés bons, et ne pas les garder condamnerait l'utilisateur à les ressaisir sans fin), **les données d'identité** seulement si le run va au bout. C'est celles-là que la sonde doit voir absentes |
+| `ukit.scolarite.sso` reste tel quel | `sso` nomme un mécanisme, pas un appel | renommé **`ukit.scolarite.dossier`**, comme la table de ce document le prévoyait déjà |
+
+### Ce que l'appareil a trouvé, et que le poste ne pouvait pas voir
+
+Trois défauts, dont deux n'existent que sur un téléphone.
+
+**Une session s'annulait elle-même en plein vol.** Symptôme : le premier login allait jusqu'au bout
+du dossier, puis `ukit.scolarite.messagerie : cancelled`, et un onglet vide — sans qu'aucun échec
+n'ait eu lieu. Cause : le hook qui écoute `AppState` avait `retrySession` en dépendance, or
+`retrySession` dépend de `credentials`, que `LOGIN_SUCCESS` met à jour **pendant** la session.
+L'effet se désabonnait donc en plein run, et son nettoyage — dont le seul travail est d'annuler la
+session en cours — annulait ce qu'on venait de lancer. La garde « une session annulée n'écrit rien »
+faisait le reste, en silence. Corrigé en passant la fonction par une référence : l'effet se monte une
+fois et ne se rejoue jamais.
+
+**Une source injoignable n'est jamais rangée en `unavailable`**, contrairement à ce que la spéc
+supposait en écrivant la sonde « mode avion ». Mesuré, et il y a deux cas distincts :
+
+| Façon d'être injoignable | Ce qui se passe | Famille obtenue |
+|---|---|---|
+| la connexion est **refusée** (`https://127.0.0.1:1/`) | iOS rend sa **propre page d'erreur** ; l'agent s'y injecte et s'annonce, donc `navigate` réussit, et c'est l'attente suivante qui échoue | `blocked` + le code du Blueprint |
+| le nom **ne résout pas** (`.invalid`) | aucun document ne s'annonce ; le host attend son plafond | `engine` |
+
+Jamais `unavailable`, donc **jamais de bouton Réessayer** sur une panne parfaitement réessayable.
+La cause est une limite du moteur — `onError` de la WebView est bien câblé côté Aetherius, mais
+l'agent qui s'annonce sur la page d'erreur fait réussir la navigation avant que le signal ne serve.
+Elle mérite une spécification dans le dépôt voisin, comme la [note de portée](README.md) le prévoit.
+Ce jalon en corrige la **conséquence**, pas la cause : `CAS_INDISPONIBLE` et
+`MESSAGERIE_INDISPONIBLE` sont déclarés réessayables côté application, `LOGIN_FAILED` non. Le cas
+`engine` reste sans bouton, et c'est écrit.
+
+**Une capture montrait un identifiant réel.** Retirée. La consigne existait déjà dans
+[screenshots/README.md](../screenshots/README.md) ; elle est facile à oublier quand on teste avec son
+propre compte, et c'est exactement pour ça qu'elle est écrite.
+
+### La livraison, jouée pour de vrai
+
+La sonde que la spéc appelle « la démonstration de toute la phase » a été jouée en conditions
+réelles, sur le bucket de production, avec un sélecteur sentinelle (`#zti__main_Mail__2_PUBLIE_CASSE`)
+qui n'existe dans aucun binaire :
+
+1. publication d'une **v3 cassée** pendant que l'appareil embarque la v2 correcte ; rafraîchissement
+   depuis le panneau de diagnostic → la ligne passe à **distant v3** ; relance → la messagerie tombe,
+   et le terminal nomme le sélecteur publié. La panne est arrivée **par le réseau** ;
+2. publication de la **v4 corrigée**, **sans toucher à l'arbre local** — donc sans que le bundle de
+   l'appareil change d'un octet ; rafraîchissement → **distant v4** ; relance → la messagerie
+   remarche.
+
+Entre la panne et la réparation, rien de ce qui était installé sur le téléphone n'a bougé. C'est le
+délai de correction que la phase existe pour supprimer, mesuré : deux commandes et un
+rafraîchissement, au lieu de deux revues de store.
+
+Deux ajouts que le texte ne demandait pas, et dont la vérification a montré le besoin :
+
+- **une session annulée n'écrit rien.** Sans cette garde, une déconnexion pendant la session
+  remettait dans le trousseau l'identité que `logout` venait d'effacer ;
+- **une session qu'on a soi-même annulée reprend au retour au premier plan.** Sans ça, poser son
+  téléphone pendant un premier login laissait l'onglet vide jusqu'au prochain démarrage de
+  l'application. Borné à ce cas : un échec réel ne se rejoue pas tout seul.
+
+Enfin, la progression affichée est **la même** — quatre étapes —, mais ce qui la déclenche vient
+désormais du flux d'événements du run : `LOGIN_SUCCESS` pour *profil*, le `step_started` du step
+nommé `dossier` pour *dossier*, le second run pour *messagerie*.

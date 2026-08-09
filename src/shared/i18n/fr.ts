@@ -38,6 +38,11 @@ const fr: TranslationDict = {
 	ERROR_BLOCKED: 'La demande n’a pas pu aboutir.',
 	ERROR_MISSING_CREDENTIALS: 'Il manque une information pour effectuer cette demande.',
 	ERROR_INTERNAL: 'Un problème est survenu de notre côté.',
+	// Les echecs que les Blueprints de scolarite se donnent eux-memes (`fail:CODE`). Ils sont plus
+	// precis que la famille dont ils relevent : « bloque » ne dirait pas lequel des deux services a
+	// manque (features/Scolarite/services/ScolariteMapping.ts).
+	ERROR_CAS_UNAVAILABLE: 'Le portail de l’université ne répond pas. Réessaie dans un moment.',
+	ERROR_MAILBOX_UNAVAILABLE: 'La messagerie n’a pas répondu. Ta connexion, elle, a fonctionné.',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
 	PARTIAL_COVERAGE: 'Certaines zones n’ont pas répondu : la liste est peut-être incomplète.',
@@ -187,6 +192,9 @@ const fr: TranslationDict = {
 	CONFIRM_LOGOUT: "Êtes-vous sûr de vouloir vous déconnecter ?",
 	CONNECTED_AS: "Connecté en tant que",
 	MESSAGING: "Messagerie",
+	MAILBOX_NO_UNREAD: "Aucun message non lu",
+	MAILBOX_UNREAD_ONE: "$- message non lu",
+	MAILBOX_UNREAD_MANY: "$- messages non lus",
 	CREDENTIALS_SETTINGS: "Identifiants",
 	USERNAME: "Nom d'utilisateur",
 	PASSWORD: "Mot de passe",

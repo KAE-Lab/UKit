@@ -35,6 +35,11 @@ const en = {
 	ERROR_BLOCKED: 'The request could not be completed.',
 	ERROR_MISSING_CREDENTIALS: 'Missing information to complete the request.',
 	ERROR_INTERNAL: 'Something went wrong on our side.',
+	// Les echecs que les Blueprints de scolarite se donnent eux-memes (`fail:CODE`). Ils sont plus
+	// precis que la famille dont ils relevent : « bloque » ne dirait pas lequel des deux services a
+	// manque (features/Scolarite/services/ScolariteMapping.ts).
+	ERROR_CAS_UNAVAILABLE: 'The university portal is not responding. Try again in a moment.',
+	ERROR_MAILBOX_UNAVAILABLE: 'The mailbox did not respond. Your sign-in did work.',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
 	PARTIAL_COVERAGE: 'Some areas did not respond: this list may be incomplete.',
@@ -183,6 +188,9 @@ const en = {
 	CONFIRM_LOGOUT: "Are you sure you want to log out?",
 	CONNECTED_AS: "Logged in as",
 	MESSAGING: "Mailbox",
+	MAILBOX_NO_UNREAD: "No unread messages",
+	MAILBOX_UNREAD_ONE: "$- unread message",
+	MAILBOX_UNREAD_MANY: "$- unread messages",
 	CREDENTIALS_SETTINGS: "Credentials",
 	USERNAME: "Username",
 	PASSWORD: "Password",

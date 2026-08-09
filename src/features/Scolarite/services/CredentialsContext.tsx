@@ -1,225 +1,331 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
-import ScolariteWebSession from '../components/ScolariteWebSession';
+import type { UkitFailure } from '../../../shared/aetherius';
+import { cleDeMessage, type ScolariteColdData, type ScolariteMailData } from './ScolariteMapping';
+import { deroulerSession, type EtapeSession, type ResultatSession } from './ScolariteSession';
 
 /**
- * Contexte central de l'onglet Scolarité.
+ * Contexte central de l'onglet Scolarite.
  *
- * Données froides (coldData) : stockées en SecureStore, scrapées une seule fois.
- *   - firstName, studentNumber, ine, emailAddress, dateOfBirth
- * Données chaudes (mailData) : scrapées à chaque lancement.
- *   - unreadCount
+ * Il garde ce qu'il a toujours porte — l'etat de session, le choix froid/chaud, l'ecriture en
+ * `SecureStore`, la progression affichee — et perd ce que le jalon 6-F a remplace : la machine a
+ * etats pilotee par des messages de WebView, les sept types d'evenements, et le garde-fou global de
+ * 60 s. La session est desormais une **sequence de runs** (services/ScolariteSession.ts), et les
+ * delais sont declares step par step dans les Blueprints.
  *
- * mode "cold" : premier login, scraping complet (ENT + mondossierweb + webmel)
- * mode "hot"  : coldData déjà stockée, scraping webmel uniquement
+ * Donnees froides : prenom, numero etudiant, INE, adresse mail, date de naissance. Lues une fois, au
+ * premier login, et gardees en `SecureStore`.
+ * Donnees chaudes : le nombre de messages non lus. Relues a chaque lancement, en memoire seulement.
  *
- * scrapeStatus : 'idle' | 'connecting' | 'scraping' | 'done' | 'error'
- * scrapeProgress : 'connecting' | 'profile' | 'dossier' | 'mailbox' | null
+ * Deux ecritures, deux declencheurs, et il ne faut pas les confondre :
+ *
+ *   - **les identifiants** s'ecrivent sur `LOGIN_SUCCESS`, l'evenement que le Blueprint emet quand
+ *     le CAS a accepte. C'est la preuve qu'ils sont bons, et un mot de passe errone ne laisse donc
+ *     aucune trace ;
+ *   - **les donnees froides** ne s'ecrivent que si le run va au bout, `assert` compris. Un decalage
+ *     des identifiants GWT fait echouer l'assertion, et rien d'incorrect n'atteint le trousseau —
+ *     c'est le filet que le code d'origine n'avait pas.
+ *
+ * **Une session a la fois.** Il y a une WebView montee, donc un run navigateur a la fois : une
+ * seconde demande est refusee **explicitement et bruyamment** plutot que mise en file — une file
+ * cacherait une seconde session derriere un delai inexplique, et l'utilisateur ne saurait pas
+ * laquelle il regarde. Le service pose la meme garde de son cote (ScolariteSession.ts) ; les deux
+ * ceintures sont voulues, celle-ci attrapant ce que l'autre laisserait passer.
+ *
+ * Voir docs/features/scolarite.md et docs/phase-6/6-f-scolarite.md.
  */
 
-const CredentialsContext = createContext(null);
+export type ScrapeStatus = 'idle' | 'connecting' | 'scraping' | 'done' | 'error';
 
-export const useCredentials = () => useContext(CredentialsContext);
+export interface Identifiants {
+    readonly username: string;
+    readonly password: string;
+}
 
-const SESSION_TIMEOUT_MS = 60000;
+export interface ResultatValidation {
+    readonly success: boolean;
+    readonly error?: string;
+}
 
-const createEventHandler = ({
-    setScrapeStatus,
-    validationResolver,
-    validationCandidate,
-    setCredentials,
-    setActiveCreds,
-    setScrapeProgress,
-    setColdData,
-    setMailData
-}) => (data) => {
-    switch (data.type) {
-        case 'LOGIN_SUCCESS': {
-            setScrapeStatus('scraping');
-            if (validationResolver.current) {
-                const candidate = validationCandidate.current;
-                SecureStoreService.saveCredentials(candidate.username, candidate.password).then(() => {
-                    setCredentials(candidate);
-                });
-                validationResolver.current({ success: true });
-                validationResolver.current = null;
-                validationCandidate.current = null;
-            }
-            break;
-        }
-        case 'LOGIN_FAILED': {
-            setScrapeStatus('error');
-            if (validationResolver.current) {
-                validationResolver.current({ success: false, error: Translator.get('LOGIN_FAILED') });
-                validationResolver.current = null;
-                validationCandidate.current = null;
-            }
-            setActiveCreds(null);
-            break;
-        }
-        case 'PROGRESS':
-            setScrapeProgress(data.step);
-            break;
-        case 'ENT_DATA':
-            setColdData((prev) => ({ ...prev, firstName: data.firstName || '' }));
-            break;
-        case 'DOSSIER_DATA': {
-            setColdData((prev) => {
-                const merged = {
-                    ...prev,
-                    studentNumber: data.studentNumber,
-                    ine: data.ine,
-                    emailAddress: data.emailAddress,
-                    dateOfBirth: data.dateOfBirth,
-                };
-                SecureStoreService.saveColdData(merged);
-                return merged;
-            });
-            break;
-        }
-        case 'MAILBOX_DATA':
-            setMailData({ unreadCount: data.unreadCount });
-            setScrapeStatus('done');
-            setScrapeProgress(null);
-            break;
-        case 'DEBUG':
-            if (__DEV__) console.log('[Scolarite]', data.message);
-            break;
-        default:
-            break;
-    }
-};
+export interface CredentialsValue {
+    readonly credentials: Identifiants | null;
+    readonly credentialsLoaded: boolean;
+    readonly coldData: ScolariteColdData | null;
+    readonly mailData: ScolariteMailData | null;
+    readonly scrapeStatus: ScrapeStatus;
+    readonly scrapeProgress: EtapeSession | null;
+    readonly sessionMode: 'cold' | 'hot';
+    /** Le dernier echec de session, deja traduit en decision d'ecran. `null` si tout va bien. */
+    readonly sessionFailure: UkitFailure | null;
+    readonly validateAndSave: (username: string, password: string) => Promise<ResultatValidation>;
+    readonly retrySession: () => void;
+    readonly logout: () => Promise<void>;
+}
 
-const useCredentialsSession = () => {
-    const [credentials, setCredentials] = useState(null);
-    const [credentialsLoaded, setCredentialsLoaded] = useState(false);
+const CredentialsContext = createContext<CredentialsValue | null>(null);
 
-    const [activeCreds, setActiveCreds] = useState(null);
-    const [sessionKey, setSessionKey] = useState(0);
-    const [sessionMode, setSessionMode] = useState('cold');
+export const useCredentials = (): CredentialsValue => useContext(CredentialsContext) as CredentialsValue;
 
-    const [coldData, setColdData] = useState(null);
-    const [mailData, setMailData] = useState(null);
-    const [scrapeStatus, setScrapeStatus] = useState('idle');
-    const [scrapeProgress, setScrapeProgress] = useState(null);
+/** Le message a afficher pour un echec : le code du Blueprint s'il en a un, sa famille sinon. */
+function messageDEchec(failure: UkitFailure): string {
+    return Translator.get(cleDeMessage(failure));
+}
 
-    const validationResolver = useRef(null);
-    const validationCandidate = useRef(null);
-    const timeoutRef = useRef(null);
+/**
+ * L'etat d'une session, d'un seul tenant.
+ *
+ * Les trois champs changent **toujours** ensemble : un statut qui avance sans que la progression
+ * suive, ou un echec qui reste affiche apres une reprise, sont les deux defauts que trois `useState`
+ * separes laissaient possibles.
+ */
+interface EtatSession {
+    readonly status: ScrapeStatus;
+    readonly progress: EtapeSession | null;
+    readonly failure: UkitFailure | null;
+}
 
-    const startSession = useCallback((creds, mode) => {
-        setMailData(null);
-        setScrapeStatus('connecting');
-        setScrapeProgress('connecting');
-        setActiveCreds(creds);
-        setSessionMode(mode);
-        setSessionKey((k) => k + 1);
-    }, []);
+const AU_REPOS: EtatSession = { status: 'idle', progress: null, failure: null };
 
-    // Chargement initial : credentials + cold data
+/**
+ * L'etat final d'une session.
+ *
+ * `idle` pour un echec **silencieux** : un run annule veut dire que l'utilisateur est parti, et
+ * afficher une erreur a son retour serait signaler une panne qui n'a pas eu lieu.
+ */
+function etatFinal(resultat: ResultatSession): EtatSession {
+    const failure = resultat.failure ?? null;
+    if (failure === null) return { status: 'done', progress: null, failure: null };
+    return { status: failure.silent ? 'idle' : 'error', progress: null, failure };
+}
+
+/**
+ * Le premier chargement : ce que le trousseau porte, puis la session qui va avec.
+ *
+ * Le parcours se deduit des donnees froides — deja la, parcours chaud ; absentes, parcours froid.
+ * C'est ce qui evite de relire trois pages lourdes a chaque lancement.
+ */
+function useChargementInitial(
+    lancerSession: (mode: 'cold' | 'hot') => void,
+    poser: (creds: Identifiants | null, cold: ScolariteColdData | null) => void,
+): void {
     useEffect(() => {
-        let mounted = true;
-        Promise.all([
+        let monte = true;
+        void Promise.all([
             SecureStoreService.getCredentials(),
             SecureStoreService.getColdData(),
         ]).then(([creds, cold]) => {
-            if (!mounted) return;
-            setCredentials(creds);
-            setCredentialsLoaded(true);
-            if (cold) setColdData(cold);
-            if (creds) {
-                // Si cold data déjà là → mode hot ; sinon → mode cold
-                startSession(creds, cold ? 'hot' : 'cold');
-            }
+            if (!monte) return;
+            poser(creds, (cold as ScolariteColdData | null) ?? null);
+            if (creds) lancerSession(cold ? 'hot' : 'cold');
         });
-        return () => { mounted = false; };
-    }, [startSession]);
+        return () => { monte = false; };
+    }, [lancerSession, poser]);
+}
 
-    // Garde-fou timeout
+/**
+ * Le cycle de vie d'une session face a celui de l'application.
+ *
+ * **Annuler en arriere-plan** evite le defaut classique de ce motif : une WebView cachee qui survit
+ * a l'ecran qui l'a demandee. Sur `background` seulement, jamais sur `inactive` : iOS emet
+ * `inactive` pour un centre de controle tire ou une invite systeme — dont l'invite biometrique de
+ * cet onglet — et annuler la session a ce moment-la la tuerait sans raison.
+ *
+ * **Reprendre au retour**, et seulement si l'on avait soi-meme annule : sans ca, poser son telephone
+ * pendant un premier login laisserait l'onglet vide jusqu'au prochain demarrage de l'application.
+ * La reprise est bornee a ce cas precis — un echec reel, lui, ne se rejoue pas tout seul.
+ *
+ * **L'effet ne se rejoue jamais**, et c'est la ligne la plus importante du fichier. Son nettoyage
+ * annule la session en cours ; le lier a une fonction qui change — `reprendre` depend de
+ * `credentials`, que `LOGIN_SUCCESS` met a jour **pendant** la session — faisait se desabonner puis
+ * se reabonner en plein run, donc annuler ce qu'on venait de lancer. Le symptome etait un
+ * « cancelled » sur le second Blueprint et un onglet vide, sans que rien n'ait echoue. La fonction
+ * passe donc par une reference, relue au moment de l'appel.
+ */
+function useCycleDeVieSession(
+    sessionRef: React.RefObject<AbortController | null>,
+    reprendre: () => void,
+): void {
+    const annulee = useRef(false);
+    const reprendreRef = useRef(reprendre);
+    reprendreRef.current = reprendre;
+
     useEffect(() => {
-        if (scrapeStatus !== 'connecting' && scrapeStatus !== 'scraping') return;
-        timeoutRef.current = setTimeout(() => {
-            if (validationResolver.current) {
-                validationResolver.current({ success: false, error: Translator.get('LOGIN_NETWORK_ERROR') });
-                validationResolver.current = null;
-                validationCandidate.current = null;
-                setScrapeStatus('error');
-            } else {
-                setScrapeStatus('done');
+        const abonnement = AppState.addEventListener('change', (etat) => {
+            if (etat === 'background' && sessionRef.current !== null) {
+                annulee.current = true;
+                sessionRef.current.abort();
+            } else if (etat === 'active' && annulee.current) {
+                annulee.current = false;
+                reprendreRef.current();
             }
-        }, SESSION_TIMEOUT_MS);
-        return () => clearTimeout(timeoutRef.current);
-    }, [scrapeStatus, sessionKey]);
-
-    const handleEvent = useCallback(createEventHandler({
-        setScrapeStatus,
-        validationResolver,
-        validationCandidate,
-        setCredentials,
-        setActiveCreds,
-        setScrapeProgress,
-        setColdData,
-        setMailData
-    }), []);
-
-    const validateAndSave = useCallback((username, password) => {
-        return new Promise((resolve) => {
-            validationResolver.current = resolve;
-            validationCandidate.current = { username, password };
-            // Nouveau login → cold data à re-scraper
-            setColdData(null);
-            startSession({ username, password }, 'cold');
         });
-    }, [startSession]);
+        return () => {
+            abonnement.remove();
+            sessionRef.current?.abort();
+        };
+    }, [sessionRef]);
+}
 
-    const logout = useCallback(async () => {
+/**
+ * La deconnexion : couper la session en cours, puis vider le trousseau.
+ *
+ * Dans cet ordre, et pas l'inverse : une session encore vivante rendrait ses donnees apres
+ * l'effacement, et les reecrirait. Le run annule, lui, n'ecrit rien (voir `lancerSession`).
+ */
+function useDeconnexion(
+    sessionRef: React.RefObject<AbortController | null>,
+    oublier: () => void,
+): () => Promise<void> {
+    return useCallback(async () => {
+        sessionRef.current?.abort();
         await SecureStoreService.deleteCredentials();
         await SecureStoreService.deleteColdData();
-        setCredentials(null);
-        setActiveCreds(null);
-        setColdData(null);
-        setMailData(null);
-        setScrapeStatus('idle');
-        setScrapeProgress(null);
+        oublier();
+    }, [oublier, sessionRef]);
+}
+
+const useCredentialsSession = (): CredentialsValue => {
+    const [credentials, setCredentials] = useState<Identifiants | null>(null);
+    const [credentialsLoaded, setCredentialsLoaded] = useState(false);
+
+    const [sessionMode, setSessionMode] = useState<'cold' | 'hot'>('cold');
+    const [coldData, setColdData] = useState<ScolariteColdData | null>(null);
+    const [mailData, setMailData] = useState<ScolariteMailData | null>(null);
+    const [etat, setEtat] = useState<EtatSession>(AU_REPOS);
+
+    /** La session en cours : son controleur d'annulation, ou `null`. Aussi le verrou de non-reentrance. */
+    const sessionRef = useRef<AbortController | null>(null);
+    const validationRef = useRef<((resultat: ResultatValidation) => void) | null>(null);
+
+    /** Resout la promesse de `validateAndSave`, une seule fois. */
+    const finirValidation = useCallback((resultat: ResultatValidation) => {
+        const resoudre = validationRef.current;
+        validationRef.current = null;
+        resoudre?.(resultat);
     }, []);
 
+    // Le CAS a accepte : on ecrit les identifiants, et seulement eux. L'ecran de connexion peut
+    // disparaitre des maintenant, la suite se joue derriere l'ecran de progression.
+    const surLoginReussi = useCallback((candidat: Identifiants | null) => {
+        setEtat((precedent) => ({ ...precedent, status: 'scraping' }));
+        if (candidat === null) return;
+        void SecureStoreService.saveCredentials(candidat.username, candidat.password).then(() => {
+            setCredentials(candidat);
+        });
+        finirValidation({ success: true });
+    }, [finirValidation]);
+
+    // Les trois champs d'un resultat sont independants : un dossier lu se garde meme si la
+    // messagerie a echoue ensuite. Deux Blueprints, deux sorts.
+    const appliquerResultat = useCallback((resultat: ResultatSession) => {
+        if (resultat.cold !== undefined) {
+            setColdData(resultat.cold);
+            void SecureStoreService.saveColdData(resultat.cold);
+        }
+        if (resultat.mail !== undefined) setMailData(resultat.mail);
+        if (resultat.failure !== undefined) {
+            finirValidation({ success: false, error: messageDEchec(resultat.failure) });
+        }
+        setEtat(etatFinal(resultat));
+    }, [finirValidation]);
+
+    /**
+     * Demarre une session, ou la refuse : une seule a la fois (voir l'en-tete du module).
+     *
+     * Rend `false` quand elle a refuse, pour que l'appelant n'aille pas defaire un etat au nom d'une
+     * session qui n'a jamais commence.
+     */
+    const lancerSession = useCallback((mode: 'cold' | 'hot', candidat: Identifiants | null = null): boolean => {
+        if (sessionRef.current !== null) {
+            console.warn('[scolarite] session deja en cours : la seconde demande est refusee');
+            finirValidation({ success: false, error: Translator.get('ERROR_INTERNAL') });
+            return false;
+        }
+
+        const controleur = new AbortController();
+        sessionRef.current = controleur;
+
+        setSessionMode(mode);
+        setMailData(null);
+        setEtat({ status: 'connecting', progress: mode === 'cold' ? 'connecting' : 'mailbox', failure: null });
+
+        void deroulerSession(mode, {
+            onEtape: (etape) => setEtat((precedent) => ({ ...precedent, progress: etape })),
+            onLoginSuccess: () => surLoginReussi(candidat),
+            signal: controleur.signal,
+            ...(candidat !== null
+                ? { secrets: { bordeaux_user: candidat.username, bordeaux_pass: candidat.password } }
+                : {}),
+        })
+            .then((resultat) => {
+                // Une session annulee n'ecrit rien. Le cas qui l'impose n'est pas theorique : une
+                // deconnexion pendant la session remettrait dans le trousseau l'identite que
+                // `logout` vient d'effacer.
+                if (controleur.signal.aborted) {
+                    setEtat(AU_REPOS);
+                    return;
+                }
+                appliquerResultat(resultat);
+            })
+            .finally(() => {
+                if (sessionRef.current === controleur) sessionRef.current = null;
+                // Un run annule laisse une promesse de validation en attente : la resoudre ici evite
+                // qu'un ecran de connexion reste bloque sur son indicateur.
+                finirValidation({ success: false, error: Translator.get('LOGIN_NETWORK_ERROR') });
+            });
+
+        return true;
+    }, [appliquerResultat, finirValidation, surLoginReussi]);
+
+    const poserTrousseau = useCallback((creds: Identifiants | null, cold: ScolariteColdData | null) => {
+        setCredentials(creds);
+        setCredentialsLoaded(true);
+        if (cold !== null) setColdData(cold);
+    }, []);
+
+    useChargementInitial(lancerSession, poserTrousseau);
+
+    const retrySession = useCallback(() => {
+        if (credentials === null) return;
+        lancerSession(coldData === null ? 'cold' : 'hot');
+    }, [coldData, credentials, lancerSession]);
+
+    useCycleDeVieSession(sessionRef, retrySession);
+
+    const validateAndSave = useCallback((username: string, password: string) => {
+        return new Promise<ResultatValidation>((resolve) => {
+            validationRef.current = resolve;
+            // Un nouveau login invalide les donnees froides : elles appartiennent au compte
+            // precedent. Seulement si la session demarre, sinon on effacerait pour rien.
+            if (lancerSession('cold', { username, password })) setColdData(null);
+        });
+    }, [lancerSession]);
+
+    const logout = useDeconnexion(sessionRef, useCallback(() => {
+        setCredentials(null);
+        setColdData(null);
+        setMailData(null);
+        setEtat(AU_REPOS);
+    }, []));
+
     return {
-        credentials, credentialsLoaded, activeCreds, sessionKey, sessionMode,
-        coldData, mailData, scrapeStatus, scrapeProgress,
-        handleEvent, validateAndSave, logout
+        credentials, credentialsLoaded, coldData, mailData, sessionMode,
+        scrapeStatus: etat.status,
+        scrapeProgress: etat.progress,
+        sessionFailure: etat.failure,
+        validateAndSave, retrySession, logout,
     };
 };
 
-export const CredentialsProvider = ({ children }) => {
-    const {
-        credentials, credentialsLoaded, activeCreds, sessionKey, sessionMode,
-        coldData, mailData, scrapeStatus, scrapeProgress,
-        handleEvent, validateAndSave, logout
-    } = useCredentialsSession();
-
-    const value = {
-        credentials,
-        credentialsLoaded,
-        coldData,
-        mailData,
-        scrapeStatus,
-        scrapeProgress,
-        sessionMode,
-        validateAndSave,
-        logout,
-    };
+export const CredentialsProvider = ({ children }: { children: React.ReactNode }) => {
+    const value = useCredentialsSession();
 
     return (
         <CredentialsContext.Provider value={value}>
             {children}
-            <ScolariteWebSession
-                credentials={activeCreds}
-                sessionKey={sessionKey}
-                mode={sessionMode}
-                onEvent={handleEvent}
-            />
         </CredentialsContext.Provider>
     );
 };

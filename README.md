@@ -218,9 +218,11 @@ livré ; elle est mise à jour à chaque contribution.
   et **le canal de correction est branché** (6-C) : une source qui change se répare par une
   publication de fichier, reçue au retour au premier plan, avec trois interrupteurs d'arrêt. **Les
   deux sources de campus sont migrées** (6-D) — restaurants et bibliothèques, cinq Blueprints, cinq
-  cas de parité sur données réelles — et **l'emploi du temps aussi** (6-E) : six Blueprints, la
-  bascule directe sur Celcat, et **un serveur retiré de l'architecture**. Il ne reste que la
-  scolarité : [docs/phase-6/README.md](docs/phase-6/README.md).
+  cas de parité sur données réelles —, **l'emploi du temps aussi** (6-E) : six Blueprints, la
+  bascule directe sur Celcat, et **un serveur retiré de l'architecture** — et enfin **la session
+  universitaire** (6-F), le morceau qui justifiait la phase. Les sept sources sont migrées ; restent
+  le multi-établissement et le retrait du legacy :
+  [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
   et l'application démarre et s'utilise sans jamais la joindre. [docs/backend.md](docs/backend.md)
@@ -257,7 +259,11 @@ livré ; elle est mise à jour à chaque contribution.
   [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
 - [x] **Scolarité** — connexion CAS, récupération de l'identité au premier login puis rafraîchissement
   léger, compteur de messages non lus, verrou biométrique, navigateur intégré avec remplissage
-  automatique du formulaire. [docs/features/scolarite.md](docs/features/scolarite.md)
+  automatique du formulaire. Les 323 lignes de WebView cachée pilotée par du JavaScript injecté sont
+  devenues **deux [Blueprints](docs/blueprints.md)** (6-F) : les identifiants ne traversent plus la
+  source d'un script, chaque attente porte un délai déclaré et un échec nommé, et un décalage des
+  sélecteurs positionnels produit désormais une **erreur** au lieu d'une donnée fausse écrite dans le
+  trousseau. [docs/features/scolarite.md](docs/features/scolarite.md)
 - [x] **Réglages** — langue, thème, filtres d'UE, rappels de cours avec délai réglable,
   synchronisation idempotente du calendrier système (tâche de fond toutes les 12 h), réinitialisation,
   À propos. [docs/features/settings.md](docs/features/settings.md)
