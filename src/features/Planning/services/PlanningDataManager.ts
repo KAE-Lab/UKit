@@ -72,6 +72,20 @@ class PlanningDataManagerService {
         AsyncStorage.setItem('groupList', JSON.stringify(this._groupList));
     };
 
+    /**
+     * Le cache d'abord, le reseau ensuite et **sans bloquer**.
+     *
+     * Ce chargement est attendu par le splash (App.tsx). Y laisser un appel reseau rend le demarrage
+     * de l'application otage de la disponibilite d'une source tierce : quand le relais Celcat est
+     * tombe, chaque expiration du cache de sept jours a coute jusqu'a vingt secondes d'ecran fixe,
+     * une fois sur sept jours — d'ou un symptome qui paraissait aleatoire. La source est redevenue
+     * rapide, mais la dependance, elle, restait.
+     *
+     * C'est deja le motif du depot : le registre de Blueprints garde son rafraichissement hors du
+     * chemin critique (docs/phase-6/6-c-livraison.md), et `loadBuildings()` sert la surcouche du
+     * referentiel depuis le cache avant que le distant ne la corrige. Le manager etant observable,
+     * la liste fraiche atteint les ecrans par `notify` des qu'elle arrive.
+     */
     loadData = async () => {
         try {
             const groupListRaw = await AsyncStorage.getItem('groupList');
@@ -79,10 +93,12 @@ class PlanningDataManagerService {
             const timestamp = await AsyncStorage.getItem('groupListTimestamp');
             const difference = Date.now() - parseInt(timestamp || '0');
 
-            if (groupList && difference < this._cacheTimeLimit) {
-                this.setGroupList(groupList);
-            } else {
-                await this.fetchGroupList();
+            if (groupList) this.setGroupList(groupList);
+
+            if (!groupList || difference >= this._cacheTimeLimit) {
+                // Volontairement non attendu. Un echec est deja journalise par le service, et une
+                // liste de groupes absente n'empeche aucun ecran de s'afficher.
+                void this.fetchGroupList();
             }
         } catch (error) {
             console.warn('COULDNT RETRIEVE GROUP LIST...');

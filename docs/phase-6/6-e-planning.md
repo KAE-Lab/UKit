@@ -3,6 +3,12 @@
 > La source la plus critique de l'application, la seule qui doit survivre hors ligne, et celle dont
 > le port retire un serveur de l'architecture.
 
+> **Jalon livré.** Ce document a été amendé à la livraison : ce qui suit décrit ce qui est en place.
+> Les endroits où la réalité a corrigé la spécification sont rassemblés dans
+> [« Écarts constatés à l'implémentation »](#écarts-constatés-à-limplémentation) — il y en a cinq, et
+> l'un d'eux invalide une affirmation de ce document. Ce qui n'a pas pu être vérifié est écrit aussi,
+> plutôt que coché.
+
 ## Objectif
 
 [`PlanningApiService`](../../src/features/Planning/services/PlanningApiService.ts) et la partie

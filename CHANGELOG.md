@@ -218,6 +218,14 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Corrigé
 
+- **Le splash attendait deux appels réseau avant de s'effacer.** `PlanningDataManager.loadData()` et
+  `CampusDataManager.loadData()` sont attendus par [`App.tsx`](App.tsx) et allaient chercher leur
+  liste sur le réseau dès que le cache de sept jours avait expiré. Tant que le relais Celcat
+  répondait `522` après vingt secondes, l'application restait donc figée jusqu'à quarante secondes au
+  démarrage — une fois tous les sept jours, ce qui rendait le symptôme apparemment aléatoire. Les deux
+  managers servent désormais leur cache immédiatement et rafraîchissent **sans bloquer** ; étant
+  observables, la liste fraîche atteint les écrans dès qu'elle arrive. Le passage à
+  `celcat.u-bordeaux.fr` avait masqué le symptôme, il ne l'avait pas corrigé.
 - **Le sélecteur de date du menu de développement était invisible en thème clair sur iOS.**
   `DateTimePicker` ne recevait pas `themeVariant` : il suivait l'apparence du **système** et non celle
   de l'application, donc un iPhone en mode sombre affichait du texte blanc sur le fond clair du menu.

@@ -81,8 +81,10 @@ Décrite par [`App.tsx`](../App.tsx), dans cet ordre exact :
 1. `SplashScreen.preventAutoHideAsync()` est appelé **au niveau module**, avant tout rendu, pour que
    le splash natif reste affiché pendant la préparation.
 2. `AnimatedAppLoader` prépare en parallèle : la police `Montserrat_500Medium`, le préchargement des
-   images et des jeux d'icônes vectorielles, puis — séquentiellement —
+   images et des jeux d'icônes vectorielles, puis — séquentiellement — `loadBuildings()`,
    `PlanningDataManager.loadData()`, `CampusDataManager.loadData()`, `SettingsManager.loadSettings()`.
+   **Aucun des quatre ne touche le réseau** : ils lisent le magasin local, et ce qui doit être
+   rafraîchi l'est sans être attendu.
 3. Une fois prêt, `AnimatedSplashScreen` recouvre l'application d'une image identique au splash natif
    et la fait disparaître en fondu sur 1 s. C'est ce qui évite le clignotement entre splash natif et
    premier écran.
@@ -93,13 +95,27 @@ Décrite par [`App.tsx`](../App.tsx), dans cet ordre exact :
 
 Conséquence à connaître : **les données de démarrage sont chargées avant le premier rendu**. Un écran
 peut donc supposer que `SettingsManager` et les managers de listes sont déjà peuplés. En contrepartie,
-un `loadData()` lent retarde l'apparition de l'application.
+un `loadData()` lent retarde l'apparition de l'application — d'où la règle : **rien de ce chargement
+ne touche le réseau**.
 
-Le coût est réel, et il est **proportionnel à la latence du réseau** quand les caches ont expiré. Les
-deux `loadData()` retombent sur le réseau au-delà de sept jours de cache — liste des groupes Celcat
-pour l'un, liste des bâtiments pour l'autre — et ils sont `await`és **l'un après l'autre**, donc
-leurs latences s'additionnent avant le premier pixel. Sur une connexion lente, un démarrage à cache
-froid attend deux allers-retours en série, puis le fondu d'une seconde par-dessus.
+Ce n'était pas le cas jusqu'au jalon [6-E](phase-6/6-e-planning.md). Les deux `loadData()` retombaient
+sur le réseau au-delà de sept jours de cache — liste des groupes Celcat pour l'un, liste des bâtiments
+pour l'autre — et ils étaient `await`és **l'un après l'autre**, donc leurs latences s'additionnaient
+avant le premier pixel. La facture a été payée en vrai : tant que le relais Celcat répondait `522`
+après vingt secondes, le splash restait figé jusqu'à quarante secondes. Une fois tous les sept jours
+seulement, ce qui rendait le symptôme apparemment aléatoire et l'a laissé vivre longtemps.
+
+Les deux managers servent désormais leur cache immédiatement et lancent le rafraîchissement **sans
+l'attendre**. Étant observables, la liste fraîche atteint les écrans par `notify` dès qu'elle arrive :
+[`WelcomeScreen`](../src/features/Onboarding/WelcomeScreen.tsx) s'abonne à `groupList`, et les deux
+écrans de salles libres relisent la liste du manager — et déclenchent eux-mêmes un chargement si elle
+est vide. Un premier lancement sans aucun cache reste donc complet, il l'est simplement une fraction
+de seconde plus tard.
+
+La contrepartie, à connaître : sur un premier lancement, un écran ouvert très vite peut voir une liste
+encore vide et lancer sa propre requête, en doublon de celle du démarrage. Deux runs Act I ne
+partagent aucun état, donc c'est une requête de trop, pas un défaut — et poser un verrou coûterait plus
+que ce qu'il éviterait.
 
 Le socle a pourtant tout ce qu'il faut pour ne pas payer ça : les deux managers sont observables et
 persistent leur état. Rendre depuis le cache et rafraîchir en arrière-plan rendrait le démarrage
@@ -159,6 +175,11 @@ consommateurs hors React (tâche de fond, planificateur de notifications). Déta
   Sources déjà sorties : `BdeService` ([6-A](phase-6/6-a-socle.md)), `CrousService` et
   `LibraryService` ([6-D](phase-6/6-d-campus.md)), `PlanningApiService` et `CampusApiService`
   ([6-E](phase-6/6-e-planning.md)). Il ne reste que la scolarité.
+- **Le démarrage ne dépend d'aucune source distante.** Le splash attend le chargement des managers,
+  donc rien de ce chargement ne touche le réseau : les caches sont servis tels quels et le
+  rafraîchissement part **sans être attendu**. Même principe que le registre de Blueprints, dont la
+  résolution ne touche jamais le réseau ([blueprints.md](blueprints.md)). Ce que l'écart a coûté est
+  raconté dans [la séquence de démarrage](#séquence-de-démarrage).
 - **Le comportement distant est de la donnée.** Ce qu'on demande à une source et ce qu'on en retient
   vit dans [`blueprints/`](../blueprints/), pas dans le binaire — donc corrigeable sans release. Le
   calcul, le cache, l'internationalisation et l'heure courante n'y descendent jamais

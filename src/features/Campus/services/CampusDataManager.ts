@@ -43,6 +43,11 @@ class CampusDataManagerService {
         this.setBuildingList(buildings);
     };
 
+    /**
+     * Le cache d'abord, le reseau ensuite et **sans bloquer** — meme raison que
+     * `PlanningDataManager.loadData`, qu'il faut lire pour la mesure : ce chargement est attendu par
+     * le splash, et un appel reseau a cet endroit rend le demarrage otage d'une source tierce.
+     */
     loadData = async () => {
         try {
             const buildingListRaw = await AsyncStorage.getItem('buildingList');
@@ -50,10 +55,12 @@ class CampusDataManagerService {
             const buildingTimestamp = await AsyncStorage.getItem('buildingListTimestamp');
             const buildingDiff = Date.now() - parseInt(buildingTimestamp || '0');
 
-            if (buildingList && buildingDiff < this._cacheTimeLimit) {
-                this.setBuildingList(buildingList);
-            } else {
-                await this.fetchBuildingList();
+            if (buildingList) this.setBuildingList(buildingList);
+
+            if (!buildingList || buildingDiff >= this._cacheTimeLimit) {
+                // Volontairement non attendu : l'ecran des salles libres relit la liste du manager et
+                // se remplit quand elle arrive.
+                void this.fetchBuildingList();
             }
         } catch (error) {
             console.warn('COULDNT RETRIEVE BUILDING LIST...');
