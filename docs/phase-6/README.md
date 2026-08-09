@@ -161,6 +161,11 @@ Trois adaptations propres à cette phase :
   comprend toujours les **chemins dégradés** : mode avion, source qui répond un statut inattendu,
   identifiants faux, sélecteur devenu introuvable. Chacun doit produire un écran **différent**. S'ils
   produisent tous « aucun résultat », le jalon n'a rien apporté.
+- **Un jalon se termine par l'amendement de sa propre spécification.** La bannière « Jalon livré », et
+  les endroits où la réalité a corrigé le texte. Se vérifie par `git diff --stat docs/phase-6/` avant
+  de commiter : une spécification restée intacte ne se distingue pas d'une spécification dont
+  l'amendement a été perdu — c'est arrivé à [6-C](6-c-livraison.md), dont le commit de livraison n'a
+  jamais touché le fichier, et qui n'a été relu qu'au jalon 6-E.
 - **Un jalon qui touche un Blueprint touche la documentation de sa source.** L'inventaire
   [sources-externes.md](../sources-externes.md) reste le document qu'on lit avant toute intervention
   réseau ; il doit dire, pour chaque source, quel Blueprint la porte et ce qui est resté applicatif.

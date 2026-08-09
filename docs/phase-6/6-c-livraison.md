@@ -3,6 +3,16 @@
 > Le jalon où la phase commence à payer : corriger une source cassée devient une publication de
 > fichier, pas une release.
 
+> **Jalon livré — spécification amendée après coup.** Contrairement aux autres jalons de la phase, ce
+> document n'a **pas** été mis à jour au moment de sa livraison : le commit `3943076` ne l'a pas
+> touché. Il a été relu et corrigé plus tard, au jalon [6-E](6-e-planning.md), contre le code
+> réellement livré — trois sections décrivaient une chose plus petite que ce qui a été construit. On
+> ne sait pas si l'amendement d'origine a été écrit puis perdu (un fichier restauré à son contenu
+> initial est indiscernable d'un fichier jamais modifié) ou s'il n'a jamais existé. Ce qui suit est
+> aligné sur le code ; ce qui manque en revanche, et ne se reconstitue pas, c'est le récit de ce qui
+> a surpris pendant la livraison. La référence opérationnelle, elle, est
+> [blueprints.md](../blueprints.md) et elle est à jour.
+
 ## Objectif
 
 Le registre résout chaque Blueprint entre un **socle embarqué** dans le binaire et une **surcouche
@@ -71,9 +81,18 @@ pas les affaiblir en les configurant :
 |---|---|
 | Validation complète avant mise en cache | un document invalide ou non portable n'atteint jamais un run |
 | Empreinte SHA-256, revérifiée **à chaque lecture** | un cache local n'est pas plus digne de confiance qu'un CDN |
+| Fichier modifié après la publication du manifeste | refusé — l'empreinte du manifeste fait foi, pas celle du fichier servi |
 | Périmètre des secrets (`allowedSecrets`) | un Blueprint distant ne peut pas réclamer le trousseau |
 | `min_engine` | un Blueprint écrit pour un moteur plus récent est ignoré, sans erreur visible |
 | Version strictement supérieure | le distant ne gagne que s'il est plus récent que l'embarqué |
+| Nom publié différent du nom déclaré | refusé : on ne livre pas un Blueprint à la place d'un autre |
+| Manifeste malformé | refusé **en entier** — un manifeste partiel s'interprète toujours vers le socle |
+| Bucket injoignable | l'application reste sur son socle, sans erreur visible |
+| Cache local corrompu | purgé, sans plantage |
+
+*Table alignée à l'amendement sur les cas réellement couverts par
+[`delivery.test.ts`](../../src/shared/aetherius/delivery.test.ts) — la version initiale de ce document
+en listait cinq.*
 
 Ce qui **n'est pas** couvert, et doit rester écrit : un publieur compromis. Qui contrôle la
 publication peut livrer un Blueprint qui envoie les secrets *déjà autorisés* où il veut. Le périmètre
@@ -85,18 +104,39 @@ production — parce que c'en est un.
 
 | Geste | Qui | Effet |
 |---|---|---|
-| `disabled` sur une entrée, à la racine, ou entrée retirée | le publieur | l'embarqué reprend la main au rafraîchissement suivant |
-| `registry.revert(nom?)` | l'application | purge la surcouche tout de suite, sans réseau |
-| `remote: false` à la construction | l'application | la surcouche est ignorée durablement, sans être détruite |
+| `npm run blueprints:publish -- --desactiver <nom>`, ou une entrée retirée du manifeste | le publieur | l'embarqué reprend la main sur ce Blueprint, au rafraîchissement suivant |
+| `npm run blueprints:publish -- --arret` | le publieur | **tout** revient à l'embarqué. Le geste inverse est une publication ordinaire |
+| Bouton **Embarque** du panneau de diagnostic | l'application | purge la surcouche tout de suite, sans réseau. Non durable : un rafraîchissement peut la ramener |
+| `BLUEPRINTS_REMOTE=false` à la construction | l'application | la surcouche est ignorée durablement, **sans être détruite** |
 
 Un mécanisme de déploiement sans mécanisme de retour arrière n'en est pas un.
 
 ### L'écran de diagnostic
 
-Dans le [menu de développement](../../src/shared/ui/ModMenu.tsx) : pour chaque Blueprint, son nom,
-sa version, son **origine** (embarqué ou distant), et le rapport du dernier rafraîchissement
-(succès, ignoré et pourquoi, refusé et pourquoi). Plus deux boutons : rafraîchir, revenir à
-l'embarqué.
+Livré comme un onglet du [menu de développement](../../src/shared/ui/ModMenu.tsx), dans son propre
+fichier [`ModMenuBlueprints.tsx`](../../src/shared/ui/ModMenuBlueprints.tsx) : pour chaque Blueprint,
+son nom, sa version, son **origine** (embarqué ou distant), et le rapport du dernier rafraîchissement
+(succès, ignoré et pourquoi, refusé et pourquoi). Plus **trois** boutons — ce document n'en annonçait
+que deux :
+
+| Bouton | Ce qu'il fait |
+|---|---|
+| **Rafraichir** | relit le manifeste tout de suite, au lieu d'attendre le retour au premier plan |
+| **Embarque** | purge la surcouche, sans réseau |
+| **jouer**, par ligne | exécute le Blueprint et montre son résultat |
+
+Le troisième est celui qui rend le parcours de correction vérifiable de bout en bout : voir une ligne
+passer à « distant » prouve que le document publié est en place, le jouer prouve qu'il s'exécute. Il
+n'apparaît que sur les Blueprints qui n'ont **rien à demander** — aucune entrée obligatoire sans
+valeur par défaut — et surtout **rien à engager** : un parcours déclarant des `secrets` n'est pas
+jouable depuis ce panneau, parce que vérifier une livraison ne justifie pas une tentative de connexion
+réelle sur le compte de l'utilisateur.
+
+![Le panneau de livraison : le rapport du dernier rafraîchissement, une ligne par Blueprint avec sa version, son origine et la raison retenue, et le résultat d'un run joué depuis le panneau](../screenshots/modmenu-blueprints.png)
+
+L'état de repos est celui de la capture : le bucket sert exactement ce que le binaire embarque, donc
+chaque entrée est `ignored`. C'est ce qu'on doit voir quand il n'y a **rien à corriger** — et non un
+panneau vide, qui ne dirait pas la différence avec un manifeste jamais lu.
 
 Ce n'est pas du confort. Quand une correction publiée « n'arrive pas », les causes possibles sont
 nombreuses et se ressemblent toutes vues de l'écran principal : version pas supérieure, empreinte

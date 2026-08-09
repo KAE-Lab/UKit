@@ -218,6 +218,14 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Corrigé
 
+- **La spécification du jalon [6-C](docs/phase-6/6-c-livraison.md) décrivait moins que ce qui avait
+  été livré.** Son commit de livraison ne l'avait pas touchée : le panneau de diagnostic y était
+  attribué au mauvais fichier, annoncé avec deux boutons au lieu de trois — celui qui joue un
+  Blueprint manquait, alors que c'est lui qui rend le parcours de correction vérifiable — et la table
+  des gardes en listait cinq contre dix réellement couvertes par les tests. Corrigé contre le code, et
+  l'anomalie est écrite en tête du document plutôt que gommée. Une ligne de checklist a été ajoutée au
+  [CONTRIBUTING](CONTRIBUTING.md) : une spécification restée intacte est indiscernable d'une
+  spécification dont l'amendement a été écrasé, donc elle se vérifie par `git diff`, pas de mémoire.
 - **Le splash attendait deux appels réseau avant de s'effacer.** `PlanningDataManager.loadData()` et
   `CampusDataManager.loadData()` sont attendus par [`App.tsx`](App.tsx) et allaient chercher leur
   liste sur le réseau dès que le cache de sept jours avait expiré. Tant que le relais Celcat

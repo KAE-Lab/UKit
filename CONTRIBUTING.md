@@ -203,5 +203,10 @@ manuellement. Avant de poser un tag, vérifier la cohérence de `package.json`, 
 * [ ] Aucun `any` ajouté sans justification.
 * [ ] Parcours vérifié à la main, chemin nominal **et** chemin dégradé.
 * [ ] Documentation de la partie, « État des lieux » du README et CHANGELOG mis à jour.
+* [ ] Pour un jalon de phase : sa **spécification** porte la bannière « Jalon livré » et ses écarts
+  constatés. Le vérifier par `git diff --stat docs/phase-6/` **avant** de commiter, jamais de
+  mémoire : une spécification restée intacte est indiscernable d'une spécification dont l'amendement
+  a été écrasé, et le cas s'est présenté (voir l'en-tête de
+  [6-c-livraison.md](docs/phase-6/6-c-livraison.md)).
 * [ ] Capture ajoutée si la capacité est visuelle **et** que l'outillage le permettait.
 * [ ] Commits conformes à la convention.
