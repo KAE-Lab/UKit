@@ -18,9 +18,8 @@ Source de données : Celcat, section 1 de [sources-externes.md](../sources-exter
 5. Le bouton d'action à côté de la barre d'onglets ouvre la **recherche de groupes** : liste complète,
    sections alphabétiques, recherche, ajout aux favoris.
 
-> **Capture attendue** — `planning-jour.png` : la vue jour, curseur de dates visible, sur une journée
-> chargée.
->
+![La vue jour : curseur de dates en bandeau, cartes de cours colorées par catégorie, salle et enseignant en description](../screenshots/planning-jour.png)
+
 > **Capture attendue** — `planning-semaine.png` : la vue semaine, avec ses sections repliables.
 >
 > **Capture attendue** — `planning-groupes.png` : la recherche de groupes et ses sections
@@ -37,13 +36,21 @@ DayView (état : jour/semaine sélectionnés, mode)
        └─ ScheduleList
             ├─ isConnected()                    NetInfo
             ├─ PlanningApiService.fetchCalendarDay | fetchCalendarWeek
-            │      └─ POST Celcat GetCalendarData
+            │      └─ Blueprint ukit.celcat.jour | ukit.celcat.semaine   (moteur embarqué)
+            │      └─ PlanningApiMapping         projection, filtres, tri, découpage
             ├─ AsyncStorage  <groupes>@date | <groupes>@Week<n>   (écriture si succès, lecture si échec)
+            ├─ SourceFailureNotice                                (si ni réponse ni cache)
             ├─ PlanningDataManager.extractUEsFromCourses          (alimente les filtres)
             ├─ CourseManager.computeCourseUE / filterCourse        (mode jour)
             ├─ NotificationManager.scheduleCourseNotifications     (si planning favori)
             └─ groupOverlappingCourses → CourseGroupCarousel → CourseRow
 ```
+
+Depuis le jalon [6-E](../phase-6/6-e-planning.md), le service n'émet plus aucune requête : il joue
+quatre [Blueprints](../blueprints.md) qui visent **`celcat.u-bordeaux.fr` directement**. Le relais
+`ukit.kbdev.io` est sorti de l'architecture — il n'existait que pour contourner une contrainte de
+navigateur, et il répondait déjà `522` au moment de la bascule
+([sources-externes.md](../sources-externes.md#1-celcat--emplois-du-temps)).
 
 L'ordre est important : le réseau est tenté **en premier** dès qu'une connexion est détectée, le cache
 n'intervient qu'en repli. Voir [donnees-et-persistance.md](../donnees-et-persistance.md).
@@ -52,7 +59,7 @@ n'intervient qu'en repli. Voir [donnees-et-persistance.md](../donnees-et-persist
 
 ```text
 GroupSelectionScreen
-  ├─ PlanningApiService.fetchGroupList()   GET ReadResourceListItems (resType=103)
+  ├─ PlanningApiService.fetchGroupList()   Blueprint ukit.celcat.groupes (resType=103)
   ├─ AsyncStorage 'groups'                 cache d'affichage, repli hors ligne
   └─ generateSections()                    regroupement par première lettre, couleur cyclique
 ```
@@ -63,7 +70,10 @@ ne sont pas synchronisés.
 
 ## Contrats
 
-Définis dans [`PlanningApiService.ts`](../../src/features/Planning/services/PlanningApiService.ts).
+Le contrat de données est défini dans
+[`PlanningApiMapping.ts`](../../src/features/Planning/services/PlanningApiMapping.ts) — un module sans
+dépendance de plateforme, donc testable ; le service le réexporte pour que les composants n'aient rien
+à changer.
 
 ```ts
 interface PlanningEvent {
@@ -94,6 +104,19 @@ interface PlanningWeekDay {
 sous-ensemble consommé par les composants d'affichage. Le champ `UE` y est ajouté à l'exécution par
 `CourseManager.computeCourseUE`.
 
+Les quatre méthodes du service rendent un **résultat discriminé** plutôt qu'un `null` :
+
+```ts
+type PlanningDayResult =
+    | { ok: true; courses: PlanningEvent[] }
+    | { ok: false; failure: UkitFailure };
+```
+
+**Se teste avec `resultat.ok === false`, jamais avec `!resultat.ok`** : `tsconfig.json` n'active pas
+`strictNullChecks`, et sans lui TypeScript ne restreint pas une union sur la simple véracité du
+discriminant ([qualite.md](../qualite.md)). La famille de l'échec décide de l'écran
+([blueprints.md](../blueprints.md#les-erreurs-cessent-dêtre-avalées)).
+
 ## Cache et persistance
 
 | Clé | Contenu | Expiration |
@@ -106,8 +129,14 @@ sous-ensemble consommé par les composants d'affichage. Le champ `UE` y est ajou
 `<groupes>` vaut le nom du groupe, ou les favoris joints par `+` pour le planning agrégé. Quand le
 cache est servi, un bandeau affiche sa date (`OFFLINE_DISPLAY_FROM_DATE`).
 
-> **Capture attendue** — `planning-hors-ligne.png` : le bandeau de données en cache, en mode avion.
->
+![Le bandeau de données en cache : « Offline display from Aug 9, 2026 10:00 AM » au-dessus des cours, qui restent complets et lisibles](../screenshots/planning-hors-ligne.png)
+
+Et son opposé, quand il n'y a **rien** à replier : une journée jamais consultée, source injoignable.
+Avant le jalon [6-E](../phase-6/6-e-planning.md), cet écran était un indicateur de chargement qui
+tournait indéfiniment.
+
+![L'échec d'une source : carte centrée, nuage barré, « Service unavailable. Check your connection and try again. » et un bouton Réessayer](../screenshots/planning-echec.png)
+
 > **Capture attendue** — `planning-vide.png` : l'état vide quand aucun groupe n'est en favori.
 
 ## Décisions de conception
@@ -122,9 +151,10 @@ tout le reste.
 sans condition quand `isFavorite` est faux. Consulter le planning d'un autre groupe montre donc tout,
 volontairement : les filtres décrivent *ses* UE, pas celles d'autrui.
 
-**Le jour et la semaine ne parsent pas la description pareil.** `parseEvent` reçoit `';'` en mode
-jour et `'\n'` en mode semaine, parce que Celcat ne formate pas la description de la même façon selon
-`calView`. Uniformiser casserait l'affichage des salles.
+**Le jour et la semaine ne parsent pas la description pareil.** `projeterCours` reçoit `';'` en mode
+jour et `'\n'` en mode semaine. C'est le comportement d'origine, conservé à la lettre par le jalon
+[6-E](../phase-6/6-e-planning.md) — mais sa justification historique était fausse, et sa conséquence
+réelle est écrite dans les [limites connues](#limites-connues).
 
 **La position dans le calendrier survit à la navigation.** `DayView.lastSelectedDay` et
 `lastSelectedWeek` sont des propriétés **statiques de classe** : revenir sur l'onglet Planning
@@ -157,26 +187,40 @@ revenant dans l'application.
 - Ouvrir un cours ayant une salle connue : la carte doit apparaître ; en ouvrir un sans salle : la
   fiche doit rester correcte sans carte.
 - Ajouter un cours au calendrier système et vérifier sa présence dans l'application Calendrier.
-- **Hors ligne** : activer le mode avion, ouvrir un jour déjà consulté — le cache daté doit s'afficher
-  avec son bandeau ; ouvrir un jour jamais consulté — la vue doit rester en chargement sans planter.
+- **Hors ligne** : ouvrir un jour déjà consulté — le cache daté doit s'afficher avec son bandeau ;
+  ouvrir un jour jamais consulté — un écran d'échec explicite doit apparaître, avec un bouton
+  Réessayer. Plus besoin du mode avion pour l'obtenir : pointer `vars.domaine` de
+  `ukit-celcat-jour.blueprint.json` sur un hôte injoignable et recharger produit le même chemin, en
+  vingt secondes et de façon reproductible.
+- **Source qui a changé** : passer l'`expect.status` du même Blueprint à `418` doit produire un écran
+  **différent** — « Réponse inattendue », sans bouton Réessayer, parce que rejouer ne répare pas une
+  source qui a changé de contrat.
 - Un dimanche, ou un jour sans cours : la carte « pas de cours » doit s'afficher.
 
 ## Limites connues
 
-- **Le jeton d'annulation n'annule rien.** `ScheduleList` crée un `axios.CancelToken.source()`, le
-  stocke et l'annule au démontage ou au changement de requête, mais **ne le transmet à aucun appel** :
-  `PlanningApiService` ne l'accepte pas en paramètre. Une réponse tardive peut donc encore écrire dans
-  l'état d'un composant démonté.
-- **Un échec réseau sans cache laisse la vue en chargement.** Si `fetchedData` reste `null`, aucun
-  `setState` final n'est effectué : `loading` demeure vrai et l'indicateur tourne indéfiniment.
-- **`ScheduleList` importe `axios` directement**, seul écart au principe « le réseau vit dans les
-  services » avec l'alerte de mise à jour.
+- **La vue semaine n'affiche aucune description, et ce n'est pas nouveau.** Mesure du 2026-08-09 : le
+  serveur formate la description **à l'identique** dans les deux vues
+  (`\r\n\r\n<br />\r\n\r\n`), que `formatDescription` réduit à une seule ligne séparée par `;`.
+  Découper sur `'\n'` ne rend donc qu'un champ, qui porte la catégorie en tête et se fait écarter en
+  entier. La justification historique — « le serveur ne formate pas pareil selon `calView` » — était
+  fausse ; le comportement, lui, est celui de l'application depuis toujours. Le jalon 6-E l'a
+  **conservé et verrouillé par un test**
+  ([`PlanningApiMapping.test.ts`](../../src/features/Planning/services/PlanningApiMapping.test.ts)),
+  parce que le corriger changerait l'affichage de la vue semaine : c'est une décision produit, pas une
+  correction de migration.
+- **Un `modules: []` retomberait sur la catégorie.** L'extraction rend `null` aussi bien pour un champ
+  absent que pour une liste vide, et les deux cessent d'être distinguables. Le code d'origine rendait
+  alors un sujet indéfini, affiché vide. Le cas n'existe dans aucune des 334 entrées d'une année
+  interrogée le 2026-08-09.
 - **Deux caches concurrents pour la liste des groupes** (`groups` et `groupList`), écrits par deux
   chemins différents et jamais réconciliés.
 - **`computeScheduleWeek` est appelée au rendu**, pas au chargement : le calcul des UE et le filtrage
   de la vue semaine se rejouent à chaque rendu de `DayWeek`.
-- **`ScheduleList` est un composant à classe de 341 lignes** qui mélange chargement, cache, calcul et
-  rendu. C'est le fichier le plus dense du module.
+- **`ScheduleList` est un composant à classe dense** : chargement, cache, calcul et rendu dans le même
+  fichier. Le jalon 6-E l'a découpé en méthodes nommées (`loadSchedule`, `cacheOrFailure`,
+  `applySchedule`) sans le scinder — un composant à classe qui fonctionne ne se réécrit pas sans
+  raison.
 - **La route `Day`** est déclarée dans la pile mais n'est atteinte par aucun appel de navigation.
 - **Trois erreurs de typage** subsistent dans ce module (`TS2612` sur `context`) — voir
   [qualite.md](../qualite.md).
@@ -200,5 +244,7 @@ revenant dans l'application.
 | [`components/CalendarNewEventPrompt.tsx`](../../src/features/Planning/components/CalendarNewEventPrompt.tsx) | modale d'ajout d'un cours au calendrier système (permissions, calendrier par défaut) |
 | [`components/DayWeekCollapsible.tsx`](../../src/features/Planning/components/DayWeekCollapsible.tsx) | section repliable d'un jour dans la vue semaine, avec résolution tolérante de la date |
 | [`components/GroupSelectionComponents.tsx`](../../src/features/Planning/components/GroupSelectionComponents.tsx) | en-tête de section et ligne de groupe de l'écran de recherche |
-| [`services/PlanningApiService.ts`](../../src/features/Planning/services/PlanningApiService.ts) | accès Celcat : liste des groupes, calendrier jour / semaine / année, parsing des événements |
+| [`services/PlanningApiService.ts`](../../src/features/Planning/services/PlanningApiService.ts) | joue les quatre Blueprints Celcat, et calcule les plages qui dépendent de l'heure courante |
+| [`services/PlanningApiMapping.ts`](../../src/features/Planning/services/PlanningApiMapping.ts) | contrats et projection : sujet, description, filtres, tri, découpage de la semaine |
+| [`services/PlanningApiMapping.test.ts`](../../src/features/Planning/services/PlanningApiMapping.test.ts) | ses tests, joués par `npm test` |
 | [`services/PlanningDataManager.ts`](../../src/features/Planning/services/PlanningDataManager.ts) | manager observable : liste des groupes en cache 7 jours, extraction des UE disponibles |

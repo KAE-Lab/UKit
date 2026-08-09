@@ -26,6 +26,7 @@
 
 import { Aetherius } from '@aetherius/react-native';
 
+import { NetworkMockService } from '../services/NetworkMockService';
 import SecureStoreService from '../services/SecureStoreService';
 import { ukitSecrets } from './secrets';
 
@@ -43,7 +44,13 @@ let client: Aetherius | null = null;
  */
 export function getAetheriusClient(): Aetherius {
     if (client === null) {
-        client = new Aetherius({ secrets: ukitSecrets(SecureStoreService) });
+        client = new Aetherius({
+            secrets: ukitSecrets(SecureStoreService),
+            // Le `fetch` de l'hote passe par l'interrupteur hors ligne du menu de developpement. Il
+            // delegue au `fetch` global tant que rien n'est coupe, donc ne change rien en production
+            // — et il rend le chemin degrade verifiable sans mode avion (docs/qualite.md).
+            fetch: NetworkMockService.fetch,
+        });
     }
     return client;
 }

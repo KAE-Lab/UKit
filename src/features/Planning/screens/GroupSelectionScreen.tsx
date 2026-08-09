@@ -134,34 +134,26 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
         let list = null;
 
         if (await isConnected()) {
-            try {
-                const groupList = await FetchManager.fetchGroupList();
-                if (groupList === null) throw 'network error';
+            const resultat = await FetchManager.fetchGroupList();
 
-                this.setState({ cacheDate: null });
-                list = groupList.map((e) => ({ name: e }));
-                AsyncStorage.setItem('groups', JSON.stringify({ list, date: moment() })).catch((e) =>
-                    console.warn('Échec de la mise en cache des groupes :', e)
-                );
-            } catch (error: unknown) {
-                if (error && typeof error === 'object' && 'response' in error) {
-                    Toast.show(Translator.get('ERROR_WITH_CODE'), {
-                        duration: Toast.durations.LONG,
-                        position: Toast.positions.BOTTOM,
-                    });
-                } else if (error && typeof error === 'object' && 'request' in error) {
-                    Toast.show(Translator.get('NO_CONNECTION'), {
-                        duration: Toast.durations.SHORT,
-                        position: Toast.positions.BOTTOM,
-                    });
-                } else {
-                    const msg = error instanceof Error ? error.message : String(error);
-                    Toast.show(Translator.get('ERROR_WITH_MESSAGE', msg), {
-                        duration: Toast.durations.LONG,
+            if (resultat.ok === false) {
+                // Le message vient de la famille d'echec, plus d'un reniflage de la forme de l'erreur
+                // axios : une source injoignable, une reponse inattendue et un fichier a corriger ne
+                // disaient qu'une seule chose avant, et en disent trois maintenant
+                // (shared/aetherius/failures.ts).
+                if (resultat.failure.silent !== true) {
+                    Toast.show(Translator.get(resultat.failure.messageKey), {
+                        duration: resultat.failure.retryable ? Toast.durations.SHORT : Toast.durations.LONG,
                         position: Toast.positions.BOTTOM,
                     });
                 }
                 list = await this.getCache();
+            } else {
+                this.setState({ cacheDate: null });
+                list = resultat.groups.map((e) => ({ name: e }));
+                AsyncStorage.setItem('groups', JSON.stringify({ list, date: moment() })).catch((e) =>
+                    console.warn('Échec de la mise en cache des groupes :', e)
+                );
             }
         } else {
             Toast.show(Translator.get('NO_CONNECTION'), {

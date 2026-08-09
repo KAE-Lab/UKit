@@ -4,6 +4,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, AppThemeType } from '../../../shared/theme/Theme';
+import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import type { UkitFailure } from '../../../shared/aetherius';
 
 interface CampusSearchBarProps {
@@ -160,13 +161,13 @@ interface CampusListEmptyStateProps {
 /**
  * L'etat vide d'une liste Campus, et son etat d'erreur.
  *
- * Le rendu de l'echec est delegue a `CampusFailureNotice`, qui sert aussi les ecrans sans liste — la
- * fiche d'un restaurant, les horaires d'une bibliotheque. Un seul message et un seul bouton pour un
- * meme echec, quel que soit l'ecran qui le montre.
+ * Le rendu de l'echec est delegue a `SourceFailureNotice`, qui sert aussi les ecrans sans liste — la
+ * fiche d'un restaurant, les horaires d'une bibliotheque, le planning. Un seul message et un seul
+ * bouton pour un meme echec, quel que soit l'ecran qui le montre.
  */
 export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, theme, failure, onRetry }: CampusListEmptyStateProps) {
     if (failure !== undefined && failure.silent !== true) {
-        return <CampusFailureNotice failure={failure} theme={theme} onRetry={onRetry} />;
+        return <SourceFailureNotice failure={failure} theme={theme} onRetry={onRetry} />;
     }
 
     return (
@@ -197,70 +198,13 @@ export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, the
     );
 }
 
-interface CampusFailureNoticeProps {
-    failure: UkitFailure;
-    theme: AppThemeType;
-    onRetry?: () => void;
-}
-
 /**
- * Un echec de source, tel qu'un ecran Campus le montre.
- *
- * Le bouton Reessayer n'apparait que si la famille est reessayable : le proposer sur un echec que
- * rejouer ne repare pas — une source qui a change de contrat — serait pire que de ne rien proposer.
- * C'est la table de shared/aetherius/failures.ts qui decide, pas ce composant.
+ * Le rendu d'un echec de source a remonte dans `shared/ui/` au jalon 6-E, quand le planning en a eu
+ * besoin : une dependance croisee entre deux dossiers de `features/` est ce que
+ * [architecture.md](../../../../docs/architecture.md) demande d'eviter. Le nom local est conserve
+ * pour que les ecrans Campus qui l'importent d'ici n'aient pas a changer.
  */
-export function CampusFailureNotice({ failure, theme, onRetry }: CampusFailureNoticeProps) {
-    return (
-        <View style={{
-            alignItems: 'center',
-            paddingVertical: tokens.space.xl,
-            paddingHorizontal: tokens.space.lg,
-            marginHorizontal: tokens.space.sm,
-            backgroundColor: theme.cardBackground,
-            borderRadius: tokens.radius.lg,
-            borderWidth: 1,
-            borderColor: theme.border
-        }}>
-            <MaterialCommunityIcons
-                name="cloud-off-outline"
-                size={48}
-                color={theme.fontSecondary}
-                style={{ marginBottom: tokens.space.sm }}
-            />
-            <Text style={{
-                color: theme.fontSecondary,
-                fontSize: tokens.fontSize.md,
-                textAlign: 'center'
-            }}>
-                {Translator.get(failure.messageKey)}
-            </Text>
-
-            {failure.retryable && onRetry ? (
-                <TouchableOpacity
-                    onPress={onRetry}
-                    activeOpacity={0.8}
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginTop: tokens.space.md,
-                        paddingVertical: tokens.space.sm,
-                        paddingHorizontal: tokens.space.lg,
-                        borderRadius: tokens.radius.md,
-                        backgroundColor: theme.primary,
-                    }}
-                >
-                    {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif des messages
-                        d'erreur (ScolariteLoginView), illisible sur le fond `primary` du bouton. */}
-                    <MaterialCommunityIcons name="refresh" size={18} color={theme.lightFont} />
-                    <Text style={{ color: theme.lightFont, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, marginLeft: tokens.space.xs }}>
-                        {Translator.get('RETRY')}
-                    </Text>
-                </TouchableOpacity>
-            ) : null}
-        </View>
-    );
-}
+export { SourceFailureNotice as CampusFailureNotice };
 
 interface CampusPartialNoticeProps {
     theme: AppThemeType;

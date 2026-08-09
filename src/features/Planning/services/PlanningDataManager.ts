@@ -59,11 +59,13 @@ class PlanningDataManagerService {
     };
 
     fetchGroupList = async () => {
-        const groupList = await PlanningApiService.fetchGroupList();
-        if (groupList) {
-            await AsyncStorage.setItem('groupListTimestamp', String(Date.now()));
-            this.setGroupList(groupList);
-        }
+        // `resultat.ok === false` et non `!resultat.ok` : sans `strictNullChecks`, TypeScript ne
+        // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
+        const resultat = await PlanningApiService.fetchGroupList();
+        if (resultat.ok === false) return;
+
+        await AsyncStorage.setItem('groupListTimestamp', String(Date.now()));
+        this.setGroupList(resultat.groups);
     };
 
     saveData = () => {

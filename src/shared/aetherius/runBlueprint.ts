@@ -22,7 +22,7 @@
  * Voir docs/phase-6/6-a-socle.md et docs/blueprints.md.
  */
 
-import { describeFailure, type RunEventHandler } from '@aetherius/engine';
+import { describeFailure, type AbortSignalLike, type RunEventHandler } from '@aetherius/engine';
 
 import type { BlueprintName } from '../../../blueprints';
 import { getAetheriusClient } from './client';
@@ -54,6 +54,16 @@ export interface RunBlueprintOptions {
      * postait a la main.
      */
     readonly onEvent?: RunEventHandler;
+    /**
+     * Annule le run.
+     *
+     * Un ecran qui peut disparaitre pendant un chargement en a besoin, et le moteur en a un : c'est
+     * ce qui a permis de retirer le `axios.CancelToken` de `ScheduleList`, lequel etait stocke et
+     * annule sans jamais etre transmis a un appel — il n'annulait donc rien
+     * (docs/features/planning.md). Un run annule est un echec de famille `cancelled`, marque
+     * `silent` : l'utilisateur est deja parti, il n'y a rien a lui afficher.
+     */
+    readonly signal?: AbortSignalLike;
 }
 
 /**
@@ -75,6 +85,7 @@ export async function runBlueprint(
         const result = await getAetheriusClient().run(resolved.blueprint, {
             inputs: options.inputs ?? {},
             ...(options.onEvent !== undefined ? { onEvent: options.onEvent } : {}),
+            ...(options.signal !== undefined ? { signal: options.signal } : {}),
         });
 
         // Le verdict vient du moteur, pas d'une comparaison de statut : `describeFailure` rend

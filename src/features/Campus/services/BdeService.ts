@@ -21,6 +21,8 @@ import {
     getSupabase,
     reportSupabaseFailure,
 } from '../../../shared/supabase';
+import moment from 'moment';
+
 import type { UkitFailure } from '../../../shared/aetherius';
 import { estValide, projeterAnnonce, type BdeAnnonce } from './BdeMapping';
 
@@ -79,7 +81,9 @@ const BdeService = {
 
         // Une liste vide est un resultat, pas un echec : la base a bien repondu, elle n'a rien a
         // publier aujourd'hui. C'est la distinction que toute la Phase 6 existe pour rendre visible.
-        const now = new Date();
+        // `moment()` suit le mock temporel : c'est ce qui rend une annonce expiree
+        // verifiable sans attendre son echeance (docs/qualite.md).
+        const now = moment().toDate();
         return {
             ok: true,
             annonces: (data ?? []).map(projeterAnnonce).filter((annonce) => estValide(annonce, now)),

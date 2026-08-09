@@ -32,13 +32,15 @@ class CampusDataManagerService {
     };
 
     fetchBuildingList = async () => {
-        const roomList = await CampusApiService.fetchRoomList();
-        if (roomList) {
-            const buildings = CampusApiService.extractBuildingsFromRooms(roomList);
-            await AsyncStorage.setItem('buildingListTimestamp', String(Date.now()));
-            await AsyncStorage.setItem('buildingList', JSON.stringify(buildings));
-            this.setBuildingList(buildings);
-        }
+        // `resultat.ok === false` et non `!resultat.ok` : sans `strictNullChecks`, TypeScript ne
+        // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
+        const resultat = await CampusApiService.fetchRoomList();
+        if (resultat.ok === false) return;
+
+        const buildings = CampusApiService.extractBuildingsFromRooms(resultat.rooms);
+        await AsyncStorage.setItem('buildingListTimestamp', String(Date.now()));
+        await AsyncStorage.setItem('buildingList', JSON.stringify(buildings));
+        this.setBuildingList(buildings);
     };
 
     loadData = async () => {

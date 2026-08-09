@@ -99,6 +99,10 @@ la politique de lecture, donc une annonce retirée ne sort pas de la base.
 
 **`expire_le` peut rester vide** : l'annonce n'expire alors jamais.
 
+Le filtre applicatif date par `moment()` depuis le jalon [6-E](../phase-6/6-e-planning.md), et non
+plus par `new Date()` : la [simulation temporelle](../qualite.md) l'atteint donc, et une annonce
+expirée se vérifie en déplaçant l'heure au lieu d'attendre son échéance.
+
 Les visuels vont dans le bucket `media`, sous `annonces/`, et leur URL publique dans `image_url`.
 Procédure complète et clés : [backend.md](../backend.md#publier).
 

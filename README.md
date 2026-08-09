@@ -88,7 +88,7 @@ l'application — sans intermédiaire.
 
 | Source | Ce qu'elle fournit | Accès |
 |---|---|---|
-| Celcat (`ukit.kbdev.io`) | emplois du temps, groupes, salles et leur occupation | API interne, sans authentification |
+| Celcat (`celcat.u-bordeaux.fr`) | emplois du temps, groupes, salles et leur occupation | API interne, sans authentification |
 | CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires, extraction de pages |
 | Affluences | bibliothèques, affluence temps réel, horaires | API privée |
 | Croustillant | restaurants CROUS et menus | API publique |
@@ -196,7 +196,7 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Thème** — tokens de design (espacements, rayons, typographie, ombres), thèmes clair et sombre
   complets, alignement sur la préférence système au premier lancement.
   [docs/theme.md](docs/theme.md)
-- [x] **Internationalisation** — français, anglais, espagnol ; 217 clés par dictionnaire, typage de
+- [x] **Internationalisation** — français, anglais, espagnol ; 215 clés par dictionnaire, typage de
   la clé, locale des dates alignée. Treize libellés d'écrans Campus restent non traduits.
   [docs/i18n.md](docs/i18n.md)
 - [x] **Persistance locale** — managers observables, caches à expiration pour les listes de
@@ -218,8 +218,9 @@ livré ; elle est mise à jour à chaque contribution.
   et **le canal de correction est branché** (6-C) : une source qui change se répare par une
   publication de fichier, reçue au retour au premier plan, avec trois interrupteurs d'arrêt. **Les
   deux sources de campus sont migrées** (6-D) — restaurants et bibliothèques, cinq Blueprints, cinq
-  cas de parité sur données réelles. Les sources universitaires suivent, jalon par jalon :
-  [docs/phase-6/README.md](docs/phase-6/README.md).
+  cas de parité sur données réelles — et **l'emploi du temps aussi** (6-E) : six Blueprints, la
+  bascule directe sur Celcat, et **un serveur retiré de l'architecture**. Il ne reste que la
+  scolarité : [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
   et l'application démarre et s'utilise sans jamais la joindre. [docs/backend.md](docs/backend.md)
@@ -232,7 +233,9 @@ livré ; elle est mise à jour à chaque contribution.
 
 - [x] **Planning** — vues jour et semaine, planning agrégé des groupes favoris, curseur couvrant
   l'année scolaire, recherche de groupes par sections, fiche de cours avec carte, filtres d'UE,
-  carrousel des cours simultanés, repli hors ligne daté.
+  carrousel des cours simultanés, repli hors ligne daté. Source jouée par quatre
+  [Blueprints](docs/blueprints.md) visant l'université **sans relais** ; une panne, une source qui a
+  changé et une journée sans cours produisent trois écrans différents.
   [docs/features/planning.md](docs/features/planning.md)
 - [x] **Campus — tableau de bord** — quatre sections indépendantes, position résolue une seule fois,
   socle de liste commun (recherche, filtres persistés, favoris, états vides).

@@ -24,7 +24,7 @@ fragilité, extraction, contrat non versionné — ne s'y applique. Ce document 
 
 | # | Source | Rôle | Authentification | Fragilité |
 |---|---|---|---|---|
-| 1 | Celcat (`ukit.kbdev.io`) | emplois du temps, groupes, salles | aucune | moyenne — API interne non documentée |
+| 1 | Celcat (`celcat.u-bordeaux.fr`) | emplois du temps, groupes, salles | aucune | moyenne — API interne non documentée. **Six Blueprints** depuis [6-E](phase-6/6-e-planning.md), et le relais `ukit.kbdev.io` est sorti de l'architecture |
 | 2 | CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires | **élevée** — extraction de pages HTML |
 | 3 | Affluences | bibliothèques, affluence, horaires | aucune (en-têtes imités) | moyenne — API privée d'une application web. **Trois Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
 | 4 | Croustillant | restaurants CROUS et menus | aucune | faible — API publique documentée. **Deux Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
@@ -34,31 +34,64 @@ fragilité, extraction, contrat non versionné — ne s'y applique. Ce document 
 
 ## 1. Celcat — emplois du temps
 
-Serveur de planning de l'université, exposé derrière `https://ukit.kbdev.io/Home/`. Constantes dans
-[`urls.ts`](../src/shared/constants/urls.ts) (`WebApiURL`). Deux consommateurs :
-[`PlanningApiService`](../src/features/Planning/services/PlanningApiService.ts) pour les groupes,
-[`CampusApiService`](../src/features/Campus/services/CampusApiService.ts) pour les salles.
+Serveur de planning de l'université, joint **directement** sur `https://celcat.u-bordeaux.fr/calendar`
+depuis le jalon [6-E](phase-6/6-e-planning.md). Six [Blueprints](blueprints.md) le portent, un par
+appel réellement joué :
+
+| Blueprint | Appel | Consommateur |
+|---|---|---|
+| `ukit.celcat.groupes` | la liste des groupes d'étudiants (`resType` 103) | [`PlanningApiService`](../src/features/Planning/services/PlanningApiService.ts) |
+| `ukit.celcat.jour` | les cours d'une journée, pour un ou plusieurs groupes | idem |
+| `ukit.celcat.semaine` | les cours d'une semaine | idem |
+| `ukit.celcat.annee` | la plage annuelle de la synchronisation calendrier | idem |
+| `ukit.celcat.salles` | la liste des salles (`resType` 102) | [`CampusApiService`](../src/features/Campus/services/CampusApiService.ts) |
+| `ukit.celcat.occupation` | l'occupation de salles sur une journée | idem |
+
+### Le relais est sorti de l'architecture
+
+L'application passait par `https://ukit.kbdev.io/Home/`, un point d'entrée dédié. Il existait pour
+une seule raison : une page web ne peut pas appeler un autre domaine sans son accord, et
+l'application était une WebView. **Une requête émise nativement depuis l'appareil n'y est pas
+soumise**, donc le relais n'a plus d'objet — un serveur à héberger, à payer et à surveiller en moins.
+
+Trois conditions ont été mesurées avant de basculer, le **2026-08-09**, et elles sont notées ici
+parce qu'un changement côté université les invaliderait sans prévenir :
+
+- le serveur ne filtre **ni sur `Origin`, ni sur `Referer`, ni sur l'`User-Agent`** : les trois ont
+  été envoyés faux ou vides, la réponse reste `200` ;
+- il répond en **0,6 s** sur une liste, **2,3 s** pour une année entière (216 Ko, 334 événements) ;
+- il accepte `federationIds[]` répété, donc l'interrogation multi-ressources en une requête.
+
+> **Le relais était déjà tombé au moment de la bascule.** Les trois sondes de ce jour-là ont reçu un
+> **522 (Cloudflare)** après vingt secondes, à chaque essai. Le planning des utilisateurs sans cache
+> était donc en panne, et le jalon 6-E est autant une réparation qu'une migration.
+
+Le repli reste gratuit et n'exige pas de release : `vars.domaine` peut redevenir le relais par une
+**publication de Blueprint**. L'extinction définitive du relais est une décision de
+[6-H](phase-6/6-h-livraison-finale.md), après observation.
 
 ### Lister des ressources
 
 ```http
-GET https://ukit.kbdev.io/Home/ReadResourceListItems
+GET https://celcat.u-bordeaux.fr/calendar/Home/ReadResourceListItems
     ?searchTerm=_&pageSize=10000&resType=<103|102>
 ```
 
 `resType` sélectionne la famille de ressources : **103 = groupes d'étudiants**, **102 = salles**.
-Réponse : `{ results: [{ id, text, ... }] }`.
+Réponse : `{ results: [{ id, text, ... }] }`. Environ 2 945 groupes et 283 salles.
 
-- Groupes — on ne garde que `id`, on écarte les identifiants de moins de 3 caractères, on trie
-  alphabétiquement.
-- Salles — on garde `{ id, name: text }` pour les entrées dont `text` fait plus de 2 caractères.
+Les deux Blueprints portent un `assert` sur la présence du tableau `results` : sans lui, une réponse
+dont la clé aurait disparu rendrait un **succès à liste vide**, indistinguable d'une liste
+légitimement vide ([blueprints.md](blueprints.md#affirmer-la-forme-pour-que--rien-trouvé--ne-se-confonde-pas-avec--rien-à-trouver-)).
 
 ### Récupérer un calendrier
 
 ```http
-POST https://ukit.kbdev.io/Home/GetCalendarData
-Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+POST https://celcat.u-bordeaux.fr/calendar/Home/GetCalendarData
+Pragma: no-cache
+Cache-Control: no-cache
 Accept: application/json
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
 
 start=YYYY-MM-DD&end=YYYY-MM-DD&resType=103&calView=agendaDay
 &federationIds[]=<identifiant>&colourScheme=3
@@ -66,58 +99,97 @@ start=YYYY-MM-DD&end=YYYY-MM-DD&resType=103&calView=agendaDay
 
 Points à respecter, tous appris à l'usage :
 
-- Le corps est **encodé en formulaire**, jamais en JSON. `qs.stringify(data, { arrayFormat: 'repeat' })`
-  produit `federationIds[]=A&federationIds[]=B` — c'est la forme attendue pour interroger plusieurs
-  ressources d'un coup (plusieurs groupes favoris, ou toutes les salles d'un bâtiment).
+- Le corps est **encodé en formulaire**, jamais en JSON. `federationIds[]` est une clé littérale
+  **répétable** : `federationIds[]=A&federationIds[]=B` interroge deux ressources en une requête
+  (plusieurs groupes favoris, ou plusieurs salles). Le Blueprint le déclare en entrée `array`, et
+  l'encodeur du moteur répète la clé — c'est ce que faisait `qs.stringify(data, { arrayFormat: 'repeat' })`.
+- **Une nuance d'encodage subsiste, et elle est sans effet.** `qs` sortait en RFC3986 (une espace
+  devient `%20`), l'encodeur du moteur reproduit `quote_plus` de Python (une espace devient `+`).
+  Partout ailleurs les deux coïncident au caractère près, `!'()*~` compris. Les deux formes ont été
+  postées le 2026-08-09 sur un identifiant de salle porteur d'espaces, d'accents, d'un point et d'une
+  barre oblique : même statut, même réponse au SHA-256 près. Le
+  [harnais de parité](../tools/parity/README.md) compare le corps réellement émis, cet écart
+  normalisé et lui seul.
+- `Connection: keep-alive` figurait dans les en-têtes du code d'origine ; c'est un en-tête **interdit
+  à `fetch`**, il n'a jamais traversé, et il a été retiré.
 - `calView` vaut `agendaDay` ou `agendaWeek` selon la fenêtre demandée. `resType` doit correspondre à
   la famille des identifiants passés.
 - `colourScheme=3` détermine la palette renvoyée dans `backgroundColor` ; c'est cette couleur qui
   colore les cartes de cours dans l'application.
-- `end` est **exclusif** : pour une journée on envoie le lendemain, et on refiltre côté client sur la
-  date exacte (le serveur renvoie des débordements).
+- `end` est **exclusif**. Une journée envoie donc le lendemain (`{{ inputs.jour | add_days(1) }}`), et
+  une semaine envoie le **samedi** (`add_days(6)`) : l'application n'affiche que six jours, du lundi
+  au samedi.
+- **Le serveur déborde.** Une journée demandée un dimanche renvoie les cours du lundi ; un événement
+  de vacances s'étale sur plusieurs jours. Le refiltrage sur la date exacte reste donc applicatif.
 
 ### Forme d'un événement
 
 ```ts
-interface RawPlanningEvent {
+interface EvenementCelcat {
     id: string;
-    eventCategory: string;      // "CM", "TD", "TP", "Examen", "Vacances"…
-    start: string;              // ISO
-    end: string;                // ISO
+    eventCategory: string;      // "Cours", "TD", "TP", "Examen", "Vacances"…
+    start: string;              // ISO, sans fuseau
+    end: string | null;         // null sur les evenements en journee entiere
     backgroundColor: string;
-    description: string;        // HTML échappé, multi-lignes
-    modules: string[] | null;   // intitulés de matière
+    description: string;        // HTML echappe, multi-lignes
+    modules: string[] | null;   // intitules de matiere, null sur les vacances
 }
 ```
 
-### Transformation appliquée
+Deux pièges mesurés sur une année complète de données :
 
-`PlanningApiService.parseEvent` produit un `PlanningEvent` applicatif :
+- **`end` est nul** sur les événements `Vacances`, servis en journée entière. La valeur descend telle
+  quelle jusqu'à `moment(null)`, qui est une date **invalide** — et non `moment(undefined)`, qui
+  vaudrait *maintenant*.
+- **`modules` traverse l'arité de l'extraction.** Un chemin `$.modules[*]` qui ne correspond à rien
+  rend `null`, une seule correspondance rend **la valeur**, plusieurs rendent la liste. Un cours à un
+  module rend donc une chaîne, jamais un tableau d'un élément. Corollaire : un `modules: []` serait
+  indistinguable d'un `modules: null` — le cas n'existe pas dans une année de données, et le sujet
+  retombe sur la catégorie plutôt que de rester indéfini.
 
-1. Les événements de catégorie `Vacances` sont **écartés** systématiquement.
-2. Le sujet vient du premier élément de `modules` ; si `modules` est `null`, on retombe sur
-   `eventCategory`.
-3. `description` est nettoyée par
-   [`formatDescription`](../src/shared/utils/formatUtils.ts) : suppression des `\r` et des `<br />`,
-   remplacement de quatre sauts de ligne consécutifs par `;`, puis décodage des entités HTML. Les
-   lignes qui répètent la catégorie ou le sujet sont retirées.
-4. Le **séparateur de description dépend de la vue** : `;` pour le jour et la synchronisation
-   calendrier, `\n` pour la semaine. Cette différence est délibérée — le serveur ne formate pas la
-   description de la même façon selon `calView`.
-5. Le code d'UE est extrait du sujet par l'expression `([0-9][A-Z0-9]+) (.+)` : `4TIN301U Algorithmique`
-   devient `UE = "4TIN301U"`, `subject = "Algorithmique"`. C'est ce code qui alimente les filtres.
-6. Le tri est double : heure de début, puis sujet alphabétique **après retrait du code d'UE**.
+### Ce qui reste applicatif, et ce n'est pas rien
+
+La frontière est celle de [blueprints.md](blueprints.md#ce-qui-descend-dans-un-blueprint-et-ce-qui-ny-descend-pas) :
+le Blueprint décrit la requête et ce qu'on en retient, le reste est du calcul. Vit donc dans
+[`PlanningApiMapping`](../src/features/Planning/services/PlanningApiMapping.ts) et
+[`CampusApiMapping`](../src/features/Campus/services/CampusApiMapping.ts) :
+
+1. Le rejet des événements `Vacances` **et** le refiltrage sur la date exacte. Le fichier de
+   référence d'Aetherius filtrait `Vacances` dans le Blueprint ; on ne l'a pas suivi. **Un filtre, un
+   endroit** — et surtout, la recherche de salles libres a *besoin* des `Vacances` : ce sont elles qui
+   déclarent un bâtiment fermé.
+2. Le sujet, tiré du premier `modules`, avec repli sur `eventCategory`.
+3. Le nettoyage de la description par [`formatDescription`](../src/shared/utils/formatUtils.ts) :
+   suppression des `\r` et des `<br />`, remplacement de quatre sauts de ligne consécutifs par `;`,
+   décodage des entités HTML, puis retrait des lignes qui répètent la catégorie ou le sujet.
+4. Le **séparateur de description dépend de la vue** : `;` pour le jour et la synchronisation, `\n`
+   pour la semaine. Conservé tel quel, et sa conséquence réelle est écrite dans
+   [features/planning.md](features/planning.md#limites-connues) — elle n'est pas celle qu'on croit.
+5. Le code d'UE, extrait du sujet par `([0-9][A-Z0-9]+) (.+)` : `4TIN301U Algorithmique` devient
+   `UE = "4TIN301U"`, `subject = "Algorithmique"`. C'est lui qui alimente les filtres.
+6. Le tri double : heure de début, puis sujet alphabétique **après retrait du code d'UE**.
+7. Le découpage de la semaine en six jours et le calcul des horodatages ; le calcul du lundi depuis un
+   numéro de semaine ISO et la bascule d'année scolaire au 1er août, qui ont besoin de l'heure
+   courante et n'ont donc rien à faire dans un fichier rejouable.
+8. La reconstruction des bâtiments à partir des salles, par correspondance textuelle avec le
+   référentiel ([features/campus-salles-libres.md](features/campus-salles-libres.md)).
 
 ### Gestion d'erreur
 
-Toutes les méthodes renvoient `null` en cas d'échec (statut non-200, exception réseau, réponse vide).
-Aucune exception ne remonte à l'appelant.
+Les six appels rendent désormais `{ ok: true, … }` ou `{ ok: false, failure }`, et la famille d'échec
+décide de l'écran ([blueprints.md](blueprints.md#les-erreurs-cessent-dêtre-avalées)). Une source
+injoignable, une réponse au statut inattendu et une journée légitimement vide produisent **trois
+écrans différents** — ce n'était pas le cas avant, où tout rendait `null`.
+
+Le cache de repli hors ligne, lui, n'a pas bougé : il enveloppe l'appel, avant comme après.
 
 ### Fragilité
 
-L'API n'est pas documentée publiquement et le domaine `ukit.kbdev.io` est un point d'entrée dédié.
-Les constantes `resType`, `calView` et `colourScheme` sont des valeurs magiques : un changement côté
-serveur se traduirait par une réponse vide, pas par une erreur explicite.
+L'API n'est pas documentée publiquement et n'offre aucun contrat. `resType`, `calView` et
+`colourScheme` sont désormais des `vars` nommées, en un seul endroit et corrigeables sans release —
+elles ne sont pas devenues **garanties** pour autant. Un changement côté Celcat se traduira toujours
+par une réponse vide plutôt que par une erreur explicite ; `expect` transforme au moins un statut
+inattendu en échec nommé, et l'`assert` des deux listes rattrape une clé disparue.
 
 ## 2. CAS / ENT Université de Bordeaux — identité et messagerie
 

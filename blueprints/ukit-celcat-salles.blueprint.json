@@ -1,0 +1,54 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.celcat.salles",
+  "description": "La liste des salles du serveur d'emplois du temps de l'universite. res_type 102 = salles (103 = groupes d'etudiants, voir ukit.celcat.groupes). Celcat expose des salles, pas des batiments : la reconstruction de la hierarchie par croisement avec le referentiel reste applicative, ainsi que le filtre sur la longueur du libelle. Vise celcat.u-bordeaux.fr DIRECTEMENT, comme les autres Blueprints Celcat.",
+  "act": "vector",
+  "inputs": {
+    "recherche": {
+      "type": "string",
+      "required": true,
+      "default": "_",
+      "description": "Terme de recherche. L'application demande tout le catalogue avec '_'."
+    }
+  },
+  "vars": {
+    "domaine": "https://celcat.u-bordeaux.fr/calendar",
+    "res_type": "102",
+    "taille_de_page": "10000"
+  },
+  "steps": [
+    {
+      "id": "liste",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.domaine }}/Home/ReadResourceListItems",
+      "headers": { "Accept": "application/json" },
+      "params": {
+        "searchTerm": "{{ inputs.recherche }}",
+        "pageSize": "{{ vars.taille_de_page }}",
+        "resType": "{{ vars.res_type }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "racine": { "from": "json", "path": "$.results" },
+        "salles": {
+          "from": "json",
+          "path": "$.results[*]",
+          "fields": {
+            "id": "$.id",
+            "libelle": "$.text"
+          }
+        }
+      }
+    },
+    {
+      "id": "forme",
+      "action": "assert",
+      "condition": "{{ steps.liste.racine | length > 0 }}",
+      "message": "la reponse ne porte pas de tableau 'results'"
+    }
+  ],
+  "outputs": {
+    "salles": "{{ steps.liste.salles }}"
+  }
+}

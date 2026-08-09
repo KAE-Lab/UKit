@@ -1,7 +1,7 @@
 {
   "aetherius": "1.0",
-  "name": "ukit.celcat.semaine",
-  "description": "Les cours d'une semaine, pour un ou plusieurs groupes d'etudiants. Comme pour ukit.celcat.jour, federationIds[] prend une LISTE et l'encodeur du moteur repete la cle. La borne 'end' vaut add_days(6), soit le dimanche : c'est ce que le code d'origine envoyait (endOf('week') en locale francaise) et l'application n'affiche que six jours, du lundi au samedi. Le calcul du lundi a partir d'un numero de semaine ISO reste applicatif : il a besoin de l'heure courante et de la locale, deux choses qu'un Blueprint n'a pas et ne doit pas avoir. Le decoupage en six jours, le tri et le rejet des 'Vacances' restent applicatifs egalement. Pas d'assert de forme : la reponse EST le tableau, expect.status est le seul garde honnete.",
+  "name": "ukit.celcat.jour",
+  "description": "Les cours d'une journee, pour un ou plusieurs groupes d'etudiants. federationIds[] est une cle litterale repetable : l'entree 'groupes' est une liste, et l'encodeur du moteur repete la cle — c'est ce qui permet au planning agrege des favoris de tenir en UNE requete plutot qu'en N, et de ne pas multiplier la charge sur un serveur universitaire. La borne 'end' est EXCLUSIVE, d'ou add_days(1) : c'etait un '+1 jour' implicite que rien n'expliquait. Le serveur renvoie des debordements (une journee demandee un dimanche rend les cours du lundi), donc le refiltrage sur la date exacte reste applicatif, tout comme le rejet des evenements 'Vacances' : ils sont ecartes UNE fois, dans le service, et pas deux. Pas d'assert de forme, contrairement aux Blueprints de liste : la reponse EST le tableau, il n'existe aucune cle dont la disparition serait detectable, et expect.status reste le seul garde honnete.",
   "act": "vector",
   "inputs": {
     "groupes": {
@@ -9,22 +9,22 @@
       "required": true,
       "description": "Identifiants de federation des groupes. Un seul pour un planning ordinaire, plusieurs pour le planning agrege des favoris."
     },
-    "lundi": {
+    "jour": {
       "type": "string",
       "format": "date",
       "required": true,
-      "description": "Premier jour de la semaine demandee, au format YYYY-MM-DD."
+      "description": "Journee demandee, au format YYYY-MM-DD."
     }
   },
   "vars": {
     "domaine": "https://celcat.u-bordeaux.fr/calendar",
     "res_type": "103",
-    "cal_view": "agendaWeek",
+    "cal_view": "agendaDay",
     "colour_scheme": "3"
   },
   "steps": [
     {
-      "id": "semaine",
+      "id": "jour",
       "action": "http.request",
       "method": "POST",
       "url": "{{ vars.domaine }}/Home/GetCalendarData",
@@ -35,8 +35,8 @@
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
       },
       "form": {
-        "start": "{{ inputs.lundi }}",
-        "end": "{{ inputs.lundi | add_days(6) }}",
+        "start": "{{ inputs.jour }}",
+        "end": "{{ inputs.jour | add_days(1) }}",
         "resType": "{{ vars.res_type }}",
         "calView": "{{ vars.cal_view }}",
         "federationIds[]": "{{ inputs.groupes }}",
@@ -61,6 +61,6 @@
     }
   ],
   "outputs": {
-    "cours": "{{ steps.semaine.cours }}"
+    "cours": "{{ steps.jour.cours }}"
   }
 }

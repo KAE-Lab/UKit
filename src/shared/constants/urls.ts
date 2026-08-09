@@ -10,9 +10,7 @@ export const URL = {
     CROUSTILLANT_WEBSITE: 'https://croustillant.menu',
 };
 
-export const WebApiURL = {
-    DOMAIN: 'https://ukit.kbdev.io/Home/',
-    GROUPS: 'ReadResourceListItems',
-    CALENDARDATA: 'GetCalendarData',
-    SIDEBAR: 'GetSideBarEvent',
-};
+// `WebApiURL` vivait ici : le domaine du relais Celcat et ses trois routes. Le jalon 6-E l'a retire
+// avec ses deux derniers lecteurs. L'adresse de la source vit desormais dans les six Blueprints
+// `ukit.celcat.*` (blueprints/), donc corrigeable sans release — et elle vise l'universite
+// directement. Voir docs/sources-externes.md.

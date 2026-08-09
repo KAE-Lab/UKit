@@ -1,0 +1,64 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.celcat.occupation",
+  "description": "L'occupation de salles sur une journee, pour la recherche de salles libres. res_type 102 = salles. La borne 'end' est EXCLUSIVE, d'ou add_days(1), et le serveur deborde : le refiltrage sur la date exacte reste applicatif. Les evenements 'Vacances' ne sont PAS filtres ici, et c'est volontaire : ce sont eux qui declarent un batiment ferme. Ils portent 'end' a null, valeur transmise telle quelle — le service la traite comme avant. L'entree accepte une liste, mais l'application interroge une salle par run : la reponse ne porte pas l'identifiant de la ressource interrogee, donc un run groupe ne permettrait pas de reattribuer les evenements a leur salle, et un echec isole viderait tout le batiment.",
+  "act": "vector",
+  "inputs": {
+    "salles": {
+      "type": "array",
+      "required": true,
+      "description": "Identifiants de federation des salles."
+    },
+    "jour": {
+      "type": "string",
+      "format": "date",
+      "required": true,
+      "description": "Journee demandee, au format YYYY-MM-DD."
+    }
+  },
+  "vars": {
+    "domaine": "https://celcat.u-bordeaux.fr/calendar",
+    "res_type": "102",
+    "cal_view": "agendaDay",
+    "colour_scheme": "3"
+  },
+  "steps": [
+    {
+      "id": "occupation",
+      "action": "http.request",
+      "method": "POST",
+      "url": "{{ vars.domaine }}/Home/GetCalendarData",
+      "headers": {
+        "Pragma": "no-cache",
+        "Cache-Control": "no-cache",
+        "Accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+      },
+      "form": {
+        "start": "{{ inputs.jour }}",
+        "end": "{{ inputs.jour | add_days(1) }}",
+        "resType": "{{ vars.res_type }}",
+        "calView": "{{ vars.cal_view }}",
+        "federationIds[]": "{{ inputs.salles }}",
+        "colourScheme": "{{ vars.colour_scheme }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "evenements": {
+          "from": "json",
+          "path": "$[*]",
+          "fields": {
+            "id": "$.id",
+            "debut": "$.start",
+            "fin": "$.end",
+            "categorie": "$.eventCategory",
+            "description": "$.description"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "evenements": "{{ steps.occupation.evenements }}"
+  }
+}

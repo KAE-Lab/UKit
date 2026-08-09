@@ -1,19 +1,25 @@
 {
   "aetherius": "1.0",
-  "name": "ukit.celcat.semaine",
-  "description": "Les cours d'une semaine, pour un ou plusieurs groupes d'etudiants. Comme pour ukit.celcat.jour, federationIds[] prend une LISTE et l'encodeur du moteur repete la cle. La borne 'end' vaut add_days(6), soit le dimanche : c'est ce que le code d'origine envoyait (endOf('week') en locale francaise) et l'application n'affiche que six jours, du lundi au samedi. Le calcul du lundi a partir d'un numero de semaine ISO reste applicatif : il a besoin de l'heure courante et de la locale, deux choses qu'un Blueprint n'a pas et ne doit pas avoir. Le decoupage en six jours, le tri et le rejet des 'Vacances' restent applicatifs egalement. Pas d'assert de forme : la reponse EST le tableau, expect.status est le seul garde honnete.",
+  "name": "ukit.celcat.annee",
+  "description": "La plage annuelle utilisee par la synchronisation du calendrier systeme. Les deux bornes arrivent en entree parce que leur calcul depend de l'heure courante : l'annee scolaire bascule au 1er aout, et savoir de quel cote de cette date on se trouve n'est pas exprimable dans un fichier rejouable. Le run part d'une tache de fond, sans ecran : aucun 'confirm' ne doit jamais entrer ici, personne ne l'ecouterait. timeout_ms est releve a 60 s parce que la reponse pese environ 200 Ko pour une annee, et qu'un delai depasse dans une tache qui tourne toutes les 12 h coute un cycle entier.",
   "act": "vector",
   "inputs": {
     "groupes": {
       "type": "array",
       "required": true,
-      "description": "Identifiants de federation des groupes. Un seul pour un planning ordinaire, plusieurs pour le planning agrege des favoris."
+      "description": "Identifiants de federation des groupes a synchroniser."
     },
-    "lundi": {
+    "debut": {
       "type": "string",
       "format": "date",
       "required": true,
-      "description": "Premier jour de la semaine demandee, au format YYYY-MM-DD."
+      "description": "Premier jour de la plage, au format YYYY-MM-DD."
+    },
+    "fin": {
+      "type": "string",
+      "format": "date",
+      "required": true,
+      "description": "Borne de fin de la plage, au format YYYY-MM-DD."
     }
   },
   "vars": {
@@ -22,9 +28,12 @@
     "cal_view": "agendaWeek",
     "colour_scheme": "3"
   },
+  "options": {
+    "timeout_ms": 60000
+  },
   "steps": [
     {
-      "id": "semaine",
+      "id": "annee",
       "action": "http.request",
       "method": "POST",
       "url": "{{ vars.domaine }}/Home/GetCalendarData",
@@ -35,8 +44,8 @@
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
       },
       "form": {
-        "start": "{{ inputs.lundi }}",
-        "end": "{{ inputs.lundi | add_days(6) }}",
+        "start": "{{ inputs.debut }}",
+        "end": "{{ inputs.fin }}",
         "resType": "{{ vars.res_type }}",
         "calView": "{{ vars.cal_view }}",
         "federationIds[]": "{{ inputs.groupes }}",
@@ -61,6 +70,6 @@
     }
   ],
   "outputs": {
-    "cours": "{{ steps.semaine.cours }}"
+    "cours": "{{ steps.annee.cours }}"
   }
 }

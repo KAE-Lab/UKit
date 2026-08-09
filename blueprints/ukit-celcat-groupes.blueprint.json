@@ -1,0 +1,47 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.celcat.groupes",
+  "description": "La liste des groupes d'etudiants du serveur d'emplois du temps de l'universite. res_type 103 = groupes d'etudiants (102 = salles, voir ukit.celcat.salles). Vise celcat.u-bordeaux.fr DIRECTEMENT : le relais qui existait devant contournait une contrainte de navigateur (une page ne peut pas appeler un autre domaine sans son accord), et une requete emise nativement depuis l'appareil n'y est pas soumise. Le filtre sur la longueur de l'identifiant et le tri restent applicatifs : ce sont des calculs, et un calcul dans un Blueprint devrait etre reimplemente a l'identique dans les deux moteurs.",
+  "act": "vector",
+  "inputs": {
+    "recherche": {
+      "type": "string",
+      "required": true,
+      "default": "_",
+      "description": "Terme de recherche. L'application demande tout le catalogue avec '_'."
+    }
+  },
+  "vars": {
+    "domaine": "https://celcat.u-bordeaux.fr/calendar",
+    "res_type": "103",
+    "taille_de_page": "10000"
+  },
+  "steps": [
+    {
+      "id": "liste",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.domaine }}/Home/ReadResourceListItems",
+      "headers": { "Accept": "application/json" },
+      "params": {
+        "searchTerm": "{{ inputs.recherche }}",
+        "pageSize": "{{ vars.taille_de_page }}",
+        "resType": "{{ vars.res_type }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "racine": { "from": "json", "path": "$.results" },
+        "identifiants": { "from": "json", "path": "$.results[*].id" }
+      }
+    },
+    {
+      "id": "forme",
+      "action": "assert",
+      "condition": "{{ steps.liste.racine | length > 0 }}",
+      "message": "la reponse ne porte pas de tableau 'results'"
+    }
+  ],
+  "outputs": {
+    "groupes": "{{ steps.liste.identifiants }}"
+  }
+}

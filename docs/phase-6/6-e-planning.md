@@ -49,8 +49,19 @@ tient la charge de tous nos utilisateurs sans le relais devant. Si l'un des deux
 gratuit — `vars.domaine` redevient le relais par une publication de Blueprint, ce qui est une
 démonstration en soi.
 
+> **Mesuré le 2026-08-09, avant d'écrire une ligne.** Le serveur ne filtre **ni sur `Origin`, ni sur
+> `Referer`, ni sur l'`User-Agent`** : les trois envoyés faux ou vides, la réponse reste `200`. Il
+> répond en 0,6 s sur une liste et 2,3 s pour une année entière (216 Ko, 334 événements), et accepte
+> `federationIds[]` répété.
+>
+> **Et le relais était déjà tombé.** Trois sondes, trois **522 (Cloudflare)** après vingt secondes. Le
+> planning des utilisateurs sans cache était donc en panne : ce jalon est autant une réparation
+> qu'une migration. C'est aussi ce qui a décidé de la forme du harnais de parité — voir
+> « Écarts constatés » plus bas.
+
 Le relais n'est **pas éteint** au terme du jalon. Il l'est en [6-H](6-h-livraison-finale.md), après
 une période d'observation, et pas avant que la dernière version qui en dépend soit sortie du parc.
+Son extinction est désormais une formalité : il ne répond plus.
 
 ### Les constantes magiques deviennent des `vars`
 
@@ -140,16 +151,90 @@ de duplication qui rend un comportement inexplicable trois mois plus tard. **Un 
 | Sonde | Attendu |
 |---|---|
 | Vue jour, vue semaine, nominal | identiques à avant, y compris les couleurs et les descriptions |
-| Mode avion, jour déjà consulté | le cache s'affiche avec son bandeau daté |
-| Mode avion, jour jamais consulté | état vide explicite, pas un plantage |
-| Réseau qui coupe **pendant** le chargement | échec propre, repli sur cache si disponible |
+| Source injoignable, jour déjà consulté | le cache s'affiche avec son bandeau daté |
+| Source injoignable, jour jamais consulté | échec nommé et bouton Réessayer, pas un indicateur qui tourne |
+| Statut inattendu (`expect` à 418) | écran **différent** du précédent, sans bouton Réessayer |
 | Changement de groupe favori | le planning agrégé suit, une seule requête |
 | Simulation temporelle activée | les caches sont purgés comme avant ([qualite.md](../qualite.md)) |
 | Synchronisation calendrier | les mêmes événements, aux mêmes dates, sans doublon |
 
+**Comment casser la source sans couper le réseau.** Les trois sondes dégradées se jouent en éditant le
+Blueprint **embarqué** — `vars.domaine` sur un hôte injoignable, puis `expect.status` à `418`, puis
+`params.resType` à une valeur absurde — et en rechargeant Metro. Vingt secondes par aller-retour, rien
+n'est publié, le bucket n'est jamais touché. Le mode avion n'apporterait qu'une chose de plus : la
+branche `isConnected()` fausse, que ce jalon ne modifie pas — elle décide **avant** que le service
+soit appelé.
+
 La ligne « simulation temporelle » n'est pas décorative : `TimeMockService` purge les clés de cache à
 chaque bascule, et c'est le seul moyen raisonnable de vérifier les autres lignes sans attendre le bon
 jour.
+
+## Ce que la vérification sur appareil a établi
+
+Jouée sur iPhone via Expo Go, le 2026-08-09, avec deux groupes favoris. Les chemins dégradés ont été
+obtenus en cassant le Blueprint **embarqué** et en rechargeant Metro — pas en coupant le réseau : plus
+rapide, reproductible, et le bucket n'a jamais été touché.
+
+| Sonde | Résultat |
+|---|---|
+| Vue jour, vue semaine, planning agrégé, fiche de cours, calendrier système, simulation temporelle | **identiques à avant** |
+| `vars.domaine` injoignable, jour déjà consulté | cache servi, bandeau daté |
+| `vars.domaine` injoignable, jour jamais consulté | « Service indisponible » **avec** Réessayer — là où l'indicateur tournait indéfiniment |
+| Bouton Réessayer | rejoue réellement, une ligne `unavailable` par tentative |
+| `expect.status` à 418, jour jamais consulté | « Réponse inattendue », **sans** Réessayer |
+| `expect.status` à 418, jour déjà consulté | cache servi : un échec n'écrase pas une donnée qu'on a |
+| `resType` à 999 sur les groupes | Toast « Contenu introuvable », liste servie par le cache, bandeau daté |
+
+**Les trois familles produisent trois écrans différents**, ce qui est la seule mesure qui compte ici.
+Un détail non anticipé mérite d'être noté : `resType=999` ne rend pas une liste vide mais un **corps
+vide avec un statut 200**, rangé en `data` (« la réponse n'est plus lisible ») et non en `rejected`.
+La distinction est juste, et elle n'aurait pas été devinée depuis un bureau.
+
+### Ce qui n'a pas été vérifié, et ce qui le couvre en attendant
+
+Trois points de ce plan de test n'ont pas été observés sur appareil. Ils sont écrits ici plutôt que
+cochés : un critère qu'on déclare vert sans l'avoir vu est pire qu'un critère ouvert, parce que
+personne ne le rouvrira.
+
+| Non vérifié | Pourquoi | Ce qui le couvre en attendant |
+|---|---|---|
+| **La tâche de fond, application fermée** (point 4 de la définition de terminé) | demande de laisser l'appareil une nuit, ou de déclencher `BackgroundFetch` depuis Xcode | la synchronisation **manuelle** a été jouée et est correcte, sans doublon. Les deux chemins appellent le même objet de service : seul l'appel réseau au milieu a changé, et il est prouvé par ailleurs |
+| **Le réseau Wi-Fi** (point 6) | les trois captures ont été prises en **4G** ; le réseau mobile est donc prouvé, pas le Wi-Fi | rien de la bascule ne dépend du transport : le serveur ne filtre sur aucun en-tête, et le relais qui aurait pu se comporter différemment n'est plus dans le chemin |
+| **Les créneaux de salles libres** | hors période universitaire le bâtiment est fermé pour de vrai | le cas de parité `celcat-occupation` sur données réelles — journée ordinaire **et** journée de vacances — et [`CampusApiMapping.test.ts`](../../src/features/Campus/services/CampusApiMapping.test.ts). Simuler un mardi de novembre rouvre désormais le bâtiment, la sonde est donc rejouable |
+
+Les deux premiers se lèvent en quelques minutes le jour où l'occasion se présente. Le troisième s'est
+levé de lui-même : le mock temporel atteint désormais ce hook.
+
+## Écarts constatés à l'implémentation
+
+Cinq points où le terrain a contredit ce document. Ils sont écrits ici plutôt que corrigés en
+silence : la spécification a eu tort, et savoir *où* vaut mieux que la relire comme si elle avait eu
+raison partout.
+
+1. **« Les mêmes octets que `qs.stringify` » est faux, et sans conséquence.** `qs` sort en RFC3986
+   (une espace devient `%20`), l'encodeur du moteur reproduit `quote_plus` de Python (une espace
+   devient `+`). Partout ailleurs les deux coïncident au caractère près, `!'()*~` compris — or les
+   identifiants de salles portent des espaces (`CREMI - Bât. A28 Salle 005`). Les deux formes ont été
+   postées au serveur réel : même statut, même réponse au SHA-256 près. Le harnais compare le corps
+   **réellement émis** — un `fetch` espion, pas une réimplémentation — en normalisant cet écart et lui
+   seul ([tools/parity/README.md](../../tools/parity/README.md)).
+2. **Le harnais fait viser Celcat aux deux chemins.** Le relais étant mort, l'y pointer rendrait six
+   cas rouges en permanence pour une raison qui n'est pas celle qu'on veut mesurer. Ce que la parité
+   isole reste ce que la migration change : l'encodage du moteur contre `qs`, l'extraction déclarative
+   contre le parsing à la main. Que la bascule d'hôte fonctionne est établi par la mesure directe.
+3. **La semaine se termine à `add_days(6)`, pas `add_days(7)`.** Le code d'origine envoyait
+   `endOf('week')`, soit le dimanche. Élargir la fenêtre d'un jour n'aurait rien changé à l'écran —
+   les jours ISO 7 sont écartés ensuite — mais aurait été un changement non demandé sur la source la
+   plus critique.
+4. **Le filtre `Vacances` n'est descendu dans aucun Blueprint**, comme ce document le demandait — et
+   pour une raison de plus que celle écrite : la recherche de salles libres en a *besoin*. Ce sont les
+   événements de vacances qui déclarent un bâtiment fermé.
+5. **Le séparateur de description : la justification était fausse.** Ce document, et
+   [features/planning.md](../features/planning.md), affirmaient que « le serveur ne formate pas la
+   description de la même façon selon `calView` ». Mesure faite : le format est **identique** dans les
+   deux vues, et la conséquence du séparateur `\n` est que la vue semaine n'affiche **aucune**
+   description. C'est le comportement de l'application depuis toujours. Il est conservé et verrouillé
+   par un test ; le corriger est une décision produit, pas une correction de migration.
 
 ## Limites écrites
 
@@ -160,4 +245,9 @@ jour.
 - **Le refiltrage sur la date exacte reste applicatif**, donc une réponse qui déborde reste traitée
   après coup. C'est le comportement actuel, conservé volontairement.
 - **Le relais reste allumé** à la fin du jalon, le temps d'observer. Son extinction est une décision
-  de [6-H](6-h-livraison-finale.md), pas un oubli.
+  de [6-H](6-h-livraison-finale.md), pas un oubli — mais il ne répond déjà plus.
+- **Un `modules: []` retomberait sur la catégorie**, là où le code d'origine rendait un sujet
+  indéfini. Après extraction, `[]` et `null` sont indistinguables. Le cas n'existe dans aucune des 334
+  entrées d'une année interrogée, et le sujet indéfini s'affichait de toute façon vide.
+- **La vue semaine n'affiche aucune description**, et c'est le comportement d'origine (voir les écarts
+  constatés). Le jalon ne le corrige pas.

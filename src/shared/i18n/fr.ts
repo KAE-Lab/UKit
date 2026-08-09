@@ -31,8 +31,6 @@ const fr: TranslationDict = {
 	ENABLE_CALENDAR_PERMISSION_DESCRIPTION:
 		"Veuillez autoriser l'application à accéder à vos calendriers via les Réglages système avant pour pouvoir utiliser cette fonctionnalité.",
 	ENGLISH: 'Anglais',
-	ERROR_WITH_CODE: 'Le serveur a renvoyé une erreur $-',
-	ERROR_WITH_MESSAGE: 'Erreur : $-',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
 	ERROR_SERVICE_UNAVAILABLE: 'Service indisponible. Vérifie ta connexion et réessaie.',
 	ERROR_UNEXPECTED_RESPONSE: 'Réponse inattendue de la source. On s’en occupe.',

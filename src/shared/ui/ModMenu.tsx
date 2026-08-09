@@ -6,6 +6,7 @@ import moment from 'moment';
 
 import style, { tokens } from '../theme/Theme';
 import { TimeMockService } from '../services/TimeMockService';
+import { NetworkMockService } from '../services/NetworkMockService';
 import { AppContext } from '../services/AppCore';
 import ModMenuBlueprints from './ModMenuBlueprints';
 
@@ -18,6 +19,8 @@ export interface ModMenuState {
     isVisible: boolean;
     isExpanded: boolean;
     isActive: boolean;
+    /** L'application se croit hors ligne, sans que l'appareil le soit. */
+    isOffline: boolean;
     currentTime: moment.Moment;
     selectedDate: Date;
     showPicker: boolean;
@@ -43,6 +46,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             isVisible: false,
             isExpanded: false,
             isActive: TimeMockService.isMockActive(),
+            isOffline: NetworkMockService.isOffline(),
             currentTime: moment(),
             selectedDate: new Date(),
             showPicker: false,
@@ -114,8 +118,17 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     }
 
     closeMenu = () => {
+        // Fermer le menu remet tout a l'etat reel : une simulation qu'on oublie active est un
+        // faux bug qu'on cherchera longtemps.
         TimeMockService.resetFakeTime();
-        this.setState({ isVisible: false, isExpanded: false });
+        NetworkMockService.setOffline(false);
+        this.setState({ isVisible: false, isExpanded: false, isOffline: false });
+    }
+
+    toggleOffline = () => {
+        const coupe = !this.state.isOffline;
+        NetworkMockService.setOffline(coupe);
+        this.setState({ isOffline: coupe });
     }
 
     applyFakeTime = () => {
@@ -230,6 +243,44 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         </>
     );
 
+    /**
+     * L'interrupteur hors ligne.
+     *
+     * Il coupe le reseau de l'**application** — `isConnected()` et le `fetch` du moteur — sans toucher
+     * a celui de l'appareil, donc sans perdre Metro. C'est ce qui rend un chemin degrade verifiable
+     * en deux tapes au lieu d'un mode avion qui casse la session de developpement.
+     */
+    renderOfflineSwitch = (theme: import('../theme/Theme').AppThemeType, isOffline: boolean) => (
+        <TouchableOpacity
+            onPress={this.toggleOffline}
+            activeOpacity={0.8}
+            style={{
+                flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                backgroundColor: theme.cardBackground, padding: tokens.space.sm,
+                borderRadius: tokens.radius.md, borderWidth: 1,
+                borderColor: isOffline ? '#f87171' : theme.border, marginBottom: tokens.space.md,
+            }}
+        >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <MaterialCommunityIcons
+                    name={isOffline ? 'wifi-off' : 'wifi'}
+                    size={20}
+                    color={isOffline ? '#f87171' : theme.primary}
+                    style={{ marginRight: tokens.space.sm }}
+                />
+                <View>
+                    <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm, fontWeight: 'bold' }}>
+                        {isOffline ? 'HORS LIGNE' : 'EN LIGNE'}
+                    </Text>
+                    <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs }}>
+                        {isOffline ? 'app coupee, appareil intact' : 'couper le reseau de l app'}
+                    </Text>
+                </View>
+            </View>
+            {this.renderIndicator(!isOffline)}
+        </TouchableOpacity>
+    );
+
     renderActionButtons = (theme: import('../theme/Theme').AppThemeType) => (
         // Actions
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -252,11 +303,15 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         if (!this.state.showPicker) return null;
         return (
             <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginTop: tokens.space.md, borderWidth: 1, borderColor: theme.border, alignItems: 'center' }}>
+                {/* `themeVariant` n'est pas cosmetique : sans lui, le selecteur iOS suit l'apparence
+                    du **systeme** et non celle de l'application. Un iPhone en mode sombre affichait
+                    donc du texte blanc sur le fond clair du menu — invisible. */}
                 <DateTimePicker
                     value={this.state.selectedDate}
                     mode={this.state.pickerMode}
                     is24Hour={true}
                     display={Platform.OS === 'ios' ? "spinner" : "default"}
+                    themeVariant={this.context?.themeName === 'dark' ? 'dark' : 'light'}
                     onChange={this.onPickerChange}
                     style={{ width: Platform.OS === 'ios' ? 240 : 'auto', height: Platform.OS === 'ios' ? 120 : 'auto' }}
                 />
@@ -272,7 +327,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     render() {
         if (!this.state.isVisible) return null;
 
-        const { isExpanded, isActive, currentTime, selectedDate, panel } = this.state;
+        const { isExpanded, isActive, isOffline, currentTime, selectedDate, panel } = this.state;
         const theme = style.Theme[this.context?.themeName || 'light'];
 
         if (!isExpanded) {
@@ -292,7 +347,10 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     }]}
                 >
                     <TouchableOpacity onPress={this.expandMenu} style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                        {this.renderIndicator(isActive, { position: 'absolute', top: -4, right: -4, borderWidth: 2, borderColor: theme.cardBackground, zIndex: 10 })}
+                        {/* La pastille signale qu'**une** simulation tourne, temps ou reseau : une
+                            simulation oubliee derriere l'icone reduite est un faux bug qu'on
+                            cherchera longtemps. */}
+                        {this.renderIndicator(isActive || isOffline, { position: 'absolute', top: -4, right: -4, borderWidth: 2, borderColor: theme.cardBackground, zIndex: 10 })}
                         <Image source={require('../../../assets/icons/logo.png')} style={{ width: 40, height: 40, resizeMode: 'contain' }} />
                     </TouchableOpacity>
                 </Animated.View>
@@ -313,7 +371,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     borderWidth: 1, borderColor: theme.border
                 }]}
             >
-                {this.renderExpandedHeader(theme, isActive)}
+                {this.renderExpandedHeader(theme, isActive || isOffline)}
 
                 {/* Content */}
                 <View style={{ padding: tokens.space.md }}>
@@ -323,6 +381,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     ) : (
                         <>
                             {this.renderLiveClock(theme, isActive, currentTime)}
+                            {this.renderOfflineSwitch(theme, isOffline)}
                             {this.renderTimeSelectors(theme, selectedDate)}
                             {this.renderActionButtons(theme)}
                             {this.renderDateTimePicker(theme)}

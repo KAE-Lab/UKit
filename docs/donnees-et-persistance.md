@@ -75,6 +75,12 @@ Un contexte ne serait pas accessible depuis ces points.
 Le préfixe `<groupes>` est le nom du groupe, ou la concaténation des groupes favoris jointe par `+`
 quand la vue affiche le planning agrégé.
 
+> **Les deux clés d'emploi du temps n'ont pas bougé au jalon [6-E](phase-6/6-e-planning.md)**, et
+> c'est la règle qui a gouverné ce jalon. Le cache enveloppe l'appel, avant comme après : leur nom,
+> leur contenu, leur absence d'expiration et le bandeau daté sont identiques. Seule la nature de
+> l'appel du milieu a changé. C'est ce qui rend la bascule invisible sur la seule fonctionnalité que
+> l'application promet de faire marcher hors ligne — et ce qui permettrait de la défaire.
+
 Les deux clés de surcouche sont les seules du tableau à porter **un document unique pour plusieurs
 entrées**, et c'est délibéré : un document illisible fait perdre la surcouche entière et l'application
 retombe sur son socle embarqué. C'est le sens du repli, et c'est préférable à un index réparti sur

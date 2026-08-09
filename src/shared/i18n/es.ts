@@ -30,8 +30,6 @@ const es: TranslationDict = {
 	ENABLE_CALENDAR_PERMISSION_DESCRIPTION:
 		'Permita que la aplicación acceda a sus calendarios a través de los Ajustes del sistema antes de utilizar esta función.',
 	ENGLISH: 'Inglés',
-	ERROR_WITH_CODE: 'El servidor a devuelto un error $-',
-	ERROR_WITH_MESSAGE: 'Error: $-',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
 	ERROR_SERVICE_UNAVAILABLE: 'Servicio no disponible. Comprueba tu conexión e inténtalo de nuevo.',
 	ERROR_UNEXPECTED_RESPONSE: 'Respuesta inesperada de la fuente. Estamos en ello.',

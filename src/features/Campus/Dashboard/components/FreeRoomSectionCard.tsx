@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
+import moment from 'moment';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
@@ -28,7 +29,7 @@ export function FreeRoomSectionCard({ item, navigation, isFavorite, onToggleFavo
     
     let hoursText = Translator.get('UNKNOWN') || 'Non communiqué';
     if (item.schedule) {
-        const currentDay = new Date().getDay() || 7; // 1-7
+        const currentDay = moment().day() || 7; // 1-7, et suit le mock temporel
         const daySchedule = item.schedule[String(currentDay)];
         if (daySchedule) {
             hoursText = `${daySchedule.open} - ${daySchedule.close}`;

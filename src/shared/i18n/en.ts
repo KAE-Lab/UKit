@@ -28,8 +28,6 @@ const en = {
 	ENABLE_CALENDAR_PERMISSION_DESCRIPTION:
 		'Please allow Ukit to access to your calendars in system Settings to use this feature.',
 	ENGLISH: 'English',
-	ERROR_WITH_CODE: 'Server send an error $-',
-	ERROR_WITH_MESSAGE: 'Error : $-',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
 	ERROR_SERVICE_UNAVAILABLE: 'Service unavailable. Check your connection and try again.',
 	ERROR_UNEXPECTED_RESPONSE: 'Unexpected response from the source. We are on it.',

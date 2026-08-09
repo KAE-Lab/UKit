@@ -65,12 +65,13 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `planning-jour.png` | vue jour, curseur de dates, journée chargée | essentielle |
+| `planning-jour.png` | vue jour, curseur de dates, journée chargée | **prise** |
 | `planning-semaine.png` | vue semaine, sections repliables | essentielle |
 | `planning-groupes.png` | recherche de groupes, sections alphabétiques | essentielle |
 | `planning-cours-detail.png` | fiche d'un cours avec sa carte | essentielle |
 | `planning-cours-simultanes.png` | carrousel de cours qui se chevauchent | complémentaire |
-| `planning-hors-ligne.png` | bandeau de données en cache daté | complémentaire |
+| `planning-hors-ligne.png` | bandeau de données en cache daté | **prise** — produite avec l'interrupteur **hors ligne** du menu de développement, sans mode avion ([qualite.md](../qualite.md)) |
+| `planning-echec.png` | l'échec d'une source : message de la famille et bouton Réessayer | **prise** — même interrupteur |
 | `planning-vide.png` | état vide, aucun groupe favori | complémentaire |
 
 ### Campus — [features/campus.md](../features/campus.md)

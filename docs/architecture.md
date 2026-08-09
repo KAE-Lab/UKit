@@ -143,10 +143,12 @@ consommateurs hors React (tâche de fond, planificateur de notifications). Déta
 - **Aucune dépendance cartographique propriétaire** : les cartes sont rendues par Leaflet et
   OpenStreetMap dans une WebView ([cartographie.md](cartographie.md)).
 - **Le réseau est confiné aux services.** Un composant n'appelle jamais `axios` ni `fetch`
-  directement. Deux écarts subsistent et sont documentés là où ils vivent :
+  directement. **Un seul écart subsiste** et il est documenté là où il vit :
   [`AppUI.tsx`](../src/shared/ui/AppUI.tsx) interroge le fichier de version distant
-  ([plateforme.md](plateforme.md)), et [`ScheduleList.tsx`](../src/features/Planning/components/ScheduleList.tsx)
-  importe `axios` pour un jeton d'annulation ([features/planning.md](features/planning.md)).
+  ([plateforme.md](plateforme.md)). Le second — `ScheduleList` important `axios` pour un jeton
+  d'annulation qui n'annulait rien — a disparu au jalon [6-E](phase-6/6-e-planning.md) : le moteur
+  accepte un `AbortSignal`, donc le composant n'a plus besoin d'une bibliothèque réseau pour annuler
+  ([features/planning.md](features/planning.md)).
 - **Les services distants échouent en silence utile** : ils renvoient `null` ou `[]` plutôt que de
   propager une exception. C'est un choix assumé (l'application reste utilisable hors ligne grâce au
   cache) dont la contrepartie est qu'une erreur réseau et une réponse vide sont indistinguables côté
@@ -154,7 +156,9 @@ consommateurs hors React (tâche de fond, planificateur de notifications). Déta
   **Cet invariant est en cours de remplacement** par la [Phase 6](phase-6/README.md) : un échec est
   désormais typé et rangé dans une famille d'écran, et une liste vide redevient une liste vide. Il
   disparaîtra du document quand la dernière source aura migré ([blueprints.md](blueprints.md)).
-  Première source sortie : `BdeService` ([6-A](phase-6/6-a-socle.md)).
+  Sources déjà sorties : `BdeService` ([6-A](phase-6/6-a-socle.md)), `CrousService` et
+  `LibraryService` ([6-D](phase-6/6-d-campus.md)), `PlanningApiService` et `CampusApiService`
+  ([6-E](phase-6/6-e-planning.md)). Il ne reste que la scolarité.
 - **Le comportement distant est de la donnée.** Ce qu'on demande à une source et ce qu'on en retient
   vit dans [`blueprints/`](../blueprints/), pas dans le binaire — donc corrigeable sans release. Le
   calcul, le cache, l'internationalisation et l'heure courante n'y descendent jamais
@@ -203,9 +207,11 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/locations/index.ts`](../src/shared/locations/index.ts) | sa couture de plateforme : cache local et lecture de la table `batiments` |
 | [`shared/locations/referentiel.test.ts`](../src/shared/locations/referentiel.test.ts) | la fusion champ par champ, jouée par `npm test` |
 | [`shared/services/AppCore.tsx`](../src/shared/services/AppCore.tsx) | `AppContext`, `SettingsManager`, synchronisation calendrier, tâche de fond, utilitaires de lieux et de cours |
+| [`shared/services/CalendarSyncHelpers.ts`](../src/shared/services/CalendarSyncHelpers.ts) | les deux pièces « calendrier système » de la synchronisation, sorties d'`AppCore` au jalon [6-E](phase-6/6-e-planning.md) quand il a franchi les 400 lignes |
 | [`shared/services/NotificationService.ts`](../src/shared/services/NotificationService.ts) | planification des rappels de cours ([features/settings.md](features/settings.md)) |
 | [`shared/services/SecureStoreService.ts`](../src/shared/services/SecureStoreService.ts) | stockage chiffré des identifiants et des données étudiant |
 | [`shared/services/TimeMockService.ts`](../src/shared/services/TimeMockService.ts) | simulation temporelle pour la vérification manuelle ([qualite.md](qualite.md)) |
+| [`shared/services/NetworkMockService.ts`](../src/shared/services/NetworkMockService.ts) | l'interrupteur hors ligne : couper le réseau de l'application sans couper celui de l'appareil ([qualite.md](qualite.md)) |
 | [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | tokens, thèmes clair et sombre, styles partagés ([theme.md](theme.md)) |
 | [`shared/i18n/Translator.ts`](../src/shared/i18n/Translator.ts) | service de traduction, langue courante, locale moment ([i18n.md](i18n.md)) |
 | [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 217 clés chacun |
@@ -216,7 +222,8 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/ModMenu.tsx`](../src/shared/ui/ModMenu.tsx) | menu flottant de développement : simulation temporelle et livraison ([qualite.md](qualite.md)) |
 | [`shared/ui/ModMenuBlueprints.tsx`](../src/shared/ui/ModMenuBlueprints.tsx) | son panneau de diagnostic de la livraison ([blueprints.md](blueprints.md)) |
 | [`shared/ui/OpenMapButton.tsx`](../src/shared/ui/OpenMapButton.tsx) | bouton d'ouverture de carte — non importé ([cartographie.md](cartographie.md)) |
-| [`shared/constants/urls.ts`](../src/shared/constants/urls.ts) | URLs externes : liens applicatifs (`URL`) et points d'entrée Celcat (`WebApiURL`) |
+| [`shared/ui/SourceFailureNotice.tsx`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, tel qu'un écran le montre : message de la famille, bouton Réessayer seulement s'il répare ([blueprints.md](blueprints.md)) |
+| [`shared/constants/urls.ts`](../src/shared/constants/urls.ts) | URLs externes : liens applicatifs (`URL`). Les points d'entrée Celcat en sont sortis au jalon [6-E](phase-6/6-e-planning.md) — ils vivent dans les Blueprints |
 | [`shared/utils/formatUtils.ts`](../src/shared/utils/formatUtils.ts) | `upperCaseFirstLetter` et `formatDescription` (nettoyage des descriptions Celcat) |
 
 ## Documentation associée

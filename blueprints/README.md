@@ -30,11 +30,23 @@ un manque** — et la correction s'accompagne d'une montée de version.
 |---|---|---|---|
 | `ukit-campus-annonces` | extraction de `long_desc`, que la fiche affiche et que le fichier oubliait ; `assert` sur la présence du tableau `annonces` | 1 → **2** | [6-A](../docs/phase-6/6-a-socle.md) |
 | `ukit-campus-restaurants` | réduit au **seul** appel de liste, `assert` de forme, extraction de `horaires` | 1 → **2** | [6-D](../docs/phase-6/6-d-campus.md) |
+| `ukit-celcat-semaine` | réduit au **seul** appel de semaine ; `federationIds[]` prend une liste, borne de fin à `add_days(6)`, filtre `Vacances` **retiré** du fichier, `taille_de_page` remise à 10000 | 1 → **2** | [6-E](../docs/phase-6/6-e-planning.md) |
 
 Le second ajout du jalon 6-A mérite d'être connu avant d'écrire le suivant : sans lui, une réponse
 valide dont la clé attendue a disparu rend un **succès à liste vide**, indistinguable d'une liste
 légitimement vide.
 Voir [docs/blueprints.md](../docs/blueprints.md#affirmer-la-forme-pour-que--rien-trouvé--ne-se-confonde-pas-avec--rien-à-trouver-).
+
+Deux corrections du jalon 6-E méritent la même attention, parce qu'elles vont **contre** le fichier de
+référence :
+
+- **le filtre `Vacances` est sorti du Blueprint.** Le fichier 3-G l'exprimait en `where`, ce qui est
+  parfaitement légal — mais le service refiltre de toute façon sur la date exacte, et deux filtres
+  pour une même liste rendent un comportement inexplicable trois mois plus tard. Surtout, la recherche
+  de salles libres a *besoin* des `Vacances` : ce sont elles qui déclarent un bâtiment fermé. **Un
+  filtre, un endroit** ;
+- **`taille_de_page` était à 50**, contre 10000 dans le code. Un fichier de démonstration n'a pas
+  besoin des 2 945 groupes ; l'application, si.
 
 Ils sont un point de départ démontré, pas le jeu final :
 
@@ -43,7 +55,7 @@ Ils sont un point de départ démontré, pas le jeu final :
 | `ukit-campus-annonces` | **plus joué** ; conservé comme témoin du format — la source est passée en base | [6-A](../docs/phase-6/6-a-socle.md), [6-B](../docs/phase-6/6-b-supabase.md) |
 | `ukit-campus-restaurants` | **fait** : découpé en `restaurants` et `restaurant-menu` | [6-D](../docs/phase-6/6-d-campus.md) |
 | `ukit-campus-affluence` | **fait** : remplacé par `bibliotheques`, `bibliotheque-affluence` et `bibliotheque-horaires` ; le fichier d'origine est supprimé | [6-D](../docs/phase-6/6-d-campus.md) |
-| `ukit-celcat-semaine` | découpé en `groupes`, `jour`, `semaine`, `annee`, `salles`, `occupation` | [6-E](../docs/phase-6/6-e-planning.md) |
+| `ukit-celcat-semaine` | **fait** : découpé en `groupes`, `jour`, `semaine`, `annee`, `salles`, `occupation` | [6-E](../docs/phase-6/6-e-planning.md) |
 | `ukit-scolarite-sso` | renommé `ukit.portail.<code>.dossier` | [6-F](../docs/phase-6/6-f-scolarite.md), [6-G](../docs/phase-6/6-g-etablissements.md) |
 | `ukit-scolarite-messagerie` | renommé `ukit.portail.<code>.messagerie` | [6-F](../docs/phase-6/6-f-scolarite.md), [6-G](../docs/phase-6/6-g-etablissements.md) |
 

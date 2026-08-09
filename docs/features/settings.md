@@ -87,7 +87,7 @@ Activation
 syncCalendar()
   ├─ crée le calendrier "UKit" au premier passage si c'est la cible
   ├─ PlanningApiService.fetchCalendarForSynchronization(premier groupe favori)
-  │     └─ POST Celcat, année universitaire complète (août → août)
+  │     └─ Blueprint ukit.celcat.annee, année universitaire complète (août → août)
   ├─ pour chaque événement : mise à jour si connu, création sinon
   ├─ suppression des événements devenus obsolètes
   └─ écriture de previousSyncData / previousSyncTime
@@ -97,7 +97,27 @@ La table `previousSyncData` associe l'identifiant Celcat à l'identifiant de l'�
 c'est ce qui rend la synchronisation **idempotente**. Sans elle, chaque passage dupliquerait l'agenda.
 
 La fenêtre synchronisée est l'**année universitaire** : du 1er août courant au 1er août suivant, avec
-recul d'un an si l'on est avant août.
+recul d'un an si l'on est avant août. Ses deux bornes sont **calculées par le service** et passées en
+entrée au Blueprint : savoir de quel côté du 1er août on se trouve demande l'heure courante, ce qui
+rendrait le fichier non rejouable, donc non vérifiable ([blueprints.md](../blueprints.md)).
+
+Deux propriétés de ce run, depuis le jalon [6-E](../phase-6/6-e-planning.md) :
+
+- **il part d'une tâche de fond, sans écran.** Aucun `confirm` ne doit donc entrer dans ce Blueprint :
+  personne ne l'écouterait, et la politique de délai le refuserait ;
+- **son délai est relevé à 60 s** (`options.timeout_ms`). La réponse pèse environ 200 Ko pour une
+  année, et un délai dépassé dans une tâche qui tourne toutes les 12 h coûte un cycle entier.
+
+Un échec laisse le calendrier **tel quel** et repassera au cycle suivant : purger des événements déjà
+posés sur la foi d'une source injoignable serait pire que ne rien faire.
+
+> **Non vérifié à ce jour : la tâche de fond application fermée.** La synchronisation manuelle a été
+> jouée après la migration du jalon [6-E](../phase-6/6-e-planning.md) et rend les mêmes événements,
+> aux mêmes dates, sans doublon. Le passage automatique toutes les 12 h avec l'application tuée, lui,
+> n'a pas été observé — il demande d'attendre une nuit ou de déclencher `BackgroundFetch` depuis
+> Xcode. Les deux chemins appellent le même objet de service, donc le risque est faible, mais il
+> n'est pas nul : c'est le seul endroit où un run part sans écran, et un `confirm` qui s'y glisserait
+> bloquerait la tâche sans que personne le voie.
 
 Création d'un calendrier dédié : sur iOS, une source locale ou iCloud est requise et recherchée parmi
 les calendriers existants ; sur Android, une source locale est déclarée directement.

@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { View, Text } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import moment from 'moment';
 import Translator from '../../../../shared/i18n/Translator';
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
@@ -21,7 +22,7 @@ export function FreeRoomListItem({ item, isFavorite, onToggleFavorite, onPress }
 
     let hoursText = Translator.get('UNKNOWN') || 'Non communiqué';
     if (item.schedule) {
-        const currentDay = new Date().getDay() || 7;
+        const currentDay = moment().day() || 7; // 1-7, et suit le mock temporel
         const daySchedule = item.schedule[String(currentDay)];
         if (daySchedule) {
             hoursText = `${daySchedule.open} - ${daySchedule.close}`;

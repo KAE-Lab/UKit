@@ -15,6 +15,54 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **L'emploi du temps joué par le moteur, et un serveur en moins** (jalon
+  [6-E](docs/phase-6/6-e-planning.md)). `PlanningApiService` et `CampusApiService` n'émettent plus
+  aucune requête : six [Blueprints](docs/blueprints.md) portent les six appels que l'application joue
+  réellement — la liste des groupes, une journée, une semaine, la plage annuelle de synchronisation,
+  la liste des salles, l'occupation d'un bâtiment. `axios` et `qs` disparaissent des deux services et
+  de `ScheduleList`.
+
+  **Le relais `ukit.kbdev.io` sort de l'architecture.** Il existait parce qu'une page web ne peut pas
+  appeler un autre domaine sans son accord, et que l'application était une WebView ; une requête
+  émise nativement depuis l'appareil n'y est pas soumise. Les Blueprints visent
+  `celcat.u-bordeaux.fr` directement — un serveur à héberger, à payer et à surveiller en moins. Trois
+  conditions ont été mesurées avant de basculer et sont consignées dans
+  [sources-externes.md](docs/sources-externes.md) : le serveur ne filtre ni sur `Origin`, ni sur
+  `Referer`, ni sur l'`User-Agent`.
+
+  **Et le relais était déjà tombé.** Il répondait `522` à chacune des trois sondes du jour de la
+  bascule : le planning des utilisateurs sans cache était en panne. Ce jalon est donc autant une
+  réparation qu'une migration.
+
+  Vérifié sur iPhone : vue jour et semaine identiques, planning agrégé, synchronisation calendrier
+  sans doublon, et les trois familles d'échec produisant trois écrans distincts. Captures dans
+  [docs/features/planning.md](docs/features/planning.md). Deux points restent **non vérifiés** et sont
+  écrits comme tels : la tâche de fond application fermée, et le réseau Wi-Fi (les sondes ont été
+  jouées en 4G) — voir [6-e-planning.md](docs/phase-6/6-e-planning.md).
+
+  **Le cache n'a pas bougé d'un octet.** Il enveloppe l'appel, avant comme après — c'est ce qui rend
+  la bascule invisible sur la seule fonctionnalité que l'application promet de faire marcher hors
+  ligne, et c'est aussi ce qui permettrait de la défaire.
+
+  Ce qui reste applicatif est écrit, et ce n'est pas rien : le rejet des vacances *et* le refiltrage
+  sur la date exacte — **un filtre, un endroit**, contrairement au fichier de référence qui les
+  dédoublait —, le nettoyage des descriptions, l'extraction du code d'UE, le tri double, le découpage
+  de la semaine, et les calculs de plage qui ont besoin de l'heure courante.
+
+- **Un interrupteur « hors ligne » dans le menu de développement.** Il coupe le réseau de
+  l'**application** — `isConnected()` et le `fetch` du moteur — sans toucher à celui de l'appareil,
+  donc sans perdre Metro. Le mode avion, lui, coupe la session de développement : en pratique on
+  finissait par ne pas tester le chemin dégradé, celui qui décide de l'expérience réelle. Les deux
+  volets sont nécessaires — sans le second, les écrans Campus ne verraient rien, ils ne consultent
+  pas `NetInfo`. Ne couvre pas la WebView de l'Act II, ce qui est écrit.
+  [docs/qualite.md](docs/qualite.md)
+
+- **Le planning distingue enfin ses échecs** (jalon [6-E](docs/phase-6/6-e-planning.md)). Une source
+  injoignable affiche « Service indisponible » avec Réessayer, une réponse inattendue le dit sans
+  proposer de rejouer, et une journée légitimement vide garde sa carte « pas de cours ». Un échec
+  réseau sans cache **laissait auparavant l'indicateur de chargement tourner indéfiniment** ; il
+  produit désormais un écran nommé. Le bandeau de cache daté, lui, est inchangé.
+
 - **Les sources de campus jouées par le moteur** (jalon [6-D](docs/phase-6/6-d-campus.md)).
   `CrousService` et `LibraryService` n'émettent plus aucune requête : cinq
   [Blueprints](docs/blueprints.md) portent les cinq appels que l'application joue réellement —
@@ -155,6 +203,13 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   [docs/architecture.md](docs/architecture.md)
 - **`DataService` éclaté** en services dédiés par domaine : accès Celcat côté planning et côté salles,
   managers observables séparés pour les groupes et les bâtiments.
+- **Le rendu d'un échec de source est remonté dans `shared/ui/`** sous le nom `SourceFailureNotice` :
+  le planning en avait besoin, et une dépendance croisée entre deux dossiers de `features/` est ce que
+  l'architecture demande d'éviter. Les écrans Campus qui l'importaient sous son ancien nom ne changent
+  pas.
+- **Les deux pièces « calendrier système » sont sorties d'`AppCore`** vers
+  [`CalendarSyncHelpers.ts`](src/shared/services/CalendarSyncHelpers.ts) : le fichier franchissait la
+  limite de 400 lignes que le projet s'impose, et ce sont deux fonctions sans état.
 - **Règles ESLint d'architecture** ajoutées comme garde-fous : taille de fichier, taille de fonction,
   profondeur d'imbrication, complexité cyclomatique, interdiction de `any`.
   [docs/qualite.md](docs/qualite.md)
@@ -163,6 +218,23 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Corrigé
 
+- **Le sélecteur de date du menu de développement était invisible en thème clair sur iOS.**
+  `DateTimePicker` ne recevait pas `themeVariant` : il suivait l'apparence du **système** et non celle
+  de l'application, donc un iPhone en mode sombre affichait du texte blanc sur le fond clair du menu.
+- **La simulation temporelle ne s'appliquait qu'à la moitié de l'application.** Elle remplace
+  `moment.now`, donc tout ce qui date par `new Date()` lui échappait : les salles libres retenaient le
+  vrai jour d'ouverture — un bâtiment restait fermé quel que soit le jour simulé — et la péremption
+  des annonces ignorait l'heure simulée. Les cinq sites concernés datent désormais par `moment()`. La
+  règle est écrite dans [qualite.md](docs/qualite.md) : le code applicatif date par `moment()`, jamais
+  par `new Date()`.
+- **Le jeton d'annulation du planning n'annulait rien.** `ScheduleList` créait un
+  `axios.CancelToken`, le stockait et l'annulait au démontage — sans jamais le transmettre à un
+  appel, que `PlanningApiService` n'acceptait pas. Une réponse tardive pouvait donc écrire dans
+  l'état d'un composant démonté. Le moteur accepte un `AbortSignal` : l'annulation fonctionne, et le
+  dernier composant qui importait une bibliothèque réseau ne le fait plus.
+- **Une synchronisation calendrier en échec laissait l'indicateur tourner pour toujours.** Le retour
+  anticipé oubliait de rabaisser le drapeau `isSynchronizingCalendar`, et l'écran de réglages ne
+  pouvait plus distinguer un échec d'une synchro sans fin.
 - **Les horaires des restaurants CROUS étaient invisibles.** La source a cessé de servir `horaires`
   comme un tableau pour le servir comme une chaîne JSON ; le test `Array.isArray` était donc faux
   pour les 41 établissements de la région, et l'écran affichait « horaires non spécifiés » partout.
@@ -185,6 +257,15 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   champ `CrousRestaurant.menus` qui n'était jamais rempli.
 - Le Blueprint de référence `ukit.campus.affluence`, remplacé par les trois documents que les écrans
   demandent réellement.
+- `ERROR_WITH_CODE` et `ERROR_WITH_MESSAGE` des trois dictionnaires : leur seul lecteur reniflait la
+  forme d'une erreur `axios` pour deviner ce qui s'était passé. La famille d'échec le dit mieux, et
+  avec un message par cas.
+- `WebApiURL` de [`urls.ts`](src/shared/constants/urls.ts) : le domaine du relais Celcat et ses trois
+  routes, avec leurs deux derniers lecteurs. L'adresse de la source vit désormais dans les
+  Blueprints, donc corrigeable sans release.
+- `axios` et `qs` de `PlanningApiService`, `CampusApiService` et `ScheduleList`. Les deux paquets
+  restent installés : `AppUI` interroge encore le fichier de version distant, et `qs` sert au harnais
+  de parité pour comparer l'encodage historique.
 - Fichiers de journalisation d'erreurs laissés dans le dépôt.
 
 ## [5.6.1] - 2026-04-13

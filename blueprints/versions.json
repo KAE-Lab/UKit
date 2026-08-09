@@ -5,7 +5,12 @@
     "ukit.campus.bibliotheques": { "version": "1" },
     "ukit.campus.bibliotheque-affluence": { "version": "1" },
     "ukit.campus.bibliotheque-horaires": { "version": "1" },
-    "ukit.celcat.semaine": { "version": "1" },
+    "ukit.celcat.groupes": { "version": "1" },
+    "ukit.celcat.salles": { "version": "1" },
+    "ukit.celcat.jour": { "version": "1" },
+    "ukit.celcat.semaine": { "version": "2" },
+    "ukit.celcat.annee": { "version": "1" },
+    "ukit.celcat.occupation": { "version": "1" },
     "ukit.scolarite.sso": { "version": "1" },
     "ukit.scolarite.messagerie": { "version": "1" }
 }

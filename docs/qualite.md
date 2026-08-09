@@ -48,6 +48,8 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`features/Campus/services/CrousMapping.ts`](../src/features/Campus/services/CrousMapping.ts) | la date du fournisseur, les horaires servis en chaîne JSON, le regroupement midi/soir |
 | [`features/Campus/services/LibraryMapping.ts`](../src/features/Campus/services/LibraryMapping.ts) | l'arité d'une extraction, le choix du visuel, un site fermé sans taux |
 | [`shared/locations/referentiel.ts`](../src/shared/locations/referentiel.ts) | la fusion champ par champ du socle et de la surcouche |
+| [`features/Planning/services/PlanningApiMapping.ts`](../src/features/Planning/services/PlanningApiMapping.ts) | l'arité de `modules`, le séparateur qui change avec la vue, une fin d'événement nulle, le tri double |
+| [`features/Campus/services/CampusApiMapping.ts`](../src/features/Campus/services/CampusApiMapping.ts) | la correspondance textuelle salle vers bâtiment, la détection des vacances, le refiltrage sur la date |
 
 `BdeMapping` a été le premier module **de feature** couvert, et il l'est pour une raison précise :
 c'est là qu'une erreur ne se voit pas. Un champ omis rend une fiche incomplète sans rien casser, et
@@ -59,6 +61,13 @@ chacun verrouille un défaut **mesuré** plutôt qu'imaginé : une date absente 
 des horaires devenus invisibles parce que la source a changé de forme, une extraction qui rend `20` et
 non `[20]`, et une colonne nulle qui pourrait effacer une coordonnée embarquée. Aucun des quatre ne
 se voit à la relecture.
+
+Les deux du jalon [6-E](phase-6/6-e-planning.md) suivent la même règle, sur la source la plus critique
+de l'application. Deux d'entre eux valent d'être connus avant de « simplifier » quoi que ce soit :
+`moment(null)` est une date **invalide** là où `moment(undefined)` vaut *maintenant* — une salle
+occupée à l'heure où l'écran s'ouvre — et la vue semaine rend une description **vide**, ce qui est le
+comportement d'origine et non un défaut de la migration
+([features/planning.md](features/planning.md#limites-connues)).
 
 Ce qui n'y est **pas** : les façades et les clients (`aetherius/client.ts`,
 `aetherius/registry.ts`, `supabase/client.ts`, `runBlueprint`), qui importent React Native,
@@ -172,6 +181,8 @@ par **sept tapes sur le numéro de version** de l'écran À propos, et porte deu
 *Blueprints* — le diagnostic de la livraison, décrit dans
 [blueprints.md](blueprints.md#quand-une-correction--narrive-pas-).
 
+L'onglet *Temps* porte deux simulations indépendantes : l'heure, et le **réseau**.
+
 Ses libellés sont volontairement **hors des dictionnaires** : ce n'est pas une capacité utilisateur,
 et lui ouvrir les trois traductions ferait porter à l'internationalisation un écran que personne
 n'ouvre par hasard.
@@ -180,7 +191,11 @@ Fonctionnement de la simulation temporelle :
 
 - `setFakeTime(date)` calcule un décalage entre la date voulue et l'heure réelle, puis **remplace
   `moment.now`** par une fonction qui applique ce décalage. Tout le code qui date via `moment()` voit
-  donc l'heure simulée.
+  donc l'heure simulée — et c'est la raison pour laquelle **le code applicatif date par `moment()` et
+  jamais par `new Date()`**. Un `new Date()` échappe au décalage, ce qui donnait une simulation à
+  moitié appliquée : jusqu'au jalon [6-E](phase-6/6-e-planning.md), simuler un jour de cours ne
+  rouvrait pas un bâtiment, parce que les salles libres lisaient l'heure par l'autre chemin. Les
+  seuls `new Date()` légitimes sont ceux du menu lui-même et les dates passées au calendrier système.
 - Les caches d'emploi du temps (`@Week…` et `@YYYY/MM/DD`) sont purgés à chaque changement, pour que
   les vues rechargent la bonne date.
 - L'événement `timeMockChanged` est diffusé via `DeviceEventEmitter` ; `DayView` s'y abonne pour
@@ -190,8 +205,41 @@ Fonctionnement de la simulation temporelle :
   tombe dans le passé. Un message de retour indique dans combien de secondes réelles la première
   notification arrivera.
 
-> **Capture attendue** — `modmenu.png` : le menu de simulation déployé, horloge simulée et sélecteurs
-> de date visibles.
+> **Capture attendue** — `modmenu.png` : le menu de simulation déployé, horloge simulée, interrupteur
+> hors ligne et sélecteurs de date visibles.
+
+## Couper le réseau sans couper l'appareil
+
+Le mode avion est la façon évidente de vérifier un chemin hors ligne, et c'est une mauvaise façon :
+il coupe **aussi Metro**, donc la session de développement, donc la possibilité de recharger pour
+essayer autre chose. En pratique, on finit par ne pas tester le chemin dégradé — celui qui décide de
+l'expérience réelle.
+
+L'interrupteur **HORS LIGNE** de l'onglet *Temps*
+([`NetworkMockService.ts`](../src/shared/services/NetworkMockService.ts)) coupe le réseau de
+l'**application** seulement. Il fait deux choses, et il faut les deux :
+
+| Ce qu'il coupe | Ce que ça déclenche |
+|---|---|
+| `isConnected()` rend `false` | la branche « pas de connexion » des écrans qui la consultent : le planning, la recherche de groupes |
+| le `fetch` du moteur échoue | tout run part en famille `unavailable` — sans ce volet, les écrans Campus ne verraient rien, ils ne consultent pas `NetInfo` |
+
+Ce qu'il **ne couvre pas**, et qu'il faut savoir avant de conclure : la WebView de l'Act II, qui
+navigue par elle-même et ne passe pas par ce `fetch`. La scolarité (jalon
+[6-F](phase-6/6-f-scolarite.md)) devra vérifier son chemin hors ligne autrement.
+
+Fermer le menu remet le réseau **et** l'heure à leur état réel : une simulation qu'on oublie active
+est un faux bug qu'on cherchera longtemps. La pastille de l'icône réduite reste allumée tant que l'une
+des deux tourne, pour la même raison.
+
+Deux autres façons de dégrader une source, complémentaires plutôt que redondantes :
+
+- **casser le Blueprint embarqué** — `vars.domaine` sur un hôte injoignable, `expect.status` sur une
+  valeur impossible, une constante de protocole absurde — puis recharger Metro. C'est ce qui distingue
+  les familles `unavailable`, `rejected` et `data` les unes des autres ; l'interrupteur, lui, ne
+  produit que la première ;
+- **`SUPABASE_URL` sur un hôte `.invalid`**, pour la base de publication, qui a son propre modèle
+  d'erreur ([backend.md](backend.md)).
 
 Important : `Date.now()` n'est **pas** modifié, seul `moment.now` l'est. Un code qui date via
 `new Date()` continue de voir l'heure réelle. C'est le cas de

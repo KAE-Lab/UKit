@@ -155,6 +155,15 @@ de parité ([tools/parity/README.md](../../tools/parity/README.md)).
 
 ## Limites connues
 
+- **Aucun repli hors ligne, et ce qu'on croit en voir n'en est pas un.** Le hors ligne coupé depuis le
+  menu de développement ([qualite.md](../qualite.md)) laisse le carrousel du tableau de bord afficher
+  ses restaurants, ce qui ressemble à un cache : ce n'en est pas un. C'est l'**état React** de la
+  section, chargé avant la coupure, que l'effet ne rejoue que sur un changement de position ou un
+  nouvel essai ([`useCrousRestaurants.ts`](../../src/features/Campus/hooks/useCrousRestaurants.ts)).
+  La liste complète, qui se monte à neuf, affiche bien « Service indisponible ». Au redémarrage de
+  l'application hors ligne, les deux seraient vides. C'est la décision écrite dans
+  [donnees-et-persistance.md](../donnees-et-persistance.md) — un menu change tous les jours — mais
+  elle se vérifie mal, et c'est ce piège d'observation qu'il faut connaître.
 - **Les libellés de filtre et le texte de recherche s'affichent en majuscules brutes**
   (`ALL_ESTABLISHMENTS`, `RESTO_U`, `CROUS_MARKET`, `SEARCH_RESTO_CITY`) — voir [i18n.md](../i18n.md).
 - **Le classement par type repose sur des chaînes présentes dans le nom**, et c'est plus fragile que

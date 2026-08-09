@@ -11,6 +11,8 @@ import { ErrorAlert } from '../ui/Alerts';
 // Le module pur, et non la porte d'entree `../locations` : celle-ci tire AsyncStorage et la base,
 // que ce fichier — charge avant le premier rendu — n'a aucune raison de mettre sur son chemin.
 import { getBuildingRef } from '../locations/referentiel';
+import { createUKitCalendar, formatCalendarEventData } from './CalendarSyncHelpers';
+import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
 
 // ── CONTEXTE & DEVICE ─────────────────────────────────
@@ -33,6 +35,11 @@ export function languageFromDevice(): string {
 }
 
 export async function isConnected(): Promise<boolean | null> {
+    // L'interrupteur du menu de developpement gagne : couper le reseau de l'application sans couper
+    // celui de l'appareil est le seul moyen de verifier un chemin hors ligne sans perdre Metro
+    // (docs/qualite.md). Il vaut `false` en dehors de toute verification manuelle.
+    if (NetworkMockService.isOffline()) return false;
+
     const netInfo = await NetInfo.fetch();
     return netInfo.isConnected;
 }
@@ -119,58 +126,6 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     await SettingsManager.syncCalendar();
     return BackgroundFetch.BackgroundFetchResult.NewData;
 });
-
-function formatCalendarEventData(event: import('../../features/Planning/services/PlanningApiService').PlanningEvent): Record<string, unknown> {
-    return {
-        title: event.subject,
-        startDate: event.date && event.date.start ? new Date(event.date.start) : new Date(),
-        endDate: event.date && event.date.end ? new Date(event.date.end) : new Date(),
-        timeZone: 'Europe/Paris',
-        endTimeZone: 'Europe/Paris',
-        notes: event.schedule + '\n' + event.description,
-    };
-}
-
-async function createUKitCalendar(calendars: Calendar.Calendar[]): Promise<string> {
-    let calendar: Partial<Calendar.Calendar> | Record<string, unknown> = {
-        title: `UKit`,
-        name: `UKit`,
-        color: '#009ee0',
-        entityType: Calendar.EntityTypes.EVENT,
-        allowsModifications: true,
-        source: { isLocalAccount: true, name: 'UKit', type: Calendar.SourceType.LOCAL },
-        ownerAccount: 'ukit',
-        timeZone: 'Europe/Paris',
-        isVisible: true,
-        isPrimary: false,
-        isSynced: false,
-        allowedAvailabilities: ['busy', 'free'],
-        allowedReminders: ['default', 'alert', 'email'],
-        accessLevel: 'owner',
-        allowedAttendeeTypes: ['none', 'required', 'optional'],
-    };
-
-    if (Platform.OS === 'ios') {
-        const local = calendars.filter(
-            (fetchedCalendar) =>
-                fetchedCalendar.source &&
-                (fetchedCalendar.source.type === Calendar.CalendarType.LOCAL ||
-                    (fetchedCalendar.source.type === Calendar.CalendarType.CALDAV &&
-                        fetchedCalendar.source.name === 'iCloud')),
-        );
-        if (local.length < 1) throw new Error('Impossible to find a source calendar');
-
-        calendar = {
-            title: `UKit`,
-            color: '#009ee0',
-            entityType: Calendar.EntityTypes.EVENT,
-            allowsModifications: true,
-            allowedAvailabilities: [],
-            sourceId: local[0].source.id,
-        };
-    }
-    return await Calendar.createCalendarAsync(calendar as Calendar.Calendar);
-}
 
 class SettingsManagerService {
     _calendar: string | number;
@@ -294,8 +249,21 @@ class SettingsManagerService {
             this._calendar = !ukitCalendar ? await createUKitCalendar(this._calendars) : ukitCalendar.id;
         }
 
-        const events = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups[0]);
-        if (!events) return;
+        // `resultat.ok === false` et non `!resultat.ok` : sans `strictNullChecks`, TypeScript ne
+        // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
+        // Une synchronisation qui echoue laisse le calendrier tel quel et repassera dans 12 h : purger
+        // les evenements deja poses sur la foi d'une source injoignable serait pire que ne rien faire.
+        const resultat = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups[0]);
+        if (resultat.ok === false) {
+            // Le drapeau doit retomber, sinon l'ecran de reglages tourne indefiniment. Le retour
+            // anticipe d'origine l'oubliait, et l'echec etait alors indiscernable d'une synchro sans
+            // fin.
+            this._isSynchronizingCalendar = false;
+            this.notify('isSynchronizingCalendar', false);
+            return;
+        }
+
+        const events = resultat.courses;
         let existingCalendarEvents: Record<string, string> = {};
 
         try {

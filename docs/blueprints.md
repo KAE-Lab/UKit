@@ -118,6 +118,13 @@ correspond une fois si la clé existe — même vide — et zéro fois si elle a
 en `rejected`. Un Blueprint dont l'extraction peut légitimement être vide devrait porter cette
 assertion ; celui des annonces l'a gagnée au jalon [6-A](phase-6/6-a-socle.md), après mesure.
 
+**Et quand il n'y a pas de clé ?** Certaines réponses *sont* le tableau : les quatre Blueprints de
+calendrier Celcat reçoivent `[ … ]` à la racine. Il n'existe alors aucune clé dont la disparition
+serait détectable — `$` correspond toujours, y compris à un objet d'erreur — et une assertion écrite
+là ne ferait que rassurer. Ces fichiers s'en tiennent donc à `expect: { status: 200 }`, et le disent
+dans leur `description` : une garde qui n'en est pas une coûte plus cher que son absence, parce qu'on
+cesse de chercher ailleurs. Constaté au jalon [6-E](phase-6/6-e-planning.md).
+
 ### Accepter deux statuts, sans accepter n'importe lequel
 
 `expect.status` ne prend **qu'un** entier. Or une source rend parfois un statut d'erreur pour dire
@@ -269,6 +276,7 @@ est un accès de production.
 | Avant | Après |
 |---|---|
 | Constantes magiques disséminées | `vars` nommées, en un seul endroit |
+| Un relais à héberger devant une source | **plus de relais** : la requête part de l'appareil ([6-E](phase-6/6-e-planning.md)) |
 | Parsing par expression régulière | `as: number`, champs nommés — ou explicitement applicatif |
 | Erreurs avalées (`catch { return null }`) | Erreurs typées, familles d'écran |
 | JavaScript injecté non typé | Vocabulaire d'actions fermé, validé avant le run |
