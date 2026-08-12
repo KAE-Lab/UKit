@@ -8,9 +8,10 @@ UKit s'appuie sur un projet **Supabase** pour publier ce qu'il publie : les
 > sont créés, **les annonces de vie étudiante y sont lues** depuis le jalon
 > [6-B](phase-6/6-b-supabase.md), **le bucket de livraison sert les Blueprints et leur manifeste**
 > depuis le jalon [6-C](phase-6/6-c-livraison.md), et **le référentiel des bâtiments surcouche le
-> fichier embarqué** depuis le jalon [6-D](phase-6/6-d-campus.md). Le catalogue des établissements
-> est rempli et branché au jalon [6-G](phase-6/6-g-etablissements.md). Ce qui est écrit ici avant
-> d'exister est marqué comme tel.
+> fichier embarqué** depuis le jalon [6-D](phase-6/6-d-campus.md), et **le catalogue des
+> établissements pilote l'interface** depuis le jalon [6-G](phase-6/6-g-etablissements.md) — c'est
+> lui qui porte le second établissement, ajouté sans release. Ce qui est écrit ici avant d'exister
+> est marqué comme tel.
 
 ## Ce que la base est, et ce qu'elle n'est pas
 
@@ -73,7 +74,7 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 |---|---|---|---|---|
 | `annonces` | contenu éditorial de vie étudiante | [`BdeService`](../src/features/Campus/services/BdeService.ts) | **6-B** | — |
 | `batiments` | coordonnées, horaires, accès libre, visuel | [`shared/locations`](../src/shared/locations/index.ts) | **6-D** | [`assets/locations.json`](../assets/locations.json) |
-| `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | 6-G | l'établissement historique |
+| `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | **6-G** | l'établissement historique |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | bandeau de service : maintenance, incident | rien aujourd'hui | — | — |
 | `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal, `desactive` | le script de publication | **6-C** | [`blueprints/`](../blueprints/) |
@@ -90,6 +91,23 @@ Le rafraîchissement suit le même rythme que la livraison des Blueprints — d�
 premier plan, jamais dans le chemin d'un rendu — et son résultat est mis en cache local pour que la
 dernière correction connue survive au mode hors ligne
 ([donnees-et-persistance.md](donnees-et-persistance.md)).
+
+`etablissements` est **lue depuis le jalon [6-G](phase-6/6-g-etablissements.md)**, par
+[`shared/etablissements`](../src/shared/etablissements/index.ts), et elle **remplace** — à l'inverse
+de `batiments`, qui corrige champ par champ. La différence est de sens et il ne faut pas l'aplatir :
+là-bas un nul veut dire « je ne corrige pas ce champ » et ne doit donc rien effacer ; ici il veut dire
+« ce service n'existe pas » et doit gagner. Sans ça, on ne pourrait jamais **retirer** une messagerie
+devenue inextractible. Corollaire : une ligne s'écrit **entière**, et
+[`supabase/etablissements.sql`](../supabase/etablissements.sql) est faite pour ça.
+
+Le socle embarqué du catalogue ne porte qu'**un** établissement, l'historique. C'est délibéré : le
+binaire n'embarque que ce dont il embarque aussi les Blueprints, et un second établissement inscrit
+dans le binaire détruirait la preuve que le mécanisme d'ajout fonctionne.
+
+La politique de lecture filtre `actif` **côté serveur** : un établissement retiré disparaît de la
+liste sans une ligne de code applicatif. L'appareil de quelqu'un qui l'avait choisi, lui, continue sur
+ce qu'il en sait et **le dit** — basculer quelqu'un d'office au milieu de son année serait pire que
+le prévenir.
 
 `app_release` et `service_messages` sont créées vides, et rien ne les lit : il n'existe aucun écran
 de mise à jour ni de bandeau de service dans l'application. Les créer maintenant coûte deux tables et

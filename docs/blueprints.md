@@ -17,12 +17,19 @@ chez Aetherius ; elle n'est pas recopiée ici, parce qu'une copie périmée est 
 | Endroit | Rôle |
 |---|---|
 | [`blueprints/`](../blueprints/) | **la source de vérité.** Les fichiers sont relus en revue, versionnés avec le code qui les consomme, et importés dans le binaire |
+| [`blueprints/portails/`](../blueprints/portails/) | les portails d'établissements **hors socle** : relus et versionnés comme les autres, mais **jamais embarqués** — ils arrivent par le manifeste ([6-G](phase-6/6-g-etablissements.md)) |
 | [`blueprints/index.ts`](../blueprints/index.ts) | le **socle embarqué** : la table des noms livrés avec l'application |
 | [`blueprints/versions.json`](../blueprints/versions.json) | la **version** de chaque fichier, et son `min_engine` s'il en a un |
 | Bucket `blueprints` de Supabase | la **surcouche distante** : les mêmes fichiers, plus récents, publiés entre deux releases |
 
 Le socle embarqué n'est jamais optionnel. Une application doit fonctionner au premier lancement, hors
 ligne, sans avoir jamais contacté le réseau ; le distant ne fait que le mettre à jour.
+
+**Une seule exception, et elle est bornée** : un portail d'établissement que l'application n'a jamais
+livré n'a pas de repli hors ligne à préserver — il n'existe pas encore pour l'utilisateur. C'est ce
+qui rend acceptable que le manifeste puisse en **ajouter** sous `ukit.portail.`, et rien d'autre. La
+contrepartie est assumée : tant qu'un portail ajouté n'a pas été résolu une fois, il n'y a rien à quoi
+retomber.
 
 Les versions vivent dans un fichier de données plutôt que dans `index.ts` pour une raison
 mécanique : le script de publication est un module Node, il ne sait pas lire du TypeScript. Un
@@ -163,6 +170,16 @@ contrat se nomme**, il ne se subit pas et ne s'ignore pas. Livré au jalon
    statuts attendus.
 4. **Le jouer avec le moteur Python**, depuis un poste, avant de toucher à l'application. C'est là
    qu'on itère : le cycle est de quelques secondes.
+
+   > **Un fichier qui passe ici peut échouer sur l'appareil**, et le jalon
+   > [6-G](phase-6/6-g-etablissements.md) l'a payé. Le moteur Python s'appuie sur Playwright, dont les
+   > sélecteurs acceptent des pseudo-classes **propriétaires** — `:text-is()`, `:nth-match()`,
+   > `:has-text()`. Le moteur embarqué, lui, résout par `document.querySelectorAll`, qui les rejette
+   > comme CSS invalide : le run échoue au premier `extract`, avec un message qui ne nomme pas la
+   > cause. **Pour un sélecteur que le CSS standard n'exprime pas — « la valeur dont le libellé voisin
+   > vaut X » —, la réponse est XPath**, que les deux moteurs partagent. Un test du dépôt refuse ces
+   > pseudo-classes ([`delivery.test.ts`](../src/shared/aetherius/delivery.test.ts)), mais il vaut
+   > mieux le savoir en écrivant qu'en le découvrant.
 5. **Écrire son cas de parité** dans [`tools/parity/`](../tools/parity/README.md) et le rendre vert
    contre le service historique.
 6. **Le jouer sur un appareil**, chemins dégradés compris.
@@ -196,8 +213,9 @@ raison d'attendre le téléphone. Chacune arrête la publication, aucune n'est r
 |---|---|
 | Le document est validé par le moteur (`validateBlueprintData` + `validateForAct`) | un fichier invalide qui traverserait le réseau pour être refusé à l'arrivée |
 | Le `name` déclaré dans le fichier correspond à sa clé de `versions.json` | livrer un Blueprint à la place d'un autre |
-| Toute entrée a son fichier, tout fichier a son entrée | annoncer une URL qui ne répond pas |
+| Toute entrée a son fichier, tout fichier a son entrée, et deux fichiers ne portent pas le même nom | annoncer une URL qui ne répond pas, ou publier celui des deux que le système de fichiers a rendu en premier |
 | La version est une chaîne numérique pointée | une comparaison que personne ne saurait faire de tête |
+| Un fichier de `portails/` est couvert par le préfixe réservé | publier un fichier que l'appareil ignorera **en silence** |
 
 Trois propriétés du script valent d'être connues avant de s'en servir :
 
@@ -263,7 +281,10 @@ Un Blueprint est de la **donnée exécutable**, et il est traité comme tel :
 - il ne peut **déclarer** que les secrets que l'application lui ouvre ;
 - il ne peut pas **ajouter** un nom que l'application n'embarque pas — sauf sous le préfixe
   `ukit.portail.`, explicitement ouvert pour le multi-établissement
-  ([6-G](phase-6/6-g-etablissements.md)) ;
+  ([6-G](phase-6/6-g-etablissements.md)). Un nom **ajouté** ne reçoit que les secrets déclarés dans
+  `allowNew.secrets`, jamais l'union de ceux du socle : déduire le périmètre est raisonnable pour un
+  fichier qui en remplace un que quelqu'un a relu, et ne l'est pas pour un fichier que personne n'a
+  lu ;
 - il ne peut pas exécuter de code : le moteur embarqué n'évalue rien dynamiquement, par construction ;
 - il est validé **entièrement** avant d'atteindre le cache, donc avant d'atteindre un run.
 

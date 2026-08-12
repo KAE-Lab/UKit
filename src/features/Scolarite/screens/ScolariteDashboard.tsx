@@ -26,7 +26,7 @@ const ScolariteDashboard = ({ navigation }) => {
     const accent = theme.accent ?? theme.primary;
 
     const {
-        credentials, credentialsLoaded, coldData, mailData,
+        credentials, credentialsLoaded, coldData, mailData, messagerieDisponible,
         scrapeStatus, scrapeProgress, sessionMode, sessionFailure, retrySession,
     } = useCredentials();
 
@@ -106,16 +106,26 @@ const ScolariteDashboard = ({ navigation }) => {
                             >
                                 <GreetingBlock coldData={coldData} color={accent} theme={theme} />
 
-                                <SectionHeader title={Translator.get('MESSAGING')} theme={theme} />
-                                <MailboxRow
-                                    mailData={mailData}
-                                    coldData={coldData}
-                                    status={scrapeStatus}
-                                    failure={sessionFailure}
-                                    color={theme.sectionsHeaders[5] || accent}
-                                    theme={theme}
-                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email' })}
-                                />
+                                {/*
+                                  * La messagerie disparait quand l'etablissement n'en publie pas
+                                  * d'extractible : il n'y a alors rien qui echoue, donc rien a
+                                  * montrer. Une carte en panne permanente pour un service inexistant
+                                  * serait un mensonge repete a chaque lancement.
+                                  */}
+                                {messagerieDisponible && (
+                                    <>
+                                        <SectionHeader title={Translator.get('MESSAGING')} theme={theme} />
+                                        <MailboxRow
+                                            mailData={mailData}
+                                            coldData={coldData}
+                                            status={scrapeStatus}
+                                            failure={sessionFailure}
+                                            color={theme.sectionsHeaders[5] || accent}
+                                            theme={theme}
+                                            onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email' })}
+                                        />
+                                    </>
+                                )}
                             </Animated.ScrollView>
                         </BiometryGate>
                     )}

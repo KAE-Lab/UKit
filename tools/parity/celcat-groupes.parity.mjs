@@ -8,13 +8,13 @@
  */
 
 import { commeListe, jouer } from './commun.mjs';
-import { DOMAINE } from './celcat-commun.mjs';
+import { CATALOGUE_BORDEAUX, DOMAINE } from './celcat-commun.mjs';
 
 export const NAME = 'celcat-groupes';
 
 /** Le chemin migre : joue le Blueprint et rend la donnee au format applicatif. */
 export async function viaBlueprint() {
-    const outputs = await jouer('ukit-celcat-groupes.blueprint.json');
+    const outputs = await jouer('ukit-celcat-groupes.blueprint.json', CATALOGUE_BORDEAUX.groupes);
 
     return commeListe(outputs.groupes)
         .filter((identifiant) => typeof identifiant === 'string' && identifiant.length > 2)

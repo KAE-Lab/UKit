@@ -7,8 +7,8 @@
  * et la seule facon de mal faire ce jalon serait d'affaiblir ce cadrage :
  *
  *   - `allowedSecrets` borne ce qu'un fichier publie a le droit de reclamer ;
- *   - `allowNew` est volontairement **absent** — un nom absent du socle reste ignore, et cette limite
- *     est levee au jalon 6-G, pas ici ;
+ *   - `allowNew` ouvre **une** porte, et une seule : un nom absent du socle peut arriver s'il est
+ *     couvert par `ukit.portail.` et ne declare que les identifiants universitaires (jalon 6-G) ;
  *   - `remote: false` coupe durablement la surcouche sans la detruire.
  *
  * Il vit separe de `registry.ts` pour rester jouable hors appareil : la configuration et les gardes
@@ -28,7 +28,7 @@ import type {
     ResolvedBlueprint,
 } from '@aetherius/react-native';
 
-import { ALLOWED_SECRETS, BUNDLED } from '../../../blueprints';
+import { ALLOWED_SECRETS, BUNDLED, REMOTE_NAME_PREFIX } from '../../../blueprints';
 
 export type {
     BlueprintCacheStore,
@@ -77,6 +77,22 @@ export function manifestUrl(baseUrl?: string | null): string | undefined {
  * l'union des secrets declares par le socle. Les deux valent la meme chose aujourd'hui, mais le
  * defaut s'elargirait tout seul le jour ou un Blueprint embarque declarerait un nouveau secret,
  * et un perimetre qui s'elargit sans qu'on le decide n'est plus un perimetre.
+ *
+ * `allowNew` est **l'unique ajout du jalon 6-G**, et tout ce qui le rend acceptable tient dans ses
+ * deux champs :
+ *
+ *   - le **prefixe** borne les noms. Un manifeste ne peut ajouter que sous `ukit.portail.` ; ouvrir
+ *     `ukit.` rendrait toutes les sources de l'application remplacables a distance, ce qui est
+ *     precisement ce que la garde d'origine evite. Le paquet refuse d'ailleurs a la construction un
+ *     prefixe vide ou qui ne nomme pas un espace de noms ;
+ *   - les **secrets** bornent le rayon. Ils sont obligatoires et sans defaut cote paquet, et pour une
+ *     bonne raison : deduire le perimetre du socle est raisonnable pour un fichier qui en remplace un
+ *     que quelqu'un a relu, et ne l'est pas pour un fichier que personne n'a lu.
+ *
+ * Ce qui n'est **pas** borne, et qui doit rester su : ce qu'un portail publie fait de ces
+ * identifiants, et ou il envoie ses requetes. Un publieur compromis pouvait deja livrer un Blueprint
+ * malveillant sous un nom existant ; ce jalon augmente le **nombre de portes**, pas leur solidite
+ * (docs/blueprints.md).
  */
 export function createRegistry(options: DeliveryOptions): BlueprintRegistry {
     const manifest = manifestUrl(options.baseUrl);
@@ -84,6 +100,7 @@ export function createRegistry(options: DeliveryOptions): BlueprintRegistry {
     return new BlueprintRegistry({
         bundled: BUNDLED,
         allowedSecrets: ALLOWED_SECRETS,
+        allowNew: { prefix: REMOTE_NAME_PREFIX, secrets: ALLOWED_SECRETS },
         cache: options.cache,
         remote: options.remote !== false,
         ...(manifest !== undefined ? { manifest } : {}),

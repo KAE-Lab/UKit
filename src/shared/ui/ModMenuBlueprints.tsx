@@ -26,7 +26,7 @@ import {
     revertBlueprints,
     runBlueprint,
     type BlueprintLine,
-    type BlueprintName,
+    type RunnableBlueprintName,
     type RefreshReport,
 } from '../aetherius';
 import { tokens, type AppThemeType } from '../theme/Theme';
@@ -82,7 +82,7 @@ export default function ModMenuBlueprints({ theme }: ModMenuBlueprintsProps) {
      * C'est ce qui rend le parcours de correction verifiable de bout en bout : voir une ligne passer
      * a « distant » prouve que le document publie est en place, le jouer prouve qu'il s'execute.
      */
-    const jouer = useCallback(async (name: BlueprintName) => {
+    const jouer = useCallback(async (name: RunnableBlueprintName) => {
         setRuns((etat) => ({ ...etat, [name]: 'en cours...' }));
         const run = await runBlueprint(name);
         const verdict =
@@ -148,7 +148,7 @@ function renderLigne(
     line: BlueprintLine,
     raison: string | null,
     run: string | undefined,
-    jouer: (name: BlueprintName) => void,
+    jouer: (name: RunnableBlueprintName) => void,
 ) {
     const distant = line.origin === 'remote';
 

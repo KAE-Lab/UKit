@@ -197,6 +197,27 @@ revenant dans l'application.
   source qui a changé de contrat.
 - Un dimanche, ou un jour sans cours : la carte « pas de cours » doit s'afficher.
 
+## Quand l'établissement ne publie pas d'emploi du temps
+
+`celcat_domaine` à `null` dans le catalogue veut dire « cette université ne publie pas son emploi du
+temps ici ». Le service rend alors `PLANNING_ABSENT` **sans qu'aucun run ne parte**, et l'écran affiche
+« Cette université ne publie pas encore son emploi du temps dans UKit » — sans bouton Réessayer, parce
+que rien n'est en panne et que la source ne répondra pas mieux dans dix secondes.
+
+C'est un écran **différent** de celui d'une panne, d'une journée sans cours **et d'une liste de
+favoris vide** ; les quatre se ressemblaient avant la Phase 6 et c'est précisément ce qu'elle a
+supprimé. Le dernier cas a demandé une correction trouvée sur appareil : l'absence d'emploi du temps
+est testée **avant** l'état « aucun groupe favori », parce qu'une université sans serveur n'en a jamais
+— l'écran d'invitation à chercher un groupe gagnait donc toujours, avec un bouton menant à une
+recherche qui ne peut rien trouver. Le cas est réel depuis le
+jalon [6-G](../phase-6/6-g-etablissements.md) : Bordeaux INP est sur ADE, pas sur Celcat. Le porter
+demande une capacité que le moteur n'a pas encore, et le sujet a sa propre spécification —
+[6-I](../phase-6/6-i-planning-universel.md).
+
+L'hôte et les codes d'inventaire des six Blueprints `ukit.celcat.*` viennent eux aussi du catalogue
+depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par défaut. Aucun
+`if (etablissement === …)` n'apparaît dans un service — ce qui varie est une donnée.
+
 ## Limites connues
 
 - **La vue semaine n'affiche aucune description, et ce n'est pas nouveau.** Mesure du 2026-08-09 : le

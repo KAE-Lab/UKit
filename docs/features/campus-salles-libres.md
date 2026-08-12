@@ -164,6 +164,15 @@ est testable et réutilisable indépendamment du hook.
   **complète** — visuel, horaires, coordonnées. C'est la promesse du socle embarqué : si l'écran se
   vide, la surcouche est devenue une dépendance, ce qu'elle ne doit jamais être.
 
+## Quand l'établissement n'a pas de serveur d'emplois du temps
+
+Les bâtiments et leurs salles se reconstruisent depuis l'inventaire du serveur de planning : une
+université qui n'en publie pas n'a rien à montrer ici. La **section disparaît du tableau de bord**
+plutôt que d'afficher un carrousel vide ou une erreur permanente — même règle que la ligne de
+messagerie d'un établissement sans webmail extractible
+([6-G](../phase-6/6-g-etablissements.md)). L'écran détaillé n'est atteignable que depuis cette
+section : le masquer suffit à le rendre inaccessible.
+
 ## Limites connues
 
 - **Un seul bâtiment est éligible aujourd'hui.** Le référentiel compte 73 entrées, dont **une seule**

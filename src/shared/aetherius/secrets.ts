@@ -39,13 +39,20 @@ export interface CredentialStore {
  * Les noms de secrets, tels que les Blueprints les declarent, projetes sur les champs du document
  * stocke.
  *
- * C'est le seul endroit a toucher au jalon 6-G, quand les noms deviendront neutres vis-a-vis de
- * l'etablissement (`portail_user` / `portail_pass`) : les deux graphies cohabiteront ici le temps
- * que le parc migre, et ni le trousseau ni les ecrans n'en sauront rien.
+ * Ils sont **neutres vis-a-vis de l'etablissement** depuis le jalon 6-G. `bordeaux_user` aurait
+ * oblige le portail de chaque nouvelle universite a declarer un nom que l'application ne connait
+ * pas — donc a passer par une release, exactement ce que le multi-etablissement supprime.
+ *
+ * Le renommage est **net** : les anciennes graphies ne cohabitent pas. Elles n'ont plus de porteur
+ * (aucun Blueprint embarque ne les declare, et un nom disparu du socle n'est plus resolu), donc les
+ * garder serait du code mort et un perimetre de secrets deux fois plus large pour rien.
+ *
+ * **Les cles du trousseau, elles, n'ont pas bouge** : c'est ce qui fait que personne n'est
+ * deconnecte par la mise a jour. Ce module traduit des noms, il ne migre pas un magasin.
  */
 const SECRET_FIELD: Readonly<Record<string, 'username' | 'password'>> = {
-    bordeaux_user: 'username',
-    bordeaux_pass: 'password',
+    portail_user: 'username',
+    portail_pass: 'password',
 };
 
 /**

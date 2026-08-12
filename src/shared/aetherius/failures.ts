@@ -22,7 +22,7 @@
 
 import { describeFailure, type FailureKind } from '@aetherius/engine';
 
-import type { BlueprintName } from '../../../blueprints';
+import type { BlueprintName, PortailBlueprintName } from '../../../blueprints';
 import type { TranslationKey } from '../i18n/Translator';
 
 /** Les familles d'echec, telles que le moteur les rend. */
@@ -119,11 +119,33 @@ export function describeUkitFailure(subject: unknown): UkitFailure {
  * pas la liste promise, par exemple. C'est un Blueprint a corriger, et le dire vaut mieux que rendre
  * une liste vide qui passerait pour une absence de donnees.
  *
+ * Un run peut aussi ne **jamais partir** : depuis le jalon 6-G, un etablissement peut ne pas publier
+ * un service — pas de serveur d'emploi du temps interrogeable, pas de messagerie extractible. Le
+ * `code` sert alors a ce que l'ecran nomme cette absence au lieu de la confondre avec une panne : les
+ * deux appellent des mots differents, et c'est toute la difference entre « reviens plus tard » et
+ * « ca n'existe pas ici ».
+ *
  * Passer par ce constructeur plutot que d'ecrire l'objet au point d'appel : la table reste le seul
  * endroit qui decide de ce qu'un ecran fait d'une famille.
  */
-export function ukitFailure(kind: UkitFailureKind, detail: string): UkitFailure {
-    return { kind, detail, ...FAILURE_PRESENTATION[kind] };
+export function ukitFailure(kind: UkitFailureKind, detail: string, code?: string): UkitFailure {
+    return { kind, detail, ...(code !== undefined ? { code } : {}), ...FAILURE_PRESENTATION[kind] };
+}
+
+/**
+ * L'echec d'un service que l'etablissement selectionne **ne publie pas** (jalon 6-G).
+ *
+ * C'est le seul echec de l'application qu'aucune famille du moteur ne decrit, et c'est normal :
+ * aucun run n'est parti. Une fac sans messagerie extractible, une fac dont le serveur d'emplois du
+ * temps n'est pas interrogeable — il n'y a rien en panne, il n'y a rien a joindre.
+ *
+ * `config` est la famille la moins fausse — ce n'est pas une panne, et ce n'est pas reessayable —
+ * mais son message par defaut (« saisis tes identifiants ») serait un contresens. Le message est donc
+ * donne par l'appelant, qui est le seul a savoir **quel** service manque : c'est la seule exception a
+ * la regle « la table decide », et elle est bornee a ce constructeur.
+ */
+export function serviceAbsent(messageKey: TranslationKey, code: string, detail: string): UkitFailure {
+    return { kind: 'config', code, detail, messageKey, retryable: false, silent: false };
 }
 
 /**
@@ -136,7 +158,7 @@ export function ukitFailure(kind: UkitFailureKind, detail: string): UkitFailure 
  * Les valeurs de secrets sont deja masquees par la facade quand elle rend l'echec : ce qui arrive
  * ici est publiable dans un journal.
  */
-export function reportFailure(name: BlueprintName, failure: UkitFailure): void {
+export function reportFailure(name: BlueprintName | PortailBlueprintName, failure: UkitFailure): void {
     const code = failure.code !== undefined ? ` [${failure.code}]` : '';
     console.warn(`[aetherius] ${name} : ${failure.kind}${code} — ${failure.detail ?? 'sans detail'}`);
 }

@@ -25,6 +25,24 @@ moment.locale('fr');
 
 export const DOMAINE = 'https://celcat.u-bordeaux.fr/calendar';
 
+/**
+ * Ce que le catalogue fournit aux six Blueprints Celcat depuis le jalon 6-G.
+ *
+ * Les cas les passent **explicitement**, alors que les fichiers portent les memes valeurs par defaut :
+ * c'est le chemin de l'application qu'on veut mesurer, et l'application les passe. S'en remettre au
+ * defaut laisserait passer un plombage casse — un service qui oublierait de transmettre l'hote de
+ * l'etablissement continuerait d'interroger Bordeaux, et la parite resterait verte pendant qu'un
+ * etudiant d'ailleurs verrait le planning d'une autre universite.
+ *
+ * Les valeurs sont celles de la ligne `bordeaux` (supabase/etablissements.sql), recopiees plutot
+ * qu'importees : un cas qui suivrait le catalogue verifierait son propre accord avec lui-meme.
+ */
+export const CATALOGUE_BORDEAUX = {
+    domaine: DOMAINE,
+    groupes: { domaine: DOMAINE, res_type: '103' },
+    salles: { domaine: DOMAINE, res_type: '102' },
+};
+
 /** Les en-tetes que le service historique envoyait, `Connection` mis a part (interdit a `fetch`). */
 export const ENTETES_CELCAT = {
     Pragma: 'no-cache',

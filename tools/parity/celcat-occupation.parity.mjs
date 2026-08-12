@@ -16,7 +16,7 @@ import { decode } from 'html-entities';
 import moment from 'moment';
 
 import { agreger, comparerCorps, jouerEnCapturant } from './commun.mjs';
-import { DOMAINE, ENTETES_CELCAT, corpsCalendrier } from './celcat-commun.mjs';
+import { CATALOGUE_BORDEAUX, DOMAINE, ENTETES_CELCAT, corpsCalendrier } from './celcat-commun.mjs';
 
 export const NAME = 'celcat-occupation';
 
@@ -38,6 +38,7 @@ export async function viaBlueprint() {
         const evenements = [];
         for (const salle of SALLES) {
             const { outputs, requetes } = await jouerEnCapturant('ukit-celcat-occupation.blueprint.json', {
+                ...CATALOGUE_BORDEAUX.salles,
                 salles: [salle],
                 jour: sonde.jour,
             });

@@ -54,7 +54,7 @@ Un contexte ne serait pas accessible depuis ces points.
 | Clé | Écrite par | Contenu | Durée de vie |
 |---|---|---|---|
 | `firstload` | `SettingsManager.saveSettings` | booléen : parcours d'accueil non terminé | jusqu'à la fin de l'onboarding ou une réinitialisation |
-| `settings` | `SettingsManager.saveSettings` | objet unique : `calendar`, `theme`, `favoriteGroups`, `language`, `openAppOnFavoriteGroup`, `filters`, `calendarSyncEnabled`, `courseNotificationsEnabled`, `courseNotificationDelay` | permanent |
+| `settings` | `SettingsManager.saveSettings` | objet unique : `calendar`, `theme`, `favoriteGroups`, `language`, `openAppOnFavoriteGroup`, `filters`, `calendarSyncEnabled`, `courseNotificationsEnabled`, `courseNotificationDelay`, **`etablissement`** | permanent |
 | `groupList` | `PlanningDataManager` | liste complète des groupes Celcat | 7 jours (`groupListTimestamp`) |
 | `groupListTimestamp` | `PlanningDataManager` | horodatage du dernier rafraîchissement | — |
 | `groups` | [`GroupSelectionScreen`](../src/features/Planning/screens/GroupSelectionScreen.tsx) | `{ list, date }` — cache d'affichage de l'écran de recherche | sans expiration, repli hors ligne |
@@ -71,6 +71,7 @@ Un contexte ne serait pas accessible depuis ces points.
 | `library_filter` | `useSavedFilter` | filtre actif (`all` / `open`) | permanent |
 | `aetherius/blueprints@1` | le registre du moteur, via [`registry.ts`](../src/shared/aetherius/registry.ts) | la **surcouche** des Blueprints publiés : un document unique portant, par nom, le texte servi et son empreinte | jusqu'à la prochaine publication ou un retour à l'embarqué |
 | `batiments@1` | [`shared/locations`](../src/shared/locations/index.ts) | la **surcouche** du référentiel des lieux : un document unique portant, par code, les champs publiés | jusqu'au prochain rafraîchissement |
+| `etablissements@1` | [`shared/etablissements`](../src/shared/etablissements/index.ts) | la **surcouche** du catalogue : un document unique portant, par code, l'établissement publié | jusqu'au prochain rafraîchissement |
 
 Le préfixe `<groupes>` est le nom du groupe, ou la concaténation des groupes favoris jointe par `+`
 quand la vue affiche le planning agrégé.
@@ -81,13 +82,36 @@ quand la vue affiche le planning agrégé.
 > l'appel du milieu a changé. C'est ce qui rend la bascule invisible sur la seule fonctionnalité que
 > l'application promet de faire marcher hors ligne — et ce qui permettrait de la défaire.
 
-Les deux clés de surcouche sont les seules du tableau à porter **un document unique pour plusieurs
+Les trois clés de surcouche sont les seules du tableau à porter **un document unique pour plusieurs
 entrées**, et c'est délibéré : un document illisible fait perdre la surcouche entière et l'application
 retombe sur son socle embarqué. C'est le sens du repli, et c'est préférable à un index réparti sur
 plusieurs clés qui pourrait se contredire. Pour les Blueprints, l'empreinte de chaque entrée est
 d'ailleurs **revérifiée à chaque lecture** — un cache local n'est pas plus digne de confiance qu'un
-CDN ([blueprints.md](blueprints.md)). Le référentiel des lieux n'a pas cette garde, et n'en a pas
-besoin : ce sont des coordonnées, pas de la donnée exécutable.
+CDN ([blueprints.md](blueprints.md)). Le référentiel des lieux et le catalogue n'ont pas cette garde,
+et n'en ont pas besoin : ce sont des coordonnées et des noms, pas de la donnée exécutable. Le
+catalogue *nomme* en revanche des Blueprints — et c'est le registre, pas lui, qui décide si l'un
+d'eux a le droit d'exister ([6-G](phase-6/6-g-etablissements.md)).
+
+### Ce qu'un changement d'établissement efface
+
+Mêler les données de deux facs serait pire que de tout redemander : un planning gardé s'afficherait
+sous une autre université sans que rien ne le dise, et c'est exactement la donnée fausse silencieuse
+que la Phase 6 existe pour supprimer. `purgerDonneesEtablissement()`
+([`shared/etablissements/purge.ts`](../src/shared/etablissements/purge.ts)) efface donc `groupList`,
+`groupListTimestamp`, `groups`, `buildingList`, `buildingListTimestamp`, `freeroom_favorites`,
+`batiments@1`, **tous** les caches de planning (`…@Week…` et `…@AAAA/MM/JJ`), ainsi que les deux clés
+`SecureStore` de la session universitaire. Les réglages — groupes favoris, filtres d'UE — sont remis à
+zéro par `SettingsManager` dans le même geste.
+
+`crous_favorites`, `library_favorites` et leurs filtres **restent**, et c'est une décision : ils
+pointent Croustillant et Affluences, deux sources **nationales**. Un étudiant qui passe d'une fac
+bordelaise à l'autre garde la même bibliothèque préférée.
+
+**La réinitialisation depuis les réglages joue la même purge.** Elle ne l'a pas toujours fait : elle
+laissait la session universitaire en place, ce qui n'était pas faux tant qu'il n'y avait qu'une
+université — et qui l'est devenu dès que le parcours d'accueil s'est mis à redemander l'établissement.
+Le module vit à part de `index.ts` pour que `AppCore` puisse l'appeler sans tirer le client de la base
+sur le chemin de démarrage.
 
 ## Clés SecureStore
 

@@ -13,10 +13,17 @@
  *     npm test
  */
 
-import { memoryCache, sha256Hex } from '@aetherius/react-native';
+import { BlueprintRegistry, memoryCache, sha256Hex } from '@aetherius/react-native';
+import { readFile, readdir } from 'node:fs/promises';
 import { afterEach, expect, test } from 'vitest';
 
-import { ALLOWED_SECRETS, BLUEPRINT, BUNDLED, type BlueprintName } from '../../../blueprints';
+import {
+    ALLOWED_SECRETS,
+    BLUEPRINT,
+    BUNDLED,
+    REMOTE_NAME_PREFIX,
+    type BlueprintName,
+} from '../../../blueprints';
 import { createRegistry, manifestUrl } from './delivery';
 
 const BASE = 'https://exemple.supabase.co';
@@ -266,7 +273,7 @@ test('un manifeste malforme est refuse en entier, et rien n est remplace', async
 });
 
 test('un Blueprint distant qui reclame un secret hors perimetre est refuse avant le cache', async () => {
-    const texte = document({ secrets: ['bordeaux_pass', 'trousseau_entier'] });
+    const texte = document({ secrets: ['portail_pass', 'trousseau_entier'] });
     const { registry, report } = await publier(texte, '3');
 
     expect(report.entries[0].outcome).toBe('rejected');
@@ -377,3 +384,198 @@ test('remote false ignore durablement la surcouche, sans la detruire', async () 
     // Sans la detruire : le meme cache, relu par un registre ordinaire, rend la surcouche.
     expect((await registre({ cache }).resolve(NOM)).origin).toBe('remote');
 });
+
+// ---------------------------------------------------------------------------------------------
+// La porte du jalon 6-G : ce qu'un manifeste a le droit d'**ajouter**.
+//
+// Le paquet porte le mecanisme (jalon 3-H d'Aetherius) ; ce que ces cas verifient, c'est **notre
+// cadrage** — le prefixe reserve, le perimetre de secrets, et le fait qu'aucun des deux ne s'elargit
+// par inadvertance. Un portail publie sous un nom que personne n'a relu est la seule chose que
+// l'application accepte sans l'avoir embarquee : la borne est donc la garde, et une garde qui ne se
+// teste pas n'en est pas une.
+// ---------------------------------------------------------------------------------------------
+
+const PORTAIL = 'ukit.portail.essai.dossier';
+const PORTAIL_FICHIER = 'portails/ukit-portail-essai-dossier.blueprint.json';
+
+/** Un document de portail valide, sous un nom **absent** du socle. */
+function documentDePortail(nom: string, patch: Record<string, unknown> = {}): string {
+    const modele = BUNDLED[BLUEPRINT.PORTAIL_BORDEAUX_DOSSIER].document as Record<string, unknown>;
+    return JSON.stringify({ ...modele, name: nom, ...patch });
+}
+
+/** Publie *texte* sous *nom*, a un chemin quelconque, et rend le rapport et le registre. */
+async function publierSousLeNom(
+    nom: string,
+    texte: string,
+    extra: Record<string, unknown> = {},
+    options: { cache?: ReturnType<typeof memoryCache> } = {},
+) {
+    const url = `portails/${nom.replace(/\./g, '-')}.blueprint.json`;
+    servir({
+        [chemin('manifest.json')]: JSON.stringify({
+            manifest: '1',
+            generated_at: '2026-08-10T12:00:00.000Z',
+            disabled: false,
+            blueprints: { [nom]: { version: '1', url, sha256: sha256Hex(texte), disabled: false, ...extra } },
+        }),
+        [chemin(url)]: texte,
+    });
+    const registry = registre(options);
+    return { registry, report: await registry.refresh() };
+}
+
+test('le prefixe reserve et le perimetre de secrets sont ceux que le jalon a decides', () => {
+    // Le verrou de la surface : elargir l'un ou l'autre doit demander de toucher ce test, donc de le
+    // decider. `ukit.` rendrait toutes les sources de l'application remplacables a distance.
+    expect(REMOTE_NAME_PREFIX).toBe('ukit.portail.');
+    expect([...ALLOWED_SECRETS]).toEqual(['portail_user', 'portail_pass']);
+});
+
+test('un portail publie sous le prefixe reserve est ajoute, alors qu il n est pas embarque', async () => {
+    expect(BUNDLED[PORTAIL as BlueprintName]).toBeUndefined();
+
+    const texte = documentDePortail(PORTAIL);
+    const { registry, report } = await publierSousLeNom(PORTAIL, texte);
+
+    expect(report.entries[0].outcome).toBe('updated');
+    const resolved = await registry.resolve(PORTAIL);
+    expect(resolved.origin).toBe('remote');
+    expect(resolved.blueprint.name).toBe(PORTAIL);
+    // Et il apparait dans le diagnostic, apres le socle : c'est la qu'on va le chercher quand une
+    // publication « n'arrive pas ».
+    const noms = (await registry.list()).map((ligne) => ligne.name);
+    expect(noms).toContain(PORTAIL);
+});
+
+test('un nom hors prefixe est ignore, avec sa raison', async () => {
+    const nom = 'ukit.essai.hors-prefixe';
+    const { registry, report } = await publierSousLeNom(nom, documentDePortail(nom));
+
+    // `ignored` et non `rejected` : le manifeste ne demandait rien que l'application connaisse.
+    expect(report.entries[0].outcome).toBe('ignored');
+    expect(report.entries[0].reason).toBeDefined();
+    await expect(registry.resolve(nom as BlueprintName)).rejects.toThrow();
+});
+
+test('un portail ajoute ne peut pas reclamer un secret hors perimetre', async () => {
+    const texte = documentDePortail(PORTAIL, { secrets: ['portail_user', 'trousseau_entier'] });
+    const { registry, report } = await publierSousLeNom(PORTAIL, texte);
+
+    expect(report.entries[0].outcome).toBe('rejected');
+    expect(report.entries[0].reason).toContain('trousseau_entier');
+    // Refuse **avant** le cache : rien a purger, rien a jouer.
+    await expect(registry.resolve(PORTAIL)).rejects.toThrow();
+});
+
+test('un portail ajoute dont l empreinte ment est refuse', async () => {
+    const texte = documentDePortail(PORTAIL);
+    const { registry, report } = await publierSousLeNom(PORTAIL, texte, { sha256: 'a'.repeat(64) });
+
+    expect(report.entries[0].outcome).toBe('rejected');
+    await expect(registry.resolve(PORTAIL)).rejects.toThrow();
+});
+
+test('un portail ecrit pour un moteur plus recent est ignore en silence', async () => {
+    // C'est ce qui permet d'ecrire un portail sans se demander qui l'executera : les applications
+    // anciennes ne le voient simplement pas.
+    const texte = documentDePortail(PORTAIL);
+    const { registry, report } = await publierSousLeNom(PORTAIL, texte, { min_engine: '999' });
+
+    expect(report.entries[0].outcome).toBe('ignored');
+    await expect(registry.resolve(PORTAIL)).rejects.toThrow();
+});
+
+test('un portail invalide au schema est refuse avant le cache', async () => {
+    const texte = JSON.stringify({ aetherius: '1.0', name: PORTAIL, act: 'continuum' });
+    const { registry, report } = await publierSousLeNom(PORTAIL, texte);
+
+    expect(report.entries[0].outcome).toBe('rejected');
+    await expect(registry.resolve(PORTAIL)).rejects.toThrow();
+});
+
+test('retirer la capacite desinstalle ce qui etait entre par la, sans reseau', async () => {
+    const cache = memoryCache();
+    const texte = documentDePortail(PORTAIL);
+    await publierSousLeNom(PORTAIL, texte, {}, { cache });
+
+    // Un interrupteur d'arret qui laisse en place ce qu'il a laisse entrer n'en est pas un.
+    const sansPorte = new BlueprintRegistry({ bundled: BUNDLED, allowedSecrets: ALLOWED_SECRETS, cache });
+    globalThis.fetch = (() => {
+        throw new Error('la purge a appele le reseau');
+    }) as unknown as typeof fetch;
+
+    await expect(sansPorte.resolve(PORTAIL)).rejects.toThrow();
+    expect((await sansPorte.list()).map((ligne) => ligne.name)).not.toContain(PORTAIL);
+});
+
+test('un nom du socle couvert par le prefixe garde la regle de la mise a jour', async () => {
+    // `ukit.portail.bordeaux.dossier` est **a la fois** embarque et sous le prefixe : le prefixe
+    // ajoute des noms, il n assouplit rien pour ceux qui existent. Une version qui ne bat pas le
+    // socle reste ignoree.
+    const nom = BLUEPRINT.PORTAIL_BORDEAUX_DOSSIER;
+    const texte = documentDePortail(nom, { description: 'une version qui ne bat pas le socle' });
+    const { registry, report } = await publierSousLeNom(nom, texte);
+
+    expect(report.entries[0].outcome).toBe('ignored');
+    expect((await registry.resolve(nom)).origin).toBe('bundled');
+});
+
+test('le prefixe du script de publication est celui du binaire', async () => {
+    // `tools/blueprints/socle.mjs` recopie le prefixe : il est en Node pur et ne sait pas lire un
+    // fichier TypeScript. Une divergence publierait des fichiers que l'appareil ignorerait ensuite en
+    // silence — le genre de panne qu'on cherche une soiree.
+    // Un chemin relatif a la racine du depot, ou vitest est lance : `import.meta.url` donnerait une
+    // `URL` du `lib` DOM, structurellement incompatible avec celle que `node:fs` attend.
+    const source = await readFile('tools/blueprints/socle.mjs', 'utf8');
+    expect(source).toContain(`const PREFIXE_RESERVE = '${REMOTE_NAME_PREFIX}';`);
+});
+
+test('aucun Blueprint ne s appuie sur un selecteur propre a un seul moteur', async () => {
+    // La leçon la plus chere du jalon 6-G, et elle ne se voyait qu'au bout d'un parcours
+    // d'authentification sur un vrai telephone. Le portail de Bordeaux INP a d'abord ete ecrit avec
+    // `:text-is()` et `:nth-match()` : ces pseudo-classes appartiennent a **Playwright**, donc au
+    // moteur Python qui sert a mettre au point un fichier depuis un poste. Le moteur embarque, lui,
+    // resout par `document.querySelectorAll`, qui les rejette comme CSS invalide — le run passait le
+    // CAS puis mourait a l'extraction, et le message n'avait aucun rapport avec la cause.
+    //
+    // **XPath est le seul langage de selection que les deux moteurs partagent** au-dela du CSS
+    // standard. Ce test refuse les autres avant qu'ils n'atteignent un appareil.
+    const PSEUDOS_PLAYWRIGHT = [':text-is(', ':text-matches(', ':nth-match(', ':has-text(', ':visible', ':light('];
+
+    const dossier = 'blueprints';
+    const fichiers = [
+        ...(await readdir(dossier)).map((nom) => `${dossier}/${nom}`),
+        ...(await readdir(`${dossier}/portails`)).map((nom) => `${dossier}/portails/${nom}`),
+    ].filter((chemin) => chemin.endsWith('.blueprint.json'));
+
+    expect(fichiers.length).toBeGreaterThan(0);
+
+    for (const chemin of fichiers) {
+        const document = JSON.parse(await readFile(chemin, 'utf8')) as { steps?: unknown[] };
+        // On cherche dans les **selecteurs**, pas dans le fichier entier : une `description` a le
+        // droit de nommer ces pseudo-classes, et celle du portail de l'INP le fait justement pour
+        // expliquer pourquoi elles n'y sont plus.
+        for (const selecteur of selecteursDe(document)) {
+            for (const pseudo of PSEUDOS_PLAYWRIGHT) {
+                expect(
+                    selecteur.includes(pseudo),
+                    `${chemin} : le selecteur ${JSON.stringify(selecteur)} utilise ${pseudo}, que le moteur embarque ne sait pas lire`,
+                ).toBe(false);
+            }
+        }
+    }
+});
+
+/** Tous les `selector` d'un document, quelle que soit leur profondeur. */
+function selecteursDe(noeud: unknown): string[] {
+    if (Array.isArray(noeud)) return noeud.flatMap(selecteursDe);
+    if (noeud === null || typeof noeud !== 'object') return [];
+
+    const trouves: string[] = [];
+    for (const [cle, valeur] of Object.entries(noeud as Record<string, unknown>)) {
+        if (cle === 'selector' && typeof valeur === 'string') trouves.push(valeur);
+        else trouves.push(...selecteursDe(valeur));
+    }
+    return trouves;
+}

@@ -8,6 +8,7 @@ import moment from 'moment';
 import { NotificationManager } from '../../../shared/services/NotificationService';
 
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
+import { changerEtablissement, etablissementRetire, getEtablissementActif } from '../../../shared/etablissements';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Button from '../../../shared/ui/Button';
@@ -19,9 +20,11 @@ import {
     SettingsResetPopup,
     SettingsCalendarPopup
 } from '../components/SettingsModals';
+import { SettingsInstitutionPopup } from '../components/SettingsInstitutionPopup';
 
 import {
     DisplaySection,
+    InstitutionSection,
     ThemeSection,
     NotificationsSection,
     AppLaunchingSection,
@@ -49,6 +52,9 @@ export interface SettingsState {
     isDarkMode: boolean;
     courseNotificationsEnabled: boolean;
     courseNotificationDelay: number;
+    institutionDialogVisible: boolean;
+    /** Le nom affiche : il vient du catalogue et change avec lui, d'ou l'etat plutot qu'un calcul. */
+    institutionName: string;
 }
 
 class Settings extends React.Component<SettingsProps, SettingsState> {
@@ -76,6 +82,8 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             isDarkMode: SettingsManager.getTheme() === 'dark',
             courseNotificationsEnabled: SettingsManager.getCourseNotificationsEnabled(),
             courseNotificationDelay: SettingsManager.getCourseNotificationDelay(),
+            institutionDialogVisible: false,
+            institutionName: getEtablissementActif().nom,
         };
         this.scrollY = new Animated.Value(0);
 
@@ -198,9 +206,34 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     openCalendarDialog = () => this.setState({ calendarDialogVisible: true });
     closeCalendarDialog = () => this.setState({ calendarDialogVisible: false });
 
-    resetApp = () => {
+    openInstitutionDialog = () => this.setState({ institutionDialogVisible: true });
+    closeInstitutionDialog = () => this.setState({ institutionDialogVisible: false });
+
+    /**
+     * La bascule d'etablissement : purger d'abord, selectionner ensuite.
+     *
+     * L'ordre vient de `changerEtablissement` et il n'est pas negociable — une purge jouee apres la
+     * selection courrait contre les ecrans qui se rechargent deja sur le nouvel etablissement. Le
+     * `setEtablissement` qui suit persiste le code et notifie les abonnes, ce qui suffit a faire
+     * repartir le planning et la session sur la bonne universite.
+     */
+    setInstitution = async (code: string) => {
+        await changerEtablissement(code);
+        SettingsManager.setEtablissement(code);
+        this.setState({ institutionName: getEtablissementActif().nom });
+    };
+
+    onInstitutionConfirmed = (code: string) => { void this.setInstitution(code); };
+
+    /**
+     * La modale se ferme d'abord, la purge court ensuite.
+     *
+     * `resetSettings` efface aussi la session universitaire depuis le jalon 6-G : la laisser en place
+     * ferait repartir quelqu'un sur une autre fac en restant connecte au portail de la precedente.
+     */
+    resetApp = async () => {
         this.closeResetDialog();
-        SettingsManager.resetSettings();
+        await SettingsManager.resetSettings();
     };
 
     componentDidMount = async () => {
@@ -227,6 +260,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                 <SettingsFiltersPopup theme={themeSettings} popupVisible={this.state.filtersDialogVisible} popupClose={this.closeFiltersDialog} filterList={this.state.filterList} filterTextInput={this.state.filterTextInput} setFilterTextInput={this.setFilterTextInput} submitFilterTextInput={this.submitFilterTextInput} />
                 <SettingsResetPopup theme={themeSettings} popupVisible={this.state.resetDialogVisible} popupClose={this.closeResetDialog} resetApp={this.resetApp} />
                 <SettingsCalendarPopup theme={themeSettings} popupVisible={this.state.calendarDialogVisible} popupClose={this.closeCalendarDialog} setCalendar={this.setCalendar} selectedCalendar={this.state.selectedCalendar} />
+                <SettingsInstitutionPopup theme={themeSettings} popupVisible={this.state.institutionDialogVisible} popupClose={this.closeInstitutionDialog} codeActif={SettingsManager.getEtablissement()} onConfirm={this.onInstitutionConfirmed} />
             </>
         );
     }
@@ -270,6 +304,13 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                 )}
                 scrollEventThrottle={16}
             >
+                <InstitutionSection
+                    themeSettings={themeSettings}
+                    theme={theme}
+                    institutionName={this.state.institutionName}
+                    institutionRetiree={etablissementRetire()}
+                    openInstitutionDialog={this.openInstitutionDialog}
+                />
                 <DisplaySection
                     themeSettings={themeSettings}
                     language={this.state.language}

@@ -42,6 +42,10 @@ const es: TranslationDict = {
 	// manque (features/Scolarite/services/ScolariteMapping.ts).
 	ERROR_CAS_UNAVAILABLE: 'El portal de la universidad no responde. Inténtalo de nuevo más tarde.',
 	ERROR_MAILBOX_UNAVAILABLE: 'El buzón no ha respondido. Tu conexión sí ha funcionado.',
+	// Un service que l'etablissement ne publie pas : rien n'est en panne, il n'y a rien a joindre.
+	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
+	ERROR_PORTAL_UNAVAILABLE: 'Esta universidad aún no está conectada a UKit.',
+	ERROR_TIMETABLE_UNAVAILABLE: 'Esta universidad aún no publica su horario en UKit.',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
 	PARTIAL_COVERAGE: 'Algunas zonas no han respondido: puede que la lista esté incompleta.',
@@ -115,6 +119,13 @@ const es: TranslationDict = {
 		'Hay una actualización disponible. Para tener la mejor experiencia posible, le recomendamos que descargue esta actualización.',
 	USE_SEARCH_BAR: 'Usa la barra de búsqueda para restringir los resultados.',
 	YOUR_CALENDAR: '¿Qué calendario debe utilizarse para la sincronización?',
+	// Le multi-etablissement (jalon 6-G). Le NOM d'une universite vient du catalogue, jamais d'ici :
+	// ce sont les libelles d'ecran qui se traduisent, pas les donnees.
+	YOUR_INSTITUTION: '¿A qué universidad vas?',
+	INSTITUTION: 'Centro',
+	INSTITUTION_CHANGE_TITLE: '¿Cambiar de centro?',
+	INSTITUTION_CHANGE_WARNING: 'Tus grupos favoritos, tu horario en caché y tu sesión universitaria se borrarán.\nLos datos de dos universidades no se mezclan.',
+	INSTITUTION_UNAVAILABLE: 'Tu centro ya no aparece en la lista. UKit sigue con lo que sabe de él.',
 	YOUR_GROUP: '¿Cuál es tu grupo?',
 	YOUR_LANGUAGE: '¿Cuál es tu idioma?',
 	YOUR_SEMESTER: '¿En que semestre estás?',

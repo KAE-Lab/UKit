@@ -26,8 +26,8 @@
   },
   "main": "node_modules/expo/AppEntry.js",
   "dependencies": {
-    "@aetherius/engine": "^0.5.2",
-    "@aetherius/react-native": "^0.5.2",
+    "@aetherius/engine": "^0.5.3",
+    "@aetherius/react-native": "^0.5.3",
     "@expo-google-fonts/montserrat": "^0.1.0",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",

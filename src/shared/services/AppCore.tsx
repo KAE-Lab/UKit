@@ -8,15 +8,46 @@ import * as TaskManager from 'expo-task-manager';
 import NetInfo from '@react-native-community/netinfo';
 
 import { ErrorAlert } from '../ui/Alerts';
-// Le module pur, et non la porte d'entree `../locations` : celle-ci tire AsyncStorage et la base,
-// que ce fichier — charge avant le premier rendu — n'a aucune raison de mettre sur son chemin.
+// Les modules purs, et non les portes d'entree `../locations` et `../etablissements` : celles-ci
+// tirent AsyncStorage et la base, que ce fichier — charge avant le premier rendu — n'a aucune raison
+// de mettre sur son chemin.
 import { getBuildingRef } from '../locations/referentiel';
+import {
+    ETABLISSEMENT_DEFAUT,
+    getCodeEtablissementActif,
+    setCodeEtablissementActif,
+} from '../etablissements/catalogue';
+// `purge` et non la porte d'entree pour la meme raison : elle ne connait que le magasin local et le
+// trousseau, la ou `../etablissements` tirerait le client de la base.
+import { purgerDonneesEtablissement } from '../etablissements/purge';
 import { createUKitCalendar, formatCalendarEventData } from './CalendarSyncHelpers';
 import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
 
 // ── CONTEXTE & DEVICE ─────────────────────────────────
-export const AppContext = React.createContext<{ themeName?: string; favoriteGroups?: string[]; filters?: string[] }>({});
+/**
+ * Ce que tout ecran peut lire sans le demander a personne.
+ *
+ * `etablissement` y figure depuis le jalon 6-G, et pour une raison mesuree sur appareil : les ecrans
+ * deja montes ne se redessinent pas tout seuls quand le catalogue change sous eux. La section des
+ * salles libres restait masquee apres un retour a un etablissement qui en a, parce que le tableau de
+ * bord n'avait aucune raison de rendre a nouveau. Porter le code ici suffit — tout consommateur du
+ * contexte se redessine, et c'est deja par la que passent le theme et les groupes favoris.
+ */
+export const AppContext = React.createContext<{
+    themeName?: string;
+    favoriteGroups?: string[];
+    filters?: string[];
+    etablissement?: string;
+    /**
+     * Un compteur de revisions du **catalogue**, distinct du code selectionne.
+     *
+     * Les deux changent pour des raisons differentes : le code change quand l'utilisateur bascule, la
+     * revision quand la base publie autre chose — un etablissement ajoute, ou retire. Sans elle, un
+     * ecran deja monte ne voyait un retrait qu'au premier geste qui provoquait un rendu par ailleurs.
+     */
+    catalogue?: number;
+}>({});
 export const AppContextProvider = AppContext.Provider;
 
 export function deviceLanguage(): string {
@@ -206,7 +237,24 @@ class SettingsManagerService {
     
     getLanguage = () => this._language;
     setLanguage = (newLang: string) => { this._language = newLang; this.notify('language', this._language); };
-    
+
+    /**
+     * L'etablissement selectionne.
+     *
+     * Le code est persiste ici, avec les autres reglages ; l'etablissement **resolu** vit dans
+     * `shared/etablissements`, qui sait le lire dans le catalogue publie ou dans le socle embarque.
+     * Les deux ne se confondent pas : un code peut survivre a l'etablissement qu'il designait.
+     *
+     * La purge de ce qui appartenait a l'etablissement quitte est faite par `changerEtablissement`
+     * **avant** cet appel : ce setter ne fait que poser et notifier (docs/features/settings.md).
+     */
+    getEtablissement = (): string => getCodeEtablissementActif();
+    setEtablissement = (code: string) => {
+        setCodeEtablissementActif(code);
+        this.notify('etablissement', getCodeEtablissementActif());
+    };
+
+
     getLastSyncDate = () => this._lastSyncDate;
     getSyncCalendar = () => this._calendar;
     setSyncCalendar = (newCalendar: string | number) => {
@@ -359,13 +407,31 @@ class SettingsManagerService {
         }
     };
 
-    resetSettings = () => {
+    /**
+     * La reinitialisation : tout redevient ce qu'il etait au premier lancement.
+     *
+     * **Asynchrone depuis le jalon 6-G**, et ce n'est pas un raffinement. Elle rouvre le parcours
+     * d'accueil, qui redemande l'etablissement — quelqu'un pouvait donc repartir sur une autre fac en
+     * restant connecte au portail de la precedente. Constate sur appareil pendant la campagne de
+     * verification, sur un chemin qui n'avait jamais efface le trousseau : le defaut est anterieur au
+     * jalon, mais c'est le jalon qui le rend faux.
+     *
+     * La purge est **attendue** avant `setFirstLoad(true)` : ce dernier demonte la pile de navigation
+     * et remonte le parcours d'accueil, et une session encore en memoire reecrirait ce qu'on efface.
+     */
+    resetSettings = async () => {
         this.setTheme('light');
         this.setLanguage('fr');
         this._favoriteGroups = [];
         this.notify('favoriteGroups', this._favoriteGroups);
         this.setOpenAppOnFavoriteGroup(true);
         this.resetFilter();
+        // Les memes donnees qu'un changement d'etablissement, et par le meme chemin : deux gestes qui
+        // effacent la meme chose ne doivent pas avoir deux definitions de « la meme chose ».
+        await purgerDonneesEtablissement();
+        // Le parcours d'accueil redemande l'etablissement : le laisser sur le precedent afficherait un
+        // choix deja fait a quelqu'un qui vient de tout effacer.
+        this.setEtablissement(ETABLISSEMENT_DEFAUT);
         this.setFirstLoad(true);
     };
 
@@ -376,6 +442,7 @@ class SettingsManagerService {
             language: this._language, openAppOnFavoriteGroup: this._openAppOnFavoriteGroup,
             filters: this._filters, calendarSyncEnabled: this._calendarSyncEnabled,
             courseNotificationsEnabled: this._courseNotificationsEnabled, courseNotificationDelay: this._courseNotificationDelay,
+            etablissement: getCodeEtablissementActif(),
         }));
     };
 
@@ -383,7 +450,17 @@ class SettingsManagerService {
         if (!settings) return;
         
         if (settings.theme) this._theme = settings.theme as string;
-        
+
+        // Migration silencieuse vers le multi-etablissement (jalon 6-G) : une installation anterieure
+        // n'a pas de code, et elle est **reputee** bordelaise — c'est la seule universite que
+        // l'application ait jamais servie. Aucun ecran, aucune question : demander a un utilisateur
+        // de confirmer quelque chose qu'il n'a jamais choisi serait inventer une decision.
+        //
+        // Ce code reste tant que des installations anciennes peuvent etre mises a jour. Il vit ici, a
+        // cote de celui de `groupName` -> `favoriteGroups`, pour qu'on les retire ensemble le jour ou
+        // on les retirera.
+        setCodeEtablissementActif((settings.etablissement as string) || ETABLISSEMENT_DEFAUT);
+
         // Migration for legacy groupName to favoriteGroups
         if (settings.groupName && !settings.favoriteGroups) {
             this._favoriteGroups = [settings.groupName as string];

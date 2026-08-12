@@ -43,6 +43,10 @@ const fr: TranslationDict = {
 	// manque (features/Scolarite/services/ScolariteMapping.ts).
 	ERROR_CAS_UNAVAILABLE: 'Le portail de l’université ne répond pas. Réessaie dans un moment.',
 	ERROR_MAILBOX_UNAVAILABLE: 'La messagerie n’a pas répondu. Ta connexion, elle, a fonctionné.',
+	// Un service que l'etablissement ne publie pas : rien n'est en panne, il n'y a rien a joindre.
+	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
+	ERROR_PORTAL_UNAVAILABLE: 'Cette université n’est pas encore reliée à UKit.',
+	ERROR_TIMETABLE_UNAVAILABLE: 'Cette université ne publie pas encore son emploi du temps dans UKit.',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
 	PARTIAL_COVERAGE: 'Certaines zones n’ont pas répondu : la liste est peut-être incomplète.',
@@ -115,6 +119,13 @@ const fr: TranslationDict = {
 		"Une mise à jour de l'application est disponible. Afin de profiter de la meilleure expérience possible, nous vous recommandons de télécharger cette mise à jour !",
 	USE_SEARCH_BAR: 'Utilisez la barre de recherche pour affiner les résultats.',
 	YOUR_CALENDAR: 'Quel calendrier doit être utilisé pour la synchronisation ?',
+	// Le multi-etablissement (jalon 6-G). Le NOM d'une universite vient du catalogue, jamais d'ici :
+	// ce sont les libelles d'ecran qui se traduisent, pas les donnees.
+	YOUR_INSTITUTION: 'Quelle est ton université ?',
+	INSTITUTION: 'Établissement',
+	INSTITUTION_CHANGE_TITLE: 'Changer d’établissement ?',
+	INSTITUTION_CHANGE_WARNING: 'Tes groupes favoris, ton planning en cache et ta session universitaire seront effacés.\nLes données de deux universités ne se mélangent pas.',
+	INSTITUTION_UNAVAILABLE: 'Ton établissement n’est plus proposé. UKit continue avec ce qu’il en sait.',
 	YOUR_GROUP: 'Quel est ton groupe ?',
 	YOUR_LANGUAGE: 'Quelle est ta langue ?',
 	YOUR_SEMESTER: 'À quel semestre es-tu ?',

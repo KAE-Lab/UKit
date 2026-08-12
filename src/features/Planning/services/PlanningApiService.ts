@@ -3,9 +3,14 @@
  *
  * Ce service n'emet plus aucune requete : il joue quatre Blueprints — la liste des groupes, une
  * journee, une semaine, la plage annuelle de la synchronisation — et travaille la donnee recue. Les
- * quatre visent `celcat.u-bordeaux.fr` **directement** : le relais `ukit.kbdev.io` n'existait que
+ * quatre visent le serveur de l'universite **directement** : le relais `ukit.kbdev.io` n'existait que
  * pour contourner une contrainte de navigateur, et une requete emise nativement depuis l'appareil
  * n'y est pas soumise. Un serveur sort donc de l'architecture.
+ *
+ * **L'hote vient du catalogue** depuis le jalon 6-G, plus des `vars` du fichier : il est propre a
+ * l'etablissement selectionne. Un etablissement qui n'en publie pas fait rendre `PLANNING_ABSENT`
+ * **sans qu'aucun run ne parte** — ce n'est pas une panne, et les deux ne doivent pas s'afficher
+ * pareil.
  *
  * Ce qui reste ici est ce qui ne descend pas dans un fichier, et c'est le calcul des plages : le
  * lundi d'un numero de semaine ISO, et la bascule d'annee scolaire au 1er aout. Les deux ont besoin
@@ -23,6 +28,7 @@ import moment from 'moment';
 import type { AbortSignalLike } from '@aetherius/engine';
 
 import { BLUEPRINT, reportFailure, runBlueprint, type UkitFailure } from '../../../shared/aetherius';
+import { entreesCelcat, planningAbsent } from '../../../shared/etablissements';
 import {
     decouperSemaine,
     projeterAnnee,
@@ -76,7 +82,10 @@ function commeCible(groupe: CibleGroupe): string[] {
 class PlanningApiServiceClass {
     /** La liste complete des groupes d'etudiants, filtree et triee. */
     fetchGroupList = async (options: PlanningRunOptions = {}): Promise<GroupListResult> => {
-        const run = await runBlueprint(BLUEPRINT.CELCAT_GROUPES, options);
+        const celcat = entreesCelcat('groupes');
+        if (celcat === null) return { ok: false, failure: planningAbsent() };
+
+        const run = await runBlueprint(BLUEPRINT.CELCAT_GROUPES, { inputs: { ...celcat }, ...options });
         if (run.ok === false) {
             reportFailure(BLUEPRINT.CELCAT_GROUPES, run.failure);
             return { ok: false, failure: run.failure };
@@ -96,8 +105,11 @@ class PlanningApiServiceClass {
         date: string,
         options: PlanningRunOptions = {},
     ): Promise<PlanningDayResult> => {
+        const celcat = entreesCelcat('groupes');
+        if (celcat === null) return { ok: false, failure: planningAbsent() };
+
         const run = await runBlueprint(BLUEPRINT.CELCAT_JOUR, {
-            inputs: { groupes: commeCible(group), jour: date },
+            inputs: { ...celcat, groupes: commeCible(group), jour: date },
             ...options,
         });
         if (run.ok === false) {
@@ -114,12 +126,15 @@ class PlanningApiServiceClass {
         week: { year: number; week: number },
         options: PlanningRunOptions = {},
     ): Promise<PlanningWeekResult> => {
+        const celcat = entreesCelcat('groupes');
+        if (celcat === null) return { ok: false, failure: planningAbsent() };
+
         // `startOf('week')` suit la locale : lundi en francais. Le calcul reste ici parce qu'il a
         // besoin de l'heure courante, qu'un Blueprint n'a pas et ne doit pas avoir.
         const lundi = moment().year(week.year).isoWeek(week.week).startOf('week');
 
         const run = await runBlueprint(BLUEPRINT.CELCAT_SEMAINE, {
-            inputs: { groupes: commeCible(group), lundi: lundi.format('YYYY-MM-DD') },
+            inputs: { ...celcat, groupes: commeCible(group), lundi: lundi.format('YYYY-MM-DD') },
             ...options,
         });
         if (run.ok === false) {
@@ -141,6 +156,9 @@ class PlanningApiServiceClass {
         group: CibleGroupe,
         options: PlanningRunOptions = {},
     ): Promise<PlanningSyncResult> => {
+        const celcat = entreesCelcat('groupes');
+        if (celcat === null) return { ok: false, failure: planningAbsent() };
+
         const maintenant = moment();
         const debut = moment().set('month', 7).startOf('month');
         const fin = moment().set('month', 7).startOf('month').add(1, 'year');
@@ -152,6 +170,7 @@ class PlanningApiServiceClass {
 
         const run = await runBlueprint(BLUEPRINT.CELCAT_ANNEE, {
             inputs: {
+                ...celcat,
                 groupes: commeCible(group),
                 debut: debut.format('YYYY-MM-DD'),
                 fin: fin.format('YYYY-MM-DD'),

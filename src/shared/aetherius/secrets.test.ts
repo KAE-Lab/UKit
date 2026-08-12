@@ -21,8 +21,8 @@ const IDENTIFIANTS = { username: 'etu42', password: 'motdepasse' };
 test('les noms declares par les Blueprints sont projetes sur les champs du document', async () => {
     const resolver = ukitSecrets(magasin(IDENTIFIANTS));
 
-    expect(await resolver.resolve('bordeaux_user')).toBe('etu42');
-    expect(await resolver.resolve('bordeaux_pass')).toBe('motdepasse');
+    expect(await resolver.resolve('portail_user')).toBe('etu42');
+    expect(await resolver.resolve('portail_pass')).toBe('motdepasse');
 });
 
 test('un nom inconnu rend undefined sans toucher au trousseau', async () => {
@@ -42,7 +42,7 @@ test('un nom inconnu rend undefined sans toucher au trousseau', async () => {
 test('un trousseau vide rend undefined, pas une chaine vide', async () => {
     const resolver = ukitSecrets(magasin(null));
 
-    expect(await resolver.resolve('bordeaux_user')).toBeUndefined();
+    expect(await resolver.resolve('portail_user')).toBeUndefined();
 });
 
 test('un champ vide est une absence', async () => {
@@ -50,8 +50,8 @@ test('un champ vide est une absence', async () => {
 
     // Le moteur echoue au step qui lit le secret, la ou l'erreur a un sens. Rendre une chaine vide
     // enverrait un identifiant vide au CAS et produirait un « mot de passe incorrect » trompeur.
-    expect(await resolver.resolve('bordeaux_user')).toBeUndefined();
-    expect(await resolver.resolve('bordeaux_pass')).toBe('motdepasse');
+    expect(await resolver.resolve('portail_user')).toBeUndefined();
+    expect(await resolver.resolve('portail_pass')).toBe('motdepasse');
 });
 
 test('un echec de lecture est traite comme une absence', async () => {
@@ -63,7 +63,7 @@ test('un echec de lecture est traite comme une absence', async () => {
 
     // Laisser echapper une erreur de plateforme ferait mourir un run qui n'avait peut-etre pas
     // besoin de ce secret.
-    expect(await resolver.resolve('bordeaux_user')).toBeUndefined();
+    expect(await resolver.resolve('portail_user')).toBeUndefined();
 });
 
 test('le document est relu a chaque demande', async () => {
@@ -75,8 +75,8 @@ test('le document est relu a chaque demande', async () => {
         },
     });
 
-    await resolver.resolve('bordeaux_user');
-    await resolver.resolve('bordeaux_pass');
+    await resolver.resolve('portail_user');
+    await resolver.resolve('portail_pass');
 
     // Un run peut suivre de peu une deconnexion : servir des identifiants effaces serait pire qu'un
     // acces de trousseau de plus.

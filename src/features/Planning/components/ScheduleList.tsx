@@ -15,6 +15,7 @@ import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import Translator from '../../../shared/i18n/Translator';
 import { isConnected } from '../../../shared/services/AppCore'
 import { ukitFailure, type UkitFailure } from '../../../shared/aetherius';
+import { planningAbsent, planningDisponible } from '../../../shared/etablissements';
 import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
 import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../../shared/services/AppCore';
@@ -377,6 +378,13 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     }
 
     renderContent(listHeader: React.ReactNode) {
+        // L'absence d'emploi du temps gagne sur tout le reste, et l'ordre n'est pas indifferent :
+        // une universite qui n'en publie pas n'a jamais de groupes favoris, donc l'ecran « ton
+        // planning est vide » s'afficherait toujours — avec un bouton menant a une recherche de
+        // groupes qui ne peut rien trouver. Constate sur appareil en verifiant le jalon 6-G.
+        if (!planningDisponible()) {
+            return this.renderFailure(planningAbsent());
+        }
         if (Array.isArray(this.state.groupName) && this.state.groupName.length === 0) {
             return this.renderEmptyFavorites();
         } else if (this.state.failure !== null && this.state.failure.silent !== true) {

@@ -4,6 +4,18 @@
   "description": "La liste des groupes d'etudiants du serveur d'emplois du temps de l'universite. res_type 103 = groupes d'etudiants (102 = salles, voir ukit.celcat.salles). Vise celcat.u-bordeaux.fr DIRECTEMENT : le relais qui existait devant contournait une contrainte de navigateur (une page ne peut pas appeler un autre domaine sans son accord), et une requete emise nativement depuis l'appareil n'y est pas soumise. Le filtre sur la longueur de l'identifiant et le tri restent applicatifs : ce sont des calculs, et un calcul dans un Blueprint devrait etre reimplemente a l'identique dans les deux moteurs.",
   "act": "vector",
   "inputs": {
+    "domaine": {
+      "type": "string",
+      "required": true,
+      "default": "https://celcat.u-bordeaux.fr/calendar",
+      "description": "Racine du serveur d'emplois du temps de l'etablissement. Vient du catalogue (colonne celcat_domaine) depuis le jalon 6-G : l'hote n'est pas une propriete de la source, c'est une propriete de l'universite. Le defaut garde le fichier jouable seul."
+    },
+    "res_type": {
+      "type": "string",
+      "required": true,
+      "default": "103",
+      "description": "Code d'inventaire de la ressource interrogee (groupes d etudiants). Conventionnel chez Celcat, pas contractuel : une autre instance peut le numeroter autrement, d'ou le catalogue (colonne celcat_res_types)."
+    },
     "recherche": {
       "type": "string",
       "required": true,
@@ -12,8 +24,6 @@
     }
   },
   "vars": {
-    "domaine": "https://celcat.u-bordeaux.fr/calendar",
-    "res_type": "103",
     "taille_de_page": "10000"
   },
   "steps": [
@@ -21,12 +31,12 @@
       "id": "liste",
       "action": "http.request",
       "method": "GET",
-      "url": "{{ vars.domaine }}/Home/ReadResourceListItems",
+      "url": "{{ inputs.domaine }}/Home/ReadResourceListItems",
       "headers": { "Accept": "application/json" },
       "params": {
         "searchTerm": "{{ inputs.recherche }}",
         "pageSize": "{{ vars.taille_de_page }}",
-        "resType": "{{ vars.res_type }}"
+        "resType": "{{ inputs.res_type }}"
       },
       "expect": { "status": 200 },
       "extract": {

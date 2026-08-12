@@ -10,7 +10,7 @@
  */
 
 import { commeListe, jouer } from './commun.mjs';
-import { DOMAINE } from './celcat-commun.mjs';
+import { CATALOGUE_BORDEAUX, DOMAINE } from './celcat-commun.mjs';
 
 export const NAME = 'celcat-salles';
 
@@ -23,7 +23,7 @@ const BATIMENTS_LIBRES = ['A28'];
 
 /** Le chemin migre : joue le Blueprint et rend la donnee au format applicatif. */
 export async function viaBlueprint() {
-    const outputs = await jouer('ukit-celcat-salles.blueprint.json');
+    const outputs = await jouer('ukit-celcat-salles.blueprint.json', CATALOGUE_BORDEAUX.salles);
 
     const salles = [];
     for (const brute of commeListe(outputs.salles)) {

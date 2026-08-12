@@ -37,6 +37,7 @@ src/
   shared/
     aetherius/      le moteur : façade, registre, secrets, modèle d'erreur, et leurs tests
     supabase/       la base de publication : client anonyme et types du schéma
+    etablissements/ le catalogue des universités : socle embarqué, surcouche publiée, purge
     constants/      URLs externes centralisées
     i18n/           Translator + dictionnaires fr / en / es
     map/            écran carte (Leaflet + OpenStreetMap en WebView)
@@ -207,7 +208,7 @@ racine et de [`src/shared/`](../src/shared/).
 |---|---|
 | [`App.tsx`](../App.tsx) | point d'entrée : préchargement des ressources, chargement des managers, splash animé |
 | [`app.config.ts`](../app.config.ts) | configuration Expo ([plateforme.md](plateforme.md)) |
-| [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement de la livraison **et du référentiel des lieux** au démarrage et au retour au premier plan |
+| [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement de la livraison, **du référentiel des lieux et du catalogue des établissements** au démarrage et au retour au premier plan |
 | [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 18 écrans |
 | [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | barre d'onglets personnalisée et son bouton d'action contextuel |
 | [`shared/navigation/NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) | `NavBarHelper`, `withHeaderAnimation`, `withStaticHeader`, boutons d'en-tête |
@@ -227,6 +228,10 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/locations/referentiel.ts`](../src/shared/locations/referentiel.ts) | le référentiel des lieux : socle embarqué, fusion de la surcouche, accesseurs **synchrones** ([donnees-et-persistance.md](donnees-et-persistance.md)) |
 | [`shared/locations/index.ts`](../src/shared/locations/index.ts) | sa couture de plateforme : cache local et lecture de la table `batiments` |
 | [`shared/locations/referentiel.test.ts`](../src/shared/locations/referentiel.test.ts) | la fusion champ par champ, jouée par `npm test` |
+| [`shared/etablissements/catalogue.ts`](../src/shared/etablissements/catalogue.ts) | le catalogue : socle embarqué, projection d'une ligne, établissement actif, libellés propres à l'université ([features/settings.md](features/settings.md)) |
+| [`shared/etablissements/celcat.ts`](../src/shared/etablissements/celcat.ts) | ce que le catalogue fournit aux six Blueprints d'emploi du temps, et l'échec « pas d'emploi du temps ici » |
+| [`shared/etablissements/index.ts`](../src/shared/etablissements/index.ts) | sa couture de plateforme : cache local, lecture de la table `etablissements`, purge au changement |
+| [`shared/etablissements/catalogue.test.ts`](../src/shared/etablissements/catalogue.test.ts) | la projection et le repli sur le socle, joués par `npm test` |
 | [`shared/services/AppCore.tsx`](../src/shared/services/AppCore.tsx) | `AppContext`, `SettingsManager`, synchronisation calendrier, tâche de fond, utilitaires de lieux et de cours |
 | [`shared/services/CalendarSyncHelpers.ts`](../src/shared/services/CalendarSyncHelpers.ts) | les deux pièces « calendrier système » de la synchronisation, sorties d'`AppCore` au jalon [6-E](phase-6/6-e-planning.md) quand il a franchi les 400 lignes |
 | [`shared/services/NotificationService.ts`](../src/shared/services/NotificationService.ts) | planification des rappels de cours ([features/settings.md](features/settings.md)) |

@@ -2,10 +2,16 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { AppState } from 'react-native';
 
 import SecureStoreService from '../../../shared/services/SecureStoreService';
+import { SettingsManager } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { cleDeMessage, type ScolariteColdData, type ScolariteMailData } from './ScolariteMapping';
-import { deroulerSession, type EtapeSession, type ResultatSession } from './ScolariteSession';
+import {
+    deroulerSession,
+    portailDisponible,
+    type EtapeSession,
+    type ResultatSession,
+} from './ScolariteSession';
 
 /**
  * Contexte central de l'onglet Scolarite.
@@ -60,6 +66,15 @@ export interface CredentialsValue {
     readonly sessionMode: 'cold' | 'hot';
     /** Le dernier echec de session, deja traduit en decision d'ecran. `null` si tout va bien. */
     readonly sessionFailure: UkitFailure | null;
+    /**
+     * L'etablissement selectionne publie-t-il une messagerie extractible ?
+     *
+     * `false` fait **disparaitre** la ligne de messagerie, il ne la met pas en erreur : chez une fac
+     * dont le webmail passe par une authentification que l'application ne sait pas jouer, il n'y a
+     * rien qui echoue — il n'y a rien a montrer. Afficher une panne permanente pour un service qui
+     * n'existe pas serait un mensonge affiche a chaque lancement.
+     */
+    readonly messagerieDisponible: boolean;
     readonly validateAndSave: (username: string, password: string) => Promise<ResultatValidation>;
     readonly retrySession: () => void;
     readonly logout: () => Promise<void>;
@@ -187,6 +202,35 @@ function useDeconnexion(
     }, [oublier, sessionRef]);
 }
 
+/**
+ * Changer d'etablissement deconnecte, y compris de ce que ce contexte garde en memoire.
+ *
+ * `changerEtablissement` vide bien le trousseau, mais ce provider est monte **au-dessus de toute la
+ * pile** : il ne se demonte pas, et son etat survivait donc a la bascule. Le symptome mesure sur
+ * appareil (jalon 6-G) : apres un retour a Bordeaux, l'onglet affichait encore le prenom de
+ * l'etudiant de l'autre universite, avec un trousseau pourtant vide — la pire forme du defaut que
+ * cette phase supprime, une donnee fausse qui a l'air juste.
+ *
+ * On n'efface **que la memoire** : le magasin, lui, a deja ete vide par la purge, et le refaire ici
+ * ferait dependre la correction de l'ordre des abonnements.
+ */
+function useOublierAuChangementDEtablissement(
+    sessionRef: React.RefObject<AbortController | null>,
+    oublier: () => void,
+): void {
+    const oublierRef = useRef(oublier);
+    oublierRef.current = oublier;
+
+    useEffect(() => {
+        const surChangement = () => {
+            sessionRef.current?.abort();
+            oublierRef.current();
+        };
+        SettingsManager.on('etablissement', surChangement);
+        return () => SettingsManager.unsubscribe('etablissement', surChangement);
+    }, [sessionRef]);
+}
+
 const useCredentialsSession = (): CredentialsValue => {
     const [credentials, setCredentials] = useState<Identifiants | null>(null);
     const [credentialsLoaded, setCredentialsLoaded] = useState(false);
@@ -257,7 +301,7 @@ const useCredentialsSession = (): CredentialsValue => {
             onLoginSuccess: () => surLoginReussi(candidat),
             signal: controleur.signal,
             ...(candidat !== null
-                ? { secrets: { bordeaux_user: candidat.username, bordeaux_pass: candidat.password } }
+                ? { secrets: { portail_user: candidat.username, portail_pass: candidat.password } }
                 : {}),
         })
             .then((resultat) => {
@@ -304,18 +348,26 @@ const useCredentialsSession = (): CredentialsValue => {
         });
     }, [lancerSession]);
 
-    const logout = useDeconnexion(sessionRef, useCallback(() => {
+    /** Tout oublier, sans toucher au magasin : la deconnexion et la bascule d'etablissement le partagent. */
+    const oublier = useCallback(() => {
         setCredentials(null);
         setColdData(null);
         setMailData(null);
         setEtat(AU_REPOS);
-    }, []));
+    }, []);
+
+    const logout = useDeconnexion(sessionRef, oublier);
+    useOublierAuChangementDEtablissement(sessionRef, oublier);
 
     return {
         credentials, credentialsLoaded, coldData, mailData, sessionMode,
         scrapeStatus: etat.status,
         scrapeProgress: etat.progress,
         sessionFailure: etat.failure,
+        // Lu a chaque rendu plutot que memorise : le catalogue peut changer sous l'application — un
+        // rafraichissement au retour au premier plan, ou une bascule d'etablissement — et une valeur
+        // figee au montage ferait survivre une ligne de messagerie a l'universite qui la portait.
+        messagerieDisponible: portailDisponible('messagerie'),
         validateAndSave, retrySession, logout,
     };
 };

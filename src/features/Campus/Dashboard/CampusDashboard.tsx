@@ -11,6 +11,7 @@ import { BdeSection } from './components/BdeSection';
 import { CrousSection } from './components/CrousSection';
 import { LibrarySection } from './components/LibrarySection';
 import { FreeRoomSection } from './components/FreeRoomSection';
+import { planningDisponible } from '../../../shared/etablissements';
 
 const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) => {
     const { themeName } = useContext(AppContext);
@@ -68,7 +69,16 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
                         <BdeSection navigation={navigation} />
                         <CrousSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
                         <LibrarySection navigation={navigation} userLat={location.lat} userLon={location.lon} />
-                        <FreeRoomSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                        {/*
+                          * Les salles libres se reconstruisent depuis les salles du serveur
+                          * d'emplois du temps : une universite qui n'en publie pas n'a rien a
+                          * montrer ici. La section disparait plutot que d'afficher un carrousel vide
+                          * ou une erreur permanente — meme regle que la ligne de messagerie d'un
+                          * etablissement sans webmail extractible (jalon 6-G).
+                          */}
+                        {planningDisponible() && (
+                            <FreeRoomSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                        )}
                     </Animated.ScrollView>
                 </View>
             )}

@@ -81,8 +81,13 @@ soient prêtes quand l'utilisateur y arrive.
 
 | Blueprint | Quand | Ce qu'il rend |
 |---|---|---|
-| [`ukit.scolarite.dossier`](../../blueprints/ukit-scolarite-dossier.blueprint.json) | premier login | numéro étudiant, INE, identité, adresse mail, date de naissance |
-| [`ukit.scolarite.messagerie`](../../blueprints/ukit-scolarite-messagerie.blueprint.json) | chaque lancement, et fin du parcours froid | nombre de messages non lus |
+| [`ukit.portail.bordeaux.dossier`](../../blueprints/ukit-portail-bordeaux-dossier.blueprint.json) | premier login | numéro étudiant, INE, identité, adresse mail, date de naissance |
+| [`ukit.portail.bordeaux.messagerie`](../../blueprints/ukit-portail-bordeaux-messagerie.blueprint.json) | chaque lancement, et fin du parcours froid | nombre de messages non lus |
+
+**Les noms viennent du catalogue**, plus de constantes, depuis le jalon
+[6-G](../phase-6/6-g-etablissements.md) : ils sont propres à l'établissement sélectionné, et un
+établissement ajouté à distance apporte les siens. Un champ à `null` n'est pas une panne mais un
+**service absent** — voir [Un établissement peut n'avoir qu'une partie des services](#un-établissement-peut-navoir-quune-partie-des-services).
 
 Le découpage suit **les parcours de l'application, pas les pages** : chacun ouvre son service, qui
 rebondit lui-même sur l'authentification unifiée. Chacun se rejoue seul, et une panne de l'un
@@ -94,6 +99,42 @@ directement `mondossierweb` ou `webmel`, qui redirigent vers le CAS avec leur pa
 reviennent au bon endroit, fragment compris. Corollaire assumé : **la lecture du prénom sur l'ENT
 n'a plus de page où se faire.** Le dossier administratif porte l'identité complète, c'est de là
 qu'elle vient désormais.
+
+## Un établissement peut n'avoir qu'une partie des services
+
+Le cas n'est pas théorique : **Bordeaux INP**, le second établissement du catalogue, n'a pas de
+messagerie extractible — son webmail passe par SAML et non par le CAS. `portail_messagerie` vaut donc
+`null`, et trois choses en découlent :
+
+- la session **saute** le run de messagerie au lieu d'échouer : une fac sans webmail lisible doit
+  donner une session complète, pas une erreur à chaque lancement ;
+- le tableau de bord **n'affiche pas la carte** (`messagerieDisponible`, lu à chaque rendu pour qu'une
+  bascule d'établissement le fasse disparaître tout de suite). Une carte en panne permanente pour un
+  service inexistant serait un mensonge répété ;
+- le seul cas qui échoue est celui où l'établissement ne publie **rien** : il n'y a alors pas de
+  session à dérouler, et le dire est le bon comportement (`PORTAIL_ABSENT`).
+
+Le pendant côté message : `serviceAbsent()` rend un échec de famille `config`, non réessayable, qui
+porte **son propre libellé** — « Cette université n'est pas encore reliée à UKit », et non « le portail
+ne répond pas ». Les deux appellent des gestes opposés de la part d'un étudiant.
+
+## Deux portails, une seule sortie
+
+Le portail de Bordeaux INP a été écrit au jalon 6-G contre un compte étudiant réel, et il ne ressemble
+au premier que par sa forme :
+
+| | Université de Bordeaux | Bordeaux INP |
+|---|---|---|
+| Soumission du CAS | `input[type=submit]` | **`<button id="submitBtn">`** |
+| Panneau d'erreur | `#loginErrorsPanel` | **le même** |
+| Dossier | `mondossierweb` **GWT**, `#gwt-uid-NN` positionnels | `mondossierweb` **Vaadin**, couples ancrés **par leur libellé** |
+| Identité | `PRÉNOM NOM` en un champ | nom et prénom séparés, recomposés par le fichier |
+| INE | lu | absent du dossier |
+| Durée du parcours froid | ~40 s | ~12 s |
+
+Ce que ça établit, et qui vaut pour tous les portails à venir : **c'est la sortie qui est le
+contrat.** Les deux fichiers rendent les mêmes cinq champs, `ScolariteMapping` n'a pas bougé d'une
+ligne, et les écrans ne savent toujours pas qu'il existe deux portails.
 
 ## Données froides et données chaudes
 
@@ -156,6 +197,14 @@ au démontage du provider, sans quoi une WebView cachée survivrait à l'écran 
 onglet, et couper là serait absurde. Au retour au premier plan, une session qu'on a soi-même annulée
 **reprend** ; un échec réel, lui, ne se rejoue pas tout seul.
 
+**Changer d'établissement déconnecte, y compris en mémoire.** `changerEtablissement` vide le
+trousseau, mais le provider est monté au-dessus de toute la pile : il ne se démonte pas, et son état
+survivait à la bascule — l'onglet affichait le prénom de l'étudiant de l'autre université avec un
+trousseau pourtant vide, c'est-à-dire la pire forme du défaut que cette phase supprime : une donnée
+fausse qui a l'air juste. Le contexte s'abonne donc à l'événement `etablissement` et oublie **ce qu'il
+garde**, sans retoucher au magasin — le refaire ici ferait dépendre la correction de l'ordre des
+abonnements. Trouvé sur appareil au jalon 6-G.
+
 Une session annulée **n'écrit rien**. Le cas qui l'impose n'est pas théorique : une déconnexion
 pendant la session remettrait dans le trousseau l'identité que `logout` vient d'effacer.
 
@@ -186,10 +235,16 @@ Quatre points d'entrée nommés :
 
 | `entrypoint` | Destination |
 |---|---|
-| `ent` | `https://ent.u-bordeaux.fr` |
-| `email` | `https://webmel.u-bordeaux.fr` |
-| `cas` | `https://cas.u-bordeaux.fr` |
-| `apogee` | `https://apogee.u-bordeaux.fr` |
+| `ent` | l'ENT de l'établissement |
+| `email` | son webmail |
+| `cas` | son authentification unifiée |
+| `apogee` | ses résultats |
+
+Les quatre adresses **viennent du catalogue** (colonne `services`) depuis le jalon
+[6-G](../phase-6/6-g-etablissements.md). Elles étaient en dur ici, et c'était le dernier hôte
+bordelais compilé dans un écran : un étudiant d'une autre fac s'y serait retrouvé sur le portail de
+Bordeaux. Un point d'entrée que l'établissement ne déclare pas retombe sur le site de UKit — le repli
+qui existait déjà pour un paramètre absent.
 
 **Remplissage automatique du formulaire CAS** : `getCASInjectedScript` scrute la page toutes les
 100 ms (50 tentatives, soit 5 s). Si des identifiants sont enregistrés et qu'aucune erreur n'est
@@ -216,7 +271,11 @@ quitter l'écran, et le geste de retour de la pile est désactivé tant qu'un hi
   par une communication corrélée avec l'agent injecté.
 - Un Blueprint ne peut déclarer que les secrets que l'application lui ouvre
   (`ALLOWED_SECRETS`, [blueprints/index.ts](../../blueprints/index.ts)) — y compris un Blueprint
-  publié à distance.
+  publié à distance, **y compris un portail que l'application n'embarque pas**. C'est la borne du
+  jalon 6-G : le préfixe décide de ce qui peut arriver, le périmètre de secrets décide de ce que ça
+  peut réclamer. Les deux noms sont neutres vis-à-vis de l'établissement (`portail_user` /
+  `portail_pass`) ; les **clés du trousseau, elles, n'ont pas bougé**, et personne n'a été déconnecté
+  par le renommage.
 - Les valeurs résolues sont **masquées** dans les événements et les messages d'échec.
 - Les données personnelles récupérées ne quittent jamais l'appareil.
 - L'accès à l'onglet est protégé par `BiometryGate` (`expo-local-authentication`), avec repli sur le
@@ -279,6 +338,10 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
 - **Navigateur intégré** : ouvrir le webmail depuis la ligne de messagerie ; le formulaire CAS doit se
   remplir seul.
 - **Déconnexion** : l'écran de connexion revient, aucune donnée ne subsiste.
+- **Second établissement** : basculer sur Bordeaux INP dans les réglages, se connecter avec un compte
+  de cette école — le parcours froid va au bout en une douzaine de secondes, l'identité s'affiche, et
+  **aucune ligne de messagerie n'apparaît**. Puis revenir à Bordeaux : la session est à refaire, ce
+  qui est le comportement voulu.
 
 ## Limites connues
 
@@ -321,6 +384,12 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
   pareil, et le test [`ScolariteMapping.test.ts`](../../src/features/Scolarite/services/ScolariteMapping.test.ts)
   fige la distinction.
 - **Apogée n'est pas extrait**, pas plus qu'avant : il reste accessible par le navigateur intégré.
+- **Le numéro étudiant de Bordeaux INP est lu par position** dans le bandeau latéral, faute d'un
+  libellé pour l'ancrer — la seule fragilité positionnelle de ce portail. L'`assert` sur les libellés
+  de l'état-civil est ce qui la garde : un décalage du bandeau accompagnerait une refonte de la page,
+  donc de ces libellés.
+- **Bordeaux INP ne rend pas d'INE** : son dossier ne l'expose pas. Le champ reste vide plutôt que
+  d'être inventé.
 - **Pas de parité automatisée** pour ce module, et c'est assumé : elle demanderait des identifiants
   réels dans un harnais.
 - **[`ApogeeCard.tsx`](../../src/features/Scolarite/components/cards/ApogeeCard.tsx) n'est importé

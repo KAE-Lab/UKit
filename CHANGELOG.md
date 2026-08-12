@@ -15,6 +15,50 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **Le multi-établissement** (jalon [6-G](docs/phase-6/6-g-etablissements.md)). UKit n'est plus une
+  application mono-université : le **catalogue des établissements** vit dans la
+  [base de publication](docs/backend.md) et pilote l'interface. Ajouter une université est désormais
+  **une ligne en base et un fichier publié** — pas une release, pas une revue de store.
+
+  **Bordeaux INP est en ligne, et il est arrivé sans release.** Son portail a été écrit et joué contre
+  un compte étudiant réel, et il n'a presque rien en commun avec celui de Bordeaux : même produit CAS
+  mais un `<button>` là où l'autre a un `<input>`, `mondossierweb` en Vaadin (PC-Scol) là où l'autre
+  est en GWT (Apogée), champs ancrés **par leur libellé** au lieu d'identifiants positionnels, pas
+  d'INE, pas de messagerie extractible. Ce qui ne change pas, c'est la **sortie** : les deux fichiers
+  rendent les mêmes cinq champs, et aucun écran n'a appris qu'il existe deux portails.
+
+  **Un service absent cesse d'être une panne.** Une université sans messagerie extractible ne montre
+  simplement pas la carte ; une université sans emploi du temps interrogeable l'affiche en toutes
+  lettres au lieu d'échouer, et l'accueil saute l'étape des groupes. C'est un nouveau constructeur du
+  modèle d'erreur (`serviceAbsent`), parce qu'aucune famille du moteur ne décrivait « ce service
+  n'existe pas ici » — et pour cause : aucun run ne part.
+
+  **Le registre sait maintenant *ajouter*, et rien de plus.** La garde levée par le jalon 3-H
+  d'Aetherius est activée en opt-in, bornée au préfixe réservé `ukit.portail.` et au périmètre de
+  secrets de l'application. Un nom hors préfixe est ignoré, un portail qui réclamerait un secret hors
+  périmètre est refusé **avant** le cache, et retirer la capacité désinstalle ce qu'elle avait laissé
+  entrer — dix cas de test le figent.
+
+  Au passage, trois constantes bordelaises quittent le binaire : l'hôte Celcat et ses codes
+  d'inventaire (devenus des **entrées** des six Blueprints d'emploi du temps), les onze points de
+  balayage des bibliothèques, et les quatre adresses du navigateur intégré — le dernier hôte de
+  Bordeaux compilé dans un écran.
+
+- **Le choix de l'établissement** à l'accueil et dans les réglages. Changer
+  d'établissement demande une confirmation qui **annonce ce qui sera effacé** — groupes favoris,
+  planning en cache, session universitaire — puis purge ce qui appartenait à l'université quittée. Les
+  favoris de restaurants et de bibliothèques restent : ces sources-là sont nationales.
+
+  Le parcours de premier lancement passe à cinq étapes : thème et langue, puis l'établissement, puis
+  les groupes qu'il conditionne — et cette dernière **disparaît** quand l'université ne publie pas
+  d'emploi du temps.
+
+- **Une spécification ouverte pour l'emploi du temps universel**
+  ([6-I](docs/phase-6/6-i-planning-universel.md)). Le second établissement n'a pas de planning dans
+  UKit, et ce n'est pas un oubli : presque aucune université française n'expose un Celcat ouvert. La
+  voie mesurée est l'export **iCal**, qui existe partout — elle demande une capacité que le moteur n'a
+  pas encore, et le document dit laquelle et pourquoi elle ne se contourne pas ici.
+
 - **La session universitaire jouée par le moteur** (jalon
   [6-F](docs/phase-6/6-f-scolarite.md)). `ScolariteWebSession.tsx` est **supprimé** : 323 lignes de
   WebView cachée pilotée par du JavaScript en gabarits de chaîne, quatre scripts déclenchés selon
@@ -239,7 +283,49 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   architecture, conventions, navigation, persistance, sources externes, thème, i18n, cartographie,
   plateforme, qualité, plus une documentation par domaine fonctionnel.
 
+### Corrigé
+
+- **Le Planning dit l'absence d'emploi du temps au lieu de réclamer des groupes favoris.** Une
+  université sans serveur interrogeable n'a jamais de groupes favoris : l'écran « ton planning est
+  vide, cherche un groupe » gagnait donc toujours, avec un bouton menant à une recherche qui ne peut
+  rien trouver. La **section « salles libres »** disparaît pour la même raison — elle se reconstruit
+  depuis les salles du même serveur.
+
+- **Un Blueprint ne peut plus s'appuyer sur un sélecteur qu'un seul moteur comprend.** Le portail du
+  second établissement avait été écrit avec `:text-is()` et `:nth-match()` : ces pseudo-classes
+  appartiennent à **Playwright**, donc au moteur Python qui sert à mettre un fichier au point depuis un
+  poste. Le moteur embarqué résout par `document.querySelectorAll` et les rejette comme CSS invalide —
+  le run passait le CAS puis mourait à l'extraction, avec un message sans rapport avec la cause.
+  Réécrit en **XPath**, seul langage de sélection que les deux moteurs partagent, et un test refuse
+  désormais ces pseudo-classes dans n'importe quel Blueprint du dépôt.
+
+- **Un établissement retiré du catalogue ne bascule plus personne en silence.** Il disparaissait aussi
+  du cache : il cessait de résoudre, l'application retombait sur l'établissement historique, et posait
+  quelqu'un sur une autre université sans un mot. Le rafraîchissement **reporte** désormais
+  l'établissement sélectionné depuis le cache quand la base ne le publie plus — il continue de
+  fonctionner — et l'avertissement couvre aussi le cas où le cache l'a perdu, où le repli reste la
+  seule issue mais cesse d'être muet.
+
+- **Changer d'établissement se propage enfin aux écrans déjà ouverts.** Le code de l'université passe
+  par `AppContext`, à côté du thème et des groupes favoris : sans ça, un onglet monté gardait l'état de
+  l'établissement précédent — la section des salles libres restait masquée après un retour à Bordeaux.
+  Le contexte de scolarité oublie en plus ce qu'il garde **en mémoire** : le trousseau était vidé, mais
+  l'onglet affichait encore le prénom de l'étudiant de l'autre fac.
+
+- **La réinitialisation déconnecte enfin la session universitaire.** `resetSettings` n'avait jamais
+  touché au trousseau — sans conséquence tant que l'application ne connaissait qu'une université, mais
+  faux dès que la réinitialisation rouvre un parcours d'accueil qui **redemande l'établissement** : on
+  pouvait repartir sur une autre fac en restant connecté au portail de la précédente. Elle passe
+  désormais par la même purge que le changement d'établissement. Trouvé sur appareil, pendant la
+  campagne de vérification du jalon 6-G.
+
 ### Modifié
+
+- **Les Blueprints de portail sont renommés** `ukit.portail.bordeaux.*`, et leurs secrets deviennent
+  `portail_user` / `portail_pass` — neutres vis-à-vis de l'établissement, sans quoi chaque nouvelle
+  université aurait exigé une release rien que pour un nom de secret. **Les clés du trousseau n'ont
+  pas bougé : personne n'est déconnecté.** Une installation existante passe la mise à jour sans rien
+  remarquer, son établissement étant réputé `bordeaux`.
 
 - **Migration TypeScript intégrale** — plus aucun fichier `.js` ou `.jsx` dans `src/` : i18n,
   navigation, services, thème, composants d'interface, modules Planning, Campus, Scolarité, Settings

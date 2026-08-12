@@ -49,9 +49,15 @@ export interface BatimentRow {
 /**
  * Catalogue des universites et de leurs portails.
  *
- * Un champ de portail a `null` est un cas **normal** : une fac sans messagerie extractible existe,
- * et l'ecran n'affiche alors pas la carte. Prevoir l'absence des le premier jour coute moins cher
- * que de la decouvrir au second etablissement.
+ * Un champ nul est un cas **normal**, pas un trou a combler : une fac sans messagerie extractible
+ * existe, une fac sans serveur d'emploi du temps interrogeable aussi. Prevoir l'absence des le
+ * premier jour coute moins cher que de la decouvrir au second etablissement.
+ *
+ * Les trois champs `unknown` — `celcat_res_types`, `bibliotheques_points`, `libelles` — sont
+ * volontairement libres cote base et **projetes** cote application
+ * (`shared/etablissements/catalogue.ts`) : figer leur forme en colonnes obligerait a migrer la base
+ * chaque fois qu'un etablissement a un cas particulier, et c'est deja la posture retenue pour les
+ * horaires de `batiments`.
  */
 export interface EtablissementRow {
     readonly code: string;
@@ -62,7 +68,11 @@ export interface EtablissementRow {
     readonly portail_dossier: string | null;
     readonly portail_messagerie: string | null;
     readonly celcat_domaine: string | null;
+    readonly celcat_res_types: unknown;
+    readonly bibliotheques_points: unknown;
+    readonly services: unknown;
     readonly libelles: unknown;
+    readonly ordre: number;
 }
 
 /** Version courante et minimale par plateforme. Remplace la lecture du fichier VERSION sur GitHub. */

@@ -7,6 +7,7 @@ ce qu'elle n'est pas, et comment on publie : [docs/backend.md](../docs/backend.m
 |---|---|
 | [`schema.sql`](schema.sql) | tables, index, contraintes, **et les deux buckets** |
 | [`policies.sql`](policies.sql) | RLS : lecture publique restreinte, écriture réservée |
+| [`etablissements.sql`](etablissements.sql) | le catalogue des universités : une ligne par établissement, `on conflict do update` |
 
 **Tout s'applique depuis ces fichiers, jamais depuis l'interface web.** Ce qui est fait à la main
 n'est pas reproductible, ne se relit pas en revue, et se perd le jour où il faut recréer le projet.
@@ -46,7 +47,16 @@ européenne — les utilisateurs sont en France.
 
    psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/schema.sql
    psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/policies.sql
+   psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/etablissements.sql
    ```
+
+   > **La connexion directe fonctionne depuis un poste en NAT64** — mesuré le 2026-08-10, là où les
+   > *poolers* régionaux répondent `tenant/user not found` quand on se trompe de région. Essayer
+   > `db.<reference>.supabase.co` d'abord coûte une seconde et évite de chercher la bonne région.
+
+   **Les Blueprints d'un portail se publient avant la ligne de catalogue qui les nomme.** Une ligne
+   qui désigne un Blueprint non publié ferait échouer le parcours d'un étudiant sur une erreur que
+   personne ne sait lire — même règle que le manifeste, écrit en dernier.
 
    > **La connexion directe est en IPv6 seule** sur le plan gratuit. Depuis un réseau qui n'en a pas,
    > passer par le *session pooler* (`aws-0-<region>.pooler.supabase.com`, utilisateur

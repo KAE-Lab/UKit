@@ -76,8 +76,8 @@ biométrique, identifiants stockés chiffrés.
 système, réinitialisation, et écran À propos.
 → [docs/features/settings.md](docs/features/settings.md)
 
-Au premier lancement, un [parcours d'accueil](docs/features/onboarding.md) en quatre étapes règle le
-thème, la langue et le premier groupe favori.
+Au premier lancement, un [parcours d'accueil](docs/features/onboarding.md) en cinq étapes règle le
+thème, la langue, l'établissement et le premier groupe favori.
 
 <p align="center"><sub>· · ·</sub></p>
 
@@ -90,6 +90,7 @@ l'application — sans intermédiaire.
 |---|---|---|
 | Celcat (`celcat.u-bordeaux.fr`) | emplois du temps, groupes, salles et leur occupation | API interne, sans authentification |
 | CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires, extraction de pages |
+| CAS / mondossierweb Bordeaux INP | identité étudiant | identifiants universitaires, extraction de pages |
 | Affluences | bibliothèques, affluence temps réel, horaires | API privée |
 | Croustillant | restaurants CROUS et menus | API publique |
 | OpenStreetMap / CartoDB | fonds de carte | tuiles publiques |
@@ -103,7 +104,8 @@ publication** (Supabase) : elle porte ce que l'équipe publie — les [Blueprint
 les annonces de vie étudiante, le référentiel des bâtiments, le catalogue des établissements. Elle ne
 relaie aucune de ces sources et ne voit passer aucune donnée personnelle ; l'application fonctionne
 sans elle, sur son socle embarqué. Les annonces y sont lues depuis le jalon 6-B ; le dépôt
-`ukit-data` qui les servait par jsDelivr cesse d'être écrit.
+`ukit-data` qui les servait par jsDelivr cesse d'être écrit. Depuis le jalon 6-G, c'est aussi elle qui
+porte **les universités** : ajouter un établissement est une ligne en base et un fichier publié.
 → [docs/backend.md](docs/backend.md)
 
 <p align="center"><sub>· · ·</sub></p>
@@ -123,6 +125,7 @@ src/
   shared/            socle transverse
     aetherius/         le moteur : façade, registre de Blueprints, secrets, modèle d'erreur
     supabase/          la base de publication : client anonyme et types du schéma
+    etablissements/    le catalogue des universités : socle, surcouche publiée, purge
     navigation/        conteneur racine, navigateurs, helpers d'en-tête
     services/          contexte et réglages, notifications, stockage chiffré, mock temporel
     theme/             tokens de design et thèmes clair / sombre
@@ -132,6 +135,7 @@ src/
     constants/         URLs externes
     utils/             utilitaires de formatage
 blueprints/          les fichiers d'instructions embarqués (le socle hors ligne)
+  portails/            les portails d'établissements publiés, jamais embarqués
 supabase/            schéma et politiques d'accès de la base de publication
 tools/               publication des Blueprints, harnais de parité
 assets/              icônes, visuels, référentiel des bâtiments du campus
@@ -219,9 +223,10 @@ livré ; elle est mise à jour à chaque contribution.
   publication de fichier, reçue au retour au premier plan, avec trois interrupteurs d'arrêt. **Les
   deux sources de campus sont migrées** (6-D) — restaurants et bibliothèques, cinq Blueprints, cinq
   cas de parité sur données réelles —, **l'emploi du temps aussi** (6-E) : six Blueprints, la
-  bascule directe sur Celcat, et **un serveur retiré de l'architecture** — et enfin **la session
-  universitaire** (6-F), le morceau qui justifiait la phase. Les sept sources sont migrées ; restent
-  le multi-établissement et le retrait du legacy :
+  bascule directe sur Celcat, et **un serveur retiré de l'architecture** —, puis **la session
+  universitaire** (6-F), le morceau qui justifiait la phase. Depuis 6-G, **l'application n'est plus
+  mono-université** : le catalogue vit en base, et **Bordeaux INP a été ajouté sans release** — une
+  ligne en base, un Blueprint publié. Reste le retrait du legacy :
   [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
@@ -263,12 +268,21 @@ livré ; elle est mise à jour à chaque contribution.
   devenues **deux [Blueprints](docs/blueprints.md)** (6-F) : les identifiants ne traversent plus la
   source d'un script, chaque attente porte un délai déclaré et un échec nommé, et un décalage des
   sélecteurs positionnels produit désormais une **erreur** au lieu d'une donnée fausse écrite dans le
-  trousseau. [docs/features/scolarite.md](docs/features/scolarite.md)
+  trousseau. Le portail n'est plus le seul : **celui de Bordeaux INP est arrivé sans release** (6-G),
+  et une université qui n'a pas de messagerie extractible ne montre simplement pas la carte.
+  [docs/features/scolarite.md](docs/features/scolarite.md)
+- [x] **Multi-établissement** — le catalogue des universités vit en
+  [base](docs/backend.md) et pilote l'interface : choix à l'accueil, changement dans les réglages,
+  purge de ce qui appartenait à l'université quittée. Les Blueprints de portail sont namespacés sous
+  `ukit.portail.`, **le seul préfixe qu'un manifeste a le droit d'étendre** — et un service qu'un
+  établissement ne publie pas se **dit** au lieu d'échouer.
+  [docs/phase-6/6-g-etablissements.md](docs/phase-6/6-g-etablissements.md)
 - [x] **Réglages** — langue, thème, filtres d'UE, rappels de cours avec délai réglable,
   synchronisation idempotente du calendrier système (tâche de fond toutes les 12 h), réinitialisation,
   À propos. [docs/features/settings.md](docs/features/settings.md)
-- [x] **Premier lancement** — parcours en quatre étapes, valeurs par défaut issues de l'appareil,
-  sélection de groupes filtrée par année et semestre.
+- [x] **Premier lancement** — parcours en cinq étapes : thème et langue, puis l'**établissement**,
+  puis les groupes qu'il conditionne. Valeurs par défaut issues de l'appareil, sélection de groupes
+  filtrée par année et semestre — étape omise quand l'université ne publie pas d'emploi du temps.
   [docs/features/onboarding.md](docs/features/onboarding.md)
 
 Les limites connues de chaque partie sont documentées dans la section « Limites connues » de son

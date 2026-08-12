@@ -24,10 +24,9 @@
 
 import { describeFailure, type AbortSignalLike, type RunEventHandler } from '@aetherius/engine';
 
-import type { BlueprintName } from '../../../blueprints';
 import { getAetheriusClient } from './client';
 import { describeUkitFailure, type UkitFailure } from './failures';
-import { resolveBlueprint, type BlueprintOrigin } from './registry';
+import { resolveBlueprint, type BlueprintOrigin, type RunnableBlueprintName } from './registry';
 
 export interface RunInputs {
     readonly [key: string]: unknown;
@@ -91,7 +90,7 @@ export interface RunBlueprintOptions {
  * les services n'ont pas a savoir.
  */
 export async function runBlueprint(
-    name: BlueprintName,
+    name: RunnableBlueprintName,
     options: RunBlueprintOptions = {},
 ): Promise<BlueprintRun> {
     try {

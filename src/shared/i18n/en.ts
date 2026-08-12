@@ -40,6 +40,10 @@ const en = {
 	// manque (features/Scolarite/services/ScolariteMapping.ts).
 	ERROR_CAS_UNAVAILABLE: 'The university portal is not responding. Try again in a moment.',
 	ERROR_MAILBOX_UNAVAILABLE: 'The mailbox did not respond. Your sign-in did work.',
+	// Un service que l'etablissement ne publie pas : rien n'est en panne, il n'y a rien a joindre.
+	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
+	ERROR_PORTAL_UNAVAILABLE: 'This university is not connected to UKit yet.',
+	ERROR_TIMETABLE_UNAVAILABLE: 'This university does not publish its timetable in UKit yet.',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
 	PARTIAL_COVERAGE: 'Some areas did not respond: this list may be incomplete.',
@@ -111,6 +115,13 @@ const en = {
 		'An update is available. In order to have the best experience possible, we recommand that you download this update!',
 	USE_SEARCH_BAR: 'Please use the search bar to narrow down the results.',
 	YOUR_CALENDAR: 'Which calendar must be use for synchronization?',
+	// Le multi-etablissement (jalon 6-G). Le NOM d'une universite vient du catalogue, jamais d'ici :
+	// ce sont les libelles d'ecran qui se traduisent, pas les donnees.
+	YOUR_INSTITUTION: 'Which university do you attend?',
+	INSTITUTION: 'Institution',
+	INSTITUTION_CHANGE_TITLE: 'Switch institution?',
+	INSTITUTION_CHANGE_WARNING: 'Your favourite groups, cached timetable and university session will be erased.\nData from two universities does not mix.',
+	INSTITUTION_UNAVAILABLE: 'Your institution is no longer listed. UKit carries on with what it knows.',
 	YOUR_GROUP: 'What is your group?',
 	YOUR_LANGUAGE: 'What is your language?',
 	YOUR_SEMESTER: 'What semester are you in?',

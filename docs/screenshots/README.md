@@ -57,9 +57,10 @@ peuvent attendre.
 | Fichier | Contenu | Priorité |
 |---|---|---|
 | `onboarding-bienvenue.png` | étape 1, logo et accroche | essentielle |
+| `onboarding-etablissement.png` | étape 3, la liste des universités | **prise** |
 | `onboarding-preferences.png` | étape 2, choix du thème et de la langue | essentielle |
-| `onboarding-groupes.png` | étape 3, année, semestre et recherche de groupe | essentielle |
-| `onboarding-fin.png` | étape 4, confirmation | complémentaire |
+| `onboarding-groupes.png` | étape 4, année, semestre et recherche de groupe | essentielle |
+| `onboarding-fin.png` | étape 5, confirmation | complémentaire |
 
 ### Planning — [features/planning.md](../features/planning.md)
 
@@ -142,6 +143,7 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 | `reglages-filtres.png` | modale de gestion des filtres d'UE | complémentaire |
 | `reglages-calendrier.png` | modale de choix du calendrier | complémentaire |
 | `reglages-langue.png` | modale de langue | complémentaire |
+| `reglages-etablissement.png` | modale d'établissement : la liste, puis la confirmation | **prise** |
 
 ### Socle
 

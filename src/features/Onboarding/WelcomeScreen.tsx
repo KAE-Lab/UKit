@@ -1,18 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import {
-    Text, View, Image, TouchableOpacity, ScrollView,
-    KeyboardAvoidingView, Platform
-} from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TextInput } from 'react-native-gesture-handler';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+/**
+ * Le parcours d'accueil : ce qu'on demande avant la premiere ouverture.
+ *
+ * Cet ecran **compose et enchaine** ; l'etat vit dans `hooks/useWelcomeState.ts` et la mise en page
+ * dans `components/WelcomeSteps.tsx` depuis le jalon 6-G. Chaque choix s'applique immediatement —
+ * selectionner le mode sombre repeint l'ecran en cours — il n'y a donc aucun etat a valider, seul
+ * `firstload` reste a basculer.
+ *
+ * **L'etablissement se choisit juste avant les groupes**, et il decide du **nombre d'etapes** : une
+ * universite qui ne publie pas son emploi du temps n'a pas de groupes a proposer, et lui demander
+ * lequel est le sien serait poser une question sans reponse (docs/phase-6/6-g-etablissements.md).
+ *
+ * Voir docs/features/onboarding.md.
+ */
 
-import { SettingsManager, languageFromDevice } from '../../shared/services/AppCore';
-import { PlanningDataManager as DataManager } from '../Planning/services/PlanningDataManager';
+import React, { useState } from 'react';
+import { Text, View, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { SettingsManager } from '../../shared/services/AppCore';
+import { planningDisponible } from '../../shared/etablissements';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
-
-const MAXIMUM_NUMBER_ITEMS_GROUPLIST = 10;
+import { useWelcomeState } from './hooks/useWelcomeState';
+import {
+    StepEtablissement,
+    StepFin,
+    StepGroupes,
+    StepIntro,
+    StepPreferences,
+    WelcomeBackButton,
+    WelcomePagination,
+} from './components/WelcomeSteps';
 
 const THEME_LIST = [
     { id: 'light', title: 'LIGHT_THEME' },
@@ -39,247 +57,79 @@ const UNIVERSITY_SEASON_LIST = [
     { id: 'spring', title: 'SPRING' },
 ];
 
-const filterSeason = {
-    autumn: {
-        L1: ['10', 'MIASHS1'], L2: ['30', 'MIASHS3'], L3: ['50', 'MIASHS5'],
-        M1: ['M1', '70'], M2: ['M2', '90'], AUTRE: [''],
-    },
-    spring: {
-        L1: ['20', 'MIASHS2'], L2: ['40', 'MIASHS4'], L3: ['60', 'MIASHS6'],
-        M1: ['M1', '80'], M2: ['M2', '000', '001', '002', '003', '004'], AUTRE: [''],
-    },
-};
+/**
+ * Les etapes, dans l'ordre. `groupes` disparait quand l'etablissement n'a pas d'emploi du temps.
+ *
+ * **Le theme et la langue viennent avant l'etablissement**, alors que la specification du jalon 6-G
+ * annoncait l'inverse. La raison est celle qu'on voit en jouant le parcours : demander a quelqu'un de
+ * choisir son universite dans une langue qu'il n'a pas encore choisie met la charge au mauvais
+ * endroit. L'argument technique de la spec — « l'etablissement conditionne tout le reste » — reste
+ * vrai, mais il ne concerne que **l'etape des groupes**, qui le suit toujours.
+ */
+type Etape = 'intro' | 'preferences' | 'etablissement' | 'groupes' | 'fin';
 
-const WelcomePagination = ({ pageNumber, maxPage, themeObj }) => (
-    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: tokens.space.md }}>
-        {Array.from({ length: pageNumber }).map((_, i) => <View key={`f-${i}`} style={{ width: 24, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.md, backgroundColor: themeObj.primary }} />)}
-        {Array.from({ length: maxPage - pageNumber }).map((_, i) => <View key={`e-${i}`} style={{ width: 8, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.md, backgroundColor: themeObj.greyBackground }} />)}
-    </View>
-);
-
-const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
-    <TouchableOpacity 
-        onPress={onPress} 
-        disabled={!visible} 
-        style={{ 
-            position: 'absolute', 
-            top: (topInset || 0), 
-            left: tokens.space.md, 
-            zIndex: 10, 
-            opacity: visible ? 1 : 0, 
-            padding: tokens.space.xs 
-        }}
-    >
-        <MaterialIcons name="arrow-back" size={28} color={themeObj.font} />
-    </TouchableOpacity>
-);
-
-const Step1 = ({ themeObj }) => (
-    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
-        <Image source={require('../../../assets/icons/logo.png')} style={{ width: 200, height: 100, resizeMode: 'contain', marginBottom: tokens.space.xl }} />
-        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELCOME')}</Text>
-        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
-    </View>
-);
-
-const Step2 = ({ themeObj, navigatorState, selectTheme, selectLanguage }) => (
-    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2 }} showsVerticalScrollIndicator={false}>
-        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, marginBottom: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
-            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_THEME')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                {THEME_LIST.map((themeEntry) => {
-                    const selected = navigatorState.theme === themeEntry.id;
-                    return (
-                        <TouchableOpacity key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(themeEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
-        </View>
-        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, marginBottom: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
-            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_LANGUAGE')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                {LANGUAGE_LIST.map((langEntry) => {
-                    const selected = navigatorState.language === langEntry.id;
-                    return (
-                        <TouchableOpacity key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(langEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
-        </View>
-    </ScrollView>
-);
-
-const Step3 = ({ themeObj, navigatorState, filterList, selectGroup, footerTextComponent }) => (
-    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: 140 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <View style={{ backgroundColor: themeObj.cardBackground, borderRadius: tokens.radius.lg, padding: tokens.space.md, borderWidth: 1, borderColor: themeObj.border, ...tokens.shadow.sm }}>
-            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_YEAR')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: tokens.space.lg }}>
-                {UNIVERSITY_YEARS_LIST.map((yearEntry) => {
-                    const selected = navigatorState.year?.id === yearEntry.id;
-                    return (
-                        <TouchableOpacity 
-                            key={yearEntry.id} 
-                            onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)} 
-                            style={{ 
-                                width: '48%', 
-                                alignItems: 'center', 
-                                backgroundColor: themeObj.greyBackground, 
-                                borderWidth: 2, 
-                                borderColor: selected ? themeObj.primary : 'transparent', 
-                                paddingVertical: tokens.space.sm, 
-                                borderRadius: tokens.radius.md, 
-                                marginBottom: tokens.space.sm 
-                            }}
-                        >
-                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>
-                                {Translator.get(yearEntry.title as Parameters<typeof Translator.get>[0])} {yearEntry.suffix}
-                            </Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
-
-            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_SEMESTER')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: tokens.space.lg }}>
-                {UNIVERSITY_SEASON_LIST.map((seasonEntry) => {
-                    const selected = navigatorState.season?.id === seasonEntry.id;
-                    return (
-                        <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{Translator.get(seasonEntry.title as Parameters<typeof Translator.get>[0])}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
-
-            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: themeObj.font, marginBottom: tokens.space.md }}>{Translator.get('YOUR_GROUP')}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
-                <MaterialCommunityIcons name="magnify" size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
-                <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.OS === 'ios' ? tokens.space.md : tokens.space.sm, color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
-            </View>
-
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item) => {
-                    const selected = navigatorState.groups.includes(item);
-                    return (
-                        <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={{ backgroundColor: themeObj.greyBackground, borderWidth: 2, borderColor: selected ? themeObj.primary : 'transparent', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.md, borderRadius: tokens.radius.md, marginRight: tokens.space.sm, marginBottom: tokens.space.sm }}>
-                            <Text style={{ color: selected ? themeObj.primary : themeObj.fontSecondary, fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium, fontSize: tokens.fontSize.sm }}>{item}</Text>
-                        </TouchableOpacity>
-                    )
-                })}
-            </View>
-            {footerTextComponent()}
-        </View>
-    </ScrollView>
-);
-
-const Step4 = ({ themeObj }) => (
-    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
-        <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
-            <MaterialCommunityIcons name="check-circle-outline" size={100} color={themeObj.primary} />
-        </View>
-        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELL_DONE')}</Text>
-        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
-    </View>
-);
+function etapesPour(avecGroupes: boolean): Etape[] {
+    const etapes: Etape[] = ['intro', 'preferences', 'etablissement'];
+    if (avecGroupes) etapes.push('groupes');
+    etapes.push('fin');
+    return etapes;
+}
 
 export default function WelcomeScreen() {
-    const [step, setStep] = useState(1);
+    const [index, setIndex] = useState(0);
     const insets = useSafeAreaInsets();
-    const [navigatorState, setNavigatorState] = useState({
-        language: 'fr',
-        theme: 'light',
-        year: null,
-        season: null,
-        groups: [],
-        groupList: DataManager.getGroupList(),
-        groupListFiltered: [],
-        textFilter: '',
-    });
+    const { state, actions } = useWelcomeState();
 
-    const changeState = (newState) => setNavigatorState((prev) => ({ ...prev, ...newState }));
+    const themeObj = style.Theme[state.theme];
 
-    useEffect(() => {
-        SettingsManager.on('theme', (newTheme) => changeState({ theme: newTheme }));
-        SettingsManager.on('language', (newLang) => changeState({ language: newLang }));
-        SettingsManager.on('favoriteGroups', (newGroups) => changeState({ groups: newGroups }));
-        DataManager.on('groupList', (newGroupList) => changeState({ groupList: newGroupList }));
-
-        const langSystem = languageFromDevice();
-        const themeSystem = SettingsManager.getAutomaticTheme();
-
-        SettingsManager.setLanguage(langSystem);
-        SettingsManager.setTheme(themeSystem);
-    }, []);
-
-    const theme = navigatorState.theme;
-    const themeObj = style.Theme[theme];
-
-    const handleNext = () => setStep((prev) => prev + 1);
-    const handleBack = () => setStep((prev) => prev - 1);
-    const finishWelcome = () => SettingsManager.setFirstLoad(false);
-
-    const selectTheme = (newTheme) => SettingsManager.setTheme(newTheme.id);
-    const selectLanguage = (newLang) => SettingsManager.setLanguage(newLang.id);
-    const selectGroup = (group) => {
-        if (navigatorState.groups.includes(group)) {
-            SettingsManager.removeFavoriteGroup(group);
-        } else {
-            SettingsManager.addFavoriteGroup(group);
-        }
-    };
-
-    const filterList = (year, season, textFilter) => {
-        let newList = [];
-        if (year && season) {
-            newList = navigatorState.groupList.filter((e) => {
-                const groupName = e.toUpperCase();
-                return filterSeason[season.id][year.id].some((filter) =>
-                    groupName.includes(filter.toUpperCase()) && groupName.includes(textFilter.toUpperCase())
-                );
-            });
-        }
-        changeState({ groupListFiltered: newList, year, season, textFilter });
-    };
-
-    const footerTextComponent = () => {
-        if (navigatorState.textFilter) {
-            if (navigatorState.groupListFiltered.length > MAXIMUM_NUMBER_ITEMS_GROUPLIST) {
-                return (
-                    <View style={{ marginTop: tokens.space.sm }}>
-                        <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, textAlign: 'center' }}>
-                            {Translator.get('HIDDEN_RESULT', navigatorState.groupListFiltered.length - MAXIMUM_NUMBER_ITEMS_GROUPLIST)}
-                        </Text>
-                        <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, textAlign: 'center', marginTop: 4 }}>
-                            {Translator.get('USE_SEARCH_BAR')}
-                        </Text>
-                    </View>
-                );
-            } else if (!navigatorState.groupListFiltered.length) {
-                return <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.sm, textAlign: 'center' }}>{Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}</Text>;
-            }
-        }
-        return <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.sm, textAlign: 'center' }}>{Translator.get('USE_SEARCH_BAR')}</Text>;
-    };
+    // La liste se recalcule a chaque rendu : changer d'etablissement doit ajouter ou retirer l'etape
+    // des groupes tout de suite, pas au rendu suivant.
+    const etapes = etapesPour(planningDisponible());
+    const index_ = Math.min(index, etapes.length - 1);
+    const etape = etapes[index_];
+    const derniere = index_ >= etapes.length - 1;
 
     return (
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: themeObj.background, paddingTop: (insets.top || 0) - tokens.space.lg }}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-                
-                <WelcomeBackButton onPress={handleBack} visible={step > 1} themeObj={themeObj} topInset={insets.top} />
 
-                {step === 1 && <Step1 themeObj={themeObj} />}
-                {step === 2 && <Step2 themeObj={themeObj} navigatorState={navigatorState} selectTheme={selectTheme} selectLanguage={selectLanguage} />}
-                {step === 3 && <Step3 themeObj={themeObj} navigatorState={navigatorState} filterList={filterList} selectGroup={selectGroup} footerTextComponent={footerTextComponent} />}
-                {step === 4 && <Step4 themeObj={themeObj} />}
+                <WelcomeBackButton onPress={() => setIndex(index_ - 1)} visible={index_ > 0} themeObj={themeObj} topInset={insets.top} />
+
+                {etape === 'intro' && <StepIntro themeObj={themeObj} />}
+                {etape === 'etablissement' && (
+                    <StepEtablissement
+                        themeObj={themeObj}
+                        etablissements={state.etablissements}
+                        codeActif={state.etablissement}
+                        selectEtablissement={actions.selectEtablissement}
+                    />
+                )}
+                {etape === 'preferences' && (
+                    <StepPreferences
+                        themeObj={themeObj}
+                        navigatorState={state}
+                        themeList={THEME_LIST}
+                        languageList={LANGUAGE_LIST}
+                        selectTheme={actions.selectTheme}
+                        selectLanguage={actions.selectLanguage}
+                    />
+                )}
+                {etape === 'groupes' && (
+                    <StepGroupes
+                        themeObj={themeObj}
+                        navigatorState={state}
+                        yearList={UNIVERSITY_YEARS_LIST}
+                        seasonList={UNIVERSITY_SEASON_LIST}
+                        filterList={actions.filterList}
+                        selectGroup={actions.selectGroup}
+                    />
+                )}
+                {etape === 'fin' && <StepFin themeObj={themeObj} />}
 
                 <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: (insets.bottom || 0) }}>
                     <View style={{ paddingHorizontal: tokens.space.xl, marginBottom: tokens.space.xs }}>
                         <TouchableOpacity
-                            onPress={step === 4 ? finishWelcome : handleNext}
+                            onPress={derniere ? () => SettingsManager.setFirstLoad(false) : () => setIndex(index_ + 1)}
                             style={{
                                 backgroundColor: themeObj.primary,
                                 borderRadius: tokens.radius.md,
@@ -289,12 +139,12 @@ export default function WelcomeScreen() {
                             }}
                         >
                             <Text style={{ color: '#ffffff', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
-                                {step === 4 ? Translator.get('FINISH') : (step === 1 ? Translator.get('START') : Translator.get('NEXT'))}
+                                {derniere ? Translator.get('FINISH') : (index_ === 0 ? Translator.get('START') : Translator.get('NEXT'))}
                             </Text>
                         </TouchableOpacity>
                     </View>
 
-                    <WelcomePagination pageNumber={step} maxPage={4} themeObj={themeObj} />
+                    <WelcomePagination pageNumber={index_ + 1} maxPage={etapes.length} themeObj={themeObj} />
                 </View>
 
             </KeyboardAvoidingView>

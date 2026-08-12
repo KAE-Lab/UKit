@@ -202,8 +202,12 @@ joue réellement.
 
 | Parcours | Blueprint | Ce qui est resté applicatif |
 |---|---|---|
-| froid — premier login | [`ukit.scolarite.dossier`](../blueprints/ukit-scolarite-dossier.blueprint.json) | le trousseau, le choix froid/chaud, la projection `identité → prénom`, l'affichage |
-| chaud — chaque lancement | [`ukit.scolarite.messagerie`](../blueprints/ukit-scolarite-messagerie.blueprint.json) | la décision « pas de parenthèse = zéro non lu », le verrou biométrique |
+| froid — premier login | [`ukit.portail.bordeaux.dossier`](../blueprints/ukit-portail-bordeaux-dossier.blueprint.json) | le trousseau, le choix froid/chaud, la projection `identité → prénom`, l'affichage |
+| chaud — chaque lancement | [`ukit.portail.bordeaux.messagerie`](../blueprints/ukit-portail-bordeaux-messagerie.blueprint.json) | la décision « pas de parenthèse = zéro non lu », le verrou biométrique |
+
+**Namespacés au jalon [6-G](phase-6/6-g-etablissements.md)** : le nom porte désormais le code de
+l'établissement, parce que rien de ce fichier n'est générique. Les noms à jouer viennent du catalogue,
+et un second établissement apporte les siens — voir la section 8.
 
 Implémentation applicative : [`ScolariteSession.ts`](../src/features/Scolarite/services/ScolariteSession.ts)
 (la séquence), [`CredentialsContext.tsx`](../src/features/Scolarite/services/CredentialsContext.tsx)
@@ -232,8 +236,8 @@ Les deux Blueprints ont la même forme, et chaque step y est une décision qu'on
 ```text
 navigate <service>                        le service redirige vers le CAS
 wait_for #username        20 s            fail:CAS_INDISPONIBLE
-fill     #username / #password            secrets bordeaux_user / bordeaux_pass
-click    input[type=submit]
+fill     #username / #password            secrets portail_user / portail_pass
+click    input[type=submit]                (Bordeaux ; l'INP sert un #submitBtn)
 wait     8 s (dossier) / 15 s (messagerie)   laisser la cascade d'authentification arriver
 wait_for #loginErrorsPanel  detached, 2 s    fail:LOGIN_FAILED
 wait_for <cible>          30 s            fail:LOGIN_FAILED | MESSAGERIE_INDISPONIBLE
@@ -493,6 +497,47 @@ GET https://raw.githubusercontent.com/KAE-Lab/UKit/master/VERSION
 Comparée à la version du manifeste Expo par `UpdateAlert`
 ([`AppUI.tsx`](../src/shared/ui/AppUI.tsx)) pour proposer une mise à jour vers le store. Voir
 [plateforme.md](plateforme.md) — ce mécanisme est actuellement inactif.
+
+## 6 bis. Bordeaux INP — le second portail
+
+Ajouté au jalon [6-G](phase-6/6-g-etablissements.md), **sans release** : une ligne dans
+`etablissements` et un Blueprint publié sous le préfixe réservé.
+
+| Hôte | Rôle |
+|---|---|
+| `cas.bordeaux-inp.fr` | authentification centralisée |
+| `mondossierweb.bordeaux-inp.fr` | dossier administratif — nom, prénom, date de naissance, numéro étudiant |
+| `mondossierweb.bordeaux-inp.fr/coordonnees` | adresse électronique de l'établissement |
+| `sso.bordeaux-inp.fr` | SAML — **c'est lui qui rend le webmail inextractible** |
+| `ade.bordeaux-inp.fr` | emploi du temps, en ADE — **non porté**, voir [6-I](phase-6/6-i-planning-universel.md) |
+
+Un seul Blueprint,
+[`ukit.portail.bordeaux-inp.dossier`](../blueprints/portails/ukit-portail-bordeaux-inp-dossier.blueprint.json),
+et il n'est **pas embarqué** dans le binaire : il arrive par le manifeste.
+
+### Ce qui diverge de Bordeaux, et qui est mesuré
+
+| | Université de Bordeaux | Bordeaux INP |
+|---|---|---|
+| Produit CAS | Apereo, thème classique | Apereo, thème MDC |
+| Soumission | `input[type=submit]` | **`<button id="submitBtn">`** |
+| Panneau d'erreur | `#loginErrorsPanel` | **le même** |
+| Produit du dossier | `mondossierweb` **GWT** (Apogée) | `mondossierweb` **Vaadin** (PC-Scol) |
+| Ancrage des champs | `#gwt-uid-NN`, positionnels | `.text-label:has(.label-titre:text-is("…"))`, **par libellé** |
+| Identité | `PRÉNOM NOM` en un champ | nom et prénom séparés |
+| INE | présent | **absent du dossier** |
+| Messagerie | derrière le CAS | derrière SAML — hors de portée |
+| Durée du parcours froid | ~40 s | ~12 s |
+
+**Fragilité connue** : le numéro étudiant est lu par position dans le bandeau latéral
+(`:nth-match(vaadin-vertical-layout[slot=drawer] label, 2)`), faute d'un libellé pour l'ancrer. Le
+filet est l'`assert` sur les trois libellés de l'état-civil — un décalage du bandeau accompagnerait une
+refonte de la page, donc de ces libellés.
+
+**Piège de sélecteur, mesuré le 2026-08-10** : `:text-is()` correspond au texte **source**
+(`Nom de famille`), alors que l'extraction rend le texte **affiché**, mis en capitales par la feuille
+de style (`NOM DE FAMILLE`). Le même fichier compare donc aux deux formes, et ce n'est pas une
+étourderie.
 
 ## 7. Rendu cartographique
 

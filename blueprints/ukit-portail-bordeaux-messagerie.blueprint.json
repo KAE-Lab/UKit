@@ -1,0 +1,57 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux.messagerie",
+  "description": "Le parcours CHAUD du portail de l'UNIVERSITE DE BORDEAUX : le nombre de messages non lus, seul. Le nom porte le code de l'etablissement depuis le jalon 6-G — et cette messagerie-ci est extractible parce qu'elle passe par le CAS ; toutes ne le sont pas, auquel cas la ligne de catalogue vaut null et l'application n'affiche simplement pas la carte. Joue a chaque lancement (CredentialsContext), et aussi en fin de parcours froid. Ouvrir la messagerie suffit : elle rebondit d'elle-meme sur le CAS avec son parametre service, et la redirection de retour ramene sur la boite. Quatre points de conception y sont deliberes. Le user-agent desktop : avec un UA mobile, ce service rend /modern/, un DOM ou le selecteur n'existe pas. La PAUSE apres le clic : l'authentification unifiee enchaine plusieurs sauts puis le client pose son fragment, et une operation emise pendant cette cascade se perd sur un appareil — on laisse donc la page arriver avant de l'interroger (limite du moteur, docs/embedded.md, sondes du jalon 3-G). La garde #loginErrorsPanel : un mot de passe refuse doit se nommer LOGIN_FAILED et non MESSAGERIE_INDISPONIBLE, sans quoi un changement de mot de passe s'afficherait comme une panne de la messagerie. Ce panneau est ABSENT de la page de connexion propre et PRESENT des que le CAS refuse, mesure le 2026-08-09 ; #msg2 et .errors ne discriminent pas, ils existent deja vides avec une boite de hauteur nulle. La lecture enfin : elle porte son PROPRE timeout_ms, court, parce qu'un wait_for vient de prouver que l'element est la. Le libelle brut de la boite descend en sortie a cote du nombre : c'est lui qui permet de distinguer une boite sans parenthese (zero non lu) d'une lecture qui n'a rien trouve.",
+  "act": "continuum",
+  "secrets": ["portail_user", "portail_pass"],
+  "vars": {
+    "messagerie": "https://webmel.u-bordeaux.fr"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+  },
+  "steps": [
+    { "action": "navigate", "url": "{{ vars.messagerie }}" },
+    {
+      "action": "wait_for",
+      "selector": "#username",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:CAS_INDISPONIBLE"
+    },
+    { "action": "fill", "selector": "#username", "value": "{{ secrets.portail_user }}" },
+    { "action": "fill", "selector": "#password", "value": "{{ secrets.portail_pass }}" },
+    { "action": "click", "selector": "input[type=submit]" },
+    { "action": "wait", "ms": 15000 },
+    {
+      "action": "wait_for",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED"
+    },
+    {
+      "action": "wait_for",
+      "selector": "#zti__main_Mail__2_textCell",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:MESSAGERIE_INDISPONIBLE"
+    },
+    { "action": "emit", "event": "LOGIN_SUCCESS" },
+    {
+      "id": "messagerie",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "boite": { "selector": "#zti__main_Mail__2_textCell", "as": "text" },
+        "non_lus": { "selector": "#zti__main_Mail__2_textCell", "as": "number" }
+      }
+    }
+  ],
+  "outputs": {
+    "boite_de_reception": "{{ steps.messagerie.boite }}",
+    "non_lus": "{{ steps.messagerie.non_lus }}"
+  }
+}

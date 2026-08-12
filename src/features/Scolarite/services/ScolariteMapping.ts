@@ -57,7 +57,7 @@ export function prenomDepuisIdentite(identite: unknown): string {
 }
 
 /**
- * Les donnees froides, depuis les sorties de `ukit.scolarite.dossier`.
+ * Les donnees froides, depuis les sorties de `ukit.portail.bordeaux.dossier`.
  *
  * Aucun repli sur une valeur inventee : un champ absent reste vide, et c'est l'`assert` du Blueprint
  * qui a deja refuse le cas ou les libelles ont bouge. Reconstruire ici ce que la page n'a pas donne
@@ -74,7 +74,7 @@ export function projeterDossier(outputs: Readonly<Record<string, unknown>>): Sco
 }
 
 /**
- * Le compteur de messages non lus, depuis les sorties de `ukit.scolarite.messagerie`.
+ * Le compteur de messages non lus, depuis les sorties de `ukit.portail.bordeaux.messagerie`.
  *
  * `as: "number"` lit le premier nombre du libelle et rend un **entier**, la ou le code d'origine
  * rendait la chaine capturee par une expression reguliere. Une difference en decoule et se decide
@@ -113,6 +113,12 @@ const CLE_PAR_CODE: Readonly<Record<string, TranslationKey>> = {
     CAS_INDISPONIBLE: 'ERROR_CAS_UNAVAILABLE',
     MESSAGERIE_INDISPONIBLE: 'ERROR_MAILBOX_UNAVAILABLE',
 };
+
+// `PORTAIL_ABSENT` n'est volontairement **pas** dans cette table (jalon 6-G) : ce n'est pas un code
+// de portail mais un code de catalogue — aucun run n'est parti, l'etablissement ne publie simplement
+// pas ce service. Il porte donc deja sa cle, posee par `serviceAbsent` (shared/aetherius/failures.ts),
+// et le repli de `cleDeMessage` la rend telle quelle. L'inscrire ici creerait un second endroit ou
+// changer le message.
 
 export function cleDeMessage(failure: UkitFailure): TranslationKey {
     if (failure.code !== undefined && CLE_PAR_CODE[failure.code] !== undefined) {

@@ -125,6 +125,9 @@ de test, et les limites écrites.
                                          ▼
                        6-G Multi-etablissement   (depend d'Aetherius 3-H)
                                          ▼
+                6-I Emploi du temps universel  (spec ouverte, depend d'Aetherius)
+                6-J Le compte d'abord           (spec ouverte, decision produit)
+                                         ▼
                        6-H Retrait du legacy et livraison
 ```
 
@@ -137,6 +140,8 @@ de test, et les limites écrites.
 | 6-E | [6-e-planning.md](6-e-planning.md) | 6-C | Emplois du temps, groupes, salles. Bascule directe sur Celcat, retrait du relais. La source la plus critique de l'application, et la seule qui doit survivre hors ligne. |
 | 6-F | [6-f-scolarite.md](6-f-scolarite.md) | 6-D, 6-E | La WebView cachée devient deux Blueprints. Le morceau qui justifie la phase, et le plus exigeant à vérifier. |
 | 6-G | [6-g-etablissements.md](6-g-etablissements.md) | 6-F, Aetherius 3-H | Le catalogue des établissements pilote l'interface, les Blueprints sont namespacés, un second portail réel est livré. |
+| 6-I | [6-i-planning-universel.md](6-i-planning-universel.md) | 6-G, **Aetherius 3-I** (spécifié) | **Spécification ouverte.** L'emploi du temps par export iCal, pour les universités qui ne sont pas sur un Celcat ouvert — c'est-à-dire presque toutes. Née de 6-G, qui a livré un établissement sans planning. |
+| 6-J | [6-j-compte-et-sources-par-etablissement.md](6-j-compte-et-sources-par-etablissement.md) | 6-G | **Spécification ouverte.** Proposer le compte universitaire dès l'accueil, et accepter que la place du compte dans le parcours **dépende de l'établissement**. Née de la campagne de 6-G sur appareil : l'application n'a qu'une forme, celle de Bordeaux. |
 | 6-H | [6-h-livraison-finale.md](6-h-livraison-finale.md) | 6-G | Les replis sont retirés, les dépendances mortes sortent, la documentation est close, la version part. |
 
 **Ordre recommandé :** séquentiel, sauf 6-D et 6-E qui sont indépendants l'un de l'autre. Deux
@@ -172,7 +177,9 @@ Trois adaptations propres à cette phase :
 
 > **Note de portée.** Rien de ce qui touche au **vocabulaire des Blueprints** n'est de notre
 > ressort : c'est le contrat d'Aetherius, et un manque se traite là-bas, pas par un contournement
-> ici. Un seul écart est prévu et il est écrit : le jalon **3-H** du dépôt voisin, dont dépend 6-G.
-> Si un autre manque apparaît en cours de route, il donne lieu à une spécification chez Aetherius —
-> le jalon 3-G en a trouvé huit en portant nos sources, ce qui est le résultat normal d'un port
-> réel, pas un accident.
+> ici. Un premier écart était prévu et il est écrit : le jalon **3-H** du dépôt voisin, dont dépend
+> 6-G — il est livré. Un **second** est apparu en livrant 6-G, exactement comme la note l'annonçait :
+> l'extraction ne sait pas rendre un corps de réponse en texte brut, ce qui met un export iCal hors
+> de portée d'un Blueprint. Il a sa spécification ici, [6-I](6-i-planning-universel.md), et le manque
+> a la sienne là-bas : `docs/phase-3/3-i-extraction-texte.md`, à livrer **avant** de commencer 6-I. Le jalon 3-G en avait trouvé huit en portant nos sources : c'est le
+> résultat normal d'un port réel, pas un accident.

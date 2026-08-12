@@ -25,7 +25,7 @@
 import 'dotenv/config';
 
 import { config, lirePublic, rest, televerser } from './blueprints/base.mjs';
-import { construireManifeste, lireSocle, memeManifeste, MANIFEST_OBJET } from './blueprints/socle.mjs';
+import { construireManifeste, lireTout, memeManifeste, MANIFEST_OBJET } from './blueprints/socle.mjs';
 
 const TABLE = 'blueprints';
 
@@ -57,8 +57,8 @@ function arguments_() {
  * d'administration puis rejouer le script suffit a ramener une entree au socle embarque. Les
  * arguments `--desactiver` / `--reactiver` font le meme geste depuis un terminal.
  */
-async function accorderDesactivations(base, options, socle) {
-    const noms = new Set(socle.map((entree) => entree.nom));
+async function accorderDesactivations(base, options, publies) {
+    const noms = new Set(publies.map((entree) => entree.nom));
     for (const [drapeau, nom] of [['--desactiver', options.desactiver], ['--reactiver', options.reactiver]]) {
         if (nom !== null && !noms.has(nom)) {
             throw new Error(`${drapeau} ${nom} : ce Blueprint n existe pas dans blueprints/`);
@@ -74,16 +74,19 @@ async function accorderDesactivations(base, options, socle) {
 }
 
 /** Les fichiers a deposer : ceux que le manifeste servi ne decrit pas avec la meme empreinte. */
-function aTeleverser(socle, servi, force) {
-    if (force || servi === null) return socle;
-    return socle.filter((entree) => servi.blueprints?.[entree.nom]?.sha256 !== entree.sha256);
+function aTeleverser(publies, servi, force) {
+    if (force || servi === null) return publies;
+    return publies.filter((entree) => servi.blueprints?.[entree.nom]?.sha256 !== entree.sha256);
 }
 
-function raconter(socle, manifeste, depots) {
-    for (const entree of socle) {
+function raconter(publies, portails, manifeste, depots) {
+    for (const entree of publies) {
         const etat = manifeste.blueprints[entree.nom].disabled ? 'desactive' : 'actif';
         const depot = depots.includes(entree) ? 'a televerser' : 'inchange';
-        console.log(`  ${entree.nom.padEnd(28)} v${entree.version.padEnd(4)} ${etat.padEnd(10)} ${depot}`);
+        // Les portails ne sont pas embarques : le dire ici evite d'aller verifier dans index.ts
+        // pourquoi une entree n'a pas de repli hors ligne.
+        const origine = portails.includes(entree) ? 'hors socle' : 'embarque';
+        console.log(`  ${entree.nom.padEnd(34)} v${entree.version.padEnd(4)} ${origine.padEnd(11)} ${etat.padEnd(10)} ${depot}`);
     }
     if (manifeste.disabled) {
         console.log('\n  ARRET GLOBAL : le manifeste ramene tous les Blueprints au socle embarque.');
@@ -94,18 +97,19 @@ async function main() {
     const options = arguments_();
     const base = config();
 
-    // Les gardes du depot d'abord : validation du moteur, coherence des noms et des versions.
-    const socle = lireSocle();
+    // Les gardes du depot d'abord : validation du moteur, coherence des noms et des versions, et —
+    // pour ce qui n'est pas embarque — l'appartenance au prefixe reserve.
+    const { portails, publies } = lireTout();
 
-    const desactives = await accorderDesactivations(base, options, socle);
-    const manifeste = construireManifeste(socle, { arret: options.arret, desactives });
+    const desactives = await accorderDesactivations(base, options, publies);
+    const manifeste = construireManifeste(publies, { arret: options.arret, desactives });
 
     const texteServi = await lirePublic(base, MANIFEST_OBJET);
     const servi = texteServi === null ? null : JSON.parse(texteServi);
-    const depots = aTeleverser(socle, servi, options.force);
+    const depots = aTeleverser(publies, servi, options.force);
 
-    console.log(`${socle.length} Blueprint(s) valides :\n`);
-    raconter(socle, manifeste, depots);
+    console.log(`${publies.length} Blueprint(s) valides, dont ${portails.length} hors socle :\n`);
+    raconter(publies, portails, manifeste, depots);
 
     if (depots.length === 0 && memeManifeste(servi, manifeste)) {
         // « Rejoue a vide, le script ne change rien » est une propriete, pas une politesse : c'est
@@ -129,7 +133,7 @@ async function main() {
         method: 'POST',
         headers: { Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify(
-            socle.map((entree) => ({
+            publies.map((entree) => ({
                 nom: entree.nom,
                 version: entree.version,
                 chemin: entree.fichier,
@@ -139,7 +143,7 @@ async function main() {
             })),
         ),
     });
-    console.log(`  table   ${socle.length} ligne(s) a jour`);
+    console.log(`  table   ${publies.length} ligne(s) a jour`);
 
     await televerser(base, MANIFEST_OBJET, JSON.stringify(manifeste, null, 2));
     console.log(`  manifeste ecrit en dernier — ${manifeste.generated_at}`);

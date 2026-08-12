@@ -4,6 +4,18 @@
   "description": "Les cours d'une journee, pour un ou plusieurs groupes d'etudiants. federationIds[] est une cle litterale repetable : l'entree 'groupes' est une liste, et l'encodeur du moteur repete la cle — c'est ce qui permet au planning agrege des favoris de tenir en UNE requete plutot qu'en N, et de ne pas multiplier la charge sur un serveur universitaire. La borne 'end' est EXCLUSIVE, d'ou add_days(1) : c'etait un '+1 jour' implicite que rien n'expliquait. Le serveur renvoie des debordements (une journee demandee un dimanche rend les cours du lundi), donc le refiltrage sur la date exacte reste applicatif, tout comme le rejet des evenements 'Vacances' : ils sont ecartes UNE fois, dans le service, et pas deux. Pas d'assert de forme, contrairement aux Blueprints de liste : la reponse EST le tableau, il n'existe aucune cle dont la disparition serait detectable, et expect.status reste le seul garde honnete.",
   "act": "vector",
   "inputs": {
+    "domaine": {
+      "type": "string",
+      "required": true,
+      "default": "https://celcat.u-bordeaux.fr/calendar",
+      "description": "Racine du serveur d'emplois du temps de l'etablissement. Vient du catalogue (colonne celcat_domaine) depuis le jalon 6-G : l'hote n'est pas une propriete de la source, c'est une propriete de l'universite. Le defaut garde le fichier jouable seul."
+    },
+    "res_type": {
+      "type": "string",
+      "required": true,
+      "default": "103",
+      "description": "Code d'inventaire de la ressource interrogee (groupes d etudiants). Conventionnel chez Celcat, pas contractuel : une autre instance peut le numeroter autrement, d'ou le catalogue (colonne celcat_res_types)."
+    },
     "groupes": {
       "type": "array",
       "required": true,
@@ -17,8 +29,6 @@
     }
   },
   "vars": {
-    "domaine": "https://celcat.u-bordeaux.fr/calendar",
-    "res_type": "103",
     "cal_view": "agendaDay",
     "colour_scheme": "3"
   },
@@ -27,7 +37,7 @@
       "id": "jour",
       "action": "http.request",
       "method": "POST",
-      "url": "{{ vars.domaine }}/Home/GetCalendarData",
+      "url": "{{ inputs.domaine }}/Home/GetCalendarData",
       "headers": {
         "Pragma": "no-cache",
         "Cache-Control": "no-cache",
@@ -37,7 +47,7 @@
       "form": {
         "start": "{{ inputs.jour }}",
         "end": "{{ inputs.jour | add_days(1) }}",
-        "resType": "{{ vars.res_type }}",
+        "resType": "{{ inputs.res_type }}",
         "calView": "{{ vars.cal_view }}",
         "federationIds[]": "{{ inputs.groupes }}",
         "colourScheme": "{{ vars.colour_scheme }}"

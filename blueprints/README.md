@@ -6,7 +6,8 @@ relus en revue, versionnés avec le code qui les consomme, importés dans le bin
 
 | Fichier | Rôle |
 |---|---|
-| `*.blueprint.json` | les documents eux-mêmes |
+| `*.blueprint.json` | les documents eux-mêmes, **embarqués** dans le binaire |
+| [`portails/`](portails/) | les portails d'établissements **hors socle** : publiés, jamais embarqués |
 | [`index.ts`](index.ts) | le socle embarqué : les noms, la table `BUNDLED`, le périmètre des secrets |
 | [`versions.json`](versions.json) | la **version** de chaque document, et son `min_engine` s'il en a un |
 
@@ -34,6 +35,8 @@ un manque** — et la correction s'accompagne d'une montée de version.
 | `ukit-scolarite-sso` → `ukit-scolarite-dossier` | **renommé** (`sso` nommait un mécanisme, `dossier` nomme l'appel) ; pause de 8 s après le clic, garde `#loginErrorsPanel`, `assert` étendu aux **cinq** libellés voisins, plafond de connexion 45 s → 30 s | **1** (nom neuf) | [6-F](../docs/phase-6/6-f-scolarite.md) |
 | `ukit-scolarite-messagerie` | garde `#loginErrorsPanel` : un mot de passe refusé doit se nommer `LOGIN_FAILED`, pas `MESSAGERIE_INDISPONIBLE` | 1 → **2** | [6-F](../docs/phase-6/6-f-scolarite.md) |
 | `ukit-scolarite-messagerie` | **aucun changement de contenu** : les versions 3 et 4 ont été brûlées à jouer la sonde de livraison sur le bucket de production — une v3 volontairement cassée, puis la v4 qui la répare, l'appareil n'ayant jamais été réinstallé entre les deux. Le fichier de la v4 est identique à celui de la v2 | 2 → **4** | [6-F](../docs/phase-6/6-f-scolarite.md) |
+| les six `ukit-celcat-*` | l'hôte et le code d'inventaire quittent les `vars` pour devenir des **entrées**, alimentées par la ligne de catalogue de l'établissement. Les valeurs par défaut restent celles de Bordeaux, ce qui garde chaque fichier jouable seul | +1 chacun | [6-G](../docs/phase-6/6-g-etablissements.md) |
+| `ukit-scolarite-*` → `ukit-portail-bordeaux-*` | **renommés** sous le préfixe réservé, et leurs secrets deviennent `portail_user` / `portail_pass` — neutres vis-à-vis de l'établissement, sans quoi chaque nouvelle université aurait exigé une release pour un nom de secret | **1** (noms neufs) | [6-G](../docs/phase-6/6-g-etablissements.md) |
 
 Le second ajout du jalon 6-A mérite d'être connu avant d'écrire le suivant : sans lui, une réponse
 valide dont la clé attendue a disparu rend un **succès à liste vide**, indistinguable d'une liste
@@ -59,8 +62,8 @@ Ils sont un point de départ démontré, pas le jeu final :
 | `ukit-campus-restaurants` | **fait** : découpé en `restaurants` et `restaurant-menu` | [6-D](../docs/phase-6/6-d-campus.md) |
 | `ukit-campus-affluence` | **fait** : remplacé par `bibliotheques`, `bibliotheque-affluence` et `bibliotheque-horaires` ; le fichier d'origine est supprimé | [6-D](../docs/phase-6/6-d-campus.md) |
 | `ukit-celcat-semaine` | **fait** : découpé en `groupes`, `jour`, `semaine`, `annee`, `salles`, `occupation` | [6-E](../docs/phase-6/6-e-planning.md) |
-| `ukit-scolarite-sso` | **fait** : renommé `ukit.scolarite.dossier` et joué par la session (6-F) ; deviendra `ukit.portail.<code>.dossier` | [6-F](../docs/phase-6/6-f-scolarite.md), [6-G](../docs/phase-6/6-g-etablissements.md) |
-| `ukit-scolarite-messagerie` | **fait** : joué par la session (6-F) ; deviendra `ukit.portail.<code>.messagerie` | [6-F](../docs/phase-6/6-f-scolarite.md), [6-G](../docs/phase-6/6-g-etablissements.md) |
+| `ukit-scolarite-sso` | **fait** : renommé `ukit.scolarite.dossier` (6-F) puis `ukit.portail.bordeaux.dossier` (6-G) | [6-F](../docs/phase-6/6-f-scolarite.md), [6-G](../docs/phase-6/6-g-etablissements.md) |
+| `ukit-scolarite-messagerie` | **fait** : renommé `ukit.portail.bordeaux.messagerie` (6-G) | [6-F](../docs/phase-6/6-f-scolarite.md), [6-G](../docs/phase-6/6-g-etablissements.md) |
 
 La règle qui explique ce tableau : **un Blueprint par appel réellement joué par l'application**, pas
 un par source. Les fichiers d'origine regroupent plusieurs requêtes parce qu'ils devaient démontrer
@@ -89,6 +92,11 @@ ukit.portail.bordeaux.dossier
 Le préfixe `ukit.portail.` est **réservé** : c'est le seul sous lequel un manifeste distant peut
 ajouter un Blueprint que l'application n'embarque pas ([6-G](../docs/phase-6/6-g-etablissements.md)).
 Ne pas l'utiliser pour autre chose.
+
+Un portail **hors socle** vit dans [`portails/`](portails/), que [`index.ts`](index.ts) n'importe pas.
+Le script de publication y applique une garde de plus : un fichier de ce dossier dont le nom n'est pas
+couvert par le préfixe **arrête la publication** — publier un fichier que l'appareil ignorera ensuite
+en silence est le genre de panne qu'on cherche une soirée.
 
 Le nom du fichier reprend le nom du Blueprint, points remplacés par des tirets, suivi de
 `.blueprint.json`.

@@ -74,7 +74,7 @@ test('une extraction sans correspondance est un Blueprint a corriger', () => {
 });
 
 test('un secret absent demande a l utilisateur, il ne signale pas une panne', () => {
-    const absent = new TemplateError("Undefined variable in expression: 'secrets.bordeaux_user'");
+    const absent = new TemplateError("Undefined variable in expression: 'secrets.portail_user'");
     const failure = describeUkitFailure(absent);
     expect(failure.kind).toBe('config');
     expect(failure.messageKey).toBe('ERROR_MISSING_CREDENTIALS');

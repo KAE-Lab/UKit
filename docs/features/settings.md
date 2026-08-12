@@ -12,6 +12,7 @@ L'écran est une suite de sections empilées, sous un titre qui s'efface au déf
 
 | Section | Contenu |
 |---|---|
+| **Établissement** | l'université sélectionnée (modale de choix, avec confirmation) |
 | **Affichage** | langue (modale à trois choix), filtres d'UE (modale de gestion) |
 | **Thème** | interrupteur mode sombre |
 | **Notifications** | interrupteur des rappels de cours, curseur de délai |
@@ -23,6 +24,64 @@ Le bouton d'action de la barre d'onglets mène à **À propos**.
 > **Capture attendue** — `reglages.png` : l'écran complet, sections visibles.
 >
 > **Capture attendue** — `reglages-langue.png` : la modale de langue.
+>
+## Changer d'établissement
+
+L'entrée est **en première position**, et pas par courtoisie : c'est le réglage dont tous les autres
+dépendent — les groupes, le planning, la session universitaire, les points de balayage des
+bibliothèques. Le nom affiché à droite vient du **catalogue** et n'est pas traduit ; c'est une donnée,
+comme le nom d'un calendrier système trois sections plus bas
+([6-G](../phase-6/6-g-etablissements.md)).
+
+![La modale d'établissement et sa confirmation : la liste des universités, puis l'écran qui annonce ce que la bascule effacera](../screenshots/reglages-etablissement.png)
+
+La modale a **deux temps** : la liste, puis une confirmation qui annonce ce qui sera effacé. Une
+bascule immédiate au premier toucher rendrait ce coût invisible jusqu'à ce qu'il soit payé. Toucher
+l'établissement **déjà actif** ne déclenche rien — il n'y a rien à purger, et une confirmation pour un
+non-changement apprend à la valider sans la lire.
+
+Ce que `changerEtablissement()` efface
+([`shared/etablissements/purge.ts`](../../src/shared/etablissements/purge.ts)) :
+
+| Effacé | Pourquoi |
+|---|---|
+| `groupList`, `groupListTimestamp`, `groups`, les groupes favoris, les filtres d'UE | ce sont des identifiants Celcat d'une université |
+| les caches de planning (`…@Week…`, `…@AAAA/MM/JJ`) | un planning gardé s'afficherait sous une autre fac sans que rien ne le dise |
+| `buildingList`, `buildingListTimestamp`, la surcouche `batiments@1`, les favoris de salles libres | les bâtiments sont reconstruits depuis les salles de **cette** université |
+| les identifiants et les données froides du trousseau | ils appartiennent au portail quitté |
+
+Ce qui **reste**, et c'est délibéré : les favoris de restaurants et de bibliothèques. Ils pointent
+Croustillant et Affluences, deux sources **nationales** — un étudiant qui passe d'une fac bordelaise à
+l'autre garde la même bibliothèque préférée, et la lui effacer serait une régression déguisée en
+propreté.
+
+La purge court **avant** la sélection, jamais après : jouée après, elle courrait contre les écrans qui
+se rechargent déjà sur le nouvel établissement, et l'un d'eux réécrirait ce qu'on efface.
+
+**La réinitialisation passe par la même porte**, et c'est une correction du jalon 6-G. Elle n'avait
+jamais touché au trousseau ; ce n'était pas faux tant que l'application ne connaissait qu'une
+université, mais elle rouvre le parcours d'accueil — donc le choix de l'établissement — et quelqu'un
+pouvait repartir sur une autre fac **en restant connecté au portail de la précédente**. Deux gestes
+qui effacent la même chose ne doivent pas avoir deux définitions de « la même chose ».
+
+**Le changement se propage aux écrans déjà montés**, et il a fallu le faire explicitement. Le code de
+l'établissement passe par `AppContext` ([`AppCore.tsx`](../../src/shared/services/AppCore.tsx)), à côté
+du thème et des groupes favoris : sans ça, un onglet monté ne rendait pas à nouveau et gardait l'état
+de l'université précédente — la section des salles libres restait masquée après un retour à Bordeaux.
+Le contexte de scolarité, lui, s'abonne directement à l'événement pour **oublier ce qu'il garde en
+mémoire** : il est monté au-dessus de toute la pile, il ne se démonte donc pas à la bascule, et
+l'onglet affichait encore le prénom de l'étudiant de l'autre fac alors que le trousseau était déjà
+vide. Les deux ont été trouvés sur appareil.
+
+**Un établissement retiré du catalogue ne bascule personne.** La politique de lecture le fait
+disparaître de la liste ; l'appareil de quelqu'un qui l'avait choisi continue sur ce qu'il en sait et
+affiche une phrase sous l'entrée. Basculer d'office au milieu d'une année serait pire que prévenir.
+
+« Ce qu'il en sait » est littéral : le rafraîchissement **reporte** l'établissement sélectionné depuis
+le cache précédent quand la base ne le publie plus. Sans ce report, il cessait de résoudre et
+l'application retombait sur l'établissement historique — une bascule silencieuse, mesurée sur
+appareil. Le report ne pouvant rien quand le cache a perdu l'entrée (réinstallation), l'avertissement
+couvre **les deux causes** : reporté, ou irrésoluble. Le repli reste possible ; il n'est plus muet.
 
 ## Les filtres d'UE
 
@@ -170,7 +229,9 @@ les limites.
 - Activer la synchronisation, choisir « UKit » : le calendrier doit être créé et peuplé. Relancer une
   synchronisation : aucun doublon.
 - Changer de calendrier cible : les événements de l'ancien doivent avoir disparu.
-- Réinitialiser l'application : le parcours d'accueil doit réapparaître.
+- Réinitialiser l'application : le parcours d'accueil doit réapparaître, **et l'onglet Scolarité doit
+  redemander les identifiants**. La sonde est celle qui a révélé le défaut, en vérifiant le jalon
+  6-G : on revenait sur l'accueil en restant connecté.
 
 ## Limites connues
 
@@ -188,8 +249,11 @@ les limites.
   salle absente ou fausse dans la notification.
 - **Les titres de notification sont en dur en français** (« Cours dans N min ») —
   voir [i18n.md](../i18n.md).
-- **`resetSettings` ne réinitialise pas tout** (caches de planning, favoris Campus, filtres de liste,
-  session universitaire).
+- **`resetSettings` ne réinitialise toujours pas tout** : les favoris de restaurants et de
+  bibliothèques et leurs filtres de liste survivent. Ils pointent des sources **nationales**, et c'est
+  la même règle qu'au changement d'établissement — mais pour une réinitialisation, l'argument est plus
+  faible : quelqu'un qui efface tout s'attend probablement à ce que tout parte. À trancher un jour, et
+  écrit ici en attendant.
 - **`SettingsScreen` est un composant à classe de 348 lignes** portant seize champs d'état.
 
 ## Carte des fichiers
@@ -198,5 +262,6 @@ les limites.
 |---|---|
 | [`screens/SettingsScreen.tsx`](../../src/features/Settings/screens/SettingsScreen.tsx) | écran d'onglet : état des réglages, gestionnaires, assemblage des sections et des modales |
 | [`screens/AboutScreen.tsx`](../../src/features/Settings/screens/AboutScreen.tsx) | À propos : historique, sources, contact, crédits, mentions légales |
-| [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les cinq sections : affichage, thème, notifications, lancement, calendrier |
+| [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les six sections : établissement, affichage, thème, notifications, lancement, calendrier |
 | [`components/SettingsModals.tsx`](../../src/features/Settings/components/SettingsModals.tsx) | modales : langue, filtres d'UE, réinitialisation, choix du calendrier |
+| [`components/SettingsInstitutionPopup.tsx`](../../src/features/Settings/components/SettingsInstitutionPopup.tsx) | la modale d'établissement : la liste, puis la confirmation de ce qui sera effacé |

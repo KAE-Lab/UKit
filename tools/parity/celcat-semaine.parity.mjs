@@ -15,6 +15,7 @@ import moment from 'moment';
 
 import { agreger, comparerCorps, jouerEnCapturant } from './commun.mjs';
 import {
+    CATALOGUE_BORDEAUX,
     DOMAINE,
     ENTETES_CELCAT,
     corpsCalendrier,
@@ -41,6 +42,7 @@ export async function viaBlueprint() {
     const blocs = [];
     for (const sonde of SONDES) {
         const { outputs, requetes } = await jouerEnCapturant('ukit-celcat-semaine.blueprint.json', {
+            ...CATALOGUE_BORDEAUX.groupes,
             groupes: [GROUPE],
             lundi: sonde.lundi,
         });

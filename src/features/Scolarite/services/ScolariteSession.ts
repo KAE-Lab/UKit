@@ -8,22 +8,29 @@
  *
  * **Deux Blueprints, pas un**, parce que l'application distingue deja deux parcours :
  *
- *   - froid (premier login)   : `ukit.scolarite.dossier`, puis `ukit.scolarite.messagerie` ;
- *   - chaud (lancements suivants) : `ukit.scolarite.messagerie` seul.
+ *   - froid (premier login)   : le dossier, puis la messagerie ;
+ *   - chaud (lancements suivants) : la messagerie seule.
  *
  * Chacun ouvre son service, qui rebondit lui-meme sur l'authentification unifiee. Une panne de l'un
  * n'emporte donc pas l'autre.
  *
- * Voir docs/features/scolarite.md et docs/phase-6/6-f-scolarite.md.
+ * **Les noms viennent du catalogue** depuis le jalon 6-G, plus de constantes : ils sont propres a
+ * l'etablissement (`ukit.portail.bordeaux.dossier`), et un etablissement ajoute a distance apporte
+ * les siens. Un champ a `null` n'est pas une panne mais un **service absent** — une fac dont le
+ * webmail n'est pas extractible est un cas normal, et l'ecran n'affiche alors pas la carte.
+ *
+ * Voir docs/features/scolarite.md, docs/phase-6/6-f-scolarite.md et docs/phase-6/6-g-etablissements.md.
  */
 
+import { getEtablissementActif } from '../../../shared/etablissements';
 import {
-    BLUEPRINT,
+    estNomDePortail,
     reportFailure,
     runBlueprint,
+    serviceAbsent,
     ukitFailure,
-    type BlueprintName,
     type RunBlueprintOptions,
+    type RunnableBlueprintName,
     type UkitFailure,
 } from '../../../shared/aetherius';
 import {
@@ -60,6 +67,43 @@ export interface OptionsSession {
 }
 
 /**
+ * Le nom du Blueprint d'un role, pour l'etablissement selectionne — ou `null` si le service n'existe
+ * pas chez lui.
+ *
+ * Le nom **doit** etre sous le prefixe reserve. La verification est ici plutot qu'a la construction du
+ * registre parce que la ligne vient de la base : un catalogue mal rempli nommerait un Blueprint que
+ * le registre refuserait d'ajouter, et l'echec arriverait au milieu d'un parcours d'authentification,
+ * la ou il serait illisible. Le refuser tot le rend explicable.
+ */
+function nomDuPortail(role: 'dossier' | 'messagerie'): RunnableBlueprintName | null {
+    const etablissement = getEtablissementActif();
+    const nom = role === 'dossier' ? etablissement.portailDossier : etablissement.portailMessagerie;
+
+    if (nom === null) return null;
+    if (!estNomDePortail(nom)) {
+        console.warn(`[scolarite] ${etablissement.code} : '${nom}' n est pas sous le prefixe reserve, ignore`);
+        return null;
+    }
+    return nom;
+}
+
+/** Ce role est-il servi par l'etablissement selectionne ? Ce que les ecrans lisent pour se taire. */
+export function portailDisponible(role: 'dossier' | 'messagerie'): boolean {
+    return nomDuPortail(role) !== null;
+}
+
+/**
+ * L'echec d'un service que l'etablissement ne publie pas.
+ *
+ * `config` et non `unavailable` : rien n'est en panne, et proposer de reessayer serait faux. Le code
+ * nomme le cas pour que l'ecran dise « cet etablissement n'est pas relie » plutot que « le portail ne
+ * repond pas » — deux phrases qui appellent deux gestes opposes de la part de l'etudiant.
+ */
+function portailAbsent(role: string): UkitFailure {
+    return serviceAbsent('ERROR_PORTAL_UNAVAILABLE', 'PORTAIL_ABSENT', `l etablissement ne publie pas de ${role}`);
+}
+
+/**
  * Le Blueprint navigateur en cours, ou `null`.
  *
  * Il y a **une** WebView montee, donc **un** run Act II a la fois : le moteur refuse le second par
@@ -71,7 +115,7 @@ export interface OptionsSession {
  * Deuxieme ceinture volontaire : l'appelant en a une aussi (CredentialsContext ne lance jamais deux
  * sessions). Celle-ci attrape ce que l'autre laisserait passer.
  */
-let enCours: BlueprintName | null = null;
+let enCours: RunnableBlueprintName | null = null;
 
 /** Le flux d'evenements du run, traduit en etapes d'ecran. */
 function suivreProgression(
@@ -98,7 +142,7 @@ function suivreProgression(
 }
 
 async function jouer(
-    nom: BlueprintName,
+    nom: RunnableBlueprintName,
     depart: EtapeSession,
     options: OptionsSession,
 ): Promise<{ ok: true; outputs: Readonly<Record<string, unknown>> } | { ok: false; failure: UkitFailure }> {
@@ -137,14 +181,20 @@ async function jouer(
  * desormais.
  */
 export async function jouerDossier(options: OptionsSession = {}): Promise<DossierResultat> {
-    const run = await jouer(BLUEPRINT.SCOLARITE_DOSSIER, 'connecting', options);
+    const nom = nomDuPortail('dossier');
+    if (nom === null) return { ok: false, failure: portailAbsent('dossier administratif') };
+
+    const run = await jouer(nom, 'connecting', options);
     if (run.ok === false) return { ok: false, failure: run.failure };
     return { ok: true, cold: projeterDossier(run.outputs) };
 }
 
 /** Le parcours chaud : le compteur de messages non lus, seul. */
 export async function jouerMessagerie(options: OptionsSession = {}): Promise<MessagerieResultat> {
-    const run = await jouer(BLUEPRINT.SCOLARITE_MESSAGERIE, 'mailbox', options);
+    const nom = nomDuPortail('messagerie');
+    if (nom === null) return { ok: false, failure: portailAbsent('messagerie') };
+
+    const run = await jouer(nom, 'mailbox', options);
     if (run.ok === false) return { ok: false, failure: run.failure };
     return { ok: true, mail: projeterMessagerie(run.outputs) };
 }
@@ -167,24 +217,41 @@ export interface ResultatSession {
  * Un echec de la messagerie **n'annule pas** le dossier deja lu : les deux champs reviennent
  * ensemble, et l'appelant ecrit ce qu'il a. C'est le pendant de « deux Blueprints, pas un » — une
  * panne de l'un n'emporte pas l'autre, y compris quand ils sont joues a la suite.
+ *
+ * Un service que l'etablissement ne publie pas est **saute**, pas echoue : une fac sans messagerie
+ * extractible doit donner une session complete et un tableau de bord sans ligne de messagerie, pas
+ * une erreur a chaque lancement. Le seul cas qui echoue est celui ou l'etablissement ne publie
+ * **rien** — il n'y a alors pas de session a derouler, et le dire est le bon comportement.
  */
 export async function deroulerSession(
     mode: 'cold' | 'hot',
     options: OptionsSession = {},
 ): Promise<ResultatSession> {
+    const dossierPublie = portailDisponible('dossier');
+    const messageriePubliee = portailDisponible('messagerie');
+
+    if (!dossierPublie && !messageriePubliee) {
+        return { failure: portailAbsent('portail') };
+    }
+
     let cold: ScolariteColdData | undefined;
 
-    if (mode === 'cold') {
+    if (mode === 'cold' && dossierPublie) {
         const dossier = await jouerDossier(options);
         if (dossier.ok === false) return { failure: dossier.failure };
         cold = dossier.cold;
     }
 
+    if (!messageriePubliee) {
+        return cold !== undefined ? { cold } : {};
+    }
+
     // En froid, le login a deja abouti au run precedent : le re-signaler ferait reecrire les
-    // identifiants et ramenerait l'ecran de progression a l'etape « profil ». En chaud, ce run
-    // **est** l'authentification, et l'evenement compte.
+    // identifiants et ramenerait l'ecran de progression a l'etape « profil ». En chaud — ou quand
+    // l'etablissement n'a pas de dossier a lire —, ce run **est** l'authentification, et l'evenement
+    // compte : sans lui, les identifiants ne seraient jamais ecrits.
     const messagerie = await jouerMessagerie(
-        mode === 'cold' ? { ...options, onLoginSuccess: undefined } : options,
+        mode === 'cold' && cold !== undefined ? { ...options, onLoginSuccess: undefined } : options,
     );
     if (messagerie.ok === false) {
         return { ...(cold !== undefined ? { cold } : {}), failure: messagerie.failure };

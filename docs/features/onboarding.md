@@ -1,10 +1,15 @@
 # Onboarding — premier lancement
 
-Le parcours d'accueil, joué une seule fois : il choisit le thème, la langue et le premier groupe
-favori, pour que l'application soit immédiatement utile à la première ouverture du planning.
+Le parcours d'accueil, joué une seule fois : il choisit l'**établissement**, le thème, la langue et le
+premier groupe favori, pour que l'application soit immédiatement utile à la première ouverture du
+planning.
 
-Implémentation : un fichier unique,
-[`WelcomeScreen.tsx`](../../src/features/Onboarding/WelcomeScreen.tsx).
+Implémentation en trois fichiers depuis le jalon [6-G](../phase-6/6-g-etablissements.md) :
+[`WelcomeScreen.tsx`](../../src/features/Onboarding/WelcomeScreen.tsx) compose et enchaîne,
+[`hooks/useWelcomeState.ts`](../../src/features/Onboarding/hooks/useWelcomeState.ts) porte l'état et
+les cinq gestes, [`components/WelcomeSteps.tsx`](../../src/features/Onboarding/components/WelcomeSteps.tsx)
+ne fait que rendre. L'étape d'établissement aurait porté le fichier unique au-delà de la limite de
+lignes, et un écran qui compose n'a pas à porter le détail de cinq mises en page.
 
 ## Déclenchement
 
@@ -16,14 +21,31 @@ gère ses propres étapes par un simple compteur d'état.
 Le drapeau `firstload` est persisté sous sa propre clé AsyncStorage, distincte de `settings`. Il est
 remis à vrai par la réinitialisation depuis [Réglages](settings.md).
 
-## Les quatre étapes
+## Les cinq étapes — quatre pour certains établissements
 
 | Étape | Contenu | Effet |
 |---|---|---|
 | 1 | Logo, souhait de bienvenue | — |
 | 2 | Choix du thème (clair / sombre) et de la langue (fr / en / es) | `SettingsManager.setTheme` / `setLanguage`, appliqués **en direct** |
-| 3 | Année, semestre, recherche et sélection de groupes | `SettingsManager.addFavoriteGroup` / `removeFavoriteGroup` |
-| 4 | Confirmation | `setFirstLoad(false)` sur « Terminer » |
+| 3 | **Choix de l'établissement**, lu dans le catalogue | `changerEtablissement(code)` puis `SettingsManager.setEtablissement` |
+| 4 | Année, semestre, recherche et sélection de groupes | `SettingsManager.addFavoriteGroup` / `removeFavoriteGroup` |
+| 5 | Confirmation | `setFirstLoad(false)` sur « Terminer » |
+
+**L'établissement vient juste avant les groupes**, et l'ordre a été corrigé après coup : la
+spécification du jalon [6-G](../phase-6/6-g-etablissements.md) le plaçait en première position, au
+motif qu'il conditionne tout le reste. C'est vrai — mais ce « tout le reste » se réduit à l'étape des
+groupes, alors que demander à quelqu'un de choisir son université **dans une langue qu'il n'a pas
+encore choisie** met la charge au mauvais endroit. Mesuré en jouant le parcours, pas déduit.
+
+**L'étape des groupes disparaît** quand l'établissement choisi ne publie pas son emploi du temps
+(`celcat_domaine` à `null`) : lui demander lequel est le sien serait poser une question sans réponse.
+La pagination suit — quatre points au lieu de cinq — et le recalcul se fait à chaque rendu, pour
+qu'un changement d'établissement à l'étape 2 ajoute ou retire l'étape **tout de suite**.
+
+La liste des établissements se rafraîchit **après** l'affichage : sa lecture est hors du chemin de
+démarrage. L'écran s'y abonne, comme il le fait depuis toujours pour la liste des groupes, plutôt que
+de figer une liste au montage — sans quoi un premier lancement afficherait le socle embarqué seul et
+n'apprendrait jamais le second établissement.
 
 Un bouton retour apparaît à partir de l'étape 2 ; une pagination en bas indique la progression.
 
@@ -31,7 +53,9 @@ Un bouton retour apparaît à partir de l'étape 2 ; une pagination en bas indiq
 >
 > **Capture attendue** — `onboarding-preferences.png` : l'étape 2, sélection du thème et de la langue.
 >
-> **Capture attendue** — `onboarding-fin.png` : l'étape 4, confirmation avant l'entrée dans l'application.
+> **Capture attendue** — `onboarding-fin.png` : l'étape 5, confirmation avant l'entrée dans l'application.
+
+![L'étape du choix de l'université : l'établissement historique sélectionné par défaut, et le second arrivé par publication. Cinq points de pagination — l'étape des groupes est encore là, l'établissement sélectionné en publiant un](../screenshots/onboarding-etablissement.png)
 
 Chaque choix est appliqué **immédiatement**, pas à la fin : sélectionner le mode sombre à l'étape 2
 repeint l'écran en cours. L'utilisateur voit ce qu'il choisit. Il n'y a donc pas d'état à valider —
@@ -74,7 +98,7 @@ texte saisi. Le choix `AUTRE` porte le fragment vide, donc ne filtre que sur le 
 L'affichage est plafonné à **10 résultats** ; au-delà, un message indique combien sont masqués et
 invite à préciser la recherche.
 
-> **Capture attendue** — `onboarding-groupes.png` : l'étape 3, avec une année et un semestre
+> **Capture attendue** — `onboarding-groupes.png` : l'étape 4, avec une année et un semestre
 > sélectionnés et une liste de groupes filtrée.
 
 ## Décisions de conception
@@ -127,4 +151,6 @@ l'application**, ou réinstaller l'application.
 
 | Fichier | Rôle |
 |---|---|
-| [`WelcomeScreen.tsx`](../../src/features/Onboarding/WelcomeScreen.tsx) | parcours complet : les quatre étapes, valeurs par défaut système, filtrage des groupes, bascule de `firstload` |
+| [`WelcomeScreen.tsx`](../../src/features/Onboarding/WelcomeScreen.tsx) | l'enchaînement des étapes, leur nombre selon l'établissement, la bascule de `firstload` |
+| [`hooks/useWelcomeState.ts`](../../src/features/Onboarding/hooks/useWelcomeState.ts) | l'état, les abonnements, les valeurs par défaut système, le filtrage des groupes et les cinq gestes |
+| [`components/WelcomeSteps.tsx`](../../src/features/Onboarding/components/WelcomeSteps.tsx) | les cinq mises en page, la pagination, le bouton retour et le pied de la liste de groupes |

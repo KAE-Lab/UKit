@@ -41,13 +41,14 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | Module | Ce qui est couvert |
 |---|---|
 | [`shared/aetherius/secrets.ts`](../src/shared/aetherius/secrets.ts) | la projection du trousseau vers les noms de secrets |
-| [`shared/aetherius/delivery.ts`](../src/shared/aetherius/delivery.ts) | la résolution socle/surcouche, « ne touche jamais au réseau », les neuf gardes et les trois interrupteurs d'arrêt |
+| [`shared/aetherius/delivery.ts`](../src/shared/aetherius/delivery.ts) | la résolution socle/surcouche, « ne touche jamais au réseau », les neuf gardes, les trois interrupteurs d'arrêt et — depuis [6-G](phase-6/6-g-etablissements.md) — **la porte d'ajout** : préfixe réservé, périmètre de secrets, purge quand on retire la capacité |
 | [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | la table du modèle d'erreur du moteur |
 | [`shared/supabase/failures.ts`](../src/shared/supabase/failures.ts) | la table d'erreurs de la base — dont « une clé fausse n'est pas `config` » |
 | [`features/Campus/services/BdeMapping.ts`](../src/features/Campus/services/BdeMapping.ts) | la projection des annonces et leur péremption |
 | [`features/Campus/services/CrousMapping.ts`](../src/features/Campus/services/CrousMapping.ts) | la date du fournisseur, les horaires servis en chaîne JSON, le regroupement midi/soir |
 | [`features/Campus/services/LibraryMapping.ts`](../src/features/Campus/services/LibraryMapping.ts) | l'arité d'une extraction, le choix du visuel, un site fermé sans taux |
 | [`shared/locations/referentiel.ts`](../src/shared/locations/referentiel.ts) | la fusion champ par champ du socle et de la surcouche |
+| [`shared/etablissements/catalogue.ts`](../src/shared/etablissements/catalogue.ts) | une ligne qui **remplace** au lieu de fusionner, le socle qui ne disparaît jamais, l'ordre stable, le repli d'un code inconnu |
 | [`features/Planning/services/PlanningApiMapping.ts`](../src/features/Planning/services/PlanningApiMapping.ts) | l'arité de `modules`, le séparateur qui change avec la vue, une fin d'événement nulle, le tri double |
 | [`features/Campus/services/CampusApiMapping.ts`](../src/features/Campus/services/CampusApiMapping.ts) | la correspondance textuelle salle vers bâtiment, la détection des vacances, le refiltrage sur la date |
 | [`features/Scolarite/services/ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) | la casse de l'identité criée par la source, le compteur `null` contre `0`, la table des échecs nommés |

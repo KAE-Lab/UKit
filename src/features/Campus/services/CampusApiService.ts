@@ -2,9 +2,13 @@
  * Les salles de l'universite et leur occupation, jouees par le moteur embarque.
  *
  * Ce service n'emet plus aucune requete : il joue deux Blueprints — la liste des salles, et
- * l'occupation d'une journee — et travaille la donnee recue. Comme cote Planning, les deux visent
- * `celcat.u-bordeaux.fr` **directement** ; le relais n'existait que pour contourner une contrainte de
- * navigateur.
+ * l'occupation d'une journee — et travaille la donnee recue. Comme cote Planning, les deux visent le
+ * serveur de l'universite **directement** ; le relais n'existait que pour contourner une contrainte
+ * de navigateur.
+ *
+ * L'hote et le code d'inventaire viennent du catalogue depuis le jalon 6-G. Un etablissement qui ne
+ * publie pas d'emploi du temps n'a pas non plus de salles a exposer : les salles libres se
+ * reconstruisent depuis le meme serveur, et l'absence se propage donc naturellement.
  *
  * Les evenements de vacances ne sont **pas** filtres par le Blueprint, contrairement au planning :
  * ce sont eux qui declarent un batiment ferme. Le refiltrage sur la date exacte, lui, reste ici — le
@@ -14,6 +18,7 @@
  */
 
 import { BLUEPRINT, reportFailure, runBlueprint, type UkitFailure } from '../../../shared/aetherius';
+import { entreesCelcat, planningAbsent } from '../../../shared/etablissements';
 import {
     extractBuildingsFromRooms,
     occupationDuJour,
@@ -47,7 +52,10 @@ function commeListe(valeur: unknown): unknown[] {
 class CampusApiServiceClass {
     /** La liste complete des salles, telle que Celcat la publie. */
     fetchRoomList = async (): Promise<RoomListResult> => {
-        const run = await runBlueprint(BLUEPRINT.CELCAT_SALLES);
+        const celcat = entreesCelcat('salles');
+        if (celcat === null) return { ok: false, failure: planningAbsent() };
+
+        const run = await runBlueprint(BLUEPRINT.CELCAT_SALLES, { inputs: { ...celcat } });
         if (run.ok === false) {
             reportFailure(BLUEPRINT.CELCAT_SALLES, run.failure);
             return { ok: false, failure: run.failure };
@@ -68,8 +76,11 @@ class CampusApiServiceClass {
      * isole ne pas vider tout le batiment.
      */
     fetchRoomsScheduleDay = async (roomIds: string[], date: string): Promise<RoomsScheduleResult> => {
+        const celcat = entreesCelcat('salles');
+        if (celcat === null) return { ok: false, failure: planningAbsent() };
+
         const run = await runBlueprint(BLUEPRINT.CELCAT_OCCUPATION, {
-            inputs: { salles: roomIds, jour: date },
+            inputs: { ...celcat, salles: roomIds, jour: date },
         });
         if (run.ok === false) {
             reportFailure(BLUEPRINT.CELCAT_OCCUPATION, run.failure);

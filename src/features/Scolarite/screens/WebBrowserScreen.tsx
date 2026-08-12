@@ -9,17 +9,30 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { URL } from '../../../shared/constants/urls';
+import { serviceEtablissement } from '../../../shared/etablissements';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
 
-const entrypoints = {
-    ent: 'https://ent.u-bordeaux.fr',
-    email: 'https://webmel.u-bordeaux.fr',
-    cas: 'https://cas.u-bordeaux.fr',
-    apogee: 'https://apogee.u-bordeaux.fr',
-};
-
 import { FloatingActionBar, SaveCredentialsModal, getCASInjectedScript } from '../components/WebBrowserComponents';
+
+/**
+ * L'adresse d'un point d'entree, telle que **l'etablissement selectionne** la declare.
+ *
+ * Les quatre adresses etaient en dur ici jusqu'au jalon 6-G, et c'etait le dernier hote bordelais
+ * compile dans un ecran : un etudiant d'une autre fac s'y serait retrouve sur le portail de Bordeaux.
+ * Elles vivent desormais dans le catalogue, corrigeables sans release comme le reste.
+ *
+ * Un point d'entree que l'etablissement ne declare pas retombe sur le site de UKit — le repli qui
+ * existait deja pour un parametre absent. C'est benin et explicable, et les appelants ne mènent de
+ * toute facon ici que lorsque le service existe (ScolariteDashboard).
+ */
+function adresseDuService(entrypoint?: string, href?: string): string {
+    if (entrypoint) {
+        const adresse = serviceEtablissement(entrypoint);
+        if (adresse !== null) return adresse;
+    }
+    return href ?? URL.UKIT_WEBSITE;
+}
 
 export interface WebBrowserScreenProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void };
@@ -28,12 +41,7 @@ export interface WebBrowserScreenProps {
 }
 
 const useWebBrowser = (route, onDismiss, navigation) => {
-    let initialUri = URL.UKIT_WEBSITE;
-    if (route.params) {
-        const { entrypoint, href } = route.params;
-        if (entrypoint && entrypoints[entrypoint]) initialUri = entrypoints[entrypoint];
-        else if (href) initialUri = href;
-    }
+    const initialUri = adresseDuService(route.params?.entrypoint, route.params?.href);
 
     const [uri, setUri] = useState(initialUri);
     const [url, setUrl] = useState(initialUri);
@@ -52,12 +60,7 @@ const useWebBrowser = (route, onDismiss, navigation) => {
     }, []);
 
     useEffect(() => {
-        let newUri = URL.UKIT_WEBSITE;
-        if (route.params) {
-            const { entrypoint, href } = route.params;
-            if (entrypoint && entrypoints[entrypoint]) newUri = entrypoints[entrypoint];
-            else if (href) newUri = href;
-        }
+        const newUri = adresseDuService(route.params?.entrypoint, route.params?.href);
         if (newUri !== uri) {
             setUri(newUri);
             setUrl(newUri);

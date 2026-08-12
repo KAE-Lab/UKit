@@ -8,10 +8,11 @@
  */
 
 export { getAetheriusClient } from './client';
-export { describeUkitFailure, reportFailure, ukitFailure, FAILURE_PRESENTATION } from './failures';
+export { describeUkitFailure, reportFailure, serviceAbsent, ukitFailure, FAILURE_PRESENTATION } from './failures';
 export type { FailurePresentation, UkitFailure, UkitFailureKind } from './failures';
 export {
     describeDelivery,
+    estNomDePortail,
     lastRefreshReport,
     listBlueprints,
     refreshBlueprints,
@@ -24,10 +25,11 @@ export type {
     BlueprintStatus,
     RefreshReport,
     ResolvedBlueprint,
+    RunnableBlueprintName,
 } from './registry';
 export { runBlueprint } from './runBlueprint';
 export type { BlueprintRun, RunBlueprintOptions, RunInputs } from './runBlueprint';
 export { ukitSecrets } from './secrets';
 export type { CredentialStore, SecretResolver } from './secrets';
-export { BLUEPRINT } from '../../../blueprints';
-export type { BlueprintName } from '../../../blueprints';
+export { BLUEPRINT, REMOTE_NAME_PREFIX } from '../../../blueprints';
+export type { BlueprintName, PortailBlueprintName } from '../../../blueprints';

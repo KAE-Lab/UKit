@@ -4,6 +4,18 @@
   "description": "L'occupation de salles sur une journee, pour la recherche de salles libres. res_type 102 = salles. La borne 'end' est EXCLUSIVE, d'ou add_days(1), et le serveur deborde : le refiltrage sur la date exacte reste applicatif. Les evenements 'Vacances' ne sont PAS filtres ici, et c'est volontaire : ce sont eux qui declarent un batiment ferme. Ils portent 'end' a null, valeur transmise telle quelle — le service la traite comme avant. L'entree accepte une liste, mais l'application interroge une salle par run : la reponse ne porte pas l'identifiant de la ressource interrogee, donc un run groupe ne permettrait pas de reattribuer les evenements a leur salle, et un echec isole viderait tout le batiment.",
   "act": "vector",
   "inputs": {
+    "domaine": {
+      "type": "string",
+      "required": true,
+      "default": "https://celcat.u-bordeaux.fr/calendar",
+      "description": "Racine du serveur d'emplois du temps de l'etablissement. Vient du catalogue (colonne celcat_domaine) depuis le jalon 6-G : l'hote n'est pas une propriete de la source, c'est une propriete de l'universite. Le defaut garde le fichier jouable seul."
+    },
+    "res_type": {
+      "type": "string",
+      "required": true,
+      "default": "102",
+      "description": "Code d'inventaire de la ressource interrogee (salles). Conventionnel chez Celcat, pas contractuel : une autre instance peut le numeroter autrement, d'ou le catalogue (colonne celcat_res_types)."
+    },
     "salles": {
       "type": "array",
       "required": true,
@@ -17,8 +29,6 @@
     }
   },
   "vars": {
-    "domaine": "https://celcat.u-bordeaux.fr/calendar",
-    "res_type": "102",
     "cal_view": "agendaDay",
     "colour_scheme": "3"
   },
@@ -27,7 +37,7 @@
       "id": "occupation",
       "action": "http.request",
       "method": "POST",
-      "url": "{{ vars.domaine }}/Home/GetCalendarData",
+      "url": "{{ inputs.domaine }}/Home/GetCalendarData",
       "headers": {
         "Pragma": "no-cache",
         "Cache-Control": "no-cache",
@@ -37,7 +47,7 @@
       "form": {
         "start": "{{ inputs.jour }}",
         "end": "{{ inputs.jour | add_days(1) }}",
-        "resType": "{{ vars.res_type }}",
+        "resType": "{{ inputs.res_type }}",
         "calView": "{{ vars.cal_view }}",
         "federationIds[]": "{{ inputs.salles }}",
         "colourScheme": "{{ vars.colour_scheme }}"

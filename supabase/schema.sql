@@ -70,8 +70,14 @@ create table if not exists public.batiments (
 );
 
 -- Catalogue des universites et de leurs portails.
--- Un champ de portail a null est un cas normal : une fac sans messagerie extractible existe, et
--- l'ecran n'affiche alors pas la carte.
+-- Un champ nul est un cas **normal**, pas un trou a combler : une fac sans messagerie extractible
+-- existe (Bordeaux INP, dont le webmail passe par SAML et non par le CAS), une fac sans serveur
+-- d'emploi du temps interrogeable aussi. Prevoir l'absence des le premier jour coute moins cher que
+-- de la decouvrir au second etablissement.
+--
+-- Ce qui varie d'un etablissement a l'autre vit **ici ou dans un Blueprint**, jamais dans une
+-- condition applicative : `if (etablissement === 'bordeaux')` est le defaut que ce jalon existe pour
+-- ne pas ecrire. Voir docs/phase-6/6-g-etablissements.md.
 create table if not exists public.etablissements (
     code               text primary key,
     nom                text        not null,
@@ -82,13 +88,32 @@ create table if not exists public.etablissements (
     -- prefixe qu'un manifeste distant a le droit d'etendre (voir docs/phase-6/6-g-etablissements.md).
     portail_dossier    text,
     portail_messagerie text,
-    -- Ce qui fait varier les Blueprints d'emploi du temps d'un etablissement a l'autre.
+    -- Ce qui fait varier les Blueprints d'emploi du temps d'un etablissement a l'autre. `null` veut
+    -- dire « cet etablissement ne publie pas son emploi du temps ici », ce que l'ecran **dit** au
+    -- lieu d'echouer. `celcat_res_types` projette les roles sur les codes de la source
+    -- ({"groupes": "103", "salles": "102"}) : ils sont conventionnels, pas garantis.
     celcat_domaine     text,
+    celcat_res_types   jsonb,
+    -- Les points de balayage des bibliotheques : [{"lat": …, "lng": …}, …]. Ce sont des decisions
+    -- produit — quelles villes on couvre — et non une propriete de la source, donc de la donnee de
+    -- catalogue. Ils etaient une liste en dur jusqu'au jalon 6-G, c'est-a-dire exactement le genre de
+    -- constante qui devient fausse au second etablissement.
+    bibliotheques_points jsonb,
+    -- Les adresses des services ouverts dans le navigateur integre ({"ent": …, "email": …, "cas": …,
+    -- "apogee": …}). Ce ne sont pas des sources — l'utilisateur pilote ces pages — mais elles sont
+    -- propres a l'etablissement, et les laisser en dur enverrait un etudiant d'une fac chez une autre.
+    services           jsonb,
     -- Les intitules propres a l'etablissement (« numero etudiant », « INE », …). Les libelles
     -- d'ecran, eux, restent traduits par Translator : confondre les deux ramenerait des chaines en dur.
     libelles           jsonb,
     ordre              integer     not null default 0
 );
+
+-- Les trois colonnes du jalon 6-G, pour une base deja creee au 6-B. « Ajouter avant de retirer,
+-- toujours » : le parc installe ne se vide pas d'un coup (supabase/README.md).
+alter table public.etablissements add column if not exists celcat_res_types     jsonb;
+alter table public.etablissements add column if not exists bibliotheques_points jsonb;
+alter table public.etablissements add column if not exists services             jsonb;
 
 -- =============================================================================
 -- Livraison

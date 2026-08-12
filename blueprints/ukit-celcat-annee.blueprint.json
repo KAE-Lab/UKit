@@ -4,6 +4,18 @@
   "description": "La plage annuelle utilisee par la synchronisation du calendrier systeme. Les deux bornes arrivent en entree parce que leur calcul depend de l'heure courante : l'annee scolaire bascule au 1er aout, et savoir de quel cote de cette date on se trouve n'est pas exprimable dans un fichier rejouable. Le run part d'une tache de fond, sans ecran : aucun 'confirm' ne doit jamais entrer ici, personne ne l'ecouterait. timeout_ms est releve a 60 s parce que la reponse pese environ 200 Ko pour une annee, et qu'un delai depasse dans une tache qui tourne toutes les 12 h coute un cycle entier.",
   "act": "vector",
   "inputs": {
+    "domaine": {
+      "type": "string",
+      "required": true,
+      "default": "https://celcat.u-bordeaux.fr/calendar",
+      "description": "Racine du serveur d'emplois du temps de l'etablissement. Vient du catalogue (colonne celcat_domaine) depuis le jalon 6-G : l'hote n'est pas une propriete de la source, c'est une propriete de l'universite. Le defaut garde le fichier jouable seul."
+    },
+    "res_type": {
+      "type": "string",
+      "required": true,
+      "default": "103",
+      "description": "Code d'inventaire de la ressource interrogee (groupes d etudiants). Conventionnel chez Celcat, pas contractuel : une autre instance peut le numeroter autrement, d'ou le catalogue (colonne celcat_res_types)."
+    },
     "groupes": {
       "type": "array",
       "required": true,
@@ -23,8 +35,6 @@
     }
   },
   "vars": {
-    "domaine": "https://celcat.u-bordeaux.fr/calendar",
-    "res_type": "103",
     "cal_view": "agendaWeek",
     "colour_scheme": "3"
   },
@@ -36,7 +46,7 @@
       "id": "annee",
       "action": "http.request",
       "method": "POST",
-      "url": "{{ vars.domaine }}/Home/GetCalendarData",
+      "url": "{{ inputs.domaine }}/Home/GetCalendarData",
       "headers": {
         "Pragma": "no-cache",
         "Cache-Control": "no-cache",
@@ -46,7 +56,7 @@
       "form": {
         "start": "{{ inputs.debut }}",
         "end": "{{ inputs.fin }}",
-        "resType": "{{ vars.res_type }}",
+        "resType": "{{ inputs.res_type }}",
         "calView": "{{ vars.cal_view }}",
         "federationIds[]": "{{ inputs.groupes }}",
         "colourScheme": "{{ vars.colour_scheme }}"

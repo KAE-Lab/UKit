@@ -26,8 +26,8 @@ import celcatJour from './ukit-celcat-jour.blueprint.json';
 import celcatOccupation from './ukit-celcat-occupation.blueprint.json';
 import celcatSalles from './ukit-celcat-salles.blueprint.json';
 import celcatSemaine from './ukit-celcat-semaine.blueprint.json';
-import scolariteDossier from './ukit-scolarite-dossier.blueprint.json';
-import scolariteMessagerie from './ukit-scolarite-messagerie.blueprint.json';
+import portailBordeauxDossier from './ukit-portail-bordeaux-dossier.blueprint.json';
+import portailBordeauxMessagerie from './ukit-portail-bordeaux-messagerie.blueprint.json';
 import versions from './versions.json';
 
 /**
@@ -53,8 +53,8 @@ export const BLUEPRINT = {
     CELCAT_SEMAINE: 'ukit.celcat.semaine',
     CELCAT_ANNEE: 'ukit.celcat.annee',
     CELCAT_OCCUPATION: 'ukit.celcat.occupation',
-    SCOLARITE_DOSSIER: 'ukit.scolarite.dossier',
-    SCOLARITE_MESSAGERIE: 'ukit.scolarite.messagerie',
+    PORTAIL_BORDEAUX_DOSSIER: 'ukit.portail.bordeaux.dossier',
+    PORTAIL_BORDEAUX_MESSAGERIE: 'ukit.portail.bordeaux.messagerie',
 } as const;
 
 export type BlueprintName = (typeof BLUEPRINT)[keyof typeof BLUEPRINT];
@@ -71,7 +71,10 @@ export type BlueprintName = (typeof BLUEPRINT)[keyof typeof BLUEPRINT];
  * desormais reduit a son seul appel, et cinq freres portent les cinq autres. Le jalon 6-F a renomme
  * `ukit.scolarite.sso` en `ukit.scolarite.dossier` — `sso` nommait un mecanisme, `dossier` nomme
  * l'appel — et les deux fichiers de scolarite ont gagne la garde qui distingue un mot de passe
- * refuse d'une page qui n'arrive pas.
+ * refuse d'une page qui n'arrive pas. Le jalon 6-G les a renommes une derniere fois,
+ * `ukit.portail.bordeaux.*` : le prefixe n'est pas cosmetique, c'est **lui** que le registre autorise
+ * a s'etendre, et c'est donc lui qui definit ce qu'un manifeste peut ajouter. Un second etablissement
+ * arrive sous le meme prefixe, sans entrer dans cette table — c'est tout l'interet.
  *
  * Les versions vivent dans `versions.json` et non ici : le script de publication est un module Node
  * qui ne sait pas lire un fichier TypeScript, et une version que le publieur recopierait a la main
@@ -127,13 +130,13 @@ export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
         version: versions[BLUEPRINT.CELCAT_OCCUPATION].version,
         document: celcatOccupation,
     },
-    [BLUEPRINT.SCOLARITE_DOSSIER]: {
-        version: versions[BLUEPRINT.SCOLARITE_DOSSIER].version,
-        document: scolariteDossier,
+    [BLUEPRINT.PORTAIL_BORDEAUX_DOSSIER]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_DOSSIER].version,
+        document: portailBordeauxDossier,
     },
-    [BLUEPRINT.SCOLARITE_MESSAGERIE]: {
-        version: versions[BLUEPRINT.SCOLARITE_MESSAGERIE].version,
-        document: scolariteMessagerie,
+    [BLUEPRINT.PORTAIL_BORDEAUX_MESSAGERIE]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_MESSAGERIE].version,
+        document: portailBordeauxMessagerie,
     },
 };
 
@@ -148,8 +151,28 @@ export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
 export const REMOTE_NAME_PREFIX = 'ukit.portail.';
 
 /**
+ * Un nom que le manifeste a le droit d'ajouter : la garde du registre, exprimee au compilateur.
+ *
+ * Les noms de portail viennent du **catalogue**, donc de la base : ils ne peuvent pas figurer dans
+ * `BLUEPRINT`, qui n'enumere que ce que le binaire embarque. Ce type litteral les laisse passer sans
+ * ouvrir la porte a n'importe quelle chaine — un nom hors prefixe ne compile pas, et l'erreur arrive
+ * a l'ecriture plutot qu'au rafraichissement, la ou elle serait silencieuse.
+ */
+export type PortailBlueprintName = `${typeof REMOTE_NAME_PREFIX}${string}`;
+
+/**
  * Les secrets que l'application sait fournir, et donc les seuls qu'un Blueprint — embarque ou
  * publie — a le droit de declarer. Sans cette borne, un fichier distant compromis pourrait reclamer
  * le trousseau et l'exfiltrer par une simple requete.
+ *
+ * Ils sont **neutres vis-a-vis de l'etablissement** depuis le jalon 6-G : `bordeaux_user` aurait
+ * oblige chaque nouveau portail a declarer un nom que l'application ne connait pas, donc a passer
+ * par une release — exactement ce que ce jalon supprime. Les cles du trousseau, elles, n'ont pas
+ * bouge : personne n'est deconnecte (shared/aetherius/secrets.ts).
+ *
+ * C'est **aussi** le perimetre ouvert aux noms ajoutes a distance (`allowNew.secrets`), et le fait
+ * que les deux valeurs coincident est une decision, pas une economie : un portail publie ne peut
+ * reclamer que ce qu'un portail embarque reclame deja, c'est-a-dire les identifiants universitaires
+ * de l'utilisateur, et rien d'autre.
  */
-export const ALLOWED_SECRETS = ['bordeaux_user', 'bordeaux_pass'] as const;
+export const ALLOWED_SECRETS = ['portail_user', 'portail_pass'] as const;

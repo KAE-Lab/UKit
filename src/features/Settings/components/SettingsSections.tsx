@@ -25,6 +25,49 @@ interface DisplaySectionProps {
     openFiltersDialog: () => void;
 }
 
+interface InstitutionSectionProps {
+    themeSettings: AppThemeType['settings'];
+    theme: AppThemeType;
+    /** Le nom de l'etablissement selectionne, tel que le catalogue le porte. Jamais traduit. */
+    institutionName: string;
+    /** L'etablissement selectionne a disparu du catalogue publie : l'utilisateur doit le savoir. */
+    institutionRetiree: boolean;
+    openInstitutionDialog: () => void;
+}
+
+/**
+ * L'etablissement, en premiere position de l'ecran (jalon 6-G).
+ *
+ * En premier parce que c'est le reglage dont tous les autres dependent : les groupes, le planning, la
+ * session universitaire. Le nom affiche a droite vient du **catalogue** et n'est pas traduit — c'est
+ * une donnee, comme le nom d'un calendrier du systeme juste en dessous.
+ *
+ * L'avertissement de retrait est **une phrase, pas une bascule** : l'application continue sur ce
+ * qu'elle sait de l'etablissement plutot que de renvoyer quelqu'un ailleurs au milieu de son annee.
+ */
+export const InstitutionSection = ({ themeSettings, theme, institutionName, institutionRetiree, openInstitutionDialog }: InstitutionSectionProps) => (
+    <>
+        <SettingsTextHeader theme={themeSettings} text={Translator.get('INSTITUTION')} />
+        <Button
+            theme={themeSettings}
+            onPress={openInstitutionDialog}
+            leftIcon="school"
+            leftText={Translator.get('INSTITUTION')}
+            rightText={institutionName}
+        />
+        {institutionRetiree && (
+            <Text style={{
+                color: theme.fontSecondary,
+                fontSize: tokens.fontSize.xs,
+                paddingHorizontal: tokens.space.md,
+                marginTop: tokens.space.xs,
+            }}>
+                {Translator.get('INSTITUTION_UNAVAILABLE')}
+            </Text>
+        )}
+    </>
+);
+
 export const DisplaySection = ({ themeSettings, language, openLanguageDialog, openFiltersDialog }: DisplaySectionProps) => (
     <>
         <SettingsTextHeader theme={themeSettings} text={Translator.get('DISPLAY')} />

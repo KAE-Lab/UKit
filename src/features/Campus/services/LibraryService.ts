@@ -5,16 +5,23 @@
  * affluence, une semaine d'horaires — et travaille la donnee recue.
  *
  * **Le balayage reste applicatif, et c'est le point du jalon.** L'endpoint de decouverte ne rend que
- * les sites proches du point interroge ; couvrir la region demande douze requetes. De tout cela, une
- * seule chose descend dans un fichier : la requete. La liste des douze points est une decision
- * produit, le filtre de categorie demanderait d'indexer une liste dans un predicat — refuse par les
- * deux moteurs, volontairement — et Haversine est du calcul.
+ * les sites proches du point interroge ; couvrir la region demande un run par point de balayage. De
+ * tout cela, une seule chose descend dans un fichier : la requete. La liste des points est une
+ * decision produit, le filtre de categorie demanderait d'indexer une liste dans un predicat — refuse
+ * par les deux moteurs, volontairement — et Haversine est du calcul.
  *
- * Voir docs/features/campus-bibliotheques.md et docs/phase-6/6-d-campus.md.
+ * Cette liste **vient du catalogue** depuis le jalon 6-G : elle etait en dur ici, ce qui est
+ * exactement le genre de constante qui devient fausse au second etablissement. Ce n'est pas une
+ * propriete de la source — le fournisseur est national — mais une propriete de l'universite : quelles
+ * villes elle couvre.
+ *
+ * Voir docs/features/campus-bibliotheques.md, docs/phase-6/6-d-campus.md et
+ * docs/phase-6/6-g-etablissements.md.
  */
 
 import Translator from '../../../shared/i18n/Translator';
 import { BLUEPRINT, reportFailure, runBlueprint, type UkitFailure } from '../../../shared/aetherius';
+import { getEtablissementActif } from '../../../shared/etablissements';
 import {
     estBibliotheque,
     projeterAffluence,
@@ -33,41 +40,13 @@ import { getDistanceInKm } from './FreeRoomService';
 export type { AffluencesData, LibraryInfo, TimetableEntry } from './LibraryMapping';
 
 /**
- * Les douze points de balayage : la position de l'utilisateur, plus onze points fixes couvrant la
- * region.
- *
- * Ils restent en dur ici parce que ce sont des **decisions produit** — quelles villes on couvre — et
- * non une propriete de la source. Ils rejoindront la base avec le catalogue des etablissements
- * (jalon 6-G), qui est le bon endroit pour eux.
- *
- * **Mesure du 2026-08-08, a lire avant d'y toucher.** Les onze points rendent 14 bibliotheques, et
- * la repartition n'est pas celle qu'on croit : Bordeaux Centre et Talence/Pessac voient les **memes**
- * 8 sites, aucun des deux n'ayant d'exclusivite ; cinq points — Poitiers, Perigueux, Agen, Angouleme,
- * Niort — n'en rendent **aucun** ; et seuls Pau, La Rochelle, Limoges et Bayonne portent des sites
- * que personne d'autre ne voit. Reduire la liste est donc tentant, et ce serait un changement de
- * comportement produit : un point muet aujourd'hui peut cesser de l'etre le jour ou une bibliotheque
- * s'inscrit chez le fournisseur. La decision se prend avec ses propres mesures, pas ici.
- */
-const POINTS_FIXES = [
-    { lat: 44.8377, lng: -0.5791 }, // Bordeaux Centre (Victoire, Bastide, Chartrons)
-    { lat: 44.7963, lng: -0.6277 }, // Campus Talence / Pessac / Gradignan
-    { lat: 43.2951, lng: -0.3707 }, // Pau
-    { lat: 46.1603, lng: -1.1511 }, // La Rochelle
-    { lat: 45.8336, lng: 1.2611 },  // Limoges
-    { lat: 46.5802, lng: 0.3403 },  // Poitiers
-    { lat: 43.4929, lng: -1.4748 }, // Bayonne / Anglet
-    { lat: 45.1920, lng: 0.7194 },  // Perigueux
-    { lat: 44.2031, lng: 0.6163 },  // Agen
-    { lat: 45.6483, lng: 0.1562 },  // Angouleme
-    { lat: 46.3237, lng: -0.4647 }, // Niort
-];
-
-/**
  * Ce qu'un ecran recoit.
  *
  * `secteursMuets` est la reponse a une question que l'ancien code ne se posait pas : que fait-on
- * quand deux points de balayage sur douze echouent ? Il repondait « rien, on n'en sait rien ».
- * Desormais on le sait, et l'ecran affiche ce qu'on a **en le disant**.
+ * quand deux points de balayage echouent sur les douze ? Il repondait « rien, on n'en sait rien ».
+ * Desormais on le sait, et l'ecran affiche ce qu'on a **en le disant**. Le nombre depend maintenant
+ * du catalogue — onze points plus la position de l'etudiant pour Bordeaux — d'ou `secteurs`, rendu a
+ * cote plutot que suppose par l'ecran.
  *
  * **Se teste avec `resultat.ok === false`** (voir shared/aetherius/runBlueprint.ts).
  */
@@ -138,12 +117,16 @@ export default class LibraryService {
     /**
      * Les bibliotheques de la region, dedoublonnees et triees par distance reelle.
      *
-     * Douze runs concurrents — les runs Act I n'ont aucun etat partage. Un point muet n'emporte pas
-     * les autres : on garde ce qui a repondu et on compte le reste. Zero reponse, en revanche, est un
-     * echec plein, avec la famille du premier run en erreur.
+     * Autant de runs concurrents que de points — les runs Act I n'ont aucun etat partage. Un point
+     * muet n'emporte pas les autres : on garde ce qui a repondu et on compte le reste. Zero reponse,
+     * en revanche, est un echec plein, avec la famille du premier run en erreur.
+     *
+     * La position de l'etudiant est **toujours** le premier point, quels que soient ceux du
+     * catalogue : c'est le seul qui garantit qu'une bibliotheque a cote de lui remonte, y compris
+     * s'il est loin de sa fac.
      */
     static async fetchNearbyLibraries(userLat: number, userLng: number): Promise<LibrariesResult> {
-        const points = [{ lat: userLat, lng: userLng }, ...POINTS_FIXES];
+        const points = [{ lat: userLat, lng: userLng }, ...getEtablissementActif().bibliothequesPoints];
 
         const runs = await Promise.all(
             points.map((point) =>

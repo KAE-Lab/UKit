@@ -196,14 +196,17 @@ bibliothèque parce que son affluence n'a pas encore été chargée serait un fa
   **Quatorze bibliothèques pour douze requêtes**, dont cinq points qui n'en rendent aucune et deux qui
   se recouvrent entièrement. Ce n'est pas un défaut à corriger tout de suite : un point muet
   aujourd'hui cesse de l'être le jour où une bibliothèque s'inscrit chez le fournisseur, et la liste
-  des villes couvertes est une promesse produit. C'est une décision pour
-  [6-G](../phase-6/6-g-etablissements.md), quand ces points rejoindront le catalogue des
-  établissements — et elle se prendra sur ces chiffres plutôt que sur une intuition.
+  des villes couvertes est une promesse produit. Depuis [6-G](../phase-6/6-g-etablissements.md) les
+  points sont **une donnée de catalogue** (`bibliotheques_points`), donc corrigibles sans release : la
+  décision de réduire la liste se prendra sur ces chiffres plutôt que sur une intuition, et elle
+  coûtera une publication au lieu d'un passage en store.
 - **Les libellés de filtre et de recherche s'affichent en majuscules brutes** (`ALL_LIBRARIES`,
   `OPEN_LIBRARIES`, `SEARCH_BU_CITY`) — voir [i18n.md](../i18n.md).
-- **Les points de balayage sont codés en dur** : une BU hors de leur portée reste invisible. Ils
-  pourraient rejoindre la base avec le catalogue des établissements
-  ([6-G](../phase-6/6-g-etablissements.md)) — c'est le bon endroit pour eux, mais pas maintenant.
+- **Une BU hors de portée des points de balayage reste invisible.** Les points ne sont plus codés en
+  dur — ils viennent du catalogue depuis [6-G](../phase-6/6-g-etablissements.md), et se corrigent donc
+  par une publication — mais la limite de fond demeure : couvrir une ville demande d'y penser. La
+  position de l'étudiant est **toujours** le premier point, quel que soit le catalogue, ce qui garantit
+  qu'une bibliothèque à côté de lui remonte même s'il est loin de sa fac.
 - **Les identifiants de catégorie (1, 20) restent une constante applicative** : les descendre
   demanderait d'indexer une liste dans un prédicat, ce que la grammaire refuse. Leur correction
   demande donc toujours une release, contrairement à tout le reste de cette source.
