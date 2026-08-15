@@ -49,6 +49,8 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`features/Campus/services/LibraryMapping.ts`](../src/features/Campus/services/LibraryMapping.ts) | l'arité d'une extraction, le choix du visuel, un site fermé sans taux |
 | [`shared/locations/referentiel.ts`](../src/shared/locations/referentiel.ts) | la fusion champ par champ du socle et de la surcouche |
 | [`shared/etablissements/catalogue.ts`](../src/shared/etablissements/catalogue.ts) | une ligne qui **remplace** au lieu de fusionner, le socle qui ne disparaît jamais, l'ordre stable, le repli d'un code inconnu |
+| [`shared/etablissements/edt.ts`](../src/shared/etablissements/edt.ts) | le choix de la source d'emploi du temps, et la résolution **partielle** des groupes favoris |
+| [`shared/services/reglagesParEtablissement.ts`](../src/shared/services/reglagesParEtablissement.ts) | les trois formes historiques des réglages cloisonnés — une migration fausse perd les favoris de quelqu'un sans rien dire |
 | [`features/Planning/services/PlanningApiMapping.ts`](../src/features/Planning/services/PlanningApiMapping.ts) | l'arité de `modules`, le séparateur qui change avec la vue, une fin d'événement nulle, le tri double |
 | [`features/Planning/services/IcsMapping.ts`](../src/features/Planning/services/IcsMapping.ts) | le pliage de lignes RFC 5545, l'horodatage d'export qui change à chaque requête, l'ancre du code de module, et **l'heure d'été d'un `DTSTART` en UTC** |
 | [`shared/locations/salles.ts`](../src/shared/locations/salles.ts) | les séparateurs qui n'ont pas le même rôle, `A5bis` qui ne doit pas devenir `A5`, un motif publié illisible |

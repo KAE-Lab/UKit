@@ -15,6 +15,25 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **Des groupes favoris par établissement.** Changer d'université range ceux qu'on quitte et ressort
+  ceux qu'on retrouve, au lieu de tout effacer : revenir à sa fac d'origine y retrouve ses groupes et
+  ses filtres d'UE. La règle « les données de deux facs ne se mélangent pas » n'est pas assouplie — à
+  tout instant, seuls les favoris de l'établissement actif sont en jeu ; elle interdisait le mélange,
+  pas la mémoire. Le cache de planning, la session universitaire et les cours du calendrier restent
+  purgés à chaque bascule.
+
+- **Éteindre la synchronisation calendrier retire les cours qu'elle avait écrits.** L'interrupteur
+  n'arrêtait que les passages suivants : les événements déjà posés restaient dans l'agenda personnel,
+  sans aucun moyen de les enlever depuis l'application — alors que le nettoyage existait déjà et
+  n'était appelé qu'en changeant de calendrier cible. L'extinction demande désormais une confirmation,
+  puisqu'elle touche un agenda que d'autres applications lisent.
+
+  **Changer d'université les retire aussi.** C'était le même oubli, en plus silencieux : après une
+  bascule les groupes favoris sont purgés, donc plus aucune synchronisation ne peut tourner, et les
+  cours de la fac précédente restaient dans l'agenda indéfiniment — pendant que l'application
+  annonçait que tout avait été effacé. La confirmation de changement d'établissement le dit désormais
+  dans les trois langues.
+
 - **L'emploi du temps universel** (jalon [6-I](docs/phase-6/6-i-planning-universel.md)).
   **Bordeaux INP a un emploi du temps**, par l'**export iCalendar** de son serveur ADE — et l'écran est
   celui de Bordeaux au pixel près : aucun composant n'a été modifié pour ça.

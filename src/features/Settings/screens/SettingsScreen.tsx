@@ -18,6 +18,7 @@ import {
     SettingsLanguagePopup,
     SettingsFiltersPopup,
     SettingsResetPopup,
+    SettingsSyncOffPopup,
     SettingsCalendarPopup
 } from '../components/SettingsModals';
 import { SettingsInstitutionPopup } from '../components/SettingsInstitutionPopup';
@@ -48,6 +49,7 @@ export interface SettingsState {
     languageDialogVisible: boolean;
     openFavSwitchValue: boolean;
     resetDialogVisible: boolean;
+    syncOffDialogVisible: boolean;
     selectedCalendar: string | number;
     isDarkMode: boolean;
     courseNotificationsEnabled: boolean;
@@ -78,6 +80,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             languageDialogVisible: false,
             openFavSwitchValue: SettingsManager.getOpenAppOnFavoriteGroup(),
             resetDialogVisible: false,
+            syncOffDialogVisible: false,
             selectedCalendar: SettingsManager.getSyncCalendar(),
             isDarkMode: SettingsManager.getTheme() === 'dark',
             courseNotificationsEnabled: SettingsManager.getCourseNotificationsEnabled(),
@@ -169,7 +172,19 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         }
     };
 
+    /**
+     * L'extinction passe par une confirmation, l'allumage non.
+     *
+     * L'asymetrie est voulue : allumer ajoute des evenements, eteindre en **retire** — et pas dans
+     * l'application, dans l'agenda personnel de l'utilisateur. Les deux gestes n'ont pas le meme
+     * cout, ils n'ont donc pas la meme garde.
+     */
     toggleCalendarSync = async () => {
+        if (this.state.calendarSyncEnabled) {
+            this.openSyncOffDialog();
+            return;
+        }
+
         if ((await Calendar.getCalendarPermissionsAsync()).status !== 'granted') {
             const { status } = await Calendar.requestCalendarPermissionsAsync();
             if (status !== 'granted') return;
@@ -199,6 +214,27 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
     openFiltersDialog = () => this.setState({ filtersDialogVisible: true });
     closeFiltersDialog = () => this.setState({ filtersDialogVisible: false });
+
+    openSyncOffDialog = () => this.setState({ syncOffDialogVisible: true });
+    closeSyncOffDialog = () => this.setState({ syncOffDialogVisible: false });
+
+    /**
+     * La modale se ferme d'abord, le retrait court ensuite — meme ordre que la reinitialisation.
+     *
+     * L'etat est relu depuis le service plutot que suppose : la cible a pu etre remise a zero si le
+     * calendrier dedie a ete supprime avec ses evenements (`SettingsManager.disableCalendarSync`).
+     */
+    disableCalendarSync = async () => {
+        this.closeSyncOffDialog();
+        await SettingsManager.disableCalendarSync();
+        this.setState({
+            calendarSyncEnabled: false,
+            selectedCalendar: SettingsManager.getSyncCalendar(),
+            calendars: SettingsManager.getCalendars(),
+        });
+    };
+
+    onSyncOffConfirmed = () => { void this.disableCalendarSync(); };
 
     openResetDialog = () => this.setState({ resetDialogVisible: true });
     closeResetDialog = () => this.setState({ resetDialogVisible: false });
@@ -258,6 +294,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             <>
                 <SettingsLanguagePopup theme={themeSettings} popupVisible={this.state.languageDialogVisible} popupClose={this.closeLanguageDialog} language={this.state.language} setLanguageToFrench={this.setLanguageToFrench} setLanguageToEnglish={this.setLanguageToEnglish} setLanguageToSpanish={this.setLanguageToSpanish} />
                 <SettingsFiltersPopup theme={themeSettings} popupVisible={this.state.filtersDialogVisible} popupClose={this.closeFiltersDialog} filterList={this.state.filterList} filterTextInput={this.state.filterTextInput} setFilterTextInput={this.setFilterTextInput} submitFilterTextInput={this.submitFilterTextInput} />
+                <SettingsSyncOffPopup theme={themeSettings} popupVisible={this.state.syncOffDialogVisible} popupClose={this.closeSyncOffDialog} disableSync={this.onSyncOffConfirmed} />
                 <SettingsResetPopup theme={themeSettings} popupVisible={this.state.resetDialogVisible} popupClose={this.closeResetDialog} resetApp={this.resetApp} />
                 <SettingsCalendarPopup theme={themeSettings} popupVisible={this.state.calendarDialogVisible} popupClose={this.closeCalendarDialog} setCalendar={this.setCalendar} selectedCalendar={this.state.selectedCalendar} />
                 <SettingsInstitutionPopup theme={themeSettings} popupVisible={this.state.institutionDialogVisible} popupClose={this.closeInstitutionDialog} codeActif={SettingsManager.getEtablissement()} onConfirm={this.onInstitutionConfirmed} />

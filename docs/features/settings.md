@@ -46,10 +46,41 @@ confondre a coûté un défaut :
 | Effacé | Par | Pourquoi |
 |---|---|---|
 | `groupList`, `groupListTimestamp`, `groups` | [`purge.ts`](../../src/shared/etablissements/purge.ts) | ce sont des identifiants d'une université |
-| **les groupes favoris et les filtres d'UE** | [`SettingsManager.purgerReglagesEtablissement()`](../../src/shared/services/AppCore.tsx) | ils nomment des groupes et des UE d'une université, mais vivent dans le document de réglages — que `purge.ts` ne connaît pas, et ne doit pas connaître |
+| **les groupes favoris et les filtres d'UE** | *rien — ils sont **rangés**, pas effacés* | voir « Des favoris par établissement » ci-dessous |
 | les caches de planning (`…@Week…`, `…@AAAA/MM/JJ`) | `purge.ts` | un planning gardé s'afficherait sous une autre fac sans que rien ne le dise |
 | `buildingList`, `buildingListTimestamp`, la surcouche `batiments@1`, les favoris de salles libres | `purge.ts` | les bâtiments sont reconstruits depuis les salles de **cette** université |
 | les identifiants et les données froides du trousseau | `purge.ts` | ils appartiennent au portail quitté |
+| **les cours écrits dans le calendrier système** | [`SettingsManager.purgeCalendarEvents()`](../../src/shared/services/AppCore.tsx) | ils sont ceux de l'université quittée, et **personne ne viendrait les chercher** : les favoris venant d'être purgés, plus aucune synchronisation ne peut tourner |
+
+### Des favoris par établissement
+
+Les groupes favoris et les filtres d'UE sont **cloisonnés par établissement** : basculer range ceux
+qu'on quitte et ressort ceux qu'on retrouve. Revenir à son université d'origine y retrouve donc ses
+groupes, sans rien reselectionner.
+
+Ce n'est pas un assouplissement de la règle « les données de deux facs ne se mélangent pas » : cette
+règle interdit le **mélange**, pas la mémoire. À tout instant, seuls les favoris de l'établissement
+actif sont en jeu — `_favoriteGroups` reste la vue de l'actif, et le reste de l'application ignore
+qu'il en existe d'autres.
+
+La version précédente les **effaçait**, ce qui était déjà un progrès sur celle d'avant — où ils
+survivaient à la bascule et faisaient buter le planning agrégé sur des groupes d'une autre université
+(voir l'encadré ci-dessous). Effacer répondait simplement à la mauvaise question.
+
+Trois choses restent purgées, et chacune pour une raison qui lui est propre :
+
+| Toujours purgé | Pourquoi |
+|---|---|
+| le **cache de planning** | ses clés portent des noms de groupe qui peuvent se ressembler d'une fac à l'autre ; le garder ferait courir un risque de collision pour économiser quelques secondes de rechargement |
+| la **session universitaire** | c'est un identifiant, il n'a rien à faire ailleurs |
+| les **cours du calendrier système** | ce sont ceux de l'université quittée, et il faut les réécrire même si des favoris reviennent |
+
+La lecture depuis le disque porte **trois formes historiques** — `groupName` d'avant les favoris
+multiples, la liste d'avant le cloisonnement, et la table — rassemblées dans
+[`reglagesParEtablissement.ts`](../../src/shared/services/reglagesParEtablissement.ts). Elles y vivent
+plutôt que dans `AppCore` pour une raison précise : une migration qui se trompe perd les favoris de
+quelqu'un **sans rien dire**, au premier lancement après une mise à jour. Là, elle est jouable sous
+Node, donc verrouillée par des tests.
 
 > **La deuxième ligne de ce tableau a été fausse pendant deux jalons.** Ce document annonçait
 > l'effacement des favoris depuis le jalon 6-G ; le code ne le faisait pas — `resetSettings` les
@@ -180,6 +211,36 @@ Deux propriétés de ce run, depuis le jalon [6-E](../phase-6/6-e-planning.md) :
 Un échec laisse le calendrier **tel quel** et repassera au cycle suivant : purger des événements déjà
 posés sur la foi d'une source injoignable serait pire que ne rien faire.
 
+### Éteindre retire ce qui a été écrit
+
+L'interrupteur ne faisait qu'arrêter les passages suivants : les cours déjà posés restaient dans
+l'agenda personnel, sans aucun moyen de les enlever depuis l'application. Le nettoyage existait
+pourtant — `deleteAllPreviousCalendarEntries` — et n'était appelé qu'en **changeant** de calendrier
+cible. Une capacité qu'on peut activer et pas désactiver n'est pas un réglage, c'est un aller simple.
+
+`SettingsManager.disableCalendarSync()` retire les événements, arrête la tâche de fond et efface
+`previousSyncData`. Le retrait lui-même vit dans `purgeCalendarEvents()`, parce que **deux gestes**
+s'en servent — éteindre la synchronisation, et changer d'université. **La cible n'est remise à zéro
+que si elle n'existe plus** : le calendrier dédié
+« UKit » est supprimé avec ses événements, donc la garder ferait échouer la synchronisation suivante
+sur un identifiant mort ; un calendrier du système, lui, survit, et effacer le choix serait une perte
+gratuite. Le code **vérifie** laquelle des deux situations il a plutôt que de la deviner.
+
+L'extinction demande une **confirmation**, l'allumage non. L'asymétrie est voulue : allumer ajoute des
+événements, éteindre en retire — et pas dans l'application, dans un agenda que d'autres applications
+lisent. Le texte dit les deux moitiés de ce qui se passe, ce qui part et ce qui ne bouge pas, parce
+que « désactiver » ne laisse pas deviner que ça efface quelque chose.
+
+> **Capture attendue** — `reglages-desync.png` : la confirmation d'extinction, montrant qu'elle
+> annonce le retrait des cours de l'agenda et l'absence d'effet sur l'emploi du temps.
+
+Le **changement d'établissement** emporte les mêmes événements, sans éteindre la synchronisation : la
+capacité reste active, elle n'a simplement plus rien à écrire tant qu'aucun groupe favori n'est choisi
+dans la nouvelle université. C'était un oubli, et de la même famille que celui des groupes favoris —
+une donnée d'établissement écrite **hors** de l'application, que la bascule ne nettoyait pas. Le
+symptôme était le pire possible : l'application annonçait que tout était effacé, et l'agenda affichait
+les cours de la fac précédente pendant des jours.
+
 > **Non vérifié à ce jour : la tâche de fond application fermée.** La synchronisation manuelle a été
 > jouée après la migration du jalon [6-E](../phase-6/6-e-planning.md) et rend les mêmes événements,
 > aux mêmes dates, sans doublon. Le passage automatique toutes les 12 h avec l'application tuée, lui,
@@ -273,5 +334,7 @@ les limites.
 | [`screens/SettingsScreen.tsx`](../../src/features/Settings/screens/SettingsScreen.tsx) | écran d'onglet : état des réglages, gestionnaires, assemblage des sections et des modales |
 | [`screens/AboutScreen.tsx`](../../src/features/Settings/screens/AboutScreen.tsx) | À propos : historique, sources, contact, crédits, mentions légales |
 | [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les six sections : établissement, affichage, thème, notifications, lancement, calendrier |
-| [`components/SettingsModals.tsx`](../../src/features/Settings/components/SettingsModals.tsx) | modales : langue, filtres d'UE, réinitialisation, choix du calendrier |
+| [`components/SettingsModals.tsx`](../../src/features/Settings/components/SettingsModals.tsx) | modales : langue, filtres d'UE, réinitialisation, extinction de la synchronisation, choix du calendrier |
 | [`components/SettingsInstitutionPopup.tsx`](../../src/features/Settings/components/SettingsInstitutionPopup.tsx) | la modale d'établissement : la liste, puis la confirmation de ce qui sera effacé |
+| [`shared/services/reglagesParEtablissement.ts`](../../src/shared/services/reglagesParEtablissement.ts) | la lecture des réglages cloisonnés par établissement, et les trois migrations de leur forme persistée |
+| [`shared/services/reglagesParEtablissement.test.ts`](../../src/shared/services/reglagesParEtablissement.test.ts) | ses tests, joués par `npm test` |

@@ -100,6 +100,10 @@ const fr: TranslationDict = {
 	RESET: 'Réinitialiser',
 	// Bouton d'un ecran en echec, quand la famille est reessayable (shared/aetherius/failures.ts).
 	RETRY: 'Réessayer',
+	DISABLE_SYNC: 'Désactiver la synchronisation',
+	DISABLE_SYNC_CONFIRMATION:
+		"Les cours déjà ajoutés à ton calendrier seront retirés. Ton emploi du temps dans UKit n'est pas touché.",
+	DISABLE: 'Désactiver',
 	RESET_APP: "Réinitialiser l'application",
 	RESET_APP_CONFIRMATION:
 		"Voulez vous réinitialiser l'application ? Vous ne pourrez pas revenir en arrière.",
@@ -126,7 +130,7 @@ const fr: TranslationDict = {
 	YOUR_INSTITUTION: 'Quelle est ton université ?',
 	INSTITUTION: 'Établissement',
 	INSTITUTION_CHANGE_TITLE: 'Changer d’établissement ?',
-	INSTITUTION_CHANGE_WARNING: 'Tes groupes favoris, ton planning en cache et ta session universitaire seront effacés.\nLes données de deux universités ne se mélangent pas.',
+	INSTITUTION_CHANGE_WARNING: 'Tes groupes favoris, ton planning en cache, ta session universitaire et les cours ajoutés à ton calendrier seront effacés.\nLes données de deux universités ne se mélangent pas.',
 	INSTITUTION_UNAVAILABLE: 'Ton établissement n’est plus proposé. UKit continue avec ce qu’il en sait.',
 	YOUR_GROUP: 'Quel est ton groupe ?',
 	YOUR_LANGUAGE: 'Quelle est ta langue ?',

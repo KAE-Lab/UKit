@@ -101,6 +101,10 @@ const es: TranslationDict = {
 	RESET: 'Reiniciar',
 	// Bouton d'un ecran en echec, quand la famille est reessayable (shared/aetherius/failures.ts).
 	RETRY: 'Reintentar',
+	DISABLE_SYNC: 'Desactivar la sincronización',
+	DISABLE_SYNC_CONFIRMATION:
+		'Los cursos ya añadidos a tu calendario se eliminarán. Tu horario en UKit no se ve afectado.',
+	DISABLE: 'Desactivar',
 	RESET_APP: 'Reiniciar la aplicación',
 	RESET_APP_CONFIRMATION: '¿Quieres reiniciar la aplicación? No podrás volver atrás.',
 	SAVE: 'Guardar',
@@ -126,7 +130,7 @@ const es: TranslationDict = {
 	YOUR_INSTITUTION: '¿A qué universidad vas?',
 	INSTITUTION: 'Centro',
 	INSTITUTION_CHANGE_TITLE: '¿Cambiar de centro?',
-	INSTITUTION_CHANGE_WARNING: 'Tus grupos favoritos, tu horario en caché y tu sesión universitaria se borrarán.\nLos datos de dos universidades no se mezclan.',
+	INSTITUTION_CHANGE_WARNING: 'Tus grupos favoritos, tu horario en caché, tu sesión universitaria y los cursos añadidos a tu calendario se borrarán.\nLos datos de dos universidades no se mezclan.',
 	INSTITUTION_UNAVAILABLE: 'Tu centro ya no aparece en la lista. UKit sigue con lo que sabe de él.',
 	YOUR_GROUP: '¿Cuál es tu grupo?',
 	YOUR_LANGUAGE: '¿Cuál es tu idioma?',

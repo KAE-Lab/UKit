@@ -97,6 +97,10 @@ const en = {
 	RESET: 'Reset',
 	// Bouton d'un ecran en echec, quand la famille est reessayable (shared/aetherius/failures.ts).
 	RETRY: 'Retry',
+	DISABLE_SYNC: 'Turn off synchronisation',
+	DISABLE_SYNC_CONFIRMATION:
+		'The courses already added to your calendar will be removed. Your UKit timetable is untouched.',
+	DISABLE: 'Turn off',
 	RESET_APP: 'Reset application',
 	RESET_APP_CONFIRMATION: 'Do you want to reset the application? You cannot undo this action.',
 	SAVE: 'Save',
@@ -122,7 +126,7 @@ const en = {
 	YOUR_INSTITUTION: 'Which university do you attend?',
 	INSTITUTION: 'Institution',
 	INSTITUTION_CHANGE_TITLE: 'Switch institution?',
-	INSTITUTION_CHANGE_WARNING: 'Your favourite groups, cached timetable and university session will be erased.\nData from two universities does not mix.',
+	INSTITUTION_CHANGE_WARNING: 'Your favourite groups, cached timetable, university session and the courses added to your calendar will be erased.\nData from two universities does not mix.',
 	INSTITUTION_UNAVAILABLE: 'Your institution is no longer listed. UKit carries on with what it knows.',
 	YOUR_GROUP: 'What is your group?',
 	YOUR_LANGUAGE: 'What is your language?',

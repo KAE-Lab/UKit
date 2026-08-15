@@ -278,6 +278,39 @@ export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, languag
 };
 
 // ── Popup Réinitialisation ──────────────────────────────────────────────
+/**
+ * La confirmation d'extinction de la synchronisation calendrier.
+ *
+ * Elle existe parce que le geste est **destructif hors de l'application** : il retire des evenements
+ * de l'agenda personnel de l'utilisateur, que d'autres applications lisent. Le texte dit les deux
+ * moities de ce qui se passe — ce qui part, et ce qui ne bouge pas — parce que « desactiver » ne
+ * laisse pas deviner que ca efface quelque chose.
+ */
+export const SettingsSyncOffPopup = ({ theme, popupVisible, popupClose, disableSync }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; disableSync: () => void }) => {
+    return (
+        <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={popupClose}>
+            <TouchableWithoutFeedback onPress={popupClose}>
+                <View style={theme.popup.background as never}>
+                    <View style={theme.popup.container as never}>
+                        <View style={theme.popup.header as never}>
+                            <Text style={theme.popup.textHeader}>{Translator.get('DISABLE_SYNC').toUpperCase()}</Text>
+                        </View>
+                        <Text style={theme.popup.textDescription}>{Translator.get('DISABLE_SYNC_CONFIRMATION')}</Text>
+                        <View style={theme.popup.buttonContainer as never}>
+                            <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={popupClose}>
+                                <Text style={[theme.popup.buttonTextSecondary, { fontWeight: '600' }]}>{Translator.get('CANCEL')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={theme.popup.buttonMain as never} onPress={disableSync}>
+                                <Text style={[theme.popup.buttonTextMain, { fontWeight: '600' }]}>{Translator.get('DISABLE')}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </TouchableWithoutFeedback>
+        </Modal>
+    );
+};
+
 export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; resetApp: () => void }) => {
     return (
         <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={popupClose}>

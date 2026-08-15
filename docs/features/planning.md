@@ -372,10 +372,6 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
   une promotion ici, un groupe là. La liste s'étend par publication.
 - **La recherche de groupes ne filtre pas côté serveur pour une source iCalendar**, et n'en a pas
   besoin : la liste tient dans le catalogue et la recherche est déjà locale.
-- **Éteindre la synchronisation calendrier ne retire pas les cours déjà écrits** dans le calendrier
-  système. L'interrupteur des réglages arrête les passages suivants, rien de plus ; la fonction de
-  nettoyage existe (`deleteAllPreviousCalendarEntries`) mais n'est appelée que lorsqu'on **change** de
-  calendrier cible. Défaut antérieur au jalon 6-I, relevé en le vérifiant.
 - **La synchronisation ne porte que le premier groupe favori** (`_favoriteGroups[0]`), pas le planning
   agrégé. Comportement d'origine, relevé en lisant le code au jalon 6-I et jamais interrogé depuis.
 - **`computeScheduleWeek` est appelée au rendu**, pas au chargement : le calcul des UE et le filtrage

@@ -19,6 +19,7 @@ import {
 // `purge` et non la porte d'entree pour la meme raison : elle ne connait que le magasin local et le
 // trousseau, la ou `../etablissements` tirerait le client de la base.
 import { purgerDonneesEtablissement } from '../etablissements/purge';
+import { restaurerReglages } from './reglagesParEtablissement';
 import { createUKitCalendar, formatCalendarEventData } from './CalendarSyncHelpers';
 import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
@@ -151,6 +152,14 @@ class SettingsManagerService {
     _courseNotificationDelay: number;
     /** Le code d'etablissement **tel que ce module le connait** : ce qui a ete charge ou choisi. */
     _etablissement: string;
+    /**
+     * Les groupes favoris et les filtres d'UE, **cloisonnes par etablissement**.
+     *
+     * `_favoriteGroups` et `_filters` restent la vue de l'etablissement actif : tout le reste de
+     * l'application les lit sans savoir qu'il en existe d'autres. Ces deux tables sont la memoire.
+     */
+    _favorisParEtablissement: Record<string, string[]>;
+    _filtresParEtablissement: Record<string, string[]>;
     _groupName?: string;
 
     constructor() {
@@ -169,6 +178,8 @@ class SettingsManagerService {
         this._courseNotificationsEnabled = true;
         this._courseNotificationDelay = 15;
         this._etablissement = ETABLISSEMENT_DEFAUT;
+        this._favorisParEtablissement = {};
+        this._filtresParEtablissement = {};
     }
 
     on = (event: string, callback: Function) => {
@@ -243,8 +254,7 @@ class SettingsManagerService {
         // la tient. `loadSettings` **restaure** ce champ sans purger : rouvrir l'application n'est pas
         // changer d'avis.
         if (this._etablissement !== resolu) {
-            this._etablissement = resolu;
-            this.purgerReglagesEtablissement();
+            this.basculerReglagesEtablissement(resolu);
         }
 
         this.notify('etablissement', resolu);
@@ -265,10 +275,54 @@ class SettingsManagerService {
      * arriver sur l'onglet Planning affichait « ce groupe n'existe plus » pour un groupe qui existe
      * parfaitement, a l'universite qu'on vient de quitter.
      */
+    /**
+     * Change d'etablissement : range les reglages de celui qu'on quitte, ressort ceux qu'on retrouve.
+     *
+     * La premiere version **effacait** les groupes favoris et les filtres d'UE, et c'etait deja un
+     * progres — avant elle, ils survivaient a la bascule et le planning agrege butait sur des groupes
+     * d'une autre universite. Mais effacer repond a la mauvaise question : la regle de la phase est que
+     * les donnees de deux facs ne se **melangent** pas, pas qu'il faille les oublier. Des favoris
+     * cloisonnes ne melangent rien — a tout instant, seuls ceux de l'etablissement actif sont en jeu —
+     * et ils evitent de tout reselectionner a chaque aller-retour.
+     *
+     * Ce qui **reste purge**, et pourquoi :
+     *
+     *   - le **cache de planning**, dont les cles portent des noms de groupe qui peuvent se ressembler
+     *     d'une fac a l'autre. Le garder ferait courir un risque de collision pour economiser quelques
+     *     secondes de rechargement ;
+     *   - la **session universitaire**, qui est un identifiant et n'a rien a faire ailleurs ;
+     *   - les **cours ecrits dans l'agenda systeme**, qui sont ceux de l'universite quittee.
+     */
+    basculerReglagesEtablissement = (nouveau: string) => {
+        this._favorisParEtablissement[this._etablissement] = [...this._favoriteGroups];
+        this._filtresParEtablissement[this._etablissement] = [...this._filters];
+
+        this._etablissement = nouveau;
+        this._favoriteGroups = [...(this._favorisParEtablissement[nouveau] ?? [])];
+        this._filters = [...(this._filtresParEtablissement[nouveau] ?? [])];
+
+        this.notify('favoriteGroups', this._favoriteGroups);
+        this.notify('filter', this._filters);
+
+        // L'agenda systeme porte les cours de l'universite quittee, et il faut le reecrire meme si des
+        // favoris reviennent : ce ne sont pas les memes cours. Le retrait est asynchrone, ne retarde
+        // pas la bascule, et ne leve jamais.
+        void this.purgeCalendarEvents();
+    };
+
+    /**
+     * La reinitialisation, elle, oublie **tous** les etablissements.
+     *
+     * C'est la difference avec une bascule : ici on ne va nulle part, on efface. Ne rien garder est le
+     * seul comportement qui rende le parcours d'accueil honnete.
+     */
     purgerReglagesEtablissement = () => {
+        this._favorisParEtablissement = {};
+        this._filtresParEtablissement = {};
         this._favoriteGroups = [];
         this.notify('favoriteGroups', this._favoriteGroups);
         this.resetFilter();
+        void this.purgeCalendarEvents();
     };
 
 
@@ -387,6 +441,63 @@ class SettingsManagerService {
         }
     };
 
+    /**
+     * Eteindre la synchronisation **retire ce qu'elle a ecrit**.
+     *
+     * L'interrupteur ne faisait qu'arreter les passages suivants : les cours deja poses restaient dans
+     * l'agenda personnel de l'utilisateur, sans aucun moyen de les enlever depuis l'application. Le
+     * plus contrariant est que le nettoyage existait deja — `deleteAllPreviousCalendarEntries` — et
+     * n'etait appele qu'en **changeant** de calendrier cible. Une capacite qu'on peut activer et pas
+     * desactiver n'est pas un reglage, c'est un aller simple.
+     *
+     * La cible est remise a `-1` **si elle n'existe plus**, et pas systematiquement : le calendrier
+     * dedie « UKit » est supprime avec ses evenements, la cible cesse alors d'exister et la garder
+     * ferait echouer la synchronisation suivante sur un identifiant mort ; un calendrier du systeme,
+     * lui, survit a la suppression de nos evenements, et effacer le choix de l'utilisateur serait une
+     * perte gratuite. Verifier vaut mieux que deviner laquelle des deux on avait.
+     */
+    disableCalendarSync = async (): Promise<void> => {
+        await this.purgeCalendarEvents();
+        this.setCalendarSyncEnabled(false);
+        this.saveSettings();
+    };
+
+    /**
+     * Retire de l'agenda systeme tout ce que la synchronisation y a ecrit, sans l'eteindre.
+     *
+     * Deux gestes s'en servent, et ils n'ont pas la meme portee : **eteindre** la synchronisation, et
+     * **changer d'universite**. Le second est le plus important des deux, parce qu'il est silencieux :
+     * apres une bascule, les favoris sont purges, donc plus aucune synchronisation ne peut tourner, et
+     * les cours de l'universite quittee restaient dans l'agenda **indefiniment** — jusqu'a ce que
+     * quelqu'un choisisse un favori dans la nouvelle et attende un cycle. Pendant ce temps
+     * l'application annoncait que tout etait efface et l'agenda affichait le contraire.
+     *
+     * La cible n'est remise a zero que si elle a **disparu** : le calendrier dedie « UKit » est
+     * supprime avec ses evenements, donc la garder ferait echouer la synchronisation suivante sur un
+     * identifiant mort ; un calendrier du systeme, lui, survit, et effacer le choix serait une perte
+     * gratuite. Apres une premiere synchronisation `_calendar` porte un identifiant resolu et ne dit
+     * plus lequel des deux c'etait : on verifie plutot que de deviner.
+     *
+     * Ne leve jamais. Un agenda qui refuse une suppression ne doit pas empecher une bascule
+     * d'etablissement, sans quoi l'utilisateur resterait coince sur l'universite qu'il vient de
+     * quitter (meme regle que `purgerDonneesEtablissement`).
+     */
+    purgeCalendarEvents = async (): Promise<void> => {
+        try {
+            await this.deleteAllPreviousCalendarEntries(this._calendar);
+
+            await this.loadCalendars();
+            const cible = String(this._calendar);
+            if (!this._calendars.some((calendrier) => String(calendrier.id) === cible)) {
+                this._calendar = -1;
+                this.notify('calendar', this._calendar);
+            }
+        } catch (erreur) {
+            console.warn(`[calendrier] purge incomplete : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+        }
+        this.notify('lastSyncDate', this._lastSyncDate);
+    };
+
     getOpenAppOnFavoriteGroup = () => this._openAppOnFavoriteGroup;
     setOpenAppOnFavoriteGroup = (newOpenAppBool: boolean) => { this._openAppOnFavoriteGroup = newOpenAppBool; this.saveSettings(); };
 
@@ -451,11 +562,16 @@ class SettingsManagerService {
     };
 
     saveSettings = () => {
+        // La vue active redescend dans sa table avant d'ecrire : c'est le seul endroit qui garde les
+        // deux formes d'accord, et il est traverse a chaque `notify`.
+        this._favorisParEtablissement[this._etablissement] = [...this._favoriteGroups];
+        this._filtresParEtablissement[this._etablissement] = [...this._filters];
+
         AsyncStorage.setItem('firstload', JSON.stringify(this._firstload));
         AsyncStorage.setItem('settings', JSON.stringify({
-            calendar: this._calendar, theme: this._theme, favoriteGroups: this._favoriteGroups,
+            calendar: this._calendar, theme: this._theme, favoriteGroups: this._favorisParEtablissement,
             language: this._language, openAppOnFavoriteGroup: this._openAppOnFavoriteGroup,
-            filters: this._filters, calendarSyncEnabled: this._calendarSyncEnabled,
+            filters: this._filtresParEtablissement, calendarSyncEnabled: this._calendarSyncEnabled,
             courseNotificationsEnabled: this._courseNotificationsEnabled, courseNotificationDelay: this._courseNotificationDelay,
             etablissement: getCodeEtablissementActif(),
         }));
@@ -478,17 +594,18 @@ class SettingsManagerService {
         // Restaure sans purger : c'est un chargement, pas un changement d'avis.
         this._etablissement = getCodeEtablissementActif();
 
-        // Migration for legacy groupName to favoriteGroups
-        if (settings.groupName && !settings.favoriteGroups) {
-            this._favoriteGroups = [settings.groupName as string];
-        } else if (settings.favoriteGroups) {
-            this._favoriteGroups = [...(settings.favoriteGroups as string[])];
-        }
-        
+        // Les groupes favoris et les filtres d'UE, avec leurs trois formes historiques — `groupName`,
+        // la liste d'avant le cloisonnement, et la table. Les migrations vivent ensemble, dans un
+        // module jouable sous Node parce qu'une migration fausse perd des reglages sans rien dire.
+        const restaures = restaurerReglages(settings, this._etablissement);
+        this._favoriteGroups = restaures.favoris;
+        this._filters = restaures.filtres;
+        this._favorisParEtablissement = restaures.favorisParEtablissement;
+        this._filtresParEtablissement = restaures.filtresParEtablissement;
+
         if (settings.openAppOnFavoriteGroup !== null && settings.openAppOnFavoriteGroup !== undefined) {
             this._openAppOnFavoriteGroup = settings.openAppOnFavoriteGroup as boolean;
         }
-        if (settings.filters) this._filters = [...(settings.filters as string[])];
         if (settings.calendar !== undefined) this._calendar = settings.calendar as string | number;
         if (settings.calendarSyncEnabled) this._calendarSyncEnabled = true;
         if (settings.language) this.setLanguage(settings.language as string);
