@@ -1,17 +1,55 @@
 {
-    "ukit.campus.annonces": { "version": "2" },
-    "ukit.campus.restaurants": { "version": "4" },
-    "ukit.campus.restaurant-menu": { "version": "1" },
-    "ukit.campus.bibliotheques": { "version": "1" },
-    "ukit.campus.bibliotheque-affluence": { "version": "1" },
-    "ukit.campus.bibliotheque-horaires": { "version": "1" },
-    "ukit.celcat.groupes": { "version": "2" },
-    "ukit.celcat.salles": { "version": "2" },
-    "ukit.celcat.jour": { "version": "2" },
-    "ukit.celcat.semaine": { "version": "3" },
-    "ukit.celcat.annee": { "version": "2" },
-    "ukit.celcat.occupation": { "version": "2" },
-    "ukit.portail.bordeaux.dossier": { "version": "1" },
-    "ukit.portail.bordeaux.messagerie": { "version": "1" },
-    "ukit.portail.bordeaux-inp.dossier": { "version": "2" }
+    "ukit.campus.annonces": {
+        "version": "2"
+    },
+    "ukit.campus.restaurants": {
+        "version": "4"
+    },
+    "ukit.campus.restaurant-menu": {
+        "version": "1"
+    },
+    "ukit.campus.bibliotheques": {
+        "version": "1"
+    },
+    "ukit.campus.bibliotheque-affluence": {
+        "version": "1"
+    },
+    "ukit.campus.bibliotheque-horaires": {
+        "version": "1"
+    },
+    "ukit.celcat.groupes": {
+        "version": "2"
+    },
+    "ukit.celcat.salles": {
+        "version": "2"
+    },
+    "ukit.celcat.jour": {
+        "version": "2"
+    },
+    "ukit.celcat.semaine": {
+        "version": "3"
+    },
+    "ukit.celcat.annee": {
+        "version": "2"
+    },
+    "ukit.celcat.occupation": {
+        "version": "2"
+    },
+    "ukit.portail.bordeaux.dossier": {
+        "version": "1"
+    },
+    "ukit.portail.bordeaux.messagerie": {
+        "version": "1"
+    },
+    "ukit.portail.bordeaux-inp.dossier": {
+        "version": "2"
+    },
+    "ukit.portail.bordeaux-inp.edt": {
+        "version": "4",
+        "min_engine": "0.5.4"
+    },
+    "ukit.portail.bordeaux-inp.edt.annee": {
+        "version": "1",
+        "min_engine": "0.5.4"
+    }
 }

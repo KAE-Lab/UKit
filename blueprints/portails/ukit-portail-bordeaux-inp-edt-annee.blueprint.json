@@ -1,0 +1,75 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux-inp.edt.annee",
+  "description": "La meme requete que ukit.portail.bordeaux-inp.edt, sur la plage ANNUELLE de la synchronisation du calendrier systeme. Un seul champ les separe, et c'est la seule raison pour laquelle ce fichier existe : timeout_ms a 60 s. Une annee complete de l'etablissement pese quelques centaines de kilo-octets, la ou une journee en pese quelques-uns ; imposer ce plafond a la vue du jour ferait attendre soixante secondes un ecran que l'utilisateur regarde, et le refuser a la synchronisation lui couterait un cycle entier de tache de fond. C'est le meme raisonnement qui a donne un fichier propre a ukit.celcat.annee au jalon 6-E. Tout le reste — le caractere positionnel des index de ressource, le projet qui change a chaque rentree, les bornes inclusives, la virgule qui agrege — est mesure et explique dans le fichier frere, qui reste la reference a lire. Le run part d'une tache de fond, sans ecran : aucun 'confirm' ne doit jamais entrer ici, personne ne l'ecouterait.",
+  "act": "vector",
+  "inputs": {
+    "domaine": {
+      "type": "string",
+      "required": true,
+      "default": "https://ade.bordeaux-inp.fr",
+      "description": "Racine du serveur ADE de l'etablissement. Le defaut garde le fichier jouable seul depuis un poste."
+    },
+    "projet": {
+      "type": "string",
+      "required": true,
+      "default": "1",
+      "description": "Identifiant du projet ADE. Vient du catalogue (colonne edt, champ params) : il change a chaque rentree."
+    },
+    "ressources": {
+      "type": "string",
+      "required": true,
+      "description": "Index des ressources a synchroniser, separes par une virgule."
+    },
+    "debut": {
+      "type": "string",
+      "format": "date",
+      "required": true,
+      "description": "Premier jour de la plage, au format YYYY-MM-DD. Borne INCLUSIVE."
+    },
+    "fin": {
+      "type": "string",
+      "format": "date",
+      "required": true,
+      "description": "Dernier jour de la plage, au format YYYY-MM-DD. Borne INCLUSIVE."
+    }
+  },
+  "vars": {
+    "chemin": "/jsp/custom/modules/plannings/anonymous_cal.jsp",
+    "type_export": "ical"
+  },
+  "options": {
+    "timeout_ms": 60000
+  },
+  "steps": [
+    {
+      "id": "cal",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ inputs.domaine }}{{ vars.chemin }}",
+      "headers": {
+        "Accept": "text/calendar"
+      },
+      "params": {
+        "resources": "{{ inputs.ressources }}",
+        "projectId": "{{ inputs.projet }}",
+        "calType": "{{ vars.type_export }}",
+        "firstDate": "{{ inputs.debut }}",
+        "lastDate": "{{ inputs.fin }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "ics": { "from": "text" }
+      }
+    },
+    {
+      "id": "forme",
+      "action": "assert",
+      "condition": "{{ 'BEGIN:VCALENDAR' in steps.cal.ics }}",
+      "message": "la reponse n'est pas un calendrier : page d'erreur ou projet inconnu"
+    }
+  ],
+  "outputs": {
+    "ics": "{{ steps.cal.ics }}"
+  }
+}

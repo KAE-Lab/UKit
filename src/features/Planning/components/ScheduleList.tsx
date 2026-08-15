@@ -44,6 +44,8 @@ export interface ScheduleListState {
     target: moment.MomentInput | { week: number; year: number };
     schedule: import('../services/PlanningApiService').PlanningEvent[] | import('../services/PlanningApiService').PlanningWeekDay[] | null;
     cacheDate: moment.MomentInput | null;
+    /** Les groupes favoris que le referentiel ne resout plus. Le planning des autres reste affiche. */
+    manquants: readonly string[];
     /** L'echec a afficher quand il n'y a ni reponse ni cache. `null` le reste du temps. */
     failure: UkitFailure | null;
     loading: boolean;
@@ -63,6 +65,7 @@ type ScheduleData =
 interface ScheduleIssue {
     data: ScheduleData | null;
     cacheDate: moment.MomentInput | null;
+    manquants?: readonly string[];
     failure: UkitFailure | null;
 }
 
@@ -77,6 +80,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             target: this.props.mode === 'day' ? moment(this.props.target) : this.props.target,
             schedule: null,
             cacheDate: null,
+            manquants: [],
             failure: null,
             loading: false,
         };
@@ -189,7 +193,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             if (resultat.ok === false) {
                 return resultat.failure.silent === true ? null : this.cacheOrFailure(id, resultat.failure);
             }
-            return this.keep(id, resultat.courses);
+            return this.keep(id, resultat.courses, resultat.manquants ?? []);
         }
 
         const semaine = this.state.target as { week: number; year: number };
@@ -197,13 +201,13 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         if (resultat.ok === false) {
             return resultat.failure.silent === true ? null : this.cacheOrFailure(id, resultat.failure);
         }
-        return this.keep(id, resultat.week);
+        return this.keep(id, resultat.week, resultat.manquants ?? []);
     };
 
     /** Une reponse fraiche : elle alimente le cache, comme avant. */
-    keep(id: string, data: ScheduleData): ScheduleIssue {
+    keep(id: string, data: ScheduleData, manquants: readonly string[] = []): ScheduleIssue {
         AsyncStorage.setItem(id, JSON.stringify({ data, date: moment() }));
-        return { data, cacheDate: null, failure: null };
+        return { data, cacheDate: null, manquants, failure: null };
     }
 
     /**
@@ -223,7 +227,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
     applySchedule(issue: ScheduleIssue) {
         if (issue.data == null) {
-            this.setState({ schedule: null, loading: false, controller: null, cacheDate: null, failure: issue.failure });
+            this.setState({ schedule: null, loading: false, controller: null, cacheDate: null, manquants: [], failure: issue.failure });
             return;
         }
 
@@ -243,7 +247,10 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             NotificationManager.scheduleCourseNotifications(schedule).catch(e => console.warn('Notification scheduling error:', e));
         }
 
-        this.setState({ schedule, loading: false, controller: null, cacheDate: issue.cacheDate, failure: null });
+        this.setState({
+            schedule, loading: false, controller: null,
+            cacheDate: issue.cacheDate, manquants: issue.manquants ?? [], failure: null,
+        });
     }
 
     computeScheduleDay(schedule: import('../services/PlanningApiService').PlanningEvent[], isFavorite: boolean) {
@@ -261,21 +268,49 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         };
     }
 
-    renderCacheMessage() {
-        const { theme, mode } = this.props;
-        if (this.state.cacheDate === null) return null;
+    /**
+     * Un bandeau au-dessus de la liste : la forme que ce depot donne a « ce que tu vois est partiel ».
+     *
+     * Deux raisons l'affichent, et elles peuvent coexister — une donnee servie depuis le cache, et un
+     * groupe favori que le referentiel ne resout plus. Aucune des deux n'est un echec : le planning
+     * est la, il lui manque quelque chose, et le taire serait pire que de l'ecrire.
+     */
+    renderNotice(texte: string, icone: boolean) {
+        const { theme } = this.props;
         return (
             <View style={{
                 flexDirection: 'row', alignItems: 'center', backgroundColor: theme.greyBackground,
                 paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
                 borderRadius: tokens.radius.md, marginBottom: tokens.space.md, marginHorizontal: tokens.space.md
             }}>
-                {mode === 'week' && <MaterialCommunityIcons name="clock-outline" size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
-                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
-                    {Translator.get('OFFLINE_DISPLAY_FROM_DATE', moment(this.state.cacheDate).format('lll'))}
-                </Text>
+                {icone && <MaterialCommunityIcons name="clock-outline" size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
+                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, flex: 1 }}>{texte}</Text>
             </View>
         );
+    }
+
+    renderCacheMessage() {
+        const { mode } = this.props;
+        const bandeaux = [];
+
+        if (this.state.cacheDate !== null) {
+            bandeaux.push(this.renderNotice(
+                Translator.get('OFFLINE_DISPLAY_FROM_DATE', moment(this.state.cacheDate).format('lll')),
+                mode === 'week',
+            ));
+        }
+
+        // Un favori perime ne vide plus le planning agrege : les autres sont joues, et celui-la est
+        // **nomme**. Un referentiel se perime a chaque rentree, donc ce cas est ordinaire (jalon 6-I).
+        if (this.state.manquants.length > 0) {
+            bandeaux.push(this.renderNotice(
+                Translator.get('TIMETABLE_GROUPS_MISSING', this.state.manquants.join(', ')),
+                false,
+            ));
+        }
+
+        if (bandeaux.length === 0) return null;
+        return <>{bandeaux.map((bandeau, index) => <React.Fragment key={index}>{bandeau}</React.Fragment>)}</>;
     }
 
     renderEmptyFavorites() {

@@ -3,7 +3,11 @@
 L'onglet historique et le cœur de l'application : consulter son emploi du temps universitaire, par
 jour ou par semaine, pour un groupe donné ou pour l'agrégation de ses groupes favoris.
 
-Source de données : Celcat, section 1 de [sources-externes.md](../sources-externes.md).
+Sources de données : **deux**, et le catalogue décide laquelle — le serveur Celcat de l'université
+(section 1 de [sources-externes.md](../sources-externes.md)) ou son **export iCalendar** (section 9,
+jalon [6-I](../phase-6/6-i-planning-universel.md)). Les écrans ne savent pas qu'il y en a deux : le
+contrat `PlanningEvent` est le même, et c'est ce qui a permis d'ajouter Bordeaux INP sans toucher un
+seul composant.
 
 ## Parcours utilisateur
 
@@ -36,8 +40,12 @@ DayView (état : jour/semaine sélectionnés, mode)
        └─ ScheduleList
             ├─ isConnected()                    NetInfo
             ├─ PlanningApiService.fetchCalendarDay | fetchCalendarWeek
-            │      └─ Blueprint ukit.celcat.jour | ukit.celcat.semaine   (moteur embarqué)
-            │      └─ PlanningApiMapping         projection, filtres, tri, découpage
+            │      └─ sourceEdt()                 le catalogue decide : Celcat ou iCalendar
+            │      ├─ Blueprint ukit.celcat.jour | ukit.celcat.semaine   (moteur embarqué)
+            │      │      └─ PlanningApiMapping   projection Celcat, filtres
+            │      └─ Blueprint ukit.portail.<code>.edt                  (moteur embarqué)
+            │             └─ IcsMapping           projection iCalendar (ical.js)
+            │      └─ PlanningAssembly            tri, découpage en six jours — commun aux deux
             ├─ AsyncStorage  <groupes>@date | <groupes>@Week<n>   (écriture si succès, lecture si échec)
             ├─ SourceFailureNotice                                (si ni réponse ni cache)
             ├─ PlanningDataManager.extractUEsFromCourses          (alimente les filtres)
@@ -102,7 +110,14 @@ interface PlanningWeekDay {
 
 `CourseData` ([`CourseCard.tsx`](../../src/features/Planning/components/CourseCard.tsx)) est le
 sous-ensemble consommé par les composants d'affichage. Le champ `UE` y est ajouté à l'exécution par
-`CourseManager.computeCourseUE`.
+`CourseManager.computeCourseUE`, qui délègue la règle à
+[`separerCodeUE`](../../src/features/Planning/services/PlanningAssembly.ts).
+
+**Un code d'UE contient au moins une lettre**, et ce n'est pas cosmétique : les titres d'ADE
+commencent souvent par une année, et sans cette contrainte `2025-2026 - Les rencontres du Réseau
+d'Écoute` devenait un cours d'UE `2026` intitulé `- Les rencontres…`. Seize matières d'un seul groupe
+étaient dans ce cas, mesurées le 2026-08-15. Les codes de Celcat — `4TIN602U` — en contiennent tous,
+donc rien ne change pour eux.
 
 Les quatre méthodes du service rendent un **résultat discriminé** plutôt qu'un `null` :
 
@@ -197,12 +212,117 @@ revenant dans l'application.
   source qui a changé de contrat.
 - Un dimanche, ou un jour sans cours : la carte « pas de cours » doit s'afficher.
 
+## Les deux sources, et ce qui les départage
+
+Depuis le jalon [6-I](../phase-6/6-i-planning-universel.md), le catalogue déclare **ce qui existe** et
+[`sourceEdt()`](../../src/shared/etablissements/edt.ts) en tire la source à jouer :
+
+| Le catalogue déclare | La source jouée | Les groupes viennent de |
+|---|---|---|
+| `celcat_domaine` | les quatre Blueprints `ukit.celcat.*` | un run — la liste complète du serveur |
+| `edt` (et pas de Celcat) | `ukit.portail.<code>.edt` et son frère `.annee` | le **référentiel du catalogue**, sans réseau |
+| ni l'un ni l'autre | aucune — `PLANNING_ABSENT`, aucun run ne part | — |
+
+**Celcat gagne quand les deux sont déclarés**, et c'est écrit : un serveur interrogeable a une liste
+de groupes vivante, là où un référentiel iCalendar est un relevé d'auteur, forcément partiel.
+Préférer la source qui se corrige toute seule est le bon défaut.
+
+Ce n'est **pas** une branche par établissement — aucun `if (etablissement === …)` n'apparaît nulle
+part — c'est une lecture de données, exactement comme l'hôte Celcat depuis le jalon 6-G.
+
+### Deux prédicats, et les confondre casserait le Campus
+
+`planningDisponible()` et `sallesDisponibles()` ne posent pas la même question, et le jalon 6-I les a
+séparés parce qu'un seul prédicat en gardait **trois** :
+
+| Prédicat | Ce qu'il garde | Ce dont il dépend |
+|---|---|---|
+| `planningDisponible()` | l'écran « pas d'emploi du temps », l'étape des groupes à l'accueil | Celcat **ou** iCalendar |
+| `sallesDisponibles()` | la section **salles libres** du Campus | un inventaire de salles Celcat, propre ou **emprunté** |
+
+Les salles libres se reconstruisent depuis un inventaire Celcat, que l'emploi du temps vienne de là
+ou non. Fondre les deux prédicats en un seul aurait fait réapparaître pour Bordeaux INP une section
+définitivement cassée — le défaut que la campagne 6-G avait justement corrigé — et les garder séparés
+est aussi ce qui a permis, deux heures plus tard, de la **rallumer** proprement.
+
+### Un établissement peut emprunter l'inventaire d'un autre
+
+Décision produit du 2026-08-15, prise en jouant le jalon sur appareil : la colonne `salles_libres`
+laisse un établissement pointer le serveur d'inventaire d'un autre. Bordeaux INP emprunte celui de
+l'Université de Bordeaux.
+
+La raison est géographique, pas technique. Les écoles de l'INP sont sur le campus de Talence —
+l'ENSC est à deux cents mètres des bâtiments que cette recherche liste. Refuser la fonctionnalité à
+ses étudiants parce que leur emploi du temps vient d'ADE les priverait d'un service qui leur sert
+réellement.
+
+L'emprunt ne concerne **que** les salles : l'emploi du temps garde sa propre source, et les bâtiments
+proposés restent ceux de l'UB, en accès libre. Adapter la recherche aux bâtiments de l'INP est un
+sujet distinct — ils ne sont pas en accès libre, et le référentiel les publie avec
+`acces_libre = false`.
+
+### Ce que l'iCalendar donne, et ce qu'il ne donne pas
+
+[`IcsMapping`](../../src/features/Planning/services/IcsMapping.ts) projette un événement sur le même
+`PlanningEvent`. Trois champs n'ont pas de source directe :
+
+- **`color`** — un iCalendar n'en porte aucune. Une empreinte stable de la matière choisit l'une des
+  huit teintes de la palette dérivée (clés `palette-1…8`). Même cours, même couleur toute l'année ;
+  Bordeaux ne change pas. **Les huit teintes sont toutes vives**, et c'est une correction : la
+  première version reprenait celles de la table Celcat, dont un brun qui vire au gris en thème
+  sombre. Il attrapait 8 matières sur 61, soit 467 cours sur l'année — un cours sur sept avait l'air
+  de n'avoir pas de couleur. Une collision se lit comme deux cours de la même couleur ; une teinte
+  neutre se lit comme une couleur manquante, et c'est la seule des deux qui soit un défaut ;
+- **`category`** — elle vit dans `DESCRIPTION`, en texte libre. L'ancre fiable est le **code de
+  module** (`COG7-CILAN`) : le type est la ligne qui le suit. Un événement sans code de module n'a pas
+  de type dérivable, la catégorie vaut `''`, et la pastille ne s'affiche pas ;
+- **`description`** — la salle vient d'un champ séparé (`LOCATION`) et est remise **en tête**, d'où le
+  `depuis: 0` du format de salle. Trois lignes en sont retirées : l'horodatage `(Exporté le:…)`, qui
+  change à chaque requête et mettrait une horloge dans la fiche ; la matière et le type, que l'écran
+  affiche **déjà** en titre et en pastille. Les deux dernières ont été trouvées sur appareil — la
+  fiche portait un `TD` en pastille et un `TD` en ligne.
+
+### L'icône d'une ligne se déduit de son contenu, pas de son rang
+
+C'était une règle positionnelle — première ligne un groupe, deuxième un enseignant, troisième une
+salle — recopiée dans la carte et dans la fiche. Elle tenait tant que Celcat était la seule source :
+ce serveur sert toujours ses lignes dans cet ordre. Avec un export iCalendar elle désignait n'importe
+quoi, et la campagne l'a montré du premier coup — la salle `CD-O204` portait l'icône « groupe », le
+type `TD` portait l'icône « lieu ».
+
+[`CourseAnnotations`](../../src/features/Planning/components/CourseAnnotations.ts) lit désormais le
+**contenu**. La salle se reconnaît contre le référentiel des lieux lui-même, c'est-à-dire contre la
+donnée d'établissement introduite par ce jalon : une ligne qui désigne un bâtiment connu *est* une
+ligne de salle. L'ordre des tests compte, et un test le verrouille : le code de module passe **avant**
+la salle, parce que le motif bordelais `([A-Z][0-9]+)` trouve `B1` dans `JPB1-OPTIQ` — et `B1` est un
+vrai bâtiment.
+
+Les dates, elles, sont **en UTC honnête** : le même créneau hebdomadaire est servi `07:30Z` en
+septembre et `08:30Z` en novembre, soit 09:30 à Paris les deux fois. Il n'y a pas de `VTIMEZONE` à
+interpréter.
+
 ## Quand l'établissement ne publie pas d'emploi du temps
 
-`celcat_domaine` à `null` dans le catalogue veut dire « cette université ne publie pas son emploi du
+Ni `celcat_domaine` ni `edt` dans le catalogue veut dire « cette université ne publie pas son emploi du
 temps ici ». Le service rend alors `PLANNING_ABSENT` **sans qu'aucun run ne parte**, et l'écran affiche
 « Cette université ne publie pas encore son emploi du temps dans UKit » — sans bouton Réessayer, parce
 que rien n'est en panne et que la source ne répondra pas mieux dans dix secondes.
+
+Un cinquième cas s'y ajoute depuis 6-I : un favori dont la ressource **ne figure plus au
+référentiel**. Un relevé se périme à la rentrée suivante, et rendre une journée vide ferait passer un
+référentiel obsolète pour une semaine sans cours.
+
+Sa forme dépend de ce qu'il reste à montrer, et la distinction compte :
+
+- **quelques favoris périmés parmi d'autres** → le planning des autres s'affiche, et un **bandeau**
+  nomme ceux qui manquent. C'est la règle de couverture partielle du dépôt : ni un succès muet, ni un
+  échec ;
+- **tous les favoris périmés** → il n'y a rien à demander, et l'écran dit « ce groupe n'existe plus »,
+  sans bouton Réessayer.
+
+La première forme est une correction trouvée sur appareil : la version d'origine échouait dès qu'un
+seul nom manquait, et vidait donc un planning dont la plus grande partie était parfaitement
+disponible.
 
 C'est un écran **différent** de celui d'une panne, d'une journée sans cours **et d'une liste de
 favoris vide** ; les quatre se ressemblaient avant la Phase 6 et c'est précisément ce qu'elle a
@@ -236,6 +356,28 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
   interrogée le 2026-08-09.
 - **Deux caches concurrents pour la liste des groupes** (`groups` et `groupList`), écrits par deux
   chemins différents et jamais réconciliés.
+- **Le cache est par vue, pas par jour**, et ça surprend hors ligne : une semaine jamais consultée en
+  ligne n'a rien à replier **même si plusieurs de ses jours sont en cache**, et affiche donc l'écran
+  d'échec là où les mêmes jours s'ouvrent un par un. Les deux clés sont indépendantes
+  (`…@AAAA/MM/JJ` et `…@Week<n>`) et `cacheOrFailure` ne consulte que celle de la vue courante.
+  C'est cohérent — le bandeau porte **une** date de récupération, et l'assembler depuis des jours
+  récupérés à des heures différentes en ferait un mensonge — mais ce n'est pas ce qu'on attend.
+  Comportement antérieur au jalon 6-I, constaté en le vérifiant.
+- **Le référentiel iCalendar est un relevé d'auteur, et il se périme.** Les index de ressource d'ADE
+  sont positionnels et propres à un projet, et un projet est annuel : à la rentrée, le relevé se
+  rejoue (`node tools/releve-ade.mjs --projet <n>`) et se republie. Un groupe favori qui ne résout
+  plus produit un message dédié plutôt qu'une journée vide.
+- **Le référentiel est partiel.** L'export anonyme d'ADE expose une tranche arbitraire de l'arbre des
+  ressources : treize entrées couvrent les cinq écoles de Bordeaux INP à des granularités inégales —
+  une promotion ici, un groupe là. La liste s'étend par publication.
+- **La recherche de groupes ne filtre pas côté serveur pour une source iCalendar**, et n'en a pas
+  besoin : la liste tient dans le catalogue et la recherche est déjà locale.
+- **Éteindre la synchronisation calendrier ne retire pas les cours déjà écrits** dans le calendrier
+  système. L'interrupteur des réglages arrête les passages suivants, rien de plus ; la fonction de
+  nettoyage existe (`deleteAllPreviousCalendarEntries`) mais n'est appelée que lorsqu'on **change** de
+  calendrier cible. Défaut antérieur au jalon 6-I, relevé en le vérifiant.
+- **La synchronisation ne porte que le premier groupe favori** (`_favoriteGroups[0]`), pas le planning
+  agrégé. Comportement d'origine, relevé en lisant le code au jalon 6-I et jamais interrogé depuis.
 - **`computeScheduleWeek` est appelée au rendu**, pas au chargement : le calcul des UE et le filtrage
   de la vue semaine se rejouent à chaque rendu de `DayWeek`.
 - **`ScheduleList` est un composant à classe dense** : chargement, cache, calcul et rendu dans le même
@@ -256,6 +398,8 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
 | [`screens/CourseScreen.tsx`](../../src/features/Planning/screens/CourseScreen.tsx) | fiche d'un cours : détails, extraction de la salle, carte Leaflet intégrée |
 | [`components/ScheduleList.tsx`](../../src/features/Planning/components/ScheduleList.tsx) | chargement et rendu d'un planning (jour ou semaine), cache, filtres, notifications |
 | [`components/ScheduleListUtils.ts`](../../src/features/Planning/components/ScheduleListUtils.ts) | `groupOverlappingCourses` : regroupement des cours qui se chevauchent |
+| [`components/CourseAnnotations.ts`](../../src/features/Planning/components/CourseAnnotations.ts) | l'icône d'une ligne de description, déduite de son contenu — partagée par la carte et la fiche |
+| [`components/CourseAnnotations.test.ts`](../../src/features/Planning/components/CourseAnnotations.test.ts) | ses tests, sur les deux formes réelles de description |
 | [`components/DayViewHeader.tsx`](../../src/features/Planning/components/DayViewHeader.tsx) | bandeau collant : titre, boutons de navigation, curseurs jour et semaine |
 | [`components/CalendarDay.tsx`](../../src/features/Planning/components/CalendarDay.tsx) | pastille d'un jour dans le curseur |
 | [`components/CalendarWeek.tsx`](../../src/features/Planning/components/CalendarWeek.tsx) | pastille d'une semaine dans le curseur |
@@ -265,7 +409,12 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
 | [`components/CalendarNewEventPrompt.tsx`](../../src/features/Planning/components/CalendarNewEventPrompt.tsx) | modale d'ajout d'un cours au calendrier système (permissions, calendrier par défaut) |
 | [`components/DayWeekCollapsible.tsx`](../../src/features/Planning/components/DayWeekCollapsible.tsx) | section repliable d'un jour dans la vue semaine, avec résolution tolérante de la date |
 | [`components/GroupSelectionComponents.tsx`](../../src/features/Planning/components/GroupSelectionComponents.tsx) | en-tête de section et ligne de groupe de l'écran de recherche |
-| [`services/PlanningApiService.ts`](../../src/features/Planning/services/PlanningApiService.ts) | joue les quatre Blueprints Celcat, et calcule les plages qui dépendent de l'heure courante |
-| [`services/PlanningApiMapping.ts`](../../src/features/Planning/services/PlanningApiMapping.ts) | contrats et projection : sujet, description, filtres, tri, découpage de la semaine |
+| [`services/PlanningApiService.ts`](../../src/features/Planning/services/PlanningApiService.ts) | les quatre signatures publiques : choisit la source déclarée, joue le Blueprint, calcule les plages qui dépendent de l'heure courante |
+| [`services/PlanningApiMapping.ts`](../../src/features/Planning/services/PlanningApiMapping.ts) | la projection **Celcat** : sujet, description, filtre `Vacances`, refiltrage sur la date |
 | [`services/PlanningApiMapping.test.ts`](../../src/features/Planning/services/PlanningApiMapping.test.ts) | ses tests, joués par `npm test` |
+| [`services/IcsMapping.ts`](../../src/features/Planning/services/IcsMapping.ts) | la projection **iCalendar** : type ancré sur le code de module, salle en tête, couleur dérivée |
+| [`services/IcsMapping.test.ts`](../../src/features/Planning/services/IcsMapping.test.ts) | ses tests, sur des corps mesurés contre ADE |
+| [`services/PlanningIcalSource.ts`](../../src/features/Planning/services/PlanningIcalSource.ts) | la branche iCalendar : résolution des ressources par le référentiel, les deux runs |
+| [`services/PlanningAssembly.ts`](../../src/features/Planning/services/PlanningAssembly.ts) | le contrat `PlanningEvent`, la lecture d'un code d'UE, le tri et le découpage en six jours — **communs aux deux sources** |
+| [`services/PlanningAssembly.test.ts`](../../src/features/Planning/services/PlanningAssembly.test.ts) | la règle du code d'UE sur les deux formes de titre |
 | [`services/PlanningDataManager.ts`](../../src/features/Planning/services/PlanningDataManager.ts) | manager observable : liste des groupes en cache 7 jours, extraction des UE disponibles |

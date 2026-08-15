@@ -44,6 +44,8 @@ const en = {
 	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
 	ERROR_PORTAL_UNAVAILABLE: 'This university is not connected to UKit yet.',
 	ERROR_TIMETABLE_UNAVAILABLE: 'This university does not publish its timetable in UKit yet.',
+	ERROR_TIMETABLE_GROUP_UNKNOWN: 'This group no longer exists in your university timetable. Pick another one.',
+	TIMETABLE_GROUPS_MISSING: 'Groups not found, not shown here: $-',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
 	PARTIAL_COVERAGE: 'Some areas did not respond: this list may be incomplete.',

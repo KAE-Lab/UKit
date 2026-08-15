@@ -1,5 +1,5 @@
 /**
- * Ce que le catalogue fournit aux Blueprints d'emploi du temps.
+ * Ce que le catalogue fournit aux Blueprints Celcat.
  *
  * Les six fichiers `ukit.celcat.*` portaient l'hote et les codes d'inventaire dans leurs `vars`
  * jusqu'au jalon 6-G. Ils les recoivent desormais en **entrees**, et les valeurs viennent de la ligne
@@ -9,20 +9,20 @@
  *
  * `null` n'est pas une panne. Le serveur d'emplois du temps de Bordeaux est interrogeable sans
  * authentification, et c'est une exception francaise plus qu'une regle : la plupart des universites
- * mettent le leur derriere un SSO, ou utilisent un autre produit. Un etablissement sans
- * `celcat_domaine` **ne publie pas** son emploi du temps ici, et l'application doit le dire au lieu
- * d'echouer — les deux appellent des ecrans opposes.
+ * mettent le leur derriere un SSO, ou utilisent un autre produit. Depuis le jalon 6-I, un
+ * etablissement sans `celcat_domaine` peut malgre tout avoir un emploi du temps — par son export
+ * iCalendar — et c'est `edt.ts` qui arbitre entre les deux sources.
  *
- * Ce module ne touche a rien : il projette une ligne de catalogue. Il vit a cote du catalogue plutot
- * que dans un service parce que **deux** domaines le lisent, Planning et Campus, et qu'il ne doit pas
- * en exister deux versions.
+ * **Ce module ne parle donc plus que de Celcat**, et c'est le decoupage que le jalon 6-I a impose :
+ * les salles libres du Campus se reconstruisent depuis l'inventaire du *meme serveur* Celcat, elles
+ * ne survivent pas a un etablissement qui n'en a pas — meme si celui-ci publie un emploi du temps
+ * ailleurs. Melanger les deux questions dans un seul predicat ferait reapparaitre pour Bordeaux INP
+ * une section definitivement cassee, c'est-a-dire exactement le defaut que la campagne 6-G avait
+ * corrige.
  *
- * Voir docs/features/planning.md et docs/phase-6/6-g-etablissements.md.
+ * Voir docs/features/planning.md, docs/phase-6/6-g-etablissements.md et 6-i-planning-universel.md.
  */
 
-// L'import vise `../aetherius/failures` et non la porte d'entree `../aetherius` : celle-ci
-// re-exporte la facade, qui tire React Native. Meme frontiere que shared/supabase/failures.ts.
-import { serviceAbsent, type UkitFailure } from '../aetherius/failures';
 import { getEtablissementActif } from './catalogue';
 
 /** Les entrees communes aux six Blueprints Celcat, prêtes a etre passees a `runBlueprint`. */
@@ -32,13 +32,24 @@ export interface EntreesCelcat {
 }
 
 /**
- * Les entrees pour un role d'inventaire, ou `null` si l'etablissement ne publie pas d'emploi du temps.
+ * Les entrees pour un role d'inventaire, ou `null` si l'etablissement n'a pas de serveur Celcat.
  *
  * Le role decide du code : les groupes d'etudiants et les salles sont deux inventaires distincts du
  * meme serveur, et c'est la seule chose qui distingue les deux familles de Blueprints.
  */
 export function entreesCelcat(role: 'groupes' | 'salles'): EntreesCelcat | null {
     const etablissement = getEtablissementActif();
+
+    // Un etablissement peut **emprunter** l'inventaire de salles d'un autre serveur, et c'est une
+    // decision produit prise sur appareil le 2026-08-15 : les etudiants de Bordeaux INP sont sur le
+    // campus de Talence, celui-la meme dont la recherche de salles libres liste les batiments. Leur
+    // refuser la fonctionnalite parce que leur emploi du temps vient d'ailleurs les priverait d'un
+    // service qui leur sert reellement. L'emprunt ne concerne **que** les salles : l'emploi du temps
+    // continue de venir de leur propre source (voir edt.ts).
+    if (role === 'salles' && etablissement.sallesLibres !== null) {
+        return etablissement.sallesLibres;
+    }
+
     if (etablissement.celcatDomaine === null) return null;
 
     return {
@@ -47,22 +58,15 @@ export function entreesCelcat(role: 'groupes' | 'salles'): EntreesCelcat | null 
     };
 }
 
-/** L'etablissement selectionne publie-t-il un emploi du temps ? Ce que les ecrans lisent pour se taire. */
-export function planningDisponible(): boolean {
-    return getEtablissementActif().celcatDomaine !== null;
-}
-
 /**
- * L'echec d'un emploi du temps que l'etablissement ne publie pas.
+ * L'etablissement selectionne donne-t-il acces a une recherche de salles libres ?
  *
- * `config` et non `unavailable` : rien n'est en panne, et proposer de reessayer serait faux — la
- * source n'existe pas, elle ne repondra pas mieux dans dix secondes. Le code nomme le cas pour que
- * l'ecran dise « pas encore d'emploi du temps ici » plutot que « service indisponible ».
+ * Ce que le Campus lit pour masquer la section. Elle reste **distincte** de `planningDisponible()`,
+ * et il ne faut pas les refondre : elles ne dependent pas de la meme chose. Un etablissement peut
+ * avoir un emploi du temps sans inventaire de salles — c'est le cas d'un export iCalendar — et,
+ * depuis ce jalon, en emprunter un sans avoir d'emploi du temps Celcat. Les confondre a deja produit
+ * un defaut au jalon 6-G, et en aurait produit un autre ici.
  */
-export function planningAbsent(): UkitFailure {
-    return serviceAbsent(
-        'ERROR_TIMETABLE_UNAVAILABLE',
-        'PLANNING_ABSENT',
-        'l etablissement ne publie pas d emploi du temps',
-    );
+export function sallesDisponibles(): boolean {
+    return entreesCelcat('salles') !== null;
 }

@@ -91,6 +91,7 @@ l'application — sans intermédiaire.
 | Celcat (`celcat.u-bordeaux.fr`) | emplois du temps, groupes, salles et leur occupation | API interne, sans authentification |
 | CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires, extraction de pages |
 | CAS / mondossierweb Bordeaux INP | identité étudiant | identifiants universitaires, extraction de pages |
+| ADE Bordeaux INP | emploi du temps | export iCalendar anonyme, aucune authentification |
 | Affluences | bibliothèques, affluence temps réel, horaires | API privée |
 | Croustillant | restaurants CROUS et menus | API publique |
 | OpenStreetMap / CartoDB | fonds de carte | tuiles publiques |
@@ -226,8 +227,10 @@ livré ; elle est mise à jour à chaque contribution.
   bascule directe sur Celcat, et **un serveur retiré de l'architecture** —, puis **la session
   universitaire** (6-F), le morceau qui justifiait la phase. Depuis 6-G, **l'application n'est plus
   mono-université** : le catalogue vit en base, et **Bordeaux INP a été ajouté sans release** — une
-  ligne en base, un Blueprint publié. Restent l'emploi du temps universel (6-I), le compte à l'accueil
-  (6-J), **la refonte visuelle** (6-K et les sessions qui suivent) et la clôture (6-Z) :
+  ligne en base, un Blueprint publié. Depuis 6-I, **il a aussi son emploi du temps**, par l'export
+  iCalendar de son serveur ADE : une seconde source de planning, choisie par le catalogue, sans qu'un
+  seul écran apprenne qu'il en existe deux. Restent le compte à l'accueil (6-J), **la refonte
+  visuelle** (6-K et les sessions qui suivent) et la clôture (6-Z) :
   [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,

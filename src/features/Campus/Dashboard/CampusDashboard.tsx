@@ -11,7 +11,7 @@ import { BdeSection } from './components/BdeSection';
 import { CrousSection } from './components/CrousSection';
 import { LibrarySection } from './components/LibrarySection';
 import { FreeRoomSection } from './components/FreeRoomSection';
-import { planningDisponible } from '../../../shared/etablissements';
+import { sallesDisponibles } from '../../../shared/etablissements';
 
 const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) => {
     const { themeName } = useContext(AppContext);
@@ -76,7 +76,7 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
                           * ou une erreur permanente — meme regle que la ligne de messagerie d'un
                           * etablissement sans webmail extractible (jalon 6-G).
                           */}
-                        {planningDisponible() && (
+                        {sallesDisponibles() && (
                             <FreeRoomSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
                         )}
                     </Animated.ScrollView>

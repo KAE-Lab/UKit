@@ -18,6 +18,12 @@
 
 import type { EtablissementRow } from '../supabase/types';
 
+/** Un serveur d'inventaire de salles : la racine Celcat, et le code d'inventaire des salles. */
+export interface EntreesSalles {
+    readonly domaine: string;
+    readonly res_type: string;
+}
+
 /** Un point de balayage des bibliotheques. Une decision produit, pas une propriete de la source. */
 export interface PointBalayage {
     readonly lat: number;
@@ -34,6 +40,59 @@ export interface PointBalayage {
 export interface CelcatResTypes {
     readonly groupes: string;
     readonly salles: string;
+}
+
+/** Un groupe d'etudiants du referentiel iCalendar : le nom affiche, et l'index a demander. */
+export interface GroupeEdt {
+    readonly nom: string;
+    readonly ressource: string;
+}
+
+/**
+ * L'emploi du temps par export iCalendar (jalon 6-I).
+ *
+ * Le catalogue dit **ce qui existe** — quels Blueprints jouer, avec quels parametres d'annee, et
+ * quels groupes proposer — et rien de plus : le *quoi faire* reste dans le Blueprint. C'est la ligne
+ * que le jalon 6-G a tracee et qu'une colonne « comment obtenir l'emploi du temps » frolerait.
+ *
+ * `params` porte les entrees propres a l'etablissement et a l'annee. Chez ADE c'est `projet`, qui
+ * designe un projet ADE et **change a chaque rentree** : le loger ici plutot que dans les `vars` du
+ * fichier fait qu'une rentree est **une** publication — la meme que celle du referentiel — au lieu
+ * de deux.
+ *
+ * `groupes` est le referentiel releve par `tools/releve-ade.mjs`. Il existe parce qu'ADE n'expose
+ * aucun arbre de ressources anonyme : l'export prend des index positionnels, et rien dans la source
+ * ne dit lequel est quel groupe.
+ */
+export interface EdtIcal {
+    /** Le Blueprint du jour et de la semaine, sous `ukit.portail.`. */
+    readonly blueprint: string;
+    /** Celui de la plage annuelle, qui ne differe que par son plafond de delai. */
+    readonly blueprintAnnee: string;
+    /** Les entrees propres a l'etablissement et a l'annee, etalees dans les entrees du run. */
+    readonly params: Readonly<Record<string, string>>;
+    readonly groupes: readonly GroupeEdt[];
+}
+
+/**
+ * Comment lire un code de batiment dans un libelle de salle, chez cet etablissement.
+ *
+ * C'etait du code bordelais jusqu'au jalon 6-I : une decoupe sur ` | ` puis `/`, et un motif
+ * `([A-Z][0-9]+)` qui attend `A29` ou `B18`. Aucune salle de Bordeaux INP n'y correspond — elles
+ * s'ecrivent `CD-O204`, `CA-N103`, `E103 - FabLaB,CD-O108` — et c'est exactement la constante
+ * bordelaise deguisee en regle generale que le jalon 6-G a corrigee onze fois ailleurs.
+ *
+ * `depuis` existe parce que la ligne de salle n'est pas au meme rang selon la source : les
+ * descriptions Celcat la portent a partir de la troisieme ligne, l'iCalendar la met en tete parce
+ * qu'elle vient d'un champ separe (`LOCATION`).
+ */
+export interface FormatSalles {
+    /** Les separateurs qui decoupent un libelle en salles successives. */
+    readonly separateurs: readonly string[];
+    /** Le motif dont le premier groupe capturant est le code de batiment. */
+    readonly motif: string;
+    /** Le rang de la premiere ligne de description susceptible de porter une salle. */
+    readonly depuis: number;
 }
 
 /**
@@ -55,6 +114,22 @@ export interface Etablissement {
     /** La racine du serveur d'emplois du temps. `null` : cet etablissement n'en publie pas ici. */
     readonly celcatDomaine: string | null;
     readonly celcatResTypes: CelcatResTypes;
+    /**
+     * L'export iCalendar, quand l'etablissement n'est pas sur un Celcat ouvert. `null` : il n'en a
+     * pas — et un etablissement dont **les deux** sont nuls n'a pas d'emploi du temps du tout, ce que
+     * l'onglet Planning dit au lieu d'echouer (jalon 6-I).
+     */
+    readonly edt: EdtIcal | null;
+    /** Comment lire un code de batiment dans une salle. Le defaut reproduit le comportement Celcat. */
+    readonly salles: FormatSalles;
+    /**
+     * Le serveur d'inventaire des salles libres, quand il n'est **pas** celui de l'etablissement.
+     *
+     * `null` : celui de l'etablissement fait l'affaire — c'est le cas general, et celui de Bordeaux.
+     * Une valeur : cet etablissement emprunte l'inventaire d'un autre serveur, parce que ses etudiants
+     * sont physiquement sur le meme campus. Voir `entreesCelcat`.
+     */
+    readonly sallesLibres: EntreesSalles | null;
     readonly bibliothequesPoints: readonly PointBalayage[];
     /**
      * Les adresses des services universitaires ouverts dans le navigateur integre, par point d'entree
@@ -101,6 +176,19 @@ const POINTS_BORDEAUX: readonly PointBalayage[] = [
     { lat: 46.3237, lng: -0.4647 }, // Niort
 ];
 
+/** Les valeurs par defaut d'un champ que la ligne ne porte pas. Un seul endroit, pour un seul sens. */
+const RES_TYPES_PAR_DEFAUT: CelcatResTypes = { groupes: '103', salles: '102' };
+
+/**
+ * Le format de salle par defaut : celui de Celcat, tel qu'il vivait en dur dans `AppCore` avant le
+ * jalon 6-I.
+ *
+ * Une ligne sans colonne `salles` garde donc **exactement** le comportement d'avant, y compris sur
+ * une base qui n'aurait pas encore recu la colonne. C'est la meme regle que `RES_TYPES_PAR_DEFAUT` :
+ * un defaut n'est pas une commodite, c'est ce qui rend la migration invisible.
+ */
+const SALLES_PAR_DEFAUT: FormatSalles = { separateurs: [' | ', '/'], motif: '([A-Z][0-9]+)', depuis: 2 };
+
 /**
  * Le socle embarque : un seul etablissement, et c'est voulu.
  *
@@ -117,6 +205,9 @@ const SOCLE: Readonly<Record<string, Etablissement>> = {
         portailMessagerie: 'ukit.portail.bordeaux.messagerie',
         celcatDomaine: 'https://celcat.u-bordeaux.fr/calendar',
         celcatResTypes: { groupes: '103', salles: '102' },
+        edt: null,
+        salles: SALLES_PAR_DEFAUT,
+        sallesLibres: null,
         bibliothequesPoints: POINTS_BORDEAUX,
         services: {
             ent: 'https://ent.u-bordeaux.fr',
@@ -128,9 +219,6 @@ const SOCLE: Readonly<Record<string, Etablissement>> = {
         ordre: 0,
     },
 };
-
-/** Les valeurs par defaut d'un champ que la ligne ne porte pas. Un seul endroit, pour un seul sens. */
-const RES_TYPES_PAR_DEFAUT: CelcatResTypes = { groupes: '103', salles: '102' };
 
 function texteOuNull(valeur: unknown): string | null {
     return typeof valeur === 'string' && valeur !== '' ? valeur : null;
@@ -179,6 +267,93 @@ function projeterResTypes(valeur: unknown): CelcatResTypes {
 }
 
 /**
+ * Le referentiel des groupes d'un export iCalendar, reduit aux entrees exploitables.
+ *
+ * Un doublon de **nom** est ecarte, et le premier gagne : le nom est ce que l'utilisateur choisit et
+ * ce qui compose la cle de cache, deux ressources sous un meme nom rendraient donc le planning
+ * dependant de l'ordre de lecture de la base. Le releve en produit reellement — mesure du
+ * 2026-08-15 : `S3` designe cinq index differents.
+ */
+function projeterGroupesEdt(valeur: unknown): readonly GroupeEdt[] {
+    if (!Array.isArray(valeur)) return [];
+
+    const groupes: GroupeEdt[] = [];
+    const vus = new Set<string>();
+    for (const brut of valeur) {
+        const nom = texteOuNull((brut as { nom?: unknown })?.nom);
+        const ressource = texteOuNull((brut as { ressource?: unknown })?.ressource);
+        if (nom === null || ressource === null || vus.has(nom)) continue;
+
+        vus.add(nom);
+        groupes.push({ nom, ressource });
+    }
+    return groupes;
+}
+
+/**
+ * L'export iCalendar d'une ligne, ou `null` si elle n'en declare pas d'exploitable.
+ *
+ * Les deux noms de Blueprint sont **obligatoires** : sans eux il n'y a rien a jouer, et rendre un
+ * objet a moitie forme ferait echouer un run au lieu de faire dire a l'ecran « pas d'emploi du temps
+ * ici ». Le referentiel, lui, peut etre vide — une universite dont on n'a pas encore releve les
+ * groupes est un cas normal, et l'ecran de recherche le montre comme une liste vide.
+ */
+function projeterEdt(valeur: unknown): EdtIcal | null {
+    if (valeur === null || typeof valeur !== 'object' || Array.isArray(valeur)) return null;
+
+    const source = valeur as Record<string, unknown>;
+    const blueprint = texteOuNull(source.blueprint);
+    const blueprintAnnee = texteOuNull(source.blueprint_annee);
+    if (blueprint === null || blueprintAnnee === null) return null;
+
+    return {
+        blueprint,
+        blueprintAnnee,
+        params: projeterTableDeChaines(source.params),
+        groupes: projeterGroupesEdt(source.groupes),
+    };
+}
+
+/**
+ * Le format de salle d'une ligne, champ par champ, avec le comportement Celcat en repli.
+ *
+ * Un motif illisible n'est pas rejete ici : c'est `shared/locations/salles.ts` qui le compile, et
+ * c'est lui qui retombe sur le defaut si le moteur d'expressions le refuse. Separer les deux garde ce
+ * module sans effet de bord — il projette une ligne, il n'execute rien.
+ */
+function projeterSalles(valeur: unknown): FormatSalles {
+    if (valeur === null || typeof valeur !== 'object' || Array.isArray(valeur)) return SALLES_PAR_DEFAUT;
+
+    const source = valeur as Record<string, unknown>;
+    const separateurs = Array.isArray(source.separateurs)
+        ? source.separateurs.filter((brut): brut is string => typeof brut === 'string' && brut !== '')
+        : null;
+    const depuis = source.depuis;
+
+    return {
+        separateurs: separateurs !== null && separateurs.length > 0 ? separateurs : SALLES_PAR_DEFAUT.separateurs,
+        motif: texteOuNull(source.motif) ?? SALLES_PAR_DEFAUT.motif,
+        depuis: typeof depuis === 'number' && Number.isInteger(depuis) && depuis >= 0 ? depuis : SALLES_PAR_DEFAUT.depuis,
+    };
+}
+
+/**
+ * Le serveur d'inventaire emprunte par une ligne, ou `null`.
+ *
+ * Les deux champs sont obligatoires : un serveur sans code d'inventaire, ou l'inverse, ne permet pas
+ * de composer une requete. Rendre `null` fait retomber sur le serveur de l'etablissement, ce qui est
+ * le bon repli.
+ */
+function projeterSallesLibres(valeur: unknown): EntreesSalles | null {
+    if (valeur === null || typeof valeur !== 'object' || Array.isArray(valeur)) return null;
+
+    const source = valeur as Record<string, unknown>;
+    const domaine = texteOuNull(source.domaine);
+    const res_type = texteOuNull(source.res_type);
+    return domaine !== null && res_type !== null ? { domaine, res_type } : null;
+}
+
+/**
  * Traduit une ligne de la table vers le contrat applicatif.
  *
  * **Une ligne remplace, elle ne corrige pas** — l'inverse exact de `projeterBatiment`, et la
@@ -198,6 +373,9 @@ export function projeterEtablissement(row: EtablissementRow): Etablissement {
         portailMessagerie: texteOuNull(row.portail_messagerie),
         celcatDomaine: texteOuNull(row.celcat_domaine),
         celcatResTypes: projeterResTypes(row.celcat_res_types),
+        edt: projeterEdt(row.edt),
+        salles: projeterSalles(row.salles),
+        sallesLibres: projeterSallesLibres(row.salles_libres),
         bibliothequesPoints: projeterPoints(row.bibliotheques_points),
         services: projeterTableDeChaines(row.services),
         libelles: projeterTableDeChaines(row.libelles),
@@ -317,6 +495,10 @@ export function libelleEtablissement(role: string, defaut: string): string {
  * `null` n'est pas une panne : toutes les facs n'ont pas d'Apogee, ni de webmail sous une adresse
  * stable. L'appelant decide alors quoi montrer — le plus souvent, rien.
  */
+export function formatSallesActif(): FormatSalles {
+    return getEtablissementActif().salles;
+}
+
 export function serviceEtablissement(nom: string): string | null {
     return getEtablissementActif().services[nom] ?? null;
 }

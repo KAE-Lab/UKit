@@ -30,4 +30,17 @@ export default defineConfig({
     resolve: {
         alias: [{ find: /^@aetherius\/react-native$/, replacement: DELIVERY }],
     },
+    test: {
+        /**
+         * Le fuseau est **fixe**, et ce n'est pas une commodite de poste.
+         *
+         * L'export iCalendar d'ADE sert ses dates en UTC honnete : un meme creneau hebdomadaire est
+         * `07:30Z` en septembre et `08:30Z` en novembre, soit 09:30 a Paris les deux fois (jalon
+         * 6-I). C'est **la** propriete a verrouiller — un affichage naif qui ignorerait l'heure d'ete
+         * decalerait tous les cours d'une heure la moitie de l'annee — et elle ne s'exprime que dans
+         * un fuseau donne. Sans cette ligne, le test passerait a Bordeaux et echouerait sur une
+         * machine reglee autrement, ce qui est la pire forme de test.
+         */
+        env: { TZ: 'Europe/Paris' },
+    },
 });

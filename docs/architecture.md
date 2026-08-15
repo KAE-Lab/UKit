@@ -228,8 +228,11 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/locations/referentiel.ts`](../src/shared/locations/referentiel.ts) | le référentiel des lieux : socle embarqué, fusion de la surcouche, accesseurs **synchrones** ([donnees-et-persistance.md](donnees-et-persistance.md)) |
 | [`shared/locations/index.ts`](../src/shared/locations/index.ts) | sa couture de plateforme : cache local et lecture de la table `batiments` |
 | [`shared/locations/referentiel.test.ts`](../src/shared/locations/referentiel.test.ts) | la fusion champ par champ, jouée par `npm test` |
+| [`shared/locations/salles.ts`](../src/shared/locations/salles.ts) | reconnaître un bâtiment dans un libellé de salle, selon le format publié par l'établissement |
+| [`shared/locations/salles.test.ts`](../src/shared/locations/salles.test.ts) | les deux formes réelles, et la non-régression bordelaise |
 | [`shared/etablissements/catalogue.ts`](../src/shared/etablissements/catalogue.ts) | le catalogue : socle embarqué, projection d'une ligne, établissement actif, libellés propres à l'université ([features/settings.md](features/settings.md)) |
-| [`shared/etablissements/celcat.ts`](../src/shared/etablissements/celcat.ts) | ce que le catalogue fournit aux six Blueprints d'emploi du temps, et l'échec « pas d'emploi du temps ici » |
+| [`shared/etablissements/celcat.ts`](../src/shared/etablissements/celcat.ts) | ce que le catalogue fournit aux six Blueprints Celcat, et le prédicat des salles libres |
+| [`shared/etablissements/edt.ts`](../src/shared/etablissements/edt.ts) | quelle source d'emploi du temps l'établissement publie — Celcat, iCalendar, ou aucune — et les échecs qui en découlent |
 | [`shared/etablissements/index.ts`](../src/shared/etablissements/index.ts) | sa couture de plateforme : cache local, lecture de la table `etablissements`, purge au changement |
 | [`shared/etablissements/catalogue.test.ts`](../src/shared/etablissements/catalogue.test.ts) | la projection et le repli sur le socle, joués par `npm test` |
 | [`shared/services/AppCore.tsx`](../src/shared/services/AppCore.tsx) | `AppContext`, `SettingsManager`, synchronisation calendrier, tâche de fond, utilitaires de lieux et de cours |

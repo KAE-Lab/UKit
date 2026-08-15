@@ -100,6 +100,24 @@ là-bas un nul veut dire « je ne corrige pas ce champ » et ne doit donc rien e
 devenue inextractible. Corollaire : une ligne s'écrit **entière**, et
 [`supabase/etablissements.sql`](../supabase/etablissements.sql) est faite pour ça.
 
+Le jalon [6-I](phase-6/6-i-planning-universel.md) lui a ajouté deux colonnes, et toutes deux disent
+**ce qui existe**, jamais quoi faire :
+
+| Colonne | Ce qu'elle porte | `null` veut dire |
+|---|---|---|
+| `edt` | l'emploi du temps par export iCalendar : les deux noms de Blueprint, les paramètres propres à l'année (`projet`), et le référentiel `nom → index de ressource` | cet établissement n'a pas d'export iCalendar |
+| `salles` | comment lire un code de bâtiment dans un libellé de salle : les séparateurs, le motif, et le rang de la première ligne où chercher | le comportement historique de Celcat |
+| `salles_libres` | le serveur d'inventaire des salles **emprunté** à un autre établissement, quand les étudiants sont sur le même campus | celui de l'établissement fait l'affaire |
+
+`edt.params` loge le projet ADE **à côté** du référentiel, et ce n'est pas un rangement arbitraire :
+les deux se périment à la même date — la rentrée — et les séparer ferait de chaque rentrée deux
+publications au lieu d'une.
+
+Un motif de salle est la seule donnée de cette base que l'application **exécute**. Il est compilé une
+fois, mis en cache, appliqué à des chaînes courtes et gardé par un `try/catch` qui retombe sur le
+comportement historique ; la vraie limite reste celle de toute la phase, à savoir que l'accès au
+projet Supabase est un accès de production.
+
 Le socle embarqué du catalogue ne porte qu'**un** établissement, l'historique. C'est délibéré : le
 binaire n'embarque que ce dont il embarque aussi les Blueprints, et un second établissement inscrit
 dans le binaire détruirait la preuve que le mécanisme d'ajout fonctionne.

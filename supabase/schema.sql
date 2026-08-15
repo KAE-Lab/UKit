@@ -94,6 +94,31 @@ create table if not exists public.etablissements (
     -- ({"groupes": "103", "salles": "102"}) : ils sont conventionnels, pas garantis.
     celcat_domaine     text,
     celcat_res_types   jsonb,
+    -- L'emploi du temps par export iCalendar, pour les universites qui ne sont pas sur un Celcat
+    -- ouvert — c'est-a-dire presque toutes (jalon 6-I). Le catalogue dit **ce qui existe** : les deux
+    -- Blueprints a jouer, les parametres propres a l'annee, et le referentiel des groupes. Le
+    -- *quoi faire* reste dans le Blueprint.
+    --   {"blueprint": "ukit.portail.<code>.edt",
+    --    "blueprint_annee": "ukit.portail.<code>.edt.annee",
+    --    "params": {"projet": "1"},
+    --    "groupes": [{"nom": "…", "ressource": "…"}, …]}
+    -- `null` : cet etablissement n'a pas d'export iCalendar. Un etablissement dont `celcat_domaine`
+    -- **et** `edt` sont nuls n'a pas d'emploi du temps du tout, ce que l'onglet Planning dit au lieu
+    -- d'echouer.
+    edt                jsonb,
+    -- Comment lire un code de batiment dans un libelle de salle, chez cet etablissement.
+    --   {"separateurs": [" | ", "/"], "motif": "([A-Z][0-9]+)", "depuis": 2}
+    -- Le premier separateur **enumere**, les suivants **tronquent** ; `motif` capture le code en
+    -- premier groupe ; `depuis` est le rang de la premiere ligne de description ou chercher une
+    -- salle. Une colonne nulle vaut le comportement historique de Celcat, ce qui rend la migration
+    -- invisible. C'etait du code bordelais jusqu'au jalon 6-I (src/shared/locations/salles.ts).
+    salles             jsonb,
+    -- Le serveur d'inventaire des salles libres, quand ce n'est **pas** celui de l'etablissement :
+    --   {"domaine": "https://celcat.u-bordeaux.fr/calendar", "res_type": "102"}
+    -- `null` : celui de l'etablissement fait l'affaire. Une valeur veut dire qu'il **emprunte**
+    -- l'inventaire d'un autre serveur, parce que ses etudiants sont physiquement sur le meme campus.
+    -- L'emprunt ne concerne que les salles : l'emploi du temps garde sa propre source.
+    salles_libres      jsonb,
     -- Les points de balayage des bibliotheques : [{"lat": …, "lng": …}, …]. Ce sont des decisions
     -- produit — quelles villes on couvre — et non une propriete de la source, donc de la donnee de
     -- catalogue. Ils etaient une liste en dur jusqu'au jalon 6-G, c'est-a-dire exactement le genre de
@@ -114,6 +139,12 @@ create table if not exists public.etablissements (
 alter table public.etablissements add column if not exists celcat_res_types     jsonb;
 alter table public.etablissements add column if not exists bibliotheques_points jsonb;
 alter table public.etablissements add column if not exists services             jsonb;
+
+-- Les deux colonnes du jalon 6-I. Meme regle : elles s'ajoutent a une base existante, et une version
+-- de l'application qui ne les connait pas continue de tourner — elle ne les lit simplement pas.
+alter table public.etablissements add column if not exists edt           jsonb;
+alter table public.etablissements add column if not exists salles        jsonb;
+alter table public.etablissements add column if not exists salles_libres jsonb;
 
 -- =============================================================================
 -- Livraison

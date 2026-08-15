@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { CourseData } from './CourseCard';
+import { iconeDAnnotation } from './CourseAnnotations';
 import { CalendarNewEventPrompt } from './CalendarNewEventPrompt';
 
 export interface CourseRowProps {
@@ -120,25 +121,9 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		const trimmedLine = line.trim();
 		if (!trimmedLine) return null;
 
-		let iconName: 'info-outline' | 'date-range' | 'room' | 'group' | 'person' = 'info-outline';
-		const lowerLine = trimmedLine.toLowerCase();
-
-		const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedLine);
-		const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
-
-		if (isWeeks) {
-			iconName = 'date-range';
-		} else if (isRoom) {
-			iconName = 'room';
-		} else if (index === 0) {
-			iconName = 'group';
-		} else if (index === 1) {
-			iconName = 'person';
-		} else if (index === 2) {
-			iconName = 'room';
-		} else {
-			iconName = 'date-range';
-		}
+		// L'icone se deduit du contenu de la ligne, jamais de son rang : avec deux sources d'emploi
+		// du temps, le rang ne veut plus rien dire (CourseAnnotations.ts).
+		const iconName = iconeDAnnotation(trimmedLine);
 
 		return (
 			<View
@@ -246,7 +231,7 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 						style={[style.schedule.course.contentBlock as never, { paddingLeft: tokens.space.sm }]}>
 						<View style={style.schedule.course.contentType as never}>
 							{subject}
-							{this.props.data.category !== this.props.data.subject && (
+							{this.props.data.category !== '' && this.props.data.category !== this.props.data.subject && (
 								<View
 									style={{
 										backgroundColor: `${this.state.lineColor}22`,

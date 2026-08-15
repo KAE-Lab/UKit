@@ -42,6 +42,9 @@ function ligne(partial: Partial<EtablissementRow>): EtablissementRow {
         portail_messagerie: null,
         celcat_domaine: null,
         celcat_res_types: null,
+        edt: null,
+        salles: null,
+        salles_libres: null,
         bibliotheques_points: null,
         libelles: null,
         ordre: 0,
@@ -213,5 +216,84 @@ describe('etablissementRetire', () => {
         appliquerCatalogue({ inp: etablissement({ code: 'inp', nom: 'INP' }) });
 
         expect(etablissementRetire()).toBe(false);
+    });
+});
+
+describe('projeterEdt', () => {
+    it('rend null quand la ligne ne declare pas d export iCalendar', () => {
+        expect(projeterEtablissement(ligne({})).edt).toBeNull();
+    });
+
+    it('refuse un export a moitie declare', () => {
+        // Sans les deux noms de Blueprint il n'y a rien a jouer. Rendre un objet ampute ferait
+        // echouer un run, la ou `null` fait dire a l'ecran « pas d'emploi du temps ici » — deux
+        // ecrans opposes pour deux situations opposees.
+        expect(projeterEtablissement(ligne({ edt: { blueprint: 'ukit.portail.x.edt' } })).edt).toBeNull();
+        expect(projeterEtablissement(ligne({ edt: { blueprint_annee: 'ukit.portail.x.edt.annee' } })).edt).toBeNull();
+        expect(projeterEtablissement(ligne({ edt: [] })).edt).toBeNull();
+    });
+
+    it('projette les parametres d annee et le referentiel des groupes', () => {
+        const edt = projeterEtablissement(
+            ligne({
+                edt: {
+                    blueprint: 'ukit.portail.x.edt',
+                    blueprint_annee: 'ukit.portail.x.edt.annee',
+                    params: { projet: '1', bruit: 42 },
+                    groupes: [{ nom: '1A', ressource: '2' }, { nom: '2A', ressource: '3' }],
+                },
+            }),
+        ).edt;
+
+        expect(edt?.blueprint).toBe('ukit.portail.x.edt');
+        expect(edt?.blueprintAnnee).toBe('ukit.portail.x.edt.annee');
+        // Une valeur qui n'est pas une chaine ne peut pas devenir une entree de Blueprint.
+        expect(edt?.params).toEqual({ projet: '1' });
+        expect(edt?.groupes).toEqual([{ nom: '1A', ressource: '2' }, { nom: '2A', ressource: '3' }]);
+    });
+
+    it('ecarte les doublons de nom, et le premier gagne', () => {
+        // Le releve en produit reellement : mesure du 2026-08-15, `S3` designe cinq index differents.
+        // Deux ressources sous un meme nom rendraient le planning dependant de l'ordre de lecture.
+        const edt = projeterEtablissement(
+            ligne({
+                edt: {
+                    blueprint: 'ukit.portail.x.edt',
+                    blueprint_annee: 'ukit.portail.x.edt.annee',
+                    groupes: [{ nom: 'S3', ressource: '65' }, { nom: 'S3', ressource: '66' }, { nom: null }],
+                },
+            }),
+        ).edt;
+
+        expect(edt?.groupes).toEqual([{ nom: 'S3', ressource: '65' }]);
+    });
+});
+
+describe('projeterSalles', () => {
+    it('retombe sur le comportement historique quand la colonne est absente', () => {
+        // Une base qui n'a pas encore recu la colonne doit se comporter **exactement** comme avant.
+        expect(projeterEtablissement(ligne({})).salles).toEqual({
+            separateurs: [' | ', '/'],
+            motif: '([A-Z][0-9]+)',
+            depuis: 2,
+        });
+    });
+
+    it('lit le format publie, champ par champ', () => {
+        const salles = projeterEtablissement(
+            ligne({ salles: { separateurs: [','], motif: '^([A-Z]{2})-', depuis: 0 } }),
+        ).salles;
+
+        expect(salles).toEqual({ separateurs: [','], motif: '^([A-Z]{2})-', depuis: 0 });
+    });
+
+    it('ignore un champ inexploitable sans jeter les autres', () => {
+        const salles = projeterEtablissement(
+            ligne({ salles: { separateurs: [], motif: '^(X)-', depuis: -1 } }),
+        ).salles;
+
+        expect(salles.separateurs).toEqual([' | ', '/']);
+        expect(salles.motif).toBe('^(X)-');
+        expect(salles.depuis).toBe(2);
     });
 });

@@ -40,15 +40,25 @@ bascule immédiate au premier toucher rendrait ce coût invisible jusqu'à ce qu
 l'établissement **déjà actif** ne déclenche rien — il n'y a rien à purger, et une confirmation pour un
 non-changement apprend à la valider sans la lire.
 
-Ce que `changerEtablissement()` efface
-([`shared/etablissements/purge.ts`](../../src/shared/etablissements/purge.ts)) :
+Ce que la bascule efface, et **par quel chemin** — les deux ne sont pas au même endroit, et les
+confondre a coûté un défaut :
 
-| Effacé | Pourquoi |
-|---|---|
-| `groupList`, `groupListTimestamp`, `groups`, les groupes favoris, les filtres d'UE | ce sont des identifiants Celcat d'une université |
-| les caches de planning (`…@Week…`, `…@AAAA/MM/JJ`) | un planning gardé s'afficherait sous une autre fac sans que rien ne le dise |
-| `buildingList`, `buildingListTimestamp`, la surcouche `batiments@1`, les favoris de salles libres | les bâtiments sont reconstruits depuis les salles de **cette** université |
-| les identifiants et les données froides du trousseau | ils appartiennent au portail quitté |
+| Effacé | Par | Pourquoi |
+|---|---|---|
+| `groupList`, `groupListTimestamp`, `groups` | [`purge.ts`](../../src/shared/etablissements/purge.ts) | ce sont des identifiants d'une université |
+| **les groupes favoris et les filtres d'UE** | [`SettingsManager.purgerReglagesEtablissement()`](../../src/shared/services/AppCore.tsx) | ils nomment des groupes et des UE d'une université, mais vivent dans le document de réglages — que `purge.ts` ne connaît pas, et ne doit pas connaître |
+| les caches de planning (`…@Week…`, `…@AAAA/MM/JJ`) | `purge.ts` | un planning gardé s'afficherait sous une autre fac sans que rien ne le dise |
+| `buildingList`, `buildingListTimestamp`, la surcouche `batiments@1`, les favoris de salles libres | `purge.ts` | les bâtiments sont reconstruits depuis les salles de **cette** université |
+| les identifiants et les données froides du trousseau | `purge.ts` | ils appartiennent au portail quitté |
+
+> **La deuxième ligne de ce tableau a été fausse pendant deux jalons.** Ce document annonçait
+> l'effacement des favoris depuis le jalon 6-G ; le code ne le faisait pas — `resetSettings` les
+> effaçait, la bascule non. Personne ne l'a vu parce que le défaut n'avait aucun symptôme : tant que
+> Bordeaux INP n'avait pas d'emploi du temps, des favoris bordelais restés en place ne rencontraient
+> jamais rien. Le jalon [6-I](../phase-6/6-i-planning-universel.md) lui en a donné un, et l'onglet
+> Planning s'est mis à annoncer « ce groupe n'existe plus » pour un groupe qui existe parfaitement —
+> à l'université qu'on venait de quitter. Une documentation en avance sur son code ne se distingue
+> pas d'une documentation juste, et c'est ce qui rend ce genre d'écart cher.
 
 Ce qui **reste**, et c'est délibéré : les favoris de restaurants et de bibliothèques. Ils pointent
 Croustillant et Affluences, deux sources **nationales** — un étudiant qui passe d'une fac bordelaise à

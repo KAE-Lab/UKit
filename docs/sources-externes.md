@@ -31,6 +31,7 @@ fragilité, extraction, contrat non versionné — ne s'y applique. Ce document 
 | 5 | ~~jsDelivr / `ukit-data`~~ | ~~annonces de vie étudiante~~ | — | **sortie de l'inventaire** — passée en base au jalon [6-B](phase-6/6-b-supabase.md) |
 | 6 | GitHub raw | fichier de version applicative | aucune | faible |
 | 7 | CDN de rendu de carte | tuiles OpenStreetMap, bibliothèque Leaflet | aucune | faible |
+| 8 | ADE (`ade.bordeaux-inp.fr`) | emploi du temps, par export iCalendar | aucune | moyenne — export anonyme, mais **index de ressource positionnels et projet annuel**. **Deux Blueprints** depuis [6-I](phase-6/6-i-planning-universel.md) |
 
 ## 1. Celcat — emplois du temps
 
@@ -509,7 +510,7 @@ Ajouté au jalon [6-G](phase-6/6-g-etablissements.md), **sans release** : une li
 | `mondossierweb.bordeaux-inp.fr` | dossier administratif — nom, prénom, date de naissance, numéro étudiant |
 | `mondossierweb.bordeaux-inp.fr/coordonnees` | adresse électronique de l'établissement |
 | `sso.bordeaux-inp.fr` | SAML — **c'est lui qui rend le webmail inextractible** |
-| `ade.bordeaux-inp.fr` | emploi du temps, en ADE — **non porté**, voir [6-I](phase-6/6-i-planning-universel.md) |
+| `ade.bordeaux-inp.fr` | emploi du temps, par export iCalendar — **porté** au jalon [6-I](phase-6/6-i-planning-universel.md), section 8 |
 
 Un seul Blueprint,
 [`ukit.portail.bordeaux-inp.dossier`](../blueprints/portails/ukit-portail-bordeaux-inp-dossier.blueprint.json),
@@ -548,6 +549,92 @@ de style (`NOM DE FAMILLE`). Le même fichier compare donc aux deux formes, et c
   (fond CartoDB Voyager, données OpenStreetMap).
 
 Détails et raison de ce choix dans [cartographie.md](cartographie.md).
+
+## 8. ADE — emploi du temps par export iCalendar
+
+L'export d'abonnement du produit ADE, joint **directement** depuis l'appareil. C'est la réponse au
+constat qui a ouvert le jalon [6-I](phase-6/6-i-planning-universel.md) : un balayage de vingt
+universités françaises n'a trouvé **aucune** instance Celcat interrogeable sans authentification hors
+Bordeaux, alors que presque tous les produits savent exporter en iCal (RFC 5545).
+
+```
+GET https://ade.bordeaux-inp.fr/jsp/custom/modules/plannings/anonymous_cal.jsp
+    ?resources=<index>[,<index>…]
+    &projectId=<n>
+    &calType=ical
+    &firstDate=AAAA-MM-JJ
+    &lastDate=AAAA-MM-JJ
+Accept: text/calendar
+```
+
+| Blueprint | Ce qu'il joue | Consommé par |
+|---|---|---|
+| [`ukit.portail.bordeaux-inp.edt`](../blueprints/portails/ukit-portail-bordeaux-inp-edt.blueprint.json) | une plage de dates : la vue jour et la vue semaine | [`PlanningIcalSource`](../src/features/Planning/services/PlanningIcalSource.ts) |
+| [`ukit.portail.bordeaux-inp.edt.annee`](../blueprints/portails/ukit-portail-bordeaux-inp-edt-annee.blueprint.json) | la même requête sur l'année, `timeout_ms` à 60 s | idem |
+
+Ni l'un ni l'autre n'est **embarqué** : ils vivent sous le préfixe réservé `ukit.portail.` et arrivent
+par le manifeste, comme le portail du même établissement. Ils déclarent `min_engine: "0.5.4"` — leur
+extraction `from: "text"` n'existe pas avant.
+
+### Les constantes, et leur signification
+
+| Paramètre | Sens | D'où il vient |
+|---|---|---|
+| `resources` | **index positionnels** dans l'arbre des ressources du projet, séparés par des virgules | le référentiel de la colonne `edt` du catalogue |
+| `projectId` | le projet ADE, c'est-à-dire l'**année universitaire** | `edt.params.projet` du catalogue |
+| `calType` | `ical` — le seul format qui nous intéresse | `vars` du Blueprint |
+| `firstDate` / `lastDate` | les bornes, **inclusives** | calculées par le service (heure courante) |
+
+### Ce que la mesure du 2026-08-15 a établi
+
+- **`resources` n'est pas un identifiant ADE mais un index.** `resources=1` rend la racine de l'arbre
+  — tout l'établissement, cinq écoles, 3156 événements sur l'année — et l'identifiant interne lu dans
+  un UID ne rend rien. L'index est stable *à l'intérieur* d'un projet, et un projet est annuel ;
+- **plusieurs projets coexistent**, et leurs noms sont lisibles dans les UID : `2025-2026` (le vivant,
+  `projectId=1`), `NEPASTOUCHER2526_SAUV`, `2526_POUR_ESUP`, `TMP2526`. `projectId=2` est une
+  quasi-coquille vide — 54 événements sur l'année ;
+- **les bornes sont inclusives** et `resources` accepte une liste : le planning agrégé des favoris
+  tient en **une** requête, comme `federationIds[]` chez Celcat ;
+- **`DTSTART` est en UTC honnête** : le même créneau hebdomadaire est servi `07:30Z` en septembre et
+  `08:30Z` en novembre, soit 09:30 à Paris les deux fois ;
+- **`(Exporté le:…)` porte l'horodatage de la requête** et change à chaque appel. Il est retiré par la
+  projection ;
+- **`LOCATION` peut porter plusieurs salles**, séparées par une virgule échappée RFC 5545, et est
+  souvent vide.
+
+### La forme du corps
+
+```
+BEGIN:VEVENT
+DTSTART:20251118T083000Z
+DTEND:20251118T095000Z
+SUMMARY:Traitement du signal
+LOCATION:CC-S112
+DESCRIPTION:\n\nCOG7-SCFTS\nTD\n2A GR1\nTraitement du signal\nFARR
+ ELL Flora\n(Exporté le:15/08/2026 17:12)\n
+UID:ADE60323032352d323032362d3831392d302d3132
+END:VEVENT
+```
+
+La description suit la forme
+`[commentaire…] <CODE-MODULE> <TYPE> <GROUPE…> [MATIÈRE] <ENSEIGNANT…> (Exporté le:…)`, et **les
+champs ne sont pas à position fixe** : le bloc de commentaire de tête tient zéro, une ou deux lignes.
+L'ancre est le **code de module** (`^[A-Z]{3}\d-[A-Z0-9]{5}$`) ; le type est la ligne qui le suit.
+
+### Ce qui reste applicatif
+
+Le dépliage de lignes et le déshabillage RFC 5545 sont confiés à **`ical.js`** ; la projection sur
+`PlanningEvent` vit dans [`IcsMapping`](../src/features/Planning/services/IcsMapping.ts). Le
+référentiel des groupes, le calcul des plages, le tri et le découpage de la semaine restent
+applicatifs — ce sont des calculs, et un calcul dans un Blueprint devrait être réimplémenté à
+l'identique dans les deux moteurs.
+
+### Fragilité connue
+
+Le point faible n'est pas le format, qui est normalisé, mais **le référentiel** : rien dans la source
+ne nomme un index. Il est relevé par [`tools/releve-ade.mjs`](../tools/releve-ade.mjs), publié dans la
+colonne `edt`, et se rejoue à chaque rentrée. Un groupe favori qui ne résout plus produit un message
+dédié plutôt qu'une journée vide.
 
 ## Modèle d'erreur commun
 

@@ -53,8 +53,8 @@ export interface BatimentRow {
  * existe, une fac sans serveur d'emploi du temps interrogeable aussi. Prevoir l'absence des le
  * premier jour coute moins cher que de la decouvrir au second etablissement.
  *
- * Les trois champs `unknown` — `celcat_res_types`, `bibliotheques_points`, `libelles` — sont
- * volontairement libres cote base et **projetes** cote application
+ * Les champs `unknown` — `celcat_res_types`, `bibliotheques_points`, `libelles`, `edt`, `salles` —
+ * sont volontairement libres cote base et **projetes** cote application
  * (`shared/etablissements/catalogue.ts`) : figer leur forme en colonnes obligerait a migrer la base
  * chaque fois qu'un etablissement a un cas particulier, et c'est deja la posture retenue pour les
  * horaires de `batiments`.
@@ -72,6 +72,12 @@ export interface EtablissementRow {
     readonly bibliotheques_points: unknown;
     readonly services: unknown;
     readonly libelles: unknown;
+    /** L'export iCalendar de l'etablissement : Blueprints, parametres d'annee, referentiel (jalon 6-I). */
+    readonly edt: unknown;
+    /** Comment lire un code de batiment dans une salle, chez cet etablissement (jalon 6-I). */
+    readonly salles: unknown;
+    /** Le serveur d'inventaire des salles libres, quand ce n'est pas celui de l'etablissement (jalon 6-I). */
+    readonly salles_libres: unknown;
     readonly ordre: number;
 }
 

@@ -11,7 +11,6 @@ import { ErrorAlert } from '../ui/Alerts';
 // Les modules purs, et non les portes d'entree `../locations` et `../etablissements` : celles-ci
 // tirent AsyncStorage et la base, que ce fichier — charge avant le premier rendu — n'a aucune raison
 // de mettre sur son chemin.
-import { getBuildingRef } from '../locations/referentiel';
 import {
     ETABLISSEMENT_DEFAUT,
     getCodeEtablissementActif,
@@ -23,6 +22,7 @@ import { purgerDonneesEtablissement } from '../etablissements/purge';
 import { createUKitCalendar, formatCalendarEventData } from './CalendarSyncHelpers';
 import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
+import { separerCodeUE } from '../../features/Planning/services/PlanningAssembly';
 
 // ── CONTEXTE & DEVICE ─────────────────────────────────
 /**
@@ -99,44 +99,20 @@ export function isArraysEquals(a: unknown[], b: unknown[]): boolean {
     return true;
 }
 
-function getLocation(house: string): Record<string, unknown> | null {
-    const lieu = getBuildingRef(house);
-    return lieu ? { title: house, ...lieu } : null;
-}
-
-export function getLocations(str: string): Record<string, unknown>[] {
-    let lines = str.split(' | ');
-    let locs = [];
-    lines.forEach((line) => {
-        let house = line.split('/')[0].replace(' ', '');
-        let loc = getLocation(house);
-        if (loc) locs.push(loc);
-    });
-    return locs;
-}
-
-export function getLocationsInText(str: string): Record<string, unknown>[] {
-    let regexBuilding = RegExp('([A-Z][0-9]+)', 'im');
-    let match = regexBuilding.exec(str);
-    if (match && match.length === 2) {
-        let loc = getLocation(match[1]);
-        if (loc) return [loc];
-    }
-    return [];
-}
+// La reconnaissance de salle a demenage dans `shared/locations/salles.ts` au jalon 6-I : la decoupe
+// et le motif etaient des constantes bordelaises, ils sont devenus une donnee d'etablissement. Les
+// deux fonctions restent exportees d'ici pour ne casser aucun appelant.
+export { getLocations, getLocationsInText, ligneDeSalle } from '../locations/salles';
 
 // ── GESTION DES COURS ───────────────────────────────
 export const CourseManager = {
     computeCourseUE: (course: Record<string, unknown>): Record<string, unknown> => {
-        let regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
         if (course.subject && course.subject !== 'N/C') {
-            let match = regexUE.exec(course.subject as string);
-            if (match && match.length === 3) {
-                course.UE = match[1];
-                course.subject = `${match[2]}`;
-            } else {
-                course.UE = null;
-            }
+            // La regle vit dans `PlanningAssembly`, avec le tri qui l'applique deja : deux copies
+            // d'une meme expression, c'est une occasion de n'en corriger qu'une (jalon 6-I).
+            const separe = separerCodeUE(course.subject as string);
+            course.UE = separe === null ? null : separe.code;
+            if (separe !== null) course.subject = separe.reste;
         }
         return course;
     },
@@ -173,6 +149,8 @@ class SettingsManagerService {
     _lastSyncDate: moment.Moment | null;
     _courseNotificationsEnabled: boolean;
     _courseNotificationDelay: number;
+    /** Le code d'etablissement **tel que ce module le connait** : ce qui a ete charge ou choisi. */
+    _etablissement: string;
     _groupName?: string;
 
     constructor() {
@@ -190,6 +168,7 @@ class SettingsManagerService {
         this._lastSyncDate = null;
         this._courseNotificationsEnabled = true;
         this._courseNotificationDelay = 15;
+        this._etablissement = ETABLISSEMENT_DEFAUT;
     }
 
     on = (event: string, callback: Function) => {
@@ -251,7 +230,45 @@ class SettingsManagerService {
     getEtablissement = (): string => getCodeEtablissementActif();
     setEtablissement = (code: string) => {
         setCodeEtablissementActif(code);
-        this.notify('etablissement', getCodeEtablissementActif());
+        const resolu = getCodeEtablissementActif();
+
+        // Changer d'universite efface aussi les reglages qui lui appartenaient. La purge est ici, et
+        // pas au point d'appel, parce qu'il y en a **deux** — l'accueil et les reglages — et qu'un
+        // oubli dans l'un des deux est exactement ce qui a produit le defaut.
+        //
+        // La comparaison porte sur `_etablissement`, le code que **ce module** connait, et pas sur
+        // celui du catalogue : `changerEtablissement` a deja pose ce dernier quand on arrive ici, donc
+        // le lire rendrait la comparaison toujours fausse. C'est la bonne semantique de toute facon —
+        // la question est « la selection de l'utilisateur a-t-elle change ? », et c'est ce module qui
+        // la tient. `loadSettings` **restaure** ce champ sans purger : rouvrir l'application n'est pas
+        // changer d'avis.
+        if (this._etablissement !== resolu) {
+            this._etablissement = resolu;
+            this.purgerReglagesEtablissement();
+        }
+
+        this.notify('etablissement', resolu);
+    };
+
+    /**
+     * Les reglages qui appartiennent a **l'etablissement**, et qui n'ont aucun sens sous un autre.
+     *
+     * Les groupes favoris et les filtres d'UE nomment des groupes et des unites d'enseignement d'une
+     * universite donnee. `purgerDonneesEtablissement` efface le magasin local et le trousseau, mais
+     * ces deux-la vivent dans le document de reglages, que ce module est seul a tenir — d'ou cette
+     * methode plutot qu'une ligne de plus dans `purge.ts`, qui ne doit pas dependre d'`AppCore`.
+     *
+     * **Le defaut qu'elle repare a ete trouve sur appareil au jalon 6-I**, et il est de la meme
+     * famille que celui du jalon 6-G : la reinitialisation les effacait, le changement
+     * d'etablissement non. Il etait invisible tant que le second etablissement n'avait pas d'emploi du
+     * temps — les favoris bordelais ne rencontraient jamais rien. Des que Bordeaux INP en a eu un,
+     * arriver sur l'onglet Planning affichait « ce groupe n'existe plus » pour un groupe qui existe
+     * parfaitement, a l'universite qu'on vient de quitter.
+     */
+    purgerReglagesEtablissement = () => {
+        this._favoriteGroups = [];
+        this.notify('favoriteGroups', this._favoriteGroups);
+        this.resetFilter();
     };
 
 
@@ -422,10 +439,8 @@ class SettingsManagerService {
     resetSettings = async () => {
         this.setTheme('light');
         this.setLanguage('fr');
-        this._favoriteGroups = [];
-        this.notify('favoriteGroups', this._favoriteGroups);
         this.setOpenAppOnFavoriteGroup(true);
-        this.resetFilter();
+        this.purgerReglagesEtablissement();
         // Les memes donnees qu'un changement d'etablissement, et par le meme chemin : deux gestes qui
         // effacent la meme chose ne doivent pas avoir deux definitions de « la meme chose ».
         await purgerDonneesEtablissement();
@@ -460,6 +475,8 @@ class SettingsManagerService {
         // cote de celui de `groupName` -> `favoriteGroups`, pour qu'on les retire ensemble le jour ou
         // on les retirera.
         setCodeEtablissementActif((settings.etablissement as string) || ETABLISSEMENT_DEFAUT);
+        // Restaure sans purger : c'est un chargement, pas un changement d'avis.
+        this._etablissement = getCodeEtablissementActif();
 
         // Migration for legacy groupName to favoriteGroups
         if (settings.groupName && !settings.favoriteGroups) {

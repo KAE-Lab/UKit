@@ -17,36 +17,27 @@
 import moment from 'moment';
 import 'moment/locale/fr';
 
-import { formatDescription, upperCaseFirstLetter } from '../../../shared/utils/formatUtils';
+import { formatDescription } from '../../../shared/utils/formatUtils';
+import {
+    assemblerAnnee,
+    assemblerJour,
+    assemblerSemaine,
+    trierCours,
+    type CibleGroupe,
+    type PlanningEvent,
+    type PlanningWeekDay,
+} from './PlanningAssembly';
 
 // La locale suivait deja ce module avant la migration : `Translator` la reglera sur la langue
 // choisie au chargement, celle-ci n'est que la valeur de depart. La deplacer ici plutot que dans le
 // service garde le formatage et sa locale au meme endroit.
 moment.locale('fr');
 
-/** Ce qu'un ecran manipule. Les noms ne bougent pas : changer de source ne renomme pas un contrat. */
-export interface PlanningEvent {
-    id: string;
-    style: string;
-    color: string;
-    schedule: string;
-    starttime: string;
-    endtime: string;
-    date: { start: string; end: string };
-    subject: string;
-    description: string;
-    category: string;
-    group: string;
-    toFilter?: string | null;
-    day?: string;
-    dayNumber?: string;
-}
-
-export interface PlanningWeekDay {
-    dayNumber: string;
-    dayTimestamp: number;
-    courses: PlanningEvent[];
-}
+// Le contrat et l'assemblage vivent dans `PlanningAssembly` depuis le jalon 6-I, parce qu'ils sont
+// communs aux deux sources d'emploi du temps. Ils sont reexportes ici pour que rien n'ait a changer
+// d'import : ce module reste la porte d'entree de la projection Celcat.
+export { trierCours };
+export type { CibleGroupe, PlanningEvent, PlanningWeekDay };
 
 /**
  * Une ligne de `outputs.cours`, telle que les Blueprints la nomment.
@@ -68,9 +59,6 @@ export interface CoursExtrait {
     modules?: unknown;
     description?: unknown;
 }
-
-/** Le groupe interroge : une chaine, ou la liste des favoris pour le planning agrege. */
-export type CibleGroupe = string | string[];
 
 function texte(valeur: unknown): string {
     return typeof valeur === 'string' ? valeur : '';
@@ -146,74 +134,30 @@ export function projeterCours(brut: CoursExtrait, groupe: CibleGroupe, separateu
 }
 
 /**
- * Le tri d'affichage : heure de debut, puis sujet alphabetique **apres retrait du code d'UE**.
+ * Les evenements que Celcat sert et qu'on ne montre pas : les `Vacances`.
  *
- * `4TIN301U Algorithmique` se trie donc sur `Algorithmique`, sans quoi l'ordre suivrait des codes que
- * personne ne lit.
+ * Le filtre vit ici et pas dans l'assemblage commun parce qu'il est propre a **cette** source — ce
+ * serveur sert les vacances comme des cours, l'export iCalendar ne le fait pas. Il ne vit pas non
+ * plus dans le Blueprint : la recherche de salles libres a *besoin* des vacances, ce sont elles qui
+ * declarent un batiment ferme (blueprints/README.md).
  */
-export function trierCours(gauche: { subject: string; starttime: string }, droite: { subject: string; starttime: string }): number {
-    const regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
-    let sujetGauche = gauche.subject.toUpperCase();
-    let sujetDroite = droite.subject.toUpperCase();
-    const trouveGauche = regexUE.exec(sujetGauche);
-    const trouveDroite = regexUE.exec(sujetDroite);
-
-    if (trouveGauche && trouveGauche.length === 3) sujetGauche = `${trouveGauche[2]}`;
-    if (trouveDroite && trouveDroite.length === 3) sujetDroite = `${trouveDroite[2]}`;
-
-    if (gauche.starttime > droite.starttime) return 1;
-    if (gauche.starttime < droite.starttime) return -1;
-    else if (sujetGauche > sujetDroite) return 1;
-    else if (sujetGauche < sujetDroite) return -1;
-    return 0;
+function horsVacances(cours: CoursExtrait[]): CoursExtrait[] {
+    return cours.filter((brut) => texte(brut.categorie) !== 'Vacances');
 }
 
 /** Une journee de cours : `Vacances` ecartees, debordements du serveur refiltres, tri applique. */
 export function projeterJour(cours: CoursExtrait[], groupe: CibleGroupe, date: string): PlanningEvent[] {
-    const retenus: PlanningEvent[] = [];
-    for (const brut of cours) {
-        if (texte(brut.categorie) === 'Vacances') continue;
-        // Le serveur deborde : une journee demandee un dimanche rend les cours du lundi.
-        if (moment(brut.debut ?? null).format('YYYY-MM-DD') !== date) continue;
-
-        retenus.push(projeterCours(brut, groupe, ';'));
-    }
-    return retenus.sort(trierCours);
+    // Le serveur deborde : une journee demandee un dimanche rend les cours du lundi.
+    const duJour = horsVacances(cours).filter((brut) => moment(brut.debut ?? null).format('YYYY-MM-DD') === date);
+    return assemblerJour(duJour.map((brut) => projeterCours(brut, groupe, ';')));
 }
 
-/**
- * Une semaine, decoupee en six jours du lundi au samedi.
- *
- * Le dimanche est ecarte : l'application n'affiche que six colonnes, et la requete elle-meme s'arrete
- * a cette borne. `lundi` arrive du service parce que le deduire d'un numero de semaine ISO demande
- * l'heure courante et la locale — deux choses qu'un Blueprint n'a pas.
- */
+/** Une semaine, decoupee en six jours du lundi au samedi par l'assemblage commun aux deux sources. */
 export function decouperSemaine(cours: CoursExtrait[], groupe: CibleGroupe, lundi: moment.Moment): PlanningWeekDay[] {
-    const semaine: PlanningWeekDay[] = Array.from({ length: 6 }).map((_, index) => ({
-        dayNumber: String(index + 1),
-        dayTimestamp: lundi.clone().startOf('day').add(index, 'day').unix(),
-        courses: [],
-    }));
-
-    for (const brut of cours) {
-        if (texte(brut.categorie) === 'Vacances') continue;
-
-        const debut = moment(brut.debut ?? null);
-        const jourIso = debut.isoWeekday();
-        if (jourIso < 1 || jourIso > 6) continue;
-
-        const projete = projeterCours(brut, groupe, '\n');
-        projete.day = upperCaseFirstLetter(debut.format('dddd L'));
-        projete.dayNumber = String(jourIso);
-
-        semaine[jourIso - 1].courses.push(projete);
-    }
-
-    for (const jour of semaine) {
-        jour.courses.sort(trierCours);
-    }
-
-    return semaine;
+    return assemblerSemaine(
+        horsVacances(cours).map((brut) => projeterCours(brut, groupe, '\n')),
+        lundi,
+    );
 }
 
 /**
@@ -223,18 +167,7 @@ export function decouperSemaine(cours: CoursExtrait[], groupe: CibleGroupe, lund
  * `agendaWeek` — c'est le comportement d'origine, et le calendrier systeme affiche ces descriptions.
  */
 export function projeterAnnee(cours: CoursExtrait[], groupe: CibleGroupe): PlanningEvent[] {
-    const evenements: PlanningEvent[] = [];
-    for (const brut of cours) {
-        if (texte(brut.categorie) === 'Vacances') continue;
-
-        const debut = moment(brut.debut ?? null);
-        const projete = projeterCours(brut, groupe, ';');
-        projete.day = upperCaseFirstLetter(debut.format('dddd L'));
-        projete.dayNumber = String(debut.isoWeekday());
-
-        evenements.push(projete);
-    }
-    return evenements.sort(trierCours);
+    return assemblerAnnee(horsVacances(cours).map((brut) => projeterCours(brut, groupe, ';')));
 }
 
 /**

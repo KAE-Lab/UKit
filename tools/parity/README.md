@@ -90,6 +90,24 @@ Trois pièges rencontrés, à traiter dans le cas plutôt qu'à découvrir :
 - **les dates** : ne comparer que ce qui ne dépend pas de l'instant. Un cas qui échoue à minuit n'est
   pas un cas.
 
+## Un cas sans chemin historique
+
+`ical-inp` est le premier cas dont la source **n'avait jamais été portée** : il n'y a pas d'« avant »
+à comparer. Le second chemin est donc ce que la spécification [6-I](../../docs/phase-6/6-i-planning-universel.md)
+demande — *le même jour, lu par l'iCal et lu par l'export brut*. Les deux lectures vivent côte à côte
+dans le fichier : `viaBlueprint` joue le Blueprint puis lit avec **`ical.js`**, `viaLegacy` va
+chercher la même réponse et la lit avec un analyseur **écrit à la main**, sans partager une ligne.
+
+Ce que ça prouve n'est pas « on lit comme avant », mais **la bibliothèque et notre lecture ne se
+trompent pas ensemble** : le pliage de lignes RFC 5545, les échappements, l'ancre du code de module et
+les dates sont refaits par un autre chemin. Le mapper livré, lui, est verrouillé par
+`IcsMapping.test.ts` sur des corps mesurés et sans réseau — les deux portes se complètent, aucune ne
+remplace l'autre.
+
+Deux champs sont exclus de la projection, et pour la raison prévue par la règle ci-dessous : `color`
+et `toFilter` **n'existent pas dans la source**. Le premier est dérivé de la matière par l'application,
+le second dépend du groupe demandé. Les comparer ne confronterait qu'une empreinte à elle-même.
+
 ## Ce qui n'a pas de cas de parité
 
 Le parcours universitaire ([6-F](../../docs/phase-6/6-f-scolarite.md)). Il demanderait des
@@ -138,6 +156,7 @@ ailleurs, par la mesure directe consignée dans
 | [`celcat-semaine`](celcat-semaine.parity.mjs) | Celcat — semaine complète, semaine de vacances, semaine à cheval sur deux mois | [6-E](../../docs/phase-6/6-e-planning.md) |
 | [`celcat-annee`](celcat-annee.parity.mjs) | Celcat — les deux positions de la bascule d'année scolaire | [6-E](../../docs/phase-6/6-e-planning.md) |
 | [`celcat-occupation`](celcat-occupation.parity.mjs) | Celcat — trois salles du CREMI, jour ordinaire et jour de vacances | [6-E](../../docs/phase-6/6-e-planning.md) |
+| [`ical-inp`](ical-inp.parity.mjs) | ADE — jour ordinaire, jour sans cours, semaine complète, agrégat à deux ressources | [6-I](../../docs/phase-6/6-i-planning-universel.md) |
 
 [`commun.mjs`](commun.mjs) n'est pas un cas : il porte le harnais partagé — jouer un Blueprint avec le
 moteur nu, capturer ce qu'il a émis, les en-têtes imités du chemin historique, les libellés de repli.

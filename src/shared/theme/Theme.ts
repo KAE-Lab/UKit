@@ -365,6 +365,24 @@ const Theme = {
             '#8000FF': '#FF9500',
             '#00FF00': '#34C759',
             '#400080': '#007AFF',
+            // La palette DERIVEE : un export iCalendar ne porte aucune couleur, le jalon 6-I en tire
+            // une de la matiere et la projette ici, pour que les deux sources aient le meme
+            // vocabulaire visuel (features/Planning/services/IcsMapping.ts).
+            //
+            // Huit teintes **toutes vives**, et c'est une correction mesuree : la premiere version
+            // reprenait les huit teintes de la table Celcat au-dessus, dont un brun (clair) qui vire
+            // au gris en sombre. Il attrapait 8 matieres sur 61, soit 467 cours sur l'annee — un
+            // cours sur sept avait l'air de n'avoir pas de couleur. La roue ci-dessous n'a aucune
+            // teinte neutre : une collision se lit comme deux cours de la meme couleur, jamais comme
+            // une couleur manquante.
+            'palette-1': '#FF3B30', // rouge
+            'palette-2': '#FF9500', // orange
+            'palette-3': '#FFCC00', // jaune
+            'palette-4': '#34C759', // vert
+            'palette-5': '#00C7BE', // menthe
+            'palette-6': '#5AC8FA', // cyan
+            'palette-7': '#007AFF', // bleu
+            'palette-8': '#AF52DE', // violet
             default:   '#007AFF',
         },
     },
@@ -597,6 +615,16 @@ const Theme = {
             '#8000FF': '#FF9F0A',
             '#00FF00': '#30D158',
             '#400080': '#5E5CE6',
+            // La palette derivee, en sombre (voir le theme clair). Le gris `#8E8E93` en a ete
+            // retire : c'est lui qui faisait passer un cours sur sept pour un cours sans couleur.
+            'palette-1': '#FF453A', // rouge
+            'palette-2': '#FF9F0A', // orange
+            'palette-3': '#FFD60A', // jaune
+            'palette-4': '#30D158', // vert
+            'palette-5': '#66D4CF', // menthe
+            'palette-6': '#64D2FF', // cyan
+            'palette-7': '#0A84FF', // bleu
+            'palette-8': '#BF5AF2', // violet
             default:   '#5E5CE6',
         },
     },

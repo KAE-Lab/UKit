@@ -31,6 +31,13 @@ qui rend acceptable que le manifeste puisse en **ajouter** sous `ukit.portail.`,
 contrepartie est assumée : tant qu'un portail ajouté n'a pas été résolu une fois, il n'y a rien à quoi
 retomber.
 
+Le préfixe ne porte pas que des parcours d'authentification : depuis le jalon
+[6-I](phase-6/6-i-planning-universel.md), les deux Blueprints d'**emploi du temps** de Bordeaux INP y
+vivent aussi (`ukit.portail.bordeaux-inp.edt`). Ce sont les premiers fichiers du dépôt à déclarer un
+`min_engine` — `0.5.4`, la version qui apporte l'extraction `from: "text"` —, et c'est exactement ce
+que ce champ existe pour faire : un appareil dont le moteur est plus ancien ignore l'entrée au lieu de
+jouer un fichier qu'il ne sait pas exécuter.
+
 Les versions vivent dans un fichier de données plutôt que dans `index.ts` pour une raison
 mécanique : le script de publication est un module Node, il ne sait pas lire du TypeScript. Un
 fichier que les deux côtés lisent tel quel vaut mieux qu'une version recopiée à la main — elle serait
@@ -287,6 +294,17 @@ Un Blueprint est de la **donnée exécutable**, et il est traité comme tel :
   lu ;
 - il ne peut pas exécuter de code : le moteur embarqué n'évalue rien dynamiquement, par construction ;
 - il est validé **entièrement** avant d'atteindre le cache, donc avant d'atteindre un run.
+
+Et une chose à savoir **avant** de brancher un rapporteur d'erreurs. Le message d'un `expect` raté
+porte le **corps de la réponse** : c'est ce qui rend une source qui a changé diagnosticable en une
+ligne de terminal, et c'est délibéré. Mais `reportFailure` le passe à `console.warn`, et
+`failure.detail` le transporte tel quel — sur un portail, ce corps est une page de dossier
+administratif, avec un nom et un numéro étudiant dedans.
+
+Aujourd'hui c'est sans conséquence : rien ne collecte ces journaux, et `SENTRY_DSN` traîne dans `.env`
+sans qu'aucune dépendance ne le lise (vérifié le 2026-08-15). Le jour où un rapporteur de crash arrive,
+**c'est ce chemin qu'il faut borner en premier** — pas le format du log, qui doit rester bavard là où
+il l'est, mais ce qui sort de l'appareil.
 
 Ce qui n'est **pas** couvert et doit rester su : un publieur compromis. Qui contrôle la publication
 peut livrer un Blueprint qui envoie les secrets déjà autorisés où il veut. L'accès au projet Supabase

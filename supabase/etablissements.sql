@@ -29,7 +29,7 @@
 insert into public.etablissements (
     code, nom, ville, logo_url, actif,
     portail_dossier, portail_messagerie,
-    celcat_domaine, celcat_res_types,
+    celcat_domaine, celcat_res_types, edt, salles, salles_libres,
     bibliotheques_points, services, libelles, ordre
 ) values (
     'bordeaux',
@@ -41,6 +41,16 @@ insert into public.etablissements (
     'ukit.portail.bordeaux.messagerie',
     'https://celcat.u-bordeaux.fr/calendar',
     '{"groupes": "103", "salles": "102"}'::jsonb,
+    -- Pas d'export iCalendar : cette universite publie son Celcat, et c'est l'exception francaise.
+    null,
+    -- La reconnaissance de salle, telle qu'elle vivait en dur dans AppCore jusqu'au jalon 6-I. Le
+    -- premier separateur ENUMERE (« A22/Amphi | A29/Salle » nomme deux batiments), le second TRONQUE
+    -- (« A22/Amphitheatre Charles DARWIN » n'en nomme qu'un). `depuis` a 2 parce qu'une description
+    -- Celcat porte le groupe et l'enseignant avant la salle. Ecrire ces valeurs plutot que de les
+    -- laisser au defaut n'ajoute rien au comportement : ca le rend relisible et corrigeable.
+    '{"separateurs": [" | ", "/"], "motif": "([A-Z][0-9]+)", "depuis": 2}'::jsonb,
+    -- Pas d'emprunt : cette universite est proprietaire de l'inventaire que les autres empruntent.
+    null,
     -- Les onze points de balayage des bibliotheques. Mesure du 2026-08-08 : ils rendent 14 sites,
     -- cinq points n'en rendent aucun, et quatre seulement portent des sites exclusifs. Reduire la
     -- liste serait un changement de comportement produit, pas un nettoyage — la mesure complete est
@@ -74,6 +84,9 @@ insert into public.etablissements (
     portail_messagerie   = excluded.portail_messagerie,
     celcat_domaine       = excluded.celcat_domaine,
     celcat_res_types     = excluded.celcat_res_types,
+    edt                  = excluded.edt,
+    salles               = excluded.salles,
+    salles_libres        = excluded.salles_libres,
     bibliotheques_points = excluded.bibliotheques_points,
     services             = excluded.services,
     libelles             = excluded.libelles,
@@ -93,9 +106,11 @@ insert into public.etablissements (
 --
 --   * `portail_messagerie` — le webmail de l'INP passe par SAML et non par le CAS. Il n'est donc pas
 --     extractible, et l'ecran de scolarite n'affiche simplement pas la ligne de messagerie.
---   * `celcat_domaine` — l'INP est sur ADE, pas sur Celcat, et son export n'est pas encore porte.
---     L'onglet Planning le **dit** au lieu d'echouer, et l'accueil saute l'etape des groupes.
---   * `celcat_res_types` — sans serveur d'emploi du temps, les codes d'inventaire n'ont pas d'objet.
+--   * `celcat_domaine` — l'INP est sur ADE, pas sur Celcat. La colonne reste nulle **apres** le jalon
+--     6-I : elle nomme un serveur Celcat, pas « un emploi du temps ». L'emploi du temps arrive par
+--     `edt`, et la recherche de salles libres par `salles_libres`.
+--   * `celcat_res_types` — sans serveur Celcat propre, les codes d'inventaire n'ont pas d'objet : le
+--     serveur emprunte porte le sien.
 --
 -- `bibliotheques_points` reprend ceux de Bordeaux : les deux etablissements sont dans la meme ville,
 -- et le fournisseur d'affluence est national. C'est une donnee de catalogue precisement pour que ce
@@ -103,7 +118,7 @@ insert into public.etablissements (
 insert into public.etablissements (
     code, nom, ville, logo_url, actif,
     portail_dossier, portail_messagerie,
-    celcat_domaine, celcat_res_types,
+    celcat_domaine, celcat_res_types, edt, salles, salles_libres,
     bibliotheques_points, services, libelles, ordre
 ) values (
     'bordeaux-inp',
@@ -115,6 +130,60 @@ insert into public.etablissements (
     null,
     null,
     null,
+    -- L'emploi du temps par export iCalendar (jalon 6-I). Releve le 2026-08-15 avec
+    -- `node tools/releve-ade.mjs --projet 1`, sur trois semaines de l'annee 2025-2026.
+    --
+    -- `params.projet` designe un PROJET ADE, et il en existe plusieurs simultanement : le projet
+    -- vivant est le 1 (3156 evenements sur l'annee), la ou le 2 est une quasi-coquille vide (54). Les
+    -- UID les nomment en clair — « 2025-2026 », « NEPASTOUCHER2526_SAUV », « 2526_POUR_ESUP »,
+    -- « TMP2526 ». **Il change a chaque rentree**, et c'est pourquoi il vit ici, a cote du
+    -- referentiel : une rentree est alors UNE publication, pas deux.
+    --
+    -- `groupes` nomme des **index positionnels** dans l'arbre des ressources du projet, pas des
+    -- identifiants ADE : `resources=1` rend la racine, c'est-a-dire tout l'etablissement, et
+    -- l'identifiant interne lu dans un UID ne rend rien. Un index est stable a l'interieur d'un
+    -- projet, et se re-releve a la rentree suivante.
+    --
+    -- Les treize entrees ci-dessous sont celles que le releve a nommees **sans ambiguite** : l'ecole
+    -- vient du prefixe du code de module (COG, GID, BIO, EEL/EIN/EMM/ETE/ESE/EMU), le libelle vient
+    -- des evenements eux-memes, et chacune a ete confrontee a trois semaines ecartees dans l'annee.
+    -- Un index qui melange plusieurs promotions n'est PAS publie : ce serait proposer a un etudiant
+    -- un planning qui n'est pas le sien. La liste s'etend par publication, sans release.
+    '{"blueprint": "ukit.portail.bordeaux-inp.edt",
+      "blueprint_annee": "ukit.portail.bordeaux-inp.edt.annee",
+      "params": {"projet": "1"},
+      "groupes": [{"nom": "ENSC 1A",       "ressource": "2"},
+                  {"nom": "ENSC 2A",       "ressource": "3"},
+                  {"nom": "ENSC 2A GR1",   "ressource": "7"},
+                  {"nom": "ENSC 3A",       "ressource": "4"},
+                  {"nom": "ENSEGID 2A",    "ressource": "140"},
+                  {"nom": "ENSEGID 3A",    "ressource": "183"},
+                  {"nom": "ENSTBB",        "ressource": "112"},
+                  {"nom": "ENSEIRB E2",    "ressource": "200"},
+                  {"nom": "ENSEIRB S2",    "ressource": "36"},
+                  {"nom": "ENSEIRB T2",    "ressource": "61"},
+                  {"nom": "ENSEIRB TSI",   "ressource": "201"},
+                  {"nom": "ENSEIRB R3",    "ressource": "123"},
+                  {"nom": "ENSEIRB SRT",   "ressource": "38"}]}'::jsonb,
+    -- La reconnaissance de salle. Mesure du 2026-08-15 sur les cinq ecoles : **toutes** ecrivent
+    -- leurs salles sous la meme forme, deux majuscules et un tiret, et la premiere lettre nomme
+    -- l'ecole — CA/CC/CD a l'ENSC, EA/EB a l'ENSEIRB-MATMECA, PA a l'ENSCBP, GA/GB a l'ENSEGID,
+    -- BA/BB a l'ENSTBB. Un seul motif couvre donc tout l'etablissement. Le motif est ancre en debut
+    -- de segment, ce qui laisse passer les annotations (« EA-S110/S111 (TD08) », « GB-O-111 Reservee
+    -- ISA-BTP ») sans qu'aucune troncature soit necessaire. `depuis` a 0 parce que la salle vient
+    -- d'un champ separe (LOCATION) que IcsMapping remet en tete de la description.
+    '{"separateurs": [","], "motif": "^([A-Z]{2})-", "depuis": 0}'::jsonb,
+    -- La recherche de salles libres, **empruntee** au serveur de l'Universite de Bordeaux. Decision
+    -- produit du 2026-08-15, prise en jouant le jalon sur appareil : les ecoles de l'INP sont sur le
+    -- campus de Talence, celui-la meme dont cette recherche liste les batiments en acces libre. Leur
+    -- refuser la fonctionnalite parce que leur emploi du temps vient d'ADE les priverait d'un service
+    -- qui leur sert reellement — un etudiant de l'ENSC qui cherche une salle pour travailler la
+    -- trouvera dans un batiment de l'UB, a deux cents metres.
+    --
+    -- L'emprunt ne concerne **que** les salles : `edt` reste la source de l'emploi du temps, et les
+    -- batiments proposes restent ceux de l'UB. Adapter la recherche aux batiments de l'INP est un
+    -- sujet distinct, et il n'est pas ouvert.
+    '{"domaine": "https://celcat.u-bordeaux.fr/calendar", "res_type": "102"}'::jsonb,
     '[{"lat": 44.8377, "lng": -0.5791},
       {"lat": 44.7963, "lng": -0.6277},
       {"lat": 43.2951, "lng": -0.3707},
@@ -145,6 +214,9 @@ insert into public.etablissements (
     portail_messagerie   = excluded.portail_messagerie,
     celcat_domaine       = excluded.celcat_domaine,
     celcat_res_types     = excluded.celcat_res_types,
+    edt                  = excluded.edt,
+    salles               = excluded.salles,
+    salles_libres        = excluded.salles_libres,
     bibliotheques_points = excluded.bibliotheques_points,
     services             = excluded.services,
     libelles             = excluded.libelles,

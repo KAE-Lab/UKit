@@ -33,6 +33,7 @@ import { purgerDonneesEtablissement } from './purge';
 export {
     ETABLISSEMENT_DEFAUT,
     etablissementRetire,
+    formatSallesActif,
     getCodeEtablissementActif,
     getEtablissement,
     getEtablissementActif,
@@ -41,15 +42,17 @@ export {
     serviceEtablissement,
     setCodeEtablissementActif,
 } from './catalogue';
-export type { CelcatResTypes, Etablissement, PointBalayage } from './catalogue';
-export { entreesCelcat, planningAbsent, planningDisponible } from './celcat';
+export type { CelcatResTypes, EdtIcal, Etablissement, FormatSalles, GroupeEdt, PointBalayage } from './catalogue';
+export { entreesCelcat, sallesDisponibles } from './celcat';
 export type { EntreesCelcat } from './celcat';
+export { groupeInconnu, planningAbsent, planningDisponible, resoudreRessources, sourceEdt } from './edt';
+export type { SourceEdt } from './edt';
 export { purgerDonneesEtablissement } from './purge';
 
 const TABLE = 'etablissements';
 const CLE_CACHE = 'etablissements@1';
 const COLONNES =
-    'code,nom,ville,logo_url,actif,portail_dossier,portail_messagerie,celcat_domaine,celcat_res_types,bibliotheques_points,services,libelles,ordre';
+    'code,nom,ville,logo_url,actif,portail_dossier,portail_messagerie,celcat_domaine,celcat_res_types,edt,salles,salles_libres,bibliotheques_points,services,libelles,ordre';
 
 /** Ce que rend un rafraichissement : un resultat, jamais une exception. */
 export interface EtablissementsReport {

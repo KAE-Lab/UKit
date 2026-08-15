@@ -1,0 +1,76 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux-inp.edt",
+  "description": "L'export iCalendar anonyme d'ADE, pour BORDEAUX INP : les cours d'une plage de dates, ramenes tels quels. Ce fichier n'est PAS embarque dans le binaire — il arrive par le manifeste, sous le prefixe reserve ukit.portail. (jalon 6-G), et il exige le moteur 0.5.4 pour son extraction from='text' (jalon 3-I d'Aetherius). Il ne rend PAS des cours : il rend le corps du calendrier, tel quel. Interpreter un iCalendar est le travail de l'application (IcsMapping.ts), parce qu'un Blueprint ne calcule pas — il faudrait reimplementer le meme decoupage a l'identique dans les deux moteurs. Cinq mesures du 2026-08-15, faites en lecture seule, expliquent la forme de ce fichier. (1) projectId n'est pas une constante : il designe un PROJET ADE, et il en existe plusieurs simultanement — mesure du jour, projectId=2 est une quasi-coquille vide (54 evenements sur l'annee) alors que projectId=1 en porte 3156. Les UID nomment les projets en clair : '2025-2026', 'NEPASTOUCHER2526_SAUV', '2526_POUR_ESUP', 'TMP2526'. Un projet change donc a chaque rentree, et c'est pourquoi il arrive en ENTREE depuis le catalogue plutot qu'en var — sans quoi une rentree couterait une release. (2) resources n'est pas un identifiant ADE mais un INDEX POSITIONNEL dans l'arbre des ressources du projet : resources=1 rend la racine, c'est-a-dire tout l'etablissement, et l'identifiant interne lu dans un UID (92) ne rend rien. L'index n'est pas stable d'un projet a l'autre, d'ou un referentiel releve et publie plutot que devine. (3) firstDate et lastDate sont INCLUSIVES : firstDate=lastDate rend bien la journee, contrairement a la borne exclusive de Celcat qui obligeait a un add_days(1). (4) resources accepte plusieurs index separes par une virgule, et le serveur fusionne : le planning agrege des favoris tient donc en UNE requete, comme federationIds[] chez Celcat, et n'en multiplie pas la charge. (5) L'export est anonyme — aucun cookie, aucune authentification, aucun secret declare ici. La garde de forme est une APPARTENANCE et non un prefixe : le sous-ensemble d'expressions n'a ni tranche ni startswith, c'est le corollaire du refus d'un from='regex' cote moteur. Un calendrier sans aucun VEVENT reste un SUCCES : une semaine sans cours est un resultat, pas une panne, et c'est l'application qui affiche l'etat vide.",
+  "act": "vector",
+  "inputs": {
+    "domaine": {
+      "type": "string",
+      "required": true,
+      "default": "https://ade.bordeaux-inp.fr",
+      "description": "Racine du serveur ADE de l'etablissement. Le defaut garde le fichier jouable seul depuis un poste."
+    },
+    "projet": {
+      "type": "string",
+      "required": true,
+      "default": "1",
+      "description": "Identifiant du projet ADE. Vient du catalogue (colonne edt, champ params) : il designe l'annee universitaire et change a chaque rentree. Mesure du 2026-08-15 : 1 = le projet vivant 2025-2026."
+    },
+    "ressources": {
+      "type": "string",
+      "required": true,
+      "description": "Index des ressources interrogees, separes par une virgule. Un seul pour un planning ordinaire, plusieurs pour le planning agrege des favoris. Les index viennent du referentiel du catalogue (colonne edt, champ groupes)."
+    },
+    "debut": {
+      "type": "string",
+      "format": "date",
+      "required": true,
+      "description": "Premier jour de la plage, au format YYYY-MM-DD. Borne INCLUSIVE."
+    },
+    "fin": {
+      "type": "string",
+      "format": "date",
+      "required": true,
+      "description": "Dernier jour de la plage, au format YYYY-MM-DD. Borne INCLUSIVE : pour une journee seule, elle vaut 'debut'."
+    }
+  },
+  "vars": {
+    "chemin": "/jsp/custom/modules/plannings/anonymous_cal.jsp",
+    "type_export": "ical"
+  },
+  "steps": [
+    {
+      "id": "cal",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ inputs.domaine }}{{ vars.chemin }}",
+      "headers": {
+        "Accept": "text/calendar"
+      },
+      "params": {
+        "resources": "{{ inputs.ressources }}",
+        "projectId": "{{ inputs.projet }}",
+        "calType": "{{ vars.type_export }}",
+        "firstDate": "{{ inputs.debut }}",
+        "lastDate": "{{ inputs.fin }}"
+      },
+      "expect": {
+        "status": 200
+      },
+      "extract": {
+        "ics": {
+          "from": "text"
+        }
+      }
+    },
+    {
+      "id": "forme",
+      "action": "assert",
+      "condition": "{{ 'BEGIN:VCALENDAR' in steps.cal.ics }}",
+      "message": "la reponse n'est pas un calendrier : page d'erreur ou projet inconnu"
+    }
+  ],
+  "outputs": {
+    "ics": "{{ steps.cal.ics }}"
+  }
+}

@@ -115,7 +115,7 @@ n'ont pas la même nature, et qu'il vaut mieux ne pas confondre :
 
 | Volet | Thèse | Jalons |
 |---|---|---|
-| **1 — Le comportement devient de la donnée** | l'accès aux sources quitte le binaire pour des Blueprints publiés | A → G *(livrés)*, I, J |
+| **1 — Le comportement devient de la donnée** | l'accès aux sources quitte le binaire pour des Blueprints publiés | A → G, I *(livrés)*, J |
 | **2 — La refonte visuelle** | l'application a la dette visuelle de sa reprise ; on la rend présentable avant de sortir | K, puis les sessions d'écran |
 | **Clôture** | plus aucune source n'a deux chemins, et la version part | Z |
 
@@ -142,7 +142,7 @@ de test, et les limites écrites.
                                             ▼
                           6-G Multi-etablissement   (Aetherius 3-H)
                                             ▼
-                          6-I Emploi du temps iCal  (Aetherius 3-I)
+                          6-I Emploi du temps iCal  (Aetherius 3-I)   [livre]
                                             ▼
                           6-J Le compte a l'accueil
 
@@ -167,7 +167,7 @@ de test, et les limites écrites.
 | 6-E | [6-e-planning.md](6-e-planning.md) | 6-C | Emplois du temps, groupes, salles. Bascule directe sur Celcat, retrait du relais. La source la plus critique de l'application, et la seule qui doit survivre hors ligne. |
 | 6-F | [6-f-scolarite.md](6-f-scolarite.md) | 6-D, 6-E | La WebView cachée devient deux Blueprints. Le morceau qui justifie la phase, et le plus exigeant à vérifier. |
 | 6-G | [6-g-etablissements.md](6-g-etablissements.md) | 6-F, Aetherius 3-H | Le catalogue des établissements pilote l'interface, les Blueprints sont namespacés, un second portail réel est livré. |
-| 6-I | [6-i-planning-universel.md](6-i-planning-universel.md) | 6-G, Aetherius 3-I *(livré en 0.5.4)* | L'emploi du temps par export iCal, pour les universités qui ne sont pas sur un Celcat ouvert — c'est-à-dire presque toutes. Née de 6-G, qui a livré un établissement sans planning. |
+| 6-I | [6-i-planning-universel.md](6-i-planning-universel.md) *(livré)* | 6-G, Aetherius 3-I *(livré en 0.5.4)* | L'emploi du temps par export iCal, pour les universités qui ne sont pas sur un Celcat ouvert — c'est-à-dire presque toutes. Née de 6-G, qui a livré un établissement sans planning. **Bordeaux INP a désormais son planning**, et le catalogue arbitre entre deux sources. |
 | 6-J | [6-j-compte-et-sources-par-etablissement.md](6-j-compte-et-sources-par-etablissement.md) | 6-G, 6-I | Proposer le compte **universitaire** dès l'accueil, et accepter que sa place dans le parcours dépende de l'établissement. La moitié « colle ton lien iCal » dépend de 6-I. |
 | 6-K | [6-k-socle-visuel.md](6-k-socle-visuel.md) | — | **Ouvre le volet 2.** Le vocabulaire visuel est **extrait** des écrans qui font déjà référence, pas inventé : tokens complétés, composants partagés, règle qui refuse les valeurs en dur, recette d'écran. Ce qui suit se fait en sessions, écran par écran. |
 | 6-Z | [6-z-livraison-finale.md](6-z-livraison-finale.md) | tout | Les replis sont retirés, les dépendances mortes sortent, la documentation est close, **la version 6 part**. |
@@ -218,5 +218,6 @@ Trois adaptations propres à cette phase :
 > 6-G — il est livré. Un **second** est apparu en livrant 6-G, exactement comme la note l'annonçait :
 > l'extraction ne sait pas rendre un corps de réponse en texte brut, ce qui met un export iCal hors
 > de portée d'un Blueprint. Il a sa spécification ici, [6-I](6-i-planning-universel.md), et le manque
-> a la sienne là-bas : `docs/phase-3/3-i-extraction-texte.md`, à livrer **avant** de commencer 6-I. Le jalon 3-G en avait trouvé huit en portant nos sources : c'est le
-> résultat normal d'un port réel, pas un accident.
+> avait la sienne là-bas : `docs/phase-3/3-i-extraction-texte.md`. **Les deux sont livrés**, et
+> l'ordre a tenu — le manque d'abord, le consommateur ensuite. Le jalon 3-G en avait trouvé huit en
+> portant nos sources : c'est le résultat normal d'un port réel, pas un accident.

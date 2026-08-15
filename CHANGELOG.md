@@ -15,6 +15,50 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **L'emploi du temps universel** (jalon [6-I](docs/phase-6/6-i-planning-universel.md)).
+  **Bordeaux INP a un emploi du temps**, par l'**export iCalendar** de son serveur ADE — et l'écran est
+  celui de Bordeaux au pixel près : aucun composant n'a été modifié pour ça.
+
+  C'est la réponse à un constat mesuré : un balayage de vingt universités françaises n'a trouvé
+  **aucune** instance Celcat interrogeable sans authentification hors Bordeaux, alors que presque tous
+  les produits d'emploi du temps savent exporter en iCal (RFC 5545). Porter chaque produit un par un
+  serait sans fin ; lire un format normalisé ne l'est pas.
+
+  Ce qui rend l'ajout possible sans release : le catalogue déclare **ce qui existe** — les deux
+  Blueprints à jouer, le projet ADE de l'année, le référentiel `groupe → ressource`, et la façon de
+  lire un code de bâtiment dans une salle. Les quatre signatures du service de planning n'ont pas
+  bougé d'une lettre, et les Blueprints vivent sous le préfixe réservé `ukit.portail.`.
+
+  Trois décisions valent d'être connues. **La couleur d'un cours est dérivée de sa matière** — un
+  iCalendar n'en porte aucune — par une empreinte stable qui choisit l'une des huit teintes que
+  l'application utilise déjà : même cours, même couleur toute l'année, et Bordeaux ne change pas.
+  **La reconnaissance de salle est devenue une donnée d'établissement** : elle était une expression
+  bordelaise en dur, et aucune salle de l'INP ne lui correspondait. **Le référentiel des groupes est
+  un relevé d'auteur**, scripté (`tools/releve-ade.mjs`) et rejouable à chaque rentrée, parce qu'ADE
+  n'expose aucun arbre de ressources anonyme.
+
+  Treize groupes sur les cinq écoles de l'INP, dix bâtiments relevés sur OpenStreetMap, un cas de
+  parité épinglé sur une semaine passée fixe, et 51 tests de plus.
+
+  **La campagne sur appareil a corrigé trois choses**, dont deux qu'aucun terminal ne montrait :
+  l'icône d'une ligne de description était assignée par sa **position** — juste avec Celcat, fausse
+  avec un iCalendar, où la salle portait l'icône « groupe » —, et la palette dérivée contenait une
+  teinte neutre qui faisait passer un cours sur sept pour un cours sans couleur. La troisième est une
+  décision produit : **la recherche de salles libres est ouverte à Bordeaux INP**, qui emprunte
+  l'inventaire de l'Université de Bordeaux — ses écoles sont sur le même campus, à deux cents mètres
+  des bâtiments concernés.
+
+  Elle a aussi corrigé un cinquième point, invisible sur un cours ordinaire : une **année en tête de
+  titre** — `2025-2026 - Les rencontres du Réseau d'Écoute` — était prise pour un code d'unité
+  d'enseignement, ce qui amputait le titre et affichait `2026` en en-tête de fiche. Seize matières
+  d'un seul groupe étaient dans ce cas. Un code d'UE exige désormais au moins une lettre.
+
+  Elle a enfin révélé un défaut **antérieur au jalon** : changer d'université n'effaçait pas les
+  groupes favoris ni les filtres d'UE, alors que la réinitialisation le faisait — et que la
+  documentation l'annonçait depuis le jalon 6-G. Il n'avait aucun symptôme tant que le second
+  établissement n'avait pas d'emploi du temps ; dès qu'il en a eu un, l'onglet Planning annonçait
+  « ce groupe n'existe plus » pour un groupe qui existe, à l'université qu'on venait de quitter.
+
 - **Le multi-établissement** (jalon [6-G](docs/phase-6/6-g-etablissements.md)). UKit n'est plus une
   application mono-université : le **catalogue des établissements** vit dans la
   [base de publication](docs/backend.md) et pilote l'interface. Ajouter une université est désormais

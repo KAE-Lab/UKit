@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import moment from 'moment';
 import Toast from 'react-native-root-toast';
-import { SettingsManager, getLocations, getLocationsInText } from './AppCore';
+import { SettingsManager } from './AppCore';
 import { TimeMockService } from './TimeMockService';
 import { PlanningEvent, PlanningWeekDay } from '../../features/Planning/services/PlanningApiService';
 

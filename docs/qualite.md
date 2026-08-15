@@ -50,6 +50,10 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`shared/locations/referentiel.ts`](../src/shared/locations/referentiel.ts) | la fusion champ par champ du socle et de la surcouche |
 | [`shared/etablissements/catalogue.ts`](../src/shared/etablissements/catalogue.ts) | une ligne qui **remplace** au lieu de fusionner, le socle qui ne disparaît jamais, l'ordre stable, le repli d'un code inconnu |
 | [`features/Planning/services/PlanningApiMapping.ts`](../src/features/Planning/services/PlanningApiMapping.ts) | l'arité de `modules`, le séparateur qui change avec la vue, une fin d'événement nulle, le tri double |
+| [`features/Planning/services/IcsMapping.ts`](../src/features/Planning/services/IcsMapping.ts) | le pliage de lignes RFC 5545, l'horodatage d'export qui change à chaque requête, l'ancre du code de module, et **l'heure d'été d'un `DTSTART` en UTC** |
+| [`shared/locations/salles.ts`](../src/shared/locations/salles.ts) | les séparateurs qui n'ont pas le même rôle, `A5bis` qui ne doit pas devenir `A5`, un motif publié illisible |
+| [`features/Planning/components/CourseAnnotations.ts`](../src/features/Planning/components/CourseAnnotations.ts) | l'icône déduite du contenu et non du rang, sur les deux formes de description — le défaut trouvé sur appareil au jalon 6-I |
+| [`features/Planning/services/PlanningAssembly.ts`](../src/features/Planning/services/PlanningAssembly.ts) | un code d'UE contient une lettre : une année de titre ADE n'en est pas un |
 | [`features/Campus/services/CampusApiMapping.ts`](../src/features/Campus/services/CampusApiMapping.ts) | la correspondance textuelle salle vers bâtiment, la détection des vacances, le refiltrage sur la date |
 | [`features/Scolarite/services/ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) | la casse de l'identité criée par la source, le compteur `null` contre `0`, la table des échecs nommés |
 
@@ -63,6 +67,14 @@ chacun verrouille un défaut **mesuré** plutôt qu'imaginé : une date absente 
 des horaires devenus invisibles parce que la source a changé de forme, une extraction qui rend `20` et
 non `[20]`, et une colonne nulle qui pourrait effacer une coordonnée embarquée. Aucun des quatre ne
 se voit à la relecture.
+
+Les deux du jalon [6-I](phase-6/6-i-planning-universel.md) ont une particularité : **le fuseau des
+tests est fixé** à `Europe/Paris` dans [`vitest.config.ts`](../vitest.config.ts). Ce n'est pas une
+commodité de poste. L'export iCalendar d'ADE sert ses dates en UTC honnête — le même créneau
+hebdomadaire est `07:30Z` en septembre et `08:30Z` en novembre, soit 09:30 à Paris les deux fois — et
+c'est **la** propriété à verrouiller, puisqu'un affichage naïf décalerait tous les cours d'une heure la
+moitié de l'année. Elle ne s'exprime que dans un fuseau donné : sans cette ligne, le test passerait à
+Bordeaux et échouerait ailleurs, ce qui est la pire forme de test.
 
 Les deux du jalon [6-E](phase-6/6-e-planning.md) suivent la même règle, sur la source la plus critique
 de l'application. Deux d'entre eux valent d'être connus avant de « simplifier » quoi que ce soit :

@@ -47,6 +47,8 @@ const fr: TranslationDict = {
 	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
 	ERROR_PORTAL_UNAVAILABLE: 'Cette université n’est pas encore reliée à UKit.',
 	ERROR_TIMETABLE_UNAVAILABLE: 'Cette université ne publie pas encore son emploi du temps dans UKit.',
+	ERROR_TIMETABLE_GROUP_UNKNOWN: "Ce groupe n'existe plus dans l'emploi du temps de ton université. Choisis-en un autre.",
+	TIMETABLE_GROUPS_MISSING: 'Groupes introuvables, non affichés ici : $-',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
 	PARTIAL_COVERAGE: 'Certaines zones n’ont pas répondu : la liste est peut-être incomplète.',

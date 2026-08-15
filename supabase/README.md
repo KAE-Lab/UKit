@@ -8,6 +8,7 @@ ce qu'elle n'est pas, et comment on publie : [docs/backend.md](../docs/backend.m
 | [`schema.sql`](schema.sql) | tables, index, contraintes, **et les deux buckets** |
 | [`policies.sql`](policies.sql) | RLS : lecture publique restreinte, écriture réservée |
 | [`etablissements.sql`](etablissements.sql) | le catalogue des universités : une ligne par établissement, `on conflict do update` |
+| [`batiments-bordeaux-inp.sql`](batiments-bordeaux-inp.sql) | les dix bâtiments de Bordeaux INP, relevés sur OpenStreetMap — la surcouche de `assets/locations.json` pour une université que le binaire n'embarque pas |
 
 **Tout s'applique depuis ces fichiers, jamais depuis l'interface web.** Ce qui est fait à la main
 n'est pas reproductible, ne se relit pas en revue, et se perd le jour où il faut recréer le projet.
@@ -48,6 +49,7 @@ européenne — les utilisateurs sont en France.
    psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/schema.sql
    psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/policies.sql
    psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/etablissements.sql
+   psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/batiments-bordeaux-inp.sql
    ```
 
    > **La connexion directe fonctionne depuis un poste en NAT64** — mesuré le 2026-08-10, là où les

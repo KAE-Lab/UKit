@@ -6,11 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import { getLocations, getLocationsInText } from '../../../shared/services/AppCore';
+import { getLocations, getLocationsInText, ligneDeSalle } from '../../../shared/services/AppCore';
+import type { LieuDeCours } from '../../../shared/locations/salles';
 import { AppContext } from '../../../shared/services/AppCore';
 import { URL } from '../../../shared/constants/urls';
 import { withStaticHeader } from '../../../shared/navigation/NavHelpers';
 import { CourseData } from '../components/CourseCard';
+import { iconeDAnnotation } from '../components/CourseAnnotations';
 
 export interface CourseProps {
 	route: { params: { data: CourseData } };
@@ -20,7 +22,7 @@ export interface CourseProps {
 
 export interface CourseState {
 	data: CourseData;
-	locations: Record<string, unknown>[];
+	locations: LieuDeCours[];
 }
 
 class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
@@ -43,20 +45,13 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	};
 
 	componentDidMount() {
-		let locations: Record<string, unknown>[] = [];
+		let locations: LieuDeCours[] = [];
 		this.props.navigation.setParams({ title: this.state.data.UE || Translator.get('DETAILS') });
 
-		// On nettoie les lignes vides
-		const descLines = (this.state.data.description ?? '').split('\n').map(l => l.trim()).filter(l => l);
-
-		let roomLine = '';
-		// On cherche une ligne de salle potentielle (à partir de la 3ème ligne)
-		// On exclut formellement la ligne si elle correspond au format des semaines
-		const potentialRooms = descLines.slice(2).filter(line => !/^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(line));
-
-		if (potentialRooms.length > 0) {
-			roomLine = potentialRooms[0];
-		}
+		// La ligne susceptible de porter une salle, et le rang auquel la chercher, sont une donnee
+		// d'etablissement depuis le jalon 6-I : une description Celcat porte la salle a partir de la
+		// troisieme ligne, un evenement iCalendar la tient d'un champ separe remis en tete.
+		const roomLine = ligneDeSalle(this.state.data.description ?? '');
 
 		if (roomLine) {
 			locations = getLocations(roomLine);
@@ -81,7 +76,7 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 		const centerLng = this.state.locations[0].lng;
 
 		// Génération du code Leaflet pour tes marqueurs customisés SVG
-		const markersJs = this.state.locations.map((location: Record<string, unknown>) => {
+		const markersJs = this.state.locations.map((location: LieuDeCours) => {
 			const title = location.title || Translator.get('ROOM');
 			return `
 				var iconHTML = \`
@@ -165,25 +160,8 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 			const trimmedLine = line.trim();
 			if (!trimmedLine) return null;
 
-			let iconName: 'info-outline' | 'date-range' | 'room' | 'group' | 'person' = 'info-outline';
-			const lowerLine = trimmedLine.toLowerCase();
-
-			const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedLine);
-			const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
-
-			if (isWeeks) {
-				iconName = 'date-range';
-			} else if (isRoom) {
-				iconName = 'room';
-			} else if (index === 0) {
-				iconName = 'group';
-			} else if (index === 1) {
-				iconName = 'person';
-			} else if (index === 2) {
-				iconName = 'room';
-			} else {
-				iconName = 'date-range';
-			}
+			// L'icone se deduit du contenu de la ligne, jamais de son rang (CourseAnnotations.ts).
+			const iconName = iconeDAnnotation(trimmedLine);
 
 			return (
 				<View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
@@ -217,7 +195,7 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 					<Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as never, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
 						{this.state.data.subject !== 'N/C' ? this.state.data.subject.trim() : Translator.get('UNKNOWN_SUBJECT')}
 					</Text>
-					{this.state.data.category !== this.state.data.subject && (
+					{this.state.data.category !== '' && this.state.data.category !== this.state.data.subject && (
 						<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>
 							<Text style={{ fontSize: tokens.fontSize.xs, color: lineColor, fontWeight: tokens.fontWeight.bold as never }}>
 								{this.state.data.category}

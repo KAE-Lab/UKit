@@ -46,6 +46,8 @@ const es: TranslationDict = {
 	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
 	ERROR_PORTAL_UNAVAILABLE: 'Esta universidad aún no está conectada a UKit.',
 	ERROR_TIMETABLE_UNAVAILABLE: 'Esta universidad aún no publica su horario en UKit.',
+	ERROR_TIMETABLE_GROUP_UNKNOWN: 'Este grupo ya no existe en el horario de tu universidad. Elige otro.',
+	TIMETABLE_GROUPS_MISSING: 'Grupos no encontrados, no mostrados aquí: $-',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
 	PARTIAL_COVERAGE: 'Algunas zonas no han respondido: puede que la lista esté incompleta.',
