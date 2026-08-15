@@ -226,7 +226,8 @@ livré ; elle est mise à jour à chaque contribution.
   bascule directe sur Celcat, et **un serveur retiré de l'architecture** —, puis **la session
   universitaire** (6-F), le morceau qui justifiait la phase. Depuis 6-G, **l'application n'est plus
   mono-université** : le catalogue vit en base, et **Bordeaux INP a été ajouté sans release** — une
-  ligne en base, un Blueprint publié. Reste le retrait du legacy :
+  ligne en base, un Blueprint publié. Restent l'emploi du temps universel (6-I), le compte à l'accueil
+  (6-J), **la refonte visuelle** (6-K et les sessions qui suivent) et la clôture (6-Z) :
   [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,

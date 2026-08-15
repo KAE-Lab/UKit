@@ -1,7 +1,16 @@
-# 6-H — Retrait du legacy et livraison
+# 6-Z — Retrait du legacy et livraison
 
 > Retirer les replis, éteindre ce qui n'a plus de raison d'être, clore la documentation, publier.
 > Le jalon qui empêche la phase de laisser deux implémentations derrière elle.
+
+> **Anciennement `6-H`.** Renommé en `Z` à la clôture du volet 1 : ce jalon ferme la phase, il doit
+> donc rester le dernier quel que soit le nombre de jalons ajoutés entre-temps — et un dossier trié
+> par nom de fichier se lit alors dans l'ordre d'exécution. Les références anciennes à « 6-H »
+> désignent ce document.
+
+> **Il sort la version 6**, refonte visuelle comprise : chez UKit une phase correspond à une version,
+> et rien ne part sur les stores avant que le volet 2 soit fini. Ce jalon vient donc **après**
+> [6-K](6-k-socle-visuel.md) et les sessions d'écran qui le suivent, pas après 6-J.
 
 ## Objectif
 

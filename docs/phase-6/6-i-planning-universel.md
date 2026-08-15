@@ -1,9 +1,10 @@
 # 6-I — L'emploi du temps universel
 
-> **Spécification ouverte.** Écrite au jalon [6-G](6-g-etablissements.md), qui l'a rendue nécessaire :
-> le second établissement livré n'a pas d'emploi du temps dans UKit, et il ne l'aura pas tant que ce
-> jalon n'existe pas. Rien n'est implémenté ici — ce document existe pour que la mesure faite le
-> 2026-08-10 ne soit pas à refaire.
+> **Spécification ouverte, et débloquée.** Écrite au jalon [6-G](6-g-etablissements.md), qui l'a
+> rendue nécessaire : le second établissement livré n'a pas d'emploi du temps dans UKit. Sa dépendance
+> — le jalon **3-I** d'Aetherius, `from: "text"` dans l'extraction — est **livrée et publiée en
+> 0.5.4** ; il n'y a donc plus rien qui empêche de commencer. Rien n'est implémenté ici : ce document
+> existe pour que les mesures des 10 et 11 août ne soient pas à refaire.
 
 ## Le problème
 
@@ -40,9 +41,9 @@ Sondé le 2026-08-10 sur `ade.bordeaux-inp.fr`, en lecture seule :
   suite**, sans attendre la rentrée, et un cas de parité épinglé sur une **semaine passée fixe** est
   reproductible pour toujours — là où un test sur « cette semaine » casserait à chaque vacances.
 
-## Les deux obstacles, et ils ne sont pas du même ordre
+## Trois obstacles, et ils ne sont pas du même ordre
 
-### 1. Un Blueprint ne peut pas ramener ce corps — c'est un manque du moteur
+### 1. Un Blueprint ne pouvait pas ramener ce corps — c'était un manque du moteur, il est comblé
 
 L'extraction d'Aetherius ne connaît que `from: "json"` et `from: "html"`
 (`src/aetherius/core/extraction/dispatch.py`), et le step `http.request` publie `status_code` et
@@ -53,12 +54,45 @@ de continuation commence par une espace, et rien ne garantit qu'une normalisatio
 C'est exactement le contournement que la [note de portée de la Phase 6](README.md) interdit : *« un
 manque se traite là-bas, pas par un contournement ici »*.
 
-**Ce jalon dépend donc d'un jalon Aetherius**, désormais **spécifié** :
-`docs/phase-3/3-i-extraction-texte.md` dans le dépôt voisin — un `from: "text"` dans l'extraction, les
-deux moteurs, un cas de conformance. C'est la seconde dépendance inter-dépôt de la phase, après 3-H,
-et **elle doit être livrée avant de commencer ici**.
+**Ce jalon dépendait donc d'un jalon Aetherius, et il est livré** :
+`docs/phase-3/3-i-extraction-texte.md` dans le dépôt voisin, publié en **0.5.4**. Trois choses de sa
+livraison changent la façon d'écrire les Blueprints ici, et méritent d'être sues avant :
 
-### 2. La découverte des groupes n'est pas résolue par l'iCal
+- le décodage suit l'en-tête de réponse, avec une **table d'encodages bornée et identique** dans les
+  deux moteurs : `iso-8859-1` et ses alias, `windows-1252`, et **tout le reste en UTF-8**. Un serveur
+  qui étiquette autrement sera donc lu en UTF-8, sans avertissement ;
+- une extraction `from: "text"` **refuse** `path`, `where`, `fields`, `selector`, `selector_type`,
+  `attr` et `multiple` — un Blueprint qui croirait filtrer est arrêté à la validation ;
+- le corps n'est lu en octets **que si** un `from: "text"` est déclaré : les Blueprints existants ne
+  paient rien.
+
+Première tâche du jalon, avant tout le reste : **épingler `@aetherius/engine` et
+`@aetherius/react-native` en `^0.5.4`** dans `package.json`.
+
+### 2. Deux champs de `PlanningEvent` n'ont pas de source dans un iCal
+
+Le contrat rendu aux écrans est
+[`PlanningEvent`](../../src/features/Planning/services/PlanningApiMapping.ts), treize champs plats.
+**Tant que le mapper iCal produit ce type-là, aucun écran ne change** — ni les cases de cours, ni le
+carrousel des cours simultanés, ni la vue semaine, ni la fiche. C'est le même mécanisme qui a fait que
+Bordeaux INP n'a pas touché un seul écran de scolarité au jalon 6-G, et **c'est le résultat attendu :
+visuellement identique au système de groupes.**
+
+Deux champs demandent une décision, parce que la source ne les donne pas :
+
+| Champ | Celcat | iCal |
+|---|---|---|
+| `color` / `style` | `backgroundColor`, donné par le serveur | **rien** |
+| `category` (CM/TD/TP) | `eventCategory`, un champ à part | dans `DESCRIPTION`, en texte libre — donc heuristique |
+| `subject`, `date`, `starttime`, `endtime` | champs | `SUMMARY`, `DTSTART`/`DTEND` — direct |
+
+Pour la couleur, la question à trancher **avant** d'écrire le mapper : la dériver de la matière (une
+empreinte stable, donc la même couleur pour le même cours toute l'année) uniformiserait les deux
+sources et rendrait l'application cohérente d'un établissement à l'autre. Garder celle de Celcat d'un
+côté et en inventer une de l'autre donnerait deux apparences pour un même écran. C'est une décision
+produit, pas un détail d'implémentation.
+
+### 3. La découverte des groupes n'est pas résolue par l'iCal
 
 ADE n'expose pas d'arbre de ressources anonyme : l'export prend des **identifiants numériques**, et
 rien ne dit lequel correspond à quel groupe. Deux réponses possibles, et elles ne coûtent pas la même
@@ -72,6 +106,28 @@ chose :
 La première est le modèle déjà en place pour `assets/locations.json` : de la donnée d'auteur, publiée,
 corrigeable sans release. C'est celle à privilégier ; la seconde reste le repli pour les
 établissements dont l'export n'est pas anonyme.
+
+## Ce que la carte du cours va révéler, et qui n'est pas dans l'iCal
+
+Le référentiel des lieux **est** migré : 73 bâtiments en base depuis le jalon
+[6-D](6-d-campus.md), `assets/locations.json` en socle embarqué, correction champ par champ et
+**ajout** d'un code absent — donc les bâtiments d'une nouvelle université se publient sans release.
+
+Mais **ce qui relie un cours à un bâtiment est resté bordelais**, et c'est du code :
+
+```js
+// shared/services/AppCore.tsx
+let regexBuilding = RegExp('([A-Z][0-9]+)', 'im');   // "A29", "B18"…
+```
+
+Cette expression attend une lettre suivie de chiffres, et `getLocations()` découpe sur ` | ` et `/` —
+la forme des descriptions Celcat. Or l'ADE de Bordeaux INP écrit ses salles `CD-O204`, `GA-S-174`,
+`EA- (AMPHI A)` : **aucune ne correspond**. La fiche de cours ne proposera donc pas de carte pour ce
+portail tant que la reconnaissance de salle n'est pas, elle aussi, une donnée d'établissement.
+
+C'est exactement le défaut des onze points de balayage en dur que 6-G a corrigé, au même endroit du
+raisonnement : une constante bordelaise déguisée en règle générale. Elle se traite ici, et elle se
+vérifie en ouvrant une fiche de cours INP sur un téléphone — pas autrement.
 
 ## Ce que 6-G a déjà posé pour que ce jalon soit additif
 
@@ -88,8 +144,7 @@ rentre pas dans la forme prévue demande un Blueprint de plus, pas une colonne d
 
 ## Esquisse de livraison
 
-1. **Aetherius** — jalon `3-I`, déjà spécifié : `from: "text"` dans l'extraction, les deux moteurs,
-   corpus de conformance.
+1. **Épingler `^0.5.4`** — le jalon `3-I` d'Aetherius est livré.
 2. **UKit** — `ical.js` (Mozilla, pur JavaScript, compatible React Native). On ne réécrit pas la
    RFC 5545 : les fuseaux, le pliage de lignes, l'échappement et les récurrences sont un nid à
    défauts, et c'est précisément le genre de roue qu'une bibliothèque standard a déjà.
@@ -98,7 +153,11 @@ rentre pas dans la forme prévue demande un Blueprint de plus, pas une colonne d
    testable sous vitest.
 4. Les Blueprints ADE de l'INP, publiés sous le préfixe réservé.
 5. Le référentiel des ressources, publié en base.
-6. Un cas de parité : le même jour, lu par l'iCal et lu par l'export brut.
+6. La **reconnaissance de salle par établissement**, pour que la carte du cours fonctionne ailleurs
+   qu'à Bordeaux.
+7. Un cas de parité, **épinglé sur une semaine passée fixe** : le même jour, lu par l'iCal et lu par
+   l'export brut. Une semaine figée est reproductible pour toujours, là où « cette semaine » casserait
+   à chaque vacances.
 
 ## Limites prévisibles
 

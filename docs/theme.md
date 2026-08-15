@@ -5,6 +5,12 @@ Toute valeur de style de UKit vient de [`src/shared/theme/Theme.ts`](../src/shar
 la règle qui garantit qu'un changement de thème reste cohérent et qu'un nouvel écran se fond dans
 l'existant.
 
+> **Cette règle n'est aujourd'hui appliquée par rien**, et le code en porte les traces — voir
+> [Limites connues](#limites-connues). Le jalon [6-K](phase-6/6-k-socle-visuel.md) la rend
+> exécutable par une règle ESLint, complète les tokens de ce qui leur manque, et sort les composants
+> partagés des écrans qui font déjà référence. Une règle écrite dans un document ne tient pas : celle
+> ci-dessus l'était, et n'a pas tenu.
+
 ## Ce que le fichier exporte
 
 ```ts
@@ -126,6 +132,28 @@ bascule pas l'application.
 > **Capture attendue** — `theme-clair-sombre.png` : un même écran dans les deux thèmes, côte à côte,
 > pour servir de référence visuelle.
 
+## La recette d'écran
+
+> **À écrire au jalon [6-K](phase-6/6-k-socle-visuel.md).** Cette section accueillera la liste que
+> toute session de refonte d'écran doit vérifier : en-tête animé, marges de page, état vide, état
+> d'erreur, état de chargement, cibles tactiles. Elle est le pendant visuel de la « définition de
+> terminé » du CONTRIBUTING.
+
+## Les décisions durables
+
+> **Section vivante.** Une session de refonte qui aboutit à une décision qui vaut au-delà de son écran
+> — « les cartes ont toujours ce rayon », « pas d'ombre sur fond sombre », « un état vide propose
+> toujours une action » — la consigne **ici**. Sans ça, la session suivante la défait, et on tourne en
+> rond.
+
+Deux décisions déjà acquises, et qui ont coûté à être trouvées :
+
+- **`accentFont` est le rouge destructif** (`#FF3B30`), pas « texte sur fond accent ». Pour un libellé
+  sur fond `primary`, c'est **`lightFont`** — blanc dans les deux thèmes. Trouvé au jalon 6-B.
+- **Un composant ne remonte dans [`shared/ui/`](../src/shared/ui/) qu'à partir de deux usages.** C'est
+  la règle qui a gouverné `SourceFailureNotice`, remonté au jalon 6-E quand un rendu d'échec s'est
+  retrouvé recopié — et qui garde un carrousel de cours simultanés chez lui.
+
 ## Vérifier
 
 - Basculer clair / sombre depuis Réglages et parcourir les quatre onglets : aucun texte illisible,
@@ -145,6 +173,13 @@ bascule pas l'application.
   (`#006F9F` et `#000000`), tout comme `androidStatusBar` dans
   [`app.config.ts`](../app.config.ts) : ces valeurs sont antérieures à la palette actuelle et n'en
   font pas partie.
+- **Il n'existe aucune couleur sémantique** dans les tokens — ni succès, ni avertissement, ni danger,
+  ni neutre. D'où les hexadécimaux en dur dès qu'un écran veut dire « valide » ou « fermé » :
+  `#4caf50` et `#ff9800` dans les modales de réglages et l'affluence des bibliothèques. Comblé au
+  jalon [6-K](phase-6/6-k-socle-visuel.md).
+- **`shared/ui/` ne porte aucun composant de mise en page** : ni carte, ni en-tête de section, ni état
+  vide, ni ligne de liste. Chaque écran réinvente les siens, ce qui est la cause mécanique des
+  divergences. Comblé au jalon [6-K](phase-6/6-k-socle-visuel.md).
 - **Quatre jeux de couleurs hérités subsistent en tête de fichier** : `colors` (encore référencé cinq
   fois, dans `StyleWelcome` et `style.list`), ainsi que `colors50`, `colors200` et `hintColors` qui ne
   sont **plus référencés nulle part**. Ces trois derniers sont du code mort conservé par prudence.

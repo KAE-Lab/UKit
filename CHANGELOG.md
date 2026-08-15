@@ -53,6 +53,17 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   les groupes qu'il conditionne — et cette dernière **disparaît** quand l'université ne publie pas
   d'emploi du temps.
 
+- **La phase 6 gagne un second volet : la refonte visuelle**
+  ([6-K](docs/phase-6/6-k-socle-visuel.md)). Une phase correspond à une version, et rien ne part sur
+  les stores tant que l'application n'est pas présentable : le volet 1 l'a rendue **corrigeable**, le
+  volet 2 la rend **montrable**. Le socle visuel y est **extrait** des écrans qui font déjà référence
+  — Planning, la barre d'onglets, le tableau de bord Campus, les listes CROUS et bibliothèques — et
+  non inventé, ce qui garantit que le travail déjà fait ne bouge pas. Les écrans restants — annonces,
+  scolarité, réglages — se reprennent ensuite **en sessions**, hors jalon : la beauté d'un écran n'a
+  pas de définition de « terminé », alors qu'un composant, une règle et une capture identique en ont
+  une. Au passage, `6-H` devient **`6-Z`** : le jalon de clôture doit rester le dernier quel que soit
+  le nombre de jalons ajoutés, et un dossier trié par nom se lit alors dans l'ordre d'exécution.
+
 - **Une spécification ouverte pour l'emploi du temps universel**
   ([6-I](docs/phase-6/6-i-planning-universel.md)). Le second établissement n'a pas de planning dans
   UKit, et ce n'est pas un oubli : presque aucune université française n'expose un Celcat ouvert. La
@@ -227,7 +238,7 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   [6-A](docs/phase-6/6-a-socle.md)). L'application embarque `@aetherius/engine` et
   `@aetherius/react-native`, sait jouer un [Blueprint](docs/blueprints.md) depuis n'importe quel
   service, et **les annonces de vie étudiante y passent déjà**, derrière la signature inchangée de
-  `BdeService.fetchAnnonces` — l'ancien chemin reste en repli jusqu'au jalon 6-H. Rien ne change
+  `BdeService.fetchAnnonces` — l'ancien chemin reste en repli jusqu'au jalon 6-Z. Rien ne change
   pour l'utilisateur : c'est la fondation des sept jalons suivants.
 
   Le vrai apport est le **modèle d'erreur**. Les services rendaient `null` ou `[]`, ce qui rendait

@@ -12,9 +12,9 @@
 
 ## Objectif
 
-[`ScolariteWebSession.tsx`](../../src/features/Scolarite/components/ScolariteWebSession.tsx)
-disparaît. Le parcours d'authentification et l'extraction des données étudiant sont décrits par deux
-Blueprints, joués dans la WebView unique montée par le socle. La machine à états, les quatre scripts
+`ScolariteWebSession.tsx` *(supprimé par ce jalon)* disparaît. Le parcours d'authentification et
+l'extraction des données étudiant sont décrits par deux Blueprints, joués dans la WebView unique
+montée par le socle. La machine à états, les quatre scripts
 injectés, les trois `MutationObserver` recopiés et le garde-fou global de 60 s sont remplacés par du
 vocabulaire déclaratif.
 

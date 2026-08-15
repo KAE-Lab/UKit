@@ -65,7 +65,7 @@ démonstration en soi.
 > qu'une migration. C'est aussi ce qui a décidé de la forme du harnais de parité — voir
 > « Écarts constatés » plus bas.
 
-Le relais n'est **pas éteint** au terme du jalon. Il l'est en [6-H](6-h-livraison-finale.md), après
+Le relais n'est **pas éteint** au terme du jalon. Il l'est en [6-Z](6-z-livraison-finale.md), après
 une période d'observation, et pas avant que la dernière version qui en dépend soit sortie du parc.
 Son extinction est désormais une formalité : il ne répond plus.
 
@@ -251,7 +251,7 @@ raison partout.
 - **Le refiltrage sur la date exacte reste applicatif**, donc une réponse qui déborde reste traitée
   après coup. C'est le comportement actuel, conservé volontairement.
 - **Le relais reste allumé** à la fin du jalon, le temps d'observer. Son extinction est une décision
-  de [6-H](6-h-livraison-finale.md), pas un oubli — mais il ne répond déjà plus.
+  de [6-Z](6-z-livraison-finale.md), pas un oubli — mais il ne répond déjà plus.
 - **Un `modules: []` retomberait sur la catégorie**, là où le code d'origine rendait un sujet
   indéfini. Après extraction, `[]` et `null` sont indistinguables. Le cas n'existe dans aucune des 334
   entrées d'une année interrogée, et le sujet indéfini s'affichait de toute façon vide.

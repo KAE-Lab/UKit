@@ -149,8 +149,8 @@ Le Blueprint reste dans [`blueprints/`](../../blueprints/) : il a servi de pilot
 documente le format historique, et il redeviendra utile le jour où une source éditoriale tierce
 apparaîtra. Sa parité est retirée du harnais avec la bascule, pas avant.
 
-> **Corrigé à la livraison — le repli jsDelivr part maintenant, pas en 6-H, et l'écran change.**
-> Les « limites écrites » du jalon 6-A annonçaient le retrait du repli en 6-H. Le garder ici aurait
+> **Corrigé à la livraison — le repli jsDelivr part maintenant, pas en 6-Z, et l'écran change.**
+> Les « limites écrites » du jalon 6-A annonçaient le retrait du repli en 6-Z. Le garder ici aurait
 > eu deux conséquences : servir du contenu d'un dépôt qu'on cesse d'écrire, et surtout **masquer
 > toute panne** — ce qui rendait injouable la sonde « base injoignable → écran de repli, pas une
 > liste vide » du plan de test ci-dessous. Le repli est donc retiré avec la bascule, en même temps

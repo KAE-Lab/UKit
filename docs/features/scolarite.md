@@ -51,6 +51,130 @@ d'identifiants se corrige en retapant son mot de passe, un portail muet se corri
 
 ![L'échec de session : le portail ne répond pas, avec son bouton Réessayer](../screenshots/scolarite-echec.png)
 
+## Ce que la page doit montrer
+
+> **Décidé le 2026-08-13, pour la v6.** L'onglet ne montre aujourd'hui qu'une salutation et une ligne
+> de messagerie — le reste de l'écran est vide. Cette section dit ce qu'il portera, et sert de cadrage
+> à la session de refonte du volet 2 ([6-K](../phase-6/6-k-socle-visuel.md)). Elle décrit une **première
+> version assumée**, pas un état final : ce qui manque est écrit plus bas plutôt que promis.
+
+### Trois natures, trois sections — et ne pas les mélanger
+
+L'erreur qui guette cet écran est d'aligner six tuiles qui se ressemblent alors qu'elles ne font pas
+la même chose. Une grille de widgets indifférenciés se lit comme un brouillon ; trois sections dont
+l'intention est nommée se lisent comme une décision.
+
+| Section | Nature | Ce qui la remplit |
+|---|---|---|
+| **Mon compte** | ce que l'application **sait** de l'étudiant | des données extraites par Blueprint — donc qui peuvent manquer, échouer, ou être absentes chez un établissement |
+| **Mes services** | ce que l'étudiant peut **ouvrir** | des portes vers le navigateur intégré : aucune extraction, aucune panne possible |
+| **Mes documents** | ce que l'étudiant a **rangé** | des fichiers locaux, qui n'ont rien à voir avec le portail |
+
+### Mon compte
+
+- **L'identité** — prénom, numéro étudiant, et le reste du dossier. Ces quatre champs sont **déjà lus**
+  au parcours froid et ne s'affichent aujourd'hui que dans l'écran des identifiants ; les remonter ici
+  ne coûte aucun Blueprint. Une ligne discrète plutôt qu'une grande carte : un numéro étudiant se
+  regarde une fois par an.
+- **La messagerie** — le nombre de messages non lus, et l'ouverture du webmail au toucher. Elle existe
+  déjà ; c'est le **modèle** de ce qu'est une ligne qui porte à la fois une donnée et une porte.
+  Elle **disparaît** chez un établissement sans messagerie extractible, sans le moindre échec affiché
+  (voir [Un établissement peut n'avoir qu'une partie des services](#un-établissement-peut-navoir-quune-partie-des-services)).
+
+### Mes services
+
+Des portes, et rien d'autre : elles ouvrent le [navigateur intégré](#le-navigateur-intégré) sur une
+adresse. Elles ne peuvent pas échouer, elles ne demandent aucun Blueprint, et elles **viennent toutes
+du catalogue** — colonne `services`, posée au jalon [6-G](../phase-6/6-g-etablissements.md).
+
+| Porte | Bordeaux | Bordeaux INP |
+|---|---|---|
+| **ENT** | `ent.u-bordeaux.fr` | `ent.bordeaux-inp.fr` |
+| **Apogée** | `apogee.u-bordeaux.fr` | — *(l'INP est sur PC-Scol)* |
+| **Moodle** | `moodle.u-bordeaux.fr` | `moodle.bordeaux-inp.fr` |
+| **Webmail** | `webmel.u-bordeaux.fr` | — *(SAML, non extractible)* |
+
+Les deux plateformes Moodle ont été vérifiées le 2026-08-13 — « Plateforme pédagogique de l'université
+de Bordeaux » et « Moodle Bordeaux INP » — et ajoutées au catalogue.
+
+Conséquence à retenir, parce qu'elle décide de la manière de trancher : **ajouter ou retirer une porte
+est une ligne en base**, pas une release. Le doute sur Moodle — un étudiant qui a l'application
+officielle n'a pas besoin d'une WebView — se règle donc en la mettant, puis en la retirant si elle ne
+sert pas. Une réserve honnête : l'application ne portant **aucun outil de mesure d'usage**
+([PRIVACY.md](../../PRIVACY.md)), cette décision se prendra en demandant à des étudiants, pas en
+lisant une statistique.
+
+Un établissement qui ne déclare pas une adresse **n'affiche pas la porte**, et Bordeaux INP en est le
+cas réel : ni webmail extractible, ni Apogée. La grille de portes se construit donc **depuis le
+catalogue**, jamais depuis une liste écrite dans l'écran :
+
+```ts
+import { serviceEtablissement } from '../../shared/etablissements';
+
+const adresse = serviceEtablissement('moodle');   // string | null
+// null  →  la porte ne s'affiche pas. Pas de tuile morte, pas de message d'erreur.
+```
+
+C'est la même règle que la ligne de messagerie et que la section des salles libres : **ce qui n'existe
+pas chez cet établissement disparaît**, il ne s'affiche pas en panne. Un écran qui déclarerait quatre
+tuiles en dur enverrait un étudiant de l'INP sur l'Apogée de Bordeaux — le défaut exact que le jalon
+6-G a corrigé sur ces mêmes adresses.
+
+### Mes documents
+
+Un endroit où l'étudiant range ses certificats de scolarité, attestations et autres pièces, pour les
+avoir **hors ligne** et les retrouver sans fouiller.
+
+C'est la seule partie de l'onglet qui **fonctionne sans compte**, et c'est un argument suffisant pour
+la livrer : aujourd'hui, la Scolarité ne sert à rien à qui ne se connecte pas.
+
+**Une correction à faire dès maintenant sur le stockage**, parce que la formulation naturelle est
+fausse et qu'elle finirait dans la politique de confidentialité : ces fichiers **ne peuvent pas** aller
+dans le trousseau. `expo-secure-store` est fait pour de petites valeurs — quelques kilo-octets — et
+refuserait un PDF. Ils vont dans le **répertoire privé de l'application**
+(`expo-file-system`, à ajouter en dépendance), qui est isolé des autres applications et couvert par le
+chiffrement de l'appareil quand celui-ci est verrouillé.
+
+La formulation exacte, à reprendre telle quelle dans la politique : *les documents restent sur
+l'appareil, dans l'espace privé de l'application, et ne sont envoyés nulle part.* Écrire « chiffrés par
+UKit » serait faux — une clé qui vivrait à côté du fichier ne protège de rien, et le vrai rempart est
+celui de l'OS.
+
+Pour la v6, **l'étudiant ajoute ses documents lui-même**. Les récupérer automatiquement depuis le
+portail est hors de portée aujourd'hui : le dossier de Bordeaux INP a bien un onglet « Documentation »,
+mais un Blueprint ne sait pas **télécharger un fichier binaire** — Act II n'écrit pas de fichier, et
+l'extraction texte livrée au jalon 3-I d'Aetherius ne rend que du texte décodé. Ce serait un manque à
+traiter dans le dépôt voisin, pas ici.
+
+### Ce qui n'y est pas, et pourquoi
+
+- **Les notes.** Elles sont probablement ce qu'un étudiant vient chercher, et c'est justement pour ça
+  qu'elles ne s'improvisent pas : chez Bordeaux elles vivent sur Apogée, un hôte séparé ; chez Bordeaux
+  INP, l'onglet « Parcours » du dossier est le candidat, mais son contenu n'a pas été regardé. En v6,
+  la **porte Apogée** les couvre. Le jour où on les extrait, ce sera un Blueprint par établissement —
+  publiable sans release — et un bloc de plus dans « Mon compte », qui, lui, demandera une version.
+- **Le calendrier des examens.** Même raison, en plus net : il n'est pas vérifiable en août, et il est
+  une sous-partie d'Apogée. Concevoir un bloc pour un contenu qu'on n'a jamais vu est exactement la
+  façon de devoir le refaire. Il passe par la porte Apogée en v6, et devient un sujet à part quand les
+  calendriers sont publiés et qu'on peut les lire pour de vrai.
+
+Ces deux reports ont la même logique, et elle vaut d'être retenue : **une porte est un engagement
+tenable tout de suite ; un bloc de données est un engagement qu'il faut pouvoir vérifier.**
+
+### Ce que cette page ne demande pas comme machinerie
+
+Rien, ou presque — et c'est le bénéfice direct du jalon 6-G. Chaque variation est déjà portée :
+
+- un service absent **se dit** ou disparaît, sans échec (`serviceAbsent`, `messagerieDisponible`) ;
+- les adresses des portes viennent du catalogue, donc changent sans release ;
+- le verrou biométrique, le stockage chiffré des identifiants et le navigateur intégré existent.
+
+Ce qui reste à ajouter est **`expo-file-system`** et l'écran de documents. Le reste est de la mise en
+page.
+
+La capture `scolarite-dashboard.png`, volontairement différée plus haut, se prend **après** cette
+refonte : c'est précisément l'écran dont l'habillage devait changer.
+
 ## Architecture
 
 ```text
@@ -383,7 +507,12 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
   parenthèses vaut `0`, une boîte absente vaut « on ne sait pas ». Les deux ne s'affichent pas
   pareil, et le test [`ScolariteMapping.test.ts`](../../src/features/Scolarite/services/ScolariteMapping.test.ts)
   fige la distinction.
-- **Apogée n'est pas extrait**, pas plus qu'avant : il reste accessible par le navigateur intégré.
+- **Apogée n'est pas extrait**, pas plus qu'avant : il reste accessible par le navigateur intégré —
+  et c'est lui qui couvre les notes et le calendrier des examens en v6, faute d'avoir pu les lire.
+- **Les documents étudiants ne se récupèrent pas tout seuls.** Un Blueprint ne sait pas télécharger un
+  fichier binaire : Act II n'écrit pas de fichier, et l'extraction texte du jalon 3-I ne rend que du
+  texte décodé. L'étudiant ajoute donc ses pièces lui-même ; l'automatiser demanderait une capacité
+  de plus dans le dépôt voisin.
 - **Le numéro étudiant de Bordeaux INP est lu par position** dans le bandeau latéral, faute d'un
   libellé pour l'ancrer — la seule fragilité positionnelle de ce portail. L'`assert` sur les libellés
   de l'état-civil est ce qui la garde : un décalage du bandeau accompagnerait une refonte de la page,

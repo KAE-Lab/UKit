@@ -51,7 +51,7 @@ en bas de page.
 > l'application de démonstration d'Aetherius.
 
 Les deux paquets sont publiés sur npm en **0.5.2** (le jalon 3-H d'Aetherius y est). Discipline de
-version : [6-h-livraison-finale.md](6-h-livraison-finale.md#dépendances).
+version : [6-z-livraison-finale.md](6-z-livraison-finale.md#dépendances).
 
 ### Le socle — `src/shared/aetherius/`
 
@@ -325,7 +325,7 @@ d'erreur ne se contente pas de renommer l'ancien comportement.
 
 - **Aucun gain utilisateur à ce jalon.** C'est attendu. Le premier gain visible arrive en 6-C.
 - **Le repli sur l'ancien code double temporairement le chemin des annonces.** Il est retiré en
-  [6-H](6-h-livraison-finale.md), pas avant, et pas plus tard.
+  [6-Z](6-z-livraison-finale.md), pas avant, et pas plus tard.
 - **Le masquage des secrets se fait par valeur.** Un secret d'un ou deux caractères masquerait ces
   caractères partout dans les messages. C'est visible, et plus honnête qu'un masquage qui cesserait
   silencieusement de protéger sous un seuil.

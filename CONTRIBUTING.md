@@ -47,7 +47,9 @@ Une capacité utilisateur — un écran, une source de données, une option — 
 2. **Chaînes localisées** dans les trois dictionnaires `fr`, `en`, `es`. Aucune chaîne visible en
    dur. Voir [docs/i18n.md](docs/i18n.md).
 3. **Tokens de thème** pour tout style. Aucune couleur, aucun espacement, aucun rayon littéral. Voir
-   [docs/theme.md](docs/theme.md).
+   [docs/theme.md](docs/theme.md). Cette règle devient **applicable** au jalon
+   [6-K](docs/phase-6/6-k-socle-visuel.md), qui lui donne une règle ESLint : jusque-là, elle ne tient
+   que par la relecture — et le code montre que ça n'a pas suffi.
 4. **`npx tsc --noEmit` et `npx eslint .` sans régression** — zéro nouvelle erreur, zéro nouveau
    warning. La base de référence actuelle (3 erreurs de typage, 11 warnings `no-explicit-any`) est
    décrite dans [docs/qualite.md](docs/qualite.md) : ne pas l'augmenter, la réduire quand on passe à
@@ -146,6 +148,16 @@ contributeur doit pouvoir reprendre à partir de la seule documentation, sans co
 
 Style : sobre, en français, orienté « pourquoi », sans emoji — comme le code. Toute affirmation
 technique renvoie au fichier source par un lien relatif, pour rester vérifiable.
+
+### Un travail visuel n'est pas documenté au même endroit
+
+Une décision qui vaut au-delà de l'écran où elle a été prise — un rayon, une ombre, la forme d'un état
+vide — va dans **« Les décisions durables »** de [docs/theme.md](docs/theme.md), pas dans le document
+de la fonctionnalité. C'est ce qui évite que la session suivante la défasse.
+
+Et une distinction à ne pas aplatir : un **défaut fonctionnel** rencontré en refaisant un écran — une
+impasse, un état manquant — n'est pas du goût. Il se corrige, se teste et se coche comme n'importe quel
+correctif ; le confondre avec de l'esthétique rend le travail invérifiable.
 
 ### Captures d'écran
 

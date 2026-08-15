@@ -74,5 +74,32 @@ compte* — que 6-G a rendue visible sans avoir à la trancher.
 
 ## Dépendances
 
-[6-I](6-i-planning-universel.md) pour la voie iCal, elle-même en attente d'une capacité du moteur.
-La partie « compte à l'accueil » n'en dépend pas et pourrait être livrée seule.
+[6-I](6-i-planning-universel.md) pour la voie iCal. Ce jalon se **coupe donc en deux**, et il vaut
+mieux le savoir avant de le lancer :
+
+- **« proposer le compte universitaire à l'accueil »** ne dépend de rien et peut être livré seul ;
+- **« colle ton lien iCal »** n'a aucun sens tant que l'application ne sait pas lire un iCal.
+
+C'est aussi la raison pour laquelle ce jalon vient **après** 6-I dans l'ordre de la phase, alors que sa
+première moitié pourrait techniquement passer avant.
+
+## Une précision de vocabulaire, parce qu'elle prête à confusion
+
+Le « compte » de ce jalon est le **compte universitaire** — les identifiants CAS que l'application
+détient déjà et garde dans le trousseau. Ce n'est **pas** un compte UKit : aucun serveur, aucune
+inscription, rien de nouveau qui transite, et la politique de confidentialité ne bouge pas.
+
+Un compte UKit — pour une partie sociale — est un sujet distinct, hors de la phase 6, et il n'est pas
+spécifié. Deux choses valent d'être écrites ici pour le jour où il le sera, parce qu'elles ne coûtent
+rien maintenant et qu'elles coûteraient un refactor plus tard :
+
+- **la preuve d'être étudiant est locale, donc non vérifiable par un serveur.** Le portail se joue sur
+  l'appareil et n'en rapporte aucun artefact signé ; annoncer un numéro étudiant à la base serait
+  trivialement falsifiable, la clé publiable étant publique par conception. La réponse vérifiable est
+  l'**adresse institutionnelle** — que le portail lit déjà — confirmée par un code envoyé par courriel ;
+- **faire vérifier les identifiants CAS par le serveur est exclu**, quelle que soit la commodité : ça
+  détruirait la promesse qui justifie que le moteur soit embarqué plutôt qu'hébergé
+  ([PRIVACY.md](../../PRIVACY.md)).
+
+Ce jalon, lui, ne fait ni l'un ni l'autre : il déplace seulement le moment où l'on demande les
+identifiants universitaires.

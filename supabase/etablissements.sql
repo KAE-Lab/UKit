@@ -56,10 +56,13 @@ insert into public.etablissements (
       {"lat": 44.2031, "lng": 0.6163},
       {"lat": 45.6483, "lng": 0.1562},
       {"lat": 46.3237, "lng": -0.4647}]'::jsonb,
+    -- Les portes du navigateur integre. `moodle` verifie le 2026-08-13 : « Plateforme pedagogique de
+    -- l'universite de Bordeaux ». Ajouter ou retirer une porte est une ligne ici, jamais une release.
     '{"ent":    "https://ent.u-bordeaux.fr",
       "email":  "https://webmel.u-bordeaux.fr",
       "cas":    "https://cas.u-bordeaux.fr",
-      "apogee": "https://apogee.u-bordeaux.fr"}'::jsonb,
+      "apogee": "https://apogee.u-bordeaux.fr",
+      "moodle": "https://moodle.u-bordeaux.fr"}'::jsonb,
     '{}'::jsonb,
     0
 ) on conflict (code) do update set
@@ -124,8 +127,11 @@ insert into public.etablissements (
       {"lat": 45.6483, "lng": 0.1562},
       {"lat": 46.3237, "lng": -0.4647}]'::jsonb,
     -- Le navigateur integre ouvre ces pages ; l'utilisateur les pilote, elles ne sont pas extraites.
-    '{"ent":  "https://ent.bordeaux-inp.fr",
-      "cas":  "https://cas.bordeaux-inp.fr"}'::jsonb,
+    -- Pas d'`email` : le webmail passe par SAML. Pas d'`apogee` : l'INP est sur PC-Scol. `moodle`
+    -- verifie le 2026-08-13 (« Moodle Bordeaux INP »). Une porte absente ne s'affiche pas.
+    '{"ent":    "https://ent.bordeaux-inp.fr",
+      "cas":    "https://cas.bordeaux-inp.fr",
+      "moodle": "https://moodle.bordeaux-inp.fr"}'::jsonb,
     -- Ce dossier n'expose pas d'INE : le libelle le dit plutot que de laisser une ligne vide sans
     -- explication. « Numero etudiant » reste, lui, une chaine de Translator.
     '{}'::jsonb,

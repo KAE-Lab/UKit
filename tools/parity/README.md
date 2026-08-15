@@ -9,7 +9,7 @@ npm run parity                 # tous les cas
 npm run parity -- annonces     # un seul
 ```
 
-C'est ce qui autorise à retirer un repli ([6-H](../../docs/phase-6/6-h-livraison-finale.md)). Sans
+C'est ce qui autorise à retirer un repli ([6-Z](../../docs/phase-6/6-z-livraison-finale.md)). Sans
 lui, « ça marche » veut dire « je n'ai pas vu la différence ».
 
 ## Pourquoi sous Node, et pas dans l'application

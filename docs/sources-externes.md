@@ -68,7 +68,7 @@ parce qu'un changement côté université les invaliderait sans prévenir :
 
 Le repli reste gratuit et n'exige pas de release : `vars.domaine` peut redevenir le relais par une
 **publication de Blueprint**. L'extinction définitive du relais est une décision de
-[6-H](phase-6/6-h-livraison-finale.md), après observation.
+[6-Z](phase-6/6-z-livraison-finale.md), après observation.
 
 ### Lister des ressources
 

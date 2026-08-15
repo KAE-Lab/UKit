@@ -107,6 +107,21 @@ Trois responsabilités, trois rythmes : le moteur bouge rarement et se met à jo
 les Blueprints bougent quand une source change et se publient à chaud ; les écrans ne bougent que
 pour des raisons de produit.
 
+## Les deux volets de la phase
+
+La phase 6 porte **la version 6** de l'application — chez UKit, une phase correspond à une version, et
+rien ne part sur les stores tant que la phase n'est pas close. Elle contient donc deux travaux qui
+n'ont pas la même nature, et qu'il vaut mieux ne pas confondre :
+
+| Volet | Thèse | Jalons |
+|---|---|---|
+| **1 — Le comportement devient de la donnée** | l'accès aux sources quitte le binaire pour des Blueprints publiés | A → G *(livrés)*, I, J |
+| **2 — La refonte visuelle** | l'application a la dette visuelle de sa reprise ; on la rend présentable avant de sortir | K, puis les sessions d'écran |
+| **Clôture** | plus aucune source n'a deux chemins, et la version part | Z |
+
+Le second volet n'est pas un appendice du premier : c'est ce qui manque pour que la v6 soit
+publiable. Le premier a rendu l'application **corrigeable** ; le second la rend **montrable**.
+
 ## Les jalons et leur ordre
 
 Chaque jalon fait l'objet d'une **spécification autonome**, au même format que les phases
@@ -114,21 +129,33 @@ d'Aetherius : ce qui est livré, les décisions et les pièges, la définition d
 de test, et les limites écrites.
 
 ```
-6-A Socle moteur  ──►  6-B Base Supabase  ──►  6-C Livraison des Blueprints
-                                                        │
-                          ┌─────────────────────────────┤
-                          ▼                             ▼
-                6-D Act I : campus          6-E Act I : planning
-                          └──────────────┬──────────────┘
-                                         ▼
-                              6-F Act II : scolarite
-                                         ▼
-                       6-G Multi-etablissement   (depend d'Aetherius 3-H)
-                                         ▼
-                6-I Emploi du temps universel  (spec ouverte, depend d'Aetherius)
-                6-J Le compte d'abord           (spec ouverte, decision produit)
-                                         ▼
-                       6-H Retrait du legacy et livraison
+   VOLET 1 — le comportement devient de la donnee
+
+   6-A Socle moteur  ──►  6-B Base Supabase  ──►  6-C Livraison des Blueprints
+                                                           │
+                             ┌─────────────────────────────┤
+                             ▼                             ▼
+                   6-D Act I : campus          6-E Act I : planning
+                             └──────────────┬──────────────┘
+                                            ▼
+                                 6-F Act II : scolarite
+                                            ▼
+                          6-G Multi-etablissement   (Aetherius 3-H)
+                                            ▼
+                          6-I Emploi du temps iCal  (Aetherius 3-I)
+                                            ▼
+                          6-J Le compte a l'accueil
+
+   VOLET 2 — la refonte visuelle
+
+                          6-K Le socle visuel
+                                            ▼
+                    les ecrans, en sessions, hors jalon
+                    (annonces, scolarite, reglages)
+
+   CLOTURE
+
+                          6-Z Retrait du legacy et livraison v6
 ```
 
 | Jalon | Spécification | Dépend de | Résumé |
@@ -140,18 +167,28 @@ de test, et les limites écrites.
 | 6-E | [6-e-planning.md](6-e-planning.md) | 6-C | Emplois du temps, groupes, salles. Bascule directe sur Celcat, retrait du relais. La source la plus critique de l'application, et la seule qui doit survivre hors ligne. |
 | 6-F | [6-f-scolarite.md](6-f-scolarite.md) | 6-D, 6-E | La WebView cachée devient deux Blueprints. Le morceau qui justifie la phase, et le plus exigeant à vérifier. |
 | 6-G | [6-g-etablissements.md](6-g-etablissements.md) | 6-F, Aetherius 3-H | Le catalogue des établissements pilote l'interface, les Blueprints sont namespacés, un second portail réel est livré. |
-| 6-I | [6-i-planning-universel.md](6-i-planning-universel.md) | 6-G, **Aetherius 3-I** (spécifié) | **Spécification ouverte.** L'emploi du temps par export iCal, pour les universités qui ne sont pas sur un Celcat ouvert — c'est-à-dire presque toutes. Née de 6-G, qui a livré un établissement sans planning. |
-| 6-J | [6-j-compte-et-sources-par-etablissement.md](6-j-compte-et-sources-par-etablissement.md) | 6-G | **Spécification ouverte.** Proposer le compte universitaire dès l'accueil, et accepter que la place du compte dans le parcours **dépende de l'établissement**. Née de la campagne de 6-G sur appareil : l'application n'a qu'une forme, celle de Bordeaux. |
-| 6-H | [6-h-livraison-finale.md](6-h-livraison-finale.md) | 6-G | Les replis sont retirés, les dépendances mortes sortent, la documentation est close, la version part. |
+| 6-I | [6-i-planning-universel.md](6-i-planning-universel.md) | 6-G, Aetherius 3-I *(livré en 0.5.4)* | L'emploi du temps par export iCal, pour les universités qui ne sont pas sur un Celcat ouvert — c'est-à-dire presque toutes. Née de 6-G, qui a livré un établissement sans planning. |
+| 6-J | [6-j-compte-et-sources-par-etablissement.md](6-j-compte-et-sources-par-etablissement.md) | 6-G, 6-I | Proposer le compte **universitaire** dès l'accueil, et accepter que sa place dans le parcours dépende de l'établissement. La moitié « colle ton lien iCal » dépend de 6-I. |
+| 6-K | [6-k-socle-visuel.md](6-k-socle-visuel.md) | — | **Ouvre le volet 2.** Le vocabulaire visuel est **extrait** des écrans qui font déjà référence, pas inventé : tokens complétés, composants partagés, règle qui refuse les valeurs en dur, recette d'écran. Ce qui suit se fait en sessions, écran par écran. |
+| 6-Z | [6-z-livraison-finale.md](6-z-livraison-finale.md) | tout | Les replis sont retirés, les dépendances mortes sortent, la documentation est close, **la version 6 part**. |
 
-**Ordre recommandé :** séquentiel, sauf 6-D et 6-E qui sont indépendants l'un de l'autre. Deux
-avertissements de charge : **6-F** est le jalon le plus volumineux et le seul dont la vérification
-exige un compte universitaire réel et plusieurs passes sur appareil ; **6-G** dépend d'un jalon
-écrit dans l'autre dépôt, à traiter avant d'y arriver.
+**Ordre :** séquentiel, sauf 6-D et 6-E qui sont indépendants l'un de l'autre. Trois avertissements de
+charge : **6-F** est le jalon le plus volumineux du volet 1 et le seul dont la vérification exige un
+compte universitaire réel ; **6-G** et **6-I** dépendent chacun d'un jalon écrit dans l'autre dépôt,
+tous deux livrés ; **6-K** doit passer avant toute session d'écran, sans quoi chaque session invente
+son propre vocabulaire.
 
-L'ordre des sources n'est pas arbitraire — il va du plus sûr au plus engageant : un fichier statique,
-puis des API avec en-têtes, puis une API à l'encodage exigeant, et **en dernier** le parcours
-authentifiant, celui qui demande d'avoir confiance dans tout le reste.
+### Ce qui n'est pas un jalon, et pourquoi
+
+La **beauté** d'un écran n'a pas de définition de « terminé ». On peut vérifier qu'un composant existe,
+qu'une règle passe, qu'une capture est identique avant et après — on ne peut pas vérifier que c'est
+réussi. Les écrans du volet 2 se refont donc **en sessions**, une par écran, avec le socle en place et
+les captures de `docs/screenshots/` comme cible.
+
+La règle qui départage : **ce qui se vérifie devient un jalon, ce qui se juge reste une conversation.**
+Les défauts **fonctionnels** rencontrés en chemin — une impasse, un état manquant — ne sont pas du
+goût : ils se corrigent, se testent et se cochent, et 6-K les inventorie pour qu'aucune session ne les
+confonde avec de l'esthétique.
 
 ## Implémenter un jalon
 
