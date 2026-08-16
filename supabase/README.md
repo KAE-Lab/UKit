@@ -101,3 +101,23 @@ npx --yes supabase gen types typescript --db-url "postgresql://postgres:$SUPABAS
 
 Pas de fonction métier, pas de déclencheur, pas de vue qui calcule. La base porte de la donnée ; ce
 qui se calcule se calcule dans l'application, où c'est typé, relu et vérifié.
+
+
+## La colonne du jalon 6-J
+
+`etablissements.crous_region` porte la région CROUS de Croustillant, qui était une `vars` du Blueprint
+`ukit.campus.restaurants`. La valeur ne change pas — le périmètre du produit est le secteur bordelais
+([README](../README.md)), donc `1` — mais sa **nature** si : elle se corrige désormais sans release, et
+un établissement qui ne la déclare pas ne se voit **pas** servir les restaurants d'une autre ville, la
+section disparaît.
+
+Le même jalon ajoute une ligne qui n'est pas une université : **`autre`**, « Mon université n'est pas
+dans la liste ». Elle ne déclare aucun portail et aucun serveur d'emploi du temps, seulement
+`edt.abonnement` — l'étudiant colle le lien que sa fac lui donne, et un Blueprint unique et embarqué le
+joue. Ses trois colonnes de campus (région CROUS, points de balayage, salles libres empruntées) sont
+celles de l'Université de Bordeaux, ce qui est **exact tant que le périmètre du produit est
+bordelais** ; le jour où il ne l'est plus, ces colonnes existent déjà pour porter la vérité.
+
+`salles` y vaut `{"reconnaissance": false}` : on ne connaît pas le format de ses libellés de salle, et
+appliquer celui de Bordeaux capturerait un code qui existe chez nous (`A28` est le CREMI) pour afficher
+le mauvais bâtiment. *Une carte fausse est pire qu'une carte vide.*

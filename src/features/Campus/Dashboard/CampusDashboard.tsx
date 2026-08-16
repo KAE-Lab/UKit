@@ -11,7 +11,7 @@ import { BdeSection } from './components/BdeSection';
 import { CrousSection } from './components/CrousSection';
 import { LibrarySection } from './components/LibrarySection';
 import { FreeRoomSection } from './components/FreeRoomSection';
-import { sallesDisponibles } from '../../../shared/etablissements';
+import { crousRegionActive, sallesDisponibles } from '../../../shared/etablissements';
 
 const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) => {
     const { themeName } = useContext(AppContext);
@@ -67,7 +67,17 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
                         contentContainerStyle={{ paddingTop: (insets?.top || 0) + 60, paddingBottom: tokens.space.xxl + 80 }}
                     >
                         <BdeSection navigation={navigation} />
-                        <CrousSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                        {/*
+                          * Les restaurants suivent la region CROUS du catalogue depuis le jalon 6-J.
+                          * `null` fait disparaitre la section : un etablissement hors des regions
+                          * couvertes n'a pas de restaurants a proposer, et lui servir ceux d'une autre
+                          * ville serait une donnee fausse qui a l'air juste — exactement ce que la
+                          * phase supprime. Les bibliotheques, elles, n'ont pas ce probleme : leur
+                          * balayage part de la position de l'etudiant.
+                          */}
+                        {crousRegionActive() !== null && (
+                            <CrousSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                        )}
                         <LibrarySection navigation={navigation} userLat={location.lat} userLon={location.lon} />
                         {/*
                           * Les salles libres se reconstruisent depuis les salles du serveur

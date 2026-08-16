@@ -4,6 +4,7 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { AetheriusConfirm, AetheriusWebView } from '@aetherius/react-native';
 
 import StackNavigator from './StackNavigator';
+import { CredentialsProvider } from '../../features/Scolarite/services/CredentialsContext';
 import { refreshBlueprints } from '../aetherius';
 import { refreshBuildings } from '../locations';
 import { refreshEtablissements } from '../etablissements';
@@ -107,11 +108,24 @@ export default function RootContainer() {
 		<View style={{ flex: 1 }}>
 			<AppContextProvider value={{ themeName, favoriteGroups, filters, etablissement, catalogue }}>
 				<StatusBar />
-				{isFirstLoad ? <WelcomeScreen /> : (
-                    <NavigationContainer theme={customTheme}>
-                        <StackNavigator />
-                    </NavigationContainer>
-                )}
+                {/*
+                  * La session universitaire enveloppe **les deux** branches depuis le jalon 6-J.
+                  * Elle vivait dans `StackNavigator`, ce qui allait tant que le compte ne se demandait
+                  * qu'une fois l'application ouverte ; l'accueil le propose desormais, et il est rendu
+                  * a la place de la navigation. Sans cette remontee, l'accueil aurait eu besoin de son
+                  * propre formulaire de connexion — un second chemin vers le trousseau, c'est-a-dire
+                  * exactement ce que le contexte existe pour ne pas avoir.
+                  *
+                  * Le provider ne touche a aucune navigation : il ne lit que `AppState`, le trousseau
+                  * et les reglages. La remontee est donc sans effet sur ce qu'il fait deja.
+                  */}
+                <CredentialsProvider>
+                    {isFirstLoad ? <WelcomeScreen /> : (
+                        <NavigationContainer theme={customTheme}>
+                            <StackNavigator />
+                        </NavigationContainer>
+                    )}
+                </CredentialsProvider>
                 <ModMenu />
 
                 {/*

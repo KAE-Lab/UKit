@@ -21,15 +21,20 @@ gère ses propres étapes par un simple compteur d'état.
 Le drapeau `firstload` est persisté sous sa propre clé AsyncStorage, distincte de `settings`. Il est
 remis à vrai par la réinitialisation depuis [Réglages](settings.md).
 
-## Les cinq étapes — quatre pour certains établissements
+## Les six étapes — moins pour certains établissements
 
 | Étape | Contenu | Effet |
 |---|---|---|
 | 1 | Logo, souhait de bienvenue | — |
 | 2 | Choix du thème (clair / sombre) et de la langue (fr / en / es) | `SettingsManager.setTheme` / `setLanguage`, appliqués **en direct** |
 | 3 | **Choix de l'établissement**, lu dans le catalogue | `changerEtablissement(code)` puis `SettingsManager.setEtablissement` |
-| 4 | Année, semestre, recherche et sélection de groupes | `SettingsManager.addFavoriteGroup` / `removeFavoriteGroup` |
-| 5 | Confirmation | `setFirstLoad(false)` sur « Terminer » |
+| 4 | **Compte universitaire**, proposé et sautable | `validateAndSave` du contexte de scolarité, ou « Plus tard » |
+| 5 | **L'emploi du temps** : groupes, ou lien d'abonnement | favoris, ou `enregistrerLienEdt` |
+| 6 | Confirmation | `setFirstLoad(false)` sur « Terminer » |
+
+**Deux étapes disparaissent selon l'établissement**, et la règle est la même pour les deux : *on ne
+pose pas une question sans réponse.* L'étape du compte s'efface chez une université qui ne publie
+aucun portail ; celle de l'emploi du temps, chez une université qui n'en publie pas.
 
 **L'établissement vient juste avant les groupes**, et l'ordre a été corrigé après coup : la
 spécification du jalon [6-G](../phase-6/6-g-etablissements.md) le plaçait en première position, au
@@ -37,10 +42,21 @@ motif qu'il conditionne tout le reste. C'est vrai — mais ce « tout le reste �
 groupes, alors que demander à quelqu'un de choisir son université **dans une langue qu'il n'a pas
 encore choisie** met la charge au mauvais endroit. Mesuré en jouant le parcours, pas déduit.
 
-**L'étape des groupes disparaît** quand l'établissement choisi ne publie pas son emploi du temps
-(`celcat_domaine` à `null`) : lui demander lequel est le sien serait poser une question sans réponse.
-La pagination suit — quatre points au lieu de cinq — et le recalcul se fait à chaque rendu, pour
-qu'un changement d'établissement à l'étape 2 ajoute ou retire l'étape **tout de suite**.
+**Le compte vient juste après l'établissement**, et avant l'emploi du temps (jalon
+[6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md)). L'ordre a été décidé **pour les autres
+facs, pas pour Bordeaux** : ici le compte ne sert pas à obtenir l'emploi du temps, mais chez beaucoup
+d'universités il *est* la porte, et le demander après aurait posé la question dans le mauvais sens.
+C'est le formulaire de l'onglet Scolarité, tel quel, avec une sortie « Plus tard » — un lien discret
+et non un second bouton, parce que les deux gestes n'ont pas le même poids. Il se résout dès que le CAS
+accepte (~13 s à Bordeaux) ; la lecture du dossier continue derrière, sans bloquer le parcours.
+
+**L'étape de l'emploi du temps a deux contenus**, et c'est la **source** qui tranche, jamais
+l'établissement : un choix de groupe quand il y en a à choisir, un champ de lien d'abonnement sinon
+(voir [planning.md](planning.md#les-quatre-états-de-lemploi-du-temps)). Le formulaire de lien est rendu
+**en place** : l'accueil vit hors de toute navigation, il n'a nulle part où pousser un écran.
+
+La pagination suit — quatre à six points — et le recalcul se fait à chaque rendu, pour qu'un changement
+d'établissement à l'étape 3 ajoute ou retire une étape **tout de suite**.
 
 La liste des établissements se rafraîchit **après** l'affichage : sa lecture est hors du chemin de
 démarrage. L'écran s'y abonne, comme il le fait depuis toujours pour la liste des groupes, plutôt que
@@ -79,6 +95,14 @@ C'est l'étape la plus élaborée. La liste complète des groupes vient de
 `PlanningDataManager.getGroupList()`, chargée au démarrage
 ([donnees-et-persistance.md](../donnees-et-persistance.md)), et le parcours s'abonne à l'événement
 `groupList` pour se mettre à jour si le chargement se termine après l'affichage.
+
+**Le tri par année et semestre ne s'affiche que pour Celcat**, depuis le jalon
+[6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md). La table de fragments ci-dessous est une
+convention de nommage **de Celcat Bordeaux**, et de rien d'autre : depuis que Bordeaux INP a un emploi
+du temps (6-I), ses treize groupes s'appellent `ENSC 2A GR1` et aucun fragment ne les atteignait — la
+liste restait vide sauf en choisissant « AUTRE ». La vraie question n'était pas *quelle table de
+filtrage* mais **cette liste est-elle trop longue pour être parcourue** : Celcat publie plusieurs
+centaines de groupes, un référentiel iCalendar en compte treize, qui tiennent à l'écran.
 
 Le filtrage combine trois critères : **année**, **semestre** et **texte saisi**. Année et semestre
 sont traduits en fragments d'identifiants par une table locale :
@@ -138,7 +162,11 @@ l'application**, ou réinstaller l'application.
   nomenclature côté université fait renvoyer des listes vides pour les combinaisons concernées, sans
   erreur visible. Le choix `AUTRE` reste le contournement.
 - **Aucune vérification que la liste des groupes est chargée.** Si le chargement du démarrage a
-  échoué (première installation hors ligne), l'étape 3 est vide sans expliquer pourquoi.
+  échoué (première installation hors ligne), l'étape des groupes est vide sans expliquer pourquoi.
+- **Le parcours ne vérifie pas que le compte a abouti.** « Plus tard » et un échec de connexion mènent
+  au même écran suivant : la session continue derrière, et c'est l'onglet Scolarité qui portera son
+  échec. C'est voulu — bloquer l'accueil sur une panne de portail serait pire — mais un étudiant qui
+  s'est trompé de mot de passe ne l'apprend qu'en arrivant sur l'onglet.
 - **Les abonnements ne sont jamais résiliés** : le `useEffect` de montage appelle `on(...)` sans
   fonction de nettoyage. Le composant étant démonté définitivement à la fin du parcours, les
   rappels restent enregistrés dans les managers pour la durée de la session.
@@ -153,4 +181,4 @@ l'application**, ou réinstaller l'application.
 |---|---|
 | [`WelcomeScreen.tsx`](../../src/features/Onboarding/WelcomeScreen.tsx) | l'enchaînement des étapes, leur nombre selon l'établissement, la bascule de `firstload` |
 | [`hooks/useWelcomeState.ts`](../../src/features/Onboarding/hooks/useWelcomeState.ts) | l'état, les abonnements, les valeurs par défaut système, le filtrage des groupes et les cinq gestes |
-| [`components/WelcomeSteps.tsx`](../../src/features/Onboarding/components/WelcomeSteps.tsx) | les cinq mises en page, la pagination, le bouton retour et le pied de la liste de groupes |
+| [`components/WelcomeSteps.tsx`](../../src/features/Onboarding/components/WelcomeSteps.tsx) | les mises en page, la pagination, le bouton retour et le pied de la liste de groupes. Rend deux composants venus d'autres domaines — `ScolariteLoginView` et `LienEdtForm` — plutôt que d'en recopier une seconde version ([architecture.md](../architecture.md#dépendances-entre-features)) |

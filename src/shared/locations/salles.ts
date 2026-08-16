@@ -89,7 +89,13 @@ function candidats(libelle: string, format: FormatSalles): string[] {
  * INP comme `CD-O204` ne resout pas tel quel, et c'est la que le motif prend la main pour en tirer
  * `CD`. Les deux etablissements passent ainsi par le meme chemin sans que le premier change.
  */
-export function getLocations(libelle: string, format: FormatSalles = formatSallesActif()): LieuDeCours[] {
+export function getLocations(libelle: string, format: FormatSalles | null = formatSallesActif()): LieuDeCours[] {
+    // Un etablissement sans referentiel de lieux ne rend **aucun** lieu, et surtout pas ceux d'un
+    // autre : appliquer le format bordelais a un libelle etranger capturerait un code qui existe chez
+    // nous — `A28` est un vrai batiment — et poserait un marqueur a Talence pour une salle qui n'y est
+    // pas. Une carte fausse est pire qu'une carte vide (jalon 6-I, repris tel quel ici).
+    if (format === null) return [];
+
     const regex = compiler(format.motif);
     const lieux: LieuDeCours[] = [];
     const vus = new Set<string>();
@@ -116,7 +122,9 @@ export function getLocations(libelle: string, format: FormatSalles = formatSalle
  *
  * Le repli de la fiche de cours, pour les descriptions ou la salle n'est pas isolee sur sa ligne.
  */
-export function getLocationsInText(texte: string, format: FormatSalles = formatSallesActif()): LieuDeCours[] {
+export function getLocationsInText(texte: string, format: FormatSalles | null = formatSallesActif()): LieuDeCours[] {
+    if (format === null) return [];
+
     const capture = compiler(format.motif)?.exec(texte);
     if (!capture || capture.length < 2) return [];
 
@@ -136,7 +144,11 @@ export function getLocationsInText(texte: string, format: FormatSalles = formatS
  * Les lignes qui ne portent qu'une enumeration de semaines (`3,5-7,9-11`) sont ecartees : elles
  * occupent la place d'une salle et n'en sont pas une.
  */
-export function ligneDeSalle(description: string, format: FormatSalles = formatSallesActif()): string {
+export function ligneDeSalle(description: string, format: FormatSalles | null = formatSallesActif()): string {
+    // Sans referentiel, aucune ligne n'est « la salle » : la fiche de cours affiche alors sa
+    // description telle quelle, ce qui reste juste — c'est la carte qui disparait, pas le texte.
+    if (format === null) return '';
+
     const lignes = (description ?? '')
         .split('\n')
         .map((ligne) => ligne.trim())

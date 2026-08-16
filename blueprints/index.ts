@@ -26,6 +26,7 @@ import celcatJour from './ukit-celcat-jour.blueprint.json';
 import celcatOccupation from './ukit-celcat-occupation.blueprint.json';
 import celcatSalles from './ukit-celcat-salles.blueprint.json';
 import celcatSemaine from './ukit-celcat-semaine.blueprint.json';
+import edtAbonnement from './ukit-edt-abonnement.blueprint.json';
 import portailBordeauxDossier from './ukit-portail-bordeaux-dossier.blueprint.json';
 import portailBordeauxMessagerie from './ukit-portail-bordeaux-messagerie.blueprint.json';
 import versions from './versions.json';
@@ -53,6 +54,9 @@ export const BLUEPRINT = {
     CELCAT_SEMAINE: 'ukit.celcat.semaine',
     CELCAT_ANNEE: 'ukit.celcat.annee',
     CELCAT_OCCUPATION: 'ukit.celcat.occupation',
+    // Le repli universel du jalon 6-J. Il n'est **pas** sous `ukit.portail.` et c'est deliberé : il
+    // n'appartient a aucun etablissement, il joue le lien que l'etudiant a colle, quel qu'il soit.
+    EDT_ABONNEMENT: 'ukit.edt.abonnement',
     PORTAIL_BORDEAUX_DOSSIER: 'ukit.portail.bordeaux.dossier',
     PORTAIL_BORDEAUX_MESSAGERIE: 'ukit.portail.bordeaux.messagerie',
 } as const;
@@ -129,6 +133,10 @@ export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
     [BLUEPRINT.CELCAT_OCCUPATION]: {
         version: versions[BLUEPRINT.CELCAT_OCCUPATION].version,
         document: celcatOccupation,
+    },
+    [BLUEPRINT.EDT_ABONNEMENT]: {
+        version: versions[BLUEPRINT.EDT_ABONNEMENT].version,
+        document: edtAbonnement,
     },
     [BLUEPRINT.PORTAIL_BORDEAUX_DOSSIER]: {
         version: versions[BLUEPRINT.PORTAIL_BORDEAUX_DOSSIER].version,

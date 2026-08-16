@@ -7,6 +7,7 @@ relus en revue, versionnés avec le code qui les consomme, importés dans le bin
 | Fichier | Rôle |
 |---|---|
 | `*.blueprint.json` | les documents eux-mêmes, **embarqués** dans le binaire |
+| [`ukit-edt-abonnement.blueprint.json`](ukit-edt-abonnement.blueprint.json) | le **repli universel** (jalon 6-J) : le calendrier d'un lien collé par l'étudiant. Embarqué et **hors du préfixe `ukit.portail.`**, parce qu'il n'appartient à aucun établissement |
 | [`portails/`](portails/) | les portails d'établissements **hors socle** : publiés, jamais embarqués |
 | [`index.ts`](index.ts) | le socle embarqué : les noms, la table `BUNDLED`, le périmètre des secrets |
 | [`versions.json`](versions.json) | la **version** de chaque document, et son `min_engine` s'il en a un |

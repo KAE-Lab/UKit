@@ -81,6 +81,33 @@ describe('getLocations, forme Bordeaux INP', () => {
     });
 });
 
+/**
+ * Un etablissement sans referentiel de lieux (jalon 6-J).
+ *
+ * Le cas est celui de « Mon universite n'est pas dans la liste » : on ne connait ni ses batiments ni
+ * la forme de ses salles. Appliquer le format bordelais a un libelle etranger capturerait un code qui
+ * existe **chez nous** — `A28` est un vrai batiment, le CREMI — et poserait un marqueur a Talence pour
+ * une salle qui n'y est pas. *Un batiment sans coordonnees n'est pas une carte vide, c'est une carte
+ * fausse*, et c'est la seule des deux qui soit un defaut.
+ */
+describe('reconnaissance desactivee', () => {
+    it('ne rend aucun lieu, meme pour un code qui existe au referentiel', () => {
+        // `A28` resout parfaitement sous le format bordelais : c'est bien ce qu'il faut refuser ici.
+        expect(getLocations('A28', BORDEAUX)).toHaveLength(1);
+        expect(getLocations('A28', null)).toEqual([]);
+    });
+
+    it('ne trouve rien dans un texte libre non plus', () => {
+        expect(getLocationsInText('Cours en A28 ce matin', null)).toEqual([]);
+    });
+
+    it('ne designe aucune ligne de description comme etant la salle', () => {
+        // La fiche affiche alors sa description telle quelle : c'est la carte qui disparait, pas le
+        // texte.
+        expect(ligneDeSalle('Groupe\nEnseignant\nA28', null)).toBe('');
+    });
+});
+
 describe('getLocationsInText', () => {
     it('trouve un batiment cite au milieu d un texte', () => {
         expect(getLocationsInText('Cours en A29 salle 12', BORDEAUX).map((lieu) => lieu.title)).toEqual(['A29']);

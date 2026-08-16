@@ -3,7 +3,11 @@
         "version": "2"
     },
     "ukit.campus.restaurants": {
-        "version": "4"
+        "version": "5"
+    },
+    "ukit.edt.abonnement": {
+        "version": "1",
+        "min_engine": "0.5.4"
     },
     "ukit.campus.restaurant-menu": {
         "version": "1"

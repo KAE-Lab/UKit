@@ -12,6 +12,12 @@ section 2 de [sources-externes.md](../sources-externes.md).
 
 ## Parcours utilisateur
 
+0. **Proposé dès l'accueil** depuis le jalon
+   [6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md) : le parcours de premier lancement
+   porte une étape « compte universitaire », juste après le choix de l'établissement. C'est **le même
+   formulaire** que celui de cet onglet — le contexte de session est monté au-dessus de toute
+   l'application précisément pour qu'il n'existe qu'un seul chemin vers le trousseau. Elle est
+   **sautable** (« Plus tard ») et **rappelée** dans les [Réglages](settings.md).
 1. **Sans compte enregistré** : un écran de connexion demande identifiant et mot de passe
    universitaires, avec une explication de ce qui sera fait de ces données.
 2. **Première connexion** (parcours « froid ») : un écran de progression détaille les étapes —
@@ -187,11 +193,18 @@ CredentialsProvider                     englobe toute la pile de navigation
        └─ les deux : ukit.scolarite.messagerie → non lus
 
 ScolariteDashboard                      consomme useCredentials()
+  ├─ aucun portail publié    → SourceFailureNotice (PORTAIL_ABSENT)
   ├─ pas de compte           → ScolariteLoginView
   ├─ parcours froid en cours → ScolariteLoadingScreen
   ├─ échec sans identité     → SourceFailureNotice
   └─ sinon                   → BiometryGate > GreetingBlock + MailboxRow
 ```
+
+**L'absence de portail passe devant l'absence de compte**, et l'ordre n'est pas indifférent — c'est le
+même raisonnement que l'onglet Planning au jalon 6-G, appliqué ici au jalon 6-J. Un établissement qui
+ne publie aucun portail n'a **jamais** d'identifiants enregistrés : la branche « pas de compte »
+gagnait donc toujours, et proposait un formulaire de connexion qui ne pouvait mener nulle part. C'est
+la condition pour qu'une université sans portail soit utilisable plutôt que menteuse.
 
 Il n'y a **plus de WebView propre à cet onglet** : les deux Blueprints sont joués dans la WebView
 unique montée par [`rootContainer.tsx`](../../src/shared/navigation/rootContainer.tsx), qui ne crée
@@ -462,6 +475,9 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
 - **Navigateur intégré** : ouvrir le webmail depuis la ligne de messagerie ; le formulaire CAS doit se
   remplir seul.
 - **Déconnexion** : l'écran de connexion revient, aucune donnée ne subsiste.
+- **Établissement sans portail** : basculer sur « Mon université n'est pas dans la liste » — l'onglet
+  doit dire « Cette université n'est pas encore reliée à UKit », **sans formulaire** et sans bouton
+  Réessayer. C'est la sonde du jalon 6-J.
 - **Second établissement** : basculer sur Bordeaux INP dans les réglages, se connecter avec un compte
   de cette école — le parcours froid va au bout en une douzaine de secondes, l'identité s'affiche, et
   **aucune ligne de messagerie n'apparaît**. Puis revenir à Bordeaux : la session est à refaire, ce
@@ -521,6 +537,11 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
   d'être inventé.
 - **Pas de parité automatisée** pour ce module, et c'est assumé : elle demanderait des identifiants
   réels dans un harnais.
+- **Un échec de connexion depuis l'accueil ne se voit qu'après coup.** Le formulaire affiche bien son
+  message d'erreur, mais « Plus tard » et un succès mènent au même écran suivant : quelqu'un qui
+  avance sans lire n'apprend qu'en ouvrant l'onglet Scolarité que sa session n'est pas partie. C'est le
+  prix de ne pas bloquer l'accueil sur une panne de portail, et c'est le bon arbitrage — mais il est
+  écrit ici plutôt que découvert.
 - **[`ApogeeCard.tsx`](../../src/features/Scolarite/components/cards/ApogeeCard.tsx) n'est importé
   nulle part** : la carte d'accès aux notes existe mais n'est pas branchée au tableau de bord.
 - **Le point d'entrée `apogee` du navigateur intégré n'est atteint par aucun appel** de navigation.
@@ -541,10 +562,10 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
 | [`services/ScolariteMapping.ts`](../../src/features/Scolarite/services/ScolariteMapping.ts) | la projection des sorties vers les écrans, et la table des échecs nommés |
 | [`services/ScolariteMapping.test.ts`](../../src/features/Scolarite/services/ScolariteMapping.test.ts) | ce que cette projection doit tenir |
 | [`screens/ScolariteDashboard.tsx`](../../src/features/Scolarite/screens/ScolariteDashboard.tsx) | écran d'onglet : aiguillage entre connexion, chargement, échec et tableau de bord |
-| [`screens/CredentialsSettingsScreen.tsx`](../../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | réglages du compte : informations enregistrées, déconnexion |
+| [`screens/CredentialsSettingsScreen.tsx`](../../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | réglages du compte : informations enregistrées, déconnexion — et, **sans compte, le formulaire de connexion** plutôt qu'une fiche vide |
 | [`screens/WebBrowserScreen.tsx`](../../src/features/Scolarite/screens/WebBrowserScreen.tsx) | navigateur intégré : points d'entrée, historique, retour matériel, enregistrement d'identifiants |
 | [`components/WebBrowserComponents.tsx`](../../src/features/Scolarite/components/WebBrowserComponents.tsx) | barre d'action flottante, modale d'enregistrement, script de remplissage CAS |
-| [`components/ScolariteLoginView.tsx`](../../src/features/Scolarite/components/ScolariteLoginView.tsx) | formulaire de connexion et explication du traitement des données |
+| [`components/ScolariteLoginView.tsx`](../../src/features/Scolarite/components/ScolariteLoginView.tsx) | formulaire de connexion et explication du traitement des données. Partagé avec le [parcours d'accueil](onboarding.md), où il porte en plus une sortie « Plus tard » ([architecture.md](../architecture.md#dépendances-entre-features)) |
 | [`components/ScolariteLoadingScreen.tsx`](../../src/features/Scolarite/components/ScolariteLoadingScreen.tsx) | écran de progression du parcours froid, étape par étape |
 | [`components/BiometryGate.tsx`](../../src/features/Scolarite/components/BiometryGate.tsx) | verrou biométrique, une demande par session d'application |
 | [`components/GreetingBlock.tsx`](../../src/features/Scolarite/components/GreetingBlock.tsx) | salutation, date du jour, détection d'anniversaire |

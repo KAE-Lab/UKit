@@ -25,6 +25,26 @@ Le bouton d'action de la barre d'onglets mène à **À propos**.
 >
 > **Capture attendue** — `reglages-langue.png` : la modale de langue.
 >
+## Le compte universitaire, et le lien d'emploi du temps
+
+Deux lignes vivent dans la section **Établissement** depuis le jalon
+[6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md), et chacune n'apparaît que si elle a un
+sens :
+
+| Ligne | Visible quand | Ce qu'elle dit, ce qu'elle ouvre |
+|---|---|---|
+| **Compte universitaire** | l'établissement déclare un portail | *Connecté* / *Non connecté*, et mène aux réglages du compte — **ou au formulaire de connexion** quand il n'y a pas encore de compte |
+| **Lien de l'emploi du temps** | l'établissement déclare un abonnement iCal | *Connecté* / *Non connecté*, et mène à la saisie du lien |
+
+**La première est le rappel de l'étape sautée à l'accueil.** La spécification demandait une étape
+« sautable **et rappelée** » : c'est ici que le rappel vit, à côté du réglage dont il dépend. Elle
+disparaît chez un établissement sans portail — un compte qu'on ne peut pas connecter n'est pas un
+réglage, c'est une promesse en l'air.
+
+L'état est **relu à chaque retour sur l'écran** : le trousseau n'émet aucun événement, et l'écran des
+identifiants — où l'on se déconnecte — est juste à côté. Le figer au montage afficherait « Connecté »
+après une déconnexion, sans rien pour le corriger.
+
 ## Changer d'établissement
 
 L'entrée est **en première position**, et pas par courtoisie : c'est le réglage dont tous les autres
@@ -47,6 +67,7 @@ confondre a coûté un défaut :
 |---|---|---|
 | `groupList`, `groupListTimestamp`, `groups` | [`purge.ts`](../../src/shared/etablissements/purge.ts) | ce sont des identifiants d'une université |
 | **les groupes favoris et les filtres d'UE** | *rien — ils sont **rangés**, pas effacés* | voir « Des favoris par établissement » ci-dessous |
+| **le lien d'abonnement à l'emploi du temps** | *rien — cloisonné, comme les favoris* | même règle, et voir ci-dessous |
 | les caches de planning (`…@Week…`, `…@AAAA/MM/JJ`) | `purge.ts` | un planning gardé s'afficherait sous une autre fac sans que rien ne le dise |
 | `buildingList`, `buildingListTimestamp`, la surcouche `batiments@1`, les favoris de salles libres | `purge.ts` | les bâtiments sont reconstruits depuis les salles de **cette** université |
 | les identifiants et les données froides du trousseau | `purge.ts` | ils appartiennent au portail quitté |
@@ -57,6 +78,15 @@ confondre a coûté un défaut :
 Les groupes favoris et les filtres d'UE sont **cloisonnés par établissement** : basculer range ceux
 qu'on quitte et ressort ceux qu'on retrouve. Revenir à son université d'origine y retrouve donc ses
 groupes, sans rien reselectionner.
+
+**Le lien d'abonnement à l'emploi du temps suit la même règle** depuis le jalon
+[6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md), et pour la même raison : la règle de la
+phase est que les données de deux facs ne se **mélangent** pas, pas qu'il faille les oublier. Un lien
+n'est lu que sous l'établissement qui le porte, donc rien ne se mélange à le garder — et faire recoller
+à chaque aller-retour un lien que l'étudiant a déjà donné serait une punition sans raison. Il vit dans
+le trousseau et non dans les réglages, parce qu'il ouvre un emploi du temps nominatif sans demander
+d'identifiant : il vaut un mot de passe
+([`lienEdt.ts`](../../src/shared/etablissements/lienEdt.ts)).
 
 Ce n'est pas un assouplissement de la règle « les données de deux facs ne se mélangent pas » : cette
 règle interdit le **mélange**, pas la mémoire. À tout instant, seuls les favoris de l'établissement
@@ -286,8 +316,11 @@ rien n'est replanifié — le prochain chargement du planning s'en chargera.
 l'agenda pour les cours communs.
 
 **`resetSettings` est volontairement partielle** : elle remet à zéro les préférences d'affichage et
-les favoris de planning, mais ne touche ni aux caches, ni aux favoris Campus, ni au SecureStore. Voir
-les limites.
+les favoris de planning, mais ne touche ni aux caches, ni aux favoris Campus. Elle **efface en revanche
+tout le trousseau** — session universitaire depuis le jalon 6-G, liens d'abonnement depuis 6-J. C'est
+la différence avec une bascule d'établissement : ici on ne va nulle part, on efface, et laisser un
+emploi du temps déjà rempli à quelqu'un qui vient de tout réinitialiser serait un résidu, pas un
+service. Voir les limites.
 
 ## Vérifier
 
@@ -300,6 +333,10 @@ les limites.
 - Activer la synchronisation, choisir « UKit » : le calendrier doit être créé et peuplé. Relancer une
   synchronisation : aucun doublon.
 - Changer de calendrier cible : les événements de l'ancien doivent avoir disparu.
+- Ouvrir les Réglages avec un compte connecté puis se déconnecter et revenir : la ligne « Compte
+  universitaire » doit passer de **Connecté** à **Non connecté** sans relancer l'application.
+- Sur un établissement à lien d'abonnement, coller un lien puis revenir aux Réglages : la ligne « Lien
+  de l'emploi du temps » doit dire **Connecté**.
 - Réinitialiser l'application : le parcours d'accueil doit réapparaître, **et l'onglet Scolarité doit
   redemander les identifiants**. La sonde est celle qui a révélé le défaut, en vérifiant le jalon
   6-G : on revenait sur l'accueil en restant connecté.

@@ -115,6 +115,13 @@ trompeur.
 
 ## Décisions de conception
 
+**Le balayage part de la position de l'étudiant en plus des points du catalogue**, et c'est une
+propriété qui a compté au jalon [6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md) : elle
+signifie que cette fonctionnalité marche **partout**, sans rien déclarer. Un étudiant d'une université
+que nous n'avons pas portée obtient les bibliothèques réelles autour de lui — le fournisseur est
+national. C'est la seule des quatre sections du Campus qui n'a demandé aucune adaptation pour
+l'établissement ouvert.
+
 **Douze points de balayage plutôt qu'un.** L'endpoint de découverte ne renvoie que les sites proches
 du point interrogé. Une seule requête depuis la position de l'étudiant masquerait les BU des autres
 villes de la région. Les onze points fixes couvrent Bordeaux et les campus de Nouvelle-Aquitaine ;

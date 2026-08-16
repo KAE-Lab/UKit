@@ -16,6 +16,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import SecureStoreService from '../services/SecureStoreService';
+import { appliquerLiensEdt } from './lienEdt';
 
 /**
  * Les cles d'AsyncStorage produites par les sources **de l'etablissement**, et elles seules.
@@ -65,10 +66,37 @@ export async function purgerDonneesEtablissement(): Promise<void> {
 
     // Les deux cles se suppriment separement — le trousseau ne les tient pas ensemble
     // (SecureStoreService).
+    //
+    // **Les liens d'abonnement ne sont pas de la partie**, et c'est une decision : ils sont cloisonnes
+    // par etablissement, donc rien ne se melange a les garder, et un aller-retour ferait recoller un
+    // lien que l'etudiant a deja donne. C'est la meme correction que celle des groupes favoris au
+    // jalon 6-I — effacer repond a la mauvaise question, la regle est que les donnees de deux facs ne
+    // se **melangent** pas, pas qu'il faille les oublier. La reinitialisation, elle, les efface :
+    // voir `purgerLiensEdt`.
     try {
         await SecureStoreService.deleteCredentials();
         await SecureStoreService.deleteColdData();
     } catch (erreur) {
         console.warn(`[etablissements] session non effacee : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+    }
+}
+
+/**
+ * Efface les liens d'abonnement de **tous** les etablissements, memoire comprise.
+ *
+ * Reserve a la reinitialisation, et c'est ce qui la distingue d'une bascule : ici on ne va nulle part,
+ * on efface. Ne rien garder est le seul comportement qui rende le parcours d'accueil honnete — il
+ * redemande l'etablissement, et proposer un planning deja rempli a quelqu'un qui vient de tout effacer
+ * serait un residu, pas un service.
+ *
+ * Ne leve jamais, pour la meme raison que sa voisine : un trousseau qui refuse une suppression ne doit
+ * pas empecher la reinitialisation d'aboutir.
+ */
+export async function purgerLiensEdt(): Promise<void> {
+    appliquerLiensEdt(null);
+    try {
+        await SecureStoreService.deleteEdtLiens();
+    } catch (erreur) {
+        console.warn(`[etablissements] liens non effaces : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
     }
 }

@@ -78,6 +78,8 @@ export interface EtablissementRow {
     readonly salles: unknown;
     /** Le serveur d'inventaire des salles libres, quand ce n'est pas celui de l'etablissement (jalon 6-I). */
     readonly salles_libres: unknown;
+    /** La region Croustillant des restaurants CROUS. `null` : pas de restaurants (jalon 6-J). */
+    readonly crous_region: string | null;
     readonly ordre: number;
 }
 

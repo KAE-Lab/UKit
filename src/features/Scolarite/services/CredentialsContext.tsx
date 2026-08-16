@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import { SettingsManager } from '../../../shared/services/AppCore';
+import { portailPublie } from '../../../shared/etablissements';
 import Translator from '../../../shared/i18n/Translator';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { cleDeMessage, type ScolariteColdData, type ScolariteMailData } from './ScolariteMapping';
@@ -75,6 +76,16 @@ export interface CredentialsValue {
      * n'existe pas serait un mensonge affiche a chaque lancement.
      */
     readonly messagerieDisponible: boolean;
+    /**
+     * L'etablissement selectionne publie-t-il **un** portail, quel qu'il soit ?
+     *
+     * `false` fait disparaitre le formulaire de connexion au profit d'un message : une universite qui
+     * n'expose ni dossier ni messagerie n'a rien derriere quoi s'authentifier, et lui demander des
+     * identifiants serait promettre un service qui n'existe pas. C'est le pendant, un cran au-dessus,
+     * de `messagerieDisponible` — et le cas est reel des qu'un etablissement arrive au catalogue sans
+     * portail ecrit (jalon 6-J).
+     */
+    readonly portailDisponible: boolean;
     readonly validateAndSave: (username: string, password: string) => Promise<ResultatValidation>;
     readonly retrySession: () => void;
     readonly logout: () => Promise<void>;
@@ -368,6 +379,11 @@ const useCredentialsSession = (): CredentialsValue => {
         // rafraichissement au retour au premier plan, ou une bascule d'etablissement — et une valeur
         // figee au montage ferait survivre une ligne de messagerie a l'universite qui la portait.
         messagerieDisponible: portailDisponible('messagerie'),
+        // `portailPublie()` et non `portailDisponible(role)` : la question est « y a-t-il quelque chose
+        // derriere quoi s'authentifier », pas « ce nom est-il jouable ». Une ligne de catalogue mal
+        // ecrite laisse donc le formulaire visible et fait dire le probleme par la session, ce qui est
+        // le bon endroit — le masquer ferait disparaitre l'onglet sans que personne sache pourquoi.
+        portailDisponible: portailPublie(),
         validateAndSave, retrySession, logout,
     };
 };

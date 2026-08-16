@@ -296,4 +296,54 @@ describe('projeterSalles', () => {
         expect(salles.motif).toBe('^(X)-');
         expect(salles.depuis).toBe(2);
     });
+
+    it('rend null quand l etablissement declare n avoir aucun referentiel de lieux', () => {
+        // Le cas de « Mon universite n'est pas dans la liste » (jalon 6-J). A distinguer d'une colonne
+        // **absente**, qui vaut le comportement bordelais : ici c'est une decision, la c'est un
+        // silence. Voir salles.test.ts pour ce que ce nul produit a l'ecran.
+        expect(projeterEtablissement(ligne({ salles: { reconnaissance: false } })).salles).toBeNull();
+    });
+});
+
+describe('projeterEdtAbonnement', () => {
+    it('rend null quand la ligne n en declare pas', () => {
+        expect(projeterEtablissement(ligne({})).edtAbonnement).toBeNull();
+        expect(projeterEtablissement(ligne({ edt: { blueprint: 'a', blueprint_annee: 'b' } })).edtAbonnement).toBeNull();
+    });
+
+    it('suffit a etre declare par un objet vide : ce qui compte est le fait', () => {
+        expect(projeterEtablissement(ligne({ edt: { abonnement: {} } })).edtAbonnement).toEqual({ aide: null });
+    });
+
+    it('porte l aide du catalogue, telle quelle', () => {
+        // Un libelle de donnee, comme le nom de l'universite : le chemin vers un lien d'abonnement est
+        // propre a chaque etablissement, et le traduire n'aurait aucun sens.
+        const abonnement = projeterEtablissement(
+            ligne({ edt: { abonnement: { aide: 'ADE → Exporter mon agenda' } } }),
+        ).edtAbonnement;
+
+        expect(abonnement).toEqual({ aide: 'ADE → Exporter mon agenda' });
+    });
+
+    it('coexiste avec un referentiel iCalendar dans la meme colonne', () => {
+        const etablissement = projeterEtablissement(
+            ligne({ edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [], abonnement: {} } }),
+        );
+
+        expect(etablissement.edt?.blueprint).toBe('a');
+        expect(etablissement.edtAbonnement).toEqual({ aide: null });
+    });
+});
+
+describe('crousRegion', () => {
+    it('vaut null quand la colonne est absente, et la section disparait', () => {
+        // Volontairement **pas** de repli bordelais : une ligne qui ne declare pas de region ne doit
+        // pas se voir servir les restaurants d'une autre ville. Le socle embarque, lui, porte la
+        // sienne en dur — c'est lui qui garantit le comportement historique hors ligne.
+        expect(projeterEtablissement(ligne({})).crousRegion).toBeNull();
+    });
+
+    it('lit la region publiee', () => {
+        expect(projeterEtablissement(ligne({ crous_region: '1' })).crousRegion).toBe('1');
+    });
 });

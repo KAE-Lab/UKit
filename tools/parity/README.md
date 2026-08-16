@@ -92,6 +92,14 @@ Trois pièges rencontrés, à traiter dans le cas plutôt qu'à découvrir :
 
 ## Un cas sans chemin historique
 
+`ical-abonnement` est d'une nature encore différente, et elle vaut d'être comprise : ses deux chemins
+ne diffèrent pas par la bibliothèque qui lit, mais par **qui filtre**. Le chemin de référence demande
+une plage au serveur ; le chemin migré demande le lien **verbatim, sans bornes** — c'est ce qui rend
+le repli universel, tous les produits d'emploi du temps n'acceptant pas de paramètres de dates — puis
+découpe dans l'application. Ce que le cas prouve : les deux découpes rendent exactement les mêmes
+cours. Ce qu'il ne prouve pas : que n'importe quel export iCal marche — il joue ADE, la seule source
+réelle dont nous disposions.
+
 `ical-inp` est le premier cas dont la source **n'avait jamais été portée** : il n'y a pas d'« avant »
 à comparer. Le second chemin est donc ce que la spécification [6-I](../../docs/phase-6/6-i-planning-universel.md)
 demande — *le même jour, lu par l'iCal et lu par l'export brut*. Les deux lectures vivent côte à côte
@@ -157,6 +165,7 @@ ailleurs, par la mesure directe consignée dans
 | [`celcat-annee`](celcat-annee.parity.mjs) | Celcat — les deux positions de la bascule d'année scolaire | [6-E](../../docs/phase-6/6-e-planning.md) |
 | [`celcat-occupation`](celcat-occupation.parity.mjs) | Celcat — trois salles du CREMI, jour ordinaire et jour de vacances | [6-E](../../docs/phase-6/6-e-planning.md) |
 | [`ical-inp`](ical-inp.parity.mjs) | ADE — jour ordinaire, jour sans cours, semaine complète, agrégat à deux ressources | [6-I](../../docs/phase-6/6-i-planning-universel.md) |
+| [`ical-abonnement`](ical-abonnement.parity.mjs) | un lien collé **sans bornes**, filtré par l'application, contre la même source bornée par le serveur | [6-J](../../docs/phase-6/6-j-compte-et-sources-par-etablissement.md) |
 
 [`commun.mjs`](commun.mjs) n'est pas un cas : il porte le harnais partagé — jouer un Blueprint avec le
 moteur nu, capturer ce qu'il a émis, les en-têtes imités du chemin historique, les libellés de repli.

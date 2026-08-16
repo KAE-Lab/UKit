@@ -30,7 +30,7 @@ insert into public.etablissements (
     code, nom, ville, logo_url, actif,
     portail_dossier, portail_messagerie,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
-    bibliotheques_points, services, libelles, ordre
+    bibliotheques_points, services, libelles, crous_region, ordre
 ) values (
     'bordeaux',
     'Université de Bordeaux',
@@ -74,6 +74,10 @@ insert into public.etablissements (
       "apogee": "https://apogee.u-bordeaux.fr",
       "moodle": "https://moodle.u-bordeaux.fr"}'::jsonb,
     '{}'::jsonb,
+    -- La region CROUS de Croustillant. C'etait une constante du Blueprint jusqu'au jalon 6-J ; la
+    -- valeur ne change pas, sa nature si — elle est desormais corrigeable sans release, et un
+    -- etablissement peut ne pas en avoir.
+    '1',
     0
 ) on conflict (code) do update set
     nom                  = excluded.nom,
@@ -90,6 +94,7 @@ insert into public.etablissements (
     bibliotheques_points = excluded.bibliotheques_points,
     services             = excluded.services,
     libelles             = excluded.libelles,
+    crous_region         = excluded.crous_region,
     ordre                = excluded.ordre;
 
 -- =============================================================================
@@ -119,7 +124,7 @@ insert into public.etablissements (
     code, nom, ville, logo_url, actif,
     portail_dossier, portail_messagerie,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
-    bibliotheques_points, services, libelles, ordre
+    bibliotheques_points, services, libelles, crous_region, ordre
 ) values (
     'bordeaux-inp',
     'Bordeaux INP',
@@ -204,6 +209,10 @@ insert into public.etablissements (
     -- Ce dossier n'expose pas d'INE : le libelle le dit plutot que de laisser une ligne vide sans
     -- explication. « Numero etudiant » reste, lui, une chaine de Translator.
     '{}'::jsonb,
+    -- La meme region que l'Universite de Bordeaux : les deux etablissements sont dans la meme ville,
+    -- et le CROUS y est le meme. C'est une donnee de catalogue precisement pour que ce genre de choix
+    -- se relise.
+    '1',
     1
 ) on conflict (code) do update set
     nom                  = excluded.nom,
@@ -220,4 +229,100 @@ insert into public.etablissements (
     bibliotheques_points = excluded.bibliotheques_points,
     services             = excluded.services,
     libelles             = excluded.libelles,
+    crous_region         = excluded.crous_region,
+    ordre                = excluded.ordre;
+
+-- =============================================================================
+-- « Mon universite n'est pas dans la liste » — l'etablissement ouvert (jalon 6-J)
+-- =============================================================================
+--
+-- Ce n'est pas une universite : c'est **l'absence d'universite portee, rendue utilisable**. Un
+-- etudiant dont la fac n'est pas au catalogue colle le lien d'abonnement que son etablissement lui
+-- donne, et il a son emploi du temps — sans qu'on ait ecrit une seule ligne pour lui.
+--
+-- C'est la preuve que le repli universel tient, et elle ne coute rien d'autre que cette ligne : le
+-- Blueprint `ukit.edt.abonnement` est unique, embarque, et le meme pour tout le monde. Un fichier par
+-- etablissement le rendrait aussi couteux que ce qu'il remplace.
+--
+-- **Le perimetre du produit est le secteur bordelais** (voir le README), et c'est ce qui rend cette
+-- ligne honnete : les trois colonnes de campus ci-dessous sont VRAIES pour une fac bordelaise non
+-- portee. Une fac de Lille aurait besoin des siennes, et les colonnes existent pour ca — c'est
+-- justement pourquoi la region CROUS a quitte le Blueprint au jalon 6-J.
+--
+-- Quatre `null` qui sont des decisions :
+--
+--   * `portail_dossier` / `portail_messagerie` — on ne connait pas son ENT, donc rien a jouer.
+--     L'onglet Scolarite le **dit** au lieu d'afficher un formulaire qui ne mene nulle part.
+--   * `celcat_domaine` — a fortiori.
+--   * `salles` avec `reconnaissance: false` — on ne connait pas la forme de ses salles. Appliquer le
+--     motif bordelais capturerait un code qui existe CHEZ NOUS (`A28` est le CREMI) et poserait un
+--     marqueur a Talence pour une salle qui n'y est pas. *Un batiment sans coordonnees n'est pas une
+--     carte vide, c'est une carte fausse* (jalon 6-I). Le jour ou on porte la fac pour de vrai, on lui
+--     ecrit son motif et la carte revient.
+--
+-- `ordre` a 99 : elle ferme la liste, apres les etablissements reels.
+insert into public.etablissements (
+    code, nom, ville, logo_url, actif,
+    portail_dossier, portail_messagerie,
+    celcat_domaine, celcat_res_types, edt, salles, salles_libres,
+    bibliotheques_points, services, libelles, crous_region, ordre
+) values (
+    'autre',
+    -- Court, et corrige apres coup sur appareil : « Mon universite n'est pas dans la liste » disait
+    -- juste, mais une phrase entiere dans une liste de noms propres se lit mal et deborde. Le nom d'un
+    -- etablissement est une **donnee**, donc ce genre de correction est une publication et non une
+    -- release — c'est precisement ce que le jalon 6-G a rendu possible.
+    'Autre université',
+    null,
+    null,
+    true,
+    null,
+    null,
+    null,
+    null,
+    -- Un abonnement, et rien d'autre : le catalogue dit QUE cet etablissement en publie un, jamais
+    -- comment le jouer. `aide` est un libelle de donnee — il s'affiche tel quel, comme le nom d'une
+    -- universite — et il reste volontairement generique ici, puisqu'on ne sait pas de quelle fac il
+    -- s'agit. Une fac portee, elle, nommera son chemin exact.
+    '{"abonnement": {"aide": "l''espace emploi du temps de ton ENT, rubrique « exporter » ou « s''abonner »"}}'::jsonb,
+    '{"reconnaissance": false}'::jsonb,
+    -- Les salles libres de l'Universite de Bordeaux, empruntees comme le fait Bordeaux INP. Meme
+    -- argument, et il est geographique : le perimetre du produit est bordelais, donc un etudiant qui
+    -- choisit cette ligne est sur le meme campus que les batiments listes.
+    '{"domaine": "https://celcat.u-bordeaux.fr/calendar", "res_type": "102"}'::jsonb,
+    -- Les memes points de balayage : Affluences est national, mais ces points decident des VILLES
+    -- couvertes. La position de l'etudiant est balayee en plus d'eux (LibraryService), donc une
+    -- bibliotheque proche de lui remonte de toute facon.
+    '[{"lat": 44.8377, "lng": -0.5791},
+      {"lat": 44.7963, "lng": -0.6277},
+      {"lat": 43.2951, "lng": -0.3707},
+      {"lat": 46.1603, "lng": -1.1511},
+      {"lat": 45.8336, "lng": 1.2611},
+      {"lat": 46.5802, "lng": 0.3403},
+      {"lat": 43.4929, "lng": -1.4748},
+      {"lat": 45.1920, "lng": 0.7194},
+      {"lat": 44.2031, "lng": 0.6163},
+      {"lat": 45.6483, "lng": 0.1562},
+      {"lat": 46.3237, "lng": -0.4647}]'::jsonb,
+    -- Aucune porte : on ne connait aucune de ses adresses. Le navigateur integre n'a rien a ouvrir.
+    '{}'::jsonb,
+    '{}'::jsonb,
+    '1',
+    99
+) on conflict (code) do update set
+    nom                  = excluded.nom,
+    ville                = excluded.ville,
+    logo_url             = excluded.logo_url,
+    actif                = excluded.actif,
+    portail_dossier      = excluded.portail_dossier,
+    portail_messagerie   = excluded.portail_messagerie,
+    celcat_domaine       = excluded.celcat_domaine,
+    celcat_res_types     = excluded.celcat_res_types,
+    edt                  = excluded.edt,
+    salles               = excluded.salles,
+    salles_libres        = excluded.salles_libres,
+    bibliotheques_points = excluded.bibliotheques_points,
+    services             = excluded.services,
+    libelles             = excluded.libelles,
+    crous_region         = excluded.crous_region,
     ordre                = excluded.ordre;

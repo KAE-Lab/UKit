@@ -99,7 +99,7 @@ export function portailDisponible(role: 'dossier' | 'messagerie'): boolean {
  * nomme le cas pour que l'ecran dise « cet etablissement n'est pas relie » plutot que « le portail ne
  * repond pas » — deux phrases qui appellent deux gestes opposes de la part de l'etudiant.
  */
-function portailAbsent(role: string): UkitFailure {
+export function portailAbsent(role: string = 'portail'): UkitFailure {
     return serviceAbsent('ERROR_PORTAL_UNAVAILABLE', 'PORTAIL_ABSENT', `l etablissement ne publie pas de ${role}`);
 }
 

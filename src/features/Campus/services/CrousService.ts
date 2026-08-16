@@ -13,7 +13,8 @@
  */
 
 import Translator from '../../../shared/i18n/Translator';
-import { BLUEPRINT, reportFailure, runBlueprint, type UkitFailure } from '../../../shared/aetherius';
+import { BLUEPRINT, reportFailure, runBlueprint, serviceAbsent, type UkitFailure } from '../../../shared/aetherius';
+import { crousRegionActive } from '../../../shared/etablissements';
 import {
     projeterJourMenu,
     projeterRestaurant,
@@ -45,6 +46,21 @@ function commeListe(valeur: unknown): unknown[] {
     return Array.isArray(valeur) ? valeur : [];
 }
 
+/**
+ * L'echec de restaurants qu'un etablissement ne couvre pas.
+ *
+ * `config` et non `unavailable` : aucun run n'est parti, rien n'est en panne, et proposer de reessayer
+ * serait faux. Le message est celui d'un service absent — la meme famille que la messagerie d'une fac
+ * dont le webmail n'est pas extractible (jalon 6-G).
+ */
+function restaurantsAbsents(): UkitFailure {
+    return serviceAbsent(
+        'ERROR_SERVICE_ABSENT',
+        'CROUS_ABSENT',
+        'l etablissement ne declare pas de region CROUS',
+    );
+}
+
 class CrousServiceManager {
     /**
      * La liste regionale, triee du plus proche au plus lointain quand la position est connue.
@@ -53,7 +69,15 @@ class CrousServiceManager {
      * devrait etre reimplemente a l'identique dans les deux moteurs.
      */
     async fetchRestaurantsBordeaux(userLat?: number, userLon?: number): Promise<CrousRestaurantsResult> {
-        const run = await runBlueprint(BLUEPRINT.CAMPUS_RESTAURANTS);
+        // La region vient du catalogue depuis le jalon 6-J. `null` n'est pas une panne : c'est un
+        // etablissement qui ne declare pas de restaurants, et l'ecran fait alors disparaitre la
+        // section — meme regle que la messagerie et que les salles libres.
+        const region = crousRegionActive();
+        if (region === null) {
+            return { ok: false, failure: restaurantsAbsents() };
+        }
+
+        const run = await runBlueprint(BLUEPRINT.CAMPUS_RESTAURANTS, { inputs: { region } });
         if (run.ok === false) {
             reportFailure(BLUEPRINT.CAMPUS_RESTAURANTS, run.failure);
             return { ok: false, failure: run.failure };

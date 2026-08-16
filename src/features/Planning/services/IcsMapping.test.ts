@@ -236,9 +236,35 @@ describe('projeterJourIcs', () => {
         expect(cours.map((c) => c.starttime)).toEqual(['09:30', '14:00']);
     });
 
-    it('n a pas de refiltrage sur la date : les bornes d ADE sont respectees', () => {
-        // Contrairement a Celcat, qui rend les cours du lundi pour une journee demandee un dimanche.
+    it('n a pas de refiltrage sur la date quand on ne lui en donne pas', () => {
+        // Les bornes `firstDate` / `lastDate` d'ADE sont respectees, contrairement a Celcat qui rend
+        // les cours du lundi pour une journee demandee un dimanche. Un second filtre ne servirait
+        // qu'a donner l'impression qu'il sert.
         expect(projeterJourIcs(calendrier(COURS), '2A GR1')).toHaveLength(1);
+    });
+
+    /**
+     * Le filtrage par date du jalon 6-J.
+     *
+     * Il n'existait pas, et il n'avait pas a exister : la seule source iCalendar etait ADE, qui borne
+     * ce qu'il rend. Un **lien d'abonnement colle** ne prend aucune borne — c'est ce qui le rend
+     * universel, tous les produits n'acceptant pas de parametres de dates — et rend donc le calendrier
+     * entier. Sans ce filtre, une vue « jour » afficherait l'annee.
+     */
+    it('ne garde que la journee demandee quand la source n a pas borne', () => {
+        const annee = calendrier(COURS, COURS_ETE);
+
+        expect(projeterJourIcs(annee, '2A GR1')).toHaveLength(2);
+        expect(projeterJourIcs(annee, '2A GR1', moment('2025-11-18'))).toHaveLength(1);
+        expect(projeterJourIcs(annee, '2A GR1', moment('2025-09-16'))).toHaveLength(1);
+        expect(projeterJourIcs(annee, '2A GR1', moment('2025-11-19'))).toHaveLength(0);
+    });
+
+    it('rattache un cours a sa journee **locale**, pas a celle d UTC', () => {
+        // `DTSTART` est en UTC honnete : 08:30Z le 18 novembre, soit 09:30 a Paris le meme jour. Le
+        // fuseau des tests est fixe par vitest.config.ts, sans quoi ce test passerait a Bordeaux et
+        // echouerait ailleurs.
+        expect(projeterJourIcs(calendrier(COURS), '2A GR1', moment('2025-11-18'))).toHaveLength(1);
     });
 });
 
@@ -251,6 +277,19 @@ describe('decouperSemaineIcs', () => {
         expect(semaine[1].courses).toHaveLength(1);
         expect(semaine[1].courses[0].dayNumber).toBe('2');
         expect(semaine[0].courses).toHaveLength(0);
+    });
+
+    /**
+     * Le piege que l'assemblage seul ne rattrape pas, et qui n'apparait qu'avec un calendrier non
+     * borne : `assemblerSemaine` range par **jour de la semaine**, sans regarder la semaine. Les
+     * trente-cinq mardis de l'annee tomberaient donc tous dans la colonne du mardi affiche.
+     */
+    it('ecarte les cours des autres semaines', () => {
+        const annee = calendrier(COURS, COURS_ETE);
+        const semaine = decouperSemaineIcs(annee, '2A GR1', moment('2025-11-17'));
+
+        expect(semaine[1].courses).toHaveLength(1);
+        expect(semaine.reduce((total, jour) => total + jour.courses.length, 0)).toBe(1);
     });
 });
 

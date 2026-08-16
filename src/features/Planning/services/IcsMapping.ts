@@ -221,20 +221,48 @@ export function lireCalendrier(ics: unknown, groupe: CibleGroupe): PlanningEvent
 }
 
 /**
- * Une journee de cours.
+ * Ne garde que les evenements d'une journee donnee.
  *
- * Le refiltrage sur la date exacte n'a pas lieu d'etre ici, contrairement a Celcat : les bornes
- * `firstDate` / `lastDate` d'ADE sont **inclusives et respectees**, le serveur ne deborde pas
+ * **Il ne servait a rien jusqu'au jalon 6-J**, et c'est ce qui explique qu'il n'existait pas : les
+ * bornes `firstDate` / `lastDate` d'ADE sont inclusives et respectees, le serveur ne deborde pas
  * (mesure du 2026-08-15 : `firstDate=lastDate=2025-11-18` rend les cinq cours de ce mardi, et eux
- * seuls).
+ * seuls). Un **lien d'abonnement colle**, lui, ne prend aucune borne — c'est ce qui le rend universel,
+ * puisque tous les produits n'acceptent pas de parametres de dates — et rend donc le calendrier
+ * entier. Sans ce filtre, une vue « jour » afficherait l'annee.
+ *
+ * La comparaison porte sur `date.start`, deja normalise en ISO par la projection, et se fait au jour
+ * **local** : un cours de 08:00 a Paris appartient a sa journee parisienne, pas a celle d'UTC.
  */
-export function projeterJourIcs(ics: unknown, groupe: CibleGroupe): PlanningEvent[] {
-    return assemblerJour(lireCalendrier(ics, groupe));
+function duJour(evenements: PlanningEvent[], jour: moment.Moment): PlanningEvent[] {
+    return evenements.filter((evenement) => moment(evenement.date.start ?? null).isSame(jour, 'day'));
 }
 
-/** Une semaine, decoupee en six jours du lundi au samedi par l'assemblage commun aux deux sources. */
+/**
+ * Une journee de cours.
+ *
+ * `jour` est **facultatif** : la branche ADE ne le passe pas, parce que son serveur a deja filtre et
+ * qu'un second filtrage ne changerait rien tout en donnant l'impression qu'il sert. La branche
+ * abonnement le passe, parce que la sienne ne filtre rien.
+ */
+export function projeterJourIcs(ics: unknown, groupe: CibleGroupe, jour?: moment.Moment): PlanningEvent[] {
+    const evenements = lireCalendrier(ics, groupe);
+    return assemblerJour(jour === undefined ? evenements : duJour(evenements, jour));
+}
+
+/**
+ * Une semaine, decoupee en six jours du lundi au samedi par l'assemblage commun aux deux sources.
+ *
+ * Aucun filtre n'est necessaire ici, quelle que soit la source : `assemblerSemaine` range chaque
+ * evenement dans la colonne de son jour ISO, et un evenement d'une autre semaine tombe simplement
+ * dans une colonne qu'on n'affiche pas... **sauf s'il tombe le meme jour de la semaine**. Un
+ * calendrier annuel non borne y mettrait donc les trente-cinq mardis de l'annee. Le filtrage sur la
+ * plage est donc fait ici, en amont, et il est sans effet sur une reponse deja bornee.
+ */
 export function decouperSemaineIcs(ics: unknown, groupe: CibleGroupe, lundi: moment.Moment): PlanningWeekDay[] {
-    return assemblerSemaine(lireCalendrier(ics, groupe), lundi);
+    const evenements = lireCalendrier(ics, groupe).filter((evenement) =>
+        moment(evenement.date.start ?? null).isSame(lundi, 'isoWeek'),
+    );
+    return assemblerSemaine(evenements, lundi);
 }
 
 /** La plage annuelle de la synchronisation calendrier : la meme projection, a plat. */

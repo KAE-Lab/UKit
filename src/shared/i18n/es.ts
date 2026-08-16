@@ -45,8 +45,15 @@ const es: TranslationDict = {
 	// Un service que l'etablissement ne publie pas : rien n'est en panne, il n'y a rien a joindre.
 	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
 	ERROR_PORTAL_UNAVAILABLE: 'Esta universidad aún no está conectada a UKit.',
+	// Le cas general de la meme famille : un service que cet etablissement ne propose pas. L'ecran le
+	// fait le plus souvent **disparaitre** plutot que de l'afficher ; le message existe pour les
+	// chemins ou il reste atteignable.
+	ERROR_SERVICE_ABSENT: 'Este servicio no está disponible para tu centro.',
 	ERROR_TIMETABLE_UNAVAILABLE: 'Esta universidad aún no publica su horario en UKit.',
 	ERROR_TIMETABLE_GROUP_UNKNOWN: 'Este grupo ya no existe en el horario de tu universidad. Elige otro.',
+	// Distinct de ERROR_TIMETABLE_UNAVAILABLE, et c'est tout l'objet du jalon 6-J : la-bas rien
+	// n'existe, ici il manque un geste. Deux phrases, deux ecrans, deux gestes attendus.
+	ERROR_TIMETABLE_LINK_MISSING: 'Tu universidad publica su horario mediante un enlace de suscripción. Pégalo para verlo aquí.',
 	TIMETABLE_GROUPS_MISSING: 'Grupos no encontrados, no mostrados aquí: $-',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
@@ -132,6 +139,28 @@ const es: TranslationDict = {
 	INSTITUTION_CHANGE_TITLE: '¿Cambiar de centro?',
 	INSTITUTION_CHANGE_WARNING: 'Tus grupos favoritos, tu horario en caché, tu sesión universitaria y los cursos añadidos a tu calendario se borrarán.\nLos datos de dos universidades no se mezclan.',
 	INSTITUTION_UNAVAILABLE: 'Tu centro ya no aparece en la lista. UKit sigue con lo que sabe de él.',
+	// Le compte a l'accueil et le lien d'abonnement (jalon 6-J).
+	UNIVERSITY_ACCOUNT: 'Cuenta universitaria',
+	ACCOUNT_CONNECTED: 'Conectada',
+	ACCOUNT_NOT_CONNECTED: 'Sin conectar',
+	CONNECT_ACCOUNT_TITLE: 'Conecta tu cuenta universitaria',
+	CONNECT_ACCOUNT_DESC:
+		'Para recuperar tus datos de estudiante y tus mensajes. Tus credenciales se quedan en tu teléfono, cifradas, y solo se envían a tu universidad.',
+	LATER: 'Más tarde',
+	TIMETABLE_LINK: 'Enlace del horario',
+	TIMETABLE_LINK_TITLE: 'Pega tu enlace del horario',
+	TIMETABLE_LINK_DESC:
+		'Tu universidad publica su horario mediante un enlace de suscripción (iCal). Pégalo aquí: se queda en tu teléfono, cifrado, como una contraseña.',
+	TIMETABLE_LINK_PLACEHOLDER: 'https://…',
+	TIMETABLE_LINK_ADD: 'Pegar mi enlace',
+	TIMETABLE_LINK_CHECK: 'Comprobar y guardar',
+	TIMETABLE_LINK_CHECKING: 'Comprobando…',
+	TIMETABLE_LINK_OK: 'Calendario reconocido: $- clases.',
+	TIMETABLE_LINK_EMPTY: 'Este calendario no contiene ninguna clase. Comprueba que el enlace es realmente el tuyo.',
+	TIMETABLE_LINK_INVALID:
+		'Este enlace no devuelve un calendario. Comprueba que has copiado el enlace de suscripción (iCal) y no la dirección de la página de tu horario.',
+	TIMETABLE_LINK_FORGET: 'Olvidar este enlace',
+	TIMETABLE_LINK_HELP: 'Dónde encontrarlo:',
 	YOUR_GROUP: '¿Cuál es tu grupo?',
 	YOUR_LANGUAGE: '¿Cuál es tu idioma?',
 	YOUR_SEMESTER: '¿En que semestre estás?',

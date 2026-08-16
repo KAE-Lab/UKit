@@ -121,10 +121,24 @@ Gérées exclusivement par [`SecureStoreService.ts`](../src/shared/services/Secu
 |---|---|
 | `UKIT_CAS_CREDENTIALS` | `{ username, password }` du compte universitaire |
 | `UKIT_COLD_DATA` | données étudiant scrapées une fois : prénom, numéro étudiant, INE, adresse mail, date de naissance |
+| `UKIT_EDT_LIENS` | les liens d'abonnement à l'emploi du temps, **indexés par code d'établissement** : `{ "autre": "https://…" }` |
 
-Ces deux clés sont supprimées ensemble à la déconnexion (`logout` dans
+Les deux premières sont supprimées ensemble à la déconnexion (`logout` dans
 [`CredentialsContext.tsx`](../src/features/Scolarite/services/CredentialsContext.tsx)). Aucune de ces
 données ne quitte l'appareil.
+
+**`UKIT_EDT_LIENS` est dans le trousseau et non dans les réglages, et ce n'est pas de la prudence de
+principe** : un lien d'abonnement personnel ouvre un emploi du temps **nominatif sans demander
+d'identifiant**. Il vaut donc un mot de passe et se range avec eux (jalon
+[6-J](phase-6/6-j-compte-et-sources-par-etablissement.md)).
+
+Une **seule** clé porte tous les établissements, pour deux raisons : `expo-secure-store` est fait pour
+un petit nombre de petites valeurs — une clé par établissement ferait grandir le trousseau avec le
+catalogue —, et une table unique rend le cloisonnement lisible au même endroit que sa lecture
+([`lienEdt.ts`](../src/shared/etablissements/lienEdt.ts)). Elle **survit** à un changement
+d'établissement, contrairement aux deux autres : un lien n'est lu que sous la fac qui le porte, donc
+rien ne se mélange à le garder, et faire recoller à chaque aller-retour un lien déjà donné serait une
+punition sans raison. Seule la réinitialisation l'efface.
 
 ## Stratégies de cache
 

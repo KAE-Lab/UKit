@@ -3,6 +3,16 @@
 Liste des restaurants et cafétérias CROUS de la région, triés par distance, avec les menus du jour et
 des jours suivants.
 
+**La région est une donnée de catalogue** depuis le jalon
+[6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md), colonne `crous_region`. Elle était une
+`vars` du Blueprint, avec un commentaire qui l'assumait — « l'application vise une seule région ».
+C'était vrai, et ça le reste : le périmètre du produit est le **secteur bordelais**
+([README](../../README.md)), et la valeur vaut toujours `1`. Ce qui a changé n'est pas la valeur mais
+sa **nature** — c'est exactement la forme que prend une constante bordelaise avant de devenir fausse,
+et le jalon 6-G en a déterré onze du même genre. Un établissement qui ne déclare pas de région ne fait
+pas afficher les restaurants d'une autre ville : la **section disparaît**, comme celle des salles
+libres chez un établissement sans inventaire.
+
 Socle commun : [campus.md](campus.md). Source de données : Croustillant, section 4 de
 [sources-externes.md](../sources-externes.md).
 

@@ -19,6 +19,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import SecureStoreService from '../services/SecureStoreService';
 import { getSupabase } from '../supabase';
 import {
     ETABLISSEMENT_DEFAUT,
@@ -28,10 +29,12 @@ import {
     setCodeEtablissementActif,
     type Etablissement,
 } from './catalogue';
+import { appliquerLiensEdt, fusionnerLiens, liensEdt, lireLiens } from './lienEdt';
 import { purgerDonneesEtablissement } from './purge';
 
 export {
     ETABLISSEMENT_DEFAUT,
+    crousRegionActive,
     etablissementRetire,
     formatSallesActif,
     getCodeEtablissementActif,
@@ -39,20 +42,69 @@ export {
     getEtablissementActif,
     libelleEtablissement,
     listeEtablissements,
+    portailPublie,
     serviceEtablissement,
     setCodeEtablissementActif,
 } from './catalogue';
-export type { CelcatResTypes, EdtIcal, Etablissement, FormatSalles, GroupeEdt, PointBalayage } from './catalogue';
+export type {
+    CelcatResTypes,
+    EdtAbonnement,
+    EdtIcal,
+    Etablissement,
+    FormatSalles,
+    GroupeEdt,
+    PointBalayage,
+} from './catalogue';
 export { entreesCelcat, sallesDisponibles } from './celcat';
 export type { EntreesCelcat } from './celcat';
-export { groupeInconnu, planningAbsent, planningDisponible, resoudreRessources, sourceEdt } from './edt';
+export {
+    groupeInconnu,
+    groupesRequis,
+    lienEdtAttendu,
+    planningAbsent,
+    planningDisponible,
+    resoudreRessources,
+    sourceEdt,
+} from './edt';
 export type { SourceEdt } from './edt';
-export { purgerDonneesEtablissement } from './purge';
+export { lienEdtActif } from './lienEdt';
+export { purgerDonneesEtablissement, purgerLiensEdt } from './purge';
 
 const TABLE = 'etablissements';
-const CLE_CACHE = 'etablissements@1';
+/**
+ * La cle du cache, **versionnee** — et c'est exactement a ca qu'elle sert.
+ *
+ * Ce cache ne garde pas des lignes de la base : il garde des `Etablissement` **deja projetes**. Un
+ * jalon qui ajoute un champ a la projection ne remplit donc pas retroactivement les objets deja en
+ * cache, et l'application lit `undefined` la ou elle attend une valeur ou `null`.
+ *
+ * Ce n'est pas theorique : mesure sur appareil le 2026-08-16, avec un cache ecrit avant le jalon 6-J.
+ * `crousRegion` valait `undefined`, il est parti tel quel dans les entrees du run, et le moteur l'a
+ * rendu `None` — l'application a demande `/regions/None/restaurants` et le CROUS a repondu 404. Le
+ * meme cache aurait fait passer `edtAbonnement` a `undefined`, que le test `!== null` accepte, donc
+ * fait croire a un abonnement la ou il n'y en a pas.
+ *
+ * **Passer la version invalide les caches anterieurs** : ils sont relus, juges inconnus, et la
+ * surcouche repart du socle jusqu'au premier rafraichissement. C'est sans consequence — la lecture du
+ * catalogue est deja hors du chemin de demarrage — et c'est le seul moyen sur.
+ *
+ * La regle qui suit, et qui vaut pour le prochain jalon : **ajouter un champ a `Etablissement`, c'est
+ * incrementer cette version.** Les accesseurs normalisent en plus `undefined` vers `null`, ce qui est
+ * la seconde ceinture.
+ */
+const CLE_CACHE = 'etablissements@2';
+/**
+ * Les colonnes lues, nommees une par une.
+ *
+ * **Toute colonne ajoutee au schema doit etre ajoutee ici**, sans quoi elle ne sera jamais lue et
+ * l'application se comportera comme si l'etablissement ne la declarait pas — un service qui
+ * disparait sans raison, ou un defaut qui se cherche du cote de la projection alors qu'il est dans la
+ * requete. Le corollaire vaut aussi : la table doit porter la colonne **avant** qu'une version de
+ * l'application qui la nomme n'arrive, sinon la lecture entiere echoue et le catalogue retombe sur le
+ * socle (supabase/README.md, « ajouter avant de retirer »).
+ */
 const COLONNES =
-    'code,nom,ville,logo_url,actif,portail_dossier,portail_messagerie,celcat_domaine,celcat_res_types,edt,salles,salles_libres,bibliotheques_points,services,libelles,ordre';
+    'code,nom,ville,logo_url,actif,portail_dossier,portail_messagerie,celcat_domaine,celcat_res_types,edt,salles,salles_libres,bibliotheques_points,services,libelles,crous_region,ordre';
 
 /** Ce que rend un rafraichissement : un resultat, jamais une exception. */
 export interface EtablissementsReport {
@@ -100,6 +152,32 @@ export async function loadEtablissements(): Promise<void> {
     } catch (error) {
         console.warn(`[etablissements] cache illisible : ${error instanceof Error ? error.message : String(error)}`);
     }
+}
+
+/**
+ * Installe les liens d'abonnement du trousseau, sans reseau.
+ *
+ * Appelee au demarrage a cote de `loadEtablissements()`, et pour la meme raison : `sourceEdt()` est
+ * synchrone et doit pouvoir repondre des le premier rendu. Un trousseau qui refuse de repondre laisse
+ * la table vide — l'ecran dira « colle ton lien » au lieu d'afficher un planning, ce qui est genant
+ * mais explicable, la ou une exception au demarrage ne le serait pas.
+ */
+export async function loadLiensEdt(): Promise<void> {
+    appliquerLiensEdt(lireLiens(await SecureStoreService.getEdtLiens()));
+}
+
+/**
+ * Enregistre — ou retire, avec `null` — le lien de l'etablissement selectionne.
+ *
+ * La memoire est posee **avant** l'ecriture : un ecran qui vient d'enregistrer doit voir son planning
+ * tout de suite, et le trousseau n'est pas sur le chemin d'un rendu. Une ecriture qui echoue laisse
+ * donc un lien valable pour la session en cours et perdu au redemarrage, ce qui est le moins mauvais
+ * des deux comportements possibles.
+ */
+export async function enregistrerLienEdt(lien: string | null): Promise<void> {
+    const table = fusionnerLiens(liensEdt(), getCodeEtablissementActif(), lien);
+    appliquerLiensEdt(table);
+    await SecureStoreService.saveEdtLiens(table);
 }
 
 /**

@@ -46,11 +46,16 @@ export function entreesCelcat(role: 'groupes' | 'salles'): EntreesCelcat | null 
     // refuser la fonctionnalite parce que leur emploi du temps vient d'ailleurs les priverait d'un
     // service qui leur sert reellement. L'emprunt ne concerne **que** les salles : l'emploi du temps
     // continue de venir de leur propre source (voir edt.ts).
-    if (role === 'salles' && etablissement.sallesLibres !== null) {
-        return etablissement.sallesLibres;
+    // `?? null` : un cache de catalogue anterieur au jalon qui a ajoute ce champ rend `undefined`, que
+    // `!== null` accepte — le run partirait alors avec un domaine `undefined`. Le meme defaut a ete
+    // mesure sur la region CROUS au jalon 6-J (catalogue.ts) ; la version de la cle de cache est la
+    // premiere ceinture, celle-ci la seconde.
+    const empruntees = etablissement.sallesLibres ?? null;
+    if (role === 'salles' && empruntees !== null) {
+        return empruntees;
     }
 
-    if (etablissement.celcatDomaine === null) return null;
+    if ((etablissement.celcatDomaine ?? null) === null) return null;
 
     return {
         domaine: etablissement.celcatDomaine,

@@ -212,20 +212,56 @@ revenant dans l'application.
   source qui a changé de contrat.
 - Un dimanche, ou un jour sans cours : la carte « pas de cours » doit s'afficher.
 
-## Les deux sources, et ce qui les départage
+## Les quatre états de l'emploi du temps
 
 Depuis le jalon [6-I](../phase-6/6-i-planning-universel.md), le catalogue déclare **ce qui existe** et
-[`sourceEdt()`](../../src/shared/etablissements/edt.ts) en tire la source à jouer :
+[`sourceEdt()`](../../src/shared/etablissements/edt.ts) en tire la source à jouer. Le jalon
+[6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md) en a fait une union **totale** — elle ne
+rend plus jamais `null` — ce qui force chaque consommateur à décider quoi faire de l'absence au lieu de
+la laisser tomber dans un `else` :
 
-| Le catalogue déclare | La source jouée | Les groupes viennent de |
-|---|---|---|
-| `celcat_domaine` | les quatre Blueprints `ukit.celcat.*` | un run — la liste complète du serveur |
-| `edt` (et pas de Celcat) | `ukit.portail.<code>.edt` et son frère `.annee` | le **référentiel du catalogue**, sans réseau |
-| ni l'un ni l'autre | aucune — `PLANNING_ABSENT`, aucun run ne part | — |
+| Le catalogue déclare | `kind` | La source jouée | Les groupes viennent de |
+|---|---|---|---|
+| `celcat_domaine` | `celcat` | les Blueprints `ukit.celcat.*` | un run — la liste complète du serveur |
+| `edt` avec son référentiel | `ical` | `ukit.portail.<code>.edt` et son frère `.annee` | le **référentiel du catalogue**, sans réseau |
+| `edt.abonnement`, lien collé | `abonnement` | `ukit.edt.abonnement` — un seul fichier, embarqué | **aucun** : le lien est déjà le planning de cet étudiant |
+| `edt.abonnement`, aucun lien | `lien-attendu` | aucune — `EDT_LIEN_ATTENDU`, et l'écran propose le geste | — |
+| rien | `aucun` | aucune — `PLANNING_ABSENT`, aucun run ne part | — |
 
-**Celcat gagne quand les deux sont déclarés**, et c'est écrit : un serveur interrogeable a une liste
-de groupes vivante, là où un référentiel iCalendar est un relevé d'auteur, forcément partiel.
-Préférer la source qui se corrige toute seule est le bon défaut.
+**Les deux derniers ne se confondent pas**, et c'est tout l'objet de 6-J : *« cette université n'a pas
+d'emploi du temps »* et *« elle en a un, il te manque un geste »* appellent deux gestes opposés de la
+part d'un étudiant. Le second porte donc un bouton là où le premier n'en a aucun.
+
+**L'ordre de préférence va du plus automatique au plus manuel.** Celcat gagne parce qu'un serveur
+interrogeable a une liste de groupes vivante ; le référentiel ensuite, parce qu'un étudiant y choisit
+encore son groupe ; l'abonnement en dernier, parce qu'il coûte un geste que personne n'a envie de
+faire. Il n'est pas le chemin principal — il est celui qui existe toujours.
+
+### Le lien d'abonnement collé, et pourquoi il est universel
+
+Le Blueprint [`ukit.edt.abonnement`](../../blueprints/ukit-edt-abonnement.blueprint.json) demande le
+lien **verbatim, sans bornes de dates**. C'est ce qui le rend universel : ADE accepte `firstDate` et
+`lastDate` en paramètres, mais d'autres produits figent la fenêtre à l'export, et un paramètre inconnu
+y est au mieux ignoré. Le filtrage par date est donc **applicatif** (`IcsMapping`), ce qui traite les
+deux cas avec le même fichier. Le [cas de parité](../../tools/parity/ical-abonnement.parity.mjs) le
+prouve contre la source réelle : les deux découpes rendent exactement les mêmes cours.
+
+Trois conséquences à connaître :
+
+- **le lien est un secret**, pas un réglage. Il ouvre un emploi du temps nominatif sans demander
+  d'identifiant, donc il vaut un mot de passe et vit dans le trousseau
+  ([`lienEdt.ts`](../../src/shared/etablissements/lienEdt.ts), clé `UKIT_EDT_LIENS`) ;
+- **il est cloisonné par établissement, pas effacé** à la bascule — même règle que les groupes favoris
+  ([settings.md](settings.md#des-favoris-par-établissement)). Seule la réinitialisation les efface tous ;
+- **une réponse entière coûte cher**, d'où un cache **en mémoire** de cinq minutes dans
+  `PlanningIcalSource`. Il est volontairement court : servir une salle déplacée pendant une heure serait
+  pire que de retélécharger. Il n'est pas sur disque — le cache par vue de `ScheduleList` couvre déjà
+  le hors-ligne, et ranger le même calendrier deux fois ferait deux copies à invalider.
+
+**Avec un abonnement, il n'y a pas de groupe**, et c'est une différence de nature : le lien est déjà
+l'emploi du temps de cet étudiant-là, filtré par son université. `groupesRequis()` le dit aux deux
+écrans qui traitent « aucun favori » comme un état vide à remplir — l'accueil et l'onglet Planning —
+sans quoi ils inviteraient à chercher un groupe dans une liste qui n'existe pas.
 
 Ce n'est **pas** une branche par établissement — aucun `if (etablissement === …)` n'apparaît nulle
 part — c'est une lecture de données, exactement comme l'hôte Celcat depuis le jalon 6-G.
@@ -237,7 +273,7 @@ séparés parce qu'un seul prédicat en gardait **trois** :
 
 | Prédicat | Ce qu'il garde | Ce dont il dépend |
 |---|---|---|
-| `planningDisponible()` | l'écran « pas d'emploi du temps », l'étape des groupes à l'accueil | Celcat **ou** iCalendar |
+| `planningDisponible()` | l'écran « pas d'emploi du temps », l'étape d'emploi du temps à l'accueil | Celcat, référentiel iCalendar **ou** abonnement |
 | `sallesDisponibles()` | la section **salles libres** du Campus | un inventaire de salles Celcat, propre ou **emprunté** |
 
 Les salles libres se reconstruisent depuis un inventaire Celcat, que l'emploi du temps vienne de là
@@ -303,10 +339,17 @@ interpréter.
 
 ## Quand l'établissement ne publie pas d'emploi du temps
 
-Ni `celcat_domaine` ni `edt` dans le catalogue veut dire « cette université ne publie pas son emploi du
-temps ici ». Le service rend alors `PLANNING_ABSENT` **sans qu'aucun run ne parte**, et l'écran affiche
-« Cette université ne publie pas encore son emploi du temps dans UKit » — sans bouton Réessayer, parce
-que rien n'est en panne et que la source ne répondra pas mieux dans dix secondes.
+Ni `celcat_domaine`, ni `edt`, ni `edt.abonnement` dans le catalogue veut dire « cette université ne
+publie pas son emploi du temps ici ». Le service rend alors `PLANNING_ABSENT` **sans qu'aucun run ne
+parte**, et l'écran affiche « Cette université ne publie pas encore son emploi du temps dans UKit » —
+sans bouton Réessayer, parce que rien n'est en panne et que la source ne répondra pas mieux dans dix
+secondes.
+
+**À ne pas confondre avec un lien attendu** (jalon 6-J). Un établissement qui déclare `edt.abonnement`
+sans qu'aucun lien n'ait été collé rend `EDT_LIEN_ATTENDU`, et l'écran porte alors **le geste qui le
+remplirait** : « Colle ton lien d'emploi du temps », avec un bouton. Rien n'est en panne là non plus —
+mais il manque quelque chose que l'étudiant peut faire, et le taire serait lui laisser croire que son
+université n'est pas couverte.
 
 Un cinquième cas s'y ajoute depuis 6-I : un favori dont la ressource **ne figure plus au
 référentiel**. Un relevé se périme à la rentrée suivante, et rendre une journée vide ferait passer un
@@ -410,7 +453,9 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
 | [`services/PlanningApiMapping.test.ts`](../../src/features/Planning/services/PlanningApiMapping.test.ts) | ses tests, joués par `npm test` |
 | [`services/IcsMapping.ts`](../../src/features/Planning/services/IcsMapping.ts) | la projection **iCalendar** : type ancré sur le code de module, salle en tête, couleur dérivée |
 | [`services/IcsMapping.test.ts`](../../src/features/Planning/services/IcsMapping.test.ts) | ses tests, sur des corps mesurés contre ADE |
-| [`services/PlanningIcalSource.ts`](../../src/features/Planning/services/PlanningIcalSource.ts) | la branche iCalendar : résolution des ressources par le référentiel, les deux runs |
+| [`services/PlanningIcalSource.ts`](../../src/features/Planning/services/PlanningIcalSource.ts) | la branche iCalendar : résolution des ressources par le référentiel, les deux runs bornés, le run d'abonnement et son cache, la vérification d'un lien collé |
+| [`components/LienEdtForm.tsx`](../../src/features/Planning/components/LienEdtForm.tsx) | la saisie d'un lien d'abonnement : vérification par un run réel, enregistrement, oubli. Un composant et non un écran — l'accueil le rend en place |
+| [`screens/LienEdtScreen.tsx`](../../src/features/Planning/screens/LienEdtScreen.tsx) | l'écran de pile qui porte ce formulaire, atteint depuis l'état vide du Planning et depuis les Réglages |
 | [`services/PlanningAssembly.ts`](../../src/features/Planning/services/PlanningAssembly.ts) | le contrat `PlanningEvent`, la lecture d'un code d'UE, le tri et le découpage en six jours — **communs aux deux sources** |
 | [`services/PlanningAssembly.test.ts`](../../src/features/Planning/services/PlanningAssembly.test.ts) | la règle du code d'UE sur les deux formes de titre |
-| [`services/PlanningDataManager.ts`](../../src/features/Planning/services/PlanningDataManager.ts) | manager observable : liste des groupes en cache 7 jours, extraction des UE disponibles |
+| [`services/PlanningDataManager.ts`](../../src/features/Planning/services/PlanningDataManager.ts) | manager observable : liste des groupes en cache 7 jours, extraction des UE disponibles, **rechargement au changement d'établissement** |

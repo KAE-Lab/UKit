@@ -19,7 +19,7 @@ import { Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
 import { loadBuildings } from './src/shared/locations';
-import { loadEtablissements } from './src/shared/etablissements';
+import { loadEtablissements, loadLiensEdt } from './src/shared/etablissements';
 import { PlanningDataManager } from './src/features/Planning/services/PlanningDataManager';
 import { CampusDataManager } from './src/features/Campus/services/CampusDataManager';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -46,15 +46,24 @@ function AnimatedAppLoader({ children }) {
 					SimpleLineIcons.font,
 					Entypo.font,
 				]);
-				// Les deux dernieres surcouches connues, depuis le cache et sans reseau : les
-				// batiments doivent etre complets des le premier rendu, et le catalogue doit pouvoir
-				// resoudre l'etablissement que `loadSettings` va poser juste apres — d'ou l'ordre.
-				// Les rafraichissements distants, eux, viennent apres (rootContainer).
+				// Les surcouches connues, depuis le cache et sans reseau : les batiments doivent etre
+				// complets des le premier rendu, et le catalogue doit pouvoir resoudre l'etablissement
+				// que `loadSettings` va poser juste apres. Les rafraichissements distants, eux,
+				// viennent apres (rootContainer).
 				await loadEtablissements();
+				await loadLiensEdt();
 				await loadBuildings();
+
+				// **Les reglages avant les managers**, et l'ordre inverse etait un defaut : ils
+				// chargent des donnees qui appartiennent a un etablissement, et c'est `loadSettings`
+				// qui dit lequel. Un etudiant de Bordeaux INP dont le cache de groupes avait expire
+				// voyait donc partir, au demarrage, une requete vers le serveur de Bordeaux — la seule
+				// source que le catalogue connaisse tant que le code n'est pas restaure — et la reponse
+				// ecrasait sa liste. Corrige au jalon 6-J, avec le meme defaut trouve du cote de la
+				// bascule d'etablissement (PlanningDataManager).
+				await SettingsManager.loadSettings();
 				await PlanningDataManager.loadData();
 				await CampusDataManager.loadData();
-				await SettingsManager.loadSettings();
 
 				await Promise.all([...imageAssets, ...fontAssets]);
 			} catch (e) {

@@ -27,6 +27,21 @@ demande une application, un compte ou une recherche.
 **UKit rassemble ces sources dans une seule application** — le kit de survie pour l'étudiant
 bordelais : rapide, sobre, et qui fonctionne hors ligne pour ce qui compte le plus, l'emploi du temps.
 
+### Le périmètre, parce qu'il décide de tout le reste
+
+**UKit vise les établissements du secteur bordelais, pas la France.** L'objectif est d'être *le* kit
+qu'un étudiant qui arrive à Bordeaux installe sans se poser la question — l'outil par défaut des
+étudiants bordelais — donc de couvrir **toutes les facs de Bordeaux**. Sortir de la région est un très
+long terme, pas un objectif.
+
+Cette phrase est écrite ici parce que son absence coûte cher : sans elle, on conçoit spontanément pour
+la France entière et on paie des généralisations que personne n'a demandées. Concrètement, elle
+autorise trois choses à rester bordelaises — la région CROUS, les points de balayage des
+bibliothèques, l'inventaire des salles libres — **tout en étant des données de catalogue** et non des
+constantes de code. La différence n'est pas cosmétique : une donnée se corrige par une publication le
+jour où l'hypothèse tombe, une constante demande une release. C'est la leçon des onze constantes
+bordelaises que le jalon [6-G](docs/phase-6/6-g-etablissements.md) a dû déterrer une par une.
+
 Trois principes portent le projet :
 
 - **Souveraineté.** Aucune dépendance à un service propriétaire payant. Les cartes sont rendues par
@@ -229,9 +244,10 @@ livré ; elle est mise à jour à chaque contribution.
   mono-université** : le catalogue vit en base, et **Bordeaux INP a été ajouté sans release** — une
   ligne en base, un Blueprint publié. Depuis 6-I, **il a aussi son emploi du temps**, par l'export
   iCalendar de son serveur ADE : une seconde source de planning, choisie par le catalogue, sans qu'un
-  seul écran apprenne qu'il en existe deux. Restent le compte à l'accueil (6-J), **la refonte
-  visuelle** (6-K et les sessions qui suivent) et la clôture (6-Z) :
-  [docs/phase-6/README.md](docs/phase-6/README.md).
+  seul écran apprenne qu'il en existe deux. Depuis 6-J, **le compte se propose dès l'accueil** et
+  l'application accepte un **lien d'abonnement collé** : une fac qu'on n'a pas portée devient
+  utilisable sans écrire une ligne. Restent **la refonte visuelle** (6-K et les sessions qui suivent)
+  et la clôture (6-Z) : [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
   et l'application démarre et s'utilise sans jamais la joindre. [docs/backend.md](docs/backend.md)
@@ -281,6 +297,13 @@ livré ; elle est mise à jour à chaque contribution.
   `ukit.portail.`, **le seul préfixe qu'un manifeste a le droit d'étendre** — et un service qu'un
   établissement ne publie pas se **dit** au lieu d'échouer.
   [docs/phase-6/6-g-etablissements.md](docs/phase-6/6-g-etablissements.md)
+- [x] **Le compte à l'accueil, et l'emploi du temps par lien collé** — la connexion au compte
+  universitaire est proposée dès le parcours d'accueil, **sautable et rappelée**, et omise chez un
+  établissement qui ne publie aucun portail. Pour l'emploi du temps, un **lien d'abonnement iCal collé
+  à la main** devient le repli universel : un seul Blueprint embarqué, aucune écriture par
+  établissement, et **« Mon université n'est pas dans la liste »** rend l'application utilisable pour
+  une fac bordelaise qu'on n'a pas portée — planning, restaurants, bibliothèques et salles libres
+  compris. [docs/phase-6/6-j-compte-et-sources-par-etablissement.md](docs/phase-6/6-j-compte-et-sources-par-etablissement.md)
 - [x] **Réglages** — langue, thème, filtres d'UE, rappels de cours avec délai réglable,
   synchronisation idempotente du calendrier système (tâche de fond toutes les 12 h), réinitialisation,
   À propos. [docs/features/settings.md](docs/features/settings.md)

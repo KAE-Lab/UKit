@@ -12,7 +12,7 @@ réellement partagé — et seulement cela — vit dans [`src/shared/`](../src/s
 
 La conséquence pratique : pour reprendre une fonctionnalité, on ouvre un seul dossier. Pour en
 supprimer une, on supprime un seul dossier. Les dépendances croisées entre features sont
-l'exception (une seule aujourd'hui, documentée plus bas).
+l'exception (quatre aujourd'hui, toutes documentées plus bas).
 
 ```text
 src/
@@ -37,7 +37,7 @@ src/
   shared/
     aetherius/      le moteur : façade, registre, secrets, modèle d'erreur, et leurs tests
     supabase/       la base de publication : client anonyme et types du schéma
-    etablissements/ le catalogue des universités : socle embarqué, surcouche publiée, purge
+    etablissements/ le catalogue des universités : socle embarqué, surcouche publiée, liens d'abonnement, purge
     constants/      URLs externes centralisées
     i18n/           Translator + dictionnaires fr / en / es
     map/            écran carte (Leaflet + OpenStreetMap en WebView)
@@ -82,10 +82,19 @@ Décrite par [`App.tsx`](../App.tsx), dans cet ordre exact :
 1. `SplashScreen.preventAutoHideAsync()` est appelé **au niveau module**, avant tout rendu, pour que
    le splash natif reste affiché pendant la préparation.
 2. `AnimatedAppLoader` prépare en parallèle : la police `Montserrat_500Medium`, le préchargement des
-   images et des jeux d'icônes vectorielles, puis — séquentiellement — `loadBuildings()`,
-   `PlanningDataManager.loadData()`, `CampusDataManager.loadData()`, `SettingsManager.loadSettings()`.
-   **Aucun des quatre ne touche le réseau** : ils lisent le magasin local, et ce qui doit être
-   rafraîchi l'est sans être attendu.
+   images et des jeux d'icônes vectorielles, puis — séquentiellement — `loadEtablissements()`,
+   `loadLiensEdt()`, `loadBuildings()`, `SettingsManager.loadSettings()`, puis
+   `PlanningDataManager.loadData()` et `CampusDataManager.loadData()`.
+   **Aucun ne touche le réseau** : ils lisent le magasin local, et ce qui doit être rafraîchi l'est
+   sans être attendu.
+
+   **L'ordre n'est pas indifférent, et il a été corrigé au jalon
+   [6-J](phase-6/6-j-compte-et-sources-par-etablissement.md).** Les deux managers chargent des données
+   qui appartiennent à **un** établissement, et c'est `loadSettings()` qui dit lequel — il restaure le
+   code persisté. Ils couraient avant lui : un étudiant de Bordeaux INP dont le cache de groupes avait
+   expiré voyait donc partir, au démarrage, une requête vers le serveur de **Bordeaux** — la seule
+   source que le catalogue connaisse tant que le code n'est pas restauré — et la réponse écrasait sa
+   liste. Le défaut ne se voyait qu'un jour sur sept, quand le cache expirait, ce qui l'a laissé vivre.
 3. Une fois prêt, `AnimatedSplashScreen` recouvre l'application d'une image identique au splash natif
    et la fait disparaître en fondu sur 1 s. C'est ce qui évite le clignotement entre splash natif et
    premier écran.
@@ -196,8 +205,26 @@ Une seule dépendance croisée existe, et elle est volontaire :
 - [`NotificationService.ts`](../src/shared/services/NotificationService.ts) importe les types du
   planning pour la même raison.
 
+Deux autres sont apparues au jalon [6-J](phase-6/6-j-compte-et-sources-par-etablissement.md), et elles
+sont volontaires pour la même raison — **le parcours d'accueil propose des gestes qui appartiennent à
+d'autres domaines** :
+
+- [`Onboarding/components/WelcomeSteps.tsx`](../src/features/Onboarding/components/WelcomeSteps.tsx)
+  importe `ScolariteLoginView` (Scolarité) et `LienEdtForm` (Planning). L'accueil demande le compte
+  universitaire et le lien d'emploi du temps ; recopier ces deux formulaires ferait **deux chemins vers
+  le même trousseau**, qui divergeraient à la première correction. C'est précisément pour rendre ce
+  partage possible que `CredentialsProvider` a remonté dans
+  [`rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx).
+- [`Onboarding/hooks/useWelcomeState.ts`](../src/features/Onboarding/hooks/useWelcomeState.ts) importe
+  `PlanningDataManager`. Celle-ci **est antérieure** à 6-J et n'était pas documentée ; elle l'est
+  maintenant, parce qu'une dépendance tue est plus dangereuse qu'une dépendance assumée.
+
 Toute autre dépendance croisée entre deux dossiers de `features/` est à éviter : passer par
 `shared/` ou par les paramètres de navigation.
+
+La règle qui départage, et qui a servi à trancher les deux ci-dessus : **on partage un composant quand
+le dupliquer créerait deux chemins vers le même état persistant.** Un rendu qu'on recopie coûte de la
+maintenance ; un accès au trousseau qu'on recopie coûte un défaut de sécurité.
 
 ## Carte des fichiers du socle
 
@@ -232,14 +259,17 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/locations/salles.test.ts`](../src/shared/locations/salles.test.ts) | les deux formes réelles, et la non-régression bordelaise |
 | [`shared/etablissements/catalogue.ts`](../src/shared/etablissements/catalogue.ts) | le catalogue : socle embarqué, projection d'une ligne, établissement actif, libellés propres à l'université ([features/settings.md](features/settings.md)) |
 | [`shared/etablissements/celcat.ts`](../src/shared/etablissements/celcat.ts) | ce que le catalogue fournit aux six Blueprints Celcat, et le prédicat des salles libres |
-| [`shared/etablissements/edt.ts`](../src/shared/etablissements/edt.ts) | quelle source d'emploi du temps l'établissement publie — Celcat, iCalendar, ou aucune — et les échecs qui en découlent |
+| [`shared/etablissements/edt.ts`](../src/shared/etablissements/edt.ts) | quelle source d'emploi du temps l'établissement publie — Celcat, référentiel iCalendar, abonnement collé, lien attendu, ou aucune — et les échecs qui en découlent |
 | [`shared/etablissements/edt.test.ts`](../src/shared/etablissements/edt.test.ts) | le choix de la source et la résolution partielle, joués par `npm test` |
-| [`shared/etablissements/index.ts`](../src/shared/etablissements/index.ts) | sa couture de plateforme : cache local, lecture de la table `etablissements`, purge au changement |
+| [`shared/etablissements/index.ts`](../src/shared/etablissements/index.ts) | sa couture de plateforme : cache local, lecture de la table `etablissements`, chargement et écriture des liens d'abonnement, purge au changement |
+| [`shared/etablissements/lienEdt.ts`](../src/shared/etablissements/lienEdt.ts) | les liens d'abonnement collés, **cloisonnés par établissement** : lecture défensive, fusion, lien actif ([features/planning.md](features/planning.md)) |
+| [`shared/etablissements/lienEdt.test.ts`](../src/shared/etablissements/lienEdt.test.ts) | le cloisonnement, dont une erreur ferait perdre un lien en silence — joué par `npm test` |
+| [`shared/etablissements/purge.ts`](../src/shared/etablissements/purge.ts) | ce qu'on efface en quittant un établissement, et ce que seule la réinitialisation efface |
 | [`shared/etablissements/catalogue.test.ts`](../src/shared/etablissements/catalogue.test.ts) | la projection et le repli sur le socle, joués par `npm test` |
 | [`shared/services/AppCore.tsx`](../src/shared/services/AppCore.tsx) | `AppContext`, `SettingsManager`, synchronisation calendrier, tâche de fond, utilitaires de lieux et de cours |
 | [`shared/services/CalendarSyncHelpers.ts`](../src/shared/services/CalendarSyncHelpers.ts) | les deux pièces « calendrier système » de la synchronisation, sorties d'`AppCore` au jalon [6-E](phase-6/6-e-planning.md) quand il a franchi les 400 lignes |
 | [`shared/services/NotificationService.ts`](../src/shared/services/NotificationService.ts) | planification des rappels de cours ([features/settings.md](features/settings.md)) |
-| [`shared/services/SecureStoreService.ts`](../src/shared/services/SecureStoreService.ts) | stockage chiffré des identifiants et des données étudiant |
+| [`shared/services/SecureStoreService.ts`](../src/shared/services/SecureStoreService.ts) | stockage chiffré des identifiants, des données étudiant et des liens d'abonnement |
 | [`shared/services/TimeMockService.ts`](../src/shared/services/TimeMockService.ts) | simulation temporelle pour la vérification manuelle ([qualite.md](qualite.md)) |
 | [`shared/services/NetworkMockService.ts`](../src/shared/services/NetworkMockService.ts) | l'interrupteur hors ligne : couper le réseau de l'application sans couper celui de l'appareil ([qualite.md](qualite.md)) |
 | [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | tokens, thèmes clair et sombre, styles partagés ([theme.md](theme.md)) |
@@ -252,7 +282,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/ModMenu.tsx`](../src/shared/ui/ModMenu.tsx) | menu flottant de développement : simulation temporelle et livraison ([qualite.md](qualite.md)) |
 | [`shared/ui/ModMenuBlueprints.tsx`](../src/shared/ui/ModMenuBlueprints.tsx) | son panneau de diagnostic de la livraison ([blueprints.md](blueprints.md)) |
 | [`shared/ui/OpenMapButton.tsx`](../src/shared/ui/OpenMapButton.tsx) | bouton d'ouverture de carte — non importé ([cartographie.md](cartographie.md)) |
-| [`shared/ui/SourceFailureNotice.tsx`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, tel qu'un écran le montre : message de la famille, bouton Réessayer seulement s'il répare ([blueprints.md](blueprints.md)) |
+| [`shared/ui/SourceFailureNotice.tsx`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, tel qu'un écran le montre : message de la famille, bouton Réessayer seulement s'il répare, ou l'**action** qui remplirait l'écran ([blueprints.md](blueprints.md)) |
 | [`shared/constants/urls.ts`](../src/shared/constants/urls.ts) | URLs externes : liens applicatifs (`URL`). Les points d'entrée Celcat en sont sortis au jalon [6-E](phase-6/6-e-planning.md) — ils vivent dans les Blueprints |
 | [`shared/utils/formatUtils.ts`](../src/shared/utils/formatUtils.ts) | `upperCaseFirstLetter` et `formatDescription` (nettoyage des descriptions Celcat) |
 

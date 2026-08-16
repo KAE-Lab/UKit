@@ -46,8 +46,15 @@ const fr: TranslationDict = {
 	// Un service que l'etablissement ne publie pas : rien n'est en panne, il n'y a rien a joindre.
 	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
 	ERROR_PORTAL_UNAVAILABLE: 'Cette université n’est pas encore reliée à UKit.',
+	// Le cas general de la meme famille : un service que cet etablissement ne propose pas. L'ecran le
+	// fait le plus souvent **disparaitre** plutot que de l'afficher ; le message existe pour les
+	// chemins ou il reste atteignable.
+	ERROR_SERVICE_ABSENT: 'Ce service n’est pas proposé pour ton établissement.',
 	ERROR_TIMETABLE_UNAVAILABLE: 'Cette université ne publie pas encore son emploi du temps dans UKit.',
 	ERROR_TIMETABLE_GROUP_UNKNOWN: "Ce groupe n'existe plus dans l'emploi du temps de ton université. Choisis-en un autre.",
+	// Distinct de ERROR_TIMETABLE_UNAVAILABLE, et c'est tout l'objet du jalon 6-J : la-bas rien
+	// n'existe, ici il manque un geste. Deux phrases, deux ecrans, deux gestes attendus.
+	ERROR_TIMETABLE_LINK_MISSING: 'Ton université publie son emploi du temps par un lien d’abonnement. Colle-le pour l’afficher ici.',
 	TIMETABLE_GROUPS_MISSING: 'Groupes introuvables, non affichés ici : $-',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
@@ -132,6 +139,28 @@ const fr: TranslationDict = {
 	INSTITUTION_CHANGE_TITLE: 'Changer d’établissement ?',
 	INSTITUTION_CHANGE_WARNING: 'Tes groupes favoris, ton planning en cache, ta session universitaire et les cours ajoutés à ton calendrier seront effacés.\nLes données de deux universités ne se mélangent pas.',
 	INSTITUTION_UNAVAILABLE: 'Ton établissement n’est plus proposé. UKit continue avec ce qu’il en sait.',
+	// Le compte a l'accueil et le lien d'abonnement (jalon 6-J).
+	UNIVERSITY_ACCOUNT: 'Compte universitaire',
+	ACCOUNT_CONNECTED: 'Connecté',
+	ACCOUNT_NOT_CONNECTED: 'Non connecté',
+	CONNECT_ACCOUNT_TITLE: 'Connecte ton compte universitaire',
+	CONNECT_ACCOUNT_DESC:
+		'Pour retrouver ton identité et tes messages. Tes identifiants restent sur ton téléphone, chiffrés, et ne sont envoyés à personne d’autre qu’à ton université.',
+	LATER: 'Plus tard',
+	TIMETABLE_LINK: 'Lien de l’emploi du temps',
+	TIMETABLE_LINK_TITLE: 'Colle ton lien d’emploi du temps',
+	TIMETABLE_LINK_DESC:
+		'Ton université publie son emploi du temps par un lien d’abonnement (iCal). Colle-le ici : il reste sur ton téléphone, chiffré, comme un mot de passe.',
+	TIMETABLE_LINK_PLACEHOLDER: 'https://…',
+	TIMETABLE_LINK_ADD: 'Coller mon lien',
+	TIMETABLE_LINK_CHECK: 'Vérifier et enregistrer',
+	TIMETABLE_LINK_CHECKING: 'Vérification…',
+	TIMETABLE_LINK_OK: 'Calendrier reconnu : $- cours.',
+	TIMETABLE_LINK_EMPTY: 'Ce calendrier ne porte aucun cours. Vérifie que le lien est bien le tien.',
+	TIMETABLE_LINK_INVALID:
+		'Ce lien ne rend pas un calendrier. Vérifie que tu as copié le lien d’abonnement (iCal), et non l’adresse de la page de ton agenda.',
+	TIMETABLE_LINK_FORGET: 'Oublier ce lien',
+	TIMETABLE_LINK_HELP: 'Où le trouver :',
 	YOUR_GROUP: 'Quel est ton groupe ?',
 	YOUR_LANGUAGE: 'Quelle est ta langue ?',
 	YOUR_SEMESTER: 'À quel semestre es-tu ?',

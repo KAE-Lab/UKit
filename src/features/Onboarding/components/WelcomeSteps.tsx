@@ -17,6 +17,13 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens } from '../../../shared/theme/Theme';
 import type { Etablissement } from '../../../shared/etablissements';
+// Deux dependances croisees entre features, et elles sont volontaires — voir la section
+// « Dependances entre features » de docs/architecture.md. L'accueil propose depuis le jalon 6-J deux
+// gestes qui appartiennent a d'autres domaines : se connecter au compte universitaire, et coller un
+// lien d'emploi du temps. Les recopier ici ferait deux formulaires vers le meme trousseau, qui
+// divergeraient a la premiere correction — exactement ce que le partage evite.
+import ScolariteLoginView from '../../Scolarite/components/ScolariteLoginView';
+import LienEdtForm from '../../Planning/components/LienEdtForm';
 
 type ThemeObj = Record<string, string>;
 
@@ -194,44 +201,57 @@ export const WelcomeGroupFooter = ({ themeObj, textFilter, filtres }) => {
     return <Text style={style}>{Translator.get('USE_SEARCH_BAR')}</Text>;
 };
 
-export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, filterList, selectGroup }) => (
+/**
+ * L'etape des groupes.
+ *
+ * `parAnnee` decide de la presence du tri annee/semestre, et c'est la **source** qui le dit, pas
+ * l'etablissement : Celcat publie plusieurs centaines de groupes qu'il faut reduire, un referentiel
+ * iCalendar en compte treize qui tiennent a l'ecran. Les pastilles s'appuyaient sur une table de
+ * fragments propre au nommage bordelais — les afficher ailleurs proposait un tri qui ne triait rien
+ * (jalon 6-J).
+ */
+export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, filterList, selectGroup, parAnnee = true }) => (
     <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: 140 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={{ ...carte(themeObj), marginBottom: 0 }}>
-            <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_YEAR')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: tokens.space.lg }}>
-                {yearList.map((yearEntry) => {
-                    const selected = navigatorState.year?.id === yearEntry.id;
-                    return (
-                        <TouchableOpacity
-                            key={yearEntry.id}
-                            onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)}
-                            style={{
-                                ...pastille(themeObj, selected),
-                                width: '48%',
-                                alignItems: 'center',
-                                paddingHorizontal: 0,
-                                marginRight: 0,
-                            }}
-                        >
-                            <Text style={texteDePastille(themeObj, selected)}>
-                                {Translator.get(yearEntry.title)} {yearEntry.suffix}
-                            </Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
+            {parAnnee && (
+                <>
+                    <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_YEAR')}</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: tokens.space.lg }}>
+                        {yearList.map((yearEntry) => {
+                            const selected = navigatorState.year?.id === yearEntry.id;
+                            return (
+                                <TouchableOpacity
+                                    key={yearEntry.id}
+                                    onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)}
+                                    style={{
+                                        ...pastille(themeObj, selected),
+                                        width: '48%',
+                                        alignItems: 'center',
+                                        paddingHorizontal: 0,
+                                        marginRight: 0,
+                                    }}
+                                >
+                                    <Text style={texteDePastille(themeObj, selected)}>
+                                        {Translator.get(yearEntry.title)} {yearEntry.suffix}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
 
-            <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_SEMESTER')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: tokens.space.lg }}>
-                {seasonList.map((seasonEntry) => {
-                    const selected = navigatorState.season?.id === seasonEntry.id;
-                    return (
-                        <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={pastille(themeObj, selected)}>
-                            <Text style={texteDePastille(themeObj, selected)}>{Translator.get(seasonEntry.title)}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
+                    <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_SEMESTER')}</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: tokens.space.lg }}>
+                        {seasonList.map((seasonEntry) => {
+                            const selected = navigatorState.season?.id === seasonEntry.id;
+                            return (
+                                <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={pastille(themeObj, selected)}>
+                                    <Text style={texteDePastille(themeObj, selected)}>{Translator.get(seasonEntry.title)}</Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </>
+            )}
 
             <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_GROUP')}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
@@ -256,6 +276,51 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
             />
         </View>
     </ScrollView>
+);
+
+/**
+ * L'etape du compte universitaire (jalon 6-J).
+ *
+ * Elle **n'a pas de mise en page a elle** : c'est le formulaire de l'onglet Scolarite, tel quel, avec
+ * sa sortie « Plus tard ». Deux formulaires vers le meme trousseau auraient diverge a la premiere
+ * correction, et c'est precisement pour rendre ce partage possible que `CredentialsProvider` a remonte
+ * au-dessus des deux branches (`rootContainer.tsx`).
+ */
+export const StepCompte = ({ themeObj, onSuivant }) => (
+    <View style={{ flex: 1, paddingTop: tokens.space.xxl }}>
+        {/*
+          * `onSkip` et `onSuccess` mènent au **même endroit** — l'étape suivante — et c'est voulu : le
+          * compte est proposé, pas exigé. Ce qui les distingue est ce qui se passe derrière, pas où
+          * l'on va. Sans `onSuccess`, le bouton restait figé sur « Connexion… » une fois la session
+          * réussie, parce que rien ne remplace cet écran ici (voir ScolariteLoginView).
+          */}
+        <ScolariteLoginView
+            theme={themeObj}
+            color={themeObj.primary}
+            topPadding={0}
+            onSkip={onSuivant}
+            onSuccess={onSuivant}
+            compact
+        />
+    </View>
+);
+
+/**
+ * L'etape « colle ton lien », pour un etablissement qui publie un abonnement (jalon 6-J).
+ *
+ * Elle rend le formulaire **en place** et non derriere une navigation : l'accueil vit hors de toute
+ * pile (`rootContainer.tsx`), il n'a nulle part ou pousser un ecran. C'est aussi ce qui a decide que
+ * la saisie soit un composant et pas un ecran.
+ */
+export const StepLienEdt = ({ onDone }) => (
+    <View style={{ flex: 1, paddingTop: tokens.space.xxl }}>
+        {/*
+          * `onDone` avance d'une etape. Sans lui, le bouton « Terminer » qui suit une verification
+          * reussie ne ferait **rien** — le formulaire l'utilise ailleurs pour refermer son ecran de
+          * pile, et un bouton mort au milieu d'un parcours d'accueil est pire que pas de bouton.
+          */}
+        <LienEdtForm onDone={onDone} />
+    </View>
 );
 
 export const StepFin = ({ themeObj }) => (

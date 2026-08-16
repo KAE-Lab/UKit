@@ -9,9 +9,10 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { planningDisponible, resoudreRessources, sourceEdt } from './edt';
+import { groupesRequis, planningDisponible, resoudreRessources, sourceEdt } from './edt';
 import { appliquerCatalogue, projeterEtablissement, setCodeEtablissementActif, ETABLISSEMENT_DEFAUT } from './catalogue';
 import type { EdtIcal } from './catalogue';
+import { appliquerLiensEdt } from './lienEdt';
 import type { EtablissementRow } from '../supabase/types';
 
 const CONFIG: EdtIcal = {
@@ -34,19 +35,20 @@ function publier(partial: Partial<EtablissementRow>): void {
 
 afterEach(() => {
     appliquerCatalogue(null);
+    appliquerLiensEdt(null);
     setCodeEtablissementActif(ETABLISSEMENT_DEFAUT);
 });
 
 describe('sourceEdt', () => {
-    it('rend null quand l etablissement ne publie ni Celcat ni iCalendar', () => {
+    it('rend « aucun » quand l etablissement ne publie rien', () => {
         publier({});
-        expect(sourceEdt()).toBeNull();
+        expect(sourceEdt().kind).toBe('aucun');
         expect(planningDisponible()).toBe(false);
     });
 
     it('rend la source iCalendar quand elle est seule', () => {
         publier({ edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [] } });
-        expect(sourceEdt()?.kind).toBe('ical');
+        expect(sourceEdt().kind).toBe('ical');
         expect(planningDisponible()).toBe(true);
     });
 
@@ -57,7 +59,65 @@ describe('sourceEdt', () => {
             celcat_domaine: 'https://celcat.exemple.fr/calendar',
             edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [] },
         });
-        expect(sourceEdt()?.kind).toBe('celcat');
+        expect(sourceEdt().kind).toBe('celcat');
+    });
+
+    /**
+     * Le coeur du jalon 6-J : « cette universite n'a pas d'emploi du temps » et « elle en a un, il te
+     * manque un geste » sont **deux etats**, pas un seul. Les confondre afficherait une phrase
+     * d'excuse la ou il faut un bouton — deux gestes opposes de la part d'un etudiant.
+     */
+    it('distingue un lien attendu d une absence d emploi du temps', () => {
+        publier({ edt: { abonnement: {} } });
+
+        expect(sourceEdt().kind).toBe('lien-attendu');
+        // Disponible, et c'est voulu : l'universite en a bien un. Ce qui change est le contenu de
+        // l'etape d'accueil, pas sa presence.
+        expect(planningDisponible()).toBe(true);
+    });
+
+    it('rend l abonnement des qu un lien est pose', () => {
+        publier({ edt: { abonnement: { aide: 'ADE, Exporter mon agenda' } } });
+        appliquerLiensEdt({ essai: 'https://exemple.fr/agenda.ics' });
+
+        const source = sourceEdt();
+        expect(source.kind).toBe('abonnement');
+        expect(source.kind === 'abonnement' && source.lien).toBe('https://exemple.fr/agenda.ics');
+        expect(source.kind === 'abonnement' && source.config.aide).toBe('ADE, Exporter mon agenda');
+    });
+
+    it('ne prend pas le lien d un autre etablissement', () => {
+        // Le cloisonnement, vu depuis la source : un lien colle chez une fac ne doit jamais servir
+        // sous une autre, sans quoi on afficherait le planning de l'universite quittee.
+        publier({ edt: { abonnement: {} } });
+        appliquerLiensEdt({ 'une-autre-fac': 'https://exemple.fr/agenda.ics' });
+
+        expect(sourceEdt().kind).toBe('lien-attendu');
+    });
+
+    it('prefere le referentiel a l abonnement quand les deux existent', () => {
+        // Du plus automatique au plus manuel : coller un lien coute un geste que personne n'a envie de
+        // faire, il ne doit donc jamais gagner sur une liste de groupes qui marche.
+        publier({ edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [], abonnement: {} } });
+        expect(sourceEdt().kind).toBe('ical');
+    });
+});
+
+describe('groupesRequis', () => {
+    it('est faux pour un abonnement : le lien EST le planning de cet etudiant', () => {
+        // Sans cette distinction, l'onglet Planning afficherait « ton planning est vide, cherche un
+        // groupe » a quelqu'un dont la source n'a aucune notion de groupe.
+        publier({ edt: { abonnement: {} } });
+        appliquerLiensEdt({ essai: 'https://exemple.fr/agenda.ics' });
+        expect(groupesRequis()).toBe(false);
+    });
+
+    it('est vrai pour Celcat et pour un referentiel iCalendar', () => {
+        publier({ celcat_domaine: 'https://celcat.exemple.fr/calendar' });
+        expect(groupesRequis()).toBe(true);
+
+        publier({ edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [] } });
+        expect(groupesRequis()).toBe(true);
     });
 });
 

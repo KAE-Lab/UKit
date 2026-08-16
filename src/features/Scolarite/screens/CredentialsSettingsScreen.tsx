@@ -8,7 +8,10 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
+import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import { useCredentials } from '../services/CredentialsContext';
+import { portailAbsent } from '../services/ScolariteSession';
+import ScolariteLoginView from '../components/ScolariteLoginView';
 
 const InfoRow = ({ label, value, theme }) => (
     <View style={styles.infoRow}>
@@ -32,14 +35,86 @@ const SectionCard = ({ title, children, theme }) => (
     </View>
 );
 
+/** Les identifiants enregistres, dont le mot de passe que la biometrie seule devoile. */
+const IdentifiantsSection = ({ theme, credentials, passwordVisible, onTogglePassword }) => (
+    <SectionCard title={Translator.get('CREDENTIALS_SETTINGS')} theme={theme}>
+        <InfoRow label={Translator.get('USERNAME')} value={credentials?.username} theme={theme} />
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}>
+                {Translator.get('PASSWORD')}
+            </Text>
+            <View style={styles.passwordRow}>
+                <Text style={[styles.infoValue, { color: theme.font, fontFamily: 'Montserrat_600SemiBold', flex: 1 }]} numberOfLines={1}>
+                    {passwordVisible ? credentials?.password : '••••••••'}
+                </Text>
+                <TouchableOpacity onPress={onTogglePassword} hitSlop={8}>
+                    <MaterialCommunityIcons
+                        name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
+                        size={20}
+                        color={theme.fontSecondary}
+                    />
+                </TouchableOpacity>
+            </View>
+        </View>
+    </SectionCard>
+);
+
+/** L'etablissement ne publie aucun portail : il n'y a pas de compte a regler ici. */
+const PortailAbsent = ({ theme }) => (
+    <SafeAreaInsetsContext.Consumer>
+        {(insets) => (
+            <View style={{ flex: 1, justifyContent: 'center', backgroundColor: theme.background, paddingTop: (insets?.top || 0) + 65 }}>
+                <SourceFailureNotice failure={portailAbsent()} theme={theme} />
+            </View>
+        )}
+    </SafeAreaInsetsContext.Consumer>
+);
+
+/**
+ * Aucun compte enregistre : on propose de se connecter, pas une fiche vide.
+ *
+ * C'est le meme formulaire que partout ailleurs, et il referme l'ecran une fois la session partie —
+ * on revient donc la d'ou l'on venait, le plus souvent les Reglages.
+ */
+const CompteADemander = ({ theme, onSuccess }) => (
+    <SafeAreaInsetsContext.Consumer>
+        {(insets) => (
+            <View style={{ flex: 1, backgroundColor: theme.background }}>
+                <ScolariteLoginView
+                    theme={theme}
+                    color={theme.accent ?? theme.primary}
+                    topPadding={(insets?.top || 0) + 65}
+                    onSuccess={onSuccess}
+                    compact
+                />
+            </View>
+        )}
+    </SafeAreaInsetsContext.Consumer>
+);
+
+/**
+ * Les reglages du compte universitaire : ce qui est enregistre, et la deconnexion.
+ *
+ * **Sans compte, il propose de se connecter** au lieu d'afficher sa fiche vide. L'ecran a toujours
+ * suppose qu'on y arrivait connecte — c'etait vrai tant que son seul chemin etait le bouton d'action
+ * de l'onglet Scolarite, qui n'existe qu'apres une session. Le jalon 6-J y ajoute une entree depuis
+ * les Reglages, atteignable a tout moment : la fiche s'affichait alors avec six tirets et un bouton
+ * « Se deconnecter » qui n'avait rien a deconnecter. Mesure sur appareil.
+ *
+ * Voir docs/features/scolarite.md.
+ */
 const CredentialsSettingsScreen = () => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     const navigation = useNavigation();
 
-    const { credentials, coldData, logout } = useCredentials();
+    const { credentials, coldData, logout, portailDisponible } = useCredentials();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
+
+    if (!portailDisponible) return <PortailAbsent theme={theme} />;
+    if (!credentials) return <CompteADemander theme={theme} onSuccess={() => navigation.goBack()} />;
 
     const handleShowPassword = async () => {
         if (passwordVisible) {
@@ -93,28 +168,12 @@ const CredentialsSettingsScreen = () => {
                                 <InfoRow label={Translator.get('STUDENT_EMAIL')} value={coldData?.emailAddress} theme={theme} />
                             </SectionCard>
 
-                            {/* Section Identifiants */}
-                            <SectionCard title={Translator.get('CREDENTIALS_SETTINGS')} theme={theme}>
-                                <InfoRow label={Translator.get('USERNAME')} value={credentials?.username} theme={theme} />
-                                <View style={[styles.divider, { backgroundColor: theme.border }]} />
-                                <View style={styles.infoRow}>
-                                    <Text style={[styles.infoLabel, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}>
-                                        {Translator.get('PASSWORD')}
-                                    </Text>
-                                    <View style={styles.passwordRow}>
-                                        <Text style={[styles.infoValue, { color: theme.font, fontFamily: 'Montserrat_600SemiBold', flex: 1 }]} numberOfLines={1}>
-                                            {passwordVisible ? credentials?.password : '••••••••'}
-                                        </Text>
-                                        <TouchableOpacity onPress={handleShowPassword} hitSlop={8}>
-                                            <MaterialCommunityIcons
-                                                name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
-                                                size={20}
-                                                color={theme.fontSecondary}
-                                            />
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            </SectionCard>
+                            <IdentifiantsSection
+                                theme={theme}
+                                credentials={credentials}
+                                passwordVisible={passwordVisible}
+                                onTogglePassword={handleShowPassword}
+                            />
 
                             {/* Bouton déconnexion */}
                             <TouchableOpacity

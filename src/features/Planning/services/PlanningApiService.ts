@@ -28,7 +28,7 @@ import moment from 'moment';
 import type { AbortSignalLike } from '@aetherius/engine';
 
 import { BLUEPRINT, reportFailure, runBlueprint, type UkitFailure } from '../../../shared/aetherius';
-import { planningAbsent, sourceEdt, type SourceEdt } from '../../../shared/etablissements';
+import { lienEdtAttendu, planningAbsent, sourceEdt, type SourceEdt } from '../../../shared/etablissements';
 import { decouperSemaineIcs, projeterAnneeIcs, projeterJourIcs } from './IcsMapping';
 import {
     decouperSemaine,
@@ -39,6 +39,7 @@ import {
 } from './PlanningApiMapping';
 import {
     groupesDuReferentiel,
+    jouerAbonnement,
     jouerAnnee,
     jouerPlage,
     plageSemaine,
@@ -92,9 +93,24 @@ function commeCible(groupe: CibleGroupe): string[] {
     return Array.isArray(groupe) ? groupe : [groupe];
 }
 
-/** La source declaree, ou l'echec « cet etablissement ne publie pas d'emploi du temps ». */
-function source(): SourceEdt | { readonly failure: UkitFailure } {
-    return sourceEdt() ?? { failure: planningAbsent() };
+/**
+ * La source jouable, ou l'echec qui explique pourquoi il n'y en a pas.
+ *
+ * Les deux arbres « rien a jouer » de `sourceEdt()` deviennent ici **deux echecs distincts**, et c'est
+ * tout l'objet du jalon 6-J : `PLANNING_ABSENT` veut dire « cette universite n'a pas d'emploi du temps
+ * », `EDT_LIEN_ATTENDU` veut dire « elle en a un, il te manque un geste ». Les confondre afficherait
+ * une phrase d'excuse la ou il faut un bouton.
+ *
+ * Aucun run ne part dans ni l'un ni l'autre cas : rien n'est en panne, et les deux echecs sont de
+ * famille `config`, donc sans bouton Reessayer.
+ */
+type SourceJouable = Exclude<SourceEdt, { kind: 'lien-attendu' } | { kind: 'aucun' }>;
+
+function source(): SourceJouable | { readonly failure: UkitFailure } {
+    const edt = sourceEdt();
+    if (edt.kind === 'aucun') return { failure: planningAbsent() };
+    if (edt.kind === 'lien-attendu') return { failure: lienEdtAttendu() };
+    return edt;
 }
 
 /** Les bornes de l'annee scolaire courante. Elle bascule au 1er aout, d'ou l'heure courante ici. */
@@ -116,10 +132,15 @@ class PlanningApiServiceClass {
      *
      * Chez Celcat elle vient d'un run, filtree et triee ; par l'export iCalendar elle vient du
      * **referentiel du catalogue**, sans reseau — ADE n'expose aucun arbre de ressources anonyme.
+     *
+     * Par un abonnement colle, **il n'y en a pas** : le lien est deja l'emploi du temps de cet
+     * etudiant-la, nominatif et filtre par son universite. Une liste vide est donc le bon resultat, et
+     * non un echec — les ecrans qui proposent de chercher un groupe se taisent par `groupesRequis()`.
      */
     fetchGroupList = async (options: PlanningRunOptions = {}): Promise<GroupListResult> => {
         const edt = source();
         if ('failure' in edt) return { ok: false, failure: edt.failure };
+        if (edt.kind === 'abonnement') return { ok: true, groups: [] };
         if (edt.kind === 'ical') return { ok: true, groups: groupesDuReferentiel(edt.config) };
 
         const run = await runBlueprint(BLUEPRINT.CELCAT_GROUPES, { inputs: { ...edt.entrees }, ...options });
@@ -145,6 +166,14 @@ class PlanningApiServiceClass {
     ): Promise<PlanningDayResult> => {
         const edt = source();
         if ('failure' in edt) return { ok: false, failure: edt.failure };
+
+        if (edt.kind === 'abonnement') {
+            // Le calendrier arrive **entier** : un lien colle ne prend pas de bornes, c'est ce qui le
+            // rend universel. La journee se decoupe donc ici, et `moment(date)` lit la date locale.
+            const run = await jouerAbonnement(edt.lien, options);
+            if (run.ok === false) return { ok: false, failure: run.failure };
+            return { ok: true, courses: projeterJourIcs(run.ics, group, moment(date)) };
+        }
 
         if (edt.kind === 'ical') {
             // Les bornes d'ADE sont inclusives : une journee se demande par `debut = fin`.
@@ -178,6 +207,12 @@ class PlanningApiServiceClass {
         // besoin de l'heure courante, qu'un Blueprint n'a pas et ne doit pas avoir.
         const lundi = moment().year(week.year).isoWeek(week.week).startOf('week');
 
+        if (edt.kind === 'abonnement') {
+            const run = await jouerAbonnement(edt.lien, options);
+            if (run.ok === false) return { ok: false, failure: run.failure };
+            return { ok: true, week: decouperSemaineIcs(run.ics, group, lundi) };
+        }
+
         if (edt.kind === 'ical') {
             const run = await jouerPlage(edt.config, group, plageSemaine(lundi), options);
             if (run.ok === false) return { ok: false, failure: run.failure };
@@ -210,6 +245,14 @@ class PlanningApiServiceClass {
         if ('failure' in edt) return { ok: false, failure: edt.failure };
 
         const { debut, fin } = anneeScolaire();
+
+        if (edt.kind === 'abonnement') {
+            // Rien a borner : la reponse porte deja tout ce que l'etablissement publie, et la
+            // synchronisation veut precisement toute l'annee.
+            const run = await jouerAbonnement(edt.lien, options);
+            if (run.ok === false) return { ok: false, failure: run.failure };
+            return { ok: true, courses: projeterAnneeIcs(run.ics, group) };
+        }
 
         if (edt.kind === 'ical') {
             const plage = { debut: debut.format('YYYY-MM-DD'), fin: fin.format('YYYY-MM-DD') };

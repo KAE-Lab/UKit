@@ -33,6 +33,15 @@ interface InstitutionSectionProps {
     /** L'etablissement selectionne a disparu du catalogue publie : l'utilisateur doit le savoir. */
     institutionRetiree: boolean;
     openInstitutionDialog: () => void;
+    /** L'etablissement publie-t-il un portail ? Sans lui, il n'y a pas de compte a proposer. */
+    comptePossible: boolean;
+    /** Le compte universitaire est-il connecte ? C'est le **rappel** de l'etape sautee a l'accueil. */
+    compteConnecte: boolean;
+    openCompte: () => void;
+    /** L'etablissement attend-il un lien d'abonnement ? Absent partout ailleurs. */
+    lienEdtPossible: boolean;
+    lienEdtPose: boolean;
+    openLienEdt: () => void;
 }
 
 /**
@@ -45,7 +54,10 @@ interface InstitutionSectionProps {
  * L'avertissement de retrait est **une phrase, pas une bascule** : l'application continue sur ce
  * qu'elle sait de l'etablissement plutot que de renvoyer quelqu'un ailleurs au milieu de son annee.
  */
-export const InstitutionSection = ({ themeSettings, theme, institutionName, institutionRetiree, openInstitutionDialog }: InstitutionSectionProps) => (
+export const InstitutionSection = ({
+    themeSettings, theme, institutionName, institutionRetiree, openInstitutionDialog,
+    comptePossible, compteConnecte, openCompte, lienEdtPossible, lienEdtPose, openLienEdt,
+}: InstitutionSectionProps) => (
     <>
         <SettingsTextHeader theme={themeSettings} text={Translator.get('INSTITUTION')} />
         <Button
@@ -55,6 +67,31 @@ export const InstitutionSection = ({ themeSettings, theme, institutionName, inst
             leftText={Translator.get('INSTITUTION')}
             rightText={institutionName}
         />
+        {/*
+          * Le rappel du compte (jalon 6-J). L'etape de l'accueil se saute, et la specification
+          * demandait « une etape sautable **et rappelee** » : c'est ici que le rappel vit, avec le
+          * reglage dont il depend. Il disparait chez un etablissement sans portail — un compte qu'on
+          * ne peut pas connecter n'est pas un reglage, c'est une promesse en l'air.
+          */}
+        {comptePossible && (
+            <Button
+                theme={themeSettings}
+                onPress={openCompte}
+                leftIcon="account-circle"
+                leftText={Translator.get('UNIVERSITY_ACCOUNT')}
+                rightText={Translator.get(compteConnecte ? 'ACCOUNT_CONNECTED' : 'ACCOUNT_NOT_CONNECTED')}
+            />
+        )}
+        {/* Le lien d'abonnement, la ou il y en a un a poser — et nulle part ailleurs. */}
+        {lienEdtPossible && (
+            <Button
+                theme={themeSettings}
+                onPress={openLienEdt}
+                leftIcon="event-note"
+                leftText={Translator.get('TIMETABLE_LINK')}
+                rightText={Translator.get(lienEdtPose ? 'ACCOUNT_CONNECTED' : 'ACCOUNT_NOT_CONNECTED')}
+            />
+        )}
         {institutionRetiree && (
             <Text style={{
                 color: theme.fontSecondary,

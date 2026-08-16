@@ -11,11 +11,11 @@ import { DayWeek } from './DayWeekCollapsible';
 import { groupOverlappingCourses } from './ScheduleListUtils';
 
 import { ErrorAlert } from '../../../shared/ui/Alerts';
-import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
+import { SourceFailureNotice, type NoticeAction } from '../../../shared/ui/SourceFailureNotice';
 import Translator from '../../../shared/i18n/Translator';
 import { isConnected } from '../../../shared/services/AppCore'
 import { ukitFailure, type UkitFailure } from '../../../shared/aetherius';
-import { planningAbsent, planningDisponible } from '../../../shared/etablissements';
+import { groupesRequis, lienEdtAttendu, planningAbsent, sourceEdt } from '../../../shared/etablissements';
 import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
 import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../../shared/services/AppCore';
@@ -154,7 +154,10 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         if (this.state.loading && this.state.controller) this.state.controller.abort();
 
         const groupName = this.state.groupName;
-        if (Array.isArray(groupName) && groupName.length === 0) {
+        // Aucun favori et une source qui en attend : il n'y a rien a demander. Avec un abonnement
+        // colle, en revanche, l'absence de favori est **normale** — le lien porte deja le planning de
+        // l'etudiant — et sortir ici laisserait l'onglet vide pour toujours.
+        if (groupesRequis() && Array.isArray(groupName) && groupName.length === 0) {
             this.setState({ schedule: [], loading: false, controller: null, failure: null });
             return;
         }
@@ -403,24 +406,47 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
      * Avant ce jalon, ce cas laissait l'indicateur de chargement tourner indefiniment : une source en
      * panne et un chargement lent etaient le meme ecran. Le bouton Reessayer n'apparait que si la
      * famille le justifie — c'est la table de shared/aetherius/failures.ts qui decide.
+     *
+     * `action` porte le geste **qui remplirait l'ecran** quand il en existe un, et il n'a rien a voir
+     * avec une reprise : reessayer repare une panne, une action repare une absence.
      */
-    renderFailure(failure: UkitFailure) {
+    renderFailure(failure: UkitFailure, action?: NoticeAction) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.xxl }}>
-                <SourceFailureNotice failure={failure} theme={this.props.theme} onRetry={this.fetchSchedule} />
+                <SourceFailureNotice
+                    failure={failure}
+                    theme={this.props.theme}
+                    onRetry={this.fetchSchedule}
+                    {...(action !== undefined ? { action } : {})}
+                />
             </View>
         );
     }
 
     renderContent(listHeader: React.ReactNode) {
-        // L'absence d'emploi du temps gagne sur tout le reste, et l'ordre n'est pas indifferent :
-        // une universite qui n'en publie pas n'a jamais de groupes favoris, donc l'ecran « ton
+        // Ce que l'etablissement publie gagne sur tout le reste, et l'ordre n'est pas indifferent :
+        // une universite sans emploi du temps n'a jamais de groupes favoris, donc l'ecran « ton
         // planning est vide » s'afficherait toujours — avec un bouton menant a une recherche de
         // groupes qui ne peut rien trouver. Constate sur appareil en verifiant le jalon 6-G.
-        if (!planningDisponible()) {
+        //
+        // Le jalon 6-J y ajoute la distinction qui manquait : « cette universite n'a pas d'emploi du
+        // temps » et « elle en a un, il te manque un geste » sont deux ecrans, parce qu'ils appellent
+        // deux gestes opposes. Le second porte donc un bouton la ou le premier n'en a aucun.
+        const source = sourceEdt();
+        if (source.kind === 'aucun') {
             return this.renderFailure(planningAbsent());
         }
-        if (Array.isArray(this.state.groupName) && this.state.groupName.length === 0) {
+        if (source.kind === 'lien-attendu') {
+            return this.renderFailure(lienEdtAttendu(), {
+                label: Translator.get('TIMETABLE_LINK_ADD'),
+                onPress: () => this.props.navigation?.navigate('LienEdt'),
+                icon: 'link-variant-plus',
+            });
+        }
+        // Un abonnement colle **est** l'emploi du temps de cet etudiant-la : il n'y a pas de groupe a
+        // choisir, donc pas d'etat « aucun favori » a afficher. Sans cette garde, l'ecran inviterait a
+        // chercher un groupe dans une liste vide par construction.
+        if (groupesRequis() && Array.isArray(this.state.groupName) && this.state.groupName.length === 0) {
             return this.renderEmptyFavorites();
         } else if (this.state.failure !== null && this.state.failure.silent !== true) {
             return this.renderFailure(this.state.failure);

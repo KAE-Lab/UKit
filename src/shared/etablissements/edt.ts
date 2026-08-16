@@ -22,40 +22,71 @@
 // L'import vise `../aetherius/failures` et non la porte d'entree `../aetherius` : celle-ci
 // re-exporte la facade, qui tire React Native. Meme frontiere que shared/supabase/failures.ts.
 import { serviceAbsent, type UkitFailure } from '../aetherius/failures';
-import { getEtablissementActif, type EdtIcal } from './catalogue';
+import { getEtablissementActif, type EdtAbonnement, type EdtIcal } from './catalogue';
 import { entreesCelcat, type EntreesCelcat } from './celcat';
+import { lienEdtActif } from './lienEdt';
 
 /** Le groupe interroge : une chaine, ou la liste des favoris pour le planning agrege. */
 type CibleGroupe = string | string[];
 
 /**
- * La source a jouer, deja resolue.
+ * L'etat de l'emploi du temps de l'etablissement selectionne : ce qu'il y a a jouer, ou ce qui manque.
  *
- * Une union discriminee plutot que deux accesseurs : le service doit traiter **les deux** cas, et un
- * `if (celcat !== null) … else if (ical !== null) …` laisserait au prochain appelant le soin de se
- * souvenir qu'il en existe deux.
+ * Une union discriminee plutot que plusieurs accesseurs : le service doit traiter **tous** les cas, et
+ * une cascade de `if (x !== null)` laisserait au prochain appelant le soin de se souvenir combien il
+ * y en a. Elle est **totale** depuis le jalon 6-J — elle ne rend plus jamais `null` — et c'est ce qui
+ * force chaque consommateur a decider quoi faire de l'absence au lieu de la laisser tomber dans un
+ * `else`.
+ *
+ * Les deux derniers arbres sont la nouveaute du jalon, et leur distinction est tout son objet :
+ * `lien-attendu` veut dire *cette universite a un emploi du temps, il te manque un geste*, quand
+ * `aucun` veut dire *elle n'en a pas*. Les confondre afficherait une phrase d'excuse la ou il fallait
+ * un bouton — deux gestes opposes de la part d'un etudiant.
  *
  * **Se teste avec `source.kind === 'ical'`**, jamais par la presence d'un champ : sans
  * `strictNullChecks`, TypeScript ne restreint pas une union autrement (docs/qualite.md).
  */
 export type SourceEdt =
     | { readonly kind: 'celcat'; readonly entrees: EntreesCelcat }
-    | { readonly kind: 'ical'; readonly config: EdtIcal };
+    | { readonly kind: 'ical'; readonly config: EdtIcal }
+    | { readonly kind: 'abonnement'; readonly config: EdtAbonnement; readonly lien: string }
+    | { readonly kind: 'lien-attendu'; readonly config: EdtAbonnement }
+    | { readonly kind: 'aucun' };
 
 /**
- * La source d'emploi du temps de l'etablissement selectionne, ou `null` s'il n'en publie aucune.
+ * La source d'emploi du temps de l'etablissement selectionne, ou ce qui l'empeche.
  *
  * Synchrone, comme tout le catalogue : quatre services la lisent avant d'emettre un run, et un
  * `await` de plus sur ce chemin ne servirait personne.
+ *
+ * **L'ordre de preference va du plus automatique au plus manuel**, et il compte :
+ *
+ *   1. **Celcat**, quand il est declare : un serveur interrogeable donne une liste de groupes vivante
+ *      et une recherche qui trouve, la ou tout le reste est un releve ou un geste ;
+ *   2. **le referentiel iCalendar** (jalon 6-I) : l'etudiant choisit encore son groupe dans une liste,
+ *      meme si celle-ci a ete relevee a la main ;
+ *   3. **l'abonnement colle** : il marche partout, et il coute un geste que personne n'a envie de
+ *      faire. C'est pourquoi il vient en dernier — il est celui qui existe toujours, pas le chemin
+ *      principal.
  */
-export function sourceEdt(): SourceEdt | null {
+export function sourceEdt(): SourceEdt {
     const celcat = entreesCelcat('groupes');
     if (celcat !== null) return { kind: 'celcat', entrees: celcat };
 
-    const edt = getEtablissementActif().edt;
+    // `?? null` sur les deux : un cache de catalogue ecrit avant qu'un de ces champs n'existe rend
+    // `undefined`, que `!== null` accepte — et l'application croirait alors a un abonnement la ou il
+    // n'y en a pas. Meme cause que la region CROUS rendue `None` (catalogue.ts).
+    const etablissement = getEtablissementActif();
+    const edt = etablissement.edt ?? null;
     if (edt !== null) return { kind: 'ical', config: edt };
 
-    return null;
+    const abonnement = etablissement.edtAbonnement ?? null;
+    if (abonnement !== null) {
+        const lien = lienEdtActif();
+        return lien === null ? { kind: 'lien-attendu', config: abonnement } : { kind: 'abonnement', config: abonnement, lien };
+    }
+
+    return { kind: 'aucun' };
 }
 
 /**
@@ -89,9 +120,32 @@ export function resoudreRessources(
     return { ressources: index.join(','), manquants };
 }
 
-/** L'etablissement selectionne publie-t-il un emploi du temps ? Ce que les ecrans lisent pour se taire. */
+/**
+ * L'etablissement selectionne publie-t-il un emploi du temps ? Ce que les ecrans lisent pour se taire.
+ *
+ * **`lien-attendu` compte comme disponible**, et c'est volontaire : l'universite en a bien un, et
+ * l'accueil doit donc garder son etape pour proposer le collage. Ce qui change entre les deux n'est
+ * pas la presence de l'etape mais **son contenu** — une liste de groupes, ou un champ de lien.
+ */
 export function planningDisponible(): boolean {
-    return sourceEdt() !== null;
+    return sourceEdt().kind !== 'aucun';
+}
+
+/**
+ * L'emploi du temps de cet etablissement passe-t-il par un **choix de groupe** ?
+ *
+ * Faux pour un abonnement colle, et c'est une difference de nature, pas de degre : le lien **est**
+ * l'emploi du temps de cet etudiant-la, nominatif, deja filtre par son universite. Il n'y a pas de
+ * groupe a choisir, donc pas de favoris a avoir — et les deux ecrans qui traitent « aucun favori »
+ * comme un etat vide a remplir (l'accueil et l'onglet Planning) doivent le savoir, sans quoi ils
+ * inviteraient a chercher un groupe dans une liste qui n'existe pas.
+ *
+ * C'est le meme raisonnement que `sallesDisponibles()` face a `planningDisponible()` : deux questions
+ * qui se ressemblent et ne portent pas sur la meme chose.
+ */
+export function groupesRequis(): boolean {
+    const source = sourceEdt();
+    return source.kind === 'celcat' || source.kind === 'ical';
 }
 
 /**
@@ -106,6 +160,22 @@ export function planningAbsent(): UkitFailure {
         'ERROR_TIMETABLE_UNAVAILABLE',
         'PLANNING_ABSENT',
         'l etablissement ne publie pas d emploi du temps',
+    );
+}
+
+/**
+ * L'echec d'un emploi du temps qui n'attend qu'un lien.
+ *
+ * Distinct de `planningAbsent()`, et c'est le coeur du jalon : ici **rien ne manque a l'application**,
+ * il manque un geste a l'etudiant. Le message porte donc l'invitation, et l'ecran qui l'affiche pose
+ * un bouton la ou l'autre cas n'en a aucun. Meme famille `config` — reessayer ne servirait a rien
+ * tant que le lien n'est pas colle.
+ */
+export function lienEdtAttendu(): UkitFailure {
+    return serviceAbsent(
+        'ERROR_TIMETABLE_LINK_MISSING',
+        'EDT_LIEN_ATTENDU',
+        'l etablissement publie un abonnement, aucun lien n a ete colle',
     );
 }
 

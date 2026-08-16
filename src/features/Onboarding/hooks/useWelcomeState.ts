@@ -19,11 +19,21 @@ import {
     changerEtablissement,
     getCodeEtablissementActif,
     listeEtablissements,
+    sourceEdt,
     type Etablissement,
 } from '../../../shared/etablissements';
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
 
-/** Les fragments d'identifiant de groupe par annee et par semestre. Table locale, source Celcat. */
+/**
+ * Les fragments d'identifiant de groupe par annee et par semestre.
+ *
+ * **C'est une convention de nommage de Celcat Bordeaux, et de rien d'autre.** Elle existe parce que ce
+ * serveur publie plusieurs centaines de groupes et qu'il faut bien les reduire ; elle n'a aucun sens
+ * ailleurs. Depuis le jalon 6-I, Bordeaux INP a lui aussi un emploi du temps, et ses treize groupes
+ * s'appellent `ENSC 2A GR1` : aucune pastille ne les atteint, et l'etape restait vide sauf en
+ * choisissant « AUTRE ». C'est pourquoi les pastilles ne s'affichent plus que pour la source qui les
+ * justifie (`filtrageParAnnee`) — le probleme n'etait pas la table, c'etait de la croire generale.
+ */
 const FILTRE_SAISON: Record<string, Record<string, string[]>> = {
     autumn: {
         L1: ['10', 'MIASHS1'], L2: ['30', 'MIASHS3'], L3: ['50', 'MIASHS5'],
@@ -52,6 +62,54 @@ export interface WelcomeState {
     readonly groupList: string[];
     readonly groupListFiltered: string[];
     readonly textFilter: string;
+}
+
+/**
+ * L'etape des groupes doit-elle proposer le tri par annee et semestre ?
+ *
+ * Seulement pour Celcat, et c'est la source qui le dit, pas l'etablissement. La question reelle est
+ * « cette liste est-elle trop longue pour etre parcourue ? » : Celcat en publie plusieurs centaines,
+ * un referentiel iCalendar en compte treize. Proposer un tri par annee sur treize entrees demanderait
+ * deux gestes pour reduire une liste qui tient a l'ecran — et, comme la table de fragments est
+ * bordelaise, il ne reduirait rien du tout.
+ */
+export function filtrageParAnnee(): boolean {
+    return sourceEdt().kind === 'celcat';
+}
+
+/**
+ * Les groupes a proposer, selon ce que l'etudiant a choisi et ce que la source permet.
+ *
+ * Deux regimes, et c'est la seule difference entre les sources a cette etape :
+ *
+ *   - **avec tri par annee** (Celcat) : rien tant qu'annee et semestre ne sont pas choisis. La liste
+ *     complete serait illisible, et l'afficher inviterait a la parcourir ;
+ *   - **sans** (referentiel iCalendar) : la liste entiere, reduite par le texte saisi. Treize entrees
+ *     se lisent d'un coup d'oeil.
+ *
+ * Extrait pour etre appele **aussi** a l'arrivee de la liste : elle est chargee hors du chemin de
+ * demarrage, donc elle peut arriver apres que l'etudiant a saisi son filtre, et la version d'origine
+ * ne recalculait qu'au geste suivant — une liste qui reste vide sans raison visible.
+ */
+function filtrer(
+    groupList: string[],
+    year: OptionListee | null,
+    season: OptionListee | null,
+    textFilter: string,
+): string[] {
+    const recherche = textFilter.toUpperCase();
+
+    if (!filtrageParAnnee()) {
+        return groupList.filter((groupe) => groupe.toUpperCase().includes(recherche));
+    }
+
+    const filtres = year && season ? FILTRE_SAISON[season.id][year.id] : null;
+    if (filtres === null) return [];
+
+    return groupList.filter((groupe) => {
+        const majuscules = groupe.toUpperCase();
+        return filtres.some((fragment) => majuscules.includes(fragment.toUpperCase()) && majuscules.includes(recherche));
+    });
 }
 
 export interface WelcomeActions {
@@ -85,23 +143,32 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
         // Le catalogue peut arriver **apres** l'affichage : sa lecture est hors du chemin de
         // demarrage (rootContainer). L'ecran s'abonne donc, comme il le fait deja pour la liste des
         // groupes, plutot que de figer une liste au montage.
-        SettingsManager.on('etablissement', (code: string) =>
-            changer({ etablissement: code, etablissements: listeEtablissements() }));
-        DataManager.on('groupList', (groupList: string[]) => changer({ groupList }));
+        // Le tri par annee et le texte saisi appartiennent a l'universite qu'on quitte : une annee
+        // choisie sous la convention de nommage de l'une ne veut rien dire sous l'autre.
+        SettingsManager.on('etablissement', (code: string) => changer({
+            etablissement: code,
+            etablissements: listeEtablissements(),
+            year: null,
+            season: null,
+            textFilter: '',
+            groupListFiltered: [],
+        }));
+        // La liste arrive **apres** le montage — elle est chargee hors du chemin de demarrage, et elle
+        // est rechargee a chaque changement d'etablissement (PlanningDataManager). Refiltrer ici plutot
+        // que d'attendre le geste suivant : sans ca, choisir son universite puis avancer d'un ecran
+        // montrait une liste vide jusqu'a ce qu'on retouche un filtre.
+        DataManager.on('groupList', (groupList: string[]) => setState((prev) => ({
+            ...prev,
+            groupList,
+            groupListFiltered: filtrer(groupList, prev.year, prev.season, prev.textFilter),
+        })));
 
         SettingsManager.setLanguage(languageFromDevice());
         SettingsManager.setTheme(SettingsManager.getAutomaticTheme());
     }, []);
 
     const filterList: WelcomeActions['filterList'] = (year, season, textFilter) => {
-        const filtres = year && season ? FILTRE_SAISON[season.id][year.id] : null;
-        const groupListFiltered = filtres === null ? [] : state.groupList.filter((groupe) => {
-            const majuscules = groupe.toUpperCase();
-            return filtres.some((fragment) =>
-                majuscules.includes(fragment.toUpperCase()) && majuscules.includes(textFilter.toUpperCase()));
-        });
-
-        changer({ groupListFiltered, year, season, textFilter });
+        changer({ groupListFiltered: filtrer(state.groupList, year, season, textFilter), year, season, textFilter });
     };
 
     return {

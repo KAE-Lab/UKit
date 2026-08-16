@@ -8,7 +8,15 @@ import moment from 'moment';
 import { NotificationManager } from '../../../shared/services/NotificationService';
 
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
-import { changerEtablissement, etablissementRetire, getEtablissementActif } from '../../../shared/etablissements';
+import {
+    changerEtablissement,
+    etablissementRetire,
+    getEtablissementActif,
+    lienEdtActif,
+    portailPublie,
+    sourceEdt,
+} from '../../../shared/etablissements';
+import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Button from '../../../shared/ui/Button';
@@ -57,6 +65,9 @@ export interface SettingsState {
     institutionDialogVisible: boolean;
     /** Le nom affiche : il vient du catalogue et change avec lui, d'ou l'etat plutot qu'un calcul. */
     institutionName: string;
+    /** L'etablissement propose-t-il un compte, et est-il connecte ? Le rappel de l'etape d'accueil. */
+    comptePossible: boolean;
+    compteConnecte: boolean;
 }
 
 class Settings extends React.Component<SettingsProps, SettingsState> {
@@ -64,6 +75,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     // @ts-ignore
     context!: React.ContextType<typeof AppContext>;
     scrollY: Animated.Value;
+    _unsubscribeFocus?: () => void;
 
     constructor(props: SettingsProps) {
         super(props);
@@ -87,6 +99,8 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             courseNotificationDelay: SettingsManager.getCourseNotificationDelay(),
             institutionDialogVisible: false,
             institutionName: getEtablissementActif().nom,
+            comptePossible: portailPublie(),
+            compteConnecte: false,
         };
         this.scrollY = new Animated.Value(0);
 
@@ -257,6 +271,9 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         await changerEtablissement(code);
         SettingsManager.setEtablissement(code);
         this.setState({ institutionName: getEtablissementActif().nom });
+        // La bascule vide le trousseau : la ligne du compte doit le dire tout de suite, sans attendre
+        // un retour de focus qui n'aura pas lieu — on n'a pas quitte l'ecran.
+        void this.refreshCompte();
     };
 
     onInstitutionConfirmed = (code: string) => { void this.setInstitution(code); };
@@ -272,7 +289,23 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         await SettingsManager.resetSettings();
     };
 
+    /**
+     * L'etat du compte, relu a chaque retour sur l'ecran.
+     *
+     * Le trousseau n'emet aucun evenement, et l'ecran des identifiants — ou l'on se deconnecte — est
+     * juste a cote : figer la valeur au montage afficherait « connecte » apres une deconnexion, sans
+     * rien pour la corriger. La reprise de focus est le declencheur naturel, et c'est deja celui que
+     * `ScheduleList` utilise pour la meme raison.
+     */
+    refreshCompte = async () => {
+        const credentials = await SecureStoreService.getCredentials();
+        this.setState({ comptePossible: portailPublie(), compteConnecte: credentials !== null });
+    };
+
     componentDidMount = async () => {
+        this._unsubscribeFocus = this.props.navigation.addListener('focus', () => { void this.refreshCompte(); });
+        void this.refreshCompte();
+
         if ((await Calendar.getCalendarPermissionsAsync()).status === 'granted') {
             this.setState({ hasCalendarPermission: true });
         } else {
@@ -283,6 +316,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     };
 
     componentWillUnmount = () => {
+        if (this._unsubscribeFocus) this._unsubscribeFocus();
         SettingsManager.unsubscribe('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
         SettingsManager.unsubscribe('filter', this.refreshFiltersList);
     };
@@ -347,6 +381,12 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     institutionName={this.state.institutionName}
                     institutionRetiree={etablissementRetire()}
                     openInstitutionDialog={this.openInstitutionDialog}
+                    comptePossible={this.state.comptePossible}
+                    compteConnecte={this.state.compteConnecte}
+                    openCompte={() => this.props.navigation.navigate('CredentialsSettings')}
+                    lienEdtPossible={sourceEdt().kind === 'abonnement' || sourceEdt().kind === 'lien-attendu'}
+                    lienEdtPose={lienEdtActif() !== null}
+                    openLienEdt={() => this.props.navigation.navigate('LienEdt')}
                 />
                 <DisplaySection
                     themeSettings={themeSettings}

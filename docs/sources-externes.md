@@ -32,6 +32,7 @@ fragilité, extraction, contrat non versionné — ne s'y applique. Ce document 
 | 6 | GitHub raw | fichier de version applicative | aucune | faible |
 | 7 | CDN de rendu de carte | tuiles OpenStreetMap, bibliothèque Leaflet | aucune | faible |
 | 8 | ADE (`ade.bordeaux-inp.fr`) | emploi du temps, par export iCalendar | aucune | moyenne — export anonyme, mais **index de ressource positionnels et projet annuel**. **Deux Blueprints** depuis [6-I](phase-6/6-i-planning-universel.md) |
+| 9 | **N'importe quel export iCalendar**, à l'adresse que l'étudiant colle | emploi du temps | le lien **est** le secret (trousseau) | inconnue par construction — c'est le [repli universel](phase-6/6-j-compte-et-sources-par-etablissement.md) de 6-J. Un Blueprint unique, [`ukit.edt.abonnement`](../blueprints/ukit-edt-abonnement.blueprint.json), demande le lien **verbatim et sans bornes** ; le découpage par date est applicatif, parce que tous les produits n'acceptent pas de paramètres de plage |
 
 ## 1. Celcat — emplois du temps
 
@@ -427,7 +428,7 @@ n'émet plus de requête.
 
 | Appel | Blueprint | Ce qui est resté applicatif |
 |---|---|---|
-| `GET /regions/1/restaurants` | [`ukit.campus.restaurants`](../blueprints/ukit-campus-restaurants.blueprint.json) | Haversine, le tri, la lecture des horaires, l'URL de visuel |
+| `GET /regions/{region}/restaurants` | [`ukit.campus.restaurants`](../blueprints/ukit-campus-restaurants.blueprint.json) | Haversine, le tri, la lecture des horaires, l'URL de visuel. **La région vient du catalogue** depuis [6-J](phase-6/6-j-compte-et-sources-par-etablissement.md) (colonne `crous_region`) : elle vaut toujours 1, mais c'est une donnée corrigeable et non plus une constante de fichier |
 | `GET /restaurants/{code}/menu` | [`ukit.campus.restaurant-menu`](../blueprints/ukit-campus-restaurant-menu.blueprint.json) | la relecture de la date, le regroupement midi/soir, les libellés de repli |
 | `GET /restaurants/{code}/preview` | *aucun* — c'est une URL construite, posée dans une balise image, jamais une requête que le service émet |
 

@@ -15,6 +15,33 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **Le compte universitaire proposé dès l'accueil.** Une étape dédiée, juste après le choix de
+  l'établissement, **sautable** par un lien « Plus tard » et **rappelée** dans les Réglages par une
+  ligne qui dit si le compte est connecté. Elle disparaît chez une université qui ne publie aucun
+  portail — on ne pose pas une question sans réponse. C'est le formulaire de l'onglet Scolarité, tel
+  quel : le contexte de session est monté au-dessus de tout le reste précisément pour qu'il n'existe
+  qu'un seul chemin vers le trousseau.
+
+- **L'emploi du temps par lien d'abonnement collé.** Une université qui publie un export iCal — ADE,
+  Hyperplanning, uPortal — devient utilisable en collant son lien : l'application le vérifie en le
+  jouant pour de vrai, dit combien de cours elle y a trouvés, et le range dans le trousseau. C'est le
+  **repli universel** de la phase, et il ne coûte rien à ajouter : un seul Blueprint embarqué,
+  `ukit.edt.abonnement`, joue n'importe quel lien. Il le demande **sans bornes de dates**, parce que
+  tous les produits n'acceptent pas de paramètres, et le découpage par jour et par semaine se fait
+  dans l'application — un cas de parité prouve contre la vraie source que les deux découpes rendent
+  exactement les mêmes cours.
+
+- **« Mon université n'est pas dans la liste ».** La conséquence directe du point précédent : une ligne
+  de catalogue, pas une ligne de code. Un étudiant d'une fac bordelaise que nous n'avons pas portée
+  colle son lien et obtient **son planning, les restaurants, les bibliothèques et les salles libres**.
+  Il perd la Scolarité — on ne connaît pas son ENT — et la carte des cours, faute de connaître le
+  format de ses salles : afficher un bâtiment bordelais pour une salle inconnue serait une carte
+  fausse, ce qui est pire qu'une carte absente.
+
+- **Un onglet Planning qui propose le geste au lieu de s'excuser.** « Cette université n'a pas d'emploi
+  du temps » et « elle en a un, il te manque un geste » sont désormais deux écrans différents, parce
+  qu'ils appellent deux gestes opposés. Le second porte un bouton.
+
 - **Des groupes favoris par établissement.** Changer d'université range ceux qu'on quitte et ressort
   ceux qu'on retrouve, au lieu de tout effacer : revenir à sa fac d'origine y retrouve ses groupes et
   ses filtres d'UE. La règle « les données de deux facs ne se mélangent pas » n'est pas assouplie — à
@@ -358,6 +385,39 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   plateforme, qualité, plus une documentation par domaine fonctionnel.
 
 ### Corrigé
+
+- **Le catalogue en cache ne rend plus de valeurs absentes.** Il garde des établissements **déjà
+  projetés** : un champ ajouté par une mise à jour restait donc vide sur les appareils qui avaient déjà
+  un cache. Le symptôme était une requête `…/regions/None/restaurants` et des restaurants introuvables ;
+  la même cause aurait fait croire à un abonnement d'emploi du temps là où il n'y en a pas.
+
+- **L'écran du compte propose de se connecter au lieu d'afficher une fiche vide.** Il supposait qu'on
+  y arrivait connecté — vrai tant qu'on n'y accédait que depuis l'onglet Scolarité, faux depuis que les
+  Réglages y mènent : on y trouvait six tirets et un bouton « Se déconnecter » sans rien à déconnecter.
+
+- **Le bouton de connexion ne reste plus figé à l'accueil.** La session partait bien et allait au bout,
+  mais l'indicateur ne retombait jamais : le formulaire comptait sur le tableau de bord pour le
+  remplacer, ce qui n'arrive pas pendant le parcours d'accueil.
+
+- **La liste des groupes suit enfin l'établissement.** Elle était purgée sur le disque mais survivait
+  **en mémoire** : choisir Bordeaux INP à l'accueil proposait les six cents groupes de Bordeaux, et le
+  favori retenu produisait ensuite « ce groupe n'existe plus » — pour un groupe qui existe
+  parfaitement, à l'université qu'on venait de quitter.
+
+- **Le démarrage ne demande plus les groupes à la mauvaise université.** Les listes étaient chargées
+  **avant** que le code d'établissement persisté ne soit restauré : un étudiant de Bordeaux INP dont le
+  cache avait expiré voyait partir une requête vers le serveur de Bordeaux, dont la réponse écrasait sa
+  liste. Le cache durant une semaine, le défaut n'était visible qu'un jour sur sept.
+
+- **L'accueil ne propose plus un tri par année qui ne trie rien.** Les pastilles année/semestre
+  reposent sur une convention de nommage propre à Celcat Bordeaux ; depuis que Bordeaux INP a un emploi
+  du temps, ses treize groupes n'en rencontraient aucune et la liste restait vide. Elles ne s'affichent
+  plus que pour la source qui les justifie — treize entrées se lisent d'un coup d'œil.
+
+- **La Scolarité ne demande plus un mot de passe à qui ne peut pas s'en servir.** Un établissement sans
+  portail affichait un formulaire de connexion qui ne pouvait mener nulle part, parce que la branche
+  « pas de compte » était testée en premier et gagnait toujours. L'écran dit maintenant que
+  l'université n'est pas encore reliée.
 
 - **Le Planning dit l'absence d'emploi du temps au lieu de réclamer des groupes favoris.** Une
   université sans serveur interrogeable n'a jamais de groupes favoris : l'écran « ton planning est

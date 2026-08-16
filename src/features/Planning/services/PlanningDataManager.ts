@@ -1,4 +1,12 @@
+/**
+ * La liste des groupes d'etudiants, et les unites d'enseignement rencontrees.
+ *
+ * Voir docs/features/planning.md.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { SettingsManager } from '../../../shared/services/AppCore';
 import { PlanningApiService } from './PlanningApiService';
 
 class PlanningDataManagerService {
@@ -12,7 +20,29 @@ class PlanningDataManagerService {
         this._availableUEs = [];
         this._subscribers = {};
         this._cacheTimeLimit = 7 * 24 * 60 * 60 * 1000;
+
+        // Les groupes appartiennent a **une** universite, et rien ne le disait a ce manager.
+        // `changerEtablissement` purgeait bien la cle disque, mais la liste en memoire survivait a la
+        // bascule : l'accueil proposait alors les six cents groupes de Bordeaux a quelqu'un qui venait
+        // de choisir Bordeaux INP, et le favori retenu produisait « ce groupe n'existe plus » sur
+        // l'onglet Planning. C'est la pire forme du defaut que cette phase supprime — une donnee fausse
+        // qui a l'air juste — et c'est la troisieme fois qu'il se presente sous ce visage (jalons 6-G
+        // et 6-I). Le manager tient sa donnee, il tient donc son invalidation.
+        SettingsManager.on('etablissement', () => { void this.rechargerPourEtablissement(); });
     }
+
+    /**
+     * Vide la liste et la redemande a la nouvelle source.
+     *
+     * La liste est vidée **avant** l'appel, et notifiee : un ecran deja monte doit cesser tout de suite
+     * de proposer les groupes de l'universite quittee, meme si le rechargement echoue ou tarde. Mieux
+     * vaut une liste vide qu'une liste fausse.
+     */
+    rechargerPourEtablissement = async () => {
+        this.setGroupList([]);
+        this._availableUEs = [];
+        await this.fetchGroupList();
+    };
 
     on = (event: string, callback: Function) => {
         if (!this._subscribers[event]) {

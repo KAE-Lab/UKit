@@ -25,6 +25,7 @@ import moment from 'moment';
 import type { AbortSignalLike } from '@aetherius/engine';
 
 import {
+    BLUEPRINT,
     estNomDePortail,
     reportFailure,
     runBlueprint,
@@ -124,6 +125,103 @@ export function jouerAnnee(
     options: OptionsRun = {},
 ): Promise<IcsRun> {
     return jouer(config, config.blueprintAnnee, groupe, plage, options);
+}
+
+/**
+ * Le dernier calendrier d'abonnement telecharge, garde en memoire quelques minutes.
+ *
+ * Un lien colle est demande **verbatim**, donc sans bornes de dates : la reponse porte tout ce que
+ * l'etablissement publie, souvent l'annee entiere (247 Ko mesures chez ADE). Sans ce cache, passer du
+ * mardi au mercredi la retelechargerait, et faire glisser le curseur de dates en telechargerait une
+ * par jour survole — une charge que personne n'a demandee, sur un serveur universitaire.
+ *
+ * **En memoire et non sur disque**, deliberement : le cache par vue de `ScheduleList` couvre deja le
+ * hors-ligne et le redemarrage, et ranger le meme calendrier une seconde fois dans `AsyncStorage`
+ * ferait deux copies de 250 Ko a invalider au lieu d'une. Celui-ci ne sert qu'a economiser des
+ * requetes dans une meme session.
+ *
+ * Le delai est court : un emploi du temps change, et servir une salle deplacee pendant une heure
+ * serait pire que de retelecharger.
+ */
+const PEREMPTION_ABONNEMENT_MS = 5 * 60 * 1000;
+
+let calendrierGarde: { lien: string; ics: unknown; pose: number } | null = null;
+
+/** Oublie le calendrier garde. Appele quand le lien change : il ne designe plus le meme agenda. */
+export function oublierCalendrierAbonnement(): void {
+    calendrierGarde = null;
+}
+
+/**
+ * Le calendrier de l'abonnement colle, tel quel — l'annee entiere s'il le faut.
+ *
+ * Aucune borne n'est envoyee, et c'est ce qui rend ce chemin **universel** : ADE accepte
+ * `firstDate` / `lastDate`, mais d'autres produits figent la fenetre a l'export et un parametre
+ * inconnu y est au mieux ignore. Le filtrage par date est donc applicatif (`IcsMapping`), ce qui
+ * traite les deux cas avec le meme fichier.
+ */
+export async function jouerAbonnement(lien: string, options: OptionsRun = {}): Promise<IcsRun> {
+    const maintenant = Date.now();
+    if (calendrierGarde !== null && calendrierGarde.lien === lien
+        && maintenant - calendrierGarde.pose < PEREMPTION_ABONNEMENT_MS) {
+        return { ok: true, ics: calendrierGarde.ics, manquants: [] };
+    }
+
+    const run = await runBlueprint(BLUEPRINT.EDT_ABONNEMENT, { inputs: { lien }, ...options });
+    if (run.ok === false) {
+        reportFailure(BLUEPRINT.EDT_ABONNEMENT, run.failure);
+        return { ok: false, failure: run.failure };
+    }
+
+    calendrierGarde = { lien, ics: run.outputs.ics, pose: maintenant };
+    return { ok: true, ics: run.outputs.ics, manquants: [] };
+}
+
+/**
+ * Ce qu'un controle de lien rend : le nombre de cours trouves, ou la raison du refus.
+ *
+ * `cours` accompagne un **succes** meme quand il vaut zero, et c'est une decision produit : un
+ * calendrier valide qui ne porte aucun cours est un resultat legitime — en aout, c'est meme le cas
+ * ordinaire, et c'est precisement le moment ou un etudiant installe l'application. Refuser un lien
+ * juste parce que l'annee n'a pas commence casserait le parcours de la personne qu'on vise. L'ecran le
+ * **dit** au lieu de le rejeter, ce qui est la meme regle que partout ailleurs dans la phase.
+ */
+export type ControleLien =
+    | { readonly ok: true; readonly cours: number }
+    | { readonly ok: false; readonly messageKey: UkitFailure['messageKey'] };
+
+/**
+ * Joue le lien une fois et dit s'il rend un emploi du temps.
+ *
+ * C'est ce qui separe cet ecran d'un simple champ de reglage. Un lien colle de travers — l'adresse de
+ * la page de l'agenda plutot que celle de l'abonnement, une redirection vers une page de connexion —
+ * donnerait un planning vide que personne ne saurait expliquer, et l'application porterait le chapeau.
+ * On paie donc une requete pour que l'erreur soit dite au moment ou elle se corrige.
+ *
+ * Le refus distingue **deux causes** : ce qui n'est pas un calendrier, et ce qui n'a pas repondu. Les
+ * confondre dirait a quelqu'un dont le reseau a hoquete que son lien est mauvais, et il le
+ * remplacerait par un autre tout aussi bon.
+ *
+ * **La distinction se fait sur la famille, pas sur un code**, et c'est une correction : un `code`
+ * n'existe que pour un `on_timeout: "fail:CODE"` d'un `wait_for` (`@aetherius/engine`, failure.d.ts),
+ * donc jamais pour l'`assert` de forme de ce fichier — le tester n'aurait rien attrape. Les deux
+ * familles que ce Blueprint peut produire hors panne disent la meme chose a l'etudiant : `rejected`
+ * quand le serveur n'a pas rendu 200 (une page d'erreur, une redirection vers une connexion), `data`
+ * quand la reponse n'est pas un calendrier. Dans les deux cas le lien est en cause. Tout le reste —
+ * `unavailable` en tete — garde le message de sa famille, avec son bouton Reessayer.
+ */
+export async function verifierLienEdt(lien: string, options: OptionsRun = {}): Promise<ControleLien> {
+    const run = await jouerAbonnement(lien, options);
+    if (run.ok === false) {
+        const lienEnCause = run.failure.kind === 'rejected' || run.failure.kind === 'data';
+        return { ok: false, messageKey: lienEnCause ? 'TIMETABLE_LINK_INVALID' : run.failure.messageKey };
+    }
+
+    // Compter les `BEGIN:VEVENT` plutot que d'analyser le calendrier : `IcsMapping` n'est pas
+    // importable ici sans faire remonter la projection dans un service, et le compte n'a besoin
+    // d'aucune interpretation — un `VEVENT` est un cours, quelle que soit la forme de sa description.
+    const corps = typeof run.ics === 'string' ? run.ics : '';
+    return { ok: true, cours: corps.split('BEGIN:VEVENT').length - 1 };
 }
 
 /**

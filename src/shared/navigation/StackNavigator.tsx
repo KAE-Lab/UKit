@@ -10,8 +10,8 @@ import Group from '../../features/Planning/screens/ScheduleScreen';
 import About from '../../features/Settings/screens/AboutScreen';
 import Settings from '../../features/Settings/screens/SettingsScreen';
 import CredentialsSettingsScreen from '../../features/Scolarite/screens/CredentialsSettingsScreen';
-import { CredentialsProvider } from '../../features/Scolarite/services/CredentialsContext';
 import WebBrowser from '../../features/Scolarite/screens/WebBrowserScreen';
+import LienEdtScreen from '../../features/Planning/screens/LienEdtScreen';
 import Geolocation from '../map/MapScreen';
 import { CourseScreen } from '../../features/Planning/screens/CourseScreen';
 import DayView from '../../features/Planning/views/DayView';
@@ -36,6 +36,7 @@ export type RootStackParamList = {
     About: undefined;
     Settings: undefined;
     CredentialsSettings: undefined;
+    LienEdt: undefined;
     Crous: undefined;
     Library: undefined;
     WebBrowser: { entrypoint?: string };
@@ -67,8 +68,12 @@ export default function StackNavigator() {
                 );
 
                 return (
-                    <CredentialsProvider>
-                        <Stack.Navigator
+                    // `CredentialsProvider` a remonte dans `rootContainer` au jalon 6-J : le parcours
+                    // d'accueil propose la connexion au compte, et il est rendu **a la place** de ce
+                    // navigateur. Le provider devait donc envelopper les deux branches, sans quoi
+                    // l'accueil aurait eu besoin de son propre formulaire — c'est-a-dire d'un second
+                    // chemin de connexion a maintenir.
+                    <Stack.Navigator
                             id="RootStack"
                             initialRouteName="MainTabs"
                             screenOptions={{
@@ -103,6 +108,8 @@ export default function StackNavigator() {
 
                             <Stack.Screen name="CredentialsSettings" component={CredentialsSettingsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('LOGOUT'), themeName, route, gestureEnabled: true })} />
 
+                            <Stack.Screen name="LienEdt" component={LienEdtScreen} options={({ route }) => NavBarHelper({ title: Translator.get('TIMETABLE_LINK'), themeName, route, gestureEnabled: true })} />
+
                             <Stack.Screen name="Crous" component={CrousScreen} options={({ route }) => NavBarHelper({ title: Translator.get('RESTAURANTS'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Library" component={LibraryScreen} options={({ route }) => NavBarHelper({ title: Translator.get('LIBRARIES'), themeName, route, gestureEnabled: true })} />
@@ -126,7 +133,6 @@ export default function StackNavigator() {
 
                             <Stack.Screen name="Course" component={CourseScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />
                         </Stack.Navigator>
-                    </CredentialsProvider>
                 );
             }}
         </AppContext.Consumer>

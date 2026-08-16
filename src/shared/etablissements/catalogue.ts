@@ -75,6 +75,27 @@ export interface EdtIcal {
 }
 
 /**
+ * L'emploi du temps par **abonnement colle a la main** (jalon 6-J).
+ *
+ * Le repli universel de la phase : la ou 6-I demandait un referentiel releve par un auteur, celui-ci
+ * ne demande rien du tout — l'etudiant colle le lien que son etablissement lui donne, et l'application
+ * le joue. C'est le seul chemin qui ajoute un emploi du temps **sans qu'on ait rien a porter**, et
+ * c'est pourquoi il existe : porter chaque produit de planning un par un serait sans fin.
+ *
+ * Le catalogue dit seulement **que cet etablissement publie un abonnement**, jamais comment le jouer :
+ * le Blueprint est unique, embarque, et le meme pour tous (`BLUEPRINT.EDT_ABONNEMENT`). C'est la ligne
+ * du jalon 6-G prise a la lettre, et c'est aussi ce qui rend le repli universel — un fichier par
+ * etablissement le rendrait aussi couteux que ce qu'il remplace.
+ *
+ * `aide` est un **libelle**, pas une instruction : « ADE → Exporter mon agenda ». Il s'affiche tel
+ * quel, comme le nom de l'universite, et pour la meme raison — le chemin exact vers un lien
+ * d'abonnement est propre a chaque etablissement, et le traduire n'aurait aucun sens.
+ */
+export interface EdtAbonnement {
+    readonly aide: string | null;
+}
+
+/**
  * Comment lire un code de batiment dans un libelle de salle, chez cet etablissement.
  *
  * C'etait du code bordelais jusqu'au jalon 6-I : une decoupe sur ` | ` puis `/`, et un motif
@@ -120,8 +141,37 @@ export interface Etablissement {
      * l'onglet Planning dit au lieu d'echouer (jalon 6-I).
      */
     readonly edt: EdtIcal | null;
-    /** Comment lire un code de batiment dans une salle. Le defaut reproduit le comportement Celcat. */
-    readonly salles: FormatSalles;
+    /**
+     * L'abonnement iCalendar colle a la main, quand l'etablissement en publie un (jalon 6-J).
+     *
+     * Il ne remplace pas `edt` : un etablissement peut avoir un referentiel releve **et** accepter un
+     * lien personnel. L'ordre de preference est ecrit dans `edt.ts`, et il va du plus automatique au
+     * plus manuel.
+     */
+    readonly edtAbonnement: EdtAbonnement | null;
+    /**
+     * Comment lire un code de batiment dans une salle, ou `null` quand cet etablissement n'a **pas**
+     * de referentiel de lieux.
+     *
+     * `null` n'est pas un defaut manquant, c'est une decision : chez un etablissement dont on ne
+     * connait pas le format des salles, appliquer celui de Bordeaux ferait capturer un code bordelais
+     * existant dans un libelle etranger, et afficherait **le mauvais batiment**. *Un batiment sans
+     * coordonnees n'est pas une carte vide, c'est une carte fausse* — la regle est ecrite au jalon 6-I,
+     * et c'est elle qui impose ce nul. Une colonne **absente**, elle, vaut toujours le comportement
+     * Celcat : la migration reste invisible.
+     */
+    readonly salles: FormatSalles | null;
+    /**
+     * La region CROUS de l'etablissement, telle que Croustillant la numerote. `null` : pas de
+     * restaurants a proposer, et la section disparait.
+     *
+     * Elle etait une `vars` du Blueprint jusqu'au jalon 6-J, avec un commentaire qui l'assumait —
+     * « l'application vise une seule region ». C'etait vrai, et c'est exactement la forme que prend
+     * une constante bordelaise avant de devenir fausse : le jalon 6-G en a corrige onze du meme genre.
+     * Elle vaut toujours 1 aujourd'hui, et le perimetre du produit est bordelais (voir le README) —
+     * mais elle est desormais **une donnee**, donc corrigeable sans release le jour ou ca change.
+     */
+    readonly crousRegion: string | null;
     /**
      * Le serveur d'inventaire des salles libres, quand il n'est **pas** celui de l'etablissement.
      *
@@ -180,6 +230,15 @@ const POINTS_BORDEAUX: readonly PointBalayage[] = [
 const RES_TYPES_PAR_DEFAUT: CelcatResTypes = { groupes: '103', salles: '102' };
 
 /**
+ * La region Croustillant du secteur bordelais, telle qu'elle vivait dans les `vars` du Blueprint.
+ *
+ * Elle est ici pour que le socle embarque reste **exactement** ce qu'il etait : une installation qui
+ * n'a jamais joint la base doit continuer d'afficher les restaurants de Bordeaux. La colonne, elle,
+ * permet de la corriger — et de la retirer pour un etablissement qui n'en a pas.
+ */
+const REGION_CROUS_BORDEAUX = '1';
+
+/**
  * Le format de salle par defaut : celui de Celcat, tel qu'il vivait en dur dans `AppCore` avant le
  * jalon 6-I.
  *
@@ -206,9 +265,13 @@ const SOCLE: Readonly<Record<string, Etablissement>> = {
         celcatDomaine: 'https://celcat.u-bordeaux.fr/calendar',
         celcatResTypes: { groupes: '103', salles: '102' },
         edt: null,
+        // Bordeaux publie son Celcat : personne n'a de lien a coller, et proposer un champ de saisie
+        // la ou une recherche de groupes fonctionne serait proposer un travail inutile.
+        edtAbonnement: null,
         salles: SALLES_PAR_DEFAUT,
         sallesLibres: null,
         bibliothequesPoints: POINTS_BORDEAUX,
+        crousRegion: REGION_CROUS_BORDEAUX,
         services: {
             ent: 'https://ent.u-bordeaux.fr',
             email: 'https://webmel.u-bordeaux.fr',
@@ -315,16 +378,39 @@ function projeterEdt(valeur: unknown): EdtIcal | null {
 }
 
 /**
+ * L'abonnement iCalendar d'une ligne, ou `null` si elle n'en declare pas.
+ *
+ * Un objet vide suffit a le declarer : ce qui compte est **le fait**, pas ses details. `aide` est
+ * facultative parce qu'un etablissement peut publier un export sans qu'on sache dire ou l'etudiant le
+ * trouve — et une aide inventee serait pire qu'une aide absente.
+ */
+function projeterEdtAbonnement(valeur: unknown): EdtAbonnement | null {
+    if (valeur === null || typeof valeur !== 'object' || Array.isArray(valeur)) return null;
+
+    return { aide: texteOuNull((valeur as Record<string, unknown>).aide) };
+}
+
+/**
  * Le format de salle d'une ligne, champ par champ, avec le comportement Celcat en repli.
+ *
+ * Trois cas, et le troisieme est la nouveaute du jalon 6-J :
+ *
+ *   - **colonne absente** : le comportement Celcat historique, ce qui rend la migration invisible ;
+ *   - **colonne renseignee** : les champs de l'etablissement, defaut par defaut ;
+ *   - **`{"reconnaissance": false}`** : `null`, c'est-a-dire *cet etablissement n'a pas de referentiel
+ *     de lieux*. Appliquer le format bordelais a un libelle etranger ferait capturer un code qui
+ *     existe chez nous et afficher le mauvais batiment ; une carte fausse est pire qu'une carte vide.
  *
  * Un motif illisible n'est pas rejete ici : c'est `shared/locations/salles.ts` qui le compile, et
  * c'est lui qui retombe sur le defaut si le moteur d'expressions le refuse. Separer les deux garde ce
  * module sans effet de bord — il projette une ligne, il n'execute rien.
  */
-function projeterSalles(valeur: unknown): FormatSalles {
+function projeterSalles(valeur: unknown): FormatSalles | null {
     if (valeur === null || typeof valeur !== 'object' || Array.isArray(valeur)) return SALLES_PAR_DEFAUT;
 
     const source = valeur as Record<string, unknown>;
+    if (source.reconnaissance === false) return null;
+
     const separateurs = Array.isArray(source.separateurs)
         ? source.separateurs.filter((brut): brut is string => typeof brut === 'string' && brut !== '')
         : null;
@@ -374,9 +460,14 @@ export function projeterEtablissement(row: EtablissementRow): Etablissement {
         celcatDomaine: texteOuNull(row.celcat_domaine),
         celcatResTypes: projeterResTypes(row.celcat_res_types),
         edt: projeterEdt(row.edt),
+        // L'abonnement se lit dans la **meme** colonne que le referentiel : les deux decrivent
+        // l'emploi du temps, et les separer aurait fait deux endroits ou chercher pourquoi une fac
+        // n'en a pas.
+        edtAbonnement: projeterEdtAbonnement((row.edt as { abonnement?: unknown } | null)?.abonnement),
         salles: projeterSalles(row.salles),
         sallesLibres: projeterSallesLibres(row.salles_libres),
         bibliothequesPoints: projeterPoints(row.bibliotheques_points),
+        crousRegion: texteOuNull(row.crous_region),
         services: projeterTableDeChaines(row.services),
         libelles: projeterTableDeChaines(row.libelles),
         ordre: typeof row.ordre === 'number' && Number.isFinite(row.ordre) ? row.ordre : 0,
@@ -478,6 +569,24 @@ export function setCodeEtablissementActif(code: string): void {
 }
 
 /**
+ * Cet etablissement declare-t-il **un** portail, quel qu'il soit ?
+ *
+ * La question que se posent les ecrans qui **proposent** le compte — l'etape d'accueil et la ligne des
+ * reglages : y a-t-il seulement quelque chose derriere quoi s'authentifier ? Elle porte sur la donnee
+ * du catalogue et rien d'autre, ce qui la rend synchrone et jouable sous Node.
+ *
+ * A ne pas confondre avec `portailDisponible(role)` de `ScolariteSession`, qui repond a une question
+ * voisine mais differente — *peut-on jouer ce portail ?* — et verifie donc en plus que le nom vit sous
+ * le prefixe reserve. La distinction a une consequence utile : une ligne de catalogue mal ecrite
+ * laisse la proposition visible, et c'est **l'onglet Scolarite** qui nomme le probleme. C'est le bon
+ * endroit pour le dire ; le masquer ferait disparaitre le service sans que personne sache pourquoi.
+ */
+export function portailPublie(): boolean {
+    const etablissement = getEtablissementActif();
+    return etablissement.portailDossier !== null || etablissement.portailMessagerie !== null;
+}
+
+/**
  * L'intitule d'un champ, tel que **cet** etablissement l'appelle.
  *
  * La regle a ne pas confondre : « Numero etudiant » est un libelle **d'ecran**, donc une chaine de
@@ -490,15 +599,37 @@ export function libelleEtablissement(role: string, defaut: string): string {
 }
 
 /**
+ * Le format de salle de l'etablissement selectionne, ou `null` s'il n'a pas de referentiel de lieux.
+ *
+ * `null` fait rendre une liste **vide** a la reconnaissance de salle, donc aucune carte. C'est le bon
+ * comportement et non une degradation : afficher un batiment bordelais pour une salle qu'on ne sait
+ * pas lire serait une carte fausse (voir `projeterSalles`).
+ */
+export function formatSallesActif(): FormatSalles | null {
+    return getEtablissementActif().salles ?? null;
+}
+
+/**
+ * La region CROUS de l'etablissement selectionne, ou `null` s'il n'en declare pas.
+ *
+ * `null` fait **disparaitre** la section des restaurants, comme celle des salles libres chez un
+ * etablissement sans inventaire : il n'y a rien qui echoue, il n'y a rien a montrer.
+ */
+export function crousRegionActive(): string | null {
+    // `?? null` et non un simple accès : un cache écrit avant que ce champ n'existe rend `undefined`,
+    // qui passe le test `=== null` de l'appelant et part **tel quel** dans les entrées d'un run. Le
+    // moteur le rend alors `None`, et l'application demande `/regions/None/restaurants`. Mesuré sur
+    // appareil au jalon 6-J. La version de la clé de cache est la première ceinture (index.ts), cette
+    // normalisation est la seconde — et c'est elle qui tient si quelqu'un oublie la première.
+    return getEtablissementActif().crousRegion ?? null;
+}
+
+/**
  * L'adresse d'un service universitaire, ou `null` si cet etablissement n'en declare pas.
  *
  * `null` n'est pas une panne : toutes les facs n'ont pas d'Apogee, ni de webmail sous une adresse
  * stable. L'appelant decide alors quoi montrer — le plus souvent, rien.
  */
-export function formatSallesActif(): FormatSalles {
-    return getEtablissementActif().salles;
-}
-
 export function serviceEtablissement(nom: string): string | null {
     return getEtablissementActif().services[nom] ?? null;
 }

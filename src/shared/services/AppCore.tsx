@@ -18,7 +18,7 @@ import {
 } from '../etablissements/catalogue';
 // `purge` et non la porte d'entree pour la meme raison : elle ne connait que le magasin local et le
 // trousseau, la ou `../etablissements` tirerait le client de la base.
-import { purgerDonneesEtablissement } from '../etablissements/purge';
+import { purgerDonneesEtablissement, purgerLiensEdt } from '../etablissements/purge';
 import { restaurerReglages } from './reglagesParEtablissement';
 import { createUKitCalendar, formatCalendarEventData } from './CalendarSyncHelpers';
 import { NetworkMockService } from './NetworkMockService';
@@ -555,6 +555,10 @@ class SettingsManagerService {
         // Les memes donnees qu'un changement d'etablissement, et par le meme chemin : deux gestes qui
         // effacent la meme chose ne doivent pas avoir deux definitions de « la meme chose ».
         await purgerDonneesEtablissement();
+        // Et ce qu'une bascule, elle, **garde** : les liens d'abonnement sont cloisonnes par
+        // etablissement, donc un aller-retour les retrouve. Ici on n'va nulle part, on efface — laisser
+        // un emploi du temps rempli a quelqu'un qui vient de tout reinitialiser serait un residu.
+        await purgerLiensEdt();
         // Le parcours d'accueil redemande l'etablissement : le laisser sur le precedent afficherait un
         // choix deja fait a quelqu'un qui vient de tout effacer.
         this.setEtablissement(ETABLISSEMENT_DEFAUT);

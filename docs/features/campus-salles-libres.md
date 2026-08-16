@@ -164,17 +164,47 @@ est testable et réutilisable indépendamment du hook.
   **complète** — visuel, horaires, coordonnées. C'est la promesse du socle embarqué : si l'écran se
   vide, la surcouche est devenue une dépendance, ce qu'elle ne doit jamais être.
 
-## Quand l'établissement n'a pas de serveur d'emplois du temps
+## Quand l'établissement n'a pas d'inventaire de salles
 
-Les bâtiments et leurs salles se reconstruisent depuis l'inventaire du serveur de planning : une
-université qui n'en publie pas n'a rien à montrer ici. La **section disparaît du tableau de bord**
+Les bâtiments et leurs salles se reconstruisent depuis l'inventaire d'un serveur Celcat : une
+université qui n'y a pas accès n'a rien à montrer ici. La **section disparaît du tableau de bord**
 plutôt que d'afficher un carrousel vide ou une erreur permanente — même règle que la ligne de
 messagerie d'un établissement sans webmail extractible
 ([6-G](../phase-6/6-g-etablissements.md)). L'écran détaillé n'est atteignable que depuis cette
 section : le masquer suffit à le rendre inaccessible.
 
+**Le prédicat est `sallesDisponibles()`, et surtout pas `planningDisponible()`.** Les deux ont été
+séparés au jalon [6-I](../phase-6/6-i-planning-universel.md) et il ne faut pas les refondre : depuis
+qu'il existe deux sources d'emploi du temps, avoir un planning et avoir un inventaire de salles sont
+deux questions différentes. Un établissement dont l'emploi du temps arrive par un export iCalendar n'a
+pas d'inventaire interrogeable — les fondre ferait réapparaître cette section, définitivement cassée.
+
+### Un établissement peut emprunter l'inventaire d'un autre
+
+C'est une décision produit du jalon 6-I, prise en le vérifiant sur appareil, et elle change qui voit
+cette fonctionnalité : la colonne `salles_libres` du catalogue laisse un établissement pointer le
+serveur d'un autre. **Bordeaux INP emprunte celui de l'Université de Bordeaux.**
+
+La raison est géographique, pas technique : ses écoles sont sur le campus de Talence, à deux cents
+mètres des bâtiments que cette recherche liste. Leur refuser la fonctionnalité parce que leur emploi
+du temps vient d'ADE les priverait d'un service qui leur sert réellement.
+
+Deux conséquences à connaître avant d'y toucher :
+
+- **les bâtiments proposés restent ceux de l'Université de Bordeaux**, et l'écran ne le dit pas. Les
+  bâtiments de l'INP sont bien publiés dans le référentiel depuis 6-I, mais avec `acces_libre` à faux
+  — ce sont des écoles d'ingénieurs à accès contrôlé, donc ils ne sont pas éligibles, et c'est exact ;
+- **rien dans la reconstruction ne dépend du format de salle de l'établissement.** `salles` et
+  `salles_libres` sont deux colonnes distinctes : la première dit comment lire un code de bâtiment
+  dans un libellé de cours, la seconde d'où vient l'inventaire. La reconstruction, elle, passe par
+  `freeAccess` du référentiel et une correspondance textuelle — elle est donc insensible à
+  l'établissement actif.
+
 ## Limites connues
 
+- **Un étudiant de Bordeaux INP voit les bâtiments de l'Université de Bordeaux**, sans que l'écran
+  le lui dise. C'est voulu — même campus — mais ce n'est pas écrit à l'interface, et adapter la
+  recherche aux bâtiments de l'INP est un sujet distinct qui n'est pas ouvert.
 - **Un seul bâtiment est éligible aujourd'hui.** Le référentiel compte 73 entrées, dont **une seule**
   porte `freeAccess: true` (`A28`, le CREMI). La fonctionnalité est donc opérationnelle mais son
   périmètre est minimal ; l'étendre demande d'enrichir le fichier — ou, depuis le jalon

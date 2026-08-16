@@ -115,7 +115,7 @@ n'ont pas la même nature, et qu'il vaut mieux ne pas confondre :
 
 | Volet | Thèse | Jalons |
 |---|---|---|
-| **1 — Le comportement devient de la donnée** | l'accès aux sources quitte le binaire pour des Blueprints publiés | A → G, I *(livrés)*, J |
+| **1 — Le comportement devient de la donnée** | l'accès aux sources quitte le binaire pour des Blueprints publiés | A → G, I, J *(livrés)* |
 | **2 — La refonte visuelle** | l'application a la dette visuelle de sa reprise ; on la rend présentable avant de sortir | K, puis les sessions d'écran |
 | **Clôture** | plus aucune source n'a deux chemins, et la version part | Z |
 
@@ -144,7 +144,7 @@ de test, et les limites écrites.
                                             ▼
                           6-I Emploi du temps iCal  (Aetherius 3-I)   [livre]
                                             ▼
-                          6-J Le compte a l'accueil
+                          6-J Le compte a l'accueil   [livre]
 
    VOLET 2 — la refonte visuelle
 
@@ -168,7 +168,7 @@ de test, et les limites écrites.
 | 6-F | [6-f-scolarite.md](6-f-scolarite.md) | 6-D, 6-E | La WebView cachée devient deux Blueprints. Le morceau qui justifie la phase, et le plus exigeant à vérifier. |
 | 6-G | [6-g-etablissements.md](6-g-etablissements.md) | 6-F, Aetherius 3-H | Le catalogue des établissements pilote l'interface, les Blueprints sont namespacés, un second portail réel est livré. |
 | 6-I | [6-i-planning-universel.md](6-i-planning-universel.md) *(livré)* | 6-G, Aetherius 3-I *(livré en 0.5.4)* | L'emploi du temps par export iCal, pour les universités qui ne sont pas sur un Celcat ouvert — c'est-à-dire presque toutes. Née de 6-G, qui a livré un établissement sans planning. **Bordeaux INP a désormais son planning**, et le catalogue arbitre entre deux sources. |
-| 6-J | [6-j-compte-et-sources-par-etablissement.md](6-j-compte-et-sources-par-etablissement.md) | 6-G, 6-I | Proposer le compte **universitaire** dès l'accueil, et accepter que sa place dans le parcours dépende de l'établissement. La moitié « colle ton lien iCal » dépend de 6-I. |
+| 6-J | [6-j-compte-et-sources-par-etablissement.md](6-j-compte-et-sources-par-etablissement.md) *(livré)* | 6-G, 6-I | Le compte **universitaire** proposé dès l'accueil, sautable et rappelé, et le **lien d'abonnement collé** comme repli universel — un Blueprint embarqué, aucune écriture par établissement. **Ferme le volet 1.** |
 | 6-K | [6-k-socle-visuel.md](6-k-socle-visuel.md) | — | **Ouvre le volet 2.** Le vocabulaire visuel est **extrait** des écrans qui font déjà référence, pas inventé : tokens complétés, composants partagés, règle qui refuse les valeurs en dur, recette d'écran. Ce qui suit se fait en sessions, écran par écran. |
 | 6-Z | [6-z-livraison-finale.md](6-z-livraison-finale.md) | tout | Les replis sont retirés, les dépendances mortes sortent, la documentation est close, **la version 6 part**. |
 

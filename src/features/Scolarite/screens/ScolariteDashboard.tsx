@@ -7,6 +7,7 @@ import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import { presenterEchec } from '../services/ScolariteMapping';
+import { portailAbsent } from '../services/ScolariteSession';
 import { useCredentials } from '../services/CredentialsContext';
 import ScolariteLoginView from '../components/ScolariteLoginView';
 import GreetingBlock from '../components/GreetingBlock';
@@ -20,13 +21,38 @@ const SectionHeader = ({ title, theme }) => (
     </Text>
 );
 
+/**
+ * La messagerie, quand l'etablissement en publie une d'extractible.
+ *
+ * Elle **disparait** sinon : il n'y a alors rien qui echoue, donc rien a montrer. Une carte en panne
+ * permanente pour un service inexistant serait un mensonge repete a chaque lancement (jalon 6-G).
+ */
+const MessagerieSection = ({ disponible, mailData, coldData, scrapeStatus, sessionFailure, theme, accent, onPress }) => {
+    if (!disponible) return null;
+
+    return (
+        <>
+            <SectionHeader title={Translator.get('MESSAGING')} theme={theme} />
+            <MailboxRow
+                mailData={mailData}
+                coldData={coldData}
+                status={scrapeStatus}
+                failure={sessionFailure}
+                color={theme.sectionsHeaders[5] || accent}
+                theme={theme}
+                onPress={onPress}
+            />
+        </>
+    );
+};
+
 const ScolariteDashboard = ({ navigation }) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     const accent = theme.accent ?? theme.primary;
 
     const {
-        credentials, credentialsLoaded, coldData, mailData, messagerieDisponible,
+        credentials, credentialsLoaded, coldData, mailData, messagerieDisponible, portailDisponible,
         scrapeStatus, scrapeProgress, sessionMode, sessionFailure, retrySession,
     } = useCredentials();
 
@@ -70,7 +96,20 @@ const ScolariteDashboard = ({ navigation }) => {
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
                     {renderHeader(insets)}
 
-                    {!credentials ? (
+                    {/*
+                      * L'absence de portail passe **devant** l'absence de compte, et l'ordre n'est pas
+                      * indifferent — c'est le meme raisonnement que l'onglet Planning au jalon 6-G.
+                      * Un etablissement qui ne publie aucun portail n'a jamais d'identifiants
+                      * enregistres : la branche « pas de compte » gagnait donc toujours, et proposait
+                      * un formulaire de connexion qui ne pouvait mener nulle part. Le dire est le bon
+                      * comportement, et c'est ce qui rend un etablissement sans portail utilisable
+                      * plutot que menteur (jalon 6-J).
+                      */}
+                    {!portailDisponible ? (
+                        <View style={{ flex: 1, justifyContent: 'center', paddingTop: (insets?.top || 0) + 70 }}>
+                            <SourceFailureNotice failure={portailAbsent()} theme={theme} />
+                        </View>
+                    ) : !credentials ? (
                         <ScolariteLoginView
                             theme={theme}
                             color={accent}
@@ -105,27 +144,16 @@ const ScolariteDashboard = ({ navigation }) => {
                                 }}
                             >
                                 <GreetingBlock coldData={coldData} color={accent} theme={theme} />
-
-                                {/*
-                                  * La messagerie disparait quand l'etablissement n'en publie pas
-                                  * d'extractible : il n'y a alors rien qui echoue, donc rien a
-                                  * montrer. Une carte en panne permanente pour un service inexistant
-                                  * serait un mensonge repete a chaque lancement.
-                                  */}
-                                {messagerieDisponible && (
-                                    <>
-                                        <SectionHeader title={Translator.get('MESSAGING')} theme={theme} />
-                                        <MailboxRow
-                                            mailData={mailData}
-                                            coldData={coldData}
-                                            status={scrapeStatus}
-                                            failure={sessionFailure}
-                                            color={theme.sectionsHeaders[5] || accent}
-                                            theme={theme}
-                                            onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email' })}
-                                        />
-                                    </>
-                                )}
+                                <MessagerieSection
+                                    disponible={messagerieDisponible}
+                                    mailData={mailData}
+                                    coldData={coldData}
+                                    scrapeStatus={scrapeStatus}
+                                    sessionFailure={sessionFailure}
+                                    theme={theme}
+                                    accent={accent}
+                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email' })}
+                                />
                             </Animated.ScrollView>
                         </BiometryGate>
                     )}

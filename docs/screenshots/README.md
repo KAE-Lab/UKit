@@ -58,6 +58,7 @@ peuvent attendre.
 |---|---|---|
 | `onboarding-bienvenue.png` | étape 1, logo et accroche | essentielle |
 | `onboarding-etablissement.png` | étape 3, la liste des universités | **prise** |
+| `onboarding-compte.png` | étape 4, le compte universitaire et sa sortie « Plus tard » (jalon 6-J) | attendue |
 | `onboarding-preferences.png` | étape 2, choix du thème et de la langue | essentielle |
 | `onboarding-groupes.png` | étape 4, année, semestre et recherche de groupe | essentielle |
 | `onboarding-fin.png` | étape 5, confirmation | complémentaire |
@@ -73,6 +74,9 @@ peuvent attendre.
 | `planning-cours-simultanes.png` | carrousel de cours qui se chevauchent | complémentaire |
 | `planning-hors-ligne.png` | bandeau de données en cache daté | **prise** — produite avec l'interrupteur **hors ligne** du menu de développement, sans mode avion ([qualite.md](../qualite.md)) |
 | `planning-echec.png` | l'échec d'une source : message de la famille et bouton Réessayer | **prise** — même interrupteur |
+| `planning-lien-attendu.png` | l'onglet Planning proposant de coller un lien d'abonnement (jalon 6-J) | attendue |
+| `lien-edt-saisie.png` | l'écran de saisie du lien, après une vérification réussie | attendue |
+| `scolarite-non-reliee.png` | la Scolarité d'un établissement sans portail : le message, sans formulaire | attendue |
 | `planning-vide.png` | état vide, aucun groupe favori | complémentaire |
 
 ### Campus — [features/campus.md](../features/campus.md)

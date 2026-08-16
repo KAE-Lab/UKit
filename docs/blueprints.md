@@ -38,6 +38,27 @@ vivent aussi (`ukit.portail.bordeaux-inp.edt`). Ce sont les premiers fichiers du
 que ce champ existe pour faire : un appareil dont le moteur est plus ancien ignore l'entrée au lieu de
 jouer un fichier qu'il ne sait pas exécuter.
 
+### Un Blueprint qui n'appartient à aucun établissement
+
+[`ukit.edt.abonnement`](../blueprints/ukit-edt-abonnement.blueprint.json) est le seul fichier du dépôt
+dont la source **n'est pas connue à l'écriture** : il joue le lien d'abonnement que l'étudiant a collé,
+quel qu'il soit. C'est le repli universel du jalon
+[6-J](phase-6/6-j-compte-et-sources-par-etablissement.md), et deux de ses choix méritent d'être
+compris avant d'y toucher :
+
+- **il est embarqué et hors du préfixe `ukit.portail.`**, alors qu'il sert exactement le même besoin
+  que `ukit.portail.bordeaux-inp.edt`. La différence est qu'il n'appartient à aucune université : un
+  fichier par établissement le rendrait aussi coûteux que ce qu'il remplace, c'est-à-dire lui ferait
+  perdre sa raison d'être ;
+- **il demande le lien verbatim, sans bornes de dates.** C'est ce qui le rend universel : ADE accepte
+  `firstDate` / `lastDate`, mais d'autres produits figent la fenêtre à l'export et un paramètre inconnu
+  y est au mieux ignoré. Le filtrage par date est donc **applicatif** — une exception assumée à la
+  règle « le Blueprint dit ce qu'on demande et ce qu'on en retient », parce que la seule alternative
+  serait un fichier par produit d'emploi du temps.
+
+Aucun secret n'y est déclaré, et c'est volontaire : **le lien *est* le secret**. Il arrive en entrée
+depuis le trousseau, et le moteur le masque dans les événements comme n'importe quelle autre entrée.
+
 Les versions vivent dans un fichier de données plutôt que dans `index.ts` pour une raison
 mécanique : le script de publication est un module Node, il ne sait pas lire du TypeScript. Un
 fichier que les deux côtés lisent tel quel vaut mieux qu'une version recopiée à la main — elle serait

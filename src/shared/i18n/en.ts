@@ -43,8 +43,15 @@ const en = {
 	// Un service que l'etablissement ne publie pas : rien n'est en panne, il n'y a rien a joindre.
 	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
 	ERROR_PORTAL_UNAVAILABLE: 'This university is not connected to UKit yet.',
+	// Le cas general de la meme famille : un service que cet etablissement ne propose pas. L'ecran le
+	// fait le plus souvent **disparaitre** plutot que de l'afficher ; le message existe pour les
+	// chemins ou il reste atteignable.
+	ERROR_SERVICE_ABSENT: 'This service is not available for your institution.',
 	ERROR_TIMETABLE_UNAVAILABLE: 'This university does not publish its timetable in UKit yet.',
 	ERROR_TIMETABLE_GROUP_UNKNOWN: 'This group no longer exists in your university timetable. Pick another one.',
+	// Distinct de ERROR_TIMETABLE_UNAVAILABLE, et c'est tout l'objet du jalon 6-J : la-bas rien
+	// n'existe, ici il manque un geste. Deux phrases, deux ecrans, deux gestes attendus.
+	ERROR_TIMETABLE_LINK_MISSING: 'Your university publishes its timetable through a subscription link. Paste it to see it here.',
 	TIMETABLE_GROUPS_MISSING: 'Groups not found, not shown here: $-',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.
@@ -128,6 +135,28 @@ const en = {
 	INSTITUTION_CHANGE_TITLE: 'Switch institution?',
 	INSTITUTION_CHANGE_WARNING: 'Your favourite groups, cached timetable, university session and the courses added to your calendar will be erased.\nData from two universities does not mix.',
 	INSTITUTION_UNAVAILABLE: 'Your institution is no longer listed. UKit carries on with what it knows.',
+	// Le compte a l'accueil et le lien d'abonnement (jalon 6-J).
+	UNIVERSITY_ACCOUNT: 'University account',
+	ACCOUNT_CONNECTED: 'Signed in',
+	ACCOUNT_NOT_CONNECTED: 'Not signed in',
+	CONNECT_ACCOUNT_TITLE: 'Sign in to your university account',
+	CONNECT_ACCOUNT_DESC:
+		'To get your student details and your messages. Your credentials stay on your phone, encrypted, and are sent to nobody but your university.',
+	LATER: 'Later',
+	TIMETABLE_LINK: 'Timetable link',
+	TIMETABLE_LINK_TITLE: 'Paste your timetable link',
+	TIMETABLE_LINK_DESC:
+		'Your university publishes its timetable through a subscription link (iCal). Paste it here: it stays on your phone, encrypted, like a password.',
+	TIMETABLE_LINK_PLACEHOLDER: 'https://…',
+	TIMETABLE_LINK_ADD: 'Paste my link',
+	TIMETABLE_LINK_CHECK: 'Check and save',
+	TIMETABLE_LINK_CHECKING: 'Checking…',
+	TIMETABLE_LINK_OK: 'Calendar recognised: $- classes.',
+	TIMETABLE_LINK_EMPTY: 'This calendar has no classes in it. Check that the link is really yours.',
+	TIMETABLE_LINK_INVALID:
+		'This link does not return a calendar. Check that you copied the subscription link (iCal), not the address of your timetable page.',
+	TIMETABLE_LINK_FORGET: 'Forget this link',
+	TIMETABLE_LINK_HELP: 'Where to find it:',
 	YOUR_GROUP: 'What is your group?',
 	YOUR_LANGUAGE: 'What is your language?',
 	YOUR_SEMESTER: 'What semester are you in?',

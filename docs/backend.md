@@ -109,6 +109,23 @@ Le jalon [6-I](phase-6/6-i-planning-universel.md) lui a ajouté deux colonnes, e
 | `salles` | comment lire un code de bâtiment dans un libellé de salle : les séparateurs, le motif, et le rang de la première ligne où chercher | le comportement historique de Celcat |
 | `salles_libres` | le serveur d'inventaire des salles **emprunté** à un autre établissement, quand les étudiants sont sur le même campus | celui de l'établissement fait l'affaire |
 
+Le jalon [6-J](phase-6/6-j-compte-et-sources-par-etablissement.md) en ajoute une, et enrichit `edt`
+d'un sous-objet — même règle, toujours **ce qui existe** :
+
+| Colonne | Ce qu'elle porte | `null` veut dire |
+|---|---|---|
+| `crous_region` | la région CROUS de Croustillant, jusque-là une constante du Blueprint | pas de restaurants : la section disparaît |
+| `edt.abonnement` | *cet établissement publie un export iCal à s'abonner*, plus un libellé d'aide facultatif | pas d'abonnement à proposer |
+| `salles.reconnaissance: false` | *cet établissement n'a pas de référentiel de lieux* — à distinguer d'une colonne **absente**, qui vaut le comportement bordelais | — |
+
+`edt.abonnement` ne nomme **aucun** Blueprint, et c'est délibéré : le fichier qui le joue est unique,
+embarqué, et le même pour tout le monde. Le catalogue dit que l'abonnement existe, le code relu sait
+quoi jouer — la ligne de 6-G tenue à la lettre.
+
+C'est aussi ce jalon qui ajoute la ligne **`autre`**, « Mon université n'est pas dans la liste » : elle
+n'est pas une université, c'est **l'absence d'université portée, rendue utilisable**. Voir
+[`supabase/README.md`](../supabase/README.md).
+
 `edt.params` loge le projet ADE **à côté** du référentiel, et ce n'est pas un rangement arbitraire :
 les deux se périment à la même date — la rentrée — et les séparer ferait de chaque rentrée deux
 publications au lieu d'une.

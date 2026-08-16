@@ -131,6 +131,13 @@ create table if not exists public.etablissements (
     -- Les intitules propres a l'etablissement (« numero etudiant », « INE », …). Les libelles
     -- d'ecran, eux, restent traduits par Translator : confondre les deux ramenerait des chaines en dur.
     libelles           jsonb,
+    -- La region CROUS, telle que Croustillant la numerote. Elle etait une `vars` du Blueprint jusqu'au
+    -- jalon 6-J, avec un commentaire qui l'assumait — « l'application vise une seule region ». C'est
+    -- vrai, et le perimetre du produit reste le secteur bordelais (voir le README) ; c'est aussi
+    -- exactement la forme que prend une constante bordelaise avant de devenir fausse, et le jalon 6-G
+    -- en a corrige onze du meme genre. `null` fait **disparaitre** la section des restaurants, comme
+    -- une colonne `salles_libres` absente fait disparaitre celle des salles libres.
+    crous_region       text,
     ordre              integer     not null default 0
 );
 
@@ -145,6 +152,11 @@ alter table public.etablissements add column if not exists services             
 alter table public.etablissements add column if not exists edt           jsonb;
 alter table public.etablissements add column if not exists salles        jsonb;
 alter table public.etablissements add column if not exists salles_libres jsonb;
+
+-- La colonne du jalon 6-J. Meme regle encore : « ajouter avant de retirer, toujours ». Une version de
+-- l'application qui ne la connait pas continue de tourner — son Blueprint garde son entree par
+-- defaut, celle du secteur bordelais.
+alter table public.etablissements add column if not exists crous_region  text;
 
 -- =============================================================================
 -- Livraison
