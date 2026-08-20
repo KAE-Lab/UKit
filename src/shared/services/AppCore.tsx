@@ -348,7 +348,7 @@ class SettingsManagerService {
         try {
             const data = await AsyncStorage.getItem('previousSyncData');
             existingCalendarEvents = JSON.parse(data) || {};
-        } catch (e) { existingCalendarEvents = {}; }
+        } catch { existingCalendarEvents = {}; }
 
         const existingInternalCalendarEvents = Object.values(existingCalendarEvents);
         await Promise.all(existingInternalCalendarEvents.map((id) => Calendar.deleteEventAsync(id as string)));
@@ -388,7 +388,7 @@ class SettingsManagerService {
         try {
             const data = await AsyncStorage.getItem('previousSyncData');
             existingCalendarEvents = JSON.parse(data) || {};
-        } catch (e) { existingCalendarEvents = {}; }
+        } catch { existingCalendarEvents = {}; }
 
         const existingInternalCalendarEvents = Object.values(existingCalendarEvents);
         const updatedEvents = [];
@@ -404,7 +404,7 @@ class SettingsManagerService {
                         await Calendar.updateEventAsync(existingInternalEventId, eventToCreate);
                         updatedEvents.push(existingInternalEventId);
                         nextExistingCalendarEvents[String(event.id)] = existingInternalEventId;
-                    } catch (e) {
+                    } catch {
                         const id = await Calendar.createEventAsync(this._calendar as string, eventToCreate);
                         nextExistingCalendarEvents[String(event.id)] = id;
                     }
@@ -627,7 +627,7 @@ class SettingsManagerService {
             const data = await AsyncStorage.getItem('firstload');
             const isFirstLoad = data ? JSON.parse(data) : null;
             this._firstload = isFirstLoad === null ? true : isFirstLoad;
-        } catch (error) { this._firstload = true; }
+        } catch { this._firstload = true; }
 
         if (this._firstload) return;
 
@@ -638,7 +638,7 @@ class SettingsManagerService {
             const data = await AsyncStorage.getItem('settings');
             const settings = data ? JSON.parse(data) : null;
             this.applySettingsData(settings);
-        } catch (error) {
+        } catch {
             new ErrorAlert("Settings couldn't be loaded").show();
         }
     };

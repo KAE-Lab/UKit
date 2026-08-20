@@ -97,8 +97,8 @@ export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
 						<View style={{
 							backgroundColor: theme.accent ? theme.accent + '20' : theme.primary + '20',
 							borderRadius: tokens.radius.pill,
-							paddingHorizontal: 8,
-							paddingVertical: 2,
+							paddingHorizontal: tokens.space.sm,
+							paddingVertical: tokens.space.xxs,
 							marginLeft: tokens.space.sm
 						}}>
 							<Text style={{ color: theme.accent ?? theme.primary, fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.bold }}>

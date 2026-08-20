@@ -37,7 +37,7 @@ export function lireLiens(brut: string | null): LiensEdt {
     let contenu: unknown;
     try {
         contenu = JSON.parse(brut);
-    } catch (erreur) {
+    } catch {
         console.warn('[lienEdt] table illisible, ignoree');
         return {};
     }

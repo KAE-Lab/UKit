@@ -21,19 +21,19 @@
  */
 
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Translator from '../i18n/Translator';
-import { tokens, AppThemeType } from '../theme/Theme';
+import { AppThemeType } from '../theme/Theme';
+import { EmptyState, type EmptyStateAction } from './EmptyState';
 import type { UkitFailure } from '../aetherius';
 
-/** Le geste qui remplirait l'ecran, quand il en existe un. Jamais une reprise. */
-export interface NoticeAction {
-    readonly label: string;
-    readonly onPress: () => void;
-    readonly icon?: keyof typeof MaterialCommunityIcons.glyphMap;
-}
+/**
+ * Le geste qui remplirait l'ecran, quand il en existe un. Jamais une reprise.
+ *
+ * Meme forme qu'une action d'etat vide, et c'est voulu : depuis le jalon 6-K les deux blocs partagent
+ * leur mise en page ([`EmptyState`](EmptyState.tsx)). Le nom local reste, il est deja importe ailleurs.
+ */
+export type NoticeAction = EmptyStateAction;
 
 interface SourceFailureNoticeProps {
     failure: UkitFailure;
@@ -52,54 +52,11 @@ export function SourceFailureNotice({ failure, theme, onRetry, action }: SourceF
             : null;
 
     return (
-        <View style={{
-            alignItems: 'center',
-            paddingVertical: tokens.space.xl,
-            paddingHorizontal: tokens.space.lg,
-            marginHorizontal: tokens.space.sm,
-            backgroundColor: theme.cardBackground,
-            borderRadius: tokens.radius.lg,
-            borderWidth: 1,
-            borderColor: theme.border
-        }}>
-            <MaterialCommunityIcons
-                name="cloud-off-outline"
-                size={48}
-                color={theme.fontSecondary}
-                style={{ marginBottom: tokens.space.sm }}
-            />
-            <Text style={{
-                color: theme.fontSecondary,
-                fontSize: tokens.fontSize.md,
-                textAlign: 'center'
-            }}>
-                {Translator.get(failure.messageKey)}
-            </Text>
-
-            {bouton !== null ? (
-                <TouchableOpacity
-                    onPress={bouton.onPress}
-                    activeOpacity={0.8}
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginTop: tokens.space.md,
-                        paddingVertical: tokens.space.sm,
-                        paddingHorizontal: tokens.space.lg,
-                        borderRadius: tokens.radius.md,
-                        backgroundColor: theme.primary,
-                    }}
-                >
-                    {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif des messages
-                        d'erreur (ScolariteLoginView), illisible sur le fond `primary` du bouton. */}
-                    {bouton.icon !== undefined && (
-                        <MaterialCommunityIcons name={bouton.icon} size={18} color={theme.lightFont} />
-                    )}
-                    <Text style={{ color: theme.lightFont, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, marginLeft: tokens.space.xs }}>
-                        {bouton.label}
-                    </Text>
-                </TouchableOpacity>
-            ) : null}
-        </View>
+        <EmptyState
+            icon="cloud-off-outline"
+            message={Translator.get(failure.messageKey)}
+            theme={theme}
+            action={bouton}
+        />
     );
 }

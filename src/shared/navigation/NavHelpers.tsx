@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, TouchableWithoutFeedback, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, TouchableWithoutFeedback } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SettingsManager } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import style, { tokens } from '../theme/Theme';
-import Button from '../ui/Button';
 
 
 // GESTIONNAIRE DE HEADER
@@ -157,27 +156,27 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
                             <View style={theme.settings.popup.background}>
                                 <View style={theme.settings.popup.container}>
                                     <View style={theme.settings.popup.header}>
-                                        <Text style={theme.settings.popup.textHeader}>{Translator.get('MY_PLANNING') || 'Mon Planning'}</Text>
+                                        <Text style={theme.settings.popup.textHeader}>{Translator.get('MY_PLANNING')}</Text>
                                         <TouchableOpacity onPress={() => this.setState({ modalVisible: false })}>
                                             <MaterialIcons name="close" size={32} style={theme.settings.popup.closeIcon} />
                                         </TouchableOpacity>
                                     </View>
                                     
                                     <Text style={[theme.settings.popup.textDescription, { marginBottom: 15 }]}>
-                                        {Translator.get('FAVORITES_MANAGE') || "Gérez vos groupes favoris :"}
+                                        {Translator.get('FAVORITES_MANAGE')}
                                     </Text>
                                     
                                     <ScrollView style={{ maxHeight: 300 }}>
                                         {this.state.favoriteGroups.length === 0 && (
                                             <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm, fontStyle: 'italic', paddingBottom: tokens.space.lg }}>
-                                                {Translator.get('FAVORITES_EMPTY') || "Votre liste de favoris est vide. Recherchez un groupe de l'Université pour l'ajouter à un de vos favoris !"}
+                                                {Translator.get('FAVORITES_EMPTY')}
                                             </Text>
                                         )}
                                         {this.state.favoriteGroups.map((group) => (
                                             <View key={group} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.greyBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginBottom: tokens.space.sm }}>
                                                 <Text style={{ color: theme.font, fontSize: tokens.fontSize.md, flex: 1 }}>{group.replace(/_/g, ' ')}</Text>
                                                 <TouchableOpacity onPress={() => SettingsManager.removeFavoriteGroup(group)} style={{ padding: tokens.space.xs, paddingHorizontal: 10 }}>
-                                                    <MaterialIcons name="delete" size={24} color={'#E53935'} />
+                                                    <MaterialIcons name="delete" size={24} color={theme.danger} />
                                                 </TouchableOpacity>
                                             </View>
                                         ))}
@@ -193,7 +192,8 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
         return (
             <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                 <View style={{ backgroundColor: theme.primary, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
-                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={26} color={'#FFFFFF'} />
+                    {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif (docs/theme.md). */}
+                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={26} color={theme.lightFont} />
                 </View>
             </TouchableOpacity>
         );
@@ -251,39 +251,6 @@ export class FilterRemoveButton extends React.Component<FilterRemoveButtonProps,
                     </View>
                 </Modal>
             </View>
-        );
-    }
-}
-
-// ── BOUTON MON GROUPE ──────────────────────────────────
-export interface MyGroupButtonProps {
-    favoriteGroups: string[];
-    themeName: string;
-    isActive?: boolean;
-    navigate: (route: string, params?: object) => void;
-}
-
-export class MyGroupButton extends React.PureComponent<MyGroupButtonProps> {
-    componentDidMount() {
-        if (this.props.favoriteGroups && this.props.favoriteGroups.length > 0 && SettingsManager.getOpenAppOnFavoriteGroup()) {
-            this.props.navigate('Stack', { screen: 'Group', params: { name: this.props.favoriteGroups } });
-        }
-    }
-    _onPress = () => this.props.navigate('Stack', { screen: 'Group', params: { name: this.props.favoriteGroups } });
-    render() {
-        const theme = style.Theme[this.props.themeName];
-        let title = Translator.get('MY_PLANNING') || "Mon Planning";
-        return (
-            <Button
-                title={title}
-                size={22}
-                textSize={14}
-                icon="calendar-today"
-                color={theme.primary}
-                fontColor={theme.font}
-                onPress={this._onPress}
-                isActive={this.props.isActive}
-            />
         );
     }
 }

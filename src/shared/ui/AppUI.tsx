@@ -1,40 +1,12 @@
 import React, { useEffect, useContext } from 'react';
-import { Text, View, StatusBar as RNStatusBar, Alert, Linking, Platform } from 'react-native';
+import { StatusBar as RNStatusBar, Alert, Linking, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import axios from 'axios';
 
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { URL } from '../constants/urls';
-import { tokens } from '../theme/Theme';
-
-// ── SÉPARATEUR VISUEL ───────────────────────────────────────────
-export interface SplitProps {
-    noMargin?: boolean;
-    onlyBottomMargin?: boolean;
-    lineColor?: string;
-    title?: string;
-    color?: string;
-}
-
-export class Split extends React.PureComponent<SplitProps> {
-    render() {
-        const { noMargin, onlyBottomMargin, lineColor, title, color } = this.props;
-        return (
-            <View style={{ marginTop: noMargin || onlyBottomMargin ? 0 : tokens.space.md, marginBottom: noMargin ? 0 : tokens.space.xs }}>
-                <View />
-                {title && (
-                    <Text style={{
-                        color: color, paddingLeft: tokens.space.md, paddingTop: tokens.space.sm, fontSize: tokens.fontSize.xs,
-                        fontWeight: tokens.fontWeight.semibold, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.7,
-                    }}>
-                        {title}
-                    </Text>
-                )}
-            </View>
-        );
-    }
-}
+import style from '../theme/Theme';
 
 // ── BARRE DE STATUT ─────────────────────────────────────────
 export const StatusBar = () => {
@@ -43,7 +15,7 @@ export const StatusBar = () => {
     return (
         <RNStatusBar
             barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
-            backgroundColor={theme === 'light' ? '#006F9F' : '#000000'}
+            backgroundColor={style.Theme[theme].statusBarBackground}
         />
     );
 };
@@ -70,7 +42,7 @@ export const UpdateAlert = () => {
                 if (request.status === 200 && String(request.data).trim() !== getCurrentVersion()) {
                     promptAlert();
                 }
-            } catch (e) { /* Ignore réseau */ }
+            } catch { /* Ignore réseau */ }
         };
         checkVersionDiff();
     }, []);

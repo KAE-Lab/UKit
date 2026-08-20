@@ -19,7 +19,7 @@ const ScolariteLoadingScreen = ({ scrapeProgress, theme, color }) => {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <Text style={[styles.title, { color: theme.font, fontFamily: 'Montserrat_700Bold' }]}>
+            <Text style={[styles.title, { color: theme.font }]}>
                 {Translator.get('SCOLARITY')}
             </Text>
             <View style={styles.steps}>
@@ -43,7 +43,7 @@ const ScolariteLoadingScreen = ({ scrapeProgress, theme, color }) => {
                             </View>
                             <Text style={[
                                 styles.stepLabel,
-                                { fontFamily: isCurrent ? 'Montserrat_600SemiBold' : 'Montserrat_500Medium' },
+                                { fontWeight: isCurrent ? tokens.fontWeight.semibold : tokens.fontWeight.medium },
                                 { color: isDone ? color : isCurrent ? theme.font : theme.fontSecondary },
                                 isPending && styles.pendingLabel,
                             ]}>

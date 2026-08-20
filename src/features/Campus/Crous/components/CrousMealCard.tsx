@@ -84,11 +84,13 @@ export function CrousMealCard({ mealTitle, categories, mealType, theme }: CrousM
                         const icon = getDishIcon(dish);
                         return (
                             <View key={dIdx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 }}>
-                                <MaterialCommunityIcons 
-                                    name={icon} 
-                                    size={16} 
-                                    color={icon === 'leaf' ? '#4caf50' : theme.fontSecondary} 
-                                    style={{ marginRight: 6, marginTop: 2 }} 
+                                {/* Le vegetarien est le seul plat qui porte une couleur : c'est un etat, donc
+                                    un ton du theme et non un vert Material en dur (jalon 6-K). */}
+                                <MaterialCommunityIcons
+                                    name={icon}
+                                    size={16}
+                                    color={icon === 'leaf' ? theme.success : theme.fontSecondary}
+                                    style={{ marginRight: 6, marginTop: tokens.space.xxs }}
                                 />
                                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, flex: 1, lineHeight: 20 }}>{dish}</Text>
                             </View>

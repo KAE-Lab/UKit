@@ -14,7 +14,6 @@ import {
 	MaterialIcons,
 	SimpleLineIcons,
 } from '@expo/vector-icons';
-import { Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 
 import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
@@ -33,8 +32,6 @@ function AnimatedAppLoader({ children }) {
 	useEffect(() => {
 		async function prepare() {
 			try {
-				await Font.loadAsync({ Montserrat_500Medium });
-
 				const imageAssets = cacheImages([require('./assets/icons/logo.png')]);
 
 				const fontAssets = cacheFonts([
@@ -119,6 +116,9 @@ function AnimatedSplashScreen({ children, image }) {
 					style={[
 						StyleSheet.absoluteFill,
 						{
+							// L'ecran de demarrage est peint avant que le theme existe : ce repli suit
+							// `app.config.ts`, pas la palette.
+							// eslint-disable-next-line ukit/no-style-literals
 							backgroundColor: splashConfig.backgroundColor || '#ffffff',
 							opacity: animation,
 						},

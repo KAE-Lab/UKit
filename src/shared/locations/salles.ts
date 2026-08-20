@@ -43,7 +43,7 @@ function compiler(motif: string): RegExp | null {
     let regex: RegExp | null = null;
     try {
         regex = RegExp(motif, 'im');
-    } catch (erreur) {
+    } catch {
         // Un motif publie illisible ne doit pas casser un ecran : on le dit, et le format par defaut
         // reprend la main au prochain appel via `formatSallesActif()`.
         console.warn(`[salles] motif illisible, ignore : ${motif}`);

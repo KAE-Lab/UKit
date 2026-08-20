@@ -13,7 +13,6 @@ import SettingsScreen from '../../features/Settings/screens/SettingsScreen';
 import style, { tokens, AppThemeType } from '../theme/Theme';
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
-import { NavBarHelper, SaveGroupButton } from './NavHelpers';
 import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
 
 export type MainTabParamList = {
@@ -119,7 +118,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                     size={24}
                     color={theme.accent ?? theme.primary}
                 />
-                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: tokens.space.xxs }]}>
                     {Translator.get('GROUPS')}
                 </Text>
             </TouchableOpacity>
@@ -144,7 +143,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                     size={24}
                     color={theme.accent ?? theme.primary}
                 />
-                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: tokens.space.xxs }]}>
                     {Translator.get('ABOUT')}
                 </Text>
             </TouchableOpacity>
@@ -169,7 +168,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                     size={24}
                     color={theme.accent ?? theme.primary}
                 />
-                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
+                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: tokens.space.xxs }]}>
                     {Translator.get('LOGOUT')}
                 </Text>
             </TouchableOpacity>
@@ -240,7 +239,7 @@ export default function MainTabNavigator() {
                 name="PlanningTab"
                 component={PlanningStackScreen}
                 options={{
-                    tabBarLabel: Translator.get('MY_PLANNING') || 'Planning',
+                    tabBarLabel: Translator.get('MY_PLANNING'),
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="calendar-month-outline" size={24} color={color} />,
                     headerShown: false
                 }}
@@ -249,7 +248,7 @@ export default function MainTabNavigator() {
                 name="CampusTab"
                 component={CampusDashboard}
                 options={{
-                    tabBarLabel: Translator.get('CAMPUS') || 'Campus',
+                    tabBarLabel: Translator.get('CAMPUS'),
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="domain" size={24} color={color} />
                 }}
             />
@@ -257,7 +256,7 @@ export default function MainTabNavigator() {
                 name="ScolariteTab"
                 component={ScolariteDashboard}
                 options={{
-                    tabBarLabel: Translator.get('SCOLARITY') || 'Scolarité',
+                    tabBarLabel: Translator.get('SCOLARITY'),
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="toolbox-outline" size={24} color={color} />
                 }}
             />
@@ -265,7 +264,7 @@ export default function MainTabNavigator() {
                 name="SettingsTab"
                 component={SettingsScreen}
                 options={{
-                    tabBarLabel: Translator.get('SETTINGS') || 'Paramètres',
+                    tabBarLabel: Translator.get('SETTINGS'),
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="cog-outline" size={24} color={color} />
                 }}
             />
@@ -321,12 +320,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: tokens.radius.md,
-        marginBottom: 2,
+        marginBottom: tokens.space.xxs,
         overflow: 'hidden',
     },
     tabLabel: {
         fontSize: 10,
-        fontFamily: 'Montserrat_500Medium',
     }
 });
 

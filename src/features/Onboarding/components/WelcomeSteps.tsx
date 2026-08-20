@@ -131,7 +131,7 @@ export const StepEtablissement = ({ themeObj, etablissements, codeActif, selectE
                                 {etablissement.nom}
                             </Text>
                             {etablissement.ville !== null && (
-                                <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: 2 }}>
+                                <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.xxs }}>
                                     {etablissement.ville}
                                 </Text>
                             )}
@@ -191,7 +191,7 @@ export const WelcomeGroupFooter = ({ themeObj, textFilter, filtres }) => {
                 <Text style={{ ...style, marginTop: 0 }}>
                     {Translator.get('HIDDEN_RESULT', filtres.length - MAXIMUM_NUMBER_ITEMS_GROUPLIST)}
                 </Text>
-                <Text style={{ ...style, marginTop: 4 }}>{Translator.get('USE_SEARCH_BAR')}</Text>
+                <Text style={{ ...style, marginTop: tokens.space.xs }}>{Translator.get('USE_SEARCH_BAR')}</Text>
             </View>
         );
     }

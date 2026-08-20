@@ -222,8 +222,10 @@ Deux conséquences à connaître avant d'y toucher :
   désormais `moment()`, donc la simulation les atteint. C'était la seule fonctionnalité dont le mock
   ne couvrait que la moitié — les données Celcat suivaient la date simulée, mais pas le jour
   d'ouverture retenu.
-- **Les libellés de recherche et d'état vide s'affichent en majuscules brutes** (`SEARCH_BUILDING`,
-  `NO_BUILDING_FOUND`, `NO_FREE_ROOMS`, `ROOMS`) — voir [i18n.md](../i18n.md).
+- **Un échec ne s'affiche que s'il n'y a rien d'autre.** `CampusDataManager.fetchBuildingList()` rend
+  désormais l'échec au lieu de l'avaler (jalon [6-K](../phase-6/6-k-socle-visuel.md)), mais l'écran ne
+  le montre que si la liste est vide : un cache peuplé survit à un rafraîchissement raté. C'était le
+  dernier écran de Campus où une source morte devenait « Aucun bâtiment trouvé ».
 - **[`FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) ne contient plus de
   service** : la classe exportée est vide (un commentaire annonce une intégration future avec un
   `batiments.json`). Le fichier ne sert plus qu'à porter les contrats et `getDistanceInKm`.

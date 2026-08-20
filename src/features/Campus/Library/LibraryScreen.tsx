@@ -1,7 +1,5 @@
-import React, { useState, useContext, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 
-import { AppContext } from '../../../shared/services/AppCore';
-import style from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import type { LibraryInfo } from '../services/LibraryService';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
@@ -14,9 +12,6 @@ import { useNearbyLibraries } from '../hooks/useNearbyLibraries';
 import { useSavedFilter } from '../hooks/useSavedFilter';
 
 function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>; onAnimatedScroll?: (event: unknown) => void }) {
-    const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
-    const themeName = AppContextValues.themeName ?? 'light';
-    const theme = style.Theme[themeName];
 
     const { lat, lon } = useCampusPosition();
     const { favorites, toggleFavorite } = useFavorites('library_favorites');
@@ -52,8 +47,8 @@ function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@
     }, [libraries, favorites, searchText, selectedFilter, affluences]);
 
     const filterOptions = [
-        { id: 'all', label: Translator.get('ALL_LIBRARIES' as Parameters<typeof Translator.get>[0]) },
-        { id: 'open', label: Translator.get('OPEN_LIBRARIES' as Parameters<typeof Translator.get>[0]) }
+        { id: 'all', label: Translator.get('ALL_LIBRARIES') },
+        { id: 'open', label: Translator.get('OPEN_LIBRARIES') }
     ];
 
     const renderItem = ({ item }: { item: LibraryInfo }) => {
@@ -79,7 +74,7 @@ function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@
             hasSearch={true}
             searchText={searchText}
             onSearchChange={setSearchText}
-            searchPlaceholder={Translator.get('SEARCH_BU_CITY' as Parameters<typeof Translator.get>[0])}
+            searchPlaceholder={Translator.get('SEARCH_BU_CITY')}
             
             filterOptions={filterOptions}
             selectedFilter={selectedFilter}

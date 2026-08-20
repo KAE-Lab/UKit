@@ -247,7 +247,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: tokens.fontSize.xl,
         fontWeight: tokens.fontWeight.semibold,
-        fontFamily: 'Montserrat_600SemiBold',
         marginBottom: tokens.space.xs,
         textAlign: 'center',
     },
@@ -255,7 +254,6 @@ const styles = StyleSheet.create({
         fontSize: tokens.fontSize.sm,
         textAlign: 'center',
         lineHeight: 20,
-        fontFamily: 'Montserrat_500Medium',
     },
     card: {
         marginHorizontal: tokens.space.md,
@@ -298,7 +296,6 @@ const styles = StyleSheet.create({
     buttonText: {
         fontSize: tokens.fontSize.md,
         fontWeight: tokens.fontWeight.semibold,
-        fontFamily: 'Montserrat_600SemiBold',
     },
     forget: {
         alignItems: 'center',

@@ -6,7 +6,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
-import { presenterEchec } from '../services/ScolariteMapping';
+import { demandeUneRessaisie, presenterEchec } from '../services/ScolariteMapping';
 import { portailAbsent } from '../services/ScolariteSession';
 import { useCredentials } from '../services/CredentialsContext';
 import ScolariteLoginView from '../components/ScolariteLoginView';
@@ -46,6 +46,56 @@ const MessagerieSection = ({ disponible, mailData, coldData, scrapeStatus, sessi
     );
 };
 
+
+/**
+ * Ce qui s'affiche **avant** le contenu, et dans cet ordre.
+ *
+ * L'ordre n'est pas indifferent — c'est le meme raisonnement que l'onglet Planning au jalon 6-G.
+ * L'absence de portail passe devant l'absence de compte : un etablissement qui ne publie aucun
+ * portail n'a jamais d'identifiants enregistres, la branche « pas de compte » gagnerait donc toujours
+ * et proposerait un formulaire qui ne peut mener nulle part.
+ *
+ * Sorti de l'ecran au jalon 6-K pour le garder sous la limite de lignes.
+ */
+const EtatsAvantContenu = ({
+    portailDisponible, credentials, isColdLoading, echecBloquant, sessionFailure,
+    scrapeProgress, theme, accent, insets, onRetry, onRessaisir,
+}) => {
+    const hautDePage = { flex: 1, justifyContent: 'center' as const, paddingTop: (insets?.top || 0) + 70 };
+
+    if (!portailDisponible) {
+        return <View style={hautDePage}><SourceFailureNotice failure={portailAbsent()} theme={theme} /></View>;
+    }
+    if (!credentials) {
+        return <ScolariteLoginView theme={theme} color={accent} topPadding={insets?.top || 0} />;
+    }
+    if (isColdLoading) {
+        return <ScolariteLoadingScreen scrapeProgress={scrapeProgress} theme={theme} color={accent} />;
+    }
+    if (!echecBloquant) return null;
+
+    return (
+        <View style={hautDePage}>
+            {/*
+              * Un mot de passe refuse ne se repare pas en rejouant : il se repare en le ressaisissant.
+              * On envoie donc au formulaire **sans deconnecter** — vider le trousseau effacerait aussi
+              * l'identite deja lue et obligerait a retaper l'identifiant, pour un mot de passe qui a
+              * change tout seul.
+              */}
+            <SourceFailureNotice
+                failure={echecBloquant}
+                theme={theme}
+                onRetry={onRetry}
+                action={demandeUneRessaisie(sessionFailure) ? {
+                    label: Translator.get('REENTER_CREDENTIALS'),
+                    onPress: onRessaisir,
+                    icon: 'account-key-outline',
+                } : undefined}
+            />
+        </View>
+    );
+};
+
 const ScolariteDashboard = ({ navigation }) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
@@ -67,7 +117,7 @@ const ScolariteDashboard = ({ navigation }) => {
         return (
             <Animated.View style={[styles.headerContainer, { paddingTop: insets?.top || 0, opacity }]}>
                 <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
-                    <Text style={[styles.greetingText, { color: theme.font, fontFamily: 'Montserrat_600SemiBold' }]}>
+                    <Text style={[styles.greetingText, { color: theme.font }]}>
                         {Translator.get('SCOLARITY')}
                     </Text>
                 </View>
@@ -90,46 +140,40 @@ const ScolariteDashboard = ({ navigation }) => {
         ? presenterEchec(sessionFailure)
         : null;
 
+    /**
+     * Ou mene la ligne de messagerie.
+     *
+     * Quand elle dit « identifiants incorrects », la toucher doit mener a les **corriger**, pas ouvrir
+     * une messagerie a laquelle on n'a plus acces. C'est l'autre moitie de l'impasse : celle qui se
+     * produit quand des donnees froides existent deja, donc que l'ecran d'echec plein ne s'affiche pas
+     * (`echecBloquant` exige `coldData === null`).
+     */
+    const ouvrirRessaisie = () => navigation.navigate('CredentialsSettings', { ressaisie: true });
+
+    const ouvrirMessagerie = () => (demandeUneRessaisie(sessionFailure)
+        ? ouvrirRessaisie()
+        : navigation.navigate('WebBrowser', { entrypoint: 'email' }));
+
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
                     {renderHeader(insets)}
 
-                    {/*
-                      * L'absence de portail passe **devant** l'absence de compte, et l'ordre n'est pas
-                      * indifferent — c'est le meme raisonnement que l'onglet Planning au jalon 6-G.
-                      * Un etablissement qui ne publie aucun portail n'a jamais d'identifiants
-                      * enregistres : la branche « pas de compte » gagnait donc toujours, et proposait
-                      * un formulaire de connexion qui ne pouvait mener nulle part. Le dire est le bon
-                      * comportement, et c'est ce qui rend un etablissement sans portail utilisable
-                      * plutot que menteur (jalon 6-J).
-                      */}
-                    {!portailDisponible ? (
-                        <View style={{ flex: 1, justifyContent: 'center', paddingTop: (insets?.top || 0) + 70 }}>
-                            <SourceFailureNotice failure={portailAbsent()} theme={theme} />
-                        </View>
-                    ) : !credentials ? (
-                        <ScolariteLoginView
-                            theme={theme}
-                            color={accent}
-                            topPadding={insets?.top || 0}
-                        />
-                    ) : isColdLoading ? (
-                        <ScolariteLoadingScreen
-                            scrapeProgress={scrapeProgress}
-                            theme={theme}
-                            color={accent}
-                        />
-                    ) : echecBloquant ? (
-                        <View style={{ flex: 1, justifyContent: 'center', paddingTop: (insets?.top || 0) + 70 }}>
-                            <SourceFailureNotice
-                                failure={echecBloquant}
-                                theme={theme}
-                                onRetry={retrySession}
-                            />
-                        </View>
-                    ) : (
+                    <EtatsAvantContenu
+                        portailDisponible={portailDisponible}
+                        credentials={credentials}
+                        isColdLoading={isColdLoading}
+                        echecBloquant={echecBloquant}
+                        sessionFailure={sessionFailure}
+                        scrapeProgress={scrapeProgress}
+                        theme={theme}
+                        accent={accent}
+                        insets={insets}
+                        onRetry={retrySession}
+                        onRessaisir={ouvrirRessaisie}
+                    />
+                    {portailDisponible && credentials && !isColdLoading && !echecBloquant ? (
                         <BiometryGate theme={theme} color={accent}>
                             <Animated.ScrollView
                                 onScroll={Animated.event(
@@ -152,11 +196,11 @@ const ScolariteDashboard = ({ navigation }) => {
                                     sessionFailure={sessionFailure}
                                     theme={theme}
                                     accent={accent}
-                                    onPress={() => navigation.navigate('WebBrowser', { entrypoint: 'email' })}
+                                    onPress={ouvrirMessagerie}
                                 />
                             </Animated.ScrollView>
                         </BiometryGate>
-                    )}
+                    ) : null}
                 </View>
             )}
         </SafeAreaInsetsContext.Consumer>
@@ -190,7 +234,6 @@ const styles = StyleSheet.create({
         letterSpacing: 0.8,
         marginLeft: tokens.space.md,
         marginBottom: tokens.space.sm,
-        fontFamily: 'Montserrat_600SemiBold',
     },
 });
 

@@ -2,7 +2,6 @@ import React from 'react';
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
 import { TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { RouteProp } from '@react-navigation/native';
 
 import MainTabNavigator from './MainTabNavigator';
 import GroupSearch from '../../features/Planning/screens/GroupSelectionScreen';
@@ -35,7 +34,8 @@ export type RootStackParamList = {
     Group: { name: string | string[] };
     About: undefined;
     Settings: undefined;
-    CredentialsSettings: undefined;
+    /** `ressaisie` ouvre l'ecran directement sur le formulaire, sans deconnecter. */
+    CredentialsSettings: { ressaisie?: boolean } | undefined;
     LienEdt: undefined;
     Crous: undefined;
     Library: undefined;
@@ -95,7 +95,7 @@ export default function StackNavigator() {
                                 component={Group}
                                 options={({ route }) => NavBarHelper({
                                     headerRight: () => <View style={{ paddingRight: tokens.space.md }}><SaveButton groupName={route.params.name} themeName={themeName} /></View>,
-                                    title: Array.isArray(route.params.name) ? (Translator.get('MY_PLANNING') || 'Mon Planning') : treatTitle(route.params.name),
+                                    title: Array.isArray(route.params.name) ? (Translator.get('MY_PLANNING')) : treatTitle(route.params.name),
                                     themeName,
                                     route,
                                     gestureEnabled: true
@@ -122,12 +122,12 @@ export default function StackNavigator() {
 
                             <Stack.Screen name="LibraryDetails" component={LibraryDetailsScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.library?.name, { lat: route.params?.library?.lat, lng: route.params?.library?.lng }), title: treatTitle(route.params?.library?.name ?? Translator.get('LIBRARY_DETAILS')), themeName, route })} />
 
-                            <Stack.Screen name="Bde" component={BdeScreen} options={({ route }) => NavBarHelper({ title: Translator.get('STUDENT_LIFE') || 'Student life', themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="Bde" component={BdeScreen} options={({ route }) => NavBarHelper({ title: Translator.get('STUDENT_LIFE'), themeName, route, gestureEnabled: true })} />
 
-                            <Stack.Screen name="BdeDetail" component={BdeDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS') || 'Détails', themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="BdeDetail" component={BdeDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route, gestureEnabled: true })} />
 
-                            <Stack.Screen name="FreeRoomScreen" component={FreeRoomScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FREE_ROOMS') || 'Salles Libres', themeName, route, gestureEnabled: true })} />
-                            <Stack.Screen name="FreeRoomDetails" component={FreeRoomDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS') || 'Détails', themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="FreeRoomScreen" component={FreeRoomScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FREE_ROOMS'), themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="FreeRoomDetails" component={FreeRoomDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Geolocation" component={Geolocation} options={({ route }) => NavBarHelper({ title: Translator.get('MAP'), themeName, route })} />
 

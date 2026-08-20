@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { AppContext, treatTitle } from '../../../shared/services/AppCore';
 import { NavBarHelper, SaveGroupButton } from '../../../shared/navigation/NavHelpers';
 import Translator from '../../../shared/i18n/Translator';
+import { tokens } from '../../../shared/theme/Theme';
 import DayView from '../views/DayView';
 
 export default function ScheduleScreen(props) {
@@ -15,13 +16,13 @@ export default function ScheduleScreen(props) {
 
     useLayoutEffect(() => {
         if (props.navigation) {
-            const translatedTitle = Array.isArray(groupName) ? (Translator.get('MY_PLANNING') || 'Mon Planning') : treatTitle(groupName);
+            const translatedTitle = Array.isArray(groupName) ? (Translator.get('MY_PLANNING')) : treatTitle(groupName);
             const helper = NavBarHelper({ 
                 title: translatedTitle, 
                 themeName: context.themeName, 
                 route: props.route,
                 headerRight: () => (
-                    <View style={{ paddingRight: 16 }}>
+                    <View style={{ paddingRight: tokens.space.md }}>
                         <SaveGroupButton groupName={groupName} themeName={context.themeName} />
                     </View>
                 )

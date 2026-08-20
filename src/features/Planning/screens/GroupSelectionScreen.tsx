@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Animated, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import Toast from 'react-native-root-toast';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
+import { EmptyState } from '../../../shared/ui/EmptyState';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext, isConnected } from '../../../shared/services/AppCore'
 import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
@@ -36,7 +37,17 @@ export interface HomeScreenState {
 
 class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     static contextType = AppContext;
-    context!: React.ContextType<typeof AppContext>;
+    /**
+     * Le contexte applicatif, type.
+     *
+     * `React.Component` declare `context: unknown` et `contextType` en fournit la **valeur**, pas le
+     * type. Redeclarer le champ ici l'**ecraserait** (TS2612), et le `declare` que TypeScript
+     * recommande est refuse par la couche Flow du preset Babel de React Native : l'application ne
+     * bundlerait plus. Un accesseur donne le meme confort sans toucher a la chaine de build.
+     */
+    private get app(): React.ContextType<typeof AppContext> {
+        return this.context as React.ContextType<typeof AppContext>;
+    }
     scrollY: Animated.Value;
 
     constructor(props: HomeScreenProps) {
@@ -57,13 +68,13 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
         this.props.navigation.setOptions(
             NavBarHelper({
                 title: Translator.get('GROUPS'),
-                themeName: this.context.themeName,
+                themeName: this.app.themeName,
                 scrollY: this.scrollY,
                 headerRight: () => (
                     <View style={{ paddingRight: tokens.space.md }}>
                         <SaveGroupButton
                             groupName={[]}
-                            themeName={this.context.themeName}
+                            themeName={this.app.themeName}
                         />
                     </View>
                 ),
@@ -91,7 +102,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                     key: previousSection,
                     data: [],
                     sectionIndex: ++sectionIndex,
-                    colorIndex: sectionIndex % style.Theme[this.context.themeName].sections.length,
+                    colorIndex: sectionIndex % style.Theme[this.app.themeName].sections.length,
                 };
             }
 
@@ -268,11 +279,13 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
 
     renderEmptyState(theme: import('../../../shared/theme/Theme').AppThemeType) {
         return (
-            <View style={[(style.schedule.course.noCourse as never), { backgroundColor: theme.greyBackground }]}>
-                <MaterialCommunityIcons name="magnify-close" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.md, opacity: 0.4 }} />
-                <Text style={[style.schedule.course.noCourseText as never, { color: theme.font }]}>
-                    {Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
-                </Text>
+            <View style={{ flex: 1, backgroundColor: theme.greyBackground }}>
+                <EmptyState
+                    variant="plain"
+                    icon="magnify-close"
+                    message={Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
+                    theme={theme}
+                />
             </View>
         );
     }
@@ -325,7 +338,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     }
 
     render() {
-        const theme = style.Theme[this.context.themeName];
+        const theme = style.Theme[this.app.themeName];
 
         return (
             <SafeAreaInsetsContext.Consumer>

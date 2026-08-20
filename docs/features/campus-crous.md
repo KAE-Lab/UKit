@@ -174,8 +174,6 @@ de parité ([tools/parity/README.md](../../tools/parity/README.md)).
   l'application hors ligne, les deux seraient vides. C'est la décision écrite dans
   [donnees-et-persistance.md](../donnees-et-persistance.md) — un menu change tous les jours — mais
   elle se vérifie mal, et c'est ce piège d'observation qu'il faut connaître.
-- **Les libellés de filtre et le texte de recherche s'affichent en majuscules brutes**
-  (`ALL_ESTABLISHMENTS`, `RESTO_U`, `CROUS_MARKET`, `SEARCH_RESTO_CITY`) — voir [i18n.md](../i18n.md).
 - **Le classement par type repose sur des chaînes présentes dans le nom**, et c'est plus fragile que
   ça n'en a l'air. Mesuré le 2026-08-08 en publiant la région 2 sur un appareil : le CROUS y nomme ses
   établissements `R.u. breuty`, `R.u. crousty`… là où la région 1 écrit `Resto u'`. Sur les 35

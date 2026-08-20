@@ -19,10 +19,11 @@ export const BackButton = ({ backAction }: BackButtonProps) => {
     return (
         <GHTouchableOpacity onPress={_onPress} style={[style.backButton as never, { paddingLeft: tokens.space.md }]}>
             <View style={{ backgroundColor: theme.primary, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
+                {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif (docs/theme.md). */}
                 <Ionicons
                     name="arrow-back"
                     size={22}
-                    color="#FFFFFF"
+                    color={theme.lightFont}
                 />
             </View>
         </GHTouchableOpacity>

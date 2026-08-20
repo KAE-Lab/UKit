@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import { version } from 'react';
 
 export default {
 	name: 'UKit',

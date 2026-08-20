@@ -1,4 +1,4 @@
-import { CampusApiService as FetchManager, CampusEvent } from './CampusApiService';
+import type { CampusEvent } from './CampusApiService';
 
 export interface RoomInfo {
     id: string;

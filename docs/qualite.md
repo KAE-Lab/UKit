@@ -17,16 +17,75 @@ npm run parity        # sources migrées vers un Blueprint
 
 ### Base de référence
 
-Les deux premières commandes ne sont pas encore vertes. L'état actuel du dépôt, à connaître pour
-distinguer une régression d'un héritage :
+`tsc` et `npm test` sont verts. `eslint` n'a aucune erreur, mais porte des avertissements — l'état
+actuel du dépôt, à connaître pour distinguer une régression d'un héritage :
 
 | Commande | État | Détail |
 |---|---|---|
-| `npx tsc --noEmit` | **3 erreurs** | `TS2612` sur la propriété `context` de trois composants à classe : [`CourseScreen.tsx`](../src/features/Planning/screens/CourseScreen.tsx), [`GroupSelectionScreen.tsx`](../src/features/Planning/screens/GroupSelectionScreen.tsx), [`DayView.tsx`](../src/features/Planning/views/DayView.tsx) |
-| `npx eslint .` | **0 erreur, 11 warnings** | tous `no-explicit-any`, dans `CampusListLayout.tsx` (3), `ScheduleList.tsx` (3), `Button.tsx` (4), `GroupSelectionScreen.tsx` (1) |
+| `npx tsc --noEmit` | **verte** | zéro erreur depuis le 2026-08-16 — voir ci-dessous pour les trois `TS2612` historiques |
+| `npx eslint .` | **0 erreur, 79 warnings** | 11 `no-explicit-any` et **68 `ukit/no-style-literals`** |
 
 La règle de contribution est donc : **ne pas augmenter ces compteurs**, et les réduire quand on
 travaille dans un fichier concerné.
+
+Les 11 `no-explicit-any` sont dans `CampusListLayout.tsx` (3), `ScheduleList.tsx` (3), `Button.tsx`
+(4), `GroupSelectionScreen.tsx` (1). `no-unused-vars` n'en signale **aucun** : le dépôt en portait 65
+au 2026-08-16, tous supprimés le jour même, et la règle est là pour que ça le reste.
+
+Les 68 `ukit/no-style-literals` sont apparus **avec la règle**, au jalon
+[6-K](phase-6/6-k-socle-visuel.md) : ils n'ont pas été introduits, ils étaient là et n'étaient
+mesurés par rien. Ils ne sont pas une dette diffuse mais une **liste de travail localisée** :
+
+| Zone | Warnings | Qui les résorbe |
+|---|---:|---|
+| annonces, Scolarité, Réglages | **41** | leurs sessions de refonte d'écran, qui réécrivent ces écrans de toute façon |
+| écrans de référence | 13 | personne : ce sont des valeurs hors échelle **assumées**, ou des arbitrages consignés dans [inventaire-visuel.md](inventaire-visuel.md) |
+| socle (`shared/`) | 14 | idem — ombres écrites à la main, tailles hors échelle |
+
+Par nature : 18 couleurs en dur, 25 valeurs qui ont un token exact, 25 valeurs qu'aucun token ne
+couvre. Le jalon 6-K a converti tout ce qui pouvait l'être **sans déplacer un pixel** dans les écrans
+de référence ; ce qui reste demande un arbitrage visuel, et c'est pourquoi la règle est en `warn` et
+non en `error`.
+
+#### `no-unused-vars`, et ce qu'elle a fait remonter
+
+Activée le 2026-08-16 après un nettoyage complet : 65 variables et imports morts dans 31 fichiers,
+dont 17 dans le seul `WebBrowserScreen`. Le nettoyage a aussi sorti cinq **valeurs exportées que rien
+n'atteignait** — `Split` (un séparateur dont le trait était un `<View />` vide), `RequestError`,
+`OpenMapButton` (un fichier entier), `MyGroupButton`, et `oublierCalendrierAbonnement` — plus les
+palettes `colors50` et `colors200`, deux jeux Material complets que `theme.md` gardait « par
+prudence ».
+
+Deux réglages valent d'être connus : `args: "none"`, parce qu'une signature de callback documente son
+contrat même quand elle n'utilise pas tous ses paramètres ; et `caughtErrors: "all"`, qui impose
+d'écrire `catch {` plutôt que `catch (e)` quand l'erreur n'est pas lue — la forme sans liaison est
+transpilée par Babel et le dépôt l'utilisait déjà.
+
+> **Un export mort n'est pas neutre.** Il fait croire à une capacité. `oublierCalendrierAbonnement`
+> portait même un commentaire décrivant une protection — « appelé quand le lien change » — que
+> personne n'appelait ; il a fallu vérifier que `jouerAbonnement` comparait déjà la clé de lien pour
+> savoir que ce n'était pas un bug mais du code redondant. C'est le coût réel du code mort : il faut
+> l'enquêter avant de pouvoir le supprimer.
+
+#### Les trois `TS2612`, et pourquoi le correctif évident ne marche pas ici
+
+Trois composants à classe du Planning déclaraient `context!: React.ContextType<typeof AppContext>`
+pour typer le contexte fourni par `static contextType`. TypeScript signalait, à raison, que ce champ
+**écrase** la propriété `context` héritée de `React.Component` au lieu de l'annoter.
+
+Le correctif que TypeScript recommande — et que la documentation de React reprend — est le modificateur
+`declare`. **Il ne compile pas dans ce projet** : la couche Flow du preset Babel de React Native le
+rejette avant la couche TypeScript, et le bundle échoue. Mesuré, pas supposé — `tsc` était vert et
+Metro refusait les trois fichiers. L'activer demanderait `allowDeclareFields` dans
+[`babel.config.js`](../babel.config.js), c'est-à-dire modifier la chaîne de build pour trois
+annotations de type.
+
+Le champ est donc **supprimé**, et le contexte se lit par un accesseur privé `this.app` qui caste
+`this.context`. Même confort de typage, zéro effet à l'exécution, aucune touche à la chaîne de build.
+
+> **La leçon générale :** `npx tsc --noEmit` et Metro **ne partagent pas** leur couche TypeScript.
+> Une syntaxe que `tsc` accepte peut faire échouer le bundle, et l'inverse. Un changement de syntaxe
+> inhabituelle se vérifie donc aussi côté Babel, pas seulement au typage.
 
 ### Les tests unitaires
 
@@ -59,6 +118,7 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`features/Planning/services/PlanningAssembly.ts`](../src/features/Planning/services/PlanningAssembly.ts) | un code d'UE contient une lettre : une année de titre ADE n'en est pas un |
 | [`features/Campus/services/CampusApiMapping.ts`](../src/features/Campus/services/CampusApiMapping.ts) | la correspondance textuelle salle vers bâtiment, la détection des vacances, le refiltrage sur la date |
 | [`features/Scolarite/services/ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) | la casse de l'identité criée par la source, le compteur `null` contre `0`, la table des échecs nommés |
+| [`tools/eslint/no-style-literals.mjs`](../tools/eslint/no-style-literals.mjs) | que la table d'échelles de la règle ESLint **n'a pas dérivé** de [`shared/theme/tokens.ts`](../src/shared/theme/tokens.ts) |
 
 `BdeMapping` a été le premier module **de feature** couvert, et il l'est pour une raison précise :
 c'est là qu'une erreur ne se voit pas. Un champ omis rend une fiche incomplète sans rien casser, et
@@ -85,6 +145,14 @@ de l'application. Deux d'entre eux valent d'être connus avant de « simplifier 
 occupée à l'heure où l'écran s'ouvre — et la vue semaine rend une description **vide**, ce qui est le
 comportement d'origine et non un défaut de la migration
 ([features/planning.md](features/planning.md#limites-connues)).
+
+Celui du jalon [6-K](phase-6/6-k-socle-visuel.md) est le premier à ne couvrir **aucun code applicatif** :
+il vérifie que deux fichiers disent la même chose. La règle ESLint porte une copie des échelles de
+tokens — elle est chargée par ESLint, qui ne lit pas de TypeScript applicatif — et une copie dérive.
+Sans ce test, ajouter un token laisserait la règle conseiller un remplacement qui n'existe pas, ou
+signaler une valeur devenue légitime ; personne ne s'en apercevrait avant d'avoir désactivé la règle
+par lassitude. C'est aussi ce qui a justifié de sortir les tokens de `Theme.ts` : ce dernier importe
+`react-native` et n'est donc pas jouable sous Node.
 
 Ce qui n'y est **pas** : les façades et les clients (`aetherius/client.ts`,
 `aetherius/registry.ts`, `supabase/client.ts`, `runBlueprint`), qui importent React Native,
@@ -130,8 +198,8 @@ le fassent.
 
 ### Ce que vérifient les règles ESLint
 
-[`eslint.config.mjs`](../eslint.config.mjs) ne configure volontairement que cinq règles. Ce ne sont pas
-des règles de style — le style est laissé libre — mais des **garde-fous d'architecture** :
+[`eslint.config.mjs`](../eslint.config.mjs) configure volontairement sept règles : cinq
+**garde-fous d'architecture**, une contre le code mort, et la seule règle de style du dépôt.
 
 | Règle | Seuil | Ce qu'elle protège |
 |---|---|---|
@@ -140,12 +208,36 @@ des règles de style — le style est laissé libre — mais des **garde-fous d'
 | `max-depth` | 4 | l'imbrication profonde signale une logique à extraire |
 | `complexity` | 15 | la complexité cyclomatique signale un branchement à simplifier |
 | `@typescript-eslint/no-explicit-any` | warn | le typage se perd un `any` à la fois |
+| `@typescript-eslint/no-unused-vars` | warn | le code mort fait croire à des dépendances et à des capacités qui n'existent pas |
+| `ukit/no-style-literals` | warn | le vocabulaire visuel se perd une valeur en dur à la fois |
 
-Les quatre premières sont en `warn` : elles ne bloquent pas, elles alertent. Un dépassement justifié
-se documente par une désactivation locale et commentée — comme
-[`Theme.ts`](../src/shared/theme/Theme.ts) (`eslint-disable max-lines`, fichier de données de style)
-ou [`CampusListLayout.tsx`](../src/features/Campus/components/CampusListLayout.tsx)
-(`eslint-disable-next-line complexity`, composant générique à nombreuses options).
+Toutes sont en `warn` : elles ne bloquent pas, elles alertent. Un dépassement justifié se documente
+par une désactivation locale et commentée — comme [`Theme.ts`](../src/shared/theme/Theme.ts)
+(`eslint-disable max-lines`, fichier de données de style),
+[`CampusListLayout.tsx`](../src/features/Campus/components/CampusListLayout.tsx)
+(`eslint-disable-next-line complexity`, composant générique à nombreuses options) ou
+[`App.tsx`](../App.tsx) (l'écran de démarrage est peint avant que le thème existe).
+
+#### `ukit/no-style-literals`, et pourquoi elle est écrite à la main
+
+Ajoutée au jalon [6-K](phase-6/6-k-socle-visuel.md), dans
+[`tools/eslint/no-style-literals.mjs`](../tools/eslint/no-style-literals.mjs) — **aucune dépendance
+ajoutée**, elle est branchée en plugin inline. Elle refuse :
+
+- toute **couleur hexadécimale** littérale ;
+- toute valeur numérique de **marge**, de **rayon** ou de **taille de texte** hors des échelles de
+  [`tokens.ts`](../src/shared/theme/tokens.ts). `0` est toléré : il neutralise une mise en page, ce
+  n'est pas un pas d'échelle.
+
+Un `no-restricted-syntax` aurait suffi à interdire. Celle-ci **nomme le token de remplacement** —
+« `marginLeft: 4` : utiliser `tokens.space.xs` » — et c'est ce qui fait qu'on la corrige au lieu de la
+désactiver. Quand aucun token ne tombe juste, elle propose les deux pas les plus proches.
+
+Elle **ne couvre pas** `width`, `height` ni les tailles d'icône : le dépôt n'a aucune échelle pour
+eux, et en inventer une aurait dépassé le mandat du jalon (extraire ce qui est là, pas dessiner ce
+qui manque). Trois fichiers en sont exemptés, chacun pour une raison écrite dans la configuration :
+`tokens.ts` et `Theme.ts` sont la source des valeurs, `app.config.ts` est lu par Expo avant que
+l'application existe.
 
 ### Typage
 
@@ -291,7 +383,8 @@ barrière ne les rejouera.
 - **La couverture de test est étroite** : elle s'arrête au socle Aetherius. Ni composant, ni écran,
   ni bout en bout — la vérification manuelle sur l'application réelle reste la porte principale.
 - **Aucune vérification en intégration continue.** Un code qui ne compile pas peut être fusionné.
-- **La base de référence n'est pas verte** (3 erreurs de typage), ce qui rend la lecture d'un
-  résultat de `tsc` moins immédiate : il faut comparer aux trois erreurs connues.
+- **79 warnings, c'est trop pour être lu d'un coup d'œil.** La règle de style en apporte 68, dont 41
+  dans trois écrans qui vont être réécrits. Jouer `npx eslint <fichier>` sur ce qu'on modifie plutôt
+  que `npx eslint .` sur tout, et comparer au tableau de la base de référence ci-dessus.
 - **Le menu de simulation est présent en production.** `ModMenu` n'est pas gardé par `__DEV__` ; il
   est simplement invisible tant qu'il n'est pas activé.

@@ -29,7 +29,7 @@ const GreetingBlock = ({ coldData, color, theme }) => {
 
     return (
         <View style={styles.container}>
-            <Text style={[styles.greeting, { color: theme.font, fontFamily: 'Montserrat_600SemiBold' }]}>
+            <Text style={[styles.greeting, { color: theme.font }]}>
                 {greeting}
                 {firstName ? (
                     <>
@@ -39,7 +39,7 @@ const GreetingBlock = ({ coldData, color, theme }) => {
                 ) : null}
                 <Text style={{ color: theme.font }}>{' !'}</Text>
             </Text>
-            <Text style={[styles.date, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}>
+            <Text style={[styles.date, { color: theme.fontSecondary }]}>
                 {formatDate()}
             </Text>
         </View>

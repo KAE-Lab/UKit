@@ -31,7 +31,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: { route: { 
         navigation.setOptions({
             headerTitle: () => (
                 <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold }}>
-                    {Translator.get('DETAILS') || 'Détails'}
+                    {Translator.get('DETAILS')}
                 </Text>
             ),
             headerTitleAlign: 'center'
@@ -67,7 +67,7 @@ export default function FreeRoomDetailsScreen({ route, navigation }: { route: { 
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: tokens.space.xl }}>
                     <MaterialCommunityIcons name="door-closed-lock" size={64} color={theme.fontSecondary} />
                     <Text style={{ marginTop: tokens.space.md, fontSize: tokens.fontSize.lg, color: theme.fontSecondary, textAlign: 'center' }}>
-                        {Translator.get('BU_CLOSED') || 'Bâtiment fermé aujourd\'hui'}
+                        {Translator.get('BU_CLOSED')}
                     </Text>
                 </View>
             ) : (

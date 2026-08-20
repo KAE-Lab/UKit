@@ -15,6 +15,84 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **Le code mort a été retiré, et une règle empêche qu'il revienne.** Soixante-cinq variables et
+  imports inutilisés dans trente et un fichiers, deux palettes Material complètes que plus rien ne
+  lisait, et cinq composants ou fonctions exportés que rien n'atteignait — dont un séparateur visuel
+  dont le trait était un `<View />` vide. Un export mort n'est pas neutre : il fait croire à une
+  capacité, et il faut l'enquêter avant d'oser le supprimer.
+
+- **Une seule police, celle du système.** Montserrat était demandée quarante-cinq fois, mais
+  seulement dans les titres, les en-têtes de section et la Scolarité — **jamais dans le contenu**, ni
+  les cartes de cours ni les listes Campus. Et la graisse des titres n'était même pas chargée : elle
+  retombait en silence sur la police système. Ce n'était donc pas un système « police de titrage +
+  police d'interface », c'était un résidu, et il se voyait dès qu'on le rendait vraiment.
+
+  Elle est retirée — code, chargement et dépendance. La hiérarchie tient désormais entièrement à la
+  taille et à la graisse, comme iOS la construit, et l'application paraît native sur les deux
+  plateformes au lieu de dénoter sur les deux.
+
+- **Une source de salles libres en panne le dit.** C'était le dernier écran de Campus où une panne
+  devenait « Aucun bâtiment trouvé », c'est-à-dire le message d'une réponse légitimement vide — le
+  défaut exact que la Phase 6 revendiquait d'avoir supprimé partout. L'échec remonte, et **seulement
+  quand il n'y a aucune donnée** : un cache peuplé survit à un rafraîchissement raté.
+
+- **Un mot de passe changé à l'université ne mène plus à une impasse.** L'échec proposait de
+  réessayer, ce qui ne pouvait pas marcher, ou rien du tout. Il propose maintenant de **ressaisir**,
+  et la ligne de messagerie qui affiche « identifiants incorrects » y mène aussi quand on la touche —
+  c'est le cas le plus fréquent, puisqu'un mot de passe change après une première connexion réussie.
+
+  **Et ressaisir ne déconnecte plus.** L'écran du compte porte le formulaire, sans effacer l'identité
+  déjà lue ni obliger à retaper l'identifiant. Le dossier universitaire peut aussi être **actualisé**
+  de là, là où il fallait auparavant tout effacer pour relancer le parcours complet.
+
+- **Les libellés qui s'affichaient en clé brute sont traduits.** Huit endroits de l'application
+  affichaient littéralement `SEARCH_BU_CITY`, `NO_RESULTS_FOUND` ou `OPEN_LIBRARIES` — dont le message
+  d'état vide des listes Campus. Les treize clés manquantes sont dans les trois dictionnaires, et
+  surtout : **les transtypages qui les masquaient au compilateur sont retirés**, ainsi que les
+  trente-huit replis `|| 'texte français'` qui portaient tous sur des clés existantes et ne se
+  déclenchaient jamais. Le prochain oubli ne compilera pas.
+
+- **Les popups de confirmation rejoignent la direction artistique de l'application.** Elles portaient
+  deux boutons gris identiques que seule la couleur du texte distinguait, un vocabulaire antérieur à
+  la palette actuelle. Confirmer est désormais un bouton plein — le même que Réessayer — et **détruire
+  est un bouton rouge** : « Réinitialiser l'application » et « Ajouter au calendrier » ne peuvent pas
+  se présenter de la même façon.
+
+- **Les états vides ne parlent plus quatre dialectes.** Le Planning avait les siens, en trois
+  exemplaires et trois tailles d'icône, à côté de celui que partageaient déjà les écrans Campus. Tout
+  passe par un seul composant, avec deux dispositions : dans une liste, ou en plein écran.
+
+- **Un texte de source distante ne se colle plus à un libellé traduit.** L'état d'une bibliothèque
+  fermée affichait « Closed - Ouvre demain à 09:00 » : notre mot, puis leur phrase, soudés. La
+  précision reste — c'est l'information utile — mais à côté, en texte secondaire.
+
+- **Un socle visuel, extrait de l'application plutôt qu'inventé.** L'application avait la dette
+  visuelle de sa reprise : la même carte écrite six fois, le même en-tête de section quatre fois, la
+  même pastille de distance huit fois, et **aucune couleur sémantique** — d'où des verts et des
+  oranges Material qui traînaient en dur à côté d'une palette Apple. Neuf composants partagés
+  remontent dans `shared/ui/`, chacun **relevé au moins deux fois** avant d'être extrait, et les
+  écrans de référence les consomment au lieu de les recopier.
+
+  Les tokens gagnent une échelle de succès, avertissement, danger et neutre, déclinée dans les deux
+  thèmes, plus les deux pas qui manquaient à l'échelle existante. Rien n'a été dessiné : les teintes
+  sont celles que la palette portait déjà, et les pas ceux que le code écrivait en dur.
+
+- **Une règle qui refuse les valeurs de style en dur.** « Aucune couleur, aucun espacement, aucun
+  rayon littéral » était écrit dans le README depuis toujours, et n'était appliqué par rien : le
+  dépôt en portait 195. `ukit/no-style-literals` les signale et — c'est ce qui compte — **nomme le
+  token de remplacement**, parce qu'un avertissement qui n'indique pas la sortie finit désactivé.
+  Elle arrive en `warn` : ses avertissements restants sont la liste de travail des refontes d'écran
+  à venir, pas une dette diffuse.
+
+  Un test empêche la table d'échelles de la règle de dériver de celle du thème — c'est le genre de
+  désynchronisation qui ne casse rien et qu'on ne voit jamais.
+
+- **Un inventaire visuel mesuré**, et une liste de défauts fonctionnels tenue à part. Le premier
+  compte au lieu de juger ; la seconde existe pour qu'une session de refonte ne confonde jamais un
+  écran laid avec un écran cassé. Elle ouvre avec quatre entrées, dont deux trouvées en mesurant :
+  les salles libres n'ont **aucun état d'erreur** — une source en panne y affiche « aucun bâtiment
+  trouvé » —, et la police des titres, demandée 22 fois, **n'est jamais chargée**.
+
 - **Le compte universitaire proposé dès l'accueil.** Une étape dédiée, juste après le choix de
   l'établissement, **sautable** par un lien « Plus tard » et **rappelée** dans les Réglages par une
   ligne qui dit si le compte est connecté. Elle disparaît chez une université qui ne publie aucun

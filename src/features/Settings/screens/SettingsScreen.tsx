@@ -2,7 +2,6 @@ import React from 'react';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { Linking, Text, View, Animated, StyleSheet } from 'react-native';
 import * as Calendar from 'expo-calendar';
-import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { NotificationManager } from '../../../shared/services/NotificationService';
@@ -19,7 +18,6 @@ import {
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
-import Button from '../../../shared/ui/Button';
 
 
 import {
@@ -357,7 +355,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                 <Animated.View style={[styles.headerContainer, { paddingTop: topPadding, backgroundColor: 'transparent', opacity }]}>
                     <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
                         <Text style={[styles.greetingText, { color: theme.font }]}>
-                            {Translator.get('SETTINGS') || 'Paramètres'}
+                            {Translator.get('SETTINGS')}
                         </Text>
                     </View>
                 </Animated.View>
@@ -459,7 +457,6 @@ const styles = StyleSheet.create({
     greetingText: {
         fontSize: 34,
         fontWeight: tokens.fontWeight.bold,
-        fontFamily: 'Montserrat_600SemiBold',
         marginBottom: tokens.space.md,
     },
 });

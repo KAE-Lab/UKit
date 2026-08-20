@@ -213,12 +213,22 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Navigation** — pile principale de 18 écrans, quatre onglets, barre d'onglets personnalisée
   avec bouton d'action contextuel, animation d'en-tête au défilement centralisée.
   [docs/navigation.md](docs/navigation.md)
-- [x] **Thème** — tokens de design (espacements, rayons, typographie, ombres), thèmes clair et sombre
-  complets, alignement sur la préférence système au premier lancement.
-  [docs/theme.md](docs/theme.md)
-- [x] **Internationalisation** — français, anglais, espagnol ; 215 clés par dictionnaire, typage de
-  la clé, locale des dates alignée. Treize libellés d'écrans Campus restent non traduits.
-  [docs/i18n.md](docs/i18n.md)
+- [x] **Thème** — tokens de design (espacements, rayons, typographie, ombres), **échelle de couleurs
+  sémantiques** dans les deux thèmes, thèmes clair et sombre complets, alignement sur la préférence
+  système au premier lancement. [docs/theme.md](docs/theme.md)
+- [x] **Socle visuel** — le vocabulaire visuel est **extrait** des écrans qui font référence, pas
+  inventé : neuf composants partagés dans [`shared/ui/`](src/shared/ui/), chacun relevé au moins deux
+  fois avant d'être remonté, et une **règle ESLint qui refuse les valeurs de style en dur** en nommant
+  le token de remplacement. La consigne existait depuis toujours dans ce README et n'était appliquée
+  par rien — le dépôt portait 53 couleurs et 142 valeurs en dur, mesurées dans
+  [docs/inventaire-visuel.md](docs/inventaire-visuel.md). Une
+  [recette d'écran](docs/theme.md#la-recette-décran) donne à chaque refonte sa liste à cocher.
+  L'application n'a **qu'une police, celle du système** : la hiérarchie tient à la taille et à la
+  graisse, et rien ne dénote entre iOS et Android.
+- [x] **Internationalisation** — français, anglais, espagnol ; 268 clés par dictionnaire, typage de
+  la clé, locale des dates alignée. **Plus aucune chaîne visible en dur ni clé manquante** : les
+  treize libellés Campus qui manquaient sont traduits, et les casts qui les masquaient au compilateur
+  sont retirés. [docs/i18n.md](docs/i18n.md)
 - [x] **Persistance locale** — managers observables, caches à expiration pour les listes de
   référence, cache de repli hors ligne pour l'emploi du temps, stockage chiffré pour le compte
   universitaire. [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md)
@@ -231,6 +241,7 @@ livré ; elle est mise à jour à chaque contribution.
   (résolution des secrets, livraison des Blueprints et ses gardes, modèle d'erreur) et le
   [harnais de parité](tools/parity/README.md) rejoue les sources migrées contre les vraies. Aucun
   test d'écran ni de composant, et l'intégration continue ne joue toujours que la publication.
+  **`npx tsc --noEmit` est vert** depuis le 2026-08-16 — il ne l'avait jamais été.
   [docs/qualite.md](docs/qualite.md)
 - [ ] **Le comportement en données** — l'accès aux sources migre vers des
   [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
@@ -246,8 +257,9 @@ livré ; elle est mise à jour à chaque contribution.
   iCalendar de son serveur ADE : une seconde source de planning, choisie par le catalogue, sans qu'un
   seul écran apprenne qu'il en existe deux. Depuis 6-J, **le compte se propose dès l'accueil** et
   l'application accepte un **lien d'abonnement collé** : une fac qu'on n'a pas portée devient
-  utilisable sans écrire une ligne. Restent **la refonte visuelle** (6-K et les sessions qui suivent)
-  et la clôture (6-Z) : [docs/phase-6/README.md](docs/phase-6/README.md).
+  utilisable sans écrire une ligne. Le volet 1 est clos ; **le socle visuel est posé** (6-K), et
+  restent les sessions d'écran puis la clôture (6-Z) :
+  [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
   et l'application démarre et s'utilise sans jamais la joindre. [docs/backend.md](docs/backend.md)
@@ -329,7 +341,9 @@ document.
 | [docs/blueprints.md](docs/blueprints.md) | les fichiers d'instructions : frontière, écriture, publication d'une correction |
 | [docs/backend.md](docs/backend.md) | la base de publication : schéma, politiques, clés, limites |
 | [docs/phase-6/](docs/phase-6/README.md) | le cadrage de la migration vers les Blueprints, jalon par jalon |
-| [docs/theme.md](docs/theme.md) | tokens, palettes, usage du thème |
+| [docs/theme.md](docs/theme.md) | tokens, palettes, composants partagés, **recette d'écran** |
+| [docs/inventaire-visuel.md](docs/inventaire-visuel.md) | l'état visuel mesuré du dépôt, avant le socle : littéraux, divergences, manques |
+| [docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md) | les défauts de comportement connus, tenus **à part** de l'esthétique |
 | [docs/i18n.md](docs/i18n.md) | Translator, dictionnaires, ajout d'une chaîne |
 | [docs/cartographie.md](docs/cartographie.md) | Leaflet et OpenStreetMap, `locations.json` |
 | [docs/plateforme.md](docs/plateforme.md) | configuration Expo, permissions, build EAS, release |

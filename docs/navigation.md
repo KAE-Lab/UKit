@@ -110,7 +110,7 @@ cohérence visuelle des en-têtes. Ne pas configurer un en-tête à la main.
   partout.
 
 Boutons d'en-tête réutilisables du même fichier : `SaveGroupButton` (ajout/retrait des favoris),
-`FilterRemoveButton` (retrait d'un filtre UE depuis le détail d'un cours), `MyGroupButton`,
+`FilterRemoveButton` (retrait d'un filtre UE depuis le détail d'un cours),
 `BackButton` (dans [`Button.tsx`](../src/shared/ui/Button.tsx)). Le bouton retour global et le bouton
 carte sont définis directement dans `StackNavigator`.
 

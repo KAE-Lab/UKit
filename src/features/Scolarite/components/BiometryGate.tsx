@@ -48,7 +48,7 @@ const BiometryGate = ({ children, theme, color }) => {
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             <Text style={[styles.icon, { color }]}>🔒</Text>
-            <Text style={[styles.message, { color: theme.font, fontFamily: 'Montserrat_600SemiBold' }]}>
+            <Text style={[styles.message, { color: theme.font }]}>
                 {Translator.get('BIOMETRY_PROMPT')}
             </Text>
             {failed && (
@@ -57,7 +57,7 @@ const BiometryGate = ({ children, theme, color }) => {
                     onPress={authenticate}
                     activeOpacity={0.8}
                 >
-                    <Text style={[styles.buttonText, { fontFamily: 'Montserrat_600SemiBold' }]}>
+                    <Text style={styles.buttonText}>
                         {Translator.get('BIOMETRY_RETRY')}
                     </Text>
                 </TouchableOpacity>

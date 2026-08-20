@@ -3,7 +3,8 @@ import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react
 import { EdgeInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Translator from '../../../../shared/i18n/Translator';
-import style, { tokens, AppThemeType } from '../../../../shared/theme/Theme';
+import style, { tokens, toneColor, AppThemeType } from '../../../../shared/theme/Theme';
+import { ProgressBar } from '../../../../shared/ui/ProgressBar';
 import { LibraryInfo, TimetableEntry, AffluencesData, getLibraryStatus } from '../../services/LibraryService';
 
 interface LibraryLiveAttendanceProps {
@@ -14,7 +15,8 @@ interface LibraryLiveAttendanceProps {
 export function LibraryLiveAttendance({ affluence, theme }: LibraryLiveAttendanceProps) {
     if (!affluence) return null;
 
-    const { isOpen, rate, statusColor, statusText } = getLibraryStatus(affluence);
+    const { isOpen, rate, statusTone, statusText, statusNote } = getLibraryStatus(affluence);
+    const statusColor = toneColor(theme, statusTone);
 
     return (
         <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.md, marginBottom: tokens.space.lg, borderRadius: tokens.radius.lg, borderWidth: 1, borderColor: theme.border }}>
@@ -23,20 +25,27 @@ export function LibraryLiveAttendance({ affluence, theme }: LibraryLiveAttendanc
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: rate !== null ? tokens.space.md : 0 }}>
                 <MaterialCommunityIcons name={isOpen ? 'door-open' : 'door-closed'} size={24} color={statusColor} />
-                <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as never, color: statusColor, marginLeft: tokens.space.sm, flex: 1 }}>
+                <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as never, color: statusColor, marginLeft: tokens.space.sm }}>
                     {statusText}
                 </Text>
+                {/* La precision du fournisseur, dans sa langue a lui : secondaire, jamais soudee au statut. */}
+                {statusNote ? (
+                    <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: tokens.space.sm, flex: 1 }}>
+                        {statusNote}
+                    </Text>
+                ) : null}
             </View>
-            
+
             {rate !== null && (
                 <View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: tokens.space.xs }}>
                         <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{Translator.get('OCCUPANCY_RATE')}</Text>
                         <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as never }}>{rate}%</Text>
                     </View>
-                    <View style={{ height: 8, borderRadius: 4, backgroundColor: theme.border, overflow: 'hidden' }}>
-                        <View style={{ height: '100%', borderRadius: 4, width: `${rate}%`, backgroundColor: statusColor }} />
-                    </View>
+                    {/* La fiche a sa propre hauteur de jauge — 8 px contre 6 dans les listes. Le rayon,
+                        lui, n'est plus ecrit : il vaut la moitie de la hauteur, et c'est le composant
+                        qui le calcule (inventaire visuel, divergence 3.4). */}
+                    <ProgressBar percent={rate} color={statusColor} trackColor={theme.border} height={8} />
                 </View>
             )}
         </View>

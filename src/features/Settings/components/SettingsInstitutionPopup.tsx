@@ -100,12 +100,12 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
                                 </Text>
                                 <View style={theme.popup.buttonContainer as never}>
                                     <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={() => setCandidat(null)}>
-                                        <Text style={[theme.popup.buttonTextSecondary, { fontWeight: '600' }]}>
+                                        <Text style={theme.popup.buttonTextSecondary as never}>
                                             {Translator.get('CANCEL')}
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity style={theme.popup.buttonMain as never} onPress={confirmer}>
-                                        <Text style={[theme.popup.buttonTextMain, { fontWeight: '600' }]}>
+                                        <Text style={theme.popup.buttonTextMain as never}>
                                             {Translator.get('CONFIRM')}
                                         </Text>
                                     </TouchableOpacity>

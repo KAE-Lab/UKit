@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
+import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { SettingsManager } from '../../../shared/services/AppCore';
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
@@ -213,19 +214,23 @@ const SearchAndSuggestions = ({ availableUEs, searchQuery, setSearchQuery, filte
                             key={ue}
                             onPress={() => onSuggestionPress(ue)}
                             style={{
-                                paddingHorizontal: 12,
-                                paddingVertical: 6,
-                                borderRadius: 8,
-                                marginRight: 8,
+                                paddingHorizontal: tokens.space.sm,
+                                paddingVertical: tokens.space.xs,
+                                borderRadius: tokens.radius.sm,
+                                marginRight: tokens.space.sm,
                                 borderWidth: 1,
-                                borderColor: theme.popup.filters.button?.backgroundColor || '#009ee0',
+                                // `iconColor` (la teinte pleine) et non `filters.button.backgroundColor`,
+                                // qui est un bleu a 8 % d'opacite prevu comme **fond** : employe en couleur
+                                // de texte il rendait la pastille quasi illisible. Le repli `|| '#009ee0'`
+                                // qui le doublait ne s'est jamais declenche — la valeur existe (jalon 6-K).
+                                borderColor: theme.popup.filters.iconColor,
                                 backgroundColor: 'transparent',
                             }}
                         >
                             <Text style={{
-                                fontSize: 12,
-                                fontWeight: '600',
-                                color: theme.popup.filters.button?.backgroundColor || '#009ee0',
+                                fontSize: tokens.fontSize.xs,
+                                fontWeight: tokens.fontWeight.semibold,
+                                color: theme.popup.filters.iconColor,
                             }}>
                                 {ue}
                             </Text>
@@ -298,10 +303,11 @@ export const SettingsSyncOffPopup = ({ theme, popupVisible, popupClose, disableS
                         <Text style={theme.popup.textDescription}>{Translator.get('DISABLE_SYNC_CONFIRMATION')}</Text>
                         <View style={theme.popup.buttonContainer as never}>
                             <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={popupClose}>
-                                <Text style={[theme.popup.buttonTextSecondary, { fontWeight: '600' }]}>{Translator.get('CANCEL')}</Text>
+                                <Text style={theme.popup.buttonTextSecondary as never}>{Translator.get('CANCEL')}</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={theme.popup.buttonMain as never} onPress={disableSync}>
-                                <Text style={[theme.popup.buttonTextMain, { fontWeight: '600' }]}>{Translator.get('DISABLE')}</Text>
+                            {/* Destructif : l'extinction retire de l'agenda personnel les cours deja poses. */}
+                            <TouchableOpacity style={theme.popup.buttonDestructive as never} onPress={disableSync}>
+                                <Text style={theme.popup.buttonTextDestructive as never}>{Translator.get('DISABLE')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -323,10 +329,10 @@ export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }
                         <Text style={theme.popup.textDescription}>{Translator.get('RESET_APP_CONFIRMATION')}</Text>
                         <View style={theme.popup.buttonContainer as never}>
                             <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={popupClose}>
-                                <Text style={[theme.popup.buttonTextSecondary, { fontWeight: '600' }]}>{Translator.get('CANCEL')}</Text>
+                                <Text style={theme.popup.buttonTextSecondary as never}>{Translator.get('CANCEL')}</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={theme.popup.buttonMain as never} onPress={resetApp}>
-                                <Text style={[theme.popup.buttonTextMain, { fontWeight: '600' }]}>{Translator.get('RESET')}</Text>
+                            <TouchableOpacity style={theme.popup.buttonDestructive as never} onPress={resetApp}>
+                                <Text style={theme.popup.buttonTextDestructive as never}>{Translator.get('RESET')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

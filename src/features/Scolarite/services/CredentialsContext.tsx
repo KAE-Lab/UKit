@@ -88,6 +88,8 @@ export interface CredentialsValue {
     readonly portailDisponible: boolean;
     readonly validateAndSave: (username: string, password: string) => Promise<ResultatValidation>;
     readonly retrySession: () => void;
+    /** Redemander un parcours froid, sans passer par une deconnexion. */
+    readonly rafraichirDossier: () => void;
     readonly logout: () => Promise<void>;
 }
 
@@ -242,6 +244,37 @@ function useOublierAuChangementDEtablissement(
     }, [sessionRef]);
 }
 
+
+/**
+ * Les deux facons de redemander une session, et ce qui les separe.
+ *
+ * `retrySession` **deduit** le mode de la presence des donnees froides : c'est le bon comportement
+ * par defaut, et c'est ce que fait le bouton Reessayer. `rafraichirDossier` le **force** en froid,
+ * ce que rien ne permettait — rafraichir une identite perimee, nom change ou annee d'inscription
+ * passee, obligeait a se deconnecter et a tout ressaisir (jalon 6-K, docs/defauts-fonctionnels.md).
+ *
+ * Dans les deux cas les donnees froides ne sont effacees **que si la session demarre**, meme
+ * precaution que `validateAndSave` : sinon on les perdrait pour rien.
+ */
+function useReprises(
+    credentials: Identifiants | null,
+    coldData: ScolariteColdData | null,
+    lancerSession: (mode: 'cold' | 'hot', candidat?: Identifiants | null) => boolean,
+    setColdData: (cold: ScolariteColdData | null) => void,
+) {
+    const retrySession = useCallback(() => {
+        if (credentials === null) return;
+        lancerSession(coldData === null ? 'cold' : 'hot');
+    }, [coldData, credentials, lancerSession]);
+
+    const rafraichirDossier = useCallback(() => {
+        if (credentials === null) return;
+        if (lancerSession('cold')) setColdData(null);
+    }, [credentials, lancerSession, setColdData]);
+
+    return { retrySession, rafraichirDossier };
+}
+
 const useCredentialsSession = (): CredentialsValue => {
     const [credentials, setCredentials] = useState<Identifiants | null>(null);
     const [credentialsLoaded, setCredentialsLoaded] = useState(false);
@@ -343,10 +376,7 @@ const useCredentialsSession = (): CredentialsValue => {
 
     useChargementInitial(lancerSession, poserTrousseau);
 
-    const retrySession = useCallback(() => {
-        if (credentials === null) return;
-        lancerSession(coldData === null ? 'cold' : 'hot');
-    }, [coldData, credentials, lancerSession]);
+    const { retrySession, rafraichirDossier } = useReprises(credentials, coldData, lancerSession, setColdData);
 
     useCycleDeVieSession(sessionRef, retrySession);
 
@@ -384,7 +414,7 @@ const useCredentialsSession = (): CredentialsValue => {
         // ecrite laisse donc le formulaire visible et fait dire le probleme par la session, ce qui est
         // le bon endroit — le masquer ferait disparaitre l'onglet sans que personne sache pourquoi.
         portailDisponible: portailPublie(),
-        validateAndSave, retrySession, logout,
+        validateAndSave, retrySession, rafraichirDossier, logout,
     };
 };
 

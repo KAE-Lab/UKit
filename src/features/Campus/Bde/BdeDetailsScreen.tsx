@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, Image, Animated, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, Image, Animated, TouchableOpacity, Linking } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -116,10 +116,5 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    }
-});
 
 export default withHeaderAnimation(BdeDetailsScreen);

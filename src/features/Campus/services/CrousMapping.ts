@@ -80,7 +80,7 @@ function commeLignes(brut: unknown): string[] {
     if (typeof brut === 'string' && brut.trim().startsWith('[')) {
         try {
             return commeLignes(JSON.parse(brut));
-        } catch (error) {
+        } catch {
             // Une chaine qui ressemble a du JSON sans en etre reste un libelle inconnu : mieux vaut
             // le repli traduit qu'un crochet affiche a l'ecran.
             return [];

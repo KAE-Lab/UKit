@@ -27,7 +27,17 @@ export interface CourseState {
 
 class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	static contextType = AppContext;
-	context!: React.ContextType<typeof AppContext>;
+	/**
+	 * Le contexte applicatif, type.
+	 *
+	 * `React.Component` declare `context: unknown` et `contextType` en fournit la **valeur**, pas le
+	 * type. Redeclarer le champ ici l'**ecraserait** (TS2612), et le `declare` que TypeScript
+	 * recommande est refuse par la couche Flow du preset Babel de React Native : l'application ne
+	 * bundlerait plus. Un accesseur donne le meme confort sans toucher a la chaine de build.
+	 */
+	private get app(): React.ContextType<typeof AppContext> {
+	    return this.context as React.ContextType<typeof AppContext>;
+	}
 
 	constructor(props: CourseProps) {
 		super(props);
@@ -196,7 +206,7 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 						{this.state.data.subject !== 'N/C' ? this.state.data.subject.trim() : Translator.get('UNKNOWN_SUBJECT')}
 					</Text>
 					{this.state.data.category !== '' && this.state.data.category !== this.state.data.subject && (
-						<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, paddingVertical: 2 }}>
+						<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, paddingVertical: tokens.space.xxs }}>
 							<Text style={{ fontSize: tokens.fontSize.xs, color: lineColor, fontWeight: tokens.fontWeight.bold as never }}>
 								{this.state.data.category}
 							</Text>
@@ -226,7 +236,7 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	}
 
 	render() {
-		const theme = style.Theme[this.context.themeName];
+		const theme = style.Theme[this.app.themeName];
 		const lineColor = theme.courses[this.state.data.color ?? 'default'] ?? theme.courses.default;
 
 		const map = this.renderMap(theme);

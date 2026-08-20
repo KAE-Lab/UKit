@@ -483,6 +483,26 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
   **aucune ligne de messagerie n'apparaît**. Puis revenir à Bordeaux : la session est à refaire, ce
   qui est le comportement voulu.
 
+## Deux impasses fermées au jalon 6-K
+
+- **Un mot de passe changé à l'université** produisait un `LOGIN_FAILED`, à juste titre non
+  réessayable — mais l'écran de connexion n'apparaît que si le trousseau est **vide**, et il ne
+  l'était pas. Deux chemins mènent désormais au formulaire, parce qu'il y a deux façons de tomber
+  dans l'impasse : l'écran d'échec plein porte une **action** « Ressaisir mes identifiants », et la
+  **ligne de messagerie** — le seul endroit où l'échec se montre quand une identité a déjà été lue,
+  `echecBloquant` exigeant `coldData === null` — y mène aussi quand on la touche. La condition vit
+  dans [`demandeUneRessaisie`](../../src/features/Scolarite/services/ScolariteMapping.ts), à côté de
+  la table des codes du portail.
+- **Ressaisir ne déconnecte pas.** L'écran du compte s'ouvre en mode `ressaisie`, ou porte un bouton
+  dédié. Vider le trousseau effacerait aussi l'identité déjà lue et obligerait à retaper
+  l'identifiant, pour un mot de passe qui a changé tout seul.
+- **Le mode de session se déduisait** de la présence des données froides, sans moyen de forcer :
+  rafraîchir une identité périmée obligeait à se déconnecter. `rafraichirDossier()` relance un
+  parcours froid depuis l'écran du compte, et n'efface les données froides **que si la session
+  démarre** — sinon on les perdrait pour rien.
+
+Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels.md).
+
 ## Limites connues
 
 - **Les sélecteurs restent positionnels** (`gwt-uid-41`, `-43`, `-45`, `-47`, `-51`). Ils ne sont pas

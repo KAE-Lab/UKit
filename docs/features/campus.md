@@ -88,6 +88,14 @@ filtre est actif, et animée comme le reste de l'en-tête via `globalScrollValue
 ou visuel de repli, titre, sous-titre, badge de distance, étoile de favori, contenu libre en enfant.
 Les quatre types d'éléments (restaurant, BU, bâtiment, annonce) l'habillent différemment.
 
+Depuis le jalon [6-K](../phase-6/6-k-socle-visuel.md), sa **surface** vient de
+[`Card`](../../src/shared/ui/Card.tsx) et son corps se compose de
+[`MetaRow`](../../src/shared/ui/MetaRow.tsx) et [`Badge`](../../src/shared/ui/Badge.tsx) : la même
+déclaration était écrite six fois. Ce qui reste propre à Campus — la distance à pied formatée,
+l'affluence d'une bibliothèque, le titre et son étoile — vit dans
+[`CampusCardParts.tsx`](../../src/features/Campus/components/CampusCardParts.tsx), et **pas** dans le
+socle : celui-ci n'a aucune raison de connaître les bibliothèques.
+
 ## Les hooks partagés
 
 ### `useCampusLocation`
@@ -154,9 +162,6 @@ temps de chargement.
 
 ## Limites connues
 
-- **Treize libellés d'interface s'affichent en majuscules brutes** (`ALL_ESTABLISHMENTS`, `RESTO_U`,
-  `NO_RESULTS`…). Les clés sont invoquées avec un transtypage qui contourne la vérification de type et
-  ne sont définies dans aucun dictionnaire. Détail et liste complète dans [i18n.md](../i18n.md).
 - **Quatre chargements réseau concurrents au montage du tableau de bord**, chacun potentiellement
   multiple (les bibliothèques lancent à elles seules douze requêtes de découverte, plus une par site
   pour l'affluence). L'onglet est le plus coûteux de l'application au démarrage.
@@ -181,7 +186,8 @@ temps de chargement.
 | [`Dashboard/components/FreeRoomSectionCard.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSectionCard.tsx) | carte d'un bâtiment |
 | [`components/CampusListLayout.tsx`](../../src/features/Campus/components/CampusListLayout.tsx) | socle générique des écrans de liste : liste, recherche, filtres, états |
 | [`components/CampusLayoutComponents.tsx`](../../src/features/Campus/components/CampusLayoutComponents.tsx) | `CampusSearchBar`, `CampusFilterModal`, `CampusListEmptyState`, `CampusFailureNotice`, `CampusPartialNotice` |
-| [`components/CampusCard.tsx`](../../src/features/Campus/components/CampusCard.tsx) | carte de base commune aux quatre types d'éléments |
+| [`components/CampusCard.tsx`](../../src/features/Campus/components/CampusCard.tsx) | carte de base commune aux quatre types d'éléments ; sa surface vient de `shared/ui/Card` |
+| [`components/CampusCardParts.tsx`](../../src/features/Campus/components/CampusCardParts.tsx) | `CardTitleRow` (titre + étoile), `DistanceBadge` (distance formatée), `LibraryStatusRow` (état et jauge d'affluence) — du domaine Campus, partagé entre la liste et le tableau de bord |
 | [`components/hooks/useCampusListHeader.tsx`](../../src/features/Campus/components/hooks/useCampusListHeader.tsx) | installe l'icône de filtre animée dans l'en-tête de l'écran |
 | [`hooks/useCampusLocation.ts`](../../src/features/Campus/hooks/useCampusLocation.ts) | position de l'utilisateur, avec repli sur Talence |
 | [`hooks/useCampusPosition.ts`](../../src/features/Campus/hooks/useCampusPosition.ts) | la même position, résolue une fois et rendue en état, pour les écrans de liste |

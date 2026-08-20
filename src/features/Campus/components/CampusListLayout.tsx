@@ -1,10 +1,11 @@
 import React, { useContext, useState } from 'react';
-import { Animated, View, ActivityIndicator } from 'react-native';
+import { Animated, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
+import { LoadingState } from '../../../shared/ui/LoadingState';
 import { CampusSearchBar, CampusFilterModal, CampusListEmptyState, CampusPartialNotice } from './CampusLayoutComponents';
 import { useCampusListHeader } from './hooks/useCampusListHeader';
 import type { UkitFailure } from '../../../shared/aetherius';
@@ -88,9 +89,7 @@ export function CampusListLayout<T>({
     if (loading) {
         return (
             <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
-                </View>
+                <LoadingState theme={theme} fullScreen />
             </SafeAreaView>
         );
     }

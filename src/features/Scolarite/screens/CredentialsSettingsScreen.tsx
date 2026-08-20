@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import * as LocalAuthentication from 'expo-local-authentication';
 
 import { AppContext } from '../../../shared/services/AppCore';
@@ -15,10 +15,10 @@ import ScolariteLoginView from '../components/ScolariteLoginView';
 
 const InfoRow = ({ label, value, theme }) => (
     <View style={styles.infoRow}>
-        <Text style={[styles.infoLabel, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}>
+        <Text style={[styles.infoLabel, { color: theme.fontSecondary }]}>
             {label}
         </Text>
-        <Text style={[styles.infoValue, { color: theme.font, fontFamily: 'Montserrat_600SemiBold' }]} numberOfLines={1}>
+        <Text style={[styles.infoValue, { color: theme.font }]} numberOfLines={1}>
             {value || '—'}
         </Text>
     </View>
@@ -41,11 +41,11 @@ const IdentifiantsSection = ({ theme, credentials, passwordVisible, onTogglePass
         <InfoRow label={Translator.get('USERNAME')} value={credentials?.username} theme={theme} />
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}>
+            <Text style={[styles.infoLabel, { color: theme.fontSecondary }]}>
                 {Translator.get('PASSWORD')}
             </Text>
             <View style={styles.passwordRow}>
-                <Text style={[styles.infoValue, { color: theme.font, fontFamily: 'Montserrat_600SemiBold', flex: 1 }]} numberOfLines={1}>
+                <Text style={[styles.infoValue, { color: theme.font, flex: 1 }]} numberOfLines={1}>
                     {passwordVisible ? credentials?.password : '••••••••'}
                 </Text>
                 <TouchableOpacity onPress={onTogglePassword} hitSlop={8}>
@@ -104,17 +104,66 @@ const CompteADemander = ({ theme, onSuccess }) => (
  *
  * Voir docs/features/scolarite.md.
  */
+
+/**
+ * Les trois gestes qu'on peut poser sur son compte, du plus doux au plus destructif.
+ *
+ * Sortis de l'ecran pour le garder sous la limite de lignes — meme decoupage que
+ * `CampusLayoutComponents` pour `CampusListLayout`. L'ordre porte du sens : actualiser ne perd rien,
+ * ressaisir ne perd que le mot de passe garde, se deconnecter efface tout.
+ */
+const ActionsDuCompte = ({ theme, onRafraichir, onRessaisir, onDeconnecter }) => (
+    <>
+        {/*
+          * Redemander un parcours froid, sans se deconnecter : le mode se deduisait de la presence des
+          * donnees froides, sans aucun moyen de forcer (jalon 6-K, docs/defauts-fonctionnels.md).
+          */}
+        <TouchableOpacity style={[styles.actionButton, { borderColor: theme.primary }]} onPress={onRafraichir} activeOpacity={0.8}>
+            <MaterialCommunityIcons name="refresh" size={20} color={theme.primary} />
+            <Text style={[styles.actionText, { color: theme.primary }]}>{Translator.get('REFRESH_RECORD')}</Text>
+        </TouchableOpacity>
+        <Text style={[styles.actionHint, { color: theme.fontSecondary }]}>{Translator.get('REFRESH_RECORD_DESC')}</Text>
+
+        {/*
+          * Ressaisir sans deconnecter : un mot de passe change a l'universite n'invalide pas le compte,
+          * et passer par la deconnexion effacerait aussi l'identite deja lue.
+          */}
+        <TouchableOpacity style={[styles.actionButton, { borderColor: theme.primary }]} onPress={onRessaisir} activeOpacity={0.8}>
+            <MaterialCommunityIcons name="account-key-outline" size={20} color={theme.primary} />
+            <Text style={[styles.actionText, { color: theme.primary }]}>{Translator.get('REENTER_CREDENTIALS')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.actionButton, { borderColor: theme.danger }]} onPress={onDeconnecter} activeOpacity={0.8}>
+            <MaterialCommunityIcons name="logout" size={20} color={theme.danger} />
+            <Text style={[styles.actionText, { color: theme.danger }]}>{Translator.get('LOGOUT')}</Text>
+        </TouchableOpacity>
+    </>
+);
+
 const CredentialsSettingsScreen = () => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     const navigation = useNavigation();
 
-    const { credentials, coldData, logout, portailDisponible } = useCredentials();
+    const route = useRoute<RouteProp<{ p: { ressaisie?: boolean } }, 'p'>>();
+
+    const { credentials, coldData, logout, rafraichirDossier, portailDisponible } = useCredentials();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
+    /**
+     * Ressaisir sans se deconnecter.
+     *
+     * Un mot de passe change a l'universite n'invalide pas le compte, seulement le mot de passe garde.
+     * Passer par la deconnexion pour le corriger effacait aussi l'identite deja lue et obligeait a
+     * retaper l'identifiant. `validateAndSave` rejoue de toute facon un parcours complet : il suffit
+     * de rendre le formulaire atteignable (jalon 6-K, docs/defauts-fonctionnels.md).
+     */
+    const [ressaisie, setRessaisie] = useState(route.params?.ressaisie === true);
 
     if (!portailDisponible) return <PortailAbsent theme={theme} />;
-    if (!credentials) return <CompteADemander theme={theme} onSuccess={() => navigation.goBack()} />;
+    if (!credentials || ressaisie) {
+        return <CompteADemander theme={theme} onSuccess={() => { setRessaisie(false); navigation.goBack(); }} />;
+    }
 
     const handleShowPassword = async () => {
         if (passwordVisible) {
@@ -175,17 +224,12 @@ const CredentialsSettingsScreen = () => {
                                 onTogglePassword={handleShowPassword}
                             />
 
-                            {/* Bouton déconnexion */}
-                            <TouchableOpacity
-                                style={[styles.logoutButton, { borderColor: '#EF5350' }]}
-                                onPress={() => setShowLogoutModal(true)}
-                                activeOpacity={0.8}
-                            >
-                                <MaterialCommunityIcons name="logout" size={20} color="#EF5350" />
-                                <Text style={[styles.logoutText, { fontFamily: 'Montserrat_600SemiBold' }]}>
-                                    {Translator.get('LOGOUT')}
-                                </Text>
-                            </TouchableOpacity>
+                            <ActionsDuCompte
+                                theme={theme}
+                                onRafraichir={() => { rafraichirDossier(); navigation.goBack(); }}
+                                onRessaisir={() => setRessaisie(true)}
+                                onDeconnecter={() => setShowLogoutModal(true)}
+                            />
 
                         </View>
                     </ScrollView>
@@ -211,7 +255,7 @@ const LogoutModal = ({ theme, visible, onClose, onConfirm }) => (
     >
         <View style={styles.modalOverlay}>
             <View style={[styles.modalBox, { backgroundColor: theme.cardBackground }]}>
-                <MaterialCommunityIcons name="logout" size={48} color="#EF5350" style={{ marginBottom: tokens.space.md }} />
+                <MaterialCommunityIcons name="logout" size={48} color={theme.danger} style={{ marginBottom: tokens.space.md }} />
                 <Text style={[styles.modalText, { color: theme.font }]}>
                     {Translator.get('CONFIRM_LOGOUT')}
                 </Text>
@@ -223,10 +267,11 @@ const LogoutModal = ({ theme, visible, onClose, onConfirm }) => (
                         <Text style={{ color: theme.fontSecondary, fontWeight: 'bold' }}>{Translator.get('CANCEL')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={[styles.modalButton, { backgroundColor: '#EF5350', marginLeft: tokens.space.sm }]}
+                        style={[styles.modalButton, { backgroundColor: theme.danger, marginLeft: tokens.space.sm }]}
                         onPress={onConfirm}
                     >
-                        <Text style={{ color: 'white', fontWeight: 'bold' }}>{Translator.get('CONFIRM')}</Text>
+                        {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif lui-meme. */}
+                        <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>{Translator.get('CONFIRM')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -240,7 +285,6 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: tokens.fontSize.xs,
-        fontFamily: 'Montserrat_600SemiBold',
         letterSpacing: 0.8,
         marginLeft: tokens.space.sm,
         marginBottom: 2,
@@ -278,7 +322,8 @@ const styles = StyleSheet.create({
         height: StyleSheet.hairlineWidth,
         marginLeft: tokens.space.md,
     },
-    logoutButton: {
+    /** Un bouton d'action bordé, dont la teinte vient du thème : `primary` ou `danger`. */
+    actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -288,9 +333,14 @@ const styles = StyleSheet.create({
         paddingVertical: tokens.space.md,
         marginTop: tokens.space.sm,
     },
-    logoutText: {
-        color: '#EF5350',
+    actionText: {
         fontSize: tokens.fontSize.md,
+    },
+    actionHint: {
+        fontSize: tokens.fontSize.sm,
+        textAlign: 'center',
+        marginTop: tokens.space.xs,
+        marginHorizontal: tokens.space.md,
     },
     modalOverlay: {
         flex: 1,
@@ -309,7 +359,6 @@ const styles = StyleSheet.create({
         fontSize: tokens.fontSize.md,
         textAlign: 'center',
         marginBottom: tokens.space.lg,
-        fontFamily: 'Montserrat_500Medium',
     },
     modalActions: {
         flexDirection: 'row',

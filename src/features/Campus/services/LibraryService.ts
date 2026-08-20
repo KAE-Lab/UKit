@@ -21,6 +21,7 @@
 
 import Translator from '../../../shared/i18n/Translator';
 import { BLUEPRINT, reportFailure, runBlueprint, type UkitFailure } from '../../../shared/aetherius';
+import type { SemanticTone } from '../../../shared/theme/Theme';
 import { getEtablissementActif } from '../../../shared/etablissements';
 import {
     estBibliotheque,
@@ -68,7 +69,7 @@ export type TimetableResult =
     | { readonly ok: false; readonly failure: UkitFailure };
 
 /**
- * La couleur et le libelle d'un etat d'affluence.
+ * Le **ton** et le libelle d'un etat d'affluence.
  *
  * Reste dans le service et non dans le module de projection : c'est de la presentation, elle lit la
  * langue choisie, et les composants l'importent d'ici depuis toujours. Seule source de verite de
@@ -76,24 +77,38 @@ export type TimetableResult =
  *
  * Un taux inconnu est traite comme « de la place » : afficher un avertissement sans donnee serait
  * trompeur.
+ *
+ * **Un ton, pas une couleur** (jalon 6-K). Cette fonction rendait un hexadecimal clair en dur, donc
+ * la meme couleur dans les deux themes, et deux rouges presque identiques pour « ferme » et
+ * « sature » — `#f44336` contre `#ff4436`, une frappe inversee que personne ne pouvait voir. Un
+ * service ne sait pas quel theme est actif : il nomme l'etat, le composant le resout par
+ * `toneColor` (docs/theme.md).
  */
 export function getLibraryStatus(affluenceData?: AffluencesData) {
     const rate = affluenceData?.occupancyRate ?? null;
     const isOpen = affluenceData?.isOpen ?? true;
 
-    let statusColor = '#f44336';
+    let statusTone: SemanticTone = 'danger';
     if (isOpen) {
-        if (rate === null || rate < 50) statusColor = '#4caf50';
-        else if (rate < 80) statusColor = '#ff9800';
-        else statusColor = '#ff4436';
+        if (rate === null || rate < 50) statusTone = 'success';
+        else if (rate < 80) statusTone = 'warning';
+        else statusTone = 'danger';
     }
 
-    let statusText = isOpen ? Translator.get('BU_OPEN') : Translator.get('BU_CLOSED');
-    if (!isOpen && affluenceData?.openingText) {
-        statusText = `${statusText} - ${affluenceData.openingText}`;
-    }
+    const statusText = isOpen ? Translator.get('BU_OPEN') : Translator.get('BU_CLOSED');
 
-    return { isOpen, rate, statusColor, statusText };
+    /**
+     * La precision du fournisseur, **a cote** du statut et non collee dedans.
+     *
+     * Elle etait concatenee : « Closed - Ouvre demain a 09:00 », un libelle traduit soude a une phrase
+     * que la source ne publie **qu'en francais**. Le resultat se lisait comme une phrase cassee. Elle
+     * reste affichee — l'heure est l'information utile, et la jeter serait pire — mais comme une note
+     * secondaire, dans la couleur du texte secondaire : ce qui vient de nous et ce qui vient d'eux ne
+     * se ressemblent plus (jalon 6-K).
+     */
+    const statusNote = !isOpen && affluenceData?.openingText ? affluenceData.openingText : null;
+
+    return { isOpen, rate, statusTone, statusText, statusNote };
 }
 
 function commeListe(valeur: unknown): unknown[] {

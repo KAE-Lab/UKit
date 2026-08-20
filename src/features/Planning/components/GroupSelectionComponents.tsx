@@ -57,7 +57,9 @@ export class SectionListHeader extends React.PureComponent<SectionListHeaderProp
                             fontSize: tokens.fontSize.sm,
                             fontWeight: tokens.fontWeight.bold,
                             letterSpacing: 0.5,
-                            color: '#FFFFFF',
+                            // Un libelle sur fond `sectionsHeaders` : `lightFont`, blanc dans les deux
+                            // themes, et surtout pas `accentFont` qui est le rouge destructif.
+                            color: style.Theme.light.lightFont,
                         },
                     ]}>
                         {this.props.title}

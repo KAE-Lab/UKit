@@ -47,11 +47,13 @@ Une capacité utilisateur — un écran, une source de données, une option — 
 2. **Chaînes localisées** dans les trois dictionnaires `fr`, `en`, `es`. Aucune chaîne visible en
    dur. Voir [docs/i18n.md](docs/i18n.md).
 3. **Tokens de thème** pour tout style. Aucune couleur, aucun espacement, aucun rayon littéral. Voir
-   [docs/theme.md](docs/theme.md). Cette règle devient **applicable** au jalon
-   [6-K](docs/phase-6/6-k-socle-visuel.md), qui lui donne une règle ESLint : jusque-là, elle ne tient
-   que par la relecture — et le code montre que ça n'a pas suffi.
+   [docs/theme.md](docs/theme.md). Cette règle est **applicable** depuis le jalon
+   [6-K](docs/phase-6/6-k-socle-visuel.md) : `ukit/no-style-literals` la signale et nomme le token de
+   remplacement. Pour un écran, dérouler aussi la
+   **[recette d'écran](docs/theme.md#la-recette-décran)** — en-tête animé, marges, les quatre états,
+   cibles tactiles.
 4. **`npx tsc --noEmit` et `npx eslint .` sans régression** — zéro nouvelle erreur, zéro nouveau
-   warning. La base de référence actuelle (3 erreurs de typage, 11 warnings `no-explicit-any`) est
+   warning. La base de référence actuelle (`tsc` **verte**, 79 warnings ESLint dont 68 de style) est
    décrite dans [docs/qualite.md](docs/qualite.md) : ne pas l'augmenter, la réduire quand on passe à
    proximité. **`npm test` vert**, sans exception : lui l'est déjà.
 5. **Flux vérifié à la main au moins une fois** sur l'application réelle, pas seulement relu. Chaque
@@ -86,6 +88,10 @@ Une capacité utilisateur — un écran, une source de données, une option — 
   [Phase 6](docs/phase-6/README.md), un service n'en appelle plus non plus : il joue un
   [Blueprint](docs/blueprints.md). La base de publication se lit avec la même règle.
 - **Pas de `any`** sans justification écrite.
+- **Aucun code mort.** Import inutilisé, variable jamais lue, composant jamais monté, export que rien
+  n'atteint : `@typescript-eslint/no-unused-vars` signale les premiers, la relecture doit attraper les
+  derniers. Un export mort fait croire à une capacité, et il faut l'enquêter avant d'oser le supprimer
+  — c'est son vrai coût. Une erreur qu'on n'utilise pas s'écrit `catch {`, pas `catch (e)`.
 - **Pas de dépendance cartographique propriétaire.** Les cartes passent par Leaflet et OpenStreetMap
   dans une WebView ([docs/cartographie.md](docs/cartographie.md)).
 - **Commentaires sobres, orientés « pourquoi ».** Un commentaire qui paraphrase la ligne suivante est
@@ -157,7 +163,9 @@ de la fonctionnalité. C'est ce qui évite que la session suivante la défasse.
 
 Et une distinction à ne pas aplatir : un **défaut fonctionnel** rencontré en refaisant un écran — une
 impasse, un état manquant — n'est pas du goût. Il se corrige, se teste et se coche comme n'importe quel
-correctif ; le confondre avec de l'esthétique rend le travail invérifiable.
+correctif ; le confondre avec de l'esthétique rend le travail invérifiable. Il s'inscrit dans
+[docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md) et **ne se corrige pas au passage**, sauf
+s'il tombe exactement dans le périmètre de la session.
 
 ### Captures d'écran
 

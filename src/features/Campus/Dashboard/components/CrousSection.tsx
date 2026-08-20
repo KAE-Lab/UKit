@@ -1,10 +1,11 @@
 import React, { useContext, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, FlatList } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
+import { SectionHeader } from '../../../../shared/ui/SectionHeader';
+import { LoadingState } from '../../../../shared/ui/LoadingState';
 import type { CrousRestaurant } from '../../services/CrousService';
 import { useCrousRestaurants } from '../../hooks/useCrousRestaurants';
 import { useFavorites } from '../../hooks/useFavorites';
@@ -59,19 +60,14 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
 
     return (
         <View style={{ marginTop: tokens.space.md }}>
-            <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+            <SectionHeader
+                title={Translator.get('RESTAURANTS_U')}
+                theme={theme}
                 onPress={() => navigation.navigate('Crous')}
-                activeOpacity={0.7}
-            >
-                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
-                    {Translator.get('RESTAURANT_U') || 'Restaurants Universitaires'}
-                </Text>
-                <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
+            />
 
             {loading ? (
-                <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+                <LoadingState theme={theme} />
             ) : (
                 <FlatList
                     horizontal

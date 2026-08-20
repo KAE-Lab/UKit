@@ -31,9 +31,6 @@ import {
 } from '../aetherius';
 import { tokens, type AppThemeType } from '../theme/Theme';
 
-const VERT = '#4ade80';
-const ROUGE = '#ef4444';
-const AMBRE = '#fbbf24';
 
 export interface ModMenuBlueprintsProps {
     readonly theme: AppThemeType;
@@ -108,16 +105,16 @@ export default function ModMenuBlueprints({ theme }: ModMenuBlueprintsProps) {
                 <TouchableOpacity
                     onPress={revenir}
                     disabled={busy}
-                    style={{ flex: 1, backgroundColor: ROUGE, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center', opacity: busy ? 0.5 : 1 }}
+                    style={{ flex: 1, backgroundColor: theme.danger, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center', opacity: busy ? 0.5 : 1 }}
                 >
-                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Embarque</Text>
+                    <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Embarque</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={rafraichir}
                     disabled={busy}
                     style={{ flex: 1, backgroundColor: theme.primary, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center', opacity: busy ? 0.5 : 1 }}
                 >
-                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Rafraichir</Text>
+                    <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Rafraichir</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -136,7 +133,7 @@ function renderRapport(theme: AppThemeType, report: RefreshReport | null, busy: 
 
     return (
         <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, borderWidth: 1, borderColor: theme.border, marginBottom: tokens.space.sm }}>
-            <Text style={{ color: report?.ok === false ? AMBRE : theme.fontSecondary, fontSize: tokens.fontSize.xs }}>
+            <Text style={{ color: report?.ok === false ? theme.warning : theme.fontSecondary, fontSize: tokens.fontSize.xs }}>
                 {texte}
             </Text>
         </View>
@@ -158,7 +155,7 @@ function renderLigne(
             style={{ backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, borderWidth: 1, borderColor: theme.border, marginBottom: tokens.space.xs }}
         >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: distant ? VERT : theme.fontSecondary, marginRight: tokens.space.xs }} />
+                <View style={{ width: 8, height: 8, borderRadius: tokens.radius.pill, backgroundColor: distant ? theme.success : theme.fontSecondary, marginRight: tokens.space.xs }} />
                 <Text style={{ color: theme.font, fontSize: tokens.fontSize.xs, flex: 1 }} numberOfLines={1}>
                     {line.name.replace('ukit.', '')}
                 </Text>
@@ -168,17 +165,17 @@ function renderLigne(
             </View>
 
             {line.error !== undefined && (
-                <Text style={{ color: ROUGE, fontSize: tokens.fontSize.xs, marginTop: 2 }}>{line.error}</Text>
+                <Text style={{ color: theme.danger, fontSize: tokens.fontSize.xs, marginTop: tokens.space.xxs }}>{line.error}</Text>
             )}
             {raison !== null && (
-                <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: 2 }}>{raison}</Text>
+                <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.xxs }}>{raison}</Text>
             )}
 
             {line.runnable && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.xs }}>
                     <TouchableOpacity
                         onPress={() => jouer(line.name)}
-                        style={{ paddingVertical: 2, paddingHorizontal: tokens.space.sm, borderRadius: tokens.radius.sm, borderWidth: 1, borderColor: theme.border }}
+                        style={{ paddingVertical: tokens.space.xxs, paddingHorizontal: tokens.space.sm, borderRadius: tokens.radius.sm, borderWidth: 1, borderColor: theme.border }}
                     >
                         <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xs }}>jouer</Text>
                     </TouchableOpacity>

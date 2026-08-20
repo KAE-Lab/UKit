@@ -147,11 +147,6 @@ const PEREMPTION_ABONNEMENT_MS = 5 * 60 * 1000;
 
 let calendrierGarde: { lien: string; ics: unknown; pose: number } | null = null;
 
-/** Oublie le calendrier garde. Appele quand le lien change : il ne designe plus le meme agenda. */
-export function oublierCalendrierAbonnement(): void {
-    calendrierGarde = null;
-}
-
 /**
  * Le calendrier de l'abonnement colle, tel quel — l'annee entiere s'il le faut.
  *

@@ -1,9 +1,10 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import style, { tokens } from '../../../shared/theme/Theme';
+import { EmptyState } from '../../../shared/ui/EmptyState';
 import Translator from '../../../shared/i18n/Translator';
 import { CourseData } from './CourseCard';
 import { iconeDAnnotation } from './CourseAnnotations';
@@ -68,21 +69,12 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 	renderNoCourse() {
 		const { theme } = this.props;
 		return (
-			<View style={style.schedule.course.noCourse as never}>
-				<MaterialCommunityIcons
-					name="calendar-blank-outline"
-					size={36}
-					color={theme.fontSecondary}
-					style={{ opacity: 0.4, marginBottom: tokens.space.sm }}
-				/>
-				<Text
-					style={[
-						style.schedule.course.noCourseText as never,
-						{ color: theme.fontSecondary },
-					]}>
-					{Translator.get('NO_CLASS_THIS_DAY')}
-				</Text>
-			</View>
+			<EmptyState
+				variant="plain"
+				icon="calendar-blank-outline"
+				message={Translator.get('NO_CLASS_THIS_DAY')}
+				theme={theme}
+			/>
 		);
 	}
 
@@ -237,7 +229,7 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 										backgroundColor: `${this.state.lineColor}22`,
 										borderRadius: tokens.radius.md,
 										paddingHorizontal: tokens.space.sm,
-										paddingVertical: 2,
+										paddingVertical: tokens.space.xxs,
 										marginLeft: tokens.space.xs,
 									}}>
 									<Text

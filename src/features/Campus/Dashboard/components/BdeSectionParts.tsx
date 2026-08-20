@@ -45,21 +45,21 @@ export function BdeAnnonceCard({ annonce, width, theme, onPress }: BdeAnnonceCar
                 </View>
 
                 <View style={{ padding: tokens.space.md }}>
-                    <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1, marginBottom: 4 }} numberOfLines={1}>
+                    <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, flexShrink: 1, marginBottom: tokens.space.xs }} numberOfLines={1}>
                         {annonce.title}
                     </Text>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: annonce.info_label ? 4 : 0 }}>
                         <MaterialCommunityIcons name="account" size={16} color={theme.fontSecondary} />
-                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }} numberOfLines={1}>
+                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: tokens.space.xs, flex: 1 }} numberOfLines={1}>
                             {annonce.issuer_name}
                         </Text>
                     </View>
 
                     {annonce.info_label ? (
                         <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                            <MaterialCommunityIcons name="information-outline" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
-                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1, lineHeight: 20 }} numberOfLines={2}>
+                            <MaterialCommunityIcons name="information-outline" size={16} color={theme.fontSecondary} style={{ marginTop: tokens.space.xxs }} />
+                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: tokens.space.xs, flex: 1, lineHeight: 20 }} numberOfLines={2}>
                                 {annonce.info_label}
                             </Text>
                         </View>

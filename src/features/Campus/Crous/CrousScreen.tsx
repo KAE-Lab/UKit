@@ -56,9 +56,9 @@ function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@re
     }, [restaurants, favorites, searchText, selectedFilter]);
 
     const filterOptions = [
-        { id: 'all', label: Translator.get('ALL_ESTABLISHMENTS' as Parameters<typeof Translator.get>[0]) },
-        { id: 'resto', label: Translator.get('RESTO_U' as Parameters<typeof Translator.get>[0]) },
-        { id: 'market', label: Translator.get('CROUS_MARKET' as Parameters<typeof Translator.get>[0]) }
+        { id: 'all', label: Translator.get('ALL_ESTABLISHMENTS') },
+        { id: 'resto', label: Translator.get('RESTO_U') },
+        { id: 'market', label: Translator.get('CROUS_MARKET') }
     ];
 
     const renderItem = ({ item }: { item: CrousRestaurant }) => (
@@ -86,7 +86,7 @@ function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@re
             hasSearch={true}
             searchText={searchText}
             onSearchChange={setSearchText}
-            searchPlaceholder={Translator.get('SEARCH_RESTO_CITY' as Parameters<typeof Translator.get>[0])}
+            searchPlaceholder={Translator.get('SEARCH_RESTO_CITY')}
             
             filterOptions={filterOptions}
             selectedFilter={selectedFilter}

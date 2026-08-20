@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Dimensions, FlatList, View } from 'react-native';
 
+import { tokens } from '../../../shared/theme/Theme';
 import { CourseData } from './CourseCard';
 import { CourseRowWithNavigation } from './CourseRow';
 
@@ -11,7 +12,9 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 	const groupKey = coursesGroup.length > 0 ? `${coursesGroup[0].starttime}-${coursesGroup[0].subject}` : 'default';
 	const initialIndex = savedCarouselIndices.get(groupKey) || 0;
 
-	const [currentIndex, setCurrentIndex] = useState(initialIndex);
+	// Seul le setter sert : l'index vit dans `savedCarouselIndices`, qui survit au demontage. L'etat
+	// n'est la que pour reprovoquer un rendu.
+	const [, setCurrentIndex] = useState(initialIndex);
 
 	if (!coursesGroup || coursesGroup.length === 0) return null;
 
@@ -61,8 +64,8 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 										flexDirection: 'row',
 										backgroundColor: theme.eventBackground,
 										paddingHorizontal: 6,
-										paddingVertical: 4,
-										borderRadius: 8,
+										paddingVertical: tokens.space.xs,
+										borderRadius: tokens.radius.sm,
 										borderWidth: 1,
 										borderColor: theme.eventBorder,
 									}}
@@ -76,7 +79,7 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 												borderRadius: 3,
 												backgroundColor: cardIndex === dotIndex ? (theme.accent ?? theme.primary) : theme.fontSecondary,
 												opacity: cardIndex === dotIndex ? 1 : 0.4,
-												marginHorizontal: 2,
+												marginHorizontal: tokens.space.xxs,
 											}}
 										/>
 									))}

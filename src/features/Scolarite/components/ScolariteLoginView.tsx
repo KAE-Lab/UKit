@@ -75,10 +75,10 @@ const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onSuccess
                     <View style={[styles.iconWrap, { backgroundColor: `${color}1A` }]}>
                         <MaterialCommunityIcons name="school-outline" size={36} color={color} />
                     </View>
-                    <Text style={[styles.title, { color: theme.font, fontFamily: 'Montserrat_600SemiBold' }]}>
+                    <Text style={[styles.title, { color: theme.font }]}>
                         {Translator.get(compact ? 'CONNECT_ACCOUNT_TITLE' : 'SCOLARITY')}
                     </Text>
-                    <Text style={[styles.subtitle, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}>
+                    <Text style={[styles.subtitle, { color: theme.fontSecondary }]}>
                         {Translator.get(compact ? 'CONNECT_ACCOUNT_DESC' : 'ENTER_CREDENTIALS_DESC')}
                     </Text>
                 </View>
@@ -185,7 +185,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         paddingHorizontal: tokens.space.md,
         fontSize: tokens.fontSize.md,
-        fontFamily: 'Montserrat_500Medium',
     },
     errorRow: {
         flexDirection: 'row',
@@ -196,7 +195,6 @@ const styles = StyleSheet.create({
     errorText: {
         flex: 1,
         fontSize: tokens.fontSize.sm,
-        fontFamily: 'Montserrat_500Medium',
     },
     button: {
         flexDirection: 'row',
@@ -211,7 +209,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: tokens.fontSize.md,
         fontWeight: '600',
-        fontFamily: 'Montserrat_600SemiBold',
     },
     skip: {
         alignItems: 'center',
@@ -220,7 +217,6 @@ const styles = StyleSheet.create({
     },
     skipText: {
         fontSize: tokens.fontSize.sm,
-        fontFamily: 'Montserrat_500Medium',
     },
 });
 

@@ -3,6 +3,7 @@ import moment from 'moment';
 import Toast from 'react-native-root-toast';
 import { SettingsManager } from './AppCore';
 import { TimeMockService } from './TimeMockService';
+import style from '../theme/Theme';
 import { PlanningEvent, PlanningWeekDay } from '../../features/Planning/services/PlanningApiService';
 
 // Define how notifications should be handled when the app is in the foreground
@@ -96,8 +97,10 @@ function showVisualFeedback(coursesToSchedule: Array<{ course: PlanningEvent, tr
     Toast.show(`Test Notif : Prévue dans ${seconds} secondes réelles.`, {
         duration: Toast.durations.LONG,
         position: Toast.positions.TOP,
-        backgroundColor: '#4ade80',
-        textColor: '#000',
+        // Un retour de developpement, mais pas une raison de porter une seconde palette : le vert
+        // vient du theme comme partout ailleurs (jalon 6-K).
+        backgroundColor: style.Theme.light.success,
+        textColor: style.colors.black,
         shadow: true,
         animation: true,
     });

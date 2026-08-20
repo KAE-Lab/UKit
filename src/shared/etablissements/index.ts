@@ -132,7 +132,7 @@ function lireCache(brut: string | null): Record<string, Etablissement> | null {
     try {
         const contenu = JSON.parse(brut);
         return contenu !== null && typeof contenu === 'object' ? contenu : null;
-    } catch (error) {
+    } catch {
         // Un cache illisible se jette sans bruit : le socle embarque reprend la main, ce que
         // l'application sait deja faire.
         return null;

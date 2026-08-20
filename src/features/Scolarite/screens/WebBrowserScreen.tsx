@@ -1,17 +1,13 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
-import { ActivityIndicator, Linking, Platform, TouchableOpacity, View, Modal, Text, StyleSheet, BackHandler } from 'react-native';
+import { ActivityIndicator, Linking, Platform, View, BackHandler } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, runOnJS } from 'react-native-reanimated';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 
-import style, { tokens } from '../../../shared/theme/Theme';
+import style from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { URL } from '../../../shared/constants/urls';
 import { serviceEtablissement } from '../../../shared/etablissements';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
-import Translator from '../../../shared/i18n/Translator';
 
 import { FloatingActionBar, SaveCredentialsModal, getCASInjectedScript } from '../components/WebBrowserComponents';
 
@@ -117,7 +113,7 @@ const useWebBrowser = (route, onDismiss, navigation) => {
                 setTempCredentials({ username: data.username, password: data.password });
                 setShowSaveModal(true);
             }
-        } catch (e) {
+        } catch {
         }
     };
 

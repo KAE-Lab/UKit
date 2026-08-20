@@ -43,9 +43,15 @@ Répartition des responsabilités :
   antérieurs et conservés tels quels : ils fonctionnent, on ne les réécrit pas sans raison. Tout
   nouveau composant est une fonction.
 - **Les styles** sont soit un `StyleSheet.create` en bas de fichier, soit un objet inline construit à
-  partir des tokens. Les deux formes coexistent ; suivre celle du fichier qu'on modifie.
+  partir des tokens. Les deux formes coexistent ; suivre celle du fichier qu'on modifie. **Aucune
+  valeur littérale** : la règle `ukit/no-style-literals` la signale et nomme le token
+  ([qualite.md](qualite.md#ukitno-style-literals-et-pourquoi-elle-est-écrite-à-la-main)).
 - **Le thème** se lit via `useContext(AppContext)` puis `style.Theme[themeName]`, ou se reçoit en
   prop `theme` quand le composant est purement présentational. Voir [theme.md](theme.md).
+- **Le vocabulaire visuel existe déjà.** Avant d'écrire une carte, un en-tête de section, une
+  pastille, un état vide ou une jauge, regarder [`shared/ui/`](../src/shared/ui/) : ils y sont, et ils
+  y sont parce qu'ils étaient recopiés ([theme.md](theme.md#le-vocabulaire-partagé)). Un motif qui
+  apparaît une **deuxième** fois remonte ; un composant d'un seul écran reste chez lui.
 
 ## TypeScript
 
@@ -64,6 +70,10 @@ Répartition des responsabilités :
   [`CampusListLayout.tsx`](../src/features/Campus/components/CampusListLayout.tsx) : ne pas en
   ajouter, les réduire quand on passe à proximité.
 - Le typage strict de l'application se vérifie par `npx tsc --noEmit` ([qualite.md](qualite.md)).
+  **`tsc` n'est pas la seule autorité** : Metro compile avec Babel, dont la couche TypeScript est
+  distincte. Le modificateur `declare` sur un champ de classe, par exemple, passe `tsc` et **fait
+  échouer le bundle** — un composant à classe qui doit typer `this.context` utilise donc un accesseur
+  privé, pas une redéclaration de champ (voir `DayView`, `CourseScreen`, `GroupSelectionScreen`).
 
 ## Nommage
 
@@ -118,4 +128,6 @@ Le chemin attendu, dans l'ordre :
    ([`StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx)), puis l'entrée
    `Stack.Screen` avec son `NavBarHelper`.
 3. Traduire le titre dans les trois dictionnaires.
-4. Documenter la route dans [navigation.md](navigation.md) et l'écran dans la doc de sa feature.
+4. Dérouler la **[recette d'écran](theme.md#la-recette-décran)** : en-tête animé, marges de page,
+   les quatre états, cibles tactiles, les deux thèmes.
+5. Documenter la route dans [navigation.md](navigation.md) et l'écran dans la doc de sa feature.

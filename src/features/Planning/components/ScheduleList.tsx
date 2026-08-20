@@ -1,16 +1,17 @@
 import React from 'react';
-import { ActivityIndicator, Animated, Text, View, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Animated, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import style, { tokens } from '../../../shared/theme/Theme';
+import { tokens } from '../../../shared/theme/Theme';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { CourseGroupCarousel } from './CourseCard';
 import { DayWeek } from './DayWeekCollapsible';
 import { groupOverlappingCourses } from './ScheduleListUtils';
 
 import { ErrorAlert } from '../../../shared/ui/Alerts';
+import { EmptyState } from '../../../shared/ui/EmptyState';
 import { SourceFailureNotice, type NoticeAction } from '../../../shared/ui/SourceFailureNotice';
 import Translator from '../../../shared/i18n/Translator';
 import { isConnected } from '../../../shared/services/AppCore'
@@ -18,7 +19,7 @@ import { ukitFailure, type UkitFailure } from '../../../shared/aetherius';
 import { groupesRequis, lienEdtAttendu, planningAbsent, sourceEdt } from '../../../shared/etablissements';
 import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
-import { CourseManager, upperCaseFirstLetter, isArraysEquals } from '../../../shared/services/AppCore';
+import { CourseManager, isArraysEquals } from '../../../shared/services/AppCore';
 import { NotificationManager } from '../../../shared/services/NotificationService';
 
 export interface ScheduleListProps {
@@ -319,18 +320,14 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     renderEmptyFavorites() {
         const { theme, navigation } = this.props;
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, paddingBottom: 80 }}>
-                <MaterialCommunityIcons name="star-outline" size={60} color={theme.fontSecondary} style={{ marginBottom: tokens.space.lg }} />
-                <Text style={{ color: theme.font, fontSize: tokens.fontSize.lg, fontWeight: 'bold', textAlign: 'center', marginBottom: tokens.space.md }}>
-                    {Translator.get('FAVORITES_EMPTY_TITLE') || "Votre planning est vide"}
-                </Text>
-                <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.md, textAlign: 'center', lineHeight: 22 }}>
-                    {Translator.get('FAVORITES_EMPTY') || "Votre liste de favoris est vide. Recherchez un groupe dans la liste pour l'ajouter \u00e0 un de vos favoris !"}
-                </Text>
-                <TouchableOpacity style={{ marginTop: 30, backgroundColor: theme.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }} onPress={() => navigation?.navigate('GroupSearch')}>
-                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{Translator.get('GROUPS_LIST') || "Groupes"}</Text>
-                </TouchableOpacity>
-            </View>
+            <EmptyState
+                variant="plain"
+                icon="star-outline"
+                title={Translator.get('FAVORITES_EMPTY_TITLE')}
+                message={Translator.get('FAVORITES_EMPTY')}
+                theme={theme}
+                action={{ label: Translator.get('GROUPS_LIST'), onPress: () => navigation?.navigate('GroupSearch'), icon: 'magnify' }}
+            />
         );
     }
 

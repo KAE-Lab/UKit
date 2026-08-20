@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
-import { View, Text } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import React, { useState, useEffect, useMemo } from 'react';
 
-import { AppContext } from '../../../shared/services/AppCore';
-import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { CampusDataManager as DataManager } from '../services/CampusDataManager';
 import { BuildingInfo, getDistanceInKm } from '../services/FreeRoomService';
+import type { UkitFailure } from '../../../shared/aetherius';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 import { CampusListLayout } from '../components/CampusListLayout';
@@ -15,16 +12,21 @@ import { useFavorites } from '../hooks/useFavorites';
 import { useCampusLocation } from '../hooks/useCampusLocation';
 
 function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, onAnimatedScroll?: (event: unknown) => void }) {
-    const AppContextValues = useContext(AppContext);
-    const themeName = AppContextValues.themeName ?? 'light';
-    const theme = style.Theme[themeName];
-
     const { fetchLocation } = useCampusLocation();
     const { favorites, toggleFavorite } = useFavorites('freeroom_favorites');
     
     const [buildings, setBuildings] = useState<BuildingInfo[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [searchText, setSearchText] = useState('');
+    /**
+     * L'echec de la source, quand il n'y a **rien** a afficher malgre lui.
+     *
+     * Un cache peuple survit a un rafraichissement rate : c'est seulement l'absence totale de donnee
+     * qui merite un ecran d'echec. Sans cette distinction, une liste incomplete se presenterait comme
+     * une panne, et une panne comme une liste vide — les deux mensonges que la Phase 6 supprime.
+     */
+    const [failure, setFailure] = useState<UkitFailure | null>(null);
+    const [essai, setEssai] = useState(0);
 
     useEffect(() => {
         let mounted = true;
@@ -32,8 +34,9 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
             setLoading(true);
             try {
                 let bList: BuildingInfo[] = DataManager.getBuildingList() as unknown as BuildingInfo[];
+                let echec: UkitFailure | null = null;
                 if (!bList || bList.length === 0) {
-                    await DataManager.fetchBuildingList();
+                    echec = await DataManager.fetchBuildingList();
                     bList = DataManager.getBuildingList() as unknown as BuildingInfo[];
                 }
 
@@ -50,6 +53,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
                     }
 
                     setBuildings(bList || []);
+                    setFailure(bList && bList.length > 0 ? null : echec);
                 }
             } catch (error) {
                 console.error(error);
@@ -60,7 +64,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
 
         loadBuildings();
         return () => { mounted = false; };
-    }, [fetchLocation]);
+    }, [fetchLocation, essai]);
 
     const filteredData = useMemo(() => {
         let result = [...buildings].sort((a, b) => {
@@ -105,10 +109,13 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
             hasSearch={true}
             searchText={searchText}
             onSearchChange={setSearchText}
-            searchPlaceholder={Translator.get('SEARCH_BUILDING' as Parameters<typeof Translator.get>[0]) || 'Rechercher un bâtiment...'}
+            searchPlaceholder={Translator.get('SEARCH_BUILDING')}
             
             emptyIcon="domain"
-            emptyMessage={Translator.get('NO_BUILDING_FOUND' as Parameters<typeof Translator.get>[0]) || 'Aucun bâtiment trouvé'}
+            emptyMessage={Translator.get('NO_BUILDING_FOUND')}
+
+            failure={failure ?? undefined}
+            onRetry={() => setEssai((n) => n + 1)}
         />
     );
 }

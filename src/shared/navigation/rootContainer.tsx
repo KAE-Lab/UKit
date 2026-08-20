@@ -13,14 +13,16 @@ import { SettingsManager } from '../services/AppCore';
 import WelcomeScreen from '../../features/Onboarding/WelcomeScreen';
 import Style from '../theme/Theme';
 import Translator from '../i18n/Translator';
-import { StatusBar, UpdateAlert } from '../ui/AppUI';
+import { StatusBar } from '../ui/AppUI';
 import ModMenu from '../ui/ModMenu';
 
 export default function RootContainer() {
 	const [isFirstLoad, setFirstLoad] = useState(SettingsManager.isFirstLoad());
 	const [themeName, setThemeName] = useState(SettingsManager.getTheme());
 	const [favoriteGroups, setFavoriteGroups] = useState(SettingsManager.getFavoriteGroups());
-	const [language, setLanguage] = useState(SettingsManager.getLanguage());
+	// Seul le setter sert : la valeur n'est pas lue, mais la poser reprovoque un rendu quand la
+	// langue change, ce qui reevalue tous les libelles traduits.
+	const [, setLanguage] = useState(SettingsManager.getLanguage());
 	const [filters, setFilters] = useState(SettingsManager.getFilters());
 	const [etablissement, setEtablissement] = useState(SettingsManager.getEtablissement());
 	const [catalogue, setCatalogue] = useState(0);

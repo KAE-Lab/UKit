@@ -44,7 +44,7 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
             <Animated.View style={[styles.headerContainer, { paddingTop: topPadding, backgroundColor: 'transparent', opacity }]}>
                 <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
                     <Text style={[styles.greetingText, { color: theme.font }]}>
-                        {Translator.get('CAMPUS') || 'Campus'}
+                        {Translator.get('CAMPUS')}
                     </Text>
                 </View>
             </Animated.View>
@@ -113,9 +113,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     greetingText: {
-        fontSize: 34,
+        fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold as '700',
-        fontFamily: 'Montserrat_600SemiBold',
         marginBottom: tokens.space.md,
     },
 });

@@ -1,10 +1,11 @@
 import React, { useContext, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, FlatList, Dimensions } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
+import { SectionHeader } from '../../../../shared/ui/SectionHeader';
+import { LoadingState } from '../../../../shared/ui/LoadingState';
 import type { LibraryInfo } from '../../services/LibraryService';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useNearbyLibraries } from '../../hooks/useNearbyLibraries';
@@ -59,21 +60,16 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
 
     return (
         <View style={{ marginTop: tokens.space.md }}>
-            <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+            <SectionHeader
+                title={Translator.get('UNIVERSITY_LIBRARY')}
+                theme={theme}
                 onPress={() => navigation.navigate('Library')}
-                activeOpacity={0.7}
-            >
-                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
-                    {Translator.get('UNIVERSITY_LIBRARY') || 'Bibliothèques Universitaires'}
-                </Text>
-                <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
+            />
 
             {secteursMuets > 0 && !loading ? <CampusPartialNotice theme={theme} onRetry={retry} /> : null}
 
             {loading ? (
-                <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+                <LoadingState theme={theme} />
             ) : (
                 <FlatList
                     horizontal

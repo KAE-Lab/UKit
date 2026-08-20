@@ -83,7 +83,7 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `campus-dashboard.png` | tableau de bord, quatre sections | essentielle |
+| `campus-dashboard.png` | tableau de bord, quatre sections | essentielle — la comparaison avant / après du jalon 6-K a été faite **hors dépôt** ; le fichier reste à déposer |
 | `campus-liste-filtres.png` | modale de filtres du socle de liste | complémentaire |
 | `campus-liste-vide.png` | état vide d'une liste filtrée | complémentaire |
 
@@ -92,16 +92,16 @@ peuvent attendre.
 | Fichier | Contenu | Priorité |
 |---|---|---|
 | `crous-liste.png` | liste des restaurants avec distances **et horaires** | **livrée** |
-| `crous-menu.png` | menu d'un restaurant, midi et soir | **livrée** |
+| `crous-menu.png` | menu d'un restaurant, midi et soir | **à reprendre** (6-K : icône végétarien) |
 | `crous-menu-absent.png` | restaurant qui ne publie pas de menu — l'état vide, à contraster avec l'état d'échec | **livrée** |
 
 ### Campus — bibliothèques · [features/campus-bibliotheques.md](../features/campus-bibliotheques.md)
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `bu-liste.png` | liste avec pastilles d'affluence | **livrée** |
-| `bu-detail.png` | fiche, jauge d'affluence et horaires | **livrée** |
-| `bu-couverture-partielle.png` | le bandeau de couverture partielle au-dessus d'une liste réelle — la seule interface que le jalon 6-D ajoute | **livrée** |
+| `bu-liste.png` | liste avec pastilles d'affluence | **à reprendre** (6-K : teintes d'affluence) |
+| `bu-detail.png` | fiche, jauge d'affluence et horaires | **à reprendre** (6-K : teintes d'affluence) |
+| `bu-couverture-partielle.png` | le bandeau de couverture partielle au-dessus d'une liste réelle — la seule interface que le jalon 6-D ajoute | **à reprendre** (6-K : teintes d'affluence des cartes) |
 
 ### Campus — salles libres · [features/campus-salles-libres.md](../features/campus-salles-libres.md)
 
@@ -125,11 +125,11 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `scolarite-login.png` | écran de connexion universitaire — **déposée** (jalon 6-F) | essentielle |
+| `scolarite-login.png` | écran de connexion universitaire | **à reprendre** (6-K : retrait de Montserrat) |
 | `scolarite-dashboard.png` | salutation et ligne de messagerie — **différée** : l'habillage de ces écrans doit changer, et une capture périmée renseigne moins bien qu'une absence signalée | essentielle |
-| `scolarite-progression.png` | écran de progression du parcours froid — **déposée** (jalon 6-F) | complémentaire |
+| `scolarite-progression.png` | écran de progression du parcours froid | **à reprendre** (6-K : retrait de Montserrat) |
 | `scolarite-echec.png` | un échec de session nommé, message et bouton Réessayer — l'écran que le module n'avait pas avant le jalon 6-F — **déposée** | essentielle |
-| `scolarite-login-echec.png` | le refus d'identifiants sur le formulaire, distinct de l'échec de session — **déposée** (jalon 6-F) | complémentaire |
+| `scolarite-login-echec.png` | le refus d'identifiants sur le formulaire, distinct de l'échec de session | **à reprendre** (6-K : retrait de Montserrat) |
 | `scolarite-biometrie.png` | verrou biométrique — **différée** (refonte d'habillage à venir) | complémentaire |
 | `scolarite-compte.png` | réglages du compte et déconnexion — **différée** (idem) | complémentaire |
 | `scolarite-navigateur.png` | navigateur intégré et sa barre flottante | complémentaire |
@@ -147,7 +147,7 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 | `reglages-filtres.png` | modale de gestion des filtres d'UE | complémentaire |
 | `reglages-calendrier.png` | modale de choix du calendrier | complémentaire |
 | `reglages-langue.png` | modale de langue | complémentaire |
-| `reglages-etablissement.png` | modale d'établissement : la liste, puis la confirmation | **prise** |
+| `reglages-etablissement.png` | modale d'établissement : la liste, puis la confirmation | **à reprendre** (6-K : boutons de confirmation pleins) |
 
 ### Socle
 
@@ -157,10 +157,38 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 | `theme-clair-sombre.png` | un même écran dans les deux thèmes | [theme.md](../theme.md) | essentielle |
 | `carte.png` | écran carte, marqueur au thème de l'application | [cartographie.md](../cartographie.md) | essentielle |
 | `modmenu.png` | menu flottant de simulation temporelle | [qualite.md](../qualite.md) | complémentaire |
-| `modmenu-blueprints.png` | panneau de livraison : origine, version et raison par Blueprint — **déposée** (jalon 6-C) | [blueprints.md](../blueprints.md) | essentielle |
+| `modmenu-blueprints.png` | panneau de livraison : origine, version et raison par Blueprint | [blueprints.md](../blueprints.md) | **à reprendre** (6-K : teintes du menu) |
+
+## Sept captures que le jalon 6-K a périmées
+
+Le socle visuel a changé quatre choses **visibles** sur des écrans déjà photographiés : les teintes
+d'affluence des bibliothèques (Material → Apple), l'icône « végétarien » du Crous, les boutons de
+confirmation des modales (gris → plein), et le retrait de Montserrat — qui ne rendait que dans la
+Scolarité, la seule graisse chargée y vivant.
+
+`bu-liste` · `bu-detail` · `bu-couverture-partielle` · `crous-menu` · `scolarite-login` ·
+`scolarite-progression` · `scolarite-login-echec` · `reglages-etablissement` · `modmenu-blueprints`
+
+Elles restent dans le dépôt en attendant : les remplacer demande un appareil, et une capture absente
+renseigne moins bien qu'une capture datée dont on sait qu'elle l'est. **Mais elles sont marquées, et
+c'est ce qui compte** — le tableau ci-dessus les porte en « à reprendre ».
+
+Celles qui **n'ont pas bougé**, vérifiées : `planning-jour`, `planning-echec`, `planning-hors-ligne`,
+`crous-liste`, `crous-menu-absent`, `annonces-erreur`, `onboarding-etablissement`, `scolarite-echec`.
 
 ## Mettre à jour
 
 Une capture périmée est plus trompeuse que pas de capture. Après une évolution visible d'un écran,
 reprendre l'image concernée dans le même changement, en conservant son nom de fichier — les documents
 qui la référencent n'ont alors rien à modifier.
+
+## Le cas particulier d'une refonte visuelle
+
+Une session qui refait un écran, ou un jalon qui touche au socle visuel, se vérifie par une **capture
+avant et une capture après**, comparées côte à côte. C'est la seule preuve qu'une extraction n'a pas
+redessiné en silence — et le jalon [6-K](../phase-6/6-k-socle-visuel.md) en a fait sa définition de
+« terminé ».
+
+Prendre l'image **avant** de commencer : une fois le code changé, elle n'est plus reproductible. Les
+captures déjà déposées ici jouent ce rôle pour les écrans qu'elles couvrent ; pour les autres, la
+capture « avant » est le premier geste de la session.

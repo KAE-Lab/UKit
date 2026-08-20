@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, TouchableOpacity, Linking, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { View, TouchableOpacity, Linking, ActivityIndicator, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Translator from '../i18n/Translator';
@@ -28,7 +28,8 @@ export default function MapScreen({ route, navigation }: MapScreenProps) {
     const theme = style.Theme[themeName];
     const insets = useSafeAreaInsets();
 
-    const [title, setTitle] = useState<string>(route.params.title || Translator.get('DESTINATION'));
+    // Le titre ne change jamais apres le montage : une constante, pas un etat.
+    const title = route.params.title || Translator.get('DESTINATION');
     const [lat, setLat] = useState<number | null>(null);
     const [lng, setLng] = useState<number | null>(null);
 

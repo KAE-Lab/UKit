@@ -190,8 +190,6 @@ message ni bouton.*
 
 ## Limites connues
 
-- **Le message d'état vide s'affiche en majuscules brutes** (`NO_RESULTS`) — voir
-  [i18n.md](../i18n.md). Le repli `|| 'Aucune annonce'` qui l'accompagne ne se déclenche jamais.
 - **Aucun cache** : l'absence de réseau vide la section. Elle affiche désormais *pourquoi*, ce qui
   est mieux qu'avant, mais des annonces vues juste avant ne réapparaissent pas hors ligne.
 - **`expires_at` est comparé en heure locale de l'appareil**, sans fuseau explicite.

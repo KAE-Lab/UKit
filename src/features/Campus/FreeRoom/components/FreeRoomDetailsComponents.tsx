@@ -4,6 +4,7 @@ import { EdgeInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Translator from '../../../../shared/i18n/Translator';
 import style, { tokens, AppThemeType } from '../../../../shared/theme/Theme';
+import { Badge } from '../../../../shared/ui/Badge';
 import { BuildingInfo, FreeRoomSlot } from '../../services/FreeRoomService';
 
 interface FreeRoomHoursHeaderProps {
@@ -93,13 +94,13 @@ export function FreeRoomsList({ freeRooms, theme }: FreeRoomsListProps) {
                     color={theme.accent ?? theme.primary} 
                 />
                 <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, marginLeft: tokens.space.sm }}>
-                    {Translator.get('FREE_ROOMS') || 'Salles libres'} ({freeRooms.length})
+                    {Translator.get('FREE_ROOMS')} ({freeRooms.length})
                 </Text>
             </View>
 
             {freeRooms.length === 0 ? (
                 <Text style={{ textAlign: 'center', color: theme.fontSecondary, marginTop: tokens.space.xl }}>
-                    {Translator.get('NO_FREE_ROOMS' as Parameters<typeof Translator.get>[0]) || 'Aucune salle libre à cette heure.'}
+                    {Translator.get('NO_FREE_ROOMS')}
                 </Text>
             ) : (
                 freeRooms.map((slot, index) => (
@@ -113,18 +114,17 @@ export function FreeRoomsList({ freeRooms, theme }: FreeRoomsListProps) {
                         marginBottom: tokens.space.sm
                     }]}>
                         <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold, color: theme.accent ?? theme.primary, marginBottom: 2 }}>
+                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold, color: theme.accent ?? theme.primary, marginBottom: tokens.space.xxs }}>
                                 {slot.room.name}
                             </Text>
                             <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary }}>
-                                {Translator.get('AVAILABLE_UNTIL') || 'Libre jusqu\'à'} {slot.availableUntil}
+                                {Translator.get('AVAILABLE_UNTIL')} {slot.availableUntil}
                             </Text>
                         </View>
-                        <View style={{ backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
-                            <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary }}>
-                                {Math.floor(slot.durationMinutes / 60)}h{slot.durationMinutes % 60 > 0 ? (slot.durationMinutes % 60).toString().padStart(2, '0') : ''}
-                            </Text>
-                        </View>
+                        <Badge
+                            theme={theme}
+                            label={`${Math.floor(slot.durationMinutes / 60)}h${slot.durationMinutes % 60 > 0 ? (slot.durationMinutes % 60).toString().padStart(2, '0') : ''}`}
+                        />
                     </View>
                 ))
             )}

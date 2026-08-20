@@ -396,7 +396,6 @@ test('remote false ignore durablement la surcouche, sans la detruire', async () 
 // ---------------------------------------------------------------------------------------------
 
 const PORTAIL = 'ukit.portail.essai.dossier';
-const PORTAIL_FICHIER = 'portails/ukit-portail-essai-dossier.blueprint.json';
 
 /** Un document de portail valide, sous un nom **absent** du socle. */
 function documentDePortail(nom: string, patch: Record<string, unknown> = {}): string {

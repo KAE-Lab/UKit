@@ -130,7 +130,7 @@ class PlanningDataManagerService {
                 // liste de groupes absente n'empeche aucun ecran de s'afficher.
                 void this.fetchGroupList();
             }
-        } catch (error) {
+        } catch {
             console.warn('COULDNT RETRIEVE GROUP LIST...');
         }
     };

@@ -60,14 +60,14 @@ const MailboxRow = ({ mailData, coldData, status, failure, color, theme, onPress
 
             <View style={styles.textWrap}>
                 <Text
-                    style={[styles.title, { color: echec ? theme.fontSecondary : theme.font, fontFamily: 'Montserrat_600SemiBold' }]}
+                    style={[styles.title, { color: echec ? theme.fontSecondary : theme.font }]}
                     numberOfLines={2}
                 >
                     {libelle(echec, unread)}
                 </Text>
                 {emailAddress ? (
                     <Text
-                        style={[styles.subtitle, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}
+                        style={[styles.subtitle, { color: theme.fontSecondary }]}
                         numberOfLines={1}
                     >
                         {emailAddress}

@@ -81,7 +81,7 @@ Décrite par [`App.tsx`](../App.tsx), dans cet ordre exact :
 
 1. `SplashScreen.preventAutoHideAsync()` est appelé **au niveau module**, avant tout rendu, pour que
    le splash natif reste affiché pendant la préparation.
-2. `AnimatedAppLoader` prépare en parallèle : la police `Montserrat_500Medium`, le préchargement des
+2. `AnimatedAppLoader` prépare en parallèle : le préchargement des
    images et des jeux d'icônes vectorielles, puis — séquentiellement — `loadEtablissements()`,
    `loadLiensEdt()`, `loadBuildings()`, `SettingsManager.loadSettings()`, puis
    `PlanningDataManager.loadData()` et `CampusDataManager.loadData()`.
@@ -272,16 +272,24 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/services/SecureStoreService.ts`](../src/shared/services/SecureStoreService.ts) | stockage chiffré des identifiants, des données étudiant et des liens d'abonnement |
 | [`shared/services/TimeMockService.ts`](../src/shared/services/TimeMockService.ts) | simulation temporelle pour la vérification manuelle ([qualite.md](qualite.md)) |
 | [`shared/services/NetworkMockService.ts`](../src/shared/services/NetworkMockService.ts) | l'interrupteur hors ligne : couper le réseau de l'application sans couper celui de l'appareil ([qualite.md](qualite.md)) |
-| [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | tokens, thèmes clair et sombre, styles partagés ([theme.md](theme.md)) |
+| [`shared/theme/tokens.ts`](../src/shared/theme/tokens.ts) | les primitives de design, isolées pour être testables sous Node ([theme.md](theme.md#les-tokens)) |
+| [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | thèmes clair et sombre, échelle sémantique, styles partagés ([theme.md](theme.md)) |
 | [`shared/i18n/Translator.ts`](../src/shared/i18n/Translator.ts) | service de traduction, langue courante, locale moment ([i18n.md](i18n.md)) |
 | [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 217 clés chacun |
 | [`shared/map/MapScreen.tsx`](../src/shared/map/MapScreen.tsx) | écran carte Leaflet ([cartographie.md](cartographie.md)) |
-| [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème), `Split` (séparateur), `UpdateAlert` (contrôle de version, non rendu) |
+| [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème) et `UpdateAlert` (contrôle de version, non rendu) |
 | [`shared/ui/Button.tsx`](../src/shared/ui/Button.tsx) | boutons partagés : retour, accueil, tiroir, ligne de réglage |
-| [`shared/ui/Alerts.ts`](../src/shared/ui/Alerts.ts) | `ErrorAlert` (messages éphémères) et `RequestError` (non utilisé) |
+| [`shared/ui/Alerts.ts`](../src/shared/ui/Alerts.ts) | `ErrorAlert` (messages éphémères) |
+| [`shared/ui/Card.tsx`](../src/shared/ui/Card.tsx) | la surface d'une carte — fond, rayon, ombre, apparition animée ([theme.md](theme.md#le-vocabulaire-partagé)) |
+| [`shared/ui/SectionHeader.tsx`](../src/shared/ui/SectionHeader.tsx) | l'en-tête d'une section de tableau de bord : titre, chevron, destination |
+| [`shared/ui/Badge.tsx`](../src/shared/ui/Badge.tsx) | une pastille icône + libellé, teinte d'action ou ton sémantique |
+| [`shared/ui/MetaRow.tsx`](../src/shared/ui/MetaRow.tsx) | une ligne « icône + texte secondaire », avec de quoi poser un contenu à droite |
+| [`shared/ui/EmptyState.tsx`](../src/shared/ui/EmptyState.tsx) | icône, message, action facultative — le bloc commun à « rien à afficher » et « source en panne » |
+| [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente, en ligne ou plein écran |
+| [`shared/ui/ProgressBar.tsx`](../src/shared/ui/ProgressBar.tsx) | une jauge horizontale, rayon calculé sur la hauteur |
+| [`shared/ui/Icon.tsx`](../src/shared/ui/Icon.tsx) | une icône de l'une ou l'autre famille Material, typée par union discriminée |
 | [`shared/ui/ModMenu.tsx`](../src/shared/ui/ModMenu.tsx) | menu flottant de développement : simulation temporelle et livraison ([qualite.md](qualite.md)) |
 | [`shared/ui/ModMenuBlueprints.tsx`](../src/shared/ui/ModMenuBlueprints.tsx) | son panneau de diagnostic de la livraison ([blueprints.md](blueprints.md)) |
-| [`shared/ui/OpenMapButton.tsx`](../src/shared/ui/OpenMapButton.tsx) | bouton d'ouverture de carte — non importé ([cartographie.md](cartographie.md)) |
 | [`shared/ui/SourceFailureNotice.tsx`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, tel qu'un écran le montre : message de la famille, bouton Réessayer seulement s'il répare, ou l'**action** qui remplirait l'écran ([blueprints.md](blueprints.md)) |
 | [`shared/constants/urls.ts`](../src/shared/constants/urls.ts) | URLs externes : liens applicatifs (`URL`). Les points d'entrée Celcat en sont sortis au jalon [6-E](phase-6/6-e-planning.md) — ils vivent dans les Blueprints |
 | [`shared/utils/formatUtils.ts`](../src/shared/utils/formatUtils.ts) | `upperCaseFirstLetter` et `formatDescription` (nettoyage des descriptions Celcat) |
@@ -297,7 +305,9 @@ racine et de [`src/shared/`](../src/shared/).
 | Les fichiers d'instructions et leur publication | [blueprints.md](blueprints.md) |
 | La base de publication | [backend.md](backend.md) |
 | La migration vers les Blueprints, jalon par jalon | [phase-6/README.md](phase-6/README.md) |
-| Tokens et thèmes | [theme.md](theme.md) |
+| Tokens, thèmes, composants partagés, recette d'écran | [theme.md](theme.md) |
+| L'état visuel mesuré, avant le socle | [inventaire-visuel.md](inventaire-visuel.md) |
+| Les défauts de comportement connus | [defauts-fonctionnels.md](defauts-fonctionnels.md) |
 | Localisation | [i18n.md](i18n.md) |
 | Cartes | [cartographie.md](cartographie.md) |
 | Expo, permissions, build, release | [plateforme.md](plateforme.md) |

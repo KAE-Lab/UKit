@@ -13,6 +13,7 @@
 import { Platform } from 'react-native';
 import * as Calendar from 'expo-calendar';
 
+import style from '../theme/Theme';
 import type { PlanningEvent } from '../../features/Planning/services/PlanningApiService';
 
 /** Un cours, tel que le calendrier systeme l'attend. */
@@ -37,7 +38,7 @@ export async function createUKitCalendar(calendars: Calendar.Calendar[]): Promis
     let calendar: Partial<Calendar.Calendar> | Record<string, unknown> = {
         title: `UKit`,
         name: `UKit`,
-        color: '#009ee0',
+        color: style.colors.brand,
         entityType: Calendar.EntityTypes.EVENT,
         allowsModifications: true,
         source: { isLocalAccount: true, name: 'UKit', type: Calendar.SourceType.LOCAL },
@@ -64,7 +65,7 @@ export async function createUKitCalendar(calendars: Calendar.Calendar[]): Promis
 
         calendar = {
             title: `UKit`,
-            color: '#009ee0',
+            color: style.colors.brand,
             entityType: Calendar.EntityTypes.EVENT,
             allowsModifications: true,
             allowedAvailabilities: [],

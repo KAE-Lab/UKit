@@ -10,10 +10,10 @@ const ApogeeCard = ({ color, theme }) => (
             <MaterialCommunityIcons name="school-outline" size={28} color={color} />
         </View>
         <View style={styles.textBlock}>
-            <Text style={[styles.title, { color: theme.font, fontFamily: 'Montserrat_600SemiBold' }]}>
+            <Text style={[styles.title, { color: theme.font }]}>
                 Apogée
             </Text>
-            <Text style={[styles.subtitle, { color: theme.fontSecondary, fontFamily: 'Montserrat_500Medium' }]}>
+            <Text style={[styles.subtitle, { color: theme.fontSecondary }]}>
                 Notes & résultats
             </Text>
         </View>

@@ -133,11 +133,11 @@ interface ThemeSectionProps {
 
 export const ThemeSection = ({ themeSettings, isDarkMode, toggleTheme }: ThemeSectionProps) => (
     <>
-        <SettingsTextHeader theme={themeSettings} text={Translator.get('THEME') || 'Thème'} />
+        <SettingsTextHeader theme={themeSettings} text={Translator.get('THEME')} />
         <Button
             theme={themeSettings}
             leftIcon="theme-light-dark"
-            leftText={Translator.get('DARK_MODE') || 'Mode Sombre'}
+            leftText={Translator.get('DARK_MODE')}
             onSwitchToggle={toggleTheme}
             switchValue={isDarkMode}
         />
@@ -156,11 +156,11 @@ interface NotificationsSectionProps {
 
 export const NotificationsSection = ({ themeSettings, theme, courseNotificationsEnabled, toggleCourseNotifications, courseNotificationDelay, onNotificationDelayChange, onNotificationDelaySlidingComplete }: NotificationsSectionProps) => (
     <>
-        <SettingsTextHeader theme={themeSettings} text={Translator.get('NOTIFICATIONS') || 'Notifications'} />
+        <SettingsTextHeader theme={themeSettings} text={Translator.get('NOTIFICATIONS')} />
         <Button
             theme={themeSettings}
             leftIcon="bell-outline"
-            leftText={Translator.get('COURSE_NOTIFICATIONS') || 'Notifications de cours'}
+            leftText={Translator.get('COURSE_NOTIFICATIONS')}
             onSwitchToggle={toggleCourseNotifications}
             switchValue={courseNotificationsEnabled}
         />
@@ -168,7 +168,7 @@ export const NotificationsSection = ({ themeSettings, theme, courseNotifications
             <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.sm }}>
                     <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: tokens.fontWeight.semibold }}>
-                        {Translator.get('NOTIFICATION_DELAY') || 'Délai avant le cours'}
+                        {Translator.get('NOTIFICATION_DELAY')}
                     </Text>
                     <Text style={{ fontSize: tokens.fontSize.sm, color: theme.primary, fontWeight: tokens.fontWeight.bold }}>
                         {courseNotificationDelay} min
@@ -187,7 +187,7 @@ export const NotificationsSection = ({ themeSettings, theme, courseNotifications
                     thumbTintColor={theme.primary}
                 />
                 <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginTop: tokens.space.xs }}>
-                    {Translator.get('NOTIFICATION_DELAY_DESC') || 'Ajustez combien de minutes avant le début du cours vous souhaitez être notifié.'}
+                    {Translator.get('NOTIFICATION_DELAY_DESC')}
                 </Text>
             </View>
         )}

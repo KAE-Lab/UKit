@@ -207,8 +207,6 @@ bibliothèque parce que son affluence n'a pas encore été chargée serait un fa
   points sont **une donnée de catalogue** (`bibliotheques_points`), donc corrigibles sans release : la
   décision de réduire la liste se prendra sur ces chiffres plutôt que sur une intuition, et elle
   coûtera une publication au lieu d'un passage en store.
-- **Les libellés de filtre et de recherche s'affichent en majuscules brutes** (`ALL_LIBRARIES`,
-  `OPEN_LIBRARIES`, `SEARCH_BU_CITY`) — voir [i18n.md](../i18n.md).
 - **Une BU hors de portée des points de balayage reste invisible.** Les points ne sont plus codés en
   dur — ils viennent du catalogue depuis [6-G](../phase-6/6-g-etablissements.md), et se corrigent donc
   par une publication — mais la limite de fond demeure : couvrir une ville demande d'y penser. La
@@ -225,11 +223,15 @@ bibliothèque parce que son affluence n'a pas encore été chargée serait un fa
   accepte un décalage signé et la parité le joue sur deux semaines : brancher deux boutons suffirait,
   mais c'est une capacité d'interface, à décider comme telle.
 - **Les textes venant du fournisseur restent en français**, quelle que soit la langue de
-  l'application : les Blueprints envoient `Accept-Language: fr` sans condition. Une BU fermée affiche
-  donc « Ouvre demain à 14:00 » au milieu d'une interface en anglais — visible sur la capture
-  ci-dessus. Ce n'était pas différent avant la migration, mais l'en-tête est désormais **dans un
-  fichier** : le corriger demanderait de passer la langue en entrée du Blueprint, ce qu'un Blueprint
-  ne peut pas deviner seul. C'est une évolution possible, pas un défaut de la migration.
+  l'application : les Blueprints envoient `Accept-Language: fr` sans condition. Une BU fermée annonce
+  donc « Ouvre demain à 14:00 » au milieu d'une interface en anglais. Ce n'était pas différent avant la
+  migration, mais l'en-tête est désormais **dans un fichier** : le corriger demanderait de passer la
+  langue en entrée du Blueprint, ce qu'un Blueprint ne peut pas deviner seul.
+
+  Depuis le jalon [6-K](../phase-6/6-k-socle-visuel.md), cette phrase n'est plus **soudée** au statut
+  traduit — elle s'affichait « Closed - Ouvre demain à 09:00 », comme une phrase cassée. Le statut
+  garde sa couleur de ton, la précision du fournisseur passe à côté en texte secondaire : ce qui vient
+  de nous et ce qui vient d'eux ne se ressemblent plus. La langue, elle, reste celle de la source.
 - **Aucun cache** : la liste et les affluences sont rechargées à chaque montage.
 - **Un site sans coordonnées ni distance estimée n'a plus de distance du tout.** L'ancien code
   divisait `estimated_distance` sans vérifier sa présence et produisait `NaN` ; il rend désormais

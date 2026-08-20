@@ -159,3 +159,19 @@ export function presenterEchec(failure: UkitFailure): UkitFailure {
 
     return { ...failure, messageKey: cleDeMessage(failure), retryable: reessayable };
 }
+
+/**
+ * Un echec qui appelle une **ressaisie**, et non une reprise.
+ *
+ * `LOGIN_FAILED` reste a juste titre non reessayable — rejouer le meme mot de passe donnera le meme
+ * refus. Mais l'ecran de connexion n'apparaissait que si le trousseau etait **vide** : quelqu'un dont
+ * le mot de passe a change a l'universite voyait une erreur definitive, sans formulaire, et devait
+ * deviner qu'il fallait passer par les Reglages pour se deconnecter.
+ *
+ * C'est exactement la distinction que porte `NoticeAction` : reessayer repare une panne, une action
+ * repare une **absence** — et un mot de passe perime est une absence (jalon 6-K,
+ * docs/defauts-fonctionnels.md).
+ */
+export function demandeUneRessaisie(failure: UkitFailure | null): boolean {
+    return failure !== null && failure.code === 'LOGIN_FAILED';
+}

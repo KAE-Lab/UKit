@@ -4,6 +4,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, AppThemeType } from '../../../shared/theme/Theme';
+import { EmptyState } from '../../../shared/ui/EmptyState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import type { UkitFailure } from '../../../shared/aetherius';
 
@@ -95,11 +96,19 @@ export function CampusFilterModal({ visible, setVisible, filterOptions, selected
     return (
         <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={() => setVisible(false)}>
             <TouchableWithoutFeedback onPress={() => setVisible(false)}>
-                <View style={(theme.settings?.popup?.background || { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }) as never}>
+                {/*
+                  * La modale prend le vocabulaire de `theme.settings.popup`, sans repli.
+                  *
+                  * Elle portait jusqu'au jalon 6-K une chaine `?.` doublee d'objets de style ecrits
+                  * inline « au cas ou » : un troisieme dialecte de modale, qui ne s'affichait jamais et
+                  * divergeait a chaque retouche du vrai. `settings.popup` fait partie de `AppThemeType`,
+                  * donc des deux themes — son absence serait un theme casse, pas un cas a rattraper.
+                  */}
+                <View style={theme.settings.popup.background as never}>
                     <TouchableWithoutFeedback>
-                        <View style={(theme.settings?.popup?.container || { backgroundColor: theme.cardBackground, width: "85%", borderRadius: tokens.radius.xl, padding: tokens.space.lg }) as never}>
-                            <View style={(theme.settings?.popup?.header || { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: tokens.space.md }) as never}>
-                                <Text style={theme.settings?.popup?.textHeader || { fontSize: tokens.fontSize.lg, fontWeight: 'bold', color: theme.font }}>
+                        <View style={theme.settings.popup.container as never}>
+                            <View style={theme.settings.popup.header as never}>
+                                <Text style={theme.settings.popup.textHeader as never}>
                                     {Translator.get('FILTERS')}
                                 </Text>
                                 <TouchableOpacity onPress={() => setVisible(false)}>
@@ -170,31 +179,14 @@ export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, the
         return <SourceFailureNotice failure={failure} theme={theme} onRetry={onRetry} />;
     }
 
+    // Meme bloc que l'echec, et c'est voulu : ce qui les separe est l'icone et le message, pas la
+    // mise en page. Les deux etaient ecrits a l'identique jusqu'au jalon 6-K.
     return (
-        <View style={{
-            alignItems: 'center',
-            paddingVertical: tokens.space.xl,
-            paddingHorizontal: tokens.space.lg,
-            marginHorizontal: tokens.space.sm,
-            backgroundColor: theme.cardBackground,
-            borderRadius: tokens.radius.lg,
-            borderWidth: 1,
-            borderColor: theme.border
-        }}>
-            <MaterialCommunityIcons
-                name={emptyIcon}
-                size={48}
-                color={theme.fontSecondary}
-                style={{ marginBottom: tokens.space.sm }}
-            />
-            <Text style={{
-                color: theme.fontSecondary,
-                fontSize: tokens.fontSize.md,
-                textAlign: 'center'
-            }}>
-                {isFiltering ? Translator.get('NO_RESULTS_FOUND' as Parameters<typeof Translator.get>[0]) : emptyMessage}
-            </Text>
-        </View>
+        <EmptyState
+            icon={emptyIcon}
+            message={isFiltering ? Translator.get('NO_RESULTS_FOUND') : emptyMessage}
+            theme={theme}
+        />
     );
 }
 

@@ -1,61 +1,8 @@
 /* eslint-disable max-lines */
 import { Platform } from 'react-native';
 
-const tokens = {
-    space: {
-        xs: 4,
-        sm: 8,
-        md: 16,
-        lg: 24,
-        xl: 32,
-        xxl: 48,
-    },
-    radius: {
-        sm: 8,
-        md: 12,
-        lg: 16,
-        xl: 24,
-        pill: 999,
-    },
-    fontSize: {
-        xs: 12,
-        sm: 14,
-        md: 16,
-        lg: 18,
-        xl: 22,
-        xxl: 28,
-        hero: 36,
-    },
-    fontWeight: {
-        regular: '400' as const,
-        medium: '500' as const,
-        semibold: '600' as const,
-        bold: '700' as const,
-    },
-    shadow: {
-        sm: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.04,
-            shadowRadius: 6,
-            elevation: 2,
-        },
-        md: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.06,
-            shadowRadius: 14,
-            elevation: 5,
-        },
-        lg: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.08,
-            shadowRadius: 24,
-            elevation: 10,
-        },
-    },
-};
+import { tokens } from './tokens';
+
 
 const colors = {
     brand:      '#009ee0',
@@ -86,50 +33,6 @@ const hintColors = {
     gray: '#9499a1AA',
 };
 
-const colors200 = {
-    red:        '#EF9A9A',
-    pink:       '#F48FB1',
-    purple:     '#CE93D8',
-    deepPurple: '#B39DDB',
-    indigo:     '#9FA8DA',
-    blue:       '#90CAF9',
-    lightBlue:  '#81D4FA',
-    cyan:       '#80DEEA',
-    teal:       '#80CBC4',
-    green:      '#A5D6A7',
-    lightGreen: '#C5E1A5',
-    lime:       '#E6EE9C',
-    yellow:     '#FFF59D',
-    amber:      '#FFE082',
-    orange:     '#FFCC80',
-    deepOrange: '#FFAB91',
-    brown:      '#BCAAA4',
-    grey:       '#EEEEEE',
-    blueGrey:   '#B0BEC5',
-};
-
-const colors50 = {
-    red:        '#FFEBEE',
-    pink:       '#FCE4EC',
-    purple:     '#F3E5F5',
-    deepPurple: '#EDE7F6',
-    indigo:     '#E8EAF6',
-    blue:       '#E3F2FD',
-    lightBlue:  '#E1F5FE',
-    cyan:       '#E0F7FA',
-    teal:       '#E0F2F1',
-    green:      '#E8F5E9',
-    lightGreen: '#F1F8E9',
-    lime:       '#F9FBE7',
-    yellow:     '#FFFDE7',
-    amber:      '#FFF8E1',
-    orange:     '#FFF3E0',
-    deepOrange: '#FBE9E7',
-    brown:      '#EFEBE9',
-    grey:       '#FAFAFA',
-    blueGrey:   '#ECEFF1',
-};
-
 const AppTheme = {
     primary:   '#007AFF',
     secondary: '#34C759',
@@ -143,12 +46,27 @@ const Theme = {
         selection:     '#F2F2F7',
         accent:        '#007AFF',
         accentFont:    '#FF3B30',
+        // L'echelle semantique. Elle reprend les teintes que `sectionsHeaders` portait deja, plutot
+        // que les verts et oranges Material qui trainaient en dur dans les composants : la palette
+        // suit les couleurs systeme d'Apple, et en laisser vivre une seconde etait la cause des
+        // `#4caf50` recopies. Le suffixe `Soft` suit la convention de `primarySoft`.
+        success:       '#34C759',
+        successSoft:   '#34C75915',
+        warning:       '#FF9500',
+        warningSoft:   '#FF950015',
+        danger:        '#FF3B30',
+        dangerSoft:    '#FF3B3015',
+        neutral:       '#8E8E93',
+        neutralSoft:   '#8E8E9315',
         font:          '#1C1C1E',
         fontSecondary: '#8E8E93',
         lightFont:     '#FFFFFF',
         link:          '#007AFF',
         icon:          '#1C1C1E',
         border:        '#E5E5EA',
+        // Anterieure a la palette, et laissee a sa valeur : la nommer supprime le litteral d'AppUI
+        // sans changer un pixel de la barre de statut.
+        statusBarBackground: '#006F9F',
         background:            '#F2F2F7',
         cardBackground:        '#FFFFFF',
         greyBackground:        '#E5E5EA',
@@ -289,29 +207,43 @@ const Theme = {
                 },
                 buttonSecondary: {
                     backgroundColor: '#E5E5EA',
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
+                    paddingVertical: tokens.space.md,
+                    paddingHorizontal: tokens.space.lg,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
                     minWidth: 150,
                 },
                 buttonMain: {
-                    backgroundColor: '#E5E5EA', 
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
+                    backgroundColor: '#007AFF',
+                    paddingVertical: tokens.space.md,
+                    paddingHorizontal: tokens.space.lg,
+                    borderRadius: tokens.radius.md,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 150,
+                },
+                buttonDestructive: {
+                    backgroundColor: '#FF3B30',
+                    paddingVertical: tokens.space.md,
+                    paddingHorizontal: tokens.space.lg,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
                     minWidth: 150,
                 },
                 buttonTextSecondary: {
-                    color: '#8E8E93', 
+                    color: '#8E8E93',
                     fontWeight: tokens.fontWeight.medium,
                     fontSize: tokens.fontSize.md,
                 },
                 buttonTextMain: {
-                    color: '#007AFF', 
+                    color: '#FFFFFF',
+                    fontWeight: tokens.fontWeight.bold,
+                    fontSize: tokens.fontSize.md,
+                },
+                buttonTextDestructive: {
+                    color: '#FFFFFF',
                     fontWeight: tokens.fontWeight.bold,
                     fontSize: tokens.fontSize.md,
                 },
@@ -393,12 +325,22 @@ const Theme = {
         secondary:     '#30D158',
         selection:     '#2C2C2E',
         accentFont:    '#FF453A',
+        // Les variantes sombres des memes couleurs systeme, deja presentes dans `sectionsHeaders`.
+        success:       '#30D158',
+        successSoft:   '#30D15815',
+        warning:       '#FF9F0A',
+        warningSoft:   '#FF9F0A15',
+        danger:        '#FF453A',
+        dangerSoft:    '#FF453A15',
+        neutral:       '#8E8E93',
+        neutralSoft:   '#8E8E9315',
         font:          '#FFFFFF',
         fontSecondary: '#8E8E93',
         lightFont:     '#FFFFFF',
         link:          '#64D2FF',
         icon:          '#FFFFFF',
         border:        '#38383A',
+        statusBarBackground: '#000000',
         background:            '#000000',
         cardBackground:        '#1C1C1E',
         greyBackground:        '#121212',
@@ -539,29 +481,43 @@ const Theme = {
                 },
                 buttonSecondary: {
                     backgroundColor: '#121212',
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
+                    paddingVertical: tokens.space.md,
+                    paddingHorizontal: tokens.space.lg,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
                     minWidth: 150,
                 },
                 buttonMain: {
-                    backgroundColor: '#121212',
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
+                    backgroundColor: '#5E5CE6',
+                    paddingVertical: tokens.space.md,
+                    paddingHorizontal: tokens.space.lg,
+                    borderRadius: tokens.radius.md,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 150,
+                },
+                buttonDestructive: {
+                    backgroundColor: '#FF453A',
+                    paddingVertical: tokens.space.md,
+                    paddingHorizontal: tokens.space.lg,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
                     minWidth: 150,
                 },
                 buttonTextSecondary: {
-                    color: '#8E8E93', 
+                    color: '#8E8E93',
                     fontWeight: tokens.fontWeight.medium,
                     fontSize: tokens.fontSize.md,
                 },
                 buttonTextMain: {
-                    color: '#5E5CE6', 
+                    color: '#FFFFFF',
+                    fontWeight: tokens.fontWeight.bold,
+                    fontSize: tokens.fontSize.md,
+                },
+                buttonTextDestructive: {
+                    color: '#FFFFFF',
                     fontWeight: tokens.fontWeight.bold,
                     fontSize: tokens.fontSize.md,
                 },
@@ -642,7 +598,6 @@ const StyleWelcome = {
             justifyContent: 'center',
         },
         buttonText: {
-            fontFamily: 'Montserrat_600SemiBold',
             fontSize: tokens.fontSize.md,
             color: '#5E5CE6',
             alignSelf: 'center',
@@ -694,7 +649,6 @@ const StyleWelcome = {
             ...tokens.shadow.lg,
         },
         whiteCardText: {
-            fontFamily: 'Montserrat_600SemiBold',
             fontSize: tokens.fontSize.lg,
             marginBottom: tokens.space.md,
             color: '#1A1D23',
@@ -721,13 +675,11 @@ const StyleWelcome = {
             marginBottom: tokens.space.sm,
         },
         whiteCardButtonText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             alignSelf: 'center',
             color: '#495057',
         },
         whiteCardButtonTextSelected: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             alignSelf: 'center',
             color: '#FFFFFF',
@@ -744,12 +696,10 @@ const StyleWelcome = {
             flex: 1,
         },
         whiteCardGroupText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             color: '#495057',
         },
         greyBottomText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.xs,
             marginTop: tokens.space.sm,
             marginHorizontal: tokens.space.sm,
@@ -771,7 +721,6 @@ const StyleWelcome = {
             justifyContent: 'center',
         },
         buttonText: {
-            fontFamily: 'Montserrat_600SemiBold',
             fontSize: tokens.fontSize.md,
             color: '#FFFFFF',
             alignSelf: 'center',
@@ -823,7 +772,6 @@ const StyleWelcome = {
             ...tokens.shadow.lg,
         },
         whiteCardText: {
-            fontFamily: 'Montserrat_600SemiBold',
             fontSize: tokens.fontSize.lg,
             marginBottom: tokens.space.md,
             color: '#F0EAF1',
@@ -850,13 +798,11 @@ const StyleWelcome = {
             marginBottom: tokens.space.sm,
         },
         whiteCardButtonText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             alignSelf: 'center',
             color: '#B1A5B2',
         },
         whiteCardButtonTextSelected: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             alignSelf: 'center',
             color: '#2D1A2E',
@@ -873,12 +819,10 @@ const StyleWelcome = {
             flex: 1,
         },
         whiteCardGroupText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             color: '#B1A5B2',
         },
         greyBottomText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.xs,
             marginTop: tokens.space.sm,
             marginHorizontal: tokens.space.sm,
@@ -975,17 +919,6 @@ const style = {
             },
             groupsContent: {
                 flex: 1,
-            },
-            noCourse: {
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                paddingVertical: tokens.space.xxl,
-            },
-            noCourseText: {
-                fontSize: tokens.fontSize.md,
-                fontWeight: tokens.fontWeight.medium,
-                opacity: 0.5,
             },
         },
     },
@@ -1209,6 +1142,25 @@ const style = {
 
 export type AppThemeType = typeof Theme.light;
 export type ThemeKey = 'light' | 'dark';
+
+/**
+ * Un etat, pas une couleur.
+ *
+ * Un service ou un module de projection rend un **ton** ; c'est le composant qui le resout sur le
+ * theme courant. Sans ca une couleur redescend dans une couche qui ne sait pas quel theme est actif —
+ * ce que faisait `getLibraryStatus`, qui rendait un hexadecimal clair jusqu'au jalon 6-K.
+ */
+export type SemanticTone = 'success' | 'warning' | 'danger' | 'neutral';
+
+/** La couleur pleine d'un ton. */
+export function toneColor(theme: AppThemeType, tone: SemanticTone): string {
+    return theme[tone];
+}
+
+/** Le fond translucide du meme ton, pour une pastille ou un bandeau. */
+export function toneSoftColor(theme: AppThemeType, tone: SemanticTone): string {
+    return theme[`${tone}Soft` as const];
+}
 
 export { tokens, StyleWelcome };
 export default style as typeof style & { Theme: Record<ThemeKey, AppThemeType> };

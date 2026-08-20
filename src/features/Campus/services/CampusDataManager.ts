@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CampusApiService } from './CampusApiService';
+import type { UkitFailure } from '../../../shared/aetherius';
 
 class CampusDataManagerService {
     _buildingList: import('./CampusApiService').CelcatBuilding[];
@@ -31,16 +32,29 @@ class CampusDataManagerService {
         this.notify('buildingList', this._buildingList);
     };
 
-    fetchBuildingList = async () => {
+    /**
+     * Rafraichit la liste des batiments, et **rend l'echec** plutot que de l'avaler.
+     *
+     * Le `return` nu qui tenait cette place etait le dernier endroit de Campus ou une source en panne
+     * devenait une liste vide : l'ecran des salles libres affichait « Aucun batiment trouve »,
+     * c'est-a-dire le message d'une reponse legitimement vide. C'est exactement le defaut que la
+     * Phase 6 revendique d'avoir supprime partout ailleurs (jalon 6-K,
+     * docs/defauts-fonctionnels.md).
+     *
+     * Rend `null` quand tout va bien. L'appelant decide quoi en faire : un cache peuple survit a un
+     * rafraichissement rate, c'est seulement l'absence totale de donnee qui merite un ecran d'echec.
+     */
+    fetchBuildingList = async (): Promise<UkitFailure | null> => {
         // `resultat.ok === false` et non `!resultat.ok` : sans `strictNullChecks`, TypeScript ne
         // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
         const resultat = await CampusApiService.fetchRoomList();
-        if (resultat.ok === false) return;
+        if (resultat.ok === false) return resultat.failure;
 
         const buildings = CampusApiService.extractBuildingsFromRooms(resultat.rooms);
         await AsyncStorage.setItem('buildingListTimestamp', String(Date.now()));
         await AsyncStorage.setItem('buildingList', JSON.stringify(buildings));
         this.setBuildingList(buildings);
+        return null;
     };
 
     /**
@@ -62,7 +76,7 @@ class CampusDataManagerService {
                 // se remplit quand elle arrive.
                 void this.fetchBuildingList();
             }
-        } catch (error) {
+        } catch {
             console.warn('COULDNT RETRIEVE BUILDING LIST...');
         }
     };

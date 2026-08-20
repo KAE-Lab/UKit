@@ -1,10 +1,11 @@
 import React, { useContext } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, FlatList, Dimensions } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
+import { SectionHeader } from '../../../../shared/ui/SectionHeader';
+import { LoadingState } from '../../../../shared/ui/LoadingState';
 import { useBdeAnnonces } from '../../hooks/useBdeAnnonces';
 import { BdeAnnonceCard, BdeSectionError } from './BdeSectionParts';
 import type { BdeAnnonce } from '../../services/BdeService';
@@ -35,19 +36,14 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
 
     return (
         <View style={{ marginTop: tokens.space.md }}>
-            <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+            <SectionHeader
+                title={Translator.get('STUDENT_LIFE')}
+                theme={theme}
                 onPress={() => navigation.navigate('Bde')}
-                activeOpacity={0.7}
-            >
-                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
-                    {Translator.get('STUDENT_LIFE') || 'Student life'}
-                </Text>
-                <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
+            />
 
             {loading ? (
-                <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+                <LoadingState theme={theme} />
             ) : enEchec ? (
                 <BdeSectionError failure={failure!} theme={theme} onRetry={retry} />
             ) : (

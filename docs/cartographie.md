@@ -158,7 +158,6 @@ et au premier lancement :
   bâtiment est visible **hors ligne et au premier lancement**.
 - **La correspondance dépend du format de description Celcat.** Un changement de format côté serveur
   fait disparaître les boutons de localisation sans erreur visible.
-- **[`OpenMapButton.tsx`](../src/shared/ui/OpenMapButton.tsx) n'est importé nulle part.** Le bouton
-  d'ouverture de carte réellement utilisé est défini dans
-  [`StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) ; ce composant est du code non
-  atteint.
+- **Le bouton d'ouverture de carte est défini dans
+  [`StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx).** Un composant `OpenMapButton`
+  dupliquait ce rôle sans jamais être importé ; il a été supprimé le 2026-08-16.

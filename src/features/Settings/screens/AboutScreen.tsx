@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, ScrollView, Image, TouchableOpacity, Linking, Animated, DeviceEventEmitter } from 'react-native';
+import { Text, View, Image, TouchableOpacity, Linking, Animated, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';

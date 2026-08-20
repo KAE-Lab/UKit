@@ -3,7 +3,7 @@ import { FlatList, Text, TouchableOpacity, View, ViewabilityConfig, ViewToken, L
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 
-import style, { tokens } from '../../../shared/theme/Theme';
+import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 
 export interface DayViewHeaderProps {
@@ -51,13 +51,12 @@ const renderTitle = (groupName: string | string[], theme: import('../../../share
         opacity: Array.isArray(groupName) ? 1 : 0,
     }}>
         <Text style={{
-            fontSize: 34,
+            fontSize: tokens.fontSize.title,
             fontWeight: tokens.fontWeight.bold as never,
-            fontFamily: 'Montserrat_600SemiBold',
             color: theme.font,
             marginBottom: tokens.space.md,
         }}>
-            {Translator.get('MY_PLANNING') || 'Planning'}
+            {Translator.get('MY_PLANNING')}
         </Text>
     </View>
 );
