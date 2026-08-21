@@ -6,6 +6,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
+import { ScreenState } from '../../../shared/ui/ScreenState';
 import { demandeUneRessaisie, presenterEchec } from '../services/ScolariteMapping';
 import { portailAbsent } from '../services/ScolariteSession';
 import { useCredentials } from '../services/CredentialsContext';
@@ -61,10 +62,15 @@ const EtatsAvantContenu = ({
     portailDisponible, credentials, isColdLoading, echecBloquant, sessionFailure,
     scrapeProgress, theme, accent, insets, onRetry, onRessaisir,
 }) => {
-    const hautDePage = { flex: 1, justifyContent: 'center' as const, paddingTop: (insets?.top || 0) + 70 };
+    // Le centrage passe par `ScreenState` : la compensation d'en-tete etait posee **en haut seul**,
+    // ce qui descendait le bloc de toute la hauteur de l'en-tete au lieu de le centrer sur la surface
+    // libre. C'etait l'etat vide le plus bas de l'application (shared/ui/ScreenState).
+    const etat = (contenu: React.ReactNode) => (
+        <ScreenState theme={theme}>{contenu}</ScreenState>
+    );
 
     if (!portailDisponible) {
-        return <View style={hautDePage}><SourceFailureNotice failure={portailAbsent()} theme={theme} /></View>;
+        return etat(<SourceFailureNotice failure={portailAbsent()} theme={theme} variant="plain" />);
     }
     if (!credentials) {
         return <ScolariteLoginView theme={theme} color={accent} topPadding={insets?.top || 0} />;
@@ -74,25 +80,23 @@ const EtatsAvantContenu = ({
     }
     if (!echecBloquant) return null;
 
-    return (
-        <View style={hautDePage}>
-            {/*
-              * Un mot de passe refuse ne se repare pas en rejouant : il se repare en le ressaisissant.
-              * On envoie donc au formulaire **sans deconnecter** — vider le trousseau effacerait aussi
-              * l'identite deja lue et obligerait a retaper l'identifiant, pour un mot de passe qui a
-              * change tout seul.
-              */}
-            <SourceFailureNotice
-                failure={echecBloquant}
-                theme={theme}
-                onRetry={onRetry}
-                action={demandeUneRessaisie(sessionFailure) ? {
-                    label: Translator.get('REENTER_CREDENTIALS'),
-                    onPress: onRessaisir,
-                    icon: 'account-key-outline',
-                } : undefined}
-            />
-        </View>
+    /*
+     * Un mot de passe refuse ne se repare pas en rejouant : il se repare en le ressaisissant. On
+     * envoie donc au formulaire **sans deconnecter** — vider le trousseau effacerait aussi l'identite
+     * deja lue et obligerait a retaper l'identifiant, pour un mot de passe qui a change tout seul.
+     */
+    return etat(
+        <SourceFailureNotice
+            variant="plain"
+            failure={echecBloquant}
+            theme={theme}
+            onRetry={onRetry}
+            action={demandeUneRessaisie(sessionFailure) ? {
+                label: Translator.get('REENTER_CREDENTIALS'),
+                onPress: onRessaisir,
+                icon: 'account-key-outline',
+            } : undefined}
+        />
     );
 };
 
@@ -174,7 +178,7 @@ const ScolariteDashboard = ({ navigation }) => {
                         onRessaisir={ouvrirRessaisie}
                     />
                     {portailDisponible && credentials && !isColdLoading && !echecBloquant ? (
-                        <BiometryGate theme={theme} color={accent}>
+                        <BiometryGate theme={theme}>
                             <Animated.ScrollView
                                 onScroll={Animated.event(
                                     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -224,7 +228,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     greetingText: {
-        fontSize: 34,
+        fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold,
         marginBottom: tokens.space.md,
     },

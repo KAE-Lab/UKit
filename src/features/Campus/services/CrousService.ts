@@ -58,6 +58,7 @@ function restaurantsAbsents(): UkitFailure {
         'ERROR_SERVICE_ABSENT',
         'CROUS_ABSENT',
         'l etablissement ne declare pas de region CROUS',
+        'ERROR_SERVICE_ABSENT_TITLE',
     );
 }
 

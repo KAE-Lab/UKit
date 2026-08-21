@@ -33,15 +33,18 @@ export function CrousRestaurantListItem({ item, theme, isFavorite, onToggleFavor
                 ) : undefined}
             />
 
+            {/*
+              * **Une ligne, toujours.** Les horaires du fournisseur sont une phrase libre, parfois
+              * longue : sur deux lignes, la carte d'un restaurant devenait plus haute que celle d'une
+              * bibliotheque, et les sections cessaient d'etre alignees. La phrase est donc coupee ici,
+              * et l'ecran de detail la donne en entier — c'est lui qui a la place.
+              */}
             <MetaRow
                 theme={theme}
                 icon={{ name: 'calendar-clock' }}
                 label={item.opening}
-                align="flex-start"
-                iconOffset={tokens.space.xxs}
                 gap={6}
-                numberOfLines={2}
-                textStyle={{ lineHeight: 20 }}
+                numberOfLines={1}
             />
         </CampusCard>
     );

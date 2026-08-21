@@ -70,7 +70,8 @@ function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@re
             onPress={() => navigation.navigate('CrousMenu', {
                 restaurantId: item.id,
                 restaurantName: item.title,
-                location: { lat: item.lat, lon: item.lon }
+                location: { lat: item.lat, lon: item.lon },
+                openingLines: item.openingLines
             })}
         />
     );
@@ -93,6 +94,7 @@ function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@re
             onFilterChange={setSelectedFilter}
             
             emptyIcon="store-off-outline"
+            emptyTitle={Translator.get('NO_RU_NEARBY_TITLE')}
             emptyMessage={Translator.get('NO_RU_NEARBY')}
             failure={failure}
             onRetry={retry}

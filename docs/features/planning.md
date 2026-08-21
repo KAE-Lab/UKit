@@ -196,6 +196,10 @@ revenant dans l'application.
 ## Vérifier
 
 - Ouvrir l'onglet sans favori : l'état vide et son bouton vers la recherche doivent s'afficher.
+- Ouvrir un dimanche, ou un jour sans cours : « Journée libre » doit se poser **exactement au même
+  endroit** que l'état vide ci-dessus et que l'écran d'échec plus bas. Les trois passent par le même
+  hôte ([`ScreenState`](../../src/shared/ui/ScreenState.tsx)) ; s'ils sautent d'un état à l'autre,
+  c'est que l'un d'eux a repris un centrage local.
 - Ajouter deux groupes en favori : le planning agrégé doit fusionner leurs cours et la clé de cache
   contenir les deux noms joints par `+`.
 - Basculer jour / semaine, naviguer dans le curseur, revenir avec le bouton « aujourd'hui ».
@@ -419,6 +423,13 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
   agrégé. Comportement d'origine, relevé en lisant le code au jalon 6-I et jamais interrogé depuis.
 - **`computeScheduleWeek` est appelée au rendu**, pas au chargement : le calcul des UE et le filtrage
   de la vue semaine se rejouent à chaque rendu de `DayWeek`.
+- **La catégorie fantôme `nocourse` a disparu.** Une journée vide était rendue en **injectant un faux
+  cours** dans la liste, que `CourseRow` reconnaissait pour afficher le message à la place d'une
+  carte. Le détour coûtait sa hauteur au bloc : il se retrouvait dans une cellule de liste, qui ne
+  s'étire pas, donc il se posait là où la cellule tombait. C'est un état d'écran comme les deux
+  autres depuis la passe de finition. Le filtre défensif sur `nocourse` de
+  [`DayWeekCollapsible`](../../src/features/Planning/components/DayWeekCollapsible.tsx) est resté :
+  il ne se déclenchait déjà plus avant ce changement, et le retirer sortait du périmètre.
 - **`ScheduleList` est un composant à classe dense** : chargement, cache, calcul et rendu dans le même
   fichier. Le jalon 6-E l'a découpé en méthodes nommées (`loadSchedule`, `cacheOrFailure`,
   `applySchedule`) sans le scinder — un composant à classe qui fonctionne ne se réécrit pas sans

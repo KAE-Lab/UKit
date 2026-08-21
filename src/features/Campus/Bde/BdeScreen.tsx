@@ -56,6 +56,7 @@ function BdeScreen({ navigation, onAnimatedScroll }: BdeScreenProps) {
             navigation={navigation}
             
             emptyIcon="party-popper"
+            emptyTitle={Translator.get('NO_RESULTS_TITLE')}
             emptyMessage={Translator.get('NO_RESULTS')}
             failure={failure}
             onRetry={retry}

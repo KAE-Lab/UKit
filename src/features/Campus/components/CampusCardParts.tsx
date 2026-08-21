@@ -94,7 +94,16 @@ interface LibraryStatusRowProps {
     rate: number | null;
     tone: SemanticTone;
     label: string;
-    /** La precision du fournisseur, dans sa langue a lui. Secondaire par construction. */
+    /**
+     * La precision du fournisseur, dans sa langue a lui.
+     *
+     * Elle porte **la couleur du statut**, pas celle du texte secondaire, et un tiret la separe du
+     * libelle. Le jalon 6-K l'avait passee en gris pour distinguer ce qui vient de nous de ce qui
+     * vient d'eux ; a l'usage les deux moities se lisaient comme deux fragments colles, et la
+     * distinction ne se decodait pas. Ce qui comptait dans ce jalon — **ne pas concatener une chaine
+     * traduite et une donnee distante dans le service** — est intact : ce sont deux `Text`, et
+     * `LibraryService` ne les soude toujours pas (docs/theme.md).
+     */
     note?: string | null;
     theme: AppThemeType;
 }
@@ -130,12 +139,13 @@ export function LibraryStatusRow({ isOpen, rate, tone, label, note, theme }: Lib
                     numberOfLines={1}
                     style={{
                         fontSize: tokens.fontSize.sm,
-                        color: theme.fontSecondary,
+                        fontWeight: tokens.fontWeight.semibold,
+                        color: couleur,
                         marginLeft: tokens.space.xs,
                         flexShrink: 1,
                     }}
                 >
-                    {note}
+                    {`- ${note}`}
                 </Text>
             ) : null}
 

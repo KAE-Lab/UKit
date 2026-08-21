@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import Translator from '../../../shared/i18n/Translator';
@@ -16,38 +17,121 @@ interface CampusSearchBarProps {
     insets: EdgeInsets;
 }
 
+/** La hauteur du degrade qui separe la liste de la barre. Assez pour amortir, pas assez pour masquer. */
+const VOILE = 24;
+
+/**
+ * La hauteur du clavier, ou `0` quand il est replie. **iOS seulement**, et c'est voulu.
+ *
+ * Sous Android la fenetre se redimensionne quand le clavier monte : `bottom: 0` est deja au-dessus de
+ * lui, il n'y a rien a compenser et rien a couvrir. Sous iOS le clavier est une couche **posee
+ * par-dessus** l'application, et c'est ce qui cree les deux defauts que ce module corrige.
+ */
+function useHauteurClavier(): number {
+    const [hauteur, setHauteur] = useState(0);
+
+    useEffect(() => {
+        if (Platform.OS !== 'ios') return undefined;
+        // `will` et non `did` : la dalle doit etre en place **avant** que le clavier apparaisse,
+        // sinon elle se pose une image apres lui et le defaut clignote.
+        const montre = Keyboard.addListener('keyboardWillShow', (e) => setHauteur(e.endCoordinates.height));
+        const cache = Keyboard.addListener('keyboardWillHide', () => setHauteur(0));
+        return () => { montre.remove(); cache.remove(); };
+    }, []);
+
+    return hauteur;
+}
+
+/**
+ * La barre de recherche, flottante au-dessus de la liste.
+ *
+ * **Elle reste en bas**, a portee de pouce : c'est un bon choix et le changer couterait plus qu'il ne
+ * rendrait. Ce qui la rendait discrete n'etait pas sa hauteur mais sa **couleur** — `greyBackground`
+ * est un fond, et un champ de la couleur d'un fond ne se voit pas. Elle prend donc la surface d'une
+ * carte, un filet, et l'ombre partagee : un objet **pose sur** la liste plutot qu'un creux dedans.
+ *
+ * Les quatre proprietes d'ombre ecrites a la main sont remplacees par `tokens.shadow.md` — quatre
+ * avertissements ESLint en moins, et la meme ombre que les cartes.
+ *
+ * Le degrade au-dessus n'est pas decoratif : sans lui, les cartes disparaissent d'un coup sous la
+ * barre au defilement. `expo-linear-gradient` etait deja en dependance, sans aucun appelant.
+ *
+ * **Il part du fond a opacite nulle, jamais de `'transparent'`**, et c'est le piege classique du
+ * degrade sous React Native : `'transparent'` vaut `rgba(0, 0, 0, 0)`, donc l'interpolation traverse
+ * du **noir** de plus en plus opaque. En theme sombre ca ne se voit pas, le fond est deja noir ; en
+ * theme clair ca pose une salissure grise en travers de la liste. Le fond a `00` d'alpha interpole
+ * dans sa propre teinte et reste invisible dans les deux themes.
+ */
+
+/** Le fond de l'ecran, a opacite nulle : le point de depart honnete d'un degre de voile. */
+function fondTransparent(couleur: string): string {
+    return /^#[0-9a-f]{6}$/i.test(couleur) ? `${couleur}00` : couleur;
+}
 export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder, theme, insets }: CampusSearchBarProps) {
+    const hauteurClavier = useHauteurClavier();
+
     return (
+        <>
+        {/*
+          * La dalle posee **sous** le clavier, de la couleur de la page.
+          *
+          * Le clavier d'iOS a des coins superieurs arrondis et un fond qui laisse passer ce qu'il y a
+          * derriere. Sans cette dalle, ce sont les cartes de la liste qui apparaissent dans ces coins,
+          * juste sous la barre : une zone qui n'est visiblement « pas couverte ». Elle est rendue hors
+          * du `KeyboardAvoidingView`, qui translate ses enfants vers le haut — une dalle qui monte avec
+          * eux ne couvrirait justement pas la zone du clavier.
+          */}
+        {hauteurClavier > 0 ? (
+            <View
+                pointerEvents="none"
+                style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: hauteurClavier,
+                    backgroundColor: theme.courseBackground,
+                }}
+            />
+        ) : null}
+
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'position' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-            style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-            }}
+            style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
         >
+            <LinearGradient
+                colors={[fondTransparent(theme.courseBackground), theme.courseBackground]}
+                style={{ height: VOILE }}
+                pointerEvents="none"
+            />
             <View style={{
-                paddingBottom: Math.max(tokens.space.sm, (insets?.bottom || 0) - 15)
+                backgroundColor: theme.courseBackground,
+                /*
+                 * La marge de zone sure ne sert qu'a degager l'indicateur d'accueil. Clavier ouvert,
+                 * celui-ci est masque : la garder laissait un ruban de vingt points entre la barre et
+                 * le clavier, qu'on lit comme un trou.
+                 */
+                paddingBottom: hauteurClavier > 0
+                    ? tokens.space.sm
+                    : Math.max(tokens.space.sm, (insets?.bottom || 0) - 15),
             }}>
                 <View style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    backgroundColor: theme.greyBackground,
+                    backgroundColor: theme.cardBackground,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    // `radius.md`, comme le bouton de retour et le bouton favori : l'application est
+                    // en carres arrondis, pas en pilules (docs/theme.md).
                     borderRadius: tokens.radius.md,
                     paddingHorizontal: tokens.space.md,
                     marginHorizontal: tokens.space.md,
-                    height: 45,
-                    elevation: 5,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 4,
+                    height: 48,
+                    ...tokens.shadow.md,
                 }}>
                     <MaterialCommunityIcons
                         name="magnify"
-                        size={22}
+                        size={20}
                         color={theme.fontSecondary}
                         style={{ marginRight: tokens.space.sm }}
                     />
@@ -56,7 +140,7 @@ export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder,
                             flex: 1,
                             fontSize: tokens.fontSize.md,
                             color: theme.font,
-                            padding: 0
+                            padding: 0,
                         }}
                         placeholder={searchPlaceholder}
                         placeholderTextColor={theme.fontSecondary}
@@ -64,17 +148,15 @@ export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder,
                         value={searchText}
                         autoCorrect={false}
                     />
-                    {searchText.length > 0 && onSearchChange && (
-                        <TouchableOpacity
-                            onPress={() => onSearchChange('')}
-                            style={{ padding: tokens.space.xs }}
-                        >
-                            <MaterialCommunityIcons name="close-circle" size={18} color={theme.fontSecondary} />
+                    {searchText.length > 0 ? (
+                        <TouchableOpacity onPress={() => onSearchChange('')} hitSlop={12}>
+                            <MaterialCommunityIcons name="close-circle" size={20} color={theme.fontSecondary} />
                         </TouchableOpacity>
-                    )}
+                    ) : null}
                 </View>
             </View>
         </KeyboardAvoidingView>
+        </>
     );
 }
 
@@ -111,8 +193,8 @@ export function CampusFilterModal({ visible, setVisible, filterOptions, selected
                                 <Text style={theme.settings.popup.textHeader as never}>
                                     {Translator.get('FILTERS')}
                                 </Text>
-                                <TouchableOpacity onPress={() => setVisible(false)}>
-                                    <MaterialIcons name="close" size={28} color={theme.fontSecondary} />
+                                <TouchableOpacity onPress={() => setVisible(false)} hitSlop={12}>
+                                    <MaterialIcons name="close" size={24} color={theme.fontSecondary} />
                                 </TouchableOpacity>
                             </View>
 
@@ -137,7 +219,7 @@ export function CampusFilterModal({ visible, setVisible, filterOptions, selected
                                     <Text style={{ 
                                         color: selectedFilter === option.id ? theme.primary : theme.font, 
                                         fontSize: tokens.fontSize.md, 
-                                        fontWeight: selectedFilter === option.id ? 'bold' : 'normal' 
+                                        fontWeight: selectedFilter === option.id ? tokens.fontWeight.semibold : tokens.fontWeight.regular,
                                     }}>
                                         {option.label}
                                     </Text>
@@ -154,6 +236,7 @@ export function CampusFilterModal({ visible, setVisible, filterOptions, selected
 interface CampusListEmptyStateProps {
     isFiltering: boolean;
     emptyIcon: keyof typeof import('@expo/vector-icons').MaterialCommunityIcons.glyphMap;
+    emptyTitle: string;
     emptyMessage: string;
     theme: AppThemeType;
     /**
@@ -165,6 +248,8 @@ interface CampusListEmptyStateProps {
      */
     failure?: UkitFailure;
     onRetry?: () => void;
+    /** Efface la recherche et remet le filtre a `all`. Absent, l'etat vide ne propose rien. */
+    onReset?: () => void;
 }
 
 /**
@@ -173,19 +258,34 @@ interface CampusListEmptyStateProps {
  * Le rendu de l'echec est delegue a `SourceFailureNotice`, qui sert aussi les ecrans sans liste — la
  * fiche d'un restaurant, les horaires d'une bibliotheque, le planning. Un seul message et un seul
  * bouton pour un meme echec, quel que soit l'ecran qui le montre.
+ *
+ * Les deux rendent en `plain` : ils **sont** l'ecran, puisque la liste est vide. Ils etaient encadres
+ * et colles sous l'en-tete, ce qui les posait plus haut que les etats vides du Planning et de la
+ * Scolarite ; c'est `ScreenState`, cote `CampusListLayout`, qui decide maintenant de leur hauteur.
  */
-export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, theme, failure, onRetry }: CampusListEmptyStateProps) {
+export function CampusListEmptyState({ isFiltering, emptyIcon, emptyTitle, emptyMessage, theme, failure, onRetry, onReset }: CampusListEmptyStateProps) {
     if (failure !== undefined && failure.silent !== true) {
-        return <SourceFailureNotice failure={failure} theme={theme} onRetry={onRetry} />;
+        return <SourceFailureNotice failure={failure} theme={theme} onRetry={onRetry} variant="plain" />;
     }
 
     // Meme bloc que l'echec, et c'est voulu : ce qui les separe est l'icone et le message, pas la
     // mise en page. Les deux etaient ecrits a l'identique jusqu'au jalon 6-K.
     return (
         <EmptyState
-            icon={emptyIcon}
+            variant="plain"
+            icon={isFiltering ? 'magnify-close' : emptyIcon}
+            title={isFiltering ? Translator.get('NO_RESULTS_FOUND_TITLE') : emptyTitle}
             message={isFiltering ? Translator.get('NO_RESULTS_FOUND') : emptyMessage}
             theme={theme}
+            /*
+             * « Un etat vide propose une action quand il en existe une » (recette d'ecran). Ici elle
+             * existe, et elle etait cachee derriere l'icone de filtre de l'en-tete : rien, dans un
+             * ecran vide, ne disait qu'un filtre etait la cause. Elle n'apparait que quand on filtre —
+             * une liste vide **par nature** n'a rien a reinitialiser.
+             */
+            action={isFiltering && onReset
+                ? { label: Translator.get('SHOW_ALL'), onPress: onReset, icon: 'filter-remove-outline' }
+                : null}
         />
     );
 }
@@ -198,22 +298,27 @@ export function CampusListEmptyState({ isFiltering, emptyIcon, emptyMessage, the
  */
 export { SourceFailureNotice as CampusFailureNotice };
 
-interface CampusPartialNoticeProps {
+interface CampusNoticeProps {
     theme: AppThemeType;
-    onRetry?: () => void;
+    icon: keyof typeof MaterialCommunityIcons.glyphMap;
+    message: string;
+    /** Le geste propose a droite. Sans lui, le bandeau ne fait que dire. */
+    actionLabel?: string;
+    onAction?: () => void;
 }
 
 /**
- * Le bandeau de couverture partielle.
+ * Une ligne discrete qui dit quelque chose **sur** une liste, sans la remplacer.
  *
- * Il repond a une question que l'ancien code ne se posait pas : que fait-on quand deux points de
- * balayage sur douze echouent ? La reponse etait « rien, on n'en sait rien ». Elle est desormais
- * « on affiche ce qu'on a, **en le disant** » — une liste incomplete qui se presente comme complete
- * est un mensonge silencieux, et c'est exactement le defaut que la Phase 6 supprime.
+ * Elle est nee du bandeau de couverture partielle et a ete generalisee quand les sections du tableau
+ * de bord en ont eu besoin : un carrousel vide n'affichait rien du tout sous son en-tete, ce qui se
+ * lit comme une application cassee — d'autant que la cause la plus frequente est un **filtre**, donc
+ * quelque chose que l'utilisateur peut defaire.
  *
- * Discret par construction : la donnee est la, seule sa completude est en doute.
+ * Discrete par construction : elle tient sur une ligne et laisse la place a la donnee. Ce n'est pas
+ * un etat vide plein ecran ([`EmptyState`](../../../shared/ui/EmptyState.tsx)), qui **est** l'ecran.
  */
-export function CampusPartialNotice({ theme, onRetry }: CampusPartialNoticeProps) {
+export function CampusNotice({ theme, icon, message, actionLabel, onAction }: CampusNoticeProps) {
     return (
         <View style={{
             flexDirection: 'row',
@@ -227,18 +332,42 @@ export function CampusPartialNotice({ theme, onRetry }: CampusPartialNoticeProps
             borderWidth: 1,
             borderColor: theme.border,
         }}>
-            <MaterialCommunityIcons name="alert-outline" size={18} color={theme.fontSecondary} />
+            <MaterialCommunityIcons name={icon} size={18} color={theme.fontSecondary} />
             <Text style={{ flex: 1, marginLeft: tokens.space.sm, color: theme.fontSecondary, fontSize: tokens.fontSize.sm }}>
-                {Translator.get('PARTIAL_COVERAGE')}
+                {message}
             </Text>
 
-            {onRetry ? (
-                <TouchableOpacity onPress={onRetry} activeOpacity={0.7} style={{ paddingLeft: tokens.space.sm }}>
+            {actionLabel !== undefined && onAction !== undefined ? (
+                <TouchableOpacity onPress={onAction} activeOpacity={0.7} style={{ paddingLeft: tokens.space.sm }} hitSlop={8}>
                     <Text style={{ color: theme.primary, fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold }}>
-                        {Translator.get('RETRY')}
+                        {actionLabel}
                     </Text>
                 </TouchableOpacity>
             ) : null}
         </View>
+    );
+}
+
+interface CampusPartialNoticeProps {
+    theme: AppThemeType;
+    onRetry?: () => void;
+}
+
+/**
+ * Le bandeau de couverture partielle.
+ *
+ * Il repond a une question que l'ancien code ne se posait pas : que fait-on quand deux points de
+ * balayage sur douze echouent ? La reponse etait « rien, on n'en sait rien ». Elle est desormais
+ * « on affiche ce qu'on a, **en le disant** » — une liste incomplete qui se presente comme complete
+ * est un mensonge silencieux, et c'est exactement le defaut que la Phase 6 supprime.
+ */
+export function CampusPartialNotice({ theme, onRetry }: CampusPartialNoticeProps) {
+    return (
+        <CampusNotice
+            theme={theme}
+            icon="alert-outline"
+            message={Translator.get('PARTIAL_COVERAGE')}
+            {...(onRetry !== undefined ? { actionLabel: Translator.get('RETRY'), onAction: onRetry } : {})}
+        />
     );
 }

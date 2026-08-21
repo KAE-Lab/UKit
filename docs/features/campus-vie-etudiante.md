@@ -208,5 +208,5 @@ message ni bouton.*
 | [`services/BdeService.ts`](../../src/features/Campus/services/BdeService.ts) | lit la table, rend une liste ou un échec traduit |
 | [`services/BdeMapping.ts`](../../src/features/Campus/services/BdeMapping.ts) | le contrat `BdeAnnonce`, la projection depuis la ligne de base, la péremption |
 | [`Dashboard/components/BdeSection.tsx`](../../src/features/Campus/Dashboard/components/BdeSection.tsx) | le carrousel du tableau de bord |
-| [`Dashboard/components/BdeSectionParts.tsx`](../../src/features/Campus/Dashboard/components/BdeSectionParts.tsx) | la carte d'annonce et la ligne d'échec du carrousel |
+| [`Dashboard/components/BdeSectionParts.tsx`](../../src/features/Campus/Dashboard/components/BdeSectionParts.tsx) | la carte d'annonce du carrousel. **La ligne d'échec en est partie** : elle était la troisième copie du même bandeau et rejoint [`SectionEtatVide`](../../src/features/Campus/Dashboard/components/SectionEtatVide.tsx), commun aux quatre sections ([campus.md](campus.md)) |
 | [`blueprints/ukit-campus-annonces.blueprint.json`](../../blueprints/ukit-campus-annonces.blueprint.json) | témoin du format : le pilote du jalon 6-A, plus joué en production |

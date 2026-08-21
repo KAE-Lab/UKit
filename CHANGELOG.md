@@ -15,6 +15,88 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **Les dialogues, les états et les boutons ne parlent plus qu'une langue.** Neuf modales, six écrans
+  d'état vide ou d'erreur et quatre formes de bouton se sont alignés sur un vocabulaire unique. Le
+  détail est dans [docs/theme.md](docs/theme.md) ; ce qui change à l'usage :
+
+  - **les dialogues sont recadrés.** Le conteneur était trop rond et trop serré (`radius.xl`,
+    `space.md`), les boutons trop gros pour leur libellé — 150 de large et 52 de haut sous un texte de
+    16. Ils passent en `radius.lg`, `space.lg` de rembourrage, titre d'un cran au-dessus, et deux
+    boutons mi-largeur de 48 de haut. Et **un titre de dialogue ne se crie plus** : cinq popups sur
+    sept le mettaient en majuscules, deux non ;
+  - **un état vide se pose enfin au même endroit sur tous les écrans.** Le bloc était partagé depuis
+    le jalon 6-K, mais son hôte ne l'était pas : six écrans calculaient leur propre centrage, l'un en
+    ne compensant que le haut (bloc trop bas), l'autre que le bas (bloc trop haut), un troisième avec
+    `+ 65` au lieu de `+ 70`. Un composant partagé décide désormais, et il **ancre le bloc sous
+    l'en-tête** plutôt que de le centrer : centrer demanderait de connaître ce qui occupe le bas de
+    chaque écran — barre d'onglets, barre de recherche flottante, ou rien — et c'est précisément ce
+    calcul qui produisait des messages « légèrement en dessous du milieu » ;
+  - **un état vide a une masse.** Icône dans un carré arrondi, **titre** obligatoire, message à mesure
+    courte, action. C'était un glyphe gris et une ligne unique étirée sur toute la largeur, ce qui
+    donnait à ces écrans leur air de vide bizarre ;
+  - **la couleur dit maintenant ce que les mots disaient seuls.** Une source en panne et une
+    université qui ne publie pas d'emploi du temps portaient le même carré gris : la distinction que
+    toute la Phase 6 a établie — ce qui est cassé contre ce qui est absent — ne se lisait qu'en toutes
+    lettres. Le carré est rouge pâle pour une panne, gris pour une absence ;
+  - **un état vide de recherche propose de tout réafficher.** La sortie existait — retirer le filtre —
+    mais elle était cachée derrière l'icône de l'en-tête, et rien, dans un écran vide, ne disait qu'un
+    filtre en était la cause ;
+  - **un échec dit ce qui s'est passé avant de dire quoi faire.** « Service indisponible » en titre,
+    « Vérifie ta connexion, puis réessaie » en message, au lieu d'une phrase unique ;
+  - **trois boutons transparents disparaissent.** Dans les réglages du compte, actualiser, ressaisir
+    et se déconnecter étaient de simples cadres à fond transparent — la couleur du fond de page. Ils
+    prennent le fond gris de la barre d'onglets, et c'est **le libellé** qui porte le sens : bleu pour
+    les deux premiers, rouge pour la déconnexion. Même recette que le bouton « Réserver » d'une
+    bibliothèque ;
+  - **la barre de recherche de Campus existe.** Elle avait la couleur d'un fond, donc elle ne se
+    voyait pas ; elle est maintenant posée **sur** la liste, avec un dégradé qui amortit le
+    défilement — un dégradé qui part du fond à opacité nulle et non de `transparent`, lequel traverse
+    du noir et salissait le thème clair. Et elle **disparaît quand il n'y a rien à chercher** — une source en panne ou une
+    liste vide n'ont pas besoin d'un champ de recherche. Elle reste tant qu'une requête est saisie,
+    sans quoi on serait enfermé avec un texte qu'on ne peut plus effacer.
+
+- **Une section vide du tableau de bord Campus dit pourquoi, et propose un geste.** Un carrousel sans
+  carte n'affichait rien du tout sous son en-tête, ce qui se lit comme une application cassée. Il
+  distingue maintenant trois causes et trois sorties : un filtre qui masque tout (« Tout afficher »),
+  une source en panne (renvoi vers l'écran dédié, où l'explication vit), et une absence légitime.
+
+- **Le filtre d'une liste Campus remonte enfin au tableau de bord.** Le changer depuis l'écran de
+  liste ne changeait rien sur l'accueil : ses carrousels restaient sur la valeur lue au lancement de
+  l'application, définitivement. Le hook lisait le stockage une seule fois, au montage — ce qui suffit
+  à une liste qui se remonte à chaque ouverture, mais pas à un onglet qui ne se démonte jamais.
+
+- **La section des salles libres avalait l'échec de sa source**, alors que l'écran dédié le montre
+  depuis le jalon 6-K : une source morte y devenait un carrousel vide.
+
+- **Deux gestes du compte demandent maintenant confirmation**, et pas seulement celui qui détruit.
+  « Actualiser mon dossier » rejoue une connexion universitaire complète : plusieurs secondes d'écran
+  de progression, sans retour possible une fois lancée. Son explication vit dans le dialogue, au
+  moment de décider, plutôt qu'en ligne d'aide sous le bouton — que personne ne lisait, et qui cassait
+  le rythme des trois actions de l'écran.
+
+- **L'écran du compte s'appelait « Se déconnecter »**, alors qu'il montre le profil, le dossier, les
+  identifiants et trois actions. Il prend le nom de la ligne qui l'ouvre. Au passage, le libellé du
+  prénom y était **écrit en dur, en français**, sur un écran qui s'affiche dans les trois langues.
+
+- **Les cartes des quatre sections Campus ont de nouveau la même hauteur.** Les horaires d'un
+  restaurant sont une phrase libre du fournisseur : affichée sur deux lignes, elle rendait la carte
+  d'un restaurant plus haute que celle d'une bibliothèque. Elle se coupe désormais à une ligne, et se
+  lit **en entier en pied de l'écran du menu, mise en forme**. La source ne déclare aucune structure
+  mais elle en publie une — sur les 81 lignes des quarante-et-un restaurants de la région, 36 sont de
+  la forme « NOM : créneau », 25 des portées de jours, 20 des créneaux nus ou des phrases. Chacune a
+  désormais sa mise en page ; ce qui n'est pas reconnu s'affiche tel quel.
+
+- **Le statut d'une bibliothèque fermée redevient une ligne d'une seule couleur.** Le jalon 6-K avait
+  passé la précision du fournisseur (« Ouvre demain à 09:00 ») en gris pour la distinguer du libellé
+  traduit ; la distinction ne se décodait pas et les deux moitiés se lisaient comme deux fragments
+  collés. Ce qui comptait dans ce jalon reste acquis : le service ne concatène plus une chaîne
+  traduite et une donnée distante.
+
+- **L'application tutoie, partout.** Vingt et une chaînes françaises héritées vouvoyaient quand tout
+  ce qui a été écrit depuis le multi-établissement tutoyait, et le mélange se voyait exactement là où
+  on regarde : les confirmations et les états vides. Les confirmations perdent au passage leur
+  « Êtes-vous sûr de vouloir… », qui n'ajoutait rien.
+
 - **Le code mort a été retiré, et une règle empêche qu'il revienne.** Soixante-cinq variables et
   imports inutilisés dans trente et un fichiers, deux palettes Material complètes que plus rien ne
   lisait, et cinq composants ou fonctions exportés que rien n'atteignait — dont un séparateur visuel

@@ -7,7 +7,8 @@ import Translator from '../../../../shared/i18n/Translator';
 import { SectionHeader } from '../../../../shared/ui/SectionHeader';
 import { LoadingState } from '../../../../shared/ui/LoadingState';
 import { useBdeAnnonces } from '../../hooks/useBdeAnnonces';
-import { BdeAnnonceCard, BdeSectionError } from './BdeSectionParts';
+import { BdeAnnonceCard } from './BdeSectionParts';
+import { SectionEtatVide } from './SectionEtatVide';
 import type { BdeAnnonce } from '../../services/BdeService';
 
 const { width } = Dimensions.get('window');
@@ -45,7 +46,15 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
             {loading ? (
                 <LoadingState theme={theme} />
             ) : enEchec ? (
-                <BdeSectionError failure={failure!} theme={theme} onRetry={retry} />
+                /* Le bandeau est celui des trois autres sections : il portait ici une troisieme copie
+                   du meme motif, avec son propre rayon et son propre rembourrage. */
+                <SectionEtatVide
+                    theme={theme}
+                    failure={failure}
+                    masquesParFiltre={false}
+                    onRetry={retry}
+                    onOuvrir={() => navigation.navigate('Bde')}
+                />
             ) : (
                 <FlatList
                     horizontal

@@ -100,7 +100,12 @@ export function portailDisponible(role: 'dossier' | 'messagerie'): boolean {
  * repond pas » — deux phrases qui appellent deux gestes opposes de la part de l'etudiant.
  */
 export function portailAbsent(role: string = 'portail'): UkitFailure {
-    return serviceAbsent('ERROR_PORTAL_UNAVAILABLE', 'PORTAIL_ABSENT', `l etablissement ne publie pas de ${role}`);
+    return serviceAbsent(
+        'ERROR_PORTAL_UNAVAILABLE',
+        'PORTAIL_ABSENT',
+        `l etablissement ne publie pas de ${role}`,
+        'ERROR_PORTAL_UNAVAILABLE_TITLE',
+    );
 }
 
 /**

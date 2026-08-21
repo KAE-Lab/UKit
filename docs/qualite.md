@@ -23,7 +23,7 @@ actuel du dépôt, à connaître pour distinguer une régression d'un héritage 
 | Commande | État | Détail |
 |---|---|---|
 | `npx tsc --noEmit` | **verte** | zéro erreur depuis le 2026-08-16 — voir ci-dessous pour les trois `TS2612` historiques |
-| `npx eslint .` | **0 erreur, 79 warnings** | 11 `no-explicit-any` et **68 `ukit/no-style-literals`** |
+| `npx eslint .` | **0 erreur, 53 warnings** | 11 `no-explicit-any` et **42 `ukit/no-style-literals`** |
 
 La règle de contribution est donc : **ne pas augmenter ces compteurs**, et les réduire quand on
 travaille dans un fichier concerné.
@@ -32,20 +32,27 @@ Les 11 `no-explicit-any` sont dans `CampusListLayout.tsx` (3), `ScheduleList.tsx
 (4), `GroupSelectionScreen.tsx` (1). `no-unused-vars` n'en signale **aucun** : le dépôt en portait 65
 au 2026-08-16, tous supprimés le jour même, et la règle est là pour que ça le reste.
 
-Les 68 `ukit/no-style-literals` sont apparus **avec la règle**, au jalon
+Les 42 `ukit/no-style-literals` sont apparus **avec la règle**, au jalon
 [6-K](phase-6/6-k-socle-visuel.md) : ils n'ont pas été introduits, ils étaient là et n'étaient
 mesurés par rien. Ils ne sont pas une dette diffuse mais une **liste de travail localisée** :
 
 | Zone | Warnings | Qui les résorbe |
 |---|---:|---|
-| annonces, Scolarité, Réglages | **41** | leurs sessions de refonte d'écran, qui réécrivent ces écrans de toute façon |
-| écrans de référence | 13 | personne : ce sont des valeurs hors échelle **assumées**, ou des arbitrages consignés dans [inventaire-visuel.md](inventaire-visuel.md) |
-| socle (`shared/`) | 14 | idem — ombres écrites à la main, tailles hors échelle |
+| annonces, Scolarité, Réglages | **18** | leurs sessions de refonte d'écran, qui réécrivent ces écrans de toute façon |
+| écrans de référence | 12 | personne : ce sont des valeurs hors échelle **assumées**, ou des arbitrages consignés dans [inventaire-visuel.md](inventaire-visuel.md) |
+| socle (`shared/`) | 12 | idem — ombres écrites à la main, tailles hors échelle |
 
-Par nature : 18 couleurs en dur, 25 valeurs qui ont un token exact, 25 valeurs qu'aucun token ne
-couvre. Le jalon 6-K a converti tout ce qui pouvait l'être **sans déplacer un pixel** dans les écrans
-de référence ; ce qui reste demande un arbitrage visuel, et c'est pourquoi la règle est en `warn` et
-non en `error`.
+Le jalon 6-K a converti tout ce qui pouvait l'être **sans déplacer un pixel** dans les écrans de
+référence ; ce qui reste demande un arbitrage visuel, et c'est pourquoi la règle est en `warn` et non
+en `error`.
+
+> **Le compteur a baissé de 79 à 53**, dont 26 avertissements de style, pendant la passe de finition
+> du 2026-08-21 — celle qui a normalisé les dialogues, les états et les boutons. Aucun n'a été
+> désactivé : ils ont été résorbés en traversant les fichiers, ce que la règle de contribution demande
+> (« les réduire quand on travaille dans un fichier concerné »). Les plus notables sont les quatre
+> propriétés d'ombre écrites à la main de la barre de recherche Campus, devenues `tokens.shadow.md`,
+> et les quatre couleurs Material — deux `#4caf50`, un `#43A047`, un `#E65100` — remplacées par
+> l'échelle sémantique que le jalon 6-K avait créée pour elles.
 
 #### `no-unused-vars`, et ce qu'elle a fait remonter
 
@@ -104,7 +111,7 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | la table du modèle d'erreur du moteur |
 | [`shared/supabase/failures.ts`](../src/shared/supabase/failures.ts) | la table d'erreurs de la base — dont « une clé fausse n'est pas `config` » |
 | [`features/Campus/services/BdeMapping.ts`](../src/features/Campus/services/BdeMapping.ts) | la projection des annonces et leur péremption |
-| [`features/Campus/services/CrousMapping.ts`](../src/features/Campus/services/CrousMapping.ts) | la date du fournisseur, les horaires servis en chaîne JSON, le regroupement midi/soir |
+| [`features/Campus/services/CrousMapping.ts`](../src/features/Campus/services/CrousMapping.ts) | la date du fournisseur, les horaires servis en chaîne JSON, le regroupement midi/soir, et la **reconnaissance de la structure des horaires** — un format que la source ne déclare pas, donc le repli est la moitié qui compte |
 | [`features/Campus/services/LibraryMapping.ts`](../src/features/Campus/services/LibraryMapping.ts) | l'arité d'une extraction, le choix du visuel, un site fermé sans taux |
 | [`shared/locations/referentiel.ts`](../src/shared/locations/referentiel.ts) | la fusion champ par champ du socle et de la surcouche |
 | [`shared/etablissements/catalogue.ts`](../src/shared/etablissements/catalogue.ts) | une ligne qui **remplace** au lieu de fusionner, le socle qui ne disparaît jamais, l'ordre stable, le repli d'un code inconnu, et les trois faits du jalon 6-J — abonnement, région CROUS, reconnaissance de salle désactivée |

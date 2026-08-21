@@ -28,6 +28,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { enregistrerLienEdt, lienEdtActif, sourceEdt } from '../../../shared/etablissements';
 import { verifierLienEdt } from '../services/PlanningIcalSource';
+import { ActionButton } from '../../../shared/ui/ActionButton';
 
 interface LienEdtFormProps {
     /**
@@ -218,11 +219,14 @@ export default function LienEdtForm({ onDone, topPadding = 0 }: LienEdtFormProps
                 </TouchableOpacity>
 
                 {enregistre && (
-                    <TouchableOpacity onPress={() => { void oublier(); }} style={styles.forget}>
-                        <Text style={{ color: theme.accentFont, fontSize: tokens.fontSize.sm }}>
-                            {Translator.get('TIMETABLE_LINK_FORGET')}
-                        </Text>
-                    </TouchableOpacity>
+                    <ActionButton
+                        theme={theme}
+                        variant="destructive"
+                        icon={{ name: 'link-variant-off' }}
+                        label={Translator.get('TIMETABLE_LINK_FORGET')}
+                        onPress={() => { void oublier(); }}
+                        style={styles.forget}
+                    />
                 )}
             </View>
         </ScrollView>
@@ -298,8 +302,6 @@ const styles = StyleSheet.create({
         fontWeight: tokens.fontWeight.semibold,
     },
     forget: {
-        alignItems: 'center',
         marginTop: tokens.space.md,
-        paddingVertical: tokens.space.xs,
     },
 });

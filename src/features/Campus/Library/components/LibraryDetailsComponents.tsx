@@ -28,10 +28,10 @@ export function LibraryLiveAttendance({ affluence, theme }: LibraryLiveAttendanc
                 <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as never, color: statusColor, marginLeft: tokens.space.sm }}>
                     {statusText}
                 </Text>
-                {/* La precision du fournisseur, dans sa langue a lui : secondaire, jamais soudee au statut. */}
+                {/* Meme ligne, meme couleur : deux `Text`, jamais une concatenation dans le service. */}
                 {statusNote ? (
-                    <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: tokens.space.sm, flex: 1 }}>
-                        {statusNote}
+                    <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as never, color: statusColor, marginLeft: tokens.space.xs, flexShrink: 1 }}>
+                        {`- ${statusNote}`}
                     </Text>
                 ) : null}
             </View>

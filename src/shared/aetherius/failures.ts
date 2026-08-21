@@ -24,12 +24,41 @@ import { describeFailure, type FailureKind } from '@aetherius/engine';
 
 import type { BlueprintName, PortailBlueprintName } from '../../../blueprints';
 import type { TranslationKey } from '../i18n/Translator';
+// Import **de type seulement** : `Theme.ts` importe `react-native` et n'est pas jouable sous Node,
+// alors que ce module l'est et doit le rester (failures.test.ts). Un `import type` est efface a la
+// compilation, il n'introduit donc aucune dependance a l'execution.
+import type { SemanticTone } from '../theme/Theme';
 
 /** Les familles d'echec, telles que le moteur les rend. */
 export type UkitFailureKind = FailureKind;
 
 /** Ce qu'un ecran a besoin de savoir, et rien de plus. */
 export interface FailurePresentation {
+    /**
+     * Cle de traduction du **titre** affiche : ce qui s'est passe, en trois mots.
+     *
+     * Elle existe parce qu'un etat plein ecran sans titre est un aplat gris — un glyphe et une ligne
+     * de texte secondaire, ce que l'application montrait jusqu'ici. Le titre porte le fait, le
+     * message porte la consequence et le geste ; les deux niveaux de lecture valent plus qu'une
+     * phrase unique qui essaie de tenir les deux.
+     *
+     * Elle est portee par la **famille**, comme le message : un ecran branche sur `UkitFailure` n'a
+     * pas a savoir de quelle source vient l'echec. Les deux endroits qui la precisent sont les deux
+     * qui precisent deja le message — `serviceAbsent` et la table de codes de la scolarite.
+     */
+    readonly titleKey: TranslationKey;
+    /**
+     * Le ton de l'echec, tel qu'un ecran le **colore**.
+     *
+     * Il porte la distinction qui fonde la Phase 6, et il la rend lisible avant les mots : ce qui est
+     * **casse** est `danger`, ce qui est simplement **absent** est `neutral`. Un etablissement qui ne
+     * publie pas d'emploi du temps n'est pas en panne, et le peindre en rouge dirait le contraire —
+     * c'est exactement la confusion que la phase a passe sept jalons a supprimer.
+     *
+     * Le ton, et non la couleur : une table qui ne sait pas quel theme est actif n'a rien a faire d'un
+     * hexadecimal (docs/theme.md, « un service rend un ton »).
+     */
+    readonly tone: SemanticTone;
     /**
      * Cle de traduction du message affiche.
      *
@@ -60,23 +89,23 @@ export interface FailurePresentation {
  */
 export const FAILURE_PRESENTATION: Readonly<Record<UkitFailureKind, FailurePresentation>> = {
     // La source est en panne : la seule famille qu'il est utile de reessayer.
-    unavailable: { messageKey: 'ERROR_SERVICE_UNAVAILABLE', retryable: true, silent: false },
+    unavailable: { tone: 'danger', titleKey: 'ERROR_SERVICE_UNAVAILABLE_TITLE', messageKey: 'ERROR_SERVICE_UNAVAILABLE', retryable: true, silent: false },
     // La source a repondu, mais pas comme `expect` ou `assert` l'exigeait : elle a change.
-    rejected: { messageKey: 'ERROR_UNEXPECTED_RESPONSE', retryable: false, silent: false },
+    rejected: { tone: 'danger', titleKey: 'ERROR_UNEXPECTED_RESPONSE_TITLE', messageKey: 'ERROR_UNEXPECTED_RESPONSE', retryable: false, silent: false },
     // La page ou la reponse n'est plus celle que le Blueprint decrit : fichier a corriger.
-    data: { messageKey: 'ERROR_CONTENT_NOT_FOUND', retryable: false, silent: false },
+    data: { tone: 'danger', titleKey: 'ERROR_CONTENT_NOT_FOUND_TITLE', messageKey: 'ERROR_CONTENT_NOT_FOUND', retryable: false, silent: false },
     // Echec nomme par le Blueprint : le message du cas est affiche tel quel.
-    blocked: { messageKey: 'ERROR_BLOCKED', retryable: false, silent: false },
+    blocked: { tone: 'danger', titleKey: 'ERROR_BLOCKED_TITLE', messageKey: 'ERROR_BLOCKED', retryable: false, silent: false },
     // Il manque une entree ou un secret : ce n'est pas une panne, c'est une demande a l'utilisateur.
-    config: { messageKey: 'ERROR_MISSING_CREDENTIALS', retryable: false, silent: false },
+    config: { tone: 'neutral', titleKey: 'ERROR_MISSING_CREDENTIALS_TITLE', messageKey: 'ERROR_MISSING_CREDENTIALS', retryable: false, silent: false },
     // Le fichier est faux ou non portable : ne pas reessayer, remonter.
-    blueprint: { messageKey: 'ERROR_INTERNAL', retryable: false, silent: false },
+    blueprint: { tone: 'danger', titleKey: 'ERROR_INTERNAL_TITLE', messageKey: 'ERROR_INTERNAL', retryable: false, silent: false },
     // L'utilisateur est parti.
-    cancelled: { messageKey: 'ERROR_INTERNAL', retryable: false, silent: true },
+    cancelled: { tone: 'neutral', titleKey: 'ERROR_INTERNAL_TITLE', messageKey: 'ERROR_INTERNAL', retryable: false, silent: true },
     // Une piece de plateforme manque : ne devrait jamais arriver en production.
-    unsupported: { messageKey: 'ERROR_INTERNAL', retryable: false, silent: false },
+    unsupported: { tone: 'danger', titleKey: 'ERROR_INTERNAL_TITLE', messageKey: 'ERROR_INTERNAL', retryable: false, silent: false },
     // Un bug : remonter, ne pas masquer.
-    engine: { messageKey: 'ERROR_INTERNAL', retryable: false, silent: false },
+    engine: { tone: 'danger', titleKey: 'ERROR_INTERNAL_TITLE', messageKey: 'ERROR_INTERNAL', retryable: false, silent: false },
 };
 
 /** Ce qu'un service rend a un ecran quand un run a echoue. */
@@ -143,9 +172,18 @@ export function ukitFailure(kind: UkitFailureKind, detail: string, code?: string
  * mais son message par defaut (« saisis tes identifiants ») serait un contresens. Le message est donc
  * donne par l'appelant, qui est le seul a savoir **quel** service manque : c'est la seule exception a
  * la regle « la table decide », et elle est bornee a ce constructeur.
+ *
+ * Le **titre** suit la meme logique et il est facultatif : sans lui, celui de la famille s'applique
+ * (« Il manque une information »), ce qui reste juste mais generique. Les appelants qui savent nommer
+ * l'absence — « Pas d'emploi du temps ici », « Un lien a coller » — le precisent.
  */
-export function serviceAbsent(messageKey: TranslationKey, code: string, detail: string): UkitFailure {
-    return { kind: 'config', code, detail, messageKey, retryable: false, silent: false };
+export function serviceAbsent(
+    messageKey: TranslationKey,
+    code: string,
+    detail: string,
+    titleKey: TranslationKey = FAILURE_PRESENTATION.config.titleKey,
+): UkitFailure {
+    return { kind: 'config', code, detail, titleKey, messageKey, tone: 'neutral', retryable: false, silent: false };
 }
 
 /**

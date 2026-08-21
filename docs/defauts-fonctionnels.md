@@ -19,8 +19,9 @@ de la leur laisser en travers.
 
 ## Ouverts
 
-*Aucun.* Les quatre défauts ouverts par le jalon 6-K ont été corrigés le 2026-08-16 ; ils sont
-plus bas, sous [Corrigés](#corrigés). Une session d'écran qui en rencontre un nouveau l'inscrit ici.
+*Aucun.* Les quatre défauts ouverts par le jalon 6-K ont été corrigés le 2026-08-16, et deux autres
+levés en vérifiant la passe de finition l'ont été le 2026-08-21 ; ils sont plus bas, sous
+[Corrigés](#corrigés). Une session d'écran qui en rencontre un nouveau l'inscrit ici.
 
 ## Limites connues, qui ne sont pas des défauts
 
@@ -30,6 +31,38 @@ plus bas, sous [Corrigés](#corrigés). Une session d'écran qui en rencontre un
   secondaire — mais elle reste dans sa langue. À reprendre le jour où la source publiera une heure.
 
 ## Corrigés
+
+### Le filtre d'une liste Campus ne remontait jamais au tableau de bord — *corrigé le 2026-08-21*
+
+Changer le filtre des restaurants ou des bibliothèques depuis l'écran de liste ne changeait **rien**
+sur le tableau de bord : ses carrousels restaient sur la valeur lue au lancement de l'application,
+définitivement — passer en arrière-plan et revenir n'y changeait rien non plus. Constaté sur appareil,
+et le symptôme visible était pire que la cause : deux sections vides sous leur en-tête, ce qui se lit
+comme une application cassée.
+
+`useSavedFilter` lisait `AsyncStorage` **une seule fois**, dans un `useEffect` dont la dépendance ne
+bouge jamais. Deux écrans lisent la même clé — le tableau de bord et la liste complète — et chacun en
+a sa propre instance, sans rien entre elles. Une lecture au montage suffisait à la liste, qui se
+remonte à chaque ouverture ; elle ne suffisait pas au tableau de bord, qui est un **onglet et ne se
+démonte jamais**.
+
+Il lit désormais au `useFocusEffect`, exactement comme
+[`useFavorites`](../src/features/Campus/hooks/useFavorites.ts) juste à côté — qui résout le même
+problème depuis toujours, et qui est la raison pour laquelle une étoile posée depuis la liste, elle,
+était bien à jour au retour. Le rapprochement est ce qui a désigné la cause : deux hooks voisins, une
+seule bonne réponse, et un seul des deux l'avait.
+
+**Et une clé jamais écrite rend maintenant la valeur par défaut** au lieu de conserver la dernière
+lue : sans ça, le geste « Tout afficher » n'aurait pas survécu à un retour d'écran.
+
+### La section des salles libres avalait l'échec de sa source — *corrigé le 2026-08-21*
+
+`CampusDataManager.fetchBuildingList()` **rend** un `UkitFailure` depuis le jalon 6-K, et
+`FreeRoomScreen` le passe à son écran. La **section** du tableau de bord, elle, appelait la même
+fonction en ignorant sa valeur de retour : une source morte y devenait un carrousel vide. C'est le
+défaut que la Phase 6 revendique d'avoir supprimé, resté dans le seul appelant qu'on n'avait pas
+regardé. L'échec n'est retenu que s'il ne reste rien à montrer — un cache peuplé survit à un
+rafraîchissement raté, même règle que l'écran.
 
 ### Un mot de passe changé à l'université menait à une impasse — *corrigé le 2026-08-16*
 

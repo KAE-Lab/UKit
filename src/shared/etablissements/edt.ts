@@ -160,6 +160,7 @@ export function planningAbsent(): UkitFailure {
         'ERROR_TIMETABLE_UNAVAILABLE',
         'PLANNING_ABSENT',
         'l etablissement ne publie pas d emploi du temps',
+        'ERROR_TIMETABLE_UNAVAILABLE_TITLE',
     );
 }
 
@@ -176,6 +177,7 @@ export function lienEdtAttendu(): UkitFailure {
         'ERROR_TIMETABLE_LINK_MISSING',
         'EDT_LIEN_ATTENDU',
         'l etablissement publie un abonnement, aucun lien n a ete colle',
+        'ERROR_TIMETABLE_LINK_MISSING_TITLE',
     );
 }
 
@@ -188,5 +190,10 @@ export function lienEdtAttendu(): UkitFailure {
  * rendre une journee vide ferait passer un referentiel perime pour une semaine sans cours.
  */
 export function groupeInconnu(nom: string): UkitFailure {
-    return serviceAbsent('ERROR_TIMETABLE_GROUP_UNKNOWN', 'GROUPE_INCONNU', `groupe hors referentiel : ${nom}`);
+    return serviceAbsent(
+        'ERROR_TIMETABLE_GROUP_UNKNOWN',
+        'GROUPE_INCONNU',
+        `groupe hors referentiel : ${nom}`,
+        'ERROR_TIMETABLE_GROUP_UNKNOWN_TITLE',
+    );
 }

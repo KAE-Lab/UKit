@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, ScrollView, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -8,6 +8,8 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
+import { ActionButton } from '../../../shared/ui/ActionButton';
+import { ScreenState } from '../../../shared/ui/ScreenState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import { useCredentials } from '../services/CredentialsContext';
 import { portailAbsent } from '../services/ScolariteSession';
@@ -60,15 +62,17 @@ const IdentifiantsSection = ({ theme, credentials, passwordVisible, onTogglePass
     </SectionCard>
 );
 
-/** L'etablissement ne publie aucun portail : il n'y a pas de compte a regler ici. */
+/**
+ * L'etablissement ne publie aucun portail : il n'y a pas de compte a regler ici.
+ *
+ * L'ecran calait sa compensation d'en-tete a `+ 65` la ou tout le reste emploie `+ 70`, **en haut
+ * seul** : le bloc se posait donc cinq points plus haut que partout ailleurs, et decale vers le bas.
+ * `ScreenState` porte la seule valeur du depot (shared/ui/ScreenState).
+ */
 const PortailAbsent = ({ theme }) => (
-    <SafeAreaInsetsContext.Consumer>
-        {(insets) => (
-            <View style={{ flex: 1, justifyContent: 'center', backgroundColor: theme.background, paddingTop: (insets?.top || 0) + 65 }}>
-                <SourceFailureNotice failure={portailAbsent()} theme={theme} />
-            </View>
-        )}
-    </SafeAreaInsetsContext.Consumer>
+    <ScreenState theme={theme}>
+        <SourceFailureNotice failure={portailAbsent()} theme={theme} variant="plain" />
+    </ScreenState>
 );
 
 /**
@@ -118,25 +122,66 @@ const ActionsDuCompte = ({ theme, onRafraichir, onRessaisir, onDeconnecter }) =>
           * Redemander un parcours froid, sans se deconnecter : le mode se deduisait de la presence des
           * donnees froides, sans aucun moyen de forcer (jalon 6-K, docs/defauts-fonctionnels.md).
           */}
-        <TouchableOpacity style={[styles.actionButton, { borderColor: theme.primary }]} onPress={onRafraichir} activeOpacity={0.8}>
-            <MaterialCommunityIcons name="refresh" size={20} color={theme.primary} />
-            <Text style={[styles.actionText, { color: theme.primary }]}>{Translator.get('REFRESH_RECORD')}</Text>
-        </TouchableOpacity>
-        <Text style={[styles.actionHint, { color: theme.fontSecondary }]}>{Translator.get('REFRESH_RECORD_DESC')}</Text>
+        <ActionButton
+            theme={theme}
+            variant="tonal"
+            icon={{ name: 'refresh' }}
+            label={Translator.get('REFRESH_RECORD')}
+            onPress={onRafraichir}
+            style={{ marginTop: tokens.space.sm }}
+        />
 
         {/*
           * Ressaisir sans deconnecter : un mot de passe change a l'universite n'invalide pas le compte,
           * et passer par la deconnexion effacerait aussi l'identite deja lue.
           */}
-        <TouchableOpacity style={[styles.actionButton, { borderColor: theme.primary }]} onPress={onRessaisir} activeOpacity={0.8}>
-            <MaterialCommunityIcons name="account-key-outline" size={20} color={theme.primary} />
-            <Text style={[styles.actionText, { color: theme.primary }]}>{Translator.get('REENTER_CREDENTIALS')}</Text>
-        </TouchableOpacity>
+        <ActionButton
+            theme={theme}
+            variant="tonal"
+            icon={{ name: 'account-key-outline' }}
+            label={Translator.get('REENTER_CREDENTIALS')}
+            onPress={onRessaisir}
+            style={{ marginTop: tokens.space.sm }}
+        />
 
-        <TouchableOpacity style={[styles.actionButton, { borderColor: theme.danger }]} onPress={onDeconnecter} activeOpacity={0.8}>
-            <MaterialCommunityIcons name="logout" size={20} color={theme.danger} />
-            <Text style={[styles.actionText, { color: theme.danger }]}>{Translator.get('LOGOUT')}</Text>
-        </TouchableOpacity>
+        {/* Destructif : la deconnexion efface le trousseau **et** l'identite deja lue. */}
+        <ActionButton
+            theme={theme}
+            variant="destructive"
+            icon={{ name: 'logout' }}
+            label={Translator.get('LOGOUT')}
+            onPress={onDeconnecter}
+            style={{ marginTop: tokens.space.sm }}
+        />
+    </>
+);
+
+/**
+ * Les deux confirmations de l'ecran, groupees pour le garder sous la limite de lignes — meme decoupage
+ * que `ActionsDuCompte` juste au-dessus.
+ */
+const ConfirmationsDuCompte = ({ theme, refresh, logout }) => (
+    <>
+        <ConfirmationModal
+            theme={theme}
+            visible={refresh.visible}
+            titre={Translator.get('REFRESH_RECORD')}
+            description={Translator.get('REFRESH_RECORD_DESC')}
+            confirmer={Translator.get('CONFIRM')}
+            onClose={refresh.fermer}
+            onConfirm={refresh.confirmer}
+        />
+
+        <ConfirmationModal
+            theme={theme}
+            visible={logout.visible}
+            titre={Translator.get('LOGOUT')}
+            description={Translator.get('CONFIRM_LOGOUT')}
+            confirmer={Translator.get('CONFIRM')}
+            onClose={logout.fermer}
+            onConfirm={logout.confirmer}
+            destructif
+        />
     </>
 );
 
@@ -149,6 +194,7 @@ const CredentialsSettingsScreen = () => {
 
     const { credentials, coldData, logout, rafraichirDossier, portailDisponible } = useCredentials();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [showRefreshModal, setShowRefreshModal] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
     /**
      * Ressaisir sans se deconnecter.
@@ -188,6 +234,12 @@ const CredentialsSettingsScreen = () => {
         navigation.goBack();
     };
 
+    const confirmRefresh = () => {
+        setShowRefreshModal(false);
+        rafraichirDossier();
+        navigation.goBack();
+    };
+
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
@@ -203,8 +255,13 @@ const CredentialsSettingsScreen = () => {
                             <SectionCard title={Translator.get('PROFILE')} theme={theme}>
                                 <InfoRow label={Translator.get('USERNAME')} value={credentials?.username} theme={theme} />
                                 <View style={[styles.divider, { backgroundColor: theme.border }]} />
-                                <InfoRow label={coldData?.firstName ? 'Prénom' : ''} value={coldData?.firstName} theme={theme} />
-                                <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                                {/* La ligne disparait faute de donnee, au lieu d'afficher un libelle vide. */}
+                                {coldData?.firstName ? (
+                                    <>
+                                        <InfoRow label={Translator.get('FIRST_NAME')} value={coldData.firstName} theme={theme} />
+                                        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+                                    </>
+                                ) : null}
                                 <InfoRow label={Translator.get('DATE_OF_BIRTH')} value={coldData?.dateOfBirth} theme={theme} />
                             </SectionCard>
 
@@ -226,7 +283,7 @@ const CredentialsSettingsScreen = () => {
 
                             <ActionsDuCompte
                                 theme={theme}
-                                onRafraichir={() => { rafraichirDossier(); navigation.goBack(); }}
+                                onRafraichir={() => setShowRefreshModal(true)}
                                 onRessaisir={() => setRessaisie(true)}
                                 onDeconnecter={() => setShowLogoutModal(true)}
                             />
@@ -234,11 +291,10 @@ const CredentialsSettingsScreen = () => {
                         </View>
                     </ScrollView>
 
-                    <LogoutModal
+                    <ConfirmationsDuCompte
                         theme={theme}
-                        visible={showLogoutModal}
-                        onClose={() => setShowLogoutModal(false)}
-                        onConfirm={confirmLogout}
+                        refresh={{ visible: showRefreshModal, fermer: () => setShowRefreshModal(false), confirmer: confirmRefresh }}
+                        logout={{ visible: showLogoutModal, fermer: () => setShowLogoutModal(false), confirmer: confirmLogout }}
                     />
                 </SafeAreaView>
             )}
@@ -246,36 +302,52 @@ const CredentialsSettingsScreen = () => {
     );
 };
 
-const LogoutModal = ({ theme, visible, onClose, onConfirm }) => (
+/**
+ * Les deux confirmations de cet ecran, dans un seul dialogue parametre.
+ *
+ * La deconnexion portait un **dialecte de modale a elle seule** — sa propre superposition en
+ * `rgba(0,0,0,0.5)`, sa propre boite en 85 % de largeur, ses propres boutons — alors que huit autres
+ * modales partagent `theme.settings.popup`. Elle le prend comme les autres.
+ *
+ * L'actualisation en a gagne une, et ce n'est pas un rangement de texte : elle **rejoue une connexion
+ * complete**, ce qui prend l'ecran plusieurs secondes et ne s'annule pas une fois lance. Le depot
+ * reserve les confirmations aux gestes couteux (« l'extinction passe par une confirmation, l'allumage
+ * non ») — celui-ci l'est par sa **duree**, pas par ce qu'il detruit, et c'est la raison de sa garde.
+ * Son explication vit donc la, au moment de decider, au lieu d'etre une ligne d'aide sous le bouton
+ * que personne ne lisait — et qui cassait au passage le rythme des trois actions.
+ */
+const ConfirmationModal = ({ theme, visible, titre, description, confirmer, onClose, onConfirm, destructif = false }) => (
     <Modal
         animationType="fade"
         transparent
         visible={visible}
         onRequestClose={onClose}
     >
-        <View style={styles.modalOverlay}>
-            <View style={[styles.modalBox, { backgroundColor: theme.cardBackground }]}>
-                <MaterialCommunityIcons name="logout" size={48} color={theme.danger} style={{ marginBottom: tokens.space.md }} />
-                <Text style={[styles.modalText, { color: theme.font }]}>
-                    {Translator.get('CONFIRM_LOGOUT')}
-                </Text>
-                <View style={styles.modalActions}>
-                    <TouchableOpacity
-                        style={[styles.modalButton, { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, marginRight: tokens.space.sm }]}
-                        onPress={onClose}
-                    >
-                        <Text style={{ color: theme.fontSecondary, fontWeight: 'bold' }}>{Translator.get('CANCEL')}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.modalButton, { backgroundColor: theme.danger, marginLeft: tokens.space.sm }]}
-                        onPress={onConfirm}
-                    >
-                        {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif lui-meme. */}
-                        <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>{Translator.get('CONFIRM')}</Text>
-                    </TouchableOpacity>
-                </View>
+        <TouchableWithoutFeedback onPress={onClose}>
+            <View style={theme.settings.popup.background}>
+                <TouchableWithoutFeedback>
+                    <View style={theme.settings.popup.container}>
+                        <View style={theme.settings.popup.header}>
+                            <Text style={theme.settings.popup.textHeader}>{titre}</Text>
+                        </View>
+                        <Text style={theme.settings.popup.textDescription}>{description}</Text>
+                        <View style={theme.settings.popup.buttonContainer}>
+                            <TouchableOpacity style={theme.settings.popup.buttonSecondary} onPress={onClose}>
+                                <Text style={theme.settings.popup.buttonTextSecondary}>{Translator.get('CANCEL')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={destructif ? theme.settings.popup.buttonDestructive : theme.settings.popup.buttonMain}
+                                onPress={onConfirm}
+                            >
+                                <Text style={destructif ? theme.settings.popup.buttonTextDestructive : theme.settings.popup.buttonTextMain}>
+                                    {confirmer}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </TouchableWithoutFeedback>
             </View>
-        </View>
+        </TouchableWithoutFeedback>
     </Modal>
 );
 
@@ -287,7 +359,7 @@ const styles = StyleSheet.create({
         fontSize: tokens.fontSize.xs,
         letterSpacing: 0.8,
         marginLeft: tokens.space.sm,
-        marginBottom: 2,
+        marginBottom: tokens.space.xxs,
     },
     card: {
         borderRadius: tokens.radius.lg,
@@ -321,55 +393,6 @@ const styles = StyleSheet.create({
     divider: {
         height: StyleSheet.hairlineWidth,
         marginLeft: tokens.space.md,
-    },
-    /** Un bouton d'action bordé, dont la teinte vient du thème : `primary` ou `danger`. */
-    actionButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: tokens.space.sm,
-        borderWidth: 1,
-        borderRadius: tokens.radius.lg,
-        paddingVertical: tokens.space.md,
-        marginTop: tokens.space.sm,
-    },
-    actionText: {
-        fontSize: tokens.fontSize.md,
-    },
-    actionHint: {
-        fontSize: tokens.fontSize.sm,
-        textAlign: 'center',
-        marginTop: tokens.space.xs,
-        marginHorizontal: tokens.space.md,
-    },
-    modalOverlay: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-    },
-    modalBox: {
-        padding: tokens.space.lg,
-        borderRadius: tokens.radius.lg,
-        width: '85%',
-        alignItems: 'center',
-        ...tokens.shadow.lg,
-    },
-    modalText: {
-        fontSize: tokens.fontSize.md,
-        textAlign: 'center',
-        marginBottom: tokens.space.lg,
-    },
-    modalActions: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
-    },
-    modalButton: {
-        flex: 1,
-        padding: tokens.space.md,
-        alignItems: 'center',
-        borderRadius: tokens.radius.md,
     },
 });
 

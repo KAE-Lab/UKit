@@ -81,6 +81,7 @@ function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@
             onFilterChange={setSelectedFilter}
             
             emptyIcon="bookshelf"
+            emptyTitle={Translator.get('NO_BU_NEARBY_TITLE')}
             emptyMessage={Translator.get('NO_BU_NEARBY')}
             failure={failure}
             onRetry={retry}

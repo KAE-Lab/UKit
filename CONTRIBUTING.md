@@ -52,6 +52,13 @@ Une capacité utilisateur — un écran, une source de données, une option — 
    remplacement. Pour un écran, dérouler aussi la
    **[recette d'écran](docs/theme.md#la-recette-décran)** — en-tête animé, marges, les quatre états,
    cibles tactiles.
+
+   > **Un token bien utilisé ne suffit pas : la forme aussi est une règle.** Les surfaces de UKit sont
+   > des **carrés arrondis** — `radius.md` par défaut, `radius.lg` pour un conteneur, `radius.xl` pour
+   > une carte. `radius.pill` est réservé aux points d'état, aux compteurs et aux jauges. Un bouton
+   > rond, un champ en pilule ou une icône dans un disque **dénotent**, et la règle ESLint ne les voit
+   > pas — elle refuse une valeur en dur, pas une mauvaise forme. C'est la première chose à vérifier
+   > sur un rendu ([docs/theme.md](docs/theme.md#les-décisions-durables)).
 4. **`npx tsc --noEmit` et `npx eslint .` sans régression** — zéro nouvelle erreur, zéro nouveau
    warning. La base de référence actuelle (`tsc` **verte**, 79 warnings ESLint dont 68 de style) est
    décrite dans [docs/qualite.md](docs/qualite.md) : ne pas l'augmenter, la réduire quand on passe à

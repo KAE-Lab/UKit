@@ -33,21 +33,21 @@ export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selecte
                     <View style={theme.popup.container as never}>
                         <View style={theme.popup.header as never}>
                             <Text style={theme.popup.textHeader}>
-                                {Translator.get('CALENDAR').toUpperCase()}
+                                {Translator.get('CALENDAR')}
                             </Text>
-                            <TouchableOpacity onPress={popupClose}>
-                                <MaterialIcons name="close" size={32} style={theme.popup.closeIcon} />
+                            <TouchableOpacity onPress={popupClose} hitSlop={12}>
+                                <MaterialIcons name="close" size={24} style={theme.popup.closeIcon} />
                             </TouchableOpacity>
                         </View>
                         <Text style={theme.popup.textDescription}>
                             {Translator.get('YOUR_CALENDAR')}
                         </Text>
-                        <ScrollView style={{ marginVertical: 8 }}>
+                        <ScrollView style={{ marginVertical: tokens.space.sm }}>
                             <TouchableOpacity onPress={setDefaultCalendar} style={theme.popup.radioContainer as never}>
                                 <MaterialIcons
                                     name={selectedCalendar === 'UKit' || selectedCalendar === ukitCalendar?.id ? 'radio-button-on' : 'radio-button-off'}
                                     size={24}
-                                    color={selectedCalendar === 'UKit' || selectedCalendar === ukitCalendar?.id ? '#4caf50' : theme.popup.radioIconColor}
+                                    color={theme.popup.radioIconColor}
                                 />
                                 <Text style={theme.popup.radioText}>{Translator.get('UKIT_CALENDAR')}</Text>
                             </TouchableOpacity>
@@ -62,7 +62,7 @@ export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selecte
                                         <MaterialIcons
                                             name={isSelected ? 'radio-button-on' : 'radio-button-off'}
                                             size={24}
-                                            color={isSelected ? '#4caf50' : theme.popup.radioIconColor}
+                                            color={theme.popup.radioIconColor}
                                         />
                                         <Text style={theme.popup.radioText}>{calendar.title + '  '}</Text>
                                     </TouchableOpacity>
@@ -128,9 +128,9 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
                     <SettingsDismissKeyboard>
                         <View style={theme.popup.filters.container as never}>
                             <View style={theme.popup.filters.header as never}>
-                                <Text style={theme.popup.textHeader}>{Translator.get('FILTERS').toUpperCase()}</Text>
-                                <TouchableOpacity onPress={popupClose}>
-                                    <MaterialIcons name="close" size={32} style={theme.popup.closeIcon} />
+                                <Text style={theme.popup.textHeader}>{Translator.get('FILTERS')}</Text>
+                                <TouchableOpacity onPress={popupClose} hitSlop={12}>
+                                    <MaterialIcons name="close" size={24} style={theme.popup.closeIcon} />
                                 </TouchableOpacity>
                             </View>
 
@@ -191,9 +191,9 @@ export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterLi
 const SearchAndSuggestions = ({ availableUEs, searchQuery, setSearchQuery, filteredSuggestions, onSuggestionPress, theme }) => {
     if (availableUEs.length === 0) return null;
     return (
-        <View style={{ marginHorizontal: 16, marginBottom: 8 }}>
+        <View style={{ marginHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}>
             <TextInput
-                style={[theme.popup.textInput, { marginHorizontal: 0, marginBottom: 8 }]}
+                style={[theme.popup.textInput, { marginHorizontal: 0, marginBottom: tokens.space.sm }]}
                 onChangeText={setSearchQuery}
                 value={searchQuery}
                 placeholder={Translator.get('SEARCH_UE')}
@@ -205,8 +205,8 @@ const SearchAndSuggestions = ({ availableUEs, searchQuery, setSearchQuery, filte
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    style={{ marginBottom: 4 }}
-                    contentContainerStyle={{ paddingVertical: 4 }}
+                    style={{ marginBottom: tokens.space.xs }}
+                    contentContainerStyle={{ paddingVertical: tokens.space.xs }}
                     keyboardShouldPersistTaps="handled"
                 >
                     {filteredSuggestions.map((ue) => (
@@ -239,7 +239,7 @@ const SearchAndSuggestions = ({ availableUEs, searchQuery, setSearchQuery, filte
                 </ScrollView>
             )}
             {searchQuery.length > 0 && filteredSuggestions.length === 0 && (
-                <Text style={[theme.popup.textDescription, { fontSize: 12, marginBottom: 4 }]}>
+                <Text style={[theme.popup.textDescription, { fontSize: tokens.fontSize.xs, marginBottom: tokens.space.xs }]}>
                     {Translator.get('NO_UE_FOUND')}
                 </Text>
             )}
@@ -255,24 +255,24 @@ export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, languag
                 <View style={theme.popup.background as never}>
                     <View style={theme.popup.container as never}>
                         <View style={theme.popup.header as never}>
-                            <Text style={theme.popup.textHeader}>{Translator.get('LANGUAGE').toUpperCase()}</Text>
-                            <TouchableOpacity onPress={popupClose}>
-                                <MaterialIcons name="close" size={32} style={theme.popup.closeIcon} />
+                            <Text style={theme.popup.textHeader}>{Translator.get('LANGUAGE')}</Text>
+                            <TouchableOpacity onPress={popupClose} hitSlop={12}>
+                                <MaterialIcons name="close" size={24} style={theme.popup.closeIcon} />
                             </TouchableOpacity>
                         </View>
                         <Text style={theme.popup.textDescription}>{Translator.get('YOUR_LANGUAGE')}</Text>
-                        <View style={{ marginVertical: 8 }}>
+                        <View style={{ marginVertical: tokens.space.sm }}>
                             <TouchableOpacity onPress={setLanguageToFrench} style={theme.popup.radioContainer as never}>
                                 <MaterialIcons name={language === 'fr' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
-                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: 8, fontWeight: '600' }]}>{Translator.get('FRENCH')}</Text>
+                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: tokens.space.sm, fontWeight: tokens.fontWeight.semibold }]}>{Translator.get('FRENCH')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={setLanguageToEnglish} style={theme.popup.radioContainer as never}>
                                 <MaterialIcons name={language === 'en' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
-                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: 8, fontWeight: '600' }]}>{Translator.get('ENGLISH')}</Text>
+                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: tokens.space.sm, fontWeight: tokens.fontWeight.semibold }]}>{Translator.get('ENGLISH')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={setLanguageToSpanish} style={theme.popup.radioContainer as never}>
                                 <MaterialIcons name={language === 'es' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
-                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: 8, fontWeight: '600' }]}>{Translator.get('SPANISH')}</Text>
+                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: tokens.space.sm, fontWeight: tokens.fontWeight.semibold }]}>{Translator.get('SPANISH')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -298,7 +298,7 @@ export const SettingsSyncOffPopup = ({ theme, popupVisible, popupClose, disableS
                 <View style={theme.popup.background as never}>
                     <View style={theme.popup.container as never}>
                         <View style={theme.popup.header as never}>
-                            <Text style={theme.popup.textHeader}>{Translator.get('DISABLE_SYNC').toUpperCase()}</Text>
+                            <Text style={theme.popup.textHeader}>{Translator.get('DISABLE_SYNC')}</Text>
                         </View>
                         <Text style={theme.popup.textDescription}>{Translator.get('DISABLE_SYNC_CONFIRMATION')}</Text>
                         <View style={theme.popup.buttonContainer as never}>
@@ -324,7 +324,7 @@ export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }
                 <View style={theme.popup.background as never}>
                     <View style={theme.popup.container as never}>
                         <View style={theme.popup.header as never}>
-                            <Text style={theme.popup.textHeader}>{Translator.get('RESET_APP').toUpperCase()}</Text>
+                            <Text style={theme.popup.textHeader}>{Translator.get('RESET_APP')}</Text>
                         </View>
                         <Text style={theme.popup.textDescription}>{Translator.get('RESET_APP_CONFIRMATION')}</Text>
                         <View style={theme.popup.buttonContainer as never}>

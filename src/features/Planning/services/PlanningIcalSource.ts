@@ -76,6 +76,7 @@ function blueprintHorsPerimetre(nom: string): UkitFailure {
         'ERROR_TIMETABLE_UNAVAILABLE',
         'EDT_BLUEPRINT_INVALIDE',
         `le catalogue nomme un Blueprint hors du prefixe reserve : ${nom}`,
+        'ERROR_TIMETABLE_UNAVAILABLE_TITLE',
     );
 }
 

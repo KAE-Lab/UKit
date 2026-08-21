@@ -416,8 +416,35 @@ quitter l'écran, et le geste de retour de la pile est désactivé tant qu'un hi
 - Les valeurs résolues sont **masquées** dans les événements et les messages d'échec.
 - Les données personnelles récupérées ne quittent jamais l'appareil.
 - L'accès à l'onglet est protégé par `BiometryGate` (`expo-local-authentication`), avec repli sur le
-  code de l'appareil.
+  code de l'appareil. Son écran de garde a pris le vocabulaire partagé : il affichait un **cadenas
+  emoji** de 48 points et un `#fff` en dur sur son bouton — deux règles du dépôt enfreintes au même
+  endroit, et un rendu qui variait avec la police d'emoji du système.
 - La déconnexion coupe la session en cours **avant** de supprimer les deux clés SecureStore.
+
+## Les trois gestes du compte, et pourquoi ils ne se ressemblent pas
+
+L'écran du compte propose d'**actualiser** le dossier, de **ressaisir** ses identifiants et de **se
+déconnecter**. L'ordre porte du sens — actualiser ne perd rien, ressaisir ne perd que le mot de passe
+gardé, se déconnecter efface tout — et depuis la passe de finition, l'habillage le porte aussi : les
+deux premiers sont `tonal`, le troisième `destructive`
+([theme.md](../theme.md#les-décisions-durables)).
+
+Les trois étaient auparavant de simples **cadres à fond transparent**, distingués par la seule couleur
+de leur filet. C'était le seul endroit de l'application où une action ne portait pas de surface, et
+sur le fond de page ils disparaissaient : rien ne disait lequel des trois coûtait quelque chose.
+
+**Deux des trois demandent une confirmation**, et pas pour la même raison. La déconnexion parce
+qu'elle efface le trousseau et l'identité déjà lue ; l'actualisation parce qu'elle **rejoue une
+connexion complète** — plusieurs secondes d'écran de progression, sans retour possible une fois
+lancée. Le coût n'est pas toujours une destruction ([theme.md](../theme.md#les-décisions-durables)).
+L'explication du geste vit dans ce dialogue, au moment de décider, et non en ligne d'aide sous le
+bouton : personne ne la lisait, et elle cassait le rythme des trois actions.
+
+Deux défauts de cet écran, relevés sur capture, valaient d'être corrigés en même temps : il
+s'intitulait **« Se déconnecter »** alors qu'il montre le profil, le dossier, les identifiants *et*
+trois actions — il prend le nom de la ligne qui l'ouvre, « Compte universitaire » — et le libellé du
+prénom était **écrit en dur, en français**, sur un écran qui s'affiche dans les trois langues. Sa
+ligne disparaît désormais faute de donnée, au lieu d'afficher un libellé vide avec son filet.
 
 ## Décisions de conception
 

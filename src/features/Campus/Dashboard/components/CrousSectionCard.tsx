@@ -54,14 +54,12 @@ export function CrousSectionCard({ item, theme, isFavorite, onToggleFavorite, on
                     ) : undefined}
                 />
 
+                {/* Une ligne, comme dans la liste : c'est ce qui garde toutes les sections alignees. */}
                 <MetaRow
                     theme={theme}
                     icon={{ name: 'calendar-clock' }}
                     label={item.opening || Translator.get('UNKNOWN')}
-                    align="flex-start"
-                    iconOffset={tokens.space.xxs}
-                    numberOfLines={2}
-                    textStyle={{ lineHeight: 20 }}
+                    numberOfLines={1}
                 />
             </View>
         </Card>

@@ -11,6 +11,7 @@ import { useCrousRestaurants } from '../../hooks/useCrousRestaurants';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useSavedFilter } from '../../hooks/useSavedFilter';
 import { CrousSectionCard, CARD_WIDTH } from './CrousSectionCard';
+import { SectionEtatVide } from './SectionEtatVide';
 
 export function CrousSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -19,10 +20,10 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
     // Meme hook que la liste complete : un echec y reste discret — le carrousel disparait et la ligne
     // de journal du service dit pourquoi. Le tableau de bord n'est pas l'endroit ou l'on explique une
     // panne, l'ecran dedie l'est.
-    const { restaurants, loading } = useCrousRestaurants(userLat, userLon);
+    const { restaurants, failure, loading, retry } = useCrousRestaurants(userLat, userLon);
 
     const { favorites: favRu, toggleFavorite: toggleFavRu } = useFavorites('crous_favorites');
-    const [crousFilter] = useSavedFilter('crous_filter', 'all');
+    const [crousFilter, setFiltre] = useSavedFilter('crous_filter', 'all');
 
     const filteredRestaurants = useMemo(() => {
         return [...restaurants].filter(item => {
@@ -53,7 +54,8 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
             onPress={() => navigation.navigate('CrousMenu', {
                 restaurantId: item.id,
                 restaurantName: item.title,
-                location: { lat: item.lat, lon: item.lon }
+                location: { lat: item.lat, lon: item.lon },
+                openingLines: item.openingLines
             })}
         />
     );
@@ -69,6 +71,17 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
             {loading ? (
                 <LoadingState theme={theme} />
             ) : (
+                filteredRestaurants.length === 0 ? (
+                    <SectionEtatVide
+                        theme={theme}
+                        failure={failure}
+                        masquesParFiltre={restaurants.length > 0}
+                        messageVide={Translator.get('NO_RU_NEARBY')}
+                        onToutAfficher={() => setFiltre('all')}
+                        onRetry={retry}
+                        onOuvrir={() => navigation.navigate('Crous')}
+                    />
+                ) : (
                 <FlatList
                     horizontal
                     data={filteredRestaurants}
@@ -79,6 +92,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
                     decelerationRate="fast"
                     contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
                 />
+                )
             )}
         </View>
     );

@@ -284,7 +284,9 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/SectionHeader.tsx`](../src/shared/ui/SectionHeader.tsx) | l'en-tête d'une section de tableau de bord : titre, chevron, destination |
 | [`shared/ui/Badge.tsx`](../src/shared/ui/Badge.tsx) | une pastille icône + libellé, teinte d'action ou ton sémantique |
 | [`shared/ui/MetaRow.tsx`](../src/shared/ui/MetaRow.tsx) | une ligne « icône + texte secondaire », avec de quoi poser un contenu à droite |
-| [`shared/ui/EmptyState.tsx`](../src/shared/ui/EmptyState.tsx) | icône, message, action facultative — le bloc commun à « rien à afficher » et « source en panne » |
+| [`shared/ui/EmptyState.tsx`](../src/shared/ui/EmptyState.tsx) | icône, titre, message, action facultative — le bloc commun à « rien à afficher » et « source en panne » |
+| [`shared/ui/ScreenState.tsx`](../src/shared/ui/ScreenState.tsx) | **où** un état plein écran se pose : le centrage sur la surface libre, et les hauteurs `HEADER_OFFSET` et `TAB_BAR_HEIGHT` ([theme.md](theme.md#les-décisions-durables)) |
+| [`shared/ui/ActionButton.tsx`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente, en ligne ou plein écran |
 | [`shared/ui/ProgressBar.tsx`](../src/shared/ui/ProgressBar.tsx) | une jauge horizontale, rayon calculé sur la hauteur |
 | [`shared/ui/Icon.tsx`](../src/shared/ui/Icon.tsx) | une icône de l'une ou l'autre famille Material, typée par union discriminée |

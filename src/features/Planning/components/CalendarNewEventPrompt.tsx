@@ -114,7 +114,7 @@ export class CalendarNewEventPrompt extends React.Component<CalendarNewEventProm
 							<View style={theme.popup.container as never}>
 								<View style={theme.popup.header as never}>
 									<Text style={theme.popup.textHeader as never}>
-										{Translator.get('ADD_TO_CALENDAR').toUpperCase()}
+										{Translator.get('ADD_TO_CALENDAR')}
 									</Text>
 								</View>
 								<Text style={theme.popup.textDescription as never}>

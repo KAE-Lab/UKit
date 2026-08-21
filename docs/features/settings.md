@@ -288,6 +288,23 @@ Changer de calendrier cible **supprime d'abord** tous les événements précéde
 > **Capture attendue** — `reglages-calendrier.png` : la modale de choix du calendrier, montrant le
 > calendrier UKit dédié et les calendriers existants.
 
+## Les dialogues, et pourquoi ils vivent ici
+
+Six des neuf modales de l'application sont pilotées depuis cet écran, et **toutes** — y compris celles
+du Planning, de Campus et de la Scolarité — s'habillent avec le sous-arbre `theme.settings.popup` de
+[`Theme.ts`](../../src/shared/theme/Theme.ts). C'est la raison pour laquelle ce sous-arbre porte des
+styles composés plutôt que des couleurs : un dialogue ne doit avoir aucun style local.
+
+Leurs proportions ont été recadrées après mesure à l'usage, et le détail est dans
+[theme.md](../theme.md#les-décisions-durables). Deux points valent d'être connus avant de retoucher
+une modale :
+
+- **un titre de dialogue ne se crie pas.** Cinq popups sur sept passaient le leur en majuscules, deux
+  non ; les `.toUpperCase()` sont retirés, et un titre de 22 en gras n'en a pas besoin ;
+- **la teinte d'un radio ne double pas son glyphe.** Trois listes de choix — calendrier, langue,
+  établissement — coloraient l'option active en `#4caf50`, un vert Material dans une palette bleue.
+  Le glyphe (`radio-button-on`) porte déjà l'état.
+
 ## L'écran À propos
 
 [`AboutScreen.tsx`](../../src/features/Settings/screens/AboutScreen.tsx) — sections d'information et
@@ -340,6 +357,9 @@ service. Voir les limites.
 - Réinitialiser l'application : le parcours d'accueil doit réapparaître, **et l'onglet Scolarité doit
   redemander les identifiants**. La sonde est celle qui a révélé le défaut, en vérifiant le jalon
   6-G : on revenait sur l'accueil en restant connecté.
+- Ouvrir les six modales d'affilée — langue, filtres, calendrier, réinitialisation, désactivation de
+  la synchronisation, établissement — et vérifier qu'elles ont **le même rayon, le même rembourrage
+  et des boutons de même hauteur**. Aucun titre en majuscules, aucun vert de sélection.
 
 ## Limites connues
 

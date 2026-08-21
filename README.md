@@ -225,6 +225,14 @@ livré ; elle est mise à jour à chaque contribution.
   [recette d'écran](docs/theme.md#la-recette-décran) donne à chaque refonte sa liste à cocher.
   L'application n'a **qu'une police, celle du système** : la hiérarchie tient à la taille et à la
   graisse, et rien ne dénote entre iOS et Android.
+
+  Une **passe de finition** a suivi : les neuf dialogues, les six états plein écran et les quatre
+  formes de bouton parlent désormais une seule langue. Ce qu'elle a trouvé vaut d'être retenu — le
+  *bloc* d'état vide était partagé depuis 6-K, son **hôte** ne l'était pas, et c'est l'hôte qui décide
+  de la hauteur : six écrans calaient le leur différemment, d'où des messages qui flottaient tantôt
+  trop haut, tantôt trop bas. Un [`ScreenState`](src/shared/ui/ScreenState.tsx) centre maintenant sur
+  la **surface libre** et non sur l'écran. L'application **tutoie** partout, et les avertissements
+  ESLint sont passés de 79 à 53.
 - [x] **Internationalisation** — français, anglais, espagnol ; 268 clés par dictionnaire, typage de
   la clé, locale des dates alignée. **Plus aucune chaîne visible en dur ni clé manquante** : les
   treize libellés Campus qui manquaient sont traduits, et les casts qui les masquaient au compilateur

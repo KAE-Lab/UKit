@@ -1,16 +1,16 @@
 import React, { useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import * as LocalAuthentication from 'expo-local-authentication';
 
-import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import { EmptyState } from '../../../shared/ui/EmptyState';
+import { ScreenState } from '../../../shared/ui/ScreenState';
 
 /**
  * Porte biométrique : protège son contenu par une authentification locale.
  * Une seule demande par session app (authPassedRef persiste entre renders).
  */
-const BiometryGate = ({ children, theme, color }) => {
+const BiometryGate = ({ children, theme }) => {
     const authPassedRef = useRef(false);
     const [authenticated, setAuthenticated] = React.useState(false);
     const [failed, setFailed] = React.useState(false);
@@ -45,53 +45,27 @@ const BiometryGate = ({ children, theme, color }) => {
 
     if (authenticated) return children;
 
+    /*
+     * La porte prend le vocabulaire des autres etats plein ecran.
+     *
+     * Elle portait un **cadenas emoji** de 48 points en guise d'icone et un `#fff` en dur sur son
+     * bouton : deux regles du depot enfreintes au meme endroit — aucun emoji, aucune couleur en dur —
+     * et un rendu qui variait avec la police d'emoji du systeme. L'icone est desormais un glyphe de la
+     * meme famille que partout ailleurs, dans le meme disque, et le bouton est celui de tous les
+     * etats.
+     */
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <Text style={[styles.icon, { color }]}>🔒</Text>
-            <Text style={[styles.message, { color: theme.font }]}>
-                {Translator.get('BIOMETRY_PROMPT')}
-            </Text>
-            {failed && (
-                <TouchableOpacity
-                    style={[styles.button, { backgroundColor: color }]}
-                    onPress={authenticate}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.buttonText}>
-                        {Translator.get('BIOMETRY_RETRY')}
-                    </Text>
-                </TouchableOpacity>
-            )}
-        </View>
+        <ScreenState theme={theme}>
+            <EmptyState
+                variant="plain"
+                icon="lock-outline"
+                title={Translator.get('BIOMETRY_TITLE')}
+                message={Translator.get('BIOMETRY_PROMPT')}
+                theme={theme}
+                action={failed ? { label: Translator.get('BIOMETRY_RETRY'), onPress: authenticate, icon: 'refresh' } : null}
+            />
+        </ScreenState>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: tokens.space.md,
-        paddingHorizontal: tokens.space.xl,
-    },
-    icon: {
-        fontSize: 48,
-    },
-    message: {
-        fontSize: tokens.fontSize.md,
-        textAlign: 'center',
-        lineHeight: 22,
-    },
-    button: {
-        marginTop: tokens.space.sm,
-        paddingVertical: tokens.space.sm,
-        paddingHorizontal: tokens.space.xl,
-        borderRadius: tokens.radius.md,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: tokens.fontSize.md,
-    },
-});
 
 export default BiometryGate;

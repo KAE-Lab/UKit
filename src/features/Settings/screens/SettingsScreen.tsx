@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     greetingText: {
-        fontSize: 34,
+        fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold,
         marginBottom: tokens.space.md,
     },

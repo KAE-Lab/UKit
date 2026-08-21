@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Animated, Text, View } from 'react-native';
+import { Animated, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -12,6 +12,8 @@ import { groupOverlappingCourses } from './ScheduleListUtils';
 
 import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { EmptyState } from '../../../shared/ui/EmptyState';
+import { LoadingState } from '../../../shared/ui/LoadingState';
+import { ScreenState } from '../../../shared/ui/ScreenState';
 import { SourceFailureNotice, type NoticeAction } from '../../../shared/ui/SourceFailureNotice';
 import Translator from '../../../shared/i18n/Translator';
 import { isConnected } from '../../../shared/services/AppCore'
@@ -317,9 +319,24 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         return <>{bandeaux.map((bandeau, index) => <React.Fragment key={index}>{bandeau}</React.Fragment>)}</>;
     }
 
+    /**
+     * L'hote des trois etats plein ecran du planning.
+     *
+     * `topOffset={0}` : `DayViewHeader` est rendu **au-dessus** de ce composant, dans le flux, et non
+     * en en-tete transparent. La boite de `ScheduleList` est donc deja la surface libre, et lui
+     * appliquer la compensation d'en-tete descendrait le bloc de 130 points (shared/ui/ScreenState).
+     */
+    renderEtat(contenu: React.ReactNode) {
+        return (
+            <ScreenState theme={this.props.theme} background={this.props.theme.courseBackground} topOffset={0}>
+                {contenu}
+            </ScreenState>
+        );
+    }
+
     renderEmptyFavorites() {
         const { theme, navigation } = this.props;
-        return (
+        return this.renderEtat(
             <EmptyState
                 variant="plain"
                 icon="star-outline"
@@ -331,21 +348,49 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         );
     }
 
-    renderLoading() {
+    /** Une journee sans cours : ce n'est ni une panne ni une absence de favori, c'est une journee libre. */
+    renderEmptyDay(listHeader: React.ReactNode) {
         const { theme } = this.props;
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator style={{ margin: tokens.space.lg }} size="large" color={theme.primary} animating={true} />
+            <View style={{ flex: 1 }}>
+                {listHeader}
+                {this.renderEtat(
+                    <EmptyState
+                        variant="plain"
+                        icon="calendar-blank-outline"
+                        title={Translator.get('NO_CLASS_THIS_DAY_TITLE')}
+                        message={Translator.get('NO_CLASS_THIS_DAY')}
+                        theme={theme}
+                    />
+                )}
             </View>
+        );
+    }
+
+    renderLoading() {
+        return (
+            <LoadingState
+                theme={this.props.theme}
+                fullScreen
+                background={this.props.theme.courseBackground}
+                topOffset={0}
+            />
         );
     }
 
     renderDayMode(listHeader: React.ReactNode) {
         const { theme } = this.props;
-        let daySchedule = this.state.schedule as import('../services/PlanningApiService').PlanningEvent[];
+        const daySchedule = this.state.schedule as import('../services/PlanningApiService').PlanningEvent[];
+
+        // La journee vide etait rendue en **injectant un faux cours** de categorie `nocourse`, que
+        // `CourseRow` reconnaissait pour afficher le message a la place d'une carte. Le detour coutait
+        // cher : le bloc se retrouvait dans une cellule de liste, qui ne s'etire pas, donc il se posait
+        // la ou la cellule tombait — d'ou sa hauteur imprevisible. Il est desormais un etat d'ecran
+        // comme les deux autres, et la categorie fantome a disparu du depot.
         if (moment(this.state.target).day() === 0 || daySchedule.length === 0) {
-            daySchedule = [{ schedule: '0', category: 'nocourse' } as unknown as import('../services/PlanningApiService').PlanningEvent];
+            return this.renderEmptyDay(listHeader);
         }
+
         const groupedDaySchedule = groupOverlappingCourses(daySchedule);
 
         return (
@@ -408,15 +453,14 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
      * avec une reprise : reessayer repare une panne, une action repare une absence.
      */
     renderFailure(failure: UkitFailure, action?: NoticeAction) {
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.xxl }}>
-                <SourceFailureNotice
-                    failure={failure}
-                    theme={this.props.theme}
-                    onRetry={this.fetchSchedule}
-                    {...(action !== undefined ? { action } : {})}
-                />
-            </View>
+        return this.renderEtat(
+            <SourceFailureNotice
+                variant="plain"
+                failure={failure}
+                theme={this.props.theme}
+                onRetry={this.fetchSchedule}
+                {...(action !== undefined ? { action } : {})}
+            />
         );
     }
 

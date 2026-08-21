@@ -157,12 +157,12 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
                                 <View style={theme.settings.popup.container}>
                                     <View style={theme.settings.popup.header}>
                                         <Text style={theme.settings.popup.textHeader}>{Translator.get('MY_PLANNING')}</Text>
-                                        <TouchableOpacity onPress={() => this.setState({ modalVisible: false })}>
-                                            <MaterialIcons name="close" size={32} style={theme.settings.popup.closeIcon} />
+                                        <TouchableOpacity onPress={() => this.setState({ modalVisible: false })} hitSlop={12}>
+                                            <MaterialIcons name="close" size={24} style={theme.settings.popup.closeIcon} />
                                         </TouchableOpacity>
                                     </View>
                                     
-                                    <Text style={[theme.settings.popup.textDescription, { marginBottom: 15 }]}>
+                                    <Text style={theme.settings.popup.textDescription}>
                                         {Translator.get('FAVORITES_MANAGE')}
                                     </Text>
                                     
@@ -175,7 +175,7 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
                                         {this.state.favoriteGroups.map((group) => (
                                             <View key={group} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.greyBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginBottom: tokens.space.sm }}>
                                                 <Text style={{ color: theme.font, fontSize: tokens.fontSize.md, flex: 1 }}>{group.replace(/_/g, ' ')}</Text>
-                                                <TouchableOpacity onPress={() => SettingsManager.removeFavoriteGroup(group)} style={{ padding: tokens.space.xs, paddingHorizontal: 10 }}>
+                                                <TouchableOpacity onPress={() => SettingsManager.removeFavoriteGroup(group)} style={{ padding: tokens.space.xs, paddingHorizontal: tokens.space.sm }} hitSlop={8}>
                                                     <MaterialIcons name="delete" size={24} color={theme.danger} />
                                                 </TouchableOpacity>
                                             </View>
@@ -236,7 +236,7 @@ export class FilterRemoveButton extends React.Component<FilterRemoveButtonProps,
                     <View style={popupTheme.background}>
                         <View style={popupTheme.container}>
                             <View style={popupTheme.header}>
-                                <Text style={popupTheme.textHeader}>{Translator.get('FILTERS_UE').toUpperCase()}</Text>
+                                <Text style={popupTheme.textHeader}>{Translator.get('FILTERS_UE')}</Text>
                             </View>
                             <Text style={popupTheme.textDescription}>{Translator.get('FILTERS_CONFIRMATION')}</Text>
                             <View style={popupTheme.buttonContainer}>

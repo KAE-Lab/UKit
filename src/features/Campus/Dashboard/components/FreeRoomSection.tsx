@@ -8,18 +8,21 @@ import { SectionHeader } from '../../../../shared/ui/SectionHeader';
 import { LoadingState } from '../../../../shared/ui/LoadingState';
 import { CampusDataManager as DataManager } from '../../services/CampusDataManager';
 import { getDistanceInKm, BuildingInfo } from '../../services/FreeRoomService';
+import type { UkitFailure } from '../../../../shared/aetherius';
 import { useFavorites } from '../../hooks/useFavorites';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
 import { FreeRoomSectionCard } from './FreeRoomSectionCard';
+import { SectionEtatVide } from './SectionEtatVide';
 
 export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
     const [buildings, setBuildings] = useState<BuildingInfo[]>([]);
+    const [failure, setFailure] = useState<UkitFailure | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const mountedRef = useRef(true);
 
@@ -34,8 +37,12 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
             try {
                 let bList: BuildingInfo[] = DataManager.getBuildingList() as unknown as BuildingInfo[];
                 if (!bList || bList.length === 0) {
-                    await DataManager.fetchBuildingList();
+                    // L'echec n'est retenu que s'il ne reste rien a montrer : un cache peuple survit a
+                    // un rafraichissement rate, sinon une liste complete se presenterait comme une
+                    // panne (meme regle que `FreeRoomScreen`, docs/defauts-fonctionnels.md).
+                    const echec = await DataManager.fetchBuildingList();
                     bList = DataManager.getBuildingList() as unknown as BuildingInfo[];
+                    if (echec !== null && (!bList || bList.length === 0)) setFailure(echec);
                 }
                 if (mountedRef.current) {
                     if (bList) {
@@ -89,6 +96,14 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
 
             {loading ? (
                 <LoadingState theme={theme} />
+            ) : sortedBuildings.length === 0 ? (
+                <SectionEtatVide
+                    theme={theme}
+                    failure={failure}
+                    masquesParFiltre={false}
+                    messageVide={Translator.get('NO_BUILDING_FOUND')}
+                    onOuvrir={() => navigation.navigate('FreeRoomScreen')}
+                />
             ) : (
                 <FlatList
                     horizontal

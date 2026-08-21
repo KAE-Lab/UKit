@@ -195,6 +195,14 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`ProgressBar`](../src/shared/ui/ProgressBar.tsx) | jauge, **rayon calculé** (`height / 2`) | 3 fois |
 | [`Icon`](../src/shared/ui/Icon.tsx) | une icône de l'une ou l'autre famille, typée | — |
 | [`SourceFailureNotice`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, bâti sur `EmptyState` | — |
+| [`ScreenState`](../src/shared/ui/ScreenState.tsx) | **l'hôte** d'un état plein écran : il décide où le bloc se pose, pas de quoi il est fait | 6 fois |
+| [`ActionButton`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` | 4 fois |
+
+`ScreenState` a été remonté pour une raison que le jalon 6-K n'avait pas vue : le **bloc** était
+partagé, son **hôte** ne l'était pas, et c'est l'hôte qui décide de la hauteur. Six écrans calaient le
+leur différemment, d'où des états vides qui flottaient tantôt trop haut, tantôt trop bas. Il exporte
+aussi `HEADER_OFFSET` et `TAB_BAR_HEIGHT` : les deux seuls endroits du dépôt où ces hauteurs sont
+écrites, `NavHelpers` et `MainTabNavigator` les important de là.
 
 **`Icon` existe pour une raison précise** : le dépôt mélange `MaterialIcons` et
 `MaterialCommunityIcons`, et les glyphes ne se correspondent pas — la punaise de lieu est
@@ -216,6 +224,10 @@ La liste que **toute session de refonte d'écran vérifie**. Elle est le pendant
    (`SourceFailureNotice`), et **couverture partielle** quand la source est interrogée en plusieurs
    points (`CampusPartialNotice`). S'ils se ressemblent, l'écran ment : une liste vide n'est pas une
    panne. C'est la thèse de la [Phase 6](phase-6/README.md) tout entière.
+
+   Les trois premiers se posent dans un [`ScreenState`](../src/shared/ui/ScreenState.tsx) quand ils
+   occupent l'écran : **c'est lui qui décide de leur hauteur, jamais l'écran**. Un écran qui calcule
+   son propre centrage dérive, et six l'ont fait.
 4. **Un état vide propose une action quand il en existe une.** « Colle ton lien », « connecte ton
    compte » — jamais un bouton Réessayer, qui répare une panne et pas une absence.
 5. **Cibles tactiles ≥ 44 pt.** Une icône de 22 px est une cible de 22 px : elle prend un `hitSlop` ou
@@ -224,10 +236,14 @@ La liste que **toute session de refonte d'écran vérifie**. Elle est le pendant
    fond resté clair, aucune teinte sémantique éteinte sur fond noir.
 7. **Aucune chaîne en dur**, les trois dictionnaires à jour ([i18n.md](i18n.md)).
 8. **Aucun littéral de style** : `npx eslint <fichier>` ne doit rien signaler de nouveau.
-9. **Le vocabulaire d'abord.** Avant d'écrire un composant, lire [`shared/theme/`](../src/shared/theme/)
+9. **Aucune forme ronde.** Toute surface est un **carré arrondi** — `radius.md` par défaut,
+   `radius.lg` pour un conteneur, `radius.xl` pour une carte. `radius.pill` est réservé aux points
+   d'état, aux compteurs et aux jauges, et à rien d'autre. C'est la signature de forme de
+   l'application ; voir [les décisions durables](#les-décisions-durables).
+10. **Le vocabulaire d'abord.** Avant d'écrire un composant, lire [`shared/theme/`](../src/shared/theme/)
    et [`shared/ui/`](../src/shared/ui/). Un motif qui existe déjà se réutilise ; un motif qui apparaît
    une deuxième fois remonte.
-10. **Une capture**, dans [`docs/screenshots/`](screenshots/README.md), et la comparaison avec
+11. **Une capture**, dans [`docs/screenshots/`](screenshots/README.md), et la comparaison avec
     l'ancienne si l'écran en avait une.
 
 ## Les décisions durables
@@ -239,6 +255,29 @@ La liste que **toute session de refonte d'écran vérifie**. Elle est le pendant
 
 Acquises, et qui ont coûté à être trouvées :
 
+- **Les surfaces de UKit sont des carrés arrondis. Rien n'est rond, sauf ce qui compte.**
+  C'est **la** signature de forme de l'application, et elle se mesure plutôt qu'elle ne s'affirme :
+  sur les rayons posés dans `src/`, **`radius.md` (12) en porte les deux tiers** et `radius.lg` (16)
+  presque tout le reste ; `radius.xl` (24) est réservé à la surface d'une carte (`Card`).
+  `radius.pill` ne survit que **cinq fois**, et les cinq sont des **pastilles ou des compteurs** : deux
+  points d'état de 8, un de 14, le compteur de messages non lus, le compteur de cours d'une journée.
+  S'y ajoutent les jauges de [`ProgressBar`](../src/shared/ui/ProgressBar.tsx), dont le rayon se
+  calcule (`height / 2`).
+
+  | Ce qu'on habille | Rayon |
+  |---|---|
+  | une carte | `radius.xl` |
+  | un conteneur de dialogue, un encart, une surface d'icône (72) | `radius.lg` |
+  | **tout le reste** — bouton, champ, pastille rectangulaire, vignette | `radius.md` |
+  | un point d'état, un compteur, une jauge | `radius.pill`, ou `height / 2` |
+
+  Les gabarits existants font foi : bouton de retour 40 × 40 en `radius.md`, bouton favori et bouton
+  de filtre 45 × 45 en `radius.md`, pastille du tiroir 36 × 36 en `radius.md`, encart d'icône du
+  formulaire de lien 72 × 72 en `radius.lg`. **Une nouvelle surface se copie sur l'un d'eux**, elle ne
+  s'invente pas — et surtout, elle ne devient pas un cercle ou une pilule parce que ça « fait
+  moderne ». Deux éléments ont dû être ramenés à cette règle après coup, la surface d'icône d'un état
+  vide et la barre de recherche Campus : c'est le genre d'écart qui coûte un aller-retour à chaque
+  fois qu'il est refait.
 - **`accentFont` est le rouge destructif** (`#FF3B30`), pas « texte sur fond accent ». Pour un libellé
   sur fond `primary`, c'est **`lightFont`** — blanc dans les deux thèmes. Trouvé au jalon 6-B.
 - **Un composant ne remonte dans [`shared/ui/`](../src/shared/ui/) qu'à partir de deux usages.** C'est
@@ -274,11 +313,19 @@ Acquises, et qui ont coûté à être trouvées :
   s'inscrit dans une liste qui défile, en `plain` quand il **est** l'écran — une carte posée au milieu
   d'un écran vide flotterait sans rien pour l'ancrer. Le Planning avait sa propre version de `plain`,
   en trois exemplaires et trois tailles d'icône ; elle a convergé au jalon 6-K.
-- **Ce qui vient de nous et ce qui vient d'une source ne se ressemblent pas.** Le statut d'une
-  bibliothèque collait un libellé traduit à une phrase que le fournisseur ne publie qu'en français :
-  « Closed - Ouvre demain à 09:00 ». Le libellé garde sa couleur de ton, la précision passe en texte
-  secondaire à côté. La règle vaut au-delà : **ne jamais concaténer, dans un service, une chaîne
-  traduite et une donnée distante** — le service ne sait pas dans quelle langue on lit.
+- **Ne jamais concaténer, dans un service, une chaîne traduite et une donnée distante.** Le service
+  ne sait pas dans quelle langue on lit. Le statut d'une bibliothèque le faisait — « Closed - Ouvre
+  demain à 09:00 », un libellé traduit soudé à une phrase que le fournisseur ne publie qu'en français.
+  `getLibraryStatus` rend donc deux champs, `statusText` et `statusNote`, et le composant les rend en
+  **deux `Text`**.
+
+  **La séparation reste dans le code, pas dans la couleur.** Le jalon 6-K avait aussi passé la
+  précision en gris secondaire pour distinguer visuellement les deux origines ; c'est revenu à la
+  couleur du statut, avec un tiret, sur arbitrage du propriétaire du produit. À l'usage, la
+  distinction ne se décodait pas — personne ne lit « gris donc ça vient du fournisseur » — et les deux
+  moitiés se lisaient comme deux fragments collés. Ce qui comptait dans ce jalon est intact : la
+  concaténation a disparu du service, ce qui est la seule moitié qui rendait la chaîne intraduisible
+  par construction.
 - **Un `?.` sur le thème masque une dépendance au lieu de la déclarer.** `CampusFilterModal` lisait
   `theme.settings?.popup?.*` en doublant chaque style d'un objet écrit inline « au cas où » : un
   troisième dialecte de modale, jamais affiché, qui divergeait à chaque retouche du vrai.
@@ -298,6 +345,91 @@ Acquises, et qui ont coûté à être trouvées :
 
   Une identité typographique reste possible — mais alors partout, corps compris, et en vérifiant la
   lisibilité des listes denses. Le mélange, lui, est tranché.
+- **Un état plein écran s'ancre en haut, jamais au centre.** Il se pose à une distance fixe
+  (`space.xxl`) sous l'en-tête, la même sur les huit écrans qui en portent un. C'est le rôle de
+  [`ScreenState`](../src/shared/ui/ScreenState.tsx), et **aucun écran ne calcule plus le sien**.
+
+  Le centrage a été essayé et abandonné, ce qui vaut d'être écrit pour qu'on ne le retente pas :
+  centrer demande de connaître ce qui occupe le **bas** de chaque écran, et ce n'est pas la même chose
+  partout — la barre d'onglets sur les quatre onglets, la barre de recherche flottante sur les listes
+  Campus, rien du tout sur un écran poussé. Deux tentatives ont échoué : un rembourrage symétrique,
+  qui recentre sur l'écran entier au lieu de la surface libre, puis un rembourrage correct en haut
+  mais aveugle aux 80 points de la barre de recherche, qu'aucun `insets` ne déclare. Le bloc tombait
+  « légèrement en dessous du milieu » — la pire position, ni centrée ni ancrée, et illisible comme
+  intention. L'ancrage haut **supprime la classe de défaut** au lieu de la re-régler.
+
+  Deux dispositions à distinguer : un en-tête transparent sous lequel le contenu glisse (cas par
+  défaut) et un en-tête rendu dans le flux (`topOffset={0}`, le Planning et son `DayViewHeader`).
+- **La surface d'icône d'un état porte son ton, et c'est ce qui rend la sévérité lisible avant les
+  mots.** Une source en panne et un établissement qui ne publie pas d'emploi du temps portaient le
+  **même carré gris** : la distinction que la [Phase 6](phase-6/README.md) a passé sept jalons à
+  établir — ce qui est cassé contre ce qui est absent — n'existait qu'en toutes lettres. Le ton vit
+  dans la table de [`failures.ts`](../src/shared/aetherius/failures.ts), à côté du titre et du
+  message, parce que c'est la même décision : **la famille décide**. Les familles qui veulent dire
+  « quelque chose est cassé » sont `danger` ; `config` et `cancelled`, qui veulent dire « il manque
+  un geste » ou « tu es parti », restent `neutral`. Peindre en rouge une université qui n'a pas
+  d'emploi du temps dirait qu'elle est en panne.
+
+  **`neutral` ne passe pas par `neutralSoft`** : ce gris à 8 % se composite à un point du fond de page
+  et la surface disparaîtrait. Il prend `greyBackground` — celui du bouton de retour et du bouton de
+  filtre en en-tête, la surface grise établie — plus un filet `border`, parce qu'à 72 points un aplat
+  à quatre pour cent d'écart du fond se lit comme une tache et non comme un objet. Les tons
+  sémantiques n'ont pas de filet : leur teinte les détache déjà.
+- **Une confirmation se réserve aux gestes coûteux, et le coût n'est pas toujours une destruction.**
+  La règle posée par la synchronisation calendrier — « l'extinction passe par une confirmation,
+  l'allumage non » — se lisait comme « on confirme ce qui détruit ». Elle est plus large :
+  « Actualiser mon dossier » ne détruit rien, mais **rejoue une connexion complète**, prend l'écran
+  plusieurs secondes et ne s'annule pas une fois lancé. Il a donc sa confirmation, et elle porte
+  l'explication du geste — au moment de décider, plutôt qu'en ligne d'aide sous le bouton, que
+  personne ne lit et qui cassait le rythme des trois actions de l'écran.
+- **Un état vide a une masse, pas seulement un message.** Un glyphe dans un **disque** de 72, un
+  **titre obligatoire** en `theme.font`, un message en `fontSecondary` à mesure courte (300), puis
+  l'action. Avant, c'était un glyphe gris de 48 et une ligne unique étirée sur la largeur : ce n'est
+  pas l'espace qui donnait à ces écrans leur air de vide bizarre, c'est l'absence de hiérarchie. Le
+  titre est **obligatoire dans le type** — c'est le compilateur qui garantit qu'aucun écran n'en
+  oublie un, pas une ligne de liste à cocher.
+- **Un échec porte un titre et un message, et ils viennent de la même table.** `titleKey` dit ce qui
+  s'est passé (« Service indisponible »), `messageKey` ce qu'on peut y faire (« Vérifie ta connexion,
+  puis réessaie »). Les deux se décident ensemble ou pas du tout : un titre de famille au-dessus d'un
+  message de code dirait deux choses différentes du même échec. Les deux seuls endroits qui les
+  précisent sont ceux qui précisaient déjà le message — `serviceAbsent` et la table de codes de la
+  scolarité.
+- **Une action hors dialogue a trois formes, et c'est le libellé qui porte le sens, jamais le fond.**
+  `filled` (fond `primary`, libellé `lightFont`) pour l'action principale — le même bouton que
+  Réessayer. `tonal` et `destructive` partagent **le même fond gris** `greyBackground` et ne diffèrent
+  que par la couleur du libellé, `primary` ou `danger`. Le modèle est le bouton « Réserver » de la
+  fiche d'une bibliothèque, qui pose depuis toujours un libellé `primary` gras sur `greyBackground`.
+
+  Une version intermédiaire teintait le fond destructif en `dangerSoft` — du rouge à 8 % sous un
+  libellé rouge : le contraste s'effondrait et le bouton se fondait, exactement le défaut qu'on venait
+  de corriger sur les boutons bordés. **Un fond plein coloré reste réservé à deux cas** : `primary`
+  pour l'action principale, et `danger` dans les **dialogues** de confirmation — une confirmation
+  assume sa gravité, une entrée de liste l'annonce.
+
+  Ce qui a été supprimé au passage : trois boutons **bordés à fond transparent** dans les réglages du
+  compte — ils avaient la couleur du fond de page et disparaissaient — et un lien texte nu en
+  `accentFont` pour oublier un lien d'abonnement.
+- **L'échelle d'un dialogue.** Conteneur en `radius.lg` et `space.lg` de rembourrage, titre en
+  `fontSize.xl`, deux boutons en `flex: 1` de 48 de haut à libellé `fontSize.md` semi-gras. Les
+  proportions précédentes — `radius.xl`, `space.md`, boutons de 150 × 52 sous un libellé de 16 —
+  ont été recadrées après mesure à l'usage : le bouton lisait comme un bouton géant et le conteneur
+  comme une pastille. **L'écart description → boutons reste à 16**, et ne suit pas le rembourrage du
+  conteneur : une première version l'avait porté à 32 en même temps, ce qui creusait un trou au milieu
+  du dialogue. Et **un titre de dialogue ne se crie pas** : cinq popups sur sept le mettaient en
+  majuscules, deux non. Les `.toUpperCase()` sont retirés.
+- **L'application tutoie.** Vingt et une chaînes françaises héritées vouvoyaient — réinitialisation,
+  favoris, identifiants, biométrie, calendrier — quand tout ce qui a été écrit depuis le jalon 6-G
+  tutoyait. Le mélange se voyait dans les popups et les états vides. `en` et `es` ne portent pas la
+  distinction. Voir [i18n.md](i18n.md).
+- **Les cartes de toutes les sections ont la même hauteur, et c'est au contenu de s'y plier.** Le
+  tableau de bord Campus empile quatre carrousels ; si l'un d'eux est plus haut d'une ligne, l'écran
+  entier perd son rythme. Une donnée qui vient d'une source est une **phrase libre** — les horaires
+  d'un restaurant en sont une, parfois longue — et elle se coupe donc à `numberOfLines`, sans état
+  d'âme. Ce qui a été tronqué se retrouve **en entier sur l'écran de détail**, qui a la place.
+
+  Le corollaire, appris en cherchant où poser ce texte complet : **une information se lit, elle ne se
+  déclenche pas.** Elle va dans la page, jamais derrière un bouton. Le seul bouton qu'un écran de
+  détail porte est une **action** — « Réserver » pour une bibliothèque, la carte pour un restaurant.
 - **Un composant d'un seul écran reste chez lui**, et un composant de domaine ne monte pas dans le
   socle. La distance à pied et l'affluence d'une bibliothèque vivent dans
   [`CampusCardParts.tsx`](../src/features/Campus/components/CampusCardParts.tsx), pas dans

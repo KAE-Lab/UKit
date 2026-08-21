@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { dateIso, horairesLisibles, projeterJourMenu, projeterRestaurant } from './CrousMapping';
+import { dateIso, horairesEnLignes, horairesLisibles, projeterJourMenu, projeterRestaurant, structurerHoraires } from './CrousMapping';
 
 const REPLI_HORAIRES = 'Horaires non specifies';
 const REPLI_CATEGORIE = 'Categorie';
@@ -51,6 +51,65 @@ describe('horairesLisibles', () => {
         expect(horairesLisibles(null, REPLI_HORAIRES)).toBe(REPLI_HORAIRES);
         expect(horairesLisibles([], REPLI_HORAIRES)).toBe(REPLI_HORAIRES);
         expect(horairesLisibles('12h-14h', REPLI_HORAIRES)).toBe(REPLI_HORAIRES);
+    });
+});
+
+describe('horairesEnLignes', () => {
+    it('rend les lignes sans les aplatir, dans les deux formes servies par la source', () => {
+        expect(horairesEnLignes('["du lundi au vendredi", "12h-13h45"]')).toEqual(['du lundi au vendredi', '12h-13h45']);
+        expect(horairesEnLignes(['lundi', 'mardi'])).toEqual(['lundi', 'mardi']);
+    });
+
+    it('rend une liste vide quand il n y a rien a lire', () => {
+        // Et non le libelle de repli : c'est `opening` qui le porte. Une liste vide laisse l'ecran de
+        // detail ne rien afficher, plutot que d'afficher « horaires non specifies » en section.
+        expect(horairesEnLignes(null)).toEqual([]);
+        expect(horairesEnLignes('[pas du json')).toEqual([]);
+    });
+});
+
+describe('structurerHoraires', () => {
+    it('reconnait un guichet et son creneau', () => {
+        expect(structurerHoraires(['SELF : 11h15-13h45'])).toEqual([
+            { kind: 'service', nom: 'SELF', horaire: '11h15-13h45' },
+        ]);
+    });
+
+    it('distingue un guichet sans creneau d une periode : ce ne sont pas la meme chose', () => {
+        expect(structurerHoraires(["CAFET' :"])).toEqual([{ kind: 'guichet', nom: "CAFET'" }]);
+        expect(structurerHoraires(['le vendredi'])).toEqual([{ kind: 'periode', texte: 'le vendredi' }]);
+    });
+
+    it('reconnait une periode de jours, mais pas une phrase qui commence par un jour', () => {
+        expect(structurerHoraires(['du lundi au vendredi'])).toEqual([
+            { kind: 'periode', texte: 'du lundi au vendredi' },
+        ]);
+        // Trop longue pour un intertitre : c'est une phrase, elle se lit comme telle.
+        const longue = "le samedi ferme jusqu'a la fin de l'annee universitaire";
+        expect(structurerHoraires([longue])).toEqual([{ kind: 'note', texte: longue }]);
+    });
+
+    it('distingue un creneau nu d une phrase qui contient une heure', () => {
+        expect(structurerHoraires(['7h45-10h | 11h30-13h45'])).toEqual([
+            { kind: 'horaire', texte: '7h45-10h | 11h30-13h45' },
+        ]);
+        const phrase = "Fermeture pour conges d'ete le mardi 30/06 a 13h45";
+        expect(structurerHoraires([phrase])).toEqual([{ kind: 'note', texte: phrase }]);
+    });
+
+    it('nettoie les espaces doubles et les barres residuelles servies par la source', () => {
+        expect(structurerHoraires(['SELF : 11h15 - 13h45 |'])).toEqual([
+            { kind: 'service', nom: 'SELF', horaire: '11h15 - 13h45' },
+        ]);
+        expect(structurerHoraires(["Fermeture pour conges d'ete  le vendredi 26/06"])).toEqual([
+            { kind: 'note', texte: "Fermeture pour conges d'ete le vendredi 26/06" },
+        ]);
+    });
+
+    it('ecarte les lignes vides et retombe en note sur ce qu elle ne reconnait pas', () => {
+        expect(structurerHoraires(['', '   ', 'Ouverture officielle le lundi 26 janvier'])).toEqual([
+            { kind: 'note', texte: 'Ouverture officielle le lundi 26 janvier' },
+        ]);
     });
 });
 

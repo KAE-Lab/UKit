@@ -17,6 +17,7 @@ import { Modal, ScrollView, Text, TouchableOpacity, TouchableWithoutFeedback, Vi
 import { MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
+import { tokens } from '../../../shared/theme/Theme';
 import { listeEtablissements, type Etablissement } from '../../../shared/etablissements';
 import type { AppThemeType } from '../../../shared/theme/Theme';
 
@@ -56,13 +57,13 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
                         {candidat === null ? (
                             <>
                                 <View style={theme.popup.header as never}>
-                                    <Text style={theme.popup.textHeader}>{Translator.get('INSTITUTION').toUpperCase()}</Text>
-                                    <TouchableOpacity onPress={fermer}>
-                                        <MaterialIcons name="close" size={32} style={theme.popup.closeIcon} />
+                                    <Text style={theme.popup.textHeader}>{Translator.get('INSTITUTION')}</Text>
+                                    <TouchableOpacity onPress={fermer} hitSlop={12}>
+                                        <MaterialIcons name="close" size={24} style={theme.popup.closeIcon} />
                                     </TouchableOpacity>
                                 </View>
                                 <Text style={theme.popup.textDescription}>{Translator.get('YOUR_INSTITUTION')}</Text>
-                                <ScrollView style={{ marginVertical: 8 }}>
+                                <ScrollView style={{ marginVertical: tokens.space.sm }}>
                                     {etablissements.map((etablissement) => {
                                         const actif = etablissement.code === codeActif;
                                         return (
@@ -77,7 +78,7 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
                                                 <MaterialIcons
                                                     name={actif ? 'radio-button-on' : 'radio-button-off'}
                                                     size={24}
-                                                    color={actif ? '#4caf50' : theme.popup.radioIconColor}
+                                                    color={theme.popup.radioIconColor}
                                                 />
                                                 {/* Le nom vient du catalogue : c'est une donnee, pas un libelle traduit. */}
                                                 <Text style={[theme.popup.radioText, { flexShrink: 1 }]}>
@@ -92,7 +93,7 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
                             <>
                                 <View style={theme.popup.header as never}>
                                     <Text style={theme.popup.textHeader}>
-                                        {Translator.get('INSTITUTION_CHANGE_TITLE').toUpperCase()}
+                                        {Translator.get('INSTITUTION_CHANGE_TITLE')}
                                     </Text>
                                 </View>
                                 <Text style={theme.popup.textDescription}>

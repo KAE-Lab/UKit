@@ -4,8 +4,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import style, { tokens } from '../../../shared/theme/Theme';
-import { EmptyState } from '../../../shared/ui/EmptyState';
-import Translator from '../../../shared/i18n/Translator';
 import { CourseData } from './CourseCard';
 import { iconeDAnnotation } from './CourseAnnotations';
 import { CalendarNewEventPrompt } from './CalendarNewEventPrompt';
@@ -65,18 +63,6 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 			this.props.navigation.navigate('Course', { data: this.props.data });
 		});
 	};
-
-	renderNoCourse() {
-		const { theme } = this.props;
-		return (
-			<EmptyState
-				variant="plain"
-				icon="calendar-blank-outline"
-				message={Translator.get('NO_CLASS_THIS_DAY')}
-				theme={theme}
-			/>
-		);
-	}
 
 	renderUE(theme: import('../../../shared/theme/Theme').AppThemeType) {
 		if (!this.props.data.UE) return null;
@@ -257,10 +243,6 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 
 	render() {
 		const { theme } = this.props;
-
-		if (this.props.data.category === 'nocourse') {
-			return this.renderNoCourse();
-		}
 
 		if (this.props.data.category === 'masked') {
 			return null;

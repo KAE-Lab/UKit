@@ -43,6 +43,10 @@ test('chaque famille du moteur a une presentation', () => {
         const presentation = FAILURE_PRESENTATION[famille];
         expect(presentation, `famille sans presentation : ${famille}`).toBeTruthy();
         expect(presentation.messageKey).not.toBe('');
+        // Le titre est aussi obligatoire que le message depuis que l'etat plein ecran en porte un :
+        // une famille sans titre rendrait un bloc sans premiere ligne, et le compilateur ne le voit
+        // pas — `titleKey` est une chaine, une chaine vide compile.
+        expect(presentation.titleKey, `famille sans titre : ${famille}`).not.toBe('');
     }
     // Une famille ajoutee par le moteur casserait la compilation du Record, pas ce test : la garde
     // reelle est le typage. Ce test verifie qu'aucune entree n'a ete videe.

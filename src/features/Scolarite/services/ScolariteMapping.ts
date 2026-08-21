@@ -108,10 +108,10 @@ export function projeterMessagerie(outputs: Readonly<Record<string, unknown>>): 
  * version de l'application n'a jamais vu, et « la demande n'a pas pu aboutir » vaut mieux qu'un
  * libelle brut affiche a un etudiant.
  */
-const CLE_PAR_CODE: Readonly<Record<string, TranslationKey>> = {
-    LOGIN_FAILED: 'LOGIN_FAILED',
-    CAS_INDISPONIBLE: 'ERROR_CAS_UNAVAILABLE',
-    MESSAGERIE_INDISPONIBLE: 'ERROR_MAILBOX_UNAVAILABLE',
+const CLE_PAR_CODE: Readonly<Record<string, { readonly titre: TranslationKey; readonly message: TranslationKey }>> = {
+    LOGIN_FAILED: { titre: 'LOGIN_FAILED_TITLE', message: 'LOGIN_FAILED' },
+    CAS_INDISPONIBLE: { titre: 'ERROR_CAS_UNAVAILABLE_TITLE', message: 'ERROR_CAS_UNAVAILABLE' },
+    MESSAGERIE_INDISPONIBLE: { titre: 'ERROR_MAILBOX_UNAVAILABLE_TITLE', message: 'ERROR_MAILBOX_UNAVAILABLE' },
 };
 
 // `PORTAIL_ABSENT` n'est volontairement **pas** dans cette table (jalon 6-G) : ce n'est pas un code
@@ -122,9 +122,23 @@ const CLE_PAR_CODE: Readonly<Record<string, TranslationKey>> = {
 
 export function cleDeMessage(failure: UkitFailure): TranslationKey {
     if (failure.code !== undefined && CLE_PAR_CODE[failure.code] !== undefined) {
-        return CLE_PAR_CODE[failure.code];
+        return CLE_PAR_CODE[failure.code].message;
     }
     return failure.messageKey;
+}
+
+/**
+ * Le **titre** du meme echec, suivant exactement le meme chemin que son message.
+ *
+ * Les deux se decident ensemble ou pas du tout : un titre de famille (« Demande interrompue ») pose
+ * au-dessus d'un message de code (« Le portail de ton universite ne repond pas ») dirait deux choses
+ * differentes du meme echec.
+ */
+export function cleDeTitre(failure: UkitFailure): TranslationKey {
+    if (failure.code !== undefined && CLE_PAR_CODE[failure.code] !== undefined) {
+        return CLE_PAR_CODE[failure.code].titre;
+    }
+    return failure.titleKey;
 }
 
 /**
@@ -157,7 +171,7 @@ export function presenterEchec(failure: UkitFailure): UkitFailure {
     const reessayable = failure.retryable
         || (failure.code !== undefined && CODES_REESSAYABLES.includes(failure.code));
 
-    return { ...failure, messageKey: cleDeMessage(failure), retryable: reessayable };
+    return { ...failure, titleKey: cleDeTitre(failure), messageKey: cleDeMessage(failure), retryable: reessayable };
 }
 
 /**

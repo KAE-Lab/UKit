@@ -31,6 +31,45 @@ La ligne d'horaires de cette capture est le correctif du jalon [6-D](../phase-6/
 lui, ces trois mentions étaient remplacées par « Horaires non spécifiés », pour **tous** les
 établissements de la région.
 
+**Elle tient sur une seule ligne, et se coupe s'il le faut.** C'est une phrase libre du fournisseur,
+parfois longue : sur deux lignes, la carte d'un restaurant devenait plus haute que celle d'une
+bibliothèque, et les quatre carrousels du tableau de bord cessaient d'être alignés. Toutes les cartes
+de section ont la même hauteur, et c'est au contenu de s'y plier
+([theme.md](../theme.md#les-décisions-durables)).
+
+Ce qui est tronqué se retrouve **en entier sur l'écran du menu, en pied de page et ligne par ligne**.
+Trois décisions, et chacune corrige un essai précédent :
+
+- **selon leur forme**, et non ligne après ligne. Le contrat porte **deux champs** : `opening`, la
+  chaîne jointe qu'affichent les cartes de liste, et `openingLines`, la liste telle que la source la
+  publie. Ajouter le second était gratuit côté parité — `opening` en est exclu depuis le jalon 6-D
+  ([tools/parity/](../../tools/parity/README.md)).
+
+  La source **ne déclare aucune structure, mais elle en publie une**, et le relevé du 2026-08-21 sur
+  les quarante-et-un restaurants de la région la donne : sur 81 lignes, **36** sont de la forme
+  « NOM : créneau », **25** sont des portées de jours (« du lundi au vendredi »), et **20** sont des
+  créneaux nus ou des phrases libres. `structurerHoraires`
+  ([CrousMapping.ts](../../src/features/Campus/services/CrousMapping.ts)) les reconnaît, et l'écran
+  donne à chacune sa mise en page : intertitre pour une **période** (« du lundi au vendredi »), nom en
+  gras pour un **guichet** qui n'annonce pas son créneau (« CAFET' : »), deux colonnes pour un
+  **service** et son créneau, ligne en gras pour un créneau seul, icône d'information pour une phrase.
+
+  La distinction période / guichet n'est pas cosmétique : une première version les confondait sous un
+  seul type, et un comptoir se lisait alors comme une plage de jours. La source, elle, les distingue
+  bien — l'un finit par un deux-points, l'autre nomme un jour ;
+
+  **Toute ligne non reconnue retombe en phrase**, affichée telle quelle : le pire cas est donc
+  exactement ce que l'écran faisait avant. C'est ce qui autorise à reconnaître un format qu'aucun
+  contrat ne garantit — cette source a déjà changé de forme une fois, et ce fichier en porte la trace ;
+- **en pied.** La raison d'ouvrir cet écran est le menu. Les horaires sont une référence, pas
+  l'information principale : en tête, ils passaient devant ;
+- **dans la page, pas derrière un bouton.** Une information se lit, elle ne se déclenche pas — et le
+  bouton qu'on aurait pu poser, à la manière du « Réserver » d'une bibliothèque, **existe déjà en
+  en-tête** : c'est la carte du restaurant.
+
+La grammaire est celle d'un repas juste au-dessus : une icône d'accent, un titre, puis une carte. Les
+filets séparent les lignes **sauf autour d'un intertitre** : un titre touche ce qu'il annonce.
+
 ![Le menu d'un restaurant un jour de service, bandeau de dates et plats par catégorie](../screenshots/crous-menu.png)
 
 ![Un restaurant qui ne publie pas de menu : l'état vide, sans message d'erreur ni bouton](../screenshots/crous-menu-absent.png)

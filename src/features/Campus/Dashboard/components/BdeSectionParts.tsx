@@ -12,9 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
 import { tokens, type AppThemeType } from '../../../../shared/theme/Theme';
-import Translator from '../../../../shared/i18n/Translator';
 import type { BdeAnnonce } from '../../services/BdeService';
-import type { UkitFailure } from '../../../../shared/aetherius';
 
 interface BdeAnnonceCardProps {
     annonce: BdeAnnonce;
@@ -70,45 +68,3 @@ export function BdeAnnonceCard({ annonce, width, theme, onPress }: BdeAnnonceCar
     );
 }
 
-interface BdeSectionErrorProps {
-    failure: UkitFailure;
-    theme: AppThemeType;
-    onRetry: () => void;
-}
-
-/**
- * L'echec, en une ligne discrete plutot qu'en carte pleine.
- *
- * Le tableau de bord empile plusieurs sections : une carte d'erreur de la taille d'une annonce
- * donnerait a une panne editoriale l'importance d'un contenu. Une ligne suffit a dire ce qui se
- * passe et a proposer d'y revenir.
- *
- * Le bouton n'apparait que si la famille est reessayable : c'est la table de
- * shared/aetherius/failures.ts qui decide, pas ce composant.
- */
-export function BdeSectionError({ failure, theme, onRetry }: BdeSectionErrorProps) {
-    return (
-        <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginHorizontal: tokens.space.md,
-            padding: tokens.space.md,
-            backgroundColor: theme.cardBackground,
-            borderRadius: tokens.radius.lg,
-            borderWidth: 1,
-            borderColor: theme.border,
-        }}>
-            <MaterialCommunityIcons name="cloud-off-outline" size={20} color={theme.fontSecondary} />
-            <Text style={{ flex: 1, marginLeft: tokens.space.sm, fontSize: tokens.fontSize.sm, color: theme.fontSecondary }}>
-                {Translator.get(failure.messageKey)}
-            </Text>
-            {failure.retryable ? (
-                <TouchableOpacity onPress={onRetry} activeOpacity={0.7} style={{ paddingLeft: tokens.space.sm }}>
-                    <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary }}>
-                        {Translator.get('RETRY')}
-                    </Text>
-                </TouchableOpacity>
-            ) : null}
-        </View>
-    );
-}

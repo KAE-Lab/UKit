@@ -135,6 +135,29 @@ const Theme = {
                 color:           '#C7C7CC',
                 marginHorizontal: tokens.space.xs,
             },
+            /*
+             * Le vocabulaire des dialogues, et il est unique : les neuf modales de l'application
+             * s'habillent ici, sans un style local. Les proportions ont ete recadrees apres mesure a
+             * l'usage — un bouton de 150 de large et 52 de haut sous un libelle de 16 lisait comme
+             * un bouton geant, et `radius.xl` sur une carte pleine largeur lisait comme une pastille.
+             *
+             * Ce qui a change : le conteneur descend a `radius.lg` et monte a `space.lg` de
+             * rembourrage, le titre prend `fontSize.xl` — un titre de dialogue titre une page, pas un
+             * paragraphe —, et les boutons passent en `flex: 1` avec un `minHeight` de 48, la cible
+             * tactile minimale de la recette d'ecran, au lieu d'une largeur minimale en dur qui ne
+             * s'adaptait a rien.
+             *
+             * **L'ecart description -> boutons reste a 16**, et pas davantage : une premiere version
+             * l'avait porte a 32 en meme temps que le rembourrage, ce qui creusait un trou au milieu
+             * du dialogue. Le rembourrage du conteneur et l'espacement interne ne se regient pas
+             * ensemble.
+             *
+             * `minHeight` n'a pas de token, et c'est assume : le depot n'a aucune echelle de
+             * dimensions (docs/theme.md, « ce que les tokens ne couvrent pas »).
+             *
+             * Le bloc jumeau du theme sombre porte exactement les memes valeurs : seules les
+             * couleurs different. Toute retouche ici se recopie la-bas.
+             */
             popup: {
                 filters: {
                     container: {
@@ -177,9 +200,9 @@ const Theme = {
                 },
                 container: {
                     backgroundColor: '#FFFFFF',
-                    borderRadius:    tokens.radius.xl,
-                    padding:         tokens.space.md,
-                    marginHorizontal: tokens.space.md,
+                    borderRadius:    tokens.radius.lg,
+                    padding:         tokens.space.lg,
+                    marginHorizontal: tokens.space.lg,
                     marginVertical:  tokens.space.xl,
                     ...tokens.shadow.lg,
                     flexShrink: 1,
@@ -192,59 +215,64 @@ const Theme = {
                 },
                 textHeader: {
                     fontWeight: tokens.fontWeight.bold,
-                    fontSize:   tokens.fontSize.lg,
+                    fontSize:   tokens.fontSize.xl,
                     color:      '#1C1C1E',
                 },
                 textDescription: {
-                    marginVertical: tokens.space.sm,
+                    marginTop:      tokens.space.sm,
+                    marginBottom:   tokens.space.sm,
+                    lineHeight:     22,
                     fontSize:       tokens.fontSize.md,
                     color:          '#8E8E93',
                 },
                 buttonContainer: {
-                    flexDirection:  'row',
-                    justifyContent: 'space-around',
-                    marginTop:      tokens.space.sm,
+                    flexDirection: 'row',
+                    gap:           tokens.space.sm,
+                    marginTop:     tokens.space.sm,
                 },
                 buttonSecondary: {
                     backgroundColor: '#E5E5EA',
-                    paddingVertical: tokens.space.md,
-                    paddingHorizontal: tokens.space.lg,
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: 150,
                 },
                 buttonMain: {
                     backgroundColor: '#007AFF',
-                    paddingVertical: tokens.space.md,
-                    paddingHorizontal: tokens.space.lg,
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: 150,
                 },
                 buttonDestructive: {
                     backgroundColor: '#FF3B30',
-                    paddingVertical: tokens.space.md,
-                    paddingHorizontal: tokens.space.lg,
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: 150,
                 },
                 buttonTextSecondary: {
                     color: '#8E8E93',
-                    fontWeight: tokens.fontWeight.medium,
+                    fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
                 buttonTextMain: {
                     color: '#FFFFFF',
-                    fontWeight: tokens.fontWeight.bold,
+                    fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
                 buttonTextDestructive: {
                     color: '#FFFFFF',
-                    fontWeight: tokens.fontWeight.bold,
+                    fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
                 closeIcon: {
@@ -451,9 +479,9 @@ const Theme = {
                 },
                 container: {
                     backgroundColor: '#1C1C1E',
-                    borderRadius:    tokens.radius.xl,
-                    padding:         tokens.space.md,
-                    marginHorizontal: tokens.space.md,
+                    borderRadius:    tokens.radius.lg,
+                    padding:         tokens.space.lg,
+                    marginHorizontal: tokens.space.lg,
                     marginVertical:  tokens.space.xl,
                     ...tokens.shadow.lg,
                     flexShrink: 1,
@@ -466,59 +494,64 @@ const Theme = {
                 },
                 textHeader: {
                     fontWeight: tokens.fontWeight.bold,
-                    fontSize:   tokens.fontSize.lg,
+                    fontSize:   tokens.fontSize.xl,
                     color:      '#FFFFFF',
                 },
                 textDescription: {
-                    marginVertical: tokens.space.sm,
+                    marginTop:      tokens.space.sm,
+                    marginBottom:   tokens.space.sm,
+                    lineHeight:     22,
                     fontSize:       tokens.fontSize.md,
                     color:          '#8E8E93',
                 },
                 buttonContainer: {
-                    flexDirection:  'row',
-                    justifyContent: 'space-around',
-                    marginTop:      tokens.space.sm,
+                    flexDirection: 'row',
+                    gap:           tokens.space.sm,
+                    marginTop:     tokens.space.sm,
                 },
                 buttonSecondary: {
                     backgroundColor: '#121212',
-                    paddingVertical: tokens.space.md,
-                    paddingHorizontal: tokens.space.lg,
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: 150,
                 },
                 buttonMain: {
                     backgroundColor: '#5E5CE6',
-                    paddingVertical: tokens.space.md,
-                    paddingHorizontal: tokens.space.lg,
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: 150,
                 },
                 buttonDestructive: {
                     backgroundColor: '#FF453A',
-                    paddingVertical: tokens.space.md,
-                    paddingHorizontal: tokens.space.lg,
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: 150,
                 },
                 buttonTextSecondary: {
                     color: '#8E8E93',
-                    fontWeight: tokens.fontWeight.medium,
+                    fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
                 buttonTextMain: {
                     color: '#FFFFFF',
-                    fontWeight: tokens.fontWeight.bold,
+                    fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
                 buttonTextDestructive: {
                     color: '#FFFFFF',
-                    fontWeight: tokens.fontWeight.bold,
+                    fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
                 closeIcon: {

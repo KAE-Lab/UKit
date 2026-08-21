@@ -12,6 +12,11 @@
  * change de contrat — serait pire que de ne rien proposer. C'est la table de
  * [`failures.ts`](../aetherius/failures.ts) qui tranche.
  *
+ * Il porte un **titre** et un message, et les deux viennent de la meme table : `titleKey` dit ce qui
+ * s'est passe (« Service indisponible »), `messageKey` ce qu'on peut y faire (« Verifie ta connexion,
+ * puis reessaie »). Ils ne se choisissent jamais separement — un titre de famille au-dessus d'un
+ * message de code dirait deux choses differentes du meme echec.
+ *
  * Depuis le jalon 6-J il porte aussi une **action qui n'est pas une reprise** : « colle ton lien »,
  * « connecte ton compte ». La distinction est la meme que celle du bouton Reessayer, prise par l'autre
  * bout — reessayer repare une panne, une action repare une **absence**. Un echec de famille `config`
@@ -40,9 +45,11 @@ interface SourceFailureNoticeProps {
     theme: AppThemeType;
     onRetry?: () => void;
     action?: NoticeAction;
+    /** Comme `EmptyState` : `plain` quand l'echec **est** l'ecran, `card` dans une liste qui defile. */
+    variant?: 'card' | 'plain';
 }
 
-export function SourceFailureNotice({ failure, theme, onRetry, action }: SourceFailureNoticeProps) {
+export function SourceFailureNotice({ failure, theme, onRetry, action, variant = 'card' }: SourceFailureNoticeProps) {
     // Une action proposee remplace la reprise : les deux au meme endroit rendraient la cible ambigue,
     // et un echec qui porte une action n'est de toute facon jamais reessayable (famille `config`).
     const bouton: NoticeAction | null = action
@@ -53,7 +60,10 @@ export function SourceFailureNotice({ failure, theme, onRetry, action }: SourceF
 
     return (
         <EmptyState
+            variant={variant}
+            tone={failure.tone}
             icon="cloud-off-outline"
+            title={Translator.get(failure.titleKey)}
             message={Translator.get(failure.messageKey)}
             theme={theme}
             action={bouton}

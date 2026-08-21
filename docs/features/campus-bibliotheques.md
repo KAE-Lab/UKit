@@ -229,9 +229,14 @@ bibliothèque parce que son affluence n'a pas encore été chargée serait un fa
   langue en entrée du Blueprint, ce qu'un Blueprint ne peut pas deviner seul.
 
   Depuis le jalon [6-K](../phase-6/6-k-socle-visuel.md), cette phrase n'est plus **soudée** au statut
-  traduit — elle s'affichait « Closed - Ouvre demain à 09:00 », comme une phrase cassée. Le statut
-  garde sa couleur de ton, la précision du fournisseur passe à côté en texte secondaire : ce qui vient
-  de nous et ce qui vient d'eux ne se ressemblent plus. La langue, elle, reste celle de la source.
+  traduit dans le service : `getLibraryStatus` rend `statusText` et `statusNote` séparément, et le
+  composant les affiche en deux `Text`. C'est la moitié qui comptait — une concaténation faite dans un
+  service rend la chaîne intraduisible par construction.
+
+  L'autre moitié du jalon, qui passait la précision en **gris secondaire**, a été reprise : la ligne
+  est de nouveau entièrement dans la couleur du statut, avec un tiret. La distinction visuelle ne se
+  décodait pas, et les deux moitiés se lisaient comme deux fragments collés
+  ([theme.md](../theme.md#les-décisions-durables)). La langue, elle, reste celle de la source.
 - **Aucun cache** : la liste et les affluences sont rechargées à chaque montage.
 - **Un site sans coordonnées ni distance estimée n'a plus de distance du tout.** L'ancien code
   divisait `estimated_distance` sans vérifier sa présence et produisait `NaN` ; il rend désormais

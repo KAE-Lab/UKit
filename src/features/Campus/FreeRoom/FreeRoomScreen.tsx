@@ -112,6 +112,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
             searchPlaceholder={Translator.get('SEARCH_BUILDING')}
             
             emptyIcon="domain"
+            emptyTitle={Translator.get('NO_BUILDING_FOUND_TITLE')}
             emptyMessage={Translator.get('NO_BUILDING_FOUND')}
 
             failure={failure ?? undefined}

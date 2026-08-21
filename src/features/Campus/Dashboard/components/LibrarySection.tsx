@@ -16,6 +16,7 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
 import { LibrarySectionCard } from './LibrarySectionCard';
+import { SectionEtatVide } from './SectionEtatVide';
 
 export function LibrarySection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -24,10 +25,10 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
     // Meme hook que la liste complete. Un echec plein reste discret ici — le carrousel disparait, la
     // ligne de journal du service dit pourquoi, et l'ecran dedie explique. Une couverture partielle,
     // elle, se dit : le carrousel montre une donnee reelle mais incomplete, ce qui ne se devine pas.
-    const { libraries, affluences, secteursMuets, loading, retry } = useNearbyLibraries(userLat, userLon);
+    const { libraries, affluences, failure, secteursMuets, loading, retry } = useNearbyLibraries(userLat, userLon);
 
     const { favorites: favBu, toggleFavorite: toggleFavBu } = useFavorites('library_favorites');
-    const [libraryFilter] = useSavedFilter('library_filter', 'all');
+    const [libraryFilter, setFiltre] = useSavedFilter('library_filter', 'all');
 
     const filteredLibraries = useMemo(() => {
         return [...libraries].filter(item => {
@@ -71,6 +72,17 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
             {loading ? (
                 <LoadingState theme={theme} />
             ) : (
+                filteredLibraries.length === 0 ? (
+                    <SectionEtatVide
+                        theme={theme}
+                        failure={failure}
+                        masquesParFiltre={libraries.length > 0}
+                        messageVide={Translator.get('NO_BU_NEARBY')}
+                        onToutAfficher={() => setFiltre('all')}
+                        onRetry={retry}
+                        onOuvrir={() => navigation.navigate('Library')}
+                    />
+                ) : (
                 <FlatList
                     horizontal
                     data={filteredLibraries}
@@ -81,6 +93,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
                     decelerationRate="fast"
                     contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
                 />
+                )
             )}
         </View>
     );

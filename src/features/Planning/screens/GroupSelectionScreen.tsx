@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Animated, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Animated, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,6 +8,8 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { EmptyState } from '../../../shared/ui/EmptyState';
+import { LoadingState } from '../../../shared/ui/LoadingState';
+import { ScreenState } from '../../../shared/ui/ScreenState';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext, isConnected } from '../../../shared/services/AppCore'
 import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
@@ -279,22 +281,24 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
 
     renderEmptyState(theme: import('../../../shared/theme/Theme').AppThemeType) {
         return (
-            <View style={{ flex: 1, backgroundColor: theme.greyBackground }}>
+            // Le fond est celui de l'ecran, `background`. Il etait `greyBackground` — le gris des
+            // pastilles et de la barre d'onglets — que plus aucun autre ecran n'emploie comme fond de
+            // page : l'etat vide apparaissait sur une dalle d'une autre couleur que la liste.
+            <ScreenState theme={theme}>
                 <EmptyState
                     variant="plain"
                     icon="magnify-close"
+                    title={Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH_TITLE')}
                     message={Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
                     theme={theme}
                 />
-            </View>
+            </ScreenState>
         );
     }
 
     renderLoading(theme: import('../../../shared/theme/Theme').AppThemeType) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', backgroundColor: theme.background }}>
-                <ActivityIndicator size="large" color={theme.primary} animating={true} />
-            </View>
+            <LoadingState theme={theme} fullScreen />
         );
     }
 

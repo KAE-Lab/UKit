@@ -55,6 +55,34 @@ cartes, et un état de chargement propre.
 
 > **Capture attendue** — `campus-dashboard.png` : le tableau de bord, les quatre sections peuplées.
 
+## Une section vide dit pourquoi, et propose un geste
+
+Un carrousel sans carte n'affichait **rien du tout** : un en-tête de section, son chevron, et le vide
+en dessous. Ça se lit comme une application cassée — d'autant que la cause la plus fréquente est un
+**filtre**, donc quelque chose que l'utilisateur a posé lui-même et peut défaire.
+[`SectionEtatVide`](../../src/features/Campus/Dashboard/components/SectionEtatVide.tsx) distingue
+trois causes, et surtout trois **gestes** :
+
+| Cause | Ce qui s'affiche | Le geste |
+|---|---|---|
+| le filtre masque tout | « Tout est masqué par ton filtre. » | **Tout afficher**, ici même |
+| la source a échoué | le **titre** de la famille d'échec, « Service indisponible » | **Réessayer** si la famille le justifie, sinon **Voir tout** vers l'écran dédié |
+| il n'y a légitimement rien | « Aucun restaurant à proximité. » | aucun — il n'y en a pas |
+
+La décision du tableau de bord ne change pas : **ce n'est pas ici qu'on explique une panne**, c'est
+sur l'écran dédié, où vivent le message complet et le bouton Réessayer. Mais ne rien afficher n'était
+pas « rester discret », c'était laisser croire à un bug. La ligne renvoie donc là où l'explication se
+trouve.
+
+Le bouton Réessayer n'apparaît que si la famille d'échec est réessayable : c'est la table de
+[`failures.ts`](../../src/shared/aetherius/failures.ts) qui décide, pas la section.
+
+Le bloc est une [`CampusNotice`](../../src/features/Campus/components/CampusLayoutComponents.tsx) —
+le bandeau de couverture partielle, généralisé quand ce second usage est apparu. Il en existait en
+réalité **trois copies** : celle-ci, le bandeau partiel, et une ligne d'échec propre aux annonces avec
+son propre rayon et son propre rembourrage. Les quatre sections partagent maintenant la même. C'est une **ligne**,
+pas un état plein écran : elle laisse la place à la donnée, alors qu'un `EmptyState` **est** l'écran.
+
 ## Le socle de liste
 
 [`CampusListLayout.tsx`](../../src/features/Campus/components/CampusListLayout.tsx) est le composant
@@ -65,14 +93,42 @@ l'intégralité de la mise en page commune :
 |---|---|
 | Liste | `Animated.FlatList` avec rembourrage de zone sûre et de barre d'onglets |
 | Chargement | indicateur centré tant que `loading` est vrai |
-| Recherche | barre flottante en bas (`CampusSearchBar`), optionnelle via `hasSearch` |
+| Recherche | barre flottante en bas (`CampusSearchBar`), optionnelle via `hasSearch` — et **affichée seulement s'il y a quelque chose à chercher** |
 | Filtres | icône dans l'en-tête + modale (`CampusFilterModal`), affichées si `filterOptions` est non vide |
-| État vide | `CampusListEmptyState`, dont le message distingue « aucune donnée » de « aucun résultat pour ce filtre » |
+| État vide | `CampusListEmptyState` dans un [`ScreenState`](../../src/shared/ui/ScreenState.tsx), dont le message distingue « aucune donnée » de « aucun résultat pour ce filtre » |
 | Défilement | `onAnimatedScroll` transmis, pour l'animation d'en-tête ([navigation.md](../navigation.md)) |
 
-L'écran consommateur ne fournit que la donnée déjà filtrée et son `renderItem`. Un nouvel écran de
-liste Campus **doit** passer par ce composant : c'est ce qui garantit que les quatre listes se
-comportent identiquement.
+L'écran consommateur ne fournit que la donnée déjà filtrée, son `renderItem`, et le **couple
+titre + message** de son état vide. Un nouvel écran de liste Campus **doit** passer par ce composant :
+c'est ce qui garantit que les quatre listes se comportent identiquement.
+
+### La barre de recherche, et quand elle n'est pas là
+
+Elle reste **flottante en bas**, à portée de pouce. Ce qui la rendait discrète n'était pas sa hauteur
+mais sa couleur : elle prenait `greyBackground`, c'est-à-dire un fond, et un champ de la couleur d'un
+fond ne se voit pas. Elle porte désormais la surface d'une carte, un filet et l'ombre partagée — un
+objet **posé sur** la liste plutôt qu'un creux dedans — et un dégradé de 24 points amortit le passage
+des cartes sous elle.
+
+**Deux choses la séparent du clavier, et il faut les deux.** Le clavier d'iOS est posé *par-dessus*
+l'application, avec des coins supérieurs arrondis et un fond qui laisse passer ce qu'il y a derrière :
+sans une **dalle opaque** de la couleur de la page, à la hauteur exacte du clavier, ce sont les cartes
+de la liste qui apparaissent dans ces coins. Elle est rendue **hors** du `KeyboardAvoidingView`, qui
+translate ses enfants vers le haut — une dalle qui monterait avec eux ne couvrirait justement pas la
+zone du clavier. Et la marge de zone sûre, qui ne sert qu'à dégager l'indicateur d'accueil, tombe
+quand le clavier est ouvert : le clavier le masque déjà, et la garder laissait un ruban de vingt
+points qu'on lit comme un trou. Sous Android la fenêtre se redimensionne, rien de tout cela ne se
+produit, et le mécanisme y est explicitement inactif.
+
+Elle n'apparaît que si `data.length > 0` **ou** si une requête est saisie, et le rembourrage de pied
+de liste suit la même condition. Les deux moitiés comptent : sans la première, une source en panne
+proposait de chercher dans une liste qui n'existe pas ; sans la seconde, taper une recherche sans
+résultat ferait disparaître le champ, et avec lui la croix qui l'efface — on serait enfermé.
+
+Un cas se distingue et il est délibéré : quand la **couverture est partielle** et la liste vide, le
+bandeau `CampusPartialNotice` reste affiché au-dessus de l'état vide. Il vivait dans l'en-tête de la
+liste, qui n'existe plus dans ce cas ; le taire ferait passer « on n'a pas pu tout interroger » pour
+« il n'y a rien ».
 
 > **Capture attendue** — `campus-liste-filtres.png` : la modale de filtres ouverte sur un écran de
 > liste.
@@ -158,7 +214,22 @@ temps de chargement.
   Talence.
 - Mettre un élément en favori depuis la liste, revenir au tableau de bord : l'étoile doit être à jour.
 - Appliquer un filtre, quitter l'écran, y revenir : le filtre doit être conservé.
-- Mode avion : chaque section doit afficher un état vide propre, sans plantage.
+- **Appliquer un filtre qui ne laisse rien, puis revenir au tableau de bord** : la section doit dire
+  que tout est masqué et proposer « Tout afficher ». Toucher le bouton doit **repeupler le carrousel
+  immédiatement**. C'est la sonde du défaut corrigé le 2026-08-21
+  ([defauts-fonctionnels.md](../defauts-fonctionnels.md)) : le tableau de bord est un onglet qui ne se
+  démonte jamais, et il restait sur le filtre lu au lancement de l'application.
+- Réseau coupé depuis le [menu flottant](../qualite.md) — pas le mode avion, qui coupe aussi Metro :
+  chaque section doit afficher un état vide propre, sans plantage.
+- Sur une liste (CROUS, BU, salles libres) : réseau coupé, la **barre de recherche doit disparaître** ;
+  réseau rétabli, elle revient ; une recherche sans résultat la laisse en place, croix comprise.
+- Comparer l'écran d'une liste hors ligne et celui d'une recherche sans résultat : **ils doivent être
+  différents**, jusqu'à la teinte du carré d'icône — rouge pâle pour la panne, gris pour l'absence.
+  S'ils se ressemblent, la vérification n'a rien vérifié.
+- Sur une recherche sans résultat, toucher **« Tout afficher »** : la requête et le filtre doivent se
+  retirer ensemble et la liste revenir entière.
+- Clavier ouvert sur une liste, dans les **deux thèmes** : aucune zone découverte entre la barre de
+  recherche et le clavier, y compris dans ses coins supérieurs arrondis.
 
 ## Limites connues
 
@@ -184,6 +255,7 @@ temps de chargement.
 | [`Dashboard/components/LibrarySectionCard.tsx`](../../src/features/Campus/Dashboard/components/LibrarySectionCard.tsx) | carte d'une BU avec son indicateur d'affluence |
 | [`Dashboard/components/FreeRoomSection.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSection.tsx) | section salles libres : déclenche le chargement des bâtiments si le cache est vide |
 | [`Dashboard/components/FreeRoomSectionCard.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSectionCard.tsx) | carte d'un bâtiment |
+| [`Dashboard/components/SectionEtatVide.tsx`](../../src/features/Campus/Dashboard/components/SectionEtatVide.tsx) | ce qu'une section montre quand son carrousel n'a rien : filtre, panne, ou absence |
 | [`components/CampusListLayout.tsx`](../../src/features/Campus/components/CampusListLayout.tsx) | socle générique des écrans de liste : liste, recherche, filtres, états |
 | [`components/CampusLayoutComponents.tsx`](../../src/features/Campus/components/CampusLayoutComponents.tsx) | `CampusSearchBar`, `CampusFilterModal`, `CampusListEmptyState`, `CampusFailureNotice`, `CampusPartialNotice` |
 | [`components/CampusCard.tsx`](../../src/features/Campus/components/CampusCard.tsx) | carte de base commune aux quatre types d'éléments ; sa surface vient de `shared/ui/Card` |

@@ -243,7 +243,8 @@ export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, l
                         {Translator.get('AUTO_SYNC_DESCRIPTION')}
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.xs }}>
-                        <View style={{ width: 8, height: 8, borderRadius: tokens.radius.md, backgroundColor: lastSyncDate ? '#43A047' : theme.fontSecondary, marginRight: tokens.space.sm }} />
+                        {/* Une pastille ronde : le rayon se calcule, il ne s'ecrit pas (docs/theme.md). */}
+                        <View style={{ width: 8, height: 8, borderRadius: tokens.radius.pill, backgroundColor: lastSyncDate ? theme.success : theme.neutral, marginRight: tokens.space.sm }} />
                         <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
                             {lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}
                         </Text>
@@ -274,7 +275,7 @@ export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, l
             </>
         ) : (
             <>
-                <View style={{ backgroundColor: `#E6510018`, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: `#E6510040`, flexDirection: 'row', alignItems: 'flex-start' }}>
+                <View style={{ backgroundColor: theme.warningSoft, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.warning, flexDirection: 'row', alignItems: 'flex-start' }}>
                     <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, lineHeight: 20, flex: 1 }}>
                         {Translator.get('ENABLE_CALENDAR_PERMISSION_DESCRIPTION')}
                     </Text>

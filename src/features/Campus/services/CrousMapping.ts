@@ -20,6 +20,16 @@ export interface CrousRestaurant {
     lat: number;
     lon: number;
     opening: string;
+    /**
+     * Les memes horaires, **non aplatis**.
+     *
+     * La source sert une liste d'affirmations heterogenes — une plage de jours, un nom de service,
+     * une fermeture exceptionnelle. `opening` les joint par « | » pour la ligne unique d'une carte de
+     * liste ; l'ecran de detail, lui, a la place de les rendre une par une, et un pave de cinq
+     * mentions separees par des barres verticales est illisible. Vide quand la source ne publie rien :
+     * c'est `opening` qui porte alors le libelle de repli.
+     */
+    openingLines: string[];
     distance?: number;
     image_url?: string;
 }
@@ -72,6 +82,82 @@ export function horairesLisibles(brut: unknown, repli: string): string {
     return lignes.length > 0 ? lignes.join(' | ') : repli;
 }
 
+/** Les memes horaires, ligne par ligne. Vide si la source n'en publie aucun. */
+export function horairesEnLignes(brut: unknown): string[] {
+    return commeLignes(brut);
+}
+
+/**
+ * Une ligne d'horaires, une fois **reconnue**.
+ *
+ * Quatre formes, et la distinction entre les deux premieres n'est pas cosmetique : « du lundi au
+ * vendredi » est une **periode**, « CAFET' : » est un **guichet** qui n'annonce pas son creneau. Les
+ * confondre — ce qu'une premiere version faisait — les affichait a l'identique, et un guichet se
+ * lisait comme une plage de jours.
+ *
+ * `service` nomme un guichet **et** son creneau, `horaire` est un creneau seul, `note` est tout le
+ * reste : une phrase du fournisseur, affichee telle quelle.
+ */
+export type LigneHoraire =
+    | { readonly kind: 'periode'; readonly texte: string }
+    | { readonly kind: 'guichet'; readonly nom: string }
+    | { readonly kind: 'service'; readonly nom: string; readonly horaire: string }
+    | { readonly kind: 'horaire'; readonly texte: string }
+    | { readonly kind: 'note'; readonly texte: string };
+
+/** Un nom de guichet est court. Au-dela, le deux-points appartient a une phrase. */
+const LARGEUR_NOM = 40;
+/** Une portee et un creneau tiennent en peu de mots. Au-dela, c'est une phrase. */
+const LARGEUR_COURTE = 30;
+
+const JOUR = /^(du|le|les|a partir du|jusqu'au)\s+(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)/i;
+const HEURE = /\d{1,2}\s*h/;
+
+/** Espaces doubles et barres verticales residuelles : la source en sert (« SELF : 11h15 - 13h45 | »). */
+function nettoyer(ligne: string): string {
+    return ligne.replace(/\s+/g, ' ').replace(/^\|+/, '').replace(/\|+$/, '').trim();
+}
+
+/**
+ * Reconnait la structure que la source publie sans la declarer.
+ *
+ * Mesure le 2026-08-21 sur les quarante-et-un restaurants de la region : 81 lignes, dont 36 de la
+ * forme « NOM : creneau », 25 portees de jours, et 20 creneaux nus ou phrases libres. Aplaties par des
+ * « | » et repliees, elles formaient un pave illisible ; rendues selon leur forme, elles se lisent.
+ *
+ * **Toute ligne non reconnue retombe en `note`**, et une note s'affiche telle quelle : le pire cas est
+ * donc exactement ce que l'ecran faisait avant. C'est ce qui autorise a reconnaitre sans garantie —
+ * une source tierce peut changer de format demain, et elle l'a deja fait (`horairesLisibles`).
+ */
+export function structurerHoraires(lignes: readonly string[]): LigneHoraire[] {
+    const sorties: LigneHoraire[] = [];
+
+    for (const brute of lignes) {
+        const ligne = nettoyer(brute);
+        if (ligne === '') continue;
+
+        const rang = ligne.indexOf(':');
+        const nom = rang > 0 ? ligne.slice(0, rang).trim() : '';
+        if (nom !== '' && rang <= LARGEUR_NOM) {
+            const horaire = nettoyer(ligne.slice(rang + 1));
+            // « CAFET' : » sans creneau reste un **guichet** : il cadre les lignes qui suivent, mais
+            // il nomme un comptoir, pas une plage de jours.
+            sorties.push(horaire === '' ? { kind: 'guichet', nom } : { kind: 'service', nom, horaire });
+            continue;
+        }
+
+        if (JOUR.test(ligne) && ligne.length <= LARGEUR_COURTE) {
+            sorties.push({ kind: 'periode', texte: ligne });
+            continue;
+        }
+
+        const creneau = HEURE.test(ligne) && ligne.length <= LARGEUR_COURTE;
+        sorties.push(creneau ? { kind: 'horaire', texte: ligne } : { kind: 'note', texte: ligne });
+    }
+
+    return sorties;
+}
+
 function commeLignes(brut: unknown): string[] {
     if (Array.isArray(brut)) {
         return brut.filter((ligne): ligne is string => typeof ligne === 'string' && ligne !== '');
@@ -107,6 +193,7 @@ export function projeterRestaurant(brut: RestaurantExtrait, repliHoraires: strin
         lat: nombre(brut.lat) ?? 0,
         lon: nombre(brut.lon) ?? 0,
         opening: horairesLisibles(brut.horaires, repliHoraires),
+        openingLines: horairesEnLignes(brut.horaires),
         image_url: `${API}/restaurants/${code}/preview`,
     };
 }

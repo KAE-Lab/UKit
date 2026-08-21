@@ -127,7 +127,7 @@ class AboutScreen extends React.Component<AboutScreenProps> {
                     <View style={{ alignItems: 'center', paddingVertical: tokens.space.lg }}>
 						<View style={{
 							width: 90, height: 90, borderRadius: tokens.radius.lg, overflow: 'hidden',
-							marginBottom: tokens.space.md, backgroundColor: '#ffffff',
+							marginBottom: tokens.space.md, backgroundColor: theme.lightFont,
                             justifyContent: 'center', alignItems: 'center'
 						}}>
                             <Image

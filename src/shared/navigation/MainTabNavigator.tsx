@@ -11,6 +11,7 @@ import ScolariteDashboard from '../../features/Scolarite/screens/ScolariteDashbo
 import SettingsScreen from '../../features/Settings/screens/SettingsScreen';
 
 import style, { tokens, AppThemeType } from '../theme/Theme';
+import { TAB_BAR_HEIGHT } from '../ui/ScreenState';
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
@@ -176,7 +177,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
     }
     
     // Placeholder invisible — maintient la largeur de la tab bar sans afficher de contour
-    return <View style={{ width: 65, height: 75 }} />;
+    return <View style={{ width: 65, height: TAB_BAR_HEIGHT }} />;
 }
 
 // Composant Custom Tab Bar pour reproduire l'effet Apple Music (décalé à gauche, ratio icon/text, bords arrondis)
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderRadius: tokens.radius.md,
         borderWidth: 1,
-        height: 75,
+        height: TAB_BAR_HEIGHT,
         elevation: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
@@ -297,7 +298,7 @@ const styles = StyleSheet.create({
     },
     groupButton: {
         width: 65,
-        height: 75,
+        height: TAB_BAR_HEIGHT,
         borderRadius: tokens.radius.md,
         borderWidth: 1,
         justifyContent: 'center',
