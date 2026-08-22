@@ -230,9 +230,10 @@ livré ; elle est mise à jour à chaque contribution.
   formes de bouton parlent désormais une seule langue. Ce qu'elle a trouvé vaut d'être retenu — le
   *bloc* d'état vide était partagé depuis 6-K, son **hôte** ne l'était pas, et c'est l'hôte qui décide
   de la hauteur : six écrans calaient le leur différemment, d'où des messages qui flottaient tantôt
-  trop haut, tantôt trop bas. Un [`ScreenState`](src/shared/ui/ScreenState.tsx) centre maintenant sur
-  la **surface libre** et non sur l'écran. L'application **tutoie** partout, et les avertissements
-  ESLint sont passés de 79 à 53.
+  trop haut, tantôt trop bas. Un [`ScreenState`](src/shared/ui/ScreenState.tsx) décide maintenant, et
+  il **ancre le bloc sous l'en-tête** plutôt que de le centrer : centrer demanderait de connaître ce
+  qui occupe le bas de chaque écran. L'application **tutoie** partout, et les avertissements ESLint
+  sont passés de 79 à 53.
 - [x] **Internationalisation** — français, anglais, espagnol ; 268 clés par dictionnaire, typage de
   la clé, locale des dates alignée. **Plus aucune chaîne visible en dur ni clé manquante** : les
   treize libellés Campus qui manquaient sont traduits, et les casts qui les masquaient au compilateur
@@ -270,7 +271,10 @@ livré ; elle est mise à jour à chaque contribution.
   [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
-  et l'application démarre et s'utilise sans jamais la joindre. [docs/backend.md](docs/backend.md)
+  et l'application démarre et s'utilise sans jamais la joindre. Elle porte aussi, depuis la passe de
+  finition, **les visuels** : la photo d'un restaurant, d'une bibliothèque, d'un bâtiment ou d'une
+  annonce se remplace par une ligne, pour tout le monde, sans release — ces images venaient jusque-là
+  d'une source tierce et n'étaient corrigeables par rien. [docs/backend.md](docs/backend.md)
 - [x] **Livraison des Blueprints** — le registre résout entre le socle embarqué et une surcouche
   publiée, vérifiée à l'empreinte à chaque lecture ; le rafraîchissement est hors du chemin d'un run,
   et un panneau de diagnostic dit d'où vient chaque Blueprint.

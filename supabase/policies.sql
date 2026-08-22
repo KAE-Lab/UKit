@@ -24,6 +24,7 @@
 alter table public.annonces         enable row level security;
 alter table public.service_messages enable row level security;
 alter table public.batiments        enable row level security;
+alter table public.visuels          enable row level security;
 alter table public.etablissements   enable row level security;
 alter table public.blueprints       enable row level security;
 alter table public.app_release      enable row level security;
@@ -49,6 +50,15 @@ create policy "messages de service actifs lisibles"
 drop policy if exists "batiments lisibles" on public.batiments;
 create policy "batiments lisibles"
     on public.batiments for select
+    to anon
+    using (true);
+
+-- Aucune condition de publication : une ligne de cette table **est** la publication. Il n'y a ni
+-- date d'expiration ni drapeau d'activation a filtrer — retirer un visuel se fait en retirant la
+-- ligne, ce qui rend a la source la sienne.
+drop policy if exists "visuels lisibles" on public.visuels;
+create policy "visuels lisibles"
+    on public.visuels for select
     to anon
     using (true);
 

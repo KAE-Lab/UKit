@@ -340,10 +340,21 @@ l'**application** seulement. Il fait deux choses, et il faut les deux :
 | `isConnected()` rend `false` | la branche « pas de connexion » des écrans qui la consultent : le planning, la recherche de groupes |
 | le `fetch` du moteur échoue | tout run part en famille `unavailable` — sans ce volet, les écrans Campus ne verraient rien, ils ne consultent pas `NetInfo` |
 
-Ce qu'il **ne couvre pas**, et qu'il faut savoir avant de conclure : la WebView de l'Act II, qui
-navigue par elle-même et ne passe pas par ce `fetch`. La scolarité est dans ce cas depuis le jalon
-[6-F](phase-6/6-f-scolarite.md), et son chemin dégradé se vérifie donc par la seconde méthode
-ci-dessous — pointer une `vars` d'hôte sur une adresse injoignable, puis recharger.
+Ce qu'il **ne couvre pas**, et qu'il faut savoir avant de conclure, ce sont les deux chemins réseau
+qui ne passent pas par le `fetch` du moteur :
+
+- **la WebView de l'Act II**, qui navigue par elle-même. La scolarité est dans ce cas depuis le jalon
+  [6-F](phase-6/6-f-scolarite.md) ;
+- **le client Supabase**, qui utilise le `fetch` global. Les trois surcouches publiées — Blueprints,
+  bâtiments, catalogue, visuels — continuent donc de se rafraîchir alors que l'interrupteur est
+  actif. C'est contre-intuitif et ça invalide silencieusement toute vérification de cache : on croit
+  observer un repli local alors qu'on observe une lecture qui a abouti.
+
+Les deux se vérifient par la seconde méthode ci-dessous — pointer un hôte sur une adresse
+injoignable, puis recharger. Pour la base, c'est `SUPABASE_URL=https://127.0.0.1:1` dans `.env` : la
+configuration reste **présente**, donc le client se construit et sa requête échoue, ce qui est le
+chemin réel d'une base injoignable. Une clé vidée testerait autre chose — l'application non
+configurée.
 
 > **Une source injoignable ne produit pas `unavailable` sur un appareil**, contrairement à ce que
 > laisse attendre le modèle d'erreur. Mesuré sur iPhone au jalon 6-F, et il y a **deux** cas :

@@ -57,6 +57,13 @@ Celcat expose des salles, pas des bâtiments. `extractBuildingsFromRooms` recons
    [6-D](../phase-6/6-d-campus.md), ce référentiel est le fichier embarqué **surcouché** par la table
    `batiments` : ouvrir un bâtiment à l'accès libre, corriger ses horaires ou remplacer son visuel se
    fait donc par une publication de données, pas par une release.
+
+   **Deux chemins mènent à la photo d'un bâtiment, et il faut prendre le second.**
+   `batiments.image_url` la porte dans le référentiel, mais elle y est lue à la *reconstruction* de la
+   liste, qui est ensuite mise en cache **sept jours** : une correction peut donc attendre une semaine.
+   La table [`visuels`](../backend.md#le-schéma) (domaine `batiment`, clé le code) est résolue **à la
+   lecture**, donc reçue au prochain retour au premier plan. Le premier chemin reste le bon endroit
+   pour la photo d'origine d'un bâtiment ; le second est celui d'une correction.
 2. Pour chaque salle Celcat, recherche du code de bâtiment dans son nom, par expression régulière de
    mot entier (`\bA28\b`, insensible à la casse) avec repli sur une inclusion simple.
 3. Nettoyage du nom : retrait du suffixe entre parenthèses, puis troncature à partir du mot « salle »

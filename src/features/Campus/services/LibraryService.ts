@@ -23,6 +23,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { BLUEPRINT, reportFailure, runBlueprint, type UkitFailure } from '../../../shared/aetherius';
 import type { SemanticTone } from '../../../shared/theme/Theme';
 import { getEtablissementActif } from '../../../shared/etablissements';
+import { appliquerVisuel } from '../../../shared/visuels';
 import {
     estBibliotheque,
     projeterAffluence,
@@ -183,7 +184,10 @@ export default class LibraryService {
                 lat: site.lat,
                 lng: site.lng,
                 slug: site.slug,
-                imageUrl: site.imageUrl,
+                // La photo publiee gagne sur celle du fournisseur, quand il y en a une : la galerie
+                // d'Affluences illustre parfois un site avec le hall d'un autre, et rien dans
+                // l'application ne permettait de le corriger (docs/backend.md).
+                imageUrl: appliquerVisuel('bibliotheque', site.id, site.imageUrl),
                 distance: distanceDepuis(site, userLat, userLng),
             }))
             .sort((gauche, droite) => (gauche.distance || 0) - (droite.distance || 0));

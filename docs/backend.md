@@ -74,6 +74,7 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 |---|---|---|---|---|
 | `annonces` | contenu éditorial de vie étudiante | [`BdeService`](../src/features/Campus/services/BdeService.ts) | **6-B** | — |
 | `batiments` | coordonnées, horaires, accès libre, visuel | [`shared/locations`](../src/shared/locations/index.ts) | **6-D** | [`assets/locations.json`](../assets/locations.json) |
+| `visuels` | la photo d'un contenu, quand celle de sa source est fausse ou absente | [`shared/visuels`](../src/shared/visuels/index.ts) | passe de finition | *aucun* — le socle, c'est l'image de la source |
 | `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | **6-G** | l'établissement historique |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | bandeau de service : maintenance, incident | rien aujourd'hui | — | — |
@@ -91,6 +92,66 @@ Le rafraîchissement suit le même rythme que la livraison des Blueprints — d�
 premier plan, jamais dans le chemin d'un rendu — et son résultat est mis en cache local pour que la
 dernière correction connue survive au mode hors ligne
 ([donnees-et-persistance.md](donnees-et-persistance.md)).
+
+`visuels` est la seule table qui ne surcouche pas notre propre donnée : elle surcouche celle des
+**autres**. Toutes les images de Campus viennent d'une source tierce — la route de prévisualisation de
+Croustillant, la galerie d'Affluences — et jusqu'à cette table, une photo fausse ou absente l'était
+pour tout le monde jusqu'au prochain passage en boutique. C'est-à-dire, en pratique, pour toujours.
+
+Elle n'a **aucun socle embarqué**, et c'est la décision qui gouverne tout le reste : *le socle d'un
+visuel, c'est l'image que la source publie déjà*. Une table vide, absente ou injoignable laisse donc
+l'application exactement dans l'état qui était le sien avant — ce qui la rend intégralement
+retirable, et ce qu'un socle de photos embarquées interdirait.
+
+La clé est composée : `(domaine, cle)`. Le domaine est fermé — `crous`, `bibliotheque`, `batiment`,
+`annonce` — et porté par un `check`, parce que c'est la seule faute de publication qui serait
+autrement **parfaitement silencieuse** : une faute de frappe donne une ligne valide, un visuel
+inchangé, et aucun moyen de savoir pourquoi. La clé, elle, est l'identifiant du contenu **chez sa
+source** : le code Croustillant d'un restaurant, l'id Affluences d'un site, le code d'un bâtiment,
+l'`id` de la ligne `annonces`.
+
+`image_url` porte **trois** états, et les aplatir ferait perdre le seul moyen de retirer une image :
+
+| Ce que la base porte | Ce que l'application fait |
+|---|---|
+| aucune ligne, ou `null` | rien : la photo de la source est servie, comme avant |
+| une URL | elle remplace celle de la source, pour tout le monde |
+| la chaîne vide `''` | aucune image : l'écran affiche son visuel de repli embarqué |
+
+C'est la même distinction que celle qui sépare `batiments` d'`etablissements` — là-bas un nul veut
+dire « je ne corrige pas ce champ », ici il veut dire la même chose, et c'est le **vide** qui porte
+l'effacement. Il fallait un troisième état parce qu'une URL vide n'est pas une URL : dire « cette
+photo est fausse, n'en montre aucune » n'a aucune autre façon de s'écrire.
+
+Une lecture qui aboutit **remplace** la surcouche entière plutôt que de la fusionner. C'est ce qui
+fait qu'une ligne retirée rend son visuel à la source, sans avoir à publier une correction de la
+correction.
+
+La résolution vit dans les **services**, jamais dans les modules de projection, qui restent purs et
+couverts par des tests : [`CrousService`](../src/features/Campus/services/CrousService.ts),
+[`LibraryService`](../src/features/Campus/services/LibraryService.ts),
+[`BdeService`](../src/features/Campus/services/BdeService.ts) et, pour les bâtiments,
+[`CampusDataManager.getBuildingList`](../src/features/Campus/services/CampusDataManager.ts). Ce
+dernier applique la règle **à la lecture** et non à la reconstruction, ce qui n'est pas un détail : la
+liste des bâtiments est mise en cache sept jours, et l'appliquer en amont figerait une photo pour une
+semaine — exactement ce que cette table existe pour supprimer.
+
+> **Limite connue, mesurée sur appareil.** Un visuel corrigé pendant que l'application tourne arrive
+> sur les **écrans de liste**, qui se montent à neuf, mais **pas sur les carrousels du tableau de bord
+> Campus**, qui gardent l'état chargé à leur montage : l'onglet ne se démonte jamais et leur effet ne
+> se rejoue que sur un changement de position ou un nouvel essai
+> ([`useCrousRestaurants.ts`](../src/features/Campus/hooks/useCrousRestaurants.ts)). La correction y
+> apparaît au lancement suivant. La cause est antérieure aux visuels — c'est celle qui a produit le
+> défaut du filtre corrigé pendant la passe de finition — et la corriger demande de décider de la
+> politique de rafraîchissement du tableau de bord entier, pas d'une photo : rejouer quatre appels
+> réseau à chaque retour au premier plan est un arbitrage produit, qui appartient à la session
+> d'écran du tableau de bord.
+
+> **Limite connue.** Un visuel de domaine `batiment` est indexé par un code (`A28`), et un code n'a de
+> sens que chez l'établissement qui le publie. Deux universités qui partageraient un code
+> partageraient la correction. Aucune ligne de ce domaine n'existe aujourd'hui, et le jour où elle
+> existera, la clé deviendra `<établissement>/<code>` — pas avant : le mécanisme se juge sur ce qu'il
+> corrige, pas sur ce qu'il pourrait avoir à corriger.
 
 `etablissements` est **lue depuis le jalon [6-G](phase-6/6-g-etablissements.md)**, par
 [`shared/etablissements`](../src/shared/etablissements/index.ts), et elle **remplace** — à l'inverse
@@ -158,7 +219,7 @@ Deux buckets :
 | Bucket | Contenu | Accès |
 |---|---|---|
 | `blueprints` | les six fichiers d'instructions et `manifest.json` | lecture publique |
-| `media` | visuels des annonces (`annonces/`) et des bâtiments (`batiments/`) | lecture publique |
+| `media` | visuels publiés : annonces (`annonces/`), bâtiments (`batiments/`), contenus (`restaurants/`, `bibliotheques/`) | lecture publique |
 
 **Rien de tout cela ne porte de logique.** Pas de fonction, pas de déclencheur métier, pas de vue qui
 calcule. Ce qui se calcule se calcule dans l'application, où c'est typé, relu et vérifié. La base
@@ -246,8 +307,35 @@ pas filtrée côté application.
 **`expire_le` peut rester vide** : une annonce sans date n'expire jamais. La politique la laisse
 passer et l'application l'affiche.
 
-Les visuels vont dans le bucket `media`, sous `annonces/` ou `batiments/`, et l'URL publique se colle
-dans `image_url`.
+Les visuels vont dans le bucket `media`, sous `annonces/`, `batiments/`, `restaurants/` ou
+`bibliotheques/`, et l'URL publique se colle dans `image_url`.
+
+**Remplacer la photo d'un contenu servi par une source tierce** — un restaurant, une bibliothèque, un
+bâtiment, une annonce — se fait par la table `visuels`, une ligne par contenu :
+
+```sql
+-- Remplacer la photo du Resto U de l'Amazone (code Croustillant 21).
+insert into public.visuels (domaine, cle, image_url)
+values ('crous', '21', 'https://<projet>.supabase.co/storage/v1/object/public/media/restaurants/amazone.jpg')
+on conflict (domaine, cle) do update set image_url = excluded.image_url, maj_le = now();
+
+-- Retirer une photo fausse sans en fournir d'autre : l'ecran reprend son visuel embarque.
+insert into public.visuels (domaine, cle, image_url) values ('crous', '21', '')
+on conflict (domaine, cle) do update set image_url = '', maj_le = now();
+
+-- Rendre son visuel a la source.
+delete from public.visuels where domaine = 'crous' and cle = '21';
+```
+
+La clé est celle du contenu **chez sa source**. Un restaurant la porte dans l'URL de son image
+actuelle (`.../restaurants/21/preview`), un bâtiment est son code (`A28`), une annonce est l'`id` de
+sa ligne. Une bibliothèque fait exception et c'est le seul cas qui demande une commande : son
+identifiant Affluences est un UUID que **rien dans l'application n'affiche**, et son image porte un
+hachage sans rapport avec lui — [`supabase/README.md`](../supabase/README.md#publier-un-visuel) donne
+la requête qui les liste.
+
+Le changement arrive sur les appareils au **prochain retour au premier plan**, comme les Blueprints
+et le référentiel des lieux. Aucune release, aucun redémarrage.
 
 ### Des Blueprints
 

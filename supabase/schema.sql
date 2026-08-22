@@ -158,6 +158,37 @@ alter table public.etablissements add column if not exists salles_libres jsonb;
 -- defaut, celle du secteur bordelais.
 alter table public.etablissements add column if not exists crous_region  text;
 
+-- Surcouche des visuels de contenu. Elle repond a une question qu'aucune des tables
+-- precedentes ne couvre : que fait-on quand une **source tierce** publie une photo fausse, ou n'en
+-- publie pas ? Jusqu'ici, rien — l'image venait du fournisseur et il fallait une release pour la
+-- changer, ce qui revient a ne jamais la changer.
+--
+-- Trois particularites, et aucune n'est un detail :
+--
+--   1. **Aucun socle embarque, et c'est la decision.** Le socle d'un visuel, c'est l'image que la
+--      source publie deja. Une table absente, vide ou injoignable laisse donc l'application dans
+--      l'etat exact qui est le sien aujourd'hui — ce que la promesse « l'application fonctionne sans
+--      jamais joindre la base » exige, et ce qui rend cette table entierement retirable.
+--   2. **`image_url` porte trois etats, pas deux.** Une ligne absente (ou une valeur nulle) veut dire
+--      « je ne corrige rien » ; une URL remplace le visuel de la source ; la **chaine vide** dit « la
+--      photo de la source est fausse, n'en montre aucune » et fait tomber l'ecran sur son visuel de
+--      repli embarque. Aplatir le vide et le nul ferait perdre le seul moyen de retirer une image.
+--   3. La cle est **celle du contenu chez sa source** — le code Croustillant d'un restaurant, l'id
+--      Affluences d'une bibliotheque, le code d'un batiment, l'`id` d'une annonce. Elle n'est donc
+--      unique qu'a l'interieur d'un domaine, d'ou la cle primaire composee.
+--
+-- Le `check` sur `domaine` existe pour attraper la seule faute de publication qui serait autrement
+-- **parfaitement silencieuse** : une faute de frappe donnerait une ligne valide, un visuel inchange,
+-- et aucune facon de savoir pourquoi. L'ajouter d'un domaine se fait par migration, et l'application
+-- installee qui ne le connait pas ignore simplement ses lignes.
+create table if not exists public.visuels (
+    domaine   text        not null check (domaine in ('crous', 'bibliotheque', 'batiment', 'annonce')),
+    cle       text        not null,
+    image_url text,
+    maj_le    timestamptz not null default now(),
+    primary key (domaine, cle)
+);
+
 -- =============================================================================
 -- Livraison
 -- =============================================================================
@@ -191,7 +222,7 @@ create table if not exists public.app_release (
 -- =============================================================================
 --
 --   blueprints  les fichiers d'instructions et manifest.json  — lecture publique
---   media       visuels des annonces et des batiments         — lecture publique
+--   media       visuels publies : annonces, batiments, contenus  — lecture publique
 --
 -- Crees ici plutot que depuis la console : la regle de ce fichier vaut aussi pour eux, et un bucket
 -- cree a la main est un bucket qu'on ne saura pas recreer. `public` autorise la lecture par URL

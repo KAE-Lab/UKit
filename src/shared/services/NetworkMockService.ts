@@ -14,8 +14,11 @@
  *     volet, les écrans Campus ne verraient rien : ils ne consultent pas `NetInfo`, ils jouent un
  *     Blueprint et lisent son échec.
  *
- * Ce qu'il ne couvre **pas**, et qu'il faut savoir avant de conclure : la WebView de l'Act II, qui
- * navigue par elle-même et ne passe pas par ce `fetch`. C'est le cas de la scolarité depuis le jalon
+ * Ce qu'il ne couvre **pas**, et qu'il faut savoir avant de conclure, ce sont les deux chemins qui
+ * n'empruntent pas ce `fetch` : **le client Supabase**, qui utilise le `fetch` global — les
+ * surcouches publiées continuent donc de se rafraîchir, ce qui invalide en silence toute
+ * vérification de cache local (pointer `SUPABASE_URL` sur `https://127.0.0.1:1` pour ça) — et la
+ * WebView de l'Act II, qui navigue par elle-même. C'est le cas de la scolarité depuis le jalon
  * 6-F : son chemin dégradé se vérifie en pointant une `vars` d'hôte sur `https://127.0.0.1:1/` puis
  * en rechargeant Metro. Une adresse qui refuse la connexion plutôt qu'un nom qui ne résout pas, et
  * ce n'est pas un détail : mesuré sur appareil, la première produit un échec **nommé** par le

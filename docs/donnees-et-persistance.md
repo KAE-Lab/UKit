@@ -72,6 +72,7 @@ Un contexte ne serait pas accessible depuis ces points.
 | `aetherius/blueprints@1` | le registre du moteur, via [`registry.ts`](../src/shared/aetherius/registry.ts) | la **surcouche** des Blueprints publiés : un document unique portant, par nom, le texte servi et son empreinte | jusqu'à la prochaine publication ou un retour à l'embarqué |
 | `batiments@1` | [`shared/locations`](../src/shared/locations/index.ts) | la **surcouche** du référentiel des lieux : un document unique portant, par code, les champs publiés | jusqu'au prochain rafraîchissement |
 | `etablissements@1` | [`shared/etablissements`](../src/shared/etablissements/index.ts) | la **surcouche** du catalogue : un document unique portant, par code, l'établissement publié | jusqu'au prochain rafraîchissement |
+| `visuels@1` | [`shared/visuels`](../src/shared/visuels/index.ts) | la **surcouche** des visuels : un document unique portant, par `domaine:cle`, la photo publiée — ou `null`, qui dit « n'en montre aucune » | jusqu'au prochain rafraîchissement |
 
 Le préfixe `<groupes>` est le nom du groupe, ou la concaténation des groupes favoris jointe par `+`
 quand la vue affiche le planning agrégé.
@@ -82,7 +83,7 @@ quand la vue affiche le planning agrégé.
 > l'appel du milieu a changé. C'est ce qui rend la bascule invisible sur la seule fonctionnalité que
 > l'application promet de faire marcher hors ligne — et ce qui permettrait de la défaire.
 
-Les trois clés de surcouche sont les seules du tableau à porter **un document unique pour plusieurs
+Les quatre clés de surcouche sont les seules du tableau à porter **un document unique pour plusieurs
 entrées**, et c'est délibéré : un document illisible fait perdre la surcouche entière et l'application
 retombe sur son socle embarqué. C'est le sens du repli, et c'est préférable à un index réparti sur
 plusieurs clés qui pourrait se contredire. Pour les Blueprints, l'empreinte de chaque entrée est
@@ -191,6 +192,7 @@ quoi que ce soit.
 | Référentiel des bâtiments | [`assets/locations.json`](../assets/locations.json) | table `batiments` | **6-D** |
 | Établissements | l'établissement historique, en dur | table `etablissements` | 6-G |
 | Annonces de vie étudiante | *aucun* | table `annonces` | **6-B** |
+| Visuels de contenu | *aucun* — l'image de la source | table `visuels` | passe de finition |
 
 Les deux surcouches livrées suivent la même mécanique et le même rythme : rafraîchies au démarrage et
 au retour au premier plan, jamais dans le chemin d'un run ni d'un rendu, jamais bloquantes, et
@@ -202,6 +204,12 @@ coordonnée, qu'une publication a le droit d'ajouter.
 Les annonces sont l'exception, et volontairement : une annonce n'a pas de valeur par défaut
 raisonnable, et en figer une dans le binaire reviendrait à livrer un contenu éditorial périmé à
 chaque installation. Leur absence produit une section vide, pas une application cassée.
+
+Les visuels sont l'autre exception, et pour une raison inverse : ils ont bien un socle, mais il
+n'est **pas dans le binaire** — c'est l'image que la source publie déjà. La table ne fait que la
+corriger, ce qui rend le mécanisme intégralement retirable et son absence strictement invisible. Le
+cache local, lui, existe pour la raison symétrique de celle des lieux : sans lui, une photo retirée
+parce qu'elle était fausse **reviendrait** au premier lancement hors ligne.
 
 ## Invalidation
 

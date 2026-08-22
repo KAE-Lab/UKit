@@ -257,6 +257,9 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/locations/referentiel.test.ts`](../src/shared/locations/referentiel.test.ts) | la fusion champ par champ, jouée par `npm test` |
 | [`shared/locations/salles.ts`](../src/shared/locations/salles.ts) | reconnaître un bâtiment dans un libellé de salle, selon le format publié par l'établissement |
 | [`shared/locations/salles.test.ts`](../src/shared/locations/salles.test.ts) | les deux formes réelles, et la non-régression bordelaise |
+| [`shared/visuels/referentiel.ts`](../src/shared/visuels/referentiel.ts) | les visuels publiés : la surcouche en mémoire et la résolution des trois états — pas de socle embarqué, le socle est l'image de la source ([backend.md](backend.md)) |
+| [`shared/visuels/index.ts`](../src/shared/visuels/index.ts) | sa couture de plateforme : cache local et lecture de la table `visuels` |
+| [`shared/visuels/referentiel.test.ts`](../src/shared/visuels/referentiel.test.ts) | la distinction du vide et du nul, dont une erreur ferait disparaître une photo en silence — joué par `npm test` |
 | [`shared/etablissements/catalogue.ts`](../src/shared/etablissements/catalogue.ts) | le catalogue : socle embarqué, projection d'une ligne, établissement actif, libellés propres à l'université ([features/settings.md](features/settings.md)) |
 | [`shared/etablissements/celcat.ts`](../src/shared/etablissements/celcat.ts) | ce que le catalogue fournit aux six Blueprints Celcat, et le prédicat des salles libres |
 | [`shared/etablissements/edt.ts`](../src/shared/etablissements/edt.ts) | quelle source d'emploi du temps l'établissement publie — Celcat, référentiel iCalendar, abonnement collé, lien attendu, ou aucune — et les échecs qui en découlent |

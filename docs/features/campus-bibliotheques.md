@@ -64,7 +64,7 @@ interface LibraryInfo {
     lng: number;            // noter "lng", pas "lon"
     slug: string;           // identifiant utilisé par les endpoints v4
     distance?: number;      // km, recalculé localement
-    imageUrl?: string;
+    imageUrl?: string;      // celui du fournisseur, sauf visuel publié
 }
 
 interface AffluencesData {
@@ -114,6 +114,12 @@ Un taux inconnu est traité comme « de la place » : afficher un avertissement 
 trompeur.
 
 ## Décisions de conception
+
+**Le visuel d'un site se remplace depuis la base.** La galerie du fournisseur illustre parfois un
+site avec le hall d'un autre, et rien ne permettait de le corriger. Une ligne
+`('bibliotheque', '<id>', '<url>')` dans la table [`visuels`](../backend.md#le-schéma) gagne sur la
+sienne ; la chaîne vide retire l'image sans en fournir d'autre. La résolution est faite par
+`LibraryService` à la projection de la liste, jamais dans `LibraryMapping`, qui reste pur.
 
 **Le balayage part de la position de l'étudiant en plus des points du catalogue**, et c'est une
 propriété qui a compté au jalon [6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md) : elle

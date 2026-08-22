@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CampusApiService } from './CampusApiService';
 import type { UkitFailure } from '../../../shared/aetherius';
+import { appliquerVisuel } from '../../../shared/visuels';
 
 class CampusDataManagerService {
     _buildingList: import('./CampusApiService').CelcatBuilding[];
@@ -25,7 +26,22 @@ class CampusDataManagerService {
         this._subscribers[event].forEach((fn) => fn(...args));
     };
 
-    getBuildingList = (): import('./CampusApiService').CelcatBuilding[] => this._buildingList;
+    /**
+     * La liste des batiments, visuels publies appliques.
+     *
+     * La resolution se fait **a la lecture** et non a la reconstruction, ce qui est le seul endroit
+     * ou elle vaut ici : cette liste est mise en cache pour sept jours (`buildingList`), et l'appliquer
+     * en amont figerait la photo d'un batiment pour une semaine — c'est-a-dire exactement ce que
+     * « corriger un visuel sans release » existe pour supprimer. La table est en memoire et la liste
+     * fait une dizaine d'entrees ; les deux appelants lisent depuis un effet, jamais depuis un rendu.
+     *
+     * `name` porte le code du batiment (`A28`), qui est la cle du referentiel comme celle des visuels.
+     */
+    getBuildingList = (): import('./CampusApiService').CelcatBuilding[] =>
+        this._buildingList.map((batiment) => ({
+            ...batiment,
+            imageUrl: appliquerVisuel('batiment', batiment.name, batiment.imageUrl),
+        }));
 
     setBuildingList = (newList: import('./CampusApiService').CelcatBuilding[]) => {
         this._buildingList = [...newList];

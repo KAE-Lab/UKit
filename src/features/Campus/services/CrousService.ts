@@ -15,6 +15,7 @@
 import Translator from '../../../shared/i18n/Translator';
 import { BLUEPRINT, reportFailure, runBlueprint, serviceAbsent, type UkitFailure } from '../../../shared/aetherius';
 import { crousRegionActive } from '../../../shared/etablissements';
+import { appliquerVisuel } from '../../../shared/visuels';
 import {
     projeterJourMenu,
     projeterRestaurant,
@@ -86,7 +87,14 @@ class CrousServiceManager {
 
         const repli = Translator.get('UNSPECIFIED_HOURS');
         const restaurants = commeListe(run.outputs.restaurants).map((brut) => {
-            const restaurant = projeterRestaurant(brut as RestaurantExtrait, repli);
+            const projete = projeterRestaurant(brut as RestaurantExtrait, repli);
+            // La photo publiee gagne sur celle de la source, quand il y en a une. La resolution vit
+            // ici et non dans la projection : le mapping reste pur et sans etat partage, comme ses
+            // trois voisins (docs/backend.md, « les visuels publies »).
+            const restaurant = {
+                ...projete,
+                image_url: appliquerVisuel('crous', projete.id, projete.image_url),
+            };
             if (userLat === undefined || userLon === undefined) {
                 return restaurant;
             }

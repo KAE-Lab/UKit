@@ -97,6 +97,51 @@ toujours d'accord avec la base, sans ajouter la CLI Supabase aux dépendances du
 npx --yes supabase gen types typescript --db-url "postgresql://postgres:$SUPABASE_DB_PASSWORD@$HOTE:5432/postgres"
 ```
 
+## Publier un visuel
+
+La table `visuels` remplace la photo d'un contenu servi par une **source tierce** — un restaurant
+CROUS, une bibliothèque, un bâtiment, une annonce. Elle n'a aucun socle embarqué : sans ligne, la
+photo reste celle de la source, exactement comme avant qu'elle n'existe.
+
+1. Téléverser l'image dans le bucket `media`, sous `restaurants/`, `bibliotheques/`, `batiments/` ou
+   `annonces/`, et copier son URL publique.
+2. Écrire la ligne. La clé est l'identifiant du contenu **chez sa source**, et elle ne se devine pas
+   de la même façon selon le domaine :
+
+| Domaine | La clé | Où la lire |
+|---|---|---|
+| `crous` | le code Croustillant | dans l'URL de l'image actuelle du restaurant : `.../restaurants/**21**/preview` |
+| `batiment` | le code du bâtiment | tel qu'il s'affiche : `A28` |
+| `annonce` | l'`id` de la ligne | `select id, titre from public.annonces;` |
+| `bibliotheque` | l'identifiant Affluences (un UUID) | **pas dans l'URL de l'image**, qui porte un hachage sans rapport — voir la commande ci-dessous |
+
+```bash
+# Les bibliothèques autour d'un point de balayage, avec leur identifiant.
+curl -s -X POST https://api.affluences.com/app/v3/sites/map \
+  -H 'Content-Type: application/json' -H 'Accept-Language: fr' \
+  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' \
+  -d '{"latitude":44.7963,"longitude":-0.6277}' \
+| python3 -c "import json,sys; [print(s['id'], s['primary_name']) for s in json.load(sys.stdin)['data']['results'] if any(c['id'] in (1,20) for c in s['categories'])]"
+```
+
+```sql
+insert into public.visuels (domaine, cle, image_url)
+values ('crous', '21', 'https://<projet>.supabase.co/storage/v1/object/public/media/restaurants/amazone.jpg')
+on conflict (domaine, cle) do update set image_url = excluded.image_url, maj_le = now();
+```
+
+Trois écritures, trois effets à ne pas confondre :
+
+| Ce qu'on écrit | Ce que l'appareil fait |
+|---|---|
+| une URL | elle remplace la photo de la source, pour tout le monde |
+| la chaîne vide `''` | aucune image : l'écran reprend son visuel de repli embarqué |
+| `delete from public.visuels …` | la photo de la source revient |
+
+Le changement arrive au **prochain retour au premier plan**, sans release et sans redémarrage. Le
+domaine est contraint par un `check` : une faute de frappe serait sinon une ligne parfaitement valide
+qui ne corrige rien, et rien à l'écran ne le dirait.
+
 ## Ce qui n'a pas sa place ici
 
 Pas de fonction métier, pas de déclencheur, pas de vue qui calcule. La base porte de la donnée ; ce

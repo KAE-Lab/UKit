@@ -106,6 +106,11 @@ expirée se vérifie en déplaçant l'heure au lieu d'attendre son échéance.
 Les visuels vont dans le bucket `media`, sous `annonces/`, et leur URL publique dans `image_url`.
 Procédure complète et clés : [backend.md](../backend.md#publier).
 
+Une annonce est le seul contenu dont **nous** publions déjà l'image : la table
+[`visuels`](../backend.md#le-schéma) s'y applique quand même, et c'est délibéré. Elle permet de
+retirer ou de remplacer un visuel sans toucher à la ligne d'annonce — donc sans risquer de modifier un
+texte en voulant changer une photo.
+
 ## Décisions de conception
 
 **Le tri est explicite.** Une table n'a pas d'ordre : s'en remettre à celui que la base rend ferait

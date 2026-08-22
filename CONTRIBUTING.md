@@ -60,7 +60,7 @@ Une capacité utilisateur — un écran, une source de données, une option — 
    > pas — elle refuse une valeur en dur, pas une mauvaise forme. C'est la première chose à vérifier
    > sur un rendu ([docs/theme.md](docs/theme.md#les-décisions-durables)).
 4. **`npx tsc --noEmit` et `npx eslint .` sans régression** — zéro nouvelle erreur, zéro nouveau
-   warning. La base de référence actuelle (`tsc` **verte**, 79 warnings ESLint dont 68 de style) est
+   warning. La base de référence actuelle (`tsc` **verte**, 53 warnings ESLint dont 42 de style) est
    décrite dans [docs/qualite.md](docs/qualite.md) : ne pas l'augmenter, la réduire quand on passe à
    proximité. **`npm test` vert**, sans exception : lui l'est déjà.
 5. **Flux vérifié à la main au moins une fois** sur l'application réelle, pas seulement relu. Chaque

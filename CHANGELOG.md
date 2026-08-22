@@ -55,6 +55,16 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
     liste vide n'ont pas besoin d'un champ de recherche. Elle reste tant qu'une requête est saisie,
     sans quoi on serait enfermé avec un texte qu'on ne peut plus effacer.
 
+- **N'importe quelle photo servie par une source tierce se corrige depuis la base.** Les images des
+  restaurants, des bibliothèques et des bâtiments viennent d'un fournisseur : une photo fausse, ou
+  absente, l'était pour tout le monde jusqu'au prochain passage en boutique. Une table `visuels`
+  permet désormais d'en remplacer une par une ligne — reçue au retour au premier plan, sans release et
+  sans redémarrage. Trois écritures, trois effets : une URL remplace, la chaîne vide dit « celle-ci est
+  fausse, n'en montre aucune » et rend la main au visuel embarqué, et retirer la ligne rend son image à
+  la source. Elle n'a **aucun socle embarqué**, et c'est ce qui la rend intégralement retirable : sans
+  ligne, l'application affiche exactement ce qu'elle affichait avant. Voir
+  [docs/backend.md](docs/backend.md).
+
 - **Une section vide du tableau de bord Campus dit pourquoi, et propose un geste.** Un carrousel sans
   carte n'affichait rien du tout sous son en-tête, ce qui se lit comme une application cassée. Il
   distingue maintenant trois causes et trois sorties : un filtre qui masque tout (« Tout afficher »),

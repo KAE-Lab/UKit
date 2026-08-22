@@ -24,6 +24,7 @@ import {
 import moment from 'moment';
 
 import type { UkitFailure } from '../../../shared/aetherius';
+import { appliquerVisuel } from '../../../shared/visuels';
 import { estValide, projeterAnnonce, type BdeAnnonce } from './BdeMapping';
 
 export type { BdeAnnonce } from './BdeMapping';
@@ -86,7 +87,13 @@ const BdeService = {
         const now = moment().toDate();
         return {
             ok: true,
-            annonces: (data ?? []).map(projeterAnnonce).filter((annonce) => estValide(annonce, now)),
+            annonces: (data ?? [])
+                .map(projeterAnnonce)
+                .map((annonce) => ({
+                    ...annonce,
+                    image_url: appliquerVisuel('annonce', annonce.id, annonce.image_url),
+                }))
+                .filter((annonce) => estValide(annonce, now)),
         };
     },
 };

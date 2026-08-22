@@ -7,7 +7,7 @@
  * composants, et rendrait toute evolution de table visible a l'ecran.
  *
  * **Ecrits a la main, et c'est une decision.** Le TODO du jalon 6-A prevoyait de les generer par
- * `supabase gen types typescript` ; la CLI Supabase est une dependance permanente pour six tables
+ * `supabase gen types typescript` ; la CLI Supabase est une dependance permanente pour sept tables
  * que nous ecrivons nous-memes, dans le meme depot, revues dans le meme commit que le schema. La
  * commande reste notee dans supabase/README.md pour verifier ponctuellement l'accord des deux apres
  * une migration.
@@ -83,6 +83,24 @@ export interface EtablissementRow {
     readonly ordre: number;
 }
 
+/**
+ * Surcouche des visuels de contenu.
+ *
+ * `domaine` est type `string` et **non** l'union des quatre domaines connus, alors que la base porte
+ * un `check` qui la contraint. L'ecart est voulu et il suit la regle « ajouter avant de retirer » :
+ * une publication peut ouvrir un cinquieme domaine avant que le parc installe ne le connaisse, et
+ * une version qui typerait l'union pretendrait que cette ligne ne peut pas exister. Elle existe, et
+ * la projection l'ignore — ce qui est le comportement voulu, pas une erreur.
+ *
+ * `image_url` porte **trois** etats, que la projection distingue : nul (ne rien corriger), une URL
+ * (remplacer), la chaine vide (ne montrer aucune image, donc le repli embarque de l'ecran).
+ */
+export interface VisuelRow {
+    readonly domaine: string;
+    readonly cle: string;
+    readonly image_url: string | null;
+}
+
 /** Version courante et minimale par plateforme. Remplace la lecture du fichier VERSION sur GitHub. */
 export interface AppReleaseRow {
     readonly plateforme: 'ios' | 'android';
@@ -133,8 +151,9 @@ interface TableEnLecture<Row> {
  * Le schema, tel que le client le connait.
  *
  * Toutes les tables y figurent, y compris celles qu'aucun service ne lit encore : `blueprints` est
- * branchee au jalon 6-C, `batiments` au 6-D, `etablissements` au 6-G. Les declarer maintenant coute
- * six lignes et evite que le premier appelant ait a decider seul de leur forme.
+ * branchee au jalon 6-C, `batiments` au 6-D, `etablissements` au 6-G, `visuels` a la passe de
+ * finition. Les declarer maintenant coute sept lignes et evite que le premier appelant ait a decider
+ * seul de leur forme.
  */
 export interface Database {
     public: {
@@ -145,6 +164,7 @@ export interface Database {
             app_release: TableEnLecture<AppReleaseRow>;
             service_messages: TableEnLecture<ServiceMessageRow>;
             blueprints: TableEnLecture<BlueprintRow>;
+            visuels: TableEnLecture<VisuelRow>;
         };
         Views: Record<string, never>;
         Functions: Record<string, never>;

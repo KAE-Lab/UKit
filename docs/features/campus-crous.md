@@ -180,6 +180,12 @@ restaurant sans visuel côté fournisseur affiche donc une image cassée, rattra
 [`default_resto.png`](../../assets/images/default_resto.png). Aucun Blueprint ne la porte : ce n'est
 pas une requête que le service émet, c'est une adresse qu'une balise image résout.
 
+**Cette photo se remplace depuis la base**, sans release : une ligne
+`('crous', '<code>', '<url>')` dans la table [`visuels`](../backend.md#le-schéma) gagne sur celle du
+fournisseur, et la chaîne vide dit « celle-ci est fausse, n'en montre aucune » — l'écran reprend alors
+`default_resto.png`. La résolution est faite par `CrousService`, à la projection de la liste ; le
+mapping, lui, reste pur. Le changement arrive au prochain retour au premier plan.
+
 **Les horaires étaient invisibles, et personne ne le savait.** La source a cessé de servir `horaires`
 comme un tableau pour le servir comme une **chaîne JSON** ; `Array.isArray` étant faux pour les 41
 établissements, l'écran affichait « horaires non spécifiés » partout. Mesuré et corrigé au jalon 6-D :
@@ -201,6 +207,18 @@ de parité ([tools/parity/README.md](../../tools/parity/README.md)).
   « Service indisponible » **avec** Réessayer, et non un état vide.
 - Chemin dégradé : mettre `expect.status` à `999` — « Réponse inattendue », **sans** Réessayer. Les
   deux écrans doivent être différents ; s'ils ne le sont pas, la vérification n'a rien vérifié.
+- **Visuel publié** : poser une ligne `('crous', '<code>', '<url du bucket>')` dans
+  [`visuels`](../backend.md#le-schéma), revenir au premier plan. La photo doit changer, **et le reste
+  de la fiche ne doit pas bouger**. Puis `image_url = ''` : l'image par défaut. Puis supprimer la
+  ligne : la photo de la source revient — c'est ce dernier temps qui prouve le rafraîchissement au
+  retour au premier plan, les deux premiers marcheraient avec un simple redémarrage.
+  Le changement se voit sur la **liste complète**, pas sur le carrousel du tableau de bord, qui garde
+  son état de montage — même cause que le repli hors ligne qui n'en est pas un, ci-dessous.
+- **Visuel publié, base injoignable** : l'interrupteur *Hors ligne* du menu flottant **ne coupe pas la
+  base** (il coupe le `fetch` du moteur, pas celui du client Supabase). Pointer `SUPABASE_URL` sur
+  `https://127.0.0.1:1` dans `.env` et recharger Metro. La dernière
+  surcouche connue doit tenir, servie par le cache, **sans écran d'erreur** — une table injoignable
+  n'est pas une panne, et sans cache une photo retirée parce qu'elle était fausse reviendrait.
 
 ## Limites connues
 

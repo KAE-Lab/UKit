@@ -7,6 +7,7 @@ import StackNavigator from './StackNavigator';
 import { CredentialsProvider } from '../../features/Scolarite/services/CredentialsContext';
 import { refreshBlueprints } from '../aetherius';
 import { refreshBuildings } from '../locations';
+import { refreshVisuels } from '../visuels';
 import { refreshEtablissements } from '../etablissements';
 import { AppContextProvider } from '../services/AppCore';
 import { SettingsManager } from '../services/AppCore';
@@ -48,7 +49,7 @@ export default function RootContainer() {
 	 * Le retour au premier plan, et lui seul.
 	 *
 	 * `reloadData` se declenche sur **toutes** les transitions et continue de le faire — c'est son
-	 * comportement depuis toujours. Les trois rafraichissements de donnee publiee, eux, n'ont de sens
+	 * comportement depuis toujours. Les quatre rafraichissements de donnee publiee, eux, n'ont de sens
 	 * qu'au retour : les declencher en passant en arriere-plan ferait des requetes que personne ne
 	 * regarde.
 	 */
@@ -57,6 +58,7 @@ export default function RootContainer() {
 		if (nextAppState === 'active') {
 			void refreshBlueprints();
 			void refreshBuildings();
+			void refreshVisuels();
 			rafraichirCatalogue();
 		}
 	}
@@ -82,11 +84,13 @@ export default function RootContainer() {
 		const eventSubscription = AppState.addEventListener('change', onAppStateChange);
 
 		// Les deux declencheurs de la donnee publiee : le demarrage, et le retour au premier plan.
-		// Jamais dans le chemin d'un run ni d'un rendu — aucune des trois ne leve, aucune n'est
+		// Jamais dans le chemin d'un run ni d'un rendu — aucune des quatre ne leve, aucune n'est
 		// attendue, donc un point de publication en panne ne retarde ni ne casse le demarrage. Le
-		// socle embarque a deja repondu avant que ces requetes ne partent.
+		// socle embarque a deja repondu avant que ces requetes ne partent. Les visuels n'en ont pas,
+		// de socle : sans surcouche, les images restent celles que les sources publient.
 		void refreshBlueprints();
 		void refreshBuildings();
+		void refreshVisuels();
 		rafraichirCatalogue();
 
 		return () => {
