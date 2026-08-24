@@ -293,9 +293,17 @@ Le projet embarque donc un **menu de développement flottant** :
 [`ModMenu.tsx`](../src/shared/ui/ModMenu.tsx), monté en permanence par
 [`rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx), et
 [`TimeMockService.ts`](../src/shared/services/TimeMockService.ts) qui porte la logique. Il s'ouvre
-par **sept tapes sur le numéro de version** de l'écran À propos, et porte deux onglets : *Temps*, et
-*Blueprints* — le diagnostic de la livraison, décrit dans
-[blueprints.md](blueprints.md#quand-une-correction--narrive-pas-).
+par **sept tapes sur le numéro de version** de l'écran À propos, et porte quatre onglets : *Temps* ;
+*Blueprints*, le diagnostic de la livraison, décrit dans
+[blueprints.md](blueprints.md#quand-une-correction--narrive-pas-) ; *Biometrie* et *Dossier*, deux
+**sondes**.
+
+Les deux sondes répondent à la même difficulté, et c'est celle qui justifie leur existence : **un
+écran qui ne montre rien n'est pas un symptôme**. Face ID qui ne se déclenche pas a cinq causes qui ne
+se distinguent pas à l'œil ; une proposition de dossier qui n'apparaît pas en a quatre. Une sonde
+garde donc la trace de **chaque** étape, pas seulement du verdict final — la première campagne
+biométrique a coûté un aller-retour pour avoir jeté l'erreur du premier temps dès que le second
+réussissait.
 
 L'onglet *Temps* porte deux simulations indépendantes : l'heure, et le **réseau**.
 
@@ -323,6 +331,25 @@ Fonctionnement de la simulation temporelle :
 
 > **Capture attendue** — `modmenu.png` : le menu de simulation déployé, horloge simulée, interrupteur
 > hors ligne et sélecteurs de date visibles.
+
+## Sonder la biométrie plutôt que la deviner
+
+Le menu de développement porte un onglet **Biométrie**. Il existe parce que le symptôme — « l'iPhone
+demande le code sans tenter Face ID » — a plusieurs causes qui **ne se distinguent pas à l'écran** et
+qui n'ont pas le même remède : Face ID refusé à l'application, aucun visage enrôlé, verrouillage après
+trop d'échecs, ou simplement iOS qui court-circuite parce que la politique le lui permet.
+
+Il montre les **capacités** de l'appareil — matériel, enrôlement, modalités, niveau — qui ne demandent
+rien à personne et répondent déjà à la moitié des questions, puis le `{success, error, warning}`
+**brut** d'une demande, jouable par les **deux politiques côte à côte** : celle d'avant le correctif
+et celle en deux temps. C'est cette comparaison qui tranche, et la faire en une session vaut mieux que
+mesurer, corriger, puis remesurer. Le champ `error` désigne la cause à lui seul
+([features/scolarite.md](features/scolarite.md#la-biométrie-se-demande-en-deux-temps)).
+
+> **Expo Go porte son propre `Info.plist`**, et la clé `NSFaceIDUsageDescription` d'`app.config.ts`
+> ne s'y applique pas. Un verdict `not_available` sous Expo Go ne prouve donc **rien** sur
+> l'application réelle : il faut un `eas build --profile development` pour conclure. Le panneau sert
+> exactement à savoir si ce build est nécessaire.
 
 ## Couper le réseau sans couper l'appareil
 

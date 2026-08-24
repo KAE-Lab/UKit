@@ -19,9 +19,7 @@ de la leur laisser en travers.
 
 ## Ouverts
 
-*Aucun.* Les quatre défauts ouverts par le jalon 6-K ont été corrigés le 2026-08-16, et deux autres
-levés en vérifiant la passe de finition l'ont été le 2026-08-21 ; ils sont plus bas, sous
-[Corrigés](#corrigés). Une session d'écran qui en rencontre un nouveau l'inscrit ici.
+*Aucun.* Une session d'écran qui en rencontre un nouveau l'inscrit ici.
 
 ## Limites connues, qui ne sont pas des défauts
 
@@ -31,6 +29,128 @@ levés en vérifiant la passe de finition l'ont été le 2026-08-21 ; ils sont p
   secondaire — mais elle reste dans sa langue. À reprendre le jour où la source publiera une heure.
 
 ## Corrigés
+
+Les quatre défauts ouverts par le jalon 6-K ont été corrigés le 2026-08-16, deux autres levés en
+vérifiant la passe de finition l'ont été le 2026-08-21, et les deux que cette passe visait
+explicitement l'ont été le 2026-08-22.
+
+### Le mode sombre choisi à la configuration ne s'appliquait qu'au redémarrage suivant — *corrigé le 2026-08-22*
+
+Signalé par un utilisateur sur la v5.6.1 (Pixel 8, GrapheneOS) : choisir le mode sombre pendant le
+parcours d'accueil laissait l'application en clair, et il fallait la redémarrer pour que le choix
+prenne. La préférence était pourtant bien enregistrée — c'est ce qui rendait le symptôme déroutant.
+
+**Deux causes, qui se combinaient**, et corriger l'une aurait laissé l'autre :
+
+- **`loadSettings` ne restaurait rien tant que le parcours n'était pas terminé.** Un `return` anticipé
+  sur `firstload` sautait le thème et la langue avec le reste. Le raisonnement se défend pour les
+  groupes favoris ou l'établissement — ils se choisissent *dans* le parcours, les restaurer par-dessus
+  répondrait à sa place — mais pas pour des préférences d'affichage, qui n'attendent pas qu'un
+  parcours soit fini pour valoir ;
+- **le parcours reposait les valeurs de l'appareil à chaque montage.** Son effet de montage appelait
+  `setTheme(getAutomaticTheme())` sans condition : rouvrir l'application au milieu de la configuration
+  écrasait donc le choix par le thème du système. Sur un téléphone au thème clair, retour au clair.
+
+Un parcours interrompu n'a rien d'exceptionnel : il suffit qu'Android réclame la mémoire, ce qui est
+fréquent sur les systèmes qui gèrent l'arrière-plan agressivement — le rapport vient précisément d'un
+appareil de ce genre.
+
+Les préférences d'affichage se restaurent désormais **toujours**, le reste restant réservé à un
+parcours terminé ; et les valeurs de l'appareil ne sont posées que lorsque **rien n'a jamais été
+écrit**. L'état initial de l'écran part du gestionnaire au lieu de `fr`/`light` en dur, sans quoi un
+parcours repris clignoterait en clair le temps d'un rendu.
+
+### Changer d'établissement déconnectait le compte universitaire — *corrigé le 2026-08-22*
+
+Basculer d'une fac à l'autre effaçait les identifiants **et** le dossier froid du trousseau : revenir
+à son établissement d'origine obligeait à se reconnecter. Signalé à l'usage.
+
+**Ce n'était pas une régression, mais une décision du jalon [6-G](phase-6/6-g-etablissements.md)**,
+prise pour une bonne raison : les identifiants et l'identité appartiennent au portail quitté, et les
+garder afficherait le nom d'un étudiant d'une fac sous le nom d'une autre.
+
+Le remède, lui, était le mauvais — et le dépôt avait déjà tranché ce dilemme deux fois. Les groupes
+favoris au 6-I, puis les liens d'abonnement au 6-J, ont reçu la correction inverse, et sa
+justification était écrite dans le fichier même qui effaçait la session : *« effacer répond à la
+mauvaise question, la règle est que les données de deux facs ne se **mélangent** pas, pas qu'il faille
+les oublier »*. Un seul élément qui saute quand tout le reste survit ressemble à un défaut, pas à une
+règle.
+
+La session est donc **cloisonnée** ([`comptes.ts`](../src/shared/etablissements/comptes.ts)) : le
+trousseau porte une table indexée par code d'établissement, on ne lit jamais que l'entrée de
+l'établissement actif — donc rien ne se mélange — et un retour retrouve sa session. La déconnexion
+explicite ne retire que l'entrée courante ; seule la réinitialisation efface tout.
+
+Deux pièges valaient d'être traités plutôt que découverts. **La conversion** : sans elle, la
+correction aurait déconnecté tout le parc installé le jour de sa mise à jour, produisant une fois
+exactement le défaut qu'elle supprime. Les clés d'avant sont donc lues une dernière fois, rangées sous
+l'établissement sélectionné, puis supprimées — dans cet ordre, une interruption entre les deux ferait
+perdre la session. **Et la mémoire** : le contexte de scolarité est monté au-dessus de toute la pile
+et ne se démonte jamais. Il oubliait déjà la session au changement, ce qui suffisait tant que la
+bascule vidait le magasin ; il doit maintenant **relire** celle de la fac d'arrivée, sans quoi on
+redemanderait une connexion là où l'on est déjà connecté.
+
+### Une fiche de cours n'avait pas de carte, pour deux raisons différentes — *corrigé le 2026-08-22*
+
+Ouvrir un cours donné dans le bâtiment `A28` n'affichait **aucune carte**, alors que ce bâtiment est
+au référentiel avec ses coordonnées. Aucun message, aucune erreur : la fiche s'affichait simplement
+sans son plan, comme si la localisation était inconnue.
+
+Rejoué sur les vraies données Celcat (groupe `INF601A5`, semaine du 2026-01-12), le symptôme unique
+avait **deux causes indépendantes**, et corriger l'une aurait laissé l'autre :
+
+- **la vue semaine ne produisait aucune description.** Le serveur formate à l'identique dans les deux
+  vues (`\r\n\r\n<br />\r\n\r\n`), `formatDescription` réduit cela à des `;`, et `projeterCours`
+  découpait la semaine sur `\n` : il n'en sortait qu'un champ, porteur de la catégorie, donc écarté en
+  entier. Plus de ligne de salle, donc plus de carte — ni enseignant, ni semaines. C'était écrit comme
+  limite connue et **verrouillé par un test**, au motif que le corriger déplacerait des pixels ;
+- **une double espace dans `modules`.** La source rend `"4TIN606U  Histoire et Epistémologie de
+  l'Optimisation"` avec deux espaces là où la description n'en a qu'une. La ligne du module n'était
+  donc pas reconnue comme une répétition du sujet, elle restait dans la description, et tout glissait
+  d'un rang : la « ligne de salle » cherchée au rang 2 devenait le nom de l'enseignant.
+
+Le correctif ne répare aucune des deux heuristiques : il cesse de deviner. **Celcat publie un champ
+`sites`** (`["Bâtiment A28"]`) que rien n'extrayait, et c'est la donnée fiable. Les trois Blueprints
+de cours l'extraient désormais, la fiche le lit **avant** toute heuristique, et le séparateur passe à
+`;` pour toutes les vues — ce qui rend au passage sa description à la vue semaine.
+
+Le test qui « verrouillait » la vue semaine ne vérifiait d'ailleurs pas ce qu'il annonçait : il
+passait le séparateur **à la main**, donc il décrivait la fonction et non la vue. Il passait encore
+après le changement. Il porte maintenant sur `decouperSemaine`, seul chemin réel.
+
+### Sur iPhone, Face ID n'était jamais tenté — *corrigé le 2026-08-22, à confirmer sur un build*
+
+L'onglet Scolarité et la révélation du mot de passe demandaient directement le **code de l'appareil**,
+sans jamais proposer Face ID, alors que l'empreinte se déclenchait normalement sur Android.
+
+Les deux appels passaient `disableDeviceFallback: false`, ce qui demande à iOS la politique
+`deviceOwnerAuthentication` — celle qui **autorise** le système à court-circuiter la biométrie. Ce
+n'est pas un défaut de la bibliothèque, et aucune option ne rend ce choix prévisible.
+
+Les deux appels vivent désormais dans [`shared/biometrie`](../src/shared/biometrie/index.ts), qui
+demande les deux politiques dans l'ordre : biométrie seule d'abord, puis le code en repli — sauf
+lorsque la personne a **annulé**, cas où enchaîner reproduirait le défaut dans l'autre sens.
+
+Au passage, un appareil **sans aucun verrou** ne pouvait plus jamais ouvrir cet onglet : toute demande
+échouait et l'écran proposait un « Réessayer » qui ne pouvait pas marcher. La porte s'ouvre maintenant
+dans ce cas, ce qui est défendable parce qu'elle est un verrou d'interface — le trousseau, lui,
+n'exige pas d'authentification.
+
+**La cause est mesurée, et elle est celle qu'on redoutait.** Sonde sur iPhone le 2026-08-22, sous
+Expo Go : matériel et enrôlement sont vrais, et le premier temps échoue sur
+**`missing_usage_description`** — `NSFaceIDUsageDescription` manque à l'`Info.plist` du conteneur qui
+exécute. La couche native résout alors l'échec **sans jamais appeler `evaluatePolicy`**, donc sans
+ouvrir la moindre fenêtre : voilà pourquoi personne n'a jamais vu Face ID essayer.
+
+Le conteneur, sous Expo Go, est Expo Go. Celui de UKit porte la clé par deux chemins vérifiés dans
+`app.config.ts` — `ios.infoPlist` et l'option `faceIDPermission` du greffon. **La confirmation demande
+un `eas build --profile development`** ; le correctif, lui, est exactement celui que ce verdict appelle.
+
+Deux choses trouvées en chemin. La sonde elle-même était fautive : `demander()` **jetait l'erreur du
+premier temps** dès que le code finissait par réussir, c'est-à-dire au moment précis où on la
+cherchait — la première campagne n'a donc rien pu apprendre. Et `missing_usage_description` **n'est pas
+dans le type publié** par la bibliothèque, seulement dans sa couche native : le garde de compilation
+qui protège l'union ne voit que la déclaration, pas ce qui est réellement émis.
 
 ### Le filtre d'une liste Campus ne remontait jamais au tableau de bord — *corrigé le 2026-08-21*
 

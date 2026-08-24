@@ -161,13 +161,31 @@ Un filtre masque les cours d'une UE dans le **planning des groupes favoris uniqu
 
 - **saisie libre** d'un code, mis en majuscules automatiquement ;
 - **sélection dans la liste** des UE réellement rencontrées, alimentée par
-  `PlanningDataManager.getAvailableUEs()` — celle-ci se remplit à mesure que des plannings sont
-  chargés, par extraction du code d'UE des matières.
+  `PlanningDataManager.getUEs()` — celle-ci se remplit à mesure que des plannings sont chargés, par
+  extraction du code d'UE des matières.
+
+**Un filtre s'affiche avec l'intitulé de son UE**, et pas seulement son code. `4TIN606U` ne se relie à
+un cours qu'en ouvrant son emploi du temps : vérifier ce qu'on a filtré était fastidieux. L'intitulé
+existait déjà dans la donnée — l'indexation le capturait et le **jetait**. Il est désormais gardé
+([`indexerUes`](../../src/features/Planning/services/PlanningAssembly.ts)), la recherche porte sur le
+code **et** sur l'intitulé, et le code seul reste affiché quand aucun planning chargé ne connaît l'UE
+— un filtre saisi à la main, ou hérité d'une année précédente.
+
+Le déplacement a corrigé un défaut au passage : l'indexation gardait la règle d'**avant** le jalon
+6-I, celle qui acceptait un nombre nu, si bien qu'un titre commençant par une année (`2025-2026 - …`)
+entrait dans la liste comme une UE `2026`. Il n'y a plus qu'une expression pour tout le dépôt.
 
 Les filtres sont stockés dans `settings.filters` et diffusés par l'événement `filter`, auquel
 `RootContainer` et l'écran Réglages sont abonnés.
 
 Un filtre se retire aussi depuis la fiche d'un cours, via le bouton d'en-tête `FilterRemoveButton`.
+
+**Une troisième origine depuis le 2026-08-24, et elle demande d'abord.** Si le dossier universitaire
+a livré les UE auxquelles l'étudiant est inscrit, un dialogue propose de masquer **celles qu'il ne
+suit pas** — le complément, jamais ses propres UE : un filtre masque, et pré-remplir avec les siennes
+aurait vidé son planning sans rien expliquer. Ce qui arrive par là n'a rien de particulier ensuite :
+ce sont des filtres comme les autres, retirables des deux endroits habituels
+([scolarite.md](scolarite.md#ce-que-la-connexion-trouve-en-plus-et-quelle-propose)).
 
 > **Capture attendue** — `reglages-filtres.png` : la modale de gestion des filtres d'UE, avec des
 > filtres actifs et la liste des UE suggérées.
@@ -332,12 +350,24 @@ rien n'est replanifié — le prochain chargement du planning s'en chargera.
 (`this._favoriteGroups[0]`). Synchroniser une agrégation de groupes produirait des doublons dans
 l'agenda pour les cours communs.
 
+**Changer d'établissement ne déconnecte plus** (2026-08-22). La bascule effaçait la session
+universitaire, pour une raison juste — le nom d'un étudiant d'une fac ne doit pas s'afficher sous une
+autre — mais avec le mauvais remède : elle obligeait à se reconnecter à chaque aller-retour, alors que
+les groupes favoris, les filtres et les liens d'abonnement, eux, survivaient. Un seul élément qui saute
+ressemble à un défaut, pas à une règle.
+
+La session est désormais **cloisonnée**, comme les liens depuis le jalon 6-J : le trousseau porte une
+table indexée par code d'établissement, et on ne lit jamais que l'entrée de l'établissement actif.
+Rien ne se mélange, et un retour retrouve sa session. Le contexte de scolarité **rebascule** au
+changement — il oublie la session d'avant, puis relit celle d'après ; s'arrêter à l'oubli déplacerait
+le défaut d'un cran, en redemandant une connexion à une fac où l'on est déjà connecté.
+
 **`resetSettings` est volontairement partielle** : elle remet à zéro les préférences d'affichage et
 les favoris de planning, mais ne touche ni aux caches, ni aux favoris Campus. Elle **efface en revanche
-tout le trousseau** — session universitaire depuis le jalon 6-G, liens d'abonnement depuis 6-J. C'est
-la différence avec une bascule d'établissement : ici on ne va nulle part, on efface, et laisser un
-emploi du temps déjà rempli à quelqu'un qui vient de tout réinitialiser serait un résidu, pas un
-service. Voir les limites.
+tout le trousseau** (`purgerTrousseau`) — session universitaire et liens d'abonnement, tous
+établissements confondus. C'est la différence avec une bascule : ici on ne va nulle part, on efface, et
+laisser un emploi du temps déjà rempli, ou un compte connecté, à quelqu'un qui vient de tout
+réinitialiser serait un résidu, pas un service. Voir les limites.
 
 ## Vérifier
 

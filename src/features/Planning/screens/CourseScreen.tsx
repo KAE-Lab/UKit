@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import { getLocations, getLocationsInText, ligneDeSalle } from '../../../shared/services/AppCore';
+import { getLocations, getLocationsInText, lieuxDesSites, ligneDeSalle } from '../../../shared/services/AppCore';
 import type { LieuDeCours } from '../../../shared/locations/salles';
 import { AppContext } from '../../../shared/services/AppCore';
 import { URL } from '../../../shared/constants/urls';
@@ -55,28 +55,43 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	};
 
 	componentDidMount() {
-		let locations: LieuDeCours[] = [];
 		this.props.navigation.setParams({ title: this.state.data.UE || Translator.get('DETAILS') });
+
+		const locations = this.resoudreLieux();
+		if (locations.length > 0) {
+			this.setState({ locations });
+		}
+	}
+
+	/**
+	 * Ou se donne ce cours : la donnee d'abord, l'heuristique ensuite.
+	 *
+	 * Celcat **declare** ses batiments (`sites`), et c'est ce qu'on lit en premier depuis qu'on
+	 * l'extrait. Tout ce qui suit est du devinement dans du texte libre, et il rendait deux cours sans
+	 * carte le meme jour : l'un vu depuis la semaine, dont la description etait vide, l'autre dont une
+	 * double espace dans `modules` decalait le rang de la ligne de salle d'un cran — la « salle »
+	 * devenait le nom de l'enseignant, silencieusement.
+	 *
+	 * Les trois replis restent, et ils servent : un evenement iCalendar n'a pas de `sites`, et les
+	 * caches ecrits avant ce champ n'en portent pas non plus.
+	 */
+	resoudreLieux(): LieuDeCours[] {
+		const declares = lieuxDesSites(this.state.data.sites);
+		if (declares.length > 0) return declares;
 
 		// La ligne susceptible de porter une salle, et le rang auquel la chercher, sont une donnee
 		// d'etablissement depuis le jalon 6-I : une description Celcat porte la salle a partir de la
 		// troisieme ligne, un evenement iCalendar la tient d'un champ separe remis en tete.
 		const roomLine = ligneDeSalle(this.state.data.description ?? '');
-
 		if (roomLine) {
-			locations = getLocations(roomLine);
-			if (locations.length < 1) {
-				locations = getLocationsInText(roomLine);
-			}
+			const parLibelle = getLocations(roomLine);
+			if (parLibelle.length > 0) return parLibelle;
+
+			const dansLeTexte = getLocationsInText(roomLine);
+			if (dansLeTexte.length > 0) return dansLeTexte;
 		}
 
-		if (locations.length < 1) {
-			locations = getLocationsInText(this.state.data.subject ?? '');
-		}
-
-		if (locations.length > 0) {
-			this.setState({ locations });
-		}
+		return getLocationsInText(this.state.data.subject ?? '');
 	}
 
 	renderMap(theme: import('../../../shared/theme/Theme').AppThemeType) {

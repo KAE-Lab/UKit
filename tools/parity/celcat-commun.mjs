@@ -103,6 +103,10 @@ export function projeterDepuisBlueprint(brut, groupe, separateur) {
         categorie: brut.categorie ?? '',
         couleur: brut.couleur ?? '',
         description: brut.description,
+        // Ce que l'extraction `$.sites[*]` rend : une **chaine** a une seule correspondance, une
+        // liste au-dela. Le cote historique lit le champ brut ; la comparaison prouve donc que
+        // l'extraction ne perd ni ne deforme rien, arite comprise.
+        sites: brut.sites,
         sujet,
         groupe,
         separateur,
@@ -125,6 +129,9 @@ export function projeterDepuisLegacy(event, groupe, separateur) {
         categorie: event.eventCategory,
         couleur: event.backgroundColor,
         description: event.description,
+        // Le champ tel que le serveur le sert : toujours une liste. Le code d'origine ne le lisait
+        // pas — il n'existait aucune carte fondee dessus — mais la source, elle, le publiait deja.
+        sites: event.sites,
         sujet,
         groupe,
         separateur,
@@ -132,7 +139,7 @@ export function projeterDepuisLegacy(event, groupe, separateur) {
 }
 
 /** Le reste de la transformation, identique des deux cotes : c'est ce qui doit rester egal. */
-function composer({ id, debut, fin, categorie, couleur, description, sujet, groupe, separateur }) {
+function composer({ id, debut, fin, categorie, couleur, description, sites, sujet, groupe, separateur }) {
     const debutMoment = moment(debut ?? null);
     const finMoment = moment(fin ?? null);
     const starttime = debutMoment.format('HH:mm');
@@ -162,9 +169,17 @@ function composer({ id, debut, fin, categorie, couleur, description, sujet, grou
         description: retenues.filter((ligne) => ligne !== '').join('\n'),
         category: categorie,
         toFilter,
+        sites: normaliserSites(sites),
         day: upperCaseFirstLetter(debutMoment.format('dddd L')),
         dayNumber: String(debutMoment.isoWeekday()),
     };
+}
+
+/** L'arite ramenee a une liste, des deux cotes — la meme regle que `sitesDuCours` cote application. */
+function normaliserSites(sites) {
+    if (typeof sites === 'string') return sites === '' ? [] : [sites];
+    if (Array.isArray(sites)) return sites.filter((site) => typeof site === 'string' && site !== '');
+    return [];
 }
 
 /** Le decoupage d'une semaine en six jours, identique des deux cotes. */
@@ -199,6 +214,7 @@ export function projeterCours(cours) {
         description: cours.description ?? null,
         category: cours.category ?? null,
         toFilter: cours.toFilter ?? null,
+        sites: (cours.sites ?? []).join('|'),
         day: cours.day ?? null,
         dayNumber: cours.dayNumber ?? null,
     };

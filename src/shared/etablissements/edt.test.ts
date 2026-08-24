@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { groupesRequis, planningDisponible, resoudreRessources, sourceEdt } from './edt';
 import { appliquerCatalogue, projeterEtablissement, setCodeEtablissementActif, ETABLISSEMENT_DEFAUT } from './catalogue';
 import type { EdtIcal } from './catalogue';
+import { appliquerEdtsPersonnels } from './edtPersonnel';
 import { appliquerLiensEdt } from './lienEdt';
 import type { EtablissementRow } from '../supabase/types';
 
@@ -35,6 +36,7 @@ function publier(partial: Partial<EtablissementRow>): void {
 
 afterEach(() => {
     appliquerCatalogue(null);
+    appliquerEdtsPersonnels(null);
     appliquerLiensEdt(null);
     setCodeEtablissementActif(ETABLISSEMENT_DEFAUT);
 });
@@ -50,6 +52,35 @@ describe('sourceEdt', () => {
         publier({ edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [] } });
         expect(sourceEdt().kind).toBe('ical');
         expect(planningDisponible()).toBe(true);
+    });
+
+    /**
+     * Le groupe personnel trouve dans le dossier, vu **par le chemin reel**.
+     *
+     * C'est la seule ligne dont depend toute la proposition d'emploi du temps : `sourceEdt()` est le
+     * passage que tous les lecteurs du referentiel traversent. Si la fusion n'a pas lieu ici, l'ecran
+     * de choix ne montre pas le groupe et un favori accepte rend « groupe inconnu » — deux symptomes
+     * qui n'ont pas l'air d'avoir la meme cause.
+     */
+    it('fusionne l emploi du temps personnel au referentiel publie', () => {
+        publier({ edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [{ nom: 'ENSC 1A', ressource: '2' }] } });
+        appliquerEdtsPersonnels({ essai: { nom: 'Belharet Damien', ressource: '4087' } });
+
+        const source = sourceEdt();
+        if (source.kind !== 'ical') throw new Error('source attendue iCalendar');
+
+        expect(source.config.groupes[0]).toEqual({ nom: 'Belharet Damien', ressource: '4087' });
+        // Et il se resout comme un autre : c'est tout l'objet de la fusion.
+        expect(resoudreRessources(source.config, 'Belharet Damien').ressources).toBe('4087');
+    });
+
+    it('ne fait pas fuir l emploi du temps personnel d un autre etablissement', () => {
+        publier({ edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [] } });
+        appliquerEdtsPersonnels({ 'une-autre-fac': { nom: 'Belharet Damien', ressource: '4087' } });
+
+        const source = sourceEdt();
+        if (source.kind !== 'ical') throw new Error('source attendue iCalendar');
+        expect(source.config.groupes).toEqual([]);
     });
 
     it('prefere Celcat quand les deux sont declares', () => {

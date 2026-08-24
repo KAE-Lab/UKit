@@ -1,39 +1,50 @@
 import React, { useRef, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import * as LocalAuthentication from 'expo-local-authentication';
 
+import { capacites, demander } from '../../../shared/biometrie';
 import Translator from '../../../shared/i18n/Translator';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 
 /**
- * Porte biométrique : protège son contenu par une authentification locale.
+ * Porte biometrique : protege son contenu par une authentification locale.
  * Une seule demande par session app (authPassedRef persiste entre renders).
+ *
+ * Elle passe par `shared/biometrie`, qui demande **la biometrie d'abord** puis le code. L'appel
+ * direct qui vivait ici passait `disableDeviceFallback: false`, ce qui laissait iOS court-circuiter
+ * Face ID et presenter le code d'emblee — le defaut que ce module corrige.
+ *
+ * **Un appareil sans aucun verrou ouvre la porte**, et c'est une decision. Sans code ni biometrie,
+ * aucune demande ne peut jamais aboutir : l'ecran d'avant montrait un bouton « Reessayer » qui ne
+ * pouvait pas marcher, et l'onglet Scolarite devenait inatteignable pour toujours. Cette porte est un
+ * verrou **d'interface** — le trousseau, lui, ne demande pas d'authentification
+ * (`SecureStoreService`) — donc bloquer ne protegeait rien que l'appareil ne laisse deja voir.
  */
 const BiometryGate = ({ children, theme }) => {
     const authPassedRef = useRef(false);
     const [authenticated, setAuthenticated] = React.useState(false);
     const [failed, setFailed] = React.useState(false);
 
+    const ouvrir = useCallback(() => {
+        authPassedRef.current = true;
+        setAuthenticated(true);
+        setFailed(false);
+    }, []);
+
     const authenticate = useCallback(async () => {
         if (authPassedRef.current) return;
-        try {
-            const result = await LocalAuthentication.authenticateAsync({
-                promptMessage: Translator.get('BIOMETRY_PROMPT'),
-                fallbackLabel: Translator.get('BIOMETRY_FALLBACK'),
-                disableDeviceFallback: false,
-            });
-            if (result.success) {
-                authPassedRef.current = true;
-                setAuthenticated(true);
-                setFailed(false);
-            } else {
-                setFailed(true);
-            }
-        } catch {
-            setFailed(true);
+
+        const etat = await capacites();
+        if (!etat.verrouille) {
+            console.warn('[biometrie] aucun verrou sur cet appareil : la porte s ouvre');
+            ouvrir();
+            return;
         }
-    }, []);
+
+        const resultat = await demander();
+        if (resultat.success) ouvrir();
+        else setFailed(true);
+    }, [ouvrir]);
 
     useFocusEffect(
         useCallback(() => {

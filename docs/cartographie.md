@@ -107,8 +107,13 @@ sans risquer de faire disparaître une carte, et c'est verrouillé par un test
 
 ## Extraction d'un lieu depuis un cours
 
-[`AppCore.tsx`](../src/shared/services/AppCore.tsx) expose deux fonctions qui font le lien entre les
-descriptions Celcat et le référentiel :
+[`AppCore.tsx`](../src/shared/services/AppCore.tsx) expose trois fonctions qui font le lien entre un
+cours et le référentiel. **La première est la seule qui lise une donnée ; les deux autres devinent**,
+et l'ordre d'essai de la fiche de cours suit exactement cette hiérarchie :
+
+- **`lieuxDesSites(sites)`** — les bâtiments que la source **déclare** (`Bâtiment A28`), réduits au
+  code par le même format d'établissement que les libellés de salle. Extrait des Blueprints Celcat
+  depuis le 2026-08-22 ; absent d'un export iCalendar, où les replis reprennent la main.
 
 - **`getLocations(str)`** — découpe la description sur ` | `, prend pour chaque segment la partie
   avant `/`, retire les espaces, et retourne les bâtiments trouvés. Format visé :
@@ -118,7 +123,9 @@ descriptions Celcat et le référentiel :
   attendu.
 
 Un code introuvable dans `locations.json` est silencieusement ignoré : le cours s'affiche alors sans
-bouton de localisation.
+bouton de localisation. C'est voulu — **une carte fausse est pire qu'une carte vide** — mais c'est
+aussi ce qui rendait les deux causes de cartes manquantes invisibles pendant des mois
+([features/planning.md](features/planning.md#décisions-de-conception)).
 
 ## Ajouter ou corriger un bâtiment
 

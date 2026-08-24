@@ -3,10 +3,12 @@ import { AppState } from 'react-native';
 
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import { SettingsManager } from '../../../shared/services/AppCore';
-import { portailPublie } from '../../../shared/etablissements';
+import { getCodeEtablissementActif, portailPublie } from '../../../shared/etablissements';
 import Translator from '../../../shared/i18n/Translator';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { cleDeMessage, type ScolariteColdData, type ScolariteMailData } from './ScolariteMapping';
+import type { PropositionsDossier } from './PropositionsDossier';
+import { lirePropositionsEnAttente, propositionsDe } from './PropositionsEnAttente';
 import {
     deroulerSession,
     portailDisponible,
@@ -86,6 +88,17 @@ export interface CredentialsValue {
      * portail ecrit (jalon 6-J).
      */
     readonly portailDisponible: boolean;
+    /**
+     * Ce que le dossier a livre **en plus** de l'identite, et qu'un ecran proposera d'appliquer.
+     *
+     * Present apres un parcours froid, et pour la duree de la session seulement : rien ne les
+     * persiste, volontairement. Une nouvelle lecture du dossier — « Actualiser le dossier », une
+     * reconnexion — les reproposera, et c'est le bon comportement puisqu'elle est un geste
+     * volontaire ; les garder ferait ressurgir un jour une proposition vieille de six mois.
+     */
+    readonly propositions: PropositionsDossier | null;
+    /** Les oublier : la modale disparait, et rien n'est ecrit. Refuser, ou avoir applique. */
+    readonly oublierPropositions: () => void;
     readonly validateAndSave: (username: string, password: string) => Promise<ResultatValidation>;
     readonly retrySession: () => void;
     /** Redemander un parcours froid, sans passer par une deconnexion. */
@@ -130,25 +143,49 @@ function etatFinal(resultat: ResultatSession): EtatSession {
 }
 
 /**
+ * Ce qu'un chargement du trousseau rend a l'ecran, d'un seul tenant.
+ *
+ * Un objet plutot que trois parametres : ils arrivent toujours ensemble, et la signature etait
+ * recopiee a trois endroits — un quatrieme champ y aurait ete oublie une fois sur deux.
+ */
+interface SessionDuTrousseau {
+    readonly credentials: Identifiants | null;
+    readonly cold: ScolariteColdData | null;
+    readonly enAttente: PropositionsDossier | null;
+}
+
+type PoserSession = (session: SessionDuTrousseau) => void;
+
+/**
  * Le premier chargement : ce que le trousseau porte, puis la session qui va avec.
  *
  * Le parcours se deduit des donnees froides — deja la, parcours chaud ; absentes, parcours froid.
  * C'est ce qui evite de relire trois pages lourdes a chaque lancement.
  */
-function useChargementInitial(
+async function chargerSessionDuTrousseau(
     lancerSession: (mode: 'cold' | 'hot') => void,
-    poser: (creds: Identifiants | null, cold: ScolariteColdData | null) => void,
-): void {
+    poser: PoserSession,
+    vivant: () => boolean,
+): Promise<void> {
+    const [creds, cold, propositions] = await Promise.all([
+        SecureStoreService.getCredentials(),
+        SecureStoreService.getColdData(),
+        SecureStoreService.getPropositions(),
+    ]);
+    if (!vivant()) return;
+
+    // Ce qui attendait une reponse revient avec le reste, et sera **redecide** contre le planning du
+    // moment : c'est ce qui rattrape une connexion faite quand le planning etait encore vide.
+    const enAttente = propositionsDe(lirePropositionsEnAttente(propositions), getCodeEtablissementActif());
+
+    poser({ credentials: creds, cold: (cold as ScolariteColdData | null) ?? null, enAttente });
+    if (creds) lancerSession(cold ? 'hot' : 'cold');
+}
+
+function useChargementInitial(lancerSession: (mode: 'cold' | 'hot') => void, poser: PoserSession): void {
     useEffect(() => {
         let monte = true;
-        void Promise.all([
-            SecureStoreService.getCredentials(),
-            SecureStoreService.getColdData(),
-        ]).then(([creds, cold]) => {
-            if (!monte) return;
-            poser(creds, (cold as ScolariteColdData | null) ?? null);
-            if (creds) lancerSession(cold ? 'hot' : 'cold');
-        });
+        void chargerSessionDuTrousseau(lancerSession, poser, () => monte);
         return () => { monte = false; };
     }, [lancerSession, poser]);
 }
@@ -211,36 +248,59 @@ function useDeconnexion(
         sessionRef.current?.abort();
         await SecureStoreService.deleteCredentials();
         await SecureStoreService.deleteColdData();
+        // Ce qui attendait une reponse appartenait a ce compte : le garder ferait poser la question
+        // au suivant, avec les UE du precedent.
+        await ecrireEnAttente(null);
         oublier();
     }, [oublier, sessionRef]);
 }
 
 /**
- * Changer d'etablissement deconnecte, y compris de ce que ce contexte garde en memoire.
+ * Changer d'etablissement **rebascule** la session : on oublie celle d'avant, on relit celle d'apres.
  *
- * `changerEtablissement` vide bien le trousseau, mais ce provider est monte **au-dessus de toute la
- * pile** : il ne se demonte pas, et son etat survivait donc a la bascule. Le symptome mesure sur
- * appareil (jalon 6-G) : apres un retour a Bordeaux, l'onglet affichait encore le prenom de
- * l'etudiant de l'autre universite, avec un trousseau pourtant vide — la pire forme du defaut que
- * cette phase supprime, une donnee fausse qui a l'air juste.
+ * Ce provider est monte au-dessus de toute la pile : il ne se demonte pas, et son etat survivait donc
+ * a la bascule. Le symptome mesure sur appareil au jalon 6-G : apres un retour a Bordeaux, l'onglet
+ * affichait encore le prenom de l'etudiant de l'autre universite — la pire forme du defaut que cette
+ * phase supprime, une donnee fausse qui a l'air juste. Oublier reste donc indispensable.
  *
- * On n'efface **que la memoire** : le magasin, lui, a deja ete vide par la purge, et le refaire ici
- * ferait dependre la correction de l'ordre des abonnements.
+ * **Oublier ne suffit plus depuis que le trousseau cloisonne** (2026-08-22). Avant, la bascule vidait
+ * le magasin : ne garder aucune memoire etait exactement juste, puisqu'il n'y avait plus rien a lire.
+ * Desormais l'entree de l'etablissement d'arrivee existe peut-etre, et s'arreter a l'oubli
+ * demanderait de se reconnecter a une fac ou l'on est deja connecte — le defaut d'origine, deplace
+ * d'un cran.
+ *
+ * La relecture est sure parce que l'ordre l'est : `SettingsManager.setEtablissement` pose le code
+ * actif **avant** de notifier, donc le trousseau interroge ici est deja celui de la fac d'arrivee.
  */
-function useOublierAuChangementDEtablissement(
+function useBasculerAuChangementDEtablissement(
     sessionRef: React.RefObject<AbortController | null>,
     oublier: () => void,
+    lancerSession: (mode: 'cold' | 'hot') => void,
+    poser: PoserSession,
 ): void {
     const oublierRef = useRef(oublier);
     oublierRef.current = oublier;
+    const lancerRef = useRef(lancerSession);
+    lancerRef.current = lancerSession;
+    const poserRef = useRef(poser);
+    poserRef.current = poser;
 
     useEffect(() => {
+        let monte = true;
         const surChangement = () => {
             sessionRef.current?.abort();
             oublierRef.current();
+            void chargerSessionDuTrousseau(
+                (mode) => lancerRef.current(mode),
+                (session) => poserRef.current(session),
+                () => monte,
+            );
         };
         SettingsManager.on('etablissement', surChangement);
-        return () => SettingsManager.unsubscribe('etablissement', surChangement);
+        return () => {
+            monte = false;
+            SettingsManager.unsubscribe('etablissement', surChangement);
+        };
     }, [sessionRef]);
 }
 
@@ -275,6 +335,54 @@ function useReprises(
     return { retrySession, rafraichirDossier };
 }
 
+/**
+ * Ecrit — ou retire, avec `null` — l'entree de l'etablissement actif dans la table des propositions.
+ *
+ * Le meme cloisonnement que partout ailleurs dans le trousseau : on ne touche jamais qu'a l'entree
+ * de la fac active, sans quoi une proposition acceptee chez l'une effacerait celle qui attendait
+ * chez l'autre.
+ */
+async function ecrireEnAttente(propositions: PropositionsDossier | null): Promise<void> {
+    const table = { ...lirePropositionsEnAttente(await SecureStoreService.getPropositions()) };
+    const code = getCodeEtablissementActif();
+
+    if (propositions === null) delete table[code];
+    else table[code] = propositions;
+
+    await SecureStoreService.savePropositions(table);
+}
+
+/**
+ * Ce que le dossier a propose, et le geste qui l'oublie.
+ *
+ * **Elles survivent au redemarrage**, et c'est une correction du 2026-08-24 : les UE a masquer se
+ * calculent contre le planning, or le planning d'une universite est vide tout l'ete — exactement la
+ * periode ou l'on installe l'application. Sans persistance, une connexion d'ete perdait la
+ * proposition definitivement, puisque les lancements suivants sont des parcours **chauds** qui ne
+ * relisent pas le dossier.
+ *
+ * Une entree disparait quand l'etudiant a tranche, accepte ou refuse, et pas avant. Rien d'autre ne
+ * la retient : elle est **redecidee** a chaque fois contre le planning et les filtres du moment, donc
+ * une proposition qui n'a plus lieu d'etre s'eteint toute seule (`PropositionsDecision`).
+ */
+function usePropositions() {
+    const [propositions, setPropositions] = useState<PropositionsDossier | null>(null);
+
+    /** Poser : en memoire pour l'ecran, au trousseau pour le prochain lancement. */
+    const poserPropositions = useCallback((lues: PropositionsDossier) => {
+        setPropositions(lues);
+        void ecrireEnAttente(lues);
+    }, []);
+
+    /** L'etudiant a tranche : l'ecran se tait, et rien n'attend plus. */
+    const oublierPropositions = useCallback(() => {
+        setPropositions(null);
+        void ecrireEnAttente(null);
+    }, []);
+
+    return { propositions, setPropositions, poserPropositions, oublierPropositions };
+}
+
 const useCredentialsSession = (): CredentialsValue => {
     const [credentials, setCredentials] = useState<Identifiants | null>(null);
     const [credentialsLoaded, setCredentialsLoaded] = useState(false);
@@ -282,6 +390,7 @@ const useCredentialsSession = (): CredentialsValue => {
     const [sessionMode, setSessionMode] = useState<'cold' | 'hot'>('cold');
     const [coldData, setColdData] = useState<ScolariteColdData | null>(null);
     const [mailData, setMailData] = useState<ScolariteMailData | null>(null);
+    const { propositions, setPropositions, poserPropositions, oublierPropositions } = usePropositions();
     const [etat, setEtat] = useState<EtatSession>(AU_REPOS);
 
     /** La session en cours : son controleur d'annulation, ou `null`. Aussi le verrou de non-reentrance. */
@@ -314,11 +423,14 @@ const useCredentialsSession = (): CredentialsValue => {
             void SecureStoreService.saveColdData(resultat.cold);
         }
         if (resultat.mail !== undefined) setMailData(resultat.mail);
+        // Ni appliquees ni oubliees : c'est la modale qui demande, et l'etudiant qui tranche. Elles
+        // sont en revanche **gardees** jusqu'a sa reponse (voir `usePropositions`).
+        if (resultat.propositions !== undefined) poserPropositions(resultat.propositions);
         if (resultat.failure !== undefined) {
             finirValidation({ success: false, error: messageDEchec(resultat.failure) });
         }
         setEtat(etatFinal(resultat));
-    }, [finirValidation]);
+    }, [finirValidation, poserPropositions]);
 
     /**
      * Demarre une session, ou la refuse : une seule a la fois (voir l'en-tete du module).
@@ -368,11 +480,14 @@ const useCredentialsSession = (): CredentialsValue => {
         return true;
     }, [appliquerResultat, finirValidation, surLoginReussi]);
 
-    const poserTrousseau = useCallback((creds: Identifiants | null, cold: ScolariteColdData | null) => {
-        setCredentials(creds);
+    const poserTrousseau = useCallback((session: SessionDuTrousseau) => {
+        setCredentials(session.credentials);
         setCredentialsLoaded(true);
-        if (cold !== null) setColdData(cold);
-    }, []);
+        if (session.cold !== null) setColdData(session.cold);
+        // `setPropositions` et non `poserPropositions` : elles **viennent** du trousseau, les
+        // reecrire ne ferait que recopier ce qu'on vient de lire.
+        setPropositions(session.enAttente);
+    }, [setPropositions]);
 
     useChargementInitial(lancerSession, poserTrousseau);
 
@@ -394,17 +509,18 @@ const useCredentialsSession = (): CredentialsValue => {
         setCredentials(null);
         setColdData(null);
         setMailData(null);
+        // L'etat seul : la table du trousseau appartient a `logout`, qui l'efface, et a la bascule
+        // d'etablissement, qui doit au contraire la laisser intacte pour la fac qu'on quitte.
+        setPropositions(null);
         setEtat(AU_REPOS);
-    }, []);
+    }, [setPropositions]);
 
     const logout = useDeconnexion(sessionRef, oublier);
-    useOublierAuChangementDEtablissement(sessionRef, oublier);
+    useBasculerAuChangementDEtablissement(sessionRef, oublier, lancerSession, poserTrousseau);
 
     return {
         credentials, credentialsLoaded, coldData, mailData, sessionMode,
-        scrapeStatus: etat.status,
-        scrapeProgress: etat.progress,
-        sessionFailure: etat.failure,
+        scrapeStatus: etat.status, scrapeProgress: etat.progress, sessionFailure: etat.failure,
         // Lu a chaque rendu plutot que memorise : le catalogue peut changer sous l'application — un
         // rafraichissement au retour au premier plan, ou une bascule d'etablissement — et une valeur
         // figee au montage ferait survivre une ligne de messagerie a l'universite qui la portait.
@@ -414,7 +530,7 @@ const useCredentialsSession = (): CredentialsValue => {
         // ecrite laisse donc le formulaire visible et fait dire le probleme par la session, ce qui est
         // le bon endroit — le masquer ferait disparaitre l'onglet sans que personne sache pourquoi.
         portailDisponible: portailPublie(),
-        validateAndSave, retrySession, rafraichirDossier, logout,
+        propositions, oublierPropositions, validateAndSave, retrySession, rafraichirDossier, logout,
     };
 };
 

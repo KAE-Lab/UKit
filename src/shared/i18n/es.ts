@@ -325,6 +325,14 @@ const es: TranslationDict = {
 	COURSE_NOTIFICATIONS: "Notificaciones de cursos",
 	NOTIFICATION_DELAY: "Retraso de la notificación",
 	NOTIFICATION_DELAY_DESC: "Ajusta cuántos minutos antes del inicio del curso deseas ser notificado.",
+	PROPOSALS_TITLE: "Encontrado en tu expediente",
+	PROPOSALS_INTRO: "Tu conexión universitaria nos ha dicho algo más. No se aplicará nada sin tu consentimiento.",
+	PROPOSALS_EDT_LABEL: "Tu horario",
+	PROPOSALS_EDT_HINT: "Se añadirá a tus favoritos, como un grupo. Puedes quitarlo cuando quieras.",
+	PROPOSALS_UES_LABEL: "Las asignaturas que no cursas",
+	PROPOSALS_UES_HINT: "Se ocultarán de tu horario. Puedes volver a mostrarlas en los ajustes.",
+	PROPOSALS_APPLY: "Aplicar",
+	PROPOSALS_SKIP: "No, gracias",
 };
 
 export default es;

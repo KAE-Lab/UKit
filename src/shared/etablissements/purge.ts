@@ -16,6 +16,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import SecureStoreService from '../services/SecureStoreService';
+import { appliquerEdtsPersonnels } from './edtPersonnel';
 import { appliquerLiensEdt } from './lienEdt';
 
 /**
@@ -44,13 +45,22 @@ function estCacheDePlanning(cle: string): boolean {
 }
 
 /**
- * Efface tout ce qui appartenait a l'etablissement quitte, session universitaire comprise.
+ * Efface les caches locaux de l'etablissement quitte.
  *
- * **La session en fait partie, et ce n'est pas un detail.** Les identifiants et l'identite du
- * trousseau appartiennent au portail quitte : les garder afficherait le nom d'un etudiant d'une fac
- * sous le nom d'une autre. C'est aussi ce qui manquait a la reinitialisation depuis toujours —
- * constate sur appareil en verifiant le jalon 6-G, sur un parcours qui redemande l'etablissement mais
- * laissait la session en place.
+ * **La session universitaire n'en fait plus partie**, et c'est la correction du 2026-08-22. Elle en
+ * faisait partie depuis le jalon 6-G, pour une raison juste — les identifiants et l'identite
+ * appartiennent au portail quitte, et les garder afficherait le nom d'un etudiant d'une fac sous le
+ * nom d'une autre. Le remede l'etait moins : il deconnectait a chaque aller-retour, alors que tout le
+ * reste survivait, ce qui le faisait passer pour un defaut plutot que pour une regle.
+ *
+ * Le depot avait deja tranche ce dilemme deux fois — les groupes favoris au 6-I, les liens
+ * d'abonnement au 6-J — et la formule vaut ici mot pour mot : **effacer repond a la mauvaise
+ * question, la regle est que les donnees de deux facs ne se melangent pas, pas qu'il faille les
+ * oublier.** La session est donc **cloisonnee** par etablissement (`etablissements/comptes.ts`), ce
+ * qui tient les deux bouts : on ne lit jamais que l'entree de l'etablissement actif, donc rien ne se
+ * melange, et un retour retrouve sa session.
+ *
+ * Ce que la reinitialisation efface, elle, est ailleurs : `purgerTrousseau`.
  *
  * Ne leve pas : un magasin qui refuse une suppression ne doit pas empecher la bascule, sans quoi
  * l'utilisateur resterait coince sur un etablissement qu'il vient de quitter.
@@ -63,40 +73,34 @@ export async function purgerDonneesEtablissement(): Promise<void> {
     } catch (erreur) {
         console.warn(`[etablissements] purge incomplete : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
     }
-
-    // Les deux cles se suppriment separement — le trousseau ne les tient pas ensemble
-    // (SecureStoreService).
-    //
-    // **Les liens d'abonnement ne sont pas de la partie**, et c'est une decision : ils sont cloisonnes
-    // par etablissement, donc rien ne se melange a les garder, et un aller-retour ferait recoller un
-    // lien que l'etudiant a deja donne. C'est la meme correction que celle des groupes favoris au
-    // jalon 6-I — effacer repond a la mauvaise question, la regle est que les donnees de deux facs ne
-    // se **melangent** pas, pas qu'il faille les oublier. La reinitialisation, elle, les efface :
-    // voir `purgerLiensEdt`.
-    try {
-        await SecureStoreService.deleteCredentials();
-        await SecureStoreService.deleteColdData();
-    } catch (erreur) {
-        console.warn(`[etablissements] session non effacee : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
-    }
 }
 
 /**
- * Efface les liens d'abonnement de **tous** les etablissements, memoire comprise.
+ * Efface **tout le trousseau** : la session universitaire, les liens d'abonnement, les emplois du
+ * temps personnels et les propositions en attente, de tous les etablissements.
  *
- * Reserve a la reinitialisation, et c'est ce qui la distingue d'une bascule : ici on ne va nulle part,
- * on efface. Ne rien garder est le seul comportement qui rende le parcours d'accueil honnete — il
- * redemande l'etablissement, et proposer un planning deja rempli a quelqu'un qui vient de tout effacer
- * serait un residu, pas un service.
+ * Reservee a la reinitialisation, et c'est ce qui la distingue d'une bascule : les deux contenus sont
+ * cloisonnes par etablissement, donc un aller-retour les retrouve — ici on ne va nulle part, on
+ * efface. Laisser un compte connecte ou un emploi du temps rempli a quelqu'un qui vient de tout
+ * reinitialiser serait un residu, et le parcours d'accueil redemande de toute facon l'etablissement.
  *
- * Ne leve jamais, pour la meme raison que sa voisine : un trousseau qui refuse une suppression ne doit
- * pas empecher la reinitialisation d'aboutir.
+ * Les deux effacements sont **regroupes** parce qu'ils repondent a une seule question — « que garde
+ * une bascule, et qu'efface une remise a zero ? » — et qu'un appelant qui n'en jouerait qu'un
+ * laisserait la moitie du trousseau derriere lui.
+ *
+ * Ne leve jamais : un trousseau qui refuse une suppression ne doit pas empecher la reinitialisation
+ * d'aboutir.
  */
-export async function purgerLiensEdt(): Promise<void> {
+export async function purgerTrousseau(): Promise<void> {
     appliquerLiensEdt(null);
+    appliquerEdtsPersonnels(null);
     try {
         await SecureStoreService.deleteEdtLiens();
+        await SecureStoreService.deleteEdtsPersonnels();
+        await SecureStoreService.deletePropositions();
+        await SecureStoreService.deleteAllComptes();
     } catch (erreur) {
-        console.warn(`[etablissements] liens non effaces : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+        console.warn(`[etablissements] trousseau non efface : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
     }
 }
+

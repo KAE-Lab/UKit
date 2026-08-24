@@ -51,7 +51,7 @@ export async function viaBlueprint() {
 
         const cours = (outputs.cours ?? [])
             .filter((brut) => brut.categorie !== 'Vacances')
-            .map((brut) => projeterDepuisBlueprint(brut, GROUPE, '\n'));
+            .map((brut) => projeterDepuisBlueprint(brut, GROUPE, ';'));
         blocs.push([sonde.cas, aplatir(decouper(cours, sonde.lundi))]);
     }
     return agreger(blocs);
@@ -70,7 +70,7 @@ export async function viaLegacy() {
 
         const cours = (await response.json())
             .filter((event) => event.eventCategory !== 'Vacances')
-            .map((event) => projeterDepuisLegacy(event, GROUPE, '\n'));
+            .map((event) => projeterDepuisLegacy(event, GROUPE, ';'));
         blocs.push([sonde.cas, aplatir(decouper(cours, sonde.lundi))]);
     }
     return agreger(blocs);

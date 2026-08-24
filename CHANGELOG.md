@@ -55,6 +55,63 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
     liste vide n'ont pas besoin d'un champ de recherche. Elle reste tant qu'une requête est saisie,
     sans quoi on serait enfermé avec un texte qu'on ne peut plus effacer.
 
+- **Le mode sombre choisi à la configuration s'applique tout de suite** (issue #13). Le choisir pendant
+  le parcours d'accueil laissait l'application en clair jusqu'au redémarrage suivant. La préférence
+  était pourtant bien enregistrée, ce qui rendait le symptôme déroutant : deux causes se combinaient —
+  les réglages n'étaient pas relus tant que le parcours n'était pas terminé, et le parcours reposait le
+  thème du système à chaque ouverture, écrasant le choix. Il suffisait qu'Android récupère la mémoire
+  pendant la configuration pour le déclencher.
+
+- **Changer d'université ne déconnecte plus.** La bascule effaçait les identifiants et le dossier,
+  alors que les groupes favoris, les filtres et les liens d'abonnement, eux, survivaient : un seul
+  élément qui saute quand tout le reste tient ressemble à un défaut, pas à une règle. La raison
+  d'origine était pourtant juste — le nom d'un étudiant d'une fac ne doit pas s'afficher sous une
+  autre. C'est le remède qui ne l'était pas : la session est maintenant **cloisonnée** par
+  établissement, comme les liens d'abonnement l'étaient déjà. On ne lit jamais que le compte de la fac
+  active, donc rien ne se mélange, et un aller-retour retrouve sa session. Les identifiants déjà
+  enregistrés sont convertis au premier lancement — sans quoi la correction aurait déconnecté tout le
+  monde une fois, ce qu'elle existe précisément pour éviter.
+
+- **Une fiche de cours a enfin sa carte.** Ouvrir un cours donné au bâtiment A28 n'affichait aucun
+  plan, alors que ce bâtiment est au référentiel avec ses coordonnées — sans message, sans erreur,
+  comme si la localisation était inconnue. Le symptôme était unique, les causes étaient **deux** : la
+  vue semaine ne produisait aucune description, donc aucune ligne de salle à lire ; et une double
+  espace dans le champ `modules` de la source décalait d'un rang la ligne où la salle est cherchée,
+  qui devenait le nom de l'enseignant. Le correctif ne répare ni l'une ni l'autre heuristique : il
+  cesse de deviner. Celcat **déclare** ses bâtiments dans un champ que rien n'extrayait, et c'est
+  désormais lui qu'on lit en premier.
+
+- **La vue semaine du planning affiche sa description.** Groupes, enseignant, salle et semaines y
+  étaient vides depuis toujours, par un découpage sur le mauvais séparateur. C'est le seul endroit de
+  cette passe où des pixels bougent, et c'est assumé : ces lignes ressemblent maintenant à celles de
+  la vue jour.
+
+- **Face ID est tenté avant le code, sur iPhone.** L'onglet Scolarité et la révélation du mot de passe
+  demandaient directement le code de l'appareil, alors que l'empreinte se déclenchait normalement sur
+  Android : la politique demandée à iOS l'autorisait à court-circuiter la biométrie. Les deux appels
+  demandent maintenant la biométrie seule d'abord, puis le code en repli — **sauf si la personne a
+  annulé**, auquel cas rien ne s'enchaîne : lui ouvrir le clavier du code serait une seconde demande
+  qu'elle n'a pas faite. Au passage, un appareil sans aucun verrou ne pouvait plus jamais ouvrir cet
+  onglet — toute demande échouait, et le bouton « Réessayer » ne pouvait pas marcher.
+
+- **Un filtre d'UE s'affiche avec le nom du cours, plus seulement son code.** `4TIN606U` ne se relie
+  à une matière qu'en ouvrant son emploi du temps : vérifier ce qu'on avait filtré était fastidieux.
+  Le nom **existait déjà** dans la donnée — l'extraction le capturait et le jetait. La recherche porte
+  aussi sur le nom, et le code seul reste affiché pour une UE qu'aucun planning chargé ne connaît. Au
+  passage, l'indexation gardait une règle corrigée ailleurs il y a deux jalons : un titre commençant
+  par une année entrait dans la liste comme une UE fantôme `2026`.
+
+- **La connexion universitaire propose ce qu'elle a trouvé, au lieu de le garder pour elle.** Une
+  connexion traverse des pages qui en savent bien plus que l'état civil : à Bordeaux l'annuaire liste
+  les **UE auxquelles on est inscrit**, à Bordeaux INP l'agenda **présélectionne sa propre fiche**,
+  c'est-à-dire son emploi du temps personnel. Les deux étaient sous nos yeux sans être lues. Un
+  dialogue les propose désormais — les UE qu'on **ne suit pas** deviennent des filtres, l'emploi du
+  temps devient un groupe favori — et **rien ne s'applique sans qu'on ait dit oui** : deviner juste
+  dans le dos de quelqu'un reste deviner dans son dos, et une proposition fausse lui serait
+  indétectable. Ce sont les UE **non suivies** qui sont proposées, et c'est tout le sujet : un filtre
+  masque, donc pré-remplir avec les siennes aurait caché ses propres cours et vidé son planning sans
+  rien expliquer.
+
 - **N'importe quelle photo servie par une source tierce se corrige depuis la base.** Les images des
   restaurants, des bibliothèques et des bâtiments viennent d'un fournisseur : une photo fausse, ou
   absente, l'était pour tout le monde jusqu'au prochain passage en boutique. Une table `visuels`

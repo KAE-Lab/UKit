@@ -121,9 +121,12 @@ export interface WelcomeActions {
 }
 
 export function useWelcomeState(): { state: WelcomeState; actions: WelcomeActions } {
+    // L'etat de depart lit le gestionnaire plutot que de figer `fr`/`light` : au retour dans un
+    // parcours interrompu, les reglages restaures sont deja poses, et repartir d'une constante
+    // afficherait un ecran clair le temps d'un rendu avant de se corriger.
     const [state, setState] = useState<WelcomeState>({
-        language: 'fr',
-        theme: 'light',
+        language: SettingsManager.getLanguage(),
+        theme: SettingsManager.getTheme(),
         etablissement: getCodeEtablissementActif(),
         etablissements: listeEtablissements(),
         year: null,
@@ -163,8 +166,18 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
             groupListFiltered: filtrer(groupList, prev.year, prev.season, prev.textFilter),
         })));
 
-        SettingsManager.setLanguage(languageFromDevice());
-        SettingsManager.setTheme(SettingsManager.getAutomaticTheme());
+        // **Les defauts de l'appareil, une seule fois** : au tout premier lancement, quand rien n'a
+        // encore ete ecrit. Les poser a chaque montage etait un defaut signale par un utilisateur —
+        // choisir le mode sombre pendant la configuration, quitter l'application puis la rouvrir, et
+        // le parcours reprenait en clair, le choix ecrase par le theme du systeme. Il ne revenait
+        // qu'au redemarrage **suivant**, une fois la configuration terminee, ce qui le faisait passer
+        // pour un bug d'affichage alors que la preference etait bien enregistree.
+        //
+        // Un parcours interrompu n'a rien d'exceptionnel : il suffit qu'Android reclame la memoire.
+        if (!SettingsManager.aDesReglagesEnregistres()) {
+            SettingsManager.setLanguage(languageFromDevice());
+            SettingsManager.setTheme(SettingsManager.getAutomaticTheme());
+        }
     }, []);
 
     const filterList: WelcomeActions['filterList'] = (year, season, textFilter) => {

@@ -9,6 +9,7 @@ import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { SettingsManager } from '../../../shared/services/AppCore';
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
+import type { UeRencontree } from '../../Planning/services/PlanningAssembly';
 
 // ── Utilitaire Clavier ──────────────────────────────────────────────────
 export const SettingsDismissKeyboard = ({ children }: { children: React.ReactNode }) => (
@@ -76,39 +77,66 @@ export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selecte
     );
 };
 
+/**
+ * Un filtre actif : son code, et l'intitule de l'UE quand un planning charge le connait.
+ *
+ * Le code seul n'etait pas exploitable — `4TIN606U` ne se relie a un cours qu'en ouvrant son emploi du
+ * temps. L'intitule existait deja dans la donnee ; l'indexation le jetait
+ * (`PlanningAssembly.indexerUes`).
+ *
+ * `null` est un cas ordinaire : un filtre saisi a la main, ou herite d'une annee precedente, nomme une
+ * UE qu'aucun planning charge ne porte. L'ecran affiche alors le code seul, comme avant.
+ */
+const FiltreActif = ({ theme, code }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; code: string }) => {
+    const nom = DataManager.nomDUE(code);
+
+    return (
+        <TouchableOpacity
+            onLongPress={() => SettingsManager.removeFilters(code)}
+            style={[
+                theme.popup.filters.button as never,
+                { flex: 1, minWidth: 0, alignItems: 'flex-start', flexDirection: 'column' },
+            ]}
+        >
+            <Text style={theme.popup.filters.buttonText}>{code}</Text>
+            {nom !== null ? (
+                <Text
+                    numberOfLines={2}
+                    style={{ fontSize: tokens.fontSize.xs, color: theme.popup.filters.iconColor, marginTop: tokens.space.xxs }}
+                >
+                    {nom}
+                </Text>
+            ) : null}
+        </TouchableOpacity>
+    );
+};
+
 // ── Popup Filtres ───────────────────────────────────────────────────────
 export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterList, filterTextInput, setFilterTextInput, submitFilterTextInput }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; filterList: string[]; filterTextInput: string | null; setFilterTextInput: (input: string) => void; submitFilterTextInput: () => void }) => {
     const flatListRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [availableUEs, setAvailableUEs] = useState(DataManager.getAvailableUEs());
+    const [availableUEs, setAvailableUEs] = useState(DataManager.getUEs());
     const scrollToEnd = () => flatListRef.current?.scrollToEnd();
 
     // Subscribe to UE updates
     React.useEffect(() => {
-        const updateUEs = (ues: string[]) => setAvailableUEs([...ues]);
+        const updateUEs = (ues: UeRencontree[]) => setAvailableUEs([...ues]);
         DataManager.on('availableUEs', updateUEs);
         // Refresh on open
-        setAvailableUEs(DataManager.getAvailableUEs());
+        setAvailableUEs(DataManager.getUEs());
     }, [popupVisible]);
 
-    // Filter available UEs based on search query, excluding already-added ones
+    // La recherche porte sur le code **et** sur l'intitule : personne ne retient `4TIN606U`, tout le
+    // monde retient « Histoire ».
     const filteredSuggestions = searchQuery.length > 0
         ? availableUEs.filter(ue =>
-            ue.toUpperCase().includes(searchQuery.toUpperCase()) &&
-            !filterList.includes(ue)
+            (ue.code.toUpperCase().includes(searchQuery.toUpperCase()) ||
+                ue.nom.toUpperCase().includes(searchQuery.toUpperCase())) &&
+            !filterList.includes(ue.code)
         )
         : [];
 
-    const renderFilterItem = ({ item }: { item: string }) => {
-        const removeFilter = () => {
-            SettingsManager.removeFilters(item);
-        };
-        return (
-            <TouchableOpacity key={item} onLongPress={removeFilter} style={theme.popup.filters.button as never}>
-                <Text style={theme.popup.filters.buttonText}>{item}</Text>
-            </TouchableOpacity>
-        );
-    };
+    const renderFilterItem = ({ item }: { item: string }) => <FiltreActif theme={theme} code={item} />;
 
     const addFilterTextInput = () => {
         submitFilterTextInput();
@@ -211,8 +239,8 @@ const SearchAndSuggestions = ({ availableUEs, searchQuery, setSearchQuery, filte
                 >
                     {filteredSuggestions.map((ue) => (
                         <TouchableOpacity
-                            key={ue}
-                            onPress={() => onSuggestionPress(ue)}
+                            key={ue.code}
+                            onPress={() => onSuggestionPress(ue.code)}
                             style={{
                                 paddingHorizontal: tokens.space.sm,
                                 paddingVertical: tokens.space.xs,
@@ -232,7 +260,8 @@ const SearchAndSuggestions = ({ availableUEs, searchQuery, setSearchQuery, filte
                                 fontWeight: tokens.fontWeight.semibold,
                                 color: theme.popup.filters.iconColor,
                             }}>
-                                {ue}
+                                {/* Le code identifie, l'intitule reconnait : les deux, ou le code seul. */}
+                                {ue.nom === '' ? ue.code : `${ue.code} · ${ue.nom}`}
                             </Text>
                         </TouchableOpacity>
                     ))}

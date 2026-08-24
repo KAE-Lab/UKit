@@ -9,7 +9,8 @@
   ],
   "vars": {
     "dossier": "https://mondossierweb.bordeaux-inp.fr/",
-    "coordonnees": "https://mondossierweb.bordeaux-inp.fr/coordonnees"
+    "coordonnees": "https://mondossierweb.bordeaux-inp.fr/coordonnees",
+    "planning": "https://ade.bordeaux-inp.fr/direct/myplanning.jsp"
   },
   "options": {
     "timeout_ms": 30000,
@@ -132,6 +133,38 @@
           "as": "text"
         }
       }
+    },
+    {
+      "action": "navigate",
+      "url": "{{ vars.planning }}",
+      "note": "ADE, sur le meme SSO que le dossier. Il **preselectionne la fiche de l'etudiant connecte** dans son arbre de ressources — aucune recherche par nom n'est necessaire."
+    },
+    {
+      "action": "wait",
+      "ms": 6000,
+      "note": "L'arbre est rendu par une application GWT : il n'existe pas au chargement du document. `wait` et non `wait_for`, parce qu'un `wait_for` qui expire fait echouer le run — et cette lecture est un bonus qui ne doit jamais emporter la connexion."
+    },
+    {
+      "id": "planning",
+      "action": "extract",
+      "outputs": {
+        "ressource": {
+          "selector": "//div[@aria-selected=\"true\"]//div[contains(@class,\"x-tree3-node\")]",
+          "selector_type": "xpath",
+          "as": "list",
+          "item": "attr",
+          "attr": "id",
+          "note": "L'identifiant ADE de l'etudiant, porte par l'element de l'arbre sous la forme `Direct Planning Tree_4087`. XPath parce que c'est le seul langage de selection que les deux moteurs partagent. `as: list` ne leve jamais : sans correspondance, la liste est vide et l'application ne propose rien."
+        },
+        "promotion": {
+          "selector": "//div[@aria-selected=\"true\"]",
+          "selector_type": "xpath",
+          "as": "list",
+          "item": "attr",
+          "attr": "aria-label",
+          "note": "Le nom affiche, pour que l'ecran puisse nommer ce qu'il propose."
+        }
+      }
     }
   ],
   "outputs": {
@@ -139,6 +172,8 @@
     "ine": "",
     "identite": "{{ steps.dossier.prenom }} {{ steps.dossier.nom }}",
     "email": "{{ steps.coordonnees.email }}",
-    "naissance": "{{ steps.dossier.naissance }}"
+    "naissance": "{{ steps.dossier.naissance }}",
+    "edt_ressource": "{{ steps.planning.ressource }}",
+    "edt_libelle": "{{ steps.planning.promotion }}"
   }
 }

@@ -5,6 +5,7 @@ import { AetheriusConfirm, AetheriusWebView } from '@aetherius/react-native';
 
 import StackNavigator from './StackNavigator';
 import { CredentialsProvider } from '../../features/Scolarite/services/CredentialsContext';
+import { PropositionsModal } from '../../features/Scolarite/components/PropositionsModal';
 import { refreshBlueprints } from '../aetherius';
 import { refreshBuildings } from '../locations';
 import { refreshVisuels } from '../visuels';
@@ -131,6 +132,15 @@ export default function RootContainer() {
                             <StackNavigator />
                         </NavigationContainer>
                     )}
+                    {/*
+                      * Ce que la connexion universitaire a trouve, et qu'elle propose d'appliquer.
+                      * Rendue ici plutot que dans un ecran pour deux raisons : elle doit pouvoir
+                      * apparaitre **pendant** le parcours d'accueil, qui remplace la navigation, et
+                      * elle attend un moment qui n'appartient a aucun ecran — celui ou le planning du
+                      * groupe choisi a livre ses UE. Elle ne rend rien tant qu'il n'y a rien a
+                      * demander (features/Scolarite/services/PropositionsDecision.ts).
+                      */}
+                    <PropositionsModal />
                 </CredentialsProvider>
                 <ModMenu />
 

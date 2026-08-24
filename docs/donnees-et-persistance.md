@@ -120,18 +120,41 @@ Gérées exclusivement par [`SecureStoreService.ts`](../src/shared/services/Secu
 
 | Clé | Contenu |
 |---|---|
-| `UKIT_CAS_CREDENTIALS` | `{ username, password }` du compte universitaire |
-| `UKIT_COLD_DATA` | données étudiant scrapées une fois : prénom, numéro étudiant, INE, adresse mail, date de naissance |
+| `UKIT_CAS_COMPTES` | le compte universitaire, **indexé par code d'établissement** : `{ "bordeaux": { username, password } }` |
+| `UKIT_COLD_DATA_PAR_ETAB` | les données étudiant lues une fois — prénom, numéro étudiant, INE, adresse mail, date de naissance — **indexées par code d'établissement** |
 | `UKIT_EDT_LIENS` | les liens d'abonnement à l'emploi du temps, **indexés par code d'établissement** : `{ "autre": "https://…" }` |
+| `UKIT_EDT_PERSONNELS` | l'emploi du temps personnel trouvé dans le dossier, **indexé par code d'établissement** : `{ "bordeaux-inp": { nom, ressource } }` |
+| `UKIT_PROPOSITIONS` | ce que le dossier a proposé et qui **n'a pas encore reçu de réponse**, indexé par code d'établissement. Une entrée disparaît quand l'étudiant a tranché |
 
-Les deux premières sont supprimées ensemble à la déconnexion (`logout` dans
-[`CredentialsContext.tsx`](../src/features/Scolarite/services/CredentialsContext.tsx)). Aucune de ces
-données ne quitte l'appareil.
+**Les cinq clés sont cloisonnées par établissement**, et les deux premières ne l'étaient pas avant le
+2026-08-22. Elles portaient une session unique, effacée à chaque bascule : revenir à sa fac d'origine
+obligeait à se reconnecter, alors que tout le reste survivait — ce qui le faisait passer pour un
+défaut plutôt que pour une règle. La règle, elle, est celle que le dépôt a déjà appliquée aux groupes
+favoris (6-I) puis aux liens (6-J) : *les données de deux facs ne se **mélangent** pas, ce qui ne veut
+pas dire qu'il faille les oublier*. On ne lit jamais que l'entrée de l'établissement actif, donc rien
+ne se mélange, et un retour retrouve sa session.
+
+> **Les clés d'avant — `UKIT_CAS_CREDENTIALS` et `UKIT_COLD_DATA` — ne sont plus écrites.** Elles sont
+> lues une dernière fois au premier accès, converties sous le code de l'établissement sélectionné,
+> puis supprimées. Sans cette conversion, la correction aurait déconnecté tout le parc installé le jour
+> de sa mise à jour, produisant une fois exactement le défaut qu'elle supprime. La suppression vient
+> **après** l'écriture : dans l'ordre inverse, une interruption entre les deux perdrait la session.
+
+La déconnexion explicite retire l'entrée de **l'établissement actif** seulement — elle n'a aucune
+raison d'emporter le compte d'une autre fac. Seule la réinitialisation efface tout
+(`purgerTrousseau`). Aucune de ces données ne quitte l'appareil.
 
 **`UKIT_EDT_LIENS` est dans le trousseau et non dans les réglages, et ce n'est pas de la prudence de
 principe** : un lien d'abonnement personnel ouvre un emploi du temps **nominatif sans demander
 d'identifiant**. Il vaut donc un mot de passe et se range avec eux (jalon
 [6-J](phase-6/6-j-compte-et-sources-par-etablissement.md)).
+
+**`UKIT_EDT_PERSONNELS` est là pour exactement la même raison, et elle est mesurée** : l'export
+anonyme d'ADE accepte n'importe quel identifiant de ressource et rend l'emploi du temps correspondant,
+sans authentification. Le nombre lu dans l'agenda de l'étudiant vaut donc un secret. Il se comporte
+comme un lien : il **survit** à un changement d'établissement — il n'est lu que sous la fac qui le
+porte —, la déconnexion n'y touche pas, et seule la réinitialisation l'efface
+([scolarite.md](features/scolarite.md#lidentifiant-ade-vaut-un-secret)).
 
 Une **seule** clé porte tous les établissements, pour deux raisons : `expo-secure-store` est fait pour
 un petit nombre de petites valeurs — une clé par établissement ferait grandir le trousseau avec le

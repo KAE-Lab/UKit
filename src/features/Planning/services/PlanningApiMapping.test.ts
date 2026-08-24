@@ -1,10 +1,10 @@
 /**
  * Ce que la projection de l'emploi du temps doit tenir.
  *
- * Les cas verrouilles ici sont **mesures** contre la vraie source le 2026-08-09, pas imagines :
- * l'arite d'une extraction, la description telle que Celcat la sert reellement, le separateur qui
- * change avec la vue, et la fin nulle d'un evenement de vacances. Aucun des quatre ne se voit a la
- * relecture, et chacun ferait disparaitre de la donnee en silence.
+ * Les cas verrouilles ici sont **mesures** contre la vraie source, pas imagines : l'arite d'une
+ * extraction, la description telle que Celcat la sert reellement, les batiments qu'il declare, et la
+ * fin nulle d'un evenement de vacances. Aucun des quatre ne se voit a la relecture, et chacun ferait
+ * disparaitre de la donnee en silence.
  */
 
 import moment from 'moment';
@@ -16,6 +16,7 @@ import {
     projeterCours,
     projeterGroupes,
     projeterJour,
+    sitesDuCours,
     sujetDuCours,
     trierCours,
     type CoursExtrait,
@@ -33,6 +34,8 @@ const COURS: CoursExtrait = {
         'Cours\r\n\r\n<br />\r\n\r\n4TIN602U Techn algorithmiques et program\r\n\r\n<br />\r\n\r\n' +
         'CMI ISI601A1, INF601A, MI601A\r\n\r\n<br />\r\n\r\nGAVOILLE Cyril\r\n\r\n<br />\r\n\r\n' +
         'A22/Amphith&#233;&#226;tre Charles DARWIN\r\n\r\n<br />\r\n\r\n3,5-7,9-11,13-14\r\n',
+    // Une extraction `$.sites[*]` a une seule correspondance rend la **valeur**, pas une liste.
+    sites: 'Bâtiment A22',
 };
 
 /** Un evenement de vacances, tel que la source le sert : journee entiere, sans fin, sans modules. */
@@ -81,21 +84,23 @@ describe('projeterCours', () => {
         expect(projete.description).not.toContain('4TIN602U');
     });
 
-    it('separe la description selon la vue, et la vue semaine n en garde rien', () => {
-        const jour = projeterCours(COURS, 'INF601A', ';');
-        const semaine = projeterCours(COURS, 'INF601A', '\n');
+    it('rend les quatre lignes utiles : groupes, enseignant, salle, semaines', () => {
+        expect(projeterCours(COURS, 'INF601A').description.split('\n')).toHaveLength(4);
+    });
 
-        // En vue jour, les quatre lignes utiles sont separees : groupes, enseignant, salle, semaines.
-        expect(jour.description.split('\n')).toHaveLength(4);
+    it('rend la meme description en vue semaine qu en vue jour', () => {
+        // **L'inverse etait verrouille ici**, et ce test-la ne verifiait pas ce qu'il annoncait : il
+        // passait le separateur a la main, donc il decrivait la fonction et non la vue. La vue
+        // semaine, elle, ressortait vide — le serveur formate a l'identique dans les deux vues
+        // (`\r\n\r\n<br />\r\n\r\n`), `formatDescription` reduit cela a des `;`, et couper sur `\n`
+        // ne rendait qu'un champ, porteur de la categorie, donc ecarte en entier. Plus de salle, plus
+        // d'enseignant, plus de carte. On passe donc par `decouperSemaine`, seul chemin reel.
+        const semaine = decouperSemaine([COURS], 'INF601A', moment('2026-01-12'));
+        const depuisLaSemaine = semaine[0].courses[0];
 
-        // En vue semaine, la description ressort **vide**, et ce n'est pas un defaut de ce jalon :
-        // c'est le comportement d'origine, verrouille ici parce qu'il est contre-intuitif. Mesure du
-        // 2026-08-09 : le serveur formate la description a l'identique dans les deux vues
-        // (`\r\n\r\n<br />\r\n\r\n`), donc `formatDescription` la reduit a une seule ligne separee par
-        // `;`. Couper sur `\n` ne rend alors qu'un champ, qui porte la categorie en tete et se fait
-        // ecarter en entier. Corriger cela changerait l'affichage de la vue semaine : c'est une
-        // decision produit, pas une correction de migration. Voir docs/features/planning.md.
-        expect(semaine.description).toBe('');
+        expect(depuisLaSemaine.description).toBe(projeterCours(COURS, 'INF601A').description);
+        expect(depuisLaSemaine.description).toContain('GAVOILLE Cyril');
+        expect(depuisLaSemaine.description).toContain('A22/Amphithéâtre Charles DARWIN');
     });
 
     it('deduit le sous-groupe a filtrer depuis la premiere ligne de description', () => {
@@ -144,6 +149,40 @@ describe('projeterJour', () => {
 
         expect(cours).toHaveLength(1);
         expect(projeterJour([COURS], 'INF601A', '2026-01-11')).toHaveLength(0);
+    });
+});
+
+describe('sitesDuCours', () => {
+    // Le meme piege que `modules`, deja paye une fois : `$.sites[*]` rend une **chaine** quand il n'y
+    // a qu'une correspondance et une **liste** au-dela. Mesure sur la vraie source : un cours nomme
+    // un seul batiment dans l'immense majorite des cas, donc c'est la forme chaine qui domine — celle
+    // qu'un code ecrit « evidemment » pour une liste ne traiterait jamais.
+    it('accepte la forme a une seule correspondance', () => {
+        expect(sitesDuCours('Bâtiment A28')).toEqual(['Bâtiment A28']);
+    });
+
+    it('accepte la forme a plusieurs correspondances', () => {
+        expect(sitesDuCours(['Bâtiment A28', 'Bâtiment A21'])).toEqual(['Bâtiment A28', 'Bâtiment A21']);
+    });
+
+    it('rend une liste vide quand la source ne declare rien', () => {
+        // `null` est aussi ce que rend une liste vide une fois la reponse traduite : les deux disent
+        // « on ne sait pas ou est ce cours », et une carte fausse serait pire qu'une carte absente.
+        expect(sitesDuCours(null)).toEqual([]);
+        expect(sitesDuCours(undefined)).toEqual([]);
+        expect(sitesDuCours('')).toEqual([]);
+        expect(sitesDuCours([])).toEqual([]);
+    });
+
+    it('ecarte ce qui n est pas une chaine plutot que de le convertir', () => {
+        expect(sitesDuCours(['Bâtiment A28', null, 42, ''])).toEqual(['Bâtiment A28']);
+    });
+
+    it('est porte jusqu au contrat, y compris depuis la vue semaine', () => {
+        expect(projeterCours(COURS, 'INF601A').sites).toEqual(['Bâtiment A22']);
+        expect(decouperSemaine([COURS], 'INF601A', moment('2026-01-12'))[0].courses[0].sites).toEqual([
+            'Bâtiment A22',
+        ]);
     });
 });
 

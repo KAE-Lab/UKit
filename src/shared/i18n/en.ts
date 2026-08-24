@@ -322,6 +322,14 @@ const en = {
 	COURSE_NOTIFICATIONS: "Course Notifications",
 	NOTIFICATION_DELAY: "Notification delay",
 	NOTIFICATION_DELAY_DESC: "Adjust how many minutes before the start of the course you want to be notified.",
+	PROPOSALS_TITLE: "Found in your records",
+	PROPOSALS_INTRO: "Your university login told us a little more. Nothing will be applied without your consent.",
+	PROPOSALS_EDT_LABEL: "Your timetable",
+	PROPOSALS_EDT_HINT: "It will be added to your favourites, like a group. You can remove it at any time.",
+	PROPOSALS_UES_LABEL: "Courses you are not enrolled in",
+	PROPOSALS_UES_HINT: "They will be hidden from your timetable. You can show them again in the settings.",
+	PROPOSALS_APPLY: "Apply",
+	PROPOSALS_SKIP: "No thanks",
 };
 
 export default en;

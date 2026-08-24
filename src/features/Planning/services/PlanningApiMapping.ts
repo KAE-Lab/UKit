@@ -58,6 +58,7 @@ export interface CoursExtrait {
     couleur?: unknown;
     modules?: unknown;
     description?: unknown;
+    sites?: unknown;
 }
 
 function texte(valeur: unknown): string {
@@ -79,13 +80,32 @@ export function sujetDuCours(modules: unknown, categorie: string): string {
 }
 
 /**
+ * Les batiments declares par la source, quelle que soit leur arite.
+ *
+ * `$.sites[*]` rend une **chaine** quand il n'y a qu'un site et une **liste** au-dela — le meme piege
+ * que `modules`, deja paye une fois (`sujetDuCours`). Un champ absent rend `null`, indistinguable
+ * d'une liste vide une fois la reponse traduite, et les deux veulent dire la meme chose ici : on ne
+ * sait pas ou est ce cours.
+ */
+export function sitesDuCours(sites: unknown): string[] {
+    if (typeof sites === 'string') return sites === '' ? [] : [sites];
+    if (Array.isArray(sites)) return sites.filter((site): site is string => typeof site === 'string' && site !== '');
+    return [];
+}
+
+/**
  * Projette un cours extrait sur le contrat applicatif.
  *
- * Le `separateur` **depend de la vue** : `;` pour le jour et la synchronisation, `\n` pour la
- * semaine. Celcat ne formate pas la description de la meme facon selon `calView`, et uniformiser
- * casserait l'affichage des salles. C'est une difference deliberee, a ne pas « corriger ».
+ * Le `separateur` est `;` pour **toutes** les vues depuis la correction de la description de la
+ * semaine. Il ne l'a pas toujours ete : la vue semaine decoupait sur `\n` au nom d'un formatage
+ * different selon `calView`, justification mesuree fausse au jalon 6-E puis conservee telle quelle
+ * parce que la corriger deplacait des pixels. Le serveur formate a l'identique dans les deux vues
+ * (`\r\n\r\n<br />\r\n\r\n`), que `formatDescription` reduit a des `;` : decouper sur `\n` ne rendait
+ * qu'un champ, porteur de la categorie, donc ecarte en entier — d'ou une vue semaine sans salle, sans
+ * enseignant et sans carte. Le parametre reste, pour qu'un futur format n'ait pas a rouvrir la
+ * signature.
  */
-export function projeterCours(brut: CoursExtrait, groupe: CibleGroupe, separateur: string = '\n'): PlanningEvent {
+export function projeterCours(brut: CoursExtrait, groupe: CibleGroupe, separateur: string = ';'): PlanningEvent {
     // `?? null` et non `?? undefined` : `moment(undefined)` vaut *maintenant*, `moment(null)` est une
     // date invalide. C'est cette seconde forme que le code d'origine produisait sur une fin nulle.
     const debut = moment(brut.debut ?? null);
@@ -130,6 +150,7 @@ export function projeterCours(brut: CoursExtrait, groupe: CibleGroupe, separateu
         // toujours et aucun ecran ne le lit. Le convertir changerait le contenu des caches ecrits.
         group: groupe as string,
         toFilter,
+        sites: sitesDuCours(brut.sites),
     };
 }
 
@@ -155,7 +176,7 @@ export function projeterJour(cours: CoursExtrait[], groupe: CibleGroupe, date: s
 /** Une semaine, decoupee en six jours du lundi au samedi par l'assemblage commun aux deux sources. */
 export function decouperSemaine(cours: CoursExtrait[], groupe: CibleGroupe, lundi: moment.Moment): PlanningWeekDay[] {
     return assemblerSemaine(
-        horsVacances(cours).map((brut) => projeterCours(brut, groupe, '\n')),
+        horsVacances(cours).map((brut) => projeterCours(brut, groupe, ';')),
         lundi,
     );
 }

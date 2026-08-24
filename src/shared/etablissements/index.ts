@@ -28,7 +28,14 @@ import {
     projeterEtablissement,
     setCodeEtablissementActif,
     type Etablissement,
+    type GroupeEdt,
 } from './catalogue';
+import {
+    appliquerEdtsPersonnels,
+    edtsPersonnels,
+    fusionnerEdtsPersonnels,
+    lireEdtsPersonnels,
+} from './edtPersonnel';
 import { appliquerLiensEdt, fusionnerLiens, liensEdt, lireLiens } from './lienEdt';
 import { purgerDonneesEtablissement } from './purge';
 
@@ -67,8 +74,10 @@ export {
     sourceEdt,
 } from './edt';
 export type { SourceEdt } from './edt';
+export { edtPersonnelActif } from './edtPersonnel';
+export type { EdtsPersonnels } from './edtPersonnel';
 export { lienEdtActif } from './lienEdt';
-export { purgerDonneesEtablissement, purgerLiensEdt } from './purge';
+export { purgerDonneesEtablissement, purgerTrousseau } from './purge';
 
 const TABLE = 'etablissements';
 /**
@@ -178,6 +187,32 @@ export async function enregistrerLienEdt(lien: string | null): Promise<void> {
     const table = fusionnerLiens(liensEdt(), getCodeEtablissementActif(), lien);
     appliquerLiensEdt(table);
     await SecureStoreService.saveEdtLiens(table);
+}
+
+/**
+ * Installe les emplois du temps personnels du trousseau, sans reseau.
+ *
+ * A cote de `loadLiensEdt()` et pour la meme raison : `sourceEdt()` est synchrone et fusionne le
+ * groupe personnel au referentiel des le premier rendu. Un trousseau muet laisse la table vide — le
+ * groupe personnel disparait de la liste jusqu'au prochain demarrage, ce qui est genant mais
+ * explicable, la ou une exception au demarrage ne le serait pas.
+ */
+export async function loadEdtsPersonnels(): Promise<void> {
+    appliquerEdtsPersonnels(lireEdtsPersonnels(await SecureStoreService.getEdtsPersonnels()));
+}
+
+/**
+ * Enregistre — ou retire, avec `null` — l'emploi du temps personnel de l'etablissement selectionne.
+ *
+ * La memoire est posee **avant** l'ecriture, comme pour les liens : l'ecran qui vient d'accepter la
+ * proposition doit voir son planning tout de suite, et le trousseau n'est pas sur le chemin d'un
+ * rendu. Une ecriture qui echoue laisse donc un groupe valable pour la session en cours et perdu au
+ * redemarrage — le moins mauvais des deux comportements possibles.
+ */
+export async function enregistrerEdtPersonnel(groupe: GroupeEdt | null): Promise<void> {
+    const table = fusionnerEdtsPersonnels(edtsPersonnels(), getCodeEtablissementActif(), groupe);
+    appliquerEdtsPersonnels(table);
+    await SecureStoreService.saveEdtsPersonnels(table);
 }
 
 /**

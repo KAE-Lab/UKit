@@ -45,6 +45,19 @@ export interface PlanningEvent {
     toFilter?: string | null;
     day?: string;
     dayNumber?: string;
+    /**
+     * Les batiments que la source **declare**, tels quels (`Batiment A28`).
+     *
+     * Celcat publie ce champ structure ; la fiche de cours s'en sert avant de tenter l'heuristique de
+     * description, qui devine un code de salle dans du texte libre. C'est la difference entre lire une
+     * donnee et l'inferer, et elle se voit : deux cours de la meme journee n'avaient pas de carte, l'un
+     * parce que la vue semaine ne rendait aucune description, l'autre parce qu'une double espace dans
+     * `modules` decalait le rang de la ligne de salle.
+     *
+     * Absent d'un evenement iCalendar, et absent des caches ecrits avant ce champ : les deux
+     * retombent sur l'heuristique, qui n'a pas bouge.
+     */
+    sites?: string[];
 }
 
 export interface PlanningWeekDay {
@@ -78,6 +91,47 @@ const CODE_UE = /([0-9][A-Z0-9]*[A-Z][A-Z0-9]*) (.+)/im;
 export function separerCodeUE(sujet: string): { code: string; reste: string } | null {
     const trouve = CODE_UE.exec(sujet);
     return trouve !== null && trouve.length === 3 ? { code: trouve[1], reste: trouve[2] } : null;
+}
+
+/** Une unite d'enseignement rencontree dans un planning : son code, et son intitule. */
+export interface UeRencontree {
+    readonly code: string;
+    readonly nom: string;
+}
+
+/**
+ * Les UE rencontrees dans une liste de sujets, **avec leur intitule**.
+ *
+ * L'intitule etait jete : l'indexation lisait `([0-9][A-Z0-9]+) (.+)` et ne gardait que le premier
+ * groupe, si bien que les reglages n'affichaient qu'un code — `4TIN606U` — que personne ne sait
+ * relier a un cours sans ouvrir son planning. Il est la, il suffisait de le garder.
+ *
+ * Deux corrections viennent avec ce deplacement, et aucune n'est cosmetique :
+ *
+ *   - **une seule expression pour tout le depot.** L'indexation gardait la regle d'**avant** le jalon
+ *     6-I, celle qui acceptait un nombre nu : `2025-2026 - Les rencontres…` y devenait une UE `2026`.
+ *     Le defaut avait ete corrige dans `separerCodeUE` et pas ici, ce qui est exactement le risque que
+ *     l'unification supprime ;
+ *   - **l'intitule est nettoye.** Celcat sert parfois deux espaces apres le code (mesure du jalon
+ *     6-K sur `4TIN606U  Histoire…`), et un intitule qui commence par une espace se voit a l'ecran.
+ *
+ * Cumulatif : la liste connue entre et ressort enrichie. Un code deja connu **garde** son premier
+ * intitule — deux sujets d'une meme UE peuvent differer, et changer le libelle d'un rendu a l'autre
+ * ferait clignoter l'ecran des reglages sans raison.
+ */
+export function indexerUes(sujets: readonly string[], connues: readonly UeRencontree[] = []): UeRencontree[] {
+    const index = new Map(connues.map((ue) => [ue.code, ue.nom]));
+
+    for (const sujet of sujets) {
+        if (typeof sujet !== 'string' || sujet === '' || sujet === 'N/C') continue;
+        const separe = separerCodeUE(sujet);
+        if (separe === null || index.has(separe.code)) continue;
+        index.set(separe.code, separe.reste.trim());
+    }
+
+    return [...index.entries()]
+        .map(([code, nom]) => ({ code, nom }))
+        .sort((gauche, droite) => (gauche.code < droite.code ? -1 : gauche.code > droite.code ? 1 : 0));
 }
 
 /**

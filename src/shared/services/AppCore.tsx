@@ -18,7 +18,7 @@ import {
 } from '../etablissements/catalogue';
 // `purge` et non la porte d'entree pour la meme raison : elle ne connait que le magasin local et le
 // trousseau, la ou `../etablissements` tirerait le client de la base.
-import { purgerDonneesEtablissement, purgerLiensEdt } from '../etablissements/purge';
+import { purgerDonneesEtablissement, purgerTrousseau } from '../etablissements/purge';
 import { restaurerReglages } from './reglagesParEtablissement';
 import { createUKitCalendar, formatCalendarEventData } from './CalendarSyncHelpers';
 import { NetworkMockService } from './NetworkMockService';
@@ -103,7 +103,7 @@ export function isArraysEquals(a: unknown[], b: unknown[]): boolean {
 // La reconnaissance de salle a demenage dans `shared/locations/salles.ts` au jalon 6-I : la decoupe
 // et le motif etaient des constantes bordelaises, ils sont devenus une donnee d'etablissement. Les
 // deux fonctions restent exportees d'ici pour ne casser aucun appelant.
-export { getLocations, getLocationsInText, ligneDeSalle } from '../locations/salles';
+export { getLocations, getLocationsInText, lieuxDesSites, ligneDeSalle } from '../locations/salles';
 
 // ── GESTION DES COURS ───────────────────────────────
 export const CourseManager = {
@@ -139,6 +139,8 @@ class SettingsManagerService {
     _calendar: string | number;
     _calendars: Calendar.Calendar[];
     _firstload: boolean;
+    /** Un document de reglages existait-il au demarrage ? Distinct de « le parcours est termine ». */
+    _reglagesEnregistres = false;
     _theme: string;
     _favoriteGroups: string[];
     _language: string;
@@ -199,15 +201,16 @@ class SettingsManagerService {
         this._subscribers[event].filter((e) => e !== null).forEach((fn) => fn(...args));
     };
 
+    /** Des reglages ont-ils deja ete ecrits ? Le parcours d'accueil s'en sert pour ne pas ecraser un choix. */
+    aDesReglagesEnregistres = (): boolean => this._reglagesEnregistres;
+
     getTheme = (): string => this._theme;
     setTheme = (newTheme: string) => { this._theme = newTheme; this.notify('theme', this._theme); };
     switchTheme = () => { this.setTheme(this._theme === 'light' ? 'dark' : 'light'); };
-    setAutomaticTheme = () => { this.setTheme(Appearance.getColorScheme() === 'dark' ? 'dark' : 'light'); };
     getAutomaticTheme = () => Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
 
     isFirstLoad = () => this._firstload;
     setFirstLoad = (newState) => { this._firstload = newState; this.notify('firstload', this._firstload); };
-    switchFirstLoad = () => { this.setFirstLoad(!this.isFirstLoad()); };
 
     isSynchronizingCalendar = () => this._isSynchronizingCalendar;
     getFavoriteGroups = () => this._favoriteGroups;
@@ -223,7 +226,6 @@ class SettingsManagerService {
             this.notify('favoriteGroups', this._favoriteGroups);
         }
     };
-    isFavoriteGroup = (group: string) => this._favoriteGroups.includes(group);
     
     getLanguage = () => this._language;
     setLanguage = (newLang: string) => { this._language = newLang; this.notify('language', this._language); };
@@ -555,10 +557,11 @@ class SettingsManagerService {
         // Les memes donnees qu'un changement d'etablissement, et par le meme chemin : deux gestes qui
         // effacent la meme chose ne doivent pas avoir deux definitions de « la meme chose ».
         await purgerDonneesEtablissement();
-        // Et ce qu'une bascule, elle, **garde** : les liens d'abonnement sont cloisonnes par
-        // etablissement, donc un aller-retour les retrouve. Ici on n'va nulle part, on efface — laisser
-        // un emploi du temps rempli a quelqu'un qui vient de tout reinitialiser serait un residu.
-        await purgerLiensEdt();
+        // Et ce qu'une bascule, elle, **garde** : les liens d'abonnement et la session universitaire
+        // sont cloisonnes par etablissement, donc un aller-retour les retrouve. Ici on ne va nulle
+        // part, on efface — laisser un emploi du temps rempli, ou un compte connecte, a quelqu'un qui
+        // vient de tout reinitialiser serait un residu.
+        await purgerTrousseau();
         // Le parcours d'accueil redemande l'etablissement : le laisser sur le precedent afficherait un
         // choix deja fait a quelqu'un qui vient de tout effacer.
         this.setEtablissement(ETABLISSEMENT_DEFAUT);
@@ -581,10 +584,17 @@ class SettingsManagerService {
         }));
     };
 
-    applySettingsData = (settings: Record<string, unknown> | null) => {
+    applySettingsData = (settings: Record<string, unknown> | null, affichageSeulement = false) => {
         if (!settings) return;
-        
+
+        // **Le theme et la langue se restaurent toujours**, meme avant la fin du parcours d'accueil.
+        // C'est la correction d'un defaut signale par un utilisateur : choisir le mode sombre pendant
+        // la configuration, puis revenir dans l'application, la rendait en clair jusqu'au
+        // redemarrage suivant. Ce sont des preferences d'affichage — elles n'attendent pas qu'un
+        // parcours soit termine pour valoir.
         if (settings.theme) this._theme = settings.theme as string;
+        if (settings.language) this.setLanguage(settings.language as string);
+        if (affichageSeulement) return;
 
         // Migration silencieuse vers le multi-etablissement (jalon 6-G) : une installation anterieure
         // n'a pas de code, et elle est **reputee** bordelaise — c'est la seule universite que
@@ -612,7 +622,6 @@ class SettingsManagerService {
         }
         if (settings.calendar !== undefined) this._calendar = settings.calendar as string | number;
         if (settings.calendarSyncEnabled) this._calendarSyncEnabled = true;
-        if (settings.language) this.setLanguage(settings.language as string);
         if (settings.courseNotificationsEnabled !== undefined) {
             this._courseNotificationsEnabled = settings.courseNotificationsEnabled as boolean;
         }
@@ -629,15 +638,17 @@ class SettingsManagerService {
             this._firstload = isFirstLoad === null ? true : isFirstLoad;
         } catch { this._firstload = true; }
 
-        if (this._firstload) return;
-
-        const lastSyncDateItem = await AsyncStorage.getItem('previousSyncTime');
-        if (lastSyncDateItem !== null) this._lastSyncDate = moment(parseInt(lastSyncDateItem, 10));
+        const lastSync = this._firstload ? null : await AsyncStorage.getItem('previousSyncTime');
+        if (lastSync !== null) this._lastSyncDate = moment(parseInt(lastSync, 10));
 
         try {
             const data = await AsyncStorage.getItem('settings');
             const settings = data ? JSON.parse(data) : null;
-            this.applySettingsData(settings);
+            this._reglagesEnregistres = settings !== null;
+            // Avant la fin du parcours, seul l'affichage se restaure : les groupes favoris, les
+            // filtres et l'etablissement se choisissent dans le parcours lui-meme, et les restaurer
+            // par-dessus lui reviendrait a repondre a sa place.
+            this.applySettingsData(settings, this._firstload);
         } catch {
             new ErrorAlert("Settings couldn't be loaded").show();
         }

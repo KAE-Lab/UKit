@@ -12,7 +12,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { separerCodeUE, trierCours } from './PlanningAssembly';
+import { indexerUes, separerCodeUE, trierCours } from './PlanningAssembly';
 
 describe('separerCodeUE, codes Celcat', () => {
     it('separe un code d UE de son intitule, comme avant', () => {
@@ -69,5 +69,47 @@ describe('trierCours', () => {
         ];
 
         expect([...cours].sort(trierCours).map((c) => c.subject[0])).toEqual(['2', 'A']);
+    });
+});
+
+
+describe('indexerUes', () => {
+    it('garde l intitule, qui etait jete', () => {
+        // Le defaut que ca corrige : les reglages n'affichaient qu'un code, que personne ne sait
+        // relier a un cours sans ouvrir son planning.
+        expect(indexerUes(['4TIN602U Techn algorithmiques et program'])).toEqual([
+            { code: '4TIN602U', nom: 'Techn algorithmiques et program' },
+        ]);
+    });
+
+    it('applique la regle du jalon 6-I, que l indexation avait ratee', () => {
+        // L'ancienne expression acceptait un nombre nu : un titre d'ADE commencant par une annee
+        // devenait une UE fantome `2026`, dans la liste de suggestions comme dans les filtres.
+        expect(indexerUes(["2025-2026 - Les rencontres du Reseau d'Ecoute"])).toEqual([]);
+    });
+
+    it('nettoie l intitule, que la source espace parfois deux fois', () => {
+        expect(indexerUes(['4TIN606U  Histoire et Epistemologie'])[0].nom).toBe('Histoire et Epistemologie');
+    });
+
+    it('cumule sans changer un intitule deja connu', () => {
+        // Deux sujets d'une meme UE peuvent differer ; changer le libelle d'un rendu a l'autre ferait
+        // clignoter l'ecran des reglages sans raison.
+        const connues = [{ code: '4TIN602U', nom: 'Techn algorithmiques' }];
+        const apres = indexerUes(['4TIN602U Autre libelle', '4TIN603U Compilation'], connues);
+
+        expect(apres).toEqual([
+            { code: '4TIN602U', nom: 'Techn algorithmiques' },
+            { code: '4TIN603U', nom: 'Compilation' },
+        ]);
+    });
+
+    it('ecarte ce qui ne porte pas de code, sans lever', () => {
+        expect(indexerUes(['Presentation semestre', '', 'N/C'])).toEqual([]);
+    });
+
+    it('trie par code, pour que l ecran ne depende pas de l ordre des cours', () => {
+        const codes = indexerUes(['4TIN615U Logique', '4TIN602U Techn']).map((ue) => ue.code);
+        expect(codes).toEqual(['4TIN602U', '4TIN615U']);
     });
 });

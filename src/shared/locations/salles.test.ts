@@ -13,7 +13,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { getLocations, getLocationsInText, ligneDeSalle } from './salles';
+import { getLocations, getLocationsInText, lieuxDesSites, ligneDeSalle } from './salles';
 import { appliquerSurcouche } from './referentiel';
 import type { FormatSalles } from '../etablissements/catalogue';
 
@@ -105,6 +105,46 @@ describe('reconnaissance desactivee', () => {
         // La fiche affiche alors sa description telle quelle : c'est la carte qui disparait, pas le
         // texte.
         expect(ligneDeSalle('Groupe\nEnseignant\nA28', null)).toBe('');
+    });
+});
+
+describe('lieuxDesSites', () => {
+    // La voie fiable : Celcat **declare** ses batiments au lieu de les laisser deviner dans du texte
+    // libre. C'est ce qui rend la carte independante des deux defauts qui la faisaient disparaitre —
+    // une description vide en vue semaine, et une double espace dans `modules` qui decalait le rang
+    // de la ligne de salle.
+    it('reconnait un batiment declare, que son libelle ne resout pas tel quel', () => {
+        const lieux = lieuxDesSites(['Bâtiment A28'], BORDEAUX);
+
+        expect(lieux).toHaveLength(1);
+        expect(lieux[0].title).toBe('A28');
+    });
+
+    it('rend un lieu par batiment declare', () => {
+        expect(lieuxDesSites(['Bâtiment A28', 'Bâtiment A21'], BORDEAUX).map((lieu) => lieu.title)).toEqual([
+            'A28',
+            'A21',
+        ]);
+    });
+
+    it('ne marque pas deux fois le meme batiment', () => {
+        expect(lieuxDesSites(['Bâtiment A28', 'Bâtiment A28'], BORDEAUX)).toHaveLength(1);
+    });
+
+    it('ne rend rien sans batiment declare', () => {
+        expect(lieuxDesSites(undefined, BORDEAUX)).toEqual([]);
+        expect(lieuxDesSites([], BORDEAUX)).toEqual([]);
+    });
+
+    it('ne rend rien pour un etablissement sans referentiel de lieux', () => {
+        // Le meme garde que `getLocations`, et pour la meme raison : appliquer le format bordelais a
+        // un libelle etranger capturerait un code qui existe chez nous et poserait un marqueur a
+        // Talence. Une carte fausse est pire qu'une carte vide.
+        expect(lieuxDesSites(['Bâtiment A28'], null)).toEqual([]);
+    });
+
+    it('ignore un batiment que le referentiel ne connait pas', () => {
+        expect(lieuxDesSites(['Bâtiment Z99'], BORDEAUX)).toEqual([]);
     });
 });
 

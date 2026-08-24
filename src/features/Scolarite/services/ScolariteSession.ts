@@ -34,6 +34,11 @@ import {
     type UkitFailure,
 } from '../../../shared/aetherius';
 import {
+    natureDeSortie,
+    tracerLectureDossier,
+} from '../../../shared/services/PropositionsTrace';
+import { projeterPropositions, type PropositionsDossier } from './PropositionsDossier';
+import {
     projeterDossier,
     projeterMessagerie,
     type ScolariteColdData,
@@ -44,7 +49,7 @@ import {
 export type EtapeSession = 'connecting' | 'profile' | 'dossier' | 'mailbox';
 
 export type DossierResultat =
-    | { readonly ok: true; readonly cold: ScolariteColdData }
+    | { readonly ok: true; readonly cold: ScolariteColdData; readonly propositions: PropositionsDossier }
     | { readonly ok: false; readonly failure: UkitFailure };
 
 export type MessagerieResultat =
@@ -191,7 +196,26 @@ export async function jouerDossier(options: OptionsSession = {}): Promise<Dossie
 
     const run = await jouer(nom, 'connecting', options);
     if (run.ok === false) return { ok: false, failure: run.failure };
-    return { ok: true, cold: projeterDossier(run.outputs) };
+
+    const propositions = projeterPropositions(run.outputs);
+    // La trace de la lecture, **avant** toute decision. Sans elle, une proposition absente ne dit pas
+    // si le run n'a rien rendu ou si l'ecran n'en a rien fait — deux causes, deux remedes
+    // (shared/services/PropositionsTrace.ts).
+    tracerLectureDossier({
+        heure: new Date().toLocaleTimeString(),
+        blueprint: nom,
+        sorties: Object.entries(run.outputs).map(([cle, valeur]) => `${cle}: ${natureDeSortie(valeur)}`),
+        uesInscrites: propositions.ues,
+        edtLu: propositions.edt === null
+            ? null
+            : `${propositions.edt.libelle} (${propositions.edt.ressource})`,
+    });
+    console.log(
+        `[propositions] dossier lu : ${propositions.ues.length} UE inscrite(s), ` +
+        `edt ${propositions.edt === null ? 'absent' : propositions.edt.ressource}`,
+    );
+
+    return { ok: true, cold: projeterDossier(run.outputs), propositions };
 }
 
 /** Le parcours chaud : le compteur de messages non lus, seul. */
@@ -204,10 +228,17 @@ export async function jouerMessagerie(options: OptionsSession = {}): Promise<Mes
     return { ok: true, mail: projeterMessagerie(run.outputs) };
 }
 
-/** Ce qu'une session complete a obtenu. Les trois champs sont independants. */
+/** Ce qu'une session complete a obtenu. Les champs sont independants. */
 export interface ResultatSession {
     readonly cold?: ScolariteColdData;
     readonly mail?: ScolariteMailData;
+    /**
+     * Ce que le dossier a livre **en plus** de l'identite, et qu'un ecran proposera d'appliquer.
+     *
+     * Present seulement apres un parcours froid : c'est la lecture du dossier qui les porte. Rien ne
+     * s'applique ici — la session lit, l'ecran demande, l'utilisateur decide.
+     */
+    readonly propositions?: PropositionsDossier;
     /** Le premier echec rencontre. Il n'annule pas ce qui a ete obtenu avant lui. */
     readonly failure?: UkitFailure;
 }
@@ -240,15 +271,22 @@ export async function deroulerSession(
     }
 
     let cold: ScolariteColdData | undefined;
+    let propositions: PropositionsDossier | undefined;
 
     if (mode === 'cold' && dossierPublie) {
         const dossier = await jouerDossier(options);
         if (dossier.ok === false) return { failure: dossier.failure };
         cold = dossier.cold;
+        propositions = dossier.propositions;
     }
 
+    const acquis = {
+        ...(cold !== undefined ? { cold } : {}),
+        ...(propositions !== undefined ? { propositions } : {}),
+    };
+
     if (!messageriePubliee) {
-        return cold !== undefined ? { cold } : {};
+        return acquis;
     }
 
     // En froid, le login a deja abouti au run precedent : le re-signaler ferait reecrire les
@@ -259,8 +297,8 @@ export async function deroulerSession(
         mode === 'cold' && cold !== undefined ? { ...options, onLoginSuccess: undefined } : options,
     );
     if (messagerie.ok === false) {
-        return { ...(cold !== undefined ? { cold } : {}), failure: messagerie.failure };
+        return { ...acquis, failure: messagerie.failure };
     }
 
-    return { ...(cold !== undefined ? { cold } : {}), mail: messagerie.mail };
+    return { ...acquis, mail: messagerie.mail };
 }

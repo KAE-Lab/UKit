@@ -19,7 +19,7 @@ import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
 import { loadBuildings } from './src/shared/locations';
 import { loadVisuels } from './src/shared/visuels';
-import { loadEtablissements, loadLiensEdt } from './src/shared/etablissements';
+import { loadEdtsPersonnels, loadEtablissements, loadLiensEdt } from './src/shared/etablissements';
 import { PlanningDataManager } from './src/features/Planning/services/PlanningDataManager';
 import { CampusDataManager } from './src/features/Campus/services/CampusDataManager';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -50,6 +50,9 @@ function AnimatedAppLoader({ children }) {
 				// viennent apres (rootContainer).
 				await loadEtablissements();
 				await loadLiensEdt();
+				// L'emploi du temps personnel trouve dans le dossier se fusionne au referentiel du
+				// catalogue : il doit etre la avant que le premier ecran ne resolve un favori.
+				await loadEdtsPersonnels();
 				await loadBuildings();
 				// Les visuels publies suivent les batiments, et pour la meme raison : une photo
 				// corrigee ne doit pas redevenir fausse le temps qu'une requete revienne.

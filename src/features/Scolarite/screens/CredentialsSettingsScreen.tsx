@@ -3,8 +3,8 @@ import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-cont
 import { View, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, ScrollView, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
-import * as LocalAuthentication from 'expo-local-authentication';
 
+import { demander } from '../../../shared/biometrie';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
@@ -216,16 +216,9 @@ const CredentialsSettingsScreen = () => {
             setPasswordVisible(false);
             return;
         }
-        try {
-            const result = await LocalAuthentication.authenticateAsync({
-                promptMessage: Translator.get('BIOMETRY_PROMPT'),
-                fallbackLabel: Translator.get('BIOMETRY_FALLBACK'),
-                disableDeviceFallback: false,
-            });
-            if (result.success) setPasswordVisible(true);
-        } catch {
-            // biométrie non disponible, ignorer
-        }
+        // Biometrie d'abord, code ensuite : `shared/biometrie` porte la sequence, et ne leve jamais.
+        const resultat = await demander();
+        if (resultat.success) setPasswordVisible(true);
     };
 
     const confirmLogout = async () => {

@@ -156,6 +156,26 @@ tournait indéfiniment.
 
 ## Décisions de conception
 
+**Où se donne un cours se lit, ça ne se devine plus.** Celcat publie un champ `sites`
+(`["Bâtiment A28"]`) que rien n'extrayait ; la fiche de cours cherchait donc un code de salle dans la
+description, à un rang que le catalogue déclare. Deux choses faisaient échouer cette heuristique en
+silence, sans jamais afficher d'erreur — juste une carte absente :
+
+- **la vue semaine ne produisait aucune description.** Le serveur formate à l'identique dans les deux
+  vues, `formatDescription` réduit cela à des `;`, et découper sur `\n` ne rendait qu'un champ,
+  porteur de la catégorie, donc écarté en entier. Plus de salle, plus d'enseignant, plus de semaines ;
+- **une double espace dans `modules`** (`4TIN606U  Histoire…`, contre une seule dans la description)
+  empêchait de reconnaître la ligne du module comme une répétition du sujet. Elle restait, tout
+  glissait d'un rang, et la « ligne de salle » devenait le nom de l'enseignant.
+
+Depuis le 2026-08-22 : `sites` est extrait des trois Blueprints de cours, `lieuxDesSites` le réduit à
+un code par le **même** format d'établissement que les libellés de salle, et le séparateur est `;`
+pour toutes les vues. Les trois replis historiques restent et servent encore — un export iCalendar
+n'a pas de `sites`, et les caches écrits avant ce champ non plus.
+
+> **Ce changement déplace des pixels**, et c'est le seul assumé : les lignes de la vue semaine,
+> jusque-là vides, affichent désormais groupes, enseignant, salle et semaines — comme la vue jour.
+
 **Le planning agrégé est un `groupName` de type tableau.** `ScheduleScreen` reçoit `name` ; s'il
 s'agit d'un tableau, il le remplace par `context.favoriteGroups`. Toute la chaîne — clé de cache,
 requête `federationIds[]` multiple, activation des notifications, application des filtres UE —
@@ -341,6 +361,28 @@ Les dates, elles, sont **en UTC honnête** : le même créneau hebdomadaire est 
 septembre et `08:30Z` en novembre, soit 09:30 à Paris les deux fois. Il n'y a pas de `VTIMEZONE` à
 interpréter.
 
+### L'emploi du temps personnel
+
+ADE **présélectionne la fiche de l'étudiant connecté** dans son arbre de ressources : le portail de
+scolarité y lit un identifiant qui désigne *son* emploi du temps, là où le référentiel du catalogue
+ne connaît que des promotions. Cet identifiant ne peut pas vivre dans le catalogue publié — il est
+propre à une personne — mais tout le reste de l'application ne sait interroger qu'un `GroupeEdt`.
+
+[`edtPersonnel.ts`](../../src/shared/etablissements/edtPersonnel.ts) le range donc à côté, au
+trousseau et cloisonné par établissement, et `sourceEdt()` le **fusionne** au référentiel au moment
+de le lire — en tête de liste, parce que c'est celui qu'on cherche. Le groupe personnel se résout
+alors exactement comme un autre : ni `resoudreRessources`, ni l'écran de choix, ni les favoris
+n'apprennent qu'il existe.
+
+La fusion vit dans `sourceEdt()` **et nulle part ailleurs**, parce que c'est le seul passage que tous
+les lecteurs du référentiel traversent. La poser plus loin obligerait chaque appelant à se souvenir
+qu'elle existe, et le premier qui l'oublierait rendrait un emploi du temps vide à celui qui vient de
+l'accepter — deux symptômes qui n'ont pas l'air d'avoir la même cause. Un test le vérifie par le
+chemin réel ([`edt.test.ts`](../../src/shared/etablissements/edt.test.ts)).
+
+Rien ne s'y écrit tout seul : la proposition et sa confirmation appartiennent à la Scolarité
+([scolarite.md](scolarite.md#ce-que-la-connexion-trouve-en-plus-et-quelle-propose)).
+
 ## Quand l'établissement ne publie pas d'emploi du temps
 
 Ni `celcat_domaine`, ni `edt`, ni `edt.abonnement` dans le catalogue veut dire « cette université ne
@@ -387,16 +429,6 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
 
 ## Limites connues
 
-- **La vue semaine n'affiche aucune description, et ce n'est pas nouveau.** Mesure du 2026-08-09 : le
-  serveur formate la description **à l'identique** dans les deux vues
-  (`\r\n\r\n<br />\r\n\r\n`), que `formatDescription` réduit à une seule ligne séparée par `;`.
-  Découper sur `'\n'` ne rend donc qu'un champ, qui porte la catégorie en tête et se fait écarter en
-  entier. La justification historique — « le serveur ne formate pas pareil selon `calView` » — était
-  fausse ; le comportement, lui, est celui de l'application depuis toujours. Le jalon 6-E l'a
-  **conservé et verrouillé par un test**
-  ([`PlanningApiMapping.test.ts`](../../src/features/Planning/services/PlanningApiMapping.test.ts)),
-  parce que le corriger changerait l'affichage de la vue semaine : c'est une décision produit, pas une
-  correction de migration.
 - **Un `modules: []` retomberait sur la catégorie.** L'extraction rend `null` aussi bien pour un champ
   absent que pour une liste vide, et les deux cessent d'être distinguables. Le code d'origine rendait
   alors un sujet indéfini, affiché vide. Le cas n'existe dans aucune des 334 entrées d'une année
@@ -468,5 +500,6 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
 | [`components/LienEdtForm.tsx`](../../src/features/Planning/components/LienEdtForm.tsx) | la saisie d'un lien d'abonnement : vérification par un run réel, enregistrement, oubli. Un composant et non un écran — l'accueil le rend en place |
 | [`screens/LienEdtScreen.tsx`](../../src/features/Planning/screens/LienEdtScreen.tsx) | l'écran de pile qui porte ce formulaire, atteint depuis l'état vide du Planning et depuis les Réglages |
 | [`services/PlanningAssembly.ts`](../../src/features/Planning/services/PlanningAssembly.ts) | le contrat `PlanningEvent`, la lecture d'un code d'UE, le tri et le découpage en six jours — **communs aux deux sources** |
+| [`shared/etablissements/edtPersonnel.ts`](../../src/shared/etablissements/edtPersonnel.ts) | l'emploi du temps personnel trouvé dans le dossier : la table cloisonnée, et sa fusion au référentiel publié |
 | [`services/PlanningAssembly.test.ts`](../../src/features/Planning/services/PlanningAssembly.test.ts) | la règle du code d'UE sur les deux formes de titre |
 | [`services/PlanningDataManager.ts`](../../src/features/Planning/services/PlanningDataManager.ts) | manager observable : liste des groupes en cache 7 jours, extraction des UE disponibles, **rechargement au changement d'établissement** |

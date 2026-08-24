@@ -257,6 +257,9 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/locations/referentiel.test.ts`](../src/shared/locations/referentiel.test.ts) | la fusion champ par champ, jouée par `npm test` |
 | [`shared/locations/salles.ts`](../src/shared/locations/salles.ts) | reconnaître un bâtiment dans un libellé de salle, selon le format publié par l'établissement |
 | [`shared/locations/salles.test.ts`](../src/shared/locations/salles.test.ts) | les deux formes réelles, et la non-régression bordelaise |
+| [`shared/biometrie/decision.ts`](../src/shared/biometrie/decision.ts) | après un échec de biométrie, propose-t-on le code ? Aucune dépendance, donc jouable sous Node ([features/scolarite.md](features/scolarite.md)) |
+| [`shared/biometrie/index.ts`](../src/shared/biometrie/index.ts) | la séquence en deux temps — biométrie d'abord, code ensuite — et les capacités de l'appareil |
+| [`shared/biometrie/decision.test.ts`](../src/shared/biometrie/decision.test.ts) | la frontière entre une annulation et un échec, dont une erreur ne se voit pas — jouée par `npm test` |
 | [`shared/visuels/referentiel.ts`](../src/shared/visuels/referentiel.ts) | les visuels publiés : la surcouche en mémoire et la résolution des trois états — pas de socle embarqué, le socle est l'image de la source ([backend.md](backend.md)) |
 | [`shared/visuels/index.ts`](../src/shared/visuels/index.ts) | sa couture de plateforme : cache local et lecture de la table `visuels` |
 | [`shared/visuels/referentiel.test.ts`](../src/shared/visuels/referentiel.test.ts) | la distinction du vide et du nul, dont une erreur ferait disparaître une photo en silence — joué par `npm test` |
@@ -267,6 +270,8 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/etablissements/index.ts`](../src/shared/etablissements/index.ts) | sa couture de plateforme : cache local, lecture de la table `etablissements`, chargement et écriture des liens d'abonnement, purge au changement |
 | [`shared/etablissements/lienEdt.ts`](../src/shared/etablissements/lienEdt.ts) | les liens d'abonnement collés, **cloisonnés par établissement** : lecture défensive, fusion, lien actif ([features/planning.md](features/planning.md)) |
 | [`shared/etablissements/lienEdt.test.ts`](../src/shared/etablissements/lienEdt.test.ts) | le cloisonnement, dont une erreur ferait perdre un lien en silence — joué par `npm test` |
+| [`shared/etablissements/comptes.ts`](../src/shared/etablissements/comptes.ts) | la session universitaire **cloisonnée par établissement** : lecture défensive, fusion, conversion des clés d'avant ([features/scolarite.md](features/scolarite.md)) |
+| [`shared/etablissements/comptes.test.ts`](../src/shared/etablissements/comptes.test.ts) | le cloisonnement et la conversion, dont une erreur ferait perdre une session sans rien dire — joué par `npm test` |
 | [`shared/etablissements/purge.ts`](../src/shared/etablissements/purge.ts) | ce qu'on efface en quittant un établissement, et ce que seule la réinitialisation efface |
 | [`shared/etablissements/catalogue.test.ts`](../src/shared/etablissements/catalogue.test.ts) | la projection et le repli sur le socle, joués par `npm test` |
 | [`shared/services/AppCore.tsx`](../src/shared/services/AppCore.tsx) | `AppContext`, `SettingsManager`, synchronisation calendrier, tâche de fond, utilitaires de lieux et de cours |

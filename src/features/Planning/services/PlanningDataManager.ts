@@ -7,11 +7,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { SettingsManager } from '../../../shared/services/AppCore';
+import { indexerUes, type UeRencontree } from './PlanningAssembly';
 import { PlanningApiService } from './PlanningApiService';
 
 class PlanningDataManagerService {
     _groupList: string[];
-    _availableUEs: string[];
+    /** Les UE rencontrees, **avec leur intitule** : l'ecran des filtres n'affichait qu'un code. */
+    _availableUEs: UeRencontree[];
     _subscribers: Record<string, Function[]>;
     _cacheTimeLimit: number;
 
@@ -64,27 +66,39 @@ class PlanningDataManagerService {
         this.notify('groupList', this._groupList);
     };
 
-    getAvailableUEs = (): string[] => this._availableUEs;
+    /** Les codes seuls : ce que les filtres comparent, et ce que la plupart des appelants veulent. */
+    getAvailableUEs = (): string[] => this._availableUEs.map((ue) => ue.code);
 
+    /** Les UE avec leur intitule, pour les ecrans qui les **affichent**. */
+    getUEs = (): UeRencontree[] => [...this._availableUEs];
+
+    /**
+     * L'intitule d'une UE, ou `null` s'il n'est pas connu.
+     *
+     * `null` est un cas ordinaire et non une anomalie : un filtre pose a la main, ou herite d'une
+     * annee precedente, nomme une UE qu'aucun planning charge ne porte. L'ecran affiche alors le code
+     * seul, comme avant.
+     */
+    nomDUE = (code: string): string | null =>
+        this._availableUEs.find((ue) => ue.code === code)?.nom ?? null;
+
+    /**
+     * Indexe les UE des cours rendus, avec leur intitule.
+     *
+     * L'aplatissement — une liste de jours, ou une liste de cours — reste ici parce qu'il depend de
+     * la forme que les vues passent ; la lecture d'un code, elle, vit dans `PlanningAssembly` avec le
+     * tri qui l'applique deja. Deux copies d'une meme expression, c'est une occasion de n'en corriger
+     * qu'une : celle-ci gardait la regle d'avant le jalon 6-I et fabriquait des UE `2026`.
+     */
     extractUEsFromCourses = (courses: Array<{ courses?: { subject?: string }[], subject?: string }>) => {
-        const regexUE = RegExp('([0-9][A-Z0-9]+) (.+)', 'im');
-        const ueSet = new Set(this._availableUEs);
-        const flatCourses = Array.isArray(courses) ? courses : [];
-
-        for (const item of flatCourses) {
-            const coursesToScan = item.courses ? item.courses : [item];
-            for (const course of coursesToScan) {
-                if (course.subject && course.subject !== 'N/C') {
-                    const match = regexUE.exec(course.subject as string);
-                    if (match && match.length === 3) {
-                        ueSet.add(match[1]);
-                    }
-                }
+        const sujets: string[] = [];
+        for (const item of Array.isArray(courses) ? courses : []) {
+            for (const course of item.courses ? item.courses : [item]) {
+                if (typeof course?.subject === 'string') sujets.push(course.subject);
             }
         }
 
-        const newUEs = [...ueSet].sort();
-        this._availableUEs = newUEs;
+        this._availableUEs = indexerUes(sujets, this._availableUEs);
         this.notify('availableUEs', this._availableUEs);
     };
 

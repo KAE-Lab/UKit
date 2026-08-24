@@ -133,6 +133,35 @@ export function getLocationsInText(texte: string, format: FormatSalles | null = 
 }
 
 /**
+ * Les lieux nommes par les **batiments declares** d'un cours (`Batiment A28`).
+ *
+ * C'est la voie fiable, et elle passe par la meme reconnaissance que les libelles de salle : un
+ * segment est essaye tel quel, puis le motif de l'etablissement prend la main — `Batiment A28` ne
+ * resout pas tel quel, `A28` oui. Rien de nouveau n'est invente pour ce champ.
+ *
+ * Le garde de `getLocations` s'applique donc aussi : un etablissement sans referentiel de lieux ne
+ * rend **aucun** lieu, plutot que d'appliquer le format bordelais a des libelles etrangers. Une carte
+ * fausse est pire qu'une carte vide.
+ */
+export function lieuxDesSites(
+    sites: readonly string[] | undefined,
+    format: FormatSalles | null = formatSallesActif(),
+): LieuDeCours[] {
+    const lieux: LieuDeCours[] = [];
+    const vus = new Set<string>();
+
+    for (const site of sites ?? []) {
+        for (const trouve of getLocations(site, format)) {
+            if (vus.has(trouve.title)) continue;
+            vus.add(trouve.title);
+            lieux.push(trouve);
+        }
+    }
+
+    return lieux;
+}
+
+/**
  * La ligne de description susceptible de porter une salle, ou `''`.
  *
  * Le rang de depart est une donnee d'etablissement (`FormatSalles.depuis`) parce qu'il n'est pas le

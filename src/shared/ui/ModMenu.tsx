@@ -9,6 +9,17 @@ import { TimeMockService } from '../services/TimeMockService';
 import { NetworkMockService } from '../services/NetworkMockService';
 import { AppContext } from '../services/AppCore';
 import ModMenuBlueprints from './ModMenuBlueprints';
+import ModMenuBiometrie from './ModMenuBiometrie';
+import ModMenuPropositions from './ModMenuPropositions';
+
+/**
+ * Les panneaux du menu, et leur libelle d'onglet.
+ *
+ * Table plutot que ternaire : le troisieme panneau a rendu la seconde forme illisible, et un
+ * quatrieme n'ajoutera qu'une ligne ici.
+ */
+const PANNEAUX = { time: 'Temps', blueprints: 'Blueprints', biometrie: 'Biometrie', propositions: 'Dossier' } as const;
+type Panneau = keyof typeof PANNEAUX;
 
 const { width, height } = Dimensions.get('window');
 const ICON_SIZE = 60;
@@ -25,8 +36,8 @@ export interface ModMenuState {
     selectedDate: Date;
     showPicker: boolean;
     pickerMode: 'date' | 'time' | 'datetime';
-    /** L'onglet affiche : la simulation temporelle, ou le diagnostic de la livraison. */
-    panel: 'time' | 'blueprints';
+    /** L'onglet affiche : la simulation temporelle, le diagnostic de la livraison, ou la sonde biometrique. */
+    panel: Panneau;
 }
 
 export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
@@ -153,16 +164,16 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         }
     }
 
-    renderTabs = (theme: import('../theme/Theme').AppThemeType, panel: 'time' | 'blueprints') => (
+    renderTabs = (theme: import('../theme/Theme').AppThemeType, panel: Panneau) => (
         <View style={{ flexDirection: 'row', marginBottom: tokens.space.md, backgroundColor: theme.greyBackground, borderRadius: tokens.radius.md, padding: tokens.space.xxs }}>
-            {(['time', 'blueprints'] as const).map((cible) => (
+            {(Object.keys(PANNEAUX) as Panneau[]).map((cible) => (
                 <TouchableOpacity
                     key={cible}
                     onPress={() => this.setState({ panel: cible })}
                     style={{ flex: 1, paddingVertical: tokens.space.xs, borderRadius: tokens.radius.sm, alignItems: 'center', backgroundColor: panel === cible ? theme.cardBackground : 'transparent' }}
                 >
                     <Text style={{ color: panel === cible ? theme.font : theme.fontSecondary, fontSize: tokens.fontSize.xs, fontWeight: 'bold' }}>
-                        {cible === 'time' ? 'Temps' : 'Blueprints'}
+                        {PANNEAUX[cible]}
                     </Text>
                 </TouchableOpacity>
             ))}
@@ -378,6 +389,10 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     {this.renderTabs(theme, panel)}
                     {panel === 'blueprints' ? (
                         <ModMenuBlueprints theme={theme} />
+                    ) : panel === 'biometrie' ? (
+                        <ModMenuBiometrie theme={theme} />
+                    ) : panel === 'propositions' ? (
+                        <ModMenuPropositions theme={theme} />
                     ) : (
                         <>
                             {this.renderLiveClock(theme, isActive, currentTime)}

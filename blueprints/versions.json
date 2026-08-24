@@ -28,25 +28,25 @@
         "version": "2"
     },
     "ukit.celcat.jour": {
-        "version": "2"
-    },
-    "ukit.celcat.semaine": {
         "version": "3"
     },
+    "ukit.celcat.semaine": {
+        "version": "4"
+    },
     "ukit.celcat.annee": {
-        "version": "2"
+        "version": "3"
     },
     "ukit.celcat.occupation": {
         "version": "2"
     },
     "ukit.portail.bordeaux.dossier": {
-        "version": "1"
+        "version": "2"
     },
     "ukit.portail.bordeaux.messagerie": {
         "version": "1"
     },
     "ukit.portail.bordeaux-inp.dossier": {
-        "version": "2"
+        "version": "3"
     },
     "ukit.portail.bordeaux-inp.edt": {
         "version": "4",

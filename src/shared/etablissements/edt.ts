@@ -24,6 +24,7 @@
 import { serviceAbsent, type UkitFailure } from '../aetherius/failures';
 import { getEtablissementActif, type EdtAbonnement, type EdtIcal } from './catalogue';
 import { entreesCelcat, type EntreesCelcat } from './celcat';
+import { edtPersonnelActif, fusionnerGroupePersonnel } from './edtPersonnel';
 import { lienEdtActif } from './lienEdt';
 
 /** Le groupe interroge : une chaine, ou la liste des favoris pour le planning agrege. */
@@ -78,7 +79,11 @@ export function sourceEdt(): SourceEdt {
     // n'y en a pas. Meme cause que la region CROUS rendue `None` (catalogue.ts).
     const etablissement = getEtablissementActif();
     const edt = etablissement.edt ?? null;
-    if (edt !== null) return { kind: 'ical', config: edt };
+    // Le groupe personnel se fusionne **ici** et nulle part ailleurs : c'est le seul passage que
+    // tous les lecteurs du referentiel traversent — la liste de l'ecran de choix comme la resolution
+    // d'un favori. Le poser plus loin obligerait chaque appelant a se souvenir qu'il existe, et le
+    // premier qui l'oublierait rendrait un emploi du temps vide a celui qui vient de l'accepter.
+    if (edt !== null) return { kind: 'ical', config: fusionnerGroupePersonnel(edt, edtPersonnelActif()) };
 
     const abonnement = etablissement.edtAbonnement ?? null;
     if (abonnement !== null) {

@@ -3,9 +3,13 @@
   "name": "ukit.portail.bordeaux.dossier",
   "description": "Le parcours FROID du portail de l'UNIVERSITE DE BORDEAUX : ouvrir le dossier administratif, subir la redirection CAS, et lire l'identite complete de l'etudiant. Joue une fois, au premier login (CredentialsContext). Le nom porte le code de l'etablissement depuis le jalon 6-G : rien ici n'est generique, ni l'hote, ni les identifiants GWT, ni les libelles — un second etablissement demande son propre fichier, publie sous le meme prefixe reserve. Il part du SERVICE et non du portail : mondossierweb redirige lui-meme vers le CAS avec son parametre service, et la redirection de retour ramene le fragment #!etatCivilView — l'hote du portail historique, lui, ne resout plus. Les identifiants de champ GWT sont POSITIONNELS : la migration ne les rend pas robustes, elle en fait une ligne de donnees corrigeable a distance. Le filet est ailleurs : les cinq libelles voisins sont lus puis asserts, de sorte qu'un decalage devienne un echec nomme au lieu d'une donnee fausse ecrite dans le trousseau. Deux steps meritent d'etre lus avant d'etre 'simplifies'. La PAUSE apres le clic : l'authentification unifiee enchaine plusieurs sauts puis le client GWT pose son fragment, et une operation emise pendant cette cascade se perd en silence sur un appareil (limite du moteur, docs/embedded.md, sondes du jalon 3-G) — on laisse donc la page arriver avant de l'interroger. La GARDE #loginErrorsPanel ensuite : ce panneau est ABSENT de la page de connexion propre et PRESENT des que le CAS refuse, mesure le 2026-08-09 ; c'est le seul noeud qui discrimine, #msg2 et .errors existant deja vides avec une boite de hauteur nulle. Sans elle, un mot de passe faux couterait le plafond entier du selecteur suivant. Mettre options.debug a true rend la WebView visible sur l'appareil : c'est l'outil de diagnostic quand un step echoue.",
   "act": "continuum",
-  "secrets": ["portail_user", "portail_pass"],
+  "secrets": [
+    "portail_user",
+    "portail_pass"
+  ],
   "vars": {
-    "dossier": "https://mondossierweb.u-bordeaux.fr/"
+    "dossier": "https://mondossierweb.u-bordeaux.fr/",
+    "annuaire": "https://intranet.u-bordeaux.fr/commun/compte"
   },
   "options": {
     "timeout_ms": 30000,
@@ -15,17 +19,34 @@
     }
   },
   "steps": [
-    { "action": "navigate", "url": "{{ vars.dossier }}" },
+    {
+      "action": "navigate",
+      "url": "{{ vars.dossier }}"
+    },
     {
       "action": "wait_for",
       "selector": "#username",
       "timeout_ms": 20000,
       "on_timeout": "fail:CAS_INDISPONIBLE"
     },
-    { "action": "fill", "selector": "#username", "value": "{{ secrets.portail_user }}" },
-    { "action": "fill", "selector": "#password", "value": "{{ secrets.portail_pass }}" },
-    { "action": "click", "selector": "input[type=submit]" },
-    { "action": "wait", "ms": 8000 },
+    {
+      "action": "fill",
+      "selector": "#username",
+      "value": "{{ secrets.portail_user }}"
+    },
+    {
+      "action": "fill",
+      "selector": "#password",
+      "value": "{{ secrets.portail_pass }}"
+    },
+    {
+      "action": "click",
+      "selector": "input[type=submit]"
+    },
+    {
+      "action": "wait",
+      "ms": 8000
+    },
     {
       "action": "wait_for",
       "selector": "#loginErrorsPanel",
@@ -39,28 +60,84 @@
       "timeout_ms": 30000,
       "on_timeout": "fail:LOGIN_FAILED"
     },
-    { "action": "emit", "event": "LOGIN_SUCCESS" },
+    {
+      "action": "emit",
+      "event": "LOGIN_SUCCESS"
+    },
     {
       "id": "dossier",
       "action": "extract",
       "timeout_ms": 5000,
       "outputs": {
-        "numero_etudiant": { "selector": "#gwt-uid-41", "as": "text" },
-        "ine": { "selector": "#gwt-uid-43", "as": "text" },
-        "identite": { "selector": "#gwt-uid-45", "as": "text" },
-        "email": { "selector": "#gwt-uid-47", "as": "text" },
-        "naissance": { "selector": "#gwt-uid-51", "as": "text" },
-        "libelle_numero": { "selector": "#gwt-uid-40", "as": "text" },
-        "libelle_ine": { "selector": "#gwt-uid-42", "as": "text" },
-        "libelle_identite": { "selector": "#gwt-uid-44", "as": "text" },
-        "libelle_email": { "selector": "#gwt-uid-46", "as": "text" },
-        "libelle_naissance": { "selector": "#gwt-uid-50", "as": "text" }
+        "numero_etudiant": {
+          "selector": "#gwt-uid-41",
+          "as": "text"
+        },
+        "ine": {
+          "selector": "#gwt-uid-43",
+          "as": "text"
+        },
+        "identite": {
+          "selector": "#gwt-uid-45",
+          "as": "text"
+        },
+        "email": {
+          "selector": "#gwt-uid-47",
+          "as": "text"
+        },
+        "naissance": {
+          "selector": "#gwt-uid-51",
+          "as": "text"
+        },
+        "libelle_numero": {
+          "selector": "#gwt-uid-40",
+          "as": "text"
+        },
+        "libelle_ine": {
+          "selector": "#gwt-uid-42",
+          "as": "text"
+        },
+        "libelle_identite": {
+          "selector": "#gwt-uid-44",
+          "as": "text"
+        },
+        "libelle_email": {
+          "selector": "#gwt-uid-46",
+          "as": "text"
+        },
+        "libelle_naissance": {
+          "selector": "#gwt-uid-50",
+          "as": "text"
+        }
       }
     },
     {
       "action": "assert",
       "condition": "{{ steps.dossier.libelle_numero == 'Dossier' and steps.dossier.libelle_ine == 'NNE' and steps.dossier.libelle_identite == 'Prénom et Nom' and steps.dossier.libelle_email == 'Email' and steps.dossier.libelle_naissance == 'Date de naissance' }}",
       "message": "Les libelles du dossier ont bouge : les identifiants GWT sont positionnels, donc les valeurs lues ne sont plus celles qu'on croit. Corriger les selecteurs de ce Blueprint et republier."
+    },
+    {
+      "action": "navigate",
+      "url": "{{ vars.annuaire }}",
+      "note": "L'annuaire du compte, sur le meme SSO : la session CAS ouverte pour le dossier vaut ici, donc aucune seconde authentification."
+    },
+    {
+      "action": "wait",
+      "ms": 6000,
+      "note": "`wait` et non `wait_for`, et c'est la garde de tout ce bloc : un `wait_for` qui expire **fait echouer le run**, quel que soit son `on_timeout`. Cette lecture est un bonus — elle ne doit jamais emporter la connexion. Le revers de cette garde est qu'elle degrade **en silence** : une page pas encore arrivee rend une liste vide, indistinguable d'un compte sans UE. D'ou 6000 et non 1500 : l'annuaire est un autre service que le dossier, donc cette navigation traverse une cascade de redirections SSO — quelques centaines de millisecondes depuis un poste, plusieurs secondes depuis un telephone en cellulaire. Mesure du 2026-08-24 depuis un poste filaire : la navigation elle-meme prend **2834 ms**, et c'est le meilleur cas — un moteur de WebView peut de surcroit rendre la main a la fin d'une redirection **intermediaire** du SSO, la ou Playwright attend la page finale. Le delai n'est paye qu'au parcours froid, une fois."
+    },
+    {
+      "id": "annuaire",
+      "action": "extract",
+      "outputs": {
+        "appartenances": {
+          "selector": "#collapseGroups div[title]",
+          "as": "list",
+          "item": "attr",
+          "attr": "title",
+          "note": "`as: list` ne leve jamais : zero correspondance rend une liste vide. C'est ce qui rend l'etape sans danger pour le dossier. L'attribut plutot que le texte, parce que l'accordeon est **replie** : un moteur qui lirait `innerText` d'un element masque rendrait des chaines vides."
+        }
+      }
     }
   ],
   "outputs": {
@@ -68,6 +145,7 @@
     "ine": "{{ steps.dossier.ine }}",
     "identite": "{{ steps.dossier.identite }}",
     "email": "{{ steps.dossier.email }}",
-    "naissance": "{{ steps.dossier.naissance }}"
+    "naissance": "{{ steps.dossier.naissance }}",
+    "appartenances": "{{ steps.annuaire.appartenances }}"
   }
 }

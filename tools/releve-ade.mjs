@@ -3,6 +3,8 @@
  *
  *   node tools/releve-ade.mjs --projet 1
  *   node tools/releve-ade.mjs --projet 1 --max 400 --semaines 2025-11-17:2025-11-23,2026-01-12:2026-01-18
+ *   node tools/releve-ade.mjs --projet 1 --index 2467,2468,2469,4156   # sonder des index nommes
+ *   node tools/releve-ade.mjs --projet 1 --ecoles 2467=ENSEIRB,2475=ENSMAC   # attribuer chaque index
  *
  * ADE n'expose aucun arbre de ressources anonyme : l'export prend des **index positionnels**, et
  * rien ne dit lequel correspond a quel groupe. Ce script fait le seul releve possible — il balaie les
@@ -26,6 +28,21 @@
  * 2A GR1 suit aussi les cours de toute sa promotion. Le script propose le libelle le plus frequent
  * et montre les inclusions ; trancher reste un **geste d'auteur**. Il enleve la corvee, pas le
  * jugement.
+ *
+ * **`--index` sonde des index nommes plutot que le balayage**, et il vient d'une decouverte du
+ * 2026-08-22 : l'arbre de ressources d'ADE, lu **sous authentification** sur `myplanning.jsp`, donne
+ * les vrais identifiants des ecoles et des promotions — mais tous ne portent pas d'evenements. Chez
+ * ENSEIRB-MATMECA, `2469` (IIETE3) en rend zero quand `2467` (l'ecole) en rend des centaines : les
+ * cours y sont accroches aux **etudiants**, pas aux promotions. Publier un noeud d'arbre sans l'avoir
+ * sonde donnerait donc un groupe qui s'affiche, se choisit, et reste vide toute l'annee.
+ *
+ * **`--ecoles` attribue chaque index a une ecole, par mesure et non par supposition.** Le balayage
+ * anonyme rend des index dont le libelle ne porte pas toujours le nom de l'ecole (`1A GR3`, `T2`,
+ * `MAT-1A`) : les prefixer demanderait de deviner, et un prefixe devine publierait l'emploi du temps
+ * d'une ecole sous le nom d'une autre. L'arbre authentifie, lui, donne des noeuds **nommes**
+ * (`2467=ENSEIRB-MATMECA`) : il suffit alors de comparer les identifiants d'evenements pour savoir
+ * lequel contient les cours d'un index. La part est affichee, parce qu'elle n'est pas toujours de
+ * 100 % — un index peut porter des cours mutualises entre deux ecoles.
  *
  * Il n'ecrit ni dans la base ni dans un fichier du depot : il rend du texte a relire et a coller.
  *
@@ -76,10 +93,27 @@ function options() {
         throw new Error('--semaines attend des paires debut:fin separees par des virgules');
     }
 
+    const index = valeur('--index', null);
+    const indices = index === null
+        ? null
+        : index.split(',').map((brut) => Number(brut.trim())).filter((nombre) => Number.isInteger(nombre));
+    if (indices !== null && indices.length === 0) throw new Error('--index attend des nombres separes par des virgules');
+
+    const ecoles = valeur('--ecoles', null);
+    const nommes = ecoles === null
+        ? []
+        : ecoles.split(',').map((paire) => {
+            const [index, ...nom] = paire.split('=');
+            if (nom.length === 0) throw new Error('--ecoles attend des couples index=nom separes par des virgules');
+            return { index: Number(index.trim()), nom: nom.join('=').trim() };
+        });
+
     return {
+        ecoles: nommes,
         domaine: valeur('--domaine', 'https://ade.bordeaux-inp.fr'),
         projet: valeur('--projet', '1'),
         max: Number(valeur('--max', '220')),
+        indices,
         pause: Number(valeur('--pause', '200')),
         semaines,
         json: argv.includes('--json'),
@@ -159,8 +193,35 @@ function propose(libelles) {
     return nom;
 }
 
-/** L'index dont cet index est un sous-ensemble strict, s'il y en a un. Le plus petit gagne. */
+/**
+ * L'ecole qui porte le plus grand nombre des cours d'un index, et la part que ca represente.
+ *
+ * Une part, et non un booleen : la mesure du 2026-08-24 montre des index franchement attribues
+ * (14/14, 15/15, 0/78) et un cas partiel — l'index 61 n'a que 2 de ses 11 cours dans ENSEIRB. Cacher
+ * ce chiffre ferait passer une mutualisation pour une appartenance.
+ */
+function ecoleDe(sonde, ecoles) {
+    let meilleure = null;
+    for (const ecole of ecoles) {
+        const dedans = [...sonde.uids].filter((uid) => ecole.uids.has(uid)).length;
+        if (dedans > 0 && (meilleure === null || dedans > meilleure.dedans)) {
+            meilleure = { nom: ecole.nom, dedans };
+        }
+    }
+    if (meilleure === null) return null;
+    return { nom: meilleure.nom, part: Math.round((meilleure.dedans / sonde.total) * 100) };
+}
+
+/**
+ * L'index dont cet index est un sous-ensemble strict, s'il y en a un. Le plus petit gagne.
+ *
+ * Un index **vide** n'a pas de parent : l'ensemble vide est inclus dans tous les autres, et sans ce
+ * refus le rapport designerait au hasard le plus petit index porteur de cours — une inclusion qui a
+ * l'air d'une mesure et n'en est pas. Le cas n'existe que depuis `--index`, qui garde les index
+ * vides parce que c'est justement ce qu'on vient verifier.
+ */
 function parentDe(sonde, sondes) {
+    if (sonde.total === 0) return null;
     let parent = null;
     for (const autre of sondes) {
         if (autre.index === sonde.index || autre.total <= sonde.total) continue;
@@ -175,10 +236,21 @@ async function main() {
     const config = options();
     const sondes = [];
 
-    for (let index = 1; index <= config.max; index += 1) {
-        if (!config.json) process.stderr.write(`\r  index ${index}/${config.max}`);
+    // Les ecoles d'abord : leurs ensembles d'evenements servent a attribuer tous les autres index.
+    const ecoles = [];
+    for (const ecole of config.ecoles) {
+        if (!config.json) process.stderr.write(`\r  ecole ${ecole.nom} (${ecole.index})`);
+        ecoles.push({ ...ecole, ...(await sonder(config, ecole.index)) });
+    }
+
+    // Les index nommes sont gardes **meme vides** : c'est precisement ce qu'on vient verifier. Le
+    // balayage, lui, ne retient que ce qui porte des cours — sinon le rapport ferait deux cents
+    // lignes de silence.
+    const aSonder = config.indices ?? Array.from({ length: config.max }, (_, rang) => rang + 1);
+    for (const [rang, index] of aSonder.entries()) {
+        if (!config.json) process.stderr.write(`\r  index ${index} (${rang + 1}/${aSonder.length})`);
         const sonde = await sonder(config, index);
-        if (sonde.total > 0) sondes.push(sonde);
+        if (sonde.total > 0 || config.indices !== null) sondes.push(sonde);
     }
     if (!config.json) process.stderr.write(`\r${' '.repeat(30)}\r`);
 
@@ -191,6 +263,7 @@ async function main() {
             distincts: sonde.libelles.size,
             libelles: [...sonde.libelles.keys()],
             parent: parentDe(sonde, sondes)?.index ?? null,
+            ecole: ecoleDe(sonde, ecoles),
         }))
         .sort((gauche, droite) => droite.total - gauche.total);
 
@@ -199,16 +272,19 @@ async function main() {
         return;
     }
 
+    const balayes = config.indices === null ? `${config.max} index balayes` : `${config.indices.length} index sondes`;
     console.log(
-        `Projet ${config.projet}, ${config.semaines.length} semaine(s), ${config.max} index balayes — ` +
-            `${lignes.length} portent des cours.\n`,
+        `Projet ${config.projet}, ${config.semaines.length} semaine(s), ${balayes} — ` +
+            `${lignes.filter((ligne) => ligne.total > 0).length} portent des cours.\n`,
     );
-    console.log('  index    total  par semaine        inclus dans   libelle propose (nombre de libelles)');
-    console.log('  ' + '-'.repeat(94));
+    console.log('  index    total  par semaine        inclus dans   ecole (part)          libelle propose (nombre)');
+    console.log('  ' + '-'.repeat(112));
     for (const ligne of lignes) {
+        const ecole = ligne.ecole === null ? '—' : `${ligne.ecole.nom} (${ligne.ecole.part}%)`;
         console.log(
             `  ${String(ligne.index).padStart(5)}  ${String(ligne.total).padStart(7)}  ` +
                 `${ligne.parSemaine.join('/').padEnd(18)} ${String(ligne.parent ?? '—').padStart(11)}   ` +
+                `${ecole.padEnd(21)} ` +
                 `${String(ligne.nom ?? '(aucun libelle lisible)').padEnd(34)} (${ligne.distincts})`,
         );
     }

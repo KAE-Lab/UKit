@@ -64,7 +64,8 @@
             "categorie": "$.eventCategory",
             "couleur": "$.backgroundColor",
             "modules": "$.modules[*]",
-            "description": "$.description"
+            "description": "$.description",
+            "sites": "$.sites[*]"
           }
         }
       }

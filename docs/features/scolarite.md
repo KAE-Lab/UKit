@@ -415,11 +415,83 @@ quitter l'écran, et le geste de retour de la pile est désactivé tant qu'un hi
   par le renommage.
 - Les valeurs résolues sont **masquées** dans les événements et les messages d'échec.
 - Les données personnelles récupérées ne quittent jamais l'appareil.
-- L'accès à l'onglet est protégé par `BiometryGate` (`expo-local-authentication`), avec repli sur le
-  code de l'appareil. Son écran de garde a pris le vocabulaire partagé : il affichait un **cadenas
-  emoji** de 48 points et un `#fff` en dur sur son bouton — deux règles du dépôt enfreintes au même
-  endroit, et un rendu qui variait avec la police d'emoji du système.
+- L'accès à l'onglet est protégé par `BiometryGate`, avec repli sur le code de l'appareil. Son écran
+  de garde a pris le vocabulaire partagé : il affichait un **cadenas emoji** de 48 points et un `#fff`
+  en dur sur son bouton — deux règles du dépôt enfreintes au même endroit, et un rendu qui variait
+  avec la police d'emoji du système.
 - La déconnexion coupe la session en cours **avant** de supprimer les deux clés SecureStore.
+
+## La biométrie se demande en deux temps
+
+Sur iPhone, l'application demandait le **code de l'appareil sans jamais tenter Face ID**, alors que
+l'empreinte se déclenchait normalement sur Android. Les deux appels — la porte de l'onglet et la
+révélation du mot de passe — passaient `disableDeviceFallback: false`, ce qui demande à iOS la
+politique `deviceOwnerAuthentication` : celle qui **autorise** le système à court-circuiter la
+biométrie. C'est une décision d'iOS, pas un défaut de la bibliothèque, et aucune option ne la rend
+prévisible.
+
+[`shared/biometrie`](../../src/shared/biometrie/index.ts) demande donc les deux politiques dans
+l'ordre : `disableDeviceFallback: true` d'abord — `deviceOwnerAuthenticationWithBiometrics`, où iOS ne
+peut plus court-circuiter — puis, sur échec, une seconde demande **avec** le repli, pour que le code
+reste atteignable.
+
+**Deux temps ne veut pas dire deux fenêtres imposées.** Quelqu'un qui appuie sur *Annuler* a décidé :
+lui ouvrir aussitôt le clavier du code serait une seconde demande qu'il n'a pas faite, c'est-à-dire
+exactement le comportement qu'on reproche à iOS dans l'autre sens. C'est
+[`doitProposerLeCode`](../../src/shared/biometrie/decision.ts) qui tient cette frontière, et elle vit
+dans un fichier **sans aucune dépendance** pour être vérifiable sans appareil : `expo-local-authentication`
+tire `react-native`, donc tout module qui l'importe est injouable sous Node.
+
+| Ce que rend `error` | Ce qu'on fait |
+|---|---|
+| `user_cancel`, `app_cancel`, `system_cancel` | **rien** : la personne, l'application ou le système a interrompu |
+| `user_fallback` | le code — c'est le cas nominal, « Utiliser le code » |
+| `authentication_failed`, `lockout` | le code : le visage n'a pas été reconnu, ou le système n'accepte plus que lui |
+| `not_enrolled`, `passcode_not_set`, `not_available` | le code : rien n'est enrôlé, ou Face ID est refusé à l'application |
+| `timeout`, `unable_to_process`, `no_space`, `invalid_context`, `unknown` | le code : la biométrie n'a pas pu se prononcer |
+
+| `missing_usage_description` | le code : `NSFaceIDUsageDescription` manque à l'`Info.plist` du conteneur qui exécute |
+
+> **Attention en lisant d'anciennes notes** : `biometry_not_available` et `biometry_lockout`, qui
+> circulent dans la documentation d'iOS et dans les versions anciennes de la bibliothèque,
+> **n'existent pas** en version 17. Ce sont `not_available` et `lockout`.
+
+Un code ajouté à la **déclaration** de la bibliothèque casse la compilation plutôt que de tomber en
+silence dans le repli par défaut : `index.ts` affecte le `error` de la bibliothèque dans un champ du
+type recopié. Ce garde a une limite, et elle a servi dès la première campagne de sonde : il ne voit
+que la déclaration. `missing_usage_description` est émis par la couche **native** et n'est pas dans le
+`.d.ts` de la version 17 — mesuré sur iPhone le 2026-08-22. **Ce qu'une sonde rapporte prime sur ce
+qu'un type déclare.**
+
+### Le verdict de la première campagne, et ce qu'il ne dit pas
+
+Mesuré sur iPhone le 2026-08-22, sous Expo Go : `matériel` et `enrôlé` sont vrais, et le premier temps
+échoue immédiatement sur **`missing_usage_description`** — sans ouvrir la moindre fenêtre. Le code
+natif l'explique : sur la politique biométrique seule, si la clé d'usage manque, il **résout l'échec
+sans jamais appeler `evaluatePolicy`**, parce qu'appeler planterait. C'est exactement pour ça qu'on ne
+voit jamais Face ID essayer.
+
+Le cas ne se produit **que** sur `disableDeviceFallback: true`. Avec le repli, la bibliothèque va
+directement à `deviceOwnerAuthentication`, qui présente le code : c'est pourquoi le symptôme d'origine
+n'avait pas d'explication visible.
+
+**Ce verdict ne dit rien de l'application réelle.** Le conteneur qui exécute est Expo Go, avec son
+propre `Info.plist`. Celui de UKit porte la clé, par **deux** chemins vérifiés dans
+[`app.config.ts`](../../app.config.ts) — `ios.infoPlist.NSFaceIDUsageDescription` et l'option
+`faceIDPermission` du greffon `expo-local-authentication`. La confirmation demande donc un
+`eas build --profile development` ; le correctif, lui, est celui que ce verdict appelle.
+
+**Un appareil sans aucun verrou ouvre la porte**, et c'est une décision. Sans code ni biométrie,
+aucune demande ne peut jamais aboutir : l'écran d'avant montrait un bouton « Réessayer » qui ne pouvait
+pas marcher, et l'onglet devenait inatteignable pour toujours. Cette porte est un verrou
+**d'interface** — le trousseau, lui, n'exige pas d'authentification
+([`SecureStoreService`](../../src/shared/services/SecureStoreService.ts)) — donc bloquer ne protégeait
+rien que l'appareil ne laisse déjà voir. Le jour où `requireAuthentication` sera posé sur SecureStore,
+cette décision devra être rouverte.
+
+Le menu de développement porte un panneau **Biométrie** qui affiche les capacités de l'appareil et le
+`{success, error, warning}` **brut** des deux politiques, jouables côte à côte : le symptôme ne
+distingue pas ses causes, et sans ce panneau on corrige à l'aveugle ([qualite.md](../qualite.md)).
 
 ## Les trois gestes du compte, et pourquoi ils ne se ressemblent pas
 
@@ -445,6 +517,148 @@ s'intitulait **« Se déconnecter »** alors qu'il montre le profil, le dossier,
 trois actions — il prend le nom de la ligne qui l'ouvre, « Compte universitaire » — et le libellé du
 prénom était **écrit en dur, en français**, sur un écran qui s'affiche dans les trois langues. Sa
 ligne disparaît désormais faute de donnée, au lieu d'afficher un libellé vide avec son filet.
+
+## Ce que la connexion trouve en plus, et qu'elle propose
+
+Une connexion universitaire traverse des pages qui en savent bien plus que l'état civil. Deux
+lectures s'ajoutent au dossier depuis le 2026-08-24, une par établissement, et **aucune des deux ne
+s'applique toute seule** :
+
+| Établissement | Ce que la page porte | Ce qu'on en fait |
+|---|---|---|
+| Université de Bordeaux | les **appartenances** de l'annuaire, dont les UE inscrites | pré-remplir les filtres |
+| Bordeaux INP | la fiche que **ADE présélectionne**, c'est-à-dire l'emploi du temps personnel | le proposer comme groupe |
+
+### Le piège du filtre, et pourquoi on pré-remplit le complément
+
+Un filtre d'UE **masque** : `CourseManager.filterCourse` rend `false` quand la liste contient le code
+du cours. Pré-remplir cette liste avec les UE **inscrites** cacherait donc à l'étudiant exactement
+ses propres cours — le planning se viderait, et rien ne dirait pourquoi. Ce qu'on propose est le
+**complément** : les UE que le planning du groupe porte et auxquelles il n'est pas inscrit.
+
+Inverser le filtre en liste positive a été envisagé puis écarté. Il y a deux intentions distinctes —
+*« cette UE n'est pas la mienne »*, qui est un fait du dossier, et *« cette UE est la mienne mais je
+ne veux pas la voir »*, qui est une décision personnelle — et une liste unique ne peut pas porter les
+deux. Pré-remplir garde le geste manuel identique dans les deux sens, ne migre aucune donnée
+persistée, et laisse la refonte des réglages libre de ses choix.
+
+### Le moment, qui n'appartient à aucun écran
+
+Le parcours d'accueil demande le compte **avant** le groupe (`intro > préférences > établissement >
+compte > edt`) : à la fin de la lecture du dossier, il n'existe encore aucun planning, donc aucune UE
+à comparer. La question attend donc que le planning ait livré ses UE, et
+[`PropositionsDecision`](../../src/features/Scolarite/services/PropositionsDecision.ts) a trois
+réponses et non deux — `rien`, `attendre`, `demander`. Confondre les deux premières ferait taire la
+proposition pour toujours, au moment précis où elle est la plus utile.
+
+L'emploi du temps personnel, lui, ne dépend d'aucun planning : c'est **lui** qui remplit l'étape des
+groupes, et l'attendre serait circulaire. Quand les deux sont là, on ne demande **qu'une fois**, avec
+tout ce qu'il y a à demander : deux dialogues à la suite pour une même lecture se lisent comme un
+défaut.
+
+La modale est donc rendue par `rootContainer`, à côté du menu flottant : elle doit pouvoir apparaître
+pendant le parcours d'accueil — qui est rendu *à la place* de la navigation — comme au-dessus de
+n'importe quel onglet. Aucun écran ne la porte, donc aucun écran n'a besoin de savoir qu'elle existe.
+
+### L'identifiant ADE vaut un secret
+
+L'export anonyme d'ADE accepte **n'importe quel** identifiant de ressource et rend l'emploi du temps
+correspondant, sans authentification : mesuré le 2026-08-22, `anonymous_cal.jsp?resources=4087` rend
+le planning nominatif d'un étudiant. Deux conséquences, et les deux sont écrites dans le code :
+
+- la lecture **refuse un identifiant qui n'est pas un nombre** plutôt que de proposer une valeur
+  douteuse — un identifiant mal lu afficherait, sans la moindre erreur, le planning de quelqu'un
+  d'autre ;
+- il vit au **trousseau**, cloisonné par établissement comme le lien d'abonnement et la session, et
+  la réinitialisation seule l'efface.
+
+Il est ensuite **fusionné au référentiel du catalogue** par `sourceEdt()`, en tête de liste : le
+groupe personnel se résout alors comme un autre, et ni les services, ni les écrans, ni les favoris
+n'apprennent qu'il existe ([planning.md](planning.md#lemploi-du-temps-personnel)).
+
+### Le portail de l'INP n'est pas embarqué : sans publication, il ne change pas
+
+`ukit.portail.bordeaux.dossier` est **dans le binaire** ; `ukit.portail.bordeaux-inp.dossier` ne l'est
+pas — il vit sous le préfixe réservé et arrive **uniquement par le manifeste**
+([6-G](../phase-6/6-g-etablissements.md)). C'est la règle de la phase, et elle a une conséquence
+pratique qui se paie une fois par jalon si on l'oublie : **modifier le fichier de l'INP dans le dépôt
+ne change rien sur l'appareil.** Tant que la publication n'a pas eu lieu, le téléphone joue la version
+publiée, qui ne connaît pas les sorties qu'on vient d'ajouter — et la fonctionnalité paraît morte
+alors qu'elle n'a jamais été livrée.
+
+Bordeaux n'a pas ce problème : l'embarqué gagne tant que le publié n'est pas d'une version
+strictement supérieure, donc une correction locale s'y teste au rechargement.
+
+### La proposition d'UE ne se contente pas de ce qui a été affiché
+
+La liste des UE rencontrées (`PlanningDataManager.getAvailableUEs`) ne se remplit qu'**à mesure qu'on
+affiche des journées**, et elle repart vide à chaque lancement — elle n'est pas persistée. S'en
+contenter rendait la proposition **partielle par construction** : on aurait proposé de masquer une UE
+étrangère aujourd'hui, une autre la semaine suivante. Masquer un tiers de ce qu'il fallait est pire
+que ne rien masquer, parce que l'étudiant croit le ménage fait.
+
+Mesuré le 2026-08-24 sur `INF601A5` : le **lundi 12 janvier** ne porte que 4 UE, toutes suivies par
+l'étudiant — complément vide, donc aucune question, à juste titre. Il faut la **semaine** entière pour
+voir apparaître `4TIN606U` et `4TTVP32U`, les deux seules qu'il ne suit pas.
+
+Quand une proposition d'UE attend, l'écran demande donc **une fois** l'année entière du groupe, par le
+run qui sert déjà la synchronisation calendrier (`fetchCalendarForSynchronization`), et verse le
+résultat par la porte ordinaire — ce qui profite aussi à la liste de suggestions des réglages. Un
+échec ne se dit pas : on retombe sur ce que l'écran a déjà chargé.
+
+### La sonde, parce qu'« aucun dialogue » n'est pas un symptôme
+
+Quatre situations produisent le même écran — aucune question — et ne se distinguent pas à l'œil :
+l'annuaire n'a rien rendu, l'étudiant suit toutes les UE de son planning, le planning n'est pas encore
+chargé, ou la proposition a déjà été appliquée. Le menu flottant porte donc un panneau **Dossier**
+([`ModMenuPropositions`](../../src/shared/ui/ModMenuPropositions.tsx)) qui lit une trace posée à
+**chaque** calcul de décision, y compris quand il n'y a rien à demander. Il donne l'arbre en entier :
+
+| Ce que le panneau dit | Ce que ça veut dire |
+|---|---|
+| *aucune lecture depuis le démarrage* | aucun parcours froid n'a eu lieu — « Actualiser le dossier » en rejoue un |
+| `UE inscrites lues : 0` | la lecture de l'annuaire est revenue vide : la page n'était pas arrivée, ou elle a changé |
+| `décision : attendre` | le planning n'a pas encore livré ses UE — ouvrir l'onglet Planning |
+| `décision : rien`, complément 0 | il n'y a réellement rien à proposer |
+| `décision : demander` | le dialogue doit être à l'écran |
+
+C'est la leçon de la campagne biométrique, appliquée avant d'en payer le prix une seconde fois : une
+sonde doit garder la trace de **chaque** étape, pas seulement du verdict final.
+
+**Le piège que cette sonde a été écrite pour rendre visible est réel.** La lecture de l'annuaire est
+un bonus qui ne doit jamais faire échouer la connexion, donc elle utilise `wait` et `as: "list"` — ni
+l'un ni l'autre ne peut échouer. Le revers est qu'elle dégrade **en silence** : une page pas encore
+arrivée rend une liste vide, indistinguable d'un compte sans UE. L'attente était de 1500 ms ; la
+navigation vers l'annuaire, mesurée depuis un poste filaire le 2026-08-24, prend à elle seule
+**2834 ms**, et un moteur de WebView peut de surcroît rendre la main à la fin d'une redirection
+intermédiaire du SSO. Elle est passée à 6000 ms.
+
+### Ce qui attend une réponse est gardé — et pourquoi la décision inverse était fausse
+
+La première version ne persistait rien : une proposition vivait le temps de la session qui avait lu le
+dossier, une nouvelle lecture la reproposait, et l'écart — fermer l'application entre la lecture et le
+premier chargement du planning — paraissait étroit.
+
+**Il ne l'est pas, et c'est une mesure qui l'a montré.** Les UE à masquer se calculent contre le
+planning du groupe, or le planning d'une université est **vide tout l'été** : mesuré le 2026-08-24 sur
+le groupe `INF601A5`, 33 cours la semaine du 12 janvier, **zéro** les semaines du 24 août et du
+14 septembre. C'est exactement la période où l'on installe l'application. Quelqu'un qui se connecte en
+août lit donc son dossier alors qu'il n'y a rien à comparer — et sans persistance, la proposition
+était perdue au prochain démarrage, **définitivement**, puisque les lancements suivants sont des
+parcours *chauds* qui ne relisent pas le dossier.
+
+Ce qui attend une réponse est donc gardé au trousseau
+([`PropositionsEnAttente`](../../src/features/Scolarite/services/PropositionsEnAttente.ts), clé
+`UKIT_PROPOSITIONS`), cloisonné par établissement comme le reste. Trois règles, et elles suffisent :
+
+- une entrée disparaît quand l'étudiant a **tranché** — accepté ou refusé — et pas avant ;
+- elle est **redécidée** à chaque lancement contre le planning et les filtres du moment : une
+  proposition qui n'a plus lieu d'être ne s'affiche pas, elle s'éteint toute seule. C'est ce qui
+  répond au risque qui avait motivé l'inverse — voir ressurgir six mois plus tard une proposition
+  périmée ;
+- la **déconnexion** l'efface : ce qui attendait appartenait à ce compte, et le garder poserait la
+  question au suivant avec les UE du précédent. Un changement d'établissement, lui, n'y touche pas —
+  chaque fac garde la sienne.
 
 ## Décisions de conception
 
@@ -608,6 +822,9 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`services/ScolariteSession.ts`](../../src/features/Scolarite/services/ScolariteSession.ts) | la séquence de runs : quels Blueprints, dans quel ordre, et le verrou d'un run navigateur à la fois |
 | [`services/ScolariteMapping.ts`](../../src/features/Scolarite/services/ScolariteMapping.ts) | la projection des sorties vers les écrans, et la table des échecs nommés |
 | [`services/ScolariteMapping.test.ts`](../../src/features/Scolarite/services/ScolariteMapping.test.ts) | ce que cette projection doit tenir |
+| [`services/PropositionsDossier.ts`](../../src/features/Scolarite/services/PropositionsDossier.ts) | ce que le dossier a livré en plus de l'identité : UE inscrites, emploi du temps personnel |
+| [`services/PropositionsDecision.ts`](../../src/features/Scolarite/services/PropositionsDecision.ts) | ce qu'on en demande, et **quand** — le complément des UE, jamais les UE inscrites |
+| [`components/PropositionsModal.tsx`](../../src/features/Scolarite/components/PropositionsModal.tsx) | la confirmation, rendue par `rootContainer` pour exister aussi pendant l'accueil |
 | [`screens/ScolariteDashboard.tsx`](../../src/features/Scolarite/screens/ScolariteDashboard.tsx) | écran d'onglet : aiguillage entre connexion, chargement, échec et tableau de bord |
 | [`screens/CredentialsSettingsScreen.tsx`](../../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | réglages du compte : informations enregistrées, déconnexion — et, **sans compte, le formulaire de connexion** plutôt qu'une fiche vide |
 | [`screens/WebBrowserScreen.tsx`](../../src/features/Scolarite/screens/WebBrowserScreen.tsx) | navigateur intégré : points d'entrée, historique, retour matériel, enregistrement d'identifiants |
@@ -615,6 +832,8 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`components/ScolariteLoginView.tsx`](../../src/features/Scolarite/components/ScolariteLoginView.tsx) | formulaire de connexion et explication du traitement des données. Partagé avec le [parcours d'accueil](onboarding.md), où il porte en plus une sortie « Plus tard » ([architecture.md](../architecture.md#dépendances-entre-features)) |
 | [`components/ScolariteLoadingScreen.tsx`](../../src/features/Scolarite/components/ScolariteLoadingScreen.tsx) | écran de progression du parcours froid, étape par étape |
 | [`components/BiometryGate.tsx`](../../src/features/Scolarite/components/BiometryGate.tsx) | verrou biométrique, une demande par session d'application |
+| [`shared/biometrie/decision.ts`](../../src/shared/biometrie/decision.ts) | après un échec, propose-t-on le code ? Sans dépendance, donc jouable sous Node |
+| [`shared/biometrie/index.ts`](../../src/shared/biometrie/index.ts) | la séquence en deux temps, les capacités de l'appareil, et la politique d'avant pour la sonde |
 | [`components/GreetingBlock.tsx`](../../src/features/Scolarite/components/GreetingBlock.tsx) | salutation, date du jour, détection d'anniversaire |
 | [`components/MailboxRow.tsx`](../../src/features/Scolarite/components/MailboxRow.tsx) | ligne de messagerie : compteur de non-lus, chargement, et échec du parcours chaud |
 | [`components/cards/ApogeeCard.tsx`](../../src/features/Scolarite/components/cards/ApogeeCard.tsx) | carte d'accès aux résultats — définie, non branchée |

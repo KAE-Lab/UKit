@@ -242,8 +242,10 @@ livré ; elle est mise à jour à chaque contribution.
   référence, cache de repli hors ligne pour l'emploi du temps, stockage chiffré pour le compte
   universitaire. [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md)
 - [x] **Cartographie libre** — Leaflet et OpenStreetMap en WebView, marqueur au thème de
-  l'application, référentiel de 73 bâtiments embarqué dans le binaire et corrigeable à distance.
-  [docs/cartographie.md](docs/cartographie.md)
+  l'application, référentiel de 73 bâtiments embarqué dans le binaire et corrigeable à distance. Où se
+  donne un cours **se lit** désormais dans un champ que la source déclare, au lieu d'être deviné dans
+  du texte libre : deux causes indépendantes faisaient disparaître la carte d'une fiche de cours, sans
+  jamais afficher d'erreur. [docs/cartographie.md](docs/cartographie.md)
 - [x] **Publication** — profils EAS (développement, aperçu, production) et chaîne de release GitHub
   Actions vers les deux stores. [docs/plateforme.md](docs/plateforme.md)
 - [ ] **Tests automatisés** — un premier harnais existe, borné : `npm test` couvre le socle du moteur
@@ -314,6 +316,9 @@ livré ; elle est mise à jour à chaque contribution.
   sélecteurs positionnels produit désormais une **erreur** au lieu d'une donnée fausse écrite dans le
   trousseau. Le portail n'est plus le seul : **celui de Bordeaux INP est arrivé sans release** (6-G),
   et une université qui n'a pas de messagerie extractible ne montre simplement pas la carte.
+  Une connexion **propose** désormais ce qu'elle trouve en chemin — les UE non suivies en filtres, à
+  Bordeaux ; l'emploi du temps personnel en groupe, à l'INP — derrière une confirmation, parce que
+  deviner juste dans le dos de quelqu'un reste deviner dans son dos.
   [docs/features/scolarite.md](docs/features/scolarite.md)
 - [x] **Multi-établissement** — le catalogue des universités vit en
   [base](docs/backend.md) et pilote l'interface : choix à l'accueil, changement dans les réglages,

@@ -135,10 +135,18 @@ interface EvenementCelcat {
     backgroundColor: string;
     description: string;        // HTML echappe, multi-lignes
     modules: string[] | null;   // intitules de matiere, null sur les vacances
+    sites: string[] | null;     // batiments declares : ["Bâtiment A28"]
 }
 ```
 
-Deux pièges mesurés sur une année complète de données :
+**`sites` est la donnée fiable pour placer un cours sur une carte**, et elle a longtemps été ignorée :
+la fiche de cours devinait le bâtiment en cherchant un code de salle dans la description, ce qui
+échouait silencieusement dès que la description était vide ou décalée d'une ligne. Le champ est
+extrait depuis la correction du 2026-08-22 (`$.sites[*]`) et la fiche le lit **avant** toute
+heuristique. Il porte le libellé complet — `Bâtiment A28` — que la reconnaissance de salle réduit au
+code par le motif de l'établissement, sans qu'aucune règle nouvelle soit inventée pour lui.
+
+Trois pièges mesurés sur une année complète de données :
 
 - **`end` est nul** sur les événements `Vacances`, servis en journée entière. La valeur descend telle
   quelle jusqu'à `moment(null)`, qui est une date **invalide** — et non `moment(undefined)`, qui
@@ -148,6 +156,16 @@ Deux pièges mesurés sur une année complète de données :
   module rend donc une chaîne, jamais un tableau d'un élément. Corollaire : un `modules: []` serait
   indistinguable d'un `modules: null` — le cas n'existe pas dans une année de données, et le sujet
   retombe sur la catégorie plutôt que de rester indéfini.
+- **`sites` traverse la même arité**, et c'est le cas dominant : un cours nomme presque toujours un
+  seul bâtiment, donc `$.sites[*]` rend presque toujours une **chaîne**. Un code écrit « évidemment »
+  pour une liste ne traiterait donc jamais le cas normal. `sitesDuCours` ramène les deux formes à une
+  liste, et le harnais de parité compare l'extraction à une lecture directe du champ brut.
+- **`modules` et la description ne s'écrivent pas pareil.** Mesuré le 2026-08-22 :
+  `modules` rend `"4TIN606U  Histoire et Epistémologie de l'Optimisation"` avec **deux espaces**, là
+  où la description n'en a qu'une. La ligne du module n'était donc pas reconnue comme une répétition
+  du sujet, elle restait dans la description, et tout le reste glissait d'un rang : la « ligne de
+  salle » devenait le nom de l'enseignant. C'est la seconde cause des cartes manquantes, et `sites`
+  la rend sans objet.
 
 ### Ce qui reste applicatif, et ce n'est pas rien
 
@@ -164,9 +182,12 @@ le Blueprint décrit la requête et ce qu'on en retient, le reste est du calcul.
 3. Le nettoyage de la description par [`formatDescription`](../src/shared/utils/formatUtils.ts) :
    suppression des `\r` et des `<br />`, remplacement de quatre sauts de ligne consécutifs par `;`,
    décodage des entités HTML, puis retrait des lignes qui répètent la catégorie ou le sujet.
-4. Le **séparateur de description dépend de la vue** : `;` pour le jour et la synchronisation, `\n`
-   pour la semaine. Conservé tel quel, et sa conséquence réelle est écrite dans
-   [features/planning.md](features/planning.md#limites-connues) — elle n'est pas celle qu'on croit.
+4. Le séparateur de description est `;` pour **toutes** les vues. Il a longtemps été `\n` pour la
+   semaine, au nom d'un formatage différent selon `calView` — justification mesurée fausse au jalon
+   6-E, puis conservée parce que la corriger déplaçait des pixels. Elle l'est depuis le 2026-08-22 :
+   le serveur formate à l'identique dans les deux vues, `formatDescription` réduit cela à des `;`, et
+   découper sur `\n` ne rendait qu'un champ — porteur de la catégorie, donc écarté en entier. La vue
+   semaine n'affichait donc **ni salle, ni enseignant, ni semaines**.
 5. Le code d'UE, extrait du sujet par `([0-9][A-Z0-9]+) (.+)` : `4TIN301U Algorithmique` devient
    `UE = "4TIN301U"`, `subject = "Algorithmique"`. C'est lui qui alimente les filtres.
 6. Le tri double : heure de début, puis sujet alphabétique **après retrait du code d'UE**.
@@ -175,6 +196,8 @@ le Blueprint décrit la requête et ce qu'on en retient, le reste est du calcul.
    courante et n'ont donc rien à faire dans un fichier rejouable.
 8. La reconstruction des bâtiments à partir des salles, par correspondance textuelle avec le
    référentiel ([features/campus-salles-libres.md](features/campus-salles-libres.md)).
+9. La réduction d'un `sites` (`Bâtiment A28`) à un code du référentiel, par le format de salle de
+   l'établissement ([cartographie.md](cartographie.md#extraction-dun-lieu-depuis-un-cours)).
 
 ### Gestion d'erreur
 
@@ -510,6 +533,7 @@ Ajouté au jalon [6-G](phase-6/6-g-etablissements.md), **sans release** : une li
 | `cas.bordeaux-inp.fr` | authentification centralisée |
 | `mondossierweb.bordeaux-inp.fr` | dossier administratif — nom, prénom, date de naissance, numéro étudiant |
 | `mondossierweb.bordeaux-inp.fr/coordonnees` | adresse électronique de l'établissement |
+| `ade.bordeaux-inp.fr/direct/myplanning.jsp` | l'arbre de ressources **sous authentification** — il présélectionne la fiche de l'étudiant, donc son emploi du temps personnel (section 8) |
 | `sso.bordeaux-inp.fr` | SAML — **c'est lui qui rend le webmail inextractible** |
 | `ade.bordeaux-inp.fr` | emploi du temps, par export iCalendar — **porté** au jalon [6-I](phase-6/6-i-planning-universel.md), section 8 |
 
@@ -636,6 +660,33 @@ Le point faible n'est pas le format, qui est normalisé, mais **le référentiel
 ne nomme un index. Il est relevé par [`tools/releve-ade.mjs`](../tools/releve-ade.mjs), publié dans la
 colonne `edt`, et se rejoue à chaque rentrée. Un groupe favori qui ne résout plus produit un message
 dédié plutôt qu'une journée vide.
+
+### L'arbre authentifié, et ce qu'il change au relevé (2026-08-24)
+
+`myplanning.jsp`, ouvert **sous le CAS**, rend un arbre de ressources qui porte les **vrais
+identifiants** ADE et leurs noms : `Direct Planning Tree_2467` pour ENSEIRB-MATMECA, `2475` pour
+ENSMAC, `2492` pour ENSTBB… Ces identifiants vivent dans le même espace que `resources` — l'export
+anonyme les accepte tels quels.
+
+Trois choses en découlent, et aucune n'est théorique :
+
+- **ADE présélectionne la fiche de l'étudiant connecté.** Son identifiant personnel se lit donc sans
+  aucune recherche, et l'export anonyme rend **son** emploi du temps. C'est ce qui rend l'identifiant
+  aussi sensible qu'un lien d'abonnement nominatif
+  ([scolarite.md](features/scolarite.md#lidentifiant-ade-vaut-un-secret)) ;
+- **tous les nœuds de l'arbre ne portent pas d'événements.** Chez ENSEIRB, les cours sont accrochés
+  aux étudiants et aux groupes, pas aux promotions. Publier un nœud d'arbre sans l'avoir sondé
+  donnerait un groupe qui s'affiche, se choisit, et reste vide toute l'année ;
+- **une seule semaine ne prouve rien.** `2469` (IIETE3) rend 0 événement sur la semaine du 12 janvier
+  et 47 sur trois semaines réparties dans l'année. C'était déjà la raison d'être des trois semaines
+  du relevé ; c'est mesuré une seconde fois, sur un autre cas.
+
+L'arbre donne des **noms d'école**, le balayage anonyme donne des **index de groupe** sans nom d'école
+(`1A GR3`, `T2`, `MAT-1A`). `tools/releve-ade.mjs --ecoles 2467=ENSEIRB-MATMECA,…` relie les deux par
+**mesure** : il compare les identifiants d'événements et rend, pour chaque index, l'école qui porte
+ses cours et la **part** que ça représente. La part compte — l'index `61` n'a que 2 de ses 11 cours
+dans ENSEIRB, ce qui est une mutualisation et non une appartenance. Préfixer un groupe sans cette
+mesure publierait l'emploi du temps d'une école sous le nom d'une autre.
 
 ## Modèle d'erreur commun
 
