@@ -29,6 +29,8 @@ import celcatSemaine from './ukit-celcat-semaine.blueprint.json';
 import edtAbonnement from './ukit-edt-abonnement.blueprint.json';
 import portailBordeauxDossier from './ukit-portail-bordeaux-dossier.blueprint.json';
 import portailBordeauxMessagerie from './ukit-portail-bordeaux-messagerie.blueprint.json';
+import portailDeconnexion from './ukit-portail-deconnexion.blueprint.json';
+import portailVerification from './ukit-portail-verification.blueprint.json';
 import versions from './versions.json';
 
 /**
@@ -59,6 +61,14 @@ export const BLUEPRINT = {
     EDT_ABONNEMENT: 'ukit.edt.abonnement',
     PORTAIL_BORDEAUX_DOSSIER: 'ukit.portail.bordeaux.dossier',
     PORTAIL_BORDEAUX_MESSAGERIE: 'ukit.portail.bordeaux.messagerie',
+    // Generique et embarque, malgre son prefixe : `/logout` est le chemin d'Apereo CAS, le meme
+    // produit chez les deux etablissements, et la racine arrive en entree depuis le catalogue. Il
+    // ferme la session que `session.persist` garde ouverte — sans lui, se deconnecter effacerait le
+    // trousseau en laissant un navigateur authentifie.
+    PORTAIL_DECONNEXION: 'ukit.portail.deconnexion',
+    // Generique et embarque, comme la deconnexion : il ne lit rien, il **prouve** un couple
+    // d'identifiants aupres du CAS par `renew=true`. Voir sa description.
+    PORTAIL_VERIFICATION: 'ukit.portail.verification',
 } as const;
 
 export type BlueprintName = (typeof BLUEPRINT)[keyof typeof BLUEPRINT];
@@ -145,6 +155,14 @@ export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
     [BLUEPRINT.PORTAIL_BORDEAUX_MESSAGERIE]: {
         version: versions[BLUEPRINT.PORTAIL_BORDEAUX_MESSAGERIE].version,
         document: portailBordeauxMessagerie,
+    },
+    [BLUEPRINT.PORTAIL_DECONNEXION]: {
+        version: versions[BLUEPRINT.PORTAIL_DECONNEXION].version,
+        document: portailDeconnexion,
+    },
+    [BLUEPRINT.PORTAIL_VERIFICATION]: {
+        version: versions[BLUEPRINT.PORTAIL_VERIFICATION].version,
+        document: portailVerification,
     },
 };
 

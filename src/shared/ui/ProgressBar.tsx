@@ -11,11 +11,18 @@
  */
 
 import React from 'react';
-import { StyleProp, View, ViewStyle } from 'react-native';
+import { Animated, StyleProp, View, ViewStyle } from 'react-native';
 
 export interface ProgressBarProps {
-    /** Entre 0 et 100. Au-dela, la barre sature — une source peut annoncer 110 %. */
-    percent: number;
+    /**
+     * Entre 0 et 100. Au-dela, la barre sature — une source peut annoncer 110 %.
+     *
+     * Une `Animated.Value` est acceptee pour une barre qui **progresse** : elle est alors interpolee
+     * et rendue sans repasser par un rendu React, donc a la frequence de l'ecran plutot qu'a celle
+     * des mises a jour d'etat. Une jauge qui affiche une mesure — l'affluence d'une bibliotheque —
+     * garde un nombre : il n'y a rien a animer.
+     */
+    percent: number | Animated.Value;
     color: string;
     trackColor: string;
     height: number;
@@ -27,7 +34,13 @@ export interface ProgressBarProps {
 }
 
 export function ProgressBar({ percent, color, trackColor, height, style }: ProgressBarProps) {
-    const rempli = Math.max(0, Math.min(100, percent));
+    const largeur = typeof percent === 'number'
+        ? (`${Math.max(0, Math.min(100, percent))}%` as const)
+        : percent.interpolate({
+            inputRange: [0, 100],
+            outputRange: ['0%', '100%'],
+            extrapolate: 'clamp',
+        });
 
     return (
         <View style={[{
@@ -36,8 +49,8 @@ export function ProgressBar({ percent, color, trackColor, height, style }: Progr
             borderRadius: height / 2,
             overflow: 'hidden',
         }, style]}>
-            <View style={{
-                width: `${rempli}%`,
+            <Animated.View style={{
+                width: largeur,
                 height: '100%',
                 backgroundColor: color,
                 borderRadius: height / 2,

@@ -17,6 +17,11 @@ L'application ne collecte, ne stocke, ni ne transmet aucune donnée personnelle 
 **4. Sauvegarde locale des préférences (App Storage)**
 UKit mémorise vos choix (langue préférée, favoris de groupes de TD/TP, identifiant du calendrier sélectionné pour la synchronisation, etc.) pour améliorer votre expérience utilisateur. Ces préférences sont stockées de manière robuste via votre système d'exploitation avec l'outil de mémoire locale et ne sont jamais téléversées : notre base de publication (point 5) ne reçoit **aucune** écriture de l'application, par construction.
 
+**4 bis. Documents que vous rangez dans l'onglet Scolarité**
+Les pièces que vous ajoutez vous-même (certificats de scolarité, attestations, etc.) **restent sur l'appareil, dans l'espace privé de l'application, et ne sont envoyées nulle part.** Cet espace est isolé des autres applications par votre système d'exploitation, et couvert par le chiffrement de l'appareil lorsque celui-ci est verrouillé. Nous n'écrivons pas « chiffrés par UKit » : une clé qui vivrait à côté du fichier ne protégerait de rien, et le véritable rempart est celui de votre système.
+
+Ces fichiers ne sont **jamais téléversés**, ni vers notre base de publication, ni vers un tiers. L'application ne les récupère pas non plus automatiquement depuis votre portail universitaire : vous les ajoutez vous-même. Ouvrir une pièce passe par la feuille de partage de votre système — si vous y choisissez une destination distante, c'est votre décision, pas la nôtre. Supprimer une pièce dans l'application la supprime de l'appareil ; désinstaller l'application les supprime toutes.
+
 **5. Appels réseau et services tiers**
 Afin de vous fournir des informations actualisées, UKit Bordeaux effectue des requêtes anonymisées vers les services suivants :
 *   **API UKit :** Pour télécharger les emplois du temps des groupes que vous avez sélectionnés (requêtes anonymes basées sur le code du groupe).

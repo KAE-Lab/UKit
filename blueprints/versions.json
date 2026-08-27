@@ -40,13 +40,13 @@
         "version": "2"
     },
     "ukit.portail.bordeaux.dossier": {
-        "version": "2"
+        "version": "5"
     },
     "ukit.portail.bordeaux.messagerie": {
-        "version": "1"
+        "version": "3"
     },
     "ukit.portail.bordeaux-inp.dossier": {
-        "version": "3"
+        "version": "6"
     },
     "ukit.portail.bordeaux-inp.edt": {
         "version": "4",
@@ -55,5 +55,11 @@
     "ukit.portail.bordeaux-inp.edt.annee": {
         "version": "1",
         "min_engine": "0.5.4"
+    },
+    "ukit.portail.deconnexion": {
+        "version": "1"
+    },
+    "ukit.portail.verification": {
+        "version": "1"
     }
 }

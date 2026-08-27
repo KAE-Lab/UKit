@@ -57,37 +57,43 @@ d'identifiants se corrige en retapant son mot de passe, un portail muet se corri
 
 ![L'échec de session : le portail ne répond pas, avec son bouton Réessayer](../screenshots/scolarite-echec.png)
 
-## Ce que la page doit montrer
+## Ce que la page montre
 
-> **Décidé le 2026-08-13, pour la v6.** L'onglet ne montre aujourd'hui qu'une salutation et une ligne
-> de messagerie — le reste de l'écran est vide. Cette section dit ce qu'il portera, et sert de cadrage
-> à la session de refonte du volet 2 ([6-K](../phase-6/6-k-socle-visuel.md)). Elle décrit une **première
-> version assumée**, pas un état final : ce qui manque est écrit plus bas plutôt que promis.
+> **Décidé le 2026-08-13, livré le 2026-08-25** par la première session d'écran du volet 2. Avant
+> elle, l'onglet ne montrait qu'une salutation et une ligne de messagerie — le reste était vide, et
+> chez un établissement sans portail publié il n'y avait *rien du tout*.
 
 ### Trois natures, trois sections — et ne pas les mélanger
 
-L'erreur qui guette cet écran est d'aligner six tuiles qui se ressemblent alors qu'elles ne font pas
-la même chose. Une grille de widgets indifférenciés se lit comme un brouillon ; trois sections dont
-l'intention est nommée se lisent comme une décision.
+L'erreur qui guettait cet écran était d'aligner six tuiles qui se ressemblent alors qu'elles ne font
+pas la même chose. Une grille de widgets indifférenciés se lit comme un brouillon ; trois sections
+dont l'intention est nommée se lisent comme une décision.
 
 | Section | Nature | Ce qui la remplit |
 |---|---|---|
-| **Mon compte** | ce que l'application **sait** de l'étudiant | des données extraites par Blueprint — donc qui peuvent manquer, échouer, ou être absentes chez un établissement |
-| **Mes services** | ce que l'étudiant peut **ouvrir** | des portes vers le navigateur intégré : aucune extraction, aucune panne possible |
-| **Mes documents** | ce que l'étudiant a **rangé** | des fichiers locaux, qui n'ont rien à voir avec le portail |
+| **Ton dossier** | ce que l'application **sait** | des données extraites par Blueprint — donc qui peuvent manquer, échouer, ou être absentes chez un établissement |
+| **Tes services** | ce que l'étudiant peut **ouvrir** | des portes vers le navigateur intégré : aucune extraction, aucune panne possible |
+| **Tes documents** | ce que l'étudiant a **rangé** | des fichiers locaux, qui n'ont rien à voir avec le portail |
 
-### Mon compte
+### Ton dossier
 
-- **L'identité** — prénom, numéro étudiant, et le reste du dossier. Ces quatre champs sont **déjà lus**
-  au parcours froid et ne s'affichent aujourd'hui que dans l'écran des identifiants ; les remonter ici
-  ne coûte aucun Blueprint. Une ligne discrète plutôt qu'une grande carte : un numéro étudiant se
-  regarde une fois par an.
-- **La messagerie** — le nombre de messages non lus, et l'ouverture du webmail au toucher. Elle existe
-  déjà ; c'est le **modèle** de ce qu'est une ligne qui porte à la fois une donnée et une porte.
-  Elle **disparaît** chez un établissement sans messagerie extractible, sans le moindre échec affiché
-  (voir [Un établissement peut n'avoir qu'une partie des services](#un-établissement-peut-navoir-quune-partie-des-services)).
+Trois rangées, et **aucune n'est une porte** : c'est l'en-tête de section qui porte le chevron et
+mène à la fiche complète. C'est la règle du dépôt appliquée — *une information se lit, elle ne se
+déclenche pas* — et ça évite trois cibles qui mèneraient toutes au même écran.
 
-### Mes services
+**Une seule rangée : la formation courante** — son intitulé, son année, et l'intitulé long en
+sous-titre. Lue dans *Inscriptions* à Bordeaux, dans *Parcours* à l'INP.
+
+**Le numéro étudiant et la fraîcheur ont quitté cet écran**, et ce n'est pas un allègement
+cosmétique : le tableau de bord est **dédié aux services**, et l'écran du compte est devenu l'endroit
+où l'on va chercher une information d'état civil — c'est ce que dit son bouton de barre d'onglets,
+« Compte » et non plus « Déconnexion ». Le numéro s'y **copie d'un geste** ; la fraîcheur y vit à
+côté du bouton qui la corrige, ce qui la rend actionnable au lieu d'informative.
+
+Faute de formation lue — une entrée de trousseau écrite par une version antérieure — la section
+**disparaît entièrement** plutôt que d'afficher un en-tête au-dessus du vide.
+
+### Tes services
 
 Des portes, et rien d'autre : elles ouvrent le [navigateur intégré](#le-navigateur-intégré) sur une
 adresse. Elles ne peuvent pas échouer, elles ne demandent aucun Blueprint, et elles **viennent toutes
@@ -95,24 +101,21 @@ du catalogue** — colonne `services`, posée au jalon [6-G](../phase-6/6-g-etab
 
 | Porte | Bordeaux | Bordeaux INP |
 |---|---|---|
+| **Webmail** *(rangée à compteur)* | `webmel.u-bordeaux.fr` | — *(SAML, non extractible)* |
 | **ENT** | `ent.u-bordeaux.fr` | `ent.bordeaux-inp.fr` |
-| **Apogée** | `apogee.u-bordeaux.fr` | — *(l'INP est sur PC-Scol)* |
 | **Moodle** | `moodle.u-bordeaux.fr` | `moodle.bordeaux-inp.fr` |
-| **Webmail** | `webmel.u-bordeaux.fr` | — *(SAML, non extractible)* |
+| **Apogée** | `apogee.u-bordeaux.fr` | — *(l'INP est sur PC-Scol)* |
 
-Les deux plateformes Moodle ont été vérifiées le 2026-08-13 — « Plateforme pédagogique de l'université
-de Bordeaux » et « Moodle Bordeaux INP » — et ajoutées au catalogue.
+**La messagerie a perdu la section qu'elle avait pour elle seule.** Un en-tête « MESSAGERIE » au-dessus
+d'une unique rangée était une grammaire de plus, et il disparaissait en entier chez un établissement
+sans webmail extractible. Elle vit maintenant ici, parce que c'est ce qu'elle est : une porte, qui
+porte en plus un compteur. Elle **garde sa forme de rangée pleine largeur**, et ce n'est pas
+cosmétique — c'est elle qui lui permet d'afficher l'échec du parcours chaud et de mener à la
+ressaisie quand les identifiants sont refusés, deux comportements gagnés au jalon 6-K qu'une tuile
+rendrait illisibles.
 
-Conséquence à retenir, parce qu'elle décide de la manière de trancher : **ajouter ou retirer une porte
-est une ligne en base**, pas une release. Le doute sur Moodle — un étudiant qui a l'application
-officielle n'a pas besoin d'une WebView — se règle donc en la mettant, puis en la retirant si elle ne
-sert pas. Une réserve honnête : l'application ne portant **aucun outil de mesure d'usage**
-([PRIVACY.md](../../PRIVACY.md)), cette décision se prendra en demandant à des étudiants, pas en
-lisant une statistique.
-
-Un établissement qui ne déclare pas une adresse **n'affiche pas la porte**, et Bordeaux INP en est le
-cas réel : ni webmail extractible, ni Apogée. La grille de portes se construit donc **depuis le
-catalogue**, jamais depuis une liste écrite dans l'écran :
+Un établissement qui ne déclare pas une adresse **n'affiche pas la porte**. La grille se construit
+donc **depuis le catalogue**, jamais depuis une liste écrite dans l'écran :
 
 ```ts
 import { serviceEtablissement } from '../../shared/etablissements';
@@ -121,65 +124,276 @@ const adresse = serviceEtablissement('moodle');   // string | null
 // null  →  la porte ne s'affiche pas. Pas de tuile morte, pas de message d'erreur.
 ```
 
-C'est la même règle que la ligne de messagerie et que la section des salles libres : **ce qui n'existe
-pas chez cet établissement disparaît**, il ne s'affiche pas en panne. Un écran qui déclarerait quatre
-tuiles en dur enverrait un étudiant de l'INP sur l'Apogée de Bordeaux — le défaut exact que le jalon
-6-G a corrigé sur ces mêmes adresses.
+Deux limites documentées meurent ici : `ApogeeCard.tsx` était **défini et monté nulle part**, et le
+point d'entrée `apogee` n'était atteint par **aucun appel** de navigation. La carte est supprimée, et
+une rangée générique pilotée par le catalogue la remplace — *un export mort fait croire à une
+capacité*.
 
-### Mes documents
+### Tes documents
 
 Un endroit où l'étudiant range ses certificats de scolarité, attestations et autres pièces, pour les
 avoir **hors ligne** et les retrouver sans fouiller.
 
-C'est la seule partie de l'onglet qui **fonctionne sans compte**, et c'est un argument suffisant pour
-la livrer : aujourd'hui, la Scolarité ne sert à rien à qui ne se connecte pas.
+Elle fonctionne **techniquement** sans compte — ce sont des fichiers locaux — mais elle ne s'affiche
+pas sans compte, et c'est un arbitrage du propriétaire du produit du 2026-08-27, contraire au premier.
 
-**Une correction à faire dès maintenant sur le stockage**, parce que la formulation naturelle est
-fausse et qu'elle finirait dans la politique de confidentialité : ces fichiers **ne peuvent pas** aller
-dans le trousseau. `expo-secure-store` est fait pour de petites valeurs — quelques kilo-octets — et
-refuserait un PDF. Ils vont dans le **répertoire privé de l'application**
-(`expo-file-system`, à ajouter en dépendance), qui est isolé des autres applications et couvert par le
-chiffrement de l'appareil quand celui-ci est verrouillé.
+La première version la rendait sans condition, pour une raison qui tenait : l'onglet ne servait à rien
+à qui ne se connectait pas, et rien du tout chez un établissement sans portail. À l'usage, un onglet
+qui montre **une seule section sous un encart d'invitation** se lit moins bien qu'un onglet
+franchement vide, qui ne propose qu'une chose — se connecter. C'est **tout ou rien**.
 
-La formulation exacte, à reprendre telle quelle dans la politique : *les documents restent sur
-l'appareil, dans l'espace privé de l'application, et ne sont envoyés nulle part.* Écrire « chiffrés par
-UKit » serait faux — une clé qui vivrait à côté du fichier ne protège de rien, et le vrai rempart est
-celui de l'OS.
+La conséquence est assumée : chez « Autre université », l'onglet redit qu'il n'est pas pris en charge
+et s'arrête là.
 
-Pour la v6, **l'étudiant ajoute ses documents lui-même**. Les récupérer automatiquement depuis le
-portail est hors de portée aujourd'hui : le dossier de Bordeaux INP a bien un onglet « Documentation »,
-mais un Blueprint ne sait pas **télécharger un fichier binaire** — Act II n'écrit pas de fichier, et
-l'extraction texte livrée au jalon 3-I d'Aetherius ne rend que du texte décodé. Ce serait un manque à
-traiter dans le dépôt voisin, pas ici.
+Ces fichiers vont dans le **répertoire privé de l'application** (`expo-file-system`), isolé des
+autres applications et couvert par le chiffrement de l'appareil quand celui-ci est verrouillé. **Pas
+dans le trousseau** : `expo-secure-store` est fait pour de petites valeurs — quelques kilo-octets —
+et refuserait un PDF.
 
-### Ce qui n'y est pas, et pourquoi
+La formulation exacte, reprise telle quelle dans [PRIVACY.md](../../PRIVACY.md) : *les documents
+restent sur l'appareil, dans l'espace privé de l'application, et ne sont envoyés nulle part.* Écrire
+« chiffrés par UKit » serait faux — une clé qui vivrait à côté du fichier ne protège de rien, et le
+vrai rempart est celui de l'OS.
 
-- **Les notes.** Elles sont probablement ce qu'un étudiant vient chercher, et c'est justement pour ça
-  qu'elles ne s'improvisent pas : chez Bordeaux elles vivent sur Apogée, un hôte séparé ; chez Bordeaux
-  INP, l'onglet « Parcours » du dossier est le candidat, mais son contenu n'a pas été regardé. En v6,
-  la **porte Apogée** les couvre. Le jour où on les extrait, ce sera un Blueprint par établissement —
-  publiable sans release — et un bloc de plus dans « Mon compte », qui, lui, demandera une version.
-- **Le calendrier des examens.** Même raison, en plus net : il n'est pas vérifiable en août, et il est
-  une sous-partie d'Apogée. Concevoir un bloc pour un contenu qu'on n'a jamais vu est exactement la
-  façon de devoir le refaire. Il passe par la porte Apogée en v6, et devient un sujet à part quand les
-  calendriers sont publiés et qu'on peut les lire pour de vrai.
+**Le répertoire est la liste.** Aucun index JSON n'est tenu en parallèle : ce serait deux vérités à
+réconcilier — un fichier supprimé par le système, un index qui le mentionne encore — pour ne gagner
+que des métadonnées que `info()` donne déjà.
 
-Ces deux reports ont la même logique, et elle vaut d'être retenue : **une porte est un engagement
-tenable tout de suite ; un bloc de données est un engagement qu'il faut pouvoir vérifier.**
+Trois dépendances : `expo-file-system` (le répertoire), `expo-document-picker` (importer),
+`expo-sharing` (ouvrir dans une autre application — afficher un PDF soi-même demanderait une
+dépendance de rendu pour refaire, moins bien, ce que le système fait déjà).
 
-### Ce que cette page ne demande pas comme machinerie
+**L'étudiant ajoute ses pièces lui-même**, et c'est une limite écrite. Voir
+[Ce qui n'est pas récupérable](#ce-qui-nest-pas-récupérable-et-pourquoi).
 
-Rien, ou presque — et c'est le bénéfice direct du jalon 6-G. Chaque variation est déjà portée :
+### L'aiguillage s'est inversé, et c'est le changement structurant
 
-- un service absent **se dit** ou disparaît, sans échec (`serviceAbsent`, `messagerieDisponible`) ;
-- les adresses des portes viennent du catalogue, donc changent sans release ;
-- le verrou biométrique, le stockage chiffré des identifiants et le navigateur intégré existent.
+L'écran rendait un état **plein écran** et rien d'autre dès que la session n'était pas nominale.
+Depuis que les documents existent — locaux, sans compte, sans portail — cacher toute la page derrière
+un écran d'erreur rendrait l'onglet mort pour exactement ceux à qui il sert le plus.
 
-Ce qui reste à ajouter est **`expo-file-system`** et l'écran de documents. Le reste est de la mise en
-page.
+| Situation | Avant | Après |
+|---|---|---|
+| Aucun portail publié | `PORTAIL_ABSENT` plein écran | **« Campus non pris en charge »**, avec une action de demande |
+| Aucun compte | `ScolariteLoginView` plein écran | une invitation à connecter, **et rien d'autre** |
+| Échec bloquant | `SourceFailureNotice` plein écran | l'encart d'échec en tête, **puis les documents** |
+| **Parcours froid en cours** | plein écran | **inchangé** |
 
-La capture `scolarite-dashboard.png`, volontairement différée plus haut, se prend **après** cette
-refonte : c'est précisément l'écran dont l'habillage devait changer.
+La dernière ligne est délibérée : le parcours froid est *transitoire*, et une page qui se remplirait
+sous un indicateur de progression ferait sauter le contenu à chaque étape franchie.
+
+**Le verrou biométrique suit la même logique** : il ne s'arme que lorsqu'un compte est enregistré.
+Sans compte il n'y a rien à protéger dans cet onglet — l'identité n'a pas été lue — et demander une
+empreinte pour atteindre ses propres fichiers serait un péage sans serrure derrière.
+
+### Le tableau de bord est dédié aux services
+
+La formation y a vécu une journée, puis elle a rejoint l'écran du compte. C'est une information d'état
+civil : on la consulte, on n'agit pas dessus — et la garder sur le tableau de bord obligeait à poser un
+en-tête de section au-dessus d'une **rangée unique**. Le tableau de bord se réduit donc à la
+salutation, l'encart d'état, les services et les documents.
+
+**L'écran du compte est devenu le lieu de ce qu'on va chercher**, et son bouton de barre d'onglets le
+dit : « Compte », plus « Déconnexion ». Il porte l'état civil, la formation, l'INE, les identifiants,
+la date de dernière lecture, et les trois gestes.
+
+### Trois chaînes se copient, et ce sont les bonnes
+
+Le numéro étudiant, l'INE et l'adresse universitaire portent un bouton de copie. Ce sont exactement
+les chaînes qu'on redemande à un étudiant et qu'il ne retient pas — inscription en bibliothèque,
+feuille d'examen, formulaire administratif. Le bouton **ne s'affiche que s'il y a quelque chose à
+copier** : une icône au-dessus d'un tiret proposerait un geste sans effet. Le retour est un toast,
+parce qu'un presse-papiers est invisible : sans confirmation, rien ne distingue « copié » de « rien ne
+s'est passé ».
+
+### La progression s'affiche là où le geste est fait
+
+« Actualiser mon dossier » rejouait un parcours froid puis **fermait l'écran**. Le run se déroulait
+bien — il n'est annulé qu'au passage en arrière-plan, jamais par un changement d'écran — mais **rien
+ne le montrait** en dehors de l'onglet Scolarité, seul endroit qui rendait l'écran de progression.
+Depuis les Réglages, on revenait donc aux Réglages et le geste paraissait sans effet, jusqu'à ce qu'on
+ouvre l'onglet et qu'on découvre une progression qui semblait commencer à cet instant.
+
+L'écran du compte rend maintenant la progression lui-même et **ne se ferme plus**. L'autre remède
+envisagé — renvoyer l'utilisateur vers l'onglet Scolarité — corrigeait le symptôme en *déplaçant la
+personne* : on touche une ligne dans les Réglages et on se retrouve dans un autre onglet.
+
+### Le formulaire ne cède plus la place à l'écran d'attente
+
+Se connecter faisait défiler deux pages : le formulaire, puis un écran de progression, puis la fiche.
+Chacune paraissait à moitié vide, et l'enchaînement se lisait comme une application qui hésite —
+d'autant qu'un échec obligeait à revenir en arrière pour retrouver ses champs.
+
+**Le formulaire porte donc sa propre progression** : le bandeau — logo, titre, phrase — reste, et
+seule la carte passe des champs à la barre. Une page qui se transforme se lit comme une suite, et un
+échec revient **là où la saisie a eu lieu**, sans qu'aucun écran ne soit rejoué en sens inverse.
+Le bloc est partagé ([`BlocProgression`](../../src/features/Scolarite/components/ScolariteLoadingScreen.tsx)) :
+l'écran plein n'en est qu'un second hôte.
+
+**L'ordre de l'aiguillage est le sujet**, et il a dû être inversé : l'écran plein était testé *avant*
+le formulaire, donc il le supplantait dès que la session partait — on retombait sur deux pages qui se
+remplacent. Ce qui reste à l'écran plein est le parcours froid qu'on n'a **pas** demandé depuis un
+formulaire : au lancement, ou sur « Actualiser mon dossier ». Il n'y a alors aucune page à garder.
+
+### Une seule règle : la page se transforme, elle ne se remplace pas
+
+Elle vaut désormais partout sur l'écran du compte, et il n'y a **plus aucun chargement plein écran**
+sur cet écran :
+
+| Situation | Ce qui change | Ce qui reste |
+|---|---|---|
+| Connexion en cours | la carte passe des champs à la barre | le bandeau : logo, titre, phrase |
+| Actualisation du dossier | les trois actions cèdent la place à la barre | la fiche : état civil, dossier, identifiants |
+
+Actualiser prenait l'écran entier : on perdait de vue ce qu'on était en train d'actualiser, et le
+retour de la fiche se lisait comme un changement de page. Les trois actions n'ont de toute façon aucun
+sens pendant un run — c'est exactement l'espace à leur prendre.
+
+**Un piège dans le premier cas, et il n'est pas évident.** `LOGIN_SUCCESS` est émis au dixième step
+sur vingt : les identifiants sont posés **dès que le CAS accepte**, donc `credentials` cesse d'être nul
+*en plein run*. La condition qui gardait le formulaire retombait à faux à mi-parcours, et l'écran
+basculait d'un coup. Le formulaire signale donc à son hôte qu'une session part **de lui**
+(`onDebut`), et garde la page jusqu'au terme — échec compris, puisque c'est là que son message doit
+s'afficher.
+
+### Le moteur se libère avant un geste qui doit pouvoir jouer
+
+`fermerSessionDistante` appelle le moteur **directement**, sans passer par le verrou d'un run — donc
+sans être mise en file, mais aussi sans être protégée : lancée pendant un run, elle est refusée par le
+moteur et **avale son échec**.
+
+L'enchaînement qui en découlait valait d'être démonté, parce que le symptôme ne ressemblait pas à sa
+cause : la session CAS restait ouverte, le parcours suivant ne voyait donc **aucun formulaire**, donc
+`LOGIN_SUCCESS` n'était pas émis, donc la validation se soldait en *« impossible de vérifier tes
+identifiants »* — sur des identifiants pourtant justes.
+
+`validateAndSave` **libère le moteur d'abord**, puis ferme la session distante, puis relance. Et
+« libérer » veut dire *attendre* : annuler ne rend pas le verrou tout de suite, l'abandon se propage
+au run dont le `finally` le rend au tour suivant. Repartir aussitôt faisait refuser la nouvelle
+session par ce verrou-là.
+
+Ce n'est **pas** la file d'attente que le module refuse : on ne met pas deux demandes concurrentes en
+attente l'une de l'autre, on laisse celle qu'on vient d'annuler finir de mourir.
+
+### Une demande explicite passe devant une session de fond
+
+« Une seule session à la fois » reste vrai, mais le refus sec traitait de la même façon deux choses
+différentes : un double appui accidentel, et quelqu'un qui demande « actualise mon dossier » pendant
+que le parcours chaud du lancement tourne encore. Le second se faisait refuser **en silence à
+l'écran**, avec pour seule trace un avertissement dans le terminal — le bouton paraissait mort.
+
+Une session portée par un **geste** — actualiser, valider des identifiants — remplace donc celle qui
+court. Le refus reste pour tout le reste.
+
+Deux précautions que ce remplacement impose, et qui ne se devinent pas :
+
+- **la remise à `null` de la session est synchrone.** Le `finally` du run remplacé ne s'exécute qu'au
+  tour suivant, et sa garde `=== controleur` l'empêche d'effacer la session qui vient d'arriver ;
+- **un run remplacé ne solde pas la validation de celui qui l'a remplacé.** Sans cette garde, l'écran
+  afficherait une erreur réseau sur une session qui se déroule parfaitement.
+
+### L'écran ne se referme plus tout seul, et c'était deux bugs
+
+Il se refermait après un `await`, ce qui supposait que la personne y était encore. Elle ne l'était
+plus, pour deux raisons indépendantes :
+
+- **à la déconnexion**, `logout` attend la fermeture de la session distante — quelques secondes.
+  L'interface, elle, s'est mise à jour bien avant : le formulaire est déjà affiché, et l'écran se
+  refermait **pendant qu'on retapait ses identifiants** ;
+- **à la connexion**, `LOGIN_SUCCESS` est émis au **dixième step sur vingt**. Le CAS a accepté, mais
+  le dossier, la formation et l'annuaire restent à lire : la promesse se résolvait à mi-parcours, et
+  l'écran se refermait avec dix secondes de run devant lui.
+
+Rester est aussi le bon comportement en soi : l'aiguillage de cet écran montre déjà la suite — la
+progression, puis la fiche, ou le formulaire après une déconnexion. Il n'y a rien à fuir.
+
+### Une validation en attente se solde toujours
+
+`finirValidation` n'était appelé que sur `LOGIN_SUCCESS` ou sur un échec. Depuis que l'`emit` est
+conditionnel, **un run qui va au bout sans formulaire ne résolvait plus rien** : la promesse restait
+pendante et la référence armée, si bien que le `LOGIN_SUCCESS` d'un run *ultérieur* la résolvait.
+
+Elle se solde désormais à la fin de chaque run, et en **échec** quand le CAS ne s'est pas prononcé :
+sans formulaire, les identifiants n'ont été vérifiés par personne et n'ont donc pas été écrits —
+annoncer un succès afficherait « connecté » sur un trousseau vide.
+
+### L'écran d'attente : une barre, un pourcentage, une ligne
+
+La liste d'étapes cochées était **plus informative**, et c'est justement ce qui la rendait mal adaptée
+ici : **on ne peut agir sur aucune de ces étapes.** « Récupération du dossier étudiant » ne dit rien
+d'utilisable à quelqu'un qui ne peut qu'attendre ; ce qu'il veut savoir, c'est *combien de temps
+encore*. Une liste de tâches sert quand on peut intervenir, ou quand les étapes veulent dire quelque
+chose pour celui qui regarde — ce n'est ni l'un ni l'autre. La ligne unique dit la même chose sans
+étaler quatre lignes dont trois sont grisées.
+
+**La barre ne saute jamais.** Une première version posait un *plancher* au changement d'étape : elle
+bondissait d'un coup, et les étapes quasi instantanées rendaient le saut très visible. Elle anime
+maintenant **toujours depuis sa position courante** vers le plafond de l'étape — un changement d'étape
+ne fait que changer la cible, jamais la position. Une étape qui passe en une seconde accélère la barre
+au lieu de la téléporter.
+
+Elle est portée par une `Animated.Value` : elle avance à la fréquence de l'écran, pas à celle des
+mises à jour d'état. La version d'avant se rafraîchissait quatre fois par seconde, ce qui suffit à se
+voir. Le pourcentage, lui, passe par un écouteur arrondi à l'entier — au plus cent mises à jour sur
+tout le parcours, là où suivre la valeur brute en rendrait des milliers pour un texte qui ne change
+pas.
+
+**Ce qu'elle s'autorise et ce qu'elle s'interdit.** Elle s'autorise à *lisser* : les durées sont
+estimées, donc elle avance sans savoir exactement où elle en est. Elle s'interdit les deux choses qui
+en feraient un mensonge — elle ne **recule** jamais, et elle n'atteint jamais le plafond d'une étape
+qui n'est pas finie. Les paliers ne sont pas équidistants, et c'est mesuré : la connexion et la
+messagerie portent les deux pauses d'authentification, le profil est instantané.
+
+### Le logo de l'établissement
+
+Le catalogue porte une colonne `logo_url` depuis le jalon 6-G, et **elle n'était lue nulle part** : la
+plomberie existait, la donnée manquait. Le formulaire de connexion l'affiche désormais.
+
+**Deux gabarits, parce que ce sont deux objets différents.** Un logo d'université est un *logotype* :
+large, plus proche du mot que du pictogramme. Mesuré le 2026-08-27, l'Université de Bordeaux est en
+**2,86:1** et Bordeaux INP en **1,69:1** — posés dans le carré de 72 prévu pour une icône, ils se
+réduisaient à 49 points de large sur 17 de haut, un timbre au milieu d'un grand carré blanc. Le
+conteneur est donc **large quand il porte un logo** et carré quand il porte l'icône de repli.
+
+**Fond blanc dans les deux thèmes**, comme le logo de UKit sur la page À propos. Un logo publié est
+fourni détouré sur transparent et dessiné pour du blanc : sur le fond de page en thème sombre, il
+devient illisible. Le teinter serait pire — ça ferait varier les couleurs d'une marque qu'on ne
+possède pas. Le rembourrage est **le nôtre** : les fichiers sont détourés à ras du tracé, sans marge.
+
+Le **repli sur l'icône générique** couvre les trois cas : aucun logo publié, un logo qui ne se charge
+pas, et le premier lancement hors ligne. Le formulaire reste utilisable dans les trois, ce qui est la
+seule chose qui compte à cet endroit.
+
+Un logo peut servir **plusieurs établissements** : celui de l'Université de Bordeaux vaut pour le
+Collège Sciences et Technologies et vaudra pour les autres campus qui en dépendent. C'est pourquoi
+`logo_url` est une colonne par établissement et non un fichier par code — plusieurs lignes pointent
+sur le même objet sans le dupliquer.
+
+### Un campus non porté n'est pas une panne
+
+L'état d'un établissement sans portail publié empruntait la grammaire d'échec
+(`SourceFailureNotice`) : il disait « le portail ne répond pas » là où il n'y a **jamais eu** de
+portail à joindre. C'est désormais un **état vide**, avec ce qu'un état vide doit porter — une
+**action**, jamais un bouton Réessayer qui n'aurait rien à rejouer.
+
+L'action ouvre un formulaire de demande, et **son adresse vient du catalogue** (`services.adaptation`)
+: ajouter ou changer ce lien est une publication, pas une release. Sans lien publié, le message reste
+et l'action disparaît — mieux vaut dire honnêtement « pas encore » que proposer une porte fermée.
+
+### Ce qui n'est pas récupérable, et pourquoi
+
+- **Les documents du portail ne se téléchargent pas.** Un Blueprint ne sait pas écrire un fichier
+  binaire : l'Act II n'en écrit pas, et l'extraction texte du jalon 3-I ne rend que du texte décodé.
+  La sonde du 2026-08-25 a de plus montré que les PDF de Bordeaux INP — certificat de scolarité,
+  attestation de paiement, relevés de notes — portent une URL dont l'UUID **et** l'horodatage sont
+  régénérés à chaque rendu de page : même téléchargeables, ils ne seraient pas rejouables. Ce sont
+  des **portes**, jamais des données.
+- **Les notes ne sont pas encore extraites**, et elles le seront : la sonde du 2026-08-25 les a
+  trouvées **des deux côtés** (voir [Ce que la sonde a corrigé](#ce-que-la-sonde-du-2026-08-25-a-corrigé)).
+  Elles font l'objet de leur propre session : ce n'est pas une rangée mais un écran — résultats par
+  année, détail par UE derrière un clic, échelles `/20` et `/200` qui cohabitent, hiérarchie
+  BCC → UE → CC/EX portée par l'indentation du libellé. Les mêler à une session de refonte l'aurait
+  rendue invérifiable. En attendant, la **porte Apogée** les couvre à Bordeaux.
 
 ## Architecture
 
@@ -193,18 +407,24 @@ CredentialsProvider                     englobe toute la pile de navigation
        └─ les deux : ukit.scolarite.messagerie → non lus
 
 ScolariteDashboard                      consomme useCredentials()
-  ├─ aucun portail publié    → SourceFailureNotice (PORTAIL_ABSENT)
-  ├─ pas de compte           → ScolariteLoginView
-  ├─ parcours froid en cours → ScolariteLoadingScreen
-  ├─ échec sans identité     → SourceFailureNotice
-  └─ sinon                   → BiometryGate > GreetingBlock + MailboxRow
+  ├─ parcours froid en cours → ScolariteLoadingScreen        (le seul etat plein ecran)
+  └─ sinon                   → [BiometryGate si compte] > PageScolarite
+                                  ├─ GreetingBlock          (si une identite est lue)
+                                  ├─ EncartSession          (portail absent / pas de compte / echec)
+                                  ├─ DossierSection         (formation, numero, fraicheur)
+                                  ├─ ServicesSection        (messagerie + portes du catalogue)
+                                  └─ DocumentsSection       (local — toujours, sans condition)
 ```
 
-**L'absence de portail passe devant l'absence de compte**, et l'ordre n'est pas indifférent — c'est le
-même raisonnement que l'onglet Planning au jalon 6-G, appliqué ici au jalon 6-J. Un établissement qui
-ne publie aucun portail n'a **jamais** d'identifiants enregistrés : la branche « pas de compte »
-gagnait donc toujours, et proposait un formulaire de connexion qui ne pouvait mener nulle part. C'est
-la condition pour qu'une université sans portail soit utilisable plutôt que menteuse.
+**L'absence de portail passe devant l'absence de compte** dans `EncartSession`, et l'ordre n'est pas
+indifférent — c'est le même raisonnement que l'onglet Planning au jalon 6-G, appliqué ici au jalon
+6-J. Un établissement qui ne publie aucun portail n'a **jamais** d'identifiants enregistrés : la
+branche « pas de compte » gagnait donc toujours, et proposait un formulaire de connexion qui ne
+pouvait mener nulle part. C'est la condition pour qu'une université sans portail soit utilisable
+plutôt que menteuse.
+
+Ce qui a changé, c'est que ces états ne **prennent plus l'écran** : ce sont des encarts, et les
+documents restent atteignables dessous (voir [L'aiguillage s'est inversé](#laiguillage-sest-inversé-et-cest-le-changement-structurant)).
 
 Il n'y a **plus de WebView propre à cet onglet** : les deux Blueprints sont joués dans la WebView
 unique montée par [`rootContainer.tsx`](../../src/shared/navigation/rootContainer.tsx), qui ne crée
@@ -218,7 +438,7 @@ soient prêtes quand l'utilisateur y arrive.
 
 | Blueprint | Quand | Ce qu'il rend |
 |---|---|---|
-| [`ukit.portail.bordeaux.dossier`](../../blueprints/ukit-portail-bordeaux-dossier.blueprint.json) | premier login | numéro étudiant, INE, identité, adresse mail, date de naissance |
+| [`ukit.portail.bordeaux.dossier`](../../blueprints/ukit-portail-bordeaux-dossier.blueprint.json) | premier login | numéro étudiant, INE, identité, adresse mail, date de naissance, **formation**, appartenances d'annuaire |
 | [`ukit.portail.bordeaux.messagerie`](../../blueprints/ukit-portail-bordeaux-messagerie.blueprint.json) | chaque lancement, et fin du parcours froid | nombre de messages non lus |
 
 **Les noms viennent du catalogue**, plus de constantes, depuis le jalon
@@ -264,20 +484,30 @@ au premier que par sa forme :
 |---|---|---|
 | Soumission du CAS | `input[type=submit]` | **`<button id="submitBtn">`** |
 | Panneau d'erreur | `#loginErrorsPanel` | **le même** |
-| Dossier | `mondossierweb` **GWT**, `#gwt-uid-NN` positionnels | `mondossierweb` **Vaadin**, couples ancrés **par leur libellé** |
+| Dossier | `mondossierweb` **Vaadin 8** (thème Valo) | `mondossierweb` **Vaadin 14+** (PC-Scol) |
+| Ancrage des champs | **par leur libellé** *(depuis le 2026-08-25)* | **par leur libellé** |
+| Navigation entre vues | on **clique** un menu à état serveur | de vraies routes (`/acces`, `/inscriptions`) |
 | Identité | `PRÉNOM NOM` en un champ | nom et prénom séparés, recomposés par le fichier |
-| INE | lu | absent du dossier |
-| Durée du parcours froid | ~40 s | ~12 s |
+| INE | état civil | **onglet Accès** |
+| Formation | vue *Inscriptions*, un tableau | vue *Parcours*, une carte par année |
+| Durée du parcours froid | ~46 s | ~24 s |
 
 Ce que ça établit, et qui vaut pour tous les portails à venir : **c'est la sortie qui est le
-contrat.** Les deux fichiers rendent les mêmes cinq champs, `ScolariteMapping` n'a pas bougé d'une
-ligne, et les écrans ne savent toujours pas qu'il existe deux portails.
+contrat.** Les deux fichiers rendent les mêmes champs, et les écrans ne savent toujours pas qu'il
+existe deux portails.
+
+Une nuance est apparue en ajoutant la formation, et elle vaut d'être écrite : **les deux portails ne
+rendent pas la même *forme*.** Une lecture obligatoire descend en `as: "text"`, qui lève si le nœud
+manque ; une lecture **bonus** descend en `as: "list"`, qui rend `[]` et ne lève jamais. L'INE en est
+l'illustration — obligatoire à Bordeaux, facultatif à l'INP où il vit sur un onglet à part.
+`premierTexte` ramène les deux à une chaîne, dans le seul module qui en a le droit. Normaliser là
+plutôt que dans les fichiers évite d'imposer à un portail la fragilité de l'autre.
 
 ## Données froides et données chaudes
 
 | | Données froides | Données chaudes |
 |---|---|---|
-| Contenu | prénom, numéro étudiant, INE, adresse mail, date de naissance | nombre de messages non lus |
+| Contenu | prénom, numéro étudiant, INE, adresse mail, date de naissance, **formation et son année**, **date de lecture** | nombre de messages non lus |
 | Stabilité | ne changent pas d'une année sur l'autre | changent en permanence |
 | Stockage | SecureStore (`UKIT_COLD_DATA`) | mémoire seulement |
 | Récupération | une seule fois, au premier login | à chaque lancement |
@@ -285,6 +515,16 @@ ligne, et les écrans ne savent toujours pas qu'il existe deux portails.
 C'est ce qui permet le mode « chaud » : une page lourde évitée à chaque démarrage. Le mode est
 choisi automatiquement à l'initialisation — `hot` si des données froides existent, `cold` sinon — et
 forcé à `cold` lors d'un nouveau login.
+
+**Les quatre champs ajoutés le 2026-08-25 sont facultatifs dans le type**, et le compilateur le dit :
+une entrée de trousseau écrite par une version antérieure ne les porte pas. Les déclarer obligatoires
+ferait mentir le type sur des données qui existent déjà sur les appareils, et l'écran afficherait un
+libellé vide au lieu de faire disparaître sa ligne. **Personne n'est déconnecté par cet ajout** : les
+clés historiques n'ont pas bougé, et un dossier ancien se complète au prochain « Actualiser ».
+
+La **date de lecture** est posée par l'appelant (`ScolariteSession`), jamais lue dans la projection :
+`ScolariteMapping` ne connaît ni l'heure ni la plateforme, et c'est ce qui le garde rejouable sous
+vitest.
 
 ## États de session
 
@@ -345,21 +585,209 @@ abonnements. Trouvé sur appareil au jalon 6-G.
 Une session annulée **n'écrit rien**. Le cas qui l'impose n'est pas théorique : une déconnexion
 pendant la session remettrait dans le trousseau l'identité que `logout` vient d'effacer.
 
-## Le filet que le code d'origine n'avait pas
+## Ce que la sonde du 2026-08-25 a corrigé
 
-Les identifiants GWT du dossier sont attribués selon l'ordre de construction du DOM. La migration ne
-les rend **pas** robustes. Ce qu'elle ajoute, c'est la lecture des **cinq libellés voisins** et leur
-assertion :
+Une sonde de reconnaissance a ouvert les deux dossiers avec des comptes réels — 5 connexions côté
+Bordeaux, **2** côté INP dont le compte est prêté — et dumpé leur DOM pour l'analyser hors ligne.
+Elle a corrigé **trois affirmations de cette documentation** et supprimé la fragilité que la Phase 6
+désignait comme la plus sérieuse du projet.
 
-```json
-{ "action": "assert",
-  "condition": "{{ steps.dossier.libelle_numero == 'Dossier' and … }}" }
+### Les deux portails sont des Vaadin
+
+Ce document opposait « `mondossierweb` **GWT** » à « `mondossierweb` **Vaadin** ». C'est inexact, et
+ça masquait leur symétrie : Bordeaux est un **Vaadin 8** (thème Valo) dont le moteur client est
+*compilé par GWT* — d'où les `gwt-uid-NN` — et l'INP un **Vaadin 14+** en composants web. Même
+famille, deux générations.
+
+### Les sélecteurs positionnels ont disparu
+
+Les cinq `#gwt-uid-41/43/45/47/51` étaient attribués selon l'ordre de construction du DOM, et ce
+document les appelait *« la fragilité la plus sérieuse du projet »*. Ils n'existent plus : chaque
+champ vit dans une ligne de `v-formlayout` qui **porte sa légende**, exactement comme chez l'INP.
+
+```
+//tr[contains(@class,'v-formlayout-row')]
+   [td[contains(@class,'v-formlayout-captioncell')][normalize-space()="NNE"]]
+   /td[contains(@class,'v-formlayout-contentcell')]
 ```
 
-Un décalage devient un **échec nommé** au lieu d'une donnée fausse écrite dans le trousseau. Le
-libellé `Prénom et Nom` sert deux fois : il garde l'extraction, et c'est lui qui autorise à prendre
-le premier mot de l'identité comme prénom — sans lui, l'ordre serait une supposition, et une
-supposition sur un nom propre s'affiche en toutes lettres sur le tableau de bord.
+Vérifié hors ligne sur le DOM capturé : **11 libellés testés, 11 nœuds uniques.** Un décalage du DOM
+ne peut donc plus rendre *la mauvaise valeur* — il ne rend plus *rien*, et l'extraction échoue
+bruyamment.
+
+**Le piège, à connaître avant de « simplifier » ces XPath** : une ligne porte **trois** cellules —
+légende, **erreur**, contenu. Un `following-sibling::td[1]` tombe sur la cellule d'erreur, vide.
+C'est ce qui a fait échouer le premier essai de la sonde.
+
+**L'`assert` a maigri en conséquence.** Les cinq libellés voisins n'ont plus à être lus puisqu'ils
+*sont* les sélecteurs. Il ne garde que le cas qu'un ancrage par libellé ne couvre pas : un libellé
+présent au-dessus d'une valeur **vide**, qui écrirait un dossier creux dans le trousseau.
+
+Et l'attente qui prouve la connexion a suivi : `#gwt-uid-41` cède la place à
+`td.v-formlayout-contentcell`. En CSS et non en XPath, parce que `wait_for` ne lit pas
+`selector_type` côté moteur Python — c'est le dernier identifiant positionnel à quitter le chemin
+critique.
+
+### L'INE de Bordeaux INP existe
+
+Ce document écrivait : *« Bordeaux INP ne rend pas d'INE : son dossier ne l'expose pas. »* Faux. Il
+est sous l'onglet **Accès**, libellé `Code INE`, que le Blueprint ne visitait pas. Le champ est
+désormais rempli des deux côtés.
+
+### « Documentation » n'est pas un onglet de documents
+
+Ce document écrivait que *« le dossier de Bordeaux INP a bien un onglet "Documentation" »*, en
+supposant des fichiers. C'est un **lien externe** vers une page d'aide de l'ENT. Les vrais PDF sont
+dans *Parcours*, et ils ne sont pas stockables — voir
+[Ce qui n'est pas récupérable](#ce-qui-nest-pas-récupérable-et-pourquoi).
+
+### Deux garde-fous appris en écrivant ces Blueprints
+
+Ils ne se devinent pas à la relecture, et chacun coûte un run entier :
+
+- **un step gardé par `when` n'enregistre aucune sortie**, donc le bloc `outputs` qui le référence
+  lève en `StrictUndefined`. Une lecture facultative se protège par `as: "list"` — qui rend `[]` et
+  ne lève jamais — et non par une garde ;
+- **le moteur embarqué refuse un clic ambigu** là où Playwright prend le premier. Tout sélecteur de
+  `click` doit matcher **exactement un** élément, et ça se mesure.
+
+## Le navigateur intégré s'ouvre déjà authentifié
+
+**Décidé et mesuré le 2026-08-25.** C'était l'une des promesses de garder des identifiants
+enregistrés, et elle n'était pas tenue : ouvrir l'ENT, Moodle ou le webmail retombait sur un
+formulaire de connexion, que le script injecte remplissait en interrogeant la page toutes les
+100 ms.
+
+**La cause n'était pas là où on la cherchait, et le remède n'est pas un Blueprint de plus.** Le
+moteur ouvre sa WebView en **incognito** — `options.session.persist` vaut `false` par défaut — donc
+le ticket CAS que le parcours vient d'obtenir est *jeté* à la fin du run. Il y avait une session
+valide, elle était détruite trois secondes plus tard.
+
+Deux lignes suffisent, et elles vont par paire :
+
+| Où | Quoi | Pourquoi |
+|---|---|---|
+| les trois Blueprints de portail | `options.session.persist: true` | le ticket survit au run et atterrit dans le magasin de cookies de la plateforme |
+| [`WebBrowserScreen`](../../src/features/Scolarite/screens/WebBrowserScreen.tsx) | `sharedCookiesEnabled`, `thirdPartyCookiesEnabled` | sur iOS, `WKWebView` n'utilise le magasin partagé que si on le demande — sans ça, l'écran repartirait d'un magasin vide malgré une session ouverte à côté |
+
+**C'est un gain de sécurité, pas une concession.** Le mot de passe cesse d'être injecté dans une page
+pour le cas courant. Le script de remplissage **reste** et n'est pas redondant : un ticket CAS expire,
+et c'est lui qui rattrape ce cas-là.
+
+### La connexion est devenue conditionnelle, et il le fallait
+
+Persister la session a immédiatement cassé le parcours chaud, et le symptôme était trompeur :
+
+```
+ukit.portail.bordeaux.messagerie : blocked [CAS_INDISPONIBLE]
+  — wait_for timed out for selector "#username"
+```
+
+**C'est la preuve que ça marche.** Avec une session vivante, le CAS reconnaît le ticket et renvoie
+*directement* au service : il n'affiche **aucun formulaire**, donc attendre `#username` échoue après
+20 s d'attente inutile. Les trois Blueprints de portail demandent désormais à la page s'il y a un
+formulaire — `as: "count"`, qui ne lève jamais — et ne jouent le bloc de connexion que dans ce cas.
+
+| Branche | Ce qui se joue | Code d'échec de la cible |
+|---|---|---|
+| `formulaire > 0` | remplissage, clic, pause d'après-clic, garde `#loginErrorsPanel` | `LOGIN_FAILED` / `MESSAGERIE_INDISPONIBLE` |
+| `formulaire == 0` | rien — on est déjà passé | **`CAS_INDISPONIBLE`** : ni formulaire ni cible veut dire que le portail n'a rien rendu |
+
+Deux gains au passage : la pause d'après-clic — **15 s** sur la messagerie — n'est plus payée quand on
+n'a pas eu à s'authentifier ; et la distinction de diagnostic que la phase a mis sept jalons à
+construire est préservée au lieu d'être aplatie sur un seul code.
+
+**La sonde d'attente vaut 6 s et non 3.** La mesure du 2026-08-24 donne **2834 ms pour la seule
+navigation** depuis un poste filaire, et c'est le meilleur cas. Sous-estimer ce délai ferait conclure
+« pas de formulaire » à une page qui allait en afficher un.
+
+### Le piège que cette garde a révélé : une revalidation pouvait écrire un mot de passe faux
+
+`LOGIN_SUCCESS` est ce qui autorise l'application à écrire les identifiants dans le trousseau — il
+veut dire *« le CAS a accepté ce couple »*. Avec une session vivante, le run traverse **sans que le
+CAS ait rien vérifié** : l'émettre là ferait enregistrer un mot de passe faux comme s'il était bon.
+
+Le cas n'est pas théorique, c'est exactement celui de **« Ressaisir mes identifiants »** : quelqu'un
+dont le mot de passe a changé tape le nouveau, une session de l'ancien est encore ouverte, et rien ne
+distingue le succès de l'inertie.
+
+Deux moitiés, et il faut les deux :
+
+- l'`emit` est **gardé sur la branche du formulaire** — il ne se produit que si le CAS s'est
+  réellement prononcé ;
+- `validateAndSave` **ferme la session distante avant de lancer le run**, de sorte que le formulaire
+  apparaisse et que la garde soit vraie. `finally` et non `then` : une fermeture qui échoue ne doit
+  pas empêcher quelqu'un de se reconnecter.
+
+**Les deux branches sont vérifiées contre le portail réel** (2026-08-27) : au premier passage la sonde
+compte `1` formulaire et la connexion se joue ; au second, session vivante, elle compte `0`, aucune
+étape de connexion ne s'exécute, et la boîte est relue sans reconnexion.
+
+### Prouver un couple d'identifiants ne se déduit pas, ça se demande
+
+C'est la correction la plus instructive de la session, parce qu'elle a démoli une déduction qui
+paraissait solide : *si le parcours traverse un formulaire, c'est que le CAS a accepté.*
+
+Elle est fausse dès que la session persiste. On a d'abord cru pouvoir la sauver en fermant la session
+distante avant toute validation — puisque sans session, le formulaire réapparaît. **Mesuré le
+2026-08-27, ça ne marche pas** : le CAS répond « Logout successful », et revenir sur `mondossierweb`
+passe quand même **sans formulaire**. Le service garde son **propre** cookie de session, que la
+déconnexion du CAS ne touche pas.
+
+Le parcours traversait donc sans que personne ne se prononce, `LOGIN_SUCCESS` n'était pas émis, et
+l'application soldait la validation en *« impossible de vérifier tes identifiants »* — sur des
+identifiants justes.
+
+La réponse est un paramètre du protocole, pas un contournement :
+[`ukit.portail.verification`](../../blueprints/ukit-portail-verification.blueprint.json) demande au
+CAS `renew=true`, ce qui le fait **redemander les identifiants même si un ticket vit**. La preuve
+cesse d'être déduite d'une absence de session pour devenir demandée.
+
+| | Avant | Après |
+|---|---|---|
+| Comment on prouve | on espère qu'un formulaire apparaisse | on **exige** qu'il apparaisse |
+| Si une session vit | rien n'est prouvé, et on l'ignore | le CAS redemande quand même |
+| Mauvais mot de passe | dépend du chemin | `LOGIN_FAILED`, toujours |
+
+Vérifié contre le portail réel, les deux cas, **avec une session vivante** : bon mot de passe →
+`LOGIN_SUCCESS` ; mauvais → `LOGIN_FAILED`, aucun émis.
+
+Le fichier est **générique et embarqué** : `/login` est le chemin d'Apereo — Bordeaux le sert sous
+`/cas` et y redirige en 308, l'INP à la racine — et les deux entrées viennent du catalogue. Une
+précaution y est écrite : le `service` arrive **déjà encodé**, parce que le filtre `urlencode` existe
+côté moteur Python et **pas** côté moteur embarqué. L'employer dans le fichier marcherait depuis un
+poste et nulle part ailleurs — la même classe de piège que les pseudo-classes de Playwright au jalon
+6-G.
+
+### Le pendant obligatoire : la déconnexion ferme la session distante
+
+Persister une session sans savoir la fermer serait une régression, pas une fonctionnalité : « se
+déconnecter » effacerait le trousseau **en laissant un navigateur intégré authentifié** au compte
+qu'on vient de retirer.
+
+[`ukit.portail.deconnexion`](../../blueprints/ukit-portail-deconnexion.blueprint.json) navigue vers
+`{{ inputs.cas }}/logout`. Trois choix s'y expliquent :
+
+- **viser le CAS plutôt que supprimer un cookie local** : le serveur invalide le ticket pour de bon,
+  là où une suppression locale laisse une session vivante qu'un autre client pourrait reprendre — et
+  ça ne coûte aucune dépendance de plus ;
+- **le fichier est générique et embarqué**, malgré son préfixe `ukit.portail.` : `/logout` est le
+  chemin d'Apereo CAS, le même produit chez les deux établissements, et la racine arrive **en
+  entrée** depuis le catalogue. Il ne déclare **aucun secret** : il n'a rien à authentifier ;
+- **il s'exécute après l'effacement local, et il ne lève jamais.** L'inverse laisserait quelqu'un dont
+  le portail ne répond pas *toujours connecté localement* — c'est-à-dire un bouton « Se déconnecter »
+  qui ne déconnecte pas.
+
+> **Limite mesurée le 2026-08-27, et elle vaut d'être écrite plutôt que découverte.** Fermer la
+> session **du CAS** ne ferme pas celle **des services** déjà ouverts : `mondossierweb` garde son
+> propre cookie, et le navigateur intégré peut donc encore l'atteindre après une déconnexion. Le
+> ticket est bien invalidé — un service qu'on n'a pas encore ouvert redemandera une authentification —
+> mais ceux qui l'étaient survivent.
+>
+> Fermer aussi les sessions de service demanderait soit de vider les cookies du navigateur, ce que ni
+> le moteur ni ce dépôt n'exposent, soit de visiter la déconnexion propre à chaque service, ce qui
+> serait une donnée de plus par établissement. Aucune des deux n'est faite ici, et la validation
+> d'identifiants **ne repose plus dessus** depuis qu'elle demande `renew=true`.
 
 ## Le navigateur intégré
 
@@ -383,10 +811,57 @@ bordelais compilé dans un écran : un étudiant d'une autre fac s'y serait retr
 Bordeaux. Un point d'entrée que l'établissement ne déclare pas retombe sur le site de UKit — le repli
 qui existait déjà pour un paramètre absent.
 
-**Remplissage automatique du formulaire CAS** : `getCASInjectedScript` scrute la page toutes les
-100 ms (50 tentatives, soit 5 s). Si des identifiants sont enregistrés et qu'aucune erreur n'est
-affichée, il remplit et soumet. Sinon, il pose un écouteur sur la soumission du formulaire pour
-**proposer d'enregistrer** les identifiants saisis à la main.
+**Le script injecté franchit deux pages, et elles ne se ressemblent pas.**
+`getPortalInjectedScript` scrute la page toutes les 100 ms (50 tentatives, soit 5 s).
+
+**1. Le formulaire du CAS.** Si des identifiants sont enregistrés et qu'aucun refus n'est affiché, il
+remplit et soumet. Sinon, il pose un écouteur sur la soumission pour **proposer d'enregistrer** les
+identifiants saisis à la main.
+
+**Ce n'est plus le chemin principal** depuis que la session persiste : le navigateur s'ouvre
+normalement déjà authentifié, et cette branche ne voit même pas la page. Elle reste pour ce qu'une
+session ne couvre pas — **un ticket CAS expiré**. C'est un filet, pas la règle.
+
+**2. La page de choix d'établissement.** Moodle à Bordeaux ne passe pas par le CAS mais par
+**Shibboleth**, et sa page d'entrée est une page de *découverte* : une liste de **56 établissements**
+dans laquelle il faut trouver le sien avant que la moindre authentification commence. Une session
+persistée n'y change rien — ce n'est pas une connexion, c'est un aiguillage — et c'est pourquoi cette
+branche existe. Elle coche au passage « se souvenir pour cette session », sans quoi la page revient à
+chaque service.
+
+Elle **ne tape aucun secret** : elle choisit une entrée dans une liste et soumet. Sa garde est donc
+**structurelle** plutôt que fondée sur l'URL, ce qui la rend portable à un autre WAYF : le select
+`#userIdPSelection` doit exister **et** contenir exactement l'identité publiée pour cet
+établissement. Sans identité publiée, elle ne fait rien — on ne devine pas la fac de quelqu'un dans
+une liste de 56.
+
+| | Identité Shibboleth | Parcours de Moodle |
+|---|---|---|
+| Bordeaux | `https://idp-ubx.u-bordeaux.fr/idp/shibboleth` | page WAYF, puis l'IdP |
+| Bordeaux INP | `https://sso.bordeaux-inp.fr/idp/shibboleth` | **pas de WAYF** — droit sur son CAS avec `gateway=true`, donc la session persistée suffit |
+
+L'identité vit dans le catalogue (`services.idp_shibboleth`) et **n'est pas une porte** : rien ne
+s'ouvre à cette adresse. C'est ce que la page attend qu'on lui désigne.
+
+Trois défauts y ont été corrigés le 2026-08-25, et aucun ne se voyait à la relecture :
+
+- **la porte ENT menait à un hôte qui n'existe plus.** `ent.u-bordeaux.fr` **ne résout pas** —
+  `NSURLErrorDomain -1003`, « A server with the specified hostname could not be found », à chaque
+  ouverture et **y compris en production**. Le portail vit sur `intranet.u-bordeaux.fr`, qui rebondit
+  sur le CAS avec son paramètre `service`. Le Blueprint du dossier visait déjà cet hôte pour
+  l'annuaire, et sa propre description écrivait que *« l'hôte du portail historique ne résout plus »*
+  — l'écran, lui, était resté sur l'ancien nom. Corrigé **par une publication de catalogue** ;
+
+- **l'hôte était écrit en dur.** La garde testait `cas.u-bordeaux.fr`, donc le remplissage n'a
+  **jamais** fonctionné pour un étudiant de Bordeaux INP, dont le CAS est `cas.bordeaux-inp.fr`.
+  C'était le dernier hôte bordelais compilé dans un écran, du même genre que les onze que le jalon
+  6-G a déterrés ; la racine vient désormais du catalogue ;
+- **la détection d'erreur ne discriminait rien, et empêchait le remplissage.** Le script cherchait
+  `.alert-danger`, `#msg.errors` et `.errors`. Or la mesure du 2026-08-09 dit deux choses : **il
+  n'existe aucun `#msg`** sur ce CAS, et **`.errors` existe déjà vide** sur la page propre. Le
+  troisième sélecteur répondait donc *toujours* — le script concluait « une erreur est affichée »,
+  sautait le remplissage, et se contentait de poser son écouteur. Le seul nœud mesuré comme
+  discriminant est `#loginErrorsPanel`, celui que les Blueprints emploient depuis 6-F.
 
 Les identifiants y passent par `JSON.stringify` depuis le jalon 6-F : ils étaient interpolés entre
 apostrophes simples, donc un mot de passe contenant `'` cassait le script — pas l'authentification,
@@ -420,6 +895,33 @@ quitter l'écran, et le geste de retour de la pile est désactivé tant qu'un hi
   en dur sur son bouton — deux règles du dépôt enfreintes au même endroit, et un rendu qui variait
   avec la police d'emoji du système.
 - La déconnexion coupe la session en cours **avant** de supprimer les deux clés SecureStore.
+
+## Où la biométrie est demandée, et où elle ne l'est pas
+
+Audité le 2026-08-27, après deux incohérences trouvées à l'usage.
+
+| Endroit | Demande ? | Pourquoi |
+|---|:---:|---|
+| L'onglet Scolarité | **oui**, une fois par lancement | il montre l'identité et la messagerie |
+| La fiche du compte | **oui**, la **même** porte | elle montre davantage : INE, date de naissance, état civil, identifiants |
+| Le formulaire de connexion | non | il n'y a rien à protéger avant d'avoir lu quoi que ce soit |
+| L'écran de progression | non | transitoire, et il ne montre rien |
+| Un établissement sans portail | non | il n'y a pas de compte |
+| Révéler le mot de passe | **oui, à chaque fois** | c'est le seul geste qui dévoile un secret, et il ne se mutualise pas |
+
+**Deux corrections, et la seconde fermait un contournement.**
+
+`authPassedRef` était un `useRef` **dans** le composant : il survit aux rendus, pas aux
+**démontages**. Or cette porte se démonte tout le temps — le tableau de bord la retire dès qu'un
+parcours froid prend l'écran, et la remonte après. On redemandait donc une empreinte après chaque
+actualisation du dossier, à quelqu'un qu'on venait d'identifier. Le drapeau vit désormais **au niveau
+du module**, ce qui est ce que « une fois par session d'application » voulait dire depuis le début.
+
+Et un module survit aussi d'un écran à l'autre, ce qui est le second effet voulu : **la fiche du
+compte partage la porte du tableau de bord.** Elle s'ouvrait sans rien demander depuis les Réglages —
+en montrant plus que l'onglet gardé — ce qui faisait du verrou un théâtre qu'il suffisait de
+contourner par un autre chemin. Franchir l'une ouvre l'autre : on ne paie pas une seconde demande,
+on ferme une porte dérobée.
 
 ## La biométrie se demande en deux temps
 
@@ -711,6 +1213,20 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
 - **Deux sessions coup sur coup** : la seconde est refusée, la première va au bout.
 - **Correction publiée** : `npm run blueprints:publish` après avoir corrigé un sélecteur — la session
   repart sans réinstaller l'application.
+- **Formation** : après un parcours froid, la rangée « Formation » porte l'intitulé de l'inscription
+  courante et son année, **des deux côtés**. Un dossier lu avant le 2026-08-25 ne la porte pas : c'est
+  le comportement voulu, et « Actualiser mon dossier » la fait apparaître.
+- **Libellé déplacé** : changer `Prénom et Nom` en `Prénom et Nom X` dans le Blueprint embarqué —
+  l'extraction doit **échouer bruyamment** (`data`, « Contenu introuvable ») et non écrire une valeur
+  décalée. C'est la sonde qui remplace l'ancien test de décalage GWT.
+- **Valeur vide sous un libellé présent** : l'`assert` déclenche, et **rien n'atteint le trousseau**.
+- **Documents** : ajouter une pièce, la rouvrir, la supprimer ; relancer l'application, elle est
+  toujours là. Ajouter **deux fois le même nom** — la seconde est suffixée, la première n'est pas
+  écrasée.
+- **Documents sans compte** : se déconnecter — la section reste, et aucune biométrie n'est demandée.
+- **Documents chez « Autre université »** : basculer dessus — l'encart dit que l'université n'est pas
+  reliée, **et les documents restent en dessous**. C'est la sonde de cette session : avant, l'onglet
+  était entièrement mort pour ces étudiants.
 - **Verrou biométrique** : quitter l'onglet et y revenir dans la même session — aucune nouvelle
   demande ; relancer l'application — la demande revient.
 - **Navigateur intégré** : ouvrir le webmail depuis la ligne de messagerie ; le formulaire CAS doit se
@@ -746,10 +1262,10 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 
 ## Limites connues
 
-- **Les sélecteurs restent positionnels** (`gwt-uid-41`, `-43`, `-45`, `-47`, `-51`). Ils ne sont pas
-  devenus robustes : ils sont devenus une **ligne de données corrigeable à distance**, et un décalage
-  produit désormais un échec nommé au lieu d'une donnée fausse. C'est déjà beaucoup, et ce n'est pas
-  la même chose.
+- **Le parcours froid s'est allongé** — d'environ 40 s à 46 s à Bordeaux, de 12 s à 24 s à l'INP.
+  C'est le prix de la formation et, à l'INP, de l'INE : chaque vue de plus est une navigation et une
+  pause de 6 s, calibrée pour un téléphone en cellulaire et non pour un poste filaire. Le délai n'est
+  payé **qu'au premier login**, et les lancements suivants sont des parcours chauds.
 - **Un mot de passe faux coûte environ 13 s.** Le script d'origine lisait le message d'erreur du CAS
   en deux secondes. Descendre plus bas demanderait d'interroger la page pendant la cascade de
   navigations qui suit la soumission — là où une opération se perd en silence, ce qui mettrait le
@@ -784,18 +1300,24 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   parenthèses vaut `0`, une boîte absente vaut « on ne sait pas ». Les deux ne s'affichent pas
   pareil, et le test [`ScolariteMapping.test.ts`](../../src/features/Scolarite/services/ScolariteMapping.test.ts)
   fige la distinction.
-- **Apogée n'est pas extrait**, pas plus qu'avant : il reste accessible par le navigateur intégré —
-  et c'est lui qui couvre les notes et le calendrier des examens en v6, faute d'avoir pu les lire.
-- **Les documents étudiants ne se récupèrent pas tout seuls.** Un Blueprint ne sait pas télécharger un
-  fichier binaire : Act II n'écrit pas de fichier, et l'extraction texte du jalon 3-I ne rend que du
-  texte décodé. L'étudiant ajoute donc ses pièces lui-même ; l'automatiser demanderait une capacité
-  de plus dans le dépôt voisin.
+- **Les notes ne sont pas extraites, et ce n'est plus faute de savoir où elles sont.** La sonde du
+  2026-08-25 les a trouvées des deux côtés, dans `mondossierweb` — la porte Apogée les couvre en
+  attendant, à Bordeaux. Elles font l'objet de leur propre session, pour une raison de vérifiabilité
+  et non de difficulté ([Ce qui n'est pas récupérable](#ce-qui-nest-pas-récupérable-et-pourquoi)).
+- **Les documents étudiants ne se récupèrent pas tout seuls**, et deux obstacles s'ajoutent au lieu
+  de s'annuler : un Blueprint ne sait pas écrire un fichier binaire, **et** les PDF que Bordeaux INP
+  publie portent une URL régénérée à chaque rendu de page. Lever le premier ne suffirait donc pas.
+- **Une pièce ajoutée s'ouvre par la feuille de partage du système**, pas dans l'application. Afficher
+  un PDF soi-même demanderait une dépendance de rendu pour refaire, moins bien, ce que le système
+  fait déjà. Le fichier ne quitte pas l'appareil tant que l'utilisateur ne choisit pas une
+  destination distante — ce que la feuille lui permet, et qui est sa décision.
+- **Rien ne borne le volume des documents.** Ni nombre, ni taille totale : le répertoire privé de
+  l'application est compté dans son stockage, et une pièce oubliée le reste. Un garde-fou demanderait
+  de décider quoi supprimer à la place de l'utilisateur.
 - **Le numéro étudiant de Bordeaux INP est lu par position** dans le bandeau latéral, faute d'un
   libellé pour l'ancrer — la seule fragilité positionnelle de ce portail. L'`assert` sur les libellés
   de l'état-civil est ce qui la garde : un décalage du bandeau accompagnerait une refonte de la page,
   donc de ces libellés.
-- **Bordeaux INP ne rend pas d'INE** : son dossier ne l'expose pas. Le champ reste vide plutôt que
-  d'être inventé.
 - **Pas de parité automatisée** pour ce module, et c'est assumé : elle demanderait des identifiants
   réels dans un harnais.
 - **Un échec de connexion depuis l'accueil ne se voit qu'après coup.** Le formulaire affiche bien son
@@ -803,9 +1325,6 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   avance sans lire n'apprend qu'en ouvrant l'onglet Scolarité que sa session n'est pas partie. C'est le
   prix de ne pas bloquer l'accueil sur une panne de portail, et c'est le bon arbitrage — mais il est
   écrit ici plutôt que découvert.
-- **[`ApogeeCard.tsx`](../../src/features/Scolarite/components/cards/ApogeeCard.tsx) n'est importé
-  nulle part** : la carte d'accès aux notes existe mais n'est pas branchée au tableau de bord.
-- **Le point d'entrée `apogee` du navigateur intégré n'est atteint par aucun appel** de navigation.
 - **La session rallonge le splash de démarrage.** `CredentialsProvider` enveloppe toute la pile
   ([`StackNavigator.tsx`](../../src/shared/navigation/StackNavigator.tsx)) et lance la session dès
   que le trousseau a rendu des identifiants, donc **à chaque lancement**. Le comportement est
@@ -828,7 +1347,7 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`screens/ScolariteDashboard.tsx`](../../src/features/Scolarite/screens/ScolariteDashboard.tsx) | écran d'onglet : aiguillage entre connexion, chargement, échec et tableau de bord |
 | [`screens/CredentialsSettingsScreen.tsx`](../../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | réglages du compte : informations enregistrées, déconnexion — et, **sans compte, le formulaire de connexion** plutôt qu'une fiche vide |
 | [`screens/WebBrowserScreen.tsx`](../../src/features/Scolarite/screens/WebBrowserScreen.tsx) | navigateur intégré : points d'entrée, historique, retour matériel, enregistrement d'identifiants |
-| [`components/WebBrowserComponents.tsx`](../../src/features/Scolarite/components/WebBrowserComponents.tsx) | barre d'action flottante, modale d'enregistrement, script de remplissage CAS |
+| [`components/WebBrowserComponents.tsx`](../../src/features/Scolarite/components/WebBrowserComponents.tsx) | barre d'action flottante, modale d'enregistrement, et le script injecté : formulaire CAS **et** page de choix d'établissement |
 | [`components/ScolariteLoginView.tsx`](../../src/features/Scolarite/components/ScolariteLoginView.tsx) | formulaire de connexion et explication du traitement des données. Partagé avec le [parcours d'accueil](onboarding.md), où il porte en plus une sortie « Plus tard » ([architecture.md](../architecture.md#dépendances-entre-features)) |
 | [`components/ScolariteLoadingScreen.tsx`](../../src/features/Scolarite/components/ScolariteLoadingScreen.tsx) | écran de progression du parcours froid, étape par étape |
 | [`components/BiometryGate.tsx`](../../src/features/Scolarite/components/BiometryGate.tsx) | verrou biométrique, une demande par session d'application |
@@ -836,4 +1355,12 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`shared/biometrie/index.ts`](../../src/shared/biometrie/index.ts) | la séquence en deux temps, les capacités de l'appareil, et la politique d'avant pour la sonde |
 | [`components/GreetingBlock.tsx`](../../src/features/Scolarite/components/GreetingBlock.tsx) | salutation, date du jour, détection d'anniversaire |
 | [`components/MailboxRow.tsx`](../../src/features/Scolarite/components/MailboxRow.tsx) | ligne de messagerie : compteur de non-lus, chargement, et échec du parcours chaud |
-| [`components/cards/ApogeeCard.tsx`](../../src/features/Scolarite/components/cards/ApogeeCard.tsx) | carte d'accès aux résultats — définie, non branchée |
+| [`components/PageScolarite.tsx`](../../src/features/Scolarite/components/PageScolarite.tsx) | le corps défilant : l'encart d'état, puis les trois sections |
+| [`components/EncartSession.tsx`](../../src/features/Scolarite/components/EncartSession.tsx) | l'état de la session **en tête de page** : portail absent, pas de compte, échec |
+| [`components/DossierSection.tsx`](../../src/features/Scolarite/components/DossierSection.tsx) | « Ton dossier » : formation, numéro étudiant, fraîcheur de la lecture |
+| [`components/ServicesSection.tsx`](../../src/features/Scolarite/components/ServicesSection.tsx) | « Tes services » : la messagerie et les portes, toutes issues du catalogue |
+| [`components/DocumentsSection.tsx`](../../src/features/Scolarite/components/DocumentsSection.tsx) | « Tes documents » : la liste locale, l'ajout, la suppression |
+| [`components/LigneScolarite.tsx`](../../src/features/Scolarite/components/LigneScolarite.tsx) | le vocabulaire de rangées de l'onglet : un groupe encadré, ses lignes, son compteur |
+| [`components/ConfirmationScolarite.tsx`](../../src/features/Scolarite/components/ConfirmationScolarite.tsx) | le dialogue de confirmation, partagé par les trois gestes qui en demandent un |
+| [`services/DocumentsService.ts`](../../src/features/Scolarite/services/DocumentsService.ts) | les pièces locales : lister, ajouter, supprimer — dans le répertoire privé de l'application |
+| [`hooks/useDocuments.ts`](../../src/features/Scolarite/hooks/useDocuments.ts) | leur état d'écran, relu **au focus** et non au montage — l'onglet ne se démonte jamais |

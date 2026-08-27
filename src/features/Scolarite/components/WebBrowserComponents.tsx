@@ -155,58 +155,133 @@ export const SaveCredentialsModal = ({ theme, visible, onClose, onSave }: { them
 );
 
 /**
- * Le remplissage automatique du formulaire CAS, dans le navigateur **visible**.
+ * Ce que le navigateur integre injecte pour franchir les pages d'authentification tout seul.
  *
- * Cet écran n'est pas concerné par le jalon 6-F — c'est une WebView que l'utilisateur pilote, pas du
- * scraping — mais il portait la même classe de bug que la session : les identifiants étaient
- * interpolés entre apostrophes simples, sans échappement, donc un mot de passe contenant `'` cassait
- * le script. Pas l'authentification : **le script**, silencieusement.
+ * **Ce n'est plus le chemin principal depuis le 2026-08-25.** Les parcours de portail persistent leur
+ * session (`options.session.persist`), donc le navigateur s'ouvre normalement deja authentifie et ce
+ * script ne voit meme pas ces pages. Il reste pour ce qu'une session ne couvre pas : **un ticket CAS
+ * expire**, et **une page de choix d'etablissement**, qui n'est pas une authentification et qu'aucune
+ * session ne dispense de remplir.
  *
- * `JSON.stringify` produit un littéral JavaScript valide quel que soit le contenu. C'est la même
- * garantie que la session obtient désormais par construction, le moteur ne concaténant jamais un
- * paramètre dans une source de script.
+ * Deux branches, deux pages, et elles ne se ressemblent pas :
+ *
+ * ## 1. Le formulaire du CAS
+ *
+ * Deux defauts mesures y ont ete corriges, et aucun ne se voyait a la relecture.
+ *
+ * **L'hote etait ecrit en dur.** La garde testait `cas.u-bordeaux.fr`, donc le remplissage n'a
+ * **jamais** fonctionne pour un etudiant de Bordeaux INP, dont le CAS est `cas.bordeaux-inp.fr`.
+ * C'etait le dernier hote bordelais compile dans un ecran, du meme genre que les onze que le jalon
+ * 6-G a deterres. La racine vient desormais du **catalogue**.
+ *
+ * **La detection d'erreur ne discriminait rien, et empechait le remplissage.** Le script cherchait
+ * `.alert-danger`, `#msg.errors` et `.errors`. Or la mesure du 2026-08-09 dit deux choses : **il
+ * n'existe aucun `#msg`** sur ce CAS, et **`.errors` existe deja vide** sur la page propre. Le
+ * troisieme selecteur repondait donc *toujours* — le script concluait « une erreur est affichee »,
+ * sautait le remplissage, et posait seulement son ecouteur. Le seul noeud mesure comme discriminant
+ * est `#loginErrorsPanel`, celui que les Blueprints emploient depuis 6-F.
+ *
+ * ## 2. La page WAYF de Shibboleth — « Selection de votre etablissement »
+ *
+ * Moodle a Bordeaux ne passe pas par le CAS mais par **Shibboleth**, et sa page d'entree est une
+ * page de *decouverte* : une liste de **56 etablissements** dans laquelle il faut trouver le sien
+ * avant que la moindre authentification commence. Une session persistee n'y change rien — ce n'est
+ * pas une connexion, c'est un aiguillage — et c'est pourquoi cette branche existe.
+ *
+ * Elle **ne tape aucun secret** : elle choisit une entree dans une liste et soumet. Sa garde est
+ * donc structurelle plutot que fondee sur l'URL, ce qui la rend portable a un autre WAYF : le select
+ * `#userIdPSelection` doit exister **et** contenir exactement l'identite publiee pour cet
+ * etablissement. Sans identite publiee, elle ne fait rien — on ne devine pas la fac de quelqu'un
+ * dans une liste de 56.
+ *
+ * Mesure du 2026-08-25 : Bordeaux vaut `https://idp-ubx.u-bordeaux.fr/idp/shibboleth`, l'INP
+ * `https://sso.bordeaux-inp.fr/idp/shibboleth`. Le Moodle de l'INP, lui, part droit sur son CAS avec
+ * `gateway=true` et n'a donc **pas** de page WAYF : la session persistee suffit.
  */
-export const getCASInjectedScript = (savedCredentials: { username?: string; password?: string } | null) => {
+export const getPortalInjectedScript = (
+    savedCredentials: { username?: string; password?: string } | null,
+    casRacine: string | null,
+    identiteShibboleth: string | null,
+) => {
+    if ((casRacine === null || casRacine === '') && (identiteShibboleth === null || identiteShibboleth === '')) {
+        return '';
+    }
+
     const identifiant = JSON.stringify(savedCredentials?.username || '');
     const secret = JSON.stringify(savedCredentials?.password || '');
+    const cas = JSON.stringify(casRacine || '');
+    const idp = JSON.stringify(identiteShibboleth || '');
 
     return `
         (function() {
-            if (!window.location.href.includes('cas.u-bordeaux.fr/cas/login')) return;
+            const CAS = ${cas};
+            const IDP = ${idp};
 
-            let attempts = 0;
-            const checkInterval = setInterval(function() {
-                attempts++;
-                if (attempts > 50) { clearInterval(checkInterval); return; }
+            /** Interroge la page jusqu'a ce que \`trouver\` rende un noeud, 5 s au plus. */
+            function attendre(trouver, agir) {
+                let essais = 0;
+                const minuteur = setInterval(function() {
+                    essais++;
+                    if (essais > 50) { clearInterval(minuteur); return; }
+                    const cible = trouver();
+                    if (cible) { clearInterval(minuteur); agir(cible); }
+                }, 100);
+            }
 
-                const usernameInput = document.getElementById('username');
-                const passwordInput = document.getElementById('password');
-                const form = document.getElementById('fm1');
+            // --- 1. Le formulaire du CAS -------------------------------------------------
+            if (CAS !== '' && window.location.href.indexOf(CAS) === 0) {
+                attendre(function() {
+                    const u = document.getElementById('username');
+                    const p = document.getElementById('password');
+                    return (u && p && u.closest('form')) ? { u: u, p: p, form: u.closest('form') } : null;
+                }, function(champs) {
+                    // Le seul noeud mesure comme discriminant : absent de la page propre, present
+                    // des que le CAS refuse. Voir docs/sources-externes.md.
+                    const refus = document.getElementById('loginErrorsPanel');
 
-                if (usernameInput && passwordInput && form) {
-                    clearInterval(checkInterval);
-                    const errorElement = document.querySelector('.alert-danger') || document.querySelector('#msg.errors') || document.querySelector('.errors');
-
-                    if (!errorElement && ${identifiant} !== '') {
-                        usernameInput.value = ${identifiant};
-                        passwordInput.value = ${secret};
-                        const submitBtn = document.querySelector('input[name="submit"], button[name="submit"], input[type="submit"], button[type="submit"], .btn-submit');
-                        if (submitBtn) {
-                            submitBtn.click();
-                        } else {
-                            form.submit();
-                        }
+                    if (!refus && ${identifiant} !== '') {
+                        champs.u.value = ${identifiant};
+                        champs.p.value = ${secret};
+                        champs.u.dispatchEvent(new Event('input', { bubbles: true }));
+                        champs.p.dispatchEvent(new Event('input', { bubbles: true }));
+                        // L'INP sert un <button id="submitBtn">, Bordeaux un input[type=submit] : on
+                        // accepte les deux plutot qu'un selecteur par etablissement.
+                        const envoi = document.querySelector('#submitBtn, input[name="submit"], button[name="submit"], input[type="submit"], button[type="submit"], .btn-submit');
+                        if (envoi) { envoi.click(); } else { champs.form.submit(); }
                     } else {
-                        form.addEventListener('submit', function(e) {
+                        champs.form.addEventListener('submit', function() {
                             window.ReactNativeWebView.postMessage(JSON.stringify({
                                 type: 'CAS_CREDENTIALS',
-                                username: usernameInput.value,
-                                password: passwordInput.value
+                                username: champs.u.value,
+                                password: champs.p.value
                             }));
                         });
                     }
+                });
+                return;
+            }
+
+            // --- 2. La page de choix d'etablissement (WAYF Shibboleth) -------------------
+            if (IDP === '') return;
+            attendre(function() {
+                const liste = document.getElementById('userIdPSelection');
+                if (!liste) return null;
+                // Double garde : l'identite publiee doit **exister** dans cette liste. Sans elle, on
+                // n'a pas affaire au WAYF qu'on croit, et soumettre choisirait une fac au hasard.
+                for (let i = 0; i < liste.options.length; i++) {
+                    if (liste.options[i].value === IDP) return liste;
                 }
-            }, 100);
+                return null;
+            }, function(liste) {
+                liste.value = IDP;
+                liste.dispatchEvent(new Event('change', { bubbles: true }));
+                // « Se souvenir pour cette session » : sans elle, la page revient a chaque service.
+                const memoriser = document.getElementById('rememberForSession');
+                if (memoriser && !memoriser.checked) { memoriser.click(); }
+                const envoi = document.querySelector('input[name="Select"], input[type="submit"], button[type="submit"]');
+                if (envoi) { envoi.click(); }
+                else if (liste.form) { liste.form.submit(); }
+            });
         })();
         true;
     `;

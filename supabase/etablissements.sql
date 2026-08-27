@@ -27,13 +27,14 @@
 -- ici n'est donc pas redondante — elle permet de le **corriger** sans release, comme n'importe quelle
 -- autre ligne.
 insert into public.etablissements (
-    code, nom, ville, logo_url, actif,
+    code, nom, nom_court, ville, logo_url, actif,
     portail_dossier, portail_messagerie,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
     bibliotheques_points, services, libelles, crous_region, ordre
 ) values (
     'bordeaux',
-    'Université de Bordeaux',
+    'Collège Sciences et Technologies',
+    'Collège ST',
     'Bordeaux',
     null,
     true,
@@ -68,11 +69,21 @@ insert into public.etablissements (
       {"lat": 46.3237, "lng": -0.4647}]'::jsonb,
     -- Les portes du navigateur integre. `moodle` verifie le 2026-08-13 : « Plateforme pedagogique de
     -- l'universite de Bordeaux ». Ajouter ou retirer une porte est une ligne ici, jamais une release.
-    '{"ent":    "https://ent.u-bordeaux.fr",
+    --
+    -- `ent` visait `ent.u-bordeaux.fr`, qui **ne resout plus** — mesure le 2026-08-25, et le symptome
+    -- etait un `NSURLErrorDomain -1003` a chaque ouverture, y compris en production. Le portail vit
+    -- sur `intranet`, qui rebondit sur le CAS avec son parametre `service`.
+    --
+    -- `idp_shibboleth` n'est **pas une porte** : rien ne s'ouvre a cette adresse. C'est l'identite
+    -- que la page de choix d'etablissement de Moodle attend qu'on lui designe, dans une liste de 56
+    -- (voir `getPortalInjectedScript`). Elle vit ici parce qu'elle est propre a l'etablissement, et
+    -- que la corriger doit rester une publication.
+    '{"ent":    "https://intranet.u-bordeaux.fr",
       "email":  "https://webmel.u-bordeaux.fr",
       "cas":    "https://cas.u-bordeaux.fr",
       "apogee": "https://apogee.u-bordeaux.fr",
-      "moodle": "https://moodle.u-bordeaux.fr"}'::jsonb,
+      "moodle": "https://moodle.u-bordeaux.fr",
+      "idp_shibboleth": "https://idp-ubx.u-bordeaux.fr/idp/shibboleth"}'::jsonb,
     '{}'::jsonb,
     -- La region CROUS de Croustillant. C'etait une constante du Blueprint jusqu'au jalon 6-J ; la
     -- valeur ne change pas, sa nature si — elle est desormais corrigeable sans release, et un
@@ -81,6 +92,7 @@ insert into public.etablissements (
     0
 ) on conflict (code) do update set
     nom                  = excluded.nom,
+    nom_court            = excluded.nom_court,
     ville                = excluded.ville,
     logo_url             = excluded.logo_url,
     actif                = excluded.actif,
@@ -121,13 +133,14 @@ insert into public.etablissements (
 -- et le fournisseur d'affluence est national. C'est une donnee de catalogue precisement pour que ce
 -- genre de choix se relise.
 insert into public.etablissements (
-    code, nom, ville, logo_url, actif,
+    code, nom, nom_court, ville, logo_url, actif,
     portail_dossier, portail_messagerie,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
     bibliotheques_points, services, libelles, crous_region, ordre
 ) values (
     'bordeaux-inp',
     'Bordeaux INP',
+    null,
     'Bordeaux',
     null,
     true,
@@ -205,7 +218,8 @@ insert into public.etablissements (
     -- verifie le 2026-08-13 (« Moodle Bordeaux INP »). Une porte absente ne s'affiche pas.
     '{"ent":    "https://ent.bordeaux-inp.fr",
       "cas":    "https://cas.bordeaux-inp.fr",
-      "moodle": "https://moodle.bordeaux-inp.fr"}'::jsonb,
+      "moodle": "https://moodle.bordeaux-inp.fr",
+      "idp_shibboleth": "https://sso.bordeaux-inp.fr/idp/shibboleth"}'::jsonb,
     -- Ce dossier n'expose pas d'INE : le libelle le dit plutot que de laisser une ligne vide sans
     -- explication. « Numero etudiant » reste, lui, une chaine de Translator.
     '{}'::jsonb,
@@ -216,6 +230,7 @@ insert into public.etablissements (
     1
 ) on conflict (code) do update set
     nom                  = excluded.nom,
+    nom_court            = excluded.nom_court,
     ville                = excluded.ville,
     logo_url             = excluded.logo_url,
     actif                = excluded.actif,
@@ -262,7 +277,7 @@ insert into public.etablissements (
 --
 -- `ordre` a 99 : elle ferme la liste, apres les etablissements reels.
 insert into public.etablissements (
-    code, nom, ville, logo_url, actif,
+    code, nom, nom_court, ville, logo_url, actif,
     portail_dossier, portail_messagerie,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
     bibliotheques_points, services, libelles, crous_region, ordre
@@ -273,6 +288,7 @@ insert into public.etablissements (
     -- etablissement est une **donnee**, donc ce genre de correction est une publication et non une
     -- release — c'est precisement ce que le jalon 6-G a rendu possible.
     'Autre université',
+    null,
     null,
     null,
     true,
@@ -304,13 +320,24 @@ insert into public.etablissements (
       {"lat": 44.2031, "lng": 0.6163},
       {"lat": 45.6483, "lng": 0.1562},
       {"lat": 46.3237, "lng": -0.4647}]'::jsonb,
-    -- Aucune porte : on ne connait aucune de ses adresses. Le navigateur integre n'a rien a ouvrir.
-    '{}'::jsonb,
+    -- Aucune porte universitaire : on ne connait aucune des adresses de cet etablissement, donc le
+    -- navigateur integre n'a aucun service a ouvrir.
+    --
+    -- Une seule cle, et ce n'est pas une porte de service : `adaptation`, l'adresse du formulaire de
+    -- demande. L'onglet Scolarite l'affiche en action de son etat vide — « Campus non pris en
+    -- charge » — et **la masque tant qu'elle est absente** : mieux vaut dire honnetement « pas
+    -- encore » que proposer une porte fermee.
+    --
+    -- Elle vit ici plutot que dans l'ecran pour la raison qui vaut partout dans cette phase :
+    -- remplacer un formulaire, le fermer quand la campagne est finie, ou en ouvrir un par region est
+    -- **une publication**, pas une release.
+    '{"adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8"}'::jsonb,
     '{}'::jsonb,
     '1',
     99
 ) on conflict (code) do update set
     nom                  = excluded.nom,
+    nom_court            = excluded.nom_court,
     ville                = excluded.ville,
     logo_url             = excluded.logo_url,
     actif                = excluded.actif,

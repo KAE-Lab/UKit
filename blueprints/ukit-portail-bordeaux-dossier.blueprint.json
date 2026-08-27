@@ -1,7 +1,7 @@
 {
   "aetherius": "1.0",
   "name": "ukit.portail.bordeaux.dossier",
-  "description": "Le parcours FROID du portail de l'UNIVERSITE DE BORDEAUX : ouvrir le dossier administratif, subir la redirection CAS, et lire l'identite complete de l'etudiant. Joue une fois, au premier login (CredentialsContext). Le nom porte le code de l'etablissement depuis le jalon 6-G : rien ici n'est generique, ni l'hote, ni les identifiants GWT, ni les libelles — un second etablissement demande son propre fichier, publie sous le meme prefixe reserve. Il part du SERVICE et non du portail : mondossierweb redirige lui-meme vers le CAS avec son parametre service, et la redirection de retour ramene le fragment #!etatCivilView — l'hote du portail historique, lui, ne resout plus. Les identifiants de champ GWT sont POSITIONNELS : la migration ne les rend pas robustes, elle en fait une ligne de donnees corrigeable a distance. Le filet est ailleurs : les cinq libelles voisins sont lus puis asserts, de sorte qu'un decalage devienne un echec nomme au lieu d'une donnee fausse ecrite dans le trousseau. Deux steps meritent d'etre lus avant d'etre 'simplifies'. La PAUSE apres le clic : l'authentification unifiee enchaine plusieurs sauts puis le client GWT pose son fragment, et une operation emise pendant cette cascade se perd en silence sur un appareil (limite du moteur, docs/embedded.md, sondes du jalon 3-G) — on laisse donc la page arriver avant de l'interroger. La GARDE #loginErrorsPanel ensuite : ce panneau est ABSENT de la page de connexion propre et PRESENT des que le CAS refuse, mesure le 2026-08-09 ; c'est le seul noeud qui discrimine, #msg2 et .errors existant deja vides avec une boite de hauteur nulle. Sans elle, un mot de passe faux couterait le plafond entier du selecteur suivant. Mettre options.debug a true rend la WebView visible sur l'appareil : c'est l'outil de diagnostic quand un step echoue.",
+  "description": "Le parcours FROID du portail de l'UNIVERSITE DE BORDEAUX : ouvrir le dossier administratif, subir la redirection CAS, lire l'identite complete de l'etudiant, sa formation courante, puis ses appartenances d'annuaire. Joue une fois, au premier login (CredentialsContext). Le nom porte le code de l'etablissement depuis le jalon 6-G. Il part du SERVICE et non du portail : mondossierweb redirige lui-meme vers le CAS avec son parametre service, et la redirection de retour ramene le fragment #!etatCivilView — l'hote du portail historique, lui, ne resout plus. LES SELECTEURS NE SONT PLUS POSITIONNELS. Le portail est un Vaadin 8 (theme Valo) dont le moteur client est compile par GWT — d'ou les #gwt-uid-NN qu'on lisait, attribues selon l'ordre de construction du DOM et que la documentation appelait la fragilite la plus serieuse du projet. Sonde du 2026-08-25 : chaque champ vit dans une ligne de v-formlayout qui PORTE SA LEGENDE, et l'ancrage par libelle a ete verifie hors ligne sur le DOM capture — 11 libelles testes, 11 noeuds uniques. Un decalage du DOM ne peut donc plus rendre LA MAUVAISE VALEUR : il ne rend plus RIEN, et l'extraction echoue bruyamment. Piege a connaitre avant de 'simplifier' ces XPath : une ligne porte TROIS cellules — legende, ERREUR, contenu — donc un following-sibling::td[1] tombe sur la cellule d'erreur, vide. C'est ce qui a fait echouer le premier essai de la sonde. XPath et non CSS parce que c'est le seul langage de selection que LES DEUX moteurs partagent, et guillemets DOUBLES parce que plusieurs libelles portent une apostrophe. L'assert a maigri en consequence : les cinq libelles voisins n'ont plus a etre lus puisqu'ils SONT les selecteurs. Il ne garde plus que le cas qu'un ancrage par libelle ne couvre pas — un libelle present au-dessus d'une valeur VIDE, qui ecrirait un dossier creux dans le trousseau. Deux steps meritent d'etre lus avant d'etre 'simplifies'. La PAUSE apres le clic : l'authentification unifiee enchaine plusieurs sauts puis le client Vaadin pose son fragment, et une operation emise pendant cette cascade se perd en silence sur un appareil (limite du moteur, docs/embedded.md). La GARDE #loginErrorsPanel ensuite : ce panneau est ABSENT de la page de connexion propre et PRESENT des que le CAS refuse, mesure le 2026-08-09 ; sans elle, un mot de passe faux couterait le plafond entier du selecteur suivant. Mettre options.debug a true rend la WebView visible sur l'appareil. Persister la session est ce qui evite au navigateur integre de redemander une connexion. Par defaut le moteur ouvre sa WebView en INCOGNITO (`options.session.persist` vaut false) : le ticket CAS que ce run vient d'obtenir est donc jete a la fin, et l'ecran de navigateur integre retombe sur un formulaire vide — d'ou le script de remplissage qui interrogeait la page toutes les 100 ms. En persistant, le cookie atterrit dans le magasin PARTAGE de la plateforme, et ouvrir l'ENT, Moodle ou le webmail se fait deja authentifie. C'est un GAIN de securite et non une concession : le mot de passe cesse d'etre injecte dans une page pour le cas courant. Le pendant obligatoire est que la deconnexion invalide la session cote CAS (ukit.portail.deconnexion), sans quoi « se deconnecter » laisserait un navigateur authentifie. CONNEXION CONDITIONNELLE depuis le 2026-08-25, et c'est la consequence directe de `session.persist`. Avec une session vivante, le CAS reconnait le ticket et renvoie DIRECTEMENT au service : il n'affiche aucun formulaire, et attendre `#username` echouait alors en CAS_INDISPONIBLE apres 20 s d'attente inutile. On demande donc a la page s'il y a un formulaire (`as: count`, qui ne leve jamais) et on ne joue le bloc de connexion que dans ce cas. Effet de bord bienvenu : le parcours qui trouve une session ouverte economise aussi la pause d'apres-clic, qui n'a plus lieu d'etre.",
   "act": "continuum",
   "secrets": [
     "portail_user",
@@ -16,6 +16,9 @@
     "debug": false,
     "stealth": {
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "session": {
+      "persist": true
     }
   },
   "steps": [
@@ -24,45 +27,75 @@
       "url": "{{ vars.dossier }}"
     },
     {
-      "action": "wait_for",
-      "selector": "#username",
-      "timeout_ms": 20000,
-      "on_timeout": "fail:CAS_INDISPONIBLE"
+      "action": "wait",
+      "ms": 6000,
+      "note": "La redirection SSO doit avoir fini de se decider avant qu'on regarde ou l'on est. 6000 et non 3000 : la mesure du 2026-08-24 donne **2834 ms pour la seule navigation** depuis un poste filaire, et c'est le meilleur cas — un telephone en cellulaire est plus lent, et un moteur de WebView peut rendre la main a la fin d'une redirection intermediaire. Sous-estimer ce delai ferait conclure « pas de formulaire » a une page qui allait en afficher un."
+    },
+    {
+      "id": "porte",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formulaire": {
+          "selector": "#username",
+          "as": "count",
+          "note": "`as: count` ne leve JAMAIS : c'est ce qui permet de demander « y a-t-il un formulaire ? » sans risquer le run. Depuis que la session persiste, la reponse est NON la plupart du temps — le CAS reconnait le ticket et renvoie directement au service, sans jamais afficher de champ."
+        }
+      }
     },
     {
       "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
       "selector": "#username",
       "value": "{{ secrets.portail_user }}"
     },
     {
       "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
       "selector": "#password",
       "value": "{{ secrets.portail_pass }}"
     },
     {
       "action": "click",
+      "when": "{{ steps.porte.formulaire > 0 }}",
       "selector": "input[type=submit]"
     },
     {
       "action": "wait",
-      "ms": 8000
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "ms": 8000,
+      "note": "La cascade d'authentification enchaine plusieurs sauts puis le client pose son fragment ; une operation emise pendant cette cascade se perd en silence sur un appareil. Elle n'est payee que si l'on s'est reellement authentifie."
     },
     {
       "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
       "selector": "#loginErrorsPanel",
       "state": "detached",
       "timeout_ms": 2000,
-      "on_timeout": "fail:LOGIN_FAILED"
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "Ce panneau est ABSENT de la page propre et PRESENT des que le CAS refuse, mesure le 2026-08-09. Sans lui, un mot de passe faux couterait le plafond entier du selecteur suivant."
     },
     {
       "action": "wait_for",
-      "selector": "#gwt-uid-41",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "td.v-formlayout-contentcell",
       "timeout_ms": 30000,
-      "on_timeout": "fail:LOGIN_FAILED"
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "Le chemin AVEC formulaire : on s'est authentifie, donc un echec ici parle du service et non du portail."
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire == 0 }}",
+      "selector": "td.v-formlayout-contentcell",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:CAS_INDISPONIBLE",
+      "note": "Le chemin SANS formulaire : la session etait deja ouverte. N'avoir vu ni formulaire ni cible veut dire que le portail n'a rien rendu, d'ou un code different — c'est la precision de diagnostic que la phase a mis sept jalons a construire, et elle ne se perd pas ici."
     },
     {
       "action": "emit",
-      "event": "LOGIN_SUCCESS"
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "event": "LOGIN_SUCCESS",
+      "note": "**Garde indispensable, et ce n'est pas une precaution de style.** Cet evenement est ce qui autorise l'application a ecrire les identifiants dans le trousseau : il veut dire « le CAS a accepte ce couple ». Avec une session deja ouverte, le run traverse sans que le CAS ait rien verifie — l'emettre la ferait enregistrer un mot de passe FAUX comme s'il etait bon, ce qui est exactement la donnee fausse qui a l'air juste que cette phase supprime. L'application ferme donc la session distante avant toute revalidation (`validateAndSave`), de sorte que le formulaire apparaisse et que cette garde soit vraie."
     },
     {
       "id": "dossier",
@@ -70,51 +103,87 @@
       "timeout_ms": 5000,
       "outputs": {
         "numero_etudiant": {
-          "selector": "#gwt-uid-41",
+          "selector": "//tr[contains(@class,'v-formlayout-row')][td[contains(@class,'v-formlayout-captioncell')][normalize-space()=\"Dossier\"]]/td[contains(@class,'v-formlayout-contentcell')]",
+          "selector_type": "xpath",
           "as": "text"
         },
         "ine": {
-          "selector": "#gwt-uid-43",
+          "selector": "//tr[contains(@class,'v-formlayout-row')][td[contains(@class,'v-formlayout-captioncell')][normalize-space()=\"NNE\"]]/td[contains(@class,'v-formlayout-contentcell')]",
+          "selector_type": "xpath",
           "as": "text"
         },
         "identite": {
-          "selector": "#gwt-uid-45",
+          "selector": "//tr[contains(@class,'v-formlayout-row')][td[contains(@class,'v-formlayout-captioncell')][normalize-space()=\"Prénom et Nom\"]]/td[contains(@class,'v-formlayout-contentcell')]",
+          "selector_type": "xpath",
           "as": "text"
         },
         "email": {
-          "selector": "#gwt-uid-47",
+          "selector": "//tr[contains(@class,'v-formlayout-row')][td[contains(@class,'v-formlayout-captioncell')][normalize-space()=\"Email\"]]/td[contains(@class,'v-formlayout-contentcell')]",
+          "selector_type": "xpath",
           "as": "text"
         },
         "naissance": {
-          "selector": "#gwt-uid-51",
-          "as": "text"
-        },
-        "libelle_numero": {
-          "selector": "#gwt-uid-40",
-          "as": "text"
-        },
-        "libelle_ine": {
-          "selector": "#gwt-uid-42",
-          "as": "text"
-        },
-        "libelle_identite": {
-          "selector": "#gwt-uid-44",
-          "as": "text"
-        },
-        "libelle_email": {
-          "selector": "#gwt-uid-46",
-          "as": "text"
-        },
-        "libelle_naissance": {
-          "selector": "#gwt-uid-50",
+          "selector": "//tr[contains(@class,'v-formlayout-row')][td[contains(@class,'v-formlayout-captioncell')][normalize-space()=\"Date de naissance\"]]/td[contains(@class,'v-formlayout-contentcell')]",
+          "selector_type": "xpath",
           "as": "text"
         }
       }
     },
     {
       "action": "assert",
-      "condition": "{{ steps.dossier.libelle_numero == 'Dossier' and steps.dossier.libelle_ine == 'NNE' and steps.dossier.libelle_identite == 'Prénom et Nom' and steps.dossier.libelle_email == 'Email' and steps.dossier.libelle_naissance == 'Date de naissance' }}",
-      "message": "Les libelles du dossier ont bouge : les identifiants GWT sont positionnels, donc les valeurs lues ne sont plus celles qu'on croit. Corriger les selecteurs de ce Blueprint et republier."
+      "condition": "{{ steps.dossier.numero_etudiant != '' and steps.dossier.identite != '' }}",
+      "message": "Le dossier a rendu des champs vides sous des libelles pourtant presents. Rien n'est ecrit dans le trousseau : une identite creuse s'afficherait comme une identite juste."
+    },
+    {
+      "id": "menu",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "inscriptions": {
+          "selector": "//div[contains(@class,'valo-menu-item')][.//span[contains(@class,'valo-menu-item-caption')][normalize-space()=\"Inscriptions\"]]",
+          "selector_type": "xpath",
+          "as": "count",
+          "note": "`as: count` ne leve JAMAIS : c'est ce qui rend la garde ci-dessous sans danger."
+        }
+      }
+    },
+    {
+      "action": "click",
+      "when": "{{ steps.menu.inscriptions > 0 }}",
+      "selector": "//div[contains(@class,'valo-menu-item')][.//span[contains(@class,'valo-menu-item-caption')][normalize-space()=\"Inscriptions\"]]",
+      "selector_type": "xpath",
+      "note": "Garde par `when` et non joue sec : un clic qui echoue FAIT ECHOUER LE RUN, et la formation est un bonus qui ne doit jamais emporter la connexion — meme regle que l'annuaire plus bas. Le moteur embarque refuse par ailleurs un clic ambigu la ou Playwright prend le premier : ce selecteur ne matche qu'une entree de menu, mesure."
+    },
+    {
+      "action": "wait",
+      "ms": 6000,
+      "when": "{{ steps.menu.inscriptions > 0 }}",
+      "note": "`wait` et non `wait_for`, pour la meme raison que l'annuaire : un `wait_for` qui expire fait echouer le run quel que soit son on_timeout. Vaadin 8 est une application a etat serveur — le clic declenche un aller-retour, et rien dans le document ne prouve l'arrivee avant qu'elle ait eu lieu. 6000 et non 4000 : mesure depuis un poste filaire, l'aller-retour tient en 4 s, un telephone en cellulaire non. Le delai n'est paye qu'au parcours froid, une fois."
+    },
+    {
+      "id": "formation",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formation_libelle": {
+          "selector": "(//tr[contains(@class,'v-table-row')])[1]/td[3]",
+          "selector_type": "xpath",
+          "as": "list",
+          "note": "`as: list` et non `text` : une lecture qui ne matche rien LEVE en `text`, et la formation est un bonus qui ne doit jamais emporter la connexion. En liste, zero correspondance rend [], et l'arite se normalise applicativement — meme motif que `edt_ressource` du portail de l'INP. Le glyphe FontAwesome colle au libelle de la ligne courante est retire par la projection : c'est du nettoyage, donc applicatif."
+        },
+        "formation_annee": {
+          "selector": "(//tr[contains(@class,'v-table-row')])[1]/td[1]",
+          "selector_type": "xpath",
+          "as": "list"
+        },
+        "formation_detail": {
+          "selector": "(//tr[contains(@class,'v-table-row')])[1]/td[2]",
+          "selector_type": "xpath",
+          "as": "list",
+          "note": "La composante — « UF Informatique ». La colonne du milieu."
+        }
+      },
+      "note": "La premiere ligne du tableau est l'inscription COURANTE : la source trie par annee decroissante. Le tableau Vaadin 8 est VIRTUALISE — il rend 3 a 5 lignes selon la hauteur de la fenetre, mesure — donc on ne lit que la premiere, la seule dont la presence soit acquise. La vue ne porte qu'un seul tableau, mesure aussi."
     },
     {
       "action": "navigate",
@@ -146,6 +215,9 @@
     "identite": "{{ steps.dossier.identite }}",
     "email": "{{ steps.dossier.email }}",
     "naissance": "{{ steps.dossier.naissance }}",
-    "appartenances": "{{ steps.annuaire.appartenances }}"
+    "appartenances": "{{ steps.annuaire.appartenances }}",
+    "formation_libelle": "{{ steps.formation.formation_libelle }}",
+    "formation_annee": "{{ steps.formation.formation_annee }}",
+    "formation_detail": "{{ steps.formation.formation_detail }}"
   }
 }

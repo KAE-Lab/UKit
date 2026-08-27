@@ -15,6 +15,93 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 
 ### Ajouté
 
+- **L'onglet Scolarité est « tout ou rien » sans compte.** Il ne montre plus ses documents sous une
+  invitation à se connecter : un onglet qui porte une seule section sous un encart se lit moins bien
+  qu'un onglet franchement vide, qui ne propose qu'une chose.
+
+
+- **Connexion et progression sur une seule page.** Le formulaire ne cède plus la place à un écran
+  d'attente : son bandeau reste et sa carte passe des champs à la barre. Un échec revient là où la
+  saisie a eu lieu, sans retour en arrière.
+
+
+- **L'écran d'attente du premier login est refait** : une barre, un pourcentage et **une seule ligne**
+  qui se remplace, au lieu de quatre étapes dont trois grisées. La question qu'on se pose en attendant
+  n'est pas « quelle étape » mais « combien de temps encore » — et on ne peut agir sur aucune d'elles.
+  La barre anime toujours depuis sa position courante : une étape rapide l'accélère au lieu de la
+  faire sauter.
+
+
+- **Une barre de progression sur le parcours froid.** Elle avance en continu vers l'étape en cours
+  plutôt que par paliers : une barre qui passerait quinze secondes immobile à 75 % serait pire que pas
+  de barre. Elle ne peut jamais annoncer une étape terminée avant qu'elle le soit.
+
+- **Le logo de l'établissement sur l'écran de connexion**, avec repli sur l'icône générique quand
+  aucun logo n'est publié, qu'il ne se charge pas, ou qu'on est hors ligne au premier lancement.
+
+- **Un nom court par établissement.** « Collège ST » là où la place manque, « Collège Sciences et
+  Technologies » dans l'écran de choix — le seul endroit où il faut reconnaître une fac qu'on ne
+  connaît pas encore.
+
+
+- **Le navigateur intégré s'ouvre déjà connecté.** C'était l'une des promesses de garder des
+  identifiants enregistrés, et elle n'était pas tenue : ouvrir l'ENT, Moodle ou le webmail retombait
+  sur un formulaire. La cause n'était pas où on la cherchait — le moteur ouvrait sa WebView en
+  **incognito**, donc le ticket CAS que la session venait d'obtenir était *jeté* trois secondes plus
+  tard. Il est désormais conservé et partagé, et **le mot de passe cesse d'être injecté dans une
+  page** pour le cas courant. En contrepartie obligatoire, **se déconnecter ferme aussi la session
+  côté serveur** : sans ça, le geste effacerait le trousseau en laissant un navigateur authentifié.
+
+- **Le numéro étudiant, l'INE et l'adresse universitaire se copient d'un geste**, dans l'écran du
+  compte. Ce sont exactement les trois chaînes qu'on redemande à un étudiant et qu'il ne retient pas.
+
+- **Le bouton de la barre d'onglets s'appelle « Compte », plus « Déconnexion ».** Cet écran ne sert
+  plus à partir : il porte l'état civil, l'INE, les identifiants, la formation et la date de dernière
+  lecture. Le nommer par le plus destructeur de ses trois gestes dissuadait d'y aller pour consulter.
+  Le tableau de bord, lui, se recentre sur **les services**.
+
+- **Un campus non pris en charge le dit, et propose de le demander.** L'état empruntait la grammaire
+  d'une panne — « le portail ne répond pas » — là où il n'y a jamais eu de portail. C'est un état
+  vide avec une action, dont l'adresse vient du catalogue : ouvrir un établissement est une
+  publication, pas une release.
+
+
+- **L'onglet Scolarité a été refait, et il commence par dire quelque chose.** Il n'affichait qu'une
+  salutation et une ligne de messagerie ; chez un établissement sans portail publié, il n'affichait
+  *rien*. C'est la première session d'écran du volet 2 de la Phase 6, et elle a commencé par
+  **sonder les deux dossiers universitaires** plutôt que par un habillage — la page n'avait pas un
+  problème de mise en page, elle n'avait pas de contenu.
+
+  - **Trois sections, de trois natures différentes**, et c'est ce qui les empêche de se ressembler :
+    *ton dossier* (ce que l'application sait), *tes services* (ce qu'on peut ouvrir), *tes documents*
+    (ce qu'on a rangé) ;
+  - **la formation courante s'affiche**, lue des deux côtés — la vue *Inscriptions* à Bordeaux, la
+    vue *Parcours* à Bordeaux INP — avec son année ;
+  - **« Tes documents » : des pièces rangées sur l'appareil**, qui fonctionnent **sans compte**.
+    Certificats de scolarité, attestations : elles restent dans l'espace privé de l'application et ne
+    sont envoyées nulle part ([PRIVACY.md](PRIVACY.md)). C'est ce qui rend enfin l'onglet utile à qui
+    ne se connecte pas — et vivant pour « Autre université », où il était entièrement mort ;
+  - **la messagerie a perdu la section qu'elle avait pour elle seule.** Un en-tête au-dessus d'une
+    unique rangée était une grammaire de plus. Elle vit dans *tes services*, parce que c'est ce
+    qu'elle est : une porte qui porte en plus un compteur ;
+  - **les états ne prennent plus l'écran.** Pas de portail, pas de compte, échec : ce sont désormais
+    des encarts en tête de page, et le reste de la page continue dessous. Seul le parcours froid
+    reste plein écran, parce qu'il est transitoire ;
+  - **le verrou biométrique ne s'arme que s'il y a quelque chose à garder** — c'est-à-dire un compte
+    enregistré. Demander une empreinte pour atteindre ses propres fichiers serait un péage sans
+    serrure derrière.
+
+- **La fragilité la plus sérieuse du projet a disparu.** Les cinq champs du dossier de Bordeaux
+  étaient lus par identifiant DOM **positionnel** (`gwt-uid-41`, `-43`…), attribués selon l'ordre de
+  construction de la page : une refonte côté université les décalait silencieusement. La sonde a
+  montré que chaque champ porte sa légende, et l'ancrage par libellé a été vérifié hors ligne sur le
+  DOM capturé — **11 libellés testés, 11 nœuds uniques**. Un décalage ne peut plus rendre *la
+  mauvaise valeur* : il ne rend plus *rien*, et l'extraction échoue bruyamment.
+
+- **L'INE de Bordeaux INP existe.** La documentation affirmait le contraire ; il est simplement sous
+  un onglet que le Blueprint ne visitait pas. Le champ est désormais rempli des deux côtés.
+
+
 - **Les dialogues, les états et les boutons ne parlent plus qu'une langue.** Neuf modales, six écrans
   d'état vide ou d'erreur et quatre formes de bouton se sont alignés sur un vocabulaire unique. Le
   détail est dans [docs/theme.md](docs/theme.md) ; ce qui change à l'usage :
@@ -612,6 +699,142 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   plateforme, qualité, plus une documentation par domaine fonctionnel.
 
 ### Corrigé
+
+- **Se connecter échouait sur « impossible de vérifier tes identifiants », avec les bons
+  identifiants.** La vérification reposait sur une déduction — *si un formulaire apparaît, c'est que
+  le CAS a accepté* — qui cesse d'être vraie dès que la session persiste. Fermer la session du CAS
+  avant de valider ne suffisait pas : le service garde son propre cookie, mesuré. La preuve est
+  désormais **demandée** au CAS (`renew=true`), qui redemande les identifiants même si un ticket vit.
+
+- **Le logo de l'établissement manquait sur l'écran de connexion.** Il ne vivait que dans la ligne
+  publiée, appliquée en asynchrone au lancement : un écran monté avant elle gardait le repli.
+
+
+- **La biométrie était demandée une fois de trop, et pas là où il aurait fallu.** Le drapeau « déjà
+  authentifié » vivait dans un composant qui se démonte à chaque parcours froid : on redemandait une
+  empreinte après chaque actualisation du dossier. Il vit désormais au niveau du module — ce que
+  « une fois par lancement » voulait dire. Au passage, la fiche du compte, atteignable depuis les
+  Réglages, s'ouvrait **sans rien demander** alors qu'elle montre plus que l'onglet gardé : elle
+  partage maintenant la même porte.
+
+- **Se connecter pouvait échouer sur « impossible de vérifier tes identifiants » avec les bons
+  identifiants.** La fermeture de la session distante était refusée en silence quand un run tournait
+  encore ; la session CAS restait donc ouverte, aucun formulaire n'apparaissait, et rien ne prouvait
+  les identifiants. Le moteur est désormais libéré — et **attendu** — avant ce geste.
+
+
+- **Actualiser son dossier pouvait être refusé sans que rien ne le dise.** Demander une actualisation
+  pendant le parcours du lancement se heurtait à la règle « une seule session à la fois » : le bouton
+  paraissait mort, et le refus n'existait que dans le terminal. Une demande portée par un geste passe
+  désormais devant une session de fond.
+
+- **Le formulaire de connexion perdait la page à mi-parcours.** Le CAS accepte au dixième step sur
+  vingt, donc les identifiants sont posés bien avant la fin : la condition qui gardait le formulaire
+  retombait à faux et l'écran basculait d'un coup. Il garde la page jusqu'au terme.
+
+
+- **L'écran du compte se refermait tout seul, et pour deux raisons différentes.** À la déconnexion, il
+  attendait la fermeture de la session distante — quelques secondes — puis se refermait *pendant qu'on
+  retapait ses identifiants*. À la connexion, il se refermait à mi-parcours, parce que le CAS accepte
+  au dixième step sur vingt alors que le dossier reste à lire. Il ne se referme plus : l'écran montre
+  déjà la suite.
+
+- **Une validation d'identifiants pouvait rester en attente indéfiniment**, et se faire résoudre par un
+  run ultérieur — ce qui refermait l'écran au milieu d'un rafraîchissement. Elle se solde désormais à
+  la fin de chaque run.
+
+
+- **Le logo de l'établissement était minuscule et illisible en thème sombre.** Un logo d'université
+  est un logotype large — mesuré à 2,86:1 pour l'Université de Bordeaux — et il était posé dans le
+  carré prévu pour une icône. Il a désormais son propre gabarit, et un fond blanc dans les deux
+  thèmes, comme le logo de UKit sur la page À propos.
+
+- **Fermer l'écran du compte après un geste long ne fait plus crier le navigateur.** Valider des
+  identifiants rejoue une connexion complète : entre l'appui et la fin, on a le temps de quitter
+  l'écran soi-même, et la fermeture différée tentait alors de dépiler un écran déjà parti.
+
+
+- **Le gel à l'ouverture d'un service venait de la synchronisation des cookies, et il s'aggravait.**
+  `sharedCookiesEnabled` ne sert pas à partager entre vues web — elles partagent déjà le même magasin —
+  mais à y recopier celui des requêtes natives : **tous** les cookies de l'application, un par un,
+  chacun avec un aller-retour, **sur la file principale**. Plus on ouvrait de services, plus le magasin
+  grossissait, plus le gel durait. L'option est retirée ; la pré-authentification, elle, ne dépendait
+  pas d'elle. Une première tentative avait déplacé le montage après l'animation d'écran : ça ne
+  faisait que rallonger l'attente, parce que déplacer un coût n'est pas le supprimer.
+
+- **Le script injecté changeait en pleine charge de page.** Il dépend du trousseau, lu en asynchrone :
+  la vue se montait avec un script provisoire, remplacé une fraction de seconde plus tard. On attend
+  désormais la réponse du trousseau — locale et rapide — avant de monter.
+
+- **Le titre de l'écran du compte ne tenait pas.** « Compte universitaire » était tronqué ; il dit
+  « Compte », comme le bouton qui y mène.
+
+
+- **Ouvrir un service figeait l'application une demi-seconde.** Créer la vue web native et lancer sa
+  première navigation se produisait **pendant** l'animation de poussée de l'écran : les deux se
+  disputaient la même frame. La vue ne se monte plus qu'une fois l'animation terminée. Le symptôme
+  s'est vu quand le reste est devenu rapide — il était noyé dans l'attente d'authentification tant
+  qu'il fallait se connecter à chaque fois.
+
+- **Une valeur longue écrasait son libellé dans les réglages.** « Institution » s'affichait à la
+  verticale, une lettre par ligne, dès que le nom de l'établissement était long. Ce n'était pas un
+  problème de longueur mais de gabarit : le libellé portait `flex: 1` et la valeur n'avait aucune
+  contrainte. La valeur cède et se tronque désormais, ce qui vaut pour **toutes** les lignes de
+  réglage, pas seulement celle-là.
+
+- **Un dernier disque a rejoint la signature de forme.** La surface d'icône de l'écran de progression
+  était un cercle, là où toutes les surfaces de 40 points de l'application sont des carrés arrondis.
+
+
+- **Le compteur de messages non lus a cessé de fonctionner, et c'était la rançon du succès.** Depuis
+  que la session persiste, le CAS n'affiche plus de formulaire — le Blueprint attendait un champ qui
+  n'apparaîtrait jamais et abandonnait au bout de 20 s. Les trois parcours de portail demandent
+  maintenant à la page s'il y a un formulaire avant de jouer le bloc de connexion. Le parcours chaud
+  y gagne **15 secondes**, qui étaient une pause d'après-clic qu'on ne clique plus.
+
+- **Une revalidation d'identifiants pouvait enregistrer un mot de passe faux.** Le même changement
+  l'a révélé : avec une session ouverte, « Ressaisir mes identifiants » traversait sans que le CAS
+  vérifie quoi que ce soit, et le couple était écrit comme s'il avait été accepté. L'application ferme
+  désormais la session avant toute revalidation, et l'événement qui autorise l'écriture n'est émis que
+  si le CAS s'est réellement prononcé.
+
+
+- **La porte ENT menait dans le vide, et depuis longtemps.** `ent.u-bordeaux.fr` ne résout plus :
+  ouvrir l'ENT depuis l'application rendait `A server with the specified hostname could not be found`,
+  **y compris sur la version en production**. Le portail vit sur `intranet.u-bordeaux.fr`. Corrigé par
+  une publication de catalogue, sans release — et la description du Blueprint du dossier l'écrivait
+  déjà noir sur blanc, mais l'écran était resté sur l'ancien nom.
+
+- **Moodle demandait de choisir son établissement dans une liste de 56.** Sa page d'entrée n'est pas
+  une connexion mais une page de découverte Shibboleth, qu'aucune session ne dispense de remplir. Elle
+  est franchie automatiquement, et le choix est mémorisé pour la session. Côté Bordeaux INP il n'y a
+  pas de page de ce genre : Moodle y part droit sur le CAS, donc la session suffit.
+
+
+- **Le remplissage automatique du formulaire CAS ne marchait pas, pour deux raisons indépendantes.**
+  Son hôte était écrit en dur (`cas.u-bordeaux.fr`), donc il n'avait **jamais** fonctionné pour un
+  étudiant de Bordeaux INP ; et sa détection d'erreur cherchait `.errors`, qui **existe déjà vide**
+  sur la page de connexion propre — le script concluait qu'une erreur était affichée et sautait le
+  remplissage. Les deux sont corrigés, mais le sujet a surtout changé de nature : le navigateur
+  s'ouvre désormais déjà connecté, et ce script n'est plus qu'un filet pour un ticket expiré.
+
+
+- **L'établissement s'appelle « Collège Sciences et Technologies »**, plus « Université de Bordeaux ».
+  Le périmètre réellement porté est celui du collège — c'est son Celcat qu'on interroge, ses bâtiments
+  qu'on référence, ses groupes qu'on propose. Annoncer l'université entière promettait des formations
+  que l'application ne sert pas. **Seul le nom change** : le code d'établissement, qui partitionne le
+  trousseau, les réglages et les favoris, ne bouge pas — personne n'est déconnecté ni ne perd ses
+  groupes.
+
+- **`username` ne s'affiche plus deux fois** dans l'écran du compte. La même valeur figurait sous le
+  même libellé dans « Profil » et dans « Identifiants », sur un écran qui tient sur une hauteur.
+
+
+- **Deux exports morts de l'onglet Scolarité sont supprimés.** `ApogeeCard.tsx` était défini et monté
+  nulle part, et le point d'entrée `apogee` du navigateur intégré n'était atteint par aucun appel de
+  navigation : la carte d'accès aux notes existait dans le code sans exister à l'écran. Une rangée
+  générique pilotée par le catalogue la remplace — *un export mort fait croire à une capacité*.
+
 
 - **Le catalogue en cache ne rend plus de valeurs absentes.** Il garde des établissements **déjà
   projetés** : un champ ajouté par une mise à jour restait donc vide sur les appareils qui avaient déjà

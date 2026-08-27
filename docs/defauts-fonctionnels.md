@@ -19,7 +19,36 @@ de la leur laisser en travers.
 
 ## Ouverts
 
-*Aucun.* Une session d'écran qui en rencontre un nouveau l'inscrit ici.
+Les deux suivants ont été **rencontrés** par la session d'écran Scolarité du 2026-08-25, et
+volontairement **pas corrigés** : ni l'un ni l'autre ne tombe dans son périmètre, et les traiter en
+passant aurait rendu la session invérifiable
+([CONTRIBUTING.md](../CONTRIBUTING.md#un-travail-visuel-nest-pas-documenté-au-même-endroit)).
+
+### La date du bloc de salutation est en français, en dur
+
+[`GreetingBlock.tsx`](../src/features/Scolarite/components/GreetingBlock.tsx) porte ses propres
+tableaux `DAYS` et `MONTHS` en français, et compose « Bonjour »/« Bonsoir » de la même façon. Dans une
+application qui parle **trois langues**, un utilisateur en anglais ou en espagnol lit donc « Lundi
+25 août » sous une interface traduite.
+
+`moment` est déjà une dépendance et porte la locale de l'application — la rangée de fraîcheur ajoutée
+juste en dessous l'utilise (`format('LL')`). Le correctif est donc petit ; ce qui le retient est que
+ce bloc **fait partie des écrans de référence** du jalon [6-K](phase-6/6-k-socle-visuel.md), et que
+changer son format de date change un rendu de référence. C'est une décision, pas un effet de bord.
+
+### Les styles composés du thème ne sont pas typés
+
+[`Theme.ts`](../src/shared/theme/Theme.ts) n'emploie pas `StyleSheet.create` : ses styles composés
+sont des objets littéraux, donc TypeScript élargit `justifyContent: 'center'` en `string`, qui n'est
+plus assignable à un `ViewStyle`. Les appelants historiques ne le voyaient pas parce que leur prop
+`theme` n'était pas typée ; le problème **apparaît dès qu'un composant l'est**, ce qui est le sens de
+la marche.
+
+Contourné localement et **une seule fois**, dans
+[`ConfirmationScolarite.tsx`](../src/features/Scolarite/components/ConfirmationScolarite.tsx), par un
+transtypage commenté. Le corriger à la source demanderait de retyper un fichier de données de
+1 100 lignes — hors du périmètre d'une session d'écran, et à faire une fois pour toutes plutôt que
+trois fois à moitié.
 
 ## Limites connues, qui ne sont pas des défauts
 

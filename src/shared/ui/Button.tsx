@@ -120,6 +120,18 @@ export interface SettingsButtonProps {
     switchValue?: boolean;
     onSwitchToggle?: (value: boolean) => void;
 }
+/**
+ * La valeur a droite d'une ligne de reglage : elle **cede** avant le libelle.
+ *
+ * `flexShrink: 1` et `numberOfLines` la font se tronquer plutot que pousser ; `marginLeft: 'auto'`
+ * la garde collee a droite maintenant que le libelle n'occupe plus tout l'espace disponible.
+ */
+const VALEUR_A_DROITE: import('react-native').TextStyle = {
+    flexShrink: 1,
+    textAlign: 'right',
+    marginLeft: 'auto',
+};
+
 export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, leftText, rightText, disabled, switchValue, onSwitchToggle }: SettingsButtonProps) => {
     const rotatingAnimation = useRef(new Animated.Value(0)).current;
 
@@ -158,7 +170,14 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
                     <IconComponent name={leftIcon as never} size={24} style={theme.leftIcon as import('react-native').TextStyle} />
                 </Animated.View>
             )}
-            <Text style={[theme.buttonMainText, { flex: 1 }] as any}>{leftText}</Text>
+            {/*
+              * `flexShrink: 0` et non `flex: 1` seul : le libelle ne doit **jamais** etre comprime.
+              * Sans cette borne, une valeur longue a droite — le nom d'un etablissement, par exemple —
+              * ecrasait le libelle jusqu'a une lettre par ligne, et « Institution » s'affichait a la
+              * verticale. Ce n'etait pas un probleme de longueur de nom mais de gabarit : n'importe
+              * quelle valeur longue le reproduisait.
+              */}
+            <Text style={[theme.buttonMainText, { flexShrink: 0 }] as any}>{leftText}</Text>
             {onSwitchToggle !== undefined ? (
                 <Switch
                     style={{ marginLeft: 'auto', marginRight: theme.leftIcon?.marginLeft }}
@@ -168,7 +187,12 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
                     onValueChange={onSwitchToggle}
                 />
             ) : (
-                <Text style={theme.buttonSecondaryText as import('react-native').TextStyle}>{rightText}</Text>
+                <Text
+                    style={[theme.buttonSecondaryText as import('react-native').TextStyle, VALEUR_A_DROITE]}
+                    numberOfLines={1}
+                >
+                    {rightText}
+                </Text>
             )}
             {!onSwitchToggle && (
                 <MaterialCommunityIcons name="chevron-right" size={22} style={theme.rightIcon as import('react-native').TextStyle} />

@@ -82,9 +82,11 @@ leurs horaires, et les salles libres des bâtiments en accès libre. Tout est tr
 recherche, filtres et favoris.
 → [docs/features/campus.md](docs/features/campus.md)
 
-**Scolarité** — la connexion au compte universitaire : identité de l'étudiant, compteur de messages
-non lus, et navigateur intégré vers l'ENT, le webmail et Apogée. Protégé par authentification
-biométrique, identifiants stockés chiffrés.
+**Scolarité** — trois sections qui n'ont pas la même nature : **ton dossier** (formation courante,
+numéro étudiant, fraîcheur de la lecture), **tes services** (webmail avec son compteur de non-lus,
+ENT, Moodle, Apogée — tous issus du catalogue), et **tes documents**, des pièces rangées sur
+l'appareil qui fonctionnent sans compte. Protégé par authentification biométrique, identifiants
+stockés chiffrés.
 → [docs/features/scolarite.md](docs/features/scolarite.md)
 
 **Réglages** — langue, thème, filtres d'UE, rappels de cours, synchronisation avec le calendrier du
@@ -104,8 +106,8 @@ l'application — sans intermédiaire.
 | Source | Ce qu'elle fournit | Accès |
 |---|---|---|
 | Celcat (`celcat.u-bordeaux.fr`) | emplois du temps, groupes, salles et leur occupation | API interne, sans authentification |
-| CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires, extraction de pages |
-| CAS / mondossierweb Bordeaux INP | identité étudiant | identifiants universitaires, extraction de pages |
+| CAS / ENT Université de Bordeaux | identité étudiant, formation, messagerie | identifiants universitaires, extraction de pages |
+| CAS / mondossierweb Bordeaux INP | identité étudiant, formation | identifiants universitaires, extraction de pages |
 | ADE Bordeaux INP | emploi du temps | export iCalendar anonyme, aucune authentification |
 | Affluences | bibliothèques, affluence temps réel, horaires | API privée |
 | Croustillant | restaurants CROUS et menus | API publique |
@@ -268,8 +270,10 @@ livré ; elle est mise à jour à chaque contribution.
   iCalendar de son serveur ADE : une seconde source de planning, choisie par le catalogue, sans qu'un
   seul écran apprenne qu'il en existe deux. Depuis 6-J, **le compte se propose dès l'accueil** et
   l'application accepte un **lien d'abonnement collé** : une fac qu'on n'a pas portée devient
-  utilisable sans écrire une ligne. Le volet 1 est clos ; **le socle visuel est posé** (6-K), et
-  restent les sessions d'écran puis la clôture (6-Z) :
+  utilisable sans écrire une ligne. Le volet 1 est clos ; **le socle visuel est posé** (6-K), **la première
+  session d'écran est faite** — la Scolarité, qui a commencé par une sonde des deux portails et en a
+  rapporté la formation, les documents locaux et la fin des sélecteurs positionnels — et restent les
+  sessions des annonces et des réglages, puis la clôture (6-Z) :
   [docs/phase-6/README.md](docs/phase-6/README.md).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
@@ -312,13 +316,27 @@ livré ; elle est mise à jour à chaque contribution.
   léger, compteur de messages non lus, verrou biométrique, navigateur intégré avec remplissage
   automatique du formulaire. Les 323 lignes de WebView cachée pilotée par du JavaScript injecté sont
   devenues **deux [Blueprints](docs/blueprints.md)** (6-F) : les identifiants ne traversent plus la
-  source d'un script, chaque attente porte un délai déclaré et un échec nommé, et un décalage des
-  sélecteurs positionnels produit désormais une **erreur** au lieu d'une donnée fausse écrite dans le
-  trousseau. Le portail n'est plus le seul : **celui de Bordeaux INP est arrivé sans release** (6-G),
-  et une université qui n'a pas de messagerie extractible ne montre simplement pas la carte.
-  Une connexion **propose** désormais ce qu'elle trouve en chemin — les UE non suivies en filtres, à
+  source d'un script, et chaque attente porte un délai déclaré et un échec nommé. Le portail n'est
+  plus le seul : **celui de Bordeaux INP est arrivé sans release** (6-G), et une université qui n'a
+  pas de messagerie extractible ne montre simplement pas la carte.
+  Une connexion **propose** ce qu'elle trouve en chemin — les UE non suivies en filtres, à
   Bordeaux ; l'emploi du temps personnel en groupe, à l'INP — derrière une confirmation, parce que
   deviner juste dans le dos de quelqu'un reste deviner dans son dos.
+
+  **La première session d'écran du volet 2 a refait cet onglet** (2026-08-25), et elle a commencé par
+  une sonde des deux dossiers plutôt que par un habillage : la page n'avait rien à dire, et aucun
+  travail visuel n'y répondait. La page porte désormais **trois sections de natures différentes** —
+  ce que l'application sait, ce qu'on peut ouvrir, ce qu'on a rangé — dont **la formation courante**,
+  lue des deux côtés. Ses états ne prennent plus l'écran : ce sont des encarts, et **les documents
+  restent atteignables sans compte** — ce qui rend l'onglet vivant pour « Autre université », où il
+  était jusqu'ici entièrement mort. Deux exports morts sont supprimés au passage.
+
+  La sonde a aussi supprimé **la fragilité que cette phase désignait comme la plus sérieuse du
+  projet** : les cinq identifiants DOM positionnels de Bordeaux ont un libellé voisin, vérifié hors
+  ligne sur le DOM capturé — 11 libellés, 11 nœuds uniques — et sont devenus des ancrages par
+  libellé. Un décalage ne peut plus rendre *la mauvaise valeur*, il ne rend plus *rien*. Elle a
+  corrigé trois affirmations fausses de la documentation au passage, dont **l'INE de Bordeaux INP**,
+  qui existe.
   [docs/features/scolarite.md](docs/features/scolarite.md)
 - [x] **Multi-établissement** — le catalogue des universités vit en
   [base](docs/backend.md) et pilote l'interface : choix à l'accueil, changement dans les réglages,

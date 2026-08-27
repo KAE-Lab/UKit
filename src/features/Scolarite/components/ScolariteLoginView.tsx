@@ -5,6 +5,11 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+import { getEtablissementActif } from '../../../shared/etablissements';
+import { LogoEtablissement } from './LogoEtablissement';
+import { BlocProgression } from './ScolariteLoadingScreen';
+import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
+
 import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { useCredentials } from '../services/CredentialsContext';
@@ -21,69 +26,65 @@ import { useCredentials } from '../services/CredentialsContext';
  * endroit qui la demandait ; à l'accueil elle se saute, et `onSkip` porte cette sortie. Le composant
  * ne décide pas de sa présence — l'écran qui l'utilise la passe, ou non.
  */
-const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onSuccess = null, compact = false }) => {
-    const { validateAndSave } = useCredentials();
+/**
+ * Le bandeau du formulaire : le logo de l'etablissement, le titre, la phrase d'explication.
+ *
+ * Sorti du formulaire pour le garder sous la limite de lignes. À l'accueil, le titre annonce **le
+ * geste** (« connecte ton compte ») plutot que l'onglet : l'etudiant n'y est pas encore, et lui
+ * nommer une destination qu'il ne connait pas n'explique rien. Le corps du formulaire, lui, est
+ * identique dans les deux cas.
+ */
+const EnTeteDuFormulaire = ({ theme, color, compact }) => (
+    <View style={styles.hero}>
+        <LogoEtablissement
+            logo={getEtablissementActif().logo}
+            theme={theme}
+            teinte={color}
+            style={styles.iconWrap}
+        />
+        <Text style={[styles.title, { color: theme.font }]}>
+            {Translator.get(compact ? 'CONNECT_ACCOUNT_TITLE' : 'SCOLARITY')}
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.fontSecondary }]}>
+            {Translator.get(compact ? 'CONNECT_ACCOUNT_DESC' : 'ENTER_CREDENTIALS_DESC')}
+        </Text>
+    </View>
+);
 
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState('');
-
-    const onSubmit = useCallback(async () => {
-        if (!username || !password || submitting) return;
-        setError('');
-        setSubmitting(true);
-        const result = await validateAndSave(username.trim(), password);
-        if (!result.success) {
-            setError(result.error || Translator.get('LOGIN_FAILED'));
-            setSubmitting(false);
-            return;
-        }
-
-        /*
-         * Le succès rendait la main **sans rien faire**, et c'était juste tant que cet écran n'avait
-         * qu'un seul appelant : le tableau de bord se redessine dès que le contexte pose
-         * `credentials`, et cet écran disparaît avec lui. À l'accueil, rien ne le remplace — l'étape
-         * reste affichée, et le bouton restait donc figé sur « Connexion… » alors que la session
-         * était allée au bout. Mesuré sur appareil au jalon 6-J.
-         *
-         * L'indicateur retombe donc explicitement, et `onSuccess` porte la suite quand l'appelant en
-         * a une. Le tableau de bord n'en passe pas : son remplacement d'écran reste sa réponse.
-         */
-        setSubmitting(false);
-        onSuccess?.();
-    }, [username, password, submitting, validateAndSave, onSuccess]);
-
+/**
+ * La carte du formulaire : les champs, l'erreur, le bouton — ou la progression a leur place.
+ *
+ * Sortie du composant pour le garder sous la limite de lignes, comme `EnTeteDuFormulaire`.
+ */
+const CarteDuFormulaire = ({
+    theme, color, submitting, enSession, terminee, scrapeProgress,
+    username, setUsername, password, setPassword, error, onSubmit, onSkip,
+}) => {
+    /** Le bouton ne part pas sans ses deux champs, et pas deux fois. */
     const disabled = !username || !password || submitting;
 
     return (
-        <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-            <ScrollView
-                contentContainerStyle={{ paddingTop: topPadding + 70, paddingBottom: tokens.space.xxl }}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-            >
-                {/*
-                  * À l'accueil, le titre annonce le geste (« connecte ton compte ») plutôt que
-                  * l'onglet : l'étudiant n'y est pas encore, et lui nommer une destination qu'il ne
-                  * connaît pas n'explique rien. Le corps du formulaire, lui, est identique.
-                  */}
-                <View style={styles.hero}>
-                    <View style={[styles.iconWrap, { backgroundColor: `${color}1A` }]}>
-                        <MaterialCommunityIcons name="school-outline" size={36} color={color} />
-                    </View>
-                    <Text style={[styles.title, { color: theme.font }]}>
-                        {Translator.get(compact ? 'CONNECT_ACCOUNT_TITLE' : 'SCOLARITY')}
-                    </Text>
-                    <Text style={[styles.subtitle, { color: theme.fontSecondary }]}>
-                        {Translator.get(compact ? 'CONNECT_ACCOUNT_DESC' : 'ENTER_CREDENTIALS_DESC')}
-                    </Text>
-                </View>
-
-                <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+            <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+                {enSession ? (
+                    /*
+                      * **La page ne cede pas la place, elle change de contenu.**
+                      *
+                      * Le bandeau — logo, titre, phrase — reste ; seule la carte passe des champs
+                      * a la progression. Deux pages a moitie vides qui se remplacent donnaient
+                      * l'impression d'une application qui hesite ; une seule qui se transforme se
+                      * lit comme une suite.
+                      *
+                      * Et le gain n'est pas qu'esthetique : un echec revient **ici**, sous les
+                      * champs qu'on vient de remplir, sans qu'aucun ecran n'ait a etre rejoue en
+                      * sens inverse.
+                      */
+                    <BlocProgression
+                        scrapeProgress={scrapeProgress}
+                        theme={theme}
+                        color={color}
+                    />
+                ) : (
+                    <>
                     <TextInput
                         style={[styles.input, { backgroundColor: theme.background, color: theme.font, borderColor: theme.border }]}
                         placeholder={Translator.get('USERNAME')}
@@ -121,11 +122,11 @@ const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onSuccess
                     >
                         {submitting ? (
                             <>
-                                <ActivityIndicator size="small" color="#fff" />
-                                <Text style={styles.buttonText}>{Translator.get('CONNECTING')}</Text>
+                                <ActivityIndicator size="small" color={theme.lightFont} />
+                                <Text style={[styles.buttonText, { color: theme.lightFont }]}>{Translator.get('CONNECTING')}</Text>
                             </>
                         ) : (
-                            <Text style={styles.buttonText}>{Translator.get('CONNECT')}</Text>
+                            <Text style={[styles.buttonText, { color: theme.lightFont }]}>{Translator.get('CONNECT')}</Text>
                         )}
                     </TouchableOpacity>
 
@@ -143,7 +144,89 @@ const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onSuccess
                             </Text>
                         </TouchableOpacity>
                     )}
-                </View>
+                    </>
+                )}
+            </View>
+    );
+};
+
+const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onDebut = null, onSuccess = null, compact = false }) => {
+    const { validateAndSave, scrapeProgress, scrapeStatus, sessionMode } = useCredentials();
+
+    /*
+     * **La carte montre la progression tant que LA SESSION tourne, pas tant que le bouton attend.**
+     *
+     * `submitting` retombe quand `validateAndSave` resout — et cette promesse se resout **tot** : la
+     * preuve des identifiants est la premiere etape de la session, le dossier, la formation, l'annuaire
+     * et la messagerie viennent apres. La carte revenait donc a ses champs **vides** au milieu du run,
+     * sans erreur et sans explication, et il fallait quitter l'ecran pour retrouver la progression
+     * ailleurs. Mesure sur appareil le 2026-08-27.
+     *
+     * On suit donc la session elle-meme. `useEcranDeProgression` ne compte que les parcours **froids**,
+     * ce qui evite qu'un rafraichissement de fond fasse clignoter un formulaire.
+     */
+    const progression = useEcranDeProgression(sessionMode, scrapeStatus);
+
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState('');
+
+    const enSession = submitting || progression.visible;
+
+    const onSubmit = useCallback(async () => {
+        if (!username || !password || submitting) return;
+        setError('');
+        setSubmitting(true);
+        // L'ecran hote apprend qu'une session part **de ce formulaire** : c'est ce qui lui permet de
+        // lui laisser la page jusqu'au bout, alors que `credentials` est pose des le dixieme step.
+        onDebut?.();
+        const result = await validateAndSave(username.trim(), password);
+        if (!result.success) {
+            setError(result.error || Translator.get('LOGIN_FAILED'));
+            setSubmitting(false);
+            return;
+        }
+
+        /*
+         * Le succès rendait la main **sans rien faire**, et c'était juste tant que cet écran n'avait
+         * qu'un seul appelant : le tableau de bord se redessine dès que le contexte pose
+         * `credentials`, et cet écran disparaît avec lui. À l'accueil, rien ne le remplace — l'étape
+         * reste affichée, et le bouton restait donc figé sur « Connexion… » alors que la session
+         * était allée au bout. Mesuré sur appareil au jalon 6-J.
+         *
+         * L'indicateur retombe donc explicitement, et `onSuccess` porte la suite quand l'appelant en
+         * a une. Le tableau de bord n'en passe pas : son remplacement d'écran reste sa réponse.
+         */
+        setSubmitting(false);
+        onSuccess?.();
+    }, [username, password, submitting, validateAndSave, onSuccess]);
+
+
+    return (
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+            {/*
+              * Le rebond est **volontairement conserve**. Le supprimer a ete essaye et retire : sur
+              * un ecran ou le clavier entre et sort, couper le debattement fait sauter la vue et
+              * clignoter le clavier. Un rebond sur une page courte est le comportement natif attendu ;
+              * c'est le remede qui faisait plus de bruit que le mal.
+              */}
+            <ScrollView
+                contentContainerStyle={{ paddingTop: topPadding + 70, paddingBottom: tokens.space.xxl }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+                <EnTeteDuFormulaire theme={theme} color={color} compact={compact} />
+
+                <CarteDuFormulaire
+                    theme={theme} color={color} submitting={submitting} enSession={enSession}
+                    terminee={progression.terminee} scrapeProgress={scrapeProgress}
+                    username={username} setUsername={setUsername} password={password} setPassword={setPassword}
+                    error={error} onSubmit={onSubmit} onSkip={onSkip}
+                />
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -156,11 +239,6 @@ const styles = StyleSheet.create({
         marginBottom: tokens.space.lg,
     },
     iconWrap: {
-        width: 72,
-        height: 72,
-        borderRadius: tokens.radius.lg,
-        justifyContent: 'center',
-        alignItems: 'center',
         marginBottom: tokens.space.md,
     },
     title: {
@@ -206,7 +284,8 @@ const styles = StyleSheet.create({
         marginTop: tokens.space.md,
     },
     buttonText: {
-        color: '#fff',
+        // La couleur vient du theme a l'appel : `lightFont`, blanc dans les deux themes. Surtout pas
+        // `accentFont`, qui est le rouge destructif (docs/theme.md).
         fontSize: tokens.fontSize.md,
         fontWeight: '600',
     },

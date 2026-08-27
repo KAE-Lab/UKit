@@ -25,7 +25,7 @@ fragilité, extraction, contrat non versionné — ne s'y applique. Ce document 
 | # | Source | Rôle | Authentification | Fragilité |
 |---|---|---|---|---|
 | 1 | Celcat (`celcat.u-bordeaux.fr`) | emplois du temps, groupes, salles | aucune | moyenne — API interne non documentée. **Six Blueprints** depuis [6-E](phase-6/6-e-planning.md), et le relais `ukit.kbdev.io` est sorti de l'architecture |
-| 2 | CAS / ENT Université de Bordeaux | identité étudiant, messagerie | identifiants universitaires | **élevée** — extraction de pages HTML, sélecteurs positionnels. **Deux Blueprints** depuis [6-F](phase-6/6-f-scolarite.md) |
+| 2 | CAS / ENT Université de Bordeaux | identité étudiant, formation, messagerie | identifiants universitaires | **moyenne** — extraction de pages HTML, mais **ancrées par libellé** depuis le 2026-08-25 : les sélecteurs positionnels ont disparu. **Deux Blueprints** depuis [6-F](phase-6/6-f-scolarite.md) |
 | 3 | Affluences | bibliothèques, affluence, horaires | aucune (en-têtes imités) | moyenne — API privée d'une application web. **Trois Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
 | 4 | Croustillant | restaurants CROUS et menus | aucune | faible — API publique documentée. **Deux Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
 | 5 | ~~jsDelivr / `ukit-data`~~ | ~~annonces de vie étudiante~~ | — | **sortie de l'inventaire** — passée en base au jalon [6-B](phase-6/6-b-supabase.md) |
@@ -265,13 +265,19 @@ fill     #username / #password            secrets portail_user / portail_pass
 click    input[type=submit]                (Bordeaux ; l'INP sert un #submitBtn)
 wait     8 s (dossier) / 15 s (messagerie)   laisser la cascade d'authentification arriver
 wait_for #loginErrorsPanel  detached, 2 s    fail:LOGIN_FAILED
-wait_for <cible>          30 s            fail:LOGIN_FAILED | MESSAGERIE_INDISPONIBLE
+wait_for <cible CSS>      30 s            fail:LOGIN_FAILED | MESSAGERIE_INDISPONIBLE
 emit     LOGIN_SUCCESS                    c'est ce qui autorise a ecrire les identifiants
-extract  …                 5 s            une lecture n'a rien a attendre
-assert   les libelles voisins             dossier seulement
+extract  … par libelle     5 s            une lecture n'a rien a attendre
+assert   les champs critiques ne sont pas vides    dossier seulement
+
+  puis, pour le dossier seul — des BONUS qui ne doivent jamais emporter la connexion :
+
+click/navigate <vue>                      Inscriptions (Bordeaux) | /acces et /inscriptions (INP)
+wait     6 s                              `wait` et non `wait_for` : un timeout ferait echouer le run
+extract  … as: list                       zero correspondance rend [], jamais une levee
 ```
 
-Trois de ces lignes sont contre-intuitives et **mesurées**, pas supposées :
+Cinq de ces lignes sont contre-intuitives et **mesurées**, pas supposées :
 
 - **la pause après le clic.** L'authentification unifiée enchaîne plusieurs sauts, puis le client pose
   son propre fragment ; une opération émise pendant cette cascade **se perd en silence** sur un
@@ -286,30 +292,84 @@ Trois de ces lignes sont contre-intuitives et **mesurées**, pas supposées :
   réel. Un budget court garantit que la page réponde avant l'appelant, donc qu'un échec soit lisible
   au lieu d'être un silence rapporté comme « la page a changé ».
 
+- **`wait_for` porte un sélecteur CSS, jamais un XPath.** Le moteur embarqué lit `selector_type` sur
+  cette action, le moteur Python **non** : il passe le sélecteur à `page.locator()` tel quel. Un
+  XPath y marcherait donc sur un poste et nulle part ailleurs — la même classe de piège que les
+  pseudo-classes Playwright du jalon 6-G ;
+- **une lecture facultative descend en `as: "list"`, jamais derrière un `when`.** Un step gardé par
+  `when` est *sauté*, et un step sauté **n'enregistre aucune sortie** : le bloc `outputs` qui le
+  référence lève alors en `StrictUndefined`, ce qui fait échouer le run entier — exactement ce que la
+  garde prétendait éviter. `as: "list"` rend `[]` et ne lève jamais.
+
+Et un garde-fou qui vaut pour toute action d'interaction : **le moteur embarqué refuse un clic
+ambigu** là où Playwright prend le premier. Tout sélecteur de `click` doit matcher **exactement un**
+élément, et ça se mesure avant d'écrire le fichier.
+
 Au passage, la migration a trouvé du **code mort** dans le script d'origine : il testait `#msg.success`
 et `#msg.errors`, or **il n'existe aucun `#msg`** sur ce CAS. Ces deux branches ne matchaient plus
 rien, et personne ne pouvait le savoir.
 
 ### Le dossier administratif
 
-La page est une application GWT, et les champs sont lus **par identifiant DOM positionnel** :
+**Le portail est un Vaadin 8** (thème Valo), et non « une application GWT » comme ce document
+l'affirmait : le moteur *client* de Vaadin 8 est compilé par GWT, ce qui explique les `gwt-uid-NN` —
+mais le produit, sa structure et ses libellés sont ceux de Vaadin. La confusion masquait sa symétrie
+avec le portail de l'INP, qui est un Vaadin d'une génération plus récente.
 
-| Valeur | Libellé voisin | Donnée |
+**Les champs sont ancrés par leur libellé** depuis le 2026-08-25. Chaque couple vit dans une ligne de
+`v-formlayout` qui porte sa légende :
+
+```
+//tr[contains(@class,'v-formlayout-row')]
+   [td[contains(@class,'v-formlayout-captioncell')][normalize-space()="NNE"]]
+   /td[contains(@class,'v-formlayout-contentcell')]
+```
+
+| Libellé d'ancrage | Donnée |
+|---|---|
+| `Dossier` | numéro étudiant |
+| `NNE` | INE |
+| `Prénom et Nom` | identité complète |
+| `Email` | adresse mail |
+| `Date de naissance` | date de naissance |
+
+> **La fragilité la plus sérieuse du projet a disparu.** Les cinq `#gwt-uid-41/43/45/47/51` étaient
+> attribués selon l'ordre de construction du DOM : une refonte de page les décalait *silencieusement*,
+> et l'application affichait alors des champs mélangés. L'ancrage par libellé a été vérifié hors
+> ligne sur le DOM capturé — **11 libellés testés, 11 nœuds uniques** — et un décalage ne peut plus
+> rendre la mauvaise valeur : il ne rend plus rien, et l'extraction échoue bruyamment.
+
+**Le piège, avant de « simplifier » ces XPath** : une ligne de `v-formlayout` porte **trois** cellules
+— légende, **erreur**, contenu. Un `following-sibling::td[1]` tombe sur la cellule d'erreur, vide.
+
+L'`assert` a maigri en conséquence : les libellés n'ont plus à être lus puisqu'ils *sont* les
+sélecteurs. Il ne garde que ce que l'ancrage ne couvre pas — un libellé présent au-dessus d'une
+valeur **vide**, qui écrirait un dossier creux dans le trousseau. Le libellé `Prénom et Nom` sert
+toujours deux fois : il ancre l'extraction, et c'est lui qui autorise à prendre le premier mot de
+l'identité comme prénom.
+
+### La formation
+
+Le menu du portail porte six entrées, ancrables **par leur libellé** — ce ne sont pas des liens mais
+des `div[role=button]` d'une application à état serveur, donc on les **clique** :
+
+| Entrée | Ce qu'elle porte | Extraite ? |
 |---|---|---|
-| `gwt-uid-41` | `gwt-uid-40` = `Dossier` | numéro étudiant |
-| `gwt-uid-43` | `gwt-uid-42` = `NNE` | INE |
-| `gwt-uid-45` | `gwt-uid-44` = `Prénom et Nom` | identité complète |
-| `gwt-uid-47` | `gwt-uid-46` = `Email` | adresse mail |
-| `gwt-uid-51` | `gwt-uid-50` = `Date de naissance` | date de naissance |
+| Etat-civil | l'identité, la nationalité, le bac | **oui** |
+| Informations annuelles | boursier, salarié, aménagement d'étude | non — les trois champs sont vides sur le compte sondé |
+| Adresses | adresse annuelle et fixe | non — sans usage sur un tableau de bord |
+| **Inscriptions** | `Année · Composante · Filière`, une ligne par année | **oui**, la première ligne |
+| **Notes & résultats** | diplômes et étapes, puis le détail par UE derrière un clic | pas encore — session à part |
+| Aide | — | non |
 
-> Ces identifiants sont attribués par GWT selon l'ordre de construction du DOM. Toute modification de
-> la page côté université les décale silencieusement. C'est la fragilité la plus sérieuse du projet,
-> et **la migration ne la supprime pas** — elle en fait une ligne de données corrigeable à distance.
+Trois mesures gouvernent l'extraction de la formation :
 
-Ce qu'elle ajoute, en revanche, le code d'origine ne l'avait pas : **les cinq libellés voisins sont
-lus et affirmés**. Un décalage produit un échec nommé au lieu d'une donnée fausse écrite dans le
-trousseau. Le libellé `Prénom et Nom` sert deux fois — il garde l'extraction, et c'est lui qui
-autorise à prendre le premier mot de l'identité comme prénom.
+- **la première ligne est l'inscription courante** : la source trie par année décroissante ;
+- **le tableau est virtualisé** — 3 à 5 lignes rendues selon la hauteur de la fenêtre. On ne lit donc
+  que la première, la seule dont la présence soit acquise ;
+- **la ligne courante porte un glyphe FontAwesome collé à son libellé** (`M1 Informatique\uf002`). Il
+  vit dans la zone d'usage privé d'Unicode et se retire applicativement, où rien de légitime ne
+  s'écrit.
 
 Corollaire de « partir du service » : la lecture du prénom sur l'ENT — cinq sélecteurs en cascade plus
 une expression régulière — **n'a plus de page où se faire**, et n'existe plus. L'identité vient du
@@ -533,6 +593,8 @@ Ajouté au jalon [6-G](phase-6/6-g-etablissements.md), **sans release** : une li
 | `cas.bordeaux-inp.fr` | authentification centralisée |
 | `mondossierweb.bordeaux-inp.fr` | dossier administratif — nom, prénom, date de naissance, numéro étudiant |
 | `mondossierweb.bordeaux-inp.fr/coordonnees` | adresse électronique de l'établissement |
+| `mondossierweb.bordeaux-inp.fr/acces` | le bac, les primo-inscriptions, et **l'INE** |
+| `mondossierweb.bordeaux-inp.fr/inscriptions` | l'onglet « Parcours » — **la formation courante**, une carte par année |
 | `ade.bordeaux-inp.fr/direct/myplanning.jsp` | l'arbre de ressources **sous authentification** — il présélectionne la fiche de l'étudiant, donc son emploi du temps personnel (section 8) |
 | `sso.bordeaux-inp.fr` | SAML — **c'est lui qui rend le webmail inextractible** |
 | `ade.bordeaux-inp.fr` | emploi du temps, par export iCalendar — **porté** au jalon [6-I](phase-6/6-i-planning-universel.md), section 8 |
@@ -548,12 +610,14 @@ et il n'est **pas embarqué** dans le binaire : il arrive par le manifeste.
 | Produit CAS | Apereo, thème classique | Apereo, thème MDC |
 | Soumission | `input[type=submit]` | **`<button id="submitBtn">`** |
 | Panneau d'erreur | `#loginErrorsPanel` | **le même** |
-| Produit du dossier | `mondossierweb` **GWT** (Apogée) | `mondossierweb` **Vaadin** (PC-Scol) |
-| Ancrage des champs | `#gwt-uid-NN`, positionnels | `.text-label:has(.label-titre:text-is("…"))`, **par libellé** |
+| Produit du dossier | `mondossierweb` **Vaadin 8** (thème Valo) | `mondossierweb` **Vaadin 14+** (PC-Scol) |
+| Ancrage des champs | **par libellé**, en XPath *(depuis le 2026-08-25)* | **par libellé**, en XPath |
+| Navigation entre vues | on **clique** un menu à état serveur | de vraies routes (`/acces`, `/inscriptions`) |
 | Identité | `PRÉNOM NOM` en un champ | nom et prénom séparés |
-| INE | présent | **absent du dossier** |
+| INE | état civil | **onglet Accès** — voir ci-dessous |
+| Formation | vue *Inscriptions*, un tableau | vue *Parcours*, une carte par année |
 | Messagerie | derrière le CAS | derrière SAML — hors de portée |
-| Durée du parcours froid | ~40 s | ~12 s |
+| Durée du parcours froid | ~46 s | ~24 s |
 
 **Fragilité connue** : le numéro étudiant est lu par position dans le bandeau latéral
 (`:nth-match(vaadin-vertical-layout[slot=drawer] label, 2)`), faute d'un libellé pour l'ancrer. Le
@@ -564,6 +628,42 @@ refonte de la page, donc de ces libellés.
 (`Nom de famille`), alors que l'extraction rend le texte **affiché**, mis en capitales par la feuille
 de style (`NOM DE FAMILLE`). Le même fichier compare donc aux deux formes, et ce n'est pas une
 étourderie.
+
+### Ce que la sonde du 2026-08-25 a ajouté, et corrigé
+
+Deux vues du menu n'avaient jamais été ouvertes. Elles portent chacune une donnée que ce document
+déclarait absente :
+
+| Vue | Route | Ce qu'on en lit |
+|---|---|---|
+| **Accès** | `/acces` | `Code INE`, l'année et la mention du bac, les primo-inscriptions |
+| **Parcours** | `/inscriptions` | une carte par année : `Formation`, `Période`, `Régime d'inscription`, `Statut de l'inscription`, `Statut du paiement`, `Statut des pièces justificatives` |
+
+> **« Bordeaux INP ne rend pas d'INE » était faux.** Il n'est pas dans l'état civil mais sous
+> l'onglet *Accès*, que le Blueprint ne visitait pas. Le champ est désormais rempli des deux côtés.
+
+> **« Documentation » n'est pas un onglet de documents.** C'est un **lien externe** vers une page
+> d'aide de l'ENT. Les vrais PDF — certificat de scolarité, attestation de paiement, relevés de notes
+> — sont des liens dans les cartes de *Parcours*, mais leur URL porte un UUID **et** un horodatage
+> régénérés à chaque rendu de page : ils ne sont pas rejouables, donc pas stockables. Ce sont des
+> portes, jamais des données.
+
+Trois précautions, mesurées et non supposées :
+
+- **la première carte de *Parcours* est l'année courante**, et les libellés apparaissent autant de
+  fois qu'il y a d'années. Un XPath par libellé seul rendrait deux nœuds : l'indexation `[1]` est
+  donc nécessaire, et elle vise la carte et non le libellé ;
+- **les libellés se lisent dans leur casse source** (`Code INE`, `Régime d'inscription`), alors que
+  l'extraction rend le texte affiché en capitales — le même piège qu'en 2026-08-10, sur de nouvelles
+  vues ;
+- **plusieurs libellés portent une apostrophe**, donc le XPath s'écrit en **guillemets doubles**,
+  sans quoi il ne compile pas.
+
+**Les deux lectures sont des bonus, et elles descendent en `as: "list"`.** C'est ce qui les empêche
+d'emporter la connexion : une liste vide ne lève jamais, là où un `as: "text"` sur un nœud absent
+fait échouer le run — et perdre l'identité pour un INE serait un mauvais marché. Un `when` aurait été
+pire : **un step sauté n'enregistre aucune sortie**, donc le bloc `outputs` qui le référence lèverait
+en `StrictUndefined`.
 
 ## 7. Rendu cartographique
 
@@ -653,6 +753,37 @@ Le dépliage de lignes et le déshabillage RFC 5545 sont confiés à **`ical.js`
 référentiel des groupes, le calcul des plages, le tri et le découpage de la semaine restent
 applicatifs — ce sont des calculs, et un calcul dans un Blueprint devrait être réimplémenté à
 l'identique dans les deux moteurs.
+
+### L'accès anonyme a été coupé quelques jours — mesuré les 2026-08-25 et 2026-08-28
+
+```
+GET .../anonymous_cal.jsp?resources=7&projectId=1&calType=ical&firstDate=…&lastDate=…
+→ HTTP 500
+   org.apache.jasper.JasperException: com.adesoft.errors.InvalidLogin: Invalid login.
+```
+
+**Le serveur est debout** — sa racine rend `200`, `myplanning.jsp` rend `302` vers le CAS. C'est
+l'export **anonyme** qui refuse, et le message ne laisse pas de doute sur la cause : le compte
+anonyme d'ADE a été désactivé, ou son mot de passe a expiré au changement de projet.
+
+Ce n'est **pas** une question de dates ni de projet : les quatre `projectId` connus ont été essayés
+sur trois plages, dont l'année écoulée qui fonctionnait en août — **douze combinaisons, douze `500`**.
+
+> **Rétabli le 2026-08-28**, sans intervention de notre part : les deux cas de parité iCal sont
+> repassés au vert d'eux-mêmes. La panne aura duré quelques jours.
+
+Ce que l'épisode a établi, et qui vaut d'être gardé :
+
+- **le harnais de parité a fait exactement son travail.** Deux cas rouges, une cause externe, et
+  l'information est arrivée avant que des utilisateurs la remontent : *« un cas peut échouer parce
+  que la source est en panne. C'est une information »*
+  ([tools/parity/README.md](../tools/parity/README.md)). La tentation était de « réparer » les cas en
+  déplaçant leurs dates — ça aurait masqué la panne ;
+- **ce n'était ni les dates ni le projet.** Les quatre `projectId` connus ont été essayés sur trois
+  plages, dont l'année écoulée qui fonctionnait la veille : **douze combinaisons, douze `500`**. Le
+  message d'erreur, lui, nommait la cause sans ambiguïté ;
+- **le remède appartenait à l'établissement**, et il a été appliqué chez lui. Si ça recommence, la
+  piste sérieuse est `myplanning.jsp` sous CAS, que le Blueprint de dossier traverse déjà.
 
 ### Fragilité connue
 

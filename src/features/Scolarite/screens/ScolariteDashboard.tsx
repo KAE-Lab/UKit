@@ -1,3 +1,30 @@
+/**
+ * L'onglet Scolarite.
+ *
+ * Trois sections, et elles n'ont pas la meme nature — c'est ce qui les empeche de se ressembler :
+ * « Ton dossier » est ce que l'application **sait**, « Tes services » ce que l'etudiant peut
+ * **ouvrir**, « Tes documents » ce qu'il a **range**. Une grille de tuiles indifferenciees se lit
+ * comme un brouillon ; trois sections dont l'intention est nommee se lisent comme une decision
+ * (docs/features/scolarite.md).
+ *
+ * ## L'aiguillage s'est inverse, et c'est le changement structurant
+ *
+ * Cet ecran rendait un etat **plein ecran** et rien d'autre des que la session n'etait pas nominale.
+ * Depuis que les documents existent — locaux, sans compte, sans portail — cacher toute la page
+ * derriere un ecran d'erreur rendrait l'onglet mort pour ceux a qui il sert le plus. Les etats sont
+ * donc des **encarts en tete de page** (`EncartSession`), et la page se poursuit dessous.
+ *
+ * Une seule exception, deliberee : le **parcours froid** reste plein ecran, parce qu'il est
+ * transitoire et qu'une page qui se remplit sous un indicateur de progression fait sauter le contenu.
+ *
+ * ## Le verrou biometrique ne garde que ce qui merite d'etre garde
+ *
+ * Il ne s'arme que lorsqu'un compte est enregistre. Sans compte il n'y a **rien a proteger** dans cet
+ * onglet — l'identite n'a pas ete lue — et demander une empreinte pour atteindre ses propres fichiers
+ * serait un peage sans serrure derriere. Il reste une porte d'interface : le trousseau, lui, n'exige
+ * pas d'authentification (docs/features/scolarite.md).
+ */
+
 import React, { useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
@@ -5,100 +32,12 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
-import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
-import { ScreenState } from '../../../shared/ui/ScreenState';
 import { demandeUneRessaisie, presenterEchec } from '../services/ScolariteMapping';
-import { portailAbsent } from '../services/ScolariteSession';
 import { useCredentials } from '../services/CredentialsContext';
-import ScolariteLoginView from '../components/ScolariteLoginView';
-import GreetingBlock from '../components/GreetingBlock';
-import MailboxRow from '../components/MailboxRow';
 import BiometryGate from '../components/BiometryGate';
 import ScolariteLoadingScreen from '../components/ScolariteLoadingScreen';
-
-const SectionHeader = ({ title, theme }) => (
-    <Text style={[styles.sectionHeader, { color: theme.fontSecondary }]}>
-        {title.toUpperCase()}
-    </Text>
-);
-
-/**
- * La messagerie, quand l'etablissement en publie une d'extractible.
- *
- * Elle **disparait** sinon : il n'y a alors rien qui echoue, donc rien a montrer. Une carte en panne
- * permanente pour un service inexistant serait un mensonge repete a chaque lancement (jalon 6-G).
- */
-const MessagerieSection = ({ disponible, mailData, coldData, scrapeStatus, sessionFailure, theme, accent, onPress }) => {
-    if (!disponible) return null;
-
-    return (
-        <>
-            <SectionHeader title={Translator.get('MESSAGING')} theme={theme} />
-            <MailboxRow
-                mailData={mailData}
-                coldData={coldData}
-                status={scrapeStatus}
-                failure={sessionFailure}
-                color={theme.sectionsHeaders[5] || accent}
-                theme={theme}
-                onPress={onPress}
-            />
-        </>
-    );
-};
-
-
-/**
- * Ce qui s'affiche **avant** le contenu, et dans cet ordre.
- *
- * L'ordre n'est pas indifferent — c'est le meme raisonnement que l'onglet Planning au jalon 6-G.
- * L'absence de portail passe devant l'absence de compte : un etablissement qui ne publie aucun
- * portail n'a jamais d'identifiants enregistres, la branche « pas de compte » gagnerait donc toujours
- * et proposerait un formulaire qui ne peut mener nulle part.
- *
- * Sorti de l'ecran au jalon 6-K pour le garder sous la limite de lignes.
- */
-const EtatsAvantContenu = ({
-    portailDisponible, credentials, isColdLoading, echecBloquant, sessionFailure,
-    scrapeProgress, theme, accent, insets, onRetry, onRessaisir,
-}) => {
-    // Le centrage passe par `ScreenState` : la compensation d'en-tete etait posee **en haut seul**,
-    // ce qui descendait le bloc de toute la hauteur de l'en-tete au lieu de le centrer sur la surface
-    // libre. C'etait l'etat vide le plus bas de l'application (shared/ui/ScreenState).
-    const etat = (contenu: React.ReactNode) => (
-        <ScreenState theme={theme}>{contenu}</ScreenState>
-    );
-
-    if (!portailDisponible) {
-        return etat(<SourceFailureNotice failure={portailAbsent()} theme={theme} variant="plain" />);
-    }
-    if (!credentials) {
-        return <ScolariteLoginView theme={theme} color={accent} topPadding={insets?.top || 0} />;
-    }
-    if (isColdLoading) {
-        return <ScolariteLoadingScreen scrapeProgress={scrapeProgress} theme={theme} color={accent} />;
-    }
-    if (!echecBloquant) return null;
-
-    /*
-     * Un mot de passe refuse ne se repare pas en rejouant : il se repare en le ressaisissant. On
-     * envoie donc au formulaire **sans deconnecter** — vider le trousseau effacerait aussi l'identite
-     * deja lue et obligerait a retaper l'identifiant, pour un mot de passe qui a change tout seul.
-     */
-    return etat(
-        <SourceFailureNotice
-            variant="plain"
-            failure={echecBloquant}
-            theme={theme}
-            onRetry={onRetry}
-            action={demandeUneRessaisie(sessionFailure) ? {
-                label: Translator.get('REENTER_CREDENTIALS'),
-                onPress: onRessaisir,
-                icon: 'account-key-outline',
-            } : undefined}
-        />
-    );
-};
+import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
+import { PageScolarite } from '../components/PageScolarite';
 
 const ScolariteDashboard = ({ navigation }) => {
     const { themeName } = useContext(AppContext);
@@ -131,80 +70,86 @@ const ScolariteDashboard = ({ navigation }) => {
 
     if (!credentialsLoaded) return null;
 
-    const isColdLoading = sessionMode === 'cold' && (scrapeStatus === 'connecting' || scrapeStatus === 'scraping');
+    // `useEcranDeProgression` et non un test direct : l'ecran doit **survivre** quelques centaines de
+    // millisecondes a la fin du run, le temps que la barre rejoigne 100 %. Sans ce delai, elle restait
+    // a 80 % et la page se substituait d'un coup.
+    const progression = useEcranDeProgression(sessionMode, scrapeStatus);
 
     /**
-     * L'echec qui prend tout l'ecran : la session a echoue **et** il n'y a aucune identite a
-     * afficher. Quand des donnees froides existent — deja en trousseau, ou lues a un lancement
-     * precedent — le tableau de bord reste montrable et c'est la ligne de messagerie qui porte
-     * l'echec. Un run annule ne montre rien : l'utilisateur est deja parti.
+     * L'echec qui merite un encart : la session a echoue **et** il n'y a aucune identite a afficher.
+     * Quand des donnees froides existent, le dossier reste montrable et c'est la ligne de messagerie
+     * qui porte l'echec. Un run annule ne montre rien : l'utilisateur est deja parti.
      */
     const echecBloquant = scrapeStatus === 'error' && coldData === null
         && sessionFailure !== null && !sessionFailure.silent
         ? presenterEchec(sessionFailure)
         : null;
 
+    const ouvrirRessaisie = () => navigation.navigate('CredentialsSettings', { ressaisie: true });
+    const ouvrirFiche = () => navigation.navigate('CredentialsSettings');
+    const ouvrirPorte = (point: string) => navigation.navigate('WebBrowser', { entrypoint: point });
+    const ouvrirLien = (href: string) => navigation.navigate('WebBrowser', { href });
+
     /**
      * Ou mene la ligne de messagerie.
      *
      * Quand elle dit « identifiants incorrects », la toucher doit mener a les **corriger**, pas ouvrir
      * une messagerie a laquelle on n'a plus acces. C'est l'autre moitie de l'impasse : celle qui se
-     * produit quand des donnees froides existent deja, donc que l'ecran d'echec plein ne s'affiche pas
-     * (`echecBloquant` exige `coldData === null`).
+     * produit quand des donnees froides existent deja, donc que l'encart d'echec ne s'affiche pas.
      */
-    const ouvrirRessaisie = () => navigation.navigate('CredentialsSettings', { ressaisie: true });
-
     const ouvrirMessagerie = () => (demandeUneRessaisie(sessionFailure)
         ? ouvrirRessaisie()
-        : navigation.navigate('WebBrowser', { entrypoint: 'email' }));
+        : ouvrirPorte('email'));
+
+    // Le parcours froid prend l'ecran : il est transitoire, et une page qui se remplit sous lui
+    // ferait sauter le contenu a chaque etape franchie.
+    if (portailDisponible && credentials && progression.visible) {
+        return (
+            <View style={[styles.container, { backgroundColor: theme.background }]}>
+                <SafeAreaInsetsContext.Consumer>
+                    {(insets) => renderHeader(insets)}
+                </SafeAreaInsetsContext.Consumer>
+                <ScolariteLoadingScreen
+                    scrapeProgress={scrapeProgress}
+                    terminee={progression.terminee}
+                    theme={theme}
+                    color={accent}
+                />
+            </View>
+        );
+    }
+
+    const corps = (insets) => (
+        <PageScolarite
+            theme={theme}
+            teinte={accent}
+            insets={insets}
+            scrollY={scrollY}
+            coldData={coldData}
+            mailData={mailData}
+            credentials={credentials}
+            portailDisponible={portailDisponible}
+            messagerieDisponible={messagerieDisponible}
+            scrapeStatus={scrapeStatus}
+            sessionFailure={sessionFailure}
+            echecBloquant={echecBloquant}
+            onRetry={retrySession}
+            onRessaisir={ouvrirRessaisie}
+            onConnecter={ouvrirFiche}
+            onDemanderCampus={ouvrirLien}
+            onMessagerie={ouvrirMessagerie}
+            onPorte={ouvrirPorte}
+        />
+    );
 
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
                     {renderHeader(insets)}
-
-                    <EtatsAvantContenu
-                        portailDisponible={portailDisponible}
-                        credentials={credentials}
-                        isColdLoading={isColdLoading}
-                        echecBloquant={echecBloquant}
-                        sessionFailure={sessionFailure}
-                        scrapeProgress={scrapeProgress}
-                        theme={theme}
-                        accent={accent}
-                        insets={insets}
-                        onRetry={retrySession}
-                        onRessaisir={ouvrirRessaisie}
-                    />
-                    {portailDisponible && credentials && !isColdLoading && !echecBloquant ? (
-                        <BiometryGate theme={theme}>
-                            <Animated.ScrollView
-                                onScroll={Animated.event(
-                                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                                    { useNativeDriver: true }
-                                )}
-                                scrollEventThrottle={16}
-                                showsVerticalScrollIndicator={false}
-                                contentContainerStyle={{
-                                    paddingTop: (insets?.top || 0) + 70,
-                                    paddingBottom: tokens.space.xxl + 80,
-                                }}
-                            >
-                                <GreetingBlock coldData={coldData} color={accent} theme={theme} />
-                                <MessagerieSection
-                                    disponible={messagerieDisponible}
-                                    mailData={mailData}
-                                    coldData={coldData}
-                                    scrapeStatus={scrapeStatus}
-                                    sessionFailure={sessionFailure}
-                                    theme={theme}
-                                    accent={accent}
-                                    onPress={ouvrirMessagerie}
-                                />
-                            </Animated.ScrollView>
-                        </BiometryGate>
-                    ) : null}
+                    {credentials
+                        ? <BiometryGate theme={theme}>{corps(insets)}</BiometryGate>
+                        : corps(insets)}
                 </View>
             )}
         </SafeAreaInsetsContext.Consumer>
@@ -231,13 +176,6 @@ const styles = StyleSheet.create({
         fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold,
         marginBottom: tokens.space.md,
-    },
-    sectionHeader: {
-        fontSize: tokens.fontSize.sm,
-        fontWeight: tokens.fontWeight.semibold,
-        letterSpacing: 0.8,
-        marginLeft: tokens.space.md,
-        marginBottom: tokens.space.sm,
     },
 });
 

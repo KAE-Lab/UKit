@@ -23,7 +23,7 @@ actuel du dépôt, à connaître pour distinguer une régression d'un héritage 
 | Commande | État | Détail |
 |---|---|---|
 | `npx tsc --noEmit` | **verte** | zéro erreur depuis le 2026-08-16 — voir ci-dessous pour les trois `TS2612` historiques |
-| `npx eslint .` | **0 erreur, 53 warnings** | 11 `no-explicit-any` et **42 `ukit/no-style-literals`** |
+| `npx eslint .` | **0 erreur, 47 warnings** | 11 `no-explicit-any` et **36 `ukit/no-style-literals`** |
 
 La règle de contribution est donc : **ne pas augmenter ces compteurs**, et les réduire quand on
 travaille dans un fichier concerné.
@@ -38,7 +38,7 @@ mesurés par rien. Ils ne sont pas une dette diffuse mais une **liste de travail
 
 | Zone | Warnings | Qui les résorbe |
 |---|---:|---|
-| annonces, Scolarité, Réglages | **18** | leurs sessions de refonte d'écran, qui réécrivent ces écrans de toute façon |
+| annonces, Réglages | **15** | leurs sessions de refonte d'écran, qui réécrivent ces écrans de toute façon |
 | écrans de référence | 12 | personne : ce sont des valeurs hors échelle **assumées**, ou des arbitrages consignés dans [inventaire-visuel.md](inventaire-visuel.md) |
 | socle (`shared/`) | 12 | idem — ombres écrites à la main, tailles hors échelle |
 
@@ -46,7 +46,13 @@ Le jalon 6-K a converti tout ce qui pouvait l'être **sans déplacer un pixel** 
 référence ; ce qui reste demande un arbitrage visuel, et c'est pourquoi la règle est en `warn` et non
 en `error`.
 
-> **Le compteur a baissé de 79 à 53**, dont 26 avertissements de style, pendant la passe de finition
+> **Le compteur est passé de 53 à 47** pendant la session d'écran Scolarité du 2026-08-25, sans
+> qu'aucun n'ait été désactivé : la réécriture de la rangée de messagerie sur le vocabulaire partagé a
+> résorbé les trois derniers littéraux de cet écran — un `#fff` sur un compteur, deux espacements de 2
+> devenus `space.xxs`. C'est la règle de contribution appliquée telle quelle : les réduire quand on
+> travaille dans un fichier concerné.
+
+> **Le compteur avait baissé de 79 à 53**, dont 26 avertissements de style, pendant la passe de finition
 > du 2026-08-21 — celle qui a normalisé les dialogues, les états et les boutons. Aucun n'a été
 > désactivé : ils ont été résorbés en traversant les fichiers, ce que la règle de contribution demande
 > (« les réduire quand on travaille dans un fichier concerné »). Les plus notables sont les quatre
@@ -124,7 +130,7 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`features/Planning/components/CourseAnnotations.ts`](../src/features/Planning/components/CourseAnnotations.ts) | l'icône déduite du contenu et non du rang, sur les deux formes de description — le défaut trouvé sur appareil au jalon 6-I |
 | [`features/Planning/services/PlanningAssembly.ts`](../src/features/Planning/services/PlanningAssembly.ts) | un code d'UE contient une lettre : une année de titre ADE n'en est pas un |
 | [`features/Campus/services/CampusApiMapping.ts`](../src/features/Campus/services/CampusApiMapping.ts) | la correspondance textuelle salle vers bâtiment, la détection des vacances, le refiltrage sur la date |
-| [`features/Scolarite/services/ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) | la casse de l'identité criée par la source, le compteur `null` contre `0`, la table des échecs nommés |
+| [`features/Scolarite/services/ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) | la casse de l'identité criée par la source, le compteur `null` contre `0`, la table des échecs nommés, et — depuis le 2026-08-25 — **l'arité asymétrique des deux portails** (une lecture obligatoire rend une chaîne, une lecture bonus rend une liste) plus le **glyphe d'icône** que la source colle au libellé de la formation |
 | [`tools/eslint/no-style-literals.mjs`](../tools/eslint/no-style-literals.mjs) | que la table d'échelles de la règle ESLint **n'a pas dérivé** de [`shared/theme/tokens.ts`](../src/shared/theme/tokens.ts) |
 
 `BdeMapping` a été le premier module **de feature** couvert, et il l'est pour une raison précise :

@@ -434,6 +434,59 @@ Acquises, et qui ont coûté à être trouvées :
   socle. La distance à pied et l'affluence d'une bibliothèque vivent dans
   [`CampusCardParts.tsx`](../src/features/Campus/components/CampusCardParts.tsx), pas dans
   `shared/ui/` : le socle n'a aucune raison de connaître les bibliothèques.
+- **Un en-tête de section de tableau de bord et un libellé de groupe de réglages sont deux choses,
+  pas deux dialectes.** Le dépôt en portait **trois** : le grand titre de
+  [`SectionHeader`](../src/shared/ui/SectionHeader.tsx) — `fontSize.xl`, gras, `theme.font`, chevron
+  facultatif — relevé quatre fois sur le tableau de bord Campus ; un petit libellé gris en capitales
+  défini localement dans le tableau de bord Scolarité ; et un troisième, plus petit encore, dans
+  l'écran du compte.
+
+  **Arbitrage de la session Scolarité du 2026-08-25** : un **tableau de bord** prend
+  `shared/ui/SectionHeader`, comme Campus qui fait référence — le dialecte local a été supprimé. Le
+  petit libellé en capitales **reste**, mais borné à ce qu'il est : le libellé d'un groupe de
+  réglages, dans un écran poussé. La distinction est de nature et non de goût, et c'est elle qui
+  empêche la troisième réapparition.
+- **Une pile de rangées est un groupe encadré, pas une pile de cartes.** Chaque rangée encadrée pour
+  elle-même se lit comme une pile d'objets sans rapport ; un conteneur en `radius.lg` avec un filet
+  de 1, dont les lignes sont séparées par un filet fin **indenté sous le texte**, se lit comme une
+  liste. Le motif était déjà là trois fois — la rangée de messagerie et les deux groupes de l'écran
+  du compte — et il porte maintenant un nom
+  ([`LigneScolarite.tsx`](../src/features/Scolarite/components/LigneScolarite.tsx)).
+
+  Deux détails qui décident du rendu : **le filet sépare, il n'encadre pas** — un filet sous la
+  dernière ligne double le bord du groupe et se voit ; et **la surface d'icône est un carré arrondi**
+  de `radius.md`, jamais un disque.
+- **Un état plein écran cesse d'être plein écran dès que la page porte autre chose.** Le tableau de
+  bord Scolarité rendait quatre situations en plein écran — pas de portail, pas de compte, échec
+  bloquant, parcours froid — et c'était juste tant que l'onglet n'avait rien d'autre à montrer. Le
+  jour où il a gagné une section **locale**, qui ne dépend ni d'un portail ni d'un compte, ces écrans
+  se sont mis à cacher le seul contenu qui restait valide.
+
+  La règle qui en sort : un état plein écran dit *« il n'y a rien ici »*. S'il reste quelque chose, il
+  devient un **encart en tête de page** (`EmptyState` ou `SourceFailureNotice` en `variant="card"`) et
+  la page continue dessous. **Une exception, et une seule** : un état **transitoire** — un chargement
+  — reste plein écran, parce qu'une page qui se remplit sous un indicateur de progression fait sauter
+  le contenu à chaque étape.
+- **Un écran d'attente montre une progression, pas une liste de tâches.** La distinction se décide sur
+  une question : *l'utilisateur peut-il agir sur ces étapes ?* Quand il ne peut qu'attendre, nommer
+  quatre étapes dont trois sont grisées l'informe sur ce qu'il ne contrôle pas, et laisse la plus
+  longue paraître figée. Une barre, un pourcentage et **une seule ligne** répondent à la question
+  qu'il se pose vraiment — combien de temps encore.
+
+  Deux règles rendent une barre honnête sans l'empêcher de lisser : **elle ne recule jamais**, et
+  **elle n'atteint jamais le palier d'une étape qui n'est pas finie**. Elle anime depuis sa position
+  courante et non depuis un plancher — sinon une étape rapide la fait sauter, ce qui se lit comme un
+  défaut. Voir [`ProgressBar`](../src/shared/ui/ProgressBar.tsx), qui accepte une `Animated.Value`
+  pour avancer à la fréquence de l'écran plutôt qu'à celle des mises à jour d'état.
+- **Une ligne de réglage ne laisse jamais sa valeur écraser son libellé.** Le libellé porte
+  `flexShrink: 0`, la valeur cède et se tronque. Sans cette borne, une valeur longue comprime le
+  libellé jusqu'à une lettre par ligne — « Institution » s'affichait à la verticale. C'est un défaut
+  de gabarit et non de donnée : raccourcir la valeur ne fait que déplacer le seuil.
+- **Un échec transitoire se dit par un toast, pas par un état d'écran ni par un dialogue.** Un geste
+  de fichier qui échoue — ajouter une pièce, la supprimer — n'est pas une source en panne : il se dit
+  et s'oublie. [`ErrorAlert`](../src/shared/ui/Alerts.ts) est le mécanisme du dépôt pour ça.
+  Détourner une modale de confirmation en porte-message demanderait à l'utilisateur de **confirmer**
+  une mauvaise nouvelle.
 
 ## Vérifier
 

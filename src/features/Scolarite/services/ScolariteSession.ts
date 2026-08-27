@@ -22,7 +22,8 @@
  * Voir docs/features/scolarite.md, docs/phase-6/6-f-scolarite.md et docs/phase-6/6-g-etablissements.md.
  */
 
-import { getEtablissementActif } from '../../../shared/etablissements';
+import { getEtablissementActif, serviceEtablissement } from '../../../shared/etablissements';
+import { BLUEPRINT } from '../../../../blueprints';
 import {
     estNomDePortail,
     reportFailure,
@@ -69,6 +70,8 @@ export interface OptionsSession {
     /** Le CAS a accepte les identifiants. C'est ce qui autorise a les ecrire. */
     readonly onLoginSuccess?: () => void;
     readonly signal?: RunBlueprintOptions['signal'];
+    /** Les entrees du Blueprint, quand il en declare — la verification prend le CAS et son service. */
+    readonly inputs?: Readonly<Record<string, unknown>>;
 }
 
 /**
@@ -168,6 +171,7 @@ async function jouer(
     enCours = nom;
     try {
         const run = await runBlueprint(nom, {
+            ...(options.inputs !== undefined ? { inputs: options.inputs } : {}),
             ...(options.secrets !== undefined ? { secrets: options.secrets } : {}),
             ...(options.signal !== undefined ? { signal: options.signal } : {}),
             onEvent: suivreProgression(depart, options),
@@ -215,7 +219,70 @@ export async function jouerDossier(options: OptionsSession = {}): Promise<Dossie
         `edt ${propositions.edt === null ? 'absent' : propositions.edt.ressource}`,
     );
 
-    return { ok: true, cold: projeterDossier(run.outputs), propositions };
+    // L'horodatage se pose ICI et non dans la projection : celle-ci ne doit connaitre ni
+    // l'heure ni la plateforme, c'est ce qui la rend rejouable sous vitest.
+    return { ok: true, cold: projeterDossier(run.outputs, new Date().toISOString()), propositions };
+}
+
+/**
+ * Ferme la session CAS **cote serveur**, en sortie de deconnexion.
+ *
+ * C'est le pendant obligatoire de `options.session.persist`, que les parcours de portail declarent
+ * depuis le 2026-08-25 pour que le navigateur integre s'ouvre deja authentifie. Sans lui, « se
+ * deconnecter » effacerait le trousseau **en laissant un navigateur connecte** au compte qu'on vient
+ * de retirer : le cookie de ticket survivrait au geste qui pretend tout effacer.
+ *
+ * Viser le CAS plutot que supprimer un cookie local n'est pas un detour : le serveur invalide le
+ * ticket pour de bon, la ou une suppression locale laisse une session vivante que n'importe quel
+ * autre client pourrait reprendre. Et ca ne coute aucune dependance de plus.
+ *
+ * **Ne rend rien et ne leve jamais.** Une deconnexion locale reussie avec une session distante encore
+ * ouverte vaut mieux qu'un bouton « Se deconnecter » qui refuse de marcher parce que le portail ne
+ * repond pas — l'inverse laisserait quelqu'un coince dans un compte dont il veut sortir.
+ */
+export async function fermerSessionDistante(): Promise<void> {
+    const cas = serviceEtablissement('cas');
+    if (cas === null) return;
+
+    try {
+        await runBlueprint(BLUEPRINT.PORTAIL_DECONNEXION, { inputs: { cas } });
+    } catch {
+        // Volontairement muet : voir ci-dessus.
+    }
+}
+
+/**
+ * Prouve un couple d'identifiants aupres du CAS, avant de lire quoi que ce soit.
+ *
+ * **Pourquoi une etape a part, et pas la simple presence d'un formulaire.** On a longtemps deduit la
+ * preuve du parcours lui-meme : s'il traversait un formulaire, c'est que le CAS avait accepte. Cette
+ * deduction est fausse des que la session persiste — et la sonde du 2026-08-27 a montre pire encore :
+ * fermer la session **au CAS** ne suffit pas a faire reapparaitre le formulaire, parce que le
+ * **service** garde son propre cookie. Le CAS repondait « Logout successful » et `mondossierweb`
+ * laissait quand meme entrer.
+ *
+ * Le parcours passait donc sans que personne ne se prononce, et l'application soldait la validation
+ * en « impossible de verifier tes identifiants » sur des identifiants justes.
+ *
+ * `renew=true` est la reponse du protocole : Apereo redemande les identifiants meme si un ticket vit.
+ * La preuve cesse d'etre deduite d'une absence de session pour devenir **demandee**.
+ *
+ * L'encodage du `service` est fait **ici** : le filtre `urlencode` n'existe pas dans le moteur
+ * embarque, donc l'employer dans le fichier marcherait depuis un poste et nulle part ailleurs.
+ */
+async function jouerVerification(options: OptionsSession): Promise<UkitFailure | null> {
+    const cas = serviceEtablissement('cas');
+    const service = serviceEtablissement('ent');
+    // Sans CAS ni service connus, on ne sait pas ou prouver quoi que ce soit. On laisse alors le
+    // parcours suivre son cours : c'est ce qu'il faisait avant, et le dire ici serait un echec de
+    // configuration deguise en echec d'identifiants.
+    if (cas === null || service === null) return null;
+
+    const run = await jouer(BLUEPRINT.PORTAIL_VERIFICATION, 'connecting', {
+        ...options,
+        inputs: { cas, service: encodeURIComponent(service) },
+    });
+    return run.ok === false ? run.failure : null;
 }
 
 /** Le parcours chaud : le compteur de messages non lus, seul. */
@@ -268,6 +335,22 @@ export async function deroulerSession(
 
     if (!dossierPublie && !messageriePubliee) {
         return { failure: portailAbsent('portail') };
+    }
+
+    /*
+     * **Un couple fourni a l'appel se prouve AVANT qu'on lise quoi que ce soit.**
+     *
+     * `options.secrets` n'est present que sur une validation — quelqu'un vient de taper ses
+     * identifiants, et rien ne les a encore verifies. Le parcours seul ne peut pas s'en charger : une
+     * session vivante le laisse passer sans que le CAS se prononce, et fermer cette session ne suffit
+     * pas (le service garde la sienne). On demande donc la preuve explicitement.
+     *
+     * Sur le chemin nominal — pas de secrets a l'appel, le resolver fournit ceux du trousseau — cette
+     * etape n'existe pas : il n'y a rien a prouver, ils l'ont deja ete.
+     */
+    if (options.secrets !== undefined) {
+        const refus = await jouerVerification(options);
+        if (refus !== null) return { failure: refus };
     }
 
     let cold: ScolariteColdData | undefined;

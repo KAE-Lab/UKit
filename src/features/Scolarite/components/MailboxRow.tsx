@@ -1,33 +1,46 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { ActivityIndicator } from 'react-native';
 
-import { tokens } from '../../../shared/theme/Theme';
+import { type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import type { UkitFailure } from '../../../shared/aetherius/failures';
 import { presenterEchec } from '../services/ScolariteMapping';
+import type { ScolariteColdData, ScolariteMailData } from '../services/ScolariteMapping';
+import { CompteurScolarite, LigneScolarite } from './LigneScolarite';
 
 /**
- * Rangée de section « Messagerie », style liste groupée native.
- * Affiche le nombre de mails non lus + l'adresse, ouvre la webview au tap.
+ * La rangee « Messagerie » : un compteur de non-lus, et la porte vers le webmail.
  *
- * Depuis le jalon 6-F, la rangée porte aussi **l'échec** du parcours chaud. Sans ça, une messagerie
- * injoignable laissait l'indicateur tourner indéfiniment : l'utilisateur ne pouvait pas distinguer
- * « ça charge » de « ça a échoué », ce qui est exactement l'erreur avalée que la Phase 6 supprime.
+ * Elle porte aussi **l'echec** du parcours chaud depuis le jalon 6-F. Sans ca, une messagerie
+ * injoignable laissait l'indicateur tourner indefiniment : impossible de distinguer « ca charge » de
+ * « ca a echoue », ce qui est exactement l'erreur avalee que la Phase 6 supprime.
+ *
+ * Elle a **perdu sa section a elle** : un en-tete « MESSAGERIE » pour une seule ligne etait une
+ * grammaire de plus, et chez un etablissement sans webmail extractible cette section disparaissait
+ * en entier. Elle vit desormais dans « Tes services », avec les portes — c'est bien ce qu'elle est,
+ * une porte qui porte en plus une donnee. Elle garde sa **forme de rangee pleine largeur** parce que
+ * c'est elle qui lui permet d'afficher un echec et de mener a la ressaisie ; une tuile ne le ferait
+ * pas (voir ScolariteDashboard).
  */
-/** Ce que la rangée annonce : l'échec s'il y en a un, sinon le compte, accordé. */
-const libelle = (echec, unread) => {
+
+/** Ce que la rangee annonce : l'echec s'il y en a un, sinon le compte, accorde. */
+const libelle = (echec: UkitFailure | null, unread: number | null | undefined): string => {
     if (echec) return Translator.get(presenterEchec(echec).messageKey);
     if (unread == null || unread <= 0) return Translator.get('MAILBOX_NO_UNREAD');
     return Translator.get(unread === 1 ? 'MAILBOX_UNREAD_ONE' : 'MAILBOX_UNREAD_MANY', unread);
 };
 
 /**
- * Ce que la rangée montre, décidé hors du rendu.
+ * Ce que la rangee montre, decide hors du rendu.
  *
- * Un échec **silencieux** est un run annulé : l'utilisateur est déjà parti, il n'y a rien à lui
- * dire, et la rangée se comporte comme s'il n'y avait pas eu d'échec.
+ * Un echec **silencieux** est un run annule : l'utilisateur est deja parti, il n'y a rien a lui
+ * dire, et la rangee se comporte comme s'il n'y avait pas eu d'echec.
  */
-const etatDeLaRangee = ({ mailData, status, failure }) => {
+const etatDeLaRangee = ({ mailData, status, failure }: {
+    mailData: ScolariteMailData | null;
+    status: string;
+    failure: UkitFailure | null;
+}) => {
     const echec = failure && !failure.silent ? failure : null;
     const unread = mailData?.unreadCount;
 
@@ -39,99 +52,37 @@ const etatDeLaRangee = ({ mailData, status, failure }) => {
     };
 };
 
-const MailboxRow = ({ mailData, coldData, status, failure, color, theme, onPress }) => {
+export interface MailboxRowProps {
+    mailData: ScolariteMailData | null;
+    coldData: ScolariteColdData | null;
+    status: string;
+    failure: UkitFailure | null;
+    color: string;
+    theme: AppThemeType;
+    onPress: () => void;
+}
+
+const MailboxRow = ({ mailData, coldData, status, failure, color, theme, onPress }: MailboxRowProps) => {
     const { echec, unread, loading, hasUnread } = etatDeLaRangee({ mailData, status, failure });
-    const emailAddress = coldData?.emailAddress;
-    const teinte = echec ? theme.accentFont : color;
+    const teinte = echec ? theme.danger : color;
 
     return (
-        <TouchableOpacity
-            activeOpacity={0.7}
+        <LigneScolarite
+            theme={theme}
+            icon={{ name: echec ? 'email-alert-outline' : 'email-outline' }}
+            teinte={teinte}
+            titre={libelle(echec, unread)}
+            sousTitre={coldData?.emailAddress}
+            attenue={echec !== null}
             onPress={onPress}
-            style={[styles.row, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
-        >
-            <View style={[styles.iconWrap, { backgroundColor: `${teinte}1A` }]}>
-                <MaterialCommunityIcons
-                    name={echec ? 'email-alert-outline' : 'email-outline'}
-                    size={22}
-                    color={teinte}
-                />
-            </View>
-
-            <View style={styles.textWrap}>
-                <Text
-                    style={[styles.title, { color: echec ? theme.fontSecondary : theme.font }]}
-                    numberOfLines={2}
-                >
-                    {libelle(echec, unread)}
-                </Text>
-                {emailAddress ? (
-                    <Text
-                        style={[styles.subtitle, { color: theme.fontSecondary }]}
-                        numberOfLines={1}
-                    >
-                        {emailAddress}
-                    </Text>
-                ) : null}
-            </View>
-
-            {loading ? (
-                <ActivityIndicator size="small" color={color} />
-            ) : (
-                <>
-                    {hasUnread && (
-                        <View style={[styles.badge, { backgroundColor: color }]}>
-                            <Text style={styles.badgeText}>{unread}</Text>
-                        </View>
-                    )}
-                    <MaterialIcons name="chevron-right" size={24} color={theme.fontSecondary} />
-                </>
-            )}
-        </TouchableOpacity>
+            chevron
+            droite={loading
+                ? <ActivityIndicator size="small" color={color} />
+                : (hasUnread
+                    ? <CompteurScolarite valeur={unread as number} teinte={color} theme={theme} />
+                    : null)}
+        />
     );
 };
-
-const styles = StyleSheet.create({
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginHorizontal: tokens.space.md,
-        paddingVertical: tokens.space.md,
-        paddingHorizontal: tokens.space.md,
-        borderRadius: tokens.radius.lg,
-        borderWidth: 1,
-        gap: tokens.space.md,
-    },
-    iconWrap: {
-        width: 40,
-        height: 40,
-        borderRadius: tokens.radius.md,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    textWrap: {
-        flex: 1,
-        gap: 2,
-    },
-    title: {
-        fontSize: tokens.fontSize.md,
-        fontWeight: '600',
-    },
-    subtitle: {
-        fontSize: tokens.fontSize.sm,
-    },
-    badge: {
-        borderRadius: tokens.radius.pill,
-        paddingHorizontal: tokens.space.sm,
-        paddingVertical: 2,
-        minWidth: 24,
-        alignItems: 'center',
-    },
-    badgeText: {
-        fontSize: tokens.fontSize.xs,
-        color: '#fff',
-        fontWeight: '700',
-    },
-});
 
 export default MailboxRow;

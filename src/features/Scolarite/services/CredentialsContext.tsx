@@ -11,6 +11,7 @@ import type { PropositionsDossier } from './PropositionsDossier';
 import { lirePropositionsEnAttente, propositionsDe } from './PropositionsEnAttente';
 import {
     deroulerSession,
+    fermerSessionDistante,
     portailDisponible,
     type EtapeSession,
     type ResultatSession,
@@ -252,6 +253,17 @@ function useDeconnexion(
         // au suivant, avec les UE du precedent.
         await ecrireEnAttente(null);
         oublier();
+        /*
+         * **Apres le local, jamais avant.** Depuis que les parcours de portail persistent leur
+         * session (`options.session.persist`), le cookie de ticket CAS survit au run : l'effacer
+         * cote serveur fait partie du geste, sinon on retirerait le trousseau en laissant un
+         * navigateur integre authentifie au compte qu'on vient de quitter.
+         *
+         * L'ordre compte et il est deliberé : cet appel touche le reseau et peut trainer. Le placer
+         * avant laisserait quelqu'un dont le portail ne repond pas **toujours connecte localement**
+         * — c'est-a-dire un bouton « Se deconnecter » qui ne deconnecte pas. Il ne leve jamais.
+         */
+        await fermerSessionDistante();
     }, [oublier, sessionRef]);
 }
 
@@ -306,6 +318,53 @@ function useBasculerAuChangementDEtablissement(
 
 
 /**
+ * Valider un couple d'identifiants, et ne l'ecrire que si le CAS l'accepte.
+ *
+ * **La session distante se ferme d'abord, et c'est indispensable depuis que la session persiste.**
+ * Le Blueprint n'ecrit les identifiants que sur `LOGIN_SUCCESS`, qu'il n'emet que s'il a reellement
+ * traverse un formulaire — c'est la preuve que le couple est bon. Or avec une session vivante, le CAS
+ * reconnait le ticket et renvoie directement au service **sans jamais afficher de champ** : le run
+ * traverserait sans rien verifier.
+ *
+ * Le cas dangereux n'est pas theorique, c'est celui de « Ressaisir mes identifiants » : quelqu'un dont
+ * le mot de passe a change tape le nouveau, une session de l'ancien est encore ouverte, et sans cette
+ * fermeture **un mot de passe faux serait enregistre comme s'il etait bon**. C'est exactement la
+ * donnee fausse qui a l'air juste que cette phase supprime.
+ *
+ * Fermer d'abord garantit que le formulaire apparaisse, donc que la garde de l'`emit` soit vraie,
+ * donc que l'ecriture soit meritee. `finally` et non `then` : une fermeture qui echoue ne doit pas
+ * empecher quelqu'un de se reconnecter.
+ */
+function useValidation(
+    lancerSession: (mode: 'cold' | 'hot', candidat?: Identifiants | null, remplacer?: boolean) => boolean,
+    setColdData: (cold: ScolariteColdData | null) => void,
+    validationRef: React.MutableRefObject<((resultat: ResultatValidation) => void) | null>,
+    libererLeMoteur: () => Promise<void>,
+): (username: string, password: string) => Promise<ResultatValidation> {
+    return useCallback((username: string, password: string) => {
+        return new Promise<ResultatValidation>((resolve) => {
+            validationRef.current = resolve;
+            /*
+             * **On ne ferme plus rien avant de valider.** On l'a fait, et la mesure du 2026-08-27 a
+             * montre que ca ne marchait pas : fermer la session au CAS laisse le SERVICE garder la
+             * sienne, donc le formulaire ne reapparaissait pas et rien n'etait prouve. La preuve est
+             * desormais **demandee** par un Blueprint dedie (`renew=true`), en tete de la session.
+             *
+             * Il reste a liberer le moteur : la session de fond du lancement peut encore courir, et
+             * une seule tourne a la fois.
+             */
+            void libererLeMoteur().finally(() => {
+                // Un nouveau login invalide les donnees froides : elles appartiennent au compte
+                // precedent. Seulement si la session demarre, sinon on effacerait pour rien.
+                // Un geste, la aussi : quelqu'un qui valide ses identifiants ne doit pas etre
+                // refuse parce qu'un parcours de fond n'a pas fini.
+                if (lancerSession('cold', { username, password }, true)) setColdData(null);
+            });
+        });
+    }, [lancerSession, libererLeMoteur, setColdData, validationRef]);
+}
+
+/**
  * Les deux facons de redemander une session, et ce qui les separe.
  *
  * `retrySession` **deduit** le mode de la presence des donnees froides : c'est le bon comportement
@@ -319,7 +378,7 @@ function useBasculerAuChangementDEtablissement(
 function useReprises(
     credentials: Identifiants | null,
     coldData: ScolariteColdData | null,
-    lancerSession: (mode: 'cold' | 'hot', candidat?: Identifiants | null) => boolean,
+    lancerSession: (mode: 'cold' | 'hot', candidat?: Identifiants | null, remplacer?: boolean) => boolean,
     setColdData: (cold: ScolariteColdData | null) => void,
 ) {
     const retrySession = useCallback(() => {
@@ -329,10 +388,75 @@ function useReprises(
 
     const rafraichirDossier = useCallback(() => {
         if (credentials === null) return;
-        if (lancerSession('cold')) setColdData(null);
+        // `remplacer` : c'est un geste, pas une reprise automatique. Sans lui, demander une
+        // actualisation pendant le parcours chaud du lancement se faisait refuser sans que l'ecran
+        // le dise — le bouton paraissait mort.
+        if (lancerSession('cold', null, true)) setColdData(null);
     }, [credentials, lancerSession, setColdData]);
 
     return { retrySession, rafraichirDossier };
+}
+
+/**
+ * Les deux reactions du provider a ce qu'une session rapporte : le CAS a accepte, et le run est fini.
+ *
+ * Sorties du provider pour le garder sous la limite de lignes — meme decoupage que `useReprises` et
+ * `useValidation`. Elles ne dependent que de ce qu'on leur passe.
+ */
+function useReactionsDeSession(
+    setEtat: React.Dispatch<React.SetStateAction<EtatSession>>,
+    setCredentials: (c: Identifiants | null) => void,
+    setColdData: (c: ScolariteColdData | null) => void,
+    setMailData: (m: ScolariteMailData | null) => void,
+    poserPropositions: (p: PropositionsDossier) => void,
+    finirValidation: (r: ResultatValidation) => void,
+) {
+// Le CAS a accepte : on ecrit les identifiants, et seulement eux. L'ecran de connexion peut
+// disparaitre des maintenant, la suite se joue derriere l'ecran de progression.
+const surLoginReussi = useCallback((candidat: Identifiants | null) => {
+    setEtat((precedent) => ({ ...precedent, status: 'scraping' }));
+    if (candidat === null) return;
+    void SecureStoreService.saveCredentials(candidat.username, candidat.password).then(() => {
+        setCredentials(candidat);
+    });
+    finirValidation({ success: true });
+}, [finirValidation]);
+
+// Les trois champs d'un resultat sont independants : un dossier lu se garde meme si la
+// messagerie a echoue ensuite. Deux Blueprints, deux sorts.
+const appliquerResultat = useCallback((resultat: ResultatSession) => {
+    if (resultat.cold !== undefined) {
+        setColdData(resultat.cold);
+        void SecureStoreService.saveColdData(resultat.cold);
+    }
+    if (resultat.mail !== undefined) setMailData(resultat.mail);
+    // Ni appliquees ni oubliees : c'est la modale qui demande, et l'etudiant qui tranche. Elles
+    // sont en revanche **gardees** jusqu'a sa reponse (voir `usePropositions`).
+    if (resultat.propositions !== undefined) poserPropositions(resultat.propositions);
+    /*
+     * **Une validation en attente se solde TOUJOURS a la fin du run.**
+     *
+     * Elle ne se resolvait jusqu'ici que sur `LOGIN_SUCCESS` ou sur un echec. Depuis que l'`emit`
+     * est conditionnel — il n'a lieu que si le CAS a reellement affiche un formulaire — un run qui
+     * va au bout **sans** formulaire ne resolvait plus rien : la promesse restait pendante et la
+     * reference armee. Le `LOGIN_SUCCESS` d'un run *ulterieur* la resolvait alors, et l'ecran du
+     * compte se refermait tout seul au milieu d'un rafraichissement. Mesure sur appareil.
+     *
+     * Sur le chemin nominal, `surLoginReussi` a deja resolu et remis la reference a `null` :
+     * l'appel ci-dessous est alors sans effet. Il ne mord que sur le cas ou le CAS ne s'est pas
+     * prononce — et il le solde en **echec**, parce que c'est la verite : sans formulaire, les
+     * identifiants saisis n'ont ete verifies par personne, et `surLoginReussi` ne les a donc pas
+     * ecrits. Annoncer un succes afficherait « connecte » sur un trousseau vide.
+     */
+    if (resultat.failure !== undefined) {
+        finirValidation({ success: false, error: messageDEchec(resultat.failure) });
+    } else {
+        finirValidation({ success: false, error: Translator.get('CREDENTIALS_UNVERIFIED') });
+    }
+    setEtat(etatFinal(resultat));
+}, [finirValidation, poserPropositions]);
+
+    return { surLoginReussi, appliquerResultat };
 }
 
 /**
@@ -395,6 +519,14 @@ const useCredentialsSession = (): CredentialsValue => {
 
     /** La session en cours : son controleur d'annulation, ou `null`. Aussi le verrou de non-reentrance. */
     const sessionRef = useRef<AbortController | null>(null);
+    /**
+     * La session **en vol**, pour que la suivante puisse attendre qu'elle ait rendu le moteur.
+     *
+     * Distincte de `sessionRef`, qui dit *laquelle est la courante* : celle-ci dit *quand la
+     * precedente aura fini de mourir*. Les deux sont necessaires, et les confondre ferait attendre
+     * une session qu'on n'a pas annulee.
+     */
+    const sessionEnVolRef = useRef<Promise<unknown> | null>(null);
     const validationRef = useRef<((resultat: ResultatValidation) => void) | null>(null);
 
     /** Resout la promesse de `validateAndSave`, une seule fois. */
@@ -404,45 +536,59 @@ const useCredentialsSession = (): CredentialsValue => {
         resoudre?.(resultat);
     }, []);
 
-    // Le CAS a accepte : on ecrit les identifiants, et seulement eux. L'ecran de connexion peut
-    // disparaitre des maintenant, la suite se joue derriere l'ecran de progression.
-    const surLoginReussi = useCallback((candidat: Identifiants | null) => {
-        setEtat((precedent) => ({ ...precedent, status: 'scraping' }));
-        if (candidat === null) return;
-        void SecureStoreService.saveCredentials(candidat.username, candidat.password).then(() => {
-            setCredentials(candidat);
-        });
-        finirValidation({ success: true });
-    }, [finirValidation]);
-
-    // Les trois champs d'un resultat sont independants : un dossier lu se garde meme si la
-    // messagerie a echoue ensuite. Deux Blueprints, deux sorts.
-    const appliquerResultat = useCallback((resultat: ResultatSession) => {
-        if (resultat.cold !== undefined) {
-            setColdData(resultat.cold);
-            void SecureStoreService.saveColdData(resultat.cold);
-        }
-        if (resultat.mail !== undefined) setMailData(resultat.mail);
-        // Ni appliquees ni oubliees : c'est la modale qui demande, et l'etudiant qui tranche. Elles
-        // sont en revanche **gardees** jusqu'a sa reponse (voir `usePropositions`).
-        if (resultat.propositions !== undefined) poserPropositions(resultat.propositions);
-        if (resultat.failure !== undefined) {
-            finirValidation({ success: false, error: messageDEchec(resultat.failure) });
-        }
-        setEtat(etatFinal(resultat));
-    }, [finirValidation, poserPropositions]);
-
     /**
      * Demarre une session, ou la refuse : une seule a la fois (voir l'en-tete du module).
      *
      * Rend `false` quand elle a refuse, pour que l'appelant n'aille pas defaire un etat au nom d'une
      * session qui n'a jamais commence.
      */
-    const lancerSession = useCallback((mode: 'cold' | 'hot', candidat: Identifiants | null = null): boolean => {
+    const { surLoginReussi, appliquerResultat } = useReactionsDeSession(
+        setEtat, setCredentials, setColdData, setMailData, poserPropositions, finirValidation,
+    );
+
+    /**
+     * Liberer le moteur avant un geste qui doit **absolument** pouvoir jouer un Blueprint.
+     *
+     * `fermerSessionDistante` appelle le moteur directement, sans passer par le verrou de
+     * `ScolariteSession` — donc sans etre mise en file, mais aussi sans etre protegee : lancee
+     * pendant un run, elle est refusee par le moteur et **avale son echec**. La session CAS restait
+     * alors ouverte, le parcours suivant ne voyait aucun formulaire, et la validation se soldait en
+     * « impossible de verifier tes identifiants » sur des identifiants pourtant justes.
+     */
+    const libererLeMoteur = useCallback(async () => {
+        sessionRef.current?.abort();
+        sessionRef.current = null;
+        const enVol = sessionEnVolRef.current;
+        if (enVol !== null) await enVol.catch(() => undefined);
+    }, []);
+
+    const lancerSession = useCallback((
+        mode: 'cold' | 'hot',
+        candidat: Identifiants | null = null,
+        remplacer = false,
+    ): boolean => {
         if (sessionRef.current !== null) {
-            console.warn('[scolarite] session deja en cours : la seconde demande est refusee');
-            finirValidation({ success: false, error: Translator.get('ERROR_INTERNAL') });
-            return false;
+            /*
+             * **Une demande explicite gagne sur une session de fond.**
+             *
+             * Le refus sec etait juste tant que toutes les sessions se valaient : deux runs a la fois
+             * sont impossibles, et une file cacherait la seconde derriere un delai inexplique. Mais
+             * il traitait de la meme facon deux choses differentes — un double appui accidentel, et
+             * quelqu'un qui demande « actualise mon dossier » pendant que le parcours chaud du
+             * lancement tourne encore. Le second se faisait refuser **en silence a l'ecran**, avec
+             * pour seule trace un avertissement dans le terminal.
+             *
+             * Une demande portee par un geste passe donc devant. Le refus reste pour tout le reste.
+             */
+            if (!remplacer) {
+                console.warn('[scolarite] session deja en cours : la seconde demande est refusee');
+                finirValidation({ success: false, error: Translator.get('ERROR_INTERNAL') });
+                return false;
+            }
+            sessionRef.current.abort();
+            // Remise a `null` **synchrone** : le `finally` du run remplace ne s'executera qu'au tour
+            // suivant, et sa garde `=== controleur` l'empechera d'effacer la session qui arrive.
+            sessionRef.current = null;
         }
 
         const controleur = new AbortController();
@@ -452,14 +598,33 @@ const useCredentialsSession = (): CredentialsValue => {
         setMailData(null);
         setEtat({ status: 'connecting', progress: mode === 'cold' ? 'connecting' : 'mailbox', failure: null });
 
-        void deroulerSession(mode, {
-            onEtape: (etape) => setEtat((precedent) => ({ ...precedent, progress: etape })),
-            onLoginSuccess: () => surLoginReussi(candidat),
-            signal: controleur.signal,
-            ...(candidat !== null
-                ? { secrets: { portail_user: candidat.username, portail_pass: candidat.password } }
-                : {}),
-        })
+        /*
+         * **On attend que la precedente ait relache le moteur.**
+         *
+         * Annuler ne libere pas immediatement : l'abandon se propage au run, dont le `finally` rend
+         * le verrou d'`ScolariteSession` au tour suivant. Repartir aussitot faisait donc refuser la
+         * nouvelle session par ce verrou-la — celui du moteur, pas celui de l'application — et le
+         * symptome etait deroutant : une connexion qui allait au bout sans jamais voir de formulaire,
+         * donc sans preuve, donc soldee en « impossible de verifier tes identifiants ».
+         *
+         * Ce n'est **pas** la file d'attente que le module refuse : on ne met pas deux demandes
+         * concurrentes en attente l'une de l'autre, on laisse celle qu'on vient d'annuler finir de
+         * mourir. La distinction est ce qui garde la regle « une seule session a la fois » intacte.
+         */
+        const precedente = sessionEnVolRef.current;
+        const demarrer = async () => {
+            if (precedente !== null) await precedente.catch(() => undefined);
+            return deroulerSession(mode, {
+                onEtape: (etape) => setEtat((precedent) => ({ ...precedent, progress: etape })),
+                onLoginSuccess: () => surLoginReussi(candidat),
+                signal: controleur.signal,
+                ...(candidat !== null
+                    ? { secrets: { portail_user: candidat.username, portail_pass: candidat.password } }
+                    : {}),
+            });
+        };
+
+        sessionEnVolRef.current = demarrer()
             .then((resultat) => {
                 // Une session annulee n'ecrit rien. Le cas qui l'impose n'est pas theorique : une
                 // deconnexion pendant la session remettrait dans le trousseau l'identite que
@@ -471,10 +636,20 @@ const useCredentialsSession = (): CredentialsValue => {
                 appliquerResultat(resultat);
             })
             .finally(() => {
-                if (sessionRef.current === controleur) sessionRef.current = null;
-                // Un run annule laisse une promesse de validation en attente : la resoudre ici evite
-                // qu'un ecran de connexion reste bloque sur son indicateur.
-                finirValidation({ success: false, error: Translator.get('LOGIN_NETWORK_ERROR') });
+                const etaitCourante = sessionRef.current === controleur;
+                if (etaitCourante) sessionRef.current = null;
+                /*
+                 * Un run annule laisse une promesse de validation en attente : la resoudre ici evite
+                 * qu'un ecran de connexion reste bloque sur son indicateur.
+                 *
+                 * **Mais seulement si ce run est encore celui qui court.** Un run *remplace* par une
+                 * demande explicite se terminerait sinon en soldant la promesse de celui qui l'a
+                 * remplace — l'ecran afficherait une erreur reseau sur une session qui se deroule
+                 * parfaitement.
+                 */
+                if (etaitCourante) {
+                    finirValidation({ success: false, error: Translator.get('LOGIN_NETWORK_ERROR') });
+                }
             });
 
         return true;
@@ -495,14 +670,7 @@ const useCredentialsSession = (): CredentialsValue => {
 
     useCycleDeVieSession(sessionRef, retrySession);
 
-    const validateAndSave = useCallback((username: string, password: string) => {
-        return new Promise<ResultatValidation>((resolve) => {
-            validationRef.current = resolve;
-            // Un nouveau login invalide les donnees froides : elles appartiennent au compte
-            // precedent. Seulement si la session demarre, sinon on effacerait pour rien.
-            if (lancerSession('cold', { username, password })) setColdData(null);
-        });
-    }, [lancerSession]);
+    const validateAndSave = useValidation(lancerSession, setColdData, validationRef, libererLeMoteur);
 
     /** Tout oublier, sans toucher au magasin : la deconnexion et la bascule d'etablissement le partagent. */
     const oublier = useCallback(() => {

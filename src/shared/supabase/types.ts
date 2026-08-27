@@ -62,6 +62,8 @@ export interface BatimentRow {
 export interface EtablissementRow {
     readonly code: string;
     readonly nom: string;
+    /** Le nom court, pour les espaces contraints. `null` : le nom complet fait l'affaire. */
+    readonly nom_court: string | null;
     readonly ville: string | null;
     readonly logo_url: string | null;
     readonly actif: boolean;

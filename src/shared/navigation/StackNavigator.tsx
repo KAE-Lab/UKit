@@ -106,7 +106,7 @@ export default function StackNavigator() {
 
                             <Stack.Screen name="Settings" component={Settings} options={({ route }) => NavBarHelper({ title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: true })} />
 
-                            <Stack.Screen name="CredentialsSettings" component={CredentialsSettingsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('UNIVERSITY_ACCOUNT'), themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="CredentialsSettings" component={CredentialsSettingsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('ACCOUNT'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="LienEdt" component={LienEdtScreen} options={({ route }) => NavBarHelper({ title: Translator.get('TIMETABLE_LINK'), themeName, route, gestureEnabled: true })} />
 

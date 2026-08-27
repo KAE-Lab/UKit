@@ -1,7 +1,7 @@
 {
   "aetherius": "1.0",
   "name": "ukit.portail.bordeaux-inp.dossier",
-  "description": "Le parcours FROID du portail de BORDEAUX INP : ouvrir le dossier administratif, subir la redirection CAS, lire l'identite puis l'adresse electronique de l'etablissement. Ce fichier n'est PAS embarque dans le binaire : il arrive par le manifeste, sous le prefixe reserve ukit.portail. (jalon 6-G). Il rend exactement les memes sorties que le portail de Bordeaux, parce que c'est la sortie qui est le contrat — l'application ne connait pas les portails, elle connait des noms de champs. Cinq mesures, faites contre un compte reel, expliquent pourquoi ce fichier ne ressemble pas a son homologue bordelais. (1) Le CAS est le meme produit Apereo mais un theme different : le bouton d'envoi est un BUTTON #submitBtn, la ou Bordeaux sert un input[type=submit] — le selecteur de Bordeaux ne matche rien ici. (2) Le panneau d'erreur, lui, EST le meme : #loginErrorsPanel est absent de la page propre et present des que le mot de passe est refuse, exactement comme a Bordeaux. (3) Le dossier n'est PAS le meme produit : Bordeaux sert l'ancien mondossierweb GWT et ses identifiants positionnels #gwt-uid-NN ; l'INP sert la generation Vaadin de PC-Scol, ou chaque couple vit dans un .text-label et se designe PAR SON LIBELLE. Ce portail est donc structurellement moins fragile que le premier, et ce n'est pas notre merite : c'est une propriete du produit d'en face. (4) L'ancrage par libelle est ecrit en XPATH et non en CSS, et c'est la lecon la plus chere du jalon : la premiere version utilisait les pseudo-classes :text-is() et :nth-match(), qui sont PROPRIETAIRES A PLAYWRIGHT. Elles marchaient depuis un poste et faisaient echouer le run sur l'appareil, ou le moteur embarque resout par document.querySelectorAll — lequel les rejette comme CSS invalide. XPath est le seul langage de selection que LES DEUX moteurs partagent. (5) XPath lit le texte SOURCE des libelles (« Nom de famille ») alors que l'extraction rend le texte AFFICHE, mis en capitales par la feuille de style (« NOM DE FAMILLE ») : le selecteur et l'assert comparent donc a deux formes differentes du meme mot, et c'est mesure, pas suppose. Deux champs manquent et c'est une limite ecrite, pas un oubli : cet etablissement ne publie pas d'INE dans son dossier, et il n'a pas de messagerie extractible — son webmail passe par SAML et non par le CAS, d'ou portail_messagerie a null dans le catalogue.",
+  "description": "Le parcours FROID du portail de BORDEAUX INP : ouvrir le dossier administratif, subir la redirection CAS, lire l'identite puis l'adresse electronique de l'etablissement. Ce fichier n'est PAS embarque dans le binaire : il arrive par le manifeste, sous le prefixe reserve ukit.portail. (jalon 6-G). Il rend exactement les memes sorties que le portail de Bordeaux, parce que c'est la sortie qui est le contrat — l'application ne connait pas les portails, elle connait des noms de champs. Cinq mesures, faites contre un compte reel, expliquent pourquoi ce fichier ne ressemble pas a son homologue bordelais. (1) Le CAS est le meme produit Apereo mais un theme different : le bouton d'envoi est un BUTTON #submitBtn, la ou Bordeaux sert un input[type=submit] — le selecteur de Bordeaux ne matche rien ici. (2) Le panneau d'erreur, lui, EST le meme : #loginErrorsPanel est absent de la page propre et present des que le mot de passe est refuse, exactement comme a Bordeaux. (3) Le dossier n'est PAS le meme produit : Bordeaux sert l'ancien mondossierweb GWT et ses identifiants positionnels #gwt-uid-NN ; l'INP sert la generation Vaadin de PC-Scol, ou chaque couple vit dans un .text-label et se designe PAR SON LIBELLE. Ce portail est donc structurellement moins fragile que le premier, et ce n'est pas notre merite : c'est une propriete du produit d'en face. (4) L'ancrage par libelle est ecrit en XPATH et non en CSS, et c'est la lecon la plus chere du jalon : la premiere version utilisait les pseudo-classes :text-is() et :nth-match(), qui sont PROPRIETAIRES A PLAYWRIGHT. Elles marchaient depuis un poste et faisaient echouer le run sur l'appareil, ou le moteur embarque resout par document.querySelectorAll — lequel les rejette comme CSS invalide. XPath est le seul langage de selection que LES DEUX moteurs partagent. (5) XPath lit le texte SOURCE des libelles (« Nom de famille ») alors que l'extraction rend le texte AFFICHE, mis en capitales par la feuille de style (« NOM DE FAMILLE ») : le selecteur et l'assert comparent donc a deux formes differentes du meme mot, et c'est mesure, pas suppose. Deux champs manquent et c'est une limite ecrite, pas un oubli : cet etablissement ne publie pas d'INE dans son dossier, et il n'a pas de messagerie extractible — son webmail passe par SAML et non par le CAS, d'ou portail_messagerie a null dans le catalogue. AJOUTS DU 2026-08-25, apres sonde contre le meme compte. (6) L'INE EXISTE, contrairement a ce que la documentation affirmait : il n'est pas dans l'etat-civil mais sous l'onglet ACCES, libelle « Code INE », que ce fichier ne visitait pas. Le champ cesse donc d'etre vide. (7) La FORMATION courante se lit sous l'onglet « Parcours », dont la route est /inscriptions — l'exact analogue de la vue « Inscriptions » de Bordeaux, en plus riche. Chaque annee est une carte ; la premiere est l'annee courante, mesure. D'ou l'indexation [1] : les libelles, eux, apparaissent AUTANT DE FOIS QU'IL Y A D'ANNEES, et un XPath par libelle seul rendrait deux noeuds. (8) Ces deux lectures sont des BONUS : elles sont gardees par une sonde `as: count` et un `when`, parce qu'un `navigate` ou un `wait_for` qui echoue fait echouer le run entier — et perdre l'identite pour un INE serait un mauvais marche. (9) Ce qui n'a PAS ete porte, et c'est deliberé : l'onglet « Documentation » n'est pas un onglet de documents mais un LIEN EXTERNE vers une page d'aide de l'ENT ; les vrais PDF (certificat de scolarite, attestation de paiement, releves de notes) vivent dans les cartes de Parcours, mais leurs URL portent un UUID et un horodatage REGENERES A CHAQUE RENDU. Ce sont des portes, jamais des donnees a stocker. Persister la session est ce qui evite au navigateur integre de redemander une connexion. Par defaut le moteur ouvre sa WebView en INCOGNITO (`options.session.persist` vaut false) : le ticket CAS que ce run vient d'obtenir est donc jete a la fin, et l'ecran de navigateur integre retombe sur un formulaire vide — d'ou le script de remplissage qui interrogeait la page toutes les 100 ms. En persistant, le cookie atterrit dans le magasin PARTAGE de la plateforme, et ouvrir l'ENT, Moodle ou le webmail se fait deja authentifie. C'est un GAIN de securite et non une concession : le mot de passe cesse d'etre injecte dans une page pour le cas courant. Le pendant obligatoire est que la deconnexion invalide la session cote CAS (ukit.portail.deconnexion), sans quoi « se deconnecter » laisserait un navigateur authentifie. CONNEXION CONDITIONNELLE depuis le 2026-08-25, et c'est la consequence directe de `session.persist`. Avec une session vivante, le CAS reconnait le ticket et renvoie DIRECTEMENT au service : il n'affiche aucun formulaire, et attendre `#username` echouait alors en CAS_INDISPONIBLE apres 20 s d'attente inutile. On demande donc a la page s'il y a un formulaire (`as: count`, qui ne leve jamais) et on ne joue le bloc de connexion que dans ce cas. Effet de bord bienvenu : le parcours qui trouve une session ouverte economise aussi la pause d'apres-clic, qui n'a plus lieu d'etre.",
   "act": "continuum",
   "secrets": [
     "portail_user",
@@ -10,13 +10,18 @@
   "vars": {
     "dossier": "https://mondossierweb.bordeaux-inp.fr/",
     "coordonnees": "https://mondossierweb.bordeaux-inp.fr/coordonnees",
-    "planning": "https://ade.bordeaux-inp.fr/direct/myplanning.jsp"
+    "planning": "https://ade.bordeaux-inp.fr/direct/myplanning.jsp",
+    "acces": "https://mondossierweb.bordeaux-inp.fr/acces",
+    "inscriptions": "https://mondossierweb.bordeaux-inp.fr/inscriptions"
   },
   "options": {
     "timeout_ms": 30000,
     "debug": false,
     "stealth": {
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "session": {
+      "persist": true
     }
   },
   "steps": [
@@ -25,45 +30,75 @@
       "url": "{{ vars.dossier }}"
     },
     {
-      "action": "wait_for",
-      "selector": "#username",
-      "timeout_ms": 20000,
-      "on_timeout": "fail:CAS_INDISPONIBLE"
+      "action": "wait",
+      "ms": 6000,
+      "note": "La redirection SSO doit avoir fini de se decider avant qu'on regarde ou l'on est. 6000 et non 3000 : la mesure du 2026-08-24 donne **2834 ms pour la seule navigation** depuis un poste filaire, et c'est le meilleur cas — un telephone en cellulaire est plus lent, et un moteur de WebView peut rendre la main a la fin d'une redirection intermediaire. Sous-estimer ce delai ferait conclure « pas de formulaire » a une page qui allait en afficher un."
+    },
+    {
+      "id": "porte",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formulaire": {
+          "selector": "#username",
+          "as": "count",
+          "note": "`as: count` ne leve JAMAIS : c'est ce qui permet de demander « y a-t-il un formulaire ? » sans risquer le run. Depuis que la session persiste, la reponse est NON la plupart du temps — le CAS reconnait le ticket et renvoie directement au service, sans jamais afficher de champ."
+        }
+      }
     },
     {
       "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
       "selector": "#username",
       "value": "{{ secrets.portail_user }}"
     },
     {
       "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
       "selector": "#password",
       "value": "{{ secrets.portail_pass }}"
     },
     {
       "action": "click",
+      "when": "{{ steps.porte.formulaire > 0 }}",
       "selector": "#submitBtn"
     },
     {
       "action": "wait",
-      "ms": 8000
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "ms": 8000,
+      "note": "La cascade d'authentification enchaine plusieurs sauts puis le client pose son fragment ; une operation emise pendant cette cascade se perd en silence sur un appareil. Elle n'est payee que si l'on s'est reellement authentifie."
     },
     {
       "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
       "selector": "#loginErrorsPanel",
       "state": "detached",
       "timeout_ms": 2000,
-      "on_timeout": "fail:LOGIN_FAILED"
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "Ce panneau est ABSENT de la page propre et PRESENT des que le CAS refuse, mesure le 2026-08-09. Sans lui, un mot de passe faux couterait le plafond entier du selecteur suivant."
     },
     {
       "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
       "selector": ".label-valeur",
       "timeout_ms": 30000,
-      "on_timeout": "fail:LOGIN_FAILED"
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "Le chemin AVEC formulaire : on s'est authentifie, donc un echec ici parle du service et non du portail."
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire == 0 }}",
+      "selector": ".label-valeur",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:CAS_INDISPONIBLE",
+      "note": "Le chemin SANS formulaire : la session etait deja ouverte. N'avoir vu ni formulaire ni cible veut dire que le portail n'a rien rendu, d'ou un code different — c'est la precision de diagnostic que la phase a mis sept jalons a construire, et elle ne se perd pas ici."
     },
     {
       "action": "emit",
-      "event": "LOGIN_SUCCESS"
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "event": "LOGIN_SUCCESS",
+      "note": "**Garde indispensable, et ce n'est pas une precaution de style.** Cet evenement est ce qui autorise l'application a ecrire les identifiants dans le trousseau : il veut dire « le CAS a accepte ce couple ». Avec une session deja ouverte, le run traverse sans que le CAS ait rien verifie — l'emettre la ferait enregistrer un mot de passe FAUX comme s'il etait bon, ce qui est exactement la donnee fausse qui a l'air juste que cette phase supprime. L'application ferme donc la session distante avant toute revalidation (`validateAndSave`), de sorte que le formulaire apparaisse et que cette garde soit vraie."
     },
     {
       "id": "dossier",
@@ -136,6 +171,65 @@
     },
     {
       "action": "navigate",
+      "url": "{{ vars.acces }}",
+      "note": "L'onglet « Acces » : le bac, l'INE et les primo-inscriptions. Meme SSO, aucune seconde authentification."
+    },
+    {
+      "action": "wait",
+      "ms": 6000,
+      "note": "`wait` et non `wait_for` : un `wait_for` qui expire fait echouer le run quel que soit son on_timeout, et cette lecture est un bonus. Vaadin 14 rend cote client apres un aller-retour SSO ; 6000 est le budget deja retenu pour l'annuaire de Bordeaux, pour la meme raison — un telephone en cellulaire n'a pas le reseau d'un poste filaire."
+    },
+    {
+      "id": "acces",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "ine": {
+          "selector": "(//vaadin-vertical-layout[@class=\"text-label\"][label[@class=\"label-titre\"][normalize-space()=\"Code INE\"]]/label[@class=\"label-valeur\"])[1]",
+          "selector_type": "xpath",
+          "as": "list",
+          "note": "`as: list` pour la meme raison qu'ailleurs : zero correspondance rend [], jamais une levee. Le libelle est lu dans sa casse SOURCE (« Code INE ») alors que l'extraction rendra le texte AFFICHE, mis en capitales par la feuille de style — le piege est deja consigne plus haut, il vaut aussi sur cette vue."
+        }
+      },
+      "note": "Aucune garde `when` sur ce step, et c'est mesure : un step saute n'enregistre AUCUNE sortie, donc le bloc `outputs` qui le reference leverait en StrictUndefined. `as: list` ne levant jamais, l'extraction court sec — si la vue n'est pas arrivee, elle rend [] et l'application n'affiche rien."
+    },
+    {
+      "action": "navigate",
+      "url": "{{ vars.inscriptions }}",
+      "note": "L'onglet « Parcours », dont la route est /inscriptions. Une carte par annee, la premiere etant l'annee courante."
+    },
+    {
+      "action": "wait",
+      "ms": 6000,
+      "note": "`wait` et non `wait_for` : un `wait_for` qui expire fait echouer le run quel que soit son on_timeout, et cette lecture est un bonus. Vaadin 14 rend cote client apres un aller-retour SSO ; 6000 est le budget deja retenu pour l'annuaire de Bordeaux, pour la meme raison — un telephone en cellulaire n'a pas le reseau d'un poste filaire."
+    },
+    {
+      "id": "formation",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formation_libelle": {
+          "selector": "(//vaadin-horizontal-layout[contains(@class,\"card-title-bordered\")]//div[@last-start-child])[1]",
+          "selector_type": "xpath",
+          "as": "list",
+          "note": "Le titre de la carte — « Annee 2 - Ingenieur Telecommunications ». C'est ce qui se lit le mieux sur un tableau de bord."
+        },
+        "formation_annee": {
+          "selector": "(//vaadin-vertical-layout[@class=\"text-label\"][label[@class=\"label-titre\"][normalize-space()=\"Période\"]]/label[@class=\"label-valeur\"])[1]",
+          "selector_type": "xpath",
+          "as": "list"
+        },
+        "formation_detail": {
+          "selector": "(//vaadin-vertical-layout[@class=\"text-label\"][label[@class=\"label-titre\"][normalize-space()=\"Formation\"]]/label[@class=\"label-valeur\"])[1]",
+          "selector_type": "xpath",
+          "as": "list",
+          "note": "L'intitule officiel du diplome, plus long que le titre de carte."
+        }
+      },
+      "note": "Aucune garde `when` sur ce step, et c'est mesure : un step saute n'enregistre AUCUNE sortie, donc le bloc `outputs` qui le reference leverait en StrictUndefined. `as: list` ne levant jamais, l'extraction court sec — si la vue n'est pas arrivee, elle rend [] et l'application n'affiche rien."
+    },
+    {
+      "action": "navigate",
       "url": "{{ vars.planning }}",
       "note": "ADE, sur le meme SSO que le dossier. Il **preselectionne la fiche de l'etudiant connecte** dans son arbre de ressources — aucune recherche par nom n'est necessaire."
     },
@@ -169,11 +263,14 @@
   ],
   "outputs": {
     "numero_etudiant": "{{ steps.dossier.numero_etudiant }}",
-    "ine": "",
+    "ine": "{{ steps.acces.ine }}",
     "identite": "{{ steps.dossier.prenom }} {{ steps.dossier.nom }}",
     "email": "{{ steps.coordonnees.email }}",
     "naissance": "{{ steps.dossier.naissance }}",
     "edt_ressource": "{{ steps.planning.ressource }}",
-    "edt_libelle": "{{ steps.planning.promotion }}"
+    "edt_libelle": "{{ steps.planning.promotion }}",
+    "formation_libelle": "{{ steps.formation.formation_libelle }}",
+    "formation_annee": "{{ steps.formation.formation_annee }}",
+    "formation_detail": "{{ steps.formation.formation_detail }}"
   }
 }

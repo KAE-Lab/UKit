@@ -164,13 +164,20 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                     }
                 ]}
             >
+                {/*
+                  * « Compte » et non « Deconnexion », depuis le 2026-08-25 : cet ecran ne sert plus
+                  * a partir. Il porte l'etat civil complet, l'INE, les identifiants et trois gestes
+                  * dont un seul deconnecte — le nommer par le plus destructeur des trois dissuadait
+                  * d'y aller pour consulter, ce qui est pourtant devenu sa raison d'etre depuis que
+                  * le tableau de bord est dedie aux services.
+                  */}
                 <MaterialCommunityIcons
-                    name="logout"
+                    name="account-circle-outline"
                     size={24}
                     color={theme.accent ?? theme.primary}
                 />
                 <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: tokens.space.xxs }]}>
-                    {Translator.get('LOGOUT')}
+                    {Translator.get('ACCOUNT')}
                 </Text>
             </TouchableOpacity>
         );

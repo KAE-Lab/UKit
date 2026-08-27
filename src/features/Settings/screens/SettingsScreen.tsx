@@ -10,7 +10,7 @@ import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
 import {
     changerEtablissement,
     etablissementRetire,
-    getEtablissementActif,
+    nomCourtEtablissement,
     lienEdtActif,
     portailPublie,
     sourceEdt,
@@ -96,7 +96,9 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             courseNotificationsEnabled: SettingsManager.getCourseNotificationsEnabled(),
             courseNotificationDelay: SettingsManager.getCourseNotificationDelay(),
             institutionDialogVisible: false,
-            institutionName: getEtablissementActif().nom,
+            // Le nom **court** : cette ligne est un espace contraint. Le nom entier reste dans
+            // l'ecran de choix, seul endroit ou il faut reconnaitre une fac inconnue.
+            institutionName: nomCourtEtablissement(),
             comptePossible: portailPublie(),
             compteConnecte: false,
         };
@@ -268,7 +270,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     setInstitution = async (code: string) => {
         await changerEtablissement(code);
         SettingsManager.setEtablissement(code);
-        this.setState({ institutionName: getEtablissementActif().nom });
+        this.setState({ institutionName: nomCourtEtablissement() });
         // La bascule vide le trousseau : la ligne du compte doit le dire tout de suite, sans attendre
         // un retour de focus qui n'aura pas lieu — on n'a pas quitte l'ecran.
         void this.refreshCompte();

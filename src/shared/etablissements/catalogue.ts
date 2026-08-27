@@ -126,6 +126,20 @@ export interface FormatSalles {
 export interface Etablissement {
     readonly code: string;
     readonly nom: string;
+    /**
+     * Le nom **court**, pour les endroits ou la place manque : une ligne de reglage, une pastille,
+     * un bouton. `null` : il n'y en a pas, et le nom complet fait l'affaire.
+     *
+     * Deux noms plutot qu'un seul raccourci partout, et c'est un arbitrage : « College ST » ne veut
+     * rien dire a quelqu'un qui choisit son etablissement pour la premiere fois, alors que « College
+     * Sciences et Technologies » ne tient pas dans une ligne de reglage. L'ecran de choix garde donc
+     * le nom entier ; les espaces contraints prennent celui-ci.
+     *
+     * A ne pas confondre avec un correctif de gabarit : une ligne qui laisse sa valeur ecraser son
+     * libelle est cassee pour **toutes** les valeurs longues, et ca se repare dans la ligne
+     * (`shared/ui/Button.tsx`), pas en raccourcissant les donnees.
+     */
+    readonly nomCourt: string | null;
     readonly ville: string | null;
     readonly logo: string | null;
     /** Le Blueprint du dossier administratif, sous `ukit.portail.`. `null` : pas d'identite lisible. */
@@ -257,9 +271,22 @@ const SALLES_PAR_DEFAUT: FormatSalles = { separateurs: [' | ', '/'], motif: '([A
 const SOCLE: Readonly<Record<string, Etablissement>> = {
     [ETABLISSEMENT_DEFAUT]: {
         code: ETABLISSEMENT_DEFAUT,
-        nom: 'Université de Bordeaux',
+        // Le NOM change, le CODE non — et la distinction n'est pas cosmetique : le code partitionne
+        // le trousseau, les reglages et les favoris (comptes.ts, reglagesParEtablissement.ts). Le
+        // renommer deconnecterait tout le parc installe et lui ferait perdre ses groupes.
+        //
+        // « Universite de Bordeaux » etait trop large : le perimetre reellement porte est celui du
+        // college Sciences et Technologies — c'est son Celcat qu'on interroge, ses batiments qu'on
+        // reference, ses groupes qu'on propose. Annoncer l'universite entiere promettait des
+        // formations que l'application ne sert pas.
+        nom: 'Collège Sciences et Technologies',
+        nomCourt: 'Collège ST',
         ville: 'Bordeaux',
-        logo: null,
+        // Dans le socle, et pas seulement dans la ligne publiee : la surcouche s'applique en
+        // **asynchrone** au lancement, si bien qu'un ecran monte avant elle gardait le repli — le
+        // formulaire de connexion s'ouvrait sans logo, puis en avait un si on y revenait plus tard.
+        // Le binaire porte donc l'adresse, et la base la met a jour comme le reste.
+        logo: 'https://owiksddeqcyyifnmpyqm.supabase.co/storage/v1/object/public/media/etablissements/bordeaux.webp',
         portailDossier: 'ukit.portail.bordeaux.dossier',
         portailMessagerie: 'ukit.portail.bordeaux.messagerie',
         celcatDomaine: 'https://celcat.u-bordeaux.fr/calendar',
@@ -273,10 +300,19 @@ const SOCLE: Readonly<Record<string, Etablissement>> = {
         bibliothequesPoints: POINTS_BORDEAUX,
         crousRegion: REGION_CROUS_BORDEAUX,
         services: {
-            ent: 'https://ent.u-bordeaux.fr',
+            // `ent.u-bordeaux.fr` **ne resout plus** — mesure le 2026-08-25, et le symptome etait un
+            // `NSURLErrorDomain -1003` a chaque ouverture de la porte ENT, y compris en production.
+            // Le portail vit sur `intranet`, qui rebondit sur le CAS avec son parametre `service`.
+            // Le Blueprint du dossier visait deja cet hote pour l'annuaire ; l'ecran, lui, etait
+            // reste sur l'ancien nom.
+            ent: 'https://intranet.u-bordeaux.fr',
             email: 'https://webmel.u-bordeaux.fr',
             cas: 'https://cas.u-bordeaux.fr',
             apogee: 'https://apogee.u-bordeaux.fr',
+            // L'identite Shibboleth de l'etablissement. Ce n'est **pas une porte** : rien ne s'ouvre
+            // a cette adresse. C'est ce que la page de choix d'etablissement de Moodle attend qu'on
+            // lui designe, dans une liste de 56 — voir `getPortalInjectedScript`.
+            idp_shibboleth: 'https://idp-ubx.u-bordeaux.fr/idp/shibboleth',
         },
         libelles: {},
         ordre: 0,
@@ -453,6 +489,7 @@ export function projeterEtablissement(row: EtablissementRow): Etablissement {
     return {
         code: row.code,
         nom: row.nom,
+        nomCourt: texteOuNull(row.nom_court),
         ville: texteOuNull(row.ville),
         logo: texteOuNull(row.logo_url),
         portailDossier: texteOuNull(row.portail_dossier),
@@ -584,6 +621,18 @@ export function setCodeEtablissementActif(code: string): void {
 export function portailPublie(): boolean {
     const etablissement = getEtablissementActif();
     return etablissement.portailDossier !== null || etablissement.portailMessagerie !== null;
+}
+
+/**
+ * Le nom de l'etablissement selectionne, dans sa forme la plus courte disponible.
+ *
+ * A employer partout ou la place est contrainte — une ligne de reglage, une pastille. L'ecran de
+ * **choix** d'etablissement, lui, garde `nom` : c'est le seul endroit ou quelqu'un doit reconnaitre
+ * une fac qu'il ne connait pas encore.
+ */
+export function nomCourtEtablissement(): string {
+    const etablissement = getEtablissementActif();
+    return etablissement.nomCourt ?? etablissement.nom;
 }
 
 /**

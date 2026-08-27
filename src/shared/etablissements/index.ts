@@ -47,6 +47,7 @@ export {
     getCodeEtablissementActif,
     getEtablissement,
     getEtablissementActif,
+    nomCourtEtablissement,
     libelleEtablissement,
     listeEtablissements,
     portailPublie,

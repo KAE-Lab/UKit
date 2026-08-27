@@ -116,7 +116,7 @@ n'ont pas la même nature, et qu'il vaut mieux ne pas confondre :
 | Volet | Thèse | Jalons |
 |---|---|---|
 | **1 — Le comportement devient de la donnée** | l'accès aux sources quitte le binaire pour des Blueprints publiés | A → G, I, J *(livrés)* |
-| **2 — La refonte visuelle** | l'application a la dette visuelle de sa reprise ; on la rend présentable avant de sortir | K *(livré)*, puis les sessions d'écran |
+| **2 — La refonte visuelle** | l'application a la dette visuelle de sa reprise ; on la rend présentable avant de sortir | K *(livré)*, puis les sessions d'écran — **Scolarité faite** le 2026-08-25 |
 | **Clôture** | plus aucune source n'a deux chemins, et la version part | Z |
 
 Le second volet n'est pas un appendice du premier : c'est ce qui manque pour que la v6 soit
@@ -151,7 +151,9 @@ de test, et les limites écrites.
                           6-K Le socle visuel   [livre]
                                             ▼
                     les ecrans, en sessions, hors jalon
-                    (annonces, scolarite, reglages)
+                    scolarite [faite]  ->  annonces  ->  reglages
+                                            ▼
+                    notes & resultats, sortie de la session scolarite
 
    CLOTURE
 
@@ -189,6 +191,27 @@ La règle qui départage : **ce qui se vérifie devient un jalon, ce qui se juge
 Les défauts **fonctionnels** rencontrés en chemin — une impasse, un état manquant — ne sont pas du
 goût : ils se corrigent, se testent et se cochent, et 6-K les inventorie pour qu'aucune session ne les
 confonde avec de l'esthétique.
+
+### Ce que la première session a appris
+
+La session **Scolarité** (2026-08-25) a livré une leçon qui vaut pour les deux suivantes, et elle n'était
+pas dans le cadrage de 6-K : **une session d'écran peut buter sur un écran qui n'a rien à dire.**
+Aucun travail visuel ne répondait à ça, et 6-K l'avait écrit — *« il ne décide pas ce que la page
+Scolarité doit montrer »*.
+
+Le remède a été de **commencer par une sonde**, pas par un habillage : ouvrir les deux dossiers
+universitaires avec des comptes réels, dumper leur DOM, et décider le contenu sur du mesuré. Elle a
+rapporté plus que prévu, et **trois affirmations fausses de la documentation** au passage.
+
+Trois règles en sortent, à appliquer aux sessions suivantes :
+
+- **si l'écran manque de contenu, la session commence par une mesure**, et le point d'arrêt qui suit
+  est réel : on lit le relevé avant de dessiner ;
+- **ce que la mesure rapporte ne rentre pas forcément dans la session.** Les notes existent des deux
+  côtés, et elles sont sorties du périmètre : ce n'est pas une rangée mais un écran, et les mêler
+  aurait rendu la session invérifiable ;
+- **une session de volet 2 peut légitimement porter du volet 1** — ici deux Blueprints étendus — à
+  condition que ce soit décidé au point d'arrêt et non subi en chemin.
 
 ## Implémenter un jalon
 

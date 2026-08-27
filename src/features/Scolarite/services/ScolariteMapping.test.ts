@@ -50,6 +50,8 @@ describe('prenomDepuisIdentite', () => {
 });
 
 describe('projeterDossier', () => {
+    const LU_LE = '2026-08-25T20:00:00.000Z';
+
     it('projette les sorties du Blueprint sur les cles du trousseau', () => {
         expect(
             projeterDossier({
@@ -58,28 +60,81 @@ describe('projeterDossier', () => {
                 identite: 'KYLIAN MALARTRE',
                 email: 'kylian.malartre@etu.u-bordeaux.fr',
                 naissance: '07/11/2005',
-            }),
+            }, LU_LE),
         ).toEqual({
             firstName: 'Kylian',
             studentNumber: '22301734',
             ine: '090640171CE',
             emailAddress: 'kylian.malartre@etu.u-bordeaux.fr',
             dateOfBirth: '07/11/2005',
+            formation: '',
+            formationAnnee: '',
+            formationDetail: '',
+            luLe: LU_LE,
         });
     });
 
     it('laisse la date de naissance telle quelle : GreetingBlock la decoupe sur des barres obliques', () => {
-        expect(projeterDossier({ naissance: '07/11/2005' }).dateOfBirth).toBe('07/11/2005');
+        expect(projeterDossier({ naissance: '07/11/2005' }, LU_LE).dateOfBirth).toBe('07/11/2005');
     });
 
     it('ne remplit rien qu il n a pas recu', () => {
-        expect(projeterDossier({})).toEqual({
+        expect(projeterDossier({}, LU_LE)).toEqual({
             firstName: '',
             studentNumber: '',
             ine: '',
             emailAddress: '',
             dateOfBirth: '',
+            formation: '',
+            formationAnnee: '',
+            formationDetail: '',
+            luLe: LU_LE,
         });
+    });
+
+    /*
+     * Les deux portails ne rendent pas la meme FORME, et c'est deliberé : une lecture obligatoire
+     * descend en `as: "text"`, une lecture bonus en `as: "list"` — qui ne leve jamais. La projection
+     * est le seul endroit qui ramene les deux a une chaine.
+     */
+    it('accepte une sortie en liste comme une sortie en chaine', () => {
+        expect(projeterDossier({ ine: ['080014278FC'] }, LU_LE).ine).toBe('080014278FC');
+        expect(projeterDossier({ ine: '090640171CE' }, LU_LE).ine).toBe('090640171CE');
+    });
+
+    it('rend une chaine vide sur une liste vide, jamais undefined', () => {
+        expect(projeterDossier({ ine: [], formation_libelle: [] }, LU_LE)).toMatchObject({
+            ine: '',
+            formation: '',
+        });
+    });
+
+    /*
+     * Mesure du 2026-08-25 : le tableau des inscriptions de Bordeaux colle une icone FontAwesome
+     * dans la cellule de la ligne courante, et le texte de l'element l'emporte. Affichee telle
+     * quelle, la formation se lirait « M1 Informatique??? ».
+     */
+    it('retire le glyphe d icone que la source colle au libelle de la ligne courante', () => {
+        expect(projeterDossier({ formation_libelle: ['M1 Informatique\uf002'] }, LU_LE).formation)
+            .toBe('M1 Informatique');
+    });
+
+    it('projette la formation des deux portails sous les memes cles', () => {
+        const bordeaux = projeterDossier({
+            formation_libelle: ['M1 Informatique\uf002'],
+            formation_annee: ['2026/2027'],
+            formation_detail: ['UF Informatique'],
+        }, LU_LE);
+        const inp = projeterDossier({
+            formation_libelle: ['Année 2 - Ingénieur Télécommunications'],
+            formation_annee: ['2026-2027'],
+            formation_detail: ['Ingénieur spécialité Télécommunications'],
+        }, LU_LE);
+
+        expect(bordeaux.formation).toBe('M1 Informatique');
+        expect(bordeaux.formationAnnee).toBe('2026/2027');
+        expect(inp.formation).toBe('Année 2 - Ingénieur Télécommunications');
+        expect(inp.formationAnnee).toBe('2026-2027');
     });
 });
 

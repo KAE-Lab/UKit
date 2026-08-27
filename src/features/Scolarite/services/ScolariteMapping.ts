@@ -12,13 +12,28 @@
 import type { UkitFailure } from '../../../shared/aetherius/failures';
 import type { TranslationKey } from '../../../shared/i18n/Translator';
 
-/** Les donnees froides, telles que `SecureStore` les porte depuis toujours. Les cles ne changent pas. */
+/**
+ * Les donnees froides, telles que `SecureStore` les porte. Les cinq cles historiques ne changent pas.
+ *
+ * Les quatre suivantes sont **facultatives**, et le type le dit : une entree de trousseau ecrite par
+ * une version anterieure ne les porte pas. Les declarer obligatoires ferait mentir le compilateur sur
+ * des donnees qui existent deja sur les appareils, et l'ecran afficherait un libelle vide plutot que
+ * de faire disparaitre sa ligne.
+ */
 export interface ScolariteColdData {
     readonly firstName: string;
     readonly studentNumber: string;
     readonly ine: string;
     readonly emailAddress: string;
     readonly dateOfBirth: string;
+    /** L'intitule de l'inscription courante : « M1 Informatique », « Annee 2 - Ingenieur ... ». */
+    readonly formation?: string;
+    /** Son annee, telle que la source l'ecrit : « 2026/2027 » a Bordeaux, « 2026-2027 » a l'INP. */
+    readonly formationAnnee?: string;
+    /** Le second intitule, plus long : la composante a Bordeaux, le diplome officiel a l'INP. */
+    readonly formationDetail?: string;
+    /** Quand le dossier a ete lu, en ISO. Pose par l'appelant : l'heure ne se lit pas ici. */
+    readonly luLe?: string;
 }
 
 /** Les donnees chaudes : le compteur, et rien d'autre. */
@@ -28,6 +43,34 @@ export interface ScolariteMailData {
 
 function texte(valeur: unknown): string {
     return typeof valeur === 'string' ? valeur.trim() : '';
+}
+
+/**
+ * La premiere valeur d'une sortie qui peut etre une chaine, une liste, ou rien.
+ *
+ * Les deux portails ne rendent pas la meme forme, et c'est deliberé : une lecture **obligatoire**
+ * descend en `as: "text"`, qui leve si le noeud manque ; une lecture **bonus** descend en
+ * `as: "list"`, qui rend `[]` et ne leve jamais. L'INE en est l'illustration — il est obligatoire a
+ * Bordeaux, facultatif a l'INP ou il vit sur un onglet a part. Normaliser ici plutot que dans les
+ * fichiers evite d'imposer a un portail la fragilite de l'autre.
+ *
+ * Meme role que `commeListe` cote bibliotheques, dans l'autre sens (LibraryMapping.ts).
+ */
+function premierTexte(valeur: unknown): string {
+    if (Array.isArray(valeur)) return valeur.length > 0 ? texte(valeur[0]) : '';
+    return texte(valeur);
+}
+
+/**
+ * Le libelle d'une formation, debarrasse des glyphes d'icone que la source y colle.
+ *
+ * Mesure du 2026-08-25 : le tableau des inscriptions de Bordeaux rend « M1 Informatique\uf002 » —
+ * la ligne courante porte une icone FontAwesome dans la meme cellule que son intitule, et le texte
+ * de l'element l'emporte avec lui. Ces glyphes vivent dans la zone d'usage prive d'Unicode, ou rien
+ * de legitime ne s'ecrit : les retirer ne peut pas amputer un vrai libelle.
+ */
+function libelleFormation(valeur: unknown): string {
+    return premierTexte(valeur).replace(/[\uE000-\uF8FF]/g, '').trim();
 }
 
 /**
@@ -63,13 +106,24 @@ export function prenomDepuisIdentite(identite: unknown): string {
  * qui a deja refuse le cas ou les libelles ont bouge. Reconstruire ici ce que la page n'a pas donne
  * reintroduirait exactement la donnee fausse que ce jalon supprime.
  */
-export function projeterDossier(outputs: Readonly<Record<string, unknown>>): ScolariteColdData {
+export function projeterDossier(
+    outputs: Readonly<Record<string, unknown>>,
+    luLe: string,
+): ScolariteColdData {
     return {
         firstName: prenomDepuisIdentite(outputs.identite),
         studentNumber: texte(outputs.numero_etudiant),
-        ine: texte(outputs.ine),
+        // `premierTexte` et non `texte` : l'INE est une chaine a Bordeaux et une liste a l'INP, ou
+        // il vit sur un onglet a part donc se lit en `as: "list"` pour ne jamais lever.
+        ine: premierTexte(outputs.ine),
         emailAddress: texte(outputs.email),
         dateOfBirth: texte(outputs.naissance),
+        formation: libelleFormation(outputs.formation_libelle),
+        formationAnnee: premierTexte(outputs.formation_annee),
+        formationDetail: libelleFormation(outputs.formation_detail),
+        // Pose par l'appelant, jamais lu ici : ce module ne connait pas l'heure courante, c'est ce
+        // qui le garde rejouable sous vitest (docs/blueprints.md).
+        luLe,
     };
 }
 

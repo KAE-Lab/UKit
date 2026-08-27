@@ -81,6 +81,10 @@ create table if not exists public.batiments (
 create table if not exists public.etablissements (
     code               text primary key,
     nom                text        not null,
+    -- Le nom **court**, pour les endroits ou la place manque : une ligne de reglage, une pastille.
+    -- `null` : il n'y en a pas, et le nom complet fait l'affaire. Deux noms plutot qu'un raccourci
+    -- partout, parce que « College ST » ne veut rien dire a qui choisit sa fac pour la premiere fois.
+    nom_court          text,
     ville              text,
     logo_url           text,
     actif              boolean     not null default true,

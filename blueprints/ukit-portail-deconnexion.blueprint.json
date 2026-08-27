@@ -1,0 +1,30 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.deconnexion",
+  "description": "Invalide la session CAS de l'etudiant, cote SERVEUR. C'est le pendant obligatoire de `options.session.persist` : depuis que les parcours de portail persistent leur session pour que le navigateur integre s'ouvre deja authentifie, « se deconnecter » doit fermer cette session — sinon le geste effacerait le trousseau tout en laissant un navigateur connecte au compte qu'on vient de retirer. Deux raisons de viser le CAS plutot que de supprimer un cookie : le serveur invalide le ticket pour de bon, la ou une suppression locale laisse une session vivante que n'importe quel autre client pourrait reprendre ; et ca ne demande aucune dependance de plus. Ce fichier est GENERIQUE et embarque, contrairement aux portails : le chemin `/logout` est celui d'Apereo CAS, le meme produit chez les deux etablissements, et la racine arrive en entree depuis le catalogue (colonne `services`, cle `cas`). Il ne declare AUCUN secret : il n'a rien a authentifier, il ferme. Son echec est volontairement sans consequence pour l'appelant — une deconnexion locale reussie avec une session distante encore ouverte vaut mieux qu'un bouton « Se deconnecter » qui refuse de marcher parce que le portail ne repond pas.",
+  "act": "continuum",
+  "inputs": {
+    "cas": { "type": "string", "required": true, "description": "La racine du CAS de l'etablissement, telle que le catalogue la publie." }
+  },
+  "options": {
+    "timeout_ms": 15000,
+    "debug": false,
+    "session": { "persist": true },
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ inputs.cas }}/logout",
+      "note": "`persist: true` est ici indispensable et non copie par habitude : en incognito, ce run ouvrirait un magasin VIDE, n'enverrait aucun cookie de session, et le CAS n'aurait rien a invalider. Il doit parler au meme magasin que celui qui porte le ticket."
+    },
+    {
+      "action": "wait",
+      "ms": 2500,
+      "note": "`wait` et non `wait_for` : la page de sortie du CAS n'a pas de marqueur stable d'un etablissement a l'autre, et un `wait_for` qui expire ferait echouer un run dont l'echec ne doit rien couter. Ce qui compte s'est deja produit au moment ou la reponse est arrivee — le serveur a invalide le ticket et expire le cookie."
+    }
+  ],
+  "outputs": {}
+}
