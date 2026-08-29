@@ -50,6 +50,39 @@ create table if not exists public.service_messages (
     expire_le  timestamptz
 );
 
+-- Le mot du haut de l'onglet Scolarite, quand une regle publiee doit passer devant le socle.
+--
+-- L'application embarque ses propres salutations — bonjour, bonsoir, bon week-end, joyeux
+-- anniversaire — et elles suffisent. Cette table sert a poser un mot **pour tout le monde** sans
+-- release : la rentree, une periode d'examens, un jour particulier.
+--
+-- `condition` porte un vocabulaire **ferme**, et toutes les conditions declarees s'appliquent (un ET).
+-- Une condition vide vaut toujours.
+--   {"heures": {"de": 22, "a": 5},        -- 0-23, fin exclue ; `de > a` passe minuit
+--    "jours":  [0, 6],                    -- 0 = dimanche
+--    "plage":  {"du": "12-20", "au": "01-05"},  -- MM-JJ ; `du > au` passe l'an
+--    "anniversaire": true}
+--
+-- `messages` porte une entree par langue — ces textes ne sont pas dans le binaire, donc ils ne
+-- passent pas par le traducteur ; le francais sert de repli.
+--   {"fr": "Bonne rentree", "en": "Welcome back"}
+--
+-- **Les garder COURTS.** La salutation tient sur une seule ligne, prenom et date compris, et ce qui
+-- depasse est tronque. C'est voulu : c'est un detail sous le titre, pas un bandeau — un message qui
+-- pousserait la grille vers le bas ferait exactement ce que cette ligne existe pour eviter.
+--
+-- `priorite` tranche entre plusieurs regles applicables. Le socle embarque va de 0 a 90, espace de
+-- dix pour qu'une regle publiee puisse se glisser entre deux sans release. **A egalite, le publie
+-- gagne** : il est assemble apres, et quelqu'un a voulu l'ecrire.
+create table if not exists public.salutations (
+    id        text primary key,
+    priorite  integer     not null default 0,
+    condition jsonb       not null default '{}'::jsonb,
+    messages  jsonb       not null,
+    actif     boolean     not null default true,
+    creee_le  timestamptz not null default now()
+);
+
 -- =============================================================================
 -- Referentiels
 -- =============================================================================
@@ -92,6 +125,29 @@ create table if not exists public.etablissements (
     -- prefixe qu'un manifeste distant a le droit d'etendre (voir docs/phase-6/6-g-etablissements.md).
     portail_dossier    text,
     portail_messagerie text,
+    -- Les Blueprints qui remplissent les **widgets** de l'onglet Scolarite, par point de service :
+    --   {"messagerie": {"blueprint": "ukit.portail.<code>.messagerie", "peremption_min": 20},
+    --    "moodle":     {"blueprint": "ukit.portail.<code>.moodle",     "peremption_min": 360}}
+    -- `peremption_min` est publiable plutot que compilee parce que c'est un compromis entre fraicheur
+    -- et runs de moteur, et que le bon reglage se mesure sur des appareils reels ; `null` ou absente
+    -- garde celle qu'embarque l'application.
+    --
+    -- Un point **absent** n'est pas une panne : c'est un widget dont la source n'existe pas encore
+    -- ici. Sa rangee reste affichee et ouvre sa porte. C'est ce qui rend vraie la promesse « un widget
+    -- de plus = un Blueprint publie + une ligne ici », sans release.
+    --
+    -- `portail_messagerie` reste **lue en repli** par l'application (catalogue.ts, `widgetPublie`) :
+    -- un appareil mis a jour avant que cette colonne ne soit remplie garde son compteur.
+    portail_widgets    jsonb       not null default '{}'::jsonb,
+    -- Le Blueprint qui rapporte le CERTIFICAT DE SCOLARITE, quand l'etablissement sert ses pieces a
+    -- une adresse rejouable. `null` est le cas general et ne signale rien : la plupart des portails
+    -- regenerent l'adresse d'un PDF a chaque affichage — consultable, donc, mais pas rapportable
+    -- (Bordeaux INP, sonde du 2026-08-25). Le certificat n'est alors simplement pas range d'avance.
+    --
+    -- Une colonne nommee et non une entree de `portail_widgets`, parce que ce n'en est pas un : un
+    -- widget rend un compteur qu'une rangee affiche, celui-ci rend un fichier qu'on ecrit sur
+    -- l'appareil.
+    portail_documents  text,
     -- Ce qui fait varier les Blueprints d'emploi du temps d'un etablissement a l'autre. `null` veut
     -- dire « cet etablissement ne publie pas son emploi du temps ici », ce que l'ecran **dit** au
     -- lieu d'echouer. `celcat_res_types` projette les roles sur les codes de la source
@@ -161,6 +217,19 @@ alter table public.etablissements add column if not exists salles_libres jsonb;
 -- l'application qui ne la connait pas continue de tourner — son Blueprint garde son entree par
 -- defaut, celle du secteur bordelais.
 alter table public.etablissements add column if not exists crous_region  text;
+
+-- La colonne des widgets (session du 2026-08-28). Meme regle, et elle porte ici un `default` non nul :
+-- une version de l'application qui la lit sur une ligne ecrite avant elle doit trouver une table
+-- vide, pas un nul — et une table vide veut dire « aucun widget rempli ici », ce qui est la verite.
+-- L'application replie en outre la messagerie sur `portail_messagerie`, de sorte qu'un appareil mis a
+-- jour avant cette colonne garde son compteur (catalogue.ts, `widgetPublie`).
+alter table public.etablissements
+    add column if not exists portail_widgets jsonb not null default '{}'::jsonb;
+
+-- La colonne des documents (2026-08-29). Meme regle, et elle reste NULLABLE la ou celle des widgets
+-- porte un default : « pas de source de documents ici » est le cas ordinaire et se dit par un nul,
+-- alors qu'une table de widgets vide se dit par une table vide.
+alter table public.etablissements add column if not exists portail_documents text;
 
 -- Surcouche des visuels de contenu. Elle repond a une question qu'aucune des tables
 -- precedentes ne couvre : que fait-on quand une **source tierce** publie une photo fausse, ou n'en

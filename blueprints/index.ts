@@ -28,7 +28,9 @@ import celcatSalles from './ukit-celcat-salles.blueprint.json';
 import celcatSemaine from './ukit-celcat-semaine.blueprint.json';
 import edtAbonnement from './ukit-edt-abonnement.blueprint.json';
 import portailBordeauxDossier from './ukit-portail-bordeaux-dossier.blueprint.json';
+import portailBordeauxDocuments from './ukit-portail-bordeaux-documents.blueprint.json';
 import portailBordeauxMessagerie from './ukit-portail-bordeaux-messagerie.blueprint.json';
+import portailBordeauxMoodle from './ukit-portail-bordeaux-moodle.blueprint.json';
 import portailDeconnexion from './ukit-portail-deconnexion.blueprint.json';
 import portailVerification from './ukit-portail-verification.blueprint.json';
 import versions from './versions.json';
@@ -61,6 +63,14 @@ export const BLUEPRINT = {
     EDT_ABONNEMENT: 'ukit.edt.abonnement',
     PORTAIL_BORDEAUX_DOSSIER: 'ukit.portail.bordeaux.dossier',
     PORTAIL_BORDEAUX_MESSAGERIE: 'ukit.portail.bordeaux.messagerie',
+    // Le premier widget qui n'est pas la messagerie. Embarque parce que Bordeaux **est** le
+    // socle : la regle du depot est que le binaire n'embarque un etablissement que s'il embarque
+    // aussi ses Blueprints. Ceux de l'INP arrivent par le manifeste, celui-ci non.
+    PORTAIL_BORDEAUX_MOODLE: 'ukit.portail.bordeaux.moodle',
+    // Le premier Blueprint du depot qui rapporte un FICHIER et non une donnee. Embarque pour la meme
+    // raison que les autres : Bordeaux est l'etablissement du socle, et le binaire n'embarque un
+    // etablissement que s'il embarque de quoi le jouer.
+    PORTAIL_BORDEAUX_DOCUMENTS: 'ukit.portail.bordeaux.documents',
     // Generique et embarque, malgre son prefixe : `/logout` est le chemin d'Apereo CAS, le meme
     // produit chez les deux etablissements, et la racine arrive en entree depuis le catalogue. Il
     // ferme la session que `session.persist` garde ouverte — sans lui, se deconnecter effacerait le
@@ -155,6 +165,14 @@ export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
     [BLUEPRINT.PORTAIL_BORDEAUX_MESSAGERIE]: {
         version: versions[BLUEPRINT.PORTAIL_BORDEAUX_MESSAGERIE].version,
         document: portailBordeauxMessagerie,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_DOCUMENTS]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_DOCUMENTS].version,
+        document: portailBordeauxDocuments,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_MOODLE]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_MOODLE].version,
+        document: portailBordeauxMoodle,
     },
     [BLUEPRINT.PORTAIL_DECONNEXION]: {
         version: versions[BLUEPRINT.PORTAIL_DECONNEXION].version,

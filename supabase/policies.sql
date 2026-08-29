@@ -28,6 +28,7 @@ alter table public.visuels          enable row level security;
 alter table public.etablissements   enable row level security;
 alter table public.blueprints       enable row level security;
 alter table public.app_release      enable row level security;
+alter table public.salutations     enable row level security;
 
 -- -----------------------------------------------------------------------------
 -- Lecture publique
@@ -46,6 +47,15 @@ create policy "messages de service actifs lisibles"
     on public.service_messages for select
     to anon
     using (actif and (expire_le is null or expire_le > now()));
+
+-- Une salutation inactive ne sort pas de la base : ce qui n'a pas a etre lu n'est pas envoye. Le
+-- filtre applicatif sur `actif` reste, comme partout — la politique est la frontiere, pas la seule
+-- ceinture.
+drop policy if exists "salutations actives lisibles" on public.salutations;
+create policy "salutations actives lisibles"
+    on public.salutations for select
+    to anon
+    using (actif);
 
 drop policy if exists "batiments lisibles" on public.batiments;
 create policy "batiments lisibles"

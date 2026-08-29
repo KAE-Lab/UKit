@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AppState, View } from 'react-native';
+import { AppState, DeviceEventEmitter, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { AetheriusConfirm, AetheriusWebView } from '@aetherius/react-native';
 
@@ -7,6 +7,7 @@ import StackNavigator from './StackNavigator';
 import { CredentialsProvider } from '../../features/Scolarite/services/CredentialsContext';
 import { PropositionsModal } from '../../features/Scolarite/components/PropositionsModal';
 import { refreshBlueprints } from '../aetherius';
+import { rafraichirSalutations } from '../../features/Scolarite/salutations';
 import { refreshBuildings } from '../locations';
 import { refreshVisuels } from '../visuels';
 import { refreshEtablissements } from '../etablissements';
@@ -26,6 +27,19 @@ export default function RootContainer() {
 	// langue change, ce qui reevalue tous les libelles traduits.
 	const [, setLanguage] = useState(SettingsManager.getLanguage());
 	const [filters, setFilters] = useState(SettingsManager.getFilters());
+	/*
+	 * La date simulee du menu developpeur.
+	 *
+	 * Meme motif que la langue juste au-dessus : seul le setter sert. Le poser reprovoque un rendu de
+	 * toute l'application, ce qui fait relire l'heure a tout ce qui en depend — la salutation de
+	 * l'onglet Scolarite, les etats « ouvert / ferme », les bornes de semaine.
+	 *
+	 * Sans lui, `DayView` etait **le seul** ecran a s'abonner a la simulation : changer la date y
+	 * fonctionnait et nulle part ailleurs, ce qui donnait l'impression que le mock ne marchait que
+	 * pour certains etablissements (signale le 2026-08-29). L'abonnement local de `DayView` reste : il
+	 * fait plus que rendre a nouveau, il recharge sa journee.
+	 */
+	const [, setInstantSimule] = useState(0);
 	const [etablissement, setEtablissement] = useState(SettingsManager.getEtablissement());
 	const [catalogue, setCatalogue] = useState(0);
 
@@ -61,6 +75,7 @@ export default function RootContainer() {
 			void refreshBuildings();
 			void refreshVisuels();
 			rafraichirCatalogue();
+			void rafraichirSalutations(SettingsManager.getLanguage());
 		}
 	}
 
@@ -83,6 +98,10 @@ export default function RootContainer() {
 		SettingsManager.on('etablissement', onEtablissement);
 
 		const eventSubscription = AppState.addEventListener('change', onAppStateChange);
+		const abonnementTemps = DeviceEventEmitter.addListener(
+			'timeMockChanged',
+			() => setInstantSimule((revision) => revision + 1),
+		);
 
 		// Les deux declencheurs de la donnee publiee : le demarrage, et le retour au premier plan.
 		// Jamais dans le chemin d'un run ni d'un rendu — aucune des quatre ne leve, aucune n'est
@@ -93,6 +112,10 @@ export default function RootContainer() {
 		void refreshBuildings();
 		void refreshVisuels();
 		rafraichirCatalogue();
+		// La cinquieme, et la plus legere : quelques lignes qui decident du mot en haut de l'onglet
+		// Scolarite. Elle suit la langue, parce que les messages publies ne passent pas par
+		// `Translator` — ils portent leur propre table par langue.
+		void rafraichirSalutations(SettingsManager.getLanguage());
 
 		return () => {
 			SettingsManager.unsubscribe('theme', onTheme);
@@ -102,6 +125,7 @@ export default function RootContainer() {
 			SettingsManager.unsubscribe('filter', onFilter);
 			SettingsManager.unsubscribe('etablissement', onEtablissement);
 			eventSubscription.remove();
+			abonnementTemps.remove();
 		};
 	}, []);
 

@@ -34,6 +34,13 @@
  * `onError` et non une verification prealable : on ne sait pas si une image chargera avant d'avoir
  * essaye, et une requete de controle doublerait le trafic pour deviner ce que l'echec dira de
  * lui-meme.
+ *
+ * ## Deux tailles, meme gabarit
+ *
+ * `compact` sert l'en-tete du tableau de bord, ou le logo remplit le vide a droite du titre et dit de
+ * quelle fac viennent les donnees — la seule information que la page ne portait nulle part depuis
+ * qu'il y a deux etablissements. Ce sont les memes proportions, a l'echelle : les figer une seconde
+ * fois les aurait fait diverger a la premiere retouche.
  */
 
 import React, { useState } from 'react';
@@ -47,29 +54,47 @@ const LARGEUR_LOGO = 208;
 const HAUTEUR_LOGO = 88;
 /** Celui du repli : un carre, comme toute surface d'icone de l'application. */
 const COTE_ICONE = 72;
+/**
+ * La reduction de l'en-tete.
+ *
+ * Un seul facteur plutot que quatre nombres : les proportions mesurees au jalon 6-K restent vraies a
+ * l'echelle, et une seconde table de tailles aurait diverge de la premiere des la premiere retouche.
+ *
+ * `0.42` donne **87 x 37 points**, ce qui tient dans la ligne d'ecriture d'un titre en 34 (environ 41
+ * points de haut) sans la faire grandir. C'est la contrainte qui fixe la valeur : le logo partage la
+ * ligne du grand titre, donc il doit s'y loger — pas la rallonger.
+ *
+ * Il a valu `0.38` le temps d'un essai ou il partageait une ligne de pastilles, plus basse. La
+ * contrainte a change avec sa place ; c'est le seul nombre a bouger s'il faut le reajuster.
+ */
+const FACTEUR_COMPACT = 0.42;
 
 export interface LogoEtablissementProps {
     /** L'adresse publiee par le catalogue, ou `null`. */
     logo: string | null;
     theme: AppThemeType;
     teinte: string;
+    /** La taille de l'en-tete : les memes proportions, reduites. */
+    compact?: boolean;
     style?: StyleProp<ViewStyle>;
 }
 
-export function LogoEtablissement({ logo, theme, teinte, style }: LogoEtablissementProps) {
+export function LogoEtablissement({ logo, theme, teinte, compact = false, style }: LogoEtablissementProps) {
     const [echec, setEchec] = useState(false);
     const montrerLeLogo = logo !== null && logo !== '' && !echec;
+    const echelle = (valeur: number) => Math.round(compact ? valeur * FACTEUR_COMPACT : valeur);
+    const marge = compact ? tokens.space.xs : tokens.space.md;
 
     if (!montrerLeLogo) {
         return (
             <View
                 style={[
                     styles.surface,
-                    { width: COTE_ICONE, height: COTE_ICONE, backgroundColor: `${teinte}1A` },
+                    { width: echelle(COTE_ICONE), height: echelle(COTE_ICONE), backgroundColor: `${teinte}1A` },
                     style,
                 ]}
             >
-                <Icon icon={{ name: 'school-outline' }} size={COTE_ICONE / 2} color={teinte} />
+                <Icon icon={{ name: 'school-outline' }} size={echelle(COTE_ICONE) / 2} color={teinte} />
             </View>
         );
     }
@@ -79,16 +104,16 @@ export function LogoEtablissement({ logo, theme, teinte, style }: LogoEtablissem
             style={[
                 styles.surface,
                 {
-                    width: LARGEUR_LOGO,
-                    height: HAUTEUR_LOGO,
+                    width: echelle(LARGEUR_LOGO),
+                    height: echelle(HAUTEUR_LOGO),
                     // Blanc dans les deux themes : les logos publies sont detoures sur transparent et
                     // dessines pour du blanc. Voir l'en-tete de ce fichier.
                     backgroundColor: theme.lightFont,
                     // Le rembourrage est **le notre**, et il vit sur le conteneur : les fichiers
                     // publies sont detoures a ras du trace, sans marge, et un `padding` pose sur une
                     // `Image` ne retrecit pas son contenu en React Native.
-                    paddingHorizontal: tokens.space.md,
-                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: marge,
+                    paddingVertical: compact ? tokens.space.xxs : tokens.space.sm,
                 },
                 style,
             ]}

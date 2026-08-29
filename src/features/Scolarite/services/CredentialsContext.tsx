@@ -6,13 +6,14 @@ import { SettingsManager } from '../../../shared/services/AppCore';
 import { getCodeEtablissementActif, portailPublie } from '../../../shared/etablissements';
 import Translator from '../../../shared/i18n/Translator';
 import type { UkitFailure } from '../../../shared/aetherius';
-import { cleDeMessage, type ScolariteColdData, type ScolariteMailData } from './ScolariteMapping';
+import { rangerCertificat } from './CertificatService';
+import { cleDeMessage, type ScolariteColdData } from './ScolariteMapping';
+import { useWidgets, type EtatDesWidgets } from '../widgets/useWidgets';
 import type { PropositionsDossier } from './PropositionsDossier';
 import { lirePropositionsEnAttente, propositionsDe } from './PropositionsEnAttente';
 import {
     deroulerSession,
     fermerSessionDistante,
-    portailDisponible,
     type EtapeSession,
     type ResultatSession,
 } from './ScolariteSession';
@@ -64,29 +65,35 @@ export interface CredentialsValue {
     readonly credentials: Identifiants | null;
     readonly credentialsLoaded: boolean;
     readonly coldData: ScolariteColdData | null;
-    readonly mailData: ScolariteMailData | null;
+    /**
+     * Ce que les widgets savent : leurs valeurs, leurs echecs, celui qui se lit en ce moment.
+     *
+     * Il remplace `mailData`, qui portait le seul compteur de messages **sans le persister** — d'ou
+     * l'indicateur tournant a chaque lancement et le vide hors ligne. Les widgets, eux, s'ouvrent sur
+     * leur derniere valeur connue et se rafraichissent dessous.
+     */
+    readonly widgets: EtatDesWidgets;
+    /**
+     * Le certificat automatique est en train de se ranger.
+     *
+     * Ce run continue APRES la barre du parcours froid — c'est le dernier de la chaine, et le plus
+     * long. La tuile des documents s'en sert pour poser le meme indicateur de lecture que les
+     * widgets : sans lui, rien n'indiquait qu'un travail se poursuivait, et l'absence de piece se
+     * lisait comme un echec (signale sur appareil le 2026-08-29).
+     */
+    readonly certificatEnCours: boolean;
     readonly scrapeStatus: ScrapeStatus;
     readonly scrapeProgress: EtapeSession | null;
     readonly sessionMode: 'cold' | 'hot';
     /** Le dernier echec de session, deja traduit en decision d'ecran. `null` si tout va bien. */
     readonly sessionFailure: UkitFailure | null;
     /**
-     * L'etablissement selectionne publie-t-il une messagerie extractible ?
-     *
-     * `false` fait **disparaitre** la ligne de messagerie, il ne la met pas en erreur : chez une fac
-     * dont le webmail passe par une authentification que l'application ne sait pas jouer, il n'y a
-     * rien qui echoue — il n'y a rien a montrer. Afficher une panne permanente pour un service qui
-     * n'existe pas serait un mensonge affiche a chaque lancement.
-     */
-    readonly messagerieDisponible: boolean;
-    /**
      * L'etablissement selectionne publie-t-il **un** portail, quel qu'il soit ?
      *
      * `false` fait disparaitre le formulaire de connexion au profit d'un message : une universite qui
      * n'expose ni dossier ni messagerie n'a rien derriere quoi s'authentifier, et lui demander des
-     * identifiants serait promettre un service qui n'existe pas. C'est le pendant, un cran au-dessus,
-     * de `messagerieDisponible` — et le cas est reel des qu'un etablissement arrive au catalogue sans
-     * portail ecrit (jalon 6-J).
+     * identifiants serait promettre un service qui n'existe pas. Le cas est reel des qu'un
+     * etablissement arrive au catalogue sans portail ecrit (jalon 6-J).
      */
     readonly portailDisponible: boolean;
     /**
@@ -180,7 +187,15 @@ async function chargerSessionDuTrousseau(
     const enAttente = propositionsDe(lirePropositionsEnAttente(propositions), getCodeEtablissementActif());
 
     poser({ credentials: creds, cold: (cold as ScolariteColdData | null) ?? null, enAttente });
-    if (creds) lancerSession(cold ? 'hot' : 'cold');
+    /*
+     * **Un dossier deja lu ne declenche plus rien.**
+     *
+     * On jouait ici un parcours « chaud » dont tout le role etait de relire la boite de reception.
+     * Ce n'est plus une session mais un widget : il s'ouvre sur sa derniere valeur connue, et ne
+     * rejoue que s'il est perime. Le lancement de l'application ne coute donc plus un run de moteur
+     * a quelqu'un qui ouvre l'onglet Planning et rien d'autre.
+     */
+    if (creds && cold === null) lancerSession('cold');
 }
 
 function useChargementInitial(lancerSession: (mode: 'cold' | 'hot') => void, poser: PoserSession): void {
@@ -249,6 +264,9 @@ function useDeconnexion(
         sessionRef.current?.abort();
         await SecureStoreService.deleteCredentials();
         await SecureStoreService.deleteColdData();
+        // Les valeurs de widgets sont des donnees du compte : les laisser ferait retrouver le
+        // compteur de messages de quelqu'un d'autre a la connexion suivante.
+        await SecureStoreService.deleteWidgets();
         // Ce qui attendait une reponse appartenait a ce compte : le garder ferait poser la question
         // au suivant, avec les UE du precedent.
         await ecrireEnAttente(null);
@@ -380,11 +398,20 @@ function useReprises(
     coldData: ScolariteColdData | null,
     lancerSession: (mode: 'cold' | 'hot', candidat?: Identifiants | null, remplacer?: boolean) => boolean,
     setColdData: (cold: ScolariteColdData | null) => void,
+    rafraichirWidgets: (options?: { readonly force?: boolean }) => Promise<void>,
 ) {
+    /*
+     * « Reessayer » ne veut pas dire la meme chose selon ce qu'on a deja.
+     *
+     * Sans identite lue, il n'y a rien a reprendre : c'est un parcours froid. Avec, l'identite est
+     * acquise et ce qui a pu echouer, ce sont les **services** — on les rejoue, tous, sans regarder
+     * leur peremption, parce que c'est un geste et qu'un geste doit se voir.
+     */
     const retrySession = useCallback(() => {
         if (credentials === null) return;
-        lancerSession(coldData === null ? 'cold' : 'hot');
-    }, [coldData, credentials, lancerSession]);
+        if (coldData === null) lancerSession('cold');
+        else void rafraichirWidgets({ force: true });
+    }, [coldData, credentials, lancerSession, rafraichirWidgets]);
 
     const rafraichirDossier = useCallback(() => {
         if (credentials === null) return;
@@ -407,9 +434,10 @@ function useReactionsDeSession(
     setEtat: React.Dispatch<React.SetStateAction<EtatSession>>,
     setCredentials: (c: Identifiants | null) => void,
     setColdData: (c: ScolariteColdData | null) => void,
-    setMailData: (m: ScolariteMailData | null) => void,
+    rafraichirWidgets: (options?: { readonly force?: boolean }) => Promise<void>,
     poserPropositions: (p: PropositionsDossier) => void,
     finirValidation: (r: ResultatValidation) => void,
+    rangerAvecIndicateur: () => Promise<void>,
 ) {
 // Le CAS a accepte : on ecrit les identifiants, et seulement eux. L'ecran de connexion peut
 // disparaitre des maintenant, la suite se joue derriere l'ecran de progression.
@@ -422,14 +450,39 @@ const surLoginReussi = useCallback((candidat: Identifiants | null) => {
     finirValidation({ success: true });
 }, [finirValidation]);
 
-// Les trois champs d'un resultat sont independants : un dossier lu se garde meme si la
-// messagerie a echoue ensuite. Deux Blueprints, deux sorts.
+// Les champs d'un resultat sont independants : ce qui a ete lu se garde meme si la suite a echoue.
 const appliquerResultat = useCallback((resultat: ResultatSession) => {
     if (resultat.cold !== undefined) {
         setColdData(resultat.cold);
         void SecureStoreService.saveColdData(resultat.cold);
+        /*
+         * **Le dossier lu, on enchaine sur les widgets, et de force.**
+         *
+         * Le parcours froid vient d'ouvrir une session CAS que `session.persist` garde vivante : les
+         * quatre lectures qui suivent la traversent sans redemander un mot de passe, et c'est le
+         * moment le moins cher de toute la vie de l'application pour les jouer.
+         *
+         * `force` parce qu'une valeur en cache appartient au compte **precedent** : quelqu'un qui
+         * vient de se connecter, ou de changer de mot de passe, ne doit pas voir le compteur de
+         * l'autre. La peremption ne le sait pas ; ce geste, si.
+         */
+        /*
+         * **Puis le certificat de scolarite — APRES les widgets, et pas a cote.**
+         *
+         * C'est le seul moment ou l'application a une session CAS vivante ET une raison de croire que
+         * le dossier a change. Chez un etablissement qui ne declare pas de source — le cas general —
+         * l'appel sort immediatement.
+         *
+         * L'enchainement n'est pas une preference de style : lance en parallele, ce run d'une
+         * vingtaine de secondes prenait le moteur **entre deux widgets** et retardait le second
+         * d'autant. Mesure sur appareil le 2026-08-29, en meme temps que la collision qui faisait
+         * refuser des connexions (voir `MoteurNavigateur`).
+         *
+         * Ni attendu ni observe : ranger un document n'a rien a dire a l'ecran de connexion, et un
+         * portail muet ne doit pas retarder l'arrivee sur le tableau de bord.
+         */
+        void rafraichirWidgets({ force: true }).then(() => rangerAvecIndicateur());
     }
-    if (resultat.mail !== undefined) setMailData(resultat.mail);
     // Ni appliquees ni oubliees : c'est la modale qui demande, et l'etudiant qui tranche. Elles
     // sont en revanche **gardees** jusqu'a sa reponse (voir `usePropositions`).
     if (resultat.propositions !== undefined) poserPropositions(resultat.propositions);
@@ -454,7 +507,7 @@ const appliquerResultat = useCallback((resultat: ResultatSession) => {
         finirValidation({ success: false, error: Translator.get('CREDENTIALS_UNVERIFIED') });
     }
     setEtat(etatFinal(resultat));
-}, [finirValidation, poserPropositions]);
+}, [finirValidation, poserPropositions, rafraichirWidgets, rangerAvecIndicateur]);
 
     return { surLoginReussi, appliquerResultat };
 }
@@ -507,15 +560,65 @@ function usePropositions() {
     return { propositions, setPropositions, poserPropositions, oublierPropositions };
 }
 
+/**
+ * La promesse de `validateAndSave` en attente, et son solde — une seule fois.
+ *
+ * Une paire ref + geste, sortie du provider pour la meme raison que ses voisines : lui tenir la
+ * discipline (remettre la reference a `null` avant de resoudre) sans qu'il ait a la connaitre.
+ */
+function useValidationEnAttente() {
+    const validationRef = useRef<((resultat: ResultatValidation) => void) | null>(null);
+
+    const finirValidation = useCallback((resultat: ResultatValidation) => {
+        const resoudre = validationRef.current;
+        validationRef.current = null;
+        resoudre?.(resultat);
+    }, []);
+
+    return { validationRef, finirValidation };
+}
+
+/**
+ * L'indicateur du rangement automatique du certificat, et l'encadrement qui le tient.
+ *
+ * Un hook a part pour une paire etat + geste, comme `usePropositions` : le provider n'a pas a porter
+ * la discipline du try/finally, il recoit un `ranger` qui la garantit.
+ */
+function useCertificat() {
+    const [certificatEnCours, setCertificatEnCours] = useState(false);
+
+    const rangerAvecIndicateur = useCallback(async () => {
+        // L'indicateur encadre le run, quoi qu'il rende : un `sans-source` le fait a peine
+        // clignoter, un vrai rangement le tient les vingt secondes qu'il dure.
+        setCertificatEnCours(true);
+        try {
+            await rangerCertificat();
+        } finally {
+            setCertificatEnCours(false);
+        }
+    }, []);
+
+    return { certificatEnCours, rangerAvecIndicateur };
+}
+
 const useCredentialsSession = (): CredentialsValue => {
     const [credentials, setCredentials] = useState<Identifiants | null>(null);
     const [credentialsLoaded, setCredentialsLoaded] = useState(false);
 
     const [sessionMode, setSessionMode] = useState<'cold' | 'hot'>('cold');
     const [coldData, setColdData] = useState<ScolariteColdData | null>(null);
-    const [mailData, setMailData] = useState<ScolariteMailData | null>(null);
     const { propositions, setPropositions, poserPropositions, oublierPropositions } = usePropositions();
     const [etat, setEtat] = useState<EtatSession>(AU_REPOS);
+    const { certificatEnCours, rangerAvecIndicateur } = useCertificat();
+
+    /*
+     * Les widgets vivent a cote de la session, pas dedans.
+     *
+     * `credentials !== null` les arme : sans compte il n'y a rien a lire, et les laisser courir
+     * jouerait des Blueprints qui echoueraient sur un formulaire de connexion. `credentialsLoaded`
+     * evite en plus la salve du premier rendu, avant que le trousseau ait rendu sa reponse.
+     */
+    const widgets = useWidgets(credentialsLoaded && credentials !== null);
 
     /** La session en cours : son controleur d'annulation, ou `null`. Aussi le verrou de non-reentrance. */
     const sessionRef = useRef<AbortController | null>(null);
@@ -527,14 +630,7 @@ const useCredentialsSession = (): CredentialsValue => {
      * une session qu'on n'a pas annulee.
      */
     const sessionEnVolRef = useRef<Promise<unknown> | null>(null);
-    const validationRef = useRef<((resultat: ResultatValidation) => void) | null>(null);
-
-    /** Resout la promesse de `validateAndSave`, une seule fois. */
-    const finirValidation = useCallback((resultat: ResultatValidation) => {
-        const resoudre = validationRef.current;
-        validationRef.current = null;
-        resoudre?.(resultat);
-    }, []);
+    const { validationRef, finirValidation } = useValidationEnAttente();
 
     /**
      * Demarre une session, ou la refuse : une seule a la fois (voir l'en-tete du module).
@@ -543,7 +639,8 @@ const useCredentialsSession = (): CredentialsValue => {
      * session qui n'a jamais commence.
      */
     const { surLoginReussi, appliquerResultat } = useReactionsDeSession(
-        setEtat, setCredentials, setColdData, setMailData, poserPropositions, finirValidation,
+        setEtat, setCredentials, setColdData, widgets.rafraichir, poserPropositions, finirValidation,
+        rangerAvecIndicateur,
     );
 
     /**
@@ -595,8 +692,7 @@ const useCredentialsSession = (): CredentialsValue => {
         sessionRef.current = controleur;
 
         setSessionMode(mode);
-        setMailData(null);
-        setEtat({ status: 'connecting', progress: mode === 'cold' ? 'connecting' : 'mailbox', failure: null });
+        setEtat({ status: 'connecting', progress: 'connecting', failure: null });
 
         /*
          * **On attend que la precedente ait relache le moteur.**
@@ -666,7 +762,9 @@ const useCredentialsSession = (): CredentialsValue => {
 
     useChargementInitial(lancerSession, poserTrousseau);
 
-    const { retrySession, rafraichirDossier } = useReprises(credentials, coldData, lancerSession, setColdData);
+    const { retrySession, rafraichirDossier } = useReprises(
+        credentials, coldData, lancerSession, setColdData, widgets.rafraichir,
+    );
 
     useCycleDeVieSession(sessionRef, retrySession);
 
@@ -676,23 +774,20 @@ const useCredentialsSession = (): CredentialsValue => {
     const oublier = useCallback(() => {
         setCredentials(null);
         setColdData(null);
-        setMailData(null);
         // L'etat seul : la table du trousseau appartient a `logout`, qui l'efface, et a la bascule
-        // d'etablissement, qui doit au contraire la laisser intacte pour la fac qu'on quitte.
+        // d'etablissement, qui doit au contraire la laisser intacte pour la fac qu'on quitte. Les
+        // widgets suivent exactement la meme regle.
+        widgets.reinitialiser();
         setPropositions(null);
         setEtat(AU_REPOS);
-    }, [setPropositions]);
+    }, [setPropositions, widgets]);
 
     const logout = useDeconnexion(sessionRef, oublier);
     useBasculerAuChangementDEtablissement(sessionRef, oublier, lancerSession, poserTrousseau);
 
     return {
-        credentials, credentialsLoaded, coldData, mailData, sessionMode,
+        credentials, credentialsLoaded, coldData, widgets, certificatEnCours, sessionMode,
         scrapeStatus: etat.status, scrapeProgress: etat.progress, sessionFailure: etat.failure,
-        // Lu a chaque rendu plutot que memorise : le catalogue peut changer sous l'application — un
-        // rafraichissement au retour au premier plan, ou une bascule d'etablissement — et une valeur
-        // figee au montage ferait survivre une ligne de messagerie a l'universite qui la portait.
-        messagerieDisponible: portailDisponible('messagerie'),
         // `portailPublie()` et non `portailDisponible(role)` : la question est « y a-t-il quelque chose
         // derriere quoi s'authentifier », pas « ce nom est-il jouable ». Une ligne de catalogue mal
         // ecrite laisse donc le formulaire visible et fait dire le probleme par la session, ce qui est

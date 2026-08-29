@@ -24,17 +24,107 @@ volontairement **pas corrigés** : ni l'un ni l'autre ne tombe dans son périmè
 passant aurait rendu la session invérifiable
 ([CONTRIBUTING.md](../CONTRIBUTING.md#un-travail-visuel-nest-pas-documenté-au-même-endroit)).
 
-### La date du bloc de salutation est en français, en dur
+### ~~La date du bloc de salutation est en français, en dur~~ — corrigé le 2026-08-28
 
-[`GreetingBlock.tsx`](../src/features/Scolarite/components/GreetingBlock.tsx) porte ses propres
-tableaux `DAYS` et `MONTHS` en français, et compose « Bonjour »/« Bonsoir » de la même façon. Dans une
-application qui parle **trois langues**, un utilisateur en anglais ou en espagnol lit donc « Lundi
-25 août » sous une interface traduite.
+`GreetingBlock` portait ses propres tableaux `DAYS` et `MONTHS` en français et composait
+« Bonjour »/« Bonsoir » hors de `Translator` : un utilisateur anglophone lisait « Lundi 25 août » sous
+une interface traduite.
 
-`moment` est déjà une dépendance et porte la locale de l'application — la rangée de fraîcheur ajoutée
-juste en dessous l'utilise (`format('LL')`). Le correctif est donc petit ; ce qui le retient est que
-ce bloc **fait partie des écrans de référence** du jalon [6-K](phase-6/6-k-socle-visuel.md), et que
-changer son format de date change un rendu de référence. C'est une décision, pas un effet de bord.
+La date passe par `moment().format('dddd D MMMM')`, donc par la locale que `Translator` pose déjà. Et
+la salutation elle-même n'est plus une condition dans un composant mais une **table de règles**
+(`features/Scolarite/salutations/`), dont le socle est traduit comme le reste — voir
+[La salutation](features/scolarite.md#la-salutation-est-une-règle-pas-une-condition).
+
+Le format de date change, donc le rendu de référence de ce bloc change : c'était la raison qui
+retenait le correctif, et elle a été levée en même temps que le bloc était repris de fond en comble.
+
+### ~~Deux écrans poussés démarrent sous la barre de navigation~~ — corrigé le 2026-08-29
+
+`LienEdtScreen` et `DocumentsScreen` posaient leur contenu à `insets.top` seulement, alors que
+l'en-tête de l'application est **transparent** et que le contenu glisse dessous : le titre et l'icône
+du formulaire se chevauchaient. Deux causes distinctes, et il valait mieux les nommer :
+
+- `LienEdtForm` ajoutait son propre espacement à une valeur qui ne comptait que l'encoche. Il est
+  partagé avec le parcours d'accueil, qui n'a **pas** d'en-tête — c'est donc à l'appelant de savoir,
+  et la marge lui est désormais passée déjà calculée (`HEADER_OFFSET` pour l'écran, `space.md` pour
+  l'accueil) ;
+- `DocumentsScreen` traitait `headerPadding` comme un nombre. `withStaticHeader` rend un **objet de
+  style** `{ paddingTop, paddingBottom }` : posé dans `paddingTop`, il était ignoré. Il s'étale
+  maintenant dans le style, comme le font `AboutScreen` et `CourseScreen`.
+
+La leçon vaut pour le prochain écran poussé : `HEADER_OFFSET` est la seule valeur juste, et
+`withStaticHeader` la donne déjà — encore faut-il l'appliquer telle qu'elle est rendue.
+
+### ~~Le bouton de filtre était agrandi de 14 % en permanence~~ — corrigé le 2026-08-29
+
+`NavBarHelper` animait les boutons d'en-tête par une mise à l'échelle `1.14 → 1` au défilement. La
+décision de retirer ce rétrécissement avait été prise, mais elle n'avait été appliquée qu'à moitié :
+[`useCampusListHeader`](../src/features/Campus/components/hooks/useCampusListHeader.tsx) posait son
+propre `headerRight` — qui **remplace** celui de `NavBarHelper` — et en gardait une copie dont le repli
+était la **valeur statique 1,14**.
+
+Le bouton de filtre des écrans Campus restait donc agrandi de 14 %, seul de sa barre, sans jamais
+s'animer. La mécanique est retirée des deux endroits ; il ne reste que le cadre de hauteur fixe qui
+aligne les boutons sur le titre.
+
+La leçon : un `navigation.setOptions({ headerRight })` **écrase** l'habillage de `NavBarHelper`. Ce
+qui y est recopié doit être retiré au même moment que l'original, sinon la copie survit à l'intention.
+
+### ~~Le logo d'établissement ne s'est jamais affiché~~ — corrigé le 2026-08-29
+
+Les fichiers étaient bien dans le bucket (`media/etablissements/*.webp`, servis en 200), le socle
+portait l'adresse, et l'écran de connexion montrait pourtant **l'icône de repli** depuis le jour de la
+publication.
+
+La cause est la règle du catalogue elle-même : **une ligne publiée remplace, elle ne corrige pas**
+(`projeterEtablissement`). `logo_url` valait `null` dans les lignes publiées, donc l'adresse du socle
+était effacée au premier rafraîchissement — et le repli faisait son travail, silencieusement.
+
+Le piège est propre à cette règle, et il vaut pour toute colonne : **oublier une colonne dans une
+ligne publiée ne laisse pas la valeur d'avant, elle la supprime.** Une ligne de catalogue s'écrit
+entière, ce que `supabase/etablissements.sql` disait déjà — il fallait l'appliquer.
+
+### ~~Les quatre toasts de l'application étaient muets~~ — corrigé le 2026-08-29
+
+`react-native-root-toast` déclare `RootSiblingParent` **obligatoire au-dessus de React Native 0.62**,
+et l'application est en 0.81. L'enveloppe était absente de `App.tsx` : `Toast.show` ne levait pas, il
+ne rendait simplement rien.
+
+Trois des quatre messages concernés annoncent un **échec** — un document qu'on n'a pas pu ajouter, des
+réglages illisibles, une absence de réseau. Ils n'ont donc jamais été vus. Trouvé en cherchant pourquoi
+la confirmation de copie de l'écran du compte ne s'affichait pas.
+
+La confirmation de copie, elle, ne repasse **pas** par un toast : même réparé, il apparaît en bas de
+l'écran, loin du doigt, et derrière la barre d'onglets flottante. L'icône devient une coche verte —
+là où l'œil est déjà.
+
+### ~~Les boutons d'en-tête avaient cinq tailles~~ — corrigé le 2026-08-29
+
+Le bouton retour valait 50 × 50 avec une icône de 28, les quatre autres 45 × 45 avec des icônes de 24
+ou de 26 selon l'endroit. **L'écart ne se voyait pas**, et la raison mérite d'être écrite :
+`NavBarHelper` appliquait à tous les boutons latéraux une mise à l'échelle animée dont la valeur au
+repos était `1.14` — et 45 × 1,14 fait **51**, c'est-à-dire la taille du bouton retour.
+
+Cette animation ne décorait donc pas, elle **compensait une divergence**. La retirer a rendu l'écart
+visible d'un coup : les boutons ont paru rapetisser alors qu'ils prenaient enfin leur taille déclarée.
+
+Un composant unique porte désormais la taille :
+[`shared/ui/HeaderButton`](../src/shared/ui/HeaderButton.tsx), 50 × 50, icône 26. Seule la flèche de
+retour garde 28 — un glyphe plus léger paraît plus petit à taille égale, et c'est un écart **optique**,
+pas une divergence oubliée.
+
+### Deux couleurs de `sectionsHeaders` sont identiques en thème sombre
+
+`theme.sectionsHeaders` porte six teintes catégorielles. En thème **clair**, l'index 0 vaut `#007AFF`
+et l'index 4 `#5856D6` — deux couleurs distinctes. En thème **sombre**, les deux valent `#5E5CE6`.
+
+La palette n'y offre donc que **cinq** couleurs distinctes au lieu de six, et deux sections de la
+recherche de groupes (Planning) peuvent partager la même en mode sombre. La grille de Scolarité évite
+l'index 4 pour cette raison.
+
+C'est vraisemblablement une coquille : la variante sombre du bleu système est `#0A84FF`, et c'est ce
+qu'on attendrait à l'index 0. Non corrigé ici — la correction change un rendu du Planning, ce qui est
+une décision à prendre pour cet écran-là, pas un effet de bord de celui-ci.
 
 ### Les styles composés du thème ne sont pas typés
 

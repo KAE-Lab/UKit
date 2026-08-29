@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import moment from 'moment';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 
 import { demander } from '../../../shared/biometrie';
+import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
+import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
 import { ActionButton } from '../../../shared/ui/ActionButton';
-import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import { useCredentials } from '../services/CredentialsContext';
@@ -22,6 +23,9 @@ import BiometryGate from '../components/BiometryGate';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 import { ConfirmationScolarite } from '../components/ConfirmationScolarite';
 
+/** Combien de temps la coche reste, en millisecondes. Assez pour etre vue, trop court pour rester. */
+const DUREE_DE_LA_COCHE = 1600;
+
 const InfoRow = ({ label, value, theme, copiable = false }) => {
     /*
      * Copier plutot que selectionner a la main : un numero etudiant, un INE et une adresse
@@ -29,13 +33,28 @@ const InfoRow = ({ label, value, theme, copiable = false }) => {
      * formulaire administratif — et ce sont precisement les trois chaines qu'on ne retient pas.
      *
      * Le bouton ne s'affiche **que s'il y a quelque chose a copier** : une icone au-dessus d'un tiret
-     * proposerait un geste sans effet. Et le retour est un toast plutot qu'un changement d'icone,
-     * parce qu'un presse-papier est invisible : sans confirmation, rien ne distingue « copie » de
-     * « rien ne s'est passe ».
+     * proposerait un geste sans effet.
+     *
+     * **Le retour est l'icone elle-meme, pas un toast**, et c'est un changement du 2026-08-29. Un
+     * presse-papier est invisible : sans confirmation, rien ne distingue « copie » de « rien ne s'est
+     * passe ». Le toast qui servait a ca ne s'affichait pas — il manquait `RootSiblingParent` a la
+     * racine (App.tsx) —, mais meme repare il n'etait pas le bon signe ici : il apparait en bas de
+     * l'ecran, loin du doigt, et il passe derriere la barre d'onglets flottante. Une coche a la place
+     * de l'icone est **la ou l'oeil est deja**, et elle ne peut rien recouvrir.
      */
+    const [copie, setCopie] = useState(false);
+
+    // Le compte a rebours est annule au demontage : sans ca, quitter l'ecran pendant la coche
+    // declencherait un `setState` sur un composant demonte.
+    useEffect(() => {
+        if (!copie) return undefined;
+        const minuteur = setTimeout(() => setCopie(false), DUREE_DE_LA_COCHE);
+        return () => clearTimeout(minuteur);
+    }, [copie]);
+
     const copier = () => {
         void Clipboard.setStringAsync(String(value));
-        new ErrorAlert(Translator.get('COPIED_TO_CLIPBOARD'), ErrorAlert.durations.SHORT).show();
+        setCopie(true);
     };
 
     return (
@@ -48,8 +67,16 @@ const InfoRow = ({ label, value, theme, copiable = false }) => {
                     {value || '—'}
                 </Text>
                 {copiable && value ? (
-                    <TouchableOpacity onPress={copier} hitSlop={12} accessibilityLabel={Translator.get('COPY')}>
-                        <MaterialCommunityIcons name="content-copy" size={18} color={theme.fontSecondary} />
+                    <TouchableOpacity
+                        onPress={copier}
+                        hitSlop={12}
+                        accessibilityLabel={Translator.get(copie ? 'COPIED_TO_CLIPBOARD' : 'COPY')}
+                    >
+                        <MaterialCommunityIcons
+                            name={copie ? 'check' : 'content-copy'}
+                            size={18}
+                            color={copie ? theme.success : theme.fontSecondary}
+                        />
                     </TouchableOpacity>
                 ) : null}
             </View>
@@ -132,7 +159,10 @@ const CompteADemander = ({ theme, onDebut, onSuccess }) => (
                 <ScolariteLoginView
                     theme={theme}
                     color={theme.accent ?? theme.primary}
-                    topPadding={(insets?.top || 0) + 65}
+                    // `HEADER_OFFSET` et non un 65 ecrit ici : c'etait un troisieme nombre pour la
+                    // meme hauteur d'en-tete, a cote du 70 du socle. Le depot dit qu'il ne doit pas y
+                    // en avoir deux (shared/ui/ScreenState.tsx).
+                    topPadding={(insets?.top || 0) + HEADER_OFFSET}
                     onDebut={onDebut}
                     onSuccess={onSuccess}
                     compact
@@ -311,7 +341,10 @@ const ConfirmationsDuCompte = ({ theme, refresh, logout }) => (
     </>
 );
 
-const CredentialsSettingsScreen = () => {
+const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
+    headerPadding?: import('react-native').ViewStyle;
+    onAnimatedScroll?: (evenement: unknown) => void;
+}) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
@@ -448,9 +481,18 @@ const CredentialsSettingsScreen = () => {
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
                 <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
-                    <ScrollView
+                    {/*
+                      * `headerPadding` vient de `withHeaderAnimation` et vaut `insets.top +
+                      * HEADER_OFFSET` : le 65 ecrit ici etait un **troisieme** nombre pour la meme
+                      * hauteur d'en-tete, a cote du 70 du socle et du 50 de l'ecran A propos. Le
+                      * depot dit qu'il ne doit pas y avoir deux 70 (shared/ui/ScreenState.tsx) ;
+                      * celui-ci en etait un de plus, et il decalait le contenu de cinq points.
+                      */}
+                    <Animated.ScrollView
                         style={{ flex: 1 }}
-                        contentContainerStyle={{ paddingTop: (insets?.top || 0) + 65, paddingBottom: tokens.space.xxl + 80 }}
+                        contentContainerStyle={[headerPadding, { paddingBottom: tokens.space.xxl + 80 }]}
+                        onScroll={onAnimatedScroll as never}
+                        scrollEventThrottle={16}
                         showsVerticalScrollIndicator={false}
                     >
                         <View style={{ marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, gap: tokens.space.sm }}>
@@ -474,7 +516,7 @@ const CredentialsSettingsScreen = () => {
                             />
 
                         </View>
-                    </ScrollView>
+                    </Animated.ScrollView>
 
                     <ConfirmationsDuCompte
                         theme={theme}
@@ -551,4 +593,9 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CredentialsSettingsScreen;
+/**
+ * `withHeaderAnimation` : le titre « Compte » s'efface au defilement, comme sur l'ecran des documents
+ * et les listes du Campus. Un ecran pousse qui garde son titre fige detonne au milieu de ceux qui
+ * l'effacent — et c'etait le dernier de l'onglet dans ce cas.
+ */
+export default withHeaderAnimation(CredentialsSettingsScreen);

@@ -28,7 +28,7 @@
 -- autre ligne.
 insert into public.etablissements (
     code, nom, nom_court, ville, logo_url, actif,
-    portail_dossier, portail_messagerie,
+    portail_dossier, portail_messagerie, portail_widgets, portail_documents,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
     bibliotheques_points, services, libelles, crous_region, ordre
 ) values (
@@ -36,10 +36,26 @@ insert into public.etablissements (
     'Collège Sciences et Technologies',
     'Collège ST',
     'Bordeaux',
-    null,
+    -- **Le logo valait `null` ici alors que le socle en portait un**, et une ligne publiee REMPLACE le
+    -- socle : le logo etait donc efface au premier rafraichissement du catalogue, et l'ecran de
+    -- connexion montrait l'icone de repli depuis le jour de sa publication. Le fichier, lui, existait
+    -- bien dans le bucket. C'est le piege propre a « une ligne remplace, elle ne corrige pas » :
+    -- oublier une colonne ne laisse pas la valeur d'avant, il la supprime.
+    'https://owiksddeqcyyifnmpyqm.supabase.co/storage/v1/object/public/media/etablissements/bordeaux.webp',
     true,
     'ukit.portail.bordeaux.dossier',
     'ukit.portail.bordeaux.messagerie',
+    -- Les widgets remplis. `notes` et `examens` n'y sont PAS, et ce n'est pas un oubli : leur donnee
+    -- n'existe pas encore — les resultats tombent en bloc en fin de semestre, il n'y a pas de
+    -- calendrier d'epreuves avant la rentree. Leurs rangees s'affichent quand meme et ouvrent leur
+    -- porte (`services.notes` / `services.examens`). Le jour ou la source existe, elle s'ajoute ici.
+    '{"messagerie": {"blueprint": "ukit.portail.bordeaux.messagerie"},
+      "moodle":     {"blueprint": "ukit.portail.bordeaux.moodle"}}'::jsonb,
+    -- ReNARD, mesure le 2026-08-29. C'est le SEUL des trois etablissements a en declarer un, et la
+    -- raison est technique et non contractuelle : l'adresse d'une piece y est deterministe
+    -- (/document/<base64 du fournisseur et de l'annee>/lang), donc rejouable, la ou celles de l'INP
+    -- sont regenerees a chaque affichage. L'identite vient du cookie, pas de l'adresse.
+    'ukit.portail.bordeaux.documents',
     'https://celcat.u-bordeaux.fr/calendar',
     '{"groupes": "103", "salles": "102"}'::jsonb,
     -- Pas d'export iCalendar : cette universite publie son Celcat, et c'est l'exception francaise.
@@ -67,8 +83,13 @@ insert into public.etablissements (
       {"lat": 44.2031, "lng": 0.6163},
       {"lat": 45.6483, "lng": 0.1562},
       {"lat": 46.3237, "lng": -0.4647}]'::jsonb,
-    -- Les portes du navigateur integre. `moodle` verifie le 2026-08-13 : « Plateforme pedagogique de
-    -- l'universite de Bordeaux ». Ajouter ou retirer une porte est une ligne ici, jamais une release.
+    -- Les portes du navigateur integre. Ajouter ou retirer une porte est une ligne ici, jamais une
+    -- release.
+    --
+    -- `moodle` vise `/login/index.php` et **pas la racine**, mesure le 2026-08-29 : la racine de ce
+    -- Moodle est une page d'accueil PUBLIQUE. On y arrivait deconnecte, avec un bouton « Connexion » a
+    -- presser, et la session persistee ne servait a rien puisqu'aucune page d'authentification n'etait
+    -- jamais demandee. `/login/index.php` part sur le WAYF, qui delegue au CAS.
     --
     -- `ent` visait `ent.u-bordeaux.fr`, qui **ne resout plus** — mesure le 2026-08-25, et le symptome
     -- etait un `NSURLErrorDomain -1003` a chaque ouverture, y compris en production. Le portail vit
@@ -78,11 +99,22 @@ insert into public.etablissements (
     -- que la page de choix d'etablissement de Moodle attend qu'on lui designe, dans une liste de 56
     -- (voir `getPortalInjectedScript`). Elle vit ici parce qu'elle est propre a l'etablissement, et
     -- que la corriger doit rester une publication.
-    '{"ent":    "https://intranet.u-bordeaux.fr",
-      "email":  "https://webmel.u-bordeaux.fr",
-      "cas":    "https://cas.u-bordeaux.fr",
-      "apogee": "https://apogee.u-bordeaux.fr",
-      "moodle": "https://moodle.u-bordeaux.fr",
+    --
+    -- `notes` et `examens` sont les deux services d'Apogee que l'intranet nomme lui-meme, releves le
+    -- 2026-08-28 : « Resultats d'examens et 2de Session » (RE01) et « Calendrier des examens »
+    -- (RE02). La racine nue obligeait a les chercher dans un portail ; ces adresses ouvrent la vue.
+    --
+    -- `adaptation` n'est pas une porte non plus : c'est le formulaire de demande, et il sert d'action
+    -- a une rangee que l'etablissement ne porte pas. Un etat vide offre une action, jamais un bouton
+    -- Reessayer qui n'aurait rien a rejouer.
+    '{"ent":     "https://intranet.u-bordeaux.fr",
+      "email":   "https://webmel.u-bordeaux.fr",
+      "cas":     "https://cas.u-bordeaux.fr",
+      "apogee":  "https://apogee.u-bordeaux.fr",
+      "moodle":  "https://moodle.u-bordeaux.fr/login/index.php",
+      "notes":   "https://apogee.u-bordeaux.fr/index.php?srv=RE01",
+      "examens": "https://apogee.u-bordeaux.fr/index.php?srv=RE02",
+      "adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
       "idp_shibboleth": "https://idp-ubx.u-bordeaux.fr/idp/shibboleth"}'::jsonb,
     '{}'::jsonb,
     -- La region CROUS de Croustillant. C'etait une constante du Blueprint jusqu'au jalon 6-J ; la
@@ -98,6 +130,8 @@ insert into public.etablissements (
     actif                = excluded.actif,
     portail_dossier      = excluded.portail_dossier,
     portail_messagerie   = excluded.portail_messagerie,
+    portail_widgets      = excluded.portail_widgets,
+    portail_documents    = excluded.portail_documents,
     celcat_domaine       = excluded.celcat_domaine,
     celcat_res_types     = excluded.celcat_res_types,
     edt                  = excluded.edt,
@@ -119,10 +153,8 @@ insert into public.etablissements (
 -- mais son bouton d'envoi est un `<button>` et non un `<input>`, et le dossier est la generation
 -- Vaadin de PC-Scol au lieu du GWT d'Apogee (blueprints/portails/).
 --
--- Trois `null` qui sont des **decisions**, pas des trous :
+-- Deux `null` qui sont des **decisions**, pas des trous :
 --
---   * `portail_messagerie` — le webmail de l'INP passe par SAML et non par le CAS. Il n'est donc pas
---     extractible, et l'ecran de scolarite n'affiche simplement pas la ligne de messagerie.
 --   * `celcat_domaine` — l'INP est sur ADE, pas sur Celcat. La colonne reste nulle **apres** le jalon
 --     6-I : elle nomme un serveur Celcat, pas « un emploi du temps ». L'emploi du temps arrive par
 --     `edt`, et la recherche de salles libres par `salles_libres`.
@@ -134,7 +166,7 @@ insert into public.etablissements (
 -- genre de choix se relise.
 insert into public.etablissements (
     code, nom, nom_court, ville, logo_url, actif,
-    portail_dossier, portail_messagerie,
+    portail_dossier, portail_messagerie, portail_widgets, portail_documents,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
     bibliotheques_points, services, libelles, crous_region, ordre
 ) values (
@@ -142,10 +174,28 @@ insert into public.etablissements (
     'Bordeaux INP',
     null,
     'Bordeaux',
-    null,
+    -- Meme correction que pour Bordeaux : le fichier etait publie, la colonne restait nulle.
+    'https://owiksddeqcyyifnmpyqm.supabase.co/storage/v1/object/public/media/etablissements/bordeaux-inp.webp',
     true,
     'ukit.portail.bordeaux-inp.dossier',
-    null,
+    -- **La messagerie de l'INP est extractible**, contrairement a ce que cette ligne affirmait en
+    -- valant `null`. Sonde du 2026-08-28 : partage.bordeaux-inp.fr redirige vers SON PROPRE CAS
+    -- (cas.bordeaux-inp.fr/login?service=sso.../idp/Authn/External) — un SP SAML dont l'IdP delegue
+    -- au CAS, exactement comme Moodle a Bordeaux. Et Partage est le MEME Zimbra que webmel : le
+    -- selecteur de la boite est identique au caractere pres. Une etape de plus, la page de
+    -- consentement Shibboleth, et elle ne parait qu'une fois.
+    'ukit.portail.bordeaux-inp.messagerie',
+    -- Un seul widget rempli. `moodle` n'y est pas : le parcours devrait fonctionner — l'INP n'a pas
+    -- de page de decouverte et sa session persistee suffit — mais il n'a **pas ete joue** contre un
+    -- compte reel, et le compte de sonde est prete. On ne publie pas une source qu'on n'a pas vue
+    -- rendre ; la rangee affiche « bientot » et ouvre Moodle en attendant.
+    '{"messagerie": {"blueprint": "ukit.portail.bordeaux-inp.messagerie"}}'::jsonb,
+    -- Le certificat de scolarite, rapporte depuis /inscriptions de mondossierweb. La sonde du
+    -- 2026-08-25 avait declare ces pieces non rapportables parce que leur adresse est regeneree a
+    -- chaque rendu — c'etait confondre l'adresse et l'acces : la technique ReNARD lit le lien FRAIS
+    -- dans le DOM et telecharge depuis la page, donc l'instabilite de l'adresse est sans objet.
+    -- Re-mesure le 2026-08-29 : fetch depuis la page = 200, application/pdf, 112 Ko, %PDF.
+    'ukit.portail.bordeaux-inp.documents',
     null,
     null,
     -- L'emploi du temps par export iCalendar (jalon 6-I). Releve le 2026-08-15 avec
@@ -214,15 +264,33 @@ insert into public.etablissements (
       {"lat": 45.6483, "lng": 0.1562},
       {"lat": 46.3237, "lng": -0.4647}]'::jsonb,
     -- Le navigateur integre ouvre ces pages ; l'utilisateur les pilote, elles ne sont pas extraites.
-    -- Pas d'`email` : le webmail passe par SAML. Pas d'`apogee` : l'INP est sur PC-Scol. `moodle`
-    -- verifie le 2026-08-13 (« Moodle Bordeaux INP »). Une porte absente ne s'affiche pas.
+    -- `moodle` verifie le 2026-08-13 (« Moodle Bordeaux INP »). Une porte absente ne s'affiche pas.
+    --
+    -- `email` EXISTE, contre ce que cette ligne disait : c'est Partage, l'adresse relevee le
+    -- 2026-08-28. Pas d'`apogee` : l'INP est sur PC-Scol.
+    --
+    -- `moodle` vise la RACINE ici, contrairement a Bordeaux : ce Moodle n'a pas de page de decouverte
+    -- et tente le SSO silencieux (`gateway=true`) des l'accueil. Le pointer sur /login/index.php
+    -- n'apporterait rien et n'a pas ete mesure contre un compte reel — le compte de sonde est prete.
+    --
+    -- **Ni `notes` ni `examens`**, et c'est mesure, pas suppose : le dossier de l'INP n'a que quatre
+    -- onglets — Etat-civil, Coordonnees, Acces, Parcours. `/notes`, `/resultats` et `/examens` rendent
+    -- tous la vue par defaut. Ces deux services vivent ailleurs chez eux, et on ne sait pas encore ou.
+    -- Leurs rangees le disent au lieu de promettre une porte qui n'existe pas.
     '{"ent":    "https://ent.bordeaux-inp.fr",
+      "email":  "https://partage.bordeaux-inp.fr/mail",
       "cas":    "https://cas.bordeaux-inp.fr",
       "moodle": "https://moodle.bordeaux-inp.fr",
+      "adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
       "idp_shibboleth": "https://sso.bordeaux-inp.fr/idp/shibboleth"}'::jsonb,
-    -- Ce dossier n'expose pas d'INE : le libelle le dit plutot que de laisser une ligne vide sans
-    -- explication. « Numero etudiant » reste, lui, une chaine de Translator.
-    '{}'::jsonb,
+    -- Le nom de l'instance Moodle de cet etablissement, releve sur la page elle-meme le 2026-08-13.
+    --
+    -- Il vit ici et non dans `Translator` parce que ce n'est pas une traduction : « Moodle » est le
+    -- nom du produit, « Moodle Bordeaux INP » celui de leur installation. La tuile s'en sert pour sa
+    -- ligne de contexte, qui disait sinon « Moodle » sous un grand texte qui disait deja « Moodle »
+    -- (signale sur appareil le 2026-08-29). Bordeaux n'en declare pas : la sienne s'appelle
+    -- simplement « Moodle », et la tuile retombe alors sur la description du service.
+    '{"moodle": "Moodle Bordeaux INP"}'::jsonb,
     -- La meme region que l'Universite de Bordeaux : les deux etablissements sont dans la meme ville,
     -- et le CROUS y est le meme. C'est une donnee de catalogue precisement pour que ce genre de choix
     -- se relise.
@@ -236,6 +304,8 @@ insert into public.etablissements (
     actif                = excluded.actif,
     portail_dossier      = excluded.portail_dossier,
     portail_messagerie   = excluded.portail_messagerie,
+    portail_widgets      = excluded.portail_widgets,
+    portail_documents    = excluded.portail_documents,
     celcat_domaine       = excluded.celcat_domaine,
     celcat_res_types     = excluded.celcat_res_types,
     edt                  = excluded.edt,
@@ -278,7 +348,7 @@ insert into public.etablissements (
 -- `ordre` a 99 : elle ferme la liste, apres les etablissements reels.
 insert into public.etablissements (
     code, nom, nom_court, ville, logo_url, actif,
-    portail_dossier, portail_messagerie,
+    portail_dossier, portail_messagerie, portail_widgets, portail_documents,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
     bibliotheques_points, services, libelles, crous_region, ordre
 ) values (
@@ -293,6 +363,12 @@ insert into public.etablissements (
     null,
     true,
     null,
+    null,
+    -- Aucun widget : sans portail, il n'y a aucune source a lire. L'onglet Scolarite dit qu'il n'est
+    -- pas pris en charge et propose le formulaire, il n'affiche pas de rangees.
+    '{}'::jsonb,
+    -- Aucune source de documents non plus, pour la meme raison : on ne sait pas de quelle fac il
+    -- s'agit, donc il n'y a nulle part ou aller chercher quoi que ce soit.
     null,
     null,
     null,
@@ -343,6 +419,8 @@ insert into public.etablissements (
     actif                = excluded.actif,
     portail_dossier      = excluded.portail_dossier,
     portail_messagerie   = excluded.portail_messagerie,
+    portail_widgets      = excluded.portail_widgets,
+    portail_documents    = excluded.portail_documents,
     celcat_domaine       = excluded.celcat_domaine,
     celcat_res_types     = excluded.celcat_res_types,
     edt                  = excluded.edt,

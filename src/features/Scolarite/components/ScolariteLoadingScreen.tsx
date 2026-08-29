@@ -44,7 +44,15 @@ import { ProgressBar } from '../../../shared/ui/ProgressBar';
  * `duree` : en combien de temps elle s'en approche — une estimation, calee sur le portail le plus
  * lent des deux. La sous-estimer ferait stagner la barre ; la surestimer la ferait paraitre en
  * retard. Les paliers ne sont pas equidistants parce que les etapes ne durent pas pareil : la
- * connexion et la messagerie portent les deux pauses d'authentification, le profil est instantane.
+ * connexion porte la cascade d'authentification, le profil est instantane, le dossier enchaine
+ * plusieurs vues.
+ *
+ * **Une etape a disparu le 2026-08-28**, et la table a ete recalee pour elle : la messagerie ne
+ * ferme plus le parcours froid, elle est devenue un widget avec son propre rafraichissement. Le
+ * dossier est donc la derniere etape reelle, et son plafond monte de 70 a 97 — le laisser a 70
+ * aurait fait sauter la barre d'un quart de sa course a la fermeture, exactement le defaut que le
+ * lissage a supprime. Le parcours y gagne une vingtaine de secondes : la page apparait plus tot, et
+ * les widgets se remplissent **dedans**.
  */
 const STEPS = [
     // Le run n'a pas encore annonce d'etape : `scrapeProgress` vaut `null` pendant la navigation
@@ -53,8 +61,7 @@ const STEPS = [
     { key: '__demarrage', labelKey: 'LOADING_STARTING', plafond: 9, duree: 4000 },
     { key: 'connecting', labelKey: 'LOADING_CONNECTING', plafond: 34, duree: 18000 },
     { key: 'profile', labelKey: 'LOADING_PROFILE', plafond: 46, duree: 3000 },
-    { key: 'dossier', labelKey: 'LOADING_DOSSIER', plafond: 70, duree: 14000 },
-    { key: 'mailbox', labelKey: 'LOADING_MAILBOX', plafond: 97, duree: 20000 },
+    { key: 'dossier', labelKey: 'LOADING_DOSSIER', plafond: 97, duree: 24000 },
     // La fin. Elle n'est jamais annoncee par le run : c'est l'appelant qui la pose, quand la session
     // s'acheve. Sans elle, la barre restait la ou elle en etait et l'ecran cedait la place d'un coup.
     { key: '__fin', labelKey: 'LOADING_FINISHING', plafond: 100, duree: 420 },

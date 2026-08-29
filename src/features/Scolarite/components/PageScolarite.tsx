@@ -1,5 +1,5 @@
 /**
- * Le corps defilant de l'onglet Scolarite : l'encart d'etat, puis les trois sections.
+ * Le corps defilant de l'onglet Scolarite : l'encart d'etat, puis la grille.
  *
  * Sorti de l'ecran pour le garder sous la limite de lignes — meme decoupage que `ActionsDuCompte`
  * pour l'ecran du compte. L'ecran garde ce qui lui revient, l'aiguillage ; ce fichier ne fait que
@@ -9,66 +9,77 @@
  * l'ecran du compte : c'est une information d'etat civil, on la consulte, on n'agit pas dessus — et la
  * garder ici obligeait a poser un en-tete de section au-dessus d'une rangee unique.
  *
- * L'ordre restant n'est pas indifferent : les services d'abord parce que ce sont des gestes, les
- * documents ensuite parce qu'ils ne dependent d'aucune session — et que ce sont les seuls a rester la
- * quand tout le reste manque.
+ * **La salutation vit dans l'en-tete, qui est COLLANT** (ScolariteDashboard). Il a d'abord glisse sous
+ * le contenu en s'effacant au defilement, et ca ne pouvait pas marcher ici : la page est courte, donc
+ * il n'y a pas assez de course pour mener la disparition a son terme — titre et salutation restaient
+ * a moitie effaces, l'un par-dessus l'autre. C'est la disposition qu'il fallait changer, pas la
+ * courbe. Cette page n'a donc plus ni valeur de defilement ni compensation d'en-tete.
+ *
+ * **Les documents ont rejoint la grille.** Ils occupaient le bas de la page avec leur propre en-tete
+ * et leur liste entiere, pour un contenu qu'on consulte le jour ou l'on en a besoin — un certificat.
+ * Ils sont desormais une **tuile** a cote de la messagerie, et leur detail a son ecran. La page ne
+ * porte donc plus que deux choses : l'etat de la session, et la grille (GrilleScolarite).
  */
 
 import React from 'react';
-import { Animated } from 'react-native';
-import type { EdgeInsets } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet } from 'react-native';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
-import { HEADER_OFFSET, TAB_BAR_HEIGHT } from '../../../shared/ui/ScreenState';
+import { TAB_BAR_HEIGHT } from '../../../shared/ui/ScreenState';
 import type { UkitFailure } from '../../../shared/aetherius/failures';
-import type { ScolariteColdData, ScolariteMailData } from '../services/ScolariteMapping';
-import GreetingBlock from './GreetingBlock';
+import type { ScolariteColdData } from '../services/ScolariteMapping';
+import type { PointWidget } from '../widgets/definitions';
+import type { EtatDesWidgets } from '../widgets/useWidgets';
 import { EncartSession } from './EncartSession';
-import { ServicesSection } from './ServicesSection';
-import { DocumentsSection } from './DocumentsSection';
+import { GrilleScolarite } from './GrilleScolarite';
+import { DocumentsTile } from './DocumentsTile';
 
 export interface PageScolariteProps {
     theme: AppThemeType;
     teinte: string;
-    insets: EdgeInsets | null;
-    scrollY: Animated.Value;
     coldData: ScolariteColdData | null;
-    mailData: ScolariteMailData | null;
+    widgets: EtatDesWidgets;
+    /** Le certificat automatique se range : la tuile des documents pose son indicateur de lecture. */
+    certificatEnCours: boolean;
     credentials: unknown;
     portailDisponible: boolean;
-    messagerieDisponible: boolean;
-    scrapeStatus: string;
     sessionFailure: UkitFailure | null;
     echecBloquant: UkitFailure | null;
     onRetry: () => void;
     onRessaisir: () => void;
     onConnecter: () => void;
     onDemanderCampus: (adresse: string) => void;
-    onMessagerie: () => void;
+    onWidget: (point: PointWidget) => void;
     onPorte: (point: string) => void;
+    onDocuments: () => void;
 }
 
 export function PageScolarite({
-    theme, teinte, insets, scrollY, coldData, mailData, credentials, portailDisponible,
-    messagerieDisponible, scrapeStatus, sessionFailure, echecBloquant,
-    onRetry, onRessaisir, onConnecter, onDemanderCampus, onMessagerie, onPorte,
+    theme, teinte, coldData, widgets, certificatEnCours, credentials, portailDisponible,
+    sessionFailure, echecBloquant,
+    onRetry, onRessaisir, onConnecter, onDemanderCampus, onWidget, onPorte, onDocuments,
 }: PageScolariteProps) {
     return (
-        <Animated.ScrollView
-            onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                { useNativeDriver: true },
-            )}
-            scrollEventThrottle={16}
+        <ScrollView
+            // `flex: 1` est **obligatoire** depuis que l'en-tete est collant : il occupe une vraie
+            // place, donc cette vue doit s'etirer sur ce qui reste. Sans lui, une vue defilante prend
+            // la hauteur de son contenu — elle deborde de l'ecran au lieu de defiler.
+            style={styles.corps}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
-                paddingTop: (insets?.top || 0) + HEADER_OFFSET,
+                // Plus de compensation d'en-tete : il est **collant** et occupe sa propre place
+                // au-dessus (ScolariteDashboard), encoche comprise. Cette page n'a donc plus besoin
+                // de connaitre les marges de securite.
+                //
+                // `sm` et non `xs` : c'est **exactement** l'espacement que la grille met entre ses
+                // blocs (`GrilleScolarite.bloc`). La premiere carte se decollait du filet de l'en-tete
+                // de quatre points la ou les suivantes se decollent de huit — un ecart de quatre
+                // points, invisible a la relecture et visible a l'oeil.
+                paddingTop: tokens.space.sm,
                 paddingBottom: tokens.space.xxl + TAB_BAR_HEIGHT,
                 gap: tokens.space.lg,
             }}
         >
-            {coldData !== null ? <GreetingBlock coldData={coldData} color={teinte} theme={theme} /> : null}
-
             <EncartSession
                 theme={theme}
                 portailDisponible={portailDisponible}
@@ -81,35 +92,28 @@ export function PageScolarite({
                 onDemanderCampus={onDemanderCampus}
             />
 
-            {/* Rien a ouvrir tant qu'aucune session n'existe : la section entiere attend. */}
+            {/* Rien a ouvrir tant qu'aucune session n'existe : la grille entiere attend. */}
             {portailDisponible && credentials ? (
-                <ServicesSection
+                <GrilleScolarite
                     theme={theme}
                     teinte={teinte}
-                    messagerieDisponible={messagerieDisponible}
-                    mailData={mailData}
+                    valeurs={widgets.valeurs}
+                    echecs={widgets.echecs}
+                    pointEnCours={widgets.pointEnCours}
                     coldData={coldData}
-                    scrapeStatus={scrapeStatus}
-                    sessionFailure={sessionFailure}
-                    onMessagerie={onMessagerie}
+                    onWidget={onWidget}
                     onPorte={onPorte}
+                    onDemande={onDemanderCampus}
+                    tuileDocuments={<DocumentsTile theme={theme} teinte={teinte} chargement={certificatEnCours} onPress={onDocuments} />}
                 />
             ) : null}
 
-            {/*
-              * **Tout ou rien** : sans compte, l'onglet ne montre rien du tout.
-              *
-              * La section a d'abord ete rendue sans condition, et l'argument tenait : les documents
-              * sont locaux, ils ne dependent d'aucun portail, et ils rendaient l'onglet vivant pour
-              * quelqu'un qui ne se connecte pas — « Autre universite » comprise.
-              *
-              * **Arbitrage du proprietaire du produit, le 2026-08-27** : un onglet qui montre une
-              * seule section sous un encart d'invitation se lit moins bien qu'un onglet franchement
-              * vide, qui ne propose qu'une chose — se connecter. La consequence est assumee : chez un
-              * etablissement sans portail publie, l'onglet redit qu'il n'est pas pris en charge et
-              * s'arrete la.
-              */}
-            {credentials ? <DocumentsSection theme={theme} teinte={teinte} /> : null}
-        </Animated.ScrollView>
+        </ScrollView>
     );
 }
+
+const styles = StyleSheet.create({
+    corps: {
+        flex: 1,
+    },
+});

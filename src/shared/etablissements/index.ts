@@ -42,6 +42,7 @@ import { purgerDonneesEtablissement } from './purge';
 export {
     ETABLISSEMENT_DEFAUT,
     crousRegionActive,
+    documentsPublies,
     etablissementRetire,
     formatSallesActif,
     getCodeEtablissementActif,
@@ -53,6 +54,7 @@ export {
     portailPublie,
     serviceEtablissement,
     setCodeEtablissementActif,
+    widgetPublie,
 } from './catalogue';
 export type {
     CelcatResTypes,
@@ -62,6 +64,7 @@ export type {
     FormatSalles,
     GroupeEdt,
     PointBalayage,
+    WidgetPublie,
 } from './catalogue';
 export { entreesCelcat, sallesDisponibles } from './celcat';
 export type { EntreesCelcat } from './celcat';
@@ -102,7 +105,20 @@ const TABLE = 'etablissements';
  * incrementer cette version.** Les accesseurs normalisent en plus `undefined` vers `null`, ce qui est
  * la seconde ceinture.
  */
-const CLE_CACHE = 'etablissements@2';
+/*
+ * @4 et non @3, et la lecon vaut d'etre lue : la version 3 accompagnait l'ajout de
+ * `portail_documents`, conformement a la regle « ajouter un champ = incrementer ». Mais la
+ * publication s'est faite en deux temps — la colonne d'abord (nulle partout), les valeurs quelques
+ * minutes apres — et un appareil qui a rafraichi **dans cette fenetre** a mis en cache un `bordeaux`
+ * dont `portailDocuments` vaut null. Une entree de surcouche REMPLACE le socle : le certificat
+ * disait « pas de source publiee ici » sur l'etablissement qui en publie une (mesure sur appareil le
+ * 2026-08-29). Incrementer jette ce cache empoisonne ; et meme si le rafraichissement echoue, le
+ * socle — qui porte le champ — reprend la main.
+ *
+ * La regle complete, desormais : **la version de cache s'incremente APRES que la base porte la
+ * colonne ET ses valeurs** — jamais entre les deux.
+ */
+const CLE_CACHE = 'etablissements@4';
 /**
  * Les colonnes lues, nommees une par une.
  *
@@ -112,9 +128,17 @@ const CLE_CACHE = 'etablissements@2';
  * requete. Le corollaire vaut aussi : la table doit porter la colonne **avant** qu'une version de
  * l'application qui la nomme n'arrive, sinon la lecture entiere echoue et le catalogue retombe sur le
  * socle (supabase/README.md, « ajouter avant de retirer »).
+ *
+ * **La consigne ci-dessus a ete violee deux fois**, et les deux fois en silence : `logo_url` (corrige
+ * le 2026-08-28) puis `nom_court` (corrige le 2026-08-29, decouvert en ajoutant `portail_documents`).
+ * Le symptome est trompeur parce qu'il ne ressemble pas a une colonne manquante : une ligne publiee
+ * REMPLACE l'entree du socle, donc la valeur ne reste pas a ce qu'elle etait — elle disparait. « Le
+ * College ST » etait redevenu « College Sciences et Technologies » partout ou la place manque, et
+ * rien n'echouait. La verification tient en une requete SQL comparee a cette chaine ; elle est
+ * decrite dans docs/backend.md.
  */
 const COLONNES =
-    'code,nom,ville,logo_url,actif,portail_dossier,portail_messagerie,celcat_domaine,celcat_res_types,edt,salles,salles_libres,bibliotheques_points,services,libelles,crous_region,ordre';
+    'code,nom,nom_court,ville,logo_url,actif,portail_dossier,portail_messagerie,portail_widgets,portail_documents,celcat_domaine,celcat_res_types,edt,salles,salles_libres,bibliotheques_points,services,libelles,crous_region,ordre';
 
 /** Ce que rend un rafraichissement : un resultat, jamais une exception. */
 export interface EtablissementsReport {

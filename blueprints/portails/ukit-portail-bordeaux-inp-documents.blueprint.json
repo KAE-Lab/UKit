@@ -1,0 +1,112 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux-inp.documents",
+  "description": "Le certificat de scolarite de BORDEAUX INP, rapporte depuis la page /inscriptions de mondossierweb (PC-Scol). Ce fichier CORRIGE une conclusion de la sonde du 2026-08-25, qui declarait ces pieces non rapportables parce que leur adresse — VAADIN/dynamic/resource/<uuid>/certificat-<horodatage> — est regeneree a chaque rendu. C'etait confondre l'adresse et l'acces : la technique ReNARD (ukit.portail.bordeaux.documents) ne REJOUE jamais une adresse, elle lit le lien FRAIS dans le DOM et le telecharge depuis la page meme, avec les cookies de la session. L'instabilite de l'adresse est donc sans objet. MESURES DU 2026-08-29 : (1) les liens vivent sur /inscriptions, un `a[href*=\"certificat\"]` par bloc d'inscription (`vaadin-vertical-layout` portant FORMATION / PERIODE / REGIME / STATUT) — le compte de sonde en a deux, un par inscription ; (2) le fetch depuis la page rend 200, application/pdf, 112 395 octets, signature %PDF — un vrai PDF, sous la borne de 4 Mo du pont ; (3) le lien profond /inscriptions TRAVERSE le CAS et y revient (`?continue`), contrairement a ReNARD dont le retour OAuth pointe sur la racine — d'ou une entree directe ici ; (4) l'ANNEE de chaque piece n'est pas dans le texte du lien (toujours « Certificat de scolarite ») mais dans le libelle PERIODE de son bloc : le script remonte au bloc, lit la plus grande annee, et choisit la piece la plus recente — la meme decision que ReNARD, prise sur une autre charpente. Les budgets d'attente sont a 30 s, la lecon du dossier INP v7 : chaque navigation PC-Scol redemarre le client Vaadin, et la WebView hors ecran d'un telephone etrangle ses timers. Le script rend `null` quand aucune piece n'est listee et `{ erreur }` quand la reponse n'est pas le PDF attendu : dans les deux cas le run REUSSIT, et c'est l'application qui decide — un etudiant sans certificat n'a rien casse.",
+  "act": "continuum",
+  "secrets": [
+    "portail_user",
+    "portail_pass"
+  ],
+  "vars": {
+    "inscriptions": "https://mondossierweb.bordeaux-inp.fr/inscriptions"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "session": {
+      "persist": true
+    }
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ vars.inscriptions }}",
+      "note": "Le lien profond directement : mesure, le CAS le traverse et y revient (`?continue`). Pas de detour par la racine, contrairement a ReNARD dont le retour OAuth l'impose."
+    },
+    {
+      "action": "wait",
+      "ms": 6000,
+      "note": "La cascade doit avoir fini de se decider avant qu'on regarde ou l'on est — meme raison que sur les trois autres portails de cet etablissement."
+    },
+    {
+      "id": "porte",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formulaire": {
+          "selector": "#username",
+          "as": "count",
+          "note": "`as: count` ne leve JAMAIS. La reponse est NON quand la session du parcours froid vit encore, ce qui est le cas ordinaire — ce Blueprint s'enchaine juste apres."
+        }
+      }
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#username",
+      "value": "{{ secrets.portail_user }}"
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#password",
+      "value": "{{ secrets.portail_pass }}"
+    },
+    {
+      "action": "click",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#submitBtn",
+      "note": "`#submitBtn` et non `input[type=submit]` : le CAS de l'INP est le meme produit Apereo que celui de Bordeaux, mais son bouton d'envoi est un <button> — la divergence mesuree au jalon 6-G."
+    },
+    {
+      "action": "wait",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "ms": 8000
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "Le meme panneau que sur tous les portails Apereo : absent de la page propre, present des que le CAS refuse."
+    },
+    {
+      "action": "navigate",
+      "url": "{{ vars.inscriptions }}",
+      "note": "Une seconde fois, sans garde : idempotent si on y est deja, et c'est ce qui couvre un retour de CAS qui ne reviendrait pas exactement sur la page demandee."
+    },
+    {
+      "action": "wait_for",
+      "selector": ".label-valeur",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:DOCUMENTS_INDISPONIBLES",
+      "note": "La page a rendu — y compris pour un etudiant sans certificat, dont les blocs d'inscription portent quand meme leurs libelles. 30 s et non 20 : la lecon du dossier v7, chaque navigation PC-Scol redemarre le client Vaadin et une WebView hors ecran etrangle ses timers."
+    },
+    {
+      "id": "liste",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "nombre": {
+          "selector": "a[href*=\"certificat\"]",
+          "as": "count"
+        }
+      }
+    },
+    {
+      "id": "fichier",
+      "action": "evaluate",
+      "script": "async () => { var liens = Array.prototype.slice.call(document.querySelectorAll('a[href*=\"certificat\"]')); if (liens.length === 0) return null; var choisi = liens[0]; var meilleure = -1; var periode = ''; for (var k = 0; k < liens.length; k++) { var bloc = liens[k].parentElement; var annee = -1; var texte = ''; for (var p = 0; bloc && p < 8; p++) { texte = bloc.innerText || ''; var m = texte.match(/(19|20)\\d{2}/g); if (m) { for (var j = 0; j < m.length; j++) { var v = parseInt(m[j], 10); if (v > annee) annee = v; } break; } bloc = bloc.parentElement; } if (annee > meilleure) { meilleure = annee; choisi = liens[k]; var pm = texte.match(/20\\d{2}\\s*[\\/\\-]\\s*20\\d{2}/); periode = pm ? pm[0].replace(/\\s+/g, '') : ''; } } var r; try { r = await fetch(choisi.href, { credentials: 'include' }); } catch (e) { return { erreur: 'reseau' }; } if (!r.ok) return { erreur: 'statut-' + r.status }; var o = new Uint8Array(await r.arrayBuffer()); if (o.length > 4194304) return { erreur: 'trop-gros' }; if (o.length < 5 || o[0] !== 37 || o[1] !== 80 || o[2] !== 68 || o[3] !== 70) return { erreur: 'pas-un-pdf' }; var s = ''; for (var i = 0; i < o.length; i += 8192) { s += String.fromCharCode.apply(null, o.subarray(i, i + 8192)); } return { libelle: periode === '' ? 'Certificat de scolarit\\u00e9' : 'Certificat de scolarit\\u00e9 ' + periode, annee: meilleure, octets: o.length, contenu: btoa(s) }; }",
+      "note": "La piece de l'annee LA PLUS RECENTE. Le texte du lien ne porte pas l'annee — toujours « Certificat de scolarite » — donc le script remonte au bloc d'inscription et lit la plus grande annee de son texte (le libelle PERIODE, mesure « 2025-2026 »). C'est la decision de ReNARD, prise sur la charpente de PC-Scol. Le libelle rendu devient le nom du fichier, PERIODE incluse quand elle est lisible, pour que deux annees rangees cote a cote se distinguent. La signature %PDF est verifiee ICI : une session expiree entre le rendu et la requete rendrait une page HTML en 200, et on rangerait une page de connexion sous le nom d'un certificat. `String.fromCharCode.apply` par tranches de 8192 : d'un coup, la pile d'arguments deborde sur un tableau de cette taille."
+    }
+  ],
+  "outputs": {
+    "nombre": "{{ steps.liste.nombre }}",
+    "fichier": "{{ steps.fichier.result }}"
+  }
+}

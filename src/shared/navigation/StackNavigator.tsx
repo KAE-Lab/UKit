@@ -9,6 +9,8 @@ import Group from '../../features/Planning/screens/ScheduleScreen';
 import About from '../../features/Settings/screens/AboutScreen';
 import Settings from '../../features/Settings/screens/SettingsScreen';
 import CredentialsSettingsScreen from '../../features/Scolarite/screens/CredentialsSettingsScreen';
+import DocumentsScreen from '../../features/Scolarite/screens/DocumentsScreen';
+import DocumentViewerScreen, { partagerDocument } from '../../features/Scolarite/screens/DocumentViewerScreen';
 import WebBrowser from '../../features/Scolarite/screens/WebBrowserScreen';
 import LienEdtScreen from '../../features/Planning/screens/LienEdtScreen';
 import Geolocation from '../map/MapScreen';
@@ -26,6 +28,7 @@ import FreeRoomDetailsScreen from '../../features/Campus/FreeRoom/FreeRoomDetail
 import style, { tokens } from '../theme/Theme';
 import { AppContext, treatTitle } from '../services/AppCore';
 import Translator from '../i18n/Translator';
+import { HeaderButton, HEADER_BUTTON_ICON } from '../ui/HeaderButton';
 import { NavBarHelper, SaveGroupButton as SaveButton, FilterRemoveButton } from './NavHelpers';
 
 export type RootStackParamList = {
@@ -36,6 +39,9 @@ export type RootStackParamList = {
     Settings: undefined;
     /** `ressaisie` ouvre l'ecran directement sur le formulaire, sans deconnecter. */
     CredentialsSettings: { ressaisie?: boolean } | undefined;
+    Documents: undefined;
+    /** Le lecteur d'une piece rangee : son adresse locale et son nom de fichier. */
+    DocumentViewer: { uri: string; nom: string };
     LienEdt: undefined;
     Crous: undefined;
     Library: undefined;
@@ -61,9 +67,9 @@ export default function StackNavigator() {
 
                 const renderMapButton = (navigation: StackNavigationProp<RootStackParamList>, title?: string, location?: { lat: number, lng: number }) => (
                     <TouchableOpacity onPress={() => navigation.navigate('Geolocation', { title, location })} style={{ paddingRight: tokens.space.md }}>
-                        <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
-                            <MaterialCommunityIcons name="map-marker-radius" size={24} color={theme.primary} />
-                        </View>
+                        <HeaderButton theme={theme}>
+                            <MaterialCommunityIcons name="map-marker-radius" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                        </HeaderButton>
                     </TouchableOpacity>
                 );
 
@@ -79,9 +85,13 @@ export default function StackNavigator() {
                             screenOptions={{
                                 headerLeft: (props) => props.canGoBack ? (
                                     <TouchableOpacity onPress={props.onPress} style={{ paddingLeft: tokens.space.md }}>
-                                        <View style={{ backgroundColor: theme.greyBackground, width: 50, height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md }}>
+                                        <HeaderButton theme={theme}>
+                                            {/* `28` et non la taille commune : une fleche est un
+                                                glyphe plus leger qu'une icone pleine, et elle parait
+                                                plus petite a taille egale. C'est un ecart **optique**,
+                                                mesure a l'oeil, pas une divergence oubliee. */}
                                             <MaterialIcons name="arrow-back" size={28} color={theme.primary} />
-                                        </View>
+                                        </HeaderButton>
                                     </TouchableOpacity>
                                 ) : undefined,
                             }}>
@@ -107,6 +117,18 @@ export default function StackNavigator() {
                             <Stack.Screen name="Settings" component={Settings} options={({ route }) => NavBarHelper({ title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="CredentialsSettings" component={CredentialsSettingsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('ACCOUNT'), themeName, route, gestureEnabled: true })} />
+
+                            <Stack.Screen name="Documents" component={DocumentsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('MY_DOCUMENTS'), themeName, route, gestureEnabled: true })} />
+
+                            {/* Le partage en bouton d'en-tete, comme le plan externe sur la carte :
+                                le geste secondaire vit dans la barre, l'ecran ne porte que la piece. */}
+                            <Stack.Screen name="DocumentViewer" component={DocumentViewerScreen} options={({ route }) => NavBarHelper({ headerRight: () => (
+                                <TouchableOpacity onPress={() => { void partagerDocument(route.params?.uri ?? ''); }} style={{ paddingRight: tokens.space.md }}>
+                                    <HeaderButton theme={theme}>
+                                        <MaterialCommunityIcons name="export-variant" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                                    </HeaderButton>
+                                </TouchableOpacity>
+                            ), title: route.params?.nom ?? Translator.get('MY_DOCUMENTS'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="LienEdt" component={LienEdtScreen} options={({ route }) => NavBarHelper({ title: Translator.get('TIMETABLE_LINK'), themeName, route, gestureEnabled: true })} />
 

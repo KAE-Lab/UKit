@@ -43,10 +43,22 @@
         "version": "5"
     },
     "ukit.portail.bordeaux.messagerie": {
+        "version": "4"
+    },
+    "ukit.portail.bordeaux.documents": {
         "version": "3"
     },
+    "ukit.portail.bordeaux.moodle": {
+        "version": "1"
+    },
+    "ukit.portail.bordeaux-inp.documents": {
+        "version": "1"
+    },
     "ukit.portail.bordeaux-inp.dossier": {
-        "version": "6"
+        "version": "7"
+    },
+    "ukit.portail.bordeaux-inp.messagerie": {
+        "version": "1"
     },
     "ukit.portail.bordeaux-inp.edt": {
         "version": "4",

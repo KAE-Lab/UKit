@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, TouchableWithoutFeedback } from 'react-native';
+import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
@@ -7,13 +7,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SettingsManager } from '../services/AppCore';
 import Translator from '../i18n/Translator';
+import { HeaderButton, HEADER_BUTTON_ICON, HEADER_BUTTON_SIZE } from '../ui/HeaderButton';
 import style, { tokens } from '../theme/Theme';
 
 
 // GESTIONNAIRE DE HEADER
 export type ScrollValueWithInterps = Animated.Value & {
     _titleOpacity?: Animated.AnimatedInterpolation<number | string>;
-    _buttonScale?: Animated.AnimatedInterpolation<number | string>;
 };
 
 export const globalScrollValues: Record<string, ScrollValueWithInterps> = {};
@@ -39,11 +39,6 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
             outputRange: [1, 0],
             extrapolate: 'clamp',
         });
-        (safeScrollY as ScrollValueWithInterps)._buttonScale = safeScrollY.interpolate({
-            inputRange: [0, 60],
-            outputRange: [1.14, 1],
-            extrapolate: 'clamp',
-        });
     }
 
     const options: StackNavigationOptions = {
@@ -51,7 +46,7 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
             <Animated.View style={{ 
                 opacity: (safeScrollY as ScrollValueWithInterps)._titleOpacity,  
                 paddingHorizontal: tokens.space.lg, 
-                height: 45, // On fige la hauteur pour correspondre aux boutons latéraux
+                height: HEADER_BUTTON_SIZE, // On fige la hauteur pour correspondre aux boutons latéraux
                 justifyContent: 'center',
                 alignItems: 'center',
                 borderRadius: tokens.radius.md, 
@@ -77,16 +72,16 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
 
     if (headerLeft !== undefined) {
         options.headerLeft = headerLeft ? () => (
-            <Animated.View style={{ transform: [{ scale: (safeScrollY as ScrollValueWithInterps)._buttonScale }], height: 45, justifyContent: 'center' }}>
+            <View style={styles.boutonEnTete}>
                 {headerLeft()}
-            </Animated.View>
+            </View>
         ) : undefined;
     }
     if (headerRight !== undefined) {
         options.headerRight = headerRight ? () => (
-            <Animated.View style={{ transform: [{ scale: (safeScrollY as ScrollValueWithInterps)._buttonScale }], height: 45, justifyContent: 'center' }}>
+            <View style={styles.boutonEnTete}>
                 {headerRight()}
-            </Animated.View>
+            </View>
         ) : undefined;
     }
 
@@ -147,9 +142,9 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
             return (
                 <View>
                     <TouchableOpacity onPress={() => this.setState({ modalVisible: true })} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
-                        <MaterialCommunityIcons name="filter-variant-remove" size={26} color={theme.primary} />
-                        </View>
+                        <HeaderButton theme={theme}>
+                            <MaterialCommunityIcons name="filter-variant-remove" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                        </HeaderButton>
                     </TouchableOpacity>
                     <Modal animationType="fade" transparent={true} visible={this.state.modalVisible} onRequestClose={() => this.setState({ modalVisible: false })}>
                         <TouchableWithoutFeedback onPress={() => this.setState({ modalVisible: false })}>
@@ -191,10 +186,10 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
 
         return (
             <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                <View style={{ backgroundColor: theme.primary, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
+                <HeaderButton theme={theme} fond={theme.primary}>
                     {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif (docs/theme.md). */}
-                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={26} color={theme.lightFont} />
-                </View>
+                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={HEADER_BUTTON_ICON} color={theme.lightFont} />
+                </HeaderButton>
             </TouchableOpacity>
         );
     }
@@ -229,9 +224,9 @@ export class FilterRemoveButton extends React.Component<FilterRemoveButtonProps,
 
         return (
             <View>
-                <TouchableOpacity onPress={this.openPopup} style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md }}>
-                    <MaterialCommunityIcons name="filter-variant-remove" size={24} color={theme.primary} />
-                </TouchableOpacity>
+                <HeaderButton theme={theme} onPress={this.openPopup}>
+                    <MaterialCommunityIcons name="filter-variant-remove" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                </HeaderButton>
                 <Modal animationType="fade" transparent={true} visible={this.state.popupVisible} onRequestClose={this.popupClose}>
                     <View style={popupTheme.background}>
                         <View style={popupTheme.container}>
@@ -304,3 +299,20 @@ export const withStaticHeader = <P extends object>(WrappedComponent: React.Compo
         return <WrappedComponent {...props} headerPadding={headerPadding} />;
     };
 };
+
+const styles = StyleSheet.create({
+    /**
+     * Le cadre des boutons d'en-tete : une hauteur figee, et rien d'autre.
+     *
+     * Il portait une **mise a l'echelle animee** — 1,14 au repos, 1 une fois defile — retiree le
+     * 2026-08-29 : la decision de ne plus faire retrecir les boutons avait ete prise, mais elle
+     * n'avait ete appliquee qu'a moitie. `useCampusListHeader` en gardait une copie dont le repli
+     * etait la **valeur statique 1,14**, si bien que le bouton de filtre restait agrandi de 14 % en
+     * permanence, seul de sa barre. Le cadre reste, parce que c'est lui qui aligne les boutons sur la
+     * hauteur du titre.
+     */
+    boutonEnTete: {
+        height: HEADER_BUTTON_SIZE,
+        justifyContent: 'center',
+    },
+});

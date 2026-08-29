@@ -319,7 +319,8 @@ export const StepLienEdt = ({ onDone }) => (
           * reussie ne ferait **rien** — le formulaire l'utilise ailleurs pour refermer son ecran de
           * pile, et un bouton mort au milieu d'un parcours d'accueil est pire que pas de bouton.
           */}
-        <LienEdtForm onDone={onDone} />
+        {/* Aucun en-tete ici : le parcours d'accueil est rendu hors de la navigation. */}
+        <LienEdtForm onDone={onDone} topPadding={tokens.space.md} />
     </View>
 );
 

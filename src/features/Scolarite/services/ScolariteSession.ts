@@ -22,7 +22,7 @@
  * Voir docs/features/scolarite.md, docs/phase-6/6-f-scolarite.md et docs/phase-6/6-g-etablissements.md.
  */
 
-import { getEtablissementActif, serviceEtablissement } from '../../../shared/etablissements';
+import { getEtablissementActif, portailPublie, serviceEtablissement } from '../../../shared/etablissements';
 import { BLUEPRINT } from '../../../../blueprints';
 import {
     estNomDePortail,
@@ -38,23 +38,22 @@ import {
     natureDeSortie,
     tracerLectureDossier,
 } from '../../../shared/services/PropositionsTrace';
+import { maintenant } from '../../../shared/services/Temps';
+import { surLeNavigateur } from './MoteurNavigateur';
 import { projeterPropositions, type PropositionsDossier } from './PropositionsDossier';
-import {
-    projeterDossier,
-    projeterMessagerie,
-    type ScolariteColdData,
-    type ScolariteMailData,
-} from './ScolariteMapping';
+import { projeterDossier, type ScolariteColdData } from './ScolariteMapping';
 
-/** Les quatre etapes que l'ecran de progression affiche, inchangees depuis toujours. */
-export type EtapeSession = 'connecting' | 'profile' | 'dossier' | 'mailbox';
+/**
+ * Les trois etapes que l'ecran de progression affiche.
+ *
+ * Il y en avait quatre : `mailbox` fermait le parcours. Elle a disparu avec la lecture qu'elle
+ * nommait — la messagerie est devenue un widget, rafraichi a part et affiche dans la page plutot
+ * qu'avant elle.
+ */
+export type EtapeSession = 'connecting' | 'profile' | 'dossier';
 
 export type DossierResultat =
     | { readonly ok: true; readonly cold: ScolariteColdData; readonly propositions: PropositionsDossier }
-    | { readonly ok: false; readonly failure: UkitFailure };
-
-export type MessagerieResultat =
-    | { readonly ok: true; readonly mail: ScolariteMailData }
     | { readonly ok: false; readonly failure: UkitFailure };
 
 export interface OptionsSession {
@@ -116,19 +115,6 @@ export function portailAbsent(role: string = 'portail'): UkitFailure {
     );
 }
 
-/**
- * Le Blueprint navigateur en cours, ou `null`.
- *
- * Il y a **une** WebView montee, donc **un** run Act II a la fois : le moteur refuse le second par
- * une `DependencyError`, et il a raison — deux runs concurrents remonteraient la vue l'un sous
- * l'autre, et la panne ressemblerait a un portail capricieux plutot qu'a une erreur de
- * programmation. Ce verrou refuse **avant** de toucher au moteur, pour que le refus porte un
- * message qui nomme le conflit plutot qu'une piece de plateforme absente.
- *
- * Deuxieme ceinture volontaire : l'appelant en a une aussi (CredentialsContext ne lance jamais deux
- * sessions). Celle-ci attrape ce que l'autre laisserait passer.
- */
-let enCours: RunnableBlueprintName | null = null;
 
 /** Le flux d'evenements du run, traduit en etapes d'ecran. */
 function suivreProgression(
@@ -159,32 +145,35 @@ async function jouer(
     depart: EtapeSession,
     options: OptionsSession,
 ): Promise<{ ok: true; outputs: Readonly<Record<string, unknown>> } | { ok: false; failure: UkitFailure }> {
-    if (enCours !== null) {
+    // `priorite: 'session'` : un geste de l'utilisateur prend la main sur les lectures d'arriere-plan,
+    // qui sont abandonnees. Il n'est refuse que par **une autre session** — deux sessions concurrentes
+    // restent une erreur de programmation, et doivent rester bruyantes. Ce n'etait pas le cas avant le
+    // 2026-08-29 : un widget en cours suffisait a refuser une connexion (voir `MoteurNavigateur`).
+    const reserve = await surLeNavigateur(nom, (signal) => runBlueprint(nom, {
+        ...(options.inputs !== undefined ? { inputs: options.inputs } : {}),
+        ...(options.secrets !== undefined ? { secrets: options.secrets } : {}),
+        signal,
+        onEvent: suivreProgression(depart, options),
+    }), {
+        priorite: 'session',
+        ...(options.signal !== undefined ? { signal: options.signal } : {}),
+    });
+
+    if (reserve.ok === false) {
         const failure = ukitFailure(
             'unsupported',
-            `un run navigateur est deja en cours (${enCours}) : ${nom} est refuse, pas mis en file`,
+            `un run navigateur est deja en cours (${reserve.occupePar}) : ${nom} est refuse, pas mis en file`,
         );
         reportFailure(nom, failure);
         return { ok: false, failure };
     }
 
-    enCours = nom;
-    try {
-        const run = await runBlueprint(nom, {
-            ...(options.inputs !== undefined ? { inputs: options.inputs } : {}),
-            ...(options.secrets !== undefined ? { secrets: options.secrets } : {}),
-            ...(options.signal !== undefined ? { signal: options.signal } : {}),
-            onEvent: suivreProgression(depart, options),
-        });
-
-        if (run.ok === false) {
-            reportFailure(nom, run.failure);
-            return { ok: false, failure: run.failure };
-        }
-        return { ok: true, outputs: run.outputs };
-    } finally {
-        enCours = null;
+    const run = reserve.valeur;
+    if (run.ok === false) {
+        reportFailure(nom, run.failure);
+        return { ok: false, failure: run.failure };
     }
+    return { ok: true, outputs: run.outputs };
 }
 
 /**
@@ -221,7 +210,7 @@ export async function jouerDossier(options: OptionsSession = {}): Promise<Dossie
 
     // L'horodatage se pose ICI et non dans la projection : celle-ci ne doit connaitre ni
     // l'heure ni la plateforme, c'est ce qui la rend rejouable sous vitest.
-    return { ok: true, cold: projeterDossier(run.outputs, new Date().toISOString()), propositions };
+    return { ok: true, cold: projeterDossier(run.outputs, maintenant().toISOString()), propositions };
 }
 
 /**
@@ -245,7 +234,21 @@ export async function fermerSessionDistante(): Promise<void> {
     if (cas === null) return;
 
     try {
-        await runBlueprint(BLUEPRINT.PORTAIL_DECONNEXION, { inputs: { cas } });
+        /*
+         * **Par le verrou, comme tout le reste.** Elle appelait le moteur en direct, et c'est ce qui
+         * a produit le defaut mesure le 2026-08-29 : la deconnexion naviguait la vue partagee vers la
+         * page de deconnexion du CAS **pendant** qu'un widget s'y authentifiait. Le widget voyait
+         * alors le panneau d'erreur du CAS et rendait `LOGIN_FAILED` sur des identifiants valides —
+         * une erreur qui accuse l'utilisateur pour une collision interne.
+         *
+         * `priorite: 'session'` parce que c'en est un geste : se deconnecter ne doit pas echouer
+         * parce qu'une chronologie se rafraichissait.
+         */
+        await surLeNavigateur(
+            BLUEPRINT.PORTAIL_DECONNEXION,
+            (signal) => runBlueprint(BLUEPRINT.PORTAIL_DECONNEXION, { inputs: { cas }, signal }),
+            { priorite: 'session' },
+        );
     } catch {
         // Volontairement muet : voir ci-dessus.
     }
@@ -285,20 +288,9 @@ async function jouerVerification(options: OptionsSession): Promise<UkitFailure |
     return run.ok === false ? run.failure : null;
 }
 
-/** Le parcours chaud : le compteur de messages non lus, seul. */
-export async function jouerMessagerie(options: OptionsSession = {}): Promise<MessagerieResultat> {
-    const nom = nomDuPortail('messagerie');
-    if (nom === null) return { ok: false, failure: portailAbsent('messagerie') };
-
-    const run = await jouer(nom, 'mailbox', options);
-    if (run.ok === false) return { ok: false, failure: run.failure };
-    return { ok: true, mail: projeterMessagerie(run.outputs) };
-}
-
 /** Ce qu'une session complete a obtenu. Les champs sont independants. */
 export interface ResultatSession {
     readonly cold?: ScolariteColdData;
-    readonly mail?: ScolariteMailData;
     /**
      * Ce que le dossier a livre **en plus** de l'identite, et qu'un ecran proposera d'appliquer.
      *
@@ -317,23 +309,33 @@ export interface ResultatSession {
  * Blueprints, dans quel ordre, et ce qu'on garde de chacun. Le contexte, lui, decide de ce que
  * l'application en fait — ecrire dans le trousseau, changer d'ecran.
  *
- * Un echec de la messagerie **n'annule pas** le dossier deja lu : les deux champs reviennent
- * ensemble, et l'appelant ecrit ce qu'il a. C'est le pendant de « deux Blueprints, pas un » — une
- * panne de l'un n'emporte pas l'autre, y compris quand ils sont joues a la suite.
+ * ## La session a maigri, et c'est la messagerie qui est partie
  *
- * Un service que l'etablissement ne publie pas est **saute**, pas echoue : une fac sans messagerie
- * extractible doit donner une session complete et un tableau de bord sans ligne de messagerie, pas
- * une erreur a chaque lancement. Le seul cas qui echoue est celui ou l'etablissement ne publie
- * **rien** — il n'y a alors pas de session a derouler, et le dire est le bon comportement.
+ * Elle jouait deux Blueprints : le dossier, puis la messagerie. Cette derniere est devenue **un
+ * widget parmi quatre**, avec son cache et sa peremption, et elle est donc rejouee par
+ * `rafraichirWidgets` — pas ici. Trois consequences, toutes voulues :
+ *
+ *   - **le parcours chaud n'existe plus.** Il ne servait qu'a relire la boite a chaque lancement,
+ *     sans jamais rien garder : de la l'indicateur tournant au demarrage et le vide hors ligne. Le
+ *     cache des widgets fait mieux, et sans run ;
+ *   - **le parcours froid est plus court** — une lecture de moins avant que l'ecran se remplisse ;
+ *   - **la preuve des identifiants ne depend plus de la messagerie.** C'etait deja le cas depuis que
+ *     `ukit.portail.verification` existe : lui seul prouve, par `renew=true`. La garde `LOGIN_SUCCESS`
+ *     de la messagerie ne servait plus que les etablissements sans dossier, et la verification les
+ *     couvre aussi.
+ *
+ * Ce qui reste vrai : un etablissement qui ne publie **rien** n'a pas de session a derouler, et le
+ * dire est le bon comportement.
  */
 export async function deroulerSession(
     mode: 'cold' | 'hot',
     options: OptionsSession = {},
 ): Promise<ResultatSession> {
     const dossierPublie = portailDisponible('dossier');
-    const messageriePubliee = portailDisponible('messagerie');
 
-    if (!dossierPublie && !messageriePubliee) {
+    // `portailPublie()` couvre le cas d'un etablissement qui n'aurait pas de dossier mais bien des
+    // widgets : il y a alors un compte a prouver, meme s'il n'y a pas d'identite a lire.
+    if (!dossierPublie && !portailPublie()) {
         return { failure: portailAbsent('portail') };
     }
 
@@ -363,25 +365,8 @@ export async function deroulerSession(
         propositions = dossier.propositions;
     }
 
-    const acquis = {
+    return {
         ...(cold !== undefined ? { cold } : {}),
         ...(propositions !== undefined ? { propositions } : {}),
     };
-
-    if (!messageriePubliee) {
-        return acquis;
-    }
-
-    // En froid, le login a deja abouti au run precedent : le re-signaler ferait reecrire les
-    // identifiants et ramenerait l'ecran de progression a l'etape « profil ». En chaud — ou quand
-    // l'etablissement n'a pas de dossier a lire —, ce run **est** l'authentification, et l'evenement
-    // compte : sans lui, les identifiants ne seraient jamais ecrits.
-    const messagerie = await jouerMessagerie(
-        mode === 'cold' && cold !== undefined ? { ...options, onLoginSuccess: undefined } : options,
-    );
-    if (messagerie.ok === false) {
-        return { ...acquis, failure: messagerie.failure };
-    }
-
-    return { ...acquis, mail: messagerie.mail };
 }

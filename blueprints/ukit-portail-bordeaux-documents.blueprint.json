@@ -1,0 +1,133 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux.documents",
+  "description": "ReNARD, le service de documents etudiants du COLLEGE SCIENCES ET TECHNOLOGIES : il liste les pieces disponibles d'une categorie et RAPPORTE LA PREMIERE, en octets. C'est le premier Blueprint du depot qui ramene un fichier, et quatre mesures du 2026-08-29 expliquent pourquoi c'est possible ici alors que ca ne l'etait pas a Bordeaux INP. (1) L'ADRESSE D'UNE PIECE EST DETERMINISTE. Elle vaut /document/<base64>/lang ou le jeton encode 'App\\Service\\Document\\Provider\\ApogeeDbProvider#App\\Dto\\CertificatScol~<annee>' : aucun UUID, aucun horodatage, IDENTIQUE d'un rendu a l'autre — c'est exactement ce qui manquait a l'INP, dont les PDF portent une URL regeneree a chaque affichage. L'identite ne vient pas de l'adresse mais du COOKIE : deux etudiants suivent le meme lien et recoivent leur propre document. (2) LA PIECE EST UN VRAI PDF SERVI PAR UNE SIMPLE REQUETE : 200, application/pdf, 93 759 octets sur le compte de sonde, signature %PDF-1.4. Il n'y a ni visionneuse intermediaire ni jeton a usage unique. (3) LA CHARPENTE EST NOMMEE. Chaque piece est un `li.PucePdf` contenant un unique `a[href^=\"/document/\"]` dont le texte est le libelle (« Certificat 2026/2027 »), et les categories sont ordonnees de la plus recente a la plus ancienne. `PucePdf` est une classe SEMANTIQUE du gabarit, pas une classe de mise en page : c'est le meilleur ancrage que la page offre. (4) LA REQUETE SE FAIT DANS LA PAGE, ET C'EST LE SEUL ENDROIT POSSIBLE. Aucune action declarative ne rapporte un binaire — l'Act II n'ecrit pas de fichier et l'extraction texte ne rend que du texte decode. `evaluate` est donc ici le SEUL outil correct, comme il l'est pour le WAYF de Moodle : la requete part du document lui-meme, donc elle porte la session sans qu'on ait a ponter le magasin de cookies natif, et elle se comporte a l'identique sur les deux moteurs. Le contenu revient en base64 par le pont, qui le decoupe en messages ; c'est ce qui BORNE la piece a 4 Mo, un refus explicite au-dela plutot qu'un pont sature. Le certificat mesure fait 94 ko. L'ETAPE DE TELECHARGEMENT N'EST PAS GARDEE PAR `when`, et c'est deliberé : un step garde n'enregistre aucune sortie, donc `outputs.fichier` ne saurait plus rendre. Le script rend `null` quand il n'y a rien a prendre, ce qui est la meme information sans le piege. Naviguer sur la RACINE avant la categorie n'est pas non plus un detour : le retour du CAS OAuth pointe sur la racine, donc un lien profond joue sans session ramenerait a l'accueil.",
+  "act": "continuum",
+  "inputs": {
+    "categorie": {
+      "type": "string",
+      "required": false,
+      "default": "3",
+      "description": "La categorie ReNARD a lister. 3 = certificat de scolarite, 1 = releve de notes, 2 = attestation de reussite, 4 = bulletin de versement. Une entree plutot qu'une constante : les autres categories ont la meme forme, donc les ouvrir sera une publication."
+    }
+  },
+  "secrets": [
+    "portail_user",
+    "portail_pass"
+  ],
+  "vars": {
+    "renard": "https://renard.u-bordeaux.fr"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "session": {
+      "persist": true
+    }
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ vars.renard }}/",
+      "note": "La racine et non la categorie : le retour du CAS OAuth a pour `redirect_uri` la racine, donc un lien profond joue sans session ouverte y ramenerait de toute facon. On ouvre la session ici, on va chercher la categorie ensuite."
+    },
+    {
+      "action": "wait",
+      "ms": 6000,
+      "note": "La meme raison que sur les trois autres portails : la cascade doit avoir fini de se decider avant qu'on regarde ou l'on est. Celle-ci passe par le point OAuth du CAS, donc un saut de plus que le parcours du dossier."
+    },
+    {
+      "id": "porte",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formulaire": {
+          "selector": "#username",
+          "as": "count",
+          "note": "`as: count` ne leve JAMAIS : c'est ce qui permet de demander « y a-t-il un formulaire ? » sans risquer le run. La reponse est NON quand la session du parcours froid vit encore, ce qui est le cas ordinaire."
+        }
+      }
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#username",
+      "value": "{{ secrets.portail_user }}"
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#password",
+      "value": "{{ secrets.portail_pass }}"
+    },
+    {
+      "action": "click",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "input[type=submit]"
+    },
+    {
+      "action": "wait",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "ms": 9000,
+      "note": "Le CAS, puis le point OAuth, puis le retour sur ReNARD qui pose son PHPSESSID."
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "Le meme panneau que sur les trois autres portails : absent de la page propre, present des que le CAS refuse."
+    },
+    {
+      "action": "navigate",
+      "url": "{{ vars.renard }}/categorie/{{ inputs.categorie }}",
+      "note": "La session est ouverte, le lien profond aboutit."
+    },
+    {
+      "action": "wait_for",
+      "selector": "#TitrePageUBxBase",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:DOCUMENTS_INDISPONIBLE",
+      "note": "Le titre de page, present sur TOUTE page de ReNARD — donc y compris sur une categorie vide. Attendre `li.PucePdf` ferait echouer le run d'un etudiant qui n'a aucune piece, ce qui n'est pas une panne."
+    },
+    {
+      "id": "liste",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "nombre": {
+          "selector": "li.PucePdf",
+          "as": "count"
+        },
+        "libelles": {
+          "selector": "li.PucePdf a",
+          "as": "list",
+          "note": "Deux listes paralleles plutot que des enregistrements (`each`/`fields`), et c'est un choix de robustesse : les enregistrements LEVENT quand un champ ne trouve rien dans son conteneur, la ou `as: list` ne leve jamais. Un `li.PucePdf` sans ancre — un gabarit qui change — ferait echouer tout le run au lieu de rendre une liste plus courte. Les deux listes sont alignees par construction : meme selecteur, donc meme ordre de correspondance."
+        },
+        "liens": {
+          "selector": "li.PucePdf a",
+          "as": "list",
+          "item": "attr",
+          "attr": "href"
+        }
+      }
+    },
+    {
+      "id": "fichier",
+      "action": "evaluate",
+      "script": "async () => { var liens = Array.prototype.slice.call(document.querySelectorAll('li.PucePdf a[href^=\"/document/\"]')); if (liens.length === 0) return null; var choisi = liens[0]; var meilleure = -1; for (var k = 0; k < liens.length; k++) { var m = (liens[k].innerText || '').match(/(19|20)\\d{2}/g); if (!m) continue; var an = 0; for (var j = 0; j < m.length; j++) { var v = parseInt(m[j], 10); if (v > an) an = v; } if (an > meilleure) { meilleure = an; choisi = liens[k]; } } var r; try { r = await fetch(choisi.href, { credentials: 'include' }); } catch (e) { return { erreur: 'reseau' }; } if (!r.ok) return { erreur: 'statut-' + r.status }; var o = new Uint8Array(await r.arrayBuffer()); if (o.length > 4194304) return { erreur: 'trop-gros' }; if (o.length < 5 || o[0] !== 37 || o[1] !== 80 || o[2] !== 68 || o[3] !== 70) return { erreur: 'pas-un-pdf' }; var s = ''; for (var i = 0; i < o.length; i += 8192) { s += String.fromCharCode.apply(null, o.subarray(i, i + 8192)); } return { libelle: choisi.innerText.trim(), annee: meilleure, octets: o.length, contenu: btoa(s) }; }",
+      "note": "La piece de l'annee LA PLUS RECENTE, choisie par l'annee lue dans le libelle et non par la position. La page en liste plusieurs — trois sur le compte de sonde, 2026/2027, 2025/2026 et 2024/2025 — et prendre la premiere revenait a parier sur un ordre que rien ne garantit. Le libelle porte deux annees (« Certificat 2026/2027 ») : on retient la plus grande des deux, ce qui ordonne correctement une annee universitaire. Sans annee lisible, on retombe sur la premiere plutot que de ne rien rendre. Le script rend `null` quand la categorie est vide, ou `{ erreur }` quand la reponse n'est pas le PDF attendu : dans les deux cas le run REUSSIT et c'est l'application qui decide quoi en faire. Un echec de run pour un document absent serait un contresens. La signature %PDF est verifiee ici plutot qu'a l'arrivee : si la session avait expire entre la liste et la requete, ReNARD rendrait une page HTML de redirection avec un statut 200, et on rangerait une page de connexion sous le nom d'un certificat. `String.fromCharCode.apply` par tranches de 8192 parce que l'appliquer d'un coup depasse la pile d'arguments sur un tableau de cette taille."
+    }
+  ],
+  "outputs": {
+    "nombre": "{{ steps.liste.nombre }}",
+    "libelles": "{{ steps.liste.libelles }}",
+    "liens": "{{ steps.liste.liens }}",
+    "fichier": "{{ steps.fichier.result }}"
+  }
+}

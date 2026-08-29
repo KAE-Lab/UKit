@@ -36,11 +36,6 @@ export interface ScolariteColdData {
     readonly luLe?: string;
 }
 
-/** Les donnees chaudes : le compteur, et rien d'autre. */
-export interface ScolariteMailData {
-    readonly unreadCount: number | null;
-}
-
 function texte(valeur: unknown): string {
     return typeof valeur === 'string' ? valeur.trim() : '';
 }
@@ -125,29 +120,6 @@ export function projeterDossier(
         // qui le garde rejouable sous vitest (docs/blueprints.md).
         luLe,
     };
-}
-
-/**
- * Le compteur de messages non lus, depuis les sorties de `ukit.portail.bordeaux.messagerie`.
- *
- * `as: "number"` lit le premier nombre du libelle et rend un **entier**, la ou le code d'origine
- * rendait la chaine capturee par une expression reguliere. Une difference en decoule et se decide
- * ici : un libelle **sans parenthese** — « Reception » tout court — donnait `'0'` avant et donnerait
- * `null` maintenant. La boite descend donc en sortie a cote du nombre, et sa presence tranche :
- *
- *   - un nombre lu           -> ce nombre ;
- *   - une boite sans nombre  -> `0`, comme avant : la boite existe, elle n'a rien de non lu ;
- *   - pas de boite du tout   -> `null`, qui veut dire « on ne sait pas » et non « zero ».
- *
- * Le troisieme cas ne devrait pas arriver — un `wait_for` vient de prouver l'element — mais le
- * confondre avec le deuxieme afficherait « aucun message non lu » sur une lecture qui a echoue.
- */
-export function projeterMessagerie(outputs: Readonly<Record<string, unknown>>): ScolariteMailData {
-    const nombre = outputs.non_lus;
-    if (typeof nombre === 'number' && Number.isFinite(nombre)) {
-        return { unreadCount: nombre };
-    }
-    return { unreadCount: texte(outputs.boite_de_reception) === '' ? null : 0 };
 }
 
 /**

@@ -27,6 +27,7 @@ import {
     listeEtablissements,
     projeterEtablissement,
     setCodeEtablissementActif,
+    widgetPublie,
     type Etablissement,
 } from './catalogue';
 import type { EtablissementRow } from '../supabase/types';
@@ -345,5 +346,77 @@ describe('crousRegion', () => {
 
     it('lit la region publiee', () => {
         expect(projeterEtablissement(ligne({ crous_region: '1' })).crousRegion).toBe('1');
+    });
+});
+
+/**
+ * Les widgets publies, et le repli qui evite une regression a la mise a jour.
+ *
+ * Le cas qui compte est le dernier : la surcouche de catalogue s'applique en **asynchrone**, donc un
+ * appareil peut tres bien porter cette version de l'application et une ligne de catalogue d'avant.
+ * Sans le repli sur `portail_messagerie`, mettre a jour eteindrait le compteur de messages jusqu'au
+ * prochain rafraichissement — une regression invisible, introduite par une amelioration.
+ */
+describe('les widgets d une ligne', () => {
+    it('retient un descripteur complet', () => {
+        const table = projeterEtablissement(ligne({
+            portail_widgets: { moodle: { blueprint: 'ukit.portail.essai.moodle', peremption_min: 90 } },
+        })).portailWidgets;
+        expect(table.moodle).toEqual({ blueprint: 'ukit.portail.essai.moodle', peremptionMin: 90 });
+    });
+
+    it('accepte un descripteur sans peremption : celle de l application fait foi', () => {
+        const table = projeterEtablissement(ligne({
+            portail_widgets: { moodle: { blueprint: 'ukit.portail.essai.moodle' } },
+        })).portailWidgets;
+        expect(table.moodle?.peremptionMin).toBeNull();
+    });
+
+    it('ecarte une peremption absurde plutot que de la suivre', () => {
+        const table = projeterEtablissement(ligne({
+            portail_widgets: {
+                a: { blueprint: 'ukit.portail.essai.a', peremption_min: 0 },
+                b: { blueprint: 'ukit.portail.essai.b', peremption_min: -5 },
+                c: { blueprint: 'ukit.portail.essai.c', peremption_min: 'souvent' },
+            },
+        })).portailWidgets;
+        // Zero ferait rejouer le widget a chaque evaluation : le seul reglage capable de vider une
+        // batterie.
+        expect([table.a?.peremptionMin, table.b?.peremptionMin, table.c?.peremptionMin])
+            .toEqual([null, null, null]);
+    });
+
+    it('ignore une entree sans nom de Blueprint plutot que de la retenir vide', () => {
+        const table = projeterEtablissement(ligne({
+            portail_widgets: { moodle: { peremption_min: 30 }, notes: null, examens: 'oui' },
+        })).portailWidgets;
+        expect(Object.keys(table)).toEqual([]);
+    });
+
+    it('ne tombe pas sur une colonne d une autre forme', () => {
+        expect(projeterEtablissement(ligne({ portail_widgets: null })).portailWidgets).toEqual({});
+        expect(projeterEtablissement(ligne({ portail_widgets: ['moodle'] })).portailWidgets).toEqual({});
+    });
+
+    it('replie la messagerie sur l ancienne colonne quand la nouvelle est vide', () => {
+        appliquerCatalogue({ repli: etablissement({
+            code: 'repli',
+            portailMessagerie: 'ukit.portail.repli.messagerie',
+            portailWidgets: {},
+        }) });
+        setCodeEtablissementActif('repli');
+        expect(widgetPublie('messagerie')?.blueprint).toBe('ukit.portail.repli.messagerie');
+        // Le repli ne vaut **que** pour la messagerie : les autres points n'ont pas d'ancienne colonne.
+        expect(widgetPublie('moodle')).toBeNull();
+    });
+
+    it('laisse la nouvelle colonne gagner sur l ancienne', () => {
+        appliquerCatalogue({ recent: etablissement({
+            code: 'recent',
+            portailMessagerie: 'ukit.portail.recent.ancienne',
+            portailWidgets: { messagerie: { blueprint: 'ukit.portail.recent.messagerie', peremptionMin: null } },
+        }) });
+        setCodeEtablissementActif('recent');
+        expect(widgetPublie('messagerie')?.blueprint).toBe('ukit.portail.recent.messagerie');
     });
 });

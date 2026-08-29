@@ -88,9 +88,20 @@ export function ActionButton({
             ]}
         >
             {icon !== undefined ? <Icon icon={icon} size={20} color={teinte} /> : null}
-            <Text style={{ color: teinte, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
-                {label}
-            </Text>
+            {/*
+              * **Rien du tout quand le libelle est vide**, et pas un `<Text>` vide.
+              *
+              * Le conteneur pose un `gap` entre ses enfants : un second enfant de largeur nulle
+              * consomme quand meme cet espacement, donc l'icone se retrouvait decalee vers la gauche
+              * de la moitie du gap. Le bouton de suppression d'un document, qui n'a qu'une icone, le
+              * montrait a l'oeil (signale le 2026-08-29). Un bouton sans libelle est un cas legitime
+              * — c'est la forme compacte d'une action dans une rangee.
+              */}
+            {label !== '' ? (
+                <Text style={{ color: teinte, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
+                    {label}
+                </Text>
+            ) : null}
         </TouchableOpacity>
     );
 }

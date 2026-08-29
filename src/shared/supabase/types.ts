@@ -59,6 +59,21 @@ export interface BatimentRow {
  * chaque fois qu'un etablissement a un cas particulier, et c'est deja la posture retenue pour les
  * horaires de `batiments`.
  */
+/**
+ * Une salutation publiee : le mot du haut de l'onglet Scolarite, et quand il s'affiche.
+ *
+ * `condition` et `messages` sont libres cote base — leur forme est validee a la projection
+ * (features/Scolarite/salutations/index.ts), parce qu'une colonne figee en colonnes obligerait a
+ * migrer la base a chaque nouvelle facon de dater un message.
+ */
+export interface SalutationRow {
+    readonly id: string;
+    readonly priorite: number;
+    readonly condition: unknown;
+    readonly messages: unknown;
+    readonly actif: boolean;
+}
+
 export interface EtablissementRow {
     readonly code: string;
     readonly nom: string;
@@ -69,6 +84,10 @@ export interface EtablissementRow {
     readonly actif: boolean;
     readonly portail_dossier: string | null;
     readonly portail_messagerie: string | null;
+    /** Le Blueprint qui rapporte le certificat de scolarite. `null` : on ne sait pas le faire ici. */
+    readonly portail_documents: string | null;
+    /** `{ point: { blueprint, peremption_min } }` — les Blueprints qui remplissent les widgets. */
+    readonly portail_widgets: unknown;
     readonly celcat_domaine: string | null;
     readonly celcat_res_types: unknown;
     readonly bibliotheques_points: unknown;
@@ -165,6 +184,7 @@ export interface Database {
             etablissements: TableEnLecture<EtablissementRow>;
             app_release: TableEnLecture<AppReleaseRow>;
             service_messages: TableEnLecture<ServiceMessageRow>;
+            salutations: TableEnLecture<SalutationRow>;
             blueprints: TableEnLecture<BlueprintRow>;
             visuels: TableEnLecture<VisuelRow>;
         };

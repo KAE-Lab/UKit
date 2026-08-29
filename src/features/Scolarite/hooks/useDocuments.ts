@@ -21,6 +21,14 @@ import {
 
 export interface EtatDocuments {
     readonly documents: readonly DocumentScolarite[];
+    /**
+     * Relit le repertoire a la demande.
+     *
+     * Le focus couvre la navigation, pas l'arriere-plan : une piece rangee par le certificat
+     * automatique atterrit PENDANT que l'ecran est visible, et sans ce declencheur le compte de la
+     * tuile restait perime jusqu'au prochain changement d'onglet (signale sur appareil, 2026-08-29).
+     */
+    readonly relire: () => void;
     /** Le dernier geste qui a echoue, ou `null`. L'ecran le montre puis l'oublie. */
     readonly echec: string | null;
     readonly oublierEchec: () => void;
@@ -69,5 +77,5 @@ export function useDocuments(messageEchec: string): EtatDocuments {
 
     const oublierEchec = useCallback(() => setEchec(null), []);
 
-    return { documents, echec, oublierEchec, ajouter, supprimer };
+    return { documents, relire, echec, oublierEchec, ajouter, supprimer };
 }

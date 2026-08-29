@@ -70,6 +70,7 @@ Un contexte ne serait pas accessible depuis ces points.
 | `crous_filter` | [`useSavedFilter`](../src/features/Campus/hooks/useSavedFilter.ts) | filtre actif (`all` / `resto` / `market`) | permanent |
 | `library_filter` | `useSavedFilter` | filtre actif (`all` / `open`) | permanent |
 | `aetherius/blueprints@1` | le registre du moteur, via [`registry.ts`](../src/shared/aetherius/registry.ts) | la **surcouche** des Blueprints publiés : un document unique portant, par nom, le texte servi et son empreinte | jusqu'à la prochaine publication ou un retour à l'embarqué |
+| `salutations@1` | [`Scolarite/salutations`](../src/features/Scolarite/salutations/index.ts) | la **surcouche** des salutations publiées, telle que l'application la projette | jusqu'au prochain rafraîchissement |
 | `batiments@1` | [`shared/locations`](../src/shared/locations/index.ts) | la **surcouche** du référentiel des lieux : un document unique portant, par code, les champs publiés | jusqu'au prochain rafraîchissement |
 | `etablissements@1` | [`shared/etablissements`](../src/shared/etablissements/index.ts) | la **surcouche** du catalogue : un document unique portant, par code, l'établissement publié | jusqu'au prochain rafraîchissement |
 | `visuels@1` | [`shared/visuels`](../src/shared/visuels/index.ts) | la **surcouche** des visuels : un document unique portant, par `domaine:cle`, la photo publiée — ou `null`, qui dit « n'en montre aucune » | jusqu'au prochain rafraîchissement |
@@ -125,8 +126,9 @@ Gérées exclusivement par [`SecureStoreService.ts`](../src/shared/services/Secu
 | `UKIT_EDT_LIENS` | les liens d'abonnement à l'emploi du temps, **indexés par code d'établissement** : `{ "autre": "https://…" }` |
 | `UKIT_EDT_PERSONNELS` | l'emploi du temps personnel trouvé dans le dossier, **indexé par code d'établissement** : `{ "bordeaux-inp": { nom, ressource } }` |
 | `UKIT_PROPOSITIONS` | ce que le dossier a proposé et qui **n'a pas encore reçu de réponse**, indexé par code d'établissement. Une entrée disparaît quand l'étudiant a tranché |
+| `UKIT_WIDGETS_PAR_ETAB` | la dernière valeur lue par chaque **widget** de Scolarité — compteur, détail, date de lecture —, **indexée par code d'établissement** |
 
-**Les cinq clés sont cloisonnées par établissement**, et les deux premières ne l'étaient pas avant le
+**Les six clés sont cloisonnées par établissement**, et les deux premières ne l'étaient pas avant le
 2026-08-22. Elles portaient une session unique, effacée à chaque bascule : revenir à sa fac d'origine
 obligeait à se reconnecter, alors que tout le reste survivait — ce qui le faisait passer pour un
 défaut plutôt que pour une règle. La règle, elle, est celle que le dépôt a déjà appliquée aux groupes

@@ -154,8 +154,9 @@
     {
       "action": "wait_for",
       "selector": ".label-valeur",
-      "timeout_ms": 20000,
-      "on_timeout": "fail:COORDONNEES_INDISPONIBLES"
+      "timeout_ms": 30000,
+      "on_timeout": "fail:COORDONNEES_INDISPONIBLES",
+      "note": "30 s et non 20, aligne sur les deux attentes de premiere page — et c'est mesure, pas prudent : sur appareil (2026-08-29), un telephone dont la WebView hors ecran etrangle ses timers a passe la premiere page sous les 30 s puis echoue ici deux fois a 20 s, alors que le meme parcours en local rend cette page en 794 ms. Chaque navigation PC-Scol redemarre le client Vaadin : la deuxieme page merite le meme budget que la premiere."
     },
     {
       "id": "coordonnees",

@@ -135,6 +135,9 @@ const styles = StyleSheet.create({
         borderRadius: tokens.radius.lg,
         borderWidth: 1,
         overflow: 'hidden',
+        // La meme ombre douce que les tuiles et que les cartes du reste de l'application : sur un fond
+        // gris clair, un aplat blanc a filet fin se lit comme un gabarit plutot que comme un objet.
+        ...tokens.shadow.sm,
     },
     filet: {
         height: StyleSheet.hairlineWidth,

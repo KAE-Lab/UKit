@@ -23,6 +23,7 @@ import { loadEdtsPersonnels, loadEtablissements, loadLiensEdt } from './src/shar
 import { PlanningDataManager } from './src/features/Planning/services/PlanningDataManager';
 import { CampusDataManager } from './src/features/Campus/services/CampusDataManager';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { RootSiblingParent } from 'react-native-root-siblings';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -164,11 +165,26 @@ function cacheImages(images) {
 export default function App() {
     return (
 		<SafeAreaProvider>
-			<GestureHandlerRootView style={{ flex: 1 }}>
-				<AnimatedAppLoader>
-					<RootContainer />
-				</AnimatedAppLoader>
-			</GestureHandlerRootView>
+			{/*
+			  * `RootSiblingParent` est ce qui rend les toasts **visibles**.
+			  *
+			  * `react-native-root-toast` le declare obligatoire au-dessus de React Native 0.62, et
+			  * l'application est en 0.81 : sans lui, `Toast.show` ne leve pas, il ne rend rien. Les
+			  * quatre messages de l'application etaient donc muets, dont trois qui annoncent un
+			  * echec — un document qu'on n'a pas pu ajouter, des reglages illisibles, une absence de
+			  * reseau. Constate le 2026-08-29 en cherchant pourquoi la confirmation de copie ne
+			  * s'affichait pas.
+			  *
+			  * Sous `SafeAreaProvider` et au-dessus du reste : il doit englober tout ce qui peut
+			  * appeler un toast.
+			  */}
+			<RootSiblingParent>
+				<GestureHandlerRootView style={{ flex: 1 }}>
+					<AnimatedAppLoader>
+						<RootContainer />
+					</AnimatedAppLoader>
+				</GestureHandlerRootView>
+			</RootSiblingParent>
 		</SafeAreaProvider>
     );
 }

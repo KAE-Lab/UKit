@@ -36,6 +36,15 @@ interface LienEdtFormProps {
      * l'accueil, qui reste sur son etape.
      */
     readonly onDone?: () => void;
+    /**
+     * La marge haute, **deja calculee** par l'appelant.
+     *
+     * C'est lui qui sait s'il y a un en-tete au-dessus : l'ecran de pile en a un — transparent, et le
+     * contenu glisse dessous —, le parcours d'accueil n'en a aucun. Le formulaire ajoutait jusqu'ici
+     * son propre espacement a une valeur qui ne comptait que l'encoche, ce qui faisait demarrer le
+     * contenu **sous la barre de navigation** : le titre et l'icone se chevauchaient (constate sur
+     * appareil le 2026-08-29).
+     */
     readonly topPadding?: number;
 }
 
@@ -164,7 +173,7 @@ export default function LienEdtForm({ onDone, topPadding = 0 }: LienEdtFormProps
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
         <ScrollView
-            contentContainerStyle={{ paddingTop: topPadding + tokens.space.md, paddingBottom: tokens.space.xxl }}
+            contentContainerStyle={{ paddingTop: topPadding, paddingBottom: tokens.space.xxl }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
         >

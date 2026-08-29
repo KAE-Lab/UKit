@@ -247,7 +247,8 @@ projection). Parcours utilisateur détaillé dans [features/scolarite.md](featur
 | `ent.u-bordeaux.fr` / `intranet.u-bordeaux.fr` | portail — prénom de l'étudiant |
 | `mondossierweb.u-bordeaux.fr` | dossier administratif — numéro étudiant, INE, mail, date de naissance |
 | `webmel.u-bordeaux.fr` | messagerie — nombre de messages non lus |
-| `apogee.u-bordeaux.fr` | notes et résultats — atteignable via le navigateur intégré, non extrait |
+| `apogee.u-bordeaux.fr` | notes et résultats — atteignable via le navigateur intégré, non extrait. Deux services nommés par l'intranet : `?srv=RE01` (résultats) et `?srv=RE02` (calendrier des examens) |
+| `moodle.u-bordeaux.fr` | plateforme pédagogique — **chronologie extraite** depuis le 2026-08-28. Entrée par `/login/index.php`, qui mène au WAYF de `idp-ubx`, lequel délègue au CAS |
 
 `ent.u-bordeaux.fr` **n'est plus traversé par la session** : chaque Blueprint ouvre directement son
 service, qui rebondit lui-même sur le CAS avec son paramètre `service=`. Le portail reste une
@@ -596,7 +597,8 @@ Ajouté au jalon [6-G](phase-6/6-g-etablissements.md), **sans release** : une li
 | `mondossierweb.bordeaux-inp.fr/acces` | le bac, les primo-inscriptions, et **l'INE** |
 | `mondossierweb.bordeaux-inp.fr/inscriptions` | l'onglet « Parcours » — **la formation courante**, une carte par année |
 | `ade.bordeaux-inp.fr/direct/myplanning.jsp` | l'arbre de ressources **sous authentification** — il présélectionne la fiche de l'étudiant, donc son emploi du temps personnel (section 8) |
-| `sso.bordeaux-inp.fr` | SAML — **c'est lui qui rend le webmail inextractible** |
+| `sso.bordeaux-inp.fr` | SAML — son IdP **délègue au CAS**, mesuré le 2026-08-28 |
+| `partage.bordeaux-inp.fr/mail` | messagerie (Zimbra « Partage ») — **le même produit que `webmel`**, donc le même sélecteur ; une page de consentement Shibboleth s'intercale à la première autorisation |
 | `ade.bordeaux-inp.fr` | emploi du temps, par export iCalendar — **porté** au jalon [6-I](phase-6/6-i-planning-universel.md), section 8 |
 
 Un seul Blueprint,
@@ -616,7 +618,7 @@ et il n'est **pas embarqué** dans le binaire : il arrive par le manifeste.
 | Identité | `PRÉNOM NOM` en un champ | nom et prénom séparés |
 | INE | état civil | **onglet Accès** — voir ci-dessous |
 | Formation | vue *Inscriptions*, un tableau | vue *Parcours*, une carte par année |
-| Messagerie | derrière le CAS | derrière SAML — hors de portée |
+| Messagerie | derrière le CAS | derrière SAML, **qui délègue au CAS** — même Zimbra, un consentement en plus |
 | Durée du parcours froid | ~46 s | ~24 s |
 
 **Fragilité connue** : le numéro étudiant est lu par position dans le bandeau latéral

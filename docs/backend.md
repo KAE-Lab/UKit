@@ -78,6 +78,7 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | **6-G** | l'établissement historique |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | bandeau de service : maintenance, incident | rien aujourd'hui | — | — |
+| `salutations` | le mot du haut de l'onglet Scolarité, quand une règle publiée doit passer devant le socle embarqué — voir [scolarite.md](features/scolarite.md#la-salutation-est-une-règle-pas-une-condition) |
 | `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal, `desactive` | le script de publication | **6-C** | [`blueprints/`](../blueprints/) |
 
 `batiments` est **lue depuis le jalon [6-D](phase-6/6-d-campus.md)**, par
@@ -178,6 +179,42 @@ d'un sous-objet — même règle, toujours **ce qui existe** :
 | `crous_region` | la région CROUS de Croustillant, jusque-là une constante du Blueprint | pas de restaurants : la section disparaît |
 | `edt.abonnement` | *cet établissement publie un export iCal à s'abonner*, plus un libellé d'aide facultatif | pas d'abonnement à proposer |
 | `salles.reconnaissance: false` | *cet établissement n'a pas de référentiel de lieux* — à distinguer d'une colonne **absente**, qui vaut le comportement bordelais | — |
+
+La session du 2026-08-28 ajoute `portail_widgets`, et celle du 2026-08-29 `portail_documents` — même
+règle encore, toujours **ce qui existe** :
+
+| Colonne | Ce qu'elle porte | `null` (ou vide) veut dire |
+|---|---|---|
+| `portail_widgets` | les Blueprints qui remplissent les **compteurs** de l'onglet Scolarité, indexés par point de service, avec leur péremption facultative | aucun widget rempli ici : les rangées s'affichent quand même et ouvrent leur porte |
+| `portail_documents` | le Blueprint qui rapporte le **certificat de scolarité** | on ne sait pas aller le chercher ici — le cas général, et il ne signale rien |
+
+Deux colonnes et non une seule entrée de plus dans `portail_widgets`, parce que ce n'en est pas un :
+un widget rend un **compteur** qu'une rangée affiche, `portail_documents` rend un **fichier** qu'on
+écrit sur l'appareil. Les mélanger aurait fait passer un document par une machinerie qui ne connaît
+que des nombres.
+
+> **Ajouter une colonne, c'est trois gestes, et en oublier un ne casse rien de visible.** La colonne
+> dans `schema.sql`, la valeur dans les trois lignes de `etablissements.sql`, **et son nom dans la
+> constante `COLONNES`** de [`shared/etablissements/index.ts`](../src/shared/etablissements/index.ts).
+> Le troisième a été oublié deux fois : `logo_url` (corrigé le 2026-08-28) et `nom_court` (corrigé le
+> 2026-08-29, découvert en ajoutant `portail_documents`). Le symptôme ne ressemble pas à une colonne
+> manquante : comme une ligne publiée **remplace**, la valeur ne reste pas à ce qu'elle était — elle
+> disparaît. « Collège ST » était redevenu « Collège Sciences et Technologies » partout où la place
+> manque, et rien n'échouait. La vérification tient en une requête :
+>
+> ```sql
+> select column_name from information_schema.columns
+>  where table_name = 'etablissements' order by ordinal_position;
+> ```
+>
+> comparée à `COLONNES`. À faire à chaque ajout, avant de publier.
+>
+> **Et la version du cache s'incrémente APRÈS que la base porte la colonne ET ses valeurs — jamais
+> entre les deux.** Mesuré le 2026-08-29 sur `portail_documents` : la colonne a été créée (nulle
+> partout) quelques minutes avant que la ligne de Bordeaux ne reçoive sa valeur, et un appareil qui a
+> rafraîchi dans cette fenêtre a mis en cache un établissement dont le champ vaut `null` — une entrée
+> de surcouche **remplace** le socle, donc le socle correct ne reprenait jamais la main. Le symptôme
+> ne ressemblait pas à sa cause : « pas de source publiée ici » sur l'établissement qui en publie une.
 
 `edt.abonnement` ne nomme **aucun** Blueprint, et c'est délibéré : le fichier qui le joue est unique,
 embarqué, et le même pour tout le monde. Le catalogue dit que l'abonnement existe, le code relu sait

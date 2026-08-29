@@ -1,25 +1,29 @@
 /**
- * « Tes documents » : ce que l'etudiant a **range**, sur son appareil.
+ * Les documents : ce qui est **range** sur l'appareil.
  *
  * C'est la seule partie de l'onglet qui **fonctionne sans compte**, et c'est ce qui la justifie :
  * l'onglet ne servait a rien a qui ne se connectait pas, et il etait entierement mort chez un
  * etablissement sans portail publie — « Autre universite ». Elle s'affiche donc **toujours**, quel
  * que soit l'etat de la session.
  *
- * Rien n'est recupere automatiquement, et c'est une limite ecrite, pas un oubli : un Blueprint ne
- * sait pas telecharger un binaire, et les PDF que Bordeaux INP publie portent une URL regeneree a
- * chaque rendu de page (docs/features/scolarite.md). L'etudiant ajoute ses pieces lui-meme.
+ * **Le certificat de scolarite s'y range tout seul** chez les etablissements dont l'adresse des
+ * pieces est rejouable (`CertificatService`). Tout le reste est ajoute a la main, et ca reste une
+ * limite ecrite : un Blueprint n'ecrit pas de fichier, et les PDF de Bordeaux INP portent une adresse
+ * regeneree a chaque rendu de page (docs/features/scolarite.md).
+ *
+ * **Une piece s'ouvre dans l'application** depuis le 2026-08-29 (`DocumentViewerScreen`), et la
+ * feuille de partage devient un second geste au lieu d'etre le seul.
  */
 
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import * as DocumentPicker from 'expo-document-picker';
-import * as Sharing from 'expo-sharing';
 import moment from 'moment';
 
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
-import { SectionHeader } from '../../../shared/ui/SectionHeader';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ActionButton } from '../../../shared/ui/ActionButton';
 import { ErrorAlert } from '../../../shared/ui/Alerts';
@@ -28,12 +32,19 @@ import { useDocuments } from '../hooks/useDocuments';
 import { GroupeScolarite, LigneScolarite } from './LigneScolarite';
 import { ConfirmationScolarite } from './ConfirmationScolarite';
 import type { IconSpec } from '../../../shared/ui/Icon';
+import type { RootStackParamList } from '../../../shared/navigation/StackNavigator';
+
+/** L'extension d'un nom de fichier, en minuscules et sans le point. Vide s'il n'y en a pas. */
+function extension(nom: string): string {
+    const point = nom.lastIndexOf('.');
+    return point <= 0 ? '' : nom.slice(point + 1).toLowerCase();
+}
 
 /** Le glyphe d'une piece, d'apres son extension. Le PDF domine ; le reste retombe sur un generique. */
 function icone(nom: string): IconSpec {
-    const extension = nom.slice(nom.lastIndexOf('.') + 1).toLowerCase();
-    if (extension === 'pdf') return { name: 'file-pdf-box' };
-    if (['png', 'jpg', 'jpeg', 'heic', 'webp'].includes(extension)) return { name: 'file-image-outline' };
+    const type = extension(nom);
+    if (type === 'pdf') return { name: 'file-pdf-box' };
+    if (['png', 'jpg', 'jpeg', 'heic', 'webp'].includes(type)) return { name: 'file-image-outline' };
     return { name: 'file-document-outline' };
 }
 
@@ -60,6 +71,7 @@ export function DocumentsSection({ theme, teinte }: DocumentsSectionProps) {
         Translator.get('DOCUMENT_ADD_FAILED'),
     );
     const [aSupprimer, setASupprimer] = useState<string | null>(null);
+    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
     /*
      * Un geste de fichier qui echoue est **transitoire** : il se dit et s'oublie, il ne merite pas un
@@ -81,21 +93,20 @@ export function DocumentsSection({ theme, teinte }: DocumentsSectionProps) {
     };
 
     /**
-     * Ouvrir une piece, c'est la confier a une autre application.
+     * Ouvrir une piece, c'est desormais l'**afficher**, pas la sortir.
      *
-     * `Sharing` et non un visualiseur maison : afficher un PDF demanderait une dependance de rendu
-     * pour refaire ce que le systeme fait deja, et mal. Le fichier ne quitte pas l'appareil — la
-     * feuille de partage est locale tant que l'utilisateur ne choisit pas une destination distante.
+     * L'ecran de lecture s'appuie sur la WebView deja au projet : aucune dependance de rendu ajoutee,
+     * et le systeme fait le travail qu'il sait faire. La feuille de partage reste accessible depuis
+     * la-bas — elle devient un second geste au lieu d'etre le seul (`DocumentViewerScreen`).
      */
-    const ouvrir = async (document: DocumentScolarite) => {
-        if (!(await Sharing.isAvailableAsync())) return;
-        await Sharing.shareAsync(document.uri);
+    const ouvrir = (document: DocumentScolarite) => {
+        navigation.navigate('DocumentViewer', { uri: document.uri, nom: document.nom });
     };
 
     return (
         <>
-            <SectionHeader title={Translator.get('MY_DOCUMENTS')} theme={theme} />
-
+            {/* Plus d'en-tete de section : cette liste a son propre ecran depuis que les documents
+                sont entres dans la grille, et la barre de navigation porte deja le titre. */}
             {documents.length === 0 ? (
                 <View style={{ marginHorizontal: tokens.space.md }}>
                     {/*
@@ -123,7 +134,7 @@ export function DocumentsSection({ theme, teinte }: DocumentsSectionProps) {
                                 teinte={teinte}
                                 titre={document.nom}
                                 sousTitre={sousTitre(document)}
-                                onPress={() => { void ouvrir(document); }}
+                                onPress={() => ouvrir(document)}
                                 droite={
                                     <ActionButton
                                         theme={theme}
@@ -131,7 +142,7 @@ export function DocumentsSection({ theme, teinte }: DocumentsSectionProps) {
                                         icon={{ name: 'trash-can-outline' }}
                                         label=""
                                         onPress={() => setASupprimer(document.nom)}
-                                        style={{ paddingHorizontal: tokens.space.sm, minHeight: 0 }}
+                                        style={styles.supprimer}
                                     />
                                 }
                             />
@@ -166,3 +177,15 @@ export function DocumentsSection({ theme, teinte }: DocumentsSectionProps) {
         </>
     );
 }
+
+const styles = StyleSheet.create({
+    supprimer: {
+        // Un carre : le bouton n'a pas de libelle, donc rien ne doit l'etirer dans un sens plutot que
+        // dans l'autre. `minHeight: 0` seul le laissait plus large que haut.
+        width: 36,
+        height: 36,
+        minHeight: 0,
+        paddingHorizontal: 0,
+        paddingVertical: 0,
+    },
+});

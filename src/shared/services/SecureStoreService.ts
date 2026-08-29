@@ -31,6 +31,23 @@ const CAS_COMPTES_KEY = 'UKIT_CAS_COMPTES';
 const COLD_DATA_KEY = 'UKIT_COLD_DATA_PAR_ETAB';
 
 /**
+ * Les dernieres valeurs lues par les widgets de Scolarite, par etablissement.
+ *
+ * **Au trousseau et non dans les reglages**, comme le dossier froid et pour la meme raison : ce sont
+ * des donnees personnelles de l'etudiant — le nombre de messages qui l'attendent, le titre du devoir
+ * qu'il doit rendre. La regle du depot range ce qui est personnel dans `SecureStore`, et
+ * `AsyncStorage` n'est pas chiffre (docs/donnees-et-persistance.md).
+ *
+ * **Pourquoi les persister alors que la messagerie ne l'etait pas** : sans cache, chaque lancement
+ * affichait un indicateur tournant a la place du compteur, et hors ligne il n'y avait rien du tout.
+ * La valeur d'hier vaut mieux que le vide — c'est ce qui permet a la page de s'ouvrir pleine, et au
+ * rafraichissement de se faire dessous.
+ *
+ * Aucune conversion a prevoir : la cle est neuve, une absence vaut table vide.
+ */
+const WIDGETS_KEY = 'UKIT_WIDGETS_PAR_ETAB';
+
+/**
  * Les liens d'abonnement a un emploi du temps, **par etablissement** (jalon 6-J).
  *
  * Ils vivent dans le trousseau et non dans les reglages, et ce n'est pas de la prudence de principe :
@@ -156,6 +173,27 @@ export default class SecureStoreService {
         return table[getCodeEtablissementActif()] ?? null;
     }
 
+    /**
+     * Les valeurs de widgets de l'etablissement selectionne, telles quelles.
+     *
+     * Rend `null` plutot que de valider : la forme appartient a la scolarite, exactement comme pour
+     * le dossier froid. Ce module range et rend, il n'interprete pas.
+     */
+    static async getWidgets(): Promise<unknown> {
+        const table = lireDossiers(await lireTablePersistee(WIDGETS_KEY));
+        return table[getCodeEtablissementActif()] ?? null;
+    }
+
+    static async saveWidgets(valeurs: unknown): Promise<boolean> {
+        const table = lireDossiers(await lireTablePersistee(WIDGETS_KEY));
+        return ecrireTablePersistee(WIDGETS_KEY, fusionnerEntree(table, getCodeEtablissementActif(), valeurs));
+    }
+
+    static async deleteWidgets(): Promise<boolean> {
+        const table = lireDossiers(await lireTablePersistee(WIDGETS_KEY));
+        return ecrireTablePersistee(WIDGETS_KEY, fusionnerEntree(table, getCodeEtablissementActif(), null));
+    }
+
     static async deleteColdData(): Promise<boolean> {
         await convertirSiNecessaire(COLD_DATA_V1, COLD_DATA_KEY, 'le dossier');
         const table = lireDossiers(await lireTablePersistee(COLD_DATA_KEY));
@@ -173,6 +211,7 @@ export default class SecureStoreService {
         try {
             await SecureStore.deleteItemAsync(CAS_COMPTES_KEY);
             await SecureStore.deleteItemAsync(COLD_DATA_KEY);
+            await SecureStore.deleteItemAsync(WIDGETS_KEY);
             await SecureStore.deleteItemAsync(CAS_CREDENTIALS_V1);
             await SecureStore.deleteItemAsync(COLD_DATA_V1);
             return true;

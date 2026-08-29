@@ -1,0 +1,133 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux-inp.messagerie",
+  "description": "Le WIDGET messagerie de BORDEAUX INP : le nombre de messages non lus. Ce fichier n'est PAS embarque : il arrive par le manifeste, sous le prefixe reserve. IL CONTREDIT UNE AFFIRMATION DE LA DOCUMENTATION, et c'est la sonde du 2026-08-28 qui tranche. On ecrivait « le webmail de l'INP passe par SAML et non par le CAS, donc il est hors de portee », et `portail_messagerie` valait null en consequence. Mesure : partage.bordeaux-inp.fr REDIRIGE VERS SON PROPRE CAS — l'URL d'atterrissage est cas.bordeaux-inp.fr/login?service=sso.bordeaux-inp.fr/idp/Authn/External, c'est-a-dire le meme schema que Moodle a Bordeaux : un SP SAML dont l'IdP delegue au CAS. Le formulaire est celui du dossier de l'INP, #username / #password / BUTTON#submitBtn, et non l'input[type=submit] de Bordeaux. Mieux : PARTAGE EST LE MEME ZIMBRA QUE WEBMEL, au selecteur pres — #zti__main_Mail__2_textCell existe et rend « Reception ». Le widget est donc le meme des deux cotes, ce qui etait l'objectif et non une coincidence heureuse. UNE ETAPE DE PLUS QU'A BORDEAUX, et une seule : la page de CONSENTEMENT Shibboleth (« Informations Transmises »), qui demande l'accord de transmettre eduPersonPrincipalName et schacHomeOrganization au service. Elle est GARDEE par une sonde `as: count` parce qu'elle ne se presente QU'UNE FOIS : son radio #_shib_idp_rememberConsent est coche PAR DEFAUT, donc l'IdP ne redemande qu'en cas de changement des attributs transmis. Le selecteur vise button[name=_eventId_proceed] et pas un autre : la page porte AUSSI un button[name=_eventId_AttributeReleaseRejected], et le moteur embarque refuse un clic ambigu — viser le formulaire ou un `button[type=submit]` generique matcherait les deux et ferait echouer le run, quand cela ne cliquerait pas le refus. Les sorties portent les noms du contrat de widget (repere / nombre) ET les noms historiques de la messagerie de Bordeaux (boite_de_reception / non_lus). Ce doublement est DELIBERE et n'est pas une redondance : les sorties d'un Blueprint publie sont un contrat avec les versions DEJA INSTALLEES, qui lisent les noms historiques. Les emettre toutes les deux fait gagner cette messagerie aux anciennes versions sans rien casser, et un ajout de nom ne coute rien la ou un renommage aurait coute une panne silencieuse. Persister la session est ce qui evite au navigateur integre de redemander une connexion, et la deconnexion (ukit.portail.deconnexion) reste son pendant obligatoire.",
+  "act": "continuum",
+  "secrets": [
+    "portail_user",
+    "portail_pass"
+  ],
+  "vars": {
+    "messagerie": "https://partage.bordeaux-inp.fr/mail#1"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "session": {
+      "persist": true
+    }
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ vars.messagerie }}",
+      "note": "Le lien direct plutot que le bouton de la barre de l'ENT : il mene au meme endroit et epargne un chargement de portail. L'ancre #1 est celle qui a ete mesuree."
+    },
+    {
+      "action": "wait",
+      "ms": 6000
+    },
+    {
+      "id": "porte",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formulaire": {
+          "selector": "#username",
+          "as": "count"
+        }
+      }
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#username",
+      "value": "{{ secrets.portail_user }}"
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#password",
+      "value": "{{ secrets.portail_pass }}"
+    },
+    {
+      "action": "click",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#submitBtn",
+      "note": "Le CAS de l'INP sert un BUTTON et non l'input[type=submit] de Bordeaux — le selecteur de l'autre portail ne matcherait rien ici."
+    },
+    {
+      "action": "wait",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "ms": 12000
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "Le meme panneau qu'a Bordeaux : le theme du CAS differe, pas son marqueur d'erreur."
+    },
+    {
+      "id": "consentement",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "present": {
+          "selector": "button[name=\"_eventId_proceed\"]",
+          "as": "count",
+          "note": "La page « Informations Transmises » ne parait qu'a la premiere autorisation : son radio de memorisation est coche par defaut."
+        }
+      }
+    },
+    {
+      "action": "click",
+      "when": "{{ steps.consentement.present > 0 }}",
+      "selector": "button[name=\"_eventId_proceed\"]",
+      "note": "Ce nom exactement : la page porte aussi _eventId_AttributeReleaseRejected, et un selecteur plus large matcherait les deux — refus du moteur embarque sur clic ambigu, quand ce ne serait pas un clic sur le refus."
+    },
+    {
+      "action": "wait",
+      "when": "{{ steps.consentement.present > 0 }}",
+      "ms": 10000
+    },
+    {
+      "action": "wait_for",
+      "selector": "#zti__main_Mail__2_textCell",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:MESSAGERIE_INDISPONIBLE"
+    },
+    {
+      "action": "emit",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "event": "LOGIN_SUCCESS",
+      "note": "Meme garde qu'a Bordeaux, et pour la meme raison : sans formulaire, le CAS ne s'est prononce sur rien, et emettre l'evenement ferait enregistrer un mot de passe faux comme s'il etait bon."
+    },
+    {
+      "id": "messagerie",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "boite": {
+          "selector": "#zti__main_Mail__2_textCell",
+          "as": "text"
+        },
+        "non_lus": {
+          "selector": "#zti__main_Mail__2_textCell",
+          "as": "number"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "boite_de_reception": "{{ steps.messagerie.boite }}",
+    "non_lus": "{{ steps.messagerie.non_lus }}",
+    "repere": "{{ steps.messagerie.boite }}",
+    "nombre": "{{ steps.messagerie.non_lus }}"
+  }
+}

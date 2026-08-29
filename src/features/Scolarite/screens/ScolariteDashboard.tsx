@@ -25,19 +25,20 @@
  * pas d'authentification (docs/features/scolarite.md).
  */
 
-import React, { useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useContext } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
-import style, { tokens } from '../../../shared/theme/Theme';
+import style from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
-import Translator from '../../../shared/i18n/Translator';
 import { demandeUneRessaisie, presenterEchec } from '../services/ScolariteMapping';
 import { useCredentials } from '../services/CredentialsContext';
 import BiometryGate from '../components/BiometryGate';
 import ScolariteLoadingScreen from '../components/ScolariteLoadingScreen';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 import { PageScolarite } from '../components/PageScolarite';
+import { EnteteScolarite } from '../components/EnteteScolarite';
+import type { PointWidget } from '../widgets/definitions';
 
 const ScolariteDashboard = ({ navigation }) => {
     const { themeName } = useContext(AppContext);
@@ -45,28 +46,19 @@ const ScolariteDashboard = ({ navigation }) => {
     const accent = theme.accent ?? theme.primary;
 
     const {
-        credentials, credentialsLoaded, coldData, mailData, messagerieDisponible, portailDisponible,
+        credentials, credentialsLoaded, coldData, widgets, certificatEnCours, portailDisponible,
         scrapeStatus, scrapeProgress, sessionMode, sessionFailure, retrySession,
     } = useCredentials();
 
-    const scrollY = useRef(new Animated.Value(0)).current;
-
-    const renderHeader = (insets) => {
-        const opacity = scrollY.interpolate({
-            inputRange: [0, 50],
-            outputRange: [1, 0],
-            extrapolate: 'clamp',
-        });
-        return (
-            <Animated.View style={[styles.headerContainer, { paddingTop: insets?.top || 0, opacity }]}>
-                <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
-                    <Text style={[styles.greetingText, { color: theme.font }]}>
-                        {Translator.get('SCOLARITY')}
-                    </Text>
-                </View>
-            </Animated.View>
-        );
-    };
+    const renderHeader = (insets) => (
+        <EnteteScolarite
+            theme={theme}
+            teinte={accent}
+            insets={insets}
+            coldData={coldData}
+            valeurs={widgets.valeurs}
+        />
+    );
 
     if (!credentialsLoaded) return null;
 
@@ -87,19 +79,26 @@ const ScolariteDashboard = ({ navigation }) => {
 
     const ouvrirRessaisie = () => navigation.navigate('CredentialsSettings', { ressaisie: true });
     const ouvrirFiche = () => navigation.navigate('CredentialsSettings');
+    const ouvrirDocuments = () => navigation.navigate('Documents');
     const ouvrirPorte = (point: string) => navigation.navigate('WebBrowser', { entrypoint: point });
     const ouvrirLien = (href: string) => navigation.navigate('WebBrowser', { href });
 
     /**
-     * Ou mene la ligne de messagerie.
+     * Ou mene une rangee de widget.
      *
      * Quand elle dit « identifiants incorrects », la toucher doit mener a les **corriger**, pas ouvrir
-     * une messagerie a laquelle on n'a plus acces. C'est l'autre moitie de l'impasse : celle qui se
-     * produit quand des donnees froides existent deja, donc que l'encart d'echec ne s'affiche pas.
+     * un service auquel on n'a plus acces. C'est l'autre moitie de l'impasse : celle qui se produit
+     * quand des donnees froides existent deja, donc que l'encart d'echec ne s'affiche pas. La regle
+     * valait pour la messagerie seule ; elle vaut pour les quatre, et pour la meme raison.
+     *
+     * La messagerie s'ouvre sous `email` : le point de catalogue porte le nom du service, pas celui du
+     * widget. Les trois autres coincident (docs/features/scolarite.md).
      */
-    const ouvrirMessagerie = () => (demandeUneRessaisie(sessionFailure)
-        ? ouvrirRessaisie()
-        : ouvrirPorte('email'));
+    const ouvrirWidget = (point: PointWidget) => {
+        const echec = widgets.echecs[point] ?? sessionFailure;
+        if (demandeUneRessaisie(echec)) return ouvrirRessaisie();
+        return ouvrirPorte(point === 'messagerie' ? 'email' : point);
+    };
 
     // Le parcours froid prend l'ecran : il est transitoire, et une page qui se remplit sous lui
     // ferait sauter le contenu a chaque etape franchie.
@@ -119,26 +118,24 @@ const ScolariteDashboard = ({ navigation }) => {
         );
     }
 
-    const corps = (insets) => (
+    const corps = () => (
         <PageScolarite
+            certificatEnCours={certificatEnCours}
             theme={theme}
             teinte={accent}
-            insets={insets}
-            scrollY={scrollY}
             coldData={coldData}
-            mailData={mailData}
+            widgets={widgets}
             credentials={credentials}
             portailDisponible={portailDisponible}
-            messagerieDisponible={messagerieDisponible}
-            scrapeStatus={scrapeStatus}
             sessionFailure={sessionFailure}
             echecBloquant={echecBloquant}
             onRetry={retrySession}
             onRessaisir={ouvrirRessaisie}
             onConnecter={ouvrirFiche}
             onDemanderCampus={ouvrirLien}
-            onMessagerie={ouvrirMessagerie}
+            onWidget={ouvrirWidget}
             onPorte={ouvrirPorte}
+            onDocuments={ouvrirDocuments}
         />
     );
 
@@ -148,8 +145,8 @@ const ScolariteDashboard = ({ navigation }) => {
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
                     {renderHeader(insets)}
                     {credentials
-                        ? <BiometryGate theme={theme}>{corps(insets)}</BiometryGate>
-                        : corps(insets)}
+                        ? <BiometryGate theme={theme}>{corps()}</BiometryGate>
+                        : corps()}
                 </View>
             )}
         </SafeAreaInsetsContext.Consumer>
@@ -159,23 +156,6 @@ const ScolariteDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    headerContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        paddingBottom: tokens.space.sm,
-    },
-    headerContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    greetingText: {
-        fontSize: tokens.fontSize.title,
-        fontWeight: tokens.fontWeight.bold,
-        marginBottom: tokens.space.md,
     },
 });
 

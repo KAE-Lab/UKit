@@ -16,14 +16,26 @@
  * « chiffres par UKit » serait faux — une cle qui vivrait a cote du fichier ne protege de rien, et
  * le vrai rempart est celui du systeme.
  *
- * ## Ce qui n'est pas fait, et c'est une limite ecrite
+ * ## Ce qui vient du portail, et ce qui n'en viendra pas
  *
- * **Rien n'est recupere automatiquement depuis le portail.** Un Blueprint ne sait pas telecharger un
- * binaire — l'Act II n'ecrit pas de fichier, et l'extraction texte du jalon 3-I ne rend que du texte
- * decode. La sonde du 2026-08-25 a de plus montre que les PDF de Bordeaux INP (certificat de
- * scolarite, attestation de paiement, releves de notes) portent une URL dont l'UUID et l'horodatage
- * sont **regeneres a chaque rendu de page** : meme telechargeables, ils ne seraient pas rejouables.
- * Ce sont des portes, jamais des donnees.
+ * **Le certificat de scolarite se range tout seul, chez les etablissements qui le permettent.** Il
+ * arrive par `certificat.ts`, qui joue un Blueprint et appelle `enregistrerDocument` ci-dessous.
+ * Ce module ne sait rien de ce chemin : il ecrit des octets sous un nom, d'ou qu'ils viennent.
+ *
+ * **La condition n'est PAS que l'adresse soit rejouable**, et cette phrase a ete fausse un jour ici :
+ * le Blueprint lit le lien frais dans le DOM a chaque run et telecharge depuis la page, donc une
+ * adresse regeneree a chaque rendu (Bordeaux INP) se rapporte aussi bien qu'une adresse deterministe
+ * (ReNARD). La seule condition est qu'un Blueprint sache trouver le lien — c'est le catalogue qui
+ * tranche (`portail_documents`), pas ce fichier.
+ *
+ * **Un Blueprint n'ecrit toujours pas de fichier** : il rapporte le contenu, l'application l'ecrit.
+ * La limite n'a pas bouge, c'est la repartition qui est devenue explicite.
+ *
+ * ## Un dossier par etablissement
+ *
+ * Les pieces sont cloisonnees par etablissement (`scolarite-documents/<code>/`), comme la session et
+ * les liens d'abonnement le sont dans le trousseau : une bascule n'efface rien, un aller-retour
+ * retrouve tout, et le certificat du College ST ne s'affiche plus sous un compte de l'INP.
  *
  * ## Pas d'index a cote des fichiers
  *
@@ -34,7 +46,11 @@
 
 import { Directory, File, Paths } from 'expo-file-system';
 
-/** Le sous-repertoire, nomme une seule fois. */
+import { decoderBase64 } from '../../../shared/services/Base64';
+import { getCodeEtablissementActif } from '../../../shared/etablissements';
+import { ecrireEtVerifier } from './EcritureVerifiee';
+
+/** Le sous-repertoire racine, nomme une seule fois. Chaque etablissement y a son propre dossier. */
 const DOSSIER = 'scolarite-documents';
 
 /** Une piece rangee, telle que l'ecran la montre. */
@@ -48,9 +64,44 @@ export interface DocumentScolarite {
     readonly ajouteLe: number | null;
 }
 
-/** Le repertoire, cree a la demande.  couvre la course entre le test et la creation. */
+/**
+ * Les fichiers restes a la racine relevent d'une disposition d'avant le cloisonnement : ils sont
+ * effaces une fois par lancement. Voir `repertoire` — le nettoyage n'existe que parce que des
+ * appareils de test ont ecrit dans l'ancienne disposition ; en production, la racine n'a jamais
+ * porte de fichier.
+ */
+let racineNettoyee = false;
+
+/**
+ * Le repertoire des pieces de **l'etablissement selectionne**, cree a la demande.
+ *
+ * Cloisonne par etablissement, et c'est une correction mesuree : les pieces vivaient dans un seul
+ * dossier, et basculer vers Bordeaux INP montrait le certificat de scolarite du College ST — la
+ * regle du depot dit pourtant que *les donnees de deux universites ne se melangent pas* (signale sur
+ * appareil le 2026-08-29). Le modele est celui du trousseau : chaque fac a son entree, une bascule
+ * n'efface rien, et un aller-retour retrouve ses pieces. Effacer a la bascule, comme le font les
+ * caches, serait ici une perte — ce sont des fichiers personnels, pas des donnees rejouables.
+ */
 function repertoire(): Directory {
-    const dossier = new Directory(Paths.document, DOSSIER);
+    const racine = new Directory(Paths.document, DOSSIER);
+    if (!racine.exists) racine.create({ intermediates: true, idempotent: true });
+
+    if (!racineNettoyee) {
+        racineNettoyee = true;
+        try {
+            const relics = racine.list().filter((entree): entree is File => entree instanceof File);
+            for (const relic of relics) relic.delete();
+            if (relics.length > 0) {
+                // Sans regret : la disposition a plat n'a jamais ete livree, et le certificat — la
+                // seule piece rangee automatiquement — se retelecharge seul au parcours froid.
+                console.warn(`[documents] ${relics.length} piece(s) de l'ancienne disposition effacee(s)`);
+            }
+        } catch (erreur) {
+            console.warn(`[documents] nettoyage de racine impossible : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+        }
+    }
+
+    const dossier = new Directory(racine, getCodeEtablissementActif());
     if (!dossier.exists) dossier.create({ intermediates: true, idempotent: true });
     return dossier;
 }
@@ -117,6 +168,90 @@ export function ajouterDocument(uriSource: string, nomSouhaite: string): Documen
         taille: info.size ?? null,
         ajouteLe: info.modificationTime ?? Date.now(),
     };
+}
+
+/**
+ * Range des octets rapportes par un run, et rend la piece.
+ *
+ * Le pendant de `ajouterDocument` pour ce qui ne vient pas d'un fichier : la meme regle de nommage,
+ * le meme repertoire, la meme absence d'index. Le contenu arrive en **base64** parce que c'est la
+ * seule forme sous laquelle un binaire traverse le pont d'une WebView.
+ *
+ * **Le decodage se fait ici, en JavaScript, et l'ecriture est verifiee par relecture — c'est la
+ * lecon la plus chere de ce module.** La premiere version deleguait au natif
+ * (`write(base64, { encoding: 'base64' })`), une option qui n'existe que depuis expo-file-system
+ * 19.0.16 — et le natif qui tourne est celui **embarque dans Expo Go**, pas celui de node_modules.
+ * Le releve sur l'appareil touche (2026-08-29) : un fichier de **zero octet** sous un nom en `.pdf`,
+ * que la WebView chargeait « avec succes » et rendait en ecran noir — cinq essais pour le nommer,
+ * parce qu'aucune etape n'avait echoue bruyamment. D'ou la regle qui structure `ecrireEtVerifier` :
+ * **aucun appel d'ecriture n'est cru sur parole**, la seule preuve est la relecture.
+ *
+ * **Une ecriture qui echoue ne laisse rien derriere elle.** Un fichier partiel porterait le nom qui
+ * sert de cle d'idempotence : le rangement automatique le croirait fait et ne retenterait jamais.
+ */
+export async function enregistrerDocument(nomSouhaite: string, base64: string): Promise<DocumentScolarite> {
+    const dossier = repertoire();
+    const nom = nomLibre(dossier, nomSouhaite);
+    const destination = new File(dossier, nom);
+
+    const octets = decoderBase64(base64);
+    if (octets.length === 0) throw new Error('contenu vide');
+
+    try {
+        await ecrireEtVerifier(destination, octets, base64);
+    } catch (erreur) {
+        if (destination.exists) destination.delete();
+        throw erreur;
+    }
+
+    const info = destination.info();
+    return {
+        nom,
+        uri: destination.uri,
+        taille: info.size ?? null,
+        ajouteLe: info.modificationTime ?? Date.now(),
+    };
+}
+
+/** La signature d'un PDF : `%PDF`. Le seul type que le rangement automatique ecrit aujourd'hui. */
+function estUnPdf(octets: Uint8Array): boolean {
+    return octets.length >= 4
+        && octets[0] === 0x25 && octets[1] === 0x50 && octets[2] === 0x44 && octets[3] === 0x46;
+}
+
+/**
+ * Une piece **saine** de ce nom est-elle deja rangee ?
+ *
+ * C'est ce qui tient l'idempotence du rangement automatique, **sans index** : le repertoire est la
+ * liste, donc la question se pose au systeme de fichiers. Un nom deja pris veut dire « on l'a deja »,
+ * la ou `nomLibre` en aurait fait un doublon suffixe a chaque lancement.
+ *
+ * « Saine » et pas seulement « presente », et la nuance est une reparation : le defaut d'ecriture
+ * ci-dessus a laisse sur de vrais appareils un fichier du bon nom au contenu faux — du texte base64
+ * la ou un PDF etait attendu. Presente seule, la cle d'idempotence **verrouillait le defaut** : la
+ * piece corrompue bloquait toute nouvelle tentative, pour toujours. Une piece dont le contenu ne
+ * porte pas la signature de son type est donc **supprimee ici**, et la reponse « non » declenche le
+ * rangement propre — l'appareil se repare tout seul au parcours froid suivant.
+ */
+export function pieceSaineRangee(nom: string): boolean {
+    try {
+        const fichier = new File(repertoire(), nom);
+        if (!fichier.exists) return false;
+
+        const octets = fichier.bytesSync();
+        const saine = octets.length > 0 && (!nom.toLowerCase().endsWith('.pdf') || estUnPdf(octets));
+        if (!saine) {
+            console.warn(`[documents] piece corrompue supprimee pour reprise : ${nom} (${octets.length} octets)`);
+            fichier.delete();
+            return false;
+        }
+        return true;
+    } catch {
+        // Un repertoire illisible se comporte comme un repertoire vide partout ailleurs ici. Repondre
+        // « non » fait au pire retenter une ecriture qui echouera proprement, la ou repondre « oui »
+        // ferait manquer le certificat en silence.
+        return false;
+    }
 }
 
 /** Supprime une piece. Un fichier deja disparu n'est pas une erreur : le resultat voulu est atteint. */

@@ -12,6 +12,7 @@
 import React from 'react';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
+import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 import LienEdtForm from '../components/LienEdtForm';
 
 interface LienEdtScreenProps {
@@ -21,7 +22,14 @@ interface LienEdtScreenProps {
 export default function LienEdtScreen({ navigation }: LienEdtScreenProps) {
     return (
         <SafeAreaInsetsContext.Consumer>
-            {(insets) => <LienEdtForm topPadding={insets?.top || 0} onDone={() => navigation.goBack()} />}
+            {/* `HEADER_OFFSET` et non l'encoche seule : cet en-tete est transparent et le contenu
+                glisse dessous. Sans lui, le titre et l'icone du formulaire se chevauchent. */}
+            {(insets) => (
+                <LienEdtForm
+                    topPadding={(insets?.top ?? 0) + HEADER_OFFSET}
+                    onDone={() => navigation.goBack()}
+                />
+            )}
         </SafeAreaInsetsContext.Consumer>
     );
 }

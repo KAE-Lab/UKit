@@ -146,6 +146,36 @@ export interface Etablissement {
     readonly portailDossier: string | null;
     /** Le Blueprint de la messagerie. `null` : pas de compteur de messages, et aucun echec affiche. */
     readonly portailMessagerie: string | null;
+    /**
+     * Le Blueprint qui rapporte le **certificat de scolarite**, sous `ukit.portail.`.
+     *
+     * `null` veut dire « personne n'a encore ecrit le Blueprint de ce portail », et rien de plus. La
+     * technique ne depend PAS de la stabilite des adresses : le Blueprint lit le lien frais dans le
+     * DOM a chaque run et telecharge depuis la page — les deux etablissements portes le prouvent,
+     * ReNARD aux adresses deterministes comme PC-Scol aux adresses regenerees a chaque rendu
+     * (mesures des 2026-08-25 et 2026-08-29). Sans source, le certificat n'est simplement pas range
+     * d'avance, et la section Documents reste un endroit ou l'etudiant depose ce qu'il veut.
+     *
+     * Une colonne nommee plutot qu'une entree de `portailWidgets`, et la distinction n'est pas
+     * formelle : un widget rend un **compteur** qu'une rangee affiche, celui-ci rend un **fichier**
+     * qu'on ecrit sur l'appareil. Les melanger aurait fait passer un document par une machinerie qui
+     * ne connait que des nombres.
+     */
+    readonly portailDocuments: string | null;
+    /**
+     * Les Blueprints qui **remplissent les widgets**, indexes par point de service.
+     *
+     * C'est la table generale, et `portailMessagerie` en est l'ancetre : la messagerie y figure comme
+     * les autres. L'ancienne colonne est conservee **et lue en repli** (voir `blueprintDuWidget`)
+     * parce qu'un appareil dont la surcouche de catalogue n'a pas encore ete rafraichie ne connait
+     * qu'elle — sans ce repli, mettre a jour l'application eteindrait le compteur jusqu'au prochain
+     * rafraichissement du catalogue.
+     *
+     * Un point **absent** n'est pas une panne : c'est un widget dont la donnee n'existe pas encore
+     * chez cet etablissement. La rangee reste affichee et ouvre sa porte — les notes et les examens
+     * sont exactement dans ce cas au 2026-08-28 (features/Scolarite/widgets/definitions.ts).
+     */
+    readonly portailWidgets: Readonly<Record<string, WidgetPublie>>;
     /** La racine du serveur d'emplois du temps. `null` : cet etablissement n'en publie pas ici. */
     readonly celcatDomaine: string | null;
     readonly celcatResTypes: CelcatResTypes;
@@ -207,6 +237,20 @@ export interface Etablissement {
     /** Les intitules propres a l'etablissement, indexes par role (voir `libelleEtablissement`). */
     readonly libelles: Readonly<Record<string, string>>;
     readonly ordre: number;
+}
+
+/**
+ * Ce qu'une ligne de catalogue dit d'un widget : quel Blueprint le remplit, et a quel rythme.
+ *
+ * La peremption est **publiable** plutot que compilee : c'est un compromis entre fraicheur et runs de
+ * moteur, et le bon reglage se mesure sur des appareils reels. La regler par une release aurait rendu
+ * l'experience impossible a corriger entre deux versions.
+ */
+export interface WidgetPublie {
+    /** Le nom du Blueprint, sous le prefixe reserve. */
+    readonly blueprint: string;
+    /** La peremption en minutes, ou `null` pour garder celle de la definition. */
+    readonly peremptionMin: number | null;
 }
 
 /** Le code de l'etablissement historique : celui qu'une installation existante est reputee avoir. */
@@ -289,6 +333,18 @@ const SOCLE: Readonly<Record<string, Etablissement>> = {
         logo: 'https://owiksddeqcyyifnmpyqm.supabase.co/storage/v1/object/public/media/etablissements/bordeaux.webp',
         portailDossier: 'ukit.portail.bordeaux.dossier',
         portailMessagerie: 'ukit.portail.bordeaux.messagerie',
+        // ReNARD, le service de documents etudiants. Embarque comme les autres Blueprints de
+        // Bordeaux : le binaire n'embarque un etablissement que s'il embarque aussi de quoi le jouer.
+        portailDocuments: 'ukit.portail.bordeaux.documents',
+        // Deux widgets remplis, deux en attente de source. `notes` et `examens` ne figurent pas ici
+        // et ce n'est pas un oubli : leurs donnees n'existent pas encore — les resultats tombent en
+        // bloc en fin de semestre, et il n'y a pas de calendrier d'epreuves avant la rentree. Leurs
+        // rangees s'affichent quand meme et ouvrent leur porte ; le jour ou la source existe, la
+        // ligne s'ajoute **par publication**, sans release.
+        portailWidgets: {
+            messagerie: { blueprint: 'ukit.portail.bordeaux.messagerie', peremptionMin: null },
+            moodle: { blueprint: 'ukit.portail.bordeaux.moodle', peremptionMin: null },
+        },
         celcatDomaine: 'https://celcat.u-bordeaux.fr/calendar',
         celcatResTypes: { groupes: '103', salles: '102' },
         edt: null,
@@ -309,6 +365,24 @@ const SOCLE: Readonly<Record<string, Etablissement>> = {
             email: 'https://webmel.u-bordeaux.fr',
             cas: 'https://cas.u-bordeaux.fr',
             apogee: 'https://apogee.u-bordeaux.fr',
+            // `/login/index.php` et **pas la racine** : la racine de ce Moodle est une page d'accueil
+            // PUBLIQUE, mesuree le 2026-08-29. On y arrivait donc deconnecte, avec un bouton
+            // « Connexion » a presser — et la session persistee ne servait a rien, puisqu'aucune page
+            // d'authentification n'etait jamais demandee. `/login/index.php` part sur le WAYF, qui
+            // delegue au CAS, ou le ticket vivant passe sans rien retaper. C'est la porte que le
+            // Blueprint du widget emprunte deja.
+            //
+            // Absente du socle jusqu'ici : elle n'existait que dans la ligne publiee, donc une
+            // installation qui n'avait pas encore rafraichi son catalogue n'avait pas de porte Moodle.
+            moodle: 'https://moodle.u-bordeaux.fr/login/index.php',
+            // Les deux services d'Apogee que l'intranet nomme, releves le 2026-08-28 : la racine nue
+            // obligeait a chercher dans un portail, ces adresses ouvrent directement la vue.
+            notes: 'https://apogee.u-bordeaux.fr/index.php?srv=RE01',
+            examens: 'https://apogee.u-bordeaux.fr/index.php?srv=RE02',
+            // Pas une porte de service : l'adresse du formulaire de demande. Elle sert d'action a un
+            // etat vide — un widget que l'etablissement ne porte pas propose de le demander, plutot
+            // que d'afficher une rangee muette.
+            adaptation: 'https://forms.gle/c8vpwBu1QpowkAKC8',
             // L'identite Shibboleth de l'etablissement. Ce n'est **pas une porte** : rien ne s'ouvre
             // a cette adresse. C'est ce que la page de choix d'etablissement de Moodle attend qu'on
             // lui designe, dans une liste de 56 — voir `getPortalInjectedScript`.
@@ -476,6 +550,40 @@ function projeterSallesLibres(valeur: unknown): EntreesSalles | null {
 }
 
 /**
+ * Les widgets d'une ligne, reduits aux descripteurs exploitables.
+ *
+ * Defensive comme ses voisines, et pour la meme raison : la colonne est libre cote base, donc une
+ * ligne mal remplie ne doit pas faire tomber le catalogue entier. Une entree sans nom de Blueprint
+ * est **ignoree** plutot que retenue vide — la retenir ferait tenter un run sur un nom absent, et
+ * l'echec arriverait au milieu d'un rafraichissement, la ou il serait illisible.
+ *
+ * La peremption n'est validee que sur sa nature : un entier strictement positif, sinon `null`, qui
+ * fait garder celle de la definition. Une valeur de zero ferait rejouer le widget a chaque
+ * evaluation, ce qui est le seul reglage capable de vider une batterie.
+ */
+function projeterWidgetsPublies(valeur: unknown): Readonly<Record<string, WidgetPublie>> {
+    if (valeur === null || typeof valeur !== 'object' || Array.isArray(valeur)) return {};
+
+    const table: Record<string, WidgetPublie> = {};
+    for (const [point, brut] of Object.entries(valeur as Record<string, unknown>)) {
+        if (brut === null || typeof brut !== 'object' || Array.isArray(brut)) continue;
+
+        const source = brut as Record<string, unknown>;
+        const blueprint = texteOuNull(source.blueprint);
+        if (blueprint === null) continue;
+
+        const peremption = source.peremption_min ?? source.peremptionMin;
+        table[point] = {
+            blueprint,
+            peremptionMin: typeof peremption === 'number' && Number.isInteger(peremption) && peremption > 0
+                ? peremption
+                : null,
+        };
+    }
+    return table;
+}
+
+/**
  * Traduit une ligne de la table vers le contrat applicatif.
  *
  * **Une ligne remplace, elle ne corrige pas** — l'inverse exact de `projeterBatiment`, et la
@@ -494,6 +602,8 @@ export function projeterEtablissement(row: EtablissementRow): Etablissement {
         logo: texteOuNull(row.logo_url),
         portailDossier: texteOuNull(row.portail_dossier),
         portailMessagerie: texteOuNull(row.portail_messagerie),
+        portailDocuments: texteOuNull(row.portail_documents),
+        portailWidgets: projeterWidgetsPublies(row.portail_widgets),
         celcatDomaine: texteOuNull(row.celcat_domaine),
         celcatResTypes: projeterResTypes(row.celcat_res_types),
         edt: projeterEdt(row.edt),
@@ -679,6 +789,42 @@ export function crousRegionActive(): string | null {
  * `null` n'est pas une panne : toutes les facs n'ont pas d'Apogee, ni de webmail sous une adresse
  * stable. L'appelant decide alors quoi montrer — le plus souvent, rien.
  */
+/**
+ * Le Blueprint qui rapporte le certificat de scolarite chez l'etablissement selectionne, ou `null`.
+ *
+ * `null` veut dire « on ne sait pas aller le chercher ici », et **pas** « panne » : la section
+ * Documents reste ce qu'elle est, un endroit ou l'etudiant depose ce qu'il veut. C'est la meme regle
+ * que pour `serviceEtablissement` et `widgetPublie` — un service absent se constate, il ne s'annonce
+ * pas comme un echec.
+ */
+export function documentsPublies(): string | null {
+    return getEtablissementActif().portailDocuments ?? null;
+}
+
 export function serviceEtablissement(nom: string): string | null {
     return getEtablissementActif().services[nom] ?? null;
+}
+
+/**
+ * Le Blueprint qui remplit un widget chez l'etablissement selectionne, ou `null`.
+ *
+ * `null` veut dire « pas de source pour ce widget ici », et **pas** « panne » : la rangee reste
+ * affichee et ouvre sa porte. C'est la meme regle que pour `serviceEtablissement`, appliquee a la
+ * donnee plutot qu'a l'adresse.
+ *
+ * **Le repli sur `portailMessagerie` n'est pas de la nostalgie.** La surcouche de catalogue s'applique
+ * en asynchrone : un appareil qui vient de recevoir cette version de l'application, mais pas encore
+ * la ligne de catalogue qui va avec, n'a que l'ancienne colonne. Sans ce repli, mettre a jour
+ * eteindrait le compteur de messages jusqu'au prochain rafraichissement — une regression invisible,
+ * introduite par une amelioration.
+ */
+export function widgetPublie(point: string): WidgetPublie | null {
+    const etablissement = getEtablissementActif();
+    const declare = etablissement.portailWidgets[point];
+    if (declare !== undefined) return declare;
+
+    if (point === 'messagerie' && etablissement.portailMessagerie !== null) {
+        return { blueprint: etablissement.portailMessagerie, peremptionMin: null };
+    }
+    return null;
 }

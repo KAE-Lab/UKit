@@ -320,16 +320,30 @@ n'ouvre par hasard.
 Fonctionnement de la simulation temporelle :
 
 - `setFakeTime(date)` calcule un décalage entre la date voulue et l'heure réelle, puis **remplace
-  `moment.now`** par une fonction qui applique ce décalage. Tout le code qui date via `moment()` voit
-  donc l'heure simulée — et c'est la raison pour laquelle **le code applicatif date par `moment()` et
-  jamais par `new Date()`**. Un `new Date()` échappe au décalage, ce qui donnait une simulation à
-  moitié appliquée : jusqu'au jalon [6-E](phase-6/6-e-planning.md), simuler un jour de cours ne
-  rouvrait pas un bâtiment, parce que les salles libres lisaient l'heure par l'autre chemin. Les
-  seuls `new Date()` légitimes sont ceux du menu lui-même et les dates passées au calendrier système.
+  `moment.now`** par une fonction qui applique ce décalage. Rien d'autre n'est déplacé : `Date.now()`
+  et `new Date()` continuent de rendre l'heure vraie.
+- **Le code applicatif lit donc l'heure par
+  [`maintenant()`](../src/shared/services/Temps.ts), jamais par `new Date()`.** Ce module n'existe que
+  pour ça : il rend `new Date(moment.now())`, et il donne un **nom** à une règle qui était jusqu'ici
+  seulement écrite. Elle avait déjà été enfreinte deux fois — les salles libres au jalon
+  [6-E](phase-6/6-e-planning.md), où simuler un jour de cours ne rouvrait pas un bâtiment ; puis
+  l'onglet Scolarité le 2026-08-29, où la **date** sous la salutation suivait la simulation (elle
+  passe par `moment`) pendant que la **salutation elle-même** restait sur l'heure réelle. Deux lignes
+  voisines, deux jours différents.
+- **Ce qui garde volontairement l'horloge réelle** : la programmation d'une notification (elle doit
+  sonner à l'heure vraie — voir le dernier point), les horodatages de cache (les simuler ferait
+  expirer ou ressusciter des entrées sans rapport), et les traces de diagnostic.
+- Les fonctions **pures** ne lisent pas l'heure du tout : elles la reçoivent en paramètre
+  (`valeurFraiche`, `choisirSalutation`), et c'est leur appelant qui vient la chercher. C'est ce qui
+  les garde jouables sous vitest.
 - Les caches d'emploi du temps (`@Week…` et `@YYYY/MM/DD`) sont purgés à chaque changement, pour que
   les vues rechargent la bonne date.
-- L'événement `timeMockChanged` est diffusé via `DeviceEventEmitter` ; `DayView` s'y abonne pour
-  régénérer ses listes de jours et de semaines, et `ModMenu` pour rafraîchir son horloge.
+- L'événement `timeMockChanged` est diffusé via `DeviceEventEmitter`. **`rootContainer` s'y abonne et
+  repeint toute l'application** — sans ça, `DayView` était le *seul* écran à réagir, ce qui donnait
+  l'impression que la simulation ne marchait que par endroits (signalé le 2026-08-29 : elle
+  fonctionnait sur une source d'emploi du temps et pas sur l'autre). L'abonnement local de `DayView`
+  reste : il fait plus que rendre à nouveau, il régénère ses listes de jours et de semaines. `ModMenu`
+  s'y abonne pour rafraîchir son horloge.
 - Les notifications planifiées sont **retraduites en temps réel** : `computeRealTriggerTime` retire le
   décalage pour que l'OS déclenche l'alerte au bon moment réel, avec un plancher de 2 s si le calcul
   tombe dans le passé. Un message de retour indique dans combien de secondes réelles la première

@@ -19,7 +19,6 @@ import {
     prenomDepuisIdentite,
     presenterEchec,
     projeterDossier,
-    projeterMessagerie,
 } from './ScolariteMapping';
 
 describe('prenomDepuisIdentite', () => {
@@ -135,33 +134,6 @@ describe('projeterDossier', () => {
         expect(bordeaux.formationAnnee).toBe('2026/2027');
         expect(inp.formation).toBe('Année 2 - Ingénieur Télécommunications');
         expect(inp.formationAnnee).toBe('2026-2027');
-    });
-});
-
-describe('projeterMessagerie', () => {
-    it('rend l entier lu dans le libelle', () => {
-        expect(projeterMessagerie({ boite_de_reception: 'Réception (789)', non_lus: 789 })).toEqual({
-            unreadCount: 789,
-        });
-    });
-
-    it('rend zero quand la boite existe sans parenthese, comme avant la migration', () => {
-        expect(projeterMessagerie({ boite_de_reception: 'Réception', non_lus: null })).toEqual({
-            unreadCount: 0,
-        });
-    });
-
-    it('rend zero, et non null, sur un compteur a zero explicite', () => {
-        expect(projeterMessagerie({ boite_de_reception: 'Réception (0)', non_lus: 0 })).toEqual({
-            unreadCount: 0,
-        });
-    });
-
-    it('distingue « on ne sait pas » de « zero » quand la boite manque', () => {
-        expect(projeterMessagerie({})).toEqual({ unreadCount: null });
-        expect(projeterMessagerie({ boite_de_reception: '', non_lus: null })).toEqual({
-            unreadCount: null,
-        });
     });
 });
 
