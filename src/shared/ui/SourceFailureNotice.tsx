@@ -62,7 +62,10 @@ export function SourceFailureNotice({ failure, theme, onRetry, action, variant =
         <EmptyState
             variant={variant}
             tone={failure.tone}
-            icon="cloud-off-outline"
+            // Le nuage barre dit « source injoignable » — faux quand rien n'est en panne : le lien
+            // iCal attendu est un geste qui manque, et son icone est celle du geste, la meme que la
+            // page qui le recoit et la rangee des Reglages qui y mene.
+            icon={failure.code === 'EDT_LIEN_ATTENDU' ? 'calendar-import' : 'cloud-off-outline'}
             title={Translator.get(failure.titleKey)}
             message={Translator.get(failure.messageKey)}
             theme={theme}

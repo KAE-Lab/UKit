@@ -41,12 +41,18 @@ export function Badge({ label, theme, icon, tone }: BadgeProps) {
             {icon !== undefined ? (
                 <Icon icon={icon} size={14} color={couleur} />
             ) : null}
-            <Text style={{
-                fontSize: tokens.fontSize.sm,
-                fontWeight: tokens.fontWeight.bold,
-                color: couleur,
-                marginLeft: icon !== undefined ? tokens.space.xs : 0,
-            }}>
+            {/* Un libelle long — un nom d'emetteur — se tronque au lieu de deborder de la carte.
+                Sans effet sur les usages courts : une distance ne remplit jamais la pastille. */}
+            <Text
+                numberOfLines={1}
+                style={{
+                    fontSize: tokens.fontSize.sm,
+                    fontWeight: tokens.fontWeight.bold,
+                    color: couleur,
+                    marginLeft: icon !== undefined ? tokens.space.xs : 0,
+                    flexShrink: 1,
+                }}
+            >
                 {label}
             </Text>
         </View>

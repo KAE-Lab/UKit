@@ -13,11 +13,11 @@ L'écran est une suite de sections empilées, sous un titre qui s'efface au déf
 | Section | Contenu |
 |---|---|
 | **Établissement** | l'université sélectionnée (modale de choix, avec confirmation) |
-| **Affichage** | langue (modale à trois choix), filtres d'UE (modale de gestion) |
+| **Affichage** | langue (modale de choix), filtres d'UE (écran dédié) |
 | **Thème** | interrupteur mode sombre |
 | **Notifications** | interrupteur des rappels de cours, curseur de délai |
 | **Lancement** | ouvrir sur le groupe favori, réinitialiser l'application |
-| **Calendrier** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation |
+| **Calendrier** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué |
 
 Le bouton d'action de la barre d'onglets mène à **À propos**.
 
@@ -157,7 +157,22 @@ couvre **les deux causes** : reporté, ou irrésoluble. Le repli reste possible 
 ## Les filtres d'UE
 
 Un filtre masque les cours d'une UE dans le **planning des groupes favoris uniquement**
-([planning.md](planning.md)). La modale propose deux moyens d'en ajouter un :
+([planning.md](planning.md)). Ils ont **leur écran** depuis le 2026-08-30
+([`FiltersScreen`](../../src/features/Settings/screens/FiltersScreen.tsx), route `Filters`), poussé
+comme les autres sous-pages : c'était une modale qui prenait tout l'écran — une sous-page qui ne
+disait pas son nom, sans en-tête de navigation ni geste de retour. L'écran parle le vocabulaire des
+Réglages dont il vient — intertitres en petites capitales, rangées-cartes — et corrige trois défauts
+mesurés de la modale :
+
+- **le retrait passait par un appui long** qu'aucun signe n'annonçait — et le texte français
+  promettait une croix qui n'existait pas. La croix existe désormais, un vrai bouton par filtre ;
+- **le champ de saisie gardait son code après l'ajout**, ce qui se lisait comme un ajout qui n'a pas
+  pris. Les champs se vident ;
+- **l'abonnement aux UE disponibles ne se désabonnait jamais** — il s'empilait à chaque ouverture.
+  `PlanningDataManager` n'exposait littéralement pas de désabonnement ; il en a un maintenant, et
+  l'écran s'en sert.
+
+Deux moyens d'ajouter un filtre, inchangés :
 
 - **saisie libre** d'un code, mis en majuscules automatiquement ;
 - **sélection dans la liste** des UE réellement rencontrées, alimentée par
@@ -187,8 +202,8 @@ aurait vidé son planning sans rien expliquer. Ce qui arrive par là n'a rien de
 ce sont des filtres comme les autres, retirables des deux endroits habituels
 ([scolarite.md](scolarite.md#ce-que-la-connexion-trouve-en-plus-et-quelle-propose)).
 
-> **Capture attendue** — `reglages-filtres.png` : la modale de gestion des filtres d'UE, avec des
-> filtres actifs et la liste des UE suggérées.
+> **Capture attendue** — `reglages-filtres.png` : l'écran des filtres d'UE, avec des filtres actifs
+> et la liste des UE suggérées.
 
 ## Les notifications de cours
 
@@ -319,9 +334,15 @@ une modale :
 
 - **un titre de dialogue ne se crie pas.** Cinq popups sur sept passaient le leur en majuscules, deux
   non ; les `.toUpperCase()` sont retirés, et un titre de 22 en gras n'en a pas besoin ;
-- **la teinte d'un radio ne double pas son glyphe.** Trois listes de choix — calendrier, langue,
-  établissement — coloraient l'option active en `#4caf50`, un vert Material dans une palette bleue.
-  Le glyphe (`radio-button-on`) porte déjà l'état.
+- **un choix se prépare, puis se confirme.** Les trois listes — calendrier, langue, établissement —
+  passaient par des ronds à cocher qui ne ressemblaient à rien d'autre dans l'application, et la
+  langue s'appliquait au premier toucher : on validait en essayant. Elles parlent désormais une seule
+  forme (`SettingsChoicePopup` pour langue et calendrier, la même dans la modale d'établissement) :
+  des **options à la forme des boutons** — contour neutre au repos, fond teinté et coche une fois
+  choisie (`theme.settings.popup.option*`) — puis Annuler / Confirmer. Toucher prépare, Confirmer
+  applique, et rien ne se rejoue si le choix n'a pas changé. L'établissement garde son second temps :
+  l'avertissement de purge, après Confirmer seulement — et Confirmer sur l'établissement déjà actif
+  ferme sans avertir, pour ne pas apprendre à valider sans lire.
 
 ## L'écran À propos
 
@@ -420,8 +441,9 @@ réinitialiser serait un résidu, pas un service. Voir les limites.
 |---|---|
 | [`screens/SettingsScreen.tsx`](../../src/features/Settings/screens/SettingsScreen.tsx) | écran d'onglet : état des réglages, gestionnaires, assemblage des sections et des modales |
 | [`screens/AboutScreen.tsx`](../../src/features/Settings/screens/AboutScreen.tsx) | À propos : historique, sources, contact, crédits, mentions légales |
+| [`screens/FiltersScreen.tsx`](../../src/features/Settings/screens/FiltersScreen.tsx) | l'écran des filtres d'UE : filtres actifs et leur croix, recherche, suggestions, saisie de code |
 | [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les six sections : établissement, affichage, thème, notifications, lancement, calendrier |
-| [`components/SettingsModals.tsx`](../../src/features/Settings/components/SettingsModals.tsx) | modales : langue, filtres d'UE, réinitialisation, extinction de la synchronisation, choix du calendrier |
+| [`components/SettingsModals.tsx`](../../src/features/Settings/components/SettingsModals.tsx) | la modale de choix générique (`SettingsChoicePopup`), ses habillages langue et calendrier, réinitialisation, extinction de la synchronisation |
 | [`components/SettingsInstitutionPopup.tsx`](../../src/features/Settings/components/SettingsInstitutionPopup.tsx) | la modale d'établissement : la liste, puis la confirmation de ce qui sera effacé |
 | [`shared/services/reglagesParEtablissement.ts`](../../src/shared/services/reglagesParEtablissement.ts) | la lecture des réglages cloisonnés par établissement, et les trois migrations de leur forme persistée |
 | [`shared/services/reglagesParEtablissement.test.ts`](../../src/shared/services/reglagesParEtablissement.test.ts) | ses tests, joués par `npm test` |

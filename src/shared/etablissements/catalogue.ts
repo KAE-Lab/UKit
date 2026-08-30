@@ -325,7 +325,9 @@ const SOCLE: Readonly<Record<string, Etablissement>> = {
         // formations que l'application ne sert pas.
         nom: 'Collège Sciences et Technologies',
         nomCourt: 'Collège ST',
-        ville: 'Bordeaux',
+        // La commune du campus, pas la metropole : le college ST est a Talence — « Bordeaux » sous
+        // le nom d'une fac bordelaise ne disait rien a personne.
+        ville: 'Talence',
         // Dans le socle, et pas seulement dans la ligne publiee : la surcouche s'applique en
         // **asynchrone** au lancement, si bien qu'un ecran monte avant elle gardait le repli — le
         // formulaire de connexion s'ouvrait sans logo, puis en avait un si on y revenait plus tard.

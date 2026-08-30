@@ -71,11 +71,11 @@ export function PageScolarite({
                 // au-dessus (ScolariteDashboard), encoche comprise. Cette page n'a donc plus besoin
                 // de connaitre les marges de securite.
                 //
-                // `sm` et non `xs` : c'est **exactement** l'espacement que la grille met entre ses
-                // blocs (`GrilleScolarite.bloc`). La premiere carte se decollait du filet de l'en-tete
-                // de quatre points la ou les suivantes se decollent de huit — un ecart de quatre
-                // points, invisible a la relecture et visible a l'oeil.
-                paddingTop: tokens.space.sm,
+                // `lg` (24) : l'ecart entre les deux sections de la grille — 8 de `bloc` + 16 de
+                // l'intertitre « Tes services ». Depuis que la page ouvre sur un intertitre, c'est
+                // lui la reference : a 8, le premier titre collait au filet de l'en-tete la ou le
+                // second respirait.
+                paddingTop: tokens.space.lg,
                 paddingBottom: tokens.space.xxl + TAB_BAR_HEIGHT,
                 gap: tokens.space.lg,
             }}

@@ -53,6 +53,14 @@ class PlanningDataManagerService {
         this._subscribers[event].push(callback);
     };
 
+    // La meme forme que `SettingsManager.unsubscribe` : ce manager n'en avait pas, donc un ecran
+    // abonne ne pouvait litteralement pas se desabonner — l'ecran des filtres empilait un abonnement
+    // par ouverture.
+    unsubscribe = (event: string, callback: Function) => {
+        if (!this._subscribers[event]) return;
+        this._subscribers[event] = this._subscribers[event].filter((fn) => fn !== callback);
+    };
+
     notify = (event: string, ...args: unknown[]) => {
         if (!this._subscribers[event]) return;
         this._subscribers[event].forEach((fn) => fn(...args));

@@ -40,7 +40,7 @@ src/
     etablissements/ le catalogue des universités : socle embarqué, surcouche publiée, liens d'abonnement, purge
     constants/      URLs externes centralisées
     i18n/           Translator + dictionnaires fr / en / es
-    map/            écran carte (Leaflet + OpenStreetMap en WebView)
+    map/            carte embarquée (MapLibre + OpenFreeMap en WebView)
     navigation/     conteneur racine, navigateurs, helpers d'en-tête
     services/       AppCore (contexte + réglages), notifications, SecureStore, mock temporel
     theme/          tokens de design et thèmes clair / sombre
@@ -166,7 +166,7 @@ consommateurs hors React (tâche de fond, planificateur de notifications). Déta
   ([qualite.md](qualite.md)).
 - **Aucune chaîne visible en dur** : tout passe par `Translator` ([i18n.md](i18n.md)).
 - **Aucune valeur de style en dur** : tout passe par les tokens ([theme.md](theme.md)).
-- **Aucune dépendance cartographique propriétaire** : les cartes sont rendues par Leaflet et
+- **Aucune dépendance cartographique propriétaire** : les cartes sont rendues par MapLibre et
   OpenStreetMap dans une WebView ([cartographie.md](cartographie.md)).
 - **Le réseau est confiné aux services.** Un composant n'appelle jamais `axios` ni `fetch`
   directement. **Un seul écart subsiste** et il est documenté là où il vit :
@@ -236,7 +236,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`App.tsx`](../App.tsx) | point d'entrée : préchargement des ressources, chargement des managers, splash animé |
 | [`app.config.ts`](../app.config.ts) | configuration Expo ([plateforme.md](plateforme.md)) |
 | [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement de la livraison, **du référentiel des lieux et du catalogue des établissements** au démarrage et au retour au premier plan |
-| [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 18 écrans |
+| [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 20 écrans |
 | [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | barre d'onglets personnalisée et son bouton d'action contextuel |
 | [`shared/navigation/NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) | `NavBarHelper`, `withHeaderAnimation`, `withStaticHeader`, boutons d'en-tête |
 | [`shared/aetherius/client.ts`](../src/shared/aetherius/client.ts) | la façade du moteur, instanciée une fois pour toute l'application |
@@ -284,7 +284,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | thèmes clair et sombre, échelle sémantique, styles partagés ([theme.md](theme.md)) |
 | [`shared/i18n/Translator.ts`](../src/shared/i18n/Translator.ts) | service de traduction, langue courante, locale moment ([i18n.md](i18n.md)) |
 | [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 217 clés chacun |
-| [`shared/map/MapScreen.tsx`](../src/shared/map/MapScreen.tsx) | écran carte Leaflet ([cartographie.md](cartographie.md)) |
+| [`shared/map/EmbeddedMap.tsx`](../src/shared/map/EmbeddedMap.tsx) | carte MapLibre embarquée dans les fiches ([cartographie.md](cartographie.md)) |
 | [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème) et `UpdateAlert` (contrôle de version, non rendu) |
 | [`shared/ui/Button.tsx`](../src/shared/ui/Button.tsx) | boutons partagés : retour, accueil, tiroir, ligne de réglage |
 | [`shared/ui/Alerts.ts`](../src/shared/ui/Alerts.ts) | `ErrorAlert` (messages éphémères) |
@@ -298,6 +298,8 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente, en ligne ou plein écran |
 | [`shared/ui/ProgressBar.tsx`](../src/shared/ui/ProgressBar.tsx) | une jauge horizontale, rayon calculé sur la hauteur |
 | [`shared/ui/Icon.tsx`](../src/shared/ui/Icon.tsx) | une icône de l'une ou l'autre famille Material, typée par union discriminée |
+| [`shared/ui/GlypheFiligrane.tsx`](../src/shared/ui/GlypheFiligrane.tsx) | le filigrane d'identité : une grande silhouette en transparence sur une surface unique — le geste de signature, règles d'usage dans son en-tête ([theme.md](theme.md#les-décisions-durables)) |
+| [`shared/ui/PiedFlottant.tsx`](../src/shared/ui/PiedFlottant.tsx) | le pied d'action flottant : le vocabulaire de la barre de recherche — dégradé d'amortissement, bande du fond de page — et le dégagement que l'écran doit lui laisser ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ModMenu.tsx`](../src/shared/ui/ModMenu.tsx) | menu flottant de développement : simulation temporelle et livraison ([qualite.md](qualite.md)) |
 | [`shared/ui/ModMenuBlueprints.tsx`](../src/shared/ui/ModMenuBlueprints.tsx) | son panneau de diagnostic de la livraison ([blueprints.md](blueprints.md)) |
 | [`shared/ui/SourceFailureNotice.tsx`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, tel qu'un écran le montre : message de la famille, bouton Réessayer seulement s'il répare, ou l'**action** qui remplirait l'écran ([blueprints.md](blueprints.md)) |

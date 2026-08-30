@@ -8,7 +8,7 @@ documentés séparément :
 | Restaurants universitaires | [campus-crous.md](campus-crous.md) |
 | Bibliothèques universitaires | [campus-bibliotheques.md](campus-bibliotheques.md) |
 | Salles libres | [campus-salles-libres.md](campus-salles-libres.md) |
-| Vie étudiante (annonces) | [campus-vie-etudiante.md](campus-vie-etudiante.md) |
+| Annonces (section « Vie étudiante » jusqu'au 2026-08-30) | [campus-vie-etudiante.md](campus-vie-etudiante.md) |
 
 Le présent document décrit ce qu'ils **partagent** : le tableau de bord, le socle de liste, les hooks
 communs et les services transverses.
@@ -96,6 +96,7 @@ l'intégralité de la mise en page commune :
 | Recherche | barre flottante en bas (`CampusSearchBar`), optionnelle via `hasSearch` — et **affichée seulement s'il y a quelque chose à chercher** |
 | Filtres | icône dans l'en-tête + modale (`CampusFilterModal`), affichées si `filterOptions` est non vide |
 | État vide | `CampusListEmptyState` dans un [`ScreenState`](../../src/shared/ui/ScreenState.tsx), dont le message distingue « aucune donnée » de « aucun résultat pour ce filtre » |
+| Grille | `numColumns` optionnel, une colonne par défaut. Les annonces rangent leurs affiches à deux par rangée ; les listes de lieux restent une carte par rangée |
 | Défilement | `onAnimatedScroll` transmis, pour l'animation d'en-tête ([navigation.md](../navigation.md)) |
 
 L'écran consommateur ne fournit que la donnée déjà filtrée, son `renderItem`, et le **couple
@@ -107,8 +108,13 @@ c'est ce qui garantit que les quatre listes se comportent identiquement.
 Elle reste **flottante en bas**, à portée de pouce. Ce qui la rendait discrète n'était pas sa hauteur
 mais sa couleur : elle prenait `greyBackground`, c'est-à-dire un fond, et un champ de la couleur d'un
 fond ne se voit pas. Elle porte désormais la surface d'une carte, un filet et l'ombre partagée — un
-objet **posé sur** la liste plutôt qu'un creux dedans — et un dégradé de 24 points amortit le passage
-des cartes sous elle.
+objet **posé sur** la liste plutôt qu'un creux dedans. Depuis le 2026-08-30, elle partage **le fond
+et le gabarit des pieds d'action flottants**
+([`PiedFlottant`](../../src/shared/ui/PiedFlottant.tsx)) : la **fumée de flou** — le contenu
+transparaît flouté et s'estompe sans couture —, la hauteur 50, et **l'assise de la barre
+d'onglets** (`inset − 15`, plancher `sm`), jugée parfaite sur appareil et qui fait loi pour tous les
+flottants. La zone sûre entière a été essayée entre les deux : les objets remontaient trop et
+laissaient un trou dessous.
 
 **Deux choses la séparent du clavier, et il faut les deux.** Le clavier d'iOS est posé *par-dessus*
 l'application, avec des coins supérieurs arrondis et un fond qui laisse passer ce qu'il y a derrière :
@@ -120,10 +126,13 @@ quand le clavier est ouvert : le clavier le masque déjà, et la garder laissait
 points qu'on lit comme un trou. Sous Android la fenêtre se redimensionne, rien de tout cela ne se
 produit, et le mécanisme y est explicitement inactif.
 
-Elle n'apparaît que si `data.length > 0` **ou** si une requête est saisie, et le rembourrage de pied
-de liste suit la même condition. Les deux moitiés comptent : sans la première, une source en panne
-proposait de chercher dans une liste qui n'existe pas ; sans la seconde, taper une recherche sans
-résultat ferait disparaître le champ, et avec lui la croix qui l'efface — on serait enfermé.
+Elle n'apparaît qu'à partir d'un **seuil d'éléments** (`seuilRecherche`, 4 par défaut — le double,
+8, pour la grille d'annonces à deux par rangée) **ou** si une requête est saisie, et le rembourrage
+de pied de liste suit la même condition. Le seuil a remplacé le simple « liste non vide » le
+2026-08-30 : chercher parmi trois cartes n'apporte rien, et la fumée de la barre n'a rien à voiler
+sur une liste qui tient à l'écran — elle flottait sur un aplat nu. La seconde moitié reste non
+négociable : taper une recherche sans résultat ferait disparaître le champ, et avec lui la croix qui
+l'efface — on serait enfermé.
 
 Un cas se distingue et il est délibéré : quand la **couverture est partielle** et la liste vide, le
 bandeau `CampusPartialNotice` reste affiché au-dessus de l'état vide. Il vivait dans l'en-tête de la
@@ -140,9 +149,11 @@ liste, qui n'existe plus dans ce cas ; le taire ferait passer « on n'a pas pu t
 complète le dispositif en installant l'icône de filtre dans l'en-tête, colorée différemment quand un
 filtre est actif, et animée comme le reste de l'en-tête via `globalScrollValues`.
 
-[`CampusCard.tsx`](../../src/features/Campus/components/CampusCard.tsx) est la carte de base : image
-ou visuel de repli, titre, sous-titre, badge de distance, étoile de favori, contenu libre en enfant.
-Les quatre types d'éléments (restaurant, BU, bâtiment, annonce) l'habillent différemment.
+[`CampusCard.tsx`](../../src/features/Campus/components/CampusCard.tsx) est la carte de base des
+**lieux** : image ou visuel de repli, titre, sous-titre, badge de distance, étoile de favori,
+contenu libre en enfant. Les trois types de lieux (restaurant, BU, bâtiment) l'habillent
+différemment ; les annonces, qui affichent des affiches 1:1 et non des photos de lieux, ont leur
+propre carte ([campus-vie-etudiante.md](campus-vie-etudiante.md)).
 
 Depuis le jalon [6-K](../phase-6/6-k-socle-visuel.md), sa **surface** vient de
 [`Card`](../../src/shared/ui/Card.tsx) et son corps se compose de
@@ -190,7 +201,7 @@ adoption transparente.
 | [`CampusDataManager.ts`](../../src/features/Campus/services/CampusDataManager.ts) | manager observable : liste des bâtiments en cache 7 jours |
 | [`CrousService.ts`](../../src/features/Campus/services/CrousService.ts) | API Croustillant |
 | [`LibraryService.ts`](../../src/features/Campus/services/LibraryService.ts) | API Affluences |
-| [`BdeService.ts`](../../src/features/Campus/services/BdeService.ts) | annonces jsDelivr |
+| [`BdeService.ts`](../../src/features/Campus/services/BdeService.ts) | annonces de la [base de publication](../backend.md) |
 | [`FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) | contrats des salles libres et calcul de distance |
 
 ## Décisions de conception
@@ -258,8 +269,10 @@ temps de chargement.
 | [`Dashboard/components/SectionEtatVide.tsx`](../../src/features/Campus/Dashboard/components/SectionEtatVide.tsx) | ce qu'une section montre quand son carrousel n'a rien : filtre, panne, ou absence |
 | [`components/CampusListLayout.tsx`](../../src/features/Campus/components/CampusListLayout.tsx) | socle générique des écrans de liste : liste, recherche, filtres, états |
 | [`components/CampusLayoutComponents.tsx`](../../src/features/Campus/components/CampusLayoutComponents.tsx) | `CampusSearchBar`, `CampusFilterModal`, `CampusListEmptyState`, `CampusFailureNotice`, `CampusPartialNotice` |
-| [`components/CampusCard.tsx`](../../src/features/Campus/components/CampusCard.tsx) | carte de base commune aux quatre types d'éléments ; sa surface vient de `shared/ui/Card` |
+| [`components/CampusCard.tsx`](../../src/features/Campus/components/CampusCard.tsx) | carte de base commune aux trois types de lieux ; sa surface vient de `shared/ui/Card` |
 | [`components/CampusCardParts.tsx`](../../src/features/Campus/components/CampusCardParts.tsx) | `CardTitleRow` (titre + étoile), `DistanceBadge` (distance formatée), `LibraryStatusRow` (état et jauge d'affluence) — du domaine Campus, partagé entre la liste et le tableau de bord |
+| [`components/CampusMapSection.tsx`](../../src/features/Campus/components/CampusMapSection.tsx) | la section « S'y rendre » d'une fiche : la carte du lieu en bannière, partagée par les fiches de restaurant et de BU ([cartographie.md](../cartographie.md)) |
+| [`components/CampusSectionHeader.tsx`](../../src/features/Campus/components/CampusSectionHeader.tsx) | la tête d'une section de fiche : icône dans son carré teinté (`theme.sectionsHeaders`), une couleur par section — le motif de la grille Scolarité, étendu aux fiches |
 | [`components/hooks/useCampusListHeader.tsx`](../../src/features/Campus/components/hooks/useCampusListHeader.tsx) | installe l'icône de filtre animée dans l'en-tête de l'écran |
 | [`hooks/useCampusLocation.ts`](../../src/features/Campus/hooks/useCampusLocation.ts) | position de l'utilisateur, avec repli sur Talence |
 | [`hooks/useCampusPosition.ts`](../../src/features/Campus/hooks/useCampusPosition.ts) | la même position, résolue une fois et rendue en état, pour les écrans de liste |

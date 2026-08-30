@@ -30,7 +30,7 @@ fragilité, extraction, contrat non versionné — ne s'y applique. Ce document 
 | 4 | Croustillant | restaurants CROUS et menus | aucune | faible — API publique documentée. **Deux Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
 | 5 | ~~jsDelivr / `ukit-data`~~ | ~~annonces de vie étudiante~~ | — | **sortie de l'inventaire** — passée en base au jalon [6-B](phase-6/6-b-supabase.md) |
 | 6 | GitHub raw | fichier de version applicative | aucune | faible |
-| 7 | CDN de rendu de carte | tuiles OpenStreetMap, bibliothèque Leaflet | aucune | faible |
+| 7 | CDN de rendu de carte | tuiles OpenFreeMap, bibliothèque MapLibre GL | aucune | faible |
 | 8 | ADE (`ade.bordeaux-inp.fr`) | emploi du temps, par export iCalendar | aucune | moyenne — export anonyme, mais **index de ressource positionnels et projet annuel**. **Deux Blueprints** depuis [6-I](phase-6/6-i-planning-universel.md) |
 | 9 | **N'importe quel export iCalendar**, à l'adresse que l'étudiant colle | emploi du temps | le lien **est** le secret (trousseau) | inconnue par construction — c'est le [repli universel](phase-6/6-j-compte-et-sources-par-etablissement.md) de 6-J. Un Blueprint unique, [`ukit.edt.abonnement`](../blueprints/ukit-edt-abonnement.blueprint.json), demande le lien **verbatim et sans bornes** ; le découpage par date est applicatif, parce que tous les produits n'acceptent pas de paramètres de plage |
 
@@ -669,11 +669,13 @@ en `StrictUndefined`.
 
 ## 7. Rendu cartographique
 
-`MapScreen` charge dans une WebView une page HTML qui référence :
+[`EmbeddedMap`](../src/shared/map/EmbeddedMap.tsx) charge dans une WebView une page HTML qui
+référence :
 
-- `https://unpkg.com/leaflet@1.9.4/dist/leaflet.css` et `leaflet.js` ;
-- les tuiles `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png`
-  (fond CartoDB Voyager, données OpenStreetMap).
+- `https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css` et `maplibre-gl.js` ;
+- le style vectoriel `https://tiles.openfreemap.org/styles/positron` (OpenFreeMap : données
+  OpenStreetMap, sans clé, autorisé en production ; attribution affichée — la politique d'usage des
+  données l'exige).
 
 Détails et raison de ce choix dans [cartographie.md](cartographie.md).
 

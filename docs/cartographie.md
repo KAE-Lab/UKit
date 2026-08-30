@@ -1,56 +1,72 @@
 # Cartographie
 
 UKit affiche des cartes **sans aucune dépendance cartographique native ni service propriétaire** :
-une WebView rend une page Leaflet autonome, sur des tuiles issues d'OpenStreetMap.
+une WebView rend une page MapLibre GL autonome, sur le style Positron servi par OpenFreeMap —
+données OpenStreetMap, sans clé d'API, autorisé en production.
 
-Implémentation : [`src/shared/map/MapScreen.tsx`](../src/shared/map/MapScreen.tsx), route
-`Geolocation` ([navigation.md](navigation.md)).
+Implémentation : [`src/shared/map/EmbeddedMap.tsx`](../src/shared/map/EmbeddedMap.tsx), un composant
+embarqué **dans les fiches** — cours ([planning.md](features/planning.md)), restaurant et
+bibliothèque (via [`CampusMapSection`](../src/features/Campus/components/CampusMapSection.tsx),
+[campus.md](features/campus.md)). Il n'y a plus d'écran carte dédié : il n'était atteignable que par
+deux boutons d'en-tête, c'est-à-dire une capacité cachée, et la fiche de cours montrait déjà la
+sienne dans la page. L'écran `Geolocation`/`MapScreen` a été retiré avec ses boutons le 2026-08-30.
 
 ## Pourquoi ce choix
 
 `react-native-maps` impose Google Maps sur Android, donc une clé d'API, un quota facturable et le
-traçage associé. Le remplacement par Leaflet et OpenStreetMap rend l'application indépendante de tout
-fournisseur payant et évite d'envoyer la position de l'étudiant à un tiers publicitaire. C'est une
-décision structurante du projet : **ne pas réintroduire `react-native-maps`**, même ponctuellement.
+traçage associé. Le rendu libre en WebView rend l'application indépendante de tout fournisseur
+payant et évite d'envoyer la position de l'étudiant à un tiers publicitaire. C'est une décision
+structurante du projet : **ne pas réintroduire `react-native-maps`**, même ponctuellement.
+
+**L'histoire du fond de carte vaut d'être retenue**, parce qu'elle s'est déjà répétée : les tuiles
+CartoDB Voyager sans clé — jolies, « gratuites » — sont passées sous un filigrane « API key
+required » le 2026-08-30. Elles n'étaient gratuites que par tolérance. Les tuiles standard d'OSM,
+réellement publiques, ont un style trop chargé pour une bannière de fiche. Le point d'arrivée est
+**OpenFreeMap** : un service sans clé ni inscription, explicitement autorisé en production, qui sert
+**Positron** — le style épuré dessiné par CARTO, passé en open source. C'est du vectoriel, d'où
+**MapLibre GL** (chargé du CDN comme Leaflet l'était) à la place de Leaflet.
 
 ## Fonctionnement
 
-`generateMapHtml(lat, lng, title, theme)` produit une page HTML complète, injectée dans la WebView
-via `source={{ html }}`. La page :
+`generateMapHtml(markers, theme, zoom)` produit une page HTML complète, injectée dans la WebView via
+`source={{ html }}`. La page :
 
-- charge Leaflet 1.9.4 depuis `unpkg.com` (CSS et JS) ;
-- instancie une carte centrée sur le point demandé au niveau de zoom 16, contrôles de zoom désactivés ;
-- ajoute la couche de tuiles `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png`
-  (fond CartoDB Voyager, données OpenStreetMap), `maxZoom: 19` ;
-- pose un marqueur `L.divIcon` dessiné en HTML : une étiquette portant le titre, colorée avec
-  `theme.primary`, surmontant une flèche SVG. `iconAnchor: [50, 45]` aligne la pointe sur la
-  coordonnée exacte ;
-- masque le contrôle d'attribution par CSS.
+- charge MapLibre GL 4.7.1 depuis `unpkg.com` (CSS et JS) ;
+- instancie une carte sur le style `https://tiles.openfreemap.org/styles/positron`, centrée sur le
+  **premier marqueur** — l'appelant exprime son zoom en niveaux Leaflet (16 par défaut, 17 sur la
+  fiche de cours) et le générateur retranche le cran d'écart de MapLibre, pour que la bascule de
+  moteur ne change le cadrage d'aucune fiche ;
+- désactive la rotation et l'inclinaison : une bannière de fiche se déplace et se zoome, elle ne se
+  penche pas ;
+- agrandit les libellés du style d'un cinquième au chargement, couche par couche et sous garde :
+  Positron est calibré pour un grand écran, et ses noms de rues devenaient illisibles dans une
+  bannière de fiche — qui est aussi passée un cran plus près (`zoom={17}` dans `CampusMapSection`) ;
+- pose un `maplibregl.Marker` à élément HTML par entrée : la même étiquette qu'avant la bascule —
+  titre sur fond `theme.primary`, flèche SVG — ancrée par sa pointe (`anchor: 'bottom'`) ; un cours
+  peut en poser plusieurs, une fiche de campus n'en pose qu'un ;
+- garde **l'attribution accessible**, repliée derrière son bouton d'information au chargement : la
+  politique d'usage des données OSM demande une attribution atteignable, pas une bande dépliée sur
+  une bannière de 180 points — le CSS qui la masquait entièrement, lui, est retiré.
 
 Le thème de l'application est injecté dans le HTML généré : la carte suit donc le mode clair ou
 sombre pour son fond et la couleur du marqueur.
 
-La WebView est rendue avec `scrollEnabled={false}` — le défilement appartient à Leaflet, pas au
-document — sous un bandeau opaque de la hauteur de la zone sûre, puisque l'en-tête de cet écran est
-transparent.
+La WebView est rendue avec `scrollEnabled={false}` — le défilement appartient à la carte, pas au
+document. Le composant remplit son parent : c'est l'appelant qui décide la hauteur (pleine hauteur
+restante sous la fiche de cours, bannière de 180 points dans une fiche de campus) et qui porte la
+surface — rayon, filet, ombre.
 
-> **Capture attendue** — `carte.png` : l'écran carte sur un bâtiment du campus, marqueur étiqueté au
-> thème de l'application.
+Un bouton posé sur la carte ouvre le point dans l'application de cartes du système, via
+`URL.MAP + search/?api=1&query=<lat>,<lng>` — le geste secondaire vit sur la carte, plus dans un
+en-tête.
 
-## Résolution d'une position
+Les coordonnées arrivent toujours en `{ lat, lng }` : c'est la convention de l'application
+(référentiel, bibliothèques), et le `lon` de Croustillant est traduit **à la frontière**, au moment
+de naviguer vers la fiche du restaurant. L'ancien écran acceptait les deux noms, ce qui répandait la
+dualité chez tous ses appelants.
 
-`MapScreen` accepte deux formes de paramètre `location` :
-
-| Forme | Origine | Résolution |
-|---|---|---|
-| `{ lat, lng }` ou `{ lat, lon }` | restaurants CROUS, bibliothèques | utilisée telle quelle |
-| `string` | description de salle issue de Celcat | la partie avant `/` est cherchée comme clé dans `locations.json` |
-
-Les deux noms `lng` et `lon` sont acceptés parce que les fournisseurs ne s'accordent pas :
-Croustillant renvoie `lon`, Affluences et `locations.json` utilisent `lng`.
-
-Un bouton d'en-tête ouvre le point dans l'application de cartes du système, via
-`URL.MAP + search/?api=1&query=<lat>,<lng>`.
+> **Capture attendue** — `fiche-carte.png` : la section « S'y rendre » d'une fiche de restaurant,
+> marqueur étiqueté au thème de l'application.
 
 ## Le référentiel des bâtiments
 
@@ -149,22 +165,24 @@ et au premier lancement :
 
 ## Vérifier
 
-- Ouvrir un cours localisé, toucher le bouton carte : le marqueur doit porter le bon libellé et se
-  situer sur le bon bâtiment.
-- Basculer en mode sombre et rouvrir la carte : fond et marqueur doivent suivre le thème.
-- Depuis une fiche de restaurant ou de BU, vérifier que le bouton carte de l'en-tête ouvre le bon
-  point.
+- Ouvrir un cours localisé : la carte est dans la fiche, le marqueur porte le bon libellé et se situe
+  sur le bon bâtiment.
+- Ouvrir une fiche de restaurant puis une fiche de BU : la section « S'y rendre » est en pied de
+  page, centrée sur le bon point — et absente si le lieu n'a pas de coordonnées, sans carte vide.
+- Basculer en mode sombre et rouvrir une fiche : fond et marqueur doivent suivre le thème.
+- Toucher le bouton posé sur la carte : le point s'ouvre dans l'application de cartes du système.
 
 ## Limites connues
 
-- **Leaflet est chargé depuis un CDN.** Sans connexion, la carte reste vide : la page HTML est locale,
-  mais la bibliothèque et les tuiles ne le sont pas.
+- **MapLibre est chargé depuis un CDN.** Sans connexion, la carte reste vide : la page HTML est
+  locale, mais la bibliothèque et les tuiles ne le sont pas. Le rendu est en WebGL — un appareil ou
+  une WebView qui ne le porte pas laisse la carte vide, sans erreur.
 - **Le socle embarqué est figé dans le binaire**, mais il n'est plus seul : depuis le jalon
   [6-D](phase-6/6-d-campus.md), la table `batiments` le corrige et peut même y ajouter un lieu sans
   release. Ce qui exige toujours une publication de l'application, c'est de garantir qu'un nouveau
   bâtiment est visible **hors ligne et au premier lancement**.
 - **La correspondance dépend du format de description Celcat.** Un changement de format côté serveur
   fait disparaître les boutons de localisation sans erreur visible.
-- **Le bouton d'ouverture de carte est défini dans
-  [`StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx).** Un composant `OpenMapButton`
-  dupliquait ce rôle sans jamais être importé ; il a été supprimé le 2026-08-16.
+- **Une carte dans un défilement capture le geste vertical** : commencer à faire défiler la page le
+  doigt posé sur la bannière déplace la carte, pas la page. C'est le comportement de la fiche de
+  cours depuis toujours, et la bannière de 180 points le rend peu gênant.

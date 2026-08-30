@@ -33,7 +33,7 @@ import { Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
-import style, { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import style, { propsLibelleBouton, tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
 import { tracerPropositions } from '../../../shared/services/PropositionsTrace';
 import { edtPersonnelActif, enregistrerEdtPersonnel } from '../../../shared/etablissements';
@@ -60,10 +60,6 @@ function etatCourant() {
  *
  * Un compteur plutot qu'une copie de l'etat : ces trois valeurs sont lues au moment de decider, et
  * les recopier dans un `useState` creerait un second endroit ou elles peuvent diverger.
- *
- * L'abonnement n'est pas defait du cote du planning — `PlanningDataManager` n'expose pas de
- * desabonnement — et c'est sans consequence ici : ce composant est monte par `rootContainer` pour
- * toute la duree de l'application, comme le menu flottant.
  */
 function useRevision(): number {
     const [revision, setRevision] = useState(0);
@@ -74,6 +70,7 @@ function useRevision(): number {
         SettingsManager.on('filter', rafraichir);
         SettingsManager.on('favoriteGroups', rafraichir);
         return () => {
+            DataManager.unsubscribe('availableUEs', rafraichir);
             SettingsManager.unsubscribe('filter', rafraichir);
             SettingsManager.unsubscribe('favoriteGroups', rafraichir);
         };
@@ -156,7 +153,10 @@ interface SectionProps {
 
 function Section({ theme, icone, titre, aide, children }: SectionProps) {
     return (
-        <View style={{ marginTop: tokens.space.md }}>
+        // Pas de marge propre : c'est le `gap` du conteneur qui espace les sections, d'un seul pas.
+        // Chacune posait la sienne, et l'intro, les sections et les boutons se retrouvaient separes
+        // de trois ecarts differents.
+        <View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: tokens.space.sm }}>
                 <MaterialCommunityIcons name={icone} size={20} color={theme.primary} />
                 <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: theme.font }}>
@@ -251,7 +251,7 @@ export function PropositionsModal() {
                     </View>
                     <Text style={popup.textDescription}>{Translator.get('PROPOSALS_INTRO')}</Text>
 
-                    <ScrollView>
+                    <ScrollView contentContainerStyle={{ gap: tokens.space.lg, paddingVertical: tokens.space.xs }}>
                         {proposition.edt !== null ? (
                             <Section
                                 theme={theme}
@@ -278,10 +278,10 @@ export function PropositionsModal() {
 
                     <View style={popup.buttonContainer as never}>
                         <TouchableOpacity style={popup.buttonSecondary as never} onPress={oublierPropositions}>
-                            <Text style={popup.buttonTextSecondary as never}>{Translator.get('PROPOSALS_SKIP')}</Text>
+                            <Text {...propsLibelleBouton} style={popup.buttonTextSecondary as never}>{Translator.get('PROPOSALS_SKIP')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={popup.buttonMain as never} onPress={confirmer}>
-                            <Text style={popup.buttonTextMain as never}>{Translator.get('PROPOSALS_APPLY')}</Text>
+                            <Text {...propsLibelleBouton} style={popup.buttonTextMain as never}>{Translator.get('PROPOSALS_APPLY')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

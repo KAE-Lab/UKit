@@ -1,6 +1,5 @@
 import React from 'react';
-import { Linking, Text, TouchableOpacity, View } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { Text, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,7 +8,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { getLocations, getLocationsInText, lieuxDesSites, ligneDeSalle } from '../../../shared/services/AppCore';
 import type { LieuDeCours } from '../../../shared/locations/salles';
 import { AppContext } from '../../../shared/services/AppCore';
-import { URL } from '../../../shared/constants/urls';
+import { EmbeddedMap } from '../../../shared/map/EmbeddedMap';
 import { withStaticHeader } from '../../../shared/navigation/NavHelpers';
 import { CourseData } from '../components/CourseCard';
 import { iconeDAnnotation } from '../components/CourseAnnotations';
@@ -48,11 +47,6 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 			locations: [],
 		};
 	}
-
-	onPressExternalMap = () => {
-		let link = URL.MAP + `search/?api=1&query=${this.state.locations[0].lat},${this.state.locations[0].lng}`;
-		Linking.openURL(link).catch((err) => console.error('An error occurred', err));
-	};
 
 	componentDidMount() {
 		this.props.navigation.setParams({ title: this.state.data.UE || Translator.get('DETAILS') });
@@ -97,87 +91,20 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	renderMap(theme: import('../../../shared/theme/Theme').AppThemeType) {
 		if (this.state.locations.length === 0) return null;
 
-		const centerLat = this.state.locations[0].lat;
-		const centerLng = this.state.locations[0].lng;
+		// Le rendu de carte vit dans `shared/map/EmbeddedMap` : la fiche ne fournit que ses marqueurs.
+		// Un lieu du referentiel peut ne pas porter de coordonnees ; il ne fait alors pas de marqueur —
+		// l'ancien code l'interpolait en `undefined` dans le HTML, et la carte echouait en silence.
+		const markers = this.state.locations
+			.filter((location: LieuDeCours) => location.lat !== undefined && location.lng !== undefined)
+			.map((location: LieuDeCours) => ({
+				lat: location.lat as number,
+				lng: location.lng as number,
+				title: location.title || Translator.get('ROOM'),
+			}));
 
-		// Génération du code Leaflet pour tes marqueurs customisés SVG
-		const markersJs = this.state.locations.map((location: LieuDeCours) => {
-			const title = location.title || Translator.get('ROOM');
-			return `
-				var iconHTML = \`
-					<div style="display: flex; flex-direction: column; align-items: center; padding-bottom: 8px;">
-						<div style="background-color: ${theme.primary}; padding: 4px 8px; border-radius: 4px; box-shadow: 0px 4px 6px rgba(0,0,0,0.3);">
-							<span style="color: #FFFFFF; font-weight: bold; font-size: 12px; font-family: sans-serif;">
-								${title}
-							</span>
-						</div>
-						<svg height="10" width="12" style="margin-top: -1px;">
-							<polygon points="0,0 6,10 12,0" fill="${theme.primary}" />
-						</svg>
-					</div>
-				\`;
-				var customIcon = L.divIcon({
-					className: 'custom-marker',
-					html: iconHTML,
-					iconSize: [100, 50],
-					iconAnchor: [50, 45] // Centre parfaitement la pointe de ta flèche sur les coordonnées
-				});
-				L.marker([${location.lat}, ${location.lng}], {icon: customIcon}).addTo(map);
-			`;
-		}).join('\n');
+		if (markers.length === 0) return null;
 
-		// Le code HTML complet embarqué dans l'application
-		const mapHtml = `
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-				<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-				<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-				<style>
-					body { padding: 0; margin: 0; background-color: ${theme.greyBackground}; }
-					html, body, #map { height: 100%; width: 100%; }
-					.leaflet-control-attribution { display: none; } /* Cache le texte OpenStreetMap pour un design plus épuré */
-				</style>
-			</head>
-			<body>
-				<div id="map"></div>
-				<script>
-					var map = L.map('map', {zoomControl: false}).setView([${centerLat}, ${centerLng}], 17);
-					L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-						maxZoom: 19
-					}).addTo(map);
-					${markersJs}
-				</script>
-			</body>
-			</html>
-		`;
-
-		return (
-			<View style={{ flex: 1 }}>
-				<WebView
-					originWhitelist={['*']}
-					source={{ html: mapHtml }}
-					style={{ flex: 1, backgroundColor: theme.greyBackground }}
-					scrollEnabled={false} // Empêche le webview de scroller, c'est la carte qui prend le relais
-					showsVerticalScrollIndicator={false}
-					showsHorizontalScrollIndicator={false}
-				/>
-
-				<View style={{ position: 'absolute', top: tokens.space.sm, right: tokens.space.sm }}>
-					<TouchableOpacity
-						onPress={this.onPressExternalMap}
-						style={{
-							backgroundColor: theme.cardBackground,
-							borderRadius: tokens.radius.md,
-							padding: tokens.space.sm,
-							...tokens.shadow.md as object as object,
-						}}>
-						<MaterialCommunityIcons name="map-search-outline" size={28} color={theme.accent} />
-					</TouchableOpacity>
-				</View>
-			</View>
-		);
+		return <EmbeddedMap markers={markers} theme={theme} zoom={17} />;
 	}
 
 	renderCourseAnnotations(theme: import('../../../shared/theme/Theme').AppThemeType) {

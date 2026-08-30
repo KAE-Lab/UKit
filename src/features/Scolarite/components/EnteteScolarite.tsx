@@ -15,17 +15,22 @@
  *
  * ## Ce qui le remplit
  *
- * **Le logo de l'etablissement, a droite du titre.** Aucun autre grand titre de section n'en porte —
- * ni Planning, ni Campus, ni Reglages —, et c'est une **exception assumee pour cet onglet**, decidee
- * apres l'avoir essaye aux deux endroits. Elle se defend : Scolarite est le seul onglet dont tout le
- * contenu appartient a un etablissement, et c'est donc le seul ou le nommer en tete a un sens.
+ * **Le titre reste « Scolarite »**, comme chaque onglet porte son nom. La salutation a ete le titre
+ * le temps d'un essai (2026-08-30), defait le jour meme — un titre au contenu variable casse sa
+ * ligne au premier prenom compose (voir GreetingBlock).
  *
- * **La fraicheur, sous l'accueil.** Quand les services ont ete relus. Elle rend visible le cache des
- * widgets, qui est sinon une plomberie invisible : une valeur affichee sans date ne dit pas si elle
- * est d'il y a deux minutes ou d'hier soir. Elle n'apparait qu'une fois quelque chose lu.
+ * **Le logo de l'etablissement, en filigrane a droite.** Aucun autre grand titre de section n'en
+ * porte — ni Planning, ni Campus, ni Reglages —, et c'est une **exception assumee pour cet onglet**,
+ * decidee apres l'avoir essaye aux deux endroits. Elle se defend : Scolarite est le seul onglet dont
+ * tout le contenu appartient a un etablissement, et c'est donc le seul ou le nommer en tete a un
+ * sens. Le filigrane est **monochrome et sans fond** (LogoEtablissement) — la vignette sur carre
+ * blanc flottait en theme sombre et restait trop petite, calee sur la seule ligne du titre ; aligne
+ * sur la salutation, le logo peut etre plus grand et accompagne la ligne personnalisee.
  *
- * Les deux ensemble comblaient chacun un manque different — le logo la largeur a cote du titre, la
- * pastille la hauteur sous l'accueil — et les tenir tous les deux garde le meilleur des deux essais.
+ * **La fraicheur n'y est plus** (2026-08-30) : elle qualifiait le cache des widgets, pas la page, et
+ * vit desormais a droite de l'intertitre « En un coup d'oeil » (GrilleScolarite) — au ras de ce
+ * qu'elle mesure. C'est aussi ce qui l'empeche de faire jurisprudence : aucun autre onglet n'a de
+ * cache a peremption, donc aucun autre n'aura la pastille.
  *
  * **Sans logo publie, rien ne se pose a cote du titre** : la pastille de nom prend le relais sur la
  * ligne de contexte. Un pictogramme generique a cote d'un grand titre serait de l'ornement, pas de
@@ -44,44 +49,23 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
-import moment from 'moment';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { Badge } from '../../../shared/ui/Badge';
 import { getEtablissementActif, nomCourtEtablissement } from '../../../shared/etablissements';
 import type { ScolariteColdData } from '../services/ScolariteMapping';
-import type { ValeursWidgets } from '../widgets/runner';
 import GreetingBlock from './GreetingBlock';
 import { LogoEtablissement } from './LogoEtablissement';
-
-/**
- * Quand les services ont ete relus pour la derniere fois, ou `null` si rien ne l'a jamais ete.
- *
- * **La plus recente des lectures**, et non la plus ancienne : la pastille repond a « ca date de
- * quand ? », pas a « qu'est-ce qui traine ? ». Chaque widget a sa propre peremption, donc la plus
- * ancienne serait toujours celle du widget au rythme le plus lent — elle dirait « il y a six heures »
- * sur une page dont la boite vient d'etre relue.
- */
-function derniereLecture(valeurs: ValeursWidgets): string | null {
-    let plusRecente: number | null = null;
-    for (const valeur of Object.values(valeurs)) {
-        const lu = Date.parse(valeur.luLe);
-        if (Number.isFinite(lu) && (plusRecente === null || lu > plusRecente)) plusRecente = lu;
-    }
-    return plusRecente === null ? null : moment(plusRecente).fromNow();
-}
 
 export interface EnteteScolariteProps {
     theme: AppThemeType;
     teinte: string;
     insets: EdgeInsets | null;
     coldData: ScolariteColdData | null;
-    valeurs: ValeursWidgets;
 }
 
-export function EnteteScolarite({ theme, teinte, insets, coldData, valeurs }: EnteteScolariteProps) {
-    const fraicheur = derniereLecture(valeurs);
+export function EnteteScolarite({ theme, teinte, insets, coldData }: EnteteScolariteProps) {
     const logo = getEtablissementActif().logo;
 
     return (
@@ -95,36 +79,49 @@ export function EnteteScolarite({ theme, teinte, insets, coldData, valeurs }: En
                 },
             ]}
         >
-            <View style={styles.rangeeDuTitre}>
-                <Text style={[styles.titre, { color: theme.font }]} numberOfLines={1}>
-                    {Translator.get('SCOLARITY')}
-                </Text>
-                {/*
-                  * Rien ne se pose ici sans logo publie : un pictogramme generique a cote d'un grand
-                  * titre serait de l'ornement. C'est la pastille de nom, plus bas, qui prend le relais.
-                  */}
-                {logo !== null ? (
-                    <LogoEtablissement logo={logo} theme={theme} teinte={teinte} compact />
-                ) : null}
-            </View>
-
+            {/*
+              * Le titre reste « Scolarite » : la salutation a ete le titre le temps d'un essai
+              * (2026-08-30), et il a ete defait le jour meme — un titre au contenu variable casse sa
+              * ligne au premier prenom compose, et la page devenait la seule a ne pas porter son nom.
+              *
+              * Le filigrane s'aligne sur **la salutation**, pas sur le bloc entier : centre sur tout
+              * l'en-tete, il ne repondait ni au titre ni a l'accueil — un entre-deux qui se lisait
+              * comme une indecision. Ancre a la ligne personnalisee, il l'accompagne ; le titre garde
+              * toute sa largeur au-dessus. Sans dossier lu, il se pose sur la ligne du titre.
+              */}
             {coldData !== null ? (
-                <GreetingBlock coldData={coldData} color={teinte} theme={theme} />
-            ) : null}
+                <>
+                    <Text style={[styles.titre, { color: theme.font }]} numberOfLines={1}>
+                        {Translator.get('SCOLARITY')}
+                    </Text>
+                    <View style={styles.corpsEntete}>
+                        <View style={styles.colonne}>
+                            <GreetingBlock coldData={coldData} color={teinte} theme={theme} />
+                        </View>
+                        {logo !== null ? (
+                            <LogoEtablissement logo={logo} theme={theme} teinte={teinte} filigrane style={styles.filigrane} />
+                        ) : null}
+                    </View>
+                </>
+            ) : (
+                <View style={styles.corpsEntete}>
+                    <Text style={[styles.titre, styles.colonne, { color: theme.font }]} numberOfLines={1}>
+                        {Translator.get('SCOLARITY')}
+                    </Text>
+                    {logo !== null ? (
+                        <LogoEtablissement logo={logo} theme={theme} teinte={teinte} filigrane style={styles.filigrane} />
+                    ) : null}
+                </View>
+            )}
 
-            {fraicheur !== null || logo === null ? (
+            {/*
+              * Sans logo publie, la pastille de nom prend le relais : l'alternative n'est jamais un
+              * trou, le nom dit la meme chose en toutes lettres. La fraicheur, elle, est partie
+              * qualifier ce qu'elle mesure : l'intertitre des widgets (GrilleScolarite).
+              */}
+            {logo === null ? (
                 <View style={styles.contexte}>
-                    {logo === null ? (
-                        <Badge label={nomCourtEtablissement()} theme={theme} icon={{ name: 'school-outline' }} />
-                    ) : null}
-                    {fraicheur !== null ? (
-                        <Badge
-                            label={Translator.get('WIDGETS_REFRESHED', fraicheur)}
-                            theme={theme}
-                            icon={{ name: 'refresh' }}
-                            tone="neutral"
-                        />
-                    ) : null}
+                    <Badge label={nomCourtEtablissement()} theme={theme} icon={{ name: 'school-outline' }} />
                 </View>
             ) : null}
         </View>
@@ -142,17 +139,26 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         ...tokens.shadow.sm,
     },
-    rangeeDuTitre: {
+    corpsEntete: {
         flexDirection: 'row',
-        alignItems: 'center',
+        // `flex-end` et non `center` : centre, le logo depassait du haut de la salutation — il se
+        // pose desormais sur le bas de la ligne, comme un texte sur sa ligne d'ecriture.
+        alignItems: 'flex-end',
         gap: tokens.space.md,
+    },
+    colonne: {
+        // Elle prend ce qui reste et pousse le filigrane a droite : c'est le texte qui se
+        // tronquerait, jamais le logo qui sortirait de l'ecran.
+        flex: 1,
+    },
+    filigrane: {
+        // Pose sur le bas de la ligne salutation + date par le `flex-end` du parent ; l'ecart leve
+        // le logo du ras exact du texte, qui se lisait comme une collision.
+        marginBottom: tokens.space.xxs,
     },
     titre: {
         fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold,
-        // Il prend ce qui reste et pousse le logo a droite. `flexShrink` implicite : c'est le titre
-        // qui se tronquerait, jamais le logo qui sortirait de l'ecran.
-        flex: 1,
     },
     contexte: {
         flexDirection: 'row',

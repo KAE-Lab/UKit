@@ -284,8 +284,17 @@ const styles = StyleSheet.create({
         borderRadius: tokens.radius.md,
         borderWidth: 1,
         paddingHorizontal: tokens.space.md,
-        paddingVertical: tokens.space.sm,
-        fontSize: tokens.fontSize.sm,
+        // Un champ `multiline` cale son texte **en haut** : avec 8 points de rembourrage sur une
+        // case de 50, une URL d'une ligne flottait contre le bord superieur, l'air perdue. Le
+        // rembourrage centre la ligne exactement (14 + 22 + 14 = 50) et la case grandit ensuite
+        // avec les liens qui debordent sur deux lignes.
+        // eslint-disable-next-line ukit/no-style-literals -- valeur calculee : (50 - 22) / 2
+        paddingVertical: 14,
+        // `md`, comme les champs du formulaire de connexion : `sm` faisait ce champ plus petit que
+        // tous les autres de l'application.
+        fontSize: tokens.fontSize.md,
+        lineHeight: 22,
+        textAlignVertical: 'center',
     },
     errorRow: {
         flexDirection: 'row',

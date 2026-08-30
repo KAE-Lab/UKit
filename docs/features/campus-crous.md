@@ -23,7 +23,9 @@ Socle commun : [campus.md](campus.md). Source de données : Croustillant, sectio
    (tous / Resto U / Crous Market), mise en favori.
 3. Toucher un restaurant ouvre sa fiche : sélecteur de dates en bandeau, menu du midi et du soir
    détaillé par catégorie.
-4. Un bouton d'en-tête ouvre la carte du restaurant.
+4. La fiche se termine par les horaires puis la carte du restaurant — la section « S'y rendre »
+   ([`CampusMapSection`](../../src/features/Campus/components/CampusMapSection.tsx)), dans la page et
+   non derrière un bouton d'en-tête, comme sur une fiche de cours.
 
 ![La liste des restaurants : distance, favori, et les horaires du fournisseur — « du lundi au vendredi | SELF : 11h30-13h30 | BAR : 8h-14h30 »](../screenshots/crous-liste.png)
 
@@ -63,12 +65,23 @@ Trois décisions, et chacune corrige un essai précédent :
   contrat ne garantit — cette source a déjà changé de forme une fois, et ce fichier en porte la trace ;
 - **en pied.** La raison d'ouvrir cet écran est le menu. Les horaires sont une référence, pas
   l'information principale : en tête, ils passaient devant ;
-- **dans la page, pas derrière un bouton.** Une information se lit, elle ne se déclenche pas — et le
-  bouton qu'on aurait pu poser, à la manière du « Réserver » d'une bibliothèque, **existe déjà en
-  en-tête** : c'est la carte du restaurant.
+- **dans la page, pas derrière un bouton.** Une information se lit, elle ne se déclenche pas. La
+  carte du restaurant a suivi la même règle depuis : elle était un bouton d'en-tête, elle est devenue
+  la section « S'y rendre » en pied de page.
 
-La grammaire est celle d'un repas juste au-dessus : une icône d'accent, un titre, puis une carte. Les
-filets séparent les lignes **sauf autour d'un intertitre** : un titre touche ce qu'il annonce.
+La grammaire est celle d'un repas juste au-dessus : une icône dans son carré teinté, un titre, puis
+une carte. Les filets séparent les lignes **sauf autour d'un intertitre** : un titre touche ce qu'il
+annonce.
+
+**Chaque section de la fiche porte sa couleur** depuis le 2026-08-30
+([`CampusSectionHeader`](../../src/features/Campus/components/CampusSectionHeader.tsx)) : déjeuner en
+orange solaire, dîner en bleu nocturne, horaires en bleu, « S'y rendre » en vert — les index de
+`theme.sectionsHeaders`, la palette du Planning et de la grille Scolarité. Tout était à l'accent, qui
+est la couleur d'action : employé partout, il ne disait plus rien. Les **catégories** d'un menu
+(« Entrées »…) cessent pour la même raison d'être accentuées : ce sont des intertitres en petites
+capitales grises — une catégorie nomme, elle n'agit pas. Et le titre de l'en-tête est « Détails »,
+comme toutes les fiches — le nom du restaurant vit dans le bandeau
+([navigation.md](../navigation.md)).
 
 ![Le menu d'un restaurant un jour de service, bandeau de dates et plats par catégorie](../screenshots/crous-menu.png)
 
@@ -251,7 +264,7 @@ de parité ([tools/parity/README.md](../../tools/parity/README.md)).
 | Fichier | Rôle |
 |---|---|
 | [`Crous/CrousScreen.tsx`](../../src/features/Campus/Crous/CrousScreen.tsx) | liste des restaurants : composition, tri, filtres, recherche |
-| [`Crous/CrousMenuScreen.tsx`](../../src/features/Campus/Crous/CrousMenuScreen.tsx) | fiche d'un restaurant : menus par jour et par service, état vide, état d'échec |
+| [`Crous/CrousMenuScreen.tsx`](../../src/features/Campus/Crous/CrousMenuScreen.tsx) | fiche d'un restaurant : menus par jour et par service, horaires, carte « S'y rendre », état vide, état d'échec |
 | [`Crous/components/CrousRestaurantListItem.tsx`](../../src/features/Campus/Crous/components/CrousRestaurantListItem.tsx) | ligne de liste d'un restaurant |
 | [`Crous/components/CrousDateHeader.tsx`](../../src/features/Campus/Crous/components/CrousDateHeader.tsx) | bandeau de sélection du jour dans la fiche |
 | [`Crous/components/CrousMealCard.tsx`](../../src/features/Campus/Crous/components/CrousMealCard.tsx) | carte d'un service (midi ou soir), catégories et plats |

@@ -903,7 +903,147 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   désormais par la même purge que le changement d'établissement. Trouvé sur appareil, pendant la
   campagne de vérification du jalon 6-G.
 
+### Ajouté (vie étudiante)
+
+- **Une annonce peut porter une galerie et un lieu.** La colonne `images` (tableau d'URLs) affiche
+  ses visuels sous la description, chacun à son ratio ; `lat`/`lng` termine la fiche par la même
+  carte « S'y rendre » que les fiches de restaurant et de BU. Les deux sont facultatives et omises
+  proprement. Le bouton d'action d'un lien web ouvre désormais le **navigateur intégré** au lieu de
+  quitter l'application. La fiche elle-même quitte le texte brut : émetteur en pastille partagée,
+  accroche en ligne d'information — elle débordait de l'écran en pastille étirée — et ses gouttières
+  s'alignent sur celles des boutons et du reste de l'application : le texte flottait plus près du
+  bord que tout le monde. Et la description devient un **mini-langage publiable**, rendu dans le
+  vocabulaire des fiches : `# icone|Titre` fait une tête de section colorée avec son icône (le carré
+  teinté des fiches resto/BU), `- ` fait une puce comme les plats d'un menu, et la colonne
+  `couleur` donne à l'annonce son **identité** — la pastille d'émetteur (sur la fiche comme sur les
+  cartes du campus), l'accroche en pastille assortie multi-ligne, et le départ du cycle des couleurs
+  de sections. Un BDE structure et colore son annonce sans release.
+  [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
+
+- **La fiche d'un bâtiment porte sa carte.** La section « S'y rendre » arrive aussi dans les salles
+  libres, en pied de liste, avec la tête de section verte de la disponibilité — et toutes les pages
+  de détail s'appellent désormais « Détails », le nom du lieu vivant dans leur bandeau. L'état
+  « Bâtiment fermé » prend le même bloc d'état que la journée sans cours du Planning : même nature
+  d'information, même rendu.
+
+- **Les tuiles de la grille Scolarité portent leur silhouette.** Une grande enveloppe, un grand
+  dossier, un livre ouvert en filigrane à ~6 % d'opacité, rognés par le coin bas droit —
+  l'identité en transparence, le geste posé par le logo d'établissement, devenu un composant du
+  socle (`GlypheFiligrane`) avec ses règles d'usage consignées dans les décisions durables.
+
+### Corrigé
+
+- **Les pieds d'action flottent, dans le vocabulaire de la barre de recherche.** Le bouton d'une
+  annonce et la réservation d'une BU deviennent des objets posés sur le contenu — ombre partagée,
+  dégradé d'amortissement au-dessus, comme la recherche des listes Campus — portés par un composant
+  du socle (`PiedFlottant`) et une règle écrite : une action qui survole le contenu parle comme la
+  barre de recherche, un bandeau fixe reste opaque. Le fond des flottants est la **fumée** — un flou
+  progressif teinté du fond de page, jamais opaque : la bande pleine cachait tout sous le bouton et
+  rien au-dessus, et l'agrandir aurait posé un nuage noir en thème sombre. Le gabarit est unifié
+  dans les deux sens : la barre de recherche prend la hauteur du bouton primaire (50), le dégagement
+  du bord des pieds d'action — elle rasait l'indicateur d'accueil — et la même fumée. Sa transition
+  est une **fumée de flou** : un flou plein masqué par un dégradé (`MaskedView`) — le flou lui-même
+  s'estompe continûment, sans jamais avoir de bord — sous un léger voile de lisibilité (~35 %). Cinq
+  formes essayées (bande opaque, bande floue, flou par tranches, voile de teinte, flou masqué) :
+  seule la dernière montre le contenu flouté sans frontière ni nuage. Android, qui ne sait pas
+  masquer un flou natif, reçoit le flou plein sous le voile. [docs/theme.md](docs/theme.md)
+
+- **Les cartes retrouvent un beau fond, réellement gratuit.** CARTO a mis ses fonds sans clé sous
+  filigrane « API key required » ; les tuiles standard d'OSM, publiques, sont trop chargées pour une
+  bannière de fiche. Les cartes passent sur **OpenFreeMap** — le style Positron (celui de CARTO,
+  passé en open source), sans clé, autorisé en production — rendu par MapLibre GL à la place de
+  Leaflet, marqueurs identiques, et l'attribution redevient visible : la politique d'usage des
+  données OSM l'exige. OpenFreeMap rejoint les crédits de l'écran À propos.
+  [docs/cartographie.md](docs/cartographie.md)
+
+- **Les groupes favoris ne disparaissent plus au hasard des redémarrages.** La restauration des
+  réglages notifiait en chemin (la langue avant les favoris), et la sauvegarde déclenchée écrasait
+  alors le stockage avec des favoris vides — perdus au démarrage suivant si aucun réglage ne
+  notifiait ensuite. L'écriture des réglages est désormais verrouillée jusqu'à la fin du chargement.
+  [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md)
+
 ### Modifié
+
+- **La barre d'onglets parle comme les flottants, et Campus gagne son bouton mystère.** La fumée des
+  pieds d'action s'installe derrière la barre d'onglets — elle survole le contenu, elle parle donc
+  pareil. Et l'emplacement d'action de l'onglet Campus, le seul vide des quatre, devient un teaser :
+  contenu flouté, cadenas, modale « Bientôt disponible » — la capacité arrivera sans que la barre
+  change de forme. Les trois boutons d'action existants, écrits en trois copies, deviennent un
+  composant.
+
+- **La recherche arrive sur les annonces, et gagne un seuil partout.** La grille des annonces se
+  cherche par titre, émetteur et accroche. Et la barre n'apparaît plus qu'à partir de quatre
+  éléments (huit pour la grille, qui en range deux par rangée) : chercher parmi trois cartes
+  n'apporte rien, et sa fumée flottait sur un aplat nu. Une requête saisie garde toujours la barre.
+  Au passage, le champ du choix de groupes prend le gabarit commun (hauteur 50), et les titres de
+  sous-pages passent en 18 demi-gras, la métrique des barres d'iOS — un 22 gras claquait seul sur un
+  fond profond, un titre de barre n'est pas un titre de page.
+
+- **Les notes et les examens deviennent un teaser assumé.** Les deux rangées sans contenu de rentrée
+  passent sous un flou (`expo-blur`), un cadenas au centre ; les toucher ouvre une modale
+  « Bientôt disponible », qui garde un lien discret vers le service quand l'établissement en déclare
+  un. Le déclencheur est la donnée — un widget sans Blueprint publié — donc le jour où la partie 2 de
+  la v6 publie la source, le flou tombe sans mise à jour.
+  [docs/features/scolarite.md](docs/features/scolarite.md)
+
+- **Le logo de l'établissement devient un filigrane.** Monochrome, sans fond ni filet — l'usage
+  « niveaux de gris » d'un kit de marque —, plus grand que l'ancienne vignette sur carré blanc qui
+  flottait en thème sombre, et centré sur la hauteur du bloc titre + accueil + date, ce qui l'ancre
+  au texte. Sa taille se calcule du **ratio mesuré** du logo : une hauteur commune égalise la masse
+  visuelle entre un logotype étiré et un logo trapu. Le titre reste « Scolarité » : la salutation a
+  été le titre le temps d'un essai, défait le jour même — un titre au contenu variable casse sa
+  ligne au premier prénom composé. Et la **fraîcheur** (« mis à jour il y a 12 min ») quitte
+  l'en-tête pour la droite de l'intertitre « En un coup d'œil » : elle qualifie le cache des widgets,
+  pas la page.
+
+- **Le violet redevient la couleur d'action, partout.** Les titres de sous-pages passent en neutre —
+  un titre en couleur d'action se lit comme un bouton — et les deux fiches qui surchargeaient le leur
+  en violet ne le font plus. Les catégories d'un menu (« Entrées »…) deviennent des intertitres en
+  petites capitales, et les sections des fiches de restaurant et de BU gagnent **une couleur par
+  section** (déjeuner solaire, dîner nocturne, horaires, « S'y rendre ») — la palette du Planning et
+  de la grille Scolarité, au lieu d'un accent employé partout. L'écran des filtres efface son titre
+  au défilement, comme les autres. Et une journée sans cours s'illustre de **confettis** : c'est une
+  bonne nouvelle, l'icône sourit, le texte ne change pas.
+  [docs/theme.md](docs/theme.md), [docs/features/campus-crous.md](docs/features/campus-crous.md)
+
+- **Les filtres d'UE ont leur écran, et les modales de choix parlent la langue de l'application.**
+  Les filtres quittent leur modale plein écran — une sous-page qui ne disait pas son nom — pour un
+  écran poussé au vocabulaire des Réglages, où retirer un filtre est une **croix visible** au lieu
+  d'un appui long qu'aucun signe n'annonçait ; le champ se vide après l'ajout, et un abonnement qui
+  s'empilait à chaque ouverture est défait. Les choix de langue, de calendrier et d'établissement
+  remplacent leurs ronds à cocher par des **options à la forme des boutons** — contour au repos, fond
+  teinté une fois choisie — suivies d'un bouton Confirmer : toucher prépare, Confirmer applique.
+  L'établissement garde son avertissement de purge, après Confirmer seulement. La modale des
+  propositions d'après-connexion aligne ses espacements au passage.
+  [docs/features/settings.md](docs/features/settings.md)
+
+- **La page Scolarité respire.** Deux intertitres en petites capitales — « En un coup d'œil », « Tes
+  services » — séparent les flux des portes, le chiffre d'une tuile et son unité partagent une même
+  ligne de base (« **790** non lus ») au lieu de s'empiler dans un carré trop haut, le milieu des
+  tuiles se centre au lieu de laisser un trou
+  quand il n'y a pas de chiffre, les unités s'accordent (« 1 non lu », « 1 document »), le logo
+  d'établissement gagne un filet qui l'ancre en thème sombre, et la salutation revient à
+  l'essentiel : « Bonjour » de 4 h à 19 h, « Bonsoir » ensuite, l'anniversaire par-dessus tout — les
+  variantes de circonstance restent possibles par une règle publiée.
+  [docs/features/scolarite.md](docs/features/scolarite.md)
+
+- **La carte d'un restaurant ou d'une BU vit dans sa fiche.** Elle était un écran à part, derrière un
+  bouton d'en-tête facile à ne jamais découvrir ; elle est désormais une section « S'y rendre » en
+  pied de fiche, en bannière, comme la fiche de cours l'a toujours fait. L'écran carte plein-page et
+  ses boutons disparaissent — le plan externe s'ouvre depuis le bouton posé sur la carte. Au passage,
+  le rendu Leaflet écrit deux fois (fiche de cours, écran carte) devient un composant unique, et la
+  fiche d'un restaurant ne charge plus son menu deux fois à l'ouverture.
+  [docs/cartographie.md](docs/cartographie.md)
+
+- **Les annonces prennent le format de leurs visuels : l'affiche.** Les communications associatives
+  sont des carrés 1:1, pas des photos paysage — les cartes affichent désormais le visuel carré et
+  plein cadre, avec un pied minimal (titre, émetteur en pastille) : l'affiche porte déjà la date, le
+  lieu et le tarif, l'accroche ne les répète plus que sur la fiche. Une affiche n'est **jamais
+  recadrée** : entière, sur un fond flou tiré d'elle-même quand son format n'est pas exactement
+  carré. Le carrousel du tableau de bord montre environ deux affiches au lieu d'une, la liste
+  complète devient une **grille de deux colonnes**, et la fiche épouse le ratio du visuel au lieu de
+  le réduire dans un bandeau paysage.
+  [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
 
 - **Les Blueprints de portail sont renommés** `ukit.portail.bordeaux.*`, et leurs secrets deviennent
   `portail_user` / `portail_pass` — neutres vis-à-vis de l'établissement, sans quoi chaque nouvelle
@@ -932,6 +1072,55 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   [docs/qualite.md](docs/qualite.md)
 - **Suppression de tous les types `any`** hérités de la migration, hors onze occurrences résiduelles
   signalées en avertissement.
+- **Les salles libres sont sectionnées par étage**, du plus bas au plus haut : la question qu'on se
+  pose devant la liste n'est pas « quelle salle » mais « combien de marches ». L'étage se déduit du
+  chiffre des centaines du numéro de salle — 003 au rez-de-chaussée, 103 au premier — convention
+  valable pour tout bâtiment du campus ; les salles sans numéro ferment la marche dans « Autres
+  salles ». Dans chaque étage, le tri par durée reste.
+- **Sur un campus non relié, l'onglet Scolarité devient un teaser — et le bouton Groupes aussi.**
+  L'icône passe sous le voile flouté à cadenas — le vocabulaire du bouton mystérieux de Campus — et
+  le toucher ouvre une modale dédiée dont l'action mène au formulaire de demande de campus. Le bouton
+  Groupes suit le même sort quand l'emploi du temps passe par un lien personnel : la recherche n'a
+  rien à chercher dans un inventaire qui n'existe pas. L'adresse du formulaire vient du catalogue
+  (`services.adaptation`), comme celle de l'état vide : la publier ou la changer reste une
+  publication, pas une release. La ligne « Autre université » du catalogue devient « Autre campus » —
+  c'est la commune du campus qui compte dans toute l'application, pas l'institution.
+- **Passe éditoriale sur le français.** Le tutoiement ne reste que là où l'application s'adresse
+  vraiment à l'utilisateur — questions d'accueil, gestes demandés, permissions — et les tournures
+  impersonnelles reprennent le reste ; les majuscules à l'anglaise disparaissent (« Vie étudiante »,
+  « Salles libres ») ; les modales de teaser disent seulement que ça arrive, sans justifier ; les
+  abréviations « sync. » redeviennent des mots. Les messages qui désignaient « cette université »
+  alors qu'ils peuvent s'afficher sur « Autre campus » — où aucune université n'est désignée — sont
+  reformulés en neutre : l'invitation à coller le lien iCal parle du lien, plus d'une fac fantôme.
+  L'anglais et l'espagnol ne suivent que là où le sens a changé.
+- **La modale de filtres des listes Campus rejoint le dialecte des Réglages.** Ses ronds à cocher
+  étaient le dernier vestige de l'ancien style de choix, effacé partout ailleurs à la refonte : les
+  options prennent la forme des boutons de l'application, coche à droite, emplacement réservé. Pas
+  de bouton Confirmer, et c'est un choix — un filtre s'applique et se voit immédiatement derrière la
+  modale. Les filtres des restaurants se renomment au passage : « Restaurants » et « Crous Market’ »
+  — le nom de l'enseigne, invariable, pas de pluriel à inventer.
+- **Un bâtiment fermé dit « Fermé ».** Le badge des cartes de salles libres empruntait le « Fermée »
+  des bibliothèques, féminin à tort ici.
+- **Les sections Campus perdent « universitaires »** : « Restaurants » et « Bibliothèques » — dans
+  l'onglet Campus, le périmètre est évident, et les sous-pages portaient déjà les formes courtes. Le
+  mot ne survit que là où il précise : les états vides, le descripteur de type d'une fiche, le compte
+  et la session universitaires. Et « Vie étudiante » devient **« Annonces »** : le nom administratif
+  ne disait pas le contenu, et toute la grammaire de la section — recherche, états vides, fiches —
+  parlait déjà d'annonces.
+- **La rangée « Lien iCal » des Réglages retrouve son icône.** `event-note` n'existe pas chez
+  MaterialCommunityIcons et rendait un point d'interrogation ; la rangée prend `calendar-import`,
+  l'icône de la page qu'elle ouvre. L'état vide du Planning qui attend le lien la prend aussi : le
+  nuage barré dit « source injoignable », faux quand rien n'est en panne — il manque un geste, et
+  l'icône est celle du geste, la même aux trois endroits du parcours.
+- **Un libellé de bouton de dialogue ne se plie plus jamais sur deux lignes.** « Demander mon
+  campus », plié en deux, faisait grandir son bouton et déséquilibrait la rangée. Toutes les modales
+  posent désormais les mêmes props sur leurs libellés (`propsLibelleBouton`, une seule ligne qui
+  rétrécit légèrement quand la place manque), et la modale du campus emploie la forme courte
+  « Demander » — son titre porte déjà le contexte.
+- **Le logo du formulaire de connexion passe en filigrane**, comme l'en-tête du tableau de bord :
+  silhouette monochrome sans fond ni filet, en plus grand (64 points contre 44) — ici le logo est le
+  héros du bandeau, pas une signature de coin. La vignette blanche à filet était devenue la dernière
+  du dépôt.
 
 ### Corrigé
 
@@ -983,6 +1172,54 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
 - Doublons de notifications lors de replanifications successives.
 - Apparence de la section active de la barre de navigation sur Android.
 - Erreurs de typage introduites par la migration TypeScript.
+- **L'icône de « Forcer la synchronisation » partait dans tous les sens.** Deux défauts empilés :
+  l'animation visait `360` là où l'interpolation attendait la borne `1` — un tour par milliseconde
+  environ — et, le rythme corrigé, la rotation pivotait autour du coin haut gauche et non du centre.
+  L'animation maison est retirée : pendant la synchronisation, l'icône cède la place à l'indicateur
+  d'activité natif, le vocabulaire des tuiles Scolarité en lecture. Au repos, le glyphe passe à la
+  variante MaterialIcons, droite — celle de MaterialCommunityIcons est dessinée en diagonale et
+  semblait figée de travers.
+- **Deux surfaces dérogeaient à la gouttière de 16 points.** Les cases de salles libres et la case
+  d'horaire des fiches de bibliothèque cumulaient la marge cachée de `course.card` avec celle de
+  leur conteneur : rentrées de 32 points du bord là où toute l'application se tient à 16.
+- **Les cours superposés ne laissent plus de trou sous les cartes courtes.** Dans le carrousel des
+  cours au même créneau, la rangée prend la hauteur du contenu le plus haut ; une carte plus courte,
+  calée en haut, laissait le fond de page apparaître sous elle. Les hauteurs convergent désormais par
+  le **gabarit** — une ligne par texte, titre compris, coupée en points de suspension ; l'UE et le
+  détail du cours portent l'intitulé complet — et la carte s'étire sur le reliquat. Trois formes ont
+  été essayées et défaites : l'étirement seul déplaçait le vide dans la carte, deux lignes de titre
+  bornées laissaient une ligne d'écart, deux lignes étirées traînaient un blanc sous les titres
+  courts. Et
+  l'espace réservé sous le contenu pour l'indicateur de pages — qui rendait les cartes du carrousel
+  plus hautes que les cartes seules — est remplacé par une règle à la ligne : la dernière ligne
+  d'infos laisse le coin droit à l'indicateur.
+- **Une synchronisation de calendrier qui échoue le dit, et ne peut plus geler le bouton.** Les
+  écritures dans le calendrier système peuvent échouer (permission retirée, calendrier supprimé) et
+  aucune n'était rattrapée : l'indicateur tournait alors indéfiniment, sans issue. Le drapeau retombe
+  désormais quoi qu'il arrive, et la pastille d'état des Réglages passe en avertissement — « La
+  dernière synchronisation a échoué » — au lieu de laisser l'échec muet, indiscernable d'un bouton
+  cassé. L'écriture d'un passage complet rejoint `CalendarSyncHelpers`, comme les autres pièces sans
+  état du calendrier.
+- **Un cours sans heure de fin ne fait plus échouer la synchronisation entière.** C'était la cause
+  du gel ci-dessus, démasquée par lui : Celcat sert des cours sans fin, la projection porte alors
+  `end: null`, et le repli de la projection calendrier posait « maintenant » à la place — la fin
+  passait avant le début de tout cours futur, et le calendrier système refusait l'écriture
+  (« The start date must be before the end date »). Un événement non bornable ne se pose plus : les
+  autres passent, et lui tombe dans la purge de fin de passage s'il avait déjà été posé.
+- **Le libellé de l'onglet sélectionné ne passe plus en gras.** Sur iOS, la graisse changeait avec la
+  sélection : le libellé s'élargissait d'un ou deux points et le rang tressaillait à chaque
+  changement d'onglet. La couleur porte l'état à elle seule.
+- **Le champ du lien iCal remplit sa case.** Un champ `multiline` cale son texte en haut : l'URL
+  d'une ligne flottait contre le bord supérieur d'une case de 50 points, en plus petit que tous les
+  autres champs de l'application. Le rembourrage centre désormais la ligne exactement, à la taille
+  des champs du formulaire de connexion. Et la sous-page s'appelle « Lien iCal » — l'ancien titre se
+  faisait couper par la barre de navigation.
+- **La première section de l'onglet Scolarité collait à l'en-tête.** La page ouvrait avec l'écart
+  interne de la grille (8 points) là où ses deux sections s'espacent de 24 ; le premier intertitre
+  paraissait rogné par le filet. C'est l'écart inter-sections qui fait loi.
+- **Les deux établissements bordelais annonçaient « Bordeaux » sous leur nom** dans le choix de
+  l'accueil. Si cette ligne est la commune du campus, c'est **Talence** pour les deux. Corrigé dans
+  la donnée publiée et dans le socle embarqué du catalogue.
 
 ### Retiré
 

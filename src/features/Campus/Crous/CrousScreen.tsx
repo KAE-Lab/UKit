@@ -70,7 +70,8 @@ function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@re
             onPress={() => navigation.navigate('CrousMenu', {
                 restaurantId: item.id,
                 restaurantName: item.title,
-                location: { lat: item.lat, lon: item.lon },
+                // `lng` est la convention de l'application ; le `lon` de Croustillant se traduit ici.
+                location: { lat: item.lat, lng: item.lon },
                 openingLines: item.openingLines
             })}
         />

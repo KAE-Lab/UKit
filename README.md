@@ -45,7 +45,7 @@ bordelaises que le jalon [6-G](docs/phase-6/6-g-etablissements.md) a dû déterr
 Trois principes portent le projet :
 
 - **Souveraineté.** Aucune dépendance à un service propriétaire payant. Les cartes sont rendues par
-  Leaflet sur des données OpenStreetMap, jamais par un fournisseur qui trace l'utilisateur.
+  MapLibre sur des données OpenStreetMap, jamais par un fournisseur qui trace l'utilisateur.
 - **Rien de vous ne transite.** Aucun compte UKit n'est requis, aucune donnée personnelle ne quitte
   l'appareil : l'application interroge les sources **directement depuis l'appareil**, avec la
   connexion de l'utilisateur, et conserve tout localement. Ce qui relève du compte universitaire est
@@ -111,7 +111,7 @@ l'application — sans intermédiaire.
 | ADE Bordeaux INP | emploi du temps | export iCalendar anonyme, aucune authentification |
 | Affluences | bibliothèques, affluence temps réel, horaires | API privée |
 | Croustillant | restaurants CROUS et menus | API publique |
-| OpenStreetMap / CartoDB | fonds de carte | tuiles publiques |
+| OpenFreeMap | fonds de carte (style Positron, données OpenStreetMap) | tuiles vectorielles publiques, sans clé, attribution affichée |
 
 Endpoints, charges utiles, transformations et fragilités connues sont détaillés dans
 **[docs/sources-externes.md](docs/sources-externes.md)** — le document à lire avant toute
@@ -148,7 +148,7 @@ src/
     services/          contexte et réglages, notifications, stockage chiffré, mock temporel
     theme/             tokens de design et thèmes clair / sombre
     i18n/              Translator et dictionnaires fr / en / es
-    map/               écran carte (Leaflet + OpenStreetMap)
+    map/               carte embarquée (MapLibre + OpenFreeMap)
     ui/                composants atomiques
     constants/         URLs externes
     utils/             utilitaires de formatage
@@ -212,7 +212,7 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Architecture par domaine de navigation** — `features/` autonomes + `shared/` transverse,
   migration TypeScript intégrale, règles ESLint d'architecture en place.
   [docs/architecture.md](docs/architecture.md), [docs/conventions.md](docs/conventions.md)
-- [x] **Navigation** — pile principale de 18 écrans, quatre onglets, barre d'onglets personnalisée
+- [x] **Navigation** — pile principale de 20 écrans, quatre onglets, barre d'onglets personnalisée
   avec bouton d'action contextuel, animation d'en-tête au défilement centralisée.
   [docs/navigation.md](docs/navigation.md)
 - [x] **Thème** — tokens de design (espacements, rayons, typographie, ombres), **échelle de couleurs
@@ -243,8 +243,9 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Persistance locale** — managers observables, caches à expiration pour les listes de
   référence, cache de repli hors ligne pour l'emploi du temps, stockage chiffré pour le compte
   universitaire. [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md)
-- [x] **Cartographie libre** — Leaflet et OpenStreetMap en WebView, marqueur au thème de
-  l'application, référentiel de 73 bâtiments embarqué dans le binaire et corrigeable à distance. Où se
+- [x] **Cartographie libre** — MapLibre et OpenFreeMap (données OpenStreetMap) en WebView, marqueur au thème de
+  l'application, carte **embarquée dans les fiches** (cours, restaurant, BU) plutôt que sur un écran
+  à part, référentiel de 73 bâtiments embarqué dans le binaire et corrigeable à distance. Où se
   donne un cours **se lit** désormais dans un champ que la source déclare, au lieu d'être deviné dans
   du texte libre : deux causes indépendantes faisaient disparaître la carte d'une fiche de cours, sans
   jamais afficher d'erreur. [docs/cartographie.md](docs/cartographie.md)
@@ -270,11 +271,13 @@ livré ; elle est mise à jour à chaque contribution.
   iCalendar de son serveur ADE : une seconde source de planning, choisie par le catalogue, sans qu'un
   seul écran apprenne qu'il en existe deux. Depuis 6-J, **le compte se propose dès l'accueil** et
   l'application accepte un **lien d'abonnement collé** : une fac qu'on n'a pas portée devient
-  utilisable sans écrire une ligne. Le volet 1 est clos ; **le socle visuel est posé** (6-K), **la première
-  session d'écran est faite** — la Scolarité, qui a commencé par une sonde des deux portails et en a
-  rapporté la formation, les documents locaux et la fin des sélecteurs positionnels — et restent les
-  sessions des annonces et des réglages, puis la clôture (6-Z) :
-  [docs/phase-6/README.md](docs/phase-6/README.md).
+  utilisable sans écrire une ligne. Le volet 1 est clos ; **le socle visuel est posé** (6-K), **la session
+  Scolarité est faite** — elle a commencé par une sonde des deux portails et en a rapporté la
+  formation, les documents locaux et la fin des sélecteurs positionnels — **la session annonces
+  aussi** (cartes au format affiche 1:1, liste en grille) ; reste la session des réglages, puis la
+  clôture (6-Z), qui sort la **v6.0** : la version part en deux temps, et ce qui attend le contenu
+  de la rentrée — mise en avant des annonces, compléments Bordeaux INP, notes — part en v6.1
+  ([docs/phase-6/README.md](docs/phase-6/README.md#la-v6-part-en-deux-temps)).
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
   et l'application démarre et s'utilise sans jamais la joindre. Elle porte aussi, depuis la passe de
@@ -310,7 +313,10 @@ livré ; elle est mise à jour à chaque contribution.
   libre à ce jour. [docs/features/campus-salles-libres.md](docs/features/campus-salles-libres.md)
 - [x] **Campus — vie étudiante** — annonces éditoriales publiées depuis la
   [base](docs/backend.md) sans mise à jour de l'application, avec activation et expiration. Premier
-  écran où une panne de la source **se dit** au lieu d'afficher une liste vide.
+  écran où une panne de la source **se dit** au lieu d'afficher une liste vide. Les cartes sont au
+  **format affiche** — visuel 1:1 plein cadre, jamais recadré, pied minimal avec l'émetteur en
+  pastille — et la liste complète est une grille de deux colonnes ; la fiche épouse le ratio du
+  visuel.
   [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
 - [x] **Scolarité** — connexion CAS, récupération de l'identité au premier login puis rafraîchissement
   léger, compteur de messages non lus, verrou biométrique, navigateur intégré avec remplissage
@@ -380,7 +386,7 @@ document.
 | [docs/inventaire-visuel.md](docs/inventaire-visuel.md) | l'état visuel mesuré du dépôt, avant le socle : littéraux, divergences, manques |
 | [docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md) | les défauts de comportement connus, tenus **à part** de l'esthétique |
 | [docs/i18n.md](docs/i18n.md) | Translator, dictionnaires, ajout d'une chaîne |
-| [docs/cartographie.md](docs/cartographie.md) | Leaflet et OpenStreetMap, `locations.json` |
+| [docs/cartographie.md](docs/cartographie.md) | MapLibre et OpenFreeMap, `locations.json` |
 | [docs/plateforme.md](docs/plateforme.md) | configuration Expo, permissions, build EAS, release |
 | [docs/qualite.md](docs/qualite.md) | portes de qualité, vérification manuelle, simulation temporelle |
 | [docs/features/](docs/features/) | une documentation par domaine fonctionnel |

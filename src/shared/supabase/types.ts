@@ -23,6 +23,12 @@ export interface AnnonceRow {
     readonly accroche: string | null;
     readonly description: string | null;
     readonly image_url: string | null;
+    /** La galerie de la fiche : un tableau JSON d'URLs. La colonne est libre, la projection trie. */
+    readonly images: unknown;
+    readonly lat: number | null;
+    readonly lng: number | null;
+    /** L'identite visuelle : un index de la palette de sections. La projection valide. */
+    readonly couleur: number | null;
     readonly cta_texte: string | null;
     readonly cta_lien: string | null;
     readonly publiee_le: string;

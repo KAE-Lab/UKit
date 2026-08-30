@@ -13,7 +13,8 @@ Socle commun : [campus.md](campus.md). Sources : Celcat (section 1 de
 1. La section du tableau de bord présente les bâtiments en accès libre, triés par distance.
 2. « Voir tout » ouvre la liste : recherche par nom de bâtiment, mise en favori.
 3. Toucher un bâtiment ouvre sa fiche : sélecteur d'heure en bandeau, et la liste des salles libres à
-   cette heure, avec pour chacune la durée de disponibilité restante.
+   cette heure — **sectionnée par étage, du plus bas au plus haut** — avec pour chacune la durée de
+   disponibilité restante.
 
 > **Capture attendue** — `salles-libres-liste.png` : la liste des bâtiments en accès libre.
 >
@@ -150,13 +151,30 @@ l'écran s'ouvre.
 **Le calcul est une fonction pure exportée.** `calculateFreeRooms` ne dépend d'aucun état React : elle
 est testable et réutilisable indépendamment du hook.
 
+**La liste est sectionnée par étage** (2026-08-30), du plus bas au plus haut : la question qu'on se
+pose devant elle n'est pas « quelle salle » mais « combien de marches ». L'étage se déduit du
+**chiffre des centaines** du numéro de salle — 003 au rez-de-chaussée, 103 au premier, 203 au
+deuxième — convention qui vaut pour tout bâtiment du campus. Le numéro se lit dans le nom
+**nettoyé**, jamais dans `fullName` : celui-ci commence par le code du bâtiment (« A28 - … »), dont
+les chiffres rangeraient tout au rez-de-chaussée. Une salle sans numéro (un amphi nommé) rejoint un
+groupe « Autres salles » en fin de liste — la fondre dans le rez-de-chaussée serait une invention.
+Dans chaque étage, le tri par durée décroissante est conservé. `etageDeSalle` et `grouperParEtage`
+sont des fonctions pures de [`FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts),
+testées ([`FreeRoomService.test.ts`](../../src/features/Campus/services/FreeRoomService.test.ts)) ;
+l'intertitre d'étage est celui des catégories de menu et des Réglages — petites capitales grises, il
+nomme, il n'agit pas.
+
 ## Vérifier
 
 - Ouvrir la liste : le ou les bâtiments en accès libre doivent apparaître avec leur distance.
 - Ouvrir une fiche en journée : le sélecteur doit être positionné sur l'heure courante, et les salles
   libres correspondre à la réalité.
+- Les salles doivent être sectionnées par étage, rez-de-chaussée en tête, et les salles sans numéro
+  — s'il y en a — dans « Autres salles » en fin de liste.
 - Sélectionner une heure de forte occupation : la liste doit se réduire.
-- Ouvrir une fiche un dimanche, ou un jour sans horaires : l'état « fermé » doit s'afficher.
+- Ouvrir une fiche un dimanche, ou un jour sans horaires : l'état « Bâtiment fermé » doit s'afficher
+  — le **même bloc d'état que la journée sans cours du Planning** (`ScreenState` + `EmptyState`,
+  2026-08-30) : les deux sont la même nature d'information, ils portaient deux rendus.
 - Pendant les vacances universitaires : l'état « fermé » doit s'afficher via la détection
   `isVacances`.
 - **Hors période universitaire**, le bâtiment est fermé pour de vrai. Le [mock temporel](../qualite.md)
@@ -246,7 +264,7 @@ Deux conséquences à connaître avant d'y toucher :
 | [`FreeRoom/FreeRoomScreen.tsx`](../../src/features/Campus/FreeRoom/FreeRoomScreen.tsx) | liste des bâtiments en accès libre : distance, tri, recherche, favoris |
 | [`FreeRoom/FreeRoomDetailsScreen.tsx`](../../src/features/Campus/FreeRoom/FreeRoomDetailsScreen.tsx) | fiche d'un bâtiment : sélecteur d'heure et salles libres |
 | [`FreeRoom/components/FreeRoomListItem.tsx`](../../src/features/Campus/FreeRoom/components/FreeRoomListItem.tsx) | ligne de liste d'un bâtiment |
-| [`FreeRoom/components/FreeRoomDetailsComponents.tsx`](../../src/features/Campus/FreeRoom/components/FreeRoomDetailsComponents.tsx) | bandeau d'heures, carte de salle libre, états fermé et vide |
+| [`FreeRoom/components/FreeRoomDetailsComponents.tsx`](../../src/features/Campus/FreeRoom/components/FreeRoomDetailsComponents.tsx) | bandeau d'heures, carte de salle libre, états fermé et vide ; la liste porte la tête de section verte ([`CampusSectionHeader`](../../src/features/Campus/components/CampusSectionHeader.tsx)) et accueille en pied la carte « S'y rendre » du bâtiment ([`CampusMapSection`](../../src/features/Campus/components/CampusMapSection.tsx)), comme les fiches de restaurant et de BU |
 | [`FreeRoom/hooks/useFreeRoomsData.ts`](../../src/features/Campus/FreeRoom/hooks/useFreeRoomsData.ts) | chargement de l'occupation et `calculateFreeRooms` (fonction pure) |
 | [`services/FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) | contrats `RoomInfo` / `BuildingInfo` / `FreeRoomSlot` et `getDistanceInKm` |
 | [`services/CampusApiService.ts`](../../src/features/Campus/services/CampusApiService.ts) | joue les deux Blueprints Celcat : la liste des salles, l'occupation d'une journée |

@@ -3,6 +3,7 @@ import { View, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import style, { tokens } from '../../../../shared/theme/Theme';
 import Translator from '../../../../shared/i18n/Translator';
+import { CampusSectionHeader } from '../../components/CampusSectionHeader';
 
 export const getDishIcon = (dishName: string): React.ComponentProps<typeof MaterialCommunityIcons>['name'] => {
     const str = dishName.toLowerCase();
@@ -52,31 +53,42 @@ interface CrousMealCardProps {
 export function CrousMealCard({ mealTitle, categories, mealType, theme }: CrousMealCardProps) {
     if (!categories || categories.length === 0) return null;
 
-    // Le soleil pour le midi, la lune pour le soir
+    // Le soleil pour le midi, la lune pour le soir — et leur couleur suit : orange solaire, bleu
+    // clair nocturne. Les index de `sectionsHeaders`, comme la grille Scolarite (le 4 est un doublon
+    // du 0 en theme sombre, on l'evite).
     const iconHeader = mealType === 'midi' ? 'white-balance-sunny' : 'moon-waning-crescent';
+    const couleur = mealType === 'midi' ? 2 : 5;
 
     return (
-        <View style={{ marginBottom: tokens.space.xl }}>
-            {/* Titre du repas */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.sm, marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}>
-                <MaterialCommunityIcons 
-                    name={iconHeader} 
-                    size={20} 
-                    color={theme.accent ?? theme.primary} 
-                />
-                <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, marginLeft: tokens.space.sm }}>
-                    {mealTitle}
-                </Text>
-            </View>
+        // `md` et non `lg` : les cartes de categories portent deja 8 points de marge basse
+        // (`course.card`), et l'ecart commun des fiches vaut 32 — 8 + 16 + la marge haute de la
+        // tete suivante. A `lg`, ce repas etait la seule section a 40.
+        <View style={{ marginBottom: tokens.space.md }}>
+            <CampusSectionHeader
+                icone={iconHeader}
+                titre={mealTitle}
+                couleur={couleur}
+                theme={theme}
+                style={{ marginTop: tokens.space.sm, marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}
+            />
 
             {/* Liste des catégories */}
             {categories.map((cat, index) => (
-                <View key={index} style={[style.course.card, { 
-                    backgroundColor: theme.cardBackground, 
-                    borderColor: theme.border, 
-                    borderWidth: 1 
+                <View key={index} style={[style.course.card, {
+                    backgroundColor: theme.cardBackground,
+                    borderColor: theme.border,
+                    borderWidth: 1
                 }]}>
-                    <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold, color: theme.accent ?? theme.primary, marginBottom: tokens.space.sm }}>
+                    {/* L'intertitre des Reglages et des horaires : une categorie nomme, elle n'agit
+                        pas — l'accent la faisait passer pour un lien. */}
+                    <Text style={{
+                        fontSize: tokens.fontSize.xs,
+                        fontWeight: tokens.fontWeight.semibold,
+                        color: theme.fontSecondary,
+                        letterSpacing: 0.8,
+                        textTransform: 'uppercase',
+                        marginBottom: tokens.space.sm,
+                    }}>
                         {cat.name}
                     </Text>
                     

@@ -16,12 +16,16 @@ fonctionnalité alimentée par la base**, et le **premier écran branché sur le
 ## Parcours utilisateur
 
 1. La section du tableau de bord présente les annonces actives en carrousel horizontal — c'est la
-   première section, en haut de l'onglet.
-2. « Voir tout » ouvre la liste complète.
-3. Toucher une annonce ouvre sa fiche : visuel, titre, émetteur, étiquette d'information, description
-   longue, et bouton d'action ouvrant un lien externe.
+   première section, en haut de l'onglet. Les cartes sont au **format affiche** : visuel carré,
+   titre et émetteur en pied — environ deux affiches visibles, l'amorce de la suivante dépassant
+   du bord.
+2. « Voir tout » ouvre la liste complète, en **grille de deux colonnes** — avec recherche sur le
+   titre, l'émetteur et l'accroche dès que huit annonces sont publiées : le seuil des listes (4),
+   doublé parce que la grille en range deux par rangée ([campus.md](campus.md)).
+3. Toucher une annonce ouvre sa fiche : visuel au ratio de l'image, titre, émetteur, étiquette
+   d'information, description longue, et bouton d'action ouvrant un lien externe.
 
-> **Capture attendue** — `annonces-liste.png` : la liste des annonces actives.
+> **Capture attendue** — `annonces-liste.png` : la grille des annonces actives.
 >
 > **Capture attendue** — `annonce-detail.png` : une fiche complète, avec émetteur, étiquette et bouton
 > d'action.
@@ -39,12 +43,13 @@ BdeSection (tableau de bord) / BdeScreen (liste)
             ├─ si erreur → describeSupabaseFailure → { ok: false, failure }
             ├─ projection : colonnes de la table → contrat BdeAnnonce (BdeMapping)
             └─ filtre applicatif : expires_at > maintenant, ou pas d'expiration
-  └─ succes → CampusCard → navigation vers BdeDetail
+  └─ succes → BdeAnnonceCard → navigation vers BdeDetail
   └─ echec  → message de la famille + bouton Reessayer
 
 BdeDetailsScreen (params : annonce)
   └─ rendu direct de l'objet reçu, aucun appel réseau
-  └─ Linking.openURL(cta_link) sur le bouton d'action
+  └─ bouton d'action (barre flottante PiedFlottant) : lien web → navigateur intégré,
+     autre schéma (mailto, tel) → Linking.openURL
 ```
 
 La fiche ne recharge rien : l'annonce complète transite par les paramètres de navigation. C'est
@@ -77,10 +82,13 @@ en même temps qu'on change de source aurait mélangé deux changements dont un 
 | `titre` | `title` | |
 | `emetteur` | `issuer_name` | association ou service émetteur |
 | `image_url` | `image_url` | URL du bucket `media` |
+| `images` | `images` | **jsonb**, tableau d'URLs : la galerie de la fiche, sous la description. Une entrée qui n'est pas une chaîne est ignorée, un tableau vide est omis |
+| `lat`, `lng` | `location` | le lieu de l'événement : les **deux** présents, la fiche montre une carte « S'y rendre » — l'un sans l'autre est omis |
+| `couleur` | `couleur` | l'identité visuelle : un index de la palette de sections (0-3, 5) — pastille d'émetteur, icône d'accroche, départ du cycle des sections. Omis si pas un entier positif |
 | `accroche` | `info_label` | étiquette courte : date, lieu, tarif |
 | `description` | `long_desc` | la description longue de la fiche |
 | `cta_texte` | `cta_text` | libellé du bouton d'action |
-| `cta_lien` | `cta_link` | URL ouverte au clic |
+| `cta_lien` | `cta_link` | URL ouverte au clic — dans le **navigateur intégré** pour un lien web, vers le système sinon (mailto, tel) |
 | `publiee_le` | — | jamais affiché ; c'est le tri |
 
 Un champ nul ou vide en base est **omis** du contrat, jamais rendu chaîne vide : la fiche n'affiche
@@ -99,12 +107,45 @@ la politique de lecture, donc une annonce retirée ne sort pas de la base.
 
 **`expire_le` peut rester vide** : l'annonce n'expire alors jamais.
 
+**La description est un mini-langage publiable**, rendu dans le vocabulaire des fiches — chaque
+section a sa **tête colorée avec icône** (le carré teinté des fiches de restaurant et de BU) et sa
+carte, les listes deviennent des **puces** comme les plats d'un menu :
+
+| Ligne | Rendu |
+|---|---|
+| `# Titre` | une section : tête colorée, icône par défaut |
+| `# icone\|Titre` | idem, avec l'icône MaterialCommunityIcons nommée (`calendar-check`, `map-marker`…) |
+| `- élément` | une puce, le point à la teinte de sa section |
+| ligne vide | séparation de paragraphes |
+
+Les couleurs des têtes **tournent** sur la palette des sections (`sectionsHeaders`, l'index 4 évité
+comme partout), à partir de la **couleur d'identité** de l'annonce — la colonne `couleur`, qui
+teinte aussi la pastille d'émetteur (sur la fiche **et** sur les cartes du carrousel et de la
+grille, [`PastilleEmetteur`](../../src/features/Campus/Bde/PastilleEmetteur.tsx)) et l'accroche —
+une pastille du même système, multi-ligne parce qu'elle porte une phrase. Tout vient du texte et de la
+ligne publiés : un BDE structure et colore son annonce **sans release**. Une icône inconnue rend le
+glyphe `?` — visible à la relecture, corrigeable à la publication, jamais un plantage.
+
 Le filtre applicatif date par `moment()` depuis le jalon [6-E](../phase-6/6-e-planning.md), et non
 plus par `new Date()` : la [simulation temporelle](../qualite.md) l'atteint donc, et une annonce
 expirée se vérifie en déplaçant l'heure au lieu d'attendre son échéance.
 
 Les visuels vont dans le bucket `media`, sous `annonces/`, et leur URL publique dans `image_url`.
-Procédure complète et clés : [backend.md](../backend.md#publier).
+**Le format attendu est le carré 1:1** — celui des affiches d'événements — et c'est lui que les
+cartes affichent plein cadre. Un autre format n'est pas rejeté, et n'est **jamais recadré** : la
+carte l'affiche entier sur un fond flou tiré de l'image, et la fiche l'affiche à son ratio, borné
+entre 3:4 et 16:9. Procédure complète et clés : [backend.md](../backend.md#publier).
+
+**La fiche parle le vocabulaire des fiches** (2026-08-30) : l'émetteur est la pastille partagée
+(`Badge`, la même que la carte de liste), l'accroche est une **ligne d'information** et non une
+pastille — elle porte une phrase, et une phrase dans une pastille déborde, c'est ce que l'écran
+faisait. La galerie (`images`) suit la description, chaque image dans le même cadre adaptatif que le
+visuel principal, et le lieu (`lat`/`lng`) se termine par la même section « S'y rendre » que les
+fiches de restaurant et de BU ([`CampusMapSection`](../../src/features/Campus/components/CampusMapSection.tsx)).
+Le bouton d'action **flotte sur le contenu**, dans le vocabulaire de la barre de recherche — objet
+posé avec l'ombre partagée, fumée d'amortissement au-dessus
+([`PiedFlottant`](../../src/shared/ui/PiedFlottant.tsx)) — et l'écran dégage sa hauteur en pied de
+défilement.
 
 Une annonce est le seul contenu dont **nous** publions déjà l'image : la table
 [`visuels`](../backend.md#le-schéma) s'y applique quand même, et c'est délibéré. Elle permet de
@@ -112,6 +153,30 @@ retirer ou de remplacer un visuel sans toucher à la ligne d'annonce — donc sa
 texte en voulant changer une photo.
 
 ## Décisions de conception
+
+**Les cartes sont au format affiche, et l'accroche n'y est pas** (session d'écran du 2026-08-30).
+Les visuels d'annonces sont des affiches 1:1 — le format des communications associatives — qui
+portent déjà la date, le lieu et le tarif : la carte les affiche carrées et plein cadre, avec un
+pied minimal (titre, émetteur). Répéter l'accroche sous l'affiche la dirait deux fois ; elle reste
+sur la fiche, où elle se copie du regard avec la description. La même carte sert au carrousel du
+tableau de bord (largeur ~60 % de l'écran, pour que la suivante dépasse) et à la grille de la liste
+complète — deux largeurs, un seul composant, [`BdeAnnonceCard`](../../src/features/Campus/Bde/BdeAnnonceCard.tsx).
+
+**Une affiche ne se recadre jamais.** Un visuel presque carré perdait son bord — précisément là où
+une affiche écrit la date et le lieu. L'image s'affiche donc entière (`contain`), et une copie
+floutée d'elle-même remplit ce que son format laisse libre du carré : invisible sur un 1:1 exact,
+des bandes aux couleurs de l'affiche sinon — jamais un recadrage, jamais un aplat gris.
+
+**L'émetteur est la pastille de la fiche**, [`Badge`](../../src/shared/ui/Badge.tsx) : la carte et
+la fiche le disent d'une seule voix. Ce choix prépare la partie 2 de la v6 : la pastille a déjà un
+`tone` sémantique, et le jour où les annonces portent une catégorie, la couleur par catégorie est
+un mapping — pas une refonte de carte.
+
+**La fiche épouse le ratio du visuel, borné.** Le bandeau paysage de 250 points réduisait une
+affiche 1:1 à une vignette. Le cadre prend désormais le ratio mesuré de l'image (`Image.getSize`),
+borné entre 3:4 et 16:9 pour qu'un format extrême — story verticale, bannière — ne prenne ni
+n'écrase l'écran. Et **sans visuel, pas de cadre** : la fiche omet ce qui manque au lieu d'afficher
+un rectangle gris qui se lirait comme une image cassée.
 
 **Le tri est explicite.** Une table n'a pas d'ordre : s'en remettre à celui que la base rend ferait
 varier l'affichage sans raison. `publiee_le` décroissant, `id` pour départager à horodatage égal, de
@@ -153,11 +218,21 @@ jsDelivr, et les deux ont quitté la production au jalon 6-B.
 
 Sur appareil, le parcours nominal :
 
-- Ouvrir l'onglet Campus : la section annonces doit être en tête et peuplée.
-- Ouvrir la liste complète puis une fiche : visuel, émetteur, étiquette et **description longue**
-  doivent s'afficher ; le bouton d'action doit ouvrir le lien dans le navigateur système.
+- Ouvrir l'onglet Campus : la section annonces doit être en tête et peuplée, environ deux affiches
+  visibles et l'amorce de la suivante dépassant du bord, l'accroche sur les cartes en moins.
+- Ouvrir la liste complète : une **grille de deux colonnes** ; avec un nombre impair d'annonces, la
+  dernière cellule reste alignée à gauche. Recherche et états inchangés.
+- Ouvrir une fiche : une affiche 1:1 s'affiche plein cadre ; visuel, émetteur en pastille, accroche
+  en ligne d'information et **description longue** doivent s'afficher ; le bouton d'action d'un lien
+  web doit ouvrir le **navigateur intégré**, et son retour ramener à la fiche.
 - Ouvrir une annonce sans `image_url`, sans `info_label` ou sans `cta_link` : la fiche doit rester
-  correcte, les éléments absents simplement omis.
+  correcte, les éléments absents simplement omis — sans visuel, **aucun cadre gris**, le titre
+  ouvre la page. Même règle pour `images` et `lat`/`lng` : pas de galerie vide, pas de carte sans
+  les deux coordonnées.
+- Publier une annonce avec `images` et `lat`/`lng` : la galerie sous la description, chaque image à
+  son ratio, et la carte « S'y rendre » en pied, centrée au bon endroit.
+- Une image paysage (ancien format) doit rester correcte : entière sur son fond flou sur les
+  cartes, bornée à 16:9 sur la fiche — jamais tronquée.
 
 Puis les chemins dégradés, qui doivent produire des écrans **différents** :
 
@@ -207,11 +282,13 @@ message ni bouton.*
 
 | Fichier | Rôle |
 |---|---|
-| [`Bde/BdeScreen.tsx`](../../src/features/Campus/Bde/BdeScreen.tsx) | liste complète des annonces actives |
-| [`Bde/BdeDetailsScreen.tsx`](../../src/features/Campus/Bde/BdeDetailsScreen.tsx) | fiche d'une annonce : visuel, métadonnées, description, bouton d'action |
+| [`Bde/BdeScreen.tsx`](../../src/features/Campus/Bde/BdeScreen.tsx) | liste complète des annonces actives, en grille de deux colonnes |
+| [`Bde/BdeAnnonceCard.tsx`](../../src/features/Campus/Bde/BdeAnnonceCard.tsx) | la carte au format affiche : visuel 1:1, titre et émetteur en pied — partagée par le carrousel et la grille |
+| [`Bde/BdeDetailsScreen.tsx`](../../src/features/Campus/Bde/BdeDetailsScreen.tsx) | fiche d'une annonce : visuel au ratio borné, métadonnées teintées par l'identité, galerie, carte « S'y rendre », bouton d'action |
+| [`Bde/DescriptionAnnonce.tsx`](../../src/features/Campus/Bde/DescriptionAnnonce.tsx) | le mini-langage de description : découpage, têtes de section colorées, puces — la grammaire vit dans son en-tête |
+| [`Bde/PastilleEmetteur.tsx`](../../src/features/Campus/Bde/PastilleEmetteur.tsx) | la pastille d'émetteur teintée par l'identité, et `teinteDAnnonce` — partagées par les cartes et la fiche |
 | [`hooks/useBdeAnnonces.ts`](../../src/features/Campus/hooks/useBdeAnnonces.ts) | le chargement, l'échec retenu, le nouvel essai — partagé par les deux surfaces |
 | [`services/BdeService.ts`](../../src/features/Campus/services/BdeService.ts) | lit la table, rend une liste ou un échec traduit |
 | [`services/BdeMapping.ts`](../../src/features/Campus/services/BdeMapping.ts) | le contrat `BdeAnnonce`, la projection depuis la ligne de base, la péremption |
-| [`Dashboard/components/BdeSection.tsx`](../../src/features/Campus/Dashboard/components/BdeSection.tsx) | le carrousel du tableau de bord |
-| [`Dashboard/components/BdeSectionParts.tsx`](../../src/features/Campus/Dashboard/components/BdeSectionParts.tsx) | la carte d'annonce du carrousel. **La ligne d'échec en est partie** : elle était la troisième copie du même bandeau et rejoint [`SectionEtatVide`](../../src/features/Campus/Dashboard/components/SectionEtatVide.tsx), commun aux quatre sections ([campus.md](campus.md)) |
+| [`Dashboard/components/BdeSection.tsx`](../../src/features/Campus/Dashboard/components/BdeSection.tsx) | le carrousel du tableau de bord. Sa carte vivait dans un `BdeSectionParts.tsx` voisin ; devenue commune à la grille, elle est remontée dans `Bde/` et le fichier a disparu |
 | [`blueprints/ukit-campus-annonces.blueprint.json`](../../blueprints/ukit-campus-annonces.blueprint.json) | témoin du format : le pilote du jalon 6-A, plus joué en production |

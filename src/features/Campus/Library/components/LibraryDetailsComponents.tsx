@@ -157,12 +157,17 @@ export function LibraryOpeningHoursList({ loading, currentDay, theme }: LibraryO
                 currentDay && currentDay.openingHours.length > 0 ? (
                     currentDay.openingHours.map((slot, index) => (
                         <View key={index} style={[style.course.card, {
-                            backgroundColor: theme.cardBackground, 
-                            borderColor: theme.border, 
+                            backgroundColor: theme.cardBackground,
+                            borderColor: theme.border,
                             borderWidth: 1,
                             flexDirection: 'row',
                             alignItems: 'center',
-                            padding: tokens.space.md,
+                            // `course.card` porte des marges cachees (md de chaque cote) qui
+                            // s'ajoutaient au padding de l'ecran : la case d'horaire etait rentree
+                            // de 32 points la ou toute l'application se tient a 16. Meme correction
+                            // que les cases de salles libres.
+                            marginHorizontal: 0,
+                            marginVertical: 0,
                             marginBottom: tokens.space.sm
                         }]}>
                             <MaterialIcons name="schedule" size={24} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.md }} />

@@ -278,17 +278,38 @@ const Theme = {
                 closeIcon: {
                     color: '#C7C7CC',
                 },
-                radioContainer: {
-                    flexDirection:  'row',
-                    alignContent:   'center',
-                    marginTop:      tokens.space.md,
+                /*
+                 * Une option de modale de choix : la forme des boutons de l'application, plus un etat
+                 * selectionne — contour neutre au repos, fond teinte et filet d'accent une fois
+                 * choisie. Remplace les ronds a cocher, qui ne ressemblaient a rien d'autre dans
+                 * l'application.
+                 */
+                option: {
+                    flexDirection:   'row',
+                    alignItems:      'center',
+                    justifyContent:  'space-between',
+                    borderWidth:     1.5,
+                    borderColor:     '#E5E5EA',
+                    borderRadius:    tokens.radius.md,
+                    minHeight:       48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.md,
+                    marginTop:       tokens.space.sm,
                 },
-                radioIconColor: '#007AFF',
-                radioText: {
-                    fontSize:  tokens.fontSize.lg,
-                    marginLeft: tokens.space.md,
-                    color:     '#1C1C1E',
+                optionSelected: {
+                    borderColor:     '#007AFF',
+                    backgroundColor: '#007AFF15',
                 },
+                optionText: {
+                    fontSize:   tokens.fontSize.md,
+                    fontWeight: tokens.fontWeight.semibold,
+                    color:      '#1C1C1E',
+                    flexShrink: 1,
+                },
+                optionTextSelected: {
+                    color: '#007AFF',
+                },
+                optionCheckColor: '#007AFF',
                 filterListContainer: {
                     flex:           1,
                     flexDirection:  'row',
@@ -557,17 +578,33 @@ const Theme = {
                 closeIcon: {
                     color: '#8E8E93',
                 },
-                radioContainer: {
-                    flexDirection: 'row',
-                    alignContent:  'center',
-                    marginTop:     tokens.space.md,
+                /* Le jumeau du bloc clair : memes valeurs, seules les couleurs different. */
+                option: {
+                    flexDirection:   'row',
+                    alignItems:      'center',
+                    justifyContent:  'space-between',
+                    borderWidth:     1.5,
+                    borderColor:     '#38383A',
+                    borderRadius:    tokens.radius.md,
+                    minHeight:       48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.md,
+                    marginTop:       tokens.space.sm,
                 },
-                radioIconColor: '#5E5CE6',
-                radioText: {
-                    fontSize:   tokens.fontSize.lg,
-                    marginLeft: tokens.space.md,
+                optionSelected: {
+                    borderColor:     '#5E5CE6',
+                    backgroundColor: '#5E5CE615',
+                },
+                optionText: {
+                    fontSize:   tokens.fontSize.md,
+                    fontWeight: tokens.fontWeight.semibold,
                     color:      '#FFFFFF',
+                    flexShrink: 1,
                 },
+                optionTextSelected: {
+                    color: '#5E5CE6',
+                },
+                optionCheckColor: '#5E5CE6',
                 filterListContainer: {
                     flex:           1,
                     flexDirection:  'row',
@@ -1194,6 +1231,18 @@ export function toneColor(theme: AppThemeType, tone: SemanticTone): string {
 export function toneSoftColor(theme: AppThemeType, tone: SemanticTone): string {
     return theme[`${tone}Soft` as const];
 }
+
+/**
+ * Les props communes des libelles de boutons de dialogue : un libelle ne se plie JAMAIS sur deux
+ * lignes — il retrecit legerement quand la place manque. Constate sur « Demander mon campus »
+ * (2026-08-30) : plie en deux, le bouton grandissait et desequilibrait toute la rangee. A poser sur
+ * chaque `Text` qui porte un style `buttonText*` de `popup`.
+ */
+export const propsLibelleBouton = {
+    numberOfLines: 1,
+    adjustsFontSizeToFit: true,
+    minimumFontScale: 0.8,
+} as const;
 
 export { tokens, StyleWelcome };
 export default style as typeof style & { Theme: Record<ThemeKey, AppThemeType> };

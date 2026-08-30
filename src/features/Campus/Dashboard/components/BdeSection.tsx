@@ -7,12 +7,14 @@ import Translator from '../../../../shared/i18n/Translator';
 import { SectionHeader } from '../../../../shared/ui/SectionHeader';
 import { LoadingState } from '../../../../shared/ui/LoadingState';
 import { useBdeAnnonces } from '../../hooks/useBdeAnnonces';
-import { BdeAnnonceCard } from './BdeSectionParts';
+import { BdeAnnonceCard } from '../../Bde/BdeAnnonceCard';
 import { SectionEtatVide } from './SectionEtatVide';
 import type { BdeAnnonce } from '../../services/BdeService';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.85;
+// Une affiche 1:1 a 85 % de largeur serait plus haute que large d'ecran : a 60 %, la carte reste
+// lisible et l'amorce de la suivante depasse du bord — le carrousel montre qu'il continue.
+const CARD_WIDTH = Math.round(width * 0.6);
 
 export function BdeSection({ navigation }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) {
     const { themeName } = useContext(AppContext);
@@ -31,6 +33,7 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
             annonce={item}
             width={CARD_WIDTH}
             theme={theme}
+            style={{ marginRight: tokens.space.md }}
             onPress={() => navigation.navigate('BdeDetail', { annonce: item })}
         />
     );
@@ -38,7 +41,7 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
     return (
         <View style={{ marginTop: tokens.space.md }}>
             <SectionHeader
-                title={Translator.get('STUDENT_LIFE')}
+                title={Translator.get('ANNOUNCEMENTS')}
                 theme={theme}
                 onPress={() => navigation.navigate('Bde')}
             />

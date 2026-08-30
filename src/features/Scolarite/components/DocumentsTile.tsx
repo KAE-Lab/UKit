@@ -48,6 +48,8 @@ export function DocumentsTile({ theme, teinte, chargement = false, onPress }: Do
     // fait aucun : elle se contente de compter ce qui est deja la.
     const { documents, relire } = useDocuments(Translator.get('DOCUMENT_ADD_FAILED'));
     const nombre = documents.length;
+    // « 1 document », pas « 1 documents » : l'unite s'accorde, comme sur la tuile de messagerie.
+    const libelle = nombre === 0 ? 'NO_DOCUMENTS_TITLE' : nombre === 1 ? 'DOCUMENT_UNIT_ONE' : 'DOCUMENTS_UNIT';
 
     // A la fin du rangement, relire : la piece vient d'atterrir pendant que l'ecran etait visible,
     // et le focus — qui couvre la navigation — ne se redeclenche pas pour un travail d'arriere-plan.
@@ -63,9 +65,10 @@ export function DocumentsTile({ theme, teinte, chargement = false, onPress }: Do
             teinte={theme.sectionsHeaders[COULEUR] ?? teinte}
             icone={{ name: 'folder-outline' }}
             nombre={nombre > 0 ? nombre : null}
-            libelle={Translator.get(nombre > 0 ? 'DOCUMENTS_UNIT' : 'NO_DOCUMENTS_TITLE')}
+            libelle={Translator.get(libelle)}
             contexte={Translator.get('DOCUMENTS_SUBTITLE')}
             chargement={chargement}
+            glypheDeFond={{ name: 'folder' }}
             onPress={onPress}
         />
     );

@@ -35,7 +35,10 @@ function grandNombre(etat: EtatRangee): number | null {
 function libelle(definition: DefinitionWidget, etat: EtatRangee): string {
     if (etat.nature === 'compte') {
         if (etat.nombre !== null && etat.nombre > 0 && definition.unite !== undefined) {
-            return Translator.get(definition.unite);
+            // « 1 non lu », pas « 1 non lus » : l'unite s'accorde quand la definition le distingue.
+            return Translator.get(
+                etat.nombre === 1 && definition.uniteUn !== undefined ? definition.uniteUn : definition.unite,
+            );
         }
         return Translator.get(definition.zero);
     }
@@ -101,6 +104,7 @@ export function WidgetTile({ definition, etat, contexte = null, teinte, theme, o
             chargement={etat.chargement}
             attenue={etat.nature === 'absent'}
             large={definition.forme === 'heros'}
+            glypheDeFond={definition.glyphe}
             onPress={onPress}
         />
     );

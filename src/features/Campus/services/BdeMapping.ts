@@ -29,6 +29,12 @@ export interface BdeAnnonce {
     title: string;
     issuer_name: string;
     image_url?: string;
+    /** La galerie de la fiche, affichee sous la description. Absente quand rien n'est publie. */
+    images?: string[];
+    /** Le lieu de l'evenement : present seulement quand les deux coordonnees le sont. */
+    location?: { lat: number; lng: number };
+    /** L'identite visuelle : un index de la palette de sections, omis s'il n'est pas un entier positif. */
+    couleur?: number;
     info_label?: string;
     long_desc?: string;
     cta_text?: string;
@@ -38,6 +44,29 @@ export interface BdeAnnonce {
 /** Une colonne nullable rend `null` ; le contrat applicatif, lui, omet ce qu'il n'a pas. */
 function texte(value: string | null | undefined): string | undefined {
     return typeof value === 'string' && value !== '' ? value : undefined;
+}
+
+/**
+ * La galerie, reduite a ce qui est exploitable : un tableau d'URLs non vides.
+ *
+ * Defensive comme toutes les projections du depot — la colonne est un `jsonb` libre cote base, et
+ * une entree qui n'est pas une chaine est **ignoree** plutot que de casser la fiche. Un tableau vide
+ * est omis : la fiche ne rend pas de galerie sans image.
+ */
+function galerie(value: unknown): string[] | undefined {
+    if (!Array.isArray(value)) return undefined;
+    const urls = value.filter((entree): entree is string => typeof entree === 'string' && entree !== '');
+    return urls.length > 0 ? urls : undefined;
+}
+
+/** Le lieu : les deux coordonnees ou rien — une carte a moitie situee serait une carte fausse. */
+function lieu(lat: unknown, lng: unknown): { lat: number; lng: number } | undefined {
+    return typeof lat === 'number' && typeof lng === 'number' ? { lat, lng } : undefined;
+}
+
+/** L'identite visuelle : un entier positif ou rien — l'ecran a son repli, pas besoin d'en inventer. */
+function identite(couleur: unknown): number | undefined {
+    return typeof couleur === 'number' && Number.isInteger(couleur) && couleur >= 0 ? couleur : undefined;
 }
 
 /**
@@ -55,6 +84,9 @@ export function projeterAnnonce(row: AnnonceRow): BdeAnnonce {
         title: texte(row.titre) ?? '',
         issuer_name: texte(row.emetteur) ?? '',
         image_url: texte(row.image_url),
+        images: galerie(row.images),
+        location: lieu(row.lat, row.lng),
+        couleur: identite(row.couleur),
         info_label: texte(row.accroche),
         long_desc: texte(row.description),
         cta_text: texte(row.cta_texte),

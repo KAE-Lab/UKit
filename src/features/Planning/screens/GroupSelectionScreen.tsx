@@ -210,13 +210,17 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
             <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
+                // `greyBackground` reste le bon choix ICI : dans un bandeau fixe opaque, un champ en
+                // creux est le motif des en-tetes iOS — la surface posee est celle des flottants.
                 backgroundColor: theme.greyBackground,
                 borderRadius: tokens.radius.md,
                 paddingHorizontal: tokens.space.md,
                 marginHorizontal: tokens.space.md,
                 marginTop: tokens.space.xs,
                 marginBottom: tokens.space.md,
-                height: 40,
+                // Le gabarit commun des champs de recherche (50, comme la barre des listes Campus) :
+                // a 40, celle-ci etait la seule naine de l'application.
+                height: 50,
             }}>
                 <MaterialCommunityIcons
                     name="magnify"

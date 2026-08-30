@@ -91,6 +91,31 @@ const URLButton = ({ url, title, theme }: URLButtonProps) => {
     );
 };
 
+/** Un credit de fournisseur : le nom en tete de puce, la description, un lien facultatif. */
+function CreditTiers({ nom, description, lien, lienTitre, theme }: { nom: string; description: string; lien?: string; lienTitre?: string; theme: import('../../../shared/theme/Theme').AppThemeType }) {
+    return (
+        <View style={{ marginTop: tokens.space.sm }}>
+            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: 'bold' }}>
+                {`• ${nom}`}
+            </Text>
+            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginLeft: tokens.space.sm }}>
+                {description}
+                {lien !== undefined && lienTitre !== undefined ? (
+                    <>
+                        {' '}
+                        <Text
+                            style={{ color: theme.primary, textDecorationLine: 'underline' }}
+                            onPress={() => Linking.openURL(lien)}
+                        >
+                            {lienTitre}
+                        </Text>
+                    </>
+                ) : null}
+            </Text>
+        </View>
+    );
+}
+
 export interface AboutScreenProps {
     headerPadding?: Record<string, unknown>;
     onAnimatedScroll?: (event: unknown) => void;
@@ -176,29 +201,11 @@ class AboutScreen extends React.Component<AboutScreenProps> {
                             {Translator.get('THIRD_PARTY_DESC')}
                         </Text>
                         
-                        <View style={{ marginTop: tokens.space.sm }}>
-                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: 'bold' }}>
-                                • API Affluences
-                            </Text>
-                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginLeft: tokens.space.sm }}>
-                                {Translator.get('AFFLUENCES_DESC')}
-                            </Text>
-                        </View>
-                        
-                        <View style={{ marginTop: tokens.space.sm }}>
-                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: 'bold' }}>
-                                • API CROUStillant
-                            </Text>
-                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginLeft: tokens.space.sm }}>
-                                {Translator.get('CROUSTILLANT_DESC')}{' '}
-                                <Text
-                                    style={{ color: theme.primary, textDecorationLine: 'underline' }}
-                                    onPress={() => Linking.openURL(URL.CROUSTILLANT_WEBSITE)}
-                                >
-                                    CROUStillant.menu
-                                </Text>
-                            </Text>
-                        </View>
+                        <CreditTiers nom="API Affluences" description={Translator.get('AFFLUENCES_DESC')} theme={theme} />
+                        <CreditTiers nom="API CROUStillant" description={Translator.get('CROUSTILLANT_DESC')} lien={URL.CROUSTILLANT_WEBSITE} lienTitre="CROUStillant.menu" theme={theme} />
+                        {/* Le fond de carte : credite comme les deux autres — la regle du depot pour
+                            toute source publique (CONTRIBUTING). */}
+                        <CreditTiers nom="OpenFreeMap" description={Translator.get('OPENFREEMAP_DESC')} theme={theme} />
                     </Section>
 
                     <Section title={Translator.get('LEGAL_NOTICE')} icon="shield-outline" theme={theme}>

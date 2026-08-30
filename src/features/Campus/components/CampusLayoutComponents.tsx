@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, AppThemeType } from '../../../shared/theme/Theme';
+import { FondDePiedFlottant, VOILE_PIED } from '../../../shared/ui/PiedFlottant';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import type { UkitFailure } from '../../../shared/aetherius';
@@ -16,9 +16,6 @@ interface CampusSearchBarProps {
     theme: AppThemeType;
     insets: EdgeInsets;
 }
-
-/** La hauteur du degrade qui separe la liste de la barre. Assez pour amortir, pas assez pour masquer. */
-const VOILE = 24;
 
 /**
  * La hauteur du clavier, ou `0` quand il est replie. **iOS seulement**, et c'est voulu.
@@ -53,20 +50,11 @@ function useHauteurClavier(): number {
  * Les quatre proprietes d'ombre ecrites a la main sont remplacees par `tokens.shadow.md` — quatre
  * avertissements ESLint en moins, et la meme ombre que les cartes.
  *
- * Le degrade au-dessus n'est pas decoratif : sans lui, les cartes disparaissent d'un coup sous la
- * barre au defilement. `expo-linear-gradient` etait deja en dependance, sans aucun appelant.
- *
- * **Il part du fond a opacite nulle, jamais de `'transparent'`**, et c'est le piege classique du
- * degrade sous React Native : `'transparent'` vaut `rgba(0, 0, 0, 0)`, donc l'interpolation traverse
- * du **noir** de plus en plus opaque. En theme sombre ca ne se voit pas, le fond est deja noir ; en
- * theme clair ca pose une salissure grise en travers de la liste. Le fond a `00` d'alpha interpole
- * dans sa propre teinte et reste invisible dans les deux themes.
+ * Son fond est la **fumee** partagee des flottants du bas (`FondDePiedFlottant`) : le flou
+ * progressif teinte qui amortit le passage des cartes sous la barre — l'histoire du motif, le piege
+ * du `'transparent'` compris, vit dans `shared/ui/PiedFlottant`.
  */
 
-/** Le fond de l'ecran, a opacite nulle : le point de depart honnete d'un degre de voile. */
-function fondTransparent(couleur: string): string {
-    return /^#[0-9a-f]{6}$/i.test(couleur) ? `${couleur}00` : couleur;
-}
 export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder, theme, insets }: CampusSearchBarProps) {
     const hauteurClavier = useHauteurClavier();
 
@@ -99,17 +87,20 @@ export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder,
             behavior={Platform.OS === 'ios' ? 'position' : undefined}
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
         >
-            <LinearGradient
-                colors={[fondTransparent(theme.courseBackground), theme.courseBackground]}
-                style={{ height: VOILE }}
-                pointerEvents="none"
-            />
+            {/* La fumee des flottants du bas (PiedFlottant) : le flou progressif teinte remplace la
+                bande opaque et son degrade — meme role que les pieds d'action, meme fond. */}
+            <FondDePiedFlottant fond={theme.courseBackground} />
             <View style={{
-                backgroundColor: theme.courseBackground,
+                // La fumee au-dessus de la barre, puis le degagement du dessous.
+                paddingTop: VOILE_PIED,
                 /*
                  * La marge de zone sure ne sert qu'a degager l'indicateur d'accueil. Clavier ouvert,
                  * celui-ci est masque : la garder laissait un ruban de vingt points entre la barre et
                  * le clavier, qu'on lit comme un trou.
+                 *
+                 * Clavier ferme, c'est l'assise commune des flottants (`inset - 15`, plancher `sm`) :
+                 * celle de la barre d'onglets, jugee parfaite sur appareil. La zone sure entiere a
+                 * ete essayee — la barre remontait trop et laissait un trou dessous.
                  */
                 paddingBottom: hauteurClavier > 0
                     ? tokens.space.sm
@@ -126,7 +117,9 @@ export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder,
                     borderRadius: tokens.radius.md,
                     paddingHorizontal: tokens.space.md,
                     marginHorizontal: tokens.space.md,
-                    height: 48,
+                    // Le gabarit du bouton primaire (50, LienEdtForm) : la barre et les pieds
+                    // d'action flottants partagent role, largeur et hauteur.
+                    height: 50,
                     ...tokens.shadow.md,
                 }}>
                     <MaterialCommunityIcons
@@ -198,33 +191,39 @@ export function CampusFilterModal({ visible, setVisible, filterOptions, selected
                                 </TouchableOpacity>
                             </View>
 
-                            {filterOptions.map((option) => (
-                                <TouchableOpacity 
-                                    key={option.id}
-                                    onPress={() => { onFilterChange(option.id); setVisible(false); }} 
-                                    style={{ 
-                                        paddingVertical: tokens.space.md, 
-                                        borderBottomWidth: option.id === filterOptions[filterOptions.length - 1].id ? 0 : 1, 
-                                        borderColor: theme.border, 
-                                        flexDirection: 'row', 
-                                        alignItems: 'center' 
-                                    }}
-                                >
-                                    <MaterialCommunityIcons 
-                                        name={selectedFilter === option.id ? "radiobox-marked" : "radiobox-blank"} 
-                                        size={22} 
-                                        color={selectedFilter === option.id ? theme.primary : theme.fontSecondary} 
-                                        style={{ marginRight: tokens.space.sm }} 
-                                    />
-                                    <Text style={{ 
-                                        color: selectedFilter === option.id ? theme.primary : theme.font, 
-                                        fontSize: tokens.fontSize.md, 
-                                        fontWeight: selectedFilter === option.id ? tokens.fontWeight.semibold : tokens.fontWeight.regular,
-                                    }}>
-                                        {option.label}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                            {/*
+                              * L'habillage des modales de choix des Reglages (option en bouton,
+                              * coche a droite) : les ronds a cocher etaient le dernier vestige de
+                              * l'ancien dialecte, efface partout ailleurs a la refonte. Pas de
+                              * bouton Confirmer ici, et c'est un choix : un filtre s'applique et se
+                              * voit immediatement derriere la modale — la ou un reglage confirme
+                              * parce qu'appliquer rejoue quelque chose.
+                              */}
+                            {filterOptions.map((option) => {
+                                const selectionne = selectedFilter === option.id;
+                                const popup = theme.settings.popup;
+                                return (
+                                    <TouchableOpacity
+                                        key={option.id}
+                                        onPress={() => { onFilterChange(option.id); setVisible(false); }}
+                                        style={[popup.option, selectionne ? popup.optionSelected : null] as never}
+                                    >
+                                        <Text
+                                            numberOfLines={2}
+                                            style={[popup.optionText, selectionne ? popup.optionTextSelected : null] as never}
+                                        >
+                                            {option.label}
+                                        </Text>
+                                        {/* L'emplacement de la coche est reserve meme au repos,
+                                            comme aux Reglages : choisir ne retrecit pas le libelle. */}
+                                        <View style={{ width: 20, marginLeft: tokens.space.sm, alignItems: 'flex-end' }}>
+                                            {selectionne ? (
+                                                <MaterialIcons name="check" size={20} color={popup.optionCheckColor as string} />
+                                            ) : null}
+                                        </View>
+                                    </TouchableOpacity>
+                                );
+                            })}
                         </View>
                     </TouchableWithoutFeedback>
                 </View>

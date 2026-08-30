@@ -22,7 +22,8 @@ interface DisplaySectionProps {
     themeSettings: AppThemeType['settings'];
     language: string;
     openLanguageDialog: () => void;
-    openFiltersDialog: () => void;
+    /** Les filtres sont un ecran pousse, plus une modale : la rangee navigue. */
+    openFilters: () => void;
 }
 
 interface InstitutionSectionProps {
@@ -87,7 +88,7 @@ export const InstitutionSection = ({
             <Button
                 theme={themeSettings}
                 onPress={openLienEdt}
-                leftIcon="event-note"
+                leftIcon="calendar-import"
                 leftText={Translator.get('TIMETABLE_LINK')}
                 rightText={Translator.get(lienEdtPose ? 'ACCOUNT_CONNECTED' : 'ACCOUNT_NOT_CONNECTED')}
             />
@@ -105,7 +106,7 @@ export const InstitutionSection = ({
     </>
 );
 
-export const DisplaySection = ({ themeSettings, language, openLanguageDialog, openFiltersDialog }: DisplaySectionProps) => (
+export const DisplaySection = ({ themeSettings, language, openLanguageDialog, openFilters }: DisplaySectionProps) => (
     <>
         <SettingsTextHeader theme={themeSettings} text={Translator.get('DISPLAY')} />
         <Button
@@ -117,7 +118,7 @@ export const DisplaySection = ({ themeSettings, language, openLanguageDialog, op
         />
         <Button
             theme={themeSettings}
-            onPress={openFiltersDialog}
+            onPress={openFilters}
             leftIcon="filter-list"
             leftText={Translator.get('FILTERS')}
             rightText="..."
@@ -225,6 +226,7 @@ interface CalendarSectionProps {
     theme: AppThemeType;
     hasCalendarPermission: boolean;
     lastSyncDate: import('moment').Moment | null;
+    lastSyncFailed: boolean;
     calendarSyncEnabled: boolean;
     toggleCalendarSync: () => void;
     calendarName: string;
@@ -233,7 +235,7 @@ interface CalendarSectionProps {
     selectedCalendar: string | number;
 }
 
-export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, lastSyncDate, calendarSyncEnabled, toggleCalendarSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar }: CalendarSectionProps) => (
+export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, lastSyncDate, lastSyncFailed, calendarSyncEnabled, toggleCalendarSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar }: CalendarSectionProps) => (
     <>
         <SettingsTextHeader theme={themeSettings} text={Translator.get('CALENDAR_SYNCHRONIZATION')} />
         {hasCalendarPermission ? (
@@ -243,10 +245,15 @@ export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, l
                         {Translator.get('AUTO_SYNC_DESCRIPTION')}
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.xs }}>
-                        {/* Une pastille ronde : le rayon se calcule, il ne s'ecrit pas (docs/theme.md). */}
-                        <View style={{ width: 8, height: 8, borderRadius: tokens.radius.pill, backgroundColor: lastSyncDate ? theme.success : theme.neutral, marginRight: tokens.space.sm }} />
+                        {/* Une pastille ronde : le rayon se calcule, il ne s'ecrit pas (docs/theme.md).
+                            L'echec passe en `warning`, pas en rouge : la synchronisation reessaie
+                            d'elle-meme toutes les 12 h, rien n'est perdu — mais sans cette pastille,
+                            un echec etait indiscernable d'un bouton casse. */}
+                        <View style={{ width: 8, height: 8, borderRadius: tokens.radius.pill, backgroundColor: lastSyncFailed ? theme.warning : lastSyncDate ? theme.success : theme.neutral, marginRight: tokens.space.sm }} />
                         <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
-                            {lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}
+                            {lastSyncFailed
+                                ? Translator.get('LAST_SYNCHRONIZATION_FAILED')
+                                : lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}
                         </Text>
                     </View>
                 </View>

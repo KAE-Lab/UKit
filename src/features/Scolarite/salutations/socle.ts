@@ -15,13 +15,11 @@ export const SALUTATIONS_SOCLE: readonly RegleSalutation[] = [
     // Le repli absolu : aucune condition, donc toujours vrai. Il garantit qu'il y a **toujours**
     // quelque chose a afficher, y compris si une regle plus fine se revele mal ecrite.
     { id: 'socle.jour', priorite: 0, condition: {}, cle: 'GREETING_DAY' },
-    // Le decoupage de la journee. « Bonsoir » commencait a 19 h en dur ; il commence toujours a 19 h,
-    // mais c'est desormais une donnee — et la nuit existe, ce qui n'etait pas le cas.
-    { id: 'socle.matin', priorite: 10, condition: { heures: { de: 5, a: 12 } }, cle: 'GREETING_MORNING' },
-    { id: 'socle.soir', priorite: 10, condition: { heures: { de: 19, a: 23 } }, cle: 'GREETING_EVENING' },
-    { id: 'socle.nuit', priorite: 10, condition: { heures: { de: 23, a: 5 } }, cle: 'GREETING_NIGHT' },
-    // Le week-end passe devant l'heure : « Bon week-end » vaut mieux que « Bonsoir » un samedi soir.
-    { id: 'socle.weekend', priorite: 20, condition: { jours: [0, 6], heures: { de: 5, a: 23 } }, cle: 'GREETING_WEEKEND' },
+    // La soiree passe minuit : « Bonsoir » de 19 h a 4 h, « Bonjour » couvre le reste par le repli.
+    // Le socle s'est reduit a ces deux moments — matin, nuit et week-end multipliaient les variantes
+    // pour un accueil qu'on ne relit pas, et un mot de circonstance reste possible par une regle
+    // publiee : c'est exactement le role de la table.
+    { id: 'socle.soir', priorite: 10, condition: { heures: { de: 19, a: 4 } }, cle: 'GREETING_EVENING' },
     // L'anniversaire passe devant tout le reste du socle. C'est le seul message qui parle de la
     // personne et non du moment, et rien du calendrier ne doit le recouvrir.
     { id: 'socle.anniversaire', priorite: 90, condition: { anniversaire: true }, cle: 'HAPPY_BIRTHDAY' },

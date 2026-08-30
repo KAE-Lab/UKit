@@ -1,20 +1,14 @@
 /**
  * La salutation : une ligne, sous le titre de l'onglet.
  *
- * **Elle est sous le titre, et elle ne bouge plus.** Elle a ete un second titre en 28 gras — deux
- * titres qui se disputaient la place —, puis une ligne minuscule fondue dans l'en-tete. Elle est
- * maintenant ce qu'elle doit etre : un accueil sous le titre de l'onglet, dans un en-tete **collant**
- * qui occupe sa propre place et ne s'efface pas (ScolariteDashboard).
+ * **Elle a ete le titre de la page le temps d'un essai** (2026-08-30), defait le jour meme, et il ne
+ * faut pas le refaire : un titre au contenu **variable** casse sa ligne au premier prenom compose ou
+ * message publie long — 34 points ne pardonnent rien — et la page devenait la seule de l'application
+ * a ne pas porter son nom. Elle est donc ce qu'elle doit etre : un accueil sous le titre, en 22, la
+ * taille a laquelle « Joyeux anniversaire Kylian ! » tient sur une ligne.
  *
- * **Pourquoi il n'y a plus d'effacement du tout** : la page est courte, donc il n'y a pas assez de
- * course pour mener une disparition a son terme — le titre et la salutation restaient a moitie
- * effaces, l'un par-dessus l'autre. Aucun reglage d'interpolation ne rattrape une page qui ne defile
- * pas assez ; c'est la disposition qu'il fallait changer, pas la courbe.
- *
- * **Une ligne, toujours** (`numberOfLines={1}`), et en 22 plutot qu'en 28 : c'est la taille a
- * laquelle « Have a good weekend Kylian ! » tient sans passer sur deux lignes. Un message publie plus
- * long est tronque, ce qui est le bon comportement pour un accueil — mieux vaut une phrase coupee
- * qu'un paragraphe qui pousse la grille hors de l'ecran.
+ * **Une ligne, toujours** : `numberOfLines={1}`, avec `adjustsFontSizeToFit` en garde-fou — une
+ * salutation plus longue que prevu retrecit doucement (plancher a 75 %) avant de tronquer.
  *
  * Ce qu'elle dit vient d'une table de regles publiable — voir `salutations/`.
  */
@@ -64,7 +58,12 @@ const GreetingBlock = ({ coldData, color, theme }: GreetingBlockProps) => {
 
     return (
         <View>
-            <Text style={[styles.salutation, { color: theme.font }]} numberOfLines={1}>
+            <Text
+                style={[styles.salutation, { color: theme.font }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+            >
                 {salutation}
                 {prenom !== '' ? <Text style={{ color }}>{` ${prenom}`}</Text> : null}
                 {' !'}
@@ -80,8 +79,7 @@ const GreetingBlock = ({ coldData, color, theme }: GreetingBlockProps) => {
 
 const styles = StyleSheet.create({
     salutation: {
-        // `xl` (22) et non `xxl` (28) : c'est la taille a laquelle une salutation longue tient sur
-        // une ligne. La hierarchie reste nette sous un titre en 34.
+        // `xl` (22) et non `title` (34) : un texte variable ne titre pas — voir l'en-tete du fichier.
         fontSize: tokens.fontSize.xl,
         fontWeight: tokens.fontWeight.semibold,
         // `md` et non `xs` : deux textes de grande taille se lisent plus serres qu'ils ne le sont, et

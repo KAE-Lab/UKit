@@ -11,6 +11,13 @@
 > **Il sort la version 6**, refonte visuelle comprise : chez UKit une phase correspond à une version,
 > et rien ne part sur les stores avant que le volet 2 soit fini. Ce jalon vient donc **après**
 > [6-K](6-k-socle-visuel.md) et les sessions d'écran qui le suivent, pas après 6-J.
+>
+> **Amendé le 2026-08-30 : il sort la v6.0, pas toute la v6.** La version part en deux publications
+> — le pourquoi et le contenu de chacune sont écrits dans le
+> [README de phase](README.md#la-v6-part-en-deux-temps). Ce que ce jalon vérifie ne change pas :
+> plus aucune source à deux chemins, le legacy retiré, la documentation close. La v6.1 qui suivra
+> est une version **mineure** — elle ajoute des capacités sur l'architecture que ce jalon a figée,
+> elle ne rouvre ni les replis ni la migration.
 
 ## Objectif
 

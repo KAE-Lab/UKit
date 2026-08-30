@@ -110,17 +110,16 @@ describe('le socle', () => {
         }
     });
 
-    it('dit bonsoir le soir et bonne nuit la nuit', () => {
+    it('dit bonsoir de 19 h a 4 h, minuit compris, et bonjour le reste du temps', () => {
         expect(choisirSalutation(SALUTATIONS_SOCLE, contexte('2026-08-28T20:00:00'))?.cle)
             .toBe('GREETING_EVENING');
+        // La soiree passe minuit : a 2 h du matin, on ne dit pas encore bonjour.
         expect(choisirSalutation(SALUTATIONS_SOCLE, contexte('2026-08-28T02:00:00'))?.cle)
-            .toBe('GREETING_NIGHT');
-    });
-
-    it('fait passer le week-end devant l heure', () => {
-        // Samedi 20 h : « Bon week-end » vaut mieux que « Bonsoir ».
-        expect(choisirSalutation(SALUTATIONS_SOCLE, contexte('2026-08-29T20:00:00'))?.cle)
-            .toBe('GREETING_WEEKEND');
+            .toBe('GREETING_EVENING');
+        expect(choisirSalutation(SALUTATIONS_SOCLE, contexte('2026-08-28T10:00:00'))?.cle)
+            .toBe('GREETING_DAY');
+        expect(choisirSalutation(SALUTATIONS_SOCLE, contexte('2026-08-28T04:00:00'))?.cle)
+            .toBe('GREETING_DAY');
     });
 
     it('fait passer l anniversaire devant tout le reste', () => {

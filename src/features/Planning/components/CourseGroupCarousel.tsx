@@ -42,8 +42,14 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 					savedCarouselIndices.set(groupKey, index);
 				}}
 				renderItem={({ item, index: cardIndex }) => (
-					<View style={{ width: screenWidth, justifyContent: 'flex-start' }}>
-						<View style={{ width: '100%', alignSelf: 'flex-start', position: 'relative' }}>
+					/*
+					  * Pas de `flex-start` ici : chaque page s'etire a la hauteur de la rangee —
+					  * celle du cours au contenu le plus haut — et la carte la remplit (CourseRow,
+					  * carouselMode). Cale en haut, un cours plus court laissait un trou de fond de
+					  * page sous sa carte, a cote de voisines pleines.
+					  */
+					<View style={{ width: screenWidth }}>
+						<View style={{ flex: 1, width: '100%' }}>
 							<CourseRowWithNavigation data={item} theme={theme} carouselMode={true} />
 
 							<View

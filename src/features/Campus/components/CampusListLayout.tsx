@@ -27,6 +27,14 @@ export interface CampusListLayoutProps<T> {
     searchText?: string;
     onSearchChange?: (text: string) => void;
     searchPlaceholder?: string;
+    /**
+     * En dessous de ce nombre d'elements, la barre n'apparait pas : chercher parmi trois cartes
+     * n'apporte rien, et la fumee de la barre n'a rien a voiler sur une liste qui tient a l'ecran.
+     * Quatre par defaut — une liste d'une carte par rangee — ; la grille d'annonces, a deux par
+     * rangee, passe le double. Une requete deja saisie garde toujours la barre : sans elle, la croix
+     * qui l'efface disparaitrait avec.
+     */
+    seuilRecherche?: number;
     
     // Filters
     filterOptions?: FilterOption[];
@@ -46,6 +54,10 @@ export interface CampusListLayoutProps<T> {
     // La donnee est la, mais incomplete : une source interrogee en plusieurs points n'a pas repondu
     // partout. Le bandeau le dit au-dessus de la liste, sans la masquer.
     partial?: boolean;
+
+    // Grille : les affiches d'annonces se rangent a deux par rangee, les lieux restent une carte par
+    // rangee. Absent, la liste se comporte exactement comme avant.
+    numColumns?: number;
 
     // Navigation for setting header filter icon
     navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
@@ -166,6 +178,7 @@ export function CampusListLayout<T>({
     searchText = '',
     onSearchChange,
     searchPlaceholder = '',
+    seuilRecherche = 4,
     filterOptions = [],
     selectedFilter,
     onFilterChange,
@@ -175,13 +188,12 @@ export function CampusListLayout<T>({
     failure,
     onRetry,
     partial = false,
+    numColumns = 1,
     navigation
 }: CampusListLayoutProps<T>) {
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
-    const themeName = AppContextValues.themeName ?? 'light';
-    const theme = style.Theme[themeName];
+    const theme = style.Theme[AppContextValues.themeName ?? 'light'];
     const insets = useSafeAreaInsets();
-    
     const [filterVisible, setFilterVisible] = useState(false);
     const route = useRoute();
 
@@ -214,7 +226,7 @@ export function CampusListLayout<T>({
      * est vide enfermerait quelqu'un avec une requete qu'il ne peut plus effacer. Tant qu'une requete
      * est saisie, la barre reste, croix comprise.
      */
-    const rechercheVisible = hasSearch && (data.length > 0 || searchText.trim().length > 0);
+    const rechercheVisible = hasSearch && (data.length >= seuilRecherche || searchText.trim().length > 0);
 
     /** Revenir a la liste entiere : les deux causes d'un filtrage se retirent ensemble. */
     const reinitialiser = () => {
@@ -267,6 +279,12 @@ export function CampusListLayout<T>({
                             + (rechercheVisible ? HAUTEUR_RECHERCHE : tokens.space.lg),
                     }}
                     renderItem={renderItem as any}
+                    numColumns={numColumns}
+                    // La gouttiere horizontale d'une rangee ; la verticale reste aux cartes, comme
+                    // pour les listes a une colonne.
+                    columnWrapperStyle={numColumns > 1
+                        ? { paddingHorizontal: tokens.space.sm, gap: tokens.space.md }
+                        : undefined}
                     ListHeaderComponent={partial ? <CampusPartialNotice theme={theme} onRetry={onRetry} /> : null}
                 />
             </View>

@@ -17,7 +17,7 @@ import { Modal, ScrollView, Text, TouchableOpacity, TouchableWithoutFeedback, Vi
 import { MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
-import { tokens } from '../../../shared/theme/Theme';
+import { propsLibelleBouton, tokens } from '../../../shared/theme/Theme';
 import { listeEtablissements, type Etablissement } from '../../../shared/etablissements';
 import type { AppThemeType } from '../../../shared/theme/Theme';
 
@@ -29,9 +29,37 @@ interface Props {
     readonly onConfirm: (code: string) => void;
 }
 
+/** Une universite de la liste : la meme option-bouton que la modale de choix generique. */
+function OptionEtablissement({ etablissement, selectionne, theme, onPress }: { etablissement: Etablissement; selectionne: boolean; theme: AppThemeType['settings']; onPress: () => void }) {
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            style={[theme.popup.option, selectionne ? theme.popup.optionSelected : null] as never}
+        >
+            {/* Le nom vient du catalogue : c'est une donnee, pas un libelle traduit. */}
+            <Text
+                numberOfLines={2}
+                style={[theme.popup.optionText, selectionne ? theme.popup.optionTextSelected : null]}
+            >
+                {etablissement.nom}
+            </Text>
+            {/* Emplacement reserve : la coche qui apparait ne doit pas retrecir le libelle — un nom
+                long sautait sur deux lignes a chaque selection. */}
+            <View style={{ width: 20, marginLeft: tokens.space.sm, alignItems: 'flex-end' }}>
+                {selectionne ? (
+                    <MaterialIcons name="check" size={20} color={theme.popup.optionCheckColor} />
+                ) : null}
+            </View>
+        </TouchableOpacity>
+    );
+}
+
 export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, codeActif, onConfirm }: Props) => {
-    /** L'etablissement que l'utilisateur vient de toucher, en attente de confirmation. */
+    /** L'etablissement touche, en attente du bouton Confirmer. */
     const [candidat, setCandidat] = useState<string | null>(null);
+    /** Le second temps : l'avertissement de purge, apres Confirmer sur un autre etablissement. */
+    const [avertissement, setAvertissement] = useState(false);
+    const choisi = candidat ?? codeActif;
 
     // La liste est relue a chaque ouverture plutot que memorisee : un rafraichissement du catalogue
     // peut avoir eu lieu entre deux visites de cet ecran.
@@ -39,22 +67,30 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
 
     const fermer = () => {
         setCandidat(null);
+        setAvertissement(false);
         popupClose();
+    };
+
+    // Confirmer l'etablissement deja actif ne doit rien declencher : il n'y a rien a purger, et un
+    // avertissement pour un non-changement apprendrait a le valider sans lire.
+    const demanderConfirmation = () => {
+        if (choisi === codeActif) return fermer();
+        setAvertissement(true);
     };
 
     const confirmer = () => {
         const code = candidat;
-        setCandidat(null);
+        fermer();
         if (code !== null) onConfirm(code);
-        popupClose();
     };
 
     return (
         <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={fermer}>
             <TouchableWithoutFeedback onPress={fermer}>
                 <View style={theme.popup.background as never}>
+                    <TouchableWithoutFeedback>
                     <View style={theme.popup.container as never}>
-                        {candidat === null ? (
+                        {!avertissement ? (
                             <>
                                 <View style={theme.popup.header as never}>
                                     <Text style={theme.popup.textHeader}>{Translator.get('INSTITUTION')}</Text>
@@ -63,31 +99,26 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
                                     </TouchableOpacity>
                                 </View>
                                 <Text style={theme.popup.textDescription}>{Translator.get('YOUR_INSTITUTION')}</Text>
-                                <ScrollView style={{ marginVertical: tokens.space.sm }}>
-                                    {etablissements.map((etablissement) => {
-                                        const actif = etablissement.code === codeActif;
-                                        return (
-                                            <TouchableOpacity
-                                                key={etablissement.code}
-                                                // Retoucher l'etablissement deja actif ne doit rien declencher : il
-                                                // n'y a rien a purger, et une confirmation pour un non-changement
-                                                // apprendrait a la valider sans lire.
-                                                onPress={() => (actif ? fermer() : setCandidat(etablissement.code))}
-                                                style={theme.popup.radioContainer as never}
-                                            >
-                                                <MaterialIcons
-                                                    name={actif ? 'radio-button-on' : 'radio-button-off'}
-                                                    size={24}
-                                                    color={theme.popup.radioIconColor}
-                                                />
-                                                {/* Le nom vient du catalogue : c'est une donnee, pas un libelle traduit. */}
-                                                <Text style={[theme.popup.radioText, { flexShrink: 1 }]}>
-                                                    {etablissement.nom}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
+                                {/* Marge basse : l'ecart options -> boutons vaut 16, comme partout. */}
+                                <ScrollView style={{ marginBottom: tokens.space.sm }}>
+                                    {etablissements.map((etablissement) => (
+                                        <OptionEtablissement
+                                            key={etablissement.code}
+                                            etablissement={etablissement}
+                                            selectionne={etablissement.code === choisi}
+                                            theme={theme}
+                                            onPress={() => setCandidat(etablissement.code)}
+                                        />
+                                    ))}
                                 </ScrollView>
+                                <View style={theme.popup.buttonContainer as never}>
+                                    <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={fermer}>
+                                        <Text {...propsLibelleBouton} style={theme.popup.buttonTextSecondary as never}>{Translator.get('CANCEL')}</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={theme.popup.buttonMain as never} onPress={demanderConfirmation}>
+                                        <Text {...propsLibelleBouton} style={theme.popup.buttonTextMain as never}>{Translator.get('CONFIRM')}</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </>
                         ) : (
                             <>
@@ -100,13 +131,15 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
                                     {Translator.get('INSTITUTION_CHANGE_WARNING')}
                                 </Text>
                                 <View style={theme.popup.buttonContainer as never}>
-                                    <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={() => setCandidat(null)}>
-                                        <Text style={theme.popup.buttonTextSecondary as never}>
+                                    {/* Annuler revient a la liste, selection intacte : on relit
+                                        l'avertissement, on ne ressaisit pas son choix. */}
+                                    <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={() => setAvertissement(false)}>
+                                        <Text {...propsLibelleBouton} style={theme.popup.buttonTextSecondary as never}>
                                             {Translator.get('CANCEL')}
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity style={theme.popup.buttonMain as never} onPress={confirmer}>
-                                        <Text style={theme.popup.buttonTextMain as never}>
+                                        <Text {...propsLibelleBouton} style={theme.popup.buttonTextMain as never}>
                                             {Translator.get('CONFIRM')}
                                         </Text>
                                     </TouchableOpacity>
@@ -114,6 +147,7 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
                             </>
                         )}
                     </View>
+                    </TouchableWithoutFeedback>
                 </View>
             </TouchableWithoutFeedback>
         </Modal>

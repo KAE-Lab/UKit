@@ -37,7 +37,13 @@ Deux détails de comportement à connaître :
 
 - **`SettingsManager.notify` persiste systématiquement**, y compris quand aucun abonné n'écoute :
   `saveSettings()` est appelé en première ligne. Toute mutation passant par `notify` est donc écrite
-  sur disque.
+  sur disque. **Sauf pendant le chargement** (2026-08-30) : la restauration notifie en chemin — la
+  langue avant les favoris — et une sauvegarde partait alors avec des favoris **vides**, qui
+  écrasaient le stockage. Si aucun réglage ne notifiait ensuite, les groupes favoris disparaissaient
+  au démarrage suivant — un défaut réel, signalé comme « mes groupes disparaissent parfois » et
+  amplifié par les recharges de développement. L'écriture est verrouillée jusqu'à la fin de
+  `loadSettings` (`_chargementTermine`, rouvert dans un `finally` pour qu'un chargement échoué ne
+  condamne pas la session).
 - **`PlanningDataManager.notify` persiste après diffusion**, mais sort immédiatement si l'événement
   n'a aucun abonné — la sauvegarde est alors sautée. C'est une asymétrie avec `SettingsManager` : ne
   pas supposer que `notify` garantit l'écriture partout.

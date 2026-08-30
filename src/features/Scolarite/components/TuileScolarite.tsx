@@ -17,8 +17,9 @@
  *
  * **Deux dispositions, et la grande n'est pas une petite etiree.**
  *
- *   - la **petite** empile : icone en haut, chiffre au milieu, contexte en bas, repartis sur la
- *     hauteur. C'est ce qui aligne deux tuiles voisines quelle que soit la longueur de leur texte ;
+ *   - la **petite** empile : icone en haut, la valeur au milieu, contexte en bas. Le chiffre et son
+ *     unite partagent **une ligne de base** — « 790 non lus » — comme dans la grande : empiles, le
+ *     retour a la ligne creusait la tuile et la faisait paraitre a moitie vide (2026-08-30) ;
  *   - la **grande** aligne : icone a gauche, puis le chiffre a cote de son libelle, puis le contexte
  *     dessous. Elle gagne une ligne pleine pour nommer une echeance — « Devoir de calcul — jeudi »
  *     n'entre pas dans une demi-largeur sans etre tronque.
@@ -36,6 +37,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import { GlypheFiligrane } from '../../../shared/ui/GlypheFiligrane';
 import { Icon, type IconSpec } from '../../../shared/ui/Icon';
 
 export interface TuileScolariteProps {
@@ -60,12 +62,18 @@ export interface TuileScolariteProps {
     attenue?: boolean;
     /** Pleine largeur, chiffre a cote du libelle, contexte sur sa propre ligne. */
     large?: boolean;
+    /**
+     * La silhouette du service en filigrane — l'enveloppe de la messagerie, le dossier des
+     * documents, le livre du heros Moodle — rognee au milieu du bord droit. Le geste et ses regles
+     * vivent dans `shared/ui/GlypheFiligrane`.
+     */
+    glypheDeFond?: IconSpec;
     onPress?: () => void;
 }
 
 export function TuileScolarite({
     theme, teinte, icone, nombre = null, libelle, contexte,
-    chargement = false, attenue = false, large = false, onPress,
+    chargement = false, attenue = false, large = false, glypheDeFond, onPress,
 }: TuileScolariteProps) {
     const couleurTexte = attenue ? theme.fontSecondary : theme.font;
 
@@ -83,14 +91,15 @@ export function TuileScolarite({
         : <Icon icon={{ family: 'material', name: 'chevron-right' }} size={24} color={theme.fontSecondary} />;
 
     const valeur = (
-        <View style={large ? styles.valeurLarge : null}>
+        // La ligne de base est partagee des qu'il y a un chiffre, petite tuile comprise : voir
+        // l'en-tete. Sans chiffre, la phrase occupe la place seule.
+        <View style={nombre !== null || large ? styles.valeurLarge : null}>
             {nombre !== null ? (
                 <Text style={[styles.nombre, { color: couleurTexte }]} numberOfLines={1}>{nombre}</Text>
             ) : null}
             <Text
                 style={[
                     nombre !== null ? styles.unite : styles.libelle,
-                    large && nombre !== null ? styles.uniteLarge : null,
                     { color: couleurTexte },
                 ]}
                 numberOfLines={2}
@@ -121,6 +130,12 @@ export function TuileScolarite({
               * dans l'une, en bout de ligne dans l'autre, exactement comme sur une rangee — et les
               * fondre rendait le rendu illisible pour un gain nul.
               */}
+            {/* Rendu en premier, il passe sous tout le contenu (shared/ui/GlypheFiligrane). Le heros
+                est une carte courte : son glyphe est reduit pour que la silhouette rognee par le bas
+                reste devinable — au meme coin que ses voisines, la coherence prime. */}
+            {glypheDeFond !== undefined ? (
+                <GlypheFiligrane icone={glypheDeFond} couleur={couleurTexte} size={large ? 64 : 88} />
+            ) : null}
             {large ? (
                 <>
                     {surface}
@@ -136,10 +151,15 @@ export function TuileScolarite({
                         {surface}
                         {coin}
                     </View>
-                    <View style={styles.textes}>
+                    {/* Le milieu s'etire et centre la valeur : une tuile sans chiffre — « Aucun
+                        message non lu » — posait tout son texte au ras du bas et laissait un trou
+                        entre l'icone et lui. Centre, l'espace libre se repartit des deux cotes et la
+                        phrase habite le carre. Le contexte, lui, reste colle en bas : c'est ce qui
+                        aligne deux tuiles voisines. */}
+                    <View style={styles.milieu}>
                         {valeur}
-                        {bas}
                     </View>
+                    {bas}
                 </>
             )}
         </TouchableOpacity>
@@ -160,10 +180,10 @@ const styles = StyleSheet.create({
         // `flex: 1` et non une largeur : les deux tuiles se partagent la ligne quel que soit
         // l'appareil, et la grille n'a aucune valeur de largeur ecrite en dur.
         flex: 1,
-        minHeight: 150,
-        // Le contexte est colle en bas : sans ca, une tuile sans chiffre remonterait son texte et deux
-        // tuiles d'une meme ligne ne s'aligneraient pas.
-        justifyContent: 'space-between',
+        // 120 et non 150 : la valeur tient sur une ligne depuis qu'elle partage sa ligne de base, et
+        // la hauteur d'avant, calibree pour un chiffre empile, laissait un vide. Deux voisines
+        // restent alignees par la rangee, qui etire ses enfants a la plus haute.
+        minHeight: 120,
     },
     large: {
         // Alignee, pas repartie : voir l'en-tete du fichier. Aucune hauteur minimale — c'est le
@@ -172,9 +192,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: tokens.space.md,
     },
-    textes: {
-        marginTop: tokens.space.sm,
-        gap: tokens.space.xxs,
+    milieu: {
+        // C'est lui qui absorbe la hauteur libre de la tuile, en la repartissant autour de la valeur.
+        flex: 1,
+        justifyContent: 'center',
+        paddingVertical: tokens.space.xs,
     },
     entete: {
         flexDirection: 'row',
@@ -204,12 +226,11 @@ const styles = StyleSheet.create({
         fontWeight: tokens.fontWeight.bold,
     },
     unite: {
-        fontSize: tokens.fontSize.sm,
-        fontWeight: tokens.fontWeight.medium,
-    },
-    uniteLarge: {
+        // La difference de taille avec le chiffre porte la hierarchie sur la ligne partagee ; elle
+        // se retrecit si la place manque, jamais le chiffre.
         fontSize: tokens.fontSize.lg,
         fontWeight: tokens.fontWeight.semibold,
+        flexShrink: 1,
     },
     libelle: {
         fontSize: tokens.fontSize.md,

@@ -28,6 +28,14 @@ create table if not exists public.annonces (
     accroche    text,
     description text,
     image_url   text,
+    -- Galerie de la fiche : un tableau JSON d'URLs du bucket media, affiche sous la description.
+    images      jsonb,
+    -- Le lieu de l'evenement : les deux presents, la fiche montre une carte « S'y rendre ».
+    lat         double precision,
+    lng         double precision,
+    -- L'identite visuelle : un index de la palette de sections (0-3, 5 — le 4 duplique le 0 en
+    -- sombre). Teinte la pastille d'emetteur et fixe le depart du cycle des sections de la fiche.
+    couleur     integer,
     cta_texte   text,
     cta_lien    text,
     publiee_le  timestamptz not null default now(),
@@ -35,6 +43,12 @@ create table if not exists public.annonces (
     active      boolean     not null default true,
     creee_le    timestamptz not null default now()
 );
+
+-- Migration des bases existantes (le create ci-dessus ne retouche pas une table deja creee).
+alter table public.annonces add column if not exists images jsonb;
+alter table public.annonces add column if not exists lat double precision;
+alter table public.annonces add column if not exists lng double precision;
+alter table public.annonces add column if not exists couleur integer;
 
 create index if not exists annonces_publication_idx
     on public.annonces (active, expire_le desc);

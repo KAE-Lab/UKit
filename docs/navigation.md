@@ -19,7 +19,7 @@ RootContainer                       rootContainer.tsx
                 │    ├─ CampusTab    → CampusDashboard
                 │    ├─ ScolariteTab → ScolariteDashboard
                 │    └─ SettingsTab  → SettingsScreen
-                └─ 17 écrans empilés (détail ci-dessous)
+                └─ 20 écrans empilés (détail ci-dessous)
 ```
 
 Deux points à connaître avant de toucher à cette structure :
@@ -46,15 +46,19 @@ Définis dans [`MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator
 ### La barre d'onglets personnalisée
 
 `CustomTabBar` remplace la barre native. Elle est flottante (positionnée en absolu au-dessus du
-contenu), arrondie, ombrée, et **décalée sur la gauche** par une marge droite (`tokens.space.xl`) qui
-libère la place d'un **bouton d'action contextuel** rendu à côté d'elle par `TabBarActionItem` :
+contenu), arrondie, ombrée, posée sur la **fumée** des flottants du bas
+([`FondDePiedFlottant`](../src/shared/ui/PiedFlottant.tsx) — elle survole le contenu, elle parle
+donc comme les pieds d'action), et **décalée sur la gauche** par une marge droite (`tokens.space.xl`)
+qui libère la place d'un **bouton d'action contextuel** rendu à côté d'elle par `TabBarActionItem`
+(un seul composant `BoutonDAction`, quatre contenus) :
 
 | Onglet actif | Bouton affiché | Destination |
 |---|---|---|
 | `PlanningTab` | Recherche de groupes | `GroupSearch` |
+| `CampusTab` | **Le bouton mystère** : contenu flouté, cadenas — le teaser des rangées Scolarité | la modale « Bientôt disponible » |
 | `SettingsTab` | À propos | `About` |
-| `ScolariteTab` **et session ouverte** | Déconnexion | `CredentialsSettings` |
-| Autre cas | Aucun (un `View` invisible de 65 × 75 conserve la largeur) | — |
+| `ScolariteTab` **et session ouverte** | Compte | `CredentialsSettings` |
+| `ScolariteTab` sans session | Aucun (un `View` invisible de 65 × 75 conserve la largeur) | — |
 
 Conséquence pratique : tout écran de la pile principale doit prévoir un rembourrage bas suffisant
 pour ne pas passer sous la barre. L'usage établi est `tokens.space.xxl + 80` dans
@@ -76,16 +80,19 @@ Déclarés dans [`StackNavigator.tsx`](../src/shared/navigation/StackNavigator.t
 | `Day` | [`DayView`](../src/features/Planning/views/DayView.tsx) | — | `DAY` |
 | `Course` | [`CourseScreen`](../src/features/Planning/screens/CourseScreen.tsx) | `{ title?, data? }` | titre du cours, bouton de retrait de filtre |
 | `Crous` | [`CrousScreen`](../src/features/Campus/Crous/CrousScreen.tsx) | — | `RESTAURANTS`, filtre à droite |
-| `CrousMenu` | [`CrousMenuScreen`](../src/features/Campus/Crous/CrousMenuScreen.tsx) | `{ restaurantId, restaurantName, location }` | nom du restaurant, bouton carte |
+| `CrousMenu` | [`CrousMenuScreen`](../src/features/Campus/Crous/CrousMenuScreen.tsx) | `{ restaurantId, restaurantName, location?, openingLines? }` | `DETAILS` — comme toutes les fiches, le nom du lieu vit dans le bandeau |
 | `Library` | [`LibraryScreen`](../src/features/Campus/Library/LibraryScreen.tsx) | — | `LIBRARIES`, filtre à droite |
-| `LibraryDetails` | [`LibraryDetailsScreen`](../src/features/Campus/Library/LibraryDetailsScreen.tsx) | `{ library, affluence }` | nom de la BU, bouton carte |
+| `LibraryDetails` | [`LibraryDetailsScreen`](../src/features/Campus/Library/LibraryDetailsScreen.tsx) | `{ library, affluence }` | nom de la BU |
 | `FreeRoomScreen` | [`FreeRoomScreen`](../src/features/Campus/FreeRoom/FreeRoomScreen.tsx) | — | `FREE_ROOMS` |
 | `FreeRoomDetails` | [`FreeRoomDetailsScreen`](../src/features/Campus/FreeRoom/FreeRoomDetailsScreen.tsx) | `{ building }` | `DETAILS` |
 | `Bde` | [`BdeScreen`](../src/features/Campus/Bde/BdeScreen.tsx) | — | `STUDENT_LIFE` |
 | `BdeDetail` | [`BdeDetailsScreen`](../src/features/Campus/Bde/BdeDetailsScreen.tsx) | `{ annonce }` | `DETAILS` |
-| `Geolocation` | [`MapScreen`](../src/shared/map/MapScreen.tsx) | `{ title?, location }` | `MAP`, transparent |
 | `WebBrowser` | [`WebBrowserScreen`](../src/features/Scolarite/screens/WebBrowserScreen.tsx) | `{ entrypoint?, href? }` | masqué (barre flottante propre) |
-| `CredentialsSettings` | [`CredentialsSettingsScreen`](../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | — | `LOGOUT` |
+| `CredentialsSettings` | [`CredentialsSettingsScreen`](../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | `{ ressaisie? }` | `ACCOUNT` |
+| `Documents` | [`DocumentsScreen`](../src/features/Scolarite/screens/DocumentsScreen.tsx) | — | `MY_DOCUMENTS` |
+| `Filters` | [`FiltersScreen`](../src/features/Settings/screens/FiltersScreen.tsx) | — | `FILTERS` |
+| `DocumentViewer` | [`DocumentViewerScreen`](../src/features/Scolarite/screens/DocumentViewerScreen.tsx) | `{ uri, nom }` | nom de la pièce, bouton de partage |
+| `LienEdt` | [`LienEdtScreen`](../src/features/Planning/screens/LienEdtScreen.tsx) | — | `TIMETABLE_LINK` |
 | `Settings` | [`SettingsScreen`](../src/features/Settings/screens/SettingsScreen.tsx) | — | `SETTINGS` |
 | `About` | [`AboutScreen`](../src/features/Settings/screens/AboutScreen.tsx) | — | `ABOUT` |
 
@@ -97,7 +104,12 @@ cohérence visuelle des en-têtes. Ne pas configurer un en-tête à la main.
 - **`NavBarHelper({ title, themeName, route, headerLeft, headerRight, gestureEnabled })`** produit les
   `StackNavigationOptions` d'un écran : titre stylé, transparence, et **animation du titre au
   défilement**. Il lit la valeur de défilement de l'écran dans le registre `globalScrollValues`,
-  indexé par `route.key`.
+  indexé par `route.key`. **Le titre est neutre** (`theme.font`, 2026-08-30) : le violet est la
+  couleur d'action, et un titre en couleur d'action se lit comme un bouton — deux fiches
+  surchargeaient d'ailleurs le leur en violet à la main, elles ne le font plus. **Toute sous-page
+  défilante transmet son défilement** (`withHeaderAnimation` + `onAnimatedScroll`) : sans ça, le
+  contenu passe derrière un titre qui ne s'efface jamais — c'est arrivé à l'écran des filtres à sa
+  création.
 - **`withHeaderAnimation(Composant)`** est le pendant côté écran. Le HOC crée une `Animated.Value`,
   l'enregistre dans `globalScrollValues[route.key]`, injecte `onAnimatedScroll` et `headerPadding`
   dans le composant, et nettoie l'entrée au démontage.

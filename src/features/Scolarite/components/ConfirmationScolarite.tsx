@@ -23,7 +23,7 @@ import {
 } from 'react-native';
 
 import Translator from '../../../shared/i18n/Translator';
-import { type AppThemeType } from '../../../shared/theme/Theme';
+import { propsLibelleBouton, type AppThemeType } from '../../../shared/theme/Theme';
 
 export interface ConfirmationScolariteProps {
     theme: AppThemeType;
@@ -83,7 +83,7 @@ export function ConfirmationScolarite({
                             <Text style={popup.textDescription}>{description}</Text>
                             <View style={popup.buttonContainer}>
                                 <TouchableOpacity style={popup.buttonSecondary} onPress={onClose}>
-                                    <Text style={popup.buttonTextSecondary}>
+                                    <Text {...propsLibelleBouton} style={popup.buttonTextSecondary}>
                                         {Translator.get('CANCEL')}
                                     </Text>
                                 </TouchableOpacity>
@@ -91,7 +91,7 @@ export function ConfirmationScolarite({
                                     style={destructif ? popup.buttonDestructive : popup.buttonMain}
                                     onPress={onConfirm}
                                 >
-                                    <Text style={destructif ? popup.buttonTextDestructive : popup.buttonTextMain}>
+                                    <Text {...propsLibelleBouton} style={destructif ? popup.buttonTextDestructive : popup.buttonTextMain}>
                                         {confirmer}
                                     </Text>
                                 </TouchableOpacity>

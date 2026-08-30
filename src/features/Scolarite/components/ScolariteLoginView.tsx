@@ -36,10 +36,17 @@ import { useCredentials } from '../services/CredentialsContext';
  */
 const EnTeteDuFormulaire = ({ theme, color, compact }) => (
     <View style={styles.hero}>
+        {/*
+          * Filigrane, comme l'en-tete du tableau de bord : la vignette blanche a filet detonnait
+          * seule dans l'application depuis que le tableau de bord est passe au monochrome. Plus
+          * haut qu'ailleurs (64 contre 44) — ici le logo est le heros du bandeau, pas une signature.
+          */}
         <LogoEtablissement
             logo={getEtablissementActif().logo}
             theme={theme}
             teinte={color}
+            filigrane
+            hauteur={64}
             style={styles.iconWrap}
         />
         <Text style={[styles.title, { color: theme.font }]}>

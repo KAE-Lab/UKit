@@ -20,6 +20,10 @@ const LIGNE: AnnonceRow = {
     accroche: '20 septembre, campus Talence',
     description: 'Le detail complet de la soiree.',
     image_url: 'https://exemple.test/visuel.jpg',
+    images: null,
+    lat: null,
+    lng: null,
+    couleur: null,
     cta_texte: 'Reserver',
     cta_lien: 'https://exemple.test/billets',
     publiee_le: '2026-09-01T10:00:00Z',
@@ -83,6 +87,28 @@ test('les champs requis restent des chaines meme sur une ligne incomplete', () =
     expect(projetee.title).toBe('');
     expect(projetee.issuer_name).toBe('');
     expect(projetee.id).not.toBe('');
+});
+
+test('la galerie ne garde que des URLs, et s omet plutot que d etre vide', () => {
+    // La colonne est un jsonb libre : une entree qui n'est pas une chaine s'ignore, elle ne casse
+    // pas la fiche.
+    expect(projeterAnnonce({ ...LIGNE, images: ['https://a.test/1.jpg', 42, '', 'https://a.test/2.jpg'] }).images)
+        .toEqual(['https://a.test/1.jpg', 'https://a.test/2.jpg']);
+    expect(projeterAnnonce({ ...LIGNE, images: [] }).images).toBeUndefined();
+    expect(projeterAnnonce({ ...LIGNE, images: 'pas-un-tableau' }).images).toBeUndefined();
+});
+
+test('le lieu exige les deux coordonnees : une carte a moitie situee serait une carte fausse', () => {
+    expect(projeterAnnonce({ ...LIGNE, lat: 44.8, lng: -0.6 }).location).toEqual({ lat: 44.8, lng: -0.6 });
+    expect(projeterAnnonce({ ...LIGNE, lat: 44.8, lng: null }).location).toBeUndefined();
+    expect(projeterAnnonce(LIGNE).location).toBeUndefined();
+});
+
+test('l identite visuelle exige un entier positif, sinon elle s omet', () => {
+    expect(projeterAnnonce({ ...LIGNE, couleur: 2 }).couleur).toBe(2);
+    expect(projeterAnnonce(LIGNE).couleur).toBeUndefined();
+    expect(projeterAnnonce({ ...LIGNE, couleur: -1 }).couleur).toBeUndefined();
+    expect(projeterAnnonce({ ...LIGNE, couleur: 2.5 }).couleur).toBeUndefined();
 });
 
 test('une annonce sans expiration ne disparait pas', () => {

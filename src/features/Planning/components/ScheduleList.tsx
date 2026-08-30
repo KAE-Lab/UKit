@@ -357,7 +357,9 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                 {this.renderEtat(
                     <EmptyState
                         variant="plain"
-                        icon="calendar-blank-outline"
+                        // Des confettis, pas un calendrier vide : une journee libre est une bonne
+                        // nouvelle, et c'est l'icone qui sourit — le texte, lui, ne change pas.
+                        icon="party-popper"
                         title={Translator.get('NO_CLASS_THIS_DAY_TITLE')}
                         message={Translator.get('NO_CLASS_THIS_DAY')}
                         theme={theme}

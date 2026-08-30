@@ -27,7 +27,7 @@ export function FreeRoomListItem({ item, isFavorite, onToggleFavorite, onPress }
         if (daySchedule) {
             hoursText = `${daySchedule.open} - ${daySchedule.close}`;
         } else {
-            hoursText = Translator.get('BU_CLOSED');
+            hoursText = Translator.get('BUILDING_CLOSED_LABEL');
         }
     }
 

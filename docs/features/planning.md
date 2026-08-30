@@ -202,6 +202,16 @@ cours dont les plages se recoupent ; `CourseGroupCarousel` les rend en pages hor
 points de position. L'index consulté est mémorisé dans une `Map` de module, indexée par
 `heure de début + matière`, pour que le défilement ne se réinitialise pas au rendu suivant.
 
+Les cartes du carrousel **convergent vers une même hauteur par le gabarit** (2026-08-30) : une
+ligne par texte, titre compris, coupée en points de suspension — l'UE et le détail du cours portent
+l'intitulé complet — et la carte s'étire sur le reliquat de la rangée. Sans cette convergence, une
+carte plus courte calée en haut laissait un trou de fond de page sous elle ; trois formes essayées
+et défaites : l'étirement seul déplaçait le vide dans la carte, deux lignes de titre bornées
+laissaient une ligne d'écart, deux lignes étirées traînaient un blanc sous les titres courts.
+L'indicateur de pages se pose dans le coin bas droit **à hauteur de la dernière ligne d'infos**, qui
+lui laisse le coin plutôt que de passer dessous. Un spacer sous le contenu a aussi été essayé et
+défait : il rendait les cartes du carrousel plus hautes que les cartes seules.
+
 > **Capture attendue** — `planning-cours-simultanes.png` : un créneau à plusieurs cours, points de
 > pagination visibles.
 
@@ -234,7 +244,9 @@ revenant dans l'application.
 - **Source qui a changé** : passer l'`expect.status` du même Blueprint à `418` doit produire un écran
   **différent** — « Réponse inattendue », sans bouton Réessayer, parce que rejouer ne répare pas une
   source qui a changé de contrat.
-- Un dimanche, ou un jour sans cours : la carte « pas de cours » doit s'afficher.
+- Un dimanche, ou un jour sans cours : la carte « pas de cours » doit s'afficher — avec ses
+  **confettis** : une journée libre est une bonne nouvelle, et c'est l'icône qui sourit, jamais le
+  texte.
 
 ## Les quatre états de l'emploi du temps
 
@@ -477,7 +489,7 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
 | [`views/DayView.tsx`](../../src/features/Planning/views/DayView.tsx) | vue composite de l'onglet : état jour/semaine, génération des 365 jours et des semaines, défilement du curseur, bascule de mode |
 | [`screens/ScheduleScreen.tsx`](../../src/features/Planning/screens/ScheduleScreen.tsx) | enveloppe routée : résout le groupe (favoris si tableau) et configure l'en-tête |
 | [`screens/GroupSelectionScreen.tsx`](../../src/features/Planning/screens/GroupSelectionScreen.tsx) | recherche de groupes : chargement, cache, sections alphabétiques, filtrage |
-| [`screens/CourseScreen.tsx`](../../src/features/Planning/screens/CourseScreen.tsx) | fiche d'un cours : détails, extraction de la salle, carte Leaflet intégrée |
+| [`screens/CourseScreen.tsx`](../../src/features/Planning/screens/CourseScreen.tsx) | fiche d'un cours : détails, extraction de la salle, carte intégrée ([`EmbeddedMap`](../../src/shared/map/EmbeddedMap.tsx), [cartographie.md](../cartographie.md)) |
 | [`components/ScheduleList.tsx`](../../src/features/Planning/components/ScheduleList.tsx) | chargement et rendu d'un planning (jour ou semaine), cache, filtres, notifications |
 | [`components/ScheduleListUtils.ts`](../../src/features/Planning/components/ScheduleListUtils.ts) | `groupOverlappingCourses` : regroupement des cours qui se chevauchent |
 | [`components/CourseAnnotations.ts`](../../src/features/Planning/components/CourseAnnotations.ts) | l'icône d'une ligne de description, déduite de son contenu — partagée par la carte et la fiche |

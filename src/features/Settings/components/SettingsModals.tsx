@@ -1,317 +1,188 @@
-import React, { useRef, useState } from 'react';
-import {
-    Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback,
-    ScrollView, Platform, FlatList, TextInput, KeyboardAvoidingView, Keyboard, SafeAreaView
-} from 'react-native';
+/**
+ * Les modales des reglages : un choix generique, et deux confirmations.
+ *
+ * **Le choix est une seule modale** (`SettingsChoicePopup`), que la langue et le calendrier
+ * habillent : des options a la forme des boutons de l'application — contour neutre au repos, fond
+ * teinte et coche une fois choisie — puis un bouton Confirmer. Les ronds a cocher ne ressemblaient a
+ * rien d'autre dans l'application, et un choix applique au premier toucher ne laissait pas se
+ * raviser : on validait en essayant.
+ *
+ * **Les filtres d'UE ne sont plus une modale** : ils ont leur ecran (`FiltersScreen`), pousse comme
+ * les autres sous-pages des reglages. Une modale qui prenait tout l'ecran, portait une liste, une
+ * recherche et un formulaire etait une sous-page qui ne disait pas son nom — sans en-tete de
+ * navigation ni geste de retour.
+ */
+
+import React, { useState } from 'react';
+import { Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import { propsLibelleBouton, tokens } from '../../../shared/theme/Theme';
 import { SettingsManager } from '../../../shared/services/AppCore';
-import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
-import type { UeRencontree } from '../../Planning/services/PlanningAssembly';
 
-// ── Utilitaire Clavier ──────────────────────────────────────────────────
-export const SettingsDismissKeyboard = ({ children }: { children: React.ReactNode }) => (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        {children}
-    </TouchableWithoutFeedback>
-);
+type ThemeSettings = import('../../../shared/theme/Theme').AppThemeType['settings'];
 
-// ── Popup Calendrier ────────────────────────────────────────────────────
-export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selectedCalendar, setCalendar }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; selectedCalendar: string | number; setCalendar: (cal: import('expo-calendar').Calendar | 'UKit') => void }) => {
-    function setDefaultCalendar() {
-        setCalendar('UKit');
-    }
+export interface OptionDeChoix {
+    /** L'identifiant stable de l'option — un code de langue, un id de calendrier. */
+    cle: string;
+    libelle: string;
+}
 
-    const calendars = SettingsManager.getCalendars().filter((cal) => cal.title !== 'UKit');
-    const ukitCalendar = SettingsManager.getCalendars().find((cal) => cal.title === 'UKit');
-
-    return (
-        <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={popupClose}>
-            <TouchableWithoutFeedback onPress={popupClose}>
-                <View style={theme.popup.background as never}>
-                    <View style={theme.popup.container as never}>
-                        <View style={theme.popup.header as never}>
-                            <Text style={theme.popup.textHeader}>
-                                {Translator.get('CALENDAR')}
-                            </Text>
-                            <TouchableOpacity onPress={popupClose} hitSlop={12}>
-                                <MaterialIcons name="close" size={24} style={theme.popup.closeIcon} />
-                            </TouchableOpacity>
-                        </View>
-                        <Text style={theme.popup.textDescription}>
-                            {Translator.get('YOUR_CALENDAR')}
-                        </Text>
-                        <ScrollView style={{ marginVertical: tokens.space.sm }}>
-                            <TouchableOpacity onPress={setDefaultCalendar} style={theme.popup.radioContainer as never}>
-                                <MaterialIcons
-                                    name={selectedCalendar === 'UKit' || selectedCalendar === ukitCalendar?.id ? 'radio-button-on' : 'radio-button-off'}
-                                    size={24}
-                                    color={theme.popup.radioIconColor}
-                                />
-                                <Text style={theme.popup.radioText}>{Translator.get('UKIT_CALENDAR')}</Text>
-                            </TouchableOpacity>
-
-                            <Text style={theme.popup.textDescription}>{Translator.get('EXISTING_CALENDARS')}</Text>
-
-                            {calendars.map((calendar, i) => {
-                                const isSelected = selectedCalendar === calendar.id;
-                                const _setCalendar = () => setCalendar(calendar);
-                                return (
-                                    <TouchableOpacity key={calendar.id} onPress={_setCalendar} style={theme.popup.radioContainer as never}>
-                                        <MaterialIcons
-                                            name={isSelected ? 'radio-button-on' : 'radio-button-off'}
-                                            size={24}
-                                            color={theme.popup.radioIconColor}
-                                        />
-                                        <Text style={theme.popup.radioText}>{calendar.title + '  '}</Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </ScrollView>
-                    </View>
-                </View>
-            </TouchableWithoutFeedback>
-        </Modal>
-    );
-};
+interface SettingsChoicePopupProps {
+    theme: ThemeSettings;
+    titre: string;
+    description?: string;
+    options: readonly OptionDeChoix[];
+    /** La cle de l'option en vigueur : c'est elle qui apparait choisie a l'ouverture. */
+    selection: string;
+    popupVisible: boolean;
+    popupClose: () => void;
+    /** Appele a la confirmation, et seulement si le choix a change : rien ne se rejoue pour rien. */
+    onConfirm: (cle: string) => void;
+}
 
 /**
- * Un filtre actif : son code, et l'intitule de l'UE quand un planning charge le connait.
+ * La modale de choix : des options, un Confirmer.
  *
- * Le code seul n'etait pas exploitable — `4TIN606U` ne se relie a un cours qu'en ouvrant son emploi du
- * temps. L'intitule existait deja dans la donnee ; l'indexation le jetait
- * (`PlanningAssembly.indexerUes`).
- *
- * `null` est un cas ordinaire : un filtre saisi a la main, ou herite d'une annee precedente, nomme une
- * UE qu'aucun planning charge ne porte. L'ecran affiche alors le code seul, comme avant.
+ * Le toucher **prepare** le choix, Confirmer l'applique, fermer l'abandonne — la selection en vigueur
+ * reste donc vraie tant qu'on n'a pas confirme, ce que l'application immediate des radios ne
+ * permettait pas de montrer.
  */
-const FiltreActif = ({ theme, code }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; code: string }) => {
-    const nom = DataManager.nomDUE(code);
+export const SettingsChoicePopup = ({ theme, titre, description, options, selection, popupVisible, popupClose, onConfirm }: SettingsChoicePopupProps) => {
+    const [candidat, setCandidat] = useState<string | null>(null);
+    const choisi = candidat ?? selection;
 
-    return (
-        <TouchableOpacity
-            onLongPress={() => SettingsManager.removeFilters(code)}
-            style={[
-                theme.popup.filters.button as never,
-                { flex: 1, minWidth: 0, alignItems: 'flex-start', flexDirection: 'column' },
-            ]}
-        >
-            <Text style={theme.popup.filters.buttonText}>{code}</Text>
-            {nom !== null ? (
-                <Text
-                    numberOfLines={2}
-                    style={{ fontSize: tokens.fontSize.xs, color: theme.popup.filters.iconColor, marginTop: tokens.space.xxs }}
-                >
-                    {nom}
-                </Text>
-            ) : null}
-        </TouchableOpacity>
-    );
-};
-
-// ── Popup Filtres ───────────────────────────────────────────────────────
-export const SettingsFiltersPopup = ({ theme, popupVisible, popupClose, filterList, filterTextInput, setFilterTextInput, submitFilterTextInput }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; filterList: string[]; filterTextInput: string | null; setFilterTextInput: (input: string) => void; submitFilterTextInput: () => void }) => {
-    const flatListRef = useRef(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [availableUEs, setAvailableUEs] = useState(DataManager.getUEs());
-    const scrollToEnd = () => flatListRef.current?.scrollToEnd();
-
-    // Subscribe to UE updates
-    React.useEffect(() => {
-        const updateUEs = (ues: UeRencontree[]) => setAvailableUEs([...ues]);
-        DataManager.on('availableUEs', updateUEs);
-        // Refresh on open
-        setAvailableUEs(DataManager.getUEs());
-    }, [popupVisible]);
-
-    // La recherche porte sur le code **et** sur l'intitule : personne ne retient `4TIN606U`, tout le
-    // monde retient « Histoire ».
-    const filteredSuggestions = searchQuery.length > 0
-        ? availableUEs.filter(ue =>
-            (ue.code.toUpperCase().includes(searchQuery.toUpperCase()) ||
-                ue.nom.toUpperCase().includes(searchQuery.toUpperCase())) &&
-            !filterList.includes(ue.code)
-        )
-        : [];
-
-    const renderFilterItem = ({ item }: { item: string }) => <FiltreActif theme={theme} code={item} />;
-
-    const addFilterTextInput = () => {
-        submitFilterTextInput();
-        setTimeout(() => scrollToEnd(), 500);
+    const fermer = () => {
+        setCandidat(null);
+        popupClose();
     };
 
-    const onSuggestionPress = (ue: string) => {
-        SettingsManager.addFilters(ue);
-        setSearchQuery('');
-        setTimeout(() => scrollToEnd(), 500);
+    const confirmer = () => {
+        const retenu = choisi;
+        setCandidat(null);
+        popupClose();
+        if (retenu !== selection) onConfirm(retenu);
     };
 
     return (
-        <Modal animationType="slide" transparent={true} visible={popupVisible} onRequestClose={popupClose}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-                <SafeAreaView style={{ flex: 1 }}>
-                    <SettingsDismissKeyboard>
-                        <View style={theme.popup.filters.container as never}>
-                            <View style={theme.popup.filters.header as never}>
-                                <Text style={theme.popup.textHeader}>{Translator.get('FILTERS')}</Text>
-                                <TouchableOpacity onPress={popupClose} hitSlop={12}>
+        <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={fermer}>
+            <TouchableWithoutFeedback onPress={fermer}>
+                <View style={theme.popup.background as never}>
+                    {/* Le second garde-toucher rend la carte inerte : sans lui, un toucher a cote
+                        d'une option — un rembourrage, la description — fermait la modale. */}
+                    <TouchableWithoutFeedback>
+                        <View style={theme.popup.container as never}>
+                            <View style={theme.popup.header as never}>
+                                <Text style={theme.popup.textHeader}>{titre}</Text>
+                                <TouchableOpacity onPress={fermer} hitSlop={12}>
                                     <MaterialIcons name="close" size={24} style={theme.popup.closeIcon} />
                                 </TouchableOpacity>
                             </View>
 
-                            <Text style={theme.popup.textDescription}>
-                                {Translator.get('REMOVE_FILTER')}
-                            </Text>
+                            {description !== undefined ? (
+                                <Text style={theme.popup.textDescription}>{description}</Text>
+                            ) : null}
 
-                            {/* ── Active filters list ── */}
-                            <View style={theme.popup.filterListContainer as never}>
-                                <FlatList
-                                    ref={flatListRef}
-                                    keyExtractor={(item) => item}
-                                    data={filterList}
-                                    renderItem={renderFilterItem}
-                                    numColumns={2}
-                                    ListEmptyComponent={
-                                        <Text style={theme.popup.textDescription}>{Translator.get('NO_FILTER')}</Text>
-                                    }
-                                />
-                            </View>
+                            {/* La marge basse complete le `marginTop` des boutons : l'ecart
+                                options -> boutons vaut alors 16, celui de tous les dialogues. */}
+                            <ScrollView style={{ marginBottom: tokens.space.sm }}>
+                                {options.map((option) => {
+                                    const selectionne = option.cle === choisi;
+                                    return (
+                                        <TouchableOpacity
+                                            key={option.cle}
+                                            onPress={() => setCandidat(option.cle)}
+                                            style={[theme.popup.option, selectionne ? theme.popup.optionSelected : null] as never}
+                                        >
+                                            <Text
+                                                numberOfLines={2}
+                                                style={[theme.popup.optionText, selectionne ? theme.popup.optionTextSelected : null]}
+                                            >
+                                                {option.libelle}
+                                            </Text>
+                                            {/* L'emplacement de la coche est reserve meme au repos :
+                                                sans lui, choisir une option retrecissait son libelle,
+                                                et un nom long sautait sur deux lignes en alternance. */}
+                                            <View style={{ width: 20, marginLeft: tokens.space.sm, alignItems: 'flex-end' }}>
+                                                {selectionne ? (
+                                                    <MaterialIcons name="check" size={20} color={theme.popup.optionCheckColor} />
+                                                ) : null}
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </ScrollView>
 
-                            {/* ── Search / Suggestions ── */}
-                            <SearchAndSuggestions 
-                                availableUEs={availableUEs} 
-                                searchQuery={searchQuery} 
-                                setSearchQuery={setSearchQuery} 
-                                filteredSuggestions={filteredSuggestions} 
-                                onSuggestionPress={onSuggestionPress} 
-                                theme={theme} 
-                            />
-
-                            {/* ── Manual input ── */}
-                            <View style={theme.popup.filters.footer as never}>
-                                <TextInput
-                                    style={theme.popup.textInput}
-                                    onChangeText={setFilterTextInput}
-                                    value={filterTextInput}
-                                    placeholder="4TIN603U"
-                                    placeholderTextColor={theme.popup.textInputPlaceholderColor}
-                                    autoCorrect={false}
-                                    keyboardType={Platform.OS === 'ios' ? 'default' : 'visible-password'}
-                                />
-                                <TouchableOpacity onPress={addFilterTextInput}>
-                                    <MaterialIcons name="add" size={32} color={theme.popup.textInputIconColor} />
+                            <View style={theme.popup.buttonContainer as never}>
+                                <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={fermer}>
+                                    <Text {...propsLibelleBouton} style={theme.popup.buttonTextSecondary as never}>{Translator.get('CANCEL')}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={theme.popup.buttonMain as never} onPress={confirmer}>
+                                    <Text {...propsLibelleBouton} style={theme.popup.buttonTextMain as never}>{Translator.get('CONFIRM')}</Text>
                                 </TouchableOpacity>
                             </View>
-                            <Text style={theme.popup.textDescription}>
-                                {Translator.get('FILTERS_ENTER_CODE')}
-                            </Text>
                         </View>
-                    </SettingsDismissKeyboard>
-                </SafeAreaView>
-            </KeyboardAvoidingView>
-        </Modal>
-    );
-};
-
-const SearchAndSuggestions = ({ availableUEs, searchQuery, setSearchQuery, filteredSuggestions, onSuggestionPress, theme }) => {
-    if (availableUEs.length === 0) return null;
-    return (
-        <View style={{ marginHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}>
-            <TextInput
-                style={[theme.popup.textInput, { marginHorizontal: 0, marginBottom: tokens.space.sm }]}
-                onChangeText={setSearchQuery}
-                value={searchQuery}
-                placeholder={Translator.get('SEARCH_UE')}
-                placeholderTextColor={theme.popup.textInputPlaceholderColor}
-                autoCorrect={false}
-                keyboardType={Platform.OS === 'ios' ? 'default' : 'visible-password'}
-            />
-            {filteredSuggestions.length > 0 && (
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={{ marginBottom: tokens.space.xs }}
-                    contentContainerStyle={{ paddingVertical: tokens.space.xs }}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    {filteredSuggestions.map((ue) => (
-                        <TouchableOpacity
-                            key={ue.code}
-                            onPress={() => onSuggestionPress(ue.code)}
-                            style={{
-                                paddingHorizontal: tokens.space.sm,
-                                paddingVertical: tokens.space.xs,
-                                borderRadius: tokens.radius.sm,
-                                marginRight: tokens.space.sm,
-                                borderWidth: 1,
-                                // `iconColor` (la teinte pleine) et non `filters.button.backgroundColor`,
-                                // qui est un bleu a 8 % d'opacite prevu comme **fond** : employe en couleur
-                                // de texte il rendait la pastille quasi illisible. Le repli `|| '#009ee0'`
-                                // qui le doublait ne s'est jamais declenche — la valeur existe (jalon 6-K).
-                                borderColor: theme.popup.filters.iconColor,
-                                backgroundColor: 'transparent',
-                            }}
-                        >
-                            <Text style={{
-                                fontSize: tokens.fontSize.xs,
-                                fontWeight: tokens.fontWeight.semibold,
-                                color: theme.popup.filters.iconColor,
-                            }}>
-                                {/* Le code identifie, l'intitule reconnait : les deux, ou le code seul. */}
-                                {ue.nom === '' ? ue.code : `${ue.code} · ${ue.nom}`}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            )}
-            {searchQuery.length > 0 && filteredSuggestions.length === 0 && (
-                <Text style={[theme.popup.textDescription, { fontSize: tokens.fontSize.xs, marginBottom: tokens.space.xs }]}>
-                    {Translator.get('NO_UE_FOUND')}
-                </Text>
-            )}
-        </View>
-    );
-};
-
-// ── Popup Langue ────────────────────────────────────────────────────────
-export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, language, setLanguageToFrench, setLanguageToEnglish, setLanguageToSpanish }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; language: string; setLanguageToFrench: () => void; setLanguageToEnglish: () => void; setLanguageToSpanish: () => void }) => {
-    return (
-        <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={popupClose}>
-            <TouchableWithoutFeedback onPress={popupClose}>
-                <View style={theme.popup.background as never}>
-                    <View style={theme.popup.container as never}>
-                        <View style={theme.popup.header as never}>
-                            <Text style={theme.popup.textHeader}>{Translator.get('LANGUAGE')}</Text>
-                            <TouchableOpacity onPress={popupClose} hitSlop={12}>
-                                <MaterialIcons name="close" size={24} style={theme.popup.closeIcon} />
-                            </TouchableOpacity>
-                        </View>
-                        <Text style={theme.popup.textDescription}>{Translator.get('YOUR_LANGUAGE')}</Text>
-                        <View style={{ marginVertical: tokens.space.sm }}>
-                            <TouchableOpacity onPress={setLanguageToFrench} style={theme.popup.radioContainer as never}>
-                                <MaterialIcons name={language === 'fr' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
-                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: tokens.space.sm, fontWeight: tokens.fontWeight.semibold }]}>{Translator.get('FRENCH')}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={setLanguageToEnglish} style={theme.popup.radioContainer as never}>
-                                <MaterialIcons name={language === 'en' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
-                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: tokens.space.sm, fontWeight: tokens.fontWeight.semibold }]}>{Translator.get('ENGLISH')}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={setLanguageToSpanish} style={theme.popup.radioContainer as never}>
-                                <MaterialIcons name={language === 'es' ? 'radio-button-on' : 'radio-button-off'} size={24} color={theme.popup.radioIconColor} />
-                                <Text style={[theme.popup.radioText, { flexShrink: 1, marginLeft: tokens.space.sm, fontWeight: tokens.fontWeight.semibold }]}>{Translator.get('SPANISH')}</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                    </TouchableWithoutFeedback>
                 </View>
             </TouchableWithoutFeedback>
         </Modal>
     );
 };
 
-// ── Popup Réinitialisation ──────────────────────────────────────────────
+// ── Popup Langue ────────────────────────────────────────────────────────
+export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, language, onConfirm }: { theme: ThemeSettings; popupVisible: boolean; popupClose: () => void; language: string; onConfirm: (code: string) => void }) => (
+    <SettingsChoicePopup
+        theme={theme}
+        titre={Translator.get('LANGUAGE')}
+        description={Translator.get('YOUR_LANGUAGE')}
+        options={[
+            { cle: 'fr', libelle: Translator.get('FRENCH') },
+            { cle: 'en', libelle: Translator.get('ENGLISH') },
+            { cle: 'es', libelle: Translator.get('SPANISH') },
+        ]}
+        selection={language}
+        popupVisible={popupVisible}
+        popupClose={popupClose}
+        onConfirm={onConfirm}
+    />
+);
+
+// ── Popup Calendrier ────────────────────────────────────────────────────
+export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selectedCalendar, setCalendar }: { theme: ThemeSettings; popupVisible: boolean; popupClose: () => void; selectedCalendar: string | number; setCalendar: (cal: import('expo-calendar').Calendar | 'UKit') => void }) => {
+    const calendars = SettingsManager.getCalendars().filter((cal) => cal.title !== 'UKit');
+    const ukitCalendar = SettingsManager.getCalendars().find((cal) => cal.title === 'UKit');
+
+    // Le calendrier dedie a deux identites — la cible symbolique `'UKit'` et l'id du calendrier reel
+    // une fois cree — et les deux veulent dire la meme option.
+    const selection = selectedCalendar === 'UKit' || selectedCalendar === ukitCalendar?.id
+        ? 'UKit'
+        : String(selectedCalendar);
+
+    const confirmerCalendrier = (cle: string) => {
+        if (cle === 'UKit') return setCalendar('UKit');
+        const calendrier = calendars.find((cal) => cal.id === cle);
+        if (calendrier !== undefined) setCalendar(calendrier);
+    };
+
+    return (
+        <SettingsChoicePopup
+            theme={theme}
+            titre={Translator.get('CALENDAR')}
+            description={Translator.get('YOUR_CALENDAR')}
+            options={[
+                { cle: 'UKit', libelle: Translator.get('UKIT_CALENDAR') },
+                ...calendars.map((cal) => ({ cle: cal.id, libelle: cal.title })),
+            ]}
+            selection={selection}
+            popupVisible={popupVisible}
+            popupClose={popupClose}
+            onConfirm={confirmerCalendrier}
+        />
+    );
+};
+
+// ── Popup Extinction de la synchronisation ──────────────────────────────
 /**
  * La confirmation d'extinction de la synchronisation calendrier.
  *
@@ -320,7 +191,7 @@ export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, languag
  * moities de ce qui se passe — ce qui part, et ce qui ne bouge pas — parce que « desactiver » ne
  * laisse pas deviner que ca efface quelque chose.
  */
-export const SettingsSyncOffPopup = ({ theme, popupVisible, popupClose, disableSync }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; disableSync: () => void }) => {
+export const SettingsSyncOffPopup = ({ theme, popupVisible, popupClose, disableSync }: { theme: ThemeSettings; popupVisible: boolean; popupClose: () => void; disableSync: () => void }) => {
     return (
         <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={popupClose}>
             <TouchableWithoutFeedback onPress={popupClose}>
@@ -332,11 +203,11 @@ export const SettingsSyncOffPopup = ({ theme, popupVisible, popupClose, disableS
                         <Text style={theme.popup.textDescription}>{Translator.get('DISABLE_SYNC_CONFIRMATION')}</Text>
                         <View style={theme.popup.buttonContainer as never}>
                             <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={popupClose}>
-                                <Text style={theme.popup.buttonTextSecondary as never}>{Translator.get('CANCEL')}</Text>
+                                <Text {...propsLibelleBouton} style={theme.popup.buttonTextSecondary as never}>{Translator.get('CANCEL')}</Text>
                             </TouchableOpacity>
                             {/* Destructif : l'extinction retire de l'agenda personnel les cours deja poses. */}
                             <TouchableOpacity style={theme.popup.buttonDestructive as never} onPress={disableSync}>
-                                <Text style={theme.popup.buttonTextDestructive as never}>{Translator.get('DISABLE')}</Text>
+                                <Text {...propsLibelleBouton} style={theme.popup.buttonTextDestructive as never}>{Translator.get('DISABLE')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -346,7 +217,8 @@ export const SettingsSyncOffPopup = ({ theme, popupVisible, popupClose, disableS
     );
 };
 
-export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }: { theme: import('../../../shared/theme/Theme').AppThemeType['settings']; popupVisible: boolean; popupClose: () => void; resetApp: () => void }) => {
+// ── Popup Réinitialisation ──────────────────────────────────────────────
+export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }: { theme: ThemeSettings; popupVisible: boolean; popupClose: () => void; resetApp: () => void }) => {
     return (
         <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={popupClose}>
             <TouchableWithoutFeedback onPress={popupClose}>
@@ -358,10 +230,10 @@ export const SettingsResetPopup = ({ theme, popupVisible, popupClose, resetApp }
                         <Text style={theme.popup.textDescription}>{Translator.get('RESET_APP_CONFIRMATION')}</Text>
                         <View style={theme.popup.buttonContainer as never}>
                             <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={popupClose}>
-                                <Text style={theme.popup.buttonTextSecondary as never}>{Translator.get('CANCEL')}</Text>
+                                <Text {...propsLibelleBouton} style={theme.popup.buttonTextSecondary as never}>{Translator.get('CANCEL')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={theme.popup.buttonDestructive as never} onPress={resetApp}>
-                                <Text style={theme.popup.buttonTextDestructive as never}>{Translator.get('RESET')}</Text>
+                                <Text {...propsLibelleBouton} style={theme.popup.buttonTextDestructive as never}>{Translator.get('RESET')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

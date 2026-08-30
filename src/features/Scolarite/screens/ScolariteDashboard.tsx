@@ -56,7 +56,6 @@ const ScolariteDashboard = ({ navigation }) => {
             teinte={accent}
             insets={insets}
             coldData={coldData}
-            valeurs={widgets.valeurs}
         />
     );
 

@@ -22,7 +22,6 @@ import style, { tokens } from '../../../shared/theme/Theme';
 
 import {
     SettingsLanguagePopup,
-    SettingsFiltersPopup,
     SettingsResetPopup,
     SettingsSyncOffPopup,
     SettingsCalendarPopup
@@ -46,9 +45,6 @@ export interface SettingsState {
     calendarDialogVisible: boolean;
     calendarSyncEnabled: boolean;
     calendars: import('expo-calendar').Calendar[];
-    filterList: string[];
-    filterTextInput: string | null;
-    filtersDialogVisible: boolean;
     hasCalendarPermission: boolean;
     isSynchronizingCalendar: boolean;
     language: string;
@@ -81,9 +77,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             calendarDialogVisible: false,
             calendarSyncEnabled: SettingsManager.getCalendarSyncEnabled(),
             calendars: SettingsManager.getCalendars(),
-            filterList: SettingsManager.getFilters(),
-            filterTextInput: null,
-            filtersDialogVisible: false,
             hasCalendarPermission: false,
             isSynchronizingCalendar: SettingsManager.isSynchronizingCalendar(),
             language: SettingsManager.getLanguage(),
@@ -116,17 +109,11 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         }
     };
 
+    // La modale de choix ne confirme que ce qui change : pas de garde a repeter ici.
     setSelectedLanguage = (newLang: string) => {
         this.setState({ language: newLang });
         SettingsManager.setLanguage(newLang);
     };
-
-    setLanguageToFrench = () => { if (this.state.language !== 'fr') this.setSelectedLanguage('fr'); };
-    setLanguageToEnglish = () => { if (this.state.language !== 'en') this.setSelectedLanguage('en'); };
-    setLanguageToSpanish = () => { if (this.state.language !== 'es') this.setSelectedLanguage('es'); };
-
-    refreshFiltersList = () => this.setState({ filterList: SettingsManager.getFilters() });
-    addFilters = (filter: string) => SettingsManager.addFilters(filter.toUpperCase());
 
     toggleOpenFavSwitchValue = () => {
         this.setState({ openFavSwitchValue: !this.state.openFavSwitchValue }, () => {
@@ -216,18 +203,9 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
     openSystemAppSettings = () => Linking.openSettings();
     setIsSynchronizingCalendar = (newState: boolean) => this.setState({ isSynchronizingCalendar: newState });
-    setFilterTextInput = (input: string) => this.setState({ filterTextInput: input.toUpperCase() });
-    submitFilterTextInput = () => {
-        if (this.state.filterTextInput) {
-            this.addFilters(this.state.filterTextInput);
-        }
-    };
 
     openLanguageDialog = () => this.setState({ languageDialogVisible: true });
     closeLanguageDialog = () => this.setState({ languageDialogVisible: false });
-
-    openFiltersDialog = () => this.setState({ filtersDialogVisible: true });
-    closeFiltersDialog = () => this.setState({ filtersDialogVisible: false });
 
     openSyncOffDialog = () => this.setState({ syncOffDialogVisible: true });
     closeSyncOffDialog = () => this.setState({ syncOffDialogVisible: false });
@@ -312,13 +290,11 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             this.toggleCalendarSync();
         }
         SettingsManager.on('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
-        SettingsManager.on('filter', this.refreshFiltersList);
     };
 
     componentWillUnmount = () => {
         if (this._unsubscribeFocus) this._unsubscribeFocus();
         SettingsManager.unsubscribe('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
-        SettingsManager.unsubscribe('filter', this.refreshFiltersList);
     };
 
 
@@ -326,8 +302,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     renderPopups(themeSettings: import('../../../shared/theme/Theme').AppThemeType['settings']) {
         return (
             <>
-                <SettingsLanguagePopup theme={themeSettings} popupVisible={this.state.languageDialogVisible} popupClose={this.closeLanguageDialog} language={this.state.language} setLanguageToFrench={this.setLanguageToFrench} setLanguageToEnglish={this.setLanguageToEnglish} setLanguageToSpanish={this.setLanguageToSpanish} />
-                <SettingsFiltersPopup theme={themeSettings} popupVisible={this.state.filtersDialogVisible} popupClose={this.closeFiltersDialog} filterList={this.state.filterList} filterTextInput={this.state.filterTextInput} setFilterTextInput={this.setFilterTextInput} submitFilterTextInput={this.submitFilterTextInput} />
+                <SettingsLanguagePopup theme={themeSettings} popupVisible={this.state.languageDialogVisible} popupClose={this.closeLanguageDialog} language={this.state.language} onConfirm={this.setSelectedLanguage} />
                 <SettingsSyncOffPopup theme={themeSettings} popupVisible={this.state.syncOffDialogVisible} popupClose={this.closeSyncOffDialog} disableSync={this.onSyncOffConfirmed} />
                 <SettingsResetPopup theme={themeSettings} popupVisible={this.state.resetDialogVisible} popupClose={this.closeResetDialog} resetApp={this.resetApp} />
                 <SettingsCalendarPopup theme={themeSettings} popupVisible={this.state.calendarDialogVisible} popupClose={this.closeCalendarDialog} setCalendar={this.setCalendar} selectedCalendar={this.state.selectedCalendar} />
@@ -342,7 +317,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         const themeSettings = theme.settings;
         const calendar = this.state.calendars.find((cal) => this.state.selectedCalendar === cal.id);
         const calendarName = !!calendar ? calendar.title : this.state.selectedCalendar === 'UKit' ? 'UKit' : Translator.get('NOT_FOUND');
-        const lastSyncDate = SettingsManager.getLastSyncDate();
 
         const renderHeader = (insets: import('react-native-safe-area-context').EdgeInsets | null) => {
             const topPadding = (insets?.top || 0);
@@ -392,7 +366,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     themeSettings={themeSettings}
                     language={this.state.language}
                     openLanguageDialog={this.openLanguageDialog}
-                    openFiltersDialog={this.openFiltersDialog}
+                    openFilters={() => this.props.navigation.navigate('Filters')}
                 />
                 <ThemeSection
                     themeSettings={themeSettings}
@@ -418,7 +392,8 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     themeSettings={themeSettings}
                     theme={theme}
                     hasCalendarPermission={this.state.hasCalendarPermission}
-                    lastSyncDate={lastSyncDate}
+                    lastSyncDate={SettingsManager.getLastSyncDate()}
+                    lastSyncFailed={SettingsManager.getLastSyncFailed()}
                     calendarSyncEnabled={this.state.calendarSyncEnabled}
                     toggleCalendarSync={this.toggleCalendarSync}
                     calendarName={calendarName}

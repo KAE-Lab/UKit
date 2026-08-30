@@ -292,6 +292,45 @@ Acquises, et qui ont coûté à être trouvées :
 - **`` `${theme.primary}15` `` n'est pas `theme.primarySoft`.** En thème sombre le premier vaut
   `#5E5CE615` et le second `#0A84FF20`. Les huit pastilles qui utilisent le premier ne sont **pas**
   à « corriger » vers le second : ce serait changer huit endroits en silence.
+- **La couleur d'action ne titre pas et ne nomme pas** (2026-08-30). Le violet dit « on peut me
+  toucher » : les titres de sous-pages (`NavBarHelper`) sont en `theme.font`, et une catégorie de
+  contenu — « Entrées » dans un menu — est un intertitre en petites capitales grises, pas un libellé
+  accentué. Les icônes de section, elles, prennent **une couleur par section** via
+  `theme.sectionsHeaders` (le motif du Planning et de la grille Scolarité, étendu aux fiches par
+  [`CampusSectionHeader`](../src/features/Campus/components/CampusSectionHeader.tsx)) — l'accent y
+  était employé partout, ce qui le banalisait.
+- **L'identité se pose en filigrane, jamais en ornement qui crie** (2026-08-30). Le logo
+  d'établissement de l'en-tête Scolarité — et du formulaire de connexion, en plus grand — est une
+  silhouette monochrome sans fond ; les tuiles de la
+  grille Scolarité portent leur silhouette — l'enveloppe, le dossier, le livre — à ~6 % d'opacité,
+  rognée par le coin bas droit. C'est **le geste de signature** du dépôt, et il a son composant :
+  [`GlypheFiligrane`](../src/shared/ui/GlypheFiligrane.tsx), qui fixe l'opacité, le rognage et le
+  calque de clip — ses règles d'usage sont dans son en-tête et elles sont strictes : une silhouette
+  **pleine** de ce que la surface *représente* (un service, une entité), sur des **surfaces
+  uniques** seulement — jamais sur les éléments répétés d'une liste, où il deviendrait du bruit, et
+  jamais comme décor sans sens. C'est ce qui le gardera signature au lieu de le laisser mourir par
+  la surexposition.
+- **Une action qui survole le contenu parle comme la barre de recherche** (2026-08-30). Un **objet
+  posé** — surface de carte ou bouton plein, filet et ombre partagée — sur la **fumée de flou**
+  (`FondDePiedFlottant`) : un flou plein **masqué par un dégradé** (`MaskedView`), donc le contenu
+  transparaît flouté et le flou s'estompe continûment vers le haut, sans jamais avoir de bord — plus
+  un léger voile du fond (~35 %) pour l'assise. Cinq formes essayées les 2026-08-30/31 : bande
+  opaque (nuage plein), bande floue (frontière), flou par tranches (chaque tranche montrait la
+  sienne), voile de teinte seul (pas une fumée — on veut voir le contenu flouté), flou masqué — le
+  bon. Android reçoit le flou plein sous le voile, compromis assumé. La barre de recherche Campus,
+  les pieds d'action (annonce, réservation de BU) et la **barre d'onglets** partagent le fond **et
+  le gabarit** : hauteur 50 (le bouton primaire de référence), marges latérales `md`, et l'assise de
+  la barre d'onglets (`inset − 15`, plancher `sm`) — jugée parfaite sur appareil, elle fait loi pour
+  tous les flottants. Un **bandeau fixe** — les dates d'une fiche,
+  un en-tête — reste **opaque** : il porte du contenu, rien ne doit transparaître. Un essai en
+  matériau translucide (flou) sur les pieds d'action a été fait et défait le même jour : il créait
+  deux traitements pour un même rôle. Le flou reste réservé au **teaser** des rangées mystérieuses —
+  là, c'est le contenu lui-même qu'on voile, pas une séparation.
+- **Un choix dans une modale est une option-bouton, jamais un rond à cocher** (2026-08-30). Contour
+  neutre au repos, fond teinté, filet d'accent et coche une fois choisie, puis Annuler / Confirmer —
+  styles `theme.settings.popup.option*`, posés pour les trois listes des Réglages
+  ([settings.md](features/settings.md#les-dialogues-et-pourquoi-ils-vivent-ici)). Toucher prépare,
+  Confirmer applique : un choix qui s'applique au premier toucher se valide en essayant.
 - **Un rayon de pilule se calcule, il ne s'écrit pas.** Une jauge de 6 px et une de 8 px prenaient
   `borderRadius: 3` et `4` en dur. `height / 2` rend les deux à l'identique et supprime le littéral.
   Vaut pour toute pastille ronde : `tokens.radius.pill`.

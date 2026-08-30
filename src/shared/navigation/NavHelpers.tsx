@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SettingsManager } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { HeaderButton, HEADER_BUTTON_ICON, HEADER_BUTTON_SIZE } from '../ui/HeaderButton';
-import style, { tokens } from '../theme/Theme';
+import style, { propsLibelleBouton, tokens } from '../theme/Theme';
 
 
 // GESTIONNAIRE DE HEADER
@@ -52,7 +52,12 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
                 borderRadius: tokens.radius.md, 
                 maxWidth: 300 
             }}>
-                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold }}>
+                {/* `font` et non `primary` : le violet est la couleur d'action, et un titre en couleur
+                    d'action se lit comme un bouton — a cote d'une fleche de retour qui, elle, en est
+                    un. Le titre nomme, il ne se touche pas. Et `xl` demi-gras : le gras claquait seul
+                    au milieu du vide, mais le 18 essaye ensuite disparaissait entre deux boutons de
+                    40 — le 22 demi-gras est l'equilibre, juge sur appareil. On n'y touche plus. */}
+                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: theme.font, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.semibold }}>
                     {title}
                 </Text>
             </Animated.View>
@@ -236,10 +241,10 @@ export class FilterRemoveButton extends React.Component<FilterRemoveButtonProps,
                             <Text style={popupTheme.textDescription}>{Translator.get('FILTERS_CONFIRMATION')}</Text>
                             <View style={popupTheme.buttonContainer}>
                                 <TouchableOpacity style={popupTheme.buttonSecondary} onPress={this.popupClose}>
-                                    <Text style={popupTheme.buttonTextSecondary}>{Translator.get('CANCEL')}</Text>
+                                    <Text {...propsLibelleBouton} style={popupTheme.buttonTextSecondary}>{Translator.get('CANCEL')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={popupTheme.buttonMain} onPress={this.filterOutUE}>
-                                    <Text style={popupTheme.buttonTextMain}>{Translator.get('CONFIRM')}</Text>
+                                    <Text {...propsLibelleBouton} style={popupTheme.buttonTextMain}>{Translator.get('CONFIRM')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>

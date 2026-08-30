@@ -54,6 +54,11 @@ export interface DefinitionWidget {
     /** L'icone d'un echec : la rangee change de signe, pas seulement de couleur. */
     readonly iconeEchec: IconSpec;
     /**
+     * La silhouette de fond d'une petite tuile — la version **pleine** de l'icone, posee en filigrane
+     * (TuileScolarite). Optionnelle : seules les tuiles en portent une.
+     */
+    readonly glyphe?: IconSpec;
+    /**
      * Sa couleur, en index dans `theme.sectionsHeaders`.
      *
      * **Toute la grille etait a l'accent** — icones, surfaces, compteurs, tous bleus —, et elle se
@@ -86,6 +91,13 @@ export interface DefinitionWidget {
      */
     readonly unite?: TranslationKey;
     /**
+     * L'unite au singulier, quand la langue la distingue : « non lu » sous un « 1 ».
+     *
+     * Optionnelle parce que toutes n'en ont pas besoin — « a rendre » est invariable — et la tuile
+     * retombe alors sur `unite`.
+     */
+    readonly uniteUn?: TranslationKey;
+    /**
      * La peremption par defaut, en minutes.
      *
      * Par widget, parce que les donnees ne vieillissent pas au meme rythme : une boite de reception
@@ -112,12 +124,14 @@ export const WIDGETS: readonly DefinitionWidget[] = [
         forme: 'tuile',
         icone: { name: 'email-outline' },
         iconeEchec: { name: 'email-alert-outline' },
+        glyphe: { name: 'email' },
         nom: 'SERVICE_MAILBOX',
         sousTitre: 'SERVICE_MAILBOX_SUBTITLE',
         zero: 'MAILBOX_NO_UNREAD',
         un: 'MAILBOX_UNREAD_ONE',
         plusieurs: 'MAILBOX_UNREAD_MANY',
         unite: 'WIDGET_MAILBOX_UNIT',
+        uniteUn: 'WIDGET_MAILBOX_UNIT_ONE',
         peremptionMin: 20,
     },
     {
@@ -127,6 +141,9 @@ export const WIDGETS: readonly DefinitionWidget[] = [
         forme: 'heros',
         icone: { name: 'book-open-variant' },
         iconeEchec: { name: 'book-alert-outline' },
+        // Le livre ferme et non l'ouvert : rogne, une silhouette simple reste reconnaissable la ou
+        // les pages ouvertes devenaient une tache.
+        glyphe: { name: 'book' },
         nom: 'SERVICE_MOODLE',
         sousTitre: 'SERVICE_MOODLE_SUBTITLE',
         zero: 'WIDGET_MOODLE_NONE',

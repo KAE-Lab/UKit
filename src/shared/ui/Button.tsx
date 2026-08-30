@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useContext } from 'react';
-import { Animated, Switch, Text, TouchableOpacity, View, Pressable } from 'react-native';
+import React, { useContext } from 'react';
+import { ActivityIndicator, Switch, Text, TouchableOpacity, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { AppContext } from '../services/AppCore';
@@ -133,31 +133,12 @@ const VALEUR_A_DROITE: import('react-native').TextStyle = {
 };
 
 export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, leftText, rightText, disabled, switchValue, onSwitchToggle }: SettingsButtonProps) => {
-    const rotatingAnimation = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        if (leftIconAnimation === 'rotate') {
-            Animated.loop(
-                Animated.timing(rotatingAnimation, {
-                    duration: 1000,
-                    toValue: 360,
-                    useNativeDriver: true,
-                }),
-            ).start();
-        } else {
-            rotatingAnimation.stopAnimation();
-            rotatingAnimation.setValue(0);
-        }
-    }, [leftIconAnimation]);
-
-    const rotate = rotatingAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '360deg'],
-    });
-
     if (!theme?.button) return null;
 
-    const isMaterialIcon = ['settings', 'language', 'filter-list', 'sync-disabled'].includes(leftIcon);
+    // `sync` en MaterialIcons et non MaterialCommunityIcons : le glyphe MCI est dessine en
+    // diagonale, et l'icone de synchronisation semblait figee de travers au repos. La variante
+    // MaterialIcons est droite, de la meme famille que `sync-disabled` juste au-dessus.
+    const isMaterialIcon = ['settings', 'language', 'filter-list', 'sync', 'sync-disabled'].includes(leftIcon);
     const IconComponent = isMaterialIcon ? MaterialIcons : MaterialCommunityIcons;
 
     return (
@@ -166,9 +147,27 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
             disabled={disabled}
             style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}] as any}>
             {leftIcon && (
-                <Animated.View style={{ transform: leftIconAnimation ? [{ rotate }] : [] }}>
+                leftIconAnimation ? (
+                    /*
+                      * L'indicateur natif remplace l'icone pendant la synchronisation — le meme
+                      * vocabulaire que les tuiles Scolarite en lecture. Une rotation maison de
+                      * l'icone a ete essayee et defaite : `Animated` la faisait pivoter autour du
+                      * coin haut gauche et non du centre, et le rendu ne fonctionnait pas. La boite
+                      * de 24 garde le gabarit de l'icone qu'il remplace, sans saut de mise en page.
+                      */
+                    <View style={{
+                        marginLeft: (theme.leftIcon as import('react-native').TextStyle)?.marginLeft,
+                        alignSelf: 'center',
+                        width: 24,
+                        height: 24,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}>
+                        <ActivityIndicator size="small" color={(theme.leftIcon as import('react-native').TextStyle)?.color} />
+                    </View>
+                ) : (
                     <IconComponent name={leftIcon as never} size={24} style={theme.leftIcon as import('react-native').TextStyle} />
-                </Animated.View>
+                )
             )}
             {/*
               * `flexShrink: 0` et non `flex: 1` seul : le libelle ne doit **jamais** etre comprime.

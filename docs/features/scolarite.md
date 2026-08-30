@@ -154,19 +154,21 @@ que son service a à annoncer.
 
 ```text
 Bonsoir Kylian !                      ← la salutation EST le titre de la page
-vendredi 28 août                        (elle s'efface au défilement)
+vendredi 28 août                        (dans l'en-tête collant, elle ne s'efface pas)
 
-┌─────────────────────────────────┐
+EN UN COUP D'ŒIL      il y a 12 min ← intertitres en petites capitales ; la
+┌─────────────────────────────────┐   fraîcheur des lectures à droite du premier
 │ [book]                          │   un HÉROS pleine largeur : une
 │  2  devoirs à rendre            │   chronologie ne porte pas qu'un
 │  Devoir de calcul — jeudi       │   chiffre, elle nomme une échéance
 └─────────────────────────────────┘
 ┌────────────────┬────────────────┐
 │ [mail]         │ [folder]       │   deux TUILES — des flux et des
-│ 3              │ 4              │   comptes : la messagerie, et les
-│ non lus        │ pièces rangées │   documents rangés sur l'appareil
-│ kylian@u-bor…  │ Sur ton appar… │
+│ 3 non lus      │ 4 documents    │   comptes : la messagerie, et les
+│ kylian@u-bor…  │ Sur ton appar… │   documents rangés sur l'appareil
 └────────────────┴────────────────┘
+
+TES SERVICES
 ┌─────────────────────────────────┐
 │ [chart] Notes et résultats    > │   des RANGÉES — des événements
 │         Tes relevés par semestre│   et des portes : rien à
@@ -218,8 +220,28 @@ demi-largeur lui suffit. Une chronologie, non — elle nomme la prochaine éché
 calcul — jeudi » ne tient pas dans une demi-largeur sans être tronqué. Il n'y en a **qu'un** : deux
 héros ne sont plus une hiérarchie.
 
-Une tuile **sépare le chiffre du mot qui le qualifie** — `3` puis « non lus » — là où une rangée écrit
-la phrase entière. On vient chercher un nombre dans un carré, pas une phrase.
+Une tuile **sépare le chiffre du mot qui le qualifie** — là où une rangée écrit la phrase entière. On
+vient chercher un nombre dans un carré, pas une phrase. La séparation est **une différence de taille
+sur une même ligne de base** — « **790** non lus », comme dans le héros — et non un retour à la
+ligne : empilés, le chiffre et son unité creusaient la tuile et la faisaient paraître à moitié vide,
+et la hauteur minimale est descendue avec (150 → 120, 2026-08-30). **Et l'unité s'accorde** : « 1 non
+lu », « 1 document » — la définition d'un widget porte une unité singulière optionnelle (`uniteUn`),
+et « à rendre », invariable, s'en passe.
+
+**Le milieu de la petite tuile se centre** (2026-08-30) : la valeur était collée en bas avec le
+contexte, et une tuile sans chiffre — « Aucun message non lu » — laissait un trou entre l'icône et
+son texte. L'espace libre se répartit désormais des deux côtés ; le contexte, lui, reste collé en
+bas, et deux voisines restent alignées par leur rangée, qui étire ses enfants à la plus haute.
+
+**Chaque tuile porte sa silhouette en filigrane** (2026-08-30) : une grande enveloppe pour la
+messagerie, un grand dossier pour les documents, un livre — fermé : rognée, une silhouette simple
+reste reconnaissable — pour le héros Moodle, réduit parce que sa carte est courte. Tous rognés par
+le **coin bas droit**. Les trois positions ont été essayées avant de s'y arrêter : au milieu, la
+silhouette ne répondait à rien ; en haut, son sommet coupé se lisait comme une forme cassée — le
+rognage doit manger le *bas* d'une silhouette, qui « dépasse » alors du cadre au lieu d'être
+amputée. C'est le geste de signature du dépôt — l'identité en transparence — porté par
+[`GlypheFiligrane`](../../src/shared/ui/GlypheFiligrane.tsx), qui fixe l'opacité et le rognage et
+consigne les règles d'usage ; la silhouette vient de `glyphe` dans la définition du widget.
 
 **Elle porte un chevron**, et c'est un revirement. On avait jugé qu'un chevron dans un carré était un
 ornement de liste égaré, la tuile entière étant la cible. L'appareil a tranché autrement : posées
@@ -243,8 +265,12 @@ passe donc à côté de la machinerie de widgets — péremption, cache, verrou 
 servirait, et emprunte seulement le châssis visuel (`TuileScolarite`). Faire entrer un cas local dans
 une machinerie qui ne connaît que des Blueprints l'aurait alourdie pour un seul appelant.
 
-Conséquence assumée : **il n'y a plus d'en-tête de section du tout.** La salutation est le titre de la
-page, et la grille suit.
+**La salutation est le titre de la page**, et la grille suit — sous deux **intertitres** en petites
+capitales, « En un coup d'œil » et « Tes services » (2026-08-30). Ce ne sont pas les en-têtes de
+section d'avant qui reviennent : c'est l'intertitre des Réglages et des horaires du CROUS, une ligne
+qui nomme sans peser. Sans eux, le héros, les tuiles et les rangées se lisaient comme un seul
+empilement — la page manquait d'air précisément là où sa structure change de nature. En mode échec,
+tout est rangées dans un seul groupe : un seul intertitre.
 
 > **Une seule exception, et elle est indispensable : un échec bascule la paire entière en rangées.**
 > Un échec demande des mots — « Identifiants incorrects », et la ressaisie derrière. Une tuile de
@@ -255,8 +281,18 @@ page, et la grille suit.
 Parce qu'il n'y a rien à lire fin août, et c'est **mesuré** : la chronologie Moodle du compte de
 sonde est vide même sur le filtre *Tout*, les résultats tombent en bloc en fin de semestre, et aucun
 calendrier d'épreuves n'existe avant la rentrée. Dessiner une extraction pour un contenu qu'on n'a
-jamais vu produirait des sélecteurs imaginés — exactement ce que ce dépôt ne fait pas. Les rangées,
-elles, sont utiles tout de suite : **elles ouvrent leur service**.
+jamais vu produirait des sélecteurs imaginés — exactement ce que ce dépôt ne fait pas.
+
+**Et depuis le 2026-08-30, une rangée sans source publiée est un teaser assumé**
+([`RangeeMysterieuse`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx)) : notes et
+examens passent **sous un flou** (`expo-blur`, un cadenas au centre — l'exclusivité plutôt que la
+promesse), et le toucher ouvre une
+modale « Bientôt disponible » — avec, quand l'établissement déclare une porte, un lien discret pour
+ouvrir le service quand même : le mystère ne coûte aucune capacité. **Le déclencheur est la donnée,
+pas une liste écrite** (natures `bientot` et `absent`, chez les deux facs) : le jour où la partie 2
+de la v6 publie le Blueprint des notes, le flou tombe de lui-même, sans release — la thèse de la
+phase 6 appliquée à un effet de style. Les tuiles, elles, ne se floutent jamais : la messagerie et
+les documents ont toujours quelque chose de vrai à dire.
 
 #### Les six états d'une rangée
 
@@ -389,9 +425,12 @@ voulu l'écrire.
 | Priorité | Règle du socle |
 |---|---|
 | 0 | « Bonjour » — sans condition, donc toujours vrai. Il garantit qu'il y a **toujours** quelque chose à afficher |
-| 10 | matin, soir, nuit |
-| 20 | le week-end — il passe devant l'heure : « Bon week-end » vaut mieux que « Bonsoir » un samedi soir |
+| 10 | « Bonsoir », de 19 h à 4 h — l'intervalle passe minuit |
 | 90 | l'anniversaire — le seul message qui parle de la personne et non du moment, et rien du calendrier ne doit le recouvrir |
+
+Le socle s'est **réduit à ces trois règles** le 2026-08-30 : matin, nuit et week-end multipliaient
+les variantes pour un accueil qu'on ne relit pas. Un mot de circonstance reste possible par une règle
+publiée — c'est exactement le rôle de la table, et c'est pourquoi la machinerie n'a pas bougé.
 
 ```sql
 -- Un mot pour la rentrée, posé sans release. `messages` porte une entrée par langue :
@@ -409,7 +448,7 @@ c'est le bon sens de l'erreur, un message qui apparaît trop souvent se remarque
 message qui n'apparaît jamais ne se remarque pas.
 
 **Une ligne, jamais deux**, et en `xl` (22) plutôt qu'en `xxl` (28) : c'est la taille à laquelle une
-salutation longue — « Have a good weekend Kylian ! » — tient sans passer à la ligne. `numberOfLines={1}`
+salutation longue — « Joyeux anniversaire Kylian ! » — tient sans passer à la ligne. `numberOfLines={1}`
 tranche ce qui dépasserait quand même.
 
 **L'en-tête est collant, il ne s'efface plus, et il s'assume comme tel.** Il a d'abord glissé sous le contenu en s'effaçant au
@@ -424,46 +463,48 @@ défilante : on lisait un contenu tronqué plutôt qu'un contenu qui glisse sous
 
 ```text
 ┌──────────────────────────────────────┐
-│ Academics              [──logo fac──]│
-│ Bon week-end Kylian !                │
-│ samedi 29 août                       │
-│ [↻ Mis à jour il y a 12 min]         │
+│ Scolarité                            │
+│ Bonsoir Kylian !          ┌─────────┐│   le logo en FILIGRANE : monochrome,
+│ samedi 29 août            │logo gris││   sans fond, aligné sur la salutation
+│                           └─────────┘│   et sa date
 └──────────────────────────────────────┘
 ```
 
-Deux éléments le remplissent, et chacun comblait un manque différent — le logo la **largeur** à côté
-du titre, la pastille la **hauteur** sous l'accueil. Ils ont été essayés séparément puis tenus
-ensemble.
+**Le titre reste « Scolarité »**, comme chaque onglet porte son nom. La salutation **a été** le titre
+le temps d'un essai (2026-08-30), défait le jour même, et il ne faut pas le refaire : un titre au
+contenu variable casse sa ligne au premier prénom composé — 34 points ne pardonnent rien — et la
+page devenait la seule de l'application à ne pas porter son nom.
 
-| Élément | Ce qu'il dit | Pourquoi il est là |
-|---|---|---|
-| le logo, à droite du titre | de quelle fac viennent ces données | rien ne l'annonçait depuis qu'il y en a deux |
-| la fraîcheur, sous l'accueil | « Mis à jour il y a 12 min » | elle rend visible le cache des widgets, sinon invisible : une valeur sans date ne dit pas si elle est d'il y a deux minutes ou d'hier soir |
+**Le logo est un filigrane** (2026-08-30) : monochrome (`tintColor: fontSecondary`), sans fond ni
+filet. C'est l'usage « niveaux de gris » que tout kit de marque autorise — à ne pas confondre avec
+recolorer ou tourner le logo, qui restent interdits. Il remplace la vignette sur carré blanc, qui
+flottait en thème sombre et restait petite parce qu'elle devait se loger dans la seule ligne du
+titre ; le filigrane, lui, **se pose sur le bas de la ligne salutation + date** — comme un texte sur
+sa ligne d'écriture — et le titre garde toute sa largeur au-dessus. Centré, il dépassait du haut de
+la salutation ; centré sur le bloc entier, il ne répondait à rien : deux entre-deux essayés et
+défaits le même jour. Sans dossier lu, il se pose sur la ligne du titre.
+
+**Sa taille se calcule du ratio mesuré du logo** (`Image.getSize`), pas d'une boîte fixe : dans une
+boîte, `contain` fait saturer la hauteur aux logos compacts et la largeur aux étirés — à hauteur
+pleine, le logo trapu de Bordeaux INP (1,69:1) paraissait plus lourd que le logotype étiré de l'UB
+(2,86:1). Une **hauteur commune** (44 points, plafond de largeur à 132) égalise la masse visuelle.
 
 > **Aucun autre grand titre de section ne porte quoi que ce soit à sa droite** — ni Planning, ni
 > Campus, ni Réglages. C'est donc une **exception assumée pour cet onglet**, décidée après l'avoir
 > essayé aux deux endroits. Elle se défend : Scolarité est le seul onglet dont *tout* le contenu
 > appartient à un établissement, donc le seul où le nommer en tête a un sens.
 
-Le gabarit compact vaut `0.42` du gabarit d'origine, soit **87 × 37 points** : ça tient dans la ligne
-d'écriture d'un titre en 34 (~41 points) sans la faire grandir. C'est la contrainte qui fixe la
-valeur, et elle a changé avec la place du logo — il valait `0.38` le temps de l'essai où il partageait
-une ligne de pastilles, plus basse.
-
 **Sans logo publié, rien ne se pose à côté du titre** : la **pastille de nom** prend le relais sur la
 ligne de contexte. Un pictogramme générique à côté d'un grand titre serait de l'ornement, pas de
 l'information — et l'alternative n'est jamais un trou, le nom dit la même chose en toutes lettres.
 
-La fraîcheur prend **la plus récente** des lectures, pas la plus ancienne : chaque widget a sa propre
-péremption, donc la plus ancienne serait toujours celle du widget au rythme le plus lent — elle dirait
-« il y a six heures » sur une page dont la boîte vient d'être relue. Elle n'apparaît qu'une fois
-quelque chose lu.
-
-> **Rien n'est posé à droite du grand titre**, et c'est une règle de l'application, pas un choix local :
-> ni Planning, ni Campus, ni Réglages ne portent quoi que ce soit à droite du leur. Un logo posé là
-> aurait fait de Scolarité le seul écran à déroger — et une exception d'un seul écran est une
-> incohérence, pas une signature. Le vide était d'ailleurs **vertical** : c'est en hauteur qu'il
-> manquait quelque chose, et l'en-tête vise désormais celle du Planning.
+**La fraîcheur a quitté l'en-tête** (2026-08-30) : « mis à jour il y a 12 min » qualifiait le cache
+des widgets, pas la page, et se lisait comme une propriété de page qu'aucun autre onglet ne portait —
+une incohérence apparente alors que Scolarité est simplement le **seul** onglet à cache à péremption
+(Campus et Planning rechargent au montage). Elle vit désormais à droite de l'intertitre « En un coup
+d'œil », en petit texte gris, au ras de ce qu'elle mesure. Elle prend **la plus récente** des
+lectures, pas la plus ancienne : chaque widget a sa propre péremption, donc la plus ancienne serait
+toujours celle du widget au rythme le plus lent. Elle n'apparaît qu'une fois quelque chose lu.
 
 Le composant vit dans [`EnteteScolarite`](../../src/features/Scolarite/components/EnteteScolarite.tsx),
 sorti de l'écran comme `PageScolarite` avant lui — la limite de lignes du dépôt, et un en-tête qui a
@@ -846,16 +887,15 @@ messagerie portent les deux pauses d'authentification, le profil est instantané
 Le catalogue porte une colonne `logo_url` depuis le jalon 6-G, et **elle n'était lue nulle part** : la
 plomberie existait, la donnée manquait. Le formulaire de connexion l'affiche désormais.
 
-**Deux gabarits, parce que ce sont deux objets différents.** Un logo d'université est un *logotype* :
-large, plus proche du mot que du pictogramme. Mesuré le 2026-08-27, l'Université de Bordeaux est en
-**2,86:1** et Bordeaux INP en **1,69:1** — posés dans le carré de 72 prévu pour une icône, ils se
-réduisaient à 49 points de large sur 17 de haut, un timbre au milieu d'un grand carré blanc. Le
-conteneur est donc **large quand il porte un logo** et carré quand il porte l'icône de repli.
-
-**Fond blanc dans les deux thèmes**, comme le logo de UKit sur la page À propos. Un logo publié est
-fourni détouré sur transparent et dessiné pour du blanc : sur le fond de page en thème sombre, il
-devient illisible. Le teinter serait pire — ça ferait varier les couleurs d'une marque qu'on ne
-possède pas. Le rembourrage est **le nôtre** : les fichiers sont détourés à ras du tracé, sans marge.
+**En filigrane, comme l'en-tête du tableau de bord** (2026-08-30) : silhouette monochrome
+(`tintColor: fontSecondary`), sans fond ni filet, dimensionnée du ratio mesuré du fichier — les
+règles sont celles du filigrane de l'en-tête (« Le logo est un filigrane », plus haut), avec une hauteur plus
+généreuse (64 points contre 44) parce qu'ici le logo est le héros du bandeau, pas une signature de
+coin. Le formulaire a d'abord porté une **vignette sur carré blanc à filet** — un logo publié est
+détouré sur transparent et dessiné pour du blanc, donc illisible posé nu sur le fond sombre — mais
+quand le tableau de bord est passé au monochrome, elle est devenue la dernière du dépôt et
+détonnait. Le gabarit blanc reste dans `LogoEtablissement` sans usage courant, pour un logo dont la
+silhouette monochrome serait illisible.
 
 Le **repli sur l'icône générique** couvre les trois cas : aucun logo publié, un logo qui ne se charge
 pas, et le premier lancement hors ligne. Le formulaire reste utilisable dans les trois, ce qui est la
@@ -872,6 +912,14 @@ L'état d'un établissement sans portail publié empruntait la grammaire d'éche
 (`SourceFailureNotice`) : il disait « le portail ne répond pas » là où il n'y a **jamais eu** de
 portail à joindre. C'est désormais un **état vide**, avec ce qu'un état vide doit porter — une
 **action**, jamais un bouton Réessayer qui n'aurait rien à rejouer.
+
+**Et l'onglet lui-même est un teaser** (2026-08-30) : dans la barre de navigation, l'icône Scolarité
+passe sous le voile flouté à cadenas — le vocabulaire du bouton mystérieux de Campus — et le toucher
+ouvre une modale dédiée (« Campus pas encore relié ») dont l'action mène au formulaire de demande,
+à la même adresse de catalogue que l'état vide. Le déclencheur est `portailPublie()` : relier le
+campus fait tomber le voile sans release. Le bouton Groupes de la barre suit le même sort quand
+l'emploi du temps passe par un lien personnel (`groupesRequis()`) : la recherche n'a rien à
+chercher dans un inventaire qui n'existe pas.
 
 L'action ouvre un formulaire de demande, et **son adresse vient du catalogue** (`services.adaptation`)
 : ajouter ou changer ce lien est une publication, pas une release. Sans lien publié, le message reste
@@ -959,9 +1007,10 @@ ScolariteDashboard                      consomme useCredentials()
                                   ├─ EncartSession          (portail absent / pas de compte / echec)
                                   ├─ ServicesSection        (4 widgets + la porte ENT)
                                   │    ├─ WidgetTile × 2    (messagerie, moodle — des flux)
-                                  │    └─ WidgetRow × 2     (notes, examens — des événements)
-                                  │         ⤷ un échec bascule les tuiles en rangées
-                                  │           (état décidé par widgets/presentation)
+                                  │    └─ WidgetRow × 2     (notes, examens — des événements,
+                                  │         ⤷ floutés en teaser tant que leur source n'est pas
+                                  │           publiée ; un échec bascule les tuiles en rangées
+                                  │           — état décidé par widgets/presentation)
                                   └─ DocumentsSection       (local — si un compte existe)
 ```
 
@@ -1956,6 +2005,7 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`services/PropositionsDossier.ts`](../../src/features/Scolarite/services/PropositionsDossier.ts) | ce que le dossier a livré en plus de l'identité : UE inscrites, emploi du temps personnel |
 | [`services/PropositionsDecision.ts`](../../src/features/Scolarite/services/PropositionsDecision.ts) | ce qu'on en demande, et **quand** — le complément des UE, jamais les UE inscrites |
 | [`components/PropositionsModal.tsx`](../../src/features/Scolarite/components/PropositionsModal.tsx) | la confirmation, rendue par `rootContainer` pour exister aussi pendant l'accueil |
+| [`components/RangeeMysterieuse.tsx`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx) | le teaser d'un widget sans source publiée : la rangée floutée, et la modale « Bientôt » qui garde la porte du service |
 | [`screens/ScolariteDashboard.tsx`](../../src/features/Scolarite/screens/ScolariteDashboard.tsx) | écran d'onglet : aiguillage entre connexion, chargement, échec et tableau de bord |
 | [`screens/CredentialsSettingsScreen.tsx`](../../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | réglages du compte : informations enregistrées, déconnexion — et, **sans compte, le formulaire de connexion** plutôt qu'une fiche vide |
 | [`screens/WebBrowserScreen.tsx`](../../src/features/Scolarite/screens/WebBrowserScreen.tsx) | navigateur intégré : points d'entrée, historique, retour matériel, enregistrement d'identifiants |
@@ -1965,7 +2015,7 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`components/BiometryGate.tsx`](../../src/features/Scolarite/components/BiometryGate.tsx) | verrou biométrique, une demande par session d'application |
 | [`shared/biometrie/decision.ts`](../../src/shared/biometrie/decision.ts) | après un échec, propose-t-on le code ? Sans dépendance, donc jouable sous Node |
 | [`shared/biometrie/index.ts`](../../src/shared/biometrie/index.ts) | la séquence en deux temps, les capacités de l'appareil, et la politique d'avant pour la sonde |
-| [`components/GreetingBlock.tsx`](../../src/features/Scolarite/components/GreetingBlock.tsx) | salutation, date du jour, détection d'anniversaire |
+| [`components/GreetingBlock.tsx`](../../src/features/Scolarite/components/GreetingBlock.tsx) | la salutation — le **titre** de la page dès qu'un dossier est lu — et la date du jour |
 | [`components/MailboxRow.tsx`](../../src/features/Scolarite/components/MailboxRow.tsx) | ligne de messagerie : compteur de non-lus, chargement, et échec du parcours chaud |
 | [`components/PageScolarite.tsx`](../../src/features/Scolarite/components/PageScolarite.tsx) | le corps défilant : l'encart d'état, puis les trois sections |
 | [`components/EncartSession.tsx`](../../src/features/Scolarite/components/EncartSession.tsx) | l'état de la session **en tête de page** : portail absent, pas de compte, échec |

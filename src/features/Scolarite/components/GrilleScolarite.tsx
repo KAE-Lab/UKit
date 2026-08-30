@@ -38,7 +38,11 @@
  * liste a la place de respirer au lieu de pousser le reste de la page vers le bas pour un contenu
  * qu'on consulte le jour ou l'on en a besoin.
  *
- * Il n'y a plus d'en-tete du tout : **la salutation est le titre de la page**, et la grille suit.
+ * **La salutation est le titre de la page**, et la grille suit — sous deux intertitres discrets,
+ * « En un coup d'oeil » et « Tes services ». Ce ne sont pas les en-tetes de section d'avant qui
+ * reviennent : c'est l'intertitre des Reglages et des horaires du CROUS, une ligne en petites
+ * capitales qui nomme sans peser. Sans eux, le heros, les tuiles et les rangees se lisaient comme un
+ * seul empilement — la page manquait d'air precisement la ou sa structure changeait de nature.
  *
  * **Une seule exception, et elle est indispensable : un echec bascule la paire entiere en rangees.**
  * Un echec demande des mots — « Identifiants incorrects », et la ressaisie derriere. Une tuile de 140
@@ -49,8 +53,9 @@
  * etudiant de l'INP sur l'Apogee de Bordeaux.
  */
 
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import moment from 'moment';
 
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
@@ -61,10 +66,110 @@ import { widgetsDeForme, type DefinitionWidget, type PointWidget } from '../widg
 import { etatDeLaRangee } from '../widgets/presentation';
 import type { ValeursWidgets } from '../widgets/runner';
 import { GroupeScolarite, LigneScolarite } from './LigneScolarite';
+import { ModaleBientot, RangeeMysterieuse } from './RangeeMysterieuse';
 import WidgetRow from './WidgetRow';
 import WidgetTile from './WidgetTile';
 
 export type EchecsWidgets = Readonly<Partial<Record<PointWidget, UkitFailure>>>;
+
+/** Ce que `preparer` rend pour chaque widget : son etat, sa couleur, et ou il mene. */
+interface RangeePreparee {
+    definition: DefinitionWidget;
+    etat: ReturnType<typeof etatDeLaRangee>;
+    action: (() => void) | undefined;
+    contexte: string | null;
+    couleur: string;
+}
+
+/** Le pendant carre de `RangeeDeWidget` : une tuile preparee, sans logique propre. */
+function TuileDeWidget({ rangee, theme }: { rangee: RangeePreparee; theme: AppThemeType }) {
+    const { definition, etat, action, contexte, couleur } = rangee;
+    return (
+        <WidgetTile
+            definition={definition}
+            etat={etat}
+            contexte={contexte}
+            teinte={couleur}
+            theme={theme}
+            onPress={action}
+        />
+    );
+}
+
+/**
+ * Une rangee de la grille — ou son teaser.
+ *
+ * Sans source publiee (`bientot`, `absent`), la rangee est mysterieuse : floutee, et son toucher
+ * ouvre la modale « bientot ». Le jour ou le Blueprint est publie, le flou tombe sans release.
+ */
+function RangeeDeWidget({ rangee, theme, onTeaser }: { rangee: RangeePreparee; theme: AppThemeType; onTeaser: (point: PointWidget) => void }) {
+    const { definition, etat, action, contexte, couleur } = rangee;
+
+    if (etat.nature === 'bientot' || etat.nature === 'absent') {
+        return (
+            <RangeeMysterieuse theme={theme} onPress={() => onTeaser(definition.point)}>
+                <WidgetRow
+                    definition={definition}
+                    etat={etat}
+                    contexte={contexte}
+                    teinte={couleur}
+                    theme={theme}
+                />
+            </RangeeMysterieuse>
+        );
+    }
+
+    return (
+        <WidgetRow
+            definition={definition}
+            etat={etat}
+            contexte={contexte}
+            teinte={couleur}
+            theme={theme}
+            onPress={action}
+        />
+    );
+}
+
+/**
+ * Quand les services ont ete relus pour la derniere fois, ou `null` si rien ne l'a jamais ete.
+ *
+ * **La plus recente des lectures**, et non la plus ancienne : la ligne repond a « ca date de
+ * quand ? », pas a « qu'est-ce qui traine ? ». Chaque widget a sa propre peremption, donc la plus
+ * ancienne serait toujours celle du widget au rythme le plus lent — elle dirait « il y a six heures »
+ * sur une page dont la boite vient d'etre relue.
+ */
+function derniereLecture(valeurs: ValeursWidgets): string | null {
+    let plusRecente: number | null = null;
+    for (const valeur of Object.values(valeurs)) {
+        const lu = Date.parse(valeur.luLe);
+        if (Number.isFinite(lu) && (plusRecente === null || lu > plusRecente)) plusRecente = lu;
+    }
+    return plusRecente === null ? null : moment(plusRecente).fromNow();
+}
+
+/**
+ * L'intertitre des Reglages et des horaires du CROUS : petites capitales, sans surface.
+ *
+ * `detail` pose la fraicheur des lectures a sa droite — au ras de ce qu'elle mesure. Elle vivait en
+ * pastille dans l'en-tete, ou elle posait une question de coherence : « mis a jour il y a X » sur une
+ * page et pas les autres se lit comme un oubli. Ici elle qualifie **les widgets**, et aucun autre
+ * onglet n'a de cache a peremption a qualifier.
+ */
+function Intertitre({ texte, detail, theme }: { texte: string; detail?: string | null; theme: AppThemeType }) {
+    return (
+        <View style={styles.ligneIntertitre}>
+            <Text style={[styles.intertitre, { color: theme.fontSecondary }]}>
+                {texte}
+            </Text>
+            {detail ? (
+                <Text style={[styles.detailIntertitre, { color: theme.fontSecondary }]} numberOfLines={1}>
+                    {detail}
+                </Text>
+            ) : null}
+        </View>
+    );
+}
 
 export interface GrilleScolariteProps {
     theme: AppThemeType;
@@ -94,6 +199,9 @@ export function GrilleScolarite({
 }: GrilleScolariteProps) {
     const ent = serviceEtablissement('ent');
     const demande = serviceEtablissement('adaptation');
+    const fraicheur = derniereLecture(valeurs);
+    /** Le point dont le teaser est ouvert, ou `null`. Voir `RangeeMysterieuse`. */
+    const [teaser, setTeaser] = useState<PointWidget | null>(null);
 
     /** L'etat d'un widget, sa couleur, et ou sa rangee doit mener. Un seul endroit pour les trois formes. */
     const preparer = (definition: DefinitionWidget) => {
@@ -128,16 +236,8 @@ export function GrilleScolarite({
     // restees carrees, casserait la hierarchie que sa taille etablit.
     const enRangees = [...heros, ...tuiles].some(({ etat }) => etat.nature === 'echec');
 
-    const rendreRangee = ({ definition, etat, action, contexte, couleur }: ReturnType<typeof preparer>) => (
-        <WidgetRow
-            key={definition.point}
-            definition={definition}
-            etat={etat}
-            contexte={contexte}
-            teinte={couleur}
-            theme={theme}
-            onPress={action}
-        />
+    const rendreRangee = (rangee: RangeePreparee) => (
+        <RangeeDeWidget key={rangee.definition.point} rangee={rangee} theme={theme} onTeaser={setTeaser} />
     );
 
     return (
@@ -148,35 +248,31 @@ export function GrilleScolarite({
         <View style={styles.bloc}>
             {enRangees ? null : (
                 <>
-                    {heros.map(({ definition, etat, action, contexte, couleur }) => (
-                        <View key={definition.point} style={styles.pleineLargeur}>
-                            <WidgetTile
-                                definition={definition}
-                                etat={etat}
-                                contexte={contexte}
-                                teinte={couleur}
-                                theme={theme}
-                                onPress={action}
-                            />
+                    <Intertitre
+                        texte={Translator.get('SCOLARITE_SECTION_GLANCE')}
+                        detail={fraicheur !== null ? Translator.get('WIDGETS_REFRESHED', fraicheur) : null}
+                        theme={theme}
+                    />
+
+                    {heros.map((rangee) => (
+                        <View key={rangee.definition.point} style={styles.pleineLargeur}>
+                            <TuileDeWidget rangee={rangee} theme={theme} />
                         </View>
                     ))}
 
                     <View style={styles.grille}>
-                        {tuiles.map(({ definition, etat, action, contexte, couleur }) => (
-                            <WidgetTile
-                                key={definition.point}
-                                definition={definition}
-                                etat={etat}
-                                contexte={contexte}
-                                teinte={couleur}
-                                theme={theme}
-                                onPress={action}
-                            />
+                        {tuiles.map((rangee) => (
+                            <TuileDeWidget key={rangee.definition.point} rangee={rangee} theme={theme} />
                         ))}
                         {tuileDocuments}
                     </View>
                 </>
             )}
+
+            {/* En mode echec tout est rangees : un seul groupe, donc un seul intertitre. */}
+            <View style={enRangees ? null : styles.sectionServices}>
+                <Intertitre texte={Translator.get('SCOLARITE_SECTION_SERVICES')} theme={theme} />
+            </View>
 
             <GroupeScolarite theme={theme}>
                 {enRangees ? [...heros, ...tuiles].map(rendreRangee) : null}
@@ -203,6 +299,19 @@ export function GrilleScolarite({
                     />
                 ) : null}
             </GroupeScolarite>
+
+            <ModaleBientot
+                theme={theme}
+                visible={teaser !== null}
+                fermer={() => setTeaser(null)}
+                ouvrirQuandMeme={teaser !== null && serviceEtablissement(teaser) !== null
+                    ? () => {
+                        const point = teaser;
+                        setTeaser(null);
+                        onWidget(point);
+                    }
+                    : undefined}
+            />
         </View>
     );
 }
@@ -210,6 +319,33 @@ export function GrilleScolarite({
 const styles = StyleSheet.create({
     bloc: {
         gap: tokens.space.sm,
+    },
+    ligneIntertitre: {
+        // Le rang s'aligne sur le bord des cartes, pas sur celui de l'ecran — c'est ce qui le
+        // rattache a ce qu'il annonce.
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        gap: tokens.space.sm,
+        marginHorizontal: tokens.space.md,
+        paddingHorizontal: tokens.space.xxs,
+    },
+    intertitre: {
+        // Le style des periodes du CROUS et des sections de Reglages : petites capitales espacees.
+        fontSize: tokens.fontSize.xs,
+        fontWeight: tokens.fontWeight.semibold,
+        letterSpacing: 0.8,
+        textTransform: 'uppercase',
+    },
+    detailIntertitre: {
+        // En bas de casse, sans espacement de capitales : la fraicheur est une note, pas un titre.
+        fontSize: tokens.fontSize.xs,
+        flexShrink: 1,
+    },
+    sectionServices: {
+        // L'air entre les deux moities de la grille : le `gap` du bloc suffit entre des cartes, pas
+        // entre deux sections que leurs intertitres viennent justement de separer.
+        marginTop: tokens.space.md,
     },
     pleineLargeur: {
         // Le heros porte sa marge ici plutot que dans la tuile : `TuileScolarite` ne connait pas la

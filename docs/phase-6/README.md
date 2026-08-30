@@ -80,7 +80,7 @@ reconstruction des bâtiments, le verrou biométrique, le stockage chiffré.
 | Session universitaire (CAS, dossier, messagerie) | oui | jalon 6-F — le morceau qui justifie la phase |
 | Sélection d'établissement, second portail | oui | jalon 6-G |
 | Version applicative et messages de service | oui | jalon 6-B |
-| Cartographie (Leaflet, tuiles) | non | ce n'est pas une source de données, c'est un rendu |
+| Cartographie (MapLibre, tuiles) | non | ce n'est pas une source de données, c'est un rendu |
 | Notifications, calendrier système, tâche de fond | non | l'application les possède déjà, et bien |
 | Partie sociale (comptes, contenus utilisateurs) | non | hors phase. La base l'accueillera sans refonte : c'est tout ce qu'on en fait aujourd'hui |
 
@@ -116,11 +116,37 @@ n'ont pas la même nature, et qu'il vaut mieux ne pas confondre :
 | Volet | Thèse | Jalons |
 |---|---|---|
 | **1 — Le comportement devient de la donnée** | l'accès aux sources quitte le binaire pour des Blueprints publiés | A → G, I, J *(livrés)* |
-| **2 — La refonte visuelle** | l'application a la dette visuelle de sa reprise ; on la rend présentable avant de sortir | K *(livré)*, puis les sessions d'écran — **Scolarité faite** le 2026-08-25 |
+| **2 — La refonte visuelle** | l'application a la dette visuelle de sa reprise ; on la rend présentable avant de sortir | K *(livré)*, puis les sessions d'écran — **Scolarité faite** le 2026-08-25, **annonces faite** le 2026-08-30 |
 | **Clôture** | plus aucune source n'a deux chemins, et la version part | Z |
 
 Le second volet n'est pas un appendice du premier : c'est ce qui manque pour que la v6 soit
 publiable. Le premier a rendu l'application **corrigeable** ; le second la rend **montrable**.
+
+## La v6 part en deux temps
+
+Décision du 2026-08-30, à deux jours de la rentrée : la phase reste la version 6, mais **la version
+sort en deux publications**, parce que ce qui reste à construire exige du contenu qui n'existe pas
+encore — des annonces réelles à mettre en avant, un dossier universitaire que seule l'année qui
+commence remplira.
+
+| Publication | Contenu | Condition de sortie |
+|---|---|---|
+| **v6.0** | la phase telle qu'écrite : volet 1 (livré), les sessions d'écran, les finitions visuelles, la clôture [6-Z](6-z-livraison-finale.md) | 6-Z déroulé |
+| **v6.1** | les capacités qui attendent le contenu de la rentrée : **mise en avant des annonces par créneaux**, **compléments du portail Bordeaux INP**, **notes & résultats** | le contenu existe et permet de vérifier |
+
+Ce n'est pas une entorse silencieuse à « une phase = une version » : c'est son amendement, écrit ici
+et dans [6-Z](6-z-livraison-finale.md). La règle protégeait d'une sortie à moitié migrée ; or le
+volet 1 est clos, et retenir l'application pour des capacités **invérifiables avant la rentrée**
+protégerait l'inverse — du travail bâclé faute de contenu. Les trois chantiers de v6.1 attendent
+pour la même raison, celle des sessions d'écran : *« si l'écran manque de contenu, la session
+commence par une mesure »* — et la mesure est impossible aujourd'hui. La mise en avant des annonces
+est une donnée de publication (des colonnes de créneaux sur `annonces`, un tri applicatif — les
+soirées remontent le soir, les offres du matin le matin) qui ne se calibre pas sans annonces
+réelles ; les compléments INP demandent un compte actif à la rentrée ; les notes ne se lisent pas
+sur un dossier vide.
+
+Une annonce de vie étudiante publiée avec la v6.0 explique le découpage aux utilisateurs — le canal
+existe précisément pour ça, et il ne coûte aucune release.
 
 ## Les jalons et leur ordre
 
@@ -151,13 +177,17 @@ de test, et les limites écrites.
                           6-K Le socle visuel   [livre]
                                             ▼
                     les ecrans, en sessions, hors jalon
-                    scolarite [faite]  ->  annonces  ->  reglages
-                                            ▼
-                    notes & resultats, sortie de la session scolarite
+                    scolarite [faite]  ->  annonces [faite]  ->  reglages
 
    CLOTURE
 
-                          6-Z Retrait du legacy et livraison v6
+                          6-Z Retrait du legacy et livraison v6.0
+
+   PARTIE 2 (v6.1) — apres la rentree, quand le contenu existe
+
+                    mise en avant des annonces par creneaux
+                    complements du portail Bordeaux INP
+                    notes & resultats, sortie de la session scolarite
 ```
 
 | Jalon | Spécification | Dépend de | Résumé |

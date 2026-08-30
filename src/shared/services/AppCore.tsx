@@ -20,7 +20,7 @@ import {
 // trousseau, la ou `../etablissements` tirerait le client de la base.
 import { purgerDonneesEtablissement, purgerTrousseau } from '../etablissements/purge';
 import { restaurerReglages } from './reglagesParEtablissement';
-import { createUKitCalendar, formatCalendarEventData } from './CalendarSyncHelpers';
+import { createUKitCalendar, ecrireEvenementsDansCalendrier } from './CalendarSyncHelpers';
 import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
 import { separerCodeUE } from '../../features/Planning/services/PlanningAssembly';
@@ -141,6 +141,8 @@ class SettingsManagerService {
     _firstload: boolean;
     /** Un document de reglages existait-il au demarrage ? Distinct de « le parcours est termine ». */
     _reglagesEnregistres = false;
+    /** L'ecriture des reglages est fermee jusqu'a la fin de `loadSettings` : voir `saveSettings`. */
+    _chargementTermine = false;
     _theme: string;
     _favoriteGroups: string[];
     _language: string;
@@ -150,6 +152,8 @@ class SettingsManagerService {
     _calendarSyncEnabled: boolean;
     _isSynchronizingCalendar: boolean;
     _lastSyncDate: moment.Moment | null;
+    /** Etat de seance, non persiste : a froid, la date de derniere synchronisation suffit. */
+    _lastSyncFailed: boolean;
     _courseNotificationsEnabled: boolean;
     _courseNotificationDelay: number;
     /** Le code d'etablissement **tel que ce module le connait** : ce qui a ete charge ou choisi. */
@@ -177,6 +181,7 @@ class SettingsManagerService {
         this._calendarSyncEnabled = false;
         this._isSynchronizingCalendar = false;
         this._lastSyncDate = null;
+        this._lastSyncFailed = false;
         this._courseNotificationsEnabled = true;
         this._courseNotificationDelay = 15;
         this._etablissement = ETABLISSEMENT_DEFAUT;
@@ -215,16 +220,14 @@ class SettingsManagerService {
     isSynchronizingCalendar = () => this._isSynchronizingCalendar;
     getFavoriteGroups = () => this._favoriteGroups;
     addFavoriteGroup = (newGroup: string) => {
-        if (newGroup && !this._favoriteGroups.includes(newGroup)) {
-            this._favoriteGroups = [...this._favoriteGroups, newGroup];
-            this.notify('favoriteGroups', this._favoriteGroups);
-        }
+        if (!newGroup || this._favoriteGroups.includes(newGroup)) return;
+        this._favoriteGroups = [...this._favoriteGroups, newGroup];
+        this.notify('favoriteGroups', this._favoriteGroups);
     };
     removeFavoriteGroup = (groupToRemove: string) => {
-        if (groupToRemove) {
-            this._favoriteGroups = this._favoriteGroups.filter((g) => g !== groupToRemove);
-            this.notify('favoriteGroups', this._favoriteGroups);
-        }
+        if (!groupToRemove) return;
+        this._favoriteGroups = this._favoriteGroups.filter((g) => g !== groupToRemove);
+        this.notify('favoriteGroups', this._favoriteGroups);
     };
     
     getLanguage = () => this._language;
@@ -329,6 +332,7 @@ class SettingsManagerService {
 
 
     getLastSyncDate = () => this._lastSyncDate;
+    getLastSyncFailed = () => this._lastSyncFailed;
     getSyncCalendar = () => this._calendar;
     setSyncCalendar = (newCalendar: string | number) => {
         if (this._calendar !== -1) this.deleteAllPreviousCalendarEntries(this._calendar);
@@ -365,6 +369,13 @@ class SettingsManagerService {
         this._isSynchronizingCalendar = true;
         this.notify('isSynchronizingCalendar', true);
 
+        /*
+         * Tout le corps est sous `try/finally` : les ecritures dans le calendrier systeme peuvent
+         * jeter (permission retiree, cible morte), et une exception laissait le drapeau leve — le
+         * bouton tournait indefiniment, sans issue. `_lastSyncFailed` porte l'issue vers la pastille
+         * d'etat des reglages : un echec silencieux etait indiscernable d'un bouton casse.
+         */
+        try {
         if (this._calendar === 'UKit') {
             const ukitCalendar = this._calendars.find((cal) => cal.title === 'UKit');
             this._calendar = !ukitCalendar ? await createUKitCalendar(this._calendars) : ukitCalendar.id;
@@ -376,15 +387,10 @@ class SettingsManagerService {
         // les evenements deja poses sur la foi d'une source injoignable serait pire que ne rien faire.
         const resultat = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups[0]);
         if (resultat.ok === false) {
-            // Le drapeau doit retomber, sinon l'ecran de reglages tourne indefiniment. Le retour
-            // anticipe d'origine l'oubliait, et l'echec etait alors indiscernable d'une synchro sans
-            // fin.
-            this._isSynchronizingCalendar = false;
-            this.notify('isSynchronizingCalendar', false);
+            this._lastSyncFailed = true;
             return;
         }
 
-        const events = resultat.courses;
         let existingCalendarEvents: Record<string, string> = {};
 
         try {
@@ -392,42 +398,23 @@ class SettingsManagerService {
             existingCalendarEvents = JSON.parse(data) || {};
         } catch { existingCalendarEvents = {}; }
 
-        const existingInternalCalendarEvents = Object.values(existingCalendarEvents);
-        const updatedEvents = [];
-        const nextExistingCalendarEvents: Record<string, string> = {};
-
-        await events.reduce((p, event) => {
-            return p.then(async () => {
-                const eventToCreate = formatCalendarEventData(event);
-                const existingInternalEventId = existingCalendarEvents[String(event.id)];
-
-                if (existingInternalEventId) {
-                    try {
-                        await Calendar.updateEventAsync(existingInternalEventId, eventToCreate);
-                        updatedEvents.push(existingInternalEventId);
-                        nextExistingCalendarEvents[String(event.id)] = existingInternalEventId;
-                    } catch {
-                        const id = await Calendar.createEventAsync(this._calendar as string, eventToCreate);
-                        nextExistingCalendarEvents[String(event.id)] = id;
-                    }
-                } else {
-                    const id = await Calendar.createEventAsync(this._calendar as string, eventToCreate);
-                    nextExistingCalendarEvents[String(event.id)] = id;
-                }
-            });
-        }, Promise.resolve());
-
-        const internalEventsToDelete = (existingInternalCalendarEvents as string[]).filter((id) => updatedEvents.indexOf(id) === -1);
-        if (internalEventsToDelete.length) {
-            await Promise.all(internalEventsToDelete.map((id) => Calendar.deleteEventAsync(id)));
-        }
+        // L'ecriture vit dans CalendarSyncHelpers, comme les autres pieces sans etat du calendrier.
+        const nextExistingCalendarEvents = await ecrireEvenementsDansCalendrier(
+            this._calendar as string, resultat.courses, existingCalendarEvents,
+        );
 
         await AsyncStorage.setItem('previousSyncData', JSON.stringify(nextExistingCalendarEvents));
         await AsyncStorage.setItem('previousSyncTime', String(Date.now()));
 
         this._lastSyncDate = moment();
-        this._isSynchronizingCalendar = false;
-        this.notify('isSynchronizingCalendar', false);
+        this._lastSyncFailed = false;
+        } catch (erreur) {
+            console.warn(`[calendrier] synchronisation interrompue : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+            this._lastSyncFailed = true;
+        } finally {
+            this._isSynchronizingCalendar = false;
+            this.notify('isSynchronizingCalendar', false);
+        }
     };
 
     getCalendars = () => this._calendars;
@@ -524,10 +511,7 @@ class SettingsManagerService {
         this.notify('filter', this._filters);
     };
     removeFilters = (filter: string) => {
-        if (filter) {
-            const index = this._filters.indexOf(filter);
-            if (index > -1) this._filters = this._filters.filter((e) => e !== filter);
-        }
+        if (filter) this._filters = this._filters.filter((e) => e !== filter);
         this.notify('filter', this._filters);
     };
 
@@ -569,6 +553,12 @@ class SettingsManagerService {
     };
 
     saveSettings = () => {
+        // Rien ne s'ecrit avant la fin du chargement : la restauration notifie en chemin (la langue
+        // avant les favoris), et une sauvegarde partait alors avec des favoris **vides** — perdus au
+        // demarrage suivant si aucun reglage ne notifiait ensuite. Signale comme « mes groupes
+        // disparaissent parfois », amplifie par les recharges de developpement.
+        if (!this._chargementTermine) return;
+
         // La vue active redescend dans sa table avant d'ecrire : c'est le seul endroit qui garde les
         // deux formes d'accord, et il est traverse a chaque `notify`.
         this._favorisParEtablissement[this._etablissement] = [...this._favoriteGroups];
@@ -651,6 +641,9 @@ class SettingsManagerService {
             this.applySettingsData(settings, this._firstload);
         } catch {
             new ErrorAlert("Settings couldn't be loaded").show();
+        } finally {
+            // Meme un chargement echoue rouvre l'ecriture, sinon plus rien ne se sauvegarderait.
+            this._chargementTermine = true;
         }
     };
 }

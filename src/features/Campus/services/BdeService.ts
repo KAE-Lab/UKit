@@ -32,7 +32,7 @@ export type { BdeAnnonce } from './BdeMapping';
 const TABLE = 'annonces';
 
 /** Les colonnes que les ecrans lisent, nommees plutot que `*` : le schema peut grossir sans cout. */
-const COLONNES = 'id,titre,emetteur,accroche,description,image_url,cta_texte,cta_lien,publiee_le,expire_le,active,creee_le';
+const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,publiee_le,expire_le,active,creee_le';
 
 /**
  * Ce qu'un ecran recoit : une liste, ou un echec deja traduit.

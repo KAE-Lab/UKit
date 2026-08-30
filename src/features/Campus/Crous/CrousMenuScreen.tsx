@@ -10,6 +10,8 @@ import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { CampusFailureNotice } from '../components/CampusLayoutComponents';
+import { CampusMapSection } from '../components/CampusMapSection';
+import { CampusSectionHeader } from '../components/CampusSectionHeader';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import { CrousMealCard } from './components/CrousMealCard';
@@ -135,9 +137,9 @@ function LigneDHoraire({ ligne, theme }: { ligne: LigneHoraire; theme: AppThemeT
  *   indigestes. Mesure sur les quarante-et-un restaurants de la region : 36 lignes « NOM : creneau »,
  *   25 portees de jours, 20 creneaux nus ou phrases (`structurerHoraires`) ;
  * - **en pied**, parce que la raison d'ouvrir cet ecran est le menu. Les horaires sont une reference ;
- * - **dans la page et non derriere un bouton** : une information se lit, elle ne se declenche pas. Et
- *   le bouton qu'on aurait pu poser, a la maniere du « Reserver » d'une bibliotheque, existe deja **en
- *   en-tete** — c'est la carte du restaurant (`renderMapButton`, shared/navigation).
+ * - **dans la page et non derriere un bouton** : une information se lit, elle ne se declenche pas.
+ *   La carte du restaurant a suivi la meme regle depuis : elle etait un bouton d'en-tete, elle est
+ *   devenue la section « S'y rendre » en pied de page (`CampusMapSection`).
  *
  * La grammaire est celle d'un repas juste au-dessus : une icone d'accent, un titre, puis une carte.
  */
@@ -146,13 +148,16 @@ function HorairesDuRestaurant({ theme, lignes }: { theme: AppThemeType; lignes?:
     if (structurees.length === 0) return null;
 
     return (
-        <View style={{ marginBottom: tokens.space.xl }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.sm, marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}>
-                <MaterialCommunityIcons name="calendar-clock" size={20} color={theme.accent ?? theme.primary} />
-                <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, marginLeft: tokens.space.sm }}>
-                    {Translator.get('OPENING_HOURS')}
-                </Text>
-            </View>
+        // `lg` et non `xl` : l'ecart commun des fiches — voir CrousMealCard.
+        <View style={{ marginBottom: tokens.space.lg }}>
+            {/* Le bleu (0) : la section de reference de la fiche, comme la messagerie chez Scolarite. */}
+            <CampusSectionHeader
+                icone="calendar-clock"
+                titre={Translator.get('OPENING_HOURS')}
+                couleur={0}
+                theme={theme}
+                style={{ marginTop: tokens.space.sm, marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}
+            />
 
             <View style={{
                 backgroundColor: theme.cardBackground,
@@ -184,6 +189,24 @@ function HorairesDuRestaurant({ theme, lignes }: { theme: AppThemeType; lignes?:
     );
 }
 
+/** Les plats du jour selectionne — ou l'aveu qu'il n'y en a pas. */
+function PlatsDuJour({ menu, theme }: { menu: CrousDayMenu; theme: AppThemeType }) {
+    if (menu.midi?.length === 0 && menu.soir?.length === 0) {
+        return (
+            <Text style={{ textAlign: 'center', color: theme.fontSecondary, marginTop: tokens.space.xl }}>
+                {Translator.get('NO_DISH_INFO')}
+            </Text>
+        );
+    }
+
+    return (
+        <>
+            <CrousMealCard mealTitle={Translator.get('LUNCH')} categories={menu.midi} mealType="midi" theme={theme} />
+            <CrousMealCard mealTitle={Translator.get('DINNER')} categories={menu.soir} mealType="soir" theme={theme} />
+        </>
+    );
+}
+
 // "2024-03-25" -> "Lun 25"
 const formatDate = (dateString: string | null) => {
     if (!dateString) return Translator.get('UNKNOWN');
@@ -196,8 +219,8 @@ const formatDate = (dateString: string | null) => {
     return `${translatedDay} ${d.getDate()}`;
 };
 
-export default function CrousMenuScreen({ route, navigation }: { route: { params: { restaurantId: string; restaurantName: string; openingLines?: string[] } }; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
-    const { restaurantId, restaurantName, openingLines } = route.params;
+export default function CrousMenuScreen({ route }: { route: { params: { restaurantId: string; restaurantName: string; location?: { lat: number; lng: number }; openingLines?: string[] } } }) {
+    const { restaurantId, restaurantName, location, openingLines } = route.params;
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const theme = style.Theme[AppContextValues.themeName];
     const insets = useSafeAreaInsets();
@@ -214,18 +237,8 @@ export default function CrousMenuScreen({ route, navigation }: { route: { params
         };
     }, []);
 
-    useEffect(() => {
-        navigation.setOptions({
-            headerTitle: () => (
-                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold }}>
-                    {Translator.get('MENU')}
-                </Text>
-            ),
-            headerTitleAlign: 'center'
-        });
-        loadMenu();
-    }, [navigation, theme]);
-
+    // Le titre vient du navigateur (« Menu », neutre, comme toute sous-page) : l'ecran surchargeait
+    // le sien en violet, seul de la pile — le nom du restaurant, lui, vit dans le bandeau.
     useEffect(() => {
         loadMenu();
     }, []);
@@ -299,17 +312,18 @@ export default function CrousMenuScreen({ route, navigation }: { route: { params
             {/* ── Affichage des plats ── */}
             <ScrollView style={{ flex: 1, paddingTop: tokens.space.md }}>
 
-                {currentMenu.midi?.length === 0 && currentMenu.soir?.length === 0 ? (
-                    <Text style={{ textAlign: 'center', color: theme.fontSecondary, marginTop: tokens.space.xl }}>
-                        {Translator.get('NO_DISH_INFO')}
-                    </Text>
-                ) : (
-                    <>
-                        <CrousMealCard mealTitle={Translator.get('LUNCH')} categories={currentMenu.midi} mealType="midi" theme={theme} />
-                        <CrousMealCard mealTitle={Translator.get('DINNER')} categories={currentMenu.soir} mealType="soir" theme={theme} />
-                    </>
-                )}
+                <PlatsDuJour menu={currentMenu} theme={theme} />
                 <HorairesDuRestaurant theme={theme} lignes={openingLines} />
+
+                {/* En pied, comme les horaires : le lieu ne depend pas du jour selectionne. Le
+                    `marginTop: sm` est celui que les tetes de section portent : sans lui, l'ecart
+                    horaires -> carte valait huit points de moins que plats -> horaires. */}
+                <CampusMapSection
+                    location={location}
+                    markerTitle={restaurantName}
+                    theme={theme}
+                    style={{ paddingHorizontal: tokens.space.md, marginTop: tokens.space.sm, marginBottom: tokens.space.xl }}
+                />
 
                 <View style={{ height: tokens.space.xxl }} />
             </ScrollView>

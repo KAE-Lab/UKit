@@ -13,7 +13,16 @@ Socle commun : [campus.md](campus.md). Source de données : Affluences, section 
    mise en favori.
 3. Toucher une BU ouvre sa fiche : jauge d'affluence, bandeau de dates de la **semaine courante**, et
    horaires du jour sélectionné.
-4. Un bouton d'en-tête ouvre la carte de la bibliothèque.
+4. La fiche se termine par la carte de la bibliothèque — la section « S'y rendre »
+   ([`CampusMapSection`](../../src/features/Campus/components/CampusMapSection.tsx)), dans la page et
+   non derrière un bouton d'en-tête, comme sur une fiche de cours. Sa tête de section est verte
+   ([`CampusSectionHeader`](../../src/features/Campus/components/CampusSectionHeader.tsx),
+   [campus-crous.md](campus-crous.md)), et le titre de l'en-tête (« Détails ») est neutre comme toute
+   sous-page.
+5. « Réserver une place » **flotte sur le contenu**, dans le vocabulaire de la barre de recherche —
+   la même surface posée (carte, filet, ombre), la même fumée d'amortissement
+   ([`PiedFlottant`](../../src/shared/ui/PiedFlottant.tsx)) ; l'écran dégage sa hauteur en pied de
+   défilement, et le lien ouvre la page de réservation Affluences.
 
 ![La liste des bibliothèques : visuel, ville, distance recalculée et état d'ouverture](../screenshots/bu-liste.png)
 
@@ -254,7 +263,7 @@ bibliothèque parce que son affluence n'a pas encore été chargée serait un fa
 | Fichier | Rôle |
 |---|---|
 | [`Library/LibraryScreen.tsx`](../../src/features/Campus/Library/LibraryScreen.tsx) | liste des BU : composition, tri, filtres, recherche |
-| [`Library/LibraryDetailsScreen.tsx`](../../src/features/Campus/Library/LibraryDetailsScreen.tsx) | fiche d'une BU : affluence, dates, horaires, état d'échec des horaires |
+| [`Library/LibraryDetailsScreen.tsx`](../../src/features/Campus/Library/LibraryDetailsScreen.tsx) | fiche d'une BU : affluence, dates, horaires, carte « S'y rendre », état d'échec des horaires |
 | [`Library/components/LibraryListItem.tsx`](../../src/features/Campus/Library/components/LibraryListItem.tsx) | ligne de liste d'une BU avec son état |
 | [`Library/components/LibraryDetailsComponents.tsx`](../../src/features/Campus/Library/components/LibraryDetailsComponents.tsx) | `LibraryLiveAttendance`, `LibraryDatesHeader`, `LibraryOpeningHoursList` |
 | [`Library/hooks/useLibraryTimetableData.ts`](../../src/features/Campus/Library/hooks/useLibraryTimetableData.ts) | horaires d'une BU : chargement par semaine, échec, sélection du jour, défilement |

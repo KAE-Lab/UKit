@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
@@ -8,12 +8,12 @@ import GroupSearch from '../../features/Planning/screens/GroupSelectionScreen';
 import Group from '../../features/Planning/screens/ScheduleScreen';
 import About from '../../features/Settings/screens/AboutScreen';
 import Settings from '../../features/Settings/screens/SettingsScreen';
+import FiltersScreen from '../../features/Settings/screens/FiltersScreen';
 import CredentialsSettingsScreen from '../../features/Scolarite/screens/CredentialsSettingsScreen';
 import DocumentsScreen from '../../features/Scolarite/screens/DocumentsScreen';
 import DocumentViewerScreen, { partagerDocument } from '../../features/Scolarite/screens/DocumentViewerScreen';
 import WebBrowser from '../../features/Scolarite/screens/WebBrowserScreen';
 import LienEdtScreen from '../../features/Planning/screens/LienEdtScreen';
-import Geolocation from '../map/MapScreen';
 import { CourseScreen } from '../../features/Planning/screens/CourseScreen';
 import DayView from '../../features/Planning/views/DayView';
 import CrousScreen from '../../features/Campus/Crous/CrousScreen';
@@ -39,13 +39,14 @@ export type RootStackParamList = {
     Settings: undefined;
     /** `ressaisie` ouvre l'ecran directement sur le formulaire, sans deconnecter. */
     CredentialsSettings: { ressaisie?: boolean } | undefined;
+    Filters: undefined;
     Documents: undefined;
     /** Le lecteur d'une piece rangee : son adresse locale et son nom de fichier. */
     DocumentViewer: { uri: string; nom: string };
     LienEdt: undefined;
     Crous: undefined;
     Library: undefined;
-    WebBrowser: { entrypoint?: string };
+    WebBrowser: { entrypoint?: string; href?: string };
     Day: undefined;
     CrousMenu: { restaurantName?: string; location?: { lat: number, lng: number }; openingLines?: string[] };
     LibraryDetails: { library?: { name: string; lat: number; lng: number } };
@@ -53,7 +54,6 @@ export type RootStackParamList = {
     BdeDetail: { annonce?: Record<string, unknown> };
     FreeRoomScreen: undefined;
     FreeRoomDetails: { building?: Record<string, unknown> };
-    Geolocation: { title?: string; location?: { lat: number; lng: number } };
     Course: { title?: string; data?: { UE?: string } };
 };
 
@@ -64,14 +64,6 @@ export default function StackNavigator() {
         <AppContext.Consumer>
             {({ themeName }) => {
                 const theme = style.Theme[themeName];
-
-                const renderMapButton = (navigation: StackNavigationProp<RootStackParamList>, title?: string, location?: { lat: number, lng: number }) => (
-                    <TouchableOpacity onPress={() => navigation.navigate('Geolocation', { title, location })} style={{ paddingRight: tokens.space.md }}>
-                        <HeaderButton theme={theme}>
-                            <MaterialCommunityIcons name="map-marker-radius" size={HEADER_BUTTON_ICON} color={theme.primary} />
-                        </HeaderButton>
-                    </TouchableOpacity>
-                );
 
                 return (
                     // `CredentialsProvider` a remonte dans `rootContainer` au jalon 6-J : le parcours
@@ -116,6 +108,8 @@ export default function StackNavigator() {
 
                             <Stack.Screen name="Settings" component={Settings} options={({ route }) => NavBarHelper({ title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: true })} />
 
+                            <Stack.Screen name="Filters" component={FiltersScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FILTERS'), themeName, route, gestureEnabled: true })} />
+
                             <Stack.Screen name="CredentialsSettings" component={CredentialsSettingsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('ACCOUNT'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Documents" component={DocumentsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('MY_DOCUMENTS'), themeName, route, gestureEnabled: true })} />
@@ -140,18 +134,23 @@ export default function StackNavigator() {
 
                             <Stack.Screen name="Day" component={DayView} options={({ route }) => NavBarHelper({ title: Translator.get('DAY'), themeName, route })} />
 
-                            <Stack.Screen name="CrousMenu" component={CrousMenuScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.restaurantName, route.params?.location), title: route.params?.restaurantName ?? Translator.get('MENU'), themeName, route })} />
+                            {/* La carte du lieu vit dans la fiche (`CampusMapSection`), plus derriere
+                                un bouton d'en-tete : l'ecran plein-page a disparu avec elle. */}
+                            {/* « Details », comme les fiches de BU, de batiment et d'annonce : toutes
+                                les pages de detail portent le meme titre — le nom du lieu vit dans
+                                leur bandeau. */}
+                            <Stack.Screen name="CrousMenu" component={CrousMenuScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route })} />
 
-                            <Stack.Screen name="LibraryDetails" component={LibraryDetailsScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => renderMapButton(navigation, route.params?.library?.name, { lat: route.params?.library?.lat, lng: route.params?.library?.lng }), title: treatTitle(route.params?.library?.name ?? Translator.get('LIBRARY_DETAILS')), themeName, route })} />
+                            {/* « Details » et non le nom de la BU : il vit deja dans le bandeau de la
+                                fiche, et un titre double est un titre de trop. */}
+                            <Stack.Screen name="LibraryDetails" component={LibraryDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route })} />
 
-                            <Stack.Screen name="Bde" component={BdeScreen} options={({ route }) => NavBarHelper({ title: Translator.get('STUDENT_LIFE'), themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="Bde" component={BdeScreen} options={({ route }) => NavBarHelper({ title: Translator.get('ANNOUNCEMENTS'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="BdeDetail" component={BdeDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="FreeRoomScreen" component={FreeRoomScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FREE_ROOMS'), themeName, route, gestureEnabled: true })} />
                             <Stack.Screen name="FreeRoomDetails" component={FreeRoomDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route, gestureEnabled: true })} />
-
-                            <Stack.Screen name="Geolocation" component={Geolocation} options={({ route }) => NavBarHelper({ title: Translator.get('MAP'), themeName, route })} />
 
                             <Stack.Screen name="Course" component={CourseScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />
                         </Stack.Navigator>

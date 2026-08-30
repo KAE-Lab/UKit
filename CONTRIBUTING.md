@@ -99,7 +99,7 @@ Une capacité utilisateur — un écran, une source de données, une option — 
   n'atteint : `@typescript-eslint/no-unused-vars` signale les premiers, la relecture doit attraper les
   derniers. Un export mort fait croire à une capacité, et il faut l'enquêter avant d'oser le supprimer
   — c'est son vrai coût. Une erreur qu'on n'utilise pas s'écrit `catch {`, pas `catch (e)`.
-- **Pas de dépendance cartographique propriétaire.** Les cartes passent par Leaflet et OpenStreetMap
+- **Pas de dépendance cartographique propriétaire.** Les cartes passent par MapLibre et OpenFreeMap
   dans une WebView ([docs/cartographie.md](docs/cartographie.md)).
 - **Commentaires sobres, orientés « pourquoi ».** Un commentaire qui paraphrase la ligne suivante est
   du bruit. **Aucun emoji** dans le code, les commentaires ou les logs.
