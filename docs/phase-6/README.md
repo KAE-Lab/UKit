@@ -132,7 +132,7 @@ commence remplira.
 | Publication | Contenu | Condition de sortie |
 |---|---|---|
 | **v6.0** | la phase telle qu'écrite : volet 1 (livré), les sessions d'écran, les finitions visuelles, la clôture [6-Z](6-z-livraison-finale.md) | 6-Z déroulé |
-| **v6.1** | les capacités qui attendent le contenu de la rentrée : **mise en avant des annonces par créneaux**, **compléments du portail Bordeaux INP**, **notes & résultats** | le contenu existe et permet de vérifier |
+| **v6.1** | les capacités qui attendent le contenu de la rentrée : **mise en avant des annonces par créneaux**, **compléments du portail Bordeaux INP**, **notes & résultats** — et un raffinement sans contenu requis, les **apparitions en fondu** (un fondu à chaque couture où un écran passe de « chargement » à « contenu » : widgets Scolarité, listes Campus, premier chargement du planning ; via un petit composant partagé, écran par écran — pas d'interrupteur global, `LayoutAnimation` fondrait aussi les frappes et les défilements), et l'**évaluation Material 3** pour les contrôles natifs Android (switches, sliders des Réglages) — à trancher : identité visuelle unifiée contre conventions de plateforme, et le coût d'une dépendance de composants | le contenu existe et permet de vérifier |
 
 Ce n'est pas une entorse silencieuse à « une phase = une version » : c'est son amendement, écrit ici
 et dans [6-Z](6-z-livraison-finale.md). La règle protégeait d'une sortie à moitié migrée ; or le
@@ -188,6 +188,8 @@ de test, et les limites écrites.
                     mise en avant des annonces par creneaux
                     complements du portail Bordeaux INP
                     notes & resultats, sortie de la session scolarite
+                    apparitions en fondu aux coutures de chargement
+                    evaluation Material 3 pour les controles natifs Android
 ```
 
 | Jalon | Spécification | Dépend de | Résumé |

@@ -250,7 +250,9 @@ export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, l
                             d'elle-meme toutes les 12 h, rien n'est perdu — mais sans cette pastille,
                             un echec etait indiscernable d'un bouton casse. */}
                         <View style={{ width: 8, height: 8, borderRadius: tokens.radius.pill, backgroundColor: lastSyncFailed ? theme.warning : lastSyncDate ? theme.success : theme.neutral, marginRight: tokens.space.sm }} />
-                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary }}>
+                        {/* `flex: 1` : sans lui, Android coupe net le texte au bord de la rangee au
+                            lieu de le plier — constate sur appareil le 2026-08-31. */}
+                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, flex: 1 }}>
                             {lastSyncFailed
                                 ? Translator.get('LAST_SYNCHRONIZATION_FAILED')
                                 : lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}

@@ -17,6 +17,7 @@ import {
 } from '../../../shared/etablissements';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
+import { adoucirLaTransition } from '../../../shared/ui/transitions';
 import style, { tokens } from '../../../shared/theme/Theme';
 
 
@@ -247,6 +248,13 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
      */
     setInstitution = async (code: string) => {
         await changerEtablissement(code);
+        // La bascule fait apparaitre ou disparaitre des rangees entieres (compte, lien iCal) et
+        // des onglets : rendue d'un coup, elle se lisait comme un accroc — surtout vers ou depuis
+        // « Autre campus », ou tout change. L'adoucissement se pose APRES la purge :
+        // `configureNext` ne couvre que le commit suivant, et n'importe quel commit pendant
+        // l'attente — la modale qui se ferme, le contexte qui purge — le consommait avant la
+        // reorganisation qu'il visait (constate sur appareil le 2026-08-31, deux fois).
+        adoucirLaTransition();
         SettingsManager.setEtablissement(code);
         this.setState({ institutionName: nomCourtEtablissement() });
         // La bascule vide le trousseau : la ligne du compte doit le dire tout de suite, sans attendre
@@ -277,6 +285,9 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
      */
     refreshCompte = async () => {
         const credentials = await SecureStoreService.getCredentials();
+        // Ce setState peut faire apparaitre ou disparaitre les rangees compte et lien iCal —
+        // le commit de la cascade de bascule d'etablissement qui restait brut.
+        adoucirLaTransition();
         this.setState({ comptePossible: portailPublie(), compteConnecte: credentials !== null });
     };
 

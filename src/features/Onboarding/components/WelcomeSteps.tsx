@@ -92,8 +92,8 @@ export const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
 export const StepIntro = ({ themeObj }) => (
     <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: 100 }}>
         <Image source={require('../../../../assets/icons/logo.png')} style={{ width: 200, height: 100, resizeMode: 'contain', marginBottom: tokens.space.xl }} />
-        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELCOME')}</Text>
-        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
+        <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELCOME')}</Text>
+        <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
     </View>
 );
 
@@ -286,20 +286,26 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
  * correction, et c'est precisement pour rendre ce partage possible que `CredentialsProvider` a remonte
  * au-dessus des deux branches (`rootContainer.tsx`).
  */
-export const StepCompte = ({ themeObj, onSuivant }) => (
-    <View style={{ flex: 1, paddingTop: tokens.space.xxl }}>
+export const StepCompte = ({ themeObj, onSuivant, onConnecte }) => (
+    /*
+     * Le degagement du haut vit dans `topPadding` — DANS le contenu defilant — et pas sur ce
+     * conteneur : pose ici, il decoupait le defilement a sa ligne et le contenu disparaissait
+     * derriere une bande de la couleur du fond (constate a l'accueil le 2026-08-31).
+     */
+    <View style={{ flex: 1 }}>
         {/*
-          * `onSkip` et `onSuccess` mènent au **même endroit** — l'étape suivante — et c'est voulu : le
-          * compte est proposé, pas exigé. Ce qui les distingue est ce qui se passe derrière, pas où
-          * l'on va. Sans `onSuccess`, le bouton restait figé sur « Connexion… » une fois la session
-          * réussie, parce que rien ne remplace cet écran ici (voir ScolariteLoginView).
+          * `onSkip` avance simplement ; `onConnecte` est distinct depuis le 2026-08-31, parce
+          * qu'une connexion reussie a pu **regler l'emploi du temps au passage** — les propositions
+          * du dossier posent les favoris pendant le parcours froid — et l'ecran d'accueil decide
+          * alors de sauter l'etape EDT devenue sans question. Sans `onSuccess`, le bouton restait
+          * fige sur « Connexion… » une fois la session reussie (voir ScolariteLoginView).
           */}
         <ScolariteLoginView
             theme={themeObj}
             color={themeObj.primary}
-            topPadding={0}
+            topPadding={tokens.space.xxl}
             onSkip={onSuivant}
-            onSuccess={onSuivant}
+            onSuccess={onConnecte}
             compact
         />
     </View>
@@ -313,14 +319,15 @@ export const StepCompte = ({ themeObj, onSuivant }) => (
  * la saisie soit un composant et pas un ecran.
  */
 export const StepLienEdt = ({ onDone }) => (
-    <View style={{ flex: 1, paddingTop: tokens.space.xxl }}>
+    /* Meme decision que StepCompte : le degagement defile avec le contenu, sans bande de coupe. */
+    <View style={{ flex: 1 }}>
         {/*
           * `onDone` avance d'une etape. Sans lui, le bouton « Terminer » qui suit une verification
           * reussie ne ferait **rien** — le formulaire l'utilise ailleurs pour refermer son ecran de
           * pile, et un bouton mort au milieu d'un parcours d'accueil est pire que pas de bouton.
           */}
         {/* Aucun en-tete ici : le parcours d'accueil est rendu hors de la navigation. */}
-        <LienEdtForm onDone={onDone} topPadding={tokens.space.md} />
+        <LienEdtForm onDone={onDone} topPadding={tokens.space.xxl + tokens.space.md} />
     </View>
 );
 
@@ -329,8 +336,8 @@ export const StepFin = ({ themeObj }) => (
         <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
             <MaterialCommunityIcons name="check-circle-outline" size={100} color={themeObj.primary} />
         </View>
-        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELL_DONE')}</Text>
-        <Text style={{ fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
+        <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELL_DONE')}</Text>
+        <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
     </View>
 );
 

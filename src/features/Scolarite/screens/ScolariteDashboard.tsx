@@ -25,8 +25,8 @@
  * pas d'authentification (docs/features/scolarite.md).
  */
 
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useContext, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
@@ -42,6 +42,48 @@ import { PageScolarite } from '../components/PageScolarite';
 import { EnteteScolarite } from '../components/EnteteScolarite';
 import type { PointWidget } from '../widgets/definitions';
 
+/**
+ * L'onglet sans compte : le grand titre des onglets pose comme Campus et Reglages — pas
+ * d'en-tete collant, le bandeau du formulaire passe en `compact` (deux « Scolarite » a l'ecran
+ * se seraient repete). Et le titre FOND au defilement, comme celui des Reglages : c'est le seul
+ * cas ou il surplombe un contenu defilant, et il restait plante sur le formulaire.
+ *
+ * Sorti de l'ecran pour le garder sous la limite de lignes, comme `PageScolarite` avant lui.
+ */
+const OngletDeconnecte = ({ theme, accent, defilement }) => (
+    <SafeAreaInsetsContext.Consumer>
+        {(insets) => (
+            <View style={[styles.container, { backgroundColor: theme.background }]}>
+                <Animated.View
+                    style={[styles.titreDOnglet, {
+                        paddingTop: insets?.top || 0,
+                        opacity: defilement.interpolate({
+                            inputRange: [0, 50],
+                            outputRange: [1, 0],
+                            extrapolate: 'clamp',
+                        }),
+                    }]}
+                    pointerEvents="none"
+                >
+                    <Text style={[styles.titreDOngletTexte, { color: theme.font }]}>
+                        {Translator.get('SCOLARITY')}
+                    </Text>
+                </Animated.View>
+                <ScolariteLoginView
+                    theme={theme}
+                    color={accent}
+                    topPadding={insets?.top || 0}
+                    compact
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: defilement } } }],
+                        { useNativeDriver: true },
+                    )}
+                />
+            </View>
+        )}
+    </SafeAreaInsetsContext.Consumer>
+);
+
 const ScolariteDashboard = ({ navigation }) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
@@ -51,6 +93,11 @@ const ScolariteDashboard = ({ navigation }) => {
         credentials, credentialsLoaded, coldData, widgets, certificatEnCours, portailDisponible,
         scrapeStatus, scrapeProgress, sessionMode, sessionFailure, retrySession,
     } = useCredentials();
+
+    // Le defilement du formulaire deconnecte, pour fondre le grand titre — le gabarit des
+    // Reglages, a l'identique (interpolation 0-50 → 1-0). Les autres branches ne s'en servent
+    // pas : le tableau de bord a son en-tete collant, qui vit sa propre vie.
+    const defilementDeconnecte = useRef(new Animated.Value(0)).current;
 
     const renderHeader = (insets) => (
         <EnteteScolarite
@@ -127,23 +174,7 @@ const ScolariteDashboard = ({ navigation }) => {
      * evite le flash du formulaire pendant la lecture du trousseau au lancement.
      */
     if (portailDisponible && credentialsLoaded && !credentials) {
-        return (
-            <SafeAreaInsetsContext.Consumer>
-                {(insets) => (
-                    <View style={[styles.container, { backgroundColor: theme.background }]}>
-                        {/* Le grand titre des onglets, pose exactement comme Campus et Reglages —
-                            pas d'en-tete collant ici. Le bandeau du formulaire passe en `compact` :
-                            deux « Scolarite » a l'ecran se seraient repete. */}
-                        <View style={[styles.titreDOnglet, { paddingTop: insets?.top || 0 }]} pointerEvents="none">
-                            <Text style={[styles.titreDOngletTexte, { color: theme.font }]}>
-                                {Translator.get('SCOLARITY')}
-                            </Text>
-                        </View>
-                        <ScolariteLoginView theme={theme} color={accent} topPadding={insets?.top || 0} compact />
-                    </View>
-                )}
-            </SafeAreaInsetsContext.Consumer>
-        );
+        return <OngletDeconnecte theme={theme} accent={accent} defilement={defilementDeconnecte} />;
     }
 
     const corps = () => (

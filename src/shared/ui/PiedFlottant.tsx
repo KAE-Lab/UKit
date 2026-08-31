@@ -70,21 +70,34 @@ export function FondDePiedFlottant({ fond }: { fond: string }) {
         />
     );
 
+    /*
+     * Android n'a pas de fumee de flou : le masque degrade est iOS-only, et le flou plein essaye a
+     * sa place tranchait le contenu d'un bord superieur NET — pire qu'un degrade franc (constate
+     * sur appareil le 2026-08-31). La fumee y est donc un degrade de la teinte du fond, quasi
+     * opaque a l'assise : le compromis des lecteurs audio Android, honnete et sans couture.
+     */
+    if (Platform.OS !== 'ios') {
+        return (
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                <LinearGradient colors={[fondTransparent(fond), `${fond}F2`]} style={{ height: VOILE_PIED }} />
+                <View style={[styles.voilePlein, { backgroundColor: `${fond}F2` }]} />
+            </View>
+        );
+    }
+
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
-            {Platform.OS === 'ios' ? (
-                <MaskedView
-                    style={StyleSheet.absoluteFill}
-                    maskElement={(
-                        <View style={styles.masque}>
-                            <LinearGradient colors={['transparent', 'black']} style={{ height: VOILE_PIED }} />
-                            <View style={styles.masquePlein} />
-                        </View>
-                    )}
-                >
-                    {flou}
-                </MaskedView>
-            ) : flou}
+            <MaskedView
+                style={StyleSheet.absoluteFill}
+                maskElement={(
+                    <View style={styles.masque}>
+                        <LinearGradient colors={['transparent', 'black']} style={{ height: VOILE_PIED }} />
+                        <View style={styles.masquePlein} />
+                    </View>
+                )}
+            >
+                {flou}
+            </MaskedView>
 
             {/* Le voile de lisibilite, leger (~35 %) : la fumee doit montrer le contenu floute, pas
                 le teinter — mais un objet pose sur du flou nu manquait d'assise. */}

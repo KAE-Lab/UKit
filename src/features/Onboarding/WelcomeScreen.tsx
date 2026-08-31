@@ -14,7 +14,7 @@
  */
 
 import React, { useState } from 'react';
-import { Text, View, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { Text, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SettingsManager } from '../../shared/services/AppCore';
@@ -22,6 +22,7 @@ import { planningDisponible, sourceEdt } from '../../shared/etablissements';
 import { useCredentials } from '../Scolarite/services/CredentialsContext';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
+import { adoucirLaTransition } from '../../shared/ui/transitions';
 import { filtrageParAnnee, useWelcomeState } from './hooks/useWelcomeState';
 import {
     StepCompte,
@@ -91,6 +92,12 @@ function etapesPour(avecCompte: boolean, avecEdt: boolean): Etape[] {
 
 export default function WelcomeScreen() {
     const [index, setIndex] = useState(0);
+    // Chaque changement d'etape traverse ce geste : une etape qui en remplace une autre d'un coup
+    // se lit comme un accroc, fondue elle se lit comme une suite (shared/ui/transitions).
+    const allerA = (prochain: number) => {
+        adoucirLaTransition();
+        setIndex(prochain);
+    };
     const insets = useSafeAreaInsets();
     const { state, actions } = useWelcomeState();
     const { portailDisponible } = useCredentials();
@@ -108,11 +115,27 @@ export default function WelcomeScreen() {
     // l'etablissement : un choix de groupe quand il y en a a choisir, un champ de lien sinon.
     const parLien = sourceEdt().kind !== 'celcat' && sourceEdt().kind !== 'ical';
 
+    const pied = (
+        <PiedDuParcours
+            themeObj={themeObj}
+            derniere={derniere}
+            index={index_}
+            total={etapes.length}
+            basInset={insets.bottom || 0}
+            onSuivant={() => allerA(index_ + 1)}
+        />
+    );
+
     return (
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: themeObj.background, paddingTop: (insets.top || 0) - tokens.space.lg }}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+            {/* AUCUN cadre clavier ici : les deux etapes qui saisissent (compte, lien iCal)
+                portent le leur, dans leur formulaire — c'est cette configuration qui a ete
+                validee sur les deux plateformes. Un cadre pose ici en plus faisait osciller le
+                contenu sur iOS (deux compensations concurrentes), et pose seul il ne degageait
+                pas la saisie (constate le 2026-08-31, dans les deux sens). */}
+            <View style={{ flex: 1 }}>
 
-                <WelcomeBackButton onPress={() => setIndex(index_ - 1)} visible={index_ > 0} themeObj={themeObj} topInset={insets.top} />
+                <WelcomeBackButton onPress={() => allerA(index_ - 1)} visible={index_ > 0} themeObj={themeObj} topInset={insets.top} />
 
                 {etape === 'intro' && <StepIntro themeObj={themeObj} />}
                 {etape === 'etablissement' && (
@@ -134,10 +157,21 @@ export default function WelcomeScreen() {
                     />
                 )}
                 {etape === 'compte' && (
-                    <StepCompte themeObj={themeObj} onSuivant={() => setIndex(index_ + 1)} />
+                    <StepCompte
+                        themeObj={themeObj}
+                        onSuivant={() => allerA(index_ + 1)}
+                        onConnecte={() => {
+                            /* Le parcours froid a pu regler l'emploi du temps (les propositions du
+                               dossier posent les favoris) : l'etape EDT n'a alors plus de question
+                               a poser — demander un groupe que le dossier vient de choisir etait
+                               un non-sens, constate sur l'accueil INP (2026-08-31). */
+                            const edtDejaRegle = SettingsManager.getFavoriteGroups().length > 0;
+                            allerA(index_ + (edtDejaRegle ? 2 : 1));
+                        }}
+                    />
                 )}
                 {etape === 'edt' && (parLien ? (
-                    <StepLienEdt onDone={() => setIndex(index_ + 1)} />
+                    <StepLienEdt onDone={() => allerA(index_ + 1)} />
                 ) : (
                     <StepGroupes
                         themeObj={themeObj}
@@ -151,28 +185,47 @@ export default function WelcomeScreen() {
                 ))}
                 {etape === 'fin' && <StepFin themeObj={themeObj} />}
 
-                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: (insets.bottom || 0) }}>
-                    <View style={{ paddingHorizontal: tokens.space.xl, marginBottom: tokens.space.xs }}>
-                        <TouchableOpacity
-                            onPress={derniere ? () => SettingsManager.setFirstLoad(false) : () => setIndex(index_ + 1)}
-                            style={{
-                                backgroundColor: themeObj.primary,
-                                borderRadius: tokens.radius.md,
-                                paddingVertical: tokens.space.md,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text style={{ color: '#ffffff', fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
-                                {derniere ? Translator.get('FINISH') : (index_ === 0 ? Translator.get('START') : Translator.get('NEXT'))}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+            </View>
 
-                    <WelcomePagination pageNumber={index_ + 1} maxPage={etapes.length} themeObj={themeObj} />
-                </View>
-
-            </KeyboardAvoidingView>
+            {/* Le pied vit HORS du KeyboardAvoidingView, sur les deux plateformes : le clavier le
+                recouvre naturellement. Dans le cadre clavier, il suivait chaque micro-cycle du
+                clavier — sur iOS, changer de champ fait bouger le cadre une fraction de seconde et
+                le bouton FLASHAIT a travers le clavier translucide ; sur Android le masquage
+                tardif le faisait flasher par-dessus la saisie. Un pied immobile ne flashe pas. */}
+            {pied}
         </SafeAreaView>
+    );
+}
+
+/** Le pied du parcours : le bouton d'avancement et la pagination. */
+function PiedDuParcours({ themeObj, derniere, index, total, basInset, onSuivant }: {
+    themeObj: (typeof style.Theme)['light'];
+    derniere: boolean;
+    index: number;
+    total: number;
+    basInset: number;
+    onSuivant: () => void;
+}) {
+    return (
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: basInset }}>
+            <View style={{ paddingHorizontal: tokens.space.xl, marginBottom: tokens.space.xs }}>
+                <TouchableOpacity
+                    onPress={derniere ? () => SettingsManager.setFirstLoad(false) : onSuivant}
+                    style={{
+                        backgroundColor: themeObj.primary,
+                        borderRadius: tokens.radius.md,
+                        paddingVertical: tokens.space.md,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Text style={{ color: themeObj.lightFont, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
+                        {derniere ? Translator.get('FINISH') : (index === 0 ? Translator.get('START') : Translator.get('NEXT'))}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            <WelcomePagination pageNumber={index + 1} maxPage={total} themeObj={themeObj} />
+        </View>
     );
 }

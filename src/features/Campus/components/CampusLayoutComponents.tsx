@@ -28,11 +28,15 @@ function useHauteurClavier(): number {
     const [hauteur, setHauteur] = useState(0);
 
     useEffect(() => {
-        if (Platform.OS !== 'ios') return undefined;
-        // `will` et non `did` : la dalle doit etre en place **avant** que le clavier apparaisse,
-        // sinon elle se pose une image apres lui et le defaut clignote.
-        const montre = Keyboard.addListener('keyboardWillShow', (e) => setHauteur(e.endCoordinates.height));
-        const cache = Keyboard.addListener('keyboardWillHide', () => setHauteur(0));
+        // `will` sur iOS — la dalle doit etre en place AVANT le clavier, sinon elle clignote une
+        // image apres lui. Android n'emet QUE les `did` : la barre n'ecoutait rien et le clavier
+        // la recouvrait (constate sur appareil le 2026-08-31) — depuis l'edge-to-edge, Android ne
+        // redimensionne plus la fenetre tout seul, il y a bien quelque chose a compenser.
+        const evenements = Platform.OS === 'ios'
+            ? { montre: 'keyboardWillShow' as const, cache: 'keyboardWillHide' as const }
+            : { montre: 'keyboardDidShow' as const, cache: 'keyboardDidHide' as const };
+        const montre = Keyboard.addListener(evenements.montre, (e) => setHauteur(e.endCoordinates.height));
+        const cache = Keyboard.addListener(evenements.cache, () => setHauteur(0));
         return () => { montre.remove(); cache.remove(); };
     }, []);
 
@@ -84,7 +88,11 @@ export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder,
         ) : null}
 
         <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'position' : undefined}
+            // `position` sur les DEUX plateformes : c'est LUI qui souleve la barre au-dessus du
+            // clavier — la dalle et le rembourrage ne font que l'habiller. Sans comportement,
+            // Android laissait la barre sous le clavier (constate sur appareil le 2026-08-31) :
+            // depuis l'edge-to-edge, la fenetre ne se redimensionne plus toute seule.
+            behavior="position"
             style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
         >
             {/* La fumee des flottants du bas (PiedFlottant) : le flou progressif teinte remplace la

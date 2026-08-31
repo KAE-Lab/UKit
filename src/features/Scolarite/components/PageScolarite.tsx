@@ -92,8 +92,12 @@ export function PageScolarite({
                 onDemanderCampus={onDemanderCampus}
             />
 
-            {/* Rien a ouvrir tant qu'aucune session n'existe : la grille entiere attend. */}
-            {portailDisponible && credentials ? (
+            {/* Rien a ouvrir tant qu'aucune session n'existe : la grille entiere attend. Et un
+                parcours froid qui a ECHOUE sans laisser de dossier ne montre pas une grille a
+                moitie vide (constate sur Android le 2026-08-31) : l'encart d'echec au-dessus porte
+                le probleme et son geste, la page reste propre. Avec un dossier deja lu, la grille
+                s'affiche — de vraies donnees valent mieux qu'un ecran vide. */}
+            {portailDisponible && credentials && (coldData !== null || (sessionFailure === null && echecBloquant === null)) ? (
                 <GrilleScolarite
                     theme={theme}
                     teinte={teinte}

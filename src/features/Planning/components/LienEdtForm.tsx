@@ -18,7 +18,7 @@
 
 import React, { useCallback, useContext, useState } from 'react';
 import {
-    ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
+    ActivityIndicator, KeyboardAvoidingView, ScrollView,
     StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -170,7 +170,10 @@ export default function LienEdtForm({ onDone, topPadding = 0 }: LienEdtFormProps
     return (
     <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: theme.background }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        // `padding` sur les DEUX plateformes, et ce cadre est le seul — meme decision que le
+        // formulaire de connexion, pour la meme raison : Android edge-to-edge (SDK 54) ne
+        // redimensionne plus la fenetre tout seul, et le parcours d'accueil n'a pas de cadre.
+        behavior="padding"
     >
         <ScrollView
             contentContainerStyle={{ paddingTop: topPadding, paddingBottom: tokens.space.xxl }}
@@ -258,12 +261,16 @@ const styles = StyleSheet.create({
         marginBottom: tokens.space.md,
     },
     title: {
+        // Largeur du parent, pas du texte : les polices constructeur Android mentent a la
+        // mesure et coupaient le dernier mot des textes centres auto-dimensionnes.
+        alignSelf: 'stretch',
         fontSize: tokens.fontSize.xl,
         fontWeight: tokens.fontWeight.semibold,
         marginBottom: tokens.space.xs,
         textAlign: 'center',
     },
     subtitle: {
+        alignSelf: 'stretch',
         fontSize: tokens.fontSize.sm,
         textAlign: 'center',
         lineHeight: 20,

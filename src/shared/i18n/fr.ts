@@ -41,7 +41,7 @@ const fr: TranslationDict = {
 	ERROR_MISSING_CREDENTIALS_TITLE: 'Il manque une information',
 	ERROR_MISSING_CREDENTIALS: 'Il manque une information pour continuer. Vérifie tes identifiants dans ton compte.',
 	ERROR_INTERNAL_TITLE: 'Une erreur est survenue',
-	ERROR_INTERNAL: 'Cette opération n’a pas pu aboutir. Le problème vient d’UKit.',
+	ERROR_INTERNAL: 'Cette opération n’a pas pu aboutir. Le problème vient de UKit.',
 	// Les echecs que les Blueprints de scolarite se donnent eux-memes (`fail:CODE`). Ils sont plus
 	// precis que la famille dont ils relevent : « bloque » ne dirait pas lequel des deux services a
 	// manque (features/Scolarite/services/ScolariteMapping.ts).

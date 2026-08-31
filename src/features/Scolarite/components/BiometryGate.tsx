@@ -38,6 +38,17 @@ import { ScreenState } from '../../../shared/ui/ScreenState';
  */
 let dejaAuthentifie = false;
 
+/**
+ * Une connexion interactive vaut franchissement : celui qui vient de TAPER le mot de passe a
+ * prouve plus qu'un visage, et lui presenter la porte sur la fiche qui suit etait la demande de
+ * trop (constate depuis les Reglages le 2026-08-31). Le geste marque la porte franchie pour la
+ * session en cours, exactement comme une authentification reussie ; il ne desarme rien pour les
+ * lancements suivants.
+ */
+export function franchirLaPorte() {
+    dejaAuthentifie = true;
+}
+
 const BiometryGate = ({ children, theme }) => {
     const authPassedRef = useRef(dejaAuthentifie);
     const [authenticated, setAuthenticated] = React.useState(dejaAuthentifie);
@@ -52,6 +63,13 @@ const BiometryGate = ({ children, theme }) => {
 
     const authenticate = useCallback(async () => {
         if (authPassedRef.current) return;
+        // Une porte deja montee — l'onglet Scolarite derriere les Reglages — a fige son etat
+        // AVANT un `franchirLaPorte` : elle relit le drapeau du module au moment de demander,
+        // sinon elle redemanderait ce que la connexion vient de prouver.
+        if (dejaAuthentifie) {
+            ouvrir();
+            return;
+        }
 
         const etat = await capacites();
         if (!etat.verrouille) {

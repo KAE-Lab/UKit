@@ -1,13 +1,14 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, ActivityIndicator,
-    StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
+    StyleSheet, KeyboardAvoidingView, Animated,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { getEtablissementActif } from '../../../shared/etablissements';
 import { LogoEtablissement } from './LogoEtablissement';
 import { BlocProgression } from './ScolariteLoadingScreen';
+import { franchirLaPorte } from './BiometryGate';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 
 import { tokens } from '../../../shared/theme/Theme';
@@ -70,6 +71,9 @@ const CarteDuFormulaire = ({
     /** Le bouton ne part pas sans ses deux champs, et pas deux fois. */
     const disabled = !username || !password || submitting;
 
+    /* La touche « suivant » enchaine sur le mot de passe sans rendre le clavier. */
+    const champMotDePasse = useRef<TextInput>(null);
+
     return (
             <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
                 {enSession ? (
@@ -85,13 +89,26 @@ const CarteDuFormulaire = ({
                       * champs qu'on vient de remplir, sans qu'aucun ecran n'ait a etre rejoue en
                       * sens inverse.
                       */
+                    /* `terminee` n'est pas decoratif : sans lui, la fin de session remettait
+                       l'etape a zero et la barre SE VIDAIT avant de disparaitre (constate sur le
+                       College ST le 2026-08-31) — c'est lui qui l'envoie a 100 %. */
                     <BlocProgression
                         scrapeProgress={scrapeProgress}
+                        terminee={terminee}
                         theme={theme}
                         color={color}
                     />
                 ) : (
                     <>
+                    {/*
+                      * Les traits iOS des deux champs sont alignes (`textContentType`) : sans eux,
+                      * iOS decidait seul d'afficher sa barre d'assistance sur un champ et pas sur
+                      * l'autre, et reconstruisait le clavier au changement de champ — un
+                      * clignotement visible a travers un clavier translucide (constate le
+                      * 2026-08-31). `submitBehavior="submit"` enchaine identifiant → mot de passe
+                      * sans blur, donc sans rendre le clavier. `textContentType` est ignore par
+                      * Android ; lui ne gagne que la touche Suivant/OK.
+                      */}
                     <TextInput
                         style={[styles.input, { backgroundColor: theme.background, color: theme.font, borderColor: theme.border }]}
                         placeholder={Translator.get('USERNAME')}
@@ -101,8 +118,13 @@ const CarteDuFormulaire = ({
                         autoCapitalize="none"
                         autoCorrect={false}
                         editable={!submitting}
+                        textContentType="username"
+                        returnKeyType="next"
+                        submitBehavior="submit"
+                        onSubmitEditing={() => champMotDePasse.current?.focus()}
                     />
                     <TextInput
+                        ref={champMotDePasse}
                         style={[styles.input, { backgroundColor: theme.background, color: theme.font, borderColor: theme.border, marginTop: tokens.space.sm }]}
                         placeholder={Translator.get('PASSWORD')}
                         placeholderTextColor={theme.fontSecondary}
@@ -112,6 +134,8 @@ const CarteDuFormulaire = ({
                         autoCapitalize="none"
                         autoCorrect={false}
                         editable={!submitting}
+                        textContentType="password"
+                        returnKeyType="done"
                     />
 
                     {error ? (
@@ -157,7 +181,7 @@ const CarteDuFormulaire = ({
     );
 };
 
-const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onDebut = null, onSuccess = null, compact = false }) => {
+const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onDebut = null, onSuccess = null, compact = false, onScroll = undefined }) => {
     const { validateAndSave, scrapeProgress, scrapeStatus, sessionMode } = useCredentials();
 
     /*
@@ -177,14 +201,67 @@ const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onDebut =
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [reussi, setReussi] = useState(false);
     const [error, setError] = useState('');
 
-    const enSession = submitting || progression.visible;
+    // `reussi` compte aussi : entre la fin de la grace de la barre et la confirmation de fin (voir
+    // l'effet plus bas), la carte remontrait les champs REMPLIS une fraction de seconde avant que
+    // l'appelant avance (constate a l'accueil le 2026-08-31).
+    const enSession = submitting || progression.visible || reussi;
+
+    /*
+     * `onSuccess` part a la FIN de la session, pas a la preuve des identifiants : `validateAndSave`
+     * resout tot — la preuve est la premiere etape — et l'appelant qui avancait a ce moment-la
+     * (l'etape suivante de l'accueil) quittait l'ecran pendant que le parcours froid tournait
+     * encore. Un echec du froid n'annule pas le compte : l'onglet le redira au bon endroit.
+     *
+     * La fin se lit sur `scrapeStatus` DIRECTEMENT — deux correctifs passes par la progression
+     * derivee ont ete defaits le meme jour, chacun perdant une course de propagation du contexte.
+     * La regle tient en deux temps : on doit VOIR la session tourner (connecting/scraping) apres
+     * l'armement — `sessionVue`, remise a zero a chaque soumission, ecarte un statut terminal
+     * residuel d'une session precedente — puis la voir finir (done/error). Le minuteur est le
+     * secours du cas degenere ou aucune session ne demarre.
+     */
+    const sessionVue = useRef(false);
+    // Le statut, lisible depuis un minuteur : la fermeture d'un `setTimeout` fige la valeur du
+    // rendu qui l'a pose — la ref, elle, dit le present.
+    const statusRef = useRef(scrapeStatus);
+    statusRef.current = scrapeStatus;
+    useEffect(() => {
+        if (!reussi) return;
+        const fin = () => { setReussi(false); onSuccess?.(); };
+
+        if (scrapeStatus === 'connecting' || scrapeStatus === 'scraping') {
+            sessionVue.current = true;
+            return;
+        }
+        if (sessionVue.current && (scrapeStatus === 'done' || scrapeStatus === 'error')) {
+            // Le terminal se CONFIRME au lieu de conclure : le parcours froid enchaine plusieurs
+            // phases et le statut repasse par `done` entre deux — partir au premier faisait sauter
+            // l'etape pendant que la suite tournait (constate sur iPhone le 2026-08-31). Si le
+            // statut repart avant l'echeance, l'effet se rejoue et ce minuteur est nettoye.
+            const conclusion = setTimeout(() => {
+                sessionVue.current = false;
+                fin();
+            }, 1200);
+            return () => clearTimeout(conclusion);
+        }
+        const secours = setTimeout(() => {
+            // Ultime verification au tir : si une session tourne malgre tout, le secours n'a pas
+            // le droit de sauter l'etape — il se remettra en attente au prochain changement.
+            if (statusRef.current === 'connecting' || statusRef.current === 'scraping') return;
+            fin();
+        }, 6000);
+        return () => clearTimeout(secours);
+    }, [reussi, scrapeStatus, onSuccess]);
 
     const onSubmit = useCallback(async () => {
         if (!username || !password || submitting) return;
         setError('');
         setSubmitting(true);
+        // La memoire de session repart : un `done` residuel d'une session passee ne doit pas faire
+        // croire que celle qui demarre est finie (voir l'effet plus haut).
+        sessionVue.current = false;
         // L'ecran hote apprend qu'une session part **de ce formulaire** : c'est ce qui lui permet de
         // lui laisser la page jusqu'au bout, alors que `credentials` est pose des le dixieme step.
         onDebut?.();
@@ -202,18 +279,31 @@ const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onDebut =
          * reste affichée, et le bouton restait donc figé sur « Connexion… » alors que la session
          * était allée au bout. Mesuré sur appareil au jalon 6-J.
          *
-         * L'indicateur retombe donc explicitement, et `onSuccess` porte la suite quand l'appelant en
-         * a une. Le tableau de bord n'en passe pas : son remplacement d'écran reste sa réponse.
+         * L'indicateur retombe donc explicitement, et `reussi` arme la suite : `onSuccess` partira
+         * quand la progression retombera (voir l'effet plus haut), pas maintenant.
          */
+        // Taper ses identifiants vaut franchissement de la porte biometrique : la fiche du compte
+        // qui remplace ce formulaire est gardee, et demander un visage a qui vient de prouver le
+        // mot de passe etait la demande de trop (voir BiometryGate).
+        franchirLaPorte();
         setSubmitting(false);
-        onSuccess?.();
-    }, [username, password, submitting, validateAndSave, onSuccess]);
+        setReussi(true);
+    }, [username, password, submitting, validateAndSave]);
 
 
     return (
         <KeyboardAvoidingView
             style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            // `padding` sur les DEUX plateformes : le clavier prend physiquement sa place et le
+            // contenu devient defilable au-dessus de lui — le comportement iOS, voulu partout.
+            // Android edge-to-edge (SDK 54) ne redimensionne plus la fenetre tout seul : sans
+            // comportement le clavier recouvrait le bas, et `height` deplacait sans liberer.
+            //
+            // Ce cadre est LE SEUL, y compris a l'accueil : le parcours n'en a pas. Deux cadres
+            // imbriques compensaient chacun la hauteur du clavier et le contenu oscillait sur
+            // iOS ; l'inverse — le cadre au parcours, aucun ici — laissait le clavier recouvrir
+            // la saisie (constate le 2026-08-31, dans les deux sens).
+            behavior="padding"
         >
             {/*
               * Le rebond est **volontairement conserve**. Le supprimer a ete essaye et retire : sur
@@ -221,10 +311,14 @@ const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onDebut =
               * clignoter le clavier. Un rebond sur une page courte est le comportement natif attendu ;
               * c'est le remede qui faisait plus de bruit que le mal.
               */}
-            <ScrollView
+            {/* `Animated.ScrollView` pour `onScroll` : l'onglet deconnecte fond son grand titre
+                sur le defilement du formulaire (ScolariteDashboard). Sans rapporteur, identique. */}
+            <Animated.ScrollView
                 contentContainerStyle={{ paddingTop: topPadding + 70, paddingBottom: tokens.space.xxl }}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
+                onScroll={onScroll}
+                scrollEventThrottle={16}
             >
                 <EnTeteDuFormulaire theme={theme} color={color} compact={compact} />
 
@@ -234,7 +328,7 @@ const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onDebut =
                     username={username} setUsername={setUsername} password={password} setPassword={setPassword}
                     error={error} onSubmit={onSubmit} onSkip={onSkip}
                 />
-            </ScrollView>
+            </Animated.ScrollView>
         </KeyboardAvoidingView>
     );
 };
@@ -249,6 +343,7 @@ const styles = StyleSheet.create({
         marginBottom: tokens.space.md,
     },
     title: {
+        alignSelf: 'stretch',
         fontSize: tokens.fontSize.xl,
         fontWeight: '600',
         marginBottom: tokens.space.xs,
@@ -257,6 +352,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     subtitle: {
+        alignSelf: 'stretch',
         fontSize: tokens.fontSize.sm,
         textAlign: 'center',
         lineHeight: 20,
@@ -305,6 +401,8 @@ const styles = StyleSheet.create({
         paddingVertical: tokens.space.xs,
     },
     skipText: {
+        alignSelf: 'stretch',
+        textAlign: 'center',
         fontSize: tokens.fontSize.sm,
     },
 });

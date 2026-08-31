@@ -132,7 +132,7 @@ export const SaveCredentialsModal = ({ theme, visible, onClose, onSave }: { them
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.lg, borderRadius: tokens.radius.lg, width: '85%', alignItems: 'center', ...tokens.shadow.lg }}>
                 <MaterialCommunityIcons name="shield-check" size={48} color={theme.primary} style={{ marginBottom: tokens.space.md }} />
-                <Text style={{ fontSize: tokens.fontSize.md, color: theme.font, textAlign: 'center', marginBottom: tokens.space.lg }}>
+                <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: theme.font, textAlign: 'center', marginBottom: tokens.space.lg }}>
                     {Translator.get('SAVE_CREDENTIALS_PROMPT')}
                 </Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>

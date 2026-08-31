@@ -142,9 +142,12 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
     const teinte = teinteDAnnonce(annonce.couleur, theme);
 
     // Tous les visuels de la fiche dans une seule visionneuse balayable : le principal en tete,
-    // la galerie a la suite — l'index ouvert est celui du visuel touche.
+    // la galerie a la suite — l'index ouvert est celui du visuel touche. Dedoublonne : une annonce
+    // peut publier le meme visuel en principal ET en galerie, et la visionneuse le montrerait deux
+    // fois pour rien.
     const visuels = [annonce.image_url, ...(annonce.images ?? [])]
-        .filter((url): url is string => typeof url === 'string' && url !== '');
+        .filter((url): url is string => typeof url === 'string' && url !== '')
+        .filter((url, index, tous) => tous.indexOf(url) === index);
 
     const handlePressCTA = () => {
         const lien = annonce.cta_link;
@@ -224,8 +227,11 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                                 que le visuel principal. */}
                             {annonce.images !== undefined ? (
                                 <View style={{ marginTop: tokens.space.lg, gap: tokens.space.md }}>
-                                    {annonce.images.map((url) => (
-                                        <CadreVisuel key={url} url={url} theme={theme} onPress={() => setImageOuverte(visuels.indexOf(url))} />
+                                    {/* La cle porte le rang : une annonce publiee avec deux fois la
+                                        meme adresse dupliquait des cles React (constate sur la
+                                        donnee de test). */}
+                                    {annonce.images.map((url, rang) => (
+                                        <CadreVisuel key={`${rang}-${url}`} url={url} theme={theme} onPress={() => setImageOuverte(visuels.indexOf(url))} />
                                     ))}
                                 </View>
                             ) : null}

@@ -93,8 +93,17 @@ function surfaceDIcone(theme: AppThemeType, tone: SemanticTone): { fond: string;
 export function EmptyState({ icon, title, message, theme, action, variant = 'card', tone = 'neutral' }: EmptyStateProps) {
     const { fond, glyphe, filet } = surfaceDIcone(theme, tone);
 
+    /*
+     * `alignSelf: 'stretch'` sur le conteneur, et c'est le coeur du correctif Android : centre et
+     * auto-dimensionne, sa largeur venait du plus large de ses textes — or les polices systeme de
+     * certains constructeurs (OnePlus, Oppo) mentent a la mesure de texte, le dernier mot passait
+     * sur une ligne invisible (« Aucun cours ce », constate sur appareil le 2026-08-31). Une
+     * largeur qui vient du PARENT casse ce cercle : le texte a de la place, il se plie au lieu de
+     * se couper.
+     */
     const conteneur: ViewStyle = variant === 'card'
         ? {
+            alignSelf: 'stretch',
             alignItems: 'center',
             paddingVertical: tokens.space.xl,
             paddingHorizontal: tokens.space.lg,
@@ -104,7 +113,7 @@ export function EmptyState({ icon, title, message, theme, action, variant = 'car
             borderWidth: 1,
             borderColor: theme.border,
         }
-        : { alignItems: 'center' };
+        : { alignSelf: 'stretch', alignItems: 'center' };
 
     return (
         <View style={conteneur}>
@@ -127,6 +136,10 @@ export function EmptyState({ icon, title, message, theme, action, variant = 'car
                 fontWeight: tokens.fontWeight.bold,
                 textAlign: 'center',
                 marginBottom: tokens.space.xs,
+                // Pleine largeur, centre par `textAlign` : auto-dimensionne dans un parent centre,
+                // Android tronquait la fin d'un titre en gras (« Journee libre » ampute, constate
+                // sur appareil le 2026-08-31) — un arrondi de mesure connu des Text bold.
+                alignSelf: 'stretch',
             }}>
                 {title}
             </Text>
@@ -136,7 +149,12 @@ export function EmptyState({ icon, title, message, theme, action, variant = 'car
                 fontSize: tokens.fontSize.md,
                 lineHeight: 22,
                 textAlign: 'center',
+                // Largeur CONTRAINTE, pas mesuree : `100 %` borne par la mesure de lecture. En
+                // auto-dimension, Android tronquait la fin (« Aucun cours ce » — le meme arrondi
+                // de mesure que le titre, constate le 2026-08-31).
+                width: '100%',
                 maxWidth: MESURE,
+                alignSelf: 'center',
             }}>
                 {message}
             </Text>

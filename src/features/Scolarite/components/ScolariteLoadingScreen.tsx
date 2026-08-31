@@ -91,9 +91,12 @@ const indiceDeLEtape = (etape: string | null | undefined) => {
 function useProgression(indice: number) {
     const valeur = useRef(new Animated.Value(0)).current;
     const [entier, setEntier] = useState(0);
+    // La position courante de la barre, lisible au moment de choisir la prochaine cible.
+    const atteint = useRef(0);
 
     useEffect(() => {
         const abonnement = valeur.addListener(({ value }) => {
+            atteint.current = value;
             setEntier((precedent) => {
                 const arrondi = Math.round(value);
                 return arrondi === precedent ? precedent : arrondi;
@@ -104,6 +107,12 @@ function useProgression(indice: number) {
 
     useEffect(() => {
         const etape = STEPS[indice];
+        // La barre ne recule JAMAIS. Un parcours enchaine plusieurs phases et le statut repasse
+        // par un terminal entre deux : la fin l'envoyait a 100, puis la phase suivante la
+        // ramenait vers son plafond — un recul de quelques points, visible juste avant que
+        // l'ecran avance (constate sur le College ST le 2026-08-31). Une cible plus basse que
+        // l'acquis est donc ignoree : le libelle continue de raconter la phase, la barre tient.
+        if (etape.plafond <= atteint.current) return;
         // `Easing.out` : rapide au debut, de plus en plus lent en approchant du plafond. C'est ce qui
         // donne l'impression d'une progression qui « travaille » plutot que d'un compte a rebours.
         const animation = Animated.timing(valeur, {

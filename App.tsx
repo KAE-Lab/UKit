@@ -27,6 +27,14 @@ import { RootSiblingParent } from 'react-native-root-siblings';
 
 SplashScreen.preventAutoHideAsync();
 
+/*
+ * Il n'existe PAS de figeage global de l'echelle de police : `Text.defaultProps` a ete tente ici
+ * (2026-08-31) et c'est un no-op — React 19 ne lit plus `defaultProps` sur les composants
+ * fonction, et Expo managee n'offre aucune prise native. La tolerance aux grandes polices se fait
+ * donc PAR LAYOUT : largeurs contraintes plutot que mesurees, `flex` sur les textes de rangees
+ * (voir EmptyState, SettingsSections). Ne pas retenter le raccourci global.
+ */
+
 function AnimatedAppLoader({ children }) {
 	const [appIsReady, setAppIsReady] = useState(false);
 	const imageSrc = require('./assets/icons/icon.png');

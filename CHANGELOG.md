@@ -1257,6 +1257,67 @@ réparations rapides.
   dernière synchronisation a échoué » — au lieu de laisser l'échec muet, indiscernable d'un bouton
   cassé. L'écriture d'un passage complet rejoint `CalendarSyncHelpers`, comme les autres pièces sans
   état du calendrier.
+- **La vérification Android a payé** (2026-08-31, appareil réel) : la fumée des flottants y devient
+  un dégradé franc de la teinte du fond — le flou plein tranchait le contenu d'un bord supérieur
+  net, le masque dégradé étant iOS seulement ; le pied du parcours d'accueil (bouton et pagination)
+  se masque pendant la frappe — le clavier rétrécissait la fenêtre et le pied absolu remontait sur
+  le contenu ; la ligne d'état de synchronisation ne se coupe plus au bord (il lui manquait de quoi
+  se plier) ; l'étape de connexion de l'accueil n'avance plus **avant la fin** du parcours froid —
+  la preuve des identifiants résout tôt, et l'échec éventuel du reste s'affichait sur la page
+  suivante ; l'onglet Scolarité ne montre plus une grille à moitié vide quand le parcours froid a
+  échoué sans laisser de dossier — l'encart d'échec porte la page seul ; une annonce publiant
+  deux fois le même visuel ne duplique plus les clés de sa galerie ni sa visionneuse ; le formulaire
+  de connexion devient défilable sous le clavier Android (`height`, comme l'accueil) ; les titres en
+  gras des états vides ne se tronquent plus (« Journée libre » amputé — un arrondi de mesure connu
+  des Text bold Android) ; et après une connexion à l'accueil qui a réglé l'emploi du temps par les
+  propositions du dossier, l'étape du choix de groupe est sautée — demander un groupe que le dossier
+  vient de choisir n'avait pas de sens. L'application **impose sa typographie** : l'échelle de
+  police du système n'agrandit plus les textes — sur un Android réglé en grande police, tous les
+  conteneurs mesurés pour l'échelle 1 tronquaient (« Plus tard » amputé en « Plus »). Le clavier
+  passe en `padding` sur les deux plateformes : il prend physiquement sa place et le contenu se
+  dégage au-dessus, le comportement iOS voulu partout — et la barre de recherche des listes écoute
+  enfin le clavier Android — c'est le `KeyboardAvoidingView` qui la soulève, et il était sans
+  comportement sur Android. Les textes centrés tirent désormais leur largeur du **parent**
+  (`alignSelf: stretch`) et plus de leur propre mesure : les polices système de certains
+  constructeurs (OnePlus, Oppo) mentent à la mesure de texte et le dernier mot passait sur une ligne
+  invisible — « Aucun cours ce », « Plus tard » amputé en « Plus » — même avec la police par défaut.
+  États vides, bandeau et lien du formulaire de connexion, formulaire iCal, modale du navigateur
+  sécurisé, écrans d'accueil : balayage complet des textes centrés, tous traités ; la règle est
+  écrite dans App.tsx, avec l'avertissement qu'aucun figeage global de police n'existe. La barre de
+  progression du login envoyait sa fin à zéro au lieu de 100 % — le formulaire ne transmettait pas
+  `terminee` — et elle se vidait avant de disparaître. Le pied du parcours d'accueil vit hors du
+  cadre clavier sur les deux plateformes : immobile, le clavier le recouvre naturellement — dans le
+  cadre, il suivait chaque micro-cycle du clavier et flashait, à travers le clavier translucide
+  d'iOS au changement de champ comme par-dessus la saisie Android. Une **connexion interactive vaut
+  franchissement de la porte biométrique** : la fiche du compte est gardée, et elle demandait un
+  visage à qui venait de prouver le mot de passe — le formulaire marque désormais la porte franchie
+  pour la session. Le dégagement du haut des étapes compte et lien iCal défile **avec** le
+  contenu : posé sur le conteneur, il découpait le défilement à sa ligne derrière une bande de la
+  couleur du fond. Le grand titre de l'onglet Scolarité déconnecté **fond au défilement** comme
+  celui des Réglages — seul cas où il surplombe un contenu défilant, il restait planté sur le
+  formulaire. Le clavier de l'accueil n'a
+  qu'un **seul cadre, celui du formulaire** (connexion comme lien iCal, `padding` sur les deux
+  plateformes) et le parcours n'en a aucun : deux cadres imbriqués faisaient osciller le contenu
+  sur iOS, et le cadre posé au parcours seul ne dégageait pas la saisie — le clavier recouvrait
+  les champs. Et la carte du formulaire reste en mode progression jusqu'à l'avancée de l'étape : les
+  champs remplis réapparaissaient une fraction de seconde entre la fin de la barre et la
+  confirmation de fin. La barre de progression **ne recule jamais** : un parcours enchaîne
+  plusieurs phases et le statut repasse par un terminal entre deux — la fin l'envoyait à 100 %,
+  puis la phase suivante la ramenait vers son plafond, un recul de quelques points visible juste
+  avant l'avancée. Les deux champs du formulaire alignent leurs traits iOS (`textContentType`) et
+  s'enchaînent à la touche « suivant » sans rendre le clavier — iOS reconstruisait le clavier au
+  changement de champ, un clignotement visible à travers un clavier translucide. Et les
+  **bascules de structure se fondent** (`adoucirLaTransition`, 220 ms) : changement
+  d'établissement — surtout vers ou depuis « Autre campus », où rangées et onglets entiers
+  apparaissent, et où l'adoucissement se pose après la purge, sans quoi la fermeture de la modale
+  le consommait avant la réorganisation qu'il visait —, étapes du parcours d'accueil, connexion et
+  déconnexion du compte ; la règle d'usage est écrite dans `shared/ui/transitions.ts` — les
+  bascules de structure seulement, jamais les frappes ni les défilements. L'avancement de l'étape de connexion se lit sur
+  l'état de session lui-même, et le terminal se **confirme** avant de conclure : le parcours froid
+  enchaîne plusieurs phases et le statut repasse par « fini » entre deux — partir au premier faisait
+  sauter l'étape pendant que la suite tournait. Et la vue d'un groupe cherché réserve au-dessus de sa
+  barre Aujourd'hui/Semaine l'espace standard des sous-pages : les boutons retour et favori frôlaient
+  les boutons du dessous.
 - **Les notifications de cours ne peuvent plus partir en double.** Chaque programmation annule tout
   puis reprogramme, et trois appelants pouvaient s'entrelacer — les deux vues du planning chargent
   en même temps au lancement : annule, annule, programme tout, programme tout, et chaque cours

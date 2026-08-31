@@ -5,6 +5,7 @@ import SecureStoreService from '../../../shared/services/SecureStoreService';
 import { SettingsManager } from '../../../shared/services/AppCore';
 import { getCodeEtablissementActif, portailPublie } from '../../../shared/etablissements';
 import Translator from '../../../shared/i18n/Translator';
+import { adoucirLaTransition } from '../../../shared/ui/transitions';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { rangerCertificat } from './CertificatService';
 import { cleDeMessage, type ScolariteColdData } from './ScolariteMapping';
@@ -772,6 +773,9 @@ const useCredentialsSession = (): CredentialsValue => {
 
     /** Tout oublier, sans toucher au magasin : la deconnexion et la bascule d'etablissement le partagent. */
     const oublier = useCallback(() => {
+        // La deconnexion et la bascule d'etablissement remplacent des ecrans entiers : le commit
+        // qui suit se fond au lieu de claquer (shared/ui/transitions).
+        adoucirLaTransition();
         setCredentials(null);
         setColdData(null);
         // L'etat seul : la table du trousseau appartient a `logout`, qui l'efface, et a la bascule
