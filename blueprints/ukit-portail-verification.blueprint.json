@@ -1,0 +1,87 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.verification",
+  "description": "Verifie un couple d'identifiants aupres du CAS, et rien d'autre. Il ne lit aucune donnee : il prouve. Ce fichier existe parce qu'une mesure a demoli la methode d'avant. On croyait pouvoir forcer l'apparition du formulaire en fermant la session distante ; sonde du 2026-08-27 : le CAS confirme « Logout successful » et pourtant revenir sur mondossierweb passe SANS formulaire, parce que le SERVICE garde son propre cookie de session, que la deconnexion du CAS ne touche pas. Un parcours lance apres une fermeture traversait donc sans que le CAS se prononce, LOGIN_SUCCESS n'etait pas emis, et l'application soldait la validation en « impossible de verifier tes identifiants » — sur des identifiants pourtant justes. La reponse est un parametre du protocole et non un contournement : `renew=true` demande a Apereo de REDEMANDER les identifiants meme si un ticket vit. Mesure le meme jour : formulaire present malgre une session ouverte. Le fichier est GENERIQUE et embarque, comme la deconnexion : `/login` est le chemin d'Apereo — Bordeaux le sert sous /cas et y redirige en 308, l'INP le sert a la racine — et les deux entrees viennent du catalogue. Le `service` doit etre une adresse que le CAS connait, d'ou l'ENT de l'etablissement plutot qu'une URL inventee. Il ne rend AUCUNE sortie : la preuve, c'est l'evenement. Le parametre `service` arrive DEJA ENCODE : `urlencode` n'existe pas dans le moteur embarque, et s'en servir ici ne marcherait que depuis un poste.",
+  "act": "continuum",
+  "secrets": [
+    "portail_user",
+    "portail_pass"
+  ],
+  "inputs": {
+    "cas": {
+      "type": "string",
+      "required": true,
+      "description": "La racine du CAS de l'etablissement, telle que le catalogue la publie."
+    },
+    "service": {
+      "type": "string",
+      "required": true,
+      "description": "Une adresse que ce CAS connait — l'ENT de l'etablissement — **deja encodee** pour tenir dans une chaine de requete."
+    }
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "session": {
+      "persist": true
+    },
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ inputs.cas }}/login?service={{ inputs.service }}&renew=true",
+      "note": "`service` arrive **deja encode** : le filtre `urlencode` existe cote moteur Python et PAS cote moteur embarque, donc l'employer ici marcherait depuis un poste et nulle part ailleurs. C'est la meme classe de piege que les pseudo-classes de Playwright au jalon 6-G. Encoder une URL est du calcul : ca reste applicatif."
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:CAS_INDISPONIBLE",
+      "note": "Ici le formulaire est GARANTI par `renew=true` : son absence veut donc dire que le CAS n'a pas repondu, pas qu'une session vivait."
+    },
+    {
+      "action": "fill",
+      "selector": "#username",
+      "value": "{{ secrets.portail_user }}"
+    },
+    {
+      "action": "fill",
+      "selector": "#password",
+      "value": "{{ secrets.portail_pass }}"
+    },
+    {
+      "action": "click",
+      "selector": "#submitBtn, input[type=submit]",
+      "note": "Les deux themes d'un coup : l'INP sert un <button id=submitBtn>, Bordeaux un input[type=submit]. Un seul selecteur pour un fichier qui doit valoir partout."
+    },
+    {
+      "action": "wait",
+      "ms": 8000
+    },
+    {
+      "action": "wait_for",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "Absent de la page propre, present des que le CAS refuse — mesure le 2026-08-09, et le meme panneau chez les deux etablissements."
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username",
+      "state": "detached",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "La preuve positive : le formulaire a disparu, donc le CAS a redirige vers le service. La garde precedente attrape le refus explicite, celle-ci le refus muet."
+    },
+    {
+      "action": "emit",
+      "event": "LOGIN_SUCCESS",
+      "note": "C'est ce qui autorise l'application a ecrire les identifiants. Il n'est atteint que si le CAS s'est reellement prononce — c'est toute la raison d'etre de ce fichier."
+    }
+  ],
+  "outputs": {}
+}

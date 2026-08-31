@@ -1,9 +1,10 @@
-import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 import ScheduleScreen from '../../features/Planning/screens/ScheduleScreen';
 import CampusDashboard from '../../features/Campus/Dashboard/CampusDashboard';
@@ -11,10 +12,15 @@ import ScolariteDashboard from '../../features/Scolarite/screens/ScolariteDashbo
 import SettingsScreen from '../../features/Settings/screens/SettingsScreen';
 
 import style, { tokens, AppThemeType } from '../theme/Theme';
+import { TAB_BAR_HEIGHT } from '../ui/ScreenState';
+import { FondDePiedFlottant, VOILE_PIED } from '../ui/PiedFlottant';
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
-import { NavBarHelper, SaveGroupButton } from './NavHelpers';
+import { groupesRequis, portailPublie, serviceEtablissement } from '../etablissements';
 import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
+// La modale du teaser, la meme que les rangees mysterieuses de la Scolarite : elle est generique
+// (vocabulaire des dialogues + cles COMING_SOON), elle vit juste chez son premier consommateur.
+import { ModaleBientot } from '../../features/Scolarite/components/RangeeMysterieuse';
 
 export type MainTabParamList = {
     PlanningTab: undefined;
@@ -39,6 +45,14 @@ interface TabBarRouteItemProps {
 }
 
 function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }: TabBarRouteItemProps) {
+    const { themeName } = useContext(AppContext) as { themeName: 'light' | 'dark' };
+    /* Le teaser de l'onglet Scolarite : sur un campus dont aucun portail n'est publie, l'onglet
+       est voile — meme vocabulaire que le bouton mysterieux de Campus — et le toucher ouvre la
+       demande de campus au lieu d'un ecran qui ne peut rien montrer. Le declencheur est la donnee
+       du catalogue : relier le campus fait tomber le voile sans release. */
+    const [teaserCampus, setTeaserCampus] = useState(false);
+    const campusNonRelie = route.name === 'ScolariteTab' && !portailPublie();
+
     const { options } = descriptors[route.key];
     const label = (options.tabBarLabel as string) !== undefined
         ? (options.tabBarLabel as string)
@@ -49,6 +63,10 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
     const isFocused = state.index === index;
 
     const onPress = () => {
+        if (campusNonRelie) {
+            setTeaserCampus(true);
+            return;
+        }
         const event = navigation.emit({
             type: 'tabPress',
             target: route.key,
@@ -85,11 +103,70 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
                 isFocused && { backgroundColor: `${theme.primary}15` }
             ]}>
                 {options.tabBarIcon && options.tabBarIcon({ color, size: 24, focused: isFocused })}
+                {campusNonRelie && (
+                    /* L'iconContainer clippe deja (overflow hidden + rayon) : le voile s'y pose nu. */
+                    <View style={[StyleSheet.absoluteFill, styles.centreVoile]} pointerEvents="none">
+                        <BlurView
+                            intensity={20}
+                            tint={themeName === 'dark' ? 'dark' : 'light'}
+                            experimentalBlurMethod="dimezisBlurView"
+                            style={StyleSheet.absoluteFill}
+                        />
+                        <MaterialCommunityIcons name="lock" size={18} color={theme.fontSecondary} />
+                    </View>
+                )}
             </View>
-            <Text style={[styles.tabLabel, { color, fontWeight: Platform.OS === 'ios' ? (isFocused ? '700' : '500') : '500' }]}>
+            {/* La graisse ne change pas avec la selection : passer en gras elargissait le libelle
+                d'un ou deux points et tout le rang tressaillait a chaque changement d'onglet. La
+                couleur porte l'etat a elle seule, comme sur le bouton d'action a cote. */}
+            <Text style={[styles.tabLabel, { color, fontWeight: '500' }]}>
                 {label}
             </Text>
+            {campusNonRelie && (
+                <ModaleCampusNonRelie
+                    theme={theme}
+                    visible={teaserCampus}
+                    fermer={() => setTeaserCampus(false)}
+                    ouvrirDemande={(href) => {
+                        setTeaserCampus(false);
+                        // La route vit dans le Stack racine, au-dessus des onglets : react-navigation
+                        // remonte tout seul, mais le type des helpers d'onglets ne le sait pas.
+                        (navigation as { navigate: (name: string, params?: object) => void }).navigate('WebBrowser', { href });
+                    }}
+                />
+            )}
         </TouchableOpacity>
+    );
+}
+
+/**
+ * La modale du campus non relie : le meme gabarit que « Bientot », un autre message.
+ *
+ * Le bouton principal ouvre la demande de campus, et son adresse vient du catalogue
+ * (`services.adaptation`) — la meme que l'etat vide de l'onglet : publier ou changer ce lien est
+ * une publication, pas une release. Sans lien publie, la modale garde sa seule sortie « Compris ».
+ */
+function ModaleCampusNonRelie({ theme, visible, fermer, ouvrirDemande }: {
+    theme: AppThemeType;
+    visible: boolean;
+    fermer: () => void;
+    ouvrirDemande: (href: string) => void;
+}) {
+    const demande = serviceEtablissement('adaptation');
+    return (
+        <ModaleBientot
+            theme={theme}
+            visible={visible}
+            fermer={fermer}
+            titre={Translator.get('CAMPUS_NOT_SUPPORTED_TITLE')}
+            corps={Translator.get('CAMPUS_NOT_SUPPORTED')}
+            // La forme courte : dans une rangee a deux boutons, « Demander mon campus » se pliait
+            // sur deux lignes. Le titre de la modale porte deja le contexte.
+            action={demande === null ? undefined : {
+                libelle: Translator.get('CAMPUS_REQUEST_SHORT'),
+                onPress: () => ouvrirDemande(demande),
+            }}
+        />
     );
 }
 
@@ -100,84 +177,96 @@ interface TabBarActionItemProps {
     credentials: unknown;
 }
 
+/** Le bouton contextuel de droite : la meme carte pour les quatre onglets, seul le contenu change. */
+function BoutonDAction({ icone, libelle, onPress, theme, children }: { icone: React.ComponentProps<typeof MaterialCommunityIcons>['name']; libelle: string; onPress: () => void; theme: AppThemeType; children?: React.ReactNode }) {
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            activeOpacity={0.85}
+            style={[styles.groupButton, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+        >
+            <MaterialCommunityIcons name={icone} size={24} color={theme.accent ?? theme.primary} />
+            <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: tokens.space.xxs }]}>
+                {libelle}
+            </Text>
+            {children}
+        </TouchableOpacity>
+    );
+}
+
+/** Le voile du teaser d'un bouton d'action : flou et cadenas, sans geste propre. */
+function VoileDeBouton({ theme, themeName }: { theme: AppThemeType; themeName: 'light' | 'dark' }) {
+    return (
+        <View style={styles.voileMystere} pointerEvents="none">
+            <BlurView
+                intensity={20}
+                tint={themeName === 'dark' ? 'dark' : 'light'}
+                experimentalBlurMethod="dimezisBlurView"
+                style={StyleSheet.absoluteFill}
+            />
+            <MaterialCommunityIcons name="lock" size={18} color={theme.fontSecondary} />
+        </View>
+    );
+}
+
 function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: TabBarActionItemProps) {
+    const { themeName } = useContext(AppContext) as { themeName: 'light' | 'dark' };
+    /** Le teaser du bouton Campus — et celui des Groupes sur un campus sans inventaire. */
+    const [teaser, setTeaser] = useState(false);
+
     if (currentRouteName === 'PlanningTab') {
-        return (
-            <TouchableOpacity
-                onPress={() => navigation.navigate('GroupSearch' as never)}
-                activeOpacity={0.85}
-                style={[
-                    styles.groupButton,
-                    {
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.border,
-                    }
-                ]}
-            >
-                <MaterialCommunityIcons
-                    name="account-search-outline"
-                    size={24}
-                    color={theme.accent ?? theme.primary}
-                />
-                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
-                    {Translator.get('GROUPS')}
-                </Text>
-            </TouchableOpacity>
-        );
+        // Sans inventaire de groupes — l'emploi du temps passe par un lien personnel — la recherche
+        // n'a rien a chercher : le bouton passe sous le voile. Le seul cas actuel est le campus non
+        // relie, d'ou la modale de demande ; un etablissement relie par abonnement demandera un
+        // autre contenu le jour ou il existera.
+        if (!groupesRequis()) {
+            return (
+                <>
+                    <BoutonDAction icone="account-search-outline" libelle={Translator.get('GROUPS')} onPress={() => setTeaser(true)} theme={theme}>
+                        <VoileDeBouton theme={theme} themeName={themeName} />
+                    </BoutonDAction>
+                    <ModaleCampusNonRelie
+                        theme={theme}
+                        visible={teaser}
+                        fermer={() => setTeaser(false)}
+                        ouvrirDemande={(href) => {
+                            setTeaser(false);
+                            (navigation as { navigate: (name: string, params?: object) => void }).navigate('WebBrowser', { href });
+                        }}
+                    />
+                </>
+            );
+        }
+        return <BoutonDAction icone="account-search-outline" libelle={Translator.get('GROUPS')} onPress={() => navigation.navigate('GroupSearch' as never)} theme={theme} />;
     }
-    
+
     if (currentRouteName === 'SettingsTab') {
-        return (
-            <TouchableOpacity
-                onPress={() => navigation.navigate('About' as never)}
-                activeOpacity={0.85}
-                style={[
-                    styles.groupButton,
-                    {
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.border,
-                    }
-                ]}
-            >
-                <MaterialCommunityIcons
-                    name="information-outline"
-                    size={24}
-                    color={theme.accent ?? theme.primary}
-                />
-                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
-                    {Translator.get('ABOUT')}
-                </Text>
-            </TouchableOpacity>
-        );
+        return <BoutonDAction icone="information-outline" libelle={Translator.get('ABOUT')} onPress={() => navigation.navigate('About' as never)} theme={theme} />;
     }
-    
+
+    // « Compte » et non « Deconnexion », depuis le 2026-08-25 : cet ecran ne sert plus a partir. Il
+    // porte l'etat civil, l'INE, les identifiants et trois gestes dont un seul deconnecte — le
+    // nommer par le plus destructeur des trois dissuadait d'y aller pour consulter.
     if (currentRouteName === 'ScolariteTab' && credentials) {
+        return <BoutonDAction icone="account-circle-outline" libelle={Translator.get('ACCOUNT')} onPress={() => navigation.navigate('CredentialsSettings' as never)} theme={theme} />;
+    }
+
+    // Le bouton mysterieux de Campus : la capacite n'existe pas encore, et l'emplacement l'assume —
+    // meme teaser que les rangees de la Scolarite (contenu floute, cadenas, modale « Bientot »).
+    // Quand elle arrivera, ce sera par ici, sans que la barre change de forme.
+    if (currentRouteName === 'CampusTab') {
         return (
-            <TouchableOpacity
-                onPress={() => navigation.navigate('CredentialsSettings' as never)}
-                activeOpacity={0.85}
-                style={[
-                    styles.groupButton,
-                    {
-                        backgroundColor: theme.cardBackground,
-                        borderColor: theme.border,
-                    }
-                ]}
-            >
-                <MaterialCommunityIcons
-                    name="logout"
-                    size={24}
-                    color={theme.accent ?? theme.primary}
-                />
-                <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: 2 }]}>
-                    {Translator.get('LOGOUT')}
-                </Text>
-            </TouchableOpacity>
+            <>
+                <BoutonDAction icone="compass-outline" libelle={Translator.get('CAMPUS')} onPress={() => setTeaser(true)} theme={theme}>
+                    <VoileDeBouton theme={theme} themeName={themeName} />
+                </BoutonDAction>
+                <ModaleBientot theme={theme} visible={teaser} fermer={() => setTeaser(false)} />
+            </>
         );
     }
-    
+
     // Placeholder invisible — maintient la largeur de la tab bar sans afficher de contour
-    return <View style={{ width: 65, height: 75 }} />;
+    return <View style={{ width: 65, height: TAB_BAR_HEIGHT }} />;
 }
 
 // Composant Custom Tab Bar pour reproduire l'effet Apple Music (décalé à gauche, ratio icon/text, bords arrondis)
@@ -190,6 +279,11 @@ function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarPro
 
                 return (
                     <View style={[styles.tabBarWrapper, { paddingBottom: bottomPadding }]}>
+                        {/* La fumee des flottants du bas (PiedFlottant) : la barre d'onglets survole
+                            le contenu comme les pieds d'action, elle parle donc pareil. Les quatre
+                            onglets partagent `theme.background` — `courseBackground` lui est
+                            identique dans les deux themes. */}
+                        <FondDePiedFlottant fond={theme.background} />
                         <View style={[
                             styles.tabBarContainer,
                             {
@@ -240,7 +334,7 @@ export default function MainTabNavigator() {
                 name="PlanningTab"
                 component={PlanningStackScreen}
                 options={{
-                    tabBarLabel: Translator.get('MY_PLANNING') || 'Planning',
+                    tabBarLabel: Translator.get('MY_PLANNING'),
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="calendar-month-outline" size={24} color={color} />,
                     headerShown: false
                 }}
@@ -249,7 +343,7 @@ export default function MainTabNavigator() {
                 name="CampusTab"
                 component={CampusDashboard}
                 options={{
-                    tabBarLabel: Translator.get('CAMPUS') || 'Campus',
+                    tabBarLabel: Translator.get('CAMPUS'),
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="domain" size={24} color={color} />
                 }}
             />
@@ -257,7 +351,7 @@ export default function MainTabNavigator() {
                 name="ScolariteTab"
                 component={ScolariteDashboard}
                 options={{
-                    tabBarLabel: Translator.get('SCOLARITY') || 'Scolarité',
+                    tabBarLabel: Translator.get('SCOLARITY'),
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="toolbox-outline" size={24} color={color} />
                 }}
             />
@@ -265,7 +359,7 @@ export default function MainTabNavigator() {
                 name="SettingsTab"
                 component={SettingsScreen}
                 options={{
-                    tabBarLabel: Translator.get('SETTINGS') || 'Paramètres',
+                    tabBarLabel: Translator.get('SETTINGS'),
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="cog-outline" size={24} color={color} />
                 }}
             />
@@ -281,6 +375,8 @@ const styles = StyleSheet.create({
         right: 0,
         flexDirection: 'row',
         paddingHorizontal: tokens.space.md,
+        // La fumee monte au-dessus de la barre : c'est ce rembourrage qui lui donne sa hauteur.
+        paddingTop: VOILE_PIED,
         backgroundColor: 'transparent',
     },
     tabBarContainer: {
@@ -288,7 +384,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderRadius: tokens.radius.md,
         borderWidth: 1,
-        height: 75,
+        height: TAB_BAR_HEIGHT,
         elevation: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
@@ -298,7 +394,7 @@ const styles = StyleSheet.create({
     },
     groupButton: {
         width: 65,
-        height: 75,
+        height: TAB_BAR_HEIGHT,
         borderRadius: tokens.radius.md,
         borderWidth: 1,
         justifyContent: 'center',
@@ -321,13 +417,25 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: tokens.radius.md,
-        marginBottom: 2,
+        marginBottom: tokens.space.xxs,
         overflow: 'hidden',
     },
     tabLabel: {
         fontSize: 10,
-        fontFamily: 'Montserrat_500Medium',
-    }
+    },
+    centreVoile: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    voileMystere: {
+        // Le calque du teaser, clippe aux coins du bouton : `overflow: hidden` sur le bouton
+        // lui-meme mangerait son ombre sur iOS — meme montage que `GlypheFiligrane`.
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: tokens.radius.md,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 });
 
 export type PlanningStackParamList = {

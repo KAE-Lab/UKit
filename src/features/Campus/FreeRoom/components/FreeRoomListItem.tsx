@@ -1,11 +1,12 @@
 import React, { useContext } from 'react';
-import { View, Text } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import moment from 'moment';
 import Translator from '../../../../shared/i18n/Translator';
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
+import { MetaRow } from '../../../../shared/ui/MetaRow';
 import { BuildingInfo } from '../../services/FreeRoomService';
 import { CampusCard } from '../../components/CampusCard';
+import { DistanceBadge } from '../../components/CampusCardParts';
 
 interface FreeRoomListItemProps {
     item: BuildingInfo;
@@ -19,17 +20,17 @@ export function FreeRoomListItem({ item, isFavorite, onToggleFavorite, onPress }
     const theme = style.Theme[themeName];
     const totalRooms = item.rooms ? item.rooms.length : 0;
 
-    let hoursText = Translator.get('UNKNOWN') || 'Non communiqué';
+    let hoursText = Translator.get('UNKNOWN');
     if (item.schedule) {
-        const currentDay = new Date().getDay() || 7;
+        const currentDay = moment().day() || 7; // 1-7, et suit le mock temporel
         const daySchedule = item.schedule[String(currentDay)];
         if (daySchedule) {
             hoursText = `${daySchedule.open} - ${daySchedule.close}`;
         } else {
-            hoursText = Translator.get('BU_CLOSED') || 'Fermé';
+            hoursText = Translator.get('BUILDING_CLOSED_LABEL');
         }
     }
-    
+
     return (
         <CampusCard
             title={item.name}
@@ -38,28 +39,22 @@ export function FreeRoomListItem({ item, isFavorite, onToggleFavorite, onPress }
             onToggleFavorite={onToggleFavorite}
             onPress={onPress}
         >
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
-                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }} numberOfLines={1}>
-                    {item.campus || 'Talence'}
-                </Text>
+            <MetaRow
+                theme={theme}
+                icon={{ family: 'material', name: 'location-on' }}
+                label={item.campus || 'Talence'}
+                numberOfLines={1}
+                marginBottom={tokens.space.xs}
+                trailing={item.distance !== undefined ? (
+                    <DistanceBadge distance={item.distance} theme={theme} icon={{ name: 'walk' }} />
+                ) : undefined}
+            />
 
-                {item.distance !== undefined && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
-                        <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
-                        <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary, marginLeft: 4 }}>
-                            {item.distance < 1 ? `${Math.round(item.distance * 1000)} m` : `${item.distance.toFixed(1)} km`}
-                        </Text>
-                    </View>
-                )}
-            </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <MaterialCommunityIcons name="clock-outline" size={16} color={theme.fontSecondary} />
-                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
-                    {hoursText} • {totalRooms} {Translator.get('ROOMS' as Parameters<typeof Translator.get>[0]) || 'Salles'}
-                </Text>
-            </View>
+            <MetaRow
+                theme={theme}
+                icon={{ name: 'clock-outline' }}
+                label={`${hoursText} • ${totalRooms} ${Translator.get('ROOMS')}`}
+            />
         </CampusCard>
     );
 }

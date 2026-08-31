@@ -1,67 +1,24 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
-import { View, Text } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import React, { useState, useMemo } from 'react';
 
-import { AppContext } from '../../../shared/services/AppCore';
-import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import LibraryService, { LibraryInfo, AffluencesData } from '../services/LibraryService';
+import type { LibraryInfo } from '../services/LibraryService';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 import { CampusListLayout } from '../components/CampusListLayout';
 import { LibraryListItem } from './components/LibraryListItem';
 import { useFavorites } from '../hooks/useFavorites';
-import { useCampusLocation } from '../hooks/useCampusLocation';
+import { useCampusPosition } from '../hooks/useCampusPosition';
+import { useNearbyLibraries } from '../hooks/useNearbyLibraries';
 import { useSavedFilter } from '../hooks/useSavedFilter';
 
 function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>; onAnimatedScroll?: (event: unknown) => void }) {
-    const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
-    const themeName = AppContextValues.themeName ?? 'light';
-    const theme = style.Theme[themeName];
 
-    const { fetchLocation } = useCampusLocation();
+    const { lat, lon } = useCampusPosition();
     const { favorites, toggleFavorite } = useFavorites('library_favorites');
     const [selectedFilter, setSelectedFilter] = useSavedFilter('library_filter', 'all');
-    
+
     const [searchText, setSearchText] = useState('');
-    const [libraries, setLibraries] = useState<LibraryInfo[]>([]);
-    const [affluences, setAffluences] = useState<Record<string, AffluencesData>>({});
-    const [loading, setLoading] = useState<boolean>(true);
-
-    useEffect(() => {
-        let mounted = true;
-        const loadLibraries = async () => {
-            setLoading(true);
-            try {
-                const { lat, lon } = await fetchLocation();
-                
-                const nearbyLibs = await LibraryService.fetchNearbyLibraries(lat, lon);
-                if (!mounted) return;
-                setLibraries(nearbyLibs);
-
-                const affluencesPromises = nearbyLibs.map(async (lib) => {
-                    const data = await LibraryService.getAffluencesData(lib.slug);
-                    return { id: lib.id, data };
-                });
-
-                const results = await Promise.all(affluencesPromises);
-                if (!mounted) return;
-
-                const newAffluences: Record<string, AffluencesData> = {};
-                results.forEach(res => {
-                    if (res.data) newAffluences[res.id] = res.data;
-                });
-                setAffluences(newAffluences);
-            } catch (error) {
-                console.error("Erreur critique dans loadLibraries:", error);
-            } finally {
-                if (mounted) setLoading(false);
-            }
-        };
-
-        loadLibraries();
-        return () => { mounted = false; };
-    }, [fetchLocation]);
+    const { libraries, affluences, failure, secteursMuets, loading, retry } = useNearbyLibraries(lat, lon);
 
     const filteredData = useMemo(() => {
         let result = [...libraries].sort((a, b) => {
@@ -90,8 +47,8 @@ function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@
     }, [libraries, favorites, searchText, selectedFilter, affluences]);
 
     const filterOptions = [
-        { id: 'all', label: Translator.get('ALL_LIBRARIES' as Parameters<typeof Translator.get>[0]) },
-        { id: 'open', label: Translator.get('OPEN_LIBRARIES' as Parameters<typeof Translator.get>[0]) }
+        { id: 'all', label: Translator.get('ALL_LIBRARIES') },
+        { id: 'open', label: Translator.get('OPEN_LIBRARIES') }
     ];
 
     const renderItem = ({ item }: { item: LibraryInfo }) => {
@@ -117,14 +74,18 @@ function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@
             hasSearch={true}
             searchText={searchText}
             onSearchChange={setSearchText}
-            searchPlaceholder={Translator.get('SEARCH_BU_CITY' as Parameters<typeof Translator.get>[0])}
+            searchPlaceholder={Translator.get('SEARCH_BU_CITY')}
             
             filterOptions={filterOptions}
             selectedFilter={selectedFilter}
             onFilterChange={setSelectedFilter}
             
             emptyIcon="bookshelf"
+            emptyTitle={Translator.get('NO_BU_NEARBY_TITLE')}
             emptyMessage={Translator.get('NO_BU_NEARBY')}
+            failure={failure}
+            onRetry={retry}
+            partial={secteursMuets > 0}
         />
     );
 }

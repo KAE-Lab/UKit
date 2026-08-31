@@ -1,25 +1,28 @@
 import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
+import { View, FlatList, Dimensions } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
+import { SectionHeader } from '../../../../shared/ui/SectionHeader';
+import { LoadingState } from '../../../../shared/ui/LoadingState';
 import { CampusDataManager as DataManager } from '../../services/CampusDataManager';
 import { getDistanceInKm, BuildingInfo } from '../../services/FreeRoomService';
+import type { UkitFailure } from '../../../../shared/aetherius';
 import { useFavorites } from '../../hooks/useFavorites';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
 import { FreeRoomSectionCard } from './FreeRoomSectionCard';
+import { SectionEtatVide } from './SectionEtatVide';
 
 export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
     const [buildings, setBuildings] = useState<BuildingInfo[]>([]);
+    const [failure, setFailure] = useState<UkitFailure | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const mountedRef = useRef(true);
 
@@ -34,8 +37,12 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
             try {
                 let bList: BuildingInfo[] = DataManager.getBuildingList() as unknown as BuildingInfo[];
                 if (!bList || bList.length === 0) {
-                    await DataManager.fetchBuildingList();
+                    // L'echec n'est retenu que s'il ne reste rien a montrer : un cache peuple survit a
+                    // un rafraichissement rate, sinon une liste complete se presenterait comme une
+                    // panne (meme regle que `FreeRoomScreen`, docs/defauts-fonctionnels.md).
+                    const echec = await DataManager.fetchBuildingList();
                     bList = DataManager.getBuildingList() as unknown as BuildingInfo[];
+                    if (echec !== null && (!bList || bList.length === 0)) setFailure(echec);
                 }
                 if (mountedRef.current) {
                     if (bList) {
@@ -49,7 +56,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
                     setBuildings(bList || []);
                     setLoading(false);
                 }
-            } catch (e) {
+            } catch {
                 if (mountedRef.current) setLoading(false);
             }
         };
@@ -81,20 +88,22 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
 
     return (
         <View style={{ marginTop: tokens.space.md }}>
-            <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
-                onPress={() => navigation.navigate('FreeRoomScreen')} // Wait, navigation key in Dashboard was 'FreeRoomScreen'? 
-                // Let's keep it 'FreeRoomScreen' to match original file
-                activeOpacity={0.7}
-            >
-                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
-                    {Translator.get('FREE_ROOMS') || 'Salles Libres'}
-                </Text>
-                <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
+            <SectionHeader
+                title={Translator.get('FREE_ROOMS')}
+                theme={theme}
+                onPress={() => navigation.navigate('FreeRoomScreen')}
+            />
 
             {loading ? (
-                <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+                <LoadingState theme={theme} />
+            ) : sortedBuildings.length === 0 ? (
+                <SectionEtatVide
+                    theme={theme}
+                    failure={failure}
+                    masquesParFiltre={false}
+                    messageVide={Translator.get('NO_BUILDING_FOUND')}
+                    onOuvrir={() => navigation.navigate('FreeRoomScreen')}
+                />
             ) : (
                 <FlatList
                     horizontal

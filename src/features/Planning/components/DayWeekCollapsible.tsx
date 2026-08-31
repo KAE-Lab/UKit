@@ -97,8 +97,8 @@ export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
 						<View style={{
 							backgroundColor: theme.accent ? theme.accent + '20' : theme.primary + '20',
 							borderRadius: tokens.radius.pill,
-							paddingHorizontal: 8,
-							paddingVertical: 2,
+							paddingHorizontal: tokens.space.sm,
+							paddingVertical: tokens.space.xxs,
 							marginLeft: tokens.space.sm
 						}}>
 							<Text style={{ color: theme.accent ?? theme.primary, fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.bold }}>
@@ -116,8 +116,10 @@ export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
 		const { theme } = this.props;
 		if (groupedCourses.length === 0) {
 			return (
-				<View style={{ padding: tokens.space.md, alignItems: 'center' }}>
-					<Text style={{ color: theme.fontSecondary }}>{Translator.get('NO_CLASS_THIS_DAY')}</Text>
+				<View style={{ padding: tokens.space.md }}>
+					{/* Pleine largeur, centre par textAlign : auto-dimensionne, Android tronque la
+					    fin des textes centres (le meme arrondi de mesure que les etats vides). */}
+					<Text style={{ color: theme.fontSecondary, textAlign: 'center', alignSelf: 'stretch' }}>{Translator.get('NO_CLASS_THIS_DAY')}</Text>
 				</View>
 			);
 		}

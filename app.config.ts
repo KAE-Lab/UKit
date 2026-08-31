@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import { version } from 'react';
 
 export default {
 	name: 'UKit',
@@ -8,8 +7,8 @@ export default {
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
-	version: '5.6.1',
-	versionCode: 550,
+	version: '6.0.0',
+	versionCode: 551,
 	orientation: 'portrait',
 	primaryColor: '#006F9F',
 	icon: './assets/icons/icon.png',
@@ -38,7 +37,7 @@ export default {
 	android: {
 		package: 'com.bordeaux1.emplois',
 		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
-		versionCode: 541,
+		versionCode: 542,
 	},
 	androidStatusBar: {
 		barStyle: 'light-content',
@@ -53,6 +52,17 @@ export default {
 			"projectId": "77596c7c-87fc-4c86-9189-3a70fd839abf"
 		},
 		sentryDSN: process.env.SENTRY_DSN,
+		// La base de publication (docs/backend.md). La cle `anon` est publique par conception : elle
+		// est lisible dans n'importe quel binaire, et la frontiere de securite ce sont les politiques
+		// RLS. La cle `service_role`, elle, ne doit jamais approcher ce fichier.
+		// Absentes, l'application demarre et s'utilise sur son socle embarque : la base est un point
+		// de publication, pas un intermediaire.
+		supabaseUrl: process.env.SUPABASE_URL,
+		supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+		// Le troisieme interrupteur d'arret de la livraison (docs/blueprints.md) : `false` fait
+		// ignorer durablement la surcouche publiee, sans la detruire. Absent, la livraison est
+		// active — une application doit recevoir ses corrections sans qu'on ait pense a le demander.
+		blueprintsRemote: process.env.BLUEPRINTS_REMOTE !== 'false',
 	},
 	plugins: [
 		"expo-web-browser",

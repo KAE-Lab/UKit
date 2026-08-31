@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { tokens } from '../../../../shared/theme/Theme';
 import style from '../../../../shared/theme/Theme';
+import { MetaRow } from '../../../../shared/ui/MetaRow';
 import { CrousRestaurant } from '../../services/CrousService';
 import { CampusCard } from '../../components/CampusCard';
+import { DistanceBadge } from '../../components/CampusCardParts';
 
 interface CrousRestaurantListItemProps {
     item: CrousRestaurant;
@@ -23,51 +23,29 @@ export function CrousRestaurantListItem({ item, theme, isFavorite, onToggleFavor
             onToggleFavorite={onToggleFavorite}
             onPress={onPress}
         >
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-                <MaterialIcons name="location-on" size={16} color={theme.fontSecondary} />
-                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }}>
-                    {item.short_desc}
-                </Text>
+            <MetaRow
+                theme={theme}
+                icon={{ family: 'material', name: 'location-on' }}
+                label={item.short_desc}
+                marginBottom={tokens.space.xs}
+                trailing={item.distance !== undefined ? (
+                    <DistanceBadge distance={item.distance} theme={theme} icon={{ name: 'walk' }} />
+                ) : undefined}
+            />
 
-                {item.distance !== undefined && (
-                    <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: `${theme.primary}15`,
-                        paddingHorizontal: tokens.space.sm,
-                        paddingVertical: 4,
-                        borderRadius: tokens.radius.md,
-                    }}>
-                        <MaterialCommunityIcons name="walk" size={14} color={theme.primary} />
-                        <Text style={{
-                            fontSize: tokens.fontSize.sm,
-                            fontWeight: tokens.fontWeight.bold,
-                            color: theme.primary,
-                            marginLeft: 4
-                        }}>
-                            {item.distance < 1
-                                ? `${Math.round(item.distance * 1000)} m`
-                                : `${item.distance.toFixed(1)} km`}
-                        </Text>
-                    </View>
-                )}
-            </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
-                <Text
-                    style={{
-                        fontSize: tokens.fontSize.sm,
-                        color: theme.fontSecondary,
-                        marginLeft: 6,
-                        flex: 1,
-                        lineHeight: 20
-                    }}
-                    numberOfLines={2}
-                >
-                    {item.opening}
-                </Text>
-            </View>
+            {/*
+              * **Une ligne, toujours.** Les horaires du fournisseur sont une phrase libre, parfois
+              * longue : sur deux lignes, la carte d'un restaurant devenait plus haute que celle d'une
+              * bibliotheque, et les sections cessaient d'etre alignees. La phrase est donc coupee ici,
+              * et l'ecran de detail la donne en entier — c'est lui qui a la place.
+              */}
+            <MetaRow
+                theme={theme}
+                icon={{ name: 'calendar-clock' }}
+                label={item.opening}
+                gap={6}
+                numberOfLines={1}
+            />
         </CampusCard>
     );
 }

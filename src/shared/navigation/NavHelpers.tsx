@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, TouchableWithoutFeedback, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
@@ -7,14 +7,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SettingsManager } from '../services/AppCore';
 import Translator from '../i18n/Translator';
-import style, { tokens } from '../theme/Theme';
-import Button from '../ui/Button';
+import { HeaderButton, HEADER_BUTTON_ICON, HEADER_BUTTON_SIZE } from '../ui/HeaderButton';
+import style, { propsLibelleBouton, tokens } from '../theme/Theme';
 
 
 // GESTIONNAIRE DE HEADER
 export type ScrollValueWithInterps = Animated.Value & {
     _titleOpacity?: Animated.AnimatedInterpolation<number | string>;
-    _buttonScale?: Animated.AnimatedInterpolation<number | string>;
 };
 
 export const globalScrollValues: Record<string, ScrollValueWithInterps> = {};
@@ -40,11 +39,6 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
             outputRange: [1, 0],
             extrapolate: 'clamp',
         });
-        (safeScrollY as ScrollValueWithInterps)._buttonScale = safeScrollY.interpolate({
-            inputRange: [0, 60],
-            outputRange: [1.14, 1],
-            extrapolate: 'clamp',
-        });
     }
 
     const options: StackNavigationOptions = {
@@ -52,13 +46,18 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
             <Animated.View style={{ 
                 opacity: (safeScrollY as ScrollValueWithInterps)._titleOpacity,  
                 paddingHorizontal: tokens.space.lg, 
-                height: 45, // On fige la hauteur pour correspondre aux boutons latéraux
+                height: HEADER_BUTTON_SIZE, // On fige la hauteur pour correspondre aux boutons latéraux
                 justifyContent: 'center',
                 alignItems: 'center',
                 borderRadius: tokens.radius.md, 
                 maxWidth: 300 
             }}>
-                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold }}>
+                {/* `font` et non `primary` : le violet est la couleur d'action, et un titre en couleur
+                    d'action se lit comme un bouton — a cote d'une fleche de retour qui, elle, en est
+                    un. Le titre nomme, il ne se touche pas. Et `xl` demi-gras : le gras claquait seul
+                    au milieu du vide, mais le 18 essaye ensuite disparaissait entre deux boutons de
+                    40 — le 22 demi-gras est l'equilibre, juge sur appareil. On n'y touche plus. */}
+                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: theme.font, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.semibold }}>
                     {title}
                 </Text>
             </Animated.View>
@@ -78,16 +77,16 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
 
     if (headerLeft !== undefined) {
         options.headerLeft = headerLeft ? () => (
-            <Animated.View style={{ transform: [{ scale: (safeScrollY as ScrollValueWithInterps)._buttonScale }], height: 45, justifyContent: 'center' }}>
+            <View style={styles.boutonEnTete}>
                 {headerLeft()}
-            </Animated.View>
+            </View>
         ) : undefined;
     }
     if (headerRight !== undefined) {
         options.headerRight = headerRight ? () => (
-            <Animated.View style={{ transform: [{ scale: (safeScrollY as ScrollValueWithInterps)._buttonScale }], height: 45, justifyContent: 'center' }}>
+            <View style={styles.boutonEnTete}>
                 {headerRight()}
-            </Animated.View>
+            </View>
         ) : undefined;
     }
 
@@ -148,36 +147,36 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
             return (
                 <View>
                     <TouchableOpacity onPress={() => this.setState({ modalVisible: true })} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
-                        <MaterialCommunityIcons name="filter-variant-remove" size={26} color={theme.primary} />
-                        </View>
+                        <HeaderButton theme={theme}>
+                            <MaterialCommunityIcons name="filter-variant-remove" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                        </HeaderButton>
                     </TouchableOpacity>
                     <Modal animationType="fade" transparent={true} visible={this.state.modalVisible} onRequestClose={() => this.setState({ modalVisible: false })}>
                         <TouchableWithoutFeedback onPress={() => this.setState({ modalVisible: false })}>
                             <View style={theme.settings.popup.background}>
                                 <View style={theme.settings.popup.container}>
                                     <View style={theme.settings.popup.header}>
-                                        <Text style={theme.settings.popup.textHeader}>{Translator.get('MY_PLANNING') || 'Mon Planning'}</Text>
-                                        <TouchableOpacity onPress={() => this.setState({ modalVisible: false })}>
-                                            <MaterialIcons name="close" size={32} style={theme.settings.popup.closeIcon} />
+                                        <Text style={theme.settings.popup.textHeader}>{Translator.get('MY_PLANNING')}</Text>
+                                        <TouchableOpacity onPress={() => this.setState({ modalVisible: false })} hitSlop={12}>
+                                            <MaterialIcons name="close" size={24} style={theme.settings.popup.closeIcon} />
                                         </TouchableOpacity>
                                     </View>
                                     
-                                    <Text style={[theme.settings.popup.textDescription, { marginBottom: 15 }]}>
-                                        {Translator.get('FAVORITES_MANAGE') || "Gérez vos groupes favoris :"}
+                                    <Text style={theme.settings.popup.textDescription}>
+                                        {Translator.get('FAVORITES_MANAGE')}
                                     </Text>
                                     
                                     <ScrollView style={{ maxHeight: 300 }}>
                                         {this.state.favoriteGroups.length === 0 && (
                                             <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm, fontStyle: 'italic', paddingBottom: tokens.space.lg }}>
-                                                {Translator.get('FAVORITES_EMPTY') || "Votre liste de favoris est vide. Recherchez un groupe de l'Université pour l'ajouter à un de vos favoris !"}
+                                                {Translator.get('FAVORITES_EMPTY')}
                                             </Text>
                                         )}
                                         {this.state.favoriteGroups.map((group) => (
                                             <View key={group} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.greyBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginBottom: tokens.space.sm }}>
                                                 <Text style={{ color: theme.font, fontSize: tokens.fontSize.md, flex: 1 }}>{group.replace(/_/g, ' ')}</Text>
-                                                <TouchableOpacity onPress={() => SettingsManager.removeFavoriteGroup(group)} style={{ padding: tokens.space.xs, paddingHorizontal: 10 }}>
-                                                    <MaterialIcons name="delete" size={24} color={'#E53935'} />
+                                                <TouchableOpacity onPress={() => SettingsManager.removeFavoriteGroup(group)} style={{ padding: tokens.space.xs, paddingHorizontal: tokens.space.sm }} hitSlop={8}>
+                                                    <MaterialIcons name="delete" size={24} color={theme.danger} />
                                                 </TouchableOpacity>
                                             </View>
                                         ))}
@@ -192,9 +191,10 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
 
         return (
             <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                <View style={{ backgroundColor: theme.primary, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
-                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={26} color={'#FFFFFF'} />
-                </View>
+                <HeaderButton theme={theme} fond={theme.primary}>
+                    {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif (docs/theme.md). */}
+                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={HEADER_BUTTON_ICON} color={theme.lightFont} />
+                </HeaderButton>
             </TouchableOpacity>
         );
     }
@@ -229,61 +229,28 @@ export class FilterRemoveButton extends React.Component<FilterRemoveButtonProps,
 
         return (
             <View>
-                <TouchableOpacity onPress={this.openPopup} style={{ backgroundColor: theme.greyBackground, width: 45, height: 45, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md }}>
-                    <MaterialCommunityIcons name="filter-variant-remove" size={24} color={theme.primary} />
-                </TouchableOpacity>
+                <HeaderButton theme={theme} onPress={this.openPopup}>
+                    <MaterialCommunityIcons name="filter-variant-remove" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                </HeaderButton>
                 <Modal animationType="fade" transparent={true} visible={this.state.popupVisible} onRequestClose={this.popupClose}>
                     <View style={popupTheme.background}>
                         <View style={popupTheme.container}>
                             <View style={popupTheme.header}>
-                                <Text style={popupTheme.textHeader}>{Translator.get('FILTERS_UE').toUpperCase()}</Text>
+                                <Text style={popupTheme.textHeader}>{Translator.get('FILTERS_UE')}</Text>
                             </View>
                             <Text style={popupTheme.textDescription}>{Translator.get('FILTERS_CONFIRMATION')}</Text>
                             <View style={popupTheme.buttonContainer}>
                                 <TouchableOpacity style={popupTheme.buttonSecondary} onPress={this.popupClose}>
-                                    <Text style={popupTheme.buttonTextSecondary}>{Translator.get('CANCEL')}</Text>
+                                    <Text {...propsLibelleBouton} style={popupTheme.buttonTextSecondary}>{Translator.get('CANCEL')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={popupTheme.buttonMain} onPress={this.filterOutUE}>
-                                    <Text style={popupTheme.buttonTextMain}>{Translator.get('CONFIRM')}</Text>
+                                    <Text {...propsLibelleBouton} style={popupTheme.buttonTextMain}>{Translator.get('CONFIRM')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
                     </View>
                 </Modal>
             </View>
-        );
-    }
-}
-
-// ── BOUTON MON GROUPE ──────────────────────────────────
-export interface MyGroupButtonProps {
-    favoriteGroups: string[];
-    themeName: string;
-    isActive?: boolean;
-    navigate: (route: string, params?: object) => void;
-}
-
-export class MyGroupButton extends React.PureComponent<MyGroupButtonProps> {
-    componentDidMount() {
-        if (this.props.favoriteGroups && this.props.favoriteGroups.length > 0 && SettingsManager.getOpenAppOnFavoriteGroup()) {
-            this.props.navigate('Stack', { screen: 'Group', params: { name: this.props.favoriteGroups } });
-        }
-    }
-    _onPress = () => this.props.navigate('Stack', { screen: 'Group', params: { name: this.props.favoriteGroups } });
-    render() {
-        const theme = style.Theme[this.props.themeName];
-        let title = Translator.get('MY_PLANNING') || "Mon Planning";
-        return (
-            <Button
-                title={title}
-                size={22}
-                textSize={14}
-                icon="calendar-today"
-                color={theme.primary}
-                fontColor={theme.font}
-                onPress={this._onPress}
-                isActive={this.props.isActive}
-            />
         );
     }
 }
@@ -337,3 +304,20 @@ export const withStaticHeader = <P extends object>(WrappedComponent: React.Compo
         return <WrappedComponent {...props} headerPadding={headerPadding} />;
     };
 };
+
+const styles = StyleSheet.create({
+    /**
+     * Le cadre des boutons d'en-tete : une hauteur figee, et rien d'autre.
+     *
+     * Il portait une **mise a l'echelle animee** — 1,14 au repos, 1 une fois defile — retiree le
+     * 2026-08-29 : la decision de ne plus faire retrecir les boutons avait ete prise, mais elle
+     * n'avait ete appliquee qu'a moitie. `useCampusListHeader` en gardait une copie dont le repli
+     * etait la **valeur statique 1,14**, si bien que le bouton de filtre restait agrandi de 14 % en
+     * permanence, seul de sa barre. Le cadre reste, parce que c'est lui qui aligne les boutons sur la
+     * hauteur du titre.
+     */
+    boutonEnTete: {
+        height: HEADER_BUTTON_SIZE,
+        justifyContent: 'center',
+    },
+});

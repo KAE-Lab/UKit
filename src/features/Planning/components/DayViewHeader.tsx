@@ -3,8 +3,9 @@ import { FlatList, Text, TouchableOpacity, View, ViewabilityConfig, ViewToken, L
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 
-import style, { tokens } from '../../../shared/theme/Theme';
+import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 
 export interface DayViewHeaderProps {
     insets: { top: number } | null;
@@ -44,23 +45,28 @@ export interface DayViewHeaderProps {
     extraData: unknown;
 }
 
-const renderTitle = (groupName: string | string[], theme: import('../../../shared/theme/Theme').AppThemeType) => (
-    // Ligne 1 : Titre "Planning"
-    <View style={{
-        paddingHorizontal: tokens.space.md,
-        opacity: Array.isArray(groupName) ? 1 : 0,
-    }}>
-        <Text style={{
-            fontSize: 34,
-            fontWeight: tokens.fontWeight.bold as never,
-            fontFamily: 'Montserrat_600SemiBold',
-            color: theme.font,
-            marginBottom: tokens.space.md,
-        }}>
-            {Translator.get('MY_PLANNING') || 'Planning'}
-        </Text>
-    </View>
-);
+const renderTitle = (groupName: string | string[], theme: import('../../../shared/theme/Theme').AppThemeType) => {
+    // Vue d'un groupe cherche : pas de grand titre, mais tout son ESPACE — le degagement standard
+    // des sous-pages (HEADER_OFFSET), la ou le titre en opacite nulle ne reservait que sa propre
+    // hauteur : les boutons flottants retour et favori frolaient la ligne Aujourd'hui/Semaine
+    // (constate sur les deux plateformes le 2026-08-31).
+    if (!Array.isArray(groupName)) {
+        return <View style={{ height: HEADER_OFFSET }} />;
+    }
+    return (
+        // Ligne 1 : Titre "Planning"
+        <View style={{ paddingHorizontal: tokens.space.md }}>
+            <Text style={{
+                fontSize: tokens.fontSize.title,
+                fontWeight: tokens.fontWeight.bold as never,
+                color: theme.font,
+                marginBottom: tokens.space.md,
+            }}>
+                {Translator.get('MY_PLANNING')}
+            </Text>
+        </View>
+    );
+};
 
 const renderNavigation = (
     theme: import('../../../shared/theme/Theme').AppThemeType,

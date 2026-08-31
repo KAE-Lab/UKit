@@ -87,7 +87,7 @@
   "lat": 44.807755,
   "lng": -0.597381,
   "freeAccess": true,
-  "image": "https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/images/cremi.jpg",
+  "image": "https://owiksddeqcyyifnmpyqm.supabase.co/storage/v1/object/public/media/batiments/cremi.jpg",
   "schedule": {
     "1": { "open": "07:45", "close": "22:00" },
     "2": { "open": "07:45", "close": "22:00" },

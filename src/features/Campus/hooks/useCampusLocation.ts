@@ -24,7 +24,7 @@ export function useCampusLocation() {
                 error = true;
                 setLocationError(true);
             }
-        } catch (e) {
+        } catch {
             error = true;
             setLocationError(true);
         }

@@ -1,17 +1,80 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, FlatList, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { tokens } from '../../../shared/theme/Theme';
+import { cleDeGroupe, empreinteDeCours, indexDuSouvenir, type CoursDeGroupe } from '../services/MemoireCarrousel';
 import { CourseData } from './CourseCard';
 import { CourseRowWithNavigation } from './CourseRow';
 
 const screenWidth = Dimensions.get('window').width;
-const savedCarouselIndices = new Map<string, number>();
+
+/**
+ * La memoire des carrousels : quelle matiere l'etudiant regarde sur chaque creneau superpose.
+ *
+ * Elle nourrit le carrousel ET les notifications (le cours consulte est le seul notifie), et elle
+ * est persistee : une memoire vive retombait sur le premier cours du groupe a chaque fermeture de
+ * l'application. La cle et le souvenir viennent de `MemoireCarrousel` (cle canonique sans date : le
+ * choix se projette sur tous les jours au meme creneau ; souvenir = la matiere, pas un rang).
+ *
+ * `memoireCarrouselChargee` expose la fin du chargement : les composants se montent souvent AVANT
+ * que la lecture du stockage aboutisse — au rechargement Metro, toujours — et l'index initial lu a
+ * ce moment-la vaut zero. Chaque carrousel se resynchronise a la resolution, et les notifications
+ * l'attendent avant de filtrer.
+ */
+const memoire = new Map<string, string>();
+const CLE_STOCKAGE = 'carouselChoices';
+
+export const memoireCarrouselChargee: Promise<void> = AsyncStorage.getItem(CLE_STOCKAGE)
+    .then((brut) => {
+        if (!brut) return;
+        try {
+            for (const [cle, matiere] of Object.entries(JSON.parse(brut) as Record<string, string>)) {
+                if (!memoire.has(cle)) memoire.set(cle, matiere);
+            }
+        } catch {
+            // Rien a rattraper : la memoire repart de zero et se reecrira au prochain geste.
+        }
+    })
+    .catch(() => undefined)
+    // L'ancien magasin (des rangs par cle dependante de l'ordre du serveur) est retire au passage.
+    .then(() => { void AsyncStorage.removeItem('carouselIndices').catch(() => undefined); });
+
+function memoriser(groupe: readonly CoursDeGroupe[], index: number) {
+    const cours = groupe[index];
+    if (cours === undefined) return;
+    memoire.set(cleDeGroupe(groupe), empreinteDeCours(cours));
+    void AsyncStorage.setItem(CLE_STOCKAGE, JSON.stringify(Object.fromEntries(memoire))).catch(() => undefined);
+}
+
+/** L'index consulte d'un groupe de cours superposes — celui que le carrousel affiche. */
+export function indexConsulte(groupe: readonly CoursDeGroupe[]): number {
+    return indexDuSouvenir(groupe, memoire.get(cleDeGroupe(groupe)));
+}
 
 export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: CourseData[], theme: import('../../../shared/theme/Theme').AppThemeType }) {
-	const groupKey = coursesGroup.length > 0 ? `${coursesGroup[0].starttime}-${coursesGroup[0].subject}` : 'default';
-	const initialIndex = savedCarouselIndices.get(groupKey) || 0;
+	const initialIndex = indexConsulte(coursesGroup ?? []);
 
-	const [currentIndex, setCurrentIndex] = useState(initialIndex);
+	// Seul le setter sert : l'index vit dans la memoire du module, qui survit au demontage. L'etat
+	// n'est la que pour reprovoquer un rendu.
+	const [, setCurrentIndex] = useState(initialIndex);
+	const listeRef = useRef<FlatList>(null);
+
+	// La resynchronisation apres chargement : monte avant que le stockage ait repondu, ce carrousel
+	// est parti de zero — il rejoint le souvenir des que la memoire est prete, sans animation.
+	useEffect(() => {
+		let vivant = true;
+		void memoireCarrouselChargee.then(() => {
+			if (!vivant || !coursesGroup || coursesGroup.length < 2) return;
+			const index = indexConsulte(coursesGroup);
+			if (index !== initialIndex && index < coursesGroup.length) {
+				setCurrentIndex(index);
+				listeRef.current?.scrollToIndex({ index, animated: false });
+			}
+		});
+		return () => { vivant = false; };
+		// Dependances vides a dessein : un rattrapage unique au montage.
+	}, []);
 
 	if (!coursesGroup || coursesGroup.length === 0) return null;
 
@@ -22,6 +85,7 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 	return (
 		<View>
 			<FlatList
+				ref={listeRef}
 				horizontal
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
@@ -36,11 +100,17 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 				onMomentumScrollEnd={(event) => {
 					const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
 					setCurrentIndex(index);
-					savedCarouselIndices.set(groupKey, index);
+					memoriser(coursesGroup, index);
 				}}
 				renderItem={({ item, index: cardIndex }) => (
-					<View style={{ width: screenWidth, justifyContent: 'flex-start' }}>
-						<View style={{ width: '100%', alignSelf: 'flex-start', position: 'relative' }}>
+					/*
+					  * Pas de `flex-start` ici : chaque page s'etire a la hauteur de la rangee —
+					  * celle du cours au contenu le plus haut — et la carte la remplit (CourseRow,
+					  * carouselMode). Cale en haut, un cours plus court laissait un trou de fond de
+					  * page sous sa carte, a cote de voisines pleines.
+					  */
+					<View style={{ width: screenWidth }}>
+						<View style={{ flex: 1, width: '100%' }}>
 							<CourseRowWithNavigation data={item} theme={theme} carouselMode={true} />
 
 							<View
@@ -61,8 +131,8 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 										flexDirection: 'row',
 										backgroundColor: theme.eventBackground,
 										paddingHorizontal: 6,
-										paddingVertical: 4,
-										borderRadius: 8,
+										paddingVertical: tokens.space.xs,
+										borderRadius: tokens.radius.sm,
 										borderWidth: 1,
 										borderColor: theme.eventBorder,
 									}}
@@ -76,7 +146,7 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 												borderRadius: 3,
 												backgroundColor: cardIndex === dotIndex ? (theme.accent ?? theme.primary) : theme.fontSecondary,
 												opacity: cardIndex === dotIndex ? 1 : 0.4,
-												marginHorizontal: 2,
+												marginHorizontal: tokens.space.xxs,
 											}}
 										/>
 									))}

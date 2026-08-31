@@ -48,7 +48,17 @@ export interface DayViewState {
 
 class DayView extends React.Component<DayViewProps, DayViewState> {
 	static contextType = AppContext;
-	context!: React.ContextType<typeof AppContext>;
+	/**
+	 * Le contexte applicatif, type.
+	 *
+	 * `React.Component` declare `context: unknown` et `contextType` en fournit la **valeur**, pas le
+	 * type. Redeclarer le champ ici l'**ecraserait** (TS2612), et le `declare` que TypeScript
+	 * recommande est refuse par la couche Flow du preset Babel de React Native : l'application ne
+	 * bundlerait plus. Un accesseur donne le meme confort sans toucher a la chaine de build.
+	 */
+	private get app(): React.ContextType<typeof AppContext> {
+	    return this.context as React.ContextType<typeof AppContext>;
+	}
 	static lastSelectedDay: moment.Moment | null = null;
 	static lastSelectedWeek: { week: number; year: number } | null = null;
     viewability: { itemVisiblePercentThreshold: number };
@@ -191,12 +201,12 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 			selectedDay={this.state.selectedDay}
 			currentDay={this.state.currentDay}
 			onPressItem={this.onDayItemPress}
-			theme={style.Theme[this.context.themeName]}
+			theme={style.Theme[this.app.themeName]}
 		/>
 	);
 
 	extractCalendarDayKey = (item: moment.Moment) =>
-		`${item.date()}-${item.month()}-${this.context.themeName}`;
+		`${item.date()}-${item.month()}-${this.app.themeName}`;
 
 	onDayItemPress = (dayItem: moment.Moment) => {
 		const index = this.state.days.findIndex((d) => d.isSame(dayItem, 'day'));
@@ -233,12 +243,12 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 			selectedWeek={this.state.selectedWeek}
 			currentWeek={this.state.currentWeek}
 			onPressItem={this.onWeekItemPress}
-			theme={style.Theme[this.context.themeName]}
+			theme={style.Theme[this.app.themeName]}
 		/>
 	);
 
 	extractCalendarWeekKey = (item: { week: number; year: number }) =>
-		`S${item.week}-${this.context.themeName}`;
+		`S${item.week}-${this.app.themeName}`;
 
 	onWeekItemPress = (item: { week: number; year: number }) => {
 		const index = findIndexOfObject(this.state.weeks, item);
@@ -282,7 +292,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 	};
 
 	render() {
-		const theme = style.Theme[this.context.themeName];
+		const theme = style.Theme[this.app.themeName];
 		const { mode } = this.state;
 
 		const centerLabel = mode === 'day'
@@ -334,21 +344,21 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 						<View style={{ flex: 1 }}>
 							{mode === 'day' ? (
 								<DayComponent
-									key={`day-${this.state.days[0].dayOfYear()}-${this.context.themeName}`}
+									key={`day-${this.state.days[0].dayOfYear()}-${this.app.themeName}`}
 									day={this.state.selectedDay}
 									groupName={this.props.groupName}
 									theme={theme}
 									navigation={this.props.navigation}
-									filtersList={this.context.filters}
+									filtersList={this.app.filters}
 								/>
 							) : (
 								<WeekComponent
-									key={`week-${this.state.selectedWeek.week}-${this.context.themeName}`}
+									key={`week-${this.state.selectedWeek.week}-${this.app.themeName}`}
 									week={this.state.selectedWeek}
 									groupName={this.props.groupName}
 									theme={theme}
 									navigation={this.props.navigation}
-									filtersList={this.context.filters}
+									filtersList={this.app.filters}
 								/>
 							)}
 						</View>

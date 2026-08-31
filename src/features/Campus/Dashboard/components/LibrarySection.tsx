@@ -1,60 +1,34 @@
-import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
+import React, { useContext, useMemo } from 'react';
+import { View, FlatList, Dimensions } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
-import LibraryService, { LibraryInfo, AffluencesData } from '../../services/LibraryService';
+import { SectionHeader } from '../../../../shared/ui/SectionHeader';
+import { LoadingState } from '../../../../shared/ui/LoadingState';
+import type { LibraryInfo } from '../../services/LibraryService';
 import { useFavorites } from '../../hooks/useFavorites';
+import { useNearbyLibraries } from '../../hooks/useNearbyLibraries';
 import { useSavedFilter } from '../../hooks/useSavedFilter';
+import { CampusPartialNotice } from '../../components/CampusLayoutComponents';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
 import { LibrarySectionCard } from './LibrarySectionCard';
+import { SectionEtatVide } from './SectionEtatVide';
 
 export function LibrarySection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
-    const [libraries, setLibraries] = useState<LibraryInfo[]>([]);
-    const [affluences, setAffluences] = useState<Record<string, AffluencesData>>({});
-    const [loading, setLoading] = useState(true);
-    const mountedRef = useRef(true);
+    // Meme hook que la liste complete. Un echec plein reste discret ici — le carrousel disparait, la
+    // ligne de journal du service dit pourquoi, et l'ecran dedie explique. Une couverture partielle,
+    // elle, se dit : le carrousel montre une donnee reelle mais incomplete, ce qui ne se devine pas.
+    const { libraries, affluences, failure, secteursMuets, loading, retry } = useNearbyLibraries(userLat, userLon);
 
     const { favorites: favBu, toggleFavorite: toggleFavBu } = useFavorites('library_favorites');
-    const [libraryFilter] = useSavedFilter('library_filter', 'all');
-
-    useEffect(() => {
-        mountedRef.current = true;
-        if (userLat === undefined || userLon === undefined) return;
-
-        const loadBu = async () => {
-            setLoading(true);
-            try {
-                const buData = await LibraryService.fetchNearbyLibraries(userLat, userLon);
-                if (!mountedRef.current) return;
-                setLibraries(buData);
-                setLoading(false);
-
-                const newAffluences: Record<string, AffluencesData> = {};
-                const promises = buData.map(lib =>
-                    LibraryService.getAffluencesData(lib.slug)
-                        .then(res => { if (res) newAffluences[lib.id] = res; })
-                        .catch(() => { })
-                );
-                await Promise.all(promises);
-                if (mountedRef.current) setAffluences(newAffluences);
-            } catch (e) {
-                if (mountedRef.current) setLoading(false);
-            }
-        };
-
-        loadBu();
-        return () => { mountedRef.current = false; };
-    }, [userLat, userLon]);
+    const [libraryFilter, setFiltre] = useSavedFilter('library_filter', 'all');
 
     const filteredLibraries = useMemo(() => {
         return [...libraries].filter(item => {
@@ -87,20 +61,28 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
 
     return (
         <View style={{ marginTop: tokens.space.md }}>
-            <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+            <SectionHeader
+                title={Translator.get('UNIVERSITY_LIBRARY')}
+                theme={theme}
                 onPress={() => navigation.navigate('Library')}
-                activeOpacity={0.7}
-            >
-                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
-                    {Translator.get('UNIVERSITY_LIBRARY') || 'Bibliothèques Universitaires'}
-                </Text>
-                <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
+            />
+
+            {secteursMuets > 0 && !loading ? <CampusPartialNotice theme={theme} onRetry={retry} /> : null}
 
             {loading ? (
-                <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+                <LoadingState theme={theme} />
             ) : (
+                filteredLibraries.length === 0 ? (
+                    <SectionEtatVide
+                        theme={theme}
+                        failure={failure}
+                        masquesParFiltre={libraries.length > 0}
+                        messageVide={Translator.get('NO_BU_NEARBY')}
+                        onToutAfficher={() => setFiltre('all')}
+                        onRetry={retry}
+                        onOuvrir={() => navigation.navigate('Library')}
+                    />
+                ) : (
                 <FlatList
                     horizontal
                     data={filteredLibraries}
@@ -111,6 +93,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
                     decelerationRate="fast"
                     contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
                 />
+                )
             )}
         </View>
     );

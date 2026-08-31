@@ -1,44 +1,29 @@
-import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import Reanimated, { FadeIn, LinearTransition } from 'react-native-reanimated';
+import React, { useContext, useMemo } from 'react';
+import { View, FlatList } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
-import { CrousService, CrousRestaurant } from '../../services/CrousService';
+import { SectionHeader } from '../../../../shared/ui/SectionHeader';
+import { LoadingState } from '../../../../shared/ui/LoadingState';
+import type { CrousRestaurant } from '../../services/CrousService';
+import { useCrousRestaurants } from '../../hooks/useCrousRestaurants';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useSavedFilter } from '../../hooks/useSavedFilter';
 import { CrousSectionCard, CARD_WIDTH } from './CrousSectionCard';
-
-const { width } = Dimensions.get('window');
+import { SectionEtatVide } from './SectionEtatVide';
 
 export function CrousSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
-    const [restaurants, setRestaurants] = useState<CrousRestaurant[]>([]);
-    const [loading, setLoading] = useState(true);
-    const mountedRef = useRef(true);
+    // Meme hook que la liste complete : un echec y reste discret — le carrousel disparait et la ligne
+    // de journal du service dit pourquoi. Le tableau de bord n'est pas l'endroit ou l'on explique une
+    // panne, l'ecran dedie l'est.
+    const { restaurants, failure, loading, retry } = useCrousRestaurants(userLat, userLon);
 
     const { favorites: favRu, toggleFavorite: toggleFavRu } = useFavorites('crous_favorites');
-    const [crousFilter] = useSavedFilter('crous_filter', 'all');
-
-    useEffect(() => {
-        mountedRef.current = true;
-        if (userLat === undefined || userLon === undefined) return;
-
-        setLoading(true);
-        CrousService.fetchRestaurantsBordeaux(userLat, userLon).then(data => {
-            if (mountedRef.current) {
-                setRestaurants(data);
-                setLoading(false);
-            }
-        }).catch(() => {
-            if (mountedRef.current) setLoading(false);
-        });
-        return () => { mountedRef.current = false; };
-    }, [userLat, userLon]);
+    const [crousFilter, setFiltre] = useSavedFilter('crous_filter', 'all');
 
     const filteredRestaurants = useMemo(() => {
         return [...restaurants].filter(item => {
@@ -69,27 +54,35 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
             onPress={() => navigation.navigate('CrousMenu', {
                 restaurantId: item.id,
                 restaurantName: item.title,
-                location: { lat: item.lat, lon: item.lon }
+                // `lng` est la convention de l'application ; le `lon` de Croustillant se traduit ici.
+                location: { lat: item.lat, lng: item.lon },
+                openingLines: item.openingLines
             })}
         />
     );
 
     return (
         <View style={{ marginTop: tokens.space.md }}>
-            <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md, marginBottom: tokens.space.sm }}
+            <SectionHeader
+                title={Translator.get('RESTAURANTS_U')}
+                theme={theme}
                 onPress={() => navigation.navigate('Crous')}
-                activeOpacity={0.7}
-            >
-                <Text style={{ fontSize: 22, fontWeight: tokens.fontWeight.bold, fontFamily: 'Montserrat_600SemiBold', color: theme.font }}>
-                    {Translator.get('RESTAURANT_U') || 'Restaurants Universitaires'}
-                </Text>
-                <MaterialIcons name="chevron-right" size={26} color={theme.fontSecondary} style={{ marginLeft: 2 }} />
-            </TouchableOpacity>
+            />
 
             {loading ? (
-                <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+                <LoadingState theme={theme} />
             ) : (
+                filteredRestaurants.length === 0 ? (
+                    <SectionEtatVide
+                        theme={theme}
+                        failure={failure}
+                        masquesParFiltre={restaurants.length > 0}
+                        messageVide={Translator.get('NO_RU_NEARBY')}
+                        onToutAfficher={() => setFiltre('all')}
+                        onRetry={retry}
+                        onOuvrir={() => navigation.navigate('Crous')}
+                    />
+                ) : (
                 <FlatList
                     horizontal
                     data={filteredRestaurants}
@@ -100,6 +93,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
                     decelerationRate="fast"
                     contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
                 />
+                )
             )}
         </View>
     );

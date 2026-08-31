@@ -1,11 +1,11 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import style, { tokens } from '../../../shared/theme/Theme';
-import Translator from '../../../shared/i18n/Translator';
 import { CourseData } from './CourseCard';
+import { iconeDAnnotation } from './CourseAnnotations';
 import { CalendarNewEventPrompt } from './CalendarNewEventPrompt';
 
 export interface CourseRowProps {
@@ -15,6 +15,16 @@ export interface CourseRowProps {
 	navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
 	carouselMode?: boolean;
 }
+
+/**
+ * La place laissee a l'indicateur de pages du carrousel par la derniere ligne d'infos.
+ *
+ * L'indicateur (CourseGroupCarousel) est pose en absolu dans le coin bas droit, a hauteur de la
+ * derniere ligne. Celle-ci se tronque donc avant de passer dessous — la suite se lit dans le
+ * detail du cours. La reserve couvre jusqu'a cinq cours superposes ; un spacer sous le contenu a
+ * ete essaye et defait : il rendait les cartes du carrousel plus hautes que les cartes seules.
+ */
+const RESERVE_INDICATEUR = 72;
 
 export interface CourseRowState {
 	backgroundColor: string;
@@ -64,27 +74,6 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		});
 	};
 
-	renderNoCourse() {
-		const { theme } = this.props;
-		return (
-			<View style={style.schedule.course.noCourse as never}>
-				<MaterialCommunityIcons
-					name="calendar-blank-outline"
-					size={36}
-					color={theme.fontSecondary}
-					style={{ opacity: 0.4, marginBottom: tokens.space.sm }}
-				/>
-				<Text
-					style={[
-						style.schedule.course.noCourseText as never,
-						{ color: theme.fontSecondary },
-					]}>
-					{Translator.get('NO_CLASS_THIS_DAY')}
-				</Text>
-			</View>
-		);
-	}
-
 	renderUE(theme: import('../../../shared/theme/Theme').AppThemeType) {
 		if (!this.props.data.UE) return null;
 		return (
@@ -110,35 +99,32 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 	renderSubject(theme: import('../../../shared/theme/Theme').AppThemeType) {
 		if (this.props.data.subject === 'N/C') return null;
 		return (
-			<Text style={[style.schedule.course.title as never, { color: theme.font, flex: 1 }]}>
+			// En carrousel le titre tient sur **une** ligne, coupe en points de suspension : c'est
+			// lui qui creusait les ecarts de hauteur entre cours superposes, et l'UE puis le detail
+			// portent l'intitule complet. Deux lignes reservees ont ete essayees et defaites — deux
+			// fois : bornees sans etirement, il restait une ligne d'ecart ; etirees, le titre court
+			// trainait un blanc entier sous lui, lu comme un trou.
+			<Text
+				numberOfLines={this.props.carouselMode ? 1 : undefined}
+				style={[style.schedule.course.title as never, { color: theme.font, flex: 1 }]}>
 				{this.props.data.subject.trim()}
 			</Text>
 		);
 	}
 
-	renderAnnotationsLine(line: string, index: number, theme: import('../../../shared/theme/Theme').AppThemeType, isLargeMode: boolean) {
+	renderAnnotationsLine(line: string, index: number, theme: import('../../../shared/theme/Theme').AppThemeType, isLargeMode: boolean, estDerniere = false) {
 		const trimmedLine = line.trim();
 		if (!trimmedLine) return null;
 
-		let iconName: 'info-outline' | 'date-range' | 'room' | 'group' | 'person' = 'info-outline';
-		const lowerLine = trimmedLine.toLowerCase();
+		// L'icone se deduit du contenu de la ligne, jamais de son rang : avec deux sources d'emploi
+		// du temps, le rang ne veut plus rien dire (CourseAnnotations.ts).
+		const iconName = iconeDAnnotation(trimmedLine);
 
-		const isWeeks = /^([sS]emaines?\s*:?\s*)?[\d\s,\-]+$/.test(trimmedLine);
-		const isRoom = lowerLine.includes('salle') || lowerLine.includes('bât') || lowerLine.includes('bat') || lowerLine.includes('amphi') || lowerLine.includes('cremi');
-
-		if (isWeeks) {
-			iconName = 'date-range';
-		} else if (isRoom) {
-			iconName = 'room';
-		} else if (index === 0) {
-			iconName = 'group';
-		} else if (index === 1) {
-			iconName = 'person';
-		} else if (index === 2) {
-			iconName = 'room';
-		} else {
-			iconName = 'date-range';
-		}
+		// En carrousel, chaque ligne d'infos tient sur une seule ligne : avec le titre borne, les
+		// cours superposes convergent vers la meme hauteur au lieu de dependre de qui wrappe. La
+		// derniere partage en plus son rang avec l'indicateur de pages : elle lui laisse le coin
+		// droit et se coupe en points de suspension plutot que de passer dessous.
+		const cedeALIndicateur = this.props.carouselMode && estDerniere;
 
 		return (
 			<View
@@ -146,6 +132,7 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 				style={[
 					style.schedule.course.line as never,
 					{ alignItems: 'flex-start', marginTop: isLargeMode ? 0 : tokens.space.xs },
+					cedeALIndicateur && { marginRight: RESERVE_INDICATEUR },
 				]}>
 				<MaterialIcons
 					name={iconName}
@@ -157,6 +144,7 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 					}}
 				/>
 				<Text
+					numberOfLines={this.props.carouselMode ? 1 : undefined}
 					style={{
 						fontSize: isLargeMode ? tokens.fontSize.sm : tokens.fontSize.xs,
 						color: theme.fontSecondary,
@@ -170,8 +158,14 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 
 	renderAnnotations(theme: import('../../../shared/theme/Theme').AppThemeType, isLargeMode: boolean) {
 		if (!this.props.data.description) return null;
-		
+
 		const lines = this.props.data.description.split('\n');
+		// La derniere ligne **rendue** : une description peut finir par des lignes vides, que le
+		// rendu ecarte — c'est la derniere non vide qui cotoie l'indicateur du carrousel.
+		let derniere = -1;
+		for (let i = 0; i < lines.length; i++) {
+			if (lines[i].trim()) derniere = i;
+		}
 		if (isLargeMode) {
 			return (
 				<View style={{ marginTop: tokens.space.sm }}>
@@ -179,7 +173,7 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 				</View>
 			);
 		} else if (lines.length > 0) {
-			return lines.map((line, index) => this.renderAnnotationsLine(line, index, theme, false));
+			return lines.map((line, index) => this.renderAnnotationsLine(line, index, theme, false, index === derniere));
 		}
 		return null;
 	}
@@ -196,7 +190,12 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 				style={[
 					style.schedule.course.root as never,
 					{
-						flex: 0,
+						// En carrousel les hauteurs convergent d'abord par le **gabarit** — titre a
+						// deux lignes, une ligne par info — et l'etirement sur la rangee n'absorbe
+						// que le reliquat. L'etirement seul a ete essaye et defait : sans gabarit
+						// borne, la carte courte s'etirait de tout l'ecart de contenu et le vide en
+						// fond de carte etait aussi laid que l'ancien trou de fond de page.
+						flex: this.props.carouselMode ? 1 : 0,
 						minHeight: 120,
 						backgroundColor: this.state.backgroundColor,
 						marginHorizontal: tokens.space.sm,
@@ -246,13 +245,13 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 						style={[style.schedule.course.contentBlock as never, { paddingLeft: tokens.space.sm }]}>
 						<View style={style.schedule.course.contentType as never}>
 							{subject}
-							{this.props.data.category !== this.props.data.subject && (
+							{this.props.data.category !== '' && this.props.data.category !== this.props.data.subject && (
 								<View
 									style={{
 										backgroundColor: `${this.state.lineColor}22`,
 										borderRadius: tokens.radius.md,
 										paddingHorizontal: tokens.space.sm,
-										paddingVertical: 2,
+										paddingVertical: tokens.space.xxs,
 										marginLeft: tokens.space.xs,
 									}}>
 									<Text
@@ -269,9 +268,6 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 
 						{ue}
 						{annotations}
-
-						{/* Espace réservé pour les dots du carousel si activé */}
-						{this.props.carouselMode && <View style={{ height: 8 }} />}
 					</View>
 				</View>
 			</View>
@@ -280,10 +276,6 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 
 	render() {
 		const { theme } = this.props;
-
-		if (this.props.data.category === 'nocourse') {
-			return this.renderNoCourse();
-		}
 
 		if (this.props.data.category === 'masked') {
 			return null;
@@ -306,8 +298,11 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		}
 
 		return (
-			<View>
+			// La chaine de `flex: 1` ne vit qu'en carrousel : elle porte l'etirement de la carte
+			// jusqu'a la racine de la page (voir renderContent). Hors carrousel, rien ne change.
+			<View style={this.props.carouselMode ? { flex: 1 } : undefined}>
 				<TouchableOpacity
+					style={this.props.carouselMode ? { flex: 1 } : undefined}
 					onPress={this._onPress}
 					onLongPress={this.openPopup}
 					activeOpacity={0.7}>

@@ -1,0 +1,77 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.celcat.semaine",
+  "description": "Les cours d'une semaine, pour un ou plusieurs groupes d'etudiants. Comme pour ukit.celcat.jour, federationIds[] prend une LISTE et l'encodeur du moteur repete la cle. La borne 'end' vaut add_days(6), soit le dimanche : c'est ce que le code d'origine envoyait (endOf('week') en locale francaise) et l'application n'affiche que six jours, du lundi au samedi. Le calcul du lundi a partir d'un numero de semaine ISO reste applicatif : il a besoin de l'heure courante et de la locale, deux choses qu'un Blueprint n'a pas et ne doit pas avoir. Le decoupage en six jours, le tri et le rejet des 'Vacances' restent applicatifs egalement. Pas d'assert de forme : la reponse EST le tableau, expect.status est le seul garde honnete.",
+  "act": "vector",
+  "inputs": {
+    "domaine": {
+      "type": "string",
+      "required": true,
+      "default": "https://celcat.u-bordeaux.fr/calendar",
+      "description": "Racine du serveur d'emplois du temps de l'etablissement. Vient du catalogue (colonne celcat_domaine) depuis le jalon 6-G : l'hote n'est pas une propriete de la source, c'est une propriete de l'universite. Le defaut garde le fichier jouable seul."
+    },
+    "res_type": {
+      "type": "string",
+      "required": true,
+      "default": "103",
+      "description": "Code d'inventaire de la ressource interrogee (groupes d etudiants). Conventionnel chez Celcat, pas contractuel : une autre instance peut le numeroter autrement, d'ou le catalogue (colonne celcat_res_types)."
+    },
+    "groupes": {
+      "type": "array",
+      "required": true,
+      "description": "Identifiants de federation des groupes. Un seul pour un planning ordinaire, plusieurs pour le planning agrege des favoris."
+    },
+    "lundi": {
+      "type": "string",
+      "format": "date",
+      "required": true,
+      "description": "Premier jour de la semaine demandee, au format YYYY-MM-DD."
+    }
+  },
+  "vars": {
+    "cal_view": "agendaWeek",
+    "colour_scheme": "3"
+  },
+  "steps": [
+    {
+      "id": "semaine",
+      "action": "http.request",
+      "method": "POST",
+      "url": "{{ inputs.domaine }}/Home/GetCalendarData",
+      "headers": {
+        "Pragma": "no-cache",
+        "Cache-Control": "no-cache",
+        "Accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+      },
+      "form": {
+        "start": "{{ inputs.lundi }}",
+        "end": "{{ inputs.lundi | add_days(6) }}",
+        "resType": "{{ inputs.res_type }}",
+        "calView": "{{ vars.cal_view }}",
+        "federationIds[]": "{{ inputs.groupes }}",
+        "colourScheme": "{{ vars.colour_scheme }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "cours": {
+          "from": "json",
+          "path": "$[*]",
+          "fields": {
+            "id": "$.id",
+            "debut": "$.start",
+            "fin": "$.end",
+            "categorie": "$.eventCategory",
+            "couleur": "$.backgroundColor",
+            "modules": "$.modules[*]",
+            "description": "$.description",
+            "sites": "$.sites[*]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "cours": "{{ steps.semaine.cours }}"
+  }
+}

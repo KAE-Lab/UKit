@@ -23,7 +23,10 @@ export function useFreeRoomsData(building: BuildingInfo) {
 
     useEffect(() => {
         let closed = false;
-        const currentDay = new Date().getDay() || 7;
+        // `moment()` et non `new Date()` : le mock temporel remplace `moment.now`, donc lui seul suit
+        // la date simulee. Avec `new Date()`, simuler un jour de cours laissait le batiment ferme et
+        // l'ecran restait invisible en dehors des periodes universitaires (docs/qualite.md).
+        const currentDay = moment().day() || 7;
         const daySchedule = building.schedule ? building.schedule[String(currentDay)] : null;
 
         if (!daySchedule) {
@@ -43,7 +46,7 @@ export function useFreeRoomsData(building: BuildingInfo) {
             }
             setHoursList(list);
 
-            const currentHour = new Date().getHours();
+            const currentHour = moment().hour();
             let defaultIndex = list.findIndex(h => parseInt(h.split(':')[0]) === currentHour);
             if (defaultIndex === -1) {
                 defaultIndex = currentHour < openTime ? 0 : list.length - 1;
@@ -59,13 +62,12 @@ export function useFreeRoomsData(building: BuildingInfo) {
         setLoading(true);
         const today = moment().format('YYYY-MM-DD');
 
+        // Un run par salle : la reponse ne porte pas l'identifiant de la ressource interrogee, donc
+        // un run groupe ne permettrait pas de reattribuer les evenements a leur salle. Chaque echec
+        // reste isole et ne vide pas tout le batiment.
         const promises = building.rooms.map(async (room) => {
-            try {
-                const res = await FetchManager.fetchRoomsScheduleDay([room.id], today);
-                return { roomId: room.id, events: res || [] };
-            } catch (e) {
-                return { roomId: room.id, events: [] };
-            }
+            const resultat = await FetchManager.fetchRoomsScheduleDay([room.id], today);
+            return { roomId: room.id, events: resultat.ok === false ? [] : resultat.events };
         });
 
         const results = await Promise.all(promises);

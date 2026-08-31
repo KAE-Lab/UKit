@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { EdgeInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Translator from '../../../../shared/i18n/Translator';
 import style, { tokens, AppThemeType } from '../../../../shared/theme/Theme';
-import { BuildingInfo, FreeRoomSlot } from '../../services/FreeRoomService';
+import { Badge } from '../../../../shared/ui/Badge';
+import { CampusSectionHeader } from '../../components/CampusSectionHeader';
+import { BuildingInfo, FreeRoomSlot, grouperParEtage } from '../../services/FreeRoomService';
 
 interface FreeRoomHoursHeaderProps {
     building: BuildingInfo;
@@ -78,57 +79,94 @@ export function FreeRoomHoursHeader({ building, hoursList, selectedIndex, setSel
     );
 }
 
+/** L'intertitre d'un etage : traduit, le rez-de-chaussee et les salles sans numero a part. */
+function libelleDEtage(etage: number | null): string {
+    if (etage === null) return Translator.get('FLOOR_UNNUMBERED');
+    if (etage === 0) return Translator.get('FLOOR_GROUND');
+    return Translator.get('FLOOR_N', etage);
+}
+
+function CaseDeSalle({ slot, theme }: { slot: FreeRoomSlot; theme: AppThemeType }) {
+    return (
+        <View style={[style.course.card, {
+            backgroundColor: theme.cardBackground,
+            borderColor: theme.border,
+            borderWidth: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            // `course.card` porte des marges cachees (md de chaque cote, sm dessus-dessous) qui
+            // s'ajoutaient a la gouttiere du ScrollView : les cases etaient rentrees de 32 points
+            // la ou toute l'application se tient a 16. La gouttiere reste au conteneur, seule.
+            marginHorizontal: 0,
+            marginVertical: 0,
+            marginBottom: tokens.space.sm,
+        }]}>
+            <View style={{ flex: 1 }}>
+                {/* `font` et non l'accent : un nom de salle nomme, il n'agit pas. */}
+                <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold, color: theme.font, marginBottom: tokens.space.xxs }}>
+                    {slot.room.name}
+                </Text>
+                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary }}>
+                    {Translator.get('AVAILABLE_UNTIL')} {slot.availableUntil}
+                </Text>
+            </View>
+            <Badge
+                theme={theme}
+                label={`${Math.floor(slot.durationMinutes / 60)}h${slot.durationMinutes % 60 > 0 ? (slot.durationMinutes % 60).toString().padStart(2, '0') : ''}`}
+            />
+        </View>
+    );
+}
+
 interface FreeRoomsListProps {
     freeRooms: FreeRoomSlot[];
     theme: AppThemeType;
+    /** Ce qui suit les creneaux — la carte du batiment, montee par l'ecran. */
+    pied?: React.ReactNode;
 }
 
-export function FreeRoomsList({ freeRooms, theme }: FreeRoomsListProps) {
+export function FreeRoomsList({ freeRooms, theme, pied }: FreeRoomsListProps) {
     return (
         <ScrollView style={{ flex: 1, paddingTop: tokens.space.md, paddingHorizontal: tokens.space.md }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.sm, marginBottom: tokens.space.md }}>
-                <MaterialCommunityIcons 
-                    name="door-open" 
-                    size={20} 
-                    color={theme.accent ?? theme.primary} 
-                />
-                <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: theme.font, marginLeft: tokens.space.sm }}>
-                    {Translator.get('FREE_ROOMS') || 'Salles libres'} ({freeRooms.length})
-                </Text>
-            </View>
+            {/* Le vert (1) : la couleur de la disponibilite, et celle de « S'y rendre » plus bas. */}
+            <CampusSectionHeader
+                icone="door-open"
+                titre={`${Translator.get('FREE_ROOMS')} (${freeRooms.length})`}
+                couleur={1}
+                theme={theme}
+                style={{ marginTop: tokens.space.sm, marginBottom: tokens.space.md }}
+            />
 
             {freeRooms.length === 0 ? (
                 <Text style={{ textAlign: 'center', color: theme.fontSecondary, marginTop: tokens.space.xl }}>
-                    {Translator.get('NO_FREE_ROOMS' as Parameters<typeof Translator.get>[0]) || 'Aucune salle libre à cette heure.'}
+                    {Translator.get('NO_FREE_ROOMS')}
                 </Text>
             ) : (
-                freeRooms.map((slot, index) => (
-                    <View key={index} style={[style.course.card, { 
-                        backgroundColor: theme.cardBackground, 
-                        borderColor: theme.border, 
-                        borderWidth: 1,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        padding: tokens.space.md,
-                        marginBottom: tokens.space.sm
-                    }]}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold, color: theme.accent ?? theme.primary, marginBottom: 2 }}>
-                                {slot.room.name}
-                            </Text>
-                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary }}>
-                                {Translator.get('AVAILABLE_UNTIL') || 'Libre jusqu\'à'} {slot.availableUntil}
-                            </Text>
-                        </View>
-                        <View style={{ backgroundColor: `${theme.primary}15`, paddingHorizontal: tokens.space.sm, paddingVertical: 4, borderRadius: tokens.radius.md }}>
-                            <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: theme.primary }}>
-                                {Math.floor(slot.durationMinutes / 60)}h{slot.durationMinutes % 60 > 0 ? (slot.durationMinutes % 60).toString().padStart(2, '0') : ''}
-                            </Text>
-                        </View>
+                /* Par etage, du plus bas au plus haut : la question qu'on se pose devant la liste
+                   n'est pas « quelle salle » mais « combien de marches ». L'intertitre est celui
+                   des categories de menu et des Reglages — un etage nomme, il n'agit pas. */
+                grouperParEtage(freeRooms).map((groupe, indexGroupe) => (
+                    <View key={groupe.etage ?? 'autres'}>
+                        <Text style={{
+                            fontSize: tokens.fontSize.xs,
+                            fontWeight: tokens.fontWeight.semibold,
+                            color: theme.fontSecondary,
+                            letterSpacing: 0.8,
+                            textTransform: 'uppercase',
+                            marginTop: indexGroupe === 0 ? 0 : tokens.space.sm,
+                            marginBottom: tokens.space.sm,
+                        }}>
+                            {libelleDEtage(groupe.etage)}
+                        </Text>
+                        {groupe.slots.map((slot) => (
+                            <CaseDeSalle key={slot.room.id} slot={slot} theme={theme} />
+                        ))}
                     </View>
                 ))
             )}
-            
+
+            {pied}
+
             <View style={{ height: tokens.space.xxl }} />
         </ScrollView>
     );

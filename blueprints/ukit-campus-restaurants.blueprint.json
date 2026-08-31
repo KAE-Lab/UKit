@@ -1,0 +1,57 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.campus.restaurants",
+  "description": "La liste regionale des restaurants CROUS, telle que CrousScreen la demande (Croustillant). La categorie ecartee descend en predicat where sur un champ imbrique ; la distance de Haversine, le tri par proximite et la lecture des horaires restent applicatifs. Le 4 du predicat n'est pas une var parce qu'une specification d'extraction n'est jamais rendue : une var y serait un nom mort. La REGION etait une var jusqu'au jalon 6-J, avec un commentaire qui l'assumait — « l'application vise une seule region ». C'etait vrai, et c'est exactement la forme que prend une constante bordelaise avant de devenir fausse : le jalon 6-G en a corrige onze du meme genre, dont l'hote Celcat et les points de balayage des bibliotheques. Elle arrive donc en ENTREE, depuis la colonne crous_region du catalogue, avec le defaut bordelais pour que le fichier reste jouable seul depuis un poste. Un etablissement qui n'en declare pas n'affiche simplement pas la section.",
+  "act": "vector",
+  "inputs": {
+    "region": {
+      "type": "string",
+      "required": true,
+      "default": "1",
+      "description": "Identifiant Croustillant de la region CROUS. Vient du catalogue (colonne crous_region). Le defaut est celui du secteur bordelais, seul perimetre du produit a ce jour (voir le README)."
+    }
+  },
+  "vars": {
+    "api": "https://api.croustillant.menu/v1"
+  },
+  "steps": [
+    {
+      "id": "lieux",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ vars.api }}/regions/{{ inputs.region }}/restaurants",
+      "headers": { "Accept": "application/json" },
+      "expect": { "status": 200 },
+      "extract": {
+        "racine": {
+          "from": "json",
+          "path": "$.data"
+        },
+        "restaurants": {
+          "from": "json",
+          "path": "$.data[*]",
+          "where": "item.type.code != 4",
+          "fields": {
+            "code": "$.code",
+            "nom": "$.nom",
+            "zone": "$.zone",
+            "adresse": "$.adresse",
+            "lat": "$.latitude",
+            "lon": "$.longitude",
+            "horaires": "$.horaires"
+          }
+        }
+      }
+    },
+    {
+      "id": "forme",
+      "action": "assert",
+      "condition": "{{ steps.lieux.racine | length > 0 }}",
+      "message": "la reponse ne porte pas de tableau 'data' : la source a change de forme"
+    }
+  ],
+  "outputs": {
+    "restaurants": "{{ steps.lieux.restaurants }}",
+    "nombre": "{{ steps.lieux.restaurants | length }}"
+  }
+}

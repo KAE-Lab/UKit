@@ -1,76 +1,73 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { View, Text } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useContext, useMemo, useState } from 'react';
+import { Dimensions } from 'react-native';
 
 import { AppContext } from '../../../shared/services/AppCore';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import BdeService, { BdeAnnonce } from '../services/BdeService';
+import type { BdeAnnonce } from '../services/BdeService';
+import { useBdeAnnonces } from '../hooks/useBdeAnnonces';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 import { CampusListLayout } from '../components/CampusListLayout';
-import { CampusCard } from '../components/CampusCard';
+import { BdeAnnonceCard } from './BdeAnnonceCard';
 
 export interface BdeScreenProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions?: (options: unknown) => void };
     onAnimatedScroll?: (event: unknown) => void;
 }
 
+const { width } = Dimensions.get('window');
+// Deux affiches par rangee : la largeur d'ecran, moins le rembourrage de rangee et la gouttiere
+// poses par le socle de liste quand il passe en grille.
+const CELL_WIDTH = Math.floor((width - tokens.space.sm * 2 - tokens.space.md) / 2);
+
 function BdeScreen({ navigation, onAnimatedScroll }: BdeScreenProps) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
-    const [annonces, setAnnonces] = useState<BdeAnnonce[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const { annonces, failure, loading, retry } = useBdeAnnonces();
+    const [recherche, setRecherche] = useState('');
 
-    useEffect(() => {
-        let mounted = true;
-        const loadData = async () => {
-            setLoading(true);
-            const data = await BdeService.fetchAnnonces();
-            if (!mounted) return;
-            setAnnonces(data);
-            setLoading(false);
-        };
-
-        loadData();
-        return () => { mounted = false; };
-    }, []);
+    // La recherche porte sur ce que l'oeil connait d'une carte : le titre, l'emetteur, l'accroche.
+    const visibles = useMemo(() => {
+        const requete = recherche.trim().toLowerCase();
+        if (requete === '') return annonces;
+        return annonces.filter((annonce) =>
+            annonce.title.toLowerCase().includes(requete)
+            || annonce.issuer_name.toLowerCase().includes(requete)
+            || (annonce.info_label ?? '').toLowerCase().includes(requete));
+    }, [annonces, recherche]);
 
     const renderItem = ({ item }: { item: BdeAnnonce }) => (
-        <CampusCard
-            title={item.title}
-            imageUrl={item.image_url}
+        <BdeAnnonceCard
+            annonce={item}
+            width={CELL_WIDTH}
+            theme={theme}
+            style={{ marginBottom: tokens.space.md }}
             onPress={() => navigation.navigate('BdeDetail', { annonce: item })}
-        >
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: item.info_label ? 4 : 0 }}>
-                <MaterialCommunityIcons name="account" size={16} color={theme.fontSecondary} />
-                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1 }} numberOfLines={1}>
-                    {item.issuer_name}
-                </Text>
-            </View>
-
-            {item.info_label ? (
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                    <MaterialCommunityIcons name="information-outline" size={16} color={theme.fontSecondary} style={{ marginTop: 2 }} />
-                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: 4, flex: 1, lineHeight: 20 }} numberOfLines={2}>
-                        {item.info_label}
-                    </Text>
-                </View>
-            ) : null}
-        </CampusCard>
+        />
     );
 
     return (
         <CampusListLayout
-            data={annonces}
+            data={visibles}
             loading={loading}
             renderItem={renderItem}
+            numColumns={2}
             onAnimatedScroll={onAnimatedScroll}
             navigation={navigation}
-            
+            hasSearch
+            searchText={recherche}
+            onSearchChange={setRecherche}
+            searchPlaceholder={Translator.get('SEARCH_ANNONCE')}
+            // Le double du seuil des listes : la grille range deux affiches par rangee, et la barre
+            // n'a de sens que si la page deborde de l'ecran.
+            seuilRecherche={8}
             emptyIcon="party-popper"
-            emptyMessage={Translator.get('NO_RESULTS' as Parameters<typeof Translator.get>[0]) || 'Aucune annonce'}
+            emptyTitle={Translator.get('NO_RESULTS_TITLE')}
+            emptyMessage={Translator.get('NO_RESULTS')}
+            failure={failure}
+            onRetry={retry}
         />
     );
 }

@@ -1,0 +1,77 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.campus.bibliotheques",
+  "description": "Les sites Affluences autour d'UN point de balayage. L'application le joue douze fois — sa position plus onze points fixes — puis dedoublonne, filtre et trie : la liste des points est une decision produit, le filtre de categorie demanderait d'indexer une liste dans un predicat (refuse des deux cotes, volontairement), et Haversine est du calcul. Seule la requete descend. Les en-tetes imitent le client web officiel : ce sont des valeurs observees, non documentees, et c'est exactement pourquoi elles ont leur place dans un fichier corrigeable a distance.",
+  "act": "vector",
+  "inputs": {
+    "latitude": {
+      "type": "number",
+      "required": true,
+      "default": 44.7963,
+      "description": "Point de balayage (defaut : campus Talence/Pessac/Gradignan)."
+    },
+    "longitude": {
+      "type": "number",
+      "required": true,
+      "default": -0.6277
+    }
+  },
+  "vars": {
+    "api": "https://api.affluences.com",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  },
+  "steps": [
+    {
+      "id": "carte",
+      "action": "http.request",
+      "method": "POST",
+      "url": "{{ vars.api }}/app/v3/sites/map",
+      "headers": {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "fr",
+        "Content-Type": "application/json",
+        "x-service-name": "website",
+        "Origin": "https://affluences.com",
+        "Referer": "https://affluences.com/",
+        "User-Agent": "{{ vars.user_agent }}"
+      },
+      "json": {
+        "latitude": "{{ inputs.latitude }}",
+        "longitude": "{{ inputs.longitude }}"
+      },
+      "expect": { "status": 200 },
+      "extract": {
+        "racine": {
+          "from": "json",
+          "path": "$.data.results"
+        },
+        "sites": {
+          "from": "json",
+          "path": "$.data.results[*]",
+          "fields": {
+            "id": "$.id",
+            "nom": "$.primary_name",
+            "slug": "$.slug",
+            "ville": "$.location.address.city",
+            "lat": "$.location.coordinates.latitude",
+            "lon": "$.location.coordinates.longitude",
+            "categories": "$.categories[*].id",
+            "images": "$.images",
+            "image_poster": "$.poster_image",
+            "distance_estimee": "$.estimated_distance"
+          }
+        }
+      }
+    },
+    {
+      "id": "forme",
+      "action": "assert",
+      "condition": "{{ steps.carte.racine | length > 0 }}",
+      "message": "la reponse ne porte pas de tableau 'data.results' : la source a change de forme"
+    }
+  ],
+  "outputs": {
+    "sites": "{{ steps.carte.sites }}",
+    "nombre": "{{ steps.carte.sites | length }}"
+  }
+}

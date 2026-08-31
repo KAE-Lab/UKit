@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import React from 'react';
-import { Animated, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { globalScrollValues } from '../../../../shared/navigation/NavHelpers';
 import { tokens } from '../../../../shared/theme/Theme';
+import { HeaderButton, HEADER_BUTTON_ICON, HEADER_BUTTON_SIZE } from '../../../../shared/ui/HeaderButton';
 import { FilterOption } from '../CampusListLayout';
 
 export function useCampusListHeader({
@@ -24,29 +24,23 @@ export function useCampusListHeader({
     useEffect(() => {
         if (!navigation || filterOptions.length === 0) return;
 
-        const safeScrollY = globalScrollValues[routeKey];
-        const scale = safeScrollY?._buttonScale || 1.14;
-
         navigation.setOptions({
             headerRight: () => (
-                <Animated.View style={{ transform: [{ scale }], height: 45, justifyContent: 'center' }}>
+                // Plus de mise a l'echelle : elle interpolait 1,14 -> 1 au defilement, et son repli
+                // etait la valeur STATIQUE 1,14 — ce bouton restait donc agrandi de 14 % en
+                // permanence, seul de sa barre, longtemps apres que la mecanique ait ete retiree
+                // ailleurs (docs/defauts-fonctionnels.md).
+                <View style={{ height: HEADER_BUTTON_SIZE, justifyContent: 'center' }}>
                     <TouchableOpacity onPress={() => setFilterVisible(true)} style={{ paddingRight: tokens.space.md }}>
-                        <View style={{ 
-                            backgroundColor: theme.greyBackground, 
-                            width: 45, height: 45, 
-                            justifyContent: 'center', 
-                            alignItems: 'center', 
-                            borderRadius: tokens.radius.md, 
-                            flexShrink: 0
-                        }}>
-                            <MaterialCommunityIcons 
+                        <HeaderButton theme={theme}>
+                            <MaterialCommunityIcons
                                 name="filter-variant"
-                                size={26} 
-                                color={selectedFilter !== 'all' && selectedFilter !== undefined ? theme.primary : theme.fontSecondary} 
+                                size={HEADER_BUTTON_ICON}
+                                color={selectedFilter !== 'all' && selectedFilter !== undefined ? theme.primary : theme.fontSecondary}
                             />
-                        </View>
+                        </HeaderButton>
                     </TouchableOpacity>
-                </Animated.View>
+                </View>
             )
         });
     }, [navigation, theme, routeKey, selectedFilter, filterOptions, setFilterVisible]);

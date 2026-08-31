@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,9 +7,12 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import { useLibraryTimetableData } from './hooks/useLibraryTimetableData';
+import { PiedFlottant, PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
+import { CampusFailureNotice } from '../components/CampusLayoutComponents';
+import { CampusMapSection } from '../components/CampusMapSection';
 import { LibraryLiveAttendance, LibraryDatesHeader, LibraryOpeningHoursList } from './components/LibraryDetailsComponents';
 
-export default function LibraryDetailsScreen({ route, navigation }: { route: { params: { library: import('../services/LibraryService').LibraryInfo; affluence: import('../services/LibraryService').AffluencesData | null } }; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void } }) {
+export default function LibraryDetailsScreen({ route }: { route: { params: { library: import('../services/LibraryService').LibraryInfo; affluence: import('../services/LibraryService').AffluencesData | null } } }) {
     const { library, affluence } = route.params;
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const themeName = AppContextValues.themeName ?? 'light';
@@ -18,24 +21,17 @@ export default function LibraryDetailsScreen({ route, navigation }: { route: { p
 
     const {
         timetable,
+        failure,
         loading,
         selectedIndex,
         setSelectedIndex,
         flatListRef,
-        scrollTimeoutRef
+        scrollTimeoutRef,
+        retry
     } = useLibraryTimetableData(library);
 
-    useEffect(() => {
-        navigation.setOptions({
-            headerTitle: () => (
-                <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold as never }}>
-                    {Translator.get('DETAILS')}
-                </Text>
-            ),
-            headerTitleAlign: 'center'
-        });
-    }, [navigation, theme]);
-
+    // Le titre vient du navigateur (« Details », neutre) : l'ecran surchargeait le sien en violet,
+    // et le nom de la bibliotheque vit deja dans le bandeau.
     const currentDay = timetable[selectedIndex];
 
     return (
@@ -56,22 +52,28 @@ export default function LibraryDetailsScreen({ route, navigation }: { route: { p
                 
                 <LibraryLiveAttendance affluence={affluence} theme={theme} />
 
-                <LibraryOpeningHoursList loading={loading} currentDay={currentDay} theme={theme} />
-                
-                <View style={{ height: tokens.space.xxl }} />
+                {/* L'affluence vient de la liste et reste affichee : seuls les horaires ont echoue.
+                    Remplacer toute la fiche par un message effacerait une donnee qu'on a. */}
+                {failure !== undefined && failure.silent !== true ? (
+                    <CampusFailureNotice failure={failure} theme={theme} onRetry={retry} />
+                ) : (
+                    <LibraryOpeningHoursList loading={loading} currentDay={currentDay} theme={theme} />
+                )}
+
+                {/* En pied : le lieu ne depend pas du jour selectionne dans le bandeau. */}
+                <CampusMapSection
+                    location={{ lat: library.lat, lng: library.lng }}
+                    markerTitle={library.name}
+                    theme={theme}
+                    style={{ marginTop: tokens.space.lg }}
+                />
+
+                {/* La barre de reservation est flottante : le defilement degage sa hauteur. */}
+                <View style={{ height: PIED_FLOTTANT_DEGAGEMENT }} />
             </ScrollView>
 
-            <SafeAreaView 
-                edges={['bottom']}
-                style={{ 
-                    paddingTop: tokens.space.md,
-                    paddingHorizontal: tokens.space.md,
-                    backgroundColor: theme.cardBackground,
-                    borderTopWidth: 1,
-                    borderTopColor: theme.border,
-                }}
-            >
-                <TouchableOpacity 
+            <PiedFlottant fond={theme.courseBackground}>
+                <TouchableOpacity
                     onPress={async () => {
                         try {
                             await WebBrowser.openBrowserAsync(`https://affluences.com/sites/${library.slug}/reservation`);
@@ -80,8 +82,15 @@ export default function LibraryDetailsScreen({ route, navigation }: { route: { p
                         }
                     }}
                     style={{
-                        backgroundColor: theme.greyBackground,
-                        paddingVertical: 14,
+                        // La surface de la barre de recherche, a l'identique : un objet pose sur la
+                        // page — `greyBackground` etait un fond, et un bouton de la couleur d'un
+                        // fond ne flotte pas. Hauteur 50 : le gabarit commun des flottants — un
+                        // rembourrage vertical le laissait deux points sous les autres.
+                        backgroundColor: theme.cardBackground,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                        ...tokens.shadow.md,
+                        height: 50,
                         borderRadius: tokens.radius.md,
                         flexDirection: 'row',
                         justifyContent: 'center',
@@ -89,16 +98,16 @@ export default function LibraryDetailsScreen({ route, navigation }: { route: { p
                     }}
                 >
                     <MaterialCommunityIcons name="calendar-check" size={22} color={theme.accent ?? theme.primary} />
-                    <Text style={{ 
-                        color: theme.accent ?? theme.primary, 
-                        fontSize: tokens.fontSize.md, 
-                        fontWeight: tokens.fontWeight.bold as never, 
-                        marginLeft: tokens.space.sm 
+                    <Text style={{
+                        color: theme.accent ?? theme.primary,
+                        fontSize: tokens.fontSize.md,
+                        fontWeight: tokens.fontWeight.bold as never,
+                        marginLeft: tokens.space.sm
                     }}>
                         {Translator.get('BOOK_SEAT')}
                     </Text>
                 </TouchableOpacity>
-            </SafeAreaView>
+            </PiedFlottant>
 
         </SafeAreaView>
     );

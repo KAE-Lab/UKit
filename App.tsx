@@ -14,15 +14,26 @@ import {
 	MaterialIcons,
 	SimpleLineIcons,
 } from '@expo/vector-icons';
-import { Montserrat_500Medium } from '@expo-google-fonts/montserrat';
 
 import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
+import { loadBuildings } from './src/shared/locations';
+import { loadVisuels } from './src/shared/visuels';
+import { loadEdtsPersonnels, loadEtablissements, loadLiensEdt } from './src/shared/etablissements';
 import { PlanningDataManager } from './src/features/Planning/services/PlanningDataManager';
 import { CampusDataManager } from './src/features/Campus/services/CampusDataManager';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { RootSiblingParent } from 'react-native-root-siblings';
 
 SplashScreen.preventAutoHideAsync();
+
+/*
+ * Il n'existe PAS de figeage global de l'echelle de police : `Text.defaultProps` a ete tente ici
+ * (2026-08-31) et c'est un no-op — React 19 ne lit plus `defaultProps` sur les composants
+ * fonction, et Expo managee n'offre aucune prise native. La tolerance aux grandes polices se fait
+ * donc PAR LAYOUT : largeurs contraintes plutot que mesurees, `flex` sur les textes de rangees
+ * (voir EmptyState, SettingsSections). Ne pas retenter le raccourci global.
+ */
 
 function AnimatedAppLoader({ children }) {
 	const [appIsReady, setAppIsReady] = useState(false);
@@ -31,8 +42,6 @@ function AnimatedAppLoader({ children }) {
 	useEffect(() => {
 		async function prepare() {
 			try {
-				await Font.loadAsync({ Montserrat_500Medium });
-
 				const imageAssets = cacheImages([require('./assets/icons/logo.png')]);
 
 				const fontAssets = cacheFonts([
@@ -44,9 +53,30 @@ function AnimatedAppLoader({ children }) {
 					SimpleLineIcons.font,
 					Entypo.font,
 				]);
+				// Les surcouches connues, depuis le cache et sans reseau : les batiments doivent etre
+				// complets des le premier rendu, et le catalogue doit pouvoir resoudre l'etablissement
+				// que `loadSettings` va poser juste apres. Les rafraichissements distants, eux,
+				// viennent apres (rootContainer).
+				await loadEtablissements();
+				await loadLiensEdt();
+				// L'emploi du temps personnel trouve dans le dossier se fusionne au referentiel du
+				// catalogue : il doit etre la avant que le premier ecran ne resolve un favori.
+				await loadEdtsPersonnels();
+				await loadBuildings();
+				// Les visuels publies suivent les batiments, et pour la meme raison : une photo
+				// corrigee ne doit pas redevenir fausse le temps qu'une requete revienne.
+				await loadVisuels();
+
+				// **Les reglages avant les managers**, et l'ordre inverse etait un defaut : ils
+				// chargent des donnees qui appartiennent a un etablissement, et c'est `loadSettings`
+				// qui dit lequel. Un etudiant de Bordeaux INP dont le cache de groupes avait expire
+				// voyait donc partir, au demarrage, une requete vers le serveur de Bordeaux — la seule
+				// source que le catalogue connaisse tant que le code n'est pas restaure — et la reponse
+				// ecrasait sa liste. Corrige au jalon 6-J, avec le meme defaut trouve du cote de la
+				// bascule d'etablissement (PlanningDataManager).
+				await SettingsManager.loadSettings();
 				await PlanningDataManager.loadData();
 				await CampusDataManager.loadData();
-				await SettingsManager.loadSettings();
 
 				await Promise.all([...imageAssets, ...fontAssets]);
 			} catch (e) {
@@ -102,6 +132,9 @@ function AnimatedSplashScreen({ children, image }) {
 					style={[
 						StyleSheet.absoluteFill,
 						{
+							// L'ecran de demarrage est peint avant que le theme existe : ce repli suit
+							// `app.config.ts`, pas la palette.
+							// eslint-disable-next-line ukit/no-style-literals
 							backgroundColor: splashConfig.backgroundColor || '#ffffff',
 							opacity: animation,
 						},
@@ -140,11 +173,26 @@ function cacheImages(images) {
 export default function App() {
     return (
 		<SafeAreaProvider>
-			<GestureHandlerRootView style={{ flex: 1 }}>
-				<AnimatedAppLoader>
-					<RootContainer />
-				</AnimatedAppLoader>
-			</GestureHandlerRootView>
+			{/*
+			  * `RootSiblingParent` est ce qui rend les toasts **visibles**.
+			  *
+			  * `react-native-root-toast` le declare obligatoire au-dessus de React Native 0.62, et
+			  * l'application est en 0.81 : sans lui, `Toast.show` ne leve pas, il ne rend rien. Les
+			  * quatre messages de l'application etaient donc muets, dont trois qui annoncent un
+			  * echec — un document qu'on n'a pas pu ajouter, des reglages illisibles, une absence de
+			  * reseau. Constate le 2026-08-29 en cherchant pourquoi la confirmation de copie ne
+			  * s'affichait pas.
+			  *
+			  * Sous `SafeAreaProvider` et au-dessus du reste : il doit englober tout ce qui peut
+			  * appeler un toast.
+			  */}
+			<RootSiblingParent>
+				<GestureHandlerRootView style={{ flex: 1 }}>
+					<AnimatedAppLoader>
+						<RootContainer />
+					</AnimatedAppLoader>
+				</GestureHandlerRootView>
+			</RootSiblingParent>
 		</SafeAreaProvider>
     );
 }

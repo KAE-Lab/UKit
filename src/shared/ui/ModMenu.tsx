@@ -6,7 +6,20 @@ import moment from 'moment';
 
 import style, { tokens } from '../theme/Theme';
 import { TimeMockService } from '../services/TimeMockService';
+import { NetworkMockService } from '../services/NetworkMockService';
 import { AppContext } from '../services/AppCore';
+import ModMenuBlueprints from './ModMenuBlueprints';
+import ModMenuBiometrie from './ModMenuBiometrie';
+import ModMenuPropositions from './ModMenuPropositions';
+
+/**
+ * Les panneaux du menu, et leur libelle d'onglet.
+ *
+ * Table plutot que ternaire : le troisieme panneau a rendu la seconde forme illisible, et un
+ * quatrieme n'ajoutera qu'une ligne ici.
+ */
+const PANNEAUX = { time: 'Temps', blueprints: 'Blueprints', biometrie: 'Biometrie', propositions: 'Dossier' } as const;
+type Panneau = keyof typeof PANNEAUX;
 
 const { width, height } = Dimensions.get('window');
 const ICON_SIZE = 60;
@@ -17,10 +30,14 @@ export interface ModMenuState {
     isVisible: boolean;
     isExpanded: boolean;
     isActive: boolean;
+    /** L'application se croit hors ligne, sans que l'appareil le soit. */
+    isOffline: boolean;
     currentTime: moment.Moment;
     selectedDate: Date;
     showPicker: boolean;
     pickerMode: 'date' | 'time' | 'datetime';
+    /** L'onglet affiche : la simulation temporelle, le diagnostic de la livraison, ou la sonde biometrique. */
+    panel: Panneau;
 }
 
 export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
@@ -40,10 +57,12 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             isVisible: false,
             isExpanded: false,
             isActive: TimeMockService.isMockActive(),
+            isOffline: NetworkMockService.isOffline(),
             currentTime: moment(),
             selectedDate: new Date(),
             showPicker: false,
             pickerMode: "date" as "date",
+            panel: 'time',
         };
 
         this.pan = new Animated.ValueXY({ x: width - ICON_SIZE - 20, y: height / 2 });
@@ -110,8 +129,17 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     }
 
     closeMenu = () => {
+        // Fermer le menu remet tout a l'etat reel : une simulation qu'on oublie active est un
+        // faux bug qu'on cherchera longtemps.
         TimeMockService.resetFakeTime();
-        this.setState({ isVisible: false, isExpanded: false });
+        NetworkMockService.setOffline(false);
+        this.setState({ isVisible: false, isExpanded: false, isOffline: false });
+    }
+
+    toggleOffline = () => {
+        const coupe = !this.state.isOffline;
+        NetworkMockService.setOffline(coupe);
+        this.setState({ isOffline: coupe });
     }
 
     applyFakeTime = () => {
@@ -136,11 +164,27 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         }
     }
 
-    renderIndicator = (isActive: boolean, customStyle = {}) => {
+    renderTabs = (theme: import('../theme/Theme').AppThemeType, panel: Panneau) => (
+        <View style={{ flexDirection: 'row', marginBottom: tokens.space.md, backgroundColor: theme.greyBackground, borderRadius: tokens.radius.md, padding: tokens.space.xxs }}>
+            {(Object.keys(PANNEAUX) as Panneau[]).map((cible) => (
+                <TouchableOpacity
+                    key={cible}
+                    onPress={() => this.setState({ panel: cible })}
+                    style={{ flex: 1, paddingVertical: tokens.space.xs, borderRadius: tokens.radius.sm, alignItems: 'center', backgroundColor: panel === cible ? theme.cardBackground : 'transparent' }}
+                >
+                    <Text style={{ color: panel === cible ? theme.font : theme.fontSecondary, fontSize: tokens.fontSize.xs, fontWeight: 'bold' }}>
+                        {PANNEAUX[cible]}
+                    </Text>
+                </TouchableOpacity>
+            ))}
+        </View>
+    );
+
+    renderIndicator = (theme: import('../theme/Theme').AppThemeType, isActive: boolean, customStyle = {}) => {
         return (
             <View style={[{
-                width: 14, height: 14, borderRadius: 7,
-                backgroundColor: isActive ? '#4ade80' : '#f87171',
+                width: 14, height: 14, borderRadius: tokens.radius.pill,
+                backgroundColor: isActive ? theme.success : theme.danger,
             }, customStyle]} />
         );
     }
@@ -156,14 +200,14 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             }}
         >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {this.renderIndicator(isActive, { marginRight: tokens.space.sm })}
+                {this.renderIndicator(theme, isActive, { marginRight: tokens.space.sm })}
                 <Text style={{ color: theme.font, fontWeight: 'bold', fontSize: tokens.fontSize.sm }}>Dev Menu</Text>
             </View>
             <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity onPress={this.minimizeMenu} style={{ padding: 4, marginRight: 8 }}>
+                <TouchableOpacity onPress={this.minimizeMenu} style={{ padding: tokens.space.xs, marginRight: tokens.space.sm }}>
                     <MaterialCommunityIcons name="minus" size={20} color={theme.fontSecondary} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={this.closeMenu} style={{ padding: 4 }}>
+                <TouchableOpacity onPress={this.closeMenu} style={{ padding: tokens.space.xs }}>
                     <MaterialCommunityIcons name="close" size={20} color={theme.fontSecondary} />
                 </TouchableOpacity>
             </View>
@@ -173,13 +217,13 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     renderLiveClock = (theme: import('../theme/Theme').AppThemeType, isActive: boolean, currentTime: moment.Moment) => (
         // Live Clock
         <View style={{ alignItems: 'center', marginBottom: tokens.space.md, backgroundColor: theme.cardBackground, padding: tokens.space.md, borderRadius: tokens.radius.md, borderWidth: 1, borderColor: theme.border }}>
-            <Text style={{ color: isActive ? '#4ade80' : theme.fontSecondary, fontWeight: 'bold', marginBottom: tokens.space.xs }}>
+            <Text style={{ color: isActive ? theme.success : theme.fontSecondary, fontWeight: 'bold', marginBottom: tokens.space.xs }}>
                 {isActive ? 'FAKE TIME ACTIVE' : 'REAL TIME'}
             </Text>
             <Text style={{ color: theme.font, fontSize: 32, fontWeight: 'bold', fontVariant: ['tabular-nums'], textAlign: 'center', width: '100%' }}>
                 {currentTime.format('HH:mm:ss')}
             </Text>
-            <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm, marginTop: 4, textAlign: 'center' }}>
+            <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm, marginTop: tokens.space.xs, textAlign: 'center' }}>
                 {currentTime.format('dddd DD MMMM YYYY')}
             </Text>
         </View>
@@ -195,7 +239,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     onPress={() => this.showPicker('date')}
                     style={{ flex: 1, backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
                 >
-                    <MaterialCommunityIcons name="calendar" size={20} color={theme.primary} style={{ marginBottom: 4 }} />
+                    <MaterialCommunityIcons name="calendar" size={20} color={theme.primary} style={{ marginBottom: tokens.space.xs }} />
                     <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{moment(selectedDate).format('DD/MM/YYYY')}</Text>
                 </TouchableOpacity>
 
@@ -203,11 +247,49 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     onPress={() => this.showPicker('time')}
                     style={{ flex: 1, backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
                 >
-                    <MaterialCommunityIcons name="clock" size={20} color={theme.primary} style={{ marginBottom: 4 }} />
+                    <MaterialCommunityIcons name="clock" size={20} color={theme.primary} style={{ marginBottom: tokens.space.xs }} />
                     <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{moment(selectedDate).format('HH:mm')}</Text>
                 </TouchableOpacity>
             </View>
         </>
+    );
+
+    /**
+     * L'interrupteur hors ligne.
+     *
+     * Il coupe le reseau de l'**application** — `isConnected()` et le `fetch` du moteur — sans toucher
+     * a celui de l'appareil, donc sans perdre Metro. C'est ce qui rend un chemin degrade verifiable
+     * en deux tapes au lieu d'un mode avion qui casse la session de developpement.
+     */
+    renderOfflineSwitch = (theme: import('../theme/Theme').AppThemeType, isOffline: boolean) => (
+        <TouchableOpacity
+            onPress={this.toggleOffline}
+            activeOpacity={0.8}
+            style={{
+                flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                backgroundColor: theme.cardBackground, padding: tokens.space.sm,
+                borderRadius: tokens.radius.md, borderWidth: 1,
+                borderColor: isOffline ? theme.danger : theme.border, marginBottom: tokens.space.md,
+            }}
+        >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <MaterialCommunityIcons
+                    name={isOffline ? 'wifi-off' : 'wifi'}
+                    size={20}
+                    color={isOffline ? theme.danger : theme.primary}
+                    style={{ marginRight: tokens.space.sm }}
+                />
+                <View>
+                    <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm, fontWeight: 'bold' }}>
+                        {isOffline ? 'HORS LIGNE' : 'EN LIGNE'}
+                    </Text>
+                    <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs }}>
+                        {isOffline ? 'app coupee, appareil intact' : 'couper le reseau de l app'}
+                    </Text>
+                </View>
+            </View>
+            {this.renderIndicator(theme, !isOffline)}
+        </TouchableOpacity>
     );
 
     renderActionButtons = (theme: import('../theme/Theme').AppThemeType) => (
@@ -215,15 +297,15 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <TouchableOpacity 
                 onPress={this.resetTime}
-                style={{ flex: 1, backgroundColor: '#ef4444', paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center' }}
+                style={{ flex: 1, backgroundColor: theme.danger, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center' }}
             >
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Reset</Text>
+                <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Reset</Text>
             </TouchableOpacity>
             <TouchableOpacity 
                 onPress={this.applyFakeTime}
                 style={{ flex: 1, backgroundColor: theme.primary, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center' }}
             >
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Apply</Text>
+                <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Apply</Text>
             </TouchableOpacity>
         </View>
     );
@@ -232,17 +314,21 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         if (!this.state.showPicker) return null;
         return (
             <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginTop: tokens.space.md, borderWidth: 1, borderColor: theme.border, alignItems: 'center' }}>
+                {/* `themeVariant` n'est pas cosmetique : sans lui, le selecteur iOS suit l'apparence
+                    du **systeme** et non celle de l'application. Un iPhone en mode sombre affichait
+                    donc du texte blanc sur le fond clair du menu — invisible. */}
                 <DateTimePicker
                     value={this.state.selectedDate}
                     mode={this.state.pickerMode}
                     is24Hour={true}
                     display={Platform.OS === 'ios' ? "spinner" : "default"}
+                    themeVariant={this.context?.themeName === 'dark' ? 'dark' : 'light'}
                     onChange={this.onPickerChange}
                     style={{ width: Platform.OS === 'ios' ? 240 : 'auto', height: Platform.OS === 'ios' ? 120 : 'auto' }}
                 />
                 {Platform.OS === 'ios' && (
                     <TouchableOpacity onPress={() => this.setState({ showPicker: false })} style={{ alignItems: 'center', paddingVertical: tokens.space.sm, paddingHorizontal: tokens.space.lg, backgroundColor: theme.primary, borderRadius: tokens.radius.md, marginTop: tokens.space.md }}>
-                        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Valider</Text>
+                        <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Valider</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -252,7 +338,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     render() {
         if (!this.state.isVisible) return null;
 
-        const { isExpanded, isActive, currentTime, selectedDate } = this.state;
+        const { isExpanded, isActive, isOffline, currentTime, selectedDate, panel } = this.state;
         const theme = style.Theme[this.context?.themeName || 'light'];
 
         if (!isExpanded) {
@@ -272,7 +358,10 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     }]}
                 >
                     <TouchableOpacity onPress={this.expandMenu} style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                        {this.renderIndicator(isActive, { position: 'absolute', top: -4, right: -4, borderWidth: 2, borderColor: theme.cardBackground, zIndex: 10 })}
+                        {/* La pastille signale qu'**une** simulation tourne, temps ou reseau : une
+                            simulation oubliee derriere l'icone reduite est un faux bug qu'on
+                            cherchera longtemps. */}
+                        {this.renderIndicator(theme, isActive || isOffline, { position: 'absolute', top: -4, right: -4, borderWidth: 2, borderColor: theme.cardBackground, zIndex: 10 })}
                         <Image source={require('../../../assets/icons/logo.png')} style={{ width: 40, height: 40, resizeMode: 'contain' }} />
                     </TouchableOpacity>
                 </Animated.View>
@@ -293,14 +382,26 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     borderWidth: 1, borderColor: theme.border
                 }]}
             >
-                {this.renderExpandedHeader(theme, isActive)}
+                {this.renderExpandedHeader(theme, isActive || isOffline)}
 
                 {/* Content */}
                 <View style={{ padding: tokens.space.md }}>
-                    {this.renderLiveClock(theme, isActive, currentTime)}
-                    {this.renderTimeSelectors(theme, selectedDate)}
-                    {this.renderActionButtons(theme)}
-                    {this.renderDateTimePicker(theme)}
+                    {this.renderTabs(theme, panel)}
+                    {panel === 'blueprints' ? (
+                        <ModMenuBlueprints theme={theme} />
+                    ) : panel === 'biometrie' ? (
+                        <ModMenuBiometrie theme={theme} />
+                    ) : panel === 'propositions' ? (
+                        <ModMenuPropositions theme={theme} />
+                    ) : (
+                        <>
+                            {this.renderLiveClock(theme, isActive, currentTime)}
+                            {this.renderOfflineSwitch(theme, isOffline)}
+                            {this.renderTimeSelectors(theme, selectedDate)}
+                            {this.renderActionButtons(theme)}
+                            {this.renderDateTimePicker(theme)}
+                        </>
+                    )}
                 </View>
             </Animated.View>
         );

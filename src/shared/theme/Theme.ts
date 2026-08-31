@@ -1,61 +1,8 @@
 /* eslint-disable max-lines */
 import { Platform } from 'react-native';
 
-const tokens = {
-    space: {
-        xs: 4,
-        sm: 8,
-        md: 16,
-        lg: 24,
-        xl: 32,
-        xxl: 48,
-    },
-    radius: {
-        sm: 8,
-        md: 12,
-        lg: 16,
-        xl: 24,
-        pill: 999,
-    },
-    fontSize: {
-        xs: 12,
-        sm: 14,
-        md: 16,
-        lg: 18,
-        xl: 22,
-        xxl: 28,
-        hero: 36,
-    },
-    fontWeight: {
-        regular: '400' as const,
-        medium: '500' as const,
-        semibold: '600' as const,
-        bold: '700' as const,
-    },
-    shadow: {
-        sm: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.04,
-            shadowRadius: 6,
-            elevation: 2,
-        },
-        md: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.06,
-            shadowRadius: 14,
-            elevation: 5,
-        },
-        lg: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.08,
-            shadowRadius: 24,
-            elevation: 10,
-        },
-    },
-};
+import { tokens } from './tokens';
+
 
 const colors = {
     brand:      '#009ee0',
@@ -86,50 +33,6 @@ const hintColors = {
     gray: '#9499a1AA',
 };
 
-const colors200 = {
-    red:        '#EF9A9A',
-    pink:       '#F48FB1',
-    purple:     '#CE93D8',
-    deepPurple: '#B39DDB',
-    indigo:     '#9FA8DA',
-    blue:       '#90CAF9',
-    lightBlue:  '#81D4FA',
-    cyan:       '#80DEEA',
-    teal:       '#80CBC4',
-    green:      '#A5D6A7',
-    lightGreen: '#C5E1A5',
-    lime:       '#E6EE9C',
-    yellow:     '#FFF59D',
-    amber:      '#FFE082',
-    orange:     '#FFCC80',
-    deepOrange: '#FFAB91',
-    brown:      '#BCAAA4',
-    grey:       '#EEEEEE',
-    blueGrey:   '#B0BEC5',
-};
-
-const colors50 = {
-    red:        '#FFEBEE',
-    pink:       '#FCE4EC',
-    purple:     '#F3E5F5',
-    deepPurple: '#EDE7F6',
-    indigo:     '#E8EAF6',
-    blue:       '#E3F2FD',
-    lightBlue:  '#E1F5FE',
-    cyan:       '#E0F7FA',
-    teal:       '#E0F2F1',
-    green:      '#E8F5E9',
-    lightGreen: '#F1F8E9',
-    lime:       '#F9FBE7',
-    yellow:     '#FFFDE7',
-    amber:      '#FFF8E1',
-    orange:     '#FFF3E0',
-    deepOrange: '#FBE9E7',
-    brown:      '#EFEBE9',
-    grey:       '#FAFAFA',
-    blueGrey:   '#ECEFF1',
-};
-
 const AppTheme = {
     primary:   '#007AFF',
     secondary: '#34C759',
@@ -143,12 +46,27 @@ const Theme = {
         selection:     '#F2F2F7',
         accent:        '#007AFF',
         accentFont:    '#FF3B30',
+        // L'echelle semantique. Elle reprend les teintes que `sectionsHeaders` portait deja, plutot
+        // que les verts et oranges Material qui trainaient en dur dans les composants : la palette
+        // suit les couleurs systeme d'Apple, et en laisser vivre une seconde etait la cause des
+        // `#4caf50` recopies. Le suffixe `Soft` suit la convention de `primarySoft`.
+        success:       '#34C759',
+        successSoft:   '#34C75915',
+        warning:       '#FF9500',
+        warningSoft:   '#FF950015',
+        danger:        '#FF3B30',
+        dangerSoft:    '#FF3B3015',
+        neutral:       '#8E8E93',
+        neutralSoft:   '#8E8E9315',
         font:          '#1C1C1E',
         fontSecondary: '#8E8E93',
         lightFont:     '#FFFFFF',
         link:          '#007AFF',
         icon:          '#1C1C1E',
         border:        '#E5E5EA',
+        // Anterieure a la palette, et laissee a sa valeur : la nommer supprime le litteral d'AppUI
+        // sans changer un pixel de la barre de statut.
+        statusBarBackground: '#006F9F',
         background:            '#F2F2F7',
         cardBackground:        '#FFFFFF',
         greyBackground:        '#E5E5EA',
@@ -217,6 +135,29 @@ const Theme = {
                 color:           '#C7C7CC',
                 marginHorizontal: tokens.space.xs,
             },
+            /*
+             * Le vocabulaire des dialogues, et il est unique : les neuf modales de l'application
+             * s'habillent ici, sans un style local. Les proportions ont ete recadrees apres mesure a
+             * l'usage — un bouton de 150 de large et 52 de haut sous un libelle de 16 lisait comme
+             * un bouton geant, et `radius.xl` sur une carte pleine largeur lisait comme une pastille.
+             *
+             * Ce qui a change : le conteneur descend a `radius.lg` et monte a `space.lg` de
+             * rembourrage, le titre prend `fontSize.xl` — un titre de dialogue titre une page, pas un
+             * paragraphe —, et les boutons passent en `flex: 1` avec un `minHeight` de 48, la cible
+             * tactile minimale de la recette d'ecran, au lieu d'une largeur minimale en dur qui ne
+             * s'adaptait a rien.
+             *
+             * **L'ecart description -> boutons reste a 16**, et pas davantage : une premiere version
+             * l'avait porte a 32 en meme temps que le rembourrage, ce qui creusait un trou au milieu
+             * du dialogue. Le rembourrage du conteneur et l'espacement interne ne se regient pas
+             * ensemble.
+             *
+             * `minHeight` n'a pas de token, et c'est assume : le depot n'a aucune echelle de
+             * dimensions (docs/theme.md, « ce que les tokens ne couvrent pas »).
+             *
+             * Le bloc jumeau du theme sombre porte exactement les memes valeurs : seules les
+             * couleurs different. Toute retouche ici se recopie la-bas.
+             */
             popup: {
                 filters: {
                     container: {
@@ -259,9 +200,9 @@ const Theme = {
                 },
                 container: {
                     backgroundColor: '#FFFFFF',
-                    borderRadius:    tokens.radius.xl,
-                    padding:         tokens.space.md,
-                    marginHorizontal: tokens.space.md,
+                    borderRadius:    tokens.radius.lg,
+                    padding:         tokens.space.lg,
+                    marginHorizontal: tokens.space.lg,
                     marginVertical:  tokens.space.xl,
                     ...tokens.shadow.lg,
                     flexShrink: 1,
@@ -274,61 +215,101 @@ const Theme = {
                 },
                 textHeader: {
                     fontWeight: tokens.fontWeight.bold,
-                    fontSize:   tokens.fontSize.lg,
+                    fontSize:   tokens.fontSize.xl,
                     color:      '#1C1C1E',
                 },
                 textDescription: {
-                    marginVertical: tokens.space.sm,
+                    marginTop:      tokens.space.sm,
+                    marginBottom:   tokens.space.sm,
+                    lineHeight:     22,
                     fontSize:       tokens.fontSize.md,
                     color:          '#8E8E93',
                 },
                 buttonContainer: {
-                    flexDirection:  'row',
-                    justifyContent: 'space-around',
-                    marginTop:      tokens.space.sm,
+                    flexDirection: 'row',
+                    gap:           tokens.space.sm,
+                    marginTop:     tokens.space.sm,
                 },
                 buttonSecondary: {
                     backgroundColor: '#E5E5EA',
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: 150,
                 },
                 buttonMain: {
-                    backgroundColor: '#E5E5EA', 
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
+                    backgroundColor: '#007AFF',
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: 150,
+                },
+                buttonDestructive: {
+                    backgroundColor: '#FF3B30',
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
+                    borderRadius: tokens.radius.md,
+                    alignItems: 'center',
+                    justifyContent: 'center',
                 },
                 buttonTextSecondary: {
-                    color: '#8E8E93', 
-                    fontWeight: tokens.fontWeight.medium,
+                    color: '#8E8E93',
+                    fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
                 buttonTextMain: {
-                    color: '#007AFF', 
-                    fontWeight: tokens.fontWeight.bold,
+                    color: '#FFFFFF',
+                    fontWeight: tokens.fontWeight.semibold,
+                    fontSize: tokens.fontSize.md,
+                },
+                buttonTextDestructive: {
+                    color: '#FFFFFF',
+                    fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
                 closeIcon: {
                     color: '#C7C7CC',
                 },
-                radioContainer: {
-                    flexDirection:  'row',
-                    alignContent:   'center',
-                    marginTop:      tokens.space.md,
+                /*
+                 * Une option de modale de choix : la forme des boutons de l'application, plus un etat
+                 * selectionne — contour neutre au repos, fond teinte et filet d'accent une fois
+                 * choisie. Remplace les ronds a cocher, qui ne ressemblaient a rien d'autre dans
+                 * l'application.
+                 */
+                option: {
+                    flexDirection:   'row',
+                    alignItems:      'center',
+                    justifyContent:  'space-between',
+                    borderWidth:     1.5,
+                    borderColor:     '#E5E5EA',
+                    borderRadius:    tokens.radius.md,
+                    minHeight:       48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.md,
+                    marginTop:       tokens.space.sm,
                 },
-                radioIconColor: '#007AFF',
-                radioText: {
-                    fontSize:  tokens.fontSize.lg,
-                    marginLeft: tokens.space.md,
-                    color:     '#1C1C1E',
+                optionSelected: {
+                    borderColor:     '#007AFF',
+                    backgroundColor: '#007AFF15',
                 },
+                optionText: {
+                    fontSize:   tokens.fontSize.md,
+                    fontWeight: tokens.fontWeight.semibold,
+                    color:      '#1C1C1E',
+                    flexShrink: 1,
+                },
+                optionTextSelected: {
+                    color: '#007AFF',
+                },
+                optionCheckColor: '#007AFF',
                 filterListContainer: {
                     flex:           1,
                     flexDirection:  'row',
@@ -365,6 +346,24 @@ const Theme = {
             '#8000FF': '#FF9500',
             '#00FF00': '#34C759',
             '#400080': '#007AFF',
+            // La palette DERIVEE : un export iCalendar ne porte aucune couleur, le jalon 6-I en tire
+            // une de la matiere et la projette ici, pour que les deux sources aient le meme
+            // vocabulaire visuel (features/Planning/services/IcsMapping.ts).
+            //
+            // Huit teintes **toutes vives**, et c'est une correction mesuree : la premiere version
+            // reprenait les huit teintes de la table Celcat au-dessus, dont un brun (clair) qui vire
+            // au gris en sombre. Il attrapait 8 matieres sur 61, soit 467 cours sur l'annee — un
+            // cours sur sept avait l'air de n'avoir pas de couleur. La roue ci-dessous n'a aucune
+            // teinte neutre : une collision se lit comme deux cours de la meme couleur, jamais comme
+            // une couleur manquante.
+            'palette-1': '#FF3B30', // rouge
+            'palette-2': '#FF9500', // orange
+            'palette-3': '#FFCC00', // jaune
+            'palette-4': '#34C759', // vert
+            'palette-5': '#00C7BE', // menthe
+            'palette-6': '#5AC8FA', // cyan
+            'palette-7': '#007AFF', // bleu
+            'palette-8': '#AF52DE', // violet
             default:   '#007AFF',
         },
     },
@@ -375,12 +374,22 @@ const Theme = {
         secondary:     '#30D158',
         selection:     '#2C2C2E',
         accentFont:    '#FF453A',
+        // Les variantes sombres des memes couleurs systeme, deja presentes dans `sectionsHeaders`.
+        success:       '#30D158',
+        successSoft:   '#30D15815',
+        warning:       '#FF9F0A',
+        warningSoft:   '#FF9F0A15',
+        danger:        '#FF453A',
+        dangerSoft:    '#FF453A15',
+        neutral:       '#8E8E93',
+        neutralSoft:   '#8E8E9315',
         font:          '#FFFFFF',
         fontSecondary: '#8E8E93',
         lightFont:     '#FFFFFF',
         link:          '#64D2FF',
         icon:          '#FFFFFF',
         border:        '#38383A',
+        statusBarBackground: '#000000',
         background:            '#000000',
         cardBackground:        '#1C1C1E',
         greyBackground:        '#121212',
@@ -491,9 +500,9 @@ const Theme = {
                 },
                 container: {
                     backgroundColor: '#1C1C1E',
-                    borderRadius:    tokens.radius.xl,
-                    padding:         tokens.space.md,
-                    marginHorizontal: tokens.space.md,
+                    borderRadius:    tokens.radius.lg,
+                    padding:         tokens.space.lg,
+                    marginHorizontal: tokens.space.lg,
                     marginVertical:  tokens.space.xl,
                     ...tokens.shadow.lg,
                     flexShrink: 1,
@@ -506,61 +515,96 @@ const Theme = {
                 },
                 textHeader: {
                     fontWeight: tokens.fontWeight.bold,
-                    fontSize:   tokens.fontSize.lg,
+                    fontSize:   tokens.fontSize.xl,
                     color:      '#FFFFFF',
                 },
                 textDescription: {
-                    marginVertical: tokens.space.sm,
+                    marginTop:      tokens.space.sm,
+                    marginBottom:   tokens.space.sm,
+                    lineHeight:     22,
                     fontSize:       tokens.fontSize.md,
                     color:          '#8E8E93',
                 },
                 buttonContainer: {
-                    flexDirection:  'row',
-                    justifyContent: 'space-around',
-                    marginTop:      tokens.space.sm,
+                    flexDirection: 'row',
+                    gap:           tokens.space.sm,
+                    marginTop:     tokens.space.sm,
                 },
                 buttonSecondary: {
                     backgroundColor: '#121212',
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: 150,
                 },
                 buttonMain: {
-                    backgroundColor: '#121212',
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
+                    backgroundColor: '#5E5CE6',
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
                     borderRadius: tokens.radius.md,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minWidth: 150,
+                },
+                buttonDestructive: {
+                    backgroundColor: '#FF453A',
+                    flex: 1,
+                    minHeight: 48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.sm,
+                    borderRadius: tokens.radius.md,
+                    alignItems: 'center',
+                    justifyContent: 'center',
                 },
                 buttonTextSecondary: {
-                    color: '#8E8E93', 
-                    fontWeight: tokens.fontWeight.medium,
+                    color: '#8E8E93',
+                    fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
                 buttonTextMain: {
-                    color: '#5E5CE6', 
-                    fontWeight: tokens.fontWeight.bold,
+                    color: '#FFFFFF',
+                    fontWeight: tokens.fontWeight.semibold,
+                    fontSize: tokens.fontSize.md,
+                },
+                buttonTextDestructive: {
+                    color: '#FFFFFF',
+                    fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
                 closeIcon: {
                     color: '#8E8E93',
                 },
-                radioContainer: {
-                    flexDirection: 'row',
-                    alignContent:  'center',
-                    marginTop:     tokens.space.md,
+                /* Le jumeau du bloc clair : memes valeurs, seules les couleurs different. */
+                option: {
+                    flexDirection:   'row',
+                    alignItems:      'center',
+                    justifyContent:  'space-between',
+                    borderWidth:     1.5,
+                    borderColor:     '#38383A',
+                    borderRadius:    tokens.radius.md,
+                    minHeight:       48,
+                    paddingVertical: tokens.space.sm,
+                    paddingHorizontal: tokens.space.md,
+                    marginTop:       tokens.space.sm,
                 },
-                radioIconColor: '#5E5CE6',
-                radioText: {
-                    fontSize:   tokens.fontSize.lg,
-                    marginLeft: tokens.space.md,
+                optionSelected: {
+                    borderColor:     '#5E5CE6',
+                    backgroundColor: '#5E5CE615',
+                },
+                optionText: {
+                    fontSize:   tokens.fontSize.md,
+                    fontWeight: tokens.fontWeight.semibold,
                     color:      '#FFFFFF',
+                    flexShrink: 1,
                 },
+                optionTextSelected: {
+                    color: '#5E5CE6',
+                },
+                optionCheckColor: '#5E5CE6',
                 filterListContainer: {
                     flex:           1,
                     flexDirection:  'row',
@@ -597,6 +641,16 @@ const Theme = {
             '#8000FF': '#FF9F0A',
             '#00FF00': '#30D158',
             '#400080': '#5E5CE6',
+            // La palette derivee, en sombre (voir le theme clair). Le gris `#8E8E93` en a ete
+            // retire : c'est lui qui faisait passer un cours sur sept pour un cours sans couleur.
+            'palette-1': '#FF453A', // rouge
+            'palette-2': '#FF9F0A', // orange
+            'palette-3': '#FFD60A', // jaune
+            'palette-4': '#30D158', // vert
+            'palette-5': '#66D4CF', // menthe
+            'palette-6': '#64D2FF', // cyan
+            'palette-7': '#0A84FF', // bleu
+            'palette-8': '#BF5AF2', // violet
             default:   '#5E5CE6',
         },
     },
@@ -614,7 +668,6 @@ const StyleWelcome = {
             justifyContent: 'center',
         },
         buttonText: {
-            fontFamily: 'Montserrat_600SemiBold',
             fontSize: tokens.fontSize.md,
             color: '#5E5CE6',
             alignSelf: 'center',
@@ -666,7 +719,6 @@ const StyleWelcome = {
             ...tokens.shadow.lg,
         },
         whiteCardText: {
-            fontFamily: 'Montserrat_600SemiBold',
             fontSize: tokens.fontSize.lg,
             marginBottom: tokens.space.md,
             color: '#1A1D23',
@@ -693,13 +745,11 @@ const StyleWelcome = {
             marginBottom: tokens.space.sm,
         },
         whiteCardButtonText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             alignSelf: 'center',
             color: '#495057',
         },
         whiteCardButtonTextSelected: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             alignSelf: 'center',
             color: '#FFFFFF',
@@ -716,12 +766,10 @@ const StyleWelcome = {
             flex: 1,
         },
         whiteCardGroupText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             color: '#495057',
         },
         greyBottomText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.xs,
             marginTop: tokens.space.sm,
             marginHorizontal: tokens.space.sm,
@@ -743,7 +791,6 @@ const StyleWelcome = {
             justifyContent: 'center',
         },
         buttonText: {
-            fontFamily: 'Montserrat_600SemiBold',
             fontSize: tokens.fontSize.md,
             color: '#FFFFFF',
             alignSelf: 'center',
@@ -795,7 +842,6 @@ const StyleWelcome = {
             ...tokens.shadow.lg,
         },
         whiteCardText: {
-            fontFamily: 'Montserrat_600SemiBold',
             fontSize: tokens.fontSize.lg,
             marginBottom: tokens.space.md,
             color: '#F0EAF1',
@@ -822,13 +868,11 @@ const StyleWelcome = {
             marginBottom: tokens.space.sm,
         },
         whiteCardButtonText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             alignSelf: 'center',
             color: '#B1A5B2',
         },
         whiteCardButtonTextSelected: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             alignSelf: 'center',
             color: '#2D1A2E',
@@ -845,12 +889,10 @@ const StyleWelcome = {
             flex: 1,
         },
         whiteCardGroupText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.sm,
             color: '#B1A5B2',
         },
         greyBottomText: {
-            fontFamily: 'Montserrat_500Medium',
             fontSize: tokens.fontSize.xs,
             marginTop: tokens.space.sm,
             marginHorizontal: tokens.space.sm,
@@ -947,17 +989,6 @@ const style = {
             },
             groupsContent: {
                 flex: 1,
-            },
-            noCourse: {
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                paddingVertical: tokens.space.xxl,
-            },
-            noCourseText: {
-                fontSize: tokens.fontSize.md,
-                fontWeight: tokens.fontWeight.medium,
-                opacity: 0.5,
             },
         },
     },
@@ -1181,6 +1212,37 @@ const style = {
 
 export type AppThemeType = typeof Theme.light;
 export type ThemeKey = 'light' | 'dark';
+
+/**
+ * Un etat, pas une couleur.
+ *
+ * Un service ou un module de projection rend un **ton** ; c'est le composant qui le resout sur le
+ * theme courant. Sans ca une couleur redescend dans une couche qui ne sait pas quel theme est actif —
+ * ce que faisait `getLibraryStatus`, qui rendait un hexadecimal clair jusqu'au jalon 6-K.
+ */
+export type SemanticTone = 'success' | 'warning' | 'danger' | 'neutral';
+
+/** La couleur pleine d'un ton. */
+export function toneColor(theme: AppThemeType, tone: SemanticTone): string {
+    return theme[tone];
+}
+
+/** Le fond translucide du meme ton, pour une pastille ou un bandeau. */
+export function toneSoftColor(theme: AppThemeType, tone: SemanticTone): string {
+    return theme[`${tone}Soft` as const];
+}
+
+/**
+ * Les props communes des libelles de boutons de dialogue : un libelle ne se plie JAMAIS sur deux
+ * lignes — il retrecit legerement quand la place manque. Constate sur « Demander mon campus »
+ * (2026-08-30) : plie en deux, le bouton grandissait et desequilibrait toute la rangee. A poser sur
+ * chaque `Text` qui porte un style `buttonText*` de `popup`.
+ */
+export const propsLibelleBouton = {
+    numberOfLines: 1,
+    adjustsFontSizeToFit: true,
+    minimumFontScale: 0.8,
+} as const;
 
 export { tokens, StyleWelcome };
 export default style as typeof style & { Theme: Record<ThemeKey, AppThemeType> };

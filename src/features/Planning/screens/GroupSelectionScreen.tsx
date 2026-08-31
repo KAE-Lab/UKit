@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Animated, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Animated, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,6 +7,9 @@ import Toast from 'react-native-root-toast';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
+import { EmptyState } from '../../../shared/ui/EmptyState';
+import { LoadingState } from '../../../shared/ui/LoadingState';
+import { ScreenState } from '../../../shared/ui/ScreenState';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext, isConnected } from '../../../shared/services/AppCore'
 import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
@@ -36,7 +39,17 @@ export interface HomeScreenState {
 
 class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     static contextType = AppContext;
-    context!: React.ContextType<typeof AppContext>;
+    /**
+     * Le contexte applicatif, type.
+     *
+     * `React.Component` declare `context: unknown` et `contextType` en fournit la **valeur**, pas le
+     * type. Redeclarer le champ ici l'**ecraserait** (TS2612), et le `declare` que TypeScript
+     * recommande est refuse par la couche Flow du preset Babel de React Native : l'application ne
+     * bundlerait plus. Un accesseur donne le meme confort sans toucher a la chaine de build.
+     */
+    private get app(): React.ContextType<typeof AppContext> {
+        return this.context as React.ContextType<typeof AppContext>;
+    }
     scrollY: Animated.Value;
 
     constructor(props: HomeScreenProps) {
@@ -57,13 +70,13 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
         this.props.navigation.setOptions(
             NavBarHelper({
                 title: Translator.get('GROUPS'),
-                themeName: this.context.themeName,
+                themeName: this.app.themeName,
                 scrollY: this.scrollY,
                 headerRight: () => (
                     <View style={{ paddingRight: tokens.space.md }}>
                         <SaveGroupButton
                             groupName={[]}
-                            themeName={this.context.themeName}
+                            themeName={this.app.themeName}
                         />
                     </View>
                 ),
@@ -91,7 +104,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                     key: previousSection,
                     data: [],
                     sectionIndex: ++sectionIndex,
-                    colorIndex: sectionIndex % style.Theme[this.context.themeName].sections.length,
+                    colorIndex: sectionIndex % style.Theme[this.app.themeName].sections.length,
                 };
             }
 
@@ -134,34 +147,26 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
         let list = null;
 
         if (await isConnected()) {
-            try {
-                const groupList = await FetchManager.fetchGroupList();
-                if (groupList === null) throw 'network error';
+            const resultat = await FetchManager.fetchGroupList();
 
-                this.setState({ cacheDate: null });
-                list = groupList.map((e) => ({ name: e }));
-                AsyncStorage.setItem('groups', JSON.stringify({ list, date: moment() })).catch((e) =>
-                    console.warn('Échec de la mise en cache des groupes :', e)
-                );
-            } catch (error: unknown) {
-                if (error && typeof error === 'object' && 'response' in error) {
-                    Toast.show(Translator.get('ERROR_WITH_CODE'), {
-                        duration: Toast.durations.LONG,
-                        position: Toast.positions.BOTTOM,
-                    });
-                } else if (error && typeof error === 'object' && 'request' in error) {
-                    Toast.show(Translator.get('NO_CONNECTION'), {
-                        duration: Toast.durations.SHORT,
-                        position: Toast.positions.BOTTOM,
-                    });
-                } else {
-                    const msg = error instanceof Error ? error.message : String(error);
-                    Toast.show(Translator.get('ERROR_WITH_MESSAGE', msg), {
-                        duration: Toast.durations.LONG,
+            if (resultat.ok === false) {
+                // Le message vient de la famille d'echec, plus d'un reniflage de la forme de l'erreur
+                // axios : une source injoignable, une reponse inattendue et un fichier a corriger ne
+                // disaient qu'une seule chose avant, et en disent trois maintenant
+                // (shared/aetherius/failures.ts).
+                if (resultat.failure.silent !== true) {
+                    Toast.show(Translator.get(resultat.failure.messageKey), {
+                        duration: resultat.failure.retryable ? Toast.durations.SHORT : Toast.durations.LONG,
                         position: Toast.positions.BOTTOM,
                     });
                 }
                 list = await this.getCache();
+            } else {
+                this.setState({ cacheDate: null });
+                list = resultat.groups.map((e) => ({ name: e }));
+                AsyncStorage.setItem('groups', JSON.stringify({ list, date: moment() })).catch((e) =>
+                    console.warn('Échec de la mise en cache des groupes :', e)
+                );
             }
         } else {
             Toast.show(Translator.get('NO_CONNECTION'), {
@@ -205,13 +210,17 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
             <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
+                // `greyBackground` reste le bon choix ICI : dans un bandeau fixe opaque, un champ en
+                // creux est le motif des en-tetes iOS — la surface posee est celle des flottants.
                 backgroundColor: theme.greyBackground,
                 borderRadius: tokens.radius.md,
                 paddingHorizontal: tokens.space.md,
                 marginHorizontal: tokens.space.md,
                 marginTop: tokens.space.xs,
                 marginBottom: tokens.space.md,
-                height: 40,
+                // Le gabarit commun des champs de recherche (50, comme la barre des listes Campus) :
+                // a 40, celle-ci etait la seule naine de l'application.
+                height: 50,
             }}>
                 <MaterialCommunityIcons
                     name="magnify"
@@ -276,20 +285,24 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
 
     renderEmptyState(theme: import('../../../shared/theme/Theme').AppThemeType) {
         return (
-            <View style={[(style.schedule.course.noCourse as never), { backgroundColor: theme.greyBackground }]}>
-                <MaterialCommunityIcons name="magnify-close" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.md, opacity: 0.4 }} />
-                <Text style={[style.schedule.course.noCourseText as never, { color: theme.font }]}>
-                    {Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
-                </Text>
-            </View>
+            // Le fond est celui de l'ecran, `background`. Il etait `greyBackground` — le gris des
+            // pastilles et de la barre d'onglets — que plus aucun autre ecran n'emploie comme fond de
+            // page : l'etat vide apparaissait sur une dalle d'une autre couleur que la liste.
+            <ScreenState theme={theme}>
+                <EmptyState
+                    variant="plain"
+                    icon="magnify-close"
+                    title={Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH_TITLE')}
+                    message={Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}
+                    theme={theme}
+                />
+            </ScreenState>
         );
     }
 
     renderLoading(theme: import('../../../shared/theme/Theme').AppThemeType) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', backgroundColor: theme.background }}>
-                <ActivityIndicator size="large" color={theme.primary} animating={true} />
-            </View>
+            <LoadingState theme={theme} fullScreen />
         );
     }
 
@@ -333,7 +346,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     }
 
     render() {
-        const theme = style.Theme[this.context.themeName];
+        const theme = style.Theme[this.app.themeName];
 
         return (
             <SafeAreaInsetsContext.Consumer>

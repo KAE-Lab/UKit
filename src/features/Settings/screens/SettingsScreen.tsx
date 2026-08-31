@@ -2,26 +2,36 @@ import React from 'react';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { Linking, Text, View, Animated, StyleSheet } from 'react-native';
 import * as Calendar from 'expo-calendar';
-import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { NotificationManager } from '../../../shared/services/NotificationService';
 
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
+import {
+    changerEtablissement,
+    etablissementRetire,
+    nomCourtEtablissement,
+    lienEdtActif,
+    portailPublie,
+    sourceEdt,
+} from '../../../shared/etablissements';
+import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
+import { adoucirLaTransition } from '../../../shared/ui/transitions';
 import style, { tokens } from '../../../shared/theme/Theme';
-import Button from '../../../shared/ui/Button';
 
 
 import {
     SettingsLanguagePopup,
-    SettingsFiltersPopup,
     SettingsResetPopup,
+    SettingsSyncOffPopup,
     SettingsCalendarPopup
 } from '../components/SettingsModals';
+import { SettingsInstitutionPopup } from '../components/SettingsInstitutionPopup';
 
 import {
     DisplaySection,
+    InstitutionSection,
     ThemeSection,
     NotificationsSection,
     AppLaunchingSection,
@@ -36,19 +46,23 @@ export interface SettingsState {
     calendarDialogVisible: boolean;
     calendarSyncEnabled: boolean;
     calendars: import('expo-calendar').Calendar[];
-    filterList: string[];
-    filterTextInput: string | null;
-    filtersDialogVisible: boolean;
     hasCalendarPermission: boolean;
     isSynchronizingCalendar: boolean;
     language: string;
     languageDialogVisible: boolean;
     openFavSwitchValue: boolean;
     resetDialogVisible: boolean;
+    syncOffDialogVisible: boolean;
     selectedCalendar: string | number;
     isDarkMode: boolean;
     courseNotificationsEnabled: boolean;
     courseNotificationDelay: number;
+    institutionDialogVisible: boolean;
+    /** Le nom affiche : il vient du catalogue et change avec lui, d'ou l'etat plutot qu'un calcul. */
+    institutionName: string;
+    /** L'etablissement propose-t-il un compte, et est-il connecte ? Le rappel de l'etape d'accueil. */
+    comptePossible: boolean;
+    compteConnecte: boolean;
 }
 
 class Settings extends React.Component<SettingsProps, SettingsState> {
@@ -56,6 +70,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     // @ts-ignore
     context!: React.ContextType<typeof AppContext>;
     scrollY: Animated.Value;
+    _unsubscribeFocus?: () => void;
 
     constructor(props: SettingsProps) {
         super(props);
@@ -63,19 +78,23 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             calendarDialogVisible: false,
             calendarSyncEnabled: SettingsManager.getCalendarSyncEnabled(),
             calendars: SettingsManager.getCalendars(),
-            filterList: SettingsManager.getFilters(),
-            filterTextInput: null,
-            filtersDialogVisible: false,
             hasCalendarPermission: false,
             isSynchronizingCalendar: SettingsManager.isSynchronizingCalendar(),
             language: SettingsManager.getLanguage(),
             languageDialogVisible: false,
             openFavSwitchValue: SettingsManager.getOpenAppOnFavoriteGroup(),
             resetDialogVisible: false,
+            syncOffDialogVisible: false,
             selectedCalendar: SettingsManager.getSyncCalendar(),
             isDarkMode: SettingsManager.getTheme() === 'dark',
             courseNotificationsEnabled: SettingsManager.getCourseNotificationsEnabled(),
             courseNotificationDelay: SettingsManager.getCourseNotificationDelay(),
+            institutionDialogVisible: false,
+            // Le nom **court** : cette ligne est un espace contraint. Le nom entier reste dans
+            // l'ecran de choix, seul endroit ou il faut reconnaitre une fac inconnue.
+            institutionName: nomCourtEtablissement(),
+            comptePossible: portailPublie(),
+            compteConnecte: false,
         };
         this.scrollY = new Animated.Value(0);
 
@@ -91,17 +110,11 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         }
     };
 
+    // La modale de choix ne confirme que ce qui change : pas de garde a repeter ici.
     setSelectedLanguage = (newLang: string) => {
         this.setState({ language: newLang });
         SettingsManager.setLanguage(newLang);
     };
-
-    setLanguageToFrench = () => { if (this.state.language !== 'fr') this.setSelectedLanguage('fr'); };
-    setLanguageToEnglish = () => { if (this.state.language !== 'en') this.setSelectedLanguage('en'); };
-    setLanguageToSpanish = () => { if (this.state.language !== 'es') this.setSelectedLanguage('es'); };
-
-    refreshFiltersList = () => this.setState({ filterList: SettingsManager.getFilters() });
-    addFilters = (filter: string) => SettingsManager.addFilters(filter.toUpperCase());
 
     toggleOpenFavSwitchValue = () => {
         this.setState({ openFavSwitchValue: !this.state.openFavSwitchValue }, () => {
@@ -161,7 +174,19 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         }
     };
 
+    /**
+     * L'extinction passe par une confirmation, l'allumage non.
+     *
+     * L'asymetrie est voulue : allumer ajoute des evenements, eteindre en **retire** — et pas dans
+     * l'application, dans l'agenda personnel de l'utilisateur. Les deux gestes n'ont pas le meme
+     * cout, ils n'ont donc pas la meme garde.
+     */
     toggleCalendarSync = async () => {
+        if (this.state.calendarSyncEnabled) {
+            this.openSyncOffDialog();
+            return;
+        }
+
         if ((await Calendar.getCalendarPermissionsAsync()).status !== 'granted') {
             const { status } = await Calendar.requestCalendarPermissionsAsync();
             if (status !== 'granted') return;
@@ -179,18 +204,30 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
     openSystemAppSettings = () => Linking.openSettings();
     setIsSynchronizingCalendar = (newState: boolean) => this.setState({ isSynchronizingCalendar: newState });
-    setFilterTextInput = (input: string) => this.setState({ filterTextInput: input.toUpperCase() });
-    submitFilterTextInput = () => {
-        if (this.state.filterTextInput) {
-            this.addFilters(this.state.filterTextInput);
-        }
-    };
 
     openLanguageDialog = () => this.setState({ languageDialogVisible: true });
     closeLanguageDialog = () => this.setState({ languageDialogVisible: false });
 
-    openFiltersDialog = () => this.setState({ filtersDialogVisible: true });
-    closeFiltersDialog = () => this.setState({ filtersDialogVisible: false });
+    openSyncOffDialog = () => this.setState({ syncOffDialogVisible: true });
+    closeSyncOffDialog = () => this.setState({ syncOffDialogVisible: false });
+
+    /**
+     * La modale se ferme d'abord, le retrait court ensuite — meme ordre que la reinitialisation.
+     *
+     * L'etat est relu depuis le service plutot que suppose : la cible a pu etre remise a zero si le
+     * calendrier dedie a ete supprime avec ses evenements (`SettingsManager.disableCalendarSync`).
+     */
+    disableCalendarSync = async () => {
+        this.closeSyncOffDialog();
+        await SettingsManager.disableCalendarSync();
+        this.setState({
+            calendarSyncEnabled: false,
+            selectedCalendar: SettingsManager.getSyncCalendar(),
+            calendars: SettingsManager.getCalendars(),
+        });
+    };
+
+    onSyncOffConfirmed = () => { void this.disableCalendarSync(); };
 
     openResetDialog = () => this.setState({ resetDialogVisible: true });
     closeResetDialog = () => this.setState({ resetDialogVisible: false });
@@ -198,24 +235,77 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     openCalendarDialog = () => this.setState({ calendarDialogVisible: true });
     closeCalendarDialog = () => this.setState({ calendarDialogVisible: false });
 
-    resetApp = () => {
+    openInstitutionDialog = () => this.setState({ institutionDialogVisible: true });
+    closeInstitutionDialog = () => this.setState({ institutionDialogVisible: false });
+
+    /**
+     * La bascule d'etablissement : purger d'abord, selectionner ensuite.
+     *
+     * L'ordre vient de `changerEtablissement` et il n'est pas negociable — une purge jouee apres la
+     * selection courrait contre les ecrans qui se rechargent deja sur le nouvel etablissement. Le
+     * `setEtablissement` qui suit persiste le code et notifie les abonnes, ce qui suffit a faire
+     * repartir le planning et la session sur la bonne universite.
+     */
+    setInstitution = async (code: string) => {
+        await changerEtablissement(code);
+        // La bascule fait apparaitre ou disparaitre des rangees entieres (compte, lien iCal) et
+        // des onglets : rendue d'un coup, elle se lisait comme un accroc — surtout vers ou depuis
+        // « Autre campus », ou tout change. L'adoucissement se pose APRES la purge :
+        // `configureNext` ne couvre que le commit suivant, et n'importe quel commit pendant
+        // l'attente — la modale qui se ferme, le contexte qui purge — le consommait avant la
+        // reorganisation qu'il visait (constate sur appareil le 2026-08-31, deux fois).
+        adoucirLaTransition();
+        SettingsManager.setEtablissement(code);
+        this.setState({ institutionName: nomCourtEtablissement() });
+        // La bascule vide le trousseau : la ligne du compte doit le dire tout de suite, sans attendre
+        // un retour de focus qui n'aura pas lieu — on n'a pas quitte l'ecran.
+        void this.refreshCompte();
+    };
+
+    onInstitutionConfirmed = (code: string) => { void this.setInstitution(code); };
+
+    /**
+     * La modale se ferme d'abord, la purge court ensuite.
+     *
+     * `resetSettings` efface aussi la session universitaire depuis le jalon 6-G : la laisser en place
+     * ferait repartir quelqu'un sur une autre fac en restant connecte au portail de la precedente.
+     */
+    resetApp = async () => {
         this.closeResetDialog();
-        SettingsManager.resetSettings();
+        await SettingsManager.resetSettings();
+    };
+
+    /**
+     * L'etat du compte, relu a chaque retour sur l'ecran.
+     *
+     * Le trousseau n'emet aucun evenement, et l'ecran des identifiants — ou l'on se deconnecte — est
+     * juste a cote : figer la valeur au montage afficherait « connecte » apres une deconnexion, sans
+     * rien pour la corriger. La reprise de focus est le declencheur naturel, et c'est deja celui que
+     * `ScheduleList` utilise pour la meme raison.
+     */
+    refreshCompte = async () => {
+        const credentials = await SecureStoreService.getCredentials();
+        // Ce setState peut faire apparaitre ou disparaitre les rangees compte et lien iCal —
+        // le commit de la cascade de bascule d'etablissement qui restait brut.
+        adoucirLaTransition();
+        this.setState({ comptePossible: portailPublie(), compteConnecte: credentials !== null });
     };
 
     componentDidMount = async () => {
+        this._unsubscribeFocus = this.props.navigation.addListener('focus', () => { void this.refreshCompte(); });
+        void this.refreshCompte();
+
         if ((await Calendar.getCalendarPermissionsAsync()).status === 'granted') {
             this.setState({ hasCalendarPermission: true });
         } else {
             this.toggleCalendarSync();
         }
         SettingsManager.on('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
-        SettingsManager.on('filter', this.refreshFiltersList);
     };
 
     componentWillUnmount = () => {
+        if (this._unsubscribeFocus) this._unsubscribeFocus();
         SettingsManager.unsubscribe('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
-        SettingsManager.unsubscribe('filter', this.refreshFiltersList);
     };
 
 
@@ -223,10 +313,11 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     renderPopups(themeSettings: import('../../../shared/theme/Theme').AppThemeType['settings']) {
         return (
             <>
-                <SettingsLanguagePopup theme={themeSettings} popupVisible={this.state.languageDialogVisible} popupClose={this.closeLanguageDialog} language={this.state.language} setLanguageToFrench={this.setLanguageToFrench} setLanguageToEnglish={this.setLanguageToEnglish} setLanguageToSpanish={this.setLanguageToSpanish} />
-                <SettingsFiltersPopup theme={themeSettings} popupVisible={this.state.filtersDialogVisible} popupClose={this.closeFiltersDialog} filterList={this.state.filterList} filterTextInput={this.state.filterTextInput} setFilterTextInput={this.setFilterTextInput} submitFilterTextInput={this.submitFilterTextInput} />
+                <SettingsLanguagePopup theme={themeSettings} popupVisible={this.state.languageDialogVisible} popupClose={this.closeLanguageDialog} language={this.state.language} onConfirm={this.setSelectedLanguage} />
+                <SettingsSyncOffPopup theme={themeSettings} popupVisible={this.state.syncOffDialogVisible} popupClose={this.closeSyncOffDialog} disableSync={this.onSyncOffConfirmed} />
                 <SettingsResetPopup theme={themeSettings} popupVisible={this.state.resetDialogVisible} popupClose={this.closeResetDialog} resetApp={this.resetApp} />
                 <SettingsCalendarPopup theme={themeSettings} popupVisible={this.state.calendarDialogVisible} popupClose={this.closeCalendarDialog} setCalendar={this.setCalendar} selectedCalendar={this.state.selectedCalendar} />
+                <SettingsInstitutionPopup theme={themeSettings} popupVisible={this.state.institutionDialogVisible} popupClose={this.closeInstitutionDialog} codeActif={SettingsManager.getEtablissement()} onConfirm={this.onInstitutionConfirmed} />
             </>
         );
     }
@@ -237,7 +328,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         const themeSettings = theme.settings;
         const calendar = this.state.calendars.find((cal) => this.state.selectedCalendar === cal.id);
         const calendarName = !!calendar ? calendar.title : this.state.selectedCalendar === 'UKit' ? 'UKit' : Translator.get('NOT_FOUND');
-        const lastSyncDate = SettingsManager.getLastSyncDate();
 
         const renderHeader = (insets: import('react-native-safe-area-context').EdgeInsets | null) => {
             const topPadding = (insets?.top || 0);
@@ -252,7 +342,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                 <Animated.View style={[styles.headerContainer, { paddingTop: topPadding, backgroundColor: 'transparent', opacity }]}>
                     <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
                         <Text style={[styles.greetingText, { color: theme.font }]}>
-                            {Translator.get('SETTINGS') || 'Paramètres'}
+                            {Translator.get('SETTINGS')}
                         </Text>
                     </View>
                 </Animated.View>
@@ -270,11 +360,24 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                 )}
                 scrollEventThrottle={16}
             >
+                <InstitutionSection
+                    themeSettings={themeSettings}
+                    theme={theme}
+                    institutionName={this.state.institutionName}
+                    institutionRetiree={etablissementRetire()}
+                    openInstitutionDialog={this.openInstitutionDialog}
+                    comptePossible={this.state.comptePossible}
+                    compteConnecte={this.state.compteConnecte}
+                    openCompte={() => this.props.navigation.navigate('CredentialsSettings')}
+                    lienEdtPossible={sourceEdt().kind === 'abonnement' || sourceEdt().kind === 'lien-attendu'}
+                    lienEdtPose={lienEdtActif() !== null}
+                    openLienEdt={() => this.props.navigation.navigate('LienEdt')}
+                />
                 <DisplaySection
                     themeSettings={themeSettings}
                     language={this.state.language}
                     openLanguageDialog={this.openLanguageDialog}
-                    openFiltersDialog={this.openFiltersDialog}
+                    openFilters={() => this.props.navigation.navigate('Filters')}
                 />
                 <ThemeSection
                     themeSettings={themeSettings}
@@ -300,7 +403,8 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     themeSettings={themeSettings}
                     theme={theme}
                     hasCalendarPermission={this.state.hasCalendarPermission}
-                    lastSyncDate={lastSyncDate}
+                    lastSyncDate={SettingsManager.getLastSyncDate()}
+                    lastSyncFailed={SettingsManager.getLastSyncFailed()}
                     calendarSyncEnabled={this.state.calendarSyncEnabled}
                     toggleCalendarSync={this.toggleCalendarSync}
                     calendarName={calendarName}
@@ -339,9 +443,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     greetingText: {
-        fontSize: 34,
+        fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold,
-        fontFamily: 'Montserrat_600SemiBold',
         marginBottom: tokens.space.md,
     },
 });

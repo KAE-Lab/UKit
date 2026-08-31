@@ -1,0 +1,45 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.edt.abonnement",
+  "description": "Le corps d'un calendrier iCalendar, a l'adresse que l'etudiant a collee. C'est le REPLI UNIVERSEL du jalon 6-J : la ou ukit.portail.<code>.edt vise un serveur ADE connu avec un referentiel releve par un auteur, celui-ci ne connait rien du tout et marche partout ou un etablissement publie un export. Quatre decisions expliquent sa forme, et aucune n'est une economie. (1) Il n'est PAS sous le prefixe ukit.portail. et il est EMBARQUE dans le binaire, parce qu'il n'appartient a aucun etablissement : un fichier par universite le rendrait aussi couteux que ce qu'il remplace, et c'est precisement ce qu'il existe pour eviter. (2) Il ne prend AUCUNE borne de dates et demande le lien VERBATIM. C'est la seule forme reellement universelle : ADE accepte firstDate/lastDate en parametres, mais d'autres produits figent la fenetre a l'export et un parametre inconnu y est ignore — ou pire, casse la requete. Le filtrage par date est donc applicatif (IcsMapping.ts), ce qui est aussi la seule facon de traiter les deux cas avec le meme fichier. (3) Il ne rend PAS des cours : il rend le corps du calendrier, tel quel. Interpreter un iCalendar est le travail de l'application, parce qu'un Blueprint ne calcule pas — il faudrait reimplementer le meme decoupage a l'identique dans les deux moteurs. (4) Aucun secret n'est declare : le lien EST le secret, il arrive en entree depuis le trousseau (SecureStoreService, cle UKIT_EDT_LIENS) et le moteur le masque dans les evenements comme toute autre entree. L'assert de forme est une APPARTENANCE et non un prefixe : le sous-ensemble d'expressions n'a ni tranche ni startswith, corollaire du refus d'un from='regex' cote moteur. Il exige le moteur 0.5.4 pour son extraction from='text' (jalon 3-I d'Aetherius). Un calendrier sans aucun VEVENT reste un SUCCES — une annee sans cours est un resultat, pas une panne, et c'est l'ecran de saisie qui le dit a l'etudiant plutot que de le rejeter.",
+  "act": "vector",
+  "inputs": {
+    "lien": {
+      "type": "string",
+      "required": true,
+      "description": "L'adresse d'abonnement collee par l'etudiant, telle quelle. Elle vient du trousseau et vaut un mot de passe : un lien d'abonnement personnel ouvre un emploi du temps nominatif sans demander d'identifiant."
+    }
+  },
+  "vars": {
+    "timeout_ms": 30000
+  },
+  "steps": [
+    {
+      "id": "cal",
+      "action": "http.request",
+      "method": "GET",
+      "url": "{{ inputs.lien }}",
+      "headers": {
+        "Accept": "text/calendar, text/plain"
+      },
+      "timeout_ms": "{{ vars.timeout_ms }}",
+      "expect": {
+        "status": 200
+      },
+      "extract": {
+        "ics": {
+          "from": "text"
+        }
+      }
+    },
+    {
+      "id": "forme",
+      "action": "assert",
+      "condition": "{{ 'BEGIN:VCALENDAR' in steps.cal.ics }}",
+      "message": "la reponse n'est pas un calendrier : le lien colle pointe une page et non un export iCalendar"
+    }
+  ],
+  "outputs": {
+    "ics": "{{ steps.cal.ics }}"
+  }
+}

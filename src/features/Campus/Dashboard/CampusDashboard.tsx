@@ -11,6 +11,7 @@ import { BdeSection } from './components/BdeSection';
 import { CrousSection } from './components/CrousSection';
 import { LibrarySection } from './components/LibrarySection';
 import { FreeRoomSection } from './components/FreeRoomSection';
+import { crousRegionActive, sallesDisponibles } from '../../../shared/etablissements';
 
 const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) => {
     const { themeName } = useContext(AppContext);
@@ -43,7 +44,7 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
             <Animated.View style={[styles.headerContainer, { paddingTop: topPadding, backgroundColor: 'transparent', opacity }]}>
                 <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
                     <Text style={[styles.greetingText, { color: theme.font }]}>
-                        {Translator.get('CAMPUS') || 'Campus'}
+                        {Translator.get('CAMPUS')}
                     </Text>
                 </View>
             </Animated.View>
@@ -66,9 +67,28 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
                         contentContainerStyle={{ paddingTop: (insets?.top || 0) + 60, paddingBottom: tokens.space.xxl + 80 }}
                     >
                         <BdeSection navigation={navigation} />
-                        <CrousSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                        {/*
+                          * Les restaurants suivent la region CROUS du catalogue depuis le jalon 6-J.
+                          * `null` fait disparaitre la section : un etablissement hors des regions
+                          * couvertes n'a pas de restaurants a proposer, et lui servir ceux d'une autre
+                          * ville serait une donnee fausse qui a l'air juste — exactement ce que la
+                          * phase supprime. Les bibliotheques, elles, n'ont pas ce probleme : leur
+                          * balayage part de la position de l'etudiant.
+                          */}
+                        {crousRegionActive() !== null && (
+                            <CrousSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                        )}
                         <LibrarySection navigation={navigation} userLat={location.lat} userLon={location.lon} />
-                        <FreeRoomSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                        {/*
+                          * Les salles libres se reconstruisent depuis les salles du serveur
+                          * d'emplois du temps : une universite qui n'en publie pas n'a rien a
+                          * montrer ici. La section disparait plutot que d'afficher un carrousel vide
+                          * ou une erreur permanente — meme regle que la ligne de messagerie d'un
+                          * etablissement sans webmail extractible (jalon 6-G).
+                          */}
+                        {sallesDisponibles() && (
+                            <FreeRoomSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                        )}
                     </Animated.ScrollView>
                 </View>
             )}
@@ -93,9 +113,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     greetingText: {
-        fontSize: 34,
+        fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold as '700',
-        fontFamily: 'Montserrat_600SemiBold',
         marginBottom: tokens.space.md,
     },
 });
