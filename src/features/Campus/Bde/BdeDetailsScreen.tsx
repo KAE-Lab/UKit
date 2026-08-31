@@ -17,16 +17,17 @@
 
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, Image, Animated, TouchableOpacity, Linking } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { PiedFlottant, PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
+import { VisionneuseImages } from '../../../shared/ui/VisionneuseImages';
 import { CampusMapSection } from '../components/CampusMapSection';
 import { DescriptionAnnonce } from './DescriptionAnnonce';
-import { PastilleEmetteur, teinteDAnnonce } from './PastilleEmetteur';
+import { GlypheFiligrane } from '../../../shared/ui/GlypheFiligrane';
+import { teinteDAnnonce } from './PastilleEmetteur';
 import { BdeAnnonce } from '../services/BdeService';
 
 export interface BdeDetailsRouteParams {
@@ -62,38 +63,38 @@ function useImageRatio(imageUrl?: string): number {
 }
 
 /**
- * L'accroche, dans le meme systeme que la pastille d'emetteur : fond teinte a 10 %, icone et texte
- * dans la teinte d'identite — mais **multi-ligne**. C'est le debordement qui l'avait chassee des
- * pastilles (une phrase dans une pastille a une ligne sortait de l'ecran) ; la ligne grise essayee
- * ensuite faisait deux systemes pour deux voisines. Celle-ci enveloppe sa phrase.
+ * L'accroche : un **chapeau** editorial — le « deck » gris de presse, semibold, pose nu.
+ *
+ * Cinq formes essayees avant celle-ci : la pastille a une ligne debordait de l'ecran ; la ligne
+ * grise faisait deux systemes pour deux voisines ; la pastille multi-ligne empilait deux capsules
+ * identiques sous le titre et passait pour un avertissement systeme ; le texte teinte, enfin,
+ * ajoutait un troisieme registre colore a la page. La regle d'ensemble (2026-08-31) : les textes ne
+ * jouent que sur la taille et la graisse — la couleur d'identite vit dans les elements, pas dans
+ * les phrases.
  */
-function AccrocheAnnonce({ texte, teinte }: { texte: string; teinte: string }) {
+function AccrocheAnnonce({ texte, theme }: { texte: string; theme: AppThemeType }) {
     return (
-        <View style={{
-            flexDirection: 'row',
-            alignItems: 'flex-start',
-            alignSelf: 'flex-start',
-            backgroundColor: `${teinte}1A`,
-            paddingHorizontal: tokens.space.sm,
-            paddingVertical: tokens.space.xs,
-            borderRadius: tokens.radius.md,
-        }}>
-            <MaterialCommunityIcons name="information-outline" size={14} color={teinte} style={{ marginTop: tokens.space.xxs }} />
-            <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold, color: teinte, marginLeft: tokens.space.xs, flexShrink: 1, lineHeight: 20 }}>
-                {texte}
-            </Text>
-        </View>
+        <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold, color: theme.fontSecondary, lineHeight: 22 }}>
+            {texte}
+        </Text>
     );
 }
 
-/** Un visuel dans son cadre adaptatif — le visuel principal comme chaque image de la galerie. */
-function CadreVisuel({ url, theme }: { url: string; theme: AppThemeType }) {
+/**
+ * Un visuel dans son cadre adaptatif — le visuel principal comme chaque image de la galerie.
+ * Le toucher l'ouvre en plein ecran : une affiche se lit de pres (VisionneuseImages).
+ */
+function CadreVisuel({ url, theme, onPress }: { url: string; theme: AppThemeType; onPress: () => void }) {
     const ratio = useImageRatio(url);
 
     return (
-        <View style={{ width: '100%', aspectRatio: ratio, backgroundColor: theme.greyBackground, borderRadius: tokens.radius.lg, overflow: 'hidden' }}>
+        <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={onPress}
+            style={{ width: '100%', aspectRatio: ratio, backgroundColor: theme.greyBackground, borderRadius: tokens.radius.lg, overflow: 'hidden' }}
+        >
             <Image source={{ uri: url }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
-        </View>
+        </TouchableOpacity>
     );
 }
 
@@ -131,11 +132,19 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
     const theme = style.Theme[themeName];
     const { annonce } = route.params || {};
 
+    // Avant le retour conditionnel : les hooks se declarent inconditionnellement.
+    const [imageOuverte, setImageOuverte] = useState<number | null>(null);
+
     if (!annonce) return null;
 
     // L'identite de l'annonce : sa couleur de palette, l'accent en repli — c'est elle qui teinte la
     // pastille d'emetteur, l'accroche, et le point de depart des sections.
     const teinte = teinteDAnnonce(annonce.couleur, theme);
+
+    // Tous les visuels de la fiche dans une seule visionneuse balayable : le principal en tete,
+    // la galerie a la suite — l'index ouvert est celui du visuel touche.
+    const visuels = [annonce.image_url, ...(annonce.images ?? [])]
+        .filter((url): url is string => typeof url === 'string' && url !== '');
 
     const handlePressCTA = () => {
         const lien = annonce.cta_link;
@@ -164,7 +173,7 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                             cassee, et la fiche omet ce qui manque plutot que de le remplacer. */}
                         {annonce.image_url ? (
                             <View style={{ paddingHorizontal: tokens.space.md }}>
-                                <CadreVisuel url={annonce.image_url} theme={theme} />
+                                <CadreVisuel url={annonce.image_url} theme={theme} onPress={() => setImageOuverte(0)} />
                             </View>
                         ) : null}
 
@@ -173,23 +182,39 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                             flottaient dans le vide. L'image suit, pour que ses bords tombent sur
                             ceux du bouton. */}
                         <View style={{ paddingHorizontal: tokens.space.md, paddingTop: tokens.space.lg }}>
-                            <Text style={{ fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.bold, color: theme.font, marginBottom: tokens.space.sm }}>
-                                {annonce.title}
-                            </Text>
-
-                            {/* La pastille d'emetteur porte l'identite de l'annonce (`couleur` en
-                                base) — le meme fond a 10 % que le Badge, dans SA teinte. */}
-                            <View style={{ flexDirection: 'row', marginBottom: tokens.space.sm }}>
-                                <PastilleEmetteur nom={annonce.issuer_name} teinte={teinte} />
+                            {/*
+                              * Le heros, en grammaire d'article : kicker (l'emetteur, petites
+                              * capitales grises), titre en corps d'affiche, chapeau teinte — et le
+                              * filigrane signature du depot, permis ici parce que la fiche est une
+                              * surface unique, jamais dans les listes. La pastille d'emetteur a
+                              * vecu ici et a ete defaite (2026-08-31) : sous le titre, elle
+                              * s'empilait avec l'accroche en deux capsules jumelles.
+                              */}
+                            <View style={{ marginBottom: tokens.space.lg }}>
+                                <GlypheFiligrane icone={{ name: 'bullhorn' }} couleur={teinte} rayon={0} />
+                                <Text style={{
+                                    fontSize: tokens.fontSize.xs,
+                                    fontWeight: tokens.fontWeight.semibold,
+                                    color: theme.fontSecondary,
+                                    letterSpacing: 0.8,
+                                    textTransform: 'uppercase',
+                                    marginBottom: tokens.space.xs,
+                                }}>
+                                    {annonce.issuer_name}
+                                </Text>
+                                <Text style={{
+                                    fontSize: tokens.fontSize.xxl,
+                                    fontWeight: tokens.fontWeight.bold,
+                                    color: theme.font,
+                                    lineHeight: 34,
+                                    marginBottom: annonce.info_label ? tokens.space.sm : 0,
+                                }}>
+                                    {annonce.title}
+                                </Text>
+                                {annonce.info_label ? (
+                                    <AccrocheAnnonce texte={annonce.info_label} theme={theme} />
+                                ) : null}
                             </View>
-
-                            {/* Le meme systeme que la pastille d'emetteur, en version multi-ligne :
-                                deux voisines a deux styles se lisaient comme un accident. */}
-                            {annonce.info_label ? (
-                                <View style={{ marginBottom: tokens.space.md }}>
-                                    <AccrocheAnnonce texte={annonce.info_label} teinte={teinte} />
-                                </View>
-                            ) : null}
 
                             {annonce.long_desc ? (
                                 <DescriptionAnnonce texte={annonce.long_desc} couleurDepart={annonce.couleur} theme={theme} />
@@ -200,7 +225,7 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                             {annonce.images !== undefined ? (
                                 <View style={{ marginTop: tokens.space.lg, gap: tokens.space.md }}>
                                     {annonce.images.map((url) => (
-                                        <CadreVisuel key={url} url={url} theme={theme} />
+                                        <CadreVisuel key={url} url={url} theme={theme} onPress={() => setImageOuverte(visuels.indexOf(url))} />
                                     ))}
                                 </View>
                             ) : null}
@@ -217,6 +242,8 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                     {annonce.cta_text && annonce.cta_link ? (
                         <BarreDAction texte={annonce.cta_text} theme={theme} onPress={handlePressCTA} />
                     ) : null}
+
+                    <VisionneuseImages urls={visuels} index={imageOuverte} fermer={() => setImageOuverte(null)} />
                 </View>
             )}
         </SafeAreaInsetsContext.Consumer>

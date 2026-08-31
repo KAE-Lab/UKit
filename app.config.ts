@@ -7,8 +7,8 @@ export default {
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
-	version: '5.6.1',
-	versionCode: 550,
+	version: '6.0.0',
+	versionCode: 551,
 	orientation: 'portrait',
 	primaryColor: '#006F9F',
 	icon: './assets/icons/icon.png',
@@ -37,7 +37,7 @@ export default {
 	android: {
 		package: 'com.bordeaux1.emplois',
 		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
-		versionCode: 541,
+		versionCode: 542,
 	},
 	androidStatusBar: {
 		barStyle: 'light-content',

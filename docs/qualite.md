@@ -23,7 +23,7 @@ actuel du dépôt, à connaître pour distinguer une régression d'un héritage 
 | Commande | État | Détail |
 |---|---|---|
 | `npx tsc --noEmit` | **verte** | zéro erreur depuis le 2026-08-16 — voir ci-dessous pour les trois `TS2612` historiques |
-| `npx eslint .` | **0 erreur, 47 warnings** | 11 `no-explicit-any` et **36 `ukit/no-style-literals`** |
+| `npx eslint .` | **0 erreur, 36 warnings** | 11 `no-explicit-any` et **25 `ukit/no-style-literals`** — base réduite de 47 à 36 à la clôture 6-Z (2026-08-31) |
 
 La règle de contribution est donc : **ne pas augmenter ces compteurs**, et les réduire quand on
 travaille dans un fichier concerné.

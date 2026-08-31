@@ -1,37 +1,16 @@
 /**
- * La pastille d'emetteur d'une annonce, teintee par son identite (`couleur` en base).
+ * La teinte d'identite d'une annonce (`couleur` en base) : sa couleur de palette, l'accent en repli.
  *
- * Le `Badge` partage ne connait que la couleur d'action et les tons semantiques — l'identite d'une
- * annonce est une couleur de palette arbitraire, donc la pastille se compose ici, au motif exact du
- * Badge (fond a 10 %, `radius.md`). Partagee par la carte de liste, le carrousel et la fiche : les
- * trois surfaces disent l'emetteur d'une seule voix, dans la teinte de l'annonce.
+ * Le fichier a porte une **pastille d'emetteur**, essayee sur les trois surfaces et defaite partout
+ * (2026-08-31) : sur les cartes, une capsule coloree par element etait du bruit repete — la regle
+ * qui interdit le filigrane dans les listes — et sur la fiche elle s'empilait avec l'accroche en
+ * deux capsules jumelles. L'emetteur se dit desormais en **kicker** — petites capitales grises
+ * au-dessus du titre, la grammaire des cartes d'article — et seule la teinte a survecu : c'est elle
+ * qui colore l'accroche, les tetes de section et l'affiche typographique d'une carte sans visuel.
  */
 
-import React from 'react';
-import { Text, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { type AppThemeType } from '../../../shared/theme/Theme';
 
-import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
-
-/** La teinte d'identite d'une annonce : sa couleur de palette, l'accent en repli. */
 export function teinteDAnnonce(couleur: number | undefined, theme: AppThemeType): string {
     return theme.sectionsHeaders[couleur ?? -1] ?? theme.accent ?? theme.primary;
-}
-
-export function PastilleEmetteur({ nom, teinte }: { nom: string; teinte: string }) {
-    return (
-        <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            backgroundColor: `${teinte}1A`,
-            paddingHorizontal: tokens.space.sm,
-            paddingVertical: tokens.space.xs,
-            borderRadius: tokens.radius.md,
-        }}>
-            <MaterialCommunityIcons name="account" size={14} color={teinte} />
-            <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold, color: teinte, marginLeft: tokens.space.xs, flexShrink: 1 }}>
-                {nom}
-            </Text>
-        </View>
-    );
 }

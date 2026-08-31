@@ -8,10 +8,13 @@ Ce fichier a été ouvert avec le socle de documentation : les versions antérie
 pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 [Releases GitHub](https://github.com/KAE-Lab/UKit/releases) et dans l'historique Git.
 
-## [Non publié]
+## [6.0.0] - 2026-08-31
 
 Le plus gros ensemble de changements depuis la reprise du projet : quatre fonctionnalités majeures,
-puis une refonte complète de l'architecture. Rien de tout cela n'est encore publié sur les stores.
+une refonte complète de l'architecture, puis une refonte visuelle intégrale. Pour l'utilisateur,
+l'essentiel tient en une ligne : **les pannes deviennent lisibles, et les corrections arrivent sans
+mise à jour.** La phase ne rend pas les sources fiables — elle rend leurs pannes honnêtes et leurs
+réparations rapides.
 
 ### Ajouté
 
@@ -1093,6 +1096,60 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   alors qu'ils peuvent s'afficher sur « Autre campus » — où aucune université n'est désignée — sont
   reformulés en neutre : l'invitation à coller le lien iCal parle du lien, plus d'une fac fantôme.
   L'anglais et l'espagnol ne suivent que là où le sens a changé.
+- **La fiche d'annonce devient un article, la carte sans visuel une affiche typographique.** La
+  première vraie annonce longue — le patch note de la v6 — a mis quatre défauts sous les yeux, tous
+  défaits : le cycle de couleurs balayait la palette entière sur sept sections, rouge de danger
+  compris — toutes les têtes prennent désormais la couleur d'identité de l'annonce ; chaque bloc de
+  texte vivait dans une carte grise bordée et la fiche se lisait comme un tableau de bord de widgets
+  — le texte se pose sur le fond, les têtes colorées suffisent à structurer ; l'accroche en pastille
+  empilait deux capsules identiques sous le titre et son icône la faisait passer pour un
+  avertissement — c'est un chapeau maintenant, teinté, posé nu ; et la carte sans visuel était un
+  carré de vide autour d'un pictogramme gris — l'accroche y est rendue en grande typographie sur
+  fond teinté, façon carte d'Apple News, et sans accroche l'icône reste mais grande et teintée.
+  L'ensemble prend la grammaire d'article : l'émetteur devient un **kicker** — petites capitales
+  grises au-dessus du titre, sur la carte comme sur la fiche — à la place de la pastille colorée,
+  du bruit répété sur les cartes et une capsule jumelle de l'accroche sur la fiche ; le titre de
+  fiche passe en corps d'affiche avec le filigrane signature derrière le héros (permis là : une
+  surface unique) ; le paragraphe d'ouverture est un lead, plus grand que le corps, et le blanc
+  entre sections fait les chapitres. Le mini-langage gagne l'**exergue** (`> phrase`) — le
+  pull-quote de presse, la citation en grand sur un filet teinté, ce qui casse la linéarité d'un
+  long texte sans image — les **sous-puces** sur deux niveaux (`--`, `---`), indentées au signe
+  dégressif, nées du premier vrai patch note qui listait des sections et leurs détails — le
+  **transition** (`= phrase`), l'emphase moyenne entre le paragraphe et l'exergue : la phrase en
+  plus grand sous un court trait teinté, le crosshead de presse (deux formes essayées et défaites :
+  le surligneur à fond teinté faisait étiquette, la bascule à droite ne passait pas à la lecture) —
+  le pied de lettre gagne la **plume en filigrane**, le geste de la Scolarité permis là parce que
+  c'est un moment unique, pas un élément répété — la **signature** (`~ nom`),
+  alignée à droite et teintée comme la fin d'une lettre — et l'article se clôt sur une marque de
+  fin, le point teinté des colonnes de presse, qui s'efface quand une signature termine le texte :
+  un nom qui signe est déjà une fin. Et une règle d'ensemble unifie les emphases (les premières
+  formes se lisaient comme un brouillon de styles) : **les textes ne jouent que sur la taille et la
+  graisse, la couleur vit dans de petits éléments** — l'exergue garde son filet teinté à gauche
+  mais son texte passe à la couleur du thème, la transition garde son trait court, le chapeau passe
+  au gris du « deck » de presse, et le guillemet en filigrane est défait avec le texte teinté. Le
+  corps gagne le **gras en ligne** (`**mots**` dans un paragraphe ou une puce) : appuyer un mot
+  sans changer de registre.
+- **Les visuels d'une annonce s'ouvrent en plein écran.** Toucher l'affiche ou une image de la
+  galerie ouvre une visionneuse — pincer pour zoomer, balayer pour fermer, toutes les images de la
+  fiche à la suite. Le composant est partagé (`VisionneuseImages`, façade au-dessus de
+  `react-native-image-viewing`) : les cartes des restaurants et autres visuels pourront s'y
+  brancher sans réimporter la bibliothèque.
+- **Un créneau à plusieurs cours ne notifie que le cours consulté.** Chaque cours d'un groupe
+  superposé partait en notification — plusieurs à la même minute. Le filtre regroupe par
+  chevauchement comme l'écran, et retient le cours que le carrousel a mémorisé — une mémoire rendue
+  **réellement solide** : persistée (elle survit aux fermetures et redémarrages), resynchronisée
+  après son chargement (montés avant la lecture du stockage — au rechargement Metro, toujours — les
+  carrousels partaient de zéro), à **clé canonique sans date** (le choix se projette sur tous les
+  jours au même créneau, quel que soit l'ordre dans lequel le serveur sert les cours), et au
+  souvenir par **empreinte du cours** plutôt que par rang — un rang pointait un autre cours dès que
+  l'ordre changeait, et la matière seule confondait deux TD parallèles d'une même UE : le choix
+  retombait toujours sur le premier des deux, un faux état de base qu'aucun swipe ne déplaçait.
+  L'empreinte ajoute la description et se cherche en deux temps, exacte puis matière seule — une
+  salle qui change ne perd pas le souvenir. Les notifications attendent ce chargement avant de
+  filtrer.
+- **L'onglet Scolarité sans compte porte le grand titre des onglets** — posé exactement comme ceux
+  de Campus et des Réglages — et son formulaire passe en bandeau compact : deux « Scolarité » à
+  l'écran se seraient répété.
 - **La modale de filtres des listes Campus rejoint le dialecte des Réglages.** Ses ronds à cocher
   étaient le dernier vestige de l'ancien style de choix, effacé partout ailleurs à la refonte : les
   options prennent la forme des boutons de l'application, coche à droite, emplacement réservé. Pas
@@ -1200,6 +1257,15 @@ puis une refonte complète de l'architecture. Rien de tout cela n'est encore pub
   dernière synchronisation a échoué » — au lieu de laisser l'échec muet, indiscernable d'un bouton
   cassé. L'écriture d'un passage complet rejoint `CalendarSyncHelpers`, comme les autres pièces sans
   état du calendrier.
+- **Les notifications de cours ne peuvent plus partir en double.** Chaque programmation annule tout
+  puis reprogramme, et trois appelants pouvaient s'entrelacer — les deux vues du planning chargent
+  en même temps au lancement : annule, annule, programme tout, programme tout, et chaque cours
+  notifiait deux fois. Les passages se suivent désormais dans une file ; l'état final est celui du
+  dernier appel.
+- **L'onglet Scolarité sans compte EST le formulaire de connexion.** L'état vide « connecte ton
+  compte » obligeait un tap de plus vers exactement la même page ; l'onglet la montre directement,
+  sans en-tête collant — le bandeau du formulaire porte déjà le titre, posé dans le vide. L'en-tête
+  collant reste au tableau de bord, qui a un dossier à saluer.
 - **Un cours sans heure de fin ne fait plus échouer la synchronisation entière.** C'était la cause
   du gel ci-dessus, démasquée par lui : Celcat sert des cours sans fin, la projection porte alors
   `end: null`, et le repli de la projection calendrier posait « maintenant » à la place — la fin

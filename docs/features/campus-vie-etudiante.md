@@ -84,7 +84,7 @@ en même temps qu'on change de source aurait mélangé deux changements dont un 
 | `image_url` | `image_url` | URL du bucket `media` |
 | `images` | `images` | **jsonb**, tableau d'URLs : la galerie de la fiche, sous la description. Une entrée qui n'est pas une chaîne est ignorée, un tableau vide est omis |
 | `lat`, `lng` | `location` | le lieu de l'événement : les **deux** présents, la fiche montre une carte « S'y rendre » — l'un sans l'autre est omis |
-| `couleur` | `couleur` | l'identité visuelle : un index de la palette de sections (0-3, 5) — pastille d'émetteur, icône d'accroche, départ du cycle des sections. Omis si pas un entier positif |
+| `couleur` | `couleur` | l'identité visuelle : un index de la palette de sections (0-3, 5) — accroche, têtes de section, affiche typographique. Omis si pas un entier positif |
 | `accroche` | `info_label` | étiquette courte : date, lieu, tarif |
 | `description` | `long_desc` | la description longue de la fiche |
 | `cta_texte` | `cta_text` | libellé du bouton d'action |
@@ -116,15 +116,24 @@ carte, les listes deviennent des **puces** comme les plats d'un menu :
 | `# Titre` | une section : tête colorée, icône par défaut |
 | `# icone\|Titre` | idem, avec l'icône MaterialCommunityIcons nommée (`calendar-check`, `map-marker`…) |
 | `- élément` | une puce, le point à la teinte de sa section |
+| `-- élément` | une sous-puce, indentée, au point plus discret |
+| `--- élément` | un troisième niveau, au tiret — la profondeur s'arrête là |
+| `> phrase` | une exergue : la phrase en grand, texte du thème, filet teinté à gauche — le pull-quote de presse |
+| `**mots**` | dans un paragraphe ou une puce : le gras en ligne, le seul enrichissement au fil du texte |
+| `= phrase` | une transition : la phrase en plus grand sous un court trait teinté — le crosshead de presse |
+| `~ nom` | une signature : alignée à droite, teintée — la fin d'une lettre. Quand elle clôt le texte, la marque de fin s'efface : un nom qui signe est déjà une fin |
 | ligne vide | séparation de paragraphes |
 
-Les couleurs des têtes **tournent** sur la palette des sections (`sectionsHeaders`, l'index 4 évité
-comme partout), à partir de la **couleur d'identité** de l'annonce — la colonne `couleur`, qui
-teinte aussi la pastille d'émetteur (sur la fiche **et** sur les cartes du carrousel et de la
-grille, [`PastilleEmetteur`](../../src/features/Campus/Bde/PastilleEmetteur.tsx)) et l'accroche —
-une pastille du même système, multi-ligne parce qu'elle porte une phrase. Tout vient du texte et de la
-ligne publiés : un BDE structure et colore son annonce **sans release**. Une icône inconnue rend le
-glyphe `?` — visible à la relecture, corrigeable à la publication, jamais un plantage.
+**Une annonce, une couleur** (2026-08-31) : toutes les têtes prennent la **couleur d'identité** de
+l'annonce — la colonne `couleur` (index de `sectionsHeaders`, le 4 interdit comme partout,
+[`teinteDAnnonce`](../../src/features/Campus/Bde/PastilleEmetteur.tsx)), qui teinte aussi l'accroche
+et l'affiche typographique d'une carte sans visuel. Le **cycle**
+de palette a été essayé et défait : sur le patch note de la v6 — sept sections — il balayait la
+palette entière, rouge de danger compris, sur des contenus neutres. Le contenu des sections se pose
+**sur le fond**, sans carte : la carte grise par section, essayée et défaite le même jour, faisait
+de la fiche un tableau de bord de widgets. Tout vient du texte et de la ligne publiés : un BDE
+structure et colore son annonce **sans release**. Une icône inconnue rend le glyphe `?` — visible à
+la relecture, corrigeable à la publication, jamais un plantage.
 
 Le filtre applicatif date par `moment()` depuis le jalon [6-E](../phase-6/6-e-planning.md), et non
 plus par `new Date()` : la [simulation temporelle](../qualite.md) l'atteint donc, et une annonce
@@ -136,12 +145,19 @@ cartes affichent plein cadre. Un autre format n'est pas rejeté, et n'est **jama
 carte l'affiche entier sur un fond flou tiré de l'image, et la fiche l'affiche à son ratio, borné
 entre 3:4 et 16:9. Procédure complète et clés : [backend.md](../backend.md#publier).
 
-**La fiche parle le vocabulaire des fiches** (2026-08-30) : l'émetteur est la pastille partagée
-(`Badge`, la même que la carte de liste), l'accroche est une **ligne d'information** et non une
-pastille — elle porte une phrase, et une phrase dans une pastille déborde, c'est ce que l'écran
-faisait. La galerie (`images`) suit la description, chaque image dans le même cadre adaptatif que le
-visuel principal, et le lieu (`lat`/`lng`) se termine par la même section « S'y rendre » que les
-fiches de restaurant et de BU ([`CampusMapSection`](../../src/features/Campus/components/CampusMapSection.tsx)).
+**La fiche parle la grammaire d'article** (2026-08-31) : kicker d'émetteur, titre en corps
+d'affiche avec le filigrane signature derrière le héros (permis là : une surface unique, jamais
+dans les listes), et l'accroche est un **chapeau** — teinte d'identité,
+semibold, posé nu sur le fond (2026-08-31). Quatre formes essayées avant : pastille à une ligne qui
+débordait, ligne grise à deux systèmes, pastille multi-ligne qui empilait deux capsules identiques
+sous le titre et passait pour un avertissement système avec son icône. Sur la **carte sans visuel**,
+l'accroche fait l'affiche : grande typographie teintée sur fond doux — le carré gris à pictogramme
+centré se lisait comme une image cassée. La galerie (`images`) suit la description, chaque image dans le même cadre adaptatif que le
+visuel principal — et **toucher un visuel l'ouvre en plein écran**
+([`VisionneuseImages`](../../src/shared/ui/VisionneuseImages.tsx), pincer pour zoomer, balayer pour
+fermer, toutes les images de la fiche à la suite). Le lieu (`lat`/`lng`) se termine par la même
+section « S'y rendre » que les fiches de restaurant et de BU
+([`CampusMapSection`](../../src/features/Campus/components/CampusMapSection.tsx)).
 Le bouton d'action **flotte sur le contenu**, dans le vocabulaire de la barre de recherche — objet
 posé avec l'ombre partagée, fumée d'amortissement au-dessus
 ([`PiedFlottant`](../../src/shared/ui/PiedFlottant.tsx)) — et l'écran dégage sa hauteur en pied de
@@ -167,10 +183,13 @@ une affiche écrit la date et le lieu. L'image s'affiche donc entière (`contain
 floutée d'elle-même remplit ce que son format laisse libre du carré : invisible sur un 1:1 exact,
 des bandes aux couleurs de l'affiche sinon — jamais un recadrage, jamais un aplat gris.
 
-**L'émetteur est la pastille de la fiche**, [`Badge`](../../src/shared/ui/Badge.tsx) : la carte et
-la fiche le disent d'une seule voix. Ce choix prépare la partie 2 de la v6 : la pastille a déjà un
-`tone` sémantique, et le jour où les annonces portent une catégorie, la couleur par catégorie est
-un mapping — pas une refonte de carte.
+**L'émetteur est un kicker** (2026-08-31) : petites capitales grises au-dessus du titre, sur la
+carte comme sur la fiche — la grammaire des cartes d'article. La pastille colorée a été essayée aux
+deux endroits et défaite : sur les cartes elle était du bruit répété (la règle qui interdit le
+filigrane dans les listes), sur la fiche elle s'empilait avec l'accroche en deux capsules jumelles.
+La couleur d'identité reste portée par l'accroche, les têtes de section et l'affiche typographique
+— et le jour où les annonces portent une catégorie, la couleur par catégorie reste un mapping, pas
+une refonte de carte.
 
 **La fiche épouse le ratio du visuel, borné.** Le bandeau paysage de 250 points réduisait une
 affiche 1:1 à une vignette. Le cadre prend désormais le ratio mesuré de l'image (`Image.getSize`),

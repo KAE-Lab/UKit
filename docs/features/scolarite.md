@@ -532,10 +532,13 @@ pas sans compte, et c'est un arbitrage du propriétaire du produit du 2026-08-27
 La première version la rendait sans condition, pour une raison qui tenait : l'onglet ne servait à rien
 à qui ne se connectait pas, et rien du tout chez un établissement sans portail. À l'usage, un onglet
 qui montre **une seule section sous un encart d'invitation** se lit moins bien qu'un onglet
-franchement vide, qui ne propose qu'une chose — se connecter. C'est **tout ou rien**.
+franchement vide, qui ne propose qu'une chose — se connecter. C'est **tout ou rien** — et depuis le
+2026-08-31, l'onglet sans compte **est le formulaire** (`ScolariteLoginView`, sans en-tête collant :
+le bandeau du formulaire porte le titre) : l'encart d'invitation obligeait un tap de plus vers
+exactement la même page.
 
-La conséquence est assumée : chez « Autre université », l'onglet redit qu'il n'est pas pris en charge
-et s'arrête là.
+La conséquence est assumée : chez « Autre campus », l'onglet est voilé dans la barre et la modale de
+demande s'arrête là.
 
 Ces fichiers vont dans le **répertoire privé de l'application** (`expo-file-system`), isolé des
 autres applications et couvert par le chiffrement de l'appareil quand celui-ci est verrouillé. **Pas

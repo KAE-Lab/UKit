@@ -1,6 +1,6 @@
 {
   "name": "ukit",
-  "version": "5.6.1",
+  "version": "6.0.0",
   "description": "Ukit",
   "author": "KAELab",
   "private": true,
@@ -40,7 +40,6 @@
     "@react-navigation/native-stack": "^7.13.0",
     "@react-navigation/stack": "^7.7.2",
     "@supabase/supabase-js": "^2.109.0",
-    "axios": "^1.13.5",
     "dotenv": "^10.0.0",
     "expo": "^54.0.33",
     "expo-application": "~7.0.8",
@@ -68,11 +67,11 @@
     "ical.js": "^2.2.1",
     "moment": "^2.22.2",
     "prop-types": "^15.6.2",
-    "qs": "^6.10.1",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-collapsible": "^1.6.2",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-image-viewing": "^0.2.2",
     "react-native-reanimated": "~4.1.1",
     "react-native-root-siblings": "^5.0.1",
     "react-native-root-toast": "^4.0.1",
@@ -95,6 +94,7 @@
     "eslint": "^10.4.0",
     "husky": "^9.1.7",
     "prettier": "^1.14.2",
+    "qs": "^6.16.0",
     "vitest": "^3.2.7"
   }
 }

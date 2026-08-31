@@ -26,15 +26,17 @@
  */
 
 import React, { useContext } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
-import style from '../../../shared/theme/Theme';
+import style, { tokens } from '../../../shared/theme/Theme';
+import Translator from '../../../shared/i18n/Translator';
 import { AppContext } from '../../../shared/services/AppCore';
 import { demandeUneRessaisie, presenterEchec } from '../services/ScolariteMapping';
 import { useCredentials } from '../services/CredentialsContext';
 import BiometryGate from '../components/BiometryGate';
 import ScolariteLoadingScreen from '../components/ScolariteLoadingScreen';
+import ScolariteLoginView from '../components/ScolariteLoginView';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 import { PageScolarite } from '../components/PageScolarite';
 import { EnteteScolarite } from '../components/EnteteScolarite';
@@ -117,6 +119,33 @@ const ScolariteDashboard = ({ navigation }) => {
         );
     }
 
+    /*
+     * L'onglet SANS compte EST le formulaire de connexion : l'etat vide « connecte ton compte »
+     * obligeait un tap de plus vers exactement la meme page. Et pas d'en-tete collant ici — le
+     * bandeau du formulaire porte deja le titre « Scolarite », pose dans le vide : l'en-tete
+     * collant appartient au tableau de bord, qui a un dossier a saluer. La garde credentialsLoaded
+     * evite le flash du formulaire pendant la lecture du trousseau au lancement.
+     */
+    if (portailDisponible && credentialsLoaded && !credentials) {
+        return (
+            <SafeAreaInsetsContext.Consumer>
+                {(insets) => (
+                    <View style={[styles.container, { backgroundColor: theme.background }]}>
+                        {/* Le grand titre des onglets, pose exactement comme Campus et Reglages —
+                            pas d'en-tete collant ici. Le bandeau du formulaire passe en `compact` :
+                            deux « Scolarite » a l'ecran se seraient repete. */}
+                        <View style={[styles.titreDOnglet, { paddingTop: insets?.top || 0 }]} pointerEvents="none">
+                            <Text style={[styles.titreDOngletTexte, { color: theme.font }]}>
+                                {Translator.get('SCOLARITY')}
+                            </Text>
+                        </View>
+                        <ScolariteLoginView theme={theme} color={accent} topPadding={insets?.top || 0} compact />
+                    </View>
+                )}
+            </SafeAreaInsetsContext.Consumer>
+        );
+    }
+
     const corps = () => (
         <PageScolarite
             certificatEnCours={certificatEnCours}
@@ -155,6 +184,21 @@ const ScolariteDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    // Le gabarit du titre de Campus et des Reglages, a l'identique : meme position, meme corps.
+    titreDOnglet: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 10,
+        paddingBottom: tokens.space.sm,
+    },
+    titreDOngletTexte: {
+        fontSize: tokens.fontSize.title,
+        fontWeight: tokens.fontWeight.bold as '700',
+        marginBottom: tokens.space.md,
+        paddingHorizontal: tokens.space.md,
     },
 });
 

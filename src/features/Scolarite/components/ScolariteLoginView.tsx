@@ -252,6 +252,9 @@ const styles = StyleSheet.create({
         fontSize: tokens.fontSize.xl,
         fontWeight: '600',
         marginBottom: tokens.space.xs,
+        // Comme le sous-titre : sur un ecran etroit le titre passe sur deux lignes, et sans
+        // centrage la seconde se calait a gauche du bloc — l'ensemble paraissait decentre.
+        textAlign: 'center',
     },
     subtitle: {
         fontSize: tokens.fontSize.sm,

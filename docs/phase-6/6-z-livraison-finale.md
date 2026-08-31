@@ -49,7 +49,7 @@ mauvais) et le modèle d'erreur a dit la vérité.
 
 | Ce qui sort | Pourquoi |
 |---|---|
-| `axios`, `qs` | plus aucun appelant — à vérifier par recherche, pas de mémoire |
+| `axios`, `qs` | plus aucun appelant — à vérifier par recherche, pas de mémoire. **Vérifié le 2026-08-31, avec une anomalie** : `axios` est sorti (son dernier appelant, le contrôle de mise à jour, lisait le fichier VERSION sur GitHub raw — remplacé par `app_release`, voir plus bas) ; `qs`, lui, reste en **dépendance de développement** : l'outillage de parité (`tools/parity/commun.mjs`) s'en sert pour reproduire l'encodage httpx, et c'est la recherche prescrite ici qui l'a montré. Hors du bundle de l'application, sa raison d'être est celle de l'outillage |
 | `ScolariteWebSession.tsx` | déjà supprimé en [6-F](6-f-scolarite.md), vérifier qu'il ne reste rien de sa machine à états |
 | Les chemins de repli des services | leur raison d'être a disparu |
 | La lecture du fichier `VERSION` sur GitHub raw | remplacée par la table `app_release` en [6-B](6-b-supabase.md) |
