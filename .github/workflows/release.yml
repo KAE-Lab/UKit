@@ -42,10 +42,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Node 22 : eas-cli recent (23+) tire @oclif/plugin-autocomplete qui exige Node >= 22 —
+      # la release v6.0.0 a echoue a l'installation sous Node 20 (2026-08-31).
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Setup Java
@@ -54,10 +56,11 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Setup Expo and EAS
+      # Pas d'expo-version : le legacy expo-cli est deprecie et aucune etape n'utilise la
+      # commande `expo` — seule la CLI EAS sert ici.
+      - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
-          expo-version: latest
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
@@ -69,22 +72,24 @@ jobs:
 
           npm version $CLEAN_VERSION --no-git-tag-version --allow-same-version
 
-          if [ -f "app.config.js" ]; then
-            sed -i -E "s/version: ['\"][0-9]+\.[0-9]+\.[0-9]+['\"]/version: '$CLEAN_VERSION'/g" app.config.js
-          fi
+          # app.config.ts et non .js : la config est TypeScript depuis la phase 6 — l'ancien nom
+          # faisait sauter le sed en silence, puis echouer le `git add` sur un fichier absent.
+          sed -i -E "s/version: ['\"][0-9]+\.[0-9]+\.[0-9]+['\"]/version: '$CLEAN_VERSION'/g" app.config.ts
 
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          git add package.json package-lock.json app.config.js
-          
+
+          git add package.json package-lock.json app.config.ts
+
           if ! git diff-index --quiet HEAD; then
             git commit -m "chore: bump version to $CLEAN_VERSION"
             git push origin HEAD:${{ github.ref }}
           fi
 
+      # `ci` et non `install` : une release se construit sur le lockfile exact, pas sur une
+      # resolution du jour.
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Determine Release Tag
         id: get_tag
