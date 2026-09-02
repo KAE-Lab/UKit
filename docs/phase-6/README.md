@@ -122,31 +122,24 @@ n'ont pas la même nature, et qu'il vaut mieux ne pas confondre :
 Le second volet n'est pas un appendice du premier : c'est ce qui manque pour que la v6 soit
 publiable. Le premier a rendu l'application **corrigeable** ; le second la rend **montrable**.
 
-## La v6 part en deux temps
+## La v6 part en deux temps — puis trois
 
 Décision du 2026-08-30, à deux jours de la rentrée : la phase reste la version 6, mais **la version
-sort en deux publications**, parce que ce qui reste à construire exige du contenu qui n'existe pas
-encore — des annonces réelles à mettre en avant, un dossier universitaire que seule l'année qui
-commence remplira.
+sort en plusieurs publications**. La 6.0 est sortie le 31 août. Deux jours plus tard, la
+[mise à plat](6-1-mise-a-plat.md) du 2026-09-02 a redéfini la suite :
 
 | Publication | Contenu | Condition de sortie |
 |---|---|---|
-| **v6.0** | la phase telle qu'écrite : volet 1 (livré), les sessions d'écran, les finitions visuelles, la clôture [6-Z](6-z-livraison-finale.md) | 6-Z déroulé |
-| **v6.1** | les capacités qui attendent le contenu de la rentrée : **mise en avant des annonces par créneaux**, **compléments du portail Bordeaux INP**, **notes & résultats** — et un raffinement sans contenu requis, les **apparitions en fondu** (un fondu à chaque couture où un écran passe de « chargement » à « contenu » : widgets Scolarité, listes Campus, premier chargement du planning ; via un petit composant partagé, écran par écran — pas d'interrupteur global, `LayoutAnimation` fondrait aussi les frappes et les défilements), et l'**évaluation Material 3** pour les contrôles natifs Android (switches, sliders des Réglages) — à trancher : identité visuelle unifiée contre conventions de plateforme, et le coût d'une dépendance de composants | le contenu existe et permet de vérifier |
+| **v6.0** | la phase telle qu'écrite : volet 1, les sessions d'écran, les finitions visuelles, la clôture [6-Z](6-z-livraison-finale.md) — **sortie le 2026-08-31** | — |
+| **v6.1** | **la consolidation de la v6** : robustesse de la scolarité ([A](6-1-a-robustesse-scolarite.md)), pilotage à distance — messages, audiences, console, sondes ([B](6-1-b-pilotage-a-distance.md)), la passe de code ([C](6-1-c-passe-de-code.md)), la publication en parallèle ([D](6-1-d-publication.md)), les finitions d'interface ([E](6-1-e-finitions-interface.md)), la sortie ([Z](6-1-z-sortie.md)) | les six jalons déroulés |
+| **v6.2** | les capacités qui attendent le contenu : **mise en avant des annonces par créneaux**, **compléments du portail Bordeaux INP** et documents supplémentaires, **notes & résultats** ; et les deux évaluations reportées, onglets natifs / `@expo/ui` et typage de `Theme.ts` | le contenu existe et permet de vérifier |
 
-Ce n'est pas une entorse silencieuse à « une phase = une version » : c'est son amendement, écrit ici
-et dans [6-Z](6-z-livraison-finale.md). La règle protégeait d'une sortie à moitié migrée ; or le
-volet 1 est clos, et retenir l'application pour des capacités **invérifiables avant la rentrée**
-protégerait l'inverse — du travail bâclé faute de contenu. Les trois chantiers de v6.1 attendent
-pour la même raison, celle des sessions d'écran : *« si l'écran manque de contenu, la session
-commence par une mesure »* — et la mesure est impossible aujourd'hui. La mise en avant des annonces
-est une donnée de publication (des colonnes de créneaux sur `annonces`, un tri applicatif — les
-soirées remontent le soir, les offres du matin le matin) qui ne se calibre pas sans annonces
-réelles ; les compléments INP demandent un compte actif à la rentrée ; les notes ne se lisent pas
-sur un dossier vide.
-
-Une annonce de vie étudiante publiée avec la v6.0 explique le découpage aux utilisateurs — le canal
-existe précisément pour ça, et il ne coûte aucune release.
+Ce n'est pas une entorse à « une phase = une version » : c'est son amendement, écrit ici et dans
+[6-Z](6-z-livraison-finale.md). La 6.0 a été sortie vite pour tenir la rentrée ; la 6.1 répare ce
+que sa première soirée en production a montré, et donne au propriétaire du produit les moyens de
+piloter sans release. Le contenu attend toujours pour la même raison — *« si l'écran manque de
+contenu, la session commence par une mesure »* — et la mesure reste impossible sans dossier rempli
+ni annonces réelles.
 
 ## Les jalons et leur ordre
 
@@ -183,13 +176,24 @@ de test, et les limites écrites.
 
                           6-Z Retrait du legacy et livraison v6.0
 
-   PARTIE 2 (v6.1) — apres la rentree, quand le contenu existe
+   6.1 — LA CONSOLIDATION (decidee le 2026-09-02, docs 6-1-*)
+
+                    6.1-A robustesse scolarite
+                              |
+                    6.1-B pilotage a distance      6.1-D publication (parallele)
+                              |
+                    6.1-C passe de code
+                              |
+                    6.1-E finitions d'interface
+                              |
+                    6.1-Z sortie
+
+   6.2 — LE CONTENU, quand il existe
 
                     mise en avant des annonces par creneaux
-                    complements du portail Bordeaux INP
-                    notes & resultats, sortie de la session scolarite
-                    apparitions en fondu aux coutures de chargement
-                    evaluation Material 3 pour les controles natifs Android
+                    complements du portail Bordeaux INP, documents supplementaires
+                    notes & resultats
+                    evaluations : onglets natifs / @expo/ui, typage de Theme.ts
 ```
 
 | Jalon | Spécification | Dépend de | Résumé |
