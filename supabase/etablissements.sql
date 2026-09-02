@@ -22,10 +22,11 @@
 -- Universite de Bordeaux — l'etablissement historique, aussi embarque dans le binaire
 -- =============================================================================
 --
--- Le seul du socle (src/shared/etablissements/catalogue.ts) : c'est lui qui doit rester
--- selectionnable au premier lancement, hors ligne, sans avoir jamais joint cette base. Sa presence
--- ici n'est donc pas redondante — elle permet de le **corriger** sans release, comme n'importe quelle
--- autre ligne.
+-- L'etablissement historique du socle (src/shared/etablissements/socle.ts) : c'est lui qui doit
+-- rester selectionnable au premier lancement, hors ligne, sans avoir jamais joint cette base. Sa
+-- presence ici n'est donc pas redondante — elle permet de le **corriger** sans release, comme
+-- n'importe quelle autre ligne. Depuis la 6.1, le socle embarque **toutes** les lignes de ce fichier
+-- a la date de la release, et un test le verifie.
 insert into public.etablissements (
     code, nom, nom_court, ville, logo_url, actif,
     portail_dossier, portail_messagerie, portail_widgets, portail_documents,
@@ -35,7 +36,10 @@ insert into public.etablissements (
     'bordeaux',
     'Collège Sciences et Technologies',
     'Collège ST',
-    'Bordeaux',
+    -- La commune du campus, pas la metropole : le college ST est a Talence. Le socle le disait deja,
+    -- cette ligne disait « Bordeaux », et une ligne publiee REMPLACE le socle — le test de
+    -- divergence (src/shared/etablissements/socle.test.ts) exige desormais qu'ils coincident.
+    'Talence',
     -- **Le logo valait `null` ici alors que le socle en portait un**, et une ligne publiee REMPLACE le
     -- socle : le logo etait donc efface au premier rafraichissement du catalogue, et l'ecran de
     -- connexion montrait l'icone de repli depuis le jour de sa publication. Le fichier, lui, existait
@@ -86,10 +90,14 @@ insert into public.etablissements (
     -- Les portes du navigateur integre. Ajouter ou retirer une porte est une ligne ici, jamais une
     -- release.
     --
-    -- `moodle` vise `/login/index.php` et **pas la racine**, mesure le 2026-08-29 : la racine de ce
-    -- Moodle est une page d'accueil PUBLIQUE. On y arrivait deconnecte, avec un bouton « Connexion » a
-    -- presser, et la session persistee ne servait a rien puisqu'aucune page d'authentification n'etait
-    -- jamais demandee. `/login/index.php` part sur le WAYF, qui delegue au CAS.
+    -- `moodle` visait `/login/index.php` (mesure du 2026-08-29 : la racine est une page d'accueil
+    -- PUBLIQUE, on y arrivait deconnecte). Le soir de la sortie de la 6.0, la cascade WAYF de ce
+    -- chemin a tue la WebView d'un Android — ENT et Chrome passaient, seul ce chemin cassait. La porte
+    -- vise depuis le **SSO initie par l'IdP** (Unsolicited SSO), SANS page de choix d'etablissement,
+    -- avec un `target` sur /auth/shibboleth/index.php qui cree la session Moodle — sans lui on est
+    -- authentifie cote SP et deconnecte cote Moodle. Publie a chaud le 2026-08-31, recopie ici le
+    -- 2026-09-02 pour que ce fichier redise ce que la base porte. C'est LE chemin sans WAYF pour tout
+    -- service Shibboleth de Bordeaux.
     --
     -- `ent` visait `ent.u-bordeaux.fr`, qui **ne resout plus** — mesure le 2026-08-25, et le symptome
     -- etait un `NSURLErrorDomain -1003` a chaque ouverture, y compris en production. Le portail vit
@@ -111,7 +119,7 @@ insert into public.etablissements (
       "email":   "https://webmel.u-bordeaux.fr",
       "cas":     "https://cas.u-bordeaux.fr",
       "apogee":  "https://apogee.u-bordeaux.fr",
-      "moodle":  "https://moodle.u-bordeaux.fr/login/index.php",
+      "moodle":  "https://idp-ubx.u-bordeaux.fr/idp/profile/SAML2/Unsolicited/SSO?providerId=https%3A%2F%2Fmoodle.u-bordeaux.fr%2Fauth%2Fshibboleth&target=https%3A%2F%2Fmoodle.u-bordeaux.fr%2Fauth%2Fshibboleth%2Findex.php",
       "notes":   "https://apogee.u-bordeaux.fr/index.php?srv=RE01",
       "examens": "https://apogee.u-bordeaux.fr/index.php?srv=RE02",
       "adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
@@ -173,7 +181,8 @@ insert into public.etablissements (
     'bordeaux-inp',
     'Bordeaux INP',
     null,
-    'Bordeaux',
+    -- Les ecoles de l'INP sont sur le campus de Talence, comme le College ST.
+    'Talence',
     -- Meme correction que pour Bordeaux : le fichier etait publie, la colonne restait nulle.
     'https://owiksddeqcyyifnmpyqm.supabase.co/storage/v1/object/public/media/etablissements/bordeaux-inp.webp',
     true,
@@ -356,9 +365,10 @@ insert into public.etablissements (
     -- Court, et corrige apres coup sur appareil : « Mon universite n'est pas dans la liste » disait
     -- juste, mais une phrase entiere dans une liste de noms propres se lit mal et deborde. Le nom d'un
     -- etablissement est une **donnee**, donc ce genre de correction est une publication et non une
-    -- release — c'est precisement ce que le jalon 6-G a rendu possible.
-    'Autre université',
-    null,
+    -- release — c'est precisement ce que le jalon 6-G a rendu possible. « Autre campus » et non
+    -- « Autre universite » : le perimetre du produit est un secteur, pas une liste d'universites.
+    'Autre campus',
+    'Autre campus',
     null,
     null,
     true,

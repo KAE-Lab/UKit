@@ -8,13 +8,13 @@ import { NotificationManager } from '../../../shared/services/NotificationServic
 
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
 import {
-    changerEtablissement,
     etablissementRetire,
     nomCourtEtablissement,
     lienEdtActif,
     portailPublie,
     sourceEdt,
 } from '../../../shared/etablissements';
+import { basculerEtablissement } from '../../../shared/etablissements/bascule';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
 import { adoucirLaTransition } from '../../../shared/ui/transitions';
@@ -27,7 +27,7 @@ import {
     SettingsSyncOffPopup,
     SettingsCalendarPopup
 } from '../components/SettingsModals';
-import { SettingsInstitutionPopup } from '../components/SettingsInstitutionPopup';
+import { ChoixEtablissement } from '../../../shared/ui/ChoixEtablissement';
 
 import {
     DisplaySection,
@@ -239,23 +239,12 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     closeInstitutionDialog = () => this.setState({ institutionDialogVisible: false });
 
     /**
-     * La bascule d'etablissement : purger d'abord, selectionner ensuite.
-     *
-     * L'ordre vient de `changerEtablissement` et il n'est pas negociable — une purge jouee apres la
-     * selection courrait contre les ecrans qui se rechargent deja sur le nouvel etablissement. Le
-     * `setEtablissement` qui suit persiste le code et notifie les abonnes, ce qui suffit a faire
-     * repartir le planning et la session sur la bonne universite.
+     * La bascule d'etablissement — purge, adoucissement, selection — vit dans
+     * `shared/etablissements/bascule.ts` depuis qu'elle a trois hotes ; l'ecran ne garde que ce qui
+     * lui revient, son libelle et l'etat de la ligne du compte.
      */
     setInstitution = async (code: string) => {
-        await changerEtablissement(code);
-        // La bascule fait apparaitre ou disparaitre des rangees entieres (compte, lien iCal) et
-        // des onglets : rendue d'un coup, elle se lisait comme un accroc — surtout vers ou depuis
-        // « Autre campus », ou tout change. L'adoucissement se pose APRES la purge :
-        // `configureNext` ne couvre que le commit suivant, et n'importe quel commit pendant
-        // l'attente — la modale qui se ferme, le contexte qui purge — le consommait avant la
-        // reorganisation qu'il visait (constate sur appareil le 2026-08-31, deux fois).
-        adoucirLaTransition();
-        SettingsManager.setEtablissement(code);
+        await basculerEtablissement(code);
         this.setState({ institutionName: nomCourtEtablissement() });
         // La bascule vide le trousseau : la ligne du compte doit le dire tout de suite, sans attendre
         // un retour de focus qui n'aura pas lieu — on n'a pas quitte l'ecran.
@@ -310,14 +299,15 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
 
 
-    renderPopups(themeSettings: import('../../../shared/theme/Theme').AppThemeType['settings']) {
+    renderPopups(theme: import('../../../shared/theme/Theme').AppThemeType) {
+        const themeSettings = theme.settings;
         return (
             <>
                 <SettingsLanguagePopup theme={themeSettings} popupVisible={this.state.languageDialogVisible} popupClose={this.closeLanguageDialog} language={this.state.language} onConfirm={this.setSelectedLanguage} />
                 <SettingsSyncOffPopup theme={themeSettings} popupVisible={this.state.syncOffDialogVisible} popupClose={this.closeSyncOffDialog} disableSync={this.onSyncOffConfirmed} />
                 <SettingsResetPopup theme={themeSettings} popupVisible={this.state.resetDialogVisible} popupClose={this.closeResetDialog} resetApp={this.resetApp} />
                 <SettingsCalendarPopup theme={themeSettings} popupVisible={this.state.calendarDialogVisible} popupClose={this.closeCalendarDialog} setCalendar={this.setCalendar} selectedCalendar={this.state.selectedCalendar} />
-                <SettingsInstitutionPopup theme={themeSettings} popupVisible={this.state.institutionDialogVisible} popupClose={this.closeInstitutionDialog} codeActif={SettingsManager.getEtablissement()} onConfirm={this.onInstitutionConfirmed} />
+                <ChoixEtablissement theme={theme} visible={this.state.institutionDialogVisible} fermer={this.closeInstitutionDialog} codeActif={SettingsManager.getEtablissement()} onConfirmer={this.onInstitutionConfirmed} />
             </>
         );
     }
@@ -412,7 +402,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     isSynchronizingCalendar={this.state.isSynchronizingCalendar}
                     selectedCalendar={this.state.selectedCalendar}
                 />
-                {this.renderPopups(themeSettings)}
+                {this.renderPopups(theme)}
             </Animated.ScrollView>
         );
 

@@ -44,10 +44,13 @@
  * capitales qui nomme sans peser. Sans eux, le heros, les tuiles et les rangees se lisaient comme un
  * seul empilement — la page manquait d'air precisement la ou sa structure changeait de nature.
  *
- * **Une seule exception, et elle est indispensable : un echec bascule la paire entiere en rangees.**
- * Un echec demande des mots — « Identifiants incorrects », et la ressaisie derriere. Une tuile de 140
- * points les tronquerait, et une phrase tronquee est une impasse. Basculer *les deux* plutot que la
- * seule fautive evite le trou qu'une tuile esseulee laisserait dans la grille.
+ * **Une tuile ne change pas de taille, quoi qu'il arrive a sa source.** La grille basculait la paire
+ * entiere en rangees des qu'un widget echouait, pour lui donner la place d'une phrase — et le soir
+ * de la sortie de la 6.0, une panne de Moodle a transforme la messagerie en rangee aussi : la page
+ * changeait de forme sous les yeux de l'utilisateur, ce qui amplifiait une panne de widget en page
+ * cassee. L'echec tient desormais en deux mots sur la tuile, et la phrase est dans la feuille que le
+ * toucher ouvre (`FeuilleDeWidget`), avec le geste qui va avec — relancer ce seul widget, ou
+ * ressaisir ses identifiants (6.1-A).
  *
  * Les adresses viennent **toutes** du catalogue (jalon 6-G) : une grille ecrite ici enverrait un
  * etudiant de l'INP sur l'Apogee de Bordeaux.
@@ -60,17 +63,17 @@ import moment from 'moment';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { serviceEtablissement, widgetPublie } from '../../../shared/etablissements';
-import type { UkitFailure } from '../../../shared/aetherius/failures';
+import { ModaleBientot } from '../../../shared/ui/ModaleBientot';
 import type { ScolariteColdData } from '../services/ScolariteMapping';
 import { widgetsDeForme, type DefinitionWidget, type PointWidget } from '../widgets/definitions';
-import { etatDeLaRangee } from '../widgets/presentation';
+import { echecDeTuile, etatDeLaRangee } from '../widgets/presentation';
 import type { ValeursWidgets } from '../widgets/runner';
+import type { EchecsWidgets } from '../widgets/useWidgets';
+import { FeuilleDeWidget } from './FeuilleDeWidget';
 import { GroupeScolarite, LigneScolarite } from './LigneScolarite';
-import { ModaleBientot, RangeeMysterieuse } from './RangeeMysterieuse';
+import { RangeeMysterieuse } from './RangeeMysterieuse';
 import WidgetRow from './WidgetRow';
 import WidgetTile from './WidgetTile';
-
-export type EchecsWidgets = Readonly<Partial<Record<PointWidget, UkitFailure>>>;
 
 /** Ce que `preparer` rend pour chaque widget : son etat, sa couleur, et ou il mene. */
 interface RangeePreparee {
@@ -132,6 +135,41 @@ function RangeeDeWidget({ rangee, theme, onTeaser }: { rangee: RangeePreparee; t
 }
 
 /**
+ * La feuille du widget dont l'echec est ouvert, ou rien.
+ *
+ * Elle ferme avant d'agir : relancer ou ressaisir sont des gestes qui quittent la feuille, et une
+ * feuille qui resterait ouverte sur un indicateur de relance cacherait la tuile qu'on vient de relancer.
+ */
+function FeuilleDuPointOuvert({ rangees, point, theme, fermer, onRelancer, onRessaisir }: {
+    rangees: readonly RangeePreparee[];
+    point: PointWidget | null;
+    theme: AppThemeType;
+    fermer: () => void;
+    onRelancer: (point: PointWidget) => void;
+    onRessaisir: () => void;
+}) {
+    const rangee = point === null ? null : rangees.find(({ definition }) => definition.point === point) ?? null;
+    if (rangee === null || rangee.etat.echec === null) return null;
+
+    return (
+        <FeuilleDeWidget
+            theme={theme}
+            echec={rangee.etat.echec}
+            visible
+            fermer={fermer}
+            onRelancer={() => {
+                fermer();
+                onRelancer(rangee.definition.point);
+            }}
+            onRessaisir={() => {
+                fermer();
+                onRessaisir();
+            }}
+        />
+    );
+}
+
+/**
  * Quand les services ont ete relus pour la derniere fois, ou `null` si rien ne l'a jamais ete.
  *
  * **La plus recente des lectures**, et non la plus ancienne : la ligne repond a « ca date de
@@ -181,6 +219,10 @@ export interface GrilleScolariteProps {
     coldData: ScolariteColdData | null;
     /** Ou mene une rangee : sa porte, ou la ressaisie quand les identifiants sont refuses. */
     onWidget: (point: PointWidget) => void;
+    /** Relit ce seul widget, depuis la feuille d'echec. */
+    onRelancer: (point: PointWidget) => void;
+    /** Ouvre la fiche du compte en ressaisie, depuis la feuille d'echec. */
+    onRessaisir: () => void;
     onPorte: (point: string) => void;
     /** Ouvre le formulaire de demande, pour un service que l'etablissement ne porte pas. */
     onDemande: (adresse: string) => void;
@@ -195,13 +237,16 @@ export interface GrilleScolariteProps {
 }
 
 export function GrilleScolarite({
-    theme, teinte, valeurs, echecs, pointEnCours, coldData, onWidget, onPorte, onDemande, tuileDocuments,
+    theme, teinte, valeurs, echecs, pointEnCours, coldData,
+    onWidget, onRelancer, onRessaisir, onPorte, onDemande, tuileDocuments,
 }: GrilleScolariteProps) {
     const ent = serviceEtablissement('ent');
     const demande = serviceEtablissement('adaptation');
     const fraicheur = derniereLecture(valeurs);
     /** Le point dont le teaser est ouvert, ou `null`. Voir `RangeeMysterieuse`. */
     const [teaser, setTeaser] = useState<PointWidget | null>(null);
+    /** Le point dont la feuille d'echec est ouverte, ou `null`. Voir `FeuilleDeWidget`. */
+    const [echecOuvert, setEchecOuvert] = useState<PointWidget | null>(null);
 
     /** L'etat d'un widget, sa couleur, et ou sa rangee doit mener. Un seul endroit pour les trois formes. */
     const preparer = (definition: DefinitionWidget) => {
@@ -214,10 +259,13 @@ export function GrilleScolarite({
         });
         // Un widget « absent » sans formulaire publie n'a nulle part ou mener : il reste alors une
         // information, sans chevron. C'est le seul cas ou une rangee ne s'ouvre pas, et il vaut mieux
-        // qu'un chevron qui ne va nulle part.
+        // qu'un chevron qui ne va nulle part. Un echec mene a la ressaisie quand c'est ce qu'il
+        // demande — `onWidget` y route deja — et a la feuille sinon.
         const action = etat.nature === 'absent'
             ? (demande !== null ? () => onDemande(demande) : undefined)
-            : () => onWidget(definition.point);
+            : etat.nature === 'echec' && etat.echec !== null && echecDeTuile(etat.echec).ouvre === 'feuille'
+                ? () => setEchecOuvert(definition.point)
+                : () => onWidget(definition.point);
         const contexte = definition.point === 'messagerie' ? coldData?.emailAddress ?? null : null;
 
         // La couleur du service, du theme donc suivant le mode sombre. Le repli sur l'accent couvre
@@ -231,10 +279,6 @@ export function GrilleScolarite({
     const heros = widgetsDeForme('heros').map(preparer);
     const tuiles = widgetsDeForme('tuile').map(preparer);
     const rangees = widgetsDeForme('rangee').map(preparer);
-    // Voir l'en-tete : un echec demande des mots, et les tuiles basculent **ensemble** pour ne pas
-    // laisser un trou dans la grille. Le heros y va aussi : lui seul en rangee, avec ses voisines
-    // restees carrees, casserait la hierarchie que sa taille etablit.
-    const enRangees = [...heros, ...tuiles].some(({ etat }) => etat.nature === 'echec');
 
     const rendreRangee = (rangee: RangeePreparee) => (
         <RangeeDeWidget key={rangee.definition.point} rangee={rangee} theme={theme} onTeaser={setTeaser} />
@@ -246,36 +290,30 @@ export function GrilleScolarite({
          * separerait ici les moities d'une meme grille. Les emballer leur donne leur propre rythme.
          */
         <View style={styles.bloc}>
-            {enRangees ? null : (
-                <>
-                    <Intertitre
-                        texte={Translator.get('SCOLARITE_SECTION_GLANCE')}
-                        detail={fraicheur !== null ? Translator.get('WIDGETS_REFRESHED', fraicheur) : null}
-                        theme={theme}
-                    />
+            <Intertitre
+                texte={Translator.get('SCOLARITE_SECTION_GLANCE')}
+                detail={fraicheur !== null ? Translator.get('WIDGETS_REFRESHED', fraicheur) : null}
+                theme={theme}
+            />
 
-                    {heros.map((rangee) => (
-                        <View key={rangee.definition.point} style={styles.pleineLargeur}>
-                            <TuileDeWidget rangee={rangee} theme={theme} />
-                        </View>
-                    ))}
+            {heros.map((rangee) => (
+                <View key={rangee.definition.point} style={styles.pleineLargeur}>
+                    <TuileDeWidget rangee={rangee} theme={theme} />
+                </View>
+            ))}
 
-                    <View style={styles.grille}>
-                        {tuiles.map((rangee) => (
-                            <TuileDeWidget key={rangee.definition.point} rangee={rangee} theme={theme} />
-                        ))}
-                        {tuileDocuments}
-                    </View>
-                </>
-            )}
+            <View style={styles.grille}>
+                {tuiles.map((rangee) => (
+                    <TuileDeWidget key={rangee.definition.point} rangee={rangee} theme={theme} />
+                ))}
+                {tuileDocuments}
+            </View>
 
-            {/* En mode echec tout est rangees : un seul groupe, donc un seul intertitre. */}
-            <View style={enRangees ? null : styles.sectionServices}>
+            <View style={styles.sectionServices}>
                 <Intertitre texte={Translator.get('SCOLARITE_SECTION_SERVICES')} theme={theme} />
             </View>
 
             <GroupeScolarite theme={theme}>
-                {enRangees ? [...heros, ...tuiles].map(rendreRangee) : null}
                 {rangees.map(rendreRangee)}
 
                 {/*
@@ -311,6 +349,15 @@ export function GrilleScolarite({
                         onWidget(point);
                     }
                     : undefined}
+            />
+
+            <FeuilleDuPointOuvert
+                rangees={[...heros, ...tuiles, ...rangees]}
+                point={echecOuvert}
+                theme={theme}
+                fermer={() => setEchecOuvert(null)}
+                onRelancer={onRelancer}
+                onRessaisir={onRessaisir}
             />
         </View>
     );

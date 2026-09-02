@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import moment from 'moment';
-import { useRoute, type RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 
 import { demander } from '../../../shared/biometrie';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
@@ -21,6 +21,7 @@ import ScolariteLoginView from '../components/ScolariteLoginView';
 import { BlocProgression } from '../components/ScolariteLoadingScreen';
 import BiometryGate from '../components/BiometryGate';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
+import { useSessionDepuisLeFormulaire } from '../hooks/useSessionDepuisLeFormulaire';
 import { ConfirmationScolarite } from '../components/ConfirmationScolarite';
 
 /** Combien de temps la coche reste, en millisecondes. Assez pour etre vue, trop court pour rester. */
@@ -349,6 +350,7 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
     const theme = style.Theme[themeName];
 
     const route = useRoute<RouteProp<{ p: { ressaisie?: boolean } }, 'p'>>();
+    const navigation = useNavigation();
 
     const {
         credentials, coldData, logout, rafraichirDossier, portailDisponible,
@@ -366,8 +368,6 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
      * de rendre le formulaire atteignable (jalon 6-K, docs/defauts-fonctionnels.md).
      */
     const [ressaisie, setRessaisie] = useState(route.params?.ressaisie === true);
-    /** Une session lancee **depuis le formulaire** : elle lui laisse la page jusqu'a son terme. */
-    const [connexionEnCours, setConnexionEnCours] = useState(false);
 
     /*
      * **La progression s'affiche ici, et non la ou elle se joue.**
@@ -385,12 +385,8 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
      * et vaut identiquement depuis les deux entrees.
      */
     const progression = useEcranDeProgression(sessionMode, scrapeStatus);
-
-    // Le drapeau retombe quand la session s'acheve — y compris sur un echec, ou le formulaire doit
-    // reprendre la main pour afficher son message.
-    useEffect(() => {
-        if (!progression.visible) setConnexionEnCours(false);
-    }, [progression.visible]);
+    /** Une session lancee **depuis le formulaire** : elle lui laisse la page jusqu'a son terme. */
+    const formulaire = useSessionDepuisLeFormulaire(progression.visible);
 
     if (!portailDisponible) return <PortailAbsent theme={theme} />;
 
@@ -406,18 +402,14 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
      * — au lancement, ou sur « Actualiser mon dossier ». Il n'y a alors aucune page a garder.
      */
     /*
-     * **Le formulaire garde la page tant que SA session tourne.**
-     *
-     * `LOGIN_SUCCESS` est emis au dixieme step sur vingt : les identifiants sont poses des que le CAS
-     * accepte, donc `credentials` cesse d'etre nul **en plein run**. Sans le drapeau ci-dessous, la
-     * condition retombait a faux a mi-parcours et l'ecran basculait d'un coup sur autre chose — ce
-     * qu'on voyait comme « la barre est repassee sur l'ancienne version de la page ».
+     * **Le formulaire garde la page tant que SA session tourne** — `credentials` est pose au dixieme
+     * step, et sans ce drapeau la condition retombait a faux a mi-parcours (voir le hook).
      */
-    if (!credentials || ressaisie || connexionEnCours) {
+    if (!credentials || ressaisie || formulaire.enCours) {
         return (
             <CompteADemander
                 theme={theme}
-                onDebut={() => setConnexionEnCours(true)}
+                onDebut={formulaire.onDebut}
                 onSuccess={() => setRessaisie(false)}
             />
         );
@@ -434,25 +426,28 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
     };
 
     /*
-     * **On ne referme plus l'ecran, et c'est la correction de deux ejections a la fois.**
+     * **La deconnexion quitte l'ecran, tout de suite ; la connexion y reste.**
      *
-     * Il se refermait apres un `await`, ce qui supposait que la personne y etait encore. Elle ne
-     * l'etait plus, pour deux raisons independantes :
+     * L'ecran s'est d'abord referme apres un `await`, ce qui supposait que la personne y etait
+     * encore — a la deconnexion, `logout` attend la fermeture de la session distante pendant que le
+     * formulaire est deja affiche, et l'ecran se refermait pendant qu'on retapait ses identifiants.
+     * Il a ensuite cesse de se refermer du tout, et c'etait l'autre defaut : un compte deconnecte
+     * depuis cet ecran montrait le formulaire ICI, puis un second formulaire — celui de l'onglet — en
+     * revenant en arriere, deux ecrans de connexion empiles (signale le 2026-09-02, 6.1-A).
      *
-     *   - **a la deconnexion**, `logout` attend la fermeture de la session distante, soit quelques
-     *     secondes. L'interface, elle, s'est deja mise a jour bien avant — `oublier()` precede cet
-     *     appel — donc le formulaire de connexion est deja affiche, et l'ecran se refermait pendant
-     *     qu'on retapait ses identifiants ;
-     *   - **a la connexion**, `LOGIN_SUCCESS` est emis au **dixieme step sur vingt** : le CAS a
-     *     accepte, mais le dossier, la formation et l'annuaire restent a lire. La promesse se
-     *     resolvait donc a mi-parcours, et l'ecran se refermait avec dix secondes de run devant lui.
+     * On revient donc **avant** d'attendre : l'onglet Scolarite est le formulaire de connexion, et
+     * c'est lui qu'on retrouve ; depuis les Reglages, on retrouve les Reglages, dont la ligne du
+     * compte se relit au focus. La fermeture de la session distante continue derriere, elle n'a
+     * besoin d'aucun ecran.
      *
-     * Rester est aussi le bon comportement en soi : l'aiguillage de cet ecran montre deja la suite —
-     * la progression, puis la fiche, ou le formulaire apres une deconnexion. Il n'y a rien a fuir.
+     * La connexion, elle, reste : `LOGIN_SUCCESS` est emis au dixieme step sur vingt, et se refermer
+     * a ce moment-la laisserait dix secondes de run derriere un ecran quitte. L'aiguillage montre la
+     * progression puis la fiche — il n'y a rien a fuir.
      */
-    const confirmLogout = async () => {
+    const confirmLogout = () => {
         setShowLogoutModal(false);
-        await logout();
+        navigation.goBack();
+        void logout();
     };
 
     const confirmRefresh = () => {

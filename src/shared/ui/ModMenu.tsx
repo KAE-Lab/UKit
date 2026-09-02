@@ -11,6 +11,7 @@ import { AppContext } from '../services/AppCore';
 import ModMenuBlueprints from './ModMenuBlueprints';
 import ModMenuBiometrie from './ModMenuBiometrie';
 import ModMenuPropositions from './ModMenuPropositions';
+import ModMenuReinitialisation from './ModMenuReinitialisation';
 
 /**
  * Les panneaux du menu, et leur libelle d'onglet.
@@ -400,6 +401,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                             {this.renderTimeSelectors(theme, selectedDate)}
                             {this.renderActionButtons(theme)}
                             {this.renderDateTimePicker(theme)}
+                            <ModMenuReinitialisation theme={theme} />
                         </>
                     )}
                 </View>

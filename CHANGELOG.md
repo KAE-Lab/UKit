@@ -8,6 +8,61 @@ Ce fichier a été ouvert avec le socle de documentation : les versions antérie
 pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 [Releases GitHub](https://github.com/KAE-Lab/UKit/releases) et dans l'historique Git.
 
+## [Non publié]
+
+La consolidation de la v6 ([docs/phase-6/6-1-mise-a-plat.md](docs/phase-6/6-1-mise-a-plat.md)) : ce que
+la première soirée en production a montré de fragile, réparé avant tout contenu nouveau.
+
+### Corrigé
+
+- **Une tuile en échec garde sa taille** (6.1-A). Un widget en panne basculait la paire entière en
+  rangées, et la page changeait de forme sous les yeux de l'utilisateur. La tuile dit désormais deux
+  mots — « Indisponible », « À ressaisir », « Erreur » — et une feuille au toucher porte la phrase et
+  le geste : **relancer ce seul widget**, ou ressaisir ses identifiants.
+- **Un code de Blueprint inconnu n'est plus une « connexion interrompue ».** Tout code en
+  `_INDISPONIBLE` se présente comme un service injoignable, réessayable — par une règle, pas par une
+  table qu'on oublie d'étendre à chaque widget.
+- **Une seule vue du chargement.** Se connecter depuis l'onglet Scolarité passait du formulaire à
+  l'écran de chargement plein au dixième pas ; le formulaire garde la page jusqu'au dernier, comme la
+  fiche du compte le faisait déjà.
+- **Le premier jour montre tous les établissements.** Le socle embarque les trois établissements
+  publiés — Blueprints de Bordeaux INP compris —, l'accueil se relit à l'arrivée du catalogue, et
+  l'étape établissement attend sa première réponse, quatre secondes au plus, avec un chargement qui
+  dit ce qu'il attend. Une installation hors ligne voit le socle, désormais complet.
+- **Face ID est confirmé** sur l'iPhone de production ; le registre des défauts le coche.
+- **Se déconnecter depuis la fiche du compte ramène à l'onglet**, qui est le formulaire de connexion :
+  on ne tombait plus sur deux formulaires empilés.
+- **Un campus non relié a sa page** dans l'onglet Scolarité — un état vide, la demande de campus, un
+  bouton pour corriger son choix — au lieu d'un onglet voilé qu'on atteignait quand même par le
+  formulaire ; c'est le bouton Compte de la barre qui porte le voile.
+- **Actualiser son dossier ne vide plus l'onglet.** Le dossier précédent reste affiché, la barre se
+  pose en encart en tête de page, et revenir sur l'onglet pendant l'actualisation ne retombe plus sur
+  l'écran de chargement plein. « Réessayer » relance le dossier après un échec.
+- **À l'accueil, une connexion lancée bloque « Suivant » et le retour** jusqu'à son terme : un échec se
+  lit sur place, un succès avance tout seul. « Tu es d'un autre campus ? » est un bouton tonal sous le
+  bouton de connexion, désactivé avec lui, plutôt qu'un lien à côté de « Plus tard ». Et l'étape des groupes
+  porte son cadre clavier : le clavier ne recouvre plus les groupes trouvés.
+
+### Ajouté
+
+- **« Tu es d'un autre campus ? »** sous le formulaire de connexion, dans l'onglet comme à l'accueil :
+  le choix d'établissement, la même bascule que les Réglages.
+- **Le PDF s'affiche dans l'application sur Android**, dessiné par pdf.js embarqué dans la vue —
+  fichiers statiques, aucun module natif, Expo Go reste utilisable. Un document trop lourd ou une
+  WebView trop ancienne retombent sur la feuille de partage, et le disent.
+
+### Modifié
+
+- Le dialogue informatif (`Dialogue`), la modale « Bientôt » et le choix d'établissement
+  (`ChoixEtablissement`) remontent dans `shared/ui` ; la bascule d'établissement est un service partagé.
+- Le socle du catalogue vit dans son propre fichier de données, et un test le compare aux lignes SQL
+  publiées ; le fichier SQL redit ce que la base porte réellement (la porte Moodle par SSO initié par
+  l'IdP, Talence pour les deux campus, « Autre campus »).
+- `pdfjs-dist` en devDependency, `metro.config.js` déclare `txt` en asset, `npm run pdfjs:vendor`
+  recopie la bibliothèque.
+- Le menu de développement gagne une **réinitialisation complète** — trousseau, documents, caches,
+  puis rechargement — pour voir ce qu'un tout nouvel étudiant voit.
+
 ## [6.0.0] - 2026-08-31
 
 Le plus gros ensemble de changements depuis la reprise du projet : quatre fonctionnalités majeures,

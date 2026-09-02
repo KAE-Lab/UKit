@@ -235,6 +235,7 @@ racine et de [`src/shared/`](../src/shared/).
 |---|---|
 | [`App.tsx`](../App.tsx) | point d'entrée : préchargement des ressources, chargement des managers, splash animé |
 | [`app.config.ts`](../app.config.ts) | configuration Expo ([plateforme.md](plateforme.md)) |
+| [`metro.config.js`](../metro.config.js) | la configuration Metro d'Expo, plus `txt` en extension d'asset — pour servir pdf.js tel quel à la WebView du lecteur ([plateforme.md](plateforme.md)) |
 | [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement de la livraison, **du référentiel des lieux et du catalogue des établissements** au démarrage et au retour au premier plan |
 | [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 20 écrans |
 | [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | barre d'onglets personnalisée et son bouton d'action contextuel |
@@ -263,7 +264,12 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/visuels/referentiel.ts`](../src/shared/visuels/referentiel.ts) | les visuels publiés : la surcouche en mémoire et la résolution des trois états — pas de socle embarqué, le socle est l'image de la source ([backend.md](backend.md)) |
 | [`shared/visuels/index.ts`](../src/shared/visuels/index.ts) | sa couture de plateforme : cache local et lecture de la table `visuels` |
 | [`shared/visuels/referentiel.test.ts`](../src/shared/visuels/referentiel.test.ts) | la distinction du vide et du nul, dont une erreur ferait disparaître une photo en silence — joué par `npm test` |
-| [`shared/etablissements/catalogue.ts`](../src/shared/etablissements/catalogue.ts) | le catalogue : socle embarqué, projection d'une ligne, établissement actif, libellés propres à l'université ([features/settings.md](features/settings.md)) |
+| [`shared/etablissements/catalogue.ts`](../src/shared/etablissements/catalogue.ts) | le catalogue : projection d'une ligne, table en mémoire, établissement actif, libellés propres à l'université ([features/settings.md](features/settings.md)) |
+| [`shared/etablissements/socle.ts`](../src/shared/etablissements/socle.ts) | le socle embarqué — la **donnée** : une copie des lignes publiées à la date de la release |
+| [`shared/etablissements/socle.test.ts`](../src/shared/etablissements/socle.test.ts) | le socle est exactement ce que la projection rend de `supabase/etablissements.sql`, et tout Blueprint qu'il nomme est embarqué — joué par `npm test` |
+| [`shared/etablissements/premierRafraichissement.ts`](../src/shared/etablissements/premierRafraichissement.ts) | le signal « le premier rafraîchissement du catalogue a répondu », et son attente plafonnée ([features/onboarding.md](features/onboarding.md)) |
+| [`shared/etablissements/premierRafraichissement.test.ts`](../src/shared/etablissements/premierRafraichissement.test.ts) | une réponse, un plafond, jamais les deux — joué par `npm test` |
+| [`shared/etablissements/bascule.ts`](../src/shared/etablissements/bascule.ts) | la bascule d'établissement — purge, adoucissement, sélection — partagée par les Réglages, l'accueil et le formulaire de connexion |
 | [`shared/etablissements/celcat.ts`](../src/shared/etablissements/celcat.ts) | ce que le catalogue fournit aux six Blueprints Celcat, et le prédicat des salles libres |
 | [`shared/etablissements/edt.ts`](../src/shared/etablissements/edt.ts) | quelle source d'emploi du temps l'établissement publie — Celcat, référentiel iCalendar, abonnement collé, lien attendu, ou aucune — et les échecs qui en découlent |
 | [`shared/etablissements/edt.test.ts`](../src/shared/etablissements/edt.test.ts) | le choix de la source et la résolution partielle, joués par `npm test` |
@@ -280,6 +286,8 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/services/SecureStoreService.ts`](../src/shared/services/SecureStoreService.ts) | stockage chiffré des identifiants, des données étudiant et des liens d'abonnement |
 | [`shared/services/TimeMockService.ts`](../src/shared/services/TimeMockService.ts) | simulation temporelle pour la vérification manuelle ([qualite.md](qualite.md)) |
 | [`shared/services/NetworkMockService.ts`](../src/shared/services/NetworkMockService.ts) | l'interrupteur hors ligne : couper le réseau de l'application sans couper celui de l'appareil ([qualite.md](qualite.md)) |
+| [`shared/services/Base64.ts`](../src/shared/services/Base64.ts) · [`Base64.test.ts`](../src/shared/services/Base64.test.ts) | le décodage base64 en JavaScript, parce que le natif d'Expo Go ne le garantit pas ([features/scolarite.md](features/scolarite.md)) |
+| [`shared/services/ReinitialisationComplete.ts`](../src/shared/services/ReinitialisationComplete.ts) | la remise à zéro complète du menu de développement : trousseau, documents, AsyncStorage, puis rechargement ([qualite.md](qualite.md)) |
 | [`shared/theme/tokens.ts`](../src/shared/theme/tokens.ts) | les primitives de design, isolées pour être testables sous Node ([theme.md](theme.md#les-tokens)) |
 | [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | thèmes clair et sombre, échelle sémantique, styles partagés ([theme.md](theme.md)) |
 | [`shared/i18n/Translator.ts`](../src/shared/i18n/Translator.ts) | service de traduction, langue courante, locale moment ([i18n.md](i18n.md)) |
@@ -295,13 +303,17 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/EmptyState.tsx`](../src/shared/ui/EmptyState.tsx) | icône, titre, message, action facultative — le bloc commun à « rien à afficher » et « source en panne » |
 | [`shared/ui/ScreenState.tsx`](../src/shared/ui/ScreenState.tsx) | **où** un état plein écran se pose : le centrage sur la surface libre, et les hauteurs `HEADER_OFFSET` et `TAB_BAR_HEIGHT` ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ActionButton.tsx`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` ([theme.md](theme.md#les-décisions-durables)) |
-| [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente, en ligne ou plein écran |
+| [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente, en ligne ou plein écran, et la phrase qui dit ce qu'on attend |
+| [`shared/ui/Dialogue.tsx`](../src/shared/ui/Dialogue.tsx) | le dialogue informatif partagé : titre, corps, action, sortie secondaire, lien discret ([theme.md](theme.md#les-décisions-durables)) |
+| [`shared/ui/ModaleBientot.tsx`](../src/shared/ui/ModaleBientot.tsx) | ce que le voile d'un teaser promet — une composition de `Dialogue` |
+| [`shared/ui/ChoixEtablissement.tsx`](../src/shared/ui/ChoixEtablissement.tsx) | la liste des universités puis la confirmation de la bascule, partagée par les Réglages et le formulaire de connexion |
 | [`shared/ui/ProgressBar.tsx`](../src/shared/ui/ProgressBar.tsx) | une jauge horizontale, rayon calculé sur la hauteur |
 | [`shared/ui/Icon.tsx`](../src/shared/ui/Icon.tsx) | une icône de l'une ou l'autre famille Material, typée par union discriminée |
 | [`shared/ui/GlypheFiligrane.tsx`](../src/shared/ui/GlypheFiligrane.tsx) | le filigrane d'identité : une grande silhouette en transparence sur une surface unique — le geste de signature, règles d'usage dans son en-tête ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/PiedFlottant.tsx`](../src/shared/ui/PiedFlottant.tsx) | le pied d'action flottant : le vocabulaire de la barre de recherche — dégradé d'amortissement, bande du fond de page — et le dégagement que l'écran doit lui laisser ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ModMenu.tsx`](../src/shared/ui/ModMenu.tsx) | menu flottant de développement : simulation temporelle et livraison ([qualite.md](qualite.md)) |
 | [`shared/ui/ModMenuBlueprints.tsx`](../src/shared/ui/ModMenuBlueprints.tsx) | son panneau de diagnostic de la livraison ([blueprints.md](blueprints.md)) |
+| [`shared/ui/ModMenuReinitialisation.tsx`](../src/shared/ui/ModMenuReinitialisation.tsx) | son bouton de remise à zéro complète, avec confirmation |
 | [`shared/ui/SourceFailureNotice.tsx`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, tel qu'un écran le montre : message de la famille, bouton Réessayer seulement s'il répare, ou l'**action** qui remplirait l'écran ([blueprints.md](blueprints.md)) |
 | [`shared/constants/urls.ts`](../src/shared/constants/urls.ts) | URLs externes : liens applicatifs (`URL`). Les points d'entrée Celcat en sont sortis au jalon [6-E](phase-6/6-e-planning.md) — ils vivent dans les Blueprints |
 | [`shared/utils/formatUtils.ts`](../src/shared/utils/formatUtils.ts) | `upperCaseFirstLetter` et `formatDescription` (nettoyage des descriptions Celcat) |

@@ -133,6 +133,7 @@ porte **les universités** : ajouter un établissement est une ligne en base et 
 ```text
 App.tsx              amorçage : ressources, managers, splash animé
 app.config.ts        configuration Expo : identité, permissions, plugins
+metro.config.js      celle d'Expo, plus une extension d'asset pour servir pdf.js à la WebView
 src/
   features/          un dossier par domaine de navigation
     Planning/          emploi du temps
@@ -153,10 +154,10 @@ src/
     constants/         URLs externes
     utils/             utilitaires de formatage
 blueprints/          les fichiers d'instructions embarqués (le socle hors ligne)
-  portails/            les portails d'établissements publiés, jamais embarqués
+  portails/            les portails d'établissements, publiés d'abord, embarqués à la release suivante
 supabase/            schéma et politiques d'accès de la base de publication
 tools/               publication des Blueprints, harnais de parité
-assets/              icônes, visuels, référentiel des bâtiments du campus
+assets/              icônes, visuels, référentiel des bâtiments du campus, pdf.js vendorisé
 docs/                cette documentation
 ```
 
@@ -343,12 +344,26 @@ livré ; elle est mise à jour à chaque contribution.
   libellé. Un décalage ne peut plus rendre *la mauvaise valeur*, il ne rend plus *rien*. Elle a
   corrigé trois affirmations fausses de la documentation au passage, dont **l'INE de Bordeaux INP**,
   qui existe.
+
+  **La 6.1 rend l'écran indifférent à la panne** ([6.1-A](docs/phase-6/6-1-a-robustesse-scolarite.md)) :
+  la première soirée en production avait montré qu'une panne de widget cassait la grille, qu'un code
+  inconnu affichait un message faux, et qu'une connexion depuis l'onglet changeait de page en plein
+  run. Une tuile en échec **garde sa taille** et dit deux mots — la phrase, et le geste (relancer ce
+  seul widget, ou ressaisir), sont dans une feuille au toucher ; tout code de Blueprint en
+  `_INDISPONIBLE` se présente comme un service injoignable, réessayable, par une règle et non par une
+  table qu'on oublie d'étendre ; et le formulaire garde la page jusqu'au dernier pas. Un lien discret
+  sous le bouton de connexion — « Tu es d'un autre campus ? » — ouvre le choix d'établissement, et un campus non
+  relié a sa propre page dans l'onglet. Et sur Android, **un PDF s'affiche dans l'application**,
+  dessiné par pdf.js embarqué dans la vue.
   [docs/features/scolarite.md](docs/features/scolarite.md)
 - [x] **Multi-établissement** — le catalogue des universités vit en
   [base](docs/backend.md) et pilote l'interface : choix à l'accueil, changement dans les réglages,
   purge de ce qui appartenait à l'université quittée. Les Blueprints de portail sont namespacés sous
   `ukit.portail.`, **le seul préfixe qu'un manifeste a le droit d'étendre** — et un service qu'un
-  établissement ne publie pas se **dit** au lieu d'échouer.
+  établissement ne publie pas se **dit** au lieu d'échouer. Depuis la 6.1, **le socle embarque tous
+  les établissements publiés à la date de la release** — Blueprints compris, un test le garantit —,
+  l'accueil se réabonne à l'arrivée du catalogue et sait attendre sa première réponse : le premier
+  jour de la rentrée 2026, une installation neuve n'avait vu que le Collège ST.
   [docs/phase-6/6-g-etablissements.md](docs/phase-6/6-g-etablissements.md)
 - [x] **Le compte à l'accueil, et l'emploi du temps par lien collé** — la connexion au compte
   universitaire est proposée dès le parcours d'accueil, **sautable et rappelée**, et omise chez un

@@ -131,7 +131,7 @@ sort en plusieurs publications**. La 6.0 est sortie le 31 août. Deux jours plus
 | Publication | Contenu | Condition de sortie |
 |---|---|---|
 | **v6.0** | la phase telle qu'écrite : volet 1, les sessions d'écran, les finitions visuelles, la clôture [6-Z](6-z-livraison-finale.md) — **sortie le 2026-08-31** | — |
-| **v6.1** | **la consolidation de la v6** : robustesse de la scolarité ([A](6-1-a-robustesse-scolarite.md)), pilotage à distance — messages, audiences, console, sondes ([B](6-1-b-pilotage-a-distance.md)), la passe de code ([C](6-1-c-passe-de-code.md)), la publication en parallèle ([D](6-1-d-publication.md)), les finitions d'interface ([E](6-1-e-finitions-interface.md)), la sortie ([Z](6-1-z-sortie.md)) | les six jalons déroulés |
+| **v6.1** | **la consolidation de la v6** : robustesse de la scolarité ([A](6-1-a-robustesse-scolarite.md), *livré le 2026-09-02*), pilotage à distance — messages, audiences, console, sondes ([B](6-1-b-pilotage-a-distance.md)), la passe de code ([C](6-1-c-passe-de-code.md)), la publication en parallèle ([D](6-1-d-publication.md)), les finitions d'interface ([E](6-1-e-finitions-interface.md)), la sortie ([Z](6-1-z-sortie.md)) | les six jalons déroulés |
 | **v6.2** | les capacités qui attendent le contenu : **mise en avant des annonces par créneaux**, **compléments du portail Bordeaux INP** et documents supplémentaires, **notes & résultats** ; et les deux évaluations reportées, onglets natifs / `@expo/ui` et typage de `Theme.ts` | le contenu existe et permet de vérifier |
 
 Ce n'est pas une entorse à « une phase = une version » : c'est son amendement, écrit ici et dans
@@ -178,7 +178,7 @@ de test, et les limites écrites.
 
    6.1 — LA CONSOLIDATION (decidee le 2026-09-02, docs 6-1-*)
 
-                    6.1-A robustesse scolarite
+                    6.1-A robustesse scolarite   [livre]
                               |
                     6.1-B pilotage a distance      6.1-D publication (parallele)
                               |

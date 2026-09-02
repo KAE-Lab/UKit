@@ -84,8 +84,16 @@ la synchronisation désenregistre la tâche.
 | [`assets/icons/logo.png`](../assets/icons/logo.png) | logo affiché dans l'onboarding |
 | [`assets/images/default_resto.png`](../assets/images/default_resto.png) | visuel de repli des fiches restaurant |
 | [`assets/locations.json`](../assets/locations.json) | référentiel des bâtiments ([cartographie.md](cartographie.md)) |
+| [`assets/pdfjs/pdf.min.mjs.txt`](../assets/pdfjs/pdf.min.mjs.txt) · [`pdf.worker.min.mjs.txt`](../assets/pdfjs/pdf.worker.min.mjs.txt) | pdf.js et son worker, copiés **tels quels** du paquet `pdfjs-dist` (build `legacy`) par `npm run pdfjs:vendor` ; `VERSION` et `LICENSE` les accompagnent, et un test vérifie qu'ils sont ceux du paquet installé ([features/scolarite.md](features/scolarite.md)) |
+| [`assets/pdfjs/viewer.html`](../assets/pdfjs/viewer.html) | la page du lecteur PDF d'Android : ses marqueurs sont remplacés à l'assemblage |
 
 `assetBundlePatterns: ['**/*']` embarque toutes les ressources dans le binaire.
+
+**Pourquoi `.txt`.** Metro traite `.mjs` comme du source — il le compilerait et l'embarquerait dans le
+bundle. Or pdf.js s'exécute dans une WebView, qui a besoin de son texte tel quel : un fichier servi tel
+quel est un asset, et `txt` est la seule extension neutre qu'un asset de texte puisse porter. C'est la
+seule chose que [`metro.config.js`](../metro.config.js) ajoute à la configuration d'Expo — Metro n'en
+avait besoin d'aucune jusqu'ici, et le fichier ne doit pas devenir l'endroit où l'on empile.
 
 ## Construction
 

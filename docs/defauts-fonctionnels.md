@@ -237,7 +237,7 @@ Le test qui « verrouillait » la vue semaine ne vérifiait d'ailleurs pas ce qu
 passait le séparateur **à la main**, donc il décrivait la fonction et non la vue. Il passait encore
 après le changement. Il porte maintenant sur `decouperSemaine`, seul chemin réel.
 
-### Sur iPhone, Face ID n'était jamais tenté — *corrigé le 2026-08-22, à confirmer sur un build*
+### Sur iPhone, Face ID n'était jamais tenté — *corrigé le 2026-08-22, confirmé sur build le 2026-09-02*
 
 L'onglet Scolarité et la révélation du mot de passe demandaient directement le **code de l'appareil**,
 sans jamais proposer Face ID, alors que l'empreinte se déclenchait normalement sur Android.
@@ -262,8 +262,9 @@ exécute. La couche native résout alors l'échec **sans jamais appeler `evaluat
 ouvrir la moindre fenêtre : voilà pourquoi personne n'a jamais vu Face ID essayer.
 
 Le conteneur, sous Expo Go, est Expo Go. Celui de UKit porte la clé par deux chemins vérifiés dans
-`app.config.ts` — `ios.infoPlist` et l'option `faceIDPermission` du greffon. **La confirmation demande
-un `eas build --profile development`** ; le correctif, lui, est exactement celui que ce verdict appelle.
+`app.config.ts` — `ios.infoPlist` et l'option `faceIDPermission` du greffon. La confirmation demandait
+un build : **elle est faite, sur l'iPhone de production, le 2026-09-02** — Face ID est proposé avant
+le code, à l'ouverture de l'onglet comme à la révélation du mot de passe.
 
 Deux choses trouvées en chemin. La sonde elle-même était fautive : `demander()` **jetait l'erreur du
 premier temps** dès que le code finissait par réussir, c'est-à-dire au moment précis où on la

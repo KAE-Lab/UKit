@@ -75,7 +75,7 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `annonces` | contenu éditorial de vie étudiante | [`BdeService`](../src/features/Campus/services/BdeService.ts) | **6-B** | — |
 | `batiments` | coordonnées, horaires, accès libre, visuel | [`shared/locations`](../src/shared/locations/index.ts) | **6-D** | [`assets/locations.json`](../assets/locations.json) |
 | `visuels` | la photo d'un contenu, quand celle de sa source est fausse ou absente | [`shared/visuels`](../src/shared/visuels/index.ts) | passe de finition | *aucun* — le socle, c'est l'image de la source |
-| `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | **6-G** | l'établissement historique |
+| `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | **6-G** | les lignes publiées à la date de la release — une copie, vérifiée par un test (6.1-A) |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | bandeau de service : maintenance, incident | rien aujourd'hui | — | — |
 | `salutations` | le mot du haut de l'onglet Scolarité, quand une règle publiée doit passer devant le socle embarqué — voir [scolarite.md](features/scolarite.md#la-salutation-est-une-règle-pas-une-condition) |

@@ -130,9 +130,11 @@ export function projeterDossier(
  * des codes que ce portail-ci se donne. Faire remonter des codes de portail dans la table generique
  * la ferait grossir a chaque etablissement ajoute (jalon 6-G).
  *
- * Un code inconnu retombe sur la famille : un Blueprint publie peut nommer un echec que cette
- * version de l'application n'a jamais vu, et « la demande n'a pas pu aboutir » vaut mieux qu'un
- * libelle brut affiche a un etudiant.
+ * Elle ne porte que les codes qui meritent un libelle **precis** — « ta boite n'a pas repondu, mais
+ * ta connexion a fonctionne ». Un code inconnu passe par la regle de `estCodeDeServiceIndisponible`,
+ * puis retombe sur la famille : un Blueprint publie peut nommer un echec que cette version de
+ * l'application n'a jamais vu, et « la demande n'a pas pu aboutir » vaut mieux qu'un libelle brut
+ * affiche a un etudiant.
  */
 const CLE_PAR_CODE: Readonly<Record<string, { readonly titre: TranslationKey; readonly message: TranslationKey }>> = {
     LOGIN_FAILED: { titre: 'LOGIN_FAILED_TITLE', message: 'LOGIN_FAILED' },
@@ -143,36 +145,29 @@ const CLE_PAR_CODE: Readonly<Record<string, { readonly titre: TranslationKey; re
 // `PORTAIL_ABSENT` n'est volontairement **pas** dans cette table (jalon 6-G) : ce n'est pas un code
 // de portail mais un code de catalogue — aucun run n'est parti, l'etablissement ne publie simplement
 // pas ce service. Il porte donc deja sa cle, posee par `serviceAbsent` (shared/aetherius/failures.ts),
-// et le repli de `cleDeMessage` la rend telle quelle. L'inscrire ici creerait un second endroit ou
+// et le repli de `clesDe` la rend telle quelle. L'inscrire ici creerait un second endroit ou
 // changer le message.
 
-export function cleDeMessage(failure: UkitFailure): TranslationKey {
-    if (failure.code !== undefined && CLE_PAR_CODE[failure.code] !== undefined) {
-        return CLE_PAR_CODE[failure.code].message;
-    }
-    return failure.messageKey;
-}
-
 /**
- * Le **titre** du meme echec, suivant exactement le meme chemin que son message.
+ * Un code de Blueprint qui decrit un service momentanement absent, et non un refus.
  *
- * Les deux se decident ensemble ou pas du tout : un titre de famille (« Demande interrompue ») pose
- * au-dessus d'un message de code (« Le portail de ton universite ne repond pas ») dirait deux choses
- * differentes du meme echec.
+ * Une **regle** plutot qu'une table : tout code qui se termine par `_INDISPONIBLE` (ou son pluriel)
+ * dit lui-meme de quoi il retourne. La table ci-dessus a deja manque un cas — `MOODLE_INDISPONIBLE`,
+ * le soir de la sortie de la 6.0, s'affichait « Connexion interrompue », le repli de sa famille,
+ * parce que personne ne l'y avait inscrit. La regle vaut pour le prochain widget sans qu'on y pense,
+ * et elle vaut pour un code que seule une version publiee connait.
  */
-export function cleDeTitre(failure: UkitFailure): TranslationKey {
-    if (failure.code !== undefined && CLE_PAR_CODE[failure.code] !== undefined) {
-        return CLE_PAR_CODE[failure.code].titre;
-    }
-    return failure.titleKey;
+export function estCodeDeServiceIndisponible(code: string | undefined): boolean {
+    return code !== undefined && /_INDISPONIBLES?$/.test(code);
 }
 
 /**
- * Les codes qui decrivent un service momentanement absent, et non un refus.
+ * Un service momentanement absent, quelle que soit la facon dont l'echec le dit : par sa famille
+ * (`unavailable`), ou par un code en `_INDISPONIBLE`.
  *
- * Ils sont **reessayables** alors que leur famille (`blocked`) ne l'est pas, et l'ecart est mesure,
- * pas theorique : sur un appareil, une source injoignable ne produit **jamais** `unavailable`. Une
- * connexion refusee fait rendre a iOS sa propre page d'erreur, dans laquelle l'agent s'injecte et
+ * Ces codes sont **reessayables** alors que leur famille (`blocked`) ne l'est pas, et l'ecart est
+ * mesure, pas theorique : sur un appareil, une source injoignable ne produit **jamais** `unavailable`.
+ * Une connexion refusee fait rendre a iOS sa propre page d'erreur, dans laquelle l'agent s'injecte et
  * s'annonce — donc `navigate` reussit, et c'est l'attente suivante qui echoue, avec le nom que le
  * Blueprint lui a donne. Un nom qui ne resout pas, lui, ne produit aucun document et retombe en
  * `engine`. Dans les deux cas la famille `unavailable`, seule porteuse d'un bouton Reessayer, est
@@ -184,7 +179,40 @@ export function cleDeTitre(failure: UkitFailure): TranslationKey {
  * reessayer serait faux. `LOGIN_FAILED`, lui, reste non reessayable — rejouer le meme mot de passe
  * donnera le meme refus.
  */
-const CODES_REESSAYABLES: readonly string[] = ['CAS_INDISPONIBLE', 'MESSAGERIE_INDISPONIBLE'];
+export function estServiceIndisponible(failure: Pick<UkitFailure, 'kind' | 'code'>): boolean {
+    return failure.kind === 'unavailable' || estCodeDeServiceIndisponible(failure.code);
+}
+
+/**
+ * Le titre et le message d'un echec, decides **ensemble** : la table du code, puis la regle des
+ * services indisponibles, puis la famille.
+ *
+ * Un titre de famille (« Demande interrompue ») pose au-dessus d'un message de code (« Le portail de
+ * ton universite ne repond pas ») dirait deux choses differentes du meme echec — d'ou un seul
+ * chemin pour les deux.
+ *
+ * La regle ne touche pas aux familles sans code : `unavailable` garde le message du moteur, qui
+ * parle a juste titre de la connexion. Elle ne s'applique qu'a un code, c'est-a-dire a un service
+ * que le Blueprint a nomme.
+ */
+function clesDe(failure: UkitFailure): { readonly titre: TranslationKey; readonly message: TranslationKey } {
+    if (failure.code !== undefined && CLE_PAR_CODE[failure.code] !== undefined) {
+        return CLE_PAR_CODE[failure.code];
+    }
+    if (estCodeDeServiceIndisponible(failure.code)) {
+        return { titre: 'ERROR_PORTAL_SERVICE_UNAVAILABLE_TITLE', message: 'ERROR_PORTAL_SERVICE_UNAVAILABLE' };
+    }
+    return { titre: failure.titleKey, message: failure.messageKey };
+}
+
+export function cleDeMessage(failure: UkitFailure): TranslationKey {
+    return clesDe(failure).message;
+}
+
+/** Le **titre** du meme echec, suivant exactement le meme chemin que son message. */
+export function cleDeTitre(failure: UkitFailure): TranslationKey {
+    return clesDe(failure).titre;
+}
 
 /**
  * L'echec tel qu'un ecran de scolarite doit le montrer : son message, et s'il vaut la peine d'etre
@@ -194,10 +222,13 @@ const CODES_REESSAYABLES: readonly string[] = ['CAS_INDISPONIBLE', 'MESSAGERIE_I
  * codes de ce portail.
  */
 export function presenterEchec(failure: UkitFailure): UkitFailure {
-    const reessayable = failure.retryable
-        || (failure.code !== undefined && CODES_REESSAYABLES.includes(failure.code));
-
-    return { ...failure, titleKey: cleDeTitre(failure), messageKey: cleDeMessage(failure), retryable: reessayable };
+    const cles = clesDe(failure);
+    return {
+        ...failure,
+        titleKey: cles.titre,
+        messageKey: cles.message,
+        retryable: failure.retryable || estServiceIndisponible(failure),
+    };
 }
 
 /**

@@ -130,7 +130,11 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`features/Planning/components/CourseAnnotations.ts`](../src/features/Planning/components/CourseAnnotations.ts) | l'icône déduite du contenu et non du rang, sur les deux formes de description — le défaut trouvé sur appareil au jalon 6-I |
 | [`features/Planning/services/PlanningAssembly.ts`](../src/features/Planning/services/PlanningAssembly.ts) | un code d'UE contient une lettre : une année de titre ADE n'en est pas un |
 | [`features/Campus/services/CampusApiMapping.ts`](../src/features/Campus/services/CampusApiMapping.ts) | la correspondance textuelle salle vers bâtiment, la détection des vacances, le refiltrage sur la date |
-| [`features/Scolarite/services/ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) | la casse de l'identité criée par la source, le compteur `null` contre `0`, la table des échecs nommés, et — depuis le 2026-08-25 — **l'arité asymétrique des deux portails** (une lecture obligatoire rend une chaîne, une lecture bonus rend une liste) plus le **glyphe d'icône** que la source colle au libellé de la formation |
+| [`features/Scolarite/services/ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) | la casse de l'identité criée par la source, le compteur `null` contre `0`, la table des échecs nommés **et la règle des codes en `_INDISPONIBLE`** — un code inconnu ne doit plus dire « connexion interrompue » —, et — depuis le 2026-08-25 — **l'arité asymétrique des deux portails** (une lecture obligatoire rend une chaîne, une lecture bonus rend une liste) plus le **glyphe d'icône** que la source colle au libellé de la formation |
+| [`features/Scolarite/widgets/presentation.ts`](../src/features/Scolarite/widgets/presentation.ts) | les six états d'une rangée, et — depuis 6.1-A — les deux mots d'une **tuile en échec** et le geste de sa feuille : ressaisie, relance, ou rien pour `engine` |
+| [`shared/etablissements/socle.ts`](../src/shared/etablissements/socle.ts) · [`tools/catalogue/etablissementsSql.ts`](../tools/catalogue/etablissementsSql.ts) | le socle embarqué est **exactement** ce que la projection rend des lignes de `supabase/etablissements.sql` — lues par un petit lecteur de littéraux SQL, lui-même testé —, et tout Blueprint que le socle nomme est embarqué. Une divergence dans un sens comme dans l'autre a été vue le premier jour de la rentrée 2026 |
+| [`shared/etablissements/premierRafraichissement.ts`](../src/shared/etablissements/premierRafraichissement.ts) | une réponse, un plafond, jamais les deux — le cas qui compte est une base injoignable qui répond vite |
+| [`features/Scolarite/services/LecteurPdfPage.ts`](../src/features/Scolarite/services/LecteurPdfPage.ts) · [`tools/pdfjs/vendor.test.ts`](../tools/pdfjs/vendor.test.ts) | l'assemblage de la page du lecteur pdf.js — ce qui doit survivre au passage en littéral, ce qui doit lever plutôt que rendre une page blanche — et la conformité des copies vendorisées au paquet installé |
 | [`tools/eslint/no-style-literals.mjs`](../tools/eslint/no-style-literals.mjs) | que la table d'échelles de la règle ESLint **n'a pas dérivé** de [`shared/theme/tokens.ts`](../src/shared/theme/tokens.ts) |
 
 `BdeMapping` a été le premier module **de feature** couvert, et il l'est pour une raison précise :
@@ -181,6 +185,10 @@ appareil reste la porte principale.
 > donc chargé en CommonJS par les transpileurs à la volée, et un module CommonJS ne peut pas
 > `require()` `@aetherius/engine`, publié en ESM pur. `vitest` résout la condition `import` quel que
 > soit le format du projet.
+
+> **`npm run pdfjs:vendor`** recopie pdf.js dans `assets/pdfjs/` ; il ne se joue qu'en bumpant la
+> devDependency `pdfjs-dist`, et le test de conformité le rappelle si on l'oublie
+> ([plateforme.md](plateforme.md#ressources)).
 
 ### Le seul réglage de vitest, et pourquoi il existe
 
@@ -311,7 +319,14 @@ garde donc la trace de **chaque** étape, pas seulement du verdict final — la 
 biométrique a coûté un aller-retour pour avoir jeté l'erreur du premier temps dès que le second
 réussissait.
 
-L'onglet *Temps* porte deux simulations indépendantes : l'heure, et le **réseau**.
+L'onglet *Temps* porte deux simulations indépendantes : l'heure, et le **réseau** — et, en bas, la
+**réinitialisation complète** (6.1-A) : le trousseau, le répertoire privé des documents et tout
+AsyncStorage — réglages, `firstload`, caches et surcouches publiées — puis un rechargement du
+JavaScript ([`ReinitialisationComplete.ts`](../src/shared/services/ReinitialisationComplete.ts)).
+« Réinitialiser l'application » des Réglages garde le cache du catalogue et l'état en mémoire — le
+premier rafraîchissement a déjà répondu —, donc il ne montre pas ce qu'un **tout nouvel étudiant**
+voit : l'attente de la liste des établissements, le socle hors ligne. Seule une remise à zéro suivie
+d'un rechargement le montre.
 
 Ses libellés sont volontairement **hors des dictionnaires** : ce n'est pas une capacité utilisateur,
 et lui ouvrir les trois traductions ferait porter à l'internationalisation un écran que personne

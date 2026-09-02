@@ -102,9 +102,27 @@ export async function rafraichirWidgets(
     return obtenues;
 }
 
-type LectureWidget =
+export type LectureWidget =
     | { readonly ok: true; readonly valeur: ValeurWidget }
     | { readonly ok: false; readonly echec: UkitFailure | null };
+
+export interface OptionsLecture {
+    readonly signal?: AbortSignal;
+}
+
+/**
+ * Relit **un seul** point, depuis la feuille d'echec de sa tuile.
+ *
+ * La meme reservation que le rafraichissement — `arriere-plan`, interruptible par un geste — et le
+ * meme silence : un point sans source, un moteur pris ou un run abandonne rendent `echec: null`.
+ * Le geste vient de l'utilisateur, mais ce qu'il relance reste une lecture d'arriere-plan : une
+ * session qui demarrerait pendant la relance doit pouvoir la faire ceder (MoteurNavigateur).
+ */
+export async function relireWidget(point: PointWidget, options: OptionsLecture = {}): Promise<LectureWidget> {
+    const source = sourceDuWidget(point);
+    if (source === null) return { ok: false, echec: null };
+    return lireUnWidget(source.nom, options);
+}
 
 /**
  * Une lecture, moteur reserve.
@@ -121,7 +139,7 @@ type LectureWidget =
  */
 async function lireUnWidget(
     nom: RunnableBlueprintName | string,
-    options: OptionsRafraichissement,
+    options: OptionsLecture,
 ): Promise<LectureWidget> {
     const blueprint = nom as RunnableBlueprintName;
 

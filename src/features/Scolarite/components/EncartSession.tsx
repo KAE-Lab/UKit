@@ -8,8 +8,11 @@
  *
  * Depuis que « Tes documents » existe, ca ne l'est plus : ces fichiers sont locaux, ils ne dependent
  * ni d'un portail ni d'un compte, et les cacher derriere un ecran d'erreur rendrait l'onglet mort
- * pour exactement les gens a qui il sert le plus — quelqu'un qui n'a pas connecte son compte, et
- * tout etudiant d'un etablissement sans portail publie (« Autre universite »).
+ * pour exactement les gens a qui il sert le plus — quelqu'un qui n'a pas connecte son compte.
+ *
+ * Un campus sans portail publie n'arrive plus jusqu'ici (6.1-A) : l'onglet lui donne sa propre page
+ * (CampusNonRelie), en amont de tout aiguillage. L'encart ne connait donc que deux situations, pas de
+ * compte et echec bloquant.
  *
  * **Une seule exception, et elle est deliberee : le parcours froid.** Il reste plein ecran, parce
  * qu'il est *transitoire* — l'afficher en encart au-dessus d'une page qui se remplit sous lui ferait
@@ -24,64 +27,26 @@ import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import type { UkitFailure } from '../../../shared/aetherius/failures';
-import { serviceEtablissement } from '../../../shared/etablissements';
 import { demandeUneRessaisie } from '../services/ScolariteMapping';
 
 export interface EncartSessionProps {
     theme: AppThemeType;
-    portailDisponible: boolean;
     aUnCompte: boolean;
     echecBloquant: UkitFailure | null;
     sessionFailure: UkitFailure | null;
     onRetry: () => void;
     onRessaisir: () => void;
     onConnecter: () => void;
-    /** Ouvre le formulaire de demande d'adaptation, quand le catalogue en publie un. */
-    onDemanderCampus: (adresse: string) => void;
 }
 
 export function EncartSession({
-    theme, portailDisponible, aUnCompte, echecBloquant, sessionFailure,
-    onRetry, onRessaisir, onConnecter, onDemanderCampus,
+    theme, aUnCompte, echecBloquant, sessionFailure, onRetry, onRessaisir, onConnecter,
 }: EncartSessionProps) {
     const encadrer = (contenu: React.ReactNode) => (
         <View style={{ marginHorizontal: tokens.space.md, marginBottom: tokens.space.lg }}>
             {contenu}
         </View>
     );
-
-    /*
-     * L'ordre n'est pas indifferent, et c'est le meme raisonnement qu'au jalon 6-J : un etablissement
-     * qui ne publie aucun portail n'a JAMAIS d'identifiants enregistres, donc la branche « pas de
-     * compte » gagnerait toujours et proposerait un formulaire qui ne peut mener nulle part.
-     */
-    if (!portailDisponible) {
-        /*
-         * Un campus qu'on n'a pas porte n'est **pas une panne**, et ne doit donc pas emprunter la
-         * grammaire d'echec : `SourceFailureNotice` disait « le portail ne repond pas » la ou il n'y
-         * a jamais eu de portail a joindre. C'est un etat vide, avec ce qu'un etat vide doit porter —
-         * **une action**, pas un bouton Reessayer qui n'aurait rien a rejouer.
-         *
-         * L'action est un formulaire de demande, et son adresse vient du **catalogue** : ajouter ou
-         * changer ce lien est une publication, pas une release. Sans lien publie, le message reste et
-         * l'action disparait — mieux vaut dire honnetement « pas encore » que proposer une porte
-         * fermee.
-         */
-        const demande = serviceEtablissement('adaptation');
-        return encadrer(
-            <EmptyState
-                icon="school-outline"
-                title={Translator.get('CAMPUS_NOT_SUPPORTED_TITLE')}
-                message={Translator.get('CAMPUS_NOT_SUPPORTED')}
-                theme={theme}
-                variant="card"
-                action={demande === null ? null : {
-                    label: Translator.get('CAMPUS_REQUEST_ACTION'),
-                    onPress: () => onDemanderCampus(demande),
-                }}
-            />,
-        );
-    }
 
     if (!aUnCompte) {
         /*

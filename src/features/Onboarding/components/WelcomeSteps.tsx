@@ -10,12 +10,13 @@
  */
 
 import React from 'react';
-import { Image, ScrollView, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { Image, KeyboardAvoidingView, ScrollView, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
 import { tokens } from '../../../shared/theme/Theme';
+import { LoadingState } from '../../../shared/ui/LoadingState';
 import type { Etablissement } from '../../../shared/etablissements';
 // Deux dependances croisees entre features, et elles sont volontaires — voir la section
 // « Dependances entre features » de docs/architecture.md. L'accueil propose depuis le jalon 6-J deux
@@ -102,12 +103,18 @@ export const StepIntro = ({ themeObj }) => (
  *
  * Les universites sont des **lignes pleine largeur** et non des pastilles : un nom d'universite ne
  * tient pas sur une puce, et le tronquer donnerait trois libelles indiscernables.
+ *
+ * `chargement` : le premier rafraichissement du catalogue n'a pas encore repondu. L'etape le dit
+ * plutot que d'afficher une liste qu'elle sait peut-etre en retard — plafonne a quelques secondes
+ * par l'appelant, apres quoi la liste connue s'affiche et se complete si le reseau revient (6.1-A).
  */
-export const StepEtablissement = ({ themeObj, etablissements, codeActif, selectEtablissement }) => (
+export const StepEtablissement = ({ themeObj, etablissements, codeActif, selectEtablissement, chargement }) => (
     <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
         <View style={carte(themeObj)}>
             <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_INSTITUTION')}</Text>
-            {etablissements.map((etablissement: Etablissement) => {
+            {chargement ? (
+                <LoadingState theme={themeObj} message={Translator.get('INSTITUTIONS_LOADING')} />
+            ) : etablissements.map((etablissement: Etablissement) => {
                 const selected = etablissement.code === codeActif;
                 return (
                     <TouchableOpacity
@@ -211,6 +218,13 @@ export const WelcomeGroupFooter = ({ themeObj, textFilter, filtres }) => {
  * (jalon 6-J).
  */
 export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, filterList, selectGroup, parAnnee = true }) => (
+    /*
+     * Le cadre clavier vit DANS l'etape, comme pour le compte et le lien iCal (voir WelcomeScreen) :
+     * sans lui, le clavier recouvrait les groupes trouves sous le champ de recherche, et rien ne
+     * permettait de les atteindre tant qu'on ne le fermait pas (constate sur iPhone le 2026-09-02).
+     * `padding` sur les deux plateformes, le comportement valide sur le formulaire de connexion.
+     */
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
     <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: 140 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={{ ...carte(themeObj), marginBottom: 0 }}>
             {parAnnee && (
@@ -276,6 +290,7 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
             />
         </View>
     </ScrollView>
+    </KeyboardAvoidingView>
 );
 
 /**
@@ -286,7 +301,7 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
  * correction, et c'est precisement pour rendre ce partage possible que `CredentialsProvider` a remonte
  * au-dessus des deux branches (`rootContainer.tsx`).
  */
-export const StepCompte = ({ themeObj, onSuivant, onConnecte }) => (
+export const StepCompte = ({ themeObj, onSuivant, onConnecte, onAutreCampus, onEnSession }) => (
     /*
      * Le degagement du haut vit dans `topPadding` — DANS le contenu defilant — et pas sur ce
      * conteneur : pose ici, il decoupait le defilement a sa ligne et le contenu disparaissait
@@ -306,6 +321,8 @@ export const StepCompte = ({ themeObj, onSuivant, onConnecte }) => (
             topPadding={tokens.space.xxl}
             onSkip={onSuivant}
             onSuccess={onConnecte}
+            onAutreCampus={onAutreCampus}
+            onEnSession={onEnSession}
             compact
         />
     </View>

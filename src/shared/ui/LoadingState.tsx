@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { tokens, AppThemeType } from '../theme/Theme';
 import { ScreenState } from './ScreenState';
@@ -33,9 +33,19 @@ export interface LoadingStateProps {
      */
     background?: string;
     topOffset?: number;
+    /**
+     * Ce qu'on attend, en une phrase : « On recupere la liste des etablissements… ». Un chargement
+     * qui parle se distingue d'un chargement qui bugue (6.1-A) ; sans phrase, l'indicateur seul,
+     * comme avant.
+     */
+    message?: string;
 }
 
-export function LoadingState({ theme, fullScreen = false, background, topOffset }: LoadingStateProps) {
+export function LoadingState({ theme, fullScreen = false, background, topOffset, message }: LoadingStateProps) {
+    const phrase = message !== undefined ? (
+        <Text style={[styles.message, { color: theme.fontSecondary }]}>{message}</Text>
+    ) : null;
+
     if (fullScreen) {
         return (
             <ScreenState
@@ -44,9 +54,31 @@ export function LoadingState({ theme, fullScreen = false, background, topOffset 
                 {...(topOffset !== undefined ? { topOffset } : {})}
             >
                 <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
+                {phrase}
             </ScreenState>
         );
     }
 
-    return <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />;
+    if (phrase === null) {
+        return <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />;
+    }
+
+    return (
+        <View style={styles.enLigne}>
+            <ActivityIndicator color={theme.primary} />
+            {phrase}
+        </View>
+    );
 }
+
+const styles = StyleSheet.create({
+    enLigne: {
+        alignItems: 'center',
+        margin: tokens.space.xl,
+    },
+    message: {
+        marginTop: tokens.space.sm,
+        fontSize: tokens.fontSize.sm,
+        textAlign: 'center',
+    },
+});

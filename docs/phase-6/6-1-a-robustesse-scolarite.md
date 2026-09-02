@@ -1,5 +1,9 @@
 # 6.1-A — Robustesse de la scolarité
 
+> **Jalon livré le 2026-09-02** — code, tests et documentation ; la vérification sur appareil suit le
+> plan de test ci-dessous. Les écarts entre ce texte et ce qui a été livré sont dans
+> [Écarts constatés](#écarts-constatés), en bas : le texte au-dessus reste tel qu'il a été écrit.
+>
 > **Le jalon qui répare ce qui a cassé en production.** Tout ce qui suit a été vu sur un appareil
 > réel entre la soirée de release et le 2026-09-02 ; rien n'est théorique. Les références S1…S10
 > renvoient à la [mise à plat](6-1-mise-a-plat.md).
@@ -128,3 +132,95 @@ est prise.
 - **La feuille d'échec ne diagnostique pas.** Elle montre le message du moteur ; un `engine` reste
   « un problème de notre côté » sans bouton.
 - **pdf.js n'annote pas, ne signe pas, ne remplit pas de formulaire.** C'est une visionneuse.
+
+## Écarts constatés
+
+Ce que la carte du code a corrigé dans le texte ci-dessus, et les décisions prises en chemin.
+
+- **Les Blueprints INP n'étaient pas embarqués.** « Ils sont dans `blueprints/` depuis 6-G »
+  confondait le dossier et le binaire : les cinq fichiers de `blueprints/portails/` n'existaient que
+  par le manifeste. Ils sont désormais importés par `blueprints/index.ts`, **sans quitter leur
+  dossier** — qui change de sens (« rangés par établissement ; embarqué ou non se lit dans
+  `index.ts` ») — et un test de `socle.test.ts` exige que tout Blueprint nommé par le socle soit dans
+  `BUNDLED`. Le script de publication lit `index.ts` pour annoncer « embarqué » ou « hors socle ».
+- **`ville`** : le socle disait « Talence », la ligne publiée « Bordeaux ». Talence des deux côtés —
+  la commune du campus, comme le socle le raisonnait — et `supabase/etablissements.sql` corrigé. **À
+  rejouer en base par `psql`** : sans cette publication, le parc voit encore « Bordeaux », la ligne
+  publiée remplaçant le socle.
+- **`SettingsManager.emit('catalogue')` n'existe pas** — l'API est `on` / `unsubscribe` / `notify`, et
+  `notify` écrit les réglages à chaque appel. Le canal « le catalogue a changé » existait déjà
+  (`AppContext.catalogue`) ; ce qui manquait est un signal « le premier rafraîchissement a répondu »,
+  parce qu'un rafraîchissement qui aboutit sans changement ne bouscule rien
+  (`shared/etablissements/premierRafraichissement.ts`).
+- **Le socle est sorti de `catalogue.ts`** (`socle.ts`) : trois établissements y auraient porté le
+  fichier au-delà de la limite de lignes. Le test de divergence passe par un petit lecteur de
+  littéraux SQL (`tools/catalogue/etablissementsSql.ts`), lui-même testé.
+- **La tuile fait 120 points, pas 140** — décision du 2026-08-30 que ce texte n'avait pas suivie.
+- **L'icône de la tuile en échec est `iconeEchec`** (l'enveloppe barrée, le livre barré), pas
+  « l'icône du service » : la définition la portait déjà pour la rangée, et un échec change de signe,
+  pas seulement de mot.
+- **La règle `_INDISPONIBLE` passe après la table**, pas avant : CAS et messagerie gardent leur
+  libellé précis (« ta boîte n'a pas répondu, mais ta connexion a fonctionné »), la règle couvre le
+  reste avec deux clés nouvelles (« Service injoignable »), plutôt que les clés de la famille
+  `unavailable`, qui accusent la connexion.
+- **`config` dit « Erreur »**, pas « À ressaisir » : un code qu'on ne sait pas lire ne doit pas envoyer
+  d'office vers la ressaisie ; sa feuille propose le lien.
+- **« Relancer » partout sauf `engine` et `LOGIN_FAILED`** — décision du 2026-09-02 : le tableau
+  disait « si la famille le permet », mais le plan de test relance un Blueprint cassé (`data`) et
+  attend que la tuile se remplisse après republication. Rejouer un widget est gratuit ; `engine` reste
+  sans bouton, la limite écrite tient.
+- **La feuille n'affiche pas le `detail` du moteur** : c'est un message technique, journalisé par
+  ailleurs — « la feuille ne diagnostique pas » se prend à la lettre.
+- **La primitive de dialogue s'appelle `Dialogue`** (le mot du dépôt), dans `shared/ui`, et la
+  feuille de widget la compose ; la modale « Bientôt » y a suivi, ayant deux hôtes de deux domaines.
+- **`LoadingState` gagne une phrase** ; le composant `ChargementPleinePage` reste à 6.1-E.
+- **pdf.js** : `pdfjs-dist` en devDependency épinglée, deux fichiers copiés tels quels en `.txt` par
+  `npm run pdfjs:vendor`, `metro.config.js` déclare l'extension, la page est assemblée inline et
+  importe la bibliothèque depuis un Blob ; pas de rendu paresseux au premier essai, limite de six
+  mégaoctets, chien de garde de quinze secondes. Le lecteur a été découpé — l'écran compose, un hook
+  décide — pour tenir les seuils ESLint.
+- **Un hook appelé après un retour anticipé** dans `ScolariteDashboard` a été remonté au passage.
+- **La carte des fichiers de `scolarite.md`** listait trois fichiers qui n'existent plus et en omettait
+  un ; corrigée.
+
+### Retours d'appareil du 2026-09-02 au soir
+
+- **Le fichier SQL ne disait pas ce que la base porte.** Comparé aux lignes publiées (lecture
+  anonyme), il divergeait sur quatre valeurs — la porte Moodle de Bordeaux (le SSO initié par l'IdP,
+  publié à chaud le 31 août), la ville de l'INP (Talence), le nom et le nom court de « Autre campus »
+  — et Talence était déjà en base pour le Collège ST. Le fichier et le socle ont été alignés sur la
+  base ; **aucune publication n'est nécessaire**, et le test de divergence garde désormais les deux.
+- **Se déconnecter depuis la fiche du compte** laissait deux formulaires empilés : la fiche revient
+  en arrière avant d'attendre la fermeture de la session distante.
+- **« Tu es d'un autre campus ? » vers « Autre campus »** menait au tableau de bord avec un encart :
+  l'onglet a désormais sa page (`CampusNonRelie`, logo de UKit en filigrane, demande de campus, lien
+  de retour), l'onglet n'est plus voilé dans la barre, et c'est le bouton Compte qui porte le voile.
+- **Le rendu pdf.js est une image** : le pincement pixellise au-delà de deux fois la densité de
+  l'écran. Limite écrite ; redessiner à l'échelle du zoom est la suite si un certificat le réclame.
+- **L'interrupteur Hors ligne du menu de développement ne coupe pas les widgets** : ils sont joués
+  dans la WebView (Act II), qu'il ne couvre pas — c'est écrit dans `qualite.md`. La sonde d'un
+  widget en échec se fait en cassant le Blueprint embarqué et en rechargeant Metro.
+- **Actualiser le dossier vidait l'onglet** : revenir sur Scolarité pendant l'actualisation retombait
+  sur l'écran de chargement plein. Le dossier reste affiché, la barre se pose en encart, et
+  « Réessayer » relance le dossier après un échec — le plein écran n'est plus que pour un parcours
+  froid sans dossier.
+- **La page du campus non relié est un état vide**, pas un bandeau au logo de UKit : le logo y a été
+  posé à la place de celui de l'établissement, à la demande, puis défait le jour même — un logotype
+  en tête d'un « pas encore » se lisait comme une signature déplacée. Le lien de changement de campus
+  est un bouton tonal — ici, et sous le bouton de connexion du formulaire, désactivé avec lui —
+  parce qu'un texte nu sous une phrase flottait « dans le vide », et qu'en tête il paraissait
+  déplacé.
+- **Deux retours de la seconde sonde** : « Suivant » restait bloqué après une connexion réussie (le
+  formulaire se démontait sans solder son état) ; le clavier recouvrait les groupes trouvés à l'étape
+  de l'emploi du temps (l'étape porte désormais son cadre clavier, comme le compte et le lien).
+- **L'attente de la liste des établissements ne se voit pas sur un bon réseau**, même après une
+  réinitialisation complète : la base répond pendant l'étape d'introduction, bien avant la troisième
+  étape. C'est un filet pour un réseau lent, pas un écran du parcours nominal.
+- **« Suivant » et le retour de l'accueil sont bloqués** tant que la connexion lancée depuis le
+  formulaire tourne ; la limite « un échec ne se voit qu'après coup » disparaît. **« Tu es d'un autre
+  campus ? »** passe sous le bouton de connexion, désactivé avec lui.
+- **Réinitialisation complète** dans le menu de développement : l'étape établissement ne peut pas
+  montrer son attente après un simple « Réinitialiser » — le cache et le signal du premier
+  rafraîchissement survivent tant que le JavaScript n'est pas relancé.
+- **Le lecteur d'image sur iPhone** peut garder son état de zoom si on quitte en plein pincement :
+  limite écrite, non corrigée.

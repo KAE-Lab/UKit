@@ -51,11 +51,15 @@ export interface TuileScolariteProps {
     /**
      * La ligne du bas.
      *
-     * Elle est **obligatoire**, et c'est une contrainte de mise en page autant que de contenu : la
-     * tuile repartit trois blocs sur sa hauteur, et s'il n'y en avait que deux le libelle tomberait
-     * au ras du bas — deux tuiles voisines n'auraient plus le meme rythme.
+     * Attendue des qu'une tuile porte une valeur, et c'est une contrainte de mise en page autant que
+     * de contenu : la tuile repartit trois blocs sur sa hauteur, et s'il n'y en avait que deux le
+     * libelle tomberait au ras du bas — deux tuiles voisines n'auraient plus le meme rythme.
+     *
+     * **Une seule exception : la tuile en echec**, qui ne dit que deux mots. Sans contexte, le milieu
+     * centre le libelle et la hauteur ne bouge pas (`minHeight`, et la rangee etire ses enfants) —
+     * la grille garde sa forme quoi qu'il arrive a une source (docs/theme.md, decisions durables).
      */
-    contexte: string;
+    contexte?: string | null;
     /** Une lecture est en cours **par-dessus** ce qui est affiche : indicateur, sans vider la tuile. */
     chargement?: boolean;
     /** Le libelle en gris : la tuile n'a rien a promettre aujourd'hui. */
@@ -69,6 +73,16 @@ export interface TuileScolariteProps {
      */
     glypheDeFond?: IconSpec;
     onPress?: () => void;
+}
+
+/** La ligne du bas, ou rien : une tuile en echec n'en a pas (voir `contexte`). */
+function ContexteDeTuile({ contexte, theme }: { contexte: string | null | undefined; theme: AppThemeType }) {
+    if (contexte === undefined || contexte === null || contexte === '') return null;
+    return (
+        <Text style={[styles.contexte, { color: theme.fontSecondary }]} numberOfLines={1}>
+            {contexte}
+        </Text>
+    );
 }
 
 export function TuileScolarite({
@@ -108,11 +122,7 @@ export function TuileScolarite({
             </Text>
         </View>
     );
-    const bas = (
-        <Text style={[styles.contexte, { color: theme.fontSecondary }]} numberOfLines={1}>
-            {contexte}
-        </Text>
-    );
+    const bas = <ContexteDeTuile contexte={contexte} theme={theme} />;
 
     return (
         <TouchableOpacity

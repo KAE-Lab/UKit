@@ -19,10 +19,15 @@
  * et leur liste entiere, pour un contenu qu'on consulte le jour ou l'on en a besoin — un certificat.
  * Ils sont desormais une **tuile** a cote de la messagerie, et leur detail a son ecran. La page ne
  * porte donc plus que deux choses : l'etat de la session, et la grille (GrilleScolarite).
+ *
+ * **Une actualisation du dossier se pose en encart** (6.1-A) : la meme barre que le formulaire et la
+ * fiche du compte, dans la meme carte, au-dessus d'une page qui ne bouge pas — le dossier precedent
+ * reste affiche jusqu'a ce que le nouveau l'ecrase. L'ecran plein n'est plus que pour un parcours
+ * froid sans dossier a montrer.
  */
 
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { TAB_BAR_HEIGHT } from '../../../shared/ui/ScreenState';
@@ -30,9 +35,11 @@ import type { UkitFailure } from '../../../shared/aetherius/failures';
 import type { ScolariteColdData } from '../services/ScolariteMapping';
 import type { PointWidget } from '../widgets/definitions';
 import type { EtatDesWidgets } from '../widgets/useWidgets';
+import type { EtatProgression } from '../hooks/useEcranDeProgression';
 import { EncartSession } from './EncartSession';
 import { GrilleScolarite } from './GrilleScolarite';
 import { DocumentsTile } from './DocumentsTile';
+import { BlocProgression } from './ScolariteLoadingScreen';
 
 export interface PageScolariteProps {
     theme: AppThemeType;
@@ -41,6 +48,9 @@ export interface PageScolariteProps {
     widgets: EtatDesWidgets;
     /** Le certificat automatique se range : la tuile des documents pose son indicateur de lecture. */
     certificatEnCours: boolean;
+    /** Une actualisation du dossier tourne : la barre se pose en encart, la page reste. */
+    progression: EtatProgression;
+    scrapeProgress: string | null;
     credentials: unknown;
     portailDisponible: boolean;
     sessionFailure: UkitFailure | null;
@@ -55,7 +65,7 @@ export interface PageScolariteProps {
 }
 
 export function PageScolarite({
-    theme, teinte, coldData, widgets, certificatEnCours, credentials, portailDisponible,
+    theme, teinte, coldData, widgets, certificatEnCours, progression, scrapeProgress, credentials, portailDisponible,
     sessionFailure, echecBloquant,
     onRetry, onRessaisir, onConnecter, onDemanderCampus, onWidget, onPorte, onDocuments,
 }: PageScolariteProps) {
@@ -80,16 +90,22 @@ export function PageScolarite({
                 gap: tokens.space.lg,
             }}
         >
+            {progression.visible ? (
+                // Le gabarit de la carte du formulaire, ou la meme barre remplace les champs : une
+                // seule facon de dire « ca se relit » dans tout l'onglet.
+                <View style={[styles.encartProgression, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+                    <BlocProgression scrapeProgress={scrapeProgress} terminee={progression.terminee} theme={theme} color={teinte} />
+                </View>
+            ) : null}
+
             <EncartSession
                 theme={theme}
-                portailDisponible={portailDisponible}
                 aUnCompte={credentials !== null && credentials !== undefined}
                 echecBloquant={echecBloquant}
                 sessionFailure={sessionFailure}
                 onRetry={onRetry}
                 onRessaisir={onRessaisir}
                 onConnecter={onConnecter}
-                onDemanderCampus={onDemanderCampus}
             />
 
             {/* Rien a ouvrir tant qu'aucune session n'existe : la grille entiere attend. Et un
@@ -106,6 +122,8 @@ export function PageScolarite({
                     pointEnCours={widgets.pointEnCours}
                     coldData={coldData}
                     onWidget={onWidget}
+                    onRelancer={(point) => { void widgets.relancer(point); }}
+                    onRessaisir={onRessaisir}
                     onPorte={onPorte}
                     onDemande={onDemanderCampus}
                     tuileDocuments={<DocumentsTile theme={theme} teinte={teinte} chargement={certificatEnCours} onPress={onDocuments} />}
@@ -119,5 +137,11 @@ export function PageScolarite({
 const styles = StyleSheet.create({
     corps: {
         flex: 1,
+    },
+    encartProgression: {
+        marginHorizontal: tokens.space.md,
+        padding: tokens.space.md,
+        borderRadius: tokens.radius.lg,
+        borderWidth: 1,
     },
 });

@@ -41,10 +41,10 @@ section 2 de [sources-externes.md](../sources-externes.md).
 >
 > **Capture attendue** — `scolarite-login.png` : l'écran de connexion universitaire.
 >
-> **Trois captures différées, volontairement** — `scolarite-dashboard.png`, `scolarite-biometrie.png`
-> et `scolarite-compte.png`. Elles montrent des écrans dont l'habillage doit changer prochainement, et
-> une capture périmée renseigne moins bien qu'une absence signalée. Les quatre autres, ci-dessous,
-> illustrent ce que le jalon 6-F a réellement changé et n'ont pas cette fragilité.
+> **Deux captures différées, volontairement** — `scolarite-dashboard.png` et `scolarite-compte.png`.
+> Elles montrent des écrans dont l'habillage doit changer prochainement, et une capture périmée
+> renseigne moins bien qu'une absence signalée. Les quatre autres, ci-dessous, illustrent ce que le
+> jalon 6-F a réellement changé et n'ont pas cette fragilité.
 
 ![L'écran de connexion universitaire, avant toute saisie](../screenshots/scolarite-login.png)
 
@@ -269,13 +269,13 @@ une machinerie qui ne connaît que des Blueprints l'aurait alourdie pour un seul
 capitales, « En un coup d'œil » et « Tes services » (2026-08-30). Ce ne sont pas les en-têtes de
 section d'avant qui reviennent : c'est l'intertitre des Réglages et des horaires du CROUS, une ligne
 qui nomme sans peser. Sans eux, le héros, les tuiles et les rangées se lisaient comme un seul
-empilement — la page manquait d'air précisément là où sa structure change de nature. En mode échec,
-tout est rangées dans un seul groupe : un seul intertitre.
+empilement — la page manquait d'air précisément là où sa structure change de nature.
 
-> **Une seule exception, et elle est indispensable : un échec bascule la paire entière en rangées.**
-> Un échec demande des mots — « Identifiants incorrects », et la ressaisie derrière. Une tuile de
-> 140 points les tronquerait, et une phrase tronquée est une impasse. Basculer *les deux* plutôt que
-> la seule fautive évite le trou qu'une tuile esseulée laisserait.
+> **La grille ne change jamais de forme.** Elle a basculé la paire entière en rangées sur un échec, le
+> temps d'une version — un échec demande des mots, et une tuile les tronquerait. La 6.0 a montré le
+> prix de cette exception : la page changeait de forme sous les yeux de l'utilisateur. Une tuile en
+> échec dit désormais deux mots et garde sa taille ; la phrase est dans la feuille — voir
+> [Une tuile en échec garde sa taille](#une-tuile-en-échec-garde-sa-taille).
 
 **Pourquoi trois rangées sur quatre n'ont pas de donnée, et pourquoi elles sont là quand même.**
 Parce qu'il n'y a rien à lire fin août, et c'est **mesuré** : la chronologie Moodle du compte de
@@ -301,7 +301,7 @@ Décidés hors du rendu, dans
 
 | État | Quand | Ce qu'on voit |
 |---|---|---|
-| `échec` | la lecture a échoué et a quelque chose à dire | l'erreur, la rangée s'efface |
+| `échec` | la lecture a échoué et a quelque chose à dire | sur une rangée, l'erreur ; sur une tuile, deux mots — la phrase est dans la feuille |
 | `compte` | une valeur exploitable | ce que la source annonce, et son compteur |
 | `attente` | une source existe, rien n'est encore connu | un indicateur |
 | `inconnu` | la lecture n'a rien rendu d'exploitable | la rangée redevient une porte |
@@ -326,6 +326,51 @@ au formulaire de demande. C'est ce qui justifie qu'ils s'affichent différemment
 
 **Aucun de ces états n'est une tuile morte** — la règle du dépôt tient. `bientôt` ouvre son service,
 `absent` ouvre le formulaire de demande (`services.adaptation`).
+
+#### Une tuile en échec garde sa taille
+
+**Décidé le 2026-09-02, livré par le jalon [6.1-A](../phase-6/6-1-a-robustesse-scolarite.md).** La
+grille basculait la paire entière en rangées dès qu'un widget échouait, pour lui donner la place
+d'une phrase — et le soir de la sortie de la 6.0, une panne de Moodle a transformé la messagerie en
+rangée aussi : la page changeait de forme sous les yeux de l'utilisateur, ce qui amplifiait une panne
+de widget en page cassée. La règle est désormais inverse, et elle est durable
+([theme.md](../theme.md#les-décisions-durables)) : **une tuile ne change pas de taille, quoi qu'il
+arrive à sa source.** Elle ne dit que deux mots — l'icône d'alerte du service, le mot, rien d'autre,
+pas même sa ligne de contexte — et la phrase vit dans la feuille que le toucher ouvre.
+
+| Famille d'échec | Les deux mots | Au toucher |
+|---|---|---|
+| refus d'identifiants (`LOGIN_FAILED`) | « À ressaisir » | la fiche du compte en mode ressaisie, sans feuille |
+| service momentanément absent — famille `unavailable`, ou un code en `_INDISPONIBLE` | « Indisponible » | la feuille : le titre et le message, **« Relancer »** ce seul widget |
+| tout le reste (`rejected`, `data`, `config`, `engine`) | « Erreur » | la feuille : le message, « Relancer » sauf pour `engine` |
+
+La décision est pure et testée ([`widgets/presentation.ts`](../../src/features/Scolarite/widgets/presentation.ts),
+`echecDeTuile`) ; le rendu n'interprète rien. Un `config` — « il manque une information » — dit
+« Erreur » et non « À ressaisir » : un code qu'on ne sait pas lire ne doit pas envoyer d'office vers la
+ressaisie, mais sa feuille propose le lien « Ressaisir mes identifiants ». `engine` reste sans bouton :
+« un problème de notre côté » que rejouer ne répare pas — c'est la limite écrite plus bas.
+
+**La feuille** ([`FeuilleDeWidget`](../../src/features/Scolarite/components/FeuilleDeWidget.tsx))
+compose le dialogue partagé du dépôt ([`shared/ui/Dialogue`](../../src/shared/ui/Dialogue.tsx)) — le
+même gabarit que « Bientôt » et que « Campus pas encore relié », extrait le jour où il a gagné son
+troisième hôte. Elle montre le titre et le message tels que `ScolariteMapping` les présente ; le
+`detail` du moteur reste dans le journal, la feuille ne diagnostique pas.
+
+**Relancer un seul widget** est nouveau : [`widgets/runner.ts`](../../src/features/Scolarite/widgets/runner.ts)
+expose `relireWidget(point)`, avec la même réservation du navigateur que le rafraîchissement global
+(priorité `arrière-plan`, interruptible par un geste), et `useWidgets` expose `relancer(point)`. La
+relance **attend** la boucle de rafraîchissement en vol plutôt que de la refuser : une boucle globale
+peut sauter le widget en échec — frais selon la valeur d'avant — et un « Relancer » sans effet visible
+serait un bouton mort. Pendant la relance, l'indicateur tourne dans le coin de la tuile sans effacer
+ses deux mots (`etatDeLaRangee` garde la nature `echec` et pose `chargement`).
+
+**Et un code inconnu n'est plus une « connexion interrompue ».** `MOODLE_INDISPONIBLE` n'était pas dans
+la table des codes de `ScolariteMapping` et tombait sur le repli de sa famille — « La connexion a été
+interrompue avant la fin », qui décrit autre chose. La table ne porte plus que les codes qui méritent
+un libellé précis ; une **règle** passe derrière elle : tout code qui se termine par `_INDISPONIBLE`
+(ou son pluriel) se présente comme un service injoignable, **réessayable**, et le prochain widget n'aura
+rien à déclarer. Le repli de la famille `blocked` ne sert plus qu'aux codes qui ne disent rien de leur
+nature.
 
 #### Un widget de plus est une publication, pas une release
 
@@ -537,8 +582,9 @@ franchement vide, qui ne propose qu'une chose — se connecter. C'est **tout ou 
 le bandeau du formulaire porte le titre) : l'encart d'invitation obligeait un tap de plus vers
 exactement la même page.
 
-La conséquence est assumée : chez « Autre campus », l'onglet est voilé dans la barre et la modale de
-demande s'arrête là.
+La conséquence est assumée : chez « Autre campus », l'onglet s'ouvre sur sa propre page — pas de
+documents, pas de compte — et c'est le bouton Compte de la barre qui est voilé
+([Un campus non porté n'est pas une panne](#un-campus-non-porté-nest-pas-une-panne)).
 
 Ces fichiers vont dans le **répertoire privé de l'application** (`expo-file-system`), isolé des
 autres applications et couvert par le chiffrement de l'appareil quand celui-ci est verrouillé. **Pas
@@ -573,16 +619,18 @@ Depuis le 2026-08-29, appuyer sur une pièce l'**affiche** au lieu de la sortir
 un certificat demandait jusque-là de passer par la feuille de partage et de choisir une autre
 application — trois gestes pour regarder une page qu'on a soi-même rangée.
 
-**Aucune dépendance ajoutée**, et c'est ce qui rend l'arbitrage tenable : le rendu vient de
+**Aucun module natif ajouté**, et c'est ce qui rend l'arbitrage tenable : le rendu vient de
 `react-native-webview`, déjà au projet pour les portails. Sur iOS, `WKWebView` affiche un PDF depuis
-une adresse `file://` avec le défilement et le zoom du système.
+une adresse `file://` avec le défilement et le zoom du système. Sur Android, c'est **pdf.js** qui
+dessine, embarqué dans la page de la WebView — des fichiers statiques, donc Expo Go reste utilisable
+(voir plus bas).
 
 **La forme est celle de l'écran de carte**, et c'est une demande explicite : barre de navigation
 transparente, bandeau plein peint par l'écran (`insets.top + HEADER_OFFSET`, fond de carte, filet
 bas), et le geste secondaire — ici le partage — en **bouton d'en-tête** (`HeaderButton`), là où la
 carte propose l'ouverture dans un plan externe. Pas de barre du bas.
 
-**Deux stratégies de rendu, et l'écran bascule tout seul.** L'écran est resté noir sur appareil à
+**Trois stratégies de rendu, et l'écran bascule tout seul.** L'écran est resté noir sur appareil à
 trois reprises le 2026-08-29, avec des événements de chargement *normaux* — commencé puis fini, aucun
 échec. C'est le piège documenté dans le natif : une adresse `file://` que la conversion refuse fait
 charger une **page vide sans erreur** (`RNCWebViewImpl`, `!request.URL` → `loadHTMLString:@""`). Un
@@ -592,6 +640,10 @@ charger une **page vide sans erreur** (`RNCWebViewImpl`, `!request.URL` → `loa
 |---|---|---|
 | `fichier` | l'adresse `file://` — le seul rendu PDF complet (défilement, zoom, toutes les pages) | d'abord, toujours |
 | `inline` | le même document en base64 dans une page `source={{ html }}` — le chemin de l'écran de carte, prouvé sur l'appareil ; `<embed>` peut ne rendre que la première page d'un PDF | quand la fin de chargement rapporte une URL qui n'est pas le fichier, ou quand le processus web meurt |
+| `pdfjs` | la page du lecteur ([`assets/pdfjs/viewer.html`](../../assets/pdfjs/viewer.html)) qui embarque pdf.js et dessine chaque page dans un canevas ; bibliothèque, worker et document lui sont posés en littéraux à l'assemblage | Android, pour un PDF, **d'emblée** — son moteur n'a aucune visionneuse |
+
+Tout ce qui décide vit dans [`hooks/useLectureDuDocument.ts`](../../src/features/Scolarite/hooks/useLectureDuDocument.ts) ;
+l'écran compose.
 
 Le contenu est **lu et vérifié au montage** (`base64Sync`) : une pièce vide ou sans la signature de
 son type (`%PDF` s'encode `JVBERi`) part au repli au lieu d'un noir muet. Les traces `[lecteur]`
@@ -610,13 +662,37 @@ d'appareil pour le nommer. Voir
 correction — décodage en JavaScript, écriture **vérifiée par relecture** avec repli sur l'API
 héritée, et idempotence durcie en auto-réparation.
 
-**Android ne rend pas les PDF dans une WebView** — son moteur n'a pas de visionneuse intégrée. L'écran
-y retombe sur la feuille de partage, avec une ligne qui le dit et une action pour ouvrir ailleurs. Ce
-n'est pas un écran d'erreur : il n'y a pas de panne, il y a une plateforme qui ne sait pas faire. Les
-images, elles, s'affichent partout.
+**Android ne rend pas les PDF dans une WebView** — son moteur n'a pas de visionneuse intégrée, ni par
+`file://` ni par `<embed>`, et l'écran y retombait sur la feuille de partage. À l'usage, « lecture
+indisponible » se lisait comme une panne ([mise à plat](../phase-6/6-1-mise-a-plat.md), S10). Depuis
+[6.1-A](../phase-6/6-1-a-robustesse-scolarite.md), l'écran y **dessine le document lui-même**, avec
+pdf.js — un essai assumé, et il tient en quatre pièces :
 
-La pièce ne quitte pas l'appareil : elle est lue depuis le répertoire privé, la WebView n'a ni réseau
-ni JavaScript, et le partage reste une décision de l'utilisateur.
+- **la bibliothèque et son worker**, copiés tels quels du paquet `pdfjs-dist` (build `legacy`, pour
+  couvrir les WebView anciennes) dans [`assets/pdfjs/`](../../assets/pdfjs/) par `npm run pdfjs:vendor`,
+  sous une extension `.txt` — Metro n'embarque un fichier tel quel que sous une extension d'asset, et
+  c'est [`metro.config.js`](../../metro.config.js) qui la déclare. Un test vérifie que les copies sont
+  celles du paquet installé ;
+- **la page du lecteur**, à nous, qui importe la bibliothèque depuis un Blob — un module ES ne
+  s'importe que par une adresse, et `blob:` est la seule qu'une page sans réseau ni fichier sache
+  fabriquer — puis dessine chaque page dans un canevas, à la largeur de l'écran, l'une sous l'autre.
+  Le pincement pour zoomer est celui de la WebView ;
+- **l'assemblage**, pur et testé ([`services/LecteurPdfPage.ts`](../../src/features/Scolarite/services/LecteurPdfPage.ts)) :
+  les trois textes posés en littéraux JavaScript dans le gabarit, avec les deux pièges qui rendent une
+  page blanche sans un mot — un `</script>` dans une bibliothèque minifiée, un `$&` dans un
+  remplacement ;
+- **la couture** ([`services/LecteurPdf.ts`](../../src/features/Scolarite/services/LecteurPdf.ts)) qui
+  lit les trois assets une fois par session d'application.
+
+La page conclut par un message — la première page est rendue, ou rien ne le sera — et un chien de
+garde de quinze secondes tranche si elle ne conclut pas. Dans les deux cas d'échec, comme pour un
+document au-delà de six mégaoctets (la page tiendrait la bibliothèque **et** le document dans une
+seule chaîne), l'écran retombe sur la feuille de partage — l'écran d'avant — et le dit. Les images,
+elles, s'affichent partout.
+
+La pièce ne quitte pas l'appareil : elle est lue depuis le répertoire privé, la WebView n'a aucun
+réseau — pdf.js compris, qui tourne sur la page sans rien charger —, le JavaScript n'est activé que
+pour cette stratégie, et le partage reste une décision de l'utilisateur.
 
 **Pas de vraie vignette dans la liste, et pas de badge d'extension non plus.** La vignette est un
 arbitrage assumé : rendre la première page d'un PDF demanderait soit une bibliothèque de rendu, soit
@@ -706,13 +782,19 @@ un écran d'erreur rendrait l'onglet mort pour exactement ceux à qui il sert le
 
 | Situation | Avant | Après |
 |---|---|---|
-| Aucun portail publié | `PORTAIL_ABSENT` plein écran | **« Campus non pris en charge »**, avec une action de demande |
+| Aucun portail publié | `PORTAIL_ABSENT` plein écran | **sa propre page** — un état vide, la demande de campus, un bouton pour corriger son choix (6.1-A) |
 | Aucun compte | `ScolariteLoginView` plein écran | une invitation à connecter, **et rien d'autre** |
 | Échec bloquant | `SourceFailureNotice` plein écran | l'encart d'échec en tête, **puis les documents** |
-| **Parcours froid en cours** | plein écran | **inchangé** |
+| **Parcours froid en cours** | plein écran | plein écran **sans dossier lu** ; avec un dossier, un encart de progression en tête de page (6.1-A) |
 
 La dernière ligne est délibérée : le parcours froid est *transitoire*, et une page qui se remplirait
-sous un indicateur de progression ferait sauter le contenu à chaque étape franchie.
+sous un indicateur de progression ferait sauter le contenu à chaque étape franchie — **tant que la
+page n'a rien d'autre à montrer**. Avec un dossier déjà lu, « Actualiser mon dossier » ne l'efface
+plus : la page reste, la barre se pose en encart au-dessus, et le nouveau dossier écrase l'ancien à
+l'arrivée. Revenir sur l'onglet pendant l'actualisation retombait sur l'écran plein, l'ancienne
+barre (constat du 2026-09-02). Corollaire : « Réessayer » relance le dossier quand la dernière
+session a échoué, et non plus seulement quand aucun dossier n'existe — la présence d'un dossier ne
+dit plus que la session a abouti.
 
 **Le verrou biométrique suit la même logique** : il ne s'arme que lorsqu'un compte est enregistré.
 Sans compte il n'y a rien à protéger dans cet onglet — l'identité n'a pas été lue — et demander une
@@ -748,7 +830,9 @@ ouvre l'onglet et qu'on découvre une progression qui semblait commencer à cet 
 
 L'écran du compte rend maintenant la progression lui-même et **ne se ferme plus**. L'autre remède
 envisagé — renvoyer l'utilisateur vers l'onglet Scolarité — corrigeait le symptôme en *déplaçant la
-personne* : on touche une ligne dans les Réglages et on se retrouve dans un autre onglet.
+personne* : on touche une ligne dans les Réglages et on se retrouve dans un autre onglet. Et l'onglet,
+lui, garde sa page pendant l'actualisation : la même barre en encart en tête, le dossier précédent
+dessous ([L'aiguillage s'est inversé](#laiguillage-sest-inversé-et-cest-le-changement-structurant)).
 
 ### Le formulaire ne cède plus la place à l'écran d'attente
 
@@ -787,6 +871,14 @@ sur vingt : les identifiants sont posés **dès que le CAS accepte**, donc `cred
 basculait d'un coup. Le formulaire signale donc à son hôte qu'une session part **de lui**
 (`onDebut`), et garde la page jusqu'au terme — échec compris, puisque c'est là que son message doit
 s'afficher.
+
+**La garde n'avait été posée que sur cet écran-ci**, et l'onglet Scolarité a montré le même défaut le
+soir de la sortie de la 6.0 : une connexion lancée depuis l'onglet passait du formulaire à l'écran de
+chargement plein au dixième pas. Elle vit désormais dans un hook partagé par les deux hôtes
+([`useSessionDepuisLeFormulaire`](../../src/features/Scolarite/hooks/useSessionDepuisLeFormulaire.ts)),
+et l'onglet teste sa branche formulaire **avant** l'écran plein — l'ordre est le sujet. L'écran plein
+reste réservé au parcours froid lancé sans formulaire : au lancement, ou sur « Actualiser mon
+dossier » ([6.1-A](../phase-6/6-1-a-robustesse-scolarite.md)).
 
 ### Le moteur se libère avant un geste qui doit pouvoir jouer
 
@@ -833,10 +925,10 @@ Deux précautions que ce remplacement impose, et qui ne se devinent pas :
 - **un run remplacé ne solde pas la validation de celui qui l'a remplacé.** Sans cette garde, l'écran
   afficherait une erreur réseau sur une session qui se déroule parfaitement.
 
-### L'écran ne se referme plus tout seul, et c'était deux bugs
+### La déconnexion quitte l'écran, la connexion y reste
 
-Il se refermait après un `await`, ce qui supposait que la personne y était encore. Elle ne l'était
-plus, pour deux raisons indépendantes :
+L'écran s'est d'abord refermé après un `await`, ce qui supposait que la personne y était encore. Elle
+ne l'était plus, pour deux raisons indépendantes :
 
 - **à la déconnexion**, `logout` attend la fermeture de la session distante — quelques secondes.
   L'interface, elle, s'est mise à jour bien avant : le formulaire est déjà affiché, et l'écran se
@@ -845,8 +937,15 @@ plus, pour deux raisons indépendantes :
   le dossier, la formation et l'annuaire restent à lire : la promesse se résolvait à mi-parcours, et
   l'écran se refermait avec dix secondes de run devant lui.
 
-Rester est aussi le bon comportement en soi : l'aiguillage de cet écran montre déjà la suite — la
-progression, puis la fiche, ou le formulaire après une déconnexion. Il n'y a rien à fuir.
+Il a ensuite cessé de se refermer du tout, et c'était l'autre défaut, signalé le 2026-09-02 : un
+compte déconnecté depuis cet écran montrait le formulaire **ici**, puis un second formulaire — celui
+de l'onglet — en revenant en arrière. Deux écrans de connexion empilés.
+
+**La déconnexion revient donc en arrière tout de suite, avant d'attendre** : l'onglet Scolarité est le
+formulaire de connexion, et c'est lui qu'on retrouve ; depuis les Réglages, on retrouve les Réglages,
+dont la ligne du compte se relit au focus. La fermeture de la session distante continue derrière,
+elle n'a besoin d'aucun écran. **La connexion, elle, reste** : l'aiguillage montre la progression
+puis la fiche — il n'y a rien à fuir.
 
 ### Une validation en attente se solde toujours
 
@@ -904,6 +1003,13 @@ Le **repli sur l'icône générique** couvre les trois cas : aucun logo publié,
 pas, et le premier lancement hors ligne. Le formulaire reste utilisable dans les trois, ce qui est la
 seule chose qui compte à cet endroit.
 
+**Sous le bouton de connexion, « Tu es d'un autre campus ? »** (6.1-A), en **bouton tonal** — la
+forme d'une action secondaire partout dans l'application, désactivé pendant la soumission comme le
+reste de la carte. Il a vécu à côté de « Plus tard » en lien de même forme, un doublon à l'œil, puis
+sous le logo en texte nu, où il flottait « dans le vide » et paraissait déplacé. Juste sous l'action
+principale, c'est l'autre chose qu'on peut faire de ce formulaire ; « Plus tard » reste dessous, où
+il est la sortie.
+
 Un logo peut servir **plusieurs établissements** : celui de l'Université de Bordeaux vaut pour le
 Collège Sciences et Technologies et vaudra pour les autres campus qui en dépendent. C'est pourquoi
 `logo_url` est une colonne par établissement et non un fichier par code — plusieurs lignes pointent
@@ -916,13 +1022,21 @@ L'état d'un établissement sans portail publié empruntait la grammaire d'éche
 portail à joindre. C'est désormais un **état vide**, avec ce qu'un état vide doit porter — une
 **action**, jamais un bouton Réessayer qui n'aurait rien à rejouer.
 
-**Et l'onglet lui-même est un teaser** (2026-08-30) : dans la barre de navigation, l'icône Scolarité
-passe sous le voile flouté à cadenas — le vocabulaire du bouton mystérieux de Campus — et le toucher
-ouvre une modale dédiée (« Campus pas encore relié ») dont l'action mène au formulaire de demande,
-à la même adresse de catalogue que l'état vide. Le déclencheur est `portailPublie()` : relier le
-campus fait tomber le voile sans release. Le bouton Groupes de la barre suit le même sort quand
-l'emploi du temps passe par un lien personnel (`groupesRequis()`) : la recherche n'a rien à
-chercher dans un inventaire qui n'existe pas.
+**L'onglet a sa page** ([`CampusNonRelie`](../../src/features/Scolarite/components/CampusNonRelie.tsx),
+6.1-A). Il a d'abord été un teaser (2026-08-30) : l'icône Scolarité passait sous le voile flouté à
+cadenas et le toucher ouvrait la modale « Campus pas encore relié ». Mais on pouvait quand même y
+arriver — en changeant de campus depuis le formulaire de connexion, ou en y étant déjà — et on
+tombait alors sur le tableau de bord avec un encart de plus, c'est-à-dire sur la page d'un étudiant
+connecté à qui il manquerait tout. L'onglet s'ouvre donc, sur une page qui est **un état vide**, posé là
+où les autres campus voient leur formulaire : la surface d'icône du vocabulaire partagé, le titre et
+la phrase du campus non relié, le bouton « Demander mon campus », et un bouton tonal « Tu es d'un
+autre campus ? » pour corriger un mauvais choix. Le logo de UKit y a été essayé à la place de
+l'icône — en filigrane, là où le formulaire pose le logo de l'établissement — et défait le jour même :
+un logotype en tête d'une page qui dit « pas encore » se lisait comme une signature déplacée. **Le bouton Compte de la barre, lui, reste sous le voile** : c'est
+le compte qui n'est pas encore possible ici, pas l'onglet. Le déclencheur est toujours
+`portailPublie()` : relier le campus fait tomber le voile sans release. Le bouton Groupes de la barre
+suit le même sort quand l'emploi du temps passe par un lien personnel (`groupesRequis()`) : la
+recherche n'a rien à chercher dans un inventaire qui n'existe pas.
 
 L'action ouvre un formulaire de demande, et **son adresse vient du catalogue** (`services.adaptation`)
 : ajouter ou changer ce lien est une publication, pas une release. Sans lien publié, le message reste
@@ -1004,17 +1118,20 @@ CredentialsProvider                     englobe toute la pile de navigation
                                           (une session refuse, un widget attend)
 
 ScolariteDashboard                      consomme useCredentials()
+  ├─ campus sans portail     → CampusNonRelie               (sa page : demande, filigrane UKit)
+  ├─ sans compte             → ScolariteLoginView           (l'onglet EST le formulaire)
   ├─ parcours froid en cours → ScolariteLoadingScreen        (le seul etat plein ecran)
   └─ sinon                   → [BiometryGate si compte] > PageScolarite
                                   ├─ GreetingBlock          (si une identite est lue)
-                                  ├─ EncartSession          (portail absent / pas de compte / echec)
-                                  ├─ ServicesSection        (4 widgets + la porte ENT)
-                                  │    ├─ WidgetTile × 2    (messagerie, moodle — des flux)
-                                  │    └─ WidgetRow × 2     (notes, examens — des événements,
-                                  │         ⤷ floutés en teaser tant que leur source n'est pas
-                                  │           publiée ; un échec bascule les tuiles en rangées
-                                  │           — état décidé par widgets/presentation)
-                                  └─ DocumentsSection       (local — si un compte existe)
+                                  ├─ EncartSession          (pas de compte / echec)
+                                  └─ GrilleScolarite        (4 widgets, les documents, la porte ENT)
+                                       ├─ WidgetTile × 2    (moodle en héros, messagerie — des flux ;
+                                       │                     un échec : deux mots, même taille, et
+                                       │                     la FeuilleDeWidget au toucher)
+                                       ├─ DocumentsTile     (local — compte les pièces rangées)
+                                       └─ WidgetRow × 2     (notes, examens — des événements,
+                                            ⤷ floutés en teaser tant que leur source n'est pas
+                                              publiée — état décidé par widgets/presentation)
 ```
 
 **L'absence de portail passe devant l'absence de compte** dans `EncartSession`, et l'ordre n'est pas
@@ -1552,6 +1669,8 @@ Audité le 2026-08-27, après deux incohérences trouvées à l'usage.
 | Un établissement sans portail | non | il n'y a pas de compte |
 | Révéler le mot de passe | **oui, à chaque fois** | c'est le seul geste qui dévoile un secret, et il ne se mutualise pas |
 
+![L'invite Face ID à l'ouverture de l'onglet, sur un build : Face ID confirmé sur l'iPhone de production le 2026-09-02](../screenshots/scolarite-biometrie.png)
+
 **Deux corrections, et la seconde fermait un contournement.**
 
 `authPassedRef` était un `useRef` **dans** le composant : il survit aux rendus, pas aux
@@ -1862,9 +1981,22 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
   navigateur. Un écran qui garde son titre figé détonne au milieu de ceux qui l'effacent.
 - **La grille** : les deux tuiles font **la même hauteur** quelle que soit la longueur de leur texte,
   et l'INP doit voir exactement la même grille que Bordeaux — c'est ce que la forme-par-rôle garantit.
-- **Bascule d'un échec** : provoquer un refus d'identifiants — les deux tuiles doivent devenir des
-  **rangées pleine largeur**, avec le message en toutes lettres et la ressaisie au bout. Aucune tuile
-  ne doit rester seule à côté d'une rangée.
+- **Une tuile en échec garde sa taille** : publier un Blueprint Moodle qui `fail:MOODLE_INDISPONIBLE`
+  — le héros dit « Indisponible », icône d'alerte, même taille ; la messagerie reste une tuile. Le
+  toucher ouvre la feuille « Service injoignable » avec « Relancer » ; l'indicateur tourne dans le coin
+  de cette tuile seule. Republier le Blueprint corrigé, revenir au premier plan, « Relancer » : la tuile
+  se remplit sans recharger l'onglet.
+- **Un refus d'identifiants** sur la messagerie : « À ressaisir », et le toucher ouvre la fiche du compte
+  en ressaisie — sans feuille. Une extraction cassée (`data`) : « Erreur », feuille avec « Relancer ».
+- **Une seule vue** : se déconnecter, se reconnecter **depuis l'onglet** — le formulaire et sa barre du
+  premier au dernier pas, puis le tableau de bord. Même chose depuis Réglages → Compte.
+- **« Tu es d'un autre campus ? »** sous le formulaire de l'onglet : choisir l'INP — même bascule que
+  les Réglages, avertissement de purge compris ; revenir à Bordeaux par les Réglages retrouve la
+  session. À l'accueil, le lien ramène à l'étape établissement.
+- **Android, un certificat PDF** : rendu dans l'application, défilement, pincement, partage par le
+  bouton d'en-tête ; un fichier `.pdf` vide, ou un document de plus de six mégaoctets, retombe sur la
+  feuille de partage et le dit. À jouer sous Expo Go **et** sur un build : l'asset n'arrive pas par le
+  même chemin.
 - **`vars.dossier` sur `https://127.0.0.1:1/`** : « Le portail de l'université ne répond pas », **avec**
   Réessayer. Une adresse qui refuse la connexion, pas un nom qui ne résout pas — voir les limites.
 - **Arrière-plan pendant la session** : pas de WebView orpheline ; la session reprend au retour.
@@ -1949,9 +2081,9 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   ouvert et documenté chez Aetherius, avec sa reproduction et sa direction de correctif, dans la
   section « Limites connues » de `docs/embedded.md` — il se corrigera par une **release du moteur**,
   pas par une publication de Blueprint.
-- **La ligne de messagerie ne propose pas de réessayer.** Elle *dit* l'échec ; la reprise se fait au
-  retour au premier plan ou au lancement suivant. Un bouton de plus sur une rangée qui ouvre déjà le
-  webmail au toucher rendrait la cible ambiguë.
+- **La feuille d'échec ne diagnostique pas.** Elle montre le titre et le message de l'échec ; le
+  `detail` du moteur reste dans le journal, et un `engine` reste « un problème de notre côté », sans
+  bouton — le distinguer d'une source morte se traite chez Aetherius (ci-dessus).
 - **Le parcours chaud dure une vingtaine de secondes**, dont 15 s de pause fixe imposée par la
   cascade d'authentification du webmail. Le compteur de messages arrive donc après l'ouverture de
   l'onglet, pas avec elle.
@@ -1971,10 +2103,18 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   de versement, internationalisation) derrière l'entrée `categorie` du Blueprint ; chez l'INP,
   l'attestation de paiement et les relevés sur la même page `/inscriptions`. Les ouvrir sera **une
   publication**, pas une release.
-- **Une pièce ajoutée s'ouvre par la feuille de partage du système**, pas dans l'application. Afficher
-  un PDF soi-même demanderait une dépendance de rendu pour refaire, moins bien, ce que le système
-  fait déjà. Le fichier ne quitte pas l'appareil tant que l'utilisateur ne choisit pas une
-  destination distante — ce que la feuille lui permet, et qui est sa décision.
+- **pdf.js est une visionneuse, et un essai assumé.** Il n'annote pas, ne signe pas, ne remplit pas de
+  formulaire ; il dessine toutes les pages d'un coup, à deux fois la densité de l'écran au plus — un
+  document long coûte de la mémoire, et un document de plus de six mégaoctets est refusé avant
+  d'être assemblé. **Le rendu est une image** : le pincement agrandit un dessin fait à deux fois la
+  densité de l'écran, et au-delà le trait se pixellise — là où iOS, qui rend le PDF lui-même, reste
+  net à tout zoom. Redessiner à l'échelle du zoom est possible et coûterait un rendu par geste ; ce
+  sera la suite si un vrai certificat le réclame. Si le rendu d'un vrai certificat déçoit — police, lenteur —, le repli vers la
+  feuille de partage reste, et la décision s'écrira ici. Les polices standard non embarquées dans un
+  PDF sont rendues par celles du système.
+- **Le socle du catalogue se périme à chaque publication d'établissement** : un campus ajouté après
+  la release n'est dans le socle qu'à la suivante. Entre les deux, il arrive par le rafraîchissement,
+  que l'accueil sait attendre ([onboarding.md](onboarding.md)).
 - **Rien ne borne le volume des documents.** Ni nombre, ni taille totale : le répertoire privé de
   l'application est compté dans son stockage, et une pièce oubliée le reste. Un garde-fou demanderait
   de décider quoi supprimer à la place de l'utilisateur.
@@ -1984,11 +2124,10 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   donc de ces libellés.
 - **Pas de parité automatisée** pour ce module, et c'est assumé : elle demanderait des identifiants
   réels dans un harnais.
-- **Un échec de connexion depuis l'accueil ne se voit qu'après coup.** Le formulaire affiche bien son
-  message d'erreur, mais « Plus tard » et un succès mènent au même écran suivant : quelqu'un qui
-  avance sans lire n'apprend qu'en ouvrant l'onglet Scolarité que sa session n'est pas partie. C'est le
-  prix de ne pas bloquer l'accueil sur une panne de portail, et c'est le bon arbitrage — mais il est
-  écrit ici plutôt que découvert.
+- **Sur iPhone, le lecteur d'image peut rester dans son état de zoom** quand on quitte l'écran en
+  plein pincement et qu'on y revient : c'est l'état de la WebView qui survit, pas une pièce abîmée, et
+  relancer l'application le remet à plat. Il faut vraiment forcer pour y arriver (constat du
+  2026-09-02) ; ce n'est pas corrigé.
 - **La session rallonge le splash de démarrage.** `CredentialsProvider` enveloppe toute la pile
   ([`StackNavigator.tsx`](../../src/shared/navigation/StackNavigator.tsx)) et lance la session dès
   que le trousseau a rendu des identifiants, donc **à chaque lancement**. Le comportement est
@@ -2008,7 +2147,9 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`services/PropositionsDossier.ts`](../../src/features/Scolarite/services/PropositionsDossier.ts) | ce que le dossier a livré en plus de l'identité : UE inscrites, emploi du temps personnel |
 | [`services/PropositionsDecision.ts`](../../src/features/Scolarite/services/PropositionsDecision.ts) | ce qu'on en demande, et **quand** — le complément des UE, jamais les UE inscrites |
 | [`components/PropositionsModal.tsx`](../../src/features/Scolarite/components/PropositionsModal.tsx) | la confirmation, rendue par `rootContainer` pour exister aussi pendant l'accueil |
-| [`components/RangeeMysterieuse.tsx`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx) | le teaser d'un widget sans source publiée : la rangée floutée, et la modale « Bientôt » qui garde la porte du service |
+| [`components/RangeeMysterieuse.tsx`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx) | le teaser d'un widget sans source publiée : la rangée floutée — la modale « Bientôt » qu'elle ouvre vit dans `shared/ui` |
+| [`components/FeuilleDeWidget.tsx`](../../src/features/Scolarite/components/FeuilleDeWidget.tsx) | la feuille d'un widget en échec : la phrase que la tuile ne dit pas, « Relancer » ce seul widget, ou la ressaisie |
+| [`hooks/useSessionDepuisLeFormulaire.ts`](../../src/features/Scolarite/hooks/useSessionDepuisLeFormulaire.ts) | une session lancée depuis le formulaire lui laisse la page jusqu'à son terme — la garde partagée par l'onglet et la fiche du compte |
 | [`screens/ScolariteDashboard.tsx`](../../src/features/Scolarite/screens/ScolariteDashboard.tsx) | écran d'onglet : aiguillage entre connexion, chargement, échec et tableau de bord |
 | [`screens/CredentialsSettingsScreen.tsx`](../../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | réglages du compte : informations enregistrées, déconnexion — et, **sans compte, le formulaire de connexion** plutôt qu'une fiche vide |
 | [`screens/WebBrowserScreen.tsx`](../../src/features/Scolarite/screens/WebBrowserScreen.tsx) | navigateur intégré : points d'entrée, historique, retour matériel, enregistrement d'identifiants |
@@ -2019,16 +2160,20 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`shared/biometrie/decision.ts`](../../src/shared/biometrie/decision.ts) | après un échec, propose-t-on le code ? Sans dépendance, donc jouable sous Node |
 | [`shared/biometrie/index.ts`](../../src/shared/biometrie/index.ts) | la séquence en deux temps, les capacités de l'appareil, et la politique d'avant pour la sonde |
 | [`components/GreetingBlock.tsx`](../../src/features/Scolarite/components/GreetingBlock.tsx) | la salutation — le **titre** de la page dès qu'un dossier est lu — et la date du jour |
-| [`components/MailboxRow.tsx`](../../src/features/Scolarite/components/MailboxRow.tsx) | ligne de messagerie : compteur de non-lus, chargement, et échec du parcours chaud |
 | [`components/PageScolarite.tsx`](../../src/features/Scolarite/components/PageScolarite.tsx) | le corps défilant : l'encart d'état, puis les trois sections |
-| [`components/EncartSession.tsx`](../../src/features/Scolarite/components/EncartSession.tsx) | l'état de la session **en tête de page** : portail absent, pas de compte, échec |
-| [`components/DossierSection.tsx`](../../src/features/Scolarite/components/DossierSection.tsx) | « Ton dossier » : formation, numéro étudiant, fraîcheur de la lecture |
-| [`components/ServicesSection.tsx`](../../src/features/Scolarite/components/ServicesSection.tsx) | « Tes services » : la messagerie et les portes, toutes issues du catalogue |
+| [`components/EncartSession.tsx`](../../src/features/Scolarite/components/EncartSession.tsx) | l'état de la session **en tête de page** : pas de compte, échec |
+| [`components/CampusNonRelie.tsx`](../../src/features/Scolarite/components/CampusNonRelie.tsx) | la page d'un campus sans portail : l'état vide du vocabulaire partagé, la demande, le bouton pour corriger son choix |
 | [`components/DocumentsSection.tsx`](../../src/features/Scolarite/components/DocumentsSection.tsx) | « Tes documents » : la liste locale, l'ajout, la suppression |
 | [`components/LigneScolarite.tsx`](../../src/features/Scolarite/components/LigneScolarite.tsx) | le vocabulaire de rangées de l'onglet : un groupe encadré, ses lignes, son compteur |
 | [`components/ConfirmationScolarite.tsx`](../../src/features/Scolarite/components/ConfirmationScolarite.tsx) | le dialogue de confirmation, partagé par les trois gestes qui en demandent un |
 | [`services/DocumentsService.ts`](../../src/features/Scolarite/services/DocumentsService.ts) | les pièces locales : lister, ajouter, écrire des octets rapportés, supprimer — dans le répertoire privé de l'application |
 | [`services/CertificatService.ts`](../../src/features/Scolarite/services/CertificatService.ts) | la couture du certificat : jouer le Blueprint, ne pas le rejouer pour rien, écrire |
 | [`services/CertificatProjection.ts`](../../src/features/Scolarite/services/CertificatProjection.ts) | ce qu'un run rapporte, et sous quel nom on le range — **pur**, donc testé |
-| [`screens/DocumentViewerScreen.tsx`](../../src/features/Scolarite/screens/DocumentViewerScreen.tsx) | le lecteur intégré : la WebView du projet, et le repli vers le partage là où elle ne rend pas |
+| [`services/EcritureVerifiee.ts`](../../src/features/Scolarite/services/EcritureVerifiee.ts) | écrire des octets et **relire** : l'API moderne, l'API héritée en repli, une erreur nommée si la taille ne suit pas |
+| [`screens/DocumentViewerScreen.tsx`](../../src/features/Scolarite/screens/DocumentViewerScreen.tsx) | le lecteur intégré : le bandeau, la WebView du projet, et l'écran de repli vers le partage — il compose, il ne décide pas |
+| [`hooks/useLectureDuDocument.ts`](../../src/features/Scolarite/hooks/useLectureDuDocument.ts) | les trois stratégies de rendu, le contenu lu et vérifié, les verdicts que la vue rapporte, le chien de garde de pdf.js |
+| [`hooks/useLecteurPdfJs.ts`](../../src/features/Scolarite/hooks/useLecteurPdfJs.ts) | les pièces de pdf.js, chargées quand l'écran en a besoin et seulement alors |
+| [`services/LecteurPdfPage.ts`](../../src/features/Scolarite/services/LecteurPdfPage.ts) | l'assemblage de la page du lecteur — **pur**, donc testé — et la lecture défiante de ses messages |
+| [`services/LecteurPdfPage.test.ts`](../../src/features/Scolarite/services/LecteurPdfPage.test.ts) | ce qui doit survivre au passage en littéral, et ce qui doit lever plutôt que rendre une page blanche |
+| [`services/LecteurPdf.ts`](../../src/features/Scolarite/services/LecteurPdf.ts) | la couture : les trois assets lus une fois par session d'application |
 | [`hooks/useDocuments.ts`](../../src/features/Scolarite/hooks/useDocuments.ts) | leur état d'écran, relu **au focus** et non au montage — l'onglet ne se démonte jamais |

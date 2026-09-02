@@ -16,6 +16,9 @@ import { describe, expect, it } from 'vitest';
 import { FAILURE_PRESENTATION, type UkitFailure } from '../../../shared/aetherius/failures';
 import {
     cleDeMessage,
+    cleDeTitre,
+    estCodeDeServiceIndisponible,
+    estServiceIndisponible,
     prenomDepuisIdentite,
     presenterEchec,
     projeterDossier,
@@ -154,6 +157,21 @@ describe('cleDeMessage', () => {
 
     it('retombe sur la famille pour un code qu une version publiee inventerait', () => {
         expect(cleDeMessage(echec('blocked', 'CODE_DU_FUTUR'))).toBe('ERROR_BLOCKED');
+        // Le suffixe doit **terminer** le code : un mot au milieu ne dit rien de sa nature.
+        expect(cleDeMessage(echec('blocked', 'X_INDISPONIBLE_Y'))).toBe('ERROR_BLOCKED');
+    });
+
+    it('presente comme un service injoignable tout code en _INDISPONIBLE que la table ne nomme pas', () => {
+        // Le cas du soir de la 6.0 : MOODLE_INDISPONIBLE s'affichait « Connexion interrompue ».
+        expect(cleDeMessage(echec('blocked', 'MOODLE_INDISPONIBLE'))).toBe('ERROR_PORTAL_SERVICE_UNAVAILABLE');
+        expect(cleDeTitre(echec('blocked', 'MOODLE_INDISPONIBLE'))).toBe('ERROR_PORTAL_SERVICE_UNAVAILABLE_TITLE');
+        // Le pluriel, que le Blueprint des documents emploie.
+        expect(cleDeMessage(echec('blocked', 'DOCUMENTS_INDISPONIBLES'))).toBe('ERROR_PORTAL_SERVICE_UNAVAILABLE');
+    });
+
+    it('laisse la table gagner sur la regle pour les codes qu elle nomme precisement', () => {
+        expect(cleDeMessage(echec('blocked', 'CAS_INDISPONIBLE'))).toBe('ERROR_CAS_UNAVAILABLE');
+        expect(cleDeTitre(echec('blocked', 'MESSAGERIE_INDISPONIBLE'))).toBe('ERROR_MAILBOX_UNAVAILABLE_TITLE');
     });
 
     it('laisse les familles sans code a la table du moteur', () => {
@@ -174,6 +192,9 @@ describe('presenterEchec', () => {
     it('rend reessayable un service momentanement absent, que sa famille dit bloque', () => {
         expect(presenterEchec(echec('blocked', 'CAS_INDISPONIBLE')).retryable).toBe(true);
         expect(presenterEchec(echec('blocked', 'MESSAGERIE_INDISPONIBLE')).retryable).toBe(true);
+        // Par la regle, sans ligne dediee : le widget suivant n'aura rien a declarer.
+        expect(presenterEchec(echec('blocked', 'MOODLE_INDISPONIBLE')).retryable).toBe(true);
+        expect(presenterEchec(echec('blocked', 'DOCUMENTS_INDISPONIBLES')).retryable).toBe(true);
     });
 
     it('laisse un refus d identifiants non reessayable', () => {
@@ -195,5 +216,28 @@ describe('presenterEchec', () => {
         expect(presenterEchec(echec('blocked', 'MESSAGERIE_INDISPONIBLE')).messageKey).toBe(
             'ERROR_MAILBOX_UNAVAILABLE',
         );
+    });
+});
+
+describe('estServiceIndisponible', () => {
+    const echec = (kind: UkitFailure['kind'], code?: string): UkitFailure => ({
+        kind,
+        ...(code !== undefined ? { code } : {}),
+        ...FAILURE_PRESENTATION[kind],
+    });
+
+    it('reconnait le suffixe, au singulier comme au pluriel, et lui seul', () => {
+        expect(estCodeDeServiceIndisponible('MOODLE_INDISPONIBLE')).toBe(true);
+        expect(estCodeDeServiceIndisponible('COORDONNEES_INDISPONIBLES')).toBe(true);
+        expect(estCodeDeServiceIndisponible('X_INDISPONIBLE_Y')).toBe(false);
+        expect(estCodeDeServiceIndisponible('LOGIN_FAILED')).toBe(false);
+        expect(estCodeDeServiceIndisponible(undefined)).toBe(false);
+    });
+
+    it('couvre la famille du moteur autant que les codes de Blueprint', () => {
+        expect(estServiceIndisponible(echec('unavailable'))).toBe(true);
+        expect(estServiceIndisponible(echec('blocked', 'CAS_INDISPONIBLE'))).toBe(true);
+        expect(estServiceIndisponible(echec('blocked', 'LOGIN_FAILED'))).toBe(false);
+        expect(estServiceIndisponible(echec('data'))).toBe(false);
     });
 });

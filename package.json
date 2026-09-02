@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "parity": "node tools/parity/run.mjs",
+    "pdfjs:vendor": "node tools/pdfjs/vendor.mjs",
     "blueprints:publish": "node tools/publish-blueprints.mjs",
     "content:import": "node tools/import-ukit-data.mjs",
     "prepare": "husky",
@@ -93,6 +94,7 @@
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^10.4.0",
     "husky": "^9.1.7",
+    "pdfjs-dist": "6.3.289",
     "prettier": "^1.14.2",
     "qs": "^6.16.0",
     "vitest": "^3.2.7"

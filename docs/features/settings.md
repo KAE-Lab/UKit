@@ -60,6 +60,14 @@ bascule immédiate au premier toucher rendrait ce coût invisible jusqu'à ce qu
 l'établissement **déjà actif** ne déclenche rien — il n'y a rien à purger, et une confirmation pour un
 non-changement apprend à la valider sans la lire.
 
+**Elle n'appartient plus aux Réglages** depuis le jalon [6.1-A](../phase-6/6-1-a-robustesse-scolarite.md) :
+le formulaire de connexion la propose aussi — « Tu es d'un autre campus ? » — à un étudiant venu de
+la v5 qui n'a jamais revu l'accueil et voit le portail de Bordeaux sans autre indice que le logo. Deux
+hôtes de deux domaines : la modale vit dans [`shared/ui/ChoixEtablissement`](../../src/shared/ui/ChoixEtablissement.tsx),
+et la bascule elle-même — purge, adoucissement, sélection — est un service partagé,
+[`basculerEtablissement`](../../src/shared/etablissements/bascule.ts), que l'accueil appelle aussi.
+L'écran ne garde que ce qui lui revient : son libellé, et l'état de la ligne du compte.
+
 Ce que la bascule efface, et **par quel chemin** — les deux ne sont pas au même endroit, et les
 confondre a coûté un défaut :
 
@@ -444,6 +452,7 @@ réinitialiser serait un résidu, pas un service. Voir les limites.
 | [`screens/FiltersScreen.tsx`](../../src/features/Settings/screens/FiltersScreen.tsx) | l'écran des filtres d'UE : filtres actifs et leur croix, recherche, suggestions, saisie de code |
 | [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les six sections : établissement, affichage, thème, notifications, lancement, calendrier |
 | [`components/SettingsModals.tsx`](../../src/features/Settings/components/SettingsModals.tsx) | la modale de choix générique (`SettingsChoicePopup`), ses habillages langue et calendrier, réinitialisation, extinction de la synchronisation |
-| [`components/SettingsInstitutionPopup.tsx`](../../src/features/Settings/components/SettingsInstitutionPopup.tsx) | la modale d'établissement : la liste, puis la confirmation de ce qui sera effacé |
+| [`shared/ui/ChoixEtablissement.tsx`](../../src/shared/ui/ChoixEtablissement.tsx) | la modale d'établissement : la liste, puis la confirmation de ce qui sera effacé — partagée avec le formulaire de connexion depuis 6.1-A |
+| [`shared/etablissements/bascule.ts`](../../src/shared/etablissements/bascule.ts) | la bascule d'établissement — purge, adoucissement, sélection — la même depuis les Réglages, l'accueil et le formulaire |
 | [`shared/services/reglagesParEtablissement.ts`](../../src/shared/services/reglagesParEtablissement.ts) | la lecture des réglages cloisonnés par établissement, et les trois migrations de leur forme persistée |
 | [`shared/services/reglagesParEtablissement.test.ts`](../../src/shared/services/reglagesParEtablissement.test.ts) | ses tests, joués par `npm test` |
