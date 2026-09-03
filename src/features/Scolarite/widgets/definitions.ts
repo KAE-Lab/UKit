@@ -70,9 +70,10 @@ export interface DefinitionWidget {
      * `sectionsHeaders` existe depuis longtemps et le Planning s'en sert deja pour colorer ses
      * sections — en inventer une seconde aurait cree deux vocabulaires de couleur.
      *
-     * Piege a connaitre : en theme sombre, les index **0 et 4 portent la meme valeur** (`#5E5CE6`), la
-     * ou le theme clair en a deux differentes. On evite donc le 4 ici, et l'ENT garde l'accent de
-     * l'application plutot que d'occuper le doublon.
+     * Le 4 n'est pas employe ici, et l'ENT garde l'accent de l'application : en theme sombre, les
+     * index 0 et 4 ont porte la meme valeur jusqu'en 6.1-C (coquille sur le 0, corrigee), et la
+     * repartition des teintes n'a pas ete rejouee apres coup — un widget ne change pas de couleur
+     * pour un correctif.
      */
     readonly couleur: number;
     /** Le nom du service. Affiche tant qu'il n'y a pas de donnee a annoncer a sa place. */

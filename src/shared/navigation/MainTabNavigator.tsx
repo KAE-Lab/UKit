@@ -373,7 +373,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         height: TAB_BAR_HEIGHT,
         elevation: 8,
-        shadowColor: '#000',
+        // Les deux ombres de la barre sont ecrites a la main, plus marquees que les tokens (docs/theme.md § limites) ; leur couleur est la leur.
+        shadowColor: tokens.shadow.md.shadowColor,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 8,
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 8,
-        shadowColor: '#000',
+        shadowColor: tokens.shadow.md.shadowColor,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 8,
@@ -408,6 +409,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     tabLabel: {
+        // eslint-disable-next-line ukit/no-style-literals -- 10 : le libelle d'onglet, hors echelle assume ; passer a 12 changerait la barre, ce qui est l'affaire de 6.1-E
         fontSize: 10,
     },
     voileMystere: {

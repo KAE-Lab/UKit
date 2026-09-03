@@ -69,9 +69,11 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
             shadowOpacity: 0, 
             borderBottomWidth: 0,
         },
+        /* eslint-disable ukit/no-style-literals -- 10 : l'en-tete de reference, mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel */
         headerTitleContainerStyle: { paddingTop: 10 },
         headerLeftContainerStyle: { paddingTop: 10 },
         headerRightContainerStyle: { paddingTop: 10 },
+        /* eslint-enable ukit/no-style-literals */
         headerTitleAlign: 'center',
     };
 

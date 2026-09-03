@@ -173,32 +173,28 @@ l'application**, ou réinstaller l'application.
 - Sélectionner deux groupes puis terminer : le planning doit s'ouvrir sur l'agrégation des deux.
 - Terminer sans choisir de groupe : le planning doit afficher son état vide, sans blocage.
 - Utiliser le bouton retour à chaque étape.
+- Réinitialisation complète depuis le menu de développement, interrupteur HORS LIGNE avant l'étape des
+  groupes : l'étape dit **pourquoi** elle est vide et propose « Réessayer » ; rétablir le réseau puis
+  réessayer remplit la liste (6.1-C).
 
 ## Limites connues
 
 - **La table `filterSeason` est spécifique à des conventions de nommage observées.** Un changement de
   nomenclature côté université fait renvoyer des listes vides pour les combinaisons concernées, sans
   erreur visible. Le choix `AUTRE` reste le contournement.
-- **Aucune vérification que la liste des groupes est chargée.** Si le chargement du démarrage a
-  échoué (première installation hors ligne), l'étape des groupes est vide sans expliquer pourquoi.
 - **Une connexion lancée bloque le parcours jusqu'à son terme** (6.1-A). « Suivant » et le retour
   sont désactivés tant que la carte du formulaire montre une session — soumission, barre,
   confirmation — parce qu'un échec doit se lire sur place et qu'un succès avance tout seul. Le prix
   est l'attente du parcours froid, une quarantaine de secondes à Bordeaux ; avant, un étudiant qui
   s'était trompé de mot de passe ne l'apprenait qu'en ouvrant l'onglet Scolarité. « Plus tard » reste
   la sortie, tant que rien n'est lancé.
-- **Les abonnements ne sont jamais résiliés** : le `useEffect` de montage appelle `on(...)` sans
-  fonction de nettoyage. Le composant étant démonté définitivement à la fin du parcours, les
-  rappels restent enregistrés dans les managers pour la durée de la session.
-- **Le parcours utilise `StyleWelcome`**, un jeu de styles distinct des deux thèmes
-  ([theme.md](../theme.md)), ce qui le rend moins homogène avec le reste de l'application.
-- **Un fichier de 302 lignes** contenant les quatre étapes, la table de filtrage et la logique de
-  navigation.
 
 ## Carte des fichiers
 
 | Fichier | Rôle |
 |---|---|
 | [`WelcomeScreen.tsx`](../../src/features/Onboarding/WelcomeScreen.tsx) | l'enchaînement des étapes, leur nombre selon l'établissement, la bascule de `firstload` |
-| [`hooks/useWelcomeState.ts`](../../src/features/Onboarding/hooks/useWelcomeState.ts) | l'état, les abonnements — dont la révision du catalogue et l'attente plafonnée du premier rafraîchissement —, les valeurs par défaut système, le filtrage des groupes et les cinq gestes |
-| [`components/WelcomeSteps.tsx`](../../src/features/Onboarding/components/WelcomeSteps.tsx) | les mises en page, la pagination, le bouton retour et le pied de la liste de groupes. Rend deux composants venus d'autres domaines — `ScolariteLoginView` et `LienEdtForm` — plutôt que d'en recopier une seconde version ([architecture.md](../architecture.md#dépendances-entre-features)) |
+| [`hooks/useWelcomeState.ts`](../../src/features/Onboarding/hooks/useWelcomeState.ts) | l'état, les abonnements — résiliés au démontage depuis 6.1-C ; dont la révision du catalogue, l'attente plafonnée du premier rafraîchissement et l'état de la liste des groupes —, les valeurs par défaut système, le filtrage des groupes et les six gestes |
+| [`components/WelcomeSteps.tsx`](../../src/features/Onboarding/components/WelcomeSteps.tsx) | les mises en page, la pagination et le bouton retour. Rend deux composants venus d'autres domaines — `ScolariteLoginView` et `LienEdtForm` — plutôt que d'en recopier une seconde version ([architecture.md](../architecture.md#dépendances-entre-features)) |
+| [`components/StepGroupes.tsx`](../../src/features/Onboarding/components/StepGroupes.tsx) | l'étape des groupes et son pied : l'attente et l'échec de la liste — « Réessayer » relit la source —, puis le tri et la recherche (6.1-C) |
+| [`components/stylesDuParcours.ts`](../../src/features/Onboarding/components/stylesDuParcours.ts) | le vocabulaire visuel du parcours — carte, pastille, dégagement du pied — sur les tokens et le thème courant |

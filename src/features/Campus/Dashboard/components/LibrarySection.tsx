@@ -17,6 +17,7 @@ const CARD_WIDTH = width * 0.85;
 
 import { LibrarySectionCard } from './LibrarySectionCard';
 import { SectionEtatVide } from './SectionEtatVide';
+import { useChargementDeSection, useRevisionDuTableauDeBord } from '../rafraichissement';
 
 export function LibrarySection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -25,7 +26,9 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
     // Meme hook que la liste complete. Un echec plein reste discret ici — le carrousel disparait, la
     // ligne de journal du service dit pourquoi, et l'ecran dedie explique. Une couverture partielle,
     // elle, se dit : le carrousel montre une donnee reelle mais incomplete, ce qui ne se devine pas.
-    const { libraries, affluences, failure, secteursMuets, loading, retry } = useNearbyLibraries(userLat, userLon);
+    const revision = useRevisionDuTableauDeBord();
+    const { libraries, affluences, failure, secteursMuets, loading, enCours, retry } = useNearbyLibraries(userLat, userLon, revision);
+    useChargementDeSection('bibliotheques', enCours);
 
     const { favorites: favBu, toggleFavorite: toggleFavBu } = useFavorites('library_favorites');
     const [libraryFilter, setFiltre] = useSavedFilter('library_filter', 'all');

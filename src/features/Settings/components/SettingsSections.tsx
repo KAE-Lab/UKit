@@ -4,7 +4,6 @@ import Slider from '@react-native-community/slider';
 import Button from '../../../shared/ui/Button';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens } from '../../../shared/theme/Theme';
-import { SettingsManager } from '../../../shared/services/AppCore';
 import { AppThemeType } from '../../../shared/theme/Theme';
 
 const LANGUAGE_LIST = {
@@ -190,6 +189,10 @@ export const NotificationsSection = ({ themeSettings, theme, courseNotifications
                 <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginTop: tokens.space.xs }}>
                     {Translator.get('NOTIFICATION_DELAY_DESC')}
                 </Text>
+                {/* Le plafond de vingt (NotificationService) est une decision, et une decision se dit. */}
+                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginTop: tokens.space.xs }}>
+                    {Translator.get('NOTIFICATION_CAP_DESC')}
+                </Text>
             </View>
         )}
     </>
@@ -229,13 +232,15 @@ interface CalendarSectionProps {
     lastSyncFailed: boolean;
     calendarSyncEnabled: boolean;
     toggleCalendarSync: () => void;
+    /** Le geste « forcer » vient de l'ecran, qui seul sait dire son issue (toast d'echec). */
+    onForceSync: () => void;
     calendarName: string;
     openCalendarDialog: () => void;
     isSynchronizingCalendar: boolean;
     selectedCalendar: string | number;
 }
 
-export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, lastSyncDate, lastSyncFailed, calendarSyncEnabled, toggleCalendarSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar }: CalendarSectionProps) => (
+export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, lastSyncDate, lastSyncFailed, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar }: CalendarSectionProps) => (
     <>
         <SettingsTextHeader theme={themeSettings} text={Translator.get('CALENDAR_SYNCHRONIZATION')} />
         {hasCalendarPermission ? (
@@ -275,7 +280,7 @@ export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, l
                 />
                 <Button
                     theme={themeSettings}
-                    onPress={SettingsManager.syncCalendar}
+                    onPress={onForceSync}
                     disabled={selectedCalendar !== -1 && isSynchronizingCalendar}
                     leftIconAnimation={isSynchronizingCalendar ? 'rotate' : ''}
                     leftIcon="sync"

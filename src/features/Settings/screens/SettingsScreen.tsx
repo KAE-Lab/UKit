@@ -19,6 +19,7 @@ import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
 import { PastilleService } from '../../../shared/messages/PastilleService';
 import { adoucirLaTransition } from '../../../shared/ui/transitions';
+import { ErrorAlert } from '../../../shared/ui/Alerts';
 import style, { tokens } from '../../../shared/theme/Theme';
 
 
@@ -226,6 +227,35 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         );
     };
 
+    /**
+     * Le geste « Forcer une synchronisation », et son issue dite.
+     *
+     * Le service rend son verdict, l'ecran decide du retour : un toast d'echec, parce que la pastille
+     * seule demandait de savoir ou regarder. La tache de fond, elle, n'a personne a qui parler.
+     */
+    forcerSynchronisation = async () => {
+        const aboutie = await SettingsManager.syncCalendar();
+        if (!aboutie) new ErrorAlert(Translator.get('CALENDAR_SYNC_FAILED_TOAST')).show();
+    };
+
+    /**
+     * La permission calendrier, lue et au besoin demandee — **sans toucher a la synchronisation**.
+     *
+     * Le montage appelait `toggleCalendarSync()` quand la permission manquait : la fonction de
+     * l'interrupteur, qui basculait donc la synchronisation des que la permission etait accordee, et
+     * ouvrait la modale d'extinction si elle etait deja active (limite ecrite depuis 6-K, corrigee en
+     * 6.1-C). Elle est demandee une fois, au montage ; au retour de focus elle est seulement relue,
+     * pour qu'un octroi dans les reglages du systeme remplace la carte « permission » par
+     * l'interrupteur — Android redemanderait sinon a chaque retour.
+     */
+    verifierPermissionCalendrier = async (demander: boolean) => {
+        let { status } = await Calendar.getCalendarPermissionsAsync();
+        if (status !== 'granted' && demander) {
+            ({ status } = await Calendar.requestCalendarPermissionsAsync());
+        }
+        this.setState({ hasCalendarPermission: status === 'granted' });
+    };
+
     openSystemAppSettings = () => Linking.openSettings();
     setIsSynchronizingCalendar = (newState: boolean) => this.setState({ isSynchronizingCalendar: newState });
 
@@ -305,14 +335,12 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     };
 
     componentDidMount = async () => {
-        this._unsubscribeFocus = this.props.navigation.addListener('focus', () => { void this.refreshCompte(); });
+        this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
+            void this.refreshCompte();
+            void this.verifierPermissionCalendrier(false);
+        });
         void this.refreshCompte();
-
-        if ((await Calendar.getCalendarPermissionsAsync()).status === 'granted') {
-            this.setState({ hasCalendarPermission: true });
-        } else {
-            this.toggleCalendarSync();
-        }
+        void this.verifierPermissionCalendrier(true);
         SettingsManager.on('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
     };
 
@@ -401,6 +429,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     lastSyncFailed={SettingsManager.getLastSyncFailed()}
                     calendarSyncEnabled={this.state.calendarSyncEnabled}
                     toggleCalendarSync={this.toggleCalendarSync}
+                    onForceSync={this.forcerSynchronisation}
                     calendarName={calendarName}
                     openCalendarDialog={this.openCalendarDialog}
                     isSynchronizingCalendar={this.state.isSynchronizingCalendar}

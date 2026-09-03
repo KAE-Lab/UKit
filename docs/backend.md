@@ -142,16 +142,14 @@ dernier applique la règle **à la lecture** et non à la reconstruction, ce qui
 liste des bâtiments est mise en cache sept jours, et l'appliquer en amont figerait une photo pour une
 semaine — exactement ce que cette table existe pour supprimer.
 
-> **Limite connue, mesurée sur appareil.** Un visuel corrigé pendant que l'application tourne arrive
-> sur les **écrans de liste**, qui se montent à neuf, mais **pas sur les carrousels du tableau de bord
-> Campus**, qui gardent l'état chargé à leur montage : l'onglet ne se démonte jamais et leur effet ne
-> se rejoue que sur un changement de position ou un nouvel essai
-> ([`useCrousRestaurants.ts`](../src/features/Campus/hooks/useCrousRestaurants.ts)). La correction y
-> apparaît au lancement suivant. La cause est antérieure aux visuels — c'est celle qui a produit le
-> défaut du filtre corrigé pendant la passe de finition — et la corriger demande de décider de la
-> politique de rafraîchissement du tableau de bord entier, pas d'une photo : rejouer quatre appels
-> réseau à chaque retour au premier plan est un arbitrage produit, qui appartient à la session
-> d'écran du tableau de bord.
+> **Limite connue, mesurée sur appareil, et arbitrée en 6.1-C.** Un visuel corrigé pendant que
+> l'application tourne arrive sur les **écrans de liste**, qui se montent à neuf, mais **pas sur les
+> carrousels du tableau de bord Campus**, qui gardent l'état chargé à leur montage : l'onglet ne se
+> démonte jamais. La politique est désormais écrite
+> ([campus.md](features/campus.md#le-tableau-de-bord)) : les sources tierces ne se rejouent pas au
+> retour au premier plan — quatre appels réseau silencieux par bascule d'application seraient un
+> arbitrage produit — mais un **tirer-pour-rafraîchir** les relit à la demande, et c'est là qu'un
+> visuel corrigé atteint les carrousels. Les annonces, elles, se relisent au retour.
 
 > **Limite connue.** Un visuel de domaine `batiment` est indexé par un code (`A28`), et un code n'a de
 > sens que chez l'établissement qui le publie. Deux universités qui partageraient un code

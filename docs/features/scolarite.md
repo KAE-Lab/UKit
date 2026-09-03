@@ -2128,13 +2128,21 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   plein pincement et qu'on y revient : c'est l'état de la WebView qui survit, pas une pièce abîmée, et
   relancer l'application le remet à plat. Il faut vraiment forcer pour y arriver (constat du
   2026-09-02) ; ce n'est pas corrigé.
-- **La session rallonge le splash de démarrage.** `CredentialsProvider` enveloppe toute la pile
-  ([`StackNavigator.tsx`](../../src/shared/navigation/StackNavigator.tsx)) et lance la session dès
-  que le trousseau a rendu des identifiants, donc **à chaque lancement**. Le comportement est
-  antérieur à la Phase 6 et reproduit à l'identique sur `master` ; le jalon 6-F change **comment** la
-  session tourne, pas **quand** elle démarre. Le raccourcir demande de retarder la session jusqu'à la
-  fin du splash, ou de la déclencher à l'entrée dans l'onglet — une décision de produit (on perdrait
-  le compteur de messages à jour dès l'ouverture), pas un correctif technique.
+- **La session au lancement, mesurée plutôt que supposée** (6.1-C, S13). Ce document affirmait
+  qu'elle « rallongeait le splash » et partait « à chaque lancement » ; le code dit autre chose.
+  `CredentialsProvider` vit dans [`rootContainer.tsx`](../../src/shared/navigation/rootContainer.tsx)
+  depuis 6-J, monté **après** que le splash natif est retiré (`App.tsx`), et il ne lance un parcours
+  froid que si le trousseau porte des identifiants **sans dossier** — c'est-à-dire, en pratique, au
+  premier lancement après une connexion ; un dossier déjà lu ne déclenche rien, ce sont les widgets
+  qui se rejouent, une fois par ouverture de l'onglet et au vrai retour d'arrière-plan. Ce que le
+  lancement coûte se lit désormais dans Metro : [`Chrono`](../../src/shared/services/Chrono.ts) pose
+  ses repères de la préparation au premier rendu et jusqu'au départ de la session ou des widgets
+  ([qualite.md](../qualite.md#lire-le-démarrage-plutôt-que-le-supposer)). Mesuré sur iPhone le
+  2026-09-03 : la scolarité décide à +447 ms sans identifiants et à +400 ms avec un dossier en
+  cache, soit trente à soixante millisecondes **après** le premier rendu (+385 et +230 ms) — rien à
+  différer. Ce qui reste écrit : le parcours froid au lancement, seul état qui lance une session,
+  tourne pendant le fondu d'une seconde du splash animé, et un run de moteur dispute alors le fil
+  JavaScript à l'animation.
 
 ## Carte des fichiers
 

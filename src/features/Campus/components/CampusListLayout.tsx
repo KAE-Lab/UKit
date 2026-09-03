@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Animated, View } from 'react-native';
+import { Animated, FlatList, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 
@@ -62,6 +62,14 @@ export interface CampusListLayoutProps<T> {
     // Navigation for setting header filter icon
     navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
 }
+
+/**
+ * `Animated.FlatList` perd le generique de la liste : ses props attendent des valeurs animees, et
+ * `T[]` n'en est pas une. Le socle n'anime que le defilement, jamais la donnee — la liste est donc
+ * typee comme une `FlatList` ordinaire, ce qui rend `data`, `renderItem` et `keyExtractor` a `T`
+ * sans les trois `any` que ce fichier portait (6.1-C).
+ */
+const ListeAnimee = Animated.FlatList as unknown as typeof FlatList;
 
 /** Ce que la barre de recherche occupe en pied de liste, quand elle est affichee. */
 const HAUTEUR_RECHERCHE = 80;
@@ -262,12 +270,12 @@ export function CampusListLayout<T>({
     return (
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
-                <Animated.FlatList
-                    data={data as any}
+                <ListeAnimee
+                    data={data}
                     onScroll={onAnimatedScroll as never}
                     scrollEventThrottle={16}
-                    keyExtractor={(item: any, index) => {
-                        const id = (item as unknown as { id?: string | number }).id;
+                    keyExtractor={(item: T, index) => {
+                        const id = (item as { id?: string | number }).id;
                         return id ? id.toString() : index.toString();
                     }}
                     showsVerticalScrollIndicator={false}
@@ -278,7 +286,7 @@ export function CampusListLayout<T>({
                         paddingBottom: Math.max(tokens.space.sm, (insets?.bottom || 0))
                             + (rechercheVisible ? HAUTEUR_RECHERCHE : tokens.space.lg),
                     }}
-                    renderItem={renderItem as any}
+                    renderItem={renderItem}
                     numColumns={numColumns}
                     // La gouttiere horizontale d'une rangee ; la verticale reste aux cartes, comme
                     // pour les listes a une colonne.

@@ -28,13 +28,13 @@ import {
     StepCompte,
     StepEtablissement,
     StepFin,
-    StepGroupes,
     StepIntro,
     StepLienEdt,
     StepPreferences,
     WelcomeBackButton,
     WelcomePagination,
 } from './components/WelcomeSteps';
+import { StepGroupes } from './components/StepGroupes';
 
 const THEME_LIST = [
     { id: 'light', title: 'LIGHT_THEME' },
@@ -192,6 +192,7 @@ export default function WelcomeScreen() {
                         seasonList={UNIVERSITY_SEASON_LIST}
                         filterList={actions.filterList}
                         selectGroup={actions.selectGroup}
+                        relancerGroupes={actions.relancerGroupes}
                         parAnnee={filtrageParAnnee()}
                     />
                 ))}

@@ -61,9 +61,8 @@ Un contexte ne serait pas accessible depuis ces points.
 |---|---|---|---|
 | `firstload` | `SettingsManager.saveSettings` | booléen : parcours d'accueil non terminé | jusqu'à la fin de l'onboarding ou une réinitialisation |
 | `settings` | `SettingsManager.saveSettings` | objet unique : `calendar`, `theme`, `favoriteGroups`, `language`, `openAppOnFavoriteGroup`, `filters`, `calendarSyncEnabled`, `courseNotificationsEnabled`, `courseNotificationDelay`, **`etablissement`** | permanent |
-| `groupList` | `PlanningDataManager` | liste complète des groupes Celcat | 7 jours (`groupListTimestamp`) |
+| `groupList` | `PlanningDataManager` | liste complète des groupes Celcat — **le seul cache** depuis 6.1-C : l'écran de recherche tenait le sien (`groups`), effacé une fois au démarrage ([planning.md](features/planning.md#un-seul-cache-pour-la-liste-des-groupes)) | 7 jours (`groupListTimestamp`), servie datée en repli hors ligne |
 | `groupListTimestamp` | `PlanningDataManager` | horodatage du dernier rafraîchissement | — |
-| `groups` | [`GroupSelectionScreen`](../src/features/Planning/screens/GroupSelectionScreen.tsx) | `{ list, date }` — cache d'affichage de l'écran de recherche | sans expiration, repli hors ligne |
 | `buildingList` | `CampusDataManager` | bâtiments en accès libre et leurs salles | 7 jours (`buildingListTimestamp`) |
 | `buildingListTimestamp` | `CampusDataManager` | horodatage du dernier rafraîchissement | — |
 | `<groupes>@YYYY/MM/DD` | [`ScheduleList`](../src/features/Planning/components/ScheduleList.tsx) | `{ data, date }` — emploi du temps d'un jour | sans expiration, repli hors ligne |
@@ -109,14 +108,17 @@ Mêler les données de deux facs serait pire que de tout redemander : un plannin
 sous une autre université sans que rien ne le dise, et c'est exactement la donnée fausse silencieuse
 que la Phase 6 existe pour supprimer. `purgerDonneesEtablissement()`
 ([`shared/etablissements/purge.ts`](../src/shared/etablissements/purge.ts)) efface donc `groupList`,
-`groupListTimestamp`, `groups`, `buildingList`, `buildingListTimestamp`, `freeroom_favorites`,
+`groupListTimestamp`, `buildingList`, `buildingListTimestamp`, `freeroom_favorites`,
 `batiments@1`, **tous** les caches de planning (`…@Week…` et `…@AAAA/MM/JJ`), ainsi que les deux clés
 `SecureStore` de la session universitaire. Les réglages — groupes favoris, filtres d'UE — sont remis à
 zéro par `SettingsManager` dans le même geste.
 
 `crous_favorites`, `library_favorites` et leurs filtres **restent**, et c'est une décision : ils
 pointent Croustillant et Affluences, deux sources **nationales**. Un étudiant qui passe d'une fac
-bordelaise à l'autre garde la même bibliothèque préférée.
+bordelaise à l'autre garde la même bibliothèque préférée. **La réinitialisation, elle, les efface**
+(6.1-C, `purgerDonneesCampusNationales`) : ici on ne va nulle part, et quelqu'un qui efface tout
+s'attend à ce que tout parte — deux listes distinctes dans `purge.ts`, pour que la bascule n'y touche
+pas.
 
 **La réinitialisation depuis les réglages joue la même purge.** Elle ne l'a pas toujours fait : elle
 laissait la session universitaire en place, ce qui n'était pas faux tant qu'il n'y avait qu'une
@@ -257,8 +259,10 @@ parce qu'elle était fausse **reviendrait** au premier lancement hors ligne.
 - **Changement de calendrier de synchronisation** — `setSyncCalendar` supprime d'abord tous les
   événements précédemment créés, puis efface `previousSyncData` et `previousSyncTime`.
 - **Réinitialisation de l'application** — `SettingsManager.resetSettings()` remet thème, langue,
-  favoris, filtres et `firstload` à leurs valeurs par défaut. **Elle ne vide ni les caches d'emploi du
-  temps, ni les favoris Campus, ni le SecureStore.**
+  favoris, filtres et `firstload` à leurs valeurs par défaut, joue la purge d'établissement (caches
+  d'emploi du temps compris), efface les favoris et filtres du Campus (6.1-C) et **tout le trousseau**
+  ([features/settings.md](features/settings.md#décisions-de-conception)). Les surcouches publiées
+  restent : elles n'appartiennent pas à l'utilisateur.
 
 ## Migration de format
 
@@ -274,8 +278,6 @@ installations anciennes peuvent être mises à jour.
   plusieurs centaines d'entrées qui ne disparaissent qu'à la désinstallation.
 - **La lecture de cache accepte trois formes** (`cache.data`, `cache.dayData`, `cache.weekData`) :
   vestige d'un format antérieur. Seule `data` est écrite aujourd'hui.
-- **`resetSettings` est partielle** (voir ci-dessus) : l'utilisateur qui « réinitialise » conserve ses
-  favoris Campus, ses filtres de liste et sa session universitaire.
 - **AsyncStorage n'est pas chiffré.** Les groupes suivis et les favoris sont lisibles par toute
   personne ayant accès au stockage de l'application. Seules les données de
   [Scolarité](features/scolarite.md) sont protégées.

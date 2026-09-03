@@ -113,7 +113,7 @@ Un composant unique porte désormais la taille :
 retour garde 28 — un glyphe plus léger paraît plus petit à taille égale, et c'est un écart **optique**,
 pas une divergence oubliée.
 
-### Deux couleurs de `sectionsHeaders` sont identiques en thème sombre
+### ~~Deux couleurs de `sectionsHeaders` sont identiques en thème sombre~~ — corrigé le 2026-09-03
 
 `theme.sectionsHeaders` porte six teintes catégorielles. En thème **clair**, l'index 0 vaut `#007AFF`
 et l'index 4 `#5856D6` — deux couleurs distinctes. En thème **sombre**, les deux valent `#5E5CE6`.
@@ -122,9 +122,15 @@ La palette n'y offre donc que **cinq** couleurs distinctes au lieu de six, et de
 recherche de groupes (Planning) peuvent partager la même en mode sombre. La grille de Scolarité évite
 l'index 4 pour cette raison.
 
-C'est vraisemblablement une coquille : la variante sombre du bleu système est `#0A84FF`, et c'est ce
-qu'on attendrait à l'index 0. Non corrigé ici — la correction change un rendu du Planning, ce qui est
-une décision à prendre pour cet écran-là, pas un effet de bord de celui-ci.
+C'était une coquille : la variante sombre du bleu système est `#0A84FF`, et c'est ce qu'on attend à
+l'index 0 — `sections[0]` sombre, sa version translucide, valait déjà `#0A84FF15`. Corrigée par la
+passe de code [6.1-C](phase-6/6-1-c-passe-de-code.md), qui prend la décision que ce registre laissait
+ouverte : la première section de la recherche de groupes passe de l'indigo au bleu en sombre, et c'est
+tout ce qui change. Les trois palettes qui évitaient le 4 (grille Scolarité, annonces, repas) le
+gardent inemployé : redistribuer les teintes n'était pas le sujet.
+
+![La recherche de groupes en thème sombre, avant : la première section en indigo, la couleur de l'index 4](screenshots/planning-groupes-sombre-avant.png)
+![Après : la première section en bleu système, la couleur que sa version translucide portait déjà](screenshots/planning-groupes-sombre-apres.png)
 
 ### Les styles composés du thème ne sont pas typés
 
@@ -140,7 +146,7 @@ transtypage commenté. Le corriger à la source demanderait de retyper un fichie
 1 100 lignes — hors du périmètre d'une session d'écran, et à faire une fois pour toutes plutôt que
 trois fois à moitié.
 
-### Le contenu publié n'atteint les écrans déjà montés qu'au lancement suivant
+### ~~Le contenu publié n'atteint les écrans déjà montés qu'au lancement suivant~~ — corrigé le 2026-09-03
 
 Rencontré le 2026-09-03 pendant la vérification du jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md),
 et déjà noté sous une forme plus étroite pour les visuels ([backend.md](backend.md)). Les surcouches
@@ -156,12 +162,17 @@ Planning ouvert le 1er et laissé en arrière-plan jusqu'au lendemain, « Aujour
 1er — le jour courant est calculé au montage, jamais au retour au premier plan. Ce n'est pas une
 publication qui manque, c'est la même absence de « relecture au retour ».
 
-**À corriger dans la passe de code [6.1-C](phase-6/6-1-c-passe-de-code.md)**, pas ici : la réponse est
-une politique de rafraîchissement au retour au premier plan pour les écrans qui lisent notre base et
-pour le jour courant du Planning, et elle se décide écran par écran — rejouer chaque chargement à
-chaque retour serait un arbitrage produit (réseau, position, quatre sources tierces), pas un
-correctif. La contrainte à respecter : les messages de service, eux, arrivent bien au retour (l'hôte
-est abonné), et c'est ce comportement-là qu'il faut étendre, pas l'inverse.
+**Corrigé par la passe de code [6.1-C](phase-6/6-1-c-passe-de-code.md)**, par une politique écrite
+écran par écran plutôt qu'un rejeu de tout à chaque retour. Un signal partagé
+([`shared/services/premierPlan.ts`](../src/shared/services/premierPlan.ts)) dit le **vrai** retour au
+premier plan — après un passage en arrière-plan, et non après un centre de contrôle tiré ou une invite
+Face ID, deux cas qui émettent aussi `active` et faisaient partir six requêtes et un second run de
+widgets pour rien. Sur ce signal : les annonces se relisent, sur le tableau de bord comme dans la
+liste ; le Planning recalcule son « Aujourd'hui » si la date a changé, comme au lancement ; les six
+surcouches publiées et les widgets de la scolarité se rafraîchissent comme avant, une fois. Les quatre
+sources tierces du tableau de bord, elles, **gardent leur contenu** : un tirer-pour-rafraîchir les
+relit à la demande ([campus.md](features/campus.md#le-tableau-de-bord)). Les messages de service
+arrivaient déjà au retour ; c'est ce comportement qui a été étendu.
 
 ## Limites connues, qui ne sont pas des défauts
 

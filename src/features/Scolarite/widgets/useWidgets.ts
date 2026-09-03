@@ -14,8 +14,9 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState } from 'react-native';
 
+import { useRetourAuPremierPlan } from '../../../shared/services/premierPlan';
+import { marquer } from '../../../shared/services/Chrono';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import type { UkitFailure } from '../../../shared/aetherius/failures';
 import type { PointWidget } from './definitions';
@@ -166,16 +167,17 @@ export function useWidgets(pret: boolean): EtatDesWidgets {
         if (!pret) return;
         void lireValeursPersistees().then((persistees) => {
             poser(persistees);
+            marquer('widgets : premier rafraichissement');
             void rafraichir();
         });
     }, [poser, pret, rafraichir]);
 
-    useEffect(() => {
-        const abonnement = AppState.addEventListener('change', (etat) => {
-            if (etat === 'active') void rafraichir();
-        });
-        return () => abonnement.remove();
-    }, [rafraichir]);
+    // Le vrai retour d'arriere-plan, et non tout passage a `active` : l'invite biometrique de cet
+    // onglet en emet un, et les widgets se rejouaient une seconde fois juste apres Face ID (6.1-C).
+    useRetourAuPremierPlan(() => {
+        marquer('widgets : rafraichissement au retour au premier plan');
+        void rafraichir();
+    });
 
     return { valeurs, echecs, pointEnCours, rafraichir, relancer, reinitialiser };
 }

@@ -72,21 +72,11 @@ insert into public.etablissements (
     '{"separateurs": [" | ", "/"], "motif": "([A-Z][0-9]+)", "depuis": 2}'::jsonb,
     -- Pas d'emprunt : cette universite est proprietaire de l'inventaire que les autres empruntent.
     null,
-    -- Les onze points de balayage des bibliotheques. Mesure du 2026-08-08 : ils rendent 14 sites,
-    -- cinq points n'en rendent aucun, et quatre seulement portent des sites exclusifs. Reduire la
-    -- liste serait un changement de comportement produit, pas un nettoyage — la mesure complete est
-    -- dans src/shared/etablissements/catalogue.ts.
+    -- Les deux points de balayage des bibliotheques : Bordeaux Centre et le campus de Talence. Onze
+    -- jusqu'en 6.1-C ; la mesure du 2026-08-08 et la decision du 2026-09-03 sont dans
+    -- src/shared/etablissements/socle.ts (POINTS_BORDEAUX).
     '[{"lat": 44.8377, "lng": -0.5791},
-      {"lat": 44.7963, "lng": -0.6277},
-      {"lat": 43.2951, "lng": -0.3707},
-      {"lat": 46.1603, "lng": -1.1511},
-      {"lat": 45.8336, "lng": 1.2611},
-      {"lat": 46.5802, "lng": 0.3403},
-      {"lat": 43.4929, "lng": -1.4748},
-      {"lat": 45.1920, "lng": 0.7194},
-      {"lat": 44.2031, "lng": 0.6163},
-      {"lat": 45.6483, "lng": 0.1562},
-      {"lat": 46.3237, "lng": -0.4647}]'::jsonb,
+      {"lat": 44.7963, "lng": -0.6277}]'::jsonb,
     -- Les portes du navigateur integre. Ajouter ou retirer une porte est une ligne ici, jamais une
     -- release.
     --
@@ -262,16 +252,7 @@ insert into public.etablissements (
     -- sujet distinct, et il n'est pas ouvert.
     '{"domaine": "https://celcat.u-bordeaux.fr/calendar", "res_type": "102"}'::jsonb,
     '[{"lat": 44.8377, "lng": -0.5791},
-      {"lat": 44.7963, "lng": -0.6277},
-      {"lat": 43.2951, "lng": -0.3707},
-      {"lat": 46.1603, "lng": -1.1511},
-      {"lat": 45.8336, "lng": 1.2611},
-      {"lat": 46.5802, "lng": 0.3403},
-      {"lat": 43.4929, "lng": -1.4748},
-      {"lat": 45.1920, "lng": 0.7194},
-      {"lat": 44.2031, "lng": 0.6163},
-      {"lat": 45.6483, "lng": 0.1562},
-      {"lat": 46.3237, "lng": -0.4647}]'::jsonb,
+      {"lat": 44.7963, "lng": -0.6277}]'::jsonb,
     -- Le navigateur integre ouvre ces pages ; l'utilisateur les pilote, elles ne sont pas extraites.
     -- `moodle` verifie le 2026-08-13 (« Moodle Bordeaux INP »). Une porte absente ne s'affiche pas.
     --
@@ -396,16 +377,7 @@ insert into public.etablissements (
     -- couvertes. La position de l'etudiant est balayee en plus d'eux (LibraryService), donc une
     -- bibliotheque proche de lui remonte de toute facon.
     '[{"lat": 44.8377, "lng": -0.5791},
-      {"lat": 44.7963, "lng": -0.6277},
-      {"lat": 43.2951, "lng": -0.3707},
-      {"lat": 46.1603, "lng": -1.1511},
-      {"lat": 45.8336, "lng": 1.2611},
-      {"lat": 46.5802, "lng": 0.3403},
-      {"lat": 43.4929, "lng": -1.4748},
-      {"lat": 45.1920, "lng": 0.7194},
-      {"lat": 44.2031, "lng": 0.6163},
-      {"lat": 45.6483, "lng": 0.1562},
-      {"lat": 46.3237, "lng": -0.4647}]'::jsonb,
+      {"lat": 44.7963, "lng": -0.6277}]'::jsonb,
     -- Aucune porte universitaire : on ne connait aucune des adresses de cet etablissement, donc le
     -- navigateur integre n'a aucun service a ouvrir.
     --

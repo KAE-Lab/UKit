@@ -157,9 +157,9 @@ consommateurs hors React (tâche de fond, planificateur de notifications). Déta
 - **Un fichier de logique reste sous 400 lignes**, une fonction sous 100 lignes, la profondeur
   d'imbrication sous 4, la complexité cyclomatique sous 15. Ces seuils sont appliqués par
   [`eslint.config.mjs`](../eslint.config.mjs) : ce sont des garde-fous d'architecture, pas du confort.
-  Au-delà, on découpe en sous-modules. Seul [`Theme.ts`](../src/shared/theme/Theme.ts) déroge
-  explicitement (`eslint-disable max-lines`) : c'est un fichier de données de style, le découper
-  nuirait à la lisibilité.
+  Au-delà, on découpe en sous-modules. Seuls [`Theme.ts`](../src/shared/theme/Theme.ts) et les trois dictionnaires de
+  [`shared/i18n/`](../src/shared/i18n/) dérogent explicitement (`eslint-disable max-lines`) : ce sont
+  des fichiers de données, les découper nuirait à la lisibilité.
 - **100 % TypeScript.** Aucun `.js` ou `.jsx` dans `src/`. Pas de `any` sans justification. À noter :
   [`tsconfig.json`](../tsconfig.json) étend `expo/tsconfig.base` **sans activer `strict`** — le
   typage est donc systématique par discipline, pas par contrainte du compilateur
@@ -236,7 +236,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`App.tsx`](../App.tsx) | point d'entrée : préchargement des ressources, chargement des managers, splash animé |
 | [`app.config.ts`](../app.config.ts) | configuration Expo ([plateforme.md](plateforme.md)) |
 | [`metro.config.js`](../metro.config.js) | la configuration Metro d'Expo, plus `txt` en extension d'asset — pour servir pdf.js tel quel à la WebView du lecteur ([plateforme.md](plateforme.md)) |
-| [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement des six surcouches publiées — livraison, lieux, visuels, catalogue, salutations, messages de service — au démarrage et au retour au premier plan, et l'hôte des messages |
+| [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement des six surcouches publiées — livraison, lieux, visuels, catalogue, salutations, messages de service — au démarrage et au vrai retour au premier plan (`premierPlan`), et l'hôte des messages |
 | [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 20 écrans |
 | [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | barre d'onglets personnalisée et son bouton d'action contextuel |
 | [`shared/navigation/NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) | `NavBarHelper`, `withHeaderAnimation`, `withStaticHeader`, boutons d'en-tête |
@@ -302,10 +302,15 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/services/NetworkMockService.ts`](../src/shared/services/NetworkMockService.ts) | l'interrupteur hors ligne : couper le réseau de l'application sans couper celui de l'appareil ([qualite.md](qualite.md)) |
 | [`shared/services/Base64.ts`](../src/shared/services/Base64.ts) · [`Base64.test.ts`](../src/shared/services/Base64.test.ts) | le décodage base64 en JavaScript, parce que le natif d'Expo Go ne le garantit pas ([features/scolarite.md](features/scolarite.md)) |
 | [`shared/services/ReinitialisationComplete.ts`](../src/shared/services/ReinitialisationComplete.ts) | la remise à zéro complète du menu de développement : trousseau, documents, AsyncStorage, puis rechargement ([qualite.md](qualite.md)) |
+| [`shared/services/retourAuPremierPlan.ts`](../src/shared/services/retourAuPremierPlan.ts) | ce qu'est un retour au premier plan — `active` après `background`, jamais après un simple `inactive` —, pur ([defauts-fonctionnels.md](defauts-fonctionnels.md)) |
+| [`shared/services/premierPlan.ts`](../src/shared/services/premierPlan.ts) | sa couture de plateforme : un seul abonnement `AppState`, `onRetourAuPremierPlan` et le hook `useRetourAuPremierPlan` — le conteneur racine, les annonces, le Planning et les widgets s'y abonnent |
+| [`shared/services/retourAuPremierPlan.test.ts`](../src/shared/services/retourAuPremierPlan.test.ts) | joué par `npm test` |
+| [`shared/services/simulations.ts`](../src/shared/services/simulations.ts) | les simulations du menu de développement — HORS LIGNE, date — gardées le temps de la relance d'une réinitialisation complète ([qualite.md](qualite.md)) |
+| [`shared/services/Chrono.ts`](../src/shared/services/Chrono.ts) | les repères de temps du démarrage, sous `__DEV__` seulement ([qualite.md](qualite.md#lire-le-démarrage-plutôt-que-le-supposer)) |
 | [`shared/theme/tokens.ts`](../src/shared/theme/tokens.ts) | les primitives de design, isolées pour être testables sous Node ([theme.md](theme.md#les-tokens)) |
 | [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | thèmes clair et sombre, échelle sémantique, styles partagés ([theme.md](theme.md)) |
 | [`shared/i18n/Translator.ts`](../src/shared/i18n/Translator.ts) | service de traduction, langue courante, locale moment ([i18n.md](i18n.md)) |
-| [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 217 clés chacun |
+| [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 390 clés chacun |
 | [`shared/map/EmbeddedMap.tsx`](../src/shared/map/EmbeddedMap.tsx) | carte MapLibre embarquée dans les fiches ([cartographie.md](cartographie.md)) |
 | [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème) et `UpdateAlert` (contrôle de version, non rendu) |
 | [`shared/ui/Button.tsx`](../src/shared/ui/Button.tsx) | boutons partagés : retour, accueil, tiroir, ligne de réglage |

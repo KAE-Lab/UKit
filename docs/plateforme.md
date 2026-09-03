@@ -113,6 +113,15 @@ npm run build:ios         # eas build -p ios --profile preview
 `cli.appVersionSource: "remote"` : c'est **EAS qui fait autorité sur le numéro de build**, pas les
 `versionCode` du fichier de configuration.
 
+**Les paquets Expo suivent le SDK.** `npx expo-doctor` est sans écart depuis la passe de code
+[6.1-C](phase-6/6-1-c-passe-de-code.md) — sept paquets avaient un patch de retard, et le `.gitignore`
+devait dire `.expo/` et non `.expo/*` pour qu'il s'en satisfasse. `npx expo install --fix` les
+réaligne, avec un piège : il **s'arrête en erreur** après avoir écrit `package.json`, parce qu'il
+voudrait ajouter les greffons `expo-asset` et `expo-font` à `app.config.ts` et ne sait pas écrire dans
+une configuration dynamique. Les versions sont bien posées ; les deux greffons sont facultatifs —
+l'application charge ses polices à l'exécution — et `expo-doctor` ne les réclame pas. Le workflow de
+release, lui, est sur `actions/setup-java@v5`.
+
 ## Publication
 
 Un seul workflow : [`.github/workflows/release.yml`](../.github/workflows/release.yml), déclenché par

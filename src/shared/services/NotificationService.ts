@@ -4,6 +4,7 @@ import Toast from 'react-native-root-toast';
 import { SettingsManager } from './AppCore';
 import { TimeMockService } from './TimeMockService';
 import style from '../theme/Theme';
+import Translator from '../i18n/Translator';
 import { PlanningEvent, PlanningWeekDay } from '../../features/Planning/services/PlanningApiService';
 import { groupOverlappingCourses } from '../../features/Planning/components/ScheduleListUtils';
 import { indexConsulte, memoireCarrouselChargee } from '../../features/Planning/components/CourseGroupCarousel';
@@ -186,14 +187,16 @@ class NotificationManagerService {
         for (const item of coursesToSchedule) {
             const { course, triggerTime } = item;
             
-            const subject = course.subject !== 'N/C' ? course.subject.trim() : 'Cours';
+            // Traduits comme le reste de l'interface : un rappel en francais sous une application en
+            // anglais etait la derniere chaine visible hors des dictionnaires (docs/i18n.md).
+            const subject = course.subject !== 'N/C' ? course.subject.trim() : Translator.get('NOTIFICATION_COURSE_FALLBACK');
             const roomText = extractRoomFromDescription(course.description);
-            const locationString = roomText || 'Localisation inconnue';
+            const locationString = roomText || Translator.get('NOTIFICATION_LOCATION_UNKNOWN');
             const realTriggerTime = computeRealTriggerTime(triggerTime);
 
             await Notifications.scheduleNotificationAsync({
                 content: {
-                    title: `Cours dans ${delayInMinutes} min`,
+                    title: Translator.get('NOTIFICATION_COURSE_IN', delayInMinutes),
                     body: `${subject}\n${locationString}`,
                     data: { courseId: course.id },
                 },

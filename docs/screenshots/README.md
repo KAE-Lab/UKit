@@ -74,6 +74,7 @@ peuvent attendre.
 | `planning-cours-simultanes.png` | carrousel de cours qui se chevauchent | complémentaire |
 | `planning-hors-ligne.png` | bandeau de données en cache daté | **prise** — produite avec l'interrupteur **hors ligne** du menu de développement, sans mode avion ([qualite.md](../qualite.md)) |
 | `planning-echec.png` | l'échec d'une source : message de la famille et bouton Réessayer | **prise** — même interrupteur |
+| `planning-groupes-sombre-avant.png` · `planning-groupes-sombre-apres.png` | la première section de la recherche de groupes en sombre, avant et après la correction de l'index 0 de `sectionsHeaders` ([6.1-C](../phase-6/6-1-c-passe-de-code.md)) | **prises** — le couple avant/après d'un rendu qui change |
 | `planning-lien-attendu.png` | l'onglet Planning proposant de coller un lien d'abonnement (jalon 6-J) | attendue |
 | `lien-edt-saisie.png` | l'écran de saisie du lien, après une vérification réussie | attendue |
 | `scolarite-non-reliee.png` | la Scolarité d'un établissement sans portail : le message, sans formulaire | attendue |

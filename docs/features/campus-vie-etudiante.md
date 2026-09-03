@@ -304,7 +304,11 @@ message ni bouton.*
 ## Limites connues
 
 - **Aucun cache** : l'absence de réseau vide la section. Elle affiche désormais *pourquoi*, ce qui
-  est mieux qu'avant, mais des annonces vues juste avant ne réapparaissent pas hors ligne.
+  est mieux qu'avant, mais des annonces vues juste avant ne réapparaissent pas hors ligne. En
+  revanche les annonces sont **relues au retour au premier plan** depuis 6.1-C, sur le tableau de bord
+  comme dans la liste : une annonce publiée ou ciblée pendant que l'application était en arrière-plan
+  apparaît au retour, sans relance, et sans repasser par l'attente quand il y a déjà des affiches à
+  l'écran ([`useBdeAnnonces`](../../src/features/Campus/hooks/useBdeAnnonces.ts)).
 - **`expires_at` est comparé en heure locale de l'appareil**, sans fuseau explicite.
 - **La fiche n'a pas d'état d'erreur** : un paramètre manquant produit un écran vide. Elle ne charge
   rien, donc elle ne peut pas échouer — mais elle ne peut pas non plus le dire.

@@ -117,6 +117,7 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 
 			return (
 				<View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
+					{/* eslint-disable-next-line ukit/no-style-literals -- 1 : un calage optique de l'icone sur la ligne de base, pas un pas d'echelle */}
 					<MaterialIcons name={iconName} size={16} color={theme.fontSecondary} style={{ marginRight: tokens.space.md, marginTop: 1 }} />
 					<Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, flex: 1 }}>{trimmedLine}</Text>
 				</View>

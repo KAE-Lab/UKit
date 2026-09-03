@@ -239,7 +239,7 @@ livré ; elle est mise à jour à chaque contribution.
   il **ancre le bloc sous l'en-tête** plutôt que de le centrer : centrer demanderait de connaître ce
   qui occupe le bas de chaque écran. L'application **tutoie** partout, et les avertissements ESLint
   sont passés de 79 à 53.
-- [x] **Internationalisation** — français, anglais, espagnol ; 268 clés par dictionnaire, typage de
+- [x] **Internationalisation** — français, anglais, espagnol ; 390 clés par dictionnaire, typage de
   la clé, locale des dates alignée. **Plus aucune chaîne visible en dur ni clé manquante** : les
   treize libellés Campus qui manquaient sont traduits, et les casts qui les masquaient au compilateur
   sont retirés. [docs/i18n.md](docs/i18n.md)
@@ -258,8 +258,9 @@ livré ; elle est mise à jour à chaque contribution.
   (résolution des secrets, livraison des Blueprints et ses gardes, modèle d'erreur) et le
   [harnais de parité](tools/parity/README.md) rejoue les sources migrées contre les vraies. Aucun
   test d'écran ni de composant, et l'intégration continue ne joue toujours que la publication.
-  **`npx tsc --noEmit` est vert** depuis le 2026-08-16 — il ne l'avait jamais été.
-  [docs/qualite.md](docs/qualite.md)
+  **`npx tsc --noEmit` est vert** depuis le 2026-08-16 — il ne l'avait jamais été — et **`npx eslint .`
+  est à zéro** depuis la passe de code 6.1-C, trente-cinq avertissements traités un par un ; `npm test`
+  joue 550 tests. [docs/qualite.md](docs/qualite.md)
 - [ ] **Le comportement en données** — l'accès aux sources migre vers des
   [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
   et corrigeables sans release. Le socle est en place (6-A), **la base de publication existe** (6-B),
@@ -305,6 +306,16 @@ livré ; elle est mise à jour à chaque contribution.
   chaque source sans identifiant depuis un runner GitHub et ouvrent une issue quand une source tombe —
   ce qui manquait l'été où le relais est mort sans que personne ne le sache.
   [docs/pilotage.md](docs/pilotage.md)
+- [x] **Passe de code** (6.1-C) — ce que la documentation portait comme limites connues, fermé ou
+  décidé : un **retour au premier plan** partagé, qui distingue le retour d'arrière-plan d'une invite
+  système — les annonces se relisent, le Planning recalcule « Aujourd'hui » après minuit, les widgets
+  ne se rejouent plus deux fois après Face ID ; un **tirer-pour-rafraîchir** sur le tableau de bord
+  Campus, seule relecture des sources tierces ; la synchronisation calendrier porte le **planning
+  agrégé** et dit ses échecs, la permission calendrier ne bascule plus rien, la réinitialisation
+  efface aussi le Campus ; un seul cache de groupes, une position résolue une fois pour tout le
+  Campus, trois requêtes de découverte des BU au lieu de douze, l'accueil qui explique une liste vide ;
+  et l'outillage à zéro écart — ESLint, `expo-doctor`, `setup-java@v5`.
+  [docs/phase-6/6-1-c-passe-de-code.md](docs/phase-6/6-1-c-passe-de-code.md)
 
 ### Fonctionnalités
 
@@ -314,8 +325,10 @@ livré ; elle est mise à jour à chaque contribution.
   [Blueprints](docs/blueprints.md) visant l'université **sans relais** ; une panne, une source qui a
   changé et une journée sans cours produisent trois écrans différents.
   [docs/features/planning.md](docs/features/planning.md)
-- [x] **Campus — tableau de bord** — quatre sections indépendantes, position résolue une seule fois,
-  socle de liste commun (recherche, filtres persistés, favoris, états vides).
+- [x] **Campus — tableau de bord** — quatre sections indépendantes, position résolue une seule fois
+  pour tout l'onglet, socle de liste commun (recherche, filtres persistés, favoris, états vides). Depuis
+  la 6.1, un **tirer-pour-rafraîchir** relit les quatre sources sans faire clignoter les carrousels,
+  et les annonces se relisent d'elles-mêmes au retour au premier plan.
   [docs/features/campus.md](docs/features/campus.md)
 - [x] **Campus — restaurants** — liste régionale triée par distance, filtres par type, menus du jour
   et des jours suivants par service. Source jouée par deux [Blueprints](docs/blueprints.md) : une
@@ -389,12 +402,13 @@ livré ; elle est mise à jour à chaque contribution.
   établissement, et **« Mon université n'est pas dans la liste »** rend l'application utilisable pour
   une fac bordelaise qu'on n'a pas portée — planning, restaurants, bibliothèques et salles libres
   compris. [docs/phase-6/6-j-compte-et-sources-par-etablissement.md](docs/phase-6/6-j-compte-et-sources-par-etablissement.md)
-- [x] **Réglages** — langue, thème, filtres d'UE, rappels de cours avec délai réglable,
-  synchronisation idempotente du calendrier système (tâche de fond toutes les 12 h), réinitialisation,
-  À propos. [docs/features/settings.md](docs/features/settings.md)
+- [x] **Réglages** — langue, thème, filtres d'UE, rappels de cours avec délai réglable et titres
+  traduits, synchronisation idempotente du **planning agrégé** avec le calendrier système (tâche de
+  fond toutes les 12 h, échec dit), réinitialisation complète, À propos. [docs/features/settings.md](docs/features/settings.md)
 - [x] **Premier lancement** — parcours en cinq étapes : thème et langue, puis l'**établissement**,
   puis les groupes qu'il conditionne. Valeurs par défaut issues de l'appareil, sélection de groupes
-  filtrée par année et semestre — étape omise quand l'université ne publie pas d'emploi du temps.
+  filtrée par année et semestre — étape omise quand l'université ne publie pas d'emploi du temps, et
+  qui dit pourquoi sa liste est vide quand la source n'a pas répondu.
   [docs/features/onboarding.md](docs/features/onboarding.md)
 
 Les limites connues de chaque partie sont documentées dans la section « Limites connues » de son

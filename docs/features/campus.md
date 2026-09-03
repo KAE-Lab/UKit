@@ -25,13 +25,14 @@ depuis l'en-tête, mise en favori, tri automatique (favoris d'abord, puis par di
 ## Le tableau de bord
 
 [`CampusDashboard.tsx`](../../src/features/Campus/Dashboard/CampusDashboard.tsx) est délibérément
-mince : il pose l'en-tête animé, résout **une seule fois** la position de l'utilisateur, et transmet
-les coordonnées à ses sections.
+mince : il pose l'en-tête animé, résout **une seule fois** la position de l'utilisateur, transmet les
+coordonnées à ses sections, et porte le tirer-pour-rafraîchir.
 
 ```text
 CampusDashboard
-  ├─ useCampusLocation().fetchLocation()      une requête GPS pour tout l'onglet
-  └─ Animated.ScrollView
+  ├─ useCampusPosition()                      la position, partagée avec les listes
+  ├─ useRafraichissementTableauDeBord()       le tirer : une revision, un spinner (rafraichissement.tsx)
+  └─ Animated.ScrollView + RefreshControl
        ├─ BdeSection                          useBdeAnnonces()
        ├─ CrousSection      (lat, lon)        useCrousRestaurants()
        ├─ LibrarySection    (lat, lon)        useNearbyLibraries()   + bandeau si partiel
@@ -41,7 +42,27 @@ CampusDashboard
 **Chaque section charge ses propres données.** C'est une entorse assumée au principe « un composant
 ne va pas chercher ses données » ([conventions.md](../conventions.md)) : elle rend les sections
 indépendantes et permet à l'une d'échouer sans priver l'utilisateur des trois autres. La position,
-elle, est mutualisée — c'est la ressource coûteuse et intrusive, on ne la demande qu'une fois.
+elle, est mutualisée — c'est la ressource coûteuse et intrusive, on ne la demande qu'une fois, et
+depuis 6.1-C une fois **pour tout le Campus** : les listes lisent la même résolution que le tableau de
+bord ([`useCampusLocation`](#usecampuslocation)).
+
+**Ce qui se rejoue, et quand** — décidé en 6.1-C, parce que l'onglet ne se démonte jamais et qu'un
+contenu publié ne l'atteignait qu'au lancement suivant
+([defauts-fonctionnels.md](../defauts-fonctionnels.md)) :
+
+| Source | Au retour au premier plan | Au tirer | Pourquoi |
+|---|---|---|---|
+| les annonces (notre base) | **relues** | relues | une requête légère, et c'est là qu'une publication doit arriver |
+| restaurants, bibliothèques, salles libres (sources tierces) | gardent leur contenu | **relues** | quatre appels réseau silencieux à chaque bascule d'application seraient un arbitrage produit, pas un correctif |
+
+Le tirer-pour-rafraîchir vit dans
+[`Dashboard/rafraichissement.tsx`](../../src/features/Campus/Dashboard/rafraichissement.tsx) : le
+tableau de bord bouscule une `revision` que chaque hook de section prend en dépendance, chaque
+section déclare sa lecture en vol, et le spinner tombe quand plus aucune ne l'est. Une relecture qui
+a déjà quelque chose à montrer **ne repasse pas par l'attente** : le contenu reste, puis change —
+c'est ce que rend `enCours` à côté de `loading` dans les hooks. Le « retour au premier plan » est le
+vrai, après un passage en arrière-plan : un centre de contrôle tiré ou une invite système n'en est
+pas un ([`shared/services/premierPlan.ts`](../../src/shared/services/premierPlan.ts)).
 
 **Une section et sa liste complète partagent leur hook.** Le carrousel du tableau de bord et l'écran
 dédié lisent la même source avec la même machinerie — chargement, échec, nouvel essai. L'écrire une
@@ -180,6 +201,12 @@ localisation échoue. C'est ce qui permet de tester sur émulateur et de garder 
 étudiant qui refuse la géolocalisation : les distances sont alors calculées depuis le campus
 principal, et l'écran reste exploitable au lieu d'être vide.
 
+
+**La résolution est partagée** depuis 6.1-C : la dernière position vaut cinq minutes pour toutes
+les instances du hook — tableau de bord et listes —, et une résolution en vol est rendue telle quelle
+à qui la demande en même temps. Chaque écran de liste demandait la sienne à l'ouverture : une
+permission vérifiée et une lecture GPS par écran, pour une valeur qui n'avait pas bougé. Un repli
+n'est jamais gardé — la prochaine demande retente la permission.
 ### `useFavorites`
 
 [`useFavorites.ts`](../../src/features/Campus/hooks/useFavorites.ts) — liste d'identifiants persistée
@@ -202,7 +229,9 @@ adoption transparente.
 | [`CrousService.ts`](../../src/features/Campus/services/CrousService.ts) | API Croustillant |
 | [`LibraryService.ts`](../../src/features/Campus/services/LibraryService.ts) | API Affluences |
 | [`BdeService.ts`](../../src/features/Campus/services/BdeService.ts) | annonces de la [base de publication](../backend.md) |
-| [`FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) | contrats des salles libres et calcul de distance |
+| [`FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) | contrats des salles libres |
+| [`distance.ts`](../../src/features/Campus/services/distance.ts) | la distance à vol d'oiseau (Haversine), pure — partagée par les restaurants, les bibliothèques et les salles libres |
+| [`distance.test.ts`](../../src/features/Campus/services/distance.test.ts) | ses tests, joués par `npm test` |
 
 ## Décisions de conception
 
@@ -245,26 +274,25 @@ temps de chargement.
 ## Limites connues
 
 - **Quatre chargements réseau concurrents au montage du tableau de bord**, chacun potentiellement
-  multiple (les bibliothèques lancent à elles seules douze requêtes de découverte, plus une par site
-  pour l'affluence). L'onglet est le plus coûteux de l'application au démarrage.
-- **La position est résolue deux fois par écran de liste** : une fois par le tableau de bord, une
-  autre par l'écran de liste quand on l'ouvre.
-- **`getDistanceInKm` est dupliquée trois fois** — dans `CrousService`, `LibraryService` et
-  `FreeRoomService` — avec un corps identique.
+  multiple (les bibliothèques lancent trois requêtes de découverte depuis 6.1-C — douze avant —, plus
+  une par site pour l'affluence). L'onglet reste le plus coûteux de l'application au démarrage.
 - **`CampusListLayout` désactive la règle `complexity`** : le composant accumule les options.
-- Les sections du tableau de bord n'ont **pas d'état d'erreur distinct** de l'état vide.
+- **La position partagée vaut cinq minutes.** Un étudiant qui change de quartier pendant ce délai
+  garde ses distances d'avant jusqu'à la prochaine résolution ; c'est le prix d'une seule lecture GPS
+  pour tout l'onglet.
 
 ## Carte des fichiers
 
 | Fichier | Rôle |
 |---|---|
-| [`Dashboard/CampusDashboard.tsx`](../../src/features/Campus/Dashboard/CampusDashboard.tsx) | écran d'onglet : en-tête animé, résolution unique de la position, empilement des sections |
+| [`Dashboard/CampusDashboard.tsx`](../../src/features/Campus/Dashboard/CampusDashboard.tsx) | écran d'onglet : en-tête animé, position partagée, tirer-pour-rafraîchir, empilement des sections |
+| [`Dashboard/rafraichissement.tsx`](../../src/features/Campus/Dashboard/rafraichissement.tsx) | le tirer-pour-rafraîchir : la révision que les sections prennent en dépendance, les lectures en vol qu'elles déclarent, le spinner qui les attend |
 | [`Dashboard/components/BdeSection.tsx`](../../src/features/Campus/Dashboard/components/BdeSection.tsx) | section annonces : chargement, liste horizontale, accès à la liste complète |
 | [`Dashboard/components/CrousSection.tsx`](../../src/features/Campus/Dashboard/components/CrousSection.tsx) | section restaurants |
 | [`Dashboard/components/CrousSectionCard.tsx`](../../src/features/Campus/Dashboard/components/CrousSectionCard.tsx) | carte large d'un restaurant dans le carrousel du tableau de bord |
 | [`Dashboard/components/LibrarySection.tsx`](../../src/features/Campus/Dashboard/components/LibrarySection.tsx) | section bibliothèques : liste + affluence par site |
 | [`Dashboard/components/LibrarySectionCard.tsx`](../../src/features/Campus/Dashboard/components/LibrarySectionCard.tsx) | carte d'une BU avec son indicateur d'affluence |
-| [`Dashboard/components/FreeRoomSection.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSection.tsx) | section salles libres : déclenche le chargement des bâtiments si le cache est vide |
+| [`Dashboard/components/FreeRoomSection.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSection.tsx) | section salles libres : déclenche le chargement des bâtiments si le cache est vide, ou au tirer ; « Réessayer » relit la source |
 | [`Dashboard/components/FreeRoomSectionCard.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSectionCard.tsx) | carte d'un bâtiment |
 | [`Dashboard/components/SectionEtatVide.tsx`](../../src/features/Campus/Dashboard/components/SectionEtatVide.tsx) | ce qu'une section montre quand son carrousel n'a rien : filtre, panne, ou absence |
 | [`components/CampusListLayout.tsx`](../../src/features/Campus/components/CampusListLayout.tsx) | socle générique des écrans de liste : liste, recherche, filtres, états |
@@ -274,8 +302,8 @@ temps de chargement.
 | [`components/CampusMapSection.tsx`](../../src/features/Campus/components/CampusMapSection.tsx) | la section « S'y rendre » d'une fiche : la carte du lieu en bannière, partagée par les fiches de restaurant et de BU ([cartographie.md](../cartographie.md)) |
 | [`components/CampusSectionHeader.tsx`](../../src/features/Campus/components/CampusSectionHeader.tsx) | la tête d'une section de fiche : icône dans son carré teinté (`theme.sectionsHeaders`), une couleur par section — le motif de la grille Scolarité, étendu aux fiches |
 | [`components/hooks/useCampusListHeader.tsx`](../../src/features/Campus/components/hooks/useCampusListHeader.tsx) | installe l'icône de filtre animée dans l'en-tête de l'écran |
-| [`hooks/useCampusLocation.ts`](../../src/features/Campus/hooks/useCampusLocation.ts) | position de l'utilisateur, avec repli sur Talence |
-| [`hooks/useCampusPosition.ts`](../../src/features/Campus/hooks/useCampusPosition.ts) | la même position, résolue une fois et rendue en état, pour les écrans de liste |
+| [`hooks/useCampusLocation.ts`](../../src/features/Campus/hooks/useCampusLocation.ts) | position de l'utilisateur, avec repli sur Talence — résolue une fois et partagée par tout le Campus pendant cinq minutes |
+| [`hooks/useCampusPosition.ts`](../../src/features/Campus/hooks/useCampusPosition.ts) | la même position, rendue en état, pour le tableau de bord et les trois listes |
 | [`hooks/useCrousRestaurants.ts`](../../src/features/Campus/hooks/useCrousRestaurants.ts) | restaurants : chargement, échec, nouvel essai — partagés par la liste et le carrousel |
 | [`hooks/useNearbyLibraries.ts`](../../src/features/Campus/hooks/useNearbyLibraries.ts) | bibliothèques et affluences, plus la couverture du balayage |
 | [`hooks/useFavorites.ts`](../../src/features/Campus/hooks/useFavorites.ts) | favoris persistés, rechargés au focus |

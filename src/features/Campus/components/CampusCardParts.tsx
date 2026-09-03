@@ -60,6 +60,7 @@ export function CardTitleRow({
                 <TouchableOpacity
                     onPress={onToggleFavorite}
                     hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }}
+                    // eslint-disable-next-line ukit/no-style-literals -- 6 : ecart mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel
                     style={{ marginLeft: 6 }}
                 >
                     <Icon

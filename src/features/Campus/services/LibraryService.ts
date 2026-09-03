@@ -37,7 +37,7 @@ import {
     type SiteProjete,
     type TimetableEntry,
 } from './LibraryMapping';
-import { getDistanceInKm } from './FreeRoomService';
+import { getDistanceInKm } from './distance';
 
 export type { AffluencesData, LibraryInfo, TimetableEntry } from './LibraryMapping';
 

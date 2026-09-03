@@ -19,7 +19,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { isConnected } from '../../../shared/services/AppCore'
 import { ukitFailure, type UkitFailure } from '../../../shared/aetherius';
 import { groupesRequis, lienEdtAttendu, planningAbsent, sourceEdt } from '../../../shared/etablissements';
-import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
+import { PlanningApiService as FetchManager, type PlanningEvent, type PlanningWeekDay } from '../services/PlanningApiService';
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
 import { CourseManager, isArraysEquals } from '../../../shared/services/AppCore';
 import { NotificationManager } from '../../../shared/services/NotificationService';
@@ -245,9 +245,13 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         }
 
         const isFavorite = Array.isArray(this.state.groupName);
-        const schedule = this.props.mode === 'day'
-            ? this.computeScheduleDay(issue.data as import('../services/PlanningApiService').PlanningEvent[], isFavorite)
-            : issue.data;
+        // Jour et semaine sont derives **ici**, une fois, jamais au rendu : la vue semaine rejouait le
+        // calcul d'UE et le filtrage de ses six jours a chaque rendu (6.1-C). Un changement de filtres
+        // passe par `componentDidUpdate`, qui recharge — et les rappels de cours suivent desormais les
+        // filtres dans les deux vues, la journee les suivait deja.
+        const schedule: ScheduleData = this.props.mode === 'day'
+            ? this.computeScheduleDay(issue.data as PlanningEvent[], isFavorite)
+            : (issue.data as PlanningWeekDay[]).map((jour) => this.computeScheduleWeek(jour, isFavorite));
 
         if (isFavorite) {
             NotificationManager.scheduleCourseNotifications(schedule).catch(e => console.warn('Notification scheduling error:', e));
@@ -259,19 +263,14 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         });
     }
 
-    computeScheduleDay(schedule: import('../services/PlanningApiService').PlanningEvent[], isFavorite: boolean) {
+    computeScheduleDay(schedule: PlanningEvent[], isFavorite: boolean): PlanningEvent[] {
         return schedule
-            .map((course) => CourseManager.computeCourseUE(course as unknown as Record<string, unknown>) as unknown as import('../services/PlanningApiService').PlanningEvent)
-            .filter((course) => CourseManager.filterCourse(isFavorite, course as any, this.props.filtersList));
+            .map((course) => CourseManager.computeCourseUE(course))
+            .filter((course) => CourseManager.filterCourse(isFavorite, course, this.props.filtersList));
     }
 
-    computeScheduleWeek(schedule: import('../services/PlanningApiService').PlanningWeekDay, isFavorite: boolean) {
-        return {
-            ...schedule,
-            courses: schedule.courses
-                .map((course) => CourseManager.computeCourseUE(course as unknown as Record<string, unknown>) as unknown as import('../services/PlanningApiService').PlanningEvent)
-                .filter((course) => CourseManager.filterCourse(isFavorite, course as any, this.props.filtersList))
-        };
+    computeScheduleWeek(schedule: PlanningWeekDay, isFavorite: boolean): PlanningWeekDay {
+        return { ...schedule, courses: this.computeScheduleDay(schedule.courses, isFavorite) };
     }
 
     /**
@@ -413,11 +412,10 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
     renderWeekMode(listHeader: React.ReactNode) {
         const { theme, navigation } = this.props;
-        const isFavorite = Array.isArray(this.state.groupName);
         const targetObject = this.state.target as { week: number; year: number };
         const targetYear = targetObject.year || moment().year();
         const targetWeek = targetObject.week;
-        const weekSchedule = this.state.schedule as import('../services/PlanningApiService').PlanningWeekDay[];
+        const weekSchedule = this.state.schedule as PlanningWeekDay[];
 
         return (
             <Animated.ScrollView 
@@ -433,7 +431,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                     return (
                         <DayWeek
                             key={index}
-                            schedule={this.computeScheduleWeek(scheduleItem, isFavorite) as any}
+                            schedule={scheduleItem}
                             navigation={navigation}
                             theme={theme}
                             fallbackDate={fallbackDate}

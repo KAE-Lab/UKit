@@ -24,7 +24,7 @@ import {
     type JourExtrait,
     type RestaurantExtrait,
 } from './CrousMapping';
-import { getDistanceInKm } from './FreeRoomService';
+import { getDistanceInKm } from './distance';
 
 export type { CrousDayMenu, CrousRestaurant } from './CrousMapping';
 

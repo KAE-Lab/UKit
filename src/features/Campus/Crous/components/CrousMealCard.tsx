@@ -54,8 +54,8 @@ export function CrousMealCard({ mealTitle, categories, mealType, theme }: CrousM
     if (!categories || categories.length === 0) return null;
 
     // Le soleil pour le midi, la lune pour le soir — et leur couleur suit : orange solaire, bleu
-    // clair nocturne. Les index de `sectionsHeaders`, comme la grille Scolarite (le 4 est un doublon
-    // du 0 en theme sombre, on l'evite).
+    // clair nocturne. Les index de `sectionsHeaders`, comme la grille Scolarite (le 4 reste inemploye :
+    // il doublait le 0 en sombre jusqu'en 6.1-C, et les teintes n'ont pas bouge apres le correctif).
     const iconHeader = mealType === 'midi' ? 'white-balance-sunny' : 'moon-waning-crescent';
     const couleur = mealType === 'midi' ? 2 : 5;
 
@@ -95,6 +95,7 @@ export function CrousMealCard({ mealTitle, categories, mealType, theme }: CrousM
                     {cat.dishes.length > 0 ? cat.dishes.map((dish: string, dIdx: number) => {
                         const icon = getDishIcon(dish);
                         return (
+                            // eslint-disable-next-line ukit/no-style-literals -- 6 : ecart mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel
                             <View key={dIdx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 }}>
                                 {/* Le vegetarien est le seul plat qui porte une couleur : c'est un etat, donc
                                     un ton du theme et non un vert Material en dur (jalon 6-K). */}
@@ -102,6 +103,7 @@ export function CrousMealCard({ mealTitle, categories, mealType, theme }: CrousM
                                     name={icon}
                                     size={16}
                                     color={icon === 'leaf' ? theme.success : theme.fontSecondary}
+                                    // eslint-disable-next-line ukit/no-style-literals -- 6 : ecart mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel
                                     style={{ marginRight: 6, marginTop: tokens.space.xxs }}
                                 />
                                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, flex: 1, lineHeight: 20 }}>{dish}</Text>

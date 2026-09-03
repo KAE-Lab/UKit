@@ -7,7 +7,8 @@ import Translator from '../../../../shared/i18n/Translator';
 import { SectionHeader } from '../../../../shared/ui/SectionHeader';
 import { LoadingState } from '../../../../shared/ui/LoadingState';
 import { CampusDataManager as DataManager } from '../../services/CampusDataManager';
-import { getDistanceInKm, BuildingInfo } from '../../services/FreeRoomService';
+import type { BuildingInfo } from '../../services/FreeRoomService';
+import { getDistanceInKm } from '../../services/distance';
 import type { UkitFailure } from '../../../../shared/aetherius';
 import { useFavorites } from '../../hooks/useFavorites';
 
@@ -16,6 +17,7 @@ const CARD_WIDTH = width * 0.85;
 
 import { FreeRoomSectionCard } from './FreeRoomSectionCard';
 import { SectionEtatVide } from './SectionEtatVide';
+import { useChargementDeSection, useRevisionDuTableauDeBord } from '../rafraichissement';
 
 export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -24,6 +26,12 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
     const [buildings, setBuildings] = useState<BuildingInfo[]>([]);
     const [failure, setFailure] = useState<UkitFailure | undefined>(undefined);
     const [loading, setLoading] = useState(true);
+    const [enCours, setEnCours] = useState(true);
+    // Un compteur, comme les trois autres sections : « Reessayer » relit la source, et la section
+    // etait la seule a ne pas le proposer (6.1-C).
+    const [essai, setEssai] = useState(0);
+    const revision = useRevisionDuTableauDeBord();
+    useChargementDeSection('salles', enCours);
     const mountedRef = useRef(true);
 
     const { favorites: favBuildings, toggleFavorite: toggleFavBuilding } = useFavorites('freeroom_favorites');
@@ -33,16 +41,19 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
         if (userLat === undefined || userLon === undefined) return;
 
         const loadBuildings = async () => {
-            setLoading(true);
+            setEnCours(true);
             try {
                 let bList: BuildingInfo[] = DataManager.getBuildingList() as unknown as BuildingInfo[];
-                if (!bList || bList.length === 0) {
+                // L'attente ne s'affiche que s'il n'y a rien a montrer ; un tirer par-dessus des
+                // batiments les garde a l'ecran.
+                setLoading(!bList || bList.length === 0);
+                if (!bList || bList.length === 0 || revision > 0) {
                     // L'echec n'est retenu que s'il ne reste rien a montrer : un cache peuple survit a
                     // un rafraichissement rate, sinon une liste complete se presenterait comme une
                     // panne (meme regle que `FreeRoomScreen`, docs/defauts-fonctionnels.md).
                     const echec = await DataManager.fetchBuildingList();
                     bList = DataManager.getBuildingList() as unknown as BuildingInfo[];
-                    if (echec !== null && (!bList || bList.length === 0)) setFailure(echec);
+                    setFailure(echec !== null && (!bList || bList.length === 0) ? echec : undefined);
                 }
                 if (mountedRef.current) {
                     if (bList) {
@@ -55,15 +66,19 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
                     }
                     setBuildings(bList || []);
                     setLoading(false);
+                    setEnCours(false);
                 }
             } catch {
-                if (mountedRef.current) setLoading(false);
+                if (mountedRef.current) {
+                    setLoading(false);
+                    setEnCours(false);
+                }
             }
         };
 
         loadBuildings();
         return () => { mountedRef.current = false; };
-    }, [userLat, userLon]);
+    }, [userLat, userLon, essai, revision]);
 
     const sortedBuildings = useMemo(() => {
         return [...buildings].sort((a, b) => {
@@ -102,6 +117,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
                     failure={failure}
                     masquesParFiltre={false}
                     messageVide={Translator.get('NO_BUILDING_FOUND')}
+                    onRetry={() => setEssai((n) => n + 1)}
                     onOuvrir={() => navigation.navigate('FreeRoomScreen')}
                 />
             ) : (

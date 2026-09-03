@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { AppState } from 'react-native';
 
 import SecureStoreService from '../../../shared/services/SecureStoreService';
+import { marquer } from '../../../shared/services/Chrono';
 import { SettingsManager } from '../../../shared/services/AppCore';
 import { getCodeEtablissementActif, portailPublie } from '../../../shared/etablissements';
 import Translator from '../../../shared/i18n/Translator';
@@ -196,15 +197,36 @@ async function chargerSessionDuTrousseau(
      * rejoue que s'il est perime. Le lancement de l'application ne coute donc plus un run de moteur
      * a quelqu'un qui ouvre l'onglet Planning et rien d'autre.
      */
+    marquer(creds === null
+        ? 'scolarite : aucun identifiant, aucune session'
+        : cold === null ? 'scolarite : parcours froid lance' : 'scolarite : dossier en cache, aucune session');
     if (creds && cold === null) lancerSession('cold');
 }
 
+/**
+ * La lecture du trousseau au lancement — **une seule fois**.
+ *
+ * L'effet dependait des deux rappels, et un rappel qui change d'identite le rejouait : le chrono
+ * de 6.1-C a vu le trousseau relu quarante secondes apres le premier rendu, sans que rien ne l'ait
+ * demande — et `lancerSession` remplace un run en cours, donc un parcours froid aurait pu etre
+ * relance par-dessus lui-meme. Les rappels passent par des references, comme dans
+ * `useBasculerAuChangementDEtablissement` juste au-dessus.
+ */
 function useChargementInitial(lancerSession: (mode: 'cold' | 'hot') => void, poser: PoserSession): void {
+    const lancerRef = useRef(lancerSession);
+    lancerRef.current = lancerSession;
+    const poserRef = useRef(poser);
+    poserRef.current = poser;
+
     useEffect(() => {
         let monte = true;
-        void chargerSessionDuTrousseau(lancerSession, poser, () => monte);
+        void chargerSessionDuTrousseau(
+            (mode) => lancerRef.current(mode),
+            (session) => poserRef.current(session),
+            () => monte,
+        );
         return () => { monte = false; };
-    }, [lancerSession, poser]);
+    }, []);
 }
 
 /**

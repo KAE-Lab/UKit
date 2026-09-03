@@ -6,13 +6,16 @@
  *   - **le chargement est en deux temps.** La liste s'affiche des que la decouverte a repondu, les
  *     pastilles d'affluence se remplissent ensuite. C'etait deja le comportement, et il tient a un
  *     fait simple : une requete d'affluence par bibliotheque trouvee ;
- *   - **la couverture peut etre partielle.** Le balayage joue douze points ; deux points muets ne
- *     doivent pas emporter les dix autres, mais l'utilisateur doit le savoir. `secteursMuets` porte
- *     cette information jusqu'a l'ecran.
+ *   - **la couverture peut etre partielle.** Le balayage joue plusieurs points (trois depuis 6.1-C :
+ *     la position de l'etudiant et les deux du catalogue) ; un point muet ne doit pas emporter les
+ *     autres, mais l'utilisateur doit le savoir. `secteursMuets` porte cette information jusqu'a
+ *     l'ecran.
  *
  * L'echec d'une affluence, lui, reste discret : il est journalise par le service, et la bibliotheque
- * s'affiche sans pastille — ce que l'application faisait deja. Douze messages d'erreur pour douze
- * pastilles seraient pires que le defaut.
+ * s'affiche sans pastille — ce que l'application faisait deja. Huit messages d'erreur pour huit
+ * pastilles seraient pires que le defaut. Le tirer-pour-rafraichir du tableau de bord passe par
+ * `revision` (6.1-C) ; une relecture qui a deja des bibliotheques a montrer ne repasse pas par
+ * l'attente.
  *
  * Voir docs/features/campus-bibliotheques.md.
  */
@@ -28,18 +31,23 @@ export interface NearbyLibrariesState {
     readonly failure: UkitFailure | undefined;
     /** Le nombre de points de balayage muets. Zero quand la couverture est complete. */
     readonly secteursMuets: number;
+    /** L'attente visible : rien a montrer encore. */
     readonly loading: boolean;
+    /** Une lecture est en vol, visible ou non — ce que le tirer-pour-rafraichir attend. */
+    readonly enCours: boolean;
     readonly retry: () => void;
 }
 
-export function useNearbyLibraries(lat?: number, lon?: number): NearbyLibrariesState {
+export function useNearbyLibraries(lat?: number, lon?: number, revision = 0): NearbyLibrariesState {
     const [libraries, setLibraries] = useState<LibraryInfo[]>([]);
     const [affluences, setAffluences] = useState<Record<string, AffluencesData>>({});
     const [failure, setFailure] = useState<UkitFailure | undefined>(undefined);
     const [secteursMuets, setSecteursMuets] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
+    const [enCours, setEnCours] = useState<boolean>(true);
     const [essai, setEssai] = useState<number>(0);
     const monte = useRef(true);
+    const aQuelqueChose = useRef(false);
 
     useEffect(() => {
         monte.current = true;
@@ -50,20 +58,24 @@ export function useNearbyLibraries(lat?: number, lon?: number): NearbyLibrariesS
         }
 
         const charger = async () => {
-            setLoading(true);
+            setLoading(!aQuelqueChose.current);
+            setEnCours(true);
             const resultat = await LibraryService.fetchNearbyLibraries(lat, lon);
             if (!monte.current) return;
 
             if (resultat.ok === false) {
                 setLibraries([]);
+                aQuelqueChose.current = false;
                 setAffluences({});
                 setSecteursMuets(0);
                 setFailure(resultat.failure);
                 setLoading(false);
+                setEnCours(false);
                 return;
             }
 
             setLibraries(resultat.libraries);
+            aQuelqueChose.current = resultat.libraries.length > 0;
             setSecteursMuets(resultat.secteursMuets);
             setFailure(undefined);
             setLoading(false);
@@ -81,20 +93,24 @@ export function useNearbyLibraries(lat?: number, lon?: number): NearbyLibrariesS
                 if (releve.resultat.ok === true) trouvees[releve.id] = releve.resultat.affluence;
             }
             setAffluences(trouvees);
+            setEnCours(false);
         };
 
         charger().catch(() => {
             // Le service ne leve pas ; ce filet existe pour que le chargement se termine quand meme
             // si un jour il le faisait.
-            if (monte.current) setLoading(false);
+            if (monte.current) {
+                setLoading(false);
+                setEnCours(false);
+            }
         });
 
         return () => {
             monte.current = false;
         };
-    }, [lat, lon, essai]);
+    }, [lat, lon, essai, revision]);
 
     const retry = useCallback(() => setEssai((n) => n + 1), []);
 
-    return { libraries, affluences, failure, secteursMuets, loading, retry };
+    return { libraries, affluences, failure, secteursMuets, loading, enCours, retry };
 }

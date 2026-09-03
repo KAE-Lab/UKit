@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- un dictionnaire est un fichier de donnees : le decouper nuirait a sa lecture, comme Theme.ts */
 const en = {
 	ABOUT: 'About',
 	ADD_TO_CALENDAR: 'Add event to calendar',
@@ -115,6 +116,7 @@ const en = {
 	NO_GROUP_FOUND_WITH_THIS_SEARCH: 'No group matches this search.',
 	NO_SYNCHRONIZATION_DONE: 'No synchronization done',
 	LAST_SYNCHRONIZATION_FAILED: 'Last synchronization failed',
+	CALENDAR_SYNC_FAILED_TOAST: 'Synchronization failed. The calendar was left unchanged.',
 	NOT_FOUND: 'Not found',
 	OFFLINE_DISPLAY_FROM_DATE: 'Offline display from $-',
 	OPEN_SYSTEM_SETTINGS: 'Open system settings',
@@ -150,6 +152,7 @@ const en = {
 	// ce sont les libelles d'ecran qui se traduisent, pas les donnees.
 	YOUR_INSTITUTION: 'Which university do you attend?',
 	INSTITUTIONS_LOADING: 'Fetching the list of institutions…',
+	GROUPS_LOADING: 'Fetching the list of groups…',
 	INSTITUTION: 'Institution',
 	INSTITUTION_CHANGE_TITLE: 'Switch institution?',
 	INSTITUTION_CHANGE_WARNING: 'Your favourite groups, cached timetable, university session and the courses added to your calendar will be erased.\nData from two universities does not mix.',
@@ -337,6 +340,10 @@ const en = {
 	COURSE_NOTIFICATIONS: "Course Notifications",
 	NOTIFICATION_DELAY: "Notification delay",
 	NOTIFICATION_DELAY_DESC: "Adjust how many minutes before the start of the course you want to be notified.",
+	NOTIFICATION_CAP_DESC: "The next 20 classes of the week last opened are covered.",
+	NOTIFICATION_COURSE_IN: "Class in $- min",
+	NOTIFICATION_COURSE_FALLBACK: "Class",
+	NOTIFICATION_LOCATION_UNKNOWN: "Room unknown",
 	PROPOSALS_TITLE: "Found in your records",
 	PROPOSALS_INTRO: 'Your university record has a few things worth adding to your profile. Nothing will be applied without your consent.',
 	PROPOSALS_EDT_LABEL: 'Timetable',

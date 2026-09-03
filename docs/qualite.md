@@ -23,42 +23,29 @@ actuel du dépôt, à connaître pour distinguer une régression d'un héritage 
 | Commande | État | Détail |
 |---|---|---|
 | `npx tsc --noEmit` | **verte** | zéro erreur depuis le 2026-08-16 — voir ci-dessous pour les trois `TS2612` historiques |
-| `npx eslint .` | **0 erreur, 35 warnings** | 11 `no-explicit-any` et **24 `ukit/no-style-literals`** — base réduite de 47 à 35 à la clôture 6-Z (2026-08-31) |
+| `npx eslint .` | **0 erreur, 0 warning** | zéro depuis la passe de code [6.1-C](phase-6/6-1-c-passe-de-code.md), le 2026-09-03 — 35 avertissements traités un par un |
 
-La règle de contribution est donc : **ne pas augmenter ces compteurs**, et les réduire quand on
-travaille dans un fichier concerné.
+La règle de contribution est donc : **zéro, et on y reste**. Un avertissement nouveau se corrige, ou se
+désactive localement avec sa justification écrite — les deux formes existent dans le dépôt, et la
+seconde n'est pas un contournement quand la règle est fausse à cet endroit.
 
-Les 11 `no-explicit-any` sont dans `CampusListLayout.tsx` (3), `ScheduleList.tsx` (3), `Button.tsx`
-(4), `GroupSelectionScreen.tsx` (1). `no-unused-vars` n'en signale **aucun** : le dépôt en portait 65
-au 2026-08-16, tous supprimés le jour même, et la règle est là pour que ça le reste.
+**Comment les 35 derniers sont partis** (6.1-C), parce que la méthode vaut pour le prochain. Les onze
+`no-explicit-any` : deux sont morts avec `WelcomeButton`, trois tenaient à `Animated.FlatList` qui perd
+le générique de la liste (typée comme une `FlatList` ordinaire, puisque seul le défilement est animé),
+trois au typage de `CourseManager` sur `Record<string, unknown>` (un type structurel `CoursAvecUE` les
+a rendus inutiles), un à `Animated.SectionList` (le cast était superflu), et deux restent **désactivés
+avec leur raison** : les styles composés de `Theme.ts` ne sont pas typés (G8, session à part en 6.2).
+Les vingt-quatre `ukit/no-style-literals` : les couleurs sont passées au thème ou aux tokens
+(`theme.danger`, `style.colors.white`, `tokens.shadow.*.shadowColor` pour cinq ombres écrites à la
+main), quatre dégagements de l'accueil sont devenus une constante dérivée du pied flottant, une puce a
+pris `radius.pill`, l'horloge du menu de développement `fontSize.title` ; les **neuf espacements hors
+échelle des écrans de référence** (5, 6, 10, 1, 3, une taille de libellé d'onglet à 10) sont désactivés
+localement, chacun avec la même phrase : écart mesuré à l'inventaire visuel, hors échelle assumé, la
+passe ne déplace pas un pixel. C'est [6.1-E](phase-6/6-1-e-finitions-interface.md) qui arbitrera ces
+pixels, pas une règle de lint.
 
-Les 42 `ukit/no-style-literals` sont apparus **avec la règle**, au jalon
-[6-K](phase-6/6-k-socle-visuel.md) : ils n'ont pas été introduits, ils étaient là et n'étaient
-mesurés par rien. Ils ne sont pas une dette diffuse mais une **liste de travail localisée** :
-
-| Zone | Warnings | Qui les résorbe |
-|---|---:|---|
-| annonces, Réglages | **15** | leurs sessions de refonte d'écran, qui réécrivent ces écrans de toute façon |
-| écrans de référence | 12 | personne : ce sont des valeurs hors échelle **assumées**, ou des arbitrages consignés dans [inventaire-visuel.md](inventaire-visuel.md) |
-| socle (`shared/`) | 12 | idem — ombres écrites à la main, tailles hors échelle |
-
-Le jalon 6-K a converti tout ce qui pouvait l'être **sans déplacer un pixel** dans les écrans de
-référence ; ce qui reste demande un arbitrage visuel, et c'est pourquoi la règle est en `warn` et non
-en `error`.
-
-> **Le compteur est passé de 53 à 47** pendant la session d'écran Scolarité du 2026-08-25, sans
-> qu'aucun n'ait été désactivé : la réécriture de la rangée de messagerie sur le vocabulaire partagé a
-> résorbé les trois derniers littéraux de cet écran — un `#fff` sur un compteur, deux espacements de 2
-> devenus `space.xxs`. C'est la règle de contribution appliquée telle quelle : les réduire quand on
-> travaille dans un fichier concerné.
-
-> **Le compteur avait baissé de 79 à 53**, dont 26 avertissements de style, pendant la passe de finition
-> du 2026-08-21 — celle qui a normalisé les dialogues, les états et les boutons. Aucun n'a été
-> désactivé : ils ont été résorbés en traversant les fichiers, ce que la règle de contribution demande
-> (« les réduire quand on travaille dans un fichier concerné »). Les plus notables sont les quatre
-> propriétés d'ombre écrites à la main de la barre de recherche Campus, devenues `tokens.shadow.md`,
-> et les quatre couleurs Material — deux `#4caf50`, un `#43A047`, un `#E65100` — remplacées par
-> l'échelle sémantique que le jalon 6-K avait créée pour elles.
+`no-unused-vars` n'en signale **aucun** : le dépôt en portait 65 au 2026-08-16, tous supprimés le jour
+même, et la règle est là pour que ça le reste.
 
 #### `no-unused-vars`, et ce qu'elle a fait remonter
 
@@ -136,6 +123,9 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`shared/etablissements/premierRafraichissement.ts`](../src/shared/etablissements/premierRafraichissement.ts) | une réponse, un plafond, jamais les deux — le cas qui compte est une base injoignable qui répond vite |
 | [`features/Scolarite/services/LecteurPdfPage.ts`](../src/features/Scolarite/services/LecteurPdfPage.ts) · [`tools/pdfjs/vendor.test.ts`](../tools/pdfjs/vendor.test.ts) | l'assemblage de la page du lecteur pdf.js — ce qui doit survivre au passage en littéral, ce qui doit lever plutôt que rendre une page blanche — et la conformité des copies vendorisées au paquet installé |
 | [`tools/eslint/no-style-literals.mjs`](../tools/eslint/no-style-literals.mjs) | que la table d'échelles de la règle ESLint **n'a pas dérivé** de [`shared/theme/tokens.ts`](../src/shared/theme/tokens.ts) |
+| [`features/Planning/services/groupListCache.ts`](../src/features/Planning/services/groupListCache.ts) | la politique du cache de la liste des groupes — expiration à sept jours, lecture défensive, repli daté — **figée avant** la fusion des deux caches (6.1-C) |
+| [`shared/services/retourAuPremierPlan.ts`](../src/shared/services/retourAuPremierPlan.ts) | ce qu'est un retour au premier plan : `active` après `background`, jamais après un simple `inactive` — la fin d'une invite système ou d'un centre de contrôle tiré n'en est pas un |
+| [`features/Campus/services/distance.ts`](../src/features/Campus/services/distance.ts) | la distance à vol d'oiseau, sur deux points bordelais connus |
 
 `BdeMapping` a été le premier module **de feature** couvert, et il l'est pour une raison précise :
 c'est là qu'une erreur ne se voit pas. Un champ omis rend une fiche incomplète sans rien casser, et
@@ -234,7 +224,8 @@ le fassent.
 
 Toutes sont en `warn` : elles ne bloquent pas, elles alertent. Un dépassement justifié se documente
 par une désactivation locale et commentée — comme [`Theme.ts`](../src/shared/theme/Theme.ts)
-(`eslint-disable max-lines`, fichier de données de style),
+(`eslint-disable max-lines`, fichier de données de style, et les trois dictionnaires de `shared/i18n/`
+pour la même raison depuis 6.1-C),
 [`CampusListLayout.tsx`](../src/features/Campus/components/CampusListLayout.tsx)
 (`eslint-disable-next-line complexity`, composant générique à nombreuses options) ou
 [`App.tsx`](../App.tsx) (l'écran de démarrage est peint avant que le thème existe).
@@ -326,6 +317,12 @@ L'onglet *Temps* porte deux simulations indépendantes : l'heure, et le **résea
 **réinitialisation complète** (6.1-A) : le trousseau, le répertoire privé des documents et tout
 AsyncStorage — réglages, `firstload`, caches et surcouches publiées — puis un rechargement du
 JavaScript ([`ReinitialisationComplete.ts`](../src/shared/services/ReinitialisationComplete.ts)).
+Elle **garde les deux simulations du menu** le temps de la relance
+([`simulations.ts`](../src/shared/services/simulations.ts), 6.1-C) : la relance les perdait, et c'est
+précisément en HORS LIGNE qu'on veut voir ce qu'un nouvel étudiant sans réseau voit — sans ça, la
+liste des bâtiments se mettait en cache pendant la relance et la sonde ne sondait rien. Le menu
+lui-même rouvre avec elles : une simulation active derrière un menu fermé serait un réglage qu'on
+ne voit pas.
 « Réinitialiser l'application » des Réglages garde le cache du catalogue et l'état en mémoire — le
 premier rafraîchissement a déjà répondu —, donc il ne montre pas ce qu'un **tout nouvel étudiant**
 voit : l'attente de la liste des établissements, le socle hors ligne. Seule une remise à zéro suivie
@@ -369,6 +366,34 @@ Fonctionnement de la simulation temporelle :
 
 > **Capture attendue** — `modmenu.png` : le menu de simulation déployé, horloge simulée, interrupteur
 > hors ligne et sélecteurs de date visibles.
+
+## Lire le démarrage plutôt que le supposer
+
+[`Chrono.ts`](../src/shared/services/Chrono.ts) pose des repères de temps sous `__DEV__` : chaque
+`marquer(nom)` écrit `[chrono] <nom> +<ms>` dans la console de Metro, compté depuis le chargement du
+module — le premier instant du JavaScript. Les repères posés : la préparation (`App.tsx`), les
+managers et ressources prêts, le premier rendu (splash natif retiré), le conteneur racine monté, puis
+ce que la scolarité décide au lancement — aucun identifiant, dossier en cache donc aucune session, ou
+parcours froid lancé — et le premier rafraîchissement des widgets. Il existe parce que la
+documentation affirmait que la session « rallongeait le splash » sans qu'aucune mesure ne l'appuie
+([features/scolarite.md](features/scolarite.md#limites-connues), 6.1-C) : un repère se lit, une
+impression se discute. En production, la fonction ne fait rien.
+
+Le premier relevé, sur iPhone le 2026-09-03 sans identifiants : préparation à +146 ms, managers et
+ressources prêts à +189 ms, premier rendu à +385 ms, conteneur racine monté à +420 ms, décision de
+la scolarité à +447 ms — vingt-sept millisecondes après le conteneur, soixante après le premier
+rendu. Et une seconde lecture du trousseau à +40 s, que rien n'avait demandée : l'effet de
+chargement initial dépendait de deux rappels dont l'identité change avec l'état du provider. Il ne
+joue plus qu'au montage. C'est le genre de chose qu'un repère voit et qu'une relecture ne voit pas.
+
+Le second relevé, dossier en cache — le cas courant : premier rendu à +230 ms, conteneur à +363 ms,
+décision « dossier en cache, aucune session » à +400 ms, premier rafraîchissement des widgets à
++445 ms, l'onglet Scolarité étant celui du lancement. Dans les deux états mesurés, la scolarité
+décide entre trente et soixante millisecondes **après** le premier rendu, et ne lance rien. Le
+parcours froid au lancement — identifiants sans dossier, le seul état qui lance une session — n'a
+pas été relevé ; le code garantit qu'il part au même instant, et il tourne alors sous le fondu
+d'une seconde du splash animé. Verdict S13 : rien à différer, la limite reste écrite avec ses
+chiffres ([features/scolarite.md](features/scolarite.md#limites-connues)).
 
 ## Sonder la biométrie plutôt que la deviner
 
@@ -471,8 +496,5 @@ barrière ne les rejouera.
 - **La couverture de test est étroite** : elle s'arrête au socle Aetherius. Ni composant, ni écran,
   ni bout en bout — la vérification manuelle sur l'application réelle reste la porte principale.
 - **Aucune vérification en intégration continue.** Un code qui ne compile pas peut être fusionné.
-- **79 warnings, c'est trop pour être lu d'un coup d'œil.** La règle de style en apporte 68, dont 41
-  dans trois écrans qui vont être réécrits. Jouer `npx eslint <fichier>` sur ce qu'on modifie plutôt
-  que `npx eslint .` sur tout, et comparer au tableau de la base de référence ci-dessus.
 - **Le menu de simulation est présent en production.** `ModMenu` n'est pas gardé par `__DEV__` ; il
   est simplement invisible tant qu'il n'est pas activé.

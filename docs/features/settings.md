@@ -17,7 +17,7 @@ L'écran est une suite de sections empilées, sous un titre qui s'efface au déf
 | **Thème** | interrupteur mode sombre |
 | **Notifications** | interrupteur des rappels de cours, curseur de délai |
 | **Lancement** | ouvrir sur le groupe favori, réinitialiser l'application |
-| **Calendrier** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué |
+| **Calendrier** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué, et un toast le dit quand c'est le geste « Forcer » qui a échoué (6.1-C) |
 
 Le bouton d'action de la barre d'onglets mène à **À propos**.
 
@@ -235,8 +235,9 @@ geste, pas pendant.
 3. aplatit les données reçues (jour ou semaine) en une liste de cours ;
 4. ne garde que ceux dont l'heure de déclenchement (début moins le délai) est encore à venir ;
 5. trie chronologiquement et **plafonne à 20 notifications**, pour rester sous la limite de l'OS
-   (64 sur iOS) ;
-6. compose le message : matière et salle, cette dernière déduite de la description par
+   (64 sur iOS) — et la section Notifications des Réglages le dit, depuis 6.1-C ;
+6. compose le message dans la langue de l'application (`NOTIFICATION_COURSE_IN`, traduit depuis
+   6.1-C — il était en français en dur) : matière et salle, cette dernière déduite de la description par
    `extractRoomFromDescription` (recherche de « salle », « bât », « amphi », « cremi », avec repli
    positionnel).
 
@@ -257,7 +258,7 @@ Activation
 
 syncCalendar()
   ├─ crée le calendrier "UKit" au premier passage si c'est la cible
-  ├─ PlanningApiService.fetchCalendarForSynchronization(premier groupe favori)
+  ├─ PlanningApiService.fetchCalendarForSynchronization(les groupes favoris, agrégés)
   │     └─ Blueprint ukit.celcat.annee, année universitaire complète (août → août)
   ├─ pour chaque événement : mise à jour si connu, création sinon
   ├─ suppression des événements devenus obsolètes
@@ -266,6 +267,23 @@ syncCalendar()
 
 La table `previousSyncData` associe l'identifiant Celcat à l'identifiant de l'événement système :
 c'est ce qui rend la synchronisation **idempotente**. Sans elle, chaque passage dupliquerait l'agenda.
+
+**Elle porte le planning agrégé des favoris** depuis 6.1-C, et non plus le premier favori seul : un
+étudiant qui agrège deux groupes attend les deux dans son agenda. Le doublon qu'on redoutait pour
+un cours commun n'existe pas — la source rend un cours par identifiant Celcat, et c'est cet
+identifiant qui indexe `previousSyncData` : il n'est écrit qu'une fois.
+
+**Un échec se dit deux fois.** La pastille sous l'interrupteur passe en avertissement, et quand c'est
+le geste « Forcer une synchronisation » qui a échoué, un toast le dit sur place : le service rend son
+verdict (`syncCalendar` rend `false`), l'écran décide du retour. La tâche de fond, elle, n'a
+personne à qui parler.
+
+**Ouvrir l'écran sans permission ne bascule plus rien** (6.1-C). Le montage appelait la fonction de
+l'interrupteur quand la permission manquait : elle la demandait, puis basculait la synchronisation
+si elle était accordée — et ouvrait la modale d'extinction si elle était déjà active. La permission
+est demandée une fois au montage, seulement relue à chaque retour sur l'écran, et l'état de
+synchronisation reste ce qu'il était ; accorder la permission dans les réglages du système puis
+revenir remplace la carte « permission » par l'interrupteur.
 
 La fenêtre synchronisée est l'**année universitaire** : du 1er août courant au 1er août suivant, avec
 recul d'un an si l'on est avant août. Ses deux bornes sont **calculées par le service** et passées en
@@ -375,9 +393,9 @@ le rendu.
 doit pas déclencher un appel Celcat : on relit la semaine courante déjà en cache. Si elle n'y est pas,
 rien n'est replanifié — le prochain chargement du planning s'en chargera.
 
-**La synchronisation ne porte que sur le premier groupe favori**
-(`this._favoriteGroups[0]`). Synchroniser une agrégation de groupes produirait des doublons dans
-l'agenda pour les cours communs.
+**La synchronisation porte le planning agrégé** (6.1-C). Elle ne portait que le premier favori, au
+motif qu'une agrégation produirait des doublons pour les cours communs ; or un cours commun porte le
+même identifiant dans les deux groupes, et la table de synchronisation est indexée par cet identifiant.
 
 **Changer d'établissement ne déconnecte plus** (2026-08-22). La bascule effaçait la session
 universitaire, pour une raison juste — le nom d'un étudiant d'une fac ne doit pas s'afficher sous une
@@ -391,12 +409,16 @@ Rien ne se mélange, et un retour retrouve sa session. Le contexte de scolarité
 changement — il oublie la session d'avant, puis relit celle d'après ; s'arrêter à l'oubli déplacerait
 le défaut d'un cran, en redemandant une connexion à une fac où l'on est déjà connecté.
 
-**`resetSettings` est volontairement partielle** : elle remet à zéro les préférences d'affichage et
-les favoris de planning, mais ne touche ni aux caches, ni aux favoris Campus. Elle **efface en revanche
+**`resetSettings` efface tout ce qui appartient à l'utilisateur** : les préférences d'affichage, les
+favoris de planning, les caches de l'établissement, et — depuis 6.1-C — les favoris et filtres de
+restaurants et de bibliothèques. La bascule d'établissement les garde, parce qu'ils pointent des sources
+nationales ; la réinitialisation non : quelqu'un qui efface tout s'attend à ce que tout parte, et
+l'argument des sources nationales ne vaut que lorsqu'on va quelque part
+([`purge.ts`](../../src/shared/etablissements/purge.ts), deux listes distinctes). Elle **efface aussi
 tout le trousseau** (`purgerTrousseau`) — session universitaire et liens d'abonnement, tous
 établissements confondus. C'est la différence avec une bascule : ici on ne va nulle part, on efface, et
 laisser un emploi du temps déjà rempli, ou un compte connecté, à quelqu'un qui vient de tout
-réinitialiser serait un résidu, pas un service. Voir les limites.
+réinitialiser serait un résidu, pas un service.
 
 ## Vérifier
 
@@ -422,26 +444,12 @@ réinitialiser serait un résidu, pas un service. Voir les limites.
 
 ## Limites connues
 
-- **Ouvrir l'écran sans permission calendrier déclenche `toggleCalendarSync()`.** Dans
-  `componentDidMount`, l'absence de permission appelle la même fonction que l'interrupteur : la
-  permission est demandée, et si elle est accordée, l'état de synchronisation **bascule** au lieu de
-  rester tel quel.
-- **`syncCalendar` sort sans réinitialiser son drapeau** quand `fetchCalendarForSynchronization`
-  renvoie une valeur vide : `_isSynchronizingCalendar` reste à `true` et l'indicateur tourne jusqu'au
-  redémarrage.
-- **Aucun retour d'erreur de synchronisation.** Un échec réseau est indiscernable d'un agenda vide.
 - **Vingt notifications au maximum**, sur la seule semaine en cache : les cours au-delà ne sont pas
-  couverts tant que leur semaine n'a pas été consultée.
+  couverts tant que leur semaine n'a pas été consultée. C'est une décision, et la section
+  Notifications le dit.
 - **`extractRoomFromDescription` est heuristique.** Une description au format inattendu produit une
   salle absente ou fausse dans la notification.
-- **Les titres de notification sont en dur en français** (« Cours dans N min ») —
-  voir [i18n.md](../i18n.md).
-- **`resetSettings` ne réinitialise toujours pas tout** : les favoris de restaurants et de
-  bibliothèques et leurs filtres de liste survivent. Ils pointent des sources **nationales**, et c'est
-  la même règle qu'au changement d'établissement — mais pour une réinitialisation, l'argument est plus
-  faible : quelqu'un qui efface tout s'attend probablement à ce que tout parte. À trancher un jour, et
-  écrit ici en attendant.
-- **`SettingsScreen` est un composant à classe de 348 lignes** portant seize champs d'état.
+- **`SettingsScreen` est un composant à classe de 450 lignes** portant dix-sept champs d'état.
 
 ## Carte des fichiers
 

@@ -16,7 +16,7 @@ l'existant.
 ## Ce que le fichier exporte
 
 ```ts
-import style, { tokens, StyleWelcome, AppThemeType, ThemeKey } from '../shared/theme/Theme';
+import style, { tokens, AppThemeType, ThemeKey } from '../shared/theme/Theme';
 
 const theme = style.Theme[themeName];   // themeName : 'light' | 'dark'
 ```
@@ -26,7 +26,6 @@ const theme = style.Theme[themeName];   // themeName : 'light' | 'dark'
 | `tokens` | primitives de design | espacements, rayons, tailles, graisses, ombres |
 | `style.Theme.light` / `.dark` | palettes complètes | couleurs et styles composés d'un thème |
 | `style` (défaut) | styles partagés hors thème | `style.list`, `style.calendarList`, plus `style.Theme` |
-| `StyleWelcome` | styles du parcours d'accueil | uniquement [Onboarding](features/onboarding.md) |
 | `AppThemeType` | `typeof Theme.light` | type d'une prop `theme` |
 | `ThemeKey` | `'light' \| 'dark'` | type d'un nom de thème |
 | `SemanticTone` | `'success' \| 'warning' \| 'danger' \| 'neutral'` | un **état**, tel qu'un service le nomme |
@@ -122,7 +121,8 @@ C'est ce qui a permis de trouver, en le déplaçant, que `LibraryService` distin
 Deux tableaux de six couleurs, indexés cycliquement (`index % 6`). Ils colorent les en-têtes de
 sections dans la recherche de groupes et servent d'accents ailleurs — par exemple
 `theme.sectionsHeaders[5]` pour la ligne de messagerie du dashboard Scolarité. Les deux tableaux sont
-alignés : `sections[i]` est la version translucide de `sectionsHeaders[i]`.
+alignés : `sections[i]` est la version translucide de `sectionsHeaders[i]`. En sombre, l'index 0 a
+porté `#5E5CE6` — la valeur du 4 — jusqu'en 6.1-C : cinq teintes au lieu de six, corrigé en `#0A84FF`.
 
 ### Le sous-arbre `settings`
 
@@ -579,8 +579,6 @@ Acquises, et qui ont coûté à être trouvées :
 - **Le fichier fait plus de 1 100 lignes** et désactive explicitement `max-lines`. C'est assumé : il
   s'agit de données de style, dont le découpage nuirait à la lisibilité et à la comparaison clair /
   sombre. Seuls les `tokens` en ont été sortis, et pour une raison technique — les rendre testables.
-- **`StyleWelcome` est un jeu de styles séparé**, hérité du parcours d'accueil, qui ne suit pas la
-  structure des deux thèmes.
 - **`androidStatusBar` reste en dur dans [`app.config.ts`](../app.config.ts)**, comme la couleur de
   l'écran de démarrage : Expo les lit avant que l'application — donc le thème — existe. C'est pourquoi
   ce fichier est exempté de la règle ESLint. Côté application, la barre de statut est passée par
@@ -591,9 +589,12 @@ Acquises, et qui ont coûté à être trouvées :
 - **Extraire depuis l'existant fige aussi ses défauts.** Deux écarts relevés au jalon 6-K sont
   **volontairement conservés** parce que les corriger déplacerait des pixels dans des écrans de
   référence : l'écart icône → texte vaut tantôt 4 tantôt 6, et six ombres restent écrites à la main
-  faute de correspondre à `tokens.shadow`. Ils sont consignés dans
-  [inventaire-visuel.md](inventaire-visuel.md#3-les-divergences-mesurées).
+  faute de correspondre à `tokens.shadow` — leur couleur, elle, est `tokens.shadow.*.shadowColor`
+  depuis 6.1-C. Ils sont consignés dans
+  [inventaire-visuel.md](inventaire-visuel.md#3-les-divergences-mesurées), et chaque site porte une
+  désactivation locale de la règle qui dit pourquoi : la base ESLint est à zéro, et le reste.
 - **Deux jeux de couleurs hérités subsistent en tête de fichier** : `colors` (encore référencé, dans
-  `StyleWelcome`, `style.list`, la couleur du calendrier système et le retour de notification) et
+  `style.list`, la couleur du calendrier système, le pouce du `Switch` des réglages et le retour de
+  notification — `StyleWelcome`, son dernier gros consommateur, est sorti du fichier en 6.1-C) et
   `hintColors` (exposé par `style.hintColors`). `colors50` et `colors200`, deux palettes Material
   entières que plus rien ne lisait, ont été **supprimées** le 2026-08-16.

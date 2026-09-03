@@ -130,6 +130,7 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 									style={{
 										flexDirection: 'row',
 										backgroundColor: theme.eventBackground,
+										// eslint-disable-next-line ukit/no-style-literals -- 6 : ecart mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel
 										paddingHorizontal: 6,
 										paddingVertical: tokens.space.xs,
 										borderRadius: tokens.radius.sm,
@@ -143,7 +144,8 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 											style={{
 												height: 5,
 												width: cardIndex === dotIndex ? 12 : 5,
-												borderRadius: 3,
+												// Une puce : le rayon se calcule, il ne s'ecrit pas (docs/theme.md).
+												borderRadius: tokens.radius.pill,
 												backgroundColor: cardIndex === dotIndex ? (theme.accent ?? theme.primary) : theme.fontSecondary,
 												opacity: cardIndex === dotIndex ? 1 : 0.4,
 												marginHorizontal: tokens.space.xxs,

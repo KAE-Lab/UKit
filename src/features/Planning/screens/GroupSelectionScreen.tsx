@@ -1,6 +1,5 @@
 import React from 'react';
 import { Animated, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Toast from 'react-native-root-toast';
@@ -12,7 +11,8 @@ import { LoadingState } from '../../../shared/ui/LoadingState';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext, isConnected } from '../../../shared/services/AppCore'
-import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
+import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
+import { formeAffichee } from '../services/groupListCache';
 import { NavBarHelper, SaveGroupButton } from '../../../shared/navigation/NavHelpers';
 import { SectionListHeader, GroupRow } from '../components/GroupSelectionComponents';
 
@@ -133,21 +133,25 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
         await this.fetchList();
     };
 
-    getCache = async () => {
-        let cacheStr = await AsyncStorage.getItem('groups');
-        if (cacheStr !== null) {
-            const cache = JSON.parse(cacheStr) as { date: string; list: string[] };
-            this.setState({ cacheDate: cache.date });
-            return cache.list;
-        }
-        return null;
+    /**
+     * Le cache du manager, date pour le bandeau « affichage hors ligne du … ».
+     *
+     * L'ecran tenait son propre cache (`groups`) jusqu'en 6.1-C, sans expiration et jamais invalide au
+     * changement d'etablissement : il lit desormais le seul qui reste (groupListCache.ts).
+     */
+    depuisLeCache = (): GroupItem[] | null => {
+        const cache = { liste: DataManager.getGroupList(), horodatage: DataManager.getGroupListEtat().horodatage };
+        const affiche = formeAffichee(cache, null);
+        if (affiche === null) return null;
+        this.setState({ cacheDate: affiche.dateCache });
+        return affiche.liste.map((name) => ({ name }));
     };
 
     fetchList = async () => {
-        let list = null;
+        let list: GroupItem[] | null = null;
 
         if (await isConnected()) {
-            const resultat = await FetchManager.fetchGroupList();
+            const resultat = await DataManager.fetchGroupList();
 
             if (resultat.ok === false) {
                 // Le message vient de la famille d'echec, plus d'un reniflage de la forme de l'erreur
@@ -160,20 +164,17 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                         position: Toast.positions.BOTTOM,
                     });
                 }
-                list = await this.getCache();
+                list = this.depuisLeCache();
             } else {
                 this.setState({ cacheDate: null });
                 list = resultat.groups.map((e) => ({ name: e }));
-                AsyncStorage.setItem('groups', JSON.stringify({ list, date: moment() })).catch((e) =>
-                    console.warn('Échec de la mise en cache des groupes :', e)
-                );
             }
         } else {
             Toast.show(Translator.get('NO_CONNECTION'), {
                 duration: Toast.durations.SHORT,
                 position: Toast.positions.BOTTOM,
             });
-            list = await this.getCache();
+            list = this.depuisLeCache();
         }
 
         if (list !== null) {
@@ -322,7 +323,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                 renderSectionHeader={({ section }: { section: { key: string; sectionIndex: number; colorIndex: number } }) => (
                     <SectionListHeader title={section.key} key={section.key} sectionIndex={section.sectionIndex} color={theme.sections[section.colorIndex]} headerColor={theme.sectionsHeaders[section.colorIndex]} />
                 )}
-                sections={this.state.sections as any}
+                sections={this.state.sections}
                 keyExtractor={(item, index) => index.toString()}
                 initialNumToRender={20}
                 onEndReachedThreshold={0.1}

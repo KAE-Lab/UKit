@@ -18,7 +18,7 @@ import {
 } from '../etablissements/catalogue';
 // `purge` et non la porte d'entree pour la meme raison : elle ne connait que le magasin local et le
 // trousseau, la ou `../etablissements` tirerait le client de la base.
-import { purgerDonneesEtablissement, purgerTrousseau } from '../etablissements/purge';
+import { purgerDonneesCampusNationales, purgerDonneesEtablissement, purgerTrousseau } from '../etablissements/purge';
 // Le module des vus seul, et non la porte d'entree des messages : elle tire le client de la base.
 import { oublierVus } from '../messages/vus';
 import { restaurerReglages } from './reglagesParEtablissement';
@@ -108,20 +108,27 @@ export function isArraysEquals(a: unknown[], b: unknown[]): boolean {
 export { getLocations, getLocationsInText, lieuxDesSites, ligneDeSalle } from '../locations/salles';
 
 // ── GESTION DES COURS ───────────────────────────────
+/** Ce qu'il faut d'un cours pour en lire l'UE : le sujet, et le champ ou la deposer. */
+export interface CoursAvecUE {
+    subject?: string;
+    UE?: string | null;
+}
+
 export const CourseManager = {
-    computeCourseUE: (course: Record<string, unknown>): Record<string, unknown> => {
+    /** Mute le cours en place — idempotent : au second passage, le code d'UE a deja quitte le sujet. */
+    computeCourseUE: <T extends CoursAvecUE>(course: T): T => {
         if (course.subject && course.subject !== 'N/C') {
             // La regle vit dans `PlanningAssembly`, avec le tri qui l'applique deja : deux copies
             // d'une meme expression, c'est une occasion de n'en corriger qu'une (jalon 6-I).
-            const separe = separerCodeUE(course.subject as string);
+            const separe = separerCodeUE(course.subject);
             course.UE = separe === null ? null : separe.code;
             if (separe !== null) course.subject = separe.reste;
         }
         return course;
     },
-    filterCourse: (isFavorite: boolean, course: Record<string, unknown>, filtersList: unknown): boolean => {
+    filterCourse: (isFavorite: boolean, course: CoursAvecUE, filtersList: unknown): boolean => {
         if (!isFavorite) return true;
-        if (course.UE !== null && filtersList instanceof Array && filtersList.includes(course.UE)) {
+        if (course.UE != null && filtersList instanceof Array && filtersList.includes(course.UE)) {
             return false;
         }
         return true;
@@ -197,9 +204,11 @@ class SettingsManagerService {
     };
 
     unsubscribe = (event: string, callback: Function) => {
-        if (!this._subscribers[event]?.length) return;
-        const index = this._subscribers[event]?.indexOf(callback);
-        if (index !== -1) this._subscribers[event].splice(index, 1);
+        const abonnes = this._subscribers[event];
+        if (!abonnes?.length) return;
+        // Un `index` indefini passait la garde `!== -1`, et `splice(undefined, 1)` retirait l'abonne 0.
+        const index = abonnes.indexOf(callback);
+        if (index !== -1) abonnes.splice(index, 1);
     };
 
     notify = (event: string, ...args: unknown[]) => {
@@ -365,8 +374,12 @@ class SettingsManagerService {
         this._lastSyncDate = null;
     };
 
-    syncCalendar = async () => {
-        if (this._calendar === -1) return;
+    /**
+     * Rend `false` si la synchronisation a **echoue** — l'ecran des reglages en fait un toast. Une
+     * synchronisation sans cible ni favori n'echoue pas : elle n'a rien a ecrire.
+     */
+    syncCalendar = async (): Promise<boolean> => {
+        if (this._calendar === -1 || this._favoriteGroups.length === 0) return true;
 
         this._isSynchronizingCalendar = true;
         this.notify('isSynchronizingCalendar', true);
@@ -387,10 +400,15 @@ class SettingsManagerService {
         // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
         // Une synchronisation qui echoue laisse le calendrier tel quel et repassera dans 12 h : purger
         // les evenements deja poses sur la foi d'une source injoignable serait pire que ne rien faire.
-        const resultat = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups[0]);
+        //
+        // Le planning **agrege** des favoris, pas le premier seul (6.1-C) : un etudiant qui agrege deux
+        // groupes attend les deux dans son agenda. Un cours commun aux deux porte le meme identifiant
+        // Celcat, et c'est par cet identifiant que `previousSyncData` est indexee — il n'est ecrit
+        // qu'une fois.
+        const resultat = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups);
         if (resultat.ok === false) {
             this._lastSyncFailed = true;
-            return;
+            return false;
         }
 
         let existingCalendarEvents: Record<string, string> = {};
@@ -410,9 +428,11 @@ class SettingsManagerService {
 
         this._lastSyncDate = moment();
         this._lastSyncFailed = false;
+        return true;
         } catch (erreur) {
             console.warn(`[calendrier] synchronisation interrompue : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
             this._lastSyncFailed = true;
+            return false;
         } finally {
             this._isSynchronizingCalendar = false;
             this.notify('isSynchronizingCalendar', false);
@@ -543,6 +563,10 @@ class SettingsManagerService {
         // Les memes donnees qu'un changement d'etablissement, et par le meme chemin : deux gestes qui
         // effacent la meme chose ne doivent pas avoir deux definitions de « la meme chose ».
         await purgerDonneesEtablissement();
+        // Et ce qu'une bascule garde par decision (6-G) : les favoris et filtres de restaurants et de
+        // bibliotheques pointent des sources nationales, ils survivent a un changement de fac. Pas a
+        // une reinitialisation — quelqu'un qui efface tout s'attend a ce que tout parte (6.1-C).
+        await purgerDonneesCampusNationales();
         // Et ce qu'une bascule, elle, **garde** : les liens d'abonnement et la session universitaire
         // sont cloisonnes par etablissement, donc un aller-retour les retrouve. Ici on ne va nulle
         // part, on efface — laisser un emploi du temps rempli, ou un compte connecte, a quelqu'un qui

@@ -33,7 +33,7 @@ import { basculerEtablissement } from '../../../shared/etablissements/bascule';
  * repond, et une base muette ne doit pas retenir un premier lancement plus longtemps.
  */
 const PLAFOND_CATALOGUE_MS = 4000;
-import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
+import { PlanningDataManager as DataManager, type EtatListeGroupes } from '../../Planning/services/PlanningDataManager';
 
 /**
  * Les fragments d'identifiant de groupe par annee et par semestre.
@@ -73,6 +73,8 @@ export interface WelcomeState {
     readonly season: OptionListee | null;
     readonly groups: string[];
     readonly groupList: string[];
+    /** Ou en est la lecture de la liste : l'etape des groupes dit pourquoi elle est vide (6.1-C). */
+    readonly groupesEtat: EtatListeGroupes;
     readonly groupListFiltered: string[];
     readonly textFilter: string;
 }
@@ -131,6 +133,8 @@ export interface WelcomeActions {
     readonly selectEtablissement: (code: string) => void;
     readonly selectGroup: (groupe: string) => void;
     readonly filterList: (year: OptionListee | null, season: OptionListee | null, textFilter: string) => void;
+    /** Redemande la liste des groupes a sa source — le « Reessayer » de l'etape. */
+    readonly relancerGroupes: () => void;
 }
 
 export function useWelcomeState(): { state: WelcomeState; actions: WelcomeActions } {
@@ -150,6 +154,7 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
         season: null,
         groups: [],
         groupList: DataManager.getGroupList(),
+        groupesEtat: DataManager.getGroupListEtat(),
         groupListFiltered: [],
         textFilter: '',
     });
@@ -178,28 +183,36 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
     }, []);
 
     useEffect(() => {
-        SettingsManager.on('theme', (theme: string) => changer({ theme }));
-        SettingsManager.on('language', (language: string) => changer({ language }));
-        SettingsManager.on('favoriteGroups', (groups: string[]) => changer({ groups }));
+        const surTheme = (theme: string) => changer({ theme });
+        const surLangue = (language: string) => changer({ language });
+        const surFavoris = (groups: string[]) => changer({ groups });
         // Le tri par annee et le texte saisi appartiennent a l'universite qu'on quitte : une annee
         // choisie sous la convention de nommage de l'une ne veut rien dire sous l'autre.
-        SettingsManager.on('etablissement', (code: string) => changer({
+        const surEtablissement = (code: string) => changer({
             etablissement: code,
             etablissements: listeEtablissements(),
             year: null,
             season: null,
             textFilter: '',
             groupListFiltered: [],
-        }));
+        });
         // La liste arrive **apres** le montage — elle est chargee hors du chemin de demarrage, et elle
         // est rechargee a chaque changement d'etablissement (PlanningDataManager). Refiltrer ici plutot
         // que d'attendre le geste suivant : sans ca, choisir son universite puis avancer d'un ecran
         // montrait une liste vide jusqu'a ce qu'on retouche un filtre.
-        DataManager.on('groupList', (groupList: string[]) => setState((prev) => ({
+        const surListe = (groupList: string[]) => setState((prev) => ({
             ...prev,
             groupList,
             groupListFiltered: filtrer(groupList, prev.year, prev.season, prev.textFilter),
-        })));
+        }));
+        const surEtatListe = (groupesEtat: EtatListeGroupes) => changer({ groupesEtat });
+
+        SettingsManager.on('theme', surTheme);
+        SettingsManager.on('language', surLangue);
+        SettingsManager.on('favoriteGroups', surFavoris);
+        SettingsManager.on('etablissement', surEtablissement);
+        DataManager.on('groupList', surListe);
+        DataManager.on('groupListEtat', surEtatListe);
 
         // **Les defauts de l'appareil, une seule fois** : au tout premier lancement, quand rien n'a
         // encore ete ecrit. Les poser a chaque montage etait un defaut signale par un utilisateur —
@@ -213,6 +226,17 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
             SettingsManager.setLanguage(languageFromDevice());
             SettingsManager.setTheme(SettingsManager.getAutomaticTheme());
         }
+
+        // Resilies au demontage : ils ne l'etaient jamais, et les managers gardaient six rappels vers
+        // un parcours termine pour toute la session (limite ecrite depuis 6-G, corrigee en 6.1-C).
+        return () => {
+            SettingsManager.unsubscribe('theme', surTheme);
+            SettingsManager.unsubscribe('language', surLangue);
+            SettingsManager.unsubscribe('favoriteGroups', surFavoris);
+            SettingsManager.unsubscribe('etablissement', surEtablissement);
+            DataManager.unsubscribe('groupList', surListe);
+            DataManager.unsubscribe('groupListEtat', surEtatListe);
+        };
     }, []);
 
     const filterList: WelcomeActions['filterList'] = (year, season, textFilter) => {
@@ -241,6 +265,9 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
                 else SettingsManager.addFavoriteGroup(groupe);
             },
             filterList,
+            relancerGroupes: () => {
+                void DataManager.fetchGroupList();
+            },
         },
     };
 }

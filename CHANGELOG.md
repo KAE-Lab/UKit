@@ -15,6 +15,33 @@ la première soirée en production a montré de fragile, réparé avant tout con
 
 ### Corrigé
 
+- **Le contenu publié atteint les écrans déjà montés** (6.1-C). Un signal partagé dit le vrai retour
+  au premier plan — après un passage en arrière-plan, pas après un centre de contrôle tiré ni une
+  invite Face ID — et sur ce signal les annonces se relisent, le Planning recalcule « Aujourd'hui »
+  quand la date a changé, et les widgets de la scolarité ne se rejouent plus une seconde fois juste
+  après la biométrie.
+- **La permission calendrier ne bascule plus la synchronisation.** Ouvrir les Réglages sans
+  permission la demandait, puis allumait la synchronisation si elle était accordée — ou ouvrait la
+  modale d'extinction si elle l'était déjà. L'état reste ce qu'il était, et accorder la permission
+  dans les réglages du système suffit au retour.
+- **La synchronisation porte le planning agrégé**, pas le premier favori seul, et un échec de
+  « Forcer une synchronisation » se dit par un toast. Les titres de notification de cours sont
+  traduits, et la section Notifications dit son plafond de vingt.
+- **Réinitialiser efface aussi les favoris et filtres du Campus** : quelqu'un qui efface tout
+  s'attend à ce que tout parte. La bascule d'établissement, elle, les garde.
+- **Un seul cache pour la liste des groupes.** L'écran de recherche tenait le sien, sans expiration
+  et jamais invalidé au changement d'établissement ; il lit celui du manager, daté.
+- **La vue semaine ne recalcule plus ses filtres à chaque rendu**, et les rappels de cours suivent les
+  filtres d'UE dans les deux vues.
+- **La première section de la recherche de groupes est bleue en sombre**, comme en clair : l'index 0
+  de la palette portait la valeur de l'index 4.
+- **L'étape des groupes de l'accueil dit pourquoi elle est vide** — une installation hors ligne
+  voyait une carte muette qui invitait à « affiner » — et propose de réessayer ; les abonnements du
+  parcours sont résiliés au démontage.
+- **La section des salles libres du tableau de bord propose « Réessayer »**, comme les trois autres.
+- **Le trousseau n'est lu qu'une fois au lancement.** Le chrono de 6.1-C a vu une seconde lecture
+  quarante secondes après le premier rendu, que rien n'avait demandée ; un parcours froid aurait pu
+  être relancé par-dessus lui-même.
 - **Une tuile en échec garde sa taille** (6.1-A). Un widget en panne basculait la paire entière en
   rangées, et la page changeait de forme sous les yeux de l'utilisateur. La tuile dit désormais deux
   mots — « Indisponible », « À ressaisir », « Erreur » — et une feuille au toucher porte la phrase et
@@ -45,6 +72,9 @@ la première soirée en production a montré de fragile, réparé avant tout con
 
 ### Ajouté
 
+- **Tirer-pour-rafraîchir sur le tableau de bord Campus** (6.1-C) : les quatre sources se relisent à
+  la demande, sans faire clignoter les carrousels — la seule relecture des sources tierces, décidée
+  plutôt qu'un rejeu silencieux à chaque retour au premier plan.
 - **Des messages de service, sans release** (6.1-B). Une information se montre en bandeau flottant
   en haut de l'écran, un avertissement et un incident en feuille ; l'incident reste rappelé tant
   qu'il dure par la **pastille d'état de service** — un « i » à droite du grand titre de chaque
@@ -93,6 +123,19 @@ la première soirée en production a montré de fragile, réparé avant tout con
   recopie la bibliothèque.
 - Le menu de développement gagne une **réinitialisation complète** — trousseau, documents, caches,
   puis rechargement — pour voir ce qu'un tout nouvel étudiant voit.
+
+- **Trois requêtes de découverte des bibliothèques au lieu de douze** (6.1-C) : la position de
+  l'étudiant et deux points bordelais. Les six sites exclusifs de Pau, La Rochelle, Limoges et
+  Bayonne sortent de la liste par défaut — le périmètre est bordelais, et un étudiant qui s'y trouve
+  les garde par sa position. Les points sont une donnée de catalogue, à republier.
+- **La position est résolue une fois pour tout le Campus**, partagée cinq minutes entre le tableau de
+  bord et les listes ; la distance à vol d'oiseau vit dans un module pur testé.
+- **L'outillage à zéro écart** : ESLint sans avertissement (35 traités un par un), `expo-doctor`
+  sans écart (sept paquets réalignés, `.expo/` ignoré), `setup-java@v5` dans le workflow de release,
+  `StyleWelcome` et `WelcomeButton` supprimés — deux cents lignes de styles que plus rien ne montait.
+- **La réinitialisation complète du menu de développement garde ses simulations** — HORS LIGNE, date
+  — le temps de la relance : c'est en HORS LIGNE qu'on veut voir ce qu'un nouvel étudiant sans réseau
+  voit.
 
 ## [6.0.0] - 2026-08-31
 

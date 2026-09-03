@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- un dictionnaire est un fichier de donnees : le decouper nuirait a sa lecture, comme Theme.ts */
 import type { TranslationDict } from './Translator';
 
 const es: TranslationDict = {
@@ -118,6 +119,7 @@ const es: TranslationDict = {
 	NO_GROUP_FOUND_WITH_THIS_SEARCH: 'Ningún grupo coincide con esta búsqueda.',
 	NO_SYNCHRONIZATION_DONE: 'No se ha realizado una sincronización',
 	LAST_SYNCHRONIZATION_FAILED: 'La última sincronización falló',
+	CALENDAR_SYNC_FAILED_TOAST: 'La sincronización falló. El calendario no se modificó.',
 	OFFLINE_DISPLAY_FROM_DATE: 'Muestra fuera de linea de $-',
 	OPEN_ON_FAVOURITE_GROUP: 'Abrir en el grupo favorito',
 	OPEN_SYSTEM_SETTINGS: 'Abrir los ajustes del sistema',
@@ -152,6 +154,7 @@ const es: TranslationDict = {
 	// ce sont les libelles d'ecran qui se traduisent, pas les donnees.
 	YOUR_INSTITUTION: '¿A qué universidad vas?',
 	INSTITUTIONS_LOADING: 'Recuperando la lista de centros…',
+	GROUPS_LOADING: 'Recuperando la lista de grupos…',
 	INSTITUTION: 'Centro',
 	INSTITUTION_CHANGE_TITLE: '¿Cambiar de centro?',
 	INSTITUTION_CHANGE_WARNING: 'Tus grupos favoritos, tu horario en caché, tu sesión universitaria y los cursos añadidos a tu calendario se borrarán.\nLos datos de dos universidades no se mezclan.',
@@ -339,6 +342,10 @@ const es: TranslationDict = {
 	COURSE_NOTIFICATIONS: "Notificaciones de cursos",
 	NOTIFICATION_DELAY: "Retraso de la notificación",
 	NOTIFICATION_DELAY_DESC: "Ajusta cuántos minutos antes del inicio del curso deseas ser notificado.",
+	NOTIFICATION_CAP_DESC: "Se cubren las 20 próximas clases de la semana consultada.",
+	NOTIFICATION_COURSE_IN: "Clase en $- min",
+	NOTIFICATION_COURSE_FALLBACK: "Clase",
+	NOTIFICATION_LOCATION_UNKNOWN: "Aula desconocida",
 	PROPOSALS_TITLE: "Encontrado en tu expediente",
 	PROPOSALS_INTRO: 'Tu expediente universitario tiene datos que pueden completar tu perfil. No se aplicará nada sin tu permiso.',
 	PROPOSALS_EDT_LABEL: 'Horario',

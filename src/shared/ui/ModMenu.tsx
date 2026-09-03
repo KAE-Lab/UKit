@@ -7,6 +7,7 @@ import moment from 'moment';
 import style, { tokens } from '../theme/Theme';
 import { TimeMockService } from '../services/TimeMockService';
 import { NetworkMockService } from '../services/NetworkMockService';
+import { menuAReouvrir } from '../services/simulations';
 import { AppContext } from '../services/AppCore';
 import ModMenuBlueprints from './ModMenuBlueprints';
 import ModMenuBiometrie from './ModMenuBiometrie';
@@ -56,7 +57,8 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         super(props);
 
         this.state = {
-            isVisible: false,
+            // Rouvert apres une reinitialisation complete, avec ses simulations (shared/services/simulations).
+            isVisible: menuAReouvrir(),
             isExpanded: false,
             isActive: TimeMockService.isMockActive(),
             isOffline: NetworkMockService.isOffline(),
@@ -222,7 +224,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             <Text style={{ color: isActive ? theme.success : theme.fontSecondary, fontWeight: 'bold', marginBottom: tokens.space.xs }}>
                 {isActive ? 'HEURE SIMULÉE' : 'HEURE RÉELLE'}
             </Text>
-            <Text style={{ color: theme.font, fontSize: 32, fontWeight: 'bold', fontVariant: ['tabular-nums'], textAlign: 'center', width: '100%' }}>
+            <Text style={{ color: theme.font, fontSize: tokens.fontSize.title, fontWeight: 'bold', fontVariant: ['tabular-nums'], textAlign: 'center', width: '100%' }}>
                 {currentTime.format('HH:mm:ss')}
             </Text>
             <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm, marginTop: tokens.space.xs, textAlign: 'center' }}>
@@ -354,7 +356,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                         backgroundColor: theme.cardBackground,
                         borderRadius: tokens.radius.md,
                         justifyContent: 'center', alignItems: 'center',
-                        shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+                        shadowColor: tokens.shadow.md.shadowColor, shadowOffset: { width: 0, height: 4 },
                         shadowOpacity: 0.3, shadowRadius: 5, elevation: 8,
                         borderWidth: 1, borderColor: theme.border
                     }]}
@@ -379,7 +381,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     backgroundColor: theme.background,
                     borderRadius: tokens.radius.md,
                     overflow: 'hidden',
-                    shadowColor: "#000", shadowOffset: { width: 0, height: 10 },
+                    shadowColor: tokens.shadow.lg.shadowColor, shadowOffset: { width: 0, height: 10 },
                     shadowOpacity: 0.3, shadowRadius: 10, elevation: 15,
                     borderWidth: 1, borderColor: theme.border
                 }]}
