@@ -30,7 +30,7 @@ export async function televerser(dossier: string, fichier: File, adresseActuelle
         contentType: fichier.type || undefined,
         cacheControl: '3600',
     });
-    if (error !== null) throw new Error(`Televersement refuse : ${error.message}`);
+    if (error !== null) throw new Error(`Téléversement refusé : ${error.message}`);
 
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(objet);
     // Meme objet qu'avant : la version continue ; sinon elle repart a 1.

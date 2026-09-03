@@ -49,13 +49,13 @@ function ChampImage({ champ, saisie, onChange, ligne, desactive }: ChampEditeurP
             <div className="apercu-image">
                 {adresse !== '' ? <img src={adresse} alt="" /> : <div className="vignette" />}
                 <div>
-                    <div className="adresse">{adresse === '' ? (champ.videEstValeur === true ? 'Aucune image (la chaine vide)' : 'Aucune adresse') : adresse}</div>
-                    {adresse !== '' ? <div className="petit secondaire">version {versionDeUrl(adresse) || 'sans parametre'} — dossier {dossier}</div> : null}
+                    <div className="adresse">{adresse === '' ? (champ.videEstValeur === true ? 'Aucune image (la chaîne vide)' : 'Aucune adresse') : adresse}</div>
+                    {adresse !== '' ? <div className="petit secondaire">version {versionDeUrl(adresse) || 'sans paramètre'} — dossier {dossier}</div> : null}
                 </div>
             </div>
             <div className="boutons">
                 <label className={`bouton tonal ${desactive === true || enCours ? 'desactive' : ''}`}>
-                    {enCours ? 'Televersement…' : 'Televerser une image'}
+                    {enCours ? 'Téléversement…' : 'Téléverser une image'}
                     <input type="file" accept="image/*" hidden disabled={desactive === true || enCours} onChange={(evenement) => { void choisir(evenement); }} />
                 </label>
                 <Bouton variante="discret" disabled={desactive === true || adresse === ''} onClick={() => onChange('')}>Retirer</Bouton>
@@ -68,7 +68,7 @@ function ChampImage({ champ, saisie, onChange, ligne, desactive }: ChampEditeurP
 function ChampEtablissements({ saisie, onChange, etablissements, desactive }: ChampEditeurProps) {
     const coches = Array.isArray(saisie) ? saisie : [];
     const basculer = (code: string) => onChange(coches.includes(code) ? coches.filter((c) => c !== code) : [...coches, code]);
-    if (etablissements.length === 0) return <span className="secondaire">Le catalogue ne repond pas ; le ciblage par campus est indisponible.</span>;
+    if (etablissements.length === 0) return <span className="secondaire">Le catalogue ne répond pas ; le ciblage par campus est indisponible.</span>;
     return (
         <div className="ligne-cases">
             {etablissements.map((etablissement) => (

@@ -20,7 +20,7 @@ def verifier_prealables(chemin: Path) -> Verdict | None:
     except (OSError, ValueError) as exc:
         return erreur_de_sonde(f"{chemin} illisible : {exc}")
     if document.get("options", {}).get("debug") is True:
-        return erreur_de_sonde(f"{chemin} porte options.debug: true — un runner sans ecran ne peut pas le jouer")
+        return erreur_de_sonde(f"{chemin} porte options.debug: true — un runner sans écran ne peut pas le jouer")
     return None
 
 

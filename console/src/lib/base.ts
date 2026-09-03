@@ -20,10 +20,10 @@ export class ErreurDeBase extends Error {
 
 function traduire(erreur: PostgrestError): ErreurDeBase {
     if (erreur.code === '42501') {
-        return new ErreurDeBase('Ecriture refusee : ce compte n est pas dans la table des editeurs.', erreur.code);
+        return new ErreurDeBase('Écriture refusée : ce compte n’est pas dans la table des éditeurs.', erreur.code);
     }
     if (erreur.code === '23505') {
-        return new ErreurDeBase('Une ligne porte deja cette cle.', erreur.code);
+        return new ErreurDeBase('Une ligne porte déjà cette clé.', erreur.code);
     }
     if (erreur.code === '23514') {
         return new ErreurDeBase(`Une valeur ne respecte pas une contrainte de la table : ${erreur.message}`, erreur.code);

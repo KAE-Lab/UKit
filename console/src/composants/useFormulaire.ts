@@ -72,7 +72,7 @@ export function useFormulaire(descripteur: Descripteur, existante: Ligne | null)
         setEnCours(true);
         try {
             const ecrite = await enregistrer(descripteur, ligne, existante);
-            setRetour({ ton: 'ok', texte: 'Enregistre.' });
+            setRetour({ ton: 'ok', texte: 'Enregistré.' });
             return ecrite;
         } catch (echec) {
             setRetour({ ton: 'erreur', texte: messageDErreur(echec) });

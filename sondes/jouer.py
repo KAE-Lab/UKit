@@ -50,7 +50,7 @@ def jouer_une(definition: dict[str, Any], config: dict[str, str], casser: bool) 
         etablissement = catalogue.lire_etablissement(config["SUPABASE_URL"], config["SUPABASE_SERVICE_ROLE_KEY"], code) if code else None
         entrees = catalogue.resoudre_entrees(definition, etablissement, dt.date.today())
     except Exception as exc:  # noqa: BLE001 - des entrees introuvables sont une erreur de sonde, pas une panne
-        return erreur_de_sonde(f"entrees introuvables : {exc}")
+        return erreur_de_sonde(f"entrées introuvables : {exc}")
 
     if casser:
         entrees[definition["casser"]] = ADRESSE_CASSEE
@@ -75,7 +75,7 @@ def transitions(depot: github.Depot, definitions: list[dict[str, Any]], verdicts
                 depot.commenter(int(issue["number"]), f"Toujours en panne, autrement :\n\n{github.corps_issue(source, libelle, verdict)}")
                 print(f"  issue #{issue['number']} commentee pour {source}")
         elif verdict.etat == "ok" and issue is not None:
-            depot.commenter(int(issue["number"]), "La source repond de nouveau : la sonde du matin la voit en `ok`.")
+            depot.commenter(int(issue["number"]), "La source répond de nouveau : la sonde du matin la voit en `ok`.")
             depot.fermer(int(issue["number"]))
             print(f"  issue #{issue['number']} fermee pour {source}")
 
@@ -94,7 +94,7 @@ def main() -> int:
 
     definitions = [d for d in charger_definitions() if args.source is None or d["source"] == args.source]
     if not definitions:
-        print(f"aucune source nommee {args.source}", file=sys.stderr)
+        print(f"aucune source nommée {args.source}", file=sys.stderr)
         return 1
 
     verdicts: dict[str, Verdict] = {}
@@ -106,7 +106,7 @@ def main() -> int:
         print(f"{etiquette:16} {source:18} {verdict.duree_ms or 0:6} ms  {verdict.message or ''}"[:200])
 
     if args.dry_run:
-        print("dry-run : rien n'est ecrit, aucune issue n'est ouverte")
+        print("dry-run : rien n’est écrit, aucune issue n’est ouverte")
         return 1 if any(v.erreur_de_sonde for v in verdicts.values()) else 0
 
     precedents = base.lire_etats(config["SUPABASE_URL"], config["SUPABASE_SERVICE_ROLE_KEY"])

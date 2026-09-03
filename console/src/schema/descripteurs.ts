@@ -71,16 +71,16 @@ export const CIBLAGE: readonly Champ[] = [
         libelle: 'Audience',
         type: { type: 'choix', options: [{ valeur: 'tous', libelle: 'Tout le monde' }, { valeur: 'testeurs', libelle: 'Les testeurs seulement' }] },
         defaut: 'tous',
-        aide: 'Les testeurs sont les appareils enregistres dans la table Testeurs : de quoi regarder un contenu sur son telephone avant de l envoyer a tout le monde.',
+        aide: 'Les testeurs sont les appareils enregistrés dans la table Testeurs : de quoi regarder un contenu sur son téléphone avant de l’envoyer à tout le monde.',
     },
     {
         nom: 'etablissements',
         libelle: 'Campus',
         type: { type: 'etablissements' },
-        aide: 'Aucune case cochee : tous les campus.',
+        aide: 'Aucune case cochée : tous les campus.',
     },
     { nom: 'version_min', libelle: 'Version minimale', type: { type: 'version' }, aide: 'Bornes incluses, en X.Y.Z. Vide : pas de borne.' },
-    { nom: 'version_max', libelle: 'Version maximale', type: { type: 'version' }, aide: '« Mets a jour » est un message dont la version maximale est la version precedente.' },
+    { nom: 'version_max', libelle: 'Version maximale', type: { type: 'version' }, aide: '« Mets à jour » est un message dont la version maximale est la version précédente.' },
 ];
 
 export function champDe(descripteur: Descripteur, nom: string): Champ | undefined {

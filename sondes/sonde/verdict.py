@@ -96,7 +96,7 @@ def classer_resultat(result: Any) -> Verdict:
         (etape for etape in getattr(result, "step_results", []) if _statut(etape) == "failed" and etape.action not in FLUX),
         None,
     )
-    message = (echouee.error if echouee is not None and echouee.error else getattr(result, "error", None)) or "sans detail"
+    message = (echouee.error if echouee is not None and echouee.error else getattr(result, "error", None)) or "sans détail"
     return Verdict(
         "panne",
         etape=getattr(echouee, "step_id", None),
