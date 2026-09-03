@@ -67,10 +67,10 @@ function Bouton({ theme, libelle, onPress }: { theme: AppThemeType; libelle: str
 
 function rapportEnClair(): string {
     const rapport = dernierRapportMessages();
-    if (rapport === null) return 'aucune lecture depuis le demarrage';
+    if (rapport === null) return 'aucune lecture depuis le démarrage';
     return rapport.ok
-        ? `${rapport.messages} en ligne a ${rapport.quand}`
-        : `echec a ${rapport.quand} : ${rapport.reason ?? 'sans detail'}`;
+        ? `${rapport.messages} en ligne à ${rapport.quand}`
+        : `échec à ${rapport.quand} : ${rapport.reason ?? 'sans détail'}`;
 }
 
 export default function ModMenuTesteur({ theme }: ModMenuTesteurProps) {
@@ -106,27 +106,27 @@ export default function ModMenuTesteur({ theme }: ModMenuTesteurProps) {
     return (
         <View>
             <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginBottom: tokens.space.xs }}>
-                L identifiant de cet appareil, a recopier dans la console pour en faire un testeur. Il
-                ne quitte jamais l appareil : l application lit la liste et compare chez elle.
+                L’identifiant de cet appareil, à recopier dans la console pour en faire un testeur. Il
+                ne quitte jamais l’appareil : l’application lit la liste et compare chez elle.
             </Text>
 
             <Ligne theme={theme} cle="identifiant" valeur={identifiant} />
             <Ligne
                 theme={theme}
                 cle="statut"
-                valeur={testeur ? 'testeur' : 'non enregistre'}
+                valeur={testeur ? 'testeur' : 'non enregistré'}
                 ton={testeur ? theme.success : theme.warning}
             />
 
             <View style={{ flexDirection: 'row', gap: tokens.space.sm, marginTop: tokens.space.sm }}>
-                <Bouton theme={theme} libelle={copie ? 'Copie' : 'Copier'} onPress={copier} />
-                <Bouton theme={theme} libelle="Verifier" onPress={verifier} />
+                <Bouton theme={theme} libelle={copie ? 'Copié' : 'Copier'} onPress={copier} />
+                <Bouton theme={theme} libelle="Vérifier" onPress={verifier} />
             </View>
 
             <View style={{ marginTop: tokens.space.sm, paddingTop: tokens.space.xs, borderTopWidth: 1, borderTopColor: theme.border }}>
                 <Ligne theme={theme} cle="messages connus" valeur={String(messagesConnus().length)} />
-                <Ligne theme={theme} cle="derniere lecture" valeur={rapportEnClair()} />
-                <Ligne theme={theme} cle="deja vus" valeur={String(vusConnus().size)} />
+                <Ligne theme={theme} cle="dernière lecture" valeur={rapportEnClair()} />
+                <Ligne theme={theme} cle="déjà vus" valeur={String(vusConnus().size)} />
             </View>
 
             <View style={{ flexDirection: 'row', gap: tokens.space.sm, marginTop: tokens.space.sm }}>
