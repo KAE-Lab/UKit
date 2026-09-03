@@ -4,12 +4,12 @@
       "source": "celcat",
       "libelle": "Celcat — liste des groupes",
       "blueprint": "blueprints/ukit-celcat-groupes.blueprint.json",
-      "preuve": "la liste des groupes rend plus de zero entree",
+      "preuve": "la liste des groupes rend plus de zéro entrée",
       "casser": "domaine"
     },
     {
       "source": "cas-bordeaux",
-      "libelle": "CAS de l'Universite de Bordeaux",
+      "libelle": "CAS de l’Université de Bordeaux",
       "blueprint": "sondes/cas.blueprint.json",
       "catalogue": { "etablissement": "bordeaux", "cas": "services.cas", "service": "services.ent" },
       "encoder": ["service"],
@@ -27,10 +27,10 @@
     },
     {
       "source": "moodle-bordeaux",
-      "libelle": "Moodle de Bordeaux — chaine SSO",
+      "libelle": "Moodle de Bordeaux — chaîne SSO",
       "blueprint": "sondes/moodle.blueprint.json",
       "catalogue": { "etablissement": "bordeaux", "sso": "services.moodle" },
-      "preuve": "la chaine SSO initiee par l'IdP atteint le formulaire CAS",
+      "preuve": "la chaîne SSO initiée par l’IdP atteint le formulaire du CAS",
       "casser": "sso"
     },
     {
@@ -39,7 +39,7 @@
       "blueprint": "blueprints/portails/ukit-portail-bordeaux-inp-edt.blueprint.json",
       "entrees": { "debut": "$aujourd_hui", "fin": "$dans_7_jours" },
       "catalogue": { "etablissement": "bordeaux-inp", "projet": "edt.params.projet", "ressources": "edt.groupes.0.ressource" },
-      "preuve": "l'export d'une ressource se lit comme un calendrier",
+      "preuve": "l’export d’une ressource se lit comme un calendrier",
       "casser": "domaine"
     },
     {

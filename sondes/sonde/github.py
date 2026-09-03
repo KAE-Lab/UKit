@@ -82,7 +82,7 @@ def corps_issue(source: str, libelle: str, verdict: Verdict) -> str:
     detail = "\n".join(f"- **{cle}** : `{valeur}`" for cle, valeur in verdict.detail().items())
     return (
         f"La sonde du matin voit **{libelle}** en panne.\n\n{detail}\n\n"
-        "Les sondes tournent depuis un runner GitHub (adresse americaine) ; une source qui filtre par pays "
-        "peut passer en panne ici sans l'etre en France. Cette issue se ferme d'elle-meme au retour de la source.\n\n"
+        "Les sondes tournent depuis un runner GitHub (adresse américaine) ; une source qui filtre par pays "
+        "peut passer en panne ici sans l’être en France. Cette issue se ferme d’elle-même au retour de la source.\n\n"
         f"<!-- sonde:{source} -->"
     )

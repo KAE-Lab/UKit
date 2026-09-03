@@ -54,8 +54,8 @@ export function Formulaire({ descripteur, existante, etablissements, onEnregistr
             ))}
             {retour !== null ? <Retour ton={retour.ton}>{retour.texte}</Retour> : null}
             <div className="boutons">
-                <Bouton variante="plein" type="submit" disabled={enCours}>{enCours ? 'Ecriture…' : 'Enregistrer'}</Bouton>
-                <Bouton variante="discret" onClick={onAnnule} disabled={enCours}>Retour a la liste</Bouton>
+                <Bouton variante="plein" type="submit" disabled={enCours}>{enCours ? 'Écriture…' : 'Enregistrer'}</Bouton>
+                <Bouton variante="discret" onClick={onAnnule} disabled={enCours}>Retour à la liste</Bouton>
                 <span className="espace" />
                 {existante !== null && descripteur.suppression !== false ? (
                     <Bouton variante="destructif" onClick={() => { void suppression(); }} disabled={enCours}>Supprimer</Bouton>

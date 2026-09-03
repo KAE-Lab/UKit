@@ -22,12 +22,12 @@ export function Compte({ session }: { readonly session: Session }) {
         }
         const { error } = await supabase.auth.updateUser({ password: motDePasse });
         if (error !== null) {
-            setRetour({ ton: 'erreur', texte: `Mot de passe non change : ${error.message}` });
+            setRetour({ ton: 'erreur', texte: `Mot de passe non changé : ${error.message}` });
             return;
         }
         setMotDePasse('');
         setConfirmation('');
-        setRetour({ ton: 'ok', texte: 'Mot de passe change.' });
+        setRetour({ ton: 'ok', texte: 'Mot de passe changé.' });
     };
 
     return (
@@ -35,11 +35,11 @@ export function Compte({ session }: { readonly session: Session }) {
             <div className="entete-page"><h1>Compte</h1></div>
             <div className="carte">
                 <h2>{session.email}</h2>
-                {session.editeur === null ? <p className="secondaire">Verification des droits…</p> : null}
-                {session.editeur === true ? <Retour ton="ok">Ce compte est editeur : il peut ecrire dans les tables publiables, et chaque ecriture est journalisee.</Retour> : null}
-                {session.editeur === false ? <Retour ton="erreur">Ce compte n est pas dans la table editeurs : il peut lire ce que la console montre, et chaque ecriture lui sera refusee.</Retour> : null}
+                {session.editeur === null ? <p className="secondaire">Vérification des droits…</p> : null}
+                {session.editeur === true ? <Retour ton="ok">Ce compte est éditeur : il peut écrire dans les tables publiables, et chaque écriture est journalisée.</Retour> : null}
+                {session.editeur === false ? <Retour ton="erreur">Ce compte n’est pas dans la table des éditeurs : il peut lire ce que la console montre, et chaque écriture lui sera refusée.</Retour> : null}
                 <div className="boutons">
-                    <Bouton variante="tonal" onClick={() => { void seDeconnecter(); }}>Se deconnecter</Bouton>
+                    <Bouton variante="tonal" onClick={() => { void seDeconnecter(); }}>Se déconnecter</Bouton>
                 </div>
             </div>
             <form className="carte formulaire" onSubmit={(evenement) => { void changer(evenement); }}>
@@ -48,7 +48,7 @@ export function Compte({ session }: { readonly session: Session }) {
                     <div className="champ">
                         <label htmlFor="nouveau">Nouveau mot de passe</label>
                         <input id="nouveau" type="password" autoComplete="new-password" minLength={12} value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} required />
-                        <span className="aide">Douze caracteres au moins.</span>
+                        <span className="aide">Douze caractères au moins.</span>
                     </div>
                     <div className="champ">
                         <label htmlFor="confirmation">Encore une fois</label>

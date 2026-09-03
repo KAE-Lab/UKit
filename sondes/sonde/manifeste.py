@@ -46,7 +46,7 @@ def comparer_empreintes(manifeste: dict, lire: Callable[[str], bytes], base: str
         url = entree.get("url") if isinstance(entree, dict) else None
         attendue = entree.get("sha256") if isinstance(entree, dict) else None
         if not isinstance(url, str) or not isinstance(attendue, str):
-            ecarts.append(f"{nom} (entree incomplete)")
+            ecarts.append(f"{nom} (entrée incomplète)")
             continue
         try:
             reelle = hashlib.sha256(lire(urllib.parse.urljoin(base, url))).hexdigest()
@@ -69,7 +69,7 @@ def verifier(base_url: str, lire: Callable[[str], bytes] = _lire) -> Verdict:
 
     duree = lambda: int((time.monotonic() - debut) * 1000)  # noqa: E731
     if not isinstance(manifeste, dict) or str(manifeste.get("manifest")) != FORMAT:
-        return Verdict("panne", etape="manifeste", famille="rejected", message="le manifeste n'a pas la forme attendue (manifest != \"1\")", duree_ms=duree())
+        return Verdict("panne", etape="manifeste", famille="rejected", message="le manifeste n’a pas la forme attendue (manifest != \"1\")", duree_ms=duree())
     if not isinstance(manifeste.get("blueprints"), dict) or len(manifeste["blueprints"]) == 0:
         return Verdict("panne", etape="manifeste", famille="data", message="le manifeste ne nomme aucun Blueprint", duree_ms=duree())
 

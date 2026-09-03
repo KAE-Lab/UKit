@@ -56,7 +56,7 @@ def resoudre_entrees(
     catalogue = dict(definition.get("catalogue", {}))
     catalogue.pop("etablissement", None)
     if catalogue and etablissement is None:
-        raise KeyError("des entrees viennent du catalogue mais aucun etablissement n'a ete lu")
+        raise KeyError("des entrées viennent du catalogue mais aucun établissement n’a été lu")
     for nom, chemin in catalogue.items():
         entrees[nom] = str(valeur(etablissement, chemin))
 

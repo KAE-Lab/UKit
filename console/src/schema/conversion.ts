@@ -72,7 +72,7 @@ function json(champ: Champ, saisie: Saisie): Conversion {
     try {
         return ok(JSON.parse(brut));
     } catch {
-        return erreur('Ce n est pas du JSON valide.');
+        return erreur('Ce n’est pas du JSON valide.');
     }
 }
 

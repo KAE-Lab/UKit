@@ -13,11 +13,11 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Jouer sans ecrire ni ouvrir d issue'
+        description: 'Jouer sans écrire ni ouvrir d’issue'
         type: boolean
         default: false
       casser:
-        description: 'Fausser l adresse d une source (celcat, cas-bordeaux, cas-bordeaux-inp, moodle-bordeaux, ade-bordeaux-inp, publication) pour verifier la chaine'
+        description: 'Fausser l’adresse d’une source (celcat, cas-bordeaux, cas-bordeaux-inp, moodle-bordeaux, ade-bordeaux-inp, publication) pour vérifier la chaîne'
         type: string
         default: ''
 
