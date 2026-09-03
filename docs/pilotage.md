@@ -222,8 +222,9 @@ workflow reste vert) et **erreur de sonde** (rien ne s'écrit, aucune issue, le 
 rouge). Mesuré : le moteur avale toute erreur en un texte, et seule l'étape nommée garde son code ;
 le verdict se lit donc sur l'étape qui a échoué. Vérifié le 2026-09-03 : six sondes en `ok` en sept
 secondes, et une adresse faussée (`127.0.0.1:4`) rend une panne « source injoignable », pas une
-erreur de sonde. Le reste — jouer en local, les réglages à poser sur GitHub, les limites — est dans
-[`sondes/README.md`](../sondes/README.md).
+erreur de sonde. Sur GitHub le même jour : le premier run, adresse du CAS de Bordeaux faussée, a
+écrit cinq `ok` et une panne dans `sondes` et ouvert l'issue #21, assignée. Le reste — jouer en local,
+les réglages à poser sur GitHub, les limites — est dans [`sondes/README.md`](../sondes/README.md).
 
 ## Vérifier
 
