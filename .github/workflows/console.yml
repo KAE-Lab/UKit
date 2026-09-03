@@ -1,0 +1,64 @@
+# La console de pilotage, deployee sur GitHub Pages a chaque poussee qui la touche.
+#
+# Deux jobs, comme la documentation de Pages le prescrit : construire, puis deployer l'artefact dans
+# l'environnement `github-pages`. Les deux valeurs que la page embarque — l'URL du projet et la cle
+# publiable — sont des VARIABLES du depot, pas des secrets : elles sont deja dans le binaire de
+# l'application, et la frontiere de securite ce sont les politiques (docs/backend.md). La cle de
+# service, elle, n'apparait nulle part ici.
+#
+# A activer une fois a la main : Settings > Pages > Source « GitHub Actions », et les deux variables
+# SUPABASE_URL et SUPABASE_ANON_KEY dans Settings > Secrets and variables > Actions > Variables.
+name: Console
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'console/**'
+      - '.github/workflows/console.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Construire
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+
+      # `ci` et non `install` : la console se construit sur son lockfile exact.
+      - run: npm ci --prefix console
+
+      - run: npm --prefix console run build
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: console/dist
+
+  deploy:
+    name: Deployer
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - id: deploiement
+        uses: actions/deploy-pages@v4

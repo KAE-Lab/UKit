@@ -15,6 +15,7 @@ const en = {
 	AUTUMN: 'Autumn',
 	BACHELORS: "Bachelor's",
 	CANCEL: 'Cancel',
+	CLOSE: 'Close',
 	CALENDAR: 'Calendar',
 	CALENDAR_SYNCHRONIZATION: 'Synchronization with a calendar',
 	COMPANY_WEBSITE: 'Company website',
@@ -48,6 +49,10 @@ const en = {
 	ERROR_CAS_UNAVAILABLE: 'Your university portal is not responding. Try again in a moment.',
 	ERROR_MAILBOX_UNAVAILABLE_TITLE: 'Mailbox unreachable',
 	ERROR_MAILBOX_UNAVAILABLE: 'The mailbox did not respond, but your sign-in worked.',
+	// Tout code de Blueprint en `_INDISPONIBLE` que la table ne nomme pas precisement : la regle
+	// de ScolariteMapping le presente comme un service injoignable, reessayable (6.1-A).
+	ERROR_PORTAL_SERVICE_UNAVAILABLE_TITLE: 'Service unreachable',
+	ERROR_PORTAL_SERVICE_UNAVAILABLE: 'This university service is not responding. Try again in a moment.',
 	// Un service que l'etablissement ne publie pas : rien n'est en panne, il n'y a rien a joindre.
 	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
 	ERROR_PORTAL_UNAVAILABLE_TITLE: 'Campus not connected yet',
@@ -144,6 +149,7 @@ const en = {
 	// Le multi-etablissement (jalon 6-G). Le NOM d'une universite vient du catalogue, jamais d'ici :
 	// ce sont les libelles d'ecran qui se traduisent, pas les donnees.
 	YOUR_INSTITUTION: 'Which university do you attend?',
+	INSTITUTIONS_LOADING: 'Fetching the list of institutions…',
 	INSTITUTION: 'Institution',
 	INSTITUTION_CHANGE_TITLE: 'Switch institution?',
 	INSTITUTION_CHANGE_WARNING: 'Your favourite groups, cached timetable, university session and the courses added to your calendar will be erased.\nData from two universities does not mix.',
@@ -156,6 +162,7 @@ const en = {
 	CONNECT_ACCOUNT_DESC:
 		'To bring back your record, your messages and your timetable. Your credentials stay encrypted on your phone, and are only ever sent to your university.',
 	LATER: 'Later',
+	OTHER_CAMPUS_QUESTION: 'From another campus?',
 	TIMETABLE_LINK: 'Timetable link',
 	TIMETABLE_LINK_TITLE: 'Paste your timetable link',
 	TIMETABLE_LINK_DESC:
@@ -184,6 +191,10 @@ const en = {
 	RESTAURANTS_U: 'Restaurants',
 	RESTAURANTS: 'Restaurants',
 	MENU: 'Menu',
+	MESSAGE_COMPRIS: 'Got it',
+	SERVICE_OK_TITLE: 'All clear',
+	SERVICE_OK_BODY: 'Every service is up and the app is running as intended. (For now, at least.)',
+	SERVICE_REPORT_LINK: 'Found a bug, got an idea? Tell us',
 	LUNCH: 'Lunch',
 	DINNER: 'Dinner',
 	DAY_MON: 'Mon',
@@ -374,6 +385,11 @@ const en = {
 	WIDGET_MOODLE_UNIT: "due",
 	WIDGETS_REFRESHED: "Updated $-",
 	WIDGET_NOT_CARRIED: 'Not available yet',
+	// Les deux mots d'une tuile en echec, et le geste de sa feuille (6.1-A).
+	WIDGET_FAILURE_REENTER: 'Sign-in needed',
+	WIDGET_FAILURE_UNAVAILABLE: 'Unavailable',
+	WIDGET_FAILURE_ERROR: 'Error',
+	WIDGET_RELAUNCH: 'Relaunch',
 	CONNECT_ACCOUNT_ACTION: "Sign in",
 	NO_DOCUMENTS_TITLE: "No documents",
 	NO_DOCUMENTS: 'Keep your enrolment certificates and statements here. They stay on your device, and open even without a connection.',
@@ -391,6 +407,7 @@ const en = {
 	DOCUMENT_OPEN_ELSEWHERE: 'Open elsewhere',
 	DOCUMENT_PREVIEW_UNAVAILABLE_TITLE: 'Preview unavailable',
 	DOCUMENT_PREVIEW_UNAVAILABLE: 'This kind of document cannot be shown here. It opens in another app, without leaving the device.',
+	DOCUMENT_PREVIEW_TOO_LARGE: 'This document is too large to be shown here. It opens in another app, without leaving the device.',
 	DOCUMENT_OPEN_FAILED: "Could not open this document.",
 	ACCOUNT: "Account",
 	COPY: "Copy",

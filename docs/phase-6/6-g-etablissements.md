@@ -95,6 +95,12 @@ le script de publication y applique une garde de plus : un fichier hors socle **
 préfixe réservé, sinon la publication s'arrête. C'est la garde symétrique de celle de l'appareil —
 publier un fichier que le registre ignorera est une erreur qu'il vaut mieux voir dans un terminal.
 
+> **Depuis [6.1-A](6-1-a-robustesse-scolarite.md)**, un portail arrivé par publication est **embarqué à
+> la release suivante** : les cinq fichiers de Bordeaux INP sont dans `BUNDLED`, sans quitter
+> `portails/`. La preuve du jalon reste faite — l'INP est arrivé sans release — et la règle « le
+> binaire n'embarque un établissement que s'il embarque de quoi le jouer » est satisfaite pour un
+> socle qui porte désormais les trois établissements publiés. Embarqué ou non se lit dans `index.ts`.
+
 ### Le parcours utilisateur
 
 - **Onboarding** : le choix de l'établissement gagne son écran, **juste avant celui des groupes**

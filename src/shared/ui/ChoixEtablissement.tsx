@@ -1,13 +1,16 @@
 /**
- * Le choix de l'etablissement, depuis les reglages.
+ * Le choix de l'etablissement : la liste, puis la confirmation.
  *
- * Deux temps dans une seule modale, et c'est deliberement le cas : la liste, puis la **confirmation**.
- * Changer d'universite efface les groupes favoris, le planning en cache et la session universitaire —
- * meler les donnees de deux facs serait pire que de tout redemander (docs/features/settings.md). Une
- * bascule immediate au premier toucher rendrait ce cout invisible jusqu'a ce qu'il soit paye.
+ * Deux temps dans une seule modale, et c'est deliberement le cas. Changer d'universite efface les
+ * groupes favoris, le planning en cache et la session universitaire — meler les donnees de deux facs
+ * serait pire que de tout redemander (docs/features/settings.md). Une bascule immediate au premier
+ * toucher rendrait ce cout invisible jusqu'a ce qu'il soit paye.
  *
- * Le fichier est a part plutot que dans `SettingsModals.tsx` : celui-ci porte deja quatre modales et
- * approche la limite de lignes, et celle-ci est la seule qui detruise quelque chose.
+ * Elle est nee dans les Reglages et y est restee tant qu'elle n'avait qu'un hote. Depuis la 6.1, le
+ * formulaire de connexion la propose aussi — « Tu es d'un autre campus ? » — a un etudiant venu de la
+ * v5 qui n'a jamais revu l'accueil et voit le portail de Bordeaux sans autre indice que le logo. Deux
+ * hotes de deux domaines : elle remonte ici, et la bascule elle-meme est un service partage
+ * (`shared/etablissements/bascule.ts`).
  *
  * Voir docs/features/settings.md et docs/phase-6/6-g-etablissements.md.
  */
@@ -16,17 +19,17 @@ import React, { useState } from 'react';
 import { Modal, ScrollView, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import Translator from '../../../shared/i18n/Translator';
-import { propsLibelleBouton, tokens } from '../../../shared/theme/Theme';
-import { listeEtablissements, type Etablissement } from '../../../shared/etablissements';
-import type { AppThemeType } from '../../../shared/theme/Theme';
+import Translator from '../i18n/Translator';
+import { propsLibelleBouton, tokens, type AppThemeType } from '../theme/Theme';
+import { listeEtablissements, type Etablissement } from '../etablissements';
 
-interface Props {
-    readonly theme: AppThemeType['settings'];
-    readonly popupVisible: boolean;
-    readonly popupClose: () => void;
+export interface ChoixEtablissementProps {
+    readonly theme: AppThemeType;
+    readonly visible: boolean;
+    readonly fermer: () => void;
     readonly codeActif: string;
-    readonly onConfirm: (code: string) => void;
+    /** Le code confirme. La modale s'est deja fermee quand il arrive. */
+    readonly onConfirmer: (code: string) => void;
 }
 
 /** Une universite de la liste : la meme option-bouton que la modale de choix generique. */
@@ -54,7 +57,8 @@ function OptionEtablissement({ etablissement, selectionne, theme, onPress }: { e
     );
 }
 
-export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, codeActif, onConfirm }: Props) => {
+export function ChoixEtablissement({ theme: themeComplet, visible, fermer: fermerDemande, codeActif, onConfirmer }: ChoixEtablissementProps) {
+    const theme = themeComplet.settings;
     /** L'etablissement touche, en attente du bouton Confirmer. */
     const [candidat, setCandidat] = useState<string | null>(null);
     /** Le second temps : l'avertissement de purge, apres Confirmer sur un autre etablissement. */
@@ -63,12 +67,12 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
 
     // La liste est relue a chaque ouverture plutot que memorisee : un rafraichissement du catalogue
     // peut avoir eu lieu entre deux visites de cet ecran.
-    const etablissements: readonly Etablissement[] = popupVisible ? listeEtablissements() : [];
+    const etablissements: readonly Etablissement[] = visible ? listeEtablissements() : [];
 
     const fermer = () => {
         setCandidat(null);
         setAvertissement(false);
-        popupClose();
+        fermerDemande();
     };
 
     // Confirmer l'etablissement deja actif ne doit rien declencher : il n'y a rien a purger, et un
@@ -81,11 +85,11 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
     const confirmer = () => {
         const code = candidat;
         fermer();
-        if (code !== null) onConfirm(code);
+        if (code !== null) onConfirmer(code);
     };
 
     return (
-        <Modal animationType="fade" transparent={true} visible={popupVisible} onRequestClose={fermer}>
+        <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={fermer}>
             <TouchableWithoutFeedback onPress={fermer}>
                 <View style={theme.popup.background as never}>
                     <TouchableWithoutFeedback>
@@ -152,4 +156,4 @@ export const SettingsInstitutionPopup = ({ theme, popupVisible, popupClose, code
             </TouchableWithoutFeedback>
         </Modal>
     );
-};
+}

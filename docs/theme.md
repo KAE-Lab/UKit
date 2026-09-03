@@ -191,12 +191,15 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`Badge`](../src/shared/ui/Badge.tsx) | pastille icône + libellé, teinte d'action ou `tone` sémantique | 8 fois |
 | [`MetaRow`](../src/shared/ui/MetaRow.tsx) | ligne « icône + texte secondaire (+ contenu à droite) » | 9 fois |
 | [`EmptyState`](../src/shared/ui/EmptyState.tsx) | icône, message, action facultative — **le même bloc** pour une liste vide et pour une source en panne | 2 fois |
-| [`LoadingState`](../src/shared/ui/LoadingState.tsx) | l'attente, en ligne ou plein écran | 6 fois |
+| [`LoadingState`](../src/shared/ui/LoadingState.tsx) | l'attente, en ligne ou plein écran — et une phrase, optionnelle, qui dit ce qu'on attend | 6 fois |
 | [`ProgressBar`](../src/shared/ui/ProgressBar.tsx) | jauge, **rayon calculé** (`height / 2`) | 3 fois |
 | [`Icon`](../src/shared/ui/Icon.tsx) | une icône de l'une ou l'autre famille, typée | — |
 | [`SourceFailureNotice`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, bâti sur `EmptyState` | — |
 | [`ScreenState`](../src/shared/ui/ScreenState.tsx) | **l'hôte** d'un état plein écran : il décide où le bloc se pose, pas de quoi il est fait | 6 fois |
 | [`ActionButton`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` | 4 fois |
+| [`Dialogue`](../src/shared/ui/Dialogue.tsx) | le dialogue informatif : titre, corps, action pleine, sortie secondaire, lien discret — sur le gabarit des popups des Réglages | 3 fois |
+| [`ModaleBientot`](../src/shared/ui/ModaleBientot.tsx) | ce que le voile d'un teaser promet : « bientôt », et la porte du service — une composition de `Dialogue` | 2 fois |
+| [`ChoixEtablissement`](../src/shared/ui/ChoixEtablissement.tsx) | la liste des universités, puis la confirmation de ce que la bascule effacera | 2 fois |
 
 `ScreenState` a été remonté pour une raison que le jalon 6-K n'avait pas vue : le **bloc** était
 partagé, son **hôte** ne l'était pas, et c'est l'hôte qui décide de la hauteur. Six écrans calaient le
@@ -278,6 +281,20 @@ Acquises, et qui ont coûté à être trouvées :
   moderne ». Deux éléments ont dû être ramenés à cette règle après coup, la surface d'icône d'un état
   vide et la barre de recherche Campus : c'est le genre d'écart qui coûte un aller-retour à chaque
   fois qu'il est refait.
+- **Un bandeau est une carte flottante en haut, par-dessus le contenu — jamais insérée dans
+  l'écran, et jamais permanente.** Décision du jalon 6.1-B pour les messages de service, et elle
+  vaut pour tout bandeau à venir : une carte sous la barre d'état, largeur écran moins les marges,
+  `radius.md`, `shadow.md`, au gabarit des en-têtes (la hauteur des boutons d'en-tête, le corps `md`
+  demi-gras), qui ne déplace aucun écran et laisse passer les touchers autour d'elle
+  ([`Bandeau.tsx`](../src/shared/ui/Bandeau.tsx)). Insérer un bandeau sous l'en-tête ferait sauter
+  le contenu à l'apparition ; un toast du bas ne se ferme pas et ne dure pas. **Ce qui doit rester
+  visible n'est pas un bandeau** : le rappel d'un incident en cours a d'abord été un bandeau
+  permanent, et il cachait le grand titre des onglets (retour d'appareil du 2026-09-03). Il est
+  devenu la **pastille d'état de service**, au gabarit de `HeaderButton`, posée par chaque en-tête
+  d'onglet tout à droite de la rangée du titre, toujours présente — grise quand tout va bien, rouge en
+  incident ([`PastilleService.tsx`](../src/shared/messages/PastilleService.tsx)). Un état durable prend
+  sa place dans la rangée du titre, il ne flotte pas dessus ; et un indicateur toujours là n'inquiète
+  pas, c'est sa couleur qui informe.
 - **`accentFont` est le rouge destructif** (`#FF3B30`), pas « texte sur fond accent ». Pour un libellé
   sur fond `primary`, c'est **`lightFont`** — blanc dans les deux thèmes. Trouvé au jalon 6-B.
 - **Un composant ne remonte dans [`shared/ui/`](../src/shared/ui/) qu'à partir de deux usages.** C'est
@@ -505,7 +522,9 @@ Acquises, et qui ont coûté à être trouvées :
   devient un **encart en tête de page** (`EmptyState` ou `SourceFailureNotice` en `variant="card"`) et
   la page continue dessous. **Une exception, et une seule** : un état **transitoire** — un chargement
   — reste plein écran, parce qu'une page qui se remplit sous un indicateur de progression fait sauter
-  le contenu à chaque étape.
+  le contenu à chaque étape. **Tant que la page n'a rien d'autre à montrer** (2026-09-02) : avec un
+  dossier déjà lu, l'actualisation de la Scolarité se pose en encart au-dessus d'une page qui ne
+  bouge pas, et le nouveau contenu écrase l'ancien à l'arrivée.
 - **Un écran d'attente montre une progression, pas une liste de tâches.** La distinction se décide sur
   une question : *l'utilisateur peut-il agir sur ces étapes ?* Quand il ne peut qu'attendre, nommer
   quatre étapes dont trois sont grisées l'informe sur ce qu'il ne contrôle pas, et laisse la plus
@@ -526,6 +545,23 @@ Acquises, et qui ont coûté à être trouvées :
   et s'oublie. [`ErrorAlert`](../src/shared/ui/Alerts.ts) est le mécanisme du dépôt pour ça.
   Détourner une modale de confirmation en porte-message demanderait à l'utilisateur de **confirmer**
   une mauvaise nouvelle.
+- **Une tuile ne change pas de taille, quoi qu'il arrive à sa source** (2026-09-02). La grille de la
+  Scolarité basculait ses tuiles en rangées sur un échec, pour lui donner la place d'une phrase ; le
+  soir de la sortie de la 6.0, une panne de Moodle a transformé la messagerie en rangée aussi, et la
+  page changeait de forme sous les yeux de l'utilisateur. Un échec tient en **deux mots** sur la tuile
+  — l'icône d'alerte, le mot, pas même la ligne de contexte — et la phrase vit dans une feuille que
+  le toucher ouvre. Une surface qui garde sa taille rend une panne lisible ; une page qui se réorganise
+  la rend spectaculaire ([features/scolarite.md](features/scolarite.md#une-tuile-en-échec-garde-sa-taille)).
+- **Un dialogue informatif a une seule forme** (2026-09-02) : titre, corps, une action pleine, une
+  sortie secondaire, et au plus un lien discret — [`Dialogue`](../src/shared/ui/Dialogue.tsx), sur le
+  gabarit `theme.settings.popup` des Réglages. Il était recopié entre la modale « Bientôt » de la
+  Scolarité et le campus non relié de la barre d'onglets ; la feuille d'échec d'un widget a été son
+  troisième hôte, et c'est la règle des deux usages qui l'a fait remonter. Une action ne doit jamais
+  être la seule sortie : avec une action, la fermeture passe en bouton secondaire.
+- **Un chargement parle** (2026-09-02) : `LoadingState` porte une phrase optionnelle — « On récupère la
+  liste des établissements… » — parce qu'un indicateur seul, quand il dure, se lit comme un bug. Le
+  jalon [6.1-E](phase-6/6-1-e-finitions-interface.md) généralisera le motif à tous les chargements
+  pleine page.
 
 ## Vérifier
 

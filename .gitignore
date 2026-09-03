@@ -8,3 +8,7 @@ npm-debug.*
 /keys/Ukit.jks
 /keys/
 .env
+console/node_modules/
+console/dist/
+console/.env*
+__pycache__/

@@ -25,7 +25,7 @@
 import 'dotenv/config';
 
 import { config, lirePublic, rest, televerser } from './blueprints/base.mjs';
-import { construireManifeste, lireTout, memeManifeste, MANIFEST_OBJET } from './blueprints/socle.mjs';
+import { construireManifeste, estEmbarque, lireTout, memeManifeste, MANIFEST_OBJET } from './blueprints/socle.mjs';
 
 const TABLE = 'blueprints';
 
@@ -83,9 +83,9 @@ function raconter(publies, portails, manifeste, depots) {
     for (const entree of publies) {
         const etat = manifeste.blueprints[entree.nom].disabled ? 'desactive' : 'actif';
         const depot = depots.includes(entree) ? 'a televerser' : 'inchange';
-        // Les portails ne sont pas embarques : le dire ici evite d'aller verifier dans index.ts
-        // pourquoi une entree n'a pas de repli hors ligne.
-        const origine = portails.includes(entree) ? 'hors socle' : 'embarque';
+        // Un portail peut etre embarque ou non — c'est `index.ts` qui le dit, pas le dossier. Le
+        // lire ici evite d'aller verifier a la main pourquoi une entree n'a pas de repli hors ligne.
+        const origine = estEmbarque(entree.fichier) ? 'embarque' : 'hors socle';
         console.log(`  ${entree.nom.padEnd(34)} v${entree.version.padEnd(4)} ${origine.padEnd(11)} ${etat.padEnd(10)} ${depot}`);
     }
     if (manifeste.disabled) {
@@ -108,7 +108,8 @@ async function main() {
     const servi = texteServi === null ? null : JSON.parse(texteServi);
     const depots = aTeleverser(publies, servi, options.force);
 
-    console.log(`${publies.length} Blueprint(s) valides, dont ${portails.length} hors socle :\n`);
+    const horsSocle = publies.filter((entree) => !estEmbarque(entree.fichier)).length;
+    console.log(`${publies.length} Blueprint(s) valides, dont ${portails.length} portail(s) et ${horsSocle} hors socle :\n`);
     raconter(publies, portails, manifeste, depots);
 
     if (depots.length === 0 && memeManifeste(servi, manifeste)) {

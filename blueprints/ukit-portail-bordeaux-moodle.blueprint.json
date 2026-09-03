@@ -1,146 +1,117 @@
 {
-  "aetherius": "1.0",
-  "name": "ukit.portail.bordeaux.moodle",
-  "description": "Le WIDGET Moodle du COLLEGE SCIENCES ET TECHNOLOGIES : la chronologie du tableau de bord — ce qui est a rendre, et combien. Il ne lit pas les notes, et c'est mesure plutot que suppose : l'onglet existe mais personne ne le consulte, les resultats tombent en bloc sur Apogee en fin de semestre. La chronologie, elle, est la partie de Moodle reellement utilisee. TROIS MESURES DU 2026-08-28 EXPLIQUENT CE FICHIER. (1) LE CHEMIN EST MOINS CHER QU'ON NE CROYAIT. La documentation affirmait qu'une session CAS persistee ne servait a rien ici parce que Moodle passe par Shibboleth. C'est faux : le WAYF mene a idp-ubx, qui DELEGUE AU CAS — le formulaire de l'IdP EST le formulaire du CAS, #username / #password. Une session vivante traverse donc sans rien retaper, exactement comme la messagerie. (2) LE WAYF NE SE FRANCHIT NI PAR `select` NI PAR UNE URL. Son <select> natif est MASQUE par un widget jQuery (improvedDropDown), et `select` exige un element visible dans LES DEUX moteurs — il echouerait sur appareil comme sur poste. Le contournement standard de Shibboleth (`/Shibboleth.sso/Login?entityID=`) a ete sonde et rendu `shibsp::ConfigurationException — handler invoked at an unconfigured location` : ce SP n'expose pas d'initiateur de session parametrable, il renvoie toujours a la decouverte. D'ou `evaluate`, qui est ici le SEUL outil correct et non un raccourci : il fait ce que le script injecte de l'ecran de navigateur fait deja depuis le jalon 6-G, en le rendant declaratif et relu. Il coche au passage « se souvenir », ce qui fait disparaitre l'etape aux runs suivants. (3) LES SELECTEURS DE LA CHRONOLOGIE VIENNENT DE LA SOURCE QUI LES GENERE, blocks/timeline/templates/event-list-item.mustache, identique en Moodle 4.5 et 5.0 — `data-region=\"event-list-item\"` et `.event-name`. Ce n'etait pas verifiable autrement : la chronologie du compte de sonde est VIDE meme sur le filtre « Tout », parce que la sonde a eu lieu avant la rentree. C'est assume, et c'est sans risque : les deux lectures descendent en `count` et en `list`, qui ne levent JAMAIS. Un selecteur qui se revelerait faux rend donc 0 et [] — la rangee retombe sur sa porte — au lieu de faire echouer le run. A CONFIRMER contre des donnees reelles a la rentree ; la correction sera une publication, pas une release. La PRESENCE du bloc, elle, est prouvee par un `wait_for` et descend en sortie a cote du compte : c'est elle qui distingue « aucune echeance » d'une lecture qui n'a rien trouve, exactement comme le libelle de la boite le fait pour la messagerie. Les sorties portent les noms GENERIQUES du contrat de widget (repere / nombre / detail) : l'application ne connait pas Moodle, elle connait un widget. Persister la session vaut ici pour la meme raison qu'ailleurs — le ticket atterrit dans le magasin partage et le navigateur integre s'ouvre deja authentifie.",
-  "act": "continuum",
-  "secrets": [
-    "portail_user",
-    "portail_pass"
-  ],
-  "vars": {
-    "moodle": "https://moodle.u-bordeaux.fr",
-    "idp": "https://idp-ubx.u-bordeaux.fr/idp/shibboleth"
+ "aetherius": "1.0",
+ "name": "ukit.portail.bordeaux.moodle",
+ "description": "Le WIDGET Moodle du COLLEGE SCIENCES ET TECHNOLOGIES : la chronologie du tableau de bord — ce qui est a rendre, et combien. Il ne lit pas les notes, et c'est mesure plutot que suppose : l'onglet existe mais personne ne le consulte, les resultats tombent en bloc sur Apogee en fin de semestre. LA V2 (2026-08-31) N'EMPRUNTE PLUS LE WAYF, ET C'EST UNE MESURE DE TERRAIN, PAS UNE PREFERENCE. Sur le build de production Android, la cascade de /login/index.php — SP vers page de decouverte — tuait la WebView (page d'erreur vide, run interrompu), alors que le meme fichier passait au poste. Le chemin retenu est le SSO INITIE PAR L'IDP (profil Unsolicited), sonde ouvert chez Bordeaux : il delegue directement au CAS — #username / #password, le meme formulaire que la messagerie — et le parametre `target` designe /auth/shibboleth/index.php, la page qui TRANSFORME l'assertion en session Moodle. Sans lui, on ressort authentifie cote SP mais deconnecte cote Moodle — mesure sur appareil le 2026-08-31, puis corrige et verifie le meme soir : sonde au poste avec identifiants reels (tableau de bord atteint, menu utilisateur present), et porte de l'ecran navigateur validee sur le telephone qui echouait. Le contournement historique cote SP (`/Shibboleth.sso/Login?entityID=`) reste mort : shibsp::ConfigurationException, sonde du 2026-08-28. LES SELECTEURS DE LA CHRONOLOGIE VIENNENT DE LA SOURCE QUI LES GENERE, blocks/timeline/templates/event-list-item.mustache, identique en Moodle 4.5 et 5.0 — `data-region=\"event-list-item\"` et `.event-name`. Les deux lectures descendent en `count` et en `list`, qui ne levent JAMAIS : un selecteur qui se revelerait faux rend 0 et [] — la rangee retombe sur sa porte — au lieu de faire echouer le run. La PRESENCE du bloc, elle, est prouvee par un `wait_for` et descend en sortie a cote du compte : c'est elle qui distingue « aucune echeance » d'une lecture qui n'a rien trouve. Les sorties portent les noms GENERIQUES du contrat de widget (repere / nombre / detail) : l'application ne connait pas Moodle, elle connait un widget. Persister la session vaut ici pour la meme raison qu'ailleurs — le ticket atterrit dans le magasin partage et le navigateur integre s'ouvre deja authentifie.",
+ "act": "continuum",
+ "secrets": [
+  "portail_user",
+  "portail_pass"
+ ],
+ "vars": {
+  "sso": "https://idp-ubx.u-bordeaux.fr/idp/profile/SAML2/Unsolicited/SSO?providerId=https%3A%2F%2Fmoodle.u-bordeaux.fr%2Fauth%2Fshibboleth&target=https%3A%2F%2Fmoodle.u-bordeaux.fr%2Fauth%2Fshibboleth%2Findex.php"
+ },
+ "options": {
+  "timeout_ms": 30000,
+  "debug": false,
+  "stealth": {
+   "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
   },
-  "options": {
-    "timeout_ms": 30000,
-    "debug": false,
-    "stealth": {
-      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-    },
-    "session": {
-      "persist": true
-    }
-  },
-  "steps": [
-    {
-      "action": "navigate",
-      "url": "{{ vars.moodle }}/login/index.php",
-      "note": "Et non /my/, qui rebondit sur la page d'accueil publique quand la session est fermee — mesure. /login/index.php declenche la decouverte, ou passe directement au tableau de bord si le ticket vit."
-    },
-    {
-      "action": "wait",
-      "ms": 6000,
-      "note": "Meme raison que sur la messagerie : la cascade doit avoir fini de se decider avant qu'on regarde ou l'on est. Le WAYF est un hote different, donc un saut de plus que le parcours du dossier."
-    },
-    {
-      "id": "wayf",
-      "action": "extract",
-      "timeout_ms": 5000,
-      "outputs": {
-        "present": {
-          "selector": "#userIdPSelection",
-          "as": "count",
-          "note": "`as: count` ne leve jamais. La page de decouverte disparait des que le choix est memorise, donc la reponse est NON la plupart du temps."
-        }
-      }
-    },
-    {
-      "id": "choix",
-      "action": "evaluate",
-      "when": "{{ steps.wayf.present > 0 }}",
-      "arg": {
-        "idp": "{{ vars.idp }}"
-      },
-      "script": "(a) => { var s = document.getElementById('userIdPSelection'); if (!s) return 'absent'; var connu = false; for (var i = 0; i < s.options.length; i++) { if (s.options[i].value === a.idp) { connu = true; break; } } if (!connu) return 'inconnu'; s.value = a.idp; s.dispatchEvent(new Event('change', { bubbles: true })); var r = document.getElementById('rememberForSession'); if (r) r.checked = true; s.form.submit(); return 'soumis'; }",
-      "note": "Rend 'soumis', 'inconnu' ou 'absent' — un diagnostic lisible dans les evenements du run plutot qu'un echec muet. 'inconnu' voudrait dire que la federation a renomme l'identite de l'etablissement : la valeur est publiee au catalogue et se corrige sans release."
-    },
-    {
-      "action": "wait",
-      "when": "{{ steps.wayf.present > 0 }}",
-      "ms": 8000,
-      "note": "N'est paye que si l'on a reellement traverse la decouverte."
-    },
-    {
-      "id": "porte",
-      "action": "extract",
-      "timeout_ms": 5000,
-      "outputs": {
-        "formulaire": {
-          "selector": "#username",
-          "as": "count",
-          "note": "Sondee APRES la decouverte, et non avant : c'est l'IdP qui decide de demander ou non les identifiants, et il ne se prononce qu'une fois l'etablissement designe."
-        }
-      }
-    },
-    {
-      "action": "fill",
-      "when": "{{ steps.porte.formulaire > 0 }}",
-      "selector": "#username",
-      "value": "{{ secrets.portail_user }}"
-    },
-    {
-      "action": "fill",
-      "when": "{{ steps.porte.formulaire > 0 }}",
-      "selector": "#password",
-      "value": "{{ secrets.portail_pass }}"
-    },
-    {
-      "action": "click",
-      "when": "{{ steps.porte.formulaire > 0 }}",
-      "selector": "input[type=submit]"
-    },
-    {
-      "action": "wait",
-      "when": "{{ steps.porte.formulaire > 0 }}",
-      "ms": 15000,
-      "note": "La cascade SAML est plus longue que celle du CAS seul : CAS, retour a l'IdP, assertion au SP, puis Moodle."
-    },
-    {
-      "action": "wait_for",
-      "when": "{{ steps.porte.formulaire > 0 }}",
-      "selector": "#loginErrorsPanel",
-      "state": "detached",
-      "timeout_ms": 2000,
-      "on_timeout": "fail:LOGIN_FAILED",
-      "note": "Le meme panneau que sur les deux autres portails : absent de la page propre, present des que le CAS refuse."
-    },
-    {
-      "action": "wait_for",
-      "selector": "[data-block=\"timeline\"]",
-      "timeout_ms": 30000,
-      "on_timeout": "fail:MOODLE_INDISPONIBLE",
-      "note": "Le bloc, pas son contenu : sa presence prouve que le tableau de bord a rendu. Son contenu, lui, arrive en AJAX — d'ou la pause qui suit."
-    },
-    {
-      "action": "wait",
-      "ms": 5000,
-      "note": "La chronologie se remplit par une requete separee apres le rendu du bloc : interroger tout de suite lirait le gabarit d'attente. Mesure — `event-list-loading-placeholder` existe et cede."
-    },
-    {
-      "id": "chronologie",
-      "action": "extract",
-      "timeout_ms": 5000,
-      "outputs": {
-        "repere": {
-          "selector": "[data-block=\"timeline\"]",
-          "as": "text",
-          "note": "La preuve que le bloc a rendu. Sans elle, « aucune echeance » et « lecture ratee » seraient indiscernables — la meme decision que le libelle de la boite sur la messagerie."
-        },
-        "nombre": {
-          "selector": "[data-region=\"event-list-item\"]",
-          "as": "count"
-        },
-        "detail": {
-          "selector": "[data-region=\"event-list-item\"] .event-name",
-          "as": "list",
-          "note": "`list` et non `text` : la chronologie est vide hors periode, et `text` leverait. Le premier element suffit a l'application, qui n'affiche qu'une ligne."
-        }
-      }
-    }
-  ],
-  "outputs": {
-    "repere": "{{ steps.chronologie.repere }}",
-    "nombre": "{{ steps.chronologie.nombre }}",
-    "detail": "{{ steps.chronologie.detail }}"
+  "session": {
+   "persist": true
   }
+ },
+ "steps": [
+  {
+   "action": "navigate",
+   "url": "{{ vars.sso }}",
+   "note": "Le SSO initie par l'IdP, avec `target` sur /auth/shibboleth/index.php : pas de WAYF — la cascade de decouverte tuait la WebView du build Android (mesure 2026-08-31) — et une session Moodle complete a l'arrivee."
+  },
+  {
+   "action": "wait",
+   "ms": 6000,
+   "note": "La cascade IdP -> CAS doit avoir fini de se decider avant qu'on regarde ou l'on est — meme raison que sur la messagerie."
+  },
+  {
+   "id": "porte",
+   "action": "extract",
+   "timeout_ms": 5000,
+   "outputs": {
+    "formulaire": {
+     "selector": "#username",
+     "as": "count",
+     "note": "Sondee APRES la decouverte, et non avant : c'est l'IdP qui decide de demander ou non les identifiants, et il ne se prononce qu'une fois l'etablissement designe."
+    }
+   }
+  },
+  {
+   "action": "fill",
+   "when": "{{ steps.porte.formulaire > 0 }}",
+   "selector": "#username",
+   "value": "{{ secrets.portail_user }}"
+  },
+  {
+   "action": "fill",
+   "when": "{{ steps.porte.formulaire > 0 }}",
+   "selector": "#password",
+   "value": "{{ secrets.portail_pass }}"
+  },
+  {
+   "action": "click",
+   "when": "{{ steps.porte.formulaire > 0 }}",
+   "selector": "input[type=submit]"
+  },
+  {
+   "action": "wait",
+   "when": "{{ steps.porte.formulaire > 0 }}",
+   "ms": 15000,
+   "note": "La cascade SAML est plus longue que celle du CAS seul : CAS, retour a l'IdP, assertion au SP, puis Moodle."
+  },
+  {
+   "action": "wait_for",
+   "when": "{{ steps.porte.formulaire > 0 }}",
+   "selector": "#loginErrorsPanel",
+   "state": "detached",
+   "timeout_ms": 2000,
+   "on_timeout": "fail:LOGIN_FAILED",
+   "note": "Le meme panneau que sur les deux autres portails : absent de la page propre, present des que le CAS refuse."
+  },
+  {
+   "action": "wait_for",
+   "selector": "[data-block=\"timeline\"]",
+   "timeout_ms": 30000,
+   "on_timeout": "fail:MOODLE_INDISPONIBLE",
+   "note": "Le bloc, pas son contenu : sa presence prouve que le tableau de bord a rendu. Son contenu, lui, arrive en AJAX — d'ou la pause qui suit."
+  },
+  {
+   "action": "wait",
+   "ms": 5000,
+   "note": "La chronologie se remplit par une requete separee apres le rendu du bloc : interroger tout de suite lirait le gabarit d'attente. Mesure — `event-list-loading-placeholder` existe et cede."
+  },
+  {
+   "id": "chronologie",
+   "action": "extract",
+   "timeout_ms": 5000,
+   "outputs": {
+    "repere": {
+     "selector": "[data-block=\"timeline\"]",
+     "as": "text",
+     "note": "La preuve que le bloc a rendu. Sans elle, « aucune echeance » et « lecture ratee » seraient indiscernables — la meme decision que le libelle de la boite sur la messagerie."
+    },
+    "nombre": {
+     "selector": "[data-region=\"event-list-item\"]",
+     "as": "count"
+    },
+    "detail": {
+     "selector": "[data-region=\"event-list-item\"] .event-name",
+     "as": "list",
+     "note": "`list` et non `text` : la chronologie est vide hors periode, et `text` leverait. Le premier element suffit a l'application, qui n'affiche qu'une ligne."
+    }
+   }
+  }
+ ],
+ "outputs": {
+  "repere": "{{ steps.chronologie.repere }}",
+  "nombre": "{{ steps.chronologie.nombre }}",
+  "detail": "{{ steps.chronologie.detail }}"
+ }
 }

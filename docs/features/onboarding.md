@@ -27,9 +27,9 @@ remis à vrai par la réinitialisation depuis [Réglages](settings.md).
 |---|---|---|
 | 1 | Logo, souhait de bienvenue | — |
 | 2 | Choix du thème (clair / sombre) et de la langue (fr / en / es) | `SettingsManager.setTheme` / `setLanguage`, appliqués **en direct** |
-| 3 | **Choix de l'établissement**, lu dans le catalogue | `changerEtablissement(code)` puis `SettingsManager.setEtablissement` |
-| 4 | **Compte universitaire**, proposé et sautable | `validateAndSave` du contexte de scolarité, ou « Plus tard » |
-| 5 | **L'emploi du temps** : groupes, ou lien d'abonnement | favoris, ou `enregistrerLienEdt` |
+| 3 | **Choix de l'établissement**, lu dans le catalogue — après un chargement parlant, le temps que le premier rafraîchissement réponde (quatre secondes au plus) | `basculerEtablissement(code)` ([`bascule.ts`](../../src/shared/etablissements/bascule.ts)), la même que les Réglages |
+| 4 | **Compte universitaire**, proposé et sautable — avec le bouton « Tu es d'un autre campus ? » sous celui de connexion, qui ramène à l'étape 3 ; **« Suivant » et le retour sont bloqués tant que la connexion tourne** | `validateAndSave` du contexte de scolarité, ou « Plus tard » |
+| 5 | **L'emploi du temps** : groupes (l'étape porte son cadre clavier), ou lien d'abonnement | favoris, ou `enregistrerLienEdt` |
 | 6 | Confirmation | `setFirstLoad(false)` sur « Terminer » |
 
 **Deux étapes disparaissent selon l'établissement**, et la règle est la même pour les deux : *on ne
@@ -59,9 +59,23 @@ La pagination suit — quatre à six points — et le recalcul se fait à chaque
 d'établissement à l'étape 3 ajoute ou retire une étape **tout de suite**.
 
 La liste des établissements se rafraîchit **après** l'affichage : sa lecture est hors du chemin de
-démarrage. L'écran s'y abonne, comme il le fait depuis toujours pour la liste des groupes, plutôt que
-de figer une liste au montage — sans quoi un premier lancement afficherait le socle embarqué seul et
-n'apprendrait jamais le second établissement.
+démarrage. **Elle ne s'y réabonnait pas**, contrairement à ce que ce paragraphe affirmait : l'écran
+n'écoutait que le choix de l'utilisateur, et une installation neuve n'a vu que le Collège ST le
+premier jour de la rentrée 2026 ([6.1-A](../phase-6/6-1-a-robustesse-scolarite.md)). Trois gestes y
+répondent, parce que la cause avait trois étages :
+
+- **le socle embarque les trois établissements publiés** à la date de la release, et un test le compare
+  aux lignes de `supabase/etablissements.sql` ([`socle.ts`](../../src/shared/etablissements/socle.ts)) —
+  une installation hors ligne voit donc la liste complète ;
+- **l'étape se relit à chaque révision du catalogue** (`AppContext.catalogue`, bousculé par
+  `rootContainer` quand la surcouche publiée change) ;
+- **elle sait attendre le premier rafraîchissement** : un chargement parlant — « On récupère la liste
+  des établissements… » — tant qu'il n'a pas répondu, plafonné à quatre secondes, après quoi la liste
+  connue s'affiche et se complète si la réponse finit par arriver. Une base injoignable **a** répondu,
+  par un échec : hors ligne, la liste s'affiche tout de suite. Le signal vit dans
+  [`premierRafraichissement.ts`](../../src/shared/etablissements/premierRafraichissement.ts) — le
+  canal « le catalogue a changé » existait, mais un premier rafraîchissement qui aboutit sans
+  changement ne bouscule rien, et rien ne distinguait « pas encore répondu » de « répondu, rien de neuf ».
 
 Un bouton retour apparaît à partir de l'étape 2 ; une pagination en bas indique la progression.
 
@@ -149,6 +163,10 @@ l'application**, ou réinstaller l'application.
 
 - Traverser les quatre étapes sans rien changer : la langue et le thème doivent correspondre à ceux du
   téléphone.
+- Réinitialiser l'application, réseau normal : l'étape établissement dit « On récupère… » puis propose
+  les trois choix en moins de quatre secondes. Base injoignable (`SUPABASE_URL=https://127.0.0.1:1`,
+  puis `expo start -c`) : les trois choix, tout de suite, depuis le socle.
+- À l'étape du compte, toucher « Tu es d'un autre campus ? » : retour à l'étape établissement.
 - À l'étape 2, changer thème et langue : l'écran doit se mettre à jour immédiatement.
 - À l'étape 3, choisir une année et un semestre : la liste doit se réduire ; saisir du texte : elle
   doit se réduire encore ; dépasser 10 résultats : le message de résultats masqués doit apparaître.
@@ -163,10 +181,12 @@ l'application**, ou réinstaller l'application.
   erreur visible. Le choix `AUTRE` reste le contournement.
 - **Aucune vérification que la liste des groupes est chargée.** Si le chargement du démarrage a
   échoué (première installation hors ligne), l'étape des groupes est vide sans expliquer pourquoi.
-- **Le parcours ne vérifie pas que le compte a abouti.** « Plus tard » et un échec de connexion mènent
-  au même écran suivant : la session continue derrière, et c'est l'onglet Scolarité qui portera son
-  échec. C'est voulu — bloquer l'accueil sur une panne de portail serait pire — mais un étudiant qui
-  s'est trompé de mot de passe ne l'apprend qu'en arrivant sur l'onglet.
+- **Une connexion lancée bloque le parcours jusqu'à son terme** (6.1-A). « Suivant » et le retour
+  sont désactivés tant que la carte du formulaire montre une session — soumission, barre,
+  confirmation — parce qu'un échec doit se lire sur place et qu'un succès avance tout seul. Le prix
+  est l'attente du parcours froid, une quarantaine de secondes à Bordeaux ; avant, un étudiant qui
+  s'était trompé de mot de passe ne l'apprenait qu'en ouvrant l'onglet Scolarité. « Plus tard » reste
+  la sortie, tant que rien n'est lancé.
 - **Les abonnements ne sont jamais résiliés** : le `useEffect` de montage appelle `on(...)` sans
   fonction de nettoyage. Le composant étant démonté définitivement à la fin du parcours, les
   rappels restent enregistrés dans les managers pour la durée de la session.
@@ -180,5 +200,5 @@ l'application**, ou réinstaller l'application.
 | Fichier | Rôle |
 |---|---|
 | [`WelcomeScreen.tsx`](../../src/features/Onboarding/WelcomeScreen.tsx) | l'enchaînement des étapes, leur nombre selon l'établissement, la bascule de `firstload` |
-| [`hooks/useWelcomeState.ts`](../../src/features/Onboarding/hooks/useWelcomeState.ts) | l'état, les abonnements, les valeurs par défaut système, le filtrage des groupes et les cinq gestes |
+| [`hooks/useWelcomeState.ts`](../../src/features/Onboarding/hooks/useWelcomeState.ts) | l'état, les abonnements — dont la révision du catalogue et l'attente plafonnée du premier rafraîchissement —, les valeurs par défaut système, le filtrage des groupes et les cinq gestes |
 | [`components/WelcomeSteps.tsx`](../../src/features/Onboarding/components/WelcomeSteps.tsx) | les mises en page, la pagination, le bouton retour et le pied de la liste de groupes. Rend deux composants venus d'autres domaines — `ScolariteLoginView` et `LienEdtForm` — plutôt que d'en recopier une seconde version ([architecture.md](../architecture.md#dépendances-entre-features)) |

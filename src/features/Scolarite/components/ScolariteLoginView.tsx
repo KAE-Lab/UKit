@@ -13,6 +13,7 @@ import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 
 import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import { ActionButton } from '../../../shared/ui/ActionButton';
 import { useCredentials } from '../services/CredentialsContext';
 
 /**
@@ -66,7 +67,7 @@ const EnTeteDuFormulaire = ({ theme, color, compact }) => (
  */
 const CarteDuFormulaire = ({
     theme, color, submitting, enSession, terminee, scrapeProgress,
-    username, setUsername, password, setPassword, error, onSubmit, onSkip,
+    username, setUsername, password, setPassword, error, onSubmit, onSkip, onAutreCampus,
 }) => {
     /** Le bouton ne part pas sans ses deux champs, et pas deux fois. */
     const disabled = !username || !password || submitting;
@@ -162,6 +163,28 @@ const CarteDuFormulaire = ({
                     </TouchableOpacity>
 
                     {/*
+                      * « Tu es d'un autre campus ? », sous le bouton de connexion (6.1-A). Il a vecu
+                      * a cote de « Plus tard », en lien de meme forme — un doublon a l'oeil —, puis
+                      * sous le logo, ou il flottait « dans le vide » et paraissait deplace. Un bouton
+                      * **tonal**, la forme d'une action secondaire dans toute l'application
+                      * (docs/theme.md), juste sous l'action principale : c'est l'autre chose qu'on
+                      * peut faire de ce formulaire. Desactive pendant la soumission, comme tout le
+                      * reste de la carte — changer de campus au milieu d'une connexion la
+                      * laisserait tourner sur une fac qu'on vient de quitter.
+                      */}
+                    {onAutreCampus !== null && (
+                        <ActionButton
+                            theme={theme}
+                            label={Translator.get('OTHER_CAMPUS_QUESTION')}
+                            onPress={onAutreCampus}
+                            variant="tonal"
+                            icon={{ name: 'swap-horizontal' }}
+                            disabled={submitting}
+                            style={styles.changerDeCampus}
+                        />
+                    )}
+
+                    {/*
                       * La sortie est un lien discret et non un second bouton : les deux gestes n'ont
                       * pas le meme poids, et leur donner la meme forme ferait hesiter la ou il n'y a
                       * pas a hesiter. Elle reste desactivee pendant la soumission — partir au milieu
@@ -181,7 +204,10 @@ const CarteDuFormulaire = ({
     );
 };
 
-const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onDebut = null, onSuccess = null, compact = false, onScroll = undefined }) => {
+const ScolariteLoginView = ({
+    theme, color, topPadding, onSkip = null, onDebut = null, onSuccess = null, onAutreCampus = null,
+    onEnSession = null, compact = false, onScroll = undefined,
+}) => {
     const { validateAndSave, scrapeProgress, scrapeStatus, sessionMode } = useCredentials();
 
     /*
@@ -208,6 +234,19 @@ const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onDebut =
     // l'effet plus bas), la carte remontrait les champs REMPLIS une fraction de seconde avant que
     // l'appelant avance (constate a l'accueil le 2026-08-31).
     const enSession = submitting || progression.visible || reussi;
+
+    // L'hote apprend que la carte montre une session, du premier au dernier instant — soumission,
+    // barre, confirmation. L'accueil s'en sert pour bloquer « Suivant » et le retour : une connexion
+    // lancee doit etre lue jusqu'au bout, l'echec ici et le succes par `onSuccess`.
+    useEffect(() => {
+        onEnSession?.(enSession);
+        // Au demontage aussi : un succes fait avancer l'hote, qui demonte ce formulaire pendant que
+        // la carte montre encore la confirmation — sans ce solde, « Suivant » restait bloque a
+        // l'etape suivante (constate le 2026-09-02).
+        return () => {
+            onEnSession?.(false);
+        };
+    }, [enSession, onEnSession]);
 
     /*
      * `onSuccess` part a la FIN de la session, pas a la preuve des identifiants : `validateAndSave`
@@ -326,7 +365,7 @@ const ScolariteLoginView = ({ theme, color, topPadding, onSkip = null, onDebut =
                     theme={theme} color={color} submitting={submitting} enSession={enSession}
                     terminee={progression.terminee} scrapeProgress={scrapeProgress}
                     username={username} setUsername={setUsername} password={password} setPassword={setPassword}
-                    error={error} onSubmit={onSubmit} onSkip={onSkip}
+                    error={error} onSubmit={onSubmit} onSkip={onSkip} onAutreCampus={onAutreCampus}
                 />
             </Animated.ScrollView>
         </KeyboardAvoidingView>
@@ -404,6 +443,10 @@ const styles = StyleSheet.create({
         alignSelf: 'stretch',
         textAlign: 'center',
         fontSize: tokens.fontSize.sm,
+    },
+    changerDeCampus: {
+        alignSelf: 'center',
+        marginTop: tokens.space.md,
     },
 });
 

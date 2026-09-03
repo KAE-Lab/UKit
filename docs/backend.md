@@ -10,8 +10,9 @@ UKit s'appuie sur un projet **Supabase** pour publier ce qu'il publie : les
 > depuis le jalon [6-C](phase-6/6-c-livraison.md), et **le référentiel des bâtiments surcouche le
 > fichier embarqué** depuis le jalon [6-D](phase-6/6-d-campus.md), et **le catalogue des
 > établissements pilote l'interface** depuis le jalon [6-G](phase-6/6-g-etablissements.md) — c'est
-> lui qui porte le second établissement, ajouté sans release. Ce qui est écrit ici avant d'exister
-> est marqué comme tel.
+> lui qui porte le second établissement, ajouté sans release —, et **les messages de service sont
+> lus, ciblés et journalisés** depuis le jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md)
+> ([pilotage.md](pilotage.md)). Ce qui est écrit ici avant d'exister est marqué comme tel.
 
 ## Ce que la base est, et ce qu'elle n'est pas
 
@@ -75,9 +76,13 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `annonces` | contenu éditorial de vie étudiante | [`BdeService`](../src/features/Campus/services/BdeService.ts) | **6-B** | — |
 | `batiments` | coordonnées, horaires, accès libre, visuel | [`shared/locations`](../src/shared/locations/index.ts) | **6-D** | [`assets/locations.json`](../assets/locations.json) |
 | `visuels` | la photo d'un contenu, quand celle de sa source est fausse ou absente | [`shared/visuels`](../src/shared/visuels/index.ts) | passe de finition | *aucun* — le socle, c'est l'image de la source |
-| `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | **6-G** | l'établissement historique |
+| `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | **6-G** | les lignes publiées à la date de la release — une copie, vérifiée par un test (6.1-A) |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
-| `service_messages` | bandeau de service : maintenance, incident | rien aujourd'hui | — | — |
+| `service_messages` | les messages de service — information, avertissement, incident — et leur ciblage | [`shared/messages`](../src/shared/messages/index.ts) | **6.1-B** | *aucun* — un cache (`messages@1`) |
+| `testeurs` | les appareils qui voient l'audience `testeurs` ; l'application n'en lit que la colonne `id` | [`shared/testeur`](../src/shared/testeur/statut.ts) | **6.1-B** | *aucun* — « non » par défaut |
+| `sondes` | l'état de chaque source tierce, mesuré chaque matin | la console ; l'application pas encore | 6.1-B | — |
+| `journal` | la trace de chaque écriture dans une table publiable : avant, après, qui, quand | la console seule | 6.1-B | — |
+| `editeurs` | les e-mails autorisés à écrire depuis la console | les politiques | 6.1-B | — |
 | `salutations` | le mot du haut de l'onglet Scolarité, quand une règle publiée doit passer devant le socle embarqué — voir [scolarite.md](features/scolarite.md#la-salutation-est-une-règle-pas-une-condition) |
 | `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal, `desactive` | le script de publication | **6-C** | [`blueprints/`](../blueprints/) |
 
@@ -242,9 +247,17 @@ liste sans une ligne de code applicatif. L'appareil de quelqu'un qui l'avait cho
 ce qu'il en sait et **le dit** — basculer quelqu'un d'office au milieu de son année serait pire que
 le prévenir.
 
-`app_release` et `service_messages` sont créées vides, et rien ne les lit : il n'existe aucun écran
-de mise à jour ni de bandeau de service dans l'application. Les créer maintenant coûte deux tables et
-évite une migration le jour où ces écrans arriveront ; les remplir sans écran ne servirait personne.
+`app_release` est créée vide, et rien ne la lit : il n'existe aucun écran de mise à jour dans
+l'application. `service_messages`, créée vide au même jalon pour la même raison, a trouvé son lecteur
+au jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md) — et quatre colonnes de ciblage avec lui,
+partagées avec `annonces` : `audience`, `etablissements`, `version_min`, `version_max`. **Le
+ciblage se filtre sur l'appareil**, jamais ici : la base ne sait ni quel campus a été choisi, ni
+quelle version tourne, ni si l'appareil est un testeur ([pilotage.md](pilotage.md)).
+
+`testeurs` a une particularité de lecture : le rôle public ne voit que sa colonne `id`, par un
+privilège de colonne, et l'application compare l'identifiant de son trousseau à cette liste **chez
+elle**. Elle ne l'envoie jamais — la requête est la même pour tout le monde, ce qui garde vraie la
+phrase de [PRIVACY.md](../PRIVACY.md) sur des requêtes anonymes. Les noms restent privés.
 
 La table `blueprints` n'est **pas lue par l'application** : l'appareil lit `manifest.json` dans le
 bucket, et la table n'a d'ailleurs aucune politique de lecture pour `anon`. Elle sert deux choses au
@@ -258,9 +271,15 @@ Deux buckets :
 | `blueprints` | les six fichiers d'instructions et `manifest.json` | lecture publique |
 | `media` | visuels publiés : annonces (`annonces/`), bâtiments (`batiments/`), contenus (`restaurants/`, `bibliotheques/`) | lecture publique |
 
-**Rien de tout cela ne porte de logique.** Pas de fonction, pas de déclencheur métier, pas de vue qui
+**Rien de tout cela ne porte de logique métier.** Pas de fonction qui calcule, pas de vue qui
 calcule. Ce qui se calcule se calcule dans l'application, où c'est typé, relu et vérifié. La base
-porte de la donnée.
+porte de la donnée — et, depuis le jalon 6.1-B, **deux gardes** qui ne calculent rien pour l'écran :
+`private.est_editeur()`, qui dit qui a le droit d'écrire, et le déclencheur `journal`, qui trace ce qui
+a été écrit ([`supabase/fonctions.sql`](../supabase/fonctions.sql)). Les deux vivent dans un schéma
+que l'API n'expose pas, s'exécutent avec les droits de leur propriétaire (`security definer`, chemin
+de recherche vide, noms qualifiés — les trois précautions que la documentation de Supabase impose), et
+sont des politiques d'accès exprimées en SQL. Une troisième fonction qui calculerait quelque chose pour
+l'écran serait la première entorse, et elle se refuse.
 
 ## Les politiques d'accès
 
@@ -272,9 +291,17 @@ sans politique est une table qu'on oubliera de protéger le jour où elle en aur
 - **Lecture publique** pour le rôle `anon`, restreinte aux lignes publiées. Une annonce inactive ou
   expirée ne sort pas de la base — elle n'est pas filtrée côté application. Le filtre applicatif
   existe quand même, pour la donnée qui vient du cache local.
-- **Aucune écriture** pour `anon`. Sans exception.
-- **Écriture par `service_role`** uniquement : le script de publication et la console
-  d'administration.
+- **Aucune écriture** pour `anon`. Sans exception — ni par politique, ni par privilège : les grants
+  d'écriture lui sont révoqués sur tout le schéma, parce qu'une politique s'oublie ouverte là où un
+  privilège révoqué ne se rouvre pas par accident.
+- **Écriture par `service_role`** : le script de publication et les sondes, avec la clé secrète.
+- **Écriture par un compte authentifié dont l'e-mail figure dans `editeurs`** — la console web, depuis
+  le jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md). Un compte se connecte avec Supabase Auth ;
+  chaque politique d'écriture demande `private.est_editeur()`. Un compte sans ligne dans `editeurs`
+  se connecte et ne peut rien écrire. `blueprints` n'a pas de politique d'écriture : les Blueprints
+  restent au script, qui les valide avec le moteur ([blueprints.md](blueprints.md)). Les inscriptions
+  libres sont désactivées dans les réglages du projet, et le compte se crée depuis le poste du
+  publieur ([`supabase/README.md`](../supabase/README.md)).
 
 Le jour où la partie sociale arrivera, elle ajoutera ses tables et ses politiques adossées à
 `auth.uid()`. Rien de ce qui est écrit ici ne devra être défait.
@@ -332,9 +359,11 @@ un aller-retour de plus à chaque correction.
 
 ### Du contenu
 
-Annonces, bâtiments, établissements, messages de service : depuis la console d'administration de
-Supabase. Une annonce se désactive par un booléen, sans release et sans commit — c'était déjà vrai
-avec le dépôt `ukit-data`, ça reste vrai, avec en plus une date, un auteur et une trace.
+Annonces, messages de service, testeurs, visuels, établissements, salutations, bâtiments : depuis la
+**console web** du jalon 6.1-B ([pilotage.md](pilotage.md)), ou depuis le Studio Supabase, qui passe
+par les mêmes politiques et les mêmes déclencheurs. Une annonce se désactive par un booléen, sans
+release et sans commit — c'était déjà vrai avec le dépôt `ukit-data`, ça reste vrai, avec en plus
+une date, un auteur et une trace dans le journal.
 
 Deux gestes suffisent à retirer une annonce, et ils ne sont pas équivalents : `active = false` la
 retire **maintenant**, `expire_le` la fait disparaître d'elle-même à échéance. Les deux sont

@@ -12,18 +12,20 @@
  *     n'y a rien serait un contresens, c'est une bonne nouvelle et non une mesure ;
  *   - pas de donnee    : le nom du service, et ce qu'on peut en attendre.
  *
- * Un **echec** ne s'affiche jamais ici : il demande des mots, et l'appelant bascule alors les tuiles
- * en rangees (ServicesSection). Une tuile ne peut pas ecrire « Identifiants incorrects » sans
- * tronquer, et une phrase tronquee est une impasse.
+ * **Un echec tient en deux mots**, et la tuile garde sa taille : « Indisponible », « A ressaisir »,
+ * « Erreur » — l'icone d'alerte du service, le mot, rien d'autre. La phrase, elle, vit dans la
+ * feuille que le toucher ouvre (`FeuilleDeWidget`). La grille basculait autrefois la paire entiere
+ * en rangees pour ecrire la phrase : la page changeait de forme sous les yeux de l'utilisateur, ce
+ * qui amplifiait une panne de widget en page cassee (6.1-A).
  */
 
 import React from 'react';
 
 import Translator from '../../../shared/i18n/Translator';
-import { type AppThemeType } from '../../../shared/theme/Theme';
+import { toneColor, type AppThemeType } from '../../../shared/theme/Theme';
 import { libelleEtablissement } from '../../../shared/etablissements';
 import type { DefinitionWidget } from '../widgets/definitions';
-import type { EtatRangee } from '../widgets/presentation';
+import { echecDeTuile, type EtatRangee } from '../widgets/presentation';
 import { TuileScolarite } from './TuileScolarite';
 
 /** Le chiffre a mettre en avant, ou `null` quand la tuile a une phrase a dire plutot qu'un nombre. */
@@ -91,6 +93,24 @@ export interface WidgetTileProps {
 }
 
 export function WidgetTile({ definition, etat, contexte = null, teinte, theme, onPress }: WidgetTileProps) {
+    if (etat.nature === 'echec' && etat.echec !== null) {
+        // Meme signe que la rangee : l'icone d'alerte et le ton de l'echec, le texte efface. Pas de
+        // ligne de contexte — deux mots, et c'est tout ce que la tuile a a dire.
+        return (
+            <TuileScolarite
+                theme={theme}
+                teinte={toneColor(theme, etat.echec.tone)}
+                icone={definition.iconeEchec}
+                libelle={Translator.get(echecDeTuile(etat.echec).libelleKey)}
+                chargement={etat.chargement}
+                attenue
+                large={definition.forme === 'heros'}
+                glypheDeFond={definition.glyphe}
+                onPress={onPress}
+            />
+        );
+    }
+
     const grandTexte = libelle(definition, etat);
 
     return (

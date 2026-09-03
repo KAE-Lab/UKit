@@ -11,6 +11,8 @@ import { rafraichirSalutations } from '../../features/Scolarite/salutations';
 import { refreshBuildings } from '../locations';
 import { refreshVisuels } from '../visuels';
 import { refreshEtablissements } from '../etablissements';
+import { rafraichirMessages } from '../messages';
+import { MessagesDeServiceHote } from '../messages/MessagesDeServiceHote';
 import { AppContextProvider } from '../services/AppCore';
 import { SettingsManager } from '../services/AppCore';
 import WelcomeScreen from '../../features/Onboarding/WelcomeScreen';
@@ -64,7 +66,7 @@ export default function RootContainer() {
 	 * Le retour au premier plan, et lui seul.
 	 *
 	 * `reloadData` se declenche sur **toutes** les transitions et continue de le faire — c'est son
-	 * comportement depuis toujours. Les quatre rafraichissements de donnee publiee, eux, n'ont de sens
+	 * comportement depuis toujours. Les six rafraichissements de donnee publiee, eux, n'ont de sens
 	 * qu'au retour : les declencher en passant en arriere-plan ferait des requetes que personne ne
 	 * regarde.
 	 */
@@ -76,6 +78,7 @@ export default function RootContainer() {
 			void refreshVisuels();
 			rafraichirCatalogue();
 			void rafraichirSalutations(SettingsManager.getLanguage());
+			void rafraichirMessages();
 		}
 	}
 
@@ -104,7 +107,7 @@ export default function RootContainer() {
 		);
 
 		// Les deux declencheurs de la donnee publiee : le demarrage, et le retour au premier plan.
-		// Jamais dans le chemin d'un run ni d'un rendu — aucune des quatre ne leve, aucune n'est
+		// Jamais dans le chemin d'un run ni d'un rendu — aucune des six ne leve, aucune n'est
 		// attendue, donc un point de publication en panne ne retarde ni ne casse le demarrage. Le
 		// socle embarque a deja repondu avant que ces requetes ne partent. Les visuels n'en ont pas,
 		// de socle : sans surcouche, les images restent celles que les sources publient.
@@ -116,6 +119,10 @@ export default function RootContainer() {
 		// Scolarite. Elle suit la langue, parce que les messages publies ne passent pas par
 		// `Translator` — ils portent leur propre table par langue.
 		void rafraichirSalutations(SettingsManager.getLanguage());
+		// La sixieme (jalon 6.1-B) : les messages de service, precedes du statut de testeur qui
+		// decide de ce qu'ils laissent voir. Sans socle, comme les visuels — un message de service
+		// est par nature ce qu'on ne connaissait pas a la construction du binaire.
+		void rafraichirMessages();
 
 		return () => {
 			SettingsManager.unsubscribe('theme', onTheme);
@@ -166,6 +173,13 @@ export default function RootContainer() {
                       */}
                     <PropositionsModal />
                 </CredentialsProvider>
+                {/*
+                  * Les messages de service (jalon 6.1-B), pour la meme raison que la modale
+                  * ci-dessus : un bandeau ou une feuille doit pouvoir apparaitre au-dessus de
+                  * n'importe quel ecran, au moment ou une lecture aboutit. Inactif pendant l'accueil,
+                  * qui ne doit pas etre interrompu et n'a pas encore d'etablissement.
+                  */}
+                <MessagesDeServiceHote actif={!isFirstLoad} />
                 <ModMenu />
 
                 {/*

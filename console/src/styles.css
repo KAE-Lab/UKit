@@ -1,0 +1,176 @@
+/*
+ * La console : sobre, système, lisible. Une seule police (celle du système), des surfaces en carrés
+ * arrondis comme l'application, une teinte d'action, trois tons sémantiques. Clair et sombre suivent
+ * le système.
+ */
+
+:root {
+    color-scheme: light dark;
+    --fond: #f2f2f7;
+    --surface: #ffffff;
+    --surface-2: #e5e5ea;
+    --bordure: #e0e0e5;
+    --texte: #1c1c1e;
+    --texte-2: #6e6e73;
+    --accent: #007aff;
+    --accent-doux: rgba(0, 122, 255, 0.12);
+    --danger: #ff3b30;
+    --danger-doux: rgba(255, 59, 48, 0.12);
+    --succes: #34c759;
+    --succes-doux: rgba(52, 199, 89, 0.14);
+    --avert: #ff9500;
+    --avert-doux: rgba(255, 149, 0, 0.14);
+    --rayon: 12px;
+    --rayon-lg: 16px;
+    --ombre: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 14px rgba(0, 0, 0, 0.05);
+    --police: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --fond: #000000;
+        --surface: #1c1c1e;
+        --surface-2: #2c2c2e;
+        --bordure: #38383a;
+        --texte: #f2f2f7;
+        --texte-2: #98989d;
+        --accent: #5e5ce6;
+        --accent-doux: rgba(94, 92, 230, 0.2);
+        --danger: #ff453a;
+        --danger-doux: rgba(255, 69, 58, 0.18);
+        --succes: #30d158;
+        --succes-doux: rgba(48, 209, 88, 0.18);
+        --avert: #ff9f0a;
+        --avert-doux: rgba(255, 159, 10, 0.18);
+        --ombre: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 20px rgba(0, 0, 0, 0.35);
+    }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+    font-family: var(--police);
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--texte);
+    background: var(--fond);
+    -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+code, .mono { font-family: var(--mono); font-size: 13px; }
+h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+h2 { font-size: 17px; font-weight: 600; margin: 0 0 8px; }
+p { margin: 0 0 8px; }
+.secondaire { color: var(--texte-2); }
+.petit { font-size: 13px; }
+
+/* ---- La coque : navigation latérale et contenu -------------------------------------------- */
+.coque { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+.laterale {
+    position: sticky; top: 0; height: 100vh; overflow: auto;
+    padding: 20px 12px; border-right: 1px solid var(--bordure); background: var(--surface);
+    display: flex; flex-direction: column; gap: 4px;
+}
+.marque { display: flex; align-items: baseline; gap: 8px; padding: 4px 12px 16px; }
+.marque strong { font-size: 18px; }
+.marque span { color: var(--texte-2); font-size: 13px; }
+.laterale .section { padding: 12px 12px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-2); }
+.lien-nav {
+    display: block; padding: 8px 12px; border-radius: 10px; color: var(--texte); font-weight: 500;
+}
+.lien-nav:hover { background: var(--surface-2); }
+.lien-nav.actif { background: var(--accent-doux); color: var(--accent); }
+.laterale .pied { margin-top: auto; padding: 12px; border-top: 1px solid var(--bordure); font-size: 13px; color: var(--texte-2); overflow-wrap: anywhere; }
+.contenu { padding: 32px 40px 64px; max-width: 1100px; width: 100%; }
+.entete-page { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.entete-page .sous-titre { color: var(--texte-2); margin-top: 4px; }
+
+@media (max-width: 800px) {
+    .coque { grid-template-columns: 1fr; }
+    .laterale { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--bordure); flex-direction: row; flex-wrap: wrap; gap: 4px; }
+    .laterale .section, .laterale .pied { display: none; }
+    .marque { width: 100%; padding-bottom: 8px; }
+    .contenu { padding: 20px 16px 48px; }
+}
+
+/* ---- Surfaces ----------------------------------------------------------------------------- */
+.carte { background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon-lg); box-shadow: var(--ombre); padding: 20px; }
+.carte + .carte { margin-top: 16px; }
+.encart { border-radius: var(--rayon); padding: 12px 14px; font-size: 14px; }
+.encart.avert { background: var(--avert-doux); color: var(--texte); border-left: 3px solid var(--avert); }
+.encart.erreur { background: var(--danger-doux); border-left: 3px solid var(--danger); }
+.encart.ok { background: var(--succes-doux); border-left: 3px solid var(--succes); }
+.encart.info { background: var(--accent-doux); border-left: 3px solid var(--accent); }
+.vide { padding: 40px 20px; text-align: center; color: var(--texte-2); }
+
+/* ---- Pastilles ---------------------------------------------------------------------------- */
+.pastille { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--surface-2); color: var(--texte-2); white-space: nowrap; }
+.pastille.ok { background: var(--succes-doux); color: var(--succes); }
+.pastille.panne { background: var(--danger-doux); color: var(--danger); }
+.pastille.avert { background: var(--avert-doux); color: var(--avert); }
+.pastille.accent { background: var(--accent-doux); color: var(--accent); }
+.point { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+
+/* ---- Boutons ------------------------------------------------------------------------------ */
+.bouton {
+    appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: 14px;
+    padding: 9px 16px; border-radius: 10px; transition: filter 120ms ease, background 120ms ease;
+    display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.bouton:disabled { opacity: 0.5; cursor: default; }
+.bouton.plein { background: var(--accent); color: #fff; }
+.bouton.tonal { background: var(--accent-doux); color: var(--accent); }
+.bouton.destructif { background: var(--danger-doux); color: var(--danger); }
+.bouton.discret { background: transparent; color: var(--texte-2); }
+.bouton:not(:disabled):hover { filter: brightness(0.94); }
+.boutons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.boutons.fin { justify-content: flex-end; }
+.boutons .espace { flex: 1; }
+
+/* ---- Tableaux ----------------------------------------------------------------------------- */
+.tableau { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tableau th { text-align: left; font-weight: 600; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--texte-2); padding: 10px 12px; border-bottom: 1px solid var(--bordure); }
+.tableau td { padding: 12px; border-bottom: 1px solid var(--bordure); vertical-align: top; }
+.tableau tr:last-child td { border-bottom: 0; }
+.tableau tbody tr.cliquable { cursor: pointer; }
+.tableau tbody tr.cliquable:hover td { background: var(--surface-2); }
+.tableau td.tronque { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tableau .vignette { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; background: var(--surface-2); }
+.defilable { overflow-x: auto; }
+
+/* ---- Formulaires -------------------------------------------------------------------------- */
+.formulaire { display: grid; gap: 18px; }
+.champ { display: grid; gap: 6px; }
+.champ label { font-weight: 600; font-size: 14px; }
+.champ .aide { color: var(--texte-2); font-size: 13px; }
+.champ input[type="text"], .champ input[type="number"], .champ input[type="datetime-local"], .champ input[type="email"], .champ input[type="password"], .champ select, .champ textarea {
+    font: inherit; color: var(--texte); background: var(--fond); border: 1px solid var(--bordure); border-radius: 10px;
+    padding: 9px 12px; width: 100%; outline: none;
+}
+.champ input:focus, .champ select:focus, .champ textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-doux); }
+.champ textarea { min-height: 120px; resize: vertical; }
+.champ textarea.code { font-family: var(--mono); font-size: 13px; min-height: 160px; }
+.champ input[readonly] { color: var(--texte-2); }
+.champ .erreur { color: var(--danger); font-size: 13px; }
+.ligne-cases { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.case { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; }
+.case input { width: 16px; height: 16px; accent-color: var(--accent); }
+.deux-colonnes { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 640px) { .deux-colonnes { grid-template-columns: 1fr; } }
+.apercu-image { display: flex; gap: 14px; align-items: center; }
+.apercu-image img { width: 96px; height: 96px; object-fit: cover; border-radius: 12px; background: var(--surface-2); }
+.apercu-image .adresse { font-size: 12px; color: var(--texte-2); overflow-wrap: anywhere; }
+
+/* ---- La connexion ------------------------------------------------------------------------- */
+.connexion { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.connexion .carte { width: 100%; max-width: 380px; }
+.connexion h1 { font-size: 22px; margin-bottom: 4px; }
+
+/* ---- Journal ------------------------------------------------------------------------------ */
+.diff { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.diff pre { margin: 0; padding: 12px; border-radius: 10px; background: var(--fond); font-family: var(--mono); font-size: 12px; overflow: auto; max-height: 320px; white-space: pre-wrap; }
+.diff .titre { font-size: 12px; font-weight: 600; color: var(--texte-2); margin-bottom: 6px; }
+.filtres { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.filtres select, .filtres input { font: inherit; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--bordure); background: var(--surface); color: var(--texte); }
+details summary { cursor: pointer; }

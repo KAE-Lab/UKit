@@ -6,8 +6,8 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { etatDeLaRangee } from './presentation';
-import type { UkitFailure } from '../../../shared/aetherius/failures';
+import { echecDeTuile, etatDeLaRangee } from './presentation';
+import { FAILURE_PRESENTATION, type UkitFailure } from '../../../shared/aetherius/failures';
 
 const valeur = (nombre: number | null, detail: string | null = null) => ({
     nombre, detail, luLe: '2026-08-28T10:00:00.000Z',
@@ -38,6 +38,12 @@ describe('etatDeLaRangee', () => {
     it('montre le compte des qu il y en a un, zero compris', () => {
         expect(etatDeLaRangee(entrees({ valeur: valeur(0) })).nature).toBe('compte');
         expect(etatDeLaRangee(entrees({ valeur: valeur(3) })).nombre).toBe(3);
+    });
+
+    it('garde un echec affiche pendant sa relance, et pose l indicateur a cote', () => {
+        const etat = etatDeLaRangee(entrees({ echec: echec(), enCours: true }));
+        expect(etat.nature).toBe('echec');
+        expect(etat.chargement).toBe(true);
     });
 
     it('garde la valeur affichee pendant une relecture, et pose l indicateur a cote', () => {
@@ -72,5 +78,42 @@ describe('etatDeLaRangee', () => {
     it('porte le detail de la source jusqu a la rangee', () => {
         expect(etatDeLaRangee(entrees({ valeur: valeur(2, 'Devoir de calcul') })).detail)
             .toBe('Devoir de calcul');
+    });
+});
+
+describe('echecDeTuile', () => {
+    const defaillance = (kind: UkitFailure['kind'], code?: string): UkitFailure => ({
+        kind,
+        ...(code !== undefined ? { code } : {}),
+        ...FAILURE_PRESENTATION[kind],
+    });
+
+    it('mene un refus d identifiants droit a la ressaisie, sans rien a relancer', () => {
+        const decision = echecDeTuile(defaillance('blocked', 'LOGIN_FAILED'));
+        expect(decision.famille).toBe('ressaisie');
+        expect(decision.ouvre).toBe('ressaisie');
+        expect(decision.relancable).toBe(false);
+        expect(decision.libelleKey).toBe('WIDGET_FAILURE_REENTER');
+    });
+
+    it('dit « indisponible » pour un service momentanement absent, par le code ou par la famille', () => {
+        expect(echecDeTuile(defaillance('blocked', 'MOODLE_INDISPONIBLE')).famille).toBe('indisponible');
+        expect(echecDeTuile(defaillance('unavailable')).famille).toBe('indisponible');
+        expect(echecDeTuile(defaillance('blocked', 'MOODLE_INDISPONIBLE')).relancable).toBe(true);
+    });
+
+    it('dit « erreur » pour tout le reste, et ouvre la feuille', () => {
+        for (const kind of ['rejected', 'data', 'config'] as const) {
+            const decision = echecDeTuile(defaillance(kind));
+            expect(decision.famille).toBe('erreur');
+            expect(decision.ouvre).toBe('feuille');
+            expect(decision.relancable).toBe(true);
+        }
+    });
+
+    it('ne propose pas de relancer un probleme de notre cote', () => {
+        const decision = echecDeTuile(defaillance('engine'));
+        expect(decision.famille).toBe('erreur');
+        expect(decision.relancable).toBe(false);
     });
 });

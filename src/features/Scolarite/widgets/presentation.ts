@@ -9,7 +9,7 @@
  *
  *   | etat       | quand | ce que l'utilisateur voit |
  *   |------------|-------|---------------------------|
- *   | `echec`    | la lecture a echoue et a quelque chose a dire | l'erreur, la rangee s'efface |
+ *   | `echec`    | la lecture a echoue et a quelque chose a dire | deux mots sur une tuile, l'erreur sur une rangee, la phrase dans la feuille |
  *   | `compte`   | une valeur exploitable | ce que la source annonce, et son compteur |
  *   | `attente`  | une source existe, rien n'est encore connu | un indicateur |
  *   | `inconnu`  | une source existe, la lecture n'a rien rendu d'exploitable | la rangee redevient une porte |
@@ -25,6 +25,8 @@
  */
 
 import type { UkitFailure } from '../../../shared/aetherius/failures';
+import type { TranslationKey } from '../../../shared/i18n/Translator';
+import { demandeUneRessaisie, estServiceIndisponible } from '../services/ScolariteMapping';
 import type { ValeurWidget } from './projection';
 
 export type NatureRangee = 'echec' | 'compte' | 'attente' | 'inconnu' | 'bientot' | 'absent';
@@ -66,7 +68,9 @@ export function etatDeLaRangee({
     const detail = valeur?.detail ?? null;
 
     if (parlant !== null) {
-        return { nature: 'echec', echec: parlant, nombre: null, detail: null, chargement: false };
+        // `chargement: enCours` et non `false` : pendant une relance, l'indicateur tourne dans le coin
+        // de la tuile sans effacer ses deux mots — la meme regle que la valeur qu'on garde affichee.
+        return { nature: 'echec', echec: parlant, nombre: null, detail: null, chargement: enCours };
     }
 
     // Une valeur connue gagne sur l'attente, **meme pendant une relecture** : c'est ce qui fait qu'on
@@ -92,4 +96,40 @@ export function etatDeLaRangee({
         detail: null,
         chargement: false,
     };
+}
+
+/**
+ * Ce qu'une **tuile** dit d'un echec, et ou son toucher mene.
+ *
+ * Une tuile ne change pas de taille, quoi qu'il arrive a sa source (docs/theme.md, decisions
+ * durables) : elle n'a la place que de deux mots, et la phrase vit dans la feuille. Trois familles,
+ * decidees ici pour que le rendu n'ait rien a interpreter :
+ *
+ *   - `ressaisie`    : un refus d'identifiants — la tuile mene directement a la fiche du compte,
+ *                      sans feuille, parce qu'il n'y a rien a relancer ;
+ *   - `indisponible` : un service momentanement absent — la feuille propose de relancer ;
+ *   - `erreur`       : tout le reste, `config` compris — un code inconnu ne doit pas envoyer
+ *                      d'office vers la ressaisie ; la feuille montre le message, et relance sauf
+ *                      pour `engine`, « un probleme de notre cote » que rejouer ne repare pas.
+ */
+export type FamilleEchecTuile = 'ressaisie' | 'indisponible' | 'erreur';
+
+export interface EchecDeTuile {
+    readonly famille: FamilleEchecTuile;
+    /** Les deux mots de la tuile. */
+    readonly libelleKey: TranslationKey;
+    /** Ou mene le toucher : la fiche du compte, ou la feuille qui porte la phrase. */
+    readonly ouvre: 'ressaisie' | 'feuille';
+    /** Relire ce seul widget a un sens. */
+    readonly relancable: boolean;
+}
+
+export function echecDeTuile(echec: UkitFailure): EchecDeTuile {
+    if (demandeUneRessaisie(echec)) {
+        return { famille: 'ressaisie', libelleKey: 'WIDGET_FAILURE_REENTER', ouvre: 'ressaisie', relancable: false };
+    }
+    if (estServiceIndisponible(echec)) {
+        return { famille: 'indisponible', libelleKey: 'WIDGET_FAILURE_UNAVAILABLE', ouvre: 'feuille', relancable: true };
+    }
+    return { famille: 'erreur', libelleKey: 'WIDGET_FAILURE_ERROR', ouvre: 'feuille', relancable: echec.kind !== 'engine' };
 }

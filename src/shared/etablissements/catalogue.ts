@@ -8,7 +8,8 @@
  *
  * Ce fichier ne touche **ni** au reseau, **ni** au stockage : il tient une table en memoire, sait la
  * fusionner, et connait l'etablissement actif. La couture de plateforme vit dans `index.ts`, comme
- * `delivery.ts` face a `registry.ts` dans shared/aetherius (docs/qualite.md).
+ * `delivery.ts` face a `registry.ts` dans shared/aetherius (docs/qualite.md). Le socle embarque —
+ * la donnee — vit dans `socle.ts`, et un test le compare aux lignes publiees.
  *
  * Les accesseurs sont **synchrones** : quatre services les lisent avant d'emettre un run, et un
  * `await` de plus sur ce chemin ne servirait personne.
@@ -17,6 +18,11 @@
  */
 
 import type { EtablissementRow } from '../supabase/types';
+import { ETABLISSEMENT_DEFAUT, RES_TYPES_PAR_DEFAUT, SALLES_PAR_DEFAUT, SOCLE } from './socle';
+
+// Le socle est une **donnee** et vit dans son propre fichier ; ce module ne porte que la logique.
+// Le code de l'etablissement historique reste exporte d'ici, d'ou tout le depot le lit.
+export { ETABLISSEMENT_DEFAUT };
 
 /** Un serveur d'inventaire de salles : la racine Celcat, et le code d'inventaire des salles. */
 export interface EntreesSalles {
@@ -252,148 +258,6 @@ export interface WidgetPublie {
     /** La peremption en minutes, ou `null` pour garder celle de la definition. */
     readonly peremptionMin: number | null;
 }
-
-/** Le code de l'etablissement historique : celui qu'une installation existante est reputee avoir. */
-export const ETABLISSEMENT_DEFAUT = 'bordeaux';
-
-/**
- * Les onze points de balayage des bibliotheques de la region bordelaise.
- *
- * **Mesure du 2026-08-08, a lire avant d'y toucher.** Les onze points rendent 14 bibliotheques, et la
- * repartition n'est pas celle qu'on croit : Bordeaux Centre et Talence/Pessac voient les **memes** 8
- * sites, aucun des deux n'ayant d'exclusivite ; cinq points — Poitiers, Perigueux, Agen, Angouleme,
- * Niort — n'en rendent **aucun** ; et seuls Pau, La Rochelle, Limoges et Bayonne portent des sites que
- * personne d'autre ne voit. Reduire la liste est donc tentant, et ce serait un changement de
- * comportement produit : un point muet aujourd'hui peut cesser de l'etre le jour ou une bibliotheque
- * s'inscrit chez le fournisseur. La decision se prend avec ses propres mesures, pas ici.
- *
- * Ils vivaient en dur dans `LibraryService.ts` jusqu'au jalon 6-G. Ce sont des decisions produit —
- * quelles villes on couvre — donc de la donnee de catalogue, corrigeable sans release.
- */
-const POINTS_BORDEAUX: readonly PointBalayage[] = [
-    { lat: 44.8377, lng: -0.5791 }, // Bordeaux Centre (Victoire, Bastide, Chartrons)
-    { lat: 44.7963, lng: -0.6277 }, // Campus Talence / Pessac / Gradignan
-    { lat: 43.2951, lng: -0.3707 }, // Pau
-    { lat: 46.1603, lng: -1.1511 }, // La Rochelle
-    { lat: 45.8336, lng: 1.2611 },  // Limoges
-    { lat: 46.5802, lng: 0.3403 },  // Poitiers
-    { lat: 43.4929, lng: -1.4748 }, // Bayonne / Anglet
-    { lat: 45.1920, lng: 0.7194 },  // Perigueux
-    { lat: 44.2031, lng: 0.6163 },  // Agen
-    { lat: 45.6483, lng: 0.1562 },  // Angouleme
-    { lat: 46.3237, lng: -0.4647 }, // Niort
-];
-
-/** Les valeurs par defaut d'un champ que la ligne ne porte pas. Un seul endroit, pour un seul sens. */
-const RES_TYPES_PAR_DEFAUT: CelcatResTypes = { groupes: '103', salles: '102' };
-
-/**
- * La region Croustillant du secteur bordelais, telle qu'elle vivait dans les `vars` du Blueprint.
- *
- * Elle est ici pour que le socle embarque reste **exactement** ce qu'il etait : une installation qui
- * n'a jamais joint la base doit continuer d'afficher les restaurants de Bordeaux. La colonne, elle,
- * permet de la corriger — et de la retirer pour un etablissement qui n'en a pas.
- */
-const REGION_CROUS_BORDEAUX = '1';
-
-/**
- * Le format de salle par defaut : celui de Celcat, tel qu'il vivait en dur dans `AppCore` avant le
- * jalon 6-I.
- *
- * Une ligne sans colonne `salles` garde donc **exactement** le comportement d'avant, y compris sur
- * une base qui n'aurait pas encore recu la colonne. C'est la meme regle que `RES_TYPES_PAR_DEFAUT` :
- * un defaut n'est pas une commodite, c'est ce qui rend la migration invisible.
- */
-const SALLES_PAR_DEFAUT: FormatSalles = { separateurs: [' | ', '/'], motif: '([A-Z][0-9]+)', depuis: 2 };
-
-/**
- * Le socle embarque : un seul etablissement, et c'est voulu.
- *
- * Le binaire n'embarque que ce dont il embarque aussi les Blueprints. Un second etablissement arrive
- * **par publication** — c'est la preuve que le mecanisme tient, et l'inscrire ici la detruirait.
- */
-const SOCLE: Readonly<Record<string, Etablissement>> = {
-    [ETABLISSEMENT_DEFAUT]: {
-        code: ETABLISSEMENT_DEFAUT,
-        // Le NOM change, le CODE non — et la distinction n'est pas cosmetique : le code partitionne
-        // le trousseau, les reglages et les favoris (comptes.ts, reglagesParEtablissement.ts). Le
-        // renommer deconnecterait tout le parc installe et lui ferait perdre ses groupes.
-        //
-        // « Universite de Bordeaux » etait trop large : le perimetre reellement porte est celui du
-        // college Sciences et Technologies — c'est son Celcat qu'on interroge, ses batiments qu'on
-        // reference, ses groupes qu'on propose. Annoncer l'universite entiere promettait des
-        // formations que l'application ne sert pas.
-        nom: 'Collège Sciences et Technologies',
-        nomCourt: 'Collège ST',
-        // La commune du campus, pas la metropole : le college ST est a Talence — « Bordeaux » sous
-        // le nom d'une fac bordelaise ne disait rien a personne.
-        ville: 'Talence',
-        // Dans le socle, et pas seulement dans la ligne publiee : la surcouche s'applique en
-        // **asynchrone** au lancement, si bien qu'un ecran monte avant elle gardait le repli — le
-        // formulaire de connexion s'ouvrait sans logo, puis en avait un si on y revenait plus tard.
-        // Le binaire porte donc l'adresse, et la base la met a jour comme le reste.
-        logo: 'https://owiksddeqcyyifnmpyqm.supabase.co/storage/v1/object/public/media/etablissements/bordeaux.webp',
-        portailDossier: 'ukit.portail.bordeaux.dossier',
-        portailMessagerie: 'ukit.portail.bordeaux.messagerie',
-        // ReNARD, le service de documents etudiants. Embarque comme les autres Blueprints de
-        // Bordeaux : le binaire n'embarque un etablissement que s'il embarque aussi de quoi le jouer.
-        portailDocuments: 'ukit.portail.bordeaux.documents',
-        // Deux widgets remplis, deux en attente de source. `notes` et `examens` ne figurent pas ici
-        // et ce n'est pas un oubli : leurs donnees n'existent pas encore — les resultats tombent en
-        // bloc en fin de semestre, et il n'y a pas de calendrier d'epreuves avant la rentree. Leurs
-        // rangees s'affichent quand meme et ouvrent leur porte ; le jour ou la source existe, la
-        // ligne s'ajoute **par publication**, sans release.
-        portailWidgets: {
-            messagerie: { blueprint: 'ukit.portail.bordeaux.messagerie', peremptionMin: null },
-            moodle: { blueprint: 'ukit.portail.bordeaux.moodle', peremptionMin: null },
-        },
-        celcatDomaine: 'https://celcat.u-bordeaux.fr/calendar',
-        celcatResTypes: { groupes: '103', salles: '102' },
-        edt: null,
-        // Bordeaux publie son Celcat : personne n'a de lien a coller, et proposer un champ de saisie
-        // la ou une recherche de groupes fonctionne serait proposer un travail inutile.
-        edtAbonnement: null,
-        salles: SALLES_PAR_DEFAUT,
-        sallesLibres: null,
-        bibliothequesPoints: POINTS_BORDEAUX,
-        crousRegion: REGION_CROUS_BORDEAUX,
-        services: {
-            // `ent.u-bordeaux.fr` **ne resout plus** — mesure le 2026-08-25, et le symptome etait un
-            // `NSURLErrorDomain -1003` a chaque ouverture de la porte ENT, y compris en production.
-            // Le portail vit sur `intranet`, qui rebondit sur le CAS avec son parametre `service`.
-            // Le Blueprint du dossier visait deja cet hote pour l'annuaire ; l'ecran, lui, etait
-            // reste sur l'ancien nom.
-            ent: 'https://intranet.u-bordeaux.fr',
-            email: 'https://webmel.u-bordeaux.fr',
-            cas: 'https://cas.u-bordeaux.fr',
-            apogee: 'https://apogee.u-bordeaux.fr',
-            // `/login/index.php` et **pas la racine** : la racine de ce Moodle est une page d'accueil
-            // PUBLIQUE, mesuree le 2026-08-29. On y arrivait donc deconnecte, avec un bouton
-            // « Connexion » a presser — et la session persistee ne servait a rien, puisqu'aucune page
-            // d'authentification n'etait jamais demandee. `/login/index.php` part sur le WAYF, qui
-            // delegue au CAS, ou le ticket vivant passe sans rien retaper. C'est la porte que le
-            // Blueprint du widget emprunte deja.
-            //
-            // Absente du socle jusqu'ici : elle n'existait que dans la ligne publiee, donc une
-            // installation qui n'avait pas encore rafraichi son catalogue n'avait pas de porte Moodle.
-            moodle: 'https://moodle.u-bordeaux.fr/login/index.php',
-            // Les deux services d'Apogee que l'intranet nomme, releves le 2026-08-28 : la racine nue
-            // obligeait a chercher dans un portail, ces adresses ouvrent directement la vue.
-            notes: 'https://apogee.u-bordeaux.fr/index.php?srv=RE01',
-            examens: 'https://apogee.u-bordeaux.fr/index.php?srv=RE02',
-            // Pas une porte de service : l'adresse du formulaire de demande. Elle sert d'action a un
-            // etat vide — un widget que l'etablissement ne porte pas propose de le demander, plutot
-            // que d'afficher une rangee muette.
-            adaptation: 'https://forms.gle/c8vpwBu1QpowkAKC8',
-            // L'identite Shibboleth de l'etablissement. Ce n'est **pas une porte** : rien ne s'ouvre
-            // a cette adresse. C'est ce que la page de choix d'etablissement de Moodle attend qu'on
-            // lui designe, dans une liste de 56 — voir `getPortalInjectedScript`.
-            idp_shibboleth: 'https://idp-ubx.u-bordeaux.fr/idp/shibboleth',
-        },
-        libelles: {},
-        ordre: 0,
-    },
-};
 
 function texteOuNull(valeur: unknown): string | null {
     return typeof valeur === 'string' && valeur !== '' ? valeur : null;

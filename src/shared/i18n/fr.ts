@@ -17,6 +17,7 @@ const fr: TranslationDict = {
 	AUTUMN: 'Automne',
 	BACHELORS: 'Licence',
 	CANCEL: 'Annuler',
+	CLOSE: 'Fermer',
 	CALENDAR: 'Calendrier',
 	CALENDAR_SYNCHRONIZATION: 'Synchronisation avec un calendrier',
 	COMPANY_WEBSITE: "Site web de l'entreprise",
@@ -49,6 +50,10 @@ const fr: TranslationDict = {
 	ERROR_CAS_UNAVAILABLE: 'Le portail de l’université ne répond pas. Réessaie dans un moment.',
 	ERROR_MAILBOX_UNAVAILABLE_TITLE: 'Messagerie injoignable',
 	ERROR_MAILBOX_UNAVAILABLE: 'La messagerie ne répond pas, mais la connexion au compte a réussi.',
+	// Tout code de Blueprint en `_INDISPONIBLE` que la table ne nomme pas precisement : la regle
+	// de ScolariteMapping le presente comme un service injoignable, reessayable (6.1-A).
+	ERROR_PORTAL_SERVICE_UNAVAILABLE_TITLE: 'Service injoignable',
+	ERROR_PORTAL_SERVICE_UNAVAILABLE: 'Ce service de ton université ne répond pas. Réessaie dans un instant.',
 	// Un service que l'etablissement ne publie pas : rien n'est en panne, il n'y a rien a joindre.
 	// Le distinguer d'une panne est le point du jalon 6-G (shared/etablissements/catalogue.ts).
 	ERROR_PORTAL_UNAVAILABLE_TITLE: 'Campus pas encore relié',
@@ -144,6 +149,7 @@ const fr: TranslationDict = {
 	// Le multi-etablissement (jalon 6-G). Le NOM d'une universite vient du catalogue, jamais d'ici :
 	// ce sont les libelles d'ecran qui se traduisent, pas les donnees.
 	YOUR_INSTITUTION: 'Quelle est ton université ?',
+	INSTITUTIONS_LOADING: 'On récupère la liste des établissements…',
 	INSTITUTION: 'Établissement',
 	INSTITUTION_CHANGE_TITLE: 'Changer d’établissement ?',
 	INSTITUTION_CHANGE_WARNING: 'Groupes favoris, planning en cache, session universitaire et cours ajoutés au calendrier seront effacés.\nLes données de deux établissements ne se mélangent pas.',
@@ -156,6 +162,7 @@ const fr: TranslationDict = {
 	CONNECT_ACCOUNT_DESC:
 		'Pour retrouver dossier, messages et emploi du temps. Les identifiants restent chiffrés sur le téléphone, et ne sont envoyés qu’à l’université.',
 	LATER: 'Plus tard',
+	OTHER_CAMPUS_QUESTION: 'Tu es d’un autre campus ?',
 	TIMETABLE_LINK: 'Lien iCal',
 	TIMETABLE_LINK_TITLE: 'Colle le lien de l’emploi du temps',
 	TIMETABLE_LINK_DESC:
@@ -186,6 +193,10 @@ const fr: TranslationDict = {
 	RESTAURANTS_U: 'Restaurants',
 	RESTAURANTS: 'Restaurants',
 	MENU: 'Menu',
+	MESSAGE_COMPRIS: 'Compris',
+	SERVICE_OK_TITLE: 'Rien à signaler',
+	SERVICE_OK_BODY: 'Tous les services répondent et l’application tourne comme prévu. (Du moins pour l’instant.)',
+	SERVICE_REPORT_LINK: 'Un bug, une idée ? Dis-nous tout',
 	LUNCH: 'Midi',
 	DINNER: 'Soir',
 	DAY_MON: 'Lun',
@@ -382,6 +393,11 @@ const fr: TranslationDict = {
 	WIDGET_MOODLE_UNIT: "à rendre",
 	WIDGETS_REFRESHED: "Mis à jour $-",
 	WIDGET_NOT_CARRIED: 'Pas encore disponible',
+	// Les deux mots d'une tuile en echec, et le geste de sa feuille (6.1-A).
+	WIDGET_FAILURE_REENTER: 'À ressaisir',
+	WIDGET_FAILURE_UNAVAILABLE: 'Indisponible',
+	WIDGET_FAILURE_ERROR: 'Erreur',
+	WIDGET_RELAUNCH: 'Relancer',
 	CONNECT_ACCOUNT_ACTION: "Se connecter",
 	NO_DOCUMENTS_TITLE: "Aucun document",
 	NO_DOCUMENTS: 'Certificats de scolarité et attestations se rangent ici. Ils restent sur l’appareil, et s’ouvrent même sans connexion.',
@@ -399,6 +415,7 @@ const fr: TranslationDict = {
 	DOCUMENT_OPEN_ELSEWHERE: 'Ouvrir ailleurs',
 	DOCUMENT_PREVIEW_UNAVAILABLE_TITLE: 'Aperçu indisponible',
 	DOCUMENT_PREVIEW_UNAVAILABLE: 'Ce type de document ne s’affiche pas ici. Il s’ouvre dans une autre application, sans quitter l’appareil.',
+	DOCUMENT_PREVIEW_TOO_LARGE: 'Ce document est trop volumineux pour s’afficher ici. Il s’ouvre dans une autre application, sans quitter l’appareil.',
 	DOCUMENT_OPEN_FAILED: 'Impossible d’ouvrir ce document.',
 	ACCOUNT: "Compte",
 	COPY: "Copier",

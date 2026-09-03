@@ -31,6 +31,11 @@ import portailBordeauxDossier from './ukit-portail-bordeaux-dossier.blueprint.js
 import portailBordeauxDocuments from './ukit-portail-bordeaux-documents.blueprint.json';
 import portailBordeauxMessagerie from './ukit-portail-bordeaux-messagerie.blueprint.json';
 import portailBordeauxMoodle from './ukit-portail-bordeaux-moodle.blueprint.json';
+import portailBordeauxInpDocuments from './portails/ukit-portail-bordeaux-inp-documents.blueprint.json';
+import portailBordeauxInpDossier from './portails/ukit-portail-bordeaux-inp-dossier.blueprint.json';
+import portailBordeauxInpEdt from './portails/ukit-portail-bordeaux-inp-edt.blueprint.json';
+import portailBordeauxInpEdtAnnee from './portails/ukit-portail-bordeaux-inp-edt-annee.blueprint.json';
+import portailBordeauxInpMessagerie from './portails/ukit-portail-bordeaux-inp-messagerie.blueprint.json';
 import portailDeconnexion from './ukit-portail-deconnexion.blueprint.json';
 import portailVerification from './ukit-portail-verification.blueprint.json';
 import versions from './versions.json';
@@ -63,10 +68,21 @@ export const BLUEPRINT = {
     EDT_ABONNEMENT: 'ukit.edt.abonnement',
     PORTAIL_BORDEAUX_DOSSIER: 'ukit.portail.bordeaux.dossier',
     PORTAIL_BORDEAUX_MESSAGERIE: 'ukit.portail.bordeaux.messagerie',
-    // Le premier widget qui n'est pas la messagerie. Embarque parce que Bordeaux **est** le
+    // Le premier widget qui n'est pas la messagerie. Embarque parce que Bordeaux **est** au
     // socle : la regle du depot est que le binaire n'embarque un etablissement que s'il embarque
-    // aussi ses Blueprints. Ceux de l'INP arrivent par le manifeste, celui-ci non.
+    // aussi ses Blueprints.
     PORTAIL_BORDEAUX_MOODLE: 'ukit.portail.bordeaux.moodle',
+    // Bordeaux INP est arrive **sans release** (jalon 6-G) — ses fichiers ne vivaient que dans le
+    // manifeste, et c'etait la preuve que le mecanisme tient. Depuis la 6.1, le socle embarque
+    // toutes les lignes publiees a la date de la release, et la regle ci-dessus impose d'embarquer
+    // aussi de quoi les jouer. Les fichiers restent dans `portails/`, ranges par etablissement ;
+    // embarque ou non se lit ici, et un test de livraison exige que tout Blueprint nomme par le
+    // socle du catalogue soit dans cette table.
+    PORTAIL_BORDEAUX_INP_DOSSIER: 'ukit.portail.bordeaux-inp.dossier',
+    PORTAIL_BORDEAUX_INP_MESSAGERIE: 'ukit.portail.bordeaux-inp.messagerie',
+    PORTAIL_BORDEAUX_INP_DOCUMENTS: 'ukit.portail.bordeaux-inp.documents',
+    PORTAIL_BORDEAUX_INP_EDT: 'ukit.portail.bordeaux-inp.edt',
+    PORTAIL_BORDEAUX_INP_EDT_ANNEE: 'ukit.portail.bordeaux-inp.edt.annee',
     // Le premier Blueprint du depot qui rapporte un FICHIER et non une donnee. Embarque pour la meme
     // raison que les autres : Bordeaux est l'etablissement du socle, et le binaire n'embarque un
     // etablissement que s'il embarque de quoi le jouer.
@@ -98,7 +114,9 @@ export type BlueprintName = (typeof BLUEPRINT)[keyof typeof BLUEPRINT];
  * refuse d'une page qui n'arrive pas. Le jalon 6-G les a renommes une derniere fois,
  * `ukit.portail.bordeaux.*` : le prefixe n'est pas cosmetique, c'est **lui** que le registre autorise
  * a s'etendre, et c'est donc lui qui definit ce qu'un manifeste peut ajouter. Un second etablissement
- * arrive sous le meme prefixe, sans entrer dans cette table — c'est tout l'interet.
+ * arrive sous le meme prefixe, sans entrer dans cette table — c'est tout l'interet — puis la
+ * release suivante l'y range, pour qu'une installation neuve le joue sans avoir jamais recu de
+ * manifeste (6.1-A).
  *
  * Les versions vivent dans `versions.json` et non ici : le script de publication est un module Node
  * qui ne sait pas lire un fichier TypeScript, et une version que le publieur recopierait a la main
@@ -173,6 +191,26 @@ export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
     [BLUEPRINT.PORTAIL_BORDEAUX_MOODLE]: {
         version: versions[BLUEPRINT.PORTAIL_BORDEAUX_MOODLE].version,
         document: portailBordeauxMoodle,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_INP_DOSSIER]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_INP_DOSSIER].version,
+        document: portailBordeauxInpDossier,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_INP_MESSAGERIE]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_INP_MESSAGERIE].version,
+        document: portailBordeauxInpMessagerie,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_INP_DOCUMENTS]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_INP_DOCUMENTS].version,
+        document: portailBordeauxInpDocuments,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_INP_EDT]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_INP_EDT].version,
+        document: portailBordeauxInpEdt,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_INP_EDT_ANNEE]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_INP_EDT_ANNEE].version,
+        document: portailBordeauxInpEdtAnnee,
     },
     [BLUEPRINT.PORTAIL_DECONNEXION]: {
         version: versions[BLUEPRINT.PORTAIL_DECONNEXION].version,

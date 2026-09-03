@@ -19,6 +19,8 @@ import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
 import { loadBuildings } from './src/shared/locations';
 import { loadVisuels } from './src/shared/visuels';
+import { chargerStatutTesteur } from './src/shared/testeur';
+import { chargerMessages } from './src/shared/messages';
 import { loadEdtsPersonnels, loadEtablissements, loadLiensEdt } from './src/shared/etablissements';
 import { PlanningDataManager } from './src/features/Planning/services/PlanningDataManager';
 import { CampusDataManager } from './src/features/Campus/services/CampusDataManager';
@@ -66,6 +68,11 @@ function AnimatedAppLoader({ children }) {
 				// Les visuels publies suivent les batiments, et pour la meme raison : une photo
 				// corrigee ne doit pas redevenir fausse le temps qu'une requete revienne.
 				await loadVisuels();
+				// L'audience et les messages de service, depuis leur cache (jalon 6.1-B) : un incident
+				// en cours doit se montrer des le premier rendu, pas une seconde apres. Le statut de
+				// testeur vient d'abord, parce qu'il decide de ce que les messages laissent voir.
+				await chargerStatutTesteur();
+				await chargerMessages();
 
 				// **Les reglages avant les managers**, et l'ordre inverse etait un defaut : ils
 				// chargent des donnees qui appartiennent a un etablissement, et c'est `loadSettings`

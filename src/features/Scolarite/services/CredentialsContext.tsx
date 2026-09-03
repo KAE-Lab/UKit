@@ -386,8 +386,8 @@ function useValidation(
 /**
  * Les deux facons de redemander une session, et ce qui les separe.
  *
- * `retrySession` **deduit** le mode de la presence des donnees froides : c'est le bon comportement
- * par defaut, et c'est ce que fait le bouton Reessayer. `rafraichirDossier` le **force** en froid,
+ * `retrySession` **deduit** le mode de la presence des donnees froides et du dernier echec : c'est le
+ * bon comportement par defaut, et c'est ce que fait le bouton Reessayer. `rafraichirDossier` le **force** en froid,
  * ce que rien ne permettait — rafraichir une identite perimee, nom change ou annee d'inscription
  * passee, obligeait a se deconnecter et a tout ressaisir (jalon 6-K, docs/defauts-fonctionnels.md).
  *
@@ -397,30 +397,38 @@ function useValidation(
 function useReprises(
     credentials: Identifiants | null,
     coldData: ScolariteColdData | null,
+    scrapeStatus: EtatSession['status'],
     lancerSession: (mode: 'cold' | 'hot', candidat?: Identifiants | null, remplacer?: boolean) => boolean,
-    setColdData: (cold: ScolariteColdData | null) => void,
     rafraichirWidgets: (options?: { readonly force?: boolean }) => Promise<void>,
 ) {
     /*
      * « Reessayer » ne veut pas dire la meme chose selon ce qu'on a deja.
      *
-     * Sans identite lue, il n'y a rien a reprendre : c'est un parcours froid. Avec, l'identite est
-     * acquise et ce qui a pu echouer, ce sont les **services** — on les rejoue, tous, sans regarder
-     * leur peremption, parce que c'est un geste et qu'un geste doit se voir.
+     * Sans identite lue, il n'y a rien a reprendre : c'est un parcours froid. Il en va de meme apres
+     * un **echec de session** — un dossier qui n'a pas pu etre relu, une actualisation coupee par un
+     * passage en arriere-plan : le dossier precedent est reste affiche (voir `rafraichirDossier`),
+     * donc sa presence ne dit plus que la session a abouti. Avec une identite et sans echec, ce qui a
+     * pu manquer, ce sont les **services** — on les rejoue, tous, sans regarder leur peremption,
+     * parce que c'est un geste et qu'un geste doit se voir.
      */
     const retrySession = useCallback(() => {
         if (credentials === null) return;
-        if (coldData === null) lancerSession('cold');
+        if (coldData === null || scrapeStatus === 'error') lancerSession('cold');
         else void rafraichirWidgets({ force: true });
-    }, [coldData, credentials, lancerSession, rafraichirWidgets]);
+    }, [coldData, credentials, lancerSession, rafraichirWidgets, scrapeStatus]);
 
     const rafraichirDossier = useCallback(() => {
         if (credentials === null) return;
         // `remplacer` : c'est un geste, pas une reprise automatique. Sans lui, demander une
         // actualisation pendant le parcours chaud du lancement se faisait refuser sans que l'ecran
         // le dise — le bouton paraissait mort.
-        if (lancerSession('cold', null, true)) setColdData(null);
-    }, [credentials, lancerSession, setColdData]);
+        //
+        // Le dossier deja lu **reste** : il etait efface au depart de la session, et l'onglet
+        // retombait alors sur l'ecran de chargement plein pendant toute l'actualisation. La page se
+        // transforme, elle ne se remplace pas — le nouveau dossier ecrase l'ancien a l'arrivee, et
+        // l'onglet pose la progression en encart au-dessus de ce qu'il montre deja (6.1-A).
+        lancerSession('cold', null, true);
+    }, [credentials, lancerSession]);
 
     return { retrySession, rafraichirDossier };
 }
@@ -764,7 +772,7 @@ const useCredentialsSession = (): CredentialsValue => {
     useChargementInitial(lancerSession, poserTrousseau);
 
     const { retrySession, rafraichirDossier } = useReprises(
-        credentials, coldData, lancerSession, setColdData, widgets.rafraichir,
+        credentials, coldData, etat.status, lancerSession, widgets.rafraichir,
     );
 
     useCycleDeVieSession(sessionRef, retrySession);

@@ -52,6 +52,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import { PastilleService } from '../../../shared/messages/PastilleService';
 import { Badge } from '../../../shared/ui/Badge';
 import { getEtablissementActif, nomCourtEtablissement } from '../../../shared/etablissements';
 import type { ScolariteColdData } from '../services/ScolariteMapping';
@@ -91,9 +92,12 @@ export function EnteteScolarite({ theme, teinte, insets, coldData }: EnteteScola
               */}
             {coldData !== null ? (
                 <>
-                    <Text style={[styles.titre, { color: theme.font }]} numberOfLines={1}>
-                        {Translator.get('SCOLARITY')}
-                    </Text>
+                    <View style={styles.rangeeDuTitre}>
+                        <Text style={[styles.titre, styles.colonne, { color: theme.font }]} numberOfLines={1}>
+                            {Translator.get('SCOLARITY')}
+                        </Text>
+                        <PastilleService theme={theme} />
+                    </View>
                     <View style={styles.corpsEntete}>
                         <View style={styles.colonne}>
                             <GreetingBlock coldData={coldData} color={teinte} theme={theme} />
@@ -108,6 +112,8 @@ export function EnteteScolarite({ theme, teinte, insets, coldData }: EnteteScola
                     <Text style={[styles.titre, styles.colonne, { color: theme.font }]} numberOfLines={1}>
                         {Translator.get('SCOLARITY')}
                     </Text>
+                    {/* La pastille d'etat de service, entre le titre et le filigrane. */}
+                    <PastilleService theme={theme} />
                     {logo !== null ? (
                         <LogoEtablissement logo={logo} theme={theme} teinte={teinte} filigrane style={styles.filigrane} />
                     ) : null}
@@ -138,6 +144,13 @@ const styles = StyleSheet.create({
         // contenu qui defile dessous, ce qu'un fond seul ne fait pas sur un theme sombre.
         borderBottomWidth: 1,
         ...tokens.shadow.sm,
+    },
+    // La ligne du titre quand la salutation est en dessous : le titre prend la largeur, la pastille
+    // du rappel d'incident se pose a droite.
+    rangeeDuTitre: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: tokens.space.md,
     },
     corpsEntete: {
         flexDirection: 'row',

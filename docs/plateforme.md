@@ -84,8 +84,16 @@ la synchronisation désenregistre la tâche.
 | [`assets/icons/logo.png`](../assets/icons/logo.png) | logo affiché dans l'onboarding |
 | [`assets/images/default_resto.png`](../assets/images/default_resto.png) | visuel de repli des fiches restaurant |
 | [`assets/locations.json`](../assets/locations.json) | référentiel des bâtiments ([cartographie.md](cartographie.md)) |
+| [`assets/pdfjs/pdf.min.mjs.txt`](../assets/pdfjs/pdf.min.mjs.txt) · [`pdf.worker.min.mjs.txt`](../assets/pdfjs/pdf.worker.min.mjs.txt) | pdf.js et son worker, copiés **tels quels** du paquet `pdfjs-dist` (build `legacy`) par `npm run pdfjs:vendor` ; `VERSION` et `LICENSE` les accompagnent, et un test vérifie qu'ils sont ceux du paquet installé ([features/scolarite.md](features/scolarite.md)) |
+| [`assets/pdfjs/viewer.html`](../assets/pdfjs/viewer.html) | la page du lecteur PDF d'Android : ses marqueurs sont remplacés à l'assemblage |
 
 `assetBundlePatterns: ['**/*']` embarque toutes les ressources dans le binaire.
+
+**Pourquoi `.txt`.** Metro traite `.mjs` comme du source — il le compilerait et l'embarquerait dans le
+bundle. Or pdf.js s'exécute dans une WebView, qui a besoin de son texte tel quel : un fichier servi tel
+quel est un asset, et `txt` est la seule extension neutre qu'un asset de texte puisse porter. C'est la
+seule chose que [`metro.config.js`](../metro.config.js) ajoute à la configuration d'Expo — Metro n'en
+avait besoin d'aucune jusqu'ici, et le fichier ne doit pas devenir l'endroit où l'on empile.
 
 ## Construction
 
@@ -126,6 +134,30 @@ Secrets requis : `EXPO_TOKEN`, `GOOGLE_PLAY_KEY` (écrit dans `google-play-key.j
 > dans `app.config.ts`. Le `sed` de mise à jour de version et le `git add` correspondant sont donc
 > sans effet : **le champ `version` de `app.config.ts` n'est pas mis à jour automatiquement** et doit
 > être modifié à la main avant de poser un tag.
+
+## La console de pilotage
+
+[`.github/workflows/console.yml`](../.github/workflows/console.yml) construit
+[`console/`](../console/README.md) et la déploie sur GitHub Pages à chaque poussée sur `master` qui
+la touche, en deux jobs — construire, déployer dans l'environnement `github-pages` — comme la
+documentation de Pages le prescrit. Elle n'embarque que l'URL du projet et la clé publiable, lues
+dans deux **variables** de dépôt (`SUPABASE_URL`, `SUPABASE_ANON_KEY`) : des valeurs publiques, déjà
+dans le binaire de l'application. La clé de service n'apparaît nulle part.
+
+À activer une fois à la main, avant le premier run : *Settings → Pages → Source : GitHub Actions*,
+et les deux variables. L'environnement `github-pages` est créé au premier déploiement et protégé par
+défaut sur la branche par défaut — le workflow tourne depuis `master`, pas depuis une branche de
+travail.
+
+## Les sondes du matin
+
+[`.github/workflows/sondes.yml`](../.github/workflows/sondes.yml) joue chaque matin, à 5 h UTC, les
+sondes de [`sondes/`](../sondes/README.md) : Python 3.12, `aetherius[browser]` épinglé, Chromium par
+Playwright (`--with-deps`), les tests unitaires du verdict, puis le runner. Il écrit la table `sondes`
+avec le secret `SUPABASE_SERVICE_ROLE_KEY` — le seul secret de ce workflow — et ouvre les issues avec
+le jeton du workflow (`issues: write`). Deux entrées en dispatch : `dry_run`, et `casser` pour
+vérifier la chaîne d'issue sans attendre une vraie panne. Il reste vert quand une source est en
+panne ; il passe au rouge quand une sonde n'a pas pu se prononcer.
 
 ## Les numéros de version
 

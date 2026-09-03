@@ -20,7 +20,8 @@ import SecureStoreService from '../../../shared/services/SecureStoreService';
 import type { UkitFailure } from '../../../shared/aetherius/failures';
 import type { PointWidget } from './definitions';
 import { lireValeursPersistees } from './stockage';
-import { rafraichirWidgets, type ValeursWidgets } from './runner';
+import { rafraichirWidgets, relireWidget, type ValeursWidgets } from './runner';
+import type { ValeurWidget } from './projection';
 
 export type EchecsWidgets = Readonly<Partial<Record<PointWidget, UkitFailure>>>;
 
@@ -38,6 +39,15 @@ export interface EtatDesWidgets {
      * secondes (mesure du 2026-08-29).
      */
     readonly rafraichir: (options?: { readonly force?: boolean }) => Promise<void>;
+    /**
+     * Relit **un seul** point — le geste de la feuille d'echec d'une tuile.
+     *
+     * Elle **attend** le rafraichissement en vol plutot que de le refuser : une boucle globale peut
+     * sauter le widget en echec (frais selon la valeur d'avant), et un « Relancer » sans effet
+     * visible serait un bouton mort. Elle se range ensuite derriere lui, ce qui evite aux deux de se
+     * disputer l'indicateur d'attente et l'ecriture du cache.
+     */
+    readonly relancer: (point: PointWidget) => Promise<void>;
     /**
      * Vide l'etat **sans toucher au cache**.
      *
@@ -63,6 +73,8 @@ export function useWidgets(pret: boolean): EtatDesWidgets {
      */
     const valeursRef = useRef<ValeursWidgets>({});
     const enCoursRef = useRef(false);
+    /** La lecture en vol — boucle ou relance — derriere laquelle une relance se range. */
+    const enVolRef = useRef<Promise<void>>(Promise.resolve());
     const pretRef = useRef(pret);
     pretRef.current = pret;
 
@@ -71,30 +83,39 @@ export function useWidgets(pret: boolean): EtatDesWidgets {
         setValeurs(prochaines);
     }, []);
 
+    /**
+     * Une lecture a abouti. Au fil de l'eau : chaque rangee s'allume des qu'elle sait, sans attendre
+     * les suivantes — un parcours de quatre widgets remplirait sinon la page d'un coup, a la fin, ce
+     * qui est exactement l'attente aveugle qu'on cherche a supprimer. L'echec du point s'efface, et
+     * le trousseau suit.
+     */
+    const poserValeur = useCallback((point: PointWidget, valeur: ValeurWidget) => {
+        const prochaines = { ...valeursRef.current, [point]: valeur };
+        poser(prochaines);
+        setEchecs((precedents) => {
+            if (precedents[point] === undefined) return precedents;
+            const suite = { ...precedents };
+            delete suite[point];
+            return suite;
+        });
+        void SecureStoreService.saveWidgets(prochaines);
+    }, [poser]);
+
+    const poserEchec = useCallback((point: PointWidget, echec: UkitFailure) => {
+        setEchecs((precedents) => ({ ...precedents, [point]: echec }));
+    }, []);
+
     const rafraichir = useCallback((options: { readonly force?: boolean } = {}): Promise<void> => {
         // Un seul rafraichissement a la fois. Le moteur serialiserait de toute facon, mais deux
         // boucles concurrentes se disputeraient l'indicateur d'attente et l'ecrasement du cache.
         if (!pretRef.current || enCoursRef.current) return Promise.resolve();
 
         enCoursRef.current = true;
-        return rafraichirWidgets(valeursRef.current, {
+        const boucle = rafraichirWidgets(valeursRef.current, {
             ...(options.force === true ? { force: true } : {}),
             onEnCours: setPointEnCours,
-            onValeur: (point, valeur) => {
-                // Au fil de l'eau : chaque rangee s'allume des qu'elle sait, sans attendre les
-                // suivantes. Un parcours de quatre widgets remplirait sinon la page d'un coup, a la
-                // fin, ce qui est exactement l'attente aveugle qu'on cherche a supprimer.
-                const prochaines = { ...valeursRef.current, [point]: valeur };
-                poser(prochaines);
-                setEchecs((precedents) => {
-                    if (precedents[point] === undefined) return precedents;
-                    const suite = { ...precedents };
-                    delete suite[point];
-                    return suite;
-                });
-                void SecureStoreService.saveWidgets(prochaines);
-            },
-            onEchec: (point, echec) => setEchecs((precedents) => ({ ...precedents, [point]: echec })),
+            onValeur: poserValeur,
+            onEchec: poserEchec,
         })
             .catch((erreur) => {
                 // `rafraichirWidgets` ne leve pas ; ce filet couvre l'imprevu, et il est muet parce
@@ -108,7 +129,30 @@ export function useWidgets(pret: boolean): EtatDesWidgets {
             // Les valeurs sont deja posees au fil de l'eau : ce qui est rendu ici est un jalon, pas
             // une donnee. `void` le dit au type, plutot que d'obliger l'appelant a l'ignorer.
             .then(() => undefined);
-    }, [poser]);
+        enVolRef.current = boucle;
+        return boucle;
+    }, [poserValeur, poserEchec]);
+
+    const relancer = useCallback((point: PointWidget): Promise<void> => {
+        if (!pretRef.current) return Promise.resolve();
+
+        const relance = enVolRef.current.then(async () => {
+            enCoursRef.current = true;
+            setPointEnCours(point);
+            try {
+                const lu = await relireWidget(point);
+                if (lu.ok === true) poserValeur(point, lu.valeur);
+                else if (lu.echec !== null) poserEchec(point, lu.echec);
+            } catch (erreur) {
+                console.warn('[widgets] relance interrompue', erreur);
+            } finally {
+                enCoursRef.current = false;
+                setPointEnCours(null);
+            }
+        });
+        enVolRef.current = relance;
+        return relance;
+    }, [poserValeur, poserEchec]);
 
     const reinitialiser = useCallback(() => {
         valeursRef.current = {};
@@ -133,5 +177,5 @@ export function useWidgets(pret: boolean): EtatDesWidgets {
         return () => abonnement.remove();
     }, [rafraichir]);
 
-    return { valeurs, echecs, pointEnCours, rafraichir, reinitialiser };
+    return { valeurs, echecs, pointEnCours, rafraichir, relancer, reinitialiser };
 }

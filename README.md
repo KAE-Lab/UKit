@@ -133,6 +133,7 @@ porte **les universités** : ajouter un établissement est une ligne en base et 
 ```text
 App.tsx              amorçage : ressources, managers, splash animé
 app.config.ts        configuration Expo : identité, permissions, plugins
+metro.config.js      celle d'Expo, plus une extension d'asset pour servir pdf.js à la WebView
 src/
   features/          un dossier par domaine de navigation
     Planning/          emploi du temps
@@ -153,10 +154,12 @@ src/
     constants/         URLs externes
     utils/             utilitaires de formatage
 blueprints/          les fichiers d'instructions embarqués (le socle hors ligne)
-  portails/            les portails d'établissements publiés, jamais embarqués
-supabase/            schéma et politiques d'accès de la base de publication
-tools/               publication des Blueprints, harnais de parité
-assets/              icônes, visuels, référentiel des bâtiments du campus
+  portails/            les portails d'établissements, publiés d'abord, embarqués à la release suivante
+supabase/            schéma, gardes et politiques d'accès de la base de publication
+console/             la console de pilotage : publier sans SQL, avec un compte, en laissant une trace
+sondes/              les sondes du matin : chaque source jouée sans identifiant, une issue au changement
+tools/               publication des Blueprints, compte éditeur de la console, harnais de parité
+assets/              icônes, visuels, référentiel des bâtiments du campus, pdf.js vendorisé
 docs/                cette documentation
 ```
 
@@ -288,6 +291,20 @@ livré ; elle est mise à jour à chaque contribution.
   publiée, vérifiée à l'empreinte à chaque lecture ; le rafraîchissement est hors du chemin d'un run,
   et un panneau de diagnostic dit d'où vient chaque Blueprint.
   [docs/blueprints.md](docs/blueprints.md)
+- [x] **Pilotage à distance** (6.1-B) — le propriétaire du produit parle aux utilisateurs sans
+  release : des **messages de service** — information en bandeau, avertissement et incident en
+  feuille, l'incident rappelé tant qu'il dure par une **pastille d'état de service** en tête de chaque
+  onglet, grise quand tout va bien et qui mène alors au formulaire — lus au démarrage et au retour au premier
+  plan, mémorisés « vus » par appareil, mis en cache pour se montrer dès le lancement. Messages et
+  annonces se **ciblent** par campus, par fenêtre de versions et par **audience** : un appareil
+  enregistré comme testeur — par un identifiant d'installation qui ne quitte jamais le téléphone —
+  voit un contenu avant tout le monde. Chaque écriture dans la base laisse une trace dans un
+  **journal** que rien ne contourne. Et une **console web** sur GitHub Pages — une liste et un
+  formulaire génériques par table, l'état des sources, le journal exportable — publie tout cela sans
+  requête SQL, avec un compte dont chaque geste est tracé. Et chaque matin, des **sondes** jouent
+  chaque source sans identifiant depuis un runner GitHub et ouvrent une issue quand une source tombe —
+  ce qui manquait l'été où le relais est mort sans que personne ne le sache.
+  [docs/pilotage.md](docs/pilotage.md)
 
 ### Fonctionnalités
 
@@ -316,7 +333,8 @@ livré ; elle est mise à jour à chaque contribution.
   écran où une panne de la source **se dit** au lieu d'afficher une liste vide. Les cartes sont au
   **format affiche** — visuel 1:1 plein cadre, jamais recadré, pied minimal avec l'émetteur en
   pastille — et la liste complète est une grille de deux colonnes ; la fiche épouse le ratio du
-  visuel.
+  visuel. Depuis la 6.1, une annonce se **cible** — un campus, une fenêtre de versions, les seuls
+  testeurs — et le tri se fait sur l'appareil.
   [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
 - [x] **Scolarité** — connexion CAS, récupération de l'identité au premier login puis rafraîchissement
   léger, compteur de messages non lus, verrou biométrique, navigateur intégré avec remplissage
@@ -343,12 +361,26 @@ livré ; elle est mise à jour à chaque contribution.
   libellé. Un décalage ne peut plus rendre *la mauvaise valeur*, il ne rend plus *rien*. Elle a
   corrigé trois affirmations fausses de la documentation au passage, dont **l'INE de Bordeaux INP**,
   qui existe.
+
+  **La 6.1 rend l'écran indifférent à la panne** ([6.1-A](docs/phase-6/6-1-a-robustesse-scolarite.md)) :
+  la première soirée en production avait montré qu'une panne de widget cassait la grille, qu'un code
+  inconnu affichait un message faux, et qu'une connexion depuis l'onglet changeait de page en plein
+  run. Une tuile en échec **garde sa taille** et dit deux mots — la phrase, et le geste (relancer ce
+  seul widget, ou ressaisir), sont dans une feuille au toucher ; tout code de Blueprint en
+  `_INDISPONIBLE` se présente comme un service injoignable, réessayable, par une règle et non par une
+  table qu'on oublie d'étendre ; et le formulaire garde la page jusqu'au dernier pas. Un lien discret
+  sous le bouton de connexion — « Tu es d'un autre campus ? » — ouvre le choix d'établissement, et un campus non
+  relié a sa propre page dans l'onglet. Et sur Android, **un PDF s'affiche dans l'application**,
+  dessiné par pdf.js embarqué dans la vue.
   [docs/features/scolarite.md](docs/features/scolarite.md)
 - [x] **Multi-établissement** — le catalogue des universités vit en
   [base](docs/backend.md) et pilote l'interface : choix à l'accueil, changement dans les réglages,
   purge de ce qui appartenait à l'université quittée. Les Blueprints de portail sont namespacés sous
   `ukit.portail.`, **le seul préfixe qu'un manifeste a le droit d'étendre** — et un service qu'un
-  établissement ne publie pas se **dit** au lieu d'échouer.
+  établissement ne publie pas se **dit** au lieu d'échouer. Depuis la 6.1, **le socle embarque tous
+  les établissements publiés à la date de la release** — Blueprints compris, un test le garantit —,
+  l'accueil se réabonne à l'arrivée du catalogue et sait attendre sa première réponse : le premier
+  jour de la rentrée 2026, une installation neuve n'avait vu que le Collège ST.
   [docs/phase-6/6-g-etablissements.md](docs/phase-6/6-g-etablissements.md)
 - [x] **Le compte à l'accueil, et l'emploi du temps par lien collé** — la connexion au compte
   universitaire est proposée dès le parcours d'accueil, **sautable et rappelée**, et omise chez un
@@ -381,6 +413,7 @@ document.
 | [docs/sources-externes.md](docs/sources-externes.md) | inventaire complet des sources distantes, endpoints et fragilités |
 | [docs/blueprints.md](docs/blueprints.md) | les fichiers d'instructions : frontière, écriture, publication d'une correction |
 | [docs/backend.md](docs/backend.md) | la base de publication : schéma, politiques, clés, limites |
+| [docs/pilotage.md](docs/pilotage.md) | le pilotage à distance : messages de service, audience testeurs, ciblage, journal, console, sondes |
 | [docs/phase-6/](docs/phase-6/README.md) | le cadrage de la migration vers les Blueprints, jalon par jalon |
 | [docs/theme.md](docs/theme.md) | tokens, palettes, composants partagés, **recette d'écran** |
 | [docs/inventaire-visuel.md](docs/inventaire-visuel.md) | l'état visuel mesuré du dépôt, avant le socle : littéraux, divergences, manques |

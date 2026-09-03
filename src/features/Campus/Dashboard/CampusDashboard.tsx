@@ -5,6 +5,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
+import { PastilleService } from '../../../shared/messages/PastilleService';
 import { useCampusLocation } from '../hooks/useCampusLocation';
 
 import { BdeSection } from './components/BdeSection';
@@ -46,6 +47,8 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
                     <Text style={[styles.greetingText, { color: theme.font }]}>
                         {Translator.get('CAMPUS')}
                     </Text>
+                    {/* La pastille d'etat de service, a droite du titre (shared/messages/PastilleService). */}
+                    <PastilleService theme={theme} style={styles.rappel} />
                 </View>
             </Animated.View>
         );
@@ -115,6 +118,11 @@ const styles = StyleSheet.create({
     greetingText: {
         fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold as '700',
+        marginBottom: tokens.space.md,
+    },
+    // Pousse a droite, et la meme marge basse que le titre : la pastille s'aligne sur sa ligne.
+    rappel: {
+        marginLeft: 'auto',
         marginBottom: tokens.space.md,
     },
 });

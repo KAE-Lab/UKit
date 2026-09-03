@@ -17,7 +17,7 @@ chez Aetherius ; elle n'est pas recopiée ici, parce qu'une copie périmée est 
 | Endroit | Rôle |
 |---|---|
 | [`blueprints/`](../blueprints/) | **la source de vérité.** Les fichiers sont relus en revue, versionnés avec le code qui les consomme, et importés dans le binaire |
-| [`blueprints/portails/`](../blueprints/portails/) | les portails d'établissements **hors socle** : relus et versionnés comme les autres, mais **jamais embarqués** — ils arrivent par le manifeste ([6-G](phase-6/6-g-etablissements.md)) |
+| [`blueprints/portails/`](../blueprints/portails/) | les portails d'établissements, rangés par établissement. Un portail arrive **hors socle**, par le manifeste ([6-G](phase-6/6-g-etablissements.md)), puis la release suivante l'embarque ([6.1-A](phase-6/6-1-a-robustesse-scolarite.md)) : embarqué ou non se lit dans `index.ts`, pas dans le dossier |
 | [`blueprints/index.ts`](../blueprints/index.ts) | le **socle embarqué** : la table des noms livrés avec l'application |
 | [`blueprints/versions.json`](../blueprints/versions.json) | la **version** de chaque fichier, et son `min_engine` s'il en a un |
 | Bucket `blueprints` de Supabase | la **surcouche distante** : les mêmes fichiers, plus récents, publiés entre deux releases |
@@ -244,6 +244,7 @@ raison d'attendre le téléphone. Chacune arrête la publication, aucune n'est r
 | Toute entrée a son fichier, tout fichier a son entrée, et deux fichiers ne portent pas le même nom | annoncer une URL qui ne répond pas, ou publier celui des deux que le système de fichiers a rendu en premier |
 | La version est une chaîne numérique pointée | une comparaison que personne ne saurait faire de tête |
 | Un fichier de `portails/` est couvert par le préfixe réservé | publier un fichier que l'appareil ignorera **en silence** |
+| Le script dit, pour chaque fichier, s'il est **embarqué** — lu dans `index.ts` | croire qu'une entrée a un repli hors ligne quand elle n'en a pas |
 
 Trois propriétés du script valent d'être connues avant de s'en servir :
 

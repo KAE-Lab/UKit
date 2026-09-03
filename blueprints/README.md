@@ -8,7 +8,7 @@ relus en revue, versionnés avec le code qui les consomme, importés dans le bin
 |---|---|
 | `*.blueprint.json` | les documents eux-mêmes, **embarqués** dans le binaire |
 | [`ukit-edt-abonnement.blueprint.json`](ukit-edt-abonnement.blueprint.json) | le **repli universel** (jalon 6-J) : le calendrier d'un lien collé par l'étudiant. Embarqué et **hors du préfixe `ukit.portail.`**, parce qu'il n'appartient à aucun établissement |
-| [`portails/`](portails/) | les portails d'établissements **hors socle** : publiés, jamais embarqués |
+| [`portails/`](portails/) | les portails d'établissements, rangés par établissement : publiés d'abord, embarqués à la release suivante — `index.ts` dit lesquels le sont |
 | [`index.ts`](index.ts) | le socle embarqué : les noms, la table `BUNDLED`, le périmètre des secrets |
 | [`versions.json`](versions.json) | la **version** de chaque document, et son `min_engine` s'il en a un |
 
@@ -98,10 +98,17 @@ Le préfixe `ukit.portail.` est **réservé** : c'est le seul sous lequel un man
 ajouter un Blueprint que l'application n'embarque pas ([6-G](../docs/phase-6/6-g-etablissements.md)).
 Ne pas l'utiliser pour autre chose.
 
-Un portail **hors socle** vit dans [`portails/`](portails/), que [`index.ts`](index.ts) n'importe pas.
-Le script de publication y applique une garde de plus : un fichier de ce dossier dont le nom n'est pas
-couvert par le préfixe **arrête la publication** — publier un fichier que l'appareil ignorera ensuite
-en silence est le genre de panne qu'on cherche une soirée.
+Un portail vit dans [`portails/`](portails/). Il arrive **hors socle** — [`index.ts`](index.ts) ne
+l'importe pas, il n'existe que par le manifeste — puis la release suivante l'embarque, parce que le
+binaire n'embarque un établissement que s'il embarque de quoi le jouer, et que le socle du catalogue
+embarque depuis la 6.1 tous les établissements publiés à la date de la release
+(`src/shared/etablissements/socle.ts`, dont un test exige que chaque Blueprint nommé soit dans
+`BUNDLED`). Le dossier ne dit donc plus s'il est embarqué : `index.ts` le dit, et le script de
+publication l'y lit pour l'annoncer.
+
+Le script y applique une garde de plus : un fichier de ce dossier dont le nom n'est pas couvert par le
+préfixe **arrête la publication** — publier un fichier que l'appareil ignorera ensuite en silence est
+le genre de panne qu'on cherche une soirée.
 
 Le nom du fichier reprend le nom du Blueprint, points remplacés par des tirets, suivi de
 `.blueprint.json`.

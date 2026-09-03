@@ -130,7 +130,7 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 | `scolarite-progression.png` | écran de progression du parcours froid | **à reprendre** (6-K : retrait de Montserrat) |
 | `scolarite-echec.png` | un échec de session nommé, message et bouton Réessayer — l'écran que le module n'avait pas avant le jalon 6-F — **déposée** | essentielle |
 | `scolarite-login-echec.png` | le refus d'identifiants sur le formulaire, distinct de l'échec de session | **à reprendre** (6-K : retrait de Montserrat) |
-| `scolarite-biometrie.png` | verrou biométrique — **différée** (refonte d'habillage à venir) | complémentaire |
+| `scolarite-biometrie.png` | l'invite Face ID à l'ouverture de l'onglet, sur un build — **déposée** (6.1-A, 2026-09-02) | complémentaire |
 | `scolarite-compte.png` | réglages du compte et déconnexion — **différée** (idem) | complémentaire |
 | `scolarite-navigateur.png` | navigateur intégré et sa barre flottante | complémentaire |
 
@@ -148,6 +148,13 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 | `reglages-calendrier.png` | modale de choix du calendrier | complémentaire |
 | `reglages-langue.png` | modale de langue | complémentaire |
 | `reglages-etablissement.png` | modale d'établissement : la liste, puis la confirmation | **à reprendre** (6-K : boutons de confirmation pleins) |
+
+### Pilotage — [pilotage.md](../pilotage.md)
+
+| Fichier | Contenu | Priorité |
+|---|---|---|
+| `pilotage-bandeau-info.png` | le bandeau flottant d'une information, sous la barre d'état, par-dessus le tableau de bord Campus | attendue |
+| `pilotage-incident.png` | la pastille d'état de service en rouge, à droite du grand titre d'un onglet | attendue |
 
 ### Socle
 

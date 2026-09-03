@@ -37,6 +37,7 @@ import {
     lireEdtsPersonnels,
 } from './edtPersonnel';
 import { appliquerLiensEdt, fusionnerLiens, liensEdt, lireLiens } from './lienEdt';
+import { creerPremierRafraichissement } from './premierRafraichissement';
 import { purgerDonneesEtablissement } from './purge';
 
 export {
@@ -251,6 +252,25 @@ export async function enregistrerEdtPersonnel(groupe: GroupeEdt | null): Promise
  * retire disparait donc de la liste sans une ligne de code ici.
  */
 export async function refreshEtablissements(): Promise<EtablissementsReport> {
+    try {
+        return await lireCataloguePublie();
+    } finally {
+        // Bonne ou mauvaise, la premiere reponse est arrivee — une base injoignable **a** repondu, et
+        // l'accueil qui l'attend doit le savoir tout de suite plutot qu'au plafond.
+        premier.signaler();
+    }
+}
+
+/**
+ * Le signal du premier rafraichissement (voir `premierRafraichissement.ts`) : l'etape
+ * d'etablissement de l'accueil attend la premiere reponse, plafond compris, avant d'afficher une
+ * liste qu'elle sait peut-etre incomplete.
+ */
+const premier = creerPremierRafraichissement();
+export const attendrePremierRafraichissement = premier.attendre;
+export const premierRafraichissementRepondu = premier.repondu;
+
+async function lireCataloguePublie(): Promise<EtablissementsReport> {
     const supabase = getSupabase();
     if (supabase === null) {
         return rapporter({ ok: false, reason: 'base non configuree' });

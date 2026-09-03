@@ -8,15 +8,16 @@ import { NotificationManager } from '../../../shared/services/NotificationServic
 
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
 import {
-    changerEtablissement,
     etablissementRetire,
     nomCourtEtablissement,
     lienEdtActif,
     portailPublie,
     sourceEdt,
 } from '../../../shared/etablissements';
+import { basculerEtablissement } from '../../../shared/etablissements/bascule';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
+import { PastilleService } from '../../../shared/messages/PastilleService';
 import { adoucirLaTransition } from '../../../shared/ui/transitions';
 import style, { tokens } from '../../../shared/theme/Theme';
 
@@ -27,7 +28,7 @@ import {
     SettingsSyncOffPopup,
     SettingsCalendarPopup
 } from '../components/SettingsModals';
-import { SettingsInstitutionPopup } from '../components/SettingsInstitutionPopup';
+import { ChoixEtablissement } from '../../../shared/ui/ChoixEtablissement';
 
 import {
     DisplaySection,
@@ -63,6 +64,29 @@ export interface SettingsState {
     /** L'etablissement propose-t-il un compte, et est-il connecte ? Le rappel de l'etape d'accueil. */
     comptePossible: boolean;
     compteConnecte: boolean;
+}
+
+/**
+ * L'en-tete de l'onglet : le grand titre qui s'efface au defilement, et a sa droite la pastille d'etat de
+ * service (shared/messages/PastilleService). Sorti de `render` pour le garder sous la
+ * limite de lignes.
+ */
+function EnTeteReglages({ theme, insets, scrollY }: {
+    theme: import('../../../shared/theme/Theme').AppThemeType;
+    insets: import('react-native-safe-area-context').EdgeInsets | null;
+    scrollY: Animated.Value;
+}) {
+    const opacity = scrollY.interpolate({ inputRange: [0, 50], outputRange: [1, 0], extrapolate: 'clamp' });
+    return (
+        <Animated.View style={[styles.headerContainer, { paddingTop: insets?.top || 0, backgroundColor: 'transparent', opacity }]}>
+            <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
+                <Text style={[styles.greetingText, { color: theme.font }]}>
+                    {Translator.get('SETTINGS')}
+                </Text>
+                <PastilleService theme={theme} style={styles.rappel} />
+            </View>
+        </Animated.View>
+    );
 }
 
 class Settings extends React.Component<SettingsProps, SettingsState> {
@@ -239,23 +263,12 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     closeInstitutionDialog = () => this.setState({ institutionDialogVisible: false });
 
     /**
-     * La bascule d'etablissement : purger d'abord, selectionner ensuite.
-     *
-     * L'ordre vient de `changerEtablissement` et il n'est pas negociable — une purge jouee apres la
-     * selection courrait contre les ecrans qui se rechargent deja sur le nouvel etablissement. Le
-     * `setEtablissement` qui suit persiste le code et notifie les abonnes, ce qui suffit a faire
-     * repartir le planning et la session sur la bonne universite.
+     * La bascule d'etablissement — purge, adoucissement, selection — vit dans
+     * `shared/etablissements/bascule.ts` depuis qu'elle a trois hotes ; l'ecran ne garde que ce qui
+     * lui revient, son libelle et l'etat de la ligne du compte.
      */
     setInstitution = async (code: string) => {
-        await changerEtablissement(code);
-        // La bascule fait apparaitre ou disparaitre des rangees entieres (compte, lien iCal) et
-        // des onglets : rendue d'un coup, elle se lisait comme un accroc — surtout vers ou depuis
-        // « Autre campus », ou tout change. L'adoucissement se pose APRES la purge :
-        // `configureNext` ne couvre que le commit suivant, et n'importe quel commit pendant
-        // l'attente — la modale qui se ferme, le contexte qui purge — le consommait avant la
-        // reorganisation qu'il visait (constate sur appareil le 2026-08-31, deux fois).
-        adoucirLaTransition();
-        SettingsManager.setEtablissement(code);
+        await basculerEtablissement(code);
         this.setState({ institutionName: nomCourtEtablissement() });
         // La bascule vide le trousseau : la ligne du compte doit le dire tout de suite, sans attendre
         // un retour de focus qui n'aura pas lieu — on n'a pas quitte l'ecran.
@@ -310,14 +323,15 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
 
 
-    renderPopups(themeSettings: import('../../../shared/theme/Theme').AppThemeType['settings']) {
+    renderPopups(theme: import('../../../shared/theme/Theme').AppThemeType) {
+        const themeSettings = theme.settings;
         return (
             <>
                 <SettingsLanguagePopup theme={themeSettings} popupVisible={this.state.languageDialogVisible} popupClose={this.closeLanguageDialog} language={this.state.language} onConfirm={this.setSelectedLanguage} />
                 <SettingsSyncOffPopup theme={themeSettings} popupVisible={this.state.syncOffDialogVisible} popupClose={this.closeSyncOffDialog} disableSync={this.onSyncOffConfirmed} />
                 <SettingsResetPopup theme={themeSettings} popupVisible={this.state.resetDialogVisible} popupClose={this.closeResetDialog} resetApp={this.resetApp} />
                 <SettingsCalendarPopup theme={themeSettings} popupVisible={this.state.calendarDialogVisible} popupClose={this.closeCalendarDialog} setCalendar={this.setCalendar} selectedCalendar={this.state.selectedCalendar} />
-                <SettingsInstitutionPopup theme={themeSettings} popupVisible={this.state.institutionDialogVisible} popupClose={this.closeInstitutionDialog} codeActif={SettingsManager.getEtablissement()} onConfirm={this.onInstitutionConfirmed} />
+                <ChoixEtablissement theme={theme} visible={this.state.institutionDialogVisible} fermer={this.closeInstitutionDialog} codeActif={SettingsManager.getEtablissement()} onConfirmer={this.onInstitutionConfirmed} />
             </>
         );
     }
@@ -328,26 +342,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         const themeSettings = theme.settings;
         const calendar = this.state.calendars.find((cal) => this.state.selectedCalendar === cal.id);
         const calendarName = !!calendar ? calendar.title : this.state.selectedCalendar === 'UKit' ? 'UKit' : Translator.get('NOT_FOUND');
-
-        const renderHeader = (insets: import('react-native-safe-area-context').EdgeInsets | null) => {
-            const topPadding = (insets?.top || 0);
-
-            const opacity = this.scrollY.interpolate({
-                inputRange: [0, 50],
-                outputRange: [1, 0],
-                extrapolate: 'clamp'
-            });
-
-            return (
-                <Animated.View style={[styles.headerContainer, { paddingTop: topPadding, backgroundColor: 'transparent', opacity }]}>
-                    <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
-                        <Text style={[styles.greetingText, { color: theme.font }]}>
-                            {Translator.get('SETTINGS')}
-                        </Text>
-                    </View>
-                </Animated.View>
-            );
-        };
 
         const renderScrollContent = (insets: import('react-native-safe-area-context').EdgeInsets | null) => (
             <Animated.ScrollView
@@ -412,7 +406,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     isSynchronizingCalendar={this.state.isSynchronizingCalendar}
                     selectedCalendar={this.state.selectedCalendar}
                 />
-                {this.renderPopups(themeSettings)}
+                {this.renderPopups(theme)}
             </Animated.ScrollView>
         );
 
@@ -420,7 +414,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             <SafeAreaInsetsContext.Consumer>
                 {(insets) => (
                     <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
-                        {renderHeader(insets)}
+                        <EnTeteReglages theme={theme} insets={insets} scrollY={this.scrollY} />
                         {renderScrollContent(insets)}
                     </SafeAreaView>
                 )}
@@ -445,6 +439,11 @@ const styles = StyleSheet.create({
     greetingText: {
         fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold,
+        marginBottom: tokens.space.md,
+    },
+    // Pousse a droite, et la meme marge basse que le titre : la pastille s'aligne sur sa ligne.
+    rappel: {
+        marginLeft: 'auto',
         marginBottom: tokens.space.md,
     },
 });

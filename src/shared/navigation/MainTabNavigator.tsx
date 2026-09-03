@@ -18,9 +18,8 @@ import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { groupesRequis, portailPublie, serviceEtablissement } from '../etablissements';
 import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
-// La modale du teaser, la meme que les rangees mysterieuses de la Scolarite : elle est generique
-// (vocabulaire des dialogues + cles COMING_SOON), elle vit juste chez son premier consommateur.
-import { ModaleBientot } from '../../features/Scolarite/components/RangeeMysterieuse';
+import { Dialogue } from '../ui/Dialogue';
+import { ModaleBientot } from '../ui/ModaleBientot';
 
 export type MainTabParamList = {
     PlanningTab: undefined;
@@ -45,14 +44,6 @@ interface TabBarRouteItemProps {
 }
 
 function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }: TabBarRouteItemProps) {
-    const { themeName } = useContext(AppContext) as { themeName: 'light' | 'dark' };
-    /* Le teaser de l'onglet Scolarite : sur un campus dont aucun portail n'est publie, l'onglet
-       est voile — meme vocabulaire que le bouton mysterieux de Campus — et le toucher ouvre la
-       demande de campus au lieu d'un ecran qui ne peut rien montrer. Le declencheur est la donnee
-       du catalogue : relier le campus fait tomber le voile sans release. */
-    const [teaserCampus, setTeaserCampus] = useState(false);
-    const campusNonRelie = route.name === 'ScolariteTab' && !portailPublie();
-
     const { options } = descriptors[route.key];
     const label = (options.tabBarLabel as string) !== undefined
         ? (options.tabBarLabel as string)
@@ -63,10 +54,6 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
     const isFocused = state.index === index;
 
     const onPress = () => {
-        if (campusNonRelie) {
-            setTeaserCampus(true);
-            return;
-        }
         const event = navigation.emit({
             type: 'tabPress',
             target: route.key,
@@ -103,18 +90,6 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
                 isFocused && { backgroundColor: `${theme.primary}15` }
             ]}>
                 {options.tabBarIcon && options.tabBarIcon({ color, size: 24, focused: isFocused })}
-                {campusNonRelie && (
-                    /* L'iconContainer clippe deja (overflow hidden + rayon) : le voile s'y pose nu. */
-                    <View style={[StyleSheet.absoluteFill, styles.centreVoile]} pointerEvents="none">
-                        <BlurView
-                            intensity={20}
-                            tint={themeName === 'dark' ? 'dark' : 'light'}
-                            experimentalBlurMethod="dimezisBlurView"
-                            style={StyleSheet.absoluteFill}
-                        />
-                        <MaterialCommunityIcons name="lock" size={18} color={theme.fontSecondary} />
-                    </View>
-                )}
             </View>
             {/* La graisse ne change pas avec la selection : passer en gras elargissait le libelle
                 d'un ou deux points et tout le rang tressaillait a chaque changement d'onglet. La
@@ -122,19 +97,6 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
             <Text style={[styles.tabLabel, { color, fontWeight: '500' }]}>
                 {label}
             </Text>
-            {campusNonRelie && (
-                <ModaleCampusNonRelie
-                    theme={theme}
-                    visible={teaserCampus}
-                    fermer={() => setTeaserCampus(false)}
-                    ouvrirDemande={(href) => {
-                        setTeaserCampus(false);
-                        // La route vit dans le Stack racine, au-dessus des onglets : react-navigation
-                        // remonte tout seul, mais le type des helpers d'onglets ne le sait pas.
-                        (navigation as { navigate: (name: string, params?: object) => void }).navigate('WebBrowser', { href });
-                    }}
-                />
-            )}
         </TouchableOpacity>
     );
 }
@@ -144,7 +106,7 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
  *
  * Le bouton principal ouvre la demande de campus, et son adresse vient du catalogue
  * (`services.adaptation`) — la meme que l'etat vide de l'onglet : publier ou changer ce lien est
- * une publication, pas une release. Sans lien publie, la modale garde sa seule sortie « Compris ».
+ * une publication, pas une release. Sans lien publie, la modale garde sa seule sortie « Fermer ».
  */
 function ModaleCampusNonRelie({ theme, visible, fermer, ouvrirDemande }: {
     theme: AppThemeType;
@@ -154,7 +116,7 @@ function ModaleCampusNonRelie({ theme, visible, fermer, ouvrirDemande }: {
 }) {
     const demande = serviceEtablissement('adaptation');
     return (
-        <ModaleBientot
+        <Dialogue
             theme={theme}
             visible={visible}
             fermer={fermer}
@@ -249,6 +211,31 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
     // nommer par le plus destructeur des trois dissuadait d'y aller pour consulter.
     if (currentRouteName === 'ScolariteTab' && credentials) {
         return <BoutonDAction icone="account-circle-outline" libelle={Translator.get('ACCOUNT')} onPress={() => navigation.navigate('CredentialsSettings' as never)} theme={theme} />;
+    }
+
+    // Sur un campus dont aucun portail n'est publie, c'est le bouton Compte qui porte le teaser —
+    // et non l'onglet, qui s'ouvre desormais sur une page a lui (6.1-A). Le voile dit qu'un compte
+    // n'est pas encore possible ici, et le toucher ouvre la demande de campus. Le declencheur reste
+    // la donnee du catalogue : relier le campus fait tomber le voile sans release.
+    if (currentRouteName === 'ScolariteTab' && !portailPublie()) {
+        return (
+            <>
+                <BoutonDAction icone="account-circle-outline" libelle={Translator.get('ACCOUNT')} onPress={() => setTeaser(true)} theme={theme}>
+                    <VoileDeBouton theme={theme} themeName={themeName} />
+                </BoutonDAction>
+                <ModaleCampusNonRelie
+                    theme={theme}
+                    visible={teaser}
+                    fermer={() => setTeaser(false)}
+                    ouvrirDemande={(href) => {
+                        setTeaser(false);
+                        // La route vit dans le Stack racine, au-dessus des onglets : react-navigation
+                        // remonte tout seul, mais le type des helpers d'onglets ne le sait pas.
+                        (navigation as { navigate: (name: string, params?: object) => void }).navigate('WebBrowser', { href });
+                    }}
+                />
+            </>
+        );
     }
 
     // Le bouton mysterieux de Campus : la capacite n'existe pas encore, et l'emplacement l'assume —
@@ -422,10 +409,6 @@ const styles = StyleSheet.create({
     },
     tabLabel: {
         fontSize: 10,
-    },
-    centreVoile: {
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     voileMystere: {
         // Le calque du teaser, clippe aux coins du bouton : `overflow: hidden` sur le bouton

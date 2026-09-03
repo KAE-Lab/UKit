@@ -12,16 +12,27 @@
  * Voir docs/features/onboarding.md.
  */
 
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
-import { SettingsManager, languageFromDevice } from '../../../shared/services/AppCore';
+import { AppContext, SettingsManager, languageFromDevice } from '../../../shared/services/AppCore';
 import {
-    changerEtablissement,
+    attendrePremierRafraichissement,
     getCodeEtablissementActif,
     listeEtablissements,
+    premierRafraichissementRepondu,
     sourceEdt,
     type Etablissement,
 } from '../../../shared/etablissements';
+import { basculerEtablissement } from '../../../shared/etablissements/bascule';
+
+/**
+ * Ce que l'etape d'etablissement attend, au plus, avant d'afficher la liste qu'elle connait.
+ *
+ * Le socle est complet a la date de la release, donc la liste connue n'est pas fausse — seulement
+ * peut-etre en retard d'un etablissement publie depuis. Quatre secondes suffisent a une base qui
+ * repond, et une base muette ne doit pas retenir un premier lancement plus longtemps.
+ */
+const PLAFOND_CATALOGUE_MS = 4000;
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
 
 /**
@@ -56,6 +67,8 @@ export interface WelcomeState {
     readonly theme: string;
     readonly etablissement: string;
     readonly etablissements: readonly Etablissement[];
+    /** Le premier rafraichissement du catalogue n'a pas encore repondu : la liste peut etre en retard. */
+    readonly catalogueEnAttente: boolean;
     readonly year: OptionListee | null;
     readonly season: OptionListee | null;
     readonly groups: string[];
@@ -121,6 +134,9 @@ export interface WelcomeActions {
 }
 
 export function useWelcomeState(): { state: WelcomeState; actions: WelcomeActions } {
+    // La revision du catalogue publie : rootContainer la bouscule quand la surcouche change. C'est le
+    // canal par lequel un etablissement publie apres le montage atteint cette liste.
+    const { catalogue } = useContext(AppContext);
     // L'etat de depart lit le gestionnaire plutot que de figer `fr`/`light` : au retour dans un
     // parcours interrompu, les reglages restaures sont deja poses, et repartir d'une constante
     // afficherait un ecran clair le temps d'un rendu avant de se corriger.
@@ -129,6 +145,7 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
         theme: SettingsManager.getTheme(),
         etablissement: getCodeEtablissementActif(),
         etablissements: listeEtablissements(),
+        catalogueEnAttente: !premierRafraichissementRepondu(),
         year: null,
         season: null,
         groups: [],
@@ -139,13 +156,31 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
 
     const changer = (partiel: Partial<WelcomeState>) => setState((prev) => ({ ...prev, ...partiel }));
 
+    // Le catalogue arrive **apres** l'affichage : sa lecture est hors du chemin de demarrage
+    // (rootContainer). La liste se relit a chaque revision publiee — l'abonnement a `etablissement`
+    // ci-dessous ne part qu'au choix de l'utilisateur, et il a longtemps passe pour ce reabonnement :
+    // une installation neuve ne voyait que le socle (6.1-A).
+    useEffect(() => {
+        changer({ etablissements: listeEtablissements() });
+    }, [catalogue]);
+
+    // Le premier rafraichissement, attendu une fois et plafonne : l'etape affiche un chargement
+    // parlant plutot qu'une liste qu'elle sait peut-etre en retard, puis la liste connue quoi qu'il
+    // arrive — completee par l'effet ci-dessus si la reponse finit par arriver.
+    useEffect(() => {
+        let monte = true;
+        void attendrePremierRafraichissement(PLAFOND_CATALOGUE_MS).then(() => {
+            if (monte) changer({ catalogueEnAttente: false, etablissements: listeEtablissements() });
+        });
+        return () => {
+            monte = false;
+        };
+    }, []);
+
     useEffect(() => {
         SettingsManager.on('theme', (theme: string) => changer({ theme }));
         SettingsManager.on('language', (language: string) => changer({ language }));
         SettingsManager.on('favoriteGroups', (groups: string[]) => changer({ groups }));
-        // Le catalogue peut arriver **apres** l'affichage : sa lecture est hors du chemin de
-        // demarrage (rootContainer). L'ecran s'abonne donc, comme il le fait deja pour la liste des
-        // groupes, plutot que de figer une liste au montage.
         // Le tri par annee et le texte saisi appartiennent a l'universite qu'on quitte : une annee
         // choisie sous la convention de nommage de l'une ne veut rien dire sous l'autre.
         SettingsManager.on('etablissement', (code: string) => changer({
@@ -190,8 +225,8 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
             selectTheme: (entree) => SettingsManager.setTheme(entree.id),
             selectLanguage: (entree) => SettingsManager.setLanguage(entree.id),
             /**
-             * Le choix de l'etablissement passe par la meme porte que celui des reglages — purge
-             * comprise.
+             * Le choix de l'etablissement passe par la meme bascule que les reglages — purge
+             * comprise (shared/etablissements/bascule.ts).
              *
              * Il n'y a le plus souvent rien a purger au premier lancement, et c'est justement
              * pourquoi il faut passer par la : une reinstallation par-dessus une installation
@@ -199,7 +234,7 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
              * par diverger de celui qui compte.
              */
             selectEtablissement: (code) => {
-                void changerEtablissement(code).then(() => SettingsManager.setEtablissement(code));
+                void basculerEtablissement(code);
             },
             selectGroup: (groupe) => {
                 if (state.groups.includes(groupe)) SettingsManager.removeFavoriteGroup(groupe);

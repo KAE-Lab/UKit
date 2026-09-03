@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes" />
+<title>UKit</title>
+<style>
+    /* Le fond de page vient du theme de l'application, pose a l'assemblage (LecteurPdfPage.ts). */
+    html, body { margin: 0; padding: 0; background: /*UKIT:FOND*/; }
+    #pages { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0; }
+    canvas { display: block; max-width: 100%; background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); }
+</style>
+</head>
+<body>
+<div id="pages"></div>
+<script>
+    /*
+     * Les trois pieces, posees par l'application a l'assemblage de la page : la bibliotheque, son
+     * worker, et le document en base64. Des litteraux JavaScript, jamais des adresses — la page
+     * n'a aucun reseau, et la WebView ne sert pas de fichiers.
+     */
+    var UKIT_LIB = /*UKIT:LIB*/;
+    var UKIT_WORKER = /*UKIT:WORKER*/;
+    var UKIT_DOCUMENT = /*UKIT:DOCUMENT*/;
+</script>
+<script type="module">
+    /*
+     * Le lecteur : chaque page du document dessinee dans un canevas, a la largeur de l'ecran, l'une
+     * sous l'autre. Le pincement pour zoomer est celui de la WebView (viewport zoomable), pas un
+     * rendu a la volee — un certificat de quelques pages ne justifie pas plus.
+     *
+     * La bibliotheque s'importe depuis un Blob : un module ES ne s'importe que par une adresse, et
+     * `blob:` est la seule que cette page puisse fabriquer sans reseau ni fichier. Le worker prend le
+     * meme chemin ; si la WebView le refuse, pdf.js retombe seul sur le fil principal.
+     *
+     * L'application n'apprend que deux choses, par `postMessage` : la premiere page est rendue, ou
+     * rien ne le sera. Le reste est son affaire — indicateur, repli vers le partage.
+     */
+    (async () => {
+        const dire = (message) => {
+            if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(message));
+        };
+        try {
+            const blob = (source) => URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
+            const pdfjs = await import(blob(UKIT_LIB));
+            pdfjs.GlobalWorkerOptions.workerSrc = blob(UKIT_WORKER);
+
+            const octets = Uint8Array.from(atob(UKIT_DOCUMENT), (caractere) => caractere.charCodeAt(0));
+            const document_ = await pdfjs.getDocument({ data: octets, isEvalSupported: false }).promise;
+
+            const conteneur = document.getElementById('pages');
+            // Plafonne a 2 : au-dela, un canevas A4 depasse les dizaines de mega-octets pour un gain
+            // que l'oeil ne voit plus sur un telephone.
+            const densite = Math.min(window.devicePixelRatio || 1, 2);
+            const largeur = conteneur.clientWidth || window.innerWidth;
+
+            for (let numero = 1; numero <= document_.numPages; numero += 1) {
+                const page = await document_.getPage(numero);
+                const naturel = page.getViewport({ scale: 1 });
+                const viewport = page.getViewport({ scale: (largeur / naturel.width) * densite });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.floor(viewport.width);
+                canvas.height = Math.floor(viewport.height);
+                canvas.style.width = Math.floor(viewport.width / densite) + 'px';
+                canvas.style.height = Math.floor(viewport.height / densite) + 'px';
+                conteneur.appendChild(canvas);
+
+                await page.render({ canvas, viewport }).promise;
+                if (numero === 1) dire({ type: 'rendu', pages: document_.numPages });
+            }
+        } catch (erreur) {
+            dire({ type: 'echec', detail: erreur && erreur.message ? erreur.message : String(erreur) });
+        }
+    })();
+</script>
+</body>
+</html>

@@ -21,9 +21,10 @@ import {
     getSupabase,
     reportSupabaseFailure,
 } from '../../../shared/supabase';
-import moment from 'moment';
 
 import type { UkitFailure } from '../../../shared/aetherius';
+import { contexteDeCiblage, estCible } from '../../../shared/ciblage';
+import { maintenant } from '../../../shared/services/Temps';
 import { appliquerVisuel } from '../../../shared/visuels';
 import { estValide, projeterAnnonce, type BdeAnnonce } from './BdeMapping';
 
@@ -32,7 +33,7 @@ export type { BdeAnnonce } from './BdeMapping';
 const TABLE = 'annonces';
 
 /** Les colonnes que les ecrans lisent, nommees plutot que `*` : le schema peut grossir sans cout. */
-const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,publiee_le,expire_le,active,creee_le';
+const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,publiee_le,expire_le,active,creee_le,audience,etablissements,version_min,version_max';
 
 /**
  * Ce qu'un ecran recoit : une liste, ou un echec deja traduit.
@@ -63,6 +64,10 @@ const BdeService = {
      *
      * La peremption est filtree deux fois — par la politique de lecture, qui protege la donnee, et
      * par `estValide`, qui protegera l'affichage le jour ou la donnee viendra d'un cache local.
+     *
+     * Le ciblage (jalon 6.1-B) se filtre **ici**, pas dans la base : la base ne sait ni la version de
+     * l'application, ni l'etablissement choisi, ni si l'appareil est un testeur — et c'est voulu,
+     * l'appareil ne lui dit rien de lui (shared/ciblage). Les ecrans ignorent qu'un filtre existe.
      */
     fetchAnnonces: async (): Promise<BdeAnnoncesResult> => {
         const supabase = getSupabase();
@@ -82,9 +87,10 @@ const BdeService = {
 
         // Une liste vide est un resultat, pas un echec : la base a bien repondu, elle n'a rien a
         // publier aujourd'hui. C'est la distinction que toute la Phase 6 existe pour rendre visible.
-        // `moment()` suit le mock temporel : c'est ce qui rend une annonce expiree
+        // `maintenant()` suit la simulation de date : c'est ce qui rend une annonce expiree
         // verifiable sans attendre son echeance (docs/qualite.md).
-        const now = moment().toDate();
+        const now = maintenant();
+        const contexte = contexteDeCiblage();
         return {
             ok: true,
             annonces: (data ?? [])
@@ -93,7 +99,7 @@ const BdeService = {
                     ...annonce,
                     image_url: appliquerVisuel('annonce', annonce.id, annonce.image_url),
                 }))
-                .filter((annonce) => estValide(annonce, now)),
+                .filter((annonce) => estValide(annonce, now) && estCible(annonce.ciblage, contexte)),
         };
     },
 };

@@ -77,6 +77,17 @@ const EDT_PERSONNELS_KEY = 'UKIT_EDT_PERSONNELS';
  * (features/Scolarite/services/PropositionsEnAttente.ts).
  */
 const PROPOSITIONS_KEY = 'UKIT_PROPOSITIONS';
+/**
+ * L'identifiant d'installation (jalon 6.1-B) : un UUID genere une fois, qui ne sert qu'a dire si cet
+ * appareil est un testeur.
+ *
+ * Au trousseau plutot que dans les reglages parce qu'il doit survivre a « Reinitialiser » — un
+ * testeur qui remet ses reglages a zero reste testeur —, et `deleteAllComptes` ne le touche pas pour
+ * la meme raison : seule la reinitialisation complete du menu de developpement l'efface. **Non
+ * cloisonne**, a la difference de toutes les cles ci-dessus : un appareil, un identifiant, quel que
+ * soit l'etablissement. Il ne quitte jamais l'appareil (shared/testeur/identifiant.ts).
+ */
+const INSTALLATION_ID_KEY = 'UKIT_INSTALLATION_ID';
 
 /**
  * La conversion des cles d'avant le cloisonnement, jouee au plus une fois.
@@ -331,6 +342,37 @@ export default class SecureStoreService {
             return true;
         } catch (error) {
             console.error('Error deleting edt links from SecureStore', error);
+            return false;
+        }
+    }
+
+    /** L'identifiant d'installation, tel quel, ou `null` s'il n'a jamais ete cree. */
+    static async getInstallationId(): Promise<string | null> {
+        try {
+            return await SecureStore.getItemAsync(INSTALLATION_ID_KEY);
+        } catch (error) {
+            console.error('Error retrieving installation id from SecureStore', error);
+            return null;
+        }
+    }
+
+    static async saveInstallationId(id: string): Promise<boolean> {
+        try {
+            await SecureStore.setItemAsync(INSTALLATION_ID_KEY, id);
+            return true;
+        } catch (error) {
+            console.error('Error saving installation id to SecureStore', error);
+            return false;
+        }
+    }
+
+    /** Reinitialisation complete seulement : un testeur ne perd pas son inscription en remettant ses reglages a zero. */
+    static async deleteInstallationId(): Promise<boolean> {
+        try {
+            await SecureStore.deleteItemAsync(INSTALLATION_ID_KEY);
+            return true;
+        } catch (error) {
+            console.error('Error deleting installation id from SecureStore', error);
             return false;
         }
     }

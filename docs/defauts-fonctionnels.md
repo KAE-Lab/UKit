@@ -140,6 +140,29 @@ transtypage commenté. Le corriger à la source demanderait de retyper un fichie
 1 100 lignes — hors du périmètre d'une session d'écran, et à faire une fois pour toutes plutôt que
 trois fois à moitié.
 
+### Le contenu publié n'atteint les écrans déjà montés qu'au lancement suivant
+
+Rencontré le 2026-09-03 pendant la vérification du jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md),
+et déjà noté sous une forme plus étroite pour les visuels ([backend.md](backend.md)). Les surcouches
+publiées se **rafraîchissent** bien au retour au premier plan — Blueprints, lieux, visuels, catalogue,
+salutations, messages —, mais ce sont les **écrans** qui ne se relisent pas : le tableau de bord
+Campus garde ce qu'il a chargé au montage (il ne se démonte jamais), et une liste d'annonces ne
+refait sa lecture qu'en se remontant. Une annonce ciblée sur un autre campus, ou rendue à tous,
+n'apparaît donc qu'après une vraie relance ; quelqu'un qui garde l'application en arrière-plan peut
+attendre longtemps une mise à jour pourtant arrivée.
+
+Le même défaut a une **seconde forme, mesurée en production** le 2 septembre 2026 : l'onglet
+Planning ouvert le 1er et laissé en arrière-plan jusqu'au lendemain, « Aujourd'hui » menait encore au
+1er — le jour courant est calculé au montage, jamais au retour au premier plan. Ce n'est pas une
+publication qui manque, c'est la même absence de « relecture au retour ».
+
+**À corriger dans la passe de code [6.1-C](phase-6/6-1-c-passe-de-code.md)**, pas ici : la réponse est
+une politique de rafraîchissement au retour au premier plan pour les écrans qui lisent notre base et
+pour le jour courant du Planning, et elle se décide écran par écran — rejouer chaque chargement à
+chaque retour serait un arbitrage produit (réseau, position, quatre sources tierces), pas un
+correctif. La contrainte à respecter : les messages de service, eux, arrivent bien au retour (l'hôte
+est abonné), et c'est ce comportement-là qu'il faut étendre, pas l'inverse.
+
 ## Limites connues, qui ne sont pas des défauts
 
 - **La précision horaire d'une bibliothèque fermée reste en français.** Le fournisseur ne publie
@@ -237,7 +260,7 @@ Le test qui « verrouillait » la vue semaine ne vérifiait d'ailleurs pas ce qu
 passait le séparateur **à la main**, donc il décrivait la fonction et non la vue. Il passait encore
 après le changement. Il porte maintenant sur `decouperSemaine`, seul chemin réel.
 
-### Sur iPhone, Face ID n'était jamais tenté — *corrigé le 2026-08-22, à confirmer sur un build*
+### Sur iPhone, Face ID n'était jamais tenté — *corrigé le 2026-08-22, confirmé sur build le 2026-09-02*
 
 L'onglet Scolarité et la révélation du mot de passe demandaient directement le **code de l'appareil**,
 sans jamais proposer Face ID, alors que l'empreinte se déclenchait normalement sur Android.
@@ -262,8 +285,9 @@ exécute. La couche native résout alors l'échec **sans jamais appeler `evaluat
 ouvrir la moindre fenêtre : voilà pourquoi personne n'a jamais vu Face ID essayer.
 
 Le conteneur, sous Expo Go, est Expo Go. Celui de UKit porte la clé par deux chemins vérifiés dans
-`app.config.ts` — `ios.infoPlist` et l'option `faceIDPermission` du greffon. **La confirmation demande
-un `eas build --profile development`** ; le correctif, lui, est exactement celui que ce verdict appelle.
+`app.config.ts` — `ios.infoPlist` et l'option `faceIDPermission` du greffon. La confirmation demandait
+un build : **elle est faite, sur l'iPhone de production, le 2026-09-02** — Face ID est proposé avant
+le code, à l'ouverture de l'onglet comme à la révélation du mot de passe.
 
 Deux choses trouvées en chemin. La sonde elle-même était fautive : `demander()` **jetait l'erreur du
 premier temps** dès que le code finissait par réussir, c'est-à-dire au moment précis où on la

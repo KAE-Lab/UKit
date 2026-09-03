@@ -11,6 +11,8 @@ import { AppContext } from '../services/AppCore';
 import ModMenuBlueprints from './ModMenuBlueprints';
 import ModMenuBiometrie from './ModMenuBiometrie';
 import ModMenuPropositions from './ModMenuPropositions';
+import ModMenuReinitialisation from './ModMenuReinitialisation';
+import ModMenuTesteur from './ModMenuTesteur';
 
 /**
  * Les panneaux du menu, et leur libelle d'onglet.
@@ -18,7 +20,7 @@ import ModMenuPropositions from './ModMenuPropositions';
  * Table plutot que ternaire : le troisieme panneau a rendu la seconde forme illisible, et un
  * quatrieme n'ajoutera qu'une ligne ici.
  */
-const PANNEAUX = { time: 'Temps', blueprints: 'Blueprints', biometrie: 'Biometrie', propositions: 'Dossier' } as const;
+const PANNEAUX = { time: 'Temps', blueprints: 'Blueprints', biometrie: 'Biometrie', propositions: 'Dossier', testeur: 'Testeur' } as const;
 type Panneau = keyof typeof PANNEAUX;
 
 const { width, height } = Dimensions.get('window');
@@ -393,6 +395,8 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                         <ModMenuBiometrie theme={theme} />
                     ) : panel === 'propositions' ? (
                         <ModMenuPropositions theme={theme} />
+                    ) : panel === 'testeur' ? (
+                        <ModMenuTesteur theme={theme} />
                     ) : (
                         <>
                             {this.renderLiveClock(theme, isActive, currentTime)}
@@ -400,6 +404,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                             {this.renderTimeSelectors(theme, selectedDate)}
                             {this.renderActionButtons(theme)}
                             {this.renderDateTimePicker(theme)}
+                            <ModMenuReinitialisation theme={theme} />
                         </>
                     )}
                 </View>

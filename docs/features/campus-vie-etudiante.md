@@ -98,8 +98,22 @@ bouton muet. La conversion est dans
 
 ## Publier une annonce
 
-Depuis la console d'administration de Supabase, table `annonces`. Une entrée ajoutée est visible au
-rechargement suivant, **sans publier de nouvelle version de l'application**.
+Depuis la **console web** du jalon 6.1-B ([pilotage.md](../pilotage.md)) — ou depuis le Studio
+Supabase, table `annonces`, qui passe par les mêmes politiques. Une entrée ajoutée est visible au
+rechargement suivant, **sans publier de nouvelle version de l'application**, et chaque écriture laisse
+une ligne dans le journal.
+
+**Une annonce se cible** (6.1-B) : `audience` — `tous`, ou `testeurs` pour la regarder sur son
+téléphone avant tout le monde —, `etablissements` — les codes des campus qui la voient, vide pour
+tous — et une fenêtre de versions de l'application, `version_min` / `version_max`. Le tri se fait sur
+l'appareil, dans `BdeService`, et les écrans n'en savent rien. Les versions antérieures à la 6.1
+ignorent ces colonnes et voient tout.
+
+**Remplacer une image publiée exige de changer son adresse** : les appareils mettent les images en
+cache par URL, et le fichier seul ne change rien à ceux qui sont déjà passés. La règle est un
+paramètre de version, `?v=N`, incrémenté à chaque remplacement ; la console l'applique d'elle-même au
+téléversement, et à la main c'est `…/annonces/soiree.jpg?v=2`. Vaut pour `image_url`, pour la galerie,
+et pour la table `visuels`.
 
 Deux garde-fous, et ils ne font pas la même chose : `active = false` retire une annonce
 **maintenant**, `expire_le` la fait disparaître d'elle-même à échéance. Les deux sont appliqués par
@@ -308,6 +322,6 @@ message ni bouton.*
 | [`Bde/PastilleEmetteur.tsx`](../../src/features/Campus/Bde/PastilleEmetteur.tsx) | la pastille d'émetteur teintée par l'identité, et `teinteDAnnonce` — partagées par les cartes et la fiche |
 | [`hooks/useBdeAnnonces.ts`](../../src/features/Campus/hooks/useBdeAnnonces.ts) | le chargement, l'échec retenu, le nouvel essai — partagé par les deux surfaces |
 | [`services/BdeService.ts`](../../src/features/Campus/services/BdeService.ts) | lit la table, rend une liste ou un échec traduit |
-| [`services/BdeMapping.ts`](../../src/features/Campus/services/BdeMapping.ts) | le contrat `BdeAnnonce`, la projection depuis la ligne de base, la péremption |
+| [`services/BdeMapping.ts`](../../src/features/Campus/services/BdeMapping.ts) | le contrat `BdeAnnonce`, la projection depuis la ligne de base, la péremption, le ciblage projeté avec la ligne |
 | [`Dashboard/components/BdeSection.tsx`](../../src/features/Campus/Dashboard/components/BdeSection.tsx) | le carrousel du tableau de bord. Sa carte vivait dans un `BdeSectionParts.tsx` voisin ; devenue commune à la grille, elle est remontée dans `Bde/` et le fichier a disparu |
 | [`blueprints/ukit-campus-annonces.blueprint.json`](../../blueprints/ukit-campus-annonces.blueprint.json) | témoin du format : le pilote du jalon 6-A, plus joué en production |

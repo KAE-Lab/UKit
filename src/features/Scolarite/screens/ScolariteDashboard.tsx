@@ -25,20 +25,26 @@
  * pas d'authentification (docs/features/scolarite.md).
  */
 
-import React, { useContext, useRef } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import { PastilleService } from '../../../shared/messages/PastilleService';
 import { AppContext } from '../../../shared/services/AppCore';
+import { getCodeEtablissementActif } from '../../../shared/etablissements';
+import { basculerEtablissement } from '../../../shared/etablissements/bascule';
+import { ChoixEtablissement } from '../../../shared/ui/ChoixEtablissement';
 import { demandeUneRessaisie, presenterEchec } from '../services/ScolariteMapping';
 import { useCredentials } from '../services/CredentialsContext';
 import BiometryGate from '../components/BiometryGate';
 import ScolariteLoadingScreen from '../components/ScolariteLoadingScreen';
 import ScolariteLoginView from '../components/ScolariteLoginView';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
+import { useSessionDepuisLeFormulaire } from '../hooks/useSessionDepuisLeFormulaire';
 import { PageScolarite } from '../components/PageScolarite';
+import { CampusNonRelie } from '../components/CampusNonRelie';
 import { EnteteScolarite } from '../components/EnteteScolarite';
 import type { PointWidget } from '../widgets/definitions';
 
@@ -50,7 +56,11 @@ import type { PointWidget } from '../widgets/definitions';
  *
  * Sorti de l'ecran pour le garder sous la limite de lignes, comme `PageScolarite` avant lui.
  */
-const OngletDeconnecte = ({ theme, accent, defilement }) => (
+const OngletDeconnecte = ({ theme, accent, defilement, onDebut }) => {
+    /** Le choix d'etablissement, ouvert par « Tu es d'un autre campus ? » sous le formulaire. */
+    const [choixCampus, setChoixCampus] = useState(false);
+
+    return (
     <SafeAreaInsetsContext.Consumer>
         {(insets) => (
             <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -63,26 +73,44 @@ const OngletDeconnecte = ({ theme, accent, defilement }) => (
                             extrapolate: 'clamp',
                         }),
                     }]}
-                    pointerEvents="none"
+                    pointerEvents="box-none"
                 >
-                    <Text style={[styles.titreDOngletTexte, { color: theme.font }]}>
-                        {Translator.get('SCOLARITY')}
-                    </Text>
+                    {/* `box-none` sur la rangee et `none` sur le titre : le formulaire dessous garde
+                        ses touchers, seule la pastille d'etat de service prend les siens. */}
+                    <View style={styles.rangeeDuTitre} pointerEvents="box-none">
+                        <Text style={[styles.titreDOngletTexte, { color: theme.font }]} pointerEvents="none">
+                            {Translator.get('SCOLARITY')}
+                        </Text>
+                        <PastilleService theme={theme} style={styles.rappel} />
+                    </View>
                 </Animated.View>
                 <ScolariteLoginView
                     theme={theme}
                     color={accent}
                     topPadding={insets?.top || 0}
                     compact
+                    onDebut={onDebut}
+                    onAutreCampus={() => setChoixCampus(true)}
                     onScroll={Animated.event(
                         [{ nativeEvent: { contentOffset: { y: defilement } } }],
                         { useNativeDriver: true },
                     )}
                 />
+                {/* La meme bascule que les Reglages, avertissement de purge compris : l'onglet suit
+                    ensuite `AppContext.etablissement`, et le contexte de session relit le trousseau
+                    de la fac d'arrivee — revenir a Bordeaux retrouve sa session. */}
+                <ChoixEtablissement
+                    theme={theme}
+                    visible={choixCampus}
+                    fermer={() => setChoixCampus(false)}
+                    codeActif={getCodeEtablissementActif()}
+                    onConfirmer={(code) => { void basculerEtablissement(code); }}
+                />
             </View>
         )}
     </SafeAreaInsetsContext.Consumer>
-);
+    );
+};
 
 const ScolariteDashboard = ({ navigation }) => {
     const { themeName } = useContext(AppContext);
@@ -108,20 +136,23 @@ const ScolariteDashboard = ({ navigation }) => {
         />
     );
 
-    if (!credentialsLoaded) return null;
-
     // `useEcranDeProgression` et non un test direct : l'ecran doit **survivre** quelques centaines de
     // millisecondes a la fin du run, le temps que la barre rejoigne 100 %. Sans ce delai, elle restait
     // a 80 % et la page se substituait d'un coup.
     const progression = useEcranDeProgression(sessionMode, scrapeStatus);
+    // Une session lancee depuis le formulaire de cet onglet lui laisse la page jusqu'a son terme :
+    // `credentials` est pose au dixieme step, et sans ce drapeau l'ecran basculait en plein run
+    // (voir le hook). Les deux hooks vivent au-dessus du premier retour, comme les regles l'exigent.
+    const formulaire = useSessionDepuisLeFormulaire(progression.visible);
+
+    if (!credentialsLoaded) return null;
 
     /**
-     * L'echec qui merite un encart : la session a echoue **et** il n'y a aucune identite a afficher.
-     * Quand des donnees froides existent, le dossier reste montrable et c'est la ligne de messagerie
-     * qui porte l'echec. Un run annule ne montre rien : l'utilisateur est deja parti.
+     * L'echec qui merite un encart : la session a echoue et a quelque chose a dire. Avec un dossier
+     * deja lu, l'encart se pose au-dessus de la page qui reste — une actualisation qui echoue ne doit
+     * pas etre muette (6.1-A). Un run annule ne montre rien : l'utilisateur est deja parti.
      */
-    const echecBloquant = scrapeStatus === 'error' && coldData === null
-        && sessionFailure !== null && !sessionFailure.silent
+    const echecBloquant = scrapeStatus === 'error' && sessionFailure !== null && !sessionFailure.silent
         ? presenterEchec(sessionFailure)
         : null;
 
@@ -148,9 +179,41 @@ const ScolariteDashboard = ({ navigation }) => {
         return ouvrirPorte(point === 'messagerie' ? 'email' : point);
     };
 
-    // Le parcours froid prend l'ecran : il est transitoire, et une page qui se remplit sous lui
-    // ferait sauter le contenu a chaque etape franchie.
-    if (portailDisponible && credentials && progression.visible) {
+    // Un campus que l'application ne porte pas a sa page — pas le tableau de bord avec un encart de
+    // plus (voir CampusNonRelie). Elle passe devant tout : sans portail, il n'y a ni formulaire, ni
+    // session, ni grille a montrer.
+    if (!portailDisponible) {
+        return <CampusNonRelie theme={theme} onDemande={ouvrirLien} />;
+    }
+
+    /*
+     * L'onglet SANS compte EST le formulaire de connexion : l'etat vide « connecte ton compte »
+     * obligeait un tap de plus vers exactement la meme page. Et pas d'en-tete collant ici — le
+     * bandeau du formulaire porte deja le titre « Scolarite », pose dans le vide : l'en-tete
+     * collant appartient au tableau de bord, qui a un dossier a saluer. Le retour anticipe sur
+     * `credentialsLoaded` evite le flash du formulaire pendant la lecture du trousseau au lancement.
+     *
+     * **Le formulaire passe devant l'ecran de chargement plein**, et l'ordre est le sujet : teste
+     * apres lui, l'ecran plein le supplantait des que `credentials` arrivait, a mi-parcours — deux
+     * vues pour le meme run. Il tient la page tant que la session partie de lui n'est pas finie.
+     */
+    if (!credentials || formulaire.enCours) {
+        return (
+            <OngletDeconnecte
+                theme={theme}
+                accent={accent}
+                defilement={defilementDeconnecte}
+                onDebut={formulaire.onDebut}
+            />
+        );
+    }
+
+    // Le parcours froid prend l'ecran **tant qu'il n'y a aucun dossier a montrer** : il est
+    // transitoire, et une page qui se remplit sous lui ferait sauter le contenu a chaque etape
+    // franchie. Avec un dossier deja lu — « Actualiser mon dossier » —, la page reste et la
+    // progression s'y pose en encart (PageScolarite) : revenir sur l'onglet pendant l'actualisation
+    // retombait sur l'ecran plein, l'ancienne barre (constat du 2026-09-02, 6.1-A).
+    if (progression.visible && coldData === null) {
         return (
             <View style={[styles.container, { backgroundColor: theme.background }]}>
                 <SafeAreaInsetsContext.Consumer>
@@ -166,22 +229,13 @@ const ScolariteDashboard = ({ navigation }) => {
         );
     }
 
-    /*
-     * L'onglet SANS compte EST le formulaire de connexion : l'etat vide « connecte ton compte »
-     * obligeait un tap de plus vers exactement la meme page. Et pas d'en-tete collant ici — le
-     * bandeau du formulaire porte deja le titre « Scolarite », pose dans le vide : l'en-tete
-     * collant appartient au tableau de bord, qui a un dossier a saluer. La garde credentialsLoaded
-     * evite le flash du formulaire pendant la lecture du trousseau au lancement.
-     */
-    if (portailDisponible && credentialsLoaded && !credentials) {
-        return <OngletDeconnecte theme={theme} accent={accent} defilement={defilementDeconnecte} />;
-    }
-
     const corps = () => (
         <PageScolarite
             certificatEnCours={certificatEnCours}
             theme={theme}
             teinte={accent}
+            progression={progression}
+            scrapeProgress={scrapeProgress}
             coldData={coldData}
             widgets={widgets}
             credentials={credentials}
@@ -225,11 +279,21 @@ const styles = StyleSheet.create({
         zIndex: 10,
         paddingBottom: tokens.space.sm,
     },
+    rangeeDuTitre: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingRight: tokens.space.md,
+    },
     titreDOngletTexte: {
         fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold as '700',
         marginBottom: tokens.space.md,
         paddingHorizontal: tokens.space.md,
+    },
+    // Pousse a droite, et la meme marge basse que le titre : la pastille s'aligne sur sa ligne.
+    rappel: {
+        marginLeft: 'auto',
+        marginBottom: tokens.space.md,
     },
 });
 

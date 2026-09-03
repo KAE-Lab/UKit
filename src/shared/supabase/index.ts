@@ -17,5 +17,7 @@ export type {
     Database,
     EtablissementRow,
     ServiceMessageRow,
+    SondeRow,
+    TesteurRow,
     VisuelRow,
 } from './types';

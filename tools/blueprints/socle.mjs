@@ -81,12 +81,12 @@ export function lireTout() {
 }
 
 /**
- * Les Blueprints **hors socle** : les portails d'etablissements que le binaire n'embarque pas.
+ * Les portails d'etablissements, ranges dans leur sous-dossier.
  *
  * Ils n'existent que depuis le jalon 6-G, et c'est tout l'interet du jalon : ajouter une universite
- * ne demande plus une release, seulement un fichier publie. Ils vivent dans un sous-dossier plutot
- * qu'a cote du socle pour que la difference se voie a la racine du depot — `blueprints/index.ts`
- * n'en importe aucun, et c'est verifiable d'un coup d'oeil.
+ * ne demande plus une release, seulement un fichier publie. Un portail arrive donc **hors socle**,
+ * puis la release suivante l'embarque (6.1-A) — le dossier ne dit plus s'il est embarque ou non,
+ * `blueprints/index.ts` le dit, et `estEmbarque` le lit.
  *
  * Ils passent les memes gardes que le socle, **plus une** : leur nom doit etre couvert par le prefixe
  * reserve. C'est la garde symetrique de celle de l'appareil (`allowNew.prefix`) : publier un fichier
@@ -95,6 +95,18 @@ export function lireTout() {
  */
 export function lirePortails() {
     return lireDossier(PORTAILS, 'portails/', { horsSocle: true });
+}
+
+/**
+ * Le binaire embarque-t-il ce fichier ?
+ *
+ * Lu dans le texte de `blueprints/index.ts` : ce module est du Node pur et ne sait pas charger un
+ * fichier TypeScript, comme pour le prefixe reserve. Un import du fichier est ce qui le rend
+ * embarque ; c'est exactement ce qu'on cherche.
+ */
+export function estEmbarque(fichier) {
+    const index = readFileSync(join(BLUEPRINTS, 'index.ts'), 'utf8');
+    return index.includes(`'./${fichier}'`);
 }
 
 /**

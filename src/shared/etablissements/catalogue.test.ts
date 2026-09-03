@@ -36,21 +36,26 @@ function ligne(partial: Partial<EtablissementRow>): EtablissementRow {
     return {
         code: 'essai',
         nom: 'Universite d essai',
+        nom_court: null,
         ville: null,
         logo_url: null,
         actif: true,
         portail_dossier: null,
         portail_messagerie: null,
+        portail_widgets: null,
+        portail_documents: null,
         celcat_domaine: null,
         celcat_res_types: null,
         edt: null,
         salles: null,
         salles_libres: null,
         bibliotheques_points: null,
+        services: null,
         libelles: null,
+        crous_region: null,
         ordre: 0,
         ...partial,
-    } as EtablissementRow;
+    };
 }
 
 /** Un etablissement publie : tout a `null` sauf ce que le cas nomme, comme une vraie ligne minimale. */
@@ -128,7 +133,8 @@ describe('appliquerCatalogue', () => {
         appliquerCatalogue({ inp: etablissement({ code: 'inp', nom: 'INP' }) });
         appliquerCatalogue(null);
 
-        expect(listeEtablissements().map((e) => e.code)).toEqual([ETABLISSEMENT_DEFAUT]);
+        // Les trois lignes publiees a la date de la release, dans l'ordre de la liste (6.1-A).
+        expect(listeEtablissements().map((e) => e.code)).toEqual([ETABLISSEMENT_DEFAUT, 'bordeaux-inp', 'autre']);
         expect(getEtablissement(ETABLISSEMENT_DEFAUT)?.celcatDomaine).toBe('https://celcat.u-bordeaux.fr/calendar');
     });
 });
@@ -141,7 +147,9 @@ describe('listeEtablissements', () => {
             a: etablissement({ code: 'a', nom: 'Premier', ordre: -1 }),
         });
 
-        expect(listeEtablissements().map((e) => e.code)).toEqual(['a', 'bordeaux', 'b', 'c']);
+        // Le socle s'intercale a sa place : « Bordeaux INP » entre « Alpha » et « Zenith » au meme
+        // ordre, « Autre universite » a 99 ferme la liste.
+        expect(listeEtablissements().map((e) => e.code)).toEqual(['a', 'bordeaux', 'b', 'bordeaux-inp', 'c', 'autre']);
     });
 });
 

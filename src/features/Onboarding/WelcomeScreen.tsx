@@ -101,6 +101,14 @@ export default function WelcomeScreen() {
     const insets = useSafeAreaInsets();
     const { state, actions } = useWelcomeState();
     const { portailDisponible } = useCredentials();
+    /*
+     * Une connexion lancee depuis l'etape du compte **bloque l'avancement et le retour** jusqu'a son
+     * terme. Avancer pendant la session menait a l'etape suivante avec une connexion qui tournait
+     * derriere : un echec ne se lisait qu'en ouvrant l'onglet, plus tard, et un succes reglait
+     * l'emploi du temps dans le dos de l'etape des groupes. Un echec se lit sur place, et un succes
+     * avance tout seul (`onConnecte`) — il n'y a rien a gagner a partir avant (2026-09-02, 6.1-A).
+     */
+    const [formulaireEnSession, setFormulaireEnSession] = useState(false);
 
     const themeObj = style.Theme[state.theme];
 
@@ -122,6 +130,7 @@ export default function WelcomeScreen() {
             index={index_}
             total={etapes.length}
             basInset={insets.bottom || 0}
+            desactive={formulaireEnSession}
             onSuivant={() => allerA(index_ + 1)}
         />
     );
@@ -135,7 +144,7 @@ export default function WelcomeScreen() {
                 pas la saisie (constate le 2026-08-31, dans les deux sens). */}
             <View style={{ flex: 1 }}>
 
-                <WelcomeBackButton onPress={() => allerA(index_ - 1)} visible={index_ > 0} themeObj={themeObj} topInset={insets.top} />
+                <WelcomeBackButton onPress={() => allerA(index_ - 1)} visible={index_ > 0 && !formulaireEnSession} themeObj={themeObj} topInset={insets.top} />
 
                 {etape === 'intro' && <StepIntro themeObj={themeObj} />}
                 {etape === 'etablissement' && (
@@ -144,6 +153,7 @@ export default function WelcomeScreen() {
                         etablissements={state.etablissements}
                         codeActif={state.etablissement}
                         selectEtablissement={actions.selectEtablissement}
+                        chargement={state.catalogueEnAttente}
                     />
                 )}
                 {etape === 'preferences' && (
@@ -160,6 +170,8 @@ export default function WelcomeScreen() {
                     <StepCompte
                         themeObj={themeObj}
                         onSuivant={() => allerA(index_ + 1)}
+                        onAutreCampus={() => allerA(etapes.indexOf('etablissement'))}
+                        onEnSession={setFormulaireEnSession}
                         onConnecte={() => {
                             /* Le parcours froid a pu regler l'emploi du temps (les propositions du
                                dossier posent les favoris) : l'etape EDT n'a alors plus de question
@@ -198,12 +210,14 @@ export default function WelcomeScreen() {
 }
 
 /** Le pied du parcours : le bouton d'avancement et la pagination. */
-function PiedDuParcours({ themeObj, derniere, index, total, basInset, onSuivant }: {
+function PiedDuParcours({ themeObj, derniere, index, total, basInset, desactive, onSuivant }: {
     themeObj: (typeof style.Theme)['light'];
     derniere: boolean;
     index: number;
     total: number;
     basInset: number;
+    /** Une connexion tourne : le bouton attend qu'elle finisse, comme le lien « Plus tard ». */
+    desactive: boolean;
     onSuivant: () => void;
 }) {
     return (
@@ -211,12 +225,14 @@ function PiedDuParcours({ themeObj, derniere, index, total, basInset, onSuivant 
             <View style={{ paddingHorizontal: tokens.space.xl, marginBottom: tokens.space.xs }}>
                 <TouchableOpacity
                     onPress={derniere ? () => SettingsManager.setFirstLoad(false) : onSuivant}
+                    disabled={desactive}
                     style={{
                         backgroundColor: themeObj.primary,
                         borderRadius: tokens.radius.md,
                         paddingVertical: tokens.space.md,
                         alignItems: 'center',
                         justifyContent: 'center',
+                        opacity: desactive ? 0.5 : 1,
                     }}
                 >
                     <Text style={{ color: themeObj.lightFont, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
