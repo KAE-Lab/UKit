@@ -52,10 +52,10 @@ function Ligne({ theme, cle, valeur, ton }: {
 
 /** Ce que dit une decision, en une phrase — c'est la ligne qu'on vient lire. */
 function explication(trace: TracePropositions): string {
-    if (trace.decision === 'demander') return 'le dialogue doit etre affiche';
-    if (trace.decision === 'attendre') return 'le planning n a pas encore livre ses UE';
-    if (trace.uesInscrites.length === 0 && trace.edtLu === null) return 'le dossier n a rien rendu a proposer';
-    return 'rien a proposer : tout est deja suivi, filtre ou accepte';
+    if (trace.decision === 'demander') return 'le dialogue doit être affiché';
+    if (trace.decision === 'attendre') return 'le planning n’a pas encore livré ses UE';
+    if (trace.uesInscrites.length === 0 && trace.edtLu === null) return 'le dossier n’a rien rendu à proposer';
+    return 'rien à proposer : tout est déjà suivi, filtré ou accepté';
 }
 
 export default function ModMenuPropositions({ theme }: ModMenuPropositionsProps) {
@@ -76,15 +76,15 @@ export default function ModMenuPropositions({ theme }: ModMenuPropositionsProps)
     return (
         <View>
             <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginBottom: tokens.space.xs }}>
-                Ce que la derniere lecture du dossier a propose. Vide tant qu aucun parcours froid n a
-                eu lieu depuis le demarrage : « Actualiser le dossier » en rejoue un.
+                Ce que la dernière lecture du dossier a proposé. Vide tant qu’aucun parcours froid n’a
+                eu lieu depuis le démarrage : « Actualiser le dossier » en rejoue un.
             </Text>
 
             <Ligne theme={theme} cle="UE du planning (maintenant)" valeur={String(ues)} />
-            <Ligne theme={theme} cle="filtres poses" valeur={String(SettingsManager.getFilters().length)} />
+            <Ligne theme={theme} cle="filtres posés" valeur={String(SettingsManager.getFilters().length)} />
             <Ligne
                 theme={theme}
-                cle="edt personnel enregistre"
+                cle="edt personnel enregistré"
                 valeur={personnel === null ? '—' : `${personnel.nom} (${personnel.ressource})`}
             />
 
@@ -95,11 +95,11 @@ export default function ModMenuPropositions({ theme }: ModMenuPropositionsProps)
               */}
             {lecture === null ? (
                 <Text style={{ color: theme.warning, fontSize: tokens.fontSize.xs, marginTop: tokens.space.sm }}>
-                    1. aucun parcours froid depuis le demarrage — « Actualiser le dossier » en rejoue un
+                    1. aucun parcours froid depuis le démarrage — « Actualiser le dossier » en rejoue un
                 </Text>
             ) : (
                 <View style={{ marginTop: tokens.space.sm, paddingTop: tokens.space.xs, borderTopWidth: 1, borderTopColor: theme.border }}>
-                    <Ligne theme={theme} cle="1. dossier lu a" valeur={lecture.heure} />
+                    <Ligne theme={theme} cle="1. dossier lu à" valeur={lecture.heure} />
                     <Ligne theme={theme} cle="blueprint" valeur={lecture.blueprint} />
                     {lecture.sorties.map((sortie) => (
                         <Text key={sortie} style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs }}>
@@ -111,11 +111,11 @@ export default function ModMenuPropositions({ theme }: ModMenuPropositionsProps)
 
             {trace === null ? (
                 <Text style={{ color: theme.warning, fontSize: tokens.fontSize.xs, marginTop: tokens.space.sm }}>
-                    2. aucune decision calculee — les propositions n ont pas atteint l ecran
+                    2. aucune décision calculée — les propositions n’ont pas atteint l’écran
                 </Text>
             ) : (
                 <View style={{ marginTop: tokens.space.sm, paddingTop: tokens.space.xs, borderTopWidth: 1, borderTopColor: theme.border }}>
-                    <Ligne theme={theme} cle="2. decidee a" valeur={trace.heure} />
+                    <Ligne theme={theme} cle="2. décidée à" valeur={trace.heure} />
                     <Ligne
                         theme={theme}
                         cle="UE inscrites lues"
@@ -125,14 +125,14 @@ export default function ModMenuPropositions({ theme }: ModMenuPropositionsProps)
                     <Ligne theme={theme} cle="edt lu" valeur={trace.edtLu ?? '—'} />
                     <Ligne
                         theme={theme}
-                        cle="decision"
+                        cle="décision"
                         valeur={trace.decision}
                         ton={trace.decision === 'demander' ? theme.success : theme.warning}
                     />
                     <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.xxs }}>
                         {explication(trace)}
                     </Text>
-                    <Ligne theme={theme} cle="UE a masquer" valeur={String(trace.complement.length)} />
+                    <Ligne theme={theme} cle="UE à masquer" valeur={String(trace.complement.length)} />
                     {trace.complement.length > 0 ? (
                         <Text style={{ color: theme.font, fontSize: tokens.fontSize.xs }}>
                             {trace.complement.join(', ')}

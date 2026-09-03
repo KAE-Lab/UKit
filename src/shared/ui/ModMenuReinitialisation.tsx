@@ -13,8 +13,8 @@ import { reinitialiserCompletement } from '../services/ReinitialisationComplete'
 
 function confirmer(): void {
     Alert.alert(
-        'Reinitialisation complete',
-        'Tout effacer — reglages, caches, trousseau, documents — puis relancer, comme une nouvelle installation ?',
+        'Réinitialisation complète',
+        'Tout effacer — réglages, caches, trousseau, documents — puis relancer, comme une nouvelle installation ?',
         [
             { text: 'Annuler', style: 'cancel' },
             { text: 'Tout effacer', style: 'destructive', onPress: () => { void reinitialiserCompletement(); } },
@@ -33,10 +33,10 @@ export default function ModMenuReinitialisation({ theme }: { theme: AppThemeType
             }}
         >
             <Text style={{ color: theme.danger, fontWeight: 'bold', fontSize: tokens.fontSize.sm }}>
-                Reinitialisation complete
+                Réinitialisation complète
             </Text>
             <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, textAlign: 'center' }}>
-                reglages, caches, trousseau, documents — puis relance, comme une nouvelle installation
+                réglages, caches, trousseau, documents — puis relance, comme une nouvelle installation
             </Text>
         </TouchableOpacity>
     );

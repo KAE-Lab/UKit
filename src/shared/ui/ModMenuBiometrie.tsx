@@ -98,11 +98,11 @@ function Verdict({ theme, titre, resultat }: {
               */}
             <Ligne
                 theme={theme}
-                cle="biometrie"
+                cle="biométrie"
                 valeur={resultat.biometrie}
                 ton={resultat.biometrie === 'reussie' ? theme.success : theme.warning}
             />
-            <Ligne theme={theme} cle="cause biometrie" valeur={resultat.erreurBiometrie ?? '—'} />
+            <Ligne theme={theme} cle="cause biométrie" valeur={resultat.erreurBiometrie ?? '—'} />
             <Ligne theme={theme} cle="error" valeur={resultat.error ?? '—'} />
             <Ligne theme={theme} cle="warning" valeur={resultat.warning ?? '—'} />
             <Ligne theme={theme} cle="porte" valeur={resultat.etape} />
@@ -133,17 +133,17 @@ export default function ModMenuBiometrie({ theme }: ModMenuBiometrieProps) {
     return (
         <View>
             <Ligne theme={theme} cle="plateforme" valeur={`${Platform.OS} ${String(Platform.Version)}`} />
-            <Ligne theme={theme} cle="materiel" valeur={etat === null ? '…' : String(etat.materiel)} />
-            <Ligne theme={theme} cle="enrole" valeur={etat === null ? '…' : String(etat.enrole)} />
-            <Ligne theme={theme} cle="modalites" valeur={etat === null ? '…' : (etat.modalites.join(', ') || 'aucune')} />
+            <Ligne theme={theme} cle="matériel" valeur={etat === null ? '…' : String(etat.materiel)} />
+            <Ligne theme={theme} cle="enrôlé" valeur={etat === null ? '…' : String(etat.enrole)} />
+            <Ligne theme={theme} cle="modalités" valeur={etat === null ? '…' : (etat.modalites.join(', ') || 'aucune')} />
             <Ligne theme={theme} cle="niveau" valeur={etat === null ? '…' : etat.niveau} />
 
             <Bouton theme={theme} libelle="Demander — deux temps" onPress={() => jouer('deux-temps')} occupe={occupe} />
-            <Bouton theme={theme} libelle="Demander — politique d'avant" onPress={() => jouer('historique')} occupe={occupe} />
-            <Bouton theme={theme} libelle="Relire les capacites" onPress={relire} occupe={occupe} />
+            <Bouton theme={theme} libelle="Demander — politique d’avant" onPress={() => jouer('historique')} occupe={occupe} />
+            <Bouton theme={theme} libelle="Relire les capacités" onPress={relire} occupe={occupe} />
 
             {deuxTemps !== null && <Verdict theme={theme} titre="Deux temps (correctif)" resultat={deuxTemps} />}
-            {historique !== null && <Verdict theme={theme} titre="Politique d'avant" resultat={historique} />}
+            {historique !== null && <Verdict theme={theme} titre="Politique d’avant" resultat={historique} />}
         </View>
     );
 }

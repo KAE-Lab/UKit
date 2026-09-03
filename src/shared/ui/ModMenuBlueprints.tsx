@@ -80,11 +80,11 @@ export default function ModMenuBlueprints({ theme }: ModMenuBlueprintsProps) {
      * a « distant » prouve que le document publie est en place, le jouer prouve qu'il s'execute.
      */
     const jouer = useCallback(async (name: RunnableBlueprintName) => {
-        setRuns((etat) => ({ ...etat, [name]: 'en cours...' }));
+        setRuns((etat) => ({ ...etat, [name]: 'en cours…' }));
         const run = await runBlueprint(name);
         const verdict =
             run.ok === false
-                ? `echec ${run.failure.kind}`
+                ? `échec ${run.failure.kind}`
                 : `ok, ${Object.keys(run.outputs).length} sorties (${run.origin})`;
         setRuns((etat) => ({ ...etat, [name]: verdict }));
     }, []);
@@ -107,14 +107,14 @@ export default function ModMenuBlueprints({ theme }: ModMenuBlueprintsProps) {
                     disabled={busy}
                     style={{ flex: 1, backgroundColor: theme.danger, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center', opacity: busy ? 0.5 : 1 }}
                 >
-                    <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Embarque</Text>
+                    <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Embarqué</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={rafraichir}
                     disabled={busy}
                     style={{ flex: 1, backgroundColor: theme.primary, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center', opacity: busy ? 0.5 : 1 }}
                 >
-                    <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Rafraichir</Text>
+                    <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Rafraîchir</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -124,12 +124,12 @@ export default function ModMenuBlueprints({ theme }: ModMenuBlueprintsProps) {
 /** L'etat du dernier rafraichissement : la question qu'on se pose en premier. */
 function renderRapport(theme: AppThemeType, report: RefreshReport | null, busy: boolean) {
     const texte = busy
-        ? 'rafraichissement...'
+        ? 'rafraîchissement…'
         : report === null
           ? 'manifeste pas encore lu'
           : report.ok
-            ? `manifeste lu, ${report.entries.length} entree(s)`
-            : `manifeste non lu : ${report.reason ?? 'sans detail'}`;
+            ? `manifeste lu, ${report.entries.length} entrée(s)`
+            : `manifeste non lu : ${report.reason ?? 'sans détail'}`;
 
     return (
         <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, borderWidth: 1, borderColor: theme.border, marginBottom: tokens.space.sm }}>
@@ -160,7 +160,7 @@ function renderLigne(
                     {line.name.replace('ukit.', '')}
                 </Text>
                 <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginLeft: tokens.space.xs }}>
-                    v{line.version} {distant ? 'distant' : 'embarque'}
+                    v{line.version} {distant ? 'distant' : 'embarqué'}
                 </Text>
             </View>
 

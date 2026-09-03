@@ -20,7 +20,7 @@ import ModMenuTesteur from './ModMenuTesteur';
  * Table plutot que ternaire : le troisieme panneau a rendu la seconde forme illisible, et un
  * quatrieme n'ajoutera qu'une ligne ici.
  */
-const PANNEAUX = { time: 'Temps', blueprints: 'Blueprints', biometrie: 'Biometrie', propositions: 'Dossier', testeur: 'Testeur' } as const;
+const PANNEAUX = { time: 'Temps', blueprints: 'Blueprints', biometrie: 'Biométrie', propositions: 'Dossier', testeur: 'Testeur' } as const;
 type Panneau = keyof typeof PANNEAUX;
 
 const { width, height } = Dimensions.get('window');
@@ -203,7 +203,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {this.renderIndicator(theme, isActive, { marginRight: tokens.space.sm })}
-                <Text style={{ color: theme.font, fontWeight: 'bold', fontSize: tokens.fontSize.sm }}>Dev Menu</Text>
+                <Text style={{ color: theme.font, fontWeight: 'bold', fontSize: tokens.fontSize.sm }}>Menu dev</Text>
             </View>
             <View style={{ flexDirection: 'row' }}>
                 <TouchableOpacity onPress={this.minimizeMenu} style={{ padding: tokens.space.xs, marginRight: tokens.space.sm }}>
@@ -220,7 +220,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
         // Live Clock
         <View style={{ alignItems: 'center', marginBottom: tokens.space.md, backgroundColor: theme.cardBackground, padding: tokens.space.md, borderRadius: tokens.radius.md, borderWidth: 1, borderColor: theme.border }}>
             <Text style={{ color: isActive ? theme.success : theme.fontSecondary, fontWeight: 'bold', marginBottom: tokens.space.xs }}>
-                {isActive ? 'FAKE TIME ACTIVE' : 'REAL TIME'}
+                {isActive ? 'HEURE SIMULÉE' : 'HEURE RÉELLE'}
             </Text>
             <Text style={{ color: theme.font, fontSize: 32, fontWeight: 'bold', fontVariant: ['tabular-nums'], textAlign: 'center', width: '100%' }}>
                 {currentTime.format('HH:mm:ss')}
@@ -233,7 +233,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
 
     renderTimeSelectors = (theme: import('../theme/Theme').AppThemeType, selectedDate: Date) => (
         <>
-            <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginBottom: tokens.space.xs, fontWeight: 'bold' }}>SET FAKE TIME</Text>
+            <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginBottom: tokens.space.xs, fontWeight: 'bold' }}>SIMULER L’HEURE</Text>
             
             {/* DateTime selectors */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: tokens.space.md }}>
@@ -286,7 +286,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                         {isOffline ? 'HORS LIGNE' : 'EN LIGNE'}
                     </Text>
                     <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs }}>
-                        {isOffline ? 'app coupee, appareil intact' : 'couper le reseau de l app'}
+                        {isOffline ? 'app coupée, appareil intact' : 'couper le réseau de l’app'}
                     </Text>
                 </View>
             </View>
@@ -301,13 +301,13 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                 onPress={this.resetTime}
                 style={{ flex: 1, backgroundColor: theme.danger, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center' }}
             >
-                <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Reset</Text>
+                <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Réinitialiser</Text>
             </TouchableOpacity>
             <TouchableOpacity 
                 onPress={this.applyFakeTime}
                 style={{ flex: 1, backgroundColor: theme.primary, paddingVertical: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center' }}
             >
-                <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Apply</Text>
+                <Text style={{ color: theme.lightFont, fontWeight: 'bold' }}>Appliquer</Text>
             </TouchableOpacity>
         </View>
     );
