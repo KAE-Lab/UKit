@@ -3,8 +3,10 @@
 > **Jalon livré le 2026-09-03** — code, tests et documentation, en trois lots vérifiés l'un après
 > l'autre : le schéma et l'application (B1, les neuf étapes du protocole jouées sur iPhone réel), la
 > console (B2, politiques vérifiées avec un compte jetable, puis le compte du propriétaire créé et une
-> écriture journalisée depuis la console en local), les sondes (B3, six sondes en `ok` en local et une
-> adresse faussée en panne ; le premier run sur GitHub et l'issue de test suivent la fusion). Les écarts entre ce texte et ce
+> écriture journalisée depuis la console en local, puis déployée sur GitHub Pages), les sondes (B3,
+> six sondes en `ok` en local, puis le premier run sur GitHub avec une adresse faussée : cinq `ok`,
+> une panne « source injoignable », l'issue #21 ouverte et assignée — le plan de test #7 joué le
+> jour même). Les écarts entre ce texte et ce
 > qui a été livré sont dans [Écarts constatés](#écarts-constatés), en bas : le texte au-dessus reste
 > tel qu'il a été écrit.
 >
