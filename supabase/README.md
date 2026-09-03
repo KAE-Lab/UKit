@@ -6,7 +6,8 @@ ce qu'elle n'est pas, et comment on publie : [docs/backend.md](../docs/backend.m
 | Fichier | Contenu |
 |---|---|
 | [`schema.sql`](schema.sql) | tables, index, contraintes, **et les deux buckets** |
-| [`policies.sql`](policies.sql) | RLS : lecture publique restreinte, écriture réservée |
+| [`fonctions.sql`](fonctions.sql) | les deux gardes : qui est éditeur, et le journal par déclencheurs — dans un schéma `private` que l'API n'expose pas |
+| [`policies.sql`](policies.sql) | RLS : lecture publique restreinte, écriture réservée aux éditeurs authentifiés et à la clé de service |
 | [`etablissements.sql`](etablissements.sql) | le catalogue des universités : une ligne par établissement, `on conflict do update` |
 | [`batiments-bordeaux-inp.sql`](batiments-bordeaux-inp.sql) | les dix bâtiments de Bordeaux INP, relevés sur OpenStreetMap — la surcouche de `assets/locations.json` pour une université que le binaire n'embarque pas |
 
@@ -15,9 +16,16 @@ n'est pas reproductible, ne se relit pas en revue, et se perd le jour où il fau
 C'est aussi pourquoi les buckets sont créés en SQL plutôt qu'en trois clics : un bucket créé à la
 main est un bucket qu'on ne saura pas recréer.
 
-**Les deux fichiers sont rejouables.** `create table if not exists` d'un côté, `drop policy if
+**Les trois fichiers sont rejouables.** `create table if not exists` et `add column if not exists`
+d'un côté, `create or replace function` et `drop trigger if exists` au milieu, `drop policy if
 exists` avant chaque `create policy` de l'autre — Postgres n'ayant pas de `create policy if not
-exists`. Un fichier qu'on ne peut appliquer qu'une fois n'est pas reproductible.
+exists`. Un fichier qu'on ne peut appliquer qu'une fois n'est pas reproductible. Avant d'appliquer
+pour de vrai, les trois se jouent **à blanc** dans une transaction annulée :
+
+```bash
+(echo 'begin;'; cat supabase/schema.sql supabase/fonctions.sql supabase/policies.sql; echo 'rollback;') \
+  | psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -q
+```
 
 ## Créer le projet
 
@@ -38,8 +46,8 @@ européenne — les utilisateurs sont en France.
    `plaintext` est volontaire : la clé publiable est publique par conception, et la ranger en secret
    contredirait ce que dit [backend.md](../docs/backend.md). `eas secret:create`, qu'on trouve encore
    dans d'anciennes documentations, est **déprécié** au profit de `eas env:set`.
-3. Appliquer `schema.sql` puis `policies.sql`, **dans cet ordre** — les politiques référencent les
-   tables :
+3. Appliquer `schema.sql`, `fonctions.sql` puis `policies.sql`, **dans cet ordre** — les
+   déclencheurs visent des tables, et les politiques appellent `private.est_editeur()` :
 
    ```bash
    # Le mot de passe est celui de la base (Project Settings > Database), jamais une cle d API.
@@ -47,6 +55,7 @@ européenne — les utilisateurs sont en France.
    HOTE="db.<reference-du-projet>.supabase.co"
 
    psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/schema.sql
+   psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/fonctions.sql
    psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/policies.sql
    psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/etablissements.sql
    psql -h "$HOTE" -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/batiments-bordeaux-inp.sql
@@ -78,7 +87,51 @@ européenne — les utilisateurs sont en France.
      -H "apikey: $SUPABASE_ANON_KEY" -H "Content-Type: application/json" \
      -d '{"titre":"intrusion","emetteur":"anon"}'
    # attendu : {"code":"42501", ... "violates row-level security policy" ...}
+
+   # Les testeurs : la colonne `id` seule est lisible, la table entiere ne l'est pas.
+   curl -s "$SUPABASE_URL/rest/v1/testeurs?select=id" -H "apikey: $SUPABASE_ANON_KEY"   # attendu : []
+   curl -s "$SUPABASE_URL/rest/v1/testeurs"           -H "apikey: $SUPABASE_ANON_KEY"   # attendu : 42501
    ```
+
+   Et la même chose pour un compte **authentifié sans ligne dans `editeurs`** (créé par
+   `node tools/console/editeur.mjs --sans-droits`) : il se connecte à la console et chaque écriture
+   lui est refusée.
+
+## La console et son compte
+
+La [console web](../docs/pilotage.md) écrit avec un compte Supabase Auth (e-mail et mot de passe)
+dont l'e-mail figure dans la table `editeurs`. Il n'y a pas d'inscription libre — elle est désactivée
+dans *Authentication → Providers → Email* du projet — et pas de courriel sortant : le compte se crée
+et se répare depuis le poste du publieur, avec la clé de service.
+
+```bash
+# Creer le compte et lui donner les droits. Le mot de passe vient de l'environnement, jamais d'un
+# argument : il resterait sinon dans l'historique du terminal.
+CONSOLE_MOT_DE_PASSE='…' node tools/console/editeur.mjs --email kylian.mltre@gmail.com
+
+# Mot de passe oublie : le meme script le remplace.
+CONSOLE_MOT_DE_PASSE='…' node tools/console/editeur.mjs --email kylian.mltre@gmail.com --mot-de-passe
+
+# Un compte SANS droits, pour verifier que les politiques refusent bien un authentifie ordinaire.
+CONSOLE_MOT_DE_PASSE='…' node tools/console/editeur.mjs --email quelqu.un@exemple.test --sans-droits
+```
+
+Révoquer un éditeur est une ligne supprimée dans `editeurs` ; son compte survit et ne peut plus rien
+écrire.
+
+## Le journal
+
+Chaque écriture dans une table publiable — depuis la console, un script, le Studio ou `psql` — laisse
+une ligne dans `journal` : la table, l'opération, la clé de la ligne, l'avant, l'après, qui, quand.
+C'est un déclencheur qui l'écrit ([`fonctions.sql`](fonctions.sql)), aucun client ne peut l'éviter ni
+le forger, et la console l'exporte en JSON.
+
+Il grossit, lentement. La purge est écrite ici et **n'est pas automatisée** — ce qui s'efface tout
+seul ne se relit pas :
+
+```sql
+delete from public.journal where quand < now() - interval '1 year';
+```
 
 ## Migrations
 
@@ -144,8 +197,14 @@ qui ne corrige rien, et rien à l'écran ne le dirait.
 
 ## Ce qui n'a pas sa place ici
 
-Pas de fonction métier, pas de déclencheur, pas de vue qui calcule. La base porte de la donnée ; ce
-qui se calcule se calcule dans l'application, où c'est typé, relu et vérifié.
+Pas de fonction métier, pas de vue qui calcule. La base porte de la donnée ; ce qui se calcule se
+calcule dans l'application, où c'est typé, relu et vérifié.
+
+Elle porte **deux gardes**, depuis le jalon [6.1-B](../docs/phase-6/6-1-b-pilotage-a-distance.md), et
+la phrase ci-dessus tient toujours : `private.est_editeur()` dit qui a le droit d'écrire, et le
+déclencheur `journal` trace ce qui a été écrit. Ce sont des politiques d'accès exprimées en SQL —
+aucune des deux ne décide de ce que l'application affiche. Une troisième fonction qui calculerait
+quelque chose pour l'écran serait la première entorse, et elle se refuse.
 
 
 ## La colonne du jalon 6-J

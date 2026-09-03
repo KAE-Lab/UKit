@@ -135,6 +135,30 @@ Secrets requis : `EXPO_TOKEN`, `GOOGLE_PLAY_KEY` (écrit dans `google-play-key.j
 > sans effet : **le champ `version` de `app.config.ts` n'est pas mis à jour automatiquement** et doit
 > être modifié à la main avant de poser un tag.
 
+## La console de pilotage
+
+[`.github/workflows/console.yml`](../.github/workflows/console.yml) construit
+[`console/`](../console/README.md) et la déploie sur GitHub Pages à chaque poussée sur `master` qui
+la touche, en deux jobs — construire, déployer dans l'environnement `github-pages` — comme la
+documentation de Pages le prescrit. Elle n'embarque que l'URL du projet et la clé publiable, lues
+dans deux **variables** de dépôt (`SUPABASE_URL`, `SUPABASE_ANON_KEY`) : des valeurs publiques, déjà
+dans le binaire de l'application. La clé de service n'apparaît nulle part.
+
+À activer une fois à la main, avant le premier run : *Settings → Pages → Source : GitHub Actions*,
+et les deux variables. L'environnement `github-pages` est créé au premier déploiement et protégé par
+défaut sur la branche par défaut — le workflow tourne depuis `master`, pas depuis une branche de
+travail.
+
+## Les sondes du matin
+
+[`.github/workflows/sondes.yml`](../.github/workflows/sondes.yml) joue chaque matin, à 5 h UTC, les
+sondes de [`sondes/`](../sondes/README.md) : Python 3.12, `aetherius[browser]` épinglé, Chromium par
+Playwright (`--with-deps`), les tests unitaires du verdict, puis le runner. Il écrit la table `sondes`
+avec le secret `SUPABASE_SERVICE_ROLE_KEY` — le seul secret de ce workflow — et ouvre les issues avec
+le jeton du workflow (`issues: write`). Deux entrées en dispatch : `dry_run`, et `casser` pour
+vérifier la chaîne d'issue sans attendre une vraie panne. Il reste vert quand une source est en
+panne ; il passe au rouge quand une sonde n'a pas pu se prononcer.
+
 ## Les numéros de version
 
 Quatre endroits portent une version, et ils ne s'accordent pas aujourd'hui :

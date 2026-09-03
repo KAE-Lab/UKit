@@ -5,6 +5,7 @@ import moment from 'moment';
 
 import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import { PastilleService } from '../../../shared/messages/PastilleService';
 import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 
 export interface DayViewHeaderProps {
@@ -54,8 +55,9 @@ const renderTitle = (groupName: string | string[], theme: import('../../../share
         return <View style={{ height: HEADER_OFFSET }} />;
     }
     return (
-        // Ligne 1 : Titre "Planning"
-        <View style={{ paddingHorizontal: tokens.space.md }}>
+        // Ligne 1 : Titre "Planning", et a droite la pastille d'etat de service
+        // (shared/messages/PastilleService), alignee sur la ligne du titre par la meme marge basse.
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md }}>
             <Text style={{
                 fontSize: tokens.fontSize.title,
                 fontWeight: tokens.fontWeight.bold as never,
@@ -64,6 +66,7 @@ const renderTitle = (groupName: string | string[], theme: import('../../../share
             }}>
                 {Translator.get('MY_PLANNING')}
             </Text>
+            <PastilleService theme={theme} style={{ marginLeft: 'auto', marginBottom: tokens.space.md }} />
         </View>
     );
 };

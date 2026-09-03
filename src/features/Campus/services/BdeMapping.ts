@@ -14,6 +14,8 @@
  */
 
 import type { AnnonceRow } from '../../../shared/supabase/types';
+// Le module pur du ciblage, et non sa porte d'entree, qui tire `expo-constants` pour la version.
+import { projeterCiblage, type Ciblage } from '../../../shared/ciblage/ciblage';
 
 /**
  * Ce qu'un ecran manipule.
@@ -39,6 +41,8 @@ export interface BdeAnnonce {
     long_desc?: string;
     cta_text?: string;
     cta_link?: string;
+    /** A qui l'annonce s'adresse (jalon 6.1-B). Le service filtre ; l'ecran n'en sait rien. */
+    ciblage: Ciblage;
 }
 
 /** Une colonne nullable rend `null` ; le contrat applicatif, lui, omet ce qu'il n'a pas. */
@@ -91,6 +95,7 @@ export function projeterAnnonce(row: AnnonceRow): BdeAnnonce {
         long_desc: texte(row.description),
         cta_text: texte(row.cta_texte),
         cta_link: texte(row.cta_lien),
+        ciblage: projeterCiblage(row),
     };
 }
 

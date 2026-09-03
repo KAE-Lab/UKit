@@ -1,0 +1,3 @@
+# Le moteur, avec Playwright pour les sondes navigateur (CAS, Moodle). Le runner n'utilise que la
+# bibliotheque standard par ailleurs.
+aetherius[browser]==0.5.5

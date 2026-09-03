@@ -215,7 +215,9 @@ Ce que la carte du code a corrigé dans le texte ci-dessus, et les décisions pr
   de l'emploi du temps (l'étape porte désormais son cadre clavier, comme le compte et le lien).
 - **L'attente de la liste des établissements ne se voit pas sur un bon réseau**, même après une
   réinitialisation complète : la base répond pendant l'étape d'introduction, bien avant la troisième
-  étape. C'est un filet pour un réseau lent, pas un écran du parcours nominal.
+  étape. C'est un filet pour un réseau lent, pas un écran du parcours nominal. **Observée le
+  2026-09-03**, pendant la vérification de 6.1-B : après une réinitialisation complète avec la base
+  injoignable, l'étape a marqué son attente, puis a affiché le socle complet — le filet fonctionne.
 - **« Suivant » et le retour de l'accueil sont bloqués** tant que la connexion lancée depuis le
   formulaire tourne ; la limite « un échec ne se voit qu'après coup » disparaît. **« Tu es d'un autre
   campus ? »** passe sous le bouton de connexion, désactivé avec lui.

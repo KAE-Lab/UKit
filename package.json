@@ -16,6 +16,9 @@
     "parity": "node tools/parity/run.mjs",
     "pdfjs:vendor": "node tools/pdfjs/vendor.mjs",
     "blueprints:publish": "node tools/publish-blueprints.mjs",
+    "console:dev": "npm --prefix console run dev",
+    "console:build": "npm --prefix console run build",
+    "console:editeur": "node tools/console/editeur.mjs",
     "content:import": "node tools/import-ukit-data.mjs",
     "prepare": "husky",
     "commit": "cz"

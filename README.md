@@ -155,8 +155,10 @@ src/
     utils/             utilitaires de formatage
 blueprints/          les fichiers d'instructions embarqués (le socle hors ligne)
   portails/            les portails d'établissements, publiés d'abord, embarqués à la release suivante
-supabase/            schéma et politiques d'accès de la base de publication
-tools/               publication des Blueprints, harnais de parité
+supabase/            schéma, gardes et politiques d'accès de la base de publication
+console/             la console de pilotage : publier sans SQL, avec un compte, en laissant une trace
+sondes/              les sondes du matin : chaque source jouée sans identifiant, une issue au changement
+tools/               publication des Blueprints, compte éditeur de la console, harnais de parité
 assets/              icônes, visuels, référentiel des bâtiments du campus, pdf.js vendorisé
 docs/                cette documentation
 ```
@@ -289,6 +291,20 @@ livré ; elle est mise à jour à chaque contribution.
   publiée, vérifiée à l'empreinte à chaque lecture ; le rafraîchissement est hors du chemin d'un run,
   et un panneau de diagnostic dit d'où vient chaque Blueprint.
   [docs/blueprints.md](docs/blueprints.md)
+- [x] **Pilotage à distance** (6.1-B) — le propriétaire du produit parle aux utilisateurs sans
+  release : des **messages de service** — information en bandeau, avertissement et incident en
+  feuille, l'incident rappelé tant qu'il dure par une **pastille d'état de service** en tête de chaque
+  onglet, grise quand tout va bien et qui mène alors au formulaire — lus au démarrage et au retour au premier
+  plan, mémorisés « vus » par appareil, mis en cache pour se montrer dès le lancement. Messages et
+  annonces se **ciblent** par campus, par fenêtre de versions et par **audience** : un appareil
+  enregistré comme testeur — par un identifiant d'installation qui ne quitte jamais le téléphone —
+  voit un contenu avant tout le monde. Chaque écriture dans la base laisse une trace dans un
+  **journal** que rien ne contourne. Et une **console web** sur GitHub Pages — une liste et un
+  formulaire génériques par table, l'état des sources, le journal exportable — publie tout cela sans
+  requête SQL, avec un compte dont chaque geste est tracé. Et chaque matin, des **sondes** jouent
+  chaque source sans identifiant depuis un runner GitHub et ouvrent une issue quand une source tombe —
+  ce qui manquait l'été où le relais est mort sans que personne ne le sache.
+  [docs/pilotage.md](docs/pilotage.md)
 
 ### Fonctionnalités
 
@@ -317,7 +333,8 @@ livré ; elle est mise à jour à chaque contribution.
   écran où une panne de la source **se dit** au lieu d'afficher une liste vide. Les cartes sont au
   **format affiche** — visuel 1:1 plein cadre, jamais recadré, pied minimal avec l'émetteur en
   pastille — et la liste complète est une grille de deux colonnes ; la fiche épouse le ratio du
-  visuel.
+  visuel. Depuis la 6.1, une annonce se **cible** — un campus, une fenêtre de versions, les seuls
+  testeurs — et le tri se fait sur l'appareil.
   [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
 - [x] **Scolarité** — connexion CAS, récupération de l'identité au premier login puis rafraîchissement
   léger, compteur de messages non lus, verrou biométrique, navigateur intégré avec remplissage
@@ -396,6 +413,7 @@ document.
 | [docs/sources-externes.md](docs/sources-externes.md) | inventaire complet des sources distantes, endpoints et fragilités |
 | [docs/blueprints.md](docs/blueprints.md) | les fichiers d'instructions : frontière, écriture, publication d'une correction |
 | [docs/backend.md](docs/backend.md) | la base de publication : schéma, politiques, clés, limites |
+| [docs/pilotage.md](docs/pilotage.md) | le pilotage à distance : messages de service, audience testeurs, ciblage, journal, console, sondes |
 | [docs/phase-6/](docs/phase-6/README.md) | le cadrage de la migration vers les Blueprints, jalon par jalon |
 | [docs/theme.md](docs/theme.md) | tokens, palettes, composants partagés, **recette d'écran** |
 | [docs/inventaire-visuel.md](docs/inventaire-visuel.md) | l'état visuel mesuré du dépôt, avant le socle : littéraux, divergences, manques |

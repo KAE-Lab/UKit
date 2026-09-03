@@ -1,0 +1,31 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.sonde.moodle",
+  "description": "Prouve que la chaine SSO de Moodle, initiee par l'IdP (profil Unsolicited), atteint le formulaire du CAS — la porte que le widget Moodle emprunte (ukit.portail.bordeaux.moodle). Aucun identifiant : la sonde s'arrete au formulaire. C'est exactement ce qui a casse le soir de la sortie de la 6.0 et qui n'aurait ete vu par personne avant les etudiants.",
+  "act": "continuum",
+  "inputs": {
+    "sso": {
+      "type": "string",
+      "required": true,
+      "description": "L'adresse Unsolicited SSO de l'IdP, telle que le catalogue la publie (services.moodle)."
+    }
+  },
+  "options": {
+    "timeout_ms": 40000,
+    "debug": false
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ inputs.sso }}"
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username",
+      "timeout_ms": 25000,
+      "on_timeout": "fail:MOODLE_INDISPONIBLE",
+      "note": "La cascade IdP -> CAS prend quelques secondes ; le plafond est large parce qu'un plafond trop bas coute une fausse panne, un plafond trop haut ne coute que du temps."
+    }
+  ],
+  "outputs": {}
+}

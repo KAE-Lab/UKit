@@ -35,6 +35,16 @@ export interface AnnonceRow {
     readonly expire_le: string | null;
     readonly active: boolean;
     readonly creee_le: string;
+    /**
+     * Le ciblage (jalon 6.1-B) : l'audience, les campus, la fenetre de versions. `audience` est
+     * `string` et non l'union des deux valeurs connues, pour la meme raison que `VisuelRow.domaine` :
+     * une publication peut en ouvrir une troisieme avant que le parc ne la connaisse, et la
+     * projection (`shared/ciblage`) l'ignore. Les trois autres sont nulles quand rien n'est cible.
+     */
+    readonly audience: string;
+    readonly etablissements: string[] | null;
+    readonly version_min: string | null;
+    readonly version_max: string | null;
 }
 
 /**
@@ -137,15 +147,44 @@ export interface AppReleaseRow {
     readonly message: string | null;
 }
 
-/** Bandeau de service : maintenance, incident, information datee. */
+/**
+ * Un message de service : information, avertissement, incident (jalon 6.1-B).
+ *
+ * `cle` est la memoire « vu » de l'appareil — stable d'une republication a l'autre, contrairement
+ * a l'id. `niveau` reste type par l'union : la presentation en depend, et un niveau inconnu serait
+ * un message qu'on ne saurait pas montrer ; la projection le rejette. Le ciblage suit les memes
+ * regles que celui des annonces.
+ */
 export interface ServiceMessageRow {
     readonly id: string;
+    readonly cle: string;
     readonly niveau: 'info' | 'avertissement' | 'incident';
     readonly titre: string;
     readonly corps: string | null;
     readonly actif: boolean;
     readonly publie_le: string;
     readonly expire_le: string | null;
+    readonly audience: string;
+    readonly etablissements: string[] | null;
+    readonly version_min: string | null;
+    readonly version_max: string | null;
+}
+
+/**
+ * Un appareil enregistre comme testeur. L'application ne lit que cette colonne — le privilege ne
+ * lui en accorde pas d'autre — et compare l'identifiant a celui de son trousseau, chez elle.
+ */
+export interface TesteurRow {
+    readonly id: string;
+}
+
+/** L'etat d'une source tierce, tel que les sondes du matin l'ecrivent. Lue par la console ; l'application ne la lit pas encore. */
+export interface SondeRow {
+    readonly source: string;
+    readonly etat: string;
+    readonly detail: unknown;
+    readonly mesure_le: string;
+    readonly change_le: string;
 }
 
 /** L'index de livraison des Blueprints. Lu par le script de publication, pas par l'application. */
@@ -177,10 +216,13 @@ interface TableEnLecture<Row> {
 /**
  * Le schema, tel que le client le connait.
  *
- * Toutes les tables y figurent, y compris celles qu'aucun service ne lit encore : `blueprints` est
- * branchee au jalon 6-C, `batiments` au 6-D, `etablissements` au 6-G, `visuels` a la passe de
- * finition. Les declarer maintenant coute sept lignes et evite que le premier appelant ait a decider
- * seul de leur forme.
+ * Toutes les tables que l'application peut lire y figurent, y compris celles qu'aucun service ne lit
+ * encore : `blueprints` est branchee au jalon 6-C, `batiments` au 6-D, `etablissements` au 6-G,
+ * `visuels` a la passe de finition, `service_messages` et `testeurs` au 6.1-B. Les declarer d'avance
+ * coute une ligne et evite que le premier appelant ait a decider seul de leur forme.
+ *
+ * `journal` et `editeurs` n'y sont **pas** : ce sont les tables de la console, et les politiques les
+ * refusent a `anon`. Les declarer ici pretendrait que l'application peut les lire.
  */
 export interface Database {
     public: {
@@ -193,6 +235,8 @@ export interface Database {
             salutations: TableEnLecture<SalutationRow>;
             blueprints: TableEnLecture<BlueprintRow>;
             visuels: TableEnLecture<VisuelRow>;
+            testeurs: TableEnLecture<TesteurRow>;
+            sondes: TableEnLecture<SondeRow>;
         };
         Views: Record<string, never>;
         Functions: Record<string, never>;

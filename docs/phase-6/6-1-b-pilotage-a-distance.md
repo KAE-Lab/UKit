@@ -1,5 +1,13 @@
 # 6.1-B — Pilotage à distance : messages, audiences, console, sondes
 
+> **Jalon livré le 2026-09-03** — code, tests et documentation, en trois lots vérifiés l'un après
+> l'autre : le schéma et l'application (B1, les neuf étapes du protocole jouées sur iPhone réel), la
+> console (B2, politiques vérifiées avec un compte jetable, puis le compte du propriétaire créé et une
+> écriture journalisée depuis la console en local), les sondes (B3, six sondes en `ok` en local et une
+> adresse faussée en panne ; le premier run sur GitHub et l'issue de test suivent la fusion). Les écarts entre ce texte et ce
+> qui a été livré sont dans [Écarts constatés](#écarts-constatés), en bas : le texte au-dessus reste
+> tel qu'il a été écrit.
+>
 > **Le jalon qui évite la prochaine panne — ou la rend visible le matin même.** Il donne au
 > propriétaire du produit ce que la soirée de release a montré qu'il lui manquait : parler aux
 > utilisateurs sans release, publier sans requête SQL, et savoir avant eux qu'une source a changé.
@@ -160,3 +168,68 @@ l'application GitHub, sans autre service. La console montre la même chose en pa
 - **Une issue GitHub est une notification pauvre.** Si la fréquence des alertes le justifie, un
   webhook Discord se branche au même endroit du workflow.
 - **La console n'est pas hors ligne, ni collaborative** : un éditeur, une session.
+
+## Écarts constatés
+
+Ce que la carte du code, puis l'appareil, ont corrigé dans le texte ci-dessus.
+
+- **L'identifiant d'installation vit dans un panneau du ModMenu**, pas derrière les sept touchers :
+  ce geste ouvrait déjà le ModMenu, présent en production, et un second geste caché aurait été un
+  geste de plus à retenir. Le panneau *Testeur* porte aussi « Relire les messages » et « Oublier les
+  vus », sans lesquels chaque cas du plan de test coûtait un redémarrage.
+- **`testeurs.id` est un `uuid`**, pas un `text` : la console colle un identifiant lu sur un écran,
+  et le type refuse une coquille. Et **l'appareil n'envoie jamais son identifiant** : le rôle public
+  ne lit que la colonne `id` (un privilège de colonne, les noms restent privés), l'application compare
+  chez elle. L'audience est un filtre d'affichage, pas une confidentialité : les identifiants sont
+  énumérables, opaques, et usurper un testeur demanderait d'écrire le trousseau d'un appareil.
+- **L'UUID vient d'`expo-modules-core`** (`uuid.v4()`, déjà dans chaque build), pas d'un module natif
+  de plus : Expo Go est resté utilisable pour vérifier le jalon.
+- **Les messages ont un cache** (`messages@1`), à la différence des annonces : sans lui, le rappel
+  d'un incident disparaissait au premier lancement hors ligne et pendant la seconde qui précède la
+  réponse de la base. Les « vus » ne s'élaguent que contre une lecture réseau réussie.
+- **La mémoire « vu » n'était pas relue au démarrage** — trouvé sur appareil : trois messages fermés
+  revenaient à chaque vraie relance. Corrigé, et une écriture ne peut plus précéder la lecture.
+- **Le rappel d'un incident n'est pas un bandeau discret** : il cachait le grand titre des onglets
+  (retour d'appareil). C'est la **pastille d'état de service**, toujours présente à droite du grand
+  titre des quatre onglets, au gabarit des boutons d'en-tête — grise quand tout va bien et elle ouvre
+  alors « Rien à signaler » avec le lien du formulaire (`services.adaptation`, dans le navigateur
+  intégré) ; rouge en incident et elle rouvre la feuille. Le bandeau flottant ne sert qu'aux
+  informations, au gabarit des en-têtes. Un écran poussé ne montre pas la pastille.
+- **Une chose à la fois pour ce qui se lit** (modale ou bandeau), mais la pastille coexiste : un
+  incident ne cesse pas d'être en cours parce qu'une information arrive.
+- **Pas de message pendant le parcours d'accueil**, et **une seule langue** par message — décisions
+  du 2026-09-02/03.
+- **Une version d'application illisible ignore les bornes** (fail open) : un incident ne doit jamais
+  être caché par un défaut de forme de notre côté ; la base garantit la forme des bornes par un `check`.
+- **Les fonctions vivent dans un schéma `private`**, `security definer`, chemin de recherche vide,
+  dans un fichier `fonctions.sql` appliqué **entre** le schéma et les politiques — et **le
+  déclencheur du journal doit être `security definer`** : sans cela, l'éditeur, qui n'a pas de
+  politique d'écriture sur `journal` et ne doit pas en avoir, voyait chaque écriture refusée sur la
+  trace qui la suit. `auth.jwt() ->> 'email'` plutôt qu'`auth.email()`. Le journal couvre aussi
+  `app_release`. Les grants d'écriture d'`anon` sont révoqués sur tout le schéma, et sa lecture de
+  `journal` et `editeurs` aussi — une RLS sans politique rend une liste vide, pas un refus.
+- **Deux doctrines de `supabase/` sont réécrites** : « pas de fonction, pas de déclencheur » et
+  « aucune politique d'écriture, jamais ». La base porte de la donnée et deux gardes.
+- **Le compte éditeur se crée par script** (`tools/console/editeur.mjs`, mot de passe en variable),
+  pas par lien d'invitation : aucune configuration de redirection à faire dans le tableau de bord, et
+  pas de courriel sortant. `--sans-droits` crée le compte du test #8. Les inscriptions libres sont
+  désactivées à la main.
+- **La console est sobre et soignée**, pas rudimentaire en finition : une liste et un formulaire
+  génériques pilotés par un descripteur par table, CSS maison, clair et sombre. Elle ne réimporte pas
+  les types de l'application : les descripteurs sont son schéma. Elle porte aussi la page *Version
+  publiée* (`app_release`), que le protocole de sortie renseigne. `SUPABASE_URL` et
+  `SUPABASE_ANON_KEY` sont des **variables** de dépôt, la clé de service seule est un secret.
+- **Le runner des sondes est en Python** : la ligne de commande du moteur n'a pas de sortie lisible
+  par une machine, et sa façade en mémoire rend un résultat typé. Mesuré : le moteur avale toute
+  erreur en un texte et seule l'étape nommée garde son code — le verdict se lit sur l'étape, et il
+  distingue **panne de source** (issue, workflow vert) d'**erreur de sonde** (rien, workflow rouge).
+- **La sonde de la base de publication est native**, en Python : vérifier les empreintes est du
+  calcul. Quatre Blueprints et une vérification. Les adresses du manifeste sont relatives à lui, et
+  la sonde les résout comme l'appareil.
+- **Les entrées des sondes viennent du catalogue publié** (CAS, ENT, projet ADE, première ressource),
+  pas de `sondes.json` : sinon chaque rentrée produirait une fausse panne le lendemain.
+- **Le workflow des sondes prend `casser` en entrée** : fausser l'adresse d'une source
+  (`127.0.0.1:4`) prouve la chaîne d'issue sans attendre une vraie panne.
+- **Un défaut hors périmètre, inscrit au registre pour 6.1-C** : les écrans déjà montés ne se
+  relisent pas au retour au premier plan — annonces, carrousel du tableau de bord, et le
+  « Aujourd'hui » du Planning après une nuit en arrière-plan (mesuré en production le 2 septembre).

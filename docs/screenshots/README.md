@@ -149,6 +149,13 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 | `reglages-langue.png` | modale de langue | complémentaire |
 | `reglages-etablissement.png` | modale d'établissement : la liste, puis la confirmation | **à reprendre** (6-K : boutons de confirmation pleins) |
 
+### Pilotage — [pilotage.md](../pilotage.md)
+
+| Fichier | Contenu | Priorité |
+|---|---|---|
+| `pilotage-bandeau-info.png` | le bandeau flottant d'une information, sous la barre d'état, par-dessus le tableau de bord Campus | attendue |
+| `pilotage-incident.png` | la pastille d'état de service en rouge, à droite du grand titre d'un onglet | attendue |
+
 ### Socle
 
 | Fichier | Contenu | Document | Priorité |

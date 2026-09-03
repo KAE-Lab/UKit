@@ -140,6 +140,29 @@ transtypage commenté. Le corriger à la source demanderait de retyper un fichie
 1 100 lignes — hors du périmètre d'une session d'écran, et à faire une fois pour toutes plutôt que
 trois fois à moitié.
 
+### Le contenu publié n'atteint les écrans déjà montés qu'au lancement suivant
+
+Rencontré le 2026-09-03 pendant la vérification du jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md),
+et déjà noté sous une forme plus étroite pour les visuels ([backend.md](backend.md)). Les surcouches
+publiées se **rafraîchissent** bien au retour au premier plan — Blueprints, lieux, visuels, catalogue,
+salutations, messages —, mais ce sont les **écrans** qui ne se relisent pas : le tableau de bord
+Campus garde ce qu'il a chargé au montage (il ne se démonte jamais), et une liste d'annonces ne
+refait sa lecture qu'en se remontant. Une annonce ciblée sur un autre campus, ou rendue à tous,
+n'apparaît donc qu'après une vraie relance ; quelqu'un qui garde l'application en arrière-plan peut
+attendre longtemps une mise à jour pourtant arrivée.
+
+Le même défaut a une **seconde forme, mesurée en production** le 2 septembre 2026 : l'onglet
+Planning ouvert le 1er et laissé en arrière-plan jusqu'au lendemain, « Aujourd'hui » menait encore au
+1er — le jour courant est calculé au montage, jamais au retour au premier plan. Ce n'est pas une
+publication qui manque, c'est la même absence de « relecture au retour ».
+
+**À corriger dans la passe de code [6.1-C](phase-6/6-1-c-passe-de-code.md)**, pas ici : la réponse est
+une politique de rafraîchissement au retour au premier plan pour les écrans qui lisent notre base et
+pour le jour courant du Planning, et elle se décide écran par écran — rejouer chaque chargement à
+chaque retour serait un arbitrage produit (réseau, position, quatre sources tierces), pas un
+correctif. La contrainte à respecter : les messages de service, eux, arrivent bien au retour (l'hôte
+est abonné), et c'est ce comportement-là qu'il faut étendre, pas l'inverse.
+
 ## Limites connues, qui ne sont pas des défauts
 
 - **La précision horaire d'une bibliothèque fermée reste en français.** Le fournisseur ne publie

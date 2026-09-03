@@ -35,6 +35,14 @@
 
 ### Campus (G5, G6)
 
+- **Les écrans qui lisent notre base se relisent au retour au premier plan**, et le Planning
+  recalcule son « Aujourd'hui » — le défaut « le contenu publié n'atteint les écrans déjà montés
+  qu'au lancement suivant », inscrit au registre le 2026-09-03 pendant la vérification de
+  [6.1-B](6-1-b-pilotage-a-distance.md) ([defauts-fonctionnels.md](../defauts-fonctionnels.md)). Une
+  politique par écran, décidée ici : les annonces (une requête légère vers notre base) et le jour
+  courant se relisent à chaque retour ; les quatre sources tierces du tableau de bord ne se rejouent
+  pas à chaque retour, elles gardent leur cache et leur bouton.
+
 - Les sections du tableau de bord ont un **état d'erreur distinct** de l'état vide, comme les
   listes complètes depuis 6-K. C'est le dernier endroit où une source morte ressemblait à une
   liste vide.

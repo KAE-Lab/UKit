@@ -45,6 +45,37 @@ la première soirée en production a montré de fragile, réparé avant tout con
 
 ### Ajouté
 
+- **Des messages de service, sans release** (6.1-B). Une information se montre en bandeau flottant
+  en haut de l'écran, un avertissement et un incident en feuille ; l'incident reste rappelé tant
+  qu'il dure par la **pastille d'état de service** — un « i » à droite du grand titre de chaque
+  onglet, gris quand tout va bien, rouge en incident. Grise, elle ouvre « Rien à signaler » et le lien
+  du formulaire ; rouge, elle rouvre la feuille. Lus au démarrage et au retour au premier plan, mémorisés « vus »
+  par appareil — un message fermé ne revient pas —, mis en cache pour se montrer dès le lancement.
+  La table existait depuis le jalon 6-B, vide et sans lecteur.
+- **Les messages et les annonces se ciblent** : un campus, une fenêtre de versions de l'application
+  (« la 6.1 est disponible » ne s'affiche qu'à qui ne l'a pas), et une **audience** — `testeurs`
+  pour regarder un contenu sur son téléphone avant de l'envoyer à tout le monde. Le tri se fait sur
+  l'appareil ; la base ne sait rien de lui.
+- **Un identifiant d'installation**, tiré une fois et gardé au trousseau, qui ne sert qu'à dire si
+  l'appareil est un testeur — et qui ne quitte jamais le téléphone : l'application lit la liste des
+  appareils enregistrés et compare chez elle. Il s'affiche dans un nouvel onglet *Testeur* du menu
+  de développement, avec deux gestes qui rendent le canal vérifiable sans relancer : relire les
+  messages, oublier les vus.
+- **Une console web de pilotage** (6.1-B), sur GitHub Pages : publier une annonce, un message de
+  service, un testeur, un visuel, une ligne de catalogue sans requête SQL — une liste et un
+  formulaire génériques par table, les avertissements que chaque table mérite, le visuel téléversé
+  avec son adresse versionnée, l'état des sources, le journal filtrable et exportable. Un compte
+  Supabase Auth dont l'e-mail figure dans `editeurs` ; les Blueprints restent au script.
+- **Des sondes chaque matin** (6.1-B) : un workflow joue chaque source tierce sans identifiant —
+  Celcat, les deux CAS, la chaîne SSO de Moodle, l'export ADE, le manifeste de publication et ses
+  empreintes —, écrit son état dans la base, et ouvre une issue GitHub quand une source tombe, la
+  ferme quand elle revient. Le relais mort tout un été et le Moodle cassé le soir de la sortie
+  auraient été vus le matin même.
+- **Un journal en base** : chaque écriture dans une table publiable — depuis la console, un script,
+  le Studio ou psql — laisse l'avant, l'après, qui et quand, par un déclencheur que rien ne
+  contourne. Avec lui, les deux premières gardes de la base, dans un schéma que l'API n'expose pas :
+  qui est éditeur, et la trace. Les politiques d'écriture pour un compte authentifié listé dans
+  `editeurs` arrivent en même temps, pour la console.
 - **« Tu es d'un autre campus ? »** sous le formulaire de connexion, dans l'onglet comme à l'accueil :
   le choix d'établissement, la même bascule que les Réglages.
 - **Le PDF s'affiche dans l'application sur Android**, dessiné par pdf.js embarqué dans la vue —

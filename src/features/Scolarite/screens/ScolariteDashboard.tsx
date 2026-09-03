@@ -31,6 +31,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
+import { PastilleService } from '../../../shared/messages/PastilleService';
 import { AppContext } from '../../../shared/services/AppCore';
 import { getCodeEtablissementActif } from '../../../shared/etablissements';
 import { basculerEtablissement } from '../../../shared/etablissements/bascule';
@@ -72,11 +73,16 @@ const OngletDeconnecte = ({ theme, accent, defilement, onDebut }) => {
                             extrapolate: 'clamp',
                         }),
                     }]}
-                    pointerEvents="none"
+                    pointerEvents="box-none"
                 >
-                    <Text style={[styles.titreDOngletTexte, { color: theme.font }]}>
-                        {Translator.get('SCOLARITY')}
-                    </Text>
+                    {/* `box-none` sur la rangee et `none` sur le titre : le formulaire dessous garde
+                        ses touchers, seule la pastille d'etat de service prend les siens. */}
+                    <View style={styles.rangeeDuTitre} pointerEvents="box-none">
+                        <Text style={[styles.titreDOngletTexte, { color: theme.font }]} pointerEvents="none">
+                            {Translator.get('SCOLARITY')}
+                        </Text>
+                        <PastilleService theme={theme} style={styles.rappel} />
+                    </View>
                 </Animated.View>
                 <ScolariteLoginView
                     theme={theme}
@@ -273,11 +279,21 @@ const styles = StyleSheet.create({
         zIndex: 10,
         paddingBottom: tokens.space.sm,
     },
+    rangeeDuTitre: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingRight: tokens.space.md,
+    },
     titreDOngletTexte: {
         fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold as '700',
         marginBottom: tokens.space.md,
         paddingHorizontal: tokens.space.md,
+    },
+    // Pousse a droite, et la meme marge basse que le titre : la pastille s'aligne sur sa ligne.
+    rappel: {
+        marginLeft: 'auto',
+        marginBottom: tokens.space.md,
     },
 });
 

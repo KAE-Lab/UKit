@@ -281,6 +281,20 @@ Acquises, et qui ont coûté à être trouvées :
   moderne ». Deux éléments ont dû être ramenés à cette règle après coup, la surface d'icône d'un état
   vide et la barre de recherche Campus : c'est le genre d'écart qui coûte un aller-retour à chaque
   fois qu'il est refait.
+- **Un bandeau est une carte flottante en haut, par-dessus le contenu — jamais insérée dans
+  l'écran, et jamais permanente.** Décision du jalon 6.1-B pour les messages de service, et elle
+  vaut pour tout bandeau à venir : une carte sous la barre d'état, largeur écran moins les marges,
+  `radius.md`, `shadow.md`, au gabarit des en-têtes (la hauteur des boutons d'en-tête, le corps `md`
+  demi-gras), qui ne déplace aucun écran et laisse passer les touchers autour d'elle
+  ([`Bandeau.tsx`](../src/shared/ui/Bandeau.tsx)). Insérer un bandeau sous l'en-tête ferait sauter
+  le contenu à l'apparition ; un toast du bas ne se ferme pas et ne dure pas. **Ce qui doit rester
+  visible n'est pas un bandeau** : le rappel d'un incident en cours a d'abord été un bandeau
+  permanent, et il cachait le grand titre des onglets (retour d'appareil du 2026-09-03). Il est
+  devenu la **pastille d'état de service**, au gabarit de `HeaderButton`, posée par chaque en-tête
+  d'onglet tout à droite de la rangée du titre, toujours présente — grise quand tout va bien, rouge en
+  incident ([`PastilleService.tsx`](../src/shared/messages/PastilleService.tsx)). Un état durable prend
+  sa place dans la rangée du titre, il ne flotte pas dessus ; et un indicateur toujours là n'inquiète
+  pas, c'est sa couleur qui informe.
 - **`accentFont` est le rouge destructif** (`#FF3B30`), pas « texte sur fond accent ». Pour un libellé
   sur fond `primary`, c'est **`lightFont`** — blanc dans les deux thèmes. Trouvé au jalon 6-B.
 - **Un composant ne remonte dans [`shared/ui/`](../src/shared/ui/) qu'à partir de deux usages.** C'est

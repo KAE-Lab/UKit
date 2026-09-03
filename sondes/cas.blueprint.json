@@ -1,0 +1,36 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.sonde.cas",
+  "description": "Prouve qu'un CAS sert son formulaire de connexion, et rien d'autre : aucun identifiant, aucune lecture. La forme est celle de ukit.portail.verification — `renew=true` force Apereo a redemander les identifiants meme si un ticket vit, donc le formulaire est GARANTI et son absence veut dire que le CAS n'a pas repondu. Le `service` doit etre une adresse que ce CAS connait (l'ENT du catalogue), deja encodee par le runner. Sans `session.persist` : un runner ephemere part toujours a froid, et une sonde n'a pas de session a garder. `debug` reste faux : le run est headless, et le runner refuse un Blueprint qui dirait le contraire.",
+  "act": "continuum",
+  "inputs": {
+    "cas": {
+      "type": "string",
+      "required": true,
+      "description": "La racine du CAS, telle que le catalogue la publie (services.cas)."
+    },
+    "service": {
+      "type": "string",
+      "required": true,
+      "description": "Une adresse que ce CAS connait, DEJA ENCODEE pour tenir dans une chaine de requete."
+    }
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ inputs.cas }}/login?service={{ inputs.service }}&renew=true"
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:CAS_INDISPONIBLE",
+      "note": "Le formulaire est garanti par renew=true : son absence dit que le CAS n'a pas repondu, pas qu'une session vivait."
+    }
+  ],
+  "outputs": {}
+}

@@ -26,6 +26,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Translator from '../../../shared/i18n/Translator';
+import { PastilleService } from '../../../shared/messages/PastilleService';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { getCodeEtablissementActif, serviceEtablissement } from '../../../shared/etablissements';
 import { basculerEtablissement } from '../../../shared/etablissements/bascule';
@@ -49,10 +50,13 @@ export function CampusNonRelie({ theme, onDemande }: CampusNonRelieProps) {
     return (
         <View style={[styles.page, { backgroundColor: theme.background }]}>
             {/* Le gabarit du titre des onglets, a l'identique : meme position, meme corps. */}
-            <View style={[styles.titreDOnglet, { paddingTop: insets.top || 0 }]} pointerEvents="none">
-                <Text style={[styles.titreDOngletTexte, { color: theme.font }]}>
-                    {Translator.get('SCOLARITY')}
-                </Text>
+            <View style={[styles.titreDOnglet, { paddingTop: insets.top || 0 }]} pointerEvents="box-none">
+                <View style={styles.rangeeDuTitre} pointerEvents="box-none">
+                    <Text style={[styles.titreDOngletTexte, { color: theme.font }]} pointerEvents="none">
+                        {Translator.get('SCOLARITY')}
+                    </Text>
+                    <PastilleService theme={theme} style={styles.rappel} />
+                </View>
             </View>
 
             <ScrollView
@@ -112,11 +116,20 @@ const styles = StyleSheet.create({
         zIndex: 10,
         paddingBottom: tokens.space.sm,
     },
+    rangeeDuTitre: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingRight: tokens.space.md,
+    },
     titreDOngletTexte: {
         fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold as '700',
         marginBottom: tokens.space.md,
         paddingHorizontal: tokens.space.md,
+    },
+    rappel: {
+        marginLeft: 'auto',
+        marginBottom: tokens.space.md,
     },
     // Les marges de `ScreenState`, sans son ancrage : c'est le defilement qui pose le bloc ici.
     bloc: {

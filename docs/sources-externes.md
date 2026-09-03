@@ -667,6 +667,25 @@ fait échouer le run — et perdre l'identité pour un INE serait un mauvais mar
 pire : **un step sauté n'enregistre aucune sortie**, donc le bloc `outputs` qui le référence lèverait
 en `StrictUndefined`.
 
+## Ce que les sondes surveillent
+
+Depuis le jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md), un workflow joue chaque matin une sonde
+par source **sans identifiant** et ouvre une issue GitHub quand une source tombe
+([`sondes/README.md`](../sondes/README.md), [pilotage.md](pilotage.md)). Ce qu'il surveille, et ce
+qu'il ne surveille pas :
+
+| Source | Sonde | Ce qu'elle prouve |
+|---|---|---|
+| Celcat | le Blueprint `ukit.celcat.groupes` de l'application | la liste des groupes rend plus de zéro entrée |
+| CAS de Bordeaux, CAS de Bordeaux INP | `ukit.sonde.cas` | la page de connexion sert son formulaire (`renew=true`) |
+| Moodle de Bordeaux, chaîne SSO | `ukit.sonde.moodle` | l'adresse Unsolicited SSO de l'IdP atteint le formulaire du CAS |
+| ADE de Bordeaux INP | le Blueprint `ukit.portail.bordeaux-inp.edt` de l'application | l'export d'une ressource se lit comme un calendrier |
+| La base de publication | native | le manifeste se lit et ses empreintes correspondent |
+| Affluences, Croustillant, OpenFreeMap | **aucune** | ces sources ont un écran qui dit leur panne, et aucune ne porte de session ; en ajouter une est une ligne dans `sondes/sondes.json` |
+
+Les sondes prouvent qu'un formulaire est atteignable, pas qu'il se passe — le dossier d'un étudiant
+peut casser derrière un CAS qui répond. Elles voient une panne, pas une lenteur.
+
 ## 7. Rendu cartographique
 
 [`EmbeddedMap`](../src/shared/map/EmbeddedMap.tsx) charge dans une WebView une page HTML qui

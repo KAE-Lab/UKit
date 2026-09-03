@@ -17,6 +17,7 @@ import {
 import { basculerEtablissement } from '../../../shared/etablissements/bascule';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
+import { PastilleService } from '../../../shared/messages/PastilleService';
 import { adoucirLaTransition } from '../../../shared/ui/transitions';
 import style, { tokens } from '../../../shared/theme/Theme';
 
@@ -63,6 +64,29 @@ export interface SettingsState {
     /** L'etablissement propose-t-il un compte, et est-il connecte ? Le rappel de l'etape d'accueil. */
     comptePossible: boolean;
     compteConnecte: boolean;
+}
+
+/**
+ * L'en-tete de l'onglet : le grand titre qui s'efface au defilement, et a sa droite la pastille d'etat de
+ * service (shared/messages/PastilleService). Sorti de `render` pour le garder sous la
+ * limite de lignes.
+ */
+function EnTeteReglages({ theme, insets, scrollY }: {
+    theme: import('../../../shared/theme/Theme').AppThemeType;
+    insets: import('react-native-safe-area-context').EdgeInsets | null;
+    scrollY: Animated.Value;
+}) {
+    const opacity = scrollY.interpolate({ inputRange: [0, 50], outputRange: [1, 0], extrapolate: 'clamp' });
+    return (
+        <Animated.View style={[styles.headerContainer, { paddingTop: insets?.top || 0, backgroundColor: 'transparent', opacity }]}>
+            <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
+                <Text style={[styles.greetingText, { color: theme.font }]}>
+                    {Translator.get('SETTINGS')}
+                </Text>
+                <PastilleService theme={theme} style={styles.rappel} />
+            </View>
+        </Animated.View>
+    );
 }
 
 class Settings extends React.Component<SettingsProps, SettingsState> {
@@ -319,26 +343,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         const calendar = this.state.calendars.find((cal) => this.state.selectedCalendar === cal.id);
         const calendarName = !!calendar ? calendar.title : this.state.selectedCalendar === 'UKit' ? 'UKit' : Translator.get('NOT_FOUND');
 
-        const renderHeader = (insets: import('react-native-safe-area-context').EdgeInsets | null) => {
-            const topPadding = (insets?.top || 0);
-
-            const opacity = this.scrollY.interpolate({
-                inputRange: [0, 50],
-                outputRange: [1, 0],
-                extrapolate: 'clamp'
-            });
-
-            return (
-                <Animated.View style={[styles.headerContainer, { paddingTop: topPadding, backgroundColor: 'transparent', opacity }]}>
-                    <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
-                        <Text style={[styles.greetingText, { color: theme.font }]}>
-                            {Translator.get('SETTINGS')}
-                        </Text>
-                    </View>
-                </Animated.View>
-            );
-        };
-
         const renderScrollContent = (insets: import('react-native-safe-area-context').EdgeInsets | null) => (
             <Animated.ScrollView
                 style={{ flex: 1 }}
@@ -410,7 +414,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             <SafeAreaInsetsContext.Consumer>
                 {(insets) => (
                     <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
-                        {renderHeader(insets)}
+                        <EnTeteReglages theme={theme} insets={insets} scrollY={this.scrollY} />
                         {renderScrollContent(insets)}
                     </SafeAreaView>
                 )}
@@ -435,6 +439,11 @@ const styles = StyleSheet.create({
     greetingText: {
         fontSize: tokens.fontSize.title,
         fontWeight: tokens.fontWeight.bold,
+        marginBottom: tokens.space.md,
+    },
+    // Pousse a droite, et la meme marge basse que le titre : la pastille s'aligne sur sa ligne.
+    rappel: {
+        marginLeft: 'auto',
         marginBottom: tokens.space.md,
     },
 });

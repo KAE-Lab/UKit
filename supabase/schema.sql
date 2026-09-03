@@ -3,9 +3,11 @@
 -- Ce fichier est la source de verite du schema : il s'applique depuis ici, jamais depuis l'interface
 -- web, sinon rien n'est reproductible. Les politiques d'acces vivent dans policies.sql.
 --
--- Principe directeur : la base porte de la **donnee**, jamais de la logique. Pas de fonction metier,
--- pas de declencheur, pas de vue qui calcule. Ce qui se calcule se calcule dans l'application, ou
--- c'est type, relu et verifie.
+-- Principe directeur : la base porte de la **donnee**, jamais de la logique metier. Pas de fonction
+-- qui calcule, pas de vue qui calcule : ce qui se calcule se calcule dans l'application, ou c'est
+-- type, relu et verifie. Depuis le jalon 6.1-B elle porte aussi **deux gardes**, et rien d'autre —
+-- qui a le droit d'ecrire, et la trace de ce qui a ete ecrit (fonctions.sql). Ce sont des politiques
+-- d'acces exprimees en SQL, pas du calcul : aucune des deux ne decide de ce que l'application affiche.
 --
 -- Chaque table publiee a un **socle embarque** dans le binaire (un fichier JSON, un referentiel, une
 -- valeur par defaut) : l'application doit fonctionner au premier lancement, hors ligne, sans avoir
@@ -50,6 +52,22 @@ alter table public.annonces add column if not exists lat double precision;
 alter table public.annonces add column if not exists lng double precision;
 alter table public.annonces add column if not exists couleur integer;
 
+-- Le ciblage des annonces (jalon 6.1-B) : les memes colonnes que les messages de service, sans la
+-- cle — une annonce se lit dans une liste, elle n'a pas de memoire « vu ». Une version anterieure de
+-- l'application ignore ces colonnes et voit tout : acceptable, et fini des que le parc a migre.
+-- Les contraintes passent par drop/add : `add constraint` n'a pas de `if not exists`.
+alter table public.annonces add column if not exists audience text not null default 'tous';
+alter table public.annonces drop constraint if exists annonces_audience_check;
+alter table public.annonces add constraint annonces_audience_check
+    check (audience in ('tous', 'testeurs'));
+alter table public.annonces add column if not exists etablissements text[];
+alter table public.annonces add column if not exists version_min text;
+alter table public.annonces add column if not exists version_max text;
+alter table public.annonces drop constraint if exists annonces_versions_check;
+alter table public.annonces add constraint annonces_versions_check
+    check ((version_min is null or version_min ~ '^\d+\.\d+\.\d+$')
+       and (version_max is null or version_max ~ '^\d+\.\d+\.\d+$'));
+
 create index if not exists annonces_publication_idx
     on public.annonces (active, expire_le desc);
 
@@ -63,6 +81,39 @@ create table if not exists public.service_messages (
     publie_le  timestamptz not null default now(),
     expire_le  timestamptz
 );
+
+-- Le ciblage des messages (jalon 6.1-B), ajoute a une table creee vide au 6-B et lue par personne
+-- jusque-la. Meme regle que le catalogue, « ajouter avant de retirer » : une version de l'application
+-- qui ne connait pas ces colonnes continue de lire les messages, et les voit tous.
+--
+--   cle             la memoire « vu » de l'appareil. Une cle stable plutot que l'id : republier un
+--                   message corrige sous la meme cle ne le refait pas apparaitre, un message
+--                   different sous une autre cle reapparait. Le defaut est un UUID, pour qu'une ligne
+--                   ecrite depuis le Studio en ait une ; la console propose un slug lisible par-dessus.
+--   audience        `tous`, ou `testeurs` : les appareils dont l'identifiant d'installation est dans
+--                   la table testeurs. C'est ce qui permet d'essayer un message sur son telephone
+--                   avant de l'envoyer a tout le monde.
+--   etablissements  les codes du catalogue qui voient le message ; null = tous. Un tableau plutot
+--                   qu'une table de jointure : trois etablissements, et une ligne se lit entiere.
+--   version_min     la fenetre de versions de l'application, bornes incluses, en `X.Y.Z` strict :
+--   version_max     le `check` garantit la forme a la source, ce qui rend le comparateur applicatif
+--                   trivial. null = pas de borne. « Mets a jour » est un message a `version_max`.
+alter table public.service_messages add column if not exists cle text default gen_random_uuid()::text;
+update public.service_messages set cle = id::text where cle is null;
+alter table public.service_messages alter column cle set not null;
+create unique index if not exists service_messages_cle_idx on public.service_messages (cle);
+
+alter table public.service_messages add column if not exists audience text not null default 'tous';
+alter table public.service_messages drop constraint if exists service_messages_audience_check;
+alter table public.service_messages add constraint service_messages_audience_check
+    check (audience in ('tous', 'testeurs'));
+alter table public.service_messages add column if not exists etablissements text[];
+alter table public.service_messages add column if not exists version_min text;
+alter table public.service_messages add column if not exists version_max text;
+alter table public.service_messages drop constraint if exists service_messages_versions_check;
+alter table public.service_messages add constraint service_messages_versions_check
+    check ((version_min is null or version_min ~ '^\d+\.\d+\.\d+$')
+       and (version_max is null or version_max ~ '^\d+\.\d+\.\d+$'));
 
 -- Le mot du haut de l'onglet Scolarite, quand une regle publiee doit passer devant le socle.
 --
@@ -274,6 +325,77 @@ create table if not exists public.visuels (
     image_url text,
     maj_le    timestamptz not null default now(),
     primary key (domaine, cle)
+);
+
+-- =============================================================================
+-- Pilotage (jalon 6.1-B)
+-- =============================================================================
+
+-- Les appareils qui voient l'audience `testeurs`.
+--
+-- L'identifiant est celui que l'application genere a sa premiere ouverture et garde dans son
+-- trousseau ; il ne sert qu'a ca. **L'appareil ne l'envoie jamais** : il lit la colonne `id` de cette
+-- table et compare chez lui — policies.sql n'expose que cette colonne a `anon`, les noms restent
+-- prives. Aucun secret dans le binaire, aucun build particulier, et revoquer un testeur est une
+-- ligne supprimee.
+--
+-- `uuid` et non `text` : la console colle un identifiant lu sur un ecran, et le type refuse une
+-- coquille la ou du texte l'aurait acceptee en silence.
+create table if not exists public.testeurs (
+    id       uuid        primary key,
+    nom      text        not null,
+    cree_le  timestamptz not null default now()
+);
+
+-- L'etat des sources tierces, mesure chaque matin par les sondes (sondes/, en integration continue).
+--
+-- Une ligne par source, **remplacee** a chaque mesure : cette table dit ou en est chaque source, pas
+-- son histoire — l'historique est dans les issues GitHub que le changement d'etat ouvre et ferme.
+-- `change_le` ne bouge que quand `etat` change : c'est le « depuis quand » de la page Sources.
+-- `detail` est libre : l'etape qui a echoue, son code, le message du moteur, la duree.
+create table if not exists public.sondes (
+    source     text        primary key,
+    etat       text        not null check (etat in ('ok', 'panne')),
+    detail     jsonb,
+    mesure_le  timestamptz not null,
+    change_le  timestamptz not null
+);
+
+-- La trace de tout ce qui s'ecrit dans les tables publiables : avant, apres, qui, quand.
+--
+-- Ecrite par un declencheur (fonctions.sql), jamais par un client : ni la console, ni un script, ni
+-- le Studio ne peuvent la contourner ni la forger. C'est le fichier a remettre quand quelque chose a
+-- mal tourne ; la console l'exporte en JSON.
+--
+-- `par` est l'e-mail de l'editeur authentifie, ou le role du jeton (`service_role` pour un script),
+-- ou l'utilisateur SQL (`postgres` pour psql). `ligne_id` est la cle primaire de la ligne, ses
+-- colonnes jointes par `/` quand elle est composee (visuels).
+--
+-- Elle grossit. Une purge apres un an suffit ; elle est ecrite dans supabase/README.md et n'est pas
+-- automatisee : ce qui s'efface tout seul ne se relit pas.
+create table if not exists public.journal (
+    id          bigserial   primary key,
+    table_name  text        not null,
+    operation   text        not null,
+    ligne_id    text,
+    avant       jsonb,
+    apres       jsonb,
+    par         text,
+    quand       timestamptz not null default now()
+);
+
+create index if not exists journal_quand_idx on public.journal (quand desc);
+create index if not exists journal_ligne_idx on public.journal (table_name, ligne_id);
+
+-- Les personnes autorisees a ecrire depuis la console. Une ligne : le proprietaire.
+--
+-- L'authentification est celle de Supabase (e-mail et mot de passe) ; cette table dit qui, parmi les
+-- comptes authentifies, a le droit d'ecrire. Un compte sans ligne ici peut se connecter et ne peut
+-- rien ecrire — les politiques le refusent (policies.sql). Les inscriptions libres sont desactivees
+-- dans les reglages du projet, et un compte se cree par tools/console/editeur.mjs.
+create table if not exists public.editeurs (
+    email      text        primary key,
+    ajoute_le  timestamptz not null default now()
 );
 
 -- =============================================================================

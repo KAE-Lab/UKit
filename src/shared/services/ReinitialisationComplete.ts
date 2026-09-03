@@ -9,7 +9,8 @@
  * seul un rechargement fait. C'est un instrument de sonde, pas une capacite utilisateur : il vit
  * derriere le menu de developpement (docs/qualite.md).
  *
- * Trois magasins, dans cet ordre : le trousseau (session, dossier, widgets, liens, propositions), le
+ * Trois magasins, dans cet ordre : le trousseau (session, dossier, widgets, liens, propositions,
+ * identifiant d'installation), le
  * repertoire prive de l'application (les documents ranges), puis AsyncStorage en entier — reglages,
  * `firstload`, caches et surcouches publiees. Puis le rechargement.
  *
@@ -24,6 +25,7 @@ import { Directory, Paths } from 'expo-file-system';
 import * as Updates from 'expo-updates';
 
 import { purgerTrousseau } from '../etablissements/purge';
+import { effacerIdentifiantInstallation } from '../testeur/identifiant';
 import SecureStoreService from './SecureStoreService';
 
 async function etape(nom: string, action: () => Promise<unknown> | unknown): Promise<void> {
@@ -64,6 +66,9 @@ async function relancer(): Promise<void> {
 export async function reinitialiserCompletement(): Promise<void> {
     console.log('[reinitialisation] debut');
     await etape('trousseau', purgerTrousseau);
+    // L'identifiant d'installation ne s'efface qu'ici : « Reinitialiser » des Reglages le garde, pour
+    // qu'un testeur le reste (shared/testeur/identifiant.ts).
+    await etape('identifiant', effacerIdentifiantInstallation);
     await etape('widgets', () => SecureStoreService.deleteWidgets());
     await etape('documents', viderLesDocuments);
     await etape('AsyncStorage', () => AsyncStorage.clear());

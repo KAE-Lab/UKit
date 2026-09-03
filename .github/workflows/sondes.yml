@@ -1,0 +1,59 @@
+# Les sondes du matin : chaque source tierce est jouee sans identifiant, son etat ecrit dans la
+# table `sondes`, et une issue s'ouvre ou se ferme quand il change (sondes/README.md).
+#
+# 05:00 UTC = 07:00 en ete, 06:00 en hiver : le cron de GitHub ne connait pas les fuseaux.
+#
+# Le workflow reste VERT quand une source est en panne — l'issue est le signal — et passe au rouge
+# seulement quand une sonde n'a pas pu se prononcer (runner casse, Blueprint invalide, moteur absent).
+name: Sondes
+
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Jouer sans ecrire ni ouvrir d issue'
+        type: boolean
+        default: false
+      casser:
+        description: 'Fausser l adresse d une source (celcat, cas-bordeaux, cas-bordeaux-inp, moodle-bordeaux, ade-bordeaux-inp, publication) pour verifier la chaine'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sondes:
+    name: Jouer les sondes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: sondes/requirements.txt
+
+      - run: python -m pip install -r sondes/requirements.txt
+
+      # Chromium et ses bibliotheques systeme : les sondes CAS et Moodle sont des runs navigateur,
+      # headless par construction (le runner refuse un Blueprint en debug).
+      - run: python -m playwright install --with-deps chromium
+
+      - run: python -m unittest discover -s sondes
+
+      - run: >
+          python sondes/jouer.py
+          ${{ inputs.dry_run && '--dry-run' || '' }}
+          ${{ inputs.casser != '' && format('--casser {0}', inputs.casser) || '' }}
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          SONDES_ASSIGNEE: ${{ vars.SONDES_ASSIGNEE }}

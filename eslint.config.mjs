@@ -5,6 +5,11 @@ import ukitPlugin from "./tools/eslint/no-style-literals.mjs";
 
 export default [
   {
+    // La console web (console/) est lintée avec les règles du dépôt — même discipline, une seule
+    // commande — mais pas ce qu'elle construit.
+    ignores: ["console/dist/**"],
+  },
+  {
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
       parser: tsParser,

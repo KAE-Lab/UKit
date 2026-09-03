@@ -19,6 +19,8 @@ import {
 // `purge` et non la porte d'entree pour la meme raison : elle ne connait que le magasin local et le
 // trousseau, la ou `../etablissements` tirerait le client de la base.
 import { purgerDonneesEtablissement, purgerTrousseau } from '../etablissements/purge';
+// Le module des vus seul, et non la porte d'entree des messages : elle tire le client de la base.
+import { oublierVus } from '../messages/vus';
 import { restaurerReglages } from './reglagesParEtablissement';
 import { createUKitCalendar, ecrireEvenementsDansCalendrier } from './CalendarSyncHelpers';
 import { NetworkMockService } from './NetworkMockService';
@@ -546,6 +548,9 @@ class SettingsManagerService {
         // part, on efface — laisser un emploi du temps rempli, ou un compte connecte, a quelqu'un qui
         // vient de tout reinitialiser serait un residu.
         await purgerTrousseau();
+        // Les messages de service deja vus reviennent : reinitialiser, c'est repartir comme apres une
+        // reinstallation. L'identifiant d'installation, lui, reste — un testeur le demeure.
+        await oublierVus();
         // Le parcours d'accueil redemande l'etablissement : le laisser sur le precedent afficherait un
         // choix deja fait a quelqu'un qui vient de tout effacer.
         this.setEtablissement(ETABLISSEMENT_DEFAUT);

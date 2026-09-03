@@ -307,10 +307,13 @@ Le projet embarque donc un **menu de développement flottant** :
 [`ModMenu.tsx`](../src/shared/ui/ModMenu.tsx), monté en permanence par
 [`rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx), et
 [`TimeMockService.ts`](../src/shared/services/TimeMockService.ts) qui porte la logique. Il s'ouvre
-par **sept tapes sur le numéro de version** de l'écran À propos, et porte quatre onglets : *Temps* ;
+par **sept tapes sur le numéro de version** de l'écran À propos, et porte cinq onglets : *Temps* ;
 *Blueprints*, le diagnostic de la livraison, décrit dans
 [blueprints.md](blueprints.md#quand-une-correction--narrive-pas-) ; *Biometrie* et *Dossier*, deux
-**sondes**.
+**sondes** ; et *Testeur* (6.1-B), qui montre l'**identifiant d'installation** de l'appareil — à
+recopier dans la console pour le faire entrer dans l'audience `testeurs` — et porte les deux gestes
+qui rendent les messages de service vérifiables sans relancer : relire, et oublier les vus
+([pilotage.md](pilotage.md)).
 
 Les deux sondes répondent à la même difficulté, et c'est celle qui justifie leur existence : **un
 écran qui ne montre rien n'est pas un symptôme**. Face ID qui ne se déclenche pas a cinq causes qui ne
@@ -451,8 +454,13 @@ simulation.
 
 ## Intégration continue
 
-Un seul workflow, [`.github/workflows/release.yml`](../.github/workflows/release.yml), déclenché par
-un tag `v*` ou manuellement. Il **construit et publie** ; il ne vérifie rien. Voir
+Trois workflows, et aucun ne vérifie le code de l'application :
+[`.github/workflows/release.yml`](../.github/workflows/release.yml), déclenché par un tag `v*` ou
+manuellement, **construit et publie** l'application ;
+[`.github/workflows/console.yml`](../.github/workflows/console.yml) construit et déploie la console
+de pilotage sur GitHub Pages (le typage de la console fait partie de sa construction) ;
+[`.github/workflows/sondes.yml`](../.github/workflows/sondes.yml) joue chaque matin les sondes des
+sources tierces, dont les tests unitaires (`python -m unittest discover -s sondes`). Voir
 [plateforme.md](plateforme.md).
 
 Conséquence directe : `npx tsc --noEmit` et `npx eslint .` doivent être joués **en local**, aucune
