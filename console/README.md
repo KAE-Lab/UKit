@@ -56,5 +56,7 @@ et testées par le `npm test` de la racine ([`src/schema/conversion.ts`](src/sch
 comme la règle des visuels — remplacer une image bumpe `?v=N` dans son adresse
 ([`src/lib/versionnerUrl.ts`](src/lib/versionnerUrl.ts)) — et la clé proposée d'un message.
 
-`tsc` et ESLint de la racine s'appliquent à `console/src` (mêmes règles, une seule commande) ; le
-`tsconfig.json` de la racine exclut `console/`, qui a le sien.
+ESLint de la racine s'applique à `console/src` (mêmes règles, une seule commande) ; le
+`tsconfig.json` de la racine exclut `console/`, qui a le sien — et celui-ci exclut les fichiers de
+test, qui importent `vitest` depuis la racine : en intégration continue, seule la console est
+installée, et c'est le `npm test` de la racine qui les joue.
