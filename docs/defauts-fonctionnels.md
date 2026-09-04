@@ -176,10 +176,16 @@ arrivaient déjà au retour ; c'est ce comportement qui a été étendu.
 
 ### Réessayer après un parcours froid en échec ramène l'écran de chargement plein
 
-Constaté sur appareil le 2026-09-04, pendant la vérification du jalon
+Constaté sur appareil le 2026-09-04, **dans l'onglet Scolarité**, pendant la vérification du jalon
 [6.1-D](phase-6/6-1-d-publication.md). C'est le même symptôme que S3 — deux vues pour un seul run —
 que [6.1-A](phase-6/6-1-a-robustesse-scolarite.md) avait traité, mais par un chemin que la correction
 ne couvre pas.
+
+**Le périmètre exact reste à établir** : l'observation vient de cet écran-là. La garde de 6.1-A a un
+**second hôte**, la fiche du compte ([`CredentialsSettingsScreen`](../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx)),
+qui porte le même `useSessionDepuisLeFormulaire` — il est donc plausible qu'elle y ait le même trou,
+mais ça n'a pas été vérifié. À faire avant de corriger, sous peine de traiter un hôte et pas l'autre :
+c'est exactement l'erreur qui a produit ce défaut.
 
 Le mécanisme, tel que
 [`ScolariteDashboard`](../src/features/Scolarite/screens/ScolariteDashboard.tsx) l'écrit : l'écran
