@@ -240,35 +240,30 @@ d'entrée.
 **Pas corrigé dans 6.1-D**, dont le périmètre est les attentes des Blueprints
 ([CONTRIBUTING.md](../CONTRIBUTING.md#un-travail-visuel-nest-pas-documenté-au-même-endroit)).
 
-### Une pause dimensionnée sur un temps de lecture alors qu'une navigation suivait — *valeur restaurée le 2026-09-04*
+### ~~Le parcours froid de Bordeaux INP échouait à 97 % sur iPhone~~ — *élucidé le 2026-09-04*
 
-Le jalon [6.1-D](phase-6/6-1-d-publication.md) avait ramené de 6 000 à 2 500 ms la pause qui précède
-la vue *Parcours* du dossier de Bordeaux INP, en la dimensionnant sur le rendu de la vue précédente —
-306 ms mesurées au poste pour le premier `label-valeur` de la vue *Accès*.
+Le 2026-09-04, un parcours froid de Bordeaux INP mourait à 97 % du chargement sur un iPhone, en
+`unavailable` — une navigation qui n'aboutit jamais. Le jalon
+[6.1-D](phase-6/6-1-d-publication.md) venait de raccourcir une pause de ce fichier, elle a donc été
+accusée, restaurée, puis **remise à l'épreuve dans des conditions propres : elle tient.**
 
-**C'était la mauvaise référence, et ça se démontre sans mesure** : ce qui suit cette pause n'est pas
-une lecture mais un `navigate`. Une pause devant une navigation doit couvrir la page **posée**, pas
-l'apparition de son premier élément — sinon la navigation suivante part pendant que la précédente
-charge encore. La valeur est revenue à 6 000, publiée en v9, et la règle est écrite dans
-[`blueprints.md`](blueprints.md#attendre--quatre-cas-et-un-seul-reste-une-pause).
+Ce qui l'a réellement causé, selon toute vraisemblance : **le compte de test était utilisé en
+parallèle par son propriétaire**, constaté à la messagerie dont le compteur de non-lus est passé de 1
+à 0 entre deux runs. Une session CAS reprise ailleurs fait rebondir la navigation vers le SSO, ce qui
+produit exactement une navigation sans fin. Le réseau du campus était instable au même moment —
+`ukit.celcat.jour` expirait à 30 s depuis deux téléphones pendant que le poste obtenait la même
+réponse en 0,19 s.
 
-**Ce qui n'est pas établi, et qu'il ne faut pas lire ici** : que cette pause soit la cause du parcours
-froid qui mourait à 97 % sur un iPhone le même jour. Trois variables étaient en jeu en même temps, et
-aucune n'a été isolée :
+**Trois leçons, et la première est sur la méthode d'enquête :**
 
-- la pause raccourcie ;
-- **le réseau** — sur le même eduroam, `ukit.celcat.jour` expirait à 30 s depuis deux téléphones
-  pendant que le poste obtenait la même réponse en 0,19 s, trois fois de suite ;
-- **le compte de test, utilisé en parallèle par son propriétaire** — constaté à la messagerie, dont le
-  compteur de non-lus est passé de 1 à 0 entre deux runs. Une session CAS reprise ailleurs peut
-  invalider celle qu'un parcours tient en cours de route.
-
-Après la republication, un essai a échoué puis **deux ont réussi d'affilée**. C'est ce qui rend
-aujourd'hui l'hypothèse du compte partagé la plus probable — une session CAS reprise ailleurs fait
-rebondir la navigation vers le SSO, ce qui produit précisément une navigation qui n'aboutit jamais —
-sans pour autant que quiconque l'ait isolée. **La valeur a donc été restaurée parce qu'elle était mal
-justifiée, pas parce qu'on a prouvé qu'elle cassait quelque chose.** La distinction compte : le défaut
-de forme ci-dessous, lui, est indépendant de tout ça et reste le vrai sujet.
+- **une explication plausible n'est pas une cause.** Le mécanisme avancé — la navigation suivante
+  partant pendant que la précédente charge — ne résiste pas à l'examen : `navigate` ne rend la main
+  qu'au chargement du document, il ne peut donc pas y avoir de course sur ce chargement-là. Il a
+  pourtant conduit à annuler une amélioration qui fonctionnait ;
+- **on ne mesure pas sur un compte qu'un tiers utilise**, ni sur un réseau dont on n'a pas d'abord
+  vérifié qu'il est sain. Les deux ont été violés le même matin ;
+- **une valeur se remet à l'épreuve plutôt que de rester annulée par précaution.** Republier la valeur
+  suspecte dans des conditions propres a coûté une publication et a tranché en cinq minutes.
 
 ### Une navigation bonus non gardée peut emporter tout le parcours froid
 
@@ -301,6 +296,166 @@ l'identité.** Le vocabulaire du moteur ne sait pas rendre un `navigate` inoffen
 Phase 6 a fait pour la messagerie en la sortant de la session ([6-F](phase-6/6-f-scolarite.md)). Une
 session à part entière : elle change le contrat de sorties du dossier, donc elle touche l'application
 autant que les fichiers.
+
+### « Se déconnecter » ne ferme pas la session distante quand un widget tourne
+
+Constaté sur appareil le 2026-09-04, et **isolé par un A/B** — c'est ce qui rend le diagnostic sûr.
+
+**Sous contention**, un widget en cours de lecture :
+
+```
+[moteur] ukit.portail.deconnexion prend la main sur ukit.portail.bordeaux.documents
+[chrono] ukit.portail.bordeaux.documents failed 1505 ms      ← le widget cède
+[aetherius] documents : cancelled
+[chrono] ukit.portail.bordeaux.moodle success 4178 ms        ← un autre widget reprend le moteur
+```
+
+Aucune ligne de chrono pour `ukit.portail.deconnexion` — or
+[`chrono.ts`](../src/shared/aetherius/chrono.ts) en écrit une pour *tout* run qui atteint
+`runBlueprint`. L'observation se prouve elle-même : la réservation *et* l'annulation du widget sont
+bien arrivées, donc le canal était vivant et `fermerSessionDistante` s'exécutait. Seul le run manque.
+
+**Sans contention**, tuiles remplies et immobiles, le même geste :
+
+```
+[chrono] ukit.portail.deconnexion success 1760 ms
+  #0 navigate success 750 ms
+  #1 wait     success 1009 ms
+```
+
+Le mécanisme est donc la contention, et il est écrit dans
+[`MoteurNavigateur`](../src/features/Scolarite/services/MoteurNavigateur.ts) : une session insiste
+trois tours pour obtenir le moteur, puis `surLeNavigateur` rend `{ ok: false }` — et
+[`fermerSessionDistante`](../src/features/Scolarite/services/ScolariteSession.ts) **ne regarde pas ce
+résultat**. Son `catch` est délibérément muet, pour la bonne raison qu'une déconnexion locale ne doit
+pas échouer parce qu'un portail ne répond pas ; mais du coup **une réservation refusée est
+indiscernable d'une déconnexion réussie**.
+
+Ce que ça coûte, et c'est exactement ce que ce Blueprint existait pour empêcher : le ticket CAS reste
+valide côté serveur. « Se déconnecter » efface le trousseau **en laissant le navigateur intégré
+authentifié au compte qu'on vient de quitter**. Et le cas se produit précisément quand il est le plus
+probable — au retour au premier plan, quand les widgets se rafraîchissent.
+
+Deux directions, à trancher dans la session qui le reprendra : donner à la déconnexion la garantie
+d'obtenir le moteur — elle est le seul geste qui ne peut pas se rejouer plus tard —, ou au minimum
+**observer le résultat de la réservation** et réessayer. La distinction entre « le portail n'a pas
+répondu » (acceptable, silencieux) et « on n'a même pas essayé » (inacceptable) doit exister quelque
+part.
+
+> **Une leçon de méthode est venue avec, et elle a failli faire rater le diagnostic.** Deux essais
+> intermédiaires n'avaient rien produit, ce qui m'avait fait écarter la contention. Ils ne prouvaient
+> rien : le journal avait cessé de recevoir quoi que ce soit de l'appareil pendant dix-neuf minutes
+> **sans le dire**. Conclure « ça n'a pas tourné » de « je ne vois rien » n'est valide que si l'on a
+> d'abord montré que la trace serait arrivée — ici, en faisant jouer une connexion complète juste
+> avant. **Un instrument peut devenir sourd en silence.**
+
+### ~~Le parcours froid de Bordeaux INP échouait à 97 % sur iPhone~~ — *élucidé le 2026-09-04*
+
+Le 2026-09-04, un parcours froid de Bordeaux INP mourait à 97 % du chargement sur un iPhone, en
+`unavailable` — une navigation qui n'aboutit jamais. Le jalon
+[6.1-D](phase-6/6-1-d-publication.md) venait de raccourcir une pause de ce fichier, elle a donc été
+accusée, restaurée, puis **remise à l'épreuve dans des conditions propres : elle tient.**
+
+Ce qui l'a réellement causé, selon toute vraisemblance : **le compte de test était utilisé en
+parallèle par son propriétaire**, constaté à la messagerie dont le compteur de non-lus est passé de 1
+à 0 entre deux runs. Une session CAS reprise ailleurs fait rebondir la navigation vers le SSO, ce qui
+produit exactement une navigation sans fin. Le réseau du campus était instable au même moment —
+`ukit.celcat.jour` expirait à 30 s depuis deux téléphones pendant que le poste obtenait la même
+réponse en 0,19 s.
+
+**Trois leçons, et la première est sur la méthode d'enquête :**
+
+- **une explication plausible n'est pas une cause.** Le mécanisme avancé — la navigation suivante
+  partant pendant que la précédente charge — ne résiste pas à l'examen : `navigate` ne rend la main
+  qu'au chargement du document, il ne peut donc pas y avoir de course sur ce chargement-là. Il a
+  pourtant conduit à annuler une amélioration qui fonctionnait ;
+- **on ne mesure pas sur un compte qu'un tiers utilise**, ni sur un réseau dont on n'a pas d'abord
+  vérifié qu'il est sain. Les deux ont été violés le même matin ;
+- **une valeur se remet à l'épreuve plutôt que de rester annulée par précaution.** Republier la valeur
+  suspecte dans des conditions propres a coûté une publication et a tranché en cinq minutes.
+
+### Une navigation bonus non gardée peut emporter tout le parcours froid
+
+Constaté sur un iPhone le 2026-09-04, en wifi de campus, pendant la vérification du jalon
+[6.1-D](phase-6/6-1-d-publication.md) : le parcours froid de Bordeaux INP meurt à 97 % du
+chargement, après une trentaine de secondes, sur « Service indisponible ».
+
+**Le déclencheur était une régression du jalon, et elle est corrigée** (voir plus bas) ; mais elle a
+mis au jour un défaut de forme qui, lui, reste ouvert. Les trois lectures bonus du dossier INP sont
+chacune précédées d'un `navigate` **non gardé** :
+
+```
+navigate  ADE (myplanning.jsp)   ← aucune garde : s'il échoue, le run meurt
+wait      6000
+extract   planning  as: list     ← protégé, lui : zéro correspondance rend []
+```
+
+La règle « une lecture bonus ne doit jamais emporter la connexion » a été appliquée à la **lecture** —
+`as: "list"` ne lève jamais — et oubliée sur la **navigation qui la précède**. Or un `navigate` qui
+n'aboutit pas lève un `NetworkError`, donc famille `unavailable`, donc le run entier échoue : un
+étudiant perd son identité, son INE et sa formation **parce qu'une page d'emploi du temps n'a pas fini
+de charger**. Le motif n'est pas propre à l'INP —
+[`ukit.portail.bordeaux.dossier`](../blueprints/ukit-portail-bordeaux-dossier.blueprint.json) a la
+même forme pour son annuaire.
+
+La direction : **une lecture bonus qui demande une navigation n'appartient pas au Blueprint qui porte
+l'identité.** Le vocabulaire du moteur ne sait pas rendre un `navigate` inoffensif — ni `try` ni
+`when` ne l'attrapent —, donc la protection ne peut pas venir du fichier : elle vient du
+**découpage**, un Blueprint par lecture bonus dont l'échec ne coûte que lui-même. C'est ce que la
+Phase 6 a fait pour la messagerie en la sortant de la session ([6-F](phase-6/6-f-scolarite.md)). Une
+session à part entière : elle change le contrat de sorties du dossier, donc elle touche l'application
+autant que les fichiers.
+
+### « Se déconnecter » peut ne jamais fermer la session distante, en silence
+
+Constaté sur appareil le 2026-09-04, chrono à l'appui. Le journal d'une déconnexion réelle donne :
+
+```
+[moteur] ukit.portail.deconnexion prend la main sur ukit.portail.bordeaux.documents
+[chrono] ukit.portail.bordeaux.documents failed 1505 ms      ← le widget cède, comme prévu
+[aetherius] documents : cancelled
+[chrono] ukit.portail.bordeaux.moodle success 4178 ms        ← un autre widget reprend le moteur
+```
+
+**Aucune ligne de chrono pour `ukit.portail.deconnexion`** — or
+[`chrono.ts`](../src/shared/aetherius/chrono.ts) en écrit une pour *tout* run qui atteint
+`runBlueprint`, réussi comme échoué. Le Blueprint n'a donc pas été joué, alors que la déconnexion a
+bien interrompu un widget pour prendre le moteur.
+
+**L'observation ci-dessus se prouve elle-même**, et c'est ce qui la rend solide : la ligne de
+réservation *et* l'annulation du widget sont bien arrivées, donc le canal de journalisation était
+vivant et `fermerSessionDistante` était bien en train de s'exécuter. Seul le run manque.
+
+Deux déconnexions ultérieures n'ont rien produit non plus, mais **elles ne prouvent rien** : le
+journal a cessé de recevoir quoi que ce soit de l'appareil pendant dix-neuf minutes sans le dire, et
+conclure « le Blueprint n'a pas tourné » de « je ne vois rien » n'est valide que si le canal est
+vivant — ce qui se vérifie, et ne l'avait pas été. La leçon vaut au-delà de ce défaut : **un
+instrument peut devenir sourd en silence**, et une absence de trace n'est une mesure que si l'on a
+d'abord montré que la trace serait arrivée.
+
+**Le mécanisme reste donc à établir**, et il demande une trace posée dans `fermerSessionDistante`
+elle-même, sur ses trois sorties possibles — adresse de CAS absente, réservation refusée, exception
+avalée par le `catch` muet. C'est la première chose à faire dans la session qui reprendra ce défaut ;
+un essai de plus sans instrument rendrait le même silence.
+
+Ce qui est acquis, en revanche, c'est le trou de conception qui rend la panne invisible :
+[`surLeNavigateur`](../src/features/Scolarite/services/MoteurNavigateur.ts) rend `{ ok: false }`
+quand une session n'obtient pas le moteur après ses trois tours d'insistance — et
+[`fermerSessionDistante`](../src/features/Scolarite/services/ScolariteSession.ts) **ne regarde pas ce
+résultat**. Son `catch` est délibérément muet, pour la bonne raison qu'une déconnexion locale ne doit
+pas échouer parce qu'un portail ne répond pas ; mais du coup **une réservation refusée est
+indiscernable d'une déconnexion réussie**.
+
+Ce que ça coûte, et c'est exactement ce que ce Blueprint existait pour empêcher : le ticket CAS reste
+valide côté serveur. « Se déconnecter » efface le trousseau **en laissant le navigateur intégré
+authentifié au compte qu'on vient de quitter** — la raison d'être de `options.session.persist` se
+retourne contre l'utilisateur.
+
+Deux directions, à trancher dans la session qui le reprendra : donner à la déconnexion la garantie
+d'obtenir le moteur — elle est le seul geste qui ne peut pas se rejouer plus tard —, ou au minimum
+**observer le résultat de la réservation** et réessayer, quitte à le dire. La distinction entre « le
+portail n'a pas répondu » (acceptable, silencieux) et « on n'a même pas essayé » (inacceptable) doit
+exister quelque part.
 
 ## Limites connues, qui ne sont pas des défauts
 

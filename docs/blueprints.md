@@ -246,13 +246,13 @@ Trois pièges, chacun payé une fois :
   et une attente qui en oublie une expire sur une page pourtant présente. La vérification est de
   lister les états, pas de les deviner : ce qui suit l'attente le dit déjà, chaque sonde `as: count`
   du fichier nomme un état que la page peut prendre.
-- **Une pause suivie d'une *navigation* ne se dimensionne pas comme une pause suivie d'une lecture.**
-  Devant une lecture, il suffit que l'élément soit là. Devant un `navigate`, il faut que la page
-  précédente soit **posée** : sinon la navigation part pendant que l'autre charge encore, la
-  comptabilité des documents se désynchronise, et le run meurt bien plus loin sur une navigation qui
-  n'aboutit jamais — un `unavailable` à trente secondes de là, qui ne désigne pas la pause fautive.
-  Mesurer le rendu du premier élément et en déduire cette pause-là est une erreur : elle a été faite,
-  et elle a cassé un parcours en production.
+- **Ce qu'une mesure de rendu justifie, et ce qu'elle ne justifie pas.** Mesurer qu'un élément
+  paraît en 306 ms justifie une pause devant **la lecture de cet élément**. Ça ne dit rien de ce
+  qu'une page continue de faire après — requêtes secondaires, travail client — ni de ce qu'un step
+  *suivant* pourrait en subir. La marge se choisit donc plus large que la mesure quand ce qui suit
+  n'est pas la lecture mesurée, sans qu'il faille pour autant inventer un mécanisme de panne :
+  l'expérience du 2026-09-04 a montré qu'une telle pause **tenait**, et que la panne attribuée à son
+  raccourcissement venait d'ailleurs — un compte de test utilisé en parallèle.
 - **Une lecture bonus perdue ne fait aucun bruit.** `as: "list"` rend `[]`, le run se déclare réussi,
   et une capacité disparaît de l'application sans message. Une pause raccourcie devant une lecture
   bonus se valide donc en **comparant les sorties** à celles d'avant, jamais au seul statut du run.

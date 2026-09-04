@@ -232,22 +232,21 @@ donc pause trop courte. Le repli est alors la pause d'avant, republiée en une c
   écrit ici plutôt que supposé : la branche **chaude**, elle, a été mesurée et enchaîne *plus* de sauts
   (service → CAS → retour → page) que la froide (CAS → service → page) ; et `verification` a bien joué
   sa propre branche froide, avec la même pause de 4 s, sur le même CAS et le même appareil.
-- **`ukit.portail.deconnexion` n'a été joué nulle part.** Il ne part que du bouton « Se déconnecter »
-  de la fiche du compte, et la vérification a fini sans l'emprunter. Sa pause est passée de 2 500 à
-  1 000 ms ; c'est une marge, pas une condition — le serveur a invalidé le ticket au moment où la
-  réponse est arrivée —, donc une valeur trop courte ne casserait rien de visible. À jouer à la
-  prochaine occasion.
+- **`ukit.portail.deconnexion` a fini par être joué**, après coup : `success` en **1 760 ms**, dont
+  750 ms de navigation et la pause de 1 000 ms ramenée par ce jalon. Le neuvième fichier est donc
+  vérifié comme les huit autres. Le détour vaut d'être noté : il a fallu deux tentatives infructueuses
+  pour découvrir que **le geste ne joue pas son Blueprint quand un widget tourne** — un défaut réel,
+  antérieur à ce jalon, désormais isolé par un A/B et inscrit au
+  [registre](../defauts-fonctionnels.md).
 - **iOS n'a été vérifié qu'après coup, et il a rapporté un échec non élucidé.** La campagne de mesure
   est passée par un Android ; iOS a été contrôlé **après la publication**, sur un iPhone portant la 6.0
-  des stores. Bordeaux y est passé sans réserve ; **Bordeaux INP a échoué**, à 97 % du parcours froid,
-  en `unavailable` — donc sur une navigation qui n'a jamais abouti. Une pause du jalon a été restaurée
-  à sa valeur d'origine dans la foulée, parce qu'elle était **mal justifiée** (dimensionnée sur un
-  temps de lecture alors qu'un `navigate` suivait), mais **le lien de cause n'est pas établi** : le
-  réseau du campus était instable au même moment, et le compte de test était utilisé en parallèle par
-  son propriétaire — constaté à la messagerie, dont le compteur de non-lus a bougé entre deux runs.
-  Le parcours froid INP a ensuite réussi **deux fois d'affilée** sur ce même iPhone, ce qui laisse le
-  compte partagé comme explication la plus probable. Le détail est au
-  [registre](../defauts-fonctionnels.md).
+  des stores. Bordeaux y est passé sans réserve ; **Bordeaux INP a d'abord échoué**, à 97 % du
+  parcours froid, en `unavailable`. Une pause du jalon a été accusée et restaurée dans la foulée —
+  puis **remise à l'épreuve dans des conditions propres, où elle a tenu**. La cause était ailleurs :
+  le compte de test était utilisé en parallèle par son propriétaire, et le réseau du campus était
+  instable au même moment. L'enquête et ses trois leçons sont au
+  [registre](../defauts-fonctionnels.md) ; la principale est qu'**une explication plausible n'est pas
+  une cause**, et qu'elle a failli faire perdre une amélioration qui fonctionnait.
 
   **La leçon est de méthode, et elle est le vrai coût de ce jalon** : tous les précédents ont été
   vérifiés sur iPhone, celui-ci est le premier à ne l'avoir été que sur Android — et c'est précisément

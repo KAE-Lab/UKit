@@ -113,6 +113,61 @@ npm run build:ios         # eas build -p ios --profile preview
 `cli.appVersionSource: "remote"` : c'est **EAS qui fait autorité sur le numéro de build**, pas les
 `versionCode` du fichier de configuration.
 
+### Expo Go ne sert plus, et il faut savoir pourquoi
+
+**Expo Go n'embarque qu'un seul SDK à la fois, le plus récent.** Le 2026-09-04, le store l'a passé en
+**SDK 57** ; le projet est en **54**. L'application du store a donc cessé d'ouvrir UKit — sur iOS
+comme sur Android, avec un message explicite sur Android et une simple absence sur iOS, dont
+l'interface a de surcroît retiré le champ de saisie d'URL. Ce n'est pas un incident : ça se
+reproduira à chaque sortie de SDK.
+
+Deux sorties, et elles ne se remplacent pas :
+
+- **Android** : Expo publie un client par SDK, en APK, sur
+  [`expo/expo-go-releases`](https://github.com/expo/expo-go-releases) — la version pour le SDK 54 est
+  `Expo-Go-54.0.8.apk`. Il faut désinstaller celui du store d'abord : Android refuse de rétrograder
+  une application installée. L'URL exacte se lit dans `https://api.expo.dev/v2/versions/latest`, champ
+  `sdkVersions["54.0.0"].androidClientUrl`.
+- **iOS** : **il n'y en a pas.** Apple ne laisse pas réinstaller une version antérieure du store. La
+  seule voie est un **build de développement** (`eas build --profile development`), c'est-à-dire le
+  client Expo Go du projet, contenant son propre runtime natif. On l'installe une fois ; il ne se
+  reconstruit que quand une dépendance **native** change, pas à chaque modification de code.
+
+Le build de développement est de toute façon la bonne réponse pour les deux plateformes : il rend le
+poste de développement indépendant de ce qu'Expo fait de son application bac à sable.
+
+> **Un piège du tunnel, mesuré le 2026-09-04.** Sur Android, le lecteur de PDF charge **pdf.js comme
+> un asset servi par Metro** (c'est la raison d'être de `metro.config.js`). En Expo Go via un tunnel,
+> ouvrir un document va donc chercher 1,8 Mo de bibliothèque **à travers ngrok** — et si le tunnel
+> tombe, l'écran casse sans que l'application y soit pour quoi que ce soit. Le journal dit alors
+> `Tunnel connection has been closed`, et une reconnexion suffit. **Ce chemin n'existe pas dans un
+> build** : les assets y sont dans le binaire. Avant de chercher un défaut du lecteur, vérifier que le
+> tunnel sert : `curl <url>/assets/assets/pdfjs/pdf.min.mjs.txt?platform=android` doit rendre 200 et
+> 518 555 octets.
+
+### Le saut de SDK : à faire, mais pas dans la 6.1
+
+**Décision du 2026-09-04.** Passer de 54 à 57 veut dire React Native **0.81.5 → 0.86.3** — cinq
+versions mineures —, React 19.1 → 19.2, et **41 dépendances de plateforme** à faire bouger ensemble :
+`reanimated`, `webview`, `screens`, `notifications`, `secure-store`, `local-authentication`,
+`calendar`, `task-manager`… (les versions attendues par chaque SDK se lisent dans
+`https://api.expo.dev/v2/sdks/<version>/native-modules`).
+
+Ce n'est pas optionnel à terme : les stores imposent périodiquement une version d'API cible minimale,
+et chez Expo c'est la montée de SDK qui la donne. Mais ce n'est **pas** un travail à mêler à la 6.1 :
+c'est une version de **consolidation**, avec des utilisateurs déjà en 6.0, et y ajouter un saut de
+runtime rendrait chaque régression ambiguë — on ne saurait plus si un défaut vient de la consolidation
+ou du saut.
+
+Il aura donc **son propre jalon**, après la sortie de la 6.1, avec une vérification appareil sur les
+**deux** plateformes — ce que le build de développement rend enfin possible sur iOS.
+
+**Et on reste sur Expo.** Ce qui a coincé est Expo Go, une commodité de développement remplaçable en
+une commande, pas le cadre lui-même : l'essentiel des 41 dépendances sont des modules `expo-*`
+(trousseau chiffré, biométrie, notifications, calendrier, tâches de fond), la chaîne de release passe
+par EAS, et partir voudrait dire reprendre à sa charge deux projets natifs pour retrouver le même
+tapis roulant de versions, en plus dur.
+
 **Les paquets Expo suivent le SDK.** `npx expo-doctor` est sans écart depuis la passe de code
 [6.1-C](phase-6/6-1-c-passe-de-code.md) — sept paquets avaient un patch de retard, et le `.gitignore`
 devait dire `.expo/` et non `.expo/*` pour qu'il s'en satisfasse. `npx expo install --fix` les
