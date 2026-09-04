@@ -395,6 +395,39 @@ pas été relevé ; le code garantit qu'il part au même instant, et il tourne a
 d'une seconde du splash animé. Verdict S13 : rien à différer, la limite reste écrite avec ses
 chiffres ([features/scolarite.md](features/scolarite.md#limites-connues)).
 
+## Lire un run plutôt que le supposer
+
+Le même instrument, à l'échelle d'un Blueprint.
+[`shared/aetherius/chrono.ts`](../src/shared/aetherius/chrono.ts) écrit, sous `__DEV__` et pour
+**chaque** run qui passe par [`runBlueprint`](../src/shared/aetherius/runBlueprint.ts), une ligne de
+total puis une ligne par step :
+
+```text
+[chrono] ukit.portail.bordeaux.messagerie success 7867 ms
+[chrono]   #0 navigate success 1204 ms
+[chrono]   #1 wait_for success 27 ms
+[chrono]   #2 extract porte success 8 ms
+```
+
+Les durées viennent du moteur (`Result.step_results`), pas d'une mesure refaite à côté, et les steps
+sont numérotés dans l'ordre du fichier — sauts par `when` compris, qui apparaissent en `skipped`. On
+lit donc un relevé le Blueprint sous les yeux. L'horloge est **la vraie** (`Date.now`) : la
+simulation temporelle du menu déplace `moment.now`, et une durée mesurée sur une horloge déplaçable
+ne veut rien dire ([`services/Temps.ts`](../src/shared/services/Temps.ts)).
+
+La **durée totale** ne s'arrête pas là : elle remonte à l'appelant sur `BlueprintRun.dureeMs`, et le
+panneau *Blueprints* du menu l'affiche à côté de son verdict — `ok, 4 sorties (distant) — 7,9 s`.
+Avec une limite qu'il faut connaître avant de compter dessus : **le panneau ne joue pas un Blueprint
+qui déclare des secrets**, et c'est délibéré — jouer un parcours authentifiant depuis un écran de
+diagnostic engagerait le compte universitaire de quelqu'un, et un échec répété se paie sur un CAS.
+Les portails se mesurent donc **par les parcours de l'application**, et c'est le chrono ci-dessus qui
+les rend lisibles ; le total du panneau couvre tout le reste — Celcat, CROUS, bibliothèques,
+annonces, iCal.
+
+C'est ce qui manquait au jalon [6.1-D](phase-6/6-1-d-publication.md) : le poste sait mesurer depuis
+toujours — `aetherius run` rend une table Step / Action / Status / Duration —, l'appareil ne savait
+pas.
+
 ## Sonder la biométrie plutôt que la deviner
 
 Le menu de développement porte un onglet **Biométrie**. Il existe parce que le symptôme — « l'iPhone

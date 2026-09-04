@@ -261,10 +261,11 @@ Les deux Blueprints ont la même forme, et chaque step y est une décision qu'on
 
 ```text
 navigate <service>                        le service redirige vers le CAS
-wait_for #username        20 s            fail:CAS_INDISPONIBLE
+wait_for "#username, <cible>"  20 s       « le formulaire, ou la page utile » — fail:CAS_INDISPONIBLE
+extract  #username as: count              y a-t-il un formulaire ? `count` ne leve jamais
 fill     #username / #password            secrets portail_user / portail_pass
 click    input[type=submit]                (Bordeaux ; l'INP sert un #submitBtn)
-wait     8 s (dossier) / 15 s (messagerie)   laisser la cascade d'authentification arriver
+wait     4 s (dossier) / 5 s (messagerie)    laisser la cascade d'authentification arriver
 wait_for #loginErrorsPanel  detached, 2 s    fail:LOGIN_FAILED
 wait_for <cible CSS>      30 s            fail:LOGIN_FAILED | MESSAGERIE_INDISPONIBLE
 emit     LOGIN_SUCCESS                    c'est ce qui autorise a ecrire les identifiants
@@ -274,16 +275,22 @@ assert   les champs critiques ne sont pas vides    dossier seulement
   puis, pour le dossier seul — des BONUS qui ne doivent jamais emporter la connexion :
 
 click/navigate <vue>                      Inscriptions (Bordeaux) | /acces et /inscriptions (INP)
-wait     6 s                              `wait` et non `wait_for` : un timeout ferait echouer le run
+wait     1,5 a 6 s                        `wait` et non `wait_for` : un timeout ferait echouer le run
 extract  … as: list                       zero correspondance rend [], jamais une levee
 ```
+
+Les durées de ce schéma sont celles du jalon [6.1-D](phase-6/6-1-d-publication.md), qui les a
+**mesurées** au lieu de les supposer : voir [Ce que coûte une attente](#ce-que-coûte-une-attente--mesures-du-2026-09-04)
+plus bas.
 
 Cinq de ces lignes sont contre-intuitives et **mesurées**, pas supposées :
 
 - **la pause après le clic.** L'authentification unifiée enchaîne plusieurs sauts, puis le client pose
   son propre fragment ; une opération émise pendant cette cascade **se perd en silence** sur un
   appareil. C'est une limite du moteur, écrite chez lui, et le contournement est visible dans le
-  fichier plutôt que déguisé en délai généreux ;
+  fichier plutôt que déguisé en délai généreux. Depuis le 2026-09-04 elle porte **sa mesure** : la
+  cascade complète tient en 0,5 à 1,3 s au poste, et la pause laisse trois à quatre fois cela à un
+  téléphone en cellulaire — au lieu des 8 à 15 s calées sur un pire cas supposé ;
 - **la garde `#loginErrorsPanel`.** Ce panneau est **absent** de la page de connexion propre et
   **présent** dès que le CAS refuse (mesuré le 2026-08-09). `#msg2` et `.errors`, eux, existent déjà
   vides avec une boîte de hauteur nulle : ils ne discriminent rien. Sans cette garde, un mot de passe
@@ -309,6 +316,145 @@ ambigu** là où Playwright prend le premier. Tout sélecteur de `click` doit ma
 Au passage, la migration a trouvé du **code mort** dans le script d'origine : il testait `#msg.success`
 et `#msg.errors`, or **il n'existe aucun `#msg`** sur ce CAS. Ces deux branches ne matchaient plus
 rien, et personne ne pouvait le savoir.
+
+### Ce que coûte une attente — mesures du 2026-09-04
+
+Les attentes de ces fichiers avaient été calées à la main, chacune sur le pire cas du jour où elle a
+été écrite. Le jalon [6.1-D](phase-6/6-1-d-publication.md) les a **chronométrées** avant de les
+toucher : neuf Blueprints de portail portaient à eux seuls **60 s de pauses aveugles**, et le travail
+réel de chacun tient en une à deux secondes.
+
+Conditions : poste filaire, moteur Python (Playwright), comptes réels des deux établissements, une
+passe par fichier. Le total est celui du run complet, pas la somme des pauses.
+
+| Blueprint | Avant | Après | Ce qui a changé |
+|---|---:|---:|---|
+| `ukit.portail.verification` | 12,9 s | 8,0 s | pause de soumission 8 s → 4 s |
+| `ukit.portail.deconnexion` | 3,5 s | 2,1 s | marge de sortie 2,5 s → 1 s |
+| `ukit.portail.bordeaux.dossier` | 30,1 s | 11,9 s | ouverture conditionnelle · 8 s → 4 s · bonus 6 s → 2 s et 1,5 s |
+| `ukit.portail.bordeaux.messagerie` | 23,9 s | 7,9 s | ouverture conditionnelle · 15 s → 5 s |
+| `ukit.portail.bordeaux.moodle` | 28,8 s | 7,7 s | ouverture conditionnelle · 15 s → 5 s · AJAX 5 s → conditionnelle |
+| `ukit.portail.bordeaux.documents` | 19,7 s | 11,4 s | ouverture conditionnelle · 9 s → 4 s |
+| `ukit.portail.bordeaux-inp.dossier` | 36,4 s | 22,8 s | ouverture conditionnelle · 8 s → 4 s · bonus « Accès » 6 s → 2,5 s |
+| `ukit.portail.bordeaux-inp.messagerie` | 24,9 s | 12,9 s | ouverture conditionnelle · 12 s → 5 s · consentement 10 s → 5 s |
+| `ukit.portail.bordeaux-inp.documents` | 19,1 s | 8,9 s | ouverture conditionnelle · 8 s → 4 s |
+
+**Le parcours froid de Bordeaux passe de 43,0 s à 19,9 s** au poste — c'est la somme de ses deux
+Blueprints, `verification` puis `dossier`, et elle encadre le « ~46 s » que ce document portait
+jusqu'ici.
+
+#### Les temps réels, ceux qui ont décidé des valeurs
+
+| Ce qu'on attendait | Mesure | Ce qui a été retenu |
+|---|---:|---|
+| Navigation d'ouverture, jusqu'à la page servie | 0,6 à 1,9 s | un `wait_for` conditionnel, plafond 20 s |
+| Cascade d'authentification, du clic à la cible | 0,5 à 1,3 s | 4 s, ou 5 s là où un client Zimbra pose son fragment |
+| Chronologie Moodle (requête AJAX séparée) | 1,299 s puis 1,301 s | un `wait_for` sur la disparition du gabarit d'attente |
+| Formation Bordeaux, aller-retour Vaadin 8 | 189 puis 285 ms | 2 s |
+| Annuaire Bordeaux | 23 ms — **servi avec le document** | 1,5 s de marge de réseau |
+| INP, vue *Accès* | 306 ms | 2,5 s |
+| INP, vue *Parcours* | 2,318 s | **6 s inchangé** — la marge n'est que de 2,6× |
+| INP, arbre ADE (GWT) | 2,816 s | **6 s inchangé** — la plus lente des trois vues |
+
+Trois de ces lignes ont coûté une sonde ratée chacune, et elles valent d'être retenues :
+
+- **`wait_for` attend `visible` par défaut, et une donnée repliée n'est jamais visible.** L'annuaire
+  de Bordeaux vit dans un accordéon fermé : une sonde en `visible` a expiré au bout de 25 s sur des
+  éléments pourtant présents. En `attached`, elle répond en 23 ms. C'est aussi ce qui **interdit** d'y
+  mettre un `wait_for` : il ne pourrait pas voir ce que l'extraction, elle, lit très bien ;
+- **un sélecteur qui ne matche rien rend `detached` vrai immédiatement.** Sonder la disparition du
+  gabarit d'attente de Moodle par sa *classe* répondait en 10 ms et ne prouvait rien :
+  `event-list-loading-placeholder` est une valeur de `data-region`, pas une classe. Une sonde qui
+  réussit trop vite est une sonde à revérifier ;
+- **une union doit énumérer les états *possibles* de la page, pas les deux auxquels on pense.**
+  `ukit.portail.bordeaux-inp.messagerie` en a **trois** : ce portail passe par SAML, qui interpose une
+  page de consentement entre le CAS et Zimbra. Écrite avec deux issues, l'attente d'ouverture a brûlé
+  ses 20 000 ms sur une page pourtant présente — et là encore le chiffre le disait, `20 014 ms` étant
+  *son* plafond et non l'échéance de l'appelant. Seul des neuf fichiers dans ce cas ;
+- **une lecture bonus perdue ne fait aucun bruit.** À 500 ms, la vue *Parcours* de l'INP rendait
+  `formation_libelle` vide et l'arbre ADE `edt_ressource` vide, **et le run se déclarait réussi**.
+  L'application aurait alors cessé de proposer l'emploi du temps personnel sans que rien ne le dise.
+  C'est la raison pour laquelle ces deux pauses-là n'ont pas bougé.
+
+#### Ce que l'appareil a démenti — Android, wifi eduroam, 2026-09-04
+
+Le poste ne peut pas tout dire, et la vérification sur appareil l'a prouvé en un run. L'attente
+d'ouverture avait d'abord été posée **sans pause** : le `wait_for` partait juste après le `navigate`.
+Au poste, impeccable. Sur un Android en conditions réelles, `ukit.portail.bordeaux.dossier` a échoué
+en **31 990 ms** — et ce chiffre est le diagnostic à lui seul : le plafond écrit était 20 000 ms, donc
+ce n'est pas lui qui a expiré, c'est **l'échéance de l'appelant** (`20 000 + 2 000 + 50 %`). La page
+n'a jamais répondu : l'opération s'était perdue.
+
+La cause se lit en comparant deux runs du **même** parcours, à trente secondes d'écart :
+
+| | `verification` | `dossier` |
+|---|---|---|
+| Ce qu'il vise | `cas.u-bordeaux.fr/login?service=…` — **le CAS en propre** | `mondossierweb.u-bordeaux.fr` — **un service, qui rebondit** |
+| `navigate` | 671 ms | 1 266 ms |
+| Le `wait_for` qui suit | **11 ms** | **perdu** |
+
+Le premier atterrit sur son document final : l'agent s'y installe, rien ne le remplacera, l'opération
+est sûre. Le second atterrit sur un document **intermédiaire** : l'agent s'y installe, l'opération
+part, puis la redirection remplace le document sans que la vue le signale — et le host ne rejoue donc
+pas l'opération comme il le ferait pour un `DocumentLostError`.
+
+D'où la règle, plus fine que « une pause après une soumission », et écrite dans
+[`blueprints.md`](blueprints.md#attendre--quatre-cas-et-un-seul-reste-une-pause) :
+
+> **Une opération injectée n'est sûre après un `navigate` que si celui-ci atterrit sur son document
+> final.** Une URL qui rebondit demande une pause avant la première opération.
+
+C'est aussi ce qui explique, rétrospectivement, pourquoi tous les fichiers d'origine posaient une
+pause après un `navigate` vers un service, alors que `ukit.portail.verification` n'en avait jamais eu
+besoin. La raison n'était écrite nulle part ; elle l'est maintenant.
+
+La valeur retenue est **4 000 ms**, et elle n'est pas prudentielle : c'est celle qui venait de prouver,
+sur le même appareil et dans le même parcours, qu'elle couvre la cascade d'authentification complète
+après soumission — laquelle enchaîne plus de sauts qu'une simple redirection de service. Vérifiée
+ensuite sur trois Blueprints : pause de 4 007, 4 004 et 4 015 ms, suivie d'un `wait_for` qui répond en
+**13, 20 et 24 ms**. La marge est donc large, et elle est mesurée.
+
+La passe complète, après une réinitialisation totale de l'appareil — un parcours froid puis les
+quatre widgets, dans l'ordre où l'application les joue :
+
+| Blueprint | Au poste, avant | Sur appareil, après |
+|---|---:|---:|
+| `ukit.portail.verification` | 12,9 s | **4,8 s** |
+| `ukit.portail.bordeaux.dossier` | 30,1 s | **9,2 s** |
+| `ukit.portail.bordeaux.messagerie` | 23,9 s | **4,4 s** |
+| `ukit.portail.bordeaux.moodle` | 28,8 s | **4,8 s** |
+| `ukit.portail.bordeaux.documents` | 19,7 s | **5,8 s** |
+| `ukit.portail.bordeaux-inp.dossier` | 36,4 s | **20,4 s** |
+| `ukit.portail.bordeaux-inp.messagerie` | 24,9 s | **9,8 s** |
+| `ukit.portail.bordeaux-inp.documents` | 19,1 s | **6,8 s** |
+
+**Le parcours froid tient en 14,1 s à Bordeaux et 25,3 s à Bordeaux INP** — `verification` puis
+`dossier` — là où la spécification du jalon visait « sous 30 s », et **un widget entre 4,4 et 9,8 s**
+là où elle visait 12 à 15 s. Les deux chemins dégradés ont été joués aussi : un mot de passe faux se
+dit en **7,2 s** (contre une vingtaine), une source injoignable en **24 s** (contre ~36), et dans les
+deux cas avec l'écran et le geste attendus. Au
+relancement suivant, les widgets ne rejouent rien : le cache répond en 691 ms et la page s'ouvre
+pleine.
+
+Deux constructions se sont validées là et nulle part ailleurs :
+
+- **l'attente AJAX de Moodle**, celle qui remplace une pause de 5 s par la disparition du gabarit de
+  chargement : 18 ms puis 15 ms pour les deux `wait_for` du bloc. C'est le plus gros gain du jalon —
+  28,8 s à 4,8 s pour ce widget ;
+- **les lectures bonus du dossier**, dont la perte aurait été silencieuse : `extract formation` en
+  14 ms, `extract annuaire` en 14 ms, et les sept UE d'inscription remontées jusqu'à l'application.
+
+**Conditions, et leur limite** : Android, Expo Go, **wifi eduroam sur le campus** — pas de mesure en
+données cellulaires, contrairement à ce que la spécification du jalon demandait. Un réseau de campus
+n'est pas un poste filaire, mais il n'est pas non plus une connexion mobile : ces chiffres sont à
+lire comme un intermédiaire, et la marge de 4 s sur les pauses est ce qui les rend robustes au cas
+qu'on n'a pas pu jouer.
+
+**Ce que ce compte ne peut pas mesurer** : la chronologie Moodle de ce dossier ne porte **aucune
+échéance**, donc le gabarit d'attente cède immédiatement et aucune valeur ne le contraint vraiment.
+L'attente conditionnelle qui l'a remplacé est sûre pour une autre raison — `state: "hidden"` est vrai
+pour un élément **absent**, donc une version de Moodle sans ce marqueur n'attendrait rien au lieu
+d'échouer.
 
 ### Le dossier administratif
 
@@ -619,7 +765,14 @@ et il n'est **pas embarqué** dans le binaire : il arrive par le manifeste.
 | INE | état civil | **onglet Accès** — voir ci-dessous |
 | Formation | vue *Inscriptions*, un tableau | vue *Parcours*, une carte par année |
 | Messagerie | derrière le CAS | derrière SAML, **qui délègue au CAS** — même Zimbra, un consentement en plus |
-| Durée du parcours froid | ~46 s | ~24 s |
+| Durée du parcours froid | **43,0 s → 14,1 s** | **48,2 s → 25,3 s** |
+| Durée du parcours froid *(chiffres antérieurs)* | ~46 s | ~24 s |
+
+Les deux premières valeurs sont mesurées au poste le 2026-09-04, avant puis après le jalon
+[6.1-D](phase-6/6-1-d-publication.md) — le parcours froid est la somme de `verification` et de
+`dossier`. La ligne des chiffres antérieurs est conservée parce qu'elle a servi de référence pendant
+un mois, mais elle n'est plus comparable : celui de l'INP est **antérieur aux trois vues bonus**
+(*Accès*, *Parcours*, arbre ADE) que la sonde du 2026-08-25 a ajoutées, chacune avec sa pause.
 
 **Fragilité connue** : le numéro étudiant est lu par position dans le bandeau latéral
 (`:nth-match(vaadin-vertical-layout[slot=drawer] label, 2)`), faute d'un libellé pour l'ancrer. Le

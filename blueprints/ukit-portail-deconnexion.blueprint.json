@@ -22,8 +22,8 @@
     },
     {
       "action": "wait",
-      "ms": 2500,
-      "note": "`wait` et non `wait_for` : la page de sortie du CAS n'a pas de marqueur stable d'un etablissement a l'autre, et un `wait_for` qui expire ferait echouer un run dont l'echec ne doit rien couter. Ce qui compte s'est deja produit au moment ou la reponse est arrivee — le serveur a invalide le ticket et expire le cookie."
+      "ms": 1000,
+      "note": "`wait` et non `wait_for` : la page de sortie du CAS n'a pas de marqueur stable d'un etablissement a l'autre, et un `wait_for` qui expire ferait echouer un run dont l'echec ne doit rien couter. Ce qui compte s'est deja produit au moment ou la reponse est arrivee — le serveur a invalide le ticket et expire le cookie. Cette pause n'est donc PAS une condition, c'est une marge : mesure du 2026-09-04, la navigation vers `/logout` prend 1 890 ms et rend la main sur la page de sortie ; 1 s de marge suffit a un reseau lent, et 2,5 s en payaient une et demie pour rien."
     }
   ],
   "outputs": {}

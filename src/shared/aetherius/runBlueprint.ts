@@ -24,6 +24,7 @@
 
 import { describeFailure, type AbortSignalLike, type RunEventHandler } from '@aetherius/engine';
 
+import { chronometrer, debutDeRun } from './chrono';
 import { getAetheriusClient } from './client';
 import { describeUkitFailure, type UkitFailure } from './failures';
 import { resolveBlueprint, type BlueprintOrigin, type RunnableBlueprintName } from './registry';
@@ -35,6 +36,9 @@ export interface RunInputs {
 /**
  * Un run reussi porte des sorties ; un run echoue porte un echec deja traduit pour un ecran.
  *
+ * Les deux portent leur **duree**, sur l'horloge reelle : c'est ce qu'un jalon de mesure a besoin de
+ * lire sur un appareil, et c'est une propriete du run, pas un etat de module (chrono.ts).
+ *
  * **Se teste avec `run.ok === false`, jamais avec `!run.ok`.** `tsconfig.json` etend
  * `expo/tsconfig.base` sans activer `strict` (voir docs/qualite.md), et sans `strictNullChecks`
  * TypeScript ne restreint pas une union discriminee sur la simple veracite du discriminant : le
@@ -42,8 +46,13 @@ export interface RunInputs {
  * litteral, elle, restreint correctement.
  */
 export type BlueprintRun =
-    | { readonly ok: true; readonly outputs: Readonly<Record<string, unknown>>; readonly origin: BlueprintOrigin }
-    | { readonly ok: false; readonly failure: UkitFailure };
+    | {
+          readonly ok: true;
+          readonly outputs: Readonly<Record<string, unknown>>;
+          readonly origin: BlueprintOrigin;
+          readonly dureeMs: number;
+      }
+    | { readonly ok: false; readonly failure: UkitFailure; readonly dureeMs: number };
 
 export interface RunBlueprintOptions {
     readonly inputs?: RunInputs;
@@ -93,6 +102,7 @@ export async function runBlueprint(
     name: RunnableBlueprintName,
     options: RunBlueprintOptions = {},
 ): Promise<BlueprintRun> {
+    const debut = debutDeRun();
     try {
         const resolved = await resolveBlueprint(name);
         const result = await getAetheriusClient().run(resolved.blueprint, {
@@ -101,14 +111,18 @@ export async function runBlueprint(
             ...(options.onEvent !== undefined ? { onEvent: options.onEvent } : {}),
             ...(options.signal !== undefined ? { signal: options.signal } : {}),
         });
+        const dureeMs = debutDeRun() - debut;
+        chronometrer(name, dureeMs, result);
 
         // Le verdict vient du moteur, pas d'une comparaison de statut : `describeFailure` rend
         // `undefined` exactement quand il n'y a rien a traduire.
         if (describeFailure(result) !== undefined) {
-            return { ok: false, failure: describeUkitFailure(result) };
+            return { ok: false, failure: describeUkitFailure(result), dureeMs };
         }
-        return { ok: true, outputs: result.outputs, origin: resolved.origin };
+        return { ok: true, outputs: result.outputs, origin: resolved.origin, dureeMs };
     } catch (error) {
-        return { ok: false, failure: describeUkitFailure(error) };
+        const dureeMs = debutDeRun() - debut;
+        chronometrer(name, dureeMs);
+        return { ok: false, failure: describeUkitFailure(error), dureeMs };
     }
 }

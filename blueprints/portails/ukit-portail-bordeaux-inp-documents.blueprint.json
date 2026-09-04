@@ -28,8 +28,15 @@
     },
     {
       "action": "wait",
-      "ms": 6000,
-      "note": "La cascade doit avoir fini de se decider avant qu'on regarde ou l'on est — meme raison que sur les trois autres portails de cet etablissement."
+      "ms": 4000,
+      "note": "La pause qui protege la premiere operation, et elle est MESUREE SUR APPAREIL le 2026-09-04. Elle avait ete retiree au profit du seul `wait_for` qui suit ; un parcours froid sur Android l'a immediatement dementi : le `wait_for` est revenu en 31 990 ms, c'est-a-dire l'echeance de l'APPELANT (20 000 + 2 000 + 50 %) et non son propre plafond — donc l'operation s'est PERDUE, la page n'a jamais repondu. La cause est visible en comparant avec `ukit.portail.verification`, joue trente secondes plus tot dans le meme parcours : lui navigue DROIT sur le CAS, son document est le bon des le chargement, et son `wait_for` repond en 11 ms. Ici on navigue vers un SERVICE, qui rebondit : l'agent s'installe sur un document intermediaire, l'operation part, puis le document est remplace sans que la vue le signale — le host ne rejoue donc pas l'operation comme il le ferait pour un `DocumentLostError`. La regle qui en sort vaut au-dela de ce fichier : une operation injectee n'est sure apres un `navigate` que si celui-ci ATTERRIT SUR SON DOCUMENT FINAL. 4 000 ms et non 6 000 : c'est la valeur qui vient de prouver, sur le meme appareil, qu'elle couvre la cascade d'authentification apres soumission — laquelle est plus longue qu'une simple redirection de service."
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username, .label-valeur",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:DOCUMENTS_INDISPONIBLES",
+      "note": "« Le formulaire, ou la page utile » : l'union des deux dit l'etat REEL de la page, la ou une pause fixe de 6 s le supposait. La sonde `as: count` qui suit repond alors instantanement et decide la branche, exactement comme avant — elle est seulement posee au bon moment. C'est l'attente que CHAQUE lancement payait, session ouverte comprise. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : la navigation d'ouverture prend 0,6 a 1,7 s selon le service, et 500 ms de plus suffisaient deja a voir la page ; le plafond de 20 s couvre un telephone en cellulaire avec une marge large, et il fait echouer PLUS TOT qu'avant (6 s + 30 s) quand le portail est vraiment muet. L'union est un selecteur CSS standard, donc portable : `locator(...).first` cote Playwright, `matchFirst` cote embarque — aucun mode strict sur cette action. Repli si un appareil dementait la mesure : la pause fixe d'avant, republiee en une commande. Le code d'echec est celui du `wait_for` de cible, inconditionnel dans ce fichier — au pluriel, comme ce fichier l'ecrit depuis le jalon 6-G."
     },
     {
       "id": "porte",
@@ -64,7 +71,8 @@
     {
       "action": "wait",
       "when": "{{ steps.porte.formulaire > 0 }}",
-      "ms": 8000
+      "ms": 4000,
+      "note": "La cascade d'authentification enchaine plusieurs sauts puis le client pose son fragment ; une operation emise pendant cette cascade se perd EN SILENCE sur un appareil. La pause reste donc — c'est un contournement d'une limite du moteur, pas une facon d'attendre — mais elle n'est plus calee sur le pire cas suppose. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : la cascade complete tient en 512 ms, et le `wait_for` qui suit rend le reste du temps au lieu de le bruler. 4 s laissent a un telephone en cellulaire trois a quatre fois la mesure. Elle n'est payee que si l'on s'est reellement authentifie. Ce fichier est le moins expose : l'operation qui suit la pause est un `navigate`, lequel s'appuie sur les generations de document du host et non sur une operation injectee."
     },
     {
       "action": "wait_for",

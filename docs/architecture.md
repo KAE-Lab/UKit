@@ -246,6 +246,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/aetherius/registry.ts`](../src/shared/aetherius/registry.ts) | le registre branché : magasin de cache, rafraîchissement, retour à l'embarqué, diagnostic |
 | [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | un échec de run traduit en famille d'écran et en clé de traduction |
 | [`shared/aetherius/runBlueprint.ts`](../src/shared/aetherius/runBlueprint.ts) | l'appel type : résoudre, jouer, rendre des sorties ou un échec décrit |
+| [`shared/aetherius/chrono.ts`](../src/shared/aetherius/chrono.ts) | la durée d'un run et de chacun de ses steps, sous `__DEV__` ([qualite.md](qualite.md#lire-un-run-plutôt-que-le-supposer)) |
 | [`shared/aetherius/index.ts`](../src/shared/aetherius/index.ts) | la porte d'entrée du socle : un service importe d'ici, jamais des paquets |
 | [`shared/aetherius/secrets.test.ts`](../src/shared/aetherius/secrets.test.ts) · [`delivery.test.ts`](../src/shared/aetherius/delivery.test.ts) · [`failures.test.ts`](../src/shared/aetherius/failures.test.ts) | les tests du socle, joués par `npm test` ([qualite.md](qualite.md)) |
 | [`shared/supabase/client.ts`](../src/shared/supabase/client.ts) | client anonyme de la base de publication, construit au premier usage ([backend.md](backend.md)) |

@@ -1221,7 +1221,14 @@ au premier que par sa forme :
 | Identité | `PRÉNOM NOM` en un champ | nom et prénom séparés, recomposés par le fichier |
 | INE | état civil | **onglet Accès** |
 | Formation | vue *Inscriptions*, un tableau | vue *Parcours*, une carte par année |
-| Durée du parcours froid | ~46 s | ~24 s |
+| Durée du parcours froid | **43,0 s → 14,1 s** | **48,2 s → 25,3 s** |
+| Durée du parcours froid *(chiffres antérieurs)* | ~46 s | ~24 s |
+
+Les deux premières valeurs sont mesurées au poste le 2026-09-04, avant puis après le jalon
+[6.1-D](../phase-6/6-1-d-publication.md) — le parcours froid est la somme de `verification` et de
+`dossier`. La ligne des chiffres antérieurs est conservée parce qu'elle a servi de référence pendant
+un mois, mais elle n'est plus comparable : celui de l'INP est **antérieur aux trois vues bonus**
+(*Accès*, *Parcours*, arbre ADE) que la sonde du 2026-08-25 a ajoutées, chacune avec sa pause.
 
 Ce que ça établit, et qui vaut pour tous les portails à venir : **c'est la sortie qui est le
 contrat.** Les deux fichiers rendent les mêmes champs, et les écrans ne savent toujours pas qu'il
@@ -2055,14 +2062,19 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 
 ## Limites connues
 
-- **Le parcours froid s'est allongé** — d'environ 40 s à 46 s à Bordeaux, de 12 s à 24 s à l'INP.
-  C'est le prix de la formation et, à l'INP, de l'INE : chaque vue de plus est une navigation et une
-  pause de 6 s, calibrée pour un téléphone en cellulaire et non pour un poste filaire. Le délai n'est
-  payé **qu'au premier login**, et les lancements suivants sont des parcours chauds.
-- **Un mot de passe faux coûte environ 13 s.** Le script d'origine lisait le message d'erreur du CAS
-  en deux secondes. Descendre plus bas demanderait d'interroger la page pendant la cascade de
-  navigations qui suit la soumission — là où une opération se perd en silence, ce qui mettrait le
-  chemin **nominal** en risque pour améliorer le chemin d'erreur.
+- **Le parcours froid a été mesuré, puis raccourci de moitié** (jalon
+  [6.1-D](../phase-6/6-1-d-publication.md), 2026-09-04). Il s'était allongé à mesure qu'on ajoutait
+  des vues, chacune payant une pause de 6 s calibrée à la main : 43,0 s à Bordeaux, 48,2 s à l'INP,
+  mesurées au poste. En chronométrant chaque cascade, on a trouvé que le travail réel tenait en une à
+  deux secondes par Blueprint — le reste était de l'attente aveugle. Mesuré **sur appareil**, il est
+  aujourd'hui de **14,1 s à Bordeaux et 25,3 s à l'INP**. Ce qui reste à l'INP,
+  ce sont ses trois vues bonus : leur rendu est réellement lent (2,3 s et 2,8 s mesurés), et leur
+  pause n'a donc **pas** bougé. Le délai n'est payé **qu'au premier login**.
+- **Un mot de passe faux coûte environ 7 s** — 7,2 s mesurées sur appareil le 2026-09-04 (9,4 s au
+  poste), contre une vingtaine avant que les attentes ne soient resserrées. Le script d'origine lisait le message
+  d'erreur du CAS en deux secondes. Descendre plus bas demanderait d'interroger la page pendant la
+  cascade de navigations qui suit la soumission — là où une opération se perd en silence, ce qui
+  mettrait le chemin **nominal** en risque pour améliorer le chemin d'erreur.
 - **Une source injoignable n'est jamais rangée en `unavailable`**, et c'est une limite du moteur
   mesurée sur appareil. Une adresse qui **refuse la connexion** fait rendre à iOS sa propre page
   d'erreur : l'agent s'y injecte et s'annonce, donc la navigation « réussit », et c'est l'attente
@@ -2084,9 +2096,13 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 - **La feuille d'échec ne diagnostique pas.** Elle montre le titre et le message de l'échec ; le
   `detail` du moteur reste dans le journal, et un `engine` reste « un problème de notre côté », sans
   bouton — le distinguer d'une source morte se traite chez Aetherius (ci-dessus).
-- **Le parcours chaud dure une vingtaine de secondes**, dont 15 s de pause fixe imposée par la
-  cascade d'authentification du webmail. Le compteur de messages arrive donc après l'ouverture de
-  l'onglet, pas avec elle.
+- **Le parcours chaud dure quelques secondes** — 4,4 s mesurées sur appareil pour la messagerie de
+  Bordeaux, contre 23,9 s avant le jalon [6.1-D](../phase-6/6-1-d-publication.md). La pause fixe qui
+  suit la soumission est passée de 15 s à 5 s, et l'attente d'ouverture de 6 s est devenue
+  conditionnelle. Elle ne disparaîtra pas complètement : une opération émise pendant la cascade
+  d'authentification du webmail **se perd en silence** sur un appareil, et cette pause est ce qui la
+  protège. Le compteur de messages arrive donc toujours après l'ouverture de l'onglet, mais de
+  beaucoup moins loin.
 - **Un prénom composé de deux prénoms n'en montre que le premier.** C'est le bon résultat pour une
   salutation ; l'état civil complet reste visible dans les réglages du compte.
 - **Le compteur peut valoir `null`.** `as: "number"` rend un entier ou rien ; un libellé sans

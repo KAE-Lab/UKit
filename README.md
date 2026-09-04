@@ -306,6 +306,22 @@ livré ; elle est mise à jour à chaque contribution.
   chaque source sans identifiant depuis un runner GitHub et ouvrent une issue quand une source tombe —
   ce qui manquait l'été où le relais est mort sans que personne ne le sache.
   [docs/pilotage.md](docs/pilotage.md)
+- [x] **Les attentes des portails, mesurées** (6.1-D) — neuf Blueprints de portail portaient **60 s
+  de pauses aveugles**, calées à la main sur le pire cas du jour où elles avaient été écrites, alors
+  que le travail réel de chacun tient en une à deux secondes. Elles sont désormais **chronométrées**,
+  cascade par cascade : l'attente d'ouverture — celle que *chaque* lancement paie — est devenue un
+  `wait_for` sur l'union « le formulaire, ou la page utile », la chronologie Moodle attend que son
+  gabarit de chargement cède, et les pauses qui restent portent leur mesure et sa date. Sur appareil,
+  **un widget passe de 24-29 s à 4,4-9,8 s**, le parcours froid de Bordeaux **de 43,0 s à 14,1 s** et
+  celui de Bordeaux INP **de 48,2 s à 25,3 s** ; un mot de passe faux se dit en 7,2 s au lieu d'une
+  vingtaine. Deux pauses n'ont **pas** bougé, et c'est une décision mesurée : les vues lentes de l'INP
+  rendent en 2,3 et 2,8 s, et les raccourcir vidait silencieusement des lectures — sans le moindre
+  échec, ce qui est exactement ce qui rend une lecture bonus dangereuse à resserrer. La vérification
+  sur appareil a d'ailleurs **corrigé deux décisions que le poste validait**, dont la règle qui les
+  résume : une opération injectée n'est sûre après un `navigate` que si celui-ci atterrit sur son
+  document final. C'est une **publication**, pas une release : les appareils déjà en 6.0 en profitent
+  au prochain manifeste.
+  [docs/phase-6/6-1-d-publication.md](docs/phase-6/6-1-d-publication.md)
 - [x] **Passe de code** (6.1-C) — ce que la documentation portait comme limites connues, fermé ou
   décidé : un **retour au premier plan** partagé, qui distingue le retour d'arrière-plan d'une invite
   système — les annonces se relisent, le Planning recalcule « Aujourd'hui » après minuit, les widgets

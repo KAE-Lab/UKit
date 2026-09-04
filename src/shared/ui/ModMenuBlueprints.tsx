@@ -21,6 +21,7 @@ import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 import {
     describeDelivery,
+    dureeLisible,
     lastRefreshReport,
     refreshBlueprints,
     revertBlueprints,
@@ -74,10 +75,14 @@ export default function ModMenuBlueprints({ theme }: ModMenuBlueprintsProps) {
     }, [relire]);
 
     /**
-     * Jouer un Blueprint depuis le panneau.
+     * Jouer un Blueprint depuis le panneau, et dire combien de temps il a pris.
      *
      * C'est ce qui rend le parcours de correction verifiable de bout en bout : voir une ligne passer
      * a « distant » prouve que le document publie est en place, le jouer prouve qu'il s'execute.
+     *
+     * La duree est la depuis le jalon 6.1-D : resserrer les attentes d'un portail demande de mesurer
+     * un run **sur un appareil, en cellulaire**, et ce menu existe en production — le detail par step
+     * part dans la console de developpement (chrono.ts), le total se lit ici sans poste.
      */
     const jouer = useCallback(async (name: RunnableBlueprintName) => {
         setRuns((etat) => ({ ...etat, [name]: 'en cours…' }));
@@ -86,7 +91,7 @@ export default function ModMenuBlueprints({ theme }: ModMenuBlueprintsProps) {
             run.ok === false
                 ? `échec ${run.failure.kind}`
                 : `ok, ${Object.keys(run.outputs).length} sorties (${run.origin})`;
-        setRuns((etat) => ({ ...etat, [name]: verdict }));
+        setRuns((etat) => ({ ...etat, [name]: `${verdict} — ${dureeLisible(run.dureeMs)}` }));
     }, []);
 
     return (

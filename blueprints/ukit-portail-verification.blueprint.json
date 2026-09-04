@@ -59,7 +59,8 @@
     },
     {
       "action": "wait",
-      "ms": 8000
+      "ms": 4000,
+      "note": "La cascade d'authentification enchaine plusieurs sauts puis le client pose son fragment ; une operation emise pendant cette cascade se perd EN SILENCE sur un appareil. La pause reste donc — c'est un contournement d'une limite du moteur, pas une facon d'attendre — mais elle n'est plus calee sur le pire cas suppose. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : la cascade complete tient en 514 ms a Bordeaux, 731 ms a l'INP, et le `wait_for` qui suit rend le reste du temps au lieu de le bruler. 4 s laissent a un telephone en cellulaire trois a quatre fois la mesure. Elle n'est payee que si l'on s'est reellement authentifie."
     },
     {
       "action": "wait_for",

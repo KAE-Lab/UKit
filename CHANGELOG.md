@@ -114,6 +114,16 @@ la première soirée en production a montré de fragile, réparé avant tout con
 
 ### Modifié
 
+- **Les portails universitaires répondent deux à trois fois plus vite** (6.1-D). Les neuf Blueprints
+  de portail portaient 60 s de pauses fixes, écrites à la main faute de mesure. Elles ont été
+  chronométrées : l'attente d'ouverture est devenue une attente conditionnelle — « le formulaire, ou
+  la page utile » —, la chronologie Moodle attend que son gabarit de chargement cède, et les pauses
+  qui restent sont calées sur ce qu'on a relevé. Sur appareil, un widget passe de 24-29 s à
+  **4,4-9,8 s**, le parcours froid de Bordeaux **de 43,0 s à 14,1 s**, celui de Bordeaux INP **de
+  48,2 s à 25,3 s**, et un mot de passe faux se dit en **7,2 s** au lieu d'une vingtaine. Les sorties
+  sont identiques, champ pour champ. Deux pauses de l'INP n'ont pas bougé : leurs vues rendent
+  réellement en 2,3 et 2,8 s, et les raccourcir vidait des lectures sans produire le moindre échec.
+  **C'est une publication** — les appareils déjà en 6.0 en profitent sans mise à jour.
 - Le dialogue informatif (`Dialogue`), la modale « Bientôt » et le choix d'établissement
   (`ChoixEtablissement`) remontent dans `shared/ui` ; la bascule d'établissement est un service partagé.
 - Le socle du catalogue vit dans son propre fichier de données, et un test le compare aux lignes SQL
@@ -123,6 +133,9 @@ la première soirée en production a montré de fragile, réparé avant tout con
   recopie la bibliothèque.
 - Le menu de développement gagne une **réinitialisation complète** — trousseau, documents, caches,
   puis rechargement — pour voir ce qu'un tout nouvel étudiant voit.
+- Le panneau **Blueprints** du menu de développement dit combien de temps un run a pris, et chaque
+  run écrit le détail de ses steps dans la console sous `__DEV__` : mesurer une lenteur ne demande
+  plus un poste.
 
 - **Trois requêtes de découverte des bibliothèques au lieu de douze** (6.1-C) : la position de
   l'étudiant et deux points bordelais. Les six sites exclusifs de Pau, La Rochelle, Limoges et

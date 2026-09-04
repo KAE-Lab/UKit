@@ -174,6 +174,134 @@ sources tierces du tableau de bord, elles, **gardent leur contenu** : un tirer-p
 relit à la demande ([campus.md](features/campus.md#le-tableau-de-bord)). Les messages de service
 arrivaient déjà au retour ; c'est ce comportement qui a été étendu.
 
+### Réessayer après un parcours froid en échec ramène l'écran de chargement plein
+
+Constaté sur appareil le 2026-09-04, pendant la vérification du jalon
+[6.1-D](phase-6/6-1-d-publication.md). C'est le même symptôme que S3 — deux vues pour un seul run —
+que [6.1-A](phase-6/6-1-a-robustesse-scolarite.md) avait traité, mais par un chemin que la correction
+ne couvre pas.
+
+Le mécanisme, tel que
+[`ScolariteDashboard`](../src/features/Scolarite/screens/ScolariteDashboard.tsx) l'écrit : l'écran
+plein s'affiche quand `progression.visible && coldData === null`, et la garde de 6.1-A
+([`useSessionDepuisLeFormulaire`](../src/features/Scolarite/hooks/useSessionDepuisLeFormulaire.ts))
+ne retient la page que pour une session **partie du formulaire**. Or la séquence observée est :
+
+1. `ukit.portail.verification` réussit → les identifiants sont validés et **écrits** ;
+2. `ukit.portail.bordeaux.dossier` échoue → aucun dossier n'a été lu, donc `coldData` reste `null` ;
+3. la progression disparaît, le drapeau du formulaire retombe, et comme les identifiants existent
+   désormais, l'onglet montre le tableau de bord avec son encart d'échec ;
+4. on touche « réessayer » **dans l'encart** — donc pas depuis le formulaire — et là,
+   `formulaire.enCours` vaut `false` pendant que `coldData` vaut toujours `null` : l'écran plein
+   reprend la main.
+
+La règle écrite dans [`scolarite.md`](features/scolarite.md) réserve l'écran plein au « parcours
+froid qu'on n'a pas demandé depuis un formulaire : au lancement, ou sur *Actualiser mon dossier* ».
+Ce cas en respecte la lettre — le geste ne vient pas du formulaire — mais pas l'intention : sur
+« Actualiser mon dossier » la page tient parce qu'un dossier existe déjà, alors qu'ici il n'y en a
+pas, et l'utilisateur voit donc la page changer sous son doigt au moment précis où il essaie de
+réparer quelque chose.
+
+La direction, quand une session le reprendra : le drapeau ne doit pas être « la session vient du
+formulaire » mais « la session vient d'un geste **de l'utilisateur sur cet écran** » — un réessai en
+fait partie. Le nommer autrement suffirait sans doute, mais c'est une décision d'écran, pas une
+retouche : le sujet touche aussi la fiche du compte, second hôte de la même garde.
+
+**Pas corrigé dans 6.1-D**, dont le périmètre est les attentes des Blueprints. Le corriger en passant
+aurait mêlé un changement d'écran à une campagne de mesure et rendu les deux invérifiables
+([CONTRIBUTING.md](../CONTRIBUTING.md#un-travail-visuel-nest-pas-documenté-au-même-endroit)).
+
+### La tuile d'établissement des Réglages reste sur l'ancien campus
+
+Constaté sur appareil le 2026-09-04, pendant la vérification du jalon
+[6.1-D](phase-6/6-1-d-publication.md). Changer de campus **depuis l'écran Scolarité** — le lien
+« Tu es d'un autre campus ? » ajouté par [6.1-A](phase-6/6-1-a-robustesse-scolarite.md) — laisse
+l'onglet Réglages afficher le nom de l'établissement quitté.
+
+[`SettingsScreen`](../src/features/Settings/screens/SettingsScreen.tsx) tient `institutionName` dans
+son **état local** : il est posé une fois au constructeur (`nomCourtEtablissement()`) et n'est mis à
+jour que par `setInstitution`, c'est-à-dire par une bascule déclenchée **depuis cet écran-là**.
+L'onglet étant déjà monté dans le navigateur d'onglets, une bascule venue d'ailleurs ne le rejoint
+jamais.
+
+Ce qui rend le défaut évitable : `SettingsManager.setEtablissement` **émet déjà** l'événement
+`etablissement` ([`AppCore.tsx`](../src/shared/services/AppCore.tsx)), et le manager porte
+`subscribe`/`unsubscribe`. L'écran n'y est simplement pas abonné pour ce champ. La direction est donc
+un abonnement au montage, résilié au démontage — le même geste que l'accueil a reçu en 6.1-C pour le
+catalogue.
+
+**C'est la même famille que le défaut précédent, et ça vaut d'être dit une fois pour les deux** : en
+donnant un **second hôte** à un geste — le choix d'établissement ici, le réessai de session là —,
+[6.1-A](phase-6/6-1-a-robustesse-scolarite.md) a déplacé le composant partagé sans rendre observable
+l'état qui l'entoure. Le composant a bien été remonté dans `shared/ui` ; l'état, lui, est resté local
+à son hôte d'origine. C'est le contrôle à faire la prochaine fois qu'un geste gagne un second point
+d'entrée.
+
+**Pas corrigé dans 6.1-D**, dont le périmètre est les attentes des Blueprints
+([CONTRIBUTING.md](../CONTRIBUTING.md#un-travail-visuel-nest-pas-documenté-au-même-endroit)).
+
+### Une pause dimensionnée sur un temps de lecture alors qu'une navigation suivait — *valeur restaurée le 2026-09-04*
+
+Le jalon [6.1-D](phase-6/6-1-d-publication.md) avait ramené de 6 000 à 2 500 ms la pause qui précède
+la vue *Parcours* du dossier de Bordeaux INP, en la dimensionnant sur le rendu de la vue précédente —
+306 ms mesurées au poste pour le premier `label-valeur` de la vue *Accès*.
+
+**C'était la mauvaise référence, et ça se démontre sans mesure** : ce qui suit cette pause n'est pas
+une lecture mais un `navigate`. Une pause devant une navigation doit couvrir la page **posée**, pas
+l'apparition de son premier élément — sinon la navigation suivante part pendant que la précédente
+charge encore. La valeur est revenue à 6 000, publiée en v9, et la règle est écrite dans
+[`blueprints.md`](blueprints.md#attendre--quatre-cas-et-un-seul-reste-une-pause).
+
+**Ce qui n'est pas établi, et qu'il ne faut pas lire ici** : que cette pause soit la cause du parcours
+froid qui mourait à 97 % sur un iPhone le même jour. Trois variables étaient en jeu en même temps, et
+aucune n'a été isolée :
+
+- la pause raccourcie ;
+- **le réseau** — sur le même eduroam, `ukit.celcat.jour` expirait à 30 s depuis deux téléphones
+  pendant que le poste obtenait la même réponse en 0,19 s, trois fois de suite ;
+- **le compte de test, utilisé en parallèle par son propriétaire** — constaté à la messagerie, dont le
+  compteur de non-lus est passé de 1 à 0 entre deux runs. Une session CAS reprise ailleurs peut
+  invalider celle qu'un parcours tient en cours de route.
+
+Après la republication, un essai a échoué puis **deux ont réussi d'affilée**. C'est ce qui rend
+aujourd'hui l'hypothèse du compte partagé la plus probable — une session CAS reprise ailleurs fait
+rebondir la navigation vers le SSO, ce qui produit précisément une navigation qui n'aboutit jamais —
+sans pour autant que quiconque l'ait isolée. **La valeur a donc été restaurée parce qu'elle était mal
+justifiée, pas parce qu'on a prouvé qu'elle cassait quelque chose.** La distinction compte : le défaut
+de forme ci-dessous, lui, est indépendant de tout ça et reste le vrai sujet.
+
+### Une navigation bonus non gardée peut emporter tout le parcours froid
+
+Constaté sur un iPhone le 2026-09-04, en wifi de campus, pendant la vérification du jalon
+[6.1-D](phase-6/6-1-d-publication.md) : le parcours froid de Bordeaux INP meurt à 97 % du
+chargement, après une trentaine de secondes, sur « Service indisponible ».
+
+**Le déclencheur était une régression du jalon, et elle est corrigée** (voir plus bas) ; mais elle a
+mis au jour un défaut de forme qui, lui, reste ouvert. Les trois lectures bonus du dossier INP sont
+chacune précédées d'un `navigate` **non gardé** :
+
+```
+navigate  ADE (myplanning.jsp)   ← aucune garde : s'il échoue, le run meurt
+wait      6000
+extract   planning  as: list     ← protégé, lui : zéro correspondance rend []
+```
+
+La règle « une lecture bonus ne doit jamais emporter la connexion » a été appliquée à la **lecture** —
+`as: "list"` ne lève jamais — et oubliée sur la **navigation qui la précède**. Or un `navigate` qui
+n'aboutit pas lève un `NetworkError`, donc famille `unavailable`, donc le run entier échoue : un
+étudiant perd son identité, son INE et sa formation **parce qu'une page d'emploi du temps n'a pas fini
+de charger**. Le motif n'est pas propre à l'INP —
+[`ukit.portail.bordeaux.dossier`](../blueprints/ukit-portail-bordeaux-dossier.blueprint.json) a la
+même forme pour son annuaire.
+
+La direction : **une lecture bonus qui demande une navigation n'appartient pas au Blueprint qui porte
+l'identité.** Le vocabulaire du moteur ne sait pas rendre un `navigate` inoffensif — ni `try` ni
+`when` ne l'attrapent —, donc la protection ne peut pas venir du fichier : elle vient du
+**découpage**, un Blueprint par lecture bonus dont l'échec ne coûte que lui-même. C'est ce que la
+Phase 6 a fait pour la messagerie en la sortant de la session ([6-F](phase-6/6-f-scolarite.md)). Une
+session à part entière : elle change le contrat de sorties du dossier, donc elle touche l'application
+autant que les fichiers.
+
 ## Limites connues, qui ne sont pas des défauts
 
 - **La précision horaire d'une bibliothèque fermée reste en français.** Le fournisseur ne publie

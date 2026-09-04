@@ -7,6 +7,7 @@
  * Vue d'ensemble : docs/blueprints.md · Cadrage : docs/phase-6/README.md
  */
 
+export { dureeLisible } from './chrono';
 export { getAetheriusClient } from './client';
 export { describeUkitFailure, reportFailure, serviceAbsent, ukitFailure, FAILURE_PRESENTATION } from './failures';
 export type { FailurePresentation, UkitFailure, UkitFailureKind } from './failures';
