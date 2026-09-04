@@ -145,6 +145,46 @@ poste de développement indépendant de ce qu'Expo fait de son application bac �
 > tunnel sert : `curl <url>/assets/assets/pdfjs/pdf.min.mjs.txt?platform=android` doit rendre 200 et
 > 518 555 octets.
 
+### Le build de développement : les quatre choses qui se perdent
+
+Fait le 2026-09-04 pour un iPhone. La marche à suivre est celle d'Expo — enregistrer l'appareil
+depuis [expo.dev](https://expo.dev/accounts/kaelab/settings/apple-devices), puis
+`npx eas-cli build --profile development --platform ios`. Ce qui suit est ce qui **ne** s'y trouve
+pas, parce que c'est propre à ce projet.
+
+**On ne reconstruit que sur un changement natif.** Le build embarque le runtime ; le JavaScript vient
+de Metro comme avec Expo Go. Ajouter un module `expo-*`, toucher à la configuration native
+d'`app.config.ts`, monter de SDK : on reconstruit. Modifier du code, un Blueprint, un écran : non.
+C'est la ligne qui coûte le plus cher à ignorer — chercher pendant une heure un défaut qui n'est que
+l'absence d'un module dans un vieux binaire.
+
+**`expo-dev-client` est une dépendance du dépôt**, ajoutée automatiquement au premier build. Elle doit
+être commitée : sans elle, le dépôt ne décrit plus ce qui a été construit.
+
+**L'identifiant reste partagé avec l'application du store — et c'est une décision.**
+`com.bordeaux.ukit` est le même des deux côtés, donc iOS les tient pour la même application :
+installer le build de développement **remplace** celle du store, et efface ses données. On pourrait
+les faire cohabiter en donnant un identifiant distinct au profil de développement ; **on ne le fait
+pas**, parce que tester au quotidien dans les conditions réelles vaut mieux que de garder les deux.
+Ne pas « corriger » ce point sans raison.
+
+**Et iOS 16 demande le mode développeur** : *Réglages → Confidentialité et sécurité → Mode
+développeur*, puis un redémarrage. L'entrée n'apparaît qu'après avoir installé une application signée
+en interne.
+
+> **Ce que ça change pour la vérification, et c'est le vrai gain.** Expo Go est un bac à sable
+> générique : le code y tourne avec *ses* droits et *ses* limites. Un build de développement porte le
+> runtime natif d'UKit — son identifiant, ses permissions, ses droits, ses modules. Deviennent donc
+> testables des choses qui ne l'étaient pas, à commencer par **les notifications push**, retirées
+> d'Expo Go depuis le SDK 53 : les rappels de cours, capacité livrée de l'application, n'y étaient pas
+> vérifiables. `__DEV__` reste vrai, donc le chrono des runs
+> ([qualite.md](qualite.md#lire-un-run-plutôt-que-le-supposer)) continue d'écrire ses mesures.
+
+**On y reste après le saut de SDK.** Revenir à Expo Go rendrait le projet dépendant d'un calendrier
+qu'on ne maîtrise pas, et ne rendrait de toute façon pas les capacités qu'il ne sait plus jouer. Expo
+Go garde un usage : un essai jetable, ou faire tourner le projet chez quelqu'un qui n'a pas les
+identifiants de signature.
+
 ### Le saut de SDK : à faire, mais pas dans la 6.1
 
 **Décision du 2026-09-04.** Passer de 54 à 57 veut dire React Native **0.81.5 → 0.86.3** — cinq
