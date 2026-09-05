@@ -12,6 +12,7 @@ import { useFavorites } from '../../hooks/useFavorites';
 import { useSavedFilter } from '../../hooks/useSavedFilter';
 import { CrousSectionCard, CARD_WIDTH } from './CrousSectionCard';
 import { SectionEtatVide } from './SectionEtatVide';
+import { useChargementDeSection, useRevisionDuTableauDeBord } from '../rafraichissement';
 
 export function CrousSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -20,7 +21,9 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
     // Meme hook que la liste complete : un echec y reste discret — le carrousel disparait et la ligne
     // de journal du service dit pourquoi. Le tableau de bord n'est pas l'endroit ou l'on explique une
     // panne, l'ecran dedie l'est.
-    const { restaurants, failure, loading, retry } = useCrousRestaurants(userLat, userLon);
+    const revision = useRevisionDuTableauDeBord();
+    const { restaurants, failure, loading, enCours, retry } = useCrousRestaurants(userLat, userLon, revision);
+    useChargementDeSection('restaurants', enCours);
 
     const { favorites: favRu, toggleFavorite: toggleFavRu } = useFavorites('crous_favorites');
     const [crousFilter, setFiltre] = useSavedFilter('crous_filter', 'all');

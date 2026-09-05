@@ -26,31 +26,23 @@ import type { CelcatResTypes, Etablissement, FormatSalles, PointBalayage } from 
 export const ETABLISSEMENT_DEFAUT = 'bordeaux';
 
 /**
- * Les onze points de balayage des bibliotheques de la region bordelaise.
+ * Les deux points de balayage des bibliotheques du secteur bordelais.
  *
- * **Mesure du 2026-08-08, a lire avant d'y toucher.** Les onze points rendent 14 bibliotheques, et la
- * repartition n'est pas celle qu'on croit : Bordeaux Centre et Talence/Pessac voient les **memes** 8
- * sites, aucun des deux n'ayant d'exclusivite ; cinq points — Poitiers, Perigueux, Agen, Angouleme,
- * Niort — n'en rendent **aucun** ; et seuls Pau, La Rochelle, Limoges et Bayonne portent des sites que
- * personne d'autre ne voit. Reduire la liste est donc tentant, et ce serait un changement de
- * comportement produit : un point muet aujourd'hui peut cesser de l'etre le jour ou une bibliotheque
- * s'inscrit chez le fournisseur. La decision se prend avec ses propres mesures, pas ici.
+ * **Onze jusqu'en 6.1-C**, couvrant la Nouvelle-Aquitaine. La mesure du 2026-08-08 avait dit ce
+ * qu'ils valaient : Bordeaux Centre et Talence/Pessac voient les **memes** 8 sites ; cinq points —
+ * Poitiers, Perigueux, Agen, Angouleme, Niort — n'en rendaient aucun ; Pau, La Rochelle, Limoges et
+ * Bayonne portaient six sites que personne d'autre ne voyait. Douze requetes par ouverture pour
+ * quatorze bibliotheques, dont huit bordelaises.
  *
- * Ils vivaient en dur dans `LibraryService.ts` jusqu'au jalon 6-G. Ce sont des decisions produit —
- * quelles villes on couvre — donc de la donnee de catalogue, corrigeable sans release.
+ * Decision du 2026-09-03, sur ces mesures : UKit vise le secteur bordelais, pas la region (README).
+ * Deux points suffisent a ses huit BU, et la **position de l'etudiant** reste toujours le premier
+ * point du balayage (`LibraryService`) : un etudiant a Pau garde les siennes. Une ville qui
+ * manquerait se rajoute ici et en base — c'est de la donnee de catalogue, corrigeable sans release,
+ * depuis le jalon 6-G.
  */
 export const POINTS_BORDEAUX: readonly PointBalayage[] = [
     { lat: 44.8377, lng: -0.5791 }, // Bordeaux Centre (Victoire, Bastide, Chartrons)
     { lat: 44.7963, lng: -0.6277 }, // Campus Talence / Pessac / Gradignan
-    { lat: 43.2951, lng: -0.3707 }, // Pau
-    { lat: 46.1603, lng: -1.1511 }, // La Rochelle
-    { lat: 45.8336, lng: 1.2611 },  // Limoges
-    { lat: 46.5802, lng: 0.3403 },  // Poitiers
-    { lat: 43.4929, lng: -1.4748 }, // Bayonne / Anglet
-    { lat: 45.1920, lng: 0.7194 },  // Perigueux
-    { lat: 44.2031, lng: 0.6163 },  // Agen
-    { lat: 45.6483, lng: 0.1562 },  // Angouleme
-    { lat: 46.3237, lng: -0.4647 }, // Niort
 ];
 
 /** Les valeurs par defaut d'un champ que la ligne ne porte pas. Un seul endroit, pour un seul sens. */

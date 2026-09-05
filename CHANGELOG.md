@@ -13,8 +13,67 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 La consolidation de la v6 ([docs/phase-6/6-1-mise-a-plat.md](docs/phase-6/6-1-mise-a-plat.md)) : ce que
 la première soirée en production a montré de fragile, réparé avant tout contenu nouveau.
 
+### Ajouté
+
+- **Les chargements disent ce qu'ils attendent** (6.1-E). « Ton emploi du temps arrive… »,
+  « Recherche des salles libres… », « Le portail se charge… » — et une seconde ligne après quatre
+  secondes quand le serveur d'une université traîne, pour qu'une attente longue cesse de ressembler à
+  une panne.
+- **Le contenu apparaît en fondu** là où il remplaçait un indicateur d'un seul coup : les valeurs des
+  widgets de la Scolarité, le premier emploi du temps affiché.
+- **Les interrupteurs et le curseur des Réglages sont dessinés par l'application**, identiques sur
+  iPhone et Android, avec retour haptique. Le curseur de délai se règle aussi au lecteur d'écran.
+- **On passe d'un onglet à l'autre en glissant** entre la Scolarité et les Réglages. Le Planning et
+  le Campus gardent leurs gestes : leur contenu glisse déjà.
+
 ### Corrigé
 
+- **Le premier parcours froid de Bordeaux INP n'échoue plus** (6.1-E). Il tombait à chaque fois, et
+  seul un réessai fonctionnait : une source parfaitement disponible se présentait comme injoignable.
+  La cause n'était ni dans cette application ni dans ses fichiers d'instructions, mais dans le
+  moteur — une WebView cachée l'était aussi pour le navigateur du système, qui cessait alors de
+  donner à la page de quoi finir une cascade d'authentification. Corrigé chez Aetherius, dont
+  l'application consomme désormais la version **0.5.7**.
+- **Et une lecture du dossier de Bordeaux INP perdait son résultat en silence.** Des quatre lectures
+  complémentaires du dossier, une seule enchaînait sans la pause de protection que les trois autres
+  portent : l'opération partait pendant que la page changeait encore, et n'obtenait jamais de
+  réponse. Le parcours mourait alors à quatre-vingt-dix-sept pour cent, après avoir pourtant lu
+  l'identité.
+- **« Se déconnecter » ferme bien la session côté université** (6.1-E). Quand un widget se
+  rafraîchissait au même moment, le geste effaçait le compte sur l'appareil **en laissant le
+  navigateur intégré connecté** : la déconnexion n'obtenait jamais le moteur, et rien ne le disait.
+  Elle l'obtient maintenant, et un échec se voit.
+- **Réessayer après une connexion à moitié échouée garde la page** (6.1-E). L'écran de chargement
+  reprenait tout l'espace au moment précis où l'on essayait de réparer.
+- **L'onglet Réglages suit le changement de campus** fait depuis la Scolarité (6.1-E) : il affichait
+  encore le nom de l'établissement quitté.
+- **Le contenu publié atteint les écrans déjà montés** (6.1-C). Un signal partagé dit le vrai retour
+  au premier plan — après un passage en arrière-plan, pas après un centre de contrôle tiré ni une
+  invite Face ID — et sur ce signal les annonces se relisent, le Planning recalcule « Aujourd'hui »
+  quand la date a changé, et les widgets de la scolarité ne se rejouent plus une seconde fois juste
+  après la biométrie.
+- **La permission calendrier ne bascule plus la synchronisation.** Ouvrir les Réglages sans
+  permission la demandait, puis allumait la synchronisation si elle était accordée — ou ouvrait la
+  modale d'extinction si elle l'était déjà. L'état reste ce qu'il était, et accorder la permission
+  dans les réglages du système suffit au retour.
+- **La synchronisation porte le planning agrégé**, pas le premier favori seul, et un échec de
+  « Forcer une synchronisation » se dit par un toast. Les titres de notification de cours sont
+  traduits, et la section Notifications dit son plafond de vingt.
+- **Réinitialiser efface aussi les favoris et filtres du Campus** : quelqu'un qui efface tout
+  s'attend à ce que tout parte. La bascule d'établissement, elle, les garde.
+- **Un seul cache pour la liste des groupes.** L'écran de recherche tenait le sien, sans expiration
+  et jamais invalidé au changement d'établissement ; il lit celui du manager, daté.
+- **La vue semaine ne recalcule plus ses filtres à chaque rendu**, et les rappels de cours suivent les
+  filtres d'UE dans les deux vues.
+- **La première section de la recherche de groupes est bleue en sombre**, comme en clair : l'index 0
+  de la palette portait la valeur de l'index 4.
+- **L'étape des groupes de l'accueil dit pourquoi elle est vide** — une installation hors ligne
+  voyait une carte muette qui invitait à « affiner » — et propose de réessayer ; les abonnements du
+  parcours sont résiliés au démontage.
+- **La section des salles libres du tableau de bord propose « Réessayer »**, comme les trois autres.
+- **Le trousseau n'est lu qu'une fois au lancement.** Le chrono de 6.1-C a vu une seconde lecture
+  quarante secondes après le premier rendu, que rien n'avait demandée ; un parcours froid aurait pu
+  être relancé par-dessus lui-même.
 - **Une tuile en échec garde sa taille** (6.1-A). Un widget en panne basculait la paire entière en
   rangées, et la page changeait de forme sous les yeux de l'utilisateur. La tuile dit désormais deux
   mots — « Indisponible », « À ressaisir », « Erreur » — et une feuille au toucher porte la phrase et
@@ -45,6 +104,9 @@ la première soirée en production a montré de fragile, réparé avant tout con
 
 ### Ajouté
 
+- **Tirer-pour-rafraîchir sur le tableau de bord Campus** (6.1-C) : les quatre sources se relisent à
+  la demande, sans faire clignoter les carrousels — la seule relecture des sources tierces, décidée
+  plutôt qu'un rejeu silencieux à chaque retour au premier plan.
 - **Des messages de service, sans release** (6.1-B). Une information se montre en bandeau flottant
   en haut de l'écran, un avertissement et un incident en feuille ; l'incident reste rappelé tant
   qu'il dure par la **pastille d'état de service** — un « i » à droite du grand titre de chaque
@@ -84,6 +146,16 @@ la première soirée en production a montré de fragile, réparé avant tout con
 
 ### Modifié
 
+- **Les portails universitaires répondent deux à trois fois plus vite** (6.1-D). Les neuf Blueprints
+  de portail portaient 60 s de pauses fixes, écrites à la main faute de mesure. Elles ont été
+  chronométrées : l'attente d'ouverture est devenue une attente conditionnelle — « le formulaire, ou
+  la page utile » —, la chronologie Moodle attend que son gabarit de chargement cède, et les pauses
+  qui restent sont calées sur ce qu'on a relevé. Sur appareil, un widget passe de 24-29 s à
+  **4,4-9,8 s**, le parcours froid de Bordeaux **de 43,0 s à 14,1 s**, celui de Bordeaux INP **de
+  48,2 s à 25,3 s**, et un mot de passe faux se dit en **7,2 s** au lieu d'une vingtaine. Les sorties
+  sont identiques, champ pour champ. Deux pauses de l'INP n'ont pas bougé : leurs vues rendent
+  réellement en 2,3 et 2,8 s, et les raccourcir vidait des lectures sans produire le moindre échec.
+  **C'est une publication** — les appareils déjà en 6.0 en profitent sans mise à jour.
 - Le dialogue informatif (`Dialogue`), la modale « Bientôt » et le choix d'établissement
   (`ChoixEtablissement`) remontent dans `shared/ui` ; la bascule d'établissement est un service partagé.
 - Le socle du catalogue vit dans son propre fichier de données, et un test le compare aux lignes SQL
@@ -93,6 +165,22 @@ la première soirée en production a montré de fragile, réparé avant tout con
   recopie la bibliothèque.
 - Le menu de développement gagne une **réinitialisation complète** — trousseau, documents, caches,
   puis rechargement — pour voir ce qu'un tout nouvel étudiant voit.
+- Le panneau **Blueprints** du menu de développement dit combien de temps un run a pris, et chaque
+  run écrit le détail de ses steps dans la console sous `__DEV__` : mesurer une lenteur ne demande
+  plus un poste.
+
+- **Trois requêtes de découverte des bibliothèques au lieu de douze** (6.1-C) : la position de
+  l'étudiant et deux points bordelais. Les six sites exclusifs de Pau, La Rochelle, Limoges et
+  Bayonne sortent de la liste par défaut — le périmètre est bordelais, et un étudiant qui s'y trouve
+  les garde par sa position. Les points sont une donnée de catalogue, à republier.
+- **La position est résolue une fois pour tout le Campus**, partagée cinq minutes entre le tableau de
+  bord et les listes ; la distance à vol d'oiseau vit dans un module pur testé.
+- **L'outillage à zéro écart** : ESLint sans avertissement (35 traités un par un), `expo-doctor`
+  sans écart (sept paquets réalignés, `.expo/` ignoré), `setup-java@v5` dans le workflow de release,
+  `StyleWelcome` et `WelcomeButton` supprimés — deux cents lignes de styles que plus rien ne montait.
+- **La réinitialisation complète du menu de développement garde ses simulations** — HORS LIGNE, date
+  — le temps de la relance : c'est en HORS LIGNE qu'on veut voir ce qu'un nouvel étudiant sans réseau
+  voit.
 
 ## [6.0.0] - 2026-08-31
 

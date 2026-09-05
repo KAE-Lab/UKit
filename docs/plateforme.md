@@ -113,6 +113,116 @@ npm run build:ios         # eas build -p ios --profile preview
 `cli.appVersionSource: "remote"` : c'est **EAS qui fait autorité sur le numéro de build**, pas les
 `versionCode` du fichier de configuration.
 
+### Expo Go ne sert plus, et il faut savoir pourquoi
+
+**Expo Go n'embarque qu'un seul SDK à la fois, le plus récent.** Le 2026-09-04, le store l'a passé en
+**SDK 57** ; le projet est en **54**. L'application du store a donc cessé d'ouvrir UKit — sur iOS
+comme sur Android, avec un message explicite sur Android et une simple absence sur iOS, dont
+l'interface a de surcroît retiré le champ de saisie d'URL. Ce n'est pas un incident : ça se
+reproduira à chaque sortie de SDK.
+
+Deux sorties, et elles ne se remplacent pas :
+
+- **Android** : Expo publie un client par SDK, en APK, sur
+  [`expo/expo-go-releases`](https://github.com/expo/expo-go-releases) — la version pour le SDK 54 est
+  `Expo-Go-54.0.8.apk`. Il faut désinstaller celui du store d'abord : Android refuse de rétrograder
+  une application installée. L'URL exacte se lit dans `https://api.expo.dev/v2/versions/latest`, champ
+  `sdkVersions["54.0.0"].androidClientUrl`.
+- **iOS** : **il n'y en a pas.** Apple ne laisse pas réinstaller une version antérieure du store. La
+  seule voie est un **build de développement** (`eas build --profile development`), c'est-à-dire le
+  client Expo Go du projet, contenant son propre runtime natif. On l'installe une fois ; il ne se
+  reconstruit que quand une dépendance **native** change, pas à chaque modification de code.
+
+Le build de développement est de toute façon la bonne réponse pour les deux plateformes : il rend le
+poste de développement indépendant de ce qu'Expo fait de son application bac à sable.
+
+> **Un piège du tunnel, mesuré le 2026-09-04.** Sur Android, le lecteur de PDF charge **pdf.js comme
+> un asset servi par Metro** (c'est la raison d'être de `metro.config.js`). En Expo Go via un tunnel,
+> ouvrir un document va donc chercher 1,8 Mo de bibliothèque **à travers ngrok** — et si le tunnel
+> tombe, l'écran casse sans que l'application y soit pour quoi que ce soit. Le journal dit alors
+> `Tunnel connection has been closed`, et une reconnexion suffit. **Ce chemin n'existe pas dans un
+> build** : les assets y sont dans le binaire. Avant de chercher un défaut du lecteur, vérifier que le
+> tunnel sert : `curl <url>/assets/assets/pdfjs/pdf.min.mjs.txt?platform=android` doit rendre 200 et
+> 518 555 octets.
+
+### Le build de développement : les quatre choses qui se perdent
+
+Fait le 2026-09-04 pour un iPhone. La marche à suivre est celle d'Expo — enregistrer l'appareil
+depuis [expo.dev](https://expo.dev/accounts/kaelab/settings/apple-devices), puis
+`npx eas-cli build --profile development --platform ios`. Ce qui suit est ce qui **ne** s'y trouve
+pas, parce que c'est propre à ce projet.
+
+> **Le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md) a changé le natif, donc le build de
+> développement du 2026-09-04 est périmé.** Deux modules entrent — `react-native-pager-view` (le
+> moteur du glissement entre onglets) et `expo-haptics` (le retour des contrôles dessinés) — et un
+> sort, `@react-native-community/slider`, remplacé par un curseur maison. Expo Go les porte déjà
+> tous ; **un build de développement doit être refait** avant de vérifier ce jalon sur iPhone.
+
+**On ne reconstruit que sur un changement natif.** Le build embarque le runtime ; le JavaScript vient
+de Metro comme avec Expo Go. Ajouter un module `expo-*`, toucher à la configuration native
+d'`app.config.ts`, monter de SDK : on reconstruit. Modifier du code, un Blueprint, un écran : non.
+C'est la ligne qui coûte le plus cher à ignorer — chercher pendant une heure un défaut qui n'est que
+l'absence d'un module dans un vieux binaire.
+
+**`expo-dev-client` est une dépendance du dépôt**, ajoutée automatiquement au premier build. Elle doit
+être commitée : sans elle, le dépôt ne décrit plus ce qui a été construit.
+
+**L'identifiant reste partagé avec l'application du store — et c'est une décision.**
+`com.bordeaux.ukit` est le même des deux côtés, donc iOS les tient pour la même application :
+installer le build de développement **remplace** celle du store, et efface ses données. On pourrait
+les faire cohabiter en donnant un identifiant distinct au profil de développement ; **on ne le fait
+pas**, parce que tester au quotidien dans les conditions réelles vaut mieux que de garder les deux.
+Ne pas « corriger » ce point sans raison.
+
+**Et iOS 16 demande le mode développeur** : *Réglages → Confidentialité et sécurité → Mode
+développeur*, puis un redémarrage. L'entrée n'apparaît qu'après avoir installé une application signée
+en interne.
+
+> **Ce que ça change pour la vérification, et c'est le vrai gain.** Expo Go est un bac à sable
+> générique : le code y tourne avec *ses* droits et *ses* limites. Un build de développement porte le
+> runtime natif d'UKit — son identifiant, ses permissions, ses droits, ses modules. Deviennent donc
+> testables des choses qui ne l'étaient pas, à commencer par **les notifications push**, retirées
+> d'Expo Go depuis le SDK 53 : les rappels de cours, capacité livrée de l'application, n'y étaient pas
+> vérifiables. `__DEV__` reste vrai, donc le chrono des runs
+> ([qualite.md](qualite.md#lire-un-run-plutôt-que-le-supposer)) continue d'écrire ses mesures.
+
+**On y reste après le saut de SDK.** Revenir à Expo Go rendrait le projet dépendant d'un calendrier
+qu'on ne maîtrise pas, et ne rendrait de toute façon pas les capacités qu'il ne sait plus jouer. Expo
+Go garde un usage : un essai jetable, ou faire tourner le projet chez quelqu'un qui n'a pas les
+identifiants de signature.
+
+### Le saut de SDK : à faire, mais pas dans la 6.1
+
+**Décision du 2026-09-04.** Passer de 54 à 57 veut dire React Native **0.81.5 → 0.86.3** — cinq
+versions mineures —, React 19.1 → 19.2, et **41 dépendances de plateforme** à faire bouger ensemble :
+`reanimated`, `webview`, `screens`, `notifications`, `secure-store`, `local-authentication`,
+`calendar`, `task-manager`… (les versions attendues par chaque SDK se lisent dans
+`https://api.expo.dev/v2/sdks/<version>/native-modules`).
+
+Ce n'est pas optionnel à terme : les stores imposent périodiquement une version d'API cible minimale,
+et chez Expo c'est la montée de SDK qui la donne. Mais ce n'est **pas** un travail à mêler à la 6.1 :
+c'est une version de **consolidation**, avec des utilisateurs déjà en 6.0, et y ajouter un saut de
+runtime rendrait chaque régression ambiguë — on ne saurait plus si un défaut vient de la consolidation
+ou du saut.
+
+Il aura donc **son propre jalon**, après la sortie de la 6.1, avec une vérification appareil sur les
+**deux** plateformes — ce que le build de développement rend enfin possible sur iOS.
+
+**Et on reste sur Expo.** Ce qui a coincé est Expo Go, une commodité de développement remplaçable en
+une commande, pas le cadre lui-même : l'essentiel des 41 dépendances sont des modules `expo-*`
+(trousseau chiffré, biométrie, notifications, calendrier, tâches de fond), la chaîne de release passe
+par EAS, et partir voudrait dire reprendre à sa charge deux projets natifs pour retrouver le même
+tapis roulant de versions, en plus dur.
+
+**Les paquets Expo suivent le SDK.** `npx expo-doctor` est sans écart depuis la passe de code
+[6.1-C](phase-6/6-1-c-passe-de-code.md) — sept paquets avaient un patch de retard, et le `.gitignore`
+devait dire `.expo/` et non `.expo/*` pour qu'il s'en satisfasse. `npx expo install --fix` les
+réaligne, avec un piège : il **s'arrête en erreur** après avoir écrit `package.json`, parce qu'il
+voudrait ajouter les greffons `expo-asset` et `expo-font` à `app.config.ts` et ne sait pas écrire dans
+une configuration dynamique. Les versions sont bien posées ; les deux greffons sont facultatifs —
+l'application charge ses polices à l'exécution — et `expo-doctor` ne les réclame pas. Le workflow de
+release, lui, est sur `actions/setup-java@v5`.
+
 ## Publication
 
 Un seul workflow : [`.github/workflows/release.yml`](../.github/workflows/release.yml), déclenché par

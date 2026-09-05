@@ -131,8 +131,9 @@ sort en plusieurs publications**. La 6.0 est sortie le 31 août. Deux jours plus
 | Publication | Contenu | Condition de sortie |
 |---|---|---|
 | **v6.0** | la phase telle qu'écrite : volet 1, les sessions d'écran, les finitions visuelles, la clôture [6-Z](6-z-livraison-finale.md) — **sortie le 2026-08-31** | — |
-| **v6.1** | **la consolidation de la v6** : robustesse de la scolarité ([A](6-1-a-robustesse-scolarite.md), *livré le 2026-09-02*), pilotage à distance — messages, audiences, console, sondes ([B](6-1-b-pilotage-a-distance.md)), la passe de code ([C](6-1-c-passe-de-code.md)), la publication en parallèle ([D](6-1-d-publication.md)), les finitions d'interface ([E](6-1-e-finitions-interface.md)), la sortie ([Z](6-1-z-sortie.md)) | les six jalons déroulés |
-| **v6.2** | les capacités qui attendent le contenu : **mise en avant des annonces par créneaux**, **compléments du portail Bordeaux INP** et documents supplémentaires, **notes & résultats** ; et les deux évaluations reportées, onglets natifs / `@expo/ui` et typage de `Theme.ts` | le contenu existe et permet de vérifier |
+| **v6.1** | **la consolidation de la v6** : robustesse de la scolarité ([A](6-1-a-robustesse-scolarite.md), *livré le 2026-09-02*), pilotage à distance — messages, audiences, console, sondes ([B](6-1-b-pilotage-a-distance.md), *livré le 2026-09-03*), la passe de code ([C](6-1-c-passe-de-code.md), *livrée le 2026-09-03*), la publication en parallèle ([D](6-1-d-publication.md), *livrée le 2026-09-04*), les finitions d'interface ([E](6-1-e-finitions-interface.md), *livré le 2026-09-04*), la sortie ([Z](6-1-z-sortie.md)) | les six jalons déroulés |
+| **v6.2** | **une version entière pour le mouvement de l'interface** — décision du 2026-09-04, en vérifiant [6.1-E](6-1-e-finitions-interface.md). Le jalon des finitions a rendu l'application correcte ; il ne l'a pas rendue **fluide**, et c'est un autre travail : *« rien n'apparaît sans être annoncé par sa forme »*. Squelettes de contenu à la place des indicateurs, entrées échelonnées, ressorts plutôt que durées fixes, états pressés, transitions d'écran. Elle s'ouvre par un **relevé de ce qui saute**, se mène d'abord sur **quelques écrans aux besoins différents**, et n'est étendue qu'ensuite — avec son vocabulaire partagé, comme [6-K](6-k-socle-visuel.md) l'a fait pour les formes | le relevé, puis les écrans pilotes |
+| **v6.3** | ce qui attend le contenu, et qui a glissé d'un cran : **mise en avant des annonces par créneaux**, **compléments du portail Bordeaux INP** et documents supplémentaires, **notes & résultats** ; plus les deux évaluations reportées, onglets natifs / `@expo/ui` et typage de `Theme.ts` | le contenu existe et permet de vérifier |
 
 Ce n'est pas une entorse à « une phase = une version » : c'est son amendement, écrit ici et dans
 [6-Z](6-z-livraison-finale.md). La 6.0 a été sortie vite pour tenir la rentrée ; la 6.1 répare ce
@@ -180,15 +181,21 @@ de test, et les limites écrites.
 
                     6.1-A robustesse scolarite   [livre]
                               |
-                    6.1-B pilotage a distance      6.1-D publication (parallele)
+                    6.1-B pilotage a distance [livre]      6.1-D publication (parallele)
                               |
-                    6.1-C passe de code
+                    6.1-C passe de code [livre]
                               |
-                    6.1-E finitions d'interface
+                    6.1-E finitions d'interface [livre]
                               |
                     6.1-Z sortie
 
-   6.2 — LE CONTENU, quand il existe
+   6.2 — LE MOUVEMENT (decidee le 2026-09-04)
+
+                    releve de ce qui saute, ecran par ecran
+                    vocabulaire partage : squelettes, ressorts, cascade, etats presses
+                    quelques ecrans pilotes, puis extension
+
+   6.3 — LE CONTENU, quand il existe
 
                     mise en avant des annonces par creneaux
                     complements du portail Bordeaux INP, documents supplementaires

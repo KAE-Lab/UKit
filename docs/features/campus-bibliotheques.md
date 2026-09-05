@@ -137,10 +137,12 @@ que nous n'avons pas portée obtient les bibliothèques réelles autour de lui �
 national. C'est la seule des quatre sections du Campus qui n'a demandé aucune adaptation pour
 l'établissement ouvert.
 
-**Douze points de balayage plutôt qu'un.** L'endpoint de découverte ne renvoie que les sites proches
-du point interrogé. Une seule requête depuis la position de l'étudiant masquerait les BU des autres
-villes de la région. Les onze points fixes couvrent Bordeaux et les campus de Nouvelle-Aquitaine ;
-ajouter une ville consiste à ajouter une coordonnée dans `POINTS_FIXES`.
+**Trois points de balayage plutôt qu'un.** L'endpoint de découverte ne renvoie que les sites proches
+du point interrogé. Une seule requête depuis la position de l'étudiant masquerait les BU de l'autre
+bout de la métropole. Les deux points fixes du catalogue couvrent le centre de Bordeaux et le campus de
+Talence — onze jusqu'en 6.1-C, voir les limites ; ajouter une ville consiste à ajouter une coordonnée
+dans `POINTS_BORDEAUX` ([`socle.ts`](../../src/shared/etablissements/socle.ts)) et dans la ligne
+publiée de l'établissement.
 
 **Le balayage n'est pas descendu dans le Blueprint, et c'est le point du jalon.** Le Blueprint prend
 une latitude et une longitude et rend les sites de ce point ; le service le joue douze fois. Trois
@@ -198,12 +200,10 @@ bibliothèque parce que son affluence n'a pas encore été chargée serait un fa
 
 ## Limites connues
 
-- **Douze requêtes de découverte à chaque ouverture**, plus une requête d'affluence par BU trouvée.
-  C'est le chargement le plus lourd de l'application. Le jalon 6-D ne l'a pas touché : réduire le
-  balayage est un changement de comportement produit, il se décide séparément et avec ses mesures.
-
-  Ces mesures existent maintenant, prises le 2026-08-08 en vérifiant la couverture partielle sur
-  appareil, et elles ne disent pas ce qu'on attendait :
+- **Trois requêtes de découverte à chaque ouverture** — la position de l'étudiant et les deux points
+  du catalogue —, plus une requête d'affluence par BU trouvée. C'est encore le chargement le plus
+  lourd de l'application. Il en comptait **douze** jusqu'en 6.1-C, et la décision de le réduire a été
+  prise sur des mesures, prises le 2026-08-08 en vérifiant la couverture partielle sur appareil :
 
   | Point | BU rendues | Exclusives |
   |---|---:|---|
@@ -215,13 +215,14 @@ bibliothèque parce que son affluence n'a pas encore été chargée serait un fa
   | Bayonne/Anglet | 2 | Médiathèque Centre-Ville, Bibliothèque Florence Delay |
   | Poitiers, Périgueux, Agen, Angoulême, Niort | 0 | — |
 
-  **Quatorze bibliothèques pour douze requêtes**, dont cinq points qui n'en rendent aucune et deux qui
-  se recouvrent entièrement. Ce n'est pas un défaut à corriger tout de suite : un point muet
-  aujourd'hui cesse de l'être le jour où une bibliothèque s'inscrit chez le fournisseur, et la liste
-  des villes couvertes est une promesse produit. Depuis [6-G](../phase-6/6-g-etablissements.md) les
-  points sont **une donnée de catalogue** (`bibliotheques_points`), donc corrigibles sans release : la
-  décision de réduire la liste se prendra sur ces chiffres plutôt que sur une intuition, et elle
-  coûtera une publication au lieu d'un passage en store.
+  **Quatorze bibliothèques pour douze requêtes**, dont cinq points qui n'en rendaient aucune et deux
+  qui se recouvrent entièrement. Décision du 2026-09-03 ([6.1-C](../phase-6/6-1-c-passe-de-code.md)) :
+  UKit vise le secteur bordelais, pas la région ([README](../../README.md)) ; les deux points
+  bordelais suffisent à ses huit BU, et les six sites exclusifs de Pau, La Rochelle, Limoges et
+  Bayonne sortent de la liste par défaut — un étudiant qui s'y trouve les garde par sa position, qui
+  reste le premier point du balayage. Depuis [6-G](../phase-6/6-g-etablissements.md) les points sont
+  **une donnée de catalogue** (`bibliotheques_points`) : une ville qui manquerait se rajoute par une
+  publication, pas par une release.
 - **Une BU hors de portée des points de balayage reste invisible.** Les points ne sont plus codés en
   dur — ils viennent du catalogue depuis [6-G](../phase-6/6-g-etablissements.md), et se corrigent donc
   par une publication — mais la limite de fond demeure : couvrir une ville demande d'y penser. La
@@ -252,7 +253,8 @@ bibliothèque parce que son affluence n'a pas encore été chargée serait un fa
   est de nouveau entièrement dans la couleur du statut, avec un tiret. La distinction visuelle ne se
   décodait pas, et les deux moitiés se lisaient comme deux fragments collés
   ([theme.md](../theme.md#les-décisions-durables)). La langue, elle, reste celle de la source.
-- **Aucun cache** : la liste et les affluences sont rechargées à chaque montage.
+- **Aucun cache** : la liste et les affluences sont rechargées à chaque montage — et au tirer sur le
+  tableau de bord, jamais au simple retour au premier plan ([campus.md](campus.md#le-tableau-de-bord)).
 - **Un site sans coordonnées ni distance estimée n'a plus de distance du tout.** L'ancien code
   divisait `estimated_distance` sans vérifier sa présence et produisait `NaN` ; il rend désormais
   `undefined`, que le tri et l'affichage traitent déjà comme une absence. Aucun site de la région

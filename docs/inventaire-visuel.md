@@ -212,6 +212,12 @@ Trois cartes voisines, même rôle visuel :
 référence, et les changer romprait le rendu à l'identique pour un gain de 2 px. La divergence est
 consignée ici ; une session d'écran pourra la trancher.
 
+> **Tranchée le 2026-09-04, par le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md) : c'est 4.**
+> Les trois `6` — l'étoile de favori d'une carte Campus, l'écart icône → texte et l'interligne d'un
+> menu de restaurant — prennent `tokens.space.xs`. Ce jalon avait de toute façon à arbitrer les neuf
+> espacements hors échelle laissés par [6.1-C](phase-6/6-1-c-passe-de-code.md), et laisser deux
+> valeurs pour un même rôle coûtait un aller-retour à chaque écran repris.
+
 ### 3.6 `#f44336` contre `#ff4436` — une coquille figée
 
 Dans [`LibraryService.ts:84-88`](../src/features/Campus/services/LibraryService.ts#L84) :

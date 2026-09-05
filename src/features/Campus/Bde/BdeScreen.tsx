@@ -52,6 +52,7 @@ function BdeScreen({ navigation, onAnimatedScroll }: BdeScreenProps) {
         <CampusListLayout
             data={visibles}
             loading={loading}
+            messageChargement={Translator.get('LOADING_ANNOUNCEMENTS')}
             renderItem={renderItem}
             numColumns={2}
             onAnimatedScroll={onAnimatedScroll}

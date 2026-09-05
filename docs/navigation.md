@@ -1,6 +1,6 @@
 # Navigation
 
-UKit utilise React Navigation 7 (`@react-navigation/native`, `stack`, `bottom-tabs`). La navigation
+UKit utilise React Navigation 7 (`@react-navigation/native`, `stack`, `material-top-tabs`). La navigation
 est le squelette de l'application : l'organisation des dossiers de `src/features/` la reproduit
 (voir [architecture.md](architecture.md)).
 
@@ -42,6 +42,49 @@ Définis dans [`MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator
 | `CampusTab` | [`CampusDashboard`](../src/features/Campus/Dashboard/CampusDashboard.tsx) | `CAMPUS` | `domain` |
 | `ScolariteTab` | [`ScolariteDashboard`](../src/features/Scolarite/screens/ScolariteDashboard.tsx) | `SCOLARITY` | `toolbox-outline` |
 | `SettingsTab` | [`SettingsScreen`](../src/features/Settings/screens/SettingsScreen.tsx) | `SETTINGS` | `cog-outline` |
+
+### Les quatre onglets sont un pager
+
+Depuis le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md), le navigateur d'onglets est un
+`createMaterialTopTabNavigator` posé **en bas** (`tabBarPosition: 'bottom'`), et non plus un
+`createBottomTabNavigator`. Ce n'est pas un changement d'apparence — la barre est la même, et elle est
+rendue en absolu, donc elle survole le pager comme elle survolait le conteneur d'onglets — c'est un
+changement de **geste** : on passe d'un onglet à l'autre au doigt.
+
+**Le glissement est accordé sur les quatre onglets**, et ce n'est pas la première version. Il n'était
+d'abord ouvert qu'à la Scolarité et aux Réglages, par prudence : le Planning et le Campus portent des
+gestes horizontaux — le ruban des jours, le carrousel des cours simultanés, les quatre carrousels du
+tableau de bord — et un pager par-dessus semblait devoir leur voler le doigt. La vérification sur
+appareil a montré que non : **une liste horizontale consomme le geste qui commence sur elle**, et le
+pager ne reçoit que ce qu'elle laisse passer.
+
+Restreindre coûtait donc plus que ça ne protégeait : un geste qui marche sur deux onglets sur quatre
+s'apprend comme un défaut, pas comme une règle — on ne devine pas où il s'arrête.
+
+L'option reste lue sur l'écran **focalisé** (`swipeEnabled`), donc un retrait se fait écran par écran,
+en une ligne, si un conflit se constate.
+
+Trois réglages du navigateur ne sont pas décoratifs :
+
+- **`animationEnabled: false`.** Animé, un appui d'onglet fait *traverser* les pages intermédiaires
+  au pager — et comme `lazy` ne les a pas montées, on verrait deux fonds vides défiler pour un seul
+  appui. Le glissement au doigt, lui, reste animé nativement : c'est le geste qui porte l'animation.
+- **`lazy: true`**, qui reproduit le montage paresseux d'avant : un onglet ne se monte qu'à sa
+  première ouverture.
+- **`overScrollMode: 'never'`**, sans quoi Android dessine une lueur dès qu'on glisse au-delà du
+  dernier onglet.
+
+Ce que la bascule coûte, et qui est écrit ici pour ne pas être découvert : il n'y a **plus de
+détachement natif** des écrans inactifs (`freezeOnBlur` n'existe pas sur ce navigateur, les pages
+restent attachées au pager). L'arbre React, lui, restait monté de toute façon. Et **la première
+traversée par glissement monte la page voisine pendant le geste** : on peut voir le fond une fraction
+de seconde. `lazyPreloadDistance` la supprimerait, au prix de monter Campus dès le lancement — refusé.
+
+`react-native-pager-view` est un **module natif** : un build de développement antérieur à ce jalon ne
+le porte pas ([plateforme.md](plateforme.md)).
+
+> **Capture attendue** — `navigation-glissement.png` : le passage de la Scolarité aux Réglages au
+> doigt, barre flottante visible.
 
 ### La barre d'onglets personnalisée
 
@@ -137,6 +180,16 @@ carte sont définis directement dans `StackNavigator`.
 
 ## Limites connues
 
+- **Le glissement entre onglets est retirable.** S'il vole un geste à un carrousel sur un appareil,
+  `swipeEnabled: false` sur l'écran concerné ramène le comportement d'avant sans rien toucher
+  d'autre : la barre reste la navigation de référence.
+- **Des allers-retours très rapides peuvent désynchroniser la barre de la page.** Constaté sur
+  appareil le 2026-09-04, en enchaînant volontairement les glissements gauche-droite : on se retrouve
+  sur le Campus avec le Planning souligné. La course est **interne à la bibliothèque** — l'événement
+  de sélection du pager et la mise à jour de l'état de navigation ne sont pas atomiques, et deux
+  gestes qui se chevauchent peuvent laisser le second sans effet sur l'état — et elle ne se ferme pas
+  proprement depuis l'application. Elle demande un enchaînement délibéré, et **un appui sur n'importe
+  quel onglet resynchronise** : la barre émet alors sa propre navigation, que le pager suit.
 - **`RootStackParamList` est incomplet pour deux routes.** `CrousMenu` ne déclare pas `restaurantId`
   alors que l'écran le lit et que l'appelant le passe ; `LibraryDetails` ne déclare pas `affluence`,
   dans le même cas. Le typage des paramètres est donc plus permissif que la réalité sur ces deux

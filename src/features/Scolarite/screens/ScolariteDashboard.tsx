@@ -42,7 +42,7 @@ import BiometryGate from '../components/BiometryGate';
 import ScolariteLoadingScreen from '../components/ScolariteLoadingScreen';
 import ScolariteLoginView from '../components/ScolariteLoginView';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
-import { useSessionDepuisLeFormulaire } from '../hooks/useSessionDepuisLeFormulaire';
+import { useSessionDemandeeIci } from '../hooks/useSessionDemandeeIci';
 import { PageScolarite } from '../components/PageScolarite';
 import { CampusNonRelie } from '../components/CampusNonRelie';
 import { EnteteScolarite } from '../components/EnteteScolarite';
@@ -56,6 +56,95 @@ import type { PointWidget } from '../widgets/definitions';
  *
  * Sorti de l'ecran pour le garder sous la limite de lignes, comme `PageScolarite` avant lui.
  */
+/**
+ * Le titre de l'onglet **sans bandeau** : le gabarit de Campus et des Reglages, a l'identique.
+ *
+ * Il sert partout ou la page n'a **pas de dossier a saluer** — le formulaire de connexion, le
+ * parcours froid en cours, l'echec qui propose de reessayer. Le bandeau collant
+ * ([`EnteteScolarite`](../components/EnteteScolarite.tsx)) appartient au tableau de bord garni, et la
+ * raison tient en une phrase : **la salutation EST le titre de cette page-la**. Sans dossier, il n'y
+ * a rien a saluer, et un bandeau se refermait sur un titre pose dans le vide — signale sur appareil
+ * le 2026-09-04, sur l'ecran de reessai.
+ *
+ * `box-none` sur la rangee et `none` sur le titre : ce qu'il y a dessous garde ses touchers, seule la
+ * pastille d'etat de service prend les siens.
+ */
+const TitreFlottant = ({ theme, defilement, insets }) => (
+    <Animated.View
+        style={[styles.titreDOnglet, {
+            paddingTop: insets?.top || 0,
+            opacity: defilement.interpolate({
+                inputRange: [0, 50],
+                outputRange: [1, 0],
+                extrapolate: 'clamp',
+            }),
+        }]}
+        pointerEvents="box-none"
+    >
+        <View style={styles.rangeeDuTitre} pointerEvents="box-none">
+            <Text style={[styles.titreDOngletTexte, { color: theme.font }]} pointerEvents="none">
+                {Translator.get('SCOLARITY')}
+            </Text>
+            <PastilleService theme={theme} style={styles.rappel} />
+        </View>
+    </Animated.View>
+);
+
+/**
+ * L'en-tete de l'onglet : **un bandeau seulement quand il y a un dossier a saluer**.
+ *
+ * `EnteteScolarite` porte un filet et une ombre, et il se justifie parce que la **salutation est le
+ * titre** de la page garnie. Sans dossier, il n'y a rien a saluer : le bandeau se refermait alors sur
+ * un titre pose dans le vide, avec trois objets sur une meme ligne — le titre, la pastille d'etat et
+ * le filigrane de l'etablissement — ce qui se lisait comme une collision (signale sur appareil le
+ * 2026-09-04, sur l'ecran de reessai).
+ *
+ * Le titre **flotte** donc tant qu'il n'y a pas de dossier, exactement comme sur le formulaire de
+ * connexion, sur Campus et sur les Reglages ; il devient un bandeau au moment ou la lecture aboutit,
+ * c'est-a-dire au moment ou il a quelque chose a dire.
+ */
+const EnTeteDeLOnglet = ({ theme, accent, coldData, defilement, insets }) => (
+    coldData === null
+        ? <TitreFlottant theme={theme} defilement={defilement} insets={insets} />
+        : <EnteteScolarite theme={theme} teinte={accent} insets={insets} coldData={coldData} />
+);
+
+/**
+ * Le parcours froid **qui n'a rien a preserver** : au lancement, ou apres une annulation.
+ *
+ * Il prend l'ecran parce qu'il est transitoire, et qu'une page qui se remplirait sous lui ferait
+ * sauter le contenu a chaque etape franchie. Des qu'il y a quelque chose a garder — un dossier deja
+ * lu, ou un geste fait sur la page — la progression se pose en encart et la page tient
+ * (`PageScolarite`).
+ */
+/**
+ * Ou mene chaque geste de l'onglet. Regroupees parce qu'elles n'ont rien a decider : ce sont cinq
+ * destinations, et les laisser dans le corps de l'ecran l'allongeait sans rien lui apprendre.
+ */
+function destinations(navigation) {
+    return {
+        ouvrirRessaisie: () => navigation.navigate('CredentialsSettings', { ressaisie: true }),
+        ouvrirFiche: () => navigation.navigate('CredentialsSettings'),
+        ouvrirDocuments: () => navigation.navigate('Documents'),
+        ouvrirPorte: (point: string) => navigation.navigate('WebBrowser', { entrypoint: point }),
+        ouvrirLien: (href: string) => navigation.navigate('WebBrowser', { href }),
+    };
+}
+
+const EcranDeParcoursFroid = ({ theme, accent, renderHeader, scrapeProgress, terminee }) => (
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <SafeAreaInsetsContext.Consumer>
+            {(insets) => renderHeader(insets)}
+        </SafeAreaInsetsContext.Consumer>
+        <ScolariteLoadingScreen
+            scrapeProgress={scrapeProgress}
+            terminee={terminee}
+            theme={theme}
+            color={accent}
+        />
+    </View>
+);
+
 const OngletDeconnecte = ({ theme, accent, defilement, onDebut }) => {
     /** Le choix d'etablissement, ouvert par « Tu es d'un autre campus ? » sous le formulaire. */
     const [choixCampus, setChoixCampus] = useState(false);
@@ -64,26 +153,7 @@ const OngletDeconnecte = ({ theme, accent, defilement, onDebut }) => {
     <SafeAreaInsetsContext.Consumer>
         {(insets) => (
             <View style={[styles.container, { backgroundColor: theme.background }]}>
-                <Animated.View
-                    style={[styles.titreDOnglet, {
-                        paddingTop: insets?.top || 0,
-                        opacity: defilement.interpolate({
-                            inputRange: [0, 50],
-                            outputRange: [1, 0],
-                            extrapolate: 'clamp',
-                        }),
-                    }]}
-                    pointerEvents="box-none"
-                >
-                    {/* `box-none` sur la rangee et `none` sur le titre : le formulaire dessous garde
-                        ses touchers, seule la pastille d'etat de service prend les siens. */}
-                    <View style={styles.rangeeDuTitre} pointerEvents="box-none">
-                        <Text style={[styles.titreDOngletTexte, { color: theme.font }]} pointerEvents="none">
-                            {Translator.get('SCOLARITY')}
-                        </Text>
-                        <PastilleService theme={theme} style={styles.rappel} />
-                    </View>
-                </Animated.View>
+                <TitreFlottant theme={theme} defilement={defilement} insets={insets} />
                 <ScolariteLoginView
                     theme={theme}
                     color={accent}
@@ -126,13 +196,15 @@ const ScolariteDashboard = ({ navigation }) => {
     // Reglages, a l'identique (interpolation 0-50 → 1-0). Les autres branches ne s'en servent
     // pas : le tableau de bord a son en-tete collant, qui vit sa propre vie.
     const defilementDeconnecte = useRef(new Animated.Value(0)).current;
+    /** Le meme, pour la page sans dossier : son titre flotte aussi, donc il s'efface au defilement. */
+    const defilementSansDossier = useRef(new Animated.Value(0)).current;
 
+    /** Voir `EnTeteDeLOnglet` : sans dossier, le titre flotte et la page lui laisse la place. */
+    const titreFlotte = coldData === null;
     const renderHeader = (insets) => (
-        <EnteteScolarite
-            theme={theme}
-            teinte={accent}
-            insets={insets}
-            coldData={coldData}
+        <EnTeteDeLOnglet
+            theme={theme} accent={accent} coldData={coldData}
+            defilement={defilementSansDossier} insets={insets}
         />
     );
 
@@ -140,10 +212,10 @@ const ScolariteDashboard = ({ navigation }) => {
     // millisecondes a la fin du run, le temps que la barre rejoigne 100 %. Sans ce delai, elle restait
     // a 80 % et la page se substituait d'un coup.
     const progression = useEcranDeProgression(sessionMode, scrapeStatus);
-    // Une session lancee depuis le formulaire de cet onglet lui laisse la page jusqu'a son terme :
+    // Une session lancee par un geste fait **ici** laisse la page a ce geste jusqu'a son terme :
     // `credentials` est pose au dixieme step, et sans ce drapeau l'ecran basculait en plein run
     // (voir le hook). Les deux hooks vivent au-dessus du premier retour, comme les regles l'exigent.
-    const formulaire = useSessionDepuisLeFormulaire(progression.visible);
+    const geste = useSessionDemandeeIci(progression.visible);
 
     if (!credentialsLoaded) return null;
 
@@ -156,11 +228,20 @@ const ScolariteDashboard = ({ navigation }) => {
         ? presenterEchec(sessionFailure)
         : null;
 
-    const ouvrirRessaisie = () => navigation.navigate('CredentialsSettings', { ressaisie: true });
-    const ouvrirFiche = () => navigation.navigate('CredentialsSettings');
-    const ouvrirDocuments = () => navigation.navigate('Documents');
-    const ouvrirPorte = (point: string) => navigation.navigate('WebBrowser', { entrypoint: point });
-    const ouvrirLien = (href: string) => navigation.navigate('WebBrowser', { href });
+    /**
+     * « Reessayer », depuis l'encart d'echec de la page.
+     *
+     * Le geste s'annonce **ici**, dans le `onPress`, et non dans `retrySession` : un parcours froid
+     * repart aussi tout seul au retour au premier plan apres une annulation
+     * (`useCycleDeVieSession`), et cette reprise-la n'est pas un geste — elle doit garder l'ecran
+     * plein, qui est le bon rendu quand il n'y a rien a preserver.
+     */
+    const reessayerDepuisLaPage = () => {
+        geste.depuisLaPage();
+        retrySession();
+    };
+
+    const { ouvrirRessaisie, ouvrirFiche, ouvrirDocuments, ouvrirPorte, ouvrirLien } = destinations(navigation);
 
     /**
      * Ou mene une rangee de widget.
@@ -197,40 +278,54 @@ const ScolariteDashboard = ({ navigation }) => {
      * apres lui, l'ecran plein le supplantait des que `credentials` arrivait, a mi-parcours — deux
      * vues pour le meme run. Il tient la page tant que la session partie de lui n'est pas finie.
      */
-    if (!credentials || formulaire.enCours) {
+    if (!credentials || geste.origine === 'formulaire') {
         return (
             <OngletDeconnecte
                 theme={theme}
                 accent={accent}
                 defilement={defilementDeconnecte}
-                onDebut={formulaire.onDebut}
+                onDebut={geste.depuisLeFormulaire}
             />
         );
     }
 
-    // Le parcours froid prend l'ecran **tant qu'il n'y a aucun dossier a montrer** : il est
-    // transitoire, et une page qui se remplit sous lui ferait sauter le contenu a chaque etape
-    // franchie. Avec un dossier deja lu — « Actualiser mon dossier » —, la page reste et la
-    // progression s'y pose en encart (PageScolarite) : revenir sur l'onglet pendant l'actualisation
-    // retombait sur l'ecran plein, l'ancienne barre (constat du 2026-09-02, 6.1-A).
-    if (progression.visible && coldData === null) {
+    /*
+     * Le parcours froid prend l'ecran **tant qu'il n'y a aucun dossier a montrer** : il est
+     * transitoire, et une page qui se remplit sous lui ferait sauter le contenu a chaque etape
+     * franchie. Avec un dossier deja lu — « Actualiser mon dossier » —, la page reste et la
+     * progression s'y pose en encart (PageScolarite) : revenir sur l'onglet pendant l'actualisation
+     * retombait sur l'ecran plein, l'ancienne barre (constat du 2026-09-02, 6.1-A).
+     *
+     * **Sauf si le geste vient de cette page**, correctif du 2026-09-04 : un dossier qui echoue apres
+     * l'ecriture des identifiants laisse la page sur son encart d'echec, sans `coldData` ; toucher
+     * « Reessayer » **dans l'encart** faisait donc reprendre l'ecran plein, et la page changeait sous
+     * le doigt de quelqu'un en train de reparer. La page tient, la barre remplace l'encart. Il reste
+     * l'ecran plein pour ce que personne n'a demande **ici** : le lancement, et la reprise apres une
+     * annulation.
+     */
+    if (progression.visible && coldData === null && geste.origine !== 'page') {
         return (
-            <View style={[styles.container, { backgroundColor: theme.background }]}>
-                <SafeAreaInsetsContext.Consumer>
-                    {(insets) => renderHeader(insets)}
-                </SafeAreaInsetsContext.Consumer>
-                <ScolariteLoadingScreen
-                    scrapeProgress={scrapeProgress}
-                    terminee={progression.terminee}
-                    theme={theme}
-                    color={accent}
-                />
-            </View>
+            <EcranDeParcoursFroid
+                theme={theme}
+                accent={accent}
+                renderHeader={renderHeader}
+                scrapeProgress={scrapeProgress}
+                terminee={progression.terminee}
+            />
         );
     }
 
-    const corps = () => (
+    const corps = (insets) => (
         <PageScolarite
+            {...(titreFlotte ? {
+                // Le gabarit de Campus et des Reglages : le titre flotte au-dessus, la page se pose
+                // dessous et lui transmet son defilement pour qu'il s'efface.
+                paddingHaut: (insets?.top || 0) + HAUTEUR_TITRE_FLOTTANT,
+                onScroll: Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: defilementSansDossier } } }],
+                    { useNativeDriver: true },
+                ),
+            } : {})}
             certificatEnCours={certificatEnCours}
             theme={theme}
             teinte={accent}
@@ -242,7 +337,7 @@ const ScolariteDashboard = ({ navigation }) => {
             portailDisponible={portailDisponible}
             sessionFailure={sessionFailure}
             echecBloquant={echecBloquant}
-            onRetry={retrySession}
+            onRetry={reessayerDepuisLaPage}
             onRessaisir={ouvrirRessaisie}
             onConnecter={ouvrirFiche}
             onDemanderCampus={ouvrirLien}
@@ -258,13 +353,16 @@ const ScolariteDashboard = ({ navigation }) => {
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
                     {renderHeader(insets)}
                     {credentials
-                        ? <BiometryGate theme={theme}>{corps()}</BiometryGate>
-                        : corps()}
+                        ? <BiometryGate theme={theme}>{corps(insets)}</BiometryGate>
+                        : corps(insets)}
                 </View>
             )}
         </SafeAreaInsetsContext.Consumer>
     );
 };
+
+/** Ce qu'un grand titre flottant occupe, hors encoche. La valeur de Campus et des Reglages. */
+const HAUTEUR_TITRE_FLOTTANT = 60;
 
 const styles = StyleSheet.create({
     container: {

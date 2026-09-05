@@ -50,7 +50,7 @@
  */
 
 import React, { useContext } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Sharing from 'expo-sharing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -167,6 +167,9 @@ export function DocumentViewerScreen({ route }: {
                     // permanent — indiscernable d'un rendu qui a echoue.
                     <View style={styles.attente} pointerEvents="none">
                         <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
+                        <Text style={[styles.attenteTexte, { color: theme.fontSecondary }]}>
+                            {Translator.get('LOADING_DOCUMENT')}
+                        </Text>
                     </View>
                 ) : null}
             </View>
@@ -189,6 +192,11 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    attenteTexte: {
+        marginTop: tokens.space.md,
+        fontSize: tokens.fontSize.sm,
+        textAlign: 'center',
     },
 });
 

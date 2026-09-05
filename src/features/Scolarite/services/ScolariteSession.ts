@@ -39,7 +39,7 @@ import {
     tracerLectureDossier,
 } from '../../../shared/services/PropositionsTrace';
 import { maintenant } from '../../../shared/services/Temps';
-import { surLeNavigateur } from './MoteurNavigateur';
+import { surLeNavigateur, TOURS_DE_SESSION } from './MoteurNavigateur';
 import { projeterPropositions, type PropositionsDossier } from './PropositionsDossier';
 import { projeterDossier, type ScolariteColdData } from './ScolariteMapping';
 
@@ -214,6 +214,14 @@ export async function jouerDossier(options: OptionsSession = {}): Promise<Dossie
 }
 
 /**
+ * Ce que la fermeture distante a reellement fait.
+ *
+ * Quatre issues et non un booleen : la distinction qui manquait est entre « le portail n'a pas
+ * repondu » (`echec`, acceptable) et « on n'a meme pas essaye » (`moteur-occupe`, inacceptable).
+ */
+export type IssueDeFermeture = 'fermee' | 'sans-cas' | 'moteur-occupe' | 'echec';
+
+/**
  * Ferme la session CAS **cote serveur**, en sortie de deconnexion.
  *
  * C'est le pendant obligatoire de `options.session.persist`, que les parcours de portail declarent
@@ -225,13 +233,26 @@ export async function jouerDossier(options: OptionsSession = {}): Promise<Dossie
  * ticket pour de bon, la ou une suppression locale laisse une session vivante que n'importe quel
  * autre client pourrait reprendre. Et ca ne coute aucune dependance de plus.
  *
- * **Ne rend rien et ne leve jamais.** Une deconnexion locale reussie avec une session distante encore
- * ouverte vaut mieux qu'un bouton « Se deconnecter » qui refuse de marcher parce que le portail ne
- * repond pas — l'inverse laisserait quelqu'un coince dans un compte dont il veut sortir.
+ * **Ne leve jamais.** Une deconnexion locale reussie avec une session distante encore ouverte vaut
+ * mieux qu'un bouton « Se deconnecter » qui refuse de marcher parce que le portail ne repond pas —
+ * l'inverse laisserait quelqu'un coince dans un compte dont il veut sortir.
+ *
+ * **Mais elle dit ce qu'elle n'a pas fait**, et c'est le correctif du 2026-09-04. Elle jetait le
+ * resultat de sa reservation : « le portail n'a pas repondu » — acceptable — et « on n'a meme pas
+ * essaye » — inacceptable, le ticket CAS restant valide cote serveur — etaient **indiscernables**, et
+ * le second s'est produit chaque fois qu'un widget tenait le moteur. Le verrou ne se laisse plus
+ * doubler (`MoteurNavigateur`) et la deconnexion arrete la serie avant d'appeler
+ * (`useDeconnexion`) ; il reste a rendre le cas visible s'il revenait, plutot que muet.
  */
-export async function fermerSessionDistante(): Promise<void> {
+export async function fermerSessionDistante(): Promise<IssueDeFermeture> {
+    const nom = BLUEPRINT.PORTAIL_DECONNEXION;
     const cas = serviceEtablissement('cas');
-    if (cas === null) return;
+    if (cas === null) {
+        // Rien a fermer — un etablissement sans CAS n'a pas de ticket — mais la trace existe : une
+        // deconnexion silencieuse et une deconnexion impossible se ressemblaient trop.
+        reportFailure(nom, portailAbsent('CAS'));
+        return 'sans-cas';
+    }
 
     try {
         /*
@@ -244,13 +265,39 @@ export async function fermerSessionDistante(): Promise<void> {
          * `priorite: 'session'` parce que c'en est un geste : se deconnecter ne doit pas echouer
          * parce qu'une chronologie se rafraichissait.
          */
-        await surLeNavigateur(
-            BLUEPRINT.PORTAIL_DECONNEXION,
-            (signal) => runBlueprint(BLUEPRINT.PORTAIL_DECONNEXION, { inputs: { cas }, signal }),
+        const reserve = await surLeNavigateur(
+            nom,
+            (signal) => runBlueprint(nom, { inputs: { cas }, signal }),
             { priorite: 'session' },
         );
-    } catch {
-        // Volontairement muet : voir ci-dessus.
+
+        if (reserve.ok === false) {
+            // « On n'a meme pas essaye » : la sortie inacceptable, et la seule qui laisse le compte
+            // ouvert sans qu'aucune source distante n'ait failli.
+            reportFailure(nom, ukitFailure(
+                'unsupported',
+                `moteur occupe par ${reserve.occupePar} apres ${TOURS_DE_SESSION} tours : `
+                + 'la session distante reste ouverte',
+                'MOTEUR_OCCUPE',
+            ));
+            return 'moteur-occupe';
+        }
+
+        if (reserve.valeur.ok === false) {
+            // « Le portail n'a pas repondu » : acceptable, et desormais visible.
+            reportFailure(nom, reserve.valeur.failure);
+            return 'echec';
+        }
+
+        return 'fermee';
+    } catch (erreur) {
+        // Le filet : une exception hors run — elle ne doit pas remonter, mais elle ne doit plus
+        // disparaitre non plus.
+        reportFailure(nom, ukitFailure(
+            'engine',
+            `exception hors run : ${erreur instanceof Error ? erreur.message : String(erreur)}`,
+        ));
+        return 'echec';
     }
 }
 

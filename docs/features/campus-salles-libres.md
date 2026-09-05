@@ -253,7 +253,9 @@ Deux conséquences à connaître avant d'y toucher :
   dernier écran de Campus où une source morte devenait « Aucun bâtiment trouvé ».
 - **[`FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) ne contient plus de
   service** : la classe exportée est vide (un commentaire annonce une intégration future avec un
-  `batiments.json`). Le fichier ne sert plus qu'à porter les contrats et `getDistanceInKm`.
+  `batiments.json`). Le fichier ne sert plus qu'à porter les contrats — `getDistanceInKm`, que les
+  restaurants et les bibliothèques importaient d'ici, vit dans
+  [`distance.ts`](../../src/features/Campus/services/distance.ts) depuis 6.1-C, pure et testée.
 - **La correspondance salle → bâtiment est textuelle.** Un renommage côté Celcat peut rattacher une
   salle au mauvais bâtiment ou la faire disparaître.
 
@@ -266,7 +268,7 @@ Deux conséquences à connaître avant d'y toucher :
 | [`FreeRoom/components/FreeRoomListItem.tsx`](../../src/features/Campus/FreeRoom/components/FreeRoomListItem.tsx) | ligne de liste d'un bâtiment |
 | [`FreeRoom/components/FreeRoomDetailsComponents.tsx`](../../src/features/Campus/FreeRoom/components/FreeRoomDetailsComponents.tsx) | bandeau d'heures, carte de salle libre, états fermé et vide ; la liste porte la tête de section verte ([`CampusSectionHeader`](../../src/features/Campus/components/CampusSectionHeader.tsx)) et accueille en pied la carte « S'y rendre » du bâtiment ([`CampusMapSection`](../../src/features/Campus/components/CampusMapSection.tsx)), comme les fiches de restaurant et de BU |
 | [`FreeRoom/hooks/useFreeRoomsData.ts`](../../src/features/Campus/FreeRoom/hooks/useFreeRoomsData.ts) | chargement de l'occupation et `calculateFreeRooms` (fonction pure) |
-| [`services/FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) | contrats `RoomInfo` / `BuildingInfo` / `FreeRoomSlot` et `getDistanceInKm` |
+| [`services/FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) | contrats `RoomInfo` / `BuildingInfo` / `FreeRoomSlot`, `etageDeSalle` et `grouperParEtage` |
 | [`services/CampusApiService.ts`](../../src/features/Campus/services/CampusApiService.ts) | joue les deux Blueprints Celcat : la liste des salles, l'occupation d'une journée |
 | [`services/CampusApiMapping.ts`](../../src/features/Campus/services/CampusApiMapping.ts) | contrats `CelcatRoom` / `CelcatBuilding` / `CampusEvent`, projection, reconstruction des bâtiments |
 | [`services/CampusApiMapping.test.ts`](../../src/features/Campus/services/CampusApiMapping.test.ts) | ses tests, joués par `npm test` |

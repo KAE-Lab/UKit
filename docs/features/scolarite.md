@@ -851,6 +851,16 @@ le formulaire, donc il le supplantait dès que la session partait — on retomba
 remplacent. Ce qui reste à l'écran plein est le parcours froid qu'on n'a **pas** demandé depuis un
 formulaire : au lancement, ou sur « Actualiser mon dossier ». Il n'y a alors aucune page à garder.
 
+### La grille n'apparaît pas vide sous une barre de chargement
+
+Un parcours froid qui a échoué sans laisser de dossier ne montre pas de grille : l'encart d'échec
+porte le problème et son geste, la page reste propre. Cette règle avait un trou, trouvé le
+2026-09-04 : **relancer efface l'échec**, donc la condition repassait et la grille revenait — vide —
+juste sous la barre de progression du réessai.
+
+Une session qui court sans dossier n'a toujours rien à montrer. La grille attend donc aussi que la
+progression soit finie, pas seulement que l'échec ait disparu.
+
 ### Une seule règle : la page se transforme, elle ne se remplace pas
 
 Elle vaut désormais partout sur l'écran du compte, et il n'y a **plus aucun chargement plein écran**
@@ -874,11 +884,24 @@ s'afficher.
 
 **La garde n'avait été posée que sur cet écran-ci**, et l'onglet Scolarité a montré le même défaut le
 soir de la sortie de la 6.0 : une connexion lancée depuis l'onglet passait du formulaire à l'écran de
-chargement plein au dixième pas. Elle vit désormais dans un hook partagé par les deux hôtes
-([`useSessionDepuisLeFormulaire`](../../src/features/Scolarite/hooks/useSessionDepuisLeFormulaire.ts)),
-et l'onglet teste sa branche formulaire **avant** l'écran plein — l'ordre est le sujet. L'écran plein
-reste réservé au parcours froid lancé sans formulaire : au lancement, ou sur « Actualiser mon
-dossier » ([6.1-A](../phase-6/6-1-a-robustesse-scolarite.md)).
+chargement plein au dixième pas. Elle vit désormais dans un hook partagé par les deux hôtes, et
+l'onglet teste sa branche formulaire **avant** l'écran plein — l'ordre est le sujet
+([6.1-A](../phase-6/6-1-a-robustesse-scolarite.md)).
+
+**Et le drapeau portait encore le mauvais concept**, ce que le jalon
+[6.1-E](../phase-6/6-1-e-finitions-interface.md) a corrigé : il ne connaissait qu'une origine, le
+formulaire. Un dossier qui échoue **après** l'écriture des identifiants laisse la page sur son encart
+d'échec ; toucher « Réessayer » **dans l'encart** relançait un parcours froid que rien n'avait
+annoncé, et l'écran plein reprenait la main — la page changeait sous le doigt de quelqu'un en train de
+réparer. La règle voulue n'a jamais été « la session vient du formulaire » mais **« la session vient
+d'un geste de l'utilisateur sur cet écran »**, et le hook s'appelle donc
+[`useSessionDemandeeIci`](../../src/features/Scolarite/hooks/useSessionDemandeeIci.ts) : il rend une
+**origine** — `formulaire`, qui garde le formulaire, ou `page`, qui garde le tableau de bord et pose
+la barre en encart — plutôt qu'un booléen.
+
+Le geste s'annonce **dans le `onPress`**, jamais dans `retrySession` : un parcours froid repart aussi
+tout seul au retour au premier plan après une annulation, et cette reprise-là n'est pas un geste —
+elle doit garder l'écran plein, qui est le bon rendu quand il n'y a rien à préserver.
 
 ### Le moteur se libère avant un geste qui doit pouvoir jouer
 
@@ -907,6 +930,19 @@ session par ce verrou-là.
 
 Ce n'est **pas** la file d'attente que le module refuse : on ne met pas deux demandes concurrentes en
 attente l'une de l'autre, on laisse celle qu'on vient d'annuler finir de mourir.
+
+### Le verrou teste et réserve dans le même tour
+
+Une session **insiste** trois tours face à une lecture d'arrière-plan, et renonce tout de suite face à
+une autre session. Ce qui manquait jusqu'au 2026-09-04 n'est pas l'insistance mais **l'atomicité** :
+l'attente et la réservation étaient séparées par une frontière d'`await`, et une lecture qui
+patientait sur le même run — inscrite avant la session, donc réveillée avant elle — réservait dans
+l'intervalle. La session se réveillait sur un moteur repris et renonçait sans avoir consommé un seul
+de ses tours.
+
+La boucle couvre donc **le test et la pose**, dans le même instant de la boucle d'événements. C'est
+une propriété qu'on ne voit pas à la relecture et qui se vérifie en une ligne de test : celui qui la
+garde échoue sur l'implémentation d'avant.
 
 ### Une demande explicite passe devant une session de fond
 
@@ -983,6 +1019,22 @@ estimées, donc elle avance sans savoir exactement où elle en est. Elle s'inter
 en feraient un mensonge — elle ne **recule** jamais, et elle n'atteint jamais le plafond d'une étape
 qui n'est pas finie. Les paliers ne sont pas équidistants, et c'est mesuré : la connexion et la
 messagerie portent les deux pauses d'authentification, le profil est instantané.
+
+### Le bandeau n'existe que pour une page qui a un dossier
+
+L'en-tête collant de l'onglet — filet, ombre, salutation en guise de titre — **ne se justifie que
+lorsqu'il y a quelqu'un à saluer**. Sans dossier lu, il se refermait sur un titre posé dans le vide,
+et il portait alors trois objets sur une même ligne : le grand titre, la pastille d'état de service et
+le filigrane de l'établissement. Une marque de coin et un contrôle d'en-tête sur la même ligne de
+base se lisent comme une collision — signalé sur appareil le 2026-09-04, sur l'écran de réessai.
+
+Le titre **flotte** donc tant qu'il n'y a pas de dossier, du même gabarit que Campus, les Réglages et
+le formulaire de connexion : posé en absolu, sans fond ni filet, il s'efface au défilement. Il devient
+un bandeau au moment où la lecture aboutit, c'est-à-dire au moment où il a quelque chose à dire.
+
+La correction en a supprimé un second, que personne n'avait nommé : **le filigrane sautait** de la
+ligne du titre à celle de la salutation quand le dossier arrivait. Les deux états ont désormais la
+même charpente, donc le logo ne bouge plus et l'en-tête ne change pas de hauteur.
 
 ### Le logo de l'établissement
 
@@ -1221,7 +1273,14 @@ au premier que par sa forme :
 | Identité | `PRÉNOM NOM` en un champ | nom et prénom séparés, recomposés par le fichier |
 | INE | état civil | **onglet Accès** |
 | Formation | vue *Inscriptions*, un tableau | vue *Parcours*, une carte par année |
-| Durée du parcours froid | ~46 s | ~24 s |
+| Durée du parcours froid | **43,0 s → 14,1 s** | **48,2 s → 25,3 s** |
+| Durée du parcours froid *(chiffres antérieurs)* | ~46 s | ~24 s |
+
+Les deux premières valeurs sont mesurées au poste le 2026-09-04, avant puis après le jalon
+[6.1-D](../phase-6/6-1-d-publication.md) — le parcours froid est la somme de `verification` et de
+`dossier`. La ligne des chiffres antérieurs est conservée parce qu'elle a servi de référence pendant
+un mois, mais elle n'est plus comparable : celui de l'INP est **antérieur aux trois vues bonus**
+(*Accès*, *Parcours*, arbre ADE) que la sonde du 2026-08-25 a ajoutées, chacune avec sa pause.
 
 Ce que ça établit, et qui vaut pour tous les portails à venir : **c'est la sortie qui est le
 contrat.** Les deux fichiers rendent les mêmes champs, et les écrans ne savent toujours pas qu'il
@@ -1525,6 +1584,20 @@ qu'on vient de retirer.
 > le moteur ni ce dépôt n'exposent, soit de visiter la déconnexion propre à chaque service, ce qui
 > serait une donnée de plus par établissement. Aucune des deux n'est faite ici, et la validation
 > d'identifiants **ne repose plus dessus** depuis qu'elle demande `renew=true`.
+
+**Elle dit désormais ce qu'elle n'a pas fait** (6.1-E). Elle jetait le résultat de sa réservation du
+moteur : « le portail n'a pas répondu » — acceptable — et « on n'a même pas essayé » — inacceptable,
+puisque le ticket CAS reste alors valide côté serveur — étaient **indiscernables**. Elle rend
+maintenant quatre issues nommées (`fermee`, `sans-cas`, `moteur-occupe`, `echec`) et journalise les
+trois qui ne sont pas nominales, dont `MOTEUR_OCCUPE`. Elle ne lève toujours jamais : une déconnexion
+locale réussie avec une session distante encore ouverte vaut mieux qu'un bouton qui refuse de marcher.
+
+**Et la déconnexion obtient le moteur avant d'appeler.** Le cas se produisait précisément quand il
+était le plus probable — au retour au premier plan, quand les widgets se rafraîchissent : la série
+reprenait le moteur entre deux runs, et le Blueprint n'était jamais joué. `logout` **arrête la série**
+et la session, **attend leur mort** — abandonner ne rend le verrou qu'au `finally` du run, un tour
+plus tard —, efface le local, puis ferme à distance. L'ordre du local avant le réseau, lui, ne change
+pas.
 
 ## Le navigateur intégré
 
@@ -2055,14 +2128,19 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 
 ## Limites connues
 
-- **Le parcours froid s'est allongé** — d'environ 40 s à 46 s à Bordeaux, de 12 s à 24 s à l'INP.
-  C'est le prix de la formation et, à l'INP, de l'INE : chaque vue de plus est une navigation et une
-  pause de 6 s, calibrée pour un téléphone en cellulaire et non pour un poste filaire. Le délai n'est
-  payé **qu'au premier login**, et les lancements suivants sont des parcours chauds.
-- **Un mot de passe faux coûte environ 13 s.** Le script d'origine lisait le message d'erreur du CAS
-  en deux secondes. Descendre plus bas demanderait d'interroger la page pendant la cascade de
-  navigations qui suit la soumission — là où une opération se perd en silence, ce qui mettrait le
-  chemin **nominal** en risque pour améliorer le chemin d'erreur.
+- **Le parcours froid a été mesuré, puis raccourci de moitié** (jalon
+  [6.1-D](../phase-6/6-1-d-publication.md), 2026-09-04). Il s'était allongé à mesure qu'on ajoutait
+  des vues, chacune payant une pause de 6 s calibrée à la main : 43,0 s à Bordeaux, 48,2 s à l'INP,
+  mesurées au poste. En chronométrant chaque cascade, on a trouvé que le travail réel tenait en une à
+  deux secondes par Blueprint — le reste était de l'attente aveugle. Mesuré **sur appareil**, il est
+  aujourd'hui de **14,1 s à Bordeaux et 25,3 s à l'INP**. Ce qui reste à l'INP,
+  ce sont ses trois vues bonus : leur rendu est réellement lent (2,3 s et 2,8 s mesurés), et leur
+  pause n'a donc **pas** bougé. Le délai n'est payé **qu'au premier login**.
+- **Un mot de passe faux coûte environ 7 s** — 7,2 s mesurées sur appareil le 2026-09-04 (9,4 s au
+  poste), contre une vingtaine avant que les attentes ne soient resserrées. Le script d'origine lisait le message
+  d'erreur du CAS en deux secondes. Descendre plus bas demanderait d'interroger la page pendant la
+  cascade de navigations qui suit la soumission — là où une opération se perd en silence, ce qui
+  mettrait le chemin **nominal** en risque pour améliorer le chemin d'erreur.
 - **Une source injoignable n'est jamais rangée en `unavailable`**, et c'est une limite du moteur
   mesurée sur appareil. Une adresse qui **refuse la connexion** fait rendre à iOS sa propre page
   d'erreur : l'agent s'y injecte et s'annonce, donc la navigation « réussit », et c'est l'attente
@@ -2084,9 +2162,13 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 - **La feuille d'échec ne diagnostique pas.** Elle montre le titre et le message de l'échec ; le
   `detail` du moteur reste dans le journal, et un `engine` reste « un problème de notre côté », sans
   bouton — le distinguer d'une source morte se traite chez Aetherius (ci-dessus).
-- **Le parcours chaud dure une vingtaine de secondes**, dont 15 s de pause fixe imposée par la
-  cascade d'authentification du webmail. Le compteur de messages arrive donc après l'ouverture de
-  l'onglet, pas avec elle.
+- **Le parcours chaud dure quelques secondes** — 4,4 s mesurées sur appareil pour la messagerie de
+  Bordeaux, contre 23,9 s avant le jalon [6.1-D](../phase-6/6-1-d-publication.md). La pause fixe qui
+  suit la soumission est passée de 15 s à 5 s, et l'attente d'ouverture de 6 s est devenue
+  conditionnelle. Elle ne disparaîtra pas complètement : une opération émise pendant la cascade
+  d'authentification du webmail **se perd en silence** sur un appareil, et cette pause est ce qui la
+  protège. Le compteur de messages arrive donc toujours après l'ouverture de l'onglet, mais de
+  beaucoup moins loin.
 - **Un prénom composé de deux prénoms n'en montre que le premier.** C'est le bon résultat pour une
   salutation ; l'état civil complet reste visible dans les réglages du compte.
 - **Le compteur peut valoir `null`.** `as: "number"` rend un entier ou rien ; un libellé sans
@@ -2128,13 +2210,21 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   plein pincement et qu'on y revient : c'est l'état de la WebView qui survit, pas une pièce abîmée, et
   relancer l'application le remet à plat. Il faut vraiment forcer pour y arriver (constat du
   2026-09-02) ; ce n'est pas corrigé.
-- **La session rallonge le splash de démarrage.** `CredentialsProvider` enveloppe toute la pile
-  ([`StackNavigator.tsx`](../../src/shared/navigation/StackNavigator.tsx)) et lance la session dès
-  que le trousseau a rendu des identifiants, donc **à chaque lancement**. Le comportement est
-  antérieur à la Phase 6 et reproduit à l'identique sur `master` ; le jalon 6-F change **comment** la
-  session tourne, pas **quand** elle démarre. Le raccourcir demande de retarder la session jusqu'à la
-  fin du splash, ou de la déclencher à l'entrée dans l'onglet — une décision de produit (on perdrait
-  le compteur de messages à jour dès l'ouverture), pas un correctif technique.
+- **La session au lancement, mesurée plutôt que supposée** (6.1-C, S13). Ce document affirmait
+  qu'elle « rallongeait le splash » et partait « à chaque lancement » ; le code dit autre chose.
+  `CredentialsProvider` vit dans [`rootContainer.tsx`](../../src/shared/navigation/rootContainer.tsx)
+  depuis 6-J, monté **après** que le splash natif est retiré (`App.tsx`), et il ne lance un parcours
+  froid que si le trousseau porte des identifiants **sans dossier** — c'est-à-dire, en pratique, au
+  premier lancement après une connexion ; un dossier déjà lu ne déclenche rien, ce sont les widgets
+  qui se rejouent, une fois par ouverture de l'onglet et au vrai retour d'arrière-plan. Ce que le
+  lancement coûte se lit désormais dans Metro : [`Chrono`](../../src/shared/services/Chrono.ts) pose
+  ses repères de la préparation au premier rendu et jusqu'au départ de la session ou des widgets
+  ([qualite.md](../qualite.md#lire-le-démarrage-plutôt-que-le-supposer)). Mesuré sur iPhone le
+  2026-09-03 : la scolarité décide à +447 ms sans identifiants et à +400 ms avec un dossier en
+  cache, soit trente à soixante millisecondes **après** le premier rendu (+385 et +230 ms) — rien à
+  différer. Ce qui reste écrit : le parcours froid au lancement, seul état qui lance une session,
+  tourne pendant le fondu d'une seconde du splash animé, et un run de moteur dispute alors le fil
+  JavaScript à l'animation.
 
 ## Carte des fichiers
 
@@ -2149,7 +2239,7 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`components/PropositionsModal.tsx`](../../src/features/Scolarite/components/PropositionsModal.tsx) | la confirmation, rendue par `rootContainer` pour exister aussi pendant l'accueil |
 | [`components/RangeeMysterieuse.tsx`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx) | le teaser d'un widget sans source publiée : la rangée floutée — la modale « Bientôt » qu'elle ouvre vit dans `shared/ui` |
 | [`components/FeuilleDeWidget.tsx`](../../src/features/Scolarite/components/FeuilleDeWidget.tsx) | la feuille d'un widget en échec : la phrase que la tuile ne dit pas, « Relancer » ce seul widget, ou la ressaisie |
-| [`hooks/useSessionDepuisLeFormulaire.ts`](../../src/features/Scolarite/hooks/useSessionDepuisLeFormulaire.ts) | une session lancée depuis le formulaire lui laisse la page jusqu'à son terme — la garde partagée par l'onglet et la fiche du compte |
+| [`hooks/useSessionDemandeeIci.ts`](../../src/features/Scolarite/hooks/useSessionDemandeeIci.ts) | une session lancée par un geste fait **sur cet écran** lui laisse la page jusqu'à son terme, et dit **de quel geste** — la garde partagée par l'onglet et la fiche du compte |
 | [`screens/ScolariteDashboard.tsx`](../../src/features/Scolarite/screens/ScolariteDashboard.tsx) | écran d'onglet : aiguillage entre connexion, chargement, échec et tableau de bord |
 | [`screens/CredentialsSettingsScreen.tsx`](../../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | réglages du compte : informations enregistrées, déconnexion — et, **sans compte, le formulaire de connexion** plutôt qu'une fiche vide |
 | [`screens/WebBrowserScreen.tsx`](../../src/features/Scolarite/screens/WebBrowserScreen.tsx) | navigateur intégré : points d'entrée, historique, retour matériel, enregistrement d'identifiants |

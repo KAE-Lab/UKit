@@ -1,9 +1,10 @@
 import React, { useContext } from 'react';
-import { ActivityIndicator, Switch, Text, TouchableOpacity, View, Pressable } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { AppContext } from '../services/AppCore';
-import style, { tokens, StyleWelcome, AppThemeType } from '../theme/Theme';
+import style, { tokens, AppThemeType } from '../theme/Theme';
+import { Interrupteur } from './Interrupteur';
 
 // ── Bouton de Retour ───────────────────────────────────────────
 export interface BackButtonProps {
@@ -27,26 +28,6 @@ export const BackButton = ({ backAction }: BackButtonProps) => {
                 />
             </View>
         </GHTouchableOpacity>
-    );
-};
-
-// ── Bouton d'Onboarding ────────────────────────────────────────
-export interface WelcomeButtonProps {
-    onPress?: () => void;
-    buttonText?: string;
-    theme?: 'light' | 'dark';
-}
-export const WelcomeButton = ({ onPress, buttonText, theme = 'light' }: WelcomeButtonProps) => {
-    return (
-        <TouchableOpacity onPress={onPress} style={StyleWelcome[theme].buttonContainer as any}>
-            <Text style={StyleWelcome[theme].buttonText as any}>{buttonText}</Text>
-            <MaterialIcons
-                name={'chevron-right'}
-                size={32}
-                color={StyleWelcome[theme].welcomeButtonIconColor}
-                style={{ position: 'absolute', alignSelf: 'center', right: 8 }}
-            />
-        </TouchableOpacity>
     );
 };
 
@@ -79,7 +60,8 @@ export const DrawerButton = (props: DrawerButtonProps) => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 paddingHorizontal: tokens.space.md,
-                paddingVertical: 3,
+                // 3 en dur jusqu'a 6.1-E : un point de plus, et la ligne tient sur l'echelle.
+                paddingVertical: tokens.space.xs,
                 marginHorizontal: tokens.space.sm,
                 marginVertical: tokens.space.xs,
                 borderRadius: tokens.radius.md,
@@ -145,6 +127,7 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
         <TouchableOpacity
             onPress={onPress}
             disabled={disabled}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- G8 : les styles composes de Theme.ts ne sont pas types (docs/defauts-fonctionnels.md), session a part en 6.2
             style={[theme.button, { flexDirection: 'row', alignItems: 'center' }, disabled && { opacity: 0.5}] as any}>
             {leftIcon && (
                 leftIconAnimation ? (
@@ -176,14 +159,20 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
               * verticale. Ce n'etait pas un probleme de longueur de nom mais de gabarit : n'importe
               * quelle valeur longue le reproduisait.
               */}
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- G8 : les styles composes de Theme.ts ne sont pas types (docs/defauts-fonctionnels.md), session a part en 6.2 */}
             <Text style={[theme.buttonMainText, { flexShrink: 0 }] as any}>{leftText}</Text>
             {onSwitchToggle !== undefined ? (
-                <Switch
-                    style={{ marginLeft: 'auto', marginRight: theme.leftIcon?.marginLeft }}
-                    trackColor={theme.switchTrack}
-                    thumbColor={'#FFFFFF'}
-                    value={switchValue}
-                    onValueChange={onSwitchToggle}
+                /*
+                  * L'interrupteur du depot, dessine, et non celui du systeme : voir son en-tete. La
+                  * marge droite reprend celle de l'icone de gauche — la rangee reste symetrique,
+                  * comme elle l'etait avec le `Switch` natif.
+                  */
+                <Interrupteur
+                    theme={theme}
+                    valeur={switchValue === true}
+                    onChange={onSwitchToggle}
+                    accessibilityLabel={leftText}
+                    style={{ marginLeft: 'auto', marginRight: (theme.leftIcon as import('react-native').TextStyle)?.marginLeft }}
                 />
             ) : (
                 <Text
@@ -201,13 +190,12 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
 };
 
 // ── COMPOSANT UNIVERSEL ─────────────────────────────────
-export type ButtonProps = Partial<Omit<WelcomeButtonProps, 'theme'> & Omit<SettingsButtonProps, 'theme'> & BackButtonProps & DrawerButtonProps> & {
+export type ButtonProps = Partial<Omit<SettingsButtonProps, 'theme'> & BackButtonProps & DrawerButtonProps> & {
     theme?: AppThemeType['settings'] | 'light' | 'dark';
 };
 
 export default function Button(props: ButtonProps) {
     if (props.backAction) return <BackButton {...props as BackButtonProps} />;
-    if (props.buttonText) return <WelcomeButton {...props as WelcomeButtonProps} />;
     if (props.title) return <DrawerButton {...props as DrawerButtonProps} />;
     return <SettingsButton {...props as SettingsButtonProps} />;
 }

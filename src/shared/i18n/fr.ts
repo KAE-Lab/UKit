@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- un dictionnaire est un fichier de donnees : le decouper nuirait a sa lecture, comme Theme.ts */
 import type { TranslationDict } from './Translator';
 
 const fr: TranslationDict = {
@@ -116,6 +117,7 @@ const fr: TranslationDict = {
 	NO_GROUP_FOUND_WITH_THIS_SEARCH: 'Aucun groupe ne correspond à cette recherche.',
 	NO_SYNCHRONIZATION_DONE: 'Jamais synchronisé',
 	LAST_SYNCHRONIZATION_FAILED: 'La dernière synchronisation a échoué',
+	CALENDAR_SYNC_FAILED_TOAST: "La synchronisation a échoué. L'agenda n'a pas été modifié.",
 	OFFLINE_DISPLAY_FROM_DATE: 'Hors ligne — données du $-',
 	OPEN_ON_FAVOURITE_GROUP: 'Ouvrir sur le groupe favori',
 	OPEN_SYSTEM_SETTINGS: 'Ouvrir les réglages du système',
@@ -149,7 +151,19 @@ const fr: TranslationDict = {
 	// Le multi-etablissement (jalon 6-G). Le NOM d'une universite vient du catalogue, jamais d'ici :
 	// ce sont les libelles d'ecran qui se traduisent, pas les donnees.
 	YOUR_INSTITUTION: 'Quelle est ton université ?',
-	INSTITUTIONS_LOADING: 'On récupère la liste des établissements…',
+	INSTITUTIONS_LOADING: 'Récupération de la liste des établissements…',
+	GROUPS_LOADING: 'Récupération de la liste des groupes…',
+	// --- Les chargements qui parlent (6.1-E) : ce qu'on attend, et la lenteur quand elle dure
+	LOADING_TIMETABLE: 'Ton emploi du temps arrive…',
+	LOADING_FREE_ROOMS: 'Recherche des salles libres…',
+	LOADING_CAMPUS_OPEN: 'Lecture de ce qui est ouvert…',
+	LOADING_ANNOUNCEMENTS: 'Lecture des annonces…',
+	LOADING_MENU: 'Lecture du menu…',
+	LOADING_OPENING_HOURS: 'Lecture des horaires…',
+	LOADING_DOCUMENT: 'Ouverture de la pièce…',
+	LOADING_PORTAL: 'Le portail se charge…',
+	LOADING_PATIENCE: 'C\'est un peu plus long que d\'habitude…',
+	LOADING_PATIENCE_UNIVERSITY: 'Le serveur de l\'université est lent aujourd\'hui…',
 	INSTITUTION: 'Établissement',
 	INSTITUTION_CHANGE_TITLE: 'Changer d’établissement ?',
 	INSTITUTION_CHANGE_WARNING: 'Groupes favoris, planning en cache, session universitaire et cours ajoutés au calendrier seront effacés.\nLes données de deux établissements ne se mélangent pas.',
@@ -342,7 +356,12 @@ const fr: TranslationDict = {
 	NOTIFICATIONS: "Notifications",
 	COURSE_NOTIFICATIONS: "Notifications de cours",
 	NOTIFICATION_DELAY: "Délai avant le cours",
+	NOTIFICATION_DELAY_VALUE: '$- min',
 	NOTIFICATION_DELAY_DESC: 'Le nombre de minutes entre la notification et le début du cours.',
+	NOTIFICATION_CAP_DESC: 'Les 20 prochains cours de la semaine consultée sont couverts.',
+	NOTIFICATION_COURSE_IN: 'Cours dans $- min',
+	NOTIFICATION_COURSE_FALLBACK: 'Cours',
+	NOTIFICATION_LOCATION_UNKNOWN: 'Salle inconnue',
 	PROPOSALS_TITLE: 'Trouvé dans ton dossier',
 	PROPOSALS_INTRO: 'Le dossier universitaire contient de quoi compléter le profil. Rien ne s’applique sans ton accord.',
 	PROPOSALS_EDT_LABEL: 'Emploi du temps',

@@ -55,7 +55,10 @@ import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { GlypheFiligrane } from '../../../shared/ui/GlypheFiligrane';
 import { CampusSectionHeader } from '../components/CampusSectionHeader';
 
-/** Les index utilisables de `sectionsHeaders` — le 4 duplique le 0 en theme sombre. */
+/**
+ * Les index utilisables de `sectionsHeaders`. Le 4 en est absent depuis qu'il doublait le 0 en sombre
+ * (coquille corrigee en 6.1-C) ; la palette n'est pas rejouee apres coup, une annonce garde sa teinte.
+ */
 const PALETTE = [0, 1, 2, 3, 5] as const;
 const ICONE_PAR_DEFAUT = 'text-box-outline';
 

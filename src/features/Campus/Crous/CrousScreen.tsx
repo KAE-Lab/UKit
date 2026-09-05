@@ -81,6 +81,7 @@ function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@re
         <CampusListLayout
             data={filteredData}
             loading={loading}
+            messageChargement={Translator.get('LOADING_CAMPUS_OPEN')}
             renderItem={renderItem}
             onAnimatedScroll={onAnimatedScroll}
             navigation={navigation}

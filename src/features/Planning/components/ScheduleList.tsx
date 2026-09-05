@@ -12,14 +12,16 @@ import { groupOverlappingCourses } from './ScheduleListUtils';
 
 import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { EmptyState } from '../../../shared/ui/EmptyState';
-import { LoadingState } from '../../../shared/ui/LoadingState';
+import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
+import { ApparitionEnFondu } from '../../../shared/ui/ApparitionEnFondu';
+import { DELAI_AVANT_INDICATEUR_MS } from '../../../shared/ui/indicateurRetarde';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import { SourceFailureNotice, type NoticeAction } from '../../../shared/ui/SourceFailureNotice';
 import Translator from '../../../shared/i18n/Translator';
 import { isConnected } from '../../../shared/services/AppCore'
 import { ukitFailure, type UkitFailure } from '../../../shared/aetherius';
 import { groupesRequis, lienEdtAttendu, planningAbsent, sourceEdt } from '../../../shared/etablissements';
-import { PlanningApiService as FetchManager } from '../services/PlanningApiService';
+import { PlanningApiService as FetchManager, type PlanningEvent, type PlanningWeekDay } from '../services/PlanningApiService';
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
 import { CourseManager, isArraysEquals } from '../../../shared/services/AppCore';
 import { NotificationManager } from '../../../shared/services/NotificationService';
@@ -168,7 +170,28 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         const controller = new AbortController();
         const id = this.cacheId(groupName);
 
-        this.setState({ schedule: null, failure: null, loading: true, controller }, async () => {
+        /*
+         * **Une relecture de ce qui est deja affiche ne vide pas l'ecran.**
+         *
+         * Revenir sur l'onglet Planning declenche un rafraichissement (`addListener('focus')`), et il
+         * posait `schedule: null` comme n'importe quel chargement : la journee disparaissait, puis
+         * revenait **identique**. Le defaut est ancien ; c'est le glissement entre onglets du jalon
+         * 6.1-E qui l'a rendu visible, parce qu'on voit desormais la page d'arrivee **pendant** le
+         * geste — un changement d'onglet instantane ne laissait pas le temps de voir l'avant.
+         *
+         * On ne vide donc que lorsque le chargement porte sur **autre chose** : un autre jour, une
+         * autre semaine, un autre groupe. Relire la meme cle garde le contenu a l'ecran jusqu'a son
+         * remplacement — il est juste, puisque c'est le meme jour —, et l'attente reste silencieuse :
+         * ni indicateur, ni fondu, rien qui signale un travail dont le resultat ne changera pas.
+         */
+        const relecture = this.state.schedule !== null && id === this.idAffiche;
+
+        // Le depart de l'attente se note **ici**, dans le gestionnaire : le rendu ne doit rien muter,
+        // et c'est cet instant qui decide si le contenu reviendra en fondu (`enveloppeApresAttente`).
+        this.attenteDepuis = relecture ? null : Date.now();
+        // Sur une relecture, `schedule` est repose **a sa propre valeur** : rien ne disparait, et rien
+        // n'est rendu a nouveau pour autant.
+        this.setState({ schedule: relecture ? this.state.schedule : null, failure: null, loading: true, controller }, async () => {
             const issue = await this.loadSchedule(groupName, id, controller.signal);
             // Un run remplace par un plus recent, ou un composant demonte : l'etat ne nous appartient
             // plus, et c'est le run suivant qui l'ecrit.
@@ -232,7 +255,12 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     };
 
     applySchedule(issue: ScheduleIssue) {
+        this.attenteAEteVisible = this.attenteDepuis !== null
+            && Date.now() - this.attenteDepuis >= DELAI_AVANT_INDICATEUR_MS;
+        this.attenteDepuis = null;
+
         if (issue.data == null) {
+            this.idAffiche = null;
             this.setState({ schedule: null, loading: false, controller: null, cacheDate: null, manquants: [], failure: issue.failure });
             return;
         }
@@ -245,13 +273,21 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         }
 
         const isFavorite = Array.isArray(this.state.groupName);
-        const schedule = this.props.mode === 'day'
-            ? this.computeScheduleDay(issue.data as import('../services/PlanningApiService').PlanningEvent[], isFavorite)
-            : issue.data;
+        // Jour et semaine sont derives **ici**, une fois, jamais au rendu : la vue semaine rejouait le
+        // calcul d'UE et le filtrage de ses six jours a chaque rendu (6.1-C). Un changement de filtres
+        // passe par `componentDidUpdate`, qui recharge — et les rappels de cours suivent desormais les
+        // filtres dans les deux vues, la journee les suivait deja.
+        const schedule: ScheduleData = this.props.mode === 'day'
+            ? this.computeScheduleDay(issue.data as PlanningEvent[], isFavorite)
+            : (issue.data as PlanningWeekDay[]).map((jour) => this.computeScheduleWeek(jour, isFavorite));
 
         if (isFavorite) {
             NotificationManager.scheduleCourseNotifications(schedule).catch(e => console.warn('Notification scheduling error:', e));
         }
+
+        // La cle de ce qui est desormais a l'ecran : c'est elle qui decidera si le prochain
+        // chargement remplace le contenu ou se contente de le relire (voir `fetchSchedule`).
+        this.idAffiche = this.cacheId(this.state.groupName);
 
         this.setState({
             schedule, loading: false, controller: null,
@@ -259,19 +295,14 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         });
     }
 
-    computeScheduleDay(schedule: import('../services/PlanningApiService').PlanningEvent[], isFavorite: boolean) {
+    computeScheduleDay(schedule: PlanningEvent[], isFavorite: boolean): PlanningEvent[] {
         return schedule
-            .map((course) => CourseManager.computeCourseUE(course as unknown as Record<string, unknown>) as unknown as import('../services/PlanningApiService').PlanningEvent)
-            .filter((course) => CourseManager.filterCourse(isFavorite, course as any, this.props.filtersList));
+            .map((course) => CourseManager.computeCourseUE(course))
+            .filter((course) => CourseManager.filterCourse(isFavorite, course, this.props.filtersList));
     }
 
-    computeScheduleWeek(schedule: import('../services/PlanningApiService').PlanningWeekDay, isFavorite: boolean) {
-        return {
-            ...schedule,
-            courses: schedule.courses
-                .map((course) => CourseManager.computeCourseUE(course as unknown as Record<string, unknown>) as unknown as import('../services/PlanningApiService').PlanningEvent)
-                .filter((course) => CourseManager.filterCourse(isFavorite, course as any, this.props.filtersList))
-        };
+    computeScheduleWeek(schedule: PlanningWeekDay, isFavorite: boolean): PlanningWeekDay {
+        return { ...schedule, courses: this.computeScheduleDay(schedule.courses, isFavorite) };
     }
 
     /**
@@ -371,9 +402,10 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
     renderLoading() {
         return (
-            <LoadingState
+            <ChargementPleinePage
                 theme={this.props.theme}
-                fullScreen
+                message={Translator.get('LOADING_TIMETABLE')}
+                patience={Translator.get('LOADING_PATIENCE_UNIVERSITY')}
                 background={this.props.theme.courseBackground}
                 topOffset={0}
             />
@@ -413,11 +445,10 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
     renderWeekMode(listHeader: React.ReactNode) {
         const { theme, navigation } = this.props;
-        const isFavorite = Array.isArray(this.state.groupName);
         const targetObject = this.state.target as { week: number; year: number };
         const targetYear = targetObject.year || moment().year();
         const targetWeek = targetObject.week;
-        const weekSchedule = this.state.schedule as import('../services/PlanningApiService').PlanningWeekDay[];
+        const weekSchedule = this.state.schedule as PlanningWeekDay[];
 
         return (
             <Animated.ScrollView 
@@ -433,7 +464,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                     return (
                         <DayWeek
                             key={index}
-                            schedule={this.computeScheduleWeek(scheduleItem, isFavorite) as any}
+                            schedule={scheduleItem}
                             navigation={navigation}
                             theme={theme}
                             fallbackDate={fallbackDate}
@@ -466,6 +497,13 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         );
     }
 
+    /** Quand l'attente en cours a commence, ou `null` si rien n'attend. Voir `enveloppeApresAttente`. */
+    private attenteDepuis: number | null = null;
+    /** La cle de ce qui est **affiche** : elle dit si un chargement remplace le contenu ou le relit. */
+    private idAffiche: string | null = null;
+    /** L'attente qui vient de s'achever a-t-elle dure assez pour montrer un indicateur ? */
+    private attenteAEteVisible = false;
+
     renderContent(listHeader: React.ReactNode) {
         // Ce que l'etablissement publie gagne sur tout le reste, et l'ordre n'est pas indifferent :
         // une universite sans emploi du temps n'a jamais de groupes favoris, donc l'ecran « ton
@@ -496,11 +534,34 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         } else if (this.state.schedule === null) {
             return this.renderLoading();
         } else if (this.state.schedule instanceof Array && this.props.mode === 'day') {
-            return this.renderDayMode(listHeader);
+            return this.enveloppeApresAttente(this.renderDayMode(listHeader));
         } else if (this.state.schedule instanceof Array && this.props.mode === 'week') {
-            return this.renderWeekMode(listHeader);
+            return this.enveloppeApresAttente(this.renderWeekMode(listHeader));
         }
         return null;
+    }
+
+    /**
+     * Le planning revient **en fondu seulement si l'attente s'est vue**.
+     *
+     * Chaque chargement vide la liste (`schedule: null`), y compris un simple changement de jour : la
+     * question n'est donc pas « est-ce le premier rendu » mais **combien de temps l'ecran a-t-il
+     * attendu**. La regle est la meme que celle de l'indicateur
+     * ([`indicateurRetarde.ts`](../../../shared/ui/indicateurRetarde.ts)), et c'est ce qui la rend
+     * coherente :
+     *
+     *   - **sous le seuil** — un jour deja en cache — rien n'a ete montre, donc il n'y a rien a
+     *     adoucir : le contenu revient sec, et c'est exactement ce qu'on veut, puisque l'operation
+     *     *a ete* instantanee. Fondre ici ajouterait 200 ms a un aller-retour de cinquante, et ferait
+     *     paraitre lent ce qui ne l'etait pas ;
+     *   - **au-dela** — un jour a chercher sur le reseau — l'indicateur a paru, et le contenu qui le
+     *     remplace se fond, comme partout ailleurs.
+     *
+     * Les cartes du planning n'ont pas d'animation d'entree propre, contrairement a celles du Campus :
+     * c'est ici, et pas la, que le fondu manque.
+     */
+    enveloppeApresAttente(contenu: React.ReactNode) {
+        return <ApparitionEnFondu actif={this.attenteAEteVisible}>{contenu}</ApparitionEnFondu>;
     }
 
     render() {

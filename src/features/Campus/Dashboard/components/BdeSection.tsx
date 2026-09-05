@@ -9,6 +9,7 @@ import { LoadingState } from '../../../../shared/ui/LoadingState';
 import { useBdeAnnonces } from '../../hooks/useBdeAnnonces';
 import { BdeAnnonceCard } from '../../Bde/BdeAnnonceCard';
 import { SectionEtatVide } from './SectionEtatVide';
+import { useChargementDeSection, useRevisionDuTableauDeBord } from '../rafraichissement';
 import type { BdeAnnonce } from '../../services/BdeService';
 
 const { width } = Dimensions.get('window');
@@ -20,7 +21,9 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
-    const { annonces, failure, loading, retry } = useBdeAnnonces();
+    const revision = useRevisionDuTableauDeBord();
+    const { annonces, failure, loading, enCours, retry } = useBdeAnnonces(revision);
+    useChargementDeSection('annonces', enCours);
     const enEchec = failure !== undefined && failure.silent !== true;
 
     // Une absence d'annonces ne merite pas de section : rien a montrer, rien a dire. Un echec, si —

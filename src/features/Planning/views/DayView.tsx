@@ -10,6 +10,7 @@ import { DayComponent, WeekComponent } from '../components/ScheduleList';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext } from '../../../shared/services/AppCore';
+import { onRetourAuPremierPlan } from '../../../shared/services/premierPlan';
 import { DayViewHeader } from '../components/DayViewHeader';
 
 function capitalize(str: string) {
@@ -64,6 +65,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
     viewability: { itemVisiblePercentThreshold: number };
     scrollTimeout: NodeJS.Timeout | null = null;
     mockListener: import('react-native').EmitterSubscription | null = null;
+    desabonnerRetour: (() => void) | null = null;
     calendarList: import('react-native').FlatList<unknown> | null = null;
 
 	constructor(props: DayViewProps) {
@@ -107,6 +109,13 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		this.scrollToSelection(false);
 		this.mockListener = DeviceEventEmitter.addListener('timeMockChanged', () => {
 			this.reinitializeDates();
+		});
+		// Le jour courant est calcule au montage, et l'onglet ne se demonte jamais : laisse en
+		// arriere-plan jusqu'au lendemain, « Aujourd'hui » menait encore a la veille (mesure en
+		// production le 2 septembre 2026). Au retour, si la date a change, tout se recalcule comme au
+		// lancement — le meme geste que la simulation temporelle juste au-dessus (6.1-C).
+		this.desabonnerRetour = onRetourAuPremierPlan(() => {
+			if (!moment().isSame(this.state.currentDay, 'day')) this.reinitializeDates();
 		});
 	}
 
@@ -158,6 +167,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 	componentWillUnmount() {
 		if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
 		if (this.mockListener) this.mockListener.remove();
+		if (this.desabonnerRetour) this.desabonnerRetour();
 	}
 
 	static getCalendarListItemLayout = (data: unknown[] | null | undefined, index: number) => ({

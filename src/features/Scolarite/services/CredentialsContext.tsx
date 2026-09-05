@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { AppState } from 'react-native';
 
 import SecureStoreService from '../../../shared/services/SecureStoreService';
+import { marquer } from '../../../shared/services/Chrono';
 import { SettingsManager } from '../../../shared/services/AppCore';
 import { getCodeEtablissementActif, portailPublie } from '../../../shared/etablissements';
 import Translator from '../../../shared/i18n/Translator';
@@ -9,7 +10,7 @@ import { adoucirLaTransition } from '../../../shared/ui/transitions';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { rangerCertificat } from './CertificatService';
 import { cleDeMessage, type ScolariteColdData } from './ScolariteMapping';
-import { useWidgets, type EtatDesWidgets } from '../widgets/useWidgets';
+import { useWidgets, type EtatDesWidgets, type IssueDeSerie } from '../widgets/useWidgets';
 import type { PropositionsDossier } from './PropositionsDossier';
 import { lirePropositionsEnAttente, propositionsDe } from './PropositionsEnAttente';
 import {
@@ -196,15 +197,36 @@ async function chargerSessionDuTrousseau(
      * rejoue que s'il est perime. Le lancement de l'application ne coute donc plus un run de moteur
      * a quelqu'un qui ouvre l'onglet Planning et rien d'autre.
      */
+    marquer(creds === null
+        ? 'scolarite : aucun identifiant, aucune session'
+        : cold === null ? 'scolarite : parcours froid lance' : 'scolarite : dossier en cache, aucune session');
     if (creds && cold === null) lancerSession('cold');
 }
 
+/**
+ * La lecture du trousseau au lancement — **une seule fois**.
+ *
+ * L'effet dependait des deux rappels, et un rappel qui change d'identite le rejouait : le chrono
+ * de 6.1-C a vu le trousseau relu quarante secondes apres le premier rendu, sans que rien ne l'ait
+ * demande — et `lancerSession` remplace un run en cours, donc un parcours froid aurait pu etre
+ * relance par-dessus lui-meme. Les rappels passent par des references, comme dans
+ * `useBasculerAuChangementDEtablissement` juste au-dessus.
+ */
 function useChargementInitial(lancerSession: (mode: 'cold' | 'hot') => void, poser: PoserSession): void {
+    const lancerRef = useRef(lancerSession);
+    lancerRef.current = lancerSession;
+    const poserRef = useRef(poser);
+    poserRef.current = poser;
+
     useEffect(() => {
         let monte = true;
-        void chargerSessionDuTrousseau(lancerSession, poser, () => monte);
+        void chargerSessionDuTrousseau(
+            (mode) => lancerRef.current(mode),
+            (session) => poserRef.current(session),
+            () => monte,
+        );
         return () => { monte = false; };
-    }, [lancerSession, poser]);
+    }, []);
 }
 
 /**
@@ -258,11 +280,24 @@ function useCycleDeVieSession(
  * l'effacement, et les reecrirait. Le run annule, lui, n'ecrit rien (voir `lancerSession`).
  */
 function useDeconnexion(
-    sessionRef: React.RefObject<AbortController | null>,
     oublier: () => void,
+    arreterLesWidgets: () => Promise<void>,
+    libererLeMoteur: () => Promise<void>,
 ): () => Promise<void> {
     return useCallback(async () => {
-        sessionRef.current?.abort();
+        /*
+         * **Tout ce qui tient le moteur est prie de s'arreter, d'abord.**
+         *
+         * Les deux abandons partent de facon synchrone : passe cette ligne, plus aucun run en vol ne
+         * peut ecrire dans le trousseau qu'on s'apprete a vider (le runner verifie son signal apres
+         * chaque lecture). Et surtout, la deconnexion distante plus bas est **le seul geste qui ne
+         * peut pas se rejouer plus tard** : sans cet arret, la serie de widgets reprenait le moteur
+         * entre deux runs et le Blueprint de deconnexion n'etait jamais joue — le ticket CAS restait
+         * valide cote serveur (mesure du 2026-09-04, docs/defauts-fonctionnels.md).
+         */
+        const serie = arreterLesWidgets();
+        const session = libererLeMoteur();
+
         await SecureStoreService.deleteCredentials();
         await SecureStoreService.deleteColdData();
         // Les valeurs de widgets sont des donnees du compte : les laisser ferait retrouver le
@@ -272,6 +307,15 @@ function useDeconnexion(
         // au suivant, avec les UE du precedent.
         await ecrireEnAttente(null);
         oublier();
+
+        /*
+         * **On attend leur mort avant de reserver.** Abandonner ne rend pas le verrou tout de suite :
+         * l'abandon se propage au run, dont le `finally` le rend au tour suivant. Repartir aussitot
+         * se ferait refuser par ce verrou-la — c'est le meme piege que `libererLeMoteur` documente
+         * pour les sessions.
+         */
+        await Promise.all([serie, session]);
+
         /*
          * **Apres le local, jamais avant.** Depuis que les parcours de portail persistent leur
          * session (`options.session.persist`), le cookie de ticket CAS survit au run : l'effacer
@@ -283,7 +327,7 @@ function useDeconnexion(
          * — c'est-a-dire un bouton « Se deconnecter » qui ne deconnecte pas. Il ne leve jamais.
          */
         await fermerSessionDistante();
-    }, [oublier, sessionRef]);
+    }, [arreterLesWidgets, libererLeMoteur, oublier]);
 }
 
 /**
@@ -399,7 +443,7 @@ function useReprises(
     coldData: ScolariteColdData | null,
     scrapeStatus: EtatSession['status'],
     lancerSession: (mode: 'cold' | 'hot', candidat?: Identifiants | null, remplacer?: boolean) => boolean,
-    rafraichirWidgets: (options?: { readonly force?: boolean }) => Promise<void>,
+    rafraichirWidgets: (options?: { readonly force?: boolean }) => Promise<IssueDeSerie>,
 ) {
     /*
      * « Reessayer » ne veut pas dire la meme chose selon ce qu'on a deja.
@@ -443,7 +487,7 @@ function useReactionsDeSession(
     setEtat: React.Dispatch<React.SetStateAction<EtatSession>>,
     setCredentials: (c: Identifiants | null) => void,
     setColdData: (c: ScolariteColdData | null) => void,
-    rafraichirWidgets: (options?: { readonly force?: boolean }) => Promise<void>,
+    rafraichirWidgets: (options?: { readonly force?: boolean }) => Promise<IssueDeSerie>,
     poserPropositions: (p: PropositionsDossier) => void,
     finirValidation: (r: ResultatValidation) => void,
     rangerAvecIndicateur: () => Promise<void>,
@@ -490,7 +534,11 @@ const appliquerResultat = useCallback((resultat: ResultatSession) => {
          * Ni attendu ni observe : ranger un document n'a rien a dire a l'ecran de connexion, et un
          * portail muet ne doit pas retarder l'arrivee sur le tableau de bord.
          */
-        void rafraichirWidgets({ force: true }).then(() => rangerAvecIndicateur());
+        void rafraichirWidgets({ force: true })
+            // **Seulement si la serie est allee au bout.** Une serie interrompue resout elle aussi,
+            // et l'enchainement partait donc apres une deconnexion : un run d'une vingtaine de
+            // secondes sur un trousseau qu'on vient de vider (2026-09-04).
+            .then((issue) => (issue === 'terminee' ? rangerAvecIndicateur() : undefined));
     }
     // Ni appliquees ni oubliees : c'est la modale qui demande, et l'etudiant qui tranche. Elles
     // sont en revanche **gardees** jusqu'a sa reponse (voir `usePropositions`).
@@ -794,7 +842,7 @@ const useCredentialsSession = (): CredentialsValue => {
         setEtat(AU_REPOS);
     }, [setPropositions, widgets]);
 
-    const logout = useDeconnexion(sessionRef, oublier);
+    const logout = useDeconnexion(oublier, widgets.arreter, libererLeMoteur);
     useBasculerAuChangementDEtablissement(sessionRef, oublier, lancerSession, poserTrousseau);
 
     return {

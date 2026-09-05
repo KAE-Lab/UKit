@@ -1,11 +1,11 @@
 import React, { useContext, useState } from 'react';
-import { Animated, View } from 'react-native';
+import { Animated, FlatList, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
-import { LoadingState } from '../../../shared/ui/LoadingState';
+import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { ScreenState, HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 import { CampusSearchBar, CampusFilterModal, CampusListEmptyState, CampusPartialNotice } from './CampusLayoutComponents';
 import { useCampusListHeader } from './hooks/useCampusListHeader';
@@ -41,6 +41,13 @@ export interface CampusListLayoutProps<T> {
     selectedFilter?: string;
     onFilterChange?: (id: string) => void;
     
+    /**
+     * Ce que la liste attend, en une phrase. **Obligatoire** : ce socle sert quatre domaines, et
+     * chacun attend autre chose — des salles, des horaires d'ouverture, des annonces. Une phrase par
+     * defaut aurait menti pour trois d'entre eux.
+     */
+    messageChargement: string;
+
     // Empty State
     emptyIcon?: keyof typeof import('@expo/vector-icons').MaterialCommunityIcons.glyphMap;
     emptyTitle?: string;
@@ -62,6 +69,14 @@ export interface CampusListLayoutProps<T> {
     // Navigation for setting header filter icon
     navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
 }
+
+/**
+ * `Animated.FlatList` perd le generique de la liste : ses props attendent des valeurs animees, et
+ * `T[]` n'en est pas une. Le socle n'anime que le defilement, jamais la donnee — la liste est donc
+ * typee comme une `FlatList` ordinaire, ce qui rend `data`, `renderItem` et `keyExtractor` a `T`
+ * sans les trois `any` que ce fichier portait (6.1-C).
+ */
+const ListeAnimee = Animated.FlatList as unknown as typeof FlatList;
 
 /** Ce que la barre de recherche occupe en pied de liste, quand elle est affichee. */
 const HAUTEUR_RECHERCHE = 80;
@@ -168,10 +183,29 @@ function ContenuVide({
     );
 }
 
+/**
+ * L'attente de la liste entiere : elle remplace la barre de recherche, les filtres et les cartes.
+ *
+ * Extraite du corps pour la meme raison que `Surcouches` juste au-dessus — la fonction principale
+ * depassait la limite de lignes — et le decoupage tombe juste : c'est le seul etat de cet ecran qui
+ * ne rend rien de ce qui l'entoure.
+ */
+function AttenteDeLaListe({ theme, message }: {
+    theme: import('../../../shared/theme/Theme').AppThemeType;
+    message: string;
+}) {
+    return (
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <ChargementPleinePage theme={theme} message={message} background={theme.courseBackground} />
+        </SafeAreaView>
+    );
+}
+
 // eslint-disable-next-line complexity
 export function CampusListLayout<T>({
     data,
     loading,
+    messageChargement,
     renderItem,
     onAnimatedScroll,
     hasSearch = false,
@@ -206,13 +240,7 @@ export function CampusListLayout<T>({
         setFilterVisible
     });
 
-    if (loading) {
-        return (
-            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-                <LoadingState theme={theme} fullScreen background={theme.courseBackground} />
-            </SafeAreaView>
-        );
-    }
+    if (loading) return <AttenteDeLaListe theme={theme} message={messageChargement} />;
 
     const isFiltering = searchText.trim().length > 0 || (selectedFilter && selectedFilter !== 'all');
 
@@ -262,12 +290,12 @@ export function CampusListLayout<T>({
     return (
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <View style={{ flex: 1 }}>
-                <Animated.FlatList
-                    data={data as any}
+                <ListeAnimee
+                    data={data}
                     onScroll={onAnimatedScroll as never}
                     scrollEventThrottle={16}
-                    keyExtractor={(item: any, index) => {
-                        const id = (item as unknown as { id?: string | number }).id;
+                    keyExtractor={(item: T, index) => {
+                        const id = (item as { id?: string | number }).id;
                         return id ? id.toString() : index.toString();
                     }}
                     showsVerticalScrollIndicator={false}
@@ -278,7 +306,7 @@ export function CampusListLayout<T>({
                         paddingBottom: Math.max(tokens.space.sm, (insets?.bottom || 0))
                             + (rechercheVisible ? HAUTEUR_RECHERCHE : tokens.space.lg),
                     }}
-                    renderItem={renderItem as any}
+                    renderItem={renderItem}
                     numColumns={numColumns}
                     // La gouttiere horizontale d'une rangee ; la verticale reste aux cartes, comme
                     // pour les listes a une colonne.

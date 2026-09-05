@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,6 +14,7 @@ import { CampusMapSection } from '../components/CampusMapSection';
 import { CampusSectionHeader } from '../components/CampusSectionHeader';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ScreenState } from '../../../shared/ui/ScreenState';
+import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { CrousMealCard } from './components/CrousMealCard';
 import { CrousDateHeader } from './components/CrousDateHeader';
 
@@ -262,9 +263,11 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
 
     if (loading) {
         return (
-            <MenuPleinePage theme={theme}>
-                <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
-            </MenuPleinePage>
+            <ChargementPleinePage
+                theme={theme}
+                message={Translator.get('LOADING_MENU')}
+                background={theme.courseBackground}
+            />
         );
     }
 

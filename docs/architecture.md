@@ -157,9 +157,9 @@ consommateurs hors React (tâche de fond, planificateur de notifications). Déta
 - **Un fichier de logique reste sous 400 lignes**, une fonction sous 100 lignes, la profondeur
   d'imbrication sous 4, la complexité cyclomatique sous 15. Ces seuils sont appliqués par
   [`eslint.config.mjs`](../eslint.config.mjs) : ce sont des garde-fous d'architecture, pas du confort.
-  Au-delà, on découpe en sous-modules. Seul [`Theme.ts`](../src/shared/theme/Theme.ts) déroge
-  explicitement (`eslint-disable max-lines`) : c'est un fichier de données de style, le découper
-  nuirait à la lisibilité.
+  Au-delà, on découpe en sous-modules. Seuls [`Theme.ts`](../src/shared/theme/Theme.ts) et les trois dictionnaires de
+  [`shared/i18n/`](../src/shared/i18n/) dérogent explicitement (`eslint-disable max-lines`) : ce sont
+  des fichiers de données, les découper nuirait à la lisibilité.
 - **100 % TypeScript.** Aucun `.js` ou `.jsx` dans `src/`. Pas de `any` sans justification. À noter :
   [`tsconfig.json`](../tsconfig.json) étend `expo/tsconfig.base` **sans activer `strict`** — le
   typage est donc systématique par discipline, pas par contrainte du compilateur
@@ -236,9 +236,9 @@ racine et de [`src/shared/`](../src/shared/).
 | [`App.tsx`](../App.tsx) | point d'entrée : préchargement des ressources, chargement des managers, splash animé |
 | [`app.config.ts`](../app.config.ts) | configuration Expo ([plateforme.md](plateforme.md)) |
 | [`metro.config.js`](../metro.config.js) | la configuration Metro d'Expo, plus `txt` en extension d'asset — pour servir pdf.js tel quel à la WebView du lecteur ([plateforme.md](plateforme.md)) |
-| [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement des six surcouches publiées — livraison, lieux, visuels, catalogue, salutations, messages de service — au démarrage et au retour au premier plan, et l'hôte des messages |
+| [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement des six surcouches publiées — livraison, lieux, visuels, catalogue, salutations, messages de service — au démarrage et au vrai retour au premier plan (`premierPlan`), et l'hôte des messages |
 | [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 20 écrans |
-| [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | barre d'onglets personnalisée et son bouton d'action contextuel |
+| [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | le pager des quatre onglets (barre en bas), la barre personnalisée et son bouton d'action contextuel ([navigation.md](navigation.md)) |
 | [`shared/navigation/NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) | `NavBarHelper`, `withHeaderAnimation`, `withStaticHeader`, boutons d'en-tête |
 | [`shared/aetherius/client.ts`](../src/shared/aetherius/client.ts) | la façade du moteur, instanciée une fois pour toute l'application |
 | [`shared/aetherius/secrets.ts`](../src/shared/aetherius/secrets.ts) | résolution des secrets depuis le document unique de `SecureStore` |
@@ -246,6 +246,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/aetherius/registry.ts`](../src/shared/aetherius/registry.ts) | le registre branché : magasin de cache, rafraîchissement, retour à l'embarqué, diagnostic |
 | [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | un échec de run traduit en famille d'écran et en clé de traduction |
 | [`shared/aetherius/runBlueprint.ts`](../src/shared/aetherius/runBlueprint.ts) | l'appel type : résoudre, jouer, rendre des sorties ou un échec décrit |
+| [`shared/aetherius/chrono.ts`](../src/shared/aetherius/chrono.ts) | la durée d'un run et de chacun de ses steps, sous `__DEV__` ([qualite.md](qualite.md#lire-un-run-plutôt-que-le-supposer)) |
 | [`shared/aetherius/index.ts`](../src/shared/aetherius/index.ts) | la porte d'entrée du socle : un service importe d'ici, jamais des paquets |
 | [`shared/aetherius/secrets.test.ts`](../src/shared/aetherius/secrets.test.ts) · [`delivery.test.ts`](../src/shared/aetherius/delivery.test.ts) · [`failures.test.ts`](../src/shared/aetherius/failures.test.ts) | les tests du socle, joués par `npm test` ([qualite.md](qualite.md)) |
 | [`shared/supabase/client.ts`](../src/shared/supabase/client.ts) | client anonyme de la base de publication, construit au premier usage ([backend.md](backend.md)) |
@@ -302,10 +303,15 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/services/NetworkMockService.ts`](../src/shared/services/NetworkMockService.ts) | l'interrupteur hors ligne : couper le réseau de l'application sans couper celui de l'appareil ([qualite.md](qualite.md)) |
 | [`shared/services/Base64.ts`](../src/shared/services/Base64.ts) · [`Base64.test.ts`](../src/shared/services/Base64.test.ts) | le décodage base64 en JavaScript, parce que le natif d'Expo Go ne le garantit pas ([features/scolarite.md](features/scolarite.md)) |
 | [`shared/services/ReinitialisationComplete.ts`](../src/shared/services/ReinitialisationComplete.ts) | la remise à zéro complète du menu de développement : trousseau, documents, AsyncStorage, puis rechargement ([qualite.md](qualite.md)) |
+| [`shared/services/retourAuPremierPlan.ts`](../src/shared/services/retourAuPremierPlan.ts) | ce qu'est un retour au premier plan — `active` après `background`, jamais après un simple `inactive` —, pur ([defauts-fonctionnels.md](defauts-fonctionnels.md)) |
+| [`shared/services/premierPlan.ts`](../src/shared/services/premierPlan.ts) | sa couture de plateforme : un seul abonnement `AppState`, `onRetourAuPremierPlan` et le hook `useRetourAuPremierPlan` — le conteneur racine, les annonces, le Planning et les widgets s'y abonnent |
+| [`shared/services/retourAuPremierPlan.test.ts`](../src/shared/services/retourAuPremierPlan.test.ts) | joué par `npm test` |
+| [`shared/services/simulations.ts`](../src/shared/services/simulations.ts) | les simulations du menu de développement — HORS LIGNE, date — gardées le temps de la relance d'une réinitialisation complète ([qualite.md](qualite.md)) |
+| [`shared/services/Chrono.ts`](../src/shared/services/Chrono.ts) | les repères de temps du démarrage, sous `__DEV__` seulement ([qualite.md](qualite.md#lire-le-démarrage-plutôt-que-le-supposer)) |
 | [`shared/theme/tokens.ts`](../src/shared/theme/tokens.ts) | les primitives de design, isolées pour être testables sous Node ([theme.md](theme.md#les-tokens)) |
 | [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | thèmes clair et sombre, échelle sémantique, styles partagés ([theme.md](theme.md)) |
 | [`shared/i18n/Translator.ts`](../src/shared/i18n/Translator.ts) | service de traduction, langue courante, locale moment ([i18n.md](i18n.md)) |
-| [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 217 clés chacun |
+| [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 390 clés chacun |
 | [`shared/map/EmbeddedMap.tsx`](../src/shared/map/EmbeddedMap.tsx) | carte MapLibre embarquée dans les fiches ([cartographie.md](cartographie.md)) |
 | [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème) et `UpdateAlert` (contrôle de version, non rendu) |
 | [`shared/ui/Button.tsx`](../src/shared/ui/Button.tsx) | boutons partagés : retour, accueil, tiroir, ligne de réglage |
@@ -317,7 +323,14 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/EmptyState.tsx`](../src/shared/ui/EmptyState.tsx) | icône, titre, message, action facultative — le bloc commun à « rien à afficher » et « source en panne » |
 | [`shared/ui/ScreenState.tsx`](../src/shared/ui/ScreenState.tsx) | **où** un état plein écran se pose : le centrage sur la surface libre, et les hauteurs `HEADER_OFFSET` et `TAB_BAR_HEIGHT` ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ActionButton.tsx`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` ([theme.md](theme.md#les-décisions-durables)) |
-| [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente, en ligne ou plein écran, et la phrase qui dit ce qu'on attend |
+| [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** — un carrousel, une section — et sa phrase, optionnelle |
+| [`shared/ui/ChargementPleinePage.tsx`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran** : sa phrase est obligatoire, et une seconde ligne paraît après quatre secondes ([theme.md](theme.md#les-décisions-durables)) |
+| [`shared/ui/ApparitionEnFondu.tsx`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu, posée une par une : jamais un interrupteur global |
+| [`shared/ui/indicateurRetarde.ts`](../src/shared/ui/indicateurRetarde.ts) | le seuil sous lequel une attente ne montre **rien**, et ce qu'on a décidé de ne pas faire ([theme.md](theme.md#les-décisions-durables)) |
+| [`shared/ui/controles.ts`](../src/shared/ui/controles.ts) | ce que les deux contrôles dessinés partagent : l'ombre de leur poignée |
+| [`shared/ui/Interrupteur.tsx`](../src/shared/ui/Interrupteur.tsx) | l'interrupteur dessiné du dépôt, piloté, identique sur les deux plateformes |
+| [`shared/ui/Curseur.tsx`](../src/shared/ui/Curseur.tsx) | le curseur dessiné : geste, cran, haptique, accessibilité |
+| [`shared/ui/echelleDeCurseur.ts`](../src/shared/ui/echelleDeCurseur.ts) · [`echelleDeCurseur.test.ts`](../src/shared/ui/echelleDeCurseur.test.ts) | son arithmétique, **pure** — donc jouable sous Node, et testée |
 | [`shared/ui/Dialogue.tsx`](../src/shared/ui/Dialogue.tsx) | le dialogue informatif partagé : titre, corps, action, sortie secondaire, lien discret ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ModaleBientot.tsx`](../src/shared/ui/ModaleBientot.tsx) | ce que le voile d'un teaser promet — une composition de `Dialogue` |
 | [`shared/ui/Bandeau.tsx`](../src/shared/ui/Bandeau.tsx) | le bandeau flottant en haut de l'écran, la seule forme de bandeau de l'application : une information, fermable, au gabarit des en-têtes ([theme.md](theme.md#les-décisions-durables)) |

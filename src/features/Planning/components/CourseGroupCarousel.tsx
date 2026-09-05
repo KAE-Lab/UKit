@@ -130,7 +130,9 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 									style={{
 										flexDirection: 'row',
 										backgroundColor: theme.eventBackground,
-										paddingHorizontal: 6,
+										// 6 en dur jusqu'a 6.1-E : `space.sm` (8) donne a la pastille le rembourrage
+										// horizontal des autres, pour deux points de large en plus.
+										paddingHorizontal: tokens.space.sm,
 										paddingVertical: tokens.space.xs,
 										borderRadius: tokens.radius.sm,
 										borderWidth: 1,
@@ -143,7 +145,8 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 											style={{
 												height: 5,
 												width: cardIndex === dotIndex ? 12 : 5,
-												borderRadius: 3,
+												// Une puce : le rayon se calcule, il ne s'ecrit pas (docs/theme.md).
+												borderRadius: tokens.radius.pill,
 												backgroundColor: cardIndex === dotIndex ? (theme.accent ?? theme.primary) : theme.fontSecondary,
 												opacity: cardIndex === dotIndex ? 1 : 0.4,
 												marginHorizontal: tokens.space.xxs,

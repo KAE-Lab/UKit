@@ -12,7 +12,8 @@ import { CourseGroupCarousel } from './CourseCard';
 import { groupOverlappingCourses } from './ScheduleListUtils';
 
 export interface DayWeekProps {
-	schedule: { date?: string; day?: string; dateString?: string; name?: string; courses?: import('../services/PlanningApiService').PlanningEvent[] } & Record<string, unknown>;
+	/** Un jour de semaine deja derive par `ScheduleList` ; les quatre noms de date sont ceux des formes historiques du cache. */
+	schedule: Pick<import('../services/PlanningApiService').PlanningWeekDay, 'courses'> & { date?: string; day?: string; dateString?: string; name?: string };
 	theme: import('../../../shared/theme/Theme').AppThemeType;
 	fallbackDate?: moment.MomentInput;
 	navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;

@@ -113,7 +113,7 @@ Un composant unique porte désormais la taille :
 retour garde 28 — un glyphe plus léger paraît plus petit à taille égale, et c'est un écart **optique**,
 pas une divergence oubliée.
 
-### Deux couleurs de `sectionsHeaders` sont identiques en thème sombre
+### ~~Deux couleurs de `sectionsHeaders` sont identiques en thème sombre~~ — corrigé le 2026-09-03
 
 `theme.sectionsHeaders` porte six teintes catégorielles. En thème **clair**, l'index 0 vaut `#007AFF`
 et l'index 4 `#5856D6` — deux couleurs distinctes. En thème **sombre**, les deux valent `#5E5CE6`.
@@ -122,9 +122,15 @@ La palette n'y offre donc que **cinq** couleurs distinctes au lieu de six, et de
 recherche de groupes (Planning) peuvent partager la même en mode sombre. La grille de Scolarité évite
 l'index 4 pour cette raison.
 
-C'est vraisemblablement une coquille : la variante sombre du bleu système est `#0A84FF`, et c'est ce
-qu'on attendrait à l'index 0. Non corrigé ici — la correction change un rendu du Planning, ce qui est
-une décision à prendre pour cet écran-là, pas un effet de bord de celui-ci.
+C'était une coquille : la variante sombre du bleu système est `#0A84FF`, et c'est ce qu'on attend à
+l'index 0 — `sections[0]` sombre, sa version translucide, valait déjà `#0A84FF15`. Corrigée par la
+passe de code [6.1-C](phase-6/6-1-c-passe-de-code.md), qui prend la décision que ce registre laissait
+ouverte : la première section de la recherche de groupes passe de l'indigo au bleu en sombre, et c'est
+tout ce qui change. Les trois palettes qui évitaient le 4 (grille Scolarité, annonces, repas) le
+gardent inemployé : redistribuer les teintes n'était pas le sujet.
+
+![La recherche de groupes en thème sombre, avant : la première section en indigo, la couleur de l'index 4](screenshots/planning-groupes-sombre-avant.png)
+![Après : la première section en bleu système, la couleur que sa version translucide portait déjà](screenshots/planning-groupes-sombre-apres.png)
 
 ### Les styles composés du thème ne sont pas typés
 
@@ -140,7 +146,7 @@ transtypage commenté. Le corriger à la source demanderait de retyper un fichie
 1 100 lignes — hors du périmètre d'une session d'écran, et à faire une fois pour toutes plutôt que
 trois fois à moitié.
 
-### Le contenu publié n'atteint les écrans déjà montés qu'au lancement suivant
+### ~~Le contenu publié n'atteint les écrans déjà montés qu'au lancement suivant~~ — corrigé le 2026-09-03
 
 Rencontré le 2026-09-03 pendant la vérification du jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md),
 et déjà noté sous une forme plus étroite pour les visuels ([backend.md](backend.md)). Les surcouches
@@ -156,12 +162,403 @@ Planning ouvert le 1er et laissé en arrière-plan jusqu'au lendemain, « Aujour
 1er — le jour courant est calculé au montage, jamais au retour au premier plan. Ce n'est pas une
 publication qui manque, c'est la même absence de « relecture au retour ».
 
-**À corriger dans la passe de code [6.1-C](phase-6/6-1-c-passe-de-code.md)**, pas ici : la réponse est
-une politique de rafraîchissement au retour au premier plan pour les écrans qui lisent notre base et
-pour le jour courant du Planning, et elle se décide écran par écran — rejouer chaque chargement à
-chaque retour serait un arbitrage produit (réseau, position, quatre sources tierces), pas un
-correctif. La contrainte à respecter : les messages de service, eux, arrivent bien au retour (l'hôte
-est abonné), et c'est ce comportement-là qu'il faut étendre, pas l'inverse.
+**Corrigé par la passe de code [6.1-C](phase-6/6-1-c-passe-de-code.md)**, par une politique écrite
+écran par écran plutôt qu'un rejeu de tout à chaque retour. Un signal partagé
+([`shared/services/premierPlan.ts`](../src/shared/services/premierPlan.ts)) dit le **vrai** retour au
+premier plan — après un passage en arrière-plan, et non après un centre de contrôle tiré ou une invite
+Face ID, deux cas qui émettent aussi `active` et faisaient partir six requêtes et un second run de
+widgets pour rien. Sur ce signal : les annonces se relisent, sur le tableau de bord comme dans la
+liste ; le Planning recalcule son « Aujourd'hui » si la date a changé, comme au lancement ; les six
+surcouches publiées et les widgets de la scolarité se rafraîchissent comme avant, une fois. Les quatre
+sources tierces du tableau de bord, elles, **gardent leur contenu** : un tirer-pour-rafraîchir les
+relit à la demande ([campus.md](features/campus.md#le-tableau-de-bord)). Les messages de service
+arrivaient déjà au retour ; c'est ce comportement qui a été étendu.
+
+### ~~Réessayer après un parcours froid en échec ramène l'écran de chargement plein~~ — corrigé le 2026-09-04
+
+Constaté sur appareil le 2026-09-04, **dans l'onglet Scolarité**, pendant la vérification du jalon
+[6.1-D](phase-6/6-1-d-publication.md). C'est le même symptôme que S3 — deux vues pour un seul run —
+que [6.1-A](phase-6/6-1-a-robustesse-scolarite.md) avait traité, mais par un chemin que la correction
+ne couvre pas.
+
+**Le périmètre exact reste à établir** : l'observation vient de cet écran-là. La garde de 6.1-A a un
+**second hôte**, la fiche du compte ([`CredentialsSettingsScreen`](../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx)),
+qui porte le même `useSessionDepuisLeFormulaire` — il est donc plausible qu'elle y ait le même trou,
+mais ça n'a pas été vérifié. À faire avant de corriger, sous peine de traiter un hôte et pas l'autre :
+c'est exactement l'erreur qui a produit ce défaut.
+
+Le mécanisme, tel que
+[`ScolariteDashboard`](../src/features/Scolarite/screens/ScolariteDashboard.tsx) l'écrit : l'écran
+plein s'affiche quand `progression.visible && coldData === null`, et la garde de 6.1-A
+(`useSessionDepuisLeFormulaire`, [renomme depuis](../src/features/Scolarite/hooks/useSessionDemandeeIci.ts))
+ne retient la page que pour une session **partie du formulaire**. Or la séquence observée est :
+
+1. `ukit.portail.verification` réussit → les identifiants sont validés et **écrits** ;
+2. `ukit.portail.bordeaux.dossier` échoue → aucun dossier n'a été lu, donc `coldData` reste `null` ;
+3. la progression disparaît, le drapeau du formulaire retombe, et comme les identifiants existent
+   désormais, l'onglet montre le tableau de bord avec son encart d'échec ;
+4. on touche « réessayer » **dans l'encart** — donc pas depuis le formulaire — et là,
+   `formulaire.enCours` vaut `false` pendant que `coldData` vaut toujours `null` : l'écran plein
+   reprend la main.
+
+La règle écrite dans [`scolarite.md`](features/scolarite.md) réserve l'écran plein au « parcours
+froid qu'on n'a pas demandé depuis un formulaire : au lancement, ou sur *Actualiser mon dossier* ».
+Ce cas en respecte la lettre — le geste ne vient pas du formulaire — mais pas l'intention : sur
+« Actualiser mon dossier » la page tient parce qu'un dossier existe déjà, alors qu'ici il n'y en a
+pas, et l'utilisateur voit donc la page changer sous son doigt au moment précis où il essaie de
+réparer quelque chose.
+
+La direction, quand une session le reprendra : le drapeau ne doit pas être « la session vient du
+formulaire » mais « la session vient d'un geste **de l'utilisateur sur cet écran** » — un réessai en
+fait partie. Le nommer autrement suffirait sans doute, mais c'est une décision d'écran, pas une
+retouche : le sujet touche aussi la fiche du compte, second hôte de la même garde.
+
+**Pas corrigé dans 6.1-D**, dont le périmètre est les attentes des Blueprints. Le corriger en passant
+aurait mêlé un changement d'écran à une campagne de mesure et rendu les deux invérifiables
+([CONTRIBUTING.md](../CONTRIBUTING.md#un-travail-visuel-nest-pas-documenté-au-même-endroit)).
+
+**Corrigé par le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md)**, et la direction annoncée
+ci-dessus était la bonne : le drapeau ne dit plus « la session vient du formulaire » mais **d'où vient
+le geste**. `useSessionDepuisLeFormulaire` est devenu
+[`useSessionDemandeeIci`](../src/features/Scolarite/hooks/useSessionDemandeeIci.ts) et rend une
+origine — `formulaire` ou `page` — au lieu d'un booléen ; l'écran plein est réservé à ce que personne
+n'a demandé **ici**, c'est-à-dire au lancement et à la reprise après une annulation.
+
+Un détail décide de la justesse, et il n'est pas évident : **le geste s'annonce dans le `onPress`, pas
+dans `retrySession`**. Un parcours froid repart aussi tout seul au retour au premier plan
+(`useCycleDeVieSession`), et armer le drapeau dans la fonction de relance aurait fait tenir la page à
+une session que personne n'a demandée — l'écran plein, qui est alors le bon rendu, n'apparaîtrait plus
+jamais.
+
+**Le périmètre a été établi avant de corriger**, comme ce texte le demandait : la fiche du compte
+porte bien la même garde, mais **pas le même trou** — elle n'a aucune branche plein écran, sa
+progression se pose en carte à la place des trois boutons. Elle a en revanche un manque distinct, noté
+ci-dessous.
+
+### ~~La tuile d'établissement des Réglages reste sur l'ancien campus~~ — corrigé le 2026-09-04
+
+Constaté sur appareil le 2026-09-04, pendant la vérification du jalon
+[6.1-D](phase-6/6-1-d-publication.md). Changer de campus **depuis l'écran Scolarité** — le lien
+« Tu es d'un autre campus ? » ajouté par [6.1-A](phase-6/6-1-a-robustesse-scolarite.md) — laisse
+l'onglet Réglages afficher le nom de l'établissement quitté.
+
+[`SettingsScreen`](../src/features/Settings/screens/SettingsScreen.tsx) tient `institutionName` dans
+son **état local** : il est posé une fois au constructeur (`nomCourtEtablissement()`) et n'est mis à
+jour que par `setInstitution`, c'est-à-dire par une bascule déclenchée **depuis cet écran-là**.
+L'onglet étant déjà monté dans le navigateur d'onglets, une bascule venue d'ailleurs ne le rejoint
+jamais.
+
+Ce qui rend le défaut évitable : `SettingsManager.setEtablissement` **émet déjà** l'événement
+`etablissement` ([`AppCore.tsx`](../src/shared/services/AppCore.tsx)), et le manager porte
+`subscribe`/`unsubscribe`. L'écran n'y est simplement pas abonné pour ce champ. La direction est donc
+un abonnement au montage, résilié au démontage — le même geste que l'accueil a reçu en 6.1-C pour le
+catalogue.
+
+**C'est la même famille que le défaut précédent, et ça vaut d'être dit une fois pour les deux** : en
+donnant un **second hôte** à un geste — le choix d'établissement ici, le réessai de session là —,
+[6.1-A](phase-6/6-1-a-robustesse-scolarite.md) a déplacé le composant partagé sans rendre observable
+l'état qui l'entoure. Le composant a bien été remonté dans `shared/ui` ; l'état, lui, est resté local
+à son hôte d'origine. C'est le contrôle à faire la prochaine fois qu'un geste gagne un second point
+d'entrée.
+
+**Pas corrigé dans 6.1-D**, dont le périmètre est les attentes des Blueprints
+([CONTRIBUTING.md](../CONTRIBUTING.md#un-travail-visuel-nest-pas-documenté-au-même-endroit)).
+
+**Corrigé par le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md)**, mais **pas** par
+l'abonnement que ce texte proposait : `institutionName` est **sorti de l'état**. L'écran consomme
+déjà `AppContext.etablissement` (`static contextType`), donc il se rend à nouveau à chaque bascule, et
+ses trois voisins de la même section — `etablissementRetire()`, `sourceEdt()`, `lienEdtActif()` — se
+calculaient déjà au rendu. Le seul champ qui mentait était celui qu'on avait figé.
+
+La différence n'est pas de style : un abonnement de plus aurait recréé le même risque au champ
+suivant, alors que supprimer l'état rend ce défaut **impossible à réintroduire** ici. C'est la même
+leçon, tirée dans l'autre sens : ce n'est pas l'observabilité qui manquait, c'est l'état local qui
+était de trop.
+
+### ~~La première navigation vers un service INP n'aboutit pas sur iPhone~~ — *cause trouvée et corrigée en amont le 2026-09-05*
+
+**Mesuré le 2026-09-04, chrono à l'appui, et cette trace annule l'élucidation ci-dessous.**
+
+Le parcours froid de Bordeaux INP échoue **au premier essai** et passe au réessai. Ce n'est ni un
+compte utilisé en parallèle ni un réseau instable : c'est reproductible, et le relevé nomme le pas.
+
+```
+[chrono] ukit.portail.verification success 4822 ms          ← le CAS accepte, vite
+[chrono] ukit.portail.bordeaux-inp.dossier failed 30010 ms
+[chrono]   #0 navigate failed 30007 ms
+[aetherius] … : unavailable — the page did not finish loading within 30000 ms
+                              (the view reported a load that never completed)
+[chrono] ukit.portail.bordeaux-inp.dossier success 20808 ms ← le réessai
+[chrono]   #0 navigate success 281 ms                       ← la MÊME adresse, en 281 ms
+```
+
+**Ce que la trace élimine**, et c'était l'hypothèse de départ : les quatre navigations bonus du
+dossier — coordonnées, accès, inscriptions, planning — **passent toutes** (`#14`, `#17`, `#20`, `#23`
+en 230 à 480 ms). Le défaut de forme qu'elles portent reste réel et reste écrit plus bas, mais il
+n'est pas celui-ci.
+
+**Ce qui échoue est le tout premier `navigate`**, vers `mondossierweb.bordeaux-inp.fr`. Et la raison
+pour laquelle c'est *lui* et pas un autre tient à ce que `verification` fait juste avant : elle prouve
+les identifiants contre le service **ENT** (`serviceEtablissement('ent')`,
+[`ScolariteSession`](../src/features/Scolarite/services/ScolariteSession.ts)). La session CAS existe
+donc, mais **pas celle de mondossierweb** : le dossier paie la première cascade SSO vers ce
+service-là. Les runs suivants la trouvent ouverte — la messagerie navigue en 232 ms, les documents en
+352 ms — et le réessai du dossier en 281 ms.
+
+C'est le **service qui rebondit** nommé par [6.1-D](phase-6/6-1-d-publication.md) : l'agent s'installe
+sur un document intermédiaire, et la redirection le remplace sans que la vue le signale. Ici la
+conséquence n'est plus une opération perdue, c'est le `navigate` lui-même qui ne rend jamais la main.
+
+**La cause a été trouvée par deux sondes, et elle est dans le moteur.**
+
+*Première sonde* — le plafond du premier pas porté à **60 s**, joué en local avec la livraison
+distante coupée, donc **sans rien publier** (`BLUEPRINTS_REMOTE=false`) : échec identique à
+60 012 ms. Une page qui met plus d'une minute puis se charge en 281 ms au réessai n'existe pas :
+l'événement de chargement est **perdu**, pas en retard. Le plafond était donc hors de cause, et le
+Blueprint aussi.
+
+*Seconde sonde* — le même parcours avec `options.debug: true`, qui **rend la WebView visible** :
+il passe du premier coup, à chaque fois. C'est ce qui nomme la cause, parce que c'est la seule
+variable qui a changé.
+
+**Une WebView cachée n'était pas seulement cachée à l'utilisateur : elle l'était aussi à WebKit.**
+Celui-ci décide qu'une page est cachée à partir de trois signaux, et le moteur n'en satisfaisait
+qu'un — une aire de rendu réelle. Le conteneur était garé hors de la fenêtre (`left: -10000`) et
+**entièrement transparent** (`opacity: 0`), les deux autres. WebKit traitait donc la page comme mise
+en arrière-plan et cessait de lui donner de quoi travailler ; une navigation qui a besoin du
+JavaScript de la page pour se poursuivre — c'est exactement ce qu'est une cascade SSO — n'avançait
+plus.
+
+Ce qui explique aussi pourquoi tout le reste fonctionnait : le formulaire du CAS est une page
+terminale qui n'a besoin de personne pour finir de charger.
+
+**Corrigé chez Aetherius, en deux temps, et le premier était faux** —
+`sdks/react-native/src/webview/component.tsx` :
+
+- **0.5.6** ramenait le conteneur dans la fenêtre à `opacity: 0.01`, mais le laissait en
+  `zIndex: -1`, donc **derrière le fond opaque de l'application**. Pour WebKit, occulté vaut absent :
+  la page reste ralentie. Cette version **ne corrige rien** de ce défaut ;
+- **0.5.7** le rend **au-dessus** de ce que l'application dessine, à `opacity: 0.02`, insensible au
+  toucher. Vérifié sur iPhone, session effacée avant chaque essai : `#0 navigate` passe en 286, 322
+  et 322 ms, là où il mourait à 30 000 puis 60 000 ms.
+
+**Pourquoi la 0.5.6 a été publiée comme un correctif alors qu'elle n'en était pas un**, parce que
+l'erreur mérite d'être écrite : l'essai qui l'a « validée » suivait immédiatement l'essai en vue
+visible, lequel avait **ouvert la session du service** — que `session.persist` conserve. Le dossier
+n'avait donc aucune cascade à jouer. Un succès de session chaude a été lu comme un succès du
+correctif. **Une seule observation ne prouve rien, et une observation qui suit un essai réussi n'en
+est pas une** : il faut effacer la session avant chaque mesure.
+
+### ~~Une lecture bonus du dossier INP perdait son opération~~ — *corrigé le 2026-09-05*
+
+Elle était **cachée derrière la précédente** : tant que le premier `navigate` mourait, on n'atteignait
+jamais cette étape. Le correctif du moteur l'a découverte.
+
+```
+#0  navigate  success   322 ms      <- la vue ne ralentit plus
+#14 navigate  success   287 ms      <- la vue des coordonnees
+#15 wait_for  failed  47 012 ms     <- son plafond declare est 30 000
+blocked [COORDONNEES_INDISPONIBLES]
+```
+
+**47 012 ms pour un plafond de 30 000 dit lequel des deux échecs c'est**, par la règle de
+[6.1-D](phase-6/6-1-d-publication.md) : un plafond atteint pile veut dire que la page n'a pas montré
+ce qu'on cherchait ; `plafond + 2 s + 50 %` veut dire que l'**opération s'est perdue**. Le moteur le
+confirme en toutes lettres : *« the page never reported back »*.
+
+La cause était structurelle et visible en alignant les quatre lectures complémentaires du fichier :
+trois d'entre elles — accès, inscriptions, planning — portent chacune la pause de protection que
+6.1-D avait rétablie, et **la première n'en avait aucune**. Une opération injectée n'est sûre après un
+`navigate` que si celui-ci atterrit sur son document final ; cette vue-là s'atteint en traversant le
+CAS, donc l'agent s'installait sur un document intermédiaire que la redirection remplaçait.
+
+Une pause de 4 000 ms est posée devant, la valeur que 6.1-D a mesurée comme couvrant une cascade
+d'authentification complète. Le `wait_for` garde son rôle : la pause protège l'opération, l'attente
+conditionnelle rend le temps.
+
+**Ce que ce défaut coûtait est disproportionné**, et le registre porte déjà la direction de fond : le
+run mourait **après avoir lu l'identité**, à 97 % de la barre, et un étudiant perdait son nom, son
+INE et sa formation parce qu'une page de coordonnées n'avait pas répondu. La pause rend la lecture
+fiable ; elle ne change pas le fait qu'une lecture bonus ne devrait jamais pouvoir emporter la
+connexion — c'est l'entrée ci-dessous, toujours ouverte.
+
+**Deux leçons, et la seconde vaut au-delà de ce défaut :**
+
+- **l'hypothèse de départ était fausse, et le relevé l'a dite en une ligne.** Les quatre navigations
+  bonus du dossier étaient accusées ; elles passent toutes. Sans le chrono par pas de
+  [6.1-D](phase-6/6-1-d-publication.md), on aurait découpé un Blueprint pour rien ;
+- **on peut sonder sans rien publier.** L'interrupteur de livraison sert exactement à ça : jouer le
+  socle embarqué, modifié en local, sur l'appareil. Aucune écriture en production n'a été nécessaire
+  pour trouver une cause qui n'était même pas dans ce dépôt.
+
+### ~~Le parcours froid de Bordeaux INP échouait à 97 % sur iPhone~~ — *élucidé le 2026-09-04, et cette élucidation est fausse*
+
+Le 2026-09-04, un parcours froid de Bordeaux INP mourait à 97 % du chargement sur un iPhone, en
+`unavailable` — une navigation qui n'aboutit jamais. Le jalon
+[6.1-D](phase-6/6-1-d-publication.md) venait de raccourcir une pause de ce fichier, elle a donc été
+accusée, restaurée, puis **remise à l'épreuve dans des conditions propres : elle tient.**
+
+> **Contredite, et deux fois plutôt qu'une.** Le symptôme « mourir à 97 % » avait deux causes
+> réelles, toutes deux trouvées le 2026-09-05 et corrigées : la vue cachée ralentie par iOS, et la
+> lecture de coordonnées dont l'opération se perdait faute de pause. Ni l'une ni l'autre n'est un
+> compte utilisé en parallèle.
+>
+> **Contredite le 2026-09-04 par la trace ci-dessus.** Le symptôme est le même — une navigation qui
+> n'aboutit jamais, en `unavailable`, sur iPhone — et il est **reproductible à chaque premier essai**,
+> ce qu'un compte utilisé en parallèle n'explique pas. L'entrée reste ici parce que la leçon de
+> méthode qu'elle porte vaut plus que sa conclusion : *une explication plausible n'est pas une
+> cause*. Elle s'appliquait aussi à elle-même.
+
+Ce qui l'a réellement causé, selon toute vraisemblance : **le compte de test était utilisé en
+parallèle par son propriétaire**, constaté à la messagerie dont le compteur de non-lus est passé de 1
+à 0 entre deux runs. Une session CAS reprise ailleurs fait rebondir la navigation vers le SSO, ce qui
+produit exactement une navigation sans fin. Le réseau du campus était instable au même moment —
+`ukit.celcat.jour` expirait à 30 s depuis deux téléphones pendant que le poste obtenait la même
+réponse en 0,19 s.
+
+**Trois leçons, et la première est sur la méthode d'enquête :**
+
+- **une explication plausible n'est pas une cause.** Le mécanisme avancé — la navigation suivante
+  partant pendant que la précédente charge — ne résiste pas à l'examen : `navigate` ne rend la main
+  qu'au chargement du document, il ne peut donc pas y avoir de course sur ce chargement-là. Il a
+  pourtant conduit à annuler une amélioration qui fonctionnait ;
+- **on ne mesure pas sur un compte qu'un tiers utilise**, ni sur un réseau dont on n'a pas d'abord
+  vérifié qu'il est sain. Les deux ont été violés le même matin ;
+- **une valeur se remet à l'épreuve plutôt que de rester annulée par précaution.** Republier la valeur
+  suspecte dans des conditions propres a coûté une publication et a tranché en cinq minutes.
+
+### Une navigation bonus non gardée peut emporter tout le parcours froid
+
+Constaté sur un iPhone le 2026-09-04, en wifi de campus, pendant la vérification du jalon
+[6.1-D](phase-6/6-1-d-publication.md) : le parcours froid de Bordeaux INP meurt à 97 % du
+chargement, après une trentaine de secondes, sur « Service indisponible ».
+
+**Le déclencheur était une régression du jalon, et elle est corrigée** (voir plus bas) ; mais elle a
+mis au jour un défaut de forme qui, lui, reste ouvert. Les trois lectures bonus du dossier INP sont
+chacune précédées d'un `navigate` **non gardé** :
+
+```
+navigate  ADE (myplanning.jsp)   ← aucune garde : s'il échoue, le run meurt
+wait      6000
+extract   planning  as: list     ← protégé, lui : zéro correspondance rend []
+```
+
+La règle « une lecture bonus ne doit jamais emporter la connexion » a été appliquée à la **lecture** —
+`as: "list"` ne lève jamais — et oubliée sur la **navigation qui la précède**. Or un `navigate` qui
+n'aboutit pas lève un `NetworkError`, donc famille `unavailable`, donc le run entier échoue : un
+étudiant perd son identité, son INE et sa formation **parce qu'une page d'emploi du temps n'a pas fini
+de charger**. Le motif n'est pas propre à l'INP —
+[`ukit.portail.bordeaux.dossier`](../blueprints/ukit-portail-bordeaux-dossier.blueprint.json) a la
+même forme pour son annuaire.
+
+La direction : **une lecture bonus qui demande une navigation n'appartient pas au Blueprint qui porte
+l'identité.** Le vocabulaire du moteur ne sait pas rendre un `navigate` inoffensif — ni `try` ni
+`when` ne l'attrapent —, donc la protection ne peut pas venir du fichier : elle vient du
+**découpage**, un Blueprint par lecture bonus dont l'échec ne coûte que lui-même. C'est ce que la
+Phase 6 a fait pour la messagerie en la sortant de la session ([6-F](phase-6/6-f-scolarite.md)). Une
+session à part entière : elle change le contrat de sorties du dossier, donc elle touche l'application
+autant que les fichiers.
+
+### ~~« Se déconnecter » ne ferme pas la session distante quand un widget tourne~~ — corrigé le 2026-09-04
+
+Constaté sur appareil le 2026-09-04, et **isolé par un A/B** — c'est ce qui rend le diagnostic sûr.
+
+**Sous contention**, un widget en cours de lecture :
+
+```
+[moteur] ukit.portail.deconnexion prend la main sur ukit.portail.bordeaux.documents
+[chrono] ukit.portail.bordeaux.documents failed 1505 ms      ← le widget cède
+[aetherius] documents : cancelled
+[chrono] ukit.portail.bordeaux.moodle success 4178 ms        ← un autre widget reprend le moteur
+```
+
+Aucune ligne de chrono pour `ukit.portail.deconnexion` — or
+[`chrono.ts`](../src/shared/aetherius/chrono.ts) en écrit une pour *tout* run qui atteint
+`runBlueprint`. L'observation se prouve elle-même : la réservation *et* l'annulation du widget sont
+bien arrivées, donc le canal était vivant et `fermerSessionDistante` s'exécutait. Seul le run manque.
+
+**Sans contention**, tuiles remplies et immobiles, le même geste :
+
+```
+[chrono] ukit.portail.deconnexion success 1760 ms
+  #0 navigate success 750 ms
+  #1 wait     success 1009 ms
+```
+
+Le mécanisme est donc la contention, et il est écrit dans
+[`MoteurNavigateur`](../src/features/Scolarite/services/MoteurNavigateur.ts) : une session insiste
+trois tours pour obtenir le moteur, puis `surLeNavigateur` rend `{ ok: false }` — et
+[`fermerSessionDistante`](../src/features/Scolarite/services/ScolariteSession.ts) **ne regarde pas ce
+résultat**. Son `catch` est délibérément muet, pour la bonne raison qu'une déconnexion locale ne doit
+pas échouer parce qu'un portail ne répond pas ; mais du coup **une réservation refusée est
+indiscernable d'une déconnexion réussie**.
+
+Ce que ça coûte, et c'est exactement ce que ce Blueprint existait pour empêcher : le ticket CAS reste
+valide côté serveur. « Se déconnecter » efface le trousseau **en laissant le navigateur intégré
+authentifié au compte qu'on vient de quitter**. Et le cas se produit précisément quand il est le plus
+probable — au retour au premier plan, quand les widgets se rafraîchissent.
+
+Deux directions, à trancher dans la session qui le reprendra : donner à la déconnexion la garantie
+d'obtenir le moteur — elle est le seul geste qui ne peut pas se rejouer plus tard —, ou au minimum
+**observer le résultat de la réservation** et réessayer. La distinction entre « le portail n'a pas
+répondu » (acceptable, silencieux) et « on n'a même pas essayé » (inacceptable) doit exister quelque
+part.
+
+> **Une leçon de méthode est venue avec, et elle a failli faire rater le diagnostic.** Deux essais
+> intermédiaires n'avaient rien produit, ce qui m'avait fait écarter la contention. Ils ne prouvaient
+> rien : le journal avait cessé de recevoir quoi que ce soit de l'appareil pendant dix-neuf minutes
+> **sans le dire**. Conclure « ça n'a pas tourné » de « je ne vois rien » n'est valide que si l'on a
+> d'abord montré que la trace serait arrivée — ici, en faisant jouer une connexion complète juste
+> avant. **Un instrument peut devenir sourd en silence.**
+
+**Corrigé par le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md), et le mécanisme était plus
+précis que « la contention » : il tenait à une frontière d'`await`.**
+
+`attendreSonTour` sortait dès qu'elle voyait le moteur libre — mais `surLeNavigateur` testait `enCours`
+**après** cet `await`, donc un tour de micro-tâches plus tard. Une lecture d'arrière-plan qui
+patientait sur le même run, inscrite avant la session donc réveillée avant elle, réservait pendant ce
+tour. La session se réveillait sur un moteur repris et rendait `{ ok: false }` sans avoir jamais joué
+son Blueprint : une seule ligne « prend la main », le widget suivant réussi, aucun chrono pour la
+déconnexion. C'est exactement la trace ci-dessus, et c'est la seule lecture qui l'explique — les trois
+tours d'insistance n'étaient jamais consommés.
+
+Le test **et** la réservation tiennent désormais dans le même tour de boucle
+([`MoteurNavigateur`](../src/features/Scolarite/services/MoteurNavigateur.ts)), et un test le
+verrouille : il **échoue sur l'implémentation d'avant**, ce qui est la seule façon de savoir qu'il
+décrit le défaut plutôt que le correctif.
+
+Les deux directions que ce texte laissait ouvertes ont été prises **toutes les deux** :
+
+- **la déconnexion obtient le moteur.** La série de widgets est devenue annulable — un
+  `AbortController` par série, que le runner lisait déjà — et `logout` l'arrête, puis **attend sa
+  mort**, avant de réserver : abandonner ne rend le verrou qu'au `finally` du run, un tour plus tard ;
+- **et elle observe son résultat.** `fermerSessionDistante` rend quatre issues nommées et journalise
+  les trois qui ne sont pas nominales, dont **`MOTEUR_OCCUPE`** — la distinction réclamée entre « le
+  portail n'a pas répondu » (acceptable, silencieux jusqu'ici) et « on n'a même pas essayé »
+  (inacceptable) existe maintenant dans le code, pas seulement dans ce registre.
+
+Deux gardes ont été ajoutées au runner en chemin, et elles valent au-delà : **rien n'est appliqué
+après un abandon.** Un run qui franchit son dernier pas une milliseconde avant l'abandon rend
+`ok: true`, et sa valeur se réécrivait dans le trousseau du compte qu'on venait d'effacer — ce que
+`deleteWidgets` existe pour empêcher. Le rangement du certificat, chaîné sur la fin du
+rafraîchissement, est gardé de la même façon : une série **interrompue** ne l'enchaîne plus.
+
+### La fiche du compte ne dit pas l'échec d'un parcours froid
+
+Trouvé en établissant le périmètre du défaut du réessai, le 2026-09-04, et **volontairement pas
+corrigé** : il ne tombe pas dans le périmètre du jalon [6.1-E](phase-6/6-1-e-finitions-interface.md),
+qui portait sur l'écran de chargement.
+
+Après un parcours froid en échec, l'onglet Scolarité montre un encart qui nomme la panne et propose
+« Réessayer ». La fiche du compte
+([`CredentialsSettingsScreen`](../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx)), elle,
+affiche la fiche avec **six tirets** et rien qui explique pourquoi : elle ne lit pas `sessionFailure`.
+Seul `portailAbsent` y porte un `SourceFailureNotice`.
+
+C'est la même famille que ce que la Phase 6 a passé sept jalons à supprimer — une absence de donnée
+qui ne se distingue pas d'une panne — et le remède existe déjà à côté : l'encart de
+[`EncartSession`](../src/features/Scolarite/components/EncartSession.tsx), en `variant="card"` au-dessus
+de la fiche.
 
 ## Limites connues, qui ne sont pas des défauts
 

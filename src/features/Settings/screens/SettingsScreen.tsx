@@ -19,6 +19,7 @@ import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
 import { PastilleService } from '../../../shared/messages/PastilleService';
 import { adoucirLaTransition } from '../../../shared/ui/transitions';
+import { ErrorAlert } from '../../../shared/ui/Alerts';
 import style, { tokens } from '../../../shared/theme/Theme';
 
 
@@ -59,8 +60,6 @@ export interface SettingsState {
     courseNotificationsEnabled: boolean;
     courseNotificationDelay: number;
     institutionDialogVisible: boolean;
-    /** Le nom affiche : il vient du catalogue et change avec lui, d'ou l'etat plutot qu'un calcul. */
-    institutionName: string;
     /** L'etablissement propose-t-il un compte, et est-il connecte ? Le rappel de l'etape d'accueil. */
     comptePossible: boolean;
     compteConnecte: boolean;
@@ -114,9 +113,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             courseNotificationsEnabled: SettingsManager.getCourseNotificationsEnabled(),
             courseNotificationDelay: SettingsManager.getCourseNotificationDelay(),
             institutionDialogVisible: false,
-            // Le nom **court** : cette ligne est un espace contraint. Le nom entier reste dans
-            // l'ecran de choix, seul endroit ou il faut reconnaitre une fac inconnue.
-            institutionName: nomCourtEtablissement(),
             comptePossible: portailPublie(),
             compteConnecte: false,
         };
@@ -226,6 +222,35 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         );
     };
 
+    /**
+     * Le geste « Forcer une synchronisation », et son issue dite.
+     *
+     * Le service rend son verdict, l'ecran decide du retour : un toast d'echec, parce que la pastille
+     * seule demandait de savoir ou regarder. La tache de fond, elle, n'a personne a qui parler.
+     */
+    forcerSynchronisation = async () => {
+        const aboutie = await SettingsManager.syncCalendar();
+        if (!aboutie) new ErrorAlert(Translator.get('CALENDAR_SYNC_FAILED_TOAST')).show();
+    };
+
+    /**
+     * La permission calendrier, lue et au besoin demandee — **sans toucher a la synchronisation**.
+     *
+     * Le montage appelait `toggleCalendarSync()` quand la permission manquait : la fonction de
+     * l'interrupteur, qui basculait donc la synchronisation des que la permission etait accordee, et
+     * ouvrait la modale d'extinction si elle etait deja active (limite ecrite depuis 6-K, corrigee en
+     * 6.1-C). Elle est demandee une fois, au montage ; au retour de focus elle est seulement relue,
+     * pour qu'un octroi dans les reglages du systeme remplace la carte « permission » par
+     * l'interrupteur — Android redemanderait sinon a chaque retour.
+     */
+    verifierPermissionCalendrier = async (demander: boolean) => {
+        let { status } = await Calendar.getCalendarPermissionsAsync();
+        if (status !== 'granted' && demander) {
+            ({ status } = await Calendar.requestCalendarPermissionsAsync());
+        }
+        this.setState({ hasCalendarPermission: status === 'granted' });
+    };
+
     openSystemAppSettings = () => Linking.openSettings();
     setIsSynchronizingCalendar = (newState: boolean) => this.setState({ isSynchronizingCalendar: newState });
 
@@ -265,11 +290,13 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     /**
      * La bascule d'etablissement — purge, adoucissement, selection — vit dans
      * `shared/etablissements/bascule.ts` depuis qu'elle a trois hotes ; l'ecran ne garde que ce qui
-     * lui revient, son libelle et l'etat de la ligne du compte.
+     * lui revient, l'etat de la ligne du compte.
+     *
+     * **Elle ne rafraichit plus le libelle**, et c'est le correctif du 2026-09-04 : le nom se derive
+     * du catalogue au rendu (voir `InstitutionSection` plus bas).
      */
     setInstitution = async (code: string) => {
         await basculerEtablissement(code);
-        this.setState({ institutionName: nomCourtEtablissement() });
         // La bascule vide le trousseau : la ligne du compte doit le dire tout de suite, sans attendre
         // un retour de focus qui n'aura pas lieu — on n'a pas quitte l'ecran.
         void this.refreshCompte();
@@ -305,14 +332,12 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     };
 
     componentDidMount = async () => {
-        this._unsubscribeFocus = this.props.navigation.addListener('focus', () => { void this.refreshCompte(); });
+        this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
+            void this.refreshCompte();
+            void this.verifierPermissionCalendrier(false);
+        });
         void this.refreshCompte();
-
-        if ((await Calendar.getCalendarPermissionsAsync()).status === 'granted') {
-            this.setState({ hasCalendarPermission: true });
-        } else {
-            this.toggleCalendarSync();
-        }
+        void this.verifierPermissionCalendrier(true);
         SettingsManager.on('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
     };
 
@@ -357,7 +382,22 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                 <InstitutionSection
                     themeSettings={themeSettings}
                     theme={theme}
-                    institutionName={this.state.institutionName}
+                    /*
+                     * Lu au rendu, jamais tenu en etat — correctif du 2026-09-04.
+                     *
+                     * Il l'etait, pose une fois au constructeur et rafraichi par `setInstitution`
+                     * seul : une bascule declenchee **ailleurs** — le « Tu es d'un autre campus ? »
+                     * de la Scolarite, depuis 6.1-A — ne le rejoignait donc jamais, et cet onglet,
+                     * qui ne se demonte pas, affichait le campus quitte. L'ecran suit deja
+                     * `AppContext.etablissement` (rootContainer), donc il se rend a nouveau a chaque
+                     * bascule : tout ce qui se calcule ici est juste par construction, et c'etait
+                     * deja le cas de ses trois voisins (`etablissementRetire`, `sourceEdt`,
+                     * `lienEdtActif`). Un abonnement de plus aurait re-cree le meme risque ailleurs.
+                     *
+                     * Le nom **court** : cette ligne est un espace contraint. Le nom entier reste
+                     * dans l'ecran de choix, seul endroit ou il faut reconnaitre une fac inconnue.
+                     */
+                    institutionName={nomCourtEtablissement()}
                     institutionRetiree={etablissementRetire()}
                     openInstitutionDialog={this.openInstitutionDialog}
                     comptePossible={this.state.comptePossible}
@@ -401,6 +441,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     lastSyncFailed={SettingsManager.getLastSyncFailed()}
                     calendarSyncEnabled={this.state.calendarSyncEnabled}
                     toggleCalendarSync={this.toggleCalendarSync}
+                    onForceSync={this.forcerSynchronisation}
                     calendarName={calendarName}
                     openCalendarDialog={this.openCalendarDialog}
                     isSynchronizingCalendar={this.state.isSynchronizingCalendar}

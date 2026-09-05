@@ -83,6 +83,41 @@ describe('surLeNavigateur', () => {
         expect(await session).toEqual({ ok: true, valeur: 'connecte' });
     });
 
+    it('**une session n’est pas doublee** par la lecture qui attendait derriere celle qu’elle interrompt', async () => {
+        const premiere = runPilote();
+        const enVol1 = surLeNavigateur('documents', premiere.tache);
+        await tourDeBoucle();
+
+        // Cette lecture-ci attend deja : inscrite sur le run en vol AVANT la session, elle sera donc
+        // reveillee AVANT elle quand la premiere cedera.
+        const seconde = runPilote();
+        const enVol2 = surLeNavigateur('moodle', seconde.tache);
+        await tourDeBoucle();
+        expect(seconde.vu.joue).toBe(false);
+
+        const session = surLeNavigateur('deconnexion', async () => 'fermee', { priorite: 'session' });
+        await tourDeBoucle();
+        expect(premiere.vu.abandonne).toBe(true);
+
+        premiere.liberer();
+        await enVol1;
+        await tourDeBoucle();
+
+        /*
+         * La course du 2026-09-04, telle qu'elle se joue : `moodle` se reveille en premier et
+         * reserve, et la session — qui avait vu le moteur libre le temps d'un tour de micro-taches —
+         * rendait `{ ok: false, occupePar: 'moodle' }` sans avoir jamais joue son Blueprint. Elle doit
+         * au contraire faire ceder cette lecture-la aussi : c'est un geste de l'utilisateur, et il
+         * n'a pas de seconde chance.
+         */
+        expect(seconde.vu.joue).toBe(true);
+        expect(seconde.vu.abandonne).toBe(true);
+        seconde.liberer();
+        await enVol2;
+
+        expect(await session).toEqual({ ok: true, valeur: 'fermee' });
+    });
+
     it('**une session refuse une autre session**, et le dit', async () => {
         const premiere = runPilote();
         const enVol = surLeNavigateur('session-1', premiere.tache, { priorite: 'session' });

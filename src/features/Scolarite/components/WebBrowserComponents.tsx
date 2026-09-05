@@ -85,7 +85,8 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
                     borderRadius: tokens.radius.md,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    marginHorizontal: 5,
+                    // 5 en dur jusqu'a 6.1-E : `space.xs` (4) rapproche les boutons d'un point.
+                    marginHorizontal: tokens.space.xs,
                     backgroundColor: disabled ? 'transparent' : `${color}15`,
                 }}>
                 <Icon name={iconName as never} size={size} color={color} />
@@ -111,7 +112,7 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
                 </TouchableOpacity>
 
                 <View style={styles.buttonsContainer}>
-                    <NavButton onPress={onQuit} iconName="door-open" iconLib="community" size={26} colorOverride="#EF5350" />
+                    <NavButton onPress={onQuit} iconName="door-open" iconLib="community" size={26} colorOverride={theme.danger} />
                     <NavButton onPress={onBack} disabled={!canGoBack} iconName="navigate-before" size={28} />
                     <NavButton onPress={onForward} disabled={!canGoForward} iconName="navigate-next" size={28} />
                     <NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
@@ -299,7 +300,8 @@ const styles = StyleSheet.create({
         borderRightWidth: 0,
         height: 75,
         elevation: 8,
-        shadowColor: '#000',
+        // Une ombre ecrite a la main, plus marquee que les tokens (docs/theme.md § limites) ; sa couleur, elle, est la leur.
+        shadowColor: tokens.shadow.md.shadowColor,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 8,

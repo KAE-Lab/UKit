@@ -7,21 +7,40 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { SettingsManager } from '../../../shared/services/AppCore';
+import type { UkitFailure } from '../../../shared/aetherius';
+import { doitRafraichir, lireCache } from './groupListCache';
 import { indexerUes, type UeRencontree } from './PlanningAssembly';
-import { PlanningApiService } from './PlanningApiService';
+import { PlanningApiService, type GroupListResult } from './PlanningApiService';
+
+/**
+ * Ou en est la liste : en cours de lecture, en echec, et la date de la derniere reponse.
+ *
+ * Exposé depuis 6.1-C parce que deux ecrans en ont besoin : l'accueil, qui doit dire **pourquoi**
+ * l'etape des groupes est vide (une installation hors ligne restait muette), et la recherche de
+ * groupes, qui date son bandeau hors ligne avec l'horodatage du seul cache qui reste.
+ */
+export interface EtatListeGroupes {
+    readonly chargement: boolean;
+    readonly echec: UkitFailure | null;
+    readonly horodatage: number | null;
+}
 
 class PlanningDataManagerService {
     _groupList: string[];
+    _horodatage: number | null;
+    _chargement: boolean;
+    _dernierEchec: UkitFailure | null;
     /** Les UE rencontrees, **avec leur intitule** : l'ecran des filtres n'affichait qu'un code. */
     _availableUEs: UeRencontree[];
     _subscribers: Record<string, Function[]>;
-    _cacheTimeLimit: number;
 
     constructor() {
         this._groupList = [];
+        this._horodatage = null;
+        this._chargement = false;
+        this._dernierEchec = null;
         this._availableUEs = [];
         this._subscribers = {};
-        this._cacheTimeLimit = 7 * 24 * 60 * 60 * 1000;
 
         // Les groupes appartiennent a **une** universite, et rien ne le disait a ce manager.
         // `changerEtablissement` purgeait bien la cle disque, mais la liste en memoire survivait a la
@@ -64,15 +83,30 @@ class PlanningDataManagerService {
     notify = (event: string, ...args: unknown[]) => {
         if (!this._subscribers[event]) return;
         this._subscribers[event].forEach((fn) => fn(...args));
-        this.saveData();
     };
 
     getGroupList = (): string[] => this._groupList;
 
+    // L'ecriture suit la liste, et elle seule : elle suivait chaque `notify`, donc chaque extraction
+    // d'UE reecrivait la liste des groupes sur le disque.
     setGroupList = (newList: string[]) => {
         this._groupList = [...newList];
         this.notify('groupList', this._groupList);
+        this.saveData();
     };
+
+    getGroupListEtat = (): EtatListeGroupes => ({
+        chargement: this._chargement,
+        echec: this._dernierEchec,
+        horodatage: this._horodatage,
+    });
+
+    private poserEtat(partiel: Partial<EtatListeGroupes>) {
+        if (partiel.chargement !== undefined) this._chargement = partiel.chargement;
+        if (partiel.echec !== undefined) this._dernierEchec = partiel.echec;
+        if (partiel.horodatage !== undefined) this._horodatage = partiel.horodatage;
+        this.notify('groupListEtat', this.getGroupListEtat());
+    }
 
     /** Les codes seuls : ce que les filtres comparent, et ce que la plupart des appelants veulent. */
     getAvailableUEs = (): string[] => this._availableUEs.map((ue) => ue.code);
@@ -110,14 +144,27 @@ class PlanningDataManagerService {
         this.notify('availableUEs', this._availableUEs);
     };
 
-    fetchGroupList = async () => {
+    /**
+     * Redemande la liste a la source, et rend le resultat a qui veut le lire.
+     *
+     * L'echec n'est plus jete : il est **garde** dans l'etat et notifie, pour que l'accueil puisse le
+     * dire (6.1-C). L'horodatage est celui de l'horloge reelle, comme tout horodatage de cache.
+     */
+    fetchGroupList = async (): Promise<GroupListResult> => {
+        this.poserEtat({ chargement: true });
         // `resultat.ok === false` et non `!resultat.ok` : sans `strictNullChecks`, TypeScript ne
         // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
         const resultat = await PlanningApiService.fetchGroupList();
-        if (resultat.ok === false) return;
+        if (resultat.ok === false) {
+            this.poserEtat({ chargement: false, echec: resultat.failure });
+            return resultat;
+        }
 
-        await AsyncStorage.setItem('groupListTimestamp', String(Date.now()));
+        const horodatage = Date.now();
+        await AsyncStorage.setItem('groupListTimestamp', String(horodatage));
         this.setGroupList(resultat.groups);
+        this.poserEtat({ chargement: false, echec: null, horodatage });
+        return resultat;
     };
 
     saveData = () => {
@@ -140,14 +187,18 @@ class PlanningDataManagerService {
      */
     loadData = async () => {
         try {
-            const groupListRaw = await AsyncStorage.getItem('groupList');
-            const groupList = groupListRaw ? JSON.parse(groupListRaw) : null;
-            const timestamp = await AsyncStorage.getItem('groupListTimestamp');
-            const difference = Date.now() - parseInt(timestamp || '0');
+            const cache = lireCache(
+                await AsyncStorage.getItem('groupList'),
+                await AsyncStorage.getItem('groupListTimestamp'),
+            );
+            // La cle `groups` — le second cache, celui de l'ecran de recherche — n'existe plus depuis
+            // 6.1-C. Effacee une fois, sans attendre : rien ne la lit plus.
+            void AsyncStorage.removeItem('groups');
 
-            if (groupList) this.setGroupList(groupList);
+            this._horodatage = cache.horodatage;
+            if (cache.liste.length > 0) this.setGroupList(cache.liste);
 
-            if (!groupList || difference >= this._cacheTimeLimit) {
+            if (doitRafraichir(cache, Date.now())) {
                 // Volontairement non attendu. Un echec est deja journalise par le service, et une
                 // liste de groupes absente n'empeche aucun ecran de s'afficher.
                 void this.fetchGroupList();

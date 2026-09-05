@@ -12,7 +12,9 @@
  * Trois magasins, dans cet ordre : le trousseau (session, dossier, widgets, liens, propositions,
  * identifiant d'installation), le
  * repertoire prive de l'application (les documents ranges), puis AsyncStorage en entier — reglages,
- * `firstload`, caches et surcouches publiees. Puis le rechargement.
+ * `firstload`, caches et surcouches publiees. Puis le rechargement — apres avoir range les simulations
+ * du menu (HORS LIGNE, date), que la relance perdait : c'est en HORS LIGNE qu'on veut voir ce qu'un
+ * nouvel etudiant sans reseau voit (`simulations.ts`, 6.1-C).
  *
  * **Chaque etape est jouee quoi qu'il arrive aux autres**, et chacune se journalise : une remise a
  * zero qui s'arrete a la premiere erreur sans rien dire laisse un appareil a moitie vide, et un
@@ -25,6 +27,7 @@ import { Directory, Paths } from 'expo-file-system';
 import * as Updates from 'expo-updates';
 
 import { purgerTrousseau } from '../etablissements/purge';
+import { garderLesSimulationsPourLaRelance } from './simulations';
 import { effacerIdentifiantInstallation } from '../testeur/identifiant';
 import SecureStoreService from './SecureStoreService';
 
@@ -72,5 +75,6 @@ export async function reinitialiserCompletement(): Promise<void> {
     await etape('widgets', () => SecureStoreService.deleteWidgets());
     await etape('documents', viderLesDocuments);
     await etape('AsyncStorage', () => AsyncStorage.clear());
+    await etape('simulations du menu', garderLesSimulationsPourLaRelance);
     await relancer();
 }

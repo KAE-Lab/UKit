@@ -215,6 +215,57 @@ contrat se nomme**, il ne se subit pas et ne s'ignore pas. Livré au jalon
 Les identifiants ne sont **jamais** dans un fichier. Ils sont déclarés (`secrets`) et fournis au
 runtime par le trousseau de l'appareil.
 
+### Attendre : quatre cas, et un seul reste une pause
+
+Une pause fixe est un pari sur le réseau de quelqu'un d'autre. Elle a toujours l'air raisonnable le
+jour où on l'écrit, et elle est payée **en entier à chaque run** ensuite — les neuf Blueprints de
+portail en portaient 60 s à eux seuls avant le jalon
+[6.1-D](phase-6/6-1-d-publication.md). La règle, avec sa raison :
+
+| Où | Quoi | Pourquoi |
+|---|---|---|
+| **Après un `navigate` qui atterrit sur son document final** | `wait_for` directement | Rien ne remplacera le document sous l'opération : elle est sûre. C'est le cas d'une URL qui vise le CAS en propre (`ukit.portail.verification`) |
+| **Après un `navigate` qui rebondit** — un service qui renvoie vers l'authentification | une pause, **puis** le `wait_for` sur l'**union** des issues possibles (`"#username, <cible>"`) | La redirection remplace le document sans que la vue le signale toujours : la première opération injectée s'y perd. La pause la protège ; l'union dit ensuite l'état réel — un portail répond le formulaire **ou** la page utile selon qu'une session est ouverte, et la sonde `as: count` qui suit décide la branche instantanément |
+| **Après une soumission** | une pause courte, **puis** le `wait_for` | Une opération émise pendant une cascade de navigations **se perd en silence** sur un appareil (limite du moteur, `docs/embedded.md`). La pause protège l'opération, l'attente conditionnelle rend le temps |
+| **Avant une lecture obligatoire** | `wait_for` sur un marqueur de la vue attendue | Elle peut échouer : cette lecture aussi. Le `on_timeout` nomme l'échec |
+| **Avant une lecture bonus** (`as: "list"`) | une pause, **calée sur une mesure** | Un `wait_for` qui expire **fait échouer le run** quel que soit son `on_timeout` — et perdre l'identité pour un INE serait un mauvais marché |
+
+Trois pièges, chacun payé une fois :
+
+- **`wait_for` attend `visible` par défaut.** Une donnée qui vit dans un accordéon replié ou un
+  panneau masqué n'est jamais visible : l'attente expire sur des éléments pourtant présents, que
+  l'extraction, elle, lit sans difficulté. `state: "attached"` répond à la question « est-ce dans le
+  document ? » ; `visible` répond à « est-ce affiché ? », et ce n'est pas la même.
+- **`detached` est vrai pour un sélecteur qui ne matche rien.** Une sonde d'attente qui réussit en
+  quelques millisecondes n'a peut-être rien prouvé du tout — vérifier d'abord que la cible existe,
+  par une attente en `attached`. Le corollaire est utile : `state: "hidden"` sur un marqueur
+  **optionnel** est une attente qui se désarme toute seule si la source cesse de le servir, au lieu
+  d'échouer.
+- **Une union énumère les états *possibles* de la page, pas ceux auxquels on pense.** Un portail qui
+  interpose un écran de consentement — SAML en pose un — a **trois** issues à l'ouverture et non deux,
+  et une attente qui en oublie une expire sur une page pourtant présente. La vérification est de
+  lister les états, pas de les deviner : ce qui suit l'attente le dit déjà, chaque sonde `as: count`
+  du fichier nomme un état que la page peut prendre.
+- **Ce qu'une mesure de rendu justifie, et ce qu'elle ne justifie pas.** Mesurer qu'un élément
+  paraît en 306 ms justifie une pause devant **la lecture de cet élément**. Ça ne dit rien de ce
+  qu'une page continue de faire après — requêtes secondaires, travail client — ni de ce qu'un step
+  *suivant* pourrait en subir. La marge se choisit donc plus large que la mesure quand ce qui suit
+  n'est pas la lecture mesurée, sans qu'il faille pour autant inventer un mécanisme de panne :
+  l'expérience du 2026-09-04 a montré qu'une telle pause **tenait**, et que la panne attribuée à son
+  raccourcissement venait d'ailleurs — un compte de test utilisé en parallèle.
+- **Une lecture bonus perdue ne fait aucun bruit.** `as: "list"` rend `[]`, le run se déclare réussi,
+  et une capacité disparaît de l'application sans message. Une pause raccourcie devant une lecture
+  bonus se valide donc en **comparant les sorties** à celles d'avant, jamais au seul statut du run.
+- **Une durée d'échec dit lequel des deux échecs c'est.** Un `wait_for` qui rend son code après
+  **son propre plafond** a vraiment attendu : la page n'a pas montré ce qu'on cherchait. Le même
+  `wait_for` qui rend le même code après `plafond + 2 s + 50 %` — l'échéance de l'*appelant* — n'a
+  rien attendu du tout : l'opération s'est **perdue**, et c'est une pause qui manque, pas un portail
+  qui traîne. Les deux se ressemblent à l'écran et se distinguent d'un coup d'œil au chrono.
+
+Un plafond trop bas coûte plus cher qu'une attente trop longue : un `wait_for` qui expire fait
+échouer le run, une pause de trop ne coûte que des secondes. Les plafonds sont larges, et c'est la
+mesure qui permet qu'ils le soient sans excès.
+
 ## Publier une correction
 
 Deux gestes, et le second n'est pas optionnel :

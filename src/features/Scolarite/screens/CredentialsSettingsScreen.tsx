@@ -21,7 +21,7 @@ import ScolariteLoginView from '../components/ScolariteLoginView';
 import { BlocProgression } from '../components/ScolariteLoadingScreen';
 import BiometryGate from '../components/BiometryGate';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
-import { useSessionDepuisLeFormulaire } from '../hooks/useSessionDepuisLeFormulaire';
+import { useSessionDemandeeIci } from '../hooks/useSessionDemandeeIci';
 import { ConfirmationScolarite } from '../components/ConfirmationScolarite';
 
 /** Combien de temps la coche reste, en millisecondes. Assez pour etre vue, trop court pour rester. */
@@ -386,7 +386,7 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
      */
     const progression = useEcranDeProgression(sessionMode, scrapeStatus);
     /** Une session lancee **depuis le formulaire** : elle lui laisse la page jusqu'a son terme. */
-    const formulaire = useSessionDepuisLeFormulaire(progression.visible);
+    const geste = useSessionDemandeeIci(progression.visible);
 
     if (!portailDisponible) return <PortailAbsent theme={theme} />;
 
@@ -405,11 +405,11 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
      * **Le formulaire garde la page tant que SA session tourne** — `credentials` est pose au dixieme
      * step, et sans ce drapeau la condition retombait a faux a mi-parcours (voir le hook).
      */
-    if (!credentials || ressaisie || formulaire.enCours) {
+    if (!credentials || ressaisie || geste.origine === 'formulaire') {
         return (
             <CompteADemander
                 theme={theme}
-                onDebut={formulaire.onDebut}
+                onDebut={geste.depuisLeFormulaire}
                 onSuccess={() => setRessaisie(false)}
             />
         );

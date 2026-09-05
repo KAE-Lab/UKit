@@ -63,7 +63,12 @@ export interface EnteteScolariteProps {
     theme: AppThemeType;
     teinte: string;
     insets: EdgeInsets | null;
-    coldData: ScolariteColdData | null;
+    /**
+     * **Jamais nul** : ce bandeau n'existe que pour une page qui a un dossier a saluer. Sans dossier,
+     * l'onglet pose un titre flottant (`EnTeteDeLOnglet`, cote ecran) — le bandeau se refermait sinon
+     * sur un titre dans le vide, avec le filigrane et la pastille d'etat sur la meme ligne.
+     */
+    coldData: ScolariteColdData;
 }
 
 export function EnteteScolarite({ theme, teinte, insets, coldData }: EnteteScolariteProps) {
@@ -90,35 +95,20 @@ export function EnteteScolarite({ theme, teinte, insets, coldData }: EnteteScola
               * comme une indecision. Ancre a la ligne personnalisee, il l'accompagne ; le titre garde
               * toute sa largeur au-dessus. Sans dossier lu, il se pose sur la ligne du titre.
               */}
-            {coldData !== null ? (
-                <>
-                    <View style={styles.rangeeDuTitre}>
-                        <Text style={[styles.titre, styles.colonne, { color: theme.font }]} numberOfLines={1}>
-                            {Translator.get('SCOLARITY')}
-                        </Text>
-                        <PastilleService theme={theme} />
-                    </View>
-                    <View style={styles.corpsEntete}>
-                        <View style={styles.colonne}>
-                            <GreetingBlock coldData={coldData} color={teinte} theme={theme} />
-                        </View>
-                        {logo !== null ? (
-                            <LogoEtablissement logo={logo} theme={theme} teinte={teinte} filigrane style={styles.filigrane} />
-                        ) : null}
-                    </View>
-                </>
-            ) : (
-                <View style={styles.corpsEntete}>
-                    <Text style={[styles.titre, styles.colonne, { color: theme.font }]} numberOfLines={1}>
-                        {Translator.get('SCOLARITY')}
-                    </Text>
-                    {/* La pastille d'etat de service, entre le titre et le filigrane. */}
-                    <PastilleService theme={theme} />
-                    {logo !== null ? (
-                        <LogoEtablissement logo={logo} theme={theme} teinte={teinte} filigrane style={styles.filigrane} />
-                    ) : null}
+            <View style={styles.rangeeDuTitre}>
+                <Text style={[styles.titre, styles.colonne, { color: theme.font }]} numberOfLines={1}>
+                    {Translator.get('SCOLARITY')}
+                </Text>
+                <PastilleService theme={theme} />
+            </View>
+            <View style={styles.corpsEntete}>
+                <View style={styles.colonne}>
+                    <GreetingBlock coldData={coldData} color={teinte} theme={theme} />
                 </View>
-            )}
+                {logo !== null ? (
+                    <LogoEtablissement logo={logo} theme={theme} teinte={teinte} filigrane style={styles.filigrane} />
+                ) : null}
+            </View>
 
             {/*
               * Sans logo publie, la pastille de nom prend le relais : l'alternative n'est jamais un

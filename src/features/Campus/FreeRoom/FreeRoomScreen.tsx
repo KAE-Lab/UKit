@@ -2,17 +2,19 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 import Translator from '../../../shared/i18n/Translator';
 import { CampusDataManager as DataManager } from '../services/CampusDataManager';
-import { BuildingInfo, getDistanceInKm } from '../services/FreeRoomService';
+import type { BuildingInfo } from '../services/FreeRoomService';
+import { getDistanceInKm } from '../services/distance';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
 import { CampusListLayout } from '../components/CampusListLayout';
 import { FreeRoomListItem } from './components/FreeRoomListItem';
 import { useFavorites } from '../hooks/useFavorites';
-import { useCampusLocation } from '../hooks/useCampusLocation';
+import { useCampusPosition } from '../hooks/useCampusPosition';
 
 function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, onAnimatedScroll?: (event: unknown) => void }) {
-    const { fetchLocation } = useCampusLocation();
+    // La meme position que le tableau de bord, resolue une fois pour tout le Campus.
+    const { lat, lon } = useCampusPosition();
     const { favorites, toggleFavorite } = useFavorites('freeroom_favorites');
     
     const [buildings, setBuildings] = useState<BuildingInfo[]>([]);
@@ -30,6 +32,9 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
 
     useEffect(() => {
         let mounted = true;
+        if (lat === undefined || lon === undefined) {
+            return () => { mounted = false; };
+        }
         const loadBuildings = async () => {
             setLoading(true);
             try {
@@ -41,8 +46,6 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
                 }
 
                 if (mounted) {
-                    const { lat, lon } = await fetchLocation();
-
                     if (bList) {
                         bList = bList.map((b: BuildingInfo) => {
                             if (lat !== undefined && lon !== undefined && b.lat && b.lng) {
@@ -64,7 +67,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
 
         loadBuildings();
         return () => { mounted = false; };
-    }, [fetchLocation, essai]);
+    }, [lat, lon, essai]);
 
     const filteredData = useMemo(() => {
         let result = [...buildings].sort((a, b) => {
@@ -102,6 +105,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
         <CampusListLayout
             data={filteredData}
             loading={loading}
+            messageChargement={Translator.get('LOADING_FREE_ROOMS')}
             renderItem={renderItem}
             onAnimatedScroll={onAnimatedScroll}
             navigation={navigation}

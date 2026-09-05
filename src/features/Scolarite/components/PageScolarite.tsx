@@ -27,7 +27,7 @@
  */
 
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { TAB_BAR_HEIGHT } from '../../../shared/ui/ScreenState';
@@ -62,15 +62,24 @@ export interface PageScolariteProps {
     onWidget: (point: PointWidget) => void;
     onPorte: (point: string) => void;
     onDocuments: () => void;
+    /**
+     * Ce que le titre occupe au-dessus, **quand il flotte** — c'est-a-dire quand il n'y a pas de
+     * dossier a saluer et donc pas d'en-tete collant (voir `ScolariteDashboard`). Avec le bandeau, il
+     * occupe sa propre place et la page n'a rien a compenser.
+     */
+    paddingHaut?: number;
+    /** Le defilement, pour que le titre flottant s'efface — le gabarit de Campus et des Reglages. */
+    onScroll?: (evenement: unknown) => void;
 }
 
 export function PageScolarite({
     theme, teinte, coldData, widgets, certificatEnCours, progression, scrapeProgress, credentials, portailDisponible,
-    sessionFailure, echecBloquant,
+    sessionFailure, echecBloquant, paddingHaut, onScroll,
     onRetry, onRessaisir, onConnecter, onDemanderCampus, onWidget, onPorte, onDocuments,
 }: PageScolariteProps) {
     return (
-        <ScrollView
+        <Animated.ScrollView
+            {...(onScroll !== undefined ? { onScroll, scrollEventThrottle: 16 } : {})}
             // `flex: 1` est **obligatoire** depuis que l'en-tete est collant : il occupe une vraie
             // place, donc cette vue doit s'etirer sur ce qui reste. Sans lui, une vue defilante prend
             // la hauteur de son contenu — elle deborde de l'ecran au lieu de defiler.
@@ -85,7 +94,7 @@ export function PageScolarite({
                 // l'intertitre « Tes services ». Depuis que la page ouvre sur un intertitre, c'est
                 // lui la reference : a 8, le premier titre collait au filet de l'en-tete la ou le
                 // second respirait.
-                paddingTop: tokens.space.lg,
+                paddingTop: (paddingHaut ?? 0) + tokens.space.lg,
                 paddingBottom: tokens.space.xxl + TAB_BAR_HEIGHT,
                 gap: tokens.space.lg,
             }}
@@ -112,8 +121,13 @@ export function PageScolarite({
                 parcours froid qui a ECHOUE sans laisser de dossier ne montre pas une grille a
                 moitie vide (constate sur Android le 2026-08-31) : l'encart d'echec au-dessus porte
                 le probleme et son geste, la page reste propre. Avec un dossier deja lu, la grille
-                s'affiche — de vraies donnees valent mieux qu'un ecran vide. */}
-            {portailDisponible && credentials && (coldData !== null || (sessionFailure === null && echecBloquant === null)) ? (
+                s'affiche — de vraies donnees valent mieux qu'un ecran vide.
+
+                `progression.visible` ferme le trou du **reessai** (2026-09-04) : relancer efface
+                l'echec, donc la grille repassait la condition et revenait **vide sous la barre de
+                chargement**. Sans dossier, une session qui court n'a toujours rien a montrer. */}
+            {portailDisponible && credentials
+                && (coldData !== null || (!progression.visible && sessionFailure === null && echecBloquant === null)) ? (
                 <GrilleScolarite
                     theme={theme}
                     teinte={teinte}
@@ -130,7 +144,7 @@ export function PageScolarite({
                 />
             ) : null}
 
-        </ScrollView>
+        </Animated.ScrollView>
     );
 }
 

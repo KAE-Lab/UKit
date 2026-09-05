@@ -26,7 +26,8 @@
  * (docs/qualite.md).
  *
  * Purement destiné à la vérification manuelle : rien dans l'application ne l'active, et il ne survit
- * pas à un rechargement. Voir docs/qualite.md.
+ * pas à un rechargement — sauf à la réinitialisation complète du menu, qui le range le temps de la
+ * relance (`simulations.ts`). Voir docs/qualite.md.
  */
 
 import { DeviceEventEmitter } from 'react-native';

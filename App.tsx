@@ -17,6 +17,8 @@ import {
 
 import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
+import { marquer } from './src/shared/services/Chrono';
+import { restaurerLesSimulations } from './src/shared/services/simulations';
 import { loadBuildings } from './src/shared/locations';
 import { loadVisuels } from './src/shared/visuels';
 import { chargerStatutTesteur } from './src/shared/testeur';
@@ -44,6 +46,10 @@ function AnimatedAppLoader({ children }) {
 	useEffect(() => {
 		async function prepare() {
 			try {
+				marquer('demarrage : preparation');
+				// Les simulations du menu de developpement rangees par une reinitialisation complete,
+				// avant la premiere requete : sinon la sonde hors ligne se met en cache elle-meme.
+				await restaurerLesSimulations();
 				const imageAssets = cacheImages([require('./assets/icons/logo.png')]);
 
 				const fontAssets = cacheFonts([
@@ -86,6 +92,7 @@ function AnimatedAppLoader({ children }) {
 				await CampusDataManager.loadData();
 
 				await Promise.all([...imageAssets, ...fontAssets]);
+				marquer('demarrage : managers et ressources prets');
 			} catch (e) {
 				console.warn(e);
 			} finally {
@@ -124,6 +131,7 @@ function AnimatedSplashScreen({ children, image }) {
 		} catch (e) {
 			console.log('err', e);
 		} finally {
+			marquer('demarrage : premier rendu, splash natif retire');
 			setAppReady(true);
 		}
 	}, []);

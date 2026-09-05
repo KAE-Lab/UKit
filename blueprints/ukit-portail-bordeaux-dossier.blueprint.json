@@ -28,8 +28,15 @@
     },
     {
       "action": "wait",
-      "ms": 6000,
-      "note": "La redirection SSO doit avoir fini de se decider avant qu'on regarde ou l'on est. 6000 et non 3000 : la mesure du 2026-08-24 donne **2834 ms pour la seule navigation** depuis un poste filaire, et c'est le meilleur cas — un telephone en cellulaire est plus lent, et un moteur de WebView peut rendre la main a la fin d'une redirection intermediaire. Sous-estimer ce delai ferait conclure « pas de formulaire » a une page qui allait en afficher un."
+      "ms": 4000,
+      "note": "La pause qui protege la premiere operation, et elle est MESUREE SUR APPAREIL le 2026-09-04. Elle avait ete retiree au profit du seul `wait_for` qui suit ; un parcours froid sur Android l'a immediatement dementi : le `wait_for` est revenu en 31 990 ms, c'est-a-dire l'echeance de l'APPELANT (20 000 + 2 000 + 50 %) et non son propre plafond — donc l'operation s'est PERDUE, la page n'a jamais repondu. La cause est visible en comparant avec `ukit.portail.verification`, joue trente secondes plus tot dans le meme parcours : lui navigue DROIT sur le CAS, son document est le bon des le chargement, et son `wait_for` repond en 11 ms. Ici on navigue vers un SERVICE, qui rebondit : l'agent s'installe sur un document intermediaire, l'operation part, puis le document est remplace sans que la vue le signale — le host ne rejoue donc pas l'operation comme il le ferait pour un `DocumentLostError`. La regle qui en sort vaut au-dela de ce fichier : une operation injectee n'est sure apres un `navigate` que si celui-ci ATTERRIT SUR SON DOCUMENT FINAL. 4 000 ms et non 6 000 : c'est la valeur qui vient de prouver, sur le meme appareil, qu'elle couvre la cascade d'authentification apres soumission — laquelle est plus longue qu'une simple redirection de service."
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username, td.v-formlayout-contentcell",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:CAS_INDISPONIBLE",
+      "note": "« Le formulaire, ou la page utile » : l'union des deux dit l'etat REEL de la page, la ou une pause fixe de 6 s le supposait. La sonde `as: count` qui suit repond alors instantanement et decide la branche, exactement comme avant — elle est seulement posee au bon moment. C'est l'attente que CHAQUE lancement payait, session ouverte comprise. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : la navigation d'ouverture prend 0,6 a 1,7 s selon le service, et 500 ms de plus suffisaient deja a voir la page ; le plafond de 20 s couvre un telephone en cellulaire avec une marge large, et il fait echouer PLUS TOT qu'avant (6 s + 30 s) quand le portail est vraiment muet. L'union est un selecteur CSS standard, donc portable : `locator(...).first` cote Playwright, `matchFirst` cote embarque — aucun mode strict sur cette action. Repli si un appareil dementait la mesure : la pause fixe d'avant, republiee en une commande. Le code d'echec est celui que la branche « sans formulaire » rendait deja."
     },
     {
       "id": "porte",
@@ -63,8 +70,8 @@
     {
       "action": "wait",
       "when": "{{ steps.porte.formulaire > 0 }}",
-      "ms": 8000,
-      "note": "La cascade d'authentification enchaine plusieurs sauts puis le client pose son fragment ; une operation emise pendant cette cascade se perd en silence sur un appareil. Elle n'est payee que si l'on s'est reellement authentifie."
+      "ms": 4000,
+      "note": "La cascade d'authentification enchaine plusieurs sauts puis le client pose son fragment ; une operation emise pendant cette cascade se perd EN SILENCE sur un appareil. La pause reste donc — c'est un contournement d'une limite du moteur, pas une facon d'attendre — mais elle n'est plus calee sur le pire cas suppose. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : la cascade complete tient en 505 a 525 ms, et le `wait_for` qui suit rend le reste du temps au lieu de le bruler. 4 s laissent a un telephone en cellulaire trois a quatre fois la mesure. Elle n'est payee que si l'on s'est reellement authentifie."
     },
     {
       "action": "wait_for",
@@ -156,9 +163,9 @@
     },
     {
       "action": "wait",
-      "ms": 6000,
+      "ms": 2000,
       "when": "{{ steps.menu.inscriptions > 0 }}",
-      "note": "`wait` et non `wait_for`, pour la meme raison que l'annuaire : un `wait_for` qui expire fait echouer le run quel que soit son on_timeout. Vaadin 8 est une application a etat serveur — le clic declenche un aller-retour, et rien dans le document ne prouve l'arrivee avant qu'elle ait eu lieu. 6000 et non 4000 : mesure depuis un poste filaire, l'aller-retour tient en 4 s, un telephone en cellulaire non. Le delai n'est paye qu'au parcours froid, une fois."
+      "note": "`wait` et non `wait_for`, pour la meme raison que l'annuaire plus bas : un `wait_for` qui expire fait echouer le run quel que soit son `on_timeout`, et la formation est un bonus qui ne doit jamais emporter la connexion. Vaadin 8 est une application a etat serveur — le clic declenche un aller-retour, pas une navigation. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : la premiere ligne du tableau est la en 189 puis 285 ms sur deux runs ; 2 s laissent sept fois la mesure a un telephone en cellulaire."
     },
     {
       "id": "formation",
@@ -192,8 +199,8 @@
     },
     {
       "action": "wait",
-      "ms": 6000,
-      "note": "`wait` et non `wait_for`, et c'est la garde de tout ce bloc : un `wait_for` qui expire **fait echouer le run**, quel que soit son `on_timeout`. Cette lecture est un bonus — elle ne doit jamais emporter la connexion. Le revers de cette garde est qu'elle degrade **en silence** : une page pas encore arrivee rend une liste vide, indistinguable d'un compte sans UE. D'ou 6000 et non 1500 : l'annuaire est un autre service que le dossier, donc cette navigation traverse une cascade de redirections SSO — quelques centaines de millisecondes depuis un poste, plusieurs secondes depuis un telephone en cellulaire. Mesure du 2026-08-24 depuis un poste filaire : la navigation elle-meme prend **2834 ms**, et c'est le meilleur cas — un moteur de WebView peut de surcroit rendre la main a la fin d'une redirection **intermediaire** du SSO, la ou Playwright attend la page finale. Le delai n'est paye qu'au parcours froid, une fois."
+      "ms": 1500,
+      "note": "`wait` et non `wait_for`, et c'est la garde de tout ce bloc : un `wait_for` qui expire FAIT ECHOUER LE RUN, quel que soit son `on_timeout`. Cette lecture est un bonus — elle ne doit jamais emporter la connexion, deja acquise plus haut. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : l'annuaire est SERVI AVEC LE DOCUMENT — sonde en `state: attached`, il repond en 23 ms apres la navigation —, donc la pause n'attend rien d'autre que la marge d'un reseau lent. Une sonde en `visible` avait d'abord expire a 25 s, et c'est la lecon a garder : ces elements vivent dans un accordeon REPLIE, donc `wait_for` ne pourrait de toute facon pas les voir."
     },
     {
       "id": "annuaire",

@@ -439,14 +439,50 @@ L'hôte et les codes d'inventaire des six Blueprints `ukit.celcat.*` viennent eu
 depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par défaut. Aucun
 `if (etablissement === …)` n'apparaît dans un service — ce qui varie est une donnée.
 
+## Un seul cache pour la liste des groupes
+
+L'écran de recherche tenait son propre cache (`groups`, sans expiration, avec sa date embarquée) à
+côté de celui du manager (`groupList`, sept jours, horodatage à part) : deux formats, deux
+politiques, deux écritures pour la même réponse, et une seule invalidation au changement
+d'établissement — la liste de l'écran survivait à la bascule. Depuis 6.1-C,
+[`PlanningDataManager`](../../src/features/Planning/services/PlanningDataManager.ts) est le seul à
+lire et à écrire, et il porte l'état de sa lecture — en cours, en échec, datée (`getGroupListEtat`,
+événement `groupListEtat`) — pour que l'écran de recherche date son bandeau hors ligne et que
+l'accueil dise pourquoi l'étape des groupes est vide. La politique est écrite et testée à part, dans
+[`groupListCache.ts`](../../src/features/Planning/services/groupListCache.ts) : le test a été écrit
+**avant** la fusion, pour figer ce que les deux caches faisaient de juste — sept jours, le repli daté,
+une liste fraîche qui efface la date.
+
+**Le jour courant se recalcule au retour au premier plan.** L'onglet ne se démonte jamais et
+[`DayView`](../../src/features/Planning/views/DayView.tsx) calculait « Aujourd'hui » à son montage :
+laissé en arrière-plan jusqu'au lendemain, le bouton menait encore à la veille (mesuré en production
+le 2 septembre 2026). Au vrai retour d'arrière-plan
+([`premierPlan.ts`](../../src/shared/services/premierPlan.ts)), si la date a changé, tout se recalcule
+comme au lancement — le même geste que la simulation temporelle du menu de développement.
+
+## Revenir sur l'onglet ne vide plus la journée
+
+Le retour sur l'onglet Planning déclenche un rafraîchissement (`addListener('focus')`), et il posait
+`schedule: null` comme n'importe quel chargement : la journée **disparaissait**, puis revenait
+identique.
+
+Le défaut est ancien ; c'est le **glissement entre onglets** du jalon
+[6.1-E](../phase-6/6-1-e-finitions-interface.md) qui l'a rendu visible, et la raison vaut d'être
+retenue : on voit désormais la page d'arrivée **pendant** le geste, alors qu'un changement d'onglet
+instantané ne laissait pas le temps de voir l'avant. Une nouvelle façon de naviguer révèle ce qu'une
+autre masquait.
+
+L'écran ne se vide donc que si le chargement porte sur **autre chose** — un autre jour, une autre
+semaine, un autre groupe. Relire la même clé garde le contenu affiché jusqu'à son remplacement : il
+est juste, puisque c'est la même journée. Et l'attente reste alors **silencieuse** — ni indicateur, ni
+fondu — parce que rien à l'écran ne change ([theme.md](../theme.md#les-décisions-durables)).
+
 ## Limites connues
 
 - **Un `modules: []` retomberait sur la catégorie.** L'extraction rend `null` aussi bien pour un champ
   absent que pour une liste vide, et les deux cessent d'être distinguables. Le code d'origine rendait
   alors un sujet indéfini, affiché vide. Le cas n'existe dans aucune des 334 entrées d'une année
   interrogée le 2026-08-09.
-- **Deux caches concurrents pour la liste des groupes** (`groups` et `groupList`), écrits par deux
-  chemins différents et jamais réconciliés.
 - **Le cache est par vue, pas par jour**, et ça surprend hors ligne : une semaine jamais consultée en
   ligne n'a rien à replier **même si plusieurs de ses jours sont en cache**, et affiche donc l'écran
   d'échec là où les mêmes jours s'ouvrent un par un. Les deux clés sont indépendantes
@@ -463,10 +499,6 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
   une promotion ici, un groupe là. La liste s'étend par publication.
 - **La recherche de groupes ne filtre pas côté serveur pour une source iCalendar**, et n'en a pas
   besoin : la liste tient dans le catalogue et la recherche est déjà locale.
-- **La synchronisation ne porte que le premier groupe favori** (`_favoriteGroups[0]`), pas le planning
-  agrégé. Comportement d'origine, relevé en lisant le code au jalon 6-I et jamais interrogé depuis.
-- **`computeScheduleWeek` est appelée au rendu**, pas au chargement : le calcul des UE et le filtrage
-  de la vue semaine se rejouent à chaque rendu de `DayWeek`.
 - **La catégorie fantôme `nocourse` a disparu.** Une journée vide était rendue en **injectant un faux
   cours** dans la liste, que `CourseRow` reconnaissait pour afficher le message à la place d'une
   carte. Le détour coûtait sa hauteur au bloc : il se retrouvait dans une cellule de liste, qui ne
@@ -486,11 +518,13 @@ depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par 
 
 | Fichier | Rôle |
 |---|---|
-| [`views/DayView.tsx`](../../src/features/Planning/views/DayView.tsx) | vue composite de l'onglet : état jour/semaine, génération des 365 jours et des semaines, défilement du curseur, bascule de mode |
+| [`views/DayView.tsx`](../../src/features/Planning/views/DayView.tsx) | vue composite de l'onglet : état jour/semaine, génération des 365 jours et des semaines — refaite au retour au premier plan si la date a changé —, défilement du curseur, bascule de mode |
 | [`screens/ScheduleScreen.tsx`](../../src/features/Planning/screens/ScheduleScreen.tsx) | enveloppe routée : résout le groupe (favoris si tableau) et configure l'en-tête |
-| [`screens/GroupSelectionScreen.tsx`](../../src/features/Planning/screens/GroupSelectionScreen.tsx) | recherche de groupes : chargement, cache, sections alphabétiques, filtrage |
+| [`screens/GroupSelectionScreen.tsx`](../../src/features/Planning/screens/GroupSelectionScreen.tsx) | recherche de groupes : chargement par le manager, repli daté sur son cache, sections alphabétiques, filtrage |
+| [`services/groupListCache.ts`](../../src/features/Planning/services/groupListCache.ts) | la politique du cache de la liste des groupes — expiration, lecture défensive, repli daté — pure |
+| [`services/groupListCache.test.ts`](../../src/features/Planning/services/groupListCache.test.ts) | ses tests, écrits avant la fusion des deux caches (6.1-C), joués par `npm test` |
 | [`screens/CourseScreen.tsx`](../../src/features/Planning/screens/CourseScreen.tsx) | fiche d'un cours : détails, extraction de la salle, carte intégrée ([`EmbeddedMap`](../../src/shared/map/EmbeddedMap.tsx), [cartographie.md](../cartographie.md)) |
-| [`components/ScheduleList.tsx`](../../src/features/Planning/components/ScheduleList.tsx) | chargement et rendu d'un planning (jour ou semaine), cache, filtres, notifications |
+| [`components/ScheduleList.tsx`](../../src/features/Planning/components/ScheduleList.tsx) | chargement et rendu d'un planning (jour ou semaine), cache, filtres — appliqués au chargement, jamais au rendu —, notifications |
 | [`components/ScheduleListUtils.ts`](../../src/features/Planning/components/ScheduleListUtils.ts) | `groupOverlappingCourses` : regroupement des cours qui se chevauchent |
 | [`components/CourseAnnotations.ts`](../../src/features/Planning/components/CourseAnnotations.ts) | l'icône d'une ligne de description, déduite de son contenu — partagée par la carte et la fiche |
 | [`components/CourseAnnotations.test.ts`](../../src/features/Planning/components/CourseAnnotations.test.ts) | ses tests, sur les deux formes réelles de description |

@@ -1,5 +1,5 @@
 import React, { useEffect, useContext, useRef } from 'react';
-import { View, ActivityIndicator, FlatList } from 'react-native';
+import { FlatList } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
@@ -7,6 +7,7 @@ import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ScreenState } from '../../../shared/ui/ScreenState';
+import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { BuildingInfo } from '../services/FreeRoomService';
 import { useFreeRoomsData } from './hooks/useFreeRoomsData';
 import { CampusMapSection } from '../components/CampusMapSection';
@@ -47,9 +48,13 @@ export default function FreeRoomDetailsScreen({ route, navigation }: { route: { 
     if (loading) {
         return (
             <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
-                </View>
+                {/* Par l'hote commun, et non plus centre a la main : l'etat « batiment ferme » juste
+                    en dessous passe par `ScreenState`, et le contenu sautait entre les deux. */}
+                <ChargementPleinePage
+                    theme={theme}
+                    message={Translator.get('LOADING_FREE_ROOMS')}
+                    background={theme.courseBackground}
+                />
             </SafeAreaView>
         );
     }

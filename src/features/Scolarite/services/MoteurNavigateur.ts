@@ -96,8 +96,42 @@ export interface OptionsMoteur {
  * Une seule tentative ne suffit pas : deux lectures peuvent attendre derriere le meme run, et celle
  * qui se reveille la premiere prendrait le moteur sous le nez de la session. Trois tours couvrent la
  * file reelle — quatre widgets et un certificat n'y sont jamais tous a la fois — sans jamais boucler.
+ *
+ * Exporte depuis le 2026-09-04 : `fermerSessionDistante` nomme ce chiffre quand elle rapporte
+ * qu'elle n'a pas obtenu le moteur, pour qu'un lecteur du journal sache combien elle a insiste.
  */
-const TOURS_DE_SESSION = 3;
+export const TOURS_DE_SESSION = 3;
+
+/**
+ * Pose la reservation **et** lance la tache, sans rendre la main entre les deux.
+ *
+ * Tout ce corps s'execute jusqu'au premier `await` de `tache` sans repasser par la boucle
+ * d'evenements : c'est ce qui garantit qu'aucune autre reservation ne s'intercale entre le test
+ * `enCours === null` de l'appelant et la pose ci-dessous.
+ */
+function reserverEtJouer<T>(
+    nom: string,
+    priorite: PrioriteMoteur,
+    tache: (signal: AbortSignal) => Promise<T>,
+    appelant: SignalAnnulable | undefined,
+): Promise<T> {
+    const controleur = new AbortController();
+    const relayer = () => controleur.abort();
+    appelant?.addEventListener?.('abort', relayer);
+    if (appelant?.aborted === true) controleur.abort();
+
+    enCours = { nom, priorite, abandonner: () => controleur.abort() };
+    const promesse = (async () => {
+        try {
+            return await tache(controleur.signal);
+        } finally {
+            appelant?.removeEventListener?.('abort', relayer);
+            enCours = null;
+        }
+    })();
+    enVol = promesse.catch(() => undefined);
+    return promesse;
+}
 
 /**
  * Joue *tache* avec le moteur reserve sous *nom*.
@@ -105,55 +139,62 @@ const TOURS_DE_SESSION = 3;
  * `tache` recoit un `AbortSignal` : c'est **lui** qu'il faut transmettre au moteur, et non celui de
  * l'appelant. Il porte les deux annulations — celle de l'appelant, et celle qu'une session declenche
  * en prenant la main.
+ *
+ * ## Pourquoi le test et la reservation sont dans la meme boucle
+ *
+ * L'attente et la reservation etaient deux etapes separees par un `await` : une session attendait son
+ * tour dans `attendreSonTour`, en sortait des qu'elle voyait le moteur libre, **puis** testait
+ * `enCours` — un tour de micro-taches plus tard. Une lecture d'arriere-plan qui patientait sur le
+ * meme `enVol`, inscrite avant elle donc reveillee avant elle, reservait pendant ce tour ; la session
+ * se reveillait sur un moteur repris et rendait `{ ok: false }`.
+ *
+ * Mesure sur appareil le 2026-09-04 : « Se deconnecter » pendant le rafraichissement des widgets
+ * interrompait bien la lecture en cours — la ligne « prend la main » etait la — mais **le Blueprint de
+ * deconnexion n'etait jamais joue**, aucune ligne de chrono ne l'attestait, et le widget suivant
+ * reussissait a sa place. Le ticket CAS restait valide cote serveur : « Se deconnecter » effacait le
+ * trousseau en laissant le navigateur integre authentifie au compte qu'on venait de quitter
+ * (docs/defauts-fonctionnels.md).
+ *
+ * Chaque tour teste **et** reserve dans le meme instant ; une session en fait quatre, une lecture un
+ * seul. Rien d'autre ne change de politique.
  */
-async function attendreSonTour(nom: string, priorite: PrioriteMoteur): Promise<void> {
-    // Une lecture d'arriere-plan attend **un** tour : celui du run en vol. Si un autre lui passe
-    // devant, elle renonce — elle n'a rien a rattraper et se rejouera.
-    if (priorite === 'arriere-plan') {
-        if (enCours !== null) await enVol;
-        return;
-    }
-
-    // Une session, elle, insiste : elle demande a chaque lecture d'arriere-plan de s'arreter, et
-    // recommence tant qu'une autre prend sa place. Face a **une autre session** elle renonce tout de
-    // suite — deux sessions concurrentes restent une erreur de programmation, et l'interrompre
-    // masquerait le defaut au lieu de le montrer.
-    for (let tour = 0; tour < TOURS_DE_SESSION; tour += 1) {
-        if (enCours === null || enCours.priorite === 'session') return;
-        console.log(`[moteur] ${nom} prend la main sur ${enCours.nom}`);
-        enCours.abandonner();
-        await enVol;
-    }
-}
-
 export async function surLeNavigateur<T>(
     nom: string,
     tache: (signal: AbortSignal) => Promise<T>,
     options: OptionsMoteur = {},
 ): Promise<ResultatMoteur<T>> {
     const priorite = options.priorite ?? 'arriere-plan';
-    await attendreSonTour(nom, priorite);
+    // Une lecture d'arriere-plan attend **un** tour : celui du run en vol. Si un autre lui passe
+    // devant, elle renonce — elle n'a rien a rattraper et se rejouera. Une session insiste.
+    const tours = priorite === 'session' ? TOURS_DE_SESSION : 1;
 
-    if (enCours !== null) return { ok: false, occupePar: enCours.nom };
+    for (let tour = 0; tour <= tours; tour += 1) {
+        // Le test et la pose, dans le meme tour de boucle d'evenements : c'est la ligne qui ferme la
+        // course du 2026-09-04.
+        if (enCours === null) {
+            return { ok: true, valeur: await reserverEtJouer(nom, priorite, tache, options.signal) };
+        }
 
-    // La reservation est **synchrone** apres l'attente — aucun `await` ne s'intercale entre le test
-    // et la pose —, ce qui suffit a exclure deux reservations simultanees sur une boucle d'evenements
-    // a un seul fil.
-    const controleur = new AbortController();
-    const relayer = () => controleur.abort();
-    const appelant = options.signal;
-    appelant?.addEventListener?.('abort', relayer);
-    if (appelant?.aborted === true) controleur.abort();
+        const occupant = enCours;
+        if (tour === tours) return { ok: false, occupePar: occupant.nom };
 
-    enCours = { nom, priorite, abandonner: () => controleur.abort() };
-    try {
-        const promesse = tache(controleur.signal);
-        enVol = promesse.catch(() => undefined);
-        return { ok: true, valeur: await promesse };
-    } finally {
-        appelant?.removeEventListener?.('abort', relayer);
-        enCours = null;
+        if (priorite === 'arriere-plan') {
+            await enVol;
+            continue;
+        }
+
+        // Face a **une autre session**, une session renonce tout de suite : deux sessions
+        // concurrentes restent une erreur de programmation, et l'interrompre masquerait le defaut au
+        // lieu de le montrer.
+        if (occupant.priorite === 'session') return { ok: false, occupePar: occupant.nom };
+
+        console.log(`[moteur] ${nom} prend la main sur ${occupant.nom}`);
+        occupant.abandonner();
+        await enVol;
     }
+
+    // Inatteignable : la boucle rend au dernier tour. La ligne existe pour le type de retour.
+    return { ok: false, occupePar: runEnCours() ?? nom };
 }
 
 /** Le nom du run en cours, pour un message qui nomme le conflit plutot qu'une piece absente. */

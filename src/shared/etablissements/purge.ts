@@ -32,11 +32,25 @@ import { appliquerLiensEdt } from './lienEdt';
 const CLES_A_PURGER: readonly string[] = [
     'groupList',
     'groupListTimestamp',
-    'groups',
     'buildingList',
     'buildingListTimestamp',
     'freeroom_favorites',
     'batiments@1',
+];
+
+/**
+ * Les cles des sources **nationales** du Campus : favoris et filtres de restaurants et de bibliotheques.
+ *
+ * Tenues a part de `CLES_A_PURGER` parce que les deux gestes ne repondent pas a la meme question. Une
+ * bascule d'etablissement les garde — c'est la decision de 6-G, ecrite juste au-dessus. Une
+ * reinitialisation les efface — decision de 6.1-C : quelqu'un qui efface tout s'attend a ce que tout
+ * parte, et l'argument des sources nationales ne vaut que lorsqu'on va quelque part.
+ */
+const CLES_CAMPUS_NATIONALES: readonly string[] = [
+    'crous_favorites',
+    'library_favorites',
+    'crous_filter',
+    'library_filter',
 ];
 
 /** Les caches de planning, dont la cle porte le nom des groupes : `<groupes>@Week<n>`, `<groupes>@AAAA/MM/JJ`. */
@@ -72,6 +86,18 @@ export async function purgerDonneesEtablissement(): Promise<void> {
         await AsyncStorage.multiRemove(aEffacer);
     } catch (erreur) {
         console.warn(`[etablissements] purge incomplete : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+    }
+}
+
+/**
+ * Efface les favoris et les filtres du Campus. Reservee a la reinitialisation (voir
+ * `CLES_CAMPUS_NATIONALES`). Ne leve pas, pour la meme raison que la purge d'etablissement.
+ */
+export async function purgerDonneesCampusNationales(): Promise<void> {
+    try {
+        await AsyncStorage.multiRemove([...CLES_CAMPUS_NATIONALES]);
+    } catch (erreur) {
+        console.warn(`[etablissements] purge du Campus incomplete : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
     }
 }
 
