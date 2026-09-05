@@ -88,6 +88,11 @@ const Theme = {
                 false: '#E5E5EA',
                 true:  '#007AFF',
             },
+            // La poignee des deux controles dessines (Interrupteur, Curseur). Blanche dans les
+            // deux themes, comme celle d'iOS : sur une piste qui porte la valeur, c'est le contraste
+            // qui la rend lisible, pas la teinte. Un seul endroit a retoucher le jour ou le sombre
+            // en voudra une autre.
+            switchThumb: '#FFFFFF',
             background: {
                 flex: 1,
                 backgroundColor: '#F2F2F7',
@@ -412,6 +417,11 @@ const Theme = {
                 false: '#38383A',
                 true:  '#5E5CE6',
             },
+            // La poignee des deux controles dessines (Interrupteur, Curseur). Blanche dans les
+            // deux themes, comme celle d'iOS : sur une piste qui porte la valeur, c'est le contraste
+            // qui la rend lisible, pas la teinte. Un seul endroit a retoucher le jour ou le sombre
+            // en voudra une autre.
+            switchThumb: '#FFFFFF',
             background: {
                 flex: 1,
                 backgroundColor: '#000000',

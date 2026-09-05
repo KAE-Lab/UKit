@@ -103,6 +103,7 @@ export function WidgetTile({ definition, etat, contexte = null, teinte, theme, o
                 icone={definition.iconeEchec}
                 libelle={Translator.get(echecDeTuile(etat.echec).libelleKey)}
                 chargement={etat.chargement}
+                cleDeFondu={etat.nature}
                 attenue
                 large={definition.forme === 'heros'}
                 glypheDeFond={definition.glyphe}
@@ -122,6 +123,7 @@ export function WidgetTile({ definition, etat, contexte = null, teinte, theme, o
             libelle={grandTexte}
             contexte={contexteDeLaTuile(definition, etat, contexte, grandTexte)}
             chargement={etat.chargement}
+            cleDeFondu={etat.nature}
             attenue={etat.nature === 'absent'}
             large={definition.forme === 'heros'}
             glypheDeFond={definition.glyphe}

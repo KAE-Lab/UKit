@@ -85,8 +85,8 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
                     borderRadius: tokens.radius.md,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    // eslint-disable-next-line ukit/no-style-literals -- 5 : ecart mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel
-                    marginHorizontal: 5,
+                    // 5 en dur jusqu'a 6.1-E : `space.xs` (4) rapproche les boutons d'un point.
+                    marginHorizontal: tokens.space.xs,
                     backgroundColor: disabled ? 'transparent' : `${color}15`,
                 }}>
                 <Icon name={iconName as never} size={size} color={color} />

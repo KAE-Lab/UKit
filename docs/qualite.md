@@ -25,6 +25,12 @@ actuel du dépôt, à connaître pour distinguer une régression d'un héritage 
 | `npx tsc --noEmit` | **verte** | zéro erreur depuis le 2026-08-16 — voir ci-dessous pour les trois `TS2612` historiques |
 | `npx eslint .` | **0 erreur, 0 warning** | zéro depuis la passe de code [6.1-C](phase-6/6-1-c-passe-de-code.md), le 2026-09-03 — 35 avertissements traités un par un |
 
+**Les neuf espacements hors échelle que 6.1-C avait désactivés localement sont arbitrés** par le
+jalon [6.1-E](phase-6/6-1-e-finitions-interface.md) : huit passent à l'échelle, un est examiné et
+**conservé** (un calage optique d'icône sur une ligne de base, auquel aucun pas ne correspond). Il ne
+reste dans `src/` que **deux** désactivations de `ukit/no-style-literals` : celle-là, et une valeur
+calculée `(50 - 22) / 2`.
+
 La règle de contribution est donc : **zéro, et on y reste**. Un avertissement nouveau se corrige, ou se
 désactive localement avec sa justification écrite — les deux formes existent dans le dépôt, et la
 seconde n'est pas un contournement quand la règle est fausse à cet endroit.
@@ -41,8 +47,8 @@ main), quatre dégagements de l'accueil sont devenus une constante dérivée du 
 pris `radius.pill`, l'horloge du menu de développement `fontSize.title` ; les **neuf espacements hors
 échelle des écrans de référence** (5, 6, 10, 1, 3, une taille de libellé d'onglet à 10) sont désactivés
 localement, chacun avec la même phrase : écart mesuré à l'inventaire visuel, hors échelle assumé, la
-passe ne déplace pas un pixel. C'est [6.1-E](phase-6/6-1-e-finitions-interface.md) qui arbitrera ces
-pixels, pas une règle de lint.
+passe ne déplace pas un pixel. C'est [6.1-E](phase-6/6-1-e-finitions-interface.md) qui a arbitré ces
+pixels, pas une règle de lint — et il l'a fait le 2026-09-04.
 
 `no-unused-vars` n'en signale **aucun** : le dépôt en portait 65 au 2026-08-16, tous supprimés le jour
 même, et la règle est là pour que ça le reste.
@@ -126,6 +132,8 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`features/Planning/services/groupListCache.ts`](../src/features/Planning/services/groupListCache.ts) | la politique du cache de la liste des groupes — expiration à sept jours, lecture défensive, repli daté — **figée avant** la fusion des deux caches (6.1-C) |
 | [`shared/services/retourAuPremierPlan.ts`](../src/shared/services/retourAuPremierPlan.ts) | ce qu'est un retour au premier plan : `active` après `background`, jamais après un simple `inactive` — la fin d'une invite système ou d'un centre de contrôle tiré n'en est pas un |
 | [`features/Campus/services/distance.ts`](../src/features/Campus/services/distance.ts) | la distance à vol d'oiseau, sur deux points bordelais connus |
+| [`shared/ui/echelleDeCurseur.ts`](../src/shared/ui/echelleDeCurseur.ts) | l'arithmétique du curseur dessiné : bornes, arrondi au cran depuis un minimum qui n'est pas un multiple du pas, aller-retour position ↔ valeur, et **une course nulle** — celle du premier rendu, avant `onLayout`, qui rendait un `NaN` propagé dans le style |
+| [`features/Scolarite/services/MoteurNavigateur.ts`](../src/features/Scolarite/services/MoteurNavigateur.ts) | le verrou du moteur navigateur, et depuis 6.1-E **la course de réservation** : une session ne se fait plus doubler par la lecture qui attendait derrière celle qu'elle vient d'interrompre |
 
 `BdeMapping` a été le premier module **de feature** couvert, et il l'est pour une raison précise :
 c'est là qu'une erreur ne se voit pas. Un champ omis rend une fiche incomplète sans rien casser, et

@@ -130,8 +130,9 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 									style={{
 										flexDirection: 'row',
 										backgroundColor: theme.eventBackground,
-										// eslint-disable-next-line ukit/no-style-literals -- 6 : ecart mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel
-										paddingHorizontal: 6,
+										// 6 en dur jusqu'a 6.1-E : `space.sm` (8) donne a la pastille le rembourrage
+										// horizontal des autres, pour deux points de large en plus.
+										paddingHorizontal: tokens.space.sm,
 										paddingVertical: tokens.space.xs,
 										borderRadius: tokens.radius.sm,
 										borderWidth: 1,

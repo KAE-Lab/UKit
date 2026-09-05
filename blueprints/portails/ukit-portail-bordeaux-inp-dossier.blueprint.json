@@ -159,6 +159,11 @@
       "url": "{{ vars.coordonnees }}"
     },
     {
+      "action": "wait",
+      "ms": 4000,
+      "note": "La pause qui protege l'operation suivante, et elle MANQUAIT ICI SEULE. Les trois autres lectures bonus de ce fichier — acces, inscriptions, planning — portent chacune la leur ; celle-ci enchainait un `wait_for` directement sur le `navigate`. Mesure sur iPhone le 2026-09-05, session effacee avant l'essai : le `wait_for` est revenu en 47 012 ms alors que son propre plafond est de 30 000 — c'est-a-dire l'echeance de l'APPELANT (30 000 + 2 000 + 50 %), donc l'operation s'est PERDUE, la page n'a jamais repondu. C'est le meme mecanisme qu'au jalon 6.1-D : une operation injectee n'est sure apres un `navigate` que si celui-ci atterrit sur son document final, et cette vue-la est atteinte en traversant le CAS, donc l'agent s'installe sur un document intermediaire que la redirection remplace. La valeur est celle que 6.1-D a mesuree comme couvrant une cascade d'authentification complete. Le `wait_for` qui suit garde son role : la pause protege, l'attente conditionnelle rend le temps."
+    },
+    {
       "action": "wait_for",
       "selector": ".label-valeur",
       "timeout_ms": 30000,

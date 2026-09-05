@@ -16,6 +16,7 @@ L'écran est une suite de sections empilées, sous un titre qui s'efface au déf
 | **Affichage** | langue (modale de choix), filtres d'UE (écran dédié) |
 | **Thème** | interrupteur mode sombre |
 | **Notifications** | interrupteur des rappels de cours, curseur de délai |
+
 | **Lancement** | ouvrir sur le groupe favori, réinitialiser l'application |
 | **Calendrier** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué, et un toast le dit quand c'est le geste « Forcer » qui a échoué (6.1-C) |
 
@@ -161,6 +162,30 @@ le cache précédent quand la base ne le publie plus. Sans ce report, il cessait
 l'application retombait sur l'établissement historique — une bascule silencieuse, mesurée sur
 appareil. Le report ne pouvant rien quand le cache a perdu l'entrée (réinstallation), l'avertissement
 couvre **les deux causes** : reporté, ou irrésoluble. Le repli reste possible ; il n'est plus muet.
+
+## Les interrupteurs et le curseur sont dessinés
+
+Depuis le jalon [6.1-E](../phase-6/6-1-e-finitions-interface.md), les quatre interrupteurs de cet
+écran et le curseur de délai ne sont plus les contrôles **du système** mais ceux du dépôt
+([`Interrupteur`](../../src/shared/ui/Interrupteur.tsx),
+[`Curseur`](../../src/shared/ui/Curseur.tsx)). La dépendance `@react-native-community/slider` est
+sortie avec le second.
+
+Deux conséquences pour qui touche à cet écran :
+
+- **le contrôle est piloté** : la poignée suit la valeur passée, jamais l'appui. C'est ce qui rend
+  correct le cas de la synchronisation calendrier, où éteindre **ouvre une confirmation** au lieu de
+  basculer — l'interrupteur ne bouge qu'après `disableCalendarSync` ;
+- **le curseur émet deux fois** : à chaque cran franchi pour le libellé (« 15 min »), et **au
+  relâcher seulement** pour ce qui coûte. `SettingsManager.notify` persiste les réglages à chaque
+  émission : écrire sur le premier réécrirait le fichier douze fois par glissement. C'est le partage
+  que faisait déjà le slider natif entre `onValueChange` et `onSlidingComplete`, et il est conservé.
+
+L'unité « min » passe par une clé (`NOTIFICATION_DELAY_VALUE`) : elle était en dur à côté du curseur,
+et un lecteur d'écran la lit.
+
+> **Capture attendue** — `reglages-controles.png` : la section Notifications, interrupteur et curseur
+> dessinés, dans les deux thèmes.
 
 ## Les filtres d'UE
 
@@ -449,7 +474,11 @@ réinitialiser serait un résidu, pas un service.
   Notifications le dit.
 - **`extractRoomFromDescription` est heuristique.** Une description au format inattendu produit une
   salle absente ou fausse dans la notification.
-- **`SettingsScreen` est un composant à classe de 450 lignes** portant dix-sept champs d'état.
+- **`SettingsScreen` est un composant à classe de 450 lignes** portant seize champs d'état.
+- **Les contrôles dessinés ne suivent pas les réglages d'accessibilité du système.** Quelqu'un qui a
+  demandé des contrôles plus grands ne les verra pas grandir : c'est le prix d'une apparence unique
+  sur les deux plateformes (6.1-E). Le clavier, lui, est servi — rôles `switch` et `adjustable`,
+  état coché, valeur annoncée, et les actions « augmenter » / « diminuer » sur le curseur.
 
 ## Carte des fichiers
 

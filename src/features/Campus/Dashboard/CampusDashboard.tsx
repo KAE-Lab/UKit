@@ -74,7 +74,13 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={lancer}
-                        tintColor={theme.fontSecondary}
+                        /*
+                         * `theme.font` et non `fontSecondary` : ce dernier vaut **la meme valeur dans
+                         * les deux themes** (`#8E8E93`), et cet arc gris, fin, disparaissait sur le
+                         * fond noir du theme sombre — signale sur appareil le 2026-09-04. La couleur
+                         * de premier plan, elle, suit le theme par construction.
+                         */
+                        tintColor={theme.font}
                         colors={[theme.primary]}
                         progressViewOffset={surIos ? undefined : hauteurEnTete}
                     />

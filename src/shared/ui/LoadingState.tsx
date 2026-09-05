@@ -1,73 +1,60 @@
 /**
- * L'attente, dans les deux formes que le depot utilise reellement.
+ * L'attente **dans le flux** : l'indicateur au milieu d'un carrousel qui n'a pas encore ses cartes,
+ * d'une section qui charge ses horaires, d'une etape d'accueil. Releve a l'identique dans les quatre
+ * sections du tableau de bord.
  *
- * - `inline` : l'indicateur au milieu d'un carrousel qui n'a pas encore ses cartes. Releve a
- *   l'identique dans les quatre sections du tableau de bord.
- * - `fullScreen` : l'indicateur centre d'un ecran qui n'a encore rien.
+ * Ce n'est **pas** l'attente d'un ecran entier : celle-la est
+ * [`ChargementPleinePage`](ChargementPleinePage.tsx), et elle exige sa phrase. Les deux ont vecu ici,
+ * en variantes d'un meme composant, jusqu'au jalon 6.1-E — et c'est precisement ce qui a laisse les
+ * trois ecrans plein ecran **muets** : la phrase y etait possible, donc facultative, donc oubliee.
+ * Deux formes, deux noms, et le compilateur qui garde la seconde.
  *
- * Les deux differaient sur un detail — `size` et la clé de couleur — sans qu'aucune raison ne
- * l'explique. La forme reste un choix de l'appelant, la valeur ne l'est plus.
+ * La phrase reste optionnelle ici, et c'est voulu : un carrousel de tableau de bord qui annonce ce
+ * qu'il attend ajouterait quatre lignes de texte a un ecran qui en porte deja beaucoup.
  *
- * La forme plein ecran passe par [`ScreenState`](ScreenState.tsx), le meme hote que l'etat vide et
- * l'etat d'erreur. Ce n'est pas un raffinement : chargement, vide et erreur se succedent sur le meme
- * ecran, et s'ils ne se centrent pas au meme endroit, le contenu **saute** au moment ou la reponse
- * arrive. C'etait le cas — l'indicateur se centrait sur l'ecran entier, l'etat vide se collait sous
- * l'en-tete.
+ * Comme la forme plein ecran, il **ne montre rien pendant les premieres millisecondes** : voir
+ * [`indicateurRetarde.ts`](indicateurRetarde.ts). Ici on ne rend alors rien du tout — contrairement a
+ * la forme plein ecran, il n'y a pas de fond a tenir.
  */
 
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text } from 'react-native';
 
 import { tokens, AppThemeType } from '../theme/Theme';
-import { ScreenState } from './ScreenState';
+import { ApparitionEnFondu } from './ApparitionEnFondu';
+import { useIndicateurRetarde } from './indicateurRetarde';
 
 export interface LoadingStateProps {
     theme: AppThemeType;
-    /** Plein ecran, centre comme les autres etats. Par defaut l'indicateur se pose dans le flux. */
-    fullScreen?: boolean;
     /**
-     * Les options de l'hote, transmises telles quelles a [`ScreenState`](ScreenState.tsx) et ignorees
-     * hors plein ecran. Elles voyagent ici plutot que d'obliger l'appelant a composer lui-meme :
-     * un ecran qui enveloppe `LoadingState` dans son propre `ScreenState` finit par y mettre autre
-     * chose, et le dialecte revient par la.
-     */
-    background?: string;
-    topOffset?: number;
-    /**
-     * Ce qu'on attend, en une phrase : « On recupere la liste des etablissements… ». Un chargement
-     * qui parle se distingue d'un chargement qui bugue (6.1-A) ; sans phrase, l'indicateur seul,
-     * comme avant.
+     * Ce qu'on attend, en une phrase : « Lecture des horaires… ». Optionnelle ici — un carrousel de
+     * tableau de bord n'a pas de place pour une ligne de plus — et **obligatoire** dans la forme
+     * plein ecran, qui est un autre composant.
      */
     message?: string;
 }
 
-export function LoadingState({ theme, fullScreen = false, background, topOffset, message }: LoadingStateProps) {
+export function LoadingState({ theme, message }: LoadingStateProps) {
+    const visible = useIndicateurRetarde();
+    if (!visible) return null;
+
     const phrase = message !== undefined ? (
         <Text style={[styles.message, { color: theme.fontSecondary }]}>{message}</Text>
     ) : null;
 
-    if (fullScreen) {
+    if (phrase === null) {
         return (
-            <ScreenState
-                theme={theme}
-                {...(background !== undefined ? { background } : {})}
-                {...(topOffset !== undefined ? { topOffset } : {})}
-            >
-                <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
-                {phrase}
-            </ScreenState>
+            <ApparitionEnFondu>
+                <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />
+            </ApparitionEnFondu>
         );
     }
 
-    if (phrase === null) {
-        return <ActivityIndicator style={{ margin: tokens.space.xl }} color={theme.primary} />;
-    }
-
     return (
-        <View style={styles.enLigne}>
+        <ApparitionEnFondu style={styles.enLigne}>
             <ActivityIndicator color={theme.primary} />
             {phrase}
-        </View>
+        </ApparitionEnFondu>
     );
 }
 

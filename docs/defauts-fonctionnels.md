@@ -174,7 +174,7 @@ sources tierces du tableau de bord, elles, **gardent leur contenu** : un tirer-p
 relit à la demande ([campus.md](features/campus.md#le-tableau-de-bord)). Les messages de service
 arrivaient déjà au retour ; c'est ce comportement qui a été étendu.
 
-### Réessayer après un parcours froid en échec ramène l'écran de chargement plein
+### ~~Réessayer après un parcours froid en échec ramène l'écran de chargement plein~~ — corrigé le 2026-09-04
 
 Constaté sur appareil le 2026-09-04, **dans l'onglet Scolarité**, pendant la vérification du jalon
 [6.1-D](phase-6/6-1-d-publication.md). C'est le même symptôme que S3 — deux vues pour un seul run —
@@ -190,7 +190,7 @@ c'est exactement l'erreur qui a produit ce défaut.
 Le mécanisme, tel que
 [`ScolariteDashboard`](../src/features/Scolarite/screens/ScolariteDashboard.tsx) l'écrit : l'écran
 plein s'affiche quand `progression.visible && coldData === null`, et la garde de 6.1-A
-([`useSessionDepuisLeFormulaire`](../src/features/Scolarite/hooks/useSessionDepuisLeFormulaire.ts))
+(`useSessionDepuisLeFormulaire`, [renomme depuis](../src/features/Scolarite/hooks/useSessionDemandeeIci.ts))
 ne retient la page que pour une session **partie du formulaire**. Or la séquence observée est :
 
 1. `ukit.portail.verification` réussit → les identifiants sont validés et **écrits** ;
@@ -217,7 +217,25 @@ retouche : le sujet touche aussi la fiche du compte, second hôte de la même ga
 aurait mêlé un changement d'écran à une campagne de mesure et rendu les deux invérifiables
 ([CONTRIBUTING.md](../CONTRIBUTING.md#un-travail-visuel-nest-pas-documenté-au-même-endroit)).
 
-### La tuile d'établissement des Réglages reste sur l'ancien campus
+**Corrigé par le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md)**, et la direction annoncée
+ci-dessus était la bonne : le drapeau ne dit plus « la session vient du formulaire » mais **d'où vient
+le geste**. `useSessionDepuisLeFormulaire` est devenu
+[`useSessionDemandeeIci`](../src/features/Scolarite/hooks/useSessionDemandeeIci.ts) et rend une
+origine — `formulaire` ou `page` — au lieu d'un booléen ; l'écran plein est réservé à ce que personne
+n'a demandé **ici**, c'est-à-dire au lancement et à la reprise après une annulation.
+
+Un détail décide de la justesse, et il n'est pas évident : **le geste s'annonce dans le `onPress`, pas
+dans `retrySession`**. Un parcours froid repart aussi tout seul au retour au premier plan
+(`useCycleDeVieSession`), et armer le drapeau dans la fonction de relance aurait fait tenir la page à
+une session que personne n'a demandée — l'écran plein, qui est alors le bon rendu, n'apparaîtrait plus
+jamais.
+
+**Le périmètre a été établi avant de corriger**, comme ce texte le demandait : la fiche du compte
+porte bien la même garde, mais **pas le même trou** — elle n'a aucune branche plein écran, sa
+progression se pose en carte à la place des trois boutons. Elle a en revanche un manque distinct, noté
+ci-dessous.
+
+### ~~La tuile d'établissement des Réglages reste sur l'ancien campus~~ — corrigé le 2026-09-04
 
 Constaté sur appareil le 2026-09-04, pendant la vérification du jalon
 [6.1-D](phase-6/6-1-d-publication.md). Changer de campus **depuis l'écran Scolarité** — le lien
@@ -246,12 +264,150 @@ d'entrée.
 **Pas corrigé dans 6.1-D**, dont le périmètre est les attentes des Blueprints
 ([CONTRIBUTING.md](../CONTRIBUTING.md#un-travail-visuel-nest-pas-documenté-au-même-endroit)).
 
-### ~~Le parcours froid de Bordeaux INP échouait à 97 % sur iPhone~~ — *élucidé le 2026-09-04*
+**Corrigé par le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md)**, mais **pas** par
+l'abonnement que ce texte proposait : `institutionName` est **sorti de l'état**. L'écran consomme
+déjà `AppContext.etablissement` (`static contextType`), donc il se rend à nouveau à chaque bascule, et
+ses trois voisins de la même section — `etablissementRetire()`, `sourceEdt()`, `lienEdtActif()` — se
+calculaient déjà au rendu. Le seul champ qui mentait était celui qu'on avait figé.
+
+La différence n'est pas de style : un abonnement de plus aurait recréé le même risque au champ
+suivant, alors que supprimer l'état rend ce défaut **impossible à réintroduire** ici. C'est la même
+leçon, tirée dans l'autre sens : ce n'est pas l'observabilité qui manquait, c'est l'état local qui
+était de trop.
+
+### ~~La première navigation vers un service INP n'aboutit pas sur iPhone~~ — *cause trouvée et corrigée en amont le 2026-09-05*
+
+**Mesuré le 2026-09-04, chrono à l'appui, et cette trace annule l'élucidation ci-dessous.**
+
+Le parcours froid de Bordeaux INP échoue **au premier essai** et passe au réessai. Ce n'est ni un
+compte utilisé en parallèle ni un réseau instable : c'est reproductible, et le relevé nomme le pas.
+
+```
+[chrono] ukit.portail.verification success 4822 ms          ← le CAS accepte, vite
+[chrono] ukit.portail.bordeaux-inp.dossier failed 30010 ms
+[chrono]   #0 navigate failed 30007 ms
+[aetherius] … : unavailable — the page did not finish loading within 30000 ms
+                              (the view reported a load that never completed)
+[chrono] ukit.portail.bordeaux-inp.dossier success 20808 ms ← le réessai
+[chrono]   #0 navigate success 281 ms                       ← la MÊME adresse, en 281 ms
+```
+
+**Ce que la trace élimine**, et c'était l'hypothèse de départ : les quatre navigations bonus du
+dossier — coordonnées, accès, inscriptions, planning — **passent toutes** (`#14`, `#17`, `#20`, `#23`
+en 230 à 480 ms). Le défaut de forme qu'elles portent reste réel et reste écrit plus bas, mais il
+n'est pas celui-ci.
+
+**Ce qui échoue est le tout premier `navigate`**, vers `mondossierweb.bordeaux-inp.fr`. Et la raison
+pour laquelle c'est *lui* et pas un autre tient à ce que `verification` fait juste avant : elle prouve
+les identifiants contre le service **ENT** (`serviceEtablissement('ent')`,
+[`ScolariteSession`](../src/features/Scolarite/services/ScolariteSession.ts)). La session CAS existe
+donc, mais **pas celle de mondossierweb** : le dossier paie la première cascade SSO vers ce
+service-là. Les runs suivants la trouvent ouverte — la messagerie navigue en 232 ms, les documents en
+352 ms — et le réessai du dossier en 281 ms.
+
+C'est le **service qui rebondit** nommé par [6.1-D](phase-6/6-1-d-publication.md) : l'agent s'installe
+sur un document intermédiaire, et la redirection le remplace sans que la vue le signale. Ici la
+conséquence n'est plus une opération perdue, c'est le `navigate` lui-même qui ne rend jamais la main.
+
+**La cause a été trouvée par deux sondes, et elle est dans le moteur.**
+
+*Première sonde* — le plafond du premier pas porté à **60 s**, joué en local avec la livraison
+distante coupée, donc **sans rien publier** (`BLUEPRINTS_REMOTE=false`) : échec identique à
+60 012 ms. Une page qui met plus d'une minute puis se charge en 281 ms au réessai n'existe pas :
+l'événement de chargement est **perdu**, pas en retard. Le plafond était donc hors de cause, et le
+Blueprint aussi.
+
+*Seconde sonde* — le même parcours avec `options.debug: true`, qui **rend la WebView visible** :
+il passe du premier coup, à chaque fois. C'est ce qui nomme la cause, parce que c'est la seule
+variable qui a changé.
+
+**Une WebView cachée n'était pas seulement cachée à l'utilisateur : elle l'était aussi à WebKit.**
+Celui-ci décide qu'une page est cachée à partir de trois signaux, et le moteur n'en satisfaisait
+qu'un — une aire de rendu réelle. Le conteneur était garé hors de la fenêtre (`left: -10000`) et
+**entièrement transparent** (`opacity: 0`), les deux autres. WebKit traitait donc la page comme mise
+en arrière-plan et cessait de lui donner de quoi travailler ; une navigation qui a besoin du
+JavaScript de la page pour se poursuivre — c'est exactement ce qu'est une cascade SSO — n'avançait
+plus.
+
+Ce qui explique aussi pourquoi tout le reste fonctionnait : le formulaire du CAS est une page
+terminale qui n'a besoin de personne pour finir de charger.
+
+**Corrigé chez Aetherius, en deux temps, et le premier était faux** —
+`sdks/react-native/src/webview/component.tsx` :
+
+- **0.5.6** ramenait le conteneur dans la fenêtre à `opacity: 0.01`, mais le laissait en
+  `zIndex: -1`, donc **derrière le fond opaque de l'application**. Pour WebKit, occulté vaut absent :
+  la page reste ralentie. Cette version **ne corrige rien** de ce défaut ;
+- **0.5.7** le rend **au-dessus** de ce que l'application dessine, à `opacity: 0.02`, insensible au
+  toucher. Vérifié sur iPhone, session effacée avant chaque essai : `#0 navigate` passe en 286, 322
+  et 322 ms, là où il mourait à 30 000 puis 60 000 ms.
+
+**Pourquoi la 0.5.6 a été publiée comme un correctif alors qu'elle n'en était pas un**, parce que
+l'erreur mérite d'être écrite : l'essai qui l'a « validée » suivait immédiatement l'essai en vue
+visible, lequel avait **ouvert la session du service** — que `session.persist` conserve. Le dossier
+n'avait donc aucune cascade à jouer. Un succès de session chaude a été lu comme un succès du
+correctif. **Une seule observation ne prouve rien, et une observation qui suit un essai réussi n'en
+est pas une** : il faut effacer la session avant chaque mesure.
+
+### ~~Une lecture bonus du dossier INP perdait son opération~~ — *corrigé le 2026-09-05*
+
+Elle était **cachée derrière la précédente** : tant que le premier `navigate` mourait, on n'atteignait
+jamais cette étape. Le correctif du moteur l'a découverte.
+
+```
+#0  navigate  success   322 ms      <- la vue ne ralentit plus
+#14 navigate  success   287 ms      <- la vue des coordonnees
+#15 wait_for  failed  47 012 ms     <- son plafond declare est 30 000
+blocked [COORDONNEES_INDISPONIBLES]
+```
+
+**47 012 ms pour un plafond de 30 000 dit lequel des deux échecs c'est**, par la règle de
+[6.1-D](phase-6/6-1-d-publication.md) : un plafond atteint pile veut dire que la page n'a pas montré
+ce qu'on cherchait ; `plafond + 2 s + 50 %` veut dire que l'**opération s'est perdue**. Le moteur le
+confirme en toutes lettres : *« the page never reported back »*.
+
+La cause était structurelle et visible en alignant les quatre lectures complémentaires du fichier :
+trois d'entre elles — accès, inscriptions, planning — portent chacune la pause de protection que
+6.1-D avait rétablie, et **la première n'en avait aucune**. Une opération injectée n'est sûre après un
+`navigate` que si celui-ci atterrit sur son document final ; cette vue-là s'atteint en traversant le
+CAS, donc l'agent s'installait sur un document intermédiaire que la redirection remplaçait.
+
+Une pause de 4 000 ms est posée devant, la valeur que 6.1-D a mesurée comme couvrant une cascade
+d'authentification complète. Le `wait_for` garde son rôle : la pause protège l'opération, l'attente
+conditionnelle rend le temps.
+
+**Ce que ce défaut coûtait est disproportionné**, et le registre porte déjà la direction de fond : le
+run mourait **après avoir lu l'identité**, à 97 % de la barre, et un étudiant perdait son nom, son
+INE et sa formation parce qu'une page de coordonnées n'avait pas répondu. La pause rend la lecture
+fiable ; elle ne change pas le fait qu'une lecture bonus ne devrait jamais pouvoir emporter la
+connexion — c'est l'entrée ci-dessous, toujours ouverte.
+
+**Deux leçons, et la seconde vaut au-delà de ce défaut :**
+
+- **l'hypothèse de départ était fausse, et le relevé l'a dite en une ligne.** Les quatre navigations
+  bonus du dossier étaient accusées ; elles passent toutes. Sans le chrono par pas de
+  [6.1-D](phase-6/6-1-d-publication.md), on aurait découpé un Blueprint pour rien ;
+- **on peut sonder sans rien publier.** L'interrupteur de livraison sert exactement à ça : jouer le
+  socle embarqué, modifié en local, sur l'appareil. Aucune écriture en production n'a été nécessaire
+  pour trouver une cause qui n'était même pas dans ce dépôt.
+
+### ~~Le parcours froid de Bordeaux INP échouait à 97 % sur iPhone~~ — *élucidé le 2026-09-04, et cette élucidation est fausse*
 
 Le 2026-09-04, un parcours froid de Bordeaux INP mourait à 97 % du chargement sur un iPhone, en
 `unavailable` — une navigation qui n'aboutit jamais. Le jalon
 [6.1-D](phase-6/6-1-d-publication.md) venait de raccourcir une pause de ce fichier, elle a donc été
 accusée, restaurée, puis **remise à l'épreuve dans des conditions propres : elle tient.**
+
+> **Contredite, et deux fois plutôt qu'une.** Le symptôme « mourir à 97 % » avait deux causes
+> réelles, toutes deux trouvées le 2026-09-05 et corrigées : la vue cachée ralentie par iOS, et la
+> lecture de coordonnées dont l'opération se perdait faute de pause. Ni l'une ni l'autre n'est un
+> compte utilisé en parallèle.
+>
+> **Contredite le 2026-09-04 par la trace ci-dessus.** Le symptôme est le même — une navigation qui
+> n'aboutit jamais, en `unavailable`, sur iPhone — et il est **reproductible à chaque premier essai**,
+> ce qu'un compte utilisé en parallèle n'explique pas. L'entrée reste ici parce que la leçon de
+> méthode qu'elle porte vaut plus que sa conclusion : *une explication plausible n'est pas une
+> cause*. Elle s'appliquait aussi à elle-même.
 
 Ce qui l'a réellement causé, selon toute vraisemblance : **le compte de test était utilisé en
 parallèle par son propriétaire**, constaté à la messagerie dont le compteur de non-lus est passé de 1
@@ -303,7 +459,7 @@ Phase 6 a fait pour la messagerie en la sortant de la session ([6-F](phase-6/6-f
 session à part entière : elle change le contrat de sorties du dossier, donc elle touche l'application
 autant que les fichiers.
 
-### « Se déconnecter » ne ferme pas la session distante quand un widget tourne
+### ~~« Se déconnecter » ne ferme pas la session distante quand un widget tourne~~ — corrigé le 2026-09-04
 
 Constaté sur appareil le 2026-09-04, et **isolé par un A/B** — c'est ce qui rend le diagnostic sûr.
 
@@ -355,113 +511,54 @@ part.
 > d'abord montré que la trace serait arrivée — ici, en faisant jouer une connexion complète juste
 > avant. **Un instrument peut devenir sourd en silence.**
 
-### ~~Le parcours froid de Bordeaux INP échouait à 97 % sur iPhone~~ — *élucidé le 2026-09-04*
+**Corrigé par le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md), et le mécanisme était plus
+précis que « la contention » : il tenait à une frontière d'`await`.**
 
-Le 2026-09-04, un parcours froid de Bordeaux INP mourait à 97 % du chargement sur un iPhone, en
-`unavailable` — une navigation qui n'aboutit jamais. Le jalon
-[6.1-D](phase-6/6-1-d-publication.md) venait de raccourcir une pause de ce fichier, elle a donc été
-accusée, restaurée, puis **remise à l'épreuve dans des conditions propres : elle tient.**
+`attendreSonTour` sortait dès qu'elle voyait le moteur libre — mais `surLeNavigateur` testait `enCours`
+**après** cet `await`, donc un tour de micro-tâches plus tard. Une lecture d'arrière-plan qui
+patientait sur le même run, inscrite avant la session donc réveillée avant elle, réservait pendant ce
+tour. La session se réveillait sur un moteur repris et rendait `{ ok: false }` sans avoir jamais joué
+son Blueprint : une seule ligne « prend la main », le widget suivant réussi, aucun chrono pour la
+déconnexion. C'est exactement la trace ci-dessus, et c'est la seule lecture qui l'explique — les trois
+tours d'insistance n'étaient jamais consommés.
 
-Ce qui l'a réellement causé, selon toute vraisemblance : **le compte de test était utilisé en
-parallèle par son propriétaire**, constaté à la messagerie dont le compteur de non-lus est passé de 1
-à 0 entre deux runs. Une session CAS reprise ailleurs fait rebondir la navigation vers le SSO, ce qui
-produit exactement une navigation sans fin. Le réseau du campus était instable au même moment —
-`ukit.celcat.jour` expirait à 30 s depuis deux téléphones pendant que le poste obtenait la même
-réponse en 0,19 s.
+Le test **et** la réservation tiennent désormais dans le même tour de boucle
+([`MoteurNavigateur`](../src/features/Scolarite/services/MoteurNavigateur.ts)), et un test le
+verrouille : il **échoue sur l'implémentation d'avant**, ce qui est la seule façon de savoir qu'il
+décrit le défaut plutôt que le correctif.
 
-**Trois leçons, et la première est sur la méthode d'enquête :**
+Les deux directions que ce texte laissait ouvertes ont été prises **toutes les deux** :
 
-- **une explication plausible n'est pas une cause.** Le mécanisme avancé — la navigation suivante
-  partant pendant que la précédente charge — ne résiste pas à l'examen : `navigate` ne rend la main
-  qu'au chargement du document, il ne peut donc pas y avoir de course sur ce chargement-là. Il a
-  pourtant conduit à annuler une amélioration qui fonctionnait ;
-- **on ne mesure pas sur un compte qu'un tiers utilise**, ni sur un réseau dont on n'a pas d'abord
-  vérifié qu'il est sain. Les deux ont été violés le même matin ;
-- **une valeur se remet à l'épreuve plutôt que de rester annulée par précaution.** Republier la valeur
-  suspecte dans des conditions propres a coûté une publication et a tranché en cinq minutes.
+- **la déconnexion obtient le moteur.** La série de widgets est devenue annulable — un
+  `AbortController` par série, que le runner lisait déjà — et `logout` l'arrête, puis **attend sa
+  mort**, avant de réserver : abandonner ne rend le verrou qu'au `finally` du run, un tour plus tard ;
+- **et elle observe son résultat.** `fermerSessionDistante` rend quatre issues nommées et journalise
+  les trois qui ne sont pas nominales, dont **`MOTEUR_OCCUPE`** — la distinction réclamée entre « le
+  portail n'a pas répondu » (acceptable, silencieux jusqu'ici) et « on n'a même pas essayé »
+  (inacceptable) existe maintenant dans le code, pas seulement dans ce registre.
 
-### Une navigation bonus non gardée peut emporter tout le parcours froid
+Deux gardes ont été ajoutées au runner en chemin, et elles valent au-delà : **rien n'est appliqué
+après un abandon.** Un run qui franchit son dernier pas une milliseconde avant l'abandon rend
+`ok: true`, et sa valeur se réécrivait dans le trousseau du compte qu'on venait d'effacer — ce que
+`deleteWidgets` existe pour empêcher. Le rangement du certificat, chaîné sur la fin du
+rafraîchissement, est gardé de la même façon : une série **interrompue** ne l'enchaîne plus.
 
-Constaté sur un iPhone le 2026-09-04, en wifi de campus, pendant la vérification du jalon
-[6.1-D](phase-6/6-1-d-publication.md) : le parcours froid de Bordeaux INP meurt à 97 % du
-chargement, après une trentaine de secondes, sur « Service indisponible ».
+### La fiche du compte ne dit pas l'échec d'un parcours froid
 
-**Le déclencheur était une régression du jalon, et elle est corrigée** (voir plus bas) ; mais elle a
-mis au jour un défaut de forme qui, lui, reste ouvert. Les trois lectures bonus du dossier INP sont
-chacune précédées d'un `navigate` **non gardé** :
+Trouvé en établissant le périmètre du défaut du réessai, le 2026-09-04, et **volontairement pas
+corrigé** : il ne tombe pas dans le périmètre du jalon [6.1-E](phase-6/6-1-e-finitions-interface.md),
+qui portait sur l'écran de chargement.
 
-```
-navigate  ADE (myplanning.jsp)   ← aucune garde : s'il échoue, le run meurt
-wait      6000
-extract   planning  as: list     ← protégé, lui : zéro correspondance rend []
-```
+Après un parcours froid en échec, l'onglet Scolarité montre un encart qui nomme la panne et propose
+« Réessayer ». La fiche du compte
+([`CredentialsSettingsScreen`](../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx)), elle,
+affiche la fiche avec **six tirets** et rien qui explique pourquoi : elle ne lit pas `sessionFailure`.
+Seul `portailAbsent` y porte un `SourceFailureNotice`.
 
-La règle « une lecture bonus ne doit jamais emporter la connexion » a été appliquée à la **lecture** —
-`as: "list"` ne lève jamais — et oubliée sur la **navigation qui la précède**. Or un `navigate` qui
-n'aboutit pas lève un `NetworkError`, donc famille `unavailable`, donc le run entier échoue : un
-étudiant perd son identité, son INE et sa formation **parce qu'une page d'emploi du temps n'a pas fini
-de charger**. Le motif n'est pas propre à l'INP —
-[`ukit.portail.bordeaux.dossier`](../blueprints/ukit-portail-bordeaux-dossier.blueprint.json) a la
-même forme pour son annuaire.
-
-La direction : **une lecture bonus qui demande une navigation n'appartient pas au Blueprint qui porte
-l'identité.** Le vocabulaire du moteur ne sait pas rendre un `navigate` inoffensif — ni `try` ni
-`when` ne l'attrapent —, donc la protection ne peut pas venir du fichier : elle vient du
-**découpage**, un Blueprint par lecture bonus dont l'échec ne coûte que lui-même. C'est ce que la
-Phase 6 a fait pour la messagerie en la sortant de la session ([6-F](phase-6/6-f-scolarite.md)). Une
-session à part entière : elle change le contrat de sorties du dossier, donc elle touche l'application
-autant que les fichiers.
-
-### « Se déconnecter » peut ne jamais fermer la session distante, en silence
-
-Constaté sur appareil le 2026-09-04, chrono à l'appui. Le journal d'une déconnexion réelle donne :
-
-```
-[moteur] ukit.portail.deconnexion prend la main sur ukit.portail.bordeaux.documents
-[chrono] ukit.portail.bordeaux.documents failed 1505 ms      ← le widget cède, comme prévu
-[aetherius] documents : cancelled
-[chrono] ukit.portail.bordeaux.moodle success 4178 ms        ← un autre widget reprend le moteur
-```
-
-**Aucune ligne de chrono pour `ukit.portail.deconnexion`** — or
-[`chrono.ts`](../src/shared/aetherius/chrono.ts) en écrit une pour *tout* run qui atteint
-`runBlueprint`, réussi comme échoué. Le Blueprint n'a donc pas été joué, alors que la déconnexion a
-bien interrompu un widget pour prendre le moteur.
-
-**L'observation ci-dessus se prouve elle-même**, et c'est ce qui la rend solide : la ligne de
-réservation *et* l'annulation du widget sont bien arrivées, donc le canal de journalisation était
-vivant et `fermerSessionDistante` était bien en train de s'exécuter. Seul le run manque.
-
-Deux déconnexions ultérieures n'ont rien produit non plus, mais **elles ne prouvent rien** : le
-journal a cessé de recevoir quoi que ce soit de l'appareil pendant dix-neuf minutes sans le dire, et
-conclure « le Blueprint n'a pas tourné » de « je ne vois rien » n'est valide que si le canal est
-vivant — ce qui se vérifie, et ne l'avait pas été. La leçon vaut au-delà de ce défaut : **un
-instrument peut devenir sourd en silence**, et une absence de trace n'est une mesure que si l'on a
-d'abord montré que la trace serait arrivée.
-
-**Le mécanisme reste donc à établir**, et il demande une trace posée dans `fermerSessionDistante`
-elle-même, sur ses trois sorties possibles — adresse de CAS absente, réservation refusée, exception
-avalée par le `catch` muet. C'est la première chose à faire dans la session qui reprendra ce défaut ;
-un essai de plus sans instrument rendrait le même silence.
-
-Ce qui est acquis, en revanche, c'est le trou de conception qui rend la panne invisible :
-[`surLeNavigateur`](../src/features/Scolarite/services/MoteurNavigateur.ts) rend `{ ok: false }`
-quand une session n'obtient pas le moteur après ses trois tours d'insistance — et
-[`fermerSessionDistante`](../src/features/Scolarite/services/ScolariteSession.ts) **ne regarde pas ce
-résultat**. Son `catch` est délibérément muet, pour la bonne raison qu'une déconnexion locale ne doit
-pas échouer parce qu'un portail ne répond pas ; mais du coup **une réservation refusée est
-indiscernable d'une déconnexion réussie**.
-
-Ce que ça coûte, et c'est exactement ce que ce Blueprint existait pour empêcher : le ticket CAS reste
-valide côté serveur. « Se déconnecter » efface le trousseau **en laissant le navigateur intégré
-authentifié au compte qu'on vient de quitter** — la raison d'être de `options.session.persist` se
-retourne contre l'utilisateur.
-
-Deux directions, à trancher dans la session qui le reprendra : donner à la déconnexion la garantie
-d'obtenir le moteur — elle est le seul geste qui ne peut pas se rejouer plus tard —, ou au minimum
-**observer le résultat de la réservation** et réessayer, quitte à le dire. La distinction entre « le
-portail n'a pas répondu » (acceptable, silencieux) et « on n'a même pas essayé » (inacceptable) doit
-exister quelque part.
+C'est la même famille que ce que la Phase 6 a passé sept jalons à supprimer — une absence de donnée
+qui ne se distingue pas d'une panne — et le remède existe déjà à côté : l'encart de
+[`EncartSession`](../src/features/Scolarite/components/EncartSession.tsx), en `variant="card"` au-dessus
+de la fiche.
 
 ## Limites connues, qui ne sont pas des défauts
 

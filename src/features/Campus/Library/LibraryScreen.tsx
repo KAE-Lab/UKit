@@ -67,6 +67,7 @@ function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@
         <CampusListLayout
             data={filteredData}
             loading={loading}
+            messageChargement={Translator.get('LOADING_CAMPUS_OPEN')}
             renderItem={renderItem}
             onAnimatedScroll={onAnimatedScroll}
             navigation={navigation}

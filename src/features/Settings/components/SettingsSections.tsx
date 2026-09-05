@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, Linking } from 'react-native';
-import Slider from '@react-native-community/slider';
 import Button from '../../../shared/ui/Button';
 import Translator from '../../../shared/i18n/Translator';
+import { Curseur } from '../../../shared/ui/Curseur';
 import { tokens } from '../../../shared/theme/Theme';
 import { AppThemeType } from '../../../shared/theme/Theme';
 
@@ -171,20 +171,19 @@ export const NotificationsSection = ({ themeSettings, theme, courseNotifications
                         {Translator.get('NOTIFICATION_DELAY')}
                     </Text>
                     <Text style={{ fontSize: tokens.fontSize.sm, color: theme.primary, fontWeight: tokens.fontWeight.bold }}>
-                        {courseNotificationDelay} min
+                        {Translator.get('NOTIFICATION_DELAY_VALUE', courseNotificationDelay)}
                     </Text>
                 </View>
-                <Slider
-                    style={{ width: '100%', height: 40 }}
-                    minimumValue={5}
-                    maximumValue={60}
-                    step={5}
-                    value={courseNotificationDelay}
-                    onValueChange={onNotificationDelayChange}
-                    onSlidingComplete={onNotificationDelaySlidingComplete}
-                    minimumTrackTintColor={theme.primary}
-                    maximumTrackTintColor={theme.border}
-                    thumbTintColor={theme.primary}
+                <Curseur
+                    theme={themeSettings}
+                    valeur={courseNotificationDelay}
+                    min={5}
+                    max={60}
+                    pas={5}
+                    onChange={onNotificationDelayChange}
+                    onFin={onNotificationDelaySlidingComplete}
+                    accessibilityLabel={Translator.get('NOTIFICATION_DELAY')}
+                    libelleValeur={(v) => Translator.get('NOTIFICATION_DELAY_VALUE', v)}
                 />
                 <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginTop: tokens.space.xs }}>
                     {Translator.get('NOTIFICATION_DELAY_DESC')}

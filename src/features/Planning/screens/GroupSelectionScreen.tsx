@@ -7,7 +7,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { EmptyState } from '../../../shared/ui/EmptyState';
-import { LoadingState } from '../../../shared/ui/LoadingState';
+import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext, isConnected } from '../../../shared/services/AppCore'
@@ -303,7 +303,11 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
 
     renderLoading(theme: import('../../../shared/theme/Theme').AppThemeType) {
         return (
-            <LoadingState theme={theme} fullScreen />
+            <ChargementPleinePage
+                theme={theme}
+                message={Translator.get('GROUPS_LOADING')}
+                patience={Translator.get('LOADING_PATIENCE_UNIVERSITY')}
+            />
         );
     }
 

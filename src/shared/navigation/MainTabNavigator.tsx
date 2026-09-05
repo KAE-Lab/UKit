@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
+import { createMaterialTopTabNavigator, MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
@@ -28,9 +28,9 @@ export type MainTabParamList = {
     SettingsTab: undefined;
 };
 
-const Tab = createBottomTabNavigator<MainTabParamList>();
+const Tab = createMaterialTopTabNavigator<MainTabParamList>();
 
-export interface CustomTabBarProps extends BottomTabBarProps {
+export interface CustomTabBarProps extends MaterialTopTabBarProps {
     theme: AppThemeType;
 }
 
@@ -38,8 +38,8 @@ interface TabBarRouteItemProps {
     route: { key: string; name: string };
     index: number;
     state: import('@react-navigation/native').TabNavigationState<import('@react-navigation/native').ParamListBase>;
-    descriptors: import('@react-navigation/bottom-tabs').BottomTabBarProps['descriptors'];
-    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/bottom-tabs').BottomTabNavigationEventMap>;
+    descriptors: import('@react-navigation/material-top-tabs').MaterialTopTabBarProps['descriptors'];
+    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/material-top-tabs').MaterialTopTabNavigationEventMap>;
     theme: AppThemeType;
 }
 
@@ -89,7 +89,7 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
                 styles.iconContainer,
                 isFocused && { backgroundColor: `${theme.primary}15` }
             ]}>
-                {options.tabBarIcon && options.tabBarIcon({ color, size: 24, focused: isFocused })}
+                {options.tabBarIcon && options.tabBarIcon({ color, focused: isFocused })}
             </View>
             {/* La graisse ne change pas avec la selection : passer en gras elargissait le libelle
                 d'un ou deux points et tout le rang tressaillait a chaque changement d'onglet. La
@@ -135,7 +135,7 @@ function ModaleCampusNonRelie({ theme, visible, fermer, ouvrirDemande }: {
 interface TabBarActionItemProps {
     currentRouteName: string;
     theme: AppThemeType;
-    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/bottom-tabs').BottomTabNavigationEventMap>;
+    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/material-top-tabs').MaterialTopTabNavigationEventMap>;
     credentials: unknown;
 }
 
@@ -308,13 +308,49 @@ function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarPro
 export default function MainTabNavigator() {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
+    const { width } = useWindowDimensions();
 
     return (
         <Tab.Navigator
             id="MainTabs"
+            // La barre reste **en bas** : c'est un pager, pas des onglets de haut de page. Elle est
+            // rendue en absolu par `CustomTabBar` et survole donc le contenu, exactement comme avant.
+            tabBarPosition="bottom"
+            // La largeur connue des le premier rendu : sans elle, le pager mesure a zero puis se
+            // rend une seconde fois, ce qui se voit au lancement.
+            initialLayout={{ width }}
+            // Android dessine une lueur de sur-defilement des qu'on glisse au-dela du dernier onglet.
+            overScrollMode="never"
             tabBar={props => <CustomTabBar {...props} theme={theme} />}
             screenOptions={{
-                headerShown: false,
+                // Le montage paresseux d'avant : un onglet ne se monte qu'a sa premiere ouverture.
+                lazy: true,
+                /*
+                 * **Un appui d'onglet ne traverse pas les pages intermediaires.**
+                 *
+                 * Anime, le pager fait defiler Planning → Campus → Scolarite → Reglages pour un seul
+                 * appui — et `lazy` n'ayant pas monte les pages traversees, on verrait deux fonds
+                 * vides passer. Le glissement au doigt, lui, reste anime nativement : c'est le geste
+                 * qui porte l'animation, pas la destination.
+                 */
+                animationEnabled: false,
+                /*
+                 * **Accorde sur les quatre onglets**, et ce n'est pas la premiere version.
+                 *
+                 * Il n'etait d'abord ouvert qu'a la Scolarite et aux Reglages, par prudence : le
+                 * Planning et le Campus portent des gestes horizontaux — le ruban des jours, le
+                 * carrousel des cours simultanes, les quatre carrousels du tableau de bord — et un
+                 * pager par-dessus semblait devoir leur voler le doigt. La verification sur appareil
+                 * a montre que non : une liste horizontale **consomme** le geste qui commence sur
+                 * elle, et le pager ne recoit que ce qu'elle laisse passer.
+                 *
+                 * Restreindre coutait donc plus que ca ne protegeait : un geste qui marche sur deux
+                 * onglets sur quatre s'apprend comme un defaut, pas comme une regle — on ne devine
+                 * pas ou il s'arrete. Si un conflit se constate malgre tout, le retrait est
+                 * `swipeEnabled: false` sur l'ecran concerne, une ligne, et la barre reste la
+                 * navigation de reference (limite ecrite du jalon 6.1-E).
+                 */
+                swipeEnabled: true,
             }}
         >
             <Tab.Screen
@@ -323,7 +359,6 @@ export default function MainTabNavigator() {
                 options={{
                     tabBarLabel: Translator.get('MY_PLANNING'),
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name="calendar-month-outline" size={24} color={color} />,
-                    headerShown: false
                 }}
             />
             <Tab.Screen
@@ -409,8 +444,10 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     tabLabel: {
-        // eslint-disable-next-line ukit/no-style-literals -- 10 : le libelle d'onglet, hors echelle assume ; passer a 12 changerait la barre, ce qui est l'affaire de 6.1-E
-        fontSize: 10,
+        // 10 en dur jusqu'a 6.1-E, hors echelle : le libelle passe au plus petit pas (`xs`, 12). La
+        // barre garde sa hauteur, fixee par `TAB_BAR_HEIGHT` — c'est le libelle qui grandit dans une
+        // boite qui ne bouge pas.
+        fontSize: tokens.fontSize.xs,
     },
     voileMystere: {
         // Le calque du teaser, clippe aux coins du bouton : `overflow: hidden` sur le bouton

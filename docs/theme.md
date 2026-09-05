@@ -191,7 +191,11 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`Badge`](../src/shared/ui/Badge.tsx) | pastille icône + libellé, teinte d'action ou `tone` sémantique | 8 fois |
 | [`MetaRow`](../src/shared/ui/MetaRow.tsx) | ligne « icône + texte secondaire (+ contenu à droite) » | 9 fois |
 | [`EmptyState`](../src/shared/ui/EmptyState.tsx) | icône, message, action facultative — **le même bloc** pour une liste vide et pour une source en panne | 2 fois |
-| [`LoadingState`](../src/shared/ui/LoadingState.tsx) | l'attente, en ligne ou plein écran — et une phrase, optionnelle, qui dit ce qu'on attend | 6 fois |
+| [`LoadingState`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** : un carrousel, une section, une étape d'accueil. Sa phrase reste optionnelle | 6 fois |
+| [`ChargementPleinePage`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran**, sa phrase **obligatoire**, et une seconde ligne après quatre secondes | 5 fois |
+| [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu : 200 ms d'opacité et un léger glissement | 3 fois |
+| [`Interrupteur`](../src/shared/ui/Interrupteur.tsx) | l'interrupteur du dépôt, dessiné, identique sur les deux plateformes | 4 fois |
+| [`Curseur`](../src/shared/ui/Curseur.tsx) | le curseur du dépôt, dessiné — son arithmétique est [testée à part](../src/shared/ui/echelleDeCurseur.ts) | 1 fois |
 | [`ProgressBar`](../src/shared/ui/ProgressBar.tsx) | jauge, **rayon calculé** (`height / 2`) | 3 fois |
 | [`Icon`](../src/shared/ui/Icon.tsx) | une icône de l'une ou l'autre famille, typée | — |
 | [`SourceFailureNotice`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, bâti sur `EmptyState` | — |
@@ -223,7 +227,8 @@ La liste que **toute session de refonte d'écran vérifie**. Elle est le pendant
 2. **Marges de page identiques.** Le contenu respire de `tokens.space.md` sur les côtés, les cartes de
    `tokens.space.sm` de plus. Ne pas mélanger `paddingHorizontal` sur le conteneur et `marginHorizontal`
    sur les enfants dans un même écran.
-3. **Quatre états, et ils sont différents.** Chargement (`LoadingState`), vide (`EmptyState`), erreur
+3. **Quatre états, et ils sont différents.** Chargement (`ChargementPleinePage` quand il occupe
+   l'écran, `LoadingState` dans le flux), vide (`EmptyState`), erreur
    (`SourceFailureNotice`), et **couverture partielle** quand la source est interrogée en plusieurs
    points (`CampusPartialNotice`). S'ils se ressemblent, l'écran ment : une liste vide n'est pas une
    panne. C'est la thèse de la [Phase 6](phase-6/README.md) tout entière.
@@ -558,10 +563,84 @@ Acquises, et qui ont coûté à être trouvées :
   Scolarité et le campus non relié de la barre d'onglets ; la feuille d'échec d'un widget a été son
   troisième hôte, et c'est la règle des deux usages qui l'a fait remonter. Une action ne doit jamais
   être la seule sortie : avec une action, la fermeture passe en bouton secondaire.
-- **Un chargement parle** (2026-09-02) : `LoadingState` porte une phrase optionnelle — « On récupère la
-  liste des établissements… » — parce qu'un indicateur seul, quand il dure, se lit comme un bug. Le
-  jalon [6.1-E](phase-6/6-1-e-finitions-interface.md) généralisera le motif à tous les chargements
-  pleine page.
+- **Un chargement parle** (2026-09-02, généralisé en 6.1-E) : un indicateur seul, quand il dure, se
+  lit comme un bug. Deux composants et deux exigences, parce que la même règle ne vaut pas dans les
+  deux cas : [`ChargementPleinePage`](../src/shared/ui/ChargementPleinePage.tsx) **exige** sa phrase —
+  elle est dans le type, comme le titre d'`EmptyState` — et ajoute une **seconde ligne après quatre
+  secondes** (« Le serveur de l'université est lent aujourd'hui… ») ; `LoadingState`, qui se pose dans
+  le flux, la garde optionnelle : quatre carrousels de tableau de bord qui annoncent chacun ce qu'ils
+  attendent ajouteraient quatre lignes à un écran qui en porte déjà beaucoup.
+
+  **La phrase obligatoire est le cœur du correctif, pas un détail de typage.** Elle existait depuis
+  6.1-A, optionnelle — et **aucun** des trois écrans pleine page ne la passait. Une capacité
+  facultative dans un socle partagé est une capacité oubliée.
+
+  > **Capture attendue** — `chargement-parlant.png` : un chargement pleine page avec sa phrase, et sa
+  > seconde ligne après quatre secondes.
+- **Un chargement bref ne montre rien** (6.1-E, retour d'appareil). Aucun indicateur pendant les
+  **300 premières millisecondes** d'attente : passer d'un jour à l'autre dans le Planning prend
+  quelques dizaines de millisecondes, et l'indicateur y apparaissait puis disparaissait aussitôt — un
+  clignotement qui se lit **moins bien que rien**, parce que l'œil enregistre un accroc là où il
+  aurait perçu une transition instantanée. Le seuil est mesuré, pas choisi : en deçà d'un dixième de
+  seconde une réponse est perçue comme instantanée, et jusqu'à une seconde l'attention reste sur la
+  tâche sans qu'un retour soit nécessaire. La règle vaut pour **les deux** composants d'attente et
+  vit dans [`indicateurRetarde.ts`](../src/shared/ui/indicateurRetarde.ts).
+
+  **L'autre moitié de cette convention est volontairement écartée**, et c'est la décision qui compte :
+  on ne garde **pas** l'indicateur un temps minimum une fois montré. Ce serait retarder l'arrivée du
+  contenu — rendre l'application plus lente pour qu'elle en ait l'air moins — alors que
+  [6.1-D](phase-6/6-1-d-publication.md) a passé une campagne entière à retirer des secondes
+  d'attente. Le clignotement de sortie est traité sans rien ralentir : l'indicateur **apparaît en
+  fondu**, donc s'il n'a vécu que cinquante millisecondes il n'aura jamais atteint sa pleine opacité.
+  On perçoit une nuance, pas un accroc.
+- **Le passage chargement → contenu se fond, une fois** (6.1-E).
+  [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) : 200 ms d'opacité et un glissement
+  de `space.sm`. Il se pose **là où rien ne fond déjà** — les valeurs de widgets, le premier rendu du
+  Planning — et **pas** sur les listes ni les sections Campus, dont les cartes passent par
+  [`Card`](../src/shared/ui/Card.tsx), qui fond à l'entrée depuis 6-K : deux animations sur les mêmes
+  pixels ne valent pas mieux qu'aucune. Et jamais sur un changement **à l'intérieur** du contenu — une
+  liste qui se refiltre — sinon l'écran clignote à chaque geste. C'est aussi pourquoi ce n'est pas un
+  interrupteur global : `LayoutAnimation`
+  ([`transitions.ts`](../src/shared/ui/transitions.ts)) anime tout le commit suivant, et reste
+  réservé aux **bascules de structure**.
+
+  **Le fondu accompagne une attente qui s'est vue, et lui seule** — c'est la règle qui unifie les deux
+  points précédents, trouvée en vérifiant le Planning sur appareil. Chaque chargement y vide la liste,
+  y compris un simple changement de jour : la question n'est donc pas « est-ce la première fois »
+  mais **combien de temps l'écran a attendu**, et le seuil est celui de l'indicateur. Sous le seuil,
+  rien n'a été montré, donc il n'y a rien à adoucir : le contenu revient sec, ce qui est exact
+  puisque l'opération *a été* instantanée — fondre y ajouterait deux cents millisecondes à un
+  aller-retour de cinquante, et ferait paraître lent ce qui ne l'était pas. Au-delà, l'indicateur a
+  paru, et ce qui le remplace se fond.
+- **Nos contrôles sont dessinés, et leur piste est une pilule** (6.1-E). Le `Switch` et le `Slider`
+  natifs rendent l'apparence de **chaque** plateforme, et celle d'Android a l'air d'un autre âge à
+  côté de celle d'iOS : [`Interrupteur`](../src/shared/ui/Interrupteur.tsx) et
+  [`Curseur`](../src/shared/ui/Curseur.tsx) donnent une seule apparence aux deux.
+
+  **L'exception de forme est écrite pour qu'on ne la « corrige » pas** : la règle des carrés arrondis
+  vise les **surfaces**, et un contrôle glissant n'en est pas une — il n'héberge aucun contenu, sa
+  couleur *est* sa valeur, il est de la famille de [`ProgressBar`](../src/shared/ui/ProgressBar.tsx).
+  Piste et poignée prennent donc `hauteur / 2`, **calculé** comme celui d'une jauge. Une piste en
+  carré arrondi se lirait comme un bouton à deux états.
+
+  Trois décisions les accompagnent. **Ils sont pilotés** : la poignée suit la prop, jamais l'appui —
+  éteindre la synchronisation calendrier ouvre une confirmation, et une poignée qui partirait d'avance
+  reviendrait en arrière si l'on annule. **Le retour haptique acquitte le geste**, pas la transition
+  de la valeur, sinon la confirmation d'une modale ferait vibrer un interrupteur que personne n'a
+  touché. **Un interrupteur s'actionne par un appui, pas par un glissement** : l'écran Réglages
+  accepte le glissement entre onglets, et deux gestes horizontaux s'y disputeraient le doigt.
+
+  Un seul jeton a été ajouté, `settings.switchThumb`, partagé par les deux. Le désactivé reste dit par
+  la **transparence**, comme partout dans le dépôt.
+
+  **La poignée porte une ombre plus marquée que les tokens**, et c'est une différence de situation, pas
+  un cas particulier : `shadow.sm` est calibrée pour une carte posée sur le fond de page, à quatre
+  pour cent d'opacité, et une poignée **blanche** sur une piste **gris clair** — l'interrupteur
+  éteint, la part non remplie d'un curseur, en thème clair — s'y fondait au point de rendre le
+  contrôle peu lisible (retour d'appareil du 2026-09-04). Une carte se détache d'un fond neutre ; une
+  poignée doit se détacher d'une **surface colorée qui porte la valeur**, et de la plus claire d'entre
+  elles. Le motif est nommé une fois pour les deux contrôles
+  ([`controles.ts`](../src/shared/ui/controles.ts)) et sa **couleur** reste celle des tokens.
 
 ## Vérifier
 
@@ -594,7 +673,7 @@ Acquises, et qui ont coûté à être trouvées :
   [inventaire-visuel.md](inventaire-visuel.md#3-les-divergences-mesurées), et chaque site porte une
   désactivation locale de la règle qui dit pourquoi : la base ESLint est à zéro, et le reste.
 - **Deux jeux de couleurs hérités subsistent en tête de fichier** : `colors` (encore référencé, dans
-  `style.list`, la couleur du calendrier système, le pouce du `Switch` des réglages et le retour de
-  notification — `StyleWelcome`, son dernier gros consommateur, est sorti du fichier en 6.1-C) et
+  `style.list`, la couleur du calendrier système et le retour de notification — le pouce du `Switch`
+  des réglages est sorti avec le contrôle natif en 6.1-E — `StyleWelcome`, son dernier gros consommateur, est sorti du fichier en 6.1-C) et
   `hintColors` (exposé par `style.hintColors`). `colors50` et `colors200`, deux palettes Material
   entières que plus rien ne lisait, ont été **supprimées** le 2026-08-16.

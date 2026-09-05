@@ -77,7 +77,7 @@ export async function rafraichirWidgets(
     const obtenues: Partial<Record<PointWidget, ValeurWidget>> = { ...connues };
 
     for (const definition of WIDGETS) {
-        if (options.signal?.aborted === true) break;
+        if (abandonnee(options)) break;
 
         const source = sourceDuWidget(definition.point);
         if (source === null) continue;
@@ -91,15 +91,47 @@ export async function rafraichirWidgets(
         const lu = await lireUnWidget(source.nom, options);
         options.onEnCours?.(null);
 
-        if (lu.ok === true) {
-            obtenues[definition.point] = lu.valeur;
-            options.onValeur?.(definition.point, lu.valeur);
-        } else if (lu.echec !== null) {
-            options.onEchec?.(definition.point, lu.echec);
-        }
+        /*
+         * **Rien n'est applique apres un abandon.**
+         *
+         * Un run qui franchit son dernier step une milliseconde avant l'abandon rend `ok: true` :
+         * sans cette garde, `onValeur` reecrivait dans le trousseau la valeur d'un compte qu'on vient
+         * d'effacer — exactement ce que la deconnexion supprime en appelant `deleteWidgets`. La garde
+         * du haut de boucle ne suffit pas : elle protege le run **suivant**, pas celui qui vient de
+         * finir.
+         */
+        if (abandonnee(options)) break;
+
+        appliquer(definition.point, lu, obtenues, options);
     }
 
     return obtenues;
+}
+
+/**
+ * La serie a-t-elle ete abandonnee ?
+ *
+ * Une fonction plutot que la lecture directe du drapeau, et ce n'est pas de la coquetterie : lu deux
+ * fois autour d'un `await`, TypeScript affine le second test a partir du premier et le declare
+ * inutile, alors que c'est justement pendant cette attente que l'abandon arrive.
+ */
+function abandonnee(options: OptionsLecture): boolean {
+    return options.signal?.aborted === true;
+}
+
+/** Ce qu'une lecture change : la table rendue, et la rangee qui s'allume. */
+function appliquer(
+    point: PointWidget,
+    lu: LectureWidget,
+    obtenues: Partial<Record<PointWidget, ValeurWidget>>,
+    options: OptionsRafraichissement,
+): void {
+    if (lu.ok === true) {
+        obtenues[point] = lu.valeur;
+        options.onValeur?.(point, lu.valeur);
+        return;
+    }
+    if (lu.echec !== null) options.onEchec?.(point, lu.echec);
 }
 
 export type LectureWidget =
@@ -156,6 +188,10 @@ async function lireUnWidget(
         console.warn(`[widgets] ${blueprint} saute : le moteur joue ${reserve.occupePar}`);
         return { ok: false, echec: null };
     }
+
+    // Un run abandonne en vol n'a rien a rendre, meme s'il a eu le temps d'aboutir : la valeur
+    // appartient a un compte ou a un etablissement qu'on est en train de quitter.
+    if (abandonnee(options)) return { ok: false, echec: null };
 
     const run = reserve.valeur;
     if (run.ok === false) {

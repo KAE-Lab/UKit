@@ -1,9 +1,10 @@
 import React, { useContext } from 'react';
-import { ActivityIndicator, Switch, Text, TouchableOpacity, View, Pressable } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View, Pressable } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { AppContext } from '../services/AppCore';
 import style, { tokens, AppThemeType } from '../theme/Theme';
+import { Interrupteur } from './Interrupteur';
 
 // ── Bouton de Retour ───────────────────────────────────────────
 export interface BackButtonProps {
@@ -59,8 +60,8 @@ export const DrawerButton = (props: DrawerButtonProps) => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 paddingHorizontal: tokens.space.md,
-                // eslint-disable-next-line ukit/no-style-literals -- 3 : ecart mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel
-                paddingVertical: 3,
+                // 3 en dur jusqu'a 6.1-E : un point de plus, et la ligne tient sur l'echelle.
+                paddingVertical: tokens.space.xs,
                 marginHorizontal: tokens.space.sm,
                 marginVertical: tokens.space.xs,
                 borderRadius: tokens.radius.md,
@@ -161,12 +162,17 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- G8 : les styles composes de Theme.ts ne sont pas types (docs/defauts-fonctionnels.md), session a part en 6.2 */}
             <Text style={[theme.buttonMainText, { flexShrink: 0 }] as any}>{leftText}</Text>
             {onSwitchToggle !== undefined ? (
-                <Switch
-                    style={{ marginLeft: 'auto', marginRight: theme.leftIcon?.marginLeft }}
-                    trackColor={theme.switchTrack}
-                    thumbColor={style.colors.white}
-                    value={switchValue}
-                    onValueChange={onSwitchToggle}
+                /*
+                  * L'interrupteur du depot, dessine, et non celui du systeme : voir son en-tete. La
+                  * marge droite reprend celle de l'icone de gauche — la rangee reste symetrique,
+                  * comme elle l'etait avec le `Switch` natif.
+                  */
+                <Interrupteur
+                    theme={theme}
+                    valeur={switchValue === true}
+                    onChange={onSwitchToggle}
+                    accessibilityLabel={leftText}
+                    style={{ marginLeft: 'auto', marginRight: (theme.leftIcon as import('react-native').TextStyle)?.marginLeft }}
                 />
             ) : (
                 <Text

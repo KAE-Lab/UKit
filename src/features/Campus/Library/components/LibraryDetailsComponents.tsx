@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Translator from '../../../../shared/i18n/Translator';
 import style, { tokens, toneColor, AppThemeType } from '../../../../shared/theme/Theme';
 import { ProgressBar } from '../../../../shared/ui/ProgressBar';
+import { LoadingState } from '../../../../shared/ui/LoadingState';
 import { LibraryInfo, TimetableEntry, AffluencesData, getLibraryStatus } from '../../services/LibraryService';
 
 interface LibraryLiveAttendanceProps {
@@ -152,7 +153,7 @@ export function LibraryOpeningHoursList({ loading, currentDay, theme }: LibraryO
             </Text>
 
             {loading ? (
-                <ActivityIndicator size="large" color={theme.accent ?? theme.primary} style={{ marginTop: tokens.space.xl }} />
+                <LoadingState theme={theme} message={Translator.get('LOADING_OPENING_HOURS')} />
             ) : (
                 currentDay && currentDay.openingHours.length > 0 ? (
                     currentDay.openingHours.map((slot, index) => (

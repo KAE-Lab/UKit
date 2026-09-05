@@ -238,7 +238,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`metro.config.js`](../metro.config.js) | la configuration Metro d'Expo, plus `txt` en extension d'asset — pour servir pdf.js tel quel à la WebView du lecteur ([plateforme.md](plateforme.md)) |
 | [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement des six surcouches publiées — livraison, lieux, visuels, catalogue, salutations, messages de service — au démarrage et au vrai retour au premier plan (`premierPlan`), et l'hôte des messages |
 | [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 20 écrans |
-| [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | barre d'onglets personnalisée et son bouton d'action contextuel |
+| [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | le pager des quatre onglets (barre en bas), la barre personnalisée et son bouton d'action contextuel ([navigation.md](navigation.md)) |
 | [`shared/navigation/NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) | `NavBarHelper`, `withHeaderAnimation`, `withStaticHeader`, boutons d'en-tête |
 | [`shared/aetherius/client.ts`](../src/shared/aetherius/client.ts) | la façade du moteur, instanciée une fois pour toute l'application |
 | [`shared/aetherius/secrets.ts`](../src/shared/aetherius/secrets.ts) | résolution des secrets depuis le document unique de `SecureStore` |
@@ -323,7 +323,14 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/EmptyState.tsx`](../src/shared/ui/EmptyState.tsx) | icône, titre, message, action facultative — le bloc commun à « rien à afficher » et « source en panne » |
 | [`shared/ui/ScreenState.tsx`](../src/shared/ui/ScreenState.tsx) | **où** un état plein écran se pose : le centrage sur la surface libre, et les hauteurs `HEADER_OFFSET` et `TAB_BAR_HEIGHT` ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ActionButton.tsx`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` ([theme.md](theme.md#les-décisions-durables)) |
-| [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente, en ligne ou plein écran, et la phrase qui dit ce qu'on attend |
+| [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** — un carrousel, une section — et sa phrase, optionnelle |
+| [`shared/ui/ChargementPleinePage.tsx`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran** : sa phrase est obligatoire, et une seconde ligne paraît après quatre secondes ([theme.md](theme.md#les-décisions-durables)) |
+| [`shared/ui/ApparitionEnFondu.tsx`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu, posée une par une : jamais un interrupteur global |
+| [`shared/ui/indicateurRetarde.ts`](../src/shared/ui/indicateurRetarde.ts) | le seuil sous lequel une attente ne montre **rien**, et ce qu'on a décidé de ne pas faire ([theme.md](theme.md#les-décisions-durables)) |
+| [`shared/ui/controles.ts`](../src/shared/ui/controles.ts) | ce que les deux contrôles dessinés partagent : l'ombre de leur poignée |
+| [`shared/ui/Interrupteur.tsx`](../src/shared/ui/Interrupteur.tsx) | l'interrupteur dessiné du dépôt, piloté, identique sur les deux plateformes |
+| [`shared/ui/Curseur.tsx`](../src/shared/ui/Curseur.tsx) | le curseur dessiné : geste, cran, haptique, accessibilité |
+| [`shared/ui/echelleDeCurseur.ts`](../src/shared/ui/echelleDeCurseur.ts) · [`echelleDeCurseur.test.ts`](../src/shared/ui/echelleDeCurseur.test.ts) | son arithmétique, **pure** — donc jouable sous Node, et testée |
 | [`shared/ui/Dialogue.tsx`](../src/shared/ui/Dialogue.tsx) | le dialogue informatif partagé : titre, corps, action, sortie secondaire, lien discret ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ModaleBientot.tsx`](../src/shared/ui/ModaleBientot.tsx) | ce que le voile d'un teaser promet — une composition de `Dialogue` |
 | [`shared/ui/Bandeau.tsx`](../src/shared/ui/Bandeau.tsx) | le bandeau flottant en haut de l'écran, la seule forme de bandeau de l'application : une information, fermable, au gabarit des en-têtes ([theme.md](theme.md#les-décisions-durables)) |

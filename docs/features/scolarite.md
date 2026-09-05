@@ -851,6 +851,16 @@ le formulaire, donc il le supplantait dès que la session partait — on retomba
 remplacent. Ce qui reste à l'écran plein est le parcours froid qu'on n'a **pas** demandé depuis un
 formulaire : au lancement, ou sur « Actualiser mon dossier ». Il n'y a alors aucune page à garder.
 
+### La grille n'apparaît pas vide sous une barre de chargement
+
+Un parcours froid qui a échoué sans laisser de dossier ne montre pas de grille : l'encart d'échec
+porte le problème et son geste, la page reste propre. Cette règle avait un trou, trouvé le
+2026-09-04 : **relancer efface l'échec**, donc la condition repassait et la grille revenait — vide —
+juste sous la barre de progression du réessai.
+
+Une session qui court sans dossier n'a toujours rien à montrer. La grille attend donc aussi que la
+progression soit finie, pas seulement que l'échec ait disparu.
+
 ### Une seule règle : la page se transforme, elle ne se remplace pas
 
 Elle vaut désormais partout sur l'écran du compte, et il n'y a **plus aucun chargement plein écran**
@@ -874,11 +884,24 @@ s'afficher.
 
 **La garde n'avait été posée que sur cet écran-ci**, et l'onglet Scolarité a montré le même défaut le
 soir de la sortie de la 6.0 : une connexion lancée depuis l'onglet passait du formulaire à l'écran de
-chargement plein au dixième pas. Elle vit désormais dans un hook partagé par les deux hôtes
-([`useSessionDepuisLeFormulaire`](../../src/features/Scolarite/hooks/useSessionDepuisLeFormulaire.ts)),
-et l'onglet teste sa branche formulaire **avant** l'écran plein — l'ordre est le sujet. L'écran plein
-reste réservé au parcours froid lancé sans formulaire : au lancement, ou sur « Actualiser mon
-dossier » ([6.1-A](../phase-6/6-1-a-robustesse-scolarite.md)).
+chargement plein au dixième pas. Elle vit désormais dans un hook partagé par les deux hôtes, et
+l'onglet teste sa branche formulaire **avant** l'écran plein — l'ordre est le sujet
+([6.1-A](../phase-6/6-1-a-robustesse-scolarite.md)).
+
+**Et le drapeau portait encore le mauvais concept**, ce que le jalon
+[6.1-E](../phase-6/6-1-e-finitions-interface.md) a corrigé : il ne connaissait qu'une origine, le
+formulaire. Un dossier qui échoue **après** l'écriture des identifiants laisse la page sur son encart
+d'échec ; toucher « Réessayer » **dans l'encart** relançait un parcours froid que rien n'avait
+annoncé, et l'écran plein reprenait la main — la page changeait sous le doigt de quelqu'un en train de
+réparer. La règle voulue n'a jamais été « la session vient du formulaire » mais **« la session vient
+d'un geste de l'utilisateur sur cet écran »**, et le hook s'appelle donc
+[`useSessionDemandeeIci`](../../src/features/Scolarite/hooks/useSessionDemandeeIci.ts) : il rend une
+**origine** — `formulaire`, qui garde le formulaire, ou `page`, qui garde le tableau de bord et pose
+la barre en encart — plutôt qu'un booléen.
+
+Le geste s'annonce **dans le `onPress`**, jamais dans `retrySession` : un parcours froid repart aussi
+tout seul au retour au premier plan après une annulation, et cette reprise-là n'est pas un geste —
+elle doit garder l'écran plein, qui est le bon rendu quand il n'y a rien à préserver.
 
 ### Le moteur se libère avant un geste qui doit pouvoir jouer
 
@@ -907,6 +930,19 @@ session par ce verrou-là.
 
 Ce n'est **pas** la file d'attente que le module refuse : on ne met pas deux demandes concurrentes en
 attente l'une de l'autre, on laisse celle qu'on vient d'annuler finir de mourir.
+
+### Le verrou teste et réserve dans le même tour
+
+Une session **insiste** trois tours face à une lecture d'arrière-plan, et renonce tout de suite face à
+une autre session. Ce qui manquait jusqu'au 2026-09-04 n'est pas l'insistance mais **l'atomicité** :
+l'attente et la réservation étaient séparées par une frontière d'`await`, et une lecture qui
+patientait sur le même run — inscrite avant la session, donc réveillée avant elle — réservait dans
+l'intervalle. La session se réveillait sur un moteur repris et renonçait sans avoir consommé un seul
+de ses tours.
+
+La boucle couvre donc **le test et la pose**, dans le même instant de la boucle d'événements. C'est
+une propriété qu'on ne voit pas à la relecture et qui se vérifie en une ligne de test : celui qui la
+garde échoue sur l'implémentation d'avant.
 
 ### Une demande explicite passe devant une session de fond
 
@@ -983,6 +1019,22 @@ estimées, donc elle avance sans savoir exactement où elle en est. Elle s'inter
 en feraient un mensonge — elle ne **recule** jamais, et elle n'atteint jamais le plafond d'une étape
 qui n'est pas finie. Les paliers ne sont pas équidistants, et c'est mesuré : la connexion et la
 messagerie portent les deux pauses d'authentification, le profil est instantané.
+
+### Le bandeau n'existe que pour une page qui a un dossier
+
+L'en-tête collant de l'onglet — filet, ombre, salutation en guise de titre — **ne se justifie que
+lorsqu'il y a quelqu'un à saluer**. Sans dossier lu, il se refermait sur un titre posé dans le vide,
+et il portait alors trois objets sur une même ligne : le grand titre, la pastille d'état de service et
+le filigrane de l'établissement. Une marque de coin et un contrôle d'en-tête sur la même ligne de
+base se lisent comme une collision — signalé sur appareil le 2026-09-04, sur l'écran de réessai.
+
+Le titre **flotte** donc tant qu'il n'y a pas de dossier, du même gabarit que Campus, les Réglages et
+le formulaire de connexion : posé en absolu, sans fond ni filet, il s'efface au défilement. Il devient
+un bandeau au moment où la lecture aboutit, c'est-à-dire au moment où il a quelque chose à dire.
+
+La correction en a supprimé un second, que personne n'avait nommé : **le filigrane sautait** de la
+ligne du titre à celle de la salutation quand le dossier arrivait. Les deux états ont désormais la
+même charpente, donc le logo ne bouge plus et l'en-tête ne change pas de hauteur.
 
 ### Le logo de l'établissement
 
@@ -1532,6 +1584,20 @@ qu'on vient de retirer.
 > le moteur ni ce dépôt n'exposent, soit de visiter la déconnexion propre à chaque service, ce qui
 > serait une donnée de plus par établissement. Aucune des deux n'est faite ici, et la validation
 > d'identifiants **ne repose plus dessus** depuis qu'elle demande `renew=true`.
+
+**Elle dit désormais ce qu'elle n'a pas fait** (6.1-E). Elle jetait le résultat de sa réservation du
+moteur : « le portail n'a pas répondu » — acceptable — et « on n'a même pas essayé » — inacceptable,
+puisque le ticket CAS reste alors valide côté serveur — étaient **indiscernables**. Elle rend
+maintenant quatre issues nommées (`fermee`, `sans-cas`, `moteur-occupe`, `echec`) et journalise les
+trois qui ne sont pas nominales, dont `MOTEUR_OCCUPE`. Elle ne lève toujours jamais : une déconnexion
+locale réussie avec une session distante encore ouverte vaut mieux qu'un bouton qui refuse de marcher.
+
+**Et la déconnexion obtient le moteur avant d'appeler.** Le cas se produisait précisément quand il
+était le plus probable — au retour au premier plan, quand les widgets se rafraîchissent : la série
+reprenait le moteur entre deux runs, et le Blueprint n'était jamais joué. `logout` **arrête la série**
+et la session, **attend leur mort** — abandonner ne rend le verrou qu'au `finally` du run, un tour
+plus tard —, efface le local, puis ferme à distance. L'ordre du local avant le réseau, lui, ne change
+pas.
 
 ## Le navigateur intégré
 
@@ -2173,7 +2239,7 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`components/PropositionsModal.tsx`](../../src/features/Scolarite/components/PropositionsModal.tsx) | la confirmation, rendue par `rootContainer` pour exister aussi pendant l'accueil |
 | [`components/RangeeMysterieuse.tsx`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx) | le teaser d'un widget sans source publiée : la rangée floutée — la modale « Bientôt » qu'elle ouvre vit dans `shared/ui` |
 | [`components/FeuilleDeWidget.tsx`](../../src/features/Scolarite/components/FeuilleDeWidget.tsx) | la feuille d'un widget en échec : la phrase que la tuile ne dit pas, « Relancer » ce seul widget, ou la ressaisie |
-| [`hooks/useSessionDepuisLeFormulaire.ts`](../../src/features/Scolarite/hooks/useSessionDepuisLeFormulaire.ts) | une session lancée depuis le formulaire lui laisse la page jusqu'à son terme — la garde partagée par l'onglet et la fiche du compte |
+| [`hooks/useSessionDemandeeIci.ts`](../../src/features/Scolarite/hooks/useSessionDemandeeIci.ts) | une session lancée par un geste fait **sur cet écran** lui laisse la page jusqu'à son terme, et dit **de quel geste** — la garde partagée par l'onglet et la fiche du compte |
 | [`screens/ScolariteDashboard.tsx`](../../src/features/Scolarite/screens/ScolariteDashboard.tsx) | écran d'onglet : aiguillage entre connexion, chargement, échec et tableau de bord |
 | [`screens/CredentialsSettingsScreen.tsx`](../../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | réglages du compte : informations enregistrées, déconnexion — et, **sans compte, le formulaire de connexion** plutôt qu'une fiche vide |
 | [`screens/WebBrowserScreen.tsx`](../../src/features/Scolarite/screens/WebBrowserScreen.tsx) | navigateur intégré : points d'entrée, historique, retour matériel, enregistrement d'identifiants |

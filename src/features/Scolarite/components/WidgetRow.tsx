@@ -21,6 +21,7 @@ import { presenterEchec } from '../services/ScolariteMapping';
 import type { DefinitionWidget } from '../widgets/definitions';
 import type { EtatRangee } from '../widgets/presentation';
 import { CompteurScolarite, LigneScolarite } from './LigneScolarite';
+import { ApparitionEnFondu } from '../../../shared/ui/ApparitionEnFondu';
 
 /**
  * Ce que la rangee annonce en gros.
@@ -90,10 +91,16 @@ export function WidgetRow({ definition, etat, contexte = null, teinte, theme, on
             attenue={enEchec || etat.nature === 'absent'}
             onPress={onPress}
             chevron={onPress !== undefined}
+            // Le compteur arrive en fondu, comme la valeur d'une tuile — et pour la meme raison, cle
+            // sur la **nature** : une relecture qui rend le meme etat ne rejoue rien.
             droite={etat.chargement
                 ? <ActivityIndicator size="small" color={teinte} />
                 : (compteVisible
-                    ? <CompteurScolarite valeur={etat.nombre as number} teinte={teinte} theme={theme} />
+                    ? (
+                        <ApparitionEnFondu key={etat.nature}>
+                            <CompteurScolarite valeur={etat.nombre as number} teinte={teinte} theme={theme} />
+                        </ApparitionEnFondu>
+                    )
                     : null)}
         />
     );

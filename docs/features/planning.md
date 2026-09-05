@@ -460,6 +460,23 @@ le 2 septembre 2026). Au vrai retour d'arrière-plan
 ([`premierPlan.ts`](../../src/shared/services/premierPlan.ts)), si la date a changé, tout se recalcule
 comme au lancement — le même geste que la simulation temporelle du menu de développement.
 
+## Revenir sur l'onglet ne vide plus la journée
+
+Le retour sur l'onglet Planning déclenche un rafraîchissement (`addListener('focus')`), et il posait
+`schedule: null` comme n'importe quel chargement : la journée **disparaissait**, puis revenait
+identique.
+
+Le défaut est ancien ; c'est le **glissement entre onglets** du jalon
+[6.1-E](../phase-6/6-1-e-finitions-interface.md) qui l'a rendu visible, et la raison vaut d'être
+retenue : on voit désormais la page d'arrivée **pendant** le geste, alors qu'un changement d'onglet
+instantané ne laissait pas le temps de voir l'avant. Une nouvelle façon de naviguer révèle ce qu'une
+autre masquait.
+
+L'écran ne se vide donc que si le chargement porte sur **autre chose** — un autre jour, une autre
+semaine, un autre groupe. Relire la même clé garde le contenu affiché jusqu'à son remplacement : il
+est juste, puisque c'est la même journée. Et l'attente reste alors **silencieuse** — ni indicateur, ni
+fondu — parce que rien à l'écran ne change ([theme.md](../theme.md#les-décisions-durables)).
+
 ## Limites connues
 
 - **Un `modules: []` retomberait sur la catégorie.** L'extraction rend `null` aussi bien pour un champ

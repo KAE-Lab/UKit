@@ -13,8 +13,40 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 La consolidation de la v6 ([docs/phase-6/6-1-mise-a-plat.md](docs/phase-6/6-1-mise-a-plat.md)) : ce que
 la première soirée en production a montré de fragile, réparé avant tout contenu nouveau.
 
+### Ajouté
+
+- **Les chargements disent ce qu'ils attendent** (6.1-E). « Ton emploi du temps arrive… »,
+  « Recherche des salles libres… », « Le portail se charge… » — et une seconde ligne après quatre
+  secondes quand le serveur d'une université traîne, pour qu'une attente longue cesse de ressembler à
+  une panne.
+- **Le contenu apparaît en fondu** là où il remplaçait un indicateur d'un seul coup : les valeurs des
+  widgets de la Scolarité, le premier emploi du temps affiché.
+- **Les interrupteurs et le curseur des Réglages sont dessinés par l'application**, identiques sur
+  iPhone et Android, avec retour haptique. Le curseur de délai se règle aussi au lecteur d'écran.
+- **On passe d'un onglet à l'autre en glissant** entre la Scolarité et les Réglages. Le Planning et
+  le Campus gardent leurs gestes : leur contenu glisse déjà.
+
 ### Corrigé
 
+- **Le premier parcours froid de Bordeaux INP n'échoue plus** (6.1-E). Il tombait à chaque fois, et
+  seul un réessai fonctionnait : une source parfaitement disponible se présentait comme injoignable.
+  La cause n'était ni dans cette application ni dans ses fichiers d'instructions, mais dans le
+  moteur — une WebView cachée l'était aussi pour le navigateur du système, qui cessait alors de
+  donner à la page de quoi finir une cascade d'authentification. Corrigé chez Aetherius, dont
+  l'application consomme désormais la version **0.5.7**.
+- **Et une lecture du dossier de Bordeaux INP perdait son résultat en silence.** Des quatre lectures
+  complémentaires du dossier, une seule enchaînait sans la pause de protection que les trois autres
+  portent : l'opération partait pendant que la page changeait encore, et n'obtenait jamais de
+  réponse. Le parcours mourait alors à quatre-vingt-dix-sept pour cent, après avoir pourtant lu
+  l'identité.
+- **« Se déconnecter » ferme bien la session côté université** (6.1-E). Quand un widget se
+  rafraîchissait au même moment, le geste effaçait le compte sur l'appareil **en laissant le
+  navigateur intégré connecté** : la déconnexion n'obtenait jamais le moteur, et rien ne le disait.
+  Elle l'obtient maintenant, et un échec se voit.
+- **Réessayer après une connexion à moitié échouée garde la page** (6.1-E). L'écran de chargement
+  reprenait tout l'espace au moment précis où l'on essayait de réparer.
+- **L'onglet Réglages suit le changement de campus** fait depuis la Scolarité (6.1-E) : il affichait
+  encore le nom de l'établissement quitté.
 - **Le contenu publié atteint les écrans déjà montés** (6.1-C). Un signal partagé dit le vrai retour
   au premier plan — après un passage en arrière-plan, pas après un centre de contrôle tiré ni une
   invite Face ID — et sur ce signal les annonces se relisent, le Planning recalcule « Aujourd'hui »

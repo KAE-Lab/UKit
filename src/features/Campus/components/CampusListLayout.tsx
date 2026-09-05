@@ -5,7 +5,7 @@ import { useRoute } from '@react-navigation/native';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
-import { LoadingState } from '../../../shared/ui/LoadingState';
+import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { ScreenState, HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 import { CampusSearchBar, CampusFilterModal, CampusListEmptyState, CampusPartialNotice } from './CampusLayoutComponents';
 import { useCampusListHeader } from './hooks/useCampusListHeader';
@@ -41,6 +41,13 @@ export interface CampusListLayoutProps<T> {
     selectedFilter?: string;
     onFilterChange?: (id: string) => void;
     
+    /**
+     * Ce que la liste attend, en une phrase. **Obligatoire** : ce socle sert quatre domaines, et
+     * chacun attend autre chose — des salles, des horaires d'ouverture, des annonces. Une phrase par
+     * defaut aurait menti pour trois d'entre eux.
+     */
+    messageChargement: string;
+
     // Empty State
     emptyIcon?: keyof typeof import('@expo/vector-icons').MaterialCommunityIcons.glyphMap;
     emptyTitle?: string;
@@ -176,10 +183,29 @@ function ContenuVide({
     );
 }
 
+/**
+ * L'attente de la liste entiere : elle remplace la barre de recherche, les filtres et les cartes.
+ *
+ * Extraite du corps pour la meme raison que `Surcouches` juste au-dessus — la fonction principale
+ * depassait la limite de lignes — et le decoupage tombe juste : c'est le seul etat de cet ecran qui
+ * ne rend rien de ce qui l'entoure.
+ */
+function AttenteDeLaListe({ theme, message }: {
+    theme: import('../../../shared/theme/Theme').AppThemeType;
+    message: string;
+}) {
+    return (
+        <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+            <ChargementPleinePage theme={theme} message={message} background={theme.courseBackground} />
+        </SafeAreaView>
+    );
+}
+
 // eslint-disable-next-line complexity
 export function CampusListLayout<T>({
     data,
     loading,
+    messageChargement,
     renderItem,
     onAnimatedScroll,
     hasSearch = false,
@@ -214,13 +240,7 @@ export function CampusListLayout<T>({
         setFilterVisible
     });
 
-    if (loading) {
-        return (
-            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
-                <LoadingState theme={theme} fullScreen background={theme.courseBackground} />
-            </SafeAreaView>
-        );
-    }
+    if (loading) return <AttenteDeLaListe theme={theme} message={messageChargement} />;
 
     const isFiltering = searchText.trim().length > 0 || (selectedFilter && selectedFilter !== 'all');
 

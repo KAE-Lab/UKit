@@ -39,6 +39,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'rea
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { GlypheFiligrane } from '../../../shared/ui/GlypheFiligrane';
 import { Icon, type IconSpec } from '../../../shared/ui/Icon';
+import { ApparitionEnFondu } from '../../../shared/ui/ApparitionEnFondu';
 
 export interface TuileScolariteProps {
     theme: AppThemeType;
@@ -62,6 +63,14 @@ export interface TuileScolariteProps {
     contexte?: string | null;
     /** Une lecture est en cours **par-dessus** ce qui est affiche : indicateur, sans vider la tuile. */
     chargement?: boolean;
+    /**
+     * Ce qui identifie la valeur affichee : elle reapparait en fondu quand cette cle change.
+     *
+     * Elle vient de l'appelant parce que lui seul sait ce qui compte comme un changement — la
+     * **nature** de l'etat, pas le nombre : une messagerie qui passe de 3 a 4 messages non lus n'est
+     * pas une arrivee, c'est une mise a jour.
+     */
+    cleDeFondu?: string;
     /** Le libelle en gris : la tuile n'a rien a promettre aujourd'hui. */
     attenue?: boolean;
     /** Pleine largeur, chiffre a cote du libelle, contexte sur sa propre ligne. */
@@ -87,7 +96,7 @@ function ContexteDeTuile({ contexte, theme }: { contexte: string | null | undefi
 
 export function TuileScolarite({
     theme, teinte, icone, nombre = null, libelle, contexte,
-    chargement = false, attenue = false, large = false, glypheDeFond, onPress,
+    chargement = false, attenue = false, large = false, glypheDeFond, onPress, cleDeFondu,
 }: TuileScolariteProps) {
     const couleurTexte = attenue ? theme.fontSecondary : theme.font;
 
@@ -104,10 +113,17 @@ export function TuileScolarite({
         ? <ActivityIndicator size="small" color={teinte} />
         : <Icon icon={{ family: 'material', name: 'chevron-right' }} size={24} color={theme.fontSecondary} />;
 
+    /*
+     * La valeur arrive **en fondu**, et seulement quand elle change de nature — l'attente qui devient
+     * un compte, un compte qui devient un echec. La cle porte cette nature : sans elle, chaque
+     * relecture qui rend la meme chose rejouerait l'animation, et une tuile qui se rafraichit toutes
+     * les vingt minutes clignoterait pour rien. Le reste de la tuile — surface, icone, filigrane — ne
+     * bouge pas : c'est la valeur qui arrive, pas la carte.
+     */
     const valeur = (
         // La ligne de base est partagee des qu'il y a un chiffre, petite tuile comprise : voir
         // l'en-tete. Sans chiffre, la phrase occupe la place seule.
-        <View style={nombre !== null || large ? styles.valeurLarge : null}>
+        <ApparitionEnFondu key={cleDeFondu} style={nombre !== null || large ? styles.valeurLarge : null}>
             {nombre !== null ? (
                 <Text style={[styles.nombre, { color: couleurTexte }]} numberOfLines={1}>{nombre}</Text>
             ) : null}
@@ -120,7 +136,7 @@ export function TuileScolarite({
             >
                 {libelle}
             </Text>
-        </View>
+        </ApparitionEnFondu>
     );
     const bas = <ContexteDeTuile contexte={contexte} theme={theme} />;
 

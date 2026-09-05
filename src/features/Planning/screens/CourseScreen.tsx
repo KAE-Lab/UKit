@@ -117,7 +117,7 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 
 			return (
 				<View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
-					{/* eslint-disable-next-line ukit/no-style-literals -- 1 : un calage optique de l'icone sur la ligne de base, pas un pas d'echelle */}
+					{/* eslint-disable-next-line ukit/no-style-literals -- 1 : un calage optique de l'icone sur la ligne de base du texte, et non un espacement. Examine et **conserve** par le jalon 6.1-E : aucun pas d'echelle ne lui correspond, et l'arrondir a 0 ou a 4 decalerait l'icone visiblement. */}
 					<MaterialIcons name={iconName} size={16} color={theme.fontSecondary} style={{ marginRight: tokens.space.md, marginTop: 1 }} />
 					<Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, flex: 1 }}>{trimmedLine}</Text>
 				</View>

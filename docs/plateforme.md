@@ -152,6 +152,12 @@ depuis [expo.dev](https://expo.dev/accounts/kaelab/settings/apple-devices), puis
 `npx eas-cli build --profile development --platform ios`. Ce qui suit est ce qui **ne** s'y trouve
 pas, parce que c'est propre à ce projet.
 
+> **Le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md) a changé le natif, donc le build de
+> développement du 2026-09-04 est périmé.** Deux modules entrent — `react-native-pager-view` (le
+> moteur du glissement entre onglets) et `expo-haptics` (le retour des contrôles dessinés) — et un
+> sort, `@react-native-community/slider`, remplacé par un curseur maison. Expo Go les porte déjà
+> tous ; **un build de développement doit être refait** avant de vérifier ce jalon sur iPhone.
+
 **On ne reconstruit que sur un changement natif.** Le build embarque le runtime ; le JavaScript vient
 de Metro comme avec Expo Go. Ajouter un module `expo-*`, toucher à la configuration native
 d'`app.config.ts`, monter de SDK : on reconstruit. Modifier du code, un Blueprint, un écran : non.

@@ -63,6 +63,14 @@ peuvent attendre.
 | `onboarding-groupes.png` | étape 4, année, semestre et recherche de groupe | essentielle |
 | `onboarding-fin.png` | étape 5, confirmation | complémentaire |
 
+### Finitions d'interface — [phase-6/6-1-e-finitions-interface.md](../phase-6/6-1-e-finitions-interface.md)
+
+| Fichier | Contenu | Priorité |
+|---|---|---|
+| `chargement-parlant.png` | un chargement pleine page avec sa phrase, et la seconde ligne après quatre secondes | essentielle |
+| `reglages-controles.png` | la section Notifications : l'interrupteur dessiné et le curseur de délai, dans les deux thèmes | essentielle |
+| `navigation-glissement.png` | le passage Scolarité → Réglages au doigt, barre flottante visible | complémentaire |
+
 ### Planning — [features/planning.md](../features/planning.md)
 
 | Fichier | Contenu | Priorité |

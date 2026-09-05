@@ -322,6 +322,26 @@ livré ; elle est mise à jour à chaque contribution.
   document final. C'est une **publication**, pas une release : les appareils déjà en 6.0 en profitent
   au prochain manifeste.
   [docs/phase-6/6-1-d-publication.md](docs/phase-6/6-1-d-publication.md)
+- [x] **Finitions d'interface** (6.1-E) — les détails qui séparent « ça bugue » de « ça charge ».
+  **Un chargement pleine page dit ce qu'il attend**, et une seconde ligne paraît après quatre secondes
+  quand un serveur d'université traîne : la phrase existait depuis 6.1-A, facultative, et **aucun** des
+  trois écrans pleine page ne la passait — elle est maintenant obligatoire dans le type. Le passage de
+  l'attente au contenu se **fond**, là où rien ne fondait déjà : les valeurs de widgets, le premier
+  rendu du Planning ; les cartes Campus, elles, fondaient depuis 6-K, et empiler deux animations sur
+  les mêmes pixels n'aurait rien ajouté. **Les interrupteurs et le curseur sont dessinés** — une seule
+  apparence sur les deux plateformes au lieu de celle d'Android à côté de celle d'iOS, avec retour
+  haptique, état désactivé et accessibilité ; deux dépendances sortent. Et **les onglets se
+  glissent** : un pager sous la barre flottante inchangée, activé sur la Scolarité et les Réglages,
+  refusé au Planning et au Campus dont le contenu glisse déjà.
+
+  Trois défauts trouvés le 2026-09-04 sont corrigés au passage, parce qu'ils vivaient dans les mêmes
+  fichiers. Deux avaient la même cause de fond — 6.1-A avait donné un **second hôte** à un geste sans
+  rendre observable l'état autour : le réessai ramenait l'écran de chargement plein, la tuile
+  d'établissement des Réglages restait sur l'ancien campus. Le troisième est plus profond : **« Se
+  déconnecter » ne fermait pas la session distante** quand un widget tournait, et le ticket restait
+  valide côté serveur. La cause tenait à une frontière d'`await` dans le verrou du moteur — le test et
+  la réservation ne partageaient pas le même tour — et un test le verrouille désormais.
+  [docs/phase-6/6-1-e-finitions-interface.md](docs/phase-6/6-1-e-finitions-interface.md)
 - [x] **Passe de code** (6.1-C) — ce que la documentation portait comme limites connues, fermé ou
   décidé : un **retour au premier plan** partagé, qui distingue le retour d'arrière-plan d'une invite
   système — les annonces se relisent, le Planning recalcule « Aujourd'hui » après minuit, les widgets
@@ -418,8 +438,8 @@ livré ; elle est mise à jour à chaque contribution.
   établissement, et **« Mon université n'est pas dans la liste »** rend l'application utilisable pour
   une fac bordelaise qu'on n'a pas portée — planning, restaurants, bibliothèques et salles libres
   compris. [docs/phase-6/6-j-compte-et-sources-par-etablissement.md](docs/phase-6/6-j-compte-et-sources-par-etablissement.md)
-- [x] **Réglages** — langue, thème, filtres d'UE, rappels de cours avec délai réglable et titres
-  traduits, synchronisation idempotente du **planning agrégé** avec le calendrier système (tâche de
+- [x] **Réglages** — langue, thème, filtres d'UE, rappels de cours avec délai réglable au **curseur
+  dessiné du dépôt** (comme les quatre interrupteurs, depuis 6.1-E) et titres traduits, synchronisation idempotente du **planning agrégé** avec le calendrier système (tâche de
   fond toutes les 12 h, échec dit), réinitialisation complète, À propos. [docs/features/settings.md](docs/features/settings.md)
 - [x] **Premier lancement** — parcours en cinq étapes : thème et langue, puis l'**établissement**,
   puis les groupes qu'il conditionne. Valeurs par défaut issues de l'appareil, sélection de groupes

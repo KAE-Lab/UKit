@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useContext, useEffect } from 'react';
-import { ActivityIndicator, Linking, Platform, View, BackHandler } from 'react-native';
+import { Linking, Platform, View, BackHandler } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,6 +8,8 @@ import { AppContext } from '../../../shared/services/AppCore';
 import { URL } from '../../../shared/constants/urls';
 import { serviceEtablissement } from '../../../shared/etablissements';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
+import Translator from '../../../shared/i18n/Translator';
+import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 
 import { FloatingActionBar, SaveCredentialsModal, getPortalInjectedScript } from '../components/WebBrowserComponents';
 
@@ -170,16 +172,19 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
         [savedCredentials],
     );
 
+    /*
+     * Une seule phrase pour deux attentes, et c'est le bon compromis : la lecture du trousseau et le
+     * chargement de la page ne durent pas pareil, mais elles disent la meme chose a qui regarde —
+     * le portail n'est pas encore la. `topOffset: 0` parce que cet ecran n'a pas d'en-tete de pile,
+     * il porte sa propre barre flottante.
+     */
     const renderLoading = () => (
-        <View
-            style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: theme.background,
-            }}>
-            <ActivityIndicator size="large" color={theme.primary} />
-        </View>
+        <ChargementPleinePage
+            theme={theme}
+            message={Translator.get('LOADING_PORTAL')}
+            patience={Translator.get('LOADING_PATIENCE_UNIVERSITY')}
+            topOffset={0}
+        />
     );
 
     // On attend la reponse du trousseau : elle decide du script injecte, et un script qui change

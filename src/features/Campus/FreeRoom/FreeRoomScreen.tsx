@@ -105,6 +105,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
         <CampusListLayout
             data={filteredData}
             loading={loading}
+            messageChargement={Translator.get('LOADING_FREE_ROOMS')}
             renderItem={renderItem}
             onAnimatedScroll={onAnimatedScroll}
             navigation={navigation}

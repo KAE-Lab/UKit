@@ -26,11 +26,17 @@ livrés et vérifiés ; [D](6-1-d-publication.md) livré par publication, avant.
 8. **Après la mise en ligne** : un message de service `info` ciblé `version_max` de la version
    précédente — « la 6.1 est disponible » — plutôt qu'une annonce.
 
-## Ce que la 6.2 attend
+## Ce qui vient après
 
-Notes et résultats, mise en avant des annonces par créneaux, compléments INP et documents
-supplémentaires : tout ce qui demande un dossier rempli et des annonces réelles. Plus les deux
-évaluations reportées d'ici : onglets natifs / `@expo/ui`, et le typage de `Theme.ts`.
+**La 6.2 est une version entière consacrée au mouvement de l'interface**, décidée le 2026-09-04 en
+vérifiant [6.1-E](6-1-e-finitions-interface.md) : ce jalon a rendu l'application correcte, il ne l'a
+pas rendue fluide, et le second travail n'est pas la suite du premier. Voir le
+[README de phase](README.md#la-v6-part-en-deux-temps--puis-trois).
+
+**La 6.3 porte ce qui attend le contenu** : notes et résultats, mise en avant des annonces par
+créneaux, compléments INP et documents supplémentaires — tout ce qui demande un dossier rempli et des
+annonces réelles. Plus les deux évaluations reportées : onglets natifs / `@expo/ui`, et le typage de
+`Theme.ts`.
 
 ## Limites écrites
 

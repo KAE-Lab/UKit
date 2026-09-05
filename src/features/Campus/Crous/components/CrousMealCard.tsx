@@ -95,16 +95,17 @@ export function CrousMealCard({ mealTitle, categories, mealType, theme }: CrousM
                     {cat.dishes.length > 0 ? cat.dishes.map((dish: string, dIdx: number) => {
                         const icon = getDishIcon(dish);
                         return (
-                            // eslint-disable-next-line ukit/no-style-literals -- 6 : ecart mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel
-                            <View key={dIdx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 }}>
+                            // 6 en dur jusqu'a 6.1-E, deux fois dans cette carte : `space.xs` (4)
+                            // pour l'interligne des plats et pour l'ecart icone -> texte (inventaire
+                            // visuel 3.5, ou les deux valeurs 4 et 6 coexistaient sans raison).
+                            <View key={dIdx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
                                 {/* Le vegetarien est le seul plat qui porte une couleur : c'est un etat, donc
                                     un ton du theme et non un vert Material en dur (jalon 6-K). */}
                                 <MaterialCommunityIcons
                                     name={icon}
                                     size={16}
                                     color={icon === 'leaf' ? theme.success : theme.fontSecondary}
-                                    // eslint-disable-next-line ukit/no-style-literals -- 6 : ecart mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel
-                                    style={{ marginRight: 6, marginTop: tokens.space.xxs }}
+                                    style={{ marginRight: tokens.space.xs, marginTop: tokens.space.xxs }}
                                 />
                                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, flex: 1, lineHeight: 20 }}>{dish}</Text>
                             </View>

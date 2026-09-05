@@ -69,11 +69,13 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
             shadowOpacity: 0, 
             borderBottomWidth: 0,
         },
-        /* eslint-disable ukit/no-style-literals -- 10 : l'en-tete de reference, mesure a l'inventaire visuel, hors echelle assume ; la passe 6.1-C ne deplace pas un pixel */
-        headerTitleContainerStyle: { paddingTop: 10 },
-        headerLeftContainerStyle: { paddingTop: 10 },
-        headerRightContainerStyle: { paddingTop: 10 },
-        /* eslint-enable ukit/no-style-literals */
+        // Les trois calages de l'en-tete valaient 10, hors echelle : `space.sm` (8) les rassemble
+        // sur un pas. Deux points de moins sur un en-tete de 70 ne deplacent pas le titre a l'oeil,
+        // et c'est ce qui a decide l'arbitrage (6.1-E) — la valeur unique vaut mieux que la valeur
+        // exacte quand l'ecart n'est pas perceptible.
+        headerTitleContainerStyle: { paddingTop: tokens.space.sm },
+        headerLeftContainerStyle: { paddingTop: tokens.space.sm },
+        headerRightContainerStyle: { paddingTop: tokens.space.sm },
         headerTitleAlign: 'center',
     };
 
