@@ -14,7 +14,6 @@ import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { ApparitionEnFondu } from '../../../shared/ui/ApparitionEnFondu';
-import { DELAI_AVANT_INDICATEUR_MS } from '../../../shared/ui/indicateurRetarde';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import { SourceFailureNotice, type NoticeAction } from '../../../shared/ui/SourceFailureNotice';
 import Translator from '../../../shared/i18n/Translator';
@@ -186,9 +185,6 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
          */
         const relecture = this.state.schedule !== null && id === this.idAffiche;
 
-        // Le depart de l'attente se note **ici**, dans le gestionnaire : le rendu ne doit rien muter,
-        // et c'est cet instant qui decide si le contenu reviendra en fondu (`enveloppeApresAttente`).
-        this.attenteDepuis = relecture ? null : Date.now();
         // Sur une relecture, `schedule` est repose **a sa propre valeur** : rien ne disparait, et rien
         // n'est rendu a nouveau pour autant.
         this.setState({ schedule: relecture ? this.state.schedule : null, failure: null, loading: true, controller }, async () => {
@@ -255,10 +251,6 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     };
 
     applySchedule(issue: ScheduleIssue) {
-        this.attenteAEteVisible = this.attenteDepuis !== null
-            && Date.now() - this.attenteDepuis >= DELAI_AVANT_INDICATEUR_MS;
-        this.attenteDepuis = null;
-
         if (issue.data == null) {
             this.idAffiche = null;
             this.setState({ schedule: null, loading: false, controller: null, cacheDate: null, manquants: [], failure: issue.failure });
@@ -497,12 +489,8 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         );
     }
 
-    /** Quand l'attente en cours a commence, ou `null` si rien n'attend. Voir `enveloppeApresAttente`. */
-    private attenteDepuis: number | null = null;
     /** La cle de ce qui est **affiche** : elle dit si un chargement remplace le contenu ou le relit. */
     private idAffiche: string | null = null;
-    /** L'attente qui vient de s'achever a-t-elle dure assez pour montrer un indicateur ? */
-    private attenteAEteVisible = false;
 
     renderContent(listHeader: React.ReactNode) {
         // Ce que l'etablissement publie gagne sur tout le reste, et l'ordre n'est pas indifferent :
@@ -542,26 +530,21 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     }
 
     /**
-     * Le planning revient **en fondu seulement si l'attente s'est vue**.
+     * Le planning revient **en fondu a chaque jour affiche**.
      *
-     * Chaque chargement vide la liste (`schedule: null`), y compris un simple changement de jour : la
-     * question n'est donc pas « est-ce le premier rendu » mais **combien de temps l'ecran a-t-il
-     * attendu**. La regle est la meme que celle de l'indicateur
-     * ([`indicateurRetarde.ts`](../../../shared/ui/indicateurRetarde.ts)), et c'est ce qui la rend
-     * coherente :
-     *
-     *   - **sous le seuil** — un jour deja en cache — rien n'a ete montre, donc il n'y a rien a
-     *     adoucir : le contenu revient sec, et c'est exactement ce qu'on veut, puisque l'operation
-     *     *a ete* instantanee. Fondre ici ajouterait 200 ms a un aller-retour de cinquante, et ferait
-     *     paraitre lent ce qui ne l'etait pas ;
-     *   - **au-dela** — un jour a chercher sur le reseau — l'indicateur a paru, et le contenu qui le
-     *     remplace se fond, comme partout ailleurs.
-     *
-     * Les cartes du planning n'ont pas d'animation d'entree propre, contrairement a celles du Campus :
-     * c'est ici, et pas la, que le fondu manque.
+     * 6.1-E ne fondait que si l'attente s'etait vue ; sur appareil, ca se lisait comme une animation
+     * qui joue une fois sur deux. Tranche par le proprietaire du produit le 2026-09-06 : chaque
+     * chargement vide la liste puis la remplit, c'est une couture a chaque fois. La cle est
+     * l'identifiant du contenu affiche : un autre jour remonte l'enveloppe et rejoue l'entree, une
+     * relecture du meme jour ne clignote pas. `flex: 1` parce que le contenu s'etire dans sa boite,
+     * et qu'une enveloppe sans hauteur lui en donnait une nulle.
      */
     enveloppeApresAttente(contenu: React.ReactNode) {
-        return <ApparitionEnFondu actif={this.attenteAEteVisible}>{contenu}</ApparitionEnFondu>;
+        return (
+            <ApparitionEnFondu key={this.idAffiche ?? 'planning'} style={{ flex: 1 }}>
+                {contenu}
+            </ApparitionEnFondu>
+        );
     }
 
     render() {

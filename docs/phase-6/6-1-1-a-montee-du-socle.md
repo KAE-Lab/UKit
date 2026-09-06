@@ -1,8 +1,10 @@
 # 6.1.1-A — La montée du socle
 
 > **Jalon livré le 2026-09-06 — code, portes et documentation ; protocole joué sur iPhone sous
-> l'Expo Go du store le soir même** (le projet s'ouvre, les deux parcours froids passent, navigation
-> sans écart) ; **Android reste à jouer**, avec un build de développement neuf. Portes au moment de la
+> l'Expo Go du store le soir même**, en trois passes : le projet s'ouvre, les deux parcours froids
+> passent, navigation sans écart, et les trois retours de la soirée (réinitialisation, thème, jour
+> libre) corrigés puis revérifiés — « tout est parfait ». **Android reste à jouer**, par un second
+> testeur, avec l'Expo Go du store. Portes au moment de la
 > livraison : `tsc` vert, ESLint à zéro, 562 tests, parité 13/13, `expo-doctor` 21/21, `npx expo
 > export` sur Android et iOS, `npm ci` et `npm run build` de la console, les 12 tests des sondes.
 > Ce que la réalité a corrigé au texte est en fin de document, sous « Écarts constatés ».
@@ -223,7 +225,13 @@ Mesurés le 2026-09-06, en jouant la montée. Le texte ci-dessus est laissé tel
 - **Le thème du téléphone se mélangeait à celui de l'application** : alertes, clavier et sélecteurs
   suivaient l'appareil. `setTheme` impose désormais le thème au natif (`Appearance.setColorScheme`),
   `userInterfaceStyle` passe à `automatic` ([theme.md](../theme.md#changer-de-thème)).
-- **Le certificat de scolarité ne se range pas au parcours froid**, chez les deux établissements.
-  Les deux Blueprints rejoués depuis le poste rendent le PDF : la source est saine, la couture sur
-  appareil ne l'est pas. Ouvert au [registre](../defauts-fonctionnels.md), à lire dans la ligne
-  `[certificat]` de Metro, pour 6.1.1-B.
+- **Le certificat de scolarité paraissait ne plus se ranger** : il se range, une demi-minute après
+  la barre du parcours froid, derrière les deux widgets — le comportement écrit. Élucidé par le
+  propriétaire du produit ; une relecture forcée des widgets qui pouvait être abandonnée à tort est
+  corrigée au passage ([registre](../defauts-fonctionnels.md)).
+- **Un jour libre lointain du Planning n'affichait que son icône** : l'enveloppe du fondu n'avait
+  pas de hauteur, et le glissement était devenu `FadeInDown`. Fondu seul, enveloppe en `flex: 1` ;
+  **vérifié sur iPhone**.
+- **Le Planning fond à chaque jour** — décision du propriétaire du produit : la règle « seulement
+  si l'attente s'est vue » de 6.1-E donnait une animation qui joue une fois sur deux. Écrite dans
+  [theme.md](../theme.md#les-décisions-durables).

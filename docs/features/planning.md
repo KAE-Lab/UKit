@@ -475,7 +475,8 @@ autre masquait.
 L'écran ne se vide donc que si le chargement porte sur **autre chose** — un autre jour, une autre
 semaine, un autre groupe. Relire la même clé garde le contenu affiché jusqu'à son remplacement : il
 est juste, puisque c'est la même journée. Et l'attente reste alors **silencieuse** — ni indicateur, ni
-fondu — parce que rien à l'écran ne change ([theme.md](../theme.md#les-décisions-durables)).
+fondu — parce que rien à l'écran ne change. Un **autre** jour, lui, arrive toujours en fondu, qu'il
+vienne du cache ou du réseau ([theme.md](../theme.md#les-décisions-durables)).
 
 ## Limites connues
 

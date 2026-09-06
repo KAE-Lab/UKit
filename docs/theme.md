@@ -612,14 +612,15 @@ Acquises, et qui ont coûté à être trouvées :
   ([`transitions.ts`](../src/shared/ui/transitions.ts)) anime tout le commit suivant, et reste
   réservé aux **bascules de structure**.
 
-  **Le fondu accompagne une attente qui s'est vue, et lui seule** — c'est la règle qui unifie les deux
-  points précédents, trouvée en vérifiant le Planning sur appareil. Chaque chargement y vide la liste,
-  y compris un simple changement de jour : la question n'est donc pas « est-ce la première fois »
-  mais **combien de temps l'écran a attendu**, et le seuil est celui de l'indicateur. Sous le seuil,
-  rien n'a été montré, donc il n'y a rien à adoucir : le contenu revient sec, ce qui est exact
-  puisque l'opération *a été* instantanée — fondre y ajouterait deux cents millisecondes à un
-  aller-retour de cinquante, et ferait paraître lent ce qui ne l'était pas. Au-delà, l'indicateur a
-  paru, et ce qui le remplace se fond.
+  **Le fondu accompagne chaque couture, qu'elle se soit fait attendre ou non.** 6.1-E avait écrit
+  l'inverse — fondre seulement si l'indicateur avait paru, parce qu'un aller-retour de cinquante
+  millisecondes n'a rien à adoucir — et l'avait vérifié sur appareil ; le retour d'usage du
+  2026-09-06 l'a corrigé : sur le Planning, la règle se lisait comme une animation qui joue une fois
+  sur deux, et deux cents millisecondes de fondu n'y font pas paraître lent ce qui était instantané.
+  Chaque jour affiché fond donc à son arrivée, par une clé sur le contenu affiché — une relecture du
+  même jour ne clignote pas. Et le fondu est un **fondu seul** : le glissement de huit points que
+  6.1-E posait en valeur initiale n'était pas animé par `FadeIn`, et sa forme animée (`FadeInDown`,
+  imposée par Reanimated 4.5) a fait perdre son texte à un jour libre sur iPhone.
 - **Nos contrôles sont dessinés, et leur piste est une pilule** (6.1-E). Le `Switch` et le `Slider`
   natifs rendent l'apparence de **chaque** plateforme, et celle d'Android a l'air d'un autre âge à
   côté de celle d'iOS : [`Interrupteur`](../src/shared/ui/Interrupteur.tsx) et

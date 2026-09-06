@@ -156,7 +156,17 @@ export function useWidgets(pret: boolean): EtatDesWidgets {
     const rafraichir = useCallback((options: { readonly force?: boolean } = {}): Promise<IssueDeSerie> => {
         // Un seul rafraichissement a la fois. Le moteur serialiserait de toute facon, mais deux
         // boucles concurrentes se disputeraient l'indicateur d'attente et l'ecrasement du cache.
-        if (!pretRef.current || enCoursRef.current) return Promise.resolve('interrompue');
+        if (!pretRef.current) return Promise.resolve('interrompue');
+        if (enCoursRef.current) {
+            // Une relance ordinaire est perdue sans dommage : la serie en vol lit deja la meme chose.
+            // Une relance FORCEE, non : elle porte une raison (le dossier vient d'etre lu) et un
+            // enchainement (le certificat, qui ne part que sur `terminee`). Elle se range derriere
+            // la serie en vol au lieu d'etre declaree interrompue — c'est ce qui laissait le
+            // certificat sans jamais partir quand la premiere serie, armee au LOGIN_SUCCESS,
+            // attendait encore le moteur derriere le parcours froid (mesure sur iPhone le 2026-09-06).
+            if (options.force !== true) return Promise.resolve('interrompue');
+            return enVolRef.current.then(() => rafraichir(options));
+        }
 
         const controleur = new AbortController();
         serieRef.current = controleur;

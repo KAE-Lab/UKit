@@ -22,6 +22,11 @@ La 6.1.1 : le socle monte, rien ne se voit ([docs/phase-6/6-2-mise-a-plat.md](do
   laissait Android sans comportement de cadre.
 - **Le thème choisi s'applique aussi aux éléments du système** — alertes, clavier, sélecteurs de
   date. Un téléphone en sombre sous une application en clair ne mélange plus les deux.
+- **Chaque jour du Planning arrive en fondu**, et plus seulement ceux qui ont fait attendre : la
+  transition ne semble plus jouer une fois sur deux.
+- **Le certificat de scolarité ne peut plus rester en attente indéfinie** après un parcours froid :
+  la relecture forcée des widgets qui le précède se range derrière une lecture en cours au lieu
+  d'être abandonnée.
 
 ## [6.1.0] - 2026-09-06
 

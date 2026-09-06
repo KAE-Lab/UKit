@@ -577,19 +577,31 @@ c'est tout le défaut — une estimation devenue fausse, pas une mécanique cass
 À recalibrer sur les durées mesurées après 6.1-D. Rangé pour la version visuelle sur décision du
 propriétaire du produit : c'est du rythme, pas du comportement.
 
-### Le certificat de scolarité ne se range plus au parcours froid
+### ~~Le certificat de scolarité arrive longtemps après le parcours froid~~ — ce n'était pas un défaut, élucidé le 2026-09-06
 
 Constaté sur iPhone sous Expo Go le 2026-09-06, en jouant le protocole de la montée de socle
-([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)), **chez les deux établissements** ; le propriétaire du
-produit pense que le défaut précède la montée. Ce qui est établi : les deux Blueprints
-`ukit.portail.*.documents` rejoués depuis le poste le même jour rendent le PDF (94 et 112 ko), donc
-la source et le lien lu dans la page sont sains ; ajouter une pièce à la main et l'ouvrir fonctionne,
-donc l'écriture et le lecteur aussi. Reste la couture sur appareil, et
-[`CertificatService`](../src/features/Scolarite/services/CertificatService.ts) écrit **une ligne
-`[certificat]` pour chaque issue** — sauté parce que le moteur joue autre chose, run en échec avec
-son code, rien à ranger, déjà rangé, écriture impossible : c'est cette ligne, lue dans Metro après
-« Actualiser mon dossier », qui nomme la cause. Ne pas deviner avant de l'avoir lue. À prendre en
-[6.1.1-B](phase-6/6-1-1-b-signalements.md), qui touche déjà ces fichiers.
+([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)), **chez les deux établissements** : rien à la fin du
+parcours froid, puis la pièce « super longtemps après ». Les deux Blueprints `ukit.portail.*.documents`
+rejoués depuis le poste rendent le PDF (94 et 112 ko) : la source est saine. Ce qui est établi dans
+le code : le certificat n'est pas un widget comme les autres. Il ne part **qu'après** un parcours
+froid, derrière les deux widgets, et son run dure une vingtaine de secondes — c'est écrit dans
+[scolarite.md](features/scolarite.md), et c'est ce que l'observation a retrouvé : la pièce arrive,
+une demi-minute après la barre. Le « défaut » était une attente mal placée, et le propriétaire du
+produit l'a conclu lui-même une fois le délai laissé. Une chose a tout de même été corrigée au
+passage, parce qu'elle était réelle même si elle n'a pas mordu ici : la relecture **forcée** des
+widgets qui précède le certificat ([`useWidgets`](../src/features/Scolarite/widgets/useWidgets.ts))
+était déclarée `interrompue` dès qu'une série était en vol, et le certificat ne part que sur
+`terminee` ; elle se range désormais derrière la série en vol.
+
+### ~~Un jour libre du Planning n'affichait que son icône~~ — corrigé le 2026-09-06
+
+Constaté sur iPhone le 2026-09-06 sur les jours **loin** de la date courante — ceux qui viennent du
+réseau, donc ceux qui fondaient —, jamais sur les jours proches servis sans fondu. Deux causes
+possibles dans la même enveloppe, corrigées ensemble : l'enveloppe du fondu n'avait **pas de
+hauteur** (`flex: 1` manquait, et le contenu s'étire dans sa boîte), et le glissement porté par
+`FadeInDown` depuis la montée de socle — `FadeIn` ne l'animait pas, Reanimated 4.5 l'exige animé.
+Le fondu est redevenu un fondu seul, et l'enveloppe prend la place de son contenu. Vérifié sur
+iPhone le soir même : plus un jour libre sans texte, où qu'on aille.
 
 ### ~~Le clavier recouvrait la recherche des filtres d'UE sur Android~~ — corrigé le 2026-09-06, à confirmer sur appareil
 
