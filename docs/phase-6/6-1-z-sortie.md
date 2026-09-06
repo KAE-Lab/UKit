@@ -1,5 +1,10 @@
 # 6.1-Z — Sortie de la 6.1
 
+> **Jalon livré le 2026-09-06** — le protocole ci-dessous a été déroulé, les versions posées
+> (`package.json`, `app.config.ts`, `VERSION`, la section datée du CHANGELOG) et les builds **soumis
+> aux deux stores, en attente de review**. La mise en ligne effective ne dépend plus de nous ; le
+> message de service `info` de l'étape 8 se publie une fois qu'elle est faite.
+>
 > **La clôture, et le protocole de release écrit une fois pour toutes.** La soirée du 31 août a
 > appris cinq choses en cinq heures ; ce document est là pour qu'aucune ne se réapprenne.
 
@@ -27,6 +32,14 @@ livrés et vérifiés ; [D](6-1-d-publication.md) livré par publication, avant.
    précédente — « la 6.1 est disponible » — plutôt qu'une annonce.
 
 ## Ce qui vient après
+
+**La 6.1.1 s'intercale**, décidée le 2026-09-06 : une version courte et sans rien de visible, qui
+monte le socle d'Expo 54 à 57 — l'Expo Go des stores est passé en SDK 57 le 2026-09-04 et l'itération
+sur iPhone n'a plus de repli —, corrige la synchronisation automatique du calendrier que deux
+utilisateurs ont signalée, et branche l'entrée des retours. Elle est cadrée par la
+[mise à plat du 2026-09-06](6-2-mise-a-plat.md) et spécifiée en
+[A](6-1-1-a-montee-du-socle.md), [B](6-1-1-b-signalements.md), [C](6-1-1-c-retours.md),
+[Z](6-1-1-z-sortie.md).
 
 **La 6.2 est une version entière consacrée au mouvement de l'interface**, décidée le 2026-09-04 en
 vérifiant [6.1-E](6-1-e-finitions-interface.md) : ce jalon a rendu l'application correcte, il ne l'a
