@@ -464,6 +464,7 @@ document.
 | [docs/blueprints.md](docs/blueprints.md) | les fichiers d'instructions : frontière, écriture, publication d'une correction |
 | [docs/backend.md](docs/backend.md) | la base de publication : schéma, politiques, clés, limites |
 | [docs/pilotage.md](docs/pilotage.md) | le pilotage à distance : messages de service, audience testeurs, ciblage, journal, console, sondes |
+| [docs/adaptation-campus.md](docs/adaptation-campus.md) | adapter un nouveau campus : ce qui se mesure sans compte, le compte prêté et son engagement, l'ordre de publication |
 | [docs/phase-6/](docs/phase-6/README.md) | le cadrage de la migration vers les Blueprints, jalon par jalon |
 | [docs/theme.md](docs/theme.md) | tokens, palettes, composants partagés, **recette d'écran** |
 | [docs/inventaire-visuel.md](docs/inventaire-visuel.md) | l'état visuel mesuré du dépôt, avant le socle : littéraux, divergences, manques |
