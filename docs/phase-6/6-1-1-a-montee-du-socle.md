@@ -3,8 +3,9 @@
 > **Jalon livré le 2026-09-06 — code, portes et documentation ; protocole joué sur iPhone sous
 > l'Expo Go du store le soir même**, en trois passes : le projet s'ouvre, les deux parcours froids
 > passent, navigation sans écart, et les trois retours de la soirée (réinitialisation, thème, jour
-> libre) corrigés puis revérifiés — « tout est parfait ». **Android reste à jouer**, par un second
-> testeur, avec l'Expo Go du store. Portes au moment de la
+> libre) corrigés puis revérifiés — « tout est parfait ». **Android joué le même jour par un second
+> testeur**, avec l'Expo Go du store : rien à signaler. Le jalon est clos ; reste le renommage de
+> la branche côté GitHub, à la fusion. Portes au moment de la
 > livraison : `tsc` vert, ESLint à zéro, 562 tests, parité 13/13, `expo-doctor` 21/21, `npx expo
 > export` sur Android et iOS, `npm ci` et `npm run build` de la console, les 12 tests des sondes.
 > Ce que la réalité a corrigé au texte est en fin de document, sous « Écarts constatés ».

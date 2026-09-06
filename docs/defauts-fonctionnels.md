@@ -603,14 +603,14 @@ hauteur** (`flex: 1` manquait, et le contenu s'étire dans sa boîte), et le gli
 Le fondu est redevenu un fondu seul, et l'enveloppe prend la place de son contenu. Vérifié sur
 iPhone le soir même : plus un jour libre sans texte, où qu'on aille.
 
-### ~~Le clavier recouvrait la recherche des filtres d'UE sur Android~~ — corrigé le 2026-09-06, à confirmer sur appareil
+### ~~Le clavier recouvrait la recherche des filtres d'UE sur Android~~ — corrigé le 2026-09-06
 
 Trouvé par le relevé de la montée de socle ([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)), pas
 sur appareil : `FiltersScreen` était le **seul** des cinq `KeyboardAvoidingView` du dépôt à laisser
 Android sans comportement (`Platform.OS === 'ios' ? 'padding' : undefined`), alors que les quatre
 autres écrivent la même doctrine — `padding` sur les deux plateformes, parce que depuis l'edge-to-edge
-Android ne redimensionne plus la fenêtre tout seul. Aligné sur les quatre autres ; le protocole
-appareil du jalon le vérifie, et c'est lui qui a le dernier mot.
+Android ne redimensionne plus la fenêtre tout seul. Aligné sur les quatre autres, et vérifié sur
+Android le jour même par le second testeur du jalon.
 
 ## Limites connues, qui ne sont pas des défauts
 

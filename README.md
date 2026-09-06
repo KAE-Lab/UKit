@@ -349,8 +349,8 @@ livré ; elle est mise à jour à chaque contribution.
   et pourtant c'est ce qui casse le plus : quatre ruptures de bibliothèques ne se voyaient qu'à
   l'exécution — dont une copie de fichier devenue asynchrone sans que le compilateur le dise — et
   TypeScript 6 a déplacé la porte de typage en silence. La procédure est écrite pour le prochain saut.
-  **Vérifié sur iPhone sous l'Expo Go du store le 2026-09-06** — la boucle courte est restaurée ;
-  Android reste à jouer.
+  **Vérifié le 2026-09-06 sous l'Expo Go du store, sur iPhone et sur Android** — la boucle courte
+  est restaurée sur les deux plateformes.
   [docs/plateforme.md](docs/plateforme.md#monter-de-sdk)
 - [x] **Passe de code** (6.1-C) — ce que la documentation portait comme limites connues, fermé ou
   décidé : un **retour au premier plan** partagé, qui distingue le retour d'arrière-plan d'une invite
