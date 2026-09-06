@@ -8,7 +8,7 @@ Ce fichier a été ouvert avec le socle de documentation : les versions antérie
 pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 [Releases GitHub](https://github.com/KAE-Lab/UKit/releases) et dans l'historique Git.
 
-## [Non publié]
+## [6.1.0] - 2026-09-06
 
 La consolidation de la v6 ([docs/phase-6/6-1-mise-a-plat.md](docs/phase-6/6-1-mise-a-plat.md)) : ce que
 la première soirée en production a montré de fragile, réparé avant tout contenu nouveau.
