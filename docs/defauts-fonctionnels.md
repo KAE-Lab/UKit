@@ -560,6 +560,23 @@ qui ne se distingue pas d'une panne — et le remède existe déjà à côté : 
 [`EncartSession`](../src/features/Scolarite/components/EncartSession.tsx), en `variant="card"` au-dessus
 de la fiche.
 
+### La barre du parcours froid paraît se figer vers 30 %
+
+Constaté le 2026-09-06, et il a coûté un faux diagnostic : le parcours a été interrompu parce qu'il
+semblait bloqué, alors qu'il se déroulait normalement.
+
+La table de [`ScolariteLoadingScreen`](../src/features/Scolarite/components/ScolariteLoadingScreen.tsx)
+donne à la phase « connexion » un plafond de 34 % et une durée de **18 secondes**, avec un
+amortissement en fin de course. La barre passe donc dix-huit secondes à s'approcher lentement de
+34 %, et l'œil lit un arrêt là où il y a une décélération voulue.
+
+Ce n'était pas faux quand la table a été écrite : le parcours froid durait alors **46 secondes**.
+Depuis [6.1-D](phase-6/6-1-d-publication.md), il en dure **26**. Les paliers n'ont pas suivi, et
+c'est tout le défaut — une estimation devenue fausse, pas une mécanique cassée.
+
+À recalibrer sur les durées mesurées après 6.1-D. Rangé pour la version visuelle sur décision du
+propriétaire du produit : c'est du rythme, pas du comportement.
+
 ## Limites connues, qui ne sont pas des défauts
 
 - **La précision horaire d'une bibliothèque fermée reste en français.** Le fournisseur ne publie

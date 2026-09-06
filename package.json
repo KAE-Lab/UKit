@@ -30,8 +30,8 @@
   },
   "main": "node_modules/expo/AppEntry.js",
   "dependencies": {
-    "@aetherius/engine": "^0.5.7",
-    "@aetherius/react-native": "^0.5.7",
+    "@aetherius/engine": "^0.5.9",
+    "@aetherius/react-native": "^0.5.9",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "^8.4.4",
