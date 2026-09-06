@@ -3,7 +3,7 @@ export const URL = {
     CONTACT_EMAIL: 'mailto:contact@kaelab.dev',
     UKIT_WEBSITE: 'https://ukit-bordeaux.fr',
     KAELAB_WEBSITE: 'https://kaelab.dev',
-    LEGAL_NOTICE: 'https://github.com/KAE-Lab/UKit/blob/master/PRIVACY.md',
+    LEGAL_NOTICE: 'https://github.com/KAE-Lab/UKit/blob/main/PRIVACY.md',
     CROUSTILLANT_WEBSITE: 'https://croustillant.menu',
 };
 

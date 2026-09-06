@@ -40,7 +40,7 @@ Changer son mot de passe se fait ensuite dans la console, page Compte.
 ## Déployer
 
 [`.github/workflows/console.yml`](../.github/workflows/console.yml) construit et déploie sur GitHub
-Pages à chaque poussée sur `master` qui touche `console/`, à l'adresse
+Pages à chaque poussée sur `main` qui touche `console/`, à l'adresse
 `https://kae-lab.github.io/UKit/`. À activer une fois à la main : *Settings → Pages → Source :
 GitHub Actions*, et les deux **variables** de dépôt `SUPABASE_URL` et `SUPABASE_ANON_KEY` (*Settings
 → Secrets and variables → Actions → Variables*). Ce sont des valeurs publiques ; la clé de service ne

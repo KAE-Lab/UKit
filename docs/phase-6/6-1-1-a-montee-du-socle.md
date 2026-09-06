@@ -1,5 +1,12 @@
 # 6.1.1-A — La montée du socle
 
+> **Jalon livré le 2026-09-06 — code, portes et documentation ; protocole joué sur iPhone sous
+> l'Expo Go du store le soir même** (le projet s'ouvre, les deux parcours froids passent, navigation
+> sans écart) ; **Android reste à jouer**, avec un build de développement neuf. Portes au moment de la
+> livraison : `tsc` vert, ESLint à zéro, 562 tests, parité 13/13, `expo-doctor` 21/21, `npx expo
+> export` sur Android et iOS, `npm ci` et `npm run build` de la console, les 12 tests des sondes.
+> Ce que la réalité a corrigé au texte est en fin de document, sous « Écarts constatés ».
+
 > **Le jalon qui rend l'outil de travail.** L'Expo Go des stores est passé en SDK 57 le 2026-09-04 ;
 > l'application est en SDK 54, et **iOS n'a aucun chemin de repli**. Ce jalon monte le socle,
 > restaure la boucle courte sur les deux plateformes, et solde au passage toute la dette d'outillage
@@ -168,3 +175,55 @@ directives `'worklet'` par Babel.
   0.86 ne dit rien de 0.90.
 - **Rien ici ne garantit le prochain saut.** La procédure écrite le rend moins cher, pas gratuit :
   l'Expo Go des stores continuera d'avancer sans nous prévenir.
+
+## Écarts constatés à la livraison
+
+Mesurés le 2026-09-06, en jouant la montée. Le texte ci-dessus est laissé tel qu'il a été écrit.
+
+- **T5 était faux.** `console/package-lock.json` porte `vite 8.2.2` depuis le commit de 6.1-B ;
+  `npm ci --prefix console` puis `npm run build` passent. Le défaut latent n'existait plus, la preuve a
+  été jouée quand même.
+- **T2 : le patch n'est pas celui annoncé.** Le changelog d'Expo attribue le correctif mémoire de
+  Hermes v1 à `expo@57.0.9`, et 57.0.17 au démarrage de développement. Épinglé `~57.0.20`, qui couvre
+  les deux.
+- **T4 compte trois sites, pas deux** — [`CampusLayoutComponents.tsx`](../../src/features/Campus/components/CampusLayoutComponents.tsx)
+  raisonne aussi sur l'edge-to-edge — **et un quatrième cadre laissait Android sans comportement** :
+  [`FiltersScreen.tsx`](../../src/features/Settings/screens/FiltersScreen.tsx), aligné sur la doctrine
+  des quatre autres, à confirmer au point 4 du plan de test. Entrée au
+  [registre](../defauts-fonctionnels.md).
+- **Cinq ruptures de bibliothèques que la spécification ne listait pas**, et qu'aucune porte de typage
+  ne voyait — la liste, avec leur correction, est dans [plateforme.md](../plateforme.md#monter-de-sdk) :
+  `expo-calendar` (souches qui lèvent, `/legacy`), `expo-file-system` (`copy` asynchrone,
+  `copySync`), `expo-blur` (`blurMethod`), React Native 0.86 (`absoluteFillObject`), Reanimated 4.5
+  (`FadeInDown`). Plus `expo-modules-core`, qui n'est plus hissé : l'identifiant d'installation vient
+  d'`expo-crypto`, **un module natif de plus**, embarqué par l'Expo Go du store.
+- **TypeScript 6, que `expo-doctor` exige, passe `strict` à vrai par défaut** : plus de deux cents
+  erreurs sans qu'une ligne change. `tsconfig.json` écrit `strict: false` ; les onze vrais défauts
+  révélés — `themeName` typé `string`, `JSON.parse(null)`, un `includes` sur `undefined` — sont
+  corrigés ([qualite.md](../qualite.md#typage)).
+- **`expo/fetch` est le `fetch` global depuis le SDK 56.** Décision : garder le défaut et le vérifier
+  au point 6 du protocole ; le repli `EXPO_PUBLIC_USE_RN_FETCH=1` est écrit dans plateforme.md.
+- **iOS 16.4 minimum** (SDK 56) : la seule chose visible de la montée, dans le CHANGELOG.
+- **T7 :** `ts-node` n'était pas à déplacer mais à **retirer** — rien ne l'invoque ; `@react-navigation/drawer`
+  et `react-native-textinput-effects` (T8) n'étaient importés nulle part et sortent aussi. `prettier`
+  monte en 3.x avec `bracketSameLine`, sans reformater une ligne. `dotenv` 17 passe en devDependency
+  et se charge en silence. `typescript` et `@types/react` sont déclarés.
+- **`@expo/vector-icons` est déprécié** (SDK 56) mais encore épinglé par le 57 : gardé, en limite écrite.
+- **La clé `splash` historique sort du type `ExpoConfig`** : le natif la lit toujours, l'écran animé
+  aussi, par un type local ; le greffon changerait le rendu et n'est pas adopté.
+- **Le renommage en `main`** : les références vivantes sont changées ici (`console.yml`, `urls.ts`,
+  quatre documents) ; le renommage côté GitHub et la reprise locale sont l'étape suivante, après la
+  fusion, dans cet ordre — l'inverse arrête le déploiement de la console en silence.
+
+### Ce que le premier passage sur iPhone a ajouté (soir du 2026-09-06)
+
+- **La réinitialisation complète du menu de développement fermait Expo Go** : `Updates.reloadAsync()`
+  ne rejetait plus sous le SDK 57, il quittait l'hôte. Remplacé par `reloadAppAsync` d'`expo`, qui
+  recharge partout ; **`expo-updates` sort des dépendances** — c'était son seul appelant.
+- **Le thème du téléphone se mélangeait à celui de l'application** : alertes, clavier et sélecteurs
+  suivaient l'appareil. `setTheme` impose désormais le thème au natif (`Appearance.setColorScheme`),
+  `userInterfaceStyle` passe à `automatic` ([theme.md](../theme.md#changer-de-thème)).
+- **Le certificat de scolarité ne se range pas au parcours froid**, chez les deux établissements.
+  Les deux Blueprints rejoués depuis le poste rendent le PDF : la source est saine, la couture sur
+  appareil ne l'est pas. Ouvert au [registre](../defauts-fonctionnels.md), à lire dans la ligne
+  `[certificat]` de Metro, pour 6.1.1-B.

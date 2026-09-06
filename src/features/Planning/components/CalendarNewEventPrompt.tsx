@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Platform, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import * as Calendar from 'expo-calendar';
+import * as Calendar from 'expo-calendar/legacy';
 import Toast from 'react-native-root-toast';
 
 import Translator from '../../../shared/i18n/Translator';

@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
         padding: tokens.space.md,
     },
     attente: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         justifyContent: 'center',
         alignItems: 'center',
     },

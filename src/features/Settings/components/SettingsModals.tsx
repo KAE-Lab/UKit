@@ -149,7 +149,7 @@ export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, languag
 );
 
 // ── Popup Calendrier ────────────────────────────────────────────────────
-export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selectedCalendar, setCalendar }: { theme: ThemeSettings; popupVisible: boolean; popupClose: () => void; selectedCalendar: string | number; setCalendar: (cal: import('expo-calendar').Calendar | 'UKit') => void }) => {
+export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selectedCalendar, setCalendar }: { theme: ThemeSettings; popupVisible: boolean; popupClose: () => void; selectedCalendar: string | number; setCalendar: (cal: import('expo-calendar/legacy').Calendar | 'UKit') => void }) => {
     const calendars = SettingsManager.getCalendars().filter((cal) => cal.title !== 'UKit');
     const ukitCalendar = SettingsManager.getCalendars().find((cal) => cal.title === 'UKit');
 

@@ -21,7 +21,11 @@
  * Voir docs/backend.md et docs/phase-6/6-b-supabase.md.
  */
 
-import 'dotenv/config';
+import { config as chargerEnv } from 'dotenv';
+
+// dotenv 17 annonce chaque chargement sur la sortie standard ; un outil de publication doit rester
+// lisible dans un terminal comme dans un journal de CI.
+chargerEnv({ quiet: true });
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

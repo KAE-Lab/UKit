@@ -22,7 +22,11 @@
  * Voir docs/blueprints.md et docs/phase-6/6-c-livraison.md.
  */
 
-import 'dotenv/config';
+import { config as chargerEnv } from 'dotenv';
+
+// dotenv 17 annonce chaque chargement sur la sortie standard ; un outil de publication doit rester
+// lisible dans un terminal comme dans un journal de CI.
+chargerEnv({ quiet: true });
 
 import { config, lirePublic, rest, televerser } from './blueprints/base.mjs';
 import { construireManifeste, estEmbarque, lireTout, memeManifeste, MANIFEST_OBJET } from './blueprints/socle.mjs';

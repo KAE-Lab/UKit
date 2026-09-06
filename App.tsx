@@ -136,7 +136,12 @@ function AnimatedSplashScreen({ children, image }) {
 		}
 	}, []);
 
-	const splashConfig = Constants.expoConfig?.splash || {};
+	// La cle `splash` historique d'app.config.ts : sortie du type `ExpoConfig` au SDK 57, elle reste
+	// servie par le manifeste et lue par le greffon natif quand aucune propriete de greffon ne la
+	// remplace. On la lit telle quelle pour que l'ecran anime prolonge exactement le natif ; le
+	// greffon `expo-splash-screen` changerait le rendu (image centree a largeur fixe), et une montee
+	// de socle ne change rien de visible (docs/plateforme.md).
+	const splashConfig = (Constants.expoConfig as { splash?: SplashHistorique } | null)?.splash ?? {};
 
 	return (
 		<View style={{ flex: 1 }}>
@@ -170,6 +175,9 @@ function AnimatedSplashScreen({ children, image }) {
 		</View>
 	);
 }
+
+/** Ce que l'ecran de demarrage anime reprend de la cle `splash` historique. */
+type SplashHistorique = { backgroundColor?: string; resizeMode?: 'contain' | 'cover' };
 
 function cacheFonts(fonts) {
 	return fonts.map((font) => Font.loadAsync(font));

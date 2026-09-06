@@ -577,6 +577,29 @@ c'est tout le défaut — une estimation devenue fausse, pas une mécanique cass
 À recalibrer sur les durées mesurées après 6.1-D. Rangé pour la version visuelle sur décision du
 propriétaire du produit : c'est du rythme, pas du comportement.
 
+### Le certificat de scolarité ne se range plus au parcours froid
+
+Constaté sur iPhone sous Expo Go le 2026-09-06, en jouant le protocole de la montée de socle
+([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)), **chez les deux établissements** ; le propriétaire du
+produit pense que le défaut précède la montée. Ce qui est établi : les deux Blueprints
+`ukit.portail.*.documents` rejoués depuis le poste le même jour rendent le PDF (94 et 112 ko), donc
+la source et le lien lu dans la page sont sains ; ajouter une pièce à la main et l'ouvrir fonctionne,
+donc l'écriture et le lecteur aussi. Reste la couture sur appareil, et
+[`CertificatService`](../src/features/Scolarite/services/CertificatService.ts) écrit **une ligne
+`[certificat]` pour chaque issue** — sauté parce que le moteur joue autre chose, run en échec avec
+son code, rien à ranger, déjà rangé, écriture impossible : c'est cette ligne, lue dans Metro après
+« Actualiser mon dossier », qui nomme la cause. Ne pas deviner avant de l'avoir lue. À prendre en
+[6.1.1-B](phase-6/6-1-1-b-signalements.md), qui touche déjà ces fichiers.
+
+### ~~Le clavier recouvrait la recherche des filtres d'UE sur Android~~ — corrigé le 2026-09-06, à confirmer sur appareil
+
+Trouvé par le relevé de la montée de socle ([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)), pas
+sur appareil : `FiltersScreen` était le **seul** des cinq `KeyboardAvoidingView` du dépôt à laisser
+Android sans comportement (`Platform.OS === 'ios' ? 'padding' : undefined`), alors que les quatre
+autres écrivent la même doctrine — `padding` sur les deux plateformes, parce que depuis l'edge-to-edge
+Android ne redimensionne plus la fenêtre tout seul. Aligné sur les quatre autres ; le protocole
+appareil du jalon le vérifie, et c'est lui qui a le dernier mot.
+
 ## Limites connues, qui ne sont pas des défauts
 
 - **La précision horaire d'une bibliothèque fermée reste en français.** Le fournisseur ne publie

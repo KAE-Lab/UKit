@@ -51,7 +51,7 @@ La clé `anon` est **publique par conception** : elle est lisible dans n'importe
 pas un secret mal gardé, c'est un identifiant. La frontière de sécurité, ce sont les politiques.
 
 Les deux valeurs arrivent par l'environnement — [`app.config.ts`](../app.config.ts) charge déjà
-`dotenv/config` pour `SENTRY_DSN`. `.env.example` documente les noms ; pour les builds, les variables
+`dotenv` — en silence, `config({ quiet: true })`, depuis la version 17 qui annonce chaque chargement — pour `SENTRY_DSN`. `.env.example` documente les noms ; pour les builds, les variables
 EAS portent les valeurs sur les trois environnements (`production`, `preview`, `development`), en
 visibilité **plaintext** — la clé publiable est un identifiant, pas un secret, et la ranger comme tel
 brouillerait la seule distinction qui compte ici. Commande :

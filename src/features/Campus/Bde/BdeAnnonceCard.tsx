@@ -66,7 +66,7 @@ export function BdeAnnonceCard({ annonce, width, theme, style, onPress }: BdeAnn
                 ) : annonce.info_label ? (
                     /* L'affiche typographique : l'accroche en grand, calee en bas comme un titre
                        d'affiche — voir l'en-tete. */
-                    <View style={{ ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end', padding: tokens.space.md }}>
+                    <View style={{ ...StyleSheet.absoluteFill, justifyContent: 'flex-end', padding: tokens.space.md }}>
                         <Text
                             numberOfLines={5}
                             style={{

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Appearance, Platform, NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Calendar from 'expo-calendar';
+import * as Calendar from 'expo-calendar/legacy';
 import moment from 'moment';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
@@ -26,6 +26,7 @@ import { createUKitCalendar, ecrireEvenementsDansCalendrier } from './CalendarSy
 import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
 import { separerCodeUE } from '../../features/Planning/services/PlanningAssembly';
+import type { ThemeKey } from '../theme/Theme';
 
 // ── CONTEXTE & DEVICE ─────────────────────────────────
 /**
@@ -38,7 +39,8 @@ import { separerCodeUE } from '../../features/Planning/services/PlanningAssembly
  * contexte se redessine, et c'est deja par la que passent le theme et les groupes favoris.
  */
 export const AppContext = React.createContext<{
-    themeName?: string;
+    /** Toujours present : la valeur par defaut ci-dessous ne sert qu'a un rendu hors provider. */
+    themeName: ThemeKey;
     favoriteGroups?: string[];
     filters?: string[];
     etablissement?: string;
@@ -50,7 +52,7 @@ export const AppContext = React.createContext<{
      * ecran deja monte ne voyait un retrait qu'au premier geste qui provoquait un rendu par ailleurs.
      */
     catalogue?: number;
-}>({});
+}>({ themeName: 'light' });
 export const AppContextProvider = AppContext.Provider;
 
 export function deviceLanguage(): string {
@@ -152,7 +154,7 @@ class SettingsManagerService {
     _reglagesEnregistres = false;
     /** L'ecriture des reglages est fermee jusqu'a la fin de `loadSettings` : voir `saveSettings`. */
     _chargementTermine = false;
-    _theme: string;
+    _theme: ThemeKey;
     _favoriteGroups: string[];
     _language: string;
     _openAppOnFavoriteGroup: boolean;
@@ -220,13 +222,24 @@ class SettingsManagerService {
     /** Des reglages ont-ils deja ete ecrits ? Le parcours d'accueil s'en sert pour ne pas ecraser un choix. */
     aDesReglagesEnregistres = (): boolean => this._reglagesEnregistres;
 
-    getTheme = (): string => this._theme;
-    setTheme = (newTheme: string) => { this._theme = newTheme; this.notify('theme', this._theme); };
+    getTheme = (): ThemeKey => this._theme;
+    /**
+     * Le theme choisi s'impose aussi au NATIF. Les alertes, le clavier, les selecteurs de date et les
+     * feuilles du systeme suivent l'apparence de l'appareil, pas la palette de l'application : avec
+     * `userInterfaceStyle: automatic` (app.config.ts) ils suivraient le telephone, et un telephone
+     * sombre sous une application claire melangeait les deux (constate sous Expo Go le 2026-09-06).
+     * `Appearance.setColorScheme` aligne l'apparence du systeme sur le choix de l'utilisateur.
+     */
+    setTheme = (newTheme: ThemeKey) => {
+        this._theme = newTheme;
+        Appearance.setColorScheme(newTheme);
+        this.notify('theme', this._theme);
+    };
     switchTheme = () => { this.setTheme(this._theme === 'light' ? 'dark' : 'light'); };
     getAutomaticTheme = () => Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
 
     isFirstLoad = () => this._firstload;
-    setFirstLoad = (newState) => { this._firstload = newState; this.notify('firstload', this._firstload); };
+    setFirstLoad = (newState: boolean) => { this._firstload = newState; this.notify('firstload', this._firstload); };
 
     isSynchronizingCalendar = () => this._isSynchronizingCalendar;
     getFavoriteGroups = () => this._favoriteGroups;
@@ -364,7 +377,7 @@ class SettingsManagerService {
         let existingCalendarEvents = {};
         try {
             const data = await AsyncStorage.getItem('previousSyncData');
-            existingCalendarEvents = JSON.parse(data) || {};
+            existingCalendarEvents = data === null ? {} : JSON.parse(data) || {};
         } catch { existingCalendarEvents = {}; }
 
         const existingInternalCalendarEvents = Object.values(existingCalendarEvents);
@@ -415,7 +428,7 @@ class SettingsManagerService {
 
         try {
             const data = await AsyncStorage.getItem('previousSyncData');
-            existingCalendarEvents = JSON.parse(data) || {};
+            existingCalendarEvents = data === null ? {} : JSON.parse(data) || {};
         } catch { existingCalendarEvents = {}; }
 
         // L'ecriture vit dans CalendarSyncHelpers, comme les autres pieces sans etat du calendrier.
@@ -611,7 +624,9 @@ class SettingsManagerService {
         // la configuration, puis revenir dans l'application, la rendait en clair jusqu'au
         // redemarrage suivant. Ce sont des preferences d'affichage — elles n'attendent pas qu'un
         // parcours soit termine pour valoir.
-        if (settings.theme) this._theme = settings.theme as string;
+        if (settings.theme) this._theme = settings.theme as ThemeKey;
+        // Au chargement aussi, sans notifier : le theme restaure doit s'imposer au natif des le depart.
+        Appearance.setColorScheme(this._theme);
         if (settings.language) this.setLanguage(settings.language as string);
         if (affichageSeulement) return;
 

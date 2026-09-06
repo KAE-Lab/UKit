@@ -182,7 +182,14 @@ function FiltersScreen({ onAnimatedScroll }: { onAnimatedScroll?: (event: unknow
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
-                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: theme.background }}>
+                <KeyboardAvoidingView
+                    // `padding` sur les DEUX plateformes, comme les quatre autres cadres du depot :
+                    // depuis l'edge-to-edge (SDK 54, sans option depuis le 57), Android ne
+                    // redimensionne plus la fenetre tout seul, et ce cadre etait le seul a le laisser
+                    // sans comportement — le clavier recouvrait alors le champ de recherche.
+                    behavior="padding"
+                    style={{ flex: 1, backgroundColor: theme.background }}
+                >
                     {/* Le defilement nourrit l'animation d'en-tete : le titre s'efface quand le
                         contenu monte, au lieu de le laisser passer derriere. */}
                     <Animated.ScrollView

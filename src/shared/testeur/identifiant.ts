@@ -10,11 +10,14 @@
  * (`statut.ts`) ; le seul endroit ou il s'affiche est le panneau Testeur du menu de developpement,
  * pour que son proprietaire le recopie dans la console.
  *
- * `uuid.v4()` vient d'`expo-modules-core`, deja dans chaque build : aucun module natif de plus,
- * donc Expo Go reste utilisable pour verifier ce jalon.
+ * `randomUUID()` vient d'`expo-crypto`, un module que l'Expo Go des stores embarque : le menu de
+ * developpement reste jouable sans build. Jusqu'au SDK 54 l'identifiant venait de
+ * `expo-modules-core`, une dependance transitive d'`expo` que la montee 6.1.1-A a cesse de trouver a
+ * la racine de `node_modules` — importer un paquet qu'on ne declare pas est exactement ce genre de
+ * fragilite, et `expo-crypto` est l'API publique pour la meme chose.
  */
 
-import { uuid } from 'expo-modules-core';
+import { randomUUID } from 'expo-crypto';
 
 import SecureStoreService from '../services/SecureStoreService';
 
@@ -30,7 +33,7 @@ export async function identifiantInstallation(): Promise<string> {
         return existant;
     }
 
-    const neuf = uuid.v4();
+    const neuf = randomUUID();
     if (!(await SecureStoreService.saveInstallationId(neuf))) {
         // Un trousseau qui refuse l'ecriture donne un identifiant de session : l'appareil en aura un
         // autre au lancement suivant, et ne pourra pas etre enregistre comme testeur. Rien ne casse.

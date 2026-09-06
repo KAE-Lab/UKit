@@ -159,7 +159,11 @@ export function ajouterDocument(uriSource: string, nomSouhaite: string): Documen
     const nom = nomLibre(dossier, nomSouhaite);
     const destination = new File(dossier, nom);
 
-    new File(uriSource).copy(destination);
+    // `copySync` et non `copy` : depuis expo-file-system 57 (SDK 56), `copy` rend une promesse, et
+    // la lecture de `info()` juste en dessous verrait un fichier absent ou vide. Le service est
+    // synchrone par contrat (useDocuments.ts), et `tsc` sans `strict` ne signale pas une promesse
+    // ignoree — c'est le genre de rupture qui ne se voit que sur appareil.
+    new File(uriSource).copySync(destination);
 
     const info = destination.info();
     return {

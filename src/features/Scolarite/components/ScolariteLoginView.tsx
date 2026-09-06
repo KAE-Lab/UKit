@@ -335,8 +335,9 @@ const ScolariteLoginView = ({
             style={{ flex: 1 }}
             // `padding` sur les DEUX plateformes : le clavier prend physiquement sa place et le
             // contenu devient defilable au-dessus de lui — le comportement iOS, voulu partout.
-            // Android edge-to-edge (SDK 54) ne redimensionne plus la fenetre tout seul : sans
-            // comportement le clavier recouvrait le bas, et `height` deplacait sans liberer.
+            // Android edge-to-edge (SDK 54, sans option depuis le 57) ne redimensionne plus la
+            // fenetre tout seul : sans comportement le clavier recouvrait le bas, et `height`
+            // deplacait sans liberer.
             //
             // Ce cadre est LE SEUL, y compris a l'accueil : le parcours n'en a pas. Deux cadres
             // imbriques compensaient chacun la hauteur du clavier et le contenu oscillait sur

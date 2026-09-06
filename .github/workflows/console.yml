@@ -12,7 +12,7 @@ name: Console
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - 'console/**'
       - '.github/workflows/console.yml'

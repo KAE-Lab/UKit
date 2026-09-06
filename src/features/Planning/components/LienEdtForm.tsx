@@ -171,8 +171,9 @@ export default function LienEdtForm({ onDone, topPadding = 0 }: LienEdtFormProps
     <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: theme.background }}
         // `padding` sur les DEUX plateformes, et ce cadre est le seul — meme decision que le
-        // formulaire de connexion, pour la meme raison : Android edge-to-edge (SDK 54) ne
-        // redimensionne plus la fenetre tout seul, et le parcours d'accueil n'a pas de cadre.
+        // formulaire de connexion, pour la meme raison : Android edge-to-edge (SDK 54, sans option
+        // depuis le 57) ne redimensionne plus la fenetre tout seul, et le parcours d'accueil n'a
+        // pas de cadre.
         behavior="padding"
     >
         <ScrollView

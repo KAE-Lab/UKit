@@ -65,7 +65,7 @@ export function FondDePiedFlottant({ fond }: { fond: string }) {
         <BlurView
             intensity={45}
             tint={themeName === 'dark' ? 'dark' : 'light'}
-            experimentalBlurMethod="dimezisBlurView"
+            blurMethod="dimezisBlurView"
             style={StyleSheet.absoluteFill}
         />
     );

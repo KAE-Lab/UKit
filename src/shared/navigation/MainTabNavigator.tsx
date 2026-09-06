@@ -163,7 +163,7 @@ function VoileDeBouton({ theme, themeName }: { theme: AppThemeType; themeName: '
             <BlurView
                 intensity={20}
                 tint={themeName === 'dark' ? 'dark' : 'light'}
-                experimentalBlurMethod="dimezisBlurView"
+                blurMethod="dimezisBlurView"
                 style={StyleSheet.absoluteFill}
             />
             <MaterialCommunityIcons name="lock" size={18} color={theme.fontSecondary} />
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     voileMystere: {
         // Le calque du teaser, clippe aux coins du bouton : `overflow: hidden` sur le bouton
         // lui-meme mangerait son ombre sur iOS — meme montage que `GlypheFiligrane`.
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         borderRadius: tokens.radius.md,
         overflow: 'hidden',
         justifyContent: 'center',

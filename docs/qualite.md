@@ -15,6 +15,14 @@ npm test              # tests unitaires du socle Aetherius
 npm run parity        # sources migrées vers un Blueprint
 ```
 
+Et, dès qu'une dépendance de plateforme bouge — un module `expo-*`, `react-native`, le SDK —, deux de
+plus, parce qu'aucune des quatre ci-dessus ne prouve que le natif se résout :
+
+```bash
+npx expo-doctor@latest                                   # versions attendues par le SDK, configuration
+npx expo export --platform android && npx expo export --platform ios   # Metro résout les modules natifs, Babel passe les directives 'worklet'
+```
+
 ### Base de référence
 
 `tsc` et `npm test` sont verts. `eslint` n'a aucune erreur, mais porte des avertissements — l'état
@@ -261,10 +269,21 @@ l'application existe.
 
 ### Typage
 
-[`tsconfig.json`](../tsconfig.json) étend `expo/tsconfig.base` **sans activer `strict`**. Le
+[`tsconfig.json`](../tsconfig.json) étend `expo/tsconfig.base` et **écrit `strict: false`**. Le
 compilateur ne réclame donc ni annotations de retour, ni gestion de `null`. La rigueur de typage du
 projet tient à la discipline et à la revue, pas au compilateur : c'est une raison de plus de ne pas
 laisser passer un `any`.
+
+Le `false` est écrit, et il ne l'était pas avant la montée de socle
+([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)) : **TypeScript 6**, que le SDK 57 exige, passe
+`strict` à vrai par défaut, et la porte est passée de zéro à plus de deux cents erreurs sans qu'une
+ligne du dépôt change. Les onze premières — un `themeName` typé `string` là où le thème est une clé,
+un `JSON.parse(null)` — étaient de vrais défauts et sont corrigées ; les deux cents autres sont des
+props d'écran sans type, un chantier à part entière qu'on ne mêle pas à une montée. Le jour où on
+l'ouvre, c'est cette ligne qu'on retire. TypeScript 6 vérifie aussi qu'un import à effet de bord
+résout vers un module : les locales de `moment` n'ont pas de déclaration, et
+[`src/types/moment-locales.d.ts`](../src/types/moment-locales.d.ts) les nomme plutôt que de
+désactiver un contrôle qui attrape une faute de frappe.
 
 ## Commits
 

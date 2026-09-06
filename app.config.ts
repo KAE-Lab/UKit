@@ -1,4 +1,8 @@
-import 'dotenv/config';
+import { config as chargerEnv } from 'dotenv';
+
+// dotenv 17 annonce chaque chargement sur la sortie standard, et cette configuration est evaluee a
+// chaque commande Expo : on charge en silence.
+chargerEnv({ quiet: true });
 
 export default {
 	name: 'UKit',
@@ -8,8 +12,11 @@ export default {
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
 	version: '6.1.0',
-	versionCode: 551,
 	orientation: 'portrait',
+	// `automatic` et non le defaut `light` : l'application impose son theme au natif par
+	// `Appearance.setColorScheme` (AppCore.setTheme), ce qu'un style force par la configuration
+	// empecherait. Sous Expo Go c'est de toute facon le reglage de l'hote qui s'applique.
+	userInterfaceStyle: 'automatic',
 	primaryColor: '#006F9F',
 	icon: './assets/icons/icon.png',
 	owner: 'kaelab',
@@ -37,7 +44,9 @@ export default {
 	android: {
 		package: 'com.bordeaux1.emplois',
 		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
-		versionCode: 542,
+		// La seule declaration : la cle racine du meme nom n'est pas un champ Expo et etait ignoree.
+		// EAS fait de toute facon autorite sur le numero de build (eas.json, appVersionSource: remote).
+		versionCode: 551,
 	},
 	androidStatusBar: {
 		barStyle: 'light-content',

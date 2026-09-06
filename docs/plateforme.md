@@ -1,13 +1,14 @@
 # Plateforme, permissions et publication
 
-UKit est une application **Expo** (SDK 54, React Native 0.81, React 19) publiée sur l'App Store et le
-Play Store. Ce document couvre la configuration native, les permissions, la construction et la
+UKit est une application **Expo** (SDK 57, React Native 0.86, React 19.2 — depuis la montée de socle
+[6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)) publiée sur l'App Store et le Play Store. Ce document couvre la configuration native, les permissions, la construction et la
 publication.
 
 ## Identité de l'application
 
-Déclarée dans [`app.config.ts`](../app.config.ts), qui charge `dotenv/config` au démarrage pour rendre
-les variables d'environnement disponibles.
+Déclarée dans [`app.config.ts`](../app.config.ts), qui charge `dotenv` au démarrage — en silence,
+`config({ quiet: true })`, parce que la version 17 annonce chaque chargement et que cette configuration
+est évaluée à chaque commande Expo — pour rendre les variables d'environnement disponibles.
 
 | Champ | Valeur |
 |---|---|
@@ -18,7 +19,8 @@ les variables d'environnement disponibles.
 | Orientation | portrait uniquement |
 | Couleur principale | `#006F9F` |
 | Projet EAS | `77596c7c-87fc-4c86-9189-3a70fd839abf` |
-| Mises à jour OTA | désactivées (`updates.enabled: false`) |
+| Mises à jour OTA | désactivées (`updates.enabled: false`) ; `expo-updates` n'est plus une dépendance depuis 6.1.1-A |
+| Apparence | `userInterfaceStyle: automatic`, et l'application impose son thème au natif par `Appearance.setColorScheme` ([theme.md](theme.md#changer-de-thème)) |
 
 Le paquet Android conserve son identifiant historique : le changer ferait perdre la continuité de
 l'installation pour tous les utilisateurs existants. Ne pas y toucher.
@@ -115,8 +117,12 @@ npm run build:ios         # eas build -p ios --profile preview
 
 ### Expo Go ne sert plus, et il faut savoir pourquoi
 
+> Écrit le 2026-09-04, quand le projet était en SDK 54. Depuis la montée [6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)
+> le projet est en 57 et l'Expo Go du store le rouvre ; le mécanisme décrit ici reste vrai, et se
+> reproduira au prochain SDK.
+
 **Expo Go n'embarque qu'un seul SDK à la fois, le plus récent.** Le 2026-09-04, le store l'a passé en
-**SDK 57** ; le projet est en **54**. L'application du store a donc cessé d'ouvrir UKit — sur iOS
+**SDK 57** ; le projet était en **54**. L'application du store a donc cessé d'ouvrir UKit — sur iOS
 comme sur Android, avec un message explicite sur Android et une simple absence sur iOS, dont
 l'interface a de surcroît retiré le champ de saisie d'URL. Ce n'est pas un incident : ça se
 reproduira à chaque sortie de SDK.
@@ -191,37 +197,76 @@ qu'on ne maîtrise pas, et ne rendrait de toute façon pas les capacités qu'il 
 Go garde un usage : un essai jetable, ou faire tourner le projet chez quelqu'un qui n'a pas les
 identifiants de signature.
 
-### Le saut de SDK : à faire, mais pas dans la 6.1
+### Monter de SDK
 
-**Décision du 2026-09-04.** Passer de 54 à 57 veut dire React Native **0.81.5 → 0.86.3** — cinq
-versions mineures —, React 19.1 → 19.2, et **41 dépendances de plateforme** à faire bouger ensemble :
-`reanimated`, `webview`, `screens`, `notifications`, `secure-store`, `local-authentication`,
-`calendar`, `task-manager`… (les versions attendues par chaque SDK se lisent dans
-`https://api.expo.dev/v2/sdks/<version>/native-modules`).
+**La décision, d'abord.** Le 2026-09-04, en vérifiant 6.1-E, le saut 54 → 57 a été renvoyé « à son
+propre jalon, après la 6.1 » : une version de consolidation, avec des utilisateurs déjà en 6.0, ne
+peut pas porter cinq versions mineures de React Native sans rendre chaque régression ambiguë. Et **on
+reste sur Expo** : ce qui a coincé est Expo Go, une commodité remplaçable en une commande, pas le
+cadre — l'essentiel des dépendances de plateforme sont des modules `expo-*`, la chaîne de release
+passe par EAS, et partir voudrait dire reprendre deux projets natifs pour retrouver le même tapis
+roulant de versions, en plus dur. Ce n'est pas optionnel à terme : les stores imposent une API cible
+minimale, et chez Expo c'est la montée de SDK qui la donne.
 
-Ce n'est pas optionnel à terme : les stores imposent périodiquement une version d'API cible minimale,
-et chez Expo c'est la montée de SDK qui la donne. Mais ce n'est **pas** un travail à mêler à la 6.1 :
-c'est une version de **consolidation**, avec des utilisateurs déjà en 6.0, et y ajouter un saut de
-runtime rendrait chaque régression ambiguë — on ne saurait plus si un défaut vient de la consolidation
-ou du saut.
+**La procédure, telle qu'elle a été jouée le 2026-09-06** ([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)),
+pour que le prochain saut ne se redécouvre pas :
 
-Il aura donc **son propre jalon**, après la sortie de la 6.1, avec une vérification appareil sur les
-**deux** plateformes — ce que le build de développement rend enfin possible sur iOS.
+1. `npx expo install expo@^57.0.0 --fix`. Il écrit `package.json` puis **sort en erreur** : il
+   voudrait ajouter des greffons (`@react-native-community/datetimepicker`, `expo-asset`, `expo-font`,
+   `expo-sharing`, `expo-splash-screen`) à une configuration TypeScript qu'il ne sait pas éditer. Les
+   versions sont posées, `expo-doctor` ne réclame aucun de ces greffons : ne pas le rejouer.
+2. Ce que `--fix` ne fait pas, à la main : `expo` sur un **patch précis** (`~57.0.20` — la régression
+   mémoire de Hermes v1 avec `react-native-worklets` est corrigée en 57.0.9, le démarrage de
+   développement en 57.0.17) ; `babel-preset-expo` en devDependency, hors de la liste des modules
+   natifs ; `typescript` sur la ligne que le SDK attend (`~6.0.3`, `expo-doctor` le vérifie) et
+   `@types/react` déclaré. Les versions attendues par un SDK se lisent dans le
+   `bundledNativeModules.json` du paquet `expo`.
+3. `babel.config.js` : le greffon devient `react-native-worklets/plugin` — `react-native-reanimated/plugin`
+   n'en est plus qu'un alias.
+4. `npm install`, puis `npx expo-doctor@latest` jusqu'à zéro écart.
+5. **Les ruptures ne se voient pas au typage.** `tsc` sans `strict` accepte une promesse ignorée, et
+   c'est exactement la forme des ruptures de ce saut. Celles rencontrées entre 54 et 57 :
+   - `expo-calendar` : la racine du paquet porte l'API objet, et les fonctions historiques n'y sont
+     plus que des souches qui **lèvent** ; le même code vit sous `expo-calendar/legacy`
+     ([features/settings.md](features/settings.md#limites-connues)) ;
+   - `expo-file-system` : `File.copy()` rend une promesse (SDK 56) ; le service des documents est
+     synchrone par contrat et lit le fichier juste après — `copySync()` ;
+   - `expo-blur` : `experimentalBlurMethod` devient `blurMethod` (SDK 55) ;
+   - React Native 0.86 retire `StyleSheet.absoluteFillObject` — `absoluteFill` est l'objet ;
+   - Reanimated 4.5 type `withInitialValues` sur ce que l'animation anime : un `FadeIn` n'accepte plus
+     un glissement, `FadeInDown` anime les deux ;
+   - `expo-modules-core` n'est plus hissé à la racine de `node_modules` : l'identifiant d'installation
+     lit `randomUUID()` d'`expo-crypto`, l'API publique ;
+   - le type `ExpoConfig` perd la clé `splash` historique. Le greffon natif la lit toujours quand
+     aucune propriété de greffon ne la remplace, et l'écran de démarrage animé la relit telle quelle :
+     passer au greffon `expo-splash-screen` changerait le rendu (image centrée à largeur fixe), ce
+     qu'une montée ne fait pas ;
+   - **TypeScript 6 passe `strict` à vrai par défaut** : la porte est passée de zéro à plus de deux
+     cents erreurs sans qu'une ligne change. `tsconfig.json` écrit désormais `strict: false`
+     ([qualite.md](qualite.md#typage)), et les onze vrais défauts que le défaut avait révélés sont
+     corrigés.
+6. **`expo/fetch` est le `fetch` global depuis le SDK 56** — celui remis au moteur Aetherius par
+   `NetworkMockService` et celui du client Supabase. Le défaut est gardé et vérifié sur appareil ;
+   le repli, si une source se comporte autrement, est `EXPO_PUBLIC_USE_RN_FETCH=1` à la construction.
+7. **iOS 16.4 devient le minimum** (SDK 56) — iPhone 7, 6s et SE de première génération restent sur
+   la version précédente. Xcode 26.4 côté EAS. C'est la seule chose visible d'une montée, et elle va
+   dans le CHANGELOG.
+8. **Les builds de développement sont périmés par construction**, sur les deux plateformes ; l'Expo
+   Go du store rouvre le projet, et c'est la moitié de la raison d'être du saut.
 
-**Et on reste sur Expo.** Ce qui a coincé est Expo Go, une commodité de développement remplaçable en
-une commande, pas le cadre lui-même : l'essentiel des 41 dépendances sont des modules `expo-*`
-(trousseau chiffré, biométrie, notifications, calendrier, tâches de fond), la chaîne de release passe
-par EAS, et partir voudrait dire reprendre à sa charge deux projets natifs pour retrouver le même
-tapis roulant de versions, en plus dur.
+**Les portes**, dans cet ordre : `tsc`, ESLint à zéro, la suite unitaire, la parité, `expo-doctor`,
+puis **`npx expo export` sur les deux plateformes** — la seule qui prouve que Metro résout les
+modules natifs et que Babel passe les directives `'worklet'`. Puis le protocole appareil du jalon,
+sur des builds neufs.
 
-**Les paquets Expo suivent le SDK.** `npx expo-doctor` est sans écart depuis la passe de code
-[6.1-C](phase-6/6-1-c-passe-de-code.md) — sept paquets avaient un patch de retard, et le `.gitignore`
-devait dire `.expo/` et non `.expo/*` pour qu'il s'en satisfasse. `npx expo install --fix` les
-réaligne, avec un piège : il **s'arrête en erreur** après avoir écrit `package.json`, parce qu'il
-voudrait ajouter les greffons `expo-asset` et `expo-font` à `app.config.ts` et ne sait pas écrire dans
-une configuration dynamique. Les versions sont bien posées ; les deux greffons sont facultatifs —
-l'application charge ses polices à l'exécution — et `expo-doctor` ne les réclame pas. Le workflow de
-release, lui, est sur `actions/setup-java@v5`.
+**Ce qui a surpris.** Le `npm ci` de la console n'était pas cassé (le lockfile avait été réaligné par
+6.1-B) ; il y avait trois cadres de clavier raisonnant sur l'edge-to-edge et non deux, plus un
+quatrième qui laissait Android sans comportement ; et la copie de fichier devenue asynchrone n'aurait
+été vue que sur appareil, par un document vide. Sur iPhone, sous l'Expo Go du store, deux choses de
+plus : `Updates.reloadAsync()` ne rejetait plus, il **fermait Expo Go** — la réinitialisation du menu
+de développement recharge désormais par `reloadAppAsync` d'`expo`, et `expo-updates` sort des
+dépendances ; et le thème du téléphone se mélangeait à celui de l'application, d'où
+`Appearance.setColorScheme` ([theme.md](theme.md#changer-de-thème)).
 
 ## Publication
 
@@ -248,7 +293,7 @@ Secrets requis : `EXPO_TOKEN`, `GOOGLE_PLAY_KEY` (écrit dans `google-play-key.j
 ## La console de pilotage
 
 [`.github/workflows/console.yml`](../.github/workflows/console.yml) construit
-[`console/`](../console/README.md) et la déploie sur GitHub Pages à chaque poussée sur `master` qui
+[`console/`](../console/README.md) et la déploie sur GitHub Pages à chaque poussée sur `main` qui
 la touche, en deux jobs — construire, déployer dans l'environnement `github-pages` — comme la
 documentation de Pages le prescrit. Elle n'embarque que l'URL du projet et la clé publiable, lues
 dans deux **variables** de dépôt (`SUPABASE_URL`, `SUPABASE_ANON_KEY`) : des valeurs publiques, déjà
@@ -256,8 +301,9 @@ dans le binaire de l'application. La clé de service n'apparaît nulle part.
 
 À activer une fois à la main, avant le premier run : *Settings → Pages → Source : GitHub Actions*,
 et les deux variables. L'environnement `github-pages` est créé au premier déploiement et protégé par
-défaut sur la branche par défaut — le workflow tourne depuis `master`, pas depuis une branche de
-travail.
+défaut sur la branche par défaut — le workflow tourne depuis `main`, pas depuis une branche de
+travail. La branche s'appelait `master` jusqu'au 2026-09-06 ; un tag homonyme rendait `git push
+origin master` ambigu, et le renommage a suivi la suppression du tag ([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md#la-branche-principale-devient-main)).
 
 ## Les sondes du matin
 
@@ -271,21 +317,16 @@ panne ; il passe au rouge quand une sonde n'a pas pu se prononcer.
 
 ## Les numéros de version
 
-Quatre endroits portent une version, et ils ne s'accordent pas aujourd'hui :
+Quatre endroits portent une version :
 
-| Emplacement | Valeur actuelle | Rôle |
+| Emplacement | Valeur | Rôle |
 |---|---|---|
-| [`package.json`](../package.json) | `5.6.1` | version npm, mise à jour par le workflow |
-| [`app.config.ts`](../app.config.ts) `version` | `5.6.1` | version affichée et comparée par l'alerte de mise à jour |
-| [`app.config.ts`](../app.config.ts) `versionCode` | `550` (racine) et `541` (bloc `android`) | deux valeurs divergentes ; seule celle du bloc `android` est lue, et `appVersionSource: remote` la rend de toute façon inopérante |
-| [`VERSION`](../VERSION) | `4.0.4` | fichier lu à distance pour proposer une mise à jour |
+| [`package.json`](../package.json) | `6.1.0` | version npm, mise à jour par le workflow |
+| [`app.config.ts`](../app.config.ts) `version` | `6.1.0` | version affichée, et comparée à la table `app_release` ([backend.md](backend.md)) |
+| [`app.config.ts`](../app.config.ts) `android.versionCode` | `551` | **seule déclaration** depuis 6.1.1-A — une clé racine du même nom, qui n'est pas un champ Expo, portait une autre valeur ; de toute façon inopérante, `appVersionSource: remote` fait d'EAS l'autorité |
+| [`VERSION`](../VERSION) | `6.1.0` | fichier historique, aligné par le protocole de release ; plus lu à distance depuis [6-Z](phase-6/6-z-livraison-finale.md) |
 
-Conséquence sur l'alerte de mise à jour : `UpdateAlert` ([`AppUI.tsx`](../src/shared/ui/AppUI.tsx))
-compare la version du manifeste au contenu distant de `VERSION`. Avec `5.6.1` d'un côté et `4.0.4` de
-l'autre, la comparaison serait toujours différente — donc l'alerte s'afficherait à chaque lancement.
-Elle ne le fait pas, car **`UpdateAlert` est importé dans
-[`rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) mais jamais rendu**. Le mécanisme
-est inactif. Le rebrancher exige d'abord de réaligner `VERSION`.
+Avant de poser un tag, les trois premiers doivent s'accorder ([6-1-z](phase-6/6-1-z-sortie.md)).
 
 ## Vérifier
 
@@ -297,9 +338,16 @@ est inactif. Le rebrancher exige d'abord de réaligner `VERSION`.
 
 ## Limites connues
 
-- **`VERSION` est désynchronisé** de deux versions majeures par rapport au reste.
-- **Le workflow cible `app.config.js`** au lieu de `app.config.ts` (voir ci-dessus).
-- **`versionCode` est déclaré deux fois** avec deux valeurs.
+- **Le workflow met à jour `package.json` et `app.config.ts`**, pas `VERSION` : le protocole de release
+  l'aligne à la main.
 - **Aucun rapport d'erreur en production** malgré la présence de `extra.sentryDSN`.
 - **Les mises à jour OTA sont désactivées** : toute correction passe par une publication de store.
-- **`expo-updates` figure dans les dépendances** mais n'est ni configuré ni utilisé.
+- **`androidStatusBar.backgroundColor` et la couleur passée à `StatusBar`** sont inertes sous
+  l'edge-to-edge, obligatoire depuis le SDK 57 ; `barStyle` reste lu. Gardés tant qu'un rendu ne dit
+  pas le contraire.
+- **`@expo/vector-icons` est déprécié depuis le SDK 56** au profit des paquets
+  `@react-native-vector-icons/*` ; le SDK 57 l'épingle encore, et 41 fichiers l'importent. La
+  migration est une session à part.
+- **`expo-calendar` est consommé par son API historique** (`/legacy`), l'API objet étant une
+  réécriture de la synchronisation ([features/settings.md](features/settings.md#limites-connues)).
+- **Le mode strict de TypeScript reste éteint**, explicitement ([qualite.md](qualite.md#typage)).

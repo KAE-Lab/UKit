@@ -23,7 +23,7 @@ livrés et vérifiés ; [D](6-1-d-publication.md) livré par publication, avant.
 3. **Portes** : `tsc`, ESLint à zéro, la suite unitaire, la parité, `expo-doctor` sans écart.
 4. **Identifiants EAS** : un `eas credentials -p ios` **avant** le workflow si une capacité iOS a
    été ajoutée (le profil de provisionnement du 31 août ne portait pas les notifications).
-5. **Le workflow** « Mobile App Release » en dispatch, `build_production: true`, depuis `master`.
+5. **Le workflow** « Mobile App Release » en dispatch, `build_production: true`, depuis `main`.
 6. **Test sur build** avant la production : TestFlight et la piste interne du Play, avec un
    message de service d'audience `testeurs` comme premier test réel du canal.
 7. **Notes de review** inchangées (compte universitaire infournissable), notes de version dans la

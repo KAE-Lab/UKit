@@ -175,6 +175,14 @@ Le thème n'est **pas** suivi en continu : `setAutomaticTheme()` lit la préfér
 (au premier lancement, depuis l'onboarding). Un changement de mode système en cours d'exécution ne
 bascule pas l'application.
 
+**Et le thème choisi s'impose au natif** (depuis [6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)) :
+`setTheme` appelle `Appearance.setColorScheme`, et `loadSettings` le rejoue au démarrage. Les alertes,
+le clavier, les sélecteurs de date et les feuilles du système suivent l'apparence de l'appareil, pas
+la palette de l'application ; avec `userInterfaceStyle: automatic` dans `app.config.ts` ils suivaient
+le téléphone, et un téléphone sombre sous une application claire mélangeait les deux — constaté sous
+Expo Go le 2026-09-06, où c'est de toute façon le réglage de l'hôte qui s'applique. Aligner l'apparence
+du système sur le choix de l'utilisateur est ce qui rend le thème **un** sur toute la surface.
+
 > **Capture attendue** — `theme-clair-sombre.png` : un même écran dans les deux thèmes, côte à côte,
 > pour servir de référence visuelle.
 

@@ -469,6 +469,13 @@ réinitialiser serait un résidu, pas un service.
 
 ## Limites connues
 
+- **`expo-calendar` est lu par son API historique**, `import * as Calendar from 'expo-calendar/legacy'`,
+  depuis la montée de socle ([6.1.1-A](../phase-6/6-1-1-a-montee-du-socle.md)) : au SDK 57, la racine
+  du paquet porte l'API orientée objet (`ExpoCalendar`, `ExpoCalendarEvent`) et n'expose plus les
+  fonctions `*Async` que sous forme de souches qui **lèvent** à l'appel — `tsc` les acceptait, la
+  synchronisation aurait cassé sur appareil. Le sous-chemin est le même code qu'avant ; migrer vers
+  l'API objet est une réécriture de la synchronisation, à faire à part, quand `/legacy` disparaîtra.
+
 - **Vingt notifications au maximum**, sur la seule semaine en cache : les cours au-delà ne sont pas
   couverts tant que leur semaine n'a pas été consultée. C'est une décision, et la section
   Notifications le dit.

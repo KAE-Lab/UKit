@@ -15,6 +15,7 @@
 import { useContext, useEffect, useState } from 'react';
 
 import { AppContext, SettingsManager, languageFromDevice } from '../../../shared/services/AppCore';
+import type { ThemeKey } from '../../../shared/theme/Theme';
 import {
     attendrePremierRafraichissement,
     getCodeEtablissementActif,
@@ -60,6 +61,11 @@ export interface OptionListee {
     readonly id: string;
     readonly title: string;
     readonly suffix?: string;
+}
+
+/** Une option de theme : son identifiant est une cle de theme, pas une chaine libre. */
+export interface OptionTheme extends OptionListee {
+    readonly id: ThemeKey;
 }
 
 export interface WelcomeState {
@@ -128,7 +134,7 @@ function filtrer(
 }
 
 export interface WelcomeActions {
-    readonly selectTheme: (entree: OptionListee) => void;
+    readonly selectTheme: (entree: OptionTheme) => void;
     readonly selectLanguage: (entree: OptionListee) => void;
     readonly selectEtablissement: (code: string) => void;
     readonly selectGroup: (groupe: string) => void;

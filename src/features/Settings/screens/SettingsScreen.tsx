@@ -1,7 +1,7 @@
 import React from 'react';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { Linking, Text, View, Animated, StyleSheet } from 'react-native';
-import * as Calendar from 'expo-calendar';
+import * as Calendar from 'expo-calendar/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { NotificationManager } from '../../../shared/services/NotificationService';
@@ -47,7 +47,7 @@ export interface SettingsProps {
 export interface SettingsState {
     calendarDialogVisible: boolean;
     calendarSyncEnabled: boolean;
-    calendars: import('expo-calendar').Calendar[];
+    calendars: import('expo-calendar/legacy').Calendar[];
     hasCalendarPermission: boolean;
     isSynchronizingCalendar: boolean;
     language: string;
@@ -120,7 +120,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
     }
 
-    setCalendar = (calendar: import('expo-calendar').Calendar | 'UKit') => {
+    setCalendar = (calendar: import('expo-calendar/legacy').Calendar | 'UKit') => {
         if (calendar === 'UKit') {
             this.setState({ selectedCalendar: calendar });
             SettingsManager.setSyncCalendar(calendar);

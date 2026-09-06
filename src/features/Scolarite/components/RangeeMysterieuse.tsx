@@ -13,7 +13,7 @@
  * effet de style.
  *
  * `expo-blur` : inclus dans Expo Go, rendu natif sur iOS ; sur Android le vrai flou passe par
- * `experimentalBlurMethod`, avec un voile translucide en repli sur les appareils qui ne le portent
+ * `blurMethod`, avec un voile translucide en repli sur les appareils qui ne le portent
  * pas — le texte reste illisible dans les deux cas, c'est tout ce qu'on demande.
  */
 

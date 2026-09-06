@@ -120,7 +120,7 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
     // `sync` en MaterialIcons et non MaterialCommunityIcons : le glyphe MCI est dessine en
     // diagonale, et l'icone de synchronisation semblait figee de travers au repos. La variante
     // MaterialIcons est droite, de la meme famille que `sync-disabled` juste au-dessus.
-    const isMaterialIcon = ['settings', 'language', 'filter-list', 'sync', 'sync-disabled'].includes(leftIcon);
+    const isMaterialIcon = leftIcon !== undefined && ['settings', 'language', 'filter-list', 'sync', 'sync-disabled'].includes(leftIcon);
     const IconComponent = isMaterialIcon ? MaterialIcons : MaterialCommunityIcons;
 
     return (

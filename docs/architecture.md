@@ -312,6 +312,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | thèmes clair et sombre, échelle sémantique, styles partagés ([theme.md](theme.md)) |
 | [`shared/i18n/Translator.ts`](../src/shared/i18n/Translator.ts) | service de traduction, langue courante, locale moment ([i18n.md](i18n.md)) |
 | [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 390 clés chacun |
+| [`types/moment-locales.d.ts`](../src/types/moment-locales.d.ts) | déclare les locales de `moment` importées pour leur effet de bord — TypeScript 6 exige qu'un tel import résolve ([qualite.md](qualite.md#typage)) |
 | [`shared/map/EmbeddedMap.tsx`](../src/shared/map/EmbeddedMap.tsx) | carte MapLibre embarquée dans les fiches ([cartographie.md](cartographie.md)) |
 | [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème) et `UpdateAlert` (contrôle de version, non rendu) |
 | [`shared/ui/Button.tsx`](../src/shared/ui/Button.tsx) | boutons partagés : retour, accueil, tiroir, ligne de réglage |

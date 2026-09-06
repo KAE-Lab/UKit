@@ -19,7 +19,11 @@
  * Voir docs/pilotage.md.
  */
 
-import 'dotenv/config';
+import { config as chargerEnv } from 'dotenv';
+
+// dotenv 17 annonce chaque chargement sur la sortie standard ; un outil de publication doit rester
+// lisible dans un terminal comme dans un journal de CI.
+chargerEnv({ quiet: true });
 
 import { config, rest } from '../blueprints/base.mjs';
 

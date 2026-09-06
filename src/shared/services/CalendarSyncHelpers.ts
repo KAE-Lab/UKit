@@ -12,7 +12,12 @@
  */
 
 import { Platform } from 'react-native';
-import * as Calendar from 'expo-calendar';
+// `expo-calendar/legacy`, et non la racine : depuis le SDK 57, la racine du paquet porte l'API
+// orientee objet (`ExpoCalendar`, `ExpoCalendarEvent`) et n'expose plus les fonctions historiques que
+// sous forme de souches qui LEVENT a l'appel — `tsc` les accepte, l'appareil les refuse. Le sous-chemin
+// `/legacy` est le meme code qu'en SDK 54 ; la migration vers l'API objet est un travail a part
+// (docs/features/settings.md, limites).
+import * as Calendar from 'expo-calendar/legacy';
 
 import style from '../theme/Theme';
 import type { PlanningEvent } from '../../features/Planning/services/PlanningApiService';

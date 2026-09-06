@@ -182,7 +182,8 @@ Détail des couches, de la séquence de démarrage et des invariants :
 
 ## Développement local
 
-Prérequis : Node.js 18+, npm, et l'application Expo Go ou un émulateur.
+Prérequis : Node.js 22 (`.nvmrc` ; 20.19 minimum, c'est celui du SDK), npm, et un build de
+développement ou l'application Expo Go.
 
 ```bash
 npm install
@@ -342,6 +343,15 @@ livré ; elle est mise à jour à chaque contribution.
   valide côté serveur. La cause tenait à une frontière d'`await` dans le verrou du moteur — le test et
   la réservation ne partageaient pas le même tour — et un test le verrouille désormais.
   [docs/phase-6/6-1-e-finitions-interface.md](docs/phase-6/6-1-e-finitions-interface.md)
+- [x] **Montée du socle** (6.1.1-A) — Expo **54 → 57**, React Native 0.81 → 0.86, React 19.2, et la
+  dette d'outillage soldée au même endroit : Node écrit une fois (`.nvmrc`, `engines`), TypeScript
+  déclaré, trois dépendances mortes retirées, la branche principale renommée `main`. Rien de visible,
+  et pourtant c'est ce qui casse le plus : quatre ruptures de bibliothèques ne se voyaient qu'à
+  l'exécution — dont une copie de fichier devenue asynchrone sans que le compilateur le dise — et
+  TypeScript 6 a déplacé la porte de typage en silence. La procédure est écrite pour le prochain saut.
+  **Vérifié sur iPhone sous l'Expo Go du store le 2026-09-06** — la boucle courte est restaurée ;
+  Android reste à jouer.
+  [docs/plateforme.md](docs/plateforme.md#monter-de-sdk)
 - [x] **Passe de code** (6.1-C) — ce que la documentation portait comme limites connues, fermé ou
   décidé : un **retour au premier plan** partagé, qui distingue le retour d'arrière-plan d'une invite
   système — les annonces se relisent, le Planning recalcule « Aujourd'hui » après minuit, les widgets
@@ -471,7 +481,7 @@ document.
 | [docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md) | les défauts de comportement connus, tenus **à part** de l'esthétique |
 | [docs/i18n.md](docs/i18n.md) | Translator, dictionnaires, ajout d'une chaîne |
 | [docs/cartographie.md](docs/cartographie.md) | MapLibre et OpenFreeMap, `locations.json` |
-| [docs/plateforme.md](docs/plateforme.md) | configuration Expo, permissions, build EAS, release |
+| [docs/plateforme.md](docs/plateforme.md) | configuration Expo, permissions, build EAS, release, **monter de SDK** |
 | [docs/qualite.md](docs/qualite.md) | portes de qualité, vérification manuelle, simulation temporelle |
 | [docs/features/](docs/features/) | une documentation par domaine fonctionnel |
 | [docs/screenshots/](docs/screenshots/README.md) | captures attendues et convention |

@@ -6,7 +6,8 @@ cadrage produit est dans le [README](README.md), l'architecture dans
 
 ## Mise en place
 
-Prérequis : Node.js 18+, npm, et l'application Expo Go ou un émulateur.
+Prérequis : Node.js 22 (`.nvmrc` ; 20.19 minimum, c'est celui du SDK), npm, et un build de
+développement ou l'application Expo Go.
 
 ```bash
 npm install

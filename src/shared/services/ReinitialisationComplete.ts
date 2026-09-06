@@ -24,7 +24,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DevSettings } from 'react-native';
 import { Directory, Paths } from 'expo-file-system';
-import * as Updates from 'expo-updates';
+import { reloadAppAsync } from 'expo';
 
 import { purgerTrousseau } from '../etablissements/purge';
 import { garderLesSimulationsPourLaRelance } from './simulations';
@@ -53,15 +53,17 @@ function viderLesDocuments(): void {
 }
 
 /**
- * Recharge le JavaScript. `expo-updates` refuse en developpement et sous Expo Go — sa promesse est
- * rejetee, c'est ecrit — et c'est alors le rechargement des outils de developpement qui prend le
- * relais, celui du `r` de Metro.
+ * Recharge le JavaScript. `reloadAppAsync` d'`expo` et non `expo-updates` : ce dernier refusait en
+ * developpement et sous Expo Go — sa promesse etait rejetee, c'etait ecrit — et sous l'Expo Go du
+ * SDK 57 il ne rejetait plus, il FERMAIT Expo Go (constate sur iPhone le 2026-09-06). L'API du socle
+ * recharge l'application partout, build comme Expo Go ; le rechargement des outils de developpement,
+ * celui du `r` de Metro, reste en relais si elle refuse.
  */
 async function relancer(): Promise<void> {
     try {
-        await Updates.reloadAsync();
+        await reloadAppAsync('reinitialisation complete');
     } catch (erreur) {
-        console.log(`[reinitialisation] expo-updates ne recharge pas ici (${erreur instanceof Error ? erreur.message.split('.')[0] : String(erreur)}) : rechargement de developpement`);
+        console.log(`[reinitialisation] le socle ne recharge pas ici (${erreur instanceof Error ? erreur.message.split('.')[0] : String(erreur)}) : rechargement de developpement`);
         DevSettings.reload('reinitialisation complete');
     }
 }

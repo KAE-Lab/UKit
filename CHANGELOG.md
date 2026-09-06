@@ -8,6 +8,21 @@ Ce fichier a été ouvert avec le socle de documentation : les versions antérie
 pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 [Releases GitHub](https://github.com/KAE-Lab/UKit/releases) et dans l'historique Git.
 
+## [Non publié]
+
+La 6.1.1 : le socle monte, rien ne se voit ([docs/phase-6/6-2-mise-a-plat.md](docs/phase-6/6-2-mise-a-plat.md)).
+
+### Modifié
+
+- **Le socle passe d'Expo 54 à 57** (6.1.1-A) — React Native 0.86, React 19.2, et une quarantaine de
+  modules de plateforme avec eux. Rien ne change à l'écran ; c'est ce qui rend la version
+  attribuable. Une conséquence visible tout de même : **iOS 16.4 devient le minimum** — un iPhone 7,
+  6s ou SE de première génération garde la 6.1 et ne recevra plus de mise à jour.
+- **Le clavier ne recouvre plus la recherche des filtres d'UE sur Android** : le seul écran qui
+  laissait Android sans comportement de cadre.
+- **Le thème choisi s'applique aussi aux éléments du système** — alertes, clavier, sélecteurs de
+  date. Un téléphone en sombre sous une application en clair ne mélange plus les deux.
+
 ## [6.1.0] - 2026-09-06
 
 La consolidation de la v6 ([docs/phase-6/6-1-mise-a-plat.md](docs/phase-6/6-1-mise-a-plat.md)) : ce que

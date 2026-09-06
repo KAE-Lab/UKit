@@ -23,7 +23,7 @@ import { useCredentials } from '../Scolarite/services/CredentialsContext';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
 import { adoucirLaTransition } from '../../shared/ui/transitions';
-import { filtrageParAnnee, useWelcomeState } from './hooks/useWelcomeState';
+import { filtrageParAnnee, useWelcomeState, type OptionTheme } from './hooks/useWelcomeState';
 import {
     StepCompte,
     StepEtablissement,
@@ -36,7 +36,7 @@ import {
 } from './components/WelcomeSteps';
 import { StepGroupes } from './components/StepGroupes';
 
-const THEME_LIST = [
+const THEME_LIST: readonly OptionTheme[] = [
     { id: 'light', title: 'LIGHT_THEME' },
     { id: 'dark', title: 'DARK_THEME' },
 ];

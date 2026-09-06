@@ -28,7 +28,7 @@
 
 import React from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
-import Reanimated, { FadeIn } from 'react-native-reanimated';
+import Reanimated, { FadeInDown } from 'react-native-reanimated';
 
 import { tokens } from '../theme/Theme';
 
@@ -56,7 +56,10 @@ export function ApparitionEnFondu({ children, actif = true, style }: ApparitionE
     return (
         <Reanimated.View
             style={style}
-            entering={FadeIn.duration(DUREE_MS).withInitialValues({
+            // `FadeInDown` et non `FadeIn` avec un glissement en valeur initiale : Reanimated 4.5
+            // (SDK 57) type les valeurs initiales sur ce que l'animation anime, et `FadeIn` n'anime
+            // que l'opacite. `FadeInDown` anime les deux ; seule l'amplitude du glissement est ecrasee.
+            entering={FadeInDown.duration(DUREE_MS).withInitialValues({
                 transform: [{ translateY: GLISSEMENT }],
             })}
         >

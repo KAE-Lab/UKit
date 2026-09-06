@@ -158,7 +158,7 @@ Sa purge est écrite dans [`supabase/README.md`](../supabase/README.md) et n'est
 ## La console web
 
 Un dossier [`console/`](../console/) du dépôt — Vite, React, `supabase-js`, et rien d'autre —
-déployé sur GitHub Pages à chaque poussée sur `master` qui le touche, à l'adresse
+déployé sur GitHub Pages à chaque poussée sur `main` qui le touche, à l'adresse
 `https://kae-lab.github.io/UKit/`. Volontairement rudimentaire en périmètre, pas en finition : une
 liste et un formulaire par table, et deux pages de lecture.
 
