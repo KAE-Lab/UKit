@@ -4,8 +4,8 @@
 > l'Expo Go du store le soir même**, en trois passes : le projet s'ouvre, les deux parcours froids
 > passent, navigation sans écart, et les trois retours de la soirée (réinitialisation, thème, jour
 > libre) corrigés puis revérifiés — « tout est parfait ». **Android joué le même jour par un second
-> testeur**, avec l'Expo Go du store : rien à signaler. Le jalon est clos ; reste le renommage de
-> la branche côté GitHub, à la fusion. Portes au moment de la
+> testeur**, avec l'Expo Go du store : rien à signaler. **La branche principale s'appelle `main`** depuis le
+> même soir, renommée sur GitHub puis reprise en local. Le jalon est clos. Portes au moment de la
 > livraison : `tsc` vert, ESLint à zéro, 562 tests, parité 13/13, `expo-doctor` 21/21, `npx expo
 > export` sur Android et iOS, `npm ci` et `npm run build` de la console, les 12 tests des sondes.
 > Ce que la réalité a corrigé au texte est en fin de document, sous « Écarts constatés ».
@@ -214,9 +214,10 @@ Mesurés le 2026-09-06, en jouant la montée. Le texte ci-dessus est laissé tel
 - **`@expo/vector-icons` est déprécié** (SDK 56) mais encore épinglé par le 57 : gardé, en limite écrite.
 - **La clé `splash` historique sort du type `ExpoConfig`** : le natif la lit toujours, l'écran animé
   aussi, par un type local ; le greffon changerait le rendu et n'est pas adopté.
-- **Le renommage en `main`** : les références vivantes sont changées ici (`console.yml`, `urls.ts`,
-  quatre documents) ; le renommage côté GitHub et la reprise locale sont l'étape suivante, après la
-  fusion, dans cet ordre — l'inverse arrête le déploiement de la console en silence.
+- **Le renommage en `main`** : les références vivantes changées ici (`console.yml`, `urls.ts`,
+  quatre documents), puis le renommage sur GitHub et la reprise locale le 2026-09-06, **avant** la
+  fusion — sans dommage, puisque la branche principale ne reçoit rien avant 6.1.1-Z et que le
+  workflow de la console ne vise `main` qu'une fois fusionné.
 
 ### Ce que le premier passage sur iPhone a ajouté (soir du 2026-09-06)
 
