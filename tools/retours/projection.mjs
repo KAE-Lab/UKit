@@ -56,6 +56,21 @@ function normaliserLibelle(libelle) {
 }
 
 /**
+ * Un en-tete repond a une question s'il est son libelle, ou son libelle suivi d'un complement —
+ * le texte d'un lien pose dans le titre de la question, par exemple. Et une question peut avoir
+ * **plusieurs** colonnes : une version remplacee laisse la sienne dans la feuille, et le formulaire
+ * peut poser deux fois la meme question dans deux branches (l'adresse, facultative ici et
+ * obligatoire la). D'ou une liste d'index, et la premiere cellule non vide qui gagne.
+ */
+function indexDesColonnes(entetes, libelle) {
+    const attendu = normaliserLibelle(libelle);
+    return entetes
+        .map((entete, index) => [normaliserLibelle(entete), index])
+        .filter(([candidat]) => candidat === attendu || candidat.startsWith(`${attendu} `))
+        .map(([, index]) => index);
+}
+
+/**
  * Une colonne que la feuille porte sans en-tete — une question ajoutee puis supprimee — sort en
  * `Column N` dans l'export. Elle ne dit rien : on ne la range pas dans la reponse.
  */
@@ -153,11 +168,9 @@ export function identifiantDe(recuLe, entetes, ligne) {
  * @returns {Retour}
  */
 export function projeter(entetes, ligne, numero, fuseauFeuille = 'Europe/Paris') {
-    const indexParLibelle = new Map(entetes.map((entete, index) => [normaliserLibelle(entete), index]));
-    const brut = (cle) => {
-        const index = indexParLibelle.get(normaliserLibelle(QUESTIONS[cle]));
-        return index === undefined ? '' : normaliserCellule(ligne[index] ?? '');
-    };
+    const brut = (cle) => indexDesColonnes(entetes, QUESTIONS[cle])
+        .map((index) => normaliserCellule(ligne[index] ?? ''))
+        .find((valeur) => valeur !== '') ?? '';
     const propre = (cle) => masquer(brut(cle));
     const ouNul = (valeur) => (valeur === '' ? null : valeur);
 
@@ -165,11 +178,16 @@ export function projeter(entetes, ligne, numero, fuseauFeuille = 'Europe/Paris')
     if (recuLe === null) throw new Error(`ligne ${numero} : horodatage illisible « ${brut('horodatage')} »`);
 
     const nature = natureDe(brut('pourquoi'));
-    const contactNormalise = normaliserLibelle(QUESTIONS.contact);
-    const reponses = Object.fromEntries(entetes
-        .map((entete, index) => [entete.trim(), normaliserCellule(ligne[index] ?? '')])
-        .filter(([entete, valeur]) => !(COLONNE_SANS_ENTETE.test(entete) && valeur === ''))
-        .map(([entete, valeur]) => [entete, normaliserLibelle(entete) === contactNormalise ? valeur : masquer(valeur)]));
+    const colonnesDeContact = new Set(indexDesColonnes(entetes, QUESTIONS.contact));
+    // Une question a plusieurs colonnes garde la premiere valeur non vide, sous le premier libelle.
+    const reponses = new Map();
+    entetes.forEach((entete, index) => {
+        const libelle = entete.trim();
+        const valeur = normaliserCellule(ligne[index] ?? '');
+        if (COLONNE_SANS_ENTETE.test(libelle) && valeur === '') return;
+        if (reponses.has(libelle) && valeur === '') return;
+        reponses.set(libelle, colonnesDeContact.has(index) ? valeur : masquer(valeur));
+    });
     const volontaire = brut('volontaire');
 
     return {
@@ -184,6 +202,6 @@ export function projeter(entetes, ligne, numero, fuseauFeuille = 'Europe/Paris')
         texte: texteDe(nature, propre),
         contact: ouNul(brut('contact')),
         volontaire: volontaire !== '' && !sansAccents(volontaire).startsWith('non'),
-        reponses,
+        reponses: Object.fromEntries(reponses),
     };
 }

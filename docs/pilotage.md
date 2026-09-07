@@ -377,7 +377,9 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
   « suggérer une fonctionnalité » pour signaler un bug est rangée de travers, et c'est la colonne
   reclassable de la console qui rattrape.
 - **Renommer une question du formulaire recrée ses réponses** au passage suivant, puisque la clé
-  est une empreinte de la réponse ; ajouter une question, non. Et le fuseau de la feuille doit rester
+  est une empreinte de la réponse ; ajouter une question, non. Un libellé **suivi d'un complément**
+  (le texte d'un lien dans le titre) est reconnu, et une question posée **deux fois** — dans deux
+  branches, ou remplacée en laissant son ancienne colonne — donne sa première cellule non vide. Et le fuseau de la feuille doit rester
   Europe/Paris — l'adresse d'export écrit l'heure murale sans le dire.
 - **Un formulaire n'est pas un canal de support** : on lit, on range, on corrige ; le champ de contact
   ne promet pas de réponse, et rien ne mesure la satisfaction.

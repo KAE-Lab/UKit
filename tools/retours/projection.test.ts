@@ -110,6 +110,24 @@ describe('projeter', () => {
         expect(pleine.reponses['Column 18']).toBe('x');
     });
 
+    it('reconnait un libelle suivi d un complement, et prend la premiere colonne non vide', () => {
+        // La question remplacee a laisse sa colonne vide ; la nouvelle porte le texte d'un lien.
+        const entetes = [...ENTETES, QUESTIONS.volontaire, `${QUESTIONS.volontaire} Voir page d'engagement`];
+        const retour = projeter(entetes, [...ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Demander un campus' }), '', 'Oui'], 2);
+        expect(retour.volontaire).toBe(true);
+        expect(retour.reponses[`${QUESTIONS.volontaire} Voir page d'engagement`]).toBe('Oui');
+    });
+
+    it('prend la premiere adresse non vide quand la question est posee deux fois', () => {
+        const entetes = [...ENTETES, QUESTIONS.contact, QUESTIONS.contact];
+        const seconde = projeter(entetes, [...ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Rien' }), '', 'b@exemple.fr'], 2);
+        expect(seconde.contact).toBe('b@exemple.fr');
+        expect(seconde.reponses[QUESTIONS.contact]).toBe('b@exemple.fr');
+        const premiere = projeter(entetes, [...ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Rien' }), 'a@exemple.fr', ''], 2);
+        expect(premiere.contact).toBe('a@exemple.fr');
+        expect(premiere.reponses[QUESTIONS.contact]).toBe('a@exemple.fr');
+    });
+
     it('refuse un horodatage illisible, avec le numero de ligne', () => {
         expect(() => projeter(ENTETES, ligne({ horodatage: 'hier', pourquoi: 'Rien' }), 7)).toThrow(/ligne 7 : horodatage illisible « hier »/);
     });

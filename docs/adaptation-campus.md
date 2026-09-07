@@ -72,7 +72,13 @@ question existante est la règle :
   *« Ton adresse e-mail, si tu veux qu'on te réponde (facultatif) »* ;
 - dans la branche « Demander un campus », une case à cocher unique :
   *« Serais-tu prêt·e à prêter un accès pour adapter ton campus ? »* —
-  *« Oui, j'ai lu la page d'engagement et on peut me contacter »*.
+  *« Oui, j'ai lu la page d'engagement et on peut me contacter »*, le lien vers la page dans le
+  titre ou la description, au choix.
+
+Google Forms ne sait pas rendre une question obligatoire selon une autre réponse. Pour exiger
+l'adresse d'un volontaire : faire suivre l'option « Oui » d'une section qui pose **la même question
+d'adresse, avec le même libellé, en obligatoire**. La feuille gagne une seconde colonne du même
+nom, et l'importeur prend la première non vide.
 
 Tout est déjà câblé : la pastille d'état de service, `ModaleCampusNonRelie` et le bouton
 « Demander » d'un état vide pointent **tous** sur ce formulaire, par `services.adaptation` du
