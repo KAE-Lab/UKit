@@ -148,11 +148,33 @@ const useWebBrowser = (route, onDismiss, navigation) => {
         }
     };
 
+    /*
+     * Le formulaire de retours seul pose des domaines internes (shared/navigation/liensDuFormulaire.ts).
+     * Un lien qui en sort s'ouvre **par-dessus**, dans une seconde instance de cet ecran : le
+     * formulaire reste monte en dessous, et « retour » le retrouve la ou il en etait. Deux chemins
+     * y menent, parce que Google Forms ouvre ses liens en « nouvelle fenetre » : la WebView les
+     * signale par `onOpenWindow` quand ce gestionnaire existe, sinon les charge dans la meme vue en
+     * repassant par `onShouldStartLoadWithRequest`. Les deux appliquent la meme regle.
+     */
+    const domainesInternes = route.params?.domainesInternes;
+    const ouvrirParDessus = (adresse: string) => {
+        console.log(`[navigateur] lien hors du formulaire, ouvert par-dessus : ${adresse}`);
+        (navigation as unknown as { push: (name: string, params: object) => void }).push('WebBrowser', { href: adresse });
+    };
+    const ouvrirNouvelleFenetre = domainesInternes === undefined ? undefined : ({ nativeEvent }: { nativeEvent: { targetUrl: string } }) => {
+        if (resteDansLaVue(nativeEvent.targetUrl, domainesInternes)) {
+            webViewRef.current?.injectJavaScript(`window.location.href = ${JSON.stringify(nativeEvent.targetUrl)}; true;`);
+        } else {
+            ouvrirParDessus(nativeEvent.targetUrl);
+        }
+    };
+
     return {
         uri, url, canGoBack, canGoForward, loading, trousseauLu,
         savedCredentials, showSaveModal, setShowSaveModal,
         dismissing, webViewRef, setUrl, setCanGoBack, setCanGoForward, setLoading,
-        onRefresh, onBack, onForward, onQuit, openURL, saveCredentials, handleMessage
+        onRefresh, onBack, onForward, onQuit, openURL, saveCredentials, handleMessage,
+        domainesInternes, ouvrirParDessus, ouvrirNouvelleFenetre
     };
 };
 
@@ -163,7 +185,7 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
     const {
         uri, trousseauLu, canGoBack, canGoForward, loading, savedCredentials, showSaveModal, setShowSaveModal,
         dismissing, webViewRef, setUrl, setCanGoBack, setCanGoForward, setLoading,
-        onRefresh, onBack, onForward, onQuit, openURL, saveCredentials, handleMessage
+        onRefresh, onBack, onForward, onQuit, openURL, saveCredentials, handleMessage, domainesInternes, ouvrirParDessus, ouvrirNouvelleFenetre
     } = useWebBrowser(route, onDismiss, navigation);
 
     const theme = style.Theme[themeName];
@@ -255,16 +277,14 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
                     injectedJavaScript={scriptInjecte}
                     onMessage={handleMessage}
                     originWhitelist={['*']}
+                    onOpenWindow={ouvrirNouvelleFenetre}
                     onShouldStartLoadWithRequest={(event) => {
                         if (event.url.startsWith('http://') || event.url.startsWith('https://') || event.url === 'about:blank') {
-                            // Le formulaire de retours seul pose des domaines internes : un lien qui en
-                            // sort s'ouvre **par-dessus**, dans une seconde instance de cet ecran, et le
-                            // formulaire reste tel quel en dessous — « retour » le retrouve la ou il en
-                            // etait (shared/navigation/liensDuFormulaire.ts). Une sous-vue (iframe) n'est
-                            // pas une navigation de l'utilisateur.
-                            const domainesInternes = route.params?.domainesInternes;
-                            if (domainesInternes !== undefined && event.isTopFrame !== false && !resteDansLaVue(event.url, domainesInternes)) {
-                                (navigation as unknown as { push: (name: string, params: object) => void }).push('WebBrowser', { href: event.url });
+                            // Pas de garde sur `isTopFrame` : sur iOS, la WebView le calcule en comparant
+                            // l'adresse au document courant, et une navigation « nouvelle fenetre » le
+                            // rend faux alors que c'est bien l'utilisateur qui a touche le lien.
+                            if (domainesInternes !== undefined && !resteDansLaVue(event.url, domainesInternes)) {
+                                ouvrirParDessus(event.url);
                                 return false;
                             }
                             return true;
