@@ -128,6 +128,13 @@ describe('projeter', () => {
         expect(premiere.reponses[QUESTIONS.contact]).toBe('a@exemple.fr');
     });
 
+    it('lit l adresse obligatoire de la branche du volontaire, sans la masquer', () => {
+        const entetes = [...ENTETES, QUESTIONS.contact, QUESTIONS.contactObligatoire];
+        const retour = projeter(entetes, [...ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Demander un campus' }), '', 'v@exemple.fr'], 2);
+        expect(retour.contact).toBe('v@exemple.fr');
+        expect(retour.reponses[QUESTIONS.contactObligatoire]).toBe('v@exemple.fr');
+    });
+
     it('refuse un horodatage illisible, avec le numero de ligne', () => {
         expect(() => projeter(ENTETES, ligne({ horodatage: 'hier', pourquoi: 'Rien' }), 7)).toThrow(/ligne 7 : horodatage illisible « hier »/);
     });

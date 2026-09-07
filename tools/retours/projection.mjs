@@ -45,8 +45,13 @@ export const QUESTIONS = Object.freeze({
     autre: 'Autre chose à ajouter?',
     // Les deux questions que le jalon 6.1.x-C ajoute au formulaire (docs/adaptation-campus.md).
     contact: "Ton adresse e-mail, si tu veux qu'on te réponde (facultatif)",
+    // La meme adresse, posee en obligatoire dans la branche du volontaire, sous un autre libelle.
+    contactObligatoire: "Ton adresse e-mail, pour qu'on puisse te contacter",
     volontaire: 'Serais-tu prêt·e à prêter un accès pour adapter ton campus ?',
 });
+
+/** Les questions dont la reponse est le contact : lues dans cet ordre, jamais masquees. */
+const QUESTIONS_DE_CONTACT = ['contact', 'contactObligatoire'];
 
 export const NATURES = Object.freeze(['bug', 'fonctionnalite', 'campus', 'autre']);
 
@@ -178,7 +183,8 @@ export function projeter(entetes, ligne, numero, fuseauFeuille = 'Europe/Paris')
     if (recuLe === null) throw new Error(`ligne ${numero} : horodatage illisible « ${brut('horodatage')} »`);
 
     const nature = natureDe(brut('pourquoi'));
-    const colonnesDeContact = new Set(indexDesColonnes(entetes, QUESTIONS.contact));
+    const colonnesDeContact = new Set(QUESTIONS_DE_CONTACT.flatMap((cle) => indexDesColonnes(entetes, QUESTIONS[cle])));
+    const contact = QUESTIONS_DE_CONTACT.map(brut).find((valeur) => valeur !== '') ?? '';
     // Une question a plusieurs colonnes garde la premiere valeur non vide, sous le premier libelle.
     const reponses = new Map();
     entetes.forEach((entete, index) => {
@@ -200,7 +206,7 @@ export function projeter(entetes, ligne, numero, fuseauFeuille = 'Europe/Paris')
         systeme: ouNul(propre('systeme')),
         version_app: ouNul(propre('versionApp')),
         texte: texteDe(nature, propre),
-        contact: ouNul(brut('contact')),
+        contact: ouNul(contact),
         volontaire: volontaire !== '' && !sansAccents(volontaire).startsWith('non'),
         reponses: Object.fromEntries(reponses),
     };

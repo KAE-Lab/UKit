@@ -76,9 +76,10 @@ question existante est la règle :
   titre ou la description, au choix.
 
 Google Forms ne sait pas rendre une question obligatoire selon une autre réponse. Pour exiger
-l'adresse d'un volontaire : faire suivre l'option « Oui » d'une section qui pose **la même question
-d'adresse, avec le même libellé, en obligatoire**. La feuille gagne une seconde colonne du même
-nom, et l'importeur prend la première non vide.
+l'adresse d'un volontaire : faire suivre l'option « Oui » d'une section qui pose la question
+d'adresse **en obligatoire**, sous le libellé *« Ton adresse e-mail, pour qu'on puisse te
+contacter »* — le second libellé que l'importeur lit comme contact. C'est ainsi que le formulaire
+est construit depuis le 2026-09-07.
 
 Tout est déjà câblé : la pastille d'état de service, `ModaleCampusNonRelie` et le bouton
 « Demander » d'un état vide pointent **tous** sur ce formulaire, par `services.adaptation` du
