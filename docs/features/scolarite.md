@@ -1628,6 +1628,13 @@ plein écran avec une barre d'action flottante glissable (retour, avant, recharg
 externe, fermeture), pilotée par un geste Reanimated. **Ce n'est pas du scraping** : l'utilisateur la
 pilote, elle ne devient pas un Blueprint.
 
+Elle charge tout lien `http(s)` dans la même vue — c'est ce qu'un portail attend, lui qui passe du
+CAS à l'ENT. **Une exception, posée par l'appelant** : le formulaire de retours porte un lien vers la
+page d'engagement du chantier campus, et le charger dans la vue faisait recommencer le formulaire au
+retour. Les appelants du formulaire passent des `domainesInternes` dans la route
+([`liensDuFormulaire.ts`](../../src/shared/navigation/liensDuFormulaire.ts)) : ce qui est chez Google
+reste, tout autre lien s'ouvre dans le navigateur du téléphone. Les portails ne posent rien.
+
 Quatre points d'entrée nommés :
 
 | `entrypoint` | Destination |

@@ -241,6 +241,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 20 écrans |
 | [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | le pager des quatre onglets (barre en bas), la barre personnalisée et son bouton d'action contextuel ([navigation.md](navigation.md)) |
 | [`shared/navigation/NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) | `NavBarHelper`, `withHeaderAnimation`, `withStaticHeader`, boutons d'en-tête |
+| [`shared/navigation/liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts) | les paramètres de route du formulaire de retours, et la règle des domaines qui restent dans la vue intégrée — pur, testé |
 | [`shared/aetherius/client.ts`](../src/shared/aetherius/client.ts) | la façade du moteur, instanciée une fois pour toute l'application |
 | [`shared/aetherius/secrets.ts`](../src/shared/aetherius/secrets.ts) | résolution des secrets depuis le document unique de `SecureStore` |
 | [`shared/aetherius/delivery.ts`](../src/shared/aetherius/delivery.ts) | le cadrage du registre : socle, périmètre des secrets, URL du manifeste ([blueprints.md](blueprints.md)) |

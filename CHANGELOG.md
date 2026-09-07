@@ -37,6 +37,11 @@ La 6.1.x : le socle monte, et ce qui a été signalé se corrige
 
 ### Corrigé
 
+- **Lire la page d'engagement ne fait plus recommencer le formulaire** (6.1.x-C). Le formulaire de
+  retours s'ouvre dans le navigateur intégré, et son lien vers la page d'engagement du chantier
+  campus y remplaçait le formulaire : « retour » rechargeait Google Forms, qui repartait de zéro.
+  Depuis le formulaire, un lien qui sort de chez Google s'ouvre dans le navigateur du téléphone ;
+  les portails universitaires ne changent pas.
 - **La synchronisation automatique du calendrier part enfin** (6.1.x-B). Deux utilisateurs, sur
   Android et sur iPhone, avaient signalé qu'elle ne se faisait jamais d'elle-même. La tâche de fond
   n'était jamais réarmée au lancement, et son module était déprécié ; elle passe par

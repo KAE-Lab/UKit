@@ -46,7 +46,7 @@ export type RootStackParamList = {
     LienEdt: undefined;
     Crous: undefined;
     Library: undefined;
-    WebBrowser: { entrypoint?: string; href?: string };
+    WebBrowser: { entrypoint?: string; href?: string; domainesInternes?: readonly string[] };
     Day: undefined;
     CrousMenu: { restaurantName?: string; location?: { lat: number, lng: number }; openingLines?: string[] };
     LibraryDetails: { library?: { name: string; lat: number; lng: number } };

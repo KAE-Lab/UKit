@@ -19,6 +19,19 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Lire la page d'engagement depuis le formulaire le fait recommencer~~ — corrigé le 2026-09-07
+
+Rencontré par le propriétaire du produit le jour de la mise en ligne de la page d'engagement
+([6.1.x-C](phase-6/6-1-x-c-retours.md)). Le formulaire de retours s'ouvre dans le navigateur
+intégré, qui charge tout lien `http(s)` dans la même vue : le lien remplaçait le formulaire, et
+« retour » rechargeait Google Forms, qui repart de zéro.
+
+Les trois appelants du formulaire posent désormais des **domaines internes** sur la route
+`WebBrowser` ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts)) : ce qui
+est chez Google reste dans la vue, tout autre lien s'ouvre dans le navigateur du téléphone. Par
+domaines et non par type de navigation, parce qu'Android ne distingue pas un clic d'une
+redirection. Les portails ne posent pas ce paramètre.
+
 Les deux suivants ont été **rencontrés** par la session d'écran Scolarité du 2026-08-25, et
 volontairement **pas corrigés** : ni l'un ni l'autre ne tombe dans son périmètre, et les traiter en
 passant aurait rendu la session invérifiable

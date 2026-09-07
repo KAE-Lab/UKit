@@ -184,3 +184,12 @@ Mesurés le 2026-09-07. Le texte ci-dessus est laissé tel qu'il a été écrit.
   RLS rend une liste vide), un compte sans droits lit une liste vide et son `PATCH` ne touche rien, un
   éditeur reclasse et sa trace porte son e-mail, et un `PATCH` sur `texte` est refusé par le privilège
   de colonne.
+- **Une ligne de code applicatif, finalement.** Le jour de la mise en ligne, lire la page
+  d'engagement depuis le formulaire le faisait recommencer : le navigateur intégré chargeait le lien
+  dans la même vue. Les appelants du formulaire posent des domaines internes sur la route
+  ([`liensDuFormulaire.ts`](../../src/shared/navigation/liensDuFormulaire.ts)), et un lien qui sort
+  de chez Google s'ouvre dehors. C'est le seul point du jalon qui attend la release, et il est dans
+  la liste Android de [Z](6-1-x-z-sortie.md).
+- **Le formulaire a pris une forme un peu différente** de celle proposée : la question de
+  volontariat porte le lien dans son titre, et l'adresse est posée une seconde fois, obligatoire,
+  dans la branche du volontaire, sous un libellé propre. L'importeur reconnaît les deux.

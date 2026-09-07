@@ -36,6 +36,7 @@ import { HEADER_BUTTON_ICON, HeaderButton } from '../ui/HeaderButton';
 import { messagesConnus, onMessages } from './index';
 import { choisirPresentation } from './presentation';
 import { vusConnus } from './vus';
+import { parametresDuFormulaire } from '../navigation/liensDuFormulaire';
 
 export interface PastilleServiceProps {
     readonly theme: AppThemeType;
@@ -84,7 +85,7 @@ export function PastilleService({ theme, style }: PastilleServiceProps) {
                     corps={Translator.get('SERVICE_OK_BODY')}
                     lien={formulaire === null ? undefined : {
                         libelle: Translator.get('SERVICE_REPORT_LINK'),
-                        onPress: () => { fermer(); navigation.navigate('WebBrowser', { href: formulaire }); },
+                        onPress: () => { fermer(); navigation.navigate('WebBrowser', parametresDuFormulaire(formulaire)); },
                     }}
                 />
             )}

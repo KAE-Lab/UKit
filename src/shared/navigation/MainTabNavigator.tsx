@@ -20,6 +20,7 @@ import { groupesRequis, portailPublie, serviceEtablissement } from '../etablisse
 import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
 import { Dialogue } from '../ui/Dialogue';
 import { ModaleBientot } from '../ui/ModaleBientot';
+import { parametresDuFormulaire } from './liensDuFormulaire';
 
 export type MainTabParamList = {
     PlanningTab: undefined;
@@ -193,7 +194,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                         fermer={() => setTeaser(false)}
                         ouvrirDemande={(href) => {
                             setTeaser(false);
-                            (navigation as { navigate: (name: string, params?: object) => void }).navigate('WebBrowser', { href });
+                            (navigation as { navigate: (name: string, params?: object) => void }).navigate('WebBrowser', parametresDuFormulaire(href));
                         }}
                     />
                 </>
@@ -239,7 +240,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                         setTeaser(false);
                         // La route vit dans le Stack racine, au-dessus des onglets : react-navigation
                         // remonte tout seul, mais le type des helpers d'onglets ne le sait pas.
-                        (navigation as { navigate: (name: string, params?: object) => void }).navigate('WebBrowser', { href });
+                        (navigation as { navigate: (name: string, params?: object) => void }).navigate('WebBrowser', parametresDuFormulaire(href));
                     }}
                 />
             </>

@@ -52,8 +52,10 @@ la **pastille d'état de service** ([`PastilleService.tsx`](../src/shared/messag
 un « i » au gabarit des boutons d'en-tête, à droite du grand titre de chaque onglet, **toujours là** —
 gris quand tout va bien, rouge quand un incident est en cours. Grise, elle ouvre une feuille « Rien à
 signaler » avec le lien du formulaire commun (avis, bugs, demandes — `services.adaptation` du
-catalogue) : quelqu'un qui a trouvé un bug le cherche précisément là. Rouge, elle rouvre la feuille de
-l'incident. Chaque en-tête la pose à côté de son titre, comme il pose son titre : c'est ce qui l'aligne
+catalogue) : quelqu'un qui a trouvé un bug le cherche précisément là — et depuis ce formulaire, un
+lien qui sort de chez Google, la page d'engagement, s'ouvre dans le navigateur du téléphone pour ne
+pas faire recommencer la saisie ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts)).
+Rouge, elle rouvre la feuille de l'incident. Chaque en-tête la pose à côté de son titre, comme il pose son titre : c'est ce qui l'aligne
 avec lui et lui évite toute collision avec ce que la rangée porte déjà. Les deux premières versions —
 un rappel qui n'existait que pendant l'incident, puis un bandeau permanent qui cachait le titre — ont
 été défaites sur appareil le 2026-09-03 : une pastille toujours présente n'inquiète pas, sa couleur

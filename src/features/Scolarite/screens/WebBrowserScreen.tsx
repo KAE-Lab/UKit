@@ -10,6 +10,7 @@ import { serviceEtablissement } from '../../../shared/etablissements';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
 import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
+import { resteDansLaVue } from '../../../shared/navigation/liensDuFormulaire';
 
 import { FloatingActionBar, SaveCredentialsModal, getPortalInjectedScript } from '../components/WebBrowserComponents';
 
@@ -34,7 +35,7 @@ function adresseDuService(entrypoint?: string, href?: string): string {
 
 export interface WebBrowserScreenProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> & { setOptions: (options: unknown) => void };
-    route: { params?: { entrypoint?: 'ent' | 'email' | 'cas' | 'apogee'; href?: string } };
+    route: { params?: { entrypoint?: 'ent' | 'email' | 'cas' | 'apogee'; href?: string; domainesInternes?: readonly string[] } };
     onDismiss?: () => void;
 }
 
@@ -256,6 +257,15 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
                     originWhitelist={['*']}
                     onShouldStartLoadWithRequest={(event) => {
                         if (event.url.startsWith('http://') || event.url.startsWith('https://') || event.url === 'about:blank') {
+                            // Le formulaire de retours seul pose des domaines internes : un lien qui en
+                            // sort s'ouvre dans le navigateur du telephone, et le formulaire reste tel
+                            // quel dans la vue (shared/navigation/liensDuFormulaire.ts). Une sous-vue
+                            // (iframe) n'est pas une navigation de l'utilisateur.
+                            const domainesInternes = route.params?.domainesInternes;
+                            if (domainesInternes !== undefined && event.isTopFrame !== false && !resteDansLaVue(event.url, domainesInternes)) {
+                                Linking.openURL(event.url).catch(() => { });
+                                return false;
+                            }
                             return true;
                         }
 
