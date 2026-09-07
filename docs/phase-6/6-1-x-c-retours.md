@@ -189,8 +189,13 @@ Mesurés le 2026-09-07. Le texte ci-dessus est laissé tel qu'il a été écrit.
   dans la même vue. Les appelants du formulaire posent des domaines internes sur la route
   ([`liensDuFormulaire.ts`](../../src/shared/navigation/liensDuFormulaire.ts)), et un lien qui sort
   de chez Google s'ouvre par-dessus, dans une seconde instance du navigateur intégré — le
-  formulaire reste monté en dessous. C'est le seul point du jalon qui attend la release, et il est dans
-  la liste Android de [Z](6-1-x-z-sortie.md).
+  formulaire reste monté en dessous. Trois essais avant que ça tienne : Google Forms ouvre ses liens
+  en « nouvelle fenêtre », et sur iOS la WebView les prend pour une sous-vue ; c'est `onOpenWindow`
+  qui les attrape. **Vérifié sur iPhone le 2026-09-07 soir**, la ligne `[navigateur]` dans Metro à
+  l'appui. C'est le seul point du jalon qui attend la release, et il est dans la liste Android de
+  [Z](6-1-x-z-sortie.md).
+- **Le workflow a été lancé à la main depuis `main`, en `dry_run`** : 25 lues, 3 nouvelles (arrivées
+  dans la soirée), rien d'écrit, et rien d'autre dans le journal public.
 - **Le formulaire a pris une forme un peu différente** de celle proposée : la question de
   volontariat porte le lien dans son titre, et l'adresse est posée une seconde fois, obligatoire,
   dans la branche du volontaire, sous un libellé propre. L'importeur reconnaît les deux.
