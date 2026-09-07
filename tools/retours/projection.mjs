@@ -55,6 +55,12 @@ function normaliserLibelle(libelle) {
     return libelle.trim().replace(/\s+/g, ' ').replace(/[’‘]/g, "'");
 }
 
+/**
+ * Une colonne que la feuille porte sans en-tete — une question ajoutee puis supprimee — sort en
+ * `Column N` dans l'export. Elle ne dit rien : on ne la range pas dans la reponse.
+ */
+const COLONNE_SANS_ENTETE = /^Column \d+$/;
+
 /** Une cellule : trimee, ses fins de ligne ramenees a `\n` (les deux exports different). */
 function normaliserCellule(valeur) {
     return valeur.replace(/\r\n?/g, '\n').trim();
@@ -160,10 +166,10 @@ export function projeter(entetes, ligne, numero, fuseauFeuille = 'Europe/Paris')
 
     const nature = natureDe(brut('pourquoi'));
     const contactNormalise = normaliserLibelle(QUESTIONS.contact);
-    const reponses = Object.fromEntries(entetes.map((entete, index) => {
-        const valeur = normaliserCellule(ligne[index] ?? '');
-        return [entete.trim(), normaliserLibelle(entete) === contactNormalise ? valeur : masquer(valeur)];
-    }));
+    const reponses = Object.fromEntries(entetes
+        .map((entete, index) => [entete.trim(), normaliserCellule(ligne[index] ?? '')])
+        .filter(([entete, valeur]) => !(COLONNE_SANS_ENTETE.test(entete) && valeur === ''))
+        .map(([entete, valeur]) => [entete, normaliserLibelle(entete) === contactNormalise ? valeur : masquer(valeur)]));
     const volontaire = brut('volontaire');
 
     return {

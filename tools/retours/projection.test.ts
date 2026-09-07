@@ -102,6 +102,14 @@ describe('projeter', () => {
         expect(retour.reponses['Une question nouvelle ?']).toBe('oui');
     });
 
+    it('ignore une colonne sans en-tete quand elle est vide, la garde si elle porte quelque chose', () => {
+        const entetes = [...ENTETES, 'Column 18'];
+        const vide = projeter(entetes, [...ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Rien' }), ''], 2);
+        expect('Column 18' in vide.reponses).toBe(false);
+        const pleine = projeter(entetes, [...ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Rien' }), 'x'], 2);
+        expect(pleine.reponses['Column 18']).toBe('x');
+    });
+
     it('refuse un horodatage illisible, avec le numero de ligne', () => {
         expect(() => projeter(ENTETES, ligne({ horodatage: 'hier', pourquoi: 'Rien' }), 7)).toThrow(/ligne 7 : horodatage illisible « hier »/);
     });
