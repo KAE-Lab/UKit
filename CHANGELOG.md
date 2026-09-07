@@ -10,11 +10,51 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
-La 6.1.1 : le socle monte, rien ne se voit ([docs/phase-6/6-2-mise-a-plat.md](docs/phase-6/6-2-mise-a-plat.md)).
+La 6.1.x : le socle monte, et ce qui a été signalé se corrige
+([docs/phase-6/6-2-mise-a-plat.md](docs/phase-6/6-2-mise-a-plat.md)).
+
+### Ajouté
+
+- **L'onglet Scolarité vit sans compte** (6.1.x-B). Un enseignant-chercheur à qui l'application avait
+  été imposée cherchait la page courriel, et ne trouvait qu'un formulaire étudiant. Sans compte, la
+  page est désormais la même que connectée : les portes des services — ENT, messagerie, Moodle,
+  Apogée selon l'université —, les documents, et l'invitation à se connecter. Les identifiants tapés
+  dans le navigateur intégré peuvent être mémorisés pour remplir la connexion, sans ouvrir de session
+  dans l'application ; ils se voient et s'oublient depuis l'écran du compte.
+
+### Retiré
+
+- **On ne passe plus d'un onglet à l'autre en glissant** (6.1.x-B). Le geste, ajouté en 6.1, cassait
+  sur Android le ruban des jours et le carrousel des cours du Planning. La barre d'onglets reste la
+  navigation ; rien d'autre ne change.
+
+### Corrigé
+
+- **La synchronisation automatique du calendrier part enfin** (6.1.x-B). Deux utilisateurs, sur
+  Android et sur iPhone, avaient signalé qu'elle ne se faisait jamais d'elle-même. La tâche de fond
+  n'était jamais réarmée au lancement, et son module était déprécié ; elle passe par
+  `expo-background-task`, est armée à chaque ouverture, et surtout **l'ouverture de l'application
+  synchronise elle-même** si la dernière date de plus de douze heures. Les rappels de cours sont
+  replanifiés au même moment, sans avoir à ouvrir le Planning.
+- **Éteindre puis rallumer la synchronisation efface bien l'échec affiché.** L'avertissement « la
+  dernière synchronisation a échoué » ne s'effaçait qu'après un succès, quel que soit le geste. Il
+  est désormais daté, il s'affiche **sous** la date du dernier succès au lieu de la remplacer, et
+  l'interrupteur le remet à zéro.
+- **Une page annexe du dossier qui ne répond pas n'emporte plus l'identité** (6.1.x-B). Les lectures
+  bonus des portails — INE, formation, emploi du temps personnel à Bordeaux INP, annuaire à Bordeaux —
+  vivent dans des blocs facultatifs du moteur : si l'une cède, le parcours froid finit avec ce qu'il a
+  lu au lieu de tout perdre. C'est une publication de Blueprints, reçue par les appareils déjà installés.
+- **La fiche du compte dit l'échec d'un parcours froid**, avec le même encart que l'onglet — elle
+  affichait six tirets sans un mot.
+- **Un cours à plusieurs UE ne disparaît plus dès qu'une seule est filtrée** (6.1.x-B). Un TP commun
+  à deux unités d'enseignement — la même matière sous son code français et son code anglais —
+  s'effaçait pour tout le monde dès que l'un des deux codes était masqué, et le second code n'était
+  même pas proposé dans les filtres. Un cours reste tant qu'une de ses UE n'est pas filtrée. Signalé
+  par mail le 2026-09-06.
 
 ### Modifié
 
-- **Le socle passe d'Expo 54 à 57** (6.1.1-A) — React Native 0.86, React 19.2, et une quarantaine de
+- **Le socle passe d'Expo 54 à 57** (6.1.x-A) — React Native 0.86, React 19.2, et une quarantaine de
   modules de plateforme avec eux. Rien ne change à l'écran ; c'est ce qui rend la version
   attribuable. Une conséquence visible tout de même : **iOS 16.4 devient le minimum** — un iPhone 7,
   6s ou SE de première génération garde la 6.1 et ne recevra plus de mise à jour.

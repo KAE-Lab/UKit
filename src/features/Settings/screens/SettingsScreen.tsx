@@ -123,10 +123,10 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     setCalendar = (calendar: import('expo-calendar/legacy').Calendar | 'UKit') => {
         if (calendar === 'UKit') {
             this.setState({ selectedCalendar: calendar });
-            SettingsManager.setSyncCalendar(calendar);
+            void SettingsManager.setSyncCalendar(calendar);
         } else {
             this.setState({ selectedCalendar: calendar.id });
-            SettingsManager.setSyncCalendar(calendar.id);
+            void SettingsManager.setSyncCalendar(calendar.id);
         }
     };
 
@@ -339,12 +339,18 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         void this.refreshCompte();
         void this.verifierPermissionCalendrier(true);
         SettingsManager.on('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
+        // La tentative change aussi sans synchronisation — l'interrupteur efface un echec — et
+        // l'ecran ne la lisait qu'au rendu provoque par l'evenement du dessus (6.1.x-B).
+        SettingsManager.on('synchroCalendrier', this.surTentativeSynchro);
     };
 
     componentWillUnmount = () => {
         if (this._unsubscribeFocus) this._unsubscribeFocus();
         SettingsManager.unsubscribe('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
+        SettingsManager.unsubscribe('synchroCalendrier', this.surTentativeSynchro);
     };
+
+    surTentativeSynchro = () => this.forceUpdate();
 
 
 
@@ -438,7 +444,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     theme={theme}
                     hasCalendarPermission={this.state.hasCalendarPermission}
                     lastSyncDate={SettingsManager.getLastSyncDate()}
-                    lastSyncFailed={SettingsManager.getLastSyncFailed()}
+                    derniereTentative={SettingsManager.getDerniereTentativeSynchro()}
                     calendarSyncEnabled={this.state.calendarSyncEnabled}
                     toggleCalendarSync={this.toggleCalendarSync}
                     onForceSync={this.forcerSynchronisation}

@@ -31,6 +31,17 @@ const CAS_COMPTES_KEY = 'UKIT_CAS_COMPTES';
 const COLD_DATA_KEY = 'UKIT_COLD_DATA_PAR_ETAB';
 
 /**
+ * Les identifiants **du navigateur integre**, par etablissement (6.1.x-B).
+ *
+ * Une cle a part, et c'est la decision : ces identifiants ne remplissent que le formulaire du CAS
+ * dans le navigateur, ils n'ouvrent **aucune** session UKit — la modale du navigateur les ecrivait
+ * dans la table de session, et un enseignant qui les enregistrait se retrouvait, au lancement
+ * suivant, avec un parcours froid etudiant qui echouait chez lui. `CredentialsContext` ne lit jamais
+ * cette table ; le navigateur la lit apres celle de session, qui gagne quand elle existe.
+ */
+const AUTOFILL_KEY = 'UKIT_CAS_AUTOFILL';
+
+/**
  * Les dernieres valeurs lues par les widgets de Scolarite, par etablissement.
  *
  * **Au trousseau et non dans les reglages**, comme le dossier froid et pour la meme raison : ce sont
@@ -172,6 +183,30 @@ export default class SecureStoreService {
         );
     }
 
+    /** Memorise les identifiants du navigateur pour l'etablissement selectionne, sans toucher aux autres. */
+    static async saveAutofill(username: string, password: string): Promise<boolean> {
+        const table = lireComptes(await lireTablePersistee(AUTOFILL_KEY));
+        return ecrireTablePersistee(
+            AUTOFILL_KEY,
+            fusionnerEntree<CompteEnregistre>(table, getCodeEtablissementActif(), { username, password }),
+        );
+    }
+
+    /** Les identifiants du navigateur de l'etablissement selectionne, ou `null`. */
+    static async getAutofill(): Promise<{ username: string; password: string } | null> {
+        const table = lireComptes(await lireTablePersistee(AUTOFILL_KEY));
+        return table[getCodeEtablissementActif()] ?? null;
+    }
+
+    /** Oublie les identifiants du navigateur de l'etablissement selectionne. */
+    static async deleteAutofill(): Promise<boolean> {
+        const table = lireComptes(await lireTablePersistee(AUTOFILL_KEY));
+        return ecrireTablePersistee(
+            AUTOFILL_KEY,
+            fusionnerEntree<CompteEnregistre>(table, getCodeEtablissementActif(), null),
+        );
+    }
+
     static async saveColdData(data: unknown): Promise<boolean> {
         await convertirSiNecessaire(COLD_DATA_V1, COLD_DATA_KEY, 'le dossier');
         const table = lireDossiers(await lireTablePersistee(COLD_DATA_KEY));
@@ -223,6 +258,7 @@ export default class SecureStoreService {
             await SecureStore.deleteItemAsync(CAS_COMPTES_KEY);
             await SecureStore.deleteItemAsync(COLD_DATA_KEY);
             await SecureStore.deleteItemAsync(WIDGETS_KEY);
+            await SecureStore.deleteItemAsync(AUTOFILL_KEY);
             await SecureStore.deleteItemAsync(CAS_CREDENTIALS_V1);
             await SecureStore.deleteItemAsync(COLD_DATA_V1);
             return true;

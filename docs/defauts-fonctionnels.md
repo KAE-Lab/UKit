@@ -427,7 +427,19 @@ réponse en 0,19 s.
 - **une valeur se remet à l'épreuve plutôt que de rester annulée par précaution.** Republier la valeur
   suspecte dans des conditions propres a coûté une publication et a tranché en cinq minutes.
 
-### Une navigation bonus non gardée peut emporter tout le parcours froid
+### ~~Une navigation bonus non gardée peut emporter tout le parcours froid~~ — corrigé le 2026-09-07
+
+> **La prémisse de cette entrée était fausse, et elle a failli coûter une session.** « Le vocabulaire
+> du moteur ne sait pas rendre un `navigate` inoffensif » : c'était vrai le 2026-09-04, et faux
+> depuis le lendemain — le jalon 3-J d'Aetherius (`0.5.8`) a livré le bloc **`optional`** pour ce
+> cas exact, et l'application consomme la `0.5.9` depuis la 6.1 sans qu'aucun Blueprint ne s'en
+> serve. Le découpage en Blueprints séparés, annoncé ci-dessous comme la seule issue, aurait changé
+> le contrat de sorties pour rien. **Corrigé par le jalon [6.1.x-B](phase-6/6-1-x-b-signalements.md)**
+> avec le bloc : les trois lectures bonus de l'INP et l'annuaire de Bordeaux vivent chacune dans un
+> `optional`, les sorties qui les référencent finissent par `| default([])`, et les deux entrées de
+> `versions.json` portent `min_engine: "0.5.8"`. Rejoué sur les deux comptes réels le 2026-09-07 :
+> nominal identique ; un onglet qui ne répond jamais fait céder son seul bloc, et l'identité arrive.
+> Une leçon de méthode en plus : **relire le changelog du moteur avant de décréter qu'il ne sait pas.**
 
 Constaté sur un iPhone le 2026-09-04, en wifi de campus, pendant la vérification du jalon
 [6.1-D](phase-6/6-1-d-publication.md) : le parcours froid de Bordeaux INP meurt à 97 % du
@@ -543,7 +555,14 @@ après un abandon.** Un run qui franchit son dernier pas une milliseconde avant 
 `deleteWidgets` existe pour empêcher. Le rangement du certificat, chaîné sur la fin du
 rafraîchissement, est gardé de la même façon : une série **interrompue** ne l'enchaîne plus.
 
-### La fiche du compte ne dit pas l'échec d'un parcours froid
+### ~~La fiche du compte ne dit pas l'échec d'un parcours froid~~ — corrigé le 2026-09-07
+
+> **Corrigé par le jalon [6.1.x-B](phase-6/6-1-x-b-signalements.md)**, presque comme ce texte le
+> proposait — presque, parce que `variant="card"` n'est pas une prop d'`EncartSession` mais de ses
+> enfants, et que l'encart pose ses propres marges, qui doublaient celles de la fiche. Il a gagné
+> une prop `enveloppe`, la dérivation de l'échec bloquant est partagée avec l'onglet
+> (`echecBloquantDe`, dans `ScolariteMapping`), et le réessai s'annonce dans le geste comme là-bas,
+> pour que la fiche tienne pendant la session.
 
 Trouvé en établissant le périmètre du défaut du réessai, le 2026-09-04, et **volontairement pas
 corrigé** : il ne tombe pas dans le périmètre du jalon [6.1-E](phase-6/6-1-e-finitions-interface.md),
@@ -580,7 +599,7 @@ propriétaire du produit : c'est du rythme, pas du comportement.
 ### ~~Le certificat de scolarité arrive longtemps après le parcours froid~~ — ce n'était pas un défaut, élucidé le 2026-09-06
 
 Constaté sur iPhone sous Expo Go le 2026-09-06, en jouant le protocole de la montée de socle
-([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)), **chez les deux établissements** : rien à la fin du
+([6.1.x-A](phase-6/6-1-x-a-montee-du-socle.md)), **chez les deux établissements** : rien à la fin du
 parcours froid, puis la pièce « super longtemps après ». Les deux Blueprints `ukit.portail.*.documents`
 rejoués depuis le poste rendent le PDF (94 et 112 ko) : la source est saine. Ce qui est établi dans
 le code : le certificat n'est pas un widget comme les autres. Il ne part **qu'après** un parcours
@@ -605,7 +624,7 @@ iPhone le soir même : plus un jour libre sans texte, où qu'on aille.
 
 ### ~~Le clavier recouvrait la recherche des filtres d'UE sur Android~~ — corrigé le 2026-09-06
 
-Trouvé par le relevé de la montée de socle ([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)), pas
+Trouvé par le relevé de la montée de socle ([6.1.x-A](phase-6/6-1-x-a-montee-du-socle.md)), pas
 sur appareil : `FiltersScreen` était le **seul** des cinq `KeyboardAvoidingView` du dépôt à laisser
 Android sans comportement (`Platform.OS === 'ios' ? 'padding' : undefined`), alors que les quatre
 autres écrivent la même doctrine — `padding` sur les deux plateformes, parce que depuis l'edge-to-edge

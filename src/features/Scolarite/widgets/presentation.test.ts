@@ -27,6 +27,18 @@ const entrees = (extra: Partial<Parameters<typeof etatDeLaRangee>[0]> = {}) => (
 });
 
 describe('etatDeLaRangee', () => {
+    it('sans session, une rangee est une porte, un teaser ou un constat — jamais une attente', () => {
+        // La page sans compte (6.1.x-B) : la source ne se lira pas, mais son existence decide encore
+        // de la forme — les notes et examens de Bordeaux restent floutes, avec ou sans compte.
+        expect(etatDeLaRangee(entrees({ sansSession: true })).nature).toBe('porte');
+        expect(etatDeLaRangee(entrees({ sansSession: true, aUneSource: false })).nature).toBe('bientot');
+        expect(etatDeLaRangee(entrees({ sansSession: true, aUneSource: false, aUnePorte: false })).nature).toBe('absent');
+        expect(etatDeLaRangee(entrees({ sansSession: true, aUnePorte: false })).nature).toBe('absent');
+        // Meme un echec ou une valeur qui trainerait ne se montre pas : il n'y a personne a qui parler.
+        expect(etatDeLaRangee(entrees({ sansSession: true, echec: echec() })).nature).toBe('porte');
+        expect(etatDeLaRangee(entrees({ sansSession: true, valeur: valeur(3) })).chargement).toBe(false);
+    });
+
     it('montre l echec quand il a quelque chose a dire', () => {
         expect(etatDeLaRangee(entrees({ echec: echec() })).nature).toBe('echec');
     });

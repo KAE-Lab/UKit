@@ -1,4 +1,4 @@
-# 6.1.1-A — La montée du socle
+# 6.1.x-A — La montée du socle
 
 > **Jalon livré le 2026-09-06 — code, portes et documentation ; protocole joué sur iPhone sous
 > l'Expo Go du store le soir même**, en trois passes : le projet s'ouvre, les deux parcours froids
@@ -140,7 +140,7 @@ ordre, ce qui a surpris. Sans elle, le prochain saut se redécouvre entièrement
 
 ## Dépendances
 
-Aucune. Ce jalon ouvre la 6.1.1. [6.1.1-C](6-1-1-c-retours.md) peut courir en parallèle : il ne
+Aucune. Ce jalon ouvre la 6.1.x. [6.1.x-C](6-1-x-c-retours.md) peut courir en parallèle : il ne
 touche pas l'application.
 
 ## Plan de test sur appareil
@@ -216,7 +216,7 @@ Mesurés le 2026-09-06, en jouant la montée. Le texte ci-dessus est laissé tel
   aussi, par un type local ; le greffon changerait le rendu et n'est pas adopté.
 - **Le renommage en `main`** : les références vivantes changées ici (`console.yml`, `urls.ts`,
   quatre documents), puis le renommage sur GitHub et la reprise locale le 2026-09-06, **avant** la
-  fusion — sans dommage, puisque la branche principale ne reçoit rien avant 6.1.1-Z et que le
+  fusion — sans dommage, puisque la branche principale ne reçoit rien avant 6.1.x-Z et que le
   workflow de la console ne vise `main` qu'une fois fusionné.
 
 ### Ce que le premier passage sur iPhone a ajouté (soir du 2026-09-06)

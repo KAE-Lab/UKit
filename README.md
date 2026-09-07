@@ -261,7 +261,7 @@ livré ; elle est mise à jour à chaque contribution.
   test d'écran ni de composant, et l'intégration continue ne joue toujours que la publication.
   **`npx tsc --noEmit` est vert** depuis le 2026-08-16 — il ne l'avait jamais été — et **`npx eslint .`
   est à zéro** depuis la passe de code 6.1-C, trente-cinq avertissements traités un par un ; `npm test`
-  joue 550 tests. [docs/qualite.md](docs/qualite.md)
+  joue 582 tests. [docs/qualite.md](docs/qualite.md)
 - [ ] **Le comportement en données** — l'accès aux sources migre vers des
   [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
   et corrigeables sans release. Le socle est en place (6-A), **la base de publication existe** (6-B),
@@ -332,8 +332,9 @@ livré ; elle est mise à jour à chaque contribution.
   les mêmes pixels n'aurait rien ajouté. **Les interrupteurs et le curseur sont dessinés** — une seule
   apparence sur les deux plateformes au lieu de celle d'Android à côté de celle d'iOS, avec retour
   haptique, état désactivé et accessibilité ; deux dépendances sortent. Et **les onglets se
-  glissent** : un pager sous la barre flottante inchangée, activé sur la Scolarité et les Réglages,
-  refusé au Planning et au Campus dont le contenu glisse déjà.
+  glissaient** : un pager sous la barre flottante inchangée — **retiré au jalon 6.1.x-B**, parce
+  qu'il cassait les listes horizontales du Planning sur Android, et que le propriétaire du produit
+  n'y tenait pas ; la barre flottante est la seule navigation entre onglets.
 
   Trois défauts trouvés le 2026-09-04 sont corrigés au passage, parce qu'ils vivaient dans les mêmes
   fichiers. Deux avaient la même cause de fond — 6.1-A avait donné un **second hôte** à un geste sans
@@ -343,7 +344,7 @@ livré ; elle est mise à jour à chaque contribution.
   valide côté serveur. La cause tenait à une frontière d'`await` dans le verrou du moteur — le test et
   la réservation ne partageaient pas le même tour — et un test le verrouille désormais.
   [docs/phase-6/6-1-e-finitions-interface.md](docs/phase-6/6-1-e-finitions-interface.md)
-- [x] **Montée du socle** (6.1.1-A) — Expo **54 → 57**, React Native 0.81 → 0.86, React 19.2, et la
+- [x] **Montée du socle** (6.1.x-A) — Expo **54 → 57**, React Native 0.81 → 0.86, React 19.2, et la
   dette d'outillage soldée au même endroit : Node écrit une fois (`.nvmrc`, `engines`), TypeScript
   déclaré, trois dépendances mortes retirées, la branche principale renommée `main`. Rien de visible,
   et pourtant c'est ce qui casse le plus : quatre ruptures de bibliothèques ne se voyaient qu'à
@@ -369,7 +370,10 @@ livré ; elle est mise à jour à chaque contribution.
   l'année scolaire, recherche de groupes par sections, fiche de cours avec carte, filtres d'UE,
   carrousel des cours simultanés, repli hors ligne daté. Source jouée par quatre
   [Blueprints](docs/blueprints.md) visant l'université **sans relais** ; une panne, une source qui a
-  changé et une journée sans cours produisent trois écrans différents.
+  changé et une journée sans cours produisent trois écrans différents. **Un cours peut porter
+  plusieurs UE** (6.1.x-B) — le même TP sous son code français et son code anglais, mesuré sur
+  Celcat — et il reste affiché tant qu'une seule n'est pas filtrée ; la projection ne gardait que le
+  premier code.
   [docs/features/planning.md](docs/features/planning.md)
 - [x] **Campus — tableau de bord** — quatre sections indépendantes, position résolue une seule fois
   pour tout l'onglet, socle de liste commun (recherche, filtres persistés, favoris, états vides). Depuis
@@ -405,6 +409,13 @@ livré ; elle est mise à jour à chaque contribution.
   Une connexion **propose** ce qu'elle trouve en chemin — les UE non suivies en filtres, à
   Bordeaux ; l'emploi du temps personnel en groupe, à l'INP — derrière une confirmation, parce que
   deviner juste dans le dos de quelqu'un reste deviner dans son dos.
+
+  **Et l'onglet vit sans compte** (6.1.x-B) : un enseignant-chercheur à qui l'application avait été
+  imposée cherchait la page courriel, et ne trouvait qu'un formulaire étudiant. La page sans compte
+  est désormais **la même** que la page connectée — la grille en portes, les documents, l'invitation
+  à se connecter en encart — parce que les portes des services viennent du catalogue et n'ont jamais
+  eu besoin d'une session. Les identifiants tapés dans le navigateur intégré peuvent être mémorisés
+  pour remplir la connexion, sans ouvrir de session dans l'application.
 
   **La première session d'écran du volet 2 a refait cet onglet** (2026-08-25), et elle a commencé par
   une sonde des deux dossiers plutôt que par un habillage : la page n'avait rien à dire, et aucun
@@ -449,8 +460,14 @@ livré ; elle est mise à jour à chaque contribution.
   une fac bordelaise qu'on n'a pas portée — planning, restaurants, bibliothèques et salles libres
   compris. [docs/phase-6/6-j-compte-et-sources-par-etablissement.md](docs/phase-6/6-j-compte-et-sources-par-etablissement.md)
 - [x] **Réglages** — langue, thème, filtres d'UE, rappels de cours avec délai réglable au **curseur
-  dessiné du dépôt** (comme les quatre interrupteurs, depuis 6.1-E) et titres traduits, synchronisation idempotente du **planning agrégé** avec le calendrier système (tâche de
-  fond toutes les 12 h, échec dit), réinitialisation complète, À propos. [docs/features/settings.md](docs/features/settings.md)
+  dessiné du dépôt** (comme les quatre interrupteurs, depuis 6.1-E) et titres traduits, synchronisation idempotente du **planning agrégé** avec le calendrier système, réinitialisation complète, À propos.
+  **La synchronisation part enfin d'elle-même** (6.1.x-B) : deux utilisateurs l'avaient signalée
+  muette, et elle l'était — la tâche de fond n'était jamais réarmée au lancement, et son module ne
+  tournait pas dans l'Expo Go d'iOS. Un **entretien** joue désormais au lancement, au retour au
+  premier plan et quand les favoris changent — synchronisation si la dernière date de plus de douze
+  heures, rappels de cours replanifiés — et la tâche de fond (`expo-background-task`) n'est plus qu'un
+  bonus. La dernière tentative est persistée et datée, sous la date du dernier succès, et l'interrupteur
+  l'efface. [docs/features/settings.md](docs/features/settings.md)
 - [x] **Premier lancement** — parcours en cinq étapes : thème et langue, puis l'**établissement**,
   puis les groupes qu'il conditionne. Valeurs par défaut issues de l'appareil, sélection de groupes
   filtrée par année et semestre — étape omise quand l'université ne publie pas d'emploi du temps, et

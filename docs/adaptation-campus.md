@@ -68,7 +68,7 @@ contact facultatif et le lien vers la page d'engagement.
 
 Tout est déjà câblé : la pastille d'état de service, `ModaleCampusNonRelie` et le bouton
 « Demander » d'un état vide pointent **tous** sur ce formulaire, par `services.adaptation` du
-catalogue. Voir [6.1.1-C](phase-6/6-1-1-c-retours.md).
+catalogue. Voir [6.1.x-C](phase-6/6-1-x-c-retours.md).
 
 ### 3. La page d'engagement *(à écrire une fois)*
 

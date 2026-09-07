@@ -17,6 +17,15 @@
  * Une seule exception, deliberee : le **parcours froid** reste plein ecran, parce qu'il est
  * transitoire et qu'une page qui se remplit sous un indicateur de progression fait sauter le contenu.
  *
+ * ## Sans compte, la meme page (6.1.x-B)
+ *
+ * L'onglet sans compte a ete le formulaire, du 2026-08-31 au 2026-09-07. Un enseignant-chercheur a
+ * demande ou etait le webmail : il ne pouvait pas le trouver, la page ne montrait qu'un formulaire
+ * etudiant. Les portes des services n'ont pourtant jamais eu besoin d'une session — elles viennent
+ * du catalogue. La page sans compte est donc **la meme** que la page connectee : le bandeau avec la
+ * salutation sans prenom, l'encart qui invite a se connecter, la grille en portes, les documents.
+ * Le formulaire vit dans l'ecran du compte, ou l'encart mene. « Autre campus », lui, ne bouge pas.
+ *
  * ## Le verrou biometrique ne garde que ce qui merite d'etre garde
  *
  * Il ne s'arme que lorsqu'un compte est enregistre. Sans compte il n'y a **rien a proteger** dans cet
@@ -25,7 +34,7 @@
  * pas d'authentification (docs/features/scolarite.md).
  */
 
-import React, { useContext, useRef, useState } from 'react';
+import React, { useContext, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
@@ -33,29 +42,17 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { PastilleService } from '../../../shared/messages/PastilleService';
 import { AppContext } from '../../../shared/services/AppCore';
-import { getCodeEtablissementActif } from '../../../shared/etablissements';
-import { basculerEtablissement } from '../../../shared/etablissements/bascule';
-import { ChoixEtablissement } from '../../../shared/ui/ChoixEtablissement';
-import { demandeUneRessaisie, presenterEchec } from '../services/ScolariteMapping';
+import { demandeUneRessaisie, echecBloquantDe } from '../services/ScolariteMapping';
 import { useCredentials } from '../services/CredentialsContext';
 import BiometryGate from '../components/BiometryGate';
 import ScolariteLoadingScreen from '../components/ScolariteLoadingScreen';
-import ScolariteLoginView from '../components/ScolariteLoginView';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 import { useSessionDemandeeIci } from '../hooks/useSessionDemandeeIci';
 import { PageScolarite } from '../components/PageScolarite';
 import { CampusNonRelie } from '../components/CampusNonRelie';
 import { EnteteScolarite } from '../components/EnteteScolarite';
-import type { PointWidget } from '../widgets/definitions';
+import { serviceDuPoint, type PointWidget } from '../widgets/definitions';
 
-/**
- * L'onglet sans compte : le grand titre des onglets pose comme Campus et Reglages — pas
- * d'en-tete collant, le bandeau du formulaire passe en `compact` (deux « Scolarite » a l'ecran
- * se seraient repete). Et le titre FOND au defilement, comme celui des Reglages : c'est le seul
- * cas ou il surplombe un contenu defilant, et il restait plante sur le formulaire.
- *
- * Sorti de l'ecran pour le garder sous la limite de lignes, comme `PageScolarite` avant lui.
- */
 /**
  * Le titre de l'onglet **sans bandeau** : le gabarit de Campus et des Reglages, a l'identique.
  *
@@ -103,8 +100,11 @@ const TitreFlottant = ({ theme, defilement, insets }) => (
  * connexion, sur Campus et sur les Reglages ; il devient un bandeau au moment ou la lecture aboutit,
  * c'est-a-dire au moment ou il a quelque chose a dire.
  */
-const EnTeteDeLOnglet = ({ theme, accent, coldData, defilement, insets }) => (
-    coldData === null
+const EnTeteDeLOnglet = ({ theme, accent, coldData, sansCompte, defilement, insets }) => (
+    // Sans compte, le bandeau quand meme (6.1.x-B) : la page doit ressembler a la page connectee, et
+    // la salutation se fait sans prenom. Le titre flottant reste pour le compte SANS dossier — le
+    // parcours froid, l'echec —, ou il n'y a rien a saluer.
+    coldData === null && !sansCompte
         ? <TitreFlottant theme={theme} defilement={defilement} insets={insets} />
         : <EnteteScolarite theme={theme} teinte={accent} insets={insets} coldData={coldData} />
 );
@@ -145,42 +145,6 @@ const EcranDeParcoursFroid = ({ theme, accent, renderHeader, scrapeProgress, ter
     </View>
 );
 
-const OngletDeconnecte = ({ theme, accent, defilement, onDebut }) => {
-    /** Le choix d'etablissement, ouvert par « Tu es d'un autre campus ? » sous le formulaire. */
-    const [choixCampus, setChoixCampus] = useState(false);
-
-    return (
-    <SafeAreaInsetsContext.Consumer>
-        {(insets) => (
-            <View style={[styles.container, { backgroundColor: theme.background }]}>
-                <TitreFlottant theme={theme} defilement={defilement} insets={insets} />
-                <ScolariteLoginView
-                    theme={theme}
-                    color={accent}
-                    topPadding={insets?.top || 0}
-                    compact
-                    onDebut={onDebut}
-                    onAutreCampus={() => setChoixCampus(true)}
-                    onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: defilement } } }],
-                        { useNativeDriver: true },
-                    )}
-                />
-                {/* La meme bascule que les Reglages, avertissement de purge compris : l'onglet suit
-                    ensuite `AppContext.etablissement`, et le contexte de session relit le trousseau
-                    de la fac d'arrivee — revenir a Bordeaux retrouve sa session. */}
-                <ChoixEtablissement
-                    theme={theme}
-                    visible={choixCampus}
-                    fermer={() => setChoixCampus(false)}
-                    codeActif={getCodeEtablissementActif()}
-                    onConfirmer={(code) => { void basculerEtablissement(code); }}
-                />
-            </View>
-        )}
-    </SafeAreaInsetsContext.Consumer>
-    );
-};
 
 const ScolariteDashboard = ({ navigation }) => {
     const { themeName } = useContext(AppContext);
@@ -192,18 +156,15 @@ const ScolariteDashboard = ({ navigation }) => {
         scrapeStatus, scrapeProgress, sessionMode, sessionFailure, retrySession,
     } = useCredentials();
 
-    // Le defilement du formulaire deconnecte, pour fondre le grand titre — le gabarit des
-    // Reglages, a l'identique (interpolation 0-50 → 1-0). Les autres branches ne s'en servent
-    // pas : le tableau de bord a son en-tete collant, qui vit sa propre vie.
-    const defilementDeconnecte = useRef(new Animated.Value(0)).current;
-    /** Le meme, pour la page sans dossier : son titre flotte aussi, donc il s'efface au defilement. */
+    /** Le defilement de la page sans dossier : son titre flotte, donc il s'efface au defilement. */
     const defilementSansDossier = useRef(new Animated.Value(0)).current;
 
+    const sansCompte = !credentials;
     /** Voir `EnTeteDeLOnglet` : sans dossier, le titre flotte et la page lui laisse la place. */
-    const titreFlotte = coldData === null;
+    const titreFlotte = coldData === null && !sansCompte;
     const renderHeader = (insets) => (
         <EnTeteDeLOnglet
-            theme={theme} accent={accent} coldData={coldData}
+            theme={theme} accent={accent} coldData={coldData} sansCompte={sansCompte}
             defilement={defilementSansDossier} insets={insets}
         />
     );
@@ -220,13 +181,11 @@ const ScolariteDashboard = ({ navigation }) => {
     if (!credentialsLoaded) return null;
 
     /**
-     * L'echec qui merite un encart : la session a echoue et a quelque chose a dire. Avec un dossier
-     * deja lu, l'encart se pose au-dessus de la page qui reste — une actualisation qui echoue ne doit
-     * pas etre muette (6.1-A). Un run annule ne montre rien : l'utilisateur est deja parti.
+     * L'echec qui merite un encart. Avec un dossier deja lu, l'encart se pose au-dessus de la page
+     * qui reste — une actualisation qui echoue ne doit pas etre muette (6.1-A). La regle est partagee
+     * avec la fiche du compte (ScolariteMapping.echecBloquantDe).
      */
-    const echecBloquant = scrapeStatus === 'error' && sessionFailure !== null && !sessionFailure.silent
-        ? presenterEchec(sessionFailure)
-        : null;
+    const echecBloquant = echecBloquantDe(scrapeStatus, sessionFailure);
 
     /**
      * « Reessayer », depuis l'encart d'echec de la page.
@@ -257,7 +216,7 @@ const ScolariteDashboard = ({ navigation }) => {
     const ouvrirWidget = (point: PointWidget) => {
         const echec = widgets.echecs[point] ?? sessionFailure;
         if (demandeUneRessaisie(echec)) return ouvrirRessaisie();
-        return ouvrirPorte(point === 'messagerie' ? 'email' : point);
+        return ouvrirPorte(serviceDuPoint(point));
     };
 
     // Un campus que l'application ne porte pas a sa page — pas le tableau de bord avec un encart de
@@ -267,27 +226,10 @@ const ScolariteDashboard = ({ navigation }) => {
         return <CampusNonRelie theme={theme} onDemande={ouvrirLien} />;
     }
 
-    /*
-     * L'onglet SANS compte EST le formulaire de connexion : l'etat vide « connecte ton compte »
-     * obligeait un tap de plus vers exactement la meme page. Et pas d'en-tete collant ici — le
-     * bandeau du formulaire porte deja le titre « Scolarite », pose dans le vide : l'en-tete
-     * collant appartient au tableau de bord, qui a un dossier a saluer. Le retour anticipe sur
-     * `credentialsLoaded` evite le flash du formulaire pendant la lecture du trousseau au lancement.
-     *
-     * **Le formulaire passe devant l'ecran de chargement plein**, et l'ordre est le sujet : teste
-     * apres lui, l'ecran plein le supplantait des que `credentials` arrivait, a mi-parcours — deux
-     * vues pour le meme run. Il tient la page tant que la session partie de lui n'est pas finie.
-     */
-    if (!credentials || geste.origine === 'formulaire') {
-        return (
-            <OngletDeconnecte
-                theme={theme}
-                accent={accent}
-                defilement={defilementDeconnecte}
-                onDebut={geste.depuisLeFormulaire}
-            />
-        );
-    }
+    // Sans compte, aucun aiguillage particulier (6.1.x-B) : la page ordinaire, en portes, avec son
+    // encart d'invitation. Le formulaire vit dans l'ecran du compte, ou l'encart mene. Le retour
+    // anticipe sur `credentialsLoaded` evite le flash de la page en portes le temps de lire le
+    // trousseau au lancement.
 
     /*
      * Le parcours froid prend l'ecran **tant qu'il n'y a aucun dossier a montrer** : il est

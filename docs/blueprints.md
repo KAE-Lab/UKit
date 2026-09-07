@@ -36,7 +36,8 @@ Le préfixe ne porte pas que des parcours d'authentification : depuis le jalon
 vivent aussi (`ukit.portail.bordeaux-inp.edt`). Ce sont les premiers fichiers du dépôt à déclarer un
 `min_engine` — `0.5.4`, la version qui apporte l'extraction `from: "text"` —, et c'est exactement ce
 que ce champ existe pour faire : un appareil dont le moteur est plus ancien ignore l'entrée au lieu de
-jouer un fichier qu'il ne sait pas exécuter.
+jouer un fichier qu'il ne sait pas exécuter. Les deux dossiers de portail portent `0.5.8` depuis
+[6.1.x-B](phase-6/6-1-x-b-signalements.md), la version du bloc `optional`.
 
 ### Un Blueprint qui n'appartient à aucun établissement
 
@@ -228,7 +229,7 @@ portail en portaient 60 s à eux seuls avant le jalon
 | **Après un `navigate` qui rebondit** — un service qui renvoie vers l'authentification | une pause, **puis** le `wait_for` sur l'**union** des issues possibles (`"#username, <cible>"`) | La redirection remplace le document sans que la vue le signale toujours : la première opération injectée s'y perd. La pause la protège ; l'union dit ensuite l'état réel — un portail répond le formulaire **ou** la page utile selon qu'une session est ouverte, et la sonde `as: count` qui suit décide la branche instantanément |
 | **Après une soumission** | une pause courte, **puis** le `wait_for` | Une opération émise pendant une cascade de navigations **se perd en silence** sur un appareil (limite du moteur, `docs/embedded.md`). La pause protège l'opération, l'attente conditionnelle rend le temps |
 | **Avant une lecture obligatoire** | `wait_for` sur un marqueur de la vue attendue | Elle peut échouer : cette lecture aussi. Le `on_timeout` nomme l'échec |
-| **Avant une lecture bonus** (`as: "list"`) | une pause, **calée sur une mesure** | Un `wait_for` qui expire **fait échouer le run** quel que soit son `on_timeout` — et perdre l'identité pour un INE serait un mauvais marché |
+| **Avant une lecture bonus** (`as: "list"`, dans un bloc `optional`) | une pause, **calée sur une mesure** | Un `wait_for` qui expire ferait **céder le bloc** — et une page lente finit par rendre. La pause est une marge, pas une garde ; le bloc, lui, garde la navigation : s'il cède, le run finit en `partial` avec ce qui a été lu avant (6.1.x-B) |
 
 Trois pièges, chacun payé une fois :
 
@@ -256,6 +257,15 @@ Trois pièges, chacun payé une fois :
 - **Une lecture bonus perdue ne fait aucun bruit.** `as: "list"` rend `[]`, le run se déclare réussi,
   et une capacité disparaît de l'application sans message. Une pause raccourcie devant une lecture
   bonus se valide donc en **comparant les sorties** à celles d'avant, jamais au seul statut du run.
+- **Une navigation bonus ne se garde que par un bloc `optional`.** `as: "list"` protège l'extraction ;
+  le `navigate` qui la précède, lui, lève en `unavailable` quand la page ne finit pas de charger, et
+  le run entier avec — c'est ce qui a coûté un nom, un INE et une formation pour une page d'emploi du
+  temps le 2026-09-04. Depuis le moteur `0.5.8` (jalon 3-J d'Aetherius), la séquence entière —
+  naviguer, attendre, lire — s'écrit dans un bloc `optional` : à la première défaillance le reste du
+  bloc est sauté, le run finit en `partial` **avec ses sorties**, et `runBlueprint` le tient pour un
+  succès. Deux règles d'écriture : les steps d'un bloc qui a cédé publient `{}`, donc toute sortie qui
+  les référence finit par `| default([])` ; et l'entrée de `versions.json` porte `min_engine:
+  "0.5.8"`, pour qu'un appareil au moteur plus ancien ignore la version au lieu de refuser le fichier.
 - **Une durée d'échec dit lequel des deux échecs c'est.** Un `wait_for` qui rend son code après
   **son propre plafond** a vraiment attendu : la page n'a pas montré ce qu'on cherchait. Le même
   `wait_for` qui rend le même code après `plafond + 2 s + 50 %` — l'échéance de l'*appelant* — n'a

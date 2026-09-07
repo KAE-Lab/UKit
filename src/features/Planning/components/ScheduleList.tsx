@@ -288,9 +288,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     }
 
     computeScheduleDay(schedule: PlanningEvent[], isFavorite: boolean): PlanningEvent[] {
-        return schedule
-            .map((course) => CourseManager.computeCourseUE(course))
-            .filter((course) => CourseManager.filterCourse(isFavorite, course, this.props.filtersList));
+        return CourseManager.preparerPourAffichage(schedule, isFavorite, this.props.filtersList);
     }
 
     computeScheduleWeek(schedule: PlanningWeekDay, isFavorite: boolean): PlanningWeekDay {

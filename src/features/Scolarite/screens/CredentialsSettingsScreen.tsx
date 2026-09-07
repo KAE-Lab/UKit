@@ -8,7 +8,6 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 
 import { demander } from '../../../shared/biometrie';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
-import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
@@ -16,13 +15,15 @@ import { ActionButton } from '../../../shared/ui/ActionButton';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import { useCredentials } from '../services/CredentialsContext';
+import { echecBloquantDe } from '../services/ScolariteMapping';
 import { portailAbsent } from '../services/ScolariteSession';
-import ScolariteLoginView from '../components/ScolariteLoginView';
+import { EncartSession } from '../components/EncartSession';
 import { BlocProgression } from '../components/ScolariteLoadingScreen';
 import BiometryGate from '../components/BiometryGate';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 import { useSessionDemandeeIci } from '../hooks/useSessionDemandeeIci';
 import { ConfirmationScolarite } from '../components/ConfirmationScolarite';
+import { CompteADemander } from '../components/CompteADemander';
 
 /** Combien de temps la coche reste, en millisecondes. Assez pour etre vue, trop court pour rester. */
 const DUREE_DE_LA_COCHE = 1600;
@@ -147,31 +148,6 @@ const PortailAbsent = ({ theme }) => (
     </ScreenState>
 );
 
-/**
- * Aucun compte enregistre : on propose de se connecter, pas une fiche vide.
- *
- * C'est le meme formulaire que partout ailleurs, et il referme l'ecran une fois la session partie —
- * on revient donc la d'ou l'on venait, le plus souvent les Reglages.
- */
-const CompteADemander = ({ theme, onDebut, onSuccess }) => (
-    <SafeAreaInsetsContext.Consumer>
-        {(insets) => (
-            <View style={{ flex: 1, backgroundColor: theme.background }}>
-                <ScolariteLoginView
-                    theme={theme}
-                    color={theme.accent ?? theme.primary}
-                    // `HEADER_OFFSET` et non un 65 ecrit ici : c'etait un troisieme nombre pour la
-                    // meme hauteur d'en-tete, a cote du 70 du socle. Le depot dit qu'il ne doit pas y
-                    // en avoir deux (shared/ui/ScreenState.tsx).
-                    topPadding={(insets?.top || 0) + HEADER_OFFSET}
-                    onDebut={onDebut}
-                    onSuccess={onSuccess}
-                    compact
-                />
-            </View>
-        )}
-    </SafeAreaInsetsContext.Consumer>
-);
 
 /**
  * Les reglages du compte universitaire : ce qui est enregistre, et la deconnexion.
@@ -342,6 +318,11 @@ const ConfirmationsDuCompte = ({ theme, refresh, logout }) => (
     </>
 );
 
+/*
+ * L'echec d'un parcours froid se dit ici aussi (6.1.x-B) : la fiche affichait six tirets sans un mot.
+ * Le meme encart que l'onglet (`EncartSession`), sans son enveloppe — le conteneur porte deja la
+ * marge — et le reessai s'annonce dans le geste, comme la-bas, pour que la page tienne.
+ */
 const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
     headerPadding?: import('react-native').ViewStyle;
     onAnimatedScroll?: (evenement: unknown) => void;
@@ -354,7 +335,7 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
 
     const {
         credentials, coldData, logout, rafraichirDossier, portailDisponible,
-        scrapeStatus, scrapeProgress, sessionMode,
+        scrapeStatus, scrapeProgress, sessionMode, sessionFailure, retrySession,
     } = useCredentials();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showRefreshModal, setShowRefreshModal] = useState(false);
@@ -411,6 +392,7 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
                 theme={theme}
                 onDebut={geste.depuisLeFormulaire}
                 onSuccess={() => setRessaisie(false)}
+                onScroll={onAnimatedScroll}
             />
         );
     }
@@ -491,6 +473,17 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
                         showsVerticalScrollIndicator={false}
                     >
                         <View style={{ marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, gap: tokens.space.sm }}>
+
+                            <EncartSession
+                                theme={theme}
+                                aUnCompte
+                                enveloppe={false}
+                                echecBloquant={echecBloquantDe(scrapeStatus, sessionFailure)}
+                                sessionFailure={sessionFailure}
+                                onRetry={() => { geste.depuisLaPage(); retrySession(); }}
+                                onRessaisir={() => setRessaisie(true)}
+                                onConnecter={() => setRessaisie(true)}
+                            />
 
                             <FichesDuDossier theme={theme} credentials={credentials} coldData={coldData} />
 

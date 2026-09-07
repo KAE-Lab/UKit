@@ -78,8 +78,9 @@ function memeCode(gauche: string, droite: string): boolean {
  * Les UE du planning auxquelles l'etudiant n'est pas inscrit, et qui ne sont pas deja filtrees.
  *
  * La comparaison ignore la casse — l'annuaire publie `4tin602u`, Celcat `4TIN602U` — mais le code
- * **rendu** est celui du planning, verbatim. `filterCourse` compare a `course.UE`, qui vient de la
- * source telle quelle : proposer une forme normalisee poserait un filtre qui ne masquerait rien.
+ * **rendu** est celui du planning, verbatim. `filterCourse` compare aux codes du cours (`ues`), qui
+ * viennent de la source tels quels : proposer une forme normalisee poserait un filtre qui ne
+ * masquerait rien.
  */
 function complement(etat: EtatConnu, inscrites: readonly string[]): string[] {
     return etat.uesDuPlanning.filter(

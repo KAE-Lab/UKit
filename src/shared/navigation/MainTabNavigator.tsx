@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
-import { createMaterialTopTabNavigator, MaterialTopTabBarProps } from '@react-navigation/material-top-tabs';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
@@ -28,9 +28,9 @@ export type MainTabParamList = {
     SettingsTab: undefined;
 };
 
-const Tab = createMaterialTopTabNavigator<MainTabParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
-export interface CustomTabBarProps extends MaterialTopTabBarProps {
+export interface CustomTabBarProps extends BottomTabBarProps {
     theme: AppThemeType;
 }
 
@@ -38,8 +38,8 @@ interface TabBarRouteItemProps {
     route: { key: string; name: string };
     index: number;
     state: import('@react-navigation/native').TabNavigationState<import('@react-navigation/native').ParamListBase>;
-    descriptors: import('@react-navigation/material-top-tabs').MaterialTopTabBarProps['descriptors'];
-    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/material-top-tabs').MaterialTopTabNavigationEventMap>;
+    descriptors: import('@react-navigation/bottom-tabs').BottomTabBarProps['descriptors'];
+    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/bottom-tabs').BottomTabNavigationEventMap>;
     theme: AppThemeType;
 }
 
@@ -89,7 +89,7 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
                 styles.iconContainer,
                 isFocused && { backgroundColor: `${theme.primary}15` }
             ]}>
-                {options.tabBarIcon && options.tabBarIcon({ color, focused: isFocused })}
+                {options.tabBarIcon && options.tabBarIcon({ color, size: 24, focused: isFocused })}
             </View>
             {/* La graisse ne change pas avec la selection : passer en gras elargissait le libelle
                 d'un ou deux points et tout le rang tressaillait a chaque changement d'onglet. La
@@ -135,7 +135,7 @@ function ModaleCampusNonRelie({ theme, visible, fermer, ouvrirDemande }: {
 interface TabBarActionItemProps {
     currentRouteName: string;
     theme: AppThemeType;
-    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/material-top-tabs').MaterialTopTabNavigationEventMap>;
+    navigation: import('@react-navigation/native').NavigationHelpers<import('@react-navigation/native').ParamListBase, import('@react-navigation/bottom-tabs').BottomTabNavigationEventMap>;
     credentials: unknown;
 }
 
@@ -211,6 +211,14 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
     // nommer par le plus destructeur des trois dissuadait d'y aller pour consulter.
     if (currentRouteName === 'ScolariteTab' && credentials) {
         return <BoutonDAction icone="account-circle-outline" libelle={Translator.get('ACCOUNT')} onPress={() => navigation.navigate('CredentialsSettings' as never)} theme={theme} />;
+    }
+
+    // Sans compte, sur un campus relie : « Se connecter », et c'est ici que l'invitation vit (6.1.x-B).
+    // La page sans compte est la meme que la page connectee, et un gros encart d'invitation en tete
+    // la gachait pour quelqu'un qui n'a que faire d'un compte — un enseignant qui veut son webmail.
+    // Le bouton mene a l'ecran du compte, qui porte le formulaire.
+    if (currentRouteName === 'ScolariteTab' && portailPublie()) {
+        return <BoutonDAction icone="login-variant" libelle={Translator.get('CONNECT')} onPress={() => navigation.navigate('CredentialsSettings' as never)} theme={theme} />;
     }
 
     // Sur un campus dont aucun portail n'est publie, c'est le bouton Compte qui porte le teaser —
@@ -308,49 +316,26 @@ function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarPro
 export default function MainTabNavigator() {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
-    const { width } = useWindowDimensions();
 
+    /*
+     * Des onglets du bas, **sans pager** — et ce n'est pas la premiere version.
+     *
+     * Le jalon 6.1-E avait pose un pager sous la barre pour glisser d'un onglet a l'autre, accorde
+     * sur les quatre onglets apres verification sur iPhone. Android l'a dementi (signale le
+     * 2026-09-07) : le geste horizontal du pager y casse les listes horizontales du Planning — le
+     * ruban des jours, le carrousel des cours simultanes. Un geste qui marche sur une plateforme et
+     * casse l'autre n'est pas une capacite, et le proprietaire du produit n'y tenait pas : le pager
+     * est retire, `react-native-pager-view` avec lui, et la barre flottante redevient la seule
+     * navigation entre onglets — ce qu'elle a toujours ete par ailleurs (jalon 6.1.x-B).
+     */
     return (
         <Tab.Navigator
             id="MainTabs"
-            // La barre reste **en bas** : c'est un pager, pas des onglets de haut de page. Elle est
-            // rendue en absolu par `CustomTabBar` et survole donc le contenu, exactement comme avant.
-            tabBarPosition="bottom"
-            // La largeur connue des le premier rendu : sans elle, le pager mesure a zero puis se
-            // rend une seconde fois, ce qui se voit au lancement.
-            initialLayout={{ width }}
-            // Android dessine une lueur de sur-defilement des qu'on glisse au-dela du dernier onglet.
-            overScrollMode="never"
             tabBar={props => <CustomTabBar {...props} theme={theme} />}
             screenOptions={{
-                // Le montage paresseux d'avant : un onglet ne se monte qu'a sa premiere ouverture.
+                headerShown: false,
+                // Le montage paresseux : un onglet ne se monte qu'a sa premiere ouverture.
                 lazy: true,
-                /*
-                 * **Un appui d'onglet ne traverse pas les pages intermediaires.**
-                 *
-                 * Anime, le pager fait defiler Planning → Campus → Scolarite → Reglages pour un seul
-                 * appui — et `lazy` n'ayant pas monte les pages traversees, on verrait deux fonds
-                 * vides passer. Le glissement au doigt, lui, reste anime nativement : c'est le geste
-                 * qui porte l'animation, pas la destination.
-                 */
-                animationEnabled: false,
-                /*
-                 * **Accorde sur les quatre onglets**, et ce n'est pas la premiere version.
-                 *
-                 * Il n'etait d'abord ouvert qu'a la Scolarite et aux Reglages, par prudence : le
-                 * Planning et le Campus portent des gestes horizontaux — le ruban des jours, le
-                 * carrousel des cours simultanes, les quatre carrousels du tableau de bord — et un
-                 * pager par-dessus semblait devoir leur voler le doigt. La verification sur appareil
-                 * a montre que non : une liste horizontale **consomme** le geste qui commence sur
-                 * elle, et le pager ne recoit que ce qu'elle laisse passer.
-                 *
-                 * Restreindre coutait donc plus que ca ne protegeait : un geste qui marche sur deux
-                 * onglets sur quatre s'apprend comme un defaut, pas comme une regle — on ne devine
-                 * pas ou il s'arrete. Si un conflit se constate malgre tout, le retrait est
-                 * `swipeEnabled: false` sur l'ecran concerne, une ligne, et la barre reste la
-                 * navigation de reference (limite ecrite du jalon 6.1-E).
-                 */
-                swipeEnabled: true,
             }}
         >
             <Tab.Screen

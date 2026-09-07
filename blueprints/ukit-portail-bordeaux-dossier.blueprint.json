@@ -193,27 +193,34 @@
       "note": "La premiere ligne du tableau est l'inscription COURANTE : la source trie par annee decroissante. Le tableau Vaadin 8 est VIRTUALISE — il rend 3 a 5 lignes selon la hauteur de la fenetre, mesure — donc on ne lit que la premiere, la seule dont la presence soit acquise. La vue ne porte qu'un seul tableau, mesure aussi."
     },
     {
-      "action": "navigate",
-      "url": "{{ vars.annuaire }}",
-      "note": "L'annuaire du compte, sur le meme SSO : la session CAS ouverte pour le dossier vaut ici, donc aucune seconde authentification."
-    },
-    {
-      "action": "wait",
-      "ms": 1500,
-      "note": "`wait` et non `wait_for`, et c'est la garde de tout ce bloc : un `wait_for` qui expire FAIT ECHOUER LE RUN, quel que soit son `on_timeout`. Cette lecture est un bonus — elle ne doit jamais emporter la connexion, deja acquise plus haut. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : l'annuaire est SERVI AVEC LE DOCUMENT — sonde en `state: attached`, il repond en 23 ms apres la navigation —, donc la pause n'attend rien d'autre que la marge d'un reseau lent. Une sonde en `visible` avait d'abord expire a 25 s, et c'est la lecon a garder : ces elements vivent dans un accordeon REPLIE, donc `wait_for` ne pourrait de toute facon pas les voir."
-    },
-    {
-      "id": "annuaire",
-      "action": "extract",
-      "outputs": {
-        "appartenances": {
-          "selector": "#collapseGroups div[title]",
-          "as": "list",
-          "item": "attr",
-          "attr": "title",
-          "note": "`as: list` ne leve jamais : zero correspondance rend une liste vide. C'est ce qui rend l'etape sans danger pour le dossier. L'attribut plutot que le texte, parce que l'accordeon est **replie** : un moteur qui lirait `innerText` d'un element masque rendrait des chaines vides."
+      "id": "bonus_annuaire",
+      "action": "optional",
+      "note": "Un bloc `optional` (moteur >= 0.5.8, jalon 3-J d'Aetherius) : si l'une de ses etapes cede — le `navigate` qui n'aboutit pas, l'extraction qui leve —, le reste du bloc est saute et le run continue en `partial`, avec l'identite deja lue. C'est ce qui manquait : la regle « une lecture bonus ne doit jamais emporter la connexion » n'etait appliquee qu'a l'extraction (`as: list`), jamais a la navigation qui la precede, et un `navigate` mort sur une page d'emploi du temps coutait le nom, l'INE et la formation (registre du 2026-09-04). Les steps d'un bloc qui a cede publient un dictionnaire vide : la sortie qui les reference finit donc par `| default([])`, sans quoi son rendu leverait. Ici : l'annuaire du compte, d'ou viennent les appartenances proposees en filtres.",
+      "steps": [
+        {
+          "action": "navigate",
+          "url": "{{ vars.annuaire }}",
+          "note": "L'annuaire du compte, sur le meme SSO : la session CAS ouverte pour le dossier vaut ici, donc aucune seconde authentification."
+        },
+        {
+          "action": "wait",
+          "ms": 1500,
+          "note": "`wait` et non `wait_for` : un `wait_for` qui expire ferait CEDER le bloc `optional` qui entoure cette lecture, la ou une page lente finit par rendre — la pause est une marge, pas une garde. Cette lecture est un bonus, elle ne doit jamais emporter la connexion, deja acquise plus haut, et c'est le bloc qui le garantit desormais, navigation comprise. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : l'annuaire est SERVI AVEC LE DOCUMENT — sonde en `state: attached`, il repond en 23 ms apres la navigation —, donc la pause n'attend rien d'autre que la marge d'un reseau lent. Une sonde en `visible` avait d'abord expire a 25 s, et c'est la lecon a garder : ces elements vivent dans un accordeon REPLIE, donc `wait_for` ne pourrait de toute facon pas les voir."
+        },
+        {
+          "id": "annuaire",
+          "action": "extract",
+          "outputs": {
+            "appartenances": {
+              "selector": "#collapseGroups div[title]",
+              "as": "list",
+              "item": "attr",
+              "attr": "title",
+              "note": "`as: list` ne leve jamais : zero correspondance rend une liste vide. C'est ce qui rend l'etape sans danger pour le dossier. L'attribut plutot que le texte, parce que l'accordeon est **replie** : un moteur qui lirait `innerText` d'un element masque rendrait des chaines vides."
+            }
+          }
         }
-      }
+      ]
     }
   ],
   "outputs": {
@@ -222,7 +229,7 @@
     "identite": "{{ steps.dossier.identite }}",
     "email": "{{ steps.dossier.email }}",
     "naissance": "{{ steps.dossier.naissance }}",
-    "appartenances": "{{ steps.annuaire.appartenances }}",
+    "appartenances": "{{ steps.annuaire.appartenances | default([]) }}",
     "formation_libelle": "{{ steps.formation.formation_libelle }}",
     "formation_annee": "{{ steps.formation.formation_annee }}",
     "formation_detail": "{{ steps.formation.formation_detail }}"

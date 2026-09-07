@@ -52,7 +52,7 @@ Deux détails de comportement à connaître :
 `favoriteGroups`, `firstload`, `language` et `filter` en état React, publié ensuite dans `AppContext`.
 
 Pourquoi des singletons plutôt qu'un contexte unique : ces états sont lus par du code hors React —
-la tâche de fond de synchronisation du calendrier, le planificateur de notifications, `Translator`.
+l'entretien et sa tâche de fond, le planificateur de notifications, `Translator`.
 Un contexte ne serait pas accessible depuis ces points.
 
 ## Clés AsyncStorage
@@ -69,6 +69,8 @@ Un contexte ne serait pas accessible depuis ces points.
 | `<groupes>@Week<n>` | `ScheduleList` | `{ data, date }` — emploi du temps d'une semaine | sans expiration, repli hors ligne |
 | `previousSyncData` | `SettingsManager.syncCalendar` | table `id d'événement Celcat → id d'événement système` | jusqu'à désactivation de la synchronisation |
 | `previousSyncTime` | `SettingsManager.syncCalendar` | horodatage de la dernière synchronisation | idem |
+| `calendarSyncAttempt` | `SettingsManager.syncCalendar` | la dernière tentative, réussie ou non : `{ at, ok, origine }` ([features/settings.md](features/settings.md#la-dernière-tentative-est-persistée-et-linterrupteur-lefface)) | effacée par l'interrupteur quand elle est un échec |
+| `entretien@1` | [`entretien.ts`](../src/shared/services/entretien.ts) | horodatage du dernier entretien joué, qui décide du suivant (douze heures) | permanent |
 | `crous_favorites` | [`useFavorites`](../src/features/Campus/hooks/useFavorites.ts) | identifiants de restaurants favoris | permanent |
 | `library_favorites` | `useFavorites` | identifiants de BU favorites | permanent |
 | `freeroom_favorites` | `useFavorites` | identifiants de bâtiments favoris | permanent |

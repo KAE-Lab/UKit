@@ -37,16 +37,21 @@ export interface EncartSessionProps {
     onRetry: () => void;
     onRessaisir: () => void;
     onConnecter: () => void;
+    /**
+     * L'encart pose ses propres marges, celles de la page de l'onglet. `false` quand l'hote les a
+     * deja — la fiche du compte espace ses cartes elle-meme, et les deux marges se seraient ajoutees.
+     */
+    enveloppe?: boolean;
 }
 
 export function EncartSession({
-    theme, aUnCompte, echecBloquant, sessionFailure, onRetry, onRessaisir, onConnecter,
+    theme, aUnCompte, echecBloquant, sessionFailure, onRetry, onRessaisir, onConnecter, enveloppe = true,
 }: EncartSessionProps) {
-    const encadrer = (contenu: React.ReactNode) => (
+    const encadrer = (contenu: React.ReactNode) => (enveloppe ? (
         <View style={{ marginHorizontal: tokens.space.md, marginBottom: tokens.space.lg }}>
             {contenu}
         </View>
-    );
+    ) : contenu);
 
     if (!aUnCompte) {
         /*

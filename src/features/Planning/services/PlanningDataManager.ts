@@ -19,6 +19,12 @@ import { PlanningApiService, type GroupListResult } from './PlanningApiService';
  * l'etape des groupes est vide (une installation hors ligne restait muette), et la recherche de
  * groupes, qui date son bandeau hors ligne avec l'horodatage du seul cache qui reste.
  */
+/** Ce qu'il faut d'un cours pour en indexer les UE : son sujet, et les modules que la source declare. */
+interface CoursIndexable {
+    subject?: string;
+    modules?: string[];
+}
+
 export interface EtatListeGroupes {
     readonly chargement: boolean;
     readonly echec: UkitFailure | null;
@@ -132,10 +138,13 @@ class PlanningDataManagerService {
      * tri qui l'applique deja. Deux copies d'une meme expression, c'est une occasion de n'en corriger
      * qu'une : celle-ci gardait la regle d'avant le jalon 6-I et fabriquait des UE `2026`.
      */
-    extractUEsFromCourses = (courses: Array<{ courses?: { subject?: string }[], subject?: string }>) => {
+    extractUEsFromCourses = (courses: Array<{ courses?: CoursIndexable[] } & CoursIndexable>) => {
         const sujets: string[] = [];
         for (const item of Array.isArray(courses) ? courses : []) {
             for (const course of item.courses ? item.courses : [item]) {
+                // Les modules d'abord : un cours a plusieurs UE n'en montre qu'une dans son sujet, et
+                // la seconde n'etait jamais proposee comme filtre (2026-09-06).
+                if (Array.isArray(course?.modules)) sujets.push(...course.modules);
                 if (typeof course?.subject === 'string') sujets.push(course.subject);
             }
         }

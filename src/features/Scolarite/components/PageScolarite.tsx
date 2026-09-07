@@ -24,6 +24,13 @@
  * fiche du compte, dans la meme carte, au-dessus d'une page qui ne bouge pas — le dossier precedent
  * reste affiche jusqu'a ce que le nouveau l'ecrase. L'ecran plein n'est plus que pour un parcours
  * froid sans dossier a montrer.
+ *
+ * **La page existe sans compte, et c'est la meme** (6.1.x-B). L'onglet sans compte ETAIT le
+ * formulaire depuis le 2026-08-31 ; un enseignant-chercheur a demande ou etait le webmail, et la
+ * reponse est que les portes des services n'ont jamais eu besoin d'une session. La grille se rend
+ * donc toujours — en **portes** tant qu'aucun dossier n'a ete lu, en widgets ensuite — et l'encart
+ * d'invitation mene au formulaire, qui vit dans l'ecran du compte. Une grille qui disparaissait sur
+ * un echec de session disparait de meme : elle degrade en portes, l'encart dit l'echec au-dessus.
  */
 
 import React from 'react';
@@ -107,28 +114,28 @@ export function PageScolarite({
                 </View>
             ) : null}
 
-            <EncartSession
-                theme={theme}
-                aUnCompte={credentials !== null && credentials !== undefined}
-                echecBloquant={echecBloquant}
-                sessionFailure={sessionFailure}
-                onRetry={onRetry}
-                onRessaisir={onRessaisir}
-                onConnecter={onConnecter}
-            />
+            {/* Sans compte, aucun encart : l'invitation est le bouton « Se connecter » de la barre
+                d'onglets (MainTabNavigator), et la page reste celle des services. L'encart ne porte
+                plus que l'echec d'une session. */}
+            {credentials ? (
+                <EncartSession
+                    theme={theme}
+                    aUnCompte
+                    echecBloquant={echecBloquant}
+                    sessionFailure={sessionFailure}
+                    onRetry={onRetry}
+                    onRessaisir={onRessaisir}
+                    onConnecter={onConnecter}
+                />
+            ) : null}
 
-            {/* Rien a ouvrir tant qu'aucune session n'existe : la grille entiere attend. Et un
-                parcours froid qui a ECHOUE sans laisser de dossier ne montre pas une grille a
-                moitie vide (constate sur Android le 2026-08-31) : l'encart d'echec au-dessus porte
-                le probleme et son geste, la page reste propre. Avec un dossier deja lu, la grille
-                s'affiche — de vraies donnees valent mieux qu'un ecran vide.
-
-                `progression.visible` ferme le trou du **reessai** (2026-09-04) : relancer efface
-                l'echec, donc la grille repassait la condition et revenait **vide sous la barre de
-                chargement**. Sans dossier, une session qui court n'a toujours rien a montrer. */}
-            {portailDisponible && credentials
-                && (coldData !== null || (!progression.visible && sessionFailure === null && echecBloquant === null)) ? (
+            {/* La grille se rend toujours (6.1.x-B). Sans dossier lu — pas de compte, parcours froid
+                en cours ou en echec — elle est en PORTES : rien ne tourne, rien n'est a moitie vide
+                (le cas constate sur Android le 2026-08-31 etait une grille de widgets sans donnee),
+                et l'encart au-dessus porte l'invitation ou l'echec. Avec un dossier, les widgets. */}
+            {portailDisponible ? (
                 <GrilleScolarite
+                    sansSession={!credentials || coldData === null}
                     theme={theme}
                     teinte={teinte}
                     valeurs={widgets.valeurs}

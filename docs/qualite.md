@@ -275,7 +275,7 @@ projet tient à la discipline et à la revue, pas au compilateur : c'est une rai
 laisser passer un `any`.
 
 Le `false` est écrit, et il ne l'était pas avant la montée de socle
-([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)) : **TypeScript 6**, que le SDK 57 exige, passe
+([6.1.x-A](phase-6/6-1-x-a-montee-du-socle.md)) : **TypeScript 6**, que le SDK 57 exige, passe
 `strict` à vrai par défaut, et la porte est passée de zéro à plus de deux cents erreurs sans qu'une
 ligne du dépôt change. Les onze premières — un `themeName` typé `string` là où le thème est une clé,
 un `JSON.parse(null)` — étaient de vrais défauts et sont corrigées ; les deux cents autres sont des
@@ -340,7 +340,14 @@ garde donc la trace de **chaque** étape, pas seulement du verdict final — la 
 biométrique a coûté un aller-retour pour avoir jeté l'erreur du premier temps dès que le second
 réussissait.
 
-L'onglet *Temps* porte deux simulations indépendantes : l'heure, et le **réseau** — et, en bas, la
+L'onglet *Temps* porte deux simulations indépendantes : l'heure, et le **réseau** — puis, depuis
+[6.1.x-B](phase-6/6-1-x-b-signalements.md), le bloc **Entretien**
+([`ModMenuEntretien.tsx`](../src/shared/ui/ModMenuEntretien.tsx)) : l'état de la tâche de fond auprès
+du système, la dernière tentative de synchronisation telle que les Réglages la lisent, le dernier
+bilan, et trois gestes — jouer l'entretien tout de suite, oublier l'échéance pour qu'il soit dû au
+prochain lancement (la date simulée ne survivant pas à une fermeture, c'est le seul moyen de sonder
+le chemin du lancement), ou faire réveiller la tâche par le système (build de développement). C'est l'instrument de la mesure de 24 heures du jalon : sans lui, « la
+synchro ne part jamais » avait quatre causes indiscernables à l'écran — et, en bas, la
 **réinitialisation complète** (6.1-A) : le trousseau, le répertoire privé des documents et tout
 AsyncStorage — réglages, `firstload`, caches et surcouches publiées — puis un rechargement du
 JavaScript ([`ReinitialisationComplete.ts`](../src/shared/services/ReinitialisationComplete.ts)).

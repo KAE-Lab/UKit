@@ -122,6 +122,21 @@ cosmétique — c'est elle qui lui permet d'afficher l'échec du parcours chaud 
 ressaisie quand les identifiants sont refusés, deux comportements gagnés au jalon 6-K qu'une tuile
 rendrait illisibles.
 
+**Les portes n'ont jamais eu besoin d'une session**, et depuis le jalon
+[6.1.x-B](../phase-6/6-1-x-b-signalements.md) la page le dit : sans compte, l'onglet montre **la même
+page** — le bandeau avec la salutation sans prénom, la grille, les documents ; l'invitation à se
+connecter est le bouton **« Se connecter »** de la barre d'onglets, à la place de « Compte », et non un
+encart en tête de page qui gâchait la page pour qui n'a que faire d'un compte —, et chaque rangée de
+la grille est une **porte** (`porte`, le septième état de
+[`widgets/presentation.ts`](../../src/features/Scolarite/widgets/presentation.ts)) : le nom du
+service, sa description, et il s'ouvre dans le navigateur intégré. Rien ne tourne, rien n'attend,
+aucun teaser. Le signalement qui l'a demandé venait d'un enseignant-chercheur de Bordeaux, à qui
+l'application avait été imposée : il cherchait la page courriel, et l'onglet ne lui montrait qu'un
+formulaire étudiant. « Autre campus », qui ne publie aucune porte, garde sa page.
+
+> **Capture attendue** — `scolarite-sans-compte.png` : la page sans compte à Bordeaux — bandeau sans
+> prénom, encart d'invitation, grille en portes, tuile Documents — à côté de la page connectée.
+
 Un établissement qui ne déclare pas une adresse **n'affiche pas la porte**. La grille se construit
 donc **depuis le catalogue**, jamais depuis une liste écrite dans l'écran :
 
@@ -571,18 +586,17 @@ c'est le bon comportement pour un accueil.
 Un endroit où l'étudiant range ses certificats de scolarité, attestations et autres pièces, pour les
 avoir **hors ligne** et les retrouver sans fouiller.
 
-Elle fonctionne **techniquement** sans compte — ce sont des fichiers locaux — mais elle ne s'affiche
-pas sans compte, et c'est un arbitrage du propriétaire du produit du 2026-08-27, contraire au premier.
+Elle fonctionne **sans compte** — ce sont des fichiers locaux — et elle **se montre sans compte**
+depuis le jalon [6.1.x-B](../phase-6/6-1-x-b-signalements.md), par sa tuile, dans la même grille que
+les services. Ça n'a pas toujours été le cas, et l'histoire vaut d'être gardée parce qu'elle a été
+tranchée trois fois : la première version la rendait sans condition ; le 2026-08-27, le propriétaire
+du produit a décidé « tout ou rien » — un onglet qui montre une seule section sous un encart
+d'invitation se lit moins bien qu'un onglet qui ne propose qu'une chose ; le 2026-08-31, l'onglet
+sans compte est devenu **le formulaire**. Ce qui a rouvert la question, c'est que la page sans compte
+a désormais **un contenu** — les portes des services — et que les documents y ont leur place sans
+être seuls sous un encart.
 
-La première version la rendait sans condition, pour une raison qui tenait : l'onglet ne servait à rien
-à qui ne se connectait pas, et rien du tout chez un établissement sans portail. À l'usage, un onglet
-qui montre **une seule section sous un encart d'invitation** se lit moins bien qu'un onglet
-franchement vide, qui ne propose qu'une chose — se connecter. C'est **tout ou rien** — et depuis le
-2026-08-31, l'onglet sans compte **est le formulaire** (`ScolariteLoginView`, sans en-tête collant :
-le bandeau du formulaire porte le titre) : l'encart d'invitation obligeait un tap de plus vers
-exactement la même page.
-
-La conséquence est assumée : chez « Autre campus », l'onglet s'ouvre sur sa propre page — pas de
+La conséquence chez « Autre campus » ne change pas : l'onglet s'ouvre sur sa propre page — pas de
 documents, pas de compte — et c'est le bouton Compte de la barre qui est voilé
 ([Un campus non porté n'est pas une panne](#un-campus-non-porté-nest-pas-une-panne)).
 
@@ -783,7 +797,7 @@ un écran d'erreur rendrait l'onglet mort pour exactement ceux à qui il sert le
 | Situation | Avant | Après |
 |---|---|---|
 | Aucun portail publié | `PORTAIL_ABSENT` plein écran | **sa propre page** — un état vide, la demande de campus, un bouton pour corriger son choix (6.1-A) |
-| Aucun compte | `ScolariteLoginView` plein écran | une invitation à connecter, **et rien d'autre** |
+| Aucun compte | `ScolariteLoginView` plein écran | **la même page** que connecté — invitation en encart, grille en portes, documents (6.1.x-B) ; le formulaire vit dans l'écran du compte |
 | Échec bloquant | `SourceFailureNotice` plein écran | l'encart d'échec en tête, **puis les documents** |
 | **Parcours froid en cours** | plein écran | plein écran **sans dossier lu** ; avec un dossier, un encart de progression en tête de page (6.1-A) |
 
@@ -1171,12 +1185,12 @@ CredentialsProvider                     englobe toute la pile de navigation
 
 ScolariteDashboard                      consomme useCredentials()
   ├─ campus sans portail     → CampusNonRelie               (sa page : demande, filigrane UKit)
-  ├─ sans compte             → ScolariteLoginView           (l'onglet EST le formulaire)
-  ├─ parcours froid en cours → ScolariteLoadingScreen        (le seul etat plein ecran)
-  └─ sinon                   → [BiometryGate si compte] > PageScolarite
-                                  ├─ GreetingBlock          (si une identite est lue)
-                                  ├─ EncartSession          (pas de compte / echec)
-                                  └─ GrilleScolarite        (4 widgets, les documents, la porte ENT)
+  ├─ parcours froid en cours → ScolariteLoadingScreen        (le seul etat plein ecran, compte sans dossier)
+  └─ sinon                   → [BiometryGate si compte] > PageScolarite   (avec OU sans compte)
+                                  ├─ GreetingBlock          (sans prenom tant qu'aucune identite n'est lue)
+                                  ├─ EncartSession          (pas de compte → l'ecran du compte / echec)
+                                  └─ GrilleScolarite        (4 widgets, les documents, la porte ENT ;
+                                       │                     en PORTES tant qu'aucun dossier n'est lu)
                                        ├─ WidgetTile × 2    (moodle en héros, messagerie — des flux ;
                                        │                     un échec : deux mots, même taille, et
                                        │                     la FeuilleDeWidget au toucher)
@@ -1443,7 +1457,15 @@ Ils ne se devinent pas à la relecture, et chacun coûte un run entier :
 
 - **un step gardé par `when` n'enregistre aucune sortie**, donc le bloc `outputs` qui le référence
   lève en `StrictUndefined`. Une lecture facultative se protège par `as: "list"` — qui rend `[]` et
-  ne lève jamais — et non par une garde ;
+  ne lève jamais — et non par une garde. **Et depuis le jalon [6.1.x-B](../phase-6/6-1-x-b-signalements.md),
+  par un bloc `optional`** : `as: "list"` ne couvrait que l'extraction, jamais la navigation qui la
+  précède, et un `navigate` mort sur une page d'emploi du temps emportait l'identité déjà lue. Le
+  bloc — moteur `0.5.8`, jalon 3-J d'Aetherius, d'où le `min_engine` des deux dossiers — saute le
+  reste de la séquence à la première défaillance et laisse le run finir en `partial`, avec ses
+  sorties. Les steps d'un bloc qui a cédé publient un dictionnaire vide : toute sortie qui les
+  référence finit par `| default([])`, sinon son rendu lève — bruyamment, ce qui est le bon
+  comportement. Rejoué le 2026-09-07 sur les deux comptes réels : nominal en `success`, les quatre
+  blocs (`bonus_acces`, `bonus_parcours`, `bonus_planning`, `bonus_annuaire`) sans écart de sortie ;
 - **le moteur embarqué refuse un clic ambigu** là où Playwright prend le premier. Tout sélecteur de
   `click` doit matcher **exactement un** élément, et ça se mesure.
 
@@ -1625,8 +1647,19 @@ qui existait déjà pour un paramètre absent.
 `getPortalInjectedScript` scrute la page toutes les 100 ms (50 tentatives, soit 5 s).
 
 **1. Le formulaire du CAS.** Si des identifiants sont enregistrés et qu'aucun refus n'est affiché, il
-remplit et soumet. Sinon, il pose un écouteur sur la soumission pour **proposer d'enregistrer** les
+remplit et soumet. Sinon, il pose un écouteur sur la soumission pour **proposer de mémoriser** les
 identifiants saisis à la main.
+
+**Ce que « mémoriser » veut dire a changé au jalon [6.1.x-B](../phase-6/6-1-x-b-signalements.md).**
+La modale écrivait dans la table de session : au lancement suivant, l'application y trouvait un
+compte, lançait un parcours froid étudiant — jamais prouvé par le formulaire — et, chez un membre du
+personnel, le regardait échouer. Les identifiants du navigateur vont désormais dans **un magasin à
+part** (`UKIT_CAS_AUTOFILL`, cloisonné par établissement comme la session), que seul cet écran lit,
+**après** la session quand elle existe. Ils remplissent le formulaire du CAS, et n'ouvrent aucune
+session dans UKit — la modale le dit. L'écran du compte, sans compte, les montre et les oublie
+([`IdentifiantsNavigateur`](../../src/features/Scolarite/components/IdentifiantsNavigateur.tsx)) :
+une donnée chiffrée qu'aucun écran ne montre est une donnée qu'on ne peut pas retirer. La
+réinitialisation les efface avec le reste du trousseau.
 
 **Ce n'est plus le chemin principal** depuis que la session persiste : le navigateur s'ouvre
 normalement déjà authentifié, et cette branche ne voit même pas la page. Elle reste pour ce qu'une
@@ -1913,18 +1946,20 @@ Il est ensuite **fusionné au référentiel du catalogue** par `sourceEdt()`, en
 groupe personnel se résout alors comme un autre, et ni les services, ni les écrans, ni les favoris
 n'apprennent qu'il existe ([planning.md](planning.md#lemploi-du-temps-personnel)).
 
-### Le portail de l'INP n'est pas embarqué : sans publication, il ne change pas
+### Le portail de l'INP est embarqué depuis la 6.1 — et il ne l'a pas toujours été
 
-`ukit.portail.bordeaux.dossier` est **dans le binaire** ; `ukit.portail.bordeaux-inp.dossier` ne l'est
-pas — il vit sous le préfixe réservé et arrive **uniquement par le manifeste**
-([6-G](../phase-6/6-g-etablissements.md)). C'est la règle de la phase, et elle a une conséquence
-pratique qui se paie une fois par jalon si on l'oublie : **modifier le fichier de l'INP dans le dépôt
-ne change rien sur l'appareil.** Tant que la publication n'a pas eu lieu, le téléphone joue la version
-publiée, qui ne connaît pas les sorties qu'on vient d'ajouter — et la fonctionnalité paraît morte
-alors qu'elle n'a jamais été livrée.
+`ukit.portail.bordeaux-inp.dossier` est arrivé **par le manifeste seul**, sous le préfixe réservé
+([6-G](../phase-6/6-g-etablissements.md)) : c'était la preuve que le mécanisme tient, et elle avait
+une conséquence qui s'est payée une fois par jalon — modifier le fichier de l'INP dans le dépôt ne
+changeait rien sur l'appareil tant qu'il n'était pas publié. Depuis la 6.1, le socle embarque toutes
+les lignes publiées à la date de la release, **Blueprints compris** : les cinq fichiers de
+[`blueprints/portails/`](../../blueprints/portails/) sont importés par
+[`blueprints/index.ts`](../../blueprints/index.ts), et une correction locale de l'INP se teste au
+rechargement, comme Bordeaux. Ce document a affirmé le contraire jusqu'au 2026-09-07.
 
-Bordeaux n'a pas ce problème : l'embarqué gagne tant que le publié n'est pas d'une version
-strictement supérieure, donc une correction locale s'y teste au rechargement.
+Ce qui reste vrai des deux côtés : l'embarqué gagne tant que le publié n'est pas d'une version
+strictement supérieure, et **une version publiée reste à publier** pour atteindre les appareils déjà
+installés.
 
 ### La proposition d'UE ne se contente pas de ce qui a été affiché
 
@@ -2086,10 +2121,17 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
 - **Documents** : ajouter une pièce, la rouvrir, la supprimer ; relancer l'application, elle est
   toujours là. Ajouter **deux fois le même nom** — la seconde est suffixée, la première n'est pas
   écrasée.
-- **Documents sans compte** : se déconnecter — la section reste, et aucune biométrie n'est demandée.
-- **Documents chez « Autre université »** : basculer dessus — l'encart dit que l'université n'est pas
-  reliée, **et les documents restent en dessous**. C'est la sonde de cette session : avant, l'onglet
-  était entièrement mort pour ces étudiants.
+- **Sans compte** (6.1.x-B) : se déconnecter — la **même page** revient, salutation sans prénom,
+  grille en portes (ENT, messagerie, Moodle ; notes et examens à Bordeaux), tuile Documents ; aucun
+  encart, aucune biométrie, aucun indicateur qui tourne. Toucher une porte ouvre le service ; le bouton
+  « Se connecter » de la barre d'onglets ouvre l'écran du compte, qui porte le formulaire et « Tu es
+  d'un autre campus ? ».
+- **Mémoriser depuis le navigateur** : sans compte, ouvrir la messagerie, se connecter à la main sur
+  le CAS, accepter de mémoriser — la page Scolarité reste sans compte (aucun run) ; rouvrir un service,
+  le formulaire se remplit seul ; l'écran du compte montre « Identifiants du navigateur » et les
+  oublie sur confirmation.
+- **Documents chez « Autre université »** : basculer dessus — la page du campus non relié, sans
+  documents ni compte, comme avant.
 - **Verrou biométrique** : quitter l'onglet et y revenir dans la même session — aucune nouvelle
   demande ; relancer l'application — la demande revient.
 - **Navigateur intégré** : ouvrir le webmail depuis la rangée Messagerie ; le formulaire CAS doit se
@@ -2128,6 +2170,11 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 
 ## Limites connues
 
+- **Un membre du personnel qui se connecte depuis le formulaire complet lance un parcours froid
+  étudiant**, qui échouera chez lui sur le dossier : l'application ne sait pas qui est étudiant. La
+  page sans compte existe pour ça — les portes, et la mémorisation des identifiants depuis le
+  navigateur, sans session. Si quelqu'un passe quand même par le formulaire, l'encart dit l'échec et
+  la grille reste en portes ; rien ne se casse, mais rien ne le lui déconseille non plus (6.1.x-B).
 - **Le parcours froid a été mesuré, puis raccourci de moitié** (jalon
   [6.1-D](../phase-6/6-1-d-publication.md), 2026-09-04). Il s'était allongé à mesure qu'on ajoutait
   des vues, chacune payant une pause de 6 s calibrée à la main : 43,0 s à Bordeaux, 48,2 s à l'INP,
@@ -2240,9 +2287,11 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`components/RangeeMysterieuse.tsx`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx) | le teaser d'un widget sans source publiée : la rangée floutée — la modale « Bientôt » qu'elle ouvre vit dans `shared/ui` |
 | [`components/FeuilleDeWidget.tsx`](../../src/features/Scolarite/components/FeuilleDeWidget.tsx) | la feuille d'un widget en échec : la phrase que la tuile ne dit pas, « Relancer » ce seul widget, ou la ressaisie |
 | [`hooks/useSessionDemandeeIci.ts`](../../src/features/Scolarite/hooks/useSessionDemandeeIci.ts) | une session lancée par un geste fait **sur cet écran** lui laisse la page jusqu'à son terme, et dit **de quel geste** — la garde partagée par l'onglet et la fiche du compte |
-| [`screens/ScolariteDashboard.tsx`](../../src/features/Scolarite/screens/ScolariteDashboard.tsx) | écran d'onglet : aiguillage entre connexion, chargement, échec et tableau de bord |
-| [`screens/CredentialsSettingsScreen.tsx`](../../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | réglages du compte : informations enregistrées, déconnexion — et, **sans compte, le formulaire de connexion** plutôt qu'une fiche vide |
-| [`screens/WebBrowserScreen.tsx`](../../src/features/Scolarite/screens/WebBrowserScreen.tsx) | navigateur intégré : points d'entrée, historique, retour matériel, enregistrement d'identifiants |
+| [`screens/ScolariteDashboard.tsx`](../../src/features/Scolarite/screens/ScolariteDashboard.tsx) | écran d'onglet : aiguillage entre campus non relié, chargement et la page — la même avec ou sans compte |
+| [`screens/CredentialsSettingsScreen.tsx`](../../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | réglages du compte : informations enregistrées, l'encart d'échec d'un parcours froid, déconnexion — et, **sans compte, le formulaire de connexion** plutôt qu'une fiche vide |
+| [`components/CompteADemander.tsx`](../../src/features/Scolarite/components/CompteADemander.tsx) | le formulaire de l'écran du compte, avec le choix d'un autre campus et les identifiants du navigateur en pied |
+| [`components/IdentifiantsNavigateur.tsx`](../../src/features/Scolarite/components/IdentifiantsNavigateur.tsx) | les identifiants mémorisés par le navigateur intégré — montrés, et oubliés sur confirmation |
+| [`screens/WebBrowserScreen.tsx`](../../src/features/Scolarite/screens/WebBrowserScreen.tsx) | navigateur intégré : points d'entrée, historique, retour matériel, mémorisation d'identifiants dans le magasin du navigateur |
 | [`components/WebBrowserComponents.tsx`](../../src/features/Scolarite/components/WebBrowserComponents.tsx) | barre d'action flottante, modale d'enregistrement, et le script injecté : formulaire CAS **et** page de choix d'établissement |
 | [`components/ScolariteLoginView.tsx`](../../src/features/Scolarite/components/ScolariteLoginView.tsx) | formulaire de connexion et explication du traitement des données. Partagé avec le [parcours d'accueil](onboarding.md), où il porte en plus une sortie « Plus tard » ([architecture.md](../architecture.md#dépendances-entre-features)) |
 | [`components/ScolariteLoadingScreen.tsx`](../../src/features/Scolarite/components/ScolariteLoadingScreen.tsx) | écran de progression du parcours froid, étape par étape |
@@ -2251,7 +2300,7 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`shared/biometrie/index.ts`](../../src/shared/biometrie/index.ts) | la séquence en deux temps, les capacités de l'appareil, et la politique d'avant pour la sonde |
 | [`components/GreetingBlock.tsx`](../../src/features/Scolarite/components/GreetingBlock.tsx) | la salutation — le **titre** de la page dès qu'un dossier est lu — et la date du jour |
 | [`components/PageScolarite.tsx`](../../src/features/Scolarite/components/PageScolarite.tsx) | le corps défilant : l'encart d'état, puis les trois sections |
-| [`components/EncartSession.tsx`](../../src/features/Scolarite/components/EncartSession.tsx) | l'état de la session **en tête de page** : pas de compte, échec |
+| [`components/EncartSession.tsx`](../../src/features/Scolarite/components/EncartSession.tsx) | l'état de la session **en tête de page** : pas de compte, échec — sur l'onglet et sur la fiche du compte |
 | [`components/CampusNonRelie.tsx`](../../src/features/Scolarite/components/CampusNonRelie.tsx) | la page d'un campus sans portail : l'état vide du vocabulaire partagé, la demande, le bouton pour corriger son choix |
 | [`components/DocumentsSection.tsx`](../../src/features/Scolarite/components/DocumentsSection.tsx) | « Tes documents » : la liste locale, l'ajout, la suppression |
 | [`components/LigneScolarite.tsx`](../../src/features/Scolarite/components/LigneScolarite.tsx) | le vocabulaire de rangées de l'onglet : un groupe encadré, ses lignes, son compteur |

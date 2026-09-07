@@ -1,5 +1,10 @@
 # 6.1-E — Finitions d'interface
 
+> **Le glissement entre onglets a été retiré au jalon [6.1.x-B](6-1-x-b-signalements.md)**, le
+> 2026-09-07 : sur Android, le pager cassait les listes horizontales du Planning, ce que la
+> vérification sur iPhone n'avait pas montré. La limite écrite de ce jalon prévoyait un retrait
+> écran par écran ; il a été fait entier, dépendances comprises. Le reste du jalon tient.
+>
 > **Jalon livré le 2026-09-04** — code, tests et documentation ; la vérification sur appareil suit le
 > plan de test ci-dessous, sur les **deux** plateformes (leçon de [6.1-D](6-1-d-publication.md)). Les
 > écarts entre ce texte et ce qui a été livré sont dans [Écarts constatés](#écarts-constatés), en

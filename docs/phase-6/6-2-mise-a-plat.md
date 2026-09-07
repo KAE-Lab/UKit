@@ -1,8 +1,8 @@
-# v6.1.1 puis v6.2 — Mise à plat, après la sortie de la 6.1
+# v6.1.x puis v6.2 — Mise à plat, après la sortie de la 6.1
 
 > **Statut : décisions prises le 2026-09-06**, en conversation, et les jalons spécifiés dans
-> [6.1.1-A](6-1-1-a-montee-du-socle.md), [B](6-1-1-b-signalements.md),
-> [C](6-1-1-c-retours.md), [Z](6-1-1-z-sortie.md), puis [6.2-A](6-2-a-releve-et-vocabulaire.md),
+> [6.1.x-A](6-1-x-a-montee-du-socle.md), [B](6-1-x-b-signalements.md),
+> [C](6-1-x-c-retours.md), [Z](6-1-x-z-sortie.md), puis [6.2-A](6-2-a-releve-et-vocabulaire.md),
 > [B](6-2-b-ecrans.md), [Z](6-2-z-sortie.md). Le document reste tel qu'il a été écrit : c'est la
 > trace du raisonnement.
 >
@@ -23,16 +23,23 @@ temps, et aucun des deux ne peut attendre la fin d'un travail visuel qui se comp
 - **le défaut le plus signalé par les utilisateurs n'est pas corrigé**, et sa correction propre
   passe justement par cette montée.
 
-Proposition, retenue : **une 6.1.1 courte d'abord, la 6.2 ensuite.**
+Proposition, retenue : **une 6.1.x courte d'abord, la 6.2 ensuite.**
 
-La 6.1.1 ne montre rien de nouveau : elle monte le socle, corrige ce qui a été signalé, et branche
+La 6.1.x ne montre rien de nouveau : elle monte le socle, corrige ce qui a été signalé, et branche
 l'entrée des retours. Son intérêt est d'être **attribuable** — si quelque chose casse après elle,
 c'est la montée, et rien d'autre. Mêler cinq minors de React Native à une refonte du mouvement
 rendrait chaque pixel qui bouge inexplicable, et c'est exactement la raison pour laquelle le projet
 sépare déjà les défauts fonctionnels des sessions d'écran.
 
-Le numéro est juste : la 6.1.1 n'ajoute **aucune capacité**. Elle corrige, et elle change une
+Le numéro est juste : la 6.1.x n'ajoute **aucune capacité**. Elle corrige, et elle change une
 fondation que personne ne voit.
+
+> **Amendé le soir même.** En cadrant B, le propriétaire du produit a redéfini le but de la
+> version : *se débarrasser d'un maximum de demandes* avant la 6.2. Deux capacités y entrent donc —
+> la Scolarité sans compte (dans B) et les calendriers du téléphone ([D](6-1-x-d-calendriers-du-telephone.md)).
+> La version reste attribuable : aucune n'est visuelle. Le 2026-09-07, deux de plus — le ciblage par
+> plateforme (fusionné dans [D](6-1-x-d-calendriers-du-telephone.md)) et, reporté à la version suivante, le push —, et le numéro cesse
+> d'être « 6.1.1 » : la branche s'appelle `v6.1.x`, le numéro se décide à la sortie.
 
 ## 2. L'inventaire croisé
 
@@ -45,11 +52,11 @@ produit — et sa nature : **release** (du code), **publication** (de la donnée
 
 | # | Constat | Diagnostic | Nature | Proposition |
 |---|---|---|---|---|
-| T1 | **L'Expo Go des stores ne sait plus ouvrir le projet** [D] | Il est passé en SDK 57 le 2026-09-04 ; l'application est en SDK 54. Android peut encore charger l'APK `Expo-Go-54.0.8` depuis `expo/expo-go-releases` ; **iOS n'a aucun chemin de repli**, donc un build de développement est aujourd'hui obligatoire pour itérer sur iPhone. | release | La montée 54 → 57, déjà décidée et déjà renvoyée « à son propre jalon, après la 6.1 » par [plateforme.md](../plateforme.md). C'est **6.1.1-A**, et c'est ce qui rend la boucle courte à la version suivante. |
+| T1 | **L'Expo Go des stores ne sait plus ouvrir le projet** [D] | Il est passé en SDK 57 le 2026-09-04 ; l'application est en SDK 54. Android peut encore charger l'APK `Expo-Go-54.0.8` depuis `expo/expo-go-releases` ; **iOS n'a aucun chemin de repli**, donc un build de développement est aujourd'hui obligatoire pour itérer sur iPhone. | release | La montée 54 → 57, déjà décidée et déjà renvoyée « à son propre jalon, après la 6.1 » par [plateforme.md](../plateforme.md). C'est **6.1.x-A**, et c'est ce qui rend la boucle courte à la version suivante. |
 | T2 | **Hermes v1 fait enfler la mémoire des applications qui importent `react-native-worklets`** [M] | Régression introduite au SDK 56, corrigée par `expo@57.0.17` (React Native 0.86.3). L'application importe `reanimated` **et** `worklets`. | release | Épingler **`expo >= 57.0.17`**, pas `^57.0.0` nu. C'est une contrainte, pas une préférence. |
 | T3 | **Le greffon Babel de Reanimated a déménagé** [M] | `babel.config.js` déclare `react-native-reanimated/plugin` ; en amont, c'est devenu un alias de `react-native-worklets/plugin`. | release | À changer au moment de la montée, et à vérifier par `npx expo export` sur les deux plateformes — la seule porte qui prouve le passage des directives `'worklet'`. |
 | T4 | **Edge-to-edge devient obligatoire, et deux commentaires portent l'hypothèse SDK 54** [M] | `newArchEnabled` et `edgeToEdgeEnabled` sortent du schéma de configuration ; Android 16+ impose l'edge-to-edge. Deux endroits du code raisonnent dessus : [`LienEdtForm.tsx:174`](../../src/features/Planning/components/LienEdtForm.tsx) et [`ScolariteLoginView.tsx:338`](../../src/features/Scolarite/components/ScolariteLoginView.tsx). | release | Les deux hypothèses se revérifient sur appareil Android, pas en lecture. |
-| T5 | **Le `npm ci` de la console est cassé** [M] | `console/package.json` déclare `vite ^8.2.2` quand `console/package-lock.json` porte 7.3.6 : l'installation propre ne peut pas satisfaire la plage. Le déploiement Pages passe encore parce qu'il a été lancé avant la divergence. | release | À réaligner dans la passe d'outillage de 6.1.1-A. C'est un défaut latent : il casse au prochain `npm ci`, pas avant. |
+| T5 | **Le `npm ci` de la console est cassé** [M] | `console/package.json` déclare `vite ^8.2.2` quand `console/package-lock.json` porte 7.3.6 : l'installation propre ne peut pas satisfaire la plage. Le déploiement Pages passe encore parce qu'il a été lancé avant la divergence. | release | À réaligner dans la passe d'outillage de 6.1.x-A. C'est un défaut latent : il casse au prochain `npm ci`, pas avant. |
 | T6 | **La version de Node dit trois choses différentes** [M] | `README.md:185` et `CONTRIBUTING.md:9` disent « Node.js 18+ », les workflows disent 22, la chaîne Aetherius dit 20 — et la release v6.0.0 avait justement échoué à l'installation sous Node 20. | release | Un `.nvmrc` et un `engines`, et les trois textes réalignés. Une version d'outil qui se lit à trois endroits différents finit toujours par en contredire un. |
 | T7 | **La dette d'outillage n'a jamais été soldée** [M][D] | `prettier ^1.14.2` (huit ans ; `.prettierrc` porte `jsxBracketSameLine`, retiré en 3.x) ; `dotenv ^10` ; `ts-node` en dépendance **de production** ; **aucun `typescript` déclaré** — `npm run typecheck` s'appuie sur une résolution transitive ; `eslint ^10` face à `typescript-eslint ^8` ; `react-native-webview` et `datetimepicker` en `^` là où Expo épingle exact ; `sondes/requirements.txt` en `aetherius==0.5.5` contre `^0.5.9` côté application ; `versionCode` divergent dans `app.config.ts` (551 racine, 542 Android) ; `.babelrc.old` mort. | release | Tout se solde **au même endroit** : une montée de socle est le seul moment où l'on relit ses dépendances de toute façon. Le faire à part coûterait une seconde campagne de vérification. |
 | T8 | **Cinq paquets JS non maintenus vont franchir cinq minors de React Native** [M] | `react-native-collapsible`, `react-native-image-viewing`, `react-native-textinput-effects`, `react-native-root-toast`, `prop-types`. Aucun n'est piloté par Expo, donc aucun n'est couvert par `expo install --fix`. | release | À réévaluer un par un pendant la montée, et à remplacer seulement s'ils cassent — pas par principe. |
@@ -59,12 +66,14 @@ produit — et sa nature : **release** (du code), **publication** (de la donnée
 | # | Constat | Diagnostic | Nature | Proposition |
 |---|---|---|---|---|
 | B1 | **La synchronisation automatique ne part jamais** [F]×2 | Deux signalements indépendants, deux plateformes : un Pixel 3 (« auto sync doesn't work… it always says that the last sync is failed from yesterday ») et un iPhone 16 en 6.0.0 (« elle ne se fait pas seule, je dois forcer »). **La 6.1 ne l'a pas corrigé** : elle a corrigé *ce que* la synchro synchronise et *ce qu'elle dit* quand elle échoue, jamais *le fait qu'elle parte*. [settings.md](../features/settings.md) porte d'ailleurs la limite écrite : *« non vérifié à ce jour : la tâche de fond application fermée »*. | release | Voir B2 pour la cause probable. Et surtout : **une mesure**, sans quoi le correctif sera invérifiable. |
-| B2 | **`expo-background-fetch` est déprécié depuis le SDK 53** [M] | Le module repose sur des API de plateforme elles-mêmes dépréciées, ne reçoit plus de correctifs, et sera retiré. Son successeur `expo-background-task` s'appuie sur `WorkManager` (Android) et `BGTaskScheduler` (iOS). L'API est quasi identique — seul le paramètre d'options de `registerTaskAsync` bouge. | release | La migration est **la** correction candidate de B1, et elle explique l'ordre : 6.1.1-B vient après 6.1.1-A. |
+| B2 | **`expo-background-fetch` est déprécié depuis le SDK 53** [M] | Le module repose sur des API de plateforme elles-mêmes dépréciées, ne reçoit plus de correctifs, et sera retiré. Son successeur `expo-background-task` s'appuie sur `WorkManager` (Android) et `BGTaskScheduler` (iOS). L'API est quasi identique — seul le paramètre d'options de `registerTaskAsync` bouge. | release | La migration est **la** correction candidate de B1, et elle explique l'ordre : 6.1.x-B vient après 6.1.x-A. |
 | B3 | **Le drapeau d'échec paraît collant** [F] | « last sync failed from yesterday » survit à l'extinction puis au rallumage de l'option. `_lastSyncFailed` / `_lastSyncDate` vivent dans [`AppCore.tsx`](../../src/shared/services/AppCore.tsx). | release | À traiter comme un défaut **distinct** de B1 tant que la mesure n'a pas prouvé qu'il n'en est qu'un symptôme. |
 | B4 | **« Où est la page courriel »** [F] | Un enseignant-chercheur. La porte existe pourtant : `services.email` vaut `https://webmel.u-bordeaux.fr` dans la ligne `bordeaux`. Elle vit derrière l'onglet Scolarité, donc derrière une connexion étudiante. | release | Défaut de **découverte**, pas de fonctionnalité. |
-| B5 | **Afficher un calendrier externe dans le Planning** [F] | Demande explicite (« mettre mes sessions de travail personnel et tout avoir au même endroit »). `expo-calendar` est déjà là et l'application **écrit** déjà dans le calendrier système ; lire dans l'autre sens est du même ordre de travail. | release | **6.3.** C'est une capacité, pas une correction, et la 6.2 est fermée au contenu. |
+| B5 | **Afficher un calendrier externe dans le Planning** [F] | Demande explicite (« mettre mes sessions de travail personnel et tout avoir au même endroit »). `expo-calendar` est déjà là et l'application **écrit** déjà dans le calendrier système ; lire dans l'autre sens est du même ordre de travail. | release | ~~**6.3.**~~ **Reclassé le 2026-09-06 en [6.1.x-D](6-1-x-d-calendriers-du-telephone.md)** : le propriétaire du produit veut *se débarrasser d'un maximum de demandes* avant la 6.2. Répond aussi à « ajouter mes propres événements », par l'éditeur du système. |
 | B6 | **Deux entrées ouvertes du registre tombent dans ce périmètre** [D] | [`defauts-fonctionnels.md`](../defauts-fonctionnels.md) : la fiche du compte affiche six tirets sans lire `sessionFailure` (le remède est déjà écrit, `EncartSession` en `variant="card"`), et les trois lectures bonus du dossier INP sont précédées d'un `navigate` non gardé. | release | Deux corrections courtes, à prendre pendant qu'on est dans ces fichiers. |
 | B7 | **La barre du parcours froid paraît se figer vers 30 %** [D] | Ouverte au registre le 2026-09-06. Le palier « connexion » plafonne à 34 % pour 18 secondes annoncées ; depuis [6.1-D](6-1-d-publication.md) l'étape en dure 26. | release | **6.2**, pas ici : rangé pour la version visuelle sur décision du propriétaire du produit — *« c'est du rythme, pas du comportement »*. |
+| B9 | **Un cours à plusieurs UE disparaît dès qu'une seule est filtrée** [F] *(mail du 2026-09-06, après la mise à plat)* | Mesuré sur Celcat : `MI601A` porte dix-neuf événements à plusieurs modules sur l'année, dont le même cours sous son code français et son code anglais. La projection ne gardait que le premier module. | release | **6.1.x-B** : la liste entière est gardée, un cours reste tant qu'une de ses UE n'est pas filtrée. |
+| B10 | **« Tenter une synchro à chaque ouverture »** [K] *(2026-09-06, après la mise à plat)* | Le code lui donne raison : la tâche de fond n'était jamais réarmée au lancement. | release | **6.1.x-B** : l'entretien — synchro et rappels — au lancement, au retour au premier plan, quand les favoris changent ; la tâche de fond devient un bonus. |
 | B8 | **Le reliquat du backlog 6.0.1** [K] | Diagnostic WebView/WAYF Android par `adb logcat` ; visionneuse PDF Android ; les 18 runs de `ukit.celcat.occupation` du tableau de bord, un par bâtiment. | — | Les deux premiers restent au backlog. Le troisième part en **6.2** : la refonte du tableau de bord le rencontrera de toute façon. |
 
 ### 2.3 Les campus demandés
@@ -118,7 +127,7 @@ Contrairement à la [mise à plat de la 6.1](6-1-mise-a-plat.md), les questions 
 la conversation même qui a produit ce document. Elles sont conservées avec leur réponse, parce que
 c'est la réponse qui explique la forme des jalons.
 
-1. **Le découpage.** Une 6.1.1 courte (socle, signalements, retours) puis la 6.2 pour le mouvement
+1. **Le découpage.** Une 6.1.x courte (socle, signalements, retours) puis la 6.2 pour le mouvement
    seul — plutôt que tout dans la 6.2. → **Retenu.** Les utilisateurs qui ont signalé le défaut sont
    servis vite, et une régression de la montée reste attribuable à la montée.
 2. **La direction visuelle.** Trois choses sont prises à la référence : les **fonds par écran**, la
@@ -153,10 +162,12 @@ c'est la réponse qui explique la forme des jalons.
 ## 5. Le plan
 
 ```
-   6.1.1-A  Montee du socle          T1 T2 T3 T4 T5 T6 T7 T8
-   6.1.1-B  Ce qui a ete signale     B1 B2 B3 B4 B6
-   6.1.1-C  Les retours              R1 R2 R3 R4 C6 — sans build, en parallele
-   6.1.1-Z  Sortie
+   6.1.x-A  Montee du socle          T1 T2 T3 T4 T5 T6 T7 T8
+   6.1.x-B  Ce qui a ete signale     B1 B2 B3 B4 B6 B9 B10
+   6.1.x-C  Les retours              R1 R2 R3 R4 C6 — sans build, en parallele
+   6.1.x-D  Calendriers du telephone B5 — ajoute le 2026-09-06, code apres B
+            + ciblage par plateforme  ajoute le 2026-09-07 et fusionne ici (le push est reporte)
+   6.1.x-Z  Sortie — Android verifie en une fois, numero decide a la fin
 
    6.2-A    Releve et vocabulaire    l'ecran fondateur : le tableau de bord Campus
    6.2-B    Les ecrans               S1 Planning, S2 Scolarite, S3 Reglages (+ B7, B8)
@@ -165,7 +176,7 @@ c'est la réponse qui explique la forme des jalons.
    campus   en continu, hors version C1 C2 C3 C4 C5 — voir docs/adaptation-campus.md
 ```
 
-L'ordre de la 6.1.1 est celui de la dépendance, pas du risque : **B dépend de A** parce que la
+L'ordre de la 6.1.x est celui de la dépendance, pas du risque : **B dépend de A** parce que la
 correction propre du défaut le plus signalé passe par un module que seule la montée apporte. **C ne
 dépend de rien** — il ne touche pas l'application — et peut donc commencer le jour même.
 

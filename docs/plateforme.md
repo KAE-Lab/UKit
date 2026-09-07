@@ -1,7 +1,7 @@
 # Plateforme, permissions et publication
 
 UKit est une application **Expo** (SDK 57, React Native 0.86, React 19.2 — depuis la montée de socle
-[6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)) publiée sur l'App Store et le Play Store. Ce document couvre la configuration native, les permissions, la construction et la
+[6.1.x-A](phase-6/6-1-x-a-montee-du-socle.md)) publiée sur l'App Store et le Play Store. Ce document couvre la configuration native, les permissions, la construction et la
 publication.
 
 ## Identité de l'application
@@ -19,7 +19,7 @@ est évaluée à chaque commande Expo — pour rendre les variables d'environnem
 | Orientation | portrait uniquement |
 | Couleur principale | `#006F9F` |
 | Projet EAS | `77596c7c-87fc-4c86-9189-3a70fd839abf` |
-| Mises à jour OTA | désactivées (`updates.enabled: false`) ; `expo-updates` n'est plus une dépendance depuis 6.1.1-A |
+| Mises à jour OTA | désactivées (`updates.enabled: false`) ; `expo-updates` n'est plus une dépendance depuis 6.1.x-A |
 | Apparence | `userInterfaceStyle: automatic`, et l'application impose son thème au natif par `Appearance.setColorScheme` ([theme.md](theme.md#changer-de-thème)) |
 
 Le paquet Android conserve son identifiant historique : le changer ferait perdre la continuité de
@@ -53,7 +53,7 @@ l'appareil.
 | Rappels | iOS `NSRemindersUsageDescription` | déclaré, non utilisé par le code actuel |
 | Localisation | iOS `NSLocationWhenInUseUsageDescription` · Android `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | distance aux restaurants CROUS et aux BU ([features/campus.md](features/campus.md)) |
 | Face ID / biométrie | iOS `NSFaceIDUsageDescription` + option du plugin | protection de l'onglet Scolarité |
-| Tâches en arrière-plan | iOS `UIBackgroundModes: ['fetch']` | synchronisation périodique du calendrier |
+| Tâches en arrière-plan | iOS `UIBackgroundModes: ['processing']` + `BGTaskSchedulerPermittedIdentifiers`, greffon `expo-background-task` | l'entretien : synchronisation du calendrier et rappels de cours |
 | Notifications | demandée à l'exécution | rappels avant les cours |
 
 Les permissions sont demandées **au moment de l'usage**, jamais au lancement : la localisation à
@@ -62,20 +62,41 @@ l'ouverture d'un écran Campus, le calendrier à l'activation de la synchronisat
 
 ## Tâche de fond
 
-`SettingsManager` enregistre une tâche `background-fetch` quand la synchronisation calendrier est
-activée :
+[`entretien.ts`](../src/shared/services/entretien.ts) définit une tâche `ukit-entretien` par
+`expo-background-task` — WorkManager sur Android, BGTaskScheduler sur iOS — et l'arme **à chaque
+lancement** dès que la synchronisation du calendrier ou les rappels de cours sont actifs :
 
 ```ts
-BackgroundFetch.registerTaskAsync('background-fetch', {
-    minimumInterval: 12 * 60 * 60,   // 12 heures
-    stopOnTerminate: false,
-    startOnBoot: true,
-});
+BackgroundTask.registerTaskAsync('ukit-entretien', { minimumInterval: 12 * 60 });   // en MINUTES
 ```
 
-La tâche appelle `SettingsManager.syncCalendar()`. `minimumInterval` est un **plancher**, pas une
-garantie : les deux systèmes décident de la fréquence réelle selon l'usage et la batterie. Désactiver
-la synchronisation désenregistre la tâche.
+L'unité a changé avec le module (`expo-background-fetch` comptait en secondes), et `stopOnTerminate`
+/ `startOnBoot` n'existent plus : les deux ordonnanceurs survivent d'eux-mêmes à la fermeture et au
+redémarrage. `minimumInterval` reste un **plancher**, pas une garantie — iOS accorde ses fenêtres
+quand il veut, souvent la nuit, et Android planifie sans promesse d'heure. C'est pourquoi l'entretien
+se joue aussi à l'ouverture de l'application ([features/settings.md](features/settings.md#lentretien--la-tâche-de-fond-est-un-bonus-louverture-est-la-garantie)).
+
+Trois choses à savoir avant d'y toucher :
+
+- `expo-background-fetch` est **parti** au jalon [6.1.x-B](phase-6/6-1-x-b-signalements.md) :
+  déprécié depuis le SDK 53. **Ni lui ni son remplaçant ne tournent sous Expo Go** — le JS
+  d'`expo-background-task` rend `Restricted` dès qu'il s'y sait, mesuré sur iPhone le 2026-09-07 —,
+  ce qui explique qu'on n'ait jamais vu la tâche partir en développement. Elle se sonde sur un build
+  de développement ou en production ; l'entretien à l'ouverture, lui, se joue partout ;
+- l'enregistrement est **attendu et rattrapé** : un refus du système se lit dans Metro
+  (`[entretien] tache de fond non armee : …`) au lieu de devenir un rejet non géré ;
+- le greffon `expo-background-task` pose `processing` et l'identifiant permis dans l'`Info.plist` ;
+  `app.config.ts` les écrit en clair pour rester lisible sans lui. Le `fetch` qui subsiste à côté
+  vient du greffon d'`expo-task-manager`, appliqué d'office : inoffensif, et pas à nous.
+  `npx expo config --type introspect` montre le résultat.
+
+Pour la sonder : menu de développement, onglet Temps, bloc « Entretien » ([qualite.md](qualite.md)) —
+sous Expo Go il dit « indisponible sous Expo Go (build requis) », et c'est la seule chose qu'il
+puisse dire. « Réveiller la tâche » appelle `triggerTaskWorkerForTestingAsync`, qui ne marche que sur
+un build de développement ;
+en production, la mesure est celle du jalon — 24 heures application tuée, sur les deux plateformes.
+Sur Android, `adb shell dumpsys jobscheduler` liste la tâche et `adb shell cmd jobscheduler run -f
+<package> <id>` la force.
 
 ## Ressources
 
@@ -117,7 +138,7 @@ npm run build:ios         # eas build -p ios --profile preview
 
 ### Expo Go ne sert plus, et il faut savoir pourquoi
 
-> Écrit le 2026-09-04, quand le projet était en SDK 54. Depuis la montée [6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)
+> Écrit le 2026-09-04, quand le projet était en SDK 54. Depuis la montée [6.1.x-A](phase-6/6-1-x-a-montee-du-socle.md)
 > le projet est en 57 et l'Expo Go du store le rouvre ; le mécanisme décrit ici reste vrai, et se
 > reproduira au prochain SDK.
 
@@ -160,6 +181,8 @@ pas, parce que c'est propre à ce projet.
 
 > **Le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md) a changé le natif, donc le build de
 > développement du 2026-09-04 est périmé.** Deux modules entrent — `react-native-pager-view` (le
+> pager des onglets, **ressorti au jalon 6.1.x-B** avec le glissement entre onglets ; un build
+> d'après ne le porte plus, et n'en a pas besoin) — (le
 > moteur du glissement entre onglets) et `expo-haptics` (le retour des contrôles dessinés) — et un
 > sort, `@react-native-community/slider`, remplacé par un curseur maison. Expo Go les porte déjà
 > tous ; **un build de développement doit être refait** avant de vérifier ce jalon sur iPhone.
@@ -208,7 +231,7 @@ passe par EAS, et partir voudrait dire reprendre deux projets natifs pour retrou
 roulant de versions, en plus dur. Ce n'est pas optionnel à terme : les stores imposent une API cible
 minimale, et chez Expo c'est la montée de SDK qui la donne.
 
-**La procédure, telle qu'elle a été jouée le 2026-09-06** ([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md)),
+**La procédure, telle qu'elle a été jouée le 2026-09-06** ([6.1.x-A](phase-6/6-1-x-a-montee-du-socle.md)),
 pour que le prochain saut ne se redécouvre pas :
 
 1. `npx expo install expo@^57.0.0 --fix`. Il écrit `package.json` puis **sort en erreur** : il
@@ -303,7 +326,7 @@ dans le binaire de l'application. La clé de service n'apparaît nulle part.
 et les deux variables. L'environnement `github-pages` est créé au premier déploiement et protégé par
 défaut sur la branche par défaut — le workflow tourne depuis `main`, pas depuis une branche de
 travail. La branche s'appelait `master` jusqu'au 2026-09-06 ; un tag homonyme rendait `git push
-origin master` ambigu, et le renommage a suivi la suppression du tag ([6.1.1-A](phase-6/6-1-1-a-montee-du-socle.md#la-branche-principale-devient-main)).
+origin master` ambigu, et le renommage a suivi la suppression du tag ([6.1.x-A](phase-6/6-1-x-a-montee-du-socle.md#la-branche-principale-devient-main)).
 
 ## Les sondes du matin
 
@@ -323,7 +346,7 @@ Quatre endroits portent une version :
 |---|---|---|
 | [`package.json`](../package.json) | `6.1.0` | version npm, mise à jour par le workflow |
 | [`app.config.ts`](../app.config.ts) `version` | `6.1.0` | version affichée, et comparée à la table `app_release` ([backend.md](backend.md)) |
-| [`app.config.ts`](../app.config.ts) `android.versionCode` | `551` | **seule déclaration** depuis 6.1.1-A — une clé racine du même nom, qui n'est pas un champ Expo, portait une autre valeur ; de toute façon inopérante, `appVersionSource: remote` fait d'EAS l'autorité |
+| [`app.config.ts`](../app.config.ts) `android.versionCode` | `551` | **seule déclaration** depuis 6.1.x-A — une clé racine du même nom, qui n'est pas un champ Expo, portait une autre valeur ; de toute façon inopérante, `appVersionSource: remote` fait d'EAS l'autorité |
 | [`VERSION`](../VERSION) | `6.1.0` | fichier historique, aligné par le protocole de release ; plus lu à distance depuis [6-Z](phase-6/6-z-livraison-finale.md) |
 
 Avant de poser un tag, les trois premiers doivent s'accorder ([6-1-z](phase-6/6-1-z-sortie.md)).

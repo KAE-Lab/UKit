@@ -58,6 +58,15 @@ export interface PlanningEvent {
      * retombent sur l'heuristique, qui n'a pas bouge.
      */
     sites?: string[];
+    /**
+     * Les intitules de matiere que la source **declare**, dans l'ordre (`4TIN602U Techn algorithmiques`).
+     *
+     * Un cours peut en porter plusieurs — le meme TP sous son code francais et son code anglais — et
+     * le sujet n'en garde que le premier. Sans ce champ, la seconde UE etait perdue a la projection :
+     * un filtre sur la premiere masquait le cours a qui suit la seconde, et la seconde n'etait meme
+     * pas proposee dans les suggestions. Facultatif, comme `sites`, et pour les memes raisons.
+     */
+    modules?: string[];
 }
 
 export interface PlanningWeekDay {

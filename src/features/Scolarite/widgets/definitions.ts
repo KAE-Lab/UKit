@@ -30,6 +30,18 @@ import type { IconSpec } from '../../../shared/ui/Icon';
 export type PointWidget = 'messagerie' | 'moodle' | 'notes' | 'examens';
 
 /**
+ * Le point du catalogue qui porte l'adresse d'un widget.
+ *
+ * La messagerie s'ouvre sous `email` : le catalogue nomme le service, pas le widget. Les trois autres
+ * coincident. Une seule table, parce qu'elle a manque une fois : la grille sans compte cherchait une
+ * porte sous `messagerie` et declarait la boite mail « pas encore disponible » — exactement le
+ * service que le signalement demandait (2026-09-07).
+ */
+export function serviceDuPoint(point: PointWidget): string {
+    return point === 'messagerie' ? 'email' : point;
+}
+
+/**
  * La forme d'un widget dans la page, decidee par son **role** et jamais par sa donnee.
  *
  * C'est la contrainte centrale de la grille : faire dependre la forme de la presence d'une source

@@ -1,4 +1,4 @@
-# 6.1.1-C — Les retours entrent quelque part
+# 6.1.x-C — Les retours entrent quelque part
 
 > **Le jalon qui donne une destination à ce que les utilisateurs écrivent.** Le formulaire existe
 > depuis la sortie de la 6.0, il a produit ses seize premières réponses, et **rien dans le projet ne
@@ -7,7 +7,7 @@
 > [mise à plat](6-2-mise-a-plat.md).
 >
 > **Ne touche pas l'application.** Ce jalon peut démarrer le jour même, en parallèle de
-> [6.1.1-A](6-1-1-a-montee-du-socle.md), et sa livraison ne demande aucune release.
+> [6.1.x-A](6-1-x-a-montee-du-socle.md), et sa livraison ne demande aucune release.
 
 ## La direction
 
@@ -98,7 +98,7 @@ registre des retours ne le remplace pas : il enregistre ce qui a été dit, pas 
 ## Décisions et pièges
 
 - **Le `CHANGELOG` n'a pas de section « Non publié »** alors que `CONTRIBUTING.md:159` l'exige
-  (R5). À rouvrir ici, puisque c'est le premier jalon de la 6.1.1 à écrire.
+  (R5). À rouvrir ici, puisque c'est le premier jalon de la 6.1.x à écrire.
 - **Publier une feuille de réponses la rend lisible par qui a l'adresse.** L'adresse n'est pas
   devinable et le formulaire ne demande pas d'identité, mais la décision reste au propriétaire du
   produit : sans `RETOURS_CSV_URL`, l'importeur fonctionne en manuel et rien n'est publié.

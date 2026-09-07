@@ -200,8 +200,9 @@ consommateurs hors React (tâche de fond, planificateur de notifications). Déta
 Une seule dépendance croisée existe, et elle est volontaire :
 
 - [`AppCore.tsx`](../src/shared/services/AppCore.tsx) importe `PlanningApiService` pour la
-  synchronisation du calendrier système et la tâche de fond. La synchronisation est un réglage
-  global, pas une fonctionnalité du planning, mais elle a besoin des événements du planning.
+  synchronisation du calendrier système, et [`entretien.ts`](../src/shared/services/entretien.ts)
+  pour la tâche de fond et les rappels. La synchronisation est un réglage global, pas une
+  fonctionnalité du planning, mais elle a besoin des événements du planning.
 - [`NotificationService.ts`](../src/shared/services/NotificationService.ts) importe les types du
   planning pour la même raison.
 
@@ -295,7 +296,9 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/etablissements/comptes.test.ts`](../src/shared/etablissements/comptes.test.ts) | le cloisonnement et la conversion, dont une erreur ferait perdre une session sans rien dire — joué par `npm test` |
 | [`shared/etablissements/purge.ts`](../src/shared/etablissements/purge.ts) | ce qu'on efface en quittant un établissement, et ce que seule la réinitialisation efface |
 | [`shared/etablissements/catalogue.test.ts`](../src/shared/etablissements/catalogue.test.ts) | la projection et le repli sur le socle, joués par `npm test` |
-| [`shared/services/AppCore.tsx`](../src/shared/services/AppCore.tsx) | `AppContext`, `SettingsManager`, synchronisation calendrier, tâche de fond, utilitaires de lieux et de cours |
+| [`shared/services/AppCore.tsx`](../src/shared/services/AppCore.tsx) | `AppContext`, `SettingsManager`, synchronisation calendrier et sa dernière tentative, utilitaires de lieux et de cours |
+| [`shared/services/entretien.ts`](../src/shared/services/entretien.ts) | l'entretien : la tâche de fond (`expo-background-task`), armée à chaque lancement, et le même travail — synchroniser, replanifier les rappels — au lancement, au retour au premier plan et quand les favoris changent ([features/settings.md](features/settings.md)) |
+| [`shared/services/calendrier/tentative.ts`](../src/shared/services/calendrier/tentative.ts) · [`tentative.test.ts`](../src/shared/services/calendrier/tentative.test.ts) | la dernière tentative de synchronisation — date, issue, origine —, sa lecture défensive et l'échéance de l'entretien, purs |
 | [`shared/services/CalendarSyncHelpers.ts`](../src/shared/services/CalendarSyncHelpers.ts) | les deux pièces « calendrier système » de la synchronisation, sorties d'`AppCore` au jalon [6-E](phase-6/6-e-planning.md) quand il a franchi les 400 lignes |
 | [`shared/services/NotificationService.ts`](../src/shared/services/NotificationService.ts) | planification des rappels de cours ([features/settings.md](features/settings.md)) |
 | [`shared/services/SecureStoreService.ts`](../src/shared/services/SecureStoreService.ts) | stockage chiffré des identifiants, des données étudiant, des liens d'abonnement et de l'identifiant d'installation |
@@ -344,6 +347,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/ModMenu.tsx`](../src/shared/ui/ModMenu.tsx) | menu flottant de développement : simulation temporelle et livraison ([qualite.md](qualite.md)) |
 | [`shared/ui/ModMenuBlueprints.tsx`](../src/shared/ui/ModMenuBlueprints.tsx) | son panneau de diagnostic de la livraison ([blueprints.md](blueprints.md)) |
 | [`shared/ui/ModMenuReinitialisation.tsx`](../src/shared/ui/ModMenuReinitialisation.tsx) | son bouton de remise à zéro complète, avec confirmation |
+| [`shared/ui/ModMenuEntretien.tsx`](../src/shared/ui/ModMenuEntretien.tsx) | son bloc de sonde de l'entretien : état de la tâche de fond, dernière tentative, dernier bilan, jouer et réveiller ([qualite.md](qualite.md)) |
 | [`shared/ui/SourceFailureNotice.tsx`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, tel qu'un écran le montre : message de la famille, bouton Réessayer seulement s'il répare, ou l'**action** qui remplirait l'écran ([blueprints.md](blueprints.md)) |
 | [`shared/constants/urls.ts`](../src/shared/constants/urls.ts) | URLs externes : liens applicatifs (`URL`). Les points d'entrée Celcat en sont sortis au jalon [6-E](phase-6/6-e-planning.md) — ils vivent dans les Blueprints |
 | [`shared/utils/formatUtils.ts`](../src/shared/utils/formatUtils.ts) | `upperCaseFirstLetter` et `formatDescription` (nettoyage des descriptions Celcat) |

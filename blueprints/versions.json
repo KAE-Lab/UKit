@@ -40,7 +40,8 @@
         "version": "2"
     },
     "ukit.portail.bordeaux.dossier": {
-        "version": "6"
+        "version": "7",
+        "min_engine": "0.5.8"
     },
     "ukit.portail.bordeaux.messagerie": {
         "version": "5"
@@ -55,7 +56,8 @@
         "version": "2"
     },
     "ukit.portail.bordeaux-inp.dossier": {
-        "version": "10"
+        "version": "11",
+        "min_engine": "0.5.8"
     },
     "ukit.portail.bordeaux-inp.messagerie": {
         "version": "2"

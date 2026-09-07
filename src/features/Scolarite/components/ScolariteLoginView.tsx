@@ -206,7 +206,7 @@ const CarteDuFormulaire = ({
 
 const ScolariteLoginView = ({
     theme, color, topPadding, onSkip = null, onDebut = null, onSuccess = null, onAutreCampus = null,
-    onEnSession = null, compact = false, onScroll = undefined,
+    onEnSession = null, compact = false, onScroll = undefined, pied = null,
 }) => {
     const { validateAndSave, scrapeProgress, scrapeStatus, sessionMode } = useCredentials();
 
@@ -368,6 +368,10 @@ const ScolariteLoginView = ({
                     username={username} setUsername={setUsername} password={password} setPassword={setPassword}
                     error={error} onSubmit={onSubmit} onSkip={onSkip} onAutreCampus={onAutreCampus}
                 />
+                {/* Un emplacement sous la carte, monte par l'hote : la fiche du compte y pose les
+                    identifiants memorises par le navigateur (6.1.x-B). Le formulaire ne les connait
+                    pas — ils n'ouvrent aucune session. */}
+                {pied}
             </Animated.ScrollView>
         </KeyboardAvoidingView>
     );

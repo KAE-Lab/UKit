@@ -278,16 +278,17 @@ Portée par `SettingsManager.syncCalendar()`
 Activation
   ├─ permission calendrier demandée si nécessaire
   ├─ liste des calendriers du système chargée
-  ├─ BackgroundFetch.registerTaskAsync('background-fetch', 12 h)
+  ├─ l'échec précédent est effacé, et l'entretien arme la tâche de fond (entretien.ts)
   └─ choix de la cible : un calendrier existant, ou un calendrier "UKit" dédié
 
-syncCalendar()
+syncCalendar(origine)
   ├─ crée le calendrier "UKit" au premier passage si c'est la cible
   ├─ PlanningApiService.fetchCalendarForSynchronization(les groupes favoris, agrégés)
   │     └─ Blueprint ukit.celcat.annee, année universitaire complète (août → août)
   ├─ pour chaque événement : mise à jour si connu, création sinon
   ├─ suppression des événements devenus obsolètes
-  └─ écriture de previousSyncData / previousSyncTime
+  ├─ écriture de previousSyncData / previousSyncTime
+  └─ écriture de la tentative (calendarSyncAttempt) : date, issue, origine — réussie ou non
 ```
 
 La table `previousSyncData` associe l'identifiant Celcat à l'identifiant de l'événement système :
@@ -301,7 +302,72 @@ identifiant qui indexe `previousSyncData` : il n'est écrit qu'une fois.
 **Un échec se dit deux fois.** La pastille sous l'interrupteur passe en avertissement, et quand c'est
 le geste « Forcer une synchronisation » qui a échoué, un toast le dit sur place : le service rend son
 verdict (`syncCalendar` rend `false`), l'écran décide du retour. La tâche de fond, elle, n'a
-personne à qui parler.
+personne à qui parler — mais elle laisse une trace, voir ci-dessous.
+
+### La dernière tentative est persistée, et l'interrupteur l'efface
+
+Jusqu'au jalon [6.1.x-B](../phase-6/6-1-x-b-signalements.md), le drapeau d'échec vivait en mémoire
+et n'était remis à zéro que par une synchronisation **réussie** : éteindre puis rallumer l'option ne
+le touchait pas. C'est exactement le geste qu'un utilisateur a décrit avoir tenté (« I tried to
+disable and enable the option but it always says that the last sync is failed ») — son remède ne
+pouvait pas marcher, et rien ne le lui disait.
+
+La **dernière tentative** — date, issue, origine — est désormais écrite
+([`calendrier/tentative.ts`](../../src/shared/services/calendrier/tentative.ts), clé
+`calendarSyncAttempt`), et trois règles la gouvernent :
+
+- **l'interrupteur efface un échec, dans les deux sens.** C'est le geste qui, du point de vue de
+  l'utilisateur, remet la capacité à zéro ; une réussite, elle, reste — elle date la dernière
+  synchronisation ;
+- **une synchronisation qui n'a rien à écrire efface l'échec aussi** : sans cible ou sans favori,
+  rien ne peut plus échouer, et un avertissement qui survit à la disparition de sa cause ment ;
+- **la ligne d'état dit les deux choses** : la date du dernier succès, et, sous elle, en
+  avertissement, « Dernière tentative échouée il y a 3 heures ». Avant, l'échec remplaçait la date,
+  et se lisait comme « rien n'a jamais marché ».
+
+L'écran s'abonne à l'événement `synchroCalendrier` : un effacement sans synchronisation ne
+provoquait aucun rendu, et la pastille restait orange le temps d'un autre geste.
+
+> **Capture attendue** — `reglages-synchro-echec.png` : la carte d'état après un échec — la date du
+> dernier succès, et dessous, en avertissement, « Dernière tentative échouée il y a … ».
+
+### L'entretien : la tâche de fond est un bonus, l'ouverture est la garantie
+
+Deux utilisateurs, deux plateformes, un seul signalement en septembre 2026 : *la synchronisation
+automatique ne se fait jamais*. L'exploration a trouvé trois causes, et aucune n'était la dépendance
+dépréciée qu'on soupçonnait :
+
+- la tâche n'était **jamais réenregistrée au lancement** — seul l'interrupteur l'enregistrait, et
+  rien ne garantissait qu'elle survive à une mise à jour ;
+- sa promesse d'enregistrement n'était ni attendue ni rattrapée : un refus du système passait
+  inaperçu ;
+- et sous Expo Go, aucune tâche de fond ne tourne — ni l'ancien module ni le nouveau, qui rend
+  `Restricted` dès qu'il s'y sait —, ce qui explique qu'on ne l'ait jamais vue partir en
+  développement. Elle se sonde sur un build de développement, ou en production.
+
+[`entretien.ts`](../../src/shared/services/entretien.ts) remplace tout ça par une règle : **la tâche
+de fond est un bonus, l'ouverture de l'application est la garantie.** L'entretien se joue au
+lancement, au vrai retour au premier plan ([`premierPlan`](../../src/shared/services/premierPlan.ts)),
+quand les favoris changent, et par la tâche du système ; hors tâche, il ne part que si le précédent
+date de plus de douze heures. Quelqu'un qui ouvre UKit chaque matin a son agenda à jour même si le
+système ne l'a jamais réveillé. Il fait deux choses :
+
+| | Quand | Quoi |
+|---|---|---|
+| **Synchroniser** | synchronisation active — et **tout de suite** quand on la rallume ou qu'on choisit la cible, sans attendre l'échéance | `syncCalendar(origine)`, avec la trace ci-dessus |
+| **Replanifier les rappels** | rappels actifs, favoris choisis | relit la semaine courante, applique les filtres d'UE comme le Planning, et reprogramme les vingt prochains rappels |
+
+Le second n'était pas dans le signalement, et il le mérite : une notification programmée sonne même
+application tuée, mais elle n'était **programmée** qu'en ouvrant le Planning, sur la semaine en cache
+— quatre jours sans ouvrir l'application, et plus aucun rappel.
+
+La tâche elle-même passe par `expo-background-task` (WorkManager sur Android, BGTaskScheduler sur
+iOS) : elle est armée **à chaque lancement** selon les réglages — synchronisation ou rappels actifs —,
+attendue et rattrapée, et son verdict rendu au système est celui de la synchronisation. Elle se sonde
+depuis le menu de développement, onglet Temps, bloc « Entretien » ([qualite.md](../qualite.md)) :
+l'état de la tâche, la dernière tentative, le dernier bilan, et deux gestes — jouer l'entretien tout
+de suite, ou faire réveiller la tâche par le système. **Sous Expo Go, la tâche n'existe pas** : le
+bloc le dit, l'entretien à l'ouverture reste jouable, et la tâche se vérifie sur un build.
 
 **Ouvrir l'écran sans permission ne bascule plus rien** (6.1-C). Le montage appelait la fonction de
 l'interrupteur quand la permission manquait : elle la demandait, puis basculait la synchronisation
@@ -355,13 +421,15 @@ une donnée d'établissement écrite **hors** de l'application, que la bascule n
 symptôme était le pire possible : l'application annonçait que tout était effacé, et l'agenda affichait
 les cours de la fac précédente pendant des jours.
 
-> **Non vérifié à ce jour : la tâche de fond application fermée.** La synchronisation manuelle a été
-> jouée après la migration du jalon [6-E](../phase-6/6-e-planning.md) et rend les mêmes événements,
-> aux mêmes dates, sans doublon. Le passage automatique toutes les 12 h avec l'application tuée, lui,
-> n'a pas été observé — il demande d'attendre une nuit ou de déclencher `BackgroundFetch` depuis
-> Xcode. Les deux chemins appellent le même objet de service, donc le risque est faible, mais il
-> n'est pas nul : c'est le seul endroit où un run part sans écran, et un `confirm` qui s'y glisserait
-> bloquerait la tâche sans que personne le voie.
+> **La tâche de fond application fermée se mesure, elle ne se suppose plus.** Cette limite était
+> écrite ici depuis le jalon [6-E](../phase-6/6-e-planning.md) — « non vérifié à ce jour » — et deux
+> utilisateurs l'ont confirmée de l'extérieur avant qu'on la mesure. Le jalon
+> [6.1.x-B](../phase-6/6-1-x-b-signalements.md) impose une mesure de 24 heures, application tuée, sur
+> les deux plateformes et sur un build de production ; la ligne d'état et le bloc « Entretien » du
+> menu de développement en sont l'instrument. Ce qui reste vrai : une tâche de fond n'est jamais
+> garantie — iOS l'accorde quand il veut, Android la planifie sans promesse d'heure — et c'est
+> pourquoi l'ouverture de l'application est devenue la garantie. Et un `confirm` qui se glisserait
+> dans le Blueprint de l'année bloquerait toujours la tâche sans que personne le voie.
 
 Création d'un calendrier dédié : sur iOS, une source locale ou iCloud est requise et recherchée parmi
 les calendriers existants ; sur Android, une source locale est déclarée directement.
@@ -455,6 +523,20 @@ réinitialiser serait un résidu, pas un service.
   notification arrive bien avant un cours.
 - Activer la synchronisation, choisir « UKit » : le calendrier doit être créé et peuplé. Relancer une
   synchronisation : aucun doublon.
+- Couper le réseau (interrupteur HORS LIGNE du menu de développement) et forcer : la ligne d'état garde
+  la date du dernier succès **et** dit « Dernière tentative échouée il y a quelques secondes ».
+  Éteindre puis rallumer l'interrupteur : l'échec disparaît — et la date aussi, parce qu'éteindre a
+  retiré les cours de l'agenda ; rallumer et rechoisir le calendrier resynchronise **sans attendre**,
+  et la date revient avec les cours.
+- Menu de développement, onglet Temps, bloc Entretien : sous Expo Go, « tâche système : indisponible
+  sous Expo Go » ; sur un build, « disponible » et « enregistrée » vraie dès que la synchronisation ou
+  les rappels sont actifs, et « Réveiller la tâche » produit une tentative d'origine `tache`. Partout :
+  avancer la date simulée de douze heures puis passer en arrière-plan et revenir produit une tentative
+  d'origine `premier-plan` ; « Jouer l'entretien maintenant » en produit une d'origine `sonde`.
+- Rappels actifs, « Oublier l'échéance » dans le bloc Entretien, application tuée puis rouverte : la
+  ligne `[entretien] lancement : … rappels replanifies` dans Metro. Sans ce geste, le lancement dit
+  `trop-tot` tant que douze heures **réelles** ne sont pas passées — la date simulée ne survit pas à
+  une fermeture ([qualite.md](../qualite.md)).
 - Changer de calendrier cible : les événements de l'ancien doivent avoir disparu.
 - Ouvrir les Réglages avec un compte connecté puis se déconnecter et revenir : la ligne « Compte
   universitaire » doit passer de **Connecté** à **Non connecté** sans relancer l'application.
@@ -470,7 +552,7 @@ réinitialiser serait un résidu, pas un service.
 ## Limites connues
 
 - **`expo-calendar` est lu par son API historique**, `import * as Calendar from 'expo-calendar/legacy'`,
-  depuis la montée de socle ([6.1.1-A](../phase-6/6-1-1-a-montee-du-socle.md)) : au SDK 57, la racine
+  depuis la montée de socle ([6.1.x-A](../phase-6/6-1-x-a-montee-du-socle.md)) : au SDK 57, la racine
   du paquet porte l'API orientée objet (`ExpoCalendar`, `ExpoCalendarEvent`) et n'expose plus les
   fonctions `*Async` que sous forme de souches qui **lèvent** à l'appel — `tsc` les acceptait, la
   synchronisation aurait cassé sur appareil. Le sous-chemin est le même code qu'avant ; migrer vers

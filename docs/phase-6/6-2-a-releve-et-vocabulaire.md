@@ -81,7 +81,7 @@ Ce qu'il y a déjà, et ce qui manque :
 
 ## Dépendances
 
-[6.1.1-A](6-1-1-a-montee-du-socle.md) : la boucle d'itération, et le socle sur lequel le mouvement
+[6.1.x-A](6-1-x-a-montee-du-socle.md) : la boucle d'itération, et le socle sur lequel le mouvement
 sera jugé. Écrire des animations avant la montée reviendrait à les rejuger après.
 
 ## Limites écrites

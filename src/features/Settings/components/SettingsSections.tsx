@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Linking } from 'react-native';
+import moment from 'moment';
 import Button from '../../../shared/ui/Button';
 import Translator from '../../../shared/i18n/Translator';
 import { Curseur } from '../../../shared/ui/Curseur';
@@ -228,7 +229,8 @@ interface CalendarSectionProps {
     theme: AppThemeType;
     hasCalendarPermission: boolean;
     lastSyncDate: import('moment').Moment | null;
-    lastSyncFailed: boolean;
+    /** La derniere tentative, reussie ou non ; `null` quand rien n'a jamais ete tente, ou apres effacement. */
+    derniereTentative: import('../../../shared/services/calendrier/tentative').TentativeSynchro | null;
     calendarSyncEnabled: boolean;
     toggleCalendarSync: () => void;
     /** Le geste « forcer » vient de l'ecran, qui seul sait dire son issue (toast d'echec). */
@@ -239,7 +241,9 @@ interface CalendarSectionProps {
     selectedCalendar: string | number;
 }
 
-export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, lastSyncDate, lastSyncFailed, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar }: CalendarSectionProps) => (
+export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, lastSyncDate, derniereTentative, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar }: CalendarSectionProps) => {
+    const lastSyncFailed = derniereTentative !== null && !derniereTentative.ok;
+    return (
     <>
         <SettingsTextHeader theme={themeSettings} text={Translator.get('CALENDAR_SYNCHRONIZATION')} />
         {hasCalendarPermission ? (
@@ -251,17 +255,23 @@ export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, l
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.xs }}>
                         {/* Une pastille ronde : le rayon se calcule, il ne s'ecrit pas (docs/theme.md).
                             L'echec passe en `warning`, pas en rouge : la synchronisation reessaie
-                            d'elle-meme toutes les 12 h, rien n'est perdu — mais sans cette pastille,
-                            un echec etait indiscernable d'un bouton casse. */}
+                            d'elle-meme, rien n'est perdu — mais sans cette pastille, un echec etait
+                            indiscernable d'un bouton casse. */}
                         <View style={{ width: 8, height: 8, borderRadius: tokens.radius.pill, backgroundColor: lastSyncFailed ? theme.warning : lastSyncDate ? theme.success : theme.neutral, marginRight: tokens.space.sm }} />
                         {/* `flex: 1` : sans lui, Android coupe net le texte au bord de la rangee au
                             lieu de le plier — constate sur appareil le 2026-08-31. */}
                         <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, flex: 1 }}>
-                            {lastSyncFailed
-                                ? Translator.get('LAST_SYNCHRONIZATION_FAILED')
-                                : lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}
+                            {lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}
                         </Text>
                     </View>
+                    {/* Les deux informations ensemble, et non l'une a la place de l'autre : ce qui a
+                        reussi, quand ; ce qui a echoue, depuis. L'echec seul cachait la date du dernier
+                        succes, et se lisait comme « rien ne marche » (6.1.x-B). */}
+                    {lastSyncFailed && derniereTentative !== null ? (
+                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.warning, marginTop: tokens.space.xxs, marginLeft: 8 + tokens.space.sm }}>
+                            {Translator.get('LAST_ATTEMPT_FAILED_AT', moment(derniereTentative.at).fromNow())}
+                        </Text>
+                    ) : null}
                 </View>
                 <Button
                     theme={themeSettings}
@@ -302,4 +312,5 @@ export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, l
             </>
         )}
     </>
-);
+    );
+};

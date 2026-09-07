@@ -48,8 +48,8 @@ DayView (état : jour/semaine sélectionnés, mode)
             │      └─ PlanningAssembly            tri, découpage en six jours — commun aux deux
             ├─ AsyncStorage  <groupes>@date | <groupes>@Week<n>   (écriture si succès, lecture si échec)
             ├─ SourceFailureNotice                                (si ni réponse ni cache)
-            ├─ PlanningDataManager.extractUEsFromCourses          (alimente les filtres)
-            ├─ CourseManager.computeCourseUE / filterCourse        (mode jour)
+            ├─ PlanningDataManager.extractUEsFromCourses          (alimente les filtres, modules compris)
+            ├─ CourseManager.preparerPourAffichage → filtresUe     (UE posées, filtre des favoris — jour et semaine)
             ├─ NotificationManager.scheduleCourseNotifications     (si planning favori)
             └─ groupOverlappingCourses → CourseGroupCarousel → CourseRow
 ```
@@ -79,9 +79,9 @@ ne sont pas synchronisés.
 ## Contrats
 
 Le contrat de données est défini dans
-[`PlanningApiMapping.ts`](../../src/features/Planning/services/PlanningApiMapping.ts) — un module sans
-dépendance de plateforme, donc testable ; le service le réexporte pour que les composants n'aient rien
-à changer.
+[`PlanningAssembly.ts`](../../src/features/Planning/services/PlanningAssembly.ts) — un module sans
+dépendance de plateforme, donc testable, commun aux deux sources depuis le jalon 6-I ;
+`PlanningApiMapping` et le service le réexportent pour que les composants n'aient rien à changer.
 
 ```ts
 interface PlanningEvent {
@@ -99,6 +99,8 @@ interface PlanningEvent {
     toFilter?: string | null;    // sous-groupe déduit de la description
     day?: string;                // "Lundi 12/05" (vue semaine)
     dayNumber?: string;          // jour ISO 1-7 (vue semaine)
+    sites?: string[];            // bâtiments déclarés par la source ("Bâtiment A28")
+    modules?: string[];          // intitulés de matière déclarés, tous, dans l'ordre
 }
 
 interface PlanningWeekDay {
@@ -109,9 +111,17 @@ interface PlanningWeekDay {
 ```
 
 `CourseData` ([`CourseCard.tsx`](../../src/features/Planning/components/CourseCard.tsx)) est le
-sous-ensemble consommé par les composants d'affichage. Le champ `UE` y est ajouté à l'exécution par
-`CourseManager.computeCourseUE`, qui délègue la règle à
-[`separerCodeUE`](../../src/features/Planning/services/PlanningAssembly.ts).
+sous-ensemble consommé par les composants d'affichage. Les champs `UE` et `ues` y sont ajoutés à
+l'exécution par `CourseManager.computeCourseUE`, qui délègue à
+[`filtresUe.ts`](../../src/features/Planning/services/filtresUe.ts) — un module pur — la lecture des
+codes dans `modules`, par [`separerCodeUE`](../../src/features/Planning/services/PlanningAssembly.ts).
+
+**Un cours peut porter plusieurs codes d'UE**, et c'est mesuré : le groupe `MI601A` compte dix-neuf
+événements à plusieurs modules sur l'année 2025-2026 — `4TTV417U Artificial intelligence ||
+4TTI607U Artificial Intelligence`, le même cours sous son code français et son code anglais. Le sujet
+ne garde que le premier (`UE`), la liste entière est dans `ues`. Jusqu'au 2026-09-06, la projection
+jetait les suivants : filtrer l'UE en français masquait le TP à qui suit l'UE en anglais, et la
+seconde n'apparaissait même pas dans les suggestions de filtres. Un utilisateur l'a signalé par mail.
 
 **Un code d'UE contient au moins une lettre**, et ce n'est pas cosmétique : les titres d'ADE
 commencent souvent par une année, et sans cette contrainte `2025-2026 - Les rencontres du Réseau
@@ -185,6 +195,13 @@ tout le reste.
 **Les filtres UE ne s'appliquent qu'au planning favori.** `CourseManager.filterCourse` renvoie `true`
 sans condition quand `isFavorite` est faux. Consulter le planning d'un autre groupe montre donc tout,
 volontairement : les filtres décrivent *ses* UE, pas celles d'autrui.
+
+**Un cours reste tant qu'une seule de ses UE n'est pas filtrée.** La règle est celle demandée par
+l'utilisateur qui a signalé le défaut, et c'est la seule qui respecte l'inscription : un TP commun aux
+deux UE d'une matière appartient à qui suit l'une **ou** l'autre. Un cours dont toutes les UE sont
+filtrées disparaît ; un cours sans UE ne disparaît jamais. La comparaison est verbatim, comme les
+codes que le planning écrit ([`filtresUe.ts`](../../src/features/Planning/services/filtresUe.ts),
+verrouillé par ses tests — aucun n'existait sur le filtre avant ce correctif).
 
 **Le jour et la semaine ne parsent pas la description pareil.** `projeterCours` reçoit `';'` en mode
 jour et `'\n'` en mode semaine. C'est le comportement d'origine, conservé à la lettre par le jalon
@@ -491,6 +508,10 @@ vienne du cache ou du réseau ([theme.md](../theme.md#les-décisions-durables)).
   C'est cohérent — le bandeau porte **une** date de récupération, et l'assembler depuis des jours
   récupérés à des heures différentes en ferait un mensonge — mais ce n'est pas ce qu'on attend.
   Comportement antérieur au jalon 6-I, constaté en le vérifiant.
+- **La fiche d'un cours n'affiche que sa première UE**, et son bouton de filtre ne filtre que
+  celle-là. Les codes suivants sont dans `ues` et comptent pour le filtre, mais rien ne les montre :
+  un étudiant qui veut masquer la seconde UE d'un TP la saisit depuis l'écran des filtres, où elle
+  est désormais proposée. À reprendre si le besoin se signale.
 - **Le référentiel iCalendar est un relevé d'auteur, et il se périme.** Les index de ressource d'ADE
   sont positionnels et propres à un projet, et un projet est annuel : à la rentrée, le relevé se
   rejoue (`node tools/releve-ade.mjs --projet <n>`) et se republie. Un groupe favori qui ne résout
@@ -549,4 +570,6 @@ vienne du cache ou du réseau ([theme.md](../theme.md#les-décisions-durables)).
 | [`services/PlanningAssembly.ts`](../../src/features/Planning/services/PlanningAssembly.ts) | le contrat `PlanningEvent`, la lecture d'un code d'UE, le tri et le découpage en six jours — **communs aux deux sources** |
 | [`shared/etablissements/edtPersonnel.ts`](../../src/shared/etablissements/edtPersonnel.ts) | l'emploi du temps personnel trouvé dans le dossier : la table cloisonnée, et sa fusion au référentiel publié |
 | [`services/PlanningAssembly.test.ts`](../../src/features/Planning/services/PlanningAssembly.test.ts) | la règle du code d'UE sur les deux formes de titre |
+| [`services/filtresUe.ts`](../../src/features/Planning/services/filtresUe.ts) | les UE d'un cours (toutes, lues dans `modules`) et le filtre des favoris : masqué seulement si toutes le sont — pur, `CourseManager` y délègue |
+| [`services/filtresUe.test.ts`](../../src/features/Planning/services/filtresUe.test.ts) | ses tests, sur les intitulés réels de `MI601A` |
 | [`services/PlanningDataManager.ts`](../../src/features/Planning/services/PlanningDataManager.ts) | manager observable : liste des groupes en cache 7 jours, extraction des UE disponibles, **rechargement au changement d'établissement** |

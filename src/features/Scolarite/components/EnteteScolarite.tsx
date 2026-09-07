@@ -64,11 +64,12 @@ export interface EnteteScolariteProps {
     teinte: string;
     insets: EdgeInsets | null;
     /**
-     * **Jamais nul** : ce bandeau n'existe que pour une page qui a un dossier a saluer. Sans dossier,
-     * l'onglet pose un titre flottant (`EnTeteDeLOnglet`, cote ecran) — le bandeau se refermait sinon
-     * sur un titre dans le vide, avec le filigrane et la pastille d'etat sur la meme ligne.
+     * Le dossier a saluer — ou `null` sur la page **sans compte** (6.1.x-B), ou la salutation se fait
+     * sans prenom : la page doit ressembler a la page connectee, bandeau compris. Avec un compte mais
+     * sans dossier — parcours froid en cours ou en echec —, l'onglet pose plutot un titre flottant
+     * (`EnTeteDeLOnglet`) : le bandeau se refermait sur un titre dans le vide (2026-09-04).
      */
-    coldData: ScolariteColdData;
+    coldData: ScolariteColdData | null;
 }
 
 export function EnteteScolarite({ theme, teinte, insets, coldData }: EnteteScolariteProps) {

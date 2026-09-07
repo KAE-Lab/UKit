@@ -232,6 +232,19 @@ export function presenterEchec(failure: UkitFailure): UkitFailure {
 }
 
 /**
+ * L'echec qui merite un encart : la session a echoue et a quelque chose a dire.
+ *
+ * Un run annule ne montre rien — l'utilisateur est deja parti. La regle vivait dans l'onglet seul ;
+ * la fiche du compte affichait six tirets sans elle (registre du 2026-09-04, 6.1.x-B), et deux
+ * copies d'une meme condition sont une occasion de n'en corriger qu'une.
+ */
+export function echecBloquantDe(scrapeStatus: string, sessionFailure: UkitFailure | null): UkitFailure | null {
+    return scrapeStatus === 'error' && sessionFailure !== null && sessionFailure.silent !== true
+        ? presenterEchec(sessionFailure)
+        : null;
+}
+
+/**
  * Un echec qui appelle une **ressaisie**, et non une reprise.
  *
  * `LOGIN_FAILED` reste a juste titre non reessayable — rejouer le meme mot de passe donnera le meme

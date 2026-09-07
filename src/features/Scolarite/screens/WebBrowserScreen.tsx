@@ -63,7 +63,11 @@ const useWebBrowser = (route, onDismiss, navigation) => {
      */
     const [trousseauLu, setTrousseauLu] = useState(false);
     useEffect(() => {
+        // La session d'abord, le navigateur ensuite (6.1.x-B) : un compte connecte remplit avec ses
+        // identifiants ; sans compte, ceux que la modale de cet ecran a memorises. Les seconds ne
+        // sont lus que par cet ecran — ils n'ouvrent aucune session.
         SecureStoreService.getCredentials()
+            .then((session) => session ?? SecureStoreService.getAutofill())
             .then(setSavedCredentials)
             .finally(() => setTrousseauLu(true));
     }, []);
@@ -116,9 +120,14 @@ const useWebBrowser = (route, onDismiss, navigation) => {
         }
     };
 
+    /*
+     * Dans le magasin du **navigateur**, jamais dans la table de session (6.1.x-B). Ecrits la, ils
+     * devenaient un compte etudiant au lancement suivant — sans avoir ete prouves, et chez un
+     * enseignant sans dossier a lire. Un compte UKit se connecte depuis le formulaire, qui valide.
+     */
     const saveCredentials = async () => {
         if (tempCredentials) {
-            await SecureStoreService.saveCredentials(tempCredentials.username, tempCredentials.password);
+            await SecureStoreService.saveAutofill(tempCredentials.username, tempCredentials.password);
             setSavedCredentials(tempCredentials);
         }
         setShowSaveModal(false);

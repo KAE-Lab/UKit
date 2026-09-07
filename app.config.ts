@@ -36,7 +36,11 @@ export default {
 				'UKit Bordeaux requires full calendar access to list your existing calendars (so you can select an exact destination) and to add your university classes (e.g., "Maths lecture at 8:00 AM") directly to your chosen calendar. This data is processed safely and entirely locally, and is never sent to our servers.',
 			NSRemindersUsageDescription:
 				'UKit Bordeaux requires access to your reminders to create alerts for your upcoming university classes and events.',
-			UIBackgroundModes: ['fetch'],
+			// `processing`, pas `fetch` : la tache de fond passe par BGTaskScheduler depuis
+			// expo-background-task (6.1.1-B), et l'identifiant permis est celui du module. Le greffon
+			// du module les pose aussi ; les ecrire ici garde la configuration lisible sans lui.
+			UIBackgroundModes: ['processing'],
+			BGTaskSchedulerPermittedIdentifiers: ['com.expo.modules.backgroundtask.processing'],
 			NSLocationWhenInUseUsageDescription: "UKit Bordeaux uses your device's location to calculate the distance to the nearest CROUS university restaurants and libraries. Your location is never stored or transmitted to our servers.",
 			NSFaceIDUsageDescription: "UKit Bordeaux utilise Face ID pour protéger l'accès à vos informations universitaires.",
 		},
@@ -74,6 +78,7 @@ export default {
 		blueprintsRemote: process.env.BLUEPRINTS_REMOTE !== 'false',
 	},
 	plugins: [
+		"expo-background-task",
 		"expo-web-browser",
 		"expo-secure-store",
 		[

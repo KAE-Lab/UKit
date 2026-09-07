@@ -1,10 +1,11 @@
 /**
  * Les documents : ce qui est **range** sur l'appareil.
  *
- * C'est la seule partie de l'onglet qui **fonctionne sans compte**, et c'est ce qui la justifie :
- * l'onglet ne servait a rien a qui ne se connectait pas, et il etait entierement mort chez un
- * etablissement sans portail publie — « Autre universite ». Elle s'affiche donc **toujours**, quel
- * que soit l'etat de la session.
+ * Elle **fonctionne sans compte** — ce sont des fichiers locaux — et, depuis que la page Scolarite
+ * est la meme avec ou sans compte (6.1.x-B), elle s'y **montre** aussi sans compte, par sa tuile.
+ * Elle ne s'est pas toujours montree : du 2026-08-27 au 2026-09-07 l'onglet sans compte etait le
+ * formulaire, et rien d'autre (docs/features/scolarite.md). Chez « Autre campus », rien : la page de
+ * cet etablissement-la n'a pas de grille.
  *
  * **Le certificat de scolarite s'y range tout seul** chez les etablissements dont l'adresse des
  * pieces est rejouable (`CertificatService`). Tout le reste est ajoute a la main, et ca reste une

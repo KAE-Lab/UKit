@@ -1,9 +1,8 @@
 /**
  * Les documents de scolarite : des fichiers que l'etudiant range lui-meme, sur son appareil.
  *
- * C'est la seule partie de l'onglet qui **fonctionne sans compte**, et c'est ce qui la justifie :
- * un etablissement sans portail publie — « Autre universite » — rendait jusqu'ici l'onglet
- * entierement mort. Voir docs/features/scolarite.md.
+ * Ils fonctionnent **sans compte** — ce sont des fichiers locaux — et se montrent sans compte depuis
+ * que la page Scolarite est la meme avec ou sans (6.1.x-B). Voir docs/features/scolarite.md.
  *
  * ## Ou vivent ces fichiers, et pourquoi pas ailleurs
  *

@@ -178,10 +178,14 @@ le Blueprint décrit la requête et ce qu'on en retient, le reste est du calcul.
    référence d'Aetherius filtrait `Vacances` dans le Blueprint ; on ne l'a pas suivi. **Un filtre, un
    endroit** — et surtout, la recherche de salles libres a *besoin* des `Vacances` : ce sont elles qui
    déclarent un bâtiment fermé.
-2. Le sujet, tiré du premier `modules`, avec repli sur `eventCategory`.
+2. Le sujet, tiré du premier `modules`, avec repli sur `eventCategory`. **La liste entière est
+   conservée** (`PlanningEvent.modules`) depuis le 2026-09-06 : un cours peut porter plusieurs codes
+   d'UE — dix-neuf événements de `MI601A` sur une année, le même cours sous son code français et son
+   code anglais — et le filtre d'UE a besoin de tous ([planning.md](features/planning.md#contrats)).
 3. Le nettoyage de la description par [`formatDescription`](../src/shared/utils/formatUtils.ts) :
    suppression des `\r` et des `<br />`, remplacement de quatre sauts de ligne consécutifs par `;`,
-   décodage des entités HTML, puis retrait des lignes qui répètent la catégorie ou le sujet.
+   décodage des entités HTML, puis retrait des lignes qui répètent la catégorie ou **l'un des
+   modules**, aux espaces près — le doublon à deux espaces mesuré le 2026-08-22 n'échappe plus.
 4. Le séparateur de description est `;` pour **toutes** les vues. Il a longtemps été `\n` pour la
    semaine, au nom d'un formatage différent selon `calView` — justification mesurée fausse au jalon
    6-E, puis conservée parce que la corriger déplaçait des pixels. Elle l'est depuis le 2026-08-22 :

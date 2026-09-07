@@ -33,13 +33,13 @@ livrés et vérifiés ; [D](6-1-d-publication.md) livré par publication, avant.
 
 ## Ce qui vient après
 
-**La 6.1.1 s'intercale**, décidée le 2026-09-06 : une version courte et sans rien de visible, qui
+**La 6.1.x s'intercale**, décidée le 2026-09-06 : une version courte et sans rien de visible, qui
 monte le socle d'Expo 54 à 57 — l'Expo Go des stores est passé en SDK 57 le 2026-09-04 et l'itération
 sur iPhone n'a plus de repli —, corrige la synchronisation automatique du calendrier que deux
 utilisateurs ont signalée, et branche l'entrée des retours. Elle est cadrée par la
 [mise à plat du 2026-09-06](6-2-mise-a-plat.md) et spécifiée en
-[A](6-1-1-a-montee-du-socle.md), [B](6-1-1-b-signalements.md), [C](6-1-1-c-retours.md),
-[Z](6-1-1-z-sortie.md).
+[A](6-1-x-a-montee-du-socle.md), [B](6-1-x-b-signalements.md), [C](6-1-x-c-retours.md),
+[Z](6-1-x-z-sortie.md).
 
 **La 6.2 est une version entière consacrée au mouvement de l'interface**, décidée le 2026-09-04 en
 vérifiant [6.1-E](6-1-e-finitions-interface.md) : ce jalon a rendu l'application correcte, il ne l'a

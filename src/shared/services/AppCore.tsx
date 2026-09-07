@@ -3,8 +3,6 @@ import { Appearance, Platform, NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Calendar from 'expo-calendar/legacy';
 import moment from 'moment';
-import * as BackgroundFetch from 'expo-background-fetch';
-import * as TaskManager from 'expo-task-manager';
 import NetInfo from '@react-native-community/netinfo';
 
 import { ErrorAlert } from '../ui/Alerts';
@@ -23,9 +21,10 @@ import { purgerDonneesCampusNationales, purgerDonneesEtablissement, purgerTrouss
 import { oublierVus } from '../messages/vus';
 import { restaurerReglages } from './reglagesParEtablissement';
 import { createUKitCalendar, ecrireEvenementsDansCalendrier } from './CalendarSyncHelpers';
+import { lireTentative, type OrigineSynchro, type TentativeSynchro } from './calendrier/tentative';
 import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
-import { separerCodeUE } from '../../features/Planning/services/PlanningAssembly';
+import { estMasque, poserLesUE, preparerPourAffichage, type CoursAvecUE } from '../../features/Planning/services/filtresUe';
 import type { ThemeKey } from '../theme/Theme';
 
 // ── CONTEXTE & DEVICE ─────────────────────────────────
@@ -110,41 +109,28 @@ export function isArraysEquals(a: unknown[], b: unknown[]): boolean {
 export { getLocations, getLocationsInText, lieuxDesSites, ligneDeSalle } from '../locations/salles';
 
 // ── GESTION DES COURS ───────────────────────────────
-/** Ce qu'il faut d'un cours pour en lire l'UE : le sujet, et le champ ou la deposer. */
-export interface CoursAvecUE {
-    subject?: string;
-    UE?: string | null;
-}
+// La regle vit dans `features/Planning/services/filtresUe.ts`, pur donc jouable sous Node : un cours
+// a plusieurs codes d'UE n'est masque que si toutes le sont (signalement du 2026-09-06). Ce fichier
+// ne fait que la porter sous les noms que les ecrans connaissent.
+export type { CoursAvecUE };
 
 export const CourseManager = {
-    /** Mute le cours en place — idempotent : au second passage, le code d'UE a deja quitte le sujet. */
-    computeCourseUE: <T extends CoursAvecUE>(course: T): T => {
-        if (course.subject && course.subject !== 'N/C') {
-            // La regle vit dans `PlanningAssembly`, avec le tri qui l'applique deja : deux copies
-            // d'une meme expression, c'est une occasion de n'en corriger qu'une (jalon 6-I).
-            const separe = separerCodeUE(course.subject);
-            course.UE = separe === null ? null : separe.code;
-            if (separe !== null) course.subject = separe.reste;
-        }
-        return course;
-    },
+    /** Pose `UE` et `ues` sur le cours, en place. Idempotent. */
+    computeCourseUE: poserLesUE,
     filterCourse: (isFavorite: boolean, course: CoursAvecUE, filtersList: unknown): boolean => {
-        if (!isFavorite) return true;
-        if (course.UE != null && filtersList instanceof Array && filtersList.includes(course.UE)) {
-            return false;
-        }
-        return true;
-    }
+        if (!isFavorite || !Array.isArray(filtersList)) return true;
+        return !estMasque(course, filtersList);
+    },
+    /** Ce qu'un ecran affiche d'une liste de cours : les UE posees, puis le filtre des favoris. */
+    preparerPourAffichage,
 };
 
 // ── GESTIONNAIRE DE PARAMÈTRES ────────────────────
-const TASK_DELAY = 12 * 60 * 60; 
-const BACKGROUND_FETCH_TASK = 'background-fetch';
+// La tache de fond ne vit plus ici : `entretien.ts` la definit, l'arme sur l'evenement
+// `calendarSyncEnabled` et la joue. Ce module ne sait que synchroniser, et dire ce qu'il en est.
 
-TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
-    await SettingsManager.syncCalendar();
-    return BackgroundFetch.BackgroundFetchResult.NewData;
-});
+/** La cle de la derniere tentative de synchronisation, a cote de `previousSyncTime`. */
+const CLE_TENTATIVE = 'calendarSyncAttempt';
 
 class SettingsManagerService {
     _calendar: string | number;
@@ -163,8 +149,12 @@ class SettingsManagerService {
     _calendarSyncEnabled: boolean;
     _isSynchronizingCalendar: boolean;
     _lastSyncDate: moment.Moment | null;
-    /** Etat de seance, non persiste : a froid, la date de derniere synchronisation suffit. */
-    _lastSyncFailed: boolean;
+    /**
+     * La derniere tentative, reussie ou non, **persistee** : un echec de la tache de fond, application
+     * fermee, doit se voir a la relance. Effacee par l'interrupteur, dans les deux sens, parce que
+     * c'est le geste qui remet la capacite a zero du point de vue de l'utilisateur (6.1.x-B).
+     */
+    _derniereTentative: TentativeSynchro | null;
     _courseNotificationsEnabled: boolean;
     _courseNotificationDelay: number;
     /** Le code d'etablissement **tel que ce module le connait** : ce qui a ete charge ou choisi. */
@@ -192,7 +182,7 @@ class SettingsManagerService {
         this._calendarSyncEnabled = false;
         this._isSynchronizingCalendar = false;
         this._lastSyncDate = null;
-        this._lastSyncFailed = false;
+        this._derniereTentative = null;
         this._courseNotificationsEnabled = true;
         this._courseNotificationDelay = 15;
         this._etablissement = ETABLISSEMENT_DEFAUT;
@@ -356,10 +346,33 @@ class SettingsManagerService {
 
 
     getLastSyncDate = () => this._lastSyncDate;
-    getLastSyncFailed = () => this._lastSyncFailed;
+    getLastSyncFailed = () => this._derniereTentative !== null && !this._derniereTentative.ok;
+    getDerniereTentativeSynchro = () => this._derniereTentative;
+
+    /**
+     * Ecrit la tentative — ou l'efface — puis previent : l'ecran des reglages ne lisait l'echec qu'au
+     * rendu provoque par un autre evenement, et un geste qui l'effacait sans synchroniser n'aurait
+     * rien repeint.
+     */
+    enregistrerTentativeSynchro = (tentative: TentativeSynchro | null) => {
+        this._derniereTentative = tentative;
+        if (tentative === null) void AsyncStorage.removeItem(CLE_TENTATIVE);
+        else void AsyncStorage.setItem(CLE_TENTATIVE, JSON.stringify(tentative));
+        this.notify('synchroCalendrier', tentative);
+    };
+
+    /** L'echec s'efface ; une reussite reste, elle date la derniere synchronisation. */
+    effacerEchecSynchro = () => {
+        if (this._derniereTentative !== null && !this._derniereTentative.ok) this.enregistrerTentativeSynchro(null);
+    };
     getSyncCalendar = () => this._calendar;
-    setSyncCalendar = (newCalendar: string | number) => {
-        if (this._calendar !== -1) this.deleteAllPreviousCalendarEntries(this._calendar);
+    /**
+     * Le retrait des anciens evenements est **attendu** avant de prevenir : l'entretien synchronise
+     * des que la cible change (6.1.x-B), et une synchronisation partie pendant le retrait aurait lu
+     * une table `previousSyncData` en train d'etre effacee.
+     */
+    setSyncCalendar = async (newCalendar: string | number): Promise<void> => {
+        if (this._calendar !== -1) await this.deleteAllPreviousCalendarEntries(this._calendar);
         this._calendar = newCalendar;
         this.notify('calendar', this._calendar);
     };
@@ -371,6 +384,9 @@ class SettingsManagerService {
             if (ukitCalendar) await Calendar.deleteCalendarAsync(ukitCalendar.id);
             await AsyncStorage.removeItem('previousSyncData');
             await AsyncStorage.removeItem('previousSyncTime');
+            // La date suivait dans l'autre branche seulement : le calendrier dedie supprime, elle
+            // survivait et datait une synchronisation qui n'existait plus.
+            this._lastSyncDate = null;
             return;
         }
 
@@ -389,10 +405,16 @@ class SettingsManagerService {
 
     /**
      * Rend `false` si la synchronisation a **echoue** — l'ecran des reglages en fait un toast. Une
-     * synchronisation sans cible ni favori n'echoue pas : elle n'a rien a ecrire.
+     * synchronisation sans cible ni favori n'echoue pas : elle n'a rien a ecrire — et elle efface un
+     * echec anterieur, qui ne peut plus rien decrire.
+     *
+     * `origine` dit qui l'a demandee ; la tentative la garde pour le menu de developpement.
      */
-    syncCalendar = async (): Promise<boolean> => {
-        if (this._calendar === -1 || this._favoriteGroups.length === 0) return true;
+    syncCalendar = async (origine: OrigineSynchro = 'manuel'): Promise<boolean> => {
+        if (this._calendar === -1 || this._favoriteGroups.length === 0) {
+            this.effacerEchecSynchro();
+            return true;
+        }
 
         this._isSynchronizingCalendar = true;
         this.notify('isSynchronizingCalendar', true);
@@ -400,7 +422,7 @@ class SettingsManagerService {
         /*
          * Tout le corps est sous `try/finally` : les ecritures dans le calendrier systeme peuvent
          * jeter (permission retiree, cible morte), et une exception laissait le drapeau leve — le
-         * bouton tournait indefiniment, sans issue. `_lastSyncFailed` porte l'issue vers la pastille
+         * bouton tournait indefiniment, sans issue. La tentative persistee porte l'issue vers la pastille
          * d'etat des reglages : un echec silencieux etait indiscernable d'un bouton casse.
          */
         try {
@@ -420,7 +442,7 @@ class SettingsManagerService {
         // qu'une fois.
         const resultat = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups);
         if (resultat.ok === false) {
-            this._lastSyncFailed = true;
+            this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine });
             return false;
         }
 
@@ -440,11 +462,11 @@ class SettingsManagerService {
         await AsyncStorage.setItem('previousSyncTime', String(Date.now()));
 
         this._lastSyncDate = moment();
-        this._lastSyncFailed = false;
+        this.enregistrerTentativeSynchro({ at: Date.now(), ok: true, origine });
         return true;
         } catch (erreur) {
             console.warn(`[calendrier] synchronisation interrompue : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
-            this._lastSyncFailed = true;
+            this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine });
             return false;
         } finally {
             this._isSynchronizingCalendar = false;
@@ -455,14 +477,15 @@ class SettingsManagerService {
     getCalendars = () => this._calendars;
     getCalendarSyncEnabled = () => this._calendarSyncEnabled;
     
+    /**
+     * L'interrupteur, dans les deux sens, **efface un echec** : c'est le geste que l'utilisateur
+     * tente pour remettre la capacite a zero, et il ne pouvait rien (signalement du 2026-09-03).
+     * La tache de fond suit l'evenement (`entretien.ts`) ; ce module ne l'enregistre plus lui-meme.
+     */
     setCalendarSyncEnabled = (state: boolean) => {
         this._calendarSyncEnabled = state;
+        this.effacerEchecSynchro();
         this.notify('calendarSyncEnabled', state);
-        if (state === true) {
-            BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, { minimumInterval: TASK_DELAY, stopOnTerminate: false, startOnBoot: true });
-        } else {
-            BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
-        }
     };
 
     /**
@@ -674,6 +697,7 @@ class SettingsManagerService {
 
         const lastSync = this._firstload ? null : await AsyncStorage.getItem('previousSyncTime');
         if (lastSync !== null) this._lastSyncDate = moment(parseInt(lastSync, 10));
+        this._derniereTentative = this._firstload ? null : lireTentative(await AsyncStorage.getItem(CLE_TENTATIVE));
 
         try {
             const data = await AsyncStorage.getItem('settings');

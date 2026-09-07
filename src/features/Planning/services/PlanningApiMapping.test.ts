@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     decouperSemaine,
+    modulesDuCours,
     projeterAnnee,
     projeterCours,
     projeterGroupes,
@@ -122,6 +123,45 @@ describe('projeterCours', () => {
         // Le code d'origine appelait `.replace` sans verifier : une reponse amputee vidait la journee
         // entiere par le `catch` du service, en silence.
         expect(() => projeterCours({ ...COURS, description: null }, 'INF601A', ';')).not.toThrow();
+    });
+
+    it('garde tous les modules d un cours a plusieurs UE, et n en repete aucun dans la description', () => {
+        // Le cours d'intelligence artificielle de `MI601A`, sous son code francais et son code
+        // anglais (mesure du 2026-09-06). Le sujet reste le premier ; la description, qui repete les
+        // deux, ne doit garder que les lignes utiles.
+        const brut: CoursExtrait = {
+            ...COURS,
+            modules: ['4TTV417U Artificial intelligence', '4TTI607U Artificial Intelligence'],
+            description:
+                'Cours/TD\r\n\r\n<br />\r\n\r\n4TTV417U Artificial intelligence\r\n\r\n<br />\r\n\r\n' +
+                '4TTI607U Artificial Intelligence\r\n\r\n<br />\r\n\r\nMI601A, IN601A\r\n\r\n<br />\r\n\r\n' +
+                'DUPONT Jean\r\n\r\n<br />\r\n\r\nA29/Salle 1\r\n',
+        };
+        const projete = projeterCours(brut, 'MI601A', ';');
+
+        expect(projete.subject).toBe('4TTV417U Artificial intelligence');
+        expect(projete.modules).toEqual(['4TTV417U Artificial intelligence', '4TTI607U Artificial Intelligence']);
+        expect(projete.description.split('\n')).toEqual(['MI601A, IN601A', 'DUPONT Jean', 'A29/Salle 1']);
+    });
+
+    it('reconnait la ligne du module meme quand la source y met deux espaces', () => {
+        // Mesure du 2026-08-22 : `modules` sert `4TIN606U  Histoire…` avec deux espaces, la
+        // description une seule. La ligne restait, en doublon du sujet, et decalait le reste.
+        const brut: CoursExtrait = {
+            ...COURS,
+            modules: '4TIN606U  Histoire et Epistemologie',
+            description: 'Cours\r\n\r\n<br />\r\n\r\n4TIN606U Histoire et Epistemologie\r\n\r\n<br />\r\n\r\nINF601A\r\n\r\n<br />\r\n\r\nA22/Amphi\r\n',
+        };
+        expect(projeterCours(brut, 'INF601A', ';').description.split('\n')).toEqual(['INF601A', 'A22/Amphi']);
+    });
+});
+
+describe('modulesDuCours', () => {
+    it('ramene les trois arites de l extraction a une liste', () => {
+        expect(modulesDuCours('4TIN603U Compilation')).toEqual(['4TIN603U Compilation']);
+        expect(modulesDuCours(['4TIN603U Compilation', '4TIN612U Compilation'])).toEqual(['4TIN603U Compilation', '4TIN612U Compilation']);
+        expect(modulesDuCours(null)).toEqual([]);
+        expect(modulesDuCours(undefined)).toEqual([]);
     });
 });
 

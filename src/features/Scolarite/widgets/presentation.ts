@@ -15,6 +15,14 @@
  *   | `inconnu`  | une source existe, la lecture n'a rien rendu d'exploitable | la rangee redevient une porte |
  *   | `bientot`  | pas de source, mais une porte | le service, et « bientot » |
  *   | `absent`   | ni source ni porte chez cet etablissement | une phrase, et de quoi le demander |
+ *   | `porte`    | **sans session** : une source existe, mais personne ne la lira | le service, sa description, et il s'ouvre |
+ *
+ * `porte` est le septieme etat, et il est venu avec la page sans compte (6.1.x-B) : la meme grille,
+ * les memes tuiles, mais rien ne se lit puisque personne n'est connecte. Ce n'est ni `attente` — rien
+ * n'arrive —, ni `inconnu` — rien n'a ete tente. Un enseignant qui cherche le webmail de son
+ * universite trouve ici une porte qui s'ouvre, et rien qui tourne. Les rangees **sans source
+ * publiee** gardent leur teaser (`bientot`) ou leur constat (`absent`), avec ou sans compte : la page
+ * sans compte est la page connectee moins les apercus, pas une page ou tout s'ouvre en grand.
  *
  * `bientot` et `absent` ne disent pas la meme chose et il ne faut pas les confondre : le premier
  * annonce ce qui vient, le second constate ce qui n'existe pas ici. Les melanger promettrait a un
@@ -29,7 +37,7 @@ import type { TranslationKey } from '../../../shared/i18n/Translator';
 import { demandeUneRessaisie, estServiceIndisponible } from '../services/ScolariteMapping';
 import type { ValeurWidget } from './projection';
 
-export type NatureRangee = 'echec' | 'compte' | 'attente' | 'inconnu' | 'bientot' | 'absent';
+export type NatureRangee = 'echec' | 'compte' | 'attente' | 'inconnu' | 'bientot' | 'absent' | 'porte';
 
 export interface EtatRangee {
     readonly nature: NatureRangee;
@@ -52,6 +60,8 @@ export interface EntreesRangee {
     readonly aUneSource: boolean;
     /** L'etablissement declare une adresse ouvrable pour ce service. */
     readonly aUnePorte: boolean;
+    /** Aucune session : rien ne se lit, les rangees sont des portes (ou `absent`, comme avec compte). */
+    readonly sansSession?: boolean;
 }
 
 /**
@@ -62,8 +72,12 @@ export interface EntreesRangee {
  * elle vaut pour tous les widgets.
  */
 export function etatDeLaRangee({
-    valeur, echec, enCours, aUneSource, aUnePorte,
+    valeur, echec, enCours, aUneSource, aUnePorte, sansSession = false,
 }: EntreesRangee): EtatRangee {
+    // Sans session, la source ne compte pas : personne ne la lira. La grille garde sa structure — une
+    // rangee absente le reste, pour que les deux pages se ressemblent —, tout le reste devient porte.
+    if (sansSession) return etatSansSession(aUneSource, aUnePorte);
+
     const parlant = echec !== null && echec.silent !== true ? echec : null;
     const detail = valeur?.detail ?? null;
 
@@ -96,6 +110,12 @@ export function etatDeLaRangee({
         detail: null,
         chargement: false,
     };
+}
+
+/** Sans session, la source ne se lit pas mais decide encore de la forme : porte, teaser, ou constat. */
+function etatSansSession(aUneSource: boolean, aUnePorte: boolean): EtatRangee {
+    const nature: NatureRangee = aUneSource && aUnePorte ? 'porte' : aUnePorte ? 'bientot' : 'absent';
+    return { nature, echec: null, nombre: null, detail: null, chargement: false };
 }
 
 /**

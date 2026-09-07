@@ -94,6 +94,21 @@ export function sitesDuCours(sites: unknown): string[] {
 }
 
 /**
+ * Les modules declares par la source, quelle que soit leur arite — la meme regle que `sitesDuCours`.
+ *
+ * Le sujet n'en garde que le premier ; la liste entiere est conservee parce qu'un cours a plusieurs
+ * codes d'UE ne doit pas perdre les suivants (filtresUe.ts).
+ */
+export function modulesDuCours(modules: unknown): string[] {
+    return sitesDuCours(modules);
+}
+
+/** Les espaces ramenees a une : `modules` en sert parfois deux la ou la description n'en a qu'une. */
+function normaliserEspaces(valeur: string): string {
+    return valeur.replace(/\s+/g, ' ').trim();
+}
+
+/**
  * Projette un cours extrait sur le contrat applicatif.
  *
  * Le `separateur` est `;` pour **toutes** les vues depuis la correction de la description de la
@@ -114,14 +129,21 @@ export function projeterCours(brut: CoursExtrait, groupe: CibleGroupe, separateu
     const endtime = fin.format('HH:mm');
 
     const categorie = texte(brut.categorie);
+    const modules = modulesDuCours(brut.modules);
     const subject = sujetDuCours(brut.modules, categorie);
 
     // Le code d'origine appelait `.replace` sur la description sans la verifier : une reponse sans ce
     // champ levait, et le `catch` du service vidait la journee entiere en silence.
+    //
+    // Les lignes qui repetent un module — **chacun**, pas seulement le premier — sont ecartees, aux
+    // espaces pres : `modules` sert parfois deux espaces apres le code la ou la description n'en a
+    // qu'une (mesure du 2026-08-22), et la ligne survivait alors en doublon du sujet.
+    const repetes = [subject, ...modules].map(normaliserEspaces).filter((valeur) => valeur !== '');
     const lignes = formatDescription(texte(brut.description)).split(separateur);
     const description: string[] = [];
     for (const ligne of lignes) {
-        if (!ligne.includes(categorie) && !ligne.includes(subject)) {
+        const normalisee = normaliserEspaces(ligne);
+        if (!ligne.includes(categorie) && !repetes.some((repete) => normalisee.includes(repete))) {
             description.push(ligne.trim());
         }
     }
@@ -151,6 +173,7 @@ export function projeterCours(brut: CoursExtrait, groupe: CibleGroupe, separateu
         group: groupe as string,
         toFilter,
         sites: sitesDuCours(brut.sites),
+        modules,
     };
 }
 

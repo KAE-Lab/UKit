@@ -1,7 +1,7 @@
 {
   "aetherius": "1.0",
   "name": "ukit.portail.bordeaux-inp.dossier",
-  "description": "Le parcours FROID du portail de BORDEAUX INP : ouvrir le dossier administratif, subir la redirection CAS, lire l'identite puis l'adresse electronique de l'etablissement. Ce fichier n'est PAS embarque dans le binaire : il arrive par le manifeste, sous le prefixe reserve ukit.portail. (jalon 6-G). Il rend exactement les memes sorties que le portail de Bordeaux, parce que c'est la sortie qui est le contrat — l'application ne connait pas les portails, elle connait des noms de champs. Cinq mesures, faites contre un compte reel, expliquent pourquoi ce fichier ne ressemble pas a son homologue bordelais. (1) Le CAS est le meme produit Apereo mais un theme different : le bouton d'envoi est un BUTTON #submitBtn, la ou Bordeaux sert un input[type=submit] — le selecteur de Bordeaux ne matche rien ici. (2) Le panneau d'erreur, lui, EST le meme : #loginErrorsPanel est absent de la page propre et present des que le mot de passe est refuse, exactement comme a Bordeaux. (3) Le dossier n'est PAS le meme produit : Bordeaux sert l'ancien mondossierweb GWT et ses identifiants positionnels #gwt-uid-NN ; l'INP sert la generation Vaadin de PC-Scol, ou chaque couple vit dans un .text-label et se designe PAR SON LIBELLE. Ce portail est donc structurellement moins fragile que le premier, et ce n'est pas notre merite : c'est une propriete du produit d'en face. (4) L'ancrage par libelle est ecrit en XPATH et non en CSS, et c'est la lecon la plus chere du jalon : la premiere version utilisait les pseudo-classes :text-is() et :nth-match(), qui sont PROPRIETAIRES A PLAYWRIGHT. Elles marchaient depuis un poste et faisaient echouer le run sur l'appareil, ou le moteur embarque resout par document.querySelectorAll — lequel les rejette comme CSS invalide. XPath est le seul langage de selection que LES DEUX moteurs partagent. (5) XPath lit le texte SOURCE des libelles (« Nom de famille ») alors que l'extraction rend le texte AFFICHE, mis en capitales par la feuille de style (« NOM DE FAMILLE ») : le selecteur et l'assert comparent donc a deux formes differentes du meme mot, et c'est mesure, pas suppose. Deux champs manquent et c'est une limite ecrite, pas un oubli : cet etablissement ne publie pas d'INE dans son dossier, et il n'a pas de messagerie extractible — son webmail passe par SAML et non par le CAS, d'ou portail_messagerie a null dans le catalogue. AJOUTS DU 2026-08-25, apres sonde contre le meme compte. (6) L'INE EXISTE, contrairement a ce que la documentation affirmait : il n'est pas dans l'etat-civil mais sous l'onglet ACCES, libelle « Code INE », que ce fichier ne visitait pas. Le champ cesse donc d'etre vide. (7) La FORMATION courante se lit sous l'onglet « Parcours », dont la route est /inscriptions — l'exact analogue de la vue « Inscriptions » de Bordeaux, en plus riche. Chaque annee est une carte ; la premiere est l'annee courante, mesure. D'ou l'indexation [1] : les libelles, eux, apparaissent AUTANT DE FOIS QU'IL Y A D'ANNEES, et un XPath par libelle seul rendrait deux noeuds. (8) Ces deux lectures sont des BONUS : elles sont gardees par une sonde `as: count` et un `when`, parce qu'un `navigate` ou un `wait_for` qui echoue fait echouer le run entier — et perdre l'identite pour un INE serait un mauvais marche. (9) Ce qui n'a PAS ete porte, et c'est deliberé : l'onglet « Documentation » n'est pas un onglet de documents mais un LIEN EXTERNE vers une page d'aide de l'ENT ; les vrais PDF (certificat de scolarite, attestation de paiement, releves de notes) vivent dans les cartes de Parcours, mais leurs URL portent un UUID et un horodatage REGENERES A CHAQUE RENDU. Ce sont des portes, jamais des donnees a stocker. Persister la session est ce qui evite au navigateur integre de redemander une connexion. Par defaut le moteur ouvre sa WebView en INCOGNITO (`options.session.persist` vaut false) : le ticket CAS que ce run vient d'obtenir est donc jete a la fin, et l'ecran de navigateur integre retombe sur un formulaire vide — d'ou le script de remplissage qui interrogeait la page toutes les 100 ms. En persistant, le cookie atterrit dans le magasin PARTAGE de la plateforme, et ouvrir l'ENT, Moodle ou le webmail se fait deja authentifie. C'est un GAIN de securite et non une concession : le mot de passe cesse d'etre injecte dans une page pour le cas courant. Le pendant obligatoire est que la deconnexion invalide la session cote CAS (ukit.portail.deconnexion), sans quoi « se deconnecter » laisserait un navigateur authentifie. CONNEXION CONDITIONNELLE depuis le 2026-08-25, et c'est la consequence directe de `session.persist`. Avec une session vivante, le CAS reconnait le ticket et renvoie DIRECTEMENT au service : il n'affiche aucun formulaire, et attendre `#username` echouait alors en CAS_INDISPONIBLE apres 20 s d'attente inutile. On demande donc a la page s'il y a un formulaire (`as: count`, qui ne leve jamais) et on ne joue le bloc de connexion que dans ce cas. Effet de bord bienvenu : le parcours qui trouve une session ouverte economise aussi la pause d'apres-clic, qui n'a plus lieu d'etre.",
+  "description": "Le parcours FROID du portail de BORDEAUX INP : ouvrir le dossier administratif, subir la redirection CAS, lire l'identite puis l'adresse electronique de l'etablissement. Ce fichier vit sous le prefixe reserve ukit.portail. (jalon 6-G) ; il arrivait par le manifeste seul, et il est EMBARQUE depuis la 6.1 (blueprints/index.ts). Il rend exactement les memes sorties que le portail de Bordeaux, parce que c'est la sortie qui est le contrat — l'application ne connait pas les portails, elle connait des noms de champs. Cinq mesures, faites contre un compte reel, expliquent pourquoi ce fichier ne ressemble pas a son homologue bordelais. (1) Le CAS est le meme produit Apereo mais un theme different : le bouton d'envoi est un BUTTON #submitBtn, la ou Bordeaux sert un input[type=submit] — le selecteur de Bordeaux ne matche rien ici. (2) Le panneau d'erreur, lui, EST le meme : #loginErrorsPanel est absent de la page propre et present des que le mot de passe est refuse, exactement comme a Bordeaux. (3) Le dossier n'est PAS le meme produit : Bordeaux sert l'ancien mondossierweb GWT et ses identifiants positionnels #gwt-uid-NN ; l'INP sert la generation Vaadin de PC-Scol, ou chaque couple vit dans un .text-label et se designe PAR SON LIBELLE. Ce portail est donc structurellement moins fragile que le premier, et ce n'est pas notre merite : c'est une propriete du produit d'en face. (4) L'ancrage par libelle est ecrit en XPATH et non en CSS, et c'est la lecon la plus chere du jalon : la premiere version utilisait les pseudo-classes :text-is() et :nth-match(), qui sont PROPRIETAIRES A PLAYWRIGHT. Elles marchaient depuis un poste et faisaient echouer le run sur l'appareil, ou le moteur embarque resout par document.querySelectorAll — lequel les rejette comme CSS invalide. XPath est le seul langage de selection que LES DEUX moteurs partagent. (5) XPath lit le texte SOURCE des libelles (« Nom de famille ») alors que l'extraction rend le texte AFFICHE, mis en capitales par la feuille de style (« NOM DE FAMILLE ») : le selecteur et l'assert comparent donc a deux formes differentes du meme mot, et c'est mesure, pas suppose. Deux champs manquent et c'est une limite ecrite, pas un oubli : cet etablissement ne publie pas d'INE dans son dossier, et il n'a pas de messagerie extractible — son webmail passe par SAML et non par le CAS, d'ou portail_messagerie a null dans le catalogue. AJOUTS DU 2026-08-25, apres sonde contre le meme compte. (6) L'INE EXISTE, contrairement a ce que la documentation affirmait : il n'est pas dans l'etat-civil mais sous l'onglet ACCES, libelle « Code INE », que ce fichier ne visitait pas. Le champ cesse donc d'etre vide. (7) La FORMATION courante se lit sous l'onglet « Parcours », dont la route est /inscriptions — l'exact analogue de la vue « Inscriptions » de Bordeaux, en plus riche. Chaque annee est une carte ; la premiere est l'annee courante, mesure. D'ou l'indexation [1] : les libelles, eux, apparaissent AUTANT DE FOIS QU'IL Y A D'ANNEES, et un XPath par libelle seul rendrait deux noeuds. (8) Ces lectures sont des BONUS, et depuis le jalon 6.1.x-B chacune vit dans un bloc `optional` : un `navigate` ou une extraction qui echoue fait ceder le bloc, pas le run, qui finit en `partial` avec l'identite deja lue — perdre l'identite pour un INE serait un mauvais marche, et c'est arrive (registre du 2026-09-04). (9) Ce qui n'a PAS ete porte, et c'est deliberé : l'onglet « Documentation » n'est pas un onglet de documents mais un LIEN EXTERNE vers une page d'aide de l'ENT ; les vrais PDF (certificat de scolarite, attestation de paiement, releves de notes) vivent dans les cartes de Parcours, mais leurs URL portent un UUID et un horodatage REGENERES A CHAQUE RENDU. Ce sont des portes, jamais des donnees a stocker. Persister la session est ce qui evite au navigateur integre de redemander une connexion. Par defaut le moteur ouvre sa WebView en INCOGNITO (`options.session.persist` vaut false) : le ticket CAS que ce run vient d'obtenir est donc jete a la fin, et l'ecran de navigateur integre retombe sur un formulaire vide — d'ou le script de remplissage qui interrogeait la page toutes les 100 ms. En persistant, le cookie atterrit dans le magasin PARTAGE de la plateforme, et ouvrir l'ENT, Moodle ou le webmail se fait deja authentifie. C'est un GAIN de securite et non une concession : le mot de passe cesse d'etre injecte dans une page pour le cas courant. Le pendant obligatoire est que la deconnexion invalide la session cote CAS (ukit.portail.deconnexion), sans quoi « se deconnecter » laisserait un navigateur authentifie. CONNEXION CONDITIONNELLE depuis le 2026-08-25, et c'est la consequence directe de `session.persist`. Avec une session vivante, le CAS reconnait le ticket et renvoie DIRECTEMENT au service : il n'affiche aucun formulaire, et attendre `#username` echouait alors en CAS_INDISPONIBLE apres 20 s d'attente inutile. On demande donc a la page s'il y a un formulaire (`as: count`, qui ne leve jamais) et on ne joue le bloc de connexion que dans ce cas. Effet de bord bienvenu : le parcours qui trouve une session ouverte economise aussi la pause d'apres-clic, qui n'a plus lieu d'etre.",
   "act": "continuum",
   "secrets": [
     "portail_user",
@@ -183,107 +183,128 @@
       }
     },
     {
-      "action": "navigate",
-      "url": "{{ vars.acces }}",
-      "note": "L'onglet « Acces » : le bac, l'INE et les primo-inscriptions. Meme SSO, aucune seconde authentification."
-    },
-    {
-      "action": "wait",
-      "ms": 2500,
-      "note": "`wait` et non `wait_for` : un `wait_for` qui expire fait echouer le run quel que soit son `on_timeout`, et cette lecture est un bonus. **2 500 ms est ici une valeur A L'EPREUVE, publiee le 2026-09-04 pour trancher une question restee ouverte.** Le jalon 6.1-D l'avait posee sur la mesure du rendu — la vue « Acces » sort son premier `label-valeur` en 306 ms au poste —, puis un parcours froid avait echoue sur iPhone et la valeur etait revenue a 6 000. Sauf que deux autres variables jouaient au meme moment (un reseau de campus instable, et le compte de test utilise en parallele par son proprietaire), donc rien n'a jamais ete prouve. Elle est remise a l'epreuve dans des conditions propres. **Si elle echoue, elle repart a 6 000 et la cause sera etablie ; si elle tient, c'est le raisonnement qui reste a corriger** — une pause qui precede un `navigate` doit couvrir la page POSEE, pas l'apparition de son premier element, et 306 ms ne mesurent pas ca."
-    },
-    {
-      "id": "acces",
-      "action": "extract",
-      "timeout_ms": 5000,
-      "outputs": {
-        "ine": {
-          "selector": "(//vaadin-vertical-layout[@class=\"text-label\"][label[@class=\"label-titre\"][normalize-space()=\"Code INE\"]]/label[@class=\"label-valeur\"])[1]",
-          "selector_type": "xpath",
-          "as": "list",
-          "note": "`as: list` pour la meme raison qu'ailleurs : zero correspondance rend [], jamais une levee. Le libelle est lu dans sa casse SOURCE (« Code INE ») alors que l'extraction rendra le texte AFFICHE, mis en capitales par la feuille de style — le piege est deja consigne plus haut, il vaut aussi sur cette vue."
-        }
-      },
-      "note": "Aucune garde `when` sur ce step, et c'est mesure : un step saute n'enregistre AUCUNE sortie, donc le bloc `outputs` qui le reference leverait en StrictUndefined. `as: list` ne levant jamais, l'extraction court sec — si la vue n'est pas arrivee, elle rend [] et l'application n'affiche rien."
-    },
-    {
-      "action": "navigate",
-      "url": "{{ vars.inscriptions }}",
-      "note": "L'onglet « Parcours », dont la route est /inscriptions. Une carte par annee, la premiere etant l'annee courante."
-    },
-    {
-      "action": "wait",
-      "ms": 6000,
-      "note": "`wait` et non `wait_for` : un `wait_for` qui expire fait echouer le run quel que soit son `on_timeout`, et cette lecture est un bonus. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : la vue « Parcours » rend sa premiere carte en 2 318 ms — VINGT FOIS le temps de « Acces ». La pause reste donc a 6 s, et c'est une decision, pas un oubli : la marge n'est que de 2,6 fois, un telephone en cellulaire la mange. Descendre a 500 ms a ete essaye le meme jour et rendait `formation_libelle` VIDE, sans le moindre echec — la perte d'une lecture bonus est silencieuse par construction, et c'est exactement ce qui la rend dangereuse a resserrer."
-    },
-    {
-      "id": "formation",
-      "action": "extract",
-      "timeout_ms": 5000,
-      "outputs": {
-        "formation_libelle": {
-          "selector": "(//vaadin-horizontal-layout[contains(@class,\"card-title-bordered\")]//div[@last-start-child])[1]",
-          "selector_type": "xpath",
-          "as": "list",
-          "note": "Le titre de la carte — « Annee 2 - Ingenieur Telecommunications ». C'est ce qui se lit le mieux sur un tableau de bord."
+      "id": "bonus_acces",
+      "action": "optional",
+      "note": "Un bloc `optional` (moteur >= 0.5.8, jalon 3-J d'Aetherius) : si l'une de ses etapes cede — le `navigate` qui n'aboutit pas, l'extraction qui leve —, le reste du bloc est saute et le run continue en `partial`, avec l'identite deja lue. C'est ce qui manquait : la regle « une lecture bonus ne doit jamais emporter la connexion » n'etait appliquee qu'a l'extraction (`as: list`), jamais a la navigation qui la precede, et un `navigate` mort sur une page d'emploi du temps coutait le nom, l'INE et la formation (registre du 2026-09-04). Les steps d'un bloc qui a cede publient un dictionnaire vide : la sortie qui les reference finit donc par `| default([])`, sans quoi son rendu leverait. Ici : l'onglet « Acces », d'ou vient l'INE.",
+      "steps": [
+        {
+          "action": "navigate",
+          "url": "{{ vars.acces }}",
+          "note": "L'onglet « Acces » : le bac, l'INE et les primo-inscriptions. Meme SSO, aucune seconde authentification."
         },
-        "formation_annee": {
-          "selector": "(//vaadin-vertical-layout[@class=\"text-label\"][label[@class=\"label-titre\"][normalize-space()=\"Période\"]]/label[@class=\"label-valeur\"])[1]",
-          "selector_type": "xpath",
-          "as": "list"
+        {
+          "action": "wait",
+          "ms": 2500,
+          "note": "`wait` et non `wait_for`, et la raison a change avec le bloc `optional` : un `wait_for` qui expire ne tuerait plus le run, mais il ferait CEDER le bloc et sauter la lecture — alors qu'une page lente finit par rendre. La pause est une marge, pas une garde. **2 500 ms est ici une valeur A L'EPREUVE, publiee le 2026-09-04 pour trancher une question restee ouverte.** Le jalon 6.1-D l'avait posee sur la mesure du rendu — la vue « Acces » sort son premier `label-valeur` en 306 ms au poste —, puis un parcours froid avait echoue sur iPhone et la valeur etait revenue a 6 000. Sauf que deux autres variables jouaient au meme moment (un reseau de campus instable, et le compte de test utilise en parallele par son proprietaire), donc rien n'a jamais ete prouve. Elle est remise a l'epreuve dans des conditions propres. **Si elle echoue, elle repart a 6 000 et la cause sera etablie ; si elle tient, c'est le raisonnement qui reste a corriger** — une pause qui precede un `navigate` doit couvrir la page POSEE, pas l'apparition de son premier element, et 306 ms ne mesurent pas ca."
         },
-        "formation_detail": {
-          "selector": "(//vaadin-vertical-layout[@class=\"text-label\"][label[@class=\"label-titre\"][normalize-space()=\"Formation\"]]/label[@class=\"label-valeur\"])[1]",
-          "selector_type": "xpath",
-          "as": "list",
-          "note": "L'intitule officiel du diplome, plus long que le titre de carte."
+        {
+          "id": "acces",
+          "action": "extract",
+          "timeout_ms": 5000,
+          "outputs": {
+            "ine": {
+              "selector": "(//vaadin-vertical-layout[@class=\"text-label\"][label[@class=\"label-titre\"][normalize-space()=\"Code INE\"]]/label[@class=\"label-valeur\"])[1]",
+              "selector_type": "xpath",
+              "as": "list",
+              "note": "`as: list` pour la meme raison qu'ailleurs : zero correspondance rend [], jamais une levee. Le libelle est lu dans sa casse SOURCE (« Code INE ») alors que l'extraction rendra le texte AFFICHE, mis en capitales par la feuille de style — le piege est deja consigne plus haut, il vaut aussi sur cette vue."
+            }
+          },
+          "note": "`as: list` ne leve jamais : si la vue n'est pas arrivee, l'extraction rend [] et l'application n'affiche rien. Le bloc `optional` qui l'entoure couvre ce que `as: list` ne pouvait pas — la navigation qui precede."
         }
-      },
-      "note": "Aucune garde `when` sur ce step, et c'est mesure : un step saute n'enregistre AUCUNE sortie, donc le bloc `outputs` qui le reference leverait en StrictUndefined. `as: list` ne levant jamais, l'extraction court sec — si la vue n'est pas arrivee, elle rend [] et l'application n'affiche rien."
+      ]
     },
     {
-      "action": "navigate",
-      "url": "{{ vars.planning }}",
-      "note": "ADE, sur le meme SSO que le dossier. Il **preselectionne la fiche de l'etudiant connecte** dans son arbre de ressources — aucune recherche par nom n'est necessaire."
-    },
-    {
-      "action": "wait",
-      "ms": 6000,
-      "note": "L'arbre est rendu par une application GWT : il n'existe pas au chargement du document. `wait` et non `wait_for`, parce qu'un `wait_for` qui expire fait echouer le run — et cette lecture est un bonus qui ne doit jamais emporter la connexion. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : l'arbre paraît en 2 816 ms, la plus lente des trois vues. La pause reste a 6 s pour la meme raison que « Parcours » : a 500 ms, `edt_ressource` revenait vide et le run se declarait quand meme reussi — l'application cessait alors de proposer l'emploi du temps personnel sans que rien ne le dise."
-    },
-    {
-      "id": "planning",
-      "action": "extract",
-      "outputs": {
-        "ressource": {
-          "selector": "//div[@aria-selected=\"true\"]//div[contains(@class,\"x-tree3-node\")]",
-          "selector_type": "xpath",
-          "as": "list",
-          "item": "attr",
-          "attr": "id",
-          "note": "L'identifiant ADE de l'etudiant, porte par l'element de l'arbre sous la forme `Direct Planning Tree_4087`. XPath parce que c'est le seul langage de selection que les deux moteurs partagent. `as: list` ne leve jamais : sans correspondance, la liste est vide et l'application ne propose rien."
+      "id": "bonus_parcours",
+      "action": "optional",
+      "note": "Meme mecanisme que `bonus_acces` : l'onglet « Parcours », d'ou vient la formation courante.",
+      "steps": [
+        {
+          "action": "navigate",
+          "url": "{{ vars.inscriptions }}",
+          "note": "L'onglet « Parcours », dont la route est /inscriptions. Une carte par annee, la premiere etant l'annee courante."
         },
-        "promotion": {
-          "selector": "//div[@aria-selected=\"true\"]",
-          "selector_type": "xpath",
-          "as": "list",
-          "item": "attr",
-          "attr": "aria-label",
-          "note": "Le nom affiche, pour que l'ecran puisse nommer ce qu'il propose."
+        {
+          "action": "wait",
+          "ms": 6000,
+          "note": "`wait` et non `wait_for`, et la raison a change avec le bloc `optional` : un `wait_for` qui expire ne tuerait plus le run, mais il ferait CEDER le bloc et sauter la lecture — alors qu'une page lente finit par rendre. La pause est une marge, pas une garde. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : la vue « Parcours » rend sa premiere carte en 2 318 ms — VINGT FOIS le temps de « Acces ». La pause reste donc a 6 s, et c'est une decision, pas un oubli : la marge n'est que de 2,6 fois, un telephone en cellulaire la mange. Descendre a 500 ms a ete essaye le meme jour et rendait `formation_libelle` VIDE, sans le moindre echec — la perte d'une lecture bonus est silencieuse par construction, et c'est exactement ce qui la rend dangereuse a resserrer."
+        },
+        {
+          "id": "formation",
+          "action": "extract",
+          "timeout_ms": 5000,
+          "outputs": {
+            "formation_libelle": {
+              "selector": "(//vaadin-horizontal-layout[contains(@class,\"card-title-bordered\")]//div[@last-start-child])[1]",
+              "selector_type": "xpath",
+              "as": "list",
+              "note": "Le titre de la carte — « Annee 2 - Ingenieur Telecommunications ». C'est ce qui se lit le mieux sur un tableau de bord."
+            },
+            "formation_annee": {
+              "selector": "(//vaadin-vertical-layout[@class=\"text-label\"][label[@class=\"label-titre\"][normalize-space()=\"Période\"]]/label[@class=\"label-valeur\"])[1]",
+              "selector_type": "xpath",
+              "as": "list"
+            },
+            "formation_detail": {
+              "selector": "(//vaadin-vertical-layout[@class=\"text-label\"][label[@class=\"label-titre\"][normalize-space()=\"Formation\"]]/label[@class=\"label-valeur\"])[1]",
+              "selector_type": "xpath",
+              "as": "list",
+              "note": "L'intitule officiel du diplome, plus long que le titre de carte."
+            }
+          },
+          "note": "`as: list` ne leve jamais : si la vue n'est pas arrivee, l'extraction rend [] et l'application n'affiche rien. Le bloc `optional` qui l'entoure couvre ce que `as: list` ne pouvait pas — la navigation qui precede."
         }
-      }
+      ]
+    },
+    {
+      "id": "bonus_planning",
+      "action": "optional",
+      "note": "Meme mecanisme que `bonus_acces` : l'arbre d'ADE, d'ou vient l'emploi du temps personnel.",
+      "steps": [
+        {
+          "action": "navigate",
+          "url": "{{ vars.planning }}",
+          "note": "ADE, sur le meme SSO que le dossier. Il **preselectionne la fiche de l'etudiant connecte** dans son arbre de ressources — aucune recherche par nom n'est necessaire."
+        },
+        {
+          "action": "wait",
+          "ms": 6000,
+          "note": "L'arbre est rendu par une application GWT : il n'existe pas au chargement du document. `wait` et non `wait_for`, et la raison a change avec le bloc `optional` : un `wait_for` qui expire ne tuerait plus le run, mais il ferait CEDER le bloc et sauter la lecture — alors qu'un arbre lent finit par paraitre. La pause est une marge, pas une garde. Mesure du 2026-09-04, au poste en filaire (jalon 6.1-D) : l'arbre paraît en 2 816 ms, la plus lente des trois vues. La pause reste a 6 s pour la meme raison que « Parcours » : a 500 ms, `edt_ressource` revenait vide et le run se declarait quand meme reussi — l'application cessait alors de proposer l'emploi du temps personnel sans que rien ne le dise."
+        },
+        {
+          "id": "planning",
+          "action": "extract",
+          "outputs": {
+            "ressource": {
+              "selector": "//div[@aria-selected=\"true\"]//div[contains(@class,\"x-tree3-node\")]",
+              "selector_type": "xpath",
+              "as": "list",
+              "item": "attr",
+              "attr": "id",
+              "note": "L'identifiant ADE de l'etudiant, porte par l'element de l'arbre sous la forme `Direct Planning Tree_4087`. XPath parce que c'est le seul langage de selection que les deux moteurs partagent. `as: list` ne leve jamais : sans correspondance, la liste est vide et l'application ne propose rien."
+            },
+            "promotion": {
+              "selector": "//div[@aria-selected=\"true\"]",
+              "selector_type": "xpath",
+              "as": "list",
+              "item": "attr",
+              "attr": "aria-label",
+              "note": "Le nom affiche, pour que l'ecran puisse nommer ce qu'il propose."
+            }
+          }
+        }
+      ]
     }
   ],
   "outputs": {
     "numero_etudiant": "{{ steps.dossier.numero_etudiant }}",
-    "ine": "{{ steps.acces.ine }}",
+    "ine": "{{ steps.acces.ine | default([]) }}",
     "identite": "{{ steps.dossier.prenom }} {{ steps.dossier.nom }}",
     "email": "{{ steps.coordonnees.email }}",
     "naissance": "{{ steps.dossier.naissance }}",
-    "edt_ressource": "{{ steps.planning.ressource }}",
-    "edt_libelle": "{{ steps.planning.promotion }}",
-    "formation_libelle": "{{ steps.formation.formation_libelle }}",
-    "formation_annee": "{{ steps.formation.formation_annee }}",
-    "formation_detail": "{{ steps.formation.formation_detail }}"
+    "edt_ressource": "{{ steps.planning.ressource | default([]) }}",
+    "edt_libelle": "{{ steps.planning.promotion | default([]) }}",
+    "formation_libelle": "{{ steps.formation.formation_libelle | default([]) }}",
+    "formation_annee": "{{ steps.formation.formation_annee | default([]) }}",
+    "formation_detail": "{{ steps.formation.formation_detail | default([]) }}"
   }
 }

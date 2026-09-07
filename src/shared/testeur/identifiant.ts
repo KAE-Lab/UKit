@@ -12,7 +12,7 @@
  *
  * `randomUUID()` vient d'`expo-crypto`, un module que l'Expo Go des stores embarque : le menu de
  * developpement reste jouable sans build. Jusqu'au SDK 54 l'identifiant venait de
- * `expo-modules-core`, une dependance transitive d'`expo` que la montee 6.1.1-A a cesse de trouver a
+ * `expo-modules-core`, une dependance transitive d'`expo` que la montee 6.1.x-A a cesse de trouver a
  * la racine de `node_modules` — importer un paquet qu'on ne declare pas est exactement ce genre de
  * fragilite, et `expo-crypto` est l'API publique pour la meme chose.
  */

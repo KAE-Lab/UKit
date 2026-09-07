@@ -54,6 +54,15 @@
  *
  * Les adresses viennent **toutes** du catalogue (jalon 6-G) : une grille ecrite ici enverrait un
  * etudiant de l'INP sur l'Apogee de Bordeaux.
+ *
+ * ## La meme grille sans compte
+ *
+ * Depuis le jalon 6.1.x-B, la page existe **sans session** — un enseignant-chercheur cherchait le
+ * webmail de son universite dans une application qui ne lui montrait qu'un formulaire etudiant. La
+ * grille est alors la meme, tuiles comprises, et chaque rangee est une **porte** (`sansSession`,
+ * widgets/presentation) : le nom du service, sa description, et il s'ouvre. Rien ne tourne, rien
+ * n'attend, aucun teaser — ce qui n'existe pas chez l'etablissement reste `absent`, comme avec un
+ * compte, pour que les deux pages se ressemblent.
  */
 
 import React, { useState } from 'react';
@@ -65,7 +74,7 @@ import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { serviceEtablissement, widgetPublie } from '../../../shared/etablissements';
 import { ModaleBientot } from '../../../shared/ui/ModaleBientot';
 import type { ScolariteColdData } from '../services/ScolariteMapping';
-import { widgetsDeForme, type DefinitionWidget, type PointWidget } from '../widgets/definitions';
+import { serviceDuPoint, widgetsDeForme, type DefinitionWidget, type PointWidget } from '../widgets/definitions';
 import { echecDeTuile, etatDeLaRangee } from '../widgets/presentation';
 import type { ValeursWidgets } from '../widgets/runner';
 import type { EchecsWidgets } from '../widgets/useWidgets';
@@ -234,15 +243,17 @@ export interface GrilleScolariteProps {
      * l'aurait obligee a porter un cas qui n'est pas le sien.
      */
     tuileDocuments?: React.ReactNode;
+    /** Aucune session : les rangees sont des portes, la fraicheur ne se dit pas. */
+    sansSession?: boolean;
 }
 
 export function GrilleScolarite({
     theme, teinte, valeurs, echecs, pointEnCours, coldData,
-    onWidget, onRelancer, onRessaisir, onPorte, onDemande, tuileDocuments,
+    onWidget, onRelancer, onRessaisir, onPorte, onDemande, tuileDocuments, sansSession = false,
 }: GrilleScolariteProps) {
     const ent = serviceEtablissement('ent');
     const demande = serviceEtablissement('adaptation');
-    const fraicheur = derniereLecture(valeurs);
+    const fraicheur = sansSession ? null : derniereLecture(valeurs);
     /** Le point dont le teaser est ouvert, ou `null`. Voir `RangeeMysterieuse`. */
     const [teaser, setTeaser] = useState<PointWidget | null>(null);
     /** Le point dont la feuille d'echec est ouverte, ou `null`. Voir `FeuilleDeWidget`. */
@@ -255,7 +266,8 @@ export function GrilleScolarite({
             echec: echecs[definition.point] ?? null,
             enCours: pointEnCours === definition.point,
             aUneSource: widgetPublie(definition.point) !== null,
-            aUnePorte: serviceEtablissement(definition.point) !== null,
+            aUnePorte: serviceEtablissement(serviceDuPoint(definition.point)) !== null,
+            sansSession,
         });
         // Un widget « absent » sans formulaire publie n'a nulle part ou mener : il reste alors une
         // information, sans chevron. C'est le seul cas ou une rangee ne s'ouvre pas, et il vaut mieux
@@ -342,7 +354,7 @@ export function GrilleScolarite({
                 theme={theme}
                 visible={teaser !== null}
                 fermer={() => setTeaser(null)}
-                ouvrirQuandMeme={teaser !== null && serviceEtablissement(teaser) !== null
+                ouvrirQuandMeme={teaser !== null && serviceEtablissement(serviceDuPoint(teaser)) !== null
                     ? () => {
                         const point = teaser;
                         setTeaser(null);

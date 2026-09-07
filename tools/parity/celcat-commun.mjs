@@ -107,6 +107,10 @@ export function projeterDepuisBlueprint(brut, groupe, separateur) {
         // liste au-dela. Le cote historique lit le champ brut ; la comparaison prouve donc que
         // l'extraction ne perd ni ne deforme rien, arite comprise.
         sites: brut.sites,
+        // Meme arite que `sites` : la valeur seule a une correspondance, la liste au-dela. Le cote
+        // historique lit le champ brut ; la comparaison prouve que l'extraction rend TOUS les
+        // modules, et pas seulement celui qui devient le sujet (filtres d'UE, 2026-09-06).
+        modules: brut.modules,
         sujet,
         groupe,
         separateur,
@@ -132,6 +136,7 @@ export function projeterDepuisLegacy(event, groupe, separateur) {
         // Le champ tel que le serveur le sert : toujours une liste. Le code d'origine ne le lisait
         // pas — il n'existait aucune carte fondee dessus — mais la source, elle, le publiait deja.
         sites: event.sites,
+        modules: event.modules,
         sujet,
         groupe,
         separateur,
@@ -139,7 +144,7 @@ export function projeterDepuisLegacy(event, groupe, separateur) {
 }
 
 /** Le reste de la transformation, identique des deux cotes : c'est ce qui doit rester egal. */
-function composer({ id, debut, fin, categorie, couleur, description, sites, sujet, groupe, separateur }) {
+function composer({ id, debut, fin, categorie, couleur, description, sites, modules, sujet, groupe, separateur }) {
     const debutMoment = moment(debut ?? null);
     const finMoment = moment(fin ?? null);
     const starttime = debutMoment.format('HH:mm');
@@ -170,12 +175,13 @@ function composer({ id, debut, fin, categorie, couleur, description, sites, suje
         category: categorie,
         toFilter,
         sites: normaliserSites(sites),
+        modules: normaliserSites(modules),
         day: upperCaseFirstLetter(debutMoment.format('dddd L')),
         dayNumber: String(debutMoment.isoWeekday()),
     };
 }
 
-/** L'arite ramenee a une liste, des deux cotes — la meme regle que `sitesDuCours` cote application. */
+/** L'arite ramenee a une liste, des deux cotes — la meme regle que `sitesDuCours` et `modulesDuCours` cote application. */
 function normaliserSites(sites) {
     if (typeof sites === 'string') return sites === '' ? [] : [sites];
     if (Array.isArray(sites)) return sites.filter((site) => typeof site === 'string' && site !== '');
@@ -215,6 +221,7 @@ export function projeterCours(cours) {
         category: cours.category ?? null,
         toFilter: cours.toFilter ?? null,
         sites: (cours.sites ?? []).join('|'),
+        modules: (cours.modules ?? []).join('|'),
         day: cours.day ?? null,
         dayNumber: cours.dayNumber ?? null,
     };
