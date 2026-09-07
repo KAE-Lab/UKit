@@ -258,12 +258,13 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
                     onShouldStartLoadWithRequest={(event) => {
                         if (event.url.startsWith('http://') || event.url.startsWith('https://') || event.url === 'about:blank') {
                             // Le formulaire de retours seul pose des domaines internes : un lien qui en
-                            // sort s'ouvre dans le navigateur du telephone, et le formulaire reste tel
-                            // quel dans la vue (shared/navigation/liensDuFormulaire.ts). Une sous-vue
-                            // (iframe) n'est pas une navigation de l'utilisateur.
+                            // sort s'ouvre **par-dessus**, dans une seconde instance de cet ecran, et le
+                            // formulaire reste tel quel en dessous — « retour » le retrouve la ou il en
+                            // etait (shared/navigation/liensDuFormulaire.ts). Une sous-vue (iframe) n'est
+                            // pas une navigation de l'utilisateur.
                             const domainesInternes = route.params?.domainesInternes;
                             if (domainesInternes !== undefined && event.isTopFrame !== false && !resteDansLaVue(event.url, domainesInternes)) {
-                                Linking.openURL(event.url).catch(() => { });
+                                (navigation as unknown as { push: (name: string, params: object) => void }).push('WebBrowser', { href: event.url });
                                 return false;
                             }
                             return true;

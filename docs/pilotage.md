@@ -53,8 +53,8 @@ un « i » au gabarit des boutons d'en-tête, à droite du grand titre de chaque
 gris quand tout va bien, rouge quand un incident est en cours. Grise, elle ouvre une feuille « Rien à
 signaler » avec le lien du formulaire commun (avis, bugs, demandes — `services.adaptation` du
 catalogue) : quelqu'un qui a trouvé un bug le cherche précisément là — et depuis ce formulaire, un
-lien qui sort de chez Google, la page d'engagement, s'ouvre dans le navigateur du téléphone pour ne
-pas faire recommencer la saisie ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts)).
+lien qui sort de chez Google, la page d'engagement, s'ouvre par-dessus dans une seconde page du
+navigateur intégré, pour ne pas faire recommencer la saisie ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts)).
 Rouge, elle rouvre la feuille de l'incident. Chaque en-tête la pose à côté de son titre, comme il pose son titre : c'est ce qui l'aligne
 avec lui et lui évite toute collision avec ce que la rangée porte déjà. Les deux premières versions —
 un rappel qui n'existait que pendant l'incident, puis un bandeau permanent qui cachait le titre — ont

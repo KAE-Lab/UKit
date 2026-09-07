@@ -104,7 +104,7 @@ Déclarés dans [`StackNavigator.tsx`](../src/shared/navigation/StackNavigator.t
 | `FreeRoomDetails` | [`FreeRoomDetailsScreen`](../src/features/Campus/FreeRoom/FreeRoomDetailsScreen.tsx) | `{ building }` | `DETAILS` |
 | `Bde` | [`BdeScreen`](../src/features/Campus/Bde/BdeScreen.tsx) | — | `STUDENT_LIFE` |
 | `BdeDetail` | [`BdeDetailsScreen`](../src/features/Campus/Bde/BdeDetailsScreen.tsx) | `{ annonce }` | `DETAILS` |
-| `WebBrowser` | [`WebBrowserScreen`](../src/features/Scolarite/screens/WebBrowserScreen.tsx) | `{ entrypoint?, href?, domainesInternes? }` — `domainesInternes` n'est posé que par les appelants du **formulaire de retours** ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts)) : un lien qui en sort s'ouvre dans le navigateur du téléphone, et le formulaire reste tel quel dans la vue | masqué (barre flottante propre) |
+| `WebBrowser` | [`WebBrowserScreen`](../src/features/Scolarite/screens/WebBrowserScreen.tsx) | `{ entrypoint?, href?, domainesInternes? }` — `domainesInternes` n'est posé que par les appelants du **formulaire de retours** ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts)) : un lien qui en sort s'ouvre par-dessus, dans une seconde instance de l'écran, et le formulaire reste tel quel en dessous | masqué (barre flottante propre) |
 | `CredentialsSettings` | [`CredentialsSettingsScreen`](../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | `{ ressaisie? }` | `ACCOUNT` |
 | `Documents` | [`DocumentsScreen`](../src/features/Scolarite/screens/DocumentsScreen.tsx) | — | `MY_DOCUMENTS` |
 | `Filters` | [`FiltersScreen`](../src/features/Settings/screens/FiltersScreen.tsx) | — | `FILTERS` |

@@ -188,7 +188,8 @@ Mesurés le 2026-09-07. Le texte ci-dessus est laissé tel qu'il a été écrit.
   d'engagement depuis le formulaire le faisait recommencer : le navigateur intégré chargeait le lien
   dans la même vue. Les appelants du formulaire posent des domaines internes sur la route
   ([`liensDuFormulaire.ts`](../../src/shared/navigation/liensDuFormulaire.ts)), et un lien qui sort
-  de chez Google s'ouvre dehors. C'est le seul point du jalon qui attend la release, et il est dans
+  de chez Google s'ouvre par-dessus, dans une seconde instance du navigateur intégré — le
+  formulaire reste monté en dessous. C'est le seul point du jalon qui attend la release, et il est dans
   la liste Android de [Z](6-1-x-z-sortie.md).
 - **Le formulaire a pris une forme un peu différente** de celle proposée : la question de
   volontariat porte le lien dans son titre, et l'adresse est posée une seconde fois, obligatoire,

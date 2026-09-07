@@ -28,7 +28,8 @@ intégré, qui charge tout lien `http(s)` dans la même vue : le lien remplaçai
 
 Les trois appelants du formulaire posent désormais des **domaines internes** sur la route
 `WebBrowser` ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts)) : ce qui
-est chez Google reste dans la vue, tout autre lien s'ouvre dans le navigateur du téléphone. Par
+est chez Google reste dans la vue, tout autre lien s'ouvre par-dessus, dans une seconde instance de
+l'écran — le formulaire reste monté en dessous, et « retour » le retrouve tel quel. Par
 domaines et non par type de navigation, parce qu'Android ne distingue pas un clic d'une
 redirection. Les portails ne posent pas ce paramètre.
 

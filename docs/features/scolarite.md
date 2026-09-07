@@ -1633,7 +1633,8 @@ CAS à l'ENT. **Une exception, posée par l'appelant** : le formulaire de retour
 page d'engagement du chantier campus, et le charger dans la vue faisait recommencer le formulaire au
 retour. Les appelants du formulaire passent des `domainesInternes` dans la route
 ([`liensDuFormulaire.ts`](../../src/shared/navigation/liensDuFormulaire.ts)) : ce qui est chez Google
-reste, tout autre lien s'ouvre dans le navigateur du téléphone. Les portails ne posent rien.
+reste, tout autre lien s'ouvre par-dessus, dans une seconde instance de l'écran, et « retour »
+retrouve le formulaire là où il en était. Les portails ne posent rien.
 
 Quatre points d'entrée nommés :
 
