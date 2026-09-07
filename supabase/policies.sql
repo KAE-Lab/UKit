@@ -38,6 +38,7 @@ alter table public.testeurs         enable row level security;
 alter table public.sondes           enable row level security;
 alter table public.journal          enable row level security;
 alter table public.editeurs         enable row level security;
+alter table public.retours          enable row level security;
 
 -- -----------------------------------------------------------------------------
 -- Lecture publique
@@ -138,7 +139,9 @@ create policy "sondes lisibles"
 -- Les politiques des editeurs sont generees par une boucle plutot qu'ecrites huit fois : une seule
 -- liste dit quelles tables la console peut ecrire. `blueprints` n'y est pas — les Blueprints restent
 -- publies par le script, valides par le moteur et rejoues par la parite (docs/blueprints.md) ; ni
--- `journal` (ecrit par le declencheur seul) ni `sondes` (ecrite par les sondes seules).
+-- `journal` (ecrit par le declencheur seul) ni `sondes` (ecrite par les sondes seules), ni `retours`,
+-- qui a ses propres politiques plus bas : on les lit et on les reclasse, on ne les cree ni ne les
+-- supprime depuis la console.
 --
 -- La verification se joue plutot qu'elle ne se suppose : une insertion avec la cle `anon` doit
 -- **echouer**, et une insertion par un compte authentifie absent d'editeurs aussi.
@@ -146,7 +149,7 @@ create policy "sondes lisibles"
 revoke insert, update, delete on all tables in schema public from anon;
 -- Et la lecture de ce qui ne le regarde pas. Sans politique, RLS rendrait une liste vide plutot
 -- qu'un refus : le refus dit la verite, la liste vide fait croire a une table vide.
-revoke select on public.journal, public.editeurs from anon;
+revoke select on public.journal, public.editeurs, public.retours from anon;
 
 do $$
 declare
@@ -197,6 +200,29 @@ create policy "editeurs : sa propre ligne"
     on public.editeurs for select
     to authenticated
     using (email = nullif(auth.jwt() ->> 'email', ''));
+
+-- Les retours se lisent et se reclassent depuis la console ; ils ne s'y creent ni ne s'y suppriment,
+-- puisqu'ils sont importes (tools/retours/). Deux politiques, et un privilege de colonne par-dessus :
+-- l'update n'est possible que sur ce que le proprietaire du produit en fait — la nature, l'etat, la
+-- note — et la reponse elle-meme reste ce qui a ete dit, meme par erreur de saisie. `revoke`
+-- d'abord, parce qu'une table nouvelle nait avec tous les privileges accordes aux trois roles ;
+-- `service_role` garde les siens et l'import passe par lui. Aucune politique pour `anon`, et la
+-- lecture lui est revoquee plus haut : sans ca, RLS lui rendrait une liste vide plutot qu'un refus.
+revoke insert, update, delete on public.retours from authenticated;
+grant update (nature, etat, note) on public.retours to authenticated;
+
+drop policy if exists "retours lisibles par les editeurs" on public.retours;
+create policy "retours lisibles par les editeurs"
+    on public.retours for select
+    to authenticated
+    using (private.est_editeur());
+
+drop policy if exists "retours reclassables par les editeurs" on public.retours;
+create policy "retours reclassables par les editeurs"
+    on public.retours for update
+    to authenticated
+    using (private.est_editeur())
+    with check (private.est_editeur());
 
 -- -----------------------------------------------------------------------------
 -- Buckets

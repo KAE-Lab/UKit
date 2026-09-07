@@ -14,6 +14,8 @@ import type { Ligne } from '../supabase';
 export interface Option {
     readonly valeur: string;
     readonly libelle: string;
+    /** En liste, une pastille de cette couleur plutot que le libelle nu : l'etat d'un retour. */
+    readonly ton?: 'ok' | 'panne' | 'avert' | 'accent';
 }
 
 export type TypeDeChamp =
@@ -58,6 +60,10 @@ export interface Descripteur {
     readonly avertissement?: string;
     readonly creation?: boolean;
     readonly suppression?: boolean;
+    /** Ou la page se range dans la navigation : ce qu'on suit (les retours) ou ce qu'on publie. */
+    readonly section?: 'suivre' | 'publier';
+    /** Le message d'une liste vide, quand « la premiere se cree avec le bouton » serait faux. */
+    readonly vide?: string;
     /** Une regle qui ne tient pas dans un champ : rend le message d'erreur, ou `null`. */
     readonly valider?: (ligne: Ligne) => string | null;
     /** Un complement calcule juste avant l'ecriture : la cle d'un message, proposee depuis son titre. */

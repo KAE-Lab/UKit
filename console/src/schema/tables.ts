@@ -7,7 +7,7 @@
  */
 
 import { proposerCle } from '../lib/cle';
-import { CIBLAGE, type Descripteur } from './descripteurs';
+import { CIBLAGE, type Descripteur, type Option } from './descripteurs';
 
 const MAINTENANT = () => new Date().toISOString();
 
@@ -197,8 +197,57 @@ export const VERSION: Descripteur = {
     ],
 };
 
-/** Les pages de publication, dans l'ordre de la navigation. */
-export const RESSOURCES: readonly Descripteur[] = [ANNONCES, MESSAGES, TESTEURS, VISUELS, ETABLISSEMENTS, SALUTATIONS, BATIMENTS, VERSION];
+const ETATS_DE_RETOUR: readonly Option[] = [
+    { valeur: 'nouveau', libelle: 'Nouveau', ton: 'accent' },
+    { valeur: 'en_attente', libelle: 'En attente', ton: 'avert' },
+    { valeur: 'traite', libelle: 'Traité', ton: 'ok' },
+    { valeur: 'refuse', libelle: 'Refusé', ton: 'panne' },
+];
+
+const NATURES_DE_RETOUR: readonly Option[] = [
+    { valeur: 'bug', libelle: 'Bug' },
+    { valeur: 'fonctionnalite', libelle: 'Fonctionnalité' },
+    { valeur: 'campus', libelle: 'Campus' },
+    { valeur: 'autre', libelle: 'Autre' },
+];
+
+// Tout ce qui vient du formulaire est en lecture seule : `useFormulaire` ne renvoie pas ces champs,
+// et la base n'accorde l'update qu'aux trois autres (policies.sql). Les deux gardes disent la meme
+// chose, et c'est voulu.
+export const RETOURS: Descripteur = {
+    chemin: 'retours',
+    table: 'retours',
+    section: 'suivre',
+    titre: 'Retours',
+    description: 'Ce que les utilisateurs écrivent dans le formulaire : importé toutes les 72 heures, lu et reclassé ici.',
+    cle: ['id'],
+    tri: { colonne: 'recu_le', desc: true },
+    liste: ['recu_le', 'nature', 'etat', 'campus', 'texte', 'contact', 'volontaire'],
+    avertissement: 'Lignes importées depuis le formulaire : seuls la nature, l’état et la note se modifient, le reste est ce qui a été dit. Retoucher la feuille de réponses recréerait la ligne — on reclasse ici. Un retour qui décrit un défaut devient une entrée écrite à la main dans docs/defauts-fonctionnels.md.',
+    creation: false,
+    suppression: false,
+    vide: 'Aucun retour importé. Le workflow Retours écrit ici toutes les 72 heures dès qu’il est armé ; depuis le poste, npm run retours:import.',
+    champs: [
+        { nom: 'etat', libelle: 'État', type: { type: 'choix', options: ETATS_DE_RETOUR }, obligatoire: true, aide: '« Traité » quand la correction est faite ou la demande servie ; « en attente » quand elle dépend d’autre chose ; « refusé » se justifie dans la note.' },
+        { nom: 'nature', libelle: 'Nature', type: { type: 'choix', options: NATURES_DE_RETOUR }, obligatoire: true, aide: 'Devinée à l’import depuis la case cochée ; à reclasser si le texte dit autre chose.' },
+        { nom: 'note', libelle: 'Note', type: { type: 'zone' }, aide: 'Ce qu’on en a fait : la ligne du registre, le commit, la raison du refus.' },
+        { nom: 'recu_le', libelle: 'Reçu le', type: { type: 'date' }, lectureSeule: true },
+        { nom: 'texte', libelle: 'Texte', type: { type: 'zone' }, lectureSeule: true },
+        { nom: 'campus', libelle: 'Campus demandé', type: { type: 'texte' }, lectureSeule: true },
+        { nom: 'section', libelle: 'Section', type: { type: 'texte' }, lectureSeule: true },
+        { nom: 'appareil', libelle: 'Appareil', type: { type: 'texte' }, lectureSeule: true },
+        { nom: 'systeme', libelle: 'Système', type: { type: 'texte' }, lectureSeule: true },
+        { nom: 'version_app', libelle: 'Version de l’application', type: { type: 'texte' }, lectureSeule: true },
+        { nom: 'contact', libelle: 'Contact', type: { type: 'texte' }, lectureSeule: true, aide: 'Laissé volontairement, pour répondre ou parler d’adaptation de campus. Ne promet pas de réponse.' },
+        { nom: 'volontaire', libelle: 'Prêt·e à prêter un accès', type: { type: 'booleen' }, lectureSeule: true },
+        { nom: 'reponses', libelle: 'Réponse entière', type: { type: 'json' }, lectureSeule: true },
+        { nom: 'importe_le', libelle: 'Importé le', type: { type: 'date' }, lectureSeule: true },
+        { nom: 'id', libelle: 'Identifiant', type: { type: 'texte' }, lectureSeule: true },
+    ],
+};
+
+/** Les pages a descripteur, dans l'ordre de la navigation ; `section` dit sous quel titre. */
+export const RESSOURCES: readonly Descripteur[] = [RETOURS, ANNONCES, MESSAGES, TESTEURS, VISUELS, ETABLISSEMENTS, SALUTATIONS, BATIMENTS, VERSION];
 
 export function ressourceDe(chemin: string): Descripteur | undefined {
     return RESSOURCES.find((ressource) => `/${ressource.chemin}` === chemin);

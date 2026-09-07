@@ -15,6 +15,13 @@ La 6.1.x : le socle monte, et ce qui a été signalé se corrige
 
 ### Ajouté
 
+- **Les retours du formulaire entrent dans la base** (6.1.x-C). Ce que les utilisateurs écrivent
+  dans le formulaire — un bug, une suggestion, une demande de campus — est importé toutes les
+  72 heures dans une table de la base de publication, lu et reclassé dans la console avec un état et
+  une note, et chaque geste laisse une trace. Un import se rejoue sans dupliquer : la clé d'un retour
+  est une empreinte de la réponse. Le formulaire gagne un champ de contact facultatif et une section
+  de volontariat pour qui demande son campus, et le site publie la page d'engagement que cette
+  section cite. Aucun changement dans l'application.
 - **L'onglet Scolarité vit sans compte** (6.1.x-B). Un enseignant-chercheur à qui l'application avait
   été imposée cherchait la page courriel, et ne trouvait qu'un formulaire étudiant. Sans compte, la
   page est désormais la même que connectée : les portes des services — ENT, messagerie, Moodle,
@@ -54,6 +61,9 @@ La 6.1.x : le socle monte, et ce qui a été signalé se corrige
 
 ### Modifié
 
+- **La politique de confidentialité dit ce que le formulaire collecte** (6.1.x-C) : un service tiers,
+  un contact facultatif, une copie dans notre base que seule l'équipe lit, et comment demander
+  l'effacement.
 - **Le socle passe d'Expo 54 à 57** (6.1.x-A) — React Native 0.86, React 19.2, et une quarantaine de
   modules de plateforme avec eux. Rien ne change à l'écran ; c'est ce qui rend la version
   attribuable. Une conséquence visible tout de même : **iOS 16.4 devient le minimum** — un iPhone 7,

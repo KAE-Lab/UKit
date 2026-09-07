@@ -176,6 +176,24 @@ correctif ; le confondre avec de l'esthétique rend le travail invérifiable. Il
 [docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md) et **ne se corrige pas au passage**, sauf
 s'il tombe exactement dans le périmètre de la session.
 
+### Un retour d'utilisateur
+
+Ce que les utilisateurs écrivent dans le formulaire arrive dans la table `retours` de la base,
+importé toutes les 72 heures, et se lit dans la page **Retours** de la console
+([docs/pilotage.md](docs/pilotage.md#les-retours)). Trois gestes, et un interdit :
+
+- un retour qui décrit un **défaut** devient une entrée de
+  [docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md), **écrite à la main**, avec la date de
+  réception. Le registre des retours enregistre ce qui a été dit, pas ce qu'on en a compris ;
+- la ligne passe en `traité` — ou `en attente`, ou `refusé` — avec une **note** qui renvoie à
+  l'entrée du registre, au commit, ou à la raison du refus ; la nature se reclasse si la case cochée
+  ne dit pas ce que le texte dit ;
+- une demande de campus rejoint [docs/adaptation-campus.md](docs/adaptation-campus.md).
+
+**On ne retouche jamais la feuille de réponses.** La clé d'un retour est une empreinte de la réponse :
+corriger une cellule recréerait la ligne, avec l'état « nouveau ». Et les exports bruts restent hors
+du dépôt (`tools/retours/exports/`, ignoré) : ce sont des textes libres, dans un dépôt public.
+
 ### Captures d'écran
 
 Les captures sont prises à la main : le projet ne dispose d'aucun outillage de capture automatique.
@@ -202,7 +220,8 @@ npm run parity        # sources migrees vers un Blueprint (voir tools/parity/REA
 ```
 
 Les tests automatiques couvrent ce qui porte de la logique UKit **et ne dépend d'aucune plateforme** :
-le socle Aetherius, la lecture de la base, et les projections de contrat. Il n'y a **aucun test
+le socle Aetherius, la lecture de la base, les projections de contrat, et l'outillage pur de
+`tools/` — dont l'importeur des retours. Il n'y a **aucun test
 d'écran ni de composant**, et la vérification manuelle sur l'application réelle reste la porte
 principale. Périmètre exact : [docs/qualite.md](docs/qualite.md#les-tests-unitaires).
 

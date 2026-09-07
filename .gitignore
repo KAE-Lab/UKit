@@ -14,5 +14,5 @@ console/.env*
 __pycache__/
 
 # Les exports bruts du formulaire : des reponses libres d utilisateurs, dans un depot public.
-# Ils servent de jeu d essai a tools/retours/ (jalon 6.1.1-C) et ne se versionnent pas.
+# Ils servent de jeu d essai a tools/retours/ (jalon 6.1.x-C) et ne se versionnent pas.
 tools/retours/exports/

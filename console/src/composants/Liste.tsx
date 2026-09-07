@@ -36,7 +36,9 @@ function celluleEtablissements(valeur: unknown) {
 function celluleChoix(champ: Champ, valeur: unknown) {
     const options = champ.type.type === 'choix' ? champ.type.options : [];
     const option = options.find((candidat) => candidat.valeur === String(valeur ?? ''));
-    if (option !== undefined) return <>{option.libelle}</>;
+    if (option !== undefined) {
+        return option.ton === undefined ? <>{option.libelle}</> : <span className={`pastille ${option.ton}`}>{option.libelle}</span>;
+    }
     return estVide(valeur) ? <Tiret /> : <>{String(valeur)}</>;
 }
 
@@ -63,7 +65,7 @@ export interface ListeProps {
 }
 
 export function Liste({ descripteur, lignes, onChoisir }: ListeProps) {
-    if (lignes.length === 0) return <EtatVide>Aucune ligne. La première se crée avec le bouton en haut.</EtatVide>;
+    if (lignes.length === 0) return <EtatVide>{descripteur.vide ?? 'Aucune ligne. La première se crée avec le bouton en haut.'}</EtatVide>;
     return (
         <div className="defilable">
             <table className="tableau">
@@ -73,11 +75,17 @@ export function Liste({ descripteur, lignes, onChoisir }: ListeProps) {
                 <tbody>
                     {lignes.map((ligne) => (
                         <tr key={cleDeLigne(descripteur, ligne)} className="cliquable" onClick={() => onChoisir(ligne)}>
-                            {descripteur.liste.map((nom) => (
-                                <td key={nom} className={nom === 'titre' || nom === 'nom' ? 'tronque' : undefined}>
-                                    <Cellule champ={champDe(descripteur, nom)} valeur={ligne[nom]} />
-                                </td>
-                            ))}
+                            {descripteur.liste.map((nom) => {
+                                const champ = champDe(descripteur, nom);
+                                // Un texte long (une zone) se tronque comme un titre : sans ca, la colonne
+                                // s'elargit a la longueur de la plus longue reponse.
+                                const tronque = nom === 'titre' || nom === 'nom' || champ?.type.type === 'zone';
+                                return (
+                                    <td key={nom} className={tronque ? 'tronque' : undefined}>
+                                        <Cellule champ={champ} valeur={ligne[nom]} />
+                                    </td>
+                                );
+                            })}
                         </tr>
                     ))}
                 </tbody>

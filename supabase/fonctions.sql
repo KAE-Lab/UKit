@@ -126,3 +126,12 @@ create trigger journal after insert or update or delete on public.testeurs
 drop trigger if exists journal on public.app_release;
 create trigger journal after insert or update or delete on public.app_release
     for each row execute function private.journaliser('plateforme');
+
+-- Les retours : inseres par la cle de service (`par = service_role`), reclasses par un editeur
+-- (`par = son e-mail`). Un rejeu de l'import en `on conflict do nothing` ne declenche rien pour une
+-- ligne deja presente : il n'ecrit pas une ligne de journal par reponse a chaque passage. Le journal
+-- copie la ligne entiere, contact compris — effacer un retour, c'est aussi effacer sa trace
+-- (supabase/README.md).
+drop trigger if exists journal on public.retours;
+create trigger journal after insert or update or delete on public.retours
+    for each row execute function private.journaliser('id');

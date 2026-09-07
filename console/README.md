@@ -2,7 +2,9 @@
 
 Publier sans requête SQL, avec un compte, en laissant une trace : annonces, messages de service,
 testeurs, visuels, établissements, salutations, bâtiments, version publiée — et lire l'état des
-sources et le journal. Ce qu'elle est et ce qu'elle n'est pas : [docs/pilotage.md](../docs/pilotage.md).
+sources, le journal, et **les retours du formulaire**, importés dans la base et reclassés ici depuis
+le jalon [6.1.x-C](../docs/phase-6/6-1-x-c-retours.md). Ce qu'elle est et ce qu'elle n'est pas :
+[docs/pilotage.md](../docs/pilotage.md).
 
 **Les Blueprints n'y sont pas**, et c'est une décision : ils se versionnent dans le dépôt, se
 valident avec le moteur, se rejouent par la parité et se publient par `npm run blueprints:publish`.
@@ -51,7 +53,11 @@ va nulle part ici.
 Vite, React, `@supabase/supabase-js`, et rien d'autre. Un routeur par fragment d'URL (`#/annonces`,
 vingt lignes), une **liste et un formulaire génériques** pilotés par un descripteur par table
 ([`src/schema/tables.ts`](src/schema/tables.ts)) : les colonnes, leur type de saisie, la clé, les
-avertissements qu'il faut lire avant d'écrire. Les conversions entre la saisie et la ligne sont pures
+avertissements qu'il faut lire avant d'écrire, et depuis 6.1.x-C la **section** de navigation où la
+page se range (« Suivre » pour ce qui se lit, « Publier » pour ce qui s'écrit), le message d'une
+liste vide, et la **pastille** qu'une option de choix peut porter en liste — c'est l'état d'un
+retour. Un champ en lecture seule est désactivé **et** absent de ce qui part : c'est ce qui permet à
+la base de n'accorder l'écriture qu'aux colonnes qui bougent. Les conversions entre la saisie et la ligne sont pures
 et testées par le `npm test` de la racine ([`src/schema/conversion.ts`](src/schema/conversion.ts)),
 comme la règle des visuels — remplacer une image bumpe `?v=N` dans son adresse
 ([`src/lib/versionnerUrl.ts`](src/lib/versionnerUrl.ts)) — et la clé proposée d'un message.

@@ -78,7 +78,9 @@ européenne — les utilisateurs sont en France.
 5. Migrer le contenu : `npm run content:import`
    ([`tools/import-ukit-data.mjs`](../tools/import-ukit-data.mjs)), puis publier les Blueprints :
    `npm run blueprints:publish` ([`tools/publish-blueprints.mjs`](../tools/publish-blueprints.mjs)).
-   Le second est rejouable à volonté ; rejoué à vide, il ne change rien.
+   Le second est rejouable à volonté ; rejoué à vide, il ne change rien. Les retours du formulaire
+   s'importent par `npm run retours:import` ([docs/pilotage.md](../docs/pilotage.md#les-retours)),
+   rejouable de la même façon.
 6. Vérifier, en le jouant plutôt qu'en le supposant : une insertion avec la clé publiable doit
    **échouer**.
 
@@ -132,6 +134,23 @@ seul ne se relit pas :
 ```sql
 delete from public.journal where quand < now() - interval '1 year';
 ```
+
+## Effacer un retour
+
+La table `retours` porte ce que les utilisateurs écrivent dans le formulaire, et parfois une adresse
+laissée volontairement ([PRIVACY.md](../PRIVACY.md), point 5 bis). Une demande d'effacement se
+traite en trois endroits, parce que le journal copie la ligne entière — et la suppression elle-même
+en laisse une trace, avec l'avant :
+
+```sql
+delete from public.retours where id = '<id>';
+delete from public.journal where table_name = 'retours' and ligne_id = '<id>';
+```
+
+Puis la réponse dans la feuille Google, à la main — sinon l'import suivant la ramène. Retirer la
+seule adresse revient au même geste sur la cellule de la feuille, puis un `update` de `contact` et de
+`reponses` sur la ligne ; la ligne n'est pas recréée, la clé ne dépend pas du contact… **si**, elle en
+dépend : c'est une cellule comme une autre. Effacer, donc, plutôt que retoucher.
 
 ## Migrations
 

@@ -1,0 +1,48 @@
+# Les retours du formulaire, importes dans la table `retours` toutes les 72 heures (tools/retours/,
+# docs/pilotage.md). Ils se lisent et se reclassent dans la console.
+#
+# `0 6 */3 * *` : les 1, 4, …, 28 et 31 du mois a 06:00 UTC (08:00 a Paris en ete, 07:00 en hiver).
+# Le cron ne sait pas dire « toutes les 72 heures », et l'intervalle se raccourcit au changement de
+# mois ; sans consequence, l'import est idempotent (`on conflict do nothing`).
+#
+# Il n'ouvre aucune issue et ne commite rien — un retour d'utilisateur n'est pas un incident, et une
+# issue par avis noierait le signal des sondes. Il ne s'arme que si le secret RETOURS_CSV_URL existe :
+# un secret n'est pas lisible dans un `if:` de job, donc c'est le script qui se desarme (« sans
+# RETOURS_CSV_URL : rien a importer », en succes), comme sondes/jouer.py sans GITHUB_TOKEN.
+#
+# Pas de `npm ci` : l'importeur n'a aucune dependance, et installer le projet React Native prendrait
+# des minutes pour lire un fichier. Ses tests se jouent avec ceux du depot (npm test).
+#
+# Le journal de ce workflow est public : l'importeur n'y ecrit jamais une reponse ni un contact.
+name: Retours
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Lire et compter, sans écrire'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  retours:
+    name: Importer les retours
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: node tools/retours/importer.mjs ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RETOURS_CSV_URL: ${{ secrets.RETOURS_CSV_URL }}

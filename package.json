@@ -20,6 +20,7 @@
     "console:build": "npm --prefix console run build",
     "console:editeur": "node tools/console/editeur.mjs",
     "content:import": "node tools/import-ukit-data.mjs",
+    "retours:import": "node tools/retours/importer.mjs",
     "prepare": "husky",
     "commit": "cz"
   },

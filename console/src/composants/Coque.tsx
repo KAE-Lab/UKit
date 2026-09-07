@@ -12,6 +12,10 @@ function Lien({ vers, chemin, children }: { readonly vers: string; readonly chem
     return <a href={`#${vers}`} className={`lien-nav ${chemin === vers ? 'actif' : ''}`}>{children}</a>;
 }
 
+// Les retours se lisent, ils ne se publient pas : ils vont avec les sources et le journal.
+const SUIVIES = RESSOURCES.filter((ressource) => ressource.section === 'suivre');
+const PUBLIEES = RESSOURCES.filter((ressource) => ressource.section !== 'suivre');
+
 export interface CoqueProps {
     readonly session: Session;
     readonly chemin: string;
@@ -25,9 +29,12 @@ export function Coque({ session, chemin, children }: CoqueProps) {
                 <div className="marque"><strong>UKit</strong><span>console</span></div>
                 <div className="section">Suivre</div>
                 <Lien vers="/" chemin={chemin}>Sources</Lien>
+                {SUIVIES.map((ressource) => (
+                    <Lien key={ressource.chemin} vers={`/${ressource.chemin}`} chemin={chemin}>{ressource.titre}</Lien>
+                ))}
                 <Lien vers="/journal" chemin={chemin}>Journal</Lien>
                 <div className="section">Publier</div>
-                {RESSOURCES.map((ressource) => (
+                {PUBLIEES.map((ressource) => (
                     <Lien key={ressource.chemin} vers={`/${ressource.chemin}`} chemin={chemin}>{ressource.titre}</Lien>
                 ))}
                 <div className="section">Compte</div>

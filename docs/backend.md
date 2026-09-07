@@ -83,6 +83,7 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `sondes` | l'état de chaque source tierce, mesuré chaque matin | la console ; l'application pas encore | 6.1-B | — |
 | `journal` | la trace de chaque écriture dans une table publiable : avant, après, qui, quand | la console seule | 6.1-B | — |
 | `editeurs` | les e-mails autorisés à écrire depuis la console | les politiques | 6.1-B | — |
+| `retours` | ce que les utilisateurs écrivent dans le formulaire, importé toutes les 72 heures depuis la feuille de réponses | la console seule | [6.1.x-C](phase-6/6-1-x-c-retours.md) | — |
 | `salutations` | le mot du haut de l'onglet Scolarité, quand une règle publiée doit passer devant le socle embarqué — voir [scolarite.md](features/scolarite.md#la-salutation-est-une-règle-pas-une-condition) |
 | `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal, `desactive` | le script de publication | **6-C** | [`blueprints/`](../blueprints/) |
 
@@ -262,6 +263,15 @@ bucket, et la table n'a d'ailleurs aucune politique de lecture pour `anon`. Elle
 publieur — la trace de ce qui est en ligne, et la colonne `desactive`, qui est la surface d'édition
 du premier interrupteur d'arrêt ([blueprints.md](blueprints.md#revenir-en-arrière)).
 
+`retours` est la seule table dont le contenu **vient des utilisateurs** — copié par nous, jamais écrit
+par l'application ([PRIVACY.md](../PRIVACY.md), point 5 bis). Sa clé primaire est l'identifiant
+stable de la réponse, une empreinte calculée par l'importeur ([pilotage.md](pilotage.md#les-retours)),
+et l'écriture se fait en `on conflict do nothing` : le dédoublonnage est une propriété du schéma, et
+une ligne reclassée garde son état au passage suivant. Aucune politique de lecture pour `anon`, et la
+lecture lui est même **révoquée** — sans ça, RLS lui rendrait une liste vide plutôt qu'un refus. Les
+éditeurs la lisent et la modifient par un **privilège de colonne** : `nature`, `etat`, `note`, et
+rien d'autre — la réponse reste ce qui a été dit, même par erreur de saisie dans la console.
+
 Deux buckets :
 
 | Bucket | Contenu | Accès |
@@ -300,6 +310,9 @@ sans politique est une table qu'on oubliera de protéger le jour où elle en aur
   restent au script, qui les valide avec le moteur ([blueprints.md](blueprints.md)). Les inscriptions
   libres sont désactivées dans les réglages du projet, et le compte se crée depuis le poste du
   publieur ([`supabase/README.md`](../supabase/README.md)).
+- **Lecture et reclassement des retours par les éditeurs**, bornés à trois colonnes par un privilège
+  de colonne ; ni création ni suppression depuis la console, les lignes sont importées
+  ([pilotage.md](pilotage.md#les-retours)).
 
 Le jour où la partie sociale arrivera, elle ajoutera ses tables et ses politiques adossées à
 `auth.uid()`. Rien de ce qui est écrit ici ne devra être défait.

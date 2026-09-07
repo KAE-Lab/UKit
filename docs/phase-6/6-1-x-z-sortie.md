@@ -29,6 +29,7 @@ avant le workflow. La liste s'allonge à chaque jalon ; rien ne s'en retire sans
 |---|---|
 | [A](6-1-x-a-montee-du-socle.md) | *fait le 2026-09-06* — ouverture sous l'Expo Go du store, parcours froid, navigation, clavier des filtres d'UE |
 | [B](6-1-x-b-signalements.md) | le ruban des jours et les carrousels du Planning **sans le glissement entre onglets** (le défaut qui l'a fait retirer était Android) ; la page Scolarité sans compte, portes et documents ; l'entretien au retour au premier plan et « Oublier l'échéance » puis relance ; les identifiants du navigateur (mémoriser, remplir, oublier) ; les filtres d'UE sur `MI601A` ; la fiche du compte en échec |
+| [C](6-1-x-c-retours.md) | *rien* — livré par publication, sans build ; la console et le cron vivent depuis `main`, avancé sur la branche le 2026-09-07 |
 | [D](6-1-x-d-calendriers-du-telephone.md) | *à compléter à sa livraison* — au moins : `getEventsAsync` ne rend que ce qui tient dans l'intervalle sur Android, l'événement à cheval sur minuit doit apparaître sur les deux jours après refiltrage ; le « + » ouvre l'éditeur du système ; un message ciblé `android` visible, un message ciblé `ios` invisible |
 | Z | la tâche de fond sur build : `adb shell dumpsys jobscheduler` liste `ukit-entretien`, et la mesure de 24 heures |
 

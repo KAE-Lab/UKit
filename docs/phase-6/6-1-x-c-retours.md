@@ -1,5 +1,13 @@
 # 6.1.x-C — Les retours entrent quelque part
 
+> **Jalon livré le 2026-09-07, par publication et sans build.** Le schéma est appliqué, les 22
+> réponses de la feuille sont importées (22 nouvelles, puis **0 au rejeu**, journal inchangé), la page
+> Retours est dans la console, le cron est écrit, `PRIVACY.md` et `CONTRIBUTING.md` disent le reste.
+> Ce qui a changé entre le texte et la livraison est en fin de document, et l'essentiel tient en une
+> phrase : **la source est la feuille liée au formulaire, lue par son lien**, et la clé d'un retour est
+> une empreinte de la réponse, parce que rien chez Google n'en fournit une. Le sous-chantier du site
+> (page d'engagement, mise au niveau du dépôt `UKit-website`) est décidé le même jour.
+>
 > **Le jalon qui donne une destination à ce que les utilisateurs écrivent.** Le formulaire existe
 > depuis la sortie de la 6.0, il a produit ses seize premières réponses, et **rien dans le projet ne
 > sait les recevoir** : pas de documentation, pas de convention de rangement, pas de boucle vers le
@@ -134,3 +142,45 @@ Pas de protocole appareil — rien n'est embarqué. Les vérifications sont aill
   fonctionnalité » pour signaler un bug sera rangée de travers ; c'est au propriétaire du produit de
   la reclasser dans la console, et la colonne est faite pour ça.
 - **Rien ne mesure la satisfaction.** Ce jalon range ce qui arrive ; il ne va rien chercher.
+
+## Écarts constatés à la livraison
+
+Mesurés le 2026-09-07. Le texte ci-dessus est laissé tel qu'il a été écrit.
+
+- **Le jalon n'est pas celui de la notification.** En le cadrant, le propriétaire du produit a
+  demandé ce qu'il apportait par rapport au réglage de base de Google — un mail par réponse, une
+  feuille qui se remplit seule, lisible par un `curl`. Réponse écrite dans
+  [pilotage.md](../pilotage.md#les-retours) : **l'état et la trace**, une forme normalisée, un seul
+  endroit, l'indépendance. La clé stable et le dédoublonnage sont un coût de la copie, pas une valeur.
+- **La source est la feuille liée, par son lien**, et non « la feuille publiée au format CSV » : une
+  feuille partagée « à toute personne disposant du lien » se lit sans compte à son adresse d'export,
+  et `RETOURS_CSV_URL` accepte le lien de partage. Le fichier n'est plus qu'un repli.
+- **Ni la feuille ni le formulaire n'exposent d'identifiant de réponse.** La clé est une empreinte :
+  l'instant en UTC et les **cellules non vides**, triées par question. « Toutes les cellules » aurait
+  recréé les seize premières lignes le jour où le formulaire gagne ses deux colonnes. Limite écrite :
+  renommer une question, ou retoucher une cellule, recrée la ligne.
+- **Les deux exports de Google ne s'accordent pas à la seconde près** : `9:13:21 AM GMT+3` dans le
+  fichier de l'interface, `8:13:22` en heure de Paris par l'adresse d'export, sur six réponses sur
+  seize. L'adresse d'export est donc canonique, et l'ancien export du 2026-09-06 ne sert plus que de
+  jeu d'essai au parseur. Les sauts de ligne dans une cellule diffèrent aussi ; ils sont normalisés.
+- **La nature se reclasse dans la console**, comme les limites le promettaient — ce qui demandait
+  que le privilège de colonne couvre `nature` avec `etat` et `note`.
+- **Deux colonnes de plus que la liste** : `volontaire` (la case de la section de volontariat) et
+  `reponses`, la réponse entière en JSON ; et `note`, ce que le propriétaire du produit en a fait.
+- **Le journal copie la ligne entière, contact compris** : effacer un retour, c'est aussi effacer sa
+  trace, et la procédure est écrite dans [`supabase/README.md`](../../supabase/README.md#effacer-un-retour).
+- **Le journal d'un workflow de dépôt public est public** : l'importeur n'imprime jamais une réponse.
+- **Un secret ne se lit pas dans un `if:` de job** : c'est le script qui se désarme, en succès.
+- **`0 6 */3 * *` n'est pas exactement 72 heures** (fin de mois) ; sans conséquence, l'import est
+  idempotent.
+- **Le `CHANGELOG` avait déjà sa section « Non publié »** (R5), rouverte par 6.1.x-B.
+- **La page d'engagement va sur le site**, `ukit-bordeaux.fr`, pas sur les GitHub Pages de la
+  console ; `adaptation-campus.md` est amendé. Le dépôt du site est mis au niveau documentaire
+  d'UKit dans le même mouvement, sans toucher à son style.
+- **`main` est avancé en avance rapide sur `v6.1.x`** le jour même — un workflow planifié ne tourne
+  que sur la branche par défaut, et la console ne se déploie que depuis elle. La spec disait « aucune
+  release » ; c'est vrai, mais il fallait une fusion.
+- **Les politiques aux frontières** : `anon` refusé (42501, la lecture lui est révoquée — sans ça,
+  RLS rend une liste vide), un compte sans droits lit une liste vide et son `PATCH` ne touche rien, un
+  éditeur reclasse et sa trace porte son e-mail, et un `PATCH` sur `texte` est refusé par le privilège
+  de colonne.

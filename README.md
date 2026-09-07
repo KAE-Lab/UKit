@@ -158,7 +158,7 @@ blueprints/          les fichiers d'instructions embarqués (le socle hors ligne
 supabase/            schéma, gardes et politiques d'accès de la base de publication
 console/             la console de pilotage : publier sans SQL, avec un compte, en laissant une trace
 sondes/              les sondes du matin : chaque source jouée sans identifiant, une issue au changement
-tools/               publication des Blueprints, compte éditeur de la console, harnais de parité
+tools/               publication des Blueprints, compte éditeur de la console, harnais de parité, import des retours
 assets/              icônes, visuels, référentiel des bâtiments du campus, pdf.js vendorisé
 docs/                cette documentation
 ```
@@ -363,6 +363,18 @@ livré ; elle est mise à jour à chaque contribution.
   Campus, trois requêtes de découverte des BU au lieu de douze, l'accueil qui explique une liste vide ;
   et l'outillage à zéro écart — ESLint, `expo-doctor`, `setup-java@v5`.
   [docs/phase-6/6-1-c-passe-de-code.md](docs/phase-6/6-1-c-passe-de-code.md)
+- [x] **Les retours entrent quelque part** (6.1.x-C) — le formulaire existait depuis la sortie de la
+  6.0, avait produit ses premières réponses, et rien dans le projet ne savait les recevoir. Google
+  notifie déjà et remplit une feuille ; la plus-value n'est donc pas la notification mais **l'état et
+  la trace** : les réponses sont importées toutes les 72 heures dans une table `retours` de la base,
+  lues et **reclassées** dans la console — une nature, un état, une note — et chaque geste laisse une
+  ligne de journal. La clé d'un retour est une **empreinte de la réponse**, parce que ni la feuille
+  ni le formulaire n'exposent d'identifiant : un import se rejoue sans rien dupliquer, et une ligne
+  reclassée garde son état. Aucune lecture publique, un privilège de colonne qui borne la console à
+  ce qu'elle a à écrire, un masquage des adresses dans les textes libres — et deux mesures qui ont
+  façonné l'importeur : les deux exports de Google ne s'accordent pas à la seconde près, et le
+  journal d'un workflow public est public. Livré par publication, sans build.
+  [docs/pilotage.md](docs/pilotage.md#les-retours)
 
 ### Fonctionnalités
 

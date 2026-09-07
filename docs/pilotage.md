@@ -13,6 +13,7 @@ frontière, et tout ce qui s'y écrit laisse une trace.
 | Le **journal** de tout ce qui s'écrit | la base | 6.1-B, lot B1 |
 | La **console web** | `console/` | 6.1-B, lot B2 |
 | Les **sondes** du matin | `sondes/` | 6.1-B, lot B3 |
+| Les **retours** du formulaire — importés dans la base, lus et reclassés dans la console | la base, `tools/retours/`, `console/` | [6.1.x-C](phase-6/6-1-x-c-retours.md) |
 
 ## Les messages de service
 
@@ -166,6 +167,7 @@ liste et un formulaire par table, et deux pages de lecture.
 |---|---|
 | Sources | l'état des sondes du matin, et depuis quand |
 | Journal | consulter, filtrer par table et par opération, **exporter en JSON** |
+| Retours | ce que les utilisateurs écrivent dans le formulaire, importé toutes les 72 heures ; **reclasser** (nature, état) et **noter** — le reste est ce qui a été dit, en lecture seule |
 | Annonces | créer, modifier, désactiver ; téléverser le visuel, dont l'adresse est versionnée d'elle-même (`?v=N`) ; audience, campus, versions |
 | Messages de service | la même chose pour `service_messages` ; la clé est proposée depuis le titre |
 | Testeurs | les appareils qui voient l'audience `testeurs`, avec un nom |
@@ -226,6 +228,64 @@ erreur de sonde. Sur GitHub le même jour : le premier run, adresse du CAS de Bo
 écrit cinq `ok` et une panne dans `sondes` et ouvert l'issue #21, assignée. Le reste — jouer en local,
 les réglages à poser sur GitHub, les limites — est dans [`sondes/README.md`](../sondes/README.md).
 
+## Les retours
+
+Depuis le jalon [6.1.x-C](phase-6/6-1-x-c-retours.md), ce que les utilisateurs écrivent dans le
+formulaire — celui de la pastille d'état de service, du teaser de campus non relié et du bouton
+« Demander », `services.adaptation` du catalogue — **entre quelque part** : la table `retours` de la
+[base](backend.md), lue et reclassée dans la page Retours de la console.
+
+Google fait déjà deux choses, et le jalon ne les refait pas : il notifie par mail à chaque réponse,
+et il remplit une **feuille liée**. La plus-value est ailleurs — **l'état et la trace**. Un retour
+rangé ici a un état (`nouveau`, `en attente`, `traité`, `refusé`), une nature reclassable, une
+note ; chaque changement passe par la console et laisse une ligne de journal ; et « les retours
+encore ouverts » devient une requête, pour le propriétaire du produit comme pour un agent.
+
+**La source est la feuille, par son lien.** Partagée « à toute personne disposant du lien », elle se
+lit sans compte à son adresse d'export CSV ; `RETOURS_CSV_URL` porte le lien de partage ou l'adresse
+d'export, l'importeur traduit l'un en l'autre ([`tools/retours/source.mjs`](../tools/retours/source.mjs)).
+Qui détient ce lien lit les réponses, contact compris : c'est un **secret**, sur le poste et dans la CI.
+
+**L'importeur** (`npm run retours:import`, [`tools/retours/importer.mjs`](../tools/retours/importer.mjs))
+relit la feuille **en entier** à chaque passage, projette chaque réponse
+([`projection.mjs`](../tools/retours/projection.mjs)) et écrit tout en une passe, en
+`on conflict do nothing`. La clé d'un retour est une **empreinte** de la réponse — l'instant de
+réception en UTC et les cellules non vides, triées par question — parce que ni la feuille ni le
+formulaire n'exposent d'identifiant de réponse. Non vides et triées, pour qu'une question ajoutée au
+formulaire ou une colonne déplacée ne recrée pas ce qui est déjà rangé. Le dédoublonnage est ainsi une
+propriété du schéma, et **un retour reclassé garde son état** au passage suivant. Le prix est écrit :
+**on ne retouche jamais la feuille** — corriger une cellule recréerait la ligne, à l'état « nouveau ».
+
+Deux mesures ont façonné l'importeur. Google écrit le même horodatage de deux façons selon le chemin
+— `9/1/2026 7:46:43` en heure de Paris par l'adresse d'export, `2026/09/01 8:46:43 AM GMT+3` par le
+fichier téléchargé de l'interface —, et **les deux ne s'accordent pas à la seconde près** (une seconde
+d'écart sur six réponses sur seize). L'adresse d'export est donc la forme canonique ; un fichier passé
+à `--fichier` doit en être un téléchargement, jamais un export de l'interface. Et les sauts de ligne à
+l'intérieur d'une cellule diffèrent aussi : ils sont ramenés à `\n` avant tout calcul.
+
+Les colonnes normalisées — nature, campus, appareil, système, version, un **texte** assemblé depuis la
+branche cochée — servent à lire et trier ; `reponses` garde la réponse entière, question par question.
+Les textes libres passent par un **masquage** des adresses et des numéros
+([`nettoyage.mjs`](../tools/retours/nettoyage.mjs)) ; le champ de contact, lui, est gardé tel quel,
+c'est son rôle, et il est facultatif ([PRIVACY.md](../PRIVACY.md)).
+
+**Le cron** ([`.github/workflows/retours.yml`](../.github/workflows/retours.yml)) rejoue l'import
+toutes les 72 heures — `0 6 */3 * *`, approximatif au changement de mois, sans conséquence. Il
+**n'ouvre aucune issue et ne commite rien** : une source cassée est un incident, un retour d'utilisateur
+n'en est pas un, et une issue par avis noierait le signal des sondes. Il ne s'arme que si le secret
+`RETOURS_CSV_URL` existe — et comme un secret ne se lit pas dans un `if:` de job, c'est le script qui se
+désarme, en succès. Il n'installe pas le projet (l'importeur n'a aucune dépendance) et **n'imprime jamais
+une réponse** : le journal d'un workflow de dépôt public est public.
+
+**La boucle vers le registre** reste manuscrite : un retour qui décrit un défaut devient une entrée de
+[defauts-fonctionnels.md](defauts-fonctionnels.md), la ligne passe en `traité` avec la note qui y
+renvoie ([CONTRIBUTING.md](../CONTRIBUTING.md#un-retour-dutilisateur)). Le registre des retours dit ce
+qui a été dit, pas ce qu'on en a compris.
+
+Vérifié le 2026-09-07 : 22 réponses lues depuis la feuille, 22 nouvelles au premier passage, **0 au
+rejeu** et 0 depuis le lien après un import par fichier, le journal inchangé au rejeu (22 lignes,
+toutes `service_role`) ; les politiques jouées aux frontières sont dans la spécification du jalon.
+
 ## Vérifier
 
 Le canal se vérifie **sans relancer** l'application, grâce au panneau Testeur : « Relire les
@@ -283,6 +343,9 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
 | [`.github/workflows/console.yml`](../.github/workflows/console.yml) | construire et déployer la console sur GitHub Pages |
 | [`sondes/`](../sondes/) | les sondes du matin : deux Blueprints, le runner Python et son verdict, ses tests ([`sondes/README.md`](../sondes/README.md)) |
 | [`.github/workflows/sondes.yml`](../.github/workflows/sondes.yml) | jouer les sondes chaque matin, écrire `sondes`, ouvrir ou fermer l'issue |
+| [`tools/retours/importer.mjs`](../tools/retours/importer.mjs) | l'import des retours : la feuille ou un fichier, la projection, l'écriture en une passe, le compte « lues / nouvelles » |
+| [`tools/retours/csv.mjs`](../tools/retours/csv.mjs) · [`horodatage.mjs`](../tools/retours/horodatage.mjs) · [`nettoyage.mjs`](../tools/retours/nettoyage.mjs) · [`projection.mjs`](../tools/retours/projection.mjs) · [`source.mjs`](../tools/retours/source.mjs) | les modules purs de l'importeur, sans dépendance : le lecteur CSV, les deux écritures de l'horodatage, le masquage, la projection et la clé, l'adresse d'export d'une feuille — chacun avec son `.test.ts`, joué par `npm test` |
+| [`.github/workflows/retours.yml`](../.github/workflows/retours.yml) | importer les retours toutes les 72 heures, sans issue ni commit |
 
 ## Limites connues
 
@@ -310,3 +373,11 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
   [6.1-C](phase-6/6-1-c-passe-de-code.md) ([defauts-fonctionnels.md](defauts-fonctionnels.md)).
 - **Un message désactivé pendant que l'appareil est hors ligne** reste dans le cache jusqu'à la
   lecture suivante ; son expiration, elle, est honorée localement.
+- **La nature d'un retour est devinée à l'import**, depuis la case cochée : une réponse qui coche
+  « suggérer une fonctionnalité » pour signaler un bug est rangée de travers, et c'est la colonne
+  reclassable de la console qui rattrape.
+- **Renommer une question du formulaire recrée ses réponses** au passage suivant, puisque la clé
+  est une empreinte de la réponse ; ajouter une question, non. Et le fuseau de la feuille doit rester
+  Europe/Paris — l'adresse d'export écrit l'heure murale sans le dire.
+- **Un formulaire n'est pas un canal de support** : on lit, on range, on corrige ; le champ de contact
+  ne promet pas de réponse, et rien ne mesure la satisfaction.

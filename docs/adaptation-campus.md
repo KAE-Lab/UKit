@@ -63,18 +63,28 @@ immédiate à qui vient de demander son campus.
 ### 2. Recruter *(immédiat, hors code)*
 
 Par une **section du formulaire existant**. Le formulaire demande déjà « Quel campus aimerais-tu
-adapter » ; on y branche *« ton campus n'est pas encore adapté — serais-tu prêt à aider ? »*, avec le
-contact facultatif et le lien vers la page d'engagement.
+adapter » ; on y branche une case à cocher et le contact facultatif, avec le lien vers la page
+d'engagement. Les libellés sont **exacts** — l'importeur des retours reconnaît les questions par leur
+libellé ([`tools/retours/projection.mjs`](../tools/retours/projection.mjs)), et ne renommer aucune
+question existante est la règle :
+
+- dans la section finale, commune à toutes les branches, une réponse courte facultative :
+  *« Ton adresse e-mail, si tu veux qu'on te réponde (facultatif) »* ;
+- dans la branche « Demander un campus », une case à cocher unique :
+  *« Serais-tu prêt·e à prêter un accès pour adapter ton campus ? »* —
+  *« Oui, j'ai lu la page d'engagement et on peut me contacter »*.
 
 Tout est déjà câblé : la pastille d'état de service, `ModaleCampusNonRelie` et le bouton
 « Demander » d'un état vide pointent **tous** sur ce formulaire, par `services.adaptation` du
 catalogue. Voir [6.1.x-C](phase-6/6-1-x-c-retours.md).
 
-### 3. La page d'engagement *(à écrire une fois)*
+### 3. La page d'engagement *(écrite le 2026-09-07)*
 
-Publiée à côté de la console, sur les GitHub Pages que `.github/workflows/console.yml` déploie déjà —
-donc versionnée, datée, relisable, et citable par un lien depuis le formulaire comme depuis une
-conversation.
+Publiée sur le site, **[ukit-bordeaux.fr/engagement.html](https://ukit-bordeaux.fr/engagement.html)**
+(dépôt `UKit-website`, un push sur `main` publie) — l'adresse publique qu'un volontaire peut lire,
+versionnée, datée, et citable par un lien depuis le formulaire comme depuis une conversation. Elle
+avait d'abord été prévue à côté de la console, sur GitHub Pages ; l'adresse d'un outil
+d'administration n'était pas la bonne pour une page qu'on donne à lire.
 
 Elle dit, en toutes lettres :
 

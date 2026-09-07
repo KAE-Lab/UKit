@@ -399,6 +399,54 @@ create table if not exists public.editeurs (
 );
 
 -- =============================================================================
+-- Retours (jalon 6.1.x-C)
+-- =============================================================================
+
+-- Ce que les utilisateurs ecrivent dans le formulaire (`services.adaptation` du catalogue), importe
+-- depuis la feuille de reponses par l'integration continue toutes les 72 heures (tools/retours/,
+-- .github/workflows/retours.yml), et reclasse depuis la console.
+--
+-- La cle primaire EST l'identifiant stable de la reponse : une empreinte de l'instant de reception
+-- en UTC et des cellules non vides, calculee par l'importeur. Le formulaire se relit en entier a
+-- chaque passage et l'ecriture se fait en `on conflict do nothing` : le dedoublonnage est une
+-- propriete du schema, pas une heuristique de script, et une reponse deja rangee garde l'etat que
+-- le proprietaire du produit lui a donne. Le corollaire est ecrit : retoucher une cellule dans la
+-- feuille recree la ligne — on ne retouche pas la feuille, on reclasse ici.
+--
+-- Les colonnes normalisees servent a lire et a trier ; `reponses` porte la reponse entiere,
+-- question par question, nettoyee — adresses et numeros masques dans les textes libres, jamais dans
+-- le contact, qui est fait pour ca et facultatif (PRIVACY.md). Aucune lecture publique : ce sont des
+-- textes libres d'utilisateurs, et un contact quand il a ete laisse (policies.sql).
+--
+-- `nature` est devinee a l'import depuis la case cochee ; `etat` et `note` sont ce que le
+-- proprietaire du produit en fait. Ces trois colonnes sont les seules que la console ecrit, par un
+-- privilege de colonne (policies.sql) : la reponse elle-meme reste ce qui a ete dit. Les valeurs sont
+-- en ASCII et bornees par un `check`, comme partout — une faute de saisie serait sinon une ligne
+-- parfaitement valide que rien ne signalerait.
+create table if not exists public.retours (
+    id          text        primary key check (id ~ '^[0-9a-f]{64}$'),
+    recu_le     timestamptz not null,
+    nature      text        not null default 'autre'
+                            check (nature in ('bug', 'fonctionnalite', 'campus', 'autre')),
+    campus      text,
+    section     text,
+    appareil    text,
+    systeme     text,
+    version_app text,
+    -- L'assemblage lisible des champs libres de la branche cochee ; vide quand rien n'a ete ecrit.
+    texte       text        not null,
+    contact     text,
+    volontaire  boolean     not null default false,
+    reponses    jsonb       not null,
+    etat        text        not null default 'nouveau'
+                            check (etat in ('nouveau', 'en_attente', 'traite', 'refuse')),
+    note        text,
+    importe_le  timestamptz not null default now()
+);
+
+create index if not exists retours_lecture_idx on public.retours (etat, recu_le desc);
+
+-- =============================================================================
 -- Livraison
 -- =============================================================================
 
