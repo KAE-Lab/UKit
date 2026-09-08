@@ -63,6 +63,9 @@ export interface SettingsState {
     /** L'etablissement propose-t-il un compte, et est-il connecte ? Le rappel de l'etape d'accueil. */
     comptePossible: boolean;
     compteConnecte: boolean;
+    /** Le nombre de calendriers du telephone affiches dans le Planning (6.1.x-D). */
+    calendriersAffiches: number;
+    messagesEnNotification: boolean;
 }
 
 /**
@@ -115,6 +118,8 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             institutionDialogVisible: false,
             comptePossible: portailPublie(),
             compteConnecte: false,
+            calendriersAffiches: SettingsManager.getCalendriersAffiches().length,
+            messagesEnNotification: SettingsManager.getMessagesEnNotification(),
         };
         this.scrollY = new Animated.Value(0);
 
@@ -147,10 +152,27 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         this.setState({ isDarkMode: SettingsManager.getTheme() === 'dark' });
     };
 
+    /**
+     * Allumer demande la permission, et **renonce si elle est refusee** : un interrupteur allume qui
+     * ne peut rien recevoir ment. L'entretien depose ou retire le jeton sur l'evenement.
+     */
+    toggleMessagesEnNotification = async () => {
+        const actif = !this.state.messagesEnNotification;
+        if (actif && !(await NotificationManager.requestPermissionsAsync())) {
+            new ErrorAlert(Translator.get('NOTIFICATIONS_REFUSEES')).show();
+            return;
+        }
+        this.setState({ messagesEnNotification: actif }, () => SettingsManager.setMessagesEnNotification(actif));
+    };
+
     toggleCourseNotifications = async () => {
         const newValue = !this.state.courseNotificationsEnabled;
         if (newValue) {
-            await NotificationManager.requestPermissionsAsync();
+            // Meme regle que les messages : sans permission, l'interrupteur ne s'allume pas et le dit.
+            if (!(await NotificationManager.requestPermissionsAsync())) {
+                new ErrorAlert(Translator.get('NOTIFICATIONS_REFUSEES')).show();
+                return;
+            }
         }
         this.setState({ courseNotificationsEnabled: newValue }, async () => {
             SettingsManager.setCourseNotificationsEnabled(newValue);
@@ -229,6 +251,18 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
      * seule demandait de savoir ou regarder. La tache de fond, elle, n'a personne a qui parler.
      */
     forcerSynchronisation = async () => {
+        // Le service rend `true` quand il n'a **rien a ecrire** — pas de cible, pas de favori : ce
+        // n'est pas un echec, donc pas de toast, et rien ne bouge a l'ecran non plus. Le bouton
+        // passait alors pour casse (retour iPhone du 2026-09-08, defaut anterieur au jalon). L'ecran
+        // dit ce qui manque avant d'appeler : c'est lui qui sait dire l'issue d'un geste.
+        if (SettingsManager.getSyncCalendar() === -1) {
+            new ErrorAlert(Translator.get('SYNC_NEEDS_CALENDAR')).show();
+            return;
+        }
+        if (SettingsManager.getFavoriteGroups().length === 0) {
+            new ErrorAlert(Translator.get('SYNC_NEEDS_FAVORITES')).show();
+            return;
+        }
         const aboutie = await SettingsManager.syncCalendar();
         if (!aboutie) new ErrorAlert(Translator.get('CALENDAR_SYNC_FAILED_TOAST')).show();
     };
@@ -342,12 +376,16 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         // La tentative change aussi sans synchronisation — l'interrupteur efface un echec — et
         // l'ecran ne la lisait qu'au rendu provoque par l'evenement du dessus (6.1.x-B).
         SettingsManager.on('synchroCalendrier', this.surTentativeSynchro);
+        SettingsManager.on('calendriersAffiches', this.surCalendriersAffiches);
     };
+
+    surCalendriersAffiches = (identifiants: string[]) => this.setState({ calendriersAffiches: identifiants.length });
 
     componentWillUnmount = () => {
         if (this._unsubscribeFocus) this._unsubscribeFocus();
         SettingsManager.unsubscribe('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
         SettingsManager.unsubscribe('synchroCalendrier', this.surTentativeSynchro);
+        SettingsManager.unsubscribe('calendriersAffiches', this.surCalendriersAffiches);
     };
 
     surTentativeSynchro = () => this.forceUpdate();
@@ -432,6 +470,8 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     courseNotificationDelay={this.state.courseNotificationDelay}
                     onNotificationDelayChange={this.onNotificationDelayChange}
                     onNotificationDelaySlidingComplete={this.onNotificationDelaySlidingComplete}
+                    messagesEnNotification={this.state.messagesEnNotification}
+                    toggleMessagesEnNotification={this.toggleMessagesEnNotification}
                 />
                 <AppLaunchingSection
                     themeSettings={themeSettings}
@@ -452,6 +492,8 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     openCalendarDialog={this.openCalendarDialog}
                     isSynchronizingCalendar={this.state.isSynchronizingCalendar}
                     selectedCalendar={this.state.selectedCalendar}
+                    calendriersAffiches={this.state.calendriersAffiches}
+                    openCalendriersAffiches={() => this.props.navigation.navigate('CalendriersAffiches')}
                 />
                 {this.renderPopups(theme)}
             </Animated.ScrollView>

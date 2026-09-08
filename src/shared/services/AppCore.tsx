@@ -20,7 +20,7 @@ import { purgerDonneesCampusNationales, purgerDonneesEtablissement, purgerTrouss
 // Le module des vus seul, et non la porte d'entree des messages : elle tire le client de la base.
 import { oublierVus } from '../messages/vus';
 import { restaurerReglages } from './reglagesParEtablissement';
-import { createUKitCalendar, ecrireEvenementsDansCalendrier } from './CalendarSyncHelpers';
+import { createUKitCalendar, ecrireEvenementsDansCalendrier, retirerEvenementsSynchronises } from './CalendarSyncHelpers';
 import { lireTentative, type OrigineSynchro, type TentativeSynchro } from './calendrier/tentative';
 import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
@@ -167,6 +167,10 @@ class SettingsManagerService {
      */
     _favorisParEtablissement: Record<string, string[]>;
     _filtresParEtablissement: Record<string, string[]>;
+    /** Les calendriers du telephone affiches dans le Planning (6.1.x-D) : des identifiants systeme, opt-in. */
+    _calendriersAffiches: string[];
+    /** Les messages de service en notification push (6.1.x-E) : actif par defaut, l'interrupteur retire le jeton. */
+    _messagesEnNotification: boolean;
     _groupName?: string;
 
     constructor() {
@@ -188,6 +192,8 @@ class SettingsManagerService {
         this._etablissement = ETABLISSEMENT_DEFAUT;
         this._favorisParEtablissement = {};
         this._filtresParEtablissement = {};
+        this._calendriersAffiches = [];
+        this._messagesEnNotification = true;
     }
 
     on = (event: string, callback: Function) => {
@@ -377,30 +383,18 @@ class SettingsManagerService {
         this.notify('calendar', this._calendar);
     };
 
+    /** Le retrait vit dans CalendarSyncHelpers ; la date, elle, est un etat de ce module. */
     deleteAllPreviousCalendarEntries = async (calendar: string | number) => {
         if (calendar === -1) return;
-        if (calendar === 'UKit') {
-            const ukitCalendar = this._calendars.find((cal) => cal.title === 'UKit');
-            if (ukitCalendar) await Calendar.deleteCalendarAsync(ukitCalendar.id);
-            await AsyncStorage.removeItem('previousSyncData');
-            await AsyncStorage.removeItem('previousSyncTime');
-            // La date suivait dans l'autre branche seulement : le calendrier dedie supprime, elle
-            // survivait et datait une synchronisation qui n'existait plus.
-            this._lastSyncDate = null;
-            return;
-        }
-
-        let existingCalendarEvents = {};
-        try {
-            const data = await AsyncStorage.getItem('previousSyncData');
-            existingCalendarEvents = data === null ? {} : JSON.parse(data) || {};
-        } catch { existingCalendarEvents = {}; }
-
-        const existingInternalCalendarEvents = Object.values(existingCalendarEvents);
-        await Promise.all(existingInternalCalendarEvents.map((id) => Calendar.deleteEventAsync(id as string)));
-        await AsyncStorage.removeItem('previousSyncData');
-        await AsyncStorage.removeItem('previousSyncTime');
+        await retirerEvenementsSynchronises(calendar, this._calendars);
         this._lastSyncDate = null;
+    };
+
+    getCalendriersAffiches = (): string[] => this._calendriersAffiches;
+    /** Une bascule d'etablissement ne les touche pas : ce sont des calendriers du telephone, pas d'une universite. */
+    setCalendriersAffiches = (identifiants: string[]) => {
+        this._calendriersAffiches = [...identifiants];
+        this.notify('calendriersAffiches', this._calendriersAffiches);
     };
 
     /**
@@ -548,6 +542,11 @@ class SettingsManagerService {
     getOpenAppOnFavoriteGroup = () => this._openAppOnFavoriteGroup;
     setOpenAppOnFavoriteGroup = (newOpenAppBool: boolean) => { this._openAppOnFavoriteGroup = newOpenAppBool; this.saveSettings(); };
 
+    getMessagesEnNotification = (): boolean => this._messagesEnNotification;
+    setMessagesEnNotification = (actif: boolean) => {
+        this._messagesEnNotification = actif;
+        this.notify('messagesEnNotification', actif);
+    };
     getCourseNotificationsEnabled = () => this._courseNotificationsEnabled;
     setCourseNotificationsEnabled = (state: boolean) => { 
         this._courseNotificationsEnabled = state; 
@@ -611,6 +610,8 @@ class SettingsManagerService {
         // Les messages de service deja vus reviennent : reinitialiser, c'est repartir comme apres une
         // reinstallation. L'identifiant d'installation, lui, reste — un testeur le demeure.
         await oublierVus();
+        // Les calendriers du telephone survivent a une bascule d'etablissement, pas a un effacement.
+        this.setCalendriersAffiches([]);
         // Le parcours d'accueil redemande l'etablissement : le laisser sur le precedent afficherait un
         // choix deja fait a quelqu'un qui vient de tout effacer.
         this.setEtablissement(ETABLISSEMENT_DEFAUT);
@@ -635,7 +636,8 @@ class SettingsManagerService {
             language: this._language, openAppOnFavoriteGroup: this._openAppOnFavoriteGroup,
             filters: this._filtresParEtablissement, calendarSyncEnabled: this._calendarSyncEnabled,
             courseNotificationsEnabled: this._courseNotificationsEnabled, courseNotificationDelay: this._courseNotificationDelay,
-            etablissement: getCodeEtablissementActif(),
+            etablissement: getCodeEtablissementActif(), calendriersAffiches: this._calendriersAffiches,
+            messagesEnNotification: this._messagesEnNotification,
         }));
     };
 
@@ -685,6 +687,10 @@ class SettingsManagerService {
         if (settings.courseNotificationDelay !== undefined) {
             this._courseNotificationDelay = settings.courseNotificationDelay as number;
         }
+        if (Array.isArray(settings.calendriersAffiches)) {
+            this._calendriersAffiches = settings.calendriersAffiches.filter((id): id is string => typeof id === 'string');
+        }
+        if (typeof settings.messagesEnNotification === 'boolean') this._messagesEnNotification = settings.messagesEnNotification;
     };
 
     loadSettings = async () => {

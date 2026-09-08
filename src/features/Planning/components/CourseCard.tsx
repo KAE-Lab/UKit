@@ -19,6 +19,10 @@ export interface CourseData {
 	sites?: string[];
 	/** Les intitules de matiere declares par la source, tous, quand elle en declare (PlanningAssembly.ts). */
 	modules?: string[];
+	/** `telephone` pour un evenement d'un calendrier de l'appareil ; absent pour un cours (PlanningAssembly.ts). */
+	source?: 'telephone';
+	journeeEntiere?: boolean;
+	idTelephone?: string;
 }
 
 export * from './CourseRow';

@@ -1,7 +1,9 @@
-import * as Notifications from 'expo-notifications';
+import type * as Notifications from 'expo-notifications';
 import moment from 'moment';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-root-toast';
 import { SettingsManager } from './AppCore';
+import { notificationsNatives } from './notificationsNatives';
 import { TimeMockService } from './TimeMockService';
 import style from '../theme/Theme';
 import Translator from '../i18n/Translator';
@@ -9,14 +11,9 @@ import { PlanningEvent, PlanningWeekDay } from '../../features/Planning/services
 import { groupOverlappingCourses } from '../../features/Planning/components/ScheduleListUtils';
 import { indexConsulte, memoireCarrouselChargee } from '../../features/Planning/components/CourseGroupCarousel';
 
-// Define how notifications should be handled when the app is in the foreground
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-    } as Notifications.NotificationBehavior),
-});
+// Le gestionnaire d'affichage au premier plan est pose par `notificationsNatives`, au premier
+// chargement du module : l'importer ici, statiquement, faisait tomber l'application sous Expo Go
+// Android (voir l'en-tete de ce module-la). Seuls les **types** viennent encore d'expo-notifications.
 
 function extractRoomFromDescription(description?: string): string {
     if (!description) return '';
@@ -65,7 +62,9 @@ function flattenScheduleData(scheduleData: (PlanningEvent | PlanningWeekDay)[]):
             courses.push(item as PlanningEvent);
         }
     }
-    return courses;
+    // Un rendez-vous du telephone ne se notifie pas a la place de l'agenda (6.1.x-D). Le Planning
+    // planifie sur les cours seuls ; la garde tient si un autre appelant lui passe la fusion.
+    return courses.filter((course) => course.source !== 'telephone');
 }
 
 /**
@@ -135,12 +134,43 @@ function showVisualFeedback(coursesToSchedule: Array<{ course: PlanningEvent, tr
     });
 }
 
+/** La trace de l'unique invite de permission posee d'elle-meme. Voir `demanderPermissionSiJamaisDemandee`. */
+const CLE_PERMISSION_DEMANDEE = 'permission-notifications@1';
+
 class NotificationManagerService {
+    /**
+     * Demande la permission **une seule fois**, et seulement si elle n'a jamais ete demandee.
+     *
+     * Les deux reglages de notification sont actifs par defaut, et rien ne demandait la permission :
+     * qui ne touchait jamais un interrupteur n'accordait jamais rien, donc ne recevait ni rappel de
+     * cours ni message de service — il fallait eteindre puis rallumer pour que l'invite paraisse
+     * (mesure sur iPhone le 2026-09-08).
+     *
+     * **« Jamais demandee » ne se lit pas dans le statut**, et c'est la mesure d'Android qui l'a
+     * montre : la ou iOS rend `undetermined` avant la premiere invite, Android rend `denied` avec
+     * `canAskAgain` vrai — un etat que rien ne distingue d'un refus recuperable. S'y fier laissait
+     * l'invite muette sur Android (mesure sur appareil le 2026-09-08). La memoire est donc **la
+     * notre** : une cle posee au moment ou l'on demande, et un seul passage par installation. Un
+     * refus n'est jamais redemande ; seuls les Reglages du systeme le rouvrent.
+     */
+    async demanderPermissionSiJamaisDemandee(): Promise<boolean> {
+        const natives = await notificationsNatives();
+        if (natives === null) return false;
+        const { status, canAskAgain } = await natives.getPermissionsAsync();
+        if (status === 'granted') return true;
+        if (!canAskAgain) return false;
+        if ((await AsyncStorage.getItem(CLE_PERMISSION_DEMANDEE)) !== null) return false;
+        await AsyncStorage.setItem(CLE_PERMISSION_DEMANDEE, String(Date.now()));
+        return (await natives.requestPermissionsAsync()).status === 'granted';
+    }
+
     async requestPermissionsAsync(): Promise<boolean> {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        const natives = await notificationsNatives();
+        if (natives === null) return false;
+        const { status: existingStatus } = await natives.getPermissionsAsync();
         let finalStatus = existingStatus;
         if (existingStatus !== 'granted') {
-            const { status } = await Notifications.requestPermissionsAsync();
+            const { status } = await natives.requestPermissionsAsync();
             finalStatus = status;
         }
         return finalStatus === 'granted';
@@ -164,8 +194,12 @@ class NotificationManagerService {
     }
 
     private async _reprogrammer(scheduleData: (PlanningEvent | PlanningWeekDay)[]): Promise<void> {
+        // Sans le module natif — Expo Go sur Android —, il n'y a ni rien a annuler ni rien a poser.
+        const natives = await notificationsNatives();
+        if (natives === null) return;
+
         // Cancel all existing scheduled notifications first
-        await Notifications.cancelAllScheduledNotificationsAsync();
+        await natives.cancelAllScheduledNotificationsAsync();
 
         if (!SettingsManager.getCourseNotificationsEnabled()) {
             return;
@@ -194,14 +228,14 @@ class NotificationManagerService {
             const locationString = roomText || Translator.get('NOTIFICATION_LOCATION_UNKNOWN');
             const realTriggerTime = computeRealTriggerTime(triggerTime);
 
-            await Notifications.scheduleNotificationAsync({
+            await natives.scheduleNotificationAsync({
                 content: {
                     title: Translator.get('NOTIFICATION_COURSE_IN', delayInMinutes),
                     body: `${subject}\n${locationString}`,
                     data: { courseId: course.id },
                 },
                 trigger: { 
-                    type: Notifications.SchedulableTriggerInputTypes.DATE, 
+                    type: natives.SchedulableTriggerInputTypes.DATE, 
                     date: realTriggerTime.getTime() 
                 } as Notifications.DateTriggerInput,
             });

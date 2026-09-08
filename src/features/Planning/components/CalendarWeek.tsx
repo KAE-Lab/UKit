@@ -62,6 +62,8 @@ class CalendarWeek extends React.Component<CalendarWeekProps> {
                 {/* Numéro de semaine */}
                 <Text style={{
                     textAlign: 'center',
+                    // Le parent a une largeur ferme : l'etirement mord, et Android cesse de tronquer.
+                    alignSelf: 'stretch',
                     fontSize: tokens.fontSize.xl,
                     fontWeight: selected
                         ? tokens.fontWeight.bold
@@ -74,6 +76,8 @@ class CalendarWeek extends React.Component<CalendarWeekProps> {
                 {/* Label "S.XX" */}
                 <Text style={{
                     textAlign: 'center',
+                    // Le parent a une largeur ferme : l'etirement mord, et Android cesse de tronquer.
+                    alignSelf: 'stretch',
                     fontSize: tokens.fontSize.xs,
                     fontWeight: tokens.fontWeight.medium,
                     color,

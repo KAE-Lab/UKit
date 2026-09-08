@@ -10,11 +10,34 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
-La 6.1.x : le socle monte, et ce qui a été signalé se corrige
-([docs/phase-6/6-2-mise-a-plat.md](docs/phase-6/6-2-mise-a-plat.md)).
+## [6.2.0] - 2026-09-08
+
+Le socle monte, ce qui a été signalé se corrige, et trois capacités arrivent au passage. Développée
+sur la branche `v6.1.x`, elle devait s'appeler 6.1.1 : ce qu'elle a fini par porter en fait une
+mineure ([docs/phase-6/6-2-mise-a-plat.md](docs/phase-6/6-2-mise-a-plat.md),
+[docs/phase-6/6-1-x-z-sortie.md](docs/phase-6/6-1-x-z-sortie.md)).
 
 ### Ajouté
 
+- **Les messages de service arrivent en notification, application fermée** (6.1.x-E). Un incident,
+  une information importante, un « mets à jour » réveillent le téléphone : la console envoie une
+  notification push aux seuls appareils que le message cible, par une fonction de la base qui
+  applique la même règle que l'application. Ouvrir la notification ouvre la feuille du message. C'est
+  la première chose que l'application écrit dans la base : un jeton de notification, avec le campus,
+  la version et la plateforme qu'il faut pour cibler — rien d'autre —, et l'interrupteur « Messages
+  de service en notification » des Réglages le retire. Dit dans la politique de confidentialité.
+- **Les calendriers du téléphone dans le Planning** (6.1.x-D). L'application écrivait ses cours dans
+  l'agenda depuis toujours ; elle le lit désormais dans l'autre sens. Les calendriers cochés dans
+  les Réglages — un par un, la cible de la synchronisation exclue — apparaissent mêlés aux cours,
+  jour et semaine, dans la couleur de leur calendrier ; une journée entière se pose en bandeau en
+  tête du jour. La fiche d'un rendez-vous n'a ni carte ni UE, et « Ouvrir dans le calendrier » ouvre
+  l'agenda. Un « + » dans l'en-tête du Planning ouvre l'éditeur du système sur le jour affiché, et
+  l'événement est là au retour. Rien n'est mis en cache, rien ne se propage, aucun rappel n'est
+  posé sur un rendez-vous personnel. Demandé par le formulaire le 2026-09-03.
+- **Un contenu publié se cible par plateforme** (6.1.x-D). Un message de service ou une annonce
+  peut ne viser qu'iOS, ou qu'Android — un défaut qui n'existe que d'un côté se dit à la moitié du
+  parc concernée, sans déranger l'autre. Rien de coché vaut les deux ; une plateforme que
+  l'application ne connaît pas cache, comme une audience inconnue. La console propose les deux cases.
 - **Les retours du formulaire entrent dans la base** (6.1.x-C). Ce que les utilisateurs écrivent
   dans le formulaire — un bug, une suggestion, une demande de campus — est importé toutes les
   72 heures dans une table de la base de publication, lu et reclassé dans la console avec un état et
@@ -37,6 +60,40 @@ La 6.1.x : le socle monte, et ce qui a été signalé se corrige
 
 ### Corrigé
 
+- **L'application demande enfin la permission de notification** (6.1.x-E). Les rappels de cours et
+  les messages de service sont actifs par défaut, mais rien ne demandait jamais la permission :
+  il fallait éteindre puis rallumer un interrupteur pour que l'invite paraisse, sans quoi **aucun
+  rappel n'arrivait jamais**. Elle est désormais demandée une fois, à la fin du parcours d'accueil,
+  et jamais après un refus. Le défaut est antérieur à cette version.
+- **Un libellé long ne pousse plus son interrupteur hors de la carte** dans les Réglages : face à un
+  interrupteur, dont la largeur est fixe, le libellé se plie au lieu de déborder.
+- **Les services des facs répondent enfin sur les vieux Android.** Sur un téléphone dont le système
+  date d'avant mi-2021, Celcat, les salles libres, l'ENT, Moodle, le webmail et Apogée échouaient
+  tous en erreur réseau, pendant que le reste de l'application fonctionnait : Android ne connaît pas
+  l'autorité de certification des universités, apparue en 2021, et ne met son magasin à jour qu'avec
+  le système. L'application embarque désormais ces racines. Le défaut est antérieur à cette version.
+- **Le formulaire de retours ne se perd plus quand on va lire la page d'engagement.** Google Forms
+  n'écrit jamais l'adresse d'un lien : il pose son propre redirecteur, qui est chez Google — la
+  règle le prenait donc pour une page du formulaire et y envoyait la vue, qui repartait aussitôt
+  ailleurs. Et sur Android, les liens du formulaire ouvraient carrément le navigateur du système.
+  Les deux sont corrigés : la page d'engagement s'ouvre par-dessus, et « retour » retrouve le
+  formulaire tel qu'il était. Au passage, plus aucun lien du navigateur intégré ne part dans le
+  navigateur du système : un lien qui demande une nouvelle fenêtre — une déconnexion, un PDF d'un
+  portail — s'ouvre désormais par-dessus, sans abandonner la session en cours.
+- **Les rangées « Notes » et « Examens » sont enfin illisibles.** Leur teaser reposait sur un flou
+  qui ne floutait rien : inexistant sur Android, insuffisant sur iPhone, on lisait le contenu au
+  travers. Leur texte n'est désormais plus affiché du tout — une barre prend sa place —, et la
+  rangée garde exactement la forme, la hauteur et le rythme de ses voisines.
+- **La barre d'onglets ne colle plus à la barre système sur Android.** Le dégagement du bas était
+  calculé pour l'indicateur d'accueil d'iPhone, qui est un espace vide : appliqué à la barre système
+  d'Android, qui est occupée, il ne laissait presque rien. Chaque plateforme a désormais sa mesure,
+  et les quatre copies de ce calcul dans le code n'en font plus qu'une.
+- **Un libellé d'onglet ne se coupe plus sur Android et ne se plie plus sur iPhone** : « Paramètres »
+  y renvoyait son dernier caractère à la ligne. Une seule ligne sur les deux plateformes, avec des
+  points de suspension pour dernier recours.
+- **« Forcer une synchronisation » ne reste plus muet quand il n'a rien à faire.** Sans calendrier de
+  destination ou sans groupe favori, le bouton ne produisait rien du tout — ni écriture, ni message —
+  et passait pour cassé. Il dit maintenant ce qui manque. Défaut antérieur à cette version.
 - **Lire la page d'engagement ne fait plus recommencer le formulaire** (6.1.x-C). Le formulaire de
   retours s'ouvre dans le navigateur intégré, et son lien vers la page d'engagement du chantier
   campus y remplaçait le formulaire : « retour » rechargeait Google Forms, qui repartait de zéro.

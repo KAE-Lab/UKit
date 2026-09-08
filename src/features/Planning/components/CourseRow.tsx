@@ -7,6 +7,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import { CourseData } from './CourseCard';
 import { iconeDAnnotation } from './CourseAnnotations';
 import { CalendarNewEventPrompt } from './CalendarNewEventPrompt';
+import { couleurDeCours } from '../services/couleurDeCours';
 
 export interface CourseRowProps {
 	data: CourseData;
@@ -36,7 +37,7 @@ export interface CourseRowState {
 export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 	constructor(props: CourseRowProps) {
 		super(props);
-		const lineColor = props.theme.courses[props.data?.color ?? 'default'] ?? props.theme.courses.default;
+		const lineColor = couleurDeCours(props.theme.courses, props.data?.color);
 
 		this.state = {
 			backgroundColor: props.theme.eventBackground,
@@ -47,8 +48,7 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 	}
 
 	static getDerivedStateFromProps(nextProps: CourseRowProps, prevState: CourseRowState) {
-		const lineColor =
-			nextProps.theme.courses[nextProps.data?.color ?? 'default'] ?? nextProps.theme.courses.default;
+		const lineColor = couleurDeCours(nextProps.theme.courses, nextProps.data?.color);
 
 		const backgroundColor = nextProps.theme.eventBackground;
 		const borderColor = nextProps.theme.eventBorder;
@@ -297,6 +297,8 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 			);
 		}
 
+		// Un evenement qui vient du calendrier ne s'y ajoute pas : pas d'appui long dessus (6.1.x-D).
+		const duTelephone = this.props.data.source === 'telephone';
 		return (
 			// La chaine de `flex: 1` ne vit qu'en carrousel : elle porte l'etirement de la carte
 			// jusqu'a la racine de la page (voir renderContent). Hors carrousel, rien ne change.
@@ -304,17 +306,19 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 				<TouchableOpacity
 					style={this.props.carouselMode ? { flex: 1 } : undefined}
 					onPress={this._onPress}
-					onLongPress={this.openPopup}
+					onLongPress={duTelephone ? undefined : this.openPopup}
 					activeOpacity={0.7}>
 					{content}
 				</TouchableOpacity>
-				<CalendarNewEventPrompt
-					popupVisible={this.state.popupVisible}
-					closePopup={this.closePopup}
-					openPopup={this.openPopup}
-					theme={theme}
-					data={this.props.data}
-				/>
+				{!duTelephone && (
+					<CalendarNewEventPrompt
+						popupVisible={this.state.popupVisible}
+						closePopup={this.closePopup}
+						openPopup={this.openPopup}
+						theme={theme}
+						data={this.props.data}
+					/>
+				)}
 			</View>
 		);
 	}

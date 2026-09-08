@@ -81,6 +81,23 @@ function ChampEtablissements({ saisie, onChange, etablissements, desactive }: Ch
     );
 }
 
+/** Les cases d'une liste fermee : le meme geste que les campus, avec des options declarees par le champ. */
+function ChampCases({ champ, saisie, onChange, desactive }: ChampEditeurProps) {
+    const options = champ.type.type === 'cases' ? champ.type.options : [];
+    const coches = Array.isArray(saisie) ? saisie : [];
+    const basculer = (valeur: string) => onChange(coches.includes(valeur) ? coches.filter((c) => c !== valeur) : [...coches, valeur]);
+    return (
+        <div className="ligne-cases">
+            {options.map((option) => (
+                <label key={option.valeur} className="case">
+                    <input type="checkbox" checked={coches.includes(option.valeur)} disabled={desactive} onChange={() => basculer(option.valeur)} />
+                    {option.libelle}
+                </label>
+            ))}
+        </div>
+    );
+}
+
 function Saisisseur(props: ChampEditeurProps & { readonly id: string }) {
     const { champ, saisie, onChange, id, desactive } = props;
     const texte = typeof saisie === 'string' ? saisie : '';
@@ -106,6 +123,8 @@ function Saisisseur(props: ChampEditeurProps & { readonly id: string }) {
             return <ChampImage {...props} />;
         case 'etablissements':
             return <ChampEtablissements {...props} />;
+        case 'cases':
+            return <ChampCases {...props} />;
         default:
             return <input id={id} type="text" value={texte} disabled={desactive} spellCheck={champ.type.type === 'texte'} onChange={(e) => onChange(e.target.value)} />;
     }

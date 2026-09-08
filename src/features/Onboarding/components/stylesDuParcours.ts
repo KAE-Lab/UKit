@@ -50,4 +50,8 @@ export const texteDePastille = (themeObj: ThemeObj, selected: boolean) => ({
     color: selected ? themeObj.primary : themeObj.fontSecondary,
     fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium,
     fontSize: tokens.fontSize.sm,
+    // La pastille selectionnee passe en gras, et un gras libre dans un parent qui centre se tronque
+    // sur Android. Sans effet la ou la pastille s'auto-dimensionne (docs/theme.md).
+    alignSelf: 'stretch' as const,
+    textAlign: 'center' as const,
 });

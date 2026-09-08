@@ -5,6 +5,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-na
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens } from '../../../shared/theme/Theme';
+import { assiseDuFlottant } from '../../../shared/ui/PiedFlottant';
 
 interface FloatingActionBarProps {
     theme: import('../../../shared/theme/Theme').AppThemeType;
@@ -101,7 +102,7 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
                 {
                     backgroundColor: theme.cardBackground,
                     borderColor: theme.border,
-                    bottom: Math.max(tokens.space.sm, (insets?.bottom || 0) - 15)
+                    bottom: assiseDuFlottant(insets)
                 },
                 animatedStyle
             ]}>

@@ -21,6 +21,11 @@ seul composant.
    calendrier système.
 5. Le bouton d'action à côté de la barre d'onglets ouvre la **recherche de groupes** : liste complète,
    sections alphabétiques, recherche, ajout aux favoris.
+6. Depuis [6.1.x-D](../phase-6/6-1-x-d-calendriers-du-telephone.md), les **calendriers du téléphone**
+   cochés dans les Réglages apparaissent mêlés aux cours, dans la couleur de leur calendrier — un
+   rendez-vous dans le fil de la journée, une journée entière en bandeau en tête du jour. Leur fiche
+   n'a ni carte ni UE, et ouvre l'agenda du système. Un **« + »** dans l'en-tête ouvre l'éditeur du
+   système sur le jour affiché ; il n'existe que si un calendrier est affiché.
 
 ![La vue jour : curseur de dates en bandeau, cartes de cours colorées par catégorie, salle et enseignant en description](../screenshots/planning-jour.png)
 
@@ -30,6 +35,9 @@ seul composant.
 > alphabétiques colorées.
 >
 > **Capture attendue** — `planning-cours-detail.png` : la fiche d'un cours localisé, avec sa carte.
+>
+> **Capture attendue** — `planning-telephone.png` : une journée où un rendez-vous personnel et une
+> journée entière se mêlent aux cours, dans la couleur de leur calendrier, avec le « + » en en-tête.
 
 ## Flux de données
 
@@ -50,7 +58,10 @@ DayView (état : jour/semaine sélectionnés, mode)
             ├─ SourceFailureNotice                                (si ni réponse ni cache)
             ├─ PlanningDataManager.extractUEsFromCourses          (alimente les filtres, modules compris)
             ├─ CourseManager.preparerPourAffichage → filtresUe     (UE posées, filtre des favoris — jour et semaine)
-            ├─ NotificationManager.scheduleCourseNotifications     (si planning favori)
+            ├─ NotificationManager.scheduleCourseNotifications     (si planning favori, cours seuls)
+            ├─ TelephoneSource.lireEvenementsDuTelephone          (expo-calendar : calendriers cochés, jamais en cache)
+            │      └─ TelephoneMapping → FusionTelephone            projection pure, fusion APRES la dérivation
+            ├─ separerJourneeEntiere → BandeauJourneeEntiere        (journées entières, en tête du jour)
             └─ groupOverlappingCourses → CourseGroupCarousel → CourseRow
 ```
 
@@ -101,6 +112,9 @@ interface PlanningEvent {
     dayNumber?: string;          // jour ISO 1-7 (vue semaine)
     sites?: string[];            // bâtiments déclarés par la source ("Bâtiment A28")
     modules?: string[];          // intitulés de matière déclarés, tous, dans l'ordre
+    source?: 'telephone';        // un événement d'un calendrier du téléphone (6.1.x-D) ; absent pour un cours
+    journeeEntiere?: boolean;    // sans heures : rendu en bandeau, jamais en carrousel
+    idTelephone?: string;        // l'identifiant système, pour l'ouvrir dans l'agenda ; `id` est composite
 }
 
 interface PlanningWeekDay {
@@ -234,7 +248,11 @@ défait : il rendait les cartes du carrousel plus hautes que les cartes seules.
 
 **Les couleurs Celcat sont retraduites.** `theme.courses` associe les couleurs brutes du serveur
 (`#FFFF00`, `#800040`…) à des teintes de la palette de l'application, avec un `default`. Afficher la
-couleur brute donnerait des tons saturés incohérents avec le reste de l'interface.
+couleur brute donnerait des tons saturés incohérents avec le reste de l'interface. Une troisième
+forme existe depuis 6.1.x-D : l'hexadécimale d'un calendrier du téléphone, rendue **telle quelle**,
+parce que l'utilisateur reconnaît son calendrier à sa couleur — c'est le sens de son choix.
+[`couleurDeCours`](../../src/features/Planning/services/couleurDeCours.ts) résout les trois : la clé
+de palette d'abord, l'hexadécimale ensuite, `default` enfin.
 
 **Le rechargement au focus n'existe qu'en mode jour.** `ScheduleList` s'abonne à l'événement `focus`
 de la navigation uniquement si `mode === 'day'` : c'est la vue par défaut, celle qu'on veut à jour en
@@ -261,7 +279,19 @@ revenant dans l'application.
 - **Source qui a changé** : passer l'`expect.status` du même Blueprint à `418` doit produire un écran
   **différent** — « Réponse inattendue », sans bouton Réessayer, parce que rejouer ne répare pas une
   source qui a changé de contrat.
-- Un dimanche, ou un jour sans cours : la carte « pas de cours » doit s'afficher — avec ses
+- **Les calendriers du téléphone** ([6.1.x-D](../phase-6/6-1-x-d-calendriers-du-telephone.md)) :
+  deux calendriers cochés, un décoché — les événements des deux aux bonnes heures, dans leur
+  couleur, ceux du troisième non ; le calendrier de synchronisation n'est pas proposé et aucun
+  cours n'apparaît deux fois, y compris après une synchronisation forcée ; un événement à cheval
+  sur minuit sur les deux jours, borné, et une journée entière en bandeau ; un jour sans cours mais
+  avec un rendez-vous montre la carte, pas « journée libre » ; le « + » ouvre l'éditeur du système
+  sur le jour affiché et l'événement est là au retour, sans relancer ; sa fiche n'a ni carte ni UE
+  et « Ouvrir dans le calendrier » ouvre l'agenda ; un rendez-vous ne produit aucun rappel ;
+  permission retirée dans les réglages du système : le Planning affiche les cours seuls, sans
+  erreur, et l'écran des Réglages le dit ; **basculer d'établissement garde les calendriers
+  cochés et leurs événements** — ce sont ceux du téléphone, pas d'une université — là où les cours
+  écrits dans l'agenda, eux, sont retirés et réécrits.
+- Un dimanche, ou un jour sans cours **et sans rendez-vous** : la carte « pas de cours » doit s'afficher — avec ses
   **confettis** : une journée libre est une bonne nouvelle, et c'est l'icône qui sourit, jamais le
   texte.
 
@@ -495,6 +525,94 @@ est juste, puisque c'est la même journée. Et l'attente reste alors **silencieu
 fondu — parce que rien à l'écran ne change. Un **autre** jour, lui, arrive toujours en fondu, qu'il
 vienne du cache ou du réseau ([theme.md](../theme.md#les-décisions-durables)).
 
+## Les calendriers du téléphone dans le Planning
+
+Le jalon [6.1.x-D](../phase-6/6-1-x-d-calendriers-du-telephone.md) lit l'agenda dans l'autre sens :
+l'application y écrivait ses cours depuis toujours, elle ne l'avait jamais lu. Les événements des
+calendriers que l'utilisateur coche dans les Réglages
+([settings.md](settings.md#les-calendriers-du-téléphone)) apparaissent dans le Planning, jour et
+semaine, mêlés aux cours. **Chaque côté affiche l'autre**, et rien de plus : aucune édition ne se
+propage, Celcat reste la vérité des cours et l'agenda celle des rendez-vous. Ajouter un événement
+se fait dans l'éditeur du système, ouvert par le « + » — pas d'éditeur maison, pas de donnée à
+stocker, pas de récurrence à réinventer.
+
+**La lecture est locale, instantanée, et jamais mise en cache.** Elle se joue à chaque chargement
+du planning des favoris, au retour au premier plan, au focus, à la fermeture de l'éditeur et quand
+le choix des calendriers change — sans réseau, par une *relecture* qui remêle le téléphone à la
+dernière issue appliquée et cède à un chargement en cours. Le cache `<groupes>@…` ne reçoit que les
+cours : figer des rendez-vous servirait du périmé au repli hors ligne.
+
+**Elle ne concerne que la vue des favoris.** Le planning d'un groupe cherché est celui de quelqu'un
+d'autre ; un rendez-vous personnel n'y a rien à faire.
+
+**La fusion se joue après la dérivation, jamais avant** — c'est l'écart le plus important au texte
+de la spécification, qui plaçait l'insertion dans `loadSchedule`. `preparerPourAffichage` **mute**
+le sujet pour en extraire un code d'UE, et l'indexation des UE aurait pris « 2B Dentiste » pour une
+UE. Les cours seuls passent donc par les filtres, l'indexation et les rappels ; le téléphone entre
+ensuite, dans [`FusionTelephone`](../../src/features/Planning/services/FusionTelephone.ts), et n'est
+plus touché par rien sauf le tri d'affichage. Un rendez-vous ne produit jamais de rappel — on ne
+notifie pas à la place de l'agenda —, et `flattenScheduleData` le garantit une seconde fois.
+
+**Ce qu'on ne relit pas.** Le calendrier cible de la synchronisation, par son identifiant **et** par
+le titre du calendrier dédié `UKit` (la cible a deux identités avant et après le premier passage) ;
+et les événements dont l'identifiant est dans `previousSyncData`, quel que soit leur calendrier — la
+table peut porter un orphelin. L'un sans l'autre laisserait un doublon.
+
+**Deux règles de plateforme, décidées dans la couture et jouées dans le mapper.** iOS rend tout ce
+qui *chevauche* l'intervalle demandé, Android seulement ce qui y *tient* : la source interroge donc
+sept jours de chaque côté de ce qui est affiché, et
+[`TelephoneMapping`](../../src/features/Planning/services/TelephoneMapping.ts) décide qu'un
+événement appartient à un jour **local** — à cheval sur minuit, il appartient aux deux, borné à
+chacun (`22:00`–`23:59`, puis `00:00`–`01:30`), et une fin posée exactement à minuit ne mord pas sur
+le lendemain. Une journée entière est datée en local sur iOS, en **UTC à fin exclusive** sur
+Android — lue comme un instant local, elle débordait sur deux jours ; le drapeau est lu une fois
+depuis `Platform.OS`, jamais dans le mapper. Règle déduite des sources natives d'`expo-calendar`,
+à confirmer sur les deux appareils.
+
+**Ce qui s'affiche.** Tout sauf un événement annulé ; un événement « disponible » — anniversaire,
+férié — s'affiche, parce que l'utilisateur a coché ce calendrier pour le voir (décision du
+2026-09-07, contre l'exclusion par défaut que la spécification proposait). Un rendez-vous qui
+chevauche un cours partage son carrousel : ils sont simultanés.
+
+**Un jour entièrement couvert se rend en bandeau**, et pas seulement une journée entière déclarée.
+`allDay` ne suffit pas : un événement de plusieurs jours qui porte des heures — parti vendredi soir,
+rentré dimanche matin — occupe le samedi en entier, et le rendre « de 00:00 à 23:59 » dans le fil de
+la journée est faux deux fois : ce n'est pas un créneau, et ça écrase la journée. Mesuré sur iPhone
+le 2026-09-08 avec trois jours de vacances. Le premier et le dernier jour gardent leurs heures
+réelles, eux : ils commencent ou finissent quelque part. Le bandeau
+([`BandeauJourneeEntiere`](../../src/features/Planning/components/BandeauJourneeEntiere.tsx)) se pose
+en tête du jour et compte dans la pastille de la vue semaine ; dans un carrousel, `timeToMinutes`
+mettrait l'événement à minuit.
+
+**Un état vide ne paraît que si le jour n'a rien à montrer**, cours et téléphone confondus. Les deux
+états du Planning décrivaient l'emploi du temps seul, et masquaient donc ce que l'appareil venait
+d'apporter — un écran qui dit « rien » alors qu'il a de quoi remplir la journée ment. Un jour sans
+cours mais avec un rendez-vous montre donc le rendez-vous, pas « journée libre ».
+
+**Et les deux états vides ne disent pas la même chose.** « Journée libre » décrit *ce jour-là* ;
+« aucun groupe favori » est une invitation à **configurer**. La seconde ne paraît donc que si rien
+n'est configuré du tout — ni favori, ni calendrier coché. Quelqu'un qui a coché ses calendriers a
+fait son choix de planning : lui redemander un groupe à chaque jour creux serait du bruit, et ses
+journées vides sont des journées libres comme les autres. L'invitation reste à un toucher, dans la
+barre d'onglets. Réglé le 2026-09-08, sur appareil, après une première version qui rendait
+l'invitation dès que le jour était vide.
+
+**Le dimanche s'affiche en vue jour.** Il ne court-circuite plus l'état vide : sans cours ni
+rendez-vous la liste est vide et le message paraît de lui-même, mais un rendez-vous du dimanche
+tombe un dimanche comme un autre jour. La limite des six colonnes ne vaut que pour la vue semaine.
+
+**La fiche** d'un événement du téléphone ne résout aucun lieu — « Chez Marie » matcherait un
+bâtiment bordelais —, n'a ni UE ni bouton de filtre, et porte « Ouvrir dans le calendrier »
+(`openEventInCalendarAsync` sur l'occurrence : les récurrents partagent leur identifiant sur iOS,
+d'où `instanceStartDate`). L'appui long « ajouter au calendrier » n'existe pas sur ce qui en vient.
+
+**Le « + »** ne se montre que si un calendrier coché accepte l'écriture, et pré-positionne l'éditeur
+dessus — c'est ce qui rend vrai « l'événement est dans le Planning au retour » ; l'utilisateur peut
+en choisir un autre dans l'éditeur. Le jour proposé est celui qui est affiché, à 9 h ; en vue
+semaine, aujourd'hui si la semaine est courante, sinon le lundi — par `moment()`, jamais
+`new Date()`, pour suivre la date simulée. `startNewActivityTask: false` est obligatoire : sans lui,
+Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
+
 ## Limites connues
 
 - **Un `modules: []` retomberait sur la catégorie.** L'extraction rend `null` aussi bien pour un champ
@@ -531,7 +649,24 @@ vienne du cache ou du réseau ([theme.md](../theme.md#les-décisions-durables)).
 - **`ScheduleList` est un composant à classe dense** : chargement, cache, calcul et rendu dans le même
   fichier. Le jalon 6-E l'a découpé en méthodes nommées (`loadSchedule`, `cacheOrFailure`,
   `applySchedule`) sans le scinder — un composant à classe qui fonctionne ne se réécrit pas sans
-  raison.
+  raison. Le jalon 6.1.x-D lui a fait franchir la limite de 400 lignes : les bandeaux et les états
+  plein écran vivent depuis dans
+  [`ScheduleListEtats`](../../src/features/Planning/components/ScheduleListEtats.tsx), sans état,
+  et la fusion du téléphone dans un module pur.
+- **Un événement du téléphone de plus de sept jours peut manquer sur Android**, qui ne rend que ce
+  qui tient en entier dans la fenêtre interrogée (±7 jours autour de l'affiché). Une semaine de
+  vacances posée en journée entière peut donc s'arrêter avant sa fin dans le Planning.
+- **Un groupe cherché ne montre pas le téléphone** : c'est le planning de quelqu'un d'autre.
+- **La couleur d'un événement du téléphone est celle de son calendrier**, pas celle des matières :
+  un agenda bleu à côté de cours bleus se distinguera mal. Le choix du calendrier est celui de
+  l'utilisateur.
+- **Le format d'une journée entière n'a été déduit que des sources natives** d'`expo-calendar` ;
+  le protocole de 6.1.x-D le vérifie sur iPhone, celui de 6.1.x-Z sur Android.
+- **Le compteur de la rangée des Réglages ne retire pas la cible de synchronisation.** Cocher un
+  calendrier puis le choisir comme cible fait dire « 2 choisis » à la rangée alors que l'écran n'en
+  montre qu'un — la cible n'est ni listée ni lue, pour ne pas afficher les cours deux fois. L'état
+  est **préservé** : reprendre une autre cible fait réapparaître le calendrier, coché, avec ses
+  événements. Seul le compte est faux, et seulement dans ce cas de bord.
 - **La route `Day`** est déclarée dans la pile mais n'est atteinte par aucun appel de navigation.
 - **Trois erreurs de typage** subsistent dans ce module (`TS2612` sur `context`) — voir
   [qualite.md](../qualite.md).
@@ -540,21 +675,23 @@ vienne du cache ou du réseau ([theme.md](../theme.md#les-décisions-durables)).
 
 | Fichier | Rôle |
 |---|---|
-| [`views/DayView.tsx`](../../src/features/Planning/views/DayView.tsx) | vue composite de l'onglet : état jour/semaine, génération des 365 jours et des semaines — refaite au retour au premier plan si la date a changé —, défilement du curseur, bascule de mode |
+| [`views/DayView.tsx`](../../src/features/Planning/views/DayView.tsx) | vue composite de l'onglet : état jour/semaine, génération des 365 jours et des semaines — refaite au retour au premier plan si la date a changé —, défilement du curseur, bascule de mode, et les déclencheurs de relecture du téléphone (retour, focus, éditeur fermé, choix des calendriers) |
 | [`screens/ScheduleScreen.tsx`](../../src/features/Planning/screens/ScheduleScreen.tsx) | enveloppe routée : résout le groupe (favoris si tableau) et configure l'en-tête |
 | [`screens/GroupSelectionScreen.tsx`](../../src/features/Planning/screens/GroupSelectionScreen.tsx) | recherche de groupes : chargement par le manager, repli daté sur son cache, sections alphabétiques, filtrage |
 | [`services/groupListCache.ts`](../../src/features/Planning/services/groupListCache.ts) | la politique du cache de la liste des groupes — expiration, lecture défensive, repli daté — pure |
 | [`services/groupListCache.test.ts`](../../src/features/Planning/services/groupListCache.test.ts) | ses tests, écrits avant la fusion des deux caches (6.1-C), joués par `npm test` |
-| [`screens/CourseScreen.tsx`](../../src/features/Planning/screens/CourseScreen.tsx) | fiche d'un cours : détails, extraction de la salle, carte intégrée ([`EmbeddedMap`](../../src/shared/map/EmbeddedMap.tsx), [cartographie.md](../cartographie.md)) |
-| [`components/ScheduleList.tsx`](../../src/features/Planning/components/ScheduleList.tsx) | chargement et rendu d'un planning (jour ou semaine), cache, filtres — appliqués au chargement, jamais au rendu —, notifications |
+| [`screens/CourseScreen.tsx`](../../src/features/Planning/screens/CourseScreen.tsx) | fiche d'un cours : détails, extraction de la salle, carte intégrée ([`EmbeddedMap`](../../src/shared/map/EmbeddedMap.tsx), [cartographie.md](../cartographie.md)) ; pour un événement du téléphone, ni lieu ni UE, et « Ouvrir dans le calendrier » |
+| [`components/ScheduleList.tsx`](../../src/features/Planning/components/ScheduleList.tsx) | chargement et rendu d'un planning (jour ou semaine), cache, filtres — appliqués au chargement, jamais au rendu —, notifications, et la fusion du téléphone **après** tout cela |
+| [`components/ScheduleListEtats.tsx`](../../src/features/Planning/components/ScheduleListEtats.tsx) | ses bandeaux et ses états plein écran — pas de favori, journée libre, chargement — sortis quand il a franchi 400 lignes (6.1.x-D) |
+| [`components/BandeauJourneeEntiere.tsx`](../../src/features/Planning/components/BandeauJourneeEntiere.tsx) | une journée entière du téléphone, en tête du jour : filet à la couleur du calendrier, titre, et la fiche au toucher |
 | [`components/ScheduleListUtils.ts`](../../src/features/Planning/components/ScheduleListUtils.ts) | `groupOverlappingCourses` : regroupement des cours qui se chevauchent |
 | [`components/CourseAnnotations.ts`](../../src/features/Planning/components/CourseAnnotations.ts) | l'icône d'une ligne de description, déduite de son contenu — partagée par la carte et la fiche |
 | [`components/CourseAnnotations.test.ts`](../../src/features/Planning/components/CourseAnnotations.test.ts) | ses tests, sur les deux formes réelles de description |
-| [`components/DayViewHeader.tsx`](../../src/features/Planning/components/DayViewHeader.tsx) | bandeau collant : titre, boutons de navigation, curseurs jour et semaine |
+| [`components/DayViewHeader.tsx`](../../src/features/Planning/components/DayViewHeader.tsx) | bandeau collant : titre, le « + » vers l'éditeur du système quand il a lieu d'être, boutons de navigation, curseurs jour et semaine |
 | [`components/CalendarDay.tsx`](../../src/features/Planning/components/CalendarDay.tsx) | pastille d'un jour dans le curseur |
 | [`components/CalendarWeek.tsx`](../../src/features/Planning/components/CalendarWeek.tsx) | pastille d'une semaine dans le curseur |
 | [`components/CourseCard.tsx`](../../src/features/Planning/components/CourseCard.tsx) | point d'entrée du module carte : type `CourseData` et réexports |
-| [`components/CourseRow.tsx`](../../src/features/Planning/components/CourseRow.tsx) | carte d'un cours : couleur, matière, UE, horaires, description, état « pas de cours » |
+| [`components/CourseRow.tsx`](../../src/features/Planning/components/CourseRow.tsx) | carte d'un cours : couleur, matière, UE, horaires, description — sans appui long sur ce qui vient du téléphone |
 | [`components/CourseGroupCarousel.tsx`](../../src/features/Planning/components/CourseGroupCarousel.tsx) | carrousel paginé des cours simultanés, avec mémorisation de l'index |
 | [`components/CalendarNewEventPrompt.tsx`](../../src/features/Planning/components/CalendarNewEventPrompt.tsx) | modale d'ajout d'un cours au calendrier système (permissions, calendrier par défaut) |
 | [`components/DayWeekCollapsible.tsx`](../../src/features/Planning/components/DayWeekCollapsible.tsx) | section repliable d'un jour dans la vue semaine, avec résolution tolérante de la date |
@@ -564,6 +701,13 @@ vienne du cache ou du réseau ([theme.md](../theme.md#les-décisions-durables)).
 | [`services/PlanningApiMapping.test.ts`](../../src/features/Planning/services/PlanningApiMapping.test.ts) | ses tests, joués par `npm test` |
 | [`services/IcsMapping.ts`](../../src/features/Planning/services/IcsMapping.ts) | la projection **iCalendar** : type ancré sur le code de module, salle en tête, couleur dérivée |
 | [`services/IcsMapping.test.ts`](../../src/features/Planning/services/IcsMapping.test.ts) | ses tests, sur des corps mesurés contre ADE |
+| [`services/TelephoneMapping.ts`](../../src/features/Planning/services/TelephoneMapping.ts) | la projection des **calendriers du téléphone** : la journée locale, minuit, la journée entière selon la plateforme, les exclusions — pure, sans `expo-calendar` |
+| [`services/TelephoneMapping.test.ts`](../../src/features/Planning/services/TelephoneMapping.test.ts) | ses tests, sur les formes que le type d'expo-calendar annonce et que ses sources natives produisent |
+| [`services/FusionTelephone.ts`](../../src/features/Planning/services/FusionTelephone.ts) | la fusion du téléphone avec les cours, jour et semaine, et la mise à part des journées entières — pure |
+| [`services/FusionTelephone.test.ts`](../../src/features/Planning/services/FusionTelephone.test.ts) | ses tests : le tri, les colonnes par index, les bandeaux |
+| [`services/TelephoneSource.ts`](../../src/features/Planning/services/TelephoneSource.ts) | la lecture : calendriers cochés qui existent encore, cible de synchronisation écartée, `previousSyncData`, fenêtre ±7 jours, et le calendrier où le « + » écrit — la seule pièce de plateforme du jalon |
+| [`services/couleurDeCours.ts`](../../src/features/Planning/services/couleurDeCours.ts) | la couleur d'une ligne : clé de palette, hexadécimale d'un calendrier, ou `default` — pure |
+| [`services/couleurDeCours.test.ts`](../../src/features/Planning/services/couleurDeCours.test.ts) | ses tests |
 | [`services/PlanningIcalSource.ts`](../../src/features/Planning/services/PlanningIcalSource.ts) | la branche iCalendar : résolution des ressources par le référentiel, les deux runs bornés, le run d'abonnement et son cache, la vérification d'un lien collé |
 | [`components/LienEdtForm.tsx`](../../src/features/Planning/components/LienEdtForm.tsx) | la saisie d'un lien d'abonnement : vérification par un run réel, enregistrement, oubli. Un composant et non un écran — l'accueil le rend en place |
 | [`screens/LienEdtScreen.tsx`](../../src/features/Planning/screens/LienEdtScreen.tsx) | l'écran de pile qui porte ce formulaire, atteint depuis l'état vide du Planning et depuis les Réglages |

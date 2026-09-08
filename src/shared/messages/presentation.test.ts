@@ -11,7 +11,7 @@ import { choisirPresentation, messagesVisibles, RIEN_A_MONTRER } from './present
 import { projeterMessage, type MessageDeService } from './projection';
 
 const MAINTENANT = new Date('2026-09-03T10:00:00Z');
-const CONTEXTE: ContexteDeCiblage = { testeur: false, etablissement: 'bordeaux', version: '6.1.0' };
+const CONTEXTE: ContexteDeCiblage = { testeur: false, etablissement: 'bordeaux', version: '6.1.0', plateforme: 'ios' };
 
 function message(patch: Record<string, unknown>): MessageDeService {
     const projete = projeterMessage({

@@ -56,7 +56,12 @@ vingt lignes), une **liste et un formulaire génériques** pilotés par un descr
 avertissements qu'il faut lire avant d'écrire, et depuis 6.1.x-C la **section** de navigation où la
 page se range (« Suivre » pour ce qui se lit, « Publier » pour ce qui s'écrit), le message d'une
 liste vide, et la **pastille** qu'une option de choix peut porter en liste — c'est l'état d'un
-retour. Un champ en lecture seule est désactivé **et** absent de ce qui part : c'est ce qui permet à
+retour. Depuis 6.1.x-D, un champ à **cases** porte plusieurs valeurs d'une liste fermée que le
+descripteur déclare — les plateformes du ciblage —, là où les campus, eux, lisent leurs cases dans
+le catalogue. Depuis 6.1.x-E, un descripteur porte des **actions** — un geste hors écriture sur une
+ligne existante, avec confirmation : « Notifier » un message appelle la fonction d'envoi de la base
+([`src/lib/notifier.ts`](src/lib/notifier.ts)) — et la page **Jetons push**, lue seulement, montre
+le parc qui recevra les notifications. Un champ en lecture seule est désactivé **et** absent de ce qui part : c'est ce qui permet à
 la base de n'accorder l'écriture qu'aux colonnes qui bougent. Les conversions entre la saisie et la ligne sont pures
 et testées par le `npm test` de la racine ([`src/schema/conversion.ts`](src/schema/conversion.ts)),
 comme la règle des visuels — remplacer une image bumpe `?v=N` dans son adresse

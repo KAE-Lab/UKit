@@ -7,7 +7,9 @@ export default [
   {
     // La console web (console/) est lintée avec les règles du dépôt — même discipline, une seule
     // commande — mais pas ce qu'elle construit.
-    ignores: ["console/dist/**"],
+    // Le point d'entree d'une fonction Supabase tourne sous Deno (imports `jsr:`, global `Deno`) : hors
+    // du typage et du lint de la racine. Ses regles pures, elles, sont testees par `npm test`.
+    ignores: ["console/dist/**", "supabase/functions/*/index.ts"],
   },
   {
     files: ["**/*.ts", "**/*.tsx"],

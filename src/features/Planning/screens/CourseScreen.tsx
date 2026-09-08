@@ -2,6 +2,8 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+// `/legacy`, jamais la racine : ses souches levent a l'appel (shared/services/CalendarSyncHelpers.ts).
+import * as Calendar from 'expo-calendar/legacy';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
@@ -10,8 +12,11 @@ import type { LieuDeCours } from '../../../shared/locations/salles';
 import { AppContext } from '../../../shared/services/AppCore';
 import { EmbeddedMap } from '../../../shared/map/EmbeddedMap';
 import { withStaticHeader } from '../../../shared/navigation/NavHelpers';
+import { ActionButton } from '../../../shared/ui/ActionButton';
+import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { CourseData } from '../components/CourseCard';
 import { iconeDAnnotation } from '../components/CourseAnnotations';
+import { couleurDeCours } from '../services/couleurDeCours';
 
 export interface CourseProps {
 	route: { params: { data: CourseData } };
@@ -51,11 +56,28 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	componentDidMount() {
 		this.props.navigation.setParams({ title: this.state.data.UE || Translator.get('DETAILS') });
 
+		// Pas de lieu pour un evenement du telephone : « Chez Marie » matcherait un batiment (6.1.x-D).
+		if (this.duTelephone()) return;
 		const locations = this.resoudreLieux();
 		if (locations.length > 0) {
 			this.setState({ locations });
 		}
 	}
+
+	duTelephone(): boolean {
+		return this.state.data.source === 'telephone';
+	}
+
+	/** L'agenda du systeme, sur cette occurrence : les recurrents partagent leur identifiant sur iOS. */
+	ouvrirDansCalendrier = async () => {
+		const { idTelephone, date } = this.state.data;
+		if (!idTelephone) return;
+		try {
+			await Calendar.openEventInCalendarAsync({ id: idTelephone, instanceStartDate: date.start });
+		} catch {
+			new ErrorAlert(Translator.get('OPEN_IN_CALENDAR_FAILED')).show();
+		}
+	};
 
 	/**
 	 * Ou se donne ce cours : la donnee d'abord, l'heuristique ensuite.
@@ -158,9 +180,9 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 				</View>
 
 				<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
-					<MaterialCommunityIcons name="clock-outline" size={18} color={lineColor} style={{ marginRight: tokens.space.sm }} />
+					<MaterialCommunityIcons name={this.state.data.journeeEntiere ? 'calendar-blank' : 'clock-outline'} size={18} color={lineColor} style={{ marginRight: tokens.space.sm }} />
 					<Text style={{ fontSize: tokens.fontSize.sm, color: lineColor, fontWeight: tokens.fontWeight.semibold as never }}>
-						{this.state.data.starttime} - {this.state.data.endtime}
+						{this.state.data.journeeEntiere ? Translator.get('ALL_DAY') : `${this.state.data.starttime} - ${this.state.data.endtime}`}
 					</Text>
 				</View>
 
@@ -174,13 +196,25 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 				)}
 
 				{this.renderCourseAnnotations(theme)}
+
+				{/* On lit, on ouvre l'editeur du systeme, on ne modifie rien soi-meme (6.1.x-D). */}
+				{this.duTelephone() && (
+					<ActionButton
+						theme={theme}
+						variant="tonal"
+						label={Translator.get('OPEN_IN_CALENDAR')}
+						icon={{ name: 'calendar-export' }}
+						onPress={this.ouvrirDansCalendrier}
+						style={{ marginTop: tokens.space.md }}
+					/>
+				)}
 			</View>
 		);
 	}
 
 	render() {
 		const theme = style.Theme[this.app.themeName];
-		const lineColor = theme.courses[this.state.data.color ?? 'default'] ?? theme.courses.default;
+		const lineColor = couleurDeCours(theme.courses, this.state.data.color);
 
 		const map = this.renderMap(theme);
 		const courseDetails = this.renderCourseDetails(theme, lineColor);

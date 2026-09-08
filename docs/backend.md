@@ -24,6 +24,12 @@ aucun identifiant ne la traverse, aucune donnée personnelle n'y est écrite. L'
 sans jamais la joindre : chaque chose qu'elle publie a un **socle embarqué** dans le binaire, et la
 base ne fait que le mettre à jour.
 
+**Une écriture, depuis [6.1.x-E](phase-6/6-1-x-e-notifications-push.md), et une seule** : le jeton
+push d'un appareil, avec ce qu'il faut pour le cibler — campus, version, plateforme, statut de
+testeur —, par deux fonctions `security definer` et jamais par la table. Pseudonyme, effacé par
+l'interrupteur des Réglages, dit dans [PRIVACY.md](../PRIVACY.md). Tout le reste de cette page
+tient : la base ne relaie rien, et l'application vit sans elle.
+
 C'est ce qui permet au [README](../README.md) de continuer à promettre ce qu'il promettait : aucun
 compte n'est requis, et rien de ce qui appartient à l'utilisateur ne quitte son appareil. Le moteur
 est embarqué précisément pour ça — un moteur hébergé aurait fait sortir toutes les requêtes d'une
@@ -79,6 +85,7 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | **6-G** | les lignes publiées à la date de la release — une copie, vérifiée par un test (6.1-A) |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | les messages de service — information, avertissement, incident — et leur ciblage | [`shared/messages`](../src/shared/messages/index.ts) | **6.1-B** | *aucun* — un cache (`messages@1`) |
+| `jetons_push` | **écrite par l'application** (6.1.x-E) : un jeton push par appareil, campus, version, plateforme, testeur — par `deposer_jeton` / `retirer_jeton`, jamais par la table | la fonction `notifier` (service), la console (éditeurs) | **6.1.x-E** | — |
 | `testeurs` | les appareils qui voient l'audience `testeurs` ; l'application n'en lit que la colonne `id` | [`shared/testeur`](../src/shared/testeur/statut.ts) | **6.1-B** | *aucun* — « non » par défaut |
 | `sondes` | l'état de chaque source tierce, mesuré chaque matin | la console ; l'application pas encore | 6.1-B | — |
 | `journal` | la trace de chaque écriture dans une table publiable : avant, après, qui, quand | la console seule | 6.1-B | — |
@@ -249,9 +256,10 @@ le prévenir.
 `app_release` est créée vide, et rien ne la lit : il n'existe aucun écran de mise à jour dans
 l'application. `service_messages`, créée vide au même jalon pour la même raison, a trouvé son lecteur
 au jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md) — et quatre colonnes de ciblage avec lui,
-partagées avec `annonces` : `audience`, `etablissements`, `version_min`, `version_max`. **Le
+partagées avec `annonces` : `audience`, `etablissements`, `version_min`, `version_max` ; une
+cinquième, `plateformes`, depuis [6.1.x-D](phase-6/6-1-x-d-calendriers-du-telephone.md). **Le
 ciblage se filtre sur l'appareil**, jamais ici : la base ne sait ni quel campus a été choisi, ni
-quelle version tourne, ni si l'appareil est un testeur ([pilotage.md](pilotage.md)).
+quelle version tourne, ni sur quelle plateforme, ni si l'appareil est un testeur ([pilotage.md](pilotage.md)).
 
 `testeurs` a une particularité de lecture : le rôle public ne voit que sa colonne `id`, par un
 privilège de colonne, et l'application compare l'identifiant de son trousseau à cette liste **chez
@@ -435,9 +443,15 @@ rend un manifeste périmé visible en une commande. Détail, gardes et retours e
   durée que personne ne contrôle — c'est-à-dire un interrupteur d'arrêt qui n'arrête rien.
 - **Une correction est en production immédiatement.** Il n'y a pas d'étape intermédiaire ; c'est
   l'interrupteur d'arrêt qui joue ce rôle, pas un environnement de recette.
-- **`@supabase/supabase-js` embarque Realtime, Storage et Functions**, dont UKit n'utilise
-  aucun. C'est le coût assumé de la décision 5 de la phase — deux façons de parler à la même base
-  seraient pires qu'une trop grosse.
+- **`@supabase/supabase-js` embarque Realtime, Storage et Functions** ; l'application n'en utilise
+  aucun, la console appelle une Function depuis 6.1.x-E. C'est le coût assumé de la décision 5 de la
+  phase — deux façons de parler à la même base seraient pires qu'une trop grosse.
+- **Le client de l'application n'est pas typé par `Database`**, mesuré le 2026-09-08 : le schéma de
+  [`types.ts`](../src/shared/supabase/types.ts) ne satisfait pas la contrainte `GenericSchema` de
+  supabase-js 2.109 — ses lignes sont des `interface`, sans signature d'index —, et `Schema` y
+  résout à `never` : `from` accepte n'importe quelle chaîne, `rpc` refuse tout. Les types restent
+  vrais comme **documentation**, et le dépôt du jeton push passe par un adaptateur typé par `Args`.
+  Typer le client entier ferait remonter les projections de `select` et se traite à part.
 
 ### Les limites du plan gratuit
 

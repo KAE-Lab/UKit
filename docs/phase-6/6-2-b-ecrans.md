@@ -1,7 +1,7 @@
-# 6.2-B — Les écrans
+# 6.3-B — Les écrans
 
 > **Cadre, pas encore spécification.** Chaque session se spécifie au moment de s'ouvrir, avec le
-> relevé de [6.2-A](6-2-a-releve-et-vocabulaire.md) en main.
+> relevé de [6.3-A](6-2-a-releve-et-vocabulaire.md) en main.
 >
 > **Une session par écran, jamais deux.** La règle vient du volet 2 de la phase 6 et n'a pas bougé :
 > *« ce qui se vérifie devient un jalon, ce qui se juge reste une conversation »*.
@@ -19,7 +19,7 @@ tombe exactement dans le périmètre — sans quoi la session devient invérifia
 ## Les trois sessions
 
 Le tableau de bord Campus n'est pas dans cette liste : il est traité par
-[6.2-A](6-2-a-releve-et-vocabulaire.md), comme écran fondateur du vocabulaire.
+[6.3-A](6-2-a-releve-et-vocabulaire.md), comme écran fondateur du vocabulaire.
 
 ### S1 — Planning, jour et semaine
 
@@ -71,7 +71,7 @@ quand il arrive.
 
 ## Dépendances
 
-[6.2-A](6-2-a-releve-et-vocabulaire.md), entièrement : une session qui invente son vocabulaire au
+[6.3-A](6-2-a-releve-et-vocabulaire.md), entièrement : une session qui invente son vocabulaire au
 lieu de l'appliquer produit exactement la dérive que 6-K a mesurée.
 
 ## Limites écrites

@@ -33,6 +33,32 @@ l'écran — le formulaire reste monté en dessous, et « retour » le retrouve 
 domaines et non par type de navigation, parce qu'Android ne distingue pas un clic d'une
 redirection. Les portails ne posent pas ce paramètre.
 
+**Le défaut est revenu, et deux fois, pour deux raisons que la première correction ne pouvait pas
+voir** (mesuré le 2026-09-08 sur iPhone et sur Android) :
+
+1. **Google Forms n'écrit jamais l'adresse du lien.** Il la remplace par
+   `https://www.google.com/url?q=<adresse>`, qui est chez `google.com` — donc « interne » pour une
+   règle qui ne lit que l'hôte. La vue du formulaire naviguait vers le redirecteur, qui la renvoyait
+   aussitôt dehors : le formulaire était perdu **avant** que la règle ait eu son mot à dire.
+   `destinationReelle()` défait le redirecteur, et c'est la destination qui est jugée. Un seul saut,
+   et seulement chez Google : deviner qu'une adresse quelconque en enveloppe une autre ouvrirait la
+   porte à des redirections imaginées.
+2. **Android confiait les liens du formulaire au navigateur du système**, et il a fallu deux gestes
+   pour l'en empêcher. Google Forms pose ses liens en `target="_blank"` ; avec le défaut de
+   `setSupportMultipleWindows` (`true`), la WebView d'Android ne les charge pas elle-même. Le
+   formulaire passe donc à `false`, ce qui ramène le lien dans `onShouldStartLoadWithRequest` où la
+   règle décide. **Ça n'a pas suffi**, et la lecture du code natif dit pourquoi : quand
+   `onOpenWindow` n'est pas fourni, `RNCWebChromeClient.onCreateWindow` fabrique pour la nouvelle
+   fenêtre une vue **sans client**, et une vue sans client délègue l'adresse au navigateur du
+   système. Or ce gestionnaire n'était posé que sur le formulaire. Il l'est maintenant sur **tous**
+   les écrans : sans domaines internes, une nouvelle fenêtre s'ouvre par-dessus, dans une seconde
+   instance de l'écran. Les portails y gagnent au passage — une déconnexion CAS ou un PDF partait
+   lui aussi dans le navigateur du système, en abandonnant la session.
+
+Et une troisième cause, indépendante des deux autres : la pile **détachait** la vue du dessous quand
+le navigateur s'ouvrait par-dessus lui-même, ce qui vide une WebView. L'écran `WebBrowser` pose
+`detachPreviousScreen: false` ([`StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx)).
+
 Les deux suivants ont été **rencontrés** par la session d'écran Scolarité du 2026-08-25, et
 volontairement **pas corrigés** : ni l'un ni l'autre ne tombe dans son périmètre, et les traiter en
 passant aurait rendu la session invérifiable

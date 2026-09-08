@@ -24,6 +24,7 @@ export function versSaisieDuChamp(champ: Champ, valeur: unknown): Saisie {
         case 'json':
             return valeur === null || valeur === undefined ? '' : JSON.stringify(valeur, null, 2);
         case 'etablissements':
+        case 'cases':
             return Array.isArray(valeur) ? valeur.filter((code): code is string => typeof code === 'string') : [];
         case 'nombre':
             return typeof valeur === 'number' ? String(valeur) : '';
@@ -99,10 +100,20 @@ function etablissements(_champ: Champ, saisie: Saisie): Conversion {
     return ok(codes.length === 0 ? null : codes);
 }
 
+/** Une valeur hors des options ne part pas : la base la refuserait par son `check`, autant le dire ici. */
+function cases(champ: Champ, saisie: Saisie): Conversion {
+    const options = champ.type.type === 'cases' ? champ.type.options.map((option) => option.valeur) : [];
+    const valeurs = Array.isArray(saisie) ? saisie : [];
+    const inconnue = valeurs.find((valeur) => !options.includes(valeur));
+    if (inconnue !== undefined) return erreur(`Valeur inconnue : ${inconnue}.`);
+    return ok(valeurs.length === 0 ? null : valeurs);
+}
+
 /** Un convertisseur par type ; le texte est le repli des types qui se saisissent en clair. */
 const CONVERTISSEURS: Record<string, (champ: Champ, saisie: Saisie) => Conversion> = {
     booleen: (_champ, saisie) => ok(saisie === true),
     etablissements,
+    cases,
     nombre,
     date,
     json,

@@ -209,7 +209,7 @@ function FiltersScreen({ onAnimatedScroll }: { onAnimatedScroll?: (event: unknow
                                 {/* `buttonSecondaryText` porte un `marginLeft: 'auto'` — la valeur a
                                     droite d'une rangee de reglage. Ici le texte est seul : il se cale
                                     a gauche, comme un libelle. */}
-                                <Text style={[themeSettings.buttonSecondaryText, { marginLeft: tokens.space.md }] as never}>
+                                <Text style={[themeSettings.buttonSecondaryText, { marginLeft: tokens.space.md, flex: 1 }] as never}>
                                     {Translator.get('NO_FILTER')}
                                 </Text>
                             </View>

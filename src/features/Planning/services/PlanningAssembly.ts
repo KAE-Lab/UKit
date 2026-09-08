@@ -67,6 +67,19 @@ export interface PlanningEvent {
      * pas proposee dans les suggestions. Facultatif, comme `sites`, et pour les memes raisons.
      */
     modules?: string[];
+    /**
+     * `telephone` quand l'evenement vient d'un calendrier de l'appareil (jalon 6.1.x-D), absent
+     * pour un cours. Les ecrans s'en servent pour ne pas deviner : pas de carte, pas d'UE, pas de
+     * rappel, et l'ouverture dans l'agenda du systeme. Facultatif, comme `sites`.
+     */
+    source?: 'telephone';
+    /** Une journee entiere n'a pas d'heures : elle se rend en bandeau, jamais dans un carrousel. */
+    journeeEntiere?: boolean;
+    /**
+     * L'identifiant de l'evenement dans le calendrier du systeme, tel qu'`openEventInCalendarAsync`
+     * l'attend. `id` est composite — les occurrences d'un evenement recurrent partagent le sien.
+     */
+    idTelephone?: string;
 }
 
 export interface PlanningWeekDay {

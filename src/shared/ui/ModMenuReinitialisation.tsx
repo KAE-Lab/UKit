@@ -32,10 +32,10 @@ export default function ModMenuReinitialisation({ theme }: { theme: AppThemeType
                 borderRadius: tokens.radius.md, borderWidth: 1, borderColor: theme.danger, alignItems: 'center',
             }}
         >
-            <Text style={{ color: theme.danger, fontWeight: 'bold', fontSize: tokens.fontSize.sm }}>
+            <Text style={{ alignSelf: 'stretch', textAlign: 'center', color: theme.danger, fontWeight: 'bold', fontSize: tokens.fontSize.sm }}>
                 Réinitialisation complète
             </Text>
-            <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, textAlign: 'center' }}>
+            <Text style={{ alignSelf: 'stretch', textAlign: 'center', color: theme.fontSecondary, fontSize: tokens.fontSize.xs }}>
                 réglages, caches, trousseau, documents — puis relance, comme une nouvelle installation
             </Text>
         </TouchableOpacity>

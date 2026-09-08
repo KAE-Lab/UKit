@@ -212,6 +212,7 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`Dialogue`](../src/shared/ui/Dialogue.tsx) | le dialogue informatif : titre, corps, action pleine, sortie secondaire, lien discret — sur le gabarit des popups des Réglages | 3 fois |
 | [`ModaleBientot`](../src/shared/ui/ModaleBientot.tsx) | ce que le voile d'un teaser promet : « bientôt », et la porte du service — une composition de `Dialogue` | 2 fois |
 | [`ChoixEtablissement`](../src/shared/ui/ChoixEtablissement.tsx) | la liste des universités, puis la confirmation de ce que la bascule effacera | 2 fois |
+| [`PointDeCouleur`](../src/shared/ui/PointDeCouleur.tsx) | le point de huit qui dit un état ou une appartenance — la seule forme ronde hors compteurs et jauges, rayon calculé | 4 fois, remonté au 6.1.x-D |
 
 `ScreenState` a été remonté pour une raison que le jalon 6-K n'avait pas vue : le **bloc** était
 partagé, son **hôte** ne l'était pas, et c'est l'hôte qui décide de la hauteur. Six écrans calaient le
@@ -270,6 +271,25 @@ La liste que **toute session de refonte d'écran vérifie**. Elle est le pendant
 > rond.
 
 Acquises, et qui ont coûté à être trouvées :
+
+- **Ce qu'un bouton peut dire tient sur une ligne, à 320 points.** C'est la largeur du plus petit
+  écran qu'on serve, et beaucoup d'Android en circulation font 360 : ce n'est pas une frange, c'est
+  le téléphone d'un étudiant qui n'en a pas changé depuis quatre ans. Un libellé qui passe à la ligne
+  déforme le bouton et pousse tout ce qui l'entoure — mesuré sur Android le 2026-09-08 avec
+  « Se déconnecter ». Trois règles, **dans cet ordre**, la suivante ne servant que si la précédente
+  n'a pas suffi :
+
+  1. **Raccourcir le libellé**, dans les trois dictionnaires. Si un libellé ne tient pas, ce n'est
+     pas le bouton qui est trop petit. « Se déconnecter » devient « Déconnexion » : plus court, plus
+     net, et l'espagnol tient aussi. C'est la seule règle qui produise un beau résultat.
+  2. **Borner à une ligne**, ce que [`ActionButton`](../src/shared/ui/ActionButton.tsx) fait
+     désormais pour tous. Un libellé tronqué est laid, mais moins grave qu'une mise en page cassée :
+     c'est un garde-fou contre l'oubli, pas une solution. Un libellé qui s'y prend est à raccourcir.
+  3. **Sortir la phrase du bouton.** Ce qui a besoin d'une phrase n'est pas un libellé : la phrase
+     va au-dessus, et le bouton garde le verbe.
+
+  La vérification se fait à la traduction : **l'espagnol est presque toujours le plus long des
+  trois**, c'est lui qui décide.
 
 - **Les surfaces de UKit sont des carrés arrondis. Rien n'est rond, sauf ce qui compte.**
   C'est **la** signature de forme de l'application, et elle se mesure plutôt qu'elle ne s'affirme :
@@ -349,13 +369,38 @@ Acquises, et qui ont coûté à être trouvées :
   sienne), voile de teinte seul (pas une fumée — on veut voir le contenu flouté), flou masqué — le
   bon. Android reçoit le flou plein sous le voile, compromis assumé. La barre de recherche Campus,
   les pieds d'action (annonce, réservation de BU) et la **barre d'onglets** partagent le fond **et
-  le gabarit** : hauteur 50 (le bouton primaire de référence), marges latérales `md`, et l'assise de
-  la barre d'onglets (`inset − 15`, plancher `sm`) — jugée parfaite sur appareil, elle fait loi pour
-  tous les flottants. Un **bandeau fixe** — les dates d'une fiche,
+  le gabarit** : hauteur 50 (le bouton primaire de référence), marges latérales `md`, et une assise
+  commune, [`assiseDuFlottant`](../src/shared/ui/PiedFlottant.tsx) — la valeur était écrite en
+  quatre exemplaires identiques, elle est désormais calculée en un seul endroit. **Les deux
+  plateformes n'y mesurent pas la même chose** : sur iPhone la zone sûre du bas est celle de
+  l'indicateur d'accueil, généreuse et vide, si bien que la respecter entière faisait remonter les
+  objets et laissait un trou dessous — on lui reprend quinze points, réglage jugé parfait sur
+  appareil ; sur Android c'est la barre système elle-même, gestes ou trois boutons, donc occupée, et
+  lui reprendre quoi que ce soit collait la carte contre elle (mesuré le 2026-09-08). Android la
+  respecte entière, avec un dégagement d'au moins `md` quand elle est nulle. Un **bandeau fixe** — les dates d'une fiche,
   un en-tête — reste **opaque** : il porte du contenu, rien ne doit transparaître. Un essai en
   matériau translucide (flou) sur les pieds d'action a été fait et défait le même jour : il créait
-  deux traitements pour un même rôle. Le flou reste réservé au **teaser** des rangées mystérieuses —
-  là, c'est le contenu lui-même qu'on voile, pas une séparation.
+  deux traitements pour un même rôle.
+- **Un teaser masque son texte, il ne le voile pas** (2026-09-08). Une rangée dont la source n'est
+  pas encore publiée (`RangeeMysterieuse`) doit être illisible **tout en gardant sa forme** : on doit
+  voir qu'il y a une rangée, pas un bloc gris. Trois traitements ont été essayés et mesurés sur
+  appareil le même jour, et les trois ont échoué : `expo-blur` à intensité croissante — sans aucun
+  effet sur Android au SDK 57, où la méthode native exige une cible (`blurTarget`) qu'un voile en
+  surimpression n'a pas, et encore lisible sur iPhone jusqu'à 70 ; un voile dense — la rangée
+  disparaît au lieu de se faire désirer ; le contenu à opacité réduite — du gris pâle qui se lit
+  encore. Le masque vient donc du texte lui-même : `LigneScolarite` prend une prop `masque` qui
+  **ne rend pas** ses deux textes et pose une barre à leur place. Poser le texte en couleur
+  `transparent` sous la barre a été essayé et ne suffit pas — sur Android, ce qui dépassait de la
+  barre se voyait : un caractère qui existe finit par se montrer. Le `Text` ne porte donc qu'une
+  espace, qui ne dessine rien mais lui donne la hauteur exacte de sa police : la rangée garde le
+  gabarit, les alignements et le rythme de ses voisines sans porter un seul caractère lisible. Le
+  libellé passe alors par `accessibilityLabel` — un teaser est un effet visuel, pas un secret, et un
+  lecteur d'écran doit pouvoir annoncer ce que la rangée ouvrira. **La règle qui en sort : un
+  contenu qu'on veut rendre illisible se retire du rendu, il ne se cache ni derrière un effet natif
+  ni derrière une couleur** — un effet qui n'existe pas sur une plateforme ne masque rien du tout,
+  et rien dans le typage ne le dit. Le même masque habille les boutons de la barre d'onglets
+  (`MainTabNavigator`, prop `masque`) : cadenas à la place de l'icône, barre à la place du libellé,
+  une seule langue pour tous les teasers.
 - **Un choix dans une modale est une option-bouton, jamais un rond à cocher** (2026-08-30). Contour
   neutre au repos, fond teinté, filet d'accent et coche une fois choisie, puis Annuler / Confirmer —
   styles `theme.settings.popup.option*`, posés pour les trois listes des Réglages

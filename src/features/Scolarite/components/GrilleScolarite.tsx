@@ -119,13 +119,14 @@ function RangeeDeWidget({ rangee, theme, onTeaser }: { rangee: RangeePreparee; t
 
     if (etat.nature === 'bientot' || etat.nature === 'absent') {
         return (
-            <RangeeMysterieuse theme={theme} onPress={() => onTeaser(definition.point)}>
+            <RangeeMysterieuse theme={theme} libelle={Translator.get(definition.nom)} onPress={() => onTeaser(definition.point)}>
                 <WidgetRow
                     definition={definition}
                     etat={etat}
                     contexte={contexte}
                     teinte={couleur}
                     theme={theme}
+                    masque
                 />
             </RangeeMysterieuse>
         );

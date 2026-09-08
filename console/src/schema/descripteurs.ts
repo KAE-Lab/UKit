@@ -26,6 +26,8 @@ export type TypeDeChamp =
     | { readonly type: 'date' }
     | { readonly type: 'json' }
     | { readonly type: 'choix'; readonly options: readonly Option[] }
+    /** Plusieurs valeurs d'une liste fermee, en cases a cocher ; aucune cochee = `null`, « toutes ». */
+    | { readonly type: 'cases'; readonly options: readonly Option[] }
     | { readonly type: 'etablissements' }
     | { readonly type: 'version' }
     | { readonly type: 'uuid' }
@@ -42,6 +44,18 @@ export interface Champ {
     readonly defaut?: unknown;
     /** La chaine vide est une valeur, pas une absence — `visuels.image_url` : « aucune image ». */
     readonly videEstValeur?: boolean;
+}
+
+/**
+ * Un geste sur une ligne existante, hors ecriture : « Notifier » un message (6.1.x-E). Il rend la
+ * phrase a montrer, ou leve — le formulaire l'affiche dans son retour.
+ */
+export interface ActionDeLigne {
+    readonly libelle: string;
+    /** Une confirmation avant d'agir, pour un geste qui ne se rejoue pas. */
+    readonly confirmation?: string;
+    readonly disponible?: (ligne: Ligne) => boolean;
+    readonly executer: (ligne: Ligne) => Promise<string>;
 }
 
 export interface Descripteur {
@@ -68,9 +82,11 @@ export interface Descripteur {
     readonly valider?: (ligne: Ligne) => string | null;
     /** Un complement calcule juste avant l'ecriture : la cle d'un message, proposee depuis son titre. */
     readonly avantEcriture?: (ligne: Ligne, existante: Ligne | null) => Ligne;
+    /** Les gestes hors ecriture sur une ligne existante. */
+    readonly actions?: readonly ActionDeLigne[];
 }
 
-/** Les quatre colonnes de ciblage, partagees par les annonces et les messages (docs/pilotage.md). */
+/** Les cinq colonnes de ciblage, partagees par les annonces et les messages (docs/pilotage.md). */
 export const CIBLAGE: readonly Champ[] = [
     {
         nom: 'audience',
@@ -87,6 +103,12 @@ export const CIBLAGE: readonly Champ[] = [
     },
     { nom: 'version_min', libelle: 'Version minimale', type: { type: 'version' }, aide: 'Bornes incluses, en X.Y.Z. Vide : pas de borne.' },
     { nom: 'version_max', libelle: 'Version maximale', type: { type: 'version' }, aide: '« Mets à jour » est un message dont la version maximale est la version précédente.' },
+    {
+        nom: 'plateformes',
+        libelle: 'Plateformes',
+        type: { type: 'cases', options: [{ valeur: 'ios', libelle: 'iOS' }, { valeur: 'android', libelle: 'Android' }] },
+        aide: 'Aucune case cochée : les deux. Un défaut qui n’existe que sur une plateforme se dit à elle seule.',
+    },
 ];
 
 export function champDe(descripteur: Descripteur, nom: string): Champ | undefined {

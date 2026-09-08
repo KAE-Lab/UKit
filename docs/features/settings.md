@@ -15,10 +15,10 @@ L'écran est une suite de sections empilées, sous un titre qui s'efface au déf
 | **Établissement** | l'université sélectionnée (modale de choix, avec confirmation) |
 | **Affichage** | langue (modale de choix), filtres d'UE (écran dédié) |
 | **Thème** | interrupteur mode sombre |
-| **Notifications** | interrupteur des rappels de cours, curseur de délai |
+| **Notifications** | interrupteur des messages de service en notification (6.1.x-E — le couper retire le jeton de la base), interrupteur des rappels de cours, curseur de délai. Les deux sont **actifs par défaut**, et c'est l'entretien qui demande la permission une fois ([plateforme.md](../plateforme.md#permissions)) |
 
 | **Lancement** | ouvrir sur le groupe favori, réinitialiser l'application |
-| **Calendrier** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué, et un toast le dit quand c'est le geste « Forcer » qui a échoué (6.1-C) |
+| **Calendrier** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué, et un toast le dit quand c'est le geste « Forcer » qui a échoué (6.1-C) — et, depuis 6.1.x-D, la rangée **Calendriers du téléphone** vers l'écran de choix de ceux que le Planning affiche |
 
 Le bouton d'action de la barre d'onglets mène à **À propos**.
 
@@ -293,6 +293,11 @@ syncCalendar(origine)
 
 La table `previousSyncData` associe l'identifiant Celcat à l'identifiant de l'événement système :
 c'est ce qui rend la synchronisation **idempotente**. Sans elle, chaque passage dupliquerait l'agenda.
+Elle sert aussi dans l'autre sens depuis 6.1.x-D : ce qu'elle nomme ne se relit jamais dans le
+Planning. Le retrait de ce qu'un passage a écrit — le calendrier dédié entier, ou les seuls
+événements de la table dans un calendrier du système — vit dans
+[`CalendarSyncHelpers.retirerEvenementsSynchronises`](../../src/shared/services/CalendarSyncHelpers.ts),
+sorti d'`AppCore.tsx` quand il a frôlé ses 400 lignes.
 
 **Elle porte le planning agrégé des favoris** depuis 6.1-C, et non plus le premier favori seul : un
 étudiant qui agrège deux groupes attend les deux dans son agenda. Le doublon qu'on redoutait pour
@@ -301,7 +306,13 @@ identifiant qui indexe `previousSyncData` : il n'est écrit qu'une fois.
 
 **Un échec se dit deux fois.** La pastille sous l'interrupteur passe en avertissement, et quand c'est
 le geste « Forcer une synchronisation » qui a échoué, un toast le dit sur place : le service rend son
-verdict (`syncCalendar` rend `false`), l'écran décide du retour. La tâche de fond, elle, n'a
+verdict (`syncCalendar` rend `false`), l'écran décide du retour.
+
+**« Rien à faire » se dit aussi**, depuis le 2026-09-08. Sans cible ou sans groupe favori, la
+synchronisation n'a rien à écrire : elle ne rend pas d'échec — ce n'en est pas un — donc aucun toast
+ne paraissait, et rien ne bougeait à l'écran. Le bouton passait pour cassé. L'écran vérifie
+maintenant les deux conditions **avant** d'appeler, et dit laquelle manque : choisir un calendrier de
+destination, ou ajouter un groupe favori. Défaut antérieur au jalon, trouvé en vérifiant 6.1.x-D. La tâche de fond, elle, n'a
 personne à qui parler — mais elle laisse une trace, voir ci-dessous.
 
 ### La dernière tentative est persistée, et l'interrupteur l'efface
@@ -440,6 +451,41 @@ Changer de calendrier cible **supprime d'abord** tous les événements précéde
 > **Capture attendue** — `reglages-calendrier.png` : la modale de choix du calendrier, montrant le
 > calendrier UKit dédié et les calendriers existants.
 
+## Les calendriers du téléphone
+
+Depuis [6.1.x-D](../phase-6/6-1-x-d-calendriers-du-telephone.md), la section Calendrier porte une
+rangée de plus, **Calendriers du téléphone**, qui dit combien sont affichés et pousse
+[`CalendriersAffichesScreen`](../../src/features/Settings/screens/CalendriersAffichesScreen.tsx) :
+un écran sur le modèle des filtres d'UE — `SettingsChoicePopup` est mono-sélection, et un choix
+multiple dans une modale serait une sous-page qui ne dit pas son nom. Une rangée par calendrier,
+groupées par source comme l'agenda du système les présente, avec **son point de couleur** — résolu
+par la même règle que les cartes du Planning — et un interrupteur.
+
+Deux règles : **rien ne s'affiche tant que rien n'est coché**, calendrier par calendrier ; et **le
+calendrier cible de la synchronisation n'est pas proposé**, par son identifiant et par le titre du
+calendrier dédié `UKit` — le relire afficherait chaque cours deux fois. La liste est relue au focus
+par `getCalendarsAsync`, pas par le cache de `SettingsManager` qui n'est rempli qu'au chargement :
+un calendrier créé entre-temps doit apparaître. La permission est seulement **lue** ici ; sans elle,
+l'écran montre l'encart et « Ouvrir les réglages système », comme la section.
+
+Le choix est persisté dans `calendriersAffiches` du document `settings`
+([donnees-et-persistance.md](../donnees-et-persistance.md)) : des identifiants système, opt-in. Une
+bascule d'établissement **ne le purge pas** — ce sont des calendriers du téléphone, pas d'une
+université ; une réinitialisation complète, si.
+
+**La règle du cloisonnement, sur les trois pièces du calendrier.** Ce qui vient de l'université est
+cloisonné, ce qui vient du téléphone ne l'est pas :
+
+| Pièce | Cloisonnée par établissement ? | Pourquoi |
+|---|---|---|
+| les **cours écrits** dans l'agenda | **oui, de fait** — une bascule les retire (`purgeCalendarEvents`, jalon 6-G) et l'entretien réécrit ceux de la nouvelle fac | ce sont les cours d'une université, et sans ce retrait ils restaient indéfiniment : après une bascule les favoris sont vides, donc plus aucune synchronisation ne tourne pour les remplacer |
+| le **calendrier cible** de la synchronisation | non | c'est un calendrier du téléphone ; le rechoisir à chaque bascule serait une corvée sans raison |
+| les **calendriers affichés** dans le Planning (6.1.x-D) | non | même raison — et les rendez-vous personnels ne changent pas parce qu'on change de fac | Ce que le Planning en fait est écrit dans
+[planning.md](planning.md#les-calendriers-du-téléphone-dans-le-planning).
+
+> **Capture attendue** — `reglages-calendriers-telephone.png` : l'écran, deux sources, un calendrier
+> coché.
+
 ## Les dialogues, et pourquoi ils vivent ici
 
 Six des neuf modales de l'application sont pilotées depuis cet écran, et **toutes** — y compris celles
@@ -523,6 +569,8 @@ réinitialiser serait un résidu, pas un service.
   notification arrive bien avant un cours.
 - Activer la synchronisation, choisir « UKit » : le calendrier doit être créé et peuplé. Relancer une
   synchronisation : aucun doublon.
+- Sans groupe favori, ou sans calendrier cible : « Forcer une synchronisation » doit dire **ce qui
+  manque** en toast, et non rester muet.
 - Couper le réseau (interrupteur HORS LIGNE du menu de développement) et forcer : la ligne d'état garde
   la date du dernier succès **et** dit « Dernière tentative échouée il y a quelques secondes ».
   Éteindre puis rallumer l'interrupteur : l'échec disparaît — et la date aussi, parce qu'éteindre a
@@ -538,6 +586,19 @@ réinitialiser serait un résidu, pas un service.
   `trop-tot` tant que douze heures **réelles** ne sont pas passées — la date simulée ne survit pas à
   une fermeture ([qualite.md](../qualite.md)).
 - Changer de calendrier cible : les événements de l'ancien doivent avoir disparu.
+- Messages de service en notification (sur un build) : couper l'interrupteur retire la ligne de la page
+  Jetons push de la console, rallumer la fait revenir — voir le protocole de [pilotage.md](../pilotage.md#vérifier).
+- **Sur une installation neuve** (désinstaller puis réinstaller) : terminer le parcours d'accueil doit
+  faire paraître l'invite de notification **sans toucher aucun interrupteur**. Refuser, relancer :
+  elle ne revient pas, et le panneau Testeur dit « sans-permission ».
+- La rangée « Messages de service » et son interrupteur tiennent dans la carte : **un libellé long
+  ne pousse plus l'interrupteur dehors** — il se plie, parce que la largeur d'un interrupteur est
+  fixe. Vérifier aussi les rangées à valeur texte (Établissement, Langue, Calendrier), où la règle
+  inverse tient : c'est la valeur qui cède, jamais le libellé.
+- Calendriers du téléphone : la rangée dit « Aucun », l'écran liste les calendriers par source avec
+  leur couleur, **sans** le calendrier cible de la synchronisation ; cocher deux calendriers, tuer
+  l'application, revenir : la rangée dit « 2 choisis » et les deux sont cochés. Retirer la
+  permission dans les réglages du système : l'écran montre l'encart et le bouton vers les réglages.
 - Ouvrir les Réglages avec un compte connecté puis se déconnecter et revenir : la ligne « Compte
   universitaire » doit passer de **Connecté** à **Non connecté** sans relancer l'application.
 - Sur un établissement à lien d'abonnement, coller un lien puis revenir aux Réglages : la ligne « Lien
@@ -576,6 +637,8 @@ réinitialiser serait un résidu, pas un service.
 | [`screens/SettingsScreen.tsx`](../../src/features/Settings/screens/SettingsScreen.tsx) | écran d'onglet : état des réglages, gestionnaires, assemblage des sections et des modales |
 | [`screens/AboutScreen.tsx`](../../src/features/Settings/screens/AboutScreen.tsx) | À propos : historique, sources, contact, crédits, mentions légales |
 | [`screens/FiltersScreen.tsx`](../../src/features/Settings/screens/FiltersScreen.tsx) | l'écran des filtres d'UE : filtres actifs et leur croix, recherche, suggestions, saisie de code |
+| [`screens/CalendriersAffichesScreen.tsx`](../../src/features/Settings/screens/CalendriersAffichesScreen.tsx) | l'écran des calendriers du téléphone affichés dans le Planning : par source, couleur, interrupteur, cible de synchronisation écartée (6.1.x-D) |
+| [`shared/services/CalendarSyncHelpers.ts`](../../src/shared/services/CalendarSyncHelpers.ts) | les pièces sans état de la synchronisation : projection d'un cours vers un événement, création du calendrier `UKit`, écriture d'un passage, retrait de ce qu'un passage a écrit |
 | [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les six sections : établissement, affichage, thème, notifications, lancement, calendrier |
 | [`components/SettingsModals.tsx`](../../src/features/Settings/components/SettingsModals.tsx) | la modale de choix générique (`SettingsChoicePopup`), ses habillages langue et calendrier, réinitialisation, extinction de la synchronisation |
 | [`shared/ui/ChoixEtablissement.tsx`](../../src/shared/ui/ChoixEtablissement.tsx) | la modale d'établissement : la liste, puis la confirmation de ce qui sera effacé — partagée avec le formulaire de connexion depuis 6.1-A |

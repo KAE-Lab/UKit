@@ -34,6 +34,7 @@ const LIGNE: AnnonceRow = {
     etablissements: null,
     version_min: null,
     version_max: null,
+    plateformes: null,
 };
 
 function annonce(patch: Partial<BdeAnnonce>): BdeAnnonce {
@@ -135,9 +136,9 @@ test('une date illisible ecarte l annonce plutot que de l afficher', () => {
 });
 
 test('le ciblage est projete avec la ligne, et une ligne d avant les colonnes vise tout le monde', () => {
-    expect(projeterAnnonce(LIGNE).ciblage).toEqual({ audience: 'tous', etablissements: null, version_min: null, version_max: null });
+    expect(projeterAnnonce(LIGNE).ciblage).toEqual({ audience: 'tous', etablissements: null, version_min: null, version_max: null, plateformes: null });
     expect(projeterAnnonce({ ...LIGNE, audience: 'testeurs', etablissements: ['bordeaux-inp'], version_max: '6.0.0' }).ciblage)
-        .toEqual({ audience: 'testeurs', etablissements: ['bordeaux-inp'], version_min: null, version_max: '6.0.0' });
+        .toEqual({ audience: 'testeurs', etablissements: ['bordeaux-inp'], version_min: null, version_max: '6.0.0', plateformes: null });
     // Un cache ou une base d'avant le jalon : les colonnes manquent, l'annonce reste visible.
     const ancienne = Object.fromEntries(Object.entries(LIGNE).filter(([cle]) => cle !== 'audience')) as AnnonceRow;
     expect(projeterAnnonce(ancienne).ciblage.audience).toBe('tous');

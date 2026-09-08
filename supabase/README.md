@@ -214,6 +214,28 @@ Le changement arrive au **prochain retour au premier plan**, sans release et san
 domaine est contraint par un `check` : une faute de frappe serait sinon une ligne parfaitement valide
 qui ne corrige rien, et rien à l'écran ne le dirait.
 
+## La fonction d'envoi
+
+[`functions/notifier/`](functions/notifier/) est la seule fonction du projet
+([6.1.x-E](../docs/phase-6/6-1-x-e-notifications-push.md)) : elle envoie un message de service en
+notification push. Elle se déploie par la CLI, sans l'ajouter aux dépendances, et demande une fois
+une session sur le compte Supabase du projet :
+
+```bash
+npx --yes supabase login                                            # une fois, ouvre le navigateur
+npx --yes supabase functions deploy notifier --project-ref owiksddeqcyyifnmpyqm --use-api
+```
+
+`--use-api` évite Docker : le bundle est construit par la plateforme. La clé de service et l'URL du
+projet sont fournies à la fonction par la plateforme (`SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`),
+rien à configurer. [`config.toml`](config.toml) ne porte que l'identifiant du projet et la
+vérification du JWT ; la fonction vérifie en plus que la session est celle d'un éditeur. Après un
+changement de `regles.ts`, le test `regles.test.ts` de la racine doit rester vert **avant** de
+redéployer : c'est lui qui garantit que la fonction cible comme l'appareil.
+
+Se vérifie depuis la console : un message, « Notifier », la réponse en clair. Un refus (403) veut
+dire que la session n'est pas éditeur ; un 409, que le message est inactif, expiré ou déjà notifié.
+
 ## Ce qui n'a pas sa place ici
 
 Pas de fonction métier, pas de vue qui calcule. La base porte de la donnée ; ce qui se calcule se

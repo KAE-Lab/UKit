@@ -21,7 +21,7 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { Icon, type IconSpec } from '../../../shared/ui/Icon';
@@ -76,31 +76,77 @@ export interface LigneScolariteProps {
     onPress?: () => void;
     /** Le titre en gris : une rangee qui porte un echec ne crie pas, elle s'efface. */
     attenue?: boolean;
+    /**
+     * Le masque du teaser : l'icone devient un cadenas, et les deux textes **ne sont pas rendus** —
+     * une barre prend la boite de chacun.
+     *
+     * C'est la troisieme tentative, et la seule qui tienne sur les deux plateformes. Le flou natif
+     * d'`expo-blur` n'existe pas sur Android au SDK 57 sans cible (`blurTarget`), et sur iOS il
+     * laissait lire le texte a toutes les intensites essayees ; baisser l'opacite du contenu donne
+     * du gris pale qui se lit encore. Ici il n'y a plus rien a lire : la couleur du texte est
+     * `transparent`. La boite du `Text`, elle, se pose normalement — la rangee garde donc exactement
+     * la hauteur, les alignements et le rythme des rangees voisines, ce qu'un aplat opaque perdrait.
+     */
+    masque?: boolean;
+}
+
+/**
+ * Une ligne de texte masquee : sa hauteur, et rien d'autre.
+ *
+ * **Le texte n'est pas rendu du tout**, et c'est la seule facon d'etre sur. Le poser en couleur
+ * `transparent` sous une barre laissait voir ce qui depassait de la barre sur Android (mesure le
+ * 2026-09-08) : un caractere qui existe finit toujours par se montrer quelque part. Ici il n'y a
+ * qu'une espace, qui ne dessine rien mais donne au `Text` la hauteur exacte de sa police — la
+ * rangee garde donc le gabarit de ses voisines sans porter un seul caractere lisible.
+ */
+function BarreDeMasque({ style, largeur, theme }: {
+    style: TextStyle; largeur: ViewStyle; theme: AppThemeType;
+}) {
+    return (
+        <View>
+            <Text style={style} numberOfLines={1}> </Text>
+            <View style={[styles.barre, largeur, { backgroundColor: theme.border }]} />
+        </View>
+    );
 }
 
 export function LigneScolarite({
-    theme, icon, teinte, titre, sousTitre, droite, onPress, attenue = false, chevron = false,
+    theme, icon, teinte, titre, sousTitre, droite, onPress, attenue = false, chevron = false, masque = false,
 }: LigneScolariteProps) {
     const contenu = (
         <View style={styles.ligne}>
             {/* `1A` = 10 % d'opacite. Volontairement pas `theme.*Soft` : la teinte vient de
                 l'appelant et peut etre une couleur de section, que le theme ne decline pas. */}
+            {/* Sous masque, la surface garde sa teinte — c'est le rythme de couleur de la pile, et
+                l'effacer rendrait la rangee grise — mais le glyphe du service cede la place au
+                cadenas : « pas encore ouvert » plutot que « voici ce que c'est ». */}
             <View style={[styles.surfaceIcone, { backgroundColor: `${teinte}1A` }]}>
-                <Icon icon={icon} size={22} color={teinte} />
+                <Icon
+                    icon={masque ? { family: 'material', name: 'lock' } : icon}
+                    size={22}
+                    color={masque ? theme.fontSecondary : teinte}
+                />
             </View>
 
             <View style={styles.textes}>
-                <Text
-                    style={[styles.titre, { color: attenue ? theme.fontSecondary : theme.font }]}
-                    numberOfLines={2}
-                >
-                    {titre}
-                </Text>
-                {sousTitre ? (
-                    <Text style={[styles.sousTitre, { color: theme.fontSecondary }]} numberOfLines={1}>
-                        {sousTitre}
+                {/* Sous masque, le texte tient toujours sa place mais n'apparait pas, et la barre
+                    posee par-dessus sa boite dit qu'il y a bien quelque chose la. Le titre garde
+                    `numberOfLines={2}` : masquer ne doit pas changer la hauteur de la rangee. */}
+                {masque ? <BarreDeMasque style={styles.titre} largeur={styles.barreTitre} theme={theme} /> : (
+                    <Text
+                        style={[styles.titre, { color: attenue ? theme.fontSecondary : theme.font }]}
+                        numberOfLines={2}
+                    >
+                        {titre}
                     </Text>
-                ) : null}
+                )}
+                {sousTitre === null || sousTitre === undefined ? null : (masque
+                    ? <BarreDeMasque style={styles.sousTitre} largeur={styles.barreSousTitre} theme={theme} />
+                    : (
+                        <Text style={[styles.sousTitre, { color: theme.fontSecondary }]} numberOfLines={1}>
+                            {sousTitre}
+                        </Text>
+                    ))}
             </View>
 
             {droite}
@@ -167,6 +213,25 @@ const styles = StyleSheet.create({
     },
     sousTitre: {
         fontSize: tokens.fontSize.sm,
+    },
+    /*
+     * La barre du masque occupe la boite du texte, moins trois points en haut et en bas : a pleine
+     * hauteur elle touche sa voisine et la paire se lit comme un aplat, pas comme deux lignes.
+     */
+    barre: {
+        position: 'absolute',
+        top: 3,
+        bottom: 3,
+        left: 0,
+        borderRadius: tokens.radius.pill,
+    },
+    // Deux longueurs differentes, comme deux vraies lignes de texte — une paire de barres egales se
+    // lit comme un gabarit de chargement, pas comme du contenu tenu au secret.
+    barreTitre: {
+        width: '62%',
+    },
+    barreSousTitre: {
+        width: '84%',
     },
     compteur: {
         borderRadius: tokens.radius.pill,

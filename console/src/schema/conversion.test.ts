@@ -17,6 +17,7 @@ const JSON_: Champ = { nom: 'j', libelle: 'j', type: { type: 'json' } };
 const DATE: Champ = { nom: 'd', libelle: 'd', type: { type: 'date' } };
 const CAMPUS: Champ = { nom: 'c', libelle: 'c', type: { type: 'etablissements' } };
 const UUID: Champ = { nom: 'u', libelle: 'u', type: { type: 'uuid' }, obligatoire: true };
+const PLATEFORMES: Champ = { nom: 'p', libelle: 'p', type: { type: 'cases', options: [{ valeur: 'ios', libelle: 'iOS' }, { valeur: 'android', libelle: 'Android' }] } };
 
 test('un texte vide devient nul, sauf quand le vide est une valeur', () => {
     expect(versLigneDuChamp(TEXTE, '  ')).toEqual({ ok: true, valeur: null });
@@ -49,6 +50,13 @@ test('aucun campus coche vaut tous, c est-a-dire nul', () => {
     expect(versLigneDuChamp(CAMPUS, [])).toEqual({ ok: true, valeur: null });
     expect(versLigneDuChamp(CAMPUS, ['bordeaux'])).toEqual({ ok: true, valeur: ['bordeaux'] });
     expect(versSaisieDuChamp(CAMPUS, ['bordeaux', 3])).toEqual(['bordeaux']);
+});
+
+test('aucune case cochee vaut toutes, c est-a-dire nul, et une valeur hors options ne part pas', () => {
+    expect(versLigneDuChamp(PLATEFORMES, [])).toEqual({ ok: true, valeur: null });
+    expect(versLigneDuChamp(PLATEFORMES, ['android'])).toEqual({ ok: true, valeur: ['android'] });
+    expect(versLigneDuChamp(PLATEFORMES, ['tv']).ok).toBe(false);
+    expect(versSaisieDuChamp(PLATEFORMES, ['ios', 7])).toEqual(['ios']);
 });
 
 test('un identifiant de testeur est nettoye et verifie', () => {

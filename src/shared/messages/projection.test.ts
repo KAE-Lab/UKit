@@ -21,6 +21,7 @@ const LIGNE = {
     etablissements: null,
     version_min: null,
     version_max: null,
+    plateformes: null,
 };
 
 test('une ligne complete se projette, titre et corps nettoyes', () => {

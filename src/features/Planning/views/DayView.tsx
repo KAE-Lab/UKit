@@ -9,9 +9,10 @@ import CalendarWeek from '../components/CalendarWeek';
 import { DayComponent, WeekComponent } from '../components/ScheduleList';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import { AppContext } from '../../../shared/services/AppCore';
+import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
 import { onRetourAuPremierPlan } from '../../../shared/services/premierPlan';
 import { DayViewHeader } from '../components/DayViewHeader';
+import { calendrierOuEcrire, ouvrirEditeurDeCreation } from '../services/TelephoneSource';
 
 function capitalize(str: string) {
 	return `${str.charAt(0).toUpperCase()}${str.substr(1)}`;
@@ -45,6 +46,10 @@ export interface DayViewState {
     weeks: { week: number; year: number }[];
     selectedWeek: { week: number; year: number };
     mode: 'day' | 'week';
+    /** Incrementee quand le telephone est a relire sans reseau ; `ScheduleList` la regarde (6.1.x-D). */
+    revisionTelephone: number;
+    /** Le calendrier ou l'editeur du systeme ecrira ; `null` = pas de « + ». */
+    calendrierPourAjout: string | null;
 }
 
 class DayView extends React.Component<DayViewProps, DayViewState> {
@@ -66,6 +71,8 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
     scrollTimeout: NodeJS.Timeout | null = null;
     mockListener: import('react-native').EmitterSubscription | null = null;
     desabonnerRetour: (() => void) | null = null;
+    desabonnerFocus: (() => void) | null = null;
+    demonte = false;
     calendarList: import('react-native').FlatList<unknown> | null = null;
 
 	constructor(props: DayViewProps) {
@@ -99,6 +106,8 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 			weeks,
 			selectedWeek,
 			mode: 'day',
+			revisionTelephone: 0,
+			calendrierPourAjout: null,
 		};
 
 		this.viewability = { itemVisiblePercentThreshold: 50 };
@@ -116,8 +125,54 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		// lancement — le meme geste que la simulation temporelle juste au-dessus (6.1-C).
 		this.desabonnerRetour = onRetourAuPremierPlan(() => {
 			if (!moment().isSame(this.state.currentDay, 'day')) this.reinitializeDates();
+			// L'agenda a pu changer pendant l'absence : le systeme n'expose aucun evenement pour le
+			// dire, relire au retour suffit (6.1.x-D).
+			this.relireTelephone();
 		});
+		// Le mode semaine n'a pas de relecture au focus, la journee en a une qui repasse par le reseau :
+		// celle-ci ne lit que le telephone, et cede a un chargement en cours.
+		this.desabonnerFocus = this.props.navigation?.addListener('focus', this.relireTelephone) ?? null;
+		SettingsManager.on('calendriersAffiches', this.surCalendriersAffiches);
+		void this.relireCalendrierPourAjout();
 	}
+
+	relireTelephone = () => this.setState((etat) => ({ revisionTelephone: etat.revisionTelephone + 1 }));
+
+	surCalendriersAffiches = () => {
+		void this.relireCalendrierPourAjout();
+		this.relireTelephone();
+	};
+
+	relireCalendrierPourAjout = async () => {
+		const calendrierPourAjout = await calendrierOuEcrire();
+		if (!this.demonte) this.setState({ calendrierPourAjout });
+	};
+
+	/** Le jour que le « + » propose : celui qui est affiche, ou aujourd'hui dans la semaine courante. */
+	jourAffiche(): moment.Moment {
+		if (this.state.mode === 'day') return this.state.selectedDay.clone();
+		const { week, year } = this.state.selectedWeek;
+		const courante = this.state.currentWeek;
+		// `moment()`, jamais `new Date()` : le simulateur de date ne deplace que `moment.now`.
+		return week === courante.week && year === courante.year ? moment() : moment().year(year).isoWeek(week).isoWeekday(1);
+	}
+
+	/**
+	 * Le « + » : l'editeur du systeme, pre-rempli sur le jour affiche a 9 h et sur un calendrier
+	 * affiche — pour que l'evenement soit dans le Planning au retour. Pas d'editeur maison (6.1.x-D).
+	 * `startNewActivityTask: false` : sans lui, Android resout « done » a l'ouverture, avant la saisie.
+	 */
+	ajouterEvenement = async () => {
+		try {
+			// Une seule relecture : quand un calendrier vient d'etre adopte, c'est l'evenement du
+			// reglage qui la declenche, et la redemander ici rendait la liste deux fois de suite —
+			// d'ou le battement visible sur appareil le 2026-09-08.
+			if (await ouvrirEditeurDeCreation(this.jourAffiche())) return;
+		} catch (erreur) {
+			console.warn(`[telephone] editeur du systeme : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+		}
+		this.relireTelephone();
+	};
 
 	reinitializeDates = () => {
 		const currentDay = moment();
@@ -165,9 +220,12 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 	};
 
 	componentWillUnmount() {
+		this.demonte = true;
 		if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
 		if (this.mockListener) this.mockListener.remove();
 		if (this.desabonnerRetour) this.desabonnerRetour();
+		if (this.desabonnerFocus) this.desabonnerFocus();
+		SettingsManager.unsubscribe('calendriersAffiches', this.surCalendriersAffiches);
 	}
 
 	static getCalendarListItemLayout = (data: unknown[] | null | undefined, index: number) => ({
@@ -332,6 +390,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
                             rightIcon={rightIcon}
                             onTodayPress={this.onTodayPress}
                             onRightPress={onRightPress}
+                            onAjouterEvenement={this.state.calendrierPourAjout !== null ? this.ajouterEvenement : undefined}
                             days={this.state.days}
                             extractCalendarDayKey={this.extractCalendarDayKey}
                             viewability={this.viewability}
@@ -360,6 +419,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 									theme={theme}
 									navigation={this.props.navigation}
 									filtersList={this.app.filters}
+									revisionTelephone={this.state.revisionTelephone}
 								/>
 							) : (
 								<WeekComponent
@@ -369,6 +429,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 									theme={theme}
 									navigation={this.props.navigation}
 									filtersList={this.app.filters}
+									revisionTelephone={this.state.revisionTelephone}
 								/>
 							)}
 						</View>

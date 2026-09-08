@@ -219,6 +219,10 @@ const Theme = {
                     alignItems:     'center',
                 },
                 textHeader: {
+                    // `flex: 1` et non `alignSelf` : l'en-tete est une **rangee**, ou un etirement
+                    // jouerait sur la hauteur. Sans contrainte, Yoga mesure le titre a sa largeur
+                    // intrinseque et Android en coupe la fin (docs/theme.md).
+                    flex: 1,
                     fontWeight: tokens.fontWeight.bold,
                     fontSize:   tokens.fontSize.xl,
                     color:      '#1C1C1E',
@@ -525,6 +529,10 @@ const Theme = {
                     alignItems:     'center',
                 },
                 textHeader: {
+                    // `flex: 1` et non `alignSelf` : l'en-tete est une **rangee**, ou un etirement
+                    // jouerait sur la hauteur. Sans contrainte, Yoga mesure le titre a sa largeur
+                    // intrinseque et Android en coupe la fin (docs/theme.md).
+                    flex: 1,
                     fontWeight: tokens.fontWeight.bold,
                     fontSize:   tokens.fontSize.xl,
                     color:      '#FFFFFF',
@@ -710,6 +718,9 @@ const style = {
                 fontSize: tokens.fontSize.sm,
                 fontWeight: tokens.fontWeight.bold,
                 textAlign: 'center',
+                // Le parent pose un `minWidth`, pas une largeur : le texte reste libre, et un gras
+                // libre se tronque sur Android (docs/theme.md).
+                alignSelf: 'stretch' as const,
             },
             contentBlock: {
                 flex: 1,
@@ -962,6 +973,9 @@ const style = {
         sectionHeaderTitle: {
             fontWeight: tokens.fontWeight.bold,
             fontSize:   tokens.fontSize.md,
+            // Le conteneur de section centre ses enfants : sans cette largeur, Android tronque
+            // la fin d'un nom de section (docs/theme.md).
+            alignSelf: 'stretch' as const,
         },
     },
 

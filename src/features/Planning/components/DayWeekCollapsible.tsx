@@ -9,7 +9,9 @@ import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { upperCaseFirstLetter } from '../../../shared/services/AppCore';
 import { CourseGroupCarousel } from './CourseCard';
+import { BandeauJourneeEntiere } from './BandeauJourneeEntiere';
 import { groupOverlappingCourses } from './ScheduleListUtils';
+import { separerJourneeEntiere } from '../services/FusionTelephone';
 
 export interface DayWeekProps {
 	/** Un jour de semaine deja derive par `ScheduleList` ; les quatre noms de date sont ceux des formes historiques du cache. */
@@ -70,11 +72,13 @@ export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
 			: 'Date inconnue';
 	}
 
+	/** Les journees entieres du telephone a part : elles se rendent en bandeau, jamais en carrousel (6.1.x-D). */
 	getGroupedCourses() {
 		const activeCourses = this.props.schedule.courses 
 			? this.props.schedule.courses.filter(c => c.category !== 'nocourse') 
 			: [];
-		return groupOverlappingCourses(activeCourses);
+		const { bandeaux, horaires } = separerJourneeEntiere(activeCourses);
+		return { bandeaux, groupes: groupOverlappingCourses(horaires) };
 	}
 
 	renderHeader(title: string, courseCount: number) {
@@ -113,9 +117,9 @@ export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
 		);
 	}
 
-	renderContent(groupedCourses: import('../services/PlanningApiService').PlanningEvent[][]) {
+	renderContent(groupedCourses: import('../services/PlanningApiService').PlanningEvent[][], bandeaux: import('../services/PlanningApiService').PlanningEvent[]) {
 		const { theme } = this.props;
-		if (groupedCourses.length === 0) {
+		if (groupedCourses.length === 0 && bandeaux.length === 0) {
 			return (
 				<View style={{ padding: tokens.space.md }}>
 					{/* Pleine largeur, centre par textAlign : auto-dimensionne, Android tronque la
@@ -125,22 +129,27 @@ export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
 			);
 		}
 		
-		return groupedCourses.map((group, index) => (
-			<CourseGroupCarousel key={index} coursesGroup={group} theme={theme} />
-		));
+		return (
+			<>
+				{bandeaux.map((evenement) => <BandeauJourneeEntiere key={evenement.id} evenement={evenement} theme={theme} />)}
+				{groupedCourses.map((group, index) => (
+					<CourseGroupCarousel key={index} coursesGroup={group} theme={theme} />
+				))}
+			</>
+		);
 	}
 
 	render() {
 		const parsedDate = this.getParsedDate();
 		const title = this.getTitle(parsedDate);
-		const groupedCourses = this.getGroupedCourses();
-		const courseCount = groupedCourses.length;
+		const { bandeaux, groupes } = this.getGroupedCourses();
+		const courseCount = groupes.length + bandeaux.length;
 
 		return (
 			<View style={{ marginBottom: tokens.space.sm }}>
 				{this.renderHeader(title, courseCount)}
 				<Collapsible collapsed={!this.state.expand}>
-					{this.renderContent(groupedCourses)}
+					{this.renderContent(groupes, bandeaux)}
 				</Collapsible>
 			</View>
 		);

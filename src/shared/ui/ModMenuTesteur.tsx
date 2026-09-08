@@ -21,6 +21,7 @@ import * as Clipboard from 'expo-clipboard';
 
 import { dernierRapportMessages, messagesConnus, oublierVus, rafraichirMessages, vusConnus } from '../messages';
 import { estTesteur, identifiantInstallation, rafraichirStatutTesteur } from '../testeur';
+import { deposerLeJeton, etatDuPush, retirerLeJeton, type EtatDepot, type MemoireDeDepot } from '../push';
 import { tokens, type AppThemeType } from '../theme/Theme';
 
 export interface ModMenuTesteurProps {
@@ -76,13 +77,21 @@ function rapportEnClair(): string {
 export default function ModMenuTesteur({ theme }: ModMenuTesteurProps) {
     const [identifiant, setIdentifiant] = useState<string>('…');
     const [copie, setCopie] = useState(false);
+    const [push, setPush] = useState<{ etat: EtatDepot | null; memoire: MemoireDeDepot | null }>({ etat: null, memoire: null });
     const [, setRevision] = useState(0);
 
-    const relire = useCallback(() => setRevision((revision) => revision + 1), []);
+    const relire = useCallback(() => {
+        void etatDuPush().then(setPush);
+        setRevision((revision) => revision + 1);
+    }, []);
 
     useEffect(() => {
         void identifiantInstallation().then(setIdentifiant);
+        void etatDuPush().then(setPush);
     }, []);
+
+    const deposer = useCallback(() => { void deposerLeJeton().then(relire); }, [relire]);
+    const retirer = useCallback(() => { void retirerLeJeton().then(relire); }, [relire]);
 
     const copier = useCallback(() => {
         void Clipboard.setStringAsync(identifiant).then(() => setCopie(true));
@@ -132,6 +141,22 @@ export default function ModMenuTesteur({ theme }: ModMenuTesteurProps) {
             <View style={{ flexDirection: 'row', gap: tokens.space.sm, marginTop: tokens.space.sm }}>
                 <Bouton theme={theme} libelle="Relire les messages" onPress={relireLesMessages} />
                 <Bouton theme={theme} libelle="Oublier les vus" onPress={oublier} />
+            </View>
+
+            {/* Le jeton push (6.1.x-E) : ce que la base sait de cet appareil, et le dernier depot. */}
+            <View style={{ marginTop: tokens.space.sm, paddingTop: tokens.space.xs, borderTopWidth: 1, borderTopColor: theme.border }}>
+                <Ligne theme={theme} cle="push" valeur={push.etat ?? 'pas encore joué'} />
+                <Ligne theme={theme} cle="jeton" valeur={push.memoire === null ? 'aucun déposé' : push.memoire.inscription.jeton.slice(18, 30) + '…'} />
+                <Ligne
+                    theme={theme}
+                    cle="déposé"
+                    valeur={push.memoire === null ? '—' : `${new Date(push.memoire.at).toLocaleString()} · ${push.memoire.inscription.etablissement} · ${push.memoire.inscription.version} · ${push.memoire.inscription.plateforme}${push.memoire.inscription.testeur ? ' · testeur' : ''}`}
+                />
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: tokens.space.sm, marginTop: tokens.space.sm }}>
+                <Bouton theme={theme} libelle="Déposer le jeton" onPress={deposer} />
+                <Bouton theme={theme} libelle="Retirer le jeton" onPress={retirer} />
             </View>
         </View>
     );

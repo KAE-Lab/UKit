@@ -1,5 +1,5 @@
 /**
- * Le ciblage : la projection defensive des quatre colonnes, et la regle de presentation.
+ * Le ciblage : la projection defensive des cinq colonnes, et la regle de presentation.
  *
  *     npm test
  */
@@ -8,8 +8,8 @@ import { expect, test } from 'vitest';
 
 import { CIBLAGE_TOUS, estCible, projeterCiblage, type ContexteDeCiblage } from './ciblage';
 
-const BORDEAUX: ContexteDeCiblage = { testeur: false, etablissement: 'bordeaux', version: '6.1.0' };
-const TESTEUR_INP: ContexteDeCiblage = { testeur: true, etablissement: 'bordeaux-inp', version: '6.1.0' };
+const BORDEAUX: ContexteDeCiblage = { testeur: false, etablissement: 'bordeaux', version: '6.1.0', plateforme: 'ios' };
+const TESTEUR_INP: ContexteDeCiblage = { testeur: true, etablissement: 'bordeaux-inp', version: '6.1.0', plateforme: 'android' };
 
 test('une ligne sans colonnes de ciblage vise tout le monde', () => {
     expect(projeterCiblage({})).toEqual(CIBLAGE_TOUS);
@@ -22,7 +22,7 @@ test('la projection nettoie ce qui vient d un cache', () => {
         etablissements: ['bordeaux', 42, '', null],
         version_min: '',
         version_max: '6.0.0',
-    })).toEqual({ audience: 'testeurs', etablissements: ['bordeaux'], version_min: null, version_max: '6.0.0' });
+    })).toEqual({ audience: 'testeurs', etablissements: ['bordeaux'], version_min: null, version_max: '6.0.0', plateformes: null });
 });
 
 test('un tableau d etablissements vide vaut tous, comme null', () => {
@@ -58,4 +58,24 @@ test('la fenetre de versions est inclusive et un cas d usage est le message de m
 
 test('une version applicative inconnue ne cache rien', () => {
     expect(estCible(projeterCiblage({ version_min: '9.0.0' }), { ...BORDEAUX, version: null })).toBe(true);
+});
+
+test('les plateformes filtrent sur celle de l appareil, et rien de coche vaut les deux', () => {
+    const android = projeterCiblage({ plateformes: ['android'] });
+    expect(estCible(android, BORDEAUX)).toBe(false);
+    expect(estCible(android, TESTEUR_INP)).toBe(true);
+    expect(estCible(projeterCiblage({ plateformes: [] }), BORDEAUX)).toBe(true);
+    expect(estCible(projeterCiblage({ plateformes: null }), TESTEUR_INP)).toBe(true);
+});
+
+test('une plateforme inconnue est ecartee, pas ignoree : elle cache', () => {
+    expect(projeterCiblage({ plateformes: ['ios', 'tv'] }).plateformes).toEqual(['ios']);
+    expect(estCible(projeterCiblage({ plateformes: ['tv'] }), BORDEAUX)).toBe(false);
+    expect(estCible(projeterCiblage({ plateformes: ['tv'] }), TESTEUR_INP)).toBe(false);
+});
+
+test('un appareil dont la plateforme est inconnue ne voit qu un contenu non cible', () => {
+    const web = { ...BORDEAUX, plateforme: 'inconnue' as const };
+    expect(estCible(projeterCiblage({}), web)).toBe(true);
+    expect(estCible(projeterCiblage({ plateformes: ['ios'] }), web)).toBe(false);
 });

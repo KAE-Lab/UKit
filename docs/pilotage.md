@@ -90,9 +90,9 @@ ne connaissait pas à la construction du binaire. Sans base et sans cache, il n'
 L'hôte est inactif tant que le parcours d'accueil n'est pas terminé : rien ne doit l'interrompre, et
 l'établissement n'y est pas encore choisi.
 
-## Le ciblage : audience, campus, version
+## Le ciblage : audience, campus, version, plateforme
 
-Les messages **et** les annonces portent les quatre mêmes colonnes, projetées et filtrées par un
+Les messages **et** les annonces portent les cinq mêmes colonnes, projetées et filtrées par un
 module pur commun, [`shared/ciblage/`](../src/shared/ciblage/ciblage.ts) :
 
 | Colonne | Ce qu'elle dit | `null` |
@@ -100,20 +100,27 @@ module pur commun, [`shared/ciblage/`](../src/shared/ciblage/ciblage.ts) :
 | `audience` | `tous`, ou `testeurs` — les appareils enregistrés (ci-dessous) | — (`tous` par défaut) |
 | `etablissements` | les codes du catalogue qui voient le contenu | tous les campus (un tableau vide aussi) |
 | `version_min`, `version_max` | la fenêtre de versions de l'application, bornes incluses, en `X.Y.Z` | pas de borne |
+| `plateformes` | `ios` et/ou `android` — la plateforme de l'appareil, lue une fois dans la couture ([6.1.x-D](phase-6/6-1-x-d-calendriers-du-telephone.md)) | les deux (un tableau vide aussi) |
 
 **Le filtre est sur l'appareil, pas dans la base.** La base ne sait ni quel campus a été choisi, ni
-quelle version tourne, ni si l'appareil est un testeur — et c'est voulu : l'appareil ne lui dit rien
-de lui. Les écrans, eux, ignorent qu'un filtre existe : `BdeService` rend une liste déjà triée.
+quelle version tourne, ni sur quelle plateforme, ni si l'appareil est un testeur — et c'est voulu :
+l'appareil ne lui dit rien de lui. Les écrans, eux, ignorent qu'un filtre existe : `BdeService` rend
+une liste déjà triée.
 
 Le cas d'usage qui a justifié la colonne de version est le message de mise à jour : un `info` avec
 `version_max` à la version précédente — « la 6.1 est disponible » — et il disparaît de lui-même chez
-qui a mis à jour ([6.1-Z](phase-6/6-1-z-sortie.md)).
+qui a mis à jour ([6.1-Z](phase-6/6-1-z-sortie.md)). Celui de la plateforme est le défaut qui
+n'existe que d'un côté — le glissement entre onglets qui cassait les carrousels sur Android, en
+6.1 — : un message qui le dit à la moitié du parc concernée, sans déranger l'autre.
 
-Trois règles de bord, et leur sens :
+Quatre règles de bord, et leur sens :
 
 - **une audience inconnue cache** — une troisième audience publiée avant que le parc ne la connaisse
   existe pour restreindre, pas pour montrer ; c'est l'inverse des salutations, où une condition
   illisible se relâche ;
+- **une plateforme inconnue cache, elle aussi** — et elle est *écartée* plutôt qu'ignorée :
+  `{ios, tv}` vise iOS seul, `{tv}` ne vise personne ; la base borne les valeurs par un `check`,
+  et l'appareil dont la plateforme n'est ni `ios` ni `android` ne voit que le contenu non ciblé ;
 - **une version d'application illisible ignore les bornes** — un incident ne doit jamais être caché
   par un défaut de forme de notre côté ; la base garantit la forme des bornes par un `check` ;
 - **les versions antérieures voient tout** — elles ne lisent pas ces colonnes. Acceptable, et fini
@@ -146,6 +153,42 @@ comme il écarte les annonces expirées. Une annonce d'audience `testeurs` est l
 regarde sur son téléphone avant de passer l'audience à `tous` ; une annonce ciblée `bordeaux-inp`
 n'apparaît pas chez un étudiant de Bordeaux. Rien ne change pour les écrans
 ([campus-vie-etudiante.md](features/campus-vie-etudiante.md)).
+
+## Les messages en notification push
+
+Depuis [6.1.x-E](phase-6/6-1-x-e-notifications-push.md), un message de service peut **réveiller le
+téléphone**, application fermée. C'est la première écriture de l'application vers la base, et elle
+est bornée à ce que le ciblage exige : chaque appareil dépose un **jeton push** avec son campus, sa
+version, sa plateforme et son statut de testeur — rien d'autre ([PRIVACY.md](../PRIVACY.md), point
+4 quater). Le dépôt se joue à l'entretien, hors de son échéance ; il ne coûte rien quand rien n'a
+changé, et se refait tous les sept jours pour dire que l'appareil vit. L'interrupteur « Messages de
+service en notification » des Réglages, actif par défaut, **retire** le jeton quand on le coupe.
+
+L'application n'écrit pas la table : elle appelle `deposer_jeton` et `retirer_jeton`, deux fonctions
+`security definer` ([fonctions.sql](../supabase/fonctions.sql)) ; le rôle public n'a aucun privilège
+sur `jetons_push`, ni lecture ni écriture. Les jetons ne s'énumèrent donc pas.
+
+**L'envoi** part de la console : le bouton **Notifier** d'un message appelle la fonction
+[`notifier`](../supabase/functions/notifier/index.ts) avec la session de l'éditeur. Elle cible par la
+**même règle** que l'appareil — recopiée pour Deno et vérifiée égale à l'original par un test —,
+envoie par lots à l'API d'Expo, lit les tickets, retire les jetons que le service déclare morts, et
+marque le message : `notifie_le`, `notifies`. Un message ne se notifie qu'**une fois**. Ouvrir la
+notification mène à la **feuille du message**, qui se marque vu à « Compris » — pas à la réception.
+
+**Un envoi dont rien ne part ne consomme pas le message.** La fonction **réserve** le message avant
+d'envoyer — un `update` conditionnel qui échoue si un autre l'a déjà réservé, ce qui tient la
+promesse « une fois, jamais deux » même avec deux onglets ouverts — puis **rend** sa réservation si
+aucune notification n'est partie. Une panne passagère du service d'envoi, ou un ciblage qui ne vise
+personne, laissent donc le message renvoyable ; sans cela, un incident aurait pu être condamné au
+silence par une erreur réseau. Les jetons sont lus **page par page**, dans un ordre stable : une
+lecture simple s'arrête à ce que la base autorise par défaut, et le reste du parc n'aurait jamais
+été notifié, sans une ligne d'erreur nulle part.
+
+Ce qui reste hors de la base : la preuve de réception (les tickets disent ce qu'Expo a accepté), et
+la vérification du statut de testeur, auto-déclaré par l'appareil.
+
+> **Capture attendue** — `pilotage-notifier.png` : le formulaire d'un message dans la console, avec
+> le bouton « Notifier » et la réponse de la fonction.
 
 ## Le journal
 
@@ -305,6 +348,10 @@ Les lignes se publient depuis la console (lot B2) ou, en attendant, par `psql`.
 | 7 | Une annonce `etablissements = '{bordeaux-inp}'` ; une annonce d'audience `testeurs` | invisible à Bordeaux, visible après bascule ; visible sur le seul appareil enregistré |
 | 8 | Hors ligne (`SUPABASE_URL=https://127.0.0.1:1`, `expo start -c`) avec un incident en cache ; puis après « Oublier les vus » et cache vidé | le bandeau, depuis le cache ; puis rien, aucune erreur, `[messages]` en `warn` dans Metro |
 | 9 | Réglages → Réinitialiser ; puis réinitialisation complète du menu de développement | l'identifiant survit au premier, change après le second |
+| 10 | Un `info` avec `plateformes = '{android}'` ; le même en `'{ios}'` puis vide ; une annonce de même ; une valeur `'{tv}'` posée par `psql` (la console ne la propose pas) | invisible sur l'iPhone ; visible, visible ; idem ; invisible partout — la moitié Android se joue à [6.1.x-Z](phase-6/6-1-x-z-sortie.md) |
+| 11 | **Sur un build de développement** : lancer, Testeur → « push : depose » ; console, page Jetons push | la ligne de l'appareil, campus et version ; relancer → « inchange » |
+| 12 | Console, un `info` enregistré, « Notifier », application **fermée** ; toucher la notification ; « Notifier » à nouveau | « 1 appareil visé » ; la notification en quelques secondes ; l'application s'ouvre sur la feuille, « Compris » la marque vue ; refusé, « déjà notifié » |
+| 13 | Réglages → Notifications → couper « Messages de service en notification » ; rallumer ; basculer d'établissement | la ligne disparaît de Jetons push ; revient ; change de campus |
 
 **Joué sur iPhone réel le 2026-09-03**, les neuf étapes : le statut de testeur, le bandeau
 d'information (visible sur le seul appareil enregistré), la feuille d'avertissement une fois, la feuille
@@ -336,6 +383,11 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
 | [`shared/messages/PastilleService.tsx`](../src/shared/messages/PastilleService.tsx) | la pastille d'état de service, posée par chaque en-tête d'onglet à droite de son titre : grise et « Rien à signaler » avec le formulaire, rouge et la feuille de l'incident |
 | [`shared/messages/projection.test.ts`](../src/shared/messages/projection.test.ts) · [`presentation.test.ts`](../src/shared/messages/presentation.test.ts) | joués par `npm test` |
 | [`shared/testeur/identifiant.ts`](../src/shared/testeur/identifiant.ts) | l'identifiant d'installation : créé une fois, mémoïsé, jamais envoyé |
+| [`shared/push/inscription.ts`](../src/shared/push/inscription.ts) · [`inscription.test.ts`](../src/shared/push/inscription.test.ts) | ce qu'un appareil dépose pour le push, et quand il le redépose — pur, testé |
+| [`shared/push/index.ts`](../src/shared/push/index.ts) | le dépôt et le retrait du jeton : le réglage, un vrai appareil, la permission lue, les deux fonctions SQL, la mémoire `push@1` |
+| [`shared/push/reception.ts`](../src/shared/push/reception.ts) | une notification ouverte mène à la feuille de son message ; le canal Android |
+| [`supabase/functions/notifier/`](../supabase/functions/notifier/) | la fonction d'envoi (Deno) : éditeur vérifié, ciblage, lots, tickets, élagage, marquage — et sa copie des règles, testée égale à l'original |
+| [`console/src/lib/notifier.ts`](../console/src/lib/notifier.ts) | l'appel de la fonction depuis la console, et sa réponse en clair |
 | [`shared/testeur/statut.ts`](../src/shared/testeur/statut.ts) | « cet appareil est-il un testeur ? » : cache, lecture de la colonne `id`, comparaison locale |
 | [`shared/ui/Bandeau.tsx`](../src/shared/ui/Bandeau.tsx) | le bandeau flottant d'une information, la seule forme de bandeau de l'application ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ModMenuTesteur.tsx`](../src/shared/ui/ModMenuTesteur.tsx) | le panneau Testeur du menu de développement |
@@ -359,6 +411,17 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
   testeur demanderait d'écrire le trousseau d'un appareil.
 - **Le ciblage par version compare des versions d'application**, pas des builds : deux builds de la
   même version sont indiscernables.
+- **Les deux portes du jeton sont ouvertes au rôle public**, et c'est le prix de l'absence de compte :
+  sans identité, rien ne peut prouver qu'un appareil est bien le propriétaire du jeton qu'il dépose ou
+  retire. Ce que ça permet, et pourquoi c'est tenable : déposer des jetons fictifs — la forme est
+  bornée par un `check`, et un envoi élague ce qui est mort ; retirer un jeton **dont on connaît la
+  valeur** — or les jetons ne s'énumèrent pas, la lecture est refusée au rôle public. Aucune donnée
+  ne fuit dans les deux cas.
+- **Le statut de testeur d'un jeton push est auto-déclaré** ; la base ne peut pas le vérifier sans
+  l'identifiant d'installation, qui ne la rejoint jamais. Un push d'audience `testeurs` peut donc
+  atteindre un appareil qui se dit testeur à tort — l'enjeu est un message de service.
+- **Une notification push ne se teste que sur un build**, jamais sous Expo Go, et Android demande
+  des identifiants FCM sur EAS.
 - **Hors ligne sans cache, un incident ne se voit pas** : la première lecture doit avoir eu lieu.
 - **La pastille d'état de service vit dans les en-têtes des quatre onglets** — Planning agrégé,
   Campus, Scolarité dans ses trois états, Réglages. Un écran poussé, ou le Planning d'un groupe

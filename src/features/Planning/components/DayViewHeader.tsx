@@ -7,6 +7,7 @@ import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { PastilleService } from '../../../shared/messages/PastilleService';
 import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
+import { HeaderButton, HEADER_BUTTON_ICON } from '../../../shared/ui/HeaderButton';
 
 export interface DayViewHeaderProps {
     insets: { top: number } | null;
@@ -23,6 +24,8 @@ export interface DayViewHeaderProps {
     // Callbacks
     onTodayPress: () => void;
     onRightPress: () => void;
+    /** Le « + » vers l'editeur du systeme ; absent tant qu'aucun calendrier du telephone n'est affiche (6.1.x-D). */
+    onAjouterEvenement?: () => void;
 
     // Day slider
     days: moment.Moment[];
@@ -46,7 +49,7 @@ export interface DayViewHeaderProps {
     extraData: unknown;
 }
 
-const renderTitle = (groupName: string | string[], theme: import('../../../shared/theme/Theme').AppThemeType) => {
+const renderTitle = (groupName: string | string[], theme: import('../../../shared/theme/Theme').AppThemeType, onAjouterEvenement?: () => void) => {
     // Vue d'un groupe cherche : pas de grand titre, mais tout son ESPACE — le degagement standard
     // des sous-pages (HEADER_OFFSET), la ou le titre en opacite nulle ne reservait que sa propre
     // hauteur : les boutons flottants retour et favori frolaient la ligne Aujourd'hui/Semaine
@@ -55,8 +58,9 @@ const renderTitle = (groupName: string | string[], theme: import('../../../share
         return <View style={{ height: HEADER_OFFSET }} />;
     }
     return (
-        // Ligne 1 : Titre "Planning", et a droite la pastille d'etat de service
-        // (shared/messages/PastilleService), alignee sur la ligne du titre par la meme marge basse.
+        // Ligne 1 : Titre "Planning", et a droite le « + » quand il a lieu d'etre, puis la pastille
+        // d'etat de service (shared/messages/PastilleService), alignes sur la ligne du titre par la
+        // meme marge basse.
         <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md }}>
             <Text style={{
                 fontSize: tokens.fontSize.title,
@@ -66,7 +70,14 @@ const renderTitle = (groupName: string | string[], theme: import('../../../share
             }}>
                 {Translator.get('MY_PLANNING')}
             </Text>
-            <PastilleService theme={theme} style={{ marginLeft: 'auto', marginBottom: tokens.space.md }} />
+            <View style={{ marginLeft: 'auto', marginBottom: tokens.space.md, flexDirection: 'row', alignItems: 'center' }}>
+                {onAjouterEvenement !== undefined && (
+                    <HeaderButton theme={theme} onPress={onAjouterEvenement} accessibilityLabel={Translator.get('ADD_EVENT')} style={{ marginRight: tokens.space.sm }}>
+                        <MaterialCommunityIcons name="plus" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                    </HeaderButton>
+                )}
+                <PastilleService theme={theme} />
+            </View>
         </View>
     );
 };
@@ -210,7 +221,7 @@ export const DayViewHeader: React.FC<DayViewHeaderProps> = (props) => {
             paddingBottom: tokens.space.sm,
             ...tokens.shadow.sm as object,
         }}>
-            {renderTitle(props.groupName, props.theme)}
+            {renderTitle(props.groupName, props.theme, props.onAjouterEvenement)}
             {renderNavigation(
                 props.theme, props.mode, props.leftLabel, props.centerLabel, 
                 props.rightLabel, props.rightIcon, props.onTodayPress, props.onRightPress

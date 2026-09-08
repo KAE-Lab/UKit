@@ -132,9 +132,20 @@ sort en plusieurs publications**. La 6.0 est sortie le 31 août. Deux jours plus
 |---|---|---|
 | **v6.0** | la phase telle qu'écrite : volet 1, les sessions d'écran, les finitions visuelles, la clôture [6-Z](6-z-livraison-finale.md) — **sortie le 2026-08-31** | — |
 | **v6.1** | **la consolidation de la v6** : robustesse de la scolarité ([A](6-1-a-robustesse-scolarite.md), *livré le 2026-09-02*), pilotage à distance — messages, audiences, console, sondes ([B](6-1-b-pilotage-a-distance.md), *livré le 2026-09-03*), la passe de code ([C](6-1-c-passe-de-code.md), *livrée le 2026-09-03*), la publication en parallèle ([D](6-1-d-publication.md), *livrée le 2026-09-04*), les finitions d'interface ([E](6-1-e-finitions-interface.md), *livré le 2026-09-04*), la sortie ([Z](6-1-z-sortie.md), *jalon livré le 2026-09-06, builds en review aux stores*) | les six jalons déroulés |
-| **v6.1.x** | **le socle, et les demandes** — partie le 2026-09-06 comme une 6.1.1 courte (l'Expo Go des stores est passé en SDK 57 le 2026-09-04, l'application était en 54, sans repli côté iOS), redéfinie le soir même : *se débarrasser d'un maximum de demandes* avant la 6.2. Le saut de SDK et la dette d'outillage ([A](6-1-x-a-montee-du-socle.md), *livré le 2026-09-06, vérifié sur les deux plateformes*) ; ce qui a été signalé — la synchronisation automatique qui ne part jamais, les filtres d'UE à plusieurs codes, la Scolarité sans compte, les lectures bonus des portails, le glissement entre onglets retiré ([B](6-1-x-b-signalements.md), *livré le 2026-09-07, vérifié sur iPhone*) ; l'entrée des retours dans la base et la console ([C](6-1-x-c-retours.md), *livré le 2026-09-07, sans build, et `main` avancé sur la branche pour que la console et le cron vivent*) ; **les calendriers du téléphone dans le Planning, et le ciblage par plateforme** ([D](6-1-x-d-calendriers-du-telephone.md), spécifié — les deux demandes du 2026-09-07 fusionnées en un jalon ; les messages en notification, en vrai push, sont reportés à la version suivante) ; la sortie ([Z](6-1-x-z-sortie.md)), où **Android se vérifie en une fois** pour tous les jalons et où **le numéro se décide**. Cadrée par la [mise à plat du 2026-09-06](6-2-mise-a-plat.md) | la vérification Android groupée, et la synchronisation **mesurée** sur 24 h application fermée, sur build de production |
-| **v6.2** | **une version entière pour le mouvement de l'interface** — décision du 2026-09-04, en vérifiant [6.1-E](6-1-e-finitions-interface.md). Le jalon des finitions a rendu l'application correcte ; il ne l'a pas rendue **fluide**, et c'est un autre travail : *« rien n'apparaît sans être annoncé par sa forme »*. Squelettes de contenu à la place des indicateurs, entrées échelonnées, ressorts plutôt que durées fixes, états pressés, transitions d'écran. Elle s'ouvre par un **relevé de ce qui saute**, se mène d'abord sur **quelques écrans aux besoins différents**, et n'est étendue qu'ensuite — avec son vocabulaire partagé, comme [6-K](6-k-socle-visuel.md) l'a fait pour les formes. **Cadrée le 2026-09-06** : le relevé, le vocabulaire et l'écran fondateur — le tableau de bord Campus — dans [A](6-2-a-releve-et-vocabulaire.md) ; les sessions Planning, Scolarité et Réglages dans [B](6-2-b-ecrans.md) ; la sortie dans [Z](6-2-z-sortie.md). On prend à la référence les **fonds par écran**, la **mise en scène du contenu** et les **transitions d'écran** ; on ne prend ni la rondeur ni une fonte propre | le relevé, puis les écrans pilotes |
-| **v6.3** | ce qui attend le contenu, et qui a glissé d'un cran : **mise en avant des annonces par créneaux**, **compléments du portail Bordeaux INP** et documents supplémentaires, **notes & résultats**, et l'**affichage d'un calendrier externe dans le Planning** (demandé par un utilisateur le 2026-09-03) ; plus les deux évaluations reportées, onglets natifs / `@expo/ui` et typage de `Theme.ts` | le contenu existe et permet de vérifier |
+| **v6.2** | **le socle, et les demandes** — partie le 2026-09-06 comme une 6.1.1 courte (l'Expo Go des stores est passé en SDK 57 le 2026-09-04, l'application était en 54, sans repli côté iOS), redéfinie le soir même : *se débarrasser d'un maximum de demandes* avant la 6.2. Le saut de SDK et la dette d'outillage ([A](6-1-x-a-montee-du-socle.md), *livré le 2026-09-06, vérifié sur les deux plateformes*) ; ce qui a été signalé — la synchronisation automatique qui ne part jamais, les filtres d'UE à plusieurs codes, la Scolarité sans compte, les lectures bonus des portails, le glissement entre onglets retiré ([B](6-1-x-b-signalements.md), *livré le 2026-09-07, vérifié sur iPhone*) ; l'entrée des retours dans la base et la console ([C](6-1-x-c-retours.md), *livré le 2026-09-07, sans build, et `main` avancé sur la branche pour que la console et le cron vivent*) ; **les calendriers du téléphone dans le Planning, et le ciblage par plateforme** ([D](6-1-x-d-calendriers-du-telephone.md), *livré le 2026-09-07, colonne appliquée en base le même jour, protocole iPhone à jouer* — les deux demandes du 2026-09-07 fusionnées en un jalon ; les messages en notification, d'abord reportés, sont finalement **livrés** par [E](6-1-x-e-notifications-push.md) le 2026-09-08 — la première écriture de l'application vers la base, un jeton et de quoi le cibler, un interrupteur pour le retirer) ; la sortie ([Z](6-1-x-z-sortie.md)), où **Android se vérifie en une fois** pour tous les jalons et où **le numéro se décide**. Cadrée par la [mise à plat du 2026-09-06](6-2-mise-a-plat.md) | la vérification Android groupée, et la synchronisation **mesurée** sur 24 h application fermée, sur build de production |
+| **v6.3** | **une version entière pour le mouvement de l'interface** — décision du 2026-09-04, en vérifiant [6.1-E](6-1-e-finitions-interface.md). Le jalon des finitions a rendu l'application correcte ; il ne l'a pas rendue **fluide**, et c'est un autre travail : *« rien n'apparaît sans être annoncé par sa forme »*. Squelettes de contenu à la place des indicateurs, entrées échelonnées, ressorts plutôt que durées fixes, états pressés, transitions d'écran. Elle s'ouvre par un **relevé de ce qui saute**, se mène d'abord sur **quelques écrans aux besoins différents**, et n'est étendue qu'ensuite — avec son vocabulaire partagé, comme [6-K](6-k-socle-visuel.md) l'a fait pour les formes. **Cadrée le 2026-09-06** : le relevé, le vocabulaire et l'écran fondateur — le tableau de bord Campus — dans [A](6-2-a-releve-et-vocabulaire.md) ; les sessions Planning, Scolarité et Réglages dans [B](6-2-b-ecrans.md) ; la sortie dans [Z](6-2-z-sortie.md). On prend à la référence les **fonds par écran**, la **mise en scène du contenu** et les **transitions d'écran** ; on ne prend ni la rondeur ni une fonte propre | le relevé, puis les écrans pilotes |
+| **v6.4** | ce qui attend le contenu, et qui a glissé de deux crans : **mise en avant des annonces par créneaux**, **compléments du portail Bordeaux INP** et documents supplémentaires, **notes & résultats**, et l'**affichage d'un calendrier externe dans le Planning** (demandé par un utilisateur le 2026-09-03) ; plus les deux évaluations reportées, onglets natifs / `@expo/ui` et typage de `Theme.ts` | le contenu existe et permet de vérifier |
+
+> **Renumérotage du 2026-09-08.** La version développée sur la branche `v6.1.x` devait s'appeler
+> `6.1.1` ; elle a fini par porter trois capacités — les messages de service en notification push,
+> les calendriers du téléphone dans le Planning, le ciblage par plateforme —, ce qui en fait une
+> **mineure** : elle sort en **6.2.0**. Le mouvement de l'interface, planifié sous le numéro 6.2 le
+> 2026-09-04, devient donc la **6.3**, et le contenu la **6.4**. *Un numéro décrit ce qui est sorti,
+> pas ce qui était prévu.* Les documents de plan gardent leurs noms de fichier — `6-2-a-…`,
+> `6-2-b-…`, `6-2-z-…` pour le mouvement, `6-2-mise-a-plat.md` pour la séance du 2026-09-06 : un nom
+> de fichier est une adresse, et les renommer casserait les liens sans rien apprendre à personne.
+> Les documents déjà écrits gardent aussi ce qu'ils disaient le jour où ils ont été écrits ; c'est
+> cette note qui fait foi.
 
 Ce n'est pas une entorse à « une phase = une version » : c'est son amendement, écrit ici et dans
 [6-Z](6-z-livraison-finale.md). La 6.0 a été sortie vite pour tenir la rentrée ; la 6.1 répare ce
@@ -198,10 +209,11 @@ de test, et les limites écrites.
                       glissement entre onglets retire   [livre, verifie iPhone]
                     C les retours entrent en base, lus dans la console (sans build)   [livre]
                     D les calendriers du telephone dans le Planning
-                      + le ciblage par plateforme (spec ecrite ; le push est reporte)
+                      + le ciblage par plateforme   [livre]
+                    E les messages de service en notification PUSH   [livre, fonction deployee]
                     Z sortie — la verification Android de TOUS les jalons, en une fois
 
-   6.2 — LE MOUVEMENT (decidee le 2026-09-04, cadree le 2026-09-06)
+   6.3 — LE MOUVEMENT (decidee le 2026-09-04, cadree le 2026-09-06, renumerotee le 2026-09-08)
 
                     A releve de ce qui saute + vocabulaire partage
                       (squelettes, ressorts, cascade, etats presses, fonds d'ecran)
@@ -214,14 +226,14 @@ de test, et les limites écrites.
                     se reconnaitre (nommage) -> recruter (formulaire) -> compte prete
                     -> mesurer et ecrire -> publier -> sonder sans le compte
 
-   6.3 — LE CONTENU, quand il existe
+   6.4 — LE CONTENU, quand il existe
 
                     mise en avant des annonces par creneaux
                     complements du portail Bordeaux INP, documents supplementaires
                     notes & resultats
                     calendrier externe affiche dans le Planning
-                    messages de service en NOTIFICATION PUSH (reporte de 6.1.x-D le 2026-09-07 :
-                      la premiere ecriture vers la base, une infra d'envoi, une boucle de builds)
+                    (les messages en NOTIFICATION PUSH, reportes ici le 2026-09-07, sont finalement
+                      livres par 6.1.x-E le 2026-09-08)
                     evaluations : onglets natifs / @expo/ui, typage de Theme.ts
 ```
 

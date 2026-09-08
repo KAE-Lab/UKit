@@ -219,6 +219,9 @@ const styles = StyleSheet.create({
         gap: tokens.space.xl,
     },
     title: {
+        // Pleine largeur : un texte libre dans un parent qui centre se tronque sur Android (docs/theme.md).
+        alignSelf: 'stretch',
+        textAlign: 'center',
         fontSize: tokens.fontSize.xxl,
         fontWeight: tokens.fontWeight.semibold,
     },

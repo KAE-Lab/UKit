@@ -111,7 +111,14 @@ export function ChargementPleinePage({
             {...(topOffset !== undefined ? { topOffset } : {})}
         >
             {indicateurVisible ? (
-                <ApparitionEnFondu>
+                /*
+                 * `alignSelf: 'stretch'` sur l'**enveloppe**, et pas seulement sur les textes :
+                 * `ScreenState` centre ses enfants (`alignItems: 'center'`), donc cette boite prenait
+                 * la largeur de son contenu et un texte etire a l'interieur n'y gagnait rien — il se
+                 * tronquait toujours sur Android (« Ton emploi du temps » au lieu de « Ton emploi du
+                 * temps arrive », mesure le 2026-09-08). Les enfants restent centres.
+                 */
+                <ApparitionEnFondu style={{ alignSelf: 'stretch', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={theme.accent ?? theme.primary} />
                     <Text style={[styles.message, { color: theme.fontSecondary }]}>{message}</Text>
                     {attente.visible && patience !== undefined ? (
@@ -132,8 +139,13 @@ const styles = StyleSheet.create({
         marginTop: tokens.space.md,
         fontSize: tokens.fontSize.sm,
         textAlign: 'center',
+        // Pleine largeur : Android tronque la fin d'un texte centre qui s'auto-dimensionne — le meme
+        // arrondi de mesure que les etats vides et les jours de la semaine. Signale sur appareil le
+        // 2026-09-08, et la regle vaut pour **tout** texte centre du depot (docs/theme.md).
+        alignSelf: 'stretch',
     },
     patience: {
+        alignSelf: 'stretch',
         marginTop: tokens.space.sm,
         fontSize: tokens.fontSize.xs,
         textAlign: 'center',

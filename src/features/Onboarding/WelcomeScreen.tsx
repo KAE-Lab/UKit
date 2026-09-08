@@ -236,7 +236,7 @@ function PiedDuParcours({ themeObj, derniere, index, total, basInset, desactive,
                         opacity: desactive ? 0.5 : 1,
                     }}
                 >
-                    <Text style={{ color: themeObj.lightFont, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
+                    <Text style={{ color: themeObj.lightFont, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, alignSelf: 'stretch', textAlign: 'center' }}>
                         {derniere ? Translator.get('FINISH') : (index === 0 ? Translator.get('START') : Translator.get('NEXT'))}
                     </Text>
                 </TouchableOpacity>

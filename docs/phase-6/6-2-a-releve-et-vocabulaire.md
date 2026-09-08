@@ -1,10 +1,15 @@
-# 6.2-A — Le relevé, et le vocabulaire du mouvement
+# 6.3-A — Le relevé, et le vocabulaire du mouvement
 
-> **Cadre, pas encore spécification.** La direction précise de la 6.2 se tranche sur des captures
+> **Ce chantier s'est appelé 6.2 jusqu'au 2026-09-08.** La version développée sur la branche
+> `v6.1.x` a fini par porter trois capacités et sort en `6.2.0` ; le mouvement devient donc la
+> **6.3**. Les fichiers gardent leur nom — `6-2-a-…`, `6-2-b-…`, `6-2-z-…` —, qui est leur adresse.
+> Voir la note de renumérotage dans le [README de phase](README.md).
+
+> **Cadre, pas encore spécification.** La direction précise de la 6.3 se tranche sur des captures
 > posées côte à côte, et son détail au moment du relevé. Ce document pose la méthode et les
 > contraintes ; il se complète avant d'être ouvert.
 >
-> Le jalon fondateur de la 6.2, sur le modèle de [6-K](6-k-socle-visuel.md) : celui-ci a donné à
+> Le jalon fondateur de la 6.3, sur le modèle de [6-K](6-k-socle-visuel.md) : celui-ci a donné à
 > l'application son vocabulaire de **formes**, celui-là lui donne son vocabulaire de **mouvement**.
 
 ## La direction
@@ -37,7 +42,7 @@ ressorts, états pressés, transitions, fond d'écran. Une règle existante **es
 
 > *« Un chargement bref ne montre rien »* (seuil de 300 ms,
 > [`indicateurRetarde.ts`](../../src/shared/ui/indicateurRetarde.ts)) — les squelettes de contenu la
-> contredisent par construction, et la 6.2 les demande. La réécrire est un geste du jalon, pas une
+> contredisent par construction, et la 6.3 les demande. La réécrire est un geste du jalon, pas une
 > entorse commise en passant.
 
 ### 3. L'écran fondateur : le tableau de bord Campus
@@ -88,6 +93,6 @@ sera jugé. Écrire des animations avant la montée reviendrait à les rejuger a
 
 - **Ce qui se vérifie devient un jalon, ce qui se juge reste une conversation.** Le relevé, le
   vocabulaire et l'écran fondateur sont ce jalon ; refaire un écran est une session
-  ([6.2-B](6-2-b-ecrans.md)).
+  ([6.3-B](6-2-b-ecrans.md)).
 - **Le tableau de bord Campus est un écran de référence de 6-K.** Le prendre comme écran fondateur
   rouvre ce contrat, et il faut l'assumer explicitement plutôt que le constater après coup.

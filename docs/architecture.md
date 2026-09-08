@@ -343,6 +343,10 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/ChoixEtablissement.tsx`](../src/shared/ui/ChoixEtablissement.tsx) | la liste des universités puis la confirmation de la bascule, partagée par les Réglages et le formulaire de connexion |
 | [`shared/ui/ProgressBar.tsx`](../src/shared/ui/ProgressBar.tsx) | une jauge horizontale, rayon calculé sur la hauteur |
 | [`shared/ui/Icon.tsx`](../src/shared/ui/Icon.tsx) | une icône de l'une ou l'autre famille Material, typée par union discriminée |
+| [`shared/ui/PointDeCouleur.tsx`](../src/shared/ui/PointDeCouleur.tsx) | le point de couleur de huit : un état, une appartenance — relevé quatre fois, remonté au 6.1.x-D ([theme.md](theme.md#le-vocabulaire-partagé)) |
+| [`shared/push/inscription.ts`](../src/shared/push/inscription.ts) · [`inscription.test.ts`](../src/shared/push/inscription.test.ts) | ce qu'un appareil dépose pour les notifications push, et quand — pur, testé (6.1.x-E) |
+| [`shared/push/index.ts`](../src/shared/push/index.ts) | le dépôt et le retrait du jeton push : la première écriture de l'application vers la base, par deux fonctions SQL ([pilotage.md](pilotage.md#les-messages-en-notification-push)) |
+| [`shared/push/reception.ts`](../src/shared/push/reception.ts) | une notification ouverte mène à la feuille de son message |
 | [`shared/ui/GlypheFiligrane.tsx`](../src/shared/ui/GlypheFiligrane.tsx) | le filigrane d'identité : une grande silhouette en transparence sur une surface unique — le geste de signature, règles d'usage dans son en-tête ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/PiedFlottant.tsx`](../src/shared/ui/PiedFlottant.tsx) | le pied d'action flottant : le vocabulaire de la barre de recherche — dégradé d'amortissement, bande du fond de page — et le dégagement que l'écran doit lui laisser ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ModMenu.tsx`](../src/shared/ui/ModMenu.tsx) | menu flottant de développement : simulation temporelle et livraison ([qualite.md](qualite.md)) |

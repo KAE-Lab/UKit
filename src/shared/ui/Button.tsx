@@ -153,14 +153,18 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
                 )
             )}
             {/*
-              * `flexShrink: 0` et non `flex: 1` seul : le libelle ne doit **jamais** etre comprime.
-              * Sans cette borne, une valeur longue a droite — le nom d'un etablissement, par exemple —
-              * ecrasait le libelle jusqu'a une lettre par ligne, et « Institution » s'affichait a la
-              * verticale. Ce n'etait pas un probleme de longueur de nom mais de gabarit : n'importe
-              * quelle valeur longue le reproduisait.
+              * `flexShrink: 0` et non `flex: 1` seul : face a une **valeur texte**, le libelle ne doit
+              * jamais etre comprime. Sans cette borne, une valeur longue a droite — le nom d'un
+              * etablissement, par exemple — ecrasait le libelle jusqu'a une lettre par ligne, et
+              * « Institution » s'affichait a la verticale.
+              *
+              * Face a un **interrupteur**, c'est l'inverse : sa largeur est fixe (51 points), donc
+              * rien ne peut ecraser le libelle — et un libelle qui ne cede pas pousse l'interrupteur
+              * hors de la carte. Constate sur iPhone le 2026-09-08 avec « Messages de service en
+              * notification ». Il prend donc l'espace restant et se plie s'il le faut.
               */}
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- G8 : les styles composes de Theme.ts ne sont pas types (docs/defauts-fonctionnels.md), session a part en 6.2 */}
-            <Text style={[theme.buttonMainText, { flexShrink: 0 }] as any}>{leftText}</Text>
+            <Text style={[theme.buttonMainText, onSwitchToggle !== undefined ? { flex: 1 } : { flexShrink: 0 }] as any}>{leftText}</Text>
             {onSwitchToggle !== undefined ? (
                 /*
                   * L'interrupteur du depot, dessine, et non celui du systeme : voir son en-tete. La

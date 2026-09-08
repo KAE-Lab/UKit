@@ -38,9 +38,11 @@ export interface HeaderButtonProps {
      */
     fond?: string;
     style?: StyleProp<ViewStyle>;
+    /** Ce que le lecteur d'ecran dit d'une icone seule. */
+    accessibilityLabel?: string;
 }
 
-export function HeaderButton({ theme, children, onPress, fond, style }: HeaderButtonProps) {
+export function HeaderButton({ theme, children, onPress, fond, style, accessibilityLabel }: HeaderButtonProps) {
     const surface = (
         <View style={[styles.surface, { backgroundColor: fond ?? theme.greyBackground }, style]}>
             {children}
@@ -50,7 +52,7 @@ export function HeaderButton({ theme, children, onPress, fond, style }: HeaderBu
     // Sans `onPress`, le bouton est un cadre : l'appelant pose son propre tactile autour, ce que fait
     // le bouton retour de la pile pour recuperer le geste que React Navigation lui fournit.
     if (onPress === undefined) return surface;
-    return <TouchableOpacity onPress={onPress}>{surface}</TouchableOpacity>;
+    return <TouchableOpacity onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel}>{surface}</TouchableOpacity>;
 }
 
 const styles = StyleSheet.create({

@@ -39,12 +39,14 @@ export interface AnnonceRow {
      * Le ciblage (jalon 6.1-B) : l'audience, les campus, la fenetre de versions. `audience` est
      * `string` et non l'union des deux valeurs connues, pour la meme raison que `VisuelRow.domaine` :
      * une publication peut en ouvrir une troisieme avant que le parc ne la connaisse, et la
-     * projection (`shared/ciblage`) l'ignore. Les trois autres sont nulles quand rien n'est cible.
+     * projection (`shared/ciblage`) l'ignore. Les autres sont nulles quand rien n'est cible ;
+     * `plateformes` (6.1.x-D) porte `ios` et/ou `android`, `null` = les deux.
      */
     readonly audience: string;
     readonly etablissements: string[] | null;
     readonly version_min: string | null;
     readonly version_max: string | null;
+    readonly plateformes: string[] | null;
 }
 
 /**
@@ -168,6 +170,7 @@ export interface ServiceMessageRow {
     readonly etablissements: string[] | null;
     readonly version_min: string | null;
     readonly version_max: string | null;
+    readonly plateformes: string[] | null;
 }
 
 /**
@@ -239,7 +242,14 @@ export interface Database {
             sondes: TableEnLecture<SondeRow>;
         };
         Views: Record<string, never>;
-        Functions: Record<string, never>;
+        /** Les deux portes d'ecriture de l'application (6.1.x-E) : le depot et le retrait d'un jeton push. */
+        Functions: {
+            deposer_jeton: {
+                Args: { p_jeton: string; p_plateforme: string; p_etablissement: string; p_version: string; p_testeur: boolean };
+                Returns: undefined;
+            };
+            retirer_jeton: { Args: { p_jeton: string }; Returns: undefined };
+        };
         Enums: Record<string, never>;
         CompositeTypes: Record<string, never>;
     };

@@ -3,7 +3,7 @@
  * evenement, la creation du calendrier UKit, et l'ecriture d'un passage complet.
  *
  * Elles vivaient dans `AppCore.tsx`, sorties chaque fois que ce fichier a franchi la limite de 400
- * lignes que le projet s'impose (jalon 6-E, puis la passe finale de la v6). Ce sont des fonctions
+ * lignes que le projet s'impose (jalon 6-E, la passe finale de la v6, puis 6.1.x-D). Ce sont des fonctions
  * de module, sans etat, qui ne touchent que `expo-calendar` : les sortir est le decoupage que la
  * regle prescrit, et il ne change rien au comportement — `SettingsManager.syncCalendar` les appelle
  * exactement comme avant.
@@ -18,6 +18,7 @@ import { Platform } from 'react-native';
 // `/legacy` est le meme code qu'en SDK 54 ; la migration vers l'API objet est un travail a part
 // (docs/features/settings.md, limites).
 import * as Calendar from 'expo-calendar/legacy';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import style from '../theme/Theme';
 import type { PlanningEvent } from '../../features/Planning/services/PlanningApiService';
@@ -79,6 +80,30 @@ export async function createUKitCalendar(calendars: Calendar.Calendar[]): Promis
         };
     }
     return await Calendar.createCalendarAsync(calendar as Calendar.Calendar);
+}
+
+/**
+ * Retire de l'agenda tout ce qu'un passage de synchronisation y a ecrit, et oublie la table.
+ *
+ * Deux formes de cible : le calendrier dedie « UKit », supprime entier avec ses evenements ; un
+ * calendrier du systeme, dont seuls les evenements de `previousSyncData` partent — il appartient a
+ * l'utilisateur. Dans les deux cas la table et l'horodatage s'effacent : la date d'une
+ * synchronisation qui n'existe plus survivait a la premiere forme (6.1-C).
+ */
+export async function retirerEvenementsSynchronises(calendar: string | number, calendars: readonly Calendar.Calendar[]): Promise<void> {
+    if (calendar === 'UKit') {
+        const ukitCalendar = calendars.find((cal) => cal.title === 'UKit');
+        if (ukitCalendar) await Calendar.deleteCalendarAsync(ukitCalendar.id);
+    } else {
+        let existingCalendarEvents: Record<string, unknown> = {};
+        try {
+            const data = await AsyncStorage.getItem('previousSyncData');
+            existingCalendarEvents = data === null ? {} : JSON.parse(data) || {};
+        } catch { existingCalendarEvents = {}; }
+        await Promise.all(Object.values(existingCalendarEvents).map((id) => Calendar.deleteEventAsync(id as string)));
+    }
+    await AsyncStorage.removeItem('previousSyncData');
+    await AsyncStorage.removeItem('previousSyncTime');
 }
 
 /**

@@ -300,14 +300,23 @@ jamais vu produirait des sélecteurs imaginés — exactement ce que ce dépôt 
 
 **Et depuis le 2026-08-30, une rangée sans source publiée est un teaser assumé**
 ([`RangeeMysterieuse`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx)) : notes et
-examens passent **sous un flou** (`expo-blur`, un cadenas au centre — l'exclusivité plutôt que la
-promesse), et le toucher ouvre une
+examens passent **sous un masque** — leurs deux lignes de texte ne sont pas rendues, une barre grise
+prend la boîte de chacune, et le cadenas prend la place de l'icône du service (l'exclusivité plutôt
+que la promesse) —, et le toucher ouvre une
 modale « Bientôt disponible » — avec, quand l'établissement déclare une porte, un lien discret pour
 ouvrir le service quand même : le mystère ne coûte aucune capacité. **Le déclencheur est la donnée,
 pas une liste écrite** (natures `bientot` et `absent`, chez les deux facs) : le jour où la partie 2
-de la v6 publie le Blueprint des notes, le flou tombe de lui-même, sans release — la thèse de la
-phase 6 appliquée à un effet de style. Les tuiles, elles, ne se floutent jamais : la messagerie et
+de la v6 publie le Blueprint des notes, le masque tombe de lui-même, sans release — la thèse de la
+phase 6 appliquée à un effet de style. Les tuiles, elles, ne se masquent jamais : la messagerie et
 les documents ont toujours quelque chose de vrai à dire.
+
+Le traitement a changé le 2026-09-08, après mesure sur iPhone **et** sur Android : c'était un flou
+(`expo-blur`), et le flou ne masquait rien — inexistant sur Android au SDK 57 faute de cible
+(`blurTarget`), encore lisible sur iPhone à toutes les intensités essayées. Un texte posé en couleur
+`transparent` sous la barre a été le pas suivant, et il ne suffisait pas non plus : sur Android, ce
+qui dépassait de la barre se voyait. La décision durable qui en sort — *un contenu qu'on veut rendre
+illisible se retire du rendu, il ne se cache ni derrière un effet natif ni derrière une couleur* —
+est écrite dans [theme.md](../theme.md#les-décisions-durables).
 
 #### Les six états d'une rangée
 
@@ -1196,7 +1205,7 @@ ScolariteDashboard                      consomme useCredentials()
                                        │                     la FeuilleDeWidget au toucher)
                                        ├─ DocumentsTile     (local — compte les pièces rangées)
                                        └─ WidgetRow × 2     (notes, examens — des événements,
-                                            ⤷ floutés en teaser tant que leur source n'est pas
+                                            ⤷ masqués en teaser tant que leur source n'est pas
                                               publiée — état décidé par widgets/presentation)
 ```
 
@@ -1635,6 +1644,13 @@ retour. Les appelants du formulaire passent des `domainesInternes` dans la route
 ([`liensDuFormulaire.ts`](../../src/shared/navigation/liensDuFormulaire.ts)) : ce qui est chez Google
 reste, tout autre lien s'ouvre par-dessus, dans une seconde instance de l'écran, et « retour »
 retrouve le formulaire là où il en était. Les portails ne posent rien.
+
+Trois détails sans lesquels la règle ne tient pas, tous mesurés le 2026-09-08 : la **destination
+réelle** est jugée et non le redirecteur `google.com/url?q=` que Google Forms pose à la place de
+l'adresse écrite ; le formulaire passe `setSupportMultipleWindows` à `false`, sans quoi Android
+confie ses liens `target="_blank"` au navigateur du système ; et l'écran pose
+`detachPreviousScreen: false`, sans quoi la pile vide la WebView du dessous. Voir
+[defauts-fonctionnels.md](../defauts-fonctionnels.md).
 
 Quatre points d'entrée nommés :
 
@@ -2292,7 +2308,7 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`services/PropositionsDossier.ts`](../../src/features/Scolarite/services/PropositionsDossier.ts) | ce que le dossier a livré en plus de l'identité : UE inscrites, emploi du temps personnel |
 | [`services/PropositionsDecision.ts`](../../src/features/Scolarite/services/PropositionsDecision.ts) | ce qu'on en demande, et **quand** — le complément des UE, jamais les UE inscrites |
 | [`components/PropositionsModal.tsx`](../../src/features/Scolarite/components/PropositionsModal.tsx) | la confirmation, rendue par `rootContainer` pour exister aussi pendant l'accueil |
-| [`components/RangeeMysterieuse.tsx`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx) | le teaser d'un widget sans source publiée : la rangée floutée — la modale « Bientôt » qu'elle ouvre vit dans `shared/ui` |
+| [`components/RangeeMysterieuse.tsx`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx) | le teaser d'un widget sans source publiée : le cadenas et le toucher — le masque du texte, lui, est posé par `LigneScolarite` ; la modale « Bientôt » qu'elle ouvre vit dans `shared/ui` |
 | [`components/FeuilleDeWidget.tsx`](../../src/features/Scolarite/components/FeuilleDeWidget.tsx) | la feuille d'un widget en échec : la phrase que la tuile ne dit pas, « Relancer » ce seul widget, ou la ressaisie |
 | [`hooks/useSessionDemandeeIci.ts`](../../src/features/Scolarite/hooks/useSessionDemandeeIci.ts) | une session lancée par un geste fait **sur cet écran** lui laisse la page jusqu'à son terme, et dit **de quel geste** — la garde partagée par l'onglet et la fiche du compte |
 | [`screens/ScolariteDashboard.tsx`](../../src/features/Scolarite/screens/ScolariteDashboard.tsx) | écran d'onglet : aiguillage entre campus non relié, chargement et la page — la même avec ou sans compte |
@@ -2311,7 +2327,7 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`components/EncartSession.tsx`](../../src/features/Scolarite/components/EncartSession.tsx) | l'état de la session **en tête de page** : pas de compte, échec — sur l'onglet et sur la fiche du compte |
 | [`components/CampusNonRelie.tsx`](../../src/features/Scolarite/components/CampusNonRelie.tsx) | la page d'un campus sans portail : l'état vide du vocabulaire partagé, la demande, le bouton pour corriger son choix |
 | [`components/DocumentsSection.tsx`](../../src/features/Scolarite/components/DocumentsSection.tsx) | « Tes documents » : la liste locale, l'ajout, la suppression |
-| [`components/LigneScolarite.tsx`](../../src/features/Scolarite/components/LigneScolarite.tsx) | le vocabulaire de rangées de l'onglet : un groupe encadré, ses lignes, son compteur |
+| [`components/LigneScolarite.tsx`](../../src/features/Scolarite/components/LigneScolarite.tsx) | le vocabulaire de rangées de l'onglet : un groupe encadré, ses lignes, son compteur — et le `masque` du teaser, qui ne peint pas les textes |
 | [`components/ConfirmationScolarite.tsx`](../../src/features/Scolarite/components/ConfirmationScolarite.tsx) | le dialogue de confirmation, partagé par les trois gestes qui en demandent un |
 | [`services/DocumentsService.ts`](../../src/features/Scolarite/services/DocumentsService.ts) | les pièces locales : lister, ajouter, écrire des octets rapportés, supprimer — dans le répertoire privé de l'application |
 | [`services/CertificatService.ts`](../../src/features/Scolarite/services/CertificatService.ts) | la couture du certificat : jouer le Blueprint, ne pas le rejouer pour rien, écrire |

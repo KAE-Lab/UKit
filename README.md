@@ -56,7 +56,10 @@ Trois principes portent le projet :
   annonces, référentiels, fichiers d'instructions — jamais ce qui appartient à l'utilisateur. Les
   requêtes qui l'atteignent sont anonymes et en lecture seule, et l'application **fonctionne sans
   jamais la joindre** : tout ce qu'elle publie existe déjà dans le binaire, et n'y est que mis à
-  jour. C'est un point de publication, pas une dorsale.
+  jour. C'est un point de publication, pas une dorsale. Une seule chose remonte de l'appareil,
+  depuis 6.1.x-E, et elle se coupe d'un interrupteur : le jeton de notification, avec le campus,
+  la version et la plateforme qu'il faut pour ne notifier que les appareils concernés — dit dans
+  [PRIVACY.md](PRIVACY.md).
   → [docs/backend.md](docs/backend.md)
 - **Un socle lisible.** Découpage par domaine de navigation, TypeScript partout, tokens de design,
   aucune chaîne en dur : le code doit pouvoir être repris sans contexte oral.
@@ -305,7 +308,12 @@ livré ; elle est mise à jour à chaque contribution.
   formulaire génériques par table, l'état des sources, le journal exportable — publie tout cela sans
   requête SQL, avec un compte dont chaque geste est tracé. Et chaque matin, des **sondes** jouent
   chaque source sans identifiant depuis un runner GitHub et ouvrent une issue quand une source tombe —
-  ce qui manquait l'été où le relais est mort sans que personne ne le sache.
+  ce qui manquait l'été où le relais est mort sans que personne ne le sache. Depuis 6.1.x-D, un
+  contenu se cible aussi **par plateforme** : un défaut qui n'existe que sur Android, ou que sur iOS,
+  se dit à la moitié du parc concernée. Et depuis 6.1.x-E, un message **réveille le téléphone** :
+  une notification push, envoyée depuis la console par une fonction de la base qui cible par la même
+  règle que l'appareil, application fermée. C'est la première écriture de l'application vers la
+  base — un jeton, et de quoi le cibler, rien d'autre —, et un interrupteur la retire.
   [docs/pilotage.md](docs/pilotage.md)
 - [x] **Les attentes des portails, mesurées** (6.1-D) — neuf Blueprints de portail portaient **60 s
   de pauses aveugles**, calées à la main sur le pire cas du jour où elles avaient été écrites, alors
@@ -385,7 +393,12 @@ livré ; elle est mise à jour à chaque contribution.
   changé et une journée sans cours produisent trois écrans différents. **Un cours peut porter
   plusieurs UE** (6.1.x-B) — le même TP sous son code français et son code anglais, mesuré sur
   Celcat — et il reste affiché tant qu'une seule n'est pas filtrée ; la projection ne gardait que le
-  premier code.
+  premier code. **Et l'agenda se lit dans l'autre sens** (6.1.x-D) : l'application y écrivait ses
+  cours depuis toujours sans jamais le lire. Les calendriers du téléphone que l'on coche apparaissent
+  mêlés aux cours, dans leur couleur, une journée entière en bandeau ; leur fiche ouvre l'agenda du
+  système, et un « + » ouvre son éditeur sur le jour affiché — pas d'éditeur maison, rien de stocké.
+  La fusion se joue après les filtres, l'indexation des UE et les rappels, jamais avant : un
+  rendez-vous n'est pas une UE et ne se notifie pas.
   [docs/features/planning.md](docs/features/planning.md)
 - [x] **Campus — tableau de bord** — quatre sections indépendantes, position résolue une seule fois
   pour tout l'onglet, socle de liste commun (recherche, filtres persistés, favoris, états vides). Depuis
@@ -479,7 +492,9 @@ livré ; elle est mise à jour à chaque contribution.
   premier plan et quand les favoris changent — synchronisation si la dernière date de plus de douze
   heures, rappels de cours replanifiés — et la tâche de fond (`expo-background-task`) n'est plus qu'un
   bonus. La dernière tentative est persistée et datée, sous la date du dernier succès, et l'interrupteur
-  l'efface. [docs/features/settings.md](docs/features/settings.md)
+  l'efface. Depuis 6.1.x-D, la section Calendrier porte aussi **les calendriers du téléphone** à
+  afficher dans le Planning, choisis un par un, avec leur couleur — la cible de la synchronisation
+  n'est pas proposée. [docs/features/settings.md](docs/features/settings.md)
 - [x] **Premier lancement** — parcours en cinq étapes : thème et langue, puis l'**établissement**,
   puis les groupes qu'il conditionne. Valeurs par défaut issues de l'appareil, sélection de groupes
   filtrée par année et semestre — étape omise quand l'université ne publie pas d'emploi du temps, et

@@ -11,7 +11,7 @@ export default {
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
-	version: '6.1.0',
+	version: '6.2.0',
 	orientation: 'portrait',
 	// `automatic` et non le defaut `light` : l'application impose son theme au natif par
 	// `Appearance.setColorScheme` (AppCore.setTheme), ce qu'un style force par la configuration
@@ -33,7 +33,7 @@ export default {
 			NSCalendarsUsageDescription:
 				'UKit Bordeaux requires calendar access to add your university classes (e.g., "Maths lecture at 8:00 AM") directly to your personal calendar. This allows you to view your school schedule alongside personal events. No calendar data ever leaves your device.',
 			NSCalendarsFullAccessUsageDescription:
-				'UKit Bordeaux requires full calendar access to list your existing calendars (so you can select an exact destination) and to add your university classes (e.g., "Maths lecture at 8:00 AM") directly to your chosen calendar. This data is processed safely and entirely locally, and is never sent to our servers.',
+				'UKit Bordeaux requires full calendar access to list your existing calendars (so you can select an exact destination), to add your university classes (e.g., "Maths lecture at 8:00 AM") directly to your chosen calendar, and to display the events of the calendars you choose alongside your classes in the planning. This data is processed safely and entirely locally, and is never sent to our servers.',
 			NSRemindersUsageDescription:
 				'UKit Bordeaux requires access to your reminders to create alerts for your upcoming university classes and events.',
 			// `processing`, pas `fetch` : la tache de fond passe par BGTaskScheduler depuis
@@ -48,6 +48,16 @@ export default {
 	android: {
 		package: 'com.bordeaux1.emplois',
 		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
+		/*
+		 * Les identifiants Firebase, sans lesquels Android n'obtient aucun jeton de notification
+		 * distante (jalon 6.1.x-E). Le fichier n'est **pas dans le depot** : il porte l'identite d'un
+		 * projet Firebase, et ce depot est public. Il vit a la racine du poste (gitignore) et sur EAS
+		 * comme variable d'environnement de type fichier, dont le chemin arrive ici a la construction.
+		 *
+		 * Sans lui — un poste qui ne l'a pas, une construction locale — la cle vaut `undefined` et
+		 * Expo l'ignore : tout se construit, seules les notifications distantes manquent.
+		 */
+		googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
 		// La seule declaration : la cle racine du meme nom n'est pas un champ Expo et etait ignoree.
 		// EAS fait de toute facon autorite sur le numero de build (eas.json, appVersionSource: remote).
 		versionCode: 551,
@@ -78,6 +88,10 @@ export default {
 		blueprintsRemote: process.env.BLUEPRINTS_REMOTE !== 'false',
 	},
 	plugins: [
+		// Les racines de certification des universites, pour les Android d'avant mi-2021 qui ne les
+		// ont pas : sans elles, tout ce qui touche aux facs echoue en erreur reseau sur ces
+		// appareils (tools/expo/autorites-universitaires.js).
+		"./tools/expo/autorites-universitaires",
 		"expo-background-task",
 		"expo-web-browser",
 		"expo-secure-store",

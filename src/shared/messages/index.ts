@@ -28,7 +28,7 @@ export { chargerVus, oublierVus, vusConnus } from './vus';
 const TABLE = 'service_messages';
 /** Versionnee comme les autres caches : elle garde des lignes brutes, et leur forme peut changer. */
 const CLE_CACHE = 'messages@1';
-const COLONNES = 'id,cle,niveau,titre,corps,actif,publie_le,expire_le,audience,etablissements,version_min,version_max';
+const COLONNES = 'id,cle,niveau,titre,corps,actif,publie_le,expire_le,audience,etablissements,version_min,version_max,plateformes';
 
 /** Ce que rend un rafraichissement : un resultat, jamais une exception. */
 export interface RapportMessages {
@@ -60,6 +60,28 @@ export function onMessages(abonne: () => void): () => void {
 
 function prevenir(): void {
     abonnes.forEach((abonne) => abonne());
+}
+
+/** La cle du message qu'une notification demande d'ouvrir ; consommee par l'hote. */
+let demande: string | null = null;
+
+/**
+ * Une notification push a ete ouverte (shared/push/reception.ts) : le message doit se montrer en
+ * feuille, meme deja vu, meme si la regle ne l'aurait pas choisi. S'il n'est pas connu — la
+ * notification a devance la lecture —, on relit d'abord.
+ */
+export async function demanderMessage(cle: string): Promise<void> {
+    if (!connus.some((message) => message.cle === cle)) await rafraichirMessages();
+    demande = cle;
+    prevenir();
+}
+
+/** Le message demande, s'il est connu, et l'oubli de la demande : une notification ouvre une fois. */
+export function consommerDemande(): MessageDeService | null {
+    if (demande === null) return null;
+    const message = connus.find((candidat) => candidat.cle === demande) ?? null;
+    demande = null;
+    return message;
 }
 
 /**

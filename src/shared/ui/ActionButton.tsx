@@ -98,7 +98,17 @@ export function ActionButton({
               * — c'est la forme compacte d'une action dans une rangee.
               */}
             {label !== '' ? (
-                <Text style={{ color: teinte, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
+                /*
+                 * **Une ligne, toujours.** Un libelle qui passe a la ligne deforme le bouton et
+                 * pousse tout ce qui l'entoure — vu sur Android le 2026-09-08 avec « Se deconnecter ».
+                 * `flexShrink` le laisse ceder plutot que deborder, et la troncature est le dernier
+                 * recours : un libelle qui s'y prend est un libelle **trop long**, a raccourcir dans
+                 * les trois dictionnaires (docs/theme.md, « ce qu'un bouton peut dire »).
+                 */
+                <Text
+                    numberOfLines={1}
+                    style={{ color: teinte, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, flexShrink: 1 }}
+                >
                     {label}
                 </Text>
             ) : null}

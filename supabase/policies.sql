@@ -35,6 +35,7 @@ alter table public.blueprints       enable row level security;
 alter table public.app_release      enable row level security;
 alter table public.salutations      enable row level security;
 alter table public.testeurs         enable row level security;
+alter table public.jetons_push      enable row level security;
 alter table public.sondes           enable row level security;
 alter table public.journal          enable row level security;
 alter table public.editeurs         enable row level security;
@@ -149,7 +150,7 @@ create policy "sondes lisibles"
 revoke insert, update, delete on all tables in schema public from anon;
 -- Et la lecture de ce qui ne le regarde pas. Sans politique, RLS rendrait une liste vide plutot
 -- qu'un refus : le refus dit la verite, la liste vide fait croire a une table vide.
-revoke select on public.journal, public.editeurs, public.retours from anon;
+revoke select on public.journal, public.editeurs, public.retours, public.jetons_push from anon;
 
 do $$
 declare
@@ -185,6 +186,16 @@ begin
     end loop;
 end
 $$;
+
+-- Les jetons push (6.1.x-E) : l'application y depose et retire par deux fonctions `security definer`
+-- (fonctions.sql), jamais par la table ; `anon` n'y a aucun privilege. Les editeurs les lisent —
+-- de quoi compter le parc dans la console — et ne les ecrivent pas : c'est la fonction `notifier`,
+-- avec la cle de service, qui elague un jeton mort.
+drop policy if exists "jetons lisibles par les editeurs" on public.jetons_push;
+create policy "jetons lisibles par les editeurs"
+    on public.jetons_push for select
+    to authenticated
+    using (private.est_editeur());
 
 -- Le journal se consulte et s'exporte depuis la console ; il ne s'ecrit pas (fonctions.sql).
 drop policy if exists "journal lisible par les editeurs" on public.journal;

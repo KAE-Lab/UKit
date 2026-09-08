@@ -108,6 +108,7 @@ Déclarés dans [`StackNavigator.tsx`](../src/shared/navigation/StackNavigator.t
 | `CredentialsSettings` | [`CredentialsSettingsScreen`](../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | `{ ressaisie? }` | `ACCOUNT` |
 | `Documents` | [`DocumentsScreen`](../src/features/Scolarite/screens/DocumentsScreen.tsx) | — | `MY_DOCUMENTS` |
 | `Filters` | [`FiltersScreen`](../src/features/Settings/screens/FiltersScreen.tsx) | — | `FILTERS` |
+| `CalendriersAffiches` | [`CalendriersAffichesScreen`](../src/features/Settings/screens/CalendriersAffichesScreen.tsx) | — | `PHONE_CALENDARS` |
 | `DocumentViewer` | [`DocumentViewerScreen`](../src/features/Scolarite/screens/DocumentViewerScreen.tsx) | `{ uri, nom }` | nom de la pièce, bouton de partage — un PDF est rendu par iOS lui-même, par pdf.js sur Android |
 | `LienEdt` | [`LienEdtScreen`](../src/features/Planning/screens/LienEdtScreen.tsx) | — | `TIMETABLE_LINK` |
 | `Settings` | [`SettingsScreen`](../src/features/Settings/screens/SettingsScreen.tsx) | — | `SETTINGS` |

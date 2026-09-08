@@ -67,5 +67,7 @@ const styles = StyleSheet.create({
         marginTop: tokens.space.sm,
         fontSize: tokens.fontSize.sm,
         textAlign: 'center',
+        // Pleine largeur : Android tronque la fin d'un texte centre auto-dimensionne (docs/theme.md).
+        alignSelf: 'stretch',
     },
 });

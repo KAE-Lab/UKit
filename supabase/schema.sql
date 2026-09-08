@@ -67,6 +67,13 @@ alter table public.annonces drop constraint if exists annonces_versions_check;
 alter table public.annonces add constraint annonces_versions_check
     check ((version_min is null or version_min ~ '^\d+\.\d+\.\d+$')
        and (version_max is null or version_max ~ '^\d+\.\d+\.\d+$'));
+-- La plateforme (jalon 6.1.x-D) : un defaut qui n'existe que sur Android, ou que sur iOS, merite un
+-- contenu qui ne derange pas l'autre moitie du parc. null = les deux ; le `check` borne les valeurs
+-- a celles que l'application connait, comme pour l'audience.
+alter table public.annonces add column if not exists plateformes text[];
+alter table public.annonces drop constraint if exists annonces_plateformes_check;
+alter table public.annonces add constraint annonces_plateformes_check
+    check (plateformes is null or plateformes <@ array['ios', 'android']::text[]);
 
 create index if not exists annonces_publication_idx
     on public.annonces (active, expire_le desc);
@@ -98,6 +105,9 @@ create table if not exists public.service_messages (
 --   version_min     la fenetre de versions de l'application, bornes incluses, en `X.Y.Z` strict :
 --   version_max     le `check` garantit la forme a la source, ce qui rend le comparateur applicatif
 --                   trivial. null = pas de borne. « Mets a jour » est un message a `version_max`.
+--   plateformes     `ios` et/ou `android` (6.1.x-D) ; null = les deux. Un defaut qui n'existe que sur
+--                   une plateforme se dit a elle seule. Une valeur que l'application ne connait pas
+--                   cache, comme une audience inconnue.
 alter table public.service_messages add column if not exists cle text default gen_random_uuid()::text;
 update public.service_messages set cle = id::text where cle is null;
 alter table public.service_messages alter column cle set not null;
@@ -114,6 +124,36 @@ alter table public.service_messages drop constraint if exists service_messages_v
 alter table public.service_messages add constraint service_messages_versions_check
     check ((version_min is null or version_min ~ '^\d+\.\d+\.\d+$')
        and (version_max is null or version_max ~ '^\d+\.\d+\.\d+$'));
+alter table public.service_messages add column if not exists plateformes text[];
+alter table public.service_messages drop constraint if exists service_messages_plateformes_check;
+alter table public.service_messages add constraint service_messages_plateformes_check
+    check (plateformes is null or plateformes <@ array['ios', 'android']::text[]);
+-- La notification push (jalon 6.1.x-E) : posee par la fonction `notifier` quand un editeur l'a
+-- demandee depuis la console. `notifie_le` = envoye une fois, jamais deux ; `notifies` = le nombre
+-- d'appareils vises a ce moment-la, une trace, pas une preuve de reception.
+alter table public.service_messages add column if not exists notifie_le timestamptz;
+alter table public.service_messages add column if not exists notifies integer;
+
+-- =============================================================================
+-- Jetons push (jalon 6.1.x-E)
+-- =============================================================================
+--
+-- La seule table que l'application ecrit, et la premiere : un jeton push par appareil, avec ce
+-- qu'il faut pour cibler AVANT d'envoyer — le campus, la version, la plateforme, le statut de
+-- testeur (auto-declare). Pseudonyme : le jeton n'est pas un identifiant de personne, et il
+-- s'efface quand l'utilisateur coupe l'interrupteur. Aucune autre colonne, par decision : la base
+-- n'apprend que ce qui sert au ciblage (PRIVACY.md, point 4 quater).
+--
+-- L'application n'ecrit pas la table : elle appelle deux fonctions (fonctions.sql), la porte etroite.
+-- Le `check` sur la forme du jeton borne ce qu'un inconnu muni de la cle publiable peut y deposer.
+create table if not exists public.jetons_push (
+    jeton         text        primary key check (jeton ~ '^ExponentPushToken\[[A-Za-z0-9_-]+\]$'),
+    plateforme    text        not null check (plateforme in ('ios', 'android')),
+    etablissement text        not null,
+    version       text        not null check (version ~ '^\d+\.\d+\.\d+$'),
+    testeur       boolean     not null default false,
+    maj_le        timestamptz not null default now()
+);
 
 -- Le mot du haut de l'onglet Scolarite, quand une regle publiee doit passer devant le socle.
 --

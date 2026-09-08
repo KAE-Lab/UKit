@@ -4,7 +4,6 @@ import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/b
 import { createStackNavigator } from '@react-navigation/stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
 
 import ScheduleScreen from '../../features/Planning/screens/ScheduleScreen';
 import CampusDashboard from '../../features/Campus/Dashboard/CampusDashboard';
@@ -13,7 +12,7 @@ import SettingsScreen from '../../features/Settings/screens/SettingsScreen';
 
 import style, { tokens, AppThemeType } from '../theme/Theme';
 import { TAB_BAR_HEIGHT } from '../ui/ScreenState';
-import { FondDePiedFlottant, VOILE_PIED } from '../ui/PiedFlottant';
+import { assiseDuFlottant, FondDePiedFlottant, VOILE_PIED } from '../ui/PiedFlottant';
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { groupesRequis, portailPublie, serviceEtablissement } from '../etablissements';
@@ -95,7 +94,7 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
             {/* La graisse ne change pas avec la selection : passer en gras elargissait le libelle
                 d'un ou deux points et tout le rang tressaillait a chaque changement d'onglet. La
                 couleur porte l'etat a elle seule, comme sur le bouton d'action a cote. */}
-            <Text style={[styles.tabLabel, { color, fontWeight: '500' }]}>
+            <Text numberOfLines={1} style={[styles.tabLabel, { color, fontWeight: '500' }]}>
                 {label}
             </Text>
         </TouchableOpacity>
@@ -140,40 +139,57 @@ interface TabBarActionItemProps {
     credentials: unknown;
 }
 
-/** Le bouton contextuel de droite : la meme carte pour les quatre onglets, seul le contenu change. */
-function BoutonDAction({ icone, libelle, onPress, theme, children }: { icone: React.ComponentProps<typeof MaterialCommunityIcons>['name']; libelle: string; onPress: () => void; theme: AppThemeType; children?: React.ReactNode }) {
+/**
+ * Le bouton contextuel de droite : la meme carte pour les quatre onglets, seul le contenu change.
+ *
+ * `masque` en fait un **teaser**, dans la langue commune a tous les teasers de l'application
+ * (docs/theme.md) : le cadenas prend la place de l'icone, une barre prend la place du libelle, et
+ * rien n'est peint. Le bouton garde sa carte, son gabarit et sa place dans la barre — on voit qu'il
+ * y a un bouton, on ne sait pas ce qu'il fera. C'est le meme masque que les rangees de la Scolarite
+ * (`LigneScolarite`, prop `masque`), et pour la meme raison : un flou ou un voile ne rend illisible
+ * que sur la plateforme qui le porte.
+ */
+function BoutonDAction({ icone, libelle, onPress, theme, masque = false }: { icone: React.ComponentProps<typeof MaterialCommunityIcons>['name']; libelle: string; onPress: () => void; theme: AppThemeType; masque?: boolean }) {
+    const teinte = theme.accent ?? theme.primary;
     return (
         <TouchableOpacity
             onPress={onPress}
             activeOpacity={0.85}
+            // Masque, le bouton n'a plus un seul caractere a annoncer : le libelle passe donc par
+            // l'accessibilite. Le teaser est un effet visuel, pas un secret — un lecteur d'ecran
+            // doit pouvoir dire ce que ce bouton ouvrira.
+            accessibilityLabel={libelle}
+            accessibilityRole="button"
             style={[styles.groupButton, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
         >
-            <MaterialCommunityIcons name={icone} size={24} color={theme.accent ?? theme.primary} />
-            <Text style={[styles.tabLabel, { color: theme.accent ?? theme.primary, fontWeight: '500', marginTop: tokens.space.xxs }]}>
-                {libelle}
-            </Text>
-            {children}
+            <MaterialCommunityIcons
+                name={masque ? 'lock' : icone}
+                size={24}
+                color={masque ? theme.fontSecondary : teinte}
+            />
+            {/* Masque, le libelle n'est **pas rendu** : une espace tient la hauteur, et la barre
+                dit qu'il y a bien un mot ici. Le poser en couleur `transparent` sous la barre
+                laissait voir ce qui en depassait sur Android (mesure le 2026-09-08) — un caractere
+                qui existe finit par se montrer. Sans la hauteur, le bouton se decalerait dans la barre.
+
+                La boite **s'etire** : sans `alignSelf`, elle se reduisait a la largeur d'une espace
+                et la barre, qui se retire de `xs` de chaque cote, n'avait plus de place — le bouton
+                Campus n'affichait rien sous son cadenas. */}
+            {masque ? (
+                <View style={styles.boiteDuLibelle}>
+                    <Text numberOfLines={1} style={[styles.tabLabel, { marginTop: tokens.space.xxs }]}> </Text>
+                    <View style={[styles.barreDeMasque, { backgroundColor: theme.border }]} />
+                </View>
+            ) : (
+                <Text numberOfLines={1} style={[styles.tabLabel, { color: teinte, fontWeight: '500', marginTop: tokens.space.xxs }]}>
+                    {libelle}
+                </Text>
+            )}
         </TouchableOpacity>
     );
 }
 
-/** Le voile du teaser d'un bouton d'action : flou et cadenas, sans geste propre. */
-function VoileDeBouton({ theme, themeName }: { theme: AppThemeType; themeName: 'light' | 'dark' }) {
-    return (
-        <View style={styles.voileMystere} pointerEvents="none">
-            <BlurView
-                intensity={20}
-                tint={themeName === 'dark' ? 'dark' : 'light'}
-                blurMethod="dimezisBlurView"
-                style={StyleSheet.absoluteFill}
-            />
-            <MaterialCommunityIcons name="lock" size={18} color={theme.fontSecondary} />
-        </View>
-    );
-}
-
 function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: TabBarActionItemProps) {
-    const { themeName } = useContext(AppContext) as { themeName: 'light' | 'dark' };
     /** Le teaser du bouton Campus — et celui des Groupes sur un campus sans inventaire. */
     const [teaser, setTeaser] = useState(false);
 
@@ -185,9 +201,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
         if (!groupesRequis()) {
             return (
                 <>
-                    <BoutonDAction icone="account-search-outline" libelle={Translator.get('GROUPS')} onPress={() => setTeaser(true)} theme={theme}>
-                        <VoileDeBouton theme={theme} themeName={themeName} />
-                    </BoutonDAction>
+                    <BoutonDAction icone="account-search-outline" libelle={Translator.get('GROUPS')} onPress={() => setTeaser(true)} theme={theme} masque />
                     <ModaleCampusNonRelie
                         theme={theme}
                         visible={teaser}
@@ -229,9 +243,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
     if (currentRouteName === 'ScolariteTab' && !portailPublie()) {
         return (
             <>
-                <BoutonDAction icone="account-circle-outline" libelle={Translator.get('ACCOUNT')} onPress={() => setTeaser(true)} theme={theme}>
-                    <VoileDeBouton theme={theme} themeName={themeName} />
-                </BoutonDAction>
+                <BoutonDAction icone="account-circle-outline" libelle={Translator.get('ACCOUNT')} onPress={() => setTeaser(true)} theme={theme} masque />
                 <ModaleCampusNonRelie
                     theme={theme}
                     visible={teaser}
@@ -248,14 +260,12 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
     }
 
     // Le bouton mysterieux de Campus : la capacite n'existe pas encore, et l'emplacement l'assume —
-    // meme teaser que les rangees de la Scolarite (contenu floute, cadenas, modale « Bientot »).
+    // meme teaser que les rangees de la Scolarite (contenu masque, cadenas, modale « Bientot »).
     // Quand elle arrivera, ce sera par ici, sans que la barre change de forme.
     if (currentRouteName === 'CampusTab') {
         return (
             <>
-                <BoutonDAction icone="compass-outline" libelle={Translator.get('CAMPUS')} onPress={() => setTeaser(true)} theme={theme}>
-                    <VoileDeBouton theme={theme} themeName={themeName} />
-                </BoutonDAction>
+                <BoutonDAction icone="compass-outline" libelle={Translator.get('CAMPUS')} onPress={() => setTeaser(true)} theme={theme} masque />
                 <ModaleBientot theme={theme} visible={teaser} fermer={() => setTeaser(false)} />
             </>
         );
@@ -271,7 +281,7 @@ function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarPro
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => {
-                const bottomPadding = Math.max(tokens.space.sm, (insets?.bottom || 0) - 15);
+                const bottomPadding = assiseDuFlottant(insets);
 
                 return (
                     <View style={[styles.tabBarWrapper, { paddingBottom: bottomPadding }]}>
@@ -434,15 +444,31 @@ const styles = StyleSheet.create({
         // barre garde sa hauteur, fixee par `TAB_BAR_HEIGHT` — c'est le libelle qui grandit dans une
         // boite qui ne bouge pas.
         fontSize: tokens.fontSize.xs,
+        // La largeur ci-dessous empeche Android de tronquer, mais elle autorise le **repli** : sur
+        // iPhone, « Parametres » renvoyait son `s` a la ligne suivante. Les deux appelants posent
+        // donc `numberOfLines={1}` — une ligne, toujours, sur les deux plateformes.
+        // Pleine largeur, centre par `textAlign` : les deux parents centrent leurs enfants, donc ce
+        // libelle s'auto-dimensionnait et Android en tronquait la fin — « Escolaridad », « Horario ».
+        // C'est la regle du depot pour tout texte libre dans un parent qui centre (docs/theme.md).
+        alignSelf: 'stretch',
+        textAlign: 'center',
     },
-    voileMystere: {
-        // Le calque du teaser, clippe aux coins du bouton : `overflow: hidden` sur le bouton
-        // lui-meme mangerait son ombre sur iOS — meme montage que `GlypheFiligrane`.
-        ...StyleSheet.absoluteFill,
-        borderRadius: tokens.radius.md,
-        overflow: 'hidden',
-        justifyContent: 'center',
-        alignItems: 'center',
+    /* La boite du libelle masque : elle prend toute la largeur du bouton, faute de quoi elle se
+     * reduirait a la largeur de l'espace qu'elle contient et la barre disparaitrait. */
+    boiteDuLibelle: {
+        alignSelf: 'stretch',
+    },
+    /*
+     * La barre qui remplace le libelle d'un bouton masque : elle occupe la boite du texte, moins
+     * deux points en haut et en bas, et se retire des bords pour ne pas toucher la carte.
+     */
+    barreDeMasque: {
+        position: 'absolute',
+        top: 2,
+        bottom: 2,
+        left: tokens.space.xs,
+        right: tokens.space.xs,
+        borderRadius: tokens.radius.pill,
     },
 });
 

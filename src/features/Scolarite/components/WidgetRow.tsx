@@ -71,9 +71,11 @@ export interface WidgetRowProps {
     teinte: string;
     theme: AppThemeType;
     onPress?: () => void;
+    /** Le teaser : les textes de la rangee ne sont pas peints (`LigneScolarite`, `masque`). */
+    masque?: boolean;
 }
 
-export function WidgetRow({ definition, etat, contexte = null, teinte, theme, onPress }: WidgetRowProps) {
+export function WidgetRow({ definition, etat, contexte = null, teinte, theme, onPress, masque = false }: WidgetRowProps) {
     const enEchec = etat.nature === 'echec';
     const couleur = enEchec ? theme.danger : teinte;
     const compteVisible = etat.nature === 'compte' && etat.nombre !== null && etat.nombre > 0;
@@ -89,6 +91,7 @@ export function WidgetRow({ definition, etat, contexte = null, teinte, theme, on
             // cette rangee aujourd'hui, et l'afficher au meme niveau que les autres la ferait
             // promettre autant qu'elles.
             attenue={enEchec || etat.nature === 'absent'}
+            masque={masque}
             onPress={onPress}
             chevron={onPress !== undefined}
             // Le compteur arrive en fondu, comme la valeur d'une tuile — et pour la meme raison, cle

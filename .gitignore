@@ -16,3 +16,12 @@ __pycache__/
 # Les exports bruts du formulaire : des reponses libres d utilisateurs, dans un depot public.
 # Ils servent de jeu d essai a tools/retours/ (jalon 6.1.x-C) et ne se versionnent pas.
 tools/retours/exports/
+
+# Les identifiants Firebase du push Android (jalon 6.1.x-E) : l'identite d'un projet, dans un depot
+# public. Sur EAS, c'est la variable de fichier GOOGLE_SERVICES_JSON (docs/plateforme.md).
+google-services.json
+# La cle du compte de service FCM V1, elle, est un **secret** : elle autorise a notifier tout le parc.
+# Elle ne vit que sur EAS (eas credentials -p android) et sur le poste qui l'y a posee.
+fcm-service-account.json
+# Les residus de la CLI Supabase (projet lie, version du binaire) : de l'etat de poste.
+supabase/.temp/

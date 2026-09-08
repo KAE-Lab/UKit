@@ -194,6 +194,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     attenteTexte: {
+        // Pleine largeur : un texte libre dans un parent qui centre se tronque sur Android (docs/theme.md).
+        alignSelf: 'stretch',
         marginTop: tokens.space.md,
         fontSize: tokens.fontSize.sm,
         textAlign: 'center',

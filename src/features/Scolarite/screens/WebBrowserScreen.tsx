@@ -10,7 +10,7 @@ import { serviceEtablissement } from '../../../shared/etablissements';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
 import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
-import { resteDansLaVue } from '../../../shared/navigation/liensDuFormulaire';
+import { destinationReelle, resteDansLaVue } from '../../../shared/navigation/liensDuFormulaire';
 
 import { FloatingActionBar, SaveCredentialsModal, getPortalInjectedScript } from '../components/WebBrowserComponents';
 
@@ -155,18 +155,40 @@ const useWebBrowser = (route, onDismiss, navigation) => {
      * y menent, parce que Google Forms ouvre ses liens en « nouvelle fenetre » : la WebView les
      * signale par `onOpenWindow` quand ce gestionnaire existe, sinon les charge dans la meme vue en
      * repassant par `onShouldStartLoadWithRequest`. Les deux appliquent la meme regle.
+     *
+     * **Android partait dans le navigateur du systeme**, et c'est le troisieme fil de la meme
+     * histoire. Google Forms pose ses liens en `target="_blank"` ; avec le defaut de
+     * `setSupportMultipleWindows` (`true`), la WebView d'Android ne les charge pas elle-meme et les
+     * confie au navigateur — on quittait UKit, formulaire perdu. Le formulaire le passe donc a
+     * `false`, ce qui ramene le lien dans `onShouldStartLoadWithRequest` ou la regle decide. Les
+     * portails universitaires gardent le defaut : eux ouvrent de vraies fenetres, une deconnexion
+     * CAS ou un PDF.
      */
     const domainesInternes = route.params?.domainesInternes;
     const ouvrirParDessus = (adresse: string) => {
-        console.log(`[navigateur] lien hors du formulaire, ouvert par-dessus : ${adresse}`);
-        (navigation as unknown as { push: (name: string, params: object) => void }).push('WebBrowser', { href: adresse });
+        // La destination reelle, et non le redirecteur : la seconde vue s'ouvre directement sur la
+        // page, sans garder un saut dans son historique que « precedent » rejouerait.
+        const destination = destinationReelle(adresse);
+        console.log(`[navigateur] lien hors du formulaire, ouvert par-dessus : ${destination}`);
+        (navigation as unknown as { push: (name: string, params: object) => void }).push('WebBrowser', { href: destination });
     };
-    const ouvrirNouvelleFenetre = domainesInternes === undefined ? undefined : ({ nativeEvent }: { nativeEvent: { targetUrl: string } }) => {
-        if (resteDansLaVue(nativeEvent.targetUrl, domainesInternes)) {
+    /*
+     * **Ce gestionnaire est pose sur tous les ecrans, pas seulement sur le formulaire**, et c'est
+     * la seconde moitie du defaut Android. Quand il manque, la WebView d'Android fabrique pour la
+     * nouvelle fenetre une vue **sans client** (`RNCWebChromeClient.onCreateWindow`), et une vue
+     * sans client confie l'adresse au **navigateur du systeme** : on quittait UKit. C'est vrai du
+     * formulaire comme d'un portail — ou c'est pire, puisque la session reste ici.
+     *
+     * Sans domaines internes, une nouvelle fenetre s'ouvre donc simplement par-dessus, dans une
+     * seconde instance de cet ecran. Avec, la regle decide : ce qui est chez Google revient dans la
+     * vue courante, le reste s'empile.
+     */
+    const ouvrirNouvelleFenetre = ({ nativeEvent }: { nativeEvent: { targetUrl: string } }) => {
+        if (domainesInternes !== undefined && resteDansLaVue(nativeEvent.targetUrl, domainesInternes)) {
             webViewRef.current?.injectJavaScript(`window.location.href = ${JSON.stringify(nativeEvent.targetUrl)}; true;`);
-        } else {
-            ouvrirParDessus(nativeEvent.targetUrl);
+            return;
         }
+        ouvrirParDessus(nativeEvent.targetUrl);
     };
 
     return {
@@ -177,6 +199,25 @@ const useWebBrowser = (route, onDismiss, navigation) => {
         domainesInternes, ouvrirParDessus, ouvrirNouvelleFenetre
     };
 };
+
+/**
+ * Le script injecte dans le portail, memorise.
+ *
+ * Il ne depend que du trousseau et du catalogue, jamais du rendu : le reconstruire a chaque passage
+ * rebatirait quelques kilo-octets de chaine pour rien, sur le thread qui est justement charge au
+ * moment ou l'ecran s'ouvre. A part parce que ses deux hotes possibles sont l'un et l'autre a la
+ * barre des cent lignes.
+ */
+function useScriptInjecte(savedCredentials: unknown): string {
+    return useMemo(
+        () => getPortalInjectedScript(
+            savedCredentials,
+            serviceEtablissement('cas'),
+            serviceEtablissement('idp_shibboleth'),
+        ),
+        [savedCredentials],
+    );
+}
 
 function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProps) {
     const { themeName } = useContext(AppContext);
@@ -189,20 +230,7 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
     } = useWebBrowser(route, onDismiss, navigation);
 
     const theme = style.Theme[themeName];
-
-    /*
-     * Le script injecte ne depend que du trousseau et du catalogue, jamais du rendu : le
-     * reconstruire a chaque passage rebatirait quelques kilo-octets de chaine pour rien, sur le
-     * thread qui est justement charge au moment ou l'ecran s'ouvre.
-     */
-    const scriptInjecte = useMemo(
-        () => getPortalInjectedScript(
-            savedCredentials,
-            serviceEtablissement('cas'),
-            serviceEtablissement('idp_shibboleth'),
-        ),
-        [savedCredentials],
-    );
+    const scriptInjecte = useScriptInjecte(savedCredentials);
 
     /*
      * Une seule phrase pour deux attentes, et c'est le bon compromis : la lecture du trousseau et le
@@ -277,6 +305,7 @@ function WebBrowserScreen({ navigation, route, onDismiss }: WebBrowserScreenProp
                     injectedJavaScript={scriptInjecte}
                     onMessage={handleMessage}
                     originWhitelist={['*']}
+                    setSupportMultipleWindows={domainesInternes === undefined}
                     onOpenWindow={ouvrirNouvelleFenetre}
                     onShouldStartLoadWithRequest={(event) => {
                         if (event.url.startsWith('http://') || event.url.startsWith('https://') || event.url === 'about:blank') {

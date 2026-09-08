@@ -3,11 +3,12 @@
  * descripteur dit les champs, `useFormulaire` dit quoi en faire.
  */
 
-import type { FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 
 import type { Ligne } from '../supabase';
 import type { EtablissementConnu } from '../lib/base';
-import type { Descripteur } from '../schema/descripteurs';
+import { messageDErreur } from '../lib/base';
+import type { ActionDeLigne, Descripteur } from '../schema/descripteurs';
 import { Bouton } from './Bouton';
 import { ChampEditeur } from './Champs';
 import { Retour } from './Retour';
@@ -24,6 +25,24 @@ export interface FormulaireProps {
 
 export function Formulaire({ descripteur, existante, etablissements, onEnregistre, onSupprime, onAnnule }: FormulaireProps) {
     const { saisies, erreurs, retour, enCours, changer, soumettre, effacer, ligne } = useFormulaire(descripteur, existante);
+    /** Le retour d'un geste hors ecriture (« Notifier ») : a part, pour ne pas ecraser celui de l'enregistrement. */
+    const [retourDAction, setRetourDAction] = useState<{ ton: 'ok' | 'erreur'; texte: string } | null>(null);
+    const [actionEnCours, setActionEnCours] = useState(false);
+
+    const agir = async (action: ActionDeLigne) => {
+        if (existante === null) return;
+        if (action.confirmation !== undefined && !window.confirm(action.confirmation)) return;
+        setActionEnCours(true);
+        setRetourDAction(null);
+        try {
+            setRetourDAction({ ton: 'ok', texte: await action.executer(existante) });
+        } catch (echec) {
+            setRetourDAction({ ton: 'erreur', texte: messageDErreur(echec) });
+        } finally {
+            setActionEnCours(false);
+        }
+    };
+    const actions = existante === null ? [] : (descripteur.actions ?? []).filter((action) => action.disponible === undefined || action.disponible(existante));
 
     const soumission = async (evenement: FormEvent) => {
         evenement.preventDefault();
@@ -53,9 +72,15 @@ export function Formulaire({ descripteur, existante, etablissements, onEnregistr
                 />
             ))}
             {retour !== null ? <Retour ton={retour.ton}>{retour.texte}</Retour> : null}
+            {retourDAction !== null ? <Retour ton={retourDAction.ton}>{retourDAction.texte}</Retour> : null}
             <div className="boutons">
                 <Bouton variante="plein" type="submit" disabled={enCours}>{enCours ? 'Écriture…' : 'Enregistrer'}</Bouton>
                 <Bouton variante="discret" onClick={onAnnule} disabled={enCours}>Retour à la liste</Bouton>
+                {actions.map((action) => (
+                    <Bouton key={action.libelle} variante="discret" onClick={() => { void agir(action); }} disabled={enCours || actionEnCours}>
+                        {actionEnCours ? 'Envoi…' : action.libelle}
+                    </Bouton>
+                ))}
                 <span className="espace" />
                 {existante !== null && descripteur.suppression !== false ? (
                     <Bouton variante="destructif" onClick={() => { void suppression(); }} disabled={enCours}>Supprimer</Bouton>

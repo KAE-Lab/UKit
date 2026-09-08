@@ -50,6 +50,7 @@ import moment from 'moment';
 
 import { CourseManager, SettingsManager } from './AppCore';
 import { NotificationManager } from './NotificationService';
+import { deposerLeJeton, retirerLeJeton, type EtatDepot } from '../push';
 import { onRetourAuPremierPlan } from './premierPlan';
 import { maintenantMs } from './Temps';
 import { INTERVALLE_ENTRETIEN_MS, estDu, type OrigineSynchro } from './calendrier/tentative';
@@ -79,6 +80,8 @@ export interface BilanEntretien {
     /** `trop-tot` : la derniere tentative est trop recente ; `inutile` : rien a synchroniser. */
     readonly synchro: 'jouee' | 'echec' | 'inutile' | 'trop-tot' | 'inactive';
     readonly rappels: 'replanifies' | 'inactifs' | 'sans-cours' | 'echec' | 'trop-tot';
+    /** Le depot du jeton push (6.1.x-E), joue a chaque passage : il ne coute rien quand rien n'a change. */
+    readonly push: EtatDepot;
 }
 
 export interface EtatTacheDeFond {
@@ -122,6 +125,25 @@ async function dernierEntretienAt(): Promise<number | null> {
     return Number.isFinite(at) ? at : null;
 }
 
+/**
+ * La permission de notification, demandee au premier passage utile et jamais pendant l'accueil.
+ *
+ * C'est la seule permission du depot dont l'usage n'a **pas de geste** : les rappels et les messages
+ * sont actifs par defaut, personne n'appuie sur rien, et la regle « au moment de l'usage » ne
+ * designe aucun moment (docs/plateforme.md). Elle se demande donc ici, une fois — l'invite systeme
+ * ne parait qu'une fois de toute facon — et jamais par-dessus le parcours d'accueil, qui a ses
+ * propres questions. Ne leve jamais : un refus de l'invite n'est pas un echec d'entretien.
+ */
+async function demanderLaPermissionAuBesoin(): Promise<void> {
+    if (SettingsManager.isFirstLoad()) return;
+    if (!SettingsManager.getMessagesEnNotification() && !SettingsManager.getCourseNotificationsEnabled()) return;
+    try {
+        await NotificationManager.demanderPermissionSiJamaisDemandee();
+    } catch (erreur) {
+        journaliser(`permission non demandee : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+    }
+}
+
 async function synchroniser(origine: OrigineEntretien): Promise<BilanEntretien['synchro']> {
     if (!SettingsManager.getCalendarSyncEnabled()) return 'inactive';
     if (SettingsManager.getSyncCalendar() === -1 || SettingsManager.getFavoriteGroups().length === 0) return 'inutile';
@@ -147,10 +169,14 @@ async function replanifierLesRappels(): Promise<BilanEntretien['rappels']> {
 
 async function jouer(origine: OrigineEntretien): Promise<BilanEntretien> {
     const at = Date.now();
+    // Hors echeance, et dans cet ordre : sans permission, il n'y a pas de jeton a deposer.
+    await demanderLaPermissionAuBesoin();
+    const push = await deposerLeJeton();
+
     const du = force(origine) || estDu(await dernierEntretienAt(), maintenantMs());
 
     if (!du) {
-        return { origine, at, synchro: 'trop-tot', rappels: 'trop-tot' };
+        return { origine, at, synchro: 'trop-tot', rappels: 'trop-tot', push };
     }
 
     const synchro = await synchroniser(origine);
@@ -166,7 +192,7 @@ async function jouer(origine: OrigineEntretien): Promise<BilanEntretien> {
     // comparaison, elle, lit l'heure simulable, pour qu'un saut de douze heures au menu de
     // developpement fasse partir l'entretien suivant.
     await AsyncStorage.setItem(CLE_DERNIER_ENTRETIEN, String(at));
-    return { origine, at, synchro, rappels };
+    return { origine, at, synchro, rappels, push };
 }
 
 /**
@@ -180,11 +206,11 @@ export function jouerEntretien(origine: OrigineEntretien): Promise<BilanEntretie
     enCours = jouer(origine)
         .catch((erreur: unknown): BilanEntretien => {
             journaliser(`interrompu : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
-            return { origine, at: Date.now(), synchro: 'echec', rappels: 'echec' };
+            return { origine, at: Date.now(), synchro: 'echec', rappels: 'echec', push: 'echec' };
         })
         .then((bilan) => {
             dernierBilan = bilan;
-            journaliser(`${bilan.origine} : synchro ${bilan.synchro}, rappels ${bilan.rappels}`);
+            journaliser(`${bilan.origine} : synchro ${bilan.synchro}, rappels ${bilan.rappels}, push ${bilan.push}`);
             DeviceEventEmitter.emit(EVENEMENT_ENTRETIEN, bilan);
             return bilan;
         })
@@ -279,6 +305,18 @@ export function armerLEntretien(): void {
     });
     SettingsManager.on('calendar', (cible: string | number) => {
         if (SettingsManager.getCalendarSyncEnabled() && cible !== -1) rejouerApres('activation');
+    });
+    // Le jeton suit le reglage et le campus sans attendre un passage : couper retire, changer de
+    // fac redepose — la base cible sur le campus, elle doit connaitre le bon (6.1.x-E).
+    SettingsManager.on('messagesEnNotification', (actif: boolean) => {
+        void (actif ? deposerLeJeton() : retirerLeJeton());
+    });
+    SettingsManager.on('etablissement', () => { void deposerLeJeton(); });
+    // La fin du parcours d'accueil est le premier instant ou une invite systeme est acceptable : le
+    // lancement, lui, l'aurait posee par-dessus l'accueil. Un entretien complet serait de trop.
+    SettingsManager.on('firstload', (premier: boolean) => {
+        if (premier) return;
+        void demanderLaPermissionAuBesoin().then(() => deposerLeJeton());
     });
     SettingsManager.on('courseNotificationsEnabled', () => {
         void armerLaTacheDeFond();

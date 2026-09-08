@@ -48,7 +48,7 @@ seconde n'est pas un contournement quand la règle est fausse à cet endroit.
 le générique de la liste (typée comme une `FlatList` ordinaire, puisque seul le défilement est animé),
 trois au typage de `CourseManager` sur `Record<string, unknown>` (un type structurel `CoursAvecUE` les
 a rendus inutiles), un à `Animated.SectionList` (le cast était superflu), et deux restent **désactivés
-avec leur raison** : les styles composés de `Theme.ts` ne sont pas typés (G8, session à part en 6.2).
+avec leur raison** : les styles composés de `Theme.ts` ne sont pas typés (G8, session à part en 6.3).
 Les vingt-quatre `ukit/no-style-literals` : les couleurs sont passées au thème ou aux tokens
 (`theme.danger`, `style.colors.white`, `tokens.shadow.*.shadowColor` pour cinq ombres écrites à la
 main), quatre dégagements de l'accueil sont devenus une constante dérivée du pied flottant, une puce a
@@ -127,6 +127,10 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`shared/services/reglagesParEtablissement.ts`](../src/shared/services/reglagesParEtablissement.ts) | les trois formes historiques des réglages cloisonnés — une migration fausse perd les favoris de quelqu'un sans rien dire |
 | [`features/Planning/services/PlanningApiMapping.ts`](../src/features/Planning/services/PlanningApiMapping.ts) | l'arité de `modules`, le séparateur qui change avec la vue, une fin d'événement nulle, le tri double |
 | [`features/Planning/services/IcsMapping.ts`](../src/features/Planning/services/IcsMapping.ts) | le pliage de lignes RFC 5545, l'horodatage d'export qui change à chaque requête, l'ancre du code de module, **l'heure d'été d'un `DTSTART` en UTC**, et le **filtrage par date** d'un calendrier que la source n'a pas borné |
+| [`features/Planning/services/TelephoneMapping.ts`](../src/features/Planning/services/TelephoneMapping.ts) | la projection des calendriers du téléphone (6.1.x-D) : la journée **locale** d'un instant, un rendez-vous à cheval sur minuit borné à chacun de ses deux jours, une fin posée à minuit qui ne mord pas sur le lendemain, la journée entière datée en local (iOS) ou en UTC à fin exclusive (Android), l'annulé exclu et le « disponible » gardé, ce qu'UKit a écrit lui-même écarté |
+| [`features/Planning/services/FusionTelephone.ts`](../src/features/Planning/services/FusionTelephone.ts) · [`couleurDeCours.ts`](../src/features/Planning/services/couleurDeCours.ts) | la fusion après la dérivation — le tri, les colonnes par index, les journées entières à part — et la couleur d'une ligne : clé de palette, hexadécimale, ou défaut |
+| [`shared/push/inscription.ts`](../src/shared/push/inscription.ts) | ce qu'un appareil dépose pour les notifications push (6.1.x-E) : la forme d'un jeton Expo, l'égalité, l'échéance du redépôt, la mémoire relue défensivement |
+| [`supabase/functions/notifier/regles.ts`](../supabase/functions/notifier/regles.ts) | que la copie Deno du ciblage rend **la même réponse** que `shared/ciblage` sur une matrice de lignes et d'appareils — la seule garantie qu'un push n'atteint pas un téléphone où le message ne s'afficherait pas |
 | [`shared/locations/salles.ts`](../src/shared/locations/salles.ts) | les séparateurs qui n'ont pas le même rôle, `A5bis` qui ne doit pas devenir `A5`, un motif publié illisible, et la reconnaissance **désactivée** — une carte fausse est pire qu'une carte vide |
 | [`features/Planning/components/CourseAnnotations.ts`](../src/features/Planning/components/CourseAnnotations.ts) | l'icône déduite du contenu et non du rang, sur les deux formes de description — le défaut trouvé sur appareil au jalon 6-I |
 | [`features/Planning/services/PlanningAssembly.ts`](../src/features/Planning/services/PlanningAssembly.ts) | un code d'UE contient une lettre : une année de titre ADE n'en est pas un |

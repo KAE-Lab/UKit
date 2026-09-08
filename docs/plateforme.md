@@ -32,14 +32,49 @@ valeur** : il n'y a pas de rapport d'erreur en production.
 
 ```ts
 plugins: [
+  './tools/expo/autorites-universitaires',
+  'expo-background-task',
   'expo-web-browser',
   'expo-secure-store',
   ['expo-local-authentication', { faceIDPermission: '…' }],
 ]
 ```
 
-Ces trois plugins servent l'onglet [Scolarité](features/scolarite.md) : navigateur intégré, stockage
-chiffré des identifiants, déverrouillage biométrique.
+Trois de ces plugins servent l'onglet [Scolarité](features/scolarite.md) : navigateur intégré,
+stockage chiffré des identifiants, déverrouillage biométrique. `expo-background-task` porte
+l'entretien. Le premier est écrit ici, et mérite son paragraphe.
+
+### Les racines de certification des universités
+
+[`tools/expo/autorites-universitaires.js`](../tools/expo/autorites-universitaires.js) embarque les
+deux racines **HARICA TLS Root CA 2021** et les déclare, en plus de celles du système, dans la
+configuration de sécurité réseau d'Android.
+
+**Pourquoi.** Tous les serveurs des deux facs — tout `u-bordeaux.fr` et tout `bordeaux-inp.fr`, du
+portail CAS à Celcat — présentent une chaîne émise par GEANT TCS, le service de certificats du
+réseau de la recherche, qui remonte à ces racines. Elles datent du 19 février 2021, et Android ne
+met à jour son magasin d'autorités qu'avec une mise à jour du système — le magasin n'est devenu
+modulaire qu'avec Android 14. Un téléphone dont l'image système est antérieure à mi-2021 ne les
+connaît donc pas et refuse la connexion. Mesuré le 2026-09-08 sur deux appareils : Celcat, les
+salles libres, l'ENT, Moodle, le webmail et Apogée tombent tous ensemble en erreur réseau, pendant
+que le CROUS, Affluences et la base de publication — tous chez des autorités plus anciennes —
+fonctionnent. Ce n'est pas une affaire de version de TLS : les serveurs acceptent jusqu'à TLS 1.0.
+
+**Elles valent pour toutes les connexions, et non pour les seuls domaines des deux facs.** Les
+limiter par domaine aurait obligé à publier une version à chaque campus ajouté, ce qui contredit la
+thèse de la phase 6 — un campus s'ajoute par le catalogue, sans release —, et GEANT TCS est le
+fournisseur de toute l'université française par RENATER : la prochaine fac y sera aussi. Le coût est
+nul : ces racines sont dans le programme de Mozilla et dans tous les Android récents. `system` est
+conservé, donc on n'enlève la confiance à personne.
+
+**Le piège de la variante de développement.** Dès qu'une configuration de sécurité réseau existe,
+Android ignore `usesCleartextTraffic` du manifeste — celui que le manifeste de débogage pose pour
+Metro. Le plugin écrit donc **deux** fichiers : celui de production, muet sur le trafic en clair
+(le défaut d'une application visant une API récente est déjà de le refuser), et celui de la variante
+`debug`, qui l'autorise. Sans ce second fichier, un build de développement perd Metro.
+
+**iOS n'est pas concerné** : son magasin d'autorités se met à jour avec les mises à jour de sécurité,
+indépendamment de la version majeure.
 
 ## Permissions
 
@@ -49,16 +84,64 @@ l'appareil.
 
 | Permission | Plateforme | Utilisée par |
 |---|---|---|
-| Calendriers (lecture / écriture) | iOS `NSCalendarsUsageDescription`, `NSCalendarsFullAccessUsageDescription` · Android `READ_CALENDAR`, `WRITE_CALENDAR` | synchronisation de l'emploi du temps ([features/settings.md](features/settings.md)) |
+| Calendriers (lecture / écriture) | iOS `NSCalendarsUsageDescription`, `NSCalendarsFullAccessUsageDescription` · Android `READ_CALENDAR`, `WRITE_CALENDAR` | synchronisation de l'emploi du temps ([features/settings.md](features/settings.md)) et, depuis 6.1.x-D, l'affichage des calendriers choisis dans le Planning — le texte iOS le dit, c'est un point de revue App Store |
 | Rappels | iOS `NSRemindersUsageDescription` | déclaré, non utilisé par le code actuel |
 | Localisation | iOS `NSLocationWhenInUseUsageDescription` · Android `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | distance aux restaurants CROUS et aux BU ([features/campus.md](features/campus.md)) |
 | Face ID / biométrie | iOS `NSFaceIDUsageDescription` + option du plugin | protection de l'onglet Scolarité |
 | Tâches en arrière-plan | iOS `UIBackgroundModes: ['processing']` + `BGTaskSchedulerPermittedIdentifiers`, greffon `expo-background-task` | l'entretien : synchronisation du calendrier et rappels de cours |
-| Notifications | demandée à l'exécution | rappels avant les cours |
+| Notifications | demandée à l'exécution | rappels avant les cours, et depuis 6.1.x-E les messages de service en push — le jeton n'est déposé que si elle est accordée |
 
 Les permissions sont demandées **au moment de l'usage**, jamais au lancement : la localisation à
-l'ouverture d'un écran Campus, le calendrier à l'activation de la synchronisation, les notifications
-à l'activation des rappels, la biométrie à l'entrée dans Scolarité.
+l'ouverture d'un écran Campus, le calendrier à l'activation de la synchronisation, la biométrie à
+l'entrée dans Scolarité.
+
+**Les notifications sont l'exception, et elle est mesurée.** C'est la seule capacité dont l'usage
+n'a pas de geste : les rappels de cours et les messages de service sont actifs **par défaut**,
+personne n'appuie sur rien, et « au moment de l'usage » ne désigne alors aucun moment. Le résultat
+se voyait sur appareil le 2026-09-08 : qui n'avait jamais touché un interrupteur n'avait jamais
+accordé la permission, donc ne recevait rien — il fallait éteindre puis rallumer pour que l'invite
+paraisse. Elle est donc demandée par l'**entretien**, une seule fois, quand elle n'a jamais été
+demandée (`undetermined`), **jamais pendant le parcours d'accueil** — qui a ses propres questions —
+et jamais après un refus : `denied` ne se redemande pas, seuls les Réglages du système le rouvrent.
+
+## Les notifications push
+
+Depuis [6.1.x-E](phase-6/6-1-x-e-notifications-push.md), un message de service peut arriver en
+notification, application fermée, par le service d'Expo. Trois choses à savoir avant de s'étonner :
+
+- **rien ne se teste sous Expo Go** : les notifications distantes en sont sorties au SDK 53. Il faut
+  un build de développement (`npx eas-cli build --profile development --platform ios`), Metro
+  servant le JavaScript. Et sur **Android**, ce n'est pas une simple absence : `expo-notifications`
+  y **lève une exception** dès qu'on touche à son émetteur de jetons depuis Expo Go
+  (`warnOfExpoGoPushUsage`, un avertissement sur iOS, un `throw` sur Android), et l'exception remonte
+  au chargement des modules — écran rouge au démarrage, application inutilisable. Mesuré le
+  2026-09-08. C'est pourquoi [`shared/push/`](../src/shared/push/index.ts) charge le module en
+  **import dynamique**, après sa garde `isRunningInExpoGo()`, et n'arme rien sous Expo Go : il n'y a
+  rien à y armer. Les rappels de cours, eux, sont des notifications **locales** et gardent leur
+  import statique ;
+- **iOS demande une clé APNs sur EAS** : `npx eas-cli credentials -p ios`, « Push Notifications ».
+  Sans elle, le jeton est déposé mais Expo ne livre rien (ticket en erreur). En pratique, **EAS la
+  crée d'elle-même** au premier build qui en a besoin — c'est ce qui s'est passé le 2026-09-08, et
+  la commande ne sert qu'à la vérifier ou à la remplacer ;
+- **Android demande Firebase**, et en deux morceaux qu'on confond facilement :
+  - le fichier **`google-services.json`** du projet Firebase, qui permet à l'application d'obtenir un
+    jeton. Il est déclaré par `android.googleServicesFile` mais **n'est pas dans le dépôt** — celui-ci
+    est public : il vit à la racine du poste, ignoré par git, et sur EAS comme **variable
+    d'environnement de type fichier** `GOOGLE_SERVICES_JSON`, que la configuration lit en priorité.
+    EAS avertit au lancement que le fichier n'est pas versionné : c'est attendu ;
+  - la **clé de compte de service**, qui autorise Expo à envoyer. Elle se pose par
+    `npx eas-cli credentials -p android`, menu **« Google Service Account »** puis
+    **« Push Notifications (FCM V1) »**. Attention au voisin : « Push Notifications (Legacy) » est
+    l'API que Google a coupée en 2024, et « Play Store Submissions » sert à publier — les trois
+    acceptent un JSON qui se ressemble. Le bon emplacement affiche le projet Firebase de
+    l'application ; les autres, autre chose.
+
+  Posés le 2026-09-08 : projet `ukit-7f13d`, compte `firebase-adminsdk`. Le projet Firebase ne sert
+  qu'à ça — pas d'Analytics, pas de SDK Firebase dans l'application.
+
+Le greffon d'`expo-notifications` est appliqué par `prebuild` sans être listé dans
+[`app.config.ts`](../app.config.ts) — il fait partie des greffons hérités que l'outil applique
+d'office quand le paquet est installé — et pose l'entitlement `aps-environment`.
 
 ## Tâche de fond
 
@@ -344,10 +427,10 @@ Quatre endroits portent une version :
 
 | Emplacement | Valeur | Rôle |
 |---|---|---|
-| [`package.json`](../package.json) | `6.1.0` | version npm, mise à jour par le workflow |
-| [`app.config.ts`](../app.config.ts) `version` | `6.1.0` | version affichée, et comparée à la table `app_release` ([backend.md](backend.md)) |
+| [`package.json`](../package.json) | `6.2.0` | version npm, mise à jour par le workflow |
+| [`app.config.ts`](../app.config.ts) `version` | `6.2.0` | version affichée, et comparée à la table `app_release` ([backend.md](backend.md)) |
 | [`app.config.ts`](../app.config.ts) `android.versionCode` | `551` | **seule déclaration** depuis 6.1.x-A — une clé racine du même nom, qui n'est pas un champ Expo, portait une autre valeur ; de toute façon inopérante, `appVersionSource: remote` fait d'EAS l'autorité |
-| [`VERSION`](../VERSION) | `6.1.0` | fichier historique, aligné par le protocole de release ; plus lu à distance depuis [6-Z](phase-6/6-z-livraison-finale.md) |
+| [`VERSION`](../VERSION) | `6.2.0` | fichier historique, aligné par le protocole de release ; plus lu à distance depuis [6-Z](phase-6/6-z-livraison-finale.md) |
 
 Avant de poser un tag, les trois premiers doivent s'accorder ([6-1-z](phase-6/6-1-z-sortie.md)).
 
@@ -374,3 +457,6 @@ Avant de poser un tag, les trois premiers doivent s'accorder ([6-1-z](phase-6/6-
 - **`expo-calendar` est consommé par son API historique** (`/legacy`), l'API objet étant une
   réécriture de la synchronisation ([features/settings.md](features/settings.md#limites-connues)).
 - **Le mode strict de TypeScript reste éteint**, explicitement ([qualite.md](qualite.md#typage)).
+- **Sous Expo Go, les vieux Android n'atteignent toujours pas les serveurs des facs** : la
+  configuration de sécurité réseau appartient au binaire, et celui d'Expo Go n'est pas le nôtre. Le
+  correctif ne vaut donc que pour un build.

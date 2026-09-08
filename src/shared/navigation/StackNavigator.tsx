@@ -9,6 +9,7 @@ import Group from '../../features/Planning/screens/ScheduleScreen';
 import About from '../../features/Settings/screens/AboutScreen';
 import Settings from '../../features/Settings/screens/SettingsScreen';
 import FiltersScreen from '../../features/Settings/screens/FiltersScreen';
+import CalendriersAffichesScreen from '../../features/Settings/screens/CalendriersAffichesScreen';
 import CredentialsSettingsScreen from '../../features/Scolarite/screens/CredentialsSettingsScreen';
 import DocumentsScreen from '../../features/Scolarite/screens/DocumentsScreen';
 import DocumentViewerScreen, { partagerDocument } from '../../features/Scolarite/screens/DocumentViewerScreen';
@@ -40,6 +41,8 @@ export type RootStackParamList = {
     /** `ressaisie` ouvre l'ecran directement sur le formulaire, sans deconnecter. */
     CredentialsSettings: { ressaisie?: boolean } | undefined;
     Filters: undefined;
+    /** Les calendriers du telephone affiches dans le Planning (6.1.x-D). */
+    CalendriersAffiches: undefined;
     Documents: undefined;
     /** Le lecteur d'une piece rangee : son adresse locale et son nom de fichier. */
     DocumentViewer: { uri: string; nom: string };
@@ -54,7 +57,7 @@ export type RootStackParamList = {
     BdeDetail: { annonce?: Record<string, unknown> };
     FreeRoomScreen: undefined;
     FreeRoomDetails: { building?: Record<string, unknown> };
-    Course: { title?: string; data?: { UE?: string } };
+    Course: { title?: string; data?: { UE?: string; source?: string } };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -110,6 +113,8 @@ export default function StackNavigator() {
 
                             <Stack.Screen name="Filters" component={FiltersScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FILTERS'), themeName, route, gestureEnabled: true })} />
 
+                            <Stack.Screen name="CalendriersAffiches" component={CalendriersAffichesScreen} options={({ route }) => NavBarHelper({ title: Translator.get('PHONE_CALENDARS'), themeName, route, gestureEnabled: true })} />
+
                             <Stack.Screen name="CredentialsSettings" component={CredentialsSettingsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('ACCOUNT'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Documents" component={DocumentsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('MY_DOCUMENTS'), themeName, route, gestureEnabled: true })} />
@@ -130,7 +135,12 @@ export default function StackNavigator() {
 
                             <Stack.Screen name="Library" component={LibraryScreen} options={({ route }) => NavBarHelper({ title: Translator.get('LIBRARIES'), themeName, route, gestureEnabled: true })} />
 
-                            <Stack.Screen name="WebBrowser" component={WebBrowser} options={{ headerShown: false, gestureEnabled: true }} />
+                            {/* `detachPreviousScreen: false` : quand le navigateur s'ouvre **par-dessus**
+                                lui-meme — le lien d'engagement depuis le formulaire de retours —, la pile
+                                detacherait la vue du dessous, ce qui vide une WebView. Le formulaire
+                                repartait donc de zero au retour. Le cout est un ecran de plus rendu, sur un
+                                ecran qui ne s'empile qu'une fois. */}
+                            <Stack.Screen name="WebBrowser" component={WebBrowser} options={{ headerShown: false, gestureEnabled: true, detachPreviousScreen: false }} />
 
                             <Stack.Screen name="Day" component={DayView} options={({ route }) => NavBarHelper({ title: Translator.get('DAY'), themeName, route })} />
 
@@ -152,7 +162,8 @@ export default function StackNavigator() {
                             <Stack.Screen name="FreeRoomScreen" component={FreeRoomScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FREE_ROOMS'), themeName, route, gestureEnabled: true })} />
                             <Stack.Screen name="FreeRoomDetails" component={FreeRoomDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route, gestureEnabled: true })} />
 
-                            <Stack.Screen name="Course" component={CourseScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />
+                            {/* Pas de bouton de filtre sur un evenement du telephone : il n'a pas d'UE (6.1.x-D). */}
+                            <Stack.Screen name="Course" component={CourseScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => route.params?.data?.source === 'telephone' ? null : <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />
                         </Stack.Navigator>
                 );
             }}

@@ -33,6 +33,15 @@ function celluleEtablissements(valeur: unknown) {
     return Array.isArray(valeur) && valeur.length > 0 ? <>{valeur.join(', ')}</> : <span className="secondaire">tous</span>;
 }
 
+/** Les libelles des cases cochees ; rien de coche se lit « toutes », comme les campus. */
+function celluleCases(champ: Champ, valeur: unknown) {
+    const options = champ.type.type === 'cases' ? champ.type.options : [];
+    const libelles = Array.isArray(valeur)
+        ? valeur.map((v) => options.find((option) => option.valeur === v)?.libelle ?? String(v))
+        : [];
+    return libelles.length > 0 ? <>{libelles.join(', ')}</> : <span className="secondaire">toutes</span>;
+}
+
 function celluleChoix(champ: Champ, valeur: unknown) {
     const options = champ.type.type === 'choix' ? champ.type.options : [];
     const option = options.find((candidat) => candidat.valeur === String(valeur ?? ''));
@@ -49,6 +58,7 @@ const CELLULES: Record<string, (champ: Champ, valeur: unknown) => JSX.Element> =
     image: (_champ, valeur) => celluleImage(valeur),
     json: (_champ, valeur) => celluleJson(valeur),
     etablissements: (_champ, valeur) => celluleEtablissements(valeur),
+    cases: celluleCases,
     choix: celluleChoix,
 };
 

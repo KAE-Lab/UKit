@@ -1,20 +1,18 @@
 import React from 'react';
-import { Animated, Text, View } from 'react-native';
+import { Animated, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens } from '../../../shared/theme/Theme';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { CourseGroupCarousel } from './CourseCard';
 import { DayWeek } from './DayWeekCollapsible';
+import { BandeauJourneeEntiere } from './BandeauJourneeEntiere';
 import { groupOverlappingCourses } from './ScheduleListUtils';
 
 import { ErrorAlert } from '../../../shared/ui/Alerts';
-import { EmptyState } from '../../../shared/ui/EmptyState';
-import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { ApparitionEnFondu } from '../../../shared/ui/ApparitionEnFondu';
-import { ScreenState } from '../../../shared/ui/ScreenState';
+import { ChargementPlanning, EtatPlanning, FavorisVides, JourneeVide, NoticesPlanning } from './ScheduleListEtats';
 import { SourceFailureNotice, type NoticeAction } from '../../../shared/ui/SourceFailureNotice';
 import Translator from '../../../shared/i18n/Translator';
 import { isConnected } from '../../../shared/services/AppCore'
@@ -22,8 +20,12 @@ import { ukitFailure, type UkitFailure } from '../../../shared/aetherius';
 import { groupesRequis, lienEdtAttendu, planningAbsent, sourceEdt } from '../../../shared/etablissements';
 import { PlanningApiService as FetchManager, type PlanningEvent, type PlanningWeekDay } from '../services/PlanningApiService';
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
-import { CourseManager, isArraysEquals } from '../../../shared/services/AppCore';
+import { CourseManager, isArraysEquals, SettingsManager } from '../../../shared/services/AppCore';
 import { NotificationManager } from '../../../shared/services/NotificationService';
+import { fusionnerJour, fusionnerSemaine, joursDeLaSemaine, separerJourneeEntiere, TELEPHONE_VIDE, type TelephoneParJour } from '../services/FusionTelephone';
+import { assemblerSemaine } from '../services/PlanningAssembly';
+import { lireEvenementsDuTelephone } from '../services/TelephoneSource';
+import { CLE_JOUR } from '../services/TelephoneMapping';
 
 export interface ScheduleListProps {
     groupName: string | string[];
@@ -33,6 +35,8 @@ export interface ScheduleListProps {
     filtersList?: string[];
     theme: import('../../../shared/theme/Theme').AppThemeType;
     onAnimatedScroll?: (event: import('react-native').NativeSyntheticEvent<import('react-native').NativeScrollEvent>) => void;
+    /** Change quand le telephone est a relire, sans reseau : retour au premier plan, editeur ferme, choix des calendriers (6.1.x-D). */
+    revisionTelephone?: number;
 }
 
 export interface ScheduleListState {
@@ -75,6 +79,9 @@ interface ScheduleIssue {
 
 export class ScheduleList extends React.Component<ScheduleListProps, ScheduleListState> {
     _unsubscribe?: () => void;
+    /** La derniere issue appliquee : ce que le telephone se remele a sa relecture. */
+    private derniereIssue: ScheduleIssue | null = null;
+    private demonte = false;
 
     constructor(props: ScheduleListProps) {
         super(props);
@@ -108,6 +115,9 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             this.fetchSchedule();
         } else if (!isArraysEquals(this.props.filtersList || [], prevProps.filtersList || [])) {
             this.fetchSchedule();
+        } else if (this.props.revisionTelephone !== prevProps.revisionTelephone) {
+            // En dernier : un changement de cible gagne, et charge le telephone avec le reste.
+            void this.relireTelephone();
         }
     }
 
@@ -135,6 +145,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     }
 
     componentWillUnmount() {
+        this.demonte = true;
         if (this.state.controller) this.state.controller.abort();
         if (this._unsubscribe) this._unsubscribe();
     }
@@ -162,7 +173,15 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         // colle, en revanche, l'absence de favori est **normale** — le lien porte deja le planning de
         // l'etudiant — et sortir ici laisserait l'onglet vide pour toujours.
         if (groupesRequis() && Array.isArray(groupName) && groupName.length === 0) {
-            this.setState({ schedule: [], loading: false, controller: null, failure: null });
+            // Rien a demander a la source — mais le telephone, lui, peut avoir de quoi remplir la
+            // journee (6.1.x-D). Sans cette lecture, cocher un calendrier sans suivre un groupe ne
+            // montrait jamais rien : l'etat « aucun favori » passait devant (mesure du 2026-09-08).
+            const vide: ScheduleData = this.props.mode === 'day' ? [] : assemblerSemaine([], this.joursAffiches()[0]);
+            this.setState({ schedule: vide, loading: false, controller: null, failure: null }, async () => {
+                const telephone = await this.lireTelephone();
+                if (this.demonte) return;
+                this.applySchedule({ data: vide, cacheDate: null, manquants: [], failure: null }, telephone, false);
+            });
             return;
         }
 
@@ -192,8 +211,47 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             // Un run remplace par un plus recent, ou un composant demonte : l'etat ne nous appartient
             // plus, et c'est le run suivant qui l'ecrit.
             if (issue === null) return;
-            this.applySchedule(issue);
+            const telephone = await this.lireTelephone();
+            // La lecture du telephone elargit la fenetre d'annulation : le repli hors ligne rend le
+            // cache sans regarder le signal, et un run remplace entre-temps ecrirait par-dessus.
+            if (controller.signal.aborted || this.demonte) return;
+            this.applySchedule(issue, telephone);
         });
+    };
+
+    /** Les jours a l'ecran : un seul, ou les six colonnes de la semaine. */
+    joursAffiches(): moment.Moment[] {
+        return this.props.mode === 'day'
+            ? [moment(this.state.target)]
+            : joursDeLaSemaine(this.state.target as { week: number; year: number });
+    }
+
+    /**
+     * Les evenements du telephone pour ce qui est affiche — la vue des favoris seulement : le
+     * planning d'un groupe cherche est celui de quelqu'un d'autre.
+     */
+    lireTelephone(): Promise<TelephoneParJour> {
+        if (!Array.isArray(this.state.groupName)) return Promise.resolve(TELEPHONE_VIDE);
+        return lireEvenementsDuTelephone(this.joursAffiches());
+    }
+
+    /**
+     * Relit le telephone seul, sans reseau : au retour au premier plan, apres l'editeur du systeme,
+     * quand le choix des calendriers change. Cede a un chargement en cours, qui le lira lui-meme.
+     */
+    relireTelephone = async () => {
+        if (this.state.loading) return;
+        // Rien a remeler : le dernier chargement a echoue, et il n'y a que le reseau pour en sortir.
+        // Sans ce rattrapage, la vue semaine — qui n'a pas de relecture au focus — restait sur son
+        // ecran d'echec meme apres avoir coche un calendrier.
+        if (this.derniereIssue === null) {
+            this.fetchSchedule();
+            return;
+        }
+        const issue = this.derniereIssue;
+        const telephone = await this.lireTelephone();
+        if (this.demonte || this.derniereIssue !== issue) return;
+        this.applySchedule(issue, telephone, false);
     };
 
     /**
@@ -250,9 +308,15 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         return { data: null, cacheDate: null, failure };
     };
 
-    applySchedule(issue: ScheduleIssue) {
+    /**
+     * `telephone` se mele **apres** la derivation, et jamais aux rappels : `preparerPourAffichage`
+     * mute le sujet pour en extraire un code d'UE, l'indexation prendrait « 2B Dentiste » pour une UE,
+     * et on ne notifie pas un rendez-vous personnel a la place de l'agenda (6.1.x-D).
+     */
+    applySchedule(issue: ScheduleIssue, telephone: TelephoneParJour = TELEPHONE_VIDE, rappels = true) {
         if (issue.data == null) {
             this.idAffiche = null;
+            this.derniereIssue = null;
             this.setState({ schedule: null, loading: false, controller: null, cacheDate: null, manquants: [], failure: issue.failure });
             return;
         }
@@ -273,16 +337,21 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             ? this.computeScheduleDay(issue.data as PlanningEvent[], isFavorite)
             : (issue.data as PlanningWeekDay[]).map((jour) => this.computeScheduleWeek(jour, isFavorite));
 
-        if (isFavorite) {
+        if (isFavorite && rappels) {
             NotificationManager.scheduleCourseNotifications(schedule).catch(e => console.warn('Notification scheduling error:', e));
         }
+
+        const affiche: ScheduleData = this.props.mode === 'day'
+            ? fusionnerJour(schedule as PlanningEvent[], telephone.get(moment(this.state.target).format(CLE_JOUR)))
+            : fusionnerSemaine(schedule as PlanningWeekDay[], this.joursAffiches(), telephone);
 
         // La cle de ce qui est desormais a l'ecran : c'est elle qui decidera si le prochain
         // chargement remplace le contenu ou se contente de le relire (voir `fetchSchedule`).
         this.idAffiche = this.cacheId(this.state.groupName);
+        this.derniereIssue = issue;
 
         this.setState({
-            schedule, loading: false, controller: null,
+            schedule: affiche, loading: false, controller: null,
             cacheDate: issue.cacheDate, manquants: issue.manquants ?? [], failure: null,
         });
     }
@@ -295,111 +364,14 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         return { ...schedule, courses: this.computeScheduleDay(schedule.courses, isFavorite) };
     }
 
-    /**
-     * Un bandeau au-dessus de la liste : la forme que ce depot donne a « ce que tu vois est partiel ».
-     *
-     * Deux raisons l'affichent, et elles peuvent coexister — une donnee servie depuis le cache, et un
-     * groupe favori que le referentiel ne resout plus. Aucune des deux n'est un echec : le planning
-     * est la, il lui manque quelque chose, et le taire serait pire que de l'ecrire.
-     */
-    renderNotice(texte: string, icone: boolean) {
-        const { theme } = this.props;
-        return (
-            <View style={{
-                flexDirection: 'row', alignItems: 'center', backgroundColor: theme.greyBackground,
-                paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
-                borderRadius: tokens.radius.md, marginBottom: tokens.space.md, marginHorizontal: tokens.space.md
-            }}>
-                {icone && <MaterialCommunityIcons name="clock-outline" size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
-                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, flex: 1 }}>{texte}</Text>
-            </View>
-        );
-    }
 
-    renderCacheMessage() {
-        const { mode } = this.props;
-        const bandeaux = [];
-
-        if (this.state.cacheDate !== null) {
-            bandeaux.push(this.renderNotice(
-                Translator.get('OFFLINE_DISPLAY_FROM_DATE', moment(this.state.cacheDate).format('lll')),
-                mode === 'week',
-            ));
-        }
-
-        // Un favori perime ne vide plus le planning agrege : les autres sont joues, et celui-la est
-        // **nomme**. Un referentiel se perime a chaque rentree, donc ce cas est ordinaire (jalon 6-I).
-        if (this.state.manquants.length > 0) {
-            bandeaux.push(this.renderNotice(
-                Translator.get('TIMETABLE_GROUPS_MISSING', this.state.manquants.join(', ')),
-                false,
-            ));
-        }
-
-        if (bandeaux.length === 0) return null;
-        return <>{bandeaux.map((bandeau, index) => <React.Fragment key={index}>{bandeau}</React.Fragment>)}</>;
-    }
-
-    /**
-     * L'hote des trois etats plein ecran du planning.
-     *
-     * `topOffset={0}` : `DayViewHeader` est rendu **au-dessus** de ce composant, dans le flux, et non
-     * en en-tete transparent. La boite de `ScheduleList` est donc deja la surface libre, et lui
-     * appliquer la compensation d'en-tete descendrait le bloc de 130 points (shared/ui/ScreenState).
-     */
+    /** Les bandeaux et les etats plein ecran vivent dans ScheduleListEtats : ici, seulement leurs appels. */
     renderEtat(contenu: React.ReactNode) {
-        return (
-            <ScreenState theme={this.props.theme} background={this.props.theme.courseBackground} topOffset={0}>
-                {contenu}
-            </ScreenState>
-        );
+        return <EtatPlanning theme={this.props.theme}>{contenu}</EtatPlanning>;
     }
 
-    renderEmptyFavorites() {
-        const { theme, navigation } = this.props;
-        return this.renderEtat(
-            <EmptyState
-                variant="plain"
-                icon="star-outline"
-                title={Translator.get('FAVORITES_EMPTY_TITLE')}
-                message={Translator.get('FAVORITES_EMPTY')}
-                theme={theme}
-                action={{ label: Translator.get('GROUPS_LIST'), onPress: () => navigation?.navigate('GroupSearch'), icon: 'magnify' }}
-            />
-        );
-    }
-
-    /** Une journee sans cours : ce n'est ni une panne ni une absence de favori, c'est une journee libre. */
     renderEmptyDay(listHeader: React.ReactNode) {
-        const { theme } = this.props;
-        return (
-            <View style={{ flex: 1 }}>
-                {listHeader}
-                {this.renderEtat(
-                    <EmptyState
-                        variant="plain"
-                        // Des confettis, pas un calendrier vide : une journee libre est une bonne
-                        // nouvelle, et c'est l'icone qui sourit — le texte, lui, ne change pas.
-                        icon="party-popper"
-                        title={Translator.get('NO_CLASS_THIS_DAY_TITLE')}
-                        message={Translator.get('NO_CLASS_THIS_DAY')}
-                        theme={theme}
-                    />
-                )}
-            </View>
-        );
-    }
-
-    renderLoading() {
-        return (
-            <ChargementPleinePage
-                theme={this.props.theme}
-                message={Translator.get('LOADING_TIMETABLE')}
-                patience={Translator.get('LOADING_PATIENCE_UNIVERSITY')}
-                background={this.props.theme.courseBackground}
-                topOffset={0}
-            />
-        );
+        return <JourneeVide theme={this.props.theme} listHeader={listHeader} />;
     }
 
     renderDayMode(listHeader: React.ReactNode) {
@@ -411,17 +383,30 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         // cher : le bloc se retrouvait dans une cellule de liste, qui ne s'etire pas, donc il se posait
         // la ou la cellule tombait — d'ou sa hauteur imprevisible. Il est desormais un etat d'ecran
         // comme les deux autres, et la categorie fantome a disparu du depot.
-        if (moment(this.state.target).day() === 0 || daySchedule.length === 0) {
+        //
+        // Le **dimanche** ne court-circuite plus : il n'a jamais de cours, donc la liste est vide et
+        // le message parait de lui-meme — mais un rendez-vous du telephone tombe un dimanche comme un
+        // autre jour, et le court-circuit le rendait invisible (mesure du 2026-09-08). La limite des
+        // six colonnes ne vaut que pour la vue semaine.
+        if (daySchedule.length === 0) {
             return this.renderEmptyDay(listHeader);
         }
 
-        const groupedDaySchedule = groupOverlappingCourses(daySchedule);
+        // Les journees entieres du telephone en tete, hors carrousel (6.1.x-D).
+        const { bandeaux, horaires } = separerJourneeEntiere(daySchedule);
+        const groupedDaySchedule = groupOverlappingCourses(horaires);
+        const enTete = (
+            <>
+                {listHeader}
+                {bandeaux.map((evenement) => <BandeauJourneeEntiere key={evenement.id} evenement={evenement} theme={theme} />)}
+            </>
+        );
 
         return (
             <Animated.FlatList
                 data={groupedDaySchedule}
                 extraData={this.state}
-                ListHeaderComponent={listHeader as never}
+                ListHeaderComponent={enTete as never}
                 renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item as import('../services/PlanningApiService').PlanningEvent[]} theme={theme} />}
                 keyExtractor={(item, index) => String(index)}
                 style={{ backgroundColor: theme.courseBackground }}
@@ -513,16 +498,24 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         // Un abonnement colle **est** l'emploi du temps de cet etudiant-la : il n'y a pas de groupe a
         // choisir, donc pas d'etat « aucun favori » a afficher. Sans cette garde, l'ecran inviterait a
         // chercher un groupe dans une liste vide par construction.
-        if (groupesRequis() && Array.isArray(this.state.groupName) && this.state.groupName.length === 0) {
-            return this.renderEmptyFavorites();
-        } else if (this.state.failure !== null && this.state.failure.silent !== true) {
+        //
+        // Et seulement si **rien n'est configure** : un etudiant qui a coche des calendriers a fait
+        // son choix de planning, et lui redemander un groupe a chaque jour creux est du bruit — ses
+        // journees vides sont des journees libres comme les autres. L'invitation reste a un toucher,
+        // dans la barre d'onglets (retour du 2026-09-08).
+        if (groupesRequis() && Array.isArray(this.state.groupName) && this.state.groupName.length === 0
+            && SettingsManager.getCalendriersAffiches().length === 0) {
+            return <FavorisVides theme={this.props.theme} onChercher={() => this.props.navigation?.navigate('GroupSearch')} />;
+        }
+        if (this.state.failure !== null && this.state.failure.silent !== true) {
             return this.renderFailure(this.state.failure);
-        } else if (this.state.schedule === null) {
-            return this.renderLoading();
-        } else if (this.state.schedule instanceof Array && this.props.mode === 'day') {
-            return this.enveloppeApresAttente(this.renderDayMode(listHeader));
-        } else if (this.state.schedule instanceof Array && this.props.mode === 'week') {
-            return this.enveloppeApresAttente(this.renderWeekMode(listHeader));
+        }
+        if (this.state.schedule === null) {
+            return <ChargementPlanning theme={this.props.theme} />;
+        }
+        if (this.state.schedule instanceof Array) {
+            const contenu = this.props.mode === 'day' ? this.renderDayMode(listHeader) : this.renderWeekMode(listHeader);
+            return this.enveloppeApresAttente(contenu);
         }
         return null;
     }
@@ -547,10 +540,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
     render() {
         const { theme } = this.props;
-        const cacheMessage = this.renderCacheMessage();
-        const listHeader = cacheMessage ? (
-            <View style={{ paddingBottom: tokens.space.sm }}>{cacheMessage}</View>
-        ) : null;
+        const listHeader = <NoticesPlanning cacheDate={this.state.cacheDate} manquants={this.state.manquants} mode={this.props.mode} theme={theme} />;
 
         return (
             <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>

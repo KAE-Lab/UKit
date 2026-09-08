@@ -23,7 +23,7 @@ import { maintenant } from '../services/Temps';
 import style from '../theme/Theme';
 import { Bandeau } from '../ui/Bandeau';
 import { Dialogue } from '../ui/Dialogue';
-import { fermerMessage, messagesConnus, onMessages } from './index';
+import { consommerDemande, fermerMessage, messagesConnus, onMessages } from './index';
 import { choisirPresentation } from './presentation';
 import type { MessageDeService } from './projection';
 import { vusConnus } from './vus';
@@ -36,13 +36,25 @@ export interface MessagesDeServiceHoteProps {
 export function MessagesDeServiceHote({ actif }: MessagesDeServiceHoteProps) {
     const { themeName, etablissement } = useContext(AppContext);
     const theme = style.Theme[themeName ?? 'light'];
-    const [, setRevision] = useState(0);
+    const [revision, setRevision] = useState(0);
     /** La feuille ouverte depuis un bandeau, par le toucher. Distincte de la modale que la regle impose. */
     const [detail, setDetail] = useState<MessageDeService | null>(null);
 
     const rejouer = useCallback(() => setRevision((revision) => revision + 1), []);
 
     useEffect(() => onMessages(rejouer), [rejouer]);
+
+    /*
+     * Une notification ouverte demande **sa** feuille (6.1.x-E). Elle ne se consomme qu'une fois
+     * l'hote actif : pendant le parcours d'accueil, rien ne se rend, et la consommer la aurait jete
+     * la demande sans jamais rien montrer. `revision` remet l'effet en jeu a chaque lecture de
+     * messages, pour le cas ou la notification devance la lecture qui apporte son message.
+     */
+    useEffect(() => {
+        if (!actif) return;
+        const demande = consommerDemande();
+        if (demande !== null) setDetail(demande);
+    }, [actif, revision]);
 
     const fermer = useCallback((message: MessageDeService) => {
         setDetail(null);
@@ -55,7 +67,10 @@ export function MessagesDeServiceHote({ actif }: MessagesDeServiceHoteProps) {
     // qu'a provoquer ce rendu quand il change, et c'est le meme.
     const contexte = { ...contexteDeCiblage(), etablissement: etablissement ?? contexteDeCiblage().etablissement };
     const { modale, bandeau } = choisirPresentation(messagesConnus(), vusConnus(), contexte, maintenant());
-    const feuille = modale ?? detail;
+    // Ce que l'utilisateur a **touche** passe devant ce que la regle propose : une notification
+    // ouverte, ou un bandeau presse, doivent montrer leur message et pas un autre. La modale que la
+    // regle impose reste en attente et parait a la fermeture, comme elle le faisait deja.
+    const feuille = detail ?? modale;
 
     return (
         <>

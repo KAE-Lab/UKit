@@ -135,3 +135,43 @@ create trigger journal after insert or update or delete on public.app_release
 drop trigger if exists journal on public.retours;
 create trigger journal after insert or update or delete on public.retours
     for each row execute function private.journaliser('id');
+
+-- -----------------------------------------------------------------------------
+-- Les jetons push (jalon 6.1.x-E)
+-- -----------------------------------------------------------------------------
+--
+-- L'application ne touche pas la table : elle depose et retire par ces deux fonctions, `security
+-- definer` pour que le role `anon` n'ait aucun privilege sur jetons_push — ni lecture (les jetons
+-- ne s'enumerent pas), ni ecriture directe. Un depot est un `upsert` sur le jeton : le meme appareil
+-- qui change de campus ou de version reecrit sa ligne, jamais une seconde.
+create or replace function public.deposer_jeton(
+    p_jeton text, p_plateforme text, p_etablissement text, p_version text, p_testeur boolean
+)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+    insert into public.jetons_push (jeton, plateforme, etablissement, version, testeur, maj_le)
+    values (p_jeton, p_plateforme, p_etablissement, p_version, coalesce(p_testeur, false), now())
+    on conflict (jeton) do update
+        set plateforme = excluded.plateforme,
+            etablissement = excluded.etablissement,
+            version = excluded.version,
+            testeur = excluded.testeur,
+            maj_le = now();
+$$;
+
+create or replace function public.retirer_jeton(p_jeton text)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+    delete from public.jetons_push where jeton = p_jeton;
+$$;
+
+revoke execute on function public.deposer_jeton(text, text, text, text, boolean) from public;
+revoke execute on function public.retirer_jeton(text) from public;
+grant execute on function public.deposer_jeton(text, text, text, text, boolean) to anon, authenticated;
+grant execute on function public.retirer_jeton(text) to anon, authenticated;

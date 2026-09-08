@@ -6,6 +6,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { Curseur } from '../../../shared/ui/Curseur';
 import { tokens } from '../../../shared/theme/Theme';
 import { AppThemeType } from '../../../shared/theme/Theme';
+import { PointDeCouleur, POINT_DE_COULEUR } from '../../../shared/ui/PointDeCouleur';
 
 const LANGUAGE_LIST = {
     fr: 'FRENCH',
@@ -153,11 +154,24 @@ interface NotificationsSectionProps {
     courseNotificationDelay: number;
     onNotificationDelayChange: (value: number) => void;
     onNotificationDelaySlidingComplete: (value: number) => void;
+    /** Les messages de service en notification push (6.1.x-E) : couper retire le jeton de la base. */
+    messagesEnNotification: boolean;
+    toggleMessagesEnNotification: () => void;
 }
 
-export const NotificationsSection = ({ themeSettings, theme, courseNotificationsEnabled, toggleCourseNotifications, courseNotificationDelay, onNotificationDelayChange, onNotificationDelaySlidingComplete }: NotificationsSectionProps) => (
+export const NotificationsSection = ({ themeSettings, theme, courseNotificationsEnabled, toggleCourseNotifications, courseNotificationDelay, onNotificationDelayChange, onNotificationDelaySlidingComplete, messagesEnNotification, toggleMessagesEnNotification }: NotificationsSectionProps) => (
     <>
         <SettingsTextHeader theme={themeSettings} text={Translator.get('NOTIFICATIONS')} />
+        <Button
+            theme={themeSettings}
+            leftIcon="bullhorn-outline"
+            leftText={Translator.get('PUSH_MESSAGES')}
+            onSwitchToggle={toggleMessagesEnNotification}
+            switchValue={messagesEnNotification}
+        />
+        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginHorizontal: tokens.space.md, marginTop: tokens.space.xs }}>
+            {Translator.get('PUSH_MESSAGES_DESC')}
+        </Text>
         <Button
             theme={themeSettings}
             leftIcon="bell-outline"
@@ -239,9 +253,12 @@ interface CalendarSectionProps {
     openCalendarDialog: () => void;
     isSynchronizingCalendar: boolean;
     selectedCalendar: string | number;
+    /** Combien de calendriers du telephone le Planning affiche ; la rangee pousse l'ecran de choix (6.1.x-D). */
+    calendriersAffiches: number;
+    openCalendriersAffiches: () => void;
 }
 
-export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, lastSyncDate, derniereTentative, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar }: CalendarSectionProps) => {
+export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, lastSyncDate, derniereTentative, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar, calendriersAffiches, openCalendriersAffiches }: CalendarSectionProps) => {
     const lastSyncFailed = derniereTentative !== null && !derniereTentative.ok;
     return (
     <>
@@ -257,7 +274,7 @@ export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, l
                             L'echec passe en `warning`, pas en rouge : la synchronisation reessaie
                             d'elle-meme, rien n'est perdu — mais sans cette pastille, un echec etait
                             indiscernable d'un bouton casse. */}
-                        <View style={{ width: 8, height: 8, borderRadius: tokens.radius.pill, backgroundColor: lastSyncFailed ? theme.warning : lastSyncDate ? theme.success : theme.neutral, marginRight: tokens.space.sm }} />
+                        <PointDeCouleur couleur={lastSyncFailed ? theme.warning : lastSyncDate ? theme.success : theme.neutral} style={{ marginRight: tokens.space.sm }} />
                         {/* `flex: 1` : sans lui, Android coupe net le texte au bord de la rangee au
                             lieu de le plier — constate sur appareil le 2026-08-31. */}
                         <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, flex: 1 }}>
@@ -268,7 +285,7 @@ export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, l
                         reussi, quand ; ce qui a echoue, depuis. L'echec seul cachait la date du dernier
                         succes, et se lisait comme « rien ne marche » (6.1.x-B). */}
                     {lastSyncFailed && derniereTentative !== null ? (
-                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.warning, marginTop: tokens.space.xxs, marginLeft: 8 + tokens.space.sm }}>
+                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.warning, marginTop: tokens.space.xxs, marginLeft: POINT_DE_COULEUR + tokens.space.sm }}>
                             {Translator.get('LAST_ATTEMPT_FAILED_AT', moment(derniereTentative.at).fromNow())}
                         </Text>
                     ) : null}
@@ -294,6 +311,15 @@ export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, l
                     leftIconAnimation={isSynchronizingCalendar ? 'rotate' : ''}
                     leftIcon="sync"
                     leftText={isSynchronizingCalendar ? Translator.get('SYNCHRONIZING') : Translator.get('FORCE_SYNC')}
+                />
+                {/* L'autre sens : ce que le Planning lit dans l'agenda. Une rangee qui navigue, comme les
+                    filtres — un choix multiple n'a pas sa place dans la modale mono-selection. */}
+                <Button
+                    theme={themeSettings}
+                    onPress={openCalendriersAffiches}
+                    leftIcon="calendar-multiple"
+                    leftText={Translator.get('PHONE_CALENDARS')}
+                    rightText={calendriersAffiches > 0 ? Translator.get('PHONE_CALENDARS_COUNT', String(calendriersAffiches)) : Translator.get('PHONE_CALENDARS_NONE')}
                 />
             </>
         ) : (

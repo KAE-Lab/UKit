@@ -60,17 +60,18 @@ Un contexte ne serait pas accessible depuis ces points.
 | Clé | Écrite par | Contenu | Durée de vie |
 |---|---|---|---|
 | `firstload` | `SettingsManager.saveSettings` | booléen : parcours d'accueil non terminé | jusqu'à la fin de l'onboarding ou une réinitialisation |
-| `settings` | `SettingsManager.saveSettings` | objet unique : `calendar`, `theme`, `favoriteGroups`, `language`, `openAppOnFavoriteGroup`, `filters`, `calendarSyncEnabled`, `courseNotificationsEnabled`, `courseNotificationDelay`, **`etablissement`** | permanent |
+| `settings` | `SettingsManager.saveSettings` | objet unique : `calendar`, `theme`, `favoriteGroups`, `language`, `openAppOnFavoriteGroup`, `filters`, `calendarSyncEnabled`, `courseNotificationsEnabled`, `courseNotificationDelay`, **`etablissement`**, `calendriersAffiches` (les calendriers du téléphone affichés dans le Planning, 6.1.x-D — survit à une bascule d'établissement, pas à une réinitialisation), `messagesEnNotification` (6.1.x-E, vrai par défaut) | permanent |
 | `groupList` | `PlanningDataManager` | liste complète des groupes Celcat — **le seul cache** depuis 6.1-C : l'écran de recherche tenait le sien (`groups`), effacé une fois au démarrage ([planning.md](features/planning.md#un-seul-cache-pour-la-liste-des-groupes)) | 7 jours (`groupListTimestamp`), servie datée en repli hors ligne |
 | `groupListTimestamp` | `PlanningDataManager` | horodatage du dernier rafraîchissement | — |
 | `buildingList` | `CampusDataManager` | bâtiments en accès libre et leurs salles | 7 jours (`buildingListTimestamp`) |
 | `buildingListTimestamp` | `CampusDataManager` | horodatage du dernier rafraîchissement | — |
 | `<groupes>@YYYY/MM/DD` | [`ScheduleList`](../src/features/Planning/components/ScheduleList.tsx) | `{ data, date }` — emploi du temps d'un jour | sans expiration, repli hors ligne |
 | `<groupes>@Week<n>` | `ScheduleList` | `{ data, date }` — emploi du temps d'une semaine | sans expiration, repli hors ligne |
-| `previousSyncData` | `SettingsManager.syncCalendar` | table `id d'événement Celcat → id d'événement système` | jusqu'à désactivation de la synchronisation |
+| `previousSyncData` | `SettingsManager.syncCalendar` | table `id d'événement Celcat → id d'événement système` — lue aussi par le Planning, qui ne relit jamais ce qu'elle nomme (6.1.x-D) | jusqu'à désactivation de la synchronisation |
 | `previousSyncTime` | `SettingsManager.syncCalendar` | horodatage de la dernière synchronisation | idem |
 | `calendarSyncAttempt` | `SettingsManager.syncCalendar` | la dernière tentative, réussie ou non : `{ at, ok, origine }` ([features/settings.md](features/settings.md#la-dernière-tentative-est-persistée-et-linterrupteur-lefface)) | effacée par l'interrupteur quand elle est un échec |
 | `entretien@1` | [`entretien.ts`](../src/shared/services/entretien.ts) | horodatage du dernier entretien joué, qui décide du suivant (douze heures) | permanent |
+| `push@1` | [`shared/push`](../src/shared/push/index.ts) | la dernière inscription déposée pour les notifications — jeton, campus, version, plateforme, testeur — et sa date : ce qui décide si la base est à réécrire (6.1.x-E) | effacée par l'interrupteur ; redéposée tous les sept jours |
 | `crous_favorites` | [`useFavorites`](../src/features/Campus/hooks/useFavorites.ts) | identifiants de restaurants favoris | permanent |
 | `library_favorites` | `useFavorites` | identifiants de BU favorites | permanent |
 | `freeroom_favorites` | `useFavorites` | identifiants de bâtiments favoris | permanent |
@@ -127,6 +128,12 @@ laissait la session universitaire en place, ce qui n'était pas faux tant qu'il 
 université — et qui l'est devenu dès que le parcours d'accueil s'est mis à redemander l'établissement.
 Le module vit à part de `index.ts` pour que `AppCore` puisse l'appeler sans tirer le client de la base
 sur le chemin de démarrage.
+
+
+**Ce qui n'est jamais mis en cache : les événements des calendriers du téléphone.** Le Planning les
+lit à chaque affichage par `expo-calendar` ([planning.md](features/planning.md#les-calendriers-du-téléphone-dans-le-planning)) :
+la donnée est locale et instantanée, et les figer servirait du périmé au repli hors ligne. Les clés
+`<groupes>@…` ne reçoivent que les cours.
 
 ## Clés SecureStore
 

@@ -11,6 +11,14 @@
  * vers `docs.google.com`, et le formulaire charge ses ressources chez `gstatic.com` —, et empile
  * tout autre domaine. Les portails universitaires ne posent pas ce parametre : eux changent de
  * domaine legitimement, du CAS a l'ENT, et gardent leur comportement.
+ *
+ * **Le redirecteur de Google est defait avant que la regle s'applique**, et c'est ce qui manquait.
+ * Google Forms ne pose jamais l'adresse ecrite dans le formulaire : il la remplace par
+ * `https://www.google.com/url?q=<adresse>&sa=D...`, qui est chez `google.com` — donc « interne »
+ * pour une regle qui ne regarde que l'hote. La vue du formulaire naviguait alors vers le
+ * redirecteur, qui la renvoyait aussitot dehors : le formulaire etait perdu **avant** que la regle
+ * ait eu son mot a dire, et « retour » le rechargeait vide. On lit donc la destination reelle
+ * d'abord, et c'est elle qu'on juge (mesure le 2026-09-08 sur iPhone et sur Android).
  */
 
 /** Les domaines qui restent dans la vue quand le formulaire est ouvert. */
@@ -28,13 +36,42 @@ export function parametresDuFormulaire(href: string): ParametresDuFormulaire {
 
 const HOTE = /^https?:\/\/([^/:?#]+)/i;
 
+/** Le redirecteur de Google : `/url` chez `google.com`, la destination dans `q` ou dans `url`. */
+const REDIRECTEUR = /^https?:\/\/(?:[^/:?#]*\.)?google\.[^/:?#]+\/url\?/i;
+
 /**
- * Une adresse reste-t-elle dans la vue ? Oui si son hote est l'un des domaines, ou un sous-domaine
- * de l'un d'eux ; sinon elle s'ouvre par-dessus. Une adresse sans hote lisible reste : la vue sait
- * deja quoi faire d'`about:blank`.
+ * La destination reelle d'une adresse : celle qu'un redirecteur transporte, ou l'adresse elle-meme.
+ *
+ * Elle ne suit qu'un seul saut et ne reconnait que le redirecteur de Google : deviner qu'une adresse
+ * quelconque en enveloppe une autre ouvrirait la porte a des redirections imaginees. Un parametre
+ * illisible ou qui n'est pas une adresse `http` rend l'adresse d'origine — mieux vaut juger le
+ * redirecteur que de suivre n'importe quoi.
+ */
+export function destinationReelle(url: string): string {
+    if (!REDIRECTEUR.test(url)) return url;
+    const requete = url.slice(url.indexOf('?') + 1);
+    for (const couple of requete.split('&')) {
+        const separateur = couple.indexOf('=');
+        if (separateur < 0) continue;
+        const nom = couple.slice(0, separateur);
+        if (nom !== 'q' && nom !== 'url') continue;
+        try {
+            const valeur = decodeURIComponent(couple.slice(separateur + 1).replace(/\+/g, ' '));
+            if (/^https?:\/\//i.test(valeur)) return valeur;
+        } catch {
+            // Un pourcentage mal forme : on garde le redirecteur, qui est un domaine connu.
+        }
+    }
+    return url;
+}
+
+/**
+ * Une adresse reste-t-elle dans la vue ? Oui si l'hote de sa **destination reelle** est l'un des
+ * domaines, ou un sous-domaine de l'un d'eux ; sinon elle s'ouvre par-dessus. Une adresse sans hote
+ * lisible reste : la vue sait deja quoi faire d'`about:blank`.
  */
 export function resteDansLaVue(url: string, domaines: readonly string[]): boolean {
-    const hote = HOTE.exec(url)?.[1]?.toLowerCase();
+    const hote = HOTE.exec(destinationReelle(url))?.[1]?.toLowerCase();
     if (hote === undefined) return true;
     return domaines.some((domaine) => hote === domaine || hote.endsWith(`.${domaine}`));
 }

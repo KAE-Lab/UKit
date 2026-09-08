@@ -62,10 +62,12 @@ export function FondDePiedFlottant({ fond }: { fond: string }) {
     const { themeName } = useContext(AppContext) as { themeName: 'light' | 'dark' };
 
     const flou = (
+        // Pas de `blurMethod` : la methode Android exige une cible que ce fond n'a pas, retombe sur
+        // « aucun flou » et avertit a chaque rendu (SDK 57). Ce flou-ci n'est de toute facon rendu
+        // que sur iOS — la branche Android est juste en dessous.
         <BlurView
             intensity={45}
             tint={themeName === 'dark' ? 'dark' : 'light'}
-            blurMethod="dimezisBlurView"
             style={StyleSheet.absoluteFill}
         />
     );
@@ -115,6 +117,25 @@ export interface PiedFlottantProps {
     children: React.ReactNode;
 }
 
+/**
+ * Ce qui separe un objet flottant du bas de l'ecran — barre d'onglets, pieds d'action, barre du
+ * navigateur, barre de recherche du Campus. Une seule fonction : la valeur etait ecrite quatre fois.
+ *
+ * **Les deux plateformes ne mesurent pas la meme chose**, et c'est pour ca qu'une seule formule ne
+ * peut pas convenir. Sur iPhone, la zone sure du bas est celle de l'indicateur d'accueil : elle est
+ * genereuse et surtout **vide**, si bien qu'en la respectant entierement les objets remontaient trop
+ * et laissaient un trou dessous — on lui reprend donc quinze points, un reglage juge parfait sur
+ * appareil et qui fait loi. Sur Android, la meme zone est la barre systeme elle-meme, gestes ou trois
+ * boutons : elle est occupee, et lui reprendre quoi que ce soit colle la carte contre elle (mesure le
+ * 2026-09-08). On la respecte donc entiere, avec un degagement d'au moins `md` quand elle est nulle.
+ */
+export function assiseDuFlottant(insets: { bottom: number } | null | undefined): number {
+    const bas = insets?.bottom ?? 0;
+    return Platform.OS === 'ios'
+        ? Math.max(tokens.space.sm, bas - 15)
+        : Math.max(tokens.space.md, bas);
+}
+
 export function PiedFlottant({ fond, children }: PiedFlottantProps) {
     const insets = useSafeAreaInsets();
 
@@ -127,10 +148,7 @@ export function PiedFlottant({ fond, children }: PiedFlottantProps) {
                 // au-dessus.
                 paddingTop: VOILE_PIED,
                 paddingHorizontal: tokens.space.md,
-                // L'assise de la barre d'onglets (`inset - 15`, plancher `sm`) : juge parfaite sur
-                // appareil, elle fait loi pour tous les flottants. La zone sure entiere a ete
-                // essayee — les objets remontaient trop et laissaient un trou dessous.
-                paddingBottom: Math.max(tokens.space.sm, (insets?.bottom || 0) - 15),
+                paddingBottom: assiseDuFlottant(insets),
             }}>
                 {children}
             </View>

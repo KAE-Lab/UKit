@@ -1,5 +1,14 @@
 # 6.1.x-D — Les calendriers du téléphone, et le ciblage par plateforme
 
+> **Jalon livré (code, portes et documentation) le 2026-09-07 — protocole iPhone à jouer, Android
+> reporté à la vérification groupée de [Z](6-1-x-z-sortie.md).** Les deux chantiers sont livrés, la
+> plateforme d'abord : colonne `plateformes` appliquée en base le même jour (essai à blanc puis
+> réel, `check` vérifié, écriture anonyme refusée), la règle et la console étendues ; puis les
+> calendriers, en trois modules purs testés et une seule pièce de plateforme. Portes : `tsc` vert,
+> ESLint à zéro, 667 tests, `expo-doctor` 21/21, `expo export` sur les deux plateformes. **Les
+> écarts au texte sont en fin de document**, avant l'analyse du push — le plus important est le
+> point d'insertion de la fusion.
+>
 > **Le premier jalon de la 6.1.x qui ajoute une capacité**, et c'est une décision du propriétaire du
 > produit du 2026-09-06 : la prochaine release doit *se débarrasser d'un maximum de demandes* avant
 > d'ouvrir la 6.2 visuelle. Deux demandes convergent ici — *« afficher un calendrier externe dans le
@@ -86,7 +95,7 @@ pour que les écrans distinguent sans deviner.
 | `CourseRow` | la **couleur du calendrier**, rendue telle quelle — `PlanningEvent.color` est aujourd'hui une clé de `theme.courses` ; une teinte hexadécimale inconnue retombe sur `default`, donc `CourseRow` et `CourseScreen` acceptent en plus une hexadécimale. L'utilisateur reconnaît son calendrier à sa couleur, c'est le sens du choix |
 | carrousel des chevauchements | un événement qui chevauche un cours entre dans le même carrousel (`groupOverlappingCourses` est purement horaire) — accepté : ils sont simultanés |
 | journée entière | un **bandeau** en tête de jour, sans heures — `starttime`/`endtime` n'ont pas de sens, et `timeToMinutes` mettrait l'événement à minuit |
-| jour vide | `renderEmptyDay` cède quand des événements existent ; le dimanche reste absent (limite) |
+| jour vide | `renderEmptyDay` cède quand des événements existent — **y compris le dimanche**, en vue jour (corrigé le 2026-09-08) |
 | `CourseScreen` | ni carte ni UE — `resoudreLieux` sur « Chez Marie » matcherait un bâtiment bordelais —, et une action **« Ouvrir dans le calendrier »** (`openEventInCalendarAsync`) ; l'appui long « ajouter au calendrier » est désactivé sur ce qui en vient |
 | en-tête du Planning | un **« + »** → `createEventInCalendarAsync({ startDate: jour affiché 9:00, endDate: 10:00 })`, l'éditeur du système ; relecture au retour au premier plan et au focus |
 
@@ -150,6 +159,46 @@ module commun, une colonne de plus s'y ajoute une fois pour tous.
   ([planning.md](../features/planning.md#limites-connues)) : le mapper vit à part, testé, et l'écran
   ne fait que fusionner.
 
+## Ce que la vérification sur iPhone a corrigé (2026-09-08)
+
+Le protocole a trouvé **trois défauts**, tous de la même famille : le Planning décrivait l'emploi du
+temps seul, là où il porte désormais deux sources.
+
+1. **Un événement de plusieurs jours s'affichait « de 00:00 à 23:59 »** sur ses jours intermédiaires,
+   au lieu d'un bandeau. `allDay` ne suffit pas à reconnaître un jour plein : trois jours de vacances
+   avec des heures occupent le jour du milieu en entier. La règle devient « ce jour est-il
+   entièrement couvert ? », et le premier comme le dernier jour gardent leurs heures réelles.
+2. **« Journée libre » masquait les rendez-vous du dimanche.** Le dimanche court-circuitait l'état
+   vide avant même de regarder ce qu'il y avait à montrer — une garde héritée des six colonnes de la
+   vue semaine, appliquée à tort à la vue jour.
+3. **Sans aucun groupe favori, rien ne s'affichait**, calendriers cochés ou non : le chargement
+   sortait avant de lire le téléphone, et l'état « aucun favori » passait devant. Un utilisateur qui
+   coche ses calendriers sans suivre de groupe voit maintenant ses rendez-vous.
+4. **Et l'invitation à ajouter un groupe revenait à chaque jour creux** — la première correction du
+   point 3 la rendait dès que le jour était vide. Remarqué par le propriétaire du produit en
+   vérifiant : les deux états vides ne disent pas la même chose. « Journée libre » décrit *ce
+   jour-là* ; « aucun groupe favori » invite à **configurer**, et n'a donc de sens que si rien n'est
+   configuré — ni favori, ni calendrier coché.
+
+Une règle en deux temps les résume, écrite dans
+[planning.md](../features/planning.md#les-calendriers-du-téléphone-dans-le-planning) : **un état vide
+ne paraît que si le jour n'a rien à montrer, cours et téléphone confondus** — et l'invitation à
+configurer, seulement si rien n'est configuré.
+
+Un **cinquième défaut**, sans rapport avec les calendriers, a été trouvé en jouant le point de la
+synchronisation forcée : sans cible ou sans groupe favori, le bouton « Forcer une synchronisation »
+ne produisait **rien** — ni écriture, ni message. Le service ne rend pas d'échec dans ce cas, ce n'en
+est pas un, mais l'écran n'affichait donc aucun retour et le bouton passait pour cassé. Il dit
+maintenant ce qui manque ([settings.md](../features/settings.md#la-synchronisation-calendrier)).
+Défaut antérieur au jalon.
+
+Le reste du protocole est passé du premier coup : les heures et les couleurs, le carrousel partagé
+avec un cours, le bandeau d'une journée entière, l'événement à cheval sur minuit sur ses deux jours,
+l'occurrence d'un récurrent et son ouverture dans l'agenda, le « + » et son éditeur pré-rempli, la
+persistance des calendriers cochés, la vue semaine, l'absence de rappel sur un rendez-vous personnel,
+le chemin dégradé quand la permission calendrier est retirée, et le calendrier de synchronisation
+absent de la liste.
+
 ## Dépendances
 
 [6.1.x-B](6-1-x-b-signalements.md) — l'entretien, pour la fraîcheur du sens écriture.
@@ -176,8 +225,8 @@ module commun, une colonne de plus s'y ajoute une fois pour tous.
 
 ## Limites écrites
 
-- **Le dimanche n'existe pas dans le Planning**, cours ou pas : six colonnes depuis toujours. Un
-  rendez-vous du dimanche est invisible. À rouvrir si la demande vient.
+- **Le dimanche n'existe pas dans la vue semaine** : six colonnes depuis toujours. La vue jour, elle,
+  l'affiche — corrigé le 2026-09-08, voir la section ci-dessous.
 - **Une modification faite dans UKit n'existe pas** : on lit, on ouvre l'éditeur du système, on ne
   modifie rien soi-même. C'est la décision, pas une lacune.
 - **Un rendez-vous qui chevauche un cours partage son carrousel** : simultané, donc au même endroit.
@@ -185,9 +234,61 @@ module commun, une colonne de plus s'y ajoute une fois pour tous.
   cours bleus se distinguera mal. Le choix du calendrier est celui de l'utilisateur.
 - **Tester la plateforme demande les deux appareils**, et Android n'est vu qu'à Z.
 
+## Écarts constatés à la livraison
+
+Ce que la réalité a corrigé dans le texte ci-dessus, dans l'ordre d'importance :
+
+1. **La fusion se joue dans `applySchedule`, après la dérivation, et non dans `loadSchedule`.** Le
+   texte plaçait l'insertion après `keep()` et `cacheOrFailure()`, avant que les cours ne soient
+   dérivés ; or `preparerPourAffichage` **mute** le sujet pour en extraire un code d'UE, et
+   `extractUEsFromCourses` aurait indexé « 2B Dentiste » comme une UE. Les cours seuls passent par
+   les filtres, l'indexation et les rappels ; le téléphone entre ensuite. L'intention tient : le
+   cache ne reçoit que les cours, le chemin de repli reçoit bien le téléphone.
+2. **La vue des favoris seulement.** Le texte ne le disait pas : le planning d'un groupe cherché est
+   celui de quelqu'un d'autre, un rendez-vous personnel n'y apparaît pas.
+3. **Un événement « disponible » s'affiche** (décision du 2026-09-07), là où le texte proposait de
+   l'exclure par défaut : anniversaires et fériés sont « free », et l'utilisateur a coché ce
+   calendrier pour les voir. Seul l'annulé est exclu.
+4. **Le « + » est opt-in, et pré-positionne l'éditeur.** Il ne se montre que si un calendrier coché
+   accepte l'écriture, et l'éditeur s'ouvre dessus — sinon l'événement pouvait atterrir dans un
+   calendrier non affiché, et « s'affiche au retour » était faux. Sur Android,
+   `startNewActivityTask: false` est obligatoire : le défaut résout l'appel à l'ouverture.
+5. **La journée entière n'a pas le même format sur les deux plateformes** — le texte l'ignorait.
+   iOS la date en local, Android en UTC à fin exclusive ; lue comme un instant local, la seconde
+   forme débordait sur deux jours. Le drapeau est lu une fois depuis `Platform.OS` dans la source.
+   Règle déduite des sources natives d'`expo-calendar`, **à confirmer sur les deux appareils** : le
+   protocole ajoute une journée entière et un événement de trois jours.
+6. **La couleur : la casse et l'absence, pas l'alpha.** Android formate déjà `#RRGGBB` ; iOS peut
+   rendre `nil`. `couleurDeCours` normalise et retombe sur `default`.
+7. **Les rappels ne voient jamais le téléphone**, par construction (cours seuls) **et** par une garde
+   dans `flattenScheduleData` — le texte ne demandait que l'une des deux.
+8. **Trois modules purs de plus que prévu** (`FusionTelephone`, `couleurDeCours`,
+   `ScheduleListEtats` — ce dernier sans logique) et une extraction : `deleteAllPreviousCalendarEntries`
+   sort d'`AppCore.tsx` vers `CalendarSyncHelpers.retirerEvenementsSynchronises`, parce que les
+   deux fichiers hôtes frôlaient la barre des 400 lignes ; `ScheduleList` l'a franchie et a rendu
+   ses bandeaux et ses états. Refactors sans changement de comportement.
+9. **Un point de couleur partagé**, `shared/ui/PointDeCouleur`, relevé quatre fois avant que
+   l'écran des calendriers n'en ait besoin une cinquième — remonté selon la règle de 6-K.
+10. **Le libellé de la rangée** est « Calendriers du téléphone », pas « Calendriers affichés dans
+    le Planning » : le libellé de gauche d'une rangée de réglage ne se comprime pas, et la valeur à
+    droite (« 2 choisis ») doit tenir.
+11. **La console gagne un type de champ générique** `cases` — plusieurs valeurs d'une liste fermée
+    déclarée par le descripteur — plutôt qu'un type `plateformes` : le prochain critère à valeurs
+    fermées n'aura rien à écrire.
+
+Ce que seul l'appareil dira, consigné pour le protocole : le format exact d'une journée entière sur
+chaque plateforme ; que l'éditeur iOS respecte le `calendarId` pré-rempli ; qu'un calendrier
+d'abonnement (anniversaires, fériés) arrive avec `allowsModifications: false` et une couleur non
+nulle ; et si l'ouverture de l'éditeur déclenche un aller-retour d'`AppState` — une double lecture,
+inoffensive par la garde de `relireTelephone`.
+
 ---
 
 ## Reporté à la version suivante : les messages en notification
+
+> **Finalement livré dans cette version**, le 2026-09-08, par le jalon
+> [6.1.x-E](6-1-x-e-notifications-push.md) : le propriétaire du produit a voulu l'essayer avant la
+> sortie. Les quatre questions ci-dessous y sont tranchées. L'analyse reste telle qu'écrite.
 
 **La demande.** L'application sait parler à ses utilisateurs par un bandeau, une feuille et une
 pastille — mais seulement quand elle est ouverte. Un incident, une annonce importante, un « mets à

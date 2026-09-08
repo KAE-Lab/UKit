@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, View, Modal, Text, Animated, ScrollView, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { Animated, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
@@ -95,7 +95,15 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
     }
 
     if (gestureEnabled !== undefined) {
-        options.gestureEnabled = gestureEnabled;
+        /*
+         * **iOS seulement.** Le glissement de retour est un geste du systeme la-bas ; sur Android,
+         * le retour se fait par le bouton ou par le geste de bord de l'ecran, et l'activer dans la
+         * pile pose un capteur horizontal sur **toute la largeur** qui avale les listes qui glissent.
+         * Mesure sur appareil le 2026-09-08 : dans le planning d'un groupe cherche, ni le ruban des
+         * jours ni le carrousel des cours simultanes ne repondaient plus. C'est la meme famille que
+         * le glissement entre onglets retire au jalon 6.1.x-B, et pour la meme raison.
+         */
+        options.gestureEnabled = Platform.OS === 'ios' && gestureEnabled;
     }
 
     return options;

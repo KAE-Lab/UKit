@@ -7,6 +7,7 @@
  */
 
 import { proposerCle } from '../lib/cle';
+import { notifierMessage } from '../lib/notifier';
 import { CIBLAGE, type Descripteur, type Option } from './descripteurs';
 
 const MAINTENANT = () => new Date().toISOString();
@@ -24,7 +25,7 @@ export const ANNONCES: Descripteur = {
     description: 'La vie étudiante : une carte au format affiche dans Campus, une fiche au toucher.',
     cle: ['id'],
     tri: { colonne: 'publiee_le', desc: true },
-    liste: ['titre', 'emetteur', 'active', 'audience', 'etablissements', 'publiee_le', 'expire_le'],
+    liste: ['titre', 'emetteur', 'active', 'audience', 'etablissements', 'plateformes', 'publiee_le', 'expire_le'],
     avertissement: 'Une annonce est visible dès que « active » est cochée et que sa date de publication est passée ; une date d’expiration vide veut dire jamais. Remplacer le visuel change son adresse (?v=N) pour que les téléphones déjà passés le rechargent.',
     champs: [
         { nom: 'titre', libelle: 'Titre', type: { type: 'texte' }, obligatoire: true },
@@ -54,8 +55,8 @@ export const MESSAGES: Descripteur = {
     description: 'Parler aux utilisateurs : une information en bandeau, un avertissement ou un incident en feuille.',
     cle: ['id'],
     tri: { colonne: 'publie_le', desc: true },
-    liste: ['titre', 'niveau', 'actif', 'audience', 'etablissements', 'version_min', 'version_max', 'publie_le'],
-    avertissement: 'Un « info » se montre une fois en bandeau ; un « avertissement » une fois en feuille ; un « incident » en feuille, puis la pastille des onglets reste rouge tant qu’il est actif. La clé est la mémoire « vu » des téléphones : garde-la pour corriger un message, change-la pour le refaire apparaître.',
+    liste: ['titre', 'niveau', 'actif', 'audience', 'etablissements', 'plateformes', 'version_min', 'version_max', 'publie_le', 'notifie_le'],
+    avertissement: 'Un « info » se montre une fois en bandeau ; un « avertissement » une fois en feuille ; un « incident » en feuille, puis la pastille des onglets reste rouge tant qu’il est actif. La clé est la mémoire « vu » des téléphones : garde-la pour corriger un message, change-la pour le refaire apparaître. « Notifier » envoie une notification push aux appareils ciblés — une fois, et ça ne se rattrape pas : enregistre et relis avant.',
     champs: [
         { nom: 'niveau', libelle: 'Niveau', type: { type: 'choix', options: [{ valeur: 'info', libelle: 'Information' }, { valeur: 'avertissement', libelle: 'Avertissement' }, { valeur: 'incident', libelle: 'Incident' }] }, obligatoire: true, defaut: 'info' },
         { nom: 'titre', libelle: 'Titre', type: { type: 'texte' }, obligatoire: true },
@@ -65,12 +66,45 @@ export const MESSAGES: Descripteur = {
         { nom: 'publie_le', libelle: 'Publié le', type: { type: 'date' }, obligatoire: true, defaut: MAINTENANT },
         { nom: 'expire_le', libelle: 'Expire le', type: { type: 'date' }, aide: 'Vide : n’expire pas.' },
         ...CIBLAGE,
+        { nom: 'notifie_le', libelle: 'Notifié le', type: { type: 'date' }, lectureSeule: true, aide: 'Posé par la fonction d’envoi. Un message ne se notifie qu’une fois.' },
+        { nom: 'notifies', libelle: 'Appareils visés', type: { type: 'nombre' }, lectureSeule: true },
     ],
     avantEcriture: (ligne, existante) => {
         if (typeof ligne.cle === 'string' && ligne.cle !== '') return ligne;
         if (existante !== null && typeof existante.cle === 'string') return { ...ligne, cle: existante.cle };
         return { ...ligne, cle: proposerCle(String(ligne.titre ?? ''), new Date()) };
     },
+    actions: [
+        {
+            libelle: 'Notifier',
+            confirmation: 'Envoyer ce message en notification push à tous les appareils qu’il cible ? Ça ne se rejoue pas.',
+            disponible: (ligne) => ligne.notifie_le === null || ligne.notifie_le === undefined,
+            executer: (ligne) => notifierMessage(String(ligne.id)),
+        },
+    ],
+};
+
+/** Le parc qui recoit les notifications : une ligne par appareil, lue seulement (6.1.x-E). */
+export const JETONS: Descripteur = {
+    chemin: 'jetons',
+    table: 'jetons_push',
+    titre: 'Jetons push',
+    description: 'Les appareils qui recevront les messages en notification, et ce qu’il faut pour les cibler. Déposés par l’application, retirés par son interrupteur ou par un envoi qui les trouve morts.',
+    section: 'suivre',
+    cle: ['jeton'],
+    tri: { colonne: 'maj_le', desc: true },
+    liste: ['plateforme', 'etablissement', 'version', 'testeur', 'maj_le'],
+    creation: false,
+    suppression: false,
+    vide: 'Aucun appareil n’a encore déposé de jeton : il faut un build (pas Expo Go), la permission de notifications, et l’interrupteur des Réglages allumé.',
+    champs: [
+        { nom: 'jeton', libelle: 'Jeton', type: { type: 'texte' }, lectureSeule: true },
+        { nom: 'plateforme', libelle: 'Plateforme', type: { type: 'texte' }, lectureSeule: true },
+        { nom: 'etablissement', libelle: 'Campus', type: { type: 'texte' }, lectureSeule: true },
+        { nom: 'version', libelle: 'Version', type: { type: 'texte' }, lectureSeule: true },
+        { nom: 'testeur', libelle: 'Testeur', type: { type: 'booleen' }, lectureSeule: true },
+        { nom: 'maj_le', libelle: 'Déposé le', type: { type: 'date' }, lectureSeule: true },
+    ],
 };
 
 export const TESTEURS: Descripteur = {
@@ -247,7 +281,7 @@ export const RETOURS: Descripteur = {
 };
 
 /** Les pages a descripteur, dans l'ordre de la navigation ; `section` dit sous quel titre. */
-export const RESSOURCES: readonly Descripteur[] = [RETOURS, ANNONCES, MESSAGES, TESTEURS, VISUELS, ETABLISSEMENTS, SALUTATIONS, BATIMENTS, VERSION];
+export const RESSOURCES: readonly Descripteur[] = [RETOURS, JETONS, ANNONCES, MESSAGES, TESTEURS, VISUELS, ETABLISSEMENTS, SALUTATIONS, BATIMENTS, VERSION];
 
 export function ressourceDe(chemin: string): Descripteur | undefined {
     return RESSOURCES.find((ressource) => `/${ressource.chemin}` === chemin);

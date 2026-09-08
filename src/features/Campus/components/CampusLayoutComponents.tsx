@@ -4,7 +4,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, AppThemeType } from '../../../shared/theme/Theme';
-import { FondDePiedFlottant, VOILE_PIED } from '../../../shared/ui/PiedFlottant';
+import { assiseDuFlottant, FondDePiedFlottant, VOILE_PIED } from '../../../shared/ui/PiedFlottant';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import type { UkitFailure } from '../../../shared/aetherius';
@@ -106,13 +106,13 @@ export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder,
                  * celui-ci est masque : la garder laissait un ruban de vingt points entre la barre et
                  * le clavier, qu'on lit comme un trou.
                  *
-                 * Clavier ferme, c'est l'assise commune des flottants (`inset - 15`, plancher `sm`) :
+                 * Clavier ferme, c'est l'assise commune des flottants (`assiseDuFlottant`) :
                  * celle de la barre d'onglets, jugee parfaite sur appareil. La zone sure entiere a
                  * ete essayee — la barre remontait trop et laissait un trou dessous.
                  */
                 paddingBottom: hauteurClavier > 0
                     ? tokens.space.sm
-                    : Math.max(tokens.space.sm, (insets?.bottom || 0) - 15),
+                    : assiseDuFlottant(insets),
             }}>
                 <View style={{
                     flexDirection: 'row',
