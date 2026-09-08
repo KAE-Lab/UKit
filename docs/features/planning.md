@@ -192,6 +192,19 @@ silence, sans jamais afficher d'erreur — juste une carte absente :
   empêchait de reconnaître la ligne du module comme une répétition du sujet. Elle restait, tout
   glissait d'un rang, et la « ligne de salle » devenait le nom de l'enseignant.
 
+**Et une troisième, trouvée le 2026-09-08 sur signalement d'un utilisateur : `modules` ne porte pas
+toujours l'intitulé.** La plupart des groupes servent `4TIN602U Techn algorithmiques` ; le master
+Génie Logiciel sert `4TGL902U`, le code nu, et met l'intitulé dans la seule description —
+`4TGL902U Programmation Large Echelle`. L'intitulé était alors perdu **deux fois** : le sujet n'en
+portait pas, et la ligne de description qui le portait était écartée comme répétition du module,
+puisqu'elle contient le code. Le cours s'affichait sous son code. La conséquence silencieuse était
+pire que l'affichage : sans intitulé, [`separerCodeUE`](../../src/features/Planning/services/PlanningAssembly.ts)
+ne sépare rien, le cours ne porte **aucun code d'UE**, et les filtres d'UE de ces groupes ne
+filtraient rien. [`completerLesModules`](../../src/features/Planning/services/PlanningApiMapping.ts)
+rend au code nu l'intitulé que la description porte, en retenant la ligne qui commence par ce code
+suivi d'une espace — et rien d'autre : si la description ne l'a pas, le module reste tel quel. On ne
+devine pas un intitulé.
+
 Depuis le 2026-08-22 : `sites` est extrait des trois Blueprints de cours, `lieuxDesSites` le réduit à
 un code par le **même** format d'établissement que les libellés de salle, et le séparateur est `;`
 pour toutes les vues. Les trois replis historiques restent et servent encore — un export iCalendar

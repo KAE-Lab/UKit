@@ -22,6 +22,7 @@ import {
     assemblerAnnee,
     assemblerJour,
     assemblerSemaine,
+    estUnCodeDUE,
     trierCours,
     type CibleGroupe,
     type PlanningEvent,
@@ -109,6 +110,32 @@ function normaliserEspaces(valeur: string): string {
 }
 
 /**
+ * Rend a un module reduit a son seul code l'intitule que porte la description.
+ *
+ * **Celcat ne declare pas ses modules de la meme facon d'un groupe a l'autre.** La plupart servent
+ * `4TIN602U Techn algorithmiques` ; le master Genie Logiciel sert `4TGL902U`, le code nu, et met
+ * l'intitule dans la description — `4TGL902U Programmation Large Echelle`. Le cours s'affichait donc
+ * sous son code, et l'intitule etait perdu **deux fois** : le sujet n'en portait pas, et la ligne de
+ * description qui le portait etait ecartee comme doublon du module, puisqu'elle contient le code.
+ * Signale par un utilisateur le 2026-09-08, mesure le meme jour sur `4TGL904S M2 Genie Logiciel`.
+ *
+ * La consequence silencieuse etait pire que l'affichage : sans intitule, `separerCodeUE` ne separe
+ * rien, le cours ne porte **aucun code d'UE**, et les filtres d'UE de ces groupes ne filtraient rien.
+ *
+ * La ligne retenue est celle qui commence par le code suivi d'une espace. Aucune autre heuristique :
+ * si la description ne la porte pas, le module reste tel quel — on ne devine pas un intitule.
+ */
+export function completerLesModules(modules: readonly string[], lignes: readonly string[]): string[] {
+    const normalisees = lignes.map(normaliserEspaces);
+    return modules.map((module) => {
+        const code = normaliserEspaces(module);
+        if (code === '' || !estUnCodeDUE(code)) return module;
+        const complet = normalisees.find((ligne) => ligne.length > code.length + 1 && ligne.startsWith(`${code} `));
+        return complet ?? module;
+    });
+}
+
+/**
  * Projette un cours extrait sur le contrat applicatif.
  *
  * Le `separateur` est `;` pour **toutes** les vues depuis la correction de la description de la
@@ -129,17 +156,20 @@ export function projeterCours(brut: CoursExtrait, groupe: CibleGroupe, separateu
     const endtime = fin.format('HH:mm');
 
     const categorie = texte(brut.categorie);
-    const modules = modulesDuCours(brut.modules);
-    const subject = sujetDuCours(brut.modules, categorie);
 
     // Le code d'origine appelait `.replace` sur la description sans la verifier : une reponse sans ce
     // champ levait, et le `catch` du service vidait la journee entiere en silence.
-    //
+    const lignes = formatDescription(texte(brut.description)).split(separateur);
+
+    // Les modules **avant** le sujet : la description peut leur rendre un intitule que Celcat ne
+    // declare pas (`completerLesModules`), et c'est le sujet et les codes d'UE qui en dependent.
+    const modules = completerLesModules(modulesDuCours(brut.modules), lignes);
+    const subject = sujetDuCours(modules, categorie);
+
     // Les lignes qui repetent un module — **chacun**, pas seulement le premier — sont ecartees, aux
     // espaces pres : `modules` sert parfois deux espaces apres le code la ou la description n'en a
     // qu'une (mesure du 2026-08-22), et la ligne survivait alors en doublon du sujet.
     const repetes = [subject, ...modules].map(normaliserEspaces).filter((valeur) => valeur !== '');
-    const lignes = formatDescription(texte(brut.description)).split(separateur);
     const description: string[] = [];
     for (const ligne of lignes) {
         const normalisee = normaliserEspaces(ligne);

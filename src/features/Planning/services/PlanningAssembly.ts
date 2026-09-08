@@ -102,7 +102,21 @@ export type CibleGroupe = string | string[];
  * `- Les rencontres du Reseau d'Ecoute`, tiret orphelin compris. Seize matieres d'un seul groupe
  * etaient dans ce cas, mesure le 2026-08-15.
  */
-const CODE_UE = /([0-9][A-Z0-9]*[A-Z][A-Z0-9]*) (.+)/im;
+const MOTIF_CODE = '[0-9][A-Z0-9]*[A-Z][A-Z0-9]*';
+const CODE_UE = new RegExp(`(${MOTIF_CODE}) (.+)`, 'im');
+/** Le meme motif, seul : un sujet qui n'est **que** son code, sans intitule derriere. */
+const CODE_UE_SEUL = new RegExp(`^${MOTIF_CODE}$`, 'i');
+
+/**
+ * Ce texte est-il un code d'UE nu ?
+ *
+ * Le motif est celui de `CODE_UE`, monte a partir de la meme chaine : deux expressions ecrites
+ * separement finiraient par diverger, et c'est exactement le defaut que le jalon 6-I a paye
+ * (`indexerUes` gardait la regle d'avant la correction).
+ */
+export function estUnCodeDUE(valeur: string): boolean {
+    return CODE_UE_SEUL.test(valeur.trim());
+}
 
 /**
  * Separe un sujet entre son code d'UE et son intitule, ou rend `null` s'il n'en porte pas.

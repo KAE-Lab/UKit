@@ -11,6 +11,7 @@ import moment from 'moment';
 import { describe, expect, it } from 'vitest';
 
 import {
+    completerLesModules,
     decouperSemaine,
     modulesDuCours,
     projeterAnnee,
@@ -258,5 +259,58 @@ describe('projeterAnnee', () => {
 describe('projeterGroupes', () => {
     it('ecarte les identifiants trop courts et trie le reste', () => {
         expect(projeterGroupes(['MI601A', 'AB', 'INF601A', null, 42])).toEqual(['INF601A', 'MI601A']);
+    });
+});
+
+/**
+ * Le meme serveur, un autre groupe, une autre facon de declarer un module : le code **nu**, et
+ * l'intitule dans la seule description. Recopie d'une reponse du 2026-09-08 pour
+ * `4TGL904S M2 Genie Logiciel`, apres le signalement d'un utilisateur.
+ */
+const COURS_SANS_INTITULE: CoursExtrait = {
+    id: '1',
+    debut: '2026-09-08T08:00:00',
+    fin: '2026-09-08T10:00:00',
+    categorie: 'Cours',
+    modules: ['4TGL902U'],
+    description:
+        'Cours\r\n\r\n<br />\r\n\r\n4TGL902U Programmation Large Echelle\r\n\r\n<br />\r\n\r\n'
+        + '4TGL904S M2 G&#233;nie Logiciel\r\n\r\n<br />\r\n\r\nAUBER David\r\n\r\n<br />\r\n\r\n'
+        + 'A29/ Salle 103\r\n\r\n<br />\r\n\r\n37-43,45-49\r\n',
+    sites: 'Bâtiment A29',
+};
+
+describe('completerLesModules', () => {
+    it('rend au code nu l intitule que porte la description', () => {
+        expect(completerLesModules(['4TGL902U'], ['Cours', '4TGL902U Programmation Large Echelle', 'AUBER David']))
+            .toEqual(['4TGL902U Programmation Large Echelle']);
+    });
+
+    it('ne touche pas un module qui porte deja son intitule', () => {
+        const modules = ['4TIN602U Techn algorithmiques'];
+        expect(completerLesModules(modules, ['4TIN602U Autre chose'])).toEqual(modules);
+    });
+
+    it('laisse le code tel quel quand la description ne le porte pas', () => {
+        expect(completerLesModules(['4TGL902U'], ['Cours', 'AUBER David'])).toEqual(['4TGL902U']);
+        // Le code seul, sans intitule derriere : rien a reprendre.
+        expect(completerLesModules(['4TGL902U'], ['4TGL902U'])).toEqual(['4TGL902U']);
+    });
+
+    it('ne confond pas deux codes qui commencent pareil', () => {
+        expect(completerLesModules(['4TGL90'], ['4TGL902U Programmation Large Echelle'])).toEqual(['4TGL90']);
+    });
+});
+
+describe('projeterCours, quand le module est un code nu', () => {
+    it('affiche l intitule et non le code', () => {
+        const cours = projeterCours(COURS_SANS_INTITULE, 'MI601A');
+        expect(cours.subject).toBe('4TGL902U Programmation Large Echelle');
+    });
+
+    it('ne repete pas l intitule dans la description', () => {
+        const cours = projeterCours(COURS_SANS_INTITULE, 'MI601A');
+        expect(cours.description).not.toContain('4TGL902U Programmation Large Echelle');
+        expect(cours.description).toContain('AUBER David');
     });
 });

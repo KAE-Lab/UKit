@@ -67,6 +67,12 @@ mineure ([docs/phase-6/6-2-mise-a-plat.md](docs/phase-6/6-2-mise-a-plat.md),
   et jamais après un refus. Le défaut est antérieur à cette version.
 - **Un libellé long ne pousse plus son interrupteur hors de la carte** dans les Réglages : face à un
   interrupteur, dont la largeur est fixe, le libellé se plie au lieu de déborder.
+- **Un cours s'affichait sous son code d'UE au lieu de son nom.** Le serveur d'emploi du temps ne
+  déclare pas ses matières de la même façon d'un groupe à l'autre : certains masters servent le code
+  seul — `4TGL902U` — et laissent l'intitulé dans la description, que l'application écartait comme
+  une répétition. Le nom est désormais repris là où il se trouve. Le défaut cachait pire que
+  lui-même : sans intitulé, ces cours ne portaient aucun code d'UE, et **les filtres d'UE de ces
+  groupes ne filtraient rien**. Signalé par un utilisateur le 2026-09-08.
 - **Les services des facs répondent enfin sur les vieux Android.** Sur un téléphone dont le système
   date d'avant mi-2021, Celcat, les salles libres, l'ENT, Moodle, le webmail et Apogée échouaient
   tous en erreur réseau, pendant que le reste de l'application fonctionnait : Android ne connaît pas
