@@ -103,6 +103,22 @@ jobs:
       - name: Create Google Play Key File
         run: echo '${{ secrets.GOOGLE_PLAY_KEY }}' > google-play-key.json
 
+      # Les identifiants Firebase, sans lesquels la preparation du projet Android echoue : la
+      # configuration les attend a la racine (`android.googleServicesFile`), et le fichier n'est pas
+      # dans le depot — il porte l'identite d'un projet Firebase et ce depot est public.
+      #
+      # **Pourquoi le runner les ecrit lui-meme.** Sur EAS Build, ils arrivent par une variable
+      # d'environnement de type fichier. Mais les builds Android de ce workflow tournent `--local`,
+      # sur ce runner, et une variable de visibilite « secret » ne quitte **jamais** les serveurs
+      # d'EAS : elle n'est pas telechargee pour un build local. `process.env.GOOGLE_SERVICES_JSON`
+      # y vaut donc `undefined`, la configuration retombe sur `./google-services.json`, et la
+      # preparation echoue sur un fichier absent — c'est ce qui a fait echouer la 6.2.0 le
+      # 2026-09-08, au premier build de production depuis que le push existe.
+      #
+      # Meme motif que la cle du Play juste au-dessus, et pour la meme raison.
+      - name: Create Google Services File
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > google-services.json
+
       - name: Build and Auto-Submit Production iOS
         if: github.event.inputs.build_production == 'true'
         run: eas build --platform ios --profile production --non-interactive --auto-submit --no-wait
