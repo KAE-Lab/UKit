@@ -130,9 +130,13 @@ l'exécution par `CourseManager.computeCourseUE`, qui délègue à
 [`filtresUe.ts`](../../src/features/Planning/services/filtresUe.ts) — un module pur — la lecture des
 codes dans `modules`, par [`separerCodeUE`](../../src/features/Planning/services/PlanningAssembly.ts).
 
-**Un cours peut porter plusieurs codes d'UE**, et c'est mesuré : le groupe `MI601A` compte dix-neuf
-événements à plusieurs modules sur l'année 2025-2026 — `4TTV417U Artificial intelligence ||
-4TTI607U Artificial Intelligence`, le même cours sous son code français et son code anglais. Le sujet
+**Un cours peut porter plusieurs codes d'UE**, et c'est mesuré : le groupe `MI601A` comptait
+dix-neuf événements à plusieurs modules sur l'année 2025-2026 — `4TTV417U Artificial intelligence ||
+4TTI607U Artificial Intelligence`, le même cours sous son code français et son code anglais. Ce
+groupe n'a plus que des vacances en 2026-2027 ; **pour rejouer la règle, prendre `4TRN901S`**, trouvé
+le 2026-09-08 en sondant le serveur et plus complet : il porte des cours à `4TRNN01U` seul, d'autres
+à `4TRNN02U` seul, et onze qui portent les deux — les vendredis de 9h30 à 12h30 à partir du
+2 octobre. Le sujet
 ne garde que le premier (`UE`), la liste entière est dans `ues`. Jusqu'au 2026-09-06, la projection
 jetait les suivants : filtrer l'UE en français masquait le TP à qui suit l'UE en anglais, et la
 seconde n'apparaissait même pas dans les suggestions de filtres. Un utilisateur l'a signalé par mail.
