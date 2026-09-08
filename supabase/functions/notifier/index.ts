@@ -103,7 +103,10 @@ function corpsDeNotification(corps: unknown): string | undefined {
 }
 
 async function envoyer(lot: string[], titre: string, corps: string | undefined, donnees: Record<string, string>): Promise<Ticket[]> {
-    const messages = lot.map((to) => ({ to, title: titre, body: corps, data: donnees, sound: 'default', priority: 'high', channelId: 'default' }));
+    // `channelId` doit nommer le canal que l'application cree (shared/push/reception.ts) : un canal
+    // inconnu de l'appareil retombe sur celui d'Expo, en importance par defaut, et la notification ne
+    // surgit alors plus par-dessus l'ecran. Android seul le lit ; iOS l'ignore.
+    const messages = lot.map((to) => ({ to, title: titre, body: corps, data: donnees, sound: 'default', priority: 'high', channelId: 'messages-de-service' }));
     const r = await fetch(EXPO_PUSH, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },

@@ -76,7 +76,18 @@ réponse que `shared/ciblage` sur une matrice de lignes et d'appareils.
 - [`shared/push/reception.ts`](../../src/shared/push/reception.ts) : ouvrir la notification mène à
   la **feuille du message** — la réponse à une notification pendant que l'application vit, et celle
   qui l'a lancée. Le message se marque vu à « Compris », pas à la réception. Le canal Android
-  `default` y est créé.
+  `messages-de-service` y est créé, en importance **haute**.
+
+  Il s'appelait `default` et naissait en importance `DEFAULT` : la notification sonnait et se rangeait
+  dans le volet, mais **ne surgissait pas par-dessus l'écran** — « je reçois la notif, mais pas en
+  mode push », mesuré sur Android le 2026-09-08. **L'importance d'un canal est figée à sa création**
+  et Android ignore toute modification ultérieure, ce qui protège le choix de l'utilisateur : monter
+  la valeur n'aurait rien changé sur un appareil qui portait déjà le canal. Il a donc fallu un
+  **identifiant neuf**, et l'ancien est supprimé pour ne pas traîner dans les réglages du système.
+  Son nom et sa description y sont désormais lisibles — « Messages de service » —, ce qui permet de
+  couper ces messages sans couper les rappels de cours. L'identifiant doit rester d'accord avec celui
+  qu'envoie la fonction : **changer l'un oblige à redéployer l'autre**, faute de quoi la notification
+  retombe sur le canal d'Expo et perd sa hauteur.
 - Le réglage `messagesEnNotification` dans `SettingsManager`, la rangée dans la section
   Notifications, le bloc « push » du panneau Testeur (état, jeton abrégé, dépôt, retrait).
 - Le texte de [PRIVACY.md](../../PRIVACY.md), point 4 quater, et la promesse du README amendée.

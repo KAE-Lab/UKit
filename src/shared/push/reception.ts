@@ -8,7 +8,8 @@
  * a l'hote d'ouvrir la feuille.
  *
  * Sur Android, un canal est obligatoire pour qu'une notification s'affiche : celui que la fonction
- * d'envoi nomme (`default`) est cree ici, une fois.
+ * d'envoi nomme est cree ici, une fois, et son nom est celui que les reglages du systeme montreront
+ * a l'utilisateur — c'est la qu'il pourra couper ces messages sans couper les rappels de cours.
  *
  * **`expo-notifications` se charge en import dynamique, et jamais sous Expo Go.** Son emetteur de
  * jetons `warnOfExpoGoPushUsage` **leve** sur Android des qu'on y touche depuis Expo Go — un simple
@@ -25,7 +26,19 @@ import type * as NotificationsType from 'expo-notifications';
 import { demanderMessage } from '../messages';
 import { notificationsNatives } from '../services/notificationsNatives';
 
-const CANAL_ANDROID = 'default';
+/*
+ * **L'importance d'un canal est figee a sa creation**, et Android ignore toute modification
+ * ulterieure : c'est ce qui protege le choix de l'utilisateur. Le premier canal, `default`, avait ete
+ * cree en importance `DEFAULT` — la notification sonne et se range dans le volet, mais **ne surgit
+ * pas par-dessus l'ecran**. « Je recois la notif mais pas en mode push », mesure sur Android le
+ * 2026-09-08. Passer la valeur a `HIGH` n'aurait rien change sur les appareils qui portaient deja le
+ * canal : il faut un **identifiant neuf**, et c'est pourquoi celui-ci est nomme. L'ancien est
+ * supprime pour ne pas trainer dans les reglages du systeme.
+ *
+ * L'identifiant doit rester d'accord avec celui qu'envoie la fonction (supabase/functions/notifier).
+ */
+const CANAL_ANDROID = 'messages-de-service';
+const CANAL_REMPLACE = 'default';
 
 function cleDe(reponse: NotificationsType.NotificationResponse | null): string | null {
     const donnees = reponse?.notification.request.content.data as { cle?: unknown } | undefined;
@@ -41,9 +54,12 @@ export function armerLaReception(): void {
             const Notifications = await notificationsNatives();
             if (Notifications === null) return;
             if (Platform.OS === 'android') {
+                await Notifications.deleteNotificationChannelAsync(CANAL_REMPLACE).catch(() => undefined);
                 await Notifications.setNotificationChannelAsync(CANAL_ANDROID, {
-                    name: 'UKit',
-                    importance: Notifications.AndroidImportance.DEFAULT,
+                    // Vus dans les reglages de notification du systeme : ils disent ce qu'on coupe.
+                    name: 'Messages de service',
+                    description: 'Incidents, informations importantes, mises à jour. Rare, et jamais promotionnel.',
+                    importance: Notifications.AndroidImportance.HIGH,
                 }).catch(() => undefined);
             }
 

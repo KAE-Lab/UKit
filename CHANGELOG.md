@@ -67,6 +67,11 @@ mineure ([docs/phase-6/6-2-mise-a-plat.md](docs/phase-6/6-2-mise-a-plat.md),
   et jamais après un refus. Le défaut est antérieur à cette version.
 - **Un libellé long ne pousse plus son interrupteur hors de la carte** dans les Réglages : face à un
   interrupteur, dont la largeur est fixe, le libellé se plie au lieu de déborder.
+- **Une notification de message de service ne surgissait pas à l'écran sur Android.** Elle sonnait et
+  se rangeait dans le volet, sans jamais s'afficher par-dessus ce qu'on était en train de faire : son
+  canal naissait en importance ordinaire. Le canal porte maintenant un nom lisible dans les réglages
+  du système — « Messages de service » —, ce qui permet de couper ces messages sans couper les
+  rappels de cours.
 - **Un cours s'affichait sous son code d'UE au lieu de son nom.** Le serveur d'emploi du temps ne
   déclare pas ses matières de la même façon d'un groupe à l'autre : certains masters servent le code
   seul — `4TGL902U` — et laissent l'intitulé dans la description, que l'application écartait comme

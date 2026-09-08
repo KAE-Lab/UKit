@@ -385,7 +385,7 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
 | [`shared/testeur/identifiant.ts`](../src/shared/testeur/identifiant.ts) | l'identifiant d'installation : créé une fois, mémoïsé, jamais envoyé |
 | [`shared/push/inscription.ts`](../src/shared/push/inscription.ts) · [`inscription.test.ts`](../src/shared/push/inscription.test.ts) | ce qu'un appareil dépose pour le push, et quand il le redépose — pur, testé |
 | [`shared/push/index.ts`](../src/shared/push/index.ts) | le dépôt et le retrait du jeton : le réglage, un vrai appareil, la permission lue, les deux fonctions SQL, la mémoire `push@1` |
-| [`shared/push/reception.ts`](../src/shared/push/reception.ts) | une notification ouverte mène à la feuille de son message ; le canal Android |
+| [`shared/push/reception.ts`](../src/shared/push/reception.ts) | une notification ouverte mène à la feuille de son message ; le canal Android `messages-de-service`, en importance haute — son identifiant doit rester d'accord avec celui qu'envoie la fonction |
 | [`supabase/functions/notifier/`](../supabase/functions/notifier/) | la fonction d'envoi (Deno) : éditeur vérifié, ciblage, lots, tickets, élagage, marquage — et sa copie des règles, testée égale à l'original |
 | [`console/src/lib/notifier.ts`](../console/src/lib/notifier.ts) | l'appel de la fonction depuis la console, et sa réponse en clair |
 | [`shared/testeur/statut.ts`](../src/shared/testeur/statut.ts) | « cet appareil est-il un testeur ? » : cache, lecture de la colonne `id`, comparaison locale |
