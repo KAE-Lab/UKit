@@ -1,0 +1,41 @@
+# Ce que la construction NE monte PAS dans son archive de projet.
+#
+# **Pourquoi ce fichier existe.** `eas build` ne construit pas dans le dossier du depot : il en
+# fabrique une archive, la depose dans un dossier de travail, et batit la. Sans ce fichier, l'archive
+# se compose d'apres `.gitignore` — et `google-services.json` y est, puisqu'il porte l'identite d'un
+# projet Firebase et que ce depot est public. Les identifiants n'arrivaient donc jamais jusqu'a la
+# preparation du projet Android, qui echouait sur un fichier introuvable, quand bien meme le runner
+# venait de l'ecrire a la racine (2026-09-08, premier build de production depuis le jalon 6.1.x-E).
+#
+# **Des qu'il existe, EAS l'emploie A LA PLACE de `.gitignore`.** C'est ce qui permet d'inclure les
+# identifiants Firebase — et c'est aussi ce qui oblige a le tenir a jour : toute nouvelle ligne de
+# `.gitignore` qui doit rester hors de l'archive se recopie ici. Il en est la copie exacte, a une
+# ligne pres : `google-services.json`, volontairement absent.
+#
+# Ce qui ne doit JAMAIS partir dans une archive de build est ci-dessous, et en particulier `.env` :
+# il porte la cle de service de la base, qui autorise a publier ce que tous les appareils jouent.
+
+node_modules/**/*
+.expo/
+npm-debug.*
+.idea/
+/Keys.keystore
+.stignore
+.stforlder/*
+/keys/Ukit.jks
+/keys/
+.env
+console/node_modules/
+console/dist/
+console/.env*
+__pycache__/
+
+# Les exports bruts du formulaire : des reponses libres d utilisateurs.
+tools/retours/exports/
+
+# La cle du compte de service FCM V1 : elle autorise a notifier tout le parc. Elle ne vit que sur EAS
+# (eas credentials -p android) et sur le poste qui l'y a posee — jamais dans une archive.
+fcm-service-account.json
+
+# Les residus de la CLI Supabase (projet lie, version du binaire) : de l'etat de poste.
+supabase/.temp/

@@ -18,7 +18,8 @@ __pycache__/
 tools/retours/exports/
 
 # Les identifiants Firebase du push Android (jalon 6.1.x-E) : l'identite d'un projet, dans un depot
-# public. Sur EAS, c'est la variable de fichier GOOGLE_SERVICES_JSON (docs/plateforme.md).
+# public. Sur EAS, c'est la variable de fichier GOOGLE_SERVICES_JSON (docs/plateforme.md) ; pour un
+# build `--local`, c'est le runner qui l'ecrit et `.easignore` qui le laisse monter dans l'archive.
 google-services.json
 # La cle du compte de service FCM V1, elle, est un **secret** : elle autorise a notifier tout le parc.
 # Elle ne vit que sur EAS (eas credentials -p android) et sur le poste qui l'y a posee.

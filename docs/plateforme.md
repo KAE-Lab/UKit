@@ -457,13 +457,16 @@ Avant de poser un tag, les trois premiers doivent s'accorder ([6-1-z](phase-6/6-
 - **`expo-calendar` est consommé par son API historique** (`/legacy`), l'API objet étant une
   réécriture de la synchronisation ([features/settings.md](features/settings.md#limites-connues)).
 - **Le mode strict de TypeScript reste éteint**, explicitement ([qualite.md](qualite.md#typage)).
-- **Une variable EAS de visibilité « secret » n'existe pas dans un build `--local`.** Elle ne quitte
-  jamais les serveurs d'EAS : le client ne la télécharge pas. Les builds Android du workflow de
-  release tournant `--local` sur le runner GitHub, `GOOGLE_SERVICES_JSON` y valait `undefined`, la
-  configuration retombait sur `./google-services.json` — absent du dépôt — et la préparation du
-  projet échouait. Le runner écrit donc le fichier lui-même depuis un secret du dépôt du même nom,
-  comme il fait déjà pour la clé du Play. Trouvé le 2026-09-08, au premier build de production
-  depuis que le push existe.
+- **Les identifiants Firebase demandent deux gestes pour un build `--local`, et le second ne se
+  devine pas.** Une variable EAS de visibilité « secret » ne quitte jamais les serveurs d'EAS : le
+  client ne la télécharge pas, donc `GOOGLE_SERVICES_JSON` vaut `undefined` sur le runner et la
+  configuration retombe sur `./google-services.json`. Le runner l'écrit donc lui-même depuis un
+  secret du dépôt du même nom, comme il fait déjà pour la clé du Play. **Ça ne suffit pas** :
+  `eas build` ne construit pas dans le dossier du dépôt, il en fabrique une archive et bâtit
+  ailleurs — et cette archive se compose d'après `.gitignore`, où le fichier figure. D'où
+  [`.easignore`](../.easignore), qu'EAS emploie **à la place** de `.gitignore` dès qu'il existe :
+  copie exacte, moins cette ligne. Les deux moitiés ont été payées séparément le 2026-09-08, au
+  premier build de production depuis que le push existe.
 - **Sous Expo Go, les vieux Android n'atteignent toujours pas les serveurs des facs** : la
   configuration de sécurité réseau appartient au binaire, et celui d'Expo Go n'est pas le nôtre. Le
   correctif ne vaut donc que pour un build.
