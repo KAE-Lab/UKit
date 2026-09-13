@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from 'react';
-import { View, FlatList } from 'react-native';
+import { View } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
@@ -13,6 +13,7 @@ import { useSavedFilter } from '../../hooks/useSavedFilter';
 import { CrousSectionCard, CARD_WIDTH } from './CrousSectionCard';
 import { SectionEtatVide } from './SectionEtatVide';
 import { useChargementDeSection, useRevisionDuTableauDeBord } from '../rafraichissement';
+import { CarrouselDeSection } from './CarrouselDeSection';
 
 export function CrousSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -86,16 +87,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
                         onOuvrir={() => navigation.navigate('Crous')}
                     />
                 ) : (
-                <FlatList
-                    horizontal
-                    data={filteredRestaurants}
-                    renderItem={renderCard}
-                    keyExtractor={item => item.id}
-                    showsHorizontalScrollIndicator={false}
-                    snapToInterval={CARD_WIDTH + tokens.space.md}
-                    decelerationRate="fast"
-                    contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
-                />
+                <CarrouselDeSection data={filteredRestaurants} renderItem={renderCard} keyExtractor={item => item.id} largeurCarte={CARD_WIDTH} />
                 )
             )}
         </View>

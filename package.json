@@ -69,7 +69,6 @@
     "expo-sharing": "~57.0.18",
     "expo-splash-screen": "~57.0.8",
     "expo-task-manager": "~57.0.16",
-    "expo-web-browser": "~57.0.2",
     "html-entities": "^2.3.2",
     "ical.js": "^2.2.1",
     "moment": "^2.22.2",

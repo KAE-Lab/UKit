@@ -17,8 +17,9 @@
 /**
  * D'ou vient une tentative. Le menu de developpement l'affiche, la ligne d'etat non.
  * `activation` : l'interrupteur rallume, ou la cible change — l'agenda se remplit sans attendre.
+ * `filtres` : un filtre d'UE change — l'agenda suit ce que l'ecran montre (6.2.x).
  */
-export type OrigineSynchro = 'manuel' | 'lancement' | 'premier-plan' | 'tache' | 'sonde' | 'favoris' | 'activation';
+export type OrigineSynchro = 'manuel' | 'lancement' | 'premier-plan' | 'tache' | 'sonde' | 'favoris' | 'activation' | 'filtres';
 
 export interface TentativeSynchro {
     /** L'horloge **reelle** : c'est une trace, pas une decision (docs/qualite.md). */
@@ -30,7 +31,7 @@ export interface TentativeSynchro {
 /** Ce que la description des reglages promet : « environ toutes les 12 heures ». */
 export const INTERVALLE_ENTRETIEN_MS = 12 * 60 * 60 * 1000;
 
-const ORIGINES: readonly OrigineSynchro[] = ['manuel', 'lancement', 'premier-plan', 'tache', 'sonde', 'favoris', 'activation'];
+const ORIGINES: readonly OrigineSynchro[] = ['manuel', 'lancement', 'premier-plan', 'tache', 'sonde', 'favoris', 'activation', 'filtres'];
 
 /**
  * Relit une tentative persistee, defensivement : un stockage corrompu rend `null`, jamais une

@@ -14,7 +14,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { describeSupabaseFailure, getSupabase, reportSupabaseFailure } from '../supabase';
-import { identifiantInstallation } from './identifiant';
+import { identifiantInstallation, lireIdentifiant } from './identifiant';
 
 const TABLE = 'testeurs';
 const CLE_CACHE = 'testeur@1';
@@ -40,8 +40,8 @@ export function estTesteur(): boolean {
 /**
  * Restaure la derniere reponse connue, sans reseau.
  *
- * Le cache porte l'identifiant avec la reponse : si le trousseau a change — reinitialisation
- * complete —, la reponse d'un autre identifiant ne vaut rien et retombe a « non ».
+ * Le cache porte l'identifiant avec la reponse : si l'identifiant a change — un autre build sur
+ * Android, une identite de session —, la reponse d'un autre identifiant ne vaut rien et retombe a « non ».
  */
 export async function chargerStatutTesteur(): Promise<void> {
     const id = await identifiantInstallation();
@@ -65,7 +65,7 @@ function rapporter(rapport: RapportTesteur): RapportTesteur {
 
 /** Relit la liste des testeurs. Ne leve jamais ; une base injoignable garde la derniere reponse. */
 export async function rafraichirStatutTesteur(): Promise<RapportTesteur> {
-    const id = await identifiantInstallation();
+    const { valeur: id, source } = await lireIdentifiant();
 
     const supabase = getSupabase();
     if (supabase === null) {
@@ -81,7 +81,9 @@ export async function rafraichirStatutTesteur(): Promise<RapportTesteur> {
 
         const testeur = (data ?? []).some((ligne) => ligne.id === id);
         statut = { id, testeur };
-        await AsyncStorage.setItem(CLE_CACHE, JSON.stringify(statut));
+        // Une identite de session — graine illisible a l'instant — ne vaut pas une reponse durable :
+        // la mettre en cache degraderait un testeur en « non » au prochain demarrage (6.2.x).
+        if (source !== 'session') await AsyncStorage.setItem(CLE_CACHE, JSON.stringify(statut));
         return rapporter({ ok: true, testeur });
     } catch (erreur) {
         return rapporter({ ok: false, reason: erreur instanceof Error ? erreur.message : String(erreur) });

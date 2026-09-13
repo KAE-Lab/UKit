@@ -76,6 +76,12 @@ export interface PlanningEvent {
     /** Une journee entiere n'a pas d'heures : elle se rend en bandeau, jamais dans un carrousel. */
     journeeEntiere?: boolean;
     /**
+     * Le lieu d'un rendez-vous du telephone, tel que l'utilisateur l'a ecrit (6.2.x). Jamais pose par
+     * une source de cours : leurs lieux sont des batiments, dans `sites` ou devines dans la
+     * description. La fiche le lit sans le resoudre, et l'ouvre dans l'application de plans.
+     */
+    lieu?: string;
+    /**
      * L'identifiant de l'evenement dans le calendrier du systeme, tel qu'`openEventInCalendarAsync`
      * l'attend. `id` est composite — les occurrences d'un evenement recurrent partagent le sien.
      */

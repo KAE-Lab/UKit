@@ -1,6 +1,6 @@
 # Navigation
 
-UKit utilise React Navigation 7 (`@react-navigation/native`, `stack`, `material-top-tabs`). La navigation
+UKit utilise React Navigation 7 (`@react-navigation/native`, `stack`, `bottom-tabs`). La navigation
 est le squelette de l'application : l'organisation des dossiers de `src/features/` la reproduit
 (voir [architecture.md](architecture.md)).
 
@@ -43,22 +43,32 @@ Définis dans [`MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator
 | `ScolariteTab` | [`ScolariteDashboard`](../src/features/Scolarite/screens/ScolariteDashboard.tsx) | `SCOLARITY` | `toolbox-outline` |
 | `SettingsTab` | [`SettingsScreen`](../src/features/Settings/screens/SettingsScreen.tsx) | `SETTINGS` | `cog-outline` |
 
-### Les quatre onglets ne sont plus un pager
+### On glisse entre les onglets — sur la barre, et c'est la troisième version
 
 Le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md) avait remplacé `createBottomTabNavigator` par
 un `createMaterialTopTabNavigator` posé en bas : même barre, mais on passait d'un onglet à l'autre au
-doigt. Il avait été accordé sur les quatre onglets après vérification sur iPhone, au motif qu'une
-liste horizontale consomme le geste qui commence sur elle.
+doigt. **Android l'a démenti** (signalé le 2026-09-07) : `ViewPager2` intercepte le toucher **avant**
+ses enfants, hors de tout arbitrage JavaScript, et le ruban des jours comme le carrousel des cours du
+Planning ne répondaient plus. Le jalon [6.1.x-B](phase-6/6-1-x-b-signalements.md) a retiré le pager
+proprement — `react-native-pager-view` et `material-top-tabs` sortis, `bottom-tabs` de retour.
 
-**Android l'a démenti** (signalé le 2026-09-07) : le geste horizontal du pager y casse les listes
-horizontales du Planning — le ruban des jours, le carrousel des cours simultanés. Un geste qui marche
-sur une plateforme et casse l'autre n'est pas une capacité, le propriétaire du produit n'y tenait
-pas, et la limite écrite du jalon prévoyait le retrait. Le jalon [6.1.x-B](phase-6/6-1-x-b-signalements.md)
-l'a fait **proprement** plutôt qu'écran par écran : le navigateur redevient
-`createBottomTabNavigator`, `react-native-pager-view` et `@react-navigation/material-top-tabs` sortent
-des dépendances, et la barre flottante redevient la seule navigation entre onglets — ce qu'elle a
-toujours été par ailleurs. Avec le pager partent aussi ses deux limites : le montage de la page
-voisine pendant le geste, et la désynchronisation de la barre sur des allers-retours rapides.
+**La 6.2.x a d'abord essayé un geste sur chaque page** : un `Pan` de `react-native-gesture-handler`
+par scène d'onglet, auquel chaque liste horizontale opposait sa priorité (`Gesture.Native()` et
+`blocksExternalGesture`). Tenu sur iPhone. Pas sur Android : un coup rapide sur le ruban des jours
+passait au geste des onglets, parce que la liste ne devenait « active » qu'en interceptant, après
+son seuil natif ; rendue active dès le toucher, elle coupait net le défilement dès que le doigt la
+quittait, et le tableau de bord Campus ne défilait plus qu'entre ses carrousels (Galaxy A8,
+2026-09-13). **Des pages pleines de listes horizontales ne peuvent pas porter un geste horizontal**,
+quelle que soit la façon de l'arbitrer.
+
+**Le geste vit donc sur la barre d'onglets** — la seule surface du bas qui n'a rien à défiler,
+proposition du propriétaire du produit ([`glissementDOnglets.tsx`](../src/shared/navigation/glissementDOnglets.tsx),
+`useGlissementDeBarre`, posé par `CustomTabBar`) : glisser sur la barre passe à l'onglet voisin au
+relâcher ([`directionDuGlissement`](../src/shared/navigation/directionDuGlissement.ts), pur et
+testé : assez de chemin ou assez de vitesse, pas de bouclage aux extrémités), avec la transition
+`shift` des onglets — celle d'un appui. Un appui reste un appui : le geste ne s'active qu'après dix
+points de course horizontale. Les pages ne portent aucun geste ; leurs listes horizontales, le
+curseur des Réglages et les interrupteurs n'ont plus de concurrent.
 
 ### La barre d'onglets personnalisée
 
@@ -104,7 +114,7 @@ Déclarés dans [`StackNavigator.tsx`](../src/shared/navigation/StackNavigator.t
 | `FreeRoomDetails` | [`FreeRoomDetailsScreen`](../src/features/Campus/FreeRoom/FreeRoomDetailsScreen.tsx) | `{ building }` | `DETAILS` |
 | `Bde` | [`BdeScreen`](../src/features/Campus/Bde/BdeScreen.tsx) | — | `STUDENT_LIFE` |
 | `BdeDetail` | [`BdeDetailsScreen`](../src/features/Campus/Bde/BdeDetailsScreen.tsx) | `{ annonce }` | `DETAILS` |
-| `WebBrowser` | [`WebBrowserScreen`](../src/features/Scolarite/screens/WebBrowserScreen.tsx) | `{ entrypoint?, href?, domainesInternes? }` — `domainesInternes` n'est posé que par les appelants du **formulaire de retours** ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts)) : un lien qui en sort s'ouvre par-dessus, dans une seconde instance de l'écran, et le formulaire reste tel quel en dessous | masqué (barre flottante propre) |
+| `WebBrowser` | [`WebBrowserScreen`](../src/features/Scolarite/screens/WebBrowserScreen.tsx) | `{ entrypoint?, href?, domainesInternes? }` — `href` pour un lien nu (le bouton d'une annonce, la réservation d'une BU depuis 6.2.x : **plus aucun lien web de l'application ne part dans le navigateur du système**, sauf le bouton explicite de cet écran) ; `domainesInternes` n'est posé que par les appelants du **formulaire de retours** ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts)) : un lien qui en sort s'ouvre par-dessus, dans une seconde instance de l'écran, et le formulaire reste tel quel en dessous | masqué (barre flottante propre) |
 | `CredentialsSettings` | [`CredentialsSettingsScreen`](../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | `{ ressaisie? }` | `ACCOUNT` |
 | `Documents` | [`DocumentsScreen`](../src/features/Scolarite/screens/DocumentsScreen.tsx) | — | `MY_DOCUMENTS` |
 | `Filters` | [`FiltersScreen`](../src/features/Settings/screens/FiltersScreen.tsx) | — | `FILTERS` |
@@ -155,10 +165,9 @@ carte sont définis directement dans `StackNavigator`.
 
 ## Limites connues
 
-- **On ne glisse plus entre les onglets.** Le pager de 6.1-E a été retiré au jalon 6.1.x-B parce
-  qu'il cassait les listes horizontales du Planning sur Android ; ses deux limites — la page voisine
-  montée pendant le geste, la barre désynchronisée sur des allers-retours rapides — sont parties avec
-  lui. Y revenir demanderait une réponse au conflit de gestes sur Android, pas seulement l'envie.
+- **Le glissement entre onglets se fait sur la barre, et la page bascule au relâcher.** Glisser sur
+  le contenu ne change pas d'onglet : deux essais l'ont montré, un pager puis un geste par page, les
+  listes horizontales du Planning et du Campus ne le tolèrent pas sur Android.
 - **`RootStackParamList` est incomplet pour deux routes.** `CrousMenu` ne déclare pas `restaurantId`
   alors que l'écran le lit et que l'appelant le passe ; `LibraryDetails` ne déclare pas `affluence`,
   dans le même cas. Le typage des paramètres est donc plus permissif que la réalité sur ces deux

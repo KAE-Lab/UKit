@@ -295,6 +295,7 @@ temps de chargement.
 | [`Dashboard/components/FreeRoomSection.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSection.tsx) | section salles libres : déclenche le chargement des bâtiments si le cache est vide, ou au tirer ; « Réessayer » relit la source |
 | [`Dashboard/components/FreeRoomSectionCard.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSectionCard.tsx) | carte d'un bâtiment |
 | [`Dashboard/components/SectionEtatVide.tsx`](../../src/features/Campus/Dashboard/components/SectionEtatVide.tsx) | ce qu'une section montre quand son carrousel n'a rien : filtre, panne, ou absence |
+| [`Dashboard/components/CarrouselDeSection.tsx`](../../src/features/Campus/Dashboard/components/CarrouselDeSection.tsx) | le carrousel des quatre sections, aimanté au pas des cartes — le même bloc était écrit quatre fois (6.2.x) |
 | [`components/CampusListLayout.tsx`](../../src/features/Campus/components/CampusListLayout.tsx) | socle générique des écrans de liste : liste, recherche, filtres, états |
 | [`components/CampusLayoutComponents.tsx`](../../src/features/Campus/components/CampusLayoutComponents.tsx) | `CampusSearchBar`, `CampusFilterModal`, `CampusListEmptyState`, `CampusFailureNotice`, `CampusPartialNotice` |
 | [`components/CampusCard.tsx`](../../src/features/Campus/components/CampusCard.tsx) | carte de base commune aux trois types de lieux ; sa surface vient de `shared/ui/Card` |

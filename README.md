@@ -342,7 +342,8 @@ livré ; elle est mise à jour à chaque contribution.
   haptique, état désactivé et accessibilité ; deux dépendances sortent. Et **les onglets se
   glissaient** : un pager sous la barre flottante inchangée — **retiré au jalon 6.1.x-B**, parce
   qu'il cassait les listes horizontales du Planning sur Android, et que le propriétaire du produit
-  n'y tenait pas ; la barre flottante est la seule navigation entre onglets.
+  n'y tenait pas ; **puis de retour en 6.2.x, sur la barre d'onglets elle-même** — la seule
+  surface du bas sans liste horizontale ([docs/navigation.md](docs/navigation.md)).
 
   Trois défauts trouvés le 2026-09-04 sont corrigés au passage, parce qu'ils vivaient dans les mêmes
   fichiers. Deux avaient la même cause de fond — 6.1-A avait donné un **second hôte** à un geste sans

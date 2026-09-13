@@ -2,11 +2,10 @@ import React from 'react';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { Linking, Text, View, Animated, StyleSheet } from 'react-native';
 import * as Calendar from 'expo-calendar/legacy';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import moment from 'moment';
 import { NotificationManager } from '../../../shared/services/NotificationService';
 
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
+import { replanifierDepuisLeCache } from '../../../shared/services/entretien';
 import {
     etablissementRetire,
     nomCourtEtablissement,
@@ -176,20 +175,8 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         }
         this.setState({ courseNotificationsEnabled: newValue }, async () => {
             SettingsManager.setCourseNotificationsEnabled(newValue);
-
-            const favGroups = SettingsManager.getFavoriteGroups();
-            if (favGroups && favGroups.length > 0) {
-                const groupPrefix = favGroups.join('+');
-                const currentWeek = moment().isoWeek();
-                const id = `${groupPrefix}@Week${currentWeek}`;
-                const cache = await AsyncStorage.getItem(id);
-                if (cache) {
-                    const parsed = JSON.parse(cache);
-                    if (parsed && parsed.data) {
-                        NotificationManager.scheduleCourseNotifications(parsed.data).catch(() => { });
-                    }
-                }
-            }
+            // Depuis le cache, filtres d'UE compris : l'ecran passait la semaine brute (6.2.x).
+            if (newValue) void replanifierDepuisLeCache();
         });
     };
 
@@ -199,21 +186,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
     onNotificationDelaySlidingComplete = async (value: number) => {
         SettingsManager.setCourseNotificationDelay(value);
-        if (this.state.courseNotificationsEnabled) {
-            const favGroups = SettingsManager.getFavoriteGroups();
-            if (favGroups && favGroups.length > 0) {
-                const groupPrefix = favGroups.join('+');
-                const currentWeek = moment().isoWeek();
-                const id = `${groupPrefix}@Week${currentWeek}`;
-                const cache = await AsyncStorage.getItem(id);
-                if (cache) {
-                    const parsed = JSON.parse(cache);
-                    if (parsed && parsed.data) {
-                        NotificationManager.scheduleCourseNotifications(parsed.data).catch(() => { });
-                    }
-                }
-            }
-        }
+        if (this.state.courseNotificationsEnabled) void replanifierDepuisLeCache();
     };
 
     /**

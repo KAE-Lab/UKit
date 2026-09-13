@@ -34,15 +34,16 @@ valeur** : il n'y a pas de rapport d'erreur en production.
 plugins: [
   './tools/expo/autorites-universitaires',
   'expo-background-task',
-  'expo-web-browser',
   'expo-secure-store',
   ['expo-local-authentication', { faceIDPermission: '…' }],
 ]
 ```
 
-Trois de ces plugins servent l'onglet [Scolarité](features/scolarite.md) : navigateur intégré,
-stockage chiffré des identifiants, déverrouillage biométrique. `expo-background-task` porte
-l'entretien. Le premier est écrit ici, et mérite son paragraphe.
+Deux de ces plugins servent l'onglet [Scolarité](features/scolarite.md) : stockage chiffré des
+identifiants, déverrouillage biométrique. `expo-background-task` porte l'entretien. Le premier est
+écrit ici, et mérite son paragraphe. `expo-web-browser` est sorti en 6.2.x : son dernier appelant,
+la réservation d'une BU, passe par la vue intégrée comme tout le reste — le navigateur intégré est
+`react-native-webview`, qui n'a pas de greffon.
 
 ### Les racines de certification des universités
 
@@ -66,6 +67,11 @@ thèse de la phase 6 — un campus s'ajoute par le catalogue, sans release —, 
 fournisseur de toute l'université française par RENATER : la prochaine fac y sera aussi. Le coût est
 nul : ces racines sont dans le programme de Mozilla et dans tous les Android récents. `system` est
 conservé, donc on n'enlève la confiance à personne.
+
+**Vérifié en production le 2026-09-11** sur un Galaxy A8 de 2018 (Android 9), avec le build de la
+6.2.0 : Celcat, les salles libres, l'ENT, Moodle, le webmail et Apogée répondent tous. Un vieil
+Android a désormais toute l'application, et c'est cet appareil qui sert depuis de second poste de
+test permanent ([qualite.md](qualite.md#vérification-manuelle)).
 
 **Le piège de la variante de développement.** Dès qu'une configuration de sécurité réseau existe,
 Android ignore `usesCleartextTraffic` du manifeste — celui que le manifeste de débogage pose pour
@@ -102,12 +108,14 @@ se voyait sur appareil le 2026-09-08 : qui n'avait jamais touché un interrupteu
 accordé la permission, donc ne recevait rien — il fallait éteindre puis rallumer pour que l'invite
 paraisse. Elle est donc demandée par l'**entretien**, une seule fois, quand elle n'a jamais été
 demandée (`undetermined`), **jamais pendant le parcours d'accueil** — qui a ses propres questions —
-et jamais après un refus : `denied` ne se redemande pas, seuls les Réglages du système le rouvrent.
+et jamais après un refus : `denied` ne se redemande pas, seuls les Réglages du système le rouvrent. **Vérifié en production sur
+les deux plateformes le 2026-09-11** : l'invite paraît à la première ouverture qui suit l'installation
+**comme la mise à jour** — l'entretien ne distingue pas les deux, et n'a pas à le faire.
 
 ## Les notifications push
 
 Depuis [6.1.x-E](phase-6/6-1-x-e-notifications-push.md), un message de service peut arriver en
-notification, application fermée, par le service d'Expo. Trois choses à savoir avant de s'étonner :
+notification, application fermée, par le service d'Expo. Quatre choses à savoir avant de s'étonner :
 
 - **rien ne se teste sous Expo Go** : les notifications distantes en sont sorties au SDK 53. Il faut
   un build de développement (`npx eas-cli build --profile development --platform ios`), Metro
@@ -137,7 +145,13 @@ notification, application fermée, par le service d'Expo. Trois choses à savoir
     l'application ; les autres, autre chose.
 
   Posés le 2026-09-08 : projet `ukit-7f13d`, compte `firebase-adminsdk`. Le projet Firebase ne sert
-  qu'à ça — pas d'Analytics, pas de SDK Firebase dans l'application.
+  qu'à ça — pas d'Analytics, pas de SDK Firebase dans l'application ;
+- **un silence pendant les tests n'est pas forcément un défaut.** Apple limite le renouvellement du
+  jeton de fournisseur d'une clé APNs, et APNs comme le service d'Expo modèrent une rafale d'envois
+  vers le même appareil : après une série de tests rapprochés, plus rien n'arrive pendant un temps,
+  sans erreur nulle part, puis tout repart de lui-même. C'est ce qui a fait croire à un défaut iOS le
+  2026-09-08 ; **vérifié en production le 2026-09-11 sur les deux plateformes**, un envoi depuis la
+  console arrive, application fermée. Devant un silence : attendre, ne pas redéployer.
 
 Le greffon d'`expo-notifications` est appliqué par `prebuild` sans être listé dans
 [`app.config.ts`](../app.config.ts) — il fait partie des greffons hérités que l'outil applique
@@ -469,4 +483,9 @@ Avant de poser un tag, les trois premiers doivent s'accorder ([6-1-z](phase-6/6-
   premier build de production depuis que le push existe.
 - **Sous Expo Go, les vieux Android n'atteignent toujours pas les serveurs des facs** : la
   configuration de sécurité réseau appartient au binaire, et celui d'Expo Go n'est pas le nôtre. Le
-  correctif ne vaut donc que pour un build.
+  correctif ne vaut donc que pour un build — et le build est prouvé : la 6.2.0 sur un Galaxy A8 de
+  2018, le 2026-09-11.
+- **En dessous de l'API 28 (Android 7 et 8), les ombres ne se dessinent pas.** Depuis 6.2.x, toute
+  ombre est un `boxShadow` sur Android ([theme.md](theme.md#les-décisions-durables)), que React
+  Native ne rend qu'à partir de l'API 28 ; en dessous, la surface garde sa bordure et rien d'autre ne
+  change. `minSdkVersion` d'Expo 57 est 24.

@@ -126,8 +126,11 @@ export function projeterEvenementDuTelephone(
     const endtime = journeeEntiere ? '' : (jour === dernier ? fin.format('HH:mm') : '23:59');
     const couleur = normaliserHex(calendrier.color) ?? 'default';
     const titre = (evenement.title ?? '').trim();
-    const lignes = [evenement.location ?? '', evenement.notes ?? '']
-        .flatMap((texte) => texte.split('\n'))
+    // Le lieu a part, les notes en description : fondu dans la description, le lieu se rendait avec
+    // l'icone d'un groupe et ne s'ouvrait nulle part (6.2.x).
+    const lieu = (evenement.location ?? '').trim();
+    const lignes = (evenement.notes ?? '')
+        .split('\n')
         .map((ligne) => ligne.trim())
         .filter((ligne) => ligne !== '');
 
@@ -151,6 +154,7 @@ export function projeterEvenementDuTelephone(
         category: '',
         group: '',
         toFilter: null,
+        ...(lieu === '' ? {} : { lieu }),
     };
 }
 

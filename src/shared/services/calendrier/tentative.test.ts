@@ -11,6 +11,8 @@ describe('lireTentative', () => {
     it('relit une tentative ecrite', () => {
         expect(lireTentative(JSON.stringify({ at: 1000, ok: false, origine: 'tache' })))
             .toEqual({ at: 1000, ok: false, origine: 'tache' });
+        expect(lireTentative(JSON.stringify({ at: 1000, ok: true, origine: 'filtres' })))
+            .toEqual({ at: 1000, ok: true, origine: 'filtres' });
     });
 
     it('rend null sur tout ce qui n est pas une tentative, sans lever', () => {

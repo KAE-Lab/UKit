@@ -128,8 +128,7 @@ Quatre règles de bord, et leur sens :
 
 ## L'audience testeurs
 
-À sa première ouverture, l'application tire un **identifiant d'installation** (un UUID, dans le
-trousseau, `UKIT_INSTALLATION_ID`) qui ne sert qu'à ça. Il s'affiche dans le panneau **Testeur** du
+L'application calcule un **identifiant d'installation** (un UUID) qui ne sert qu'à ça. Il s'affiche dans le panneau **Testeur** du
 menu de développement — sept touchers sur la version, dans À propos ([qualite.md](qualite.md)) —, se
 copie d'un bouton, et se recopie dans la table `testeurs` avec un nom. Dès lors, l'appareil voit les
 contenus d'audience `testeurs` : c'est ce qui permet d'essayer un message ou une annonce sur son
@@ -142,9 +141,21 @@ colonne `id` de `testeurs`, la seule que la base laisse lire au rôle public —
 et c'est ce qui garde vraie la phrase de [PRIVACY.md](../PRIVACY.md) sur des requêtes anonymes. La
 réponse est mise en cache (`testeur@1`) avec l'identifiant qu'elle concernait.
 
-L'identifiant **survit à « Réinitialiser »** des Réglages — un testeur qui remet ses réglages à zéro
-reste testeur — et seule la réinitialisation complète du menu de développement l'efface. Sur iOS, le
-trousseau survit aussi à une désinstallation.
+**L'identifiant tient à l'appareil, depuis 6.2.x.** Il survit à « Réinitialiser », à la
+réinitialisation complète du menu de développement, à une désinstallation et, sur Android, à
+« Effacer les données » : c'est l'empreinte SHA-256, mise en forme d'UUID v8, d'une graine que
+l'application ne crée ni n'efface jamais ([`identifiant.ts`](../src/shared/testeur/identifiant.ts),
+[`derivation.ts`](../src/shared/testeur/derivation.ts)). Sur **Android**, la graine est le SSAID du
+système — stable par appareil, clé de signature et utilisateur, renouvelé au rétablissement d'usine ;
+un build EAS, la version du Play et Expo Go n'ayant pas la même clé, un téléphone de test porte un
+identifiant par build. Sur **iOS**, c'est un secret du trousseau, posé une fois et jamais réécrit :
+la plateforme n'offre rien qui survive à une désinstallation hors trousseau (`identifierForVendor`
+se réinitialise quand la dernière application de l'éditeur part). Avant 6.2.x, un UUID tiré au
+hasard : il mourait à la désinstallation sur Android, où `expo-secure-store` exclut ses préférences
+de la sauvegarde, et la réinitialisation complète l'effaçait à dessein — les testeurs se
+réinscrivaient sans cesse. Un trousseau illisible à l'instant rend une identité de **session**, sans
+écriture ni cache. Le panneau Testeur dit la source (`appareil`, `trousseau`, `session`). Revoquer un
+testeur reste une ligne supprimée ; depuis l'appareil, on ne « devient » plus quelqu'un d'autre.
 
 ## Les annonces ciblées
 
@@ -347,8 +358,8 @@ Les lignes se publient depuis la console (lot B2) ou, en attendant, par `psql`.
 | 6 | Un message avec `version_max = '5.9.9'` ; puis `version_min` à la version courante | invisible ; visible |
 | 7 | Une annonce `etablissements = '{bordeaux-inp}'` ; une annonce d'audience `testeurs` | invisible à Bordeaux, visible après bascule ; visible sur le seul appareil enregistré |
 | 8 | Hors ligne (`SUPABASE_URL=https://127.0.0.1:1`, `expo start -c`) avec un incident en cache ; puis après « Oublier les vus » et cache vidé | le bandeau, depuis le cache ; puis rien, aucune erreur, `[messages]` en `warn` dans Metro |
-| 9 | Réglages → Réinitialiser ; puis réinitialisation complète du menu de développement | l'identifiant survit au premier, change après le second |
-| 10 | Un `info` avec `plateformes = '{android}'` ; le même en `'{ios}'` puis vide ; une annonce de même ; une valeur `'{tv}'` posée par `psql` (la console ne la propose pas) | invisible sur l'iPhone ; visible, visible ; idem ; invisible partout — la moitié Android se joue à [6.1.x-Z](phase-6/6-1-x-z-sortie.md) |
+| 9 | Réglages → Réinitialiser ; puis réinitialisation complète du menu de développement ; puis désinstaller et réinstaller | l'identifiant survit aux trois (depuis 6.2.x ; il changeait après le second) |
+| 10 | Un `info` avec `plateformes = '{android}'` ; le même en `'{ios}'` puis vide ; une annonce de même ; une valeur `'{tv}'` posée par `psql` (la console ne la propose pas) | invisible sur l'iPhone ; visible, visible ; idem ; invisible partout — la moitié Android jouée le 2026-09-08 |
 | 11 | **Sur un build de développement** : lancer, Testeur → « push : depose » ; console, page Jetons push | la ligne de l'appareil, campus et version ; relancer → « inchange » |
 | 12 | Console, un `info` enregistré, « Notifier », application **fermée** ; toucher la notification ; « Notifier » à nouveau | « 1 appareil visé » ; la notification en quelques secondes ; l'application s'ouvre sur la feuille, « Compris » la marque vue ; refusé, « déjà notifié » |
 | 13 | Réglages → Notifications → couper « Messages de service en notification » ; rallumer ; basculer d'établissement | la ligne disparaît de Jetons push ; revient ; change de campus |
@@ -361,6 +372,10 @@ rien après la réinitialisation complète, et l'identifiant qui survit à « R�
 messages fermés, eux, reviennent alors, comme prévu — et change après la réinitialisation complète.
 Deux défauts trouvés et corrigés en chemin : la mémoire « vu » qui n'était pas relue au démarrage, et
 le rappel d'incident qui cachait le titre.
+
+**Les étapes 10 à 13 sont jouées sur les deux plateformes** : 10 le 2026-09-08 ; 11 à 13 sur les
+builds de développement, puis **en production le 2026-09-11** — une notification envoyée depuis la
+console arrive sur l'iPhone comme sur l'Android, application fermée.
 
 Les trois chemins dégradés produisent trois écrans différents, comme la
 [définition de « terminé »](../CONTRIBUTING.md) l'exige : hors ligne avec un incident en cache, le
@@ -407,8 +422,11 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
   quel. Les salutations ont une table par langue ; un message de service s'écrit vite, en français,
   pour un public bordelais — la différence est assumée.
 - **L'audience est un filtre d'affichage, pas une confidentialité.** Les identifiants des testeurs
-  sont énumérables par quiconque a la clé publique ; ce sont des UUID aléatoires, et usurper un
-  testeur demanderait d'écrire le trousseau d'un appareil.
+  sont énumérables par quiconque a la clé publique. Depuis 6.2.x ils ne sont plus aléatoires mais
+  **dérivés** : qui connaît le SSAID d'un Android enregistré — et la graine de domaine, publique —
+  peut se faire passer pour ce testeur, et ne voit que les contenus d'audience `testeurs`. Sur
+  iOS la graine est un secret du trousseau, et usurper demande de l'écrire. La ligne reste
+  supprimable dans les deux cas.
 - **Le ciblage par version compare des versions d'application**, pas des builds : deux builds de la
   même version sont indiscernables.
 - **Les deux portes du jeton sont ouvertes au rôle public**, et c'est le prix de l'absence de compte :
@@ -421,7 +439,9 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
   l'identifiant d'installation, qui ne la rejoint jamais. Un push d'audience `testeurs` peut donc
   atteindre un appareil qui se dit testeur à tort — l'enjeu est un message de service.
 - **Une notification push ne se teste que sur un build**, jamais sous Expo Go, et Android demande
-  des identifiants FCM sur EAS.
+  des identifiants FCM sur EAS. Et **un silence pendant les tests n'est pas forcément un défaut** :
+  après une rafale d'envois vers le même appareil, plus rien n'arrive pendant un temps, sans erreur —
+  une limitation d'Apple/Expo, qui se relâche seule ([plateforme.md](plateforme.md#les-notifications-push)).
 - **Hors ligne sans cache, un incident ne se voit pas** : la première lecture doit avoir eu lieu.
 - **La pastille d'état de service vit dans les en-têtes des quatre onglets** — Planning agrégé,
   Campus, Scolarité dans ses trois états, Réglages. Un écran poussé, ou le Planning d'un groupe

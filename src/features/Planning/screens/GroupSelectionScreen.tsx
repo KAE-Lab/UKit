@@ -362,6 +362,8 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                             backgroundColor: theme.cardBackground,
                             borderBottomWidth: 1,
                             borderBottomColor: theme.border,
+                            // Meme regle que le bandeau du Planning : sous l'en-tete transparent, une ombre
+                            // sans elevation (6.2.x, en-tete invisible sur un Android 9).
                             ...tokens.shadow.sm as object,
                         }}>
                             {this.renderSearchInput(theme)}

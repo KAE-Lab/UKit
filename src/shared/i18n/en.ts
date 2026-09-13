@@ -133,6 +133,7 @@ const en = {
 	ALL_DAY: 'All day',
 	OPEN_IN_CALENDAR: 'Open in calendar',
 	OPEN_IN_CALENDAR_FAILED: 'Couldn’t open the event in the calendar',
+	GETTING_THERE_FAILED: 'Couldn’t open the map',
 	ADD_EVENT: 'Add an event',
 	OPEN_ON_FAVOURITE_GROUP: 'Open on favourite group',
 	OTHER: 'Other',

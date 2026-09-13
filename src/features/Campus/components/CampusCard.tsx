@@ -1,10 +1,11 @@
 import React, { useContext } from 'react';
-import { View, Image } from 'react-native';
+import { View } from 'react-native';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { Card } from '../../../shared/ui/Card';
 import { CardTitleRow } from './CampusCardParts';
+import { VisuelAvecRepli } from '../../../shared/ui/VisuelAvecRepli';
 
 const defaultImage = require('../../../../assets/images/default_resto.png');
 
@@ -43,18 +44,12 @@ export function CampusCard({
             style={{ marginBottom: tokens.space.lg, marginHorizontal: tokens.space.sm }}
         >
             <View style={{ width: '100%', height: 180, backgroundColor: theme.greyBackground }}>
-                {/* Repli sous l'image distante : une carte sans visuel resterait un rectangle gris. */}
-                <Image
-                    source={defaultImage}
+                {/* Le repli jusqu'a l'image, jamais dessous : sous le doigt, Android le laissait transparaitre (VisuelAvecRepli). */}
+                <VisuelAvecRepli
+                    uri={imageUrl}
+                    repli={defaultImage}
                     style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
                 />
-
-                {imageUrl ? (
-                    <Image
-                        source={{ uri: imageUrl }}
-                        style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
-                    />
-                ) : null}
             </View>
 
             <View style={{ padding: tokens.space.md }}>

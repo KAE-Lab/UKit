@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Image, Dimensions } from 'react-native';
+import { View, Dimensions } from 'react-native';
 import moment from 'moment';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
@@ -9,6 +9,7 @@ import { Card } from '../../../../shared/ui/Card';
 import { MetaRow } from '../../../../shared/ui/MetaRow';
 import { CardTitleRow, DistanceBadge } from '../../components/CampusCardParts';
 import { BuildingInfo } from '../../services/FreeRoomService';
+import { VisuelAvecRepli } from '../../../../shared/ui/VisuelAvecRepli';
 
 const defaultImage = require('../../../../../assets/images/default_resto.png');
 const { width } = Dimensions.get('window');
@@ -25,7 +26,6 @@ export function FreeRoomSectionCard({ item, navigation, isFavorite, onToggleFavo
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
-    const imageSource = item.imageUrl ? { uri: item.imageUrl } : defaultImage;
     const totalRooms = item.rooms ? item.rooms.length : 0;
 
     let hoursText = Translator.get('UNKNOWN');
@@ -45,7 +45,7 @@ export function FreeRoomSectionCard({ item, navigation, isFavorite, onToggleFavo
             onPress={() => navigation.navigate('FreeRoomDetails', { building: item })}
             style={{ width: CARD_WIDTH, marginRight: tokens.space.md }}
         >
-            <Image source={imageSource} style={{ width: '100%', height: 160, resizeMode: 'cover', backgroundColor: theme.greyBackground }} />
+            <VisuelAvecRepli uri={item.imageUrl} repli={defaultImage} style={{ width: '100%', height: 160, resizeMode: 'cover', backgroundColor: theme.greyBackground }} />
 
             <View style={{ padding: tokens.space.md }}>
                 <CardTitleRow

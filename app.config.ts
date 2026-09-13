@@ -93,7 +93,6 @@ export default {
 		// appareils (tools/expo/autorites-universitaires.js).
 		"./tools/expo/autorites-universitaires",
 		"expo-background-task",
-		"expo-web-browser",
 		"expo-secure-store",
 		[
 			"expo-local-authentication",

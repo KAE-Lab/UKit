@@ -24,7 +24,7 @@ import { createUKitCalendar, ecrireEvenementsDansCalendrier, retirerEvenementsSy
 import { lireTentative, type OrigineSynchro, type TentativeSynchro } from './calendrier/tentative';
 import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
-import { estMasque, poserLesUE, preparerPourAffichage, type CoursAvecUE } from '../../features/Planning/services/filtresUe';
+import { coursASynchroniser, estMasque, poserLesUE, preparerPourAffichage, type CoursAvecUE } from '../../features/Planning/services/filtresUe';
 import type { ThemeKey } from '../theme/Theme';
 
 // ── CONTEXTE & DEVICE ─────────────────────────────────
@@ -448,8 +448,10 @@ class SettingsManagerService {
         } catch { existingCalendarEvents = {}; }
 
         // L'ecriture vit dans CalendarSyncHelpers, comme les autres pieces sans etat du calendrier.
+        // Les filtres d'UE s'appliquent ici comme a l'ecran (6.2.x) : la purge finale de l'ecriture
+        // retire d'elle-meme, au passage suivant, les cours qu'un filtre vient de masquer.
         const nextExistingCalendarEvents = await ecrireEvenementsDansCalendrier(
-            this._calendar as string, resultat.courses, existingCalendarEvents,
+            this._calendar as string, coursASynchroniser(resultat.courses, this._filters), existingCalendarEvents,
         );
 
         await AsyncStorage.setItem('previousSyncData', JSON.stringify(nextExistingCalendarEvents));

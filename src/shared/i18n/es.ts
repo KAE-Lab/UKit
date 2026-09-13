@@ -136,6 +136,7 @@ const es: TranslationDict = {
 	ALL_DAY: 'Todo el día',
 	OPEN_IN_CALENDAR: 'Abrir en la agenda',
 	OPEN_IN_CALENDAR_FAILED: 'No se pudo abrir el evento en el calendario',
+	GETTING_THERE_FAILED: 'No se pudo abrir el mapa',
 	ADD_EVENT: 'Añadir un evento',
 	OTHER: 'Otro',
 	RESET: 'Reiniciar',

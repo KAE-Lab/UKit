@@ -7,7 +7,7 @@
  * la premiere retouche (docs/theme.md).
  */
 
-import { tokens } from '../theme/Theme';
+import { ombre } from '../theme/Theme';
 
 /**
  * L'ombre d'une poignee de controle : **plus marquee que les tokens**, et c'est mesure a l'usage
@@ -24,10 +24,4 @@ import { tokens } from '../theme/Theme';
  * cette raison — la barre d'onglets en porte deux (docs/theme.md, limites) — et la **couleur**, elle,
  * reste celle des tokens.
  */
-export const OMBRE_DE_POIGNEE = {
-    shadowColor: tokens.shadow.md.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-} as const;
+export const OMBRE_DE_POIGNEE = ombre({ y: 2, flou: 3, opacite: 0.2 });

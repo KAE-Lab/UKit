@@ -306,6 +306,15 @@ C'est **le filet de sécurité principal** : les tests automatiques ne couvrent 
 et la parité des sources migrées. Une contribution n'est pas terminée tant que le parcours n'a pas
 été joué sur l'application réelle.
 
+**Le parc de test est permanent depuis le 2026-09-11** : un **iPhone 13 Pro** et un **Galaxy A8 de
+2018** (Android 9, API 28, petit écran) sont tous deux sur le poste, et l'Android du second testeur
+sert de contre-épreuve. Chaque lot se vérifie sur **les deux** avant d'ouvrir le suivant. Ce que l'A8
+révèle et que l'iPhone ne peut pas : le rendu Android — ordre de dessin, ombres, ce que `boxShadow`
+sait faire dès l'API 28 —, le réseau — le magasin d'autorités d'un vieux système —, un petit écran,
+et la lenteur : une liste qui saccade sur l'A8 saccadera ailleurs. Jusqu'à la 6.2.0, Android n'était
+vu qu'en fin de version, par le second testeur ; la passe du 2026-09-08 avait trouvé sept défauts
+d'un coup ([6.1.x-Z](phase-6/6-1-x-z-sortie.md#limites-écrites)).
+
 ```bash
 npm install
 npx expo start        # puis a pour Android, i pour iOS, ou scan du QR avec Expo Go

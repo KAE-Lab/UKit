@@ -19,10 +19,14 @@ Socle commun : [campus.md](campus.md). Source de données : Affluences, section 
    ([`CampusSectionHeader`](../../src/features/Campus/components/CampusSectionHeader.tsx),
    [campus-crous.md](campus-crous.md)), et le titre de l'en-tête (« Détails ») est neutre comme toute
    sous-page.
-5. « Réserver une place » **flotte sur le contenu**, dans le vocabulaire de la barre de recherche —
-   la même surface posée (carte, filet, ombre), la même fumée d'amortissement
-   ([`PiedFlottant`](../../src/shared/ui/PiedFlottant.tsx)) ; l'écran dégage sa hauteur en pied de
-   défilement, et le lien ouvre la page de réservation Affluences.
+5. « Réserver » est **l'action principale de la fiche** depuis 6.2.x : un pied d'action rempli en
+   primaire ([`PiedDAction`](../../src/shared/ui/PiedDAction.tsx), le même que le bouton d'une
+   annonce), flottant sur la fumée ([`PiedFlottant`](../../src/shared/ui/PiedFlottant.tsx)) ; l'écran
+   dégage sa hauteur en pied de défilement. Il était une surface de carte bordée, et un retour du
+   formulaire a demandé une réservation de BU qui existait : un bouton discret ne se trouve pas. La
+   page de réservation Affluences s'ouvre **dans la vue intégrée** (route `WebBrowser`) — c'était le
+   dernier lien de l'application à partir dans le navigateur du système, et `expo-web-browser` est
+   sorti avec lui.
 
 ![La liste des bibliothèques : visuel, ville, distance recalculée et état d'ouverture](../screenshots/bu-liste.png)
 

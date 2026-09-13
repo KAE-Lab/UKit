@@ -139,13 +139,21 @@ describe('projeterEvenementsDuTelephone', () => {
         expect(projetes.map((p) => p.idTelephone)).toEqual(['ev-1']);
     });
 
-    it('compose la description du lieu et des notes, et prend le titre du calendrier pour un titre vide', () => {
+    it('garde le lieu a part, met les notes en description, et prend le titre du calendrier pour un titre vide', () => {
         const [projete] = projeterEvenementsDuTelephone(
-            [evenement({ title: '  ', location: 'Chez Marie', notes: 'Apporter le dossier\n\n  et le cheque ' })],
+            [evenement({ title: '  ', location: ' Chez Marie ', notes: 'Apporter le dossier\n\n  et le cheque ' })],
             CALENDRIERS, AUCUN, '2026-09-08', IOS,
         );
         expect(projete.subject).toBe('Perso');
-        expect(projete.description).toBe('Chez Marie\nApporter le dossier\net le cheque');
+        expect(projete.lieu).toBe('Chez Marie');
+        expect(projete.description).toBe('Apporter le dossier\net le cheque');
+    });
+
+    it('ne pose pas de lieu quand il est nul ou vide', () => {
+        const [sansLieu] = projeterEvenementsDuTelephone([evenement({ location: null })], CALENDRIERS, AUCUN, '2026-09-08', IOS);
+        const [lieuVide] = projeterEvenementsDuTelephone([evenement({ location: '  ' })], CALENDRIERS, AUCUN, '2026-09-08', IOS);
+        expect('lieu' in sansLieu).toBe(false);
+        expect('lieu' in lieuVide).toBe(false);
     });
 });
 

@@ -10,6 +10,61 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
+### Ajouté
+
+- **Le lieu d'un rendez-vous du téléphone a sa carte.** Il n'était qu'une ligne de texte dans sa
+  fiche ; il y est désormais reconnu comme un lieu et situé sur la même carte qu'un cours, par le
+  service de plans du téléphone, avec le bouton vers les plans. Quand le lieu ne se situe pas —
+  « Chez Marie » —, un bouton « S'y rendre » ouvre les plans sur le texte tel quel.
+
+- **On glisse à nouveau d'un onglet à l'autre, sur la barre.** Le geste, retiré en 6.2.0 parce
+  qu'il cassait sur Android le ruban des jours et les carrousels du Planning, revient là où rien ne
+  défile : glisser sur la barre d'onglets passe à l'onglet voisin, avec la transition d'un appui. Le
+  contenu des pages, lui, ne bouge plus d'onglet — les listes horizontales gardent leur geste.
+
+### Modifié
+
+- **« Réserver » une place en BU est l'action principale de la fiche, et reste dans l'application.**
+  Quelqu'un a proposé par le formulaire une réservation de BU qui existait déjà : le bouton, discret,
+  ne se voyait pas. Il est désormais rempli en primaire, comme le bouton d'une annonce, et la page de
+  réservation Affluences s'ouvre dans la vue intégrée — c'était le dernier lien de l'application à
+  partir dans le navigateur du système.
+
+- **Les ombres Android sont dosées comme celles d'iPhone.** Elles étaient dures et grossières sur
+  Android, où le système les dessinait par « élévation » ; elles passent par un vrai flou, calibré sur
+  les valeurs d'iOS, partout dans l'application. Sur Android 7 et 8, qui ne savent pas le dessiner,
+  les surfaces gardent leur bordure et perdent leur ombre.
+
+- **L'identifiant de testeur tient à l'appareil.** Il survivait mal : perdu à la désinstallation sur
+  Android, effacé par la réinitialisation complète, et remplacé sur iPhone dès que le trousseau se
+  lisait mal un instant — les testeurs se réenregistraient sans cesse. Il est désormais dérivé d'une
+  graine que l'application ne crée ni n'efface : l'identifiant d'appareil du système sur Android, un
+  secret du trousseau sur iPhone, réduits en une empreinte à sens unique. Rien ne quitte l'appareil ;
+  la politique de confidentialité le dit. Les testeurs se réenregistrent une dernière fois.
+
+### Corrigé
+
+- **Le visuel par défaut d'une carte Campus ne clignote plus sous le doigt sur Android.** Le repli
+  était empilé sous l'image en permanence ; pendant l'appui, Android rend l'image translucide et
+  le laissait transparaître. Le repli ne paraît plus que si l'image manque ou échoue, et plus
+  pendant le chargement — en attendant, le gris, comme toute section — ce qui donne au passage un
+  visuel aux cartes de BU et de salles dont l'image ne charge pas.
+- **La réinitialisation complète du menu de développement dit quand l'appareil ne recharge pas.**
+  Sur un Android 9 sous Expo Go, tout était effacé mais l'application restait là, sans rien dire ;
+  elle le dit désormais et demande de la relancer.
+- **Les boutons d'en-tête reparaissent dans Groupes et dans le planning d'un groupe sur les vieux
+  Android.** Sur un Galaxy A8 (Android 9), le bandeau de recherche et le bandeau des jours passaient
+  devant l'en-tête de navigation : retour, étoile et filtre étaient là mais invisibles, dans les deux
+  thèmes. Cause : l'élévation Android de ces bandeaux, qui décidait de l'ordre de dessin. Elle a
+  disparu avec toutes les autres.
+- **L'agenda synchronisé applique enfin les filtres d'UE.** Un utilisateur l'a signalé par le
+  formulaire : les cours masqués dans le Planning arrivaient quand même dans le calendrier du
+  téléphone. La synchronisation écrivait l'année entière sans consulter les filtres. Elle les
+  applique désormais comme l'écran — un cours reste tant qu'une de ses UE n'est pas filtrée —, un
+  filtre qui change relance la synchronisation, et les cours masqués quittent l'agenda au passage
+  suivant. Les rappels reprogrammés depuis les Réglages ignoraient eux aussi les filtres ; plus
+  maintenant.
+
 ## [6.2.0] - 2026-09-08
 
 Le socle monte, ce qui a été signalé se corrige, et trois capacités arrivent au passage. Développée

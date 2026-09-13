@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, Dimensions } from 'react-native';
+import { View, Dimensions } from 'react-native';
 import { tokens } from '../../../../shared/theme/Theme';
 import style from '../../../../shared/theme/Theme';
 import Translator from '../../../../shared/i18n/Translator';
@@ -7,6 +7,7 @@ import { Card } from '../../../../shared/ui/Card';
 import { MetaRow } from '../../../../shared/ui/MetaRow';
 import { CardTitleRow, DistanceBadge } from '../../components/CampusCardParts';
 import { CrousRestaurant } from '../../services/CrousService';
+import { VisuelAvecRepli } from '../../../../shared/ui/VisuelAvecRepli';
 
 const defaultRuImage = require('../../../../../assets/images/default_resto.png');
 const { width } = Dimensions.get('window');
@@ -28,10 +29,7 @@ export function CrousSectionCard({ item, theme, isFavorite, onToggleFavorite, on
             style={{ width: CARD_WIDTH, marginRight: tokens.space.md }}
         >
             <View style={{ width: '100%', height: 160, backgroundColor: theme.greyBackground }}>
-                <Image source={defaultRuImage} style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }} />
-                {item.image_url && (
-                    <Image source={{ uri: item.image_url }} style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }} />
-                )}
+                <VisuelAvecRepli uri={item.image_url} repli={defaultRuImage} style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }} />
             </View>
 
             <View style={{ padding: tokens.space.md }}>

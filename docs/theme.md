@@ -41,9 +41,13 @@ tokens.fontWeight regular 400 · medium 500 · semibold 600 · bold 700
 tokens.shadow     sm · md · lg   (objet prêt à étaler : ...tokens.shadow.sm)
 ```
 
-Les ombres sont des objets complets (`shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`,
-`elevation`) couvrant iOS et Android d'un seul coup : les étaler plutôt que redéfinir les cinq
-propriétés.
+Les ombres sont des objets prêts à étaler, **résolus par plateforme** dans `Theme.ts` depuis 6.2.x :
+iOS garde `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius` ; Android reçoit un
+`boxShadow` calibré sur les mêmes valeurs ([`ombres.ts`](../src/shared/theme/ombres.ts), pur et
+testé ; `tokens.ts` ne porte que les trois nombres de chaque ombre, `ombres.{sm,md,lg}`). Et **plus
+aucune `elevation`, nulle part** — elle dessinait une ombre dure, grossière à côté de celle d'iOS, et
+décidait de l'ordre de dessin. Une ombre hors échelle s'écrit `ombre({ y, flou, opacite })`, jamais à
+la main ; la règle ESLint refuse `elevation` (sauf 0, la négation).
 
 > **`tokens` vit dans son propre fichier**, [`tokens.ts`](../src/shared/theme/tokens.ts), et non par
 > commodité : `Theme.ts` importe `react-native` pour une branche `Platform.OS`, ce qui le rend
@@ -209,6 +213,8 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`SourceFailureNotice`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, bâti sur `EmptyState` | — |
 | [`ScreenState`](../src/shared/ui/ScreenState.tsx) | **l'hôte** d'un état plein écran : il décide où le bloc se pose, pas de quoi il est fait | 6 fois |
 | [`ActionButton`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` | 4 fois |
+| [`PiedDAction`](../src/shared/ui/PiedDAction.tsx) | l'action principale d'une fiche, flottante : un `ActionButton` rempli au gabarit des flottants, sur la fumée de `PiedFlottant` | 2 fois, remonté au 6.2.x |
+| [`VisuelAvecRepli`](../src/shared/ui/VisuelAvecRepli.tsx) | une image distante et son repli : le repli seulement si l'image manque ou échoue, jamais dessous ni avant | 4 fois, remonté au 6.2.x |
 | [`Dialogue`](../src/shared/ui/Dialogue.tsx) | le dialogue informatif : titre, corps, action pleine, sortie secondaire, lien discret — sur le gabarit des popups des Réglages | 3 fois |
 | [`ModaleBientot`](../src/shared/ui/ModaleBientot.tsx) | ce que le voile d'un teaser promet : « bientôt », et la porte du service — une composition de `Dialogue` | 2 fois |
 | [`ChoixEtablissement`](../src/shared/ui/ChoixEtablissement.tsx) | la liste des universités, puis la confirmation de ce que la bascule effacera | 2 fois |
@@ -249,8 +255,11 @@ La liste que **toute session de refonte d'écran vérifie**. Elle est le pendant
    compte » — jamais un bouton Réessayer, qui répare une panne et pas une absence.
 5. **Cibles tactiles ≥ 44 pt.** Une icône de 22 px est une cible de 22 px : elle prend un `hitSlop` ou
    un rembourrage. Le dépôt n'en porte que cinq, tous sur la même étoile de favori.
-6. **Les deux thèmes.** Basculer depuis Réglages et reparcourir l'écran : aucun texte illisible, aucun
-   fond resté clair, aucune teinte sémantique éteinte sur fond noir.
+6. **Les deux thèmes, et les deux appareils.** Basculer depuis Réglages et reparcourir l'écran : aucun
+   texte illisible, aucun fond resté clair, aucune teinte sémantique éteinte sur fond noir. Puis le
+   même écran sur le **Galaxy A8** : un petit écran ancien, où un pied flottant peut couvrir la fin
+   d'une liste, où une ombre se dose autrement, et où l'ordre de dessin n'est pas celui de l'iPhone
+   ([qualite.md](qualite.md#vérification-manuelle)).
 7. **Aucune chaîne en dur**, les trois dictionnaires à jour ([i18n.md](i18n.md)).
 8. **Aucun littéral de style** : `npx eslint <fichier>` ne doit rien signaler de nouveau.
 9. **Aucune forme ronde.** Toute surface est un **carré arrondi** — `radius.md` par défaut,
@@ -511,8 +520,11 @@ Acquises, et qui ont coûté à être trouvées :
 - **Une action hors dialogue a trois formes, et c'est le libellé qui porte le sens, jamais le fond.**
   `filled` (fond `primary`, libellé `lightFont`) pour l'action principale — le même bouton que
   Réessayer. `tonal` et `destructive` partagent **le même fond gris** `greyBackground` et ne diffèrent
-  que par la couleur du libellé, `primary` ou `danger`. Le modèle est le bouton « Réserver » de la
-  fiche d'une bibliothèque, qui pose depuis toujours un libellé `primary` gras sur `greyBackground`.
+  que par la couleur du libellé, `primary` ou `danger`. Le modèle du `tonal` est « Ouvrir dans
+  l'agenda » de la fiche d'un rendez-vous ; le bouton « Réserver » de la fiche d'une bibliothèque,
+  qui l'a été jusqu'en 6.2.x, est devenu **l'action principale de sa fiche**, remplie — un retour du
+  formulaire demandait une réservation qui existait déjà, et c'est ce qu'un bouton discret coûte
+  ([`PiedDAction`](../src/shared/ui/PiedDAction.tsx)).
 
   Une version intermédiaire teintait le fond destructif en `dangerSoft` — du rouge à 8 % sous un
   libellé rouge : le contraste s'effondrait et le bouton se fondait, exactement le défaut qu'on venait
@@ -681,8 +693,9 @@ Acquises, et qui ont coûté à être trouvées :
   éteindre la synchronisation calendrier ouvre une confirmation, et une poignée qui partirait d'avance
   reviendrait en arrière si l'on annule. **Le retour haptique acquitte le geste**, pas la transition
   de la valeur, sinon la confirmation d'une modale ferait vibrer un interrupteur que personne n'a
-  touché. **Un interrupteur s'actionne par un appui, pas par un glissement** : l'écran Réglages
-  accepte le glissement entre onglets, et deux gestes horizontaux s'y disputeraient le doigt.
+  touché. **Un interrupteur s'actionne par un appui, pas par un glissement** : un geste horizontal
+  se disputerait le doigt avec le défilement pour rien (et l'écran Réglages a porté le glissement
+  entre onglets en 6.1-E ; depuis 6.2.x ce geste vit sur la barre).
 
   Un seul jeton a été ajouté, `settings.switchThumb`, partagé par les deux. Le désactivé reste dit par
   la **transparence**, comme partout dans le dépôt.
@@ -695,6 +708,24 @@ Acquises, et qui ont coûté à être trouvées :
   poignée doit se détacher d'une **surface colorée qui porte la valeur**, et de la plus claire d'entre
   elles. Le motif est nommé une fois pour les deux contrôles
   ([`controles.ts`](../src/shared/ui/controles.ts)) et sa **couleur** reste celle des tokens.
+
+- **Un repli d'image ne vit pas sous l'image, ni avant elle : il la remplace** (2026-09-13). Android applique
+  l'opacité d'appui d'un `TouchableOpacity` **vue par vue**, là où iOS compose le groupe : deux
+  couches empilées, la vraie image devient translucide sous le doigt et le repli transparaît — un
+  flash du visuel par défaut, vu sur le Galaxy A8 dans les cartes Campus. [`VisuelAvecRepli`](../src/shared/ui/VisuelAvecRepli.tsx)
+  ne montre le repli que si l'image manque ou échoue — pendant le chargement, le gris du conteneur,
+  comme toute section : un repli en attente faisait le même flash à l'arrivée de l'image. Toute carte
+  à image passe par lui.
+- **Une ombre n'a pas d'`elevation`, et un bandeau posé sous un en-tête transparent n'a pas de Z**
+  (2026-09-11). Sur Android, `elevation` fait deux choses : une ombre dure, sans flou comparable à
+  celui d'iOS, et un **ordre de dessin** — un enfant élevé passe devant ce que `zIndex` avait mis
+  au-dessus. Mesuré sur un Galaxy A8 (Android 9) : le bandeau collant de Groupes et du planning d'un
+  groupe, à `elevation: 2`, recouvrait l'en-tête transparent de navigation, boutons compris, dans les
+  deux thèmes ; les bandeaux jumeaux sans ombre (CROUS, BU, salles) restaient corrects. Depuis,
+  toute ombre est un `boxShadow` sur Android (React Native 0.86, rendu dès l'API 28), résolu par
+  `Theme.ts` depuis les spécifications de `tokens.ombres` ; les ombres plus marquées que l'échelle
+  passent par `ombre({ y, flou, opacite })`. Les deux facteurs Android d'[`ombres.ts`](../src/shared/theme/ombres.ts)
+  sont une calibration, à doser côte à côte avec l'iPhone ; en dessous de l'API 28, pas d'ombre.
 
 ## Vérifier
 

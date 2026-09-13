@@ -3,8 +3,10 @@
 > **Jalon livré (code, base, fonction déployée, console, documentation) le 2026-09-08, et vérifié
 > sur iPhone le jour même** : une notification publiée depuis la console est arrivée sur un appareil
 > réel, application fermée, et l'a ouverte sur la feuille du message. La clé APNs était déjà en
-> place — EAS l'avait créée avec le build de développement. Reste la moitié Android, groupée à
-> [Z](6-1-x-z-sortie.md).** La fonction a été **sondée de bout en bout** le jour même avec un éditeur jetable :
+> place — EAS l'avait créée avec le build de développement. La moitié Android a été jouée le 2026-09-08 à
+> [Z](6-1-x-z-sortie.md), et **la chaîne entière est vérifiée en production le 2026-09-11, sur les
+> deux plateformes** — le silence iOS des tests venait d'une limitation d'Apple/Expo après trop
+> d'envois rapprochés, pas d'un défaut ([plateforme.md](../plateforme.md#les-notifications-push)).** La fonction a été **sondée de bout en bout** le jour même avec un éditeur jetable :
 > un appel anonyme est refusé (403), un message ciblé `ios` avec deux faux jetons (un iOS, un
 > Android) vise **un** appareil, Expo déclare le faux jeton mort et la fonction le retire, le
 > message est marqué notifié, un second appel est refusé (409), le journal porte l'insertion et la
@@ -120,9 +122,10 @@ campus, version.
   garde `isRunningInExpoGo()`, et la réception n'arme rien sous Expo Go. La leçon dépasse ce jalon :
   une garde qui protège un **appel** ne protège pas un **import**, et sur Android la différence est
   entre une capacité absente et une application morte.
-- **La permission n'est jamais demandée par le dépôt** : elle l'est par l'interrupteur des rappels
-  ou celui des messages, dans les Réglages, comme toutes les permissions du dépôt
-  ([plateforme.md](../plateforme.md#permissions)).
+- **La permission n'est pas demandée par le dépôt lui-même** : elle l'est par l'entretien, une fois,
+  quand elle n'a jamais été demandée — la correction est racontée plus bas — et le dépôt n'a lieu que
+  si elle est accordée ([plateforme.md](../plateforme.md#permissions)). *(Cette puce disait d'abord
+  que seuls les interrupteurs la demandaient : c'était le défaut, pas la règle.)*
 - **Une notification ouverte passe devant la règle de présentation** : le message se montre en
   feuille même déjà vu, même si un incident plus pressant existe. C'est ce que l'utilisateur a
   touché.
@@ -160,7 +163,8 @@ Sur le **build de développement** (jamais Expo Go), Metro lancé sur le poste.
 **Le protocole est joué et clos : huit points sur huit, et les deux corrections revérifiées dans la
 foulée** — la colonne Campus de la page Jetons push suit la bascule d'établissement sans relance, la
 rangée et son interrupteur tiennent dans la carte, et une **installation neuve demande la permission
-d'elle-même**, sans toucher aucun interrupteur. Six points étaient passés du premier coup ; deux ont
+d'elle-même**, sans toucher aucun interrupteur — et une **mise à jour** aussi, vérifié en production
+sur les deux plateformes le 2026-09-11. Six points étaient passés du premier coup ; deux ont
 produit une correction, ci-dessous.
 
 **La permission n'était jamais demandée, et le défaut est plus ancien que ce jalon.** Les deux
@@ -174,7 +178,7 @@ premier instant où elle peut paraître. La règle « au moment de l'usage » de
 
 **La demande paraît tôt, et c'est voulu** : l'abonnement à la fin du parcours d'accueil la déclenche
 dès que celui-ci se termine, donc à la première ouverture utile de l'application. Sur une
-installation neuve menée rapidement, elle se lit comme une invite « au lancement » ; c'est le premier
+installation neuve comme après une mise à jour, elle se lit comme une invite « au lancement » ; c'est le premier
 instant où elle est acceptable, et le seul qui garantisse qu'elle soit vue.
 
 **Un libellé long poussait l'interrupteur hors de la carte.** `SettingsButton` interdisait au
@@ -227,8 +231,8 @@ et les rappels.
 ## Limites écrites
 
 - **Rien ne se teste sous Expo Go** : chaque itération demande un build de développement.
-- **Android demande des identifiants FCM** sur EAS (un compte de service Firebase) ; à poser à la
-  vérification Android de [Z](6-1-x-z-sortie.md).
+- **Android demande des identifiants FCM** sur EAS (un compte de service Firebase) ; posés le
+  2026-09-08 ([plateforme.md](../plateforme.md#les-notifications-push)).
 - **La réception n'est pas prouvée.** `notifies` compte les appareils visés, les tickets disent ce
   qu'Expo a accepté, pas ce qui a été affiché.
 - **Le corps de la notification est la première ligne du message**, bornée à 180 caractères.

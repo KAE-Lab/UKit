@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
-import { View, FlatList, Dimensions } from 'react-native';
+import { View, Dimensions } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
@@ -18,6 +18,7 @@ const CARD_WIDTH = width * 0.85;
 import { FreeRoomSectionCard } from './FreeRoomSectionCard';
 import { SectionEtatVide } from './SectionEtatVide';
 import { useChargementDeSection, useRevisionDuTableauDeBord } from '../rafraichissement';
+import { CarrouselDeSection } from './CarrouselDeSection';
 
 export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -121,16 +122,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
                     onOuvrir={() => navigation.navigate('FreeRoomScreen')}
                 />
             ) : (
-                <FlatList
-                    horizontal
-                    data={sortedBuildings}
-                    renderItem={renderCard}
-                    keyExtractor={item => item.id}
-                    showsHorizontalScrollIndicator={false}
-                    snapToInterval={CARD_WIDTH + tokens.space.md}
-                    decelerationRate="fast"
-                    contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
-                />
+                <CarrouselDeSection data={sortedBuildings} renderItem={renderCard} keyExtractor={item => item.id} largeurCarte={CARD_WIDTH} />
             )}
         </View>
     );

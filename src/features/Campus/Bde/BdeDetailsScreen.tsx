@@ -22,7 +22,8 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import style, { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
-import { PiedFlottant, PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
+import { PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
+import { PiedDAction } from '../../../shared/ui/PiedDAction';
 import { VisionneuseImages } from '../../../shared/ui/VisionneuseImages';
 import { CampusMapSection } from '../components/CampusMapSection';
 import { DescriptionAnnonce } from './DescriptionAnnonce';
@@ -95,35 +96,6 @@ function CadreVisuel({ url, theme, onPress }: { url: string; theme: AppThemeType
         >
             <Image source={{ uri: url }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
         </TouchableOpacity>
-    );
-}
-
-/**
- * La barre du geste, flottante sur le contenu : le vocabulaire de la barre de recherche
- * (`PiedFlottant` — objet pose + degrade d'amortissement), et le gabarit du bouton primaire de
- * reference (LienEdtForm), avec l'ombre partagee puisqu'il flotte.
- */
-function BarreDAction({ texte, theme, onPress }: { texte: string; theme: AppThemeType; onPress: () => void }) {
-    return (
-        <PiedFlottant fond={theme.background}>
-            <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={onPress}
-                style={{
-                    backgroundColor: theme.primary,
-                    borderRadius: tokens.radius.md,
-                    height: 50,
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    ...tokens.shadow.md,
-                }}
-            >
-                <Text style={{ color: theme.lightFont, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold }}>
-                    {texte}
-                </Text>
-            </TouchableOpacity>
-        </PiedFlottant>
     );
 }
 
@@ -246,7 +218,7 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                     </Animated.ScrollView>
 
                     {annonce.cta_text && annonce.cta_link ? (
-                        <BarreDAction texte={annonce.cta_text} theme={theme} onPress={handlePressCTA} />
+                        <PiedDAction label={annonce.cta_text} theme={theme} onPress={handlePressCTA} fond={theme.background} />
                     ) : null}
 
                     <VisionneuseImages urls={visuels} index={imageOuverte} fermer={() => setImageOuverte(null)} />

@@ -134,6 +134,7 @@ const fr: TranslationDict = {
 	ALL_DAY: 'Journée entière',
 	OPEN_IN_CALENDAR: 'Ouvrir dans l’agenda',
 	OPEN_IN_CALENDAR_FAILED: 'Impossible d’ouvrir l’événement dans le calendrier',
+	GETTING_THERE_FAILED: 'Impossible d’ouvrir le plan',
 	ADD_EVENT: 'Ajouter un événement',
 	OTHER: 'Autre',
 	RESET: 'Réinitialiser',

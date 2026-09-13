@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Image, Dimensions } from 'react-native';
+import { View, Dimensions } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
@@ -7,6 +7,7 @@ import { Card } from '../../../../shared/ui/Card';
 import { MetaRow } from '../../../../shared/ui/MetaRow';
 import { CardTitleRow, DistanceBadge, LibraryStatusRow } from '../../components/CampusCardParts';
 import { LibraryInfo, AffluencesData, getLibraryStatus } from '../../services/LibraryService';
+import { VisuelAvecRepli } from '../../../../shared/ui/VisuelAvecRepli';
 
 const defaultBuImage = require('../../../../../assets/images/default_resto.png');
 const { width } = Dimensions.get('window');
@@ -26,7 +27,6 @@ export function LibrarySectionCard({ item, affluenceData, navigation, isFavorite
 
     const { isOpen, rate, statusTone, statusText, statusNote } = getLibraryStatus(affluenceData);
 
-    const imageSource = item.imageUrl ? { uri: item.imageUrl } : defaultBuImage;
 
     return (
         <Card
@@ -34,7 +34,7 @@ export function LibrarySectionCard({ item, affluenceData, navigation, isFavorite
             onPress={() => navigation.navigate('LibraryDetails', { library: item, affluence: affluenceData })}
             style={{ width: CARD_WIDTH, marginRight: tokens.space.md }}
         >
-            <Image source={imageSource} style={{ width: '100%', height: 160, resizeMode: 'cover', backgroundColor: theme.greyBackground }} />
+            <VisuelAvecRepli uri={item.imageUrl} repli={defaultBuImage} style={{ width: '100%', height: 160, resizeMode: 'cover', backgroundColor: theme.greyBackground }} />
 
             <View style={{ padding: tokens.space.md }}>
                 <CardTitleRow

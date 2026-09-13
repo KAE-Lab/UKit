@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { codesDUE, estMasque, poserLesUE, preparerPourAffichage, type CoursAvecUE } from './filtresUe';
+import { codesDUE, coursASynchroniser, estMasque, poserLesUE, preparerPourAffichage, type CoursAvecUE } from './filtresUe';
 
 /** Le cours d'intelligence artificielle, sous son code francais et son code anglais. */
 const IA: CoursAvecUE = {
@@ -74,6 +74,29 @@ describe('estMasque', () => {
 
     it('compare verbatim, comme le planning ecrit ses codes', () => {
         expect(estMasque(poserLesUE({ ...ALGO }), ['4tin602u'])).toBe(false);
+    });
+});
+
+describe('coursASynchroniser', () => {
+    it('retire ce que l ecran masque, et garde un cours dont une UE reste', () => {
+        const cours = [{ ...IA }, { ...ALGO }, { ...ANGLAIS }];
+        expect(coursASynchroniser(cours, ['4TIN602U']).map((c) => c.subject)).toEqual([IA.subject, ANGLAIS.subject]);
+        expect(coursASynchroniser(cours, ['4TTV417U'])).toHaveLength(3);
+        expect(coursASynchroniser(cours, ['4TTV417U', '4TTI607U'])).toHaveLength(2);
+    });
+
+    it('ne touche ni au sujet, qui titre l evenement de l agenda, ni aux UE', () => {
+        const cours = [{ ...ALGO }];
+        coursASynchroniser(cours, ['4TTV417U']);
+        expect(cours[0].subject).toBe('4TIN602U Techn algorithmiques et program');
+        expect(cours[0].ues).toBeUndefined();
+    });
+
+    it('rend tout sans filtre, dans une liste neuve', () => {
+        const cours = [{ ...ALGO }];
+        const rendu = coursASynchroniser(cours, []);
+        expect(rendu).toHaveLength(1);
+        expect(rendu).not.toBe(cours);
     });
 });
 

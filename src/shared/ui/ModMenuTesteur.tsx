@@ -20,13 +20,19 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 
 import { dernierRapportMessages, messagesConnus, oublierVus, rafraichirMessages, vusConnus } from '../messages';
-import { estTesteur, identifiantInstallation, rafraichirStatutTesteur } from '../testeur';
+import { estTesteur, lireIdentifiant, rafraichirStatutTesteur, type SourceDIdentifiant } from '../testeur';
 import { deposerLeJeton, etatDuPush, retirerLeJeton, type EtatDepot, type MemoireDeDepot } from '../push';
 import { tokens, type AppThemeType } from '../theme/Theme';
 
 export interface ModMenuTesteurProps {
     readonly theme: AppThemeType;
 }
+
+const SOURCES: Record<SourceDIdentifiant, string> = {
+    appareil: 'appareil (empreinte du SSAID)',
+    trousseau: 'trousseau (empreinte du secret)',
+    session: 'session — graine illisible, non enregistrable',
+};
 
 function Ligne({ theme, cle, valeur, ton }: {
     theme: AppThemeType;
@@ -76,6 +82,7 @@ function rapportEnClair(): string {
 
 export default function ModMenuTesteur({ theme }: ModMenuTesteurProps) {
     const [identifiant, setIdentifiant] = useState<string>('…');
+    const [source, setSource] = useState<SourceDIdentifiant | null>(null);
     const [copie, setCopie] = useState(false);
     const [push, setPush] = useState<{ etat: EtatDepot | null; memoire: MemoireDeDepot | null }>({ etat: null, memoire: null });
     const [, setRevision] = useState(0);
@@ -86,7 +93,7 @@ export default function ModMenuTesteur({ theme }: ModMenuTesteurProps) {
     }, []);
 
     useEffect(() => {
-        void identifiantInstallation().then(setIdentifiant);
+        void lireIdentifiant().then((lu) => { setIdentifiant(lu.valeur); setSource(lu.source); });
         void etatDuPush().then(setPush);
     }, []);
 
@@ -120,6 +127,8 @@ export default function ModMenuTesteur({ theme }: ModMenuTesteurProps) {
             </Text>
 
             <Ligne theme={theme} cle="identifiant" valeur={identifiant} />
+            {/* Quel chemin a repondu : l'appareil (SSAID), le trousseau, ou une identite de session non enregistrable (6.2.x). */}
+            <Ligne theme={theme} cle="source" valeur={source === null ? '…' : SOURCES[source]} />
             <Ligne
                 theme={theme}
                 cle="statut"

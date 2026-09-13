@@ -89,14 +89,14 @@ const EDT_PERSONNELS_KEY = 'UKIT_EDT_PERSONNELS';
  */
 const PROPOSITIONS_KEY = 'UKIT_PROPOSITIONS';
 /**
- * L'identifiant d'installation (jalon 6.1-B) : un UUID genere une fois, qui ne sert qu'a dire si cet
- * appareil est un testeur.
+ * La graine de l'identifiant testeur sur iOS (jalon 6.1-B, derivee depuis 6.2.x) : un secret tire
+ * une fois, dont l'empreinte dit si cet appareil est un testeur. Android n'en a pas besoin — sa graine
+ * est le SSAID du systeme (shared/testeur/identifiant.ts).
  *
- * Au trousseau plutot que dans les reglages parce qu'il doit survivre a « Reinitialiser » — un
- * testeur qui remet ses reglages a zero reste testeur —, et `deleteAllComptes` ne le touche pas pour
- * la meme raison : seule la reinitialisation complete du menu de developpement l'efface. **Non
- * cloisonne**, a la difference de toutes les cles ci-dessus : un appareil, un identifiant, quel que
- * soit l'etablissement. Il ne quitte jamais l'appareil (shared/testeur/identifiant.ts).
+ * Au trousseau parce qu'il doit survivre a tout : « Reinitialiser », la reinitialisation complete du
+ * menu de developpement — qui l'effacait jusqu'en 6.2.x —, une desinstallation. `deleteAllComptes` ne
+ * le touche pas, rien ne l'efface. **Non cloisonne**, a la difference de toutes les cles ci-dessus :
+ * un appareil, un identifiant, quel que soit l'etablissement. Il ne quitte jamais l'appareil.
  */
 const INSTALLATION_ID_KEY = 'UKIT_INSTALLATION_ID';
 
@@ -382,33 +382,22 @@ export default class SecureStoreService {
         }
     }
 
-    /** L'identifiant d'installation, tel quel, ou `null` s'il n'a jamais ete cree. */
+    /**
+     * La graine du trousseau, ou `null` si elle n'a jamais ete creee. **Leve** si le trousseau est
+     * illisible : l'appelant ne doit pas confondre une absence et une erreur — la seconde n'autorise
+     * pas a en creer une nouvelle (6.2.x).
+     */
     static async getInstallationId(): Promise<string | null> {
-        try {
-            return await SecureStore.getItemAsync(INSTALLATION_ID_KEY);
-        } catch (error) {
-            console.error('Error retrieving installation id from SecureStore', error);
-            return null;
-        }
+        return await SecureStore.getItemAsync(INSTALLATION_ID_KEY);
     }
 
+    /** Une seule ecriture par appareil. Lisible des le premier deverrouillage, pour un entretien en fond. */
     static async saveInstallationId(id: string): Promise<boolean> {
         try {
-            await SecureStore.setItemAsync(INSTALLATION_ID_KEY, id);
+            await SecureStore.setItemAsync(INSTALLATION_ID_KEY, id, { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK });
             return true;
         } catch (error) {
             console.error('Error saving installation id to SecureStore', error);
-            return false;
-        }
-    }
-
-    /** Reinitialisation complete seulement : un testeur ne perd pas son inscription en remettant ses reglages a zero. */
-    static async deleteInstallationId(): Promise<boolean> {
-        try {
-            await SecureStore.deleteItemAsync(INSTALLATION_ID_KEY);
-            return true;
-        } catch (error) {
-            console.error('Error deleting installation id from SecureStore', error);
             return false;
         }
     }

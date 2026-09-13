@@ -50,32 +50,15 @@ export const tokens = {
         bold: '700' as const,
     },
     /**
-     * Des objets complets — `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`,
-     * `elevation` — couvrant iOS et Android d'un coup : les etaler plutot que redefinir les cinq
-     * proprietes.
+     * Les ombres, en **specifications** : decalage, flou, opacite, au sens d'iOS. `Theme.ts` les
+     * resout pour la plateforme en `tokens.shadow.{sm,md,lg}`, prets a etaler — iOS garde ses quatre
+     * proprietes, Android recoit un `boxShadow` (ombres.ts). Elles portaient une `elevation`
+     * jusqu'en 6.2.x : ombre dure, et ordre de dessin change sur les vieux Android.
      */
-    shadow: {
-        sm: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.04,
-            shadowRadius: 6,
-            elevation: 2,
-        },
-        md: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.06,
-            shadowRadius: 14,
-            elevation: 5,
-        },
-        lg: {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.08,
-            shadowRadius: 24,
-            elevation: 10,
-        },
+    ombres: {
+        sm: { y: 2, flou: 6, opacite: 0.04 },
+        md: { y: 6, flou: 14, opacite: 0.06 },
+        lg: { y: 10, flou: 24, opacite: 0.08 },
     },
 };
 

@@ -34,9 +34,9 @@
  * ## Pourquoi un appui et pas un glissement
  *
  * Trois raisons, et chacune suffit : la confirmation ci-dessus rendrait un glissement illisible ;
- * l'ecran Reglages accepte le **glissement entre onglets** (6.1-E), et un geste horizontal de
- * cinquante points s'y disputerait le doigt pour rien ; et les lecteurs d'ecran activent par un
- * appui, que `Pressable` recoit nativement.
+ * un geste horizontal de cinquante points se disputerait le doigt avec le defilement pour rien —
+ * et l'ecran Reglages a porte le glissement entre onglets (6.1-E) ; et les lecteurs d'ecran activent
+ * par un appui, que `Pressable` recoit nativement.
  */
 
 import React, { useEffect } from 'react';

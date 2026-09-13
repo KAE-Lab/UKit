@@ -10,7 +10,7 @@ import CampusDashboard from '../../features/Campus/Dashboard/CampusDashboard';
 import ScolariteDashboard from '../../features/Scolarite/screens/ScolariteDashboard';
 import SettingsScreen from '../../features/Settings/screens/SettingsScreen';
 
-import style, { tokens, AppThemeType } from '../theme/Theme';
+import style, { tokens, AppThemeType, ombre } from '../theme/Theme';
 import { TAB_BAR_HEIGHT } from '../ui/ScreenState';
 import { assiseDuFlottant, FondDePiedFlottant, VOILE_PIED } from '../ui/PiedFlottant';
 import { AppContext } from '../services/AppCore';
@@ -20,6 +20,8 @@ import { useCredentials } from '../../features/Scolarite/services/CredentialsCon
 import { Dialogue } from '../ui/Dialogue';
 import { ModaleBientot } from '../ui/ModaleBientot';
 import { parametresDuFormulaire } from './liensDuFormulaire';
+import { GestureDetector } from 'react-native-gesture-handler';
+import { useGlissementDeBarre } from './glissementDOnglets';
 
 export type MainTabParamList = {
     PlanningTab: undefined;
@@ -278,12 +280,16 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
 // Composant Custom Tab Bar pour reproduire l'effet Apple Music (décalé à gauche, ratio icon/text, bords arrondis)
 function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarProps) {
     const { credentials } = useCredentials();
+    // Le glissement entre onglets vit ici, sur la barre : la seule surface du bas sans liste
+    // horizontale (glissementDOnglets.tsx).
+    const glissement = useGlissementDeBarre(state, navigation);
     return (
         <SafeAreaInsetsContext.Consumer>
             {(insets) => {
                 const bottomPadding = assiseDuFlottant(insets);
 
                 return (
+                    <GestureDetector gesture={glissement}>
                     <View style={[styles.tabBarWrapper, { paddingBottom: bottomPadding }]}>
                         {/* La fumee des flottants du bas (PiedFlottant) : la barre d'onglets survole
                             le contenu comme les pieds d'action, elle parle donc pareil. Les quatre
@@ -318,6 +324,7 @@ function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarPro
                             credentials={credentials} 
                         />
                     </View>
+                    </GestureDetector>
                 );
             }}
         </SafeAreaInsetsContext.Consumer>
@@ -329,15 +336,14 @@ export default function MainTabNavigator() {
     const theme = style.Theme[themeName];
 
     /*
-     * Des onglets du bas, **sans pager** — et ce n'est pas la premiere version.
+     * Des onglets du bas, **sans pager**, et on glisse quand meme de l'un a l'autre — sur la barre.
      *
-     * Le jalon 6.1-E avait pose un pager sous la barre pour glisser d'un onglet a l'autre, accorde
-     * sur les quatre onglets apres verification sur iPhone. Android l'a dementi (signale le
-     * 2026-09-07) : le geste horizontal du pager y casse les listes horizontales du Planning — le
-     * ruban des jours, le carrousel des cours simultanes. Un geste qui marche sur une plateforme et
-     * casse l'autre n'est pas une capacite, et le proprietaire du produit n'y tenait pas : le pager
-     * est retire, `react-native-pager-view` avec lui, et la barre flottante redevient la seule
-     * navigation entre onglets — ce qu'elle a toujours ete par ailleurs (jalon 6.1.x-B).
+     * Le jalon 6.1-E avait pose un pager sous la barre ; Android l'a dementi (signale le 2026-09-07) :
+     * `ViewPager2` intercepte le toucher avant ses enfants, et le ruban des jours comme le carrousel
+     * des cours du Planning ne repondaient plus. Le pager est sorti au jalon 6.1.x-B. La 6.2.x a
+     * essaye un geste sur chaque page, que les listes horizontales ont defait sur Android aussi ; le
+     * geste vit depuis sur la barre elle-meme (CustomTabBar, glissementDOnglets.tsx), et la page
+     * bascule au relacher avec la transition `shift` — la meme qu'un appui.
      */
     return (
         <Tab.Navigator
@@ -347,6 +353,8 @@ export default function MainTabNavigator() {
                 headerShown: false,
                 // Le montage paresseux : un onglet ne se monte qu'a sa premiere ouverture.
                 lazy: true,
+                // Le retour visuel du glissement, le meme qu'un appui : un fondu et un leger decalage.
+                animation: 'shift',
             }}
         >
             <Tab.Screen
@@ -385,6 +393,9 @@ export default function MainTabNavigator() {
     );
 }
 
+/** L'ombre de la barre et de son bouton d'action, plus marquee que `shadow.md` : elle flotte sur tout. */
+const OMBRE_DE_LA_BARRE = { y: 4, flou: 8, opacite: 0.15 };
+
 const styles = StyleSheet.create({
     tabBarWrapper: {
         position: 'absolute',
@@ -403,12 +414,9 @@ const styles = StyleSheet.create({
         borderRadius: tokens.radius.md,
         borderWidth: 1,
         height: TAB_BAR_HEIGHT,
-        elevation: 8,
-        // Les deux ombres de la barre sont ecrites a la main, plus marquees que les tokens (docs/theme.md § limites) ; leur couleur est la leur.
-        shadowColor: tokens.shadow.md.shadowColor,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
+        // Les deux ombres de la barre sont plus marquees que les tokens (docs/theme.md § limites) : la
+        // meme resolution par plateforme, avec leurs propres valeurs.
+        ...ombre(OMBRE_DE_LA_BARRE),
         marginRight: tokens.space.xl, // C'est ici qu'on recrée le décalage sur la gauche
     },
     groupButton: {
@@ -418,11 +426,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 8,
-        shadowColor: tokens.shadow.md.shadowColor,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
+        ...ombre(OMBRE_DE_LA_BARRE),
     },
     tabItem: {
         flex: 1,

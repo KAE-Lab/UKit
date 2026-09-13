@@ -65,7 +65,11 @@ Une capacité utilisateur — un écran, une source de données, une option — 
    depuis la passe de code [6.1-C](docs/phase-6/6-1-c-passe-de-code.md) — et elle le reste : un
    avertissement nouveau se corrige, ou se désactive localement avec sa justification écrite
    ([docs/qualite.md](docs/qualite.md)). **`npm test` vert**, sans exception : lui l'est déjà.
-5. **Flux vérifié à la main au moins une fois** sur l'application réelle, pas seulement relu. Chaque
+5. **Flux vérifié à la main au moins une fois** sur l'application réelle, pas seulement relu, **sur les
+   deux plateformes**. Le parc de test permanent est un iPhone 13 Pro et un Galaxy A8 de 2018 sous
+   Android 9 ([docs/qualite.md](docs/qualite.md#vérification-manuelle)) : le rendu et le réseau sont
+   les deux domaines où une plateforme ne dit rien de l'autre, et un petit écran ancien révèle ce
+   qu'un grand récent cache. Chaque
    documentation de partie porte une section « Vérifier » décrivant le parcours attendu. Pour toute
    capacité touchant une source distante, jouer **aussi le chemin dégradé** — hors ligne, source
    injoignable, réponse vide. Un échec propre et explicable est un résultat valide ; un comportement
@@ -78,8 +82,9 @@ Une capacité utilisateur — un écran, une source de données, une option — 
 7. **Prise en main visuelle** pour une capacité liée à l'interface et non triviale : une capture
    ajoutée dans [`docs/screenshots/`](docs/screenshots/README.md) et intégrée à la documentation
    concernée. **Uniquement si l'outillage disponible le permet** — un appareil, un émulateur Android
-   ou un simulateur iOS accessible. À défaut, le signaler dans la Pull Request plutôt que de
-   l'inventer : la capacité reste livrable, la capture se rattrape. Une interaction rudimentaire
+   ou un simulateur iOS accessible ; pour le propriétaire du produit, il le permet toujours, les deux
+   appareils sont sur le poste. Un contributeur sans appareil le signale dans la Pull Request plutôt
+   que de l'inventer : la capacité reste livrable, la capture se rattrape. Une interaction rudimentaire
    (ajouter une ligne à une liste existante) n'en a pas besoin.
 8. **Commits conformes** à la convention.
 
@@ -249,7 +254,8 @@ manuellement. Avant de poser un tag, vérifier la cohérence de `package.json`, 
 * [ ] Aucune chaîne en dur ; les trois dictionnaires sont à jour.
 * [ ] Aucune valeur de style en dur ; tokens utilisés.
 * [ ] Aucun `any` ajouté sans justification.
-* [ ] Parcours vérifié à la main, chemin nominal **et** chemin dégradé.
+* [ ] Parcours vérifié à la main, chemin nominal **et** chemin dégradé, **sur iPhone et sur Android**
+  (le Galaxy A8 pour Android).
 * [ ] Documentation de la partie, « État des lieux » du README et CHANGELOG mis à jour.
 * [ ] Pour un jalon de phase : sa **spécification** porte la bannière « Jalon livré » et ses écarts
   constatés. Le vérifier par `git diff --stat docs/phase-6/` **avant** de commiter, jamais de

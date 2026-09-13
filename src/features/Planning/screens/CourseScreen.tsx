@@ -1,9 +1,10 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Linking, Platform, Text, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // `/legacy`, jamais la racine : ses souches levent a l'appel (shared/services/CalendarSyncHelpers.ts).
 import * as Calendar from 'expo-calendar/legacy';
+import * as Location from 'expo-location';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
@@ -11,6 +12,7 @@ import { getLocations, getLocationsInText, lieuxDesSites, ligneDeSalle } from '.
 import type { LieuDeCours } from '../../../shared/locations/salles';
 import { AppContext } from '../../../shared/services/AppCore';
 import { EmbeddedMap } from '../../../shared/map/EmbeddedMap';
+import { lienVersLePlan } from '../../../shared/map/lienVersLePlan';
 import { withStaticHeader } from '../../../shared/navigation/NavHelpers';
 import { ActionButton } from '../../../shared/ui/ActionButton';
 import { ErrorAlert } from '../../../shared/ui/Alerts';
@@ -24,9 +26,12 @@ export interface CourseProps {
 	headerPadding?: import('react-native').ViewStyle;
 }
 
+/** Ce que la carte demande d'un lieu : un nom et des coordonnees. Un batiment du referentiel en est un. */
+type PointNomme = Pick<LieuDeCours, 'title' | 'lat' | 'lng'>;
+
 export interface CourseState {
 	data: CourseData;
-	locations: LieuDeCours[];
+	locations: PointNomme[];
 }
 
 class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
@@ -56,8 +61,12 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	componentDidMount() {
 		this.props.navigation.setParams({ title: this.state.data.UE || Translator.get('DETAILS') });
 
-		// Pas de lieu pour un evenement du telephone : « Chez Marie » matcherait un batiment (6.1.x-D).
-		if (this.duTelephone()) return;
+		// Pas de resolution contre le referentiel pour un evenement du telephone : « Chez Marie »
+		// matcherait un batiment (6.1.x-D). Son lieu se situe par le geocodeur du systeme (6.2.x).
+		if (this.duTelephone()) {
+			void this.situerLeLieu();
+			return;
+		}
 		const locations = this.resoudreLieux();
 		if (locations.length > 0) {
 			this.setState({ locations });
@@ -77,6 +86,34 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 		} catch {
 			new ErrorAlert(Translator.get('OPEN_IN_CALENDAR_FAILED')).show();
 		}
+	};
+
+	/**
+	 * Le lieu d'un rendez-vous, situe par le geocodeur du **systeme** — celui de l'application de plans
+	 * du telephone, pas un service tiers de l'application — pour la meme carte que celle d'un cours.
+	 * Android exige la permission de localisation pour geocoder : on ne la demande pas pour ca, on
+	 * l'utilise si le Campus l'a deja obtenue. Sans coordonnees — lieu introuvable, hors ligne, pas
+	 * de permission — la fiche garde le bouton « S'y rendre », qui ouvre les plans sur le texte.
+	 */
+	situerLeLieu = async () => {
+		const { lieu } = this.state.data;
+		if (!lieu) return;
+		try {
+			if (Platform.OS === 'android' && (await Location.getForegroundPermissionsAsync()).status !== 'granted') return;
+			const [point] = await Location.geocodeAsync(lieu);
+			if (point !== undefined) this.setState({ locations: [{ title: lieu, lat: point.latitude, lng: point.longitude }] });
+		} catch {
+			// Sans carte : le bouton reste, et rien ne casse.
+		}
+	};
+
+	/** L'application de plans du systeme, sur le lieu tel qu'il a ete ecrit, quand aucune carte n'a pu le situer. */
+	ouvrirLePlan = () => {
+		const { lieu } = this.state.data;
+		if (!lieu) return;
+		Linking.openURL(lienVersLePlan({ adresse: lieu })).catch(() => {
+			new ErrorAlert(Translator.get('GETTING_THERE_FAILED')).show();
+		});
 	};
 
 	/**
@@ -117,8 +154,8 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 		// Un lieu du referentiel peut ne pas porter de coordonnees ; il ne fait alors pas de marqueur —
 		// l'ancien code l'interpolait en `undefined` dans le HTML, et la carte echouait en silence.
 		const markers = this.state.locations
-			.filter((location: LieuDeCours) => location.lat !== undefined && location.lng !== undefined)
-			.map((location: LieuDeCours) => ({
+			.filter((location: PointNomme) => location.lat !== undefined && location.lng !== undefined)
+			.map((location: PointNomme) => ({
 				lat: location.lat as number,
 				lng: location.lng as number,
 				title: location.title || Translator.get('ROOM'),
@@ -195,6 +232,14 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 					</View>
 				)}
 
+				{/* Le lieu d'un rendez-vous, tel quel : il ne se resout pas, il se lit — et s'ouvre plus bas (6.2.x). */}
+				{this.state.data.lieu && (
+					<View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
+						<MaterialIcons name="room" size={16} color={theme.fontSecondary} style={{ marginRight: tokens.space.md }} />
+						<Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, flex: 1 }}>{this.state.data.lieu}</Text>
+					</View>
+				)}
+
 				{this.renderCourseAnnotations(theme)}
 
 				{/* On lit, on ouvre l'editeur du systeme, on ne modifie rien soi-meme (6.1.x-D). */}
@@ -206,6 +251,18 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 						icon={{ name: 'calendar-export' }}
 						onPress={this.ouvrirDansCalendrier}
 						style={{ marginTop: tokens.space.md }}
+					/>
+				)}
+				{/* Seulement sans carte : situee, la carte porte deja son bouton vers les plans. Empile sous le
+				    premier, pas a cote : deux libelles avec icone ne tiennent pas sur 360 dp. */}
+				{this.duTelephone() && this.state.data.lieu && this.state.locations.length === 0 && (
+					<ActionButton
+						theme={theme}
+						variant="tonal"
+						label={Translator.get('GETTING_THERE')}
+						icon={{ name: 'map-marker-radius' }}
+						onPress={this.ouvrirLePlan}
+						style={{ marginTop: tokens.space.sm }}
 					/>
 				)}
 			</View>

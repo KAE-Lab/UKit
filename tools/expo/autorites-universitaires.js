@@ -17,7 +17,8 @@
  * **Le remede.** Android sait, depuis la version 7, lire une configuration de securite reseau qui
  * ajoute des autorites a celles du systeme. On y declare les deux racines HARICA, en gardant
  * `system` : on n'enleve la confiance a personne, on rend simplement a un vieil appareil ce qu'un
- * appareil recent a deja.
+ * appareil recent a deja. Verifie en production le 2026-09-11 sur un Galaxy A8 de 2018 (Android 9)
+ * avec le build 6.2.0 : la moitie universitaire de l'application repond entierement.
  *
  * **Pourquoi elles valent partout et non pour les seuls domaines des deux facs.** Le premier jet
  * les limitait a `u-bordeaux.fr` et `bordeaux-inp.fr`. C'etait contraire a la these du depot : un

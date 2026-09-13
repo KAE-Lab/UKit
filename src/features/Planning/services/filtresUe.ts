@@ -83,6 +83,19 @@ export function estMasque(course: CoursAvecUE, filtres: readonly string[]): bool
 }
 
 /**
+ * Ce que la synchronisation ecrit dans l'agenda : les cours des favoris, le filtre applique.
+ *
+ * Sans `poserLesUE`, a dessein : il mute `subject`, qui titre l'evenement du calendrier — passer par
+ * `preparerPourAffichage` renommerait toute l'annee au passage suivant. `estMasque` lit les codes
+ * sans rien poser. Signale par le formulaire et verifie le 2026-09-11 : l'agenda recevait ce que
+ * l'ecran masquait, alors que les rappels, eux, filtraient deja (entretien.ts).
+ */
+export function coursASynchroniser<T extends CoursAvecUE>(cours: readonly T[], filtres: readonly string[]): T[] {
+    if (filtres.length === 0) return [...cours];
+    return cours.filter((course) => !estMasque(course, filtres));
+}
+
+/**
  * Ce que les ecrans affichent d'une liste de cours : les UE posees, puis le filtre.
  *
  * Le filtre ne s'applique **qu'au planning des favoris** : consulter le planning d'un autre groupe

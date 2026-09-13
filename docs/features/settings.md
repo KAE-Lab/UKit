@@ -190,7 +190,17 @@ et un lecteur d'écran la lit.
 ## Les filtres d'UE
 
 Un filtre masque les cours d'une UE dans le **planning des groupes favoris uniquement**
-([planning.md](planning.md)). Ils ont **leur écran** depuis le 2026-08-30
+([planning.md](planning.md)) — à l'écran, dans les rappels, **et dans l'agenda synchronisé** depuis
+6.2.x. Un utilisateur avait signalé par le formulaire que l'agenda recevait ce que l'écran masquait,
+et c'était vrai : la synchronisation écrivait l'année entière sans consulter les filtres, pendant que
+les rappels de l'entretien les appliquaient déjà. Elle passe désormais par
+[`coursASynchroniser`](../../src/features/Planning/services/filtresUe.ts), qui filtre **sans** poser
+les UE — `poserLesUE` retire le code du sujet, et le sujet titre l'événement de l'agenda : réutiliser
+la préparation de l'écran aurait renommé toute l'année au passage suivant. Un filtre qui change
+déclenche l'entretien comme un favori qui change (origine `filtres`), et la purge de fin d'écriture
+retire d'elle-même les cours masqués. Les rappels reprogrammés depuis les Réglages — rallumer
+l'interrupteur, changer le délai — passaient eux aussi le cache brut de la semaine ; ils passent par
+[`replanifierDepuisLeCache`](../../src/shared/services/entretien.ts), les mêmes cours que l'entretien. Ils ont **leur écran** depuis le 2026-08-30
 ([`FiltersScreen`](../../src/features/Settings/screens/FiltersScreen.tsx), route `Filters`), poussé
 comme les autres sous-pages : c'était une modale qui prenait tout l'écran — une sous-page qui ne
 disait pas son nom, sans en-tête de navigation ni geste de retour. L'écran parle le vocabulaire des
@@ -285,6 +295,7 @@ syncCalendar(origine)
   ├─ crée le calendrier "UKit" au premier passage si c'est la cible
   ├─ PlanningApiService.fetchCalendarForSynchronization(les groupes favoris, agrégés)
   │     └─ Blueprint ukit.celcat.annee, année universitaire complète (août → août)
+  ├─ les filtres d'UE appliqués (coursASynchroniser : un cours reste tant qu'une UE n'est pas filtrée)
   ├─ pour chaque événement : mise à jour si connu, création sinon
   ├─ suppression des événements devenus obsolètes
   ├─ écriture de previousSyncData / previousSyncTime
@@ -359,7 +370,7 @@ dépréciée qu'on soupçonnait :
 [`entretien.ts`](../../src/shared/services/entretien.ts) remplace tout ça par une règle : **la tâche
 de fond est un bonus, l'ouverture de l'application est la garantie.** L'entretien se joue au
 lancement, au vrai retour au premier plan ([`premierPlan`](../../src/shared/services/premierPlan.ts)),
-quand les favoris changent, et par la tâche du système ; hors tâche, il ne part que si le précédent
+quand les favoris ou les filtres d'UE changent, et par la tâche du système ; hors tâche, il ne part que si le précédent
 date de plus de douze heures. Quelqu'un qui ouvre UKit chaque matin a son agenda à jour même si le
 système ne l'a jamais réveillé. Il fait deux choses :
 
@@ -565,6 +576,11 @@ réinitialiser serait un résidu, pas un service.
 - Basculer le mode sombre et parcourir les quatre onglets.
 - Ajouter un filtre d'UE, revenir au planning favori : les cours correspondants doivent disparaître ;
   le retirer depuis la fiche d'un cours doit les faire réapparaître.
+- Synchronisation active, un groupe favori à plusieurs UE (`4TRN901S`) : filtrer une UE puis « Forcer
+  une synchronisation » — l'agenda du téléphone perd ces cours et garde ceux dont une UE reste ;
+  retirer le filtre, ils reviennent. Changer un filtre sans forcer : la ligne d'état porte une
+  tentative d'origine `filtres` (menu de développement, bloc Entretien). Rallumer les rappels : aucun
+  rappel pour une UE filtrée.
 - Activer les notifications, régler le délai, vérifier avec le [mock temporel](../qualite.md) qu'une
   notification arrive bien avant un cours.
 - Activer la synchronisation, choisir « UKit » : le calendrier doit être créé et peuplé. Relancer une

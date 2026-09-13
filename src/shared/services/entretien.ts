@@ -69,8 +69,8 @@ export const EVENEMENT_ENTRETIEN = 'entretienJoue';
 /** Le delai entre deux intervalles de la tache, en **minutes** : l'unite du module, pas celle de l'ancien. */
 const INTERVALLE_TACHE_MIN = INTERVALLE_ENTRETIEN_MS / 60_000;
 
-/** Les favoris changent souvent d'un coup (l'accueil, une bascule) : on attend que la rafale passe. */
-const DELAI_FAVORIS_MS = 1500;
+/** Les favoris et les filtres changent souvent d'un coup (l'accueil, une bascule, une saisie) : on attend que la rafale passe. */
+const DELAI_RAFALE_MS = 1500;
 
 export type OrigineEntretien = Exclude<OrigineSynchro, 'manuel'>;
 
@@ -92,7 +92,7 @@ export interface EtatTacheDeFond {
 
 let enCours: Promise<BilanEntretien> | null = null;
 let dernierBilan: BilanEntretien | null = null;
-let minuteurFavoris: ReturnType<typeof setTimeout> | null = null;
+let minuteurRafale: ReturnType<typeof setTimeout> | null = null;
 
 /** Le dernier bilan, pour le menu de developpement. `null` tant que rien n'a ete joue. */
 export function dernierEntretien(): BilanEntretien | null {
@@ -105,7 +105,7 @@ function journaliser(message: string): void {
 
 /** Les origines qui ne demandent pas la permission de l'echeance : le systeme, la sonde, un reglage. */
 function force(origine: OrigineEntretien): boolean {
-    return origine === 'tache' || origine === 'sonde' || origine === 'favoris' || origine === 'activation';
+    return origine === 'tache' || origine === 'sonde' || origine === 'favoris' || origine === 'activation' || origine === 'filtres';
 }
 
 /**
@@ -165,6 +165,37 @@ async function replanifierLesRappels(): Promise<BilanEntretien['rappels']> {
         CourseManager.preparerPourAffichage(cours, true, SettingsManager.getFilters()),
     );
     return 'replanifies';
+}
+
+/**
+ * Reprogramme les rappels depuis la semaine en cache, sans reseau : le geste des Reglages (rallumer
+ * les rappels, changer le delai) doit repondre tout de suite. Les memes cours que l'entretien et le
+ * Planning — les filtres d'UE appliques ; l'ecran des reglages passait le cache brut (6.2.x).
+ */
+export async function replanifierDepuisLeCache(): Promise<void> {
+    const favoris = SettingsManager.getFavoriteGroups();
+    if (favoris.length === 0) return;
+    const brut = await AsyncStorage.getItem(`${favoris.join('+')}@Week${moment().isoWeek()}`);
+    if (brut === null) return;
+    try {
+        const cache: unknown = JSON.parse(brut);
+        const data = typeof cache === 'object' && cache !== null ? (cache as { data?: unknown }).data : undefined;
+        if (!Array.isArray(data)) return;
+        await NotificationManager.scheduleCourseNotifications(
+            CourseManager.preparerPourAffichage(data as PlanningEvent[], true, SettingsManager.getFilters()),
+        );
+    } catch (erreur) {
+        journaliser(`rappels non replanifies depuis le cache : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+    }
+}
+
+/** Joue l'entretien une fois la rafale passee ; un second appel repousse le premier et garde sa propre origine. */
+function differer(origine: OrigineEntretien): void {
+    if (minuteurRafale !== null) clearTimeout(minuteurRafale);
+    minuteurRafale = setTimeout(() => {
+        minuteurRafale = null;
+        void jouerEntretien(origine);
+    }, DELAI_RAFALE_MS);
 }
 
 async function jouer(origine: OrigineEntretien): Promise<BilanEntretien> {
@@ -322,12 +353,11 @@ export function armerLEntretien(): void {
         void armerLaTacheDeFond();
     });
     SettingsManager.on('favoriteGroups', () => {
-        if (!SettingsManager.getCalendarSyncEnabled()) return;
-        if (minuteurFavoris !== null) clearTimeout(minuteurFavoris);
-        minuteurFavoris = setTimeout(() => {
-            minuteurFavoris = null;
-            void jouerEntretien('favoris');
-        }, DELAI_FAVORIS_MS);
+        if (SettingsManager.getCalendarSyncEnabled()) differer('favoris');
+    });
+    // Un filtre d'UE change ce que l'agenda doit porter, comme un favori (6.2.x).
+    SettingsManager.on('filter', () => {
+        if (SettingsManager.getCalendarSyncEnabled()) differer('filtres');
     });
 }
 

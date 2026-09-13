@@ -163,6 +163,10 @@ ci-dessous.
 > fin d'un chargement de la même façon, et **c'est précisément ce que ces pauses protègent** : un
 > jalon qui touche aux attentes ne peut pas se vérifier sur une seule plateforme. La correction a
 > demandé une publication de plus, le jour même.
+>
+> **Depuis le 2026-09-11, c'est la règle et non plus une leçon** : le second appareil est permanent,
+> et la [définition de terminé](../../CONTRIBUTING.md#définition-de--terminé-) exige les deux
+> plateformes pour tout flux vérifié à la main.
 
 | Ce qui a été joué | Résultat |
 |---|---|

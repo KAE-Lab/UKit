@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import { View, Text, TouchableOpacity, PanResponder, Animated, Dimensions, Image, Platform, DeviceEventEmitter } from 'react-native';
+import { View, Text, TouchableOpacity, PanResponder, Animated, Dimensions, Image, Platform, DeviceEventEmitter, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import moment from 'moment';
 
-import style, { tokens } from '../theme/Theme';
+import style, { tokens, ombre } from '../theme/Theme';
 import { TimeMockService } from '../services/TimeMockService';
 import { NetworkMockService } from '../services/NetworkMockService';
 import { menuAReouvrir } from '../services/simulations';
@@ -28,6 +28,9 @@ type Panneau = keyof typeof PANNEAUX;
 const { width, height } = Dimensions.get('window');
 const ICON_SIZE = 60;
 const MENU_WIDTH = 300;
+// Le contenu defile au-dela : la premiere page depassait un ecran de 5,6 pouces, et le bouton de
+// reinitialisation complete, en bas, etait hors d'atteinte (Galaxy A8, 2026-09-11).
+const MENU_HAUTEUR_MAX = Math.round(Dimensions.get('window').height * 0.7);
 
 export interface ModMenuProps {}
 export interface ModMenuState {
@@ -357,8 +360,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                         backgroundColor: theme.cardBackground,
                         borderRadius: tokens.radius.md,
                         justifyContent: 'center', alignItems: 'center',
-                        shadowColor: tokens.shadow.md.shadowColor, shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.3, shadowRadius: 5, elevation: 8,
+                        ...ombre({ y: 4, flou: 5, opacite: 0.3 }),
                         borderWidth: 1, borderColor: theme.border
                     }]}
                 >
@@ -382,15 +384,14 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     backgroundColor: theme.background,
                     borderRadius: tokens.radius.md,
                     overflow: 'hidden',
-                    shadowColor: tokens.shadow.lg.shadowColor, shadowOffset: { width: 0, height: 10 },
-                    shadowOpacity: 0.3, shadowRadius: 10, elevation: 15,
+                    ...ombre({ y: 10, flou: 10, opacite: 0.3 }),
                     borderWidth: 1, borderColor: theme.border
                 }]}
             >
                 {this.renderExpandedHeader(theme, isActive || isOffline)}
 
                 {/* Content */}
-                <View style={{ padding: tokens.space.md }}>
+                <ScrollView style={{ maxHeight: MENU_HAUTEUR_MAX }} contentContainerStyle={{ padding: tokens.space.md }} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
                     {this.renderTabs(theme, panel)}
                     {panel === 'blueprints' ? (
                         <ModMenuBlueprints theme={theme} />
@@ -411,7 +412,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                             <ModMenuReinitialisation theme={theme} />
                         </>
                     )}
-                </View>
+                </ScrollView>
             </Animated.View>
         );
     }

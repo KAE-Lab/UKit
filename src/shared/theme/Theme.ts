@@ -1,7 +1,29 @@
 /* eslint-disable max-lines */
 import { Platform } from 'react-native';
 
-import { tokens } from './tokens';
+import { tokens as primitives } from './tokens';
+import { resoudreOmbre, type SpecOmbre } from './ombres';
+
+/**
+ * Une ombre, resolue pour la plateforme : iOS garde ses quatre proprietes natives, Android recoit un
+ * `boxShadow` (React Native 0.86, nouvelle architecture, rendu des l'API 28) — un flou dose comme
+ * celui d'iOS, la ou `elevation` dessinait une ombre dure et, pire, decidait de l'ordre de dessin :
+ * sur un Android 9, un bandeau eleve recouvrait l'en-tete transparent de navigation (6.2.x). Les
+ * ombres ecrites a la main hors echelle passent par ici aussi, avec leurs propres valeurs.
+ */
+export function ombre(spec: SpecOmbre) {
+    return resoudreOmbre(spec, Platform.OS);
+}
+
+/** Les tokens, ombres resolues : `...tokens.shadow.sm` s'etale comme avant, sur les deux plateformes. */
+const tokens = {
+    ...primitives,
+    shadow: {
+        sm: ombre(primitives.ombres.sm),
+        md: ombre(primitives.ombres.md),
+        lg: ombre(primitives.ombres.lg),
+    },
+};
 
 
 const colors = {

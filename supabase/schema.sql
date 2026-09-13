@@ -380,7 +380,9 @@ create table if not exists public.visuels (
 -- ligne supprimee.
 --
 -- `uuid` et non `text` : la console colle un identifiant lu sur un ecran, et le type refuse une
--- coquille la ou du texte l'aurait acceptee en silence.
+-- coquille la ou du texte l'aurait acceptee en silence. Depuis 6.2.x l'identifiant est **derive** —
+-- l'empreinte SHA-256 d'une graine d'appareil, mise en forme d'UUID v8 — et non plus tire au hasard ;
+-- la colonne n'a pas change, un UUID v8 en est un (shared/testeur/derivation.ts).
 create table if not exists public.testeurs (
     id       uuid        primary key,
     nom      text        not null,

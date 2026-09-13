@@ -4,6 +4,7 @@
  * Voir docs/pilotage.md.
  */
 
-export { effacerIdentifiantInstallation, identifiantConnu, identifiantInstallation } from './identifiant';
+export { identifiantConnu, identifiantInstallation, lireIdentifiant } from './identifiant';
+export type { Identifiant, SourceDIdentifiant } from './identifiant';
 export { chargerStatutTesteur, estTesteur, rafraichirStatutTesteur } from './statut';
 export type { RapportTesteur } from './statut';

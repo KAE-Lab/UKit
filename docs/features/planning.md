@@ -532,8 +532,9 @@ identique.
 
 Le défaut est ancien ; c'est le **glissement entre onglets** du jalon
 [6.1-E](../phase-6/6-1-e-finitions-interface.md) qui l'a rendu visible, et la raison vaut d'être
-retenue : on voit désormais la page d'arrivée **pendant** le geste, alors qu'un changement d'onglet
-instantané ne laissait pas le temps de voir l'avant. Une nouvelle façon de naviguer révèle ce qu'une
+retenue : on voyait alors la page d'arrivée **pendant** le geste, alors qu'un changement d'onglet
+instantané ne laissait pas le temps de voir l'avant (le pager est parti en 6.1.x-B ; le glissement de
+6.2.x, par geste, bascule au relâcher). Une nouvelle façon de naviguer révèle ce qu'une
 autre masquait.
 
 L'écran ne se vide donc que si le chargement porte sur **autre chose** — un autre jour, une autre
@@ -622,6 +623,18 @@ tombe un dimanche comme un autre jour. La limite des six colonnes ne vaut que po
 bâtiment bordelais —, n'a ni UE ni bouton de filtre, et porte « Ouvrir dans le calendrier »
 (`openEventInCalendarAsync` sur l'occurrence : les récurrents partagent leur identifiant sur iOS,
 d'où `instanceStartDate`). L'appui long « ajouter au calendrier » n'existe pas sur ce qui en vient.
+
+**Le lieu** d'un rendez-vous est un champ à part depuis 6.2.x — `lieu`, posé par la projection et
+jamais par une source de cours, dont les lieux sont des bâtiments. La fiche le montre avec l'icône de
+lieu, et le **situe sur la même carte qu'un cours** : le texte est confié au géocodeur du système —
+celui de l'application de plans du téléphone, `Location.geocodeAsync`, pas un service tiers de
+l'application — et, s'il rend un point, la carte le porte avec son bouton vers les plans. Android
+exige la permission de localisation pour géocoder : elle n'est pas demandée pour ça, elle sert si le
+Campus l'a déjà obtenue. Sans point — lieu introuvable (« Chez Marie »), hors ligne, pas de
+permission — la fiche garde le bouton « S'y rendre », qui ouvre les plans sur le texte tel quel
+([`lienVersLePlan`](../../src/shared/map/lienVersLePlan.ts), le même lien que le bouton de la
+carte des cours). Avant, le lieu était fondu dans la description, où il portait l'icône d'un groupe.
+La politique de confidentialité dit ce que le géocodage envoie.
 
 **Le « + »** ne se montre que si un calendrier coché accepte l'écriture, et pré-positionne l'éditeur
 dessus — c'est ce qui rend vrai « l'événement est dans le Planning au retour » ; l'utilisateur peut

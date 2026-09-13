@@ -219,6 +219,8 @@ export const DayViewHeader: React.FC<DayViewHeaderProps> = (props) => {
             borderBottomColor: props.theme.border,
             paddingTop: (props.insets?.top || 0),
             paddingBottom: tokens.space.sm,
+            // Sous un en-tete de navigation transparent (le planning d'un groupe) : une ombre sans
+            // elevation, sinon le bandeau recouvre les boutons de l'en-tete sur un Android 9 (6.2.x).
             ...tokens.shadow.sm as object,
         }}>
             {renderTitle(props.groupName, props.theme, props.onAjouterEvenement)}

@@ -45,6 +45,15 @@ export default [
       // passer en `error` bloquerait sur du code que la refonte visuelle n'a pas encore repris
       // (docs/phase-6/6-k-socle-visuel.md).
       "ukit/no-style-literals": "warn",
+
+      // Plus d'`elevation` (6.2.x) : sur Android elle dessine une ombre dure et decide de l'ordre de
+      // dessin — un bandeau eleve recouvrait l'en-tete de navigation sur un Android 9. Une ombre
+      // s'ecrit `...tokens.shadow.*` ou `ombre({ y, flou, opacite })`, resolues par plateforme en
+      // `boxShadow`. La valeur 0 reste permise : c'est la negation, celle des en-tetes de navigation.
+      "no-restricted-syntax": ["warn", {
+        selector: "Property[key.name='elevation']:not([value.value=0])",
+        message: "Pas d'elevation : une ombre s'ecrit ...tokens.shadow.* ou ombre({ y, flou, opacite }) (docs/theme.md).",
+      }],
     },
   },
   {
@@ -58,6 +67,7 @@ export default [
     files: [
       "src/shared/theme/Theme.ts",
       "src/shared/theme/tokens.ts",
+      "src/shared/theme/ombres.ts",
       "app.config.ts",
       "**/*.test.ts",
       "**/*.test.tsx",

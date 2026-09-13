@@ -14,7 +14,10 @@ Deux supports :
 
 - **AsyncStorage** — réglages, caches, favoris. Non chiffré.
 - **SecureStore** (`expo-secure-store`) — identifiants CAS et données personnelles de l'étudiant.
-  Chiffré par le trousseau de l'OS.
+  Chiffré par le trousseau de l'OS. **Ce qui survit à une désinstallation** : sur iOS, le trousseau ;
+  sur Android, rien — le greffon exclut ses préférences de la sauvegarde du système, et la clé de
+  chiffrement ne se restaure pas. C'est pourquoi l'identifiant testeur d'Android ne vient pas d'ici
+  ([pilotage.md](pilotage.md#laudience-testeurs)).
 
 ## Le patron : manager singleton observable
 
@@ -147,7 +150,7 @@ Gérées exclusivement par [`SecureStoreService.ts`](../src/shared/services/Secu
 | `UKIT_EDT_PERSONNELS` | l'emploi du temps personnel trouvé dans le dossier, **indexé par code d'établissement** : `{ "bordeaux-inp": { nom, ressource } }` |
 | `UKIT_PROPOSITIONS` | ce que le dossier a proposé et qui **n'a pas encore reçu de réponse**, indexé par code d'établissement. Une entrée disparaît quand l'étudiant a tranché |
 | `UKIT_WIDGETS_PAR_ETAB` | la dernière valeur lue par chaque **widget** de Scolarité — compteur, détail, date de lecture —, **indexée par code d'établissement** |
-| `UKIT_INSTALLATION_ID` | l'**identifiant d'installation** (6.1-B) : un UUID tiré une fois, qui ne sert qu'à dire si l'appareil est un testeur. **Pas indexé** — un appareil, un identifiant. Survit à « Réinitialiser » ; seule la réinitialisation complète l'efface. Ne quitte jamais l'appareil ([pilotage.md](pilotage.md)) |
+| `UKIT_INSTALLATION_ID` | la **graine de l'identifiant testeur sur iOS** (6.1-B, dérivée depuis 6.2.x) : un secret tiré une fois, dont l'empreinte dit si l'appareil est un testeur. Android n'en a pas besoin, sa graine est le SSAID du système. **Pas indexé** — un appareil, un identifiant. Rien ne l'efface, pas même la réinitialisation complète ; le trousseau iOS survit à une désinstallation. Ne quitte jamais l'appareil ([pilotage.md](pilotage.md#laudience-testeurs)) |
 
 **Les six premières clés sont cloisonnées par établissement**, et les deux premières ne l'étaient pas avant le
 2026-08-22. Elles portaient une session unique, effacée à chaque bascule : revenir à sa fac d'origine

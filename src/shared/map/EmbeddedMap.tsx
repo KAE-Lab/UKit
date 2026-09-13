@@ -24,7 +24,7 @@ import { WebView } from 'react-native-webview';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens, type AppThemeType } from '../theme/Theme';
-import { URL } from '../constants/urls';
+import { lienVersLePlan } from './lienVersLePlan';
 
 export interface MapMarker {
     lat: number;
@@ -128,8 +128,7 @@ export function EmbeddedMap({ markers, theme, zoom = 16 }: EmbeddedMapProps) {
     if (markers.length === 0) return null;
 
     const onPressExternalMap = () => {
-        const link = URL.MAP + `search/?api=1&query=${markers[0].lat},${markers[0].lng}`;
-        Linking.openURL(link).catch((err) => console.error('An error occurred', err));
+        Linking.openURL(lienVersLePlan(markers[0])).catch((err) => console.error('An error occurred', err));
     };
 
     return (

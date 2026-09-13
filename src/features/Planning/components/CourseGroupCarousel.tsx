@@ -84,6 +84,7 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 
 	return (
 		<View>
+			{/* Le geste qui commence ici appartient a la liste, jamais aux onglets (glissementDOnglets.tsx). */}
 			<FlatList
 				ref={listeRef}
 				horizontal
@@ -122,8 +123,9 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 									justifyContent: 'center',
 									alignItems: 'center',
 									pointerEvents: 'none',
+									// `zIndex` seul : l'elevation qui l'accompagnait ne dessinait rien (pas de fond)
+									// et decidait de l'ordre de dessin sur les vieux Android (6.2.x).
 									zIndex: 10,
-									elevation: 5,
 								}}
 							>
 								<View

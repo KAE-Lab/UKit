@@ -14,13 +14,12 @@
  *     `SettingsManager.notify` persiste a chaque emission : brancher l'ecriture sur `onChange`
  *     ecrirait le fichier de reglages douze fois par glissement.
  *
- * ## Le geste, et le glissement entre onglets
+ * ## Le geste
  *
- * L'ecran Reglages **accepte le glissement d'onglet** depuis ce meme jalon : deux gestes horizontaux
- * se disputent donc le doigt. Le `Pan` s'active des quatre points (`activeOffsetX`), avant le seuil
- * du pager, et abandonne au-dela de douze points verticaux (`failOffsetY`) pour laisser l'ecran
- * defiler. Si l'appareil dement ce reglage, le repli est ecrit : l'hote coupe `swipeEnabled` entre
- * `onDebut` et `onFin`.
+ * Le `Pan` s'active des quatre points (`activeOffsetX`) et abandonne au-dela de douze points
+ * verticaux (`failOffsetY`) pour laisser l'ecran defiler. Il n'a plus de concurrent horizontal :
+ * le glissement entre onglets a vecu sur la page (6.1-E, puis un essai en 6.2.x) et vit desormais
+ * sur la barre d'onglets seule (shared/navigation/glissementDOnglets.tsx).
  *
  * La bande sensible fait toute la hauteur de la cible tactile, pas celle de la piste : on attrape le
  * curseur sans viser la poignee. Mais **le simple toucher ne deplace rien** — le saut n'a lieu qu'a
@@ -70,8 +69,6 @@ export interface CurseurProps {
     onChange?: (valeur: number) => void;
     /** Au relacher — et apres une action d'accessibilite, qui n'en a pas. */
     onFin?: (valeur: number) => void;
-    /** Le glissement commence : de quoi geler un geste parent, si l'appareil l'exige. */
-    onDebut?: () => void;
     theme: AppThemeType['settings'];
     desactive?: boolean;
     accessibilityLabel?: string;
@@ -81,7 +78,7 @@ export interface CurseurProps {
 }
 
 export function Curseur({
-    valeur, min, max, pas, onChange, onFin, onDebut, theme,
+    valeur, min, max, pas, onChange, onFin, theme,
     desactive = false, accessibilityLabel, libelleValeur, style,
 }: CurseurProps) {
     const echelle: EchelleDeCurseur = { min, max, pas };
@@ -112,18 +109,16 @@ export function Curseur({
         onChange?.(v);
     }, [onChange]);
 
-    const surDebut = useCallback(() => { onDebut?.(); }, [onDebut]);
     const surFin = useCallback((v: number) => { onFin?.(v); }, [onFin]);
 
     const pan = Gesture.Pan()
         .enabled(!desactive)
-        // Avant le seuil du pager d'onglets, et apres celui d'un defilement vertical : voir l'en-tete.
+        // Tot, et apres le seuil d'un defilement vertical : voir l'en-tete.
         .activeOffsetX([-4, 4])
         .failOffsetY([-12, 12])
         .onStart((e) => {
             enCours.value = true;
             x.value = bornerPosition(e.x - POIGNEE / 2, course.value);
-            scheduleOnRN(surDebut);
         })
         .onUpdate((e) => {
             x.value = bornerPosition(e.x - POIGNEE / 2, course.value);

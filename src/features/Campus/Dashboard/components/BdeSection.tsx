@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, FlatList, Dimensions } from 'react-native';
+import { View, Dimensions } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
@@ -11,6 +11,7 @@ import { BdeAnnonceCard } from '../../Bde/BdeAnnonceCard';
 import { SectionEtatVide } from './SectionEtatVide';
 import { useChargementDeSection, useRevisionDuTableauDeBord } from '../rafraichissement';
 import type { BdeAnnonce } from '../../services/BdeService';
+import { CarrouselDeSection } from './CarrouselDeSection';
 
 const { width } = Dimensions.get('window');
 // Une affiche 1:1 a 85 % de largeur serait plus haute que large d'ecran : a 60 %, la carte reste
@@ -62,16 +63,7 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
                     onOuvrir={() => navigation.navigate('Bde')}
                 />
             ) : (
-                <FlatList
-                    horizontal
-                    data={annonces}
-                    renderItem={renderCard}
-                    keyExtractor={item => item.id}
-                    showsHorizontalScrollIndicator={false}
-                    snapToInterval={CARD_WIDTH + tokens.space.md}
-                    decelerationRate="fast"
-                    contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
-                />
+                <CarrouselDeSection data={annonces} renderItem={renderCard} keyExtractor={item => item.id} largeurCarte={CARD_WIDTH} />
             )}
         </View>
     );

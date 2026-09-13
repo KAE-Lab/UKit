@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { CourseData } from './CourseCard';
-import { iconeDAnnotation } from './CourseAnnotations';
+import { iconeDAnnotation, type IconeAnnotation } from './CourseAnnotations';
 import { CalendarNewEventPrompt } from './CalendarNewEventPrompt';
 import { couleurDeCours } from '../services/couleurDeCours';
 
@@ -112,13 +112,14 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		);
 	}
 
-	renderAnnotationsLine(line: string, index: number, theme: import('../../../shared/theme/Theme').AppThemeType, isLargeMode: boolean, estDerniere = false) {
+	renderAnnotationsLine(line: string, index: number, theme: import('../../../shared/theme/Theme').AppThemeType, isLargeMode: boolean, estDerniere = false, icone?: IconeAnnotation) {
 		const trimmedLine = line.trim();
 		if (!trimmedLine) return null;
 
 		// L'icone se deduit du contenu de la ligne, jamais de son rang : avec deux sources d'emploi
-		// du temps, le rang ne veut plus rien dire (CourseAnnotations.ts).
-		const iconName = iconeDAnnotation(trimmedLine);
+		// du temps, le rang ne veut plus rien dire (CourseAnnotations.ts). Sauf quand la donnee la
+		// connait deja : le lieu d'un rendez-vous du telephone est un lieu, quoi qu'il dise.
+		const iconName = icone ?? iconeDAnnotation(trimmedLine);
 
 		// En carrousel, chaque ligne d'infos tient sur une seule ligne : avec le titre borne, les
 		// cours superposes convergent vers la meme hauteur au lieu de dependre de qui wrappe. La
@@ -157,9 +158,13 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 	}
 
 	renderAnnotations(theme: import('../../../shared/theme/Theme').AppThemeType, isLargeMode: boolean) {
-		if (!this.props.data.description) return null;
+		// Le lieu d'un rendez-vous du telephone d'abord (6.2.x) : il etait la premiere ligne de la
+		// description avant d'avoir son champ, la rangee le montrait, elle doit continuer.
+		const lieu = this.props.data.lieu ?? '';
+		if (!this.props.data.description && lieu === '') return null;
 
-		const lines = this.props.data.description.split('\n');
+		const lines = [...(lieu === '' ? [] : [lieu]), ...(this.props.data.description ?? '').split('\n')];
+		const iconeDe = (index: number): IconeAnnotation | undefined => (lieu !== '' && index === 0 ? 'room' : undefined);
 		// La derniere ligne **rendue** : une description peut finir par des lignes vides, que le
 		// rendu ecarte — c'est la derniere non vide qui cotoie l'indicateur du carrousel.
 		let derniere = -1;
@@ -169,11 +174,11 @@ export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
 		if (isLargeMode) {
 			return (
 				<View style={{ marginTop: tokens.space.sm }}>
-					{lines.map((line, index) => this.renderAnnotationsLine(line, index, theme, true))}
+					{lines.map((line, index) => this.renderAnnotationsLine(line, index, theme, true, false, iconeDe(index)))}
 				</View>
 			);
 		} else if (lines.length > 0) {
-			return lines.map((line, index) => this.renderAnnotationsLine(line, index, theme, false, index === derniere));
+			return lines.map((line, index) => this.renderAnnotationsLine(line, index, theme, false, index === derniere, iconeDe(index)));
 		}
 		return null;
 	}

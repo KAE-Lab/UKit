@@ -4,7 +4,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Translator from '../../../shared/i18n/Translator';
-import { tokens } from '../../../shared/theme/Theme';
+import { tokens, ombre } from '../../../shared/theme/Theme';
 import { assiseDuFlottant } from '../../../shared/ui/PiedFlottant';
 
 interface FloatingActionBarProps {
@@ -300,12 +300,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRightWidth: 0,
         height: 75,
-        elevation: 8,
-        // Une ombre ecrite a la main, plus marquee que les tokens (docs/theme.md § limites) ; sa couleur, elle, est la leur.
-        shadowColor: tokens.shadow.md.shadowColor,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
+        // Plus marquee que les tokens (docs/theme.md § limites) : la barre flotte, comme celle des onglets.
+        ...ombre({ y: 4, flou: 8, opacite: 0.15 }),
         paddingLeft: tokens.space.xs,
     },
     handle: {

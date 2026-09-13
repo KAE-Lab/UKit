@@ -23,6 +23,8 @@ export interface CourseData {
 	source?: 'telephone';
 	journeeEntiere?: boolean;
 	idTelephone?: string;
+	/** Le lieu d'un rendez-vous du telephone, tel quel ; jamais pose par une source de cours (PlanningAssembly.ts). */
+	lieu?: string;
 }
 
 export * from './CourseRow';

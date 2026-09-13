@@ -19,9 +19,10 @@
  * Les deux dernieres partagent leur fond, et c'est la correction qui compte : une premiere version
  * teintait le fond destructif en `dangerSoft`, du rouge a 8 %, sous un libelle rouge. Le contraste
  * s'effondrait et le bouton se fondait — exactement le defaut qu'on venait de corriger sur les
- * boutons bordes. **C'est le libelle qui porte le sens, jamais le fond.** Le modele est le bouton
- * « Reserver » de la fiche d'une bibliotheque (`LibraryDetailsScreen`), qui pose depuis toujours un
- * libelle `primary` gras sur `greyBackground`.
+ * boutons bordes. **C'est le libelle qui porte le sens, jamais le fond.** Le modele du `tonal` est
+ * « Ouvrir dans l'agenda » de la fiche d'un rendez-vous (`CourseScreen`) ; le bouton « Reserver »
+ * d'une bibliotheque, qui l'a ete, est devenu l'action principale de sa fiche en 6.2.x — un retour
+ * du formulaire demandait une reservation qui existait deja (`PiedDAction`).
  *
  * Le fond plein reste reserve a deux cas : `primary` pour l'action principale, et `danger` dans les
  * **dialogues** de confirmation (`popup.buttonDestructive`). Une confirmation assume sa gravite, une

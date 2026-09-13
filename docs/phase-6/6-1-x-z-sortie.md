@@ -25,13 +25,19 @@ publications de B (les deux Blueprints de dossier) et de C partent **avant** le 
 vérifie sur iPhone, **note ici ce qu'il laisse à Android**, et Android se joue une fois, à la fin,
 avant le workflow. La liste s'allonge à chaque jalon ; rien ne s'en retire sans avoir été joué.
 
+> **Règle caduque depuis le 2026-09-11.** Le propriétaire du produit dispose en permanence d'un
+> second appareil, un Galaxy A8 de 2018 sous Android 9 : chaque lot se vérifie désormais sur les deux
+> plateformes au fil de l'eau ([CONTRIBUTING](../../CONTRIBUTING.md#définition-de--terminé-),
+> [qualite.md](../qualite.md#vérification-manuelle)). Le tableau reste ce qu'il a été pour cette
+> version.
+
 | Jalon | À vérifier sur Android |
 |---|---|
 | [A](6-1-x-a-montee-du-socle.md) | *fait le 2026-09-06* — ouverture sous l'Expo Go du store, parcours froid, navigation, clavier des filtres d'UE |
 | [B](6-1-x-b-signalements.md) | ~~le ruban des jours et les carrousels du Planning **sans le glissement entre onglets**~~ *(joué le 2026-09-08 — bloqués au premier essai : `gestureEnabled` de la pile capturait le geste horizontal sur Android ; corrigé, revérifié)* ; ~~la page Scolarité sans compte, portes et documents~~ *(joué)* ; l'entretien au retour au premier plan et « Oublier l'échéance » puis relance ; les identifiants du navigateur (mémoriser, remplir, oublier) ; les filtres d'UE sur **`4TRN901S`** — `MI601A`, sur lequel la règle a été mesurée en 2025-2026, ne porte plus que des vacances cette année ; le groupe de remplacement a été trouvé le 2026-09-08 en sondant le serveur, et il est meilleur : il porte les trois formes à la fois, des cours à `4TRNN01U` seul, d'autres à `4TRNN02U` seul, et **onze cours qui portent les deux** (les vendredis 9h30–12h30 à partir du 2 octobre) ; la fiche du compte en échec |
 | [C](6-1-x-c-retours.md) | ~~depuis la pastille d'état de service, ouvrir le formulaire, toucher le lien de la page d'engagement : il s'ouvre par-dessus dans l'application, et « retour » retrouve le formulaire intact~~ *(joué le 2026-09-08 — échouait des deux côtés pour trois causes empilées, voir [defauts-fonctionnels.md](../defauts-fonctionnels.md) ; corrigé, revérifié sur les deux plateformes)* ; puis l'ENT depuis la Scolarité : ses liens restent dans la vue intégrée (la seule ligne de code applicatif du jalon — le reste est livré par publication, et la console et le cron vivent depuis `main`, avancé le 2026-09-07) |
 | [D](6-1-x-d-calendriers-du-telephone.md) | *livré le 2026-09-07, partiellement joué sur Android le 2026-09-08* — la lecture des calendriers a d'abord rendu **zéro événement** : l'éditeur du système écrivait dans un autre calendrier que celui demandé, l'application adopte désormais celui où l'événement a réellement atterri. Reste à jouer : **une journée entière** tient sur son seul jour (datée en UTC à fin exclusive, règle déduite des sources natives, jamais mesurée) et un événement de trois jours couvre les trois ; l'événement à cheval sur minuit apparaît sur les deux jours après refiltrage (`getEventsAsync` ne rend que ce qui tient dans l'intervalle) ; le « + » ouvre l'éditeur du système **et l'événement n'apparaît qu'après la fermeture de l'éditeur**, pas à son ouverture (`startNewActivityTask: false`) ; « Ouvrir dans le calendrier » sur un rendez-vous récurrent ; l'écran des calendriers du téléphone, par source, avec la couleur ; un message ciblé `android` visible, un message ciblé `ios` invisible, une annonce de même |
-| [E](6-1-x-e-notifications-push.md) | *protocole iPhone clos 8/8 le 2026-09-08* — sur un build Android avec les identifiants FCM posés sur EAS : ~~le dépôt du jeton~~ *(joué — la ligne `android` est en base)*, ~~une notification reçue application fermée~~ *(joué — reçue alors que le testeur faisait autre chose)* ; reste : qu'elle **ouvre la feuille**, le canal « Messages de service » visible dans les réglages de notification du système, et une notification qui **surgit** par-dessus l'écran (le canal naissait en importance `DEFAULT`, corrigé le 2026-09-08 — exige de redéployer la fonction), l'interrupteur qui retire la ligne |
+| [E](6-1-x-e-notifications-push.md) | *protocole iPhone clos 8/8 le 2026-09-08* — sur un build Android avec les identifiants FCM posés sur EAS : ~~le dépôt du jeton~~ *(joué — la ligne `android` est en base)*, ~~une notification reçue application fermée~~ *(joué — reçue alors que le testeur faisait autre chose)* ; ~~reste : qu'elle **ouvre la feuille**, le canal « Messages de service » visible dans les réglages de notification du système, et une notification qui **surgit** par-dessus l'écran (le canal naissait en importance `DEFAULT`, corrigé le 2026-09-08 — exige de redéployer la fonction), l'interrupteur qui retire la ligne~~ *(joué en production le 2026-09-11, sur les deux plateformes)* |
 | Z | la tâche de fond sur build : `adb shell dumpsys jobscheduler` liste `ukit-entretien`, et la mesure de 24 heures |
 
 ## Le protocole
@@ -97,7 +103,9 @@ aucune release.
   mi-2021, qui tue **toute** la moitié universitaire de l'application —, et un cinquième qui touchait
   les deux plateformes sans que personne l'ait vu, le teaser qu'un flou ne masquait pas. La leçon
   n'est pas « il fallait Android plus tôt » — le second testeur n'était pas disponible — mais que
-  **le rendu et le réseau sont les deux domaines où une plateforme ne dit rien de l'autre**.
+  **le rendu et le réseau sont les deux domaines où une plateforme ne dit rien de l'autre**. Et
+  depuis le 2026-09-11 le second appareil est permanent — précisément le Galaxy A8 qui a révélé le
+  quatrième défaut : ce prix ne se paie plus.
 - **Deux correctifs Expo sortis le jour même n'ont pas été pris** : `expo` 57.0.21 et
   `expo-calendar` 57.0.3, publiés pendant la passe Android — `expo-doctor` passait 21/21 à 15h45 et
   20/21 à 16h30 sans qu'une ligne du dépôt ait bougé. Toute la vérification de la journée a été
@@ -109,3 +117,6 @@ aucune release.
   et la charge utile sont vérifiés un par un, et Android fonctionne. Reste un envoi depuis la console
   qui arrive sur iPhone : la clé APNs venait d'être assignée, et Apple limite le renouvellement du
   jeton de fournisseur d'une clé neuve. À rejouer sur le build de production, avec la même clé.
+  **Rejoué en production le 2026-09-11 : reçu, sur les deux plateformes.** Le silence venait bien de
+  la limitation — trop d'envois de test rapprochés, et il fallait attendre qu'elle se relâche — et
+  non d'un défaut ; la règle est écrite dans [plateforme.md](../plateforme.md#les-notifications-push).

@@ -9,8 +9,7 @@
  * seul un rechargement fait. C'est un instrument de sonde, pas une capacite utilisateur : il vit
  * derriere le menu de developpement (docs/qualite.md).
  *
- * Trois magasins, dans cet ordre : le trousseau (session, dossier, widgets, liens, propositions,
- * identifiant d'installation), le
+ * Trois magasins, dans cet ordre : le trousseau (session, dossier, widgets, liens, propositions), le
  * repertoire prive de l'application (les documents ranges), puis AsyncStorage en entier — reglages,
  * `firstload`, caches et surcouches publiees. Puis le rechargement — apres avoir range les simulations
  * du menu (HORS LIGNE, date), que la relance perdait : c'est en HORS LIGNE qu'on veut voir ce qu'un
@@ -22,14 +21,16 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DevSettings } from 'react-native';
+import { Alert, DevSettings } from 'react-native';
 import { Directory, Paths } from 'expo-file-system';
 import { reloadAppAsync } from 'expo';
 
 import { purgerTrousseau } from '../etablissements/purge';
 import { garderLesSimulationsPourLaRelance } from './simulations';
-import { effacerIdentifiantInstallation } from '../testeur/identifiant';
 import SecureStoreService from './SecureStoreService';
+
+/** Le temps laisse au rechargement avant de conclure qu'il n'aura pas lieu. */
+const DELAI_RELANCE_MS = 2000;
 
 async function etape(nom: string, action: () => Promise<unknown> | unknown): Promise<void> {
     try {
@@ -66,14 +67,21 @@ async function relancer(): Promise<void> {
         console.log(`[reinitialisation] le socle ne recharge pas ici (${erreur instanceof Error ? erreur.message.split('.')[0] : String(erreur)}) : rechargement de developpement`);
         DevSettings.reload('reinitialisation complete');
     }
+    // Un rechargement qui a lieu emporte ce minuteur avec le contexte JavaScript ; s'il sonne, rien n'a
+    // recharge — un Android 9 sous Expo Go reste la, tout efface, sans le dire (Galaxy A8, 2026-09-13).
+    setTimeout(() => {
+        console.warn('[reinitialisation] aucun rechargement : relance manuelle');
+        Alert.alert('Réinitialisation faite', 'Cet appareil ne recharge pas l’application tout seul : ferme-la et rouvre-la.');
+    }, DELAI_RELANCE_MS);
 }
 
 export async function reinitialiserCompletement(): Promise<void> {
     console.log('[reinitialisation] debut');
     await etape('trousseau', purgerTrousseau);
-    // L'identifiant d'installation ne s'efface qu'ici : « Reinitialiser » des Reglages le garde, pour
-    // qu'un testeur le reste (shared/testeur/identifiant.ts).
-    await etape('identifiant', effacerIdentifiantInstallation);
+    // L'identifiant testeur n'est pas un magasin, il tient a l'appareil : il s'effacait ici jusqu'en
+    // 6.2.x, et c'est ce qui faisait perdre son inscription a un testeur qui sondait. Depuis, on ne
+    // « devient » plus quelqu'un d'autre depuis l'appareil ; revoquer, c'est supprimer la ligne dans
+    // la console (shared/testeur/identifiant.ts).
     await etape('widgets', () => SecureStoreService.deleteWidgets());
     await etape('documents', viderLesDocuments);
     await etape('AsyncStorage', () => AsyncStorage.clear());

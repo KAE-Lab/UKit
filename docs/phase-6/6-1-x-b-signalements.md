@@ -225,7 +225,9 @@ Mesurés les 2026-09-06 et 2026-09-07. Le texte ci-dessus est laissé tel qu'il 
   protocole (2026-09-07) : le pager cassait le ruban des jours et le carrousel des cours du Planning.
   Le navigateur redevient `createBottomTabNavigator`, `react-native-pager-view` et
   `@react-navigation/material-top-tabs` sortent, `@react-navigation/bottom-tabs` revient. Hors
-  périmètre au départ, mais attribuable, et c'est le jalon des signalements.
+  périmètre au départ, mais attribuable, et c'est le jalon des signalements. *Le glissement est de
+  retour en 6.2.x, sans pager : un geste de gesture-handler auquel chaque liste horizontale oppose sa
+  priorité ([navigation.md](../navigation.md)).*
 - **Rallumer la synchronisation synchronise tout de suite** (retour iPhone du 2026-09-07) : éteindre
   retire les cours et la date par construction, et rallumer laissait « Jamais synchronisé » jusqu'à
   l'échéance suivante. L'entretien part à l'activation et au choix de la cible ; `setSyncCalendar`

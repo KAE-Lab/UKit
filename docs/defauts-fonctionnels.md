@@ -19,6 +19,48 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Les boutons d'en-tête sont invisibles dans Groupes et le planning d'un groupe sur un Android 9~~ — corrigé le 2026-09-11
+
+Mesuré par le propriétaire du produit sur un Galaxy A8 de 2018, dans les deux thèmes ; nulle part
+ailleurs. Les deux écrans sont les deux seuls dont le bandeau collant opaque portait une ombre à
+`elevation: 2` **sous un en-tête de navigation transparent** — la pile rend cet en-tête dans la carte,
+à `zIndex: 1` et sans elevation, et sur ce HWUI l'enfant élevé passe devant. Les bandeaux jumeaux
+sans ombre (CROUS, BU, salles libres) fonctionnaient ; le Planning principal a le même bandeau mais
+aucun en-tête de pile derrière. Corrigé à la racine : plus aucune `elevation` dans l'application,
+toute ombre Android est un `boxShadow` résolu par plateforme ([theme.md](theme.md#les-décisions-durables)),
+ce qui dose au passage les ombres Android comme celles d'iOS.
+
+### ~~L'agenda synchronisé ignore les filtres d'UE~~ — corrigé le 2026-09-11
+
+Signalé par le formulaire, vérifié le 2026-09-11. `syncCalendar` passait l'année entière à
+l'écriture sans consulter les filtres, alors que l'écran et les rappels de l'entretien les
+appliquaient. Corrigé par
+[`coursASynchroniser`](../../src/features/Planning/services/filtresUe.ts) — sans `poserLesUE`, qui
+mute le sujet dont l'agenda fait son titre —, une origine d'entretien `filtres` pour que l'agenda
+suive un filtre qui change, et la même règle pour les rappels reprogrammés depuis les Réglages
+([settings.md](features/settings.md#les-filtres-due)).
+
+### ~~Les serveurs des facs échouent en erreur réseau sur les vieux Android~~ — corrigé le 2026-09-08, vérifié en production le 2026-09-11
+
+Trouvé la veille de la sortie de la 6.2.0, sur un Galaxy A8 de 2018 : Celcat, les salles libres,
+l'ENT, Moodle, le webmail et Apogée tombaient ensemble en erreur réseau, pendant que le CROUS,
+Affluences et la base répondaient. Les serveurs des deux facs remontent aux racines HARICA de 2021,
+qu'un Android dont l'image système est antérieure à mi-2021 ne connaît pas — son magasin
+d'autorités ne se met à jour qu'avec le système. Le greffon
+[`autorites-universitaires`](../tools/expo/autorites-universitaires.js) embarque les deux racines
+dans la configuration de sécurité réseau, en gardant celles du système
+([plateforme.md](plateforme.md#les-racines-de-certification-des-universités)). Ne vaut que pour un
+build : sous Expo Go, le binaire n'est pas le nôtre. Défaut antérieur à la 6.2.0.
+
+### ~~La permission de notification n'était jamais demandée~~ — corrigé le 2026-09-08, vérifié en production le 2026-09-11
+
+Les deux interrupteurs de notification sont actifs par défaut, et aucun code ne demandait la
+permission tant qu'on n'en touchait pas un : qui n'avait jamais joué avec ne recevait **aucun
+rappel de cours**, depuis toujours. Trouvé en jouant le protocole push de
+[6.1.x-E](phase-6/6-1-x-e-notifications-push.md). L'entretien la demande une fois, quand elle n'a
+jamais été demandée, jamais pendant l'accueil et jamais après un refus ; en production, sur les deux
+plateformes, l'invite paraît à la première ouverture après l'installation comme après la mise à jour.
+
 ### ~~Lire la page d'engagement depuis le formulaire le fait recommencer~~ — corrigé le 2026-09-07
 
 Rencontré par le propriétaire du produit le jour de la mise en ligne de la page d'engagement
