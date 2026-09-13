@@ -10,6 +10,10 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
+## [6.2.1] - 2026-09-13
+
+Les ajustements d'après sortie, en un seul jalon ([docs/phase-6/6-2-x-ajustements.md](docs/phase-6/6-2-x-ajustements.md)) : ce que la production a confirmé, ce que le formulaire et un Galaxy A8 de 2018 ont montré, et un second appareil de test permanent.
+
 ### Ajouté
 
 - **Le lieu d'un rendez-vous du téléphone a sa carte.** Il n'était qu'une ligne de texte dans sa
