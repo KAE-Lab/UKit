@@ -219,6 +219,13 @@ déployé sur GitHub Pages à chaque poussée sur `main` qui le touche, à l'adr
 `https://kae-lab.github.io/UKit/`. Volontairement rudimentaire en périmètre, pas en finition : une
 liste et un formulaire par table, et deux pages de lecture.
 
+> **Une refonte est ouverte depuis le 2026-09-14** (jalons [7-E](phase-7/7-e-console-socle.md) à
+> [7-H](phase-7/7-h-console-roles.md) de la phase 7) : un socle standard, des listes filtrables et
+> paginées, un filtre par campus, un tableau de bord, l'éditeur d'annonces avec l'aperçu du téléphone,
+> les statistiques, et des rôles pour l'équipe qui arrive — en quatre jalons, sans release. Ce qui suit
+> décrit la console livrée par 6.1-B, 6.1.x-C et 6.1.x-E ; chaque jalon amende cette section à sa
+> livraison.
+
 | Page | Ce qu'elle fait |
 |---|---|
 | Sources | l'état des sondes du matin, et depuis quand |
@@ -295,7 +302,7 @@ Google fait déjà deux choses, et le jalon ne les refait pas : il notifie par m
 et il remplit une **feuille liée**. La plus-value est ailleurs — **l'état et la trace**. Un retour
 rangé ici a un état (`nouveau`, `en attente`, `traité`, `refusé`), une nature reclassable, une
 note ; chaque changement passe par la console et laisse une ligne de journal ; et « les retours
-encore ouverts » devient une requête, pour le propriétaire du produit comme pour un agent.
+encore ouverts » devient une requête, pour le propriétaire du produit comme pour l'équipe.
 
 **La source est la feuille, par son lien.** Partagée « à toute personne disposant du lien », elle se
 lit sans compte à son adresse d'export CSV ; `RETOURS_CSV_URL` porte le lien de partage ou l'adresse

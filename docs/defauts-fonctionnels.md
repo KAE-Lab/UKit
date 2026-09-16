@@ -35,7 +35,7 @@ ce qui dose au passage les ombres Android comme celles d'iOS.
 Signalé par le formulaire, vérifié le 2026-09-11. `syncCalendar` passait l'année entière à
 l'écriture sans consulter les filtres, alors que l'écran et les rappels de l'entretien les
 appliquaient. Corrigé par
-[`coursASynchroniser`](../../src/features/Planning/services/filtresUe.ts) — sans `poserLesUE`, qui
+[`coursASynchroniser`](../src/features/Planning/services/filtresUe.ts) — sans `poserLesUE`, qui
 mute le sujet dont l'agenda fait son titre —, une origine d'entretien `filtres` pour que l'agenda
 suive un filtre qui change, et la même règle pour les rappels reprogrammés depuis les Réglages
 ([settings.md](features/settings.md#les-filtres-due)).

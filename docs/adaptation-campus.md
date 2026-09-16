@@ -1,11 +1,17 @@
 # Adapter un nouveau campus
 
 Comment UKit passe d'une demande — *« mon campus n'est pas dans la liste »* — à un établissement qui
-marche. **Ce chantier est hors version** : rien de ce qui suit n'exige de release, et Bordeaux INP a
+marche. **Ce travail est hors version** : rien de ce qui suit n'exige de release, et Bordeaux INP a
 été mis en ligne comme ça, sans en passer par une ([6-G](phase-6/6-g-etablissements.md)).
 
 Ce document répond à la première demande des utilisateurs. Sur les seize premières réponses du
 formulaire, **neuf demandent un campus** — voir la [mise à plat](phase-6/6-2-mise-a-plat.md) § 2.3.
+
+> **Depuis le 2026-09-14** : trois comptes vont être prêtés — IUT de Bordeaux, campus Victoire,
+> Université Bordeaux Montaigne —, une équipe arrive pour collecter la moitié publique d'un campus, et
+> le travail en cours est le jalon [7-B](phase-7/7-b-nouveaux-campus.md), les fiches se rangent dans
+> [campus/](campus/README.md), avec un [kit d'adaptation](campus/kit-d-adaptation.md) pour l'équipe. Ce
+> document reste la méthode.
 
 ## Ce que la mesure du 2026-09-06 a établi
 
@@ -54,6 +60,10 @@ couverts là où l'établissement se choisit.
 > **Le code `bordeaux` ne bouge pas.** Il partitionne le trousseau, les réglages et les favoris : le
 > renommer déconnecterait tout le parc installé. Seul le libellé change.
 
+Depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), la ligne porte aussi
+`alias` — les mots que les étudiants tapent pour chercher leur campus — et `campus`, le libellé qui
+regroupe ; l'application les lit à partir de la 6.3 ([7-J](phase-7/7-j-ecrans.md)).
+
 Et rendre visible ce qui existe déjà : la ligne `autre` porte `edt.abonnement`, donc **n'importe qui
 peut coller son lien iCal** dans [`LienEdtForm`](../src/features/Planning/components/LienEdtForm.tsx)
 et avoir son emploi du temps aujourd'hui. Presque tous les produits de planning savent exporter en
@@ -84,6 +94,13 @@ est construit depuis le 2026-09-07.
 Tout est déjà câblé : la pastille d'état de service, `ModaleCampusNonRelie` et le bouton
 « Demander » d'un état vide pointent **tous** sur ce formulaire, par `services.adaptation` du
 catalogue. Voir [6.1.x-C](phase-6/6-1-x-c-retours.md).
+
+> **Prévu en [7-C](phase-7/7-c-economie-et-socle.md#4-le-formulaire-pré-rempli)** :
+> l'application ouvrira le formulaire **pré-rempli** — version, plateforme, campus —, ce qui ajoute
+> au catalogue deux gabarits sur l'adresse longue du formulaire, `services.formulaire` et
+> `services.formulaire_campus` — un lien court `forms.gle` ne se pré-remplit pas ;
+> `services.adaptation`, que lisent les versions installées, ne change pas. Les libellés des
+> questions ne bougent pas non plus.
 
 ### 3. La page d'engagement *(écrite le 2026-09-07)*
 
@@ -122,6 +139,8 @@ D'abord ce qui est **public**, et qui se mesure depuis n'importe quel poste : la
 temps de la composante, les bâtiments, les points de balayage des bibliothèques, le motif de
 reconnaissance des salles, la région CROUS. Documenter dans
 [sources-externes.md](sources-externes.md), comme le demande `CONTRIBUTING.md`.
+Depuis le 2026-09-14, cette moitié publique se collecte avec l'équipe, à l'aide du
+[kit d'adaptation](campus/kit-d-adaptation.md).
 
 Puis les Blueprints de portail, sous le préfixe réservé `ukit.portail.`, dans `blueprints/portails/`
 — vérifiés sur le compte prêté **et sur appareil**. C'est là, et nulle part ailleurs, que Bordeaux
@@ -141,6 +160,11 @@ release** — plus les crédits du `README.md` et l'écran À propos. Prénom ou
 > les lignes de `supabase/etablissements.sql`, et le nom dans `COLONNES` de
 > [`src/shared/etablissements/index.ts`](../src/shared/etablissements/index.ts). En oublier un
 > efface des données en silence.
+>
+> **Planifié le 2026-09-14** : `credits` — avec `campus` et `alias` — arrive en base par une migration de
+> [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), valeurs comprises dans
+> `etablissements.sql` ; `COLONNES`, les types, le catalogue et le socle la lisent en 6.3, une fois la
+> base à jour. Les trois gestes sont donc scindés en deux temps, et c'est voulu.
 
 ### 7. Publier, dans l'ordre
 
@@ -170,8 +194,11 @@ le binaire n'embarque un établissement que s'il embarque de quoi le jouer.
 - **La boucle collaborative** (rapport de run partagé par le volontaire, correctif publié à chaud,
   rejeu) : envisagée puis rejetée le 2026-09-06. Trop lente pour les deux parties.
 - **Écrire quoi que ce soit vers la base depuis l'application** : `PRIVACY.md` affirme que la base
-  *« ne reçoit aucune écriture de l'application, par construction »*, et rien de ce chantier ne
-  l'entame.
+  *« ne reçoit aucune écriture de l'application, par construction »*, et rien de ce travail ne
+  l'entame. *Note du 2026-09-14 : la phrase citée n'est plus exacte — l'application dépose un jeton
+  de notification depuis [6.1.x-E](phase-6/6-1-x-e-notifications-push.md), et comptera son usage
+  depuis la 6.2.3 ([7-D](phase-7/7-d-la-mesure.md)), deux écritures bornées que `PRIVACY.md` décrit. Le
+  travail sur les campus, lui, n'écrit toujours rien depuis l'application.*
 - **Publier un campus « en cours d'adaptation »** — une ligne dont les colonnes `portail_*` sont
   nulles, qui tomberait sur le teaser déjà en place. **Possible, mais pas retenu pour l'instant** :
   tant que la moitié publique n'est pas mesurée (étape 5), un étudiant qui choisirait son campus
@@ -182,5 +209,10 @@ le binaire n'embarque un établissement que s'il embarque de quoi le jouer.
 | Campus | Statut |
 |---|---|
 | Talence, Enseirb-Matmeca | **déjà couverts** — étape 1 |
-| Carreire, Sciences humaines, AES, Droit, INSPE | composantes de l'Université de Bordeaux : portail déjà écrit, emploi du temps et géographie à mesurer, **vérification par un compte de cette composante à obtenir** |
-| Université Bordeaux Montaigne | **le seul établissement réellement nouveau** demandé : CAS distinct, ENT distinct, Blueprints à écrire de zéro |
+| IUT de Bordeaux | composante de l'Université de Bordeaux, même CAS ; **un compte prêté annoncé le 2026-09-14** ; emploi du temps et sites à mesurer |
+| Victoire | composante de l'Université de Bordeaux, portail déjà écrit, absente du Celcat de Bordeaux ; **un compte prêté annoncé le 2026-09-14** ; emploi du temps et géographie à mesurer |
+| Carreire, AES, Droit, INSPE | composantes de l'Université de Bordeaux : portail déjà écrit, emploi du temps et géographie à mesurer, **vérification par un compte de cette composante à obtenir** |
+| Université Bordeaux Montaigne | **le seul établissement réellement nouveau** demandé : CAS distinct, ENT distinct, Blueprints à écrire de zéro ; **un compte prêté annoncé le 2026-09-14** |
+
+Les codes proposés, les lots et les fiches de chaque campus sont dans le jalon
+[7-B](phase-7/7-b-nouveaux-campus.md#les-trois-campus).

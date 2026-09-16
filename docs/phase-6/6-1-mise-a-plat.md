@@ -1,6 +1,6 @@
 # v6.1 — Mise à plat, deux jours après la sortie
 
-> **Statut : décisions prises le 2026-09-02**, les neuf questions tranchées en conversation, et
+> **Statut : décisions prises le 2026-09-02**, les neuf questions tranchées en séance, et
 > les jalons spécifiés dans [6.1-A](6-1-a-robustesse-scolarite.md), [B](6-1-b-pilotage-a-distance.md),
 > [C](6-1-c-passe-de-code.md), [D](6-1-d-publication.md), [E](6-1-e-finitions-interface.md) et
 > [Z](6-1-z-sortie.md). Le document reste tel qu'il a été écrit : c'est la trace du raisonnement.
@@ -58,7 +58,7 @@ release, **[D]** limite écrite dans la documentation — et sa nature : **relea
 |---|---|---|---|---|
 | P1 | **Des messages à tous, ou à un établissement, sans release** [K] | La table `service_messages` **existe déjà** (niveau, titre, corps, actif, expiration) — elle a été prévue au jalon 6-B comme « bandeau de service » et **aucun écran ne la lit**. | release, puis publication | Le consommateur : au lancement et au retour au premier plan, un message actif non encore vu s'affiche — **bandeau** pour `info`, **feuille modale** pour `avertissement` et `incident`. Colonnes à ajouter : `etablissements` (liste de codes, vide = tous) et une clé stable pour mémoriser « vu » sur l'appareil. Après la 6.1, une annonce de mise à jour ou d'incident est une ligne de table. Question 3. |
 | P2 | **Des annonces visibles seulement pour certains campus** [K][D] | Nommé et non ouvert au jalon 6-J : *« filtrer la table `annonces` par établissement est un sujet distinct »*. La table n'a pas de colonne pour ça. | release, puis publication | Colonne `etablissements` (vide = tous), filtre côté application sur le code actif. Les versions antérieures ignorent la colonne et voient tout — acceptable, et c'est fini au premier parc migré. |
-| P3 | **Comment publier sans requêtes SQL** [K] | Aujourd'hui : SQL à la main ou par l'agent. Le script `publish-blueprints.mjs` couvre les Blueprints, rien ne couvre les annonces et les messages. | outillage | Trois niveaux, question 4 : **le Studio Supabase** (déjà là : éditeur de table avec formulaires, bucket avec glisser-déposer — zéro code) ; **un petit outil en ligne de commande** `tools/publier-annonce.mjs` (un fichier Markdown avec en-tête → ligne + image téléversée, URL versionnée automatiquement) ; **une console web** d'administration, seulement si la cadence le justifie. Un menu caché **dans l'application** est exclu : il faudrait y embarquer une clé d'écriture, et une clé dans un binaire est publique. |
+| P3 | **Comment publier sans requêtes SQL** [K] | Aujourd'hui : SQL à la main. Le script `publish-blueprints.mjs` couvre les Blueprints, rien ne couvre les annonces et les messages. | outillage | Trois niveaux, question 4 : **le Studio Supabase** (déjà là : éditeur de table avec formulaires, bucket avec glisser-déposer — zéro code) ; **un petit outil en ligne de commande** `tools/publier-annonce.mjs` (un fichier Markdown avec en-tête → ligne + image téléversée, URL versionnée automatiquement) ; **une console web** d'administration, seulement si la cadence le justifie. Un menu caché **dans l'application** est exclu : il faudrait y embarquer une clé d'écriture, et une clé dans un binaire est publique. |
 | P4 | **Remplacer un visuel ne se propage pas** [R] | Les images sont mises en cache par URL ; le fichier seul ne change rien aux appareils déjà passés. | procédure | Règle : chaque remplacement bumpe l'URL (`?v=N`). L'outil de P3 le fait tout seul. À écrire dans `campus-vie-etudiante.md` § Publier. |
 | P5 | **Mise en avant des annonces par créneaux** [D] | Toujours sans contenu pour la calibrer. | — | Reste en 6.2. |
 | P6 | **Surveiller les sources avant que les étudiants ne le fassent** [R] | Le relais est mort un été entier sans qu'on le sache ; Moodle a cassé le soir de la release. Le daemon Aetherius a un ordonnanceur et des canaux de notification. | outillage | Un `schedule` par source critique (Celcat liste des groupes, chaîne SSO Moodle, CAS, ADE) qui joue une sonde chaque matin et **notifie au changement** d'état. Ce n'est pas du code d'application ; c'est ce qui manquait le 18 août. Question 7. |
@@ -99,8 +99,8 @@ recherche de groupes qui plante et un chargement infini. **Les faits, tels que l
   supprimé le relais : les Blueprints interrogent `celcat.u-bordeaux.fr` directement, après avoir
   mesuré que le serveur ne filtre ni `Origin`, ni `Referer`, ni `User-Agent`.
 
-Le commentaire attribue donc à la refonte le défaut qu'elle a corrigé. La réponse est dans la
-conversation qui a produit ce document ; la doc n'a pas à la porter.
+Le commentaire attribue donc à la refonte le défaut qu'elle a corrigé. La réponse a été
+donnée en séance ; la doc n'a pas à la porter.
 
 ## 3. Les questions à trancher
 

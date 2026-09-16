@@ -17,7 +17,7 @@
 >
 > Les références T1…T8 renvoient à la [mise à plat](6-2-mise-a-plat.md). La décision de faire ce
 > saut « dans son propre jalon, après la 6.1 » date du 2026-09-04 et vit dans
-> [plateforme.md](../plateforme.md#le-saut-de-sdk).
+> [plateforme.md](../plateforme.md#monter-de-sdk).
 
 ## La direction
 

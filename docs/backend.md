@@ -37,8 +37,8 @@ seule adresse et fait transiter les identifiants CAS par une machine tierce.
 
 ## Le projet et ses clés
 
-Plan gratuit, un seul projet en région européenne, pas de préproduction — une correction publiée est
-une correction en production. C'est acceptable pour du contenu ; pour les Blueprints, c'est
+Plan **Pro** depuis le 2026-09-14 (gratuit jusque-là), un seul projet en région européenne, pas de
+préproduction — une correction publiée est une correction en production. C'est acceptable pour du contenu ; pour les Blueprints, c'est
 l'interrupteur d'arrêt qui rattrape ([6-C](phase-6/6-c-livraison.md)).
 
 La procédure de création et d'application du schéma est dans
@@ -437,7 +437,9 @@ rend un manifeste périmé visible en une commande. Détail, gardes et retours e
 ## Ce qu'il faut savoir avant d'être surpris
 
 - **Le plan gratuit met un projet en pause après une semaine sans requête.** Sans conséquence en
-  production ; un projet de préproduction dormant réveillera un jour quelqu'un à tort.
+  production ; un projet de préproduction dormant réveillera un jour quelqu'un à tort. Le plan Pro, en
+  place depuis le 2026-09-14, ne met pas le projet de production en pause ; la remarque vaut pour tout
+  projet gratuit à côté de lui.
 - **Le cache HTTP des plateformes est contourné** par le client de livraison (paramètre d'unicité et
   `Cache-Control: no-cache`). Sans cela, iOS et Android peuvent servir un vieux manifeste pendant une
   durée que personne ne contrôle — c'est-à-dire un interrupteur d'arrêt qui n'arrête rien.
@@ -453,12 +455,47 @@ rend un manifeste périmé visible en une commande. Détail, gardes et retours e
   vrais comme **documentation**, et le dépôt du jeton push passe par un adaptateur typé par `Args`.
   Typer le client entier ferait remonter les projections de `select` et se traite à part.
 
-### Les limites du plan gratuit
+### Les limites du plan
 
-Relevées le 2026-08-08 ; elles bougent, et ce tableau vaut d'être revérifié avant de s'en servir pour
-décider.
+> **Le projet est en Pro depuis le 2026-09-14.** Le passage a suivi l'avertissement *Fair Use* de
+> Supabase et une mesure : l'egress en cache avait atteint **10,041 Go** pour un quota de 5
+> ([7-A](phase-7/7-a-bande-passante.md#ce-qui-a-été-mesuré-le-2026-09-14)). Le tableau d'origine,
+> relevé le 2026-08-08 sur le plan gratuit, est gardé plus bas : la décision qu'il portait s'est révélée
+> fausse, et l'erreur mérite de rester lisible.
 
-| Limite | Plan gratuit | Notre usage |
+Relevées le 2026-09-14 sur la page tarifaire de Supabase ; elles bougent, et ce tableau vaut d'être
+revérifié avant de s'en servir pour décider.
+
+| Limite | Pro | Au-delà |
+|---|---|---|
+| Egress | 250 Go par mois | 0,09 $ le Go |
+| Egress en cache, servi par le CDN | 250 Go par mois | 0,03 $ le Go |
+| Stockage de fichiers | 100 Go | 0,0213 $ le Go |
+| Transformations d'image | 100 images d'origine par mois | 5 $ les 1 000 |
+| Sauvegardes | quotidiennes, gardées 7 jours | — |
+| Mise en pause | jamais | — |
+| Prix | à partir de 25 $ par mois, 10 $ de crédits de calcul inclus | — |
+
+**La phrase de décision d'origine était fausse.** Elle disait : « La bande passante est celle qui se
+rapprochera la première, et le calcul est simple : un visuel d'annonce de 200 Ko servi à chaque
+ouverture de l'onglet Campus. Quand on s'en approchera, la réponse est un cache applicatif des annonces,
+pas un plan payant. » Le diagnostic était juste — c'est bien la bande passante, et bien les images —, la
+réponse ne l'était pas, pour deux raisons mesurées :
+
+- **ce ne sont pas les annonces qui pesaient, ce sont toutes les images**, photos de restaurants
+  comprises, servies en `no-cache` et affichées par un composant sans cache disque ; un cache des seules
+  annonces n'aurait rien changé à l'essentiel ;
+- **le plan gratuit n'avait aucune sauvegarde**, et la base porte désormais ce qu'on ne sait pas
+  reconstruire : le catalogue publié, le journal, les retours des utilisateurs.
+
+Le Pro est donc pris, **et** le gaspillage se corrige quand même, par
+[7-A](phase-7/7-a-bande-passante.md) et [7-C](phase-7/7-c-economie-et-socle.md) : les objets re-encodés
+et servis avec un cache d'un an, et côté application `expo-image` et les URL de rendu. Le forfait des
+étudiants et la vitesse ne dépendent pas du quota.
+
+Le tableau d'origine, relevé le 2026-08-08 :
+
+| Limite | Plan gratuit | Notre usage d'alors |
 |---|---|---|
 | Taille de base | 500 Mo | quelques milliers de lignes de texte |
 | Stockage de fichiers | 1 Go | les visuels des annonces, quelques centaines de Ko |
@@ -466,11 +503,33 @@ décider.
 | Utilisateurs actifs mensuels | 50 000 | sans objet — aucun compte |
 | Projets actifs | 2 | un seul, et c'est aussi pourquoi il n'y a pas de préproduction |
 
-La bande passante est celle qui se rapprochera la première, et le calcul est simple : un visuel
-d'annonce de 200 Ko servi à chaque ouverture de l'onglet Campus. Quand on s'en approchera, la réponse
-est un cache applicatif des annonces, pas un plan payant.
+## Ce qui est prévu, et pas encore appliqué
+
+> **Prévu le 2026-09-14 ; rien de ceci n'est en base.** Le modèle de données qu'entraînent les décisions
+> de la [phase 7](phase-7/README.md), tenu en un seul endroit pour que les jalons qui les appliquent
+> n'en écrivent pas plusieurs versions. Chaque ligne rejoint le tableau du schéma, plus haut, le
+> jour où son jalon l'applique — et sort d'ici.
+
+Tout est **additif** et s'applique par **migrations numérotées**
+([7-C](phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt)) : aucune colonne ne se retire avant
+que le parc ait migré.
+
+| Table | Colonnes et objets | Jalon |
+|---|---|---|
+| `annonces` | `type` (`evenement`, `info`, `bon_plan`, `partenaire` ; défaut `evenement`), `emplacements text[]` (défaut `{annonces}`, parmi `annonces`, `restaurants`, `bibliotheques`, `salles`), `ajustement` (`couvrir` ou `contenir` ; défaut `couvrir`, **`contenir` pour les lignes existantes**), `focale jsonb` (défaut `{"x": 0.5, "y": 0.3}`), `priorite` (défaut 0), `epinglee` (défaut faux), `creneaux jsonb`, `statut` (`brouillon`, `publiee`, `archivee` ; défaut `publiee`), `blurhash`, `partenaire jsonb` (`{nom, logo_url, lien}`) ; `check (couleur <> 4)` ; la politique de lecture ajoute `statut = 'publiee' and publiee_le <= now()` | [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives) ; `notifiee_le` et `notifies` en [7-L](phase-7/7-l-la-boucle.md) |
+| `editeurs` | `role` (`admin`, `redacteur`, `lecteur` ; défaut `admin`), `etablissements text[]` (nul pour tous) ; `private.peut_publier(etabs)` | la donnée en [7-C](phase-7/7-c-economie-et-socle.md), les politiques en [7-H](phase-7/7-h-console-roles.md) |
+| `etablissements` | `credits jsonb` (`[{nom, role, lien}]`), `campus text`, `alias text[]` (défaut vide) ; les trois gestes **scindés** : la base et `etablissements.sql` en 6.2.2, `COLONNES`, `types.ts`, `catalogue.ts` et `socle.ts` en 6.3 | [7-C](phase-7/7-c-economie-et-socle.md), puis [7-I](phase-7/7-i-releve-et-vocabulaire.md) |
+| `evenements_connus`, `mesures` | les compteurs anonymes et leur vocabulaire fermé ; RPC `compter(lots jsonb)` ; pas de journal ; purge à treize mois ([mesure.md](mesure.md)) | [7-D](phase-7/7-d-la-mesure.md) |
+| `jetons_push` | `annonces boolean` (défaut faux) : l'accord pour les annonces en notification | [7-L](phase-7/7-l-la-boucle.md) |
+| `retours` | `source` (`formulaire` ou `app` ; défaut `formulaire`), `installation` (nul sauf accord) ; RPC `deposer_retour` | [7-L](phase-7/7-l-la-boucle.md) |
+| `soutien` | `(campus, jour, montant, repas)`, agrégée, lecture publique | [7-N](phase-7/7-n-le-soutien.md) |
+| bucket `media` | objets nommés `<dossier>/<identifiant court>-<slug>.webp`, `cache-control` d'un an ; `?v=N` reste la règle de remplacement de ce qui est posé à la main | [7-A](phase-7/7-a-bande-passante.md), et la console [7-E](phase-7/7-e-console-socle.md) |
 
 ## Migrations
+
+> **Prévu en [7-C](phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt)** : les migrations
+> numérotées du CLI de Supabase, une ligne de base marquée appliquée, et `supabase/migrations/` comme
+> registre de ce que la production porte. Le paragraphe ci-dessous décrit la pratique d'avant.
 
 Le schéma évolue par fichiers versionnés dans [`supabase/`](../supabase/), appliqués dans l'ordre.
 Une évolution qui casserait une version d'application encore installée n'en est pas une : le parc ne

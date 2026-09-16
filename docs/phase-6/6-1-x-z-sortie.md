@@ -82,7 +82,7 @@ la vérification Android ci-dessus jouée en entier.
 **La 6.3 reste la version du mouvement** — 6.2 quand elle a été décidée, renumérotée le 2026-09-08 —,
 telle que le
 [README de phase](README.md#la-v6-part-en-deux-temps--puis-trois) l'a définie le 2026-09-04. Elle
-s'ouvre par [son relevé](6-2-a-releve-et-vocabulaire.md), et la boucle d'itération que cette
+s'ouvre par [son relevé](../phase-7/7-i-releve-et-vocabulaire.md), et la boucle d'itération que cette
 version-ci restaure est ce qui la rend jouable.
 
 **Le [chantier campus](../adaptation-campus.md) court en parallèle**, hors version : il ne demande

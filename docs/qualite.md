@@ -554,10 +554,12 @@ Deux autres façons de dégrader une source, complémentaires plutôt que redond
   d'erreur ([backend.md](backend.md)).
 
 Important : `Date.now()` n'est **pas** modifié, seul `moment.now` l'est. Un code qui date via
-`new Date()` continue de voir l'heure réelle. C'est le cas de
-[`useFreeRoomsData.ts`](../src/features/Campus/FreeRoom/hooks/useFreeRoomsData.ts), qui utilise
-`new Date().getDay()` et `new Date().getHours()` : les salles libres ne suivent que partiellement la
-simulation.
+`new Date()` continue de voir l'heure réelle. C'était le cas de
+[`useFreeRoomsData.ts`](../src/features/Campus/FreeRoom/hooks/useFreeRoomsData.ts) jusqu'au jalon
+[6-E](phase-6/6-e-planning.md) : il lisait `new Date().getDay()` et `new Date().getHours()`, et un
+jour de cours simulé laissait le bâtiment fermé. Il lit `moment()` depuis, et son commentaire porte
+la leçon ; la règle générale est celle de [`maintenant()`](../src/shared/services/Temps.ts), plus
+haut. *(Corrigé le 2026-09-14 : ce paragraphe disait encore `new Date()`.)*
 
 ## Intégration continue
 

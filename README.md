@@ -264,7 +264,7 @@ livré ; elle est mise à jour à chaque contribution.
   test d'écran ni de composant, et l'intégration continue ne joue toujours que la publication.
   **`npx tsc --noEmit` est vert** depuis le 2026-08-16 — il ne l'avait jamais été — et **`npx eslint .`
   est à zéro** depuis la passe de code 6.1-C, trente-cinq avertissements traités un par un ; `npm test`
-  joue 582 tests. [docs/qualite.md](docs/qualite.md)
+  joue 703 tests à la 6.2.1. [docs/qualite.md](docs/qualite.md)
 - [ ] **Le comportement en données** — l'accès aux sources migre vers des
   [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
   et corrigeables sans release. Le socle est en place (6-A), **la base de publication existe** (6-B),
@@ -282,10 +282,12 @@ livré ; elle est mise à jour à chaque contribution.
   utilisable sans écrire une ligne. Le volet 1 est clos ; **le socle visuel est posé** (6-K), **la session
   Scolarité est faite** — elle a commencé par une sonde des deux portails et en a rapporté la
   formation, les documents locaux et la fin des sélecteurs positionnels — **la session annonces
-  aussi** (cartes au format affiche 1:1, liste en grille) ; reste la session des réglages, puis la
-  clôture (6-Z), qui sort la **v6.0** : la version part en deux temps, et ce qui attend le contenu
-  de la rentrée — mise en avant des annonces, compléments Bordeaux INP, notes — part en v6.1
-  ([docs/phase-6/README.md](docs/phase-6/README.md#la-v6-part-en-deux-temps)).
+  aussi** (cartes au format affiche 1:1, liste en grille) ; la session des réglages est rangée dans
+  la 6.3. La clôture (6-Z) a sorti la **v6.0 le 2026-08-31**, et la version est ensuite partie en
+  plusieurs publications : la **6.1** le 2026-09-06 (la consolidation), la **6.2.0** le 2026-09-08
+  (le socle et les demandes), la **6.2.1** le 2026-09-13 (les ajustements d'après sortie, sur
+  GitHub). La suite — deux versions courtes, 6.2.2 et 6.2.3, avant le mouvement de l'interface en
+  6.3 — est la [phase 7](docs/phase-7/README.md), découpée en jalons.
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
   et l'application démarre et s'utilise sans jamais la joindre. Elle porte aussi, depuis la passe de
@@ -521,6 +523,7 @@ document.
 | [docs/pilotage.md](docs/pilotage.md) | le pilotage à distance : messages de service, audience testeurs, ciblage, journal, console, sondes |
 | [docs/adaptation-campus.md](docs/adaptation-campus.md) | adapter un nouveau campus : ce qui se mesure sans compte, le compte prêté et son engagement, l'ordre de publication |
 | [docs/phase-6/](docs/phase-6/README.md) | le cadrage de la migration vers les Blueprints, jalon par jalon |
+| [docs/phase-7/](docs/phase-7/README.md) | de l'application au produit : les décisions d'après la 6.2.1, les publications 6.2.2 à 6.4, les jalons et leur état |
 | [docs/theme.md](docs/theme.md) | tokens, palettes, composants partagés, **recette d'écran** |
 | [docs/inventaire-visuel.md](docs/inventaire-visuel.md) | l'état visuel mesuré du dépôt, avant le socle : littéraux, divergences, manques |
 | [docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md) | les défauts de comportement connus, tenus **à part** de l'esthétique |

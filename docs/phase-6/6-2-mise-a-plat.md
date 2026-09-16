@@ -1,10 +1,10 @@
 # v6.1.x puis v6.2 — Mise à plat, après la sortie de la 6.1
 
-> **Statut : décisions prises le 2026-09-06**, en conversation, et les jalons spécifiés dans
+> **Statut : décisions prises le 2026-09-06**, en séance, et les jalons spécifiés dans
 > [6.1.x-A](6-1-x-a-montee-du-socle.md), [B](6-1-x-b-signalements.md),
-> [C](6-1-x-c-retours.md), [Z](6-1-x-z-sortie.md), puis [6.2-A](6-2-a-releve-et-vocabulaire.md),
-> [B](6-2-b-ecrans.md), [Z](6-2-z-sortie.md). Le document reste tel qu'il a été écrit : c'est la
-> trace du raisonnement.
+> [C](6-1-x-c-retours.md), [Z](6-1-x-z-sortie.md), puis [6.2-A](../phase-7/7-i-releve-et-vocabulaire.md),
+> [B](../phase-7/7-j-ecrans.md), [Z](../phase-7/7-k-sortie-6-3.md). Le document reste tel qu'il a été
+> écrit : c'est la trace du raisonnement.
 >
 > **Écrit le 2026-09-06**, le jour où la 6.1 atteint son point de sortie. Il croise trois choses qui
 > arrivent en même temps — une plateforme qui a bougé sous l'application, les seize premières
@@ -76,6 +76,13 @@ produit — et sa nature : **release** (du code), **publication** (de la donnée
 | B10 | **« Tenter une synchro à chaque ouverture »** [K] *(2026-09-06, après la mise à plat)* | Le code lui donne raison : la tâche de fond n'était jamais réarmée au lancement. | release | **6.1.x-B** : l'entretien — synchro et rappels — au lancement, au retour au premier plan, quand les favoris changent ; la tâche de fond devient un bonus. |
 | B8 | **Le reliquat du backlog 6.0.1** [K] | Diagnostic WebView/WAYF Android par `adb logcat` ; visionneuse PDF Android ; les 18 runs de `ukit.celcat.occupation` du tableau de bord, un par bâtiment. | — | Les deux premiers restent au backlog. Le troisième part en **6.2** : la refonte du tableau de bord le rencontrera de toute façon. |
 
+> **Note du 2026-09-14, sur B8.** Les dix-huit runs de `ukit.celcat.occupation` ne partent pas du
+> tableau de bord mais de la **fiche d'un bâtiment** — `FreeRoomDetailsScreen`, par
+> `useFreeRoomsData` —, **un par salle** (dix-huit pour l'A28), à chaque ouverture ; le tableau de
+> bord ne joue que la liste des salles, en cache sept jours. Ils sont **traités en 6.2.2** par un cache
+> d'occupation par bâtiment et par jour, non plus par la refonte : voir la
+> [phase 7](../phase-7/README.md). La ligne est laissée telle qu'elle a été écrite.
+
 ### 2.3 Les campus demandés
 
 Neuf des seize réponses demandent un campus. C'est de loin la première demande, et la mesure du
@@ -124,7 +131,7 @@ Trois choses ont été mesurées le jour de cette mise à plat, et elles portent
 ## 4. Les questions, et leurs réponses
 
 Contrairement à la [mise à plat de la 6.1](6-1-mise-a-plat.md), les questions ont été tranchées dans
-la conversation même qui a produit ce document. Elles sont conservées avec leur réponse, parce que
+la séance même qui a produit ce document. Elles sont conservées avec leur réponse, parce que
 c'est la réponse qui explique la forme des jalons.
 
 1. **Le découpage.** Une 6.1.x courte (socle, signalements, retours) puis la 6.2 pour le mouvement
