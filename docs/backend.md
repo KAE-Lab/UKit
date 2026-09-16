@@ -285,7 +285,7 @@ Deux buckets :
 | Bucket | Contenu | Accès |
 |---|---|---|
 | `blueprints` | les six fichiers d'instructions et `manifest.json` | lecture publique |
-| `media` | visuels publiés : annonces (`annonces/`), bâtiments (`batiments/`), contenus (`restaurants/`, `bibliotheques/`) | lecture publique |
+| `media` | visuels publiés : annonces (`annonces/`), bâtiments (`batiments/`), établissements (`etablissements/`), contenus (`restaurants/`, `bibliotheques/`) — tous servis avec un **`cache-control` d'un an** depuis [7-A](phase-7/7-a-bande-passante.md) | lecture publique |
 
 **Rien de tout cela ne porte de logique métier.** Pas de fonction qui calcule, pas de vue qui
 calcule. Ce qui se calcule se calcule dans l'application, où c'est typé, relu et vérifié. La base
@@ -392,8 +392,14 @@ pas filtrée côté application.
 **`expire_le` peut rester vide** : une annonce sans date n'expire jamais. La politique la laisse
 passer et l'application l'affiche.
 
-Les visuels vont dans le bucket `media`, sous `annonces/`, `batiments/`, `restaurants/` ou
-`bibliotheques/`, et l'URL publique se colle dans `image_url`.
+Les visuels vont dans le bucket `media`, sous `annonces/`, `batiments/`, `etablissements/`,
+`restaurants/` ou `bibliotheques/`, et l'URL publique se colle dans `image_url`.
+
+**Un visuel posé à la main porte un `cache-control` d'un an** (`max-age=31536000`) — sans quoi il
+recrée le gaspillage que [7-A](phase-7/7-a-bande-passante.md) a corrigé. La console le fait
+d'elle-même, et compresse l'image au passage ; depuis le Studio, c'est un champ à remplir. Le
+ré-encodage d'un objet existant se rejoue par `npm run media:compresser`
+([`tools/media/`](../tools/media/)), qui ne touche que ce qui ne porte pas déjà l'en-tête.
 
 **Remplacer la photo d'un contenu servi par une source tierce** — un restaurant, une bibliothèque, un
 bâtiment, une annonce — se fait par la table `visuels`, une ligne par contenu :
@@ -445,6 +451,17 @@ rend un manifeste périmé visible en une commande. Détail, gardes et retours e
   durée que personne ne contrôle — c'est-à-dire un interrupteur d'arrêt qui n'arrête rien.
 - **Une correction est en production immédiatement.** Il n'y a pas d'étape intermédiaire ; c'est
   l'interrupteur d'arrêt qui joue ce rôle, pas un environnement de recette.
+- **Trois adresses du bucket vivent dans le binaire**, et pas seulement en base :
+  [`assets/locations.json`](../assets/locations.json) porte celle du CRÉMI,
+  [`socle.ts`](../src/shared/etablissements/socle.ts) celles des deux logos. Le parc installé les
+  demande **sans `?v=N`** et ne peut pas recevoir une adresse bumpée. Conséquence, depuis que ces
+  objets portent un cache d'un an ([7-A](phase-7/7-a-bande-passante.md)) : **on ne les remplace plus
+  en place.** Le jour où l'un d'eux doit changer, il se publie sous un **nouveau nom** et la
+  **surcouche en base** — `batiments.image_url`, `etablissements.logo_url` — porte la nouvelle
+  adresse, qui gagne sur le socle embarqué.
+- **La purge du CDN prend environ une minute.** Mesuré le 2026-09-16 : juste après un téléversement,
+  une adresse nue peut encore servir l'ancien objet avec l'ancien en-tête. L'adresse versionnée est
+  une autre clé de cache et rend le nouvel objet tout de suite. Ne pas conclure d'un premier `curl`.
 - **`@supabase/supabase-js` embarque Realtime, Storage et Functions** ; l'application n'en utilise
   aucun, la console appelle une Function depuis 6.1.x-E. C'est le coût assumé de la décision 5 de la
   phase — deux façons de parler à la même base seraient pires qu'une trop grosse.
@@ -523,7 +540,7 @@ que le parc ait migré.
 | `jetons_push` | `annonces boolean` (défaut faux) : l'accord pour les annonces en notification | [7-L](phase-7/7-l-la-boucle.md) |
 | `retours` | `source` (`formulaire` ou `app` ; défaut `formulaire`), `installation` (nul sauf accord) ; RPC `deposer_retour` | [7-L](phase-7/7-l-la-boucle.md) |
 | `soutien` | `(campus, jour, montant, repas)`, agrégée, lecture publique | [7-N](phase-7/7-n-le-soutien.md) |
-| bucket `media` | objets nommés `<dossier>/<identifiant court>-<slug>.webp`, `cache-control` d'un an ; `?v=N` reste la règle de remplacement de ce qui est posé à la main | [7-A](phase-7/7-a-bande-passante.md), et la console [7-E](phase-7/7-e-console-socle.md) |
+| bucket `media` | objets nommés `<dossier>/<identifiant court>-<slug>.webp` — le **`cache-control` d'un an est posé** depuis [7-A](phase-7/7-a-bande-passante.md), le nommage unique reste à faire ; `?v=N` reste la règle de remplacement de ce qui est posé à la main | la console [7-E](phase-7/7-e-console-socle.md) |
 
 ## Migrations
 

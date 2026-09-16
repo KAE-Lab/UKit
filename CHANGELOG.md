@@ -10,6 +10,16 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
+### Modifié
+
+- **Les visuels publiés sont servis avec un cache d'un an, et pèsent quatre fois moins.** Rien à
+  installer : le jalon [7-A](docs/phase-7/7-a-bande-passante.md) s'est joué sur le bucket et la base,
+  et les versions déjà installées en profitent au prochain retour au premier plan. Les visuels
+  étaient servis en `no-cache`, à 400 ou 500 Ko l'unité, ce qui avait porté la bande passante à deux
+  fois le quota du plan : 1 268 892 octets sont devenus 299 000. Un outil du dépôt
+  (`npm run media:compresser`) rejoue la passe, et la console **compresse désormais dans le
+  navigateur** ce qu'elle téléverse.
+
 ## [6.2.1] - 2026-09-13
 
 Les ajustements d'après sortie, en un seul jalon ([docs/phase-6/6-2-x-ajustements.md](docs/phase-6/6-2-x-ajustements.md)) : ce que la production a confirmé, ce que le formulaire et un Galaxy A8 de 2018 ont montré, et un second appareil de test permanent.

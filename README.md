@@ -161,7 +161,7 @@ blueprints/          les fichiers d'instructions embarqués (le socle hors ligne
 supabase/            schéma, gardes et politiques d'accès de la base de publication
 console/             la console de pilotage : publier sans SQL, avec un compte, en laissant une trace
 sondes/              les sondes du matin : chaque source jouée sans identifiant, une issue au changement
-tools/               publication des Blueprints, compte éditeur de la console, harnais de parité, import des retours
+tools/               publication des Blueprints, compte éditeur de la console, harnais de parité, import des retours, compression des visuels
 assets/              icônes, visuels, référentiel des bâtiments du campus, pdf.js vendorisé
 docs/                cette documentation
 ```
@@ -293,7 +293,11 @@ livré ; elle est mise à jour à chaque contribution.
   et l'application démarre et s'utilise sans jamais la joindre. Elle porte aussi, depuis la passe de
   finition, **les visuels** : la photo d'un restaurant, d'une bibliothèque, d'un bâtiment ou d'une
   annonce se remplace par une ligne, pour tout le monde, sans release — ces images venaient jusque-là
-  d'une source tierce et n'étaient corrigeables par rien. [docs/backend.md](docs/backend.md)
+  d'une source tierce et n'étaient corrigeables par rien. Ces visuels sont **servis avec un cache d'un
+  an et pèsent quatre fois moins** depuis le jalon [7-A](docs/phase-7/7-a-bande-passante.md) : ils
+  partaient en `no-cache`, à 400 ou 500 Ko l'unité, ce qui avait porté la bande passante à deux fois
+  le quota du plan. C'est une passe sur le bucket, pas une release : les versions déjà installées en
+  profitent. [docs/backend.md](docs/backend.md)
 - [x] **Livraison des Blueprints** — le registre résout entre le socle embarqué et une surcouche
   publiée, vérifiée à l'empreinte à chaque lecture ; le rafraîchissement est hors du chemin d'un run,
   et un panneau de diagnostic dit d'où vient chaque Blueprint.

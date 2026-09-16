@@ -113,7 +113,19 @@ ignorent ces colonnes et voient tout.
 cache par URL, et le fichier seul ne change rien à ceux qui sont déjà passés. La règle est un
 paramètre de version, `?v=N`, incrémenté à chaque remplacement ; la console l'applique d'elle-même au
 téléversement, et à la main c'est `…/annonces/soiree.jpg?v=2`. Vaut pour `image_url`, pour la galerie,
-et pour la table `visuels`.
+pour la table `visuels`, et aussi pour `batiments.image_url` et `etablissements.logo_url`, qui
+pointent dans le même bucket.
+
+**Et le visuel part compressé, avec un cache d'un an** (7-A) : la console le redimensionne et le
+re-encode en WebP **dans le navigateur** avant l'envoi — 1080 px sur le grand côté pour une affiche,
+1200 px pour une photo — et pose un `cache-control` d'un an au lieu d'une heure. Ce qui est téléversé
+à la main doit porter le même en-tête, sinon il recrée le gaspillage qui avait porté l'egress à deux
+fois le quota ([7-A](../phase-7/7-a-bande-passante.md)).
+
+> **Deux adresses ne peuvent pas être bumpées** : celle du CRÉMI et celles des deux logos
+> d'établissement vivent dans le binaire déjà installé. Elles se remplacent sous un **nouveau nom**,
+> et c'est la ligne en base qui porte la nouvelle adresse
+> ([backend.md](../backend.md#ce-quil-faut-savoir-avant-dêtre-surpris)).
 
 Deux garde-fous, et ils ne font pas la même chose : `active = false` retire une annonce
 **maintenant**, `expire_le` la fait disparaître d'elle-même à échéance. Les deux sont appliqués par

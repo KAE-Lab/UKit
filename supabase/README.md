@@ -175,8 +175,12 @@ La table `visuels` remplace la photo d'un contenu servi par une **source tierce*
 CROUS, une bibliothèque, un bâtiment, une annonce. Elle n'a aucun socle embarqué : sans ligne, la
 photo reste celle de la source, exactement comme avant qu'elle n'existe.
 
-1. Téléverser l'image dans le bucket `media`, sous `restaurants/`, `bibliotheques/`, `batiments/` ou
-   `annonces/`, et copier son URL publique.
+1. Téléverser l'image dans le bucket `media`, sous `restaurants/`, `bibliotheques/`, `batiments/`,
+   `etablissements/` ou `annonces/`, **avec un `cache-control` d'un an** (`max-age=31536000`), et
+   copier son URL publique. La console le fait d'elle-même et compresse l'image au passage ; depuis le
+   Studio, c'est un champ à remplir. Sans cet en-tête, l'objet recrée le gaspillage d'egress que le
+   jalon [7-A](../docs/phase-7/7-a-bande-passante.md) a corrigé — et `npm run media:compresser`
+   rattrape ce qui aurait été posé sans lui.
 2. Écrire la ligne. La clé est l'identifiant du contenu **chez sa source**, et elle ne se devine pas
    de la même façon selon le domaine :
 

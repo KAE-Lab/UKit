@@ -10,6 +10,13 @@ le jalon [6.1.x-C](../docs/phase-6/6-1-x-c-retours.md). Ce qu'elle est et ce qu'
 valident avec le moteur, se rejouent par la parité et se publient par `npm run blueprints:publish`.
 Une console qui les éditerait à la main détruirait ces garanties.
 
+**Un visuel téléversé est compressé avant de partir** ([`src/lib/televerser.ts`](src/lib/televerser.ts),
+jalon [7-A](../docs/phase-7/7-a-bande-passante.md)) : redimensionné à 1080 px sur le grand côté pour
+une affiche d'annonce, 1200 px pour une photo, re-encodé en WebP qualité 75, et posé avec un
+`cache-control` d'un an. Une photo prise au téléphone pèse quelques mégaoctets ; sans cette étape,
+chaque visuel publié recréait le gaspillage d'egress que ce jalon a corrigé. Le nom d'objet unique et
+le blurhash restent à [7-E](../docs/phase-7/7-e-console-socle.md).
+
 ## Lancer
 
 Depuis la racine du dépôt, avec `SUPABASE_URL` et `SUPABASE_ANON_KEY` dans le `.env` (les mêmes que

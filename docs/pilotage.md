@@ -231,7 +231,7 @@ liste et un formulaire par table, et deux pages de lecture.
 | Sources | l'état des sondes du matin, et depuis quand |
 | Journal | consulter, filtrer par table et par opération, **exporter en JSON** |
 | Retours | ce que les utilisateurs écrivent dans le formulaire, importé toutes les 72 heures ; **reclasser** (nature, état) et **noter** — le reste est ce qui a été dit, en lecture seule |
-| Annonces | créer, modifier, désactiver ; téléverser le visuel, dont l'adresse est versionnée d'elle-même (`?v=N`) ; audience, campus, versions |
+| Annonces | créer, modifier, désactiver ; téléverser le visuel — **compressé dans le navigateur et posé avec un cache d'un an** depuis [7-A](phase-7/7-a-bande-passante.md) —, dont l'adresse est versionnée d'elle-même (`?v=N`) ; audience, campus, versions |
 | Messages de service | la même chose pour `service_messages` ; la clé est proposée depuis le titre |
 | Testeurs | les appareils qui voient l'audience `testeurs`, avec un nom |
 | Visuels, Établissements, Salutations, Bâtiments, Version publiée | l'édition des lignes, avec l'avertissement que chaque table mérite — « une ligne s'écrit entière », les trois états d'un visuel, un champ vide qui ne corrige rien |

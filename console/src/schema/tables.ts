@@ -155,7 +155,7 @@ export const ETABLISSEMENTS: Descripteur = {
         { nom: 'nom', libelle: 'Nom', type: { type: 'texte' }, obligatoire: true },
         { nom: 'nom_court', libelle: 'Nom court', type: { type: 'texte' } },
         { nom: 'ville', libelle: 'Ville', type: { type: 'texte' } },
-        { nom: 'logo_url', libelle: 'Logo', type: { type: 'image', dossier: 'logos' } },
+        { nom: 'logo_url', libelle: 'Logo', type: { type: 'image', dossier: 'etablissements' } },
         { nom: 'actif', libelle: 'Actif', type: { type: 'booleen' }, defaut: true },
         { nom: 'ordre', libelle: 'Ordre', type: { type: 'nombre' }, defaut: 0 },
         { nom: 'portail_dossier', libelle: 'Blueprint du dossier', type: { type: 'texte' } },
