@@ -32,3 +32,5 @@
 
 - **Le soutien dépend de l'équipe et de l'association** : la phase peut se clore sans lui, à condition de
   l'écrire ici.
+- **Les campus dépendent de comptes prêtés**, et leurs lots passent après la 6.3 : la phase peut se clore
+  avec des campus reportés, à condition d'écrire lesquels et pourquoi.

@@ -5,6 +5,10 @@
 > trois campus, puis un lot par campus. La méthode est celle
 > d'[adaptation-campus.md](../adaptation-campus.md), qui reste le document de référence ; les fiches des
 > campus se rangent dans [campus/](../campus/README.md).
+>
+> **Décalé le 2026-09-16 :** le lot 1, le relevé public, s'ouvre quand on veut ; **les lots 2 à 4, ceux
+> qui publient un campus, passent après la sortie de la 6.3** ([7-K](7-k-sortie-6-3.md)), quand
+> l'application sait les accueillir. Les comptes prêtés ne sont pas encore réunis : rien ne presse.
 
 ## La direction
 
@@ -18,6 +22,14 @@ campus est un Celcat ou un export iCalendar.
 voisin n'a pas, et Bordeaux INP en a trouvé huit, sur appareil ([6-G](../phase-6/6-g-etablissements.md)).
 **La moitié publique d'abord**, qui se mesure sans compte et pour les trois d'un coup ; la moitié
 authentifiée ensuite, sur le compte prêté.
+
+**Et après la 6.3**, pour les lots qui publient. Trois raisons, tranchées le 2026-09-16. L'application ne
+sait pas encore montrer un campus : la liste des établissements n'est ni regroupée ni cherchable par
+alias avant [7-J](7-j-ecrans.md), et « Talence » y est encore écrit en dur. Un campus de plus, c'est du
+trafic de plus sur des sources tierces que [7-A](7-a-bande-passante.md) et
+[7-C](7-c-economie-et-socle.md) sont justement en train de ménager. Et [7-D](7-d-la-mesure.md) donnera
+des chiffres par campus, donc de quoi juger ce que chaque publication apporte. Les comptes prêtés, eux,
+ne sont pas encore tous réunis.
 
 ## Les trois campus
 
@@ -78,26 +90,28 @@ mesurer.
 
 La même marche à suivre, pour **un établissement entier** : CAS, ENT, dossier et messagerie, Blueprints
 écrits de zéro sous le préfixe `ukit.portail.`, et vérifiés sur appareil à chaque étape. Le lot passe
-**après 7-C** : un établissement à écrire de zéro ne doit pas retenir la sortie des correctifs.
+**en dernier** : un établissement entier demande le plus de travail, et il profite de tout ce que les
+deux précédents auront appris.
 
 ## Décisions et pièges
 
 - **Une ligne de catalogue par campus, même quand le portail est partagé** (décision du 2026-09-14). La
   ligne est l'unité de ciblage, de source d'emploi du temps, de géographie et de trousseau ; les Blueprints
   se référencent par leur nom.
-- **Les colonnes de 7-C ne sont pas un préalable.** `credits`, `campus` et `alias` d'`etablissements`
-  arrivent en base avec [7-C](7-c-economie-et-socle.md#6-les-colonnes-additives). Un campus publié avant
-  elles est listé sans regroupement, et ses crédits et ses alias s'ajoutent quand les colonnes existent.
-  L'application ne les lit de toute façon qu'à partir de la 6.3 ([7-J](7-j-ecrans.md)).
+- **Le regroupement, les alias et les crédits sont là quand les lots s'ouvrent.** `credits`, `campus` et
+  `alias` d'`etablissements` arrivent en base avec
+  [7-C](7-c-economie-et-socle.md#6-les-colonnes-additives), et l'application les lit depuis la 6.3
+  ([7-J](7-j-ecrans.md)) : un campus publié après elle arrive regroupé, cherchable par son alias, et son
+  prêteur est crédité. Le lot 1, lui, n'a besoin d'aucune colonne.
 - **Les identifiants prêtés** passent par le `.env` gitignoré, sous `PORTAIL_<CODE>_USER` et
   `PORTAIL_<CODE>_PASS`, jamais par un canal partagé, et ne servent qu'aux lots 2 à 4.
 
 ## Dépendances
 
 - **Lot 1** : aucune.
-- **Lots 2 à 4** : le lot 1, et un compte prêté pour le campus.
+- **Lots 2 à 4** : le lot 1, la **6.3 en production** ([7-K](7-k-sortie-6-3.md)), et un compte prêté pour
+  le campus.
 - **Un campus dont le verdict demande du code** attend la publication qui porte ce code.
-- **Le lot 4** passe après [7-C](7-c-economie-et-socle.md).
 
 ## Définition de « terminé »
 
@@ -122,4 +136,6 @@ La même marche à suivre, pour **un établissement entier** : CAS, ENT, dossier
   ([campus/README.md](../campus/README.md#ce-qui-exige-une-release)).
 - **Un compte prêté se révoque à tout moment** : un changement de mot de passe arrête le lot en cours sans
   prévenir ; les sondes sans identifiants gardent la surveillance.
-- **Le regroupement, les alias et les crédits ne se voient qu'à partir de la 6.3.**
+- **Attendre la 6.3 fait attendre ceux qui ont demandé leur campus** : neuf des seize premiers retours.
+  L'annonce « Trois campus en route » ne donne pas de date, et c'est voulu ; si l'attente s'allonge, ce
+  qu'il faut renouveler est l'annonce, pas la promesse.

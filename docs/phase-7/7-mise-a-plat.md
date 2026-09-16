@@ -76,10 +76,16 @@ disponibles.
 à leur rythme. L'ordre devient une recommandation, les dépendances la seule contrainte, et le travail se
 découpe en jalons de phase, sur le système qui a porté la phase 6.
 
+**Le 2026-09-16**, l'ordre bouge une dernière fois : les campus attendront que l'application sache les
+accueillir. Les comptes prêtés ne sont toujours pas réunis, et un campus publié avant la 6.3 arriverait
+dans une liste plate, sur des sources que la 6.2.2 n'a pas encore ménagées. Seul le relevé public, qui ne
+demande ni compte ni code, reste ouvrable tout de suite.
+
 ## 5. Le plan
 
 - [7-A](7-a-bande-passante.md) — la bande passante, sans release.
-- [7-B](7-b-nouveaux-campus.md) — trois nouveaux campus, un lot chacun après le relevé public.
+- [7-B](7-b-nouveaux-campus.md) — trois nouveaux campus, un lot chacun ; le relevé public quand on veut,
+  les publications après la 6.3.
 - [7-C](7-c-economie-et-socle.md) — économie et socle, publié en 6.2.2.
 - [7-D](7-d-la-mesure.md) — la mesure, publiée en 6.2.3.
 - [7-E](7-e-console-socle.md), [7-F](7-f-console-annonces.md), [7-G](7-g-console-statistiques.md),

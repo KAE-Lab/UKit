@@ -447,11 +447,11 @@ ordre, `db push` avant `psql -f` ; **en 6.3 seulement**, ce qui la lit — `COLO
 - Le propriétaire du produit, pour deux gestes : la protection de `main`, et le tri des alertes
   Dependabot. Le lien pré-rempli du formulaire n'est plus nécessaire : sa structure se lit sur la page
   publique.
-- **Le relevé public de [7-B](7-b-nouveaux-campus.md), et les campus publiés avant la sortie**
-  ([l'ordre de la phase](README.md#les-jalons-et-leur-ordre)) : si l'IUT et Victoire sont en ligne, la
-  6.2.2 les **embarque** — leur ligne dans `socle.ts`, leurs Blueprints dans `BUNDLED` —, comme
-  l'[étape 9](../adaptation-campus.md#9-à-la-release-suivante) l'exige ; et si le relevé a montré qu'un
-  campus demande du code, ce code entre dans ce jalon.
+- **Aucun campus n'est attendu** : depuis le 2026-09-16, les lots qui publient un campus passent après la
+  6.3 ([l'ordre de la phase](README.md#les-jalons-et-leur-ordre)). Si le relevé public de
+  [7-B](7-b-nouveaux-campus.md) a lieu avant cette sortie et montre qu'un campus demande du code, ce code
+  entre dans la publication qui suit le relevé — celle-ci si elle n'est pas encore partie, et alors la
+  6.2.2 embarque ce campus comme l'[étape 9](../adaptation-campus.md#9-à-la-release-suivante) l'exige.
 
 ## Définition de « terminé »
 

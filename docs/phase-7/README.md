@@ -72,8 +72,8 @@ est tenu en un seul endroit : [backend.md](../backend.md#ce-qui-est-prévu-et-pa
 
 | Publication | Contenu | Jalons | Condition de sortie |
 |---|---|---|---|
-| **6.2.2** | **économie et socle** : la 6.2.1 part aux stores dans cette version courte, rendue économe envers la base et envers Celcat, et le dépôt rendu sûr pour la suite | [7-C](7-c-economie-et-socle.md), et les campus publiés avant elle | des builds de développement neufs sur les deux appareils, l'egress mesuré avant et après, l'intégration continue verte sur `main` |
-| **6.2.3** | **la mesure** : des compteurs anonymes, sans identifiant, avec un interrupteur ; la ligne de base avant la refonte | [7-D](7-d-la-mesure.md), et Bordeaux Montaigne s'il est en ligne | `mesures` se remplit en production, `PRIVACY.md` et les fiches des stores à jour |
+| **6.2.2** | **économie et socle** : la 6.2.1 part aux stores dans cette version courte, rendue économe envers la base et envers Celcat, et le dépôt rendu sûr pour la suite | [7-C](7-c-economie-et-socle.md) | des builds de développement neufs sur les deux appareils, l'egress mesuré avant et après, l'intégration continue verte sur `main` |
+| **6.2.3** | **la mesure** : des compteurs anonymes, sans identifiant, avec un interrupteur ; la ligne de base avant la refonte | [7-D](7-d-la-mesure.md) | `mesures` se remplit en production, `PRIVACY.md` et les fiches des stores à jour |
 | **6.3** | **le mouvement de l'interface**, décidé le 2026-09-04, cadré le 2026-09-06, complété le 2026-09-14 : squelettes, ressorts, transitions, fonds par écran, cartes d'annonce v2, cartes d'erreur au gabarit, mini-jeu de la connexion, tirer-pour-rafraîchir, les deux thèmes à égalité | [7-I](7-i-releve-et-vocabulaire.md), [7-J](7-j-ecrans.md), [7-K](7-k-sortie-6-3.md) | le relevé final contre le relevé initial, et les chiffres de la 6.2.3 comme ligne de base |
 | **6.4** | **la boucle** : un formulaire de retour natif, les annonces en notification sur consentement, le partage d'une annonce et les liens universels, les pages du site dans l'application ; et les sujets reportés, à trancher à l'ouverture | [7-L](7-l-la-boucle.md) | la 6.3 sortie ; le contenu existe et permet de vérifier |
 
@@ -94,9 +94,7 @@ son compte est prêté, un écran quand sa session est close — se découpe en 
    SANS RELEASE — LE PARC INSTALLE EN PROFITE TEL QUEL
 
                     7-A la bande passante : le media re-encode, un cache d'un an
-                    7-B trois nouveaux campus, un lot chacun
-                          1 le releve public des trois campus, sans compte
-                          2 IUT de Bordeaux    3 Victoire    4 Bordeaux Montaigne (apres 7-C)
+                    7-B lot 1 : le releve public des trois campus, sans compte ni code
 
    6.2.2 — ECONOMIE ET SOCLE
 
@@ -124,6 +122,11 @@ son compte est prêté, un écran quand sa session est close — se découpe en 
                     7-J les ecrans, un lot par ecran : 1 Planning  2 Scolarite  3 Reglages
                     7-K sortie : releve final contre releve initial, chiffres contre la 6.2.3
 
+   LES CAMPUS, QUAND L'APPLICATION SAIT LES ACCUEILLIR (apres la 6.3)
+
+                    7-B lots 2 IUT de Bordeaux   3 Victoire   4 Bordeaux Montaigne
+                        au rythme des comptes pretes
+
    6.4 — LA BOUCLE
 
                     7-L formulaire natif, annonces en notification, partage, pages du site
@@ -140,8 +143,8 @@ son compte est prêté, un écran quand sa session est close — se découpe en 
 | Jalon | Spécification | Publication | Dépend de | Résumé |
 |---|---|---|---|---|
 | 7-A | [7-a-bande-passante.md](7-a-bande-passante.md) | aucune | — | Re-encoder le média, le re-téléverser avec un cache d'un an, mesurer l'egress avant et après. Le parc installé en profite sans mise à jour. |
-| 7-B | [7-b-nouveaux-campus.md](7-b-nouveaux-campus.md) | aucune ; la publication suivante embarque chaque campus | un compte prêté par campus | Le relevé public des trois campus, puis l'IUT de Bordeaux, Victoire et Bordeaux Montaigne, un lot chacun, sur le protocole d'[adaptation-campus.md](../adaptation-campus.md). |
-| 7-C | [7-c-economie-et-socle.md](7-c-economie-et-socle.md) | 6.2.2 | 7-A ; le lot 1 de 7-B | `expo-image` et les URL de rendu avec repli, le cache d'occupation, le disjoncteur, la fraîcheur du Planning, le `User-Agent` de Celcat, le formulaire pré-rempli ; l'intégration continue, Dependabot, les migrations numérotées et les colonnes additives. |
+| 7-B | [7-b-nouveaux-campus.md](7-b-nouveaux-campus.md) | aucune ; la publication suivante embarque chaque campus | lot 1 : aucune ; lots 2 à 4 : la 6.3 en production ([7-K](7-k-sortie-6-3.md)) et un compte prêté | Le relevé public des trois campus, puis l'IUT de Bordeaux, Victoire et Bordeaux Montaigne, un lot chacun, sur le protocole d'[adaptation-campus.md](../adaptation-campus.md). Les lots qui publient attendent que l'application sache accueillir un campus (décision du 2026-09-16). |
+| 7-C | [7-c-economie-et-socle.md](7-c-economie-et-socle.md) | 6.2.2 | 7-A | `expo-image` et les URL de rendu avec repli, le cache d'occupation, le disjoncteur, la fraîcheur du Planning, le `User-Agent` de Celcat, le formulaire pré-rempli ; l'intégration continue, Dependabot, les migrations numérotées et les colonnes additives. |
 | 7-D | [7-d-la-mesure.md](7-d-la-mesure.md) | 6.2.3 | 7-C | Des compteurs anonymes, une file locale, une RPC bornée, un interrupteur, jamais de réseau au démarrage ; `PRIVACY.md` et les fiches des stores. |
 | 7-E | [7-e-console-socle.md](7-e-console-socle.md) | aucune | — ; mieux après 7-A | Le socle standard de la console et sa règle, les défauts mesurés, des listes filtrées et paginées, la page Retours, le tableau de bord, le téléversement compressé. |
 | 7-F | [7-f-console-annonces.md](7-f-console-annonces.md) | aucune | 7-E ; les migrations de 7-C | L'éditeur d'annonces v2 avec l'aperçu du téléphone, le point focal, les types, le statut, la programmation et l'ordre vu à une heure donnée. |
@@ -156,10 +159,13 @@ son compte est prêté, un écran quand sa session est close — se découpe en 
 | 7-Z | [7-z-cloture.md](7-z-cloture.md) | — | tout | La vérification de la phase, et la mise à plat de la suivante. |
 
 **Ordre :** un seul jalon ouvert à la fois, et un jalon s'ouvre dès que ses dépendances sont livrées.
-L'ordre recommandé est celui des lettres, à une exception : le lot 4 de 7-B, Bordeaux Montaigne, passe
-après 7-C, parce qu'un établissement entier à écrire ne doit pas retenir la sortie des correctifs. Les
-lots de 7-B avancent au rythme des comptes prêtés. Si le relevé montre qu'un campus demande du code, ce
-code entre dans la publication suivante, et le lot de ce campus reprend après elle.
+L'ordre recommandé est celui des lettres, à une exception, décidée le 2026-09-16 : **les lots 2 à 4 de
+7-B, ceux qui publient un campus, passent après la sortie de la 6.3** ([7-K](7-k-sortie-6-3.md)). Un
+campus publié avant elle arriverait dans une liste plate, sans regroupement ni alias, et sur des sources
+que [7-C](7-c-economie-et-socle.md) n'a pas encore ménagées : l'application doit d'abord savoir
+l'accueillir. Le **lot 1**, le relevé public, ne demande ni compte ni code et s'ouvre quand on veut ; si
+son verdict montre qu'un campus demande du code, ce code entre dans la publication qui suit le relevé.
+Les lots de campus avancent ensuite au rythme des comptes prêtés.
 
 ### L'état
 
@@ -167,9 +173,9 @@ code entre dans la publication suivante, et le lot de ce campus reprend après e
 |---|---|
 | 7-A La bande passante | à ouvrir |
 | 7-B, lot 1 : le relevé public des trois campus | à ouvrir |
-| 7-B, lot 2 : IUT de Bordeaux | à ouvrir |
-| 7-B, lot 3 : Victoire | à ouvrir |
-| 7-B, lot 4 : Bordeaux Montaigne | à ouvrir |
+| 7-B, lot 2 : IUT de Bordeaux | à ouvrir, après la 6.3 |
+| 7-B, lot 3 : Victoire | à ouvrir, après la 6.3 |
+| 7-B, lot 4 : Bordeaux Montaigne | à ouvrir, après la 6.3 |
 | 7-C Économie et socle | à ouvrir |
 | 7-D La mesure | à ouvrir |
 | 7-E Le socle de la console | à ouvrir |
