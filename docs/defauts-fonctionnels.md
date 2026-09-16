@@ -19,6 +19,41 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Les intitulés de cours d'un iCalendar collé sont parfois bizarres — constaté le 2026-09-16
+
+Trouvé en vérifiant le lien d'abonnement de **Bordeaux Montaigne**, servi par PRONOTE Campus, collé
+dans « Mon université n'est pas dans la liste » ([7-B lot 1](phase-7/7-b-nouveaux-campus.md)). Le
+planning **s'affiche et les cours sont les bons** — le chemin universel de
+[6-J](phase-6/6-j-compte-et-sources-par-etablissement.md) fonctionne —, mais certains libellés sont
+mal découpés.
+
+La cause n'est pas dans le lien, elle est dans la **projection** : tout
+[`IcsMapping.ts`](../src/features/Planning/services/IcsMapping.ts) a été réglé le 2026-08-15 sur
+**l'export ADE de Bordeaux INP**, le seul émetteur d'iCalendar que le projet connaissait alors. Quatre
+de ses règles sont des conventions de cette source, et non de la RFC 5545 :
+
+| La règle | Ce qu'elle suppose | Ce qui arrive avec PRONOTE |
+|---|---|---|
+| `CODE_MODULE`, `/^[A-Z]{3}\d-[A-Z0-9]{5}$/` | un code de module ADE (`COG7-CILAN`), **seule ancre** de la description | aucune correspondance : `typeDuCours` rend `''`, la pastille CM/TD/TP disparaît et le créneau perd son suffixe |
+| `HORODATAGE`, `/^\(Exporté le\s*:/` | le pied de page qu'ADE ajoute | un pied de page d'un autre émetteur n'est pas retiré et s'affiche |
+| `lignesUtiles` écarte les lignes égales au sujet **ou à la catégorie** | que la catégorie est connue | catégorie vide, donc plus rien n'est écarté : la description peut **répéter le titre** |
+| `SALLES_PAR_DEFAUT`, `motif: '([A-Z][0-9]+)'` ([`socle.ts`](../src/shared/etablissements/socle.ts)) | un code de bâtiment bordelais (`A28`) | la salle ne se reconnaît pas : pas de bâtiment, donc **pas de carte** sur la fiche du cours |
+
+Et le titre lui-même, `subject`, est le **`SUMMARY` verbatim** : si l'émetteur y empile le cours,
+le groupe et l'enseignant, l'écran le montre tel quel. C'est un choix délibéré — inventer un
+découpage par source serait exactement ce que le lien universel refuse de faire.
+
+**Ce n'est donc pas un défaut du campus, mais le coût de l'universalité** : la projection est réglée
+sur un émetteur et en rencontre un second. Deux réponses possibles, à trancher quand ce sera le
+sujet — rendre les ancres tolérantes (un code de module générique, un horodatage reconnu par sa
+forme), ou porter ces conventions en **données de catalogue**, comme `FormatSalles` l'est déjà depuis
+[6-I](phase-6/6-i-planning-universel.md). La seconde est cohérente avec tout le reste du projet et ne
+demande aucune release ; elle suppose en revanche une ligne de catalogue, que le campus « autre » n'a
+par construction pas.
+
+**Ne se corrige pas au passage** : il faut des exemples réels de `SUMMARY`, `DESCRIPTION` et
+`LOCATION` sous les yeux, et une source de test qui n'est pas le calendrier personnel de quelqu'un.
+
 ### ~~Les boutons d'en-tête sont invisibles dans Groupes et le planning d'un groupe sur un Android 9~~ — corrigé le 2026-09-11
 
 Mesuré par le propriétaire du produit sur un Galaxy A8 de 2018, dans les deux thèmes ; nulle part

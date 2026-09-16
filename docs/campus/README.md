@@ -23,6 +23,36 @@
 - **Le code d'un campus se choisit une fois** : il partitionne le trousseau, les réglages et les favoris des
   étudiants, et le changer ensuite les déconnecterait tous.
 
+## Comment se nomme un campus
+
+> **Tranché le 2026-09-16**, au relevé public du lot 1 de
+> [7-B](../phase-7/7-b-nouveaux-campus.md). La règle existe parce que son absence coûte cher : deux
+> des neuf premières demandes de campus portaient sur un campus **déjà servi**, que son libellé
+> rendait méconnaissable ([adaptation-campus.md](../adaptation-campus.md#ce-que-la-mesure-du-2026-09-06-a-établi)).
+
+Le **libellé** d'une ligne de catalogue suit la nature de ce qu'elle décrit :
+
+| Ce que la ligne décrit | Le nom | Exemple |
+|---|---|---|
+| une université ou une école à part | son **nom officiel court** | Bordeaux Montaigne |
+| une composante d'une université | son **nom officiel** | IUT de Bordeaux |
+| un **site** entier, qui porte plusieurs composantes | **« Campus »** suivi du lieu | Campus Victoire |
+
+Et trois règles qui vont avec :
+
+- **Les mots que tapent les étudiants vont dans `alias`**, jamais dans le nom : « la Vic », « Bordeaux
+  3 », « fac de sciences ». Le nom reste celui de l'établissement, la recherche s'occupe du reste.
+- **Le `nom_court` tient sur un bouton** — quinze caractères au plus. C'est lui qui s'affiche là où la
+  place manque, et un nom tronqué y devient méconnaissable.
+- **Le code, lui, ne se choisit qu'une fois** : il partitionne le trousseau, les réglages et les
+  favoris, et le changer déconnecterait les étudiants de ce campus.
+
+**Le cas Victoire est tranché, et il méritait de l'être.** La spécification laissait ouvert le choix
+entre le nom d'un collège — si son emploi du temps suivait le Collège Sciences de l'Homme — et un nom
+de site. Le relevé a montré qu'**aucun collège ne s'y réduit** : la place de la Victoire porte des
+formations de psychologie, de sociologie, d'anthropologie, de STAPS et de santé, et **aucune** n'est
+dans le Celcat de l'université. La ligne décrit donc **un lieu**, pas un collège : `Campus Victoire`.
+
 ## Ce qui exige une release
 
 - **Un nouveau type de source d'emploi du temps** — ni Celcat, ni export iCalendar : le moteur sait jouer

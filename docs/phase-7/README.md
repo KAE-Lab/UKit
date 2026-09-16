@@ -172,7 +172,7 @@ Les lots de campus avancent ensuite au rythme des comptes prêtés.
 | Jalon ou lot | État |
 |---|---|
 | 7-A La bande passante | **livré le 2026-09-16** — 1 268 892 o de visuels devenus 299 000 (−76 %), tout le bucket en cache d'un an ; second relevé Usage le 2026-09-23 |
-| 7-B, lot 1 : le relevé public des trois campus | à ouvrir |
+| 7-B, lot 1 : le relevé public des trois campus | **livré le 2026-09-16** — trois fiches, trois verdicts, trois codes confirmés, la règle de nommage tranchée. **Aucun des trois n'est un Celcat**, mais l'IUT et Montaigne tournent sous **PRONOTE Campus**, dont l'**adresse d'abonnement iCalendar** rend leur emploi du temps publiable **sans une ligne de code** — collée dans l'application, elle **affiche les cours sur l'appareil**, vérifié pour Montaigne |
 | 7-B, lot 2 : IUT de Bordeaux | à ouvrir, après la 6.3 |
 | 7-B, lot 3 : Victoire | à ouvrir, après la 6.3 |
 | 7-B, lot 4 : Bordeaux Montaigne | à ouvrir, après la 6.3 |

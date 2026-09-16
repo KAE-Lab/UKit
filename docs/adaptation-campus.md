@@ -209,10 +209,10 @@ le binaire n'embarque un établissement que s'il embarque de quoi le jouer.
 | Campus | Statut |
 |---|---|
 | Talence, Enseirb-Matmeca | **déjà couverts** — étape 1 |
-| IUT de Bordeaux | composante de l'Université de Bordeaux, même CAS ; **un compte prêté annoncé le 2026-09-14** ; emploi du temps et sites à mesurer |
-| Victoire | composante de l'Université de Bordeaux, portail déjà écrit, absente du Celcat de Bordeaux ; **un compte prêté annoncé le 2026-09-14** ; emploi du temps et géographie à mesurer |
+| IUT de Bordeaux | composante de l'Université de Bordeaux, **même CAS confirmé** ; **un compte prêté annoncé le 2026-09-14** ; emploi du temps mesuré le 2026-09-16 : **PRONOTE**, sans surface publique ([fiche](campus/bordeaux-iut.md)) |
+| Victoire | composante de l'Université de Bordeaux, portail déjà écrit, **absence du Celcat confirmée** ; **un compte prêté annoncé le 2026-09-14** ; source d'emploi du temps **indéterminée sans compte** ([fiche](campus/bordeaux-victoire.md)) |
 | Carreire, AES, Droit, INSPE | composantes de l'Université de Bordeaux : portail déjà écrit, emploi du temps et géographie à mesurer, **vérification par un compte de cette composante à obtenir** |
-| Université Bordeaux Montaigne | **le seul établissement réellement nouveau** demandé : CAS distinct, ENT distinct, Blueprints à écrire de zéro ; **un compte prêté annoncé le 2026-09-14** |
+| Université Bordeaux Montaigne | **le seul établissement réellement nouveau** demandé : CAS distinct, ENT distinct, Blueprints à écrire de zéro — **tout confirmé le 2026-09-16** ; emploi du temps **HyperPlanning derrière le CAS** ; **un compte prêté annoncé le 2026-09-14** ([fiche](campus/bordeaux-montaigne.md)) |
 
 Les codes proposés, les lots et les fiches de chaque campus sont dans le jalon
 [7-B](phase-7/7-b-nouveaux-campus.md#les-trois-campus).

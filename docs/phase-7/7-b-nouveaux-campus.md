@@ -9,6 +9,13 @@
 > **Décalé le 2026-09-16 :** le lot 1, le relevé public, s'ouvre quand on veut ; **les lots 2 à 4, ceux
 > qui publient un campus, passent après la sortie de la 6.3** ([7-K](7-k-sortie-6-3.md)), quand
 > l'application sait les accueillir. Les comptes prêtés ne sont pas encore réunis : rien ne presse.
+>
+> **Lot 1 livré le 2026-09-16.** Trois fiches ouvertes, trois verdicts, trois codes confirmés, la règle
+> de nommage tranchée. Deux résultats que la spécification n'attendait pas : **aucun des trois campus
+> n'est un Celcat** — mais **l'emploi du temps de deux d'entre eux se publie quand même sans une ligne
+> de code**, par l'adresse d'abonnement iCalendar que PRONOTE Campus donne à l'étudiant connecté,
+> vérifiée sur le compte prêté de Montaigne. Voir
+> [Ce que le relevé a établi](#ce-que-le-relevé-du-2026-09-16-a-établi).
 
 ## La direction
 
@@ -33,15 +40,15 @@ ne sont pas encore tous réunis.
 
 ## Les trois campus
 
-| Campus | Ce qu'on sait | Ce qu'il faut mesurer d'abord | Code proposé |
+| Campus | Ce qu'on sait, **mesuré le 2026-09-16** | Source d'emploi du temps | Code |
 |---|---|---|---|
-| **IUT de Bordeaux** | composante de l'Université de Bordeaux : même CAS, portail probablement identique | la source d'emploi du temps — un Celcat distinct, un export iCalendar, un autre logiciel ? —, les sites et leurs bâtiments, les bibliothèques sur Affluences | `bordeaux-iut` |
-| **Victoire** | composante de l'Université de Bordeaux, portail déjà écrit ; **absente du Celcat de Bordeaux**, qui ne porte que le collège Sciences et Technologies ([adaptation-campus.md](../adaptation-campus.md#ce-que-la-mesure-du-2026-09-06-a-établi)) | la source d'emploi du temps, les bâtiments, la bibliothèque | `bordeaux-victoire` |
-| **Bordeaux Montaigne** | **un établissement distinct** : CAS, ENT, dossier et messagerie à part, Blueprints à écrire de zéro | tout, y compris la génération du dossier en ligne — deux `mondossierweb` différents se cachent parfois sous le même nom | `bordeaux-montaigne` |
+| **IUT de Bordeaux** | composante de l'Université de Bordeaux : **même CAS confirmé** (`cas.u-bordeaux.fr`), portail réutilisable ; quatre sites — Gradignan, Bordeaux-Bastide, Agen, Périgueux | **PRONOTE Campus**, `pronote.iut.u-bordeaux.fr`, sans surface publique. Ses 96 groupes existent dans le Celcat mais n'y portent **que des « Vacances »** | `bordeaux-iut` **confirmé** |
+| **Victoire** | composante de l'Université de Bordeaux, portail déjà écrit ; **absente du Celcat**, confirmé sur 2 958 groupes et 286 salles ; BU Station Marne sur Affluences | **indéterminée.** L'ADE de l'université existe (`planning.u-bordeaux.fr`, ADESOFT 6.17) mais est **derrière le CAS, sans export anonyme** | `bordeaux-victoire` **confirmé** |
+| **Bordeaux Montaigne** | **un établissement distinct, confirmé** : CAS propre (`sso.`), messagerie Carbonio, ENT et portail étudiant à part ; BU Rigoberta Menchú sur Affluences | **PRONOTE Campus** sur `flaubert2` — le nom `hyperplanning.` n'est qu'un CNAME —, **entièrement derrière le CAS** | `bordeaux-montaigne` **confirmé** |
 
 **Le code se choisit une fois** : il partitionne le trousseau, les réglages et les favoris des étudiants,
-et le changer ensuite les déconnecterait tous. Les codes ci-dessus sont des propositions, confirmées ou
-corrigées au lot 1.
+et le changer ensuite les déconnecterait tous. **Les trois propositions sont confirmées** : aucune ne
+heurte le catalogue publié (`bordeaux`, `bordeaux-inp`, `autre`).
 
 ## Ce qui est à faire
 
@@ -72,6 +79,71 @@ bibliothèques sur Affluences, la région CROUS, les adresses de l'ENT et sa pag
 repousserait à la publication d'après.
 
 **Ce qu'il ne fait pas** : se connecter à un portail, écrire un Blueprint, publier quoi que ce soit.
+
+### Ce que le relevé du 2026-09-16 a établi
+
+Les trois fiches : [bordeaux-iut](../campus/bordeaux-iut.md),
+[bordeaux-victoire](../campus/bordeaux-victoire.md),
+[bordeaux-montaigne](../campus/bordeaux-montaigne.md).
+
+**Le résultat central, et il change la suite : les trois campus sortent du modèle Celcat.** La
+spécification supposait qu'un campus serait « un Celcat ou un export iCalendar », donc publiable sans
+release. Aucun des trois ne l'est :
+
+| Campus | Verdict | Pourquoi |
+|---|---|---|
+| Bordeaux Montaigne | **sans code** *(vérifié sur appareil)* | l'adresse d'abonnement iCalendar de PRONOTE Campus, collée dans l'application, **affiche les cours** |
+| IUT de Bordeaux | **sans code, sous réserve** | **le même produit**, PRONOTE Campus : l'export y est presque certainement identique, à confirmer sur le compte prêté |
+| Campus Victoire | **indéterminé sans compte** | le relevé dit où l'emploi du temps **n'est pas** ; aucune source publique ne dit où il est |
+
+**Le verdict a changé en cours de lot, et c'est la mesure qui l'a changé.** Le relevé public
+concluait « demande du code » pour l'IUT et Montaigne : ni Celcat, ni export iCalendar **public**.
+C'était vrai et insuffisant. Une connexion au compte prêté de Montaigne, le 2026-09-16, a montré que
+**PRONOTE Campus propose « Export au format iCal »** à l'étudiant connecté — un téléchargement
+ponctuel, et surtout une **adresse d'abonnement** *« mise à jour en temps réel »*, de la forme
+`https://flaubert2.u-bordeaux-montaigne.fr/Telechargements/ical/<jeton>`.
+
+C'est exactement ce que l'application sait déjà jouer depuis
+[6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md) : le **lien d'abonnement collé**, un seul
+Blueprint embarqué, aucune écriture par établissement. **Aucune release, aucune ligne de code.**
+
+Trois conséquences, et la première annule un risque que la phase portait :
+
+1. **Rien de ce lot n'a besoin d'entrer dans la 6.2.2.** La spécification prévoyait que « si un campus
+   demande du code, ce code entre dans la publication suivante ». Aucun ne le demande pour son emploi
+   du temps.
+2. **Un seul produit à connaître pour deux campus** : l'IUT et Montaigne tournent tous deux sous
+   PRONOTE Campus. Ce qui aura été appris sur l'un vaudra pour l'autre.
+3. **Ce qui reste du travail est le portail, pas l'emploi du temps** : l'IUT réutilise celui de
+   `bordeaux`, Montaigne demande le sien, écrit de zéro.
+
+> **L'adresse d'abonnement est un secret personnel** : elle rend l'emploi du temps de son porteur à
+> quiconque la détient, sans authentification. Elle ne s'écrit ni dans le dépôt, ni dans une capture —
+> seule sa forme est documentée. C'est la règle que le
+> [kit d'adaptation](../campus/kit-d-adaptation.md#les-règles-avant-tout) énonçait déjà.
+
+Cinq mesures qui ont corrigé le texte d'origine :
+
+1. **Un inventaire de groupes ne prouve pas une couverture.** Les 96 groupes `BUTD*` de l'IUT
+   **existent** dans le Celcat public, mais interrogés sur tout le semestre ils rendent 8 événements
+   chacun, **tous de catégorie `Vacances`**, sans salle ni site — quand le témoin `INF1CIA1` du
+   Collège ST en rend 32, réels. Lire l'inventaire aurait fait conclure que l'IUT est couvert.
+2. **L'IUT partage bien le CAS de l'université** : `intranet.iut.u-bordeaux.fr` répond `302` vers
+   `cas.u-bordeaux.fr`. La moitié authentifiée réutilisera `ukit.portail.bordeaux.*`.
+3. **`hyperplanning.iut.u-bordeaux.fr` est un résidu** : il redirige en `301` vers `pronote.iut…`.
+   L'IUT a changé de logiciel et gardé l'ancien nom — le genre de trace que laisse une refonte
+   d'intranet, et le genre de piste qui fait perdre une heure si on la suit sans la vérifier.
+4. **L'université exploite un ADE en plus de son Celcat**, et il est **derrière le CAS** avec un
+   export anonyme muet (`anonymous_cal.jsp` rend 0 octet pour tout `projectId`). C'est l'hypothèse
+   n° 1 pour la Victoire, et elle ne se vérifiera qu'avec un compte.
+5. **Un piège de transport, à retenir avant qu'il ne coûte une soirée** : `planning.u-bordeaux.fr` et
+   `ade.u-bordeaux.fr` servent une **chaîne de certificats incomplète**. Un navigateur la complète, un
+   vieil Android non — c'est exactement ce que le Galaxy A8 révèle et que l'iPhone cache.
+
+**La règle de nommage est tranchée** et écrite dans
+[campus/README.md](../campus/README.md#comment-se-nomme-un-campus), Victoire comprise : la ligne décrit
+**un lieu** et non un collège, parce que la mesure montre qu'aucun collège ne s'y réduit — psychologie,
+sociologie, anthropologie, STAPS et santé y cohabitent, et aucune n'est dans le Celcat.
 
 ### Lot 2 — IUT de Bordeaux
 
@@ -115,8 +187,11 @@ deux précédents auront appris.
 
 ## Définition de « terminé »
 
-- **Lot 1** : une fiche par campus, moitié publique remplie ; un verdict par campus ; les codes confirmés ;
-  la règle de nommage écrite dans [campus/README.md](../campus/README.md).
+- [x] **Lot 1** *(livré le 2026-09-16)* : une fiche par campus, moitié publique remplie ; un verdict par
+  campus ; les codes confirmés ; la règle de nommage écrite dans
+  [campus/README.md](../campus/README.md#comment-se-nomme-un-campus). Ce que le relevé ne pouvait pas
+  faire sans compte — les bâtiments, le motif des salles, la source de la Victoire — est inscrit dans
+  chaque fiche sous « Ce qui reste ».
 - **Lots 2 à 4** : les étapes 5 à 8 de la [marche à suivre](../adaptation-campus.md#la-marche-à-suivre)
   déroulées — Blueprints vérifiés sur le compte prêté et sur les deux appareils, publiés dans l'ordre,
   sondés sans identifiants, la personne créditée si elle le veut —, la fiche du campus close, et la ligne
