@@ -23,6 +23,7 @@
 
 import moment from 'moment';
 import type { AbortSignalLike } from '@aetherius/engine';
+import type { Origine } from '../../../shared/aetherius/disjoncteur';
 
 import {
     BLUEPRINT,
@@ -54,9 +55,10 @@ export interface PlageIcs {
     readonly fin: string;
 }
 
-/** Le signal d'annulation d'un ecran qui peut disparaitre pendant le chargement. */
+/** Le signal d'annulation d'un ecran qui peut disparaitre pendant le chargement, et l'origine du run (disjoncteur). */
 interface OptionsRun {
     readonly signal?: AbortSignalLike;
+    readonly origine?: Origine;
 }
 
 /**

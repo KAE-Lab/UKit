@@ -41,6 +41,8 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { PastilleService } from '../../../shared/messages/PastilleService';
+import { ouvrirLeFormulaire } from '../../../shared/navigation/formulaireDeRetours';
+import { parametresDuFormulaire } from '../../../shared/navigation/liensDuFormulaire';
 import { AppContext } from '../../../shared/services/AppCore';
 import { demandeUneRessaisie, echecBloquantDe } from '../services/ScolariteMapping';
 import { useCredentials } from '../services/CredentialsContext';
@@ -82,7 +84,7 @@ const TitreFlottant = ({ theme, defilement, insets }) => (
             <Text style={[styles.titreDOngletTexte, { color: theme.font }]} pointerEvents="none">
                 {Translator.get('SCOLARITY')}
             </Text>
-            <PastilleService theme={theme} style={styles.rappel} />
+            <PastilleService theme={theme} onglet="Scolarité" style={styles.rappel} />
         </View>
     </Animated.View>
 );
@@ -127,7 +129,9 @@ function destinations(navigation) {
         ouvrirFiche: () => navigation.navigate('CredentialsSettings'),
         ouvrirDocuments: () => navigation.navigate('Documents'),
         ouvrirPorte: (point: string) => navigation.navigate('WebBrowser', { entrypoint: point }),
-        ouvrirLien: (href: string) => navigation.navigate('WebBrowser', { href }),
+        // Un lien vers le formulaire, depuis une rangee de widget : avec la regle des domaines internes
+        // (liensDuFormulaire), sans quoi la page d'engagement remplacait le formulaire (7-C).
+        ouvrirLien: (href: string) => navigation.navigate('WebBrowser', parametresDuFormulaire(href)),
     };
 }
 
@@ -223,7 +227,7 @@ const ScolariteDashboard = ({ navigation }) => {
     // plus (voir CampusNonRelie). Elle passe devant tout : sans portail, il n'y a ni formulaire, ni
     // session, ni grille a montrer.
     if (!portailDisponible) {
-        return <CampusNonRelie theme={theme} onDemande={ouvrirLien} />;
+        return <CampusNonRelie theme={theme} onDemande={() => ouvrirLeFormulaire(navigation, { porte: 'campus' })} />;
     }
 
     // Sans compte, aucun aiguillage particulier (6.1.x-B) : la page ordinaire, en portes, avec son

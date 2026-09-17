@@ -10,8 +10,42 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
+### Ajouté
+
+- **Le formulaire de retours s'ouvre pré-rempli.** Depuis la pastille grise d'un onglet, la section du
+  bug, l'appareil, le système et la version de l'application sont déjà écrits ; depuis un campus que
+  l'application ne porte pas encore, « Demander un campus » est déjà coché. Les numéros de question
+  vivent dans le catalogue publié, pas dans l'application ([7-C](docs/phase-7/7-c-economie-et-socle.md)).
+- **Un disjoncteur par source.** Quand un serveur universitaire tombe, les relectures que personne n'a
+  demandées — le retour sur l'onglet Planning, le retour au premier plan des widgets, un cache expiré —
+  s'arrêtent après trois échecs, pour 30 secondes, puis 2 puis 10 minutes ; un geste — « Réessayer »,
+  changer de jour — passe toujours. Le menu de développement le montre et le réarme.
+- **Une annonce peut être programmée.** La base ne sert plus une annonce avant sa date de publication,
+  ni une annonce en brouillon ou archivée — pour toutes les versions installées, puisque le filtre est
+  dans la base. Les colonnes que la console et la version 6.3 attendent — le type de carte et ses
+  emplacements, le cadrage et son point focal, la priorité, l'épinglage, les créneaux, le placeholder,
+  le partenaire, les rôles des éditeurs, le campus et les alias d'un établissement — sont posées.
+- **Le dépôt se vérifie tout seul.** Un workflow rejoue le typage, ESLint sans avertissement, les
+  tests et la construction de la console sur chaque poussée ; Dependabot groupe les mises à jour hors
+  de ce que le SDK épingle ; le schéma de la base s'applique par des migrations numérotées.
+
 ### Modifié
 
+- **Les images distantes ont un cache disque, un fondu, et pèsent moins.** Elles passent par
+  `expo-image` et demandent un **rendu** aux dimensions de la carte au lieu du fichier d'origine — une
+  photo de restaurant descend à 96 Ko au lieu de 157 —, avec un repli sur l'origine si le rendu
+  échoue. Ouvrir l'onglet Campus ne retélécharge plus les visuels déjà vus. La visionneuse plein écran
+  reste hors de ce cache.
+- **La fiche d'un bâtiment ne rejoue plus dix-huit requêtes à chaque ouverture** : l'occupation des
+  salles est en cache dix minutes, par bâtiment et par jour ; une salle qui n'a pas répondu est
+  rejouée seule.
+- **Le Planning ne se relit pas dans la minute** au retour sur l'onglet quand le jour affiché vient
+  d'être lu ; l'affichage ne change pas.
+- **Les six Blueprints Celcat se nomment** (`User-Agent: UKit (+https://github.com/KAE-Lab/UKit;
+  contact@kaelab.dev)`), une politesse envers le serveur de l'université — versions montées et publiées.
+- **Expo 57.0.23 et vingt-deux modules** alignés sur ce que le SDK attend, et les correctifs de
+  sécurité transitifs appliqués : 35 vulnérabilités signalées deviennent 15, toutes modérées et
+  épinglées par le SDK, qui attendent la prochaine montée du socle.
 - **Les visuels publiés sont servis avec un cache d'un an, et pèsent quatre fois moins.** Rien à
   installer : le jalon [7-A](docs/phase-7/7-a-bande-passante.md) s'est joué sur le bucket et la base,
   et les versions déjà installées en profitent au prochain retour au premier plan. Les visuels

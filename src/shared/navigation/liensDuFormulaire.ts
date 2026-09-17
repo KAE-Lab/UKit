@@ -19,6 +19,12 @@
  * redirecteur, qui la renvoyait aussitot dehors : le formulaire etait perdu **avant** que la regle
  * ait eu son mot a dire, et « retour » le rechargeait vide. On lit donc la destination reelle
  * d'abord, et c'est elle qu'on juge (mesure le 2026-09-08 sur iPhone et sur Android).
+ *
+ * **Le formulaire est pre-rempli depuis 7-C.** Le catalogue publie l'adresse longue du formulaire en
+ * gabarit — `?usp=pp_url&entry.408146347={onglet}&…` — et `remplirGabarit` y met ce que l'application
+ * sait : l'onglet d'ou l'on vient, l'appareil, le systeme, la version. Les numeros d'entree vivent
+ * dans le catalogue, pas ici : un numero change quand une question est supprimee puis recreee, et
+ * ecrit dans le binaire il demanderait une release.
  */
 
 /** Les domaines qui restent dans la vue quand le formulaire est ouvert. */
@@ -35,6 +41,39 @@ export function parametresDuFormulaire(href: string): ParametresDuFormulaire {
 }
 
 const HOTE = /^https?:\/\/([^/:?#]+)/i;
+
+export type ValeursDuGabarit = Readonly<Record<string, string | null | undefined>>;
+
+/** Un parametre de requete dont la valeur entiere est `{cle}` : le seul qui soit un gabarit. */
+const PARAMETRE_GABARIT = /^\{(\w+)\}$/;
+
+/**
+ * Remplit un gabarit d'adresse : chaque `{cle}` d'un parametre de requete devient sa valeur encodee ;
+ * un parametre dont la valeur manque est retire en entier — pas de `&` orphelin, pas de champ vide
+ * envoye a Google — ; tout autre parametre est recopie tel quel, et un gabarit sans accolade reste
+ * intact. Manipulation de chaines, pas de `URL` : le module se joue sous Node comme sous Hermes.
+ */
+export function remplirGabarit(gabarit: string, valeurs: ValeursDuGabarit): string {
+    const debut = gabarit.indexOf('?');
+    if (debut < 0) return gabarit;
+    const fin = gabarit.indexOf('#', debut);
+    const requete = fin < 0 ? gabarit.slice(debut + 1) : gabarit.slice(debut + 1, fin);
+    const fragment = fin < 0 ? '' : gabarit.slice(fin);
+
+    const couples: string[] = [];
+    for (const couple of requete.split('&')) {
+        const separateur = couple.indexOf('=');
+        const cle = separateur < 0 ? undefined : PARAMETRE_GABARIT.exec(couple.slice(separateur + 1))?.[1];
+        if (cle === undefined) {
+            if (couple !== '') couples.push(couple);
+            continue;
+        }
+        const valeur = valeurs[cle];
+        if (typeof valeur !== 'string' || valeur === '') continue;
+        couples.push(`${couple.slice(0, separateur)}=${encodeURIComponent(valeur)}`);
+    }
+    return gabarit.slice(0, debut) + (couples.length === 0 ? '' : `?${couples.join('&')}`) + fragment;
+}
 
 /** Le redirecteur de Google : `/url` chez `google.com`, la destination dans `q` ou dans `url`. */
 const REDIRECTEUR = /^https?:\/\/(?:[^/:?#]*\.)?google\.[^/:?#]+\/url\?/i;

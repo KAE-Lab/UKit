@@ -17,7 +17,9 @@
  * Voir docs/features/campus-salles-libres.md et docs/phase-6/6-e-planning.md.
  */
 
-import { BLUEPRINT, reportFailure, runBlueprint, type UkitFailure } from '../../../shared/aetherius';
+import type { AbortSignalLike } from '@aetherius/engine';
+
+import { BLUEPRINT, reportFailure, runBlueprint, type Origine, type UkitFailure } from '../../../shared/aetherius';
 import { entreesCelcat, planningAbsent } from '../../../shared/etablissements';
 import {
     extractBuildingsFromRooms,
@@ -45,17 +47,23 @@ export type RoomsScheduleResult =
     | { readonly ok: true; readonly events: CampusEvent[] }
     | { readonly ok: false; readonly failure: UkitFailure };
 
+/** Le signal d'annulation et l'origine du run — un geste, ou l'application d'elle-meme — pour le disjoncteur (7-C). */
+export interface CampusRunOptions {
+    readonly signal?: AbortSignalLike;
+    readonly origine?: Origine;
+}
+
 function commeListe(valeur: unknown): unknown[] {
     return Array.isArray(valeur) ? valeur : [];
 }
 
 class CampusApiServiceClass {
     /** La liste complete des salles, telle que Celcat la publie. */
-    fetchRoomList = async (): Promise<RoomListResult> => {
+    fetchRoomList = async (options: CampusRunOptions = {}): Promise<RoomListResult> => {
         const celcat = entreesCelcat('salles');
         if (celcat === null) return { ok: false, failure: planningAbsent() };
 
-        const run = await runBlueprint(BLUEPRINT.CELCAT_SALLES, { inputs: { ...celcat } });
+        const run = await runBlueprint(BLUEPRINT.CELCAT_SALLES, { inputs: { ...celcat }, ...options });
         if (run.ok === false) {
             reportFailure(BLUEPRINT.CELCAT_SALLES, run.failure);
             return { ok: false, failure: run.failure };
@@ -70,17 +78,19 @@ class CampusApiServiceClass {
     /**
      * L'occupation d'une journee pour une ou plusieurs salles.
      *
-     * L'application interroge **une salle par run**, et ce n'est pas une inefficacite a corriger : la
-     * reponse ne porte pas l'identifiant de la ressource interrogee, donc un run groupe ne
-     * permettrait pas de reattribuer les evenements a leur salle. Le decoupage laisse aussi un echec
-     * isole ne pas vider tout le batiment.
+     * L'application interroge **une salle par run**, derriere un cache de dix minutes par batiment et
+     * par jour (OccupationService, jalon 7-C) : la reponse ne porte pas l'identifiant de la ressource
+     * interrogee, donc un run groupe ne permettrait pas de reattribuer les evenements a leur salle —
+     * ce que la sonde `sondes/mesures/occupation_groupee.py` mesure, pour decider de la requete groupee.
+     * Le decoupage laisse aussi un echec isole ne pas vider tout le batiment.
      */
-    fetchRoomsScheduleDay = async (roomIds: string[], date: string): Promise<RoomsScheduleResult> => {
+    fetchRoomsScheduleDay = async (roomIds: string[], date: string, options: CampusRunOptions = {}): Promise<RoomsScheduleResult> => {
         const celcat = entreesCelcat('salles');
         if (celcat === null) return { ok: false, failure: planningAbsent() };
 
         const run = await runBlueprint(BLUEPRINT.CELCAT_OCCUPATION, {
             inputs: { ...celcat, salles: roomIds, jour: date },
+            ...options,
         });
         if (run.ok === false) {
             reportFailure(BLUEPRINT.CELCAT_OCCUPATION, run.failure);

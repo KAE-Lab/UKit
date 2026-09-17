@@ -5,6 +5,7 @@
 <p align="center"><strong>Le kit de survie pour l'étudiant bordelais.</strong></p>
 
 <p align="center">
+  <a href="https://github.com/KAE-Lab/UKit/actions/workflows/verifier.yml"><img src="https://github.com/KAE-Lab/UKit/actions/workflows/verifier.yml/badge.svg" alt="Vérifier" /></a>
   <a href="https://github.com/KAE-Lab/UKit/actions"><img src="https://github.com/KAE-Lab/UKit/actions/workflows/release.yml/badge.svg" alt="Mobile App Release" /></a>
   <a href="https://github.com/KAE-Lab/UKit/releases/latest"><img src="https://img.shields.io/github/v/release/KAE-Lab/UKit?label=APK" alt="Latest Release" /></a>
 </p>
@@ -202,10 +203,10 @@ npm test              # socle du moteur
 npm run parity        # sources migrées, comparées aux services historiques
 ```
 
-Les deux premières ne sont pas encore vertes ; la base de référence à ne pas dégrader est décrite
-dans [docs/qualite.md](docs/qualite.md). Les deux dernières le sont. Aucune ne couvre l'interface :
-**la vérification manuelle sur l'application réelle fait partie de la définition de « terminé »**
-([CONTRIBUTING.md](CONTRIBUTING.md)).
+Les quatre sont vertes, et la base de référence — zéro erreur, zéro avertissement — est décrite dans
+[docs/qualite.md](docs/qualite.md) ; l'intégration continue rejoue les trois premières sur chaque
+poussée. Aucune ne couvre l'interface : **la vérification manuelle sur l'application réelle fait
+partie de la définition de « terminé »** ([CONTRIBUTING.md](CONTRIBUTING.md)).
 
 <p align="center"><sub>· · ·</sub></p>
 
@@ -259,12 +260,16 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Publication** — profils EAS (développement, aperçu, production) et chaîne de release GitHub
   Actions vers les deux stores. [docs/plateforme.md](docs/plateforme.md)
 - [ ] **Tests automatisés** — un premier harnais existe, borné : `npm test` couvre le socle du moteur
-  (résolution des secrets, livraison des Blueprints et ses gardes, modèle d'erreur) et le
+  (résolution des secrets, livraison des Blueprints et ses gardes, modèle d'erreur, disjoncteur), les
+  modules purs des fonctionnalités et l'outillage, et le
   [harnais de parité](tools/parity/README.md) rejoue les sources migrées contre les vraies. Aucun
-  test d'écran ni de composant, et l'intégration continue ne joue toujours que la publication.
-  **`npx tsc --noEmit` est vert** depuis le 2026-08-16 — il ne l'avait jamais été — et **`npx eslint .`
-  est à zéro** depuis la passe de code 6.1-C, trente-cinq avertissements traités un par un ; `npm test`
-  joue 703 tests à la 6.2.1. [docs/qualite.md](docs/qualite.md)
+  test d'écran ni de composant. **`npx tsc --noEmit` est vert** depuis le 2026-08-16 — il ne l'avait
+  jamais été — et **`npx eslint .` est à zéro** depuis la passe de code 6.1-C, trente-cinq
+  avertissements traités un par un ; `npm test` joue 760 tests à la 6.2.2. Depuis le jalon
+  [7-C](docs/phase-7/7-c-economie-et-socle.md), **l'intégration continue rejoue le typage, ESLint,
+  les tests et la construction de la console sur chaque poussée**, Dependabot groupe les mises à jour
+  hors de ce que le SDK épingle, et le schéma de la base s'applique par des migrations numérotées.
+  [docs/qualite.md](docs/qualite.md)
 - [ ] **Le comportement en données** — l'accès aux sources migre vers des
   [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
   et corrigeables sans release. Le socle est en place (6-A), **la base de publication existe** (6-B),
@@ -298,6 +303,20 @@ livré ; elle est mise à jour à chaque contribution.
   partaient en `no-cache`, à 400 ou 500 Ko l'unité, ce qui avait porté la bande passante à deux fois
   le quota du plan. C'est une passe sur le bucket, pas une release : les versions déjà installées en
   profitent. [docs/backend.md](docs/backend.md)
+- [x] **Économie et socle** ([7-C](docs/phase-7/7-c-economie-et-socle.md), 6.2.2) — l'application coûte
+  moins cher dans deux directions qui ne se voyaient pas à l'écran. **Vers notre base** : les images
+  distantes passent par `expo-image`, avec un cache disque et un fondu, et demandent un **rendu** aux
+  dimensions de la carte plutôt que le fichier d'origine (une photo de restaurant : 96 Ko au lieu de
+  157), avec un repli sur l'origine. **Vers les universités** : l'occupation des salles d'un bâtiment
+  est en cache dix minutes (dix-huit requêtes par ouverture de fiche jusque-là), le Planning ne se
+  relit pas dans la minute au retour sur l'onglet, un **disjoncteur** par hôte tait les runs que
+  personne n'a demandés quand une source tombe — trois échecs, 30 s, 2 min, 10 min, un geste passe
+  toujours —, et les six Blueprints Celcat se nomment (`User-Agent`). Une sonde a mesuré que la
+  requête d'occupation groupée est viable pour la 6.3. Le **formulaire de retours s'ouvre pré-rempli**
+  — onglet, appareil, système, version, « Demander un campus » —, les numéros de question vivant dans
+  le catalogue. Et le dépôt est prêt pour la suite : intégration continue sur chaque branche,
+  Dependabot, migrations numérotées, et les colonnes que la console et la 6.3 attendent (type et
+  emplacements d'annonce, cadrage, statut et programmation, rôles d'éditeur, campus et alias).
 - [x] **Livraison des Blueprints** — le registre résout entre le socle embarqué et une surcouche
   publiée, vérifiée à l'empreinte à chaque lecture ; le rafraîchissement est hors du chemin d'un run,
   et un panneau de diagnostic dit d'où vient chaque Blueprint.

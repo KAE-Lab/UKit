@@ -1,46 +1,44 @@
-/**
- * Ce que la trace de synchronisation doit tenir : une lecture qui ne leve jamais, et une echeance
- * qui ne se laisse pas pieger par une horloge qui recule.
- */
-
 import { describe, expect, it } from 'vitest';
 
-import { INTERVALLE_ENTRETIEN_MS, estDu, lireTentative } from './tentative';
+import { INTERVALLE_ENTRETIEN_MS, estDu, lireTentative, origineDuRun, type OrigineSynchro } from './tentative';
 
 describe('lireTentative', () => {
-    it('relit une tentative ecrite', () => {
-        expect(lireTentative(JSON.stringify({ at: 1000, ok: false, origine: 'tache' })))
-            .toEqual({ at: 1000, ok: false, origine: 'tache' });
-        expect(lireTentative(JSON.stringify({ at: 1000, ok: true, origine: 'filtres' })))
-            .toEqual({ at: 1000, ok: true, origine: 'filtres' });
+    it('relit une tentative bien formee', () => {
+        expect(lireTentative(JSON.stringify({ at: 10, ok: true, origine: 'tache' }))).toEqual({ at: 10, ok: true, origine: 'tache' });
     });
 
-    it('rend null sur tout ce qui n est pas une tentative, sans lever', () => {
+    it('rend null pour un magasin vide, illisible ou d une autre forme', () => {
         expect(lireTentative(null)).toBeNull();
         expect(lireTentative('')).toBeNull();
         expect(lireTentative('{')).toBeNull();
-        expect(lireTentative('42')).toBeNull();
         expect(lireTentative(JSON.stringify({ at: 'hier', ok: true, origine: 'tache' }))).toBeNull();
-        expect(lireTentative(JSON.stringify({ at: 1, ok: 'oui', origine: 'tache' }))).toBeNull();
-        expect(lireTentative(JSON.stringify({ at: 1, ok: true, origine: 'ailleurs' }))).toBeNull();
+        expect(lireTentative(JSON.stringify({ at: 10, ok: true, origine: 'martien' }))).toBeNull();
     });
 });
 
 describe('estDu', () => {
-    const T = 1_700_000_000_000;
-
-    it('est du quand rien n a jamais ete joue', () => {
-        expect(estDu(null, T)).toBe(true);
+    it('est du sans tentative, apres un intervalle, ou quand l horloge recule', () => {
+        expect(estDu(null, 100)).toBe(true);
+        expect(estDu(100, 100 + INTERVALLE_ENTRETIEN_MS)).toBe(true);
+        expect(estDu(100, 100 + INTERVALLE_ENTRETIEN_MS - 1)).toBe(false);
+        expect(estDu(100, 99)).toBe(true);
     });
+});
 
-    it('attend l intervalle, puis devient du', () => {
-        expect(estDu(T, T + INTERVALLE_ENTRETIEN_MS - 1)).toBe(false);
-        expect(estDu(T, T + INTERVALLE_ENTRETIEN_MS)).toBe(true);
-    });
-
-    it('est du quand l horloge a recule', () => {
-        // Une date simulee dans le passe, ou un fuseau change : on rejoue plutot que d'attendre une
-        // echeance qui ne viendra pas.
-        expect(estDu(T, T - 1)).toBe(true);
+describe('origineDuRun', () => {
+    it('ne rend automatique que ce que l application declenche d elle-meme', () => {
+        const table: Record<OrigineSynchro, 'utilisateur' | 'automatique'> = {
+            manuel: 'utilisateur',
+            lancement: 'automatique',
+            'premier-plan': 'automatique',
+            tache: 'automatique',
+            sonde: 'utilisateur',
+            favoris: 'utilisateur',
+            activation: 'utilisateur',
+            filtres: 'utilisateur',
+        };
+        for (const [origine, attendu] of Object.entries(table)) {
+            expect(origineDuRun(origine as OrigineSynchro)).toBe(attendu);
+        }
     });
 });

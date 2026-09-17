@@ -13,25 +13,49 @@
  *
  * Le gain vaut aussi pour les cartes qui n'avaient **pas** de repli en cas d'echec (BU, salles) :
  * une adresse morte y montrait un rectangle gris.
+ *
+ * Depuis 7-C, l'image est celle d'`expo-image` : un **cache disque**, que le `Image` de React Native
+ * n'a pas — chaque ouverture de l'onglet Campus redemandait chaque visuel —, une transition de la
+ * duree du fondu partage, et une adresse de **rendu** aux dimensions de la carte plutot que le
+ * fichier d'origine (useSourceRendue). Le repli local passe par le meme composant, sans transition :
+ * un seul `contentFit` pour les deux, et rien ne transparait.
  */
 
-import React, { useEffect, useState } from 'react';
-import { Image, type ImageSourcePropType, type ImageStyle, type StyleProp } from 'react-native';
+import React from 'react';
+import { Image, type ImageContentFit, type ImageStyle } from 'expo-image';
+import type { StyleProp } from 'react-native';
+
+import { DUREE_FONDU_MS } from './ApparitionEnFondu';
+import { useSourceRendue } from './useSourceRendue';
 
 export interface VisuelAvecRepliProps {
     /** L'adresse de l'image ; absente, le repli seul. */
     uri?: string | null;
-    repli: ImageSourcePropType;
+    /** Le visuel de repli, une ressource locale (`require`). */
+    repli: number;
     /** Le meme style pour l'image et son repli : ils occupent la meme place. */
     style: StyleProp<ImageStyle>;
+    /** Par defaut `cover` — l'ancien `resizeMode` du style, qu'`expo-image` ne lit plus. */
+    contentFit?: ImageContentFit;
+    /** La largeur affichee, en points : la largeur demandee au rendu en decoule (visuels/rendu.ts). */
+    largeur: number;
+    /** La qualite demandee au rendu ; 70 pour une carte. */
+    qualite?: number;
 }
 
-export function VisuelAvecRepli({ uri, repli, style }: VisuelAvecRepliProps) {
-    const [echec, setEchec] = useState(false);
+export function VisuelAvecRepli({ uri, repli, style, contentFit = 'cover', largeur, qualite = 70 }: VisuelAvecRepliProps) {
+    const { source, onError } = useSourceRendue(uri, { largeur, qualite });
 
-    // Une autre adresse repart de zero : un echec ne vaut que pour l'adresse qui l'a produit.
-    useEffect(() => { setEchec(false); }, [uri]);
-
-    if (!uri || echec) return <Image source={repli} style={style} />;
-    return <Image source={{ uri }} style={style} onError={() => setEchec(true)} />;
+    if (source === null) return <Image source={repli} style={style} contentFit={contentFit} />;
+    return (
+        <Image
+            source={source}
+            style={style}
+            contentFit={contentFit}
+            cachePolicy="memory-disk"
+            transition={DUREE_FONDU_MS}
+            recyclingKey={uri ?? null}
+            onError={onError}
+        />
+    );
 }

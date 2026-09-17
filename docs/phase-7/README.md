@@ -176,7 +176,7 @@ Les lots de campus avancent ensuite au rythme des comptes prêtés.
 | 7-B, lot 2 : IUT de Bordeaux | à ouvrir, après la 6.3 |
 | 7-B, lot 3 : Victoire | à ouvrir, après la 6.3 |
 | 7-B, lot 4 : Bordeaux Montaigne | à ouvrir, après la 6.3 |
-| 7-C Économie et socle | à ouvrir |
+| 7-C Économie et socle | **livré le 2026-09-17** — code, base et publication sur la branche `v6.2.2` : `expo-image` et les rendus, le cache d'occupation, le disjoncteur, la fraîcheur du Planning, le `User-Agent`, le formulaire pré-rempli, la CI, Dependabot, les migrations et les colonnes ; la sonde a mesuré la requête groupée viable pour la 6.3. Restent le protocole sur les deux builds neufs et l'egress avant/après |
 | 7-D La mesure | à ouvrir |
 | 7-E Le socle de la console | à ouvrir |
 | 7-F Les annonces dans la console | à ouvrir |

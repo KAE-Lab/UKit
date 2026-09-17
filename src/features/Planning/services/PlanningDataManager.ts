@@ -10,7 +10,7 @@ import { SettingsManager } from '../../../shared/services/AppCore';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { doitRafraichir, lireCache } from './groupListCache';
 import { indexerUes, type UeRencontree } from './PlanningAssembly';
-import { PlanningApiService, type GroupListResult } from './PlanningApiService';
+import { PlanningApiService, type GroupListResult, type PlanningRunOptions } from './PlanningApiService';
 
 /**
  * Ou en est la liste : en cours de lecture, en echec, et la date de la derniere reponse.
@@ -159,11 +159,11 @@ class PlanningDataManagerService {
      * L'echec n'est plus jete : il est **garde** dans l'etat et notifie, pour que l'accueil puisse le
      * dire (6.1-C). L'horodatage est celui de l'horloge reelle, comme tout horodatage de cache.
      */
-    fetchGroupList = async (): Promise<GroupListResult> => {
+    fetchGroupList = async (options: PlanningRunOptions = {}): Promise<GroupListResult> => {
         this.poserEtat({ chargement: true });
         // `resultat.ok === false` et non `!resultat.ok` : sans `strictNullChecks`, TypeScript ne
         // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
-        const resultat = await PlanningApiService.fetchGroupList();
+        const resultat = await PlanningApiService.fetchGroupList(options);
         if (resultat.ok === false) {
             this.poserEtat({ chargement: false, echec: resultat.failure });
             return resultat;
@@ -210,7 +210,7 @@ class PlanningDataManagerService {
             if (doitRafraichir(cache, Date.now())) {
                 // Volontairement non attendu. Un echec est deja journalise par le service, et une
                 // liste de groupes absente n'empeche aucun ecran de s'afficher.
-                void this.fetchGroupList();
+                void this.fetchGroupList({ origine: 'automatique' });
             }
         } catch {
             console.warn('COULDNT RETRIEVE GROUP LIST...');

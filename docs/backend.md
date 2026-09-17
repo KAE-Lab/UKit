@@ -79,17 +79,17 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 
 | Table | Contenu | Lue par | Depuis | Socle embarqué |
 |---|---|---|---|---|
-| `annonces` | contenu éditorial de vie étudiante | [`BdeService`](../src/features/Campus/services/BdeService.ts) | **6-B** | — |
+| `annonces` | contenu éditorial de vie étudiante ; depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives) : `type`, `emplacements`, `ajustement`, `focale`, `priorite`, `epinglee`, `creneaux`, `statut`, `blurhash`, `partenaire`, `check (couleur <> 4)`, et la politique de lecture filtre `statut = 'publiee' and publiee_le <= now()` — invisibles pour l'application jusqu'à la 6.3, exposées par la console en 7-F | [`BdeService`](../src/features/Campus/services/BdeService.ts) | **6-B** | — |
 | `batiments` | coordonnées, horaires, accès libre, visuel | [`shared/locations`](../src/shared/locations/index.ts) | **6-D** | [`assets/locations.json`](../assets/locations.json) |
 | `visuels` | la photo d'un contenu, quand celle de sa source est fausse ou absente | [`shared/visuels`](../src/shared/visuels/index.ts) | passe de finition | *aucun* — le socle, c'est l'image de la source |
-| `etablissements` | catalogue des universités et de leurs portails | l'onboarding et les réglages | **6-G** | les lignes publiées à la date de la release — une copie, vérifiée par un test (6.1-A) |
+| `etablissements` | catalogue des universités et de leurs portails ; depuis 7-C : `credits`, `campus`, `alias` (portés par la base et `etablissements.sql`, lus en 6.3), et les gabarits `services.formulaire` / `services.formulaire_campus` | l'onboarding et les réglages | **6-G** | les lignes publiées à la date de la release — une copie, vérifiée par un test (6.1-A) |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | les messages de service — information, avertissement, incident — et leur ciblage | [`shared/messages`](../src/shared/messages/index.ts) | **6.1-B** | *aucun* — un cache (`messages@1`) |
 | `jetons_push` | **écrite par l'application** (6.1.x-E) : un jeton push par appareil, campus, version, plateforme, testeur — par `deposer_jeton` / `retirer_jeton`, jamais par la table | la fonction `notifier` (service), la console (éditeurs) | **6.1.x-E** | — |
 | `testeurs` | les appareils qui voient l'audience `testeurs` ; l'application n'en lit que la colonne `id` | [`shared/testeur`](../src/shared/testeur/statut.ts) | **6.1-B** | *aucun* — « non » par défaut |
 | `sondes` | l'état de chaque source tierce, mesuré chaque matin | la console ; l'application pas encore | 6.1-B | — |
 | `journal` | la trace de chaque écriture dans une table publiable : avant, après, qui, quand | la console seule | 6.1-B | — |
-| `editeurs` | les e-mails autorisés à écrire depuis la console | les politiques | 6.1-B | — |
+| `editeurs` | les e-mails autorisés à écrire depuis la console ; depuis 7-C : `role` (`admin`, `redacteur`, `lecteur`) et `etablissements`, la donnée seule, les politiques en [7-H](phase-7/7-h-console-roles.md) | les politiques | 6.1-B | — |
 | `retours` | ce que les utilisateurs écrivent dans le formulaire, importé toutes les 72 heures depuis la feuille de réponses | la console seule | [6.1.x-C](phase-6/6-1-x-c-retours.md) | — |
 | `salutations` | le mot du haut de l'onglet Scolarité, quand une règle publiée doit passer devant le socle embarqué — voir [scolarite.md](features/scolarite.md#la-salutation-est-une-règle-pas-une-condition) |
 | `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal, `desactive` | le script de publication | **6-C** | [`blueprints/`](../blueprints/) |
@@ -428,6 +428,20 @@ la requête qui les liste.
 Le changement arrive sur les appareils au **prochain retour au premier plan**, comme les Blueprints
 et le référentiel des lieux. Aucune release, aucun redémarrage.
 
+### Les visuels et leur rendu
+
+La base ne stocke que des adresses d'**origine** — `/storage/v1/object/public/…` dans `annonces.image_url`,
+`annonces.images`, `visuels.image_url`, `batiments.image_url`, `etablissements.logo_url` — et c'est
+l'application qui les transforme au moment d'afficher, par les **transformations d'image** du plan Pro
+(`/storage/v1/render/image/public/…?width=&quality=`, [`rendu.ts`](../src/shared/visuels/rendu.ts)) :
+la largeur affichée arrondie à un palier (320, 480, 640, 960, 1280, 1600, 2000), une qualité par
+surface, la requête `?v=N` conservée. Publier une adresse de rendu dans la base figerait une largeur
+dans la donnée, et les versions antérieures à la 6.2.2 ne sauraient qu'en faire. Si le rendu échoue,
+l'application rejoue l'adresse d'origine, puis son repli. Mesuré le 2026-09-17 : la photo du Resto U
+de l'Amazone, 156 668 octets à l'origine, sort à **96 010 octets** en 640 px qualité 70, en cache un an
+et `HIT` au second appel. Les transformations se facturent au-delà de cent images d'origine par mois ;
+les paliers servent le taux de HIT du CDN et la vitesse.
+
 ### Des Blueprints
 
 ```bash
@@ -459,6 +473,11 @@ rend un manifeste périmé visible en une commande. Détail, gardes et retours e
   en place.** Le jour où l'un d'eux doit changer, il se publie sous un **nouveau nom** et la
   **surcouche en base** — `batiments.image_url`, `etablissements.logo_url` — porte la nouvelle
   adresse, qui gagne sur le socle embarqué.
+- **La connexion directe à la base est en IPv6 seule**, et le CLI ne trouve plus le projet lié de
+  septembre (`LegacyProjectNotLinkedError`) : depuis un poste sans IPv6, `psql` passe par le *session
+  pooler* de la région du projet, **`aws-0-eu-west-2.pooler.supabase.com`**, utilisateur
+  `postgres.<référence>` (mesuré le 2026-09-16), et les commandes de migration du CLI prennent
+  `--project-ref <référence>` plutôt que `--linked` ([`supabase/README.md`](../supabase/README.md#migrations)).
 - **La purge du CDN prend environ une minute.** Mesuré le 2026-09-16 : juste après un téléversement,
   une adresse nue peut encore servir l'ancien objet avec l'ancien en-tête. L'adresse versionnée est
   une autre clé de cache et rend le nouvel objet tout de suite. Ne pas conclure d'un premier `curl`.
@@ -522,10 +541,11 @@ Le tableau d'origine, relevé le 2026-08-08 :
 
 ## Ce qui est prévu, et pas encore appliqué
 
-> **Prévu le 2026-09-14 ; rien de ceci n'est en base.** Le modèle de données qu'entraînent les décisions
-> de la [phase 7](phase-7/README.md), tenu en un seul endroit pour que les jalons qui les appliquent
-> n'en écrivent pas plusieurs versions. Chaque ligne rejoint le tableau du schéma, plus haut, le
-> jour où son jalon l'applique — et sort d'ici.
+> **Prévu le 2026-09-14.** Le modèle de données qu'entraînent les décisions de la
+> [phase 7](phase-7/README.md), tenu en un seul endroit pour que les jalons qui les appliquent n'en
+> écrivent pas plusieurs versions. Chaque ligne rejoint le tableau du schéma, plus haut, le jour où
+> son jalon l'applique — et sort d'ici : les colonnes d'`annonces`, d'`editeurs` et d'`etablissements`
+> sont en base depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), le 2026-09-17.
 
 Tout est **additif** et s'applique par **migrations numérotées**
 ([7-C](phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt)) : aucune colonne ne se retire avant
@@ -533,9 +553,9 @@ que le parc ait migré.
 
 | Table | Colonnes et objets | Jalon |
 |---|---|---|
-| `annonces` | `type` (`evenement`, `info`, `bon_plan`, `partenaire` ; défaut `evenement`), `emplacements text[]` (défaut `{annonces}`, parmi `annonces`, `restaurants`, `bibliotheques`, `salles`), `ajustement` (`couvrir` ou `contenir` ; défaut `couvrir`, **`contenir` pour les lignes existantes**), `focale jsonb` (défaut `{"x": 0.5, "y": 0.3}`), `priorite` (défaut 0), `epinglee` (défaut faux), `creneaux jsonb`, `statut` (`brouillon`, `publiee`, `archivee` ; défaut `publiee`), `blurhash`, `partenaire jsonb` (`{nom, logo_url, lien}`) ; `check (couleur <> 4)` ; la politique de lecture ajoute `statut = 'publiee' and publiee_le <= now()` | [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives) ; `notifiee_le` et `notifies` en [7-L](phase-7/7-l-la-boucle.md) |
-| `editeurs` | `role` (`admin`, `redacteur`, `lecteur` ; défaut `admin`), `etablissements text[]` (nul pour tous) ; `private.peut_publier(etabs)` | la donnée en [7-C](phase-7/7-c-economie-et-socle.md), les politiques en [7-H](phase-7/7-h-console-roles.md) |
-| `etablissements` | `credits jsonb` (`[{nom, role, lien}]`), `campus text`, `alias text[]` (défaut vide) ; les trois gestes **scindés** : la base et `etablissements.sql` en 6.2.2, `COLONNES`, `types.ts`, `catalogue.ts` et `socle.ts` en 6.3 | [7-C](phase-7/7-c-economie-et-socle.md), puis [7-I](phase-7/7-i-releve-et-vocabulaire.md) |
+| `annonces` | `notifiee_le` et `notifies` | [7-L](phase-7/7-l-la-boucle.md) |
+| `editeurs` | `private.peut_publier(etabs)` et les politiques qui lisent `role` et `etablissements` (la donnée est en base depuis 7-C) | [7-H](phase-7/7-h-console-roles.md) |
+| `etablissements` | ce qui **lit** `credits`, `campus` et `alias` — `COLONNES`, `types.ts`, `catalogue.ts`, `socle.ts` et la version du cache —, une fois que la base porte colonne **et** valeurs (elles y sont depuis 7-C) | [7-I](phase-7/7-i-releve-et-vocabulaire.md) |
 | `evenements_connus`, `mesures` | les compteurs anonymes et leur vocabulaire fermé ; RPC `compter(lots jsonb)` ; pas de journal ; purge à treize mois ([mesure.md](mesure.md)) | [7-D](phase-7/7-d-la-mesure.md) |
 | `jetons_push` | `annonces boolean` (défaut faux) : l'accord pour les annonces en notification | [7-L](phase-7/7-l-la-boucle.md) |
 | `retours` | `source` (`formulaire` ou `app` ; défaut `formulaire`), `installation` (nul sauf accord) ; RPC `deposer_retour` | [7-L](phase-7/7-l-la-boucle.md) |
@@ -544,11 +564,15 @@ que le parc ait migré.
 
 ## Migrations
 
-> **Prévu en [7-C](phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt)** : les migrations
-> numérotées du CLI de Supabase, une ligne de base marquée appliquée, et `supabase/migrations/` comme
-> registre de ce que la production porte. Le paragraphe ci-dessous décrit la pratique d'avant.
+Depuis [7-C](phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt), le schéma évolue par les
+**migrations numérotées** du CLI de Supabase, dans [`supabase/migrations/`](../supabase/migrations/) :
+c'est le registre de ce que la production porte, et la base le prouve par sa table d'historique. La
+ligne de base (`20260914000000_ligne_de_base.sql`, la concaténation de `schema.sql`, `fonctions.sql` et
+`policies.sql`) a été **marquée appliquée sans être jouée** ; les trois fichiers restent la **vue
+lisible** de l'état, mise à jour dans le même commit que chaque migration, et `etablissements.sql`
+reste un fichier de **donnée**, rejoué par `psql` après la migration qui crée ses colonnes. La
+procédure et ses pièges sont dans [`supabase/README.md`](../supabase/README.md#migrations).
 
-Le schéma évolue par fichiers versionnés dans [`supabase/`](../supabase/), appliqués dans l'ordre.
 Une évolution qui casserait une version d'application encore installée n'en est pas une : le parc ne
 se vide pas d'un coup, et une colonne retirée trop tôt casse des installations qu'on n'a pas
 comptées. Ajouter avant de retirer, toujours.

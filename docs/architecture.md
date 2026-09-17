@@ -241,16 +241,20 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 20 écrans |
 | [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | les quatre onglets (barre en bas) et le glissement entre eux par geste, la barre personnalisée et son bouton d'action contextuel ([navigation.md](navigation.md)) |
 | [`shared/navigation/NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) | `NavBarHelper`, `withHeaderAnimation`, `withStaticHeader`, boutons d'en-tête |
-| [`shared/navigation/liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts) | les paramètres de route du formulaire de retours, et la règle des domaines qui restent dans la vue intégrée — pur, testé |
+| [`shared/navigation/liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts) | les paramètres de route du formulaire de retours, la règle des domaines qui restent dans la vue intégrée, et le remplissage du gabarit pré-rempli — pur, testé |
+| [`shared/navigation/formulaireDeRetours.ts`](../src/shared/navigation/formulaireDeRetours.ts) | la couture des trois portes du formulaire : le gabarit du catalogue, l'appareil et le système par expo-device, la version, l'onglet — et l'ouverture dans le navigateur intégré ([pilotage.md](pilotage.md#le-formulaire-pré-rempli)) |
 | [`shared/aetherius/client.ts`](../src/shared/aetherius/client.ts) | la façade du moteur, instanciée une fois pour toute l'application |
 | [`shared/aetherius/secrets.ts`](../src/shared/aetherius/secrets.ts) | résolution des secrets depuis le document unique de `SecureStore` |
 | [`shared/aetherius/delivery.ts`](../src/shared/aetherius/delivery.ts) | le cadrage du registre : socle, périmètre des secrets, URL du manifeste ([blueprints.md](blueprints.md)) |
 | [`shared/aetherius/registry.ts`](../src/shared/aetherius/registry.ts) | le registre branché : magasin de cache, rafraîchissement, retour à l'embarqué, diagnostic |
 | [`shared/aetherius/failures.ts`](../src/shared/aetherius/failures.ts) | un échec de run traduit en famille d'écran et en clé de traduction |
-| [`shared/aetherius/runBlueprint.ts`](../src/shared/aetherius/runBlueprint.ts) | l'appel type : résoudre, jouer, rendre des sorties ou un échec décrit |
+| [`shared/aetherius/runBlueprint.ts`](../src/shared/aetherius/runBlueprint.ts) | l'appel type : résoudre, jouer, rendre des sorties ou un échec décrit ; porte l'`origine` du run, signale les échecs aux observateurs et consulte le disjoncteur |
+| [`shared/aetherius/disjoncteur.ts`](../src/shared/aetherius/disjoncteur.ts) | le disjoncteur par hôte : trois échecs `unavailable` ouvrent, refroidissements croissants, un succès referme ; l'hôte déduit du run — pur, état en mémoire ([blueprints.md](blueprints.md#le-disjoncteur)) |
+| [`shared/aetherius/observateurs.ts`](../src/shared/aetherius/observateurs.ts) | le registre pur des échecs de run, où la mesure de [7-D](phase-7/7-d-la-mesure.md) se branchera sans fermer de cycle d'import |
+| [`shared/aetherius/echo.ts`](../src/shared/aetherius/echo.ts) | l'écho des en-têtes, un document inline joué par le menu de développement : le `User-Agent` des Blueprints Celcat arrive-t-il ? |
 | [`shared/aetherius/chrono.ts`](../src/shared/aetherius/chrono.ts) | la durée d'un run et de chacun de ses steps, sous `__DEV__` ([qualite.md](qualite.md#lire-un-run-plutôt-que-le-supposer)) |
 | [`shared/aetherius/index.ts`](../src/shared/aetherius/index.ts) | la porte d'entrée du socle : un service importe d'ici, jamais des paquets |
-| [`shared/aetherius/secrets.test.ts`](../src/shared/aetherius/secrets.test.ts) · [`delivery.test.ts`](../src/shared/aetherius/delivery.test.ts) · [`failures.test.ts`](../src/shared/aetherius/failures.test.ts) | les tests du socle, joués par `npm test` ([qualite.md](qualite.md)) |
+| [`shared/aetherius/secrets.test.ts`](../src/shared/aetherius/secrets.test.ts) · [`delivery.test.ts`](../src/shared/aetherius/delivery.test.ts) · [`failures.test.ts`](../src/shared/aetherius/failures.test.ts) · [`disjoncteur.test.ts`](../src/shared/aetherius/disjoncteur.test.ts) · [`observateurs.test.ts`](../src/shared/aetherius/observateurs.test.ts) | les tests du socle, joués par `npm test` ([qualite.md](qualite.md)) |
 | [`shared/supabase/client.ts`](../src/shared/supabase/client.ts) | client anonyme de la base de publication, construit au premier usage ([backend.md](backend.md)) |
 | [`shared/supabase/types.ts`](../src/shared/supabase/types.ts) | types des tables, tels que la base les rend, et le schéma en lecture seule |
 | [`shared/supabase/failures.ts`](../src/shared/supabase/failures.ts) | un échec de lecture traduit dans le même vocabulaire que ceux du moteur |
@@ -267,6 +271,8 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/visuels/referentiel.ts`](../src/shared/visuels/referentiel.ts) | les visuels publiés : la surcouche en mémoire et la résolution des trois états — pas de socle embarqué, le socle est l'image de la source ([backend.md](backend.md)) |
 | [`shared/visuels/index.ts`](../src/shared/visuels/index.ts) | sa couture de plateforme : cache local et lecture de la table `visuels` |
 | [`shared/visuels/referentiel.test.ts`](../src/shared/visuels/referentiel.test.ts) | la distinction du vide et du nul, dont une erreur ferait disparaître une photo en silence — joué par `npm test` |
+| [`shared/visuels/rendu.ts`](../src/shared/visuels/rendu.ts) | l'adresse de **rendu** d'un visuel publié — `/object/public/` → `/render/image/public/`, palier de largeur, qualité bornée, requête conservée, autre origine intacte — par des chaînes, sans `URL` : pur ([backend.md](backend.md#les-visuels-et-leur-rendu)) |
+| [`shared/visuels/rendu.test.ts`](../src/shared/visuels/rendu.test.ts) | les paliers, l'idempotence, `?v=N`, Croustillant et Affluences intacts — joué par `npm test` |
 | [`shared/ciblage/ciblage.ts`](../src/shared/ciblage/ciblage.ts) | le ciblage d'un contenu publié — audience, campus, fenêtre de versions — partagé par les annonces et les messages de service : projection défensive et règle de présentation, purs ([pilotage.md](pilotage.md)) |
 | [`shared/ciblage/versions.ts`](../src/shared/ciblage/versions.ts) | le comparateur de versions `X.Y.Z` et la fenêtre inclusive, purs |
 | [`shared/ciblage/contexte.ts`](../src/shared/ciblage/contexte.ts) | ce que l'appareil sait de lui-même au moment de présenter : établissement actif, version, statut de testeur |
@@ -330,7 +336,9 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/ActionButton.tsx`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** — un carrousel, une section — et sa phrase, optionnelle |
 | [`shared/ui/ChargementPleinePage.tsx`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran** : sa phrase est obligatoire, et une seconde ligne paraît après quatre secondes ([theme.md](theme.md#les-décisions-durables)) |
-| [`shared/ui/ApparitionEnFondu.tsx`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu, posée une par une : jamais un interrupteur global |
+| [`shared/ui/ApparitionEnFondu.tsx`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu, posée une par une : jamais un interrupteur global ; exporte `DUREE_FONDU_MS`, que les images reprennent |
+| [`shared/ui/useSourceRendue.ts`](../src/shared/ui/useSourceRendue.ts) | la source d'une image distante en trois temps — rendue, origine, repli — et la densité de l'écran, la seule chose que `rendu.ts` ne sait pas |
+| [`shared/ui/VisuelAvecRepli.tsx`](../src/shared/ui/VisuelAvecRepli.tsx) | une image distante et son repli local, par `expo-image` : le repli remplace, jamais dessous ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/indicateurRetarde.ts`](../src/shared/ui/indicateurRetarde.ts) | le seuil sous lequel une attente ne montre **rien**, et ce qu'on a décidé de ne pas faire ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/controles.ts`](../src/shared/ui/controles.ts) | ce que les deux contrôles dessinés partagent : l'ombre de leur poignée |
 | [`shared/ui/Interrupteur.tsx`](../src/shared/ui/Interrupteur.tsx) | l'interrupteur dessiné du dépôt, piloté, identique sur les deux plateformes |
@@ -353,6 +361,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/ModMenuBlueprints.tsx`](../src/shared/ui/ModMenuBlueprints.tsx) | son panneau de diagnostic de la livraison ([blueprints.md](blueprints.md)) |
 | [`shared/ui/ModMenuReinitialisation.tsx`](../src/shared/ui/ModMenuReinitialisation.tsx) | son bouton de remise à zéro complète, avec confirmation |
 | [`shared/ui/ModMenuEntretien.tsx`](../src/shared/ui/ModMenuEntretien.tsx) | son bloc de sonde de l'entretien : état de la tâche de fond, dernière tentative, dernier bilan, jouer et réveiller ([qualite.md](qualite.md)) |
+| [`shared/ui/ModMenuDisjoncteur.tsx`](../src/shared/ui/ModMenuDisjoncteur.tsx) | son bloc du disjoncteur : les hôtes en échec, leur palier, « ouvert jusqu'à », réarmer ([qualite.md](qualite.md)) |
 | [`shared/ui/SourceFailureNotice.tsx`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, tel qu'un écran le montre : message de la famille, bouton Réessayer seulement s'il répare, ou l'**action** qui remplirait l'écran ([blueprints.md](blueprints.md)) |
 | [`shared/constants/urls.ts`](../src/shared/constants/urls.ts) | URLs externes : liens applicatifs (`URL`). Les points d'entrée Celcat en sont sortis au jalon [6-E](phase-6/6-e-planning.md) — ils vivent dans les Blueprints |
 | [`shared/utils/formatUtils.ts`](../src/shared/utils/formatUtils.ts) | `upperCaseFirstLetter` et `formatDescription` (nettoyage des descriptions Celcat) |

@@ -1,6 +1,13 @@
 # 7-C — Économie et socle
 
-> **Spécification, ouverte le 2026-09-14, pas encore livrée.** Publication : **6.2.2**. Née de la
+> **Jalon livré le 2026-09-17** — le code, la base, la publication du catalogue et des Blueprints, la
+> documentation ; ouvert le 2026-09-16 sur la branche `v6.2.2`. Restent au propriétaire du produit, et
+> cochés dans la [définition de « terminé »](#définition-de--terminé-) quand ils le seront : les deux
+> builds de développement et le [protocole](#plan-de-test) en neuf points, la règle de protection de
+> `main`, le tri des alertes restantes, et l'egress relevé avant et après. Ce que la réalité a corrigé
+> du texte ci-dessous est dans [Ce que la réalité a corrigé](#ce-que-la-réalité-a-corrigé-le-2026-09-17).
+>
+> **Spécification ouverte le 2026-09-14.** Publication : **6.2.2**. Née de la
 > [mise à plat](7-mise-a-plat.md), le jour où deux choses sont arrivées ensemble : l'avertissement
 > *Fair Use* de Supabase et une panne de Celcat. La **6.2.1** ne part pas seule aux stores ; elle part dans
 > cette version courte, qui rend l'application **économe** — envers notre base comme envers les serveurs
@@ -43,6 +50,95 @@ Le tableau Usage de Supabase, les en-têtes des objets du bucket et les transfor
 2026-09-14, sont dans [7-A](7-a-bande-passante.md#ce-qui-a-été-mesuré-le-2026-09-14), qui agit sur les
 objets. Côté application, **`expo-image` n'est pas une dépendance** : toutes les images passent par le
 `Image` de React Native, qui n'a ni cache disque réglable, ni placeholder, ni transition.
+
+## Ce que la réalité a corrigé, le 2026-09-17
+
+Les endroits où l'exécution a amendé le texte des sections suivantes — annoncés, jamais cachés.
+
+**Les images (section 2).**
+
+- **Quatre cartes passent par `VisuelAvecRepli`, pas deux** : `LibrarySectionCard` et `CrousSectionCard`
+  aussi, avec le même `resizeMode` dans le style. Même traitement.
+- **Le repli local passe aussi par le `Image` d'`expo-image`**, sans transition : un seul composant,
+  une seule sémantique `contentFit`. Les `require` des écrans listés — démarrage, menu de développement,
+  accueil, À propos — restent sur React Native.
+- **`expo-image` est en `~57.0.5`**, pas `~57.0.4` : c'est ce qu'`expo` 57.0.23 épingle, une fois les
+  vingt-deux modules montés. `npx expo install --fix` sort en code 1 sur un avertissement — il ne sait
+  pas écrire les greffons dans `app.config.ts`, qui est dynamique — sans rien laisser en plan.
+- **La carte d'annonce dont ni le rendu ni l'origine ne répondent** retombe sur l'affiche typographique,
+  comme sans image, au lieu d'un carré gris.
+- **`DUREE_MS` d'`ApparitionEnFondu` est devenue `DUREE_FONDU_MS`, exportée** : la transition des images
+  la reprend au lieu de dupliquer 200.
+- **Les paliers ne bornent pas la facture** : Supabase facture par image d'**origine** transformée (cent
+  incluses, puis cinq dollars les mille), pas par variante. Ils servent le taux de HIT du CDN et la
+  vitesse, ce qui suffit à les justifier. Mesuré : `amazone.jpg`, 156 668 octets à l'origine, sort à
+  **96 010** en 640 px qualité 70, `MISS` puis `HIT`.
+
+**L'étiquette envers Celcat (section 3).**
+
+- **Le cache d'occupation porte un `ok` par salle** : un lot partiel est mis en cache, et seules les
+  salles en échec sont rejouées dans la fenêtre — sinon une salle qui n'avait pas répondu passait pour
+  libre toute la journée pendant dix minutes. Un lot entièrement en échec n'est pas mis en cache, comme
+  écrit.
+- **La sonde** ([`sondes/mesures/occupation_groupee.py`](../../sondes/mesures/occupation_groupee.py)),
+  jouée sur les dix-sept salles de l'A28 et trois journées — le mardi 2026-09-22 (84 événements), la
+  journée d'examens du 2027-01-11 (10, trouvée en sondant les titres de décembre et janvier) et le mardi
+  2026-10-27 des vacances (4) — rend un verdict **nuancé** : identifiants identiques, chaque description
+  nomme sa salle (en entités HTML, `B&#226;t.`, ce qui avait d'abord fait conclure le contraire),
+  attribution juste à 100 % (109 attributions, 0 fausse), multi-salles présents dans chaque run
+  individuel ; mais « au moins 99 % d'événements attribuables à zéro ou une salle » **ne tient pas**
+  (98,8 % le mardi, 0 % le jour d'examens, où chaque épreuve occupe plusieurs salles). Le critère
+  supposait qu'un cours multi-salles serait inattribuable ; il est attribuable à chacune de ses salles.
+  La règle actuelle reste derrière le cache, comme écrit ; la requête groupée est viable pour la 6.3 à
+  condition d'attribuer un événement à toutes les salles nommées — écrit dans
+  [campus-salles-libres.md](../features/campus-salles-libres.md#décisions-de-conception).
+- **`origineDuRun` ne rend `automatique` que pour `lancement`, `premier-plan` et `tache`** — ceux que
+  cette section nomme. `activation`, `favoris` et `filtres` suivent un geste à une seconde près, et
+  `sonde` est le bouton du menu de développement, qui doit passer pour sonder le circuit.
+- **Un run court-circuité n'est pas signalé aux observateurs** : il n'y a pas eu de run, et la mesure de
+  7-D compterait des dizaines d'échecs fictifs par minute.
+- **`[disjoncteur]` journalise l'hôte seul**, jamais l'adresse entière : un lien d'abonnement iCalendar
+  est un secret personnel. Les lignes d'ouverture et de fermeture sont des `console.warn` non gardés par
+  `__DEV__` — elles doivent se lire sur un build — ; le court-circuit lui-même l'est.
+- **`npm run parity -- celcat` ne désigne rien** : le filtre nomme un cas (`celcat-jour`), pas une
+  famille. La parité entière a été rejouée, verte sur ses treize cas.
+- **L'écho** vit dans `src/shared/aetherius/echo.ts`, un document inline joué par un bouton `__DEV__`
+  du panneau Blueprints — `blueprints/` est publié en entier par le script, et le registre ne résout
+  que des noms.
+
+**Le formulaire (section 4).**
+
+- **`ScolariteDashboard.ouvrirLien` contournait `parametresDuFormulaire`** : depuis la page Scolarité
+  d'un campus non relié — et depuis une rangée de widget, par `GrilleScolarite` —, la page d'engagement
+  remplaçait le formulaire au lieu de s'ouvrir par-dessus. Corrigé par la couture commune.
+- **PRIVACY.md, 5 bis**, dit désormais que l'application pré-remplit l'appareil, le système, la version
+  et l'onglet, et qu'ils partent vers Google à l'ouverture du formulaire.
+- **Le catalogue publié remplace le socle** : les gabarits n'existent sur un appareil qu'une fois
+  `etablissements.sql` rejoué — fait le 2026-09-17, après `db push`, dans cet ordre.
+
+**Le socle du dépôt (sections 5 et 6).**
+
+- **Le CLI ne trouvait plus le projet lié** (`LegacyProjectNotLinkedError` : le lien de septembre,
+  `supabase/.temp/linked-project.json`, n'est plus la forme attendue) : `--project-ref` remplace
+  `--linked` pour `repair`, `list` et `push`, et `psql` vise le *session pooler* de la région du projet,
+  `aws-0-eu-west-2.pooler.supabase.com`, l'hôte direct n'ayant qu'une adresse IPv6
+  ([`supabase/README.md`](../../supabase/README.md#migrations)).
+- **`ajustement = 'contenir'` sur les lignes existantes, sans `update`** : la colonne est ajoutée avec
+  le défaut `contenir`, puis son défaut passe à `couvrir` — même résultat, aucune ligne de `journal`
+  attribuée à l'utilisateur SQL, et `schema.sql` ne porte que le défaut final.
+- **`sharp`** (devDependency de 7-A) rejoint le groupe `outillage` de Dependabot.
+- **Le tri des alertes** : `npm audit fix` sans `--force` a ramené 35 vulnérabilités (1 critique,
+  10 hautes, 21 modérées, 3 basses ; 55 avis, les 52 de GitHub) à **15 modérées**, toutes derrière un
+  majeur épinglé par le SDK (`expo`, `expo-splash-screen`, `expo-sharing`, `datetimepicker`) ou
+  `vitest` 3 → 4 : elles attendent la montée du socle, politique écrite dans
+  [plateforme.md](../plateforme.md#la-politique-des-alertes-de-sécurité). Les rejeter sur GitHub avec
+  ce motif est un geste du propriétaire du produit.
+- **`dist/` entre dans `.gitignore`** : `npx expo export` l'écrit à la racine et seul `console/dist/`
+  était ignoré.
+- **Node 22** est installé par `nvm` sur le poste (sans changer le défaut) : `eas-cli` l'exige, et
+  `.nvmrc` le disait déjà.
+- **Les docs** : `qualite.md` disait « trois workflows » pour quatre (cinq avec `verifier.yml`) ; la
+  branche s'est renommée `v6.2.2`, comme le README de phase le prévoit.
 
 ## Ce qui est à faire
 
@@ -455,14 +551,30 @@ ordre, `db push` avant `psql -f` ; **en 6.3 seulement**, ce qui la lit — `COLO
 
 ## Définition de « terminé »
 
-Celle du [CONTRIBUTING](../../CONTRIBUTING.md#définition-de--terminé-), plus : `verifier.yml` vert sur la
-branche `v6.2.2` ; `npm run parity` verte ; `migration list --linked` qui montre la ligne de base et les
-trois migrations ; le protocole ci-dessous joué sur les deux appareils ; l'egress relevé avant et
-après ; cette spécification amendée — bannière de livraison, écarts constatés.
+Celle du [CONTRIBUTING](../../CONTRIBUTING.md#définition-de--terminé-), plus :
+
+- [x] `npx tsc --noEmit`, `npx eslint . --max-warnings=0`, `npm test` (760 tests), `npx expo-doctor`
+  (21/21), `npx expo export` sur les deux plateformes — *joués le 2026-09-17 sur le code final*.
+- [ ] `verifier.yml` vert sur la branche `v6.2.2` — *à la première poussée de la branche*.
+- [x] `npm run parity` verte — *treize cas, le 2026-09-17, après la montée des six Blueprints Celcat,
+  publiés dans la foulée*.
+- [x] `migration list` montre la ligne de base et les trois migrations — *le 2026-09-17, par
+  `--project-ref` ; `db push` appliqué, `etablissements.sql` rejoué, colonnes, politique, index,
+  contraintes et gabarits relus dans la base*.
+- [ ] Le protocole ci-dessous joué sur les deux appareils, sur des builds de développement neufs.
+- [ ] L'egress relevé avant et après.
+- [x] Cette spécification amendée — bannière de livraison, écarts constatés.
 
 ## Plan de test
 
 Sur les **builds de développement neufs**, iPhone 13 Pro et Galaxy A8, Metro lancé sur le poste.
+
+*Ce que le poste a pu vérifier le 2026-09-17, avant les appareils* : le rendu d'image sort du CDN en
+cache d'un an, `MISS` puis `HIT` (point 1) ; l'historique des migrations porte la ligne de base et les
+trois migrations, et `verifier.yml` et `dependabot.yml` sont en place (point 8) ; la clé publiable ne
+voit plus que l'annonce active, la politique filtrant `statut` et `publiee_le` (point 9 — les trois
+annonces de test d'audience `testeurs` restent à jouer depuis la console et l'appareil). Les points 1 à
+7 se jouent sur les appareils.
 
 1. **Les images.** Onglet Campus, carrousel d'annonces, grille, fiche, visionneuse : fondu de 200 ms,
    jamais de repli sous l'image, une affiche non carrée entière sur son fond flou. Réseau ralenti : le

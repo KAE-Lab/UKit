@@ -29,6 +29,7 @@
     }
   },
   "vars": {
+    "user_agent": "UKit (+https://github.com/KAE-Lab/UKit; contact@kaelab.dev)",
     "cal_view": "agendaDay",
     "colour_scheme": "3"
   },
@@ -39,6 +40,7 @@
       "method": "POST",
       "url": "{{ inputs.domaine }}/Home/GetCalendarData",
       "headers": {
+        "User-Agent": "{{ vars.user_agent }}",
         "Pragma": "no-cache",
         "Cache-Control": "no-cache",
         "Accept": "application/json",

@@ -4,8 +4,9 @@
  * Toujours la, a droite du grand titre, au gabarit des boutons d'en-tete (`HeaderButton`) : un « i »
  * gris quand tout va bien, rouge quand un incident est en cours. Le toucher ouvre, dans le premier
  * cas, une feuille « Rien a signaler » avec le lien du formulaire — celui ou l'on dit un bug, une
- * idee, une demande, publie par le catalogue (`services.adaptation`), ouvert dans le navigateur
- * integre comme partout ailleurs — et dans le second la feuille de l'incident.
+ * idee, une demande, publie par le catalogue et pre-rempli de l'onglet d'ou l'on vient, de l'appareil
+ * et de la version (shared/navigation/formulaireDeRetours.ts), ouvert dans le navigateur integre
+ * comme partout ailleurs — et dans le second la feuille de l'incident.
  *
  * Elle a d'abord ete un rappel qui n'existait que pendant un incident, puis un bandeau permanent qui
  * cachait le grand titre (retours d'appareil du 2026-09-03). Une pastille toujours presente vaut
@@ -27,7 +28,6 @@ import { useNavigation, type NavigationProp, type ParamListBase } from '@react-n
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { contexteDeCiblage } from '../ciblage';
-import { serviceEtablissement } from '../etablissements/catalogue';
 import Translator from '../i18n/Translator';
 import { maintenant } from '../services/Temps';
 import type { AppThemeType } from '../theme/Theme';
@@ -36,15 +36,17 @@ import { HEADER_BUTTON_ICON, HeaderButton } from '../ui/HeaderButton';
 import { messagesConnus, onMessages } from './index';
 import { choisirPresentation } from './presentation';
 import { vusConnus } from './vus';
-import { parametresDuFormulaire } from '../navigation/liensDuFormulaire';
+import { lienDuFormulaire, ouvrirLeFormulaire, type SectionDuFormulaire } from '../navigation/formulaireDeRetours';
 
 export interface PastilleServiceProps {
     readonly theme: AppThemeType;
+    /** L'onglet qui pose la pastille : la section que le formulaire coche d'avance. */
+    readonly onglet: SectionDuFormulaire;
     /** La place dans la rangee du titre : le plus souvent `marginLeft: 'auto'` et la marge basse du titre. */
     readonly style?: StyleProp<ViewStyle>;
 }
 
-export function PastilleService({ theme, style }: PastilleServiceProps) {
+export function PastilleService({ theme, onglet, style }: PastilleServiceProps) {
     const [, setRevision] = useState(0);
     const [ouverte, setOuverte] = useState(false);
 
@@ -55,7 +57,8 @@ export function PastilleService({ theme, style }: PastilleServiceProps) {
     // toujours sous le navigateur de la pile.
     const navigation = useNavigation<NavigationProp<ParamListBase>>();
     const { rappel } = choisirPresentation(messagesConnus(), vusConnus(), contexteDeCiblage(), maintenant());
-    const formulaire = serviceEtablissement('adaptation');
+    const porte = { porte: 'pastille', onglet } as const;
+    const formulaire = lienDuFormulaire(porte);
     const fermer = () => setOuverte(false);
 
     return (
@@ -85,7 +88,7 @@ export function PastilleService({ theme, style }: PastilleServiceProps) {
                     corps={Translator.get('SERVICE_OK_BODY')}
                     lien={formulaire === null ? undefined : {
                         libelle: Translator.get('SERVICE_REPORT_LINK'),
-                        onPress: () => { fermer(); navigation.navigate('WebBrowser', parametresDuFormulaire(formulaire)); },
+                        onPress: () => { fermer(); ouvrirLeFormulaire(navigation, porte); },
                     }}
                 />
             )}

@@ -136,11 +136,42 @@ existent, seule l'équipe sait lesquelles sont réellement accessibles librement
 **embarqué d'abord** — l'écran doit être complet hors ligne et au premier lancement — et corrigeable
 à distance ensuite.
 
-**Une requête d'occupation par salle**, lancées en parallèle par `Promise.all`. Le Blueprint accepte
-une liste d'identifiants, et le planning agrégé s'en sert — mais pas ici, et pour une raison qui n'est
-pas une inefficacité à corriger : **la réponse ne porte pas l'identifiant de la ressource
-interrogée**, donc un run groupé ne permettrait pas de réattribuer les événements à leur salle. Le
-découpage laisse en prime un échec isolé ne pas vider tout le bâtiment.
+**Une requête d'occupation par salle**, lancées en parallèle par `Promise.all`, **derrière un cache de
+dix minutes par bâtiment et par jour** (7-C). Le Blueprint accepte une liste d'identifiants, et le
+planning agrégé s'en sert — mais pas ici : **la réponse ne porte pas l'identifiant de la ressource
+interrogée**, donc un run groupé ne permet de réattribuer les événements à leur salle que par le nom
+que sa description porte (voir la sonde, plus bas). Le découpage laisse en prime un échec isolé ne
+pas vider tout le bâtiment.
+
+**Le cache** ([`occupationCache.ts`](../../src/features/Campus/services/occupationCache.ts), pur, et sa
+couture [`OccupationService.ts`](../../src/features/Campus/services/OccupationService.ts)) : la fiche
+d'un bâtiment jouait dix-huit runs à chaque ouverture, et le gaspillage mesuré était le va-et-vient
+tableau de bord, fiche, retour, fiche, dans la même minute. Dix minutes, parce que l'occupation d'une
+salle est **éditoriale** — elle ne bouge pas dans l'heure — et que le plus petit créneau affiché dure
+quinze minutes. Clé `occupation@1:<bâtiment>:<jour>` : le jour est celui de l'écran (l'horloge
+simulée), l'horodatage celui de l'horloge réelle, et `TimeMockService` purge le préfixe à chaque
+changement de date. Chaque salle porte son `ok` : un lot partiel est mis en cache, mais les salles en
+échec sont rejouées à l'ouverture suivante dans la fenêtre — sinon elles passeraient pour libres toute
+la journée pendant dix minutes — ; un lot où **toutes** les salles échouent n'est pas mis en cache, un
+cache vide masquerait une panne.
+
+**La sonde de la requête groupée**, jouée le 2026-09-17
+([`sondes/mesures/occupation_groupee.py`](../../sondes/mesures/occupation_groupee.py)) sur les dix-sept
+salles de l'A28 et trois journées — le mardi 2026-09-22 (84 événements), la journée d'examens du
+2027-01-11 (10) et le mardi 2026-10-27 des vacances de la Toussaint (4). Ce qu'elle a mesuré : les
+identifiants du run groupé sont **identiques** à l'union des runs par salle sur les trois journées ;
+**chaque description nomme sa salle** — en entités HTML (`CREMI - B&#226;t. A28 Salle 005`), ce qui
+avait d'abord fait conclure le contraire — ; l'attribution par le nom est **juste à 100 %**
+(109 attributions, 0 fausse), y compris pour les cours **multi-salles**, tous présents dans chacun des
+runs individuels concernés ; aucun événement sans salle hors vacances. Le critère écrit par
+[7-C](../phase-7/7-c-economie-et-socle.md#3-létiquette-envers-celcat) demandait aussi « au moins 99 %
+d'événements attribuables à zéro ou une salle », et **celui-là ne tient pas** : 98,8 % un mardi (un TP
+sur deux salles), 0 % le jour d'examens (chaque épreuve occupe plusieurs salles). Le critère supposait
+qu'un cours multi-salles serait inattribuable ; il est en fait attribuable à **chacune** de ses salles.
+Décision : la règle actuelle reste, derrière le cache, comme la spécification le prévoit en cas de
+critère non tenu ; la requête groupée est **techniquement viable** pour la 6.3, à condition
+d'attribuer un événement à toutes les salles que sa description nomme — le lot Planning de
+[7-J](../phase-7/7-j-ecrans.md) tranche.
 
 **Les événements de vacances ne sont pas filtrés dans le Blueprint**, contrairement au planning. Ce
 sont eux qui déclarent un bâtiment fermé : les écarter à la source viderait l'information. Ils
@@ -259,6 +290,9 @@ Deux conséquences à connaître avant d'y toucher :
 - **La correspondance salle → bâtiment est textuelle.** Un renommage côté Celcat peut rattacher une
   salle au mauvais bâtiment ou la faire disparaître.
 
+- **Une occupation modifiée dans les dix minutes** ne se voit qu'au terme du cache (7-C) : l'occupation
+  est éditoriale, l'écart est accepté.
+
 ## Carte des fichiers
 
 | Fichier | Rôle |
@@ -267,8 +301,11 @@ Deux conséquences à connaître avant d'y toucher :
 | [`FreeRoom/FreeRoomDetailsScreen.tsx`](../../src/features/Campus/FreeRoom/FreeRoomDetailsScreen.tsx) | fiche d'un bâtiment : sélecteur d'heure et salles libres |
 | [`FreeRoom/components/FreeRoomListItem.tsx`](../../src/features/Campus/FreeRoom/components/FreeRoomListItem.tsx) | ligne de liste d'un bâtiment |
 | [`FreeRoom/components/FreeRoomDetailsComponents.tsx`](../../src/features/Campus/FreeRoom/components/FreeRoomDetailsComponents.tsx) | bandeau d'heures, carte de salle libre, états fermé et vide ; la liste porte la tête de section verte ([`CampusSectionHeader`](../../src/features/Campus/components/CampusSectionHeader.tsx)) et accueille en pied la carte « S'y rendre » du bâtiment ([`CampusMapSection`](../../src/features/Campus/components/CampusMapSection.tsx)), comme les fiches de restaurant et de BU |
-| [`FreeRoom/hooks/useFreeRoomsData.ts`](../../src/features/Campus/FreeRoom/hooks/useFreeRoomsData.ts) | chargement de l'occupation et `calculateFreeRooms` (fonction pure) |
+| [`FreeRoom/hooks/useFreeRoomsData.ts`](../../src/features/Campus/FreeRoom/hooks/useFreeRoomsData.ts) | chargement de l'occupation (par le service, derrière son cache) et `calculateFreeRooms` (fonction pure) |
+| [`services/occupationCache.ts`](../../src/features/Campus/services/occupationCache.ts) | la politique du cache d'occupation — dix minutes, clé par bâtiment et par jour, lecture défensive, salles à rejouer — pure |
+| [`services/occupationCache.test.ts`](../../src/features/Campus/services/occupationCache.test.ts) | ses tests, joués par `npm test` |
+| [`services/OccupationService.ts`](../../src/features/Campus/services/OccupationService.ts) | sa couture : mémoire, `AsyncStorage`, les runs par salle et l'écriture |
 | [`services/FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) | contrats `RoomInfo` / `BuildingInfo` / `FreeRoomSlot`, `etageDeSalle` et `grouperParEtage` |
-| [`services/CampusApiService.ts`](../../src/features/Campus/services/CampusApiService.ts) | joue les deux Blueprints Celcat : la liste des salles, l'occupation d'une journée |
+| [`services/CampusApiService.ts`](../../src/features/Campus/services/CampusApiService.ts) | joue les deux Blueprints Celcat : la liste des salles, l'occupation d'une journée ; ses options portent l'origine du run pour le disjoncteur |
 | [`services/CampusApiMapping.ts`](../../src/features/Campus/services/CampusApiMapping.ts) | contrats `CelcatRoom` / `CelcatBuilding` / `CampusEvent`, projection, reconstruction des bâtiments |
 | [`services/CampusApiMapping.test.ts`](../../src/features/Campus/services/CampusApiMapping.test.ts) | ses tests, joués par `npm test` |

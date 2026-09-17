@@ -154,8 +154,46 @@ dépend : c'est une cellule comme une autre. Effacer, donc, plutôt que retouche
 
 ## Migrations
 
-Le schéma évolue par fichiers versionnés, appliqués dans l'ordre, nommés
-`NNN-description.sql` (`001-annonces-ordre.sql`).
+Depuis le jalon [7-C](../docs/phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt), le schéma évolue
+par les **migrations numérotées** du CLI de Supabase, par `npx --yes supabase@2.117.0` — jamais en
+dépendance du projet. **La source de vérité est [`migrations/`](migrations/)** : c'est le registre de
+ce que la production porte, et la base le prouve par sa table d'historique
+(`supabase_migrations.schema_migrations`). `schema.sql`, `fonctions.sql` et `policies.sql` restent la
+**vue lisible** de l'état, mise à jour dans le même commit que chaque migration ; `etablissements.sql`
+reste un fichier de **donnée**, rejoué par `psql` après la migration qui crée ses colonnes.
+
+La **ligne de base**, `20260914000000_ligne_de_base.sql`, est la concaténation commentée des trois
+fichiers, **marquée appliquée sans être jouée** le 2026-09-17 — la base la portait déjà :
+
+```bash
+set -a && source .env && set +a           # SUPABASE_ACCESS_TOKEN et SUPABASE_DB_PASSWORD
+REF=owiksddeqcyyifnmpyqm
+npx --yes supabase@2.117.0 migration repair --status applied 20260914000000 --project-ref $REF -p "$SUPABASE_DB_PASSWORD"
+npx --yes supabase@2.117.0 migration list --project-ref $REF -p "$SUPABASE_DB_PASSWORD"
+```
+
+Ensuite, à chaque évolution :
+
+```bash
+npx --yes supabase@2.117.0 migration new <nom>            # supabase/migrations/<horodatage>_<nom>.sql, a remplir
+npx --yes supabase@2.117.0 db push --project-ref $REF --dry-run -p "$SUPABASE_DB_PASSWORD"   # ce qui partirait
+npx --yes supabase@2.117.0 db push --project-ref $REF -p "$SUPABASE_DB_PASSWORD"             # chaque migration dans sa transaction
+psql -h aws-0-eu-west-2.pooler.supabase.com -p 5432 -U postgres.$REF -d postgres -v ON_ERROR_STOP=1 -f supabase/etablissements.sql   # si des valeurs de catalogue suivent
+```
+
+Ce qui a été mesuré en le faisant :
+
+- `--project-ref` et non `--linked` : le lien posé en septembre (`supabase/.temp/linked-project.json`)
+  n'est plus la forme que le CLI attend (`LegacyProjectNotLinkedError : Cannot find project ref`), et
+  la référence vaut mieux qu'un `supabase link` de plus ;
+- le CLI joint la base par le *session pooler*, donc en IPv4 ; `psql`, lui, doit viser le pooler de la
+  **région du projet, `eu-west-2`**, depuis un poste sans IPv6 (la connexion directe
+  `db.<référence>.supabase.co` n'a qu'une adresse IPv6) ;
+- `db pull` et `db diff` passent par un conteneur Docker ; le dépôt n'en dépend pas, et la ligne de
+  base n'en a pas eu besoin, les trois fichiers étant déjà rejouables ;
+- une migration ne s'écrit **jamais** avec un `update` que `schema.sql` recopierait : la migration
+  d'`annonces` pose `ajustement` avec le défaut `contenir` puis change le défaut, au lieu de mettre à
+  jour les lignes — rien à journaliser, et la vue lisible ne porte que le défaut final.
 
 Une règle qui n'a l'air de rien : **ajouter avant de retirer, toujours.** Le parc d'applications
 installées ne se vide pas d'un coup — une colonne supprimée trop tôt casse des installations qu'on

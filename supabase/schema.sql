@@ -36,7 +36,8 @@ create table if not exists public.annonces (
     lat         double precision,
     lng         double precision,
     -- L'identite visuelle : un index de la palette de sections (0-3, 5 — le 4 duplique le 0 en
-    -- sombre). Teinte la pastille d'emetteur et fixe le depart du cycle des sections de la fiche.
+    -- sombre, et `annonces_couleur_check` le refuse depuis 7-C). Teinte la pastille d'emetteur et
+    -- fixe le depart du cycle des sections de la fiche.
     couleur     integer,
     cta_texte   text,
     cta_lien    text,
@@ -77,6 +78,46 @@ alter table public.annonces add constraint annonces_plateformes_check
 
 create index if not exists annonces_publication_idx
     on public.annonces (active, expire_le desc);
+
+-- La publication des annonces (jalon 7-C, migration 20260916222137_annonces_publication.sql) : le
+-- type de carte, ses emplacements, son cadrage, son ordre, son cycle de vie, son placeholder et son
+-- partenaire. Invisible pour l'application installee — BdeService nomme ses colonnes — ; la console
+-- les expose en 7-F, l'application les rend en 6.3. `ajustement` vaut `contenir` sur les lignes
+-- d'avant la migration (composees pour l'affiche entiere, jamais recadree) et `couvrir` depuis.
+alter table public.annonces add column if not exists type text not null default 'evenement';
+alter table public.annonces drop constraint if exists annonces_type_check;
+alter table public.annonces add constraint annonces_type_check
+    check (type in ('evenement', 'info', 'bon_plan', 'partenaire'));
+alter table public.annonces add column if not exists emplacements text[] not null default '{annonces}';
+alter table public.annonces drop constraint if exists annonces_emplacements_check;
+alter table public.annonces add constraint annonces_emplacements_check
+    check (emplacements <@ array['annonces', 'restaurants', 'bibliotheques', 'salles']::text[]);
+alter table public.annonces add column if not exists ajustement text not null default 'couvrir';
+alter table public.annonces drop constraint if exists annonces_ajustement_check;
+alter table public.annonces add constraint annonces_ajustement_check
+    check (ajustement in ('couvrir', 'contenir'));
+-- Le point garde au centre du recadrage, en fractions de l'image.
+alter table public.annonces add column if not exists focale jsonb not null default '{"x": 0.5, "y": 0.3}'::jsonb;
+alter table public.annonces add column if not exists priorite integer not null default 0;
+alter table public.annonces add column if not exists epinglee boolean not null default false;
+-- Les plages de mise en avant : [{"jours": [1, 2, 3], "de": "11:00", "a": "14:00"}], en heure de Paris.
+alter table public.annonces add column if not exists creneaux jsonb;
+-- Une annonce programmee est une annonce `publiee` dont `publiee_le` est a venir : la politique de
+-- lecture (policies.sql) la cache jusqu'a son heure.
+alter table public.annonces add column if not exists statut text not null default 'publiee';
+alter table public.annonces drop constraint if exists annonces_statut_check;
+alter table public.annonces add constraint annonces_statut_check
+    check (statut in ('brouillon', 'publiee', 'archivee'));
+-- Le placeholder, calcule au televersement par la console (7-E) ; jamais saisi.
+alter table public.annonces add column if not exists blurhash text;
+-- {"nom", "logo_url", "lien"}, pour les cartes de type partenaire ou bon plan.
+alter table public.annonces add column if not exists partenaire jsonb;
+alter table public.annonces drop constraint if exists annonces_couleur_check;
+alter table public.annonces add constraint annonces_couleur_check
+    check (couleur is null or couleur <> 4);
+
+create index if not exists annonces_publication_v2_idx
+    on public.annonces (statut, active, publiee_le desc);
 
 -- Bandeau de service : maintenance, incident, information datee.
 create table if not exists public.service_messages (
@@ -306,6 +347,15 @@ create table if not exists public.etablissements (
     ordre              integer     not null default 0
 );
 
+-- Trois colonnes pour les campus a venir (jalon 7-C, migration
+-- 20260916222139_etablissements_credits_campus_alias.sql) : `credits` ([{"nom", "role", "lien"}]),
+-- `campus` (le libelle qui regroupe, et qui remplacera les « Talence » ecrits en dur) et `alias` (les
+-- mots des etudiants, pour la recherche). La base et etablissements.sql les portent depuis la 6.2.2 ;
+-- l'application ne les lit qu'en 6.3 — la regle des trois gestes est scindee, voir docs/backend.md.
+alter table public.etablissements add column if not exists credits jsonb;
+alter table public.etablissements add column if not exists campus text;
+alter table public.etablissements add column if not exists alias text[] not null default '{}';
+
 -- Les trois colonnes du jalon 6-G, pour une base deja creee au 6-B. « Ajouter avant de retirer,
 -- toujours » : le parc installe ne se vide pas d'un coup (supabase/README.md).
 alter table public.etablissements add column if not exists celcat_res_types     jsonb;
@@ -439,6 +489,14 @@ create table if not exists public.editeurs (
     email      text        primary key,
     ajoute_le  timestamptz not null default now()
 );
+
+-- Les roles (jalon 7-C, migration 20260916222138_editeurs_roles.sql) : la donnee seulement, les
+-- politiques qui la lisent relevent de 7-H. `etablissements` nul veut dire « tous les campus ».
+alter table public.editeurs add column if not exists role text not null default 'admin';
+alter table public.editeurs drop constraint if exists editeurs_role_check;
+alter table public.editeurs add constraint editeurs_role_check
+    check (role in ('admin', 'redacteur', 'lecteur'));
+alter table public.editeurs add column if not exists etablissements text[];
 
 -- =============================================================================
 -- Retours (jalon 6.1.x-C)

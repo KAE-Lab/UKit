@@ -22,22 +22,22 @@
         "version": "1"
     },
     "ukit.celcat.groupes": {
-        "version": "2"
+        "version": "3"
     },
     "ukit.celcat.salles": {
-        "version": "2"
+        "version": "3"
     },
     "ukit.celcat.jour": {
-        "version": "3"
-    },
-    "ukit.celcat.semaine": {
         "version": "4"
     },
+    "ukit.celcat.semaine": {
+        "version": "5"
+    },
     "ukit.celcat.annee": {
-        "version": "3"
+        "version": "4"
     },
     "ukit.celcat.occupation": {
-        "version": "2"
+        "version": "3"
     },
     "ukit.portail.bordeaux.dossier": {
         "version": "7",

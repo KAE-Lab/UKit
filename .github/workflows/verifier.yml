@@ -1,0 +1,87 @@
+# Les verifications du code, sur chaque branche et chaque pull request (docs/qualite.md).
+#
+# Trois taches, une par langage du depot : l'application (typage, ESLint a zero, tests), la console
+# (elle se construit, avec les deux variables que console.yml embarque deja) et les sondes (les tests
+# du verdict, sans moteur — leurs modules ne dependent que de la bibliotheque standard).
+#
+# `push` sur TOUTES les branches, et pas seulement les pull requests : `main` avance en avance rapide
+# depuis les branches de version, et la regle de protection de `main` exige les trois verifications
+# sans pull request obligatoire — GitHub accepte une poussee directe dont le commit a deja passe ses
+# verifications sur une autre branche (jalon 7-C).
+#
+# `HUSKY: 0` : `npm ci` joue `prepare`, qui installe les hooks de commit, inutiles sur un runner.
+# La parite (`npm run parity`) et `expo export` restent des portes locales : la premiere joue les
+# vraies sources, le second dure plusieurs minutes par plateforme.
+name: Vérifier
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verifier-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  application:
+    name: Application
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HUSKY: 0
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      # `ci` et non `install` : la verification porte sur le lockfile exact.
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      # La base de reference est zero avertissement (docs/qualite.md) : un seul fait rougir.
+      - run: npm run lint -- --max-warnings=0
+
+      - run: npm test
+
+  console:
+    name: Console
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+
+      - run: npm ci --prefix console
+
+      # La construction echoue sans ces deux variables : ce sont celles de console.yml, des variables
+      # du depot et non des secrets (la cle publiable est publique par conception).
+      - run: npm --prefix console run build
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+
+  sondes:
+    name: Sondes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: python -m unittest discover -s sondes

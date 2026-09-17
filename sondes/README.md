@@ -35,6 +35,21 @@ python sondes/jouer.py --dry-run --source cas-bordeaux --casser cas-bordeaux   #
 python -m unittest discover -s sondes                        # le verdict, sans moteur
 ```
 
+## Les mesures
+
+[`mesures/`](mesures/) porte des sondes **jouées à la main**, une question à la fois, dont le résultat
+s'écrit dans la documentation plutôt que dans une table — la première,
+[`occupation_groupee.py`](mesures/occupation_groupee.py) (jalon 7-C), compare un run d'occupation
+groupé aux runs par salle pour décider de la requête groupée
+([campus-salles-libres.md](../docs/features/campus-salles-libres.md#décisions-de-conception)). La
+partie qui décide est pure et testée par `python -m unittest discover -s sondes` ; la partie qui joue
+le moteur l'importe paresseusement, comme [`sonde/moteur.py`](sonde/moteur.py) :
+
+```bash
+python sondes/mesures/occupation_groupee.py --jours 2026-09-22 2027-01-11 2026-10-27   # trois journees, un verdict
+python sondes/mesures/occupation_groupee.py --trouver-examens 2026-12-01 2027-01-31     # les jours d'examens d'une plage
+```
+
 ## Panne de source, erreur de sonde
 
 Le verdict ([`sonde/verdict.py`](sonde/verdict.py)) distingue deux choses que le moteur ne distingue

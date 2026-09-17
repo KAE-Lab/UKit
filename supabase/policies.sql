@@ -45,13 +45,16 @@ alter table public.retours          enable row level security;
 -- Lecture publique
 -- -----------------------------------------------------------------------------
 
--- Une annonce inactive ou expiree ne sort pas de la base. Elle n'est pas filtree cote application :
--- ce qui n'a pas a etre lu n'est pas envoye.
+-- Une annonce inactive, expiree, en brouillon, archivee ou datee dans le futur ne sort pas de la
+-- base. Elle n'est pas filtree cote application : ce qui n'a pas a etre lu n'est pas envoye. Le
+-- filtre sur `statut` et `publiee_le` date de 7-C : une annonce datee dans le futur etait visible
+-- tout de suite ; programmer une annonce est desormais possible, pour tout le parc.
 drop policy if exists "annonces publiees lisibles" on public.annonces;
 create policy "annonces publiees lisibles"
     on public.annonces for select
     to anon
-    using (active and (expire_le is null or expire_le > now()));
+    using (active and statut = 'publiee' and publiee_le <= now()
+           and (expire_le is null or expire_le > now()));
 
 drop policy if exists "messages de service actifs lisibles" on public.service_messages;
 create policy "messages de service actifs lisibles"

@@ -207,7 +207,17 @@ complète — deux largeurs, un seul composant, [`BdeAnnonceCard`](../../src/fea
 **Une affiche ne se recadre jamais.** Un visuel presque carré perdait son bord — précisément là où
 une affiche écrit la date et le lieu. L'image s'affiche donc entière (`contain`), et une copie
 floutée d'elle-même remplit ce que son format laisse libre du carré : invisible sur un 1:1 exact,
-des bandes aux couleurs de l'affiche sinon — jamais un recadrage, jamais un aplat gris.
+des bandes aux couleurs de l'affiche sinon — jamais un recadrage, jamais un aplat gris. Les deux images partagent
+depuis 7-C la **même source rendue** — une requête, un cache disque — et, quand ni le rendu ni
+l'origine ne répondent, l'accroche redevient l'affiche, comme sans image.
+
+**Ce qu'une carte demande, c'est un rendu, pas le fichier.** La base ne stocke que des adresses
+d'**origine** (`image_url`, `images`, la table `visuels`), et l'application les transforme au moment
+d'afficher ([`rendu.ts`](../../src/shared/visuels/rendu.ts)) : la largeur de la carte — le carrousel et
+la grille n'ont pas la même — arrondie à un palier, qualité 70 pour une carte, 80 pour la fiche, 85 à
+1600 px pour la visionneuse. Publier une adresse de rendu figerait une largeur dans la donnée, et les
+versions antérieures à la 6.2.2 ne sauraient qu'en faire
+([7-C](../phase-7/7-c-economie-et-socle.md#2-les-images)).
 
 **L'émetteur est un kicker** (2026-08-31) : petites capitales grises au-dessus du titre, sur la
 carte comme sur la fiche — la grammaire des cartes d'article. La pastille colorée a été essayée aux
@@ -218,7 +228,8 @@ La couleur d'identité reste portée par l'accroche, les têtes de section et l'
 une refonte de carte.
 
 **La fiche épouse le ratio du visuel, borné.** Le bandeau paysage de 250 points réduisait une
-affiche 1:1 à une vignette. Le cadre prend désormais le ratio mesuré de l'image (`Image.getSize`),
+affiche 1:1 à une vignette. Le cadre prend désormais le ratio de l'image, lu à son chargement
+(`onLoad` d'`expo-image` depuis 7-C, qui a remplacé la requête de mesure d'`Image.getSize`),
 borné entre 3:4 et 16:9 pour qu'un format extrême — story verticale, bannière — ne prenne ni
 n'écrase l'écran. Et **sans visuel, pas de cadre** : la fiche omet ce qui manque au lieu d'afficher
 un rectangle gris qui se lirait comme une image cassée.

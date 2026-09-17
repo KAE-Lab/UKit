@@ -73,6 +73,17 @@ export const SALLES_PAR_DEFAUT: FormatSalles = { separateurs: [' | ', '/'], moti
  * Chaque commentaire de valeur vit dans `supabase/etablissements.sql`, qui reste la reference : ici
  * on ne raconte pas deux fois, on recopie.
  */
+/**
+ * Les gabarits du formulaire de retours (7-C). L'adresse longue du formulaire, suivie des numeros
+ * d'entree des questions que l'application sait remplir — `{onglet}`, `{appareil}`, `{systeme}`,
+ * `{version}` (shared/navigation/formulaireDeRetours.ts) — et, pour la demande de campus, la premiere
+ * question deja cochee. Les numeros vivent ici et non dans le code : un numero change quand une
+ * question est supprimee puis recreee, et le catalogue se corrige par une publication.
+ * `adaptation` reste tel quel : les versions anterieures l'ouvrent nu.
+ */
+const FORMULAIRE_PASTILLE = 'https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}';
+const FORMULAIRE_CAMPUS = 'https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.82564016=Demander%20un%20campus';
+
 export const SOCLE: Readonly<Record<string, Etablissement>> = {
     [ETABLISSEMENT_DEFAUT]: {
         code: ETABLISSEMENT_DEFAUT,
@@ -142,6 +153,8 @@ export const SOCLE: Readonly<Record<string, Etablissement>> = {
             // etat vide — un widget que l'etablissement ne porte pas propose de le demander, plutot
             // que d'afficher une rangee muette.
             adaptation: 'https://forms.gle/c8vpwBu1QpowkAKC8',
+            formulaire: FORMULAIRE_PASTILLE,
+            formulaire_campus: FORMULAIRE_CAMPUS,
             // L'identite Shibboleth de l'etablissement. Ce n'est **pas une porte** : rien ne s'ouvre
             // a cette adresse. C'est ce que la page de choix d'etablissement de Moodle attend qu'on
             // lui designe, dans une liste de 56 — voir `getPortalInjectedScript`.
@@ -197,6 +210,8 @@ export const SOCLE: Readonly<Record<string, Etablissement>> = {
             cas: 'https://cas.bordeaux-inp.fr',
             moodle: 'https://moodle.bordeaux-inp.fr',
             adaptation: 'https://forms.gle/c8vpwBu1QpowkAKC8',
+            formulaire: FORMULAIRE_PASTILLE,
+            formulaire_campus: FORMULAIRE_CAMPUS,
             idp_shibboleth: 'https://sso.bordeaux-inp.fr/idp/shibboleth',
         },
         libelles: { moodle: 'Moodle Bordeaux INP' },
@@ -229,6 +244,8 @@ export const SOCLE: Readonly<Record<string, Etablissement>> = {
         crousRegion: REGION_CROUS_BORDEAUX,
         services: {
             adaptation: 'https://forms.gle/c8vpwBu1QpowkAKC8',
+            formulaire: FORMULAIRE_PASTILLE,
+            formulaire_campus: FORMULAIRE_CAMPUS,
         },
         libelles: {},
         ordre: 99,

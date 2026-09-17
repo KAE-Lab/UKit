@@ -76,7 +76,7 @@ const renderTitle = (groupName: string | string[], theme: import('../../../share
                         <MaterialCommunityIcons name="plus" size={HEADER_BUTTON_ICON} color={theme.primary} />
                     </HeaderButton>
                 )}
-                <PastilleService theme={theme} />
+                <PastilleService theme={theme} onglet="Planning" />
             </View>
         </View>
     );

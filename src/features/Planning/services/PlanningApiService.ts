@@ -27,7 +27,7 @@
 import moment from 'moment';
 import type { AbortSignalLike } from '@aetherius/engine';
 
-import { BLUEPRINT, reportFailure, runBlueprint, type UkitFailure } from '../../../shared/aetherius';
+import { BLUEPRINT, reportFailure, runBlueprint, type Origine, type UkitFailure } from '../../../shared/aetherius';
 import { lienEdtAttendu, planningAbsent, sourceEdt, type SourceEdt } from '../../../shared/etablissements';
 import { decouperSemaineIcs, projeterAnneeIcs, projeterJourIcs } from './IcsMapping';
 import {
@@ -79,9 +79,14 @@ export type PlanningSyncResult =
     | { readonly ok: true; readonly courses: PlanningEvent[] }
     | { readonly ok: false; readonly failure: UkitFailure };
 
-/** Le signal d'annulation d'un ecran qui peut disparaitre pendant le chargement. */
+/**
+ * Le signal d'annulation d'un ecran qui peut disparaitre pendant le chargement, et l'origine du run —
+ * un geste, ou l'application d'elle-meme — pour le disjoncteur (jalon 7-C). Les deux descendent
+ * jusqu'a `runBlueprint` par le spread des options.
+ */
 export interface PlanningRunOptions {
     readonly signal?: AbortSignalLike;
+    readonly origine?: Origine;
 }
 
 function commeListe(valeur: unknown): unknown[] {

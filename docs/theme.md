@@ -214,7 +214,7 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`ScreenState`](../src/shared/ui/ScreenState.tsx) | **l'hôte** d'un état plein écran : il décide où le bloc se pose, pas de quoi il est fait | 6 fois |
 | [`ActionButton`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` | 4 fois |
 | [`PiedDAction`](../src/shared/ui/PiedDAction.tsx) | l'action principale d'une fiche, flottante : un `ActionButton` rempli au gabarit des flottants, sur la fumée de `PiedFlottant` | 2 fois, remonté au 6.2.x |
-| [`VisuelAvecRepli`](../src/shared/ui/VisuelAvecRepli.tsx) | une image distante et son repli : le repli seulement si l'image manque ou échoue, jamais dessous ni avant | 4 fois, remonté au 6.2.x |
+| [`VisuelAvecRepli`](../src/shared/ui/VisuelAvecRepli.tsx) | une image distante et son repli : le repli seulement si l'image manque ou échoue, jamais dessous ni avant ; depuis 7-C par `expo-image` — cache disque, fondu de 200 ms, adresse de rendu aux dimensions de la carte, puis l'origine si le rendu échoue ([`useSourceRendue`](../src/shared/ui/useSourceRendue.ts)) | 4 fois, remonté au 6.2.x |
 | [`Dialogue`](../src/shared/ui/Dialogue.tsx) | le dialogue informatif : titre, corps, action pleine, sortie secondaire, lien discret — sur le gabarit des popups des Réglages | 3 fois |
 | [`ModaleBientot`](../src/shared/ui/ModaleBientot.tsx) | ce que le voile d'un teaser promet : « bientôt », et la porte du service — une composition de `Dialogue` | 2 fois |
 | [`ChoixEtablissement`](../src/shared/ui/ChoixEtablissement.tsx) | la liste des universités, puis la confirmation de ce que la bascule effacera | 2 fois |
@@ -716,6 +716,17 @@ Acquises, et qui ont coûté à être trouvées :
   ne montre le repli que si l'image manque ou échoue — pendant le chargement, le gris du conteneur,
   comme toute section : un repli en attente faisait le même flash à l'arrivée de l'image. Toute carte
   à image passe par lui.
+- **Une image distante est celle d'`expo-image`, en cache disque, et fond à son arrivée** (7-C). Le
+  `Image` de React Native n'a ni cache disque réglable ni transition : chaque ouverture de l'onglet
+  Campus redemandait chaque visuel. Partout où une image distante s'affiche, `cachePolicy`
+  `memory-disk`, `transition` de la durée d'[`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx)
+  (`DUREE_FONDU_MS`), `contentFit` en prop — un `resizeMode` posé dans un style n'existe plus —, et
+  une **adresse de rendu** aux dimensions affichées ([`rendu.ts`](../src/shared/visuels/rendu.ts) :
+  un palier de largeur, une qualité par surface) avec un repli sur l'adresse d'origine si la
+  transformation échoue. La règle « le repli remplace, jamais dessous » tient telle quelle : le repli
+  local passe par le même composant, sans transition. Les ressources locales (`require`) — écran de
+  démarrage, menu de développement, accueil, À propos — restent sur le `Image` de React Native. La
+  visionneuse plein écran reste hors de ce cache (une descente par ouverture, à 1600 px).
 - **Une ombre n'a pas d'`elevation`, et un bandeau posé sous un en-tête transparent n'a pas de Z**
   (2026-09-11). Sur Android, `elevation` fait deux choses : une ombre dure, sans flou comparable à
   celui d'iOS, et un **ordre de dessin** — un enfant élevé passe devant ce que `zIndex` avait mis

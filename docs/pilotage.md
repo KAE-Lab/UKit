@@ -349,6 +349,29 @@ Vérifié le 2026-09-07 : 22 réponses lues depuis la feuille, 22 nouvelles au p
 rejeu** et 0 depuis le lien après un import par fichier, le journal inchangé au rejeu (22 lignes,
 toutes `service_role`) ; les politiques jouées aux frontières sont dans la spécification du jalon.
 
+### Le formulaire pré-rempli
+
+Depuis [7-C](phase-7/7-c-economie-et-socle.md#4-le-formulaire-pré-rempli), l'application ouvre le
+formulaire avec ce qu'elle sait déjà : l'onglet d'où l'on vient (la question « section », cochée
+d'avance), l'appareil (`Device.modelName`), le système (« iOS 18.5 », « Android 9 ») et la version
+de l'application — et, depuis la modale d'un campus non relié et la page Scolarité non reliée, la
+première question déjà cochée sur « Demander un campus ». Moins de questions pour qui signale un bug,
+et des colonnes fiables pour l'importeur.
+
+**Les numéros d'entrée vivent dans le catalogue**, sous deux gabarits de `services` —
+`formulaire` (la pastille) et `formulaire_campus` (les deux portes du campus) — qui sont l'adresse
+longue du formulaire suivie de `?usp=pp_url&entry.<numéro>={onglet}&…`
+([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts) remplit, une valeur absente
+retire son paramètre en entier ; [`formulaireDeRetours.ts`](../src/shared/navigation/formulaireDeRetours.ts)
+rassemble). Ils s'y lisent sur la page publique du formulaire (`FB_PUBLIC_LOAD_DATA_`), et un lien
+`forms.gle` ne se pré-remplit pas. **Un numéro change quand une question est supprimée puis
+recréée** : le champ arrive alors vide, sans erreur, et le gabarit se corrige par une publication du
+catalogue — la même règle que pour les libellés, ci-dessus. `services.adaptation` ne change pas : les
+versions antérieures à la 6.2.2 l'ouvrent tel quel, et un gabarit y ferait apparaître `{version}`
+en toutes lettres. Ce qui ne se pré-remplit jamais : le campus demandé (l'application ne connaît que
+le campus choisi, qui est justement le mauvais), l'accord du volontaire, les adresses e-mail, le
+petit sondage.
+
 ## Vérifier
 
 Le canal se vérifie **sans relancer** l'application, grâce au panneau Testeur : « Relire les

@@ -20,6 +20,7 @@
 
 import { widgetPublie } from '../../../shared/etablissements';
 import { maintenant, maintenantMs } from '../../../shared/services/Temps';
+import type { Origine } from '../../../shared/aetherius/disjoncteur';
 import {
     estNomDePortail,
     reportFailure,
@@ -41,6 +42,8 @@ export interface OptionsRafraichissement {
     /** Rejoue meme ce qui est frais. Vrai en sortie de parcours froid, ou sur un geste explicite. */
     readonly force?: boolean;
     readonly signal?: AbortSignal;
+    /** Qui a demande la serie : le retour au premier plan est `automatique`, une relance est un geste (disjoncteur). */
+    readonly origine?: Origine;
     /** Une lecture a abouti. Emis **au fil de l'eau** : chaque rangee s'allume des qu'elle sait. */
     readonly onValeur?: (point: PointWidget, valeur: ValeurWidget) => void;
     /** Une lecture a echoue. Les autres widgets continuent : une panne de l'un n'emporte pas l'autre. */
@@ -140,6 +143,7 @@ export type LectureWidget =
 
 export interface OptionsLecture {
     readonly signal?: AbortSignal;
+    readonly origine?: Origine;
 }
 
 /**
@@ -177,7 +181,7 @@ async function lireUnWidget(
 
     const reserve = await surLeNavigateur(
         blueprint,
-        (signal) => runBlueprint(blueprint, { signal }),
+        (signal) => runBlueprint(blueprint, { signal, ...(options.origine !== undefined ? { origine: options.origine } : {}) }),
         {
             priorite: 'arriere-plan',
             ...(options.signal !== undefined ? { signal: options.signal } : {}),

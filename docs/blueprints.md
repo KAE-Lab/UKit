@@ -183,6 +183,42 @@ Le step `http.request` publie `status_code` dans ses sorties, et l'échec d'un `
 contrat se nomme**, il ne se subit pas et ne s'ignore pas. Livré au jalon
 [6-D](phase-6/6-d-campus.md), après mesure sur les 41 établissements de la région.
 
+## Le disjoncteur
+
+Depuis [7-C](phase-7/7-c-economie-et-socle.md#3-létiquette-envers-celcat), un run porte son **origine**
+(`options.origine` de [`runBlueprint`](../src/shared/aetherius/runBlueprint.ts)) : `utilisateur`, le
+défaut — un geste —, ou `automatique` — l'application d'elle-même. Sont étiquetés automatiques : le
+rechargement au focus du Planning et le repli de sa relecture du téléphone, la synchronisation et la
+replanification des rappels d'origine `lancement`, `premier-plan` ou `tache`
+([`origineDuRun`](../src/shared/services/calendrier/tentative.ts)), le retour au premier plan et le
+premier rafraîchissement des widgets, et les rechargements de listes au cache expiré (groupes,
+bâtiments). Tout le reste — « Réessayer », un autre jour, tirer-pour-rafraîchir, le bouton du menu de
+développement — reste un geste.
+
+Le **disjoncteur** ([`disjoncteur.ts`](../src/shared/aetherius/disjoncteur.ts), pur, état en mémoire)
+compte, par hôte, les échecs `unavailable` consécutifs : au troisième, l'hôte est **ouvert** pour 30 s ;
+un échec après ce refroidissement le rouvre au palier suivant, 2 min puis 10 min, plafonné ; un succès
+le referme. Pendant l'ouverture, un run automatique rend un échec `unavailable` ordinaire **sans
+requête** — chaque écran fait ce qu'il fait déjà d'une source en panne : le Planning sert son cache
+daté, une section garde son contenu — ; un geste passe toujours, et l'échec qu'il rencontre fait monter
+le palier. Un échec d'une autre famille — `rejected`, `data` — ne compte pas : ce n'est pas une panne de
+transport. L'hôte se déduit du run — `inputs.domaine`, puis `inputs.lien`, `vars.domaine`, `vars.api`,
+l'adresse littérale du premier pas, et à défaut le nom du Blueprint — et seul l'hôte est journalisé
+(`[disjoncteur] celcat.u-bordeaux.fr ouvert 30 s (3 echecs)`), jamais l'adresse entière : un lien
+d'abonnement iCalendar est un secret personnel.
+
+Il couvre l'**Act I** — Celcat, Croustillant, Affluences, les exports iCalendar. Il ne couvre ni les
+lectures de la base, qui passent par `supabase-js`, ni les portails de l'Act II, où un hôte injoignable
+rend `blocked` ou `engine` et non `unavailable` ([qualite.md](qualite.md#couper-le-réseau-sans-couper-lappareil)).
+Il **vit en mémoire** : un redémarrage le réarme. Le menu de développement le montre et le réarme
+(bloc Disjoncteur de l'onglet *Temps*).
+
+Tout échec non silencieux est aussi **signalé aux observateurs**
+([`observateurs.ts`](../src/shared/aetherius/observateurs.ts), `onEchecDeRun`), un registre pur sans
+import de plateforme : c'est là que la mesure de [7-D](phase-7/7-d-la-mesure.md) se branche
+(`source.echec`, clé `<hôte>:<famille>`) sans fermer le cycle `AppCore → PlanningApiService →
+runBlueprint`. Un run court-circuité n'est pas signalé : il n'y a pas eu de run.
+
 ## Écrire un Blueprint
 
 1. **Inventorier la source d'abord**, dans [sources-externes.md](sources-externes.md) : l'URL exacte,

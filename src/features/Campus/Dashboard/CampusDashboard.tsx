@@ -54,7 +54,7 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
                         {Translator.get('CAMPUS')}
                     </Text>
                     {/* La pastille d'etat de service, a droite du titre (shared/messages/PastilleService). */}
-                    <PastilleService theme={theme} style={styles.rappel} />
+                    <PastilleService theme={theme} onglet="Campus" style={styles.rappel} />
                 </View>
             </Animated.View>
 

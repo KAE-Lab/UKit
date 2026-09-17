@@ -15,8 +15,9 @@
  * navigation, rien n'est recharge (docs/features/campus-vie-etudiante.md).
  */
 
-import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, Image, Animated, TouchableOpacity, Linking } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, Animated, TouchableOpacity, Linking, Dimensions } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens, type AppThemeType } from '../../../shared/theme/Theme';
@@ -25,6 +26,8 @@ import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
 import { PiedDAction } from '../../../shared/ui/PiedDAction';
 import { VisionneuseImages } from '../../../shared/ui/VisionneuseImages';
+import { DUREE_FONDU_MS } from '../../../shared/ui/ApparitionEnFondu';
+import { useSourceRendue } from '../../../shared/ui/useSourceRendue';
 import { CampusMapSection } from '../components/CampusMapSection';
 import { DescriptionAnnonce } from './DescriptionAnnonce';
 import { GlypheFiligrane } from '../../../shared/ui/GlypheFiligrane';
@@ -41,6 +44,9 @@ export interface BdeDetailsScreenProps {
     onAnimatedScroll?: (event: unknown) => void;
 }
 
+/** La largeur d'un visuel de la fiche : l'ecran moins la gouttiere `md` de chaque cote. */
+const LARGEUR_VISUEL = Dimensions.get('window').width - 2 * tokens.space.md;
+
 /**
  * Le ratio du cadre d'un visuel : celui de l'image, borne.
  *
@@ -48,19 +54,8 @@ export interface BdeDetailsScreenProps {
  * empechent un format extreme — story verticale, banniere — de prendre l'ecran ou de s'ecraser ;
  * avant la mesure, le carre est le format attendu des affiches.
  */
-function useImageRatio(imageUrl?: string): number {
-    const [ratio, setRatio] = useState(1);
-
-    useEffect(() => {
-        if (!imageUrl) return;
-        Image.getSize(imageUrl, (imgWidth, imgHeight) => {
-            if (imgWidth > 0 && imgHeight > 0) {
-                setRatio(Math.min(Math.max(imgWidth / imgHeight, 3 / 4), 16 / 9));
-            }
-        }, () => undefined);
-    }, [imageUrl]);
-
-    return ratio;
+function ratioDeCadre(largeur: number, hauteur: number): number {
+    return Math.min(Math.max(largeur / hauteur, 3 / 4), 16 / 9);
 }
 
 /**
@@ -86,7 +81,8 @@ function AccrocheAnnonce({ texte, theme }: { texte: string; theme: AppThemeType 
  * Le toucher l'ouvre en plein ecran : une affiche se lit de pres (VisionneuseImages).
  */
 function CadreVisuel({ url, theme, onPress }: { url: string; theme: AppThemeType; onPress: () => void }) {
-    const ratio = useImageRatio(url);
+    const [ratio, setRatio] = useState(1);
+    const { source, onError } = useSourceRendue(url, { largeur: LARGEUR_VISUEL, qualite: 80 });
 
     return (
         <TouchableOpacity
@@ -94,7 +90,22 @@ function CadreVisuel({ url, theme, onPress }: { url: string; theme: AppThemeType
             onPress={onPress}
             style={{ width: '100%', aspectRatio: ratio, backgroundColor: theme.greyBackground, borderRadius: tokens.radius.lg, overflow: 'hidden' }}
         >
-            <Image source={{ uri: url }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+            {source !== null ? (
+                <Image
+                    source={source}
+                    style={{ width: '100%', height: '100%' }}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={DUREE_FONDU_MS}
+                    // Le cadre prend le ratio de l'image a son chargement — ce que faisait
+                    // `Image.getSize`, en une requete de plus ; ici la mesure vient avec l'image.
+                    onLoad={(evenement) => {
+                        const { width, height } = evenement.source;
+                        if (width > 0 && height > 0) setRatio(ratioDeCadre(width, height));
+                    }}
+                    onError={onError}
+                />
+            ) : null}
         </TouchableOpacity>
     );
 }

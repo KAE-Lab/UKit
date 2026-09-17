@@ -64,6 +64,14 @@ parce qu'un changement côté université les invaliderait sans prévenir :
 - il répond en **0,6 s** sur une liste, **2,3 s** pour une année entière (216 Ko, 334 événements) ;
 - il accepte `federationIds[]` répété, donc l'interrogation multi-ressources en une requête.
 
+Depuis [7-C](phase-7/7-c-economie-et-socle.md#3-létiquette-envers-celcat), les six Blueprints se
+**nomment** : `vars.user_agent` vaut `UKit (+https://github.com/KAE-Lab/UKit; contact@kaelab.dev)`,
+posé en en-tête `User-Agent` de chaque appel, sans numéro de version — un fichier publié se
+périmerait. Le serveur ne filtre pas dessus (mesuré ci-dessus) ; c'est une politesse envers un
+service public, et l'adresse à laquelle son administrateur peut nous écrire. Le moteur passe les
+en-têtes tels quels ; que le `fetch` natif d'Expo laisse partir celui-là se vérifie sur chaque build
+par l'écho du panneau Blueprints du menu de développement ([`echo.ts`](../src/shared/aetherius/echo.ts)).
+
 > **Le relais était déjà tombé au moment de la bascule.** Les trois sondes de ce jour-là ont reçu un
 > **522 (Cloudflare)** après vingt secondes, à chaque essai. Le planning des utilisateurs sans cache
 > était donc en panne, et le jalon 6-E est autant une réparation qu'une migration.

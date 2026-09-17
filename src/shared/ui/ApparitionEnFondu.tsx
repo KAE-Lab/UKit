@@ -39,8 +39,11 @@ import React from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
 import Reanimated, { FadeIn } from 'react-native-reanimated';
 
-/** Court : la couture doit se percevoir sans se regarder. */
-const DUREE_MS = 200;
+/**
+ * Court : la couture doit se percevoir sans se regarder. Exportee depuis 7-C : la transition des
+ * images d'`expo-image` est la meme couture, et elle dure le meme temps.
+ */
+export const DUREE_FONDU_MS = 200;
 
 export interface ApparitionEnFonduProps {
     children: React.ReactNode;
@@ -55,7 +58,7 @@ export function ApparitionEnFondu({ children, actif = true, style }: ApparitionE
     return (
         <Reanimated.View
             style={style}
-            entering={FadeIn.duration(DUREE_MS)}
+            entering={FadeIn.duration(DUREE_FONDU_MS)}
         >
             {children}
         </Reanimated.View>

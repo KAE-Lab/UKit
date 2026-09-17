@@ -21,7 +21,7 @@ import { purgerDonneesCampusNationales, purgerDonneesEtablissement, purgerTrouss
 import { oublierVus } from '../messages/vus';
 import { restaurerReglages } from './reglagesParEtablissement';
 import { createUKitCalendar, ecrireEvenementsDansCalendrier, retirerEvenementsSynchronises } from './CalendarSyncHelpers';
-import { lireTentative, type OrigineSynchro, type TentativeSynchro } from './calendrier/tentative';
+import { lireTentative, origineDuRun, type OrigineSynchro, type TentativeSynchro } from './calendrier/tentative';
 import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
 import { coursASynchroniser, estMasque, poserLesUE, preparerPourAffichage, type CoursAvecUE } from '../../features/Planning/services/filtresUe';
@@ -434,7 +434,7 @@ class SettingsManagerService {
         // groupes attend les deux dans son agenda. Un cours commun aux deux porte le meme identifiant
         // Celcat, et c'est par cet identifiant que `previousSyncData` est indexee — il n'est ecrit
         // qu'une fois.
-        const resultat = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups);
+        const resultat = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups, { origine: origineDuRun(origine) });
         if (resultat.ok === false) {
             this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine });
             return false;

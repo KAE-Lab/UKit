@@ -68,6 +68,7 @@ Un contexte ne serait pas accessible depuis ces points.
 | `groupListTimestamp` | `PlanningDataManager` | horodatage du dernier rafraîchissement | — |
 | `buildingList` | `CampusDataManager` | bâtiments en accès libre et leurs salles | 7 jours (`buildingListTimestamp`) |
 | `buildingListTimestamp` | `CampusDataManager` | horodatage du dernier rafraîchissement | — |
+| `occupation@1:<bâtiment>:<jour>` | [`OccupationService`](../src/features/Campus/services/OccupationService.ts) | `{ horodatage, salles: [{ roomId, ok, events }] }` — l'occupation d'un bâtiment pour un jour, chaque salle avec son verdict ([campus-salles-libres.md](features/campus-salles-libres.md#décisions-de-conception)) | 10 minutes (horloge réelle) ; purgée par la simulation temporelle |
 | `<groupes>@YYYY/MM/DD` | [`ScheduleList`](../src/features/Planning/components/ScheduleList.tsx) | `{ data, date }` — emploi du temps d'un jour | sans expiration, repli hors ligne |
 | `<groupes>@Week<n>` | `ScheduleList` | `{ data, date }` — emploi du temps d'une semaine | sans expiration, repli hors ligne |
 | `previousSyncData` | `SettingsManager.syncCalendar` | table `id d'événement Celcat → id d'événement système` — lue aussi par le Planning, qui ne relit jamais ce qu'elle nomme (6.1.x-D) | jusqu'à désactivation de la synchronisation |
@@ -206,9 +207,17 @@ ou si l'appareil est hors ligne. Quand le cache est servi, un bandeau affiche la
 (`OFFLINE_DISPLAY_FROM_DATE`). Ce cache n'expire jamais et n'est jamais purgé : voir les limites.
 
 **3. Pas de cache — données temps réel.**
-Restaurants et menus CROUS, affluence et horaires des BU, annonces de vie étudiante, occupation des
-salles : ces données sont rechargées à chaque montage d'écran. Les mettre en cache n'aurait pas de
-sens (une affluence de bibliothèque périmée est pire qu'un chargement).
+Restaurants et menus CROUS, affluence et horaires des BU, annonces de vie étudiante : ces données sont
+rechargées à chaque montage d'écran. Les mettre en cache n'aurait pas de sens (une affluence de
+bibliothèque périmée est pire qu'un chargement). L'occupation des salles en faisait partie jusqu'à
+7-C ; elle a désormais son régime, **dix minutes par bâtiment et par jour**, parce qu'elle est
+éditoriale et que le gaspillage mesuré était le va-et-vient sur une même fiche
+([campus-salles-libres.md](features/campus-salles-libres.md#décisions-de-conception)).
+
+**4. Le cache disque des images** (7-C). Les visuels distants passent par `expo-image` en
+`memory-disk` : ce cache n'a pas de clé à nous, il est celui de la plateforme, et il fait qu'une
+ouverture de l'onglet Campus ne redemande plus les visuels déjà vus — l'egress qu'il fallait gagner
+([7-C](phase-7/7-c-economie-et-socle.md#2-les-images)). La visionneuse plein écran reste hors de lui.
 
 Le jalon [6-D](phase-6/6-d-campus.md) a fait passer les restaurants et les bibliothèques derrière le
 moteur et **n'a pas touché à cette décision** : il l'écrit simplement là où on la cherche. Elle mérite

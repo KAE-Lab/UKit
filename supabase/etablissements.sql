@@ -31,7 +31,8 @@ insert into public.etablissements (
     code, nom, nom_court, ville, logo_url, actif,
     portail_dossier, portail_messagerie, portail_widgets, portail_documents,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
-    bibliotheques_points, services, libelles, crous_region, ordre
+    bibliotheques_points, services, libelles, crous_region, ordre,
+    credits, campus, alias
 ) values (
     'bordeaux',
     'Collège Sciences et Technologies',
@@ -105,6 +106,13 @@ insert into public.etablissements (
     -- `adaptation` n'est pas une porte non plus : c'est le formulaire de demande, et il sert d'action
     -- a une rangee que l'etablissement ne porte pas. Un etat vide offre une action, jamais un bouton
     -- Reessayer qui n'aurait rien a rejouer.
+    --
+    -- `formulaire` et `formulaire_campus` (7-C) sont des GABARITS du meme formulaire, par son adresse
+    -- longue : l'application y ecrit l'onglet d'ou l'on vient, l'appareil, le systeme et sa version
+    -- (`{onglet}`, `{appareil}`, `{systeme}`, `{version}`), ou coche « Demander un campus ». Les numeros
+    -- d'entree vivent ici parce qu'ils changent quand une question est supprimee puis recreee : une
+    -- publication les corrige, pas une release. `adaptation` ne change pas : les versions anterieures
+    -- a la 6.2.2 l'ouvrent tel quel, et un gabarit y ferait apparaitre `{version}` en toutes lettres.
     '{"ent":     "https://intranet.u-bordeaux.fr",
       "email":   "https://webmel.u-bordeaux.fr",
       "cas":     "https://cas.u-bordeaux.fr",
@@ -113,13 +121,21 @@ insert into public.etablissements (
       "notes":   "https://apogee.u-bordeaux.fr/index.php?srv=RE01",
       "examens": "https://apogee.u-bordeaux.fr/index.php?srv=RE02",
       "adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
+      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}",
+      "formulaire_campus": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.82564016=Demander%20un%20campus",
       "idp_shibboleth": "https://idp-ubx.u-bordeaux.fr/idp/shibboleth"}'::jsonb,
     '{}'::jsonb,
     -- La region CROUS de Croustillant. C'etait une constante du Blueprint jusqu'au jalon 6-J ; la
     -- valeur ne change pas, sa nature si — elle est desormais corrigeable sans release, et un
     -- etablissement peut ne pas en avoir.
     '1',
-    0
+    0,
+    -- `credits`, `campus`, `alias` (7-C) : la base et ce fichier les portent, l'application ne les lit
+    -- qu'en 6.3. Les credits se rempliront depuis la console ; `campus` est le libelle qui regroupe
+    -- (Talence pour les deux universites du campus) ; `alias`, les mots que tapent les etudiants.
+    null,
+    'Talence',
+    '{"UB","Université de Bordeaux","Collège ST","Sciences et Technologies","Talence","Peixotto"}'
 ) on conflict (code) do update set
     nom                  = excluded.nom,
     nom_court            = excluded.nom_court,
@@ -139,7 +155,10 @@ insert into public.etablissements (
     services             = excluded.services,
     libelles             = excluded.libelles,
     crous_region         = excluded.crous_region,
-    ordre                = excluded.ordre;
+    ordre                = excluded.ordre,
+    credits              = excluded.credits,
+    campus               = excluded.campus,
+    alias                = excluded.alias;
 
 -- =============================================================================
 -- Bordeaux INP — le second etablissement, ajoute SANS release
@@ -166,7 +185,8 @@ insert into public.etablissements (
     code, nom, nom_court, ville, logo_url, actif,
     portail_dossier, portail_messagerie, portail_widgets, portail_documents,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
-    bibliotheques_points, services, libelles, crous_region, ordre
+    bibliotheques_points, services, libelles, crous_region, ordre,
+    credits, campus, alias
 ) values (
     'bordeaux-inp',
     'Bordeaux INP',
@@ -272,6 +292,8 @@ insert into public.etablissements (
       "cas":    "https://cas.bordeaux-inp.fr",
       "moodle": "https://moodle.bordeaux-inp.fr",
       "adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
+      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}",
+      "formulaire_campus": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.82564016=Demander%20un%20campus",
       "idp_shibboleth": "https://sso.bordeaux-inp.fr/idp/shibboleth"}'::jsonb,
     -- Le nom de l'instance Moodle de cet etablissement, releve sur la page elle-meme le 2026-08-13.
     --
@@ -285,7 +307,10 @@ insert into public.etablissements (
     -- et le CROUS y est le meme. C'est une donnee de catalogue precisement pour que ce genre de choix
     -- se relise.
     '1',
-    1
+    1,
+    null,
+    'Talence',
+    '{"INP","Bordeaux INP","ENSEIRB","ENSEIRB-MATMECA","ENSC","ENSCBP","ENSEGID","ENSPIMA","ENSTBB"}'
 ) on conflict (code) do update set
     nom                  = excluded.nom,
     nom_court            = excluded.nom_court,
@@ -305,7 +330,10 @@ insert into public.etablissements (
     services             = excluded.services,
     libelles             = excluded.libelles,
     crous_region         = excluded.crous_region,
-    ordre                = excluded.ordre;
+    ordre                = excluded.ordre,
+    credits              = excluded.credits,
+    campus               = excluded.campus,
+    alias                = excluded.alias;
 
 -- =============================================================================
 -- « Mon universite n'est pas dans la liste » — l'etablissement ouvert (jalon 6-J)
@@ -340,7 +368,8 @@ insert into public.etablissements (
     code, nom, nom_court, ville, logo_url, actif,
     portail_dossier, portail_messagerie, portail_widgets, portail_documents,
     celcat_domaine, celcat_res_types, edt, salles, salles_libres,
-    bibliotheques_points, services, libelles, crous_region, ordre
+    bibliotheques_points, services, libelles, crous_region, ordre,
+    credits, campus, alias
 ) values (
     'autre',
     -- Court, et corrige apres coup sur appareil : « Mon universite n'est pas dans la liste » disait
@@ -389,10 +418,15 @@ insert into public.etablissements (
     -- Elle vit ici plutot que dans l'ecran pour la raison qui vaut partout dans cette phase :
     -- remplacer un formulaire, le fermer quand la campagne est finie, ou en ouvrir un par region est
     -- **une publication**, pas une release.
-    '{"adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8"}'::jsonb,
+    '{"adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
+      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}",
+      "formulaire_campus": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.82564016=Demander%20un%20campus"}'::jsonb,
     '{}'::jsonb,
     '1',
-    99
+    99,
+    null,
+    null,
+    '{}'
 ) on conflict (code) do update set
     nom                  = excluded.nom,
     nom_court            = excluded.nom_court,
@@ -412,4 +446,7 @@ insert into public.etablissements (
     services             = excluded.services,
     libelles             = excluded.libelles,
     crous_region         = excluded.crous_region,
-    ordre                = excluded.ordre;
+    ordre                = excluded.ordre,
+    credits              = excluded.credits,
+    campus               = excluded.campus,
+    alias                = excluded.alias;

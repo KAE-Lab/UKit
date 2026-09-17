@@ -29,7 +29,7 @@ export function CrousSectionCard({ item, theme, isFavorite, onToggleFavorite, on
             style={{ width: CARD_WIDTH, marginRight: tokens.space.md }}
         >
             <View style={{ width: '100%', height: 160, backgroundColor: theme.greyBackground }}>
-                <VisuelAvecRepli uri={item.image_url} repli={defaultRuImage} style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }} />
+                <VisuelAvecRepli uri={item.image_url} repli={defaultRuImage} style={{ position: 'absolute', width: '100%', height: '100%' }} contentFit="cover" largeur={CARD_WIDTH} />
             </View>
 
             <View style={{ padding: tokens.space.md }}>

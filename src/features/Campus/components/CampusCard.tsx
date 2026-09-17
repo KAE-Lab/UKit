@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View } from 'react-native';
+import { Dimensions, View } from 'react-native';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
@@ -8,6 +8,8 @@ import { CardTitleRow } from './CampusCardParts';
 import { VisuelAvecRepli } from '../../../shared/ui/VisuelAvecRepli';
 
 const defaultImage = require('../../../../assets/images/default_resto.png');
+/** Pleine largeur de liste : l'ecran moins la gouttiere `sm` de chaque cote. */
+const LARGEUR_CARTE = Dimensions.get('window').width - 2 * tokens.space.sm;
 
 export interface CampusCardProps {
     title: string;
@@ -48,7 +50,9 @@ export function CampusCard({
                 <VisuelAvecRepli
                     uri={imageUrl}
                     repli={defaultImage}
-                    style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
+                    style={{ position: 'absolute', width: '100%', height: '100%' }}
+                    contentFit="cover"
+                    largeur={LARGEUR_CARTE}
                 />
             </View>
 

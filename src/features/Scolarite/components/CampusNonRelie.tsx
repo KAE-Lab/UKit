@@ -28,7 +28,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Translator from '../../../shared/i18n/Translator';
 import { PastilleService } from '../../../shared/messages/PastilleService';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
-import { getCodeEtablissementActif, serviceEtablissement } from '../../../shared/etablissements';
+import { getCodeEtablissementActif } from '../../../shared/etablissements';
+import { lienDuFormulaire } from '../../../shared/navigation/formulaireDeRetours';
 import { basculerEtablissement } from '../../../shared/etablissements/bascule';
 import { ActionButton } from '../../../shared/ui/ActionButton';
 import { ChoixEtablissement } from '../../../shared/ui/ChoixEtablissement';
@@ -37,15 +38,15 @@ import { HEADER_OFFSET, TAB_BAR_HEIGHT } from '../../../shared/ui/ScreenState';
 
 export interface CampusNonRelieProps {
     theme: AppThemeType;
-    /** Ouvre le formulaire de demande dans le navigateur integre. */
-    onDemande: (href: string) => void;
+    /** Ouvre le formulaire de demande de campus dans le navigateur integre. */
+    onDemande: () => void;
 }
 
 export function CampusNonRelie({ theme, onDemande }: CampusNonRelieProps) {
     const insets = useSafeAreaInsets();
     /** Le choix d'etablissement, ouvert par « Tu es d'un autre campus ? ». */
     const [choixCampus, setChoixCampus] = useState(false);
-    const demande = serviceEtablissement('adaptation');
+    const demande = lienDuFormulaire({ porte: 'campus' });
 
     return (
         <View style={[styles.page, { backgroundColor: theme.background }]}>
@@ -55,7 +56,7 @@ export function CampusNonRelie({ theme, onDemande }: CampusNonRelieProps) {
                     <Text style={[styles.titreDOngletTexte, { color: theme.font }]} pointerEvents="none">
                         {Translator.get('SCOLARITY')}
                     </Text>
-                    <PastilleService theme={theme} style={styles.rappel} />
+                    <PastilleService theme={theme} onglet="Scolarité" style={styles.rappel} />
                 </View>
             </View>
 
@@ -76,7 +77,7 @@ export function CampusNonRelie({ theme, onDemande }: CampusNonRelieProps) {
                         theme={theme}
                         action={demande === null ? null : {
                             label: Translator.get('CAMPUS_REQUEST_ACTION'),
-                            onPress: () => onDemande(demande),
+                            onPress: onDemande,
                         }}
                     />
                     {/* Un bouton tonal et non un lien nu : un texte seul sous un bloc se lisait

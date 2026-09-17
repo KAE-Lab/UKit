@@ -19,6 +19,10 @@
  * }
  * ```
  *
+ * Depuis 7-C, l'appel porte aussi l'**etiquette envers les sources** : tout echec non silencieux est
+ * signale aux observateurs (observateurs.ts), et un hote qui ne repond plus est mis au repos par le
+ * disjoncteur — les runs automatiques cessent, les gestes passent (disjoncteur.ts).
+ *
  * Voir docs/phase-6/6-a-socle.md et docs/blueprints.md.
  */
 
@@ -26,7 +30,9 @@ import { describeFailure, type AbortSignalLike, type RunEventHandler } from '@ae
 
 import { chronometrer, debutDeRun } from './chrono';
 import { getAetheriusClient } from './client';
-import { describeUkitFailure, type UkitFailure } from './failures';
+import { hoteDuRun, hoteOuvert, noterEchec, noterSucces, refroidissementLisible, type Origine } from './disjoncteur';
+import { describeUkitFailure, ukitFailure, type UkitFailure } from './failures';
+import { signalerEchec } from './observateurs';
 import { resolveBlueprint, type BlueprintOrigin, type RunnableBlueprintName } from './registry';
 
 export interface RunInputs {
@@ -86,6 +92,14 @@ export interface RunBlueprintOptions {
      * `silent` : l'utilisateur est deja parti, il n'y a rien a lui afficher.
      */
     readonly signal?: AbortSignalLike;
+    /**
+     * Qui a demande le run : un geste de l'utilisateur (le defaut), ou l'application d'elle-meme —
+     * un retour au premier plan, un focus, un cache expire, l'entretien. Un run automatique sur un
+     * hote que le disjoncteur a ouvert rend un echec `unavailable` ordinaire, **sans requete** ; un
+     * geste passe toujours. A ne pas confondre avec `BlueprintRun.origin`, qui dit d'ou vient le
+     * fichier joue.
+     */
+    readonly origine?: Origine;
 }
 
 /**
@@ -102,9 +116,15 @@ export async function runBlueprint(
     name: RunnableBlueprintName,
     options: RunBlueprintOptions = {},
 ): Promise<BlueprintRun> {
+    // `??` et non `||` : sans `strictNullChecks`, une chaine vide passerait pour une absence.
+    const origine = options.origine ?? 'utilisateur';
     const debut = debutDeRun();
+    let hote: string = name;
     try {
         const resolved = await resolveBlueprint(name);
+        hote = hoteDuRun(resolved.blueprint, options.inputs, name);
+        if (origine === 'automatique' && hoteOuvert(hote, Date.now())) return courtCircuit(name, hote);
+
         const result = await getAetheriusClient().run(resolved.blueprint, {
             inputs: options.inputs ?? {},
             ...(options.secrets !== undefined ? { secrets: options.secrets } : {}),
@@ -117,12 +137,36 @@ export async function runBlueprint(
         // Le verdict vient du moteur, pas d'une comparaison de statut : `describeFailure` rend
         // `undefined` exactement quand il n'y a rien a traduire.
         if (describeFailure(result) !== undefined) {
-            return { ok: false, failure: describeUkitFailure(result), dureeMs };
+            return { ok: false, failure: constater(name, hote, origine, describeUkitFailure(result)), dureeMs };
         }
+        if (noterSucces(hote)) console.warn(`[disjoncteur] ${hote} referme`);
         return { ok: true, outputs: result.outputs, origin: resolved.origin, dureeMs };
     } catch (error) {
         const dureeMs = debutDeRun() - debut;
         chronometrer(name, dureeMs);
-        return { ok: false, failure: describeUkitFailure(error), dureeMs };
+        return { ok: false, failure: constater(name, hote, origine, describeUkitFailure(error)), dureeMs };
     }
+}
+
+/** Un run automatique sur un hote ouvert : l'echec ordinaire d'une source en panne, sans requete ni `[chrono]`. */
+function courtCircuit(name: RunnableBlueprintName, hote: string): BlueprintRun {
+    if (__DEV__) console.info(`[disjoncteur] ${name} non joue : ${hote} ouvert`);
+    return { ok: false, failure: ukitFailure('unavailable', `disjoncteur ouvert : ${hote}`), dureeMs: 0 };
+}
+
+/**
+ * Ce qu'un echec reel declenche : les observateurs, sauf s'il est silencieux (un run annule n'a rien
+ * a dire), et le compte du disjoncteur, seulement pour la famille `unavailable` — une panne de
+ * transport, pas un refus ni une donnee illisible.
+ */
+function constater(name: RunnableBlueprintName, hote: string, origine: Origine, failure: UkitFailure): UkitFailure {
+    if (failure.silent === true) return failure;
+    signalerEchec({ nom: name, hote, famille: failure.kind, origine });
+    if (failure.kind === 'unavailable') {
+        const verdict = noterEchec(hote, Date.now());
+        if (verdict.ouverture) {
+            console.warn(`[disjoncteur] ${hote} ouvert ${refroidissementLisible(verdict.etat.palier)} (${verdict.etat.echecs} echecs)`);
+        }
+    }
+    return failure;
 }

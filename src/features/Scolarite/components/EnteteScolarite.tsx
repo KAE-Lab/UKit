@@ -100,7 +100,7 @@ export function EnteteScolarite({ theme, teinte, insets, coldData }: EnteteScola
                 <Text style={[styles.titre, styles.colonne, { color: theme.font }]} numberOfLines={1}>
                     {Translator.get('SCOLARITY')}
                 </Text>
-                <PastilleService theme={theme} />
+                <PastilleService theme={theme} onglet="Scolarité" />
             </View>
             <View style={styles.corpsEntete}>
                 <View style={styles.colonne}>

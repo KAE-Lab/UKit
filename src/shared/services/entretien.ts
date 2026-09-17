@@ -53,7 +53,7 @@ import { NotificationManager } from './NotificationService';
 import { deposerLeJeton, retirerLeJeton, type EtatDepot } from '../push';
 import { onRetourAuPremierPlan } from './premierPlan';
 import { maintenantMs } from './Temps';
-import { INTERVALLE_ENTRETIEN_MS, estDu, type OrigineSynchro } from './calendrier/tentative';
+import { INTERVALLE_ENTRETIEN_MS, estDu, type OrigineSynchro, origineDuRun } from './calendrier/tentative';
 import { PlanningApiService } from '../../features/Planning/services/PlanningApiService';
 import type { PlanningEvent } from '../../features/Planning/services/PlanningAssembly';
 
@@ -150,13 +150,13 @@ async function synchroniser(origine: OrigineEntretien): Promise<BilanEntretien['
     return (await SettingsManager.syncCalendar(origine)) ? 'jouee' : 'echec';
 }
 
-async function replanifierLesRappels(): Promise<BilanEntretien['rappels']> {
+async function replanifierLesRappels(origine: OrigineEntretien): Promise<BilanEntretien['rappels']> {
     if (!SettingsManager.getCourseNotificationsEnabled()) return 'inactifs';
     const favoris = SettingsManager.getFavoriteGroups();
     if (favoris.length === 0) return 'sans-cours';
 
     const courant = moment();
-    const semaine = await PlanningApiService.fetchCalendarWeek(favoris, { year: courant.isoWeekYear(), week: courant.isoWeek() });
+    const semaine = await PlanningApiService.fetchCalendarWeek(favoris, { year: courant.isoWeekYear(), week: courant.isoWeek() }, { origine: origineDuRun(origine) });
     if (semaine.ok === false) return 'echec';
 
     // Les memes cours que le Planning notifie : les UE posees, le filtre des favoris applique.
@@ -213,7 +213,7 @@ async function jouer(origine: OrigineEntretien): Promise<BilanEntretien> {
     const synchro = await synchroniser(origine);
     let rappels: BilanEntretien['rappels'];
     try {
-        rappels = await replanifierLesRappels();
+        rappels = await replanifierLesRappels(origine);
     } catch (erreur) {
         journaliser(`rappels non replanifies : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
         rappels = 'echec';

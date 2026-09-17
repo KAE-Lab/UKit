@@ -1,0 +1,87 @@
+# Dependabot : des paquets groupes, une fois par semaine, le lundi matin (docs/plateforme.md).
+#
+# Ce que le SDK epingle — expo et ses modules, @expo/*, react, react-native et ses bibliotheques,
+# @react-native-*, @react-navigation/*, babel-preset-expo, typescript, @types/react — est ignore : ces
+# versions se prennent a la montee du socle, ensemble, par `npx expo install --fix`, jamais une par une.
+# Les alertes de securite, elles, restent individuelles ; leur politique est ecrite dans plateforme.md.
+#
+# `pdfjs-dist` est dans le groupe d'outillage bien qu'il soit embarque : une montee impose de rejouer
+# `npm run pdfjs:vendor`, ce que la pull request rappelle par la presence du paquet.
+# Cote sondes, `aetherius` suit la version de `@aetherius/engine` et se monte a la main, des deux cotes.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    groups:
+      outillage:
+        patterns:
+          - eslint
+          - "@typescript-eslint/*"
+          - vitest
+          - prettier
+          - husky
+          - "@commitlint/*"
+          - commitizen
+          - cz-conventional-changelog
+          - dotenv
+          - qs
+          - pdfjs-dist
+          - sharp
+      supabase:
+        patterns:
+          - "@supabase/*"
+      aetherius:
+        patterns:
+          - "@aetherius/*"
+    ignore:
+      - dependency-name: expo
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
+      - dependency-name: react
+      - dependency-name: react-native
+      - dependency-name: "react-native-*"
+      - dependency-name: "@react-native-*"
+      - dependency-name: "@react-navigation/*"
+      - dependency-name: babel-preset-expo
+      - dependency-name: typescript
+      - dependency-name: "@types/react"
+
+  - package-ecosystem: npm
+    directory: /console
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Paris
+    groups:
+      console:
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Paris
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: /sondes
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Paris
+    ignore:
+      - dependency-name: aetherius

@@ -14,6 +14,8 @@
  * Voir docs/features/settings.md.
  */
 
+import type { Origine } from '../../aetherius/disjoncteur';
+
 /**
  * D'ou vient une tentative. Le menu de developpement l'affiche, la ligne d'etat non.
  * `activation` : l'interrupteur rallume, ou la cible change — l'agenda se remplit sans attendre.
@@ -32,6 +34,16 @@ export interface TentativeSynchro {
 export const INTERVALLE_ENTRETIEN_MS = 12 * 60 * 60 * 1000;
 
 const ORIGINES: readonly OrigineSynchro[] = ['manuel', 'lancement', 'premier-plan', 'tache', 'sonde', 'favoris', 'activation', 'filtres'];
+
+/**
+ * Ce qu'un run de l'entretien est pour le disjoncteur (jalon 7-C) : l'application d'elle-meme au
+ * lancement, au retour au premier plan et depuis la tache de fond ; un geste pour tout le reste — un
+ * favori ou un filtre qui change, un interrupteur rallume, le bouton du menu de developpement, qui
+ * doit passer precisement pour sonder le circuit.
+ */
+export function origineDuRun(origine: OrigineSynchro): Origine {
+    return origine === 'lancement' || origine === 'premier-plan' || origine === 'tache' ? 'automatique' : 'utilisateur';
+}
 
 /**
  * Relit une tentative persistee, defensivement : un stockage corrompu rend `null`, jamais une

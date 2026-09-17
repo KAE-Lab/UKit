@@ -215,13 +215,17 @@ Un nouvel écran arrive avec **son emplacement marqué**, même si la capture es
 
 ## Vérification
 
-L'intégration continue ne joue que la publication : les commandes de qualité se lancent en local.
+L'intégration continue rejoue le typage, ESLint à zéro avertissement, les tests et la construction
+de la console sur chaque poussée, sur toutes les branches
+([`.github/workflows/verifier.yml`](.github/workflows/verifier.yml)) ; les commandes de qualité se
+jouent quand même en local avant de pousser, et deux d'entre elles n'existent qu'en local.
 
 ```bash
 npx tsc --noEmit
-npx eslint .
+npx eslint . --max-warnings=0
 npm test              # tests unitaires du socle Aetherius (voir docs/qualite.md)
-npm run parity        # sources migrees vers un Blueprint (voir tools/parity/README.md)
+npm run parity        # sources migrees vers un Blueprint (voir tools/parity/README.md) — local seulement
+npx expo export --platform ios && npx expo export --platform android   # a chaque dependance native qui bouge — local seulement
 ```
 
 Les tests automatiques couvrent ce qui porte de la logique UKit **et ne dépend d'aucune plateforme** :

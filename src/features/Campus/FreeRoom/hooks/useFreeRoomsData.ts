@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import moment from 'moment';
 import { BuildingInfo, FreeRoomSlot } from '../../services/FreeRoomService';
-import { CampusApiService as FetchManager } from '../../services/CampusApiService';
+import { occupationDuBatiment } from '../../services/OccupationService';
 
 export function useFreeRoomsData(building: BuildingInfo) {
     const [loading, setLoading] = useState(true);
@@ -62,18 +62,13 @@ export function useFreeRoomsData(building: BuildingInfo) {
         setLoading(true);
         const today = moment().format('YYYY-MM-DD');
 
-        // Un run par salle : la reponse ne porte pas l'identifiant de la ressource interrogee, donc
-        // un run groupe ne permettrait pas de reattribuer les evenements a leur salle. Chaque echec
+        // Un run par salle, derriere un cache de dix minutes par batiment et par jour
+        // (OccupationService). Une salle en echec reste comptee libre, comme avant : chaque echec
         // reste isole et ne vide pas tout le batiment.
-        const promises = building.rooms.map(async (room) => {
-            const resultat = await FetchManager.fetchRoomsScheduleDay([room.id], today);
-            return { roomId: room.id, events: resultat.ok === false ? [] : resultat.events };
-        });
-
-        const results = await Promise.all(promises);
+        const results = await occupationDuBatiment(building, today);
 
         if (!mountedRef.current) return;
-        setAllEvents(results);
+        setAllEvents(results.map(({ roomId, events }) => ({ roomId, events })));
         setLoading(false);
     };
 

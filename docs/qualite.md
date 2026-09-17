@@ -25,8 +25,8 @@ npx expo export --platform android && npx expo export --platform ios   # Metro r
 
 ### Base de référence
 
-`tsc` et `npm test` sont verts. `eslint` n'a aucune erreur, mais porte des avertissements — l'état
-actuel du dépôt, à connaître pour distinguer une régression d'un héritage :
+`tsc` et `npm test` sont verts, et `eslint` est à zéro erreur et zéro avertissement — l'état du dépôt,
+tenu par l'intégration continue depuis 7-C, à connaître pour distinguer une régression d'un héritage :
 
 | Commande | État | Détail |
 |---|---|---|
@@ -362,7 +362,12 @@ du système, la dernière tentative de synchronisation telle que les Réglages l
 bilan, et trois gestes — jouer l'entretien tout de suite, oublier l'échéance pour qu'il soit dû au
 prochain lancement (la date simulée ne survivant pas à une fermeture, c'est le seul moyen de sonder
 le chemin du lancement), ou faire réveiller la tâche par le système (build de développement). C'est l'instrument de la mesure de 24 heures du jalon : sans lui, « la
-synchro ne part jamais » avait quatre causes indiscernables à l'écran — et, en bas, la
+synchro ne part jamais » avait quatre causes indiscernables à l'écran ; depuis [7-C](phase-7/7-c-economie-et-socle.md),
+le bloc **Disjoncteur** ([`ModMenuDisjoncteur.tsx`](../src/shared/ui/ModMenuDisjoncteur.tsx)) : les
+hôtes que le disjoncteur connaît, leurs échecs `unavailable` consécutifs, leur palier et « ouvert
+jusqu'à », et le geste « Réarmer » — le protocole est HORS LIGNE, trois retours au premier plan, l'hôte
+passe ouvert dans le bloc et `[disjoncteur] … ouvert` dans Metro, « Réessayer » part quand même, un
+geste réussi le referme ([blueprints.md](blueprints.md#le-disjoncteur)) — et, en bas, la
 **réinitialisation complète** (6.1-A) : le trousseau, le répertoire privé des documents et tout
 AsyncStorage — réglages, `firstload`, caches et surcouches publiées — puis un rechargement du
 JavaScript ([`ReinitialisationComplete.ts`](../src/shared/services/ReinitialisationComplete.ts)).
@@ -563,22 +568,32 @@ haut. *(Corrigé le 2026-09-14 : ce paragraphe disait encore `new Date()`.)*
 
 ## Intégration continue
 
-Trois workflows, et aucun ne vérifie le code de l'application :
-[`.github/workflows/release.yml`](../.github/workflows/release.yml), déclenché par un tag `v*` ou
-manuellement, **construit et publie** l'application ;
-[`.github/workflows/console.yml`](../.github/workflows/console.yml) construit et déploie la console
-de pilotage sur GitHub Pages (le typage de la console fait partie de sa construction) ;
-[`.github/workflows/sondes.yml`](../.github/workflows/sondes.yml) joue chaque matin les sondes des
-sources tierces, dont les tests unitaires (`python -m unittest discover -s sondes`). Voir
-[plateforme.md](plateforme.md).
+Cinq workflows, et **un seul vérifie le code** — depuis [7-C](phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt) :
+[`.github/workflows/verifier.yml`](../.github/workflows/verifier.yml), déclenché sur **toute poussée
+et toute pull request, sur toutes les branches**, joue trois tâches — `application` (Node 22,
+`npm ci`, `npm run typecheck`, `npm run lint -- --max-warnings=0`, `npm test`), `console`
+(`npm ci --prefix console`, la construction avec les deux variables de `console.yml`) et `sondes`
+(Python 3.12, `python -m unittest discover -s sondes`, sans moteur). Toutes les branches, et pas
+seulement les pull requests : `main` avance en avance rapide depuis les branches de version, et la
+règle de protection de `main` exige les trois vérifications **sans pull request obligatoire** —
+GitHub accepte une poussée directe dont le commit a déjà passé ses vérifications sur une autre
+branche. Les quatre autres ne vérifient rien :
+[`release.yml`](../.github/workflows/release.yml), déclenché par un tag `v*` ou manuellement,
+**construit et publie** l'application ; [`console.yml`](../.github/workflows/console.yml) construit
+et déploie la console sur GitHub Pages ; [`sondes.yml`](../.github/workflows/sondes.yml) joue chaque
+matin les sondes des sources tierces ; [`retours.yml`](../.github/workflows/retours.yml) importe les
+retours toutes les 72 heures. Voir [plateforme.md](plateforme.md).
 
-Conséquence directe : `npx tsc --noEmit` et `npx eslint .` doivent être joués **en local**, aucune
-barrière ne les rejouera.
+Ce que la CI ne joue pas, et qui reste local : `npm run parity` (les vraies sources, à chaque
+changement de Blueprint) et `npx expo export` (plusieurs minutes par plateforme, à chaque changement
+de dépendance native). Et les dépendances se surveillent par
+[`.github/dependabot.yml`](../.github/dependabot.yml) : des groupes, le lundi matin, hors de ce que le
+SDK épingle ([plateforme.md](plateforme.md#la-politique-des-alertes-de-sécurité)).
 
 ## Limites connues
 
 - **La couverture de test est étroite** : elle s'arrête au socle Aetherius. Ni composant, ni écran,
   ni bout en bout — la vérification manuelle sur l'application réelle reste la porte principale.
-- **Aucune vérification en intégration continue.** Un code qui ne compile pas peut être fusionné.
+- **La vérification continue ne couvre ni la parité ni l'export Metro**, qui restent des portes locales ; et une règle de protection de `main` n'existe que si le propriétaire du produit l'a posée (*Settings → Rules*), le dépôt ne peut pas se l'imposer seul.
 - **Le menu de simulation est présent en production.** `ModMenu` n'est pas gardé par `__DEV__` ; il
   est simplement invisible tant qu'il n'est pas activé.

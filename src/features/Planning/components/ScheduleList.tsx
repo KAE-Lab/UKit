@@ -16,7 +16,7 @@ import { ChargementPlanning, EtatPlanning, FavorisVides, JourneeVide, NoticesPla
 import { SourceFailureNotice, type NoticeAction } from '../../../shared/ui/SourceFailureNotice';
 import Translator from '../../../shared/i18n/Translator';
 import { isConnected } from '../../../shared/services/AppCore'
-import { ukitFailure, type UkitFailure } from '../../../shared/aetherius';
+import { ukitFailure, type Origine, type UkitFailure } from '../../../shared/aetherius';
 import { groupesRequis, lienEdtAttendu, planningAbsent, sourceEdt } from '../../../shared/etablissements';
 import { PlanningApiService as FetchManager, type PlanningEvent, type PlanningWeekDay } from '../services/PlanningApiService';
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
@@ -26,6 +26,7 @@ import { fusionnerJour, fusionnerSemaine, joursDeLaSemaine, separerJourneeEntier
 import { assemblerSemaine } from '../services/PlanningAssembly';
 import { lireEvenementsDuTelephone } from '../services/TelephoneSource';
 import { CLE_JOUR } from '../services/TelephoneMapping';
+import { relectureInutile, type DerniereLecture } from '../services/fraicheur';
 
 export interface ScheduleListProps {
     groupName: string | string[];
@@ -81,6 +82,8 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     _unsubscribe?: () => void;
     /** La derniere issue appliquee : ce que le telephone se remele a sa relecture. */
     private derniereIssue: ScheduleIssue | null = null;
+    /** La derniere reponse fraiche, cle et heure reelle : la fenetre de fraicheur des runs automatiques (fraicheur.ts). */
+    derniereLecture: DerniereLecture | null = null;
     private demonte = false;
 
     constructor(props: ScheduleListProps) {
@@ -101,7 +104,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         this.fetchSchedule();
         if (this.props.mode === 'day' && this.props.navigation) {
             this._unsubscribe = this.props.navigation.addListener('focus', () => {
-                this.fetchSchedule();
+                this.fetchSchedule('automatique');
             });
         }
     }
@@ -165,7 +168,9 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         return `${groupPrefix}@Week${(this.state.target as { week: number }).week}`;
     }
 
-    fetchSchedule = () => {
+    fetchSchedule = (origine: Origine = 'utilisateur') => {
+        // Avant l'abandon du run en vol : un run automatique saute n'annule pas un geste en cours.
+        if (origine === 'automatique' && relectureInutile(this.derniereLecture, this.cacheId(this.state.groupName), Date.now())) return;
         if (this.state.loading && this.state.controller) this.state.controller.abort();
 
         const groupName = this.state.groupName;
@@ -207,7 +212,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         // Sur une relecture, `schedule` est repose **a sa propre valeur** : rien ne disparait, et rien
         // n'est rendu a nouveau pour autant.
         this.setState({ schedule: relecture ? this.state.schedule : null, failure: null, loading: true, controller }, async () => {
-            const issue = await this.loadSchedule(groupName, id, controller.signal);
+            const issue = await this.loadSchedule(groupName, id, controller.signal, origine);
             // Un run remplace par un plus recent, ou un composant demonte : l'etat ne nous appartient
             // plus, et c'est le run suivant qui l'ecrit.
             if (issue === null) return;
@@ -245,7 +250,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         // Sans ce rattrapage, la vue semaine — qui n'a pas de relecture au focus — restait sur son
         // ecran d'echec meme apres avoir coche un calendrier.
         if (this.derniereIssue === null) {
-            this.fetchSchedule();
+            this.fetchSchedule('automatique');
             return;
         }
         const issue = this.derniereIssue;
@@ -264,6 +269,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         groupName: string | string[],
         id: string,
         signal: AbortSignal,
+        origine: Origine,
     ): Promise<ScheduleIssue | null> => {
         if (!(await isConnected())) {
             new ErrorAlert(Translator.get('NO_CONNECTION'), ErrorAlert.durations.SHORT).show();
@@ -272,7 +278,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
         if (this.props.mode === 'day') {
             const dateStr = moment(this.state.target).format('YYYY-MM-DD');
-            const resultat = await FetchManager.fetchCalendarDay(groupName, dateStr, { signal });
+            const resultat = await FetchManager.fetchCalendarDay(groupName, dateStr, { signal, origine });
             if (resultat.ok === false) {
                 return resultat.failure.silent === true ? null : this.cacheOrFailure(id, resultat.failure);
             }
@@ -280,7 +286,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         }
 
         const semaine = this.state.target as { week: number; year: number };
-        const resultat = await FetchManager.fetchCalendarWeek(groupName, semaine, { signal });
+        const resultat = await FetchManager.fetchCalendarWeek(groupName, semaine, { signal, origine });
         if (resultat.ok === false) {
             return resultat.failure.silent === true ? null : this.cacheOrFailure(id, resultat.failure);
         }
@@ -290,6 +296,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     /** Une reponse fraiche : elle alimente le cache, comme avant. */
     keep(id: string, data: ScheduleData, manquants: readonly string[] = []): ScheduleIssue {
         AsyncStorage.setItem(id, JSON.stringify({ data, date: moment() }));
+        this.derniereLecture = { cle: id, quand: Date.now() };
         return { data, cacheDate: null, manquants, failure: null };
     }
 
@@ -466,7 +473,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                 variant="plain"
                 failure={failure}
                 theme={this.props.theme}
-                onRetry={this.fetchSchedule}
+                onRetry={() => this.fetchSchedule()}
                 {...(action !== undefined ? { action } : {})}
             />
         );

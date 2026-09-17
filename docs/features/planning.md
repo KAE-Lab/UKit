@@ -275,6 +275,15 @@ de palette d'abord, l'hexadécimale ensuite, `default` enfin.
 de la navigation uniquement si `mode === 'day'` : c'est la vue par défaut, celle qu'on veut à jour en
 revenant dans l'application.
 
+**Et il ne repart pas dans la minute** (7-C). Le focus et le repli de la relecture du téléphone sont des
+runs d'origine `automatique` ([`runBlueprint`](../../src/shared/aetherius/runBlueprint.ts)) : sur une clé
+relue depuis moins de soixante secondes — une **réponse fraîche**, jamais un repli de cache —, ils ne
+partent pas ([`fraicheur.ts`](../../src/features/Planning/services/fraicheur.ts)). Quitter l'onglet et y
+revenir dans la minute faisait quatre requêtes à Celcat pour un contenu qui n'avait pas bougé.
+L'affichage ne change pas ; un geste — « Réessayer », un autre jour, un autre groupe — passe toujours,
+et c'est lui qui fait monter le disjoncteur s'il échoue. La vraie politique *stale-while-revalidate*, qui
+se voit à l'écran, appartient au lot Planning de [7-J](../phase-7/7-j-ecrans.md).
+
 ## Vérifier
 
 - Ouvrir l'onglet sans favori : l'état vide et son bouton vers la recherche doivent s'afficher.
@@ -710,6 +719,8 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`screens/GroupSelectionScreen.tsx`](../../src/features/Planning/screens/GroupSelectionScreen.tsx) | recherche de groupes : chargement par le manager, repli daté sur son cache, sections alphabétiques, filtrage |
 | [`services/groupListCache.ts`](../../src/features/Planning/services/groupListCache.ts) | la politique du cache de la liste des groupes — expiration, lecture défensive, repli daté — pure |
 | [`services/groupListCache.test.ts`](../../src/features/Planning/services/groupListCache.test.ts) | ses tests, écrits avant la fusion des deux caches (6.1-C), joués par `npm test` |
+| [`services/fraicheur.ts`](../../src/features/Planning/services/fraicheur.ts) | la fenêtre de fraîcheur de 60 s des runs automatiques — pure |
+| [`services/fraicheur.test.ts`](../../src/features/Planning/services/fraicheur.test.ts) | ses tests, joués par `npm test` |
 | [`screens/CourseScreen.tsx`](../../src/features/Planning/screens/CourseScreen.tsx) | fiche d'un cours : détails, extraction de la salle, carte intégrée ([`EmbeddedMap`](../../src/shared/map/EmbeddedMap.tsx), [cartographie.md](../cartographie.md)) ; pour un événement du téléphone, ni lieu ni UE, et « Ouvrir dans le calendrier » |
 | [`components/ScheduleList.tsx`](../../src/features/Planning/components/ScheduleList.tsx) | chargement et rendu d'un planning (jour ou semaine), cache, filtres — appliqués au chargement, jamais au rendu —, notifications, et la fusion du téléphone **après** tout cela |
 | [`components/ScheduleListEtats.tsx`](../../src/features/Planning/components/ScheduleListEtats.tsx) | ses bandeaux et ses états plein écran — pas de favori, journée libre, chargement — sortis quand il a franchi 400 lignes (6.1.x-D) |

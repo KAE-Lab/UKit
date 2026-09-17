@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CampusApiService } from './CampusApiService';
+import { CampusApiService, type CampusRunOptions } from './CampusApiService';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { appliquerVisuel } from '../../../shared/visuels';
 
@@ -60,10 +60,10 @@ class CampusDataManagerService {
      * Rend `null` quand tout va bien. L'appelant decide quoi en faire : un cache peuple survit a un
      * rafraichissement rate, c'est seulement l'absence totale de donnee qui merite un ecran d'echec.
      */
-    fetchBuildingList = async (): Promise<UkitFailure | null> => {
+    fetchBuildingList = async (options: CampusRunOptions = {}): Promise<UkitFailure | null> => {
         // `resultat.ok === false` et non `!resultat.ok` : sans `strictNullChecks`, TypeScript ne
         // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
-        const resultat = await CampusApiService.fetchRoomList();
+        const resultat = await CampusApiService.fetchRoomList(options);
         if (resultat.ok === false) return resultat.failure;
 
         const buildings = CampusApiService.extractBuildingsFromRooms(resultat.rooms);
@@ -90,7 +90,7 @@ class CampusDataManagerService {
             if (!buildingList || buildingDiff >= this._cacheTimeLimit) {
                 // Volontairement non attendu : l'ecran des salles libres relit la liste du manager et
                 // se remplit quand elle arrive.
-                void this.fetchBuildingList();
+                void this.fetchBuildingList({ origine: 'automatique' });
             }
         } catch {
             console.warn('COULDNT RETRIEVE BUILDING LIST...');

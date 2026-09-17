@@ -16,11 +16,14 @@
  */
 
 import React from 'react';
-import { View, Text, Image, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { Card } from '../../../shared/ui/Card';
+import { DUREE_FONDU_MS } from '../../../shared/ui/ApparitionEnFondu';
+import { useSourceRendue } from '../../../shared/ui/useSourceRendue';
 import { teinteDAnnonce } from './PastilleEmetteur';
 import type { BdeAnnonce } from '../services/BdeService';
 
@@ -35,6 +38,9 @@ export interface BdeAnnonceCardProps {
 
 export function BdeAnnonceCard({ annonce, width, theme, style, onPress }: BdeAnnonceCardProps) {
     const teinte = teinteDAnnonce(annonce.couleur, theme);
+    // La largeur de la carte est celle demandee au rendu : le carrousel et la grille n'ont pas la
+    // meme, et chacune tombe sur son palier (visuels/rendu.ts).
+    const { source, onError } = useSourceRendue(annonce.image_url, { largeur: width, qualite: 70 });
 
     return (
         <Card theme={theme} onPress={onPress} style={[{ width }, style]}>
@@ -42,25 +48,38 @@ export function BdeAnnonceCard({ annonce, width, theme, style, onPress }: BdeAnn
                 style={{
                     width: '100%',
                     aspectRatio: 1,
-                    backgroundColor: annonce.image_url ? theme.greyBackground : `${teinte}14`,
+                    backgroundColor: source !== null ? theme.greyBackground : `${teinte}14`,
                     alignItems: 'center',
                     justifyContent: 'center',
                 }}
             >
-                {annonce.image_url ? (
+                {source !== null ? (
                     <>
                         {/* L'affiche n'est jamais recadree : elle s'affiche entiere, et une copie
                             floutee d'elle-meme remplit ce que son format laisse libre du carre —
                             invisible sur un visuel exactement 1:1. Recadrer coupait le bord d'une
-                            affiche presque carree, la ou l'information vit. */}
+                            affiche presque carree, la ou l'information vit.
+
+                            Les deux images partagent la meme source rendue : une seule requete, un
+                            seul cache disque. La transition et le repli vivent sur l'affiche seule —
+                            deux gestionnaires d'erreur sur la meme source feraient deux replis. Sans
+                            visuel exploitable, l'accroche redevient l'affiche, comme sans image. */}
                         <Image
-                            source={{ uri: annonce.image_url }}
+                            source={source}
                             blurRadius={16}
-                            style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'cover' }}
+                            contentFit="cover"
+                            cachePolicy="memory-disk"
+                            recyclingKey={annonce.id}
+                            style={{ position: 'absolute', width: '100%', height: '100%' }}
                         />
                         <Image
-                            source={{ uri: annonce.image_url }}
-                            style={{ position: 'absolute', width: '100%', height: '100%', resizeMode: 'contain' }}
+                            source={source}
+                            contentFit="contain"
+                            cachePolicy="memory-disk"
+                            transition={DUREE_FONDU_MS}
+                            recyclingKey={annonce.id}
+                            onError={onError}
+                            style={{ position: 'absolute', width: '100%', height: '100%' }}
                         />
                     </>
                 ) : annonce.info_label ? (

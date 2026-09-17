@@ -14,6 +14,7 @@ import ModMenuBiometrie from './ModMenuBiometrie';
 import ModMenuPropositions from './ModMenuPropositions';
 import ModMenuReinitialisation from './ModMenuReinitialisation';
 import ModMenuEntretien from './ModMenuEntretien';
+import ModMenuDisjoncteur from './ModMenuDisjoncteur';
 import ModMenuTesteur from './ModMenuTesteur';
 
 /**
@@ -409,6 +410,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                             {this.renderActionButtons(theme)}
                             {this.renderDateTimePicker(theme)}
                             <ModMenuEntretien theme={theme} />
+                            <ModMenuDisjoncteur theme={theme} />
                             <ModMenuReinitialisation theme={theme} />
                         </>
                     )}

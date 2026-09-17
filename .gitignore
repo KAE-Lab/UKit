@@ -26,3 +26,6 @@ google-services.json
 fcm-service-account.json
 # Les residus de la CLI Supabase (projet lie, version du binaire) : de l'etat de poste.
 supabase/.temp/
+
+# La sortie de `npx expo export`, une porte jouee a chaque jalon depuis la phase 7 : jamais versionnee.
+dist/

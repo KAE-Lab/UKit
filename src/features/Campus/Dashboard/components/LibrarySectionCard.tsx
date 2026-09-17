@@ -34,7 +34,7 @@ export function LibrarySectionCard({ item, affluenceData, navigation, isFavorite
             onPress={() => navigation.navigate('LibraryDetails', { library: item, affluence: affluenceData })}
             style={{ width: CARD_WIDTH, marginRight: tokens.space.md }}
         >
-            <VisuelAvecRepli uri={item.imageUrl} repli={defaultBuImage} style={{ width: '100%', height: 160, resizeMode: 'cover', backgroundColor: theme.greyBackground }} />
+            <VisuelAvecRepli uri={item.imageUrl} repli={defaultBuImage} style={{ width: '100%', height: 160, backgroundColor: theme.greyBackground }} contentFit="cover" largeur={CARD_WIDTH} />
 
             <View style={{ padding: tokens.space.md }}>
                 <CardTitleRow

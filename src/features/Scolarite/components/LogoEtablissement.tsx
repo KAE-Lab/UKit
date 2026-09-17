@@ -38,7 +38,8 @@
  *
  * `onError` et non une verification prealable : on ne sait pas si une image chargera avant d'avoir
  * essaye, et une requete de controle doublerait le trafic pour deviner ce que l'echec dira de
- * lui-meme.
+ * lui-meme. Depuis 7-C, l'image est celle d'`expo-image` — cache disque, adresse de rendu a la
+ * largeur du logo, et un second temps sur l'adresse d'origine si le rendu echoue (useSourceRendue).
  *
  * ## Deux tailles, meme gabarit
  *
@@ -49,18 +50,23 @@
  * lisait comme un element flottant, et il a permis de **grossir** le logo : un aplat monochrome peut
  * occuper l'espace la ou un bloc blanc l'aurait ecrase. Sa taille se calcule du **ratio mesure** du
  * fichier publie — une hauteur commune egalise la masse visuelle entre un logotype etire et un logo
- * trapu, ce qu'une boite fixe ne faisait pas.
+ * trapu, ce qu'une boite fixe ne faisait pas. La mesure vient d'`onLoad`, avec l'image elle-meme :
+ * jusque-la, l'image se pose dans sa boite plafond a opacite nulle, et « rien tant que le ratio
+ * n'est pas mesure » reste vrai a l'oeil sans qu'une requete de mesure double le trafic.
  *
  * Le formulaire de connexion emploie le meme traitement avec une hauteur plus genereuse (`hauteur`) :
  * le logo y est le heros du bandeau, pas une signature de coin. La vignette blanche a filet reste,
  * elle, sans usage courant — gardee pour un logo publie dont la silhouette monochrome serait illisible.
  */
 
-import React, { useEffect, useState } from 'react';
-import { Image, View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, type ImageLoadEventData } from 'expo-image';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import { DUREE_FONDU_MS } from '../../../shared/ui/ApparitionEnFondu';
 import { Icon } from '../../../shared/ui/Icon';
+import { useSourceRendue } from '../../../shared/ui/useSourceRendue';
 
 /** Le gabarit d'un logotype : large, et assez haut pour qu'un logo compact respire aussi. */
 const LARGEUR_LOGO = 208;
@@ -70,7 +76,7 @@ const COTE_ICONE = 72;
 /**
  * Le gabarit du filigrane : une hauteur cible, et un plafond de largeur.
  *
- * La taille se calcule depuis le **ratio mesure du logo** (`Image.getSize`), pas depuis une boite
+ * La taille se calcule depuis le **ratio mesure du logo** (`onLoad`), pas depuis une boite
  * fixe : dans une boite, `contain` fait saturer la hauteur aux logos compacts et la largeur aux
  * etires — a hauteur pleine, le logo trapu de Bordeaux INP (1,69:1) paraissait plus lourd que le
  * logotype etire de l'UB (2,86:1). Une hauteur commune egalise la masse visuelle ; le plafond de
@@ -95,21 +101,20 @@ export interface LogoEtablissementProps {
 }
 
 export function LogoEtablissement({ logo, theme, teinte, filigrane = false, hauteur = HAUTEUR_FILIGRANE, style }: LogoEtablissementProps) {
-    const [echec, setEchec] = useState(false);
     /** Le ratio largeur/hauteur du fichier publie, mesure — inconnu tant que l'image n'a pas repondu. */
     const [ratio, setRatio] = useState<number | null>(null);
-    const montrerLeLogo = logo !== null && logo !== '' && !echec;
 
-    useEffect(() => {
-        if (!filigrane || logo === null || logo === '') return;
-        Image.getSize(
-            logo,
-            (largeur, hauteur) => { if (hauteur > 0) setRatio(largeur / hauteur); },
-            () => setEchec(true),
-        );
-    }, [filigrane, logo]);
+    // Le plafond de largeur suit la hauteur demandee : a 44 il vaut 132, a 64 il grandit
+    // d'autant — sans quoi grossir le gabarit ne grossirait jamais un logotype etire.
+    const largeurMax = (LARGEUR_MAX_FILIGRANE * hauteur) / HAUTEUR_FILIGRANE;
+    // `source` vaut null sans logo publie comme apres l'echec des deux temps : le repli couvre les deux.
+    const { source, onError } = useSourceRendue(logo, { largeur: filigrane ? largeurMax : LARGEUR_LOGO, qualite: 80 });
+    const mesurer = (evenement: ImageLoadEventData) => {
+        const { width, height } = evenement.source;
+        if (height > 0) setRatio(width / height);
+    };
 
-    if (!montrerLeLogo) {
+    if (source === null) {
         // En filigrane le repli suit le traitement : une icone nue, monochrome, sans surface.
         if (filigrane) {
             return (
@@ -136,23 +141,24 @@ export function LogoEtablissement({ logo, theme, teinte, filigrane = false, haut
     }
 
     if (filigrane) {
-        // Rien tant que le ratio n'est pas mesure : un filigrane qui change de taille sous les yeux
-        // serait pire qu'un filigrane qui apparait. La mesure sort du cache des la deuxieme fois.
-        if (ratio === null) return null;
-
-        // Le plafond de largeur suit la hauteur demandee : a 44 il vaut 132, a 64 il grandit
-        // d'autant — sans quoi grossir le gabarit ne grossirait jamais un logotype etire.
-        const largeurMax = (LARGEUR_MAX_FILIGRANE * hauteur) / HAUTEUR_FILIGRANE;
-        const hauteurRendue = Math.min(hauteur, largeurMax / ratio);
+        // Invisible tant que le ratio n'est pas mesure : un filigrane qui change de taille sous les
+        // yeux serait pire qu'un filigrane qui apparait. L'image se pose dans sa boite plafond a
+        // opacite nulle — c'est elle qui mesure —, puis prend sa largeur exacte.
+        const hauteurRendue = ratio === null ? hauteur : Math.min(hauteur, largeurMax / ratio);
+        const largeurRendue = ratio === null ? largeurMax : hauteurRendue * ratio;
         return (
-            <View style={[{ width: Math.round(hauteurRendue * ratio), height: Math.round(hauteurRendue) }, style]}>
+            <View style={[{ width: Math.round(largeurRendue), height: Math.round(hauteurRendue), opacity: ratio === null ? 0 : 1 }, style]}>
                 <Image
-                    source={{ uri: logo as string }}
+                    source={source}
+                    style={styles.image}
+                    contentFit="contain"
                     // `tintColor` rend la silhouette du logo dans le gris du theme : lisible sur les
                     // deux fonds, sans le carre blanc qui flottait en sombre. Voir l'en-tete.
-                    style={[styles.image, { tintColor: theme.fontSecondary }]}
-                    resizeMode="contain"
-                    onError={() => setEchec(true)}
+                    tintColor={theme.fontSecondary}
+                    cachePolicy="memory-disk"
+                    transition={DUREE_FONDU_MS}
+                    onLoad={mesurer}
+                    onError={onError}
                     accessibilityIgnoresInvertColors
                 />
             </View>
@@ -182,10 +188,12 @@ export function LogoEtablissement({ logo, theme, teinte, filigrane = false, haut
             ]}
         >
             <Image
-                source={{ uri: logo as string }}
+                source={source}
                 style={styles.image}
-                resizeMode="contain"
-                onError={() => setEchec(true)}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+                transition={DUREE_FONDU_MS}
+                onError={onError}
                 accessibilityIgnoresInvertColors
             />
         </View>

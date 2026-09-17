@@ -84,7 +84,7 @@ function EnTeteReglages({ theme, insets, scrollY }: {
                 <Text style={[styles.greetingText, { color: theme.font }]}>
                     {Translator.get('SETTINGS')}
                 </Text>
-                <PastilleService theme={theme} style={styles.rappel} />
+                <PastilleService theme={theme} onglet="Settings" style={styles.rappel} />
             </View>
         </Animated.View>
     );

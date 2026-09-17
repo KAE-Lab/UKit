@@ -42,8 +42,9 @@ class TimeMockManager {
     async clearCalendarCache(): Promise<void> {
         try {
             const keys = await AsyncStorage.getAllKeys();
-            // Clear calendar/schedule caches matching @Week or @YYYY/MM/DD
-            const calendarKeys = keys.filter(k => k.includes('@Week') || k.match(/@[0-9]{4}\/[0-9]{2}\/[0-9]{2}/));
+            // Les caches dates : le planning (@Week, @YYYY/MM/DD) et l'occupation des salles
+            // (occupation@1:, jalon 7-C) — une date simulee ne doit pas relire l'occupation reelle.
+            const calendarKeys = keys.filter(k => k.includes('@Week') || k.match(/@[0-9]{4}\/[0-9]{2}\/[0-9]{2}/) || k.startsWith('occupation@1:'));
             if (calendarKeys.length > 0) {
                 await AsyncStorage.multiRemove(calendarKeys);
             }

@@ -8,6 +8,10 @@
  */
 
 export { dureeLisible } from './chrono';
+export { etatDesHotes, hoteDuRun, rearmer, refroidissementLisible } from './disjoncteur';
+export type { EtatHote, Origine } from './disjoncteur';
+export { onEchecDeRun, signalerEchec } from './observateurs';
+export type { EchecDeRun } from './observateurs';
 export { getAetheriusClient } from './client';
 export { describeUkitFailure, reportFailure, serviceAbsent, ukitFailure, FAILURE_PRESENTATION } from './failures';
 export type { FailurePresentation, UkitFailure, UkitFailureKind } from './failures';

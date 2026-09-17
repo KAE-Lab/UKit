@@ -8,7 +8,9 @@
  * qui, sans lui, coute une soiree.
  *
  * Il dit trois choses par Blueprint — nom, version, origine — plus le rapport du dernier
- * rafraichissement, et porte les deux gestes de retour arriere cote application.
+ * rafraichissement, et porte les deux gestes de retour arriere cote application. Sur un build de
+ * developpement, il joue aussi l'echo des en-tetes (echo.ts) : le `User-Agent` que les Blueprints
+ * Celcat posent doit arriver tel quel chez la source (jalon 7-C).
  *
  * Les libelles y sont en dur, comme le reste du menu de developpement : il n'est pas une capacite
  * utilisateur et ne passe pas par les dictionnaires (docs/qualite.md).
@@ -30,6 +32,7 @@ import {
     type RunnableBlueprintName,
     type RefreshReport,
 } from '../aetherius';
+import { USER_AGENT_UKIT, jouerEcho } from '../aetherius/echo';
 import { tokens, type AppThemeType } from '../theme/Theme';
 
 
@@ -49,6 +52,7 @@ export default function ModMenuBlueprints({ theme }: ModMenuBlueprintsProps) {
     const [report, setReport] = useState<RefreshReport | null>(lastRefreshReport());
     const [busy, setBusy] = useState(false);
     const [runs, setRuns] = useState<Record<string, string>>({});
+    const [echo, setEcho] = useState<string | null>(null);
 
     const relire = useCallback(async () => {
         setLines(await describeDelivery());
@@ -84,6 +88,14 @@ export default function ModMenuBlueprints({ theme }: ModMenuBlueprintsProps) {
      * un run **sur un appareil, en cellulaire**, et ce menu existe en production — le detail par step
      * part dans la console de developpement (chrono.ts), le total se lit ici sans poste.
      */
+    const jouerLEcho = useCallback(async () => {
+        setEcho('en cours…');
+        const resultat = await jouerEcho();
+        if (resultat.ok === false) return setEcho(`échec : ${resultat.detail}`);
+        if (resultat.userAgent === null) return setEcho('reçu sans User-Agent');
+        setEcho(`${resultat.userAgent === USER_AGENT_UKIT ? 'le nôtre' : 'un autre'} : ${resultat.userAgent}`);
+    }, []);
+
     const jouer = useCallback(async (name: RunnableBlueprintName) => {
         setRuns((etat) => ({ ...etat, [name]: 'en cours…' }));
         const run = await runBlueprint(name);
@@ -105,6 +117,20 @@ export default function ModMenuBlueprints({ theme }: ModMenuBlueprintsProps) {
             <ScrollView style={{ maxHeight: 240, marginBottom: tokens.space.md }} nestedScrollEnabled>
                 {lines.map((line) => renderLigne(theme, line, raisonDe(report, line.name), runs[line.name], jouer))}
             </ScrollView>
+
+            {__DEV__ && (
+                <View style={{ marginBottom: tokens.space.md }}>
+                    <TouchableOpacity
+                        onPress={jouerLEcho}
+                        style={{ paddingVertical: tokens.space.xxs, paddingHorizontal: tokens.space.sm, borderRadius: tokens.radius.sm, borderWidth: 1, borderColor: theme.border, alignSelf: 'flex-start' }}
+                    >
+                        <Text style={{ color: theme.primary, fontSize: tokens.fontSize.xs }}>écho des en-têtes (User-Agent)</Text>
+                    </TouchableOpacity>
+                    {echo !== null && (
+                        <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.xxs }}>{echo}</Text>
+                    )}
+                </View>
+            )}
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <TouchableOpacity

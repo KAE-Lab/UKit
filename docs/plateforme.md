@@ -388,6 +388,28 @@ de développement recharge désormais par `reloadAppAsync` d'`expo`, et `expo-up
 dépendances ; et le thème du téléphone se mélangeait à celui de l'application, d'où
 `Appearance.setColorScheme` ([theme.md](theme.md#changer-de-thème)).
 
+### La politique des alertes de sécurité
+
+Écrite au jalon [7-C](phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt), qui a trié les
+cinquante-trois alertes que GitHub signalait à la sortie de la 6.2.1. Les mises à jour ordinaires
+arrivent groupées par [`.github/dependabot.yml`](../.github/dependabot.yml), le lundi matin ; les
+alertes de sécurité restent individuelles, et se traitent ainsi :
+
+- **une alerte critique ou haute dont le correctif est transitif** part en `npm audit fix`, sans
+  `--force`, dans une pull request `chore(deps)` qui passe les portes et `npx expo export` sur les deux
+  plateformes. Le 2026-09-16, ce geste a ramené 35 vulnérabilités (1 critique, 10 hautes) à 15
+  modérées ;
+- **un correctif qui touche un paquet épinglé par le SDK** — `expo`, `@expo/*`, `expo-*`, `react`,
+  `react-native*`, `@react-native-*`, `@react-navigation/*`, `babel-preset-expo`, `typescript`,
+  `@types/react` — attend la **montée du socle**, une fois par version : `npx expo install --fix`, puis
+  `expo-doctor`, les portes et des builds neufs. Ce sont les 15 alertes restantes de la 6.2.2 —
+  `expo`, `expo-splash-screen`, `expo-sharing`, `@react-native-community/datetimepicker` par
+  `@expo/config-plugins` — et `vitest` 3 → 4, un majeur d'outillage qui se prend par sa pull request
+  groupée ; elles se rejettent sur GitHub avec ce motif, ou restent ouvertes jusqu'à la montée ;
+- **jamais `npm audit fix --force`** : il monte des majeurs à l'aveugle, dont ceux du SDK.
+
+Le tri est un geste du propriétaire du produit sur GitHub ; le dépôt, lui, porte la règle.
+
 ## Publication
 
 Un seul workflow : [`.github/workflows/release.yml`](../.github/workflows/release.yml), déclenché par

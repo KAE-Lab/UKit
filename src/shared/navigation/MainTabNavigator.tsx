@@ -15,11 +15,11 @@ import { TAB_BAR_HEIGHT } from '../ui/ScreenState';
 import { assiseDuFlottant, FondDePiedFlottant, VOILE_PIED } from '../ui/PiedFlottant';
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
-import { groupesRequis, portailPublie, serviceEtablissement } from '../etablissements';
+import { groupesRequis, portailPublie } from '../etablissements';
 import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
 import { Dialogue } from '../ui/Dialogue';
 import { ModaleBientot } from '../ui/ModaleBientot';
-import { parametresDuFormulaire } from './liensDuFormulaire';
+import { lienDuFormulaire, ouvrirLeFormulaire } from './formulaireDeRetours';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { useGlissementDeBarre } from './glissementDOnglets';
 
@@ -107,16 +107,17 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
  * La modale du campus non relie : le meme gabarit que « Bientot », un autre message.
  *
  * Le bouton principal ouvre la demande de campus, et son adresse vient du catalogue
- * (`services.adaptation`) — la meme que l'etat vide de l'onglet : publier ou changer ce lien est
- * une publication, pas une release. Sans lien publie, la modale garde sa seule sortie « Fermer ».
+ * (`services.formulaire_campus`, « Demander un campus » deja coche) — la meme que l'etat vide de
+ * l'onglet : publier ou changer ce lien est une publication, pas une release. Sans lien publie, la
+ * modale garde sa seule sortie « Fermer ».
  */
 function ModaleCampusNonRelie({ theme, visible, fermer, ouvrirDemande }: {
     theme: AppThemeType;
     visible: boolean;
     fermer: () => void;
-    ouvrirDemande: (href: string) => void;
+    ouvrirDemande: () => void;
 }) {
-    const demande = serviceEtablissement('adaptation');
+    const demande = lienDuFormulaire({ porte: 'campus' });
     return (
         <Dialogue
             theme={theme}
@@ -128,7 +129,7 @@ function ModaleCampusNonRelie({ theme, visible, fermer, ouvrirDemande }: {
             // sur deux lignes. Le titre de la modale porte deja le contexte.
             action={demande === null ? undefined : {
                 libelle: Translator.get('CAMPUS_REQUEST_SHORT'),
-                onPress: () => ouvrirDemande(demande),
+                onPress: ouvrirDemande,
             }}
         />
     );
@@ -208,9 +209,9 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                         theme={theme}
                         visible={teaser}
                         fermer={() => setTeaser(false)}
-                        ouvrirDemande={(href) => {
+                        ouvrirDemande={() => {
                             setTeaser(false);
-                            (navigation as { navigate: (name: string, params?: object) => void }).navigate('WebBrowser', parametresDuFormulaire(href));
+                            ouvrirLeFormulaire(navigation as { navigate: (name: string, params?: object) => void }, { porte: 'campus' });
                         }}
                     />
                 </>
@@ -250,11 +251,11 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                     theme={theme}
                     visible={teaser}
                     fermer={() => setTeaser(false)}
-                    ouvrirDemande={(href) => {
+                    ouvrirDemande={() => {
                         setTeaser(false);
                         // La route vit dans le Stack racine, au-dessus des onglets : react-navigation
                         // remonte tout seul, mais le type des helpers d'onglets ne le sait pas.
-                        (navigation as { navigate: (name: string, params?: object) => void }).navigate('WebBrowser', parametresDuFormulaire(href));
+                        ouvrirLeFormulaire(navigation as { navigate: (name: string, params?: object) => void }, { porte: 'campus' });
                     }}
                 />
             </>

@@ -19,6 +19,7 @@ import { useRetourAuPremierPlan } from '../../../shared/services/premierPlan';
 import { marquer } from '../../../shared/services/Chrono';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import type { UkitFailure } from '../../../shared/aetherius/failures';
+import type { Origine } from '../../../shared/aetherius/disjoncteur';
 import type { PointWidget } from './definitions';
 import { lireValeursPersistees } from './stockage';
 import { rafraichirWidgets, relireWidget, type ValeursWidgets } from './runner';
@@ -153,7 +154,7 @@ export function useWidgets(pret: boolean): EtatDesWidgets {
     const pretRef = useRef(pret);
     pretRef.current = pret;
 
-    const rafraichir = useCallback((options: { readonly force?: boolean } = {}): Promise<IssueDeSerie> => {
+    const rafraichir = useCallback((options: { readonly force?: boolean; readonly origine?: Origine } = {}): Promise<IssueDeSerie> => {
         // Un seul rafraichissement a la fois. Le moteur serialiserait de toute facon, mais deux
         // boucles concurrentes se disputeraient l'indicateur d'attente et l'ecrasement du cache.
         if (!pretRef.current) return Promise.resolve('interrompue');
@@ -173,6 +174,7 @@ export function useWidgets(pret: boolean): EtatDesWidgets {
         enCoursRef.current = true;
         const boucle = rafraichirWidgets(valeursRef.current, {
             ...(options.force === true ? { force: true } : {}),
+            ...(options.origine !== undefined ? { origine: options.origine } : {}),
             signal: controleur.signal,
             onEnCours: setPointEnCours,
             onValeur: poserValeur,
@@ -250,7 +252,7 @@ export function useWidgets(pret: boolean): EtatDesWidgets {
         void lireValeursPersistees().then((persistees) => {
             poser(persistees);
             marquer('widgets : premier rafraichissement');
-            void rafraichir();
+            void rafraichir({ origine: 'automatique' });
         });
         // `pret` retombe a faux a la deconnexion : la serie s'arrete meme si personne n'a appele
         // `arreter`, et rien de l'ancien compte n'atteint le trousseau du suivant.
@@ -261,7 +263,7 @@ export function useWidgets(pret: boolean): EtatDesWidgets {
     // onglet en emet un, et les widgets se rejouaient une seconde fois juste apres Face ID (6.1-C).
     useRetourAuPremierPlan(() => {
         marquer('widgets : rafraichissement au retour au premier plan');
-        void rafraichir();
+        void rafraichir({ origine: 'automatique' });
     });
 
     return { valeurs, echecs, pointEnCours, rafraichir, relancer, reinitialiser, arreter };
