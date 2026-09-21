@@ -14,9 +14,10 @@ Celui de [6.1-Z](../phase-6/6-1-z-sortie.md). Deux points propres à une version
 
 1. **Le relevé de 7-I est la liste de contrôle de sortie.** Chaque ligne se coche ou s'explique.
    C'est ce qui remplace, pour une version qui se juge à l'œil, les portes automatiques des autres.
-   *Ajouté le 2026-09-14 :* la sortie compare le **relevé final au relevé initial**, **et les
-   chiffres aux mesures de la 6.2.3** — sessions, onglets vus, ouvertures, échecs de source, parts
-   des thèmes —, la ligne de base posée exprès avant la refonte.
+   *Ajouté le 2026-09-14, amendé le 2026-09-21 :* la sortie compare le **relevé final au relevé
+   initial**, et **pose les premiers chiffres** — sessions, onglets vus, ouvertures, échecs de source,
+   parts des thèmes — comme ligne de base de la suite : la mesure part dans la 6.3 elle-même, il n'y a
+   pas de chiffres d'avant la refonte.
 2. **Les captures de [screenshots/](../screenshots/) se refont** pour tout écran repris, **dans les
    deux thèmes** — décision du 2026-09-14, les deux thèmes à égalité —, et les écrans de référence
    de 6-K se comparent aux anciennes — c'est le seul moyen de voir ce qui a bougé sans qu'on l'ait

@@ -2,8 +2,8 @@
 
 > **Spécification, ouverte le 2026-09-14, pas encore livrée.** Aucune publication. Le troisième des quatre
 > jalons de la console, sur le socle de [7-E](7-e-console-socle.md) : lire la mesure posée par
-> [7-D](7-d-la-mesure.md). Il s'ouvre quand la 6.2.3 est en production depuis deux semaines — avant, les
-> courbes n'auraient rien à dire.
+> [7-D](7-d-la-mesure.md). Il s'ouvre quand la 6.3, qui porte la mesure depuis le 2026-09-21, est en
+> production depuis deux semaines — avant, les courbes n'auraient rien à dire.
 
 ## La direction
 
@@ -49,9 +49,9 @@ et elle vaut pour l'export comme pour l'écran.
 
 ## Décisions et pièges
 
-- **Les versions antérieures à la 6.2.3 ne comptent rien** : une courbe de sessions commence avec son
+- **Les versions antérieures à la 6.3 ne comptent rien** : une courbe de sessions commence avec son
   adoption, et monte d'abord parce que le parc se met à jour. La vue d'ensemble pose à côté la part de
-  la 6.2.3 dans le parc, pour que personne ne lise une croissance là où il y a une mise à jour.
+  la 6.3 dans le parc, pour que personne ne lise une croissance là où il y a une mise à jour.
 - **Un taux sur un petit dénominateur ne veut rien dire** : sous vingt impressions, il s'affiche grisé.
 - **Les impressions sont dédoublonnées par session**, pas par personne : un étudiant qui ouvre
   l'application trois fois dans la journée voit trois fois la carte.
@@ -72,6 +72,6 @@ et elle vaut pour l'export comme pour l'écran.
 
 ## Limites écrites
 
-- **Les chiffres commencent avec la 6.2.3**, et sous-comptent tant que le parc n'a pas migré.
+- **Les chiffres commencent avec la 6.3**, et sous-comptent tant que le parc n'a pas migré.
 - **Le parc actif est celui qui garde les notifications**, donc un minorant
   ([mesure.md](../mesure.md#lire-les-chiffres)).

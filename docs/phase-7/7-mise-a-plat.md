@@ -33,8 +33,8 @@ réponse qui explique la forme des jalons.
 | # | Question | Réponse | Jalons |
 |---|---|---|---|
 | 1 | Passer en Pro, ou mesurer un mois avant de payer ? | **Le Pro maintenant**, à condition qu'il ne ferme aucune perspective de statistiques — il n'en ferme aucune. Le gaspillage se corrige quand même, pour le forfait des étudiants et pour la vitesse. | 7-A, 7-C |
-| 2 | Soumettre la 6.2.1 seule aux stores ? | **Non** : elle part dans une 6.2.2 courte, suivie d'une 6.2.3 courte, avant la refonte. | 7-C, 7-D |
-| 3 | Mesurer l'usage : un service tiers ou nos compteurs, et quand ? | **Nos compteurs anonymes**, dans la base, sans identifiant, avec un interrupteur ; **dans la 6.2.3**, pour que la refonte ait une ligne de base. | 7-D, 7-G |
+| 2 | Soumettre la 6.2.1 seule aux stores ? | **Non** : elle part dans une 6.2.2 courte, suivie d'une 6.2.3 courte, avant la refonte. *Amendé le 2026-09-21 : la question était mal posée, le workflow du 13 au soir l'avait déjà soumise aux deux stores ; et la 6.2.3 n'existe plus, tout ce qui suit la 6.2.2 part dans la 6.3 ([README](README.md#les-publications)).* | 7-C, 7-D |
+| 3 | Mesurer l'usage : un service tiers ou nos compteurs, et quand ? | **Nos compteurs anonymes**, dans la base, sans identifiant, avec un interrupteur ; **dans la 6.2.3**, pour que la refonte ait une ligne de base. *Amendé le 2026-09-21 : dans la 6.3, sans ligne de base avant la refonte.* | 7-D, 7-G |
 | 4 | Verrouiller un thème ? | **Non** : les deux thèmes à égalité, tant qu'aucun chiffre ne le justifie. | 7-I, 7-J |
 | 5 | Les cartes d'annonce : carrées, ou en 4:5 ? | **4:5** ; l'image couvre le cadre autour d'un point focal, et « contenir sur fond flou » reste une option par annonce. | 7-C, 7-F, 7-I |
 | 6 | La rotation des annonces : locale, ou pilotée ? | **Les paramètres en base**, l'algorithme dans l'application, pur et testé. | 7-C, 7-F, 7-I |
@@ -87,7 +87,7 @@ demande ni compte ni code, reste ouvrable tout de suite.
 - [7-B](7-b-nouveaux-campus.md) — trois nouveaux campus, un lot chacun ; le relevé public quand on veut,
   les publications après la 6.3.
 - [7-C](7-c-economie-et-socle.md) — économie et socle, publié en 6.2.2.
-- [7-D](7-d-la-mesure.md) — la mesure, publiée en 6.2.3.
+- [7-D](7-d-la-mesure.md) — la mesure, publiée en 6.2.3 ; *depuis le 2026-09-21, en 6.3*.
 - [7-E](7-e-console-socle.md), [7-F](7-f-console-annonces.md), [7-G](7-g-console-statistiques.md),
   [7-H](7-h-console-roles.md) — la console, sans release, complète avant janvier 2027.
 - [7-I](7-i-releve-et-vocabulaire.md), [7-J](7-j-ecrans.md), [7-K](7-k-sortie-6-3.md) — le mouvement,

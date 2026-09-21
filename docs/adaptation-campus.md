@@ -197,7 +197,7 @@ le binaire n'embarque un établissement que s'il embarque de quoi le jouer.
   *« ne reçoit aucune écriture de l'application, par construction »*, et rien de ce travail ne
   l'entame. *Note du 2026-09-14 : la phrase citée n'est plus exacte — l'application dépose un jeton
   de notification depuis [6.1.x-E](phase-6/6-1-x-e-notifications-push.md), et comptera son usage
-  depuis la 6.2.3 ([7-D](phase-7/7-d-la-mesure.md)), deux écritures bornées que `PRIVACY.md` décrit. Le
+  depuis la 6.3 ([7-D](phase-7/7-d-la-mesure.md)), deux écritures bornées que `PRIVACY.md` décrit. Le
   travail sur les campus, lui, n'écrit toujours rien depuis l'application.*
 - **Publier un campus « en cours d'adaptation »** — une ligne dont les colonnes `portail_*` sont
   nulles, qui tomberait sur le teaser déjà en place. **Possible, mais pas retenu pour l'instant** :

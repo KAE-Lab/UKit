@@ -8,8 +8,8 @@
 
 ## La direction
 
-Après la 6.2.3 ([7-D](7-d-la-mesure.md)), l'équipe sait ce qui est vu ; après la 6.3, l'application sait se
-montrer. Ce qui manque, c'est le chemin du retour. Un étudiant qui veut dire quelque chose passe par
+Après la 6.3, l'équipe sait ce qui est vu ([7-D](7-d-la-mesure.md)) et l'application sait se montrer.
+Ce qui manque, c'est le chemin du retour. Un étudiant qui veut dire quelque chose passe par
 Google Forms, dans une vue intégrée ; une annonce importante ne réveille personne ; une affiche ne
 circule pas hors de l'application ; et le site n'est qu'une vitrine. La 6.4 relie les quatre.
 

@@ -58,8 +58,9 @@ Fichiers : [`CampusDashboard.tsx`](../../src/features/Campus/Dashboard/CampusDas
 > Prises à la [mise à plat de la phase 7](7-mise-a-plat.md), après la 6.2.1 ; elles complètent le
 > cadre sans le rouvrir. L'écran fondateur reste le tableau de bord Campus, et ce qui y est décidé fait
 > toujours règle pour les lots de [7-J](7-j-ecrans.md). La 6.3 vient **après** la 6.2.2 (économie et
-> socle), la 6.2.3 (la mesure) et les annonces de la console ([7-F](7-f-console-annonces.md)) : elle
-> **se compare aux chiffres de la 6.2.3**, qui sont sa ligne de base.
+> socle) et les annonces de la console ([7-F](7-f-console-annonces.md)), et elle **embarque la mesure**
+> ([7-D](7-d-la-mesure.md), en premier sur sa branche) : depuis le 2026-09-21, elle n'a pas de ligne de
+> base, ses chiffres sont la première.
 
 Le tableau de bord porte désormais aussi :
 
@@ -146,9 +147,10 @@ Ce qu'il y a déjà, et ce qui manque :
 mouvement sera jugé. Écrire des animations avant la montée reviendrait à les rejuger après.
 
 Depuis le 2026-09-14, trois de plus, dans cet ordre : [7-C](7-c-economie-et-socle.md), publié en 6.2.2
-(`expo-image`, le cache d'occupation, les colonnes en base), [7-D](7-d-la-mesure.md), publié en 6.2.3
-(la ligne de base à laquelle la 6.3 se compare), et [7-F](7-f-console-annonces.md), les annonces de la
-console, sans lequel les cartes v2 n'auraient rien à afficher.
+(`expo-image`, le cache d'occupation, les colonnes en base), [7-D](7-d-la-mesure.md), joué en premier
+sur la même branche `v6.3` (depuis le 2026-09-21 ; il n'y a plus de ligne de base d'avant la refonte),
+et [7-F](7-f-console-annonces.md), les annonces de la console, sans lequel les cartes v2 n'auraient
+rien à afficher.
 
 ## Limites écrites
 

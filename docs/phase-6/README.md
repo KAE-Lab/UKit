@@ -1,8 +1,9 @@
 # Phase 6 — Le comportement devient de la donnée
 
 > **La suite se lit dans la [phase 7](../phase-7/README.md).** Mise à plat du 2026-09-14 : ce qui s'ouvre
-> après la 6.2.1 — la bande passante, trois nouveaux campus, la 6.2.2, la 6.2.3, la console, le mouvement
-> de l'interface en 6.3, la boucle en 6.4, le site, le soutien — y est découpé en jalons. Ce README garde
+> après la 6.2.1 — la bande passante, trois nouveaux campus, la 6.2.2, la console, la mesure et le
+> mouvement de l'interface en 6.3 (la 6.2.3 prévue le 14 a été retirée le 2026-09-21), la boucle en 6.4,
+> le site, le soutien — y est découpé en jalons. Ce README garde
 > l'histoire de la phase 6, jusqu'à la 6.2.1.
 
 UKit atteint sept sources tierces, et **la façon de les atteindre est compilée dans le binaire** :
@@ -139,7 +140,7 @@ sort en plusieurs publications**. La 6.0 est sortie le 31 août. Deux jours plus
 | **v6.1** | **la consolidation de la v6** : robustesse de la scolarité ([A](6-1-a-robustesse-scolarite.md), *livré le 2026-09-02*), pilotage à distance — messages, audiences, console, sondes ([B](6-1-b-pilotage-a-distance.md), *livré le 2026-09-03*), la passe de code ([C](6-1-c-passe-de-code.md), *livrée le 2026-09-03*), la publication en parallèle ([D](6-1-d-publication.md), *livrée le 2026-09-04*), les finitions d'interface ([E](6-1-e-finitions-interface.md), *livré le 2026-09-04*), la sortie ([Z](6-1-z-sortie.md), *jalon livré le 2026-09-06, builds en review aux stores*) | les six jalons déroulés |
 | **v6.2** | **le socle, et les demandes** — partie le 2026-09-06 comme une 6.1.1 courte (l'Expo Go des stores est passé en SDK 57 le 2026-09-04, l'application était en 54, sans repli côté iOS), redéfinie le soir même : *se débarrasser d'un maximum de demandes* avant la 6.2. Le saut de SDK et la dette d'outillage ([A](6-1-x-a-montee-du-socle.md), *livré le 2026-09-06, vérifié sur les deux plateformes*) ; ce qui a été signalé — la synchronisation automatique qui ne part jamais, les filtres d'UE à plusieurs codes, la Scolarité sans compte, les lectures bonus des portails, le glissement entre onglets retiré ([B](6-1-x-b-signalements.md), *livré le 2026-09-07, vérifié sur iPhone*) ; l'entrée des retours dans la base et la console ([C](6-1-x-c-retours.md), *livré le 2026-09-07, sans build, et `main` avancé sur la branche pour que la console et le cron vivent*) ; **les calendriers du téléphone dans le Planning, et le ciblage par plateforme** ([D](6-1-x-d-calendriers-du-telephone.md), *livré le 2026-09-07, colonne appliquée en base le même jour, protocole iPhone à jouer* — les deux demandes du 2026-09-07 fusionnées en un jalon ; les messages en notification, d'abord reportés, sont finalement **livrés** par [E](6-1-x-e-notifications-push.md) le 2026-09-08 — la première écriture de l'application vers la base, un jeton et de quoi le cibler, un interrupteur pour le retirer) ; la sortie ([Z](6-1-x-z-sortie.md)), où **Android se vérifie en une fois** pour tous les jalons et où **le numéro se décide**. Cadrée par la [mise à plat du 2026-09-06](6-2-mise-a-plat.md) | la vérification Android groupée, et la synchronisation **mesurée** sur 24 h application fermée, sur build de production |
 | **v6.2.x** | **les ajustements d'après sortie** — décidés le 2026-09-11 avec ce que la production a confirmé (les racines embarquées rendent tout aux vieux Android, la permission de notification paraît après installation comme après mise à jour, le push arrive des deux côtés). Un seul jalon en lots, [6-2-x-ajustements.md](6-2-x-ajustements.md) : les filtres d'UE dans la synchronisation, le lieu d'un rendez-vous du téléphone, « Réserver » de la BU en action principale dans la vue intégrée, les ombres Android dosées comme iOS et les en-têtes rendus aux vieux Android, le glissement entre onglets de retour par un geste tenu, l'identifiant testeur lié à l'appareil. **Le second appareil est permanent** : chaque lot se vérifie sur l'iPhone et sur un Galaxy A8 de 2018. **Sortie en 6.2.1 le 2026-09-13**, sur GitHub — pas aux stores, où elle part dans la 6.2.2 | les lots joués sur les deux appareils ; le numéro se décide à la fin |
-| **La suite** | **la phase 7**, ouverte le 2026-09-14 : la 6.2.1 part aux stores dans une **6.2.2** courte, suivie d'une **6.2.3** ; le mouvement de l'interface, décidé ici le 2026-09-04 et cadré le 2026-09-06, y devient la **6.3**, et la boucle la **6.4**. Tout y est découpé en jalons : [phase-7/README.md](../phase-7/README.md) | — |
+| **La suite** | **la phase 7**, ouverte le 2026-09-14 : la 6.2.1 part aux stores dans une **6.2.2** courte, suivie d'une **6.2.3** ; le mouvement de l'interface, décidé ici le 2026-09-04 et cadré le 2026-09-06, y devient la **6.3**, et la boucle la **6.4**. *Amendé le 2026-09-21 : la 6.2.1 était déjà aux stores, et la 6.2.3 n'existe plus — la mesure part dans la 6.3.* Tout y est découpé en jalons : [phase-7/README.md](../phase-7/README.md) | — |
 
 > **Renumérotage du 2026-09-08.** La version développée sur la branche `v6.1.x` devait s'appeler
 > `6.1.1` ; elle a fini par porter trois capacités — les messages de service en notification push,
@@ -232,7 +233,7 @@ de test, et les limites écrites.
    LA SUITE — PHASE 7 (ouverte le 2026-09-14, docs/phase-7/)
 
                     la bande passante, trois nouveaux campus, 6.2.2 economie et socle,
-                    6.2.3 la mesure, la console, 6.3 le mouvement, 6.4 la boucle,
+                    la console, 6.3 la mesure et le mouvement, 6.4 la boucle,
                     le site, le soutien
 ```
 

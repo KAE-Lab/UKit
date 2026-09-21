@@ -1,10 +1,13 @@
 # 7-D — La mesure
 
-> **Spécification, ouverte le 2026-09-14, pas encore livrée.** Publication : **6.2.3**. La ligne de base de
-> la refonte : des compteurs anonymes, posés **avant** la 6.3 ([7-I](7-i-releve-et-vocabulaire.md)) pour
-> qu'elle ait quelque chose à quoi se comparer, et pour que l'équipe qui arrive — communication,
-> partenariats, subventions — ait des chiffres dès octobre. Le document de référence durable est
-> [mesure.md](../mesure.md) ; celui-ci dit comment on le livre.
+> **Spécification, ouverte le 2026-09-14, pas encore livrée.** Publication : **6.3**, décidé le 2026-09-21
+> à la sortie de la 6.2.2 — la 6.2.3 n'existe plus ([README de la phase](README.md#les-publications)).
+> Des compteurs anonymes, joués **en premier sur la branche `v6.3`**, avant les lots du mouvement
+> ([7-I](7-i-releve-et-vocabulaire.md), [7-J](7-j-ecrans.md)), pour que l'équipe qui arrive —
+> communication, partenariats, subventions — ait des chiffres à la sortie. La refonte n'a donc **pas de
+> ligne de base** : la mesure commence avec elle, et ses premiers chiffres sont ceux auxquels la 6.4 et
+> les campus se compareront. Le document de référence durable est [mesure.md](../mesure.md) ; celui-ci
+> dit comment on le livre.
 >
 > **La seconde écriture de l'application vers la base**, après le jeton de notification de
 > [6.1.x-E](../phase-6/6-1-x-e-notifications-push.md). Comme elle, c'est d'abord une décision de vie privée,
@@ -27,7 +30,7 @@ fin que l'heure.
 | Question | Décision | Pourquoi |
 |---|---|---|
 | Un service tiers ou nos compteurs | **nos compteurs**, dans la base de publication | un SDK tiers ajoute un sous-traitant à `PRIVACY.md`, un identifiant de session et un quota d'événements ; la base, la console et le chemin d'écriture bornée existent déjà ([6.1.x-E](../phase-6/6-1-x-e-notifications-push.md)) |
-| Quand | **dans la 6.2.3, avant la refonte** | une refonte mesurée après coup n'a rien à quoi se comparer |
+| Quand | **dans la 6.2.3, avant la refonte**. *Amendé le 2026-09-21 : **dans la 6.3**, en premier sur sa branche* | une refonte mesurée après coup n'a rien à quoi se comparer. *Le 2026-09-21 : à trois semaines d'écart, la comparaison n'aurait rien dit, et une version courte de plus coûtait un cycle de stores pour trois semaines de données* |
 | Consentement | **opt-out** : un interrupteur « Statistiques anonymes », actif par défaut | le cadre retenu est celui que la CNIL applique à la mesure d'audience exemptée de consentement — finalité limitée à la mesure, statistiques anonymes, aucun recoupement, conservation bornée, information et droit de s'y opposer. À relire avec l'équipe avant la sortie |
 | Granularité | le **jour**, l'**heure** pour les sessions, les onglets et les échecs de source ; le campus, la version, la plateforme | assez pour lire un usage, pas assez pour suivre quelqu'un |
 | Envoi | **groupé**, au passage en arrière-plan et à l'entretien ; **jamais au démarrage** | le démarrage ne dépend pas de la base ([backend.md](../backend.md#le-client-applicatif)) |
@@ -217,7 +220,7 @@ par campus, version et plateforme, sans une ligne de code. C'est le dénominateu
 
 [7-C](7-c-economie-et-socle.md) : `observateurs.ts`, les migrations numérotées, `verifier.yml`.
 
-Si le campus Bordeaux Montaigne est en ligne à la sortie, la 6.2.3 l'**embarque**, comme
+Si le campus Bordeaux Montaigne est en ligne à la sortie, la 6.3 l'**embarque**, comme
 l'[étape 9](../adaptation-campus.md#9-à-la-release-suivante) le demande
 ([l'ordre de la phase](README.md#les-jalons-et-leur-ordre)).
 
@@ -242,8 +245,8 @@ Sur un build de développement, les deux appareils.
 
 ## Limites écrites
 
-- **Rien n'est compté par les versions antérieures à la 6.2.3** : la ligne de base commence avec son
-  adoption ; le parc entier se lit par `jetons_push`.
+- **Rien n'est compté par les versions antérieures à la 6.3** : les chiffres commencent avec son
+  adoption, sans ligne de base d'avant la refonte ; le parc entier se lit par `jetons_push`.
 - **Une case trop petite rend un compteur attribuable** — un campus à trois étudiants, une heure
   creuse. La console n'affiche jamais une case sous cinq ([7-G](7-g-console-statistiques.md)).
 - **Une fermeture brutale sur Android perd la file de la session.**

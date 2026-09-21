@@ -1,16 +1,19 @@
 # 7-C — Économie et socle
 
-> **Jalon livré le 2026-09-17** — le code, la base, la publication du catalogue et des Blueprints, la
-> documentation ; ouvert le 2026-09-16 sur la branche `v6.2.2`. Restent au propriétaire du produit, et
-> cochés dans la [définition de « terminé »](#définition-de--terminé-) quand ils le seront : les deux
-> builds de développement et le [protocole](#plan-de-test) en neuf points, la règle de protection de
-> `main`, le tri des alertes restantes, et l'egress relevé avant et après. Ce que la réalité a corrigé
-> du texte ci-dessous est dans [Ce que la réalité a corrigé](#ce-que-la-réalité-a-corrigé-le-2026-09-17).
+> **Jalon livré le 2026-09-17, sorti en 6.2.2 le 2026-09-21** — le code, la base, la publication du
+> catalogue et des Blueprints, la documentation ; ouvert le 2026-09-16 sur la branche `v6.2.2` ; le
+> [protocole](#plan-de-test) joué sur les deux appareils, la règle de protection de `main` posée, `main`
+> avancé, le tag `v6.2.2` construit et soumis aux deux stores. Restent au propriétaire du produit : le
+> tri des quinze alertes restantes sur GitHub, et l'egress relevé avant et après — les relevés du 23 et
+> du 30 septembre —, coché dans la [définition de « terminé »](#définition-de--terminé-) quand il le
+> sera. Ce que la réalité a corrigé du texte ci-dessous est dans
+> [Ce que la réalité a corrigé](#ce-que-la-réalité-a-corrigé-le-2026-09-17).
 >
 > **Spécification ouverte le 2026-09-14.** Publication : **6.2.2**. Née de la
 > [mise à plat](7-mise-a-plat.md), le jour où deux choses sont arrivées ensemble : l'avertissement
 > *Fair Use* de Supabase et une panne de Celcat. La **6.2.1** ne part pas seule aux stores ; elle part dans
-> cette version courte, qui rend l'application **économe** — envers notre base comme envers les serveurs
+> cette version courte — *elle y était en fait déjà, corrigé le 2026-09-21 dans le
+> [README de la phase](README.md#pourquoi-maintenant)* —, qui rend l'application **économe** — envers notre base comme envers les serveurs
 > des universités — et le dépôt **sûr pour les jalons qui vont s'y succéder**. Deux à trois semaines,
 > périmètre fermé.
 >
@@ -571,7 +574,9 @@ Celle du [CONTRIBUTING](../../CONTRIBUTING.md#définition-de--terminé-), plus :
 
 - [x] `npx tsc --noEmit`, `npx eslint . --max-warnings=0`, `npm test` (760 tests), `npx expo-doctor`
   (21/21), `npx expo export` sur les deux plateformes — *joués le 2026-09-17 sur le code final*.
-- [ ] `verifier.yml` vert sur la branche `v6.2.2` — *à la première poussée de la branche*.
+- [x] `verifier.yml` vert sur la branche `v6.2.2` — *dès la première poussée, le 2026-09-21 (Application
+  49 s, Console 13 s, Sondes 7 s), puis sur chaque commit jusqu'à `bc7330f`, et sur `main` après l'avance
+  rapide*.
 - [x] `npm run parity` verte — *treize cas, le 2026-09-17, après la montée des six Blueprints Celcat,
   publiés dans la foulée*.
 - [x] `migration list` montre la ligne de base et les trois migrations — *le 2026-09-17, par
@@ -580,7 +585,10 @@ Celle du [CONTRIBUTING](../../CONTRIBUTING.md#définition-de--terminé-), plus :
 - [x] Le protocole ci-dessous joué sur les deux appareils, sur des builds de développement neufs — *le
   2026-09-21, iPhone 13 Pro en entier, Galaxy A8 en parcours court ; deux défauts trouvés et corrigés
   en séance (les rendus recadrés, le palier qui montait d'un coup), un inscrit au registre*.
-- [ ] L'egress relevé avant et après.
+- [ ] L'egress relevé avant et après — *adapté le 2026-09-21 : deux appareils sont invisibles dans l'egress
+  d'un parc de deux mille ; on compare le débit journalier du tableau Usage avant l'adoption de la 6.2.2
+  (relevé du 23 septembre, le même que celui de 7-A) et une semaine après (relevé du 30), avec la part des
+  versions dans `jetons_push` et les requêtes de rendu contre celles d'origine dans les journaux*.
 - [x] Cette spécification amendée — bannière de livraison, écarts constatés.
 
 ## Plan de test
@@ -642,6 +650,24 @@ Campus, trois fiches, une visionneuse, cinq bascules d'application ; dans les jo
 requêtes `/render/image/` comptées contre `/object/public/`. Attendu : les octets par ouverture de
 Campus divisés au moins par trois — 499 Ko devient autour de 120 Ko à 960 px en qualité 70 — et
 **aucune** requête d'image au retour au premier plan.
+
+*Adapté le 2026-09-21, à la sortie.* Deux appareils ne se voient pas dans l'egress d'un parc de deux
+mille ; la mesure se fait donc **à l'échelle du parc**, sur le cycle Pro : le débit journalier d'egress
+en cache du tableau Usage **avant** l'adoption de la 6.2.2 (relevé du 23 septembre, le même que celui de
+[7-A](7-a-bande-passante.md#les-relevés-du-tableau-usage)) et **une semaine après** (relevé du 30), lus
+avec la part des versions dans `jetons_push` et, dans l'explorateur de journaux du projet, les requêtes
+de rendu comptées contre celles d'origine sur vingt-quatre heures :
+
+```sql
+select case when r.path like '/storage/v1/render/image/%' then 'rendu'
+            when r.path like '/storage/v1/object/public/%' then 'origine'
+            else 'autre' end as genre, count(*) as n
+from edge_logs cross join unnest(metadata) as m cross join unnest(m.request) as r
+where r.path like '/storage/v1/%' group by genre
+```
+
+Le 2026-09-21 au soir, deux appareils en 6.2.2 : 50 requêtes de rendu contre 462 950 d'origine. La part
+du rendu doit suivre celle de la 6.2.2 dans le parc.
 
 ## Limites écrites
 

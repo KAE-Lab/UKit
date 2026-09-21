@@ -290,9 +290,10 @@ livré ; elle est mise à jour à chaque contribution.
   aussi** (cartes au format affiche 1:1, liste en grille) ; la session des réglages est rangée dans
   la 6.3. La clôture (6-Z) a sorti la **v6.0 le 2026-08-31**, et la version est ensuite partie en
   plusieurs publications : la **6.1** le 2026-09-06 (la consolidation), la **6.2.0** le 2026-09-08
-  (le socle et les demandes), la **6.2.1** le 2026-09-13 (les ajustements d'après sortie, sur
-  GitHub). La suite — deux versions courtes, 6.2.2 et 6.2.3, avant le mouvement de l'interface en
-  6.3 — est la [phase 7](docs/phase-7/README.md), découpée en jalons.
+  (le socle et les demandes), la **6.2.1** le 2026-09-13 (les ajustements d'après sortie), la
+  **6.2.2** le 2026-09-21 (économie et socle). La suite — la mesure et le mouvement de l'interface
+  dans une seule **6.3**, puis la boucle en 6.4 — est la [phase 7](docs/phase-7/README.md), découpée
+  en jalons.
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
   et l'application démarre et s'utilise sans jamais la joindre. Elle porte aussi, depuis la passe de

@@ -1,8 +1,9 @@
 # La mesure
 
-> **Prévu : le jalon [7-D](phase-7/7-d-la-mesure.md), publié en 6.2.3, le livre.** Ce document décrit la
-> cible, décidée le 2026-09-14 ([mise à plat de la phase 7](phase-7/7-mise-a-plat.md)) ; il s'amende à la
-> livraison, puis à chaque événement ajouté.
+> **Prévu : le jalon [7-D](phase-7/7-d-la-mesure.md), publié en 6.3, le livre** — en 6.2.3 jusqu'au
+> 2026-09-21, jour où la version courte a été retirée du plan. Ce document décrit la cible, décidée le
+> 2026-09-14 ([mise à plat de la phase 7](phase-7/7-mise-a-plat.md)) ; il s'amende à la livraison, puis à
+> chaque événement ajouté.
 
 Ce que UKit compte de son usage, pourquoi, et ce qu'il refuse de compter. La mesure sert trois
 lecteurs, et un compteur qui n'en sert aucun n'a pas sa place ici.
@@ -130,11 +131,12 @@ Treize mois, puis supprimés. La purge est une requête écrite dans
 
 « Statistiques anonymes », dans les Réglages, actif par défaut. Le couper arrête le comptage et vide la
 file locale ; rien de ce qui a été compté avant ne part. [PRIVACY.md](../PRIVACY.md) le dit au point
-4 quinquies, à partir de la 6.2.3.
+4 quinquies, à partir de la 6.3.
 
 ## Limites connues
 
-- **Rien avant la 6.2.3** : les versions antérieures ne comptent rien.
+- **Rien avant la 6.3** : les versions antérieures ne comptent rien, et la refonte n'a donc pas de ligne
+  de base ; ses chiffres sont la première.
 - **La file se perd** si Android tue l'application sans passer par l'arrière-plan.
 - **Le statut de testeur est auto-déclaré**, comme celui du jeton de notification.
 - **Ce n'est pas un rapport de plantage** : un échec de source n'est pas un plantage, et un plantage ne

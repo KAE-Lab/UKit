@@ -15,6 +15,9 @@ Cinq faits, arrivés en deux jours.
 
 1. **La 6.2.1 est sortie le 2026-09-13 sur GitHub, pas aux stores.** Depuis la rentrée : la 6.0 le 31
    août, la 6.1 le 6 septembre, la 6.2.0 le 8, la 6.2.1 le 13. Elle attend une publication qui la porte.
+   *Corrigé le 2026-09-21 : c'était faux. Le workflow de release du 13 au soir a construit et soumis les
+   deux stores, et huit jours plus tard 85 % du parc à notifications tournait en 6.2.1 (`jetons_push`,
+   2 126 appareils). La 6.2.2 n'a donc pas « porté » la 6.2.1 ; elle a sorti l'économie et le socle.*
 2. **Supabase a envoyé un avertissement *Fair Use*.** L'egress en cache avait atteint 10,041 Go pour un
    quota de 5, avec un délai de grâce jusqu'au 13 octobre 2026. Les visuels du bucket `media` étaient
    servis en `no-cache`, à 400 ou 500 Ko l'unité, par un composant sans cache disque, et la base de
@@ -39,8 +42,8 @@ Prises le 2026-09-14. Leur raisonnement, question par question, est dans la
 | Sujet | Décision |
 |---|---|
 | Supabase | **Pro maintenant** : sauvegardes quotidiennes, transformations d'image, Smart CDN. Le gaspillage se corrige quand même, pour le forfait des étudiants et pour la vitesse. Mesure avant et après dans le tableau Usage. |
-| Stores | Pas de soumission de la 6.2.1 seule : elle part dans une **6.2.2 courte**, puis une **6.2.3 courte** avant la 6.3. Cadence normale : une soumission toutes les deux à quatre semaines. |
-| Statistiques | **Compteurs anonymes maison** dans Supabase, sans identifiant d'appareil, interrupteur de retrait. **Client dans la 6.2.3**, avant la refonte, pour avoir une ligne de base. Tableaux dans la console ensuite. |
+| Stores | Pas de soumission de la 6.2.1 seule : elle part dans une **6.2.2 courte**, puis une **6.2.3 courte** avant la 6.3. Cadence normale : une soumission toutes les deux à quatre semaines. *Amendé le 2026-09-21 : la 6.2.1 était en fait déjà soumise, et la 6.2.3 n'existe plus — après la 6.2.2, tout part dans la 6.3 ([les publications](#les-publications)).* |
+| Statistiques | **Compteurs anonymes maison** dans Supabase, sans identifiant d'appareil, interrupteur de retrait. **Client dans la 6.2.3**, avant la refonte, pour avoir une ligne de base. Tableaux dans la console ensuite. *Amendé le 2026-09-21 : client dans la 6.3, en premier sur sa branche ; pas de ligne de base avant la refonte, ses chiffres sont la première.* |
 | Thème | **Les deux thèmes à égalité.** Aucun verrou tant qu'aucun chiffre ne le justifie ; chaque écran de la 6.3 se juge dans les deux. |
 | Cartes d'annonce | Cadre **4:5**. Par défaut l'image **couvre** le cadre autour d'un **point focal** choisi dans la console ; « contenir sur fond flou » reste une option par annonce. Un seul gabarit, deux largeurs. |
 | Rotation | Paramètres en base (épinglage, priorité, créneaux), **algorithme dans l'application**, pur et testé, rotation déterministe par heure ; la console montre « l'ordre vu à telle heure ». |
@@ -72,10 +75,22 @@ est tenu en un seul endroit : [backend.md](../backend.md#ce-qui-est-prévu-et-pa
 
 | Publication | Contenu | Jalons | Condition de sortie |
 |---|---|---|---|
-| **6.2.2** | **économie et socle** : la 6.2.1 part aux stores dans cette version courte, rendue économe envers la base et envers Celcat, et le dépôt rendu sûr pour la suite | [7-C](7-c-economie-et-socle.md) | des builds de développement neufs sur les deux appareils, l'egress mesuré avant et après, l'intégration continue verte sur `main` |
-| **6.2.3** | **la mesure** : des compteurs anonymes, sans identifiant, avec un interrupteur ; la ligne de base avant la refonte | [7-D](7-d-la-mesure.md) | `mesures` se remplit en production, `PRIVACY.md` et les fiches des stores à jour |
-| **6.3** | **le mouvement de l'interface**, décidé le 2026-09-04, cadré le 2026-09-06, complété le 2026-09-14 : squelettes, ressorts, transitions, fonds par écran, cartes d'annonce v2, cartes d'erreur au gabarit, mini-jeu de la connexion, tirer-pour-rafraîchir, les deux thèmes à égalité | [7-I](7-i-releve-et-vocabulaire.md), [7-J](7-j-ecrans.md), [7-K](7-k-sortie-6-3.md) | le relevé final contre le relevé initial, et les chiffres de la 6.2.3 comme ligne de base |
+| **6.2.2** | **économie et socle**, sortie le 2026-09-21 : une version courte, rendue économe envers la base et envers Celcat, et le dépôt rendu sûr pour la suite | [7-C](7-c-economie-et-socle.md) | des builds de développement neufs sur les deux appareils, l'egress mesuré avant et après, l'intégration continue verte sur `main` |
+| **6.3** | **la mesure, puis le mouvement de l'interface** — la mesure : des compteurs anonymes, sans identifiant, avec un interrupteur, dans cette version depuis le 2026-09-21 ; le mouvement, décidé le 2026-09-04, cadré le 2026-09-06, complété le 2026-09-14 : squelettes, ressorts, transitions, fonds par écran, cartes d'annonce v2, cartes d'erreur au gabarit, mini-jeu de la connexion, tirer-pour-rafraîchir, les deux thèmes à égalité. Visée : **octobre 2026** | [7-D](7-d-la-mesure.md), [7-I](7-i-releve-et-vocabulaire.md), [7-J](7-j-ecrans.md), [7-K](7-k-sortie-6-3.md) | le relevé final contre le relevé initial ; `mesures` se remplit en production, `PRIVACY.md` et les fiches des stores à jour |
 | **6.4** | **la boucle** : un formulaire de retour natif, les annonces en notification sur consentement, le partage d'une annonce et les liens universels, les pages du site dans l'application ; et les sujets reportés, à trancher à l'ouverture | [7-L](7-l-la-boucle.md) | la 6.3 sortie ; le contenu existe et permet de vérifier |
+
+> **Amendé le 2026-09-21, à la sortie de la 6.2.2 : la 6.2.3 n'existe plus.** La mesure
+> ([7-D](7-d-la-mesure.md)) part dans la 6.3, avec le mouvement. Ce qui l'a décidé : à deux ou trois
+> semaines d'écart, une ligne de base prise pendant la rentrée ne se compare pas à des semaines de
+> Toussaint, et ses chiffres seraient arrivés quand la refonte est déjà dessinée ; une version courte de
+> plus coûtait un cycle de stores pour trois semaines de données. La conséquence est acceptée : **la
+> mesure commence avec la 6.3**, sans « avant » ; ses premiers chiffres sont la ligne de base de la 6.4
+> et des campus. Ce que la version courte protégeait se garde autrement : les fiches *App Privacy* et
+> *Data safety* se remplissent dans les consoles avant la sortie, sans build ; la RPC de la mesure se
+> révoque en SQL si le tableau Usage bouge ; [7-G](7-g-console-statistiques.md) s'ouvre deux semaines
+> après la 6.3. La 6.3 vise **octobre 2026** : 7-D se joue en premier sur `v6.3`, une **date de gel** se
+> pose à l'ouverture de 7-I, et ce qui n'est pas prêt ce jour-là sort du périmètre plutôt que de
+> repousser la version. Le numéro 6.2.3 reste libre pour un correctif urgent de la 6.2.2, sans la mesure.
 
 > **Une phase n'est plus une version.** La phase 6 portait la version 6, puis l'a sortie en plusieurs
 > publications. La phase 7 commence sur la ligne 6 : ses publications gardent les numéros décidés le
@@ -106,21 +121,18 @@ son compte est prêté, un écran quand sa session est close — se découpe en 
                         5 le socle du depot : CI, Dependabot, migrations numerotees
                         6 les colonnes additives
 
-   6.2.3 — LA MESURE
-
-                    7-D compteurs anonymes, interrupteur, jamais de reseau au demarrage
-
    LA CONSOLE — SANS RELEASE, COMPLETE AVANT JANVIER 2027
 
                     7-E le socle ──► 7-F les annonces       (apres les migrations de 7-C)
-                                ──► 7-G les statistiques   (apres 7-D)
+                                ──► 7-G les statistiques   (deux semaines apres la 6.3)
                     7-E et 7-F  ──► 7-H les roles et l'equipe
 
-   6.3 — LE MOUVEMENT
+   6.3 — LA MESURE ET LE MOUVEMENT
 
+                    7-D compteurs anonymes, interrupteur, jamais de reseau au demarrage   (en premier sur la branche)
                     7-I releve, vocabulaire, ecran fondateur : le tableau de bord Campus
                     7-J les ecrans, un lot par ecran : 1 Planning  2 Scolarite  3 Reglages
-                    7-K sortie : releve final contre releve initial, chiffres contre la 6.2.3
+                    7-K sortie : releve final contre releve initial, les premiers chiffres poses
 
    LES CAMPUS, QUAND L'APPLICATION SAIT LES ACCUEILLIR (apres la 6.3)
 
@@ -145,14 +157,14 @@ son compte est prêté, un écran quand sa session est close — se découpe en 
 | 7-A | [7-a-bande-passante.md](7-a-bande-passante.md) | aucune | — | Re-encoder le média, le re-téléverser avec un cache d'un an, mesurer l'egress avant et après. Le parc installé en profite sans mise à jour. |
 | 7-B | [7-b-nouveaux-campus.md](7-b-nouveaux-campus.md) | aucune ; la publication suivante embarque chaque campus | lot 1 : aucune ; lots 2 à 4 : la 6.3 en production ([7-K](7-k-sortie-6-3.md)) et un compte prêté | Le relevé public des trois campus, puis l'IUT de Bordeaux, Victoire et Bordeaux Montaigne, un lot chacun, sur le protocole d'[adaptation-campus.md](../adaptation-campus.md). Les lots qui publient attendent que l'application sache accueillir un campus (décision du 2026-09-16). |
 | 7-C | [7-c-economie-et-socle.md](7-c-economie-et-socle.md) | 6.2.2 | 7-A | `expo-image` et les URL de rendu avec repli, le cache d'occupation, le disjoncteur, la fraîcheur du Planning, le `User-Agent` de Celcat, le formulaire pré-rempli ; l'intégration continue, Dependabot, les migrations numérotées et les colonnes additives. |
-| 7-D | [7-d-la-mesure.md](7-d-la-mesure.md) | 6.2.3 | 7-C | Des compteurs anonymes, une file locale, une RPC bornée, un interrupteur, jamais de réseau au démarrage ; `PRIVACY.md` et les fiches des stores. |
+| 7-D | [7-d-la-mesure.md](7-d-la-mesure.md) | 6.3, en premier sur sa branche | 7-C | Des compteurs anonymes, une file locale, une RPC bornée, un interrupteur, jamais de réseau au démarrage ; `PRIVACY.md` et les fiches des stores. |
 | 7-E | [7-e-console-socle.md](7-e-console-socle.md) | aucune | — ; mieux après 7-A | Le socle standard de la console et sa règle, les défauts mesurés, des listes filtrées et paginées, la page Retours, le tableau de bord, le téléversement compressé. |
 | 7-F | [7-f-console-annonces.md](7-f-console-annonces.md) | aucune | 7-E ; les migrations de 7-C | L'éditeur d'annonces v2 avec l'aperçu du téléphone, le point focal, les types, le statut, la programmation et l'ordre vu à une heure donnée. |
 | 7-G | [7-g-console-statistiques.md](7-g-console-statistiques.md) | aucune | 7-E ; 7-D en production depuis deux semaines | Les tableaux de la mesure, l'entonnoir d'une annonce, le rapport partenaire. |
 | 7-H | [7-h-console-roles.md](7-h-console-roles.md) | aucune | 7-E, 7-F ; les colonnes de 7-C | Qui peut quoi, par campus ; l'invitation sans script ; le verrou contre l'écrasement. Prêt avant janvier 2027. |
 | 7-I | [7-i-releve-et-vocabulaire.md](7-i-releve-et-vocabulaire.md) | 6.3 | 7-C, 7-D, 7-F | Le relevé de ce qui saute, le vocabulaire du mouvement, et l'écran fondateur : le tableau de bord Campus. |
 | 7-J | [7-j-ecrans.md](7-j-ecrans.md) | 6.3 | 7-I | Le Planning, la Scolarité, les Réglages : un lot par écran, mené en session. |
-| 7-K | [7-k-sortie-6-3.md](7-k-sortie-6-3.md) | 6.3 | 7-I, 7-J | Le relevé final contre le relevé initial, les captures dans les deux thèmes, les chiffres contre la 6.2.3. |
+| 7-K | [7-k-sortie-6-3.md](7-k-sortie-6-3.md) | 6.3 | 7-I, 7-J | Le relevé final contre le relevé initial, les captures dans les deux thèmes, les premiers chiffres de la mesure posés en ligne de base. |
 | 7-L | [7-l-la-boucle.md](7-l-la-boucle.md) | 6.4 | 7-K ; 7-M ; 7-F et 7-H | Le formulaire natif, les annonces en notification, le partage, les pages du site dans l'application. |
 | 7-M | [7-m-le-site.md](7-m-le-site.md) | aucune ; dépôt `UKit-website` | 7-I | Le site refondu sur les tokens de l'application, sa confidentialité générée, ses pages et ses liens universels. |
 | 7-N | [7-n-le-soutien.md](7-n-le-soutien.md) | aucune ; hors code | 7-M ; l'équipe | HelloAsso, la page « Où va l'argent », la jauge par campus. |
@@ -176,7 +188,7 @@ Les lots de campus avancent ensuite au rythme des comptes prêtés.
 | 7-B, lot 2 : IUT de Bordeaux | à ouvrir, après la 6.3 |
 | 7-B, lot 3 : Victoire | à ouvrir, après la 6.3 |
 | 7-B, lot 4 : Bordeaux Montaigne | à ouvrir, après la 6.3 |
-| 7-C Économie et socle | **livré le 2026-09-17** — code, base et publication sur la branche `v6.2.2` : `expo-image` et les rendus, le cache d'occupation, le disjoncteur, la fraîcheur du Planning, le `User-Agent`, le formulaire pré-rempli, la CI, Dependabot, les migrations et les colonnes ; la sonde a mesuré la requête groupée viable pour la 6.3. Protocole joué sur les deux appareils le 2026-09-21 ; reste l'egress avant/après |
+| 7-C Économie et socle | **livré le 2026-09-17** — code, base et publication sur la branche `v6.2.2` : `expo-image` et les rendus, le cache d'occupation, le disjoncteur, la fraîcheur du Planning, le `User-Agent`, le formulaire pré-rempli, la CI, Dependabot, les migrations et les colonnes ; la sonde a mesuré la requête groupée viable pour la 6.3. Protocole joué sur les deux appareils le 2026-09-21 ; **sortie en 6.2.2 le 2026-09-21** ; reste l'egress avant/après, relevés du 23 et du 30 septembre |
 | 7-D La mesure | à ouvrir |
 | 7-E Le socle de la console | à ouvrir |
 | 7-F Les annonces dans la console | à ouvrir |
@@ -223,8 +235,8 @@ Un jalon se traite en suivant sa **spécification** et la
 
 ## Les branches
 
-Les jalons d'une publication se jouent **sur une branche par version** — `v6.2.2`, `v6.2.3`, `v6.3`,
-`v6.4` —, créée depuis `main` à jour, et `main` est avancé en avance rapide à la sortie. Ce qui n'a pas de
+Les jalons d'une publication se jouent **sur une branche par version** — `v6.2.2`, `v6.3`, `v6.4` —,
+créée depuis `main` à jour, et `main` est avancé en avance rapide à la sortie. Ce qui n'a pas de
 code d'application **se fait sur `main`** : 7-A, 7-B et la console, de 7-E à 7-H. La console se déploie
 depuis `main`, et un campus est une publication de données. Le site vit dans son propre dépôt,
 `UKit-website`.

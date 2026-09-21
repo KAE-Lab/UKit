@@ -85,8 +85,8 @@ colonnes de la 6.2.2 rendent possible : la **liste des établissements regroupé
 [`FreeRoomListItem.tsx:45`](../../src/features/Campus/FreeRoom/components/FreeRoomListItem.tsx) —
 par la colonne. Deux entrées de plus : **« Soutenir »**, si `services.soutien` existe dans le
 catalogue — le don vit sur le site, ouvert dans le navigateur du système, règle des stores —, et
-**« Statistiques anonymes »**, que la 6.2.3 pose dans une section Confidentialité : le lot lui
-donne ses formes, il ne la crée pas.
+**« Statistiques anonymes »**, que [7-D](7-d-la-mesure.md) pose dans une section Confidentialité, en
+premier sur la même branche `v6.3` : le lot lui donne ses formes, il ne la crée pas.
 
 ## La passe « voix éditoriale »
 
@@ -112,8 +112,9 @@ passe se juge donc sur la durée, pas à la première lecture.
 
 [7-I](7-i-releve-et-vocabulaire.md), entièrement : un lot qui invente son vocabulaire au
 lieu de l'appliquer produit exactement la dérive que 6-K a mesurée. Et, depuis le 2026-09-14, ce que
-les deux versions courtes déposent avant elle : les colonnes `credits`, `campus`, `alias` et
-`expo-image` (6.2.2), l'entrée « Statistiques anonymes » (6.2.3).
+la version courte dépose avant elle — les colonnes `credits`, `campus`, `alias` et `expo-image`
+(6.2.2) — et ce que 7-D pose sur la même branche, avant les lots : l'entrée « Statistiques anonymes »
+(dans la 6.3 depuis le 2026-09-21).
 
 ## Limites écrites
 

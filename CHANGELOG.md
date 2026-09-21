@@ -12,9 +12,9 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [6.2.2] - 2026-09-21
 
-Le jalon [7-C](docs/phase-7/7-c-economie-et-socle.md), économie et socle : la 6.2.1 part aux stores dans
-cette version courte, rendue économe envers la base de publication et envers les serveurs des
-universités, avec un dépôt prêt pour les jalons qui suivent.
+Le jalon [7-C](docs/phase-7/7-c-economie-et-socle.md), économie et socle : une version courte, rendue
+économe envers la base de publication et envers les serveurs des universités, avec un dépôt prêt pour
+les jalons qui suivent.
 
 ### Ajouté
 
