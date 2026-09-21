@@ -28,6 +28,12 @@ export interface TentativeSynchro {
     readonly at: number;
     readonly ok: boolean;
     readonly origine: OrigineSynchro;
+    /**
+     * Le message de l'erreur, sur un echec. Un retour du 2026-09-17 disait « synchronisation
+     * failed » sans rien d'autre, et l'application ne gardait pas davantage : la raison se lit
+     * desormais dans le menu de developpement, sur l'appareil qui l'a rencontree.
+     */
+    readonly raison?: string;
 }
 
 /** Ce que la description des reglages promet : « environ toutes les 12 heures ». */
@@ -54,10 +60,10 @@ export function lireTentative(brut: string | null): TentativeSynchro | null {
     try {
         const valeur: unknown = JSON.parse(brut);
         if (typeof valeur !== 'object' || valeur === null) return null;
-        const { at, ok, origine } = valeur as Record<string, unknown>;
+        const { at, ok, origine, raison } = valeur as Record<string, unknown>;
         if (typeof at !== 'number' || !Number.isFinite(at) || typeof ok !== 'boolean') return null;
         if (typeof origine !== 'string' || !ORIGINES.includes(origine as OrigineSynchro)) return null;
-        return { at, ok, origine: origine as OrigineSynchro };
+        return { at, ok, origine: origine as OrigineSynchro, ...(typeof raison === 'string' && raison !== '' ? { raison } : {}) };
     } catch {
         return null;
     }

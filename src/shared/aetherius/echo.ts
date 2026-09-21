@@ -50,7 +50,10 @@ export async function jouerEcho(): Promise<EchoEnTetes> {
             const echec = describeUkitFailure(result);
             return { ok: false, detail: echec.detail ?? echec.kind };
         }
-        const enTetes = result.outputs.en_tetes;
+        // Une extraction `$.headers` rend une liste d'un element, comme tout chemin JSONPath : on
+        // deballe (mesure avec le moteur Python le 2026-09-21 — l'appareil disait « sans User-Agent »).
+        const brut = result.outputs.en_tetes;
+        const enTetes = Array.isArray(brut) ? brut[0] : brut;
         const userAgent = typeof enTetes === 'object' && enTetes !== null ? (enTetes as Record<string, unknown>)['User-Agent'] : undefined;
         return { ok: true, userAgent: typeof userAgent === 'string' ? userAgent : null };
     } catch (erreur) {

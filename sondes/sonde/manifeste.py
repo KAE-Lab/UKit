@@ -20,18 +20,32 @@ from .verdict import Verdict
 CHEMIN = "storage/v1/object/public/blueprints/manifest.json"
 FORMAT = "1"
 DELAI_S = 30
+# Trois lectures avant de conclure : depuis le runner, le CDN a rendu « Connection reset by peer » sur
+# deux fichiers de dix-huit, deux matins de suite, et la source repondait (issue #25, 2026-09-18).
+TENTATIVES = 3
+PAUSE_S = 1.5
+MARQUE_ILLISIBLE = "illisible"
 
 
 def _lire(url: str) -> bytes:
     # `?t=` et `no-cache` : le bucket est servi par un CDN, et lire un manifeste perime ici ferait
     # croire a une base saine — meme regle que tools/blueprints/base.mjs.
     separateur = "&" if "?" in url else "?"
-    requete = urllib.request.Request(
-        f"{url}{separateur}t={int(time.time() * 1000)}",
-        headers={"Cache-Control": "no-cache, no-store", "Pragma": "no-cache", "User-Agent": "ukit-sondes"},
-    )
-    with urllib.request.urlopen(requete, timeout=DELAI_S) as reponse:
-        return reponse.read()
+    derniere: Exception | None = None
+    for tentative in range(TENTATIVES):
+        requete = urllib.request.Request(
+            f"{url}{separateur}t={int(time.time() * 1000)}",
+            headers={"Cache-Control": "no-cache, no-store", "Pragma": "no-cache", "User-Agent": "ukit-sondes"},
+        )
+        try:
+            with urllib.request.urlopen(requete, timeout=DELAI_S) as reponse:
+                return reponse.read()
+        except Exception as exc:  # noqa: BLE001 - un reset ou un delai : on reessaie, le verdict vient apres
+            derniere = exc
+            if tentative + 1 < TENTATIVES:
+                time.sleep(PAUSE_S * (tentative + 1))
+    assert derniere is not None
+    raise derniere
 
 
 def comparer_empreintes(manifeste: dict, lire: Callable[[str], bytes], base: str = "") -> list[str]:
@@ -51,7 +65,7 @@ def comparer_empreintes(manifeste: dict, lire: Callable[[str], bytes], base: str
         try:
             reelle = hashlib.sha256(lire(urllib.parse.urljoin(base, url))).hexdigest()
         except Exception as exc:  # noqa: BLE001 - un fichier illisible est un ecart, pas un plantage
-            ecarts.append(f"{nom} (illisible : {exc})")
+            ecarts.append(f"{nom} ({MARQUE_ILLISIBLE} : {exc})")
             continue
         if reelle != attendue:
             ecarts.append(f"{nom} (empreinte {reelle[:12]}… au lieu de {attendue[:12]}…)")
@@ -75,5 +89,8 @@ def verifier(base_url: str, lire: Callable[[str], bytes] = _lire) -> Verdict:
 
     ecarts = comparer_empreintes(manifeste, lire, base=url)
     if ecarts:
-        return Verdict("panne", etape="empreintes", famille="data", message="; ".join(ecarts)[:600], duree_ms=duree())
+        # Des fichiers qui ne se lisent pas, sans aucune empreinte fausse : c'est le transport qui a
+        # lache, pas la publication — la meme famille que le manifeste injoignable.
+        famille = "unavailable" if all(MARQUE_ILLISIBLE in ecart for ecart in ecarts) else "data"
+        return Verdict("panne", etape="empreintes", famille=famille, message="; ".join(ecarts)[:600], duree_ms=duree())
     return Verdict("ok", duree_ms=duree())

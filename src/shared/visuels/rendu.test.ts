@@ -43,15 +43,15 @@ describe('qualiteBornee', () => {
 
 describe('urlDeRendu', () => {
     it('transforme une adresse d origine sans requete', () => {
-        expect(urlDeRendu(ORIGINE, { largeur: 640, qualite: 75 })).toBe(`${RENDU}?width=640&quality=75`);
+        expect(urlDeRendu(ORIGINE, { largeur: 640, qualite: 75 })).toBe(`${RENDU}?width=640&quality=75&resize=contain`);
     });
 
     it('conserve la requete existante en tete', () => {
-        expect(urlDeRendu(`${ORIGINE}?v=2`, { largeur: 640, qualite: 75 })).toBe(`${RENDU}?v=2&width=640&quality=75`);
+        expect(urlDeRendu(`${ORIGINE}?v=2`, { largeur: 640, qualite: 75 })).toBe(`${RENDU}?v=2&width=640&quality=75&resize=contain`);
     });
 
     it('applique le palier et la borne de qualite', () => {
-        expect(urlDeRendu(ORIGINE, { largeur: 500, qualite: 200 })).toBe(`${RENDU}?width=640&quality=100`);
+        expect(urlDeRendu(ORIGINE, { largeur: 500, qualite: 200 })).toBe(`${RENDU}?width=640&quality=100&resize=contain`);
     });
 
     it('laisse intacte une adresse d une autre origine', () => {
@@ -74,7 +74,7 @@ describe('urlDeRendu', () => {
     it('transforme aussi les adresses du socle embarque, qui nomment l hote en dur', () => {
         const logo = 'https://owiksddeqcyyifnmpyqm.supabase.co/storage/v1/object/public/media/etablissements/bordeaux.webp';
         expect(urlDeRendu(logo, { largeur: 208 * 3, qualite: 80 })).toBe(
-            'https://owiksddeqcyyifnmpyqm.supabase.co/storage/v1/render/image/public/media/etablissements/bordeaux.webp?width=640&quality=80',
+            'https://owiksddeqcyyifnmpyqm.supabase.co/storage/v1/render/image/public/media/etablissements/bordeaux.webp?width=640&quality=80&resize=contain',
         );
     });
 });

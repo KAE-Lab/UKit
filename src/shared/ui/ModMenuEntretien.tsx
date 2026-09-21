@@ -120,7 +120,7 @@ export default function ModMenuEntretien({ theme }: ModMenuEntretienProps) {
             <Ligne
                 theme={theme}
                 cle="dernière tentative"
-                valeur={tentative === null ? '—' : `${tentative.origine} · ${tentative.ok ? 'ok' : 'échec'} · ${moment(tentative.at).format('DD/MM HH:mm')}`}
+                valeur={tentative === null ? '—' : `${tentative.origine} · ${tentative.ok ? 'ok' : 'échec'} · ${moment(tentative.at).format('DD/MM HH:mm')}${tentative.raison === undefined ? '' : ` · ${tentative.raison}`}`}
                 ton={tentative === null ? undefined : tentative.ok ? theme.success : theme.warning}
             />
             <Ligne theme={theme} cle="dernier bilan" valeur={decrireBilan(bilan)} />

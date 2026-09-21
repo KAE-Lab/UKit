@@ -306,7 +306,7 @@ livré ; elle est mise à jour à chaque contribution.
 - [x] **Économie et socle** ([7-C](docs/phase-7/7-c-economie-et-socle.md), 6.2.2) — l'application coûte
   moins cher dans deux directions qui ne se voyaient pas à l'écran. **Vers notre base** : les images
   distantes passent par `expo-image`, avec un cache disque et un fondu, et demandent un **rendu** aux
-  dimensions de la carte plutôt que le fichier d'origine (une photo de restaurant : 96 Ko au lieu de
+  dimensions de la carte plutôt que le fichier d'origine (une photo de restaurant : 52 Ko au lieu de
   157), avec un repli sur l'origine. **Vers les universités** : l'occupation des salles d'un bâtiment
   est en cache dix minutes (dix-huit requêtes par ouverture de fiche jusque-là), le Planning ne se
   relit pas dans la minute au retour sur l'onglet, un **disjoncteur** par hôte tait les runs que

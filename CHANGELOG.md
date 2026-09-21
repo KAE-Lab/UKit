@@ -10,6 +10,12 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
+## [6.2.2] - 2026-09-21
+
+Le jalon [7-C](docs/phase-7/7-c-economie-et-socle.md), économie et socle : la 6.2.1 part aux stores dans
+cette version courte, rendue économe envers la base de publication et envers les serveurs des
+universités, avec un dépôt prêt pour les jalons qui suivent.
+
 ### Ajouté
 
 - **Le formulaire de retours s'ouvre pré-rempli.** Depuis la pastille grise d'un onglet, la section du
@@ -33,7 +39,7 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 - **Les images distantes ont un cache disque, un fondu, et pèsent moins.** Elles passent par
   `expo-image` et demandent un **rendu** aux dimensions de la carte au lieu du fichier d'origine — une
-  photo de restaurant descend à 96 Ko au lieu de 157 —, avec un repli sur l'origine si le rendu
+  photo de restaurant descend à 52 Ko au lieu de 157 —, avec un repli sur l'origine si le rendu
   échoue. Ouvrir l'onglet Campus ne retélécharge plus les visuels déjà vus. La visionneuse plein écran
   reste hors de ce cache.
 - **La fiche d'un bâtiment ne rejoue plus dix-huit requêtes à chaque ouverture** : l'occupation des

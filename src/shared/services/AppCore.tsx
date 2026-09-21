@@ -436,7 +436,7 @@ class SettingsManagerService {
         // qu'une fois.
         const resultat = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups, { origine: origineDuRun(origine) });
         if (resultat.ok === false) {
-            this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine });
+            this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine, raison: `source : ${resultat.failure.kind}` });
             return false;
         }
 
@@ -461,8 +461,9 @@ class SettingsManagerService {
         this.enregistrerTentativeSynchro({ at: Date.now(), ok: true, origine });
         return true;
         } catch (erreur) {
-            console.warn(`[calendrier] synchronisation interrompue : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
-            this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine });
+            const raison = erreur instanceof Error ? erreur.message : String(erreur);
+            console.warn(`[calendrier] synchronisation interrompue : ${raison}`);
+            this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine, raison });
             return false;
         } finally {
             this._isSynchronizingCalendar = false;

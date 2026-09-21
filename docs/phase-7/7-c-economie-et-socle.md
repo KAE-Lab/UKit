@@ -65,6 +65,11 @@ Les endroits où l'exécution a amendé le texte des sections suivantes — anno
 - **`expo-image` est en `~57.0.5`**, pas `~57.0.4` : c'est ce qu'`expo` 57.0.23 épingle, une fois les
   vingt-deux modules montés. `npx expo install --fix` sort en code 1 sur un avertissement — il ne sait
   pas écrire les greffons dans `app.config.ts`, qui est dynamique — sans rien laisser en plan.
+- **`resize=contain` dans chaque adresse de rendu** (2026-09-21, trouvé par le propriétaire du produit sur
+  l'iPhone : les logos d'établissement coupés des deux côtés). Le mode par défaut du service est
+  `cover` : avec la seule largeur, il garde la hauteur d'origine et recadre — le logo UB 1280 × 448
+  demandé en 480 revenait en 480 × 448, l'affiche 1080 × 1080 en 960 perdait 60 px de chaque côté. Avec
+  `contain`, 480 × 168 et 960 × 960 ; une image plus petite que le palier n'est pas agrandie.
 - **La carte d'annonce dont ni le rendu ni l'origine ne répondent** retombe sur l'affiche typographique,
   comme sans image, au lieu d'un carré gris.
 - **`DUREE_MS` d'`ApparitionEnFondu` est devenue `DUREE_FONDU_MS`, exportée** : la transition des images
@@ -72,7 +77,7 @@ Les endroits où l'exécution a amendé le texte des sections suivantes — anno
 - **Les paliers ne bornent pas la facture** : Supabase facture par image d'**origine** transformée (cent
   incluses, puis cinq dollars les mille), pas par variante. Ils servent le taux de HIT du CDN et la
   vitesse, ce qui suffit à les justifier. Mesuré : `amazone.jpg`, 156 668 octets à l'origine, sort à
-  **96 010** en 640 px qualité 70, `MISS` puis `HIT`.
+  **52 359** en 640 px qualité 70 avec `resize=contain` (96 010 recadré sans lui), `MISS` puis `HIT`.
 
 **L'étiquette envers Celcat (section 3).**
 
@@ -572,7 +577,9 @@ Celle du [CONTRIBUTING](../../CONTRIBUTING.md#définition-de--terminé-), plus :
 - [x] `migration list` montre la ligne de base et les trois migrations — *le 2026-09-17, par
   `--project-ref` ; `db push` appliqué, `etablissements.sql` rejoué, colonnes, politique, index,
   contraintes et gabarits relus dans la base*.
-- [ ] Le protocole ci-dessous joué sur les deux appareils, sur des builds de développement neufs.
+- [x] Le protocole ci-dessous joué sur les deux appareils, sur des builds de développement neufs — *le
+  2026-09-21, iPhone 13 Pro en entier, Galaxy A8 en parcours court ; deux défauts trouvés et corrigés
+  en séance (les rendus recadrés, le palier qui montait d'un coup), un inscrit au registre*.
 - [ ] L'egress relevé avant et après.
 - [x] Cette spécification amendée — bannière de livraison, écarts constatés.
 
@@ -586,6 +593,22 @@ trois migrations, et `verifier.yml` et `dependabot.yml` sont en place (point 8) 
 voit plus que l'annonce active, la politique filtrant `statut` et `publiee_le` (point 9 — les trois
 annonces de test d'audience `testeurs` restent à jouer depuis la console et l'appareil). Les points 1 à
 7 se jouent sur les appareils.
+
+*Joué le 2026-09-21*, Metro lu depuis le poste pendant que le propriétaire du produit jouait, un point à
+la fois. **iPhone 13 Pro**, tout : 23 visuels en `none` à la première ouverture, nos trois en rendu au
+bon palier, les vingt tiers intacts ; 23 en `disk` à la relance ; le fondu, le ratio de la fiche, la
+visionneuse ; le rendu cassé à la main rejoue l'origine ; 17 runs d'occupation puis zéro et la ligne
+`[salles] … cache` ; le disjoncteur ouvert au troisième échec, 34 échecs réarmés au même palier, le run
+automatique de l'entretien non joué, la sonde d'après le refroidissement montée à 2 min, un geste passé
+pendant l'ouverture, refermé au premier succès ; le Planning : un `chargement automatique` après plus
+d'une minute, deux `relecture inutile` dans la minute ; l'écho « le nôtre » ; le formulaire pré-rempli
+sur les trois portes, la page d'engagement par-dessus ; trois annonces de test, seule la normale
+visible, la programmée apparue à son heure au retour au premier plan, puis supprimées. **Galaxy A8** :
+aucun flash sous le doigt, `disk` à la relance, 17 runs puis zéro, l'écho « le nôtre », le formulaire,
+le disjoncteur ouvert après la date simulée. Ce qui n'a pas été joué : « relancer hors ligne » (un
+build de développement ne se relance pas sans Metro ; le `disk` de Metro en tient lieu) et le repli
+final des deux temps, le Wi-Fi étant resté allumé sous le mode avion — le repli est le composant
+d'avant, inchangé, et le second temps est prouvé par le rendu cassé.
 
 1. **Les images.** Onglet Campus, carrousel d'annonces, grille, fiche, visionneuse : fondu de 200 ms,
    jamais de repli sous l'image, une affiche non carrée entière sur son fond flou. Réseau ralenti : le

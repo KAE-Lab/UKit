@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { INTERVALLE_ENTRETIEN_MS, estDu, lireTentative, origineDuRun, type OrigineSynchro } from './tentative';
 
 describe('lireTentative', () => {
-    it('relit une tentative bien formee', () => {
+    it('relit une tentative bien formee, avec ou sans raison', () => {
         expect(lireTentative(JSON.stringify({ at: 10, ok: true, origine: 'tache' }))).toEqual({ at: 10, ok: true, origine: 'tache' });
+        expect(lireTentative(JSON.stringify({ at: 10, ok: false, origine: 'manuel', raison: 'calendrier introuvable' }))).toEqual({ at: 10, ok: false, origine: 'manuel', raison: 'calendrier introuvable' });
+        expect(lireTentative(JSON.stringify({ at: 10, ok: false, origine: 'manuel', raison: 7 }))).toEqual({ at: 10, ok: false, origine: 'manuel' });
     });
 
     it('rend null pour un magasin vide, illisible ou d une autre forme', () => {

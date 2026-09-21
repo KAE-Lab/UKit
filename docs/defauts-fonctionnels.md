@@ -19,6 +19,73 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Le parcours froid de l'INP dépasse ses attentes sur un appareil lent — mesuré le 2026-09-21
+
+Sur le Galaxy A8 (Android 9) derrière un partage de connexion 5G, la connexion à Bordeaux INP échoue
+trois fois de suite, de deux façons : `blocked [CAS_INDISPONIBLE]`, le champ `#username` ou le
+dossier n'apparaissant pas en 20 s, puis `unavailable`, la page du dossier ne finissant pas de charger
+en 30 s. Le même run passe sur l'iPhone 13 Pro au second essai, et sur l'A8 la messagerie de l'INP
+réussit en 10,9 s, les portes ENT et Moodle s'ouvrent, la session CAS est reconnue : ni la WebView,
+ni le réseau, ni les certificats ECC de l'INP (racine HARICA 2021, embarquée depuis la 6.2.0) ne sont
+en cause. La cause est le dossier lui-même, une application GWT lourde — 2,3 s à 2,8 s par vue depuis
+un poste filaire, parcours froid de 25 s ([6.1-D](phase-6/6-1-d-publication.md)) — que ses attentes,
+calées sur un iPhone, ne couvrent pas sur un appareil lent. Rien dans le code n'a changé depuis la
+6.2.1 sur ce chemin. À reprendre au lot Scolarité de [7-J](phase-7/7-j-ecrans.md) : dire « le portail
+met du temps » plutôt que « CAS indisponible », et mesurer sur l'A8 si un délai plus long suffit.
+
+### L'emploi du temps nominatif du premier semestre de L1 n'est pas porté — constaté le 2026-09-07, relevé le 2026-09-21
+
+Deux retours le disent, et le propriétaire du produit le confirme : au Collège Sciences et
+Technologies, le premier semestre de L1 n'a pas d'emploi du temps **par groupe** — il est
+**nominatif**, servi par Celcat une fois connecté avec les identifiants de l'ENT. L'application, qui
+ne connaît que les groupes, montre « Journée libre » à ces étudiants. Mesuré le 2026-09-21 : les
+scripts de `celcat.u-bordeaux.fr/calendar` ne connaissent que `GetCalendarData` et ses filtres,
+**aucun export iCalendar** — le chemin universel du lien collé ([6-J](phase-6/6-j-compte-et-sources-par-etablissement.md))
+ne s'applique donc pas. La lecture demande une session authentifiée sur Celcat, c'est-à-dire un
+Blueprint de portail, et pour l'écrire **un compte prêté de L1** ([adaptation-campus.md](adaptation-campus.md)) :
+rien ne se construit à l'aveugle. Sans compte, la limite s'écrit : le premier semestre de L1 attend.
+
+### Un étudiant de Bordeaux INP sans emploi du temps personnel, sans que rien ne le dise — rapporté le 2026-09-21
+
+Rapporté par le relais de l'INP : le parcours froid d'un étudiant se joue **sans erreur**, mais son
+emploi du temps personnel n'est proposé nulle part ; tous les autres étudiants de l'INP l'ont. Sans
+journal ni identifiants, une seule hypothèse tient, et elle est écrite dans le Blueprint lui-même
+([`ukit-portail-bordeaux-inp-dossier`](../blueprints/portails/ukit-portail-bordeaux-inp-dossier.blueprint.json),
+pas `planning`) : la ressource ADE de l'étudiant est lue dans un arbre GWT après une **pause de six
+secondes**, et quand l'arbre n'est pas rendu à temps — ou ne présélectionne pas sa fiche —,
+`edt_ressource` revient vide et **le run se déclare réussi quand même** : l'application cesse de
+proposer l'emploi du temps personnel sans que rien ne le dise. Deux gestes : demander à l'étudiant de
+se déconnecter puis se reconnecter sur une bonne connexion, et s'il manque encore, son école et son
+année ; et, au lot Scolarité de [7-J](phase-7/7-j-ecrans.md), **dire l'absence** — une rangée « emploi
+du temps personnel introuvable » avec sa relance — plutôt que de se taire.
+
+### « Journée libre » tout le semestre quand le groupe favori n'a plus de cours — rapporté le 2026-09-17
+
+Un retour d'un utilisateur de l'an dernier : « le planning affiche journée libre tout le semestre ».
+Son groupe favori est celui de l'année passée ; à la rentrée, Celcat en publie de nouveaux, et
+l'ancien ne porte plus rien. L'application ne distingue pas une journée réellement libre d'un groupe
+qui n'a **aucun cours sur des semaines** : elle montre le même état. À faire aux états vides de la
+6.3 ([7-I](phase-7/7-i-releve-et-vocabulaire.md), la voix éditoriale) : quand aucun cours n'existe sur
+la fenêtre déjà lue, dire « ton groupe a peut-être changé » et mener à la recherche de groupes.
+
+### Un bâtiment dont l'occupation échoue s'affiche entièrement libre — constaté le 2026-09-21
+
+Trouvé en jouant le protocole du disjoncteur de [7-C](phase-7/7-c-economie-et-socle.md), réseau coupé
+par l'interrupteur HORS LIGNE : la fiche de l'A28 s'ouvre normalement et **toutes ses salles sont
+libres**, alors que ses dix-sept lectures d'occupation viennent d'échouer en six millisecondes chacune.
+Rien ne dit la panne.
+
+La cause est une règle d'avant le jalon, écrite dans
+[`useFreeRoomsData.ts`](../src/features/Campus/FreeRoom/hooks/useFreeRoomsData.ts) : une salle dont
+la lecture échoue est comptée sans événement, donc libre — « chaque échec reste isolé et ne vide pas
+tout le bâtiment ». Juste pour une salle sur dix-sept ; faux quand toutes échouent, où un écran vide
+serait plus honnête qu'un bâtiment libre. Le cache de 7-C ne mémorise pas un lot entièrement en échec
+(`estCachable`, [`occupationCache.ts`](../src/features/Campus/services/occupationCache.ts)), donc la
+fiche redemande à l'ouverture suivante ; mais elle continue de montrer des salles libres pendant la
+panne. À corriger avec l'écran des salles libres de la 6.3 ([7-J](phase-7/7-j-ecrans.md)) : un lot
+sans aucune salle lue devient l'écran d'échec de la source, et une salle isolée en échec reste comptée
+libre.
+
 ### Les intitulés de cours d'un iCalendar collé sont parfois bizarres — constaté le 2026-09-16
 
 Trouvé en vérifiant le lien d'abonnement de **Bordeaux Montaigne**, servi par PRONOTE Campus, collé

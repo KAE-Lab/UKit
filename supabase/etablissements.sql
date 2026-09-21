@@ -109,7 +109,7 @@ insert into public.etablissements (
     --
     -- `formulaire` et `formulaire_campus` (7-C) sont des GABARITS du meme formulaire, par son adresse
     -- longue : l'application y ecrit l'onglet d'ou l'on vient, l'appareil, le systeme et sa version
-    -- (`{onglet}`, `{appareil}`, `{systeme}`, `{version}`), ou coche « Demander un campus ». Les numeros
+    -- (`{onglet}`, `{appareil}`, `{systeme}`, `{version}`, `{etablissement}`), ou coche « Demander un campus ». Les numeros
     -- d'entree vivent ici parce qu'ils changent quand une question est supprimee puis recreee : une
     -- publication les corrige, pas une release. `adaptation` ne change pas : les versions anterieures
     -- a la 6.2.2 l'ouvrent tel quel, et un gabarit y ferait apparaitre `{version}` en toutes lettres.
@@ -121,7 +121,7 @@ insert into public.etablissements (
       "notes":   "https://apogee.u-bordeaux.fr/index.php?srv=RE01",
       "examens": "https://apogee.u-bordeaux.fr/index.php?srv=RE02",
       "adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
-      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}",
+      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}&entry.278485196={etablissement}",
       "formulaire_campus": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.82564016=Demander%20un%20campus",
       "idp_shibboleth": "https://idp-ubx.u-bordeaux.fr/idp/shibboleth"}'::jsonb,
     '{}'::jsonb,
@@ -292,7 +292,7 @@ insert into public.etablissements (
       "cas":    "https://cas.bordeaux-inp.fr",
       "moodle": "https://moodle.bordeaux-inp.fr",
       "adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
-      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}",
+      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}&entry.278485196={etablissement}",
       "formulaire_campus": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.82564016=Demander%20un%20campus",
       "idp_shibboleth": "https://sso.bordeaux-inp.fr/idp/shibboleth"}'::jsonb,
     -- Le nom de l'instance Moodle de cet etablissement, releve sur la page elle-meme le 2026-08-13.
@@ -419,7 +419,7 @@ insert into public.etablissements (
     -- remplacer un formulaire, le fermer quand la campagne est finie, ou en ouvrir un par region est
     -- **une publication**, pas une release.
     '{"adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
-      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}",
+      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}&entry.278485196={etablissement}",
       "formulaire_campus": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.82564016=Demander%20un%20campus"}'::jsonb,
     '{}'::jsonb,
     '1',

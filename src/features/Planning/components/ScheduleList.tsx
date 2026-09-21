@@ -169,8 +169,13 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     }
 
     fetchSchedule = (origine: Origine = 'utilisateur') => {
+        const cle = this.cacheId(this.state.groupName);
         // Avant l'abandon du run en vol : un run automatique saute n'annule pas un geste en cours.
-        if (origine === 'automatique' && relectureInutile(this.derniereLecture, this.cacheId(this.state.groupName), Date.now())) return;
+        if (origine === 'automatique' && relectureInutile(this.derniereLecture, cle, Date.now())) {
+            if (__DEV__) console.info(`[planning] relecture inutile : ${cle}`);
+            return;
+        }
+        if (__DEV__) console.info(`[planning] chargement ${origine} : ${cle}`);
         if (this.state.loading && this.state.controller) this.state.controller.abort();
 
         const groupName = this.state.groupName;

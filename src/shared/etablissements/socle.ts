@@ -76,12 +76,12 @@ export const SALLES_PAR_DEFAUT: FormatSalles = { separateurs: [' | ', '/'], moti
 /**
  * Les gabarits du formulaire de retours (7-C). L'adresse longue du formulaire, suivie des numeros
  * d'entree des questions que l'application sait remplir — `{onglet}`, `{appareil}`, `{systeme}`,
- * `{version}` (shared/navigation/formulaireDeRetours.ts) — et, pour la demande de campus, la premiere
+ * `{version}`, `{etablissement}` (shared/navigation/formulaireDeRetours.ts) — et, pour la demande de campus, la premiere
  * question deja cochee. Les numeros vivent ici et non dans le code : un numero change quand une
  * question est supprimee puis recreee, et le catalogue se corrige par une publication.
  * `adaptation` reste tel quel : les versions anterieures l'ouvrent nu.
  */
-const FORMULAIRE_PASTILLE = 'https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}';
+const FORMULAIRE_PASTILLE = 'https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}&entry.278485196={etablissement}';
 const FORMULAIRE_CAMPUS = 'https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.82564016=Demander%20un%20campus';
 
 export const SOCLE: Readonly<Record<string, Etablissement>> = {

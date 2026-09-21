@@ -353,14 +353,17 @@ toutes `service_role`) ; les politiques jouées aux frontières sont dans la sp�
 
 Depuis [7-C](phase-7/7-c-economie-et-socle.md#4-le-formulaire-pré-rempli), l'application ouvre le
 formulaire avec ce qu'elle sait déjà : l'onglet d'où l'on vient (la question « section », cochée
-d'avance), l'appareil (`Device.modelName`), le système (« iOS 18.5 », « Android 9 ») et la version
-de l'application — et, depuis la modale d'un campus non relié et la page Scolarité non reliée, la
+d'avance), l'appareil (`Device.modelName`), le système (« iOS 18.5 », « Android 9 »), la version
+de l'application et l'établissement actif (`{etablissement}`, son nom affiché — la question s'ajoute
+au formulaire puis au gabarit, sans release) — et, depuis la modale d'un campus non relié et la page Scolarité non reliée, la
 première question déjà cochée sur « Demander un campus ». Moins de questions pour qui signale un bug,
 et des colonnes fiables pour l'importeur.
 
 **Les numéros d'entrée vivent dans le catalogue**, sous deux gabarits de `services` —
 `formulaire` (la pastille) et `formulaire_campus` (les deux portes du campus) — qui sont l'adresse
-longue du formulaire suivie de `?usp=pp_url&entry.<numéro>={onglet}&…`
+longue du formulaire suivie de `?usp=pp_url&entry.<numéro>={onglet}&…`. La question « Établissement »
+(`entry.278485196`, ajoutée le 2026-09-21) est à choix unique : ses options sont les **noms** du
+catalogue, et chaque campus publié s'y ajoute sous son nom, sinon le champ arrive vide
 ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts) remplit, une valeur absente
 retire son paramètre en entier ; [`formulaireDeRetours.ts`](../src/shared/navigation/formulaireDeRetours.ts)
 rassemble). Ils s'y lisent sur la page publique du formulaire (`FB_PUBLIC_LOAD_DATA_`), et un lien

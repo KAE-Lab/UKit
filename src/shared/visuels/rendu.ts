@@ -16,7 +16,12 @@
  *   Supabase facture par image d'origine transformee, pas par variante ; les paliers servent le
  *   taux de HIT et la vitesse ;
  * - **manipulation de chaines, pas de `URL`** : le module se joue sous Node comme sous Hermes, et il
- *   laisse intacte toute adresse qui n'est pas la notre — Croustillant, Affluences.
+ *   laisse intacte toute adresse qui n'est pas la notre — Croustillant, Affluences ;
+ * - **`resize=contain`, toujours** : le mode par defaut du service est `cover`, et avec la seule
+ *   largeur il garde la hauteur d'origine en recadrant les cotes — un logo de 1280 x 448 demande en
+ *   480 revenait en 480 x 448, coupe des deux cotes, et une affiche 1080 x 1080 en 960 perdait ses
+ *   bords (mesure sur l'iPhone le 2026-09-21). `contain` rend la largeur demandee et la hauteur
+ *   proportionnelle, et n'agrandit pas une image plus petite.
  *
  * Le repli sur l'adresse d'origine quand le rendu echoue vit dans `shared/ui/useSourceRendue.ts` :
  * ce module ne decide que de l'adresse.
@@ -66,5 +71,5 @@ export function urlDeRendu<T extends string | null | undefined>(url: T, options:
 
     const rendue = url.slice(0, position) + SEGMENT_RENDU + url.slice(position + SEGMENT_ORIGINE.length);
     const separateur = rendue.includes('?') ? '&' : '?';
-    return `${rendue}${separateur}width=${palierDeLargeur(options.largeur)}&quality=${qualiteBornee(options.qualite)}` as T;
+    return `${rendue}${separateur}width=${palierDeLargeur(options.largeur)}&quality=${qualiteBornee(options.qualite)}&resize=contain` as T;
 }

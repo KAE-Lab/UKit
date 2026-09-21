@@ -4,7 +4,7 @@
  * Trois portes y menent — la pastille grise de chaque onglet, la modale d'un campus non relie, la page
  * Scolarite d'un campus non relie — et toutes passent ici (jalon 7-C). Le catalogue porte deux
  * gabarits : `services.formulaire` pour la pastille, ou l'application ecrit l'onglet d'ou l'on vient,
- * l'appareil, le systeme et sa version ; `services.formulaire_campus` pour les deux portes du campus,
+ * l'appareil, le systeme, sa version et l'etablissement actif ; `services.formulaire_campus` pour les deux portes du campus,
  * qui cochent « Demander un campus ». Un catalogue sans gabarit retombe sur `services.adaptation`, le
  * formulaire nu — c'est ce que les versions anterieures ouvrent, et il ne change pas.
  *
@@ -15,7 +15,7 @@
 import * as Device from 'expo-device';
 
 import { versionApplication } from '../ciblage/contexte';
-import { serviceEtablissement } from '../etablissements/catalogue';
+import { getEtablissementActif, serviceEtablissement } from '../etablissements/catalogue';
 import { parametresDuFormulaire, remplirGabarit } from './liensDuFormulaire';
 
 /** Les intitules exacts des options de la question « section », tels que le formulaire les ecrit. */
@@ -40,6 +40,8 @@ export function lienDuFormulaire(porte: PorteDuFormulaire): string | null {
         appareil: Device.modelName,
         systeme: systeme(),
         version: versionApplication(),
+        // Le nom affiche, pas le code : c'est une personne qui lira la feuille (idee du 2026-09-21).
+        etablissement: getEtablissementActif().nom,
     });
 }
 

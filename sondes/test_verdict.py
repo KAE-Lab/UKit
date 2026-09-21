@@ -7,12 +7,13 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import json
 import unittest
 from types import SimpleNamespace
 
 from sonde.base import ligne_a_ecrire
 from sonde.catalogue import resoudre_entrees, valeur
-from sonde.manifeste import comparer_empreintes
+from sonde.manifeste import comparer_empreintes, verifier
 from sonde.verdict import Verdict, classer_exception, classer_resultat, famille_du_message
 
 
@@ -144,3 +145,34 @@ class TestLigne(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestVerifierLeManifeste(unittest.TestCase):
+    """Le transport qui lache n'est pas une empreinte qui ment (issue #25, 2026-09-18)."""
+
+    MANIFESTE = {"manifest": "1", "blueprints": {
+        "a": {"url": "a.json", "sha256": hashlib.sha256(b"a").hexdigest()},
+        "b": {"url": "b.json", "sha256": hashlib.sha256(b"b").hexdigest()},
+    }}
+
+    def _lecteur(self, reponses):
+        def lire(url):
+            if url.endswith("manifest.json"):
+                return json.dumps(self.MANIFESTE).encode()
+            valeur = reponses[url.rsplit("/", 1)[-1]]
+            if isinstance(valeur, Exception):
+                raise valeur
+            return valeur
+        return lire
+
+    def test_des_fichiers_illisibles_seuls_sont_une_panne_de_transport(self):
+        verdict = verifier("https://p.supabase.co", self._lecteur({"a.json": b"a", "b.json": ConnectionResetError(104, "Connection reset by peer")}))
+        self.assertEqual((verdict.etat, verdict.etape, verdict.famille), ("panne", "empreintes", "unavailable"))
+        self.assertIn("b (illisible", verdict.message)
+
+    def test_une_empreinte_fausse_reste_une_panne_de_donnee(self):
+        verdict = verifier("https://p.supabase.co", self._lecteur({"a.json": b"pas a", "b.json": ConnectionResetError(104, "reset")}))
+        self.assertEqual(verdict.famille, "data")
+
+    def test_tout_lisible_et_juste_est_ok(self):
+        self.assertEqual(verifier("https://p.supabase.co", self._lecteur({"a.json": b"a", "b.json": b"b"})).etat, "ok")

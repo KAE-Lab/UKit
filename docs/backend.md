@@ -435,11 +435,12 @@ La base ne stocke que des adresses d'**origine** — `/storage/v1/object/public/
 l'application qui les transforme au moment d'afficher, par les **transformations d'image** du plan Pro
 (`/storage/v1/render/image/public/…?width=&quality=`, [`rendu.ts`](../src/shared/visuels/rendu.ts)) :
 la largeur affichée arrondie à un palier (320, 480, 640, 960, 1280, 1600, 2000), une qualité par
-surface, la requête `?v=N` conservée. Publier une adresse de rendu dans la base figerait une largeur
+surface, `resize=contain` — sans lui le service recadre à la hauteur d'origine, un logo de 1280 × 448
+demandé en 480 revenait en 480 × 448, coupé des deux côtés —, la requête `?v=N` conservée. Publier une adresse de rendu dans la base figerait une largeur
 dans la donnée, et les versions antérieures à la 6.2.2 ne sauraient qu'en faire. Si le rendu échoue,
-l'application rejoue l'adresse d'origine, puis son repli. Mesuré le 2026-09-17 : la photo du Resto U
-de l'Amazone, 156 668 octets à l'origine, sort à **96 010 octets** en 640 px qualité 70, en cache un an
-et `HIT` au second appel. Les transformations se facturent au-delà de cent images d'origine par mois ;
+l'application rejoue l'adresse d'origine, puis son repli. Mesuré le 2026-09-21 : la photo du Resto U
+de l'Amazone, 156 668 octets à l'origine, sort à **52 359 octets** en 640 px qualité 70 (640 × 361),
+en cache un an et `HIT` au second appel. Les transformations se facturent au-delà de cent images d'origine par mois ;
 les paliers servent le taux de HIT du CDN et la vitesse.
 
 ### Des Blueprints
