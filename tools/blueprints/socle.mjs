@@ -17,6 +17,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { batLeSocle } from './sortie.mjs';
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const BLUEPRINTS = join(ROOT, 'blueprints');
 const PORTAILS = join(BLUEPRINTS, 'portails');
@@ -174,9 +176,13 @@ export function empreinte(texte) {
  */
 export function construireManifeste(socle, options = {}) {
     const desactives = new Set(options.desactives ?? []);
+    const socleSorti = options.socleSorti ?? null;
     const blueprints = {};
 
     for (const entree of socle) {
+        // Ce que la sortie embarque deja n'a rien a faire dans le manifeste : l'appareil le
+        // rejetterait, et jusqu'a @aetherius/react-native 0.5.10 il le telechargeait d'abord (sortie.mjs).
+        if (socleSorti !== null && !batLeSocle(entree, socleSorti)) continue;
         blueprints[entree.nom] = {
             version: entree.version,
             url: entree.fichier,

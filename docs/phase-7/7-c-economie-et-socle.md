@@ -54,6 +54,15 @@ Le tableau Usage de Supabase, les en-têtes des objets du bucket et les transfor
 objets. Côté application, **`expo-image` n'est pas une dépendance** : toutes les images passent par le
 `Image` de React Native, qui n'a ni cache disque réglable, ni placeholder, ni transition.
 
+### Ce que la sortie a mesuré, le 2026-09-21
+
+Le tableau Usage ne distingue pas les buckets. Les journaux du projet, eux, le font, et ils ont dit
+que **les visuels pesaient un dixième de l'egress** : les neuf autres sont la livraison des
+Blueprints, dont le registre téléchargeait le socle entier à chaque rafraîchissement pour le rejeter
+([7-A, les relevés](7-a-bande-passante.md#les-relevés-du-tableau-usage) ;
+[blueprints.md](../blueprints.md#ce-que-le-manifeste-annonce)). Ce jalon agit donc sur le dixième,
+et il y fait ce qu'il promet ; le reste s'est corrigé le même jour, sans release.
+
 ## Ce que la réalité a corrigé, le 2026-09-17
 
 Les endroits où l'exécution a amendé le texte des sections suivantes — annoncés, jamais cachés.
@@ -577,8 +586,10 @@ Celle du [CONTRIBUTING](../../CONTRIBUTING.md#définition-de--terminé-), plus :
 - [x] `verifier.yml` vert sur la branche `v6.2.2` — *dès la première poussée, le 2026-09-21 (Application
   49 s, Console 13 s, Sondes 7 s), puis sur chaque commit jusqu'à `bc7330f`, et sur `main` après l'avance
   rapide*.
-- [x] `npm run parity` verte — *treize cas, le 2026-09-17, après la montée des six Blueprints Celcat,
-  publiés dans la foulée*.
+- [x] `npm run parity` verte — *treize cas, le 2026-09-17, après la montée des six Blueprints Celcat.
+  La publication qui devait suivre n'a pas eu lieu, constaté le 2026-09-21 dans le bucket (manifeste
+  et documents datés du 7 septembre et du 24 août) : la 6.2.2 les embarque, les binaires antérieurs
+  ne les ont pas, et la règle du socle sorti les tient désormais hors du manifeste*.
 - [x] `migration list` montre la ligne de base et les trois migrations — *le 2026-09-17, par
   `--project-ref` ; `db push` appliqué, `etablissements.sql` rejoué, colonnes, politique, index,
   contraintes et gabarits relus dans la base*.
@@ -666,8 +677,11 @@ from edge_logs cross join unnest(metadata) as m cross join unnest(m.request) as 
 where r.path like '/storage/v1/%' group by genre
 ```
 
-Le 2026-09-21 au soir, deux appareils en 6.2.2 : 50 requêtes de rendu contre 462 950 d'origine. La part
-du rendu doit suivre celle de la 6.2.2 dans le parc.
+Le 2026-09-21, deux appareils en 6.2.2 : sur `media`, 63 requêtes de rendu contre 1 940 d'origine. La
+part du rendu doit suivre celle de la 6.2.2 dans le parc. Le relevé complet du 21, bucket par bucket,
+est dans [7-A](7-a-bande-passante.md#les-relevés-du-tableau-usage) : les visuels ne sont qu'un dixième
+de l'egress, la livraison des Blueprints en fait neuf ; ce jalon agit sur le dixième, la règle du
+socle sorti et `@aetherius/react-native` 0.5.10 sur le reste.
 
 ## Limites écrites
 

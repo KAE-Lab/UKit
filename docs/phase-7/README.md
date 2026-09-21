@@ -23,6 +23,9 @@ Cinq faits, arrivés en deux jours.
    servis en `no-cache`, à 400 ou 500 Ko l'unité, par un composant sans cache disque, et la base de
    production n'avait **aucune sauvegarde**. Le plan Pro a été souscrit le soir même ; le gaspillage se
    corrige quand même ([7-A](7-a-bande-passante.md)).
+   *Corrigé le 2026-09-21 : les visuels n'étaient qu'un dixième de cet egress. Les neuf autres étaient
+   la livraison des Blueprints, que le registre téléchargeait en entier à chaque rafraîchissement pour
+   la rejeter — [7-A, lot 2](7-a-bande-passante.md#lot-2--la-livraison-des-blueprints-le-2026-09-21).*
 3. **Celcat est tombé le 14 septembre**, par le serveur de l'université. L'application ne le martèle pas
    en panne, mais son rythme nominal est lourd : une requête d'occupation par salle à chaque ouverture de
    la fiche d'un bâtiment, dix-huit pour l'A28, et une relecture du Planning à chaque retour sur l'onglet
@@ -109,6 +112,7 @@ son compte est prêté, un écran quand sa session est close — se découpe en 
    SANS RELEASE — LE PARC INSTALLE EN PROFITE TEL QUEL
 
                     7-A la bande passante : le media re-encode, un cache d'un an
+                        lot 2 : le manifeste reduit au socle sorti, le registre qui juge avant de telecharger
                     7-B lot 1 : le releve public des trois campus, sans compte ni code
 
    6.2.2 — ECONOMIE ET SOCLE
@@ -154,7 +158,7 @@ son compte est prêté, un écran quand sa session est close — se découpe en 
 
 | Jalon | Spécification | Publication | Dépend de | Résumé |
 |---|---|---|---|---|
-| 7-A | [7-a-bande-passante.md](7-a-bande-passante.md) | aucune | — | Re-encoder le média, le re-téléverser avec un cache d'un an, mesurer l'egress avant et après. Le parc installé en profite sans mise à jour. |
+| 7-A | [7-a-bande-passante.md](7-a-bande-passante.md) | aucune | — | Re-encoder le média, le re-téléverser avec un cache d'un an, mesurer l'egress avant et après. Le parc installé en profite sans mise à jour. Lot 2 : le manifeste des Blueprints réduit au socle sorti, et le registre qui juge avant de télécharger. |
 | 7-B | [7-b-nouveaux-campus.md](7-b-nouveaux-campus.md) | aucune ; la publication suivante embarque chaque campus | lot 1 : aucune ; lots 2 à 4 : la 6.3 en production ([7-K](7-k-sortie-6-3.md)) et un compte prêté | Le relevé public des trois campus, puis l'IUT de Bordeaux, Victoire et Bordeaux Montaigne, un lot chacun, sur le protocole d'[adaptation-campus.md](../adaptation-campus.md). Les lots qui publient attendent que l'application sache accueillir un campus (décision du 2026-09-16). |
 | 7-C | [7-c-economie-et-socle.md](7-c-economie-et-socle.md) | 6.2.2 | 7-A | `expo-image` et les URL de rendu avec repli, le cache d'occupation, le disjoncteur, la fraîcheur du Planning, le `User-Agent` de Celcat, le formulaire pré-rempli ; l'intégration continue, Dependabot, les migrations numérotées et les colonnes additives. |
 | 7-D | [7-d-la-mesure.md](7-d-la-mesure.md) | 6.3, en premier sur sa branche | 7-C | Des compteurs anonymes, une file locale, une RPC bornée, un interrupteur, jamais de réseau au démarrage ; `PRIVACY.md` et les fiches des stores. |
@@ -183,7 +187,7 @@ Les lots de campus avancent ensuite au rythme des comptes prêtés.
 
 | Jalon ou lot | État |
 |---|---|
-| 7-A La bande passante | **livré le 2026-09-16** — 1 268 892 o de visuels devenus 299 000 (−76 %), tout le bucket en cache d'un an ; second relevé Usage le 2026-09-23 |
+| 7-A La bande passante | **lot 1 livré le 2026-09-16** — 1 268 892 o de visuels devenus 299 000 (−76 %), tout le bucket en cache d'un an ; **lot 2 livré le 2026-09-21** — l'egress était à 90 % la livraison des Blueprints : manifeste réduit au socle sorti, publié, et le registre corrigé en `@aetherius/react-native` 0.5.10 ; relevés des journaux le 2026-09-23 et le 2026-09-30 |
 | 7-B, lot 1 : le relevé public des trois campus | **livré le 2026-09-16** — trois fiches, trois verdicts, trois codes confirmés, la règle de nommage tranchée. **Aucun des trois n'est un Celcat**, mais l'IUT et Montaigne tournent sous **PRONOTE Campus**, dont l'**adresse d'abonnement iCalendar** rend leur emploi du temps publiable **sans une ligne de code** — collée dans l'application, elle **affiche les cours sur l'appareil**, vérifié pour Montaigne |
 | 7-B, lot 2 : IUT de Bordeaux | à ouvrir, après la 6.3 |
 | 7-B, lot 3 : Victoire | à ouvrir, après la 6.3 |

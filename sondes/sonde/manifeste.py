@@ -84,8 +84,10 @@ def verifier(base_url: str, lire: Callable[[str], bytes] = _lire) -> Verdict:
     duree = lambda: int((time.monotonic() - debut) * 1000)  # noqa: E731
     if not isinstance(manifeste, dict) or str(manifeste.get("manifest")) != FORMAT:
         return Verdict("panne", etape="manifeste", famille="rejected", message="le manifeste n’a pas la forme attendue (manifest != \"1\")", duree_ms=duree())
-    if not isinstance(manifeste.get("blueprints"), dict) or len(manifeste["blueprints"]) == 0:
-        return Verdict("panne", etape="manifeste", famille="data", message="le manifeste ne nomme aucun Blueprint", duree_ms=duree())
+    if not isinstance(manifeste.get("blueprints"), dict):
+        return Verdict("panne", etape="manifeste", famille="data", message="le manifeste ne porte pas de table de Blueprints", duree_ms=duree())
+    # Un manifeste vide est l'etat normal apres une sortie : il n'annonce que ce qui bat le socle
+    # sorti (docs/blueprints.md, regle du 2026-09-21). Rien a comparer, rien a signaler.
 
     ecarts = comparer_empreintes(manifeste, lire, base=url)
     if ecarts:

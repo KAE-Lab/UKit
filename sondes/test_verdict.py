@@ -176,3 +176,12 @@ class TestVerifierLeManifeste(unittest.TestCase):
 
     def test_tout_lisible_et_juste_est_ok(self):
         self.assertEqual(verifier("https://p.supabase.co", self._lecteur({"a.json": b"a", "b.json": b"b"})).etat, "ok")
+
+    def test_un_manifeste_vide_est_sain(self):
+        # L'etat normal apres une sortie : rien ne bat le socle, rien n'est annonce (regle du 2026-09-21).
+        vide = json.dumps({"manifest": "1", "blueprints": {}}).encode()
+        self.assertEqual(verifier("https://p.supabase.co", lambda url: vide).etat, "ok")
+
+    def test_un_manifeste_sans_table_reste_une_panne(self):
+        sans = json.dumps({"manifest": "1", "blueprints": []}).encode()
+        self.assertEqual(verifier("https://p.supabase.co", lambda url: sans).famille, "data")

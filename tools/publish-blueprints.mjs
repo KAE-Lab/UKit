@@ -7,13 +7,17 @@
  *   npm run blueprints:publish -- --desactiver <nom>            # une entree revient a l'embarque
  *   npm run blueprints:publish -- --reactiver <nom>
  *   npm run blueprints:publish -- --force                       # retelever tout
+ *   npm run blueprints:publish -- --socle v6.2.1                # juger contre un autre socle sorti
  *
  * Publier, c'est deux gestes : deposer les fichiers corriges, et republier le manifeste qui les
  * designe **avec leur empreinte**. Le second se fait ici plutot qu'a la main : une empreinte
  * calculee de tete est perimee des la premiere correction, et un manifeste dont l'empreinte ment est
  * exactement ce que l'appareil rejette — on passerait la soiree a deboguer une garde qui fonctionne.
  *
- * Le manifeste est un **artefact**, jamais un fichier qu'on edite.
+ * Le manifeste est un **artefact**, jamais un fichier qu'on edite. Et depuis le 2026-09-21 il
+ * n'annonce que ce qui **bat le socle sorti** — le dernier tag `vX.Y.Z` — parce que l'appareil
+ * rejette le reste, et que le rejeter lui coutait le telechargement du socle entier a chaque
+ * rafraichissement (tools/blueprints/sortie.mjs). Apres une sortie, un manifeste vide est l'etat sain.
  *
  * L'ordre compte, et il n'est pas negociable : le manifeste est ecrit **en dernier**. C'est lui le
  * plan de controle — le publier avant les fichiers qu'il designe ferait pointer une empreinte valide
@@ -30,6 +34,7 @@ chargerEnv({ quiet: true });
 
 import { config, lirePublic, rest, televerser } from './blueprints/base.mjs';
 import { construireManifeste, estEmbarque, lireTout, memeManifeste, MANIFEST_OBJET } from './blueprints/socle.mjs';
+import { lireSocleSorti } from './blueprints/sortie.mjs';
 
 const TABLE = 'blueprints';
 
@@ -40,7 +45,7 @@ function arguments_() {
         if (index < 0) return null;
         const suivant = argv[index + 1];
         if (suivant === undefined || suivant.startsWith('--')) {
-            throw new Error(`${drapeau} attend un nom de Blueprint`);
+            throw new Error(`${drapeau} attend une valeur`);
         }
         return suivant;
     };
@@ -51,6 +56,7 @@ function arguments_() {
         force: argv.includes('--force'),
         desactiver: valeur('--desactiver'),
         reactiver: valeur('--reactiver'),
+        socle: valeur('--socle'),
     };
 }
 
@@ -83,14 +89,19 @@ function aTeleverser(publies, servi, force) {
     return publies.filter((entree) => servi.blueprints?.[entree.nom]?.sha256 !== entree.sha256);
 }
 
-function raconter(publies, portails, manifeste, depots) {
+function raconter(publies, manifeste, depots, tagSorti) {
     for (const entree of publies) {
-        const etat = manifeste.blueprints[entree.nom].disabled ? 'desactive' : 'actif';
-        const depot = depots.includes(entree) ? 'a televerser' : 'inchange';
+        const annonce = manifeste.blueprints[entree.nom];
+        // Une entree que le socle sorti embarque deja n'est pas annoncee : la sortie la porte.
+        const etat = annonce === undefined ? `socle ${tagSorti}` : annonce.disabled ? 'desactive' : 'actif';
+        const depot = annonce === undefined ? '' : depots.includes(entree) ? 'a televerser' : 'inchange';
         // Un portail peut etre embarque ou non — c'est `index.ts` qui le dit, pas le dossier. Le
         // lire ici evite d'aller verifier a la main pourquoi une entree n'a pas de repli hors ligne.
         const origine = estEmbarque(entree.fichier) ? 'embarque' : 'hors socle';
-        console.log(`  ${entree.nom.padEnd(34)} v${entree.version.padEnd(4)} ${origine.padEnd(11)} ${etat.padEnd(10)} ${depot}`);
+        console.log(`  ${entree.nom.padEnd(34)} v${entree.version.padEnd(4)} ${origine.padEnd(11)} ${etat.padEnd(14)} ${depot}`);
+    }
+    if (Object.keys(manifeste.blueprints).length === 0) {
+        console.log(`\n  Rien ne bat le socle ${tagSorti} : le manifeste est vide, les appareils jouent l'embarque.`);
     }
     if (manifeste.disabled) {
         console.log('\n  ARRET GLOBAL : le manifeste ramene tous les Blueprints au socle embarque.');
@@ -106,15 +117,17 @@ async function main() {
     const { portails, publies } = lireTout();
 
     const desactives = await accorderDesactivations(base, options, publies);
-    const manifeste = construireManifeste(publies, { arret: options.arret, desactives });
+    const sorti = lireSocleSorti(options.socle);
+    const manifeste = construireManifeste(publies, { arret: options.arret, desactives, socleSorti: sorti.versions });
+    const annonces = publies.filter((entree) => manifeste.blueprints[entree.nom] !== undefined);
 
     const texteServi = await lirePublic(base, MANIFEST_OBJET);
     const servi = texteServi === null ? null : JSON.parse(texteServi);
-    const depots = aTeleverser(publies, servi, options.force);
+    const depots = aTeleverser(annonces, servi, options.force);
 
     const horsSocle = publies.filter((entree) => !estEmbarque(entree.fichier)).length;
-    console.log(`${publies.length} Blueprint(s) valides, dont ${portails.length} portail(s) et ${horsSocle} hors socle :\n`);
-    raconter(publies, portails, manifeste, depots);
+    console.log(`${publies.length} Blueprint(s) valides, dont ${portails.length} portail(s) et ${horsSocle} hors socle ; socle sorti : ${sorti.tag}\n`);
+    raconter(publies, manifeste, depots, sorti.tag);
 
     if (depots.length === 0 && memeManifeste(servi, manifeste)) {
         // « Rejoue a vide, le script ne change rien » est une propriete, pas une politesse : c'est

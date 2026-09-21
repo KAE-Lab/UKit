@@ -330,6 +330,25 @@ que l'appareil rejette : on passerait la soirée à déboguer une garde qui fonc
 La correction arrive sur les appareils au rafraîchissement suivant — au démarrage, ou au retour au
 premier plan. Le distant ne gagne que s'il est **plus récent, entier et valide**.
 
+### Ce que le manifeste annonce
+
+*Règle du 2026-09-21.* Le manifeste n'annonce que ce qui **bat le socle sorti** : une entrée dont la
+version ne dépasse pas celle qu'embarque le dernier tag `vX.Y.Z` en est **omise** ; une entrée hors
+socle est toujours annoncée. Le script lit ce socle dans `refs/tags/<tag>:blueprints/versions.json`
+après un `git fetch --tags`, et `--socle vX.Y.Z` désigne un autre tag. Après une sortie, le manifeste
+est donc normalement **vide** — c'est son état sain, et la sonde du matin le tient pour tel. Un
+correctif à chaud se publie en incrémentant la version dans `versions.json`, depuis `main` : publier
+depuis une branche de version annoncerait au parc des documents écrits pour un binaire qu'il n'a pas.
+
+Ce que la règle a corrigé : le registre de l'appareil n'adopte un document distant que s'il bat
+l'embarqué, mais, jusqu'à `@aetherius/react-native` 0.5.10, il le **téléchargeait avant** de le juger.
+Un manifeste qui annonçait les versions mêmes du socle faisait donc télécharger, à chaque
+rafraîchissement et sur chaque appareil, le socle entier pour tout rejeter : 90 Ko par lecture,
+24 000 lectures par jour, 2,2 Go par jour — neuf dixièmes de l'egress du projet, et la cause réelle
+de l'avertissement *Fair Use* du 14 septembre ([7-A](phase-7/7-a-bande-passante.md)). Le registre
+corrigé juge sur le manifeste avant le réseau ; le manifeste réduit ne coûte rien aux binaires qui
+ne l'ont pas encore.
+
 ### Ce que le script refuse de publier
 
 [`tools/publish-blueprints.mjs`](../tools/publish-blueprints.mjs) joue les gardes qui n'ont aucune
@@ -351,7 +370,9 @@ Trois propriétés du script valent d'être connues avant de s'en servir :
 - **seuls les fichiers dont l'empreinte a changé sont téléversés**, en comparant au manifeste
   réellement servi, pas à un état supposé ;
 - **rejoué à vide, il ne change rien** et le dit. C'est ce qui rend un manifeste périmé visible en une
-  commande. `--force` republie tout, `--dry-run` montre le plan sans rien toucher.
+  commande. `--force` republie tout, `--dry-run` montre le plan sans rien toucher ;
+- **il n'annonce que ce qui bat le socle sorti** (section précédente) ; la table `blueprints`, elle,
+  décrit tout le dépôt.
 
 ### Revenir en arrière
 

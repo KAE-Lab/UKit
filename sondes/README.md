@@ -15,7 +15,7 @@ le sache, et Moodle a cassé le soir de la sortie de la 6.0. Voir [docs/pilotage
 | `cas-bordeaux`, `cas-bordeaux-inp` | [`ukit.sonde.cas`](cas.blueprint.json) | la page de connexion sert son formulaire (`renew=true` le garantit) |
 | `moodle-bordeaux` | [`ukit.sonde.moodle`](moodle.blueprint.json) | la chaîne SSO initiée par l'IdP atteint le formulaire du CAS |
 | `ade-bordeaux-inp` | [`ukit.portail.bordeaux-inp.edt`](../blueprints/portails/ukit-portail-bordeaux-inp-edt.blueprint.json), le Blueprint de l'application | l'export d'une ressource se lit comme un calendrier |
-| `publication` | native, [`sonde/manifeste.py`](sonde/manifeste.py) | le manifeste se lit, et chaque fichier servi porte l'empreinte qu'il annonce |
+| `publication` | native, [`sonde/manifeste.py`](sonde/manifeste.py) | le manifeste se lit, et chaque fichier qu'il annonce porte son empreinte ; vide, il est sain (règle du 2026-09-21) |
 
 Les entrées qui peuvent changer — l'adresse d'un CAS, l'ENT qui lui sert de `service`, le projet
 ADE de l'année, la première ressource du référentiel — sont **lues dans le catalogue publié**

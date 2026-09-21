@@ -1,13 +1,15 @@
 # 7-A — La bande passante
 
-> **Jalon livré le 2026-09-16.** Ouvert le 2026-09-14. Aucune publication : le jalon s'est joué sur le
-> bucket et la base, et l'application 6.2.1 en profite sans mise à jour. Né de l'avertissement
-> *Fair Use* de Supabase ([mise à plat](7-mise-a-plat.md)).
+> **Lot 1 livré le 2026-09-16, lot 2 le 2026-09-21.** Ouvert le 2026-09-14. Aucune publication : le
+> jalon s'est joué sur le bucket et la base, et le parc installé en profite sans mise à jour. Né de
+> l'avertissement *Fair Use* de Supabase ([mise à plat](7-mise-a-plat.md)).
 >
 > **Le résultat en une ligne : 1 268 892 octets de visuels sont devenus 299 000, soit −76 %, et tout
 > le bucket porte désormais un cache d'un an.** Ce que la réalité a corrigé du texte ci-dessous est
-> écrit dans [Ce qui a été fait](#ce-qui-a-été-fait-le-2026-09-16) ; le second relevé du tableau Usage
-> est attendu le 2026-09-23.
+> écrit dans [Ce qui a été fait](#ce-qui-a-été-fait-le-2026-09-16) ; le second relevé du tableau Usage,
+> pris le 2026-09-21, est dans [Les relevés](#les-relevés-du-tableau-usage) : **l'egress n'a pas
+> baissé**, parce que les visuels n'en étaient que le dixième — le reste est la livraison des
+> Blueprints, corrigée le même jour ([blueprints.md](../blueprints.md#ce-que-le-manifeste-annonce)).
 
 ## La direction
 
@@ -162,7 +164,7 @@ journaliers**, à l'intérieur du cycle Pro.
 |---|---|---|---|---|
 | **2026-09-14**, fin du cycle gratuit | 10,041 Go — *201 % d'un quota de 5* | 1,371 Go | 0,001 Go | — |
 | **2026-09-16**, cycle Pro (14 sept – 14 oct), **~1 h après la passe** | **2,578 / 250 Go (1 %)** | 0,362 / 250 Go | 0,002 / 100 Go | **0 / 100** |
-| **2026-09-23**, une semaine après | *à relever* | | | |
+| **2026-09-21**, 7,5 jours de cycle, la 6.2.2 en cours de sortie | **8,314 Go** — *1,1 Go/jour* | 1,245 Go | 0,002 Go | **5** / 100 |
 
 Ce que le relevé du 16 établit, et ce qu'il n'établit pas :
 
@@ -179,11 +181,81 @@ Ce que le relevé du 16 établit, et ce qu'il n'établit pas :
   console, et le cycle vient de repartir —, **0 connexion Realtime**, **0 événement de *log drain***,
   et **37 heures de calcul, 0,50 $**. Aucune de ces lignes ne concerne ce jalon.
 
+**Ce que le relevé du 21 établit.** Le débit n'a pas bougé : 8,314 Go en sept jours et demi, soit
+1,1 Go par jour, le rythme du 16. Le chiffre à battre n'est pas battu, et les journaux du projet
+disent pourquoi — `edge_logs`, octets de `content-length` par jour UTC et par bucket, lus par l'API de
+gestion avec la requête écrite dans [7-C](7-c-economie-et-socle.md#plan-de-test) :
+
+| Jour | Total | `blueprints` | `media` | Requêtes `blueprints` |
+|---|---|---|---|---|
+| mar. 15 | 2,73 Go | 2,29 Go | 0,44 Go | 457 000 |
+| mer. 16, la passe à 15 h | 2,57 Go | 2,23 Go | 0,34 Go | 439 000 |
+| jeu. 17 | 2,03 Go | 1,81 Go | 0,22 Go | 359 000 |
+| ven. 18 | 1,60 Go | 1,44 Go | 0,15 Go | 287 000 |
+| sam. 19 | 0,44 Go | 0,39 Go | 0,05 Go | 78 000 |
+| dim. 20 | 0,84 Go | 0,76 Go | 0,08 Go | 151 000 |
+| lun. 21 | 2,40 Go | 2,18 Go | 0,22 Go | 427 000 |
+
+Les journaux comptent 12,6 Go sur ces sept jours là où le tableau Usage en compte 8,3 : les deux ne
+comptent pas les mêmes octets, et la part de chaque bucket ne dépend pas de l'unité. **Les visuels
+pesaient un dixième de l'egress**, et sur ce dixième la passe a fait ce qu'elle promettait : entre
+deux jours ouvrés comparables, le mardi 15 et le lundi 21, `media` passe de 438 à 216 Mo (−51 %) et
+de 6 400 à 1 900 requêtes (−70 %) — le cache d'un an est respecté par les caches HTTP natifs du parc,
+avant même `expo-image`. **Les neuf autres dixièmes sont le bucket `blueprints`** : 24 000 lectures
+du manifeste par jour, et à chaque lecture les vingt-quatre documents, 90 Ko, téléchargés puis
+rejetés, parce que le manifeste annonce les versions mêmes que le binaire embarque et que le
+registre jugeait après avoir téléchargé ([blueprints.md](../blueprints.md#ce-que-le-manifeste-annonce)).
+C'est l'origine réelle de l'avertissement *Fair Use* : la mise à plat du 14 a diagnostiqué ce que le
+tableau Usage montrait, et le tableau ne distingue pas les buckets.
+
 > **Ne pas attendre un effondrement.** Les visuels pèsent quatre fois moins et le CDN les garde un an,
 > mais le `Image` de la 6.2.1 n'a toujours **aucun cache disque** : chaque ouverture de l'onglet Campus
 > les redemande, simplement bien plus légers. La part qui reste est exactement celle que
 > [7-C](7-c-economie-et-socle.md) doit gagner avec `expo-image`. Et la semaine portera d'abord une
 > **bosse** : cinq adresses bumpées, que le parc installé relit une fois.
+
+## Lot 2 — la livraison des Blueprints, le 2026-09-21
+
+Ouvert et livré le jour de la sortie de la 6.2.2, quand le second relevé du tableau Usage a montré un
+débit inchangé et que les journaux du projet en ont donné la raison
+([les relevés](#les-relevés-du-tableau-usage)) : neuf dixièmes de l'egress étaient le bucket
+`blueprints`, pas `media`. Même nature que le lot 1 — sans release, le parc installé en profite tel
+quel — et même méthode : mesurer, corriger à la source, remesurer.
+
+**La cause.** Le registre de l'appareil lit le manifeste à chaque lancement et à chaque retour au
+premier plan, 24 000 fois par jour sur le parc. Il n'adopte un document distant que s'il **bat** la
+version embarquée, mais il le téléchargeait **avant** de le juger ; et le manifeste, généré depuis le
+dépôt, annonçait les versions mêmes que le binaire embarque. Chaque rafraîchissement téléchargeait
+donc les vingt-quatre documents, 90 Ko, pour tout rejeter, et rien n'entrait jamais en cache.
+
+**Ce qui a été fait.**
+
+1. **Le manifeste n'annonce plus que ce qui bat le socle sorti**, le dernier tag `vX.Y.Z` — la règle
+   et `--socle` dans [blueprints.md](../blueprints.md#ce-que-le-manifeste-annonce),
+   [`tools/blueprints/sortie.mjs`](../../tools/blueprints/sortie.mjs), douze tests. Publié le
+   2026-09-21 à 20 h 50 UTC contre `v6.2.2` : vingt-quatre entrées omises, un manifeste de 108 octets,
+   servi par le CDN dans la minute, vérifié dans `storage.objects` et à l'adresse que lisent les
+   appareils. Neutre pour eux, qui jouaient déjà l'embarqué ; la boucle s'arrête à leur prochain
+   rafraîchissement.
+2. **La sonde du matin tient un manifeste vide pour sain**
+   ([`manifeste.py`](../../sondes/sonde/manifeste.py)) : c'est l'état normal après une sortie.
+3. **Le registre juge avant le réseau** : `@aetherius/react-native` 0.5.10, `verifyBounds` joué sur le
+   manifeste avant tout téléchargement, trois tests. UKit le monte en ouvrant `v6.3`, premier commit
+   de [7-D](7-d-la-mesure.md) ; les binaires antérieurs n'en ont pas besoin tant que le manifeste
+   reste réduit.
+
+**Ce que le lot corrige aussi.** Les six Blueprints Celcat montés par [7-C](7-c-economie-et-socle.md)
+n'avaient jamais été publiés — le bucket datait du 7 septembre — et la règle les tient désormais hors
+du manifeste, puisque la 6.2.2 les embarque.
+
+**Définition de « terminé » du lot 2.**
+
+- [x] Le manifeste réduit publié et vérifié dans le bucket, la table et à l'adresse servie.
+- [x] La règle écrite, testée, et la sonde adaptée.
+- [ ] `@aetherius/react-native` 0.5.10 sorti.
+- [ ] UKit monté sur 0.5.10, premier commit de `v6.3`.
+- [ ] L'egress quotidien du bucket `blueprints` divisé par au moins dix dans les journaux, relevé le
+  2026-09-23 et le 2026-09-30 ; la case du lot 1 se referme avec lui.
 
 ## Ce qui est à faire
 
@@ -259,7 +331,10 @@ Aucune. Le Pro est souscrit depuis le 2026-09-14.
   q72 prévu n'a pas servi.*
 - [ ] L'egress en cache quotidien baisse dans le tableau Usage, relevé une semaine après.
   *Point de départ posé le 2026-09-16 : ~1 Go/jour, soit ~9 Go projetés au 2026-09-23 si rien ne
-  change. C'est la seule case encore ouverte du jalon.*
+  change. **Relevé le 2026-09-21 : non**, 1,1 Go/jour — les visuels n'étaient qu'un dixième de l'egress,
+  et sur ce dixième la baisse est là (−51 % d'octets sur `media` entre deux jours ouvrés). La case
+  reste ouverte jusqu'au relevé qui suivra la correction de la livraison des Blueprints, faite le
+  même jour.*
 - [x] Cette spécification porte les deux relevés, et le README de la phase la ligne « livré ».
 
 ## Plan de test
@@ -287,7 +362,8 @@ Aucune. Le Pro est souscrit depuis le 2026-09-14.
 5. [ ] Le tableau Usage, relevé avant et une semaine après, sur une période comparable. *Premier relevé
    du cycle Pro pris le 2026-09-16 — 2,578 Go d'egress en cache, soit ~1 Go/jour ; second relevé
    attendu le 2026-09-23, à comparer en **débit journalier** et non en total, le cycle ayant redémarré
-   le 14 septembre.*
+   le 14 septembre. Relevé le 2026-09-21 : 8,314 Go, le débit inchangé ; voir
+   [Les relevés](#les-relevés-du-tableau-usage).*
 
 ## Limites écrites
 
