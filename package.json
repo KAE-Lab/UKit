@@ -46,7 +46,7 @@
     "@react-navigation/native": "^7.1.28",
     "@react-navigation/native-stack": "^7.13.0",
     "@react-navigation/stack": "^7.7.2",
-    "@supabase/supabase-js": "^2.109.0",
+    "@supabase/supabase-js": "^2.116.0",
     "expo": "~57.0.23",
     "expo-application": "~57.0.3",
     "expo-asset": "~57.0.17",
