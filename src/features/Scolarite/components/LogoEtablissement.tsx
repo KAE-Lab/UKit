@@ -108,8 +108,9 @@ export function LogoEtablissement({ logo, theme, teinte, filigrane = false, haut
     // d'autant — sans quoi grossir le gabarit ne grossirait jamais un logotype etire.
     const largeurMax = (LARGEUR_MAX_FILIGRANE * hauteur) / HAUTEUR_FILIGRANE;
     // `source` vaut null sans logo publie comme apres l'echec des deux temps : le repli couvre les deux.
-    const { source, onError } = useSourceRendue(logo, { largeur: filigrane ? largeurMax : LARGEUR_LOGO, qualite: 80 });
+    const { source, onError, onLoad } = useSourceRendue(logo, { largeur: filigrane ? largeurMax : LARGEUR_LOGO, qualite: 80 });
     const mesurer = (evenement: ImageLoadEventData) => {
+        onLoad(evenement);
         const { width, height } = evenement.source;
         if (height > 0) setRatio(width / height);
     };
@@ -193,6 +194,7 @@ export function LogoEtablissement({ logo, theme, teinte, filigrane = false, haut
                 contentFit="contain"
                 cachePolicy="memory-disk"
                 transition={DUREE_FONDU_MS}
+                onLoad={onLoad}
                 onError={onError}
                 accessibilityIgnoresInvertColors
             />

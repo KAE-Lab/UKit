@@ -40,7 +40,7 @@ export function BdeAnnonceCard({ annonce, width, theme, style, onPress }: BdeAnn
     const teinte = teinteDAnnonce(annonce.couleur, theme);
     // La largeur de la carte est celle demandee au rendu : le carrousel et la grille n'ont pas la
     // meme, et chacune tombe sur son palier (visuels/rendu.ts).
-    const { source, onError } = useSourceRendue(annonce.image_url, { largeur: width, qualite: 70 });
+    const { source, onError, onLoad } = useSourceRendue(annonce.image_url, { largeur: width, qualite: 70 });
 
     return (
         <Card theme={theme} onPress={onPress} style={[{ width }, style]}>
@@ -78,6 +78,7 @@ export function BdeAnnonceCard({ annonce, width, theme, style, onPress }: BdeAnn
                             cachePolicy="memory-disk"
                             transition={DUREE_FONDU_MS}
                             recyclingKey={annonce.id}
+                            onLoad={onLoad}
                             onError={onError}
                             style={{ position: 'absolute', width: '100%', height: '100%' }}
                         />

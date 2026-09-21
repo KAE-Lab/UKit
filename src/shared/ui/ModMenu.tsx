@@ -15,6 +15,7 @@ import ModMenuPropositions from './ModMenuPropositions';
 import ModMenuReinitialisation from './ModMenuReinitialisation';
 import ModMenuEntretien from './ModMenuEntretien';
 import ModMenuDisjoncteur from './ModMenuDisjoncteur';
+import ModMenuImages from './ModMenuImages';
 import ModMenuTesteur from './ModMenuTesteur';
 
 /**
@@ -411,6 +412,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                             {this.renderDateTimePicker(theme)}
                             <ModMenuEntretien theme={theme} />
                             <ModMenuDisjoncteur theme={theme} />
+                            <ModMenuImages theme={theme} />
                             <ModMenuReinitialisation theme={theme} />
                         </>
                     )}

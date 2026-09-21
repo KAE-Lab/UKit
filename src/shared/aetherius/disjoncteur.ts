@@ -8,11 +8,14 @@
  * service public se doit de s'arreter quand il tombe (jalon 7-C).
  *
  * La regle : **trois** echecs `unavailable` consecutifs sur un hote l'ouvrent pour 30 s ; un echec
- * apres ce refroidissement le rouvre au palier suivant, 2 min puis 10 min, plafonne ; un succes le
- * referme. Un echec d'une autre famille — `rejected`, `data` — ne compte pas : ce n'est pas une panne
- * de transport. Pendant l'ouverture, un run **automatique** rend un echec `unavailable` ordinaire sans
- * requete ; un geste de l'utilisateur — « Reessayer », un autre jour — passe toujours, et l'echec
- * qu'il rencontre fait monter le palier (runBlueprint.ts).
+ * **apres** ce refroidissement — la sonde du circuit a demi ouvert — le rouvre au palier suivant,
+ * 2 min puis 10 min, plafonne ; un succes le referme. Un echec **pendant** le refroidissement — un
+ * geste, ou les dix-sept runs paralleles d'une fiche de batiment — rearme la fenetre sans monter :
+ * sans cette nuance, une seule fiche qui echoue sauterait d'un coup au dernier palier (mesure en
+ * preparant le protocole du 2026-09-21). Un echec d'une autre famille — `rejected`, `data` — ne
+ * compte pas : ce n'est pas une panne de transport. Pendant l'ouverture, un run **automatique** rend
+ * un echec `unavailable` ordinaire sans requete ; un geste de l'utilisateur — « Reessayer », un autre
+ * jour — passe toujours (runBlueprint.ts).
  *
  * L'hote se deduit du run, dans cet ordre : `inputs.domaine` (les six Celcat), `inputs.lien` (un
  * abonnement iCalendar), `vars.domaine`, `vars.api` (Affluences), l'adresse **litterale** du premier
@@ -45,7 +48,7 @@ export interface EtatHote {
 
 export interface VerdictEchec {
     readonly etat: EtatHote;
-    /** Vrai quand cet echec ouvre — ou rouvre — le circuit : c'est le moment de le journaliser. */
+    /** Vrai quand cet echec ouvre le circuit ou monte son palier : c'est le moment de le journaliser. */
     readonly ouverture: boolean;
 }
 
@@ -78,10 +81,12 @@ export function hoteDuRun(
 /** La transition d'un hote apres un echec `unavailable`, pure. */
 export function apresEchec(etat: EtatHote | undefined, hote: string, maintenant: number): VerdictEchec {
     const echecs = (etat?.echecs ?? 0) + 1;
-    // Deja ouvert — refroidissement ecoule ou non — : le palier monte, le compte a rebours repart.
+    // Deja ouvert : le compte a rebours repart de maintenant ; le palier ne monte que si le
+    // refroidissement etait ecoule — c'est l'echec d'apres qui prouve que l'hote ne repond toujours pas.
     if (etat !== undefined && etat.ouvertJusqua !== null) {
-        const palier = Math.min(etat.palier + 1, REFROIDISSEMENTS_MS.length - 1);
-        return { etat: { hote, echecs, palier, ouvertJusqua: maintenant + REFROIDISSEMENTS_MS[palier] }, ouverture: true };
+        const ecoule = maintenant >= etat.ouvertJusqua;
+        const palier = ecoule ? Math.min(etat.palier + 1, REFROIDISSEMENTS_MS.length - 1) : etat.palier;
+        return { etat: { hote, echecs, palier, ouvertJusqua: maintenant + REFROIDISSEMENTS_MS[palier] }, ouverture: ecoule };
     }
     if (echecs >= SEUIL_ECHECS) {
         return { etat: { hote, echecs, palier: 0, ouvertJusqua: maintenant + REFROIDISSEMENTS_MS[0] }, ouverture: true };

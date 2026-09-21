@@ -73,7 +73,7 @@ describe('apresEchec et estOuvert', () => {
         expect(estOuvert(trois.etat, T0 + REFROIDISSEMENTS_MS[0])).toBe(false);
     });
 
-    it('monte d un palier a chaque echec apres une ouverture, et plafonne', () => {
+    it('monte d un palier a chaque echec apres un refroidissement ecoule, et plafonne', () => {
         let verdict = apresEchec(undefined, 'h', T0);
         verdict = apresEchec(verdict.etat, 'h', T0);
         verdict = apresEchec(verdict.etat, 'h', T0);
@@ -82,12 +82,27 @@ describe('apresEchec et estOuvert', () => {
         expect(verdict.ouverture).toBe(true);
         expect(verdict.etat.palier).toBe(1);
         expect(verdict.etat.ouvertJusqua).toBe(t1 + REFROIDISSEMENTS_MS[1]);
-        // Un geste de l'utilisateur qui echoue pendant l'ouverture fait aussi monter le palier.
-        verdict = apresEchec(verdict.etat, 'h', t1 + 1);
+        const t2 = t1 + REFROIDISSEMENTS_MS[1];
+        verdict = apresEchec(verdict.etat, 'h', t2);
         expect(verdict.etat.palier).toBe(2);
-        verdict = apresEchec(verdict.etat, 'h', t1 + 2);
+        verdict = apresEchec(verdict.etat, 'h', t2 + REFROIDISSEMENTS_MS[2]);
         expect(verdict.etat.palier).toBe(2);
-        expect(verdict.etat.ouvertJusqua).toBe(t1 + 2 + REFROIDISSEMENTS_MS[2]);
+        expect(verdict.etat.ouvertJusqua).toBe(t2 + 2 * REFROIDISSEMENTS_MS[2]);
+    });
+
+    it('un echec pendant le refroidissement rearme la fenetre sans monter ni rejournaliser', () => {
+        // Les dix-sept runs paralleles d'une fiche de batiment : un seul palier, pas dix-sept.
+        let verdict = apresEchec(undefined, 'h', T0);
+        verdict = apresEchec(verdict.etat, 'h', T0);
+        verdict = apresEchec(verdict.etat, 'h', T0);
+        for (let i = 0; i < 14; i += 1) verdict = apresEchec(verdict.etat, 'h', T0);
+        expect(verdict.ouverture).toBe(false);
+        expect(verdict.etat.echecs).toBe(17);
+        expect(verdict.etat.palier).toBe(0);
+        // Un geste qui echoue a mi-fenetre repousse la fin de la fenetre, au meme palier.
+        verdict = apresEchec(verdict.etat, 'h', T0 + 20_000);
+        expect(verdict.etat.palier).toBe(0);
+        expect(verdict.etat.ouvertJusqua).toBe(T0 + 20_000 + REFROIDISSEMENTS_MS[0]);
     });
 });
 

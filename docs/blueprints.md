@@ -197,11 +197,12 @@ développement — reste un geste.
 
 Le **disjoncteur** ([`disjoncteur.ts`](../src/shared/aetherius/disjoncteur.ts), pur, état en mémoire)
 compte, par hôte, les échecs `unavailable` consécutifs : au troisième, l'hôte est **ouvert** pour 30 s ;
-un échec après ce refroidissement le rouvre au palier suivant, 2 min puis 10 min, plafonné ; un succès
-le referme. Pendant l'ouverture, un run automatique rend un échec `unavailable` ordinaire **sans
-requête** — chaque écran fait ce qu'il fait déjà d'une source en panne : le Planning sert son cache
-daté, une section garde son contenu — ; un geste passe toujours, et l'échec qu'il rencontre fait monter
-le palier. Un échec d'une autre famille — `rejected`, `data` — ne compte pas : ce n'est pas une panne de
+un échec **après** ce refroidissement — la sonde du circuit à demi ouvert — le rouvre au palier suivant,
+2 min puis 10 min, plafonné ; un échec **pendant** — un geste, ou les dix-sept runs parallèles d'une
+fiche de bâtiment — réarme la fenêtre sans monter, sans quoi une seule fiche sauterait au dernier
+palier ; un succès le referme. Pendant l'ouverture, un run automatique rend un échec `unavailable`
+ordinaire **sans requête** — chaque écran fait ce qu'il fait déjà d'une source en panne : le Planning
+sert son cache daté, une section garde son contenu — ; un geste passe toujours. Un échec d'une autre famille — `rejected`, `data` — ne compte pas : ce n'est pas une panne de
 transport. L'hôte se déduit du run — `inputs.domaine`, puis `inputs.lien`, `vars.domaine`, `vars.api`,
 l'adresse littérale du premier pas, et à défaut le nom du Blueprint — et seul l'hôte est journalisé
 (`[disjoncteur] celcat.u-bordeaux.fr ouvert 30 s (3 echecs)`), jamais l'adresse entière : un lien

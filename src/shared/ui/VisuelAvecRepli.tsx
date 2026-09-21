@@ -44,7 +44,7 @@ export interface VisuelAvecRepliProps {
 }
 
 export function VisuelAvecRepli({ uri, repli, style, contentFit = 'cover', largeur, qualite = 70 }: VisuelAvecRepliProps) {
-    const { source, onError } = useSourceRendue(uri, { largeur, qualite });
+    const { source, onError, onLoad } = useSourceRendue(uri, { largeur, qualite });
 
     if (source === null) return <Image source={repli} style={style} contentFit={contentFit} />;
     return (
@@ -55,6 +55,7 @@ export function VisuelAvecRepli({ uri, repli, style, contentFit = 'cover', large
             cachePolicy="memory-disk"
             transition={DUREE_FONDU_MS}
             recyclingKey={uri ?? null}
+            onLoad={onLoad}
             onError={onError}
         />
     );

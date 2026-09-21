@@ -82,7 +82,7 @@ function AccrocheAnnonce({ texte, theme }: { texte: string; theme: AppThemeType 
  */
 function CadreVisuel({ url, theme, onPress }: { url: string; theme: AppThemeType; onPress: () => void }) {
     const [ratio, setRatio] = useState(1);
-    const { source, onError } = useSourceRendue(url, { largeur: LARGEUR_VISUEL, qualite: 80 });
+    const { source, onError, onLoad } = useSourceRendue(url, { largeur: LARGEUR_VISUEL, qualite: 80 });
 
     return (
         <TouchableOpacity
@@ -100,6 +100,7 @@ function CadreVisuel({ url, theme, onPress }: { url: string; theme: AppThemeType
                     // Le cadre prend le ratio de l'image a son chargement — ce que faisait
                     // `Image.getSize`, en une requete de plus ; ici la mesure vient avec l'image.
                     onLoad={(evenement) => {
+                        onLoad(evenement);
                         const { width, height } = evenement.source;
                         if (width > 0 && height > 0) setRatio(ratioDeCadre(width, height));
                     }}

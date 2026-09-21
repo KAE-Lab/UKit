@@ -17,6 +17,7 @@
 
 import { useCallback, useState } from 'react';
 import { PixelRatio } from 'react-native';
+import type { ImageLoadEventData } from 'expo-image';
 
 import { urlDeRendu, type OptionsDeRendu } from '../visuels/rendu';
 
@@ -27,6 +28,8 @@ export interface SourceRendue {
     readonly source: { readonly uri: string } | null;
     /** A poser sur **une seule** image par source : deux gestionnaires feraient deux transitions. */
     readonly onError: () => void;
+    /** Journalise, en developpement, d'ou l'image est venue — reseau, memoire ou disque (docs/qualite.md). */
+    readonly onLoad: (evenement: ImageLoadEventData) => void;
 }
 
 export function useSourceRendue(uri: string | null | undefined, options: OptionsDeRendu): SourceRendue {
@@ -46,6 +49,12 @@ export function useSourceRendue(uri: string | null | undefined, options: Options
         });
     }, [rendue, uri]);
 
-    if (absente || temps === 'repli') return { source: null, onError };
-    return { source: { uri: temps === 'rendue' && rendue !== null ? rendue : (uri as string) }, onError };
+    const onLoad = useCallback((evenement: ImageLoadEventData) => {
+        // `none` = le reseau ; `disk` et `memory` = le cache. C'est ce que le protocole du jalon 7-C lit
+        // dans Metro : un retour sur l'onglet Campus ne doit plus rien redemander.
+        if (__DEV__) console.info(`[visuels] ${evenement.cacheType} ${evenement.source.url}`);
+    }, []);
+
+    if (absente || temps === 'repli') return { source: null, onError, onLoad };
+    return { source: { uri: temps === 'rendue' && rendue !== null ? rendue : (uri as string) }, onError, onLoad };
 }

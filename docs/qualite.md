@@ -365,9 +365,17 @@ le chemin du lancement), ou faire réveiller la tâche par le système (build de
 synchro ne part jamais » avait quatre causes indiscernables à l'écran ; depuis [7-C](phase-7/7-c-economie-et-socle.md),
 le bloc **Disjoncteur** ([`ModMenuDisjoncteur.tsx`](../src/shared/ui/ModMenuDisjoncteur.tsx)) : les
 hôtes que le disjoncteur connaît, leurs échecs `unavailable` consécutifs, leur palier et « ouvert
-jusqu'à », et le geste « Réarmer » — le protocole est HORS LIGNE, trois retours au premier plan, l'hôte
-passe ouvert dans le bloc et `[disjoncteur] … ouvert` dans Metro, « Réessayer » part quand même, un
-geste réussi le referme ([blueprints.md](blueprints.md#le-disjoncteur)) — et, en bas, la
+jusqu'à », et le geste « Réarmer » — le protocole est HORS LIGNE, la fiche d'un bâtiment (ses dix-sept
+runs ouvrent l'hôte de Celcat : `[disjoncteur] … ouvert 30 s` dans Metro, l'hôte dans le bloc), puis
+« Oublier l'échéance » du bloc Entretien et un retour au premier plan : le run automatique de
+l'entretien **ne part pas** (`[disjoncteur] ukit.celcat.semaine non joué`) ; rouvrir la fiche, un geste,
+part quand même ; réseau rendu, un geste réussi referme ([blueprints.md](blueprints.md#le-disjoncteur)).
+Un retour au premier plan seul ne joue aucun run de l'Act I — l'entretien n'est dû que toutes les douze
+heures, et le Planning hors ligne sert son cache sans run — d'où l'échéance à oublier. Le bloc **Images**
+([`ModMenuImages.tsx`](../src/shared/ui/ModMenuImages.tsx)) vide le cache d'`expo-image`, que ni la
+réinitialisation ni HORS LIGNE n'atteignent : c'est ce qui permet de voir le repli d'une carte (vider,
+couper le réseau de l'appareil, ouvrir Campus) et le cache (`[visuels] disk` dans Metro à la relance) —
+et, en bas, la
 **réinitialisation complète** (6.1-A) : le trousseau, le répertoire privé des documents et tout
 AsyncStorage — réglages, `firstload`, caches et surcouches publiées — puis un rechargement du
 JavaScript ([`ReinitialisationComplete.ts`](../src/shared/services/ReinitialisationComplete.ts)).

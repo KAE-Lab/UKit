@@ -97,6 +97,17 @@ Les endroits où l'exécution a amendé le texte des sections suivantes — anno
   `sonde` est le bouton du menu de développement, qui doit passer pour sonder le circuit.
 - **Un run court-circuité n'est pas signalé aux observateurs** : il n'y a pas eu de run, et la mesure de
   7-D compterait des dizaines d'échecs fictifs par minute.
+- **Le palier ne monte qu'après un refroidissement écoulé** (2026-09-21, en préparant le protocole) :
+  la spec faisait monter le palier à tout échec d'un geste pendant l'ouverture, et les dix-sept runs
+  parallèles d'une fiche de bâtiment auraient porté l'hôte d'un coup à dix minutes. Un échec pendant la
+  fenêtre la réarme au même palier ; c'est l'échec d'après, la sonde du circuit à demi ouvert, qui monte.
+- **Un retour au premier plan ne joue aucun run de l'Act I** : l'entretien n'est dû que toutes les douze
+  heures, le Planning hors ligne sert son cache sans run, les widgets sont de l'Act II. Le point 4 du
+  protocole se joue donc par la fiche d'un bâtiment (qui ouvre l'hôte) puis « Oublier l'échéance » du
+  bloc Entretien et un retour au premier plan (le run automatique ne part pas) ; et le point 1
+  « relancer hors ligne » par le bloc **Images** du menu de développement, qui vide le cache
+  d'`expo-image` — un build de développement ne se relance pas sans Metro — et la ligne
+  `[visuels] disk` de Metro.
 - **`[disjoncteur]` journalise l'hôte seul**, jamais l'adresse entière : un lien d'abonnement iCalendar
   est un secret personnel. Les lignes d'ouverture et de fermeture sont des `console.warn` non gardés par
   `__DEV__` — elles doivent se lire sur un build — ; le court-circuit lui-même l'est.
