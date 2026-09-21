@@ -73,7 +73,7 @@
     "expo-task-manager": "~57.0.18",
     "html-entities": "^2.3.2",
     "ical.js": "^2.2.1",
-    "moment": "^2.22.2",
+    "moment": "^2.31.0",
     "prop-types": "^15.6.2",
     "react": "19.2.3",
     "react-native": "0.86.3",
