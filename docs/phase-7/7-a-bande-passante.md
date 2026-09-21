@@ -237,6 +237,9 @@ donc les vingt-quatre documents, 90 Ko, pour tout rejeter, et rien n'entrait jam
    servi par le CDN dans la minute, vérifié dans `storage.objects` et à l'adresse que lisent les
    appareils. Neutre pour eux, qui jouaient déjà l'embarqué ; la boucle s'arrête à leur prochain
    rafraîchissement.
+   *Mesuré dans les journaux : dans la demi-heure qui a précédé la publication, 8 690 documents lus,
+   46,5 Mo ; dans les douze minutes qui l'ont suivie, 19 documents et 152 manifestes de 108 octets.
+   Le trafic de documents est divisé par cent cinquante, sur tout le parc, sans mise à jour.*
 2. **La sonde du matin tient un manifeste vide pour sain**
    ([`manifeste.py`](../../sondes/sonde/manifeste.py)) : c'est l'état normal après une sortie.
 3. **Le registre juge avant le réseau** : `@aetherius/react-native` 0.5.10, `verifyBounds` joué sur le
