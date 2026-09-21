@@ -90,22 +90,22 @@
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.4.2",
-    "@commitlint/config-conventional": "^20.4.2",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
     "@types/react": "~19.2.14",
-    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "@typescript-eslint/eslint-plugin": "^8.70.0",
     "@typescript-eslint/parser": "^8.60.0",
     "babel-preset-expo": "~57.0.10",
     "commitizen": "^4.2.4",
     "cz-conventional-changelog": "^3.3.0",
-    "dotenv": "^17.4.2",
-    "eslint": "^10.4.0",
+    "dotenv": "^18.0.0",
+    "eslint": "^10.10.0",
     "husky": "^9.1.7",
     "pdfjs-dist": "6.3.289",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.8",
     "qs": "^6.16.0",
     "sharp": "^0.35.4",
     "typescript": "~6.0.3",
-    "vitest": "^3.2.7"
+    "vitest": "^5.0.1"
   }
 }
