@@ -14,6 +14,8 @@ export const LARGEUR_PAR_DOSSIER: Readonly<Record<string, number>> = {
     bibliotheques: 1200,
     batiments: 1200,
     etablissements: 1280,
+    // Le logo d'un partenaire (7-F) : un badge de carte, jamais plus large qu'une vignette.
+    partenaires: 400,
 };
 export const LARGEUR_PAR_DEFAUT = 1200;
 export const QUALITE_WEBP = 0.75;

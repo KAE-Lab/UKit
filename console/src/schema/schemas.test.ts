@@ -108,3 +108,49 @@ test('les valeurs inconnues d une ligne se reperent pour la liste', () => {
     expect(valeursInconnues(CAMPUS, ['talence'], ['bordeaux'])).toEqual(['talence']);
     expect(valeursInconnues(CAMPUS, ['talence'], null)).toEqual([]);
 });
+
+// ---- Les saisies structurees des annonces (7-F) --------------------------------------------
+
+const FOCALE: Champ = { nom: 'f', libelle: 'f', type: { type: 'focale', image: 'i', ajustement: 'a' } };
+const GALERIE: Champ = { nom: 'g', libelle: 'g', type: { type: 'galerie', dossier: 'annonces' } };
+const CRENEAUX: Champ = { nom: 'k', libelle: 'k', type: { type: 'creneaux' } };
+const PARTENAIRE: Champ = { nom: 'w', libelle: 'w', type: { type: 'partenaire', dossier: 'partenaires' } };
+const EMPLACEMENTS: Champ = { nom: 'm', libelle: 'm', type: { type: 'cases', options: [{ valeur: 'annonces', libelle: 'A' }, { valeur: 'salles', libelle: 'S' }], auMoinsUne: true } };
+
+test('la focale part toujours, bornee a l image, et retombe sur le defaut de la base', () => {
+    expect(convertir(FOCALE, { x: 0.2, y: 0.9 })).toEqual({ ok: true, valeur: { x: 0.2, y: 0.9 } });
+    expect(convertir(FOCALE, { x: 2, y: 0.9 })).toEqual({ ok: true, valeur: { x: 0.5, y: 0.3 } });
+    expect(convertir(FOCALE, '')).toEqual({ ok: true, valeur: { x: 0.5, y: 0.3 } });
+    expect(versSaisieDuChamp(FOCALE, null)).toEqual({ x: 0.5, y: 0.3 });
+    expect(versSaisieDuChamp(FOCALE, { x: 0.1, y: 0.1 })).toEqual({ x: 0.1, y: 0.1 });
+});
+
+test('une galerie se reduit a ses adresses, et vide devient nulle', () => {
+    expect(convertir(GALERIE, ['a', ' ', 'b '])).toEqual({ ok: true, valeur: ['a', 'b'] });
+    expect(convertir(GALERIE, [])).toEqual({ ok: true, valeur: null });
+    expect(versSaisieDuChamp(GALERIE, ['a', 2, null])).toEqual(['a']);
+    expect(versSaisieDuChamp(GALERIE, null)).toEqual([]);
+});
+
+test('un creneau doit avoir des jours et deux heures lisibles ; aucun creneau vaut nul', () => {
+    expect(convertir(CRENEAUX, [{ jours: [1, 5], de: '11:00', a: '14:00' }])).toEqual({ ok: true, valeur: [{ jours: [1, 5], de: '11:00', a: '14:00' }] });
+    expect(convertir(CRENEAUX, [])).toEqual({ ok: true, valeur: null });
+    expect(convertir(CRENEAUX, [{ jours: [], de: '11:00', a: '14:00' }]).erreur).toBe('Créneau 1 : coche au moins un jour.');
+    expect(convertir(CRENEAUX, [{ jours: [1], de: '11h', a: '14:00' }]).erreur).toBe('Créneau 1 : les heures s’écrivent HH:MM.');
+    expect(convertir(CRENEAUX, [{ jours: [1], de: '11:00', a: '11:00' }]).erreur).toBe('Créneau 1 : la fin est égale au début.');
+    expect(versSaisieDuChamp(CRENEAUX, [{ jours: [3, 1, 9], de: '08:00', a: '10:00' }, 'x'])).toEqual([{ jours: [1, 3], de: '08:00', a: '10:00' }]);
+});
+
+test('un partenaire vide est nul ; sinon il a un nom, et un lien en http(s)', () => {
+    expect(convertir(PARTENAIRE, { nom: '', logo_url: '', lien: '' })).toEqual({ ok: true, valeur: null });
+    expect(convertir(PARTENAIRE, { nom: ' Crous ', logo_url: '', lien: '' })).toEqual({ ok: true, valeur: { nom: 'Crous', logo_url: null, lien: null } });
+    expect(convertir(PARTENAIRE, { nom: '', logo_url: 'https://l', lien: '' }).erreur).toBe('Le partenaire a besoin d’un nom.');
+    expect(convertir(PARTENAIRE, { nom: 'Crous', logo_url: '', lien: 'crous.fr' }).erreur).toBe('Le lien du partenaire commence par http:// ou https://.');
+    expect(versSaisieDuChamp(PARTENAIRE, { nom: 'Crous', lien: null })).toEqual({ nom: 'Crous', logo_url: '', lien: '' });
+});
+
+test('des cases qui exigent au moins une refusent le vide, et gardent le tableau', () => {
+    expect(convertir(EMPLACEMENTS, [])).toEqual({ ok: false, erreur: 'Coche au moins une case.' });
+    expect(convertir(EMPLACEMENTS, ['salles'])).toEqual({ ok: true, valeur: ['salles'] });
+    expect(convertir(PLATEFORMES, [])).toEqual({ ok: true, valeur: null });
+});

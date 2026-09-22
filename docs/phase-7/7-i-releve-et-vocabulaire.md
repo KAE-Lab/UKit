@@ -75,12 +75,19 @@ Le tableau de bord porte désormais aussi :
   [`BdeScreen.tsx`](../../src/features/Campus/Bde/BdeScreen.tsx),
   [`CarrouselDeSection.tsx`](../../src/features/Campus/Dashboard/components/CarrouselDeSection.tsx).
   Les colonnes arrivent en base avec la 6.2.2 ; l'éditeur avec aperçu du téléphone, dans la console
-  ([7-F](7-f-console-annonces.md)).
+  ([7-F](7-f-console-annonces.md)). *Livré le 2026-09-22 : la carte v2 est **dessinée** par l'aperçu
+  de la console — cadre, focale, badge (aucun pour un événement), logo du partenaire, carte spéciale
+  entre ses voisines — et c'est lui la référence à reproduire :
+  [la carte v2, dessinée ici](7-f-console-annonces.md#la-carte-v2-dessinée-ici).*
 - **L'ordre des annonces**, par un module **pur et testé**, `src/shared/annonces/ordre.ts` : les
   épinglées d'abord, puis le score de créneau et la priorité, puis une **rotation déterministe par
   heure**. Les paramètres vivent en base — épinglage, priorité, créneaux —, l'algorithme dans
   l'application, et la console montre « l'ordre vu à telle heure » avec le même module.
-  `BdeService` l'applique.
+  `BdeService` l'applique. *Écrit et testé par 7-F le 2026-09-22 ([`ordre.ts`](../../src/shared/annonces/ordre.ts),
+  `ordonner(annonces, instant, parametresDe)`, la rotation par « heure modulo taille du groupe », les
+  créneaux en jours ISO et heures de Paris lues par `Intl` avec repli local — à vérifier sur Hermes) :
+  ici, `BdeService` l'applique après son filtre, avec le `maintenant()` qu'il tient déjà, et
+  `AnnonceRow` porte déjà les colonnes.*
 - **Le côté application des colonnes d'`etablissements`** — `credits`, `campus`, `alias` :
   `COLONNES`, `types.ts`, `catalogue.ts`, `socle.ts`, la version de cache. La base les porte depuis
   la 6.2.2 — la règle des trois gestes est scindée, piège mesuré le 2026-08-29 — ; ici s'écrit ce

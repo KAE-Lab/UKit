@@ -47,6 +47,25 @@ export interface AnnonceRow {
     readonly version_min: string | null;
     readonly version_max: string | null;
     readonly plateformes: string[] | null;
+    /**
+     * La publication (jalon 7-C, exposee par la console en 7-F, rendue par l'application en 6.3) :
+     * la nature de la carte, ses carrousels, son cadrage, son ordre, son cycle de vie, son placeholder
+     * et son partenaire. Les `jsonb` restent `unknown` : c'est la projection qui valide leur forme
+     * (`shared/annonces/ordre.ts` pour les creneaux), jamais le type.
+     */
+    readonly type: string;
+    readonly emplacements: string[];
+    readonly ajustement: string;
+    /** `{ x, y }` en fractions de l'image, le point garde au centre du recadrage. */
+    readonly focale: unknown;
+    readonly priorite: number;
+    readonly epinglee: boolean;
+    /** `[{ jours: [1, 2, 3], de: '11:00', a: '14:00' }]`, en heure de Paris ; nul sans creneau. */
+    readonly creneaux: unknown;
+    readonly statut: string;
+    readonly blurhash: string | null;
+    /** `{ nom, logo_url, lien }` pour une carte partenaire ou bon plan ; nul sinon. */
+    readonly partenaire: unknown;
 }
 
 /**

@@ -8,6 +8,7 @@ import { ImageOff } from 'lucide-react';
 
 import { formaterDate } from '../../lib/dates';
 import type { Champ } from '../../schema/descripteurs';
+import { resumeStructure } from '../../schema/resumes';
 import { valeursInconnues } from '../../schema/schemas';
 import { Pastille, ValeurInconnue } from '../ui/Pastille';
 
@@ -80,12 +81,15 @@ const CELLULES: Record<string, (props: CelluleProps & { readonly champ: Champ })
 export function Cellule({ champ, valeur, codesConnus }: CelluleProps) {
     const rendu = champ === undefined ? undefined : CELLULES[champ.type.type];
     if (champ !== undefined && rendu !== undefined) return rendu({ champ, valeur, codesConnus });
-    return estVide(valeur) ? <Tiret /> : <>{String(valeur)}</>;
+    if (estVide(valeur)) return <Tiret />;
+    // Les saisies structurees de 7-F se resument en une ligne plutot qu'en `[object Object]`.
+    const resume = champ === undefined ? null : resumeStructure(champ.type.type, valeur);
+    return <>{resume ?? String(valeur)}</>;
 }
 
 /** Un texte long (une zone) se tronque comme un titre : sans ca, la colonne s'elargit a la longueur de la plus longue reponse. */
 export function seTronque(nom: string, champ: Champ | undefined): boolean {
-    return nom === 'titre' || nom === 'nom' || nom === 'texte' || champ?.type.type === 'zone';
+    return nom === 'titre' || nom === 'nom' || nom === 'texte' || champ?.type.type === 'zone' || champ?.type.type === 'description';
 }
 
 /** La classe d'une cellule : tronquee pour un texte long, d'un seul tenant pour une date. */

@@ -3,10 +3,15 @@
  */
 
 import { TriangleAlert } from 'lucide-react';
-import { useId } from 'react';
+import { useId, type ComponentType } from 'react';
 
 import { ChampCases, ChampEtablissements } from './Cases';
+import { ChampCreneaux } from './Creneaux';
+import { ChampDescription } from './Description';
+import { ChampFocale } from './Focale';
+import { ChampGalerie } from './Galerie';
 import { ChampImage } from './Image';
+import { ChampPartenaire } from './Partenaire';
 import type { ChampProps } from './types';
 
 /** Un choix dont la valeur n'est pas dans la liste (posee par psql) se montre, marquee, et se remplace. */
@@ -23,9 +28,23 @@ function Choix({ champ, id, saisie, onChange, desactive }: ChampProps) {
     );
 }
 
+/** Les widgets qui portent leur propre composant : ceux des annonces (7-F), l'image, les cases. */
+const WIDGETS: Readonly<Partial<Record<ChampProps['champ']['type']['type'], ComponentType<ChampProps>>>> = {
+    description: ChampDescription,
+    image: ChampImage,
+    focale: ChampFocale,
+    galerie: ChampGalerie,
+    creneaux: ChampCreneaux,
+    partenaire: ChampPartenaire,
+    etablissements: ChampEtablissements,
+    cases: ChampCases,
+};
+
 function Saisisseur(props: Omit<ChampProps, 'id'> & { readonly id: string }) {
     const { champ, saisie, onChange, id, desactive } = props;
     const texte = typeof saisie === 'string' ? saisie : '';
+    const Widget = WIDGETS[champ.type.type];
+    if (Widget !== undefined) return <Widget {...props} />;
     switch (champ.type.type) {
         case 'booleen':
             return <label className="case"><input id={id} type="checkbox" checked={saisie === true} disabled={desactive} onChange={(e) => onChange(e.target.checked)} /> {champ.libelle}</label>;
@@ -39,12 +58,6 @@ function Saisisseur(props: Omit<ChampProps, 'id'> & { readonly id: string }) {
             return <input id={id} type="datetime-local" value={texte} disabled={desactive} onChange={(e) => onChange(e.target.value)} />;
         case 'nombre':
             return <input id={id} type="number" step="any" value={texte} disabled={desactive} onChange={(e) => onChange(e.target.value)} />;
-        case 'image':
-            return <ChampImage {...props} />;
-        case 'etablissements':
-            return <ChampEtablissements {...props} />;
-        case 'cases':
-            return <ChampCases {...props} />;
         default:
             return <input id={id} type="text" value={texte} disabled={desactive} spellCheck={champ.type.type === 'texte'} onChange={(e) => onChange(e.target.value)} />;
     }
@@ -58,7 +71,7 @@ export function ChampEditeur(props: Omit<ChampProps, 'id'> & { readonly erreur?:
         <div className={`champ ${erreur === undefined ? '' : 'en-erreur'}`}>
             {libelleAPart ? <label htmlFor={id}>{champ.libelle}{champ.obligatoire === true ? ' *' : ''}</label> : null}
             <Saisisseur {...props} id={id} enErreur={erreur !== undefined} />
-            {champ.aide !== undefined ? <span className="aide">{champ.aide}</span> : null}
+            {champ.aide !== undefined ? <span className="aide" id={`${id}-aide`}>{champ.aide}</span> : null}
             {erreur !== undefined ? <span className="erreur" role="alert"><TriangleAlert className="icone" aria-hidden="true" />{erreur}</span> : null}
         </div>
     );

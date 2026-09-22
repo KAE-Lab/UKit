@@ -28,8 +28,12 @@ export type TypeDeChamp =
     | { readonly type: 'date' }
     | { readonly type: 'json' }
     | { readonly type: 'choix'; readonly options: readonly Option[] }
-    /** Plusieurs valeurs d'une liste fermee, en cases a cocher ; aucune cochee = `null`, « toutes ». */
-    | { readonly type: 'cases'; readonly options: readonly Option[] }
+    /**
+     * Plusieurs valeurs d'une liste fermee, en cases a cocher ; aucune cochee = `null`, « toutes » —
+     * sauf `auMoinsUne`, pour une colonne qui ne connait pas « toutes » (les emplacements d'une
+     * annonce) : au moins une case, et le tableau part tel quel.
+     */
+    | { readonly type: 'cases'; readonly options: readonly Option[]; readonly auMoinsUne?: boolean }
     | { readonly type: 'etablissements' }
     | { readonly type: 'version' }
     | { readonly type: 'uuid' }
@@ -37,7 +41,23 @@ export type TypeDeChamp =
      * Une image du bucket `media`, televersee depuis le formulaire. `blurhash` nomme la colonne soeur
      * qui recoit le placeholder calcule au televersement, quand la table en porte une (annonces).
      */
-    | { readonly type: 'image'; readonly dossier: string | ((ligne: Ligne) => string); readonly blurhash?: string };
+    | { readonly type: 'image'; readonly dossier: string | ((ligne: Ligne) => string); readonly blurhash?: string }
+    /**
+     * Le mini-langage d'une description d'annonce : une zone de texte avec la barre qui insere les
+     * marqueurs (jalon 7-F). Le rendu, lui, est l'affaire de l'apercu.
+     */
+    | { readonly type: 'description' }
+    /**
+     * Le point focal d'une image, `{ x, y }` en fractions, choisi d'un clic sur l'image du champ
+     * `image` ; `ajustement` nomme la colonne soeur — couvrir ou contenir — que la bascule du champ pose.
+     */
+    | { readonly type: 'focale'; readonly image: string; readonly ajustement: string }
+    /** Les plages de mise en avant : des jours de la semaine, une heure de debut, une heure de fin, en heure de Paris. */
+    | { readonly type: 'creneaux' }
+    /** Une galerie d'images du bucket `media`, televersees en plusieurs fichiers d'un coup, reordonnees par glisser-deposer. */
+    | { readonly type: 'galerie'; readonly dossier: string }
+    /** Un partenaire : son nom, son logo televerse dans `dossier`, son lien. Tout vide, la colonne est nulle. */
+    | { readonly type: 'partenaire'; readonly dossier: string };
 
 export interface Champ {
     readonly nom: string;
@@ -52,18 +72,31 @@ export interface Champ {
     readonly defaut?: unknown;
     /** La chaine vide est une valeur, pas une absence — `visuels.image_url` : « aucune image ». */
     readonly videEstValeur?: boolean;
+    /** Le groupe du formulaire ou le champ se range (« Contenu », « Publication ») ; sans groupe, a plat. */
+    readonly groupe?: string;
+}
+
+/** Ce qu'une action rend quand elle a touche une ligne : la phrase, et la ligne que le formulaire doit suivre. */
+export interface ResultatDAction {
+    readonly texte: string;
+    /** La ligne telle que la base l'a ecrite — la meme, modifiee (archiver), ou une autre (dupliquer). */
+    readonly ligne?: Ligne;
 }
 
 /**
- * Un geste sur une ligne existante, hors ecriture : « Notifier » un message (6.1.x-E). Il rend la
- * phrase a montrer, ou leve — le formulaire l'affiche dans son retour.
+ * Un geste sur une ligne existante, hors ecriture : « Notifier » un message (6.1.x-E), dupliquer ou
+ * archiver une annonce (7-F). Il rend la phrase a montrer — ou la phrase et la ligne qui en resulte,
+ * que le formulaire suit —, ou leve : le formulaire l'affiche dans son retour. Il agit sur la ligne
+ * **enregistree** : le formulaire le tient inerte tant qu'une saisie n'est pas enregistree.
  */
 export interface ActionDeLigne {
     readonly libelle: string;
     /** Une confirmation avant d'agir, pour un geste qui ne se rejoue pas. */
     readonly confirmation?: string;
     readonly disponible?: (ligne: Ligne) => boolean;
-    readonly executer: (ligne: Ligne) => Promise<string>;
+    /** Un geste qui retire ou remplace : la variante destructive du bouton. */
+    readonly destructif?: boolean;
+    readonly executer: (ligne: Ligne) => Promise<string | ResultatDAction>;
 }
 
 /**
@@ -143,7 +176,7 @@ export function champDe(descripteur: Descripteur, nom: string): Champ | undefine
 }
 
 /** Les types dont la valeur se trie en base ; un JSON, une image ou un tableau ne se trient pas. */
-const TYPES_TRIABLES: ReadonlySet<string> = new Set(['texte', 'zone', 'booleen', 'nombre', 'date', 'choix', 'version', 'uuid']);
+const TYPES_TRIABLES: ReadonlySet<string> = new Set(['texte', 'zone', 'description', 'booleen', 'nombre', 'date', 'choix', 'version', 'uuid']);
 
 export function colonnesTriables(descripteur: Descripteur): readonly string[] {
     if (descripteur.triables !== undefined) return descripteur.triables;

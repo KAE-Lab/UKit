@@ -11,6 +11,11 @@
  * blanche, et une page blanche se debogue plus mal qu'un build rouge.
  *
  * `base` est le chemin de GitHub Pages pour un depot de projet (`https://<org>.github.io/UKit/`).
+ *
+ * `server.fs.allow` remonte a la racine du depot : la console importe, par chemin relatif, les
+ * modules purs partages avec l'application — la grammaire et l'ordre des annonces, le ciblage, les
+ * tokens et les palettes du theme (jalon 7-F). Sans cette ligne, le serveur de developpement refuse
+ * de servir un fichier hors de `console/`. La construction, elle, les suit sans rien demander.
  */
 
 import { fileURLToPath } from 'node:url';
@@ -35,6 +40,7 @@ export default defineConfig(({ mode }) => {
             __SUPABASE_URL__: JSON.stringify(url),
             __SUPABASE_ANON_KEY__: JSON.stringify(clePubliable),
         },
+        server: { fs: { allow: [RACINE_DU_DEPOT] } },
         build: { outDir: 'dist', emptyOutDir: true },
     };
 });

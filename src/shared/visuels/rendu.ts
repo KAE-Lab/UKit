@@ -36,6 +36,8 @@ export interface OptionsDeRendu {
 
 /** Les largeurs que le CDN aura a garder : sept variantes au plus par image, de la vignette au plein ecran. */
 export const PALIERS_DE_LARGEUR = [320, 480, 640, 960, 1280, 1600, 2000] as const;
+/** Le dernier palier, nomme : la console compile ce module sous `noUncheckedIndexedAccess`. */
+const PALIER_MAXIMAL: number = PALIERS_DE_LARGEUR[PALIERS_DE_LARGEUR.length - 1] ?? PALIERS_DE_LARGEUR[0];
 
 export const QUALITE_MIN = 20;
 export const QUALITE_MAX = 100;
@@ -46,7 +48,7 @@ const SEGMENT_RENDU = '/storage/v1/render/image/public/';
 /** Le plus petit palier qui couvre la largeur demandee ; au-dela du dernier, le dernier. */
 export function palierDeLargeur(pixels: number): number {
     if (!Number.isFinite(pixels) || pixels <= 0) return PALIERS_DE_LARGEUR[0];
-    return PALIERS_DE_LARGEUR.find((palier) => palier >= pixels) ?? PALIERS_DE_LARGEUR[PALIERS_DE_LARGEUR.length - 1];
+    return PALIERS_DE_LARGEUR.find((palier) => palier >= pixels) ?? PALIER_MAXIMAL;
 }
 
 /** La qualite bornee et entiere ; une valeur illisible vaut la qualite maximale, jamais une image degradee par erreur. */

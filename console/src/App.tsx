@@ -14,6 +14,7 @@ import { Coque } from './composants/Coque';
 import { EtatVide } from './composants/ui/EtatVide';
 import { SqueletteBloc, SqueletteTexte } from './composants/ui/Squelette';
 import { campusRetenu, retenirCampus } from './lib/preferences';
+import { Annonces } from './pages/Annonces';
 import { Journal } from './pages/Journal';
 import { Ressource } from './pages/Ressource';
 import { Retours } from './pages/Retours';
@@ -29,6 +30,7 @@ function Page({ chemin, session }: { readonly chemin: string; readonly session: 
         case 'sources': return <Sources />;
         case 'journal': return <Journal reste={segments.reste} />;
         case 'retours': return <Retours reste={segments.reste} />;
+        case 'annonces': return <Annonces reste={segments.reste} />;
         case 'compte': return <Compte session={session} />;
         default: {
             const ressource = ressourceDe(segments.tete);

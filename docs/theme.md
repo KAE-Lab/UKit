@@ -71,6 +71,13 @@ Chaque thème expose le même jeu de clés — c'est ce qui rend `AppThemeType` 
 les couleurs système d'Apple, choix assumé pour que l'application paraisse native sur iOS sans
 dénoter sur Android.
 
+Depuis le jalon [7-F](phase-7/7-f-console-annonces.md), les **couleurs de base** — `primary`,
+`accent`, `font`, `fontSecondary`, `border`, `background`, `cardBackground`, `greyBackground`,
+`sections`, `sectionsHeaders` — vivent dans [`palettes.ts`](../src/shared/theme/palettes.ts), pur,
+que `Theme.ts` étale dans chaque thème : la console de pilotage les lit pour dessiner l'aperçu d'une
+annonce dans les couleurs de l'application, et `Theme.ts` importe `react-native`. Même geste que
+`tokens.ts`, même raison. Rien ne change pour un composant : `theme.font` reste `theme.font`.
+
 | Clé | Rôle | Clair |
 |---|---|---|
 | `primary` | couleur d'action principale | `#007AFF` |

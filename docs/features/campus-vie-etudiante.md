@@ -135,7 +135,12 @@ la politique de lecture, donc une annonce retirée ne sort pas de la base.
 
 **La description est un mini-langage publiable**, rendu dans le vocabulaire des fiches — chaque
 section a sa **tête colorée avec icône** (le carré teinté des fiches de restaurant et de BU) et sa
-carte, les listes deviennent des **puces** comme les plats d'un menu :
+carte, les listes deviennent des **puces** comme les plats d'un menu. Depuis le jalon
+[7-F](../phase-7/7-f-console-annonces.md), son découpage est un **module pur partagé**,
+[`shared/annonces/grammaire.ts`](../../src/shared/annonces/grammaire.ts) : l'application le dessine,
+la console de pilotage dessine le même arbre en HTML dans l'aperçu de l'éditeur — une seule source,
+sans quoi l'aperçu finirait par montrer une fiche que l'application ne rend pas. La console insère
+les marqueurs par une barre, au-dessus de la zone :
 
 | Ligne | Rendu |
 |---|---|
@@ -337,6 +342,13 @@ message ni bouton.*
   rien, donc elle ne peut pas échouer — mais elle ne peut pas non plus le dire.
 - **Le tri se fait sur `publiee_le`**, pas sur un ordre éditorial choisi. Deux annonces publiées à la
   même seconde sont départagées par leur identifiant, ce qui est déterministe mais arbitraire.
+  L'ordre éditorial existe depuis [7-F](../phase-7/7-f-console-annonces.md) — un module pur,
+  [`shared/annonces/ordre.ts`](../../src/shared/annonces/ordre.ts) : les épinglées, puis un créneau
+  actif (`creneaux`, jours ISO et heures de Paris), puis la priorité, puis une rotation par heure —,
+  la console le montre déjà (« ordre du carrousel »), et c'est la 6.3
+  ([7-I](../phase-7/7-i-releve-et-vocabulaire.md)) qui le branche ici. De même pour la carte v2 (4:5,
+  focale, badge de type, cartes spéciales) : composée dans la console, dessinée par son aperçu, rendue
+  par l'application à partir de la 6.3.
 
 ## Carte des fichiers
 
@@ -345,7 +357,7 @@ message ni bouton.*
 | [`Bde/BdeScreen.tsx`](../../src/features/Campus/Bde/BdeScreen.tsx) | liste complète des annonces actives, en grille de deux colonnes |
 | [`Bde/BdeAnnonceCard.tsx`](../../src/features/Campus/Bde/BdeAnnonceCard.tsx) | la carte au format affiche : visuel 1:1, titre et émetteur en pied — partagée par le carrousel et la grille |
 | [`Bde/BdeDetailsScreen.tsx`](../../src/features/Campus/Bde/BdeDetailsScreen.tsx) | fiche d'une annonce : visuel au ratio borné, métadonnées teintées par l'identité, galerie, carte « S'y rendre », bouton d'action |
-| [`Bde/DescriptionAnnonce.tsx`](../../src/features/Campus/Bde/DescriptionAnnonce.tsx) | le mini-langage de description : découpage, têtes de section colorées, puces — la grammaire vit dans son en-tête |
+| [`Bde/DescriptionAnnonce.tsx`](../../src/features/Campus/Bde/DescriptionAnnonce.tsx) | dessine la description : têtes de section colorées, puces, exergue, transition, signature, marque de fin — le découpage est celui de [`shared/annonces/grammaire.ts`](../../src/shared/annonces/grammaire.ts), partagé avec la console (7-F) |
 | [`Bde/PastilleEmetteur.tsx`](../../src/features/Campus/Bde/PastilleEmetteur.tsx) | la pastille d'émetteur teintée par l'identité, et `teinteDAnnonce` — partagées par les cartes et la fiche |
 | [`hooks/useBdeAnnonces.ts`](../../src/features/Campus/hooks/useBdeAnnonces.ts) | le chargement, l'échec retenu, le nouvel essai — partagé par les deux surfaces |
 | [`services/BdeService.ts`](../../src/features/Campus/services/BdeService.ts) | lit la table, rend une liste ou un échec traduit |

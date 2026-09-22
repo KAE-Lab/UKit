@@ -10,6 +10,43 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
+Le jalon [7-F](docs/phase-7/7-f-console-annonces.md), les annonces dans la console, sur `main` et sans
+release : une annonce se compose en voyant ce qu'elle donnera sur un téléphone.
+
+### Ajouté
+
+- **L'éditeur d'annonces avec l'aperçu du téléphone** : la carte aux deux largeurs — carrousel et
+  grille — et la fiche, dans le thème clair ou sombre au choix, qui suivent la saisie ; la carte v2
+  (cadre 4:5, image couverte autour du point focal ou contenue sur fond flou, badge du type, logo du
+  partenaire) y est dessinée pour la première fois, et c'est la référence que la 6.3 reproduit.
+- **Le point focal** se choisit d'un clic sur l'image, se règle aux flèches, et une bascule dit si
+  l'image couvre ou se contient.
+- **Les champs de la publication** que la base portait depuis 7-C : le type, les emplacements, la
+  priorité, l'épinglage, les créneaux de mise en avant (jours et heures de Paris), le partenaire, le
+  statut avec sa programmation lisible (« Programmée, publiée le 3 octobre à 11 h »).
+- **La description aidée** : une barre insère les marqueurs du mini-langage, l'aperçu les rend — par la
+  grammaire de l'application elle-même, sortie dans un module pur partagé.
+- **La galerie** se téléverse en plusieurs fichiers d'un coup et se réordonne par glisser-déposer, à la
+  souris ou au clavier, à la place du tableau JSON.
+- **Le panneau « ordre du carrousel »** : une heure, un campus, une plateforme, un appareil testeur ou
+  non, et l'ordre qu'un téléphone montrerait — par le module pur `ordre.ts`, écrit et testé ici, que
+  la 6.3 branche dans l'application.
+- **Trois gestes** : dupliquer (une copie en brouillon, ouverte), archiver, voir sur mon téléphone (et
+  son inverse), chacun tracé au journal.
+- **Des tests** : la grammaire, l'ordre, les schémas des saisies structurées, l'état d'une annonce,
+  l'ordre vu à une heure, le modèle de l'aperçu.
+
+### Modifié
+
+- **Le formulaire générique** range ses champs par groupe, accueille un aperçu, suit la ligne qu'une
+  action rend, tient ses actions inertes tant qu'une saisie n'est pas enregistrée (« Notifier »
+  compris), et la phrase d'une écriture qui change l'adresse d'une ligne survit au rechargement du
+  formulaire — « Enregistré. » d'une ligne neuve disparaissait depuis 7-E.
+- **Côté application, sans effet visible** : le découpage de la description sort de
+  `DescriptionAnnonce.tsx` vers `shared/annonces/grammaire.ts` ; les couleurs de base des deux thèmes
+  sortent de `Theme.ts` vers `shared/theme/palettes.ts` ; `AnnonceRow` porte enfin les colonnes de 7-C ;
+  deux indexations de `versions.ts` et `rendu.ts` sont typées strictement.
+
 Le jalon [7-E](docs/phase-7/7-e-console-socle.md), le socle de la console, sur `main` et sans release :
 la console de pilotage refondue sur un socle standard, pour devenir l'outil d'une équipe.
 

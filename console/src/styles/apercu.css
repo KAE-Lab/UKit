@@ -1,0 +1,89 @@
+/*
+ * L'apercu d'une annonce (7-F) : le telephone dans la console. Les couleurs et les mesures viennent
+ * des variables `--app-*` posees par palette.ts depuis les modules purs du theme de l'application —
+ * jamais des tokens de la console, qui habillent l'outil, pas ce qu'il montre. Les autres nombres
+ * sont ceux releves dans les composants React Native (BdeAnnonceCard, BdeDetailsScreen,
+ * DescriptionAnnonce, CampusSectionHeader) : interlignes, filets, opacites.
+ */
+
+.apercu { display: grid; gap: var(--espace-md); font-family: var(--police); color: var(--app-texte); }
+.apercu-entete { display: flex; align-items: center; justify-content: space-between; gap: var(--espace-sm); flex-wrap: wrap; }
+.apercu-etat { display: flex; align-items: center; gap: var(--espace-sm); flex-wrap: wrap; }
+.apercu-note { margin: 0; }
+.ap-ecran { display: grid; gap: var(--espace-xs); }
+.ap-ecran-titre { margin: 0; font-size: var(--taille-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-2); }
+.ap-telephone { max-width: 100%; background: var(--app-fond); border-radius: var(--rayon-lg); padding: var(--app-espace-md) 0; overflow: hidden; -webkit-font-smoothing: antialiased; }
+
+/* Le carrousel : la carte, une voisine, la gouttiere `md` entre elles, tout depasse du bord. */
+.ap-carrousel { display: flex; gap: var(--app-espace-md); padding: 0 var(--app-espace-md) var(--app-espace-lg); overflow: hidden; }
+.ap-carrousel > * { flex: none; }
+/* La grille : deux cellules par rangee, le rembourrage `sm` et la gouttiere `md` de BdeScreen. */
+.ap-grille { display: flex; gap: var(--app-espace-md); padding: 0 var(--app-espace-sm) var(--app-espace-md); }
+.ap-grille > * { flex: none; }
+
+/* ---- La carte v2 ------------------------------------------------------------------------- */
+.ap-carte { background: var(--app-carte); border-radius: var(--app-rayon-xl); box-shadow: var(--app-ombre); overflow: hidden; }
+.ap-cadre { position: relative; width: 100%; aspect-ratio: 4 / 5; background: var(--app-gris); display: grid; place-items: center; overflow: hidden; }
+.ap-cadre img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ap-cadre .ap-couvre { object-fit: cover; }
+.ap-cadre .ap-flou { object-fit: cover; filter: blur(16px); transform: scale(1.1); }
+.ap-cadre .ap-contient { object-fit: contain; }
+.ap-affiche-typo { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: var(--app-espace-md); font-size: var(--app-taille-lg); font-weight: 700; line-height: 26px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; }
+.ap-picto { font-size: 48px; }
+.ap-badge { position: absolute; top: var(--app-espace-sm); left: var(--app-espace-sm); display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: var(--app-rayon-sm); background: var(--app-carte); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; box-shadow: var(--app-ombre); }
+.ap-badge img { position: static; width: 16px; height: 16px; object-fit: contain; border-radius: 3px; }
+.ap-pied { padding: var(--app-espace-sm) var(--app-espace-md); }
+.ap-kicker { font-size: var(--app-taille-xs); font-weight: 600; color: var(--app-texte-2); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: var(--app-espace-xxs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ap-titre { font-size: var(--app-taille-md); font-weight: 700; color: var(--app-texte); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ap-voisine .ap-cadre { background: var(--app-gris); }
+.ap-trait-texte { display: inline-block; height: 12px; width: 70%; border-radius: 6px; background: var(--app-gris); }
+.ap-trait-texte.court { width: 40%; height: 9px; }
+
+/* ---- La fiche ---------------------------------------------------------------------------- */
+.ap-fiche { position: relative; height: 640px; }
+.ap-fiche-defilement { height: 100%; overflow: auto; padding: 0 var(--app-espace-md) var(--app-espace-xxl); }
+.ap-fiche-defilement.avec-bouton { padding-bottom: 96px; }
+.ap-visuel { width: 100%; border-radius: var(--app-rayon-lg); overflow: hidden; background: var(--app-gris); }
+.ap-visuel img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ap-heros { position: relative; padding-top: var(--app-espace-lg); margin-bottom: var(--app-espace-lg); overflow: hidden; }
+.ap-heros .ap-kicker { margin-bottom: var(--app-espace-xs); white-space: normal; }
+.ap-grand-titre { margin: 0; font-size: var(--app-taille-xxl); font-weight: 700; line-height: 34px; color: var(--app-texte); }
+.ap-chapeau { margin: var(--app-espace-sm) 0 0; font-size: var(--app-taille-md); font-weight: 600; line-height: 22px; color: var(--app-texte-2); }
+.ap-filigrane { position: absolute; right: -16px; bottom: -8px; font-size: 88px; line-height: 1; opacity: 0.06; pointer-events: none; }
+.ap-bloc .ap-filigrane { font-size: 64px; }
+.ap-galerie { display: grid; gap: var(--app-espace-md); margin-top: var(--app-espace-lg); }
+.ap-lieu { margin-top: var(--app-espace-xl); display: grid; gap: var(--app-espace-sm); }
+.ap-plan { height: 160px; border-radius: var(--app-rayon-lg); background: var(--app-gris); display: grid; place-items: center; color: var(--app-texte-2); font-size: 40px; }
+.ap-pied-action { position: absolute; left: 0; right: 0; bottom: 0; padding: var(--app-espace-md); padding-top: var(--app-espace-xl); background: linear-gradient(to top, var(--app-fond) 55%, transparent); }
+.ap-bouton { display: flex; align-items: center; justify-content: center; height: 50px; border-radius: var(--app-rayon-md); background: var(--app-accent); color: #fff; font-size: var(--app-taille-md); font-weight: 600; box-shadow: var(--app-ombre); }
+
+/* ---- La description : la grammaire des fiches -------------------------------------------- */
+.ap-description { display: grid; gap: var(--app-espace-xl); }
+.ap-bloc { position: relative; overflow: hidden; }
+.ap-tete { display: flex; align-items: center; gap: var(--app-espace-sm); margin: 0 0 var(--app-espace-sm); }
+.ap-tete h4 { margin: 0; font-size: var(--app-taille-lg); font-weight: 700; color: var(--app-texte); }
+.ap-tete-icone { width: 32px; height: 32px; border-radius: var(--app-rayon-md); display: grid; place-items: center; font-size: 18px; flex: none; }
+.ap-contenu { display: grid; gap: var(--app-espace-sm); }
+.ap-contenu p { margin: 0; }
+.ap-lead { font-size: var(--app-taille-lg); line-height: 28px; color: var(--app-texte); white-space: pre-wrap; }
+.ap-paragraphe { font-size: var(--app-taille-md); line-height: 26px; color: var(--app-texte); white-space: pre-wrap; }
+.ap-puce { display: flex; align-items: flex-start; gap: var(--app-espace-xs); font-size: var(--app-taille-md); line-height: 24px; color: var(--app-texte); }
+.ap-puce i { font-size: 20px; line-height: 24px; margin-top: var(--app-espace-xxs); }
+.ap-puce.niveau-2 { margin-left: var(--app-espace-lg); }
+.ap-puce.niveau-2 i, .ap-puce.niveau-3 i { opacity: 0.7; }
+.ap-puce.niveau-3 { margin-left: calc(2 * var(--app-espace-lg)); }
+.ap-exergue { margin: var(--app-espace-sm) 0; padding-left: var(--app-espace-md); border-left: 3px solid; font-size: var(--app-taille-xl); font-weight: 600; line-height: 30px; color: var(--app-texte); }
+.ap-transition { display: grid; gap: var(--app-espace-sm); margin-bottom: var(--app-espace-md); }
+.ap-transition .ap-trait { width: 32px; height: 3px; border-radius: 999px; }
+.ap-transition p { font-size: var(--app-taille-lg); font-weight: 600; line-height: 26px; color: var(--app-texte); }
+.ap-signature { justify-self: end; text-align: right; font-size: var(--app-taille-lg); font-weight: 600; margin-top: var(--app-espace-xs) !important; }
+.ap-fin { display: flex; justify-content: center; }
+.ap-fin span { width: 6px; height: 6px; border-radius: 999px; opacity: 0.6; }
+
+/* ---- Le panneau « ordre du carrousel » ---------------------------------------------------- */
+.ordre-controles .filtre { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.ordre-liste { margin: var(--espace-md) 0 0; padding: 0; list-style: none; display: grid; gap: var(--espace-xs); }
+.ordre-liste li { display: flex; align-items: center; gap: var(--espace-md); min-height: var(--hauteur-ligne); padding: 0 var(--espace-md); border-radius: var(--rayon-md); background: var(--fond); flex-wrap: wrap; }
+.ordre-rang { width: 28px; height: 28px; border-radius: var(--rayon-sm); background: var(--accent-doux); color: var(--accent); font-weight: 700; display: grid; place-items: center; font-variant-numeric: tabular-nums; flex: none; }
+.ordre-titre { font-weight: 600; color: var(--texte); }
+.ordre-liste li:first-child .ordre-rang { background: var(--accent); color: var(--texte-inverse); }

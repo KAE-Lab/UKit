@@ -4,8 +4,12 @@ Publier sans requête SQL, avec un compte, en laissant une trace : annonces, mes
 testeurs, visuels, établissements, salutations, bâtiments, version publiée — et lire l'état des
 sources, le journal, **les retours du formulaire** et, depuis le jalon
 [7-E](../docs/phase-7/7-e-console-socle.md), un **tableau de bord** d'arrivée : le parc actif, les
-sources, les retours ouverts, les annonces actives et programmées. Ce qu'elle est et ce qu'elle n'est
-pas : [docs/pilotage.md](../docs/pilotage.md).
+sources, les retours ouverts, les annonces actives et programmées. Depuis
+[7-F](../docs/phase-7/7-f-console-annonces.md), **une annonce se compose en voyant ce qu'elle
+donnera sur un téléphone** : l'aperçu de la carte et de la fiche dans les deux thèmes, le point focal
+choisi sur l'image, la galerie réordonnée, et un panneau « ordre du carrousel » qui rend l'ordre
+qu'un téléphone montre à l'heure dite. Ce qu'elle est et ce qu'elle n'est pas :
+[docs/pilotage.md](../docs/pilotage.md).
 
 **Les Blueprints n'y sont pas**, et c'est une décision : ils se versionnent dans le dépôt, se
 valident avec le moteur, se rejouent par la parité et se publient par `npm run blueprints:publish`.
@@ -63,6 +67,8 @@ un problème que la console avait :
 | **Base UI** | les primitives sans style : le dialogue de confirmation, le menu de navigation sous 800 px |
 | **lucide-react** | la seule famille d'icônes |
 | **browser-image-compression** et **blurhash** | le pipeline de téléversement : réduction et re-encodage en WebP dans le navigateur, un nom d'objet unique, un cache d'un an, le placeholder ([`src/lib/televerser.ts`](src/lib/televerser.ts)) |
+| **@dnd-kit** | la galerie d'une annonce réordonnée par glisser-déposer, à la souris comme au clavier (7-F) |
+| **@mdi/font** | la police MaterialCommunityIcons de l'application, à la même version (7.4.47), pour les têtes de section de l'aperçu — chargée avec l'aperçu, jamais avant |
 | **react-error-boundary** | une erreur de rendu ne laisse jamais une page blanche |
 
 **La règle transverse** : un chargement ou une erreur ne déplace jamais la mise en page. Une liste qui
@@ -77,7 +83,20 @@ colonnes, leur type de saisie, la clé, celles qui se filtrent, se cherchent et 
 par campus, les avertissements qu'il faut lire avant d'écrire, les actions hors écriture (« Notifier »).
 Un test de cohérence vérifie que chaque nom cité désigne un champ réel. La liste et le formulaire sont
 génériques ; les pages qui méritent mieux ont la leur — le tableau de bord, les retours (compteurs par
-état, nature, campus et semaine ; les réponses question par question), le journal, les sources.
+état, nature, campus et semaine ; les réponses question par question), le journal, les sources — ou
+la **complètent** : les annonces ([`src/pages/Annonces/`](src/pages/Annonces/)) ajoutent à la page
+générique un aperçu à côté du formulaire, un encart au-dessus d'une ligne en audience « testeurs »,
+et le panneau d'ordre. Le formulaire range ses champs par **groupe**, tient ses actions inertes tant
+qu'une saisie n'est pas enregistrée, et suit la ligne qu'une action rend (la copie de « Dupliquer »).
+
+**L'aperçu d'une annonce** ([`src/pages/Annonces/apercu/`](src/pages/Annonces/apercu/)) dessine la
+carte v2 — celle que la 6.3 rend — et la fiche avec les modules **purs partagés avec l'application**,
+importés par chemin relatif : la grammaire de la description
+([`src/shared/annonces/grammaire.ts`](../src/shared/annonces/grammaire.ts)), l'ordre
+([`ordre.ts`](../src/shared/annonces/ordre.ts)), le ciblage, les adresses de rendu, les tokens et
+les palettes du thème. Vite remonte à la racine du dépôt pour les servir (`server.fs.allow`), et la
+console les compile en `strict` : ce que la console importe de l'application doit être pur **et**
+strict.
 
 **L'URL porte l'état** : `#/annonces/<clé>` ouvre une ligne, `#/annonces/nouveau` une ligne neuve,
 `#/annonces?q=…&page=2&tri=titre.desc&f.audience=testeurs` retient la recherche, la page, le tri et
@@ -96,7 +115,10 @@ l'intégration continue installe la console dans le même job pour que ses modul
 dépendances. Les modules purs et testés : la traduction des erreurs, la requête d'une liste, l'état
 d'une liste dans l'URL, les schémas, la cohérence des descripteurs, les tables journalisées, le nom
 d'objet unique, les dimensions de compression, les compteurs des retours, le parc actif et l'état des
-annonces.
+annonces — et, depuis 7-F, les schémas des saisies structurées (focale, créneaux, galerie,
+partenaire), leurs résumés, l'état d'une annonce et sa phrase de programmation, le modèle de
+l'aperçu, l'ordre vu à une heure, l'insertion d'un marqueur, le pas du clavier sur la focale, le
+bilan d'un lot d'images.
 
 ## Vérifier
 
@@ -105,4 +127,7 @@ les deux thèmes, avec deux comptes jetables créés par `console:editeur`), pui
 déployée : les états réseau, le compte sans droits, les listes, la valeur inconnue, le téléversement,
 le clavier. Le détail et les mesures sont dans la
 [spécification](../docs/phase-7/7-e-console-socle.md#plan-de-test) ; les captures dans
-[`docs/screenshots/console/`](../docs/screenshots/console/).
+[`docs/screenshots/console/`](../docs/screenshots/console/). La recette du jalon 7-F s'est jouée de
+la même façon : trente-trois points sur l'éditeur, la focale, la galerie, la programmation, les gestes
+et le panneau d'ordre ([spécification](../docs/phase-7/7-f-console-annonces.md#plan-de-test)) ; ce
+qui touche le téléphone se joue en audience « testeurs » sur les deux appareils.

@@ -5,6 +5,7 @@
 
 import { formaterDate } from '../../lib/dates';
 import type { Champ } from '../../schema/descripteurs';
+import { resumeStructure } from '../../schema/resumes';
 
 function texteDe(champ: Champ, valeur: unknown): string {
     if (valeur === null || valeur === undefined || valeur === '') return '—';
@@ -13,7 +14,7 @@ function texteDe(champ: Champ, valeur: unknown): string {
         case 'booleen': return valeur === true ? 'oui' : 'non';
         case 'json': return JSON.stringify(valeur, null, 2);
         case 'choix': return champ.type.options.find((o) => o.valeur === String(valeur))?.libelle ?? String(valeur);
-        default: return String(valeur);
+        default: return resumeStructure(champ.type.type, valeur) ?? String(valeur);
     }
 }
 

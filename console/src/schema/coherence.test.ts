@@ -13,7 +13,7 @@ import { RESSOURCES } from './tables';
 import { JOURNAL } from './tables/suivi';
 
 const TYPES_DE_FILTRE = new Set(['booleen', 'choix']);
-const TYPES_DE_RECHERCHE = new Set(['texte', 'zone', 'uuid', 'version']);
+const TYPES_DE_RECHERCHE = new Set(['texte', 'zone', 'description', 'uuid', 'version']);
 
 test('les chemins et les tables sont uniques', () => {
     expect(new Set(RESSOURCES.map((r) => r.chemin)).size).toBe(RESSOURCES.length);
@@ -47,5 +47,15 @@ test.each(CAS)('%s : la colonne soeur d une image existe', (_chemin, ressource) 
     const noms = nomsDe(ressource);
     for (const champ of ressource.champs) {
         if (champ.type.type === 'image' && champ.type.blurhash !== undefined) expect(noms.has(champ.type.blurhash), `blurhash de ${champ.nom}`).toBe(true);
+    }
+});
+
+test.each(CAS)('%s : une focale vise une image et un ajustement a choix, qui s ecrivent', (_chemin, ressource) => {
+    for (const champ of ressource.champs) {
+        if (champ.type.type !== 'focale') continue;
+        expect(champDe(ressource, champ.type.image)?.type.type, `image de ${champ.nom}`).toBe('image');
+        const ajustement = champDe(ressource, champ.type.ajustement);
+        expect(ajustement?.type.type, `ajustement de ${champ.nom}`).toBe('choix');
+        expect(ajustement?.lectureSeule, `ajustement de ${champ.nom} doit s'ecrire`).not.toBe(true);
     }
 });
