@@ -1,0 +1,92 @@
+/*
+ * Les tokens de la console : la seule source des couleurs, des espacements, des tailles de texte,
+ * des rayons et des durees. Les noms reprennent l'echelle de l'application
+ * (src/shared/theme/tokens.ts : espace 4/8/16/24/32/48, rayon 8/12/16/24/999, texte 12/14/16/18/22/28),
+ * pour qu'une decision prise d'un cote se lise de l'autre. Clair et sombre suivent le systeme.
+ */
+
+:root {
+    color-scheme: light dark;
+
+    --fond: #f2f2f7;
+    --surface: #ffffff;
+    --surface-2: #e5e5ea;
+    --surface-3: #d1d1d6;
+    --bordure: #e0e0e5;
+    --texte: #1c1c1e;
+    --texte-2: #6e6e73;
+    --texte-inverse: #ffffff;
+    --accent: #007aff;
+    --accent-doux: rgba(0, 122, 255, 0.12);
+    --danger: #ff3b30;
+    --danger-doux: rgba(255, 59, 48, 0.12);
+    --succes: #34c759;
+    --succes-doux: rgba(52, 199, 89, 0.14);
+    --avert: #ff9500;
+    --avert-doux: rgba(255, 149, 0, 0.14);
+    --voile: rgba(0, 0, 0, 0.35);
+    --ombre: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 14px rgba(0, 0, 0, 0.05);
+    --ombre-flottante: 0 2px 6px rgba(0, 0, 0, 0.08), 0 16px 40px rgba(0, 0, 0, 0.14);
+
+    --espace-xs: 4px;
+    --espace-sm: 8px;
+    --espace-md: 16px;
+    --espace-lg: 24px;
+    --espace-xl: 32px;
+    --espace-xxl: 48px;
+
+    --taille-xs: 12px;
+    --taille-sm: 14px;
+    --taille-md: 16px;
+    --taille-lg: 18px;
+    --taille-xl: 22px;
+    --taille-xxl: 28px;
+
+    --rayon-sm: 8px;
+    --rayon-md: 12px;
+    --rayon-lg: 16px;
+    --rayon-xl: 24px;
+    --rayon-pilule: 999px;
+
+    --duree-courte: 120ms;
+    --duree-moyenne: 200ms;
+
+    /* La hauteur d'une ligne de tableau et d'un bouton : ce que les squelettes reservent. */
+    --hauteur-ligne: 48px;
+    --hauteur-bouton: 38px;
+    --largeur-laterale: 240px;
+
+    --police: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --fond: #000000;
+        --surface: #1c1c1e;
+        --surface-2: #2c2c2e;
+        --surface-3: #3a3a3c;
+        --bordure: #38383a;
+        --texte: #f2f2f7;
+        --texte-2: #98989d;
+        --texte-inverse: #ffffff;
+        --accent: #5e5ce6;
+        --accent-doux: rgba(94, 92, 230, 0.2);
+        --danger: #ff453a;
+        --danger-doux: rgba(255, 69, 58, 0.18);
+        --succes: #30d158;
+        --succes-doux: rgba(48, 209, 88, 0.18);
+        --avert: #ff9f0a;
+        --avert-doux: rgba(255, 159, 10, 0.18);
+        --voile: rgba(0, 0, 0, 0.6);
+        --ombre: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 20px rgba(0, 0, 0, 0.35);
+        --ombre-flottante: 0 2px 6px rgba(0, 0, 0, 0.5), 0 16px 40px rgba(0, 0, 0, 0.6);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --duree-courte: 0ms;
+        --duree-moyenne: 0ms;
+    }
+}

@@ -561,7 +561,7 @@ que le parc ait migré.
 | `jetons_push` | `annonces boolean` (défaut faux) : l'accord pour les annonces en notification | [7-L](phase-7/7-l-la-boucle.md) |
 | `retours` | `source` (`formulaire` ou `app` ; défaut `formulaire`), `installation` (nul sauf accord) ; RPC `deposer_retour` | [7-L](phase-7/7-l-la-boucle.md) |
 | `soutien` | `(campus, jour, montant, repas)`, agrégée, lecture publique | [7-N](phase-7/7-n-le-soutien.md) |
-| bucket `media` | objets nommés `<dossier>/<identifiant court>-<slug>.webp` — le **`cache-control` d'un an est posé** depuis [7-A](phase-7/7-a-bande-passante.md), le nommage unique reste à faire ; `?v=N` reste la règle de remplacement de ce qui est posé à la main | la console [7-E](phase-7/7-e-console-socle.md) |
+| bucket `media` | *fait le 2026-09-22 par [7-E](phase-7/7-e-console-socle.md)* : ce que la console téléverse se nomme `<dossier>/<identifiant court>-<slug>.webp`, avec un cache d'un an et son blurhash dans `annonces.blurhash` ; `?v=N` reste la règle de remplacement de ce qui est posé à la main ([`tools/media/versionner.mjs`](../tools/media/versionner.mjs)), et les objets déjà en ligne gardent leur nom | — |
 
 ## Migrations
 

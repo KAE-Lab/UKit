@@ -1,0 +1,95 @@
+/*
+ * Les surfaces : cartes, encarts, pastilles, boutons, squelettes, dialogues et menus (Base UI, sans
+ * style propre : la peau est ici).
+ */
+
+.carte { background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon-lg); box-shadow: var(--ombre); padding: var(--espace-lg); }
+.carte + .carte { margin-top: var(--espace-md); }
+.carte.compacte { padding: var(--espace-md); }
+.carte h2 .icone { margin-right: var(--espace-sm); color: var(--texte-2); }
+.grille-cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--espace-md); }
+.grille-cartes .carte + .carte { margin-top: 0; }
+
+.encart { border-radius: var(--rayon-md); padding: var(--espace-md); font-size: var(--taille-sm); display: flex; gap: var(--espace-sm); align-items: flex-start; }
+.encart .icone { margin-top: 2px; }
+.encart.avert { background: var(--avert-doux); border-left: 3px solid var(--avert); }
+.encart.erreur { background: var(--danger-doux); border-left: 3px solid var(--danger); }
+.encart.ok { background: var(--succes-doux); border-left: 3px solid var(--succes); }
+.encart.info { background: var(--accent-doux); border-left: 3px solid var(--accent); }
+.encart.avert .icone { color: var(--avert); }
+.encart.erreur .icone { color: var(--danger); }
+.encart.ok .icone { color: var(--succes); }
+.encart.info .icone { color: var(--accent); }
+.encart .boutons { margin-top: var(--espace-sm); }
+
+.vide { padding: var(--espace-xl) var(--espace-lg); text-align: center; color: var(--texte-2); display: grid; gap: var(--espace-sm); justify-items: center; }
+.vide .icone { width: 28px; height: 28px; color: var(--surface-3); }
+
+/* ---- Pastilles ---------------------------------------------------------------------------- */
+.pastille { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: var(--rayon-pilule); font-size: var(--taille-xs); font-weight: 600; background: var(--surface-2); color: var(--texte-2); white-space: nowrap; }
+.pastille.ok { background: var(--succes-doux); color: var(--succes); }
+.pastille.panne { background: var(--danger-doux); color: var(--danger); }
+.pastille.avert { background: var(--avert-doux); color: var(--avert); }
+.pastille.accent { background: var(--accent-doux); color: var(--accent); }
+.pastille .icone { width: 12px; height: 12px; }
+.liste-en-ligne { display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.point { width: 8px; height: 8px; border-radius: var(--rayon-pilule); background: currentColor; }
+
+/* ---- Boutons ------------------------------------------------------------------------------ */
+.bouton {
+    appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 600; font-size: var(--taille-sm);
+    padding: 0 var(--espace-md); height: var(--hauteur-bouton); border-radius: var(--rayon-md);
+    transition: filter var(--duree-courte) ease, background var(--duree-courte) ease;
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--espace-sm); white-space: nowrap;
+    position: relative;
+}
+.bouton:disabled { opacity: 0.5; cursor: default; }
+.bouton.plein { background: var(--accent); color: var(--texte-inverse); }
+.bouton.tonal { background: var(--accent-doux); color: var(--accent); }
+.bouton.destructif { background: var(--danger-doux); color: var(--danger); }
+.bouton.discret { background: transparent; color: var(--texte-2); }
+.bouton.discret:not(:disabled):hover { background: var(--surface-2); }
+.bouton:not(:disabled):hover { filter: brightness(0.94); }
+.bouton.compact { height: 32px; padding: 0 var(--espace-sm); font-size: var(--taille-xs); }
+.bouton.icone-seule { width: var(--hauteur-bouton); padding: 0; }
+.bouton.compact.icone-seule { width: 32px; }
+/* Un bouton en attente garde sa largeur : le libelle reste dans le flux, invisible, et le cercle tourne par-dessus. */
+.bouton.attente { opacity: 0.85; cursor: progress; }
+.contenu-bouton { display: inline-flex; align-items: center; gap: var(--espace-sm); }
+.bouton.attente > .contenu-bouton { visibility: hidden; }
+.bouton.attente > .rouage { position: absolute; inset: 0; display: grid; place-items: center; }
+.rouage .icone { animation: rotation 900ms linear infinite; }
+.boutons { display: flex; gap: var(--espace-sm); flex-wrap: wrap; align-items: center; }
+.boutons.fin { justify-content: flex-end; }
+.boutons .espace { flex: 1; }
+
+/* ---- Squelettes --------------------------------------------------------------------------- */
+.squelette { background: var(--surface-2); border-radius: var(--rayon-sm); animation: scintillement 1.4s ease-in-out infinite; }
+.squelette.texte { height: 14px; }
+.squelette.titre { height: 22px; width: 40%; }
+.squelette.bloc { height: 96px; }
+
+/* ---- Dialogues (Base UI) ------------------------------------------------------------------ */
+.voile { position: fixed; inset: 0; min-height: 100dvh; background: var(--voile); transition: opacity var(--duree-moyenne); }
+.voile[data-starting-style], .voile[data-ending-style] { opacity: 0; }
+.dialogue {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; max-width: calc(100vw - 2 * var(--espace-lg));
+    background: var(--surface); color: var(--texte); border: 1px solid var(--bordure); border-radius: var(--rayon-lg); box-shadow: var(--ombre-flottante);
+    padding: var(--espace-lg); display: grid; gap: var(--espace-md); transition: transform var(--duree-moyenne) ease-out, opacity var(--duree-moyenne) ease-out;
+}
+.dialogue[data-starting-style], .dialogue[data-ending-style] { opacity: 0; transform: translate(-50%, -50%) scale(0.97); }
+.dialogue h2 { margin: 0; }
+.dialogue .description { color: var(--texte-2); margin: 0; }
+
+/* ---- Menus (Base UI) ---------------------------------------------------------------------- */
+.menu-popup {
+    background: var(--surface); color: var(--texte); border: 1px solid var(--bordure); border-radius: var(--rayon-md); box-shadow: var(--ombre-flottante);
+    padding: var(--espace-xs); min-width: 220px; transform-origin: var(--transform-origin);
+    transition: transform var(--duree-courte) ease-out, opacity var(--duree-courte) ease-out; outline: 0;
+}
+.menu-popup[data-starting-style], .menu-popup[data-ending-style] { opacity: 0; transform: scale(0.97); }
+.menu-item { display: flex; align-items: center; gap: var(--espace-sm); padding: var(--espace-sm) var(--espace-md); border-radius: var(--rayon-sm); color: var(--texte); cursor: default; outline: 0; font-size: var(--taille-sm); }
+.menu-item[data-highlighted] { background: var(--accent-doux); color: var(--accent); }
+.menu-item[data-disabled] { color: var(--texte-2); }
+.menu-groupe { padding: var(--espace-sm) var(--espace-md) var(--espace-xs); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-2); }
+.menu-separateur { height: 1px; background: var(--bordure); margin: var(--espace-xs) 0; }

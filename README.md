@@ -265,7 +265,7 @@ livré ; elle est mise à jour à chaque contribution.
   [harnais de parité](tools/parity/README.md) rejoue les sources migrées contre les vraies. Aucun
   test d'écran ni de composant. **`npx tsc --noEmit` est vert** depuis le 2026-08-16 — il ne l'avait
   jamais été — et **`npx eslint .` est à zéro** depuis la passe de code 6.1-C, trente-cinq
-  avertissements traités un par un ; `npm test` joue 760 tests à la 6.2.2. Depuis le jalon
+  avertissements traités un par un ; `npm test` joue 832 tests au jalon 7-E, dont 74 pour la console. Depuis le jalon
   [7-C](docs/phase-7/7-c-economie-et-socle.md), **l'intégration continue rejoue le typage, ESLint,
   les tests et la construction de la console sur chaque poussée**, Dependabot groupe les mises à jour
   hors de ce que le SDK épingle, et le schéma de la base s'applique par des migrations numérotées.

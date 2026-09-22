@@ -1,6 +1,14 @@
 # 7-E — Le socle de la console
 
-> **Spécification, ouverte le 2026-09-14, pas encore livrée.** Aucune publication : la console se déploie
+> **Jalon livré le 2026-09-22** — le socle, les quatorze défauts, les listes, la page Retours, le tableau
+> de bord, le téléversement, les tests, la documentation et les captures ; ouvert le 2026-09-22 sur la
+> branche `feat/console-socle`, depuis `main`. Le [plan de test](#plan-de-test) a été joué sur la console
+> locale par un navigateur piloté (Playwright), avec deux comptes jetables, puis sur la console déployée ;
+> le [protocole « plateformes »](#le-protocole--plateformes-) se joue avec le propriétaire du produit sur
+> les deux appareils. Ce que la réalité a corrigé du texte ci-dessous est dans
+> [Ce que la réalité a corrigé](#ce-que-la-réalité-a-corrigé-le-2026-09-22).
+>
+> **Spécification, ouverte le 2026-09-14.** Aucune publication : la console se déploie
 > depuis `main` à chaque poussée qui la touche. Le premier des quatre jalons de la console, avant les
 > annonces ([7-F](7-f-console-annonces.md)), les statistiques ([7-G](7-g-console-statistiques.md)) et les
 > rôles ([7-H](7-h-console-roles.md)), tous livrés avant l'arrivée de l'équipe, en janvier 2027. Il pose le
@@ -72,6 +80,77 @@ déjà :
   d'écrire. Les pages qui méritent mieux qu'une liste générique — Tableau de bord, Retours, Annonces,
   Statistiques — ont la leur.
 - **Le journal**, écrit par la base, que rien ne contourne.
+
+## Ce que la réalité a corrigé, le 2026-09-22
+
+Les endroits où l'exécution a amendé le texte des sections suivantes — annoncés, jamais cachés.
+
+**Le socle.**
+
+- **Les primitives sont Base UI** (`@base-ui/react` 1.8.0), sur le critère écrit et mesuré le premier
+  jour : dernière publication le 2026-09-04 (Radix : le 2026-07-31), un seul paquet à cinq dépendances
+  là où Radix en met de sept à vingt-deux par primitive, un dialogue et un menu accessibles au clavier
+  des deux côtés. La console en prend le dialogue de confirmation (`AlertDialog`, qui remplace chaque
+  `window.confirm`) et le menu de navigation sous 800 px.
+- **TanStack Table est en version 9** (9.2.4, sortie le 2026-08-04), pas 8 : `useTable`, des fonctions
+  enregistrées explicitement (`tableFeatures`), et sa documentation embarquée dans le paquet
+  (`node_modules/@tanstack/react-table/skills/`). Le mode serveur est le seul employé : `manualSorting`,
+  `manualFiltering`, `manualPagination`, `rowCount`.
+- **Une seule politique de reprise.** Mesuré : `postgrest-js` 2.114 rejoue lui-même trois fois un échec
+  réseau (1 s, 2 s, 4 s) avant de le rendre, et TanStack Query rejouait par-dessus — une base coupée
+  mettait quinze secondes à se dire, devant un squelette. Le client est créé avec `db.retry: false` ;
+  la reprise est celle de TanStack Query, une fois, après une seconde
+  ([`supabase.ts`](../../console/src/supabase.ts), [`requetes/client.ts`](../../console/src/requetes/client.ts)).
+- **L'URL porte l'état.** `#/annonces/<clé>` ouvre une ligne, `#/annonces/nouveau` une ligne neuve, et
+  `#/annonces?q=soirée&page=2&tri=titre.desc&f.audience=testeurs` retient la recherche, la page, le tri
+  et les filtres — d'où le retour à la liste qui garde ses filtres, le rechargement fidèle, et une entrée
+  du journal qui s'ouvre à `#/journal/<numéro>` ([`routeur.ts`](../../console/src/routeur.ts),
+  [`liste/etatUrl.ts`](../../console/src/composants/liste/etatUrl.ts), pur et testé). Le routeur maison
+  reste : une quarantaine de lignes.
+- **La CI installe la console dans le job « application »** (`npm ci --prefix console`) : les tests de
+  la console sont joués par le vitest de la racine, et ses modules purs importent désormais `zod`, qui
+  ne se résout que depuis `console/node_modules`. Les tests de la console ne sont typés par personne —
+  la racine exclut `console/`, la console exclut ses tests — : inchangé, et écrit ici comme limite.
+- **Le test de cohérence a trouvé trois erreurs le jour de sa naissance** : la clé `id` des annonces et
+  des messages, et `visuels.maj_le`, étaient citées sans être des champs. Elles sont désormais des champs
+  en lecture seule, et le test couvre aussi le descripteur du journal.
+
+**Les défauts.**
+
+- **Aucune migration n'était due.** Le `check` de la couleur 4 (défaut 8) existe depuis
+  [7-C](7-c-economie-et-socle.md#6-les-colonnes-additives) ; la base n'interdit **que** le 4, et c'est
+  la liste de la console qui borne 0 à 3 et 5. `blurhash` n'existe que sur `annonces` : le pipeline le
+  calcule à chaque téléversement et ne le pose que là, par la colonne sœur que le descripteur nomme.
+- **Le cas `plateformes = '{tv}'` du plan de test est impossible** : la base borne la colonne par un
+  `check` depuis 6.1.x-D. Le cas joué à sa place est `couleur = 7`, que la base accepte : la liste
+  montre la valeur marquée, le formulaire la propose « (valeur inconnue) », l'enregistrement la refuse
+  en la nommant, et un autre choix s'enregistre. Même mécanisme pour une plateforme ou un code de campus
+  inconnus, qui se montrent cochés, marqués, et se décochent.
+- **Le filtre global par campus ne couvre que ce qui porte un code** — annonces et messages par leur
+  ciblage (les contenus « tous campus » restent visibles), jetons push par `etablissement`. Décidé le
+  2026-09-22 : `batiments.campus` est un libellé (« Talence », « Bordeaux INP — ENSC ») et
+  `retours.campus` est le campus *demandé* dans le formulaire (« Inspe »), pas l'établissement de qui
+  écrit ; les deux gardent un filtre par page sur leur colonne. Une colonne `retours.etablissement`,
+  remplie par l'importeur depuis la question « Établissement » du formulaire (2026-09-21), est un lot
+  ultérieur de l'importeur.
+- **La place réservée des encarts** a une hauteur minimale d'une ligne ; un retour plus long défile
+  dedans, borné à 120 px, plutôt que de pousser la page (défaut 11).
+- **La bannière « lecture seule »** ne paraît que quand les droits sont résolus à faux : elle apparaît
+  une fois, au chargement, jamais au fil de l'usage.
+- **`versionnerUrl.ts` est supprimé** avec son test : plus rien ne bumpe `?v=N` depuis la console. La
+  règle reste celle de ce qui est posé à la main, par `tools/media/versionner.mjs`.
+- **Le squelette d'une liste** compte au plus dix lignes, ou la taille de page, ou le total connu.
+
+**Les pages.**
+
+- **La page Retours** propose « Ouverts » dans son filtre d'état — c'est la vue par défaut, levée d'un
+  geste —, et son filtre par campus demandé tire ses valeurs des lignes elles-mêmes.
+- **Le tableau de bord** lit le parc sur `jetons_push` en trois pages de mille (2 176 lignes le
+  2026-09-22), et applique la règle des petites cases de [mesure.md](../mesure.md#les-petites-cases).
+- **Les captures sont prises par un navigateur piloté**, pas à la main : la console est une page web,
+  et Playwright émule le thème sombre. La convention `console-<page>[-dark].png` et le dossier
+  [`docs/screenshots/console/`](../screenshots/console/) sont ajoutés au
+  [README des captures](../screenshots/README.md) ; la règle « à la main » reste celle de l'application.
 
 ## Les défauts mesurés
 
@@ -198,6 +277,9 @@ un appareil non enregistré —, et elle se **reproduit** avant de se corriger :
 Le résultat s'écrit ici. Si un cas contredit le code, c'est un défaut, et il s'inscrit au
 [registre](../defauts-fonctionnels.md).
 
+*Résultat :* **à jouer avec le propriétaire du produit**, sur la console déployée, les quatre messages
+publiés en `audience` voulue puis retirés — écrit ici à la fin de la session.
+
 ### Les tests
 
 - **La cohérence des descripteurs** : chaque colonne listée existe parmi les champs, chaque clé désigne des
@@ -216,6 +298,11 @@ Le résultat s'écrit ici. Si un cas contredit le code, c'est un défaut, et il 
   ([console/README.md](../../console/README.md#comment-elle-est-faite)).
 - **Le relevé des défauts date du 2026-09-14** : une ligne citée peut avoir bougé ; c'est le symptôme qui
   fait foi.
+- **Les descripteurs restent des données pures** : l'action « Notifier » charge la fonction d'envoi par
+  un import paresseux, parce que le client de la base s'instancie à l'import et que les tests de
+  cohérence chargent les descripteurs hors navigateur.
+- **Le pipeline de téléversement se charge à la demande** (compression, blurhash) : 55 Ko que seul un
+  éditeur qui téléverse attend.
 
 ## Dépendances
 
@@ -237,6 +324,31 @@ Sources gagne sa seconde moitié en [7-G](7-g-console-statistiques.md).
 ## Plan de test
 
 Sur la console construite localement, puis déployée.
+
+*Joué le 2026-09-22 sur la console locale, par un navigateur piloté (Playwright, Chromium, dans les
+deux thèmes), avec deux comptes jetables — `recette.editeur.7e` et `recette.sansdroits.7e` —,
+supprimés après. Aucune erreur de console dans les deux thèmes. Point par point :*
+
+1. *La base coupée (`route.abort` sur `/rest/v1/`) : l'erreur prend la place des lignes avec
+   « Réessayer », les quatre cartes du tableau de bord passent en erreur et chacune se relit seule ;
+   au rechargement, la coque paraît avant la session.*
+2. *Le compte sans droits : « Lecture seule » en tête des annonces, des messages, des retours, des
+   testeurs, aucun bouton d'écriture actif.*
+3. *Le tri sur le titre (`?tri=titre`, `aria-sort`), le filtre d'audience, la recherche, le retour à
+   la liste avec les mêmes paramètres ; le campus `bordeaux-inp` retenu après rechargement ; le
+   journal en pages de cent : 240 lignes, la page 3 en rend 40.*
+4. *`couleur = 7` à la place de `{tv}` (voir plus haut) : montrée, refusée en la nommant, corrigée en
+   `2`, relue en base.*
+5. *Deux annonces de test téléversent la même `affiche.jpg` de **6,6 Mo** (2400 × 3000) : deux objets
+   distincts (`annonces/82639546-affiche.webp`, `annonces/123afa1b-affiche.webp`), **119 112 octets**
+   chacun, `image/webp`, `cache-control: public, max-age=31536000`, blurhash posé dans la ligne ; lignes
+   et objets supprimés après.*
+6. *Les compteurs : 53 retours, 53 « nouveau », par nature 10 / 9 / 24 / 10 — égaux au décompte de
+   la table par l'API.*
+7. *Le protocole « plateformes » : avec le propriétaire du produit, sur les appareils.*
+8. *Une ligne s'ouvre à « Entrée » ; la tabulation visite la navigation, les filtres, les en-têtes de
+   tri, les lignes et les boutons, focus visible ; un formulaire modifié qu'on quitte demande
+   confirmation, « Annuler » garde la page, « Quitter » revient à la liste.*
 
 1. **Les états.** Couper le réseau du navigateur sur chaque page : la mise en page ne bouge pas, l'erreur
    prend la place du contenu, « Réessayer » relit. Recharger : jamais de page blanche.

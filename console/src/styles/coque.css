@@ -1,0 +1,56 @@
+/*
+ * La coque : la navigation laterale, la barre du haut (filtre par campus, menu sous 800 px), le
+ * contenu. La coque est presente des la verification de session : rien n'apparait en page blanche.
+ */
+
+.coque { display: grid; grid-template-columns: var(--largeur-laterale) 1fr; min-height: 100vh; }
+.laterale {
+    position: sticky; top: 0; height: 100vh; overflow: auto;
+    padding: var(--espace-lg) var(--espace-md); border-right: 1px solid var(--bordure); background: var(--surface);
+    display: flex; flex-direction: column; gap: var(--espace-xs);
+}
+.marque { display: flex; align-items: baseline; gap: var(--espace-sm); padding: var(--espace-xs) var(--espace-md) var(--espace-md); }
+.marque strong { font-size: var(--taille-lg); }
+.marque span { color: var(--texte-2); font-size: var(--taille-xs); }
+.laterale .section { padding: var(--espace-md) var(--espace-md) var(--espace-xs); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-2); }
+.lien-nav {
+    display: flex; align-items: center; gap: var(--espace-sm); padding: var(--espace-sm) var(--espace-md);
+    border-radius: var(--rayon-md); color: var(--texte); font-weight: 500; min-height: 36px;
+}
+.lien-nav:hover { background: var(--surface-2); }
+.lien-nav.actif { background: var(--accent-doux); color: var(--accent); }
+.lien-nav .icone { color: var(--texte-2); }
+.lien-nav.actif .icone { color: var(--accent); }
+.lien-nav .compte { overflow-wrap: anywhere; font-size: var(--taille-xs); }
+.laterale .pied { margin-top: auto; padding: var(--espace-md); border-top: 1px solid var(--bordure); font-size: var(--taille-xs); color: var(--texte-2); overflow-wrap: anywhere; }
+
+.colonne { display: flex; flex-direction: column; min-width: 0; }
+.barre {
+    display: flex; align-items: center; gap: var(--espace-md); min-height: 56px;
+    padding: var(--espace-sm) var(--espace-xl); border-bottom: 1px solid var(--bordure); background: var(--surface);
+    position: sticky; top: 0; z-index: 5;
+}
+.barre .marque { display: none; padding: 0; }
+.barre .espace { flex: 1; }
+.barre .menu-mobile { display: none; }
+.filtre-campus { display: flex; align-items: center; gap: var(--espace-sm); font-size: var(--taille-sm); color: var(--texte-2); }
+.filtre-campus select { min-width: 180px; }
+
+.contenu { padding: var(--espace-lg) var(--espace-xl) var(--espace-xxl); max-width: 1180px; width: 100%; }
+.entete-page { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--espace-md); margin-bottom: var(--espace-md); flex-wrap: wrap; min-height: 68px; }
+.entete-page .sous-titre { color: var(--texte-2); margin-top: var(--espace-xs); }
+
+/* La place reservee des encarts : sous l'en-tete, toujours la, meme vide. Un retour n'y pousse rien. */
+.place-encart { min-height: 46px; margin-bottom: var(--espace-md); display: grid; }
+.place-encart .encart { max-height: 120px; overflow: auto; }
+
+@media (max-width: 800px) {
+    .coque { grid-template-columns: 1fr; }
+    .laterale { display: none; }
+    .barre { padding: var(--espace-sm) var(--espace-md); gap: var(--espace-sm); }
+    .barre .marque { display: flex; }
+    .barre .menu-mobile { display: inline-flex; }
+    .filtre-campus select { min-width: 120px; }
+    .contenu { padding: var(--espace-md) var(--espace-md) var(--espace-xxl); }
+    .entete-page { min-height: 0; }
+}

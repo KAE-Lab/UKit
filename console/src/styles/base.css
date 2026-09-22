@@ -1,0 +1,37 @@
+/*
+ * La base : la police du systeme, la typographie, et un style de focus visible partout — la
+ * console se parcourt au clavier (jalon 7-E).
+ */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+    font-family: var(--police);
+    font-size: var(--taille-sm);
+    line-height: 1.45;
+    color: var(--texte);
+    background: var(--fond);
+    -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+code, .mono { font-family: var(--mono); font-size: var(--taille-xs); }
+h1 { font-size: var(--taille-xxl); font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+h2 { font-size: var(--taille-lg); font-weight: 600; margin: 0 0 var(--espace-sm); }
+h3 { font-size: var(--taille-sm); font-weight: 600; margin: 0 0 var(--espace-xs); color: var(--texte-2); }
+p { margin: 0 0 var(--espace-sm); }
+.secondaire { color: var(--texte-2); }
+.petit { font-size: var(--taille-xs); }
+.tronque { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.visuellement-cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Le focus : un anneau d'accent sur tout ce qui se manipule, seulement au clavier. */
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--rayon-sm); }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offset: 0; }
+
+/* Les icones (lucide) se calent sur la ligne de texte. */
+.icone { width: 16px; height: 16px; flex: none; vertical-align: -3px; }
+.icone.grande { width: 20px; height: 20px; }
+
+@keyframes rotation { to { transform: rotate(360deg); } }
+@keyframes scintillement { 0% { opacity: 0.55; } 50% { opacity: 1; } 100% { opacity: 0.55; } }

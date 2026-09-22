@@ -214,39 +214,56 @@ Sa purge est écrite dans [`supabase/README.md`](../supabase/README.md) et n'est
 
 ## La console web
 
-Un dossier [`console/`](../console/) du dépôt — Vite, React, `supabase-js`, et rien d'autre —
-déployé sur GitHub Pages à chaque poussée sur `main` qui le touche, à l'adresse
-`https://kae-lab.github.io/UKit/`. Volontairement rudimentaire en périmètre, pas en finition : une
-liste et un formulaire par table, et deux pages de lecture.
+Un dossier [`console/`](../console/) du dépôt — Vite, React, `supabase-js`, et depuis le jalon
+[7-E](phase-7/7-e-console-socle.md) un socle standard : TanStack Query et Table, react-hook-form et
+zod, Base UI, lucide, blurhash — déployé sur GitHub Pages à chaque poussée sur `main` qui le touche, à
+l'adresse `https://kae-lab.github.io/UKit/`. Livrée « volontairement rudimentaire en périmètre, pas en
+finition » en 6.1-B, elle devient avec 7-E l'outil d'une équipe : un éditeur trouve une ligne en deux
+gestes, voit toujours la même mise en page quoi qu'il arrive au réseau, et sait ce qu'il a le droit de
+faire avant d'essayer. Les jalons suivants — [7-F](phase-7/7-f-console-annonces.md) l'éditeur
+d'annonces avec l'aperçu du téléphone, [7-G](phase-7/7-g-console-statistiques.md) les statistiques,
+[7-H](phase-7/7-h-console-roles.md) les rôles — se construisent dessus.
 
-> **Une refonte est ouverte depuis le 2026-09-14** (jalons [7-E](phase-7/7-e-console-socle.md) à
-> [7-H](phase-7/7-h-console-roles.md) de la phase 7) : un socle standard, des listes filtrables et
-> paginées, un filtre par campus, un tableau de bord, l'éditeur d'annonces avec l'aperçu du téléphone,
-> les statistiques, et des rôles pour l'équipe qui arrive — en quatre jalons, sans release. Ce qui suit
-> décrit la console livrée par 6.1-B, 6.1.x-C et 6.1.x-E ; chaque jalon amende cette section à sa
-> livraison.
+![Le tableau de bord d'arrivée : le parc actif, les sources, les retours ouverts, les annonces](screenshots/console/console-tableau-de-bord.png)
 
 | Page | Ce qu'elle fait |
 |---|---|
-| Sources | l'état des sondes du matin, et depuis quand |
-| Journal | consulter, filtrer par table et par opération, **exporter en JSON** |
-| Retours | ce que les utilisateurs écrivent dans le formulaire, importé toutes les 72 heures ; **reclasser** (nature, état) et **noter** — le reste est ce qui a été dit, en lecture seule |
-| Annonces | créer, modifier, désactiver ; téléverser le visuel — **compressé dans le navigateur et posé avec un cache d'un an** depuis [7-A](phase-7/7-a-bande-passante.md) —, dont l'adresse est versionnée d'elle-même (`?v=N`) ; audience, campus, versions |
-| Messages de service | la même chose pour `service_messages` ; la clé est proposée depuis le titre |
+| Tableau de bord | la page d'arrivée : le **parc actif** par campus, version et plateforme (compté sur `jetons_push`, testeurs exclus, jamais une case sous cinq — [mesure.md](mesure.md#lire-les-chiffres)), l'état des sources, les retours ouverts et les plus récents, les annonces actives et programmées ; quatre cartes indépendantes, chacune avec son squelette, son erreur et son « Réessayer » |
+| Sources | l'état des sondes du matin, et depuis quand ; la place réservée des échecs que l'application mesure (`source.echec`), que [7-G](phase-7/7-g-console-statistiques.md) remplit |
+| Retours | les **retours ouverts par défaut** (`nouveau`, `en attente`), des compteurs par état, nature, campus demandé et par semaine sur les huit dernières, des filtres sur les mêmes axes, la recherche sur le texte ; la fiche rend les **réponses question par question**, et n'écrit que la nature, l'état et la note — le reste est ce qui a été dit |
+| Journal | consulter, filtrer par table — **toutes** les tables journalisées — et par opération, chercher une ligne ou un auteur, paginer avec le total, ouvrir une entrée (avant, après), **exporter en JSON** avec les mêmes filtres |
+| Jetons push | le parc qui recevra les notifications, lu seulement |
+| Annonces | créer, modifier, archiver (statut), désactiver ; téléverser le visuel — réduit et compressé dans le navigateur, sous un **nom d'objet unique** avec un cache d'un an, son **blurhash** posé dans la ligne — ; audience, campus, versions, plateformes |
+| Messages de service | la même chose pour `service_messages` ; la clé est proposée depuis le titre ; « Notifier » |
 | Testeurs | les appareils qui voient l'audience `testeurs`, avec un nom |
 | Visuels, Établissements, Salutations, Bâtiments, Version publiée | l'édition des lignes, avec l'avertissement que chaque table mérite — « une ligne s'écrit entière », les trois états d'un visuel, un champ vide qui ne corrige rien |
 | Compte | qui est connecté, ses droits, changer son mot de passe |
 
+**Toute liste** se trie, se filtre, se cherche et se pagine **côté base** (`.order`, `.eq`, `.ilike`,
+`.range` avec le total exact) ; un **filtre global par campus**, dans la barre, retenu d'une page à
+l'autre sur le poste, s'applique à ce qui porte un code — annonces, messages, jetons push. L'URL porte
+l'état : `#/annonces/<clé>` ouvre une ligne, `#/annonces?q=…&page=2&tri=…&f.audience=testeurs` retient
+la recherche, la page, le tri et les filtres. Une valeur qu'on ne connaît pas — posée hors console —
+s'affiche marquée et se corrige d'un geste ; l'enregistrement la refuse en la nommant. La console se
+parcourt entière au clavier, focus visible, et une ligne s'ouvre à « Entrée ».
+
+**La règle transverse** de 7-E : un chargement ou une erreur ne déplace jamais la mise en page — des
+lignes squelettes à la hauteur des lignes attendues, une erreur qui prend leur place, un bouton en
+attente à largeur fixe, une place réservée aux encarts, une coque présente dès la vérification de
+session, une confirmation avant de quitter un formulaire modifié.
+
 **La liste et le formulaire sont génériques** : un descripteur par table
-([`console/src/schema/tables.ts`](../console/src/schema/tables.ts)) dit les colonnes, leur type de
-saisie, la clé, et ce qu'il faut savoir avant d'écrire. Les conversions entre la saisie et la ligne —
-le vide qui devient nul sauf là où il est une valeur, une version qui refuse de partir hors forme, un
-JSON illisible qui ne part pas — sont pures et jouées par `npm test`.
+([`console/src/schema/tables/`](../console/src/schema/tables/)) dit les colonnes, leur type de
+saisie, la clé, ce qui se filtre, se cherche et se trie, le ciblage par campus, et ce qu'il faut
+savoir avant d'écrire. Le schéma d'un formulaire se **dérive** du descripteur (zod), et la
+cohérence des descripteurs est un test. Les règles pures — la requête d'une liste, l'état dans l'URL,
+les schémas, le nom d'objet, les compteurs, le parc — sont jouées par `npm test`.
 
 **L'authentification** est celle de Supabase, e-mail et mot de passe. La console n'embarque que la
 clé publiable, publique par conception ; ce qui lui permet d'écrire est la session d'un compte dont
 l'e-mail figure dans la table `editeurs`. Un compte qui n'y est pas se connecte, lit ce que la
-console montre, et voit chaque écriture refusée — la page Compte le dit avant qu'il n'essaie. Le
+console montre — et la console **le dit** : « Lecture seule : ce compte n'est pas éditeur » en tête
+de chaque page qui écrit, boutons d'écriture désactivés. Le
 compte se crée et se répare depuis le poste du publieur, avec la clé de service
 (`npm run console:editeur`, [`supabase/README.md`](../supabase/README.md)) ; les inscriptions libres
 sont désactivées dans le projet.
@@ -258,7 +275,9 @@ Une console qui les éditerait à la main détruirait ces garanties.
 Vérifié le 2026-09-03 avec un compte jetable : sans ligne dans `editeurs`, l'insertion est refusée
 (42501) et la table `editeurs` se lit vide ; avec la ligne, l'insertion passe, le compte lit sa
 propre ligne et toutes les lignes de la table — inactives comprises —, la suppression aussi, et le
-journal porte son e-mail. Lancer, construire, déployer : [`console/README.md`](../console/README.md).
+journal porte son e-mail. Rejoué le 2026-09-22 sur la console refondue, par un navigateur piloté, avec
+deux comptes jetables ([7-E, plan de test](phase-7/7-e-console-socle.md#plan-de-test)). Lancer,
+construire, déployer : [`console/README.md`](../console/README.md).
 
 ## Les sondes
 
@@ -440,7 +459,7 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
 | [`shared/ui/Bandeau.tsx`](../src/shared/ui/Bandeau.tsx) | le bandeau flottant d'une information, la seule forme de bandeau de l'application ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ModMenuTesteur.tsx`](../src/shared/ui/ModMenuTesteur.tsx) | le panneau Testeur du menu de développement |
 | [`supabase/fonctions.sql`](../supabase/fonctions.sql) | qui est éditeur, et le journal par déclencheurs |
-| [`console/`](../console/) | la console web : descripteurs, liste et formulaire génériques, pages Sources et Journal ([`console/README.md`](../console/README.md)) |
+| [`console/`](../console/) | la console web : descripteurs, liste et formulaire génériques, tableau de bord, pages Retours, Sources et Journal ([`console/README.md`](../console/README.md)) |
 | [`tools/console/editeur.mjs`](../tools/console/editeur.mjs) | créer le compte éditeur, remplacer son mot de passe, donner ou retirer les droits |
 | [`.github/workflows/console.yml`](../.github/workflows/console.yml) | construire et déployer la console sur GitHub Pages |
 | [`sondes/`](../sondes/) | les sondes du matin : deux Blueprints, le runner Python et son verdict, ses tests ([`sondes/README.md`](../sondes/README.md)) |
@@ -484,7 +503,11 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
 - **Les sondes tournent depuis une adresse américaine** et prouvent qu'un formulaire est
   atteignable, pas qu'il se passe ; elles voient une panne, pas une lenteur ([`sondes/README.md`](../sondes/README.md)).
 - **La console n'est ni hors ligne, ni collaborative** : un éditeur, une session, et le dernier
-  enregistrement gagne. Le journal dit qui a écrit quoi.
+  enregistrement gagne — le verrou contre l'écrasement arrive en [7-H](phase-7/7-h-console-roles.md).
+  Le journal dit qui a écrit quoi.
+- **Le filtre global par campus ne couvre pas les retours ni les bâtiments** : `retours.campus` est le
+  campus demandé, `batiments.campus` un libellé ; chacun a son filtre par page
+  ([7-E](phase-7/7-e-console-socle.md#ce-que-la-réalité-a-corrigé-le-2026-09-22)).
 - **Une annonce ciblée, ou rendue à tous, n'atteint un écran déjà monté qu'au lancement suivant** :
   la lecture se fait au montage de la liste et du tableau de bord, pas au retour au premier plan.
   Les messages de service, eux, arrivent au retour. Défaut inscrit au registre, à corriger dans

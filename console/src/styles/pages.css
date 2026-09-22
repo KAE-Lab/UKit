@@ -1,0 +1,34 @@
+/*
+ * Ce qui n'appartient qu'a une page : le journal et ses differences, les sources, les retours.
+ */
+
+.diff { display: grid; grid-template-columns: 1fr 1fr; gap: var(--espace-md); }
+.diff pre { margin: 0; padding: var(--espace-md); border-radius: var(--rayon-md); background: var(--fond); font-family: var(--mono); font-size: var(--taille-xs); overflow: auto; max-height: 320px; white-space: pre-wrap; }
+.diff .titre { font-size: var(--taille-xs); font-weight: 600; color: var(--texte-2); margin-bottom: 6px; }
+.filtres { display: flex; gap: var(--espace-sm); flex-wrap: wrap; align-items: center; margin-bottom: var(--espace-md); }
+.filtres .espace { flex: 1; }
+details summary { cursor: pointer; }
+details pre { margin: var(--espace-sm) 0 0; padding: var(--espace-sm); border-radius: var(--rayon-sm); background: var(--fond); font-family: var(--mono); font-size: var(--taille-xs); overflow: auto; white-space: pre-wrap; }
+@media (max-width: 640px) { .diff { grid-template-columns: 1fr; } }
+
+/* Les reponses d'un retour, question par question. */
+.questions { display: grid; gap: var(--espace-sm); }
+.question { display: grid; gap: 2px; padding: var(--espace-sm) var(--espace-md); background: var(--fond); border-radius: var(--rayon-md); }
+.question .intitule { font-size: var(--taille-xs); color: var(--texte-2); font-weight: 600; }
+.question .reponse { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Le tableau de bord. */
+.bord { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--espace-md); align-items: start; }
+.bord .carte + .carte { margin-top: 0; }
+.bord .carte { min-height: 220px; display: flex; flex-direction: column; }
+.bord .carte h2 { display: flex; align-items: center; justify-content: space-between; gap: var(--espace-sm); }
+.bord .carte h2 a { font-size: var(--taille-xs); font-weight: 500; }
+.bord .corps { flex: 1; display: grid; align-content: start; gap: var(--espace-sm); }
+.liste-simple { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.liste-simple li { display: flex; gap: var(--espace-sm); align-items: baseline; min-width: 0; }
+.liste-simple li .quand { color: var(--texte-2); font-size: var(--taille-xs); white-space: nowrap; }
+.liste-simple li .texte { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chiffre-cle { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.chiffre-cle small { font-size: var(--taille-sm); font-weight: 500; color: var(--texte-2); margin-left: var(--espace-sm); letter-spacing: 0; }
+.trois-colonnes { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--espace-md); }
+@media (max-width: 640px) { .trois-colonnes { grid-template-columns: 1fr; } }

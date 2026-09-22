@@ -1,15 +1,19 @@
 # Captures d'écran
 
-Les images illustrant la documentation vivent dans ce dossier. Elles sont prises **à la main** sur un
-appareil ou un émulateur : le projet ne dispose d'aucun outillage de capture automatique, et une
-application React Native n'a pas de mode de rendu sans écran.
+Les images illustrant la documentation vivent dans ce dossier. Celles de l'application sont prises
+**à la main** sur un appareil ou un émulateur : le projet ne dispose d'aucun outillage de capture
+automatique, et une application React Native n'a pas de mode de rendu sans écran. Celles de la
+**console web**, dans [`console/`](console/), sont prises par un navigateur piloté (Playwright, Chromium
+1280 px, thème sombre émulé) : une page web se photographie sans main.
 
 Les emplacements attendus sont **répartis dans les documents eux-mêmes**, au point où l'illustration
 sert le propos. Ce fichier ne porte que la convention et l'inventaire de suivi.
 
 ## Convention
 
-- **Nom** : `<domaine>-<ecran>.png`, en minuscules, mots séparés par des tirets.
+- **Nom** : `<domaine>-<ecran>.png`, en minuscules, mots séparés par des tirets. La console préfixe
+  `console-` et vit dans le sous-dossier `console/`, pour ne pas se confondre avec un écran de
+  l'application.
 - **Format** : PNG, appareil en **mode portrait**, thème **clair** par défaut. Une variante sombre se
   suffixe `-dark`.
 - **Largeur** : celle de l'appareil, sans redimensionnement ; pas de cadre de téléphone ajouté.
@@ -164,6 +168,30 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 |---|---|---|
 | `pilotage-bandeau-info.png` | le bandeau flottant d'une information, sous la barre d'état, par-dessus le tableau de bord Campus | attendue |
 | `pilotage-incident.png` | la pastille d'état de service en rouge, à droite du grand titre d'un onglet | attendue |
+
+### Console — [pilotage.md](../pilotage.md#la-console-web), [phase-7/7-e-console-socle.md](../phase-7/7-e-console-socle.md)
+
+Prises le 2026-09-22, sur la console locale, avec un compte jetable ; chaque page en clair, les pages
+d'arrivée dans les deux thèmes, et les états que la règle transverse du jalon 7-E promet.
+
+| Fichier | Contenu | Priorité |
+|---|---|---|
+| `console/console-connexion.png` | la page de connexion | **prise** |
+| `console/console-tableau-de-bord.png` · `-dark` | le tableau de bord d'arrivée, dans les deux thèmes | **prise** |
+| `console/console-tableau-de-bord-erreur.png` | les quatre cartes en erreur, base coupée, chacune avec « Réessayer » | **prise** |
+| `console/console-sources.png` | les sondes, et la place réservée des échecs | **prise** |
+| `console/console-retours.png` · `-dark` | les compteurs et la liste des retours ouverts | **prise** |
+| `console/console-retour-fiche.png` | la fiche d'un retour : les réponses, puis nature, état, note | **prise** |
+| `console/console-journal.png` | le journal, filtres et pagination | **prise** |
+| `console/console-annonces.png` · `-dark` | la liste des annonces, filtres et tri | **prise** |
+| `console/console-annonce-formulaire.png` | le formulaire d'une annonce, l'aperçu au ratio réel | **prise** |
+| `console/console-liste-erreur.png` | une liste dont la lecture a échoué : l'erreur à la place des lignes | **prise** |
+| `console/console-sans-droits.png` | la bannière « Lecture seule » d'un compte sans droits | **prise** |
+| `console/console-valeur-inconnue.png` | une valeur hors liste, proposée et refusée en la nommant | **prise** |
+| `console/console-televersement.png` | un visuel téléversé : poids, blurhash calculé | **prise** |
+| `console/console-garde-de-sortie.png` | la confirmation avant de quitter un formulaire modifié | **prise** |
+| `console/console-mobile.png` · `console-mobile-menu.png` · `console-mobile-dark.png` | sous 800 px : la barre, le menu de navigation | **prise** |
+| `console/console-jetons.png`, `-messages`, `-testeurs`, `-visuels`, `-etablissements`, `-salutations`, `-batiments`, `-version`, `-compte` | chaque autre page, en clair | **prise** |
 
 ### Socle
 

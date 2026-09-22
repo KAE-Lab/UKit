@@ -10,6 +10,43 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
+Le jalon [7-E](docs/phase-7/7-e-console-socle.md), le socle de la console, sur `main` et sans release :
+la console de pilotage refondue sur un socle standard, pour devenir l'outil d'une équipe.
+
+### Ajouté
+
+- **Un tableau de bord d'arrivée** dans la console : le parc actif par campus, version et plateforme
+  (compté sur `jetons_push`, jamais une case sous cinq), l'état des sources, les retours ouverts et
+  les plus récents, les annonces actives et programmées — quatre cartes indépendantes.
+- **Des listes qui aident à travailler** : tri, filtres par page, recherche sur les champs texte,
+  pagination avec le total, côté base ; un **filtre global par campus** dans la barre, retenu d'une
+  page à l'autre ; l'URL qui porte l'état, pour que le retour à la liste garde ses filtres et qu'une
+  ligne ait une adresse.
+- **La page Retours** : les retours ouverts par défaut, des compteurs par état, nature, campus et
+  semaine, et les réponses rendues question par question à la place du JSON brut.
+- **Le téléversement terminé** : un nom d'objet unique (`<dossier>/<identifiant>-<slug>.webp`) — deux
+  annonces qui téléversent `affiche.jpg` n'écrasent plus le même objet —, le blurhash calculé et posé
+  dans la ligne, un aperçu au ratio réel.
+- **Une valeur inconnue se voit et se corrige** : une énumération ou un code de campus posés hors
+  console s'affichent marqués, et l'enregistrement les refuse en les nommant.
+- **Le clavier** : toute la console se parcourt à la tabulation, focus visible, une ligne s'ouvre à
+  « Entrée » ; sous 800 px, la navigation devient un menu.
+- **Des tests de la console** : la cohérence des descripteurs, les schémas, la requête d'une liste,
+  l'état dans l'URL, la traduction des erreurs, le nom d'objet, les compteurs, le parc.
+
+### Modifié
+
+- **La console ne ment plus** : une lecture en échec montre l'erreur à la place des lignes avec
+  « Réessayer » — plus jamais « Lecture… » pour toujours —, la vérification de session montre la coque
+  et un squelette — plus jamais une page blanche —, un compte sans droits lit « Lecture seule » en
+  tête de chaque page qui écrit, seul le bouton pressé passe en attente, à largeur fixe, un formulaire
+  modifié qu'on quitte demande confirmation, les encarts ont une place réservée qui ne pousse rien, le
+  filtre du journal propose toutes les tables journalisées.
+- **Une seule politique de reprise** pour les lectures de la console : celle de `postgrest-js` est
+  coupée, une base coupée se dit en deux secondes au lieu de quinze.
+- **L'intégration continue** installe la console dans le job « application », dont les tests jouent
+  aussi ceux de la console.
+
 ## [6.2.2] - 2026-09-21
 
 Le jalon [7-C](docs/phase-7/7-c-economie-et-socle.md), économie et socle : une version courte, rendue

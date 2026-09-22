@@ -17,6 +17,10 @@ export type Ligne = Record<string, unknown>;
 
 export const supabase = createClient(__SUPABASE_URL__, __SUPABASE_ANON_KEY__, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+    // Une seule politique de reprise, celle de TanStack Query (requetes/client.ts). postgrest-js
+    // rejoue sinon trois fois un echec reseau (1 s, 2 s, 4 s) avant de le rendre : une base coupee
+    // mettait quinze secondes a se dire, devant un squelette (mesure au jalon 7-E).
+    db: { retry: false },
 });
 
 /** Le nom du projet, pour le pied de page : l'hote sans son protocole. */

@@ -2,17 +2,21 @@
  * La page du compte : qui est connecte, ses droits, changer son mot de passe, se deconnecter.
  */
 
+import { KeyRound, LogOut } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 
+import { Bouton } from '../composants/ui/Bouton';
+import { Encart, PlaceDEncart, type RetourDeGeste } from '../composants/ui/Encart';
+import { SqueletteTexte } from '../composants/ui/Squelette';
 import { supabase } from '../supabase';
-import { Bouton } from '../composants/Bouton';
-import { Retour } from '../composants/Retour';
-import { seDeconnecter, type Session } from './useSession';
+import type { Session } from './session';
+import { seDeconnecter } from './useSession';
 
 export function Compte({ session }: { readonly session: Session }) {
     const [motDePasse, setMotDePasse] = useState('');
     const [confirmation, setConfirmation] = useState('');
-    const [retour, setRetour] = useState<{ ton: 'ok' | 'erreur'; texte: string } | null>(null);
+    const [retour, setRetour] = useState<RetourDeGeste | null>(null);
+    const [enCours, setEnCours] = useState(false);
 
     const changer = async (evenement: FormEvent) => {
         evenement.preventDefault();
@@ -20,7 +24,9 @@ export function Compte({ session }: { readonly session: Session }) {
             setRetour({ ton: 'erreur', texte: 'Les deux saisies ne correspondent pas.' });
             return;
         }
+        setEnCours(true);
         const { error } = await supabase.auth.updateUser({ password: motDePasse });
+        setEnCours(false);
         if (error !== null) {
             setRetour({ ton: 'erreur', texte: `Mot de passe non changé : ${error.message}` });
             return;
@@ -32,14 +38,16 @@ export function Compte({ session }: { readonly session: Session }) {
 
     return (
         <>
-            <div className="entete-page"><h1>Compte</h1></div>
+            <div className="entete-page"><div><h1>Compte</h1><p className="sous-titre">Qui est connecté, et ce qu’il a le droit de faire.</p></div></div>
             <div className="carte">
                 <h2>{session.email}</h2>
-                {session.editeur === null ? <p className="secondaire">Vérification des droits…</p> : null}
-                {session.editeur === true ? <Retour ton="ok">Ce compte est éditeur : il peut écrire dans les tables publiables, et chaque écriture est journalisée.</Retour> : null}
-                {session.editeur === false ? <Retour ton="erreur">Ce compte n’est pas dans la table des éditeurs : il peut lire ce que la console montre, et chaque écriture lui sera refusée.</Retour> : null}
+                <div className="place-encart">
+                    {session.editeur === null ? <SqueletteTexte largeur="50%" /> : null}
+                    {session.editeur === true ? <Encart ton="ok">Ce compte est éditeur : il peut écrire dans les tables publiables, et chaque écriture est journalisée.</Encart> : null}
+                    {session.editeur === false ? <Encart ton="erreur">Ce compte n’est pas dans la table des éditeurs : il peut lire ce que la console montre, et chaque écriture lui sera refusée.</Encart> : null}
+                </div>
                 <div className="boutons">
-                    <Bouton variante="tonal" onClick={() => { void seDeconnecter(); }}>Se déconnecter</Bouton>
+                    <Bouton variante="tonal" onClick={() => { void seDeconnecter(); }} icone={<LogOut className="icone" aria-hidden="true" />}>Se déconnecter</Bouton>
                 </div>
             </div>
             <form className="carte formulaire" onSubmit={(evenement) => { void changer(evenement); }}>
@@ -55,8 +63,8 @@ export function Compte({ session }: { readonly session: Session }) {
                         <input id="confirmation" type="password" autoComplete="new-password" minLength={12} value={confirmation} onChange={(e) => setConfirmation(e.target.value)} required />
                     </div>
                 </div>
-                {retour !== null ? <Retour ton={retour.ton}>{retour.texte}</Retour> : null}
-                <div className="boutons"><Bouton variante="plein" type="submit">Changer</Bouton></div>
+                <PlaceDEncart retour={retour} />
+                <div className="boutons"><Bouton variante="plein" type="submit" enAttente={enCours} icone={<KeyRound className="icone" aria-hidden="true" />}>Changer</Bouton></div>
             </form>
         </>
     );

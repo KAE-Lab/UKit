@@ -1,46 +1,47 @@
 /**
- * La page generique d'une ressource : la liste, et le formulaire d'une ligne ou d'une ligne neuve.
+ * La page generique d'une ressource : la liste, ou le formulaire d'une ligne (`/<chemin>/<cle>`)
+ * ou d'une ligne neuve (`/<chemin>/nouveau`). L'URL porte l'etat : recharger garde la page, et le
+ * retour a la liste garde ses filtres.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 
+import { useDroits } from '../auth/session';
+import { LectureSeule } from '../composants/LectureSeule';
+import { Formulaire } from '../composants/formulaire/Formulaire';
+import { ListeDeRessource } from '../composants/liste/ListeDeRessource';
+import { Bouton } from '../composants/ui/Bouton';
+import { Encart } from '../composants/ui/Encart';
+import { ErreurDeLecture } from '../composants/ui/ErreurDeLecture';
+import { EtatVide } from '../composants/ui/EtatVide';
+import { SqueletteBloc, SqueletteTexte } from '../composants/ui/Squelette';
+import { useLigne } from '../requetes/useListe';
+import { cleDepuisUrl, cleVersUrl, type Descripteur } from '../schema/descripteurs';
+import { naviguer, useRoute } from '../routeur';
 import type { Ligne } from '../supabase';
-import { lister, listerEtablissements, messageDErreur, type EtablissementConnu } from '../lib/base';
-import type { Descripteur } from '../schema/descripteurs';
-import { Bouton } from '../composants/Bouton';
-import { Formulaire } from '../composants/Formulaire';
-import { Liste } from '../composants/Liste';
-import { Retour } from '../composants/Retour';
 
-type Selection = { readonly mode: 'liste' } | { readonly mode: 'nouveau' } | { readonly mode: 'ligne'; readonly ligne: Ligne };
+export const NOUVEAU = 'nouveau';
 
-export function Ressource({ descripteur }: { readonly descripteur: Descripteur }) {
-    const [lignes, setLignes] = useState<readonly Ligne[] | null>(null);
-    const [etablissements, setEtablissements] = useState<readonly EtablissementConnu[]>([]);
-    const [erreur, setErreur] = useState<string | null>(null);
-    const [selection, setSelection] = useState<Selection>({ mode: 'liste' });
+/** Le formulaire d'une ligne lue par sa cle : squelette, puis la ligne, ou son absence. */
+function LigneExistante({ descripteur, segment, retour, onEnregistre }: { readonly descripteur: Descripteur; readonly segment: string; readonly retour: () => void; readonly onEnregistre: (ligne: Ligne) => void }) {
+    const cle = cleDepuisUrl(descripteur, segment);
+    const requete = useLigne(descripteur, cle);
+    if (cle === null || (requete.isSuccess && requete.data === null)) {
+        return <div className="carte"><EtatVide>Cette ligne n’existe pas, ou plus.</EtatVide><div className="boutons" style={{ justifyContent: 'center' }}><Bouton variante="tonal" onClick={retour}>Retour à la liste</Bouton></div></div>;
+    }
+    if (requete.isError) return <div className="carte"><ErreurDeLecture erreur={requete.error} reessayer={() => { void requete.refetch(); }} enCours={requete.isFetching} /></div>;
+    if (requete.data === undefined || requete.data === null) {
+        return <div className="carte formulaire" aria-busy="true"><SqueletteTexte largeur="30%" /><SqueletteBloc hauteur={40} /><SqueletteBloc hauteur={40} /><SqueletteBloc hauteur={120} /><SqueletteBloc hauteur={40} /></div>;
+    }
+    return <Formulaire key={segment} descripteur={descripteur} existante={requete.data} onEnregistre={onEnregistre} onSupprime={retour} onAnnule={retour} />;
+}
 
-    const charger = useCallback(async () => {
-        setErreur(null);
-        try {
-            setLignes(await lister(descripteur));
-        } catch (echec) {
-            setErreur(messageDErreur(echec));
-        }
-    }, [descripteur]);
-
-    useEffect(() => {
-        setSelection({ mode: 'liste' });
-        setLignes(null);
-        void charger();
-        // Le catalogue sert aux cases du ciblage ; un echec ici n'empeche pas d'editer le reste.
-        void listerEtablissements().then(setEtablissements).catch(() => setEtablissements([]));
-    }, [charger]);
-
-    const retourALaListe = () => {
-        setSelection({ mode: 'liste' });
-        void charger();
-    };
+export function Ressource({ descripteur, reste }: { readonly descripteur: Descripteur; readonly reste: string | null }) {
+    const droits = useDroits();
+    const { params } = useRoute();
+    const chemin = `/${descripteur.chemin}`;
+    const retourALaListe = () => naviguer(chemin, params);
+    const apresEcriture = (ligne: Ligne) => naviguer(`${chemin}/${cleVersUrl(descripteur, ligne)}`, params, { remplacer: true });
 
     return (
         <>
@@ -49,25 +50,18 @@ export function Ressource({ descripteur }: { readonly descripteur: Descripteur }
                     <h1>{descripteur.titre}</h1>
                     <p className="sous-titre">{descripteur.description}</p>
                 </div>
-                {selection.mode === 'liste' && descripteur.creation !== false ? (
-                    <Bouton variante="plein" onClick={() => setSelection({ mode: 'nouveau' })}>Nouvelle ligne</Bouton>
+                {reste === null && descripteur.creation !== false ? (
+                    <Bouton variante="plein" disabled={droits === false} onClick={() => naviguer(`${chemin}/${NOUVEAU}`, params)} icone={<Plus className="icone" aria-hidden="true" />}>Nouvelle ligne</Bouton>
                 ) : null}
             </div>
-            {descripteur.avertissement !== undefined ? <div className="carte"><Retour ton="avert">{descripteur.avertissement}</Retour></div> : null}
-            {erreur !== null ? <div className="carte"><Retour ton="erreur">{erreur}</Retour></div> : null}
-            {selection.mode === 'liste' ? (
-                <div className="carte">
-                    {lignes === null ? <p className="secondaire">Lecture…</p> : <Liste descripteur={descripteur} lignes={lignes} onChoisir={(ligne) => setSelection({ mode: 'ligne', ligne })} />}
-                </div>
+            {descripteur.creation !== false || descripteur.table === 'retours' ? <LectureSeule /> : null}
+            {descripteur.avertissement !== undefined ? <div className="carte compacte" style={{ marginBottom: 'var(--espace-md)' }}><Encart ton="avert">{descripteur.avertissement}</Encart></div> : null}
+            {reste === null ? (
+                <div className="carte"><ListeDeRessource descripteur={descripteur} lienDe={(ligne) => `${chemin}/${cleVersUrl(descripteur, ligne)}${params.size > 0 ? `?${params.toString()}` : ''}`} /></div>
+            ) : reste === NOUVEAU ? (
+                <Formulaire descripteur={descripteur} existante={null} onEnregistre={apresEcriture} onSupprime={retourALaListe} onAnnule={retourALaListe} />
             ) : (
-                <Formulaire
-                    descripteur={descripteur}
-                    existante={selection.mode === 'ligne' ? selection.ligne : null}
-                    etablissements={etablissements}
-                    onEnregistre={(ligne) => setSelection({ mode: 'ligne', ligne })}
-                    onSupprime={retourALaListe}
-                    onAnnule={retourALaListe}
-                />
+                <LigneExistante descripteur={descripteur} segment={reste} retour={retourALaListe} onEnregistre={apresEcriture} />
             )}
         </>
     );

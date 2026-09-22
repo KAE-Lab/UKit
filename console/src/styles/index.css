@@ -1,0 +1,8 @@
+/* L'ordre importe : les tokens d'abord, la base, puis les surfaces que les pages composent. */
+@import './tokens.css';
+@import './base.css';
+@import './coque.css';
+@import './surfaces.css';
+@import './tableau.css';
+@import './formulaire.css';
+@import './pages.css';

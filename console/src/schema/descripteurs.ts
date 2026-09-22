@@ -2,8 +2,10 @@
  * Le vocabulaire des descripteurs : ce que la console sait d'une table, et rien de plus.
  *
  * Un descripteur dit quelles colonnes une table porte, comment chacune se saisit, laquelle est la
- * cle, lesquelles se montrent en liste, et ce qu'il faut savoir avant d'ecrire une ligne. C'est le
- * schema de la console : la liste et le formulaire sont generiques et ne connaissent aucune table.
+ * cle, lesquelles se montrent en liste, lesquelles se filtrent, se cherchent et se trient, et ce
+ * qu'il faut savoir avant d'ecrire une ligne. C'est le schema de la console : la liste et le
+ * formulaire sont generiques et ne connaissent aucune table. Sa coherence — chaque nom cite designe
+ * un champ reel — est verifiee par coherence.test.ts.
  *
  * Il ne dit rien de ce que l'application fait de la donnee — ca, c'est la documentation de la
  * table, dans docs/backend.md et supabase/schema.sql, que chaque descripteur cite.
@@ -31,7 +33,11 @@ export type TypeDeChamp =
     | { readonly type: 'etablissements' }
     | { readonly type: 'version' }
     | { readonly type: 'uuid' }
-    | { readonly type: 'image'; readonly dossier: string | ((ligne: Ligne) => string) };
+    /**
+     * Une image du bucket `media`, televersee depuis le formulaire. `blurhash` nomme la colonne soeur
+     * qui recoit le placeholder calcule au televersement, quand la table en porte une (annonces).
+     */
+    | { readonly type: 'image'; readonly dossier: string | ((ligne: Ligne) => string); readonly blurhash?: string };
 
 export interface Champ {
     readonly nom: string;
@@ -40,6 +46,8 @@ export interface Champ {
     readonly aide?: string;
     readonly obligatoire?: boolean;
     readonly lectureSeule?: boolean;
+    /** Ni montre ni saisi, mais envoye : une colonne que le formulaire remplit lui-meme (le blurhash). */
+    readonly cache?: boolean;
     /** La valeur d'une ligne neuve. Une fonction quand elle se calcule (« maintenant »). */
     readonly defaut?: unknown;
     /** La chaine vide est une valeur, pas une absence — `visuels.image_url` : « aucune image ». */
@@ -58,6 +66,15 @@ export interface ActionDeLigne {
     readonly executer: (ligne: Ligne) => Promise<string>;
 }
 
+/**
+ * Comment le filtre global par campus s'applique a la table : sur un ciblage (`etablissements`,
+ * tableau nul pour « tous », qui reste visible), ou sur un code d'etablissement (`jetons_push`).
+ */
+export interface FiltreDeCampus {
+    readonly type: 'ciblage' | 'code';
+    readonly colonne: string;
+}
+
 export interface Descripteur {
     /** Le segment d'URL de la page, et l'identifiant de navigation. */
     readonly chemin: string;
@@ -70,6 +87,13 @@ export interface Descripteur {
     /** Les colonnes affichees en liste, dans l'ordre. */
     readonly liste: readonly string[];
     readonly tri?: { readonly colonne: string; readonly desc?: boolean };
+    /** Les champs a choix ou booleens proposes en filtre au-dessus de la liste. */
+    readonly filtres?: readonly string[];
+    /** Les colonnes texte que la recherche parcourt (`ilike`). */
+    readonly recherche?: readonly string[];
+    /** Les colonnes triables ; par defaut, celles de la liste dont le type se trie. */
+    readonly triables?: readonly string[];
+    readonly campus?: FiltreDeCampus;
     /** Ce qu'il faut savoir avant d'ecrire : « une ligne s'ecrit entiere », les trois etats d'un visuel. */
     readonly avertissement?: string;
     readonly creation?: boolean;
@@ -91,7 +115,7 @@ export const CIBLAGE: readonly Champ[] = [
     {
         nom: 'audience',
         libelle: 'Audience',
-        type: { type: 'choix', options: [{ valeur: 'tous', libelle: 'Tout le monde' }, { valeur: 'testeurs', libelle: 'Les testeurs seulement' }] },
+        type: { type: 'choix', options: [{ valeur: 'tous', libelle: 'Tout le monde' }, { valeur: 'testeurs', libelle: 'Les testeurs seulement', ton: 'avert' }] },
         defaut: 'tous',
         aide: 'Les testeurs sont les appareils enregistrés dans la table Testeurs : de quoi regarder un contenu sur son téléphone avant de l’envoyer à tout le monde.',
     },
@@ -111,13 +135,43 @@ export const CIBLAGE: readonly Champ[] = [
     },
 ];
 
+/** Le ciblage par campus des annonces et des messages, pour le filtre global. */
+export const CAMPUS_PAR_CIBLAGE: FiltreDeCampus = { type: 'ciblage', colonne: 'etablissements' };
+
 export function champDe(descripteur: Descripteur, nom: string): Champ | undefined {
     return descripteur.champs.find((champ) => champ.nom === nom);
+}
+
+/** Les types dont la valeur se trie en base ; un JSON, une image ou un tableau ne se trient pas. */
+const TYPES_TRIABLES: ReadonlySet<string> = new Set(['texte', 'zone', 'booleen', 'nombre', 'date', 'choix', 'version', 'uuid']);
+
+export function colonnesTriables(descripteur: Descripteur): readonly string[] {
+    if (descripteur.triables !== undefined) return descripteur.triables;
+    return descripteur.liste.filter((nom) => {
+        const champ = champDe(descripteur, nom);
+        return champ !== undefined && TYPES_TRIABLES.has(champ.type.type);
+    });
 }
 
 /** La cle d'une ligne, ses colonnes jointes par `/` — la meme forme que `journal.ligne_id`. */
 export function cleDeLigne(descripteur: Descripteur, ligne: Ligne): string {
     return descripteur.cle.map((colonne) => String(ligne[colonne] ?? '')).join('/');
+}
+
+/** La cle telle qu'elle voyage dans l'URL : chaque colonne encodee a part, `/` reste le separateur. */
+export function cleVersUrl(descripteur: Descripteur, ligne: Ligne): string {
+    return descripteur.cle.map((colonne) => encodeURIComponent(String(ligne[colonne] ?? ''))).join('/');
+}
+
+/** L'inverse : le filtre d'une ligne depuis le segment d'URL, ou `null` si la forme ne colle pas. */
+export function cleDepuisUrl(descripteur: Descripteur, segment: string): Ligne | null {
+    const parts = segment.split('/');
+    if (parts.length !== descripteur.cle.length) return null;
+    try {
+        return Object.fromEntries(descripteur.cle.map((colonne, index) => [colonne, decodeURIComponent(parts[index] ?? '')]));
+    } catch {
+        return null;
+    }
 }
 
 export function valeurParDefaut(champ: Champ): unknown {
