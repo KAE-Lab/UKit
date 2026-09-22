@@ -4,8 +4,8 @@
 > de bord, le téléversement, les tests, la documentation et les captures ; ouvert le 2026-09-22 sur la
 > branche `feat/console-socle`, depuis `main`. Le [plan de test](#plan-de-test) a été joué sur la console
 > locale par un navigateur piloté (Playwright), avec deux comptes jetables, puis sur la console déployée ;
-> le [protocole « plateformes »](#le-protocole--plateformes-) se joue avec le propriétaire du produit sur
-> les deux appareils. Ce que la réalité a corrigé du texte ci-dessous est dans
+> le [protocole « plateformes »](#le-protocole--plateformes-) joué le jour même par le propriétaire du
+> produit sur les deux appareils, conforme au code. Ce que la réalité a corrigé du texte ci-dessous est dans
 > [Ce que la réalité a corrigé](#ce-que-la-réalité-a-corrigé-le-2026-09-22).
 >
 > **Spécification, ouverte le 2026-09-14.** Aucune publication : la console se déploie
@@ -277,8 +277,25 @@ un appareil non enregistré —, et elle se **reproduit** avant de se corriger :
 Le résultat s'écrit ici. Si un cas contredit le code, c'est un défaut, et il s'inscrit au
 [registre](../defauts-fonctionnels.md).
 
-*Résultat :* **à jouer avec le propriétaire du produit**, sur la console déployée, les quatre messages
-publiés en `audience` voulue puis retirés — écrit ici à la fin de la session.
+*Résultat, le 2026-09-22*, cinq messages d'information publiés en base puis retirés, joués par le
+propriétaire du produit sur les builds de développement des deux appareils, Metro servi depuis `main`
+(l'application se dit 6.2.2), les cinq lus par l'application (`[messages] 5 message(s) en ligne`) :
+
+| Message | iPhone 13 Pro | Galaxy A8 |
+|---|---|---|
+| A — `tous`, sans plateforme | vu | vu |
+| B — `testeurs`, sans plateforme | vu (appareil enregistré) | vu (appareil enregistré) |
+| C — `{ios}` | vu | — |
+| D — `{android}` | — | vu |
+| E — `version_max = 6.2.1` | — | — |
+
+**Le code a raison** : un message sans plateforme atteint les deux, et chaque cas fait ce que
+[`ciblage.ts`](../../src/shared/ciblage/ciblage.ts) dit. L'ordre d'apparition — C, B, A sur l'iPhone,
+D, B, A sur l'Android — est celui de la règle de présentation, le plus récent d'abord
+([pilotage.md](../pilotage.md#une-chose-à-la-fois)). L'observation d'origine ne se reproduit pas ;
+rien n'entre au registre. Ce qui reste plausible pour l'expliquer, et qui ne se reproduit pas non
+plus ici : un message publié en audience `testeurs` regardé sur un appareil non enregistré, ou lu
+avant qu'un appareil n'ait rafraîchi.
 
 ### Les tests
 
@@ -345,7 +362,8 @@ supprimés après. Aucune erreur de console dans les deux thèmes. Point par poi
    et objets supprimés après.*
 6. *Les compteurs : 53 retours, 53 « nouveau », par nature 10 / 9 / 24 / 10 — égaux au décompte de
    la table par l'API.*
-7. *Le protocole « plateformes » : avec le propriétaire du produit, sur les appareils.*
+7. *Le protocole « plateformes », joué le jour même sur les deux appareils : conforme au code, cas par
+   cas ([le protocole](#le-protocole--plateformes-)).*
 8. *Une ligne s'ouvre à « Entrée » ; la tabulation visite la navigation, les filtres, les en-têtes de
    tri, les lignes et les boutons, focus visible ; un formulaire modifié qu'on quitte demande
    confirmation, « Annuler » garde la page, « Quitter » revient à la liste.*
