@@ -36,6 +36,8 @@ alter table public.app_release      enable row level security;
 alter table public.salutations      enable row level security;
 alter table public.testeurs         enable row level security;
 alter table public.jetons_push      enable row level security;
+alter table public.evenements_connus enable row level security;
+alter table public.mesures          enable row level security;
 alter table public.sondes           enable row level security;
 alter table public.journal          enable row level security;
 alter table public.editeurs         enable row level security;
@@ -153,7 +155,8 @@ create policy "sondes lisibles"
 revoke insert, update, delete on all tables in schema public from anon;
 -- Et la lecture de ce qui ne le regarde pas. Sans politique, RLS rendrait une liste vide plutot
 -- qu'un refus : le refus dit la verite, la liste vide fait croire a une table vide.
-revoke select on public.journal, public.editeurs, public.retours, public.jetons_push from anon;
+revoke select on public.journal, public.editeurs, public.retours, public.jetons_push,
+    public.evenements_connus, public.mesures from anon;
 
 do $$
 declare
@@ -197,6 +200,25 @@ $$;
 drop policy if exists "jetons lisibles par les editeurs" on public.jetons_push;
 create policy "jetons lisibles par les editeurs"
     on public.jetons_push for select
+    to authenticated
+    using (private.est_editeur());
+
+-- La mesure (7-D) : l'application ecrit par la seule fonction `compter` (fonctions.sql), jamais par
+-- la table ; `anon` n'y a aucun privilege. Les editeurs lisent les compteurs et leur vocabulaire —
+-- les tableaux de la console (7-G) — et ne les ecrivent pas : `revoke` du privilege, parce qu'une
+-- table nouvelle nait avec tous les privileges accordes aux trois roles, et que `mesures` n'est pas
+-- une table publiable — ni journal, ni ecriture depuis la console.
+revoke insert, update, delete on public.evenements_connus, public.mesures from authenticated;
+
+drop policy if exists "evenements connus lisibles par les editeurs" on public.evenements_connus;
+create policy "evenements connus lisibles par les editeurs"
+    on public.evenements_connus for select
+    to authenticated
+    using (private.est_editeur());
+
+drop policy if exists "mesures lisibles par les editeurs" on public.mesures;
+create policy "mesures lisibles par les editeurs"
+    on public.mesures for select
     to authenticated
     using (private.est_editeur());
 

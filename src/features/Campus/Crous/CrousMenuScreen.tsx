@@ -9,6 +9,7 @@ import style, { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import type { UkitFailure } from '../../../shared/aetherius';
+import { compter } from '../../../shared/mesure';
 import { CampusFailureNotice } from '../components/CampusLayoutComponents';
 import { CampusMapSection } from '../components/CampusMapSection';
 import { CampusSectionHeader } from '../components/CampusSectionHeader';
@@ -241,6 +242,8 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
     // Le titre vient du navigateur (« Menu », neutre, comme toute sous-page) : l'ecran surchargeait
     // le sien en violet, seul de la pile — le nom du restaurant, lui, vit dans le bandeau.
     useEffect(() => {
+        // La fiche ouverte compte (7-D), par le code Croustillant du restaurant.
+        compter('resto.ouverture', restaurantId);
         loadMenu();
     }, []);
 

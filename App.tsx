@@ -18,6 +18,7 @@ import {
 import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
 import { armerLEntretien } from './src/shared/services/entretien';
+import { armerLaMesure } from './src/shared/mesure';
 import { armerLaReception } from './src/shared/push/reception';
 import { marquer } from './src/shared/services/Chrono';
 import { restaurerLesSimulations } from './src/shared/services/simulations';
@@ -95,6 +96,9 @@ function AnimatedAppLoader({ children }) {
 				// L'entretien — la tache de fond armee selon le reglage, et la synchronisation du
 				// lancement si la derniere date de plus de douze heures (shared/services/entretien).
 				armerLEntretien();
+				// La mesure anonyme (shared/mesure) : la session du lancement se compte en memoire, et rien
+				// ne part au demarrage — la file s'envoie a l'arriere-plan et a l'entretien, apres lui.
+				armerLaMesure();
 				// Une notification push ouverte mene a la feuille de son message (shared/push/reception).
 				armerLaReception();
 

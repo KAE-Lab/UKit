@@ -15,7 +15,7 @@
  * navigation, rien n'est recharge (docs/features/campus-vie-etudiante.md).
  */
 
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, Animated, TouchableOpacity, Linking, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
@@ -33,6 +33,7 @@ import { DescriptionAnnonce } from './DescriptionAnnonce';
 import { GlypheFiligrane } from '../../../shared/ui/GlypheFiligrane';
 import { teinteDAnnonce } from './PastilleEmetteur';
 import { BdeAnnonce } from '../services/BdeService';
+import { compter } from '../../../shared/mesure';
 
 export interface BdeDetailsRouteParams {
     annonce?: BdeAnnonce;
@@ -118,6 +119,8 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
 
     // Avant le retour conditionnel : les hooks se declarent inconditionnellement.
     const [imageOuverte, setImageOuverte] = useState<number | null>(null);
+    // La fiche ouverte compte (7-D) : au montage, une fois par ouverture ; l'action, au toucher.
+    useEffect(() => { if (annonce) compter('annonce.ouverture', annonce.id); }, []);
 
     if (!annonce) return null;
 
@@ -136,6 +139,7 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
     const handlePressCTA = () => {
         const lien = annonce.cta_link;
         if (!lien) return;
+        compter('annonce.action', annonce.id);
         // Le web s'ouvre dans l'application, le reste (mailto, tel) part vers le systeme.
         if (lien.startsWith('http')) return navigation.navigate('WebBrowser', { href: lien });
         Linking.openURL(lien).catch(() => undefined);

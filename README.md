@@ -57,10 +57,11 @@ Trois principes portent le projet :
   annonces, référentiels, fichiers d'instructions — jamais ce qui appartient à l'utilisateur. Les
   requêtes qui l'atteignent sont anonymes et en lecture seule, et l'application **fonctionne sans
   jamais la joindre** : tout ce qu'elle publie existe déjà dans le binaire, et n'y est que mis à
-  jour. C'est un point de publication, pas une dorsale. Une seule chose remonte de l'appareil,
-  depuis 6.1.x-E, et elle se coupe d'un interrupteur : le jeton de notification, avec le campus,
-  la version et la plateforme qu'il faut pour ne notifier que les appareils concernés — dit dans
-  [PRIVACY.md](PRIVACY.md).
+  jour. C'est un point de publication, pas une dorsale. Deux choses remontent de l'appareil, et
+  chacune se coupe d'un interrupteur : le jeton de notification (6.1.x-E), avec le campus, la version
+  et la plateforme qu'il faut pour ne notifier que les appareils concernés ; et, depuis 7-D, des
+  **nombres** — combien d'ouvertures, d'onglets vus, d'annonces ouvertes, par jour et par campus —,
+  jamais qui. Les deux sont dits dans [PRIVACY.md](PRIVACY.md).
   → [docs/backend.md](docs/backend.md)
 - **Un socle lisible.** Découpage par domaine de navigation, TypeScript partout, tokens de design,
   aucune chaîne en dur : le code doit pouvoir être repris sans contexte oral.
@@ -244,7 +245,7 @@ livré ; elle est mise à jour à chaque contribution.
   il **ancre le bloc sous l'en-tête** plutôt que de le centrer : centrer demanderait de connaître ce
   qui occupe le bas de chaque écran. L'application **tutoie** partout, et les avertissements ESLint
   sont passés de 79 à 53.
-- [x] **Internationalisation** — français, anglais, espagnol ; 390 clés par dictionnaire, typage de
+- [x] **Internationalisation** — français, anglais, espagnol ; 424 clés par dictionnaire, typage de
   la clé, locale des dates alignée. **Plus aucune chaîne visible en dur ni clé manquante** : les
   treize libellés Campus qui manquaient sont traduits, et les casts qui les masquaient au compilateur
   sont retirés. [docs/i18n.md](docs/i18n.md)
@@ -341,6 +342,16 @@ livré ; elle est mise à jour à chaque contribution.
   règle que l'appareil, application fermée. C'est la première écriture de l'application vers la
   base — un jeton, et de quoi le cibler, rien d'autre —, et un interrupteur la retire.
   [docs/pilotage.md](docs/pilotage.md)
+- [x] **La mesure, sans suivre personne** (7-D) — l'application compte son usage : une ouverture, un
+  onglet vu, une annonce vue, ouverte ou dont le bouton est touché, un restaurant, une bibliothèque ou
+  un bâtiment consulté, la vue du Planning, une connexion universitaire aboutie ou refusée, une source
+  qui n'a pas répondu, et l'état des réglages à chaque session. Ce qui part est un **nombre** par jour —
+  par heure pour les sessions —, par campus, par version et par plateforme, jamais un identifiant ni
+  un texte saisi ; la file part au passage en arrière-plan et à l'entretien, jamais au démarrage, vers
+  une fonction de la base qui agrège et rejette ce qui sort du vocabulaire. Un interrupteur
+  « Statistiques anonymes », actif par défaut, arrête le comptage et vide la file. C'est la seconde
+  écriture de l'application vers la base, et ses premiers chiffres sont la ligne de base de la 6.3.
+  [docs/mesure.md](docs/mesure.md)
 - [x] **Les attentes des portails, mesurées** (6.1-D) — neuf Blueprints de portail portaient **60 s
   de pauses aveugles**, calées à la main sur le pire cas du jour où elles avaient été écrites, alors
   que le travail réel de chacun tient en une à deux secondes. Elles sont désormais **chronométrées**,
@@ -545,6 +556,7 @@ document.
 | [docs/blueprints.md](docs/blueprints.md) | les fichiers d'instructions : frontière, écriture, publication d'une correction |
 | [docs/backend.md](docs/backend.md) | la base de publication : schéma, politiques, clés, limites |
 | [docs/pilotage.md](docs/pilotage.md) | le pilotage à distance : messages de service, audience testeurs, ciblage, journal, console, sondes |
+| [docs/mesure.md](docs/mesure.md) | la mesure anonyme : le principe, les trois lecteurs, le vocabulaire et sa règle, lire les chiffres, les petites cases |
 | [docs/adaptation-campus.md](docs/adaptation-campus.md) | adapter un nouveau campus : ce qui se mesure sans compte, le compte prêté et son engagement, l'ordre de publication |
 | [docs/phase-6/](docs/phase-6/README.md) | le cadrage de la migration vers les Blueprints, jalon par jalon |
 | [docs/phase-7/](docs/phase-7/README.md) | de l'application au produit : les décisions d'après la 6.2.1, les publications 6.2.2 à 6.4, les jalons et leur état |

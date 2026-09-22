@@ -10,6 +10,42 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
+Le jalon [7-D](docs/phase-7/7-d-la-mesure.md), la mesure, en premier sur la branche `v6.3` : des
+compteurs anonymes, sans identifiant, avec un interrupteur, et jamais de réseau au démarrage.
+
+### Ajouté
+
+- **L'application compte son usage sans suivre personne.** Une ouverture, un onglet vu, une annonce
+  vue, ouverte ou dont le bouton est touché, un restaurant, une bibliothèque ou un bâtiment consulté,
+  la vue du Planning, une connexion universitaire aboutie ou refusée, une source qui n'a pas répondu,
+  et l'état des quatre réglages à chaque session : seize événements, un vocabulaire fermé
+  ([docs/mesure.md](docs/mesure.md)). Ce qui part vers la base est un **nombre** par jour — par
+  heure pour les sessions, les onglets et les échecs de source —, par campus, version, plateforme et
+  statut de testeur. Aucun identifiant, aucun contenu saisi.
+- **Une file locale, et un envoi groupé.** Les compteurs s'accumulent dans `mesures@1`, bornée à
+  500 lignes, et partent par lots de 200 au passage en arrière-plan et à l'entretien — jamais au
+  lancement — vers la fonction `compter` de la base, qui agrège par `on conflict` et ignore, en les
+  comptant, les éléments hors vocabulaire ou hors bornes.
+- **Un interrupteur « Statistiques anonymes »**, dans une section Confidentialité des Réglages, actif
+  par défaut : le couper arrête le comptage et vide la file ; la réinitialisation le remet actif.
+- **La base** : les tables `evenements_connus` et `mesures`, la fonction `compter`, les politiques —
+  aucun privilège pour `anon`, lecture pour les éditeurs — par la migration
+  `20260921233000_mesures.sql`, poussée en production ; pas de journal ; la purge à treize mois
+  écrite dans `supabase/README.md`.
+- **Le bloc Mesure** du panneau Testeur du menu de développement : l'interrupteur, la file, le dernier
+  envoi, « Envoyer » et « Vider ».
+- **`PRIVACY.md`** gagne le point 4 quinquies, et les points 4, 5 et 6 disent la seconde écriture.
+
+### Modifié
+
+- **`appeler`**, l'appel typé d'une fonction SQL, remonte de `shared/push` dans
+  `shared/supabase/rpc.ts`, partagé par le jeton push et la mesure.
+- **Le passage en arrière-plan a ses abonnés** (`onPassageEnArrierePlan`), sur le même abonnement
+  système que le retour au premier plan.
+- **Le bilan de l'entretien porte l'envoi de la mesure**, joué hors échéance sauf au lancement.
+- **`CarrouselDeSection` et `CampusListLayout` acceptent le couple de visibilité** d'une `FlatList`,
+  que les deux listes d'annonces leur passent.
+
 ## [6.2.2] - 2026-09-21
 
 Le jalon [7-C](docs/phase-7/7-c-economie-et-socle.md), économie et socle : une version courte, rendue

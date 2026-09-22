@@ -34,7 +34,9 @@ Deux points à connaître avant de toucher à cette structure :
 
 ## Les onglets
 
-Définis dans [`MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx).
+Définis dans [`MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx). Depuis
+[7-D](phase-7/7-d-la-mesure.md), le navigateur porte un `screenListeners` qui compte l'onglet affiché à
+chaque `focus`, le premier compris — c'est `onglet.vu` de la mesure ([mesure.md](mesure.md)).
 
 | Route | Écran | Libellé | Icône |
 |---|---|---|---|

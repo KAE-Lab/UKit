@@ -193,7 +193,7 @@ Les lots de campus avancent ensuite au rythme des comptes prêtés.
 | 7-B, lot 3 : Victoire | à ouvrir, après la 6.3 |
 | 7-B, lot 4 : Bordeaux Montaigne | à ouvrir, après la 6.3 |
 | 7-C Économie et socle | **livré le 2026-09-17** — code, base et publication sur la branche `v6.2.2` : `expo-image` et les rendus, le cache d'occupation, le disjoncteur, la fraîcheur du Planning, le `User-Agent`, le formulaire pré-rempli, la CI, Dependabot, les migrations et les colonnes ; la sonde a mesuré la requête groupée viable pour la 6.3. Protocole joué sur les deux appareils le 2026-09-21 ; **sortie en 6.2.2 le 2026-09-21** ; reste l'egress avant/après, relevés du 23 et du 30 septembre |
-| 7-D La mesure | à ouvrir |
+| 7-D La mesure | **livré le 2026-09-21** — code, base et documentation sur la branche `v6.3`, en premier : seize compteurs anonymes, la file locale `mesures@1`, la RPC `compter` poussée en production par la migration `20260921233000_mesures.sql` et sondée par l'API anonyme, l'interrupteur « Statistiques anonymes », le point 4 quinquies de `PRIVACY.md` ; **protocole joué sur les deux appareils le 2026-09-22**, un défaut Android corrigé le jour même ; **reste** les fiches *App Privacy* et *Data safety* avant la sortie |
 | 7-E Le socle de la console | à ouvrir |
 | 7-F Les annonces dans la console | à ouvrir |
 | 7-G Les statistiques | à ouvrir |

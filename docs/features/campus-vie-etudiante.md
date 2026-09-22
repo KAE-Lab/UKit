@@ -342,9 +342,9 @@ message ni bouton.*
 
 | Fichier | Rôle |
 |---|---|
-| [`Bde/BdeScreen.tsx`](../../src/features/Campus/Bde/BdeScreen.tsx) | liste complète des annonces actives, en grille de deux colonnes |
+| [`Bde/BdeScreen.tsx`](../../src/features/Campus/Bde/BdeScreen.tsx) | liste complète des annonces actives, en grille de deux colonnes ; ses impressions comptent, une fois par session (7-D) |
 | [`Bde/BdeAnnonceCard.tsx`](../../src/features/Campus/Bde/BdeAnnonceCard.tsx) | la carte au format affiche : visuel 1:1, titre et émetteur en pied — partagée par le carrousel et la grille |
-| [`Bde/BdeDetailsScreen.tsx`](../../src/features/Campus/Bde/BdeDetailsScreen.tsx) | fiche d'une annonce : visuel au ratio borné, métadonnées teintées par l'identité, galerie, carte « S'y rendre », bouton d'action |
+| [`Bde/BdeDetailsScreen.tsx`](../../src/features/Campus/Bde/BdeDetailsScreen.tsx) | fiche d'une annonce : visuel au ratio borné, métadonnées teintées par l'identité, galerie, carte « S'y rendre », bouton d'action ; l'ouverture et le bouton d'action comptent (7-D) |
 | [`Bde/DescriptionAnnonce.tsx`](../../src/features/Campus/Bde/DescriptionAnnonce.tsx) | le mini-langage de description : découpage, têtes de section colorées, puces — la grammaire vit dans son en-tête |
 | [`Bde/PastilleEmetteur.tsx`](../../src/features/Campus/Bde/PastilleEmetteur.tsx) | la pastille d'émetteur teintée par l'identité, et `teinteDAnnonce` — partagées par les cartes et la fiche |
 | [`hooks/useBdeAnnonces.ts`](../../src/features/Campus/hooks/useBdeAnnonces.ts) | le chargement, l'échec retenu, le nouvel essai — partagé par les deux surfaces |

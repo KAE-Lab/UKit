@@ -2302,7 +2302,7 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | Fichier | Rôle |
 |---|---|
 | [`services/CredentialsContext.tsx`](../../src/features/Scolarite/services/CredentialsContext.tsx) | contexte et état de session : trousseau, mode froid/chaud, progression, échec, annulation |
-| [`services/ScolariteSession.ts`](../../src/features/Scolarite/services/ScolariteSession.ts) | la séquence de runs : quels Blueprints, dans quel ordre, et le verrou d'un run navigateur à la fois |
+| [`services/ScolariteSession.ts`](../../src/features/Scolarite/services/ScolariteSession.ts) | la séquence de runs : quels Blueprints, dans quel ordre, et le verrou d'un run navigateur à la fois ; une connexion aboutie ou refusée compte (7-D) |
 | [`services/ScolariteMapping.ts`](../../src/features/Scolarite/services/ScolariteMapping.ts) | la projection des sorties vers les écrans, et la table des échecs nommés |
 | [`services/ScolariteMapping.test.ts`](../../src/features/Scolarite/services/ScolariteMapping.test.ts) | ce que cette projection doit tenir |
 | [`services/PropositionsDossier.ts`](../../src/features/Scolarite/services/PropositionsDossier.ts) | ce que le dossier a livré en plus de l'identité : UE inscrites, emploi du temps personnel |

@@ -86,6 +86,8 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | les messages de service — information, avertissement, incident — et leur ciblage | [`shared/messages`](../src/shared/messages/index.ts) | **6.1-B** | *aucun* — un cache (`messages@1`) |
 | `jetons_push` | **écrite par l'application** (6.1.x-E) : un jeton push par appareil, campus, version, plateforme, testeur — par `deposer_jeton` / `retirer_jeton`, jamais par la table | la fonction `notifier` (service), la console (éditeurs) | **6.1.x-E** | — |
+| `evenements_connus` | le vocabulaire fermé de la mesure (7-D) : un événement, sa description ; la clé étrangère de `mesures` en fait la liste de ce que la base accepte, et [`migration.test.ts`](../src/shared/mesure/migration.test.ts) la compare à celle de l'application | la console (éditeurs) | **7-D** | — |
+| `mesures` | **écrite par l'application** (7-D) : des compteurs anonymes par jour ou par heure, événement, clé, campus, version, plateforme, testeur — par `compter`, jamais par la table ; pas de journal ; purge à treize mois ([mesure.md](mesure.md)) | la console (éditeurs, [7-G](phase-7/7-g-console-statistiques.md)) | **7-D** | — |
 | `testeurs` | les appareils qui voient l'audience `testeurs` ; l'application n'en lit que la colonne `id` | [`shared/testeur`](../src/shared/testeur/statut.ts) | **6.1-B** | *aucun* — « non » par défaut |
 | `sondes` | l'état de chaque source tierce, mesuré chaque matin | la console ; l'application pas encore | 6.1-B | — |
 | `journal` | la trace de chaque écriture dans une table publiable : avant, après, qui, quand | la console seule | 6.1-B | — |
@@ -335,7 +337,16 @@ premier usage** et non à l'import. Aucun service ne construit le sien.
 | [`client.ts`](../src/shared/supabase/client.ts) | la configuration lue dans `extra`, et le client paresseux |
 | [`types.ts`](../src/shared/supabase/types.ts) | les tables telles que la base les rend, et le type `Database` |
 | [`failures.ts`](../src/shared/supabase/failures.ts) | une erreur de lecture rangée dans une famille d'écran |
+| [`rpc.ts`](../src/shared/supabase/rpc.ts) | l'appel typé d'une fonction SQL : la porte des deux écritures de l'application |
 | [`index.ts`](../src/shared/supabase/index.ts) | la porte d'entrée : un service importe d'ici |
+
+**Ce que l'application écrit, et rien d'autre.** Deux choses, par deux portes `security definer` et
+jamais par une table : le jeton push ([6.1.x-E](phase-6/6-1-x-e-notifications-push.md)), et depuis
+[7-D](phase-7/7-d-la-mesure.md) les compteurs anonymes de la mesure — la **seconde écriture** de
+l'application vers la base : des nombres sans identifiant, par jour ou par heure, campus, version et
+plateforme, envoyés par lots au passage en arrière-plan et à l'entretien, jamais au démarrage
+([mesure.md](mesure.md)). Les deux se coupent d'un interrupteur, et `anon` ne peut rien lire de ce
+qu'il a écrit.
 
 **La paresse n'est pas un détail de style.** Instancier au chargement du module mettrait la base sur
 le chemin de démarrage de l'application, ce que ce dos promet exactement de ne pas faire.
@@ -546,7 +557,8 @@ Le tableau d'origine, relevé le 2026-08-08 :
 > [phase 7](phase-7/README.md), tenu en un seul endroit pour que les jalons qui les appliquent n'en
 > écrivent pas plusieurs versions. Chaque ligne rejoint le tableau du schéma, plus haut, le jour où
 > son jalon l'applique — et sort d'ici : les colonnes d'`annonces`, d'`editeurs` et d'`etablissements`
-> sont en base depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), le 2026-09-17.
+> sont en base depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), le 2026-09-17,
+> les tables de la mesure depuis [7-D](phase-7/7-d-la-mesure.md), le 2026-09-21.
 
 Tout est **additif** et s'applique par **migrations numérotées**
 ([7-C](phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt)) : aucune colonne ne se retire avant
@@ -557,7 +569,6 @@ que le parc ait migré.
 | `annonces` | `notifiee_le` et `notifies` | [7-L](phase-7/7-l-la-boucle.md) |
 | `editeurs` | `private.peut_publier(etabs)` et les politiques qui lisent `role` et `etablissements` (la donnée est en base depuis 7-C) | [7-H](phase-7/7-h-console-roles.md) |
 | `etablissements` | ce qui **lit** `credits`, `campus` et `alias` — `COLONNES`, `types.ts`, `catalogue.ts`, `socle.ts` et la version du cache —, une fois que la base porte colonne **et** valeurs (elles y sont depuis 7-C) | [7-I](phase-7/7-i-releve-et-vocabulaire.md) |
-| `evenements_connus`, `mesures` | les compteurs anonymes et leur vocabulaire fermé ; RPC `compter(lots jsonb)` ; pas de journal ; purge à treize mois ([mesure.md](mesure.md)) | [7-D](phase-7/7-d-la-mesure.md) |
 | `jetons_push` | `annonces boolean` (défaut faux) : l'accord pour les annonces en notification | [7-L](phase-7/7-l-la-boucle.md) |
 | `retours` | `source` (`formulaire` ou `app` ; défaut `formulaire`), `installation` (nul sauf accord) ; RPC `deposer_retour` | [7-L](phase-7/7-l-la-boucle.md) |
 | `soutien` | `(campus, jour, montant, repas)`, agrégée, lecture publique | [7-N](phase-7/7-n-le-soutien.md) |

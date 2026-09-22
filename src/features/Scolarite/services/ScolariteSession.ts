@@ -39,9 +39,10 @@ import {
     tracerLectureDossier,
 } from '../../../shared/services/PropositionsTrace';
 import { maintenant } from '../../../shared/services/Temps';
+import { compter } from '../../../shared/mesure';
 import { surLeNavigateur, TOURS_DE_SESSION } from './MoteurNavigateur';
 import { projeterPropositions, type PropositionsDossier } from './PropositionsDossier';
-import { projeterDossier, type ScolariteColdData } from './ScolariteMapping';
+import { demandeUneRessaisie, projeterDossier, type ScolariteColdData } from './ScolariteMapping';
 
 /**
  * Les trois etapes que l'ecran de progression affiche.
@@ -128,6 +129,7 @@ function suivreProgression(
         // evenement que l'application interprete par son nom, et c'est ce qui remplace le message
         // du meme nom que la WebView postait a la main.
         if (evenement.type === 'progress' && evenement.message === 'LOGIN_SUCCESS') {
+            compter('scolarite.connexion', 'ok');
             options.onLoginSuccess?.();
             options.onEtape?.('profile');
             return;
@@ -170,6 +172,8 @@ async function jouer(
 
     const run = reserve.valeur;
     if (run.ok === false) {
+        // Une connexion refusee compte (7-D) : un mot de passe perime est un echec nomme, pas une panne.
+        if (demandeUneRessaisie(run.failure)) compter('scolarite.connexion', 'echec');
         reportFailure(nom, run.failure);
         return { ok: false, failure: run.failure };
     }

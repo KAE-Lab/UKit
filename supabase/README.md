@@ -6,7 +6,7 @@ ce qu'elle n'est pas, et comment on publie : [docs/backend.md](../docs/backend.m
 | Fichier | Contenu |
 |---|---|
 | [`schema.sql`](schema.sql) | tables, index, contraintes, **et les deux buckets** |
-| [`fonctions.sql`](fonctions.sql) | les deux gardes : qui est éditeur, et le journal par déclencheurs — dans un schéma `private` que l'API n'expose pas |
+| [`fonctions.sql`](fonctions.sql) | les deux gardes — qui est éditeur, et le journal par déclencheurs, dans un schéma `private` que l'API n'expose pas — et les portes d'écriture de l'application : `deposer_jeton`, `retirer_jeton` (6.1.x-E), `compter` (7-D) |
 | [`policies.sql`](policies.sql) | RLS : lecture publique restreinte, écriture réservée aux éditeurs authentifiés et à la clé de service |
 | [`etablissements.sql`](etablissements.sql) | le catalogue des universités : une ligne par établissement, `on conflict do update` |
 | [`batiments-bordeaux-inp.sql`](batiments-bordeaux-inp.sql) | les dix bâtiments de Bordeaux INP, relevés sur OpenStreetMap — la surcouche de `assets/locations.json` pour une université que le binaire n'embarque pas |
@@ -93,6 +93,13 @@ européenne — les utilisateurs sont en France.
    # Les testeurs : la colonne `id` seule est lisible, la table entiere ne l'est pas.
    curl -s "$SUPABASE_URL/rest/v1/testeurs?select=id" -H "apikey: $SUPABASE_ANON_KEY"   # attendu : []
    curl -s "$SUPABASE_URL/rest/v1/testeurs"           -H "apikey: $SUPABASE_ANON_KEY"   # attendu : 42501
+
+   # La mesure (7-D) : les compteurs ne se lisent pas, et un evenement inconnu est ignore, pas ecrit.
+   curl -s "$SUPABASE_URL/rest/v1/mesures?select=*" -H "apikey: $SUPABASE_ANON_KEY"     # attendu : 42501
+   curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/compter" \
+     -H "apikey: $SUPABASE_ANON_KEY" -H "Content-Type: application/json" \
+     -d "{\"p_lots\":[{\"jour\":\"$(date +%F)\",\"evenement\":\"inconnu\",\"version\":\"0.0.1\",\"plateforme\":\"ios\",\"n\":1}]}"
+   # attendu : {"comptes": 0, "rejetes": 1}
    ```
 
    Et la même chose pour un compte **authentifié sans ligne dans `editeurs`** (créé par
@@ -134,6 +141,22 @@ seul ne se relit pas :
 ```sql
 delete from public.journal where quand < now() - interval '1 year';
 ```
+
+## La purge de la mesure
+
+La table `mesures` ([docs/mesure.md](../docs/mesure.md)) grossit de quelques centaines à quelques
+milliers de lignes par jour à l'échelle du parc. Les nombres sont conservés **treize mois**
+([PRIVACY.md](../PRIVACY.md), point 4 quinquies), et la purge n'est pas automatisée, pour la même
+raison que celle du journal :
+
+```sql
+delete from public.mesures where jour < current_date - interval '13 months';
+```
+
+Une ligne d'`evenements_connus` ne se supprime jamais tant que des versions installées peuvent encore
+envoyer l'événement : la fonction `compter` l'ignorerait alors en le comptant dans `rejetes`, ce qui
+est le comportement voulu — un vieux client doit pouvoir vider sa file. Retirer un événement commence
+par le vocabulaire de l'application ([docs/mesure.md](../docs/mesure.md#la-règle--une-mesure-sajoute-avec-son-pourquoi-et-son-lecteur)).
 
 ## Effacer un retour
 
@@ -193,7 +216,14 @@ Ce qui a été mesuré en le faisant :
   base n'en a pas eu besoin, les trois fichiers étant déjà rejouables ;
 - une migration ne s'écrit **jamais** avec un `update` que `schema.sql` recopierait : la migration
   d'`annonces` pose `ajustement` avec le défaut `contenir` puis change le défaut, au lieu de mettre à
-  jour les lignes — rien à journaliser, et la vue lisible ne porte que le défaut final.
+  jour les lignes — rien à journaliser, et la vue lisible ne porte que le défaut final ;
+- la migration `20260921233000_mesures.sql` ([7-D](../docs/phase-7/7-d-la-mesure.md)) est la première
+  jouée par `db push` de bout en bout, le 2026-09-21 : `migration list` la voit locale et non distante,
+  le `--dry-run` la propose seule, le `push` la joue dans sa transaction, et la fonction se sonde
+  ensuite par `curl` avec la clé publiable (étape 6 ci-dessus). Une table de référence — ici le
+  vocabulaire d'`evenements_connus` — s'insère dans la migration **et** dans `schema.sql`, en
+  `on conflict do update`, et un test compare les deux
+  ([`migration.test.ts`](../src/shared/mesure/migration.test.ts)).
 
 Une règle qui n'a l'air de rien : **ajouter avant de retirer, toujours.** Le parc d'applications
 installées ne se vide pas d'un coup — une colonne supprimée trop tôt casse des installations qu'on

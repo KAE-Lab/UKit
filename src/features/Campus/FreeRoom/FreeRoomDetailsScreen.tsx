@@ -9,6 +9,7 @@ import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { BuildingInfo } from '../services/FreeRoomService';
+import { compter } from '../../../shared/mesure';
 import { useFreeRoomsData } from './hooks/useFreeRoomsData';
 import { CampusMapSection } from '../components/CampusMapSection';
 import { FreeRoomHoursHeader, FreeRoomsList } from './components/FreeRoomDetailsComponents';
@@ -20,6 +21,11 @@ export default function FreeRoomDetailsScreen({ route, navigation }: { route: { 
     const insets = useSafeAreaInsets();
 
     const { loading, isClosed, hoursList, selectedIndex, setSelectedIndex, freeRooms } = useFreeRoomsData(building);
+
+    // La fiche ouverte compte (7-D), par le code du batiment.
+    useEffect(() => {
+        compter('salles.ouverture', building.id);
+    }, []);
 
     const flatListRef = useRef<FlatList>(null);
     const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

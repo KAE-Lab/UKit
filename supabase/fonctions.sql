@@ -1,4 +1,6 @@
--- UKit — les deux gardes de la base : qui a le droit d'ecrire, et la trace de ce qui a ete ecrit.
+-- UKit — les deux gardes de la base, qui a le droit d'ecrire et la trace de ce qui a ete ecrit, et
+-- ses portes d'ecriture : les fonctions par lesquelles l'application depose un jeton push (6.1.x-E)
+-- et ses compteurs anonymes (7-D), sans jamais toucher une table.
 --
 -- S'applique **entre** schema.sql et policies.sql : les politiques appellent est_editeur(), et les
 -- declencheurs visent des tables que le schema doit avoir creees.
@@ -175,3 +177,101 @@ revoke execute on function public.deposer_jeton(text, text, text, text, boolean)
 revoke execute on function public.retirer_jeton(text) from public;
 grant execute on function public.deposer_jeton(text, text, text, text, boolean) to anon, authenticated;
 grant execute on function public.retirer_jeton(text) to anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- La mesure (jalon 7-D)
+-- -----------------------------------------------------------------------------
+--
+-- La porte d'ecriture des compteurs anonymes (schema.sql, docs/mesure.md). `security definer` pour
+-- que `anon` n'ait aucun privilege sur `mesures` — ni lecture, ni ecriture directe — ; un
+-- `search_path` vide et des noms qualifies, comme au-dessus.
+--
+-- Le lot entier est refuse s'il n'est pas un tableau ou s'il depasse 200 elements. Chaque element est
+-- ensuite juge seul, dans son propre sous-bloc : un element qui ne passe pas — evenement inconnu, `n`
+-- hors de [1, 1000], jour hors de [aujourd'hui - 14, demain], cle ou campus trop longs, forme fausse —
+-- est ignore et compte dans `rejetes`, et le lot continue. Ignorer plutot que rejeter : un vieux client
+-- qui porterait un evenement retire du vocabulaire doit pouvoir vider sa file, sinon il la renverrait
+-- pour toujours. La reponse dit ce qui a ete compte et rejete : `{"comptes": k, "rejetes": r}`.
+--
+-- `demain` et non `aujourd'hui` comme borne haute : le jour est celui de l'appareil, en heure locale,
+-- et la base est en UTC — minuit passe a Paris, la base est encore la veille.
+create or replace function public.compter(p_lots jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    element      jsonb;
+    comptes      integer := 0;
+    rejetes      integer := 0;
+    v_jour       date;
+    v_heure      smallint;
+    v_evenement  text;
+    v_cle        text;
+    v_campus     text;
+    v_version    text;
+    v_plateforme text;
+    v_testeur    boolean;
+    v_n          integer;
+begin
+    if p_lots is null or jsonb_typeof(p_lots) <> 'array' then
+        raise exception 'compter : un tableau est attendu' using errcode = '22023';
+    end if;
+    if jsonb_array_length(p_lots) > 200 then
+        raise exception 'compter : 200 elements au plus par lot' using errcode = '22023';
+    end if;
+
+    for element in select value from jsonb_array_elements(p_lots) loop
+        begin
+            if jsonb_typeof(element) <> 'object' then
+                raise exception 'un objet est attendu';
+            end if;
+            v_jour       := (element ->> 'jour')::date;
+            v_heure      := coalesce((element ->> 'heure')::smallint, -1);
+            v_evenement  := element ->> 'evenement';
+            v_cle        := coalesce(element ->> 'cle', '');
+            v_campus     := coalesce(element ->> 'campus', '');
+            v_version    := element ->> 'version';
+            v_plateforme := element ->> 'plateforme';
+            v_testeur    := coalesce((element ->> 'testeur')::boolean, false);
+            v_n          := (element ->> 'n')::integer;
+
+            if v_n is null or v_n < 1 or v_n > 1000 then
+                raise exception 'n hors de [1, 1000]';
+            end if;
+            if v_jour is null or v_jour < current_date - 14 or v_jour > current_date + 1 then
+                raise exception 'jour hors fenetre';
+            end if;
+            if v_heure < -1 or v_heure > 23 then
+                raise exception 'heure hors de [-1, 23]';
+            end if;
+            if not exists (select 1 from public.evenements_connus where evenement = v_evenement) then
+                raise exception 'evenement inconnu';
+            end if;
+            if char_length(v_cle) > 64 or char_length(v_campus) > 32 then
+                raise exception 'cle ou campus trop long';
+            end if;
+            if v_version is null or v_version !~ '^\d+\.\d+\.\d+$' then
+                raise exception 'version illisible';
+            end if;
+            if v_plateforme is null or v_plateforme not in ('ios', 'android') then
+                raise exception 'plateforme inconnue';
+            end if;
+
+            insert into public.mesures (jour, heure, evenement, cle, campus, version, plateforme, testeur, n)
+            values (v_jour, v_heure, v_evenement, v_cle, v_campus, v_version, v_plateforme, v_testeur, v_n)
+            on conflict (jour, heure, evenement, cle, campus, version, plateforme, testeur)
+            do update set n = public.mesures.n + excluded.n, maj_le = now();
+            comptes := comptes + 1;
+        exception when others then
+            rejetes := rejetes + 1;
+        end;
+    end loop;
+
+    return jsonb_build_object('comptes', comptes, 'rejetes', rejetes);
+end;
+$$;
+
+revoke execute on function public.compter(jsonb) from public;
+grant execute on function public.compter(jsonb) to anon, authenticated;

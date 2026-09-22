@@ -7,6 +7,7 @@ import { Curseur } from '../../../shared/ui/Curseur';
 import { tokens } from '../../../shared/theme/Theme';
 import { AppThemeType } from '../../../shared/theme/Theme';
 import { PointDeCouleur, POINT_DE_COULEUR } from '../../../shared/ui/PointDeCouleur';
+import { useMesureActive } from '../../../shared/mesure';
 
 const LANGUAGE_LIST = {
     fr: 'FRENCH',
@@ -211,6 +212,35 @@ export const NotificationsSection = ({ themeSettings, theme, courseNotifications
         )}
     </>
 );
+
+interface ConfidentialiteSectionProps {
+    themeSettings: AppThemeType['settings'];
+    theme: AppThemeType;
+}
+
+/**
+ * La section Confidentialite (7-D) porte son propre etat : le reglage vit dans le module de mesure,
+ * pas dans `SettingsManager`, et la rangee le lit par son hook — l'ecran n'a rien a porter. Couper
+ * l'interrupteur vide la file locale : rien de ce qui a ete compte avant ne part.
+ */
+export const ConfidentialiteSection = ({ themeSettings, theme }: ConfidentialiteSectionProps) => {
+    const [active, activer] = useMesureActive();
+    return (
+        <>
+            <SettingsTextHeader theme={themeSettings} text={Translator.get('PRIVACY_SECTION')} />
+            <Button
+                theme={themeSettings}
+                leftIcon="shield-check-outline"
+                leftText={Translator.get('ANONYMOUS_STATS')}
+                onSwitchToggle={activer}
+                switchValue={active}
+            />
+            <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginHorizontal: tokens.space.md, marginTop: tokens.space.xs }}>
+                {Translator.get('ANONYMOUS_STATS_DESC')}
+            </Text>
+        </>
+    );
+};
 
 interface AppLaunchingSectionProps {
     themeSettings: AppThemeType['settings'];

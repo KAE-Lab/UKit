@@ -130,6 +130,8 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`features/Planning/services/TelephoneMapping.ts`](../src/features/Planning/services/TelephoneMapping.ts) | la projection des calendriers du téléphone (6.1.x-D) : la journée **locale** d'un instant, un rendez-vous à cheval sur minuit borné à chacun de ses deux jours, une fin posée à minuit qui ne mord pas sur le lendemain, la journée entière datée en local (iOS) ou en UTC à fin exclusive (Android), l'annulé exclu et le « disponible » gardé, ce qu'UKit a écrit lui-même écarté |
 | [`features/Planning/services/FusionTelephone.ts`](../src/features/Planning/services/FusionTelephone.ts) · [`couleurDeCours.ts`](../src/features/Planning/services/couleurDeCours.ts) | la fusion après la dérivation — le tri, les colonnes par index, les journées entières à part — et la couleur d'une ligne : clé de palette, hexadécimale, ou défaut |
 | [`shared/push/inscription.ts`](../src/shared/push/inscription.ts) | ce qu'un appareil dépose pour les notifications push (6.1.x-E) : la forme d'un jeton Expo, l'égalité, l'échéance du redépôt, la mémoire relue défensivement |
+| [`shared/mesure/vocabulaire.ts`](../src/shared/mesure/vocabulaire.ts) · [`file.ts`](../src/shared/mesure/file.ts) · [`session.ts`](../src/shared/mesure/session.ts) | la mesure anonyme (7-D) : la forme de chaque clé — un identifiant passe, un texte saisi non —, le jour et l'heure **locaux** d'un instant proche de minuit UTC, la fusion par identité, la relecture défensive de la file, les lots de 200, la borne de 500 par jour ancien, la soustraction qui garde ce qui a été compté pendant l'envoi, le dédoublonnage des impressions par session |
+| [`shared/mesure/migration.test.ts`](../src/shared/mesure/migration.test.ts) | que chaque événement d'`EVENEMENTS` est inséré dans `evenements_connus` par une migration, et que la vue lisible `schema.sql` porte le même ensemble — la même garantie que `regles.test.ts` pour le ciblage recopié : un événement compté par l'appareil et rejeté par la base serait une perte silencieuse |
 | [`supabase/functions/notifier/regles.ts`](../supabase/functions/notifier/regles.ts) | que la copie Deno du ciblage rend **la même réponse** que `shared/ciblage` sur une matrice de lignes et d'appareils — la seule garantie qu'un push n'atteint pas un téléphone où le message ne s'afficherait pas |
 | [`shared/locations/salles.ts`](../src/shared/locations/salles.ts) | les séparateurs qui n'ont pas le même rôle, `A5bis` qui ne doit pas devenir `A5`, un motif publié illisible, et la reconnaissance **désactivée** — une carte fausse est pire qu'une carte vide |
 | [`features/Planning/components/CourseAnnotations.ts`](../src/features/Planning/components/CourseAnnotations.ts) | l'icône déduite du contenu et non du rang, sur les deux formes de description — le défaut trouvé sur appareil au jalon 6-I |
@@ -389,6 +391,12 @@ ne voit pas.
 premier rafraîchissement a déjà répondu —, donc il ne montre pas ce qu'un **tout nouvel étudiant**
 voit : l'attente de la liste des établissements, le socle hors ligne. Seule une remise à zéro suivie
 d'un rechargement le montre.
+
+L'onglet *Testeur* porte depuis [7-D](phase-7/7-d-la-mesure.md), sous le jeton push, le bloc **Mesure**
+([`ModMenuMesure.tsx`](../src/shared/ui/ModMenuMesure.tsx)) : l'interrupteur, la file — lignes et
+total —, le dernier envoi — heure, état, comptés et rejetés —, et deux gestes, « Envoyer », qui joue
+l'envoi sans attendre un passage en arrière-plan, et « Vider ». C'est l'instrument du protocole de la
+mesure : chaque `compter` s'y lit à l'instant, et un envoi se vérifie dans `mesures` juste après.
 
 Ses libellés sont volontairement **hors des dictionnaires** : ce n'est pas une capacité utilisateur,
 et lui ouvrir les trois traductions ferait porter à l'internationalisation un écran que personne

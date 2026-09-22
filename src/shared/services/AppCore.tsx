@@ -19,6 +19,8 @@ import {
 import { purgerDonneesCampusNationales, purgerDonneesEtablissement, purgerTrousseau } from '../etablissements/purge';
 // Le module des vus seul, et non la porte d'entree des messages : elle tire le client de la base.
 import { oublierVus } from '../messages/vus';
+// Le reglage seul, et non l'index de la mesure : l'index importe ce fichier (7-D).
+import { reinitialiserLaMesure } from '../mesure/reglage';
 import { restaurerReglages } from './reglagesParEtablissement';
 import { createUKitCalendar, ecrireEvenementsDansCalendrier, retirerEvenementsSynchronises } from './CalendarSyncHelpers';
 import { lireTentative, origineDuRun, type OrigineSynchro, type TentativeSynchro } from './calendrier/tentative';
@@ -613,6 +615,8 @@ class SettingsManagerService {
         // Les messages de service deja vus reviennent : reinitialiser, c'est repartir comme apres une
         // reinstallation. L'identifiant d'installation, lui, reste — un testeur le demeure.
         await oublierVus();
+        // Les statistiques anonymes reviennent a leur defaut, actif (7-D) : le module porte son reglage.
+        await reinitialiserLaMesure();
         // Les calendriers du telephone survivent a une bascule d'etablissement, pas a un effacement.
         this.setCalendriersAffiches([]);
         // Le parcours d'accueil redemande l'etablissement : le laisser sur le precedent afficherait un

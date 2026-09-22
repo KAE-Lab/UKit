@@ -7,6 +7,7 @@
  */
 
 export { getSupabase, getSupabaseConfig } from './client';
+export { appeler } from './rpc';
 export { baseNonConfiguree, describeSupabaseFailure, reportSupabaseFailure } from './failures';
 export type { SupabaseErrorLike } from './failures';
 export type {

@@ -201,6 +201,22 @@ la vérification du statut de testeur, auto-déclaré par l'appareil.
 > **Capture attendue** — `pilotage-notifier.png` : le formulaire d'un message dans la console, avec
 > le bouton « Notifier » et la réponse de la fonction.
 
+## La mesure
+
+Depuis [7-D](phase-7/7-d-la-mesure.md), l'application compte son usage **sans suivre personne** : des
+nombres par jour — par heure pour les sessions, les onglets et les échecs de source —, par campus, par
+version, par plateforme et selon le statut de testeur, envoyés par lots à la fonction `compter` de la
+base au passage en arrière-plan et à l'entretien, jamais au démarrage. Aucun identifiant, aucun contenu
+saisi ; un interrupteur « Statistiques anonymes » dans les Réglages, actif par défaut, dont la coupure
+vide la file locale. C'est la seconde écriture de l'application vers la base, après le jeton push, et
+elle passe par la même porte : une fonction `security definer`, jamais une table. Le vocabulaire, ses
+lecteurs et les requêtes de lecture sont dans [mesure.md](mesure.md) ; les tableaux de la console
+viennent avec [7-G](phase-7/7-g-console-statistiques.md), et `jetons_push`, redéposée tous les sept
+jours, reste le dénominateur des taux — le parc actif par campus, version et plateforme.
+
+Le bloc **Mesure** du panneau Testeur du menu de développement montre l'interrupteur, la file, le
+dernier envoi, et deux gestes, « Envoyer » et « Vider » ([qualite.md](qualite.md)).
+
 ## Le journal
 
 Tout ce qui s'écrit dans une table publiable — annonces, messages, établissements, visuels,
@@ -434,6 +450,7 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
 | [`shared/push/inscription.ts`](../src/shared/push/inscription.ts) · [`inscription.test.ts`](../src/shared/push/inscription.test.ts) | ce qu'un appareil dépose pour le push, et quand il le redépose — pur, testé |
 | [`shared/push/index.ts`](../src/shared/push/index.ts) | le dépôt et le retrait du jeton : le réglage, un vrai appareil, la permission lue, les deux fonctions SQL, la mémoire `push@1` |
 | [`shared/push/reception.ts`](../src/shared/push/reception.ts) | une notification ouverte mène à la feuille de son message ; le canal Android `messages-de-service`, en importance haute — son identifiant doit rester d'accord avec celui qu'envoie la fonction |
+| [`shared/mesure/`](../src/shared/mesure/index.ts) | la mesure anonyme (7-D) : vocabulaire, file, session, réglage, impressions et couture — fichier par fichier dans [architecture.md](architecture.md), la règle dans [mesure.md](mesure.md) |
 | [`supabase/functions/notifier/`](../supabase/functions/notifier/) | la fonction d'envoi (Deno) : éditeur vérifié, ciblage, lots, tickets, élagage, marquage — et sa copie des règles, testée égale à l'original |
 | [`console/src/lib/notifier.ts`](../console/src/lib/notifier.ts) | l'appel de la fonction depuis la console, et sa réponse en clair |
 | [`shared/testeur/statut.ts`](../src/shared/testeur/statut.ts) | « cet appareil est-il un testeur ? » : cache, lecture de la colonne `id`, comparaison locale |

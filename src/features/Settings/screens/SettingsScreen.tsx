@@ -35,6 +35,7 @@ import {
     InstitutionSection,
     ThemeSection,
     NotificationsSection,
+    ConfidentialiteSection,
     AppLaunchingSection,
     CalendarSection
 } from '../components/SettingsSections';
@@ -446,6 +447,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     messagesEnNotification={this.state.messagesEnNotification}
                     toggleMessagesEnNotification={this.toggleMessagesEnNotification}
                 />
+                <ConfidentialiteSection themeSettings={themeSettings} theme={theme} />
                 <AppLaunchingSection
                     themeSettings={themeSettings}
                     openFavSwitchValue={this.state.openFavSwitchValue}

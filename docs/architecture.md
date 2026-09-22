@@ -239,7 +239,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`metro.config.js`](../metro.config.js) | la configuration Metro d'Expo, plus `txt` en extension d'asset — pour servir pdf.js tel quel à la WebView du lecteur ([plateforme.md](plateforme.md)) |
 | [`shared/navigation/rootContainer.tsx`](../src/shared/navigation/rootContainer.tsx) | conteneur racine : abonnements aux réglages, `AppContext`, aiguillage onboarding / navigation, rafraîchissement des six surcouches publiées — livraison, lieux, visuels, catalogue, salutations, messages de service — au démarrage et au vrai retour au premier plan (`premierPlan`), et l'hôte des messages |
 | [`shared/navigation/StackNavigator.tsx`](../src/shared/navigation/StackNavigator.tsx) | pile principale, `RootStackParamList`, en-têtes des 20 écrans |
-| [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | les quatre onglets (barre en bas) et le glissement entre eux par geste, la barre personnalisée et son bouton d'action contextuel ([navigation.md](navigation.md)) |
+| [`shared/navigation/MainTabNavigator.tsx`](../src/shared/navigation/MainTabNavigator.tsx) | les quatre onglets (barre en bas) et le glissement entre eux par geste, la barre personnalisée et son bouton d'action contextuel ([navigation.md](navigation.md)) ; depuis 7-D, `screenListeners` compte l'onglet affiché à chaque focus |
 | [`shared/navigation/NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) | `NavBarHelper`, `withHeaderAnimation`, `withStaticHeader`, boutons d'en-tête |
 | [`shared/navigation/liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts) | les paramètres de route du formulaire de retours, la règle des domaines qui restent dans la vue intégrée, et le remplissage du gabarit pré-rempli — pur, testé |
 | [`shared/navigation/formulaireDeRetours.ts`](../src/shared/navigation/formulaireDeRetours.ts) | la couture des trois portes du formulaire : le gabarit du catalogue, l'appareil et le système par expo-device, la version, l'onglet — et l'ouverture dans le navigateur intégré ([pilotage.md](pilotage.md#le-formulaire-pré-rempli)) |
@@ -258,6 +258,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/supabase/client.ts`](../src/shared/supabase/client.ts) | client anonyme de la base de publication, construit au premier usage ([backend.md](backend.md)) |
 | [`shared/supabase/types.ts`](../src/shared/supabase/types.ts) | types des tables, tels que la base les rend, et le schéma en lecture seule |
 | [`shared/supabase/failures.ts`](../src/shared/supabase/failures.ts) | un échec de lecture traduit dans le même vocabulaire que ceux du moteur |
+| [`shared/supabase/rpc.ts`](../src/shared/supabase/rpc.ts) | l'appel typé d'une fonction SQL : la porte du jeton push et de la mesure (7-D) |
 | [`shared/supabase/index.ts`](../src/shared/supabase/index.ts) | la porte d'entrée de la base : un service importe d'ici |
 | [`shared/supabase/failures.test.ts`](../src/shared/supabase/failures.test.ts) | la table d'erreurs de la base, jouée par `npm test` |
 | [`shared/locations/referentiel.ts`](../src/shared/locations/referentiel.ts) | le référentiel des lieux : socle embarqué, fusion de la surcouche, accesseurs **synchrones** ([donnees-et-persistance.md](donnees-et-persistance.md)) |
@@ -314,14 +315,14 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/services/Base64.ts`](../src/shared/services/Base64.ts) · [`Base64.test.ts`](../src/shared/services/Base64.test.ts) | le décodage base64 en JavaScript, parce que le natif d'Expo Go ne le garantit pas ([features/scolarite.md](features/scolarite.md)) |
 | [`shared/services/ReinitialisationComplete.ts`](../src/shared/services/ReinitialisationComplete.ts) | la remise à zéro complète du menu de développement : trousseau, documents, AsyncStorage, puis rechargement ([qualite.md](qualite.md)) |
 | [`shared/services/retourAuPremierPlan.ts`](../src/shared/services/retourAuPremierPlan.ts) | ce qu'est un retour au premier plan — `active` après `background`, jamais après un simple `inactive` —, pur ([defauts-fonctionnels.md](defauts-fonctionnels.md)) |
-| [`shared/services/premierPlan.ts`](../src/shared/services/premierPlan.ts) | sa couture de plateforme : un seul abonnement `AppState`, `onRetourAuPremierPlan` et le hook `useRetourAuPremierPlan` — le conteneur racine, les annonces, le Planning et les widgets s'y abonnent |
+| [`shared/services/premierPlan.ts`](../src/shared/services/premierPlan.ts) | sa couture de plateforme : un seul abonnement `AppState`, `onRetourAuPremierPlan` et le hook `useRetourAuPremierPlan` — le conteneur racine, les annonces, le Planning et les widgets s'y abonnent ; depuis 7-D, `onPassageEnArrierePlan`, sur le même abonnement, où la mesure envoie sa file |
 | [`shared/services/retourAuPremierPlan.test.ts`](../src/shared/services/retourAuPremierPlan.test.ts) | joué par `npm test` |
 | [`shared/services/simulations.ts`](../src/shared/services/simulations.ts) | les simulations du menu de développement — HORS LIGNE, date — gardées le temps de la relance d'une réinitialisation complète ([qualite.md](qualite.md)) |
 | [`shared/services/Chrono.ts`](../src/shared/services/Chrono.ts) | les repères de temps du démarrage, sous `__DEV__` seulement ([qualite.md](qualite.md#lire-le-démarrage-plutôt-que-le-supposer)) |
 | [`shared/theme/tokens.ts`](../src/shared/theme/tokens.ts) | les primitives de design, isolées pour être testables sous Node ([theme.md](theme.md#les-tokens)) |
 | [`shared/theme/Theme.ts`](../src/shared/theme/Theme.ts) | thèmes clair et sombre, échelle sémantique, styles partagés ([theme.md](theme.md)) |
 | [`shared/i18n/Translator.ts`](../src/shared/i18n/Translator.ts) | service de traduction, langue courante, locale moment ([i18n.md](i18n.md)) |
-| [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 390 clés chacun |
+| [`shared/i18n/fr.ts`](../src/shared/i18n/fr.ts) · [`en.ts`](../src/shared/i18n/en.ts) · [`es.ts`](../src/shared/i18n/es.ts) | dictionnaires, 424 clés chacun |
 | [`types/moment-locales.d.ts`](../src/types/moment-locales.d.ts) | déclare les locales de `moment` importées pour leur effet de bord — TypeScript 6 exige qu'un tel import résolve ([qualite.md](qualite.md#typage)) |
 | [`shared/map/EmbeddedMap.tsx`](../src/shared/map/EmbeddedMap.tsx) | carte MapLibre embarquée dans les fiches ([cartographie.md](cartographie.md)) |
 | [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème) et `UpdateAlert` (contrôle de version, non rendu) |
@@ -348,6 +349,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/ModaleBientot.tsx`](../src/shared/ui/ModaleBientot.tsx) | ce que le voile d'un teaser promet — une composition de `Dialogue` |
 | [`shared/ui/Bandeau.tsx`](../src/shared/ui/Bandeau.tsx) | le bandeau flottant en haut de l'écran, la seule forme de bandeau de l'application : une information, fermable, au gabarit des en-têtes ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ModMenuTesteur.tsx`](../src/shared/ui/ModMenuTesteur.tsx) | le panneau Testeur du menu de développement : l'identifiant d'installation, le statut, relire et oublier les messages ([qualite.md](qualite.md)) |
+| [`shared/ui/ModMenuMesure.tsx`](../src/shared/ui/ModMenuMesure.tsx) | son bloc Mesure (7-D) : l'interrupteur, la file, le dernier envoi, « Envoyer » et « Vider » ([qualite.md](qualite.md)) |
 | [`shared/ui/ChoixEtablissement.tsx`](../src/shared/ui/ChoixEtablissement.tsx) | la liste des universités puis la confirmation de la bascule, partagée par les Réglages et le formulaire de connexion |
 | [`shared/ui/ProgressBar.tsx`](../src/shared/ui/ProgressBar.tsx) | une jauge horizontale, rayon calculé sur la hauteur |
 | [`shared/ui/Icon.tsx`](../src/shared/ui/Icon.tsx) | une icône de l'une ou l'autre famille Material, typée par union discriminée |
@@ -355,6 +357,13 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/push/inscription.ts`](../src/shared/push/inscription.ts) · [`inscription.test.ts`](../src/shared/push/inscription.test.ts) | ce qu'un appareil dépose pour les notifications push, et quand — pur, testé (6.1.x-E) |
 | [`shared/push/index.ts`](../src/shared/push/index.ts) | le dépôt et le retrait du jeton push : la première écriture de l'application vers la base, par deux fonctions SQL ([pilotage.md](pilotage.md#les-messages-en-notification-push)) |
 | [`shared/push/reception.ts`](../src/shared/push/reception.ts) | une notification ouverte mène à la feuille de son message |
+| [`shared/mesure/vocabulaire.ts`](../src/shared/mesure/vocabulaire.ts) · [`vocabulaire.test.ts`](../src/shared/mesure/vocabulaire.test.ts) | le vocabulaire fermé de la mesure (7-D) : seize événements, leur granularité, le validateur de leur clé, les onglets — pur, testé ([mesure.md](mesure.md)) |
+| [`shared/mesure/file.ts`](../src/shared/mesure/file.ts) · [`file.test.ts`](../src/shared/mesure/file.test.ts) | la file des compteurs : la ligne, le jour et l'heure locaux, la fusion par identité, la lecture défensive de `mesures@1`, les lots de 200, la borne de 500, la soustraction après un envoi — pur, testé |
+| [`shared/mesure/session.ts`](../src/shared/mesure/session.ts) · [`session.test.ts`](../src/shared/mesure/session.test.ts) | une session, et le dédoublonnage de ses impressions — pur, testé |
+| [`shared/mesure/migration.test.ts`](../src/shared/mesure/migration.test.ts) | chaque événement du vocabulaire est inséré dans `evenements_connus` par une migration, et `schema.sql` porte le même ensemble — joué par `npm test` |
+| [`shared/mesure/reglage.ts`](../src/shared/mesure/reglage.ts) | l'interrupteur « Statistiques anonymes » (`mesure-reglage@1`), ses abonnés, sa réinitialisation et le hook de la section Confidentialité — le seul fichier du module qu'`AppCore` importe |
+| [`shared/mesure/impressions.ts`](../src/shared/mesure/impressions.ts) | les impressions d'annonces : le couple de visibilité à identité stable d'une `FlatList`, le registre des listes focalisées, recompté à chaque session |
+| [`shared/mesure/index.ts`](../src/shared/mesure/index.ts) | sa couture de plateforme : `compter`, la file en mémoire et sa persistance différée, la session, l'envoi par lots à la fonction `compter` de la base, l'armement — la seconde écriture de l'application vers la base ([mesure.md](mesure.md)) |
 | [`shared/ui/GlypheFiligrane.tsx`](../src/shared/ui/GlypheFiligrane.tsx) | le filigrane d'identité : une grande silhouette en transparence sur une surface unique — le geste de signature, règles d'usage dans son en-tête ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/PiedFlottant.tsx`](../src/shared/ui/PiedFlottant.tsx) | le pied d'action flottant : le vocabulaire de la barre de recherche — dégradé d'amortissement, bande du fond de page — et le dégagement que l'écran doit lui laisser ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ModMenu.tsx`](../src/shared/ui/ModMenu.tsx) | menu flottant de développement : simulation temporelle et livraison ([qualite.md](qualite.md)) |

@@ -15,6 +15,8 @@
  * Voir docs/backend.md.
  */
 
+import type { LigneDeMesure } from '../mesure/file';
+
 /** Contenu editorial de vie etudiante. Remplace le fichier servi par jsDelivr. */
 export interface AnnonceRow {
     readonly id: string;
@@ -242,13 +244,18 @@ export interface Database {
             sondes: TableEnLecture<SondeRow>;
         };
         Views: Record<string, never>;
-        /** Les deux portes d'ecriture de l'application (6.1.x-E) : le depot et le retrait d'un jeton push. */
+        /**
+         * Les portes d'ecriture de l'application : le depot et le retrait d'un jeton push (6.1.x-E),
+         * et les compteurs anonymes de la mesure (7-D). `mesures` n'est pas dans `Tables` : l'application
+         * ne la lit pas, et les politiques le lui refusent.
+         */
         Functions: {
             deposer_jeton: {
                 Args: { p_jeton: string; p_plateforme: string; p_etablissement: string; p_version: string; p_testeur: boolean };
                 Returns: undefined;
             };
             retirer_jeton: { Args: { p_jeton: string }; Returns: undefined };
+            compter: { Args: { p_lots: readonly LigneDeMesure[] }; Returns: { comptes: number; rejetes: number } };
         };
         Enums: Record<string, never>;
         CompositeTypes: Record<string, never>;

@@ -714,7 +714,7 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 
 | Fichier | Rôle |
 |---|---|
-| [`views/DayView.tsx`](../../src/features/Planning/views/DayView.tsx) | vue composite de l'onglet : état jour/semaine, génération des 365 jours et des semaines — refaite au retour au premier plan si la date a changé —, défilement du curseur, bascule de mode, et les déclencheurs de relecture du téléphone (retour, focus, éditeur fermé, choix des calendriers) |
+| [`views/DayView.tsx`](../../src/features/Planning/views/DayView.tsx) | vue composite de l'onglet : état jour/semaine, génération des 365 jours et des semaines — refaite au retour au premier plan si la date a changé —, défilement du curseur, bascule de mode, et les déclencheurs de relecture du téléphone (retour, focus, éditeur fermé, choix des calendriers) ; la vue affichée compte (7-D) |
 | [`screens/ScheduleScreen.tsx`](../../src/features/Planning/screens/ScheduleScreen.tsx) | enveloppe routée : résout le groupe (favoris si tableau) et configure l'en-tête |
 | [`screens/GroupSelectionScreen.tsx`](../../src/features/Planning/screens/GroupSelectionScreen.tsx) | recherche de groupes : chargement par le manager, repli daté sur son cache, sections alphabétiques, filtrage |
 | [`services/groupListCache.ts`](../../src/features/Planning/services/groupListCache.ts) | la politique du cache de la liste des groupes — expiration, lecture défensive, repli daté — pure |

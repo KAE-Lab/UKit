@@ -51,6 +51,7 @@ import moment from 'moment';
 import { CourseManager, SettingsManager } from './AppCore';
 import { NotificationManager } from './NotificationService';
 import { deposerLeJeton, retirerLeJeton, type EtatDepot } from '../push';
+import { envoyerLesMesures, type EtatEnvoi } from '../mesure';
 import { onRetourAuPremierPlan } from './premierPlan';
 import { maintenantMs } from './Temps';
 import { INTERVALLE_ENTRETIEN_MS, estDu, type OrigineSynchro, origineDuRun } from './calendrier/tentative';
@@ -82,6 +83,8 @@ export interface BilanEntretien {
     readonly rappels: 'replanifies' | 'inactifs' | 'sans-cours' | 'echec' | 'trop-tot';
     /** Le depot du jeton push (6.1.x-E), joue a chaque passage : il ne coute rien quand rien n'a change. */
     readonly push: EtatDepot;
+    /** L'envoi de la mesure (7-D), joue a chaque passage sauf au lancement : rien ne part au demarrage. */
+    readonly mesure: EtatEnvoi | 'non-joue';
 }
 
 export interface EtatTacheDeFond {
@@ -203,11 +206,13 @@ async function jouer(origine: OrigineEntretien): Promise<BilanEntretien> {
     // Hors echeance, et dans cet ordre : sans permission, il n'y a pas de jeton a deposer.
     await demanderLaPermissionAuBesoin();
     const push = await deposerLeJeton();
+    // La mesure part ici aussi, hors echeance — et jamais au lancement : rien ne part au demarrage.
+    const mesure: BilanEntretien['mesure'] = origine === 'lancement' ? 'non-joue' : await envoyerLesMesures();
 
     const du = force(origine) || estDu(await dernierEntretienAt(), maintenantMs());
 
     if (!du) {
-        return { origine, at, synchro: 'trop-tot', rappels: 'trop-tot', push };
+        return { origine, at, synchro: 'trop-tot', rappels: 'trop-tot', push, mesure };
     }
 
     const synchro = await synchroniser(origine);
@@ -223,7 +228,7 @@ async function jouer(origine: OrigineEntretien): Promise<BilanEntretien> {
     // comparaison, elle, lit l'heure simulable, pour qu'un saut de douze heures au menu de
     // developpement fasse partir l'entretien suivant.
     await AsyncStorage.setItem(CLE_DERNIER_ENTRETIEN, String(at));
-    return { origine, at, synchro, rappels, push };
+    return { origine, at, synchro, rappels, push, mesure };
 }
 
 /**
@@ -237,11 +242,11 @@ export function jouerEntretien(origine: OrigineEntretien): Promise<BilanEntretie
     enCours = jouer(origine)
         .catch((erreur: unknown): BilanEntretien => {
             journaliser(`interrompu : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
-            return { origine, at: Date.now(), synchro: 'echec', rappels: 'echec', push: 'echec' };
+            return { origine, at: Date.now(), synchro: 'echec', rappels: 'echec', push: 'echec', mesure: 'echec' };
         })
         .then((bilan) => {
             dernierBilan = bilan;
-            journaliser(`${bilan.origine} : synchro ${bilan.synchro}, rappels ${bilan.rappels}, push ${bilan.push}`);
+            journaliser(`${bilan.origine} : synchro ${bilan.synchro}, rappels ${bilan.rappels}, push ${bilan.push}, mesure ${bilan.mesure}`);
             DeviceEventEmitter.emit(EVENEMENT_ENTRETIEN, bilan);
             return bilan;
         })

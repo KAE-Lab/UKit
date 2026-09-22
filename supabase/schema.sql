@@ -499,6 +499,63 @@ alter table public.editeurs add constraint editeurs_role_check
 alter table public.editeurs add column if not exists etablissements text[];
 
 -- =============================================================================
+-- La mesure (jalon 7-D, migration 20260921233000_mesures.sql)
+-- =============================================================================
+--
+-- Des compteurs anonymes : la seconde ecriture de l'application vers la base, apres le jeton push.
+-- Ce qui arrive est un nombre par evenement, cle courte, jour — ou heure —, campus, version,
+-- plateforme et statut de testeur. Aucun identifiant, aucun contenu saisi, aucun horodatage plus fin
+-- que l'heure : la base apprend combien, jamais qui (docs/mesure.md, PRIVACY.md point 4 quinquies).
+--
+-- L'application n'ecrit pas la table : elle appelle `compter` (fonctions.sql), qui agrege par
+-- `on conflict` et rejette ce qui sort du vocabulaire ou des bornes. `anon` n'a aucun privilege ;
+-- les editeurs lisent (policies.sql). Pas de declencheur `journal` : il trace ce que l'equipe publie,
+-- pas ce que le parc compte. La purge a treize mois est ecrite dans supabase/README.md.
+
+-- Le vocabulaire ferme. La cle etrangere de `mesures` en fait la liste de ce que la base accepte ;
+-- src/shared/mesure/vocabulaire.ts porte la meme liste cote appareil, et migration.test.ts verifie
+-- que les deux s'accordent — l'insertion ci-dessous est celle des migrations, un tuple par ligne.
+create table if not exists public.evenements_connus (
+    evenement   text primary key,
+    description text
+);
+
+create table if not exists public.mesures (
+    jour       date        not null,
+    -- -1 : le jour entier ; 0 a 23 : l'heure locale de l'appareil, pour les seuls evenements qui la portent.
+    heure      smallint    not null default -1 check (heure between -1 and 23),
+    evenement  text        not null references public.evenements_connus (evenement),
+    cle        text        not null default '' check (char_length(cle) <= 64),
+    campus     text        not null default '' check (char_length(campus) <= 32),
+    version    text        not null check (version ~ '^\d+\.\d+\.\d+$'),
+    plateforme text        not null check (plateforme in ('ios', 'android')),
+    -- Auto-declare par l'appareil, comme pour le jeton : de quoi retirer le bruit de l'equipe.
+    testeur    boolean     not null default false,
+    n          integer     not null default 0 check (n >= 0),
+    maj_le     timestamptz not null default now(),
+    primary key (jour, heure, evenement, cle, campus, version, plateforme, testeur)
+);
+
+insert into public.evenements_connus (evenement, description) values
+    ('session',               'une ouverture, ou un vrai retour au premier plan'),
+    ('onglet.vu',             'l onglet affiche : planning, campus, scolarite, reglages'),
+    ('annonce.impression',    'la carte d une annonce visible a moitie pendant une seconde, une fois par session'),
+    ('annonce.ouverture',     'la fiche d une annonce ouverte'),
+    ('annonce.action',        'le bouton d action d une annonce touche'),
+    ('resto.ouverture',       'la fiche d un restaurant ouverte, par code Croustillant'),
+    ('bu.ouverture',          'la fiche d une bibliotheque ouverte, par identifiant Affluences'),
+    ('salles.ouverture',      'la fiche des salles libres d un batiment ouverte, par code'),
+    ('planning.jour',         'la vue jour du Planning affichee'),
+    ('planning.semaine',      'la vue semaine du Planning affichee'),
+    ('scolarite.connexion',   'une connexion universitaire aboutie (ok) ou refusee (echec)'),
+    ('source.echec',          'une source qui n a pas repondu, par hote et famille d echec'),
+    ('reglage.theme',         'le theme, compte une fois par session : light, dark'),
+    ('reglage.langue',        'la langue, une fois par session : fr, en, es'),
+    ('reglage.synchro',       'la synchronisation du calendrier, une fois par session : on, off'),
+    ('reglage.notifications', 'les deux interrupteurs de notification, une fois par session : rappels:on|off, messages:on|off')
+on conflict (evenement) do update set description = excluded.description;
+
+-- =============================================================================
 -- Retours (jalon 6.1.x-C)
 -- =============================================================================
 
