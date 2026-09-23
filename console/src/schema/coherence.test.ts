@@ -1,7 +1,8 @@
 /**
  * La coherence des descripteurs : chaque colonne citee — en liste, en cle, en tri, en filtre, en
- * recherche, en campus, en colonne soeur d'une image — designe un champ reel, du bon type ; les
- * chemins et les tables sont uniques. Sans ce test, un nom errone s'affichait en silence.
+ * recherche, en campus, en colonne soeur d'une image — designe un champ reel, du bon type, ou pour
+ * la liste seule une colonne calculee ; les chemins et les tables sont uniques. Sans ce test, un nom
+ * errone s'affichait en silence.
  *
  *     npm test   (a la racine du depot)
  */
@@ -29,9 +30,20 @@ function nomsDe(ressource: Descripteur): ReadonlySet<string> {
 test.each(CAS)('%s : chaque colonne citee est un champ', (_chemin, ressource) => {
     const noms = nomsDe(ressource);
     expect(noms.size, 'champs en double').toBe(ressource.champs.length);
-    const citees = [...ressource.liste, ...ressource.cle, ...(ressource.recherche ?? []), ...(ressource.filtres ?? []), ...(ressource.triables ?? []), ...(ressource.tri === undefined ? [] : [ressource.tri.colonne])];
+    const citees = [...ressource.cle, ...(ressource.recherche ?? []), ...(ressource.filtres ?? []), ...(ressource.triables ?? []), ...(ressource.tri === undefined ? [] : [ressource.tri.colonne])];
     for (const nom of citees) expect(noms.has(nom), `${nom} n'est pas un champ`).toBe(true);
     expect(colonnesTriables(ressource).every((nom) => noms.has(nom))).toBe(true);
+});
+
+test.each(CAS)('%s : la liste montre des champs, ou des colonnes calculees qui ne masquent aucun champ', (_chemin, ressource) => {
+    const noms = nomsDe(ressource);
+    const calculees = new Set((ressource.calculees ?? []).map((colonne) => colonne.nom));
+    expect(calculees.size, 'colonnes calculees en double').toBe(ressource.calculees?.length ?? 0);
+    for (const nom of calculees) {
+        expect(noms.has(nom), `${nom} : une colonne calculee homonyme d'un champ le cacherait`).toBe(false);
+        expect(ressource.liste.includes(nom), `${nom} : une colonne calculee sert en liste`).toBe(true);
+    }
+    for (const nom of ressource.liste) expect(noms.has(nom) || calculees.has(nom), `${nom} n'est ni un champ ni une colonne calculee`).toBe(true);
 });
 
 test.each(CAS)('%s : les filtres, la recherche et le campus visent des champs du bon type', (_chemin, ressource) => {
@@ -50,9 +62,19 @@ test.each(CAS)('%s : la colonne soeur d une image existe', (_chemin, ressource) 
     }
 });
 
+test.each(CAS)('%s : un lieu nomme une longitude qui s ecrit', (_chemin, ressource) => {
+    for (const champ of ressource.champs) {
+        if (champ.type.type !== 'lieu') continue;
+        const longitude = champDe(ressource, champ.type.longitude);
+        expect(longitude?.type.type, `longitude de ${champ.nom}`).toBe('nombre');
+        expect(longitude?.lectureSeule, `longitude de ${champ.nom} doit s'ecrire`).not.toBe(true);
+    }
+});
+
 test.each(CAS)('%s : une focale vise une image et un ajustement a choix, qui s ecrivent', (_chemin, ressource) => {
     for (const champ of ressource.champs) {
         if (champ.type.type !== 'focale') continue;
+        expect(champ.type.ratio, `ratio de ${champ.nom}`).toBeGreaterThan(0);
         expect(champDe(ressource, champ.type.image)?.type.type, `image de ${champ.nom}`).toBe('image');
         const ajustement = champDe(ressource, champ.type.ajustement);
         expect(ajustement?.type.type, `ajustement de ${champ.nom}`).toBe('choix');

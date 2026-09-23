@@ -5,7 +5,7 @@
  * cle, lesquelles se montrent en liste, lesquelles se filtrent, se cherchent et se trient, et ce
  * qu'il faut savoir avant d'ecrire une ligne. C'est le schema de la console : la liste et le
  * formulaire sont generiques et ne connaissent aucune table. Sa coherence — chaque nom cite designe
- * un champ reel — est verifiee par coherence.test.ts.
+ * un champ reel, ou une colonne calculee pour la liste — est verifiee par coherence.test.ts.
  *
  * Il ne dit rien de ce que l'application fait de la donnee — ca, c'est la documentation de la
  * table, dans docs/backend.md et supabase/schema.sql, que chaque descripteur cite.
@@ -48,16 +48,27 @@ export type TypeDeChamp =
      */
     | { readonly type: 'description' }
     /**
-     * Le point focal d'une image, `{ x, y }` en fractions, choisi d'un clic sur l'image du champ
-     * `image` ; `ajustement` nomme la colonne soeur — couvrir ou contenir — que la bascule du champ pose.
+     * Le point focal d'une image, `{ x, y }` en fractions, pose d'un clic ou d'un glisser sur l'image
+     * du champ `image` ; `ajustement` nomme la colonne soeur — couvrir ou contenir — que la bascule du
+     * champ pose ; `ratio` est celui du cadre que l'image remplit, pour montrer ce qu'il en garde.
      */
-    | { readonly type: 'focale'; readonly image: string; readonly ajustement: string }
+    | { readonly type: 'focale'; readonly image: string; readonly ajustement: string; readonly ratio: number }
     /** Les plages de mise en avant : des jours de la semaine, une heure de debut, une heure de fin, en heure de Paris. */
     | { readonly type: 'creneaux' }
     /** Une galerie d'images du bucket `media`, televersees en plusieurs fichiers d'un coup, reordonnees par glisser-deposer. */
     | { readonly type: 'galerie'; readonly dossier: string }
     /** Un partenaire : son nom, son logo televerse dans `dossier`, son lien. Tout vide, la colonne est nulle. */
-    | { readonly type: 'partenaire'; readonly dossier: string };
+    | { readonly type: 'partenaire'; readonly dossier: string }
+    /**
+     * Une teinte de la palette des sections de l'application, choisie sur un nuancier — pas a
+     * l'aveugle par son index. La chaine vide vaut « par defaut », l'accent du theme.
+     */
+    | { readonly type: 'teinte' }
+    /**
+     * Un lieu : la latitude, et la colonne soeur `longitude` que le champ pose avec elle. On colle un
+     * point copie d'une carte, les deux se remplissent (lib/coordonnees.ts).
+     */
+    | { readonly type: 'lieu'; readonly longitude: string };
 
 export interface Champ {
     readonly nom: string;
@@ -74,6 +85,14 @@ export interface Champ {
     readonly videEstValeur?: boolean;
     /** Le groupe du formulaire ou le champ se range (« Contenu », « Publication ») ; sans groupe, a plat. */
     readonly groupe?: string;
+    /**
+     * Le champ ne se montre que si la saisie en cours le demande : le partenaire d'une carte qui n'est
+     * ni un partenaire ni un bon plan n'a rien a faire a l'ecran. Un champ masque garde sa valeur et
+     * sa validation : la regle doit donc le montrer des qu'il porte une valeur.
+     */
+    readonly visible?: (valeurs: Ligne) => boolean;
+    /** La forme qu'un texte doit avoir, et la phrase qui dit laquelle : un lien qui commence par `https://`. */
+    readonly forme?: { readonly motif: RegExp; readonly message: string };
 }
 
 /** Ce qu'une action rend quand elle a touche une ligne : la phrase, et la ligne que le formulaire doit suivre. */
@@ -94,9 +113,28 @@ export interface ActionDeLigne {
     /** Une confirmation avant d'agir, pour un geste qui ne se rejoue pas. */
     readonly confirmation?: string;
     readonly disponible?: (ligne: Ligne) => boolean;
-    /** Un geste qui retire ou remplace : la variante destructive du bouton. */
-    readonly destructif?: boolean;
+    /** L'icone du bouton, nommee : le descripteur reste une donnee, sans composant a l'import. */
+    readonly icone?: 'copier' | 'telephone' | 'tous' | 'archiver' | 'envoyer';
     readonly executer: (ligne: Ligne) => Promise<string | ResultatDAction>;
+}
+
+/** Ce qu'une colonne calculee montre : une pastille, et la phrase qui l'explique au survol. */
+export interface EtatCalcule {
+    readonly libelle: string;
+    readonly ton: 'ok' | 'panne' | 'avert' | 'accent' | 'neutre';
+    readonly phrase: string | null;
+}
+
+/**
+ * Une colonne de liste qu'aucun champ ne porte : un etat que plusieurs colonnes font ensemble. Celui
+ * d'une annonce tient dans son statut, sa case « active » et ses deux dates ; montrer le statut seul
+ * affichait « publiée » sur une annonce que personne ne voit. Elle ne se trie ni ne se filtre : la base
+ * ne la connait pas, et la liste la lit sur la ligne entiere, a l'instant de l'affichage.
+ */
+export interface ColonneCalculee {
+    readonly nom: string;
+    readonly libelle: string;
+    readonly valeur: (ligne: Ligne, maintenant: Date) => EtatCalcule;
 }
 
 /**
@@ -114,11 +152,15 @@ export interface Descripteur {
     readonly table: string;
     readonly titre: string;
     readonly description: string;
+    /** Le titre d'une ligne neuve dans son formulaire : « Nouvelle annonce ». « Nouvelle ligne » sinon. */
+    readonly nouvelle?: string;
     /** La ou les colonnes de la cle primaire. */
     readonly cle: readonly string[];
     readonly champs: readonly Champ[];
-    /** Les colonnes affichees en liste, dans l'ordre. */
+    /** Les colonnes affichees en liste, dans l'ordre : des champs, ou des colonnes calculees. */
     readonly liste: readonly string[];
+    /** Les colonnes de liste calculees sur la ligne, citees dans `liste` par leur nom. */
+    readonly calculees?: readonly ColonneCalculee[];
     readonly tri?: { readonly colonne: string; readonly desc?: boolean };
     /** Les champs a choix ou booleens proposes en filtre au-dessus de la liste. */
     readonly filtres?: readonly string[];
@@ -173,6 +215,10 @@ export const CAMPUS_PAR_CIBLAGE: FiltreDeCampus = { type: 'ciblage', colonne: 'e
 
 export function champDe(descripteur: Descripteur, nom: string): Champ | undefined {
     return descripteur.champs.find((champ) => champ.nom === nom);
+}
+
+export function colonneCalculee(descripteur: Descripteur, nom: string): ColonneCalculee | undefined {
+    return descripteur.calculees?.find((colonne) => colonne.nom === nom);
 }
 
 /** Les types dont la valeur se trie en base ; un JSON, une image ou un tableau ne se trient pas. */

@@ -5,6 +5,12 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+/*
+ * Ce qui colle en haut — la barre de la console — et en bas — la barre d'enregistrement d'un
+ * formulaire — ne doit pas cacher le champ que le navigateur fait defiler vers l'ecran : au focus
+ * clavier, ou quand l'enregistrement mene au premier champ a corriger.
+ */
+html { scroll-padding-top: calc(var(--hauteur-barre) + var(--espace-md)); scroll-padding-bottom: 96px; }
 body {
     font-family: var(--police);
     font-size: var(--taille-sm);

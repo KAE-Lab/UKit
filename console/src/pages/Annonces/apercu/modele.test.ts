@@ -7,7 +7,7 @@
 import { expect, test } from 'vitest';
 
 import { PALETTES } from '../../../../../src/shared/theme/palettes';
-import { annonceDApercu, badgeDeType, emplacementsSpeciaux, LARGEUR_CARROUSEL, LARGEUR_CELLULE, LARGEUR_VISUEL, positionDeFocale, ratioDeCadre, teinteDe } from './modele';
+import { annonceDApercu, badgeDeType, emplacementsSpeciaux, LARGEUR_CARROUSEL, LARGEUR_CELLULE, LARGEUR_VISUEL, ratioDeCadre, teinteDe, vueDuChamp, zoneDuChamp } from './modele';
 
 test('les largeurs sont celles que l application calcule sur un iPhone 13 Pro', () => {
     expect(LARGEUR_CARROUSEL).toBe(234);
@@ -35,8 +35,7 @@ test('une couleur hors palette retombe sur l accent, comme sur le telephone', ()
     expect(teinteDe(undefined, PALETTES.light)).toBe(PALETTES.light.accent);
 });
 
-test('la focale devient une position CSS, et le ratio de la fiche se borne', () => {
-    expect(positionDeFocale({ x: 0.5, y: 0.3 })).toBe('50% 30%');
+test('le ratio de la fiche se borne', () => {
     expect(ratioDeCadre(1000, 1000)).toBe(1);
     expect(ratioDeCadre(1000, 3000)).toBe(3 / 4);
     expect(ratioDeCadre(3000, 1000)).toBe(16 / 9);
@@ -48,4 +47,21 @@ test('un evenement ne porte pas de badge ; les autres types, oui ; les emplaceme
     expect(badgeDeType('bon_plan')).toBe('Bon plan');
     expect(badgeDeType('autre')).toBe('autre');
     expect(emplacementsSpeciaux(['annonces', 'restaurants'])).toEqual([{ code: 'restaurants', libelle: 'Restaurants' }]);
+});
+
+test('l apercu montre la vue de ce qu on edite, et laisse la vue la ou elle est pour le reste', () => {
+    expect(vueDuChamp('focale')).toBe('carte');
+    expect(vueDuChamp('partenaire')).toBe('carte');
+    expect(vueDuChamp('description')).toBe('fiche');
+    expect(vueDuChamp('lat')).toBe('fiche');
+    expect(vueDuChamp('titre')).toBeNull();
+    expect(vueDuChamp('statut')).toBeNull();
+});
+
+test('la fiche se cale sur l endroit qui montre le champ edite', () => {
+    expect(zoneDuChamp('emetteur')).toBe('heros');
+    expect(zoneDuChamp('description')).toBe('description');
+    expect(zoneDuChamp('images')).toBe('galerie');
+    expect(zoneDuChamp('lat')).toBe('lieu');
+    expect(zoneDuChamp('priorite')).toBeNull();
 });

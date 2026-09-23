@@ -54,6 +54,8 @@
     /* La hauteur d'une ligne de tableau et d'un bouton : ce que les squelettes reservent. */
     --hauteur-ligne: 48px;
     --hauteur-bouton: 38px;
+    /* La barre du haut : ce sous quoi collent l'apercu d'une annonce et la barre des marqueurs. */
+    --hauteur-barre: 56px;
     --largeur-laterale: 240px;
 
     --police: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;

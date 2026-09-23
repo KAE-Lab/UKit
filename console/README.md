@@ -69,6 +69,7 @@ un problème que la console avait :
 | **browser-image-compression** et **blurhash** | le pipeline de téléversement : réduction et re-encodage en WebP dans le navigateur, un nom d'objet unique, un cache d'un an, le placeholder ([`src/lib/televerser.ts`](src/lib/televerser.ts)) |
 | **@dnd-kit** | la galerie d'une annonce réordonnée par glisser-déposer, à la souris comme au clavier (7-F) |
 | **@mdi/font** | la police MaterialCommunityIcons de l'application, à la même version (7.4.47), pour les têtes de section de l'aperçu — chargée avec l'aperçu, jamais avant |
+| **react-textarea-autosize** | la description d'une annonce, dans une zone qui grandit avec le texte au lieu d'une boîte à faire défiler (7-F) |
 | **react-error-boundary** | une erreur de rendu ne laisse jamais une page blanche |
 
 **La règle transverse** : un chargement ou une erreur ne déplace jamais la mise en page. Une liste qui
@@ -80,17 +81,30 @@ partout.
 
 **Le descripteur par table** reste l'idée directrice ([`src/schema/tables/`](src/schema/tables/)) : les
 colonnes, leur type de saisie, la clé, celles qui se filtrent, se cherchent et se trient, le ciblage
-par campus, les avertissements qu'il faut lire avant d'écrire, les actions hors écriture (« Notifier »).
-Un test de cohérence vérifie que chaque nom cité désigne un champ réel. La liste et le formulaire sont
+par campus, les avertissements qu'il faut lire avant d'écrire, les actions hors écriture (« Notifier »),
+et les colonnes de liste calculées sur la ligne entière — l'état d'une annonce, tel que les téléphones
+le voient, que son statut seul ne dit pas. Un test de cohérence vérifie que chaque nom cité désigne un
+champ réel, ou une colonne calculée de la liste. La liste et le formulaire sont
 génériques ; les pages qui méritent mieux ont la leur — le tableau de bord, les retours (compteurs par
 état, nature, campus et semaine ; les réponses question par question), le journal, les sources — ou
 la **complètent** : les annonces ([`src/pages/Annonces/`](src/pages/Annonces/)) ajoutent à la page
-générique un aperçu à côté du formulaire, un encart au-dessus d'une ligne en audience « testeurs »,
-et le panneau d'ordre. Le formulaire range ses champs par **groupe**, tient ses actions inertes tant
-qu'une saisie n'est pas enregistrée, et suit la ligne qu'une action rend (la copie de « Dupliquer »).
+générique l'état d'une annonce sous son titre, un aperçu à côté du formulaire, et le panneau d'ordre.
 
-**L'aperçu d'une annonce** ([`src/pages/Annonces/apercu/`](src/pages/Annonces/apercu/)) dessine la
-carte v2 — celle que la 6.3 rend — et la fiche avec les modules **purs partagés avec l'application**,
+**Le formulaire** ([`src/composants/formulaire/`](src/composants/formulaire/)) a la même forme sur
+toutes les pages, depuis la passe d'ergonomie de 7-F : **en haut**, ce qu'on édite — le titre de la
+ligne, à mesure qu'on l'écrit, et son état quand la page sait le dire — et les gestes sur la ligne
+enregistrée ; **au milieu**, les champs, rangés par groupe, dont certains ne se montrent que si la saisie
+les demande (le partenaire d'une carte partenaire) ; **en bas**, une barre d'enregistrement collée au bas
+de la fenêtre, qui dit l'état de la saisie, et **Ctrl+S** ou **Cmd+S**. Sur une ligne, l'en-tête de la
+page se réduit à un lien vers la liste. Les gestes restent inertes tant qu'une saisie n'est pas
+enregistrée, le formulaire suit la ligne qu'un geste rend (la copie de « Dupliquer »), et un lien de la
+console est retenu, avec une confirmation, tant que la saisie n'est pas enregistrée.
+
+**L'aperçu d'une annonce** ([`src/pages/Annonces/apercu/`](src/pages/Annonces/apercu/)) est un panneau à
+lui, à la hauteur de la fenêtre, avec son propre défilement et deux onglets, Carte et Fiche : il **suit le
+champ qu'on édite** — le visuel montre la carte, la description montre la fiche, calée sur la section du
+curseur. Il dessine la carte v2 — celle que la 6.3 rend — et la fiche avec les modules **purs partagés
+avec l'application**,
 importés par chemin relatif : la grammaire de la description
 ([`src/shared/annonces/grammaire.ts`](../src/shared/annonces/grammaire.ts)), l'ordre
 ([`ordre.ts`](../src/shared/annonces/ordre.ts)), le ciblage, les adresses de rendu, les tokens et
@@ -118,7 +132,11 @@ d'objet unique, les dimensions de compression, les compteurs des retours, le par
 annonces — et, depuis 7-F, les schémas des saisies structurées (focale, créneaux, galerie,
 partenaire), leurs résumés, l'état d'une annonce et sa phrase de programmation, le modèle de
 l'aperçu, l'ordre vu à une heure, l'insertion d'un marqueur, le pas du clavier sur la focale, le
-bilan d'un lot d'images.
+bilan d'un lot d'images ; et, depuis sa passe d'ergonomie, la zone qu'un cadre garde d'une image et le
+point sous le pointeur ([`src/lib/cadrage.ts`](src/lib/cadrage.ts)), les coordonnées collées d'une carte
+([`src/lib/coordonnees.ts`](src/lib/coordonnees.ts)), le titre du formulaire et l'état de sa saisie, le
+raccourci d'enregistrement, la ligne du curseur, le nom de fichier d'une adresse, la vue et l'endroit
+de la fiche que l'aperçu montre pour un champ.
 
 ## Vérifier
 
@@ -130,4 +148,9 @@ le clavier. Le détail et les mesures sont dans la
 [`docs/screenshots/console/`](../docs/screenshots/console/). La recette du jalon 7-F s'est jouée de
 la même façon : trente-trois points sur l'éditeur, la focale, la galerie, la programmation, les gestes
 et le panneau d'ordre ([spécification](../docs/phase-7/7-f-console-annonces.md#plan-de-test)) ; ce
-qui touche le téléphone se joue en audience « testeurs » sur les deux appareils.
+qui touche le téléphone se joue en audience « testeurs » sur les deux appareils. Sa passe d'ergonomie
+s'est vérifiée par une **séance d'usage réel** : deux annonces complètes composées comme l'équipe le
+fera, sur un écran de portable, en clair et en sombre, chaque promesse mesurée — le repère sous le clic,
+l'aperçu qui tient dans la fenêtre, la fiche calée sur la section du curseur, Ctrl+S, la garde des liens.
+**Une recette ne publie qu'en audience `testeurs`** : la politique de lecture ne regarde pas
+l'audience, et rien de ce qu'elle crée ne doit paraître sur le parc.

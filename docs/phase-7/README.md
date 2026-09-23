@@ -195,7 +195,7 @@ Les lots de campus avancent ensuite au rythme des comptes prêtés.
 | 7-C Économie et socle | **livré le 2026-09-17** — code, base et publication sur la branche `v6.2.2` : `expo-image` et les rendus, le cache d'occupation, le disjoncteur, la fraîcheur du Planning, le `User-Agent`, le formulaire pré-rempli, la CI, Dependabot, les migrations et les colonnes ; la sonde a mesuré la requête groupée viable pour la 6.3. Protocole joué sur les deux appareils le 2026-09-21 ; **sortie en 6.2.2 le 2026-09-21** ; reste l'egress avant/après, relevés du 23 et du 30 septembre |
 | 7-D La mesure | à ouvrir |
 | 7-E Le socle de la console | **livré le 2026-09-22** — sur `main`, sans release : TanStack Query et Table v9, react-hook-form et zod, Base UI, lucide, blurhash ; les quatorze défauts corrigés ; des listes triées, filtrées, cherchées et paginées dont l'URL porte l'état, un filtre global par campus ; la page Retours avec ses compteurs, le tableau de bord d'accueil, le téléversement à nom unique ; 74 tests ; captures dans les deux thèmes ; le protocole « plateformes » joué sur les deux appareils le jour même, conforme au code |
-| 7-F Les annonces dans la console | **livré le 2026-09-22** — sur `main`, sans release : deux modules purs partagés (`grammaire.ts`, `ordre.ts`) et les palettes du thème extraites ; l'éditeur avec l'aperçu du téléphone dans les deux thèmes, le point focal, cinq types de champ nouveaux, la galerie multi-fichiers réordonnable, le panneau « ordre du carrousel », dupliquer / archiver / voir sur mon téléphone ; 33 points de recette par navigateur piloté ; **la carte v2 est dessinée ici, 7-I la reproduit** ; reste la recette sur les deux appareils (texte, programmation, galerie), la focale et l'ordre sur téléphone se ferment en 7-I |
+| 7-F Les annonces dans la console | **livré le 2026-09-22, repris et clos le 2026-09-23** — sur `main`, sans release : deux modules purs partagés (`grammaire.ts`, `ordre.ts`) et les palettes du thème extraites ; l'éditeur avec l'aperçu du téléphone dans les deux thèmes, le point focal, les nouveaux champs, la galerie multi-fichiers réordonnable, le panneau « ordre du carrousel », dupliquer / archiver / voir sur mon téléphone ; **la carte v2 est dessinée ici, 7-I la reproduit**. Joué sur les deux appareils le 2026-09-23 : aperçu fidèle, programmation et archivage conformes. Le même jour, une **passe d'ergonomie** : le repère du point focal sous le clic et la zone gardée, la description qui grandit, l'aperçu en panneau qui suit le champ édité, la barre d'enregistrement et Ctrl+S, l'en-tête de la ligne, le nuancier, le lieu collé d'une carte, la garde des liens ; recette 34 points et séance d'usage réel 38 points, en audience `testeurs` désormais ; puis la liste dit l'état que voient les téléphones, par la règle de l'éditeur. La galerie réordonnée se ferme par construction ; la focale et l'ordre sur téléphone se ferment en 7-I |
 | 7-G Les statistiques | à ouvrir |
 | 7-H Les rôles et l'équipe | à ouvrir |
 | 7-I Le relevé et le vocabulaire du mouvement | à ouvrir |
@@ -246,7 +246,9 @@ depuis `main`, et un campus est une publication de données. Le site vit dans so
 `UKit-website`.
 
 La branche `v6.3`, qui ne portait que les documents de cette phase, a été renommée puis fusionnée dans
-`main` le 2026-09-15 : elle se recrée depuis `main` à l'ouverture de 7-I.
+`main` le 2026-09-15, puis recréée depuis `main` le 2026-09-21 : elle porte Aetherius 0.5.10 et
+[7-D](7-d-la-mesure.md), que `main` n'a pas. À l'ouverture de 7-I, **`main` y est fusionnée** — la
+console de 7-E et 7-F, et les modules partagés dont 7-I a besoin — ; elle ne se recrée plus.
 
 ## La clôture
 

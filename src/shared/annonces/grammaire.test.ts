@@ -9,7 +9,7 @@
 
 import { expect, test } from 'vitest';
 
-import { arbreDeDescription, couleurDIdentite, decouperEnBlocs, estLeLead, lireTitre, porteLaSignature, segmentsDeTexte } from './grammaire';
+import { arbreDeDescription, blocDeLaLigne, couleurDIdentite, decouperEnBlocs, estLeLead, lireTitre, porteLaSignature, segmentsDeTexte } from './grammaire';
 
 test('un texte vide ne rend aucun bloc', () => {
     expect(decouperEnBlocs('')).toEqual([]);
@@ -93,4 +93,27 @@ test('la couleur d identite se valide contre la palette, le 4 retombe sur le 0',
     expect(couleurDIdentite(4)).toBe(0);
     expect(couleurDIdentite(9)).toBe(0);
     expect(couleurDIdentite(undefined)).toBe(0);
+});
+
+test('la ligne d un titre tombe dans la section qu il ouvre, quel que soit le lead', () => {
+    const avecLead = 'Ouverture.\n\n# Programme\n- 21 h\n\n# map-marker|Lieu\nLe foyer.';
+    const blocs = decouperEnBlocs(avecLead);
+    const lignes = avecLead.split('\n');
+    lignes.forEach((ligne, index) => {
+        if (!ligne.startsWith('# ')) return;
+        const bloc = blocs[blocDeLaLigne(avecLead, index) ?? -1];
+        expect(bloc?.titre).toBe(lireTitre(ligne.slice(2)).titre);
+    });
+    expect(blocDeLaLigne(avecLead, 0)).toBe(0);
+    expect(blocDeLaLigne(avecLead, 3)).toBe(1);
+    expect(blocDeLaLigne(avecLead, 99)).toBe(2);
+});
+
+test('sans lead, les lignes d avant la premiere section ne tombent dans aucun bloc', () => {
+    const sansLead = '\n# Programme\n- 21 h';
+    expect(blocDeLaLigne(sansLead, 0)).toBeNull();
+    expect(blocDeLaLigne(sansLead, 1)).toBe(0);
+    expect(blocDeLaLigne(sansLead, 2)).toBe(0);
+    expect(blocDeLaLigne('', 0)).toBeNull();
+    expect(blocDeLaLigne('Un seul paragraphe.', -3)).toBe(0);
 });

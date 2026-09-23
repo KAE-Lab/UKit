@@ -7,6 +7,7 @@ import { Image as IconeImage, Upload, X } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
 
 import { messageDErreur } from '../../../lib/erreurs';
+import { nomDeFichierDAdresse } from '../../../lib/nommage';
 import { Bouton } from '../../ui/Bouton';
 import type { Ligne } from '../../../supabase';
 import type { ChampProps } from './types';
@@ -17,8 +18,9 @@ function bilan(octets: number, blurhash: string | null): string {
     return `Téléversé : ${Math.round(octets / KO)} Ko${blurhash === null ? '' : ', blurhash calculé'}.`;
 }
 
+/** Le fichier, pas l'adresse entiere : elle faisait trois lignes de bruit ; elle reste en infobulle. */
 function libelleDAdresse(adresse: string, videEstValeur: boolean): string {
-    if (adresse !== '') return adresse;
+    if (adresse !== '') return nomDeFichierDAdresse(adresse);
     return videEstValeur ? 'Aucune image (la chaîne vide)' : 'Aucune adresse';
 }
 
@@ -63,7 +65,7 @@ export function ChampImage({ champ, id, saisie, onChange, poserAutre, ligne, des
         <div className="apercu-image">
             <div className="cadre">{adresse !== '' ? <img src={adresse} alt="" /> : <IconeImage className="icone" aria-hidden="true" />}</div>
             <div className="details">
-                <div className="adresse">{libelleDAdresse(adresse, champ.videEstValeur === true)}</div>
+                <div className="adresse" title={adresse === '' ? undefined : adresse}>{libelleDAdresse(adresse, champ.videEstValeur === true)}</div>
                 <div className="petit secondaire">dossier {dossier} — réduite et compressée avant l’envoi, cache d’un an</div>
                 <div className="boutons">
                     <label className={`bouton tonal ${desactive || enCours ? 'attente' : ''}`} htmlFor={id}>

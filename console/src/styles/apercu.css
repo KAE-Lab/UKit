@@ -6,13 +6,21 @@
  * DescriptionAnnonce, CampusSectionHeader) : interlignes, filets, opacites.
  */
 
-.apercu { display: grid; gap: var(--espace-md); font-family: var(--police); color: var(--app-texte); }
-.apercu-entete { display: flex; align-items: center; justify-content: space-between; gap: var(--espace-sm); flex-wrap: wrap; }
-.apercu-etat { display: flex; align-items: center; gap: var(--espace-sm); flex-wrap: wrap; }
-.apercu-note { margin: 0; }
+/*
+ * Le panneau : les onglets et le theme en tete, la note, puis la vue — qui seule defile. La vue
+ * « carte » empile ses ecrans ; la vue « fiche » est un telephone qui prend la hauteur du panneau,
+ * sans depasser celle d'un iPhone 13 Pro.
+ */
+.apercu { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--espace-sm); font-family: var(--police); color: var(--app-texte); }
+.apercu-entete { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--espace-sm); flex-wrap: wrap; }
+.apercu-note { flex: none; margin: 0; }
+.apercu-vue { flex: 1; min-height: 0; overflow-y: auto; display: grid; gap: var(--espace-md); align-content: start; outline: none; }
+.apercu-vue.vue-fiche { overflow: hidden; display: flex; flex-direction: column; align-items: center; }
 .ap-ecran { display: grid; gap: var(--espace-xs); }
 .ap-ecran-titre { margin: 0; font-size: var(--taille-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-2); }
-.ap-telephone { max-width: 100%; background: var(--app-fond); border-radius: var(--rayon-lg); padding: var(--app-espace-md) 0; overflow: hidden; -webkit-font-smoothing: antialiased; }
+.ap-telephone { width: 390px; max-width: 100%; background: var(--app-fond); border-radius: var(--rayon-lg); padding: var(--app-espace-md) 0; overflow: hidden; -webkit-font-smoothing: antialiased; }
+.ap-telephone.plein { flex: 1; min-height: 0; max-height: 844px; padding-bottom: 0; }
+@media (max-width: 1100px) { .apercu-vue.vue-fiche { height: 760px; flex: none; } }
 
 /* Le carrousel : la carte, une voisine, la gouttiere `md` entre elles, tout depasse du bord. */
 .ap-carrousel { display: flex; gap: var(--app-espace-md); padding: 0 var(--app-espace-md) var(--app-espace-lg); overflow: hidden; }
@@ -40,7 +48,7 @@
 .ap-trait-texte.court { width: 40%; height: 9px; }
 
 /* ---- La fiche ---------------------------------------------------------------------------- */
-.ap-fiche { position: relative; height: 640px; }
+.ap-fiche { position: relative; height: 100%; }
 .ap-fiche-defilement { height: 100%; overflow: auto; padding: 0 var(--app-espace-md) var(--app-espace-xxl); }
 .ap-fiche-defilement.avec-bouton { padding-bottom: 96px; }
 .ap-visuel { width: 100%; border-radius: var(--app-rayon-lg); overflow: hidden; background: var(--app-gris); }
@@ -59,7 +67,8 @@
 
 /* ---- La description : la grammaire des fiches -------------------------------------------- */
 .ap-description { display: grid; gap: var(--app-espace-xl); }
-.ap-bloc { position: relative; overflow: hidden; }
+/* La section du curseur se teinte pendant qu'on ecrit : un halo par ombre, qui ne deplace rien. */
+.ap-bloc { position: relative; overflow: hidden; border-radius: var(--app-rayon-md); transition: background-color var(--duree-moyenne) ease, box-shadow var(--duree-moyenne) ease; }
 .ap-tete { display: flex; align-items: center; gap: var(--app-espace-sm); margin: 0 0 var(--app-espace-sm); }
 .ap-tete h4 { margin: 0; font-size: var(--app-taille-lg); font-weight: 700; color: var(--app-texte); }
 .ap-tete-icone { width: 32px; height: 32px; border-radius: var(--app-rayon-md); display: grid; place-items: center; font-size: 18px; flex: none; }

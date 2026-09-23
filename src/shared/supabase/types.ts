@@ -56,7 +56,7 @@ export interface AnnonceRow {
     readonly type: string;
     readonly emplacements: string[];
     readonly ajustement: string;
-    /** `{ x, y }` en fractions de l'image, le point garde au centre du recadrage. */
+    /** `{ x, y }` en fractions de l'image : le point que le recadrage garde visible, comme `object-position` (7-F). */
     readonly focale: unknown;
     readonly priorite: number;
     readonly epinglee: boolean;

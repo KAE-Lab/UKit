@@ -1,12 +1,15 @@
 /**
- * L'etat d'une annonce vu du formulaire : la regle de la base, et la phrase de programmation.
+ * L'etat d'une annonce : la regle de la base, la phrase de programmation, et la colonne de la liste
+ * qui la montre.
  *
  *     npm test   (a la racine du depot)
  */
 
 import { expect, test } from 'vitest';
 
-import { etatDAnnonce, phraseDeDate } from './etat';
+import { colonneCalculee } from '../descripteurs';
+import { ANNONCES } from './annonces';
+import { etatDAnnonce, phraseDeDate } from './etatDAnnonce';
 
 const MAINTENANT = new Date('2026-09-22T10:00:00+02:00');
 const PUBLIEE = { statut: 'publiee', active: true, publiee_le: '2026-09-01T10:00:00Z', expire_le: null };
@@ -41,4 +44,12 @@ test('une expiration passee prime sur la publication', () => {
 
 test('la phrase de date porte l annee quand elle n est pas celle du moment', () => {
     expect(phraseDeDate(new Date('2027-01-05T08:00:00+01:00'), MAINTENANT)).toBe('5 janvier 2027 à 8 h');
+});
+
+test('la liste dit l etat que les telephones voient : publiee puis decochee se lit « Inactive », pas « Publiée »', () => {
+    expect(ANNONCES.liste).toContain('etat');
+    expect(ANNONCES.liste, 'le statut seul se lit « visible » a tort').not.toContain('statut');
+    const etat = colonneCalculee(ANNONCES, 'etat');
+    expect(etat?.valeur({ ...PUBLIEE, active: false }, MAINTENANT)).toMatchObject({ libelle: 'Inactive', ton: 'neutre' });
+    expect(etat?.valeur(PUBLIEE, MAINTENANT)).toMatchObject({ libelle: 'Visible', ton: 'ok' });
 });

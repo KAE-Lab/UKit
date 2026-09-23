@@ -183,12 +183,13 @@ d'arrivée dans les deux thèmes, et les états que la règle transverse du jalo
 | `console/console-retours.png` · `-dark` | les compteurs et la liste des retours ouverts | **prise** |
 | `console/console-retour-fiche.png` | la fiche d'un retour : les réponses, puis nature, état, note | **prise** |
 | `console/console-journal.png` | le journal, filtres et pagination | **prise** |
-| `console/console-annonces.png` · `-dark` | la liste des annonces, filtres et tri | **prise** |
+| `console/console-annonces.png` · `-dark` | la liste des annonces, filtres et tri, et sa colonne « État » : ce que voient les téléphones — visible, programmée, inactive, expirée, brouillon, archivée | **prise** le 2026-09-23 |
 | `console/console-annonce-formulaire.png` | le formulaire d'une annonce, l'aperçu au ratio réel (7-E, avant l'éditeur) | **prise** |
-| `console/console-annonce-editeur.png` · `-dark` | l'éditeur d'annonces de 7-F : les groupes de champs, l'aperçu du téléphone — carrousel, grille, carte spéciale, fiche — dans les deux thèmes | **prise** |
-| `console/console-annonce-focale.png` | le point focal posé sur l'image, la bascule couvrir / contenir | **prise** |
-| `console/console-annonce-galerie.png` | la galerie téléversée en un lot, numérotée, prête à réordonner | **prise** |
-| `console/console-annonce-ordre.png` | le panneau « ordre du carrousel » : l'instant, le campus, la plateforme, la liste ordonnée avec ses raisons | **prise** |
+| `console/console-annonce-editeur.png` · `-dark` | l'éditeur d'annonces après la passe d'ergonomie de 7-F : la description en cours, et l'aperçu en panneau sur la fiche, calée et teintée sur la section du curseur, dans les deux thèmes ; la barre d'enregistrement en bas | **prise** le 2026-09-23 |
+| `console/console-annonce-carte.png` | le haut de l'éditeur : le titre de l'annonce, son état, les gestes, et l'aperçu sur la carte aux deux largeurs | **prise** le 2026-09-23 |
+| `console/console-annonce-focale.png` | le point focal sur une affiche carrée, le voile sur ce que le cadre 4:5 coupe, la bascule couvrir / contenir | **prise** le 2026-09-23 |
+| `console/console-annonce-galerie.png` | la galerie téléversée en un lot, numérotée, prête à réordonner | **prise** le 2026-09-23 |
+| `console/console-annonce-ordre.png` | le panneau « ordre du carrousel » : l'instant, le campus, la plateforme, l'appareil testeur, la liste ordonnée avec ses raisons | **prise** le 2026-09-23 |
 | `console/console-liste-erreur.png` | une liste dont la lecture a échoué : l'erreur à la place des lignes | **prise** |
 | `console/console-sans-droits.png` | la bannière « Lecture seule » d'un compte sans droits | **prise** |
 | `console/console-valeur-inconnue.png` | une valeur hors liste, proposée et refusée en la nommant | **prise** |

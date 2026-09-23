@@ -96,7 +96,8 @@ alter table public.annonces add column if not exists ajustement text not null de
 alter table public.annonces drop constraint if exists annonces_ajustement_check;
 alter table public.annonces add constraint annonces_ajustement_check
     check (ajustement in ('couvrir', 'contenir'));
--- Le point garde au centre du recadrage, en fractions de l'image.
+-- Le point que le recadrage garde visible, en fractions de l'image : il s'applique comme
+-- `object-position` en pourcentages, et n'est au centre que pour 50 % (7-F).
 alter table public.annonces add column if not exists focale jsonb not null default '{"x": 0.5, "y": 0.3}'::jsonb;
 alter table public.annonces add column if not exists priorite integer not null default 0;
 alter table public.annonces add column if not exists epinglee boolean not null default false;

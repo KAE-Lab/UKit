@@ -28,3 +28,19 @@ export function nomDObjet(dossier: string, nomDeFichier: string, identifiant: st
     const base = slug(sansExtension(nomDeFichier)).slice(0, LONGUEUR_MAX_SLUG).replace(/-+$/, '');
     return `${dossier}/${identifiant}-${base === '' ? 'image' : base}.webp`;
 }
+
+/**
+ * Le nom de fichier d'une adresse publique, pour la montrer sans son adresse entiere :
+ * `…/media/annonces/3f2a9c1d-affiche.webp?v=2` -> `3f2a9c1d-affiche.webp`. L'adresse elle-meme
+ * reste a portee, en infobulle.
+ */
+export function nomDeFichierDAdresse(adresse: string): string {
+    const chemin = adresse.split(/[?#]/, 1)[0] ?? '';
+    const segment = chemin.slice(chemin.lastIndexOf('/') + 1);
+    if (segment === '') return adresse;
+    try {
+        return decodeURIComponent(segment);
+    } catch {
+        return segment;
+    }
+}

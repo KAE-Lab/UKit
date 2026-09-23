@@ -201,6 +201,22 @@ export function porteLaSignature(bloc: BlocAnnonce): boolean {
     return bloc.contenu.some((element) => element.type === 'signature');
 }
 
+/**
+ * Le bloc ou tombe une ligne du texte : son index dans `arbreDeDescription(texte).blocs`, ou `null`
+ * quand la ligne precede la premiere section et qu'il n'y a pas de lead.
+ *
+ * L'apercu de la console s'en sert pour se caler sur la section ou ecrit l'editeur. La regle est
+ * celle de `decouperEnBlocs` — une ligne `# ` ouvre une section, un lead vide disparait — et elle
+ * est ecrite a cote d'elle, dans ce module, pour ne pas deriver.
+ */
+export function blocDeLaLigne(texte: string, ligne: number): number | null {
+    const jusquIci = texte.split('\n').slice(0, Math.max(0, ligne) + 1);
+    const titres = jusquIci.filter((contenu) => contenu.startsWith('# ')).length;
+    const leadGarde = decouperEnBlocs(texte)[0]?.titre === null;
+    if (titres === 0) return leadGarde ? 0 : null;
+    return titres - 1 + (leadGarde ? 1 : 0);
+}
+
 /** L'arbre complet : les blocs, et la regle de la marque de fin. */
 export function arbreDeDescription(texte: string): ArbreDeDescription {
     const blocs = decouperEnBlocs(texte);

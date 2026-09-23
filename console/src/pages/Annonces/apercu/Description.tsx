@@ -4,6 +4,9 @@
  * portent l'icone MaterialCommunityIcons nommee (la meme police, `@mdi/font` 7.4.47, chargee ici,
  * avec l'apercu, jamais avant), les puces, l'exergue, la transition, la signature et la marque de
  * fin suivent les mesures de `DescriptionAnnonce.tsx`.
+ *
+ * Pendant qu'on ecrit, la section du curseur se teinte doucement : c'est une aide d'edition, que le
+ * telephone n'a pas. Le halo s'etend hors de la section par une ombre, pour ne rien deplacer.
  */
 
 import '@mdi/font/css/materialdesignicons.min.css';
@@ -36,12 +39,24 @@ function Element({ element, lead, teinte }: { readonly element: ElementDeBloc; r
     }
 }
 
-export function DescriptionApercu({ texte, teinte }: { readonly texte: string; readonly teinte: string }) {
+export interface DescriptionApercuProps {
+    readonly texte: string;
+    readonly teinte: string;
+    /** La section ou est le curseur de l'editeur, teintee ; `null` quand on n'edite pas la description. */
+    readonly sectionActive: number | null;
+}
+
+export function DescriptionApercu({ texte, teinte, sectionActive }: DescriptionApercuProps) {
     const { blocs, signatureClot } = arbreDeDescription(texte);
     return (
         <div className="ap-description">
             {blocs.map((bloc, index) => (
-                <section key={index} className="ap-bloc">
+                <section
+                    key={index}
+                    data-bloc={index}
+                    className={`ap-bloc ${index === sectionActive ? 'actif' : ''}`}
+                    style={index === sectionActive ? { backgroundColor: `${teinte}14`, boxShadow: `0 0 0 10px ${teinte}14` } : undefined}
+                >
                     {porteLaSignature(bloc) ? <i className="mdi mdi-feather ap-filigrane" style={{ color: teinte }} aria-hidden="true" /> : null}
                     {bloc.titre !== null ? (
                         <header className="ap-tete">

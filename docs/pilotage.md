@@ -233,7 +233,7 @@ d'annonces avec l'aperçu du téléphone, [7-G](phase-7/7-g-console-statistiques
 | Retours | les **retours ouverts par défaut** (`nouveau`, `en attente`), des compteurs par état, nature, campus demandé et par semaine sur les huit dernières, des filtres sur les mêmes axes, la recherche sur le texte ; la fiche rend les **réponses question par question**, et n'écrit que la nature, l'état et la note — le reste est ce qui a été dit |
 | Journal | consulter, filtrer par table — **toutes** les tables journalisées — et par opération, chercher une ligne ou un auteur, paginer avec le total, ouvrir une entrée (avant, après), **exporter en JSON** avec les mêmes filtres |
 | Jetons push | le parc qui recevra les notifications, lu seulement |
-| Annonces | depuis [7-F](phase-7/7-f-console-annonces.md), **l'éditeur avec l'aperçu du téléphone** : la carte aux deux largeurs et la fiche, dans les deux thèmes, qui suivent la saisie ; le **point focal** choisi d'un clic sur l'image, couvrir ou contenir ; la description par sa barre de marqueurs ; la **galerie** téléversée en plusieurs fichiers et réordonnée ; le type, les emplacements, la priorité, l'épinglage, les **créneaux** (heure de Paris), le partenaire, le statut et la programmation lisible ; **dupliquer**, **archiver**, **voir sur mon téléphone** (audience `testeurs`, et son inverse) ; le panneau **« ordre du carrousel »** — l'ordre qu'un téléphone montre à une heure, sur un campus. Le visuel reste réduit et compressé dans le navigateur, sous un nom d'objet unique avec un cache d'un an, son blurhash posé dans la ligne |
+| Annonces | depuis [7-F](phase-7/7-f-console-annonces.md), **l'éditeur avec l'aperçu du téléphone** : la carte aux deux largeurs et la fiche, dans les deux thèmes, dans un panneau qui **suit le champ qu'on édite** et se cale sur la section du curseur ; le **point focal** posé d'un clic ou d'un glisser sur l'image, la partie gardée par la carte sous un voile, couvrir ou contenir ; la description dans une zone qui grandit, avec sa barre de marqueurs ; la couleur sur un **nuancier** ; le lieu **collé d'une carte** ; la **galerie** téléversée en plusieurs fichiers et réordonnée ; le type, les emplacements, la priorité, l'épinglage, les **créneaux** (heure de Paris), le partenaire, le statut, et l'état de l'annonce tel que les téléphones le voient, sous son titre comme dans la liste ; **dupliquer**, **archiver**, **voir sur mon téléphone** (audience `testeurs`, et son inverse) ; le panneau **« ordre du carrousel »** — l'ordre qu'un téléphone montre à une heure, sur un campus. Le visuel reste réduit et compressé dans le navigateur, sous un nom d'objet unique avec un cache d'un an, son blurhash posé dans la ligne |
 | Messages de service | la même chose pour `service_messages` ; la clé est proposée depuis le titre ; « Notifier » |
 | Testeurs | les appareils qui voient l'audience `testeurs`, avec un nom |
 | Visuels, Établissements, Salutations, Bâtiments, Version publiée | l'édition des lignes, avec l'avertissement que chaque table mérite — « une ligne s'écrit entière », les trois états d'un visuel, un champ vide qui ne corrige rien |
@@ -246,6 +246,12 @@ l'état : `#/annonces/<clé>` ouvre une ligne, `#/annonces?q=…&page=2&tri=…&
 la recherche, la page, le tri et les filtres. Une valeur qu'on ne connaît pas — posée hors console —
 s'affiche marquée et se corrige d'un geste ; l'enregistrement la refuse en la nommant. La console se
 parcourt entière au clavier, focus visible, et une ligne s'ouvre à « Entrée ».
+
+**Tout formulaire** a, depuis la passe d'ergonomie de 7-F, la même forme : le titre de la ligne et ses
+gestes en haut, une barre d'enregistrement collée au bas de la fenêtre avec **Ctrl+S**, et une
+confirmation avant qu'un lien de la console ne fasse perdre une saisie non enregistrée.
+
+![L'éditeur d'annonces : la description en cours, et l'aperçu du téléphone calé sur la section du curseur](screenshots/console/console-annonce-editeur.png)
 
 **La règle transverse** de 7-E : un chargement ou une erreur ne déplace jamais la mise en page — des
 lignes squelettes à la hauteur des lignes attendues, une erreur qui prend leur place, un bouton en

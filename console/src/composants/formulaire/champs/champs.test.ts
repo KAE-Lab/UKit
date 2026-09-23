@@ -7,7 +7,7 @@
 
 import { expect, test } from 'vitest';
 
-import { inserer } from './Description';
+import { inserer, ligneDuCurseur } from './Description';
 import { deplacer } from './Focale';
 import { bilanDeLot } from './Galerie';
 
@@ -28,4 +28,12 @@ test('le bilan d un lot dit ce qui est parti et nomme le premier refus', () => {
     expect(bilanDeLot(3, 3 * 1024 * 100, [])).toEqual({ ton: 'ok', texte: '3 images téléversées (300 Ko).' });
     expect(bilanDeLot(1, 1024 * 50, ['trop lourd', 'autre'])).toEqual({ ton: 'erreur', texte: '1 image téléversée (50 Ko) ; 2 refusées : trop lourd' });
     expect(bilanDeLot(0, 0, ['refus'])).toEqual({ ton: 'erreur', texte: '1 refusée : refus' });
+});
+
+test('la ligne du curseur se compte depuis zero', () => {
+    const texte = 'Ouverture\n\n# Programme\n- 21 h';
+    expect(ligneDuCurseur(texte, 0)).toBe(0);
+    expect(ligneDuCurseur(texte, texte.indexOf('# Programme'))).toBe(2);
+    expect(ligneDuCurseur(texte, texte.length)).toBe(3);
+    expect(ligneDuCurseur(texte, -5)).toBe(0);
 });

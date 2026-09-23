@@ -7,7 +7,7 @@ import type { JSX } from 'react';
 import { ImageOff } from 'lucide-react';
 
 import { formaterDate } from '../../lib/dates';
-import type { Champ } from '../../schema/descripteurs';
+import type { Champ, EtatCalcule } from '../../schema/descripteurs';
 import { resumeStructure } from '../../schema/resumes';
 import { valeursInconnues } from '../../schema/schemas';
 import { Pastille, ValeurInconnue } from '../ui/Pastille';
@@ -85,6 +85,11 @@ export function Cellule({ champ, valeur, codesConnus }: CelluleProps) {
     // Les saisies structurees de 7-F se resument en une ligne plutot qu'en `[object Object]`.
     const resume = champ === undefined ? null : resumeStructure(champ.type.type, valeur);
     return <>{resume ?? String(valeur)}</>;
+}
+
+/** Un etat calcule sur la ligne entiere — celui d'une annonce — : sa pastille, et la phrase qui l'explique au survol. */
+export function CelluleCalculee({ etat }: { readonly etat: EtatCalcule }) {
+    return <span title={etat.phrase ?? undefined}><Pastille ton={etat.ton} point>{etat.libelle}</Pastille></span>;
 }
 
 /** Un texte long (une zone) se tronque comme un titre : sans ca, la colonne s'elargit a la longueur de la plus longue reponse. */

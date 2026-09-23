@@ -26,7 +26,7 @@
 
 .colonne { display: flex; flex-direction: column; min-width: 0; }
 .barre {
-    display: flex; align-items: center; gap: var(--espace-md); min-height: 56px;
+    display: flex; align-items: center; gap: var(--espace-md); height: var(--hauteur-barre);
     padding: var(--espace-sm) var(--espace-xl); border-bottom: 1px solid var(--bordure); background: var(--surface);
     position: sticky; top: 0; z-index: 5;
 }

@@ -70,10 +70,11 @@
 .squelette.bloc { height: 96px; }
 
 /* ---- Dialogues (Base UI) ------------------------------------------------------------------ */
-.voile { position: fixed; inset: 0; min-height: 100dvh; background: var(--voile); transition: opacity var(--duree-moyenne); }
+/* Au-dessus de tout ce qui colle : la barre du haut, la barre d'enregistrement, l'apercu. */
+.voile { position: fixed; inset: 0; z-index: 50; min-height: 100dvh; background: var(--voile); transition: opacity var(--duree-moyenne); }
 .voile[data-starting-style], .voile[data-ending-style] { opacity: 0; }
 .dialogue {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; max-width: calc(100vw - 2 * var(--espace-lg));
+    position: fixed; z-index: 51; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; max-width: calc(100vw - 2 * var(--espace-lg));
     background: var(--surface); color: var(--texte); border: 1px solid var(--bordure); border-radius: var(--rayon-lg); box-shadow: var(--ombre-flottante);
     padding: var(--espace-lg); display: grid; gap: var(--espace-md); transition: transform var(--duree-moyenne) ease-out, opacity var(--duree-moyenne) ease-out;
 }

@@ -4,6 +4,9 @@
  *
  * `useConfirmation` rend une fonction qui pose la question et une promesse qui dit la reponse ; le
  * composant se monte une fois par page.
+ *
+ * La question affichee survit a la reponse : le dialogue s'efface en fondu, et il se vidait pendant
+ * ce temps — un cadre sans titre, un bouton « Confirmer » — le temps de l'animation.
  */
 
 import { AlertDialog } from '@base-ui/react/alert-dialog';
@@ -25,8 +28,10 @@ interface EnAttente {
 
 export function useConfirmation(): { readonly demander: (question: Question) => Promise<boolean>; readonly dialogue: ReactNode } {
     const [attente, setAttente] = useState<EnAttente | null>(null);
+    const [affichee, setAffichee] = useState<Question | null>(null);
 
     const demander = useCallback((question: Question) => new Promise<boolean>((repondre) => {
+        setAffichee(question);
         setAttente({ question, repondre: (oui) => { setAttente(null); repondre(oui); } });
     }), []);
 
@@ -35,12 +40,12 @@ export function useConfirmation(): { readonly demander: (question: Question) => 
             <AlertDialog.Portal>
                 <AlertDialog.Backdrop className="voile" />
                 <AlertDialog.Popup className="dialogue">
-                    <AlertDialog.Title render={<h2 />}>{attente?.question.titre}</AlertDialog.Title>
-                    <AlertDialog.Description render={<p className="description" />}>{attente?.question.texte}</AlertDialog.Description>
+                    <AlertDialog.Title render={<h2 />}>{affichee?.titre}</AlertDialog.Title>
+                    <AlertDialog.Description render={<p className="description" />}>{affichee?.texte}</AlertDialog.Description>
                     <div className="boutons fin">
                         <Bouton variante="discret" onClick={() => attente?.repondre(false)}>Annuler</Bouton>
-                        <Bouton variante={attente?.question.destructif === true ? 'destructif' : 'plein'} onClick={() => attente?.repondre(true)} autoFocus>
-                            {attente?.question.confirmer ?? 'Confirmer'}
+                        <Bouton variante={affichee?.destructif === true ? 'destructif' : 'plein'} onClick={() => attente?.repondre(true)} autoFocus>
+                            {affichee?.confirmer ?? 'Confirmer'}
                         </Bouton>
                     </div>
                 </AlertDialog.Popup>

@@ -9,16 +9,18 @@
  * repartir telle quelle en nommant ce qu'il faut corriger (defauts 5 et 6 du jalon 7-E).
  *
  * Depuis 7-F, les saisies structurees des annonces : la focale bornee a l'image, les creneaux dont
- * chaque plage est lisible, la galerie reduite a ses adresses, le partenaire nul quand tout est vide.
+ * chaque plage est lisible, la galerie reduite a ses adresses, le partenaire nul quand tout est vide,
+ * la teinte prise dans la palette, la latitude d'un lieu, et la forme attendue d'un texte.
  */
 
 import { z } from 'zod';
 
+import { PALETTE } from '../../../src/shared/annonces/grammaire';
 import { minutesDe } from '../../../src/shared/annonces/ordre';
 import { depuisSaisie, versSaisie } from '../lib/dates';
 import type { Champ, Descripteur } from './descripteurs';
 
-/** `{ x, y }` en fractions de l'image : le point garde au centre du recadrage. */
+/** `{ x, y }` en fractions de l'image : le point que le recadrage garde visible, a la meme place relative (lib/cadrage.ts). */
 export interface FocaleSaisie {
     readonly x: number;
     readonly y: number;
@@ -110,6 +112,7 @@ export function versSaisieDuChamp(champ: Champ, valeur: unknown): Saisie {
         case 'json':
             return valeur === null || valeur === undefined ? '' : JSON.stringify(valeur, null, 2);
         case 'nombre':
+        case 'lieu':
             return typeof valeur === 'number' ? String(valeur) : '';
         default:
             return typeof valeur === 'string' ? valeur : (valeur === null || valeur === undefined ? '' : String(valeur));
@@ -138,12 +141,25 @@ function vide(champ: Champ): SchemaDeChamp {
     });
 }
 
-function nombre(champ: Champ): SchemaDeChamp {
+/** Un nombre, la virgule decimale acceptee : la console est ecrite en francais, et « 44,8 » en est un. */
+function nombre(champ: Champ, borne?: number): SchemaDeChamp {
     return vide(champ).transform((valeur, ctx) => {
         if (typeof valeur !== 'string' || valeur === '') return valeur;
-        const n = Number(valeur);
+        const n = Number(valeur.replace(',', '.'));
         if (!Number.isFinite(n)) { ctx.addIssue({ code: 'custom', message: 'Un nombre est attendu.' }); return z.NEVER; }
+        if (borne !== undefined && Math.abs(n) > borne) { ctx.addIssue({ code: 'custom', message: `Entre -${borne} et ${borne}.` }); return z.NEVER; }
         return n;
+    });
+}
+
+/** Un texte libre ; s'il a une forme attendue, un texte d'une autre forme ne part pas, et la phrase dit laquelle. */
+function texte(champ: Champ): SchemaDeChamp {
+    return vide(champ).transform((valeur, ctx) => {
+        if (typeof valeur === 'string' && valeur !== '' && champ.forme !== undefined && !champ.forme.motif.test(valeur)) {
+            ctx.addIssue({ code: 'custom', message: champ.forme.message });
+            return z.NEVER;
+        }
+        return valeur;
     });
 }
 
@@ -225,6 +241,14 @@ function etablissements(codesConnus: readonly string[] | null): SchemaDeChamp {
 
 const booleen: SchemaDeChamp = z.custom<Saisie>().transform((saisie) => saisie === true);
 
+/** Une teinte de la palette, ou nulle pour « par defaut » ; un index hors palette — le 4 — ne part pas. */
+const teinte: SchemaDeChamp = texteSaisi.transform((brut, ctx) => {
+    if (brut === '') return null;
+    const index = Number(brut);
+    if (!PALETTE.includes(index)) { ctx.addIssue({ code: 'custom', message: `Teinte hors palette : « ${brut} ». Choisis-en une autre.` }); return z.NEVER; }
+    return index;
+});
+
 /** La focale part toujours : la colonne est `not null`, et une valeur illisible retombe sur le defaut de la base. */
 const focale: SchemaDeChamp = z.custom<Saisie>().transform((saisie) => lireFocale(saisie));
 
@@ -263,24 +287,30 @@ export interface ContexteDeSchema {
     readonly etablissements: readonly string[] | null;
 }
 
-/** Le schema d'un champ ; le texte est le repli des types qui se saisissent en clair. */
+type FabriqueDeSchema = (champ: Champ, contexte: ContexteDeSchema) => SchemaDeChamp;
+
+/** Le schema de chaque type ; le texte est le repli des types qui se saisissent en clair. */
+const SCHEMAS: Readonly<Partial<Record<Champ['type']['type'], FabriqueDeSchema>>> = {
+    booleen: () => booleen,
+    nombre: (champ) => nombre(champ),
+    // La latitude d'un lieu : sa longitude est un champ `nombre` soeur, bornee par le descripteur.
+    lieu: (champ) => nombre(champ, 90),
+    date: (champ) => date(champ),
+    json: (champ) => json(champ),
+    version: () => version(),
+    uuid: (champ) => uuid(champ),
+    choix: (champ) => choix(champ),
+    cases: (champ) => cases(champ),
+    etablissements: (_champ, contexte) => etablissements(contexte.etablissements),
+    focale: () => focale,
+    galerie: () => galerie,
+    creneaux: () => creneaux,
+    partenaire: () => partenaire,
+    teinte: () => teinte,
+};
+
 export function schemaDuChamp(champ: Champ, contexte: ContexteDeSchema = { etablissements: null }): SchemaDeChamp {
-    switch (champ.type.type) {
-        case 'booleen': return booleen;
-        case 'nombre': return nombre(champ);
-        case 'date': return date(champ);
-        case 'json': return json(champ);
-        case 'version': return version();
-        case 'uuid': return uuid(champ);
-        case 'choix': return choix(champ);
-        case 'cases': return cases(champ);
-        case 'etablissements': return etablissements(contexte.etablissements);
-        case 'focale': return focale;
-        case 'galerie': return galerie;
-        case 'creneaux': return creneaux;
-        case 'partenaire': return partenaire;
-        default: return vide(champ);
-    }
+    return (SCHEMAS[champ.type.type] ?? texte)(champ, contexte);
 }
 
 /** Le schema de tout le formulaire : les champs qui s'ecrivent, chacun par son schema. */

@@ -16,4 +16,6 @@ export interface ChampProps {
     readonly codesConnus: readonly string[] | null;
     readonly desactive: boolean;
     readonly enErreur: boolean;
+    /** Dit au formulaire la ligne ou est le curseur, pour un apercu qui s'y cale (la description). */
+    readonly signalerLigne?: (ligne: number) => void;
 }

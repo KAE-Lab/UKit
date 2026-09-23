@@ -1,10 +1,13 @@
 /**
- * L'etat d'une annonce, lu sur ce que le formulaire tient — pas seulement sur la ligne enregistree :
- * l'apercu dit ce que la saisie en cours donnera. La regle est celle de la politique de lecture de
- * la base (7-C) : visible si active, publiee, deja publiee et pas expiree ; programmee si publiee
- * mais pas encore ; et une phrase lisible pour la programmation, « publiée le 3 octobre à 11 h ».
+ * L'etat d'une annonce, tel que les telephones le voient. La regle est celle de la politique de
+ * lecture de la base (7-C) : visible si active, publiee, deja publiee et pas expiree ; programmee si
+ * publiee mais pas encore ; et une phrase lisible pour la programmation, « publiée le 3 octobre à 11 h ».
  *
- * Pur : joue par `npm test` a la racine du depot (etat.test.ts).
+ * Une seule regle pour toute la console : la colonne « État » de la liste, la pastille de l'editeur
+ * — sur la ligne enregistree comme sur la saisie en cours —, le panneau d'ordre et le tableau de bord.
+ * Elle vit a cote du descripteur, qui la cite, plutot que dans une page.
+ *
+ * Pur : joue par `npm test` a la racine du depot (etatDAnnonce.test.ts).
  */
 
 export type EtatDAnnonce = 'brouillon' | 'archivee' | 'inactive' | 'programmee' | 'active' | 'expiree';

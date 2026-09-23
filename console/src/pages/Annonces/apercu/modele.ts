@@ -15,6 +15,12 @@ import type { PaletteDeBase } from '../../../../../src/shared/theme/palettes';
 import { tokens } from '../../../../../src/shared/theme/tokens';
 import { lireFocale, lirePartenaire, type FocaleSaisie } from '../../../schema/schemas';
 
+/** Les deux vues de l'apercu : la carte, dans ses carrousels, et la fiche qu'elle ouvre. */
+export type Vue = 'carte' | 'fiche';
+
+/** Les endroits de la fiche ou l'apercu se cale quand on edite ce qu'ils montrent. */
+export type ZoneDeFiche = 'heros' | 'description' | 'galerie' | 'lieu';
+
 /** La largeur logique de l'iPhone 13 Pro, l'appareil de reference du parc de test. */
 export const LARGEUR_TELEPHONE = 390;
 /** La largeur d'une carte du carrousel : 60 % de l'ecran, pour que la suivante depasse (BdeSection). */
@@ -23,8 +29,8 @@ export const LARGEUR_CARROUSEL = Math.round(LARGEUR_TELEPHONE * 0.6);
 export const LARGEUR_CELLULE = Math.floor((LARGEUR_TELEPHONE - tokens.space.sm * 2 - tokens.space.md) / 2);
 /** La largeur d'un visuel de la fiche : l'ecran moins la gouttiere de chaque cote (BdeDetailsScreen). */
 export const LARGEUR_VISUEL = LARGEUR_TELEPHONE - 2 * tokens.space.md;
-/** Le cadre de la carte v2 : quatre de large pour cinq de haut. */
-export const RATIO_CARTE = 4 / 5;
+/** La hauteur logique de l'iPhone 13 Pro : la fiche n'en montre pas plus qu'un telephone. */
+export const HAUTEUR_TELEPHONE = 844;
 
 export type Ajustement = 'couvrir' | 'contenir';
 
@@ -60,7 +66,8 @@ function texte(valeur: unknown): string | null {
 
 function nombre(valeur: unknown): number | null {
     if (typeof valeur === 'number') return Number.isFinite(valeur) ? valeur : null;
-    if (typeof valeur === 'string' && valeur.trim() !== '') { const n = Number(valeur); return Number.isFinite(n) ? n : null; }
+    // La saisie est celle du formulaire, qui accepte la virgule decimale : « 44,8 » est un nombre.
+    if (typeof valeur === 'string' && valeur.trim() !== '') { const n = Number(valeur.replace(',', '.')); return Number.isFinite(n) ? n : null; }
     return null;
 }
 
@@ -92,11 +99,6 @@ export function teinteDe(couleur: number | undefined, palette: PaletteDeBase): s
     return (couleur === undefined ? undefined : palette.sectionsHeaders[couleur]) ?? palette.accent;
 }
 
-/** La focale en `object-position` : le point garde au centre du recadrage. */
-export function positionDeFocale(focale: FocaleSaisie): string {
-    return `${Math.round(focale.x * 100)}% ${Math.round(focale.y * 100)}%`;
-}
-
 /** Le ratio du cadre d'un visuel de la fiche : celui de l'image, borne entre 3:4 et 16:9 (BdeDetailsScreen). */
 export function ratioDeCadre(largeur: number, hauteur: number): number {
     if (!(largeur > 0) || !(hauteur > 0)) return 1;
@@ -115,4 +117,26 @@ const LIBELLES_D_EMPLACEMENT: Readonly<Record<string, string>> = { annonces: 'An
 /** Les carrousels ou la carte est speciale : tous les emplacements sauf le sien. */
 export function emplacementsSpeciaux(emplacements: readonly string[]): readonly { readonly code: string; readonly libelle: string }[] {
     return emplacements.filter((code) => code !== 'annonces').map((code) => ({ code, libelle: LIBELLES_D_EMPLACEMENT[code] ?? code }));
+}
+
+/**
+ * La vue que montre l'apercu quand on edite un champ : la carte pour ce qu'elle porte — le visuel, sa
+ * focale, le type et son badge, les emplacements, le partenaire —, la fiche pour ce qu'elle seule
+ * montre. `null` pour un champ que les deux portent, ou qu'aucune ne montre : la vue ne bouge pas.
+ */
+export function vueDuChamp(nom: string): Vue | null {
+    if (['image_url', 'focale', 'type', 'emplacements', 'partenaire'].includes(nom)) return 'carte';
+    if (['accroche', 'description', 'images', 'lat', 'cta_texte', 'cta_lien'].includes(nom)) return 'fiche';
+    return null;
+}
+
+/** L'endroit de la fiche ou se caler quand on edite un champ ; `null` quand la fiche n'a pas a bouger. */
+export function zoneDuChamp(nom: string): ZoneDeFiche | null {
+    switch (nom) {
+        case 'titre': case 'emetteur': case 'accroche': return 'heros';
+        case 'description': return 'description';
+        case 'images': return 'galerie';
+        case 'lat': return 'lieu';
+        default: return null;
+    }
 }

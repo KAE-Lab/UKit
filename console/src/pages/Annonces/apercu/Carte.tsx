@@ -7,7 +7,8 @@
  */
 
 import { urlDeRendu } from '../../../../../src/shared/visuels/rendu';
-import { badgeDeType, positionDeFocale, type AnnonceApercu } from './modele';
+import { positionDeFocale } from '../../../lib/cadrage';
+import { badgeDeType, type AnnonceApercu } from './modele';
 
 /** La densite de l'ecran de reference : un rendu deux fois plus large que ses points. */
 const DENSITE = 2;

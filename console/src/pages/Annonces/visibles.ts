@@ -1,7 +1,7 @@
 /**
  * L'ordre vu a une heure donnee : ce qu'un telephone montrerait a cet instant, sur ce campus, avec
  * cette version et cette plateforme, testeur ou non. Trois regles, toutes partagees avec
- * l'application : la visibilite de la politique de lecture (etat.ts), le ciblage
+ * l'application : la visibilite de la politique de lecture (etatDAnnonce.ts), le ciblage
  * (`shared/ciblage/ciblage.ts`) et l'ordre (`shared/annonces/ordre.ts`).
  *
  * Pur : joue par `npm test` a la racine du depot (visibles.test.ts).
@@ -9,7 +9,7 @@
 
 import { creneauActif, instantDeParis, ordonner, projeterOrdre, type ParametresDOrdre } from '../../../../src/shared/annonces/ordre';
 import { estCible, projeterCiblage, type Plateforme } from '../../../../src/shared/ciblage/ciblage';
-import { etatDAnnonce } from './etat';
+import { etatDAnnonce } from '../../schema/tables/etatDAnnonce';
 
 export interface ContexteDuPanneau {
     readonly instant: Date;

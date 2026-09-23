@@ -1,9 +1,12 @@
 /**
  * L'etat des annonces, lu sur les lignes : active (visible maintenant), programmee (publiee, mais
- * pas encore), et le reste. La meme regle que la politique de lecture de la base (7-C).
+ * pas encore), et le reste. La regle est celle de la liste et de l'editeur (etatDAnnonce.ts) : le
+ * chiffre du tableau de bord et la colonne « État » ne peuvent pas se contredire.
  *
  * Pur : joue par `npm test` a la racine du depot (annonces.test.ts).
  */
+
+import { etatDAnnonce, type EtatDAnnonce } from '../../schema/tables/etatDAnnonce';
 
 export interface AnnonceLegere {
     readonly id: unknown;
@@ -22,23 +25,18 @@ export interface EtatDesAnnonces {
     readonly archivees: number;
 }
 
-function instant(valeur: unknown): number | null {
-    if (typeof valeur !== 'string' || valeur === '') return null;
-    const t = new Date(valeur).getTime();
-    return Number.isNaN(t) ? null : t;
+function debut(annonce: AnnonceLegere): number {
+    const t = typeof annonce.publiee_le === 'string' ? new Date(annonce.publiee_le).getTime() : Number.NaN;
+    return Number.isNaN(t) ? 0 : t;
 }
 
 export function etatDesAnnonces(annonces: readonly AnnonceLegere[], maintenant: Date): EtatDesAnnonces {
-    const t = maintenant.getTime();
-    const publiees = annonces.filter((a) => a.statut === 'publiee' && a.active === true);
-    const nonExpiree = (a: AnnonceLegere) => { const fin = instant(a.expire_le); return fin === null || fin > t; };
-    const actives = publiees.filter((a) => { const debut = instant(a.publiee_le); return debut !== null && debut <= t && nonExpiree(a); });
-    const programmees = publiees.filter((a) => { const debut = instant(a.publiee_le); return debut !== null && debut > t; })
-        .sort((a, b) => (instant(a.publiee_le) ?? 0) - (instant(b.publiee_le) ?? 0));
+    const lues = annonces.map((annonce) => ({ annonce, etat: etatDAnnonce(annonce, maintenant).etat }));
+    const en = (etat: EtatDAnnonce) => lues.filter((lue) => lue.etat === etat).map((lue) => lue.annonce);
     return {
-        actives: actives.sort((a, b) => (instant(b.publiee_le) ?? 0) - (instant(a.publiee_le) ?? 0)),
-        programmees,
-        brouillons: annonces.filter((a) => a.statut === 'brouillon').length,
-        archivees: annonces.filter((a) => a.statut === 'archivee').length,
+        actives: en('active').sort((a, b) => debut(b) - debut(a)),
+        programmees: en('programmee').sort((a, b) => debut(a) - debut(b)),
+        brouillons: en('brouillon').length,
+        archivees: en('archivee').length,
     };
 }

@@ -22,12 +22,12 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useMemo, type KeyboardEvent } from 'react';
 
 import type { EtatDeTable } from '../../lib/requete';
-import { champDe, cleDeLigne, cleVersUrl, colonnesTriables, type Descripteur } from '../../schema/descripteurs';
+import { champDe, cleDeLigne, cleVersUrl, colonneCalculee, colonnesTriables, type Descripteur } from '../../schema/descripteurs';
 import type { Ligne } from '../../supabase';
 import { EtatVide } from '../ui/EtatVide';
 import { ErreurDeLecture } from '../ui/ErreurDeLecture';
 import { SqueletteDeLignes } from '../ui/Squelette';
-import { Cellule, classeDeCellule } from './Cellules';
+import { Cellule, CelluleCalculee, classeDeCellule } from './Cellules';
 
 const FONCTIONS = tableFeatures({ rowSortingFeature, rowPaginationFeature, columnFilteringFeature, globalFilteringFeature });
 const aide = createColumnHelper<typeof FONCTIONS, Ligne>();
@@ -54,9 +54,11 @@ export function Table({ descripteur, etat, poser, lignes, total, enChargement, p
     const triables = colonnesTriables(descripteur);
     const colonnes = useMemo(() => descripteur.liste.map((nom) => aide.accessor((ligne) => ligne[nom], {
         id: nom,
-        header: champDe(descripteur, nom)?.libelle ?? nom,
+        header: colonneCalculee(descripteur, nom)?.libelle ?? champDe(descripteur, nom)?.libelle ?? nom,
         enableSorting: triables.includes(nom),
     })), [descripteur, triables]);
+    // Un etat calcule se lit a l'instant de l'affichage, comme la pastille de l'editeur.
+    const maintenant = new Date();
 
     const table = useTable({
         features: FONCTIONS,
@@ -116,6 +118,8 @@ export function Table({ descripteur, etat, poser, lignes, total, enChargement, p
                         {rangees.map((rangee) => (
                             <tr key={rangee.id} className="cliquable" tabIndex={0} role="link" onClick={() => ouvrir(rangee.original)} onKeyDown={(e) => auClavier(e, rangee.original)}>
                                 {rangee.getAllCells().map((cellule) => {
+                                    const calculee = colonneCalculee(descripteur, cellule.column.id);
+                                    if (calculee !== undefined) return <td key={cellule.id}><CelluleCalculee etat={calculee.valeur(rangee.original, maintenant)} /></td>;
                                     const champ = champDe(descripteur, cellule.column.id);
                                     return (
                                         <td key={cellule.id} className={classeDeCellule(cellule.column.id, champ)}>

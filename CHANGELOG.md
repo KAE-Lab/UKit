@@ -19,8 +19,8 @@ release : une annonce se compose en voyant ce qu'elle donnera sur un téléphone
   grille — et la fiche, dans le thème clair ou sombre au choix, qui suivent la saisie ; la carte v2
   (cadre 4:5, image couverte autour du point focal ou contenue sur fond flou, badge du type, logo du
   partenaire) y est dessinée pour la première fois, et c'est la référence que la 6.3 reproduit.
-- **Le point focal** se choisit d'un clic sur l'image, se règle aux flèches, et une bascule dit si
-  l'image couvre ou se contient.
+- **Le point focal** se pose d'un clic ou d'un glisser sur l'image, se règle aux flèches, et un voile
+  montre la partie que le cadre de la carte gardera ; une bascule dit si l'image couvre ou se contient.
 - **Les champs de la publication** que la base portait depuis 7-C : le type, les emplacements, la
   priorité, l'épinglage, les créneaux de mise en avant (jours et heures de Paris), le partenaire, le
   statut avec sa programmation lisible (« Programmée, publiée le 3 octobre à 11 h »).
@@ -33,8 +33,14 @@ release : une annonce se compose en voyant ce qu'elle donnera sur un téléphone
   la 6.3 branche dans l'application.
 - **Trois gestes** : dupliquer (une copie en brouillon, ouverte), archiver, voir sur mon téléphone (et
   son inverse), chacun tracé au journal.
-- **Des tests** : la grammaire, l'ordre, les schémas des saisies structurées, l'état d'une annonce,
-  l'ordre vu à une heure, le modèle de l'aperçu.
+- **Une couleur choisie sur un nuancier**, chaque teinte montrée en clair et en sombre, à la place d'un
+  index de 0 à 5.
+- **Un lieu collé d'une carte** : le clic droit de Google Maps, l'adresse d'une fiche Google Maps ou
+  d'OpenStreetMap remplissent la latitude et la longitude, avec un lien pour vérifier le point.
+- **Ctrl+S** ou **Cmd+S** enregistre tout formulaire de la console.
+- **Des tests** : la grammaire et la section d'une ligne, l'ordre, les schémas des saisies structurées,
+  l'état d'une annonce, l'ordre vu à une heure, le modèle de l'aperçu, le cadrage, les coordonnées
+  collées, l'état du formulaire, le raccourci d'enregistrement.
 
 ### Modifié
 
@@ -42,10 +48,29 @@ release : une annonce se compose en voyant ce qu'elle donnera sur un téléphone
   action rend, tient ses actions inertes tant qu'une saisie n'est pas enregistrée (« Notifier »
   compris), et la phrase d'une écriture qui change l'adresse d'une ligne survit au rechargement du
   formulaire — « Enregistré. » d'une ligne neuve disparaissait depuis 7-E.
+- **L'éditeur se regarde en écrivant** (passe d'ergonomie du 2026-09-23, après la recette sur
+  appareils) : l'aperçu est un panneau à la hauteur de la fenêtre, avec son propre défilement et deux
+  onglets, qui suit le champ édité et se cale sur la section de la description où est le curseur ; la
+  description grandit avec le texte, en police de lecture ; le titre de la ligne, son état et les gestes
+  sont en haut, et la barre d'enregistrement reste au bas de la fenêtre, avec l'état de la saisie.
 - **Côté application, sans effet visible** : le découpage de la description sort de
   `DescriptionAnnonce.tsx` vers `shared/annonces/grammaire.ts` ; les couleurs de base des deux thèmes
   sortent de `Theme.ts` vers `shared/theme/palettes.ts` ; `AnnonceRow` porte enfin les colonnes de 7-C ;
   deux indexations de `versions.ts` et `rendu.ts` sont typées strictement.
+
+### Corrigé
+
+- **Le repère du point focal tombait à droite du clic** : il se dessinait en proportion d'un cadre plus
+  large que l'image. La valeur enregistrée, elle, était juste.
+- **Un clic dans la navigation perdait une saisie non enregistrée** sans rien demander, depuis 7-E : tout
+  lien de la console demande désormais.
+- **Le dialogue de confirmation se vidait pendant qu'il s'effaçait**, depuis 7-E.
+- **Sur la largeur d'un téléphone, le formulaire d'une annonce débordait de la page**, par le champ
+  d'image, depuis 7-E.
+- **La liste des annonces disait « Publiée », en vert, d'une annonce que personne ne voit** —
+  décochée, programmée ou expirée —, depuis que 7-F avait retiré la colonne « Active » de 7-E : une
+  colonne « État » dit désormais ce que voient les téléphones, par la règle de la pastille de
+  l'éditeur, que le tableau de bord emploie aussi.
 
 Le jalon [7-E](docs/phase-7/7-e-console-socle.md), le socle de la console, sur `main` et sans release :
 la console de pilotage refondue sur un socle standard, pour devenir l'outil d'une équipe.
