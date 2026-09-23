@@ -26,6 +26,7 @@
     "react-dom": "^19.3.0",
     "react-error-boundary": "^6.1.6",
     "react-hook-form": "^7.88.0",
+    "react-textarea-autosize": "^8.5.9",
     "zod": "^4.6.5"
   },
   "devDependencies": {
