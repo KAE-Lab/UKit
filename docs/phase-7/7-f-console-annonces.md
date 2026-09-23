@@ -318,6 +318,11 @@ politique de lecture, le ciblage celui de l'application, l'ordre celui du module
   les clics, et un focus qui ne va nulle part garde le champ où il était.
 - **Une recette publie en audience `testeurs`, toujours** — [la passe d'ergonomie](#la-passe-dergonomie-le-2026-09-23)
   dit pourquoi.
+- **Vite transforme chaque fichier avec le tsconfig le plus proche** : un module de `src/shared/`
+  prenait celui de l'application, qui étend `expo/tsconfig.base`, un paquet de la racine. La
+  construction passait sur un poste où la racine est installée, et échouait en intégration continue,
+  qui n'installe que la console — depuis le premier commit du jalon, vu à sa clôture. La console
+  désigne le sien (`tsconfig` de [`vite.config.ts`](../../console/vite.config.ts)).
 
 ## Dépendances
 

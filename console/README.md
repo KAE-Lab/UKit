@@ -110,7 +110,9 @@ importés par chemin relatif : la grammaire de la description
 ([`ordre.ts`](../src/shared/annonces/ordre.ts)), le ciblage, les adresses de rendu, les tokens et
 les palettes du thème. Vite remonte à la racine du dépôt pour les servir (`server.fs.allow`), et la
 console les compile en `strict` : ce que la console importe de l'application doit être pur **et**
-strict.
+strict. Vite les transforme avec le tsconfig de la console (`tsconfig` de
+[`vite.config.ts`](vite.config.ts)) : le plus proche d'eux est celui de l'application, qui étend un
+paquet que l'intégration continue n'installe pas pour la console.
 
 **L'URL porte l'état** : `#/annonces/<clé>` ouvre une ligne, `#/annonces/nouveau` une ligne neuve,
 `#/annonces?q=…&page=2&tri=titre.desc&f.audience=testeurs` retient la recherche, la page, le tri et
