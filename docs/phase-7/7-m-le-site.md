@@ -6,6 +6,12 @@
 > [7-I](7-i-releve-et-vocabulaire.md)**, quand la direction artistique de l'application est fixée, et
 > devient l'endroit que l'application ouvre pour ce qui n'a pas sa place dans un binaire.
 
+> **Amendé le 2026-09-24 : la refonte part de l'Épure** ([identite.md](../identite.md)), l'identité née le
+> 2026-09-23 pour les slides de Disrupt Campus, que le site porte à l'intensité « forte ». Elle interroge
+> trois points de la direction ci-dessous, qui se tranchent à l'ouverture avec [7-I](7-i-releve-et-vocabulaire.md) :
+> la police (Geist dans l'Épure, celle du système ici), les formes (des cercles dans l'Épure, des carrés
+> arrondis ici) et le thème (l'Épure n'existe qu'en sombre).
+
 ## L'écart mesuré le 2026-09-15
 
 Le site est soigné, et il ne parle pas la langue de l'application. Relevé dans le dépôt `UKit-website` :

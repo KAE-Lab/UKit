@@ -151,7 +151,7 @@ module commun, une colonne de plus s'y ajoute une fois pour tous.
   l'appel, et `tsc` les accepte ([6.1.x-A](6-1-x-a-montee-du-socle.md)).
 - **`getEventsAsync` jette** sur une liste de calendriers vide, une date absente : une liste vide
   court-circuite l'appel, elle ne le tente pas.
-- **Ne pas relire ce qu'UKit a écrit** : calendrier cible exclu **et** identifiants de
+- **Ne pas relire ce que UKit a écrit** : calendrier cible exclu **et** identifiants de
   `previousSyncData` exclus. L'un sans l'autre laisse un doublon.
 - **`moment()`, jamais `new Date()`** pour le jour affiché — le simulateur de date du menu de
   développement ne déplace que `moment.now`.

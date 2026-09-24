@@ -29,3 +29,12 @@ supabase/.temp/
 
 # La sortie de `npx expo export`, une porte jouee a chaque jalon depuis la phase 7 : jamais versionnee.
 dist/
+
+# Le kit de l'Epure regenere a chaque export ses slides, ses dessins, le logo en verre et la police du
+# titre : ni la sortie ni ces fichiers intermediaires ne se versionnent (tools/epure/README.md).
+tools/epure/sortie/
+tools/epure/slide-*.html
+tools/epure/fig01-u.svg
+tools/epure/fig02-question.svg
+tools/epure/ukit-logo-verre.svg
+tools/epure/polices/Geist-600-titre.ttf

@@ -162,7 +162,7 @@ blueprints/          les fichiers d'instructions embarqués (le socle hors ligne
 supabase/            schéma, gardes et politiques d'accès de la base de publication
 console/             la console de pilotage : publier sans SQL, avec un compte, en laissant une trace
 sondes/              les sondes du matin : chaque source jouée sans identifiant, une issue au changement
-tools/               publication des Blueprints, compte éditeur de la console, harnais de parité, import des retours, compression des visuels
+tools/               publication des Blueprints, compte éditeur de la console, harnais de parité, import des retours, compression des visuels, le kit de l'Épure
 assets/              icônes, visuels, référentiel des bâtiments du campus, pdf.js vendorisé
 docs/                cette documentation
 ```
@@ -555,6 +555,7 @@ document.
 | [docs/phase-6/](docs/phase-6/README.md) | le cadrage de la migration vers les Blueprints, jalon par jalon |
 | [docs/phase-7/](docs/phase-7/README.md) | de l'application au produit : les décisions d'après la 6.2.1, les publications 6.2.2 à 6.4, les jalons et leur état |
 | [docs/theme.md](docs/theme.md) | tokens, palettes, composants partagés, **recette d'écran** |
+| [docs/identite.md](docs/identite.md) | **l'Épure**, l'identité visuelle : son idée, le logo mesuré, la palette, la typographie, les composants, les règles et les intensités selon le support |
 | [docs/inventaire-visuel.md](docs/inventaire-visuel.md) | l'état visuel mesuré du dépôt, avant le socle : littéraux, divergences, manques |
 | [docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md) | les défauts de comportement connus, tenus **à part** de l'esthétique |
 | [docs/i18n.md](docs/i18n.md) | Translator, dictionnaires, ajout d'une chaîne |
@@ -563,6 +564,7 @@ document.
 | [docs/qualite.md](docs/qualite.md) | portes de qualité, vérification manuelle, simulation temporelle |
 | [docs/features/](docs/features/) | une documentation par domaine fonctionnel |
 | [docs/screenshots/](docs/screenshots/README.md) | captures attendues et convention |
+| [docs/histoire.md](docs/histoire.md) | l'histoire de UKit, tournant par tournant, de son premier site en 2012 à aujourd'hui |
 | [docs-aetherius/](docs-aetherius/) | Aetherius, le moteur d'automatisation — doc complète sur son dépôt |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | workflow, définition de « terminé », principes de code |
 | [CHANGELOG.md](CHANGELOG.md) | évolutions notables, version par version |
@@ -582,7 +584,8 @@ travail sur les premières versions de l'application :
 * [Clément](https://github.com/Shapeqs)
 
 Le projet est aujourd'hui repris, maintenu et développé par l'organisation KAE Lab. Un remerciement
-particulier à Jean pour sa confiance et pour nous avoir transmis les clés de l'application.
+particulier à Jean pour sa confiance et pour nous avoir transmis les clés de l'application. Leur
+histoire, et celle de l'application depuis 2012, est dans [docs/histoire.md](docs/histoire.md).
 
 L'application s'appuie sur deux services tiers que nous remercions : **Affluences** pour les données
 d'affluence des bibliothèques, et **[Croustillant](https://croustillant.menu)** pour les menus des

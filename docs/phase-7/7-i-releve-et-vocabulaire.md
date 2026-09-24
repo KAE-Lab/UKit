@@ -10,6 +10,13 @@
 > Le jalon fondateur de la 6.3, sur le modèle de [6-K](../phase-6/6-k-socle-visuel.md) : celui-ci a donné à
 > l'application son vocabulaire de **formes**, celui-là lui donne son vocabulaire de **mouvement**.
 
+> **Amendé le 2026-09-24 : le point de départ visuel est l'Épure** ([identite.md](../identite.md)), l'identité
+> née le 2026-09-23 pour les slides de Disrupt Campus. Dans l'application, elle entre à l'intensité
+> « signature » : des moments — l'accueil, les états vides, les cartes d'erreur illustrées, les fonds par
+> écran, le tirer-pour-rafraîchir, où son écho est déjà un mouvement —, jamais des traces sur les écrans de
+> travail. Les deux règles laissées plus bas, la police du système et l'absence de rondeur, tiennent jusqu'à
+> ce que ce jalon les tranche : ce sont deux des questions que l'Épure laisse ouvertes.
+
 ## La direction
 
 *« Rien n'apparaît sans être annoncé par sa forme. »* La 6.1-E a rendu l'application correcte ; elle

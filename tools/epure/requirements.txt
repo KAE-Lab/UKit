@@ -1,0 +1,8 @@
+# Le kit de l'Epure. skia-pathops sert a fonttools pour fusionner les contours de la police du titre ;
+# playwright rend les slides dans Chromium (python -m playwright install chromium).
+fonttools==4.65.0
+img2pdf==0.6.3
+numpy==2.5.3
+pillow==12.3.0
+playwright==1.61.0
+skia-pathops==0.9.2

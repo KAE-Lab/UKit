@@ -106,7 +106,7 @@ function estAffichable(evenement: EvenementDuTelephone, exclus: ReadonlySet<stri
     // Un evenement annule n'est plus un rendez-vous. Un evenement « disponible » (anniversaire, jour
     // ferie) en est un : l'utilisateur a coche ce calendrier pour le voir — decision du 2026-09-07.
     if (evenement.status === 'canceled') return false;
-    // Ce qu'UKit a ecrit lui-meme se reconnait a son identifiant, quel que soit son calendrier : la
+    // Ce que UKit a ecrit lui-meme se reconnait a son identifiant, quel que soit son calendrier : la
     // table `previousSyncData` peut porter un orphelin dans un calendrier qui n'est plus la cible.
     return !exclus.has(String(evenement.id));
 }
