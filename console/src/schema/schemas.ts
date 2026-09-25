@@ -228,12 +228,21 @@ function cases(champ: Champ): SchemaDeChamp {
     });
 }
 
-/** Aucun code coche vaut tous ; un code absent du catalogue ne repart pas, quand le catalogue est connu. */
-function etablissements(codesConnus: readonly string[] | null): SchemaDeChamp {
+/**
+ * Aucun code coche vaut tous ; un code absent du catalogue ne repart pas, quand le catalogue est connu.
+ * Pour un redacteur borne (7-H), « tous » n'existe pas et un campus qui n'est pas le sien non plus : la
+ * base le refuserait (private.peut_publier), autant le dire sur le champ.
+ */
+function etablissements(codesConnus: readonly string[] | null, borne: readonly string[] | null): SchemaDeChamp {
     return listeSaisie.transform((codes, ctx) => {
         if (codesConnus !== null) {
             const inconnu = codes.find((code) => !codesConnus.includes(code));
             if (inconnu !== undefined) { ctx.addIssue({ code: 'custom', message: `Code absent du catalogue : « ${inconnu} ». Décoche-le.` }); return z.NEVER; }
+        }
+        if (borne !== null) {
+            if (codes.length === 0) { ctx.addIssue({ code: 'custom', message: 'Coche au moins un de tes campus : une annonce pour tous les campus est un geste d’admin.' }); return z.NEVER; }
+            const horsBorne = codes.find((code) => !borne.includes(code));
+            if (horsBorne !== undefined) { ctx.addIssue({ code: 'custom', message: `« ${horsBorne} » n’est pas un de tes campus : décoche-le.` }); return z.NEVER; }
         }
         return codes.length === 0 ? null : [...codes];
     });
@@ -285,6 +294,8 @@ const partenaire: SchemaDeChamp = z.custom<Saisie>().transform((saisie, ctx) => 
 export interface ContexteDeSchema {
     /** Les codes du catalogue ; `null` quand il n'a pas repondu, et la verification est alors sautee. */
     readonly etablissements: readonly string[] | null;
+    /** Les campus d'un redacteur borne (7-H) ; absent ou `null` pour tout autre compte. */
+    readonly borne?: readonly string[] | null;
 }
 
 type FabriqueDeSchema = (champ: Champ, contexte: ContexteDeSchema) => SchemaDeChamp;
@@ -301,7 +312,7 @@ const SCHEMAS: Readonly<Partial<Record<Champ['type']['type'], FabriqueDeSchema>>
     uuid: (champ) => uuid(champ),
     choix: (champ) => choix(champ),
     cases: (champ) => cases(champ),
-    etablissements: (_champ, contexte) => etablissements(contexte.etablissements),
+    etablissements: (_champ, contexte) => etablissements(contexte.etablissements, contexte.borne ?? null),
     focale: () => focale,
     galerie: () => galerie,
     creneaux: () => creneaux,

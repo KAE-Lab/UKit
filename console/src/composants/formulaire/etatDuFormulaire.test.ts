@@ -14,6 +14,7 @@ test('le titre suit la saisie, le titre ou le nom, sinon il dit ce qu on fait', 
     expect(libelleDeLigne({ titre: '' }, null, 'Nouvelle annonce')).toBe('Nouvelle annonce');
     expect(libelleDeLigne({}, null, undefined)).toBe('Nouvelle ligne');
     expect(libelleDeLigne({ plateforme: 'ios' }, { plateforme: 'ios' }, undefined)).toBe('Modifier');
+    expect(libelleDeLigne({ email: 'camille@exemple.fr', role: 'redacteur' }, { email: 'camille@exemple.fr' }, 'Inviter quelqu’un')).toBe('camille@exemple.fr');
 });
 
 test('la barre dit le dernier geste, puis les champs a corriger, puis ce qui n est pas enregistre', () => {

@@ -1,7 +1,7 @@
 /**
  * La fiche d'un retour : les reponses question par question, lisibles, a la place du JSON brut ;
- * le reste de la ligne en lecture ; et le formulaire reduit a ce que la base laisse ecrire —
- * nature, etat, note.
+ * l'adresse laissee, pour un admin et au clic (7-H) ; le reste de la ligne en lecture ; et le
+ * formulaire reduit a ce que la base laisse ecrire — nature, etat, note, par un admin.
  */
 
 import { Formulaire } from '../../composants/formulaire/Formulaire';
@@ -10,6 +10,7 @@ import { EtatVide } from '../../composants/ui/EtatVide';
 import { SqueletteBloc } from '../../composants/ui/Squelette';
 import { useLigne } from '../../requetes/useListe';
 import { RETOURS } from '../../schema/tables/retours';
+import { ContactDuRetour } from './Contact';
 
 const HORS_DES_QUESTIONS = new Set(['Timestamp']);
 const MASQUES = ['reponses', 'texte', 'id'];
@@ -41,6 +42,7 @@ export function FicheDeRetour({ id, retour }: { readonly id: string; readonly re
             <div className="carte">
                 <h2>Ce qui a été dit</h2>
                 <QuestionsReponses reponses={requete.data.reponses} />
+                <ContactDuRetour id={id} />
             </div>
             <Formulaire key={id} descripteur={RETOURS} existante={requete.data} masquer={MASQUES} onEnregistre={() => undefined} onSupprime={retour} onAnnule={retour} />
         </>

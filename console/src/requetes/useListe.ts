@@ -7,14 +7,14 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { lireLigne, lirePage, lireTout, type Page } from '../lib/base';
 import { cleDeSpec, type SpecDeRequete } from '../lib/requete';
-import { cleDeLigne, type Descripteur } from '../schema/descripteurs';
+import { cleDeLigne, colonnesLues, type Descripteur } from '../schema/descripteurs';
 import type { Ligne } from '../supabase';
 import { cles } from './client';
 
 export function useListe(descripteur: Descripteur, spec: SpecDeRequete) {
     return useQuery<Page>({
         queryKey: cles.liste(descripteur.table, cleDeSpec(spec)),
-        queryFn: () => lirePage(descripteur.table, spec),
+        queryFn: () => lirePage(descripteur.table, spec, colonnesLues(descripteur)),
         // La page precedente reste affichee, estompee, le temps que la suivante arrive : rien ne saute.
         placeholderData: keepPreviousData,
     });

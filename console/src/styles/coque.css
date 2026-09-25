@@ -21,7 +21,8 @@
 .lien-nav.actif { background: var(--accent-doux); color: var(--accent); }
 .lien-nav .icone { color: var(--texte-2); }
 .lien-nav.actif .icone { color: var(--accent); }
-.lien-nav .compte { overflow-wrap: anywhere; font-size: var(--taille-xs); }
+/* L'adresse sur une ligne, coupee en fin : a cote de la pastille du role (7-H), elle se brisait au milieu des mots. */
+.lien-nav .compte { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--taille-xs); }
 .laterale .pied { margin-top: auto; padding: var(--espace-md); border-top: 1px solid var(--bordure); font-size: var(--taille-xs); color: var(--texte-2); overflow-wrap: anywhere; }
 
 .colonne { display: flex; flex-direction: column; min-width: 0; }

@@ -4,14 +4,14 @@
  * en bas, dans la barre qui suit le defilement (BarreDEnregistrement.tsx).
  */
 
-import { Archive, Copy, Send, Smartphone, Trash2, Users, type LucideIcon } from 'lucide-react';
+import { Archive, Copy, KeyRound, Send, Smartphone, Trash2, UserX, Users, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import type { ActionDeLigne } from '../../schema/descripteurs';
 import { Bouton } from '../ui/Bouton';
 
 const ICONES: Readonly<Record<NonNullable<ActionDeLigne['icone']>, LucideIcon>> = {
-    copier: Copy, telephone: Smartphone, tous: Users, archiver: Archive, envoyer: Send,
+    copier: Copy, telephone: Smartphone, tous: Users, archiver: Archive, envoyer: Send, cle: KeyRound,
 };
 
 export interface EnTeteProps {
@@ -21,6 +21,8 @@ export interface EnTeteProps {
     readonly etat: ReactNode;
     readonly actions: readonly ActionDeLigne[];
     readonly suppression: boolean;
+    /** Le libelle du geste qui retire la ligne, quand ce n'est pas une suppression : « Révoquer » (7-H). */
+    readonly libelleDeSuppression?: string;
     readonly actionEnCours: string | null;
     readonly suppressionEnCours: boolean;
     /** Occupe ou sans droits : rien ne s'actionne. */
@@ -31,7 +33,8 @@ export interface EnTeteProps {
     readonly supprimer: () => void;
 }
 
-export function EnTeteDeFormulaire({ titre, titreDePage, etat, actions, suppression, actionEnCours, suppressionEnCours, inerte, modifie, agir, supprimer }: EnTeteProps) {
+export function EnTeteDeFormulaire({ titre, titreDePage, etat, actions, suppression, libelleDeSuppression, actionEnCours, suppressionEnCours, inerte, modifie, agir, supprimer }: EnTeteProps) {
+    const IconeDeSuppression = libelleDeSuppression === undefined ? Trash2 : UserX;
     const Titre = titreDePage ? 'h1' : 'h2';
     return (
         <header className="formulaire-entete">
@@ -59,7 +62,7 @@ export function EnTeteDeFormulaire({ titre, titreDePage, etat, actions, suppress
                         );
                     })}
                     {suppression ? (
-                        <Bouton variante="destructif" compact onClick={supprimer} enAttente={suppressionEnCours} disabled={inerte} icone={<Trash2 className="icone" aria-hidden="true" />}>Supprimer</Bouton>
+                        <Bouton variante="destructif" compact onClick={supprimer} enAttente={suppressionEnCours} disabled={inerte} icone={<IconeDeSuppression className="icone" aria-hidden="true" />}>{libelleDeSuppression ?? 'Supprimer'}</Bouton>
                     ) : null}
                 </div>
             ) : null}

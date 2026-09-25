@@ -16,7 +16,13 @@ export const TABLES_JOURNALISEES: readonly string[] = [
     'testeurs',
     'app_release',
     'retours',
+    // Depuis 7-H : qui a donne quel role a qui. Ses lignes, comme celles des retours, ne se lisent que
+    // par un admin (policies.sql).
+    'editeurs',
 ];
+
+/** Les tables dont le journal ne se lit que par un admin : un retour y copie l'adresse laissee, l'equipe ses membres (7-H). */
+export const TABLES_DU_JOURNAL_DES_ADMINS: readonly string[] = ['retours', 'editeurs'];
 
 /** Ce qui s'ecrit depuis la console sans laisser de trace : ce n'est pas un oubli, c'est ecrit. */
 export const TABLES_SANS_JOURNAL: readonly string[] = ['jetons_push', 'sondes', 'mesures'];

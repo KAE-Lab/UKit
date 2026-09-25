@@ -1,18 +1,26 @@
 /**
- * La session de la console, partagee par contexte : qui est connecte, et s'il a le droit d'ecrire.
+ * La session de la console, partagee par contexte : qui est connecte, ce que son role lui permet, et
+ * s'il doit d'abord choisir son mot de passe.
  *
- * Le droit d'ecrire est une ligne dans `editeurs`, que la politique ne laisse lire qu'a son
- * proprietaire : la console la lit pour le DIRE — chaque page qui ecrit affiche « lecture seule » a
- * un compte sans droits et desactive ses boutons (defaut 3 du jalon 7-E). Un compte sans droits
- * verrait chaque ecriture refusee de toute facon (42501).
+ * Les droits sont la ligne du compte dans `editeurs` — son role et, pour un redacteur, ses campus —, que
+ * la politique laisse lire a son proprietaire. La console les lit pour le DIRE (droits.ts) : chaque page
+ * affiche ce que le role permet, et desactive le reste. La base, elle, refuse de toute facon.
  */
 
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
+
+import type { CompteQuiAgit } from '../schema/descripteurs';
+import type { DroitsDeSession } from './droits';
 
 export interface Session {
     readonly email: string;
-    /** `null` tant que la reponse n'est pas revenue. */
-    readonly editeur: boolean | null;
+    /** `undefined` tant que la reponse n'est pas revenue ; `null` pour un compte qui n'est pas dans l'equipe. */
+    readonly droits: DroitsDeSession;
+    /**
+     * Le compte a ete cree, ou son mot de passe remplace, par un admin (7-H) : un mot de passe
+     * provisoire, transmis de vive voix, que la console fait remplacer avant toute autre page.
+     */
+    readonly provisoire: boolean;
 }
 
 export type EtatDeSession =
@@ -27,7 +35,13 @@ export function useSessionCourante(): Session | null {
     return useContext(SessionContexte);
 }
 
-/** Les droits d'ecriture : `true`, `false`, ou `null` tant qu'on ne sait pas. */
-export function useDroits(): boolean | null {
-    return useContext(SessionContexte)?.editeur ?? null;
+/** Les droits du compte : `undefined` tant qu'on ne sait pas, `null` s'il n'en a aucun. */
+export function useDroits(): DroitsDeSession {
+    return useContext(SessionContexte)?.droits;
+}
+
+/** Le compte qui agit sur une ligne : de quoi dire ce qu'il peut, et ne pas lui proposer de se revoquer. */
+export function useCompteQuiAgit(): CompteQuiAgit {
+    const session = useContext(SessionContexte);
+    return useMemo(() => ({ email: session?.email ?? '', droits: session?.droits }), [session]);
 }

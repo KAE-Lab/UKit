@@ -2,8 +2,9 @@
  * La page de connexion : e-mail et mot de passe, rien d'autre.
  *
  * Pas d'inscription — elle est desactivee dans le projet — et pas de « mot de passe oublie » : la
- * console n'envoie aucun courriel. Le compte se cree et se repare depuis le poste du publieur
- * (supabase/README.md), et la page le dit.
+ * console n'envoie aucun courriel tant que le projet n'a pas de serveur d'envoi a lui. Un compte se cree
+ * sur invitation d'un admin, qui remplace aussi un mot de passe oublie (page Equipe, jalon 7-H), et la
+ * page le dit.
  */
 
 import { LogIn } from 'lucide-react';
@@ -46,8 +47,8 @@ export function Connexion() {
                 <PlaceDEncart retour={retour} />
                 <Bouton variante="plein" type="submit" enAttente={enCours} icone={<LogIn className="icone" aria-hidden="true" />}>Se connecter</Bouton>
                 <p className="secondaire petit">
-                    Pas d’inscription ici, et pas de mot de passe oublié : le compte se crée et se remplace depuis
-                    le poste du publieur (<code>npm run console:editeur</code>).
+                    Pas d’inscription ici : un compte se crée sur invitation d’un admin de la console. Un mot de passe
+                    oublié se remplace aussi par un admin, qui t’en donne un provisoire.
                 </p>
             </form>
         </div>

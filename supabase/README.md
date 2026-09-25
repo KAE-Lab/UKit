@@ -6,8 +6,9 @@ ce qu'elle n'est pas, et comment on publie : [docs/backend.md](../docs/backend.m
 | Fichier | Contenu |
 |---|---|
 | [`schema.sql`](schema.sql) | tables, index, contraintes, **et les deux buckets** |
-| [`fonctions.sql`](fonctions.sql) | les deux gardes : qui est éditeur, et le journal par déclencheurs — dans un schéma `private` que l'API n'expose pas |
-| [`policies.sql`](policies.sql) | RLS : lecture publique restreinte, écriture réservée aux éditeurs authentifiés et à la clé de service |
+| [`fonctions.sql`](fonctions.sql) | les gardes : qui est éditeur, et depuis 7-H qui peut quoi et où ; le journal par déclencheurs ; la version d'une ligne contre l'écrasement ; la porte de l'adresse d'un retour — dans un schéma `private` que l'API n'expose pas, sauf cette porte |
+| [`policies.sql`](policies.sql) | RLS : lecture publique restreinte, écriture selon le rôle de l'éditeur authentifié (7-H) et par la clé de service |
+| [`functions/`](functions/) | les deux fonctions de la base : `notifier` (un message en notification push) et `editeurs` (l'équipe : inviter, mot de passe provisoire, révoquer), et ce qu'elles partagent (`_shared/`) |
 | [`etablissements.sql`](etablissements.sql) | le catalogue des universités : une ligne par établissement, `on conflict do update` |
 | [`batiments-bordeaux-inp.sql`](batiments-bordeaux-inp.sql) | les dix bâtiments de Bordeaux INP, relevés sur OpenStreetMap — la surcouche de `assets/locations.json` pour une université que le binaire n'embarque pas |
 
@@ -99,27 +100,40 @@ européenne — les utilisateurs sont en France.
    `node tools/console/editeur.mjs --sans-droits`) : il se connecte à la console et chaque écriture
    lui est refusée.
 
-## La console et son compte
+## La console et son équipe
 
 La [console web](../docs/pilotage.md) écrit avec un compte Supabase Auth (e-mail et mot de passe)
-dont l'e-mail figure dans la table `editeurs`. Il n'y a pas d'inscription libre — elle est désactivée
-dans *Authentication → Providers → Email* du projet — et pas de courriel sortant : le compte se crée
-et se répare depuis le poste du publieur, avec la clé de service.
+dont l'e-mail figure dans la table `editeurs`, **selon le rôle que la table lui donne** depuis le jalon
+[7-H](../docs/phase-7/7-h-console-roles.md) : `admin`, `redacteur` — borné ou non à des campus — ou
+`lecteur`. Il n'y a pas d'inscription libre — elle est désactivée dans *Authentication → Providers →
+Email* du projet — et pas de courriel sortant tant que le projet n'a pas de serveur d'envoi à lui.
+
+**Un compte naît dans la console.** Un admin l'invite depuis la page Équipe : la fonction `editeurs`
+écrit la ligne avec la session de l'admin — le journal porte son nom —, puis crée le compte avec un
+**mot de passe provisoire** qu'elle ne rend qu'une fois, à transmettre de vive voix ; la console exige
+de le changer à la première connexion. La même page change un rôle ou des campus, donne un nouveau mot
+de passe provisoire à qui a oublié le sien, et **révoque** : la ligne supprimée, les droits sont coupés
+à la requête suivante, puis le compte est supprimé. La base garde toujours au moins un admin
+([`fonctions.sql`](fonctions.sql)).
+
+L'authentification du projet impose **douze caractères** et **refuse un mot de passe connu des
+fuites** (vérification *HaveIBeenPwned* du plan Pro), réglés le 2026-09-25 par l'API de gestion ;
+l'inscription reste fermée, la confirmation d'un changement d'adresse reste double.
+
+**Le script du poste reste**, pour le jour où plus aucun admin ne peut se connecter : il ne connaît que
+le rôle d'admin, et le pose.
 
 ```bash
-# Creer le compte et lui donner les droits. Le mot de passe vient de l'environnement, jamais d'un
-# argument : il resterait sinon dans l'historique du terminal.
+# Creer un compte admin, ou rendre le role d'admin a un compte retrograde. Le mot de passe vient de
+# l'environnement, jamais d'un argument : il resterait sinon dans l'historique du terminal.
 CONSOLE_MOT_DE_PASSE='…' node tools/console/editeur.mjs --email kylian.mltre@gmail.com
 
-# Mot de passe oublie : le meme script le remplace.
+# Mot de passe oublie par le dernier admin : le meme script le remplace.
 CONSOLE_MOT_DE_PASSE='…' node tools/console/editeur.mjs --email kylian.mltre@gmail.com --mot-de-passe
 
 # Un compte SANS droits, pour verifier que les politiques refusent bien un authentifie ordinaire.
 CONSOLE_MOT_DE_PASSE='…' node tools/console/editeur.mjs --email quelqu.un@exemple.test --sans-droits
 ```
-
-Révoquer un éditeur est une ligne supprimée dans `editeurs` ; son compte survit et ne peut plus rien
-écrire.
 
 ## Le journal
 
@@ -138,9 +152,11 @@ delete from public.journal where quand < now() - interval '1 year';
 ## Effacer un retour
 
 La table `retours` porte ce que les utilisateurs écrivent dans le formulaire, et parfois une adresse
-laissée volontairement ([PRIVACY.md](../PRIVACY.md), point 5 bis). Une demande d'effacement se
-traite en trois endroits, parce que le journal copie la ligne entière — et la suppression elle-même
-en laisse une trace, avec l'avant :
+laissée volontairement ([PRIVACY.md](../PRIVACY.md), point 5 bis). Depuis le jalon 7-H, l'adresse ne
+vit que dans la colonne `contact`, que seul un admin lit : `reponses` ne porte plus la question qui la
+demande, et les lignes du journal qui copient un retour ne se lisent que par un admin. Une demande
+d'effacement se traite quand même en trois endroits, parce que le journal copie la ligne entière — et
+la suppression elle-même en laisse une trace, avec l'avant :
 
 ```sql
 delete from public.retours where id = '<id>';
@@ -148,9 +164,9 @@ delete from public.journal where table_name = 'retours' and ligne_id = '<id>';
 ```
 
 Puis la réponse dans la feuille Google, à la main — sinon l'import suivant la ramène. Retirer la
-seule adresse revient au même geste sur la cellule de la feuille, puis un `update` de `contact` et de
-`reponses` sur la ligne ; la ligne n'est pas recréée, la clé ne dépend pas du contact… **si**, elle en
-dépend : c'est une cellule comme une autre. Effacer, donc, plutôt que retoucher.
+seule adresse ne se fait pas en retouchant la cellule : la clé d'un retour est l'empreinte de ses
+cellules, adresse comprise, et la réponse reviendrait sous une autre clé. Effacer, donc, plutôt que
+retoucher.
 
 ## Migrations
 
@@ -193,7 +209,36 @@ Ce qui a été mesuré en le faisant :
   base n'en a pas eu besoin, les trois fichiers étant déjà rejouables ;
 - une migration ne s'écrit **jamais** avec un `update` que `schema.sql` recopierait : la migration
   d'`annonces` pose `ajustement` avec le défaut `contenir` puis change le défaut, au lieu de mettre à
-  jour les lignes — rien à journaliser, et la vue lisible ne porte que le défaut final.
+  jour les lignes — rien à journaliser, et la vue lisible ne porte que le défaut final. Un nettoyage de
+  donnée qui accompagne un changement de droits, lui, y a sa place, et `schema.sql` ne le recopie pas :
+  la migration des rôles retire l'adresse de `reponses` dans la même transaction que les privilèges
+  qui la ferment (7-H) ;
+- **une migration s'essaie sur la production elle-même, dans une transaction annulée**, avant
+  `--dry-run` : `begin`, la migration, puis chaque cas du plan de test joué comme un compte le jouerait
+  — `set local role authenticated` et `request.jwt.claims` posés à la main —, puis `rollback`. C'est
+  ainsi que les politiques de 7-H ont été éprouvées, cinquante-six cas, avant d'être poussées ; et
+  l'état obtenu par les migrations s'est comparé à celui des trois fichiers de la vue lisible, rejoués
+  de la même façon — une empreinte des politiques, des privilèges, des contraintes, des déclencheurs et
+  des fonctions, identique des deux côtés.
+
+**Deux branches, une base.** Une publication se prépare sur sa branche de version (`v6.3`) pendant que
+la console vit sur `main`, et toutes deux migrent la même base. Quand la production porte une migration
+que la branche courante n'a pas encore — `mesures`, de `v6.3`, vue depuis `main` le 2026-09-25 —,
+`db push` refuse, puisque l'historique distant n'est pas un préfixe du local. On ne répare pas
+l'historique : on pousse depuis un dossier de travail temporaire qui porte l'**union** des migrations,
+celles de la branche plus celles que la production porte déjà, et le CLI n'applique que les nouvelles.
+
+```bash
+TMP=$(mktemp -d) && mkdir -p $TMP/supabase/migrations
+cp supabase/config.toml $TMP/supabase/
+cp supabase/migrations/*.sql $TMP/supabase/migrations/
+git show v6.3:supabase/migrations/20260921233000_mesures.sql > $TMP/supabase/migrations/20260921233000_mesures.sql
+npx --yes supabase@2.117.0 migration list --project-ref $REF --workdir $TMP -p "$SUPABASE_DB_PASSWORD"
+npx --yes supabase@2.117.0 db push --project-ref $REF --workdir $TMP --dry-run -p "$SUPABASE_DB_PASSWORD"
+```
+
+La fusion de `main` dans la branche de version remet ensuite les deux registres d'accord, et les
+conflits des trois fichiers de la vue lisible se résolvent en gardant les deux côtés.
 
 Une règle qui n'a l'air de rien : **ajouter avant de retirer, toujours.** Le parc d'applications
 installées ne se vide pas d'un coup — une colonne supprimée trop tôt casse des installations qu'on
@@ -256,38 +301,57 @@ Le changement arrive au **prochain retour au premier plan**, sans release et san
 domaine est contraint par un `check` : une faute de frappe serait sinon une ligne parfaitement valide
 qui ne corrige rien, et rien à l'écran ne le dirait.
 
-## La fonction d'envoi
+## Les fonctions
 
-[`functions/notifier/`](functions/notifier/) est la seule fonction du projet
-([6.1.x-E](../docs/phase-6/6-1-x-e-notifications-push.md)) : elle envoie un message de service en
-notification push. Elle se déploie par la CLI, sans l'ajouter aux dépendances, et demande une fois
-une session sur le compte Supabase du projet :
+[`functions/`](functions/) porte les deux fonctions du projet, qui partagent
+[`_shared/`](functions/_shared/) — les en-têtes, la réponse, et **qui appelle** : le compte de la
+session, vérifié auprès du service d'authentification, et son rôle lu dans `editeurs`. Chacune est
+réservée aux admins depuis le jalon [7-H](../docs/phase-7/7-h-console-roles.md), et répond 403 sinon.
+
+- [`notifier/`](functions/notifier/) ([6.1.x-E](../docs/phase-6/6-1-x-e-notifications-push.md))
+  envoie un message de service en notification push, avec la clé de service : aucun compte de la
+  console ne lit les jetons, elle seule. Après un changement de `regles.ts`, le test `regles.test.ts`
+  de la racine doit rester vert **avant** de redéployer : c'est lui qui garantit que la fonction cible
+  comme l'appareil.
+- [`editeurs/`](functions/editeurs/) (7-H) gère l'équipe : **inviter** — la ligne d'`editeurs` écrite
+  avec la session de l'admin, puis le compte créé avec un mot de passe provisoire, rendu une seule
+  fois —, donner un **nouveau mot de passe provisoire**, **révoquer** — la ligne, puis le compte. Les
+  règles d'une demande et la forme du mot de passe sont pures, dans `regles.ts`, jouées par
+  `regles.test.ts` à la racine.
+
+Elles se déploient par la CLI, sans l'ajouter aux dépendances ; `SUPABASE_ACCESS_TOKEN`, dans le
+`.env`, tient lieu de `supabase login` :
 
 ```bash
-npx --yes supabase login                                            # une fois, ouvre le navigateur
-npx --yes supabase functions deploy notifier --project-ref owiksddeqcyyifnmpyqm --use-api
+set -a && source .env && set +a
+npx --yes supabase@2.117.0 functions deploy notifier --project-ref owiksddeqcyyifnmpyqm --use-api
+npx --yes supabase@2.117.0 functions deploy editeurs --project-ref owiksddeqcyyifnmpyqm --use-api
 ```
 
-`--use-api` évite Docker : le bundle est construit par la plateforme. La clé de service et l'URL du
-projet sont fournies à la fonction par la plateforme (`SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`),
-rien à configurer. [`config.toml`](config.toml) ne porte que l'identifiant du projet et la
-vérification du JWT ; la fonction vérifie en plus que la session est celle d'un éditeur. Après un
-changement de `regles.ts`, le test `regles.test.ts` de la racine doit rester vert **avant** de
-redéployer : c'est lui qui garantit que la fonction cible comme l'appareil.
+`--use-api` évite Docker : le bundle est construit par la plateforme, qui embarque `_shared/` dans
+chaque fonction qui l'importe. La clé de service et l'URL du projet leur sont fournies par la
+plateforme (`SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`), rien à configurer. [`config.toml`](config.toml)
+ne porte que l'identifiant du projet et la vérification du JWT. Leur typage se vérifie avec Deno, lui
+aussi sans dépendance : `npx --yes deno check --no-config supabase/functions/*/index.ts`.
 
-Se vérifie depuis la console : un message, « Notifier », la réponse en clair. Un refus (403) veut
-dire que la session n'est pas éditeur ; un 409, que le message est inactif, expiré ou déjà notifié.
+Se vérifient depuis la console : un message, « Notifier », la réponse en clair ; une invitation, le
+mot de passe provisoire dans son dialogue. Un refus 403 veut dire que la session n'est pas celle d'un
+admin ; un 409, que le message est inactif, expiré ou déjà notifié — ou que la personne invitée est
+déjà dans l'équipe, ou que la révocation retirerait le dernier admin.
 
 ## Ce qui n'a pas sa place ici
 
 Pas de fonction métier, pas de vue qui calcule. La base porte de la donnée ; ce qui se calcule se
 calcule dans l'application, où c'est typé, relu et vérifié.
 
-Elle porte **deux gardes**, depuis le jalon [6.1-B](../docs/phase-6/6-1-b-pilotage-a-distance.md), et
-la phrase ci-dessus tient toujours : `private.est_editeur()` dit qui a le droit d'écrire, et le
-déclencheur `journal` trace ce qui a été écrit. Ce sont des politiques d'accès exprimées en SQL —
-aucune des deux ne décide de ce que l'application affiche. Une troisième fonction qui calculerait
-quelque chose pour l'écran serait la première entorse, et elle se refuse.
+Elle porte **des gardes**, depuis le jalon [6.1-B](../docs/phase-6/6-1-b-pilotage-a-distance.md), et
+la phrase ci-dessus tient toujours : `private.est_editeur()` dit qui a le droit d'écrire — et depuis
+7-H, `private.role_editeur()`, `private.est_admin()` et `private.peut_publier()` disent quoi et où —,
+le déclencheur `journal` trace ce qui a été écrit, `maj_le` tient la version d'une ligne contre
+l'écrasement, `contact_du_retour()` ne rend une adresse qu'à un admin, et un déclencheur garde toujours
+un admin. Ce sont des politiques d'accès et d'intégrité exprimées en SQL — aucune ne décide de ce que
+l'application affiche. Une fonction qui calculerait quelque chose pour l'écran serait la première
+entorse, et elle se refuse.
 
 
 ## La colonne du jalon 6-J

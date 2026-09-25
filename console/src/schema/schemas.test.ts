@@ -69,6 +69,19 @@ test('aucun campus coche vaut tous, un code hors catalogue ne repart pas quand l
     expect(versSaisieDuChamp(CAMPUS, ['bordeaux', 3])).toEqual(['bordeaux']);
 });
 
+test('un redacteur borne coche au moins un de ses campus, et aucun autre (7-H)', () => {
+    const schema = schemaDuChamp(CAMPUS, { etablissements: ['bordeaux', 'bordeaux-inp', 'autre'], borne: ['bordeaux'] });
+    expect(schema.safeParse(['bordeaux'])).toMatchObject({ success: true, data: ['bordeaux'] });
+    const vide = schema.safeParse([]);
+    expect(vide.success).toBe(false);
+    expect(vide.error?.issues[0]?.message).toContain('au moins un de tes campus');
+    const ailleurs = schema.safeParse(['bordeaux', 'bordeaux-inp']);
+    expect(ailleurs.success).toBe(false);
+    expect(ailleurs.error?.issues[0]?.message).toContain('« bordeaux-inp » n’est pas un de tes campus');
+    // Sans borne, rien ne change : aucune case cochee vaut tous.
+    expect(schemaDuChamp(CAMPUS, { etablissements: ['bordeaux'], borne: null }).safeParse([])).toMatchObject({ success: true, data: null });
+});
+
 test('aucune case cochee vaut toutes, et une valeur hors options ne part pas en la nommant', () => {
     expect(convertir(PLATEFORMES, [])).toEqual({ ok: true, valeur: null });
     expect(convertir(PLATEFORMES, ['android'])).toEqual({ ok: true, valeur: ['android'] });

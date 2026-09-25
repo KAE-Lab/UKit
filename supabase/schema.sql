@@ -120,6 +120,21 @@ alter table public.annonces add constraint annonces_couleur_check
 create index if not exists annonces_publication_v2_idx
     on public.annonces (statut, active, publiee_le desc);
 
+-- « Tous les campus » s'ecrit `null`, et seulement ainsi (jalon 7-H, migration 20260925140000_roles.sql) :
+-- l'application lit aussi un tableau vide, ou fait de chaines vides, comme « tous » (ciblage.ts), et une
+-- inclusion SQL les prendrait pour une cible bornee — un redacteur borne publierait a tout le parc.
+alter table public.annonces drop constraint if exists annonces_etablissements_check;
+alter table public.annonces add constraint annonces_etablissements_check
+    check (etablissements is null
+           or (cardinality(etablissements) > 0
+               and array_position(etablissements, null) is null
+               and array_position(etablissements, '') is null));
+
+-- Le verrou contre l'ecrasement (jalon 7-H, migration 20260925140001_verrou.sql) : la version de la
+-- ligne, tenue par un declencheur (fonctions.sql). La console enregistre avec `where maj_le = <la valeur
+-- lue>` ; une modification qui ne touche aucune ligne a ete devancee.
+alter table public.annonces add column if not exists maj_le timestamptz not null default now();
+
 -- Bandeau de service : maintenance, incident, information datee.
 create table if not exists public.service_messages (
     id         uuid primary key default gen_random_uuid(),
@@ -175,6 +190,17 @@ alter table public.service_messages add constraint service_messages_plateformes_
 -- d'appareils vises a ce moment-la, une trace, pas une preuve de reception.
 alter table public.service_messages add column if not exists notifie_le timestamptz;
 alter table public.service_messages add column if not exists notifies integer;
+
+-- Les deux regles du jalon 7-H, comme pour les annonces : « tous les campus » s'ecrit `null`, et la
+-- version de la ligne tient le verrou contre l'ecrasement — `notifier` la change aussi, en posant
+-- `notifie_le`.
+alter table public.service_messages drop constraint if exists service_messages_etablissements_check;
+alter table public.service_messages add constraint service_messages_etablissements_check
+    check (etablissements is null
+           or (cardinality(etablissements) > 0
+               and array_position(etablissements, null) is null
+               and array_position(etablissements, '') is null));
+alter table public.service_messages add column if not exists maj_le timestamptz not null default now();
 
 -- =============================================================================
 -- Jetons push (jalon 6.1.x-E)
@@ -480,24 +506,38 @@ create table if not exists public.journal (
 create index if not exists journal_quand_idx on public.journal (quand desc);
 create index if not exists journal_ligne_idx on public.journal (table_name, ligne_id);
 
--- Les personnes autorisees a ecrire depuis la console. Une ligne : le proprietaire.
+-- L'equipe de la console : qui peut quoi, et ou.
 --
 -- L'authentification est celle de Supabase (e-mail et mot de passe) ; cette table dit qui, parmi les
--- comptes authentifies, a le droit d'ecrire. Un compte sans ligne ici peut se connecter et ne peut
--- rien ecrire — les politiques le refusent (policies.sql). Les inscriptions libres sont desactivees
--- dans les reglages du projet, et un compte se cree par tools/console/editeur.mjs.
+-- comptes authentifies, a un role. Un compte sans ligne ici peut se connecter et ne peut rien lire ni
+-- ecrire — les politiques le refusent (policies.sql). Les inscriptions libres sont desactivees dans les
+-- reglages du projet : un compte se cree sur invitation d'un admin, depuis la page Equipe de la console
+-- (fonction `editeurs`), et tools/console/editeur.mjs reste pour reparer un compte admin depuis le poste.
 create table if not exists public.editeurs (
     email      text        primary key,
     ajoute_le  timestamptz not null default now()
 );
 
--- Les roles (jalon 7-C, migration 20260916222138_editeurs_roles.sql) : la donnee seulement, les
--- politiques qui la lisent relevent de 7-H. `etablissements` nul veut dire « tous les campus ».
+-- Les roles (donnee posee au jalon 7-C, migration 20260916222138_editeurs_roles.sql ; lue par les
+-- politiques depuis 7-H) :
+--   admin      tout ce que la console permet, l'equipe comprise
+--   redacteur  les annonces des campus de sa borne ; il lit le reste
+--   lecteur    lit, et n'ecrit rien
+-- `etablissements` est la borne d'un redacteur : nulle, il publie partout ; sinon, seulement les
+-- annonces dont tous les campus sont les siens (private.peut_publier). Elle n'existe que pour un
+-- redacteur et n'est jamais vide (7-H).
 alter table public.editeurs add column if not exists role text not null default 'admin';
 alter table public.editeurs drop constraint if exists editeurs_role_check;
 alter table public.editeurs add constraint editeurs_role_check
     check (role in ('admin', 'redacteur', 'lecteur'));
 alter table public.editeurs add column if not exists etablissements text[];
+alter table public.editeurs drop constraint if exists editeurs_borne_check;
+alter table public.editeurs add constraint editeurs_borne_check
+    check (etablissements is null or (role = 'redacteur' and cardinality(etablissements) > 0));
+-- Le dernier mot de passe provisoire donne par la console (7-H) : ecrit avec la session de l'admin qui
+-- l'a donne, pour que le journal trace un geste qui, sans lui, ne toucherait que l'authentification. Un
+-- fait date, pas un etat : la base ne sait pas quand le mot de passe est change.
+alter table public.editeurs add column if not exists provisoire_le timestamptz;
 
 -- =============================================================================
 -- Retours (jalon 6.1.x-C)
@@ -515,9 +555,11 @@ alter table public.editeurs add column if not exists etablissements text[];
 -- feuille recree la ligne — on ne retouche pas la feuille, on reclasse ici.
 --
 -- Les colonnes normalisees servent a lire et a trier ; `reponses` porte la reponse entiere,
--- question par question, nettoyee — adresses et numeros masques dans les textes libres, jamais dans
--- le contact, qui est fait pour ca et facultatif (PRIVACY.md). Aucune lecture publique : ce sont des
--- textes libres d'utilisateurs, et un contact quand il a ete laisse (policies.sql).
+-- question par question, nettoyee — adresses et numeros masques dans les textes libres. Le contact,
+-- lui, n'est jamais masque — il est fait pour ca, et facultatif (PRIVACY.md) — et depuis 7-H il ne vit
+-- que dans sa colonne : `reponses` ne porte plus la question qui le demande, et seul un admin le lit,
+-- par public.contact_du_retour() (policies.sql). Aucune lecture publique : ce sont des textes libres
+-- d'utilisateurs, et un contact quand il a ete laisse.
 --
 -- `nature` est devinee a l'import depuis la case cochee ; `etat` et `note` sont ce que le
 -- proprietaire du produit en fait. Ces trois colonnes sont les seules que la console ecrit, par un

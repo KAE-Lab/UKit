@@ -79,18 +79,18 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 
 | Table | Contenu | Lue par | Depuis | Socle embarqué |
 |---|---|---|---|---|
-| `annonces` | contenu éditorial de vie étudiante ; depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives) : `type`, `emplacements`, `ajustement`, `focale`, `priorite`, `epinglee`, `creneaux`, `statut`, `blurhash`, `partenaire`, `check (couleur <> 4)`, et la politique de lecture filtre `statut = 'publiee' and publiee_le <= now()` — invisibles pour l'application jusqu'à la 6.3, **écrites par la console depuis [7-F](phase-7/7-f-console-annonces.md)**, qui tient les formes des `jsonb` : `focale` `{ x, y }` en fractions de l'image, le point que le recadrage garde visible — `object-position` en pourcentages, pas un centre ; `creneaux` `[{ jours, de, a }]` avec les jours en ISO (1 = lundi, 7 = dimanche) et les heures `HH:MM` de Paris, début inclus, fin exclue, une plage qui passe minuit acceptée ; `partenaire` `{ nom, logo_url, lien }`, nul quand tout est vide, le logo dans `partenaires/` du bucket à 400 px, exposées par la console en 7-F | [`BdeService`](../src/features/Campus/services/BdeService.ts) | **6-B** | — |
+| `annonces` | contenu éditorial de vie étudiante ; depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives) : `type`, `emplacements`, `ajustement`, `focale`, `priorite`, `epinglee`, `creneaux`, `statut`, `blurhash`, `partenaire`, `check (couleur <> 4)`, et la politique de lecture filtre `statut = 'publiee' and publiee_le <= now()` — invisibles pour l'application jusqu'à la 6.3, **écrites par la console depuis [7-F](phase-7/7-f-console-annonces.md)**, qui tient les formes des `jsonb` : `focale` `{ x, y }` en fractions de l'image, le point que le recadrage garde visible — `object-position` en pourcentages, pas un centre ; `creneaux` `[{ jours, de, a }]` avec les jours en ISO (1 = lundi, 7 = dimanche) et les heures `HH:MM` de Paris, début inclus, fin exclue, une plage qui passe minuit acceptée ; `partenaire` `{ nom, logo_url, lien }`, nul quand tout est vide, le logo dans `partenaires/` du bucket à 400 px, exposées par la console en 7-F ; depuis [7-H](phase-7/7-h-console-roles.md) : `maj_le`, la version de la ligne tenue par un déclencheur — le verrou contre l'écrasement —, et « tous les campus » ne s'écrit plus que `null` (`check` : jamais un tableau vide ni une chaîne vide) | [`BdeService`](../src/features/Campus/services/BdeService.ts) | **6-B** | — |
 | `batiments` | coordonnées, horaires, accès libre, visuel | [`shared/locations`](../src/shared/locations/index.ts) | **6-D** | [`assets/locations.json`](../assets/locations.json) |
 | `visuels` | la photo d'un contenu, quand celle de sa source est fausse ou absente | [`shared/visuels`](../src/shared/visuels/index.ts) | passe de finition | *aucun* — le socle, c'est l'image de la source |
 | `etablissements` | catalogue des universités et de leurs portails ; depuis 7-C : `credits`, `campus`, `alias` (portés par la base et `etablissements.sql`, lus en 6.3), et les gabarits `services.formulaire` / `services.formulaire_campus` | l'onboarding et les réglages | **6-G** | les lignes publiées à la date de la release — une copie, vérifiée par un test (6.1-A) |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
-| `service_messages` | les messages de service — information, avertissement, incident — et leur ciblage | [`shared/messages`](../src/shared/messages/index.ts) | **6.1-B** | *aucun* — un cache (`messages@1`) |
-| `jetons_push` | **écrite par l'application** (6.1.x-E) : un jeton push par appareil, campus, version, plateforme, testeur — par `deposer_jeton` / `retirer_jeton`, jamais par la table | la fonction `notifier` (service), la console (éditeurs) | **6.1.x-E** | — |
+| `service_messages` | les messages de service — information, avertissement, incident — et leur ciblage ; depuis 7-H, `maj_le` et « tous les campus » en `null`, comme les annonces | [`shared/messages`](../src/shared/messages/index.ts) | **6.1-B** | *aucun* — un cache (`messages@1`) |
+| `jetons_push` | **écrite par l'application** (6.1.x-E) : un jeton push par appareil, campus, version, plateforme, testeur — par `deposer_jeton` / `retirer_jeton`, jamais par la table | la fonction `notifier` (service) ; la console compte le parc sans lire le jeton lui-même, retiré à tous ses comptes depuis 7-H | **6.1.x-E** | — |
 | `testeurs` | les appareils qui voient l'audience `testeurs` ; l'application n'en lit que la colonne `id` | [`shared/testeur`](../src/shared/testeur/statut.ts) | **6.1-B** | *aucun* — « non » par défaut |
 | `sondes` | l'état de chaque source tierce, mesuré chaque matin | la console ; l'application pas encore | 6.1-B | — |
-| `journal` | la trace de chaque écriture dans une table publiable : avant, après, qui, quand | la console seule | 6.1-B | — |
-| `editeurs` | les e-mails autorisés à écrire depuis la console ; depuis 7-C : `role` (`admin`, `redacteur`, `lecteur`) et `etablissements`, la donnée seule, les politiques en [7-H](phase-7/7-h-console-roles.md) | les politiques | 6.1-B | — |
-| `retours` | ce que les utilisateurs écrivent dans le formulaire, importé toutes les 72 heures depuis la feuille de réponses | la console seule | [6.1.x-C](phase-6/6-1-x-c-retours.md) | — |
+| `journal` | la trace de chaque écriture dans une table publiable : avant, après, qui, quand ; les lignes qui copient un retour ou un membre de l'équipe ne se lisent que par un admin (7-H) | la console seule | 6.1-B | — |
+| `editeurs` | l'équipe de la console : l'e-mail, le `role` (`admin`, `redacteur`, `lecteur`), la borne `etablissements` d'un rédacteur (nulle : tous les campus ; jamais vide, jamais pour un autre rôle), et `provisoire_le`, le dernier mot de passe provisoire donné ; la donnée depuis 7-C, **lue par les politiques depuis [7-H](phase-7/7-h-console-roles.md)**, journalisée, et la base garde toujours au moins un admin | les politiques, la page Équipe | 6.1-B | — |
+| `retours` | ce que les utilisateurs écrivent dans le formulaire, importé toutes les 72 heures depuis la feuille de réponses ; depuis 7-H, l'adresse laissée ne vit que dans `contact`, que seul un admin lit, par `contact_du_retour()` | la console seule | [6.1.x-C](phase-6/6-1-x-c-retours.md) | — |
 | `salutations` | le mot du haut de l'onglet Scolarité, quand une règle publiée doit passer devant le socle embarqué — voir [scolarite.md](features/scolarite.md#la-salutation-est-une-règle-pas-une-condition) |
 | `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal, `desactive` | le script de publication | **6-C** | [`blueprints/`](../blueprints/) |
 
@@ -312,15 +312,26 @@ sans politique est une table qu'on oubliera de protéger le jour où elle en aur
   privilège révoqué ne se rouvre pas par accident.
 - **Écriture par `service_role`** : le script de publication et les sondes, avec la clé secrète.
 - **Écriture par un compte authentifié dont l'e-mail figure dans `editeurs`** — la console web, depuis
-  le jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md). Un compte se connecte avec Supabase Auth ;
-  chaque politique d'écriture demande `private.est_editeur()`. Un compte sans ligne dans `editeurs`
-  se connecte et ne peut rien écrire. `blueprints` n'a pas de politique d'écriture : les Blueprints
-  restent au script, qui les valide avec le moteur ([blueprints.md](blueprints.md)). Les inscriptions
-  libres sont désactivées dans les réglages du projet, et le compte se crée depuis le poste du
-  publieur ([`supabase/README.md`](../supabase/README.md)).
-- **Lecture et reclassement des retours par les éditeurs**, bornés à trois colonnes par un privilège
-  de colonne ; ni création ni suppression depuis la console, les lignes sont importées
-  ([pilotage.md](pilotage.md#les-retours)).
+  le jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md) —, **selon son rôle** depuis
+  [7-H](phase-7/7-h-console-roles.md). Un compte se connecte avec Supabase Auth ; la lecture est
+  commune aux trois rôles (`private.est_editeur()`) ; un **admin** écrit tout (`private.est_admin()`) ;
+  un **rédacteur** crée et modifie les annonces dont tous les campus sont les siens —
+  `private.peut_publier(etablissements)`, en `using` **et** en `with check`, pour qu'une annonce ne
+  change pas de campus en passant — et téléverse dans `annonces/` et `partenaires/` du bucket ; un
+  **lecteur** n'écrit rien. Supprimer est un geste d'admin partout : une annonce s'archive. Un compte
+  sans ligne dans `editeurs` se connecte et ne peut rien lire ni écrire. `blueprints` n'a pas de
+  politique d'écriture : les Blueprints restent au script, qui les valide avec le moteur
+  ([blueprints.md](blueprints.md)). Les inscriptions libres sont désactivées dans les réglages du
+  projet ; un compte naît sur invitation d'un admin, depuis la page Équipe de la console (fonction
+  `editeurs`), et le script du poste reste pour réparer un compte admin
+  ([`supabase/README.md`](../supabase/README.md)).
+- **Lecture des retours par les trois rôles, sans l'adresse** ; reclassement par un admin, borné à
+  trois colonnes par un privilège de colonne ; ni création ni suppression depuis la console, les lignes
+  sont importées ([pilotage.md](pilotage.md#les-retours)). L'adresse laissée se lit par un admin seul,
+  par `public.contact_du_retour(id)` : un privilège de colonne ne distingue pas deux rôles applicatifs
+  qui partagent le rôle `authenticated` de la base.
+- **Le jeton d'un appareil ne se lit par aucun compte de la console**, admin compris (7-H) : le service
+  d'envoi d'Expo accepte une notification vers tout jeton connu, et la console compte le parc sans lui.
 
 Le jour où la partie sociale arrivera, elle ajoutera ses tables et ses politiques adossées à
 `auth.uid()`. Rien de ce qui est écrit ici ne devra être défait.
@@ -538,7 +549,7 @@ Le tableau d'origine, relevé le 2026-08-08 :
 | Stockage de fichiers | 1 Go | les visuels des annonces, quelques centaines de Ko |
 | Bande passante sortante | 5 Go/mois (+ 5 Go de cache) | **la seule à surveiller** : elle grandit avec le parc, pas avec le contenu |
 | Utilisateurs actifs mensuels | 50 000 | sans objet — aucun compte |
-| Projets actifs | 2 | un seul, et c'est aussi pourquoi il n'y a pas de préproduction |
+| Projets actifs | 2 | un seul, et c'est aussi pourquoi il n'y a pas de préproduction — évaluée à l'ouverture de [7-H](phase-7/7-h-console-roles.md#la-préproduction-évaluée), et écartée |
 
 ## Ce qui est prévu, et pas encore appliqué
 
@@ -555,7 +566,6 @@ que le parc ait migré.
 | Table | Colonnes et objets | Jalon |
 |---|---|---|
 | `annonces` | `notifiee_le` et `notifies` | [7-L](phase-7/7-l-la-boucle.md) |
-| `editeurs` | `private.peut_publier(etabs)` et les politiques qui lisent `role` et `etablissements` (la donnée est en base depuis 7-C) | [7-H](phase-7/7-h-console-roles.md) |
 | `etablissements` | ce qui **lit** `credits`, `campus` et `alias` — `COLONNES`, `types.ts`, `catalogue.ts`, `socle.ts` et la version du cache —, une fois que la base porte colonne **et** valeurs (elles y sont depuis 7-C) | [7-I](phase-7/7-i-releve-et-vocabulaire.md) |
 | `evenements_connus`, `mesures` | les compteurs anonymes et leur vocabulaire fermé ; RPC `compter(lots jsonb)` ; pas de journal ; purge à treize mois ([mesure.md](mesure.md)) | [7-D](phase-7/7-d-la-mesure.md) |
 | `jetons_push` | `annonces boolean` (défaut faux) : l'accord pour les annonces en notification | [7-L](phase-7/7-l-la-boucle.md) |

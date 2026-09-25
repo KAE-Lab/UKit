@@ -5,7 +5,9 @@
 --
 -- C'est la seule logique que la base porte, et la regle de schema.sql tient toujours : rien ici ne
 -- calcule quoi que ce soit que l'application affiche. Les deux fonctions sont des politiques d'acces
--- exprimees en SQL, pas du metier.
+-- exprimees en SQL, pas du metier. Depuis le jalon 7-H, la premiere garde dit aussi quoi et ou — les
+-- roles de la console —, et une troisieme tient la version d'une ligne contre l'ecrasement : des gardes
+-- encore, aucune ne decide de ce que l'application affiche.
 --
 -- Les deux vivent dans un schema `private`, que PostgREST n'expose pas : dans `public`, une fonction
 -- est appelable en RPC par n'importe qui muni de la cle publiable. Elles sont `security definer` —
@@ -41,6 +43,88 @@ $$;
 
 revoke execute on function private.est_editeur() from public, anon;
 grant execute on function private.est_editeur() to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- Qui peut quoi, et ou (jalon 7-H)
+-- -----------------------------------------------------------------------------
+--
+-- La meme forme qu'est_editeur(), qui ne change pas : elle reste vraie pour les trois roles, parce que
+-- la lecture leur est commune. Les roles vivent ici et non dans la console — masquer un bouton ne
+-- protege rien, la cle publiable est publique et une requete faite a la main passe outre l'interface.
+create or replace function private.role_editeur()
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    select role
+      from public.editeurs
+     where email = nullif(auth.jwt() ->> 'email', '');
+$$;
+
+create or replace function private.est_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    select coalesce(private.role_editeur() = 'admin', false);
+$$;
+
+-- Publier une annonce qui cible `cibles` : un admin, toujours ; un redacteur sans borne, toujours ; un
+-- redacteur borne, si la cible est non vide et incluse dans sa borne. « Tous les campus » (`null`) reste
+-- le fait d'un admin ou d'un redacteur sans borne : publier a tout le parc est un geste large.
+-- `cardinality` en plus de l'inclusion : `'{}' <@ borne` est vrai, et un tableau vide vaut « tous »
+-- pour l'application (src/shared/ciblage/ciblage.ts). La console en tient une copie pour le dire avant
+-- d'essayer (console/src/auth/droits.ts) ; celle-ci decide.
+create or replace function private.peut_publier(cibles text[])
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    select exists (
+        select 1
+          from public.editeurs
+         where email = nullif(auth.jwt() ->> 'email', '')
+           and (role = 'admin'
+                or (role = 'redacteur'
+                    and (etablissements is null
+                         or (cardinality(cibles) > 0 and cibles <@ etablissements))))
+    );
+$$;
+
+revoke execute on function private.role_editeur() from public, anon;
+revoke execute on function private.est_admin() from public, anon;
+revoke execute on function private.peut_publier(text[]) from public, anon;
+grant execute on function private.role_editeur() to authenticated;
+grant execute on function private.est_admin() to authenticated;
+grant execute on function private.peut_publier(text[]) to authenticated;
+
+-- La console garde toujours au moins un admin : sans lui, plus personne ne peut inviter ni reparer,
+-- sinon depuis le poste du publieur. Un declencheur d'instruction, apres coup : c'est l'etat final de la
+-- table qui compte, pas chaque ligne. `security definer` : il compte les admins meme quand la session
+-- qui ecrit n'en voit qu'une partie. Il vaut aussi pour la cle de service.
+create or replace function private.garder_un_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+    if not exists (select 1 from public.editeurs where role = 'admin') then
+        raise exception 'La console garde toujours au moins un admin : nomme d’abord un autre admin.';
+    end if;
+    return null;
+end;
+$$;
+
+drop trigger if exists un_admin_au_moins on public.editeurs;
+create trigger un_admin_au_moins after update or delete on public.editeurs
+    for each statement execute function private.garder_un_admin();
 
 -- -----------------------------------------------------------------------------
 -- Le journal
@@ -127,14 +211,77 @@ drop trigger if exists journal on public.app_release;
 create trigger journal after insert or update or delete on public.app_release
     for each row execute function private.journaliser('plateforme');
 
--- Les retours : inseres par la cle de service (`par = service_role`), reclasses par un editeur
+-- Les retours : inseres par la cle de service (`par = service_role`), reclasses par un admin
 -- (`par = son e-mail`). Un rejeu de l'import en `on conflict do nothing` ne declenche rien pour une
 -- ligne deja presente : il n'ecrit pas une ligne de journal par reponse a chaque passage. Le journal
--- copie la ligne entiere, contact compris — effacer un retour, c'est aussi effacer sa trace
--- (supabase/README.md).
+-- copie la ligne entiere, contact compris — ces lignes-la ne se lisent que par un admin (policies.sql),
+-- et effacer un retour, c'est aussi effacer sa trace (supabase/README.md).
 drop trigger if exists journal on public.retours;
 create trigger journal after insert or update or delete on public.retours
     for each row execute function private.journaliser('id');
+
+-- L'equipe (jalon 7-H) : qui a donne quel role a qui. La table s'ecrit depuis la page Equipe de la
+-- console, avec la session d'un admin ; ses lignes de journal ne se lisent que par un admin.
+drop trigger if exists journal on public.editeurs;
+create trigger journal after insert or update or delete on public.editeurs
+    for each row execute function private.journaliser('email');
+
+-- -----------------------------------------------------------------------------
+-- Le verrou contre l'ecrasement (jalon 7-H)
+-- -----------------------------------------------------------------------------
+--
+-- « Le dernier enregistrement gagne » tenait pour un editeur, pas pour deux qui ouvrent la meme annonce.
+-- Les deux tables qu'une equipe ecrit a plusieurs portent `maj_le`, la version de la ligne : la console
+-- enregistre avec `where maj_le = <la valeur lue>`, et une modification qui ne touche aucune ligne a ete
+-- devancee. Tenue ici et non par la console : un script, le Studio ou la fonction `notifier` — qui pose
+-- `notifie_le` — changent la ligne aussi, et le verrou doit le voir. `clock_timestamp()` et non `now()` :
+-- `now()` est l'heure du debut de la transaction, et deux modifications dans la meme transaction
+-- garderaient la meme version.
+create or replace function private.tenir_maj_le()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+    new.maj_le := clock_timestamp();
+    return new;
+end;
+$$;
+
+drop trigger if exists maj_le on public.annonces;
+create trigger maj_le before update on public.annonces
+    for each row execute function private.tenir_maj_le();
+
+drop trigger if exists maj_le on public.service_messages;
+create trigger maj_le before update on public.service_messages
+    for each row execute function private.tenir_maj_le();
+
+-- -----------------------------------------------------------------------------
+-- L'adresse d'un retour (jalon 7-H)
+-- -----------------------------------------------------------------------------
+--
+-- PRIVACY.md promet que l'adresse laissee dans le formulaire « n'est transmise a personne » ; une equipe
+-- qui grandit rend la promesse plus exigeante, pas moins. Un privilege de colonne ne distingue pas deux
+-- roles applicatifs qui partagent le role `authenticated` : la colonne `contact` est retiree a tous
+-- (policies.sql), et cette porte la rend a un admin seul. Dans `public` parce qu'elle s'appelle en RPC
+-- depuis la console ; `anon` n'a pas le droit de l'appeler.
+create or replace function public.contact_du_retour(p_id text)
+returns text
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+    if not private.est_admin() then
+        raise exception 'L’adresse d’un retour est réservée aux admins.' using errcode = '42501';
+    end if;
+    return (select contact from public.retours where id = p_id);
+end;
+$$;
+
+revoke execute on function public.contact_du_retour(text) from public, anon;
+grant execute on function public.contact_du_retour(text) to authenticated;
 
 -- -----------------------------------------------------------------------------
 -- Les jetons push (jalon 6.1.x-E)

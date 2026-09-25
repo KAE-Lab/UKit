@@ -2,11 +2,16 @@
  * Le journal : tout ce qui s'est ecrit, filtrable par table — toutes les tables journalisees, pas
  * seulement celles qui ont une page (defaut 12) —, pagine avec son total, exportable en JSON avec
  * les memes filtres. Une entree s'ouvre a `/journal/<numero>` : avant, apres.
+ *
+ * Depuis 7-H, les lignes qui copient un retour — l'adresse laissee — ou un membre de l'equipe ne se
+ * lisent que par un admin : la base les retire aux autres, et le filtre ne les leur propose pas.
  */
 
 import { Download } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
+import { estAdmin } from '../auth/droits';
+import { useDroits } from '../auth/session';
 import { ListeDeRessource } from '../composants/liste/ListeDeRessource';
 import { etatDepuisParams } from '../composants/liste/etatUrl';
 import { Bouton } from '../composants/ui/Bouton';
@@ -21,6 +26,8 @@ import { messageDErreur } from '../lib/erreurs';
 import { exporterJson } from '../lib/exportJson';
 import { specDepuisEtat } from '../lib/requete';
 import { useLigne } from '../requetes/useListe';
+import type { Descripteur } from '../schema/descripteurs';
+import { TABLES_DU_JOURNAL_DES_ADMINS } from '../schema/journal';
 import { JOURNAL } from '../schema/tables/suivi';
 import { naviguer, useRoute } from '../routeur';
 
@@ -43,8 +50,22 @@ function Entree({ numero, retour }: { readonly numero: string; readonly retour: 
     );
 }
 
+/** Le journal tel qu'un compte le lit : sans proposer les tables dont les lignes lui sont fermees. */
+function journalPour(admin: boolean): Descripteur {
+    if (admin) return JOURNAL;
+    return {
+        ...JOURNAL,
+        champs: JOURNAL.champs.map((champ) => (champ.nom !== 'table_name' || champ.type.type !== 'choix' ? champ : {
+            ...champ,
+            type: { ...champ.type, options: champ.type.options.filter((option) => !TABLES_DU_JOURNAL_DES_ADMINS.includes(option.valeur)) },
+        })),
+    };
+}
+
 export function Journal({ reste }: { readonly reste: string | null }) {
     const { params } = useRoute();
+    const admin = estAdmin(useDroits());
+    const descripteur = useMemo(() => journalPour(admin), [admin]);
     const [retour, setRetour] = useState<RetourDeGeste | null>(null);
     const [exportEnCours, setExportEnCours] = useState(false);
 
@@ -71,7 +92,7 @@ export function Journal({ reste }: { readonly reste: string | null }) {
             </div>
             <PlaceDEncart retour={retour}>{reste === null ? <Encart ton="info">L’export relit tout ce que les filtres retiennent, par pages de mille : c’est le fichier à remettre quand quelque chose a mal tourné.</Encart> : null}</PlaceDEncart>
             {reste === null ? (
-                <div className="carte"><ListeDeRessource descripteur={JOURNAL} lienDe={(ligne) => `/journal/${String(ligne.id)}${params.size > 0 ? `?${params.toString()}` : ''}`} /></div>
+                <div className="carte"><ListeDeRessource descripteur={descripteur} lienDe={(ligne) => `/journal/${String(ligne.id)}${params.size > 0 ? `?${params.toString()}` : ''}`} /></div>
             ) : (
                 <Entree numero={reste} retour={() => naviguer('/journal', params)} />
             )}

@@ -69,7 +69,7 @@ est tenu en un seul endroit : [backend.md](../backend.md#ce-qui-est-prévu-et-pa
 | Publier un campus « en cours d'adaptation » | campus par campus | écarté tant que la moitié publique n'est pas mesurée |
 | Comptes UKit | reporté, raisonnement dans [6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md) | ne pas construire est le choix qui ne se refactore pas |
 | Onglets natifs `@expo/ui`, typage de `Theme.ts`, migration `@expo/vector-icons` (41 fichiers), TypeScript strict, remplacement de `moment` et des cinq paquets non maintenus, visionneuse maison | à part, après la 6.3 | de la dette, à solder quand elle mord |
-| Préproduction Supabase (branching Pro) | quand [7-H](7-h-console-roles.md) ouvre la console à d'autres | une base, un compte : acceptable tant qu'un seul éditeur publie |
+| Préproduction Supabase (branching Pro) | quand une deuxième personne écrit du SQL | évaluée à l'ouverture de [7-H](7-h-console-roles.md#la-préproduction-évaluée) et écartée : environ 10 $ par mois hors plafond, pour protéger ce que l'essai en transaction annulée, les comptes jetables, l'audience `testeurs` et désormais les rôles couvrent déjà |
 | Relais-cache Celcat | jamais, sauf demande de l'université | un serveur, une adresse unique, contre la promesse « aucun serveur » ; `vars.domaine` reste publiable en repli |
 | Rapport de crash tiers | non | des compteurs à nous (`source.echec`) plutôt qu'un SDK ; à rouvrir si un crash silencieux nous échappe |
 | Visuels et captures des stores refaits, textes « Quoi de neuf » | [7-K](7-k-sortie-6-3.md), avec l'équipe | c'est de la communication |
@@ -197,7 +197,7 @@ Les lots de campus avancent ensuite au rythme des comptes prêtés.
 | 7-E Le socle de la console | **livré le 2026-09-22** — sur `main`, sans release : TanStack Query et Table v9, react-hook-form et zod, Base UI, lucide, blurhash ; les quatorze défauts corrigés ; des listes triées, filtrées, cherchées et paginées dont l'URL porte l'état, un filtre global par campus ; la page Retours avec ses compteurs, le tableau de bord d'accueil, le téléversement à nom unique ; 74 tests ; captures dans les deux thèmes ; le protocole « plateformes » joué sur les deux appareils le jour même, conforme au code |
 | 7-F Les annonces dans la console | **livré le 2026-09-22, repris et clos le 2026-09-23** — sur `main`, sans release : deux modules purs partagés (`grammaire.ts`, `ordre.ts`) et les palettes du thème extraites ; l'éditeur avec l'aperçu du téléphone dans les deux thèmes, le point focal, les nouveaux champs, la galerie multi-fichiers réordonnable, le panneau « ordre du carrousel », dupliquer / archiver / voir sur mon téléphone ; **la carte v2 est dessinée ici, 7-I la reproduit**. Joué sur les deux appareils le 2026-09-23 : aperçu fidèle, programmation et archivage conformes. Le même jour, une **passe d'ergonomie** : le repère du point focal sous le clic et la zone gardée, la description qui grandit, l'aperçu en panneau qui suit le champ édité, la barre d'enregistrement et Ctrl+S, l'en-tête de la ligne, le nuancier, le lieu collé d'une carte, la garde des liens ; recette 34 points et séance d'usage réel 38 points, en audience `testeurs` désormais ; puis la liste dit l'état que voient les téléphones, par la règle de l'éditeur. La galerie réordonnée se ferme par construction ; la focale et l'ordre sur téléphone se ferment en 7-I |
 | 7-G Les statistiques | à ouvrir |
-| 7-H Les rôles et l'équipe | à ouvrir |
+| 7-H Les rôles et l'équipe | **livré le 2026-09-25** — sur `main`, sans release : trois rôles décidés par la base (admin, rédacteur borné aux annonces de ses campus, lecteur), que la console reflète ; la page Équipe et la fonction `editeurs` — inviter avec un mot de passe provisoire, révoquer —, la première connexion ; le verrou contre l'écrasement ; le guide de l'équipe. La lecture du code et de la production a fermé trois chemins que la spécification laissait ouverts : l'adresse d'un retour recopiée dans `reponses` et le journal, les jetons push lisibles par tout éditeur, le tableau de campus vide qui vaut « tous ». Deux migrations poussées, deux fonctions déployées, l'authentification durcie ; recette en SQL (56 cas, transaction annulée), par l'API (46) et dans la console (25) ; la préproduction évaluée et écartée |
 | 7-I Le relevé et le vocabulaire du mouvement | à ouvrir |
 | 7-J, lot 1 : le Planning | à ouvrir |
 | 7-J, lot 2 : la Scolarité | à ouvrir |
@@ -248,7 +248,12 @@ depuis `main`, et un campus est une publication de données. Le site vit dans so
 La branche `v6.3`, qui ne portait que les documents de cette phase, a été renommée puis fusionnée dans
 `main` le 2026-09-15, puis recréée depuis `main` le 2026-09-21 : elle porte Aetherius 0.5.10 et
 [7-D](7-d-la-mesure.md), que `main` n'a pas. À l'ouverture de 7-I, **`main` y est fusionnée** — la
-console de 7-E et 7-F, et les modules partagés dont 7-I a besoin — ; elle ne se recrée plus.
+console de 7-E à 7-H, et les modules partagés dont 7-I a besoin — ; elle ne se recrée plus. Les deux
+branches migrent la même base : `v6.3` porte la migration `mesures`, `main` celles des rôles de 7-H. La
+fusion rend les deux registres de `supabase/migrations/` d'accord, et les trois fichiers de la vue
+lisible (`schema.sql`, `fonctions.sql`, `policies.sql`) y entrent en conflit : garder les deux côtés.
+D'ici là, une migration poussée depuis l'une des deux branches passe par un dossier qui porte l'union
+des deux registres ([`supabase/README.md`](../../supabase/README.md#migrations)).
 
 ## La clôture
 

@@ -21,6 +21,10 @@ export const ETATS_OUVERTS: readonly string[] = ['nouveau', 'en_attente'];
 // la base n'accorde l'update qu'aux trois autres (policies.sql). Les deux gardes disent la meme
 // chose, et c'est voulu. La page Retours est dediee (pages/Retours) ; le descripteur reste la
 // description de reference de la table.
+//
+// L'adresse laissee n'y est pas : depuis 7-H, la base ne la laisse lire a aucun compte de la console —
+// un admin la demande a public.contact_du_retour(), au clic (pages/Retours/Contact.tsx). La console nomme
+// donc ses colonnes : `select *` lui serait refuse en entier.
 export const RETOURS: Descripteur = {
     chemin: 'retours',
     table: 'retours',
@@ -28,11 +32,12 @@ export const RETOURS: Descripteur = {
     titre: 'Retours',
     description: 'Ce que les utilisateurs écrivent dans le formulaire : importé toutes les 72 heures, lu et reclassé ici.',
     cle: ['id'],
+    colonnes: 'id,recu_le,nature,campus,section,appareil,systeme,version_app,texte,volontaire,reponses,etat,note,importe_le',
     tri: { colonne: 'recu_le', desc: true },
     liste: ['recu_le', 'nature', 'etat', 'campus', 'section', 'texte'],
     filtres: ['etat', 'nature'],
     recherche: ['texte', 'campus', 'note'],
-    avertissement: 'Lignes importées depuis le formulaire : seuls la nature, l’état et la note se modifient, le reste est ce qui a été dit. Retoucher la feuille de réponses recréerait la ligne — on reclasse ici. Un retour qui décrit un défaut devient une entrée écrite à la main dans docs/defauts-fonctionnels.md.',
+    avertissement: 'Lignes importées depuis le formulaire : seuls la nature, l’état et la note se modifient, par un admin, et le reste est ce qui a été dit. Retoucher la feuille de réponses recréerait la ligne — on reclasse ici. Un retour qui décrit un défaut devient une entrée écrite à la main dans docs/defauts-fonctionnels.md. L’adresse laissée ne se lit que par un admin, et ne se partage jamais en capture.',
     creation: false,
     suppression: false,
     vide: 'Aucun retour pour ces filtres. Le workflow Retours écrit ici toutes les 72 heures dès qu’il est armé ; depuis le poste, npm run retours:import.',
@@ -47,7 +52,6 @@ export const RETOURS: Descripteur = {
         { nom: 'appareil', libelle: 'Appareil', type: { type: 'texte' }, lectureSeule: true },
         { nom: 'systeme', libelle: 'Système', type: { type: 'texte' }, lectureSeule: true },
         { nom: 'version_app', libelle: 'Version de l’application', type: { type: 'texte' }, lectureSeule: true },
-        { nom: 'contact', libelle: 'Contact', type: { type: 'texte' }, lectureSeule: true, aide: 'Laissé volontairement, pour répondre ou parler d’adaptation de campus. Ne promet pas de réponse.' },
         { nom: 'volontaire', libelle: 'Prêt·e à prêter un accès', type: { type: 'booleen' }, lectureSeule: true },
         { nom: 'reponses', libelle: 'Réponse entière', type: { type: 'json' }, lectureSeule: true },
         { nom: 'importe_le', libelle: 'Importé le', type: { type: 'date' }, lectureSeule: true },

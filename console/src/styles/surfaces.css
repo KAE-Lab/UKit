@@ -81,6 +81,11 @@
 .dialogue[data-starting-style], .dialogue[data-ending-style] { opacity: 0; transform: translate(-50%, -50%) scale(0.97); }
 .dialogue h2 { margin: 0; }
 .dialogue .description { color: var(--texte-2); margin: 0; }
+/* Un secret montre une seule fois (7-H) : en grand, espace, pour se dicter groupe par groupe. */
+.dialogue .secret {
+    display: block; font-family: var(--mono); font-size: var(--taille-xl); letter-spacing: 0.08em; text-align: center;
+    padding: var(--espace-md); border-radius: var(--rayon-md); background: var(--fond); user-select: all; overflow-wrap: anywhere;
+}
 
 /* ---- Menus (Base UI) ---------------------------------------------------------------------- */
 .menu-popup {
@@ -94,3 +99,6 @@
 .menu-item[data-disabled] { color: var(--texte-2); }
 .menu-groupe { padding: var(--espace-sm) var(--espace-md) var(--espace-xs); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-2); }
 .menu-separateur { height: 1px; background: var(--bordure); margin: var(--espace-xs) 0; }
+
+/* ---- Ce que le role permet sur une page (7-H) --------------------------------------------- */
+.bandeau-de-droits { margin-bottom: var(--espace-md); }

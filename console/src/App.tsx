@@ -1,12 +1,13 @@
 /**
  * L'application : la garde de session, la coque — presente des la verification —, et la page que
- * le fragment d'URL designe.
+ * le fragment d'URL designe. Un compte au mot de passe provisoire ne voit que le choix du sien (7-H).
  */
 
 import { useCallback, useState } from 'react';
 
 import { Compte } from './auth/Compte';
 import { Connexion } from './auth/Connexion';
+import { PremiereConnexion } from './auth/PremiereConnexion';
 import { SessionContexte, type Session } from './auth/session';
 import { useSession } from './auth/useSession';
 import { CampusContexte } from './composants/campus';
@@ -15,6 +16,7 @@ import { EtatVide } from './composants/ui/EtatVide';
 import { SqueletteBloc, SqueletteTexte } from './composants/ui/Squelette';
 import { campusRetenu, retenirCampus } from './lib/preferences';
 import { Annonces } from './pages/Annonces';
+import { Equipe } from './pages/Equipe';
 import { Journal } from './pages/Journal';
 import { Ressource } from './pages/Ressource';
 import { Retours } from './pages/Retours';
@@ -31,6 +33,7 @@ function Page({ chemin, session }: { readonly chemin: string; readonly session: 
         case 'journal': return <Journal reste={segments.reste} />;
         case 'retours': return <Retours reste={segments.reste} />;
         case 'annonces': return <Annonces reste={segments.reste} />;
+        case 'equipe': return <Equipe reste={segments.reste} />;
         case 'compte': return <Compte session={session} />;
         default: {
             const ressource = ressourceDe(segments.tete);
@@ -57,6 +60,7 @@ export function App() {
     const choisir = useCallback((code: string | null) => { setCampus(code); retenirCampus(code); }, []);
 
     if (etat.etat === 'anonyme') return <Connexion />;
+    if (etat.etat === 'connecte' && etat.session.provisoire) return <PremiereConnexion email={etat.session.email} />;
     const session = etat.etat === 'connecte' ? etat.session : null;
 
     return (

@@ -81,3 +81,21 @@ test.each(CAS)('%s : une focale vise une image et un ajustement a choix, qui s e
         expect(ajustement?.lectureSeule, `ajustement de ${champ.nom} doit s'ecrire`).not.toBe(true);
     }
 });
+
+test.each(CAS)('%s : des colonnes nommees lisent chaque champ, et rien d autre', (_chemin, ressource) => {
+    if (ressource.colonnes === undefined) return;
+    const lues = ressource.colonnes.split(',');
+    expect(new Set(lues).size, 'colonne lue en double').toBe(lues.length);
+    expect([...lues].sort()).toEqual(ressource.champs.map((champ) => champ.nom).sort());
+});
+
+test.each(CAS)('%s : un verrou est une date en lecture seule, que la base tient', (_chemin, ressource) => {
+    if (ressource.verrou === undefined) return;
+    const champ = champDe(ressource, ressource.verrou);
+    expect(champ?.type.type, `verrou ${ressource.verrou}`).toBe('date');
+    expect(champ?.lectureSeule, `verrou ${ressource.verrou}`).toBe(true);
+});
+
+test.each(CAS)('%s : une table sans cle lisible ne s ouvre pas', (_chemin, ressource) => {
+    if (ressource.cle.length === 0) expect(ressource.ouvrable, 'une ligne sans cle ne sait pas ou s ouvrir').toBe(false);
+});

@@ -4,7 +4,8 @@
 
 /* Une seule colonne, bornee a la largeur du formulaire : un champ large passe a la ligne au lieu d'elargir la page. */
 .formulaire { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--espace-md); }
-.champ { display: grid; gap: 6px; }
+/* `align-content: start` : dans deux colonnes, un champ sans aide ne s'etire pas a la hauteur de sa voisine. */
+.champ { display: grid; gap: 6px; align-content: start; }
 .champ label { font-weight: 600; font-size: var(--taille-sm); }
 .champ .aide { color: var(--texte-2); font-size: var(--taille-xs); }
 .champ input[type="text"], .champ input[type="number"], .champ input[type="datetime-local"], .champ input[type="email"], .champ input[type="password"], .champ select, .champ textarea {
@@ -21,6 +22,8 @@
 .case { display: inline-flex; align-items: center; gap: var(--espace-sm); font-weight: 500; cursor: pointer; min-height: 24px; }
 .case input { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
 .case.inconnue { color: var(--avert); }
+/* Un campus qui n'est pas celui d'un redacteur borne (7-H) : visible, grise, et il dit pourquoi au survol. */
+.case.hors-borne { color: var(--texte-2); opacity: 0.6; cursor: not-allowed; }
 .deux-colonnes { display: grid; grid-template-columns: 1fr 1fr; gap: var(--espace-md); }
 @media (max-width: 640px) { .deux-colonnes { grid-template-columns: 1fr; } }
 
@@ -42,6 +45,10 @@
 .connexion { min-height: 100vh; display: grid; place-items: center; padding: var(--espace-lg); }
 .connexion .carte { width: 100%; max-width: 380px; }
 .connexion h1 { font-size: var(--taille-xl); margin-bottom: var(--espace-xs); }
+/* La premiere connexion d'un compte invite (7-H) : l'accueil et le choix du mot de passe, sur la meme colonne. */
+.premiere-connexion { width: 100%; max-width: 560px; display: grid; gap: var(--espace-md); }
+.premiere-connexion .carte { max-width: none; }
+.premiere-connexion > .boutons { justify-content: center; }
 
 /* ---- L'edition : le formulaire, et son apercu a cote (7-F) -------------------------------- */
 /*

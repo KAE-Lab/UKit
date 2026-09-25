@@ -14,6 +14,7 @@ frontière, et tout ce qui s'y écrit laisse une trace.
 | La **console web** | `console/` | 6.1-B, lot B2 |
 | Les **sondes** du matin | `sondes/` | 6.1-B, lot B3 |
 | Les **retours** du formulaire — importés dans la base, lus et reclassés dans la console | la base, `tools/retours/`, `console/` | [6.1.x-C](phase-6/6-1-x-c-retours.md) |
+| Les **rôles et l'équipe** de la console — admin, rédacteur borné à ses campus, lecteur —, l'invitation sans script, le **verrou** contre l'écrasement | la base, `supabase/functions/`, `console/` | [7-H](phase-7/7-h-console-roles.md) |
 
 ## Les messages de service
 
@@ -210,6 +211,10 @@ table, l'opération, la clé de la ligne, l'avant, l'après, **qui** (l'e-mail d
 ([`supabase/fonctions.sql`](../supabase/fonctions.sql)) : ni la console, ni un script, ni le Studio ne
 peuvent l'éviter ni le forger. C'est le fichier à remettre quand quelque chose a mal tourné.
 
+Depuis [7-H](phase-7/7-h-console-roles.md), l'équipe y entre aussi — qui a donné quel rôle à qui, qui a
+révoqué qui, et quand un mot de passe provisoire a été donné —, et deux familles de lignes ne se
+lisent que par un admin : celles qui copient un retour, avec l'adresse laissée, et celles de l'équipe.
+
 Sa purge est écrite dans [`supabase/README.md`](../supabase/README.md) et n'est pas automatisée.
 
 ## La console web
@@ -230,14 +235,15 @@ d'annonces avec l'aperçu du téléphone, [7-G](phase-7/7-g-console-statistiques
 |---|---|
 | Tableau de bord | la page d'arrivée : le **parc actif** par campus, version et plateforme (compté sur `jetons_push`, testeurs exclus, jamais une case sous cinq — [mesure.md](mesure.md#lire-les-chiffres)), l'état des sources, les retours ouverts et les plus récents, les annonces actives et programmées ; quatre cartes indépendantes, chacune avec son squelette, son erreur et son « Réessayer » |
 | Sources | l'état des sondes du matin, et depuis quand ; la place réservée des échecs que l'application mesure (`source.echec`), que [7-G](phase-7/7-g-console-statistiques.md) remplit |
-| Retours | les **retours ouverts par défaut** (`nouveau`, `en attente`), des compteurs par état, nature, campus demandé et par semaine sur les huit dernières, des filtres sur les mêmes axes, la recherche sur le texte ; la fiche rend les **réponses question par question**, et n'écrit que la nature, l'état et la note — le reste est ce qui a été dit |
+| Retours | les **retours ouverts par défaut** (`nouveau`, `en attente`), des compteurs par état, nature, campus demandé et par semaine sur les huit dernières, des filtres sur les mêmes axes, la recherche sur le texte ; la fiche rend les **réponses question par question**, et n'écrit que la nature, l'état et la note — le reste est ce qui a été dit. Depuis 7-H, l'**adresse laissée** ne se lit que par un admin, au clic, et le reclassement est un geste d'admin |
 | Journal | consulter, filtrer par table — **toutes** les tables journalisées — et par opération, chercher une ligne ou un auteur, paginer avec le total, ouvrir une entrée (avant, après), **exporter en JSON** avec les mêmes filtres |
-| Jetons push | le parc qui recevra les notifications, lu seulement |
+| Jetons push | le parc qui recevra les notifications, lu seulement — sans le jeton lui-même, que depuis 7-H aucun compte de la console ne lit : il suffirait à notifier l'appareil |
 | Annonces | depuis [7-F](phase-7/7-f-console-annonces.md), **l'éditeur avec l'aperçu du téléphone** : la carte aux deux largeurs et la fiche, dans les deux thèmes, dans un panneau qui **suit le champ qu'on édite** et se cale sur la section du curseur ; le **point focal** posé d'un clic ou d'un glisser sur l'image, la partie gardée par la carte sous un voile, couvrir ou contenir ; la description dans une zone qui grandit, avec sa barre de marqueurs ; la couleur sur un **nuancier** ; le lieu **collé d'une carte** ; la **galerie** téléversée en plusieurs fichiers et réordonnée ; le type, les emplacements, la priorité, l'épinglage, les **créneaux** (heure de Paris), le partenaire, le statut, et l'état de l'annonce tel que les téléphones le voient, sous son titre comme dans la liste ; **dupliquer**, **archiver**, **voir sur mon téléphone** (audience `testeurs`, et son inverse) ; le panneau **« ordre du carrousel »** — l'ordre qu'un téléphone montre à une heure, sur un campus. Le visuel reste réduit et compressé dans le navigateur, sous un nom d'objet unique avec un cache d'un an, son blurhash posé dans la ligne |
-| Messages de service | la même chose pour `service_messages` ; la clé est proposée depuis le titre ; « Notifier » |
+| Messages de service | la même chose pour `service_messages` ; la clé est proposée depuis le titre ; « Notifier » — un geste d'admin, comme tout message |
 | Testeurs | les appareils qui voient l'audience `testeurs`, avec un nom |
 | Visuels, Établissements, Salutations, Bâtiments, Version publiée | l'édition des lignes, avec l'avertissement que chaque table mérite — « une ligne s'écrit entière », les trois états d'un visuel, un champ vide qui ne corrige rien |
-| Compte | qui est connecté, ses droits, changer son mot de passe |
+| Équipe | depuis [7-H](phase-7/7-h-console-roles.md), pour un admin : qui peut quoi, et sur quels campus ; **inviter** — le mot de passe provisoire montré une seule fois —, changer un rôle ou des campus, donner un nouveau mot de passe provisoire, **révoquer** |
+| Compte | qui est connecté, ce que son rôle lui permet, en une phrase ; le guide de la console ; changer son mot de passe |
 
 **Toute liste** se trie, se filtre, se cherche et se pagine **côté base** (`.order`, `.eq`, `.ilike`,
 `.range` avec le total exact) ; un **filtre global par campus**, dans la barre, retenu d'une page à
@@ -249,7 +255,11 @@ parcourt entière au clavier, focus visible, et une ligne s'ouvre à « Entrée 
 
 **Tout formulaire** a, depuis la passe d'ergonomie de 7-F, la même forme : le titre de la ligne et ses
 gestes en haut, une barre d'enregistrement collée au bas de la fenêtre avec **Ctrl+S**, et une
-confirmation avant qu'un lien de la console ne fasse perdre une saisie non enregistrée.
+confirmation avant qu'un lien de la console ne fasse perdre une saisie non enregistrée. Depuis
+[7-H](phase-7/7-h-console-roles.md), une annonce ou un message s'enregistre **sous verrou** : avec la
+version que le formulaire a chargée (`maj_le`, tenue par la base). Quand quelqu'un a enregistré entre
+les deux, rien n'est écrasé : un dialogue dit « modifiée entre-temps », par qui et quand, et propose de
+recharger — la saisie reste à l'écran tant qu'on ne l'accepte pas.
 
 ![L'éditeur d'annonces : la description en cours, et l'aperçu du téléphone calé sur la section du curseur](screenshots/console/console-annonce-editeur.png)
 
@@ -265,14 +275,30 @@ savoir avant d'écrire. Le schéma d'un formulaire se **dérive** du descripteur
 cohérence des descripteurs est un test. Les règles pures — la requête d'une liste, l'état dans l'URL,
 les schémas, le nom d'objet, les compteurs, le parc — sont jouées par `npm test`.
 
-**L'authentification** est celle de Supabase, e-mail et mot de passe. La console n'embarque que la
-clé publiable, publique par conception ; ce qui lui permet d'écrire est la session d'un compte dont
-l'e-mail figure dans la table `editeurs`. Un compte qui n'y est pas se connecte, lit ce que la
-console montre — et la console **le dit** : « Lecture seule : ce compte n'est pas éditeur » en tête
-de chaque page qui écrit, boutons d'écriture désactivés. Le
-compte se crée et se répare depuis le poste du publieur, avec la clé de service
-(`npm run console:editeur`, [`supabase/README.md`](../supabase/README.md)) ; les inscriptions libres
-sont désactivées dans le projet.
+**L'authentification** est celle de Supabase, e-mail et mot de passe — douze caractères au moins, et
+un mot de passe connu des fuites refusé, depuis 7-H. La console n'embarque que la clé publiable,
+publique par conception ; ce qui lui permet d'écrire est la session d'un compte dont l'e-mail figure
+dans la table `editeurs`, **selon son rôle** depuis [7-H](phase-7/7-h-console-roles.md) :
+
+| Rôle | Peut | Ne peut pas |
+|---|---|---|
+| **admin** | tout ce que la console permet : messages de service et notification, établissements, bâtiments, visuels, testeurs, version publiée, retours et l'adresse laissée, l'équipe | — |
+| **rédacteur** | créer, modifier, programmer et archiver les **annonces** des campus qui lui sont confiés — tous, si sa borne est vide — et téléverser leurs visuels ; lire le reste, et les retours sans leur adresse | supprimer, publier une annonce pour tous les campus s'il est borné, publier un message ou notifier, toucher au catalogue, aux bâtiments, aux visuels des sources, aux testeurs, à l'équipe |
+| **lecteur** | lire la console, sauf l'adresse laissée dans un retour | écrire quoi que ce soit |
+
+![La page Équipe : qui peut quoi dans la console, et sur quels campus](screenshots/console/console-equipe.png)
+
+**Les rôles vivent dans la base**, par les politiques ([`supabase/policies.sql`](../supabase/policies.sql)) :
+masquer un bouton ne protège rien, puisque la clé publiable est publique et qu'une requête faite à la
+main passe outre l'interface. La console en tient une copie ([`console/src/auth/droits.ts`](../console/src/auth/droits.ts))
+pour **le dire** avant d'essayer : chaque page qui écrit dit en tête ce que le rôle y permet, une
+annonce d'un autre campus se lit sans se modifier, un rédacteur ne coche que ses campus. Un compte
+naît sur **invitation** d'un admin, depuis la page Équipe, avec un mot de passe provisoire transmis de
+vive voix et changé à la première connexion ; le script du poste
+(`npm run console:editeur`, [`supabase/README.md`](../supabase/README.md#la-console-et-son-équipe))
+reste pour réparer un compte admin. Les inscriptions libres sont désactivées dans le projet. La façon
+de s'en servir sans être développeur est écrite pour l'équipe dans
+[guide-console.md](guide-console.md).
 
 **Les Blueprints restent hors de la console**, et c'est une décision : ils sont versionnés dans le
 dépôt, validés par le moteur, rejoués par la parité et publiés par `npm run blueprints:publish`.
@@ -282,8 +308,10 @@ Vérifié le 2026-09-03 avec un compte jetable : sans ligne dans `editeurs`, l'i
 (42501) et la table `editeurs` se lit vide ; avec la ligne, l'insertion passe, le compte lit sa
 propre ligne et toutes les lignes de la table — inactives comprises —, la suppression aussi, et le
 journal porte son e-mail. Rejoué le 2026-09-22 sur la console refondue, par un navigateur piloté, avec
-deux comptes jetables ([7-E, plan de test](phase-7/7-e-console-socle.md#plan-de-test)). Lancer,
-construire, déployer : [`console/README.md`](../console/README.md).
+deux comptes jetables ([7-E, plan de test](phase-7/7-e-console-socle.md#plan-de-test)), puis le
+2026-09-25 avec un admin, un rédacteur borné et un lecteur jetables — en SQL dans une transaction
+annulée, par l'API avec la clé publiable, et dans la console ([7-H, plan de test](phase-7/7-h-console-roles.md#plan-de-test)).
+Lancer, construire, déployer : [`console/README.md`](../console/README.md).
 
 ## Les sondes
 
@@ -355,7 +383,10 @@ Les colonnes normalisées — nature, campus, appareil, système, version, un **
 branche cochée — servent à lire et trier ; `reponses` garde la réponse entière, question par question.
 Les textes libres passent par un **masquage** des adresses et des numéros
 ([`nettoyage.mjs`](../tools/retours/nettoyage.mjs)) ; le champ de contact, lui, est gardé tel quel,
-c'est son rôle, et il est facultatif ([PRIVACY.md](../PRIVACY.md)).
+c'est son rôle, et il est facultatif ([PRIVACY.md](../PRIVACY.md)). Depuis
+[7-H](phase-7/7-h-console-roles.md), il ne vit **que dans sa colonne** : `reponses` ne porte plus la
+question qui le demande — elle y était recopiée en clair, et la fiche d'un retour la montrait à
+quiconque lisait les retours —, et seul un admin le lit, au clic, par `contact_du_retour()`.
 
 **Le cron** ([`.github/workflows/retours.yml`](../.github/workflows/retours.yml)) rejoue l'import
 toutes les 72 heures — `0 6 */3 * *`, approximatif au changement de mois, sans conséquence. Il
@@ -459,14 +490,16 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
 | [`shared/push/inscription.ts`](../src/shared/push/inscription.ts) · [`inscription.test.ts`](../src/shared/push/inscription.test.ts) | ce qu'un appareil dépose pour le push, et quand il le redépose — pur, testé |
 | [`shared/push/index.ts`](../src/shared/push/index.ts) | le dépôt et le retrait du jeton : le réglage, un vrai appareil, la permission lue, les deux fonctions SQL, la mémoire `push@1` |
 | [`shared/push/reception.ts`](../src/shared/push/reception.ts) | une notification ouverte mène à la feuille de son message ; le canal Android `messages-de-service`, en importance haute — son identifiant doit rester d'accord avec celui qu'envoie la fonction |
-| [`supabase/functions/notifier/`](../supabase/functions/notifier/) | la fonction d'envoi (Deno) : éditeur vérifié, ciblage, lots, tickets, élagage, marquage — et sa copie des règles, testée égale à l'original |
+| [`supabase/functions/notifier/`](../supabase/functions/notifier/) | la fonction d'envoi (Deno) : admin vérifié, ciblage, lots, tickets, élagage, marquage — et sa copie des règles, testée égale à l'original |
+| [`supabase/functions/editeurs/`](../supabase/functions/editeurs/) | la fonction de l'équipe (Deno, 7-H) : inviter, nouveau mot de passe provisoire, révoquer — et ses règles pures, `regles.ts`, jouées par `npm test` |
+| [`supabase/functions/_shared/`](../supabase/functions/_shared/) | ce que les deux fonctions partagent : les en-têtes, la réponse, et qui appelle avec quel rôle |
 | [`console/src/lib/notifier.ts`](../console/src/lib/notifier.ts) | l'appel de la fonction depuis la console, et sa réponse en clair |
 | [`shared/testeur/statut.ts`](../src/shared/testeur/statut.ts) | « cet appareil est-il un testeur ? » : cache, lecture de la colonne `id`, comparaison locale |
 | [`shared/ui/Bandeau.tsx`](../src/shared/ui/Bandeau.tsx) | le bandeau flottant d'une information, la seule forme de bandeau de l'application ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ModMenuTesteur.tsx`](../src/shared/ui/ModMenuTesteur.tsx) | le panneau Testeur du menu de développement |
-| [`supabase/fonctions.sql`](../supabase/fonctions.sql) | qui est éditeur, et le journal par déclencheurs |
+| [`supabase/fonctions.sql`](../supabase/fonctions.sql) | qui est éditeur, et depuis 7-H qui peut quoi et où ; le journal par déclencheurs ; la version d'une ligne ; la porte de l'adresse d'un retour ; la garde du dernier admin |
 | [`console/`](../console/) | la console web : descripteurs, liste et formulaire génériques, tableau de bord, pages Retours, Sources et Journal ([`console/README.md`](../console/README.md)) |
-| [`tools/console/editeur.mjs`](../tools/console/editeur.mjs) | créer le compte éditeur, remplacer son mot de passe, donner ou retirer les droits |
+| [`tools/console/editeur.mjs`](../tools/console/editeur.mjs) | réparer un compte admin depuis le poste : le créer, remplacer son mot de passe, lui rendre le rôle d'admin, ou lui retirer tout droit |
 | [`.github/workflows/console.yml`](../.github/workflows/console.yml) | construire et déployer la console sur GitHub Pages |
 | [`sondes/`](../sondes/) | les sondes du matin : deux Blueprints, le runner Python et son verdict, ses tests ([`sondes/README.md`](../sondes/README.md)) |
 | [`.github/workflows/sondes.yml`](../.github/workflows/sondes.yml) | jouer les sondes chaque matin, écrire `sondes`, ouvrir ou fermer l'issue |
@@ -508,9 +541,17 @@ bandeau ; hors ligne sans cache, rien ; une colonne absente de la base, rien et 
   sources répondent. Le jour où elle lira la table `sondes`, elle le dira d'elle-même.
 - **Les sondes tournent depuis une adresse américaine** et prouvent qu'un formulaire est
   atteignable, pas qu'il se passe ; elles voient une panne, pas une lenteur ([`sondes/README.md`](../sondes/README.md)).
-- **La console n'est ni hors ligne, ni collaborative** : un éditeur, une session, et le dernier
-  enregistrement gagne — le verrou contre l'écrasement arrive en [7-H](phase-7/7-h-console-roles.md).
-  Le journal dit qui a écrit quoi.
+- **La console n'est pas hors ligne**, et son verrou ne couvre que les annonces et les messages de
+  service, les deux tables qu'une équipe écrit à plusieurs : ailleurs — le catalogue, les bâtiments,
+  les visuels, écrits par un admin —, le dernier enregistrement gagne encore. Le journal dit qui a écrit
+  quoi.
+- **La borne par campus porte sur les annonces seulement** : les messages de service restent un geste
+  d'admin. Et **un rédacteur voit toutes les annonces**, même hors de ses campus : la lecture est
+  commune, seule l'écriture est bornée ([7-H](phase-7/7-h-console-roles.md#limites-écrites)).
+- **Le mot de passe provisoire transite hors de l'outil**, de vive voix, tant que le projet n'a pas de
+  serveur d'envoi de courriels : pas d'invitation par lien, pas de « mot de passe oublié » — un admin en
+  redonne un provisoire. Et le drapeau qui exige de le changer vit dans les métadonnées que le compte
+  écrit lui-même : qui l'effacerait sans changer de mot de passe ne ferait tort qu'à son compte.
 - **Le filtre global par campus ne couvre pas les retours ni les bâtiments** : `retours.campus` est le
   campus demandé, `batiments.campus` un libellé ; chacun a son filtre par page
   ([7-E](phase-7/7-e-console-socle.md#ce-que-la-réalité-a-corrigé-le-2026-09-22)).

@@ -5,7 +5,7 @@
  * La regle transverse du jalon 7-E s'applique ici : en chargement, des lignes squelettes a la
  * hauteur des lignes attendues ; en echec, l'erreur prend la place des lignes, avec « Reessayer » ;
  * une page suivante en cours de lecture laisse la precedente, estompee. Une ligne s'ouvre a la
- * souris comme a « Entree ».
+ * souris comme a « Entree » — sauf dans une table qui ne s'ouvre pas, sans cle lisible (7-H).
  */
 
 import {
@@ -64,7 +64,8 @@ export function Table({ descripteur, etat, poser, lignes, total, enChargement, p
         features: FONCTIONS,
         columns: colonnes,
         data: lignes ?? AUCUNE,
-        getRowId: (ligne) => cleDeLigne(descripteur, ligne),
+        // Sans cle lisible, le rang dans la page tient lieu d'identite : les lignes ne s'ouvrent pas.
+        getRowId: (ligne, rang) => (descripteur.ouvrable === false ? String(rang) : cleDeLigne(descripteur, ligne)),
         manualSorting: true,
         manualFiltering: true,
         manualPagination: true,
@@ -81,6 +82,7 @@ export function Table({ descripteur, etat, poser, lignes, total, enChargement, p
     const auClavier = (evenement: KeyboardEvent<HTMLTableRowElement>, ligne: Ligne) => {
         if (evenement.key === 'Enter' || evenement.key === ' ') { evenement.preventDefault(); ouvrir(ligne); }
     };
+    const ouvrable = descripteur.ouvrable !== false;
     const nombreDeSquelettes = Math.min(etat.pagination.pageSize, total ?? LIGNES_SQUELETTE_MAX, LIGNES_SQUELETTE_MAX);
     const rangees = table.getRowModel().rows;
 
@@ -116,7 +118,14 @@ export function Table({ descripteur, etat, poser, lignes, total, enChargement, p
                 {lignes !== undefined && lignes.length > 0 ? (
                     <tbody className={perime ? 'perime' : undefined} aria-busy={perime}>
                         {rangees.map((rangee) => (
-                            <tr key={rangee.id} className="cliquable" tabIndex={0} role="link" onClick={() => ouvrir(rangee.original)} onKeyDown={(e) => auClavier(e, rangee.original)}>
+                            <tr
+                                key={rangee.id}
+                                className={ouvrable ? 'cliquable' : undefined}
+                                tabIndex={ouvrable ? 0 : undefined}
+                                role={ouvrable ? 'link' : undefined}
+                                onClick={ouvrable ? () => ouvrir(rangee.original) : undefined}
+                                onKeyDown={ouvrable ? (e) => auClavier(e, rangee.original) : undefined}
+                            >
                                 {rangee.getAllCells().map((cellule) => {
                                     const calculee = colonneCalculee(descripteur, cellule.column.id);
                                     if (calculee !== undefined) return <td key={cellule.id}><CelluleCalculee etat={calculee.valeur(rangee.original, maintenant)} /></td>;

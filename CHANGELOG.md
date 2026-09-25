@@ -10,6 +10,56 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
+Le jalon [7-H](docs/phase-7/7-h-console-roles.md), les rôles et l'équipe, sur `main` et sans release :
+la console s'ouvre à une équipe sans lui donner les clés de la production.
+
+### Ajouté
+
+- **Trois rôles, décidés par la base** : un admin écrit tout, l'équipe comprise ; un rédacteur crée,
+  modifie, programme et archive les annonces des campus qui lui sont confiés — et ne publie pas pour
+  tous les campus s'il est borné ; un lecteur lit. La console reflète chaque rôle : un bandeau en tête
+  de page, des boutons inertes, une annonce d'un autre campus en lecture seule, les campus d'un
+  rédacteur cochés d'avance et les autres grisés.
+- **La page Équipe**, pour un admin : inviter — le compte naît avec un mot de passe provisoire, montré
+  une seule fois, à transmettre de vive voix —, changer un rôle ou des campus, redonner un mot de passe
+  provisoire, révoquer — les droits d'abord, puis le compte. Une fonction de la base, `editeurs`, fait
+  ce qui demande la clé de service, et écrit l'équipe au nom de l'admin qui agit.
+- **La première connexion** d'un compte invité ne montre que le choix de son mot de passe.
+- **Le verrou contre l'écrasement** : une annonce ou un message s'enregistre avec la version que le
+  formulaire a chargée ; quand quelqu'un a enregistré entre-temps, un dialogue dit par qui et quand, et
+  propose de recharger.
+- **Le guide de la console** ([docs/guide-console.md](docs/guide-console.md)), pour l'équipe : se
+  connecter, qui peut quoi, publier et programmer, vérifier sur son téléphone, travailler à plusieurs,
+  lire ses chiffres, ce qui ne se fait jamais.
+- **Des tests** : la copie des droits sur les cas du plan de test, l'issue d'une écriture qui ne touche
+  aucune ligne, les règles de la fonction `editeurs`, la borne d'un rédacteur dans le champ des campus,
+  la cohérence des colonnes lues et du verrou ; et la recette elle-même, jouée en SQL, par l'API et dans
+  la console.
+
+### Modifié
+
+- **L'adresse laissée dans un retour ne se lit que par un admin**, au clic, et ne vit plus qu'à un
+  endroit : l'importeur ne la recopie plus dans la réponse entière, où la fiche d'un retour la montrait
+  à quiconque lisait les retours, et les lignes du journal qui copient un retour sont réservées à
+  l'admin. [PRIVACY.md](PRIVACY.md) le dit.
+- **Le jeton d'un appareil ne se lit plus par aucun compte de la console**, admin compris : il suffit à
+  notifier l'appareil, et le parc se compte sans lui. La page des jetons se lit, sans s'ouvrir.
+- **« Notifier » est un geste d'admin**, comme tout message de service ; reclasser un retour aussi ;
+  supprimer, partout.
+- **L'authentification** impose douze caractères et refuse un mot de passe connu des fuites.
+- **L'équipe entre au journal** : qui a donné quel rôle à qui, qui a révoqué qui. La base garde toujours
+  au moins un admin, et « tous les campus » ne s'écrit plus qu'une façon.
+- **Le script du poste** (`npm run console:editeur`) ne sert plus qu'à réparer un compte admin, et pose
+  explicitement le rôle d'admin.
+- **Le bouton de création** d'une page porte son nom : « Nouvelle annonce », « Inviter quelqu'un ».
+
+### Corrigé
+
+- **Le second champ du mot de passe était décalé** et étiré, page Compte, depuis 7-E : dans une grille à
+  deux colonnes, un champ sans aide s'étirait à la hauteur de sa voisine.
+- **L'adresse du compte se brisait au milieu des mots** en bas de la navigation : elle tient sur une
+  ligne, entière au survol.
+
 Le jalon [7-F](docs/phase-7/7-f-console-annonces.md), les annonces dans la console, sur `main` et sans
 release : une annonce se compose en voyant ce qu'elle donnera sur un téléphone.
 

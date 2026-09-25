@@ -160,9 +160,9 @@ src/
 blueprints/          les fichiers d'instructions embarqués (le socle hors ligne)
   portails/            les portails d'établissements, publiés d'abord, embarqués à la release suivante
 supabase/            schéma, gardes et politiques d'accès de la base de publication
-console/             la console de pilotage : publier sans SQL, avec un compte, en laissant une trace
+console/             la console de pilotage : publier sans SQL, avec un compte et un rôle, en laissant une trace
 sondes/              les sondes du matin : chaque source jouée sans identifiant, une issue au changement
-tools/               publication des Blueprints, compte éditeur de la console, harnais de parité, import des retours, compression des visuels, le kit de l'Épure
+tools/               publication des Blueprints, réparation d'un compte admin de la console, harnais de parité, import des retours, compression des visuels, le kit de l'Épure
 assets/              icônes, visuels, référentiel des bâtiments du campus, pdf.js vendorisé
 docs/                cette documentation
 ```
@@ -265,7 +265,7 @@ livré ; elle est mise à jour à chaque contribution.
   [harnais de parité](tools/parity/README.md) rejoue les sources migrées contre les vraies. Aucun
   test d'écran ni de composant. **`npx tsc --noEmit` est vert** depuis le 2026-08-16 — il ne l'avait
   jamais été — et **`npx eslint .` est à zéro** depuis la passe de code 6.1-C, trente-cinq
-  avertissements traités un par un ; `npm test` joue 932 tests au jalon 7-F, dont 151 pour la console. Depuis le jalon
+  avertissements traités un par un ; `npm test` joue 1 020 tests au jalon 7-H, dont 224 pour la console. Depuis le jalon
   [7-C](docs/phase-7/7-c-economie-et-socle.md), **l'intégration continue rejoue le typage, ESLint,
   les tests et la construction de la console sur chaque poussée**, Dependabot groupe les mises à jour
   hors de ce que le SDK épingle, et le schéma de la base s'applique par des migrations numérotées.
@@ -340,7 +340,16 @@ livré ; elle est mise à jour à chaque contribution.
   sur l'image, la galerie réordonnée, les créneaux, et un panneau qui rend l'ordre qu'un téléphone
   montre à l'heure dite — par les mêmes modules purs que l'application (la grammaire de la
   description, l'ordre), extraits pour être partagés. L'aperçu se regarde en écrivant : il suit le
-  champ édité et se cale sur la section du curseur. Depuis 6.1.x-D, un
+  champ édité et se cale sur la section du curseur. Et depuis le jalon
+  [7-H](docs/phase-7/7-h-console-roles.md), **la console s'ouvre à une équipe sans lui donner les
+  clés de la production** : trois rôles décidés par la base — un admin, un rédacteur borné aux annonces
+  de ses campus, un lecteur —, une page Équipe qui invite avec un mot de passe provisoire et révoque, un
+  verrou quand deux personnes ouvrent la même annonce, et un [guide](docs/guide-console.md) écrit pour
+  qui publie sans être développeur. La lecture du code et de la production y a fermé trois chemins que
+  le rôle seul aurait laissés ouverts : l'adresse d'un retour, recopiée en clair dans la réponse
+  entière et dans le journal, n'a plus qu'une copie, que seul un admin lit ; le jeton d'un appareil, qui
+  suffit à le notifier, ne se lit plus par aucun compte de la console ; et « tous les campus » n'a plus
+  qu'une écriture. Depuis 6.1.x-D, un
   contenu se cible aussi **par plateforme** : un défaut qui n'existe que sur Android, ou que sur iOS,
   se dit à la moitié du parc concernée. Et depuis 6.1.x-E, un message **réveille le téléphone** :
   une notification push, envoyée depuis la console par une fonction de la base qui cible par la même
@@ -550,7 +559,8 @@ document.
 | [docs/sources-externes.md](docs/sources-externes.md) | inventaire complet des sources distantes, endpoints et fragilités |
 | [docs/blueprints.md](docs/blueprints.md) | les fichiers d'instructions : frontière, écriture, publication d'une correction |
 | [docs/backend.md](docs/backend.md) | la base de publication : schéma, politiques, clés, limites |
-| [docs/pilotage.md](docs/pilotage.md) | le pilotage à distance : messages de service, audience testeurs, ciblage, journal, console, sondes |
+| [docs/pilotage.md](docs/pilotage.md) | le pilotage à distance : messages de service, audience testeurs, ciblage, journal, console, rôles, sondes |
+| [docs/guide-console.md](docs/guide-console.md) | **le guide de la console**, pour l'équipe : se connecter, qui peut quoi, publier et programmer une annonce, la vérifier sur son téléphone, ce qui ne se fait jamais |
 | [docs/adaptation-campus.md](docs/adaptation-campus.md) | adapter un nouveau campus : ce qui se mesure sans compte, le compte prêté et son engagement, l'ordre de publication |
 | [docs/phase-6/](docs/phase-6/README.md) | le cadrage de la migration vers les Blueprints, jalon par jalon |
 | [docs/phase-7/](docs/phase-7/README.md) | de l'application au produit : les décisions d'après la 6.2.1, les publications 6.2.2 à 6.4, les jalons et leur état |

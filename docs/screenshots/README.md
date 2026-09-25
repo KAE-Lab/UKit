@@ -176,12 +176,12 @@ d'arrivée dans les deux thèmes, et les états que la règle transverse du jalo
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `console/console-connexion.png` | la page de connexion | **prise** |
+| `console/console-connexion.png` | la page de connexion : pas d'inscription, un compte naît sur invitation d'un admin | **reprise** le 2026-09-25 (7-H) |
 | `console/console-tableau-de-bord.png` · `-dark` | le tableau de bord d'arrivée, dans les deux thèmes | **prise** |
 | `console/console-tableau-de-bord-erreur.png` | les quatre cartes en erreur, base coupée, chacune avec « Réessayer » | **prise** |
 | `console/console-sources.png` | les sondes, et la place réservée des échecs | **prise** |
 | `console/console-retours.png` · `-dark` | les compteurs et la liste des retours ouverts | **prise** |
-| `console/console-retour-fiche.png` | la fiche d'un retour : les réponses, puis nature, état, note | **prise** |
+| `console/console-retour-fiche.png` | la fiche d'un retour : les réponses, l'adresse laissée derrière « Afficher l'adresse », réservée à l'admin (7-H), puis nature, état, note | **reprise** le 2026-09-25 |
 | `console/console-journal.png` | le journal, filtres et pagination | **prise** |
 | `console/console-annonces.png` · `-dark` | la liste des annonces, filtres et tri, et sa colonne « État » : ce que voient les téléphones — visible, programmée, inactive, expirée, brouillon, archivée | **prise** le 2026-09-23 |
 | `console/console-annonce-formulaire.png` | le formulaire d'une annonce, l'aperçu au ratio réel (7-E, avant l'éditeur) | **prise** |
@@ -191,12 +191,27 @@ d'arrivée dans les deux thèmes, et les états que la règle transverse du jalo
 | `console/console-annonce-galerie.png` | la galerie téléversée en un lot, numérotée, prête à réordonner | **prise** le 2026-09-23 |
 | `console/console-annonce-ordre.png` | le panneau « ordre du carrousel » : l'instant, le campus, la plateforme, l'appareil testeur, la liste ordonnée avec ses raisons | **prise** le 2026-09-23 |
 | `console/console-liste-erreur.png` | une liste dont la lecture a échoué : l'erreur à la place des lignes | **prise** |
-| `console/console-sans-droits.png` | la bannière « Lecture seule » d'un compte sans droits | **prise** |
+| `console/console-lecture-seule.png` | la bannière d'une page que le rôle ne peut pas écrire : un rédacteur sur les messages de service (7-H, remplace `console-sans-droits.png`) | **prise** le 2026-09-25 |
 | `console/console-valeur-inconnue.png` | une valeur hors liste, proposée et refusée en la nommant | **prise** |
 | `console/console-televersement.png` | un visuel téléversé : poids, blurhash calculé | **prise** |
 | `console/console-garde-de-sortie.png` | la confirmation avant de quitter un formulaire modifié | **prise** |
 | `console/console-mobile.png` · `console-mobile-menu.png` · `console-mobile-dark.png` | sous 800 px : la barre, le menu de navigation | **prise** |
-| `console/console-jetons.png`, `-messages`, `-testeurs`, `-visuels`, `-etablissements`, `-salutations`, `-batiments`, `-version`, `-compte` | chaque autre page, en clair | **prise** |
+| `console/console-jetons.png`, `-messages`, `-testeurs`, `-visuels`, `-etablissements`, `-salutations`, `-batiments`, `-version`, `-compte` | chaque autre page, en clair ; `-compte` reprise le 2026-09-25, avec la phrase du rôle, et sa variante `-dark` | **prise** |
+
+### Console, les rôles et l'équipe — [phase-7/7-h-console-roles.md](../phase-7/7-h-console-roles.md), [guide-console.md](../guide-console.md)
+
+Prises le 2026-09-25, sur la console locale, par la recette du jalon, avec des comptes jetables
+supprimés après ; la liste de l'équipe est filtrée sur ces comptes, et aucune adresse réelle n'est à
+l'écran.
+
+| Fichier | Contenu | Priorité |
+|---|---|---|
+| `console/console-equipe.png` · `-dark` | la page Équipe : les membres, leur rôle, leurs campus, la date du dernier mot de passe provisoire | **prise** |
+| `console/console-equipe-invitation.png` | l'invitation d'un rédacteur : le mot de passe provisoire, montré une seule fois, avec « Copier » | **prise** |
+| `console/console-premiere-connexion.png` | la première connexion d'un compte invité : choisir son mot de passe, et rien d'autre | **prise** |
+| `console/console-annonces-redacteur.png` | les annonces vues par un rédacteur borné : le bandeau de ses campus | **prise** |
+| `console/console-annonce-campus-redacteur.png` | le ciblage d'une annonce neuve d'un rédacteur : son campus coché, les autres grisés | **prise** |
+| `console/console-conflit.png` | le verrou : « Modifiée entre-temps », par qui et quand, et « Recharger » | **prise** |
 
 ### Socle
 

@@ -192,7 +192,8 @@ importé toutes les 72 heures, et se lit dans la page **Retours** de la console
   réception. Le registre des retours enregistre ce qui a été dit, pas ce qu'on en a compris ;
 - la ligne passe en `traité` — ou `en attente`, ou `refusé` — avec une **note** qui renvoie à
   l'entrée du registre, au commit, ou à la raison du refus ; la nature se reclasse si la case cochée
-  ne dit pas ce que le texte dit ;
+  ne dit pas ce que le texte dit. Reclasser est un geste d'admin, comme lire l'adresse laissée
+  ([7-H](docs/phase-7/7-h-console-roles.md)) ;
 - une demande de campus rejoint [docs/adaptation-campus.md](docs/adaptation-campus.md).
 
 **On ne retouche jamais la feuille de réponses.** La clé d'un retour est une empreinte de la réponse :

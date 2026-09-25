@@ -11,10 +11,11 @@
  */
 
 import { ChevronLeft, Plus } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
+import { peutEcrire } from '../auth/droits';
 import { useDroits } from '../auth/session';
-import { LectureSeule } from '../composants/LectureSeule';
+import { BandeauDeDroits } from '../composants/BandeauDeDroits';
 import { Formulaire, type Activite } from '../composants/formulaire/Formulaire';
 import { ListeDeRessource } from '../composants/liste/ListeDeRessource';
 import { Bouton } from '../composants/ui/Bouton';
@@ -72,7 +73,11 @@ export function Ressource({ descripteur, reste, boutons, apercu, etatDeLigne }: 
     const retourALaListe = () => naviguer(chemin, params);
     // Une ecriture qui change l'adresse — une ligne neuve, une copie — remonte le formulaire : la
     // phrase du geste voyage avec la navigation, et ne vaut que pour l'adresse qui vient d'etre ouverte.
+    // Elle s'oublie des qu'on la quitte : elle peut porter un secret a ne montrer qu'une fois (7-H).
     const [retourDeNavigation, setRetourDeNavigation] = useState<{ readonly segment: string; readonly retour: RetourDeGeste } | null>(null);
+    useEffect(() => {
+        if (retourDeNavigation !== null && retourDeNavigation.segment !== reste) setRetourDeNavigation(null);
+    }, [reste, retourDeNavigation]);
     const apresEcriture = (ligne: Ligne, retour: RetourDeGeste) => {
         const segment = cleVersUrl(descripteur, ligne);
         setRetourDeNavigation({ segment, retour });
@@ -91,7 +96,9 @@ export function Ressource({ descripteur, reste, boutons, apercu, etatDeLigne }: 
                     <div className="boutons">
                         {boutons}
                         {descripteur.creation !== false ? (
-                            <Bouton variante="plein" disabled={droits === false} onClick={() => naviguer(`${chemin}/${NOUVEAU}`, params)} icone={<Plus className="icone" aria-hidden="true" />}>Nouvelle ligne</Bouton>
+                            <Bouton variante="plein" disabled={droits !== undefined && !peutEcrire(droits, descripteur.table)} onClick={() => naviguer(`${chemin}/${NOUVEAU}`, params)} icone={<Plus className="icone" aria-hidden="true" />}>
+                                {descripteur.nouvelle ?? 'Nouvelle ligne'}
+                            </Bouton>
                         ) : null}
                     </div>
                 </div>
@@ -100,10 +107,10 @@ export function Ressource({ descripteur, reste, boutons, apercu, etatDeLigne }: 
                     <a href={lienVers(chemin, params)}><ChevronLeft className="icone" aria-hidden="true" />{descripteur.titre}</a>
                 </nav>
             )}
-            {descripteur.creation !== false || descripteur.table === 'retours' ? <LectureSeule /> : null}
+            {descripteur.creation !== false || descripteur.table === 'retours' ? <BandeauDeDroits table={descripteur.table} /> : null}
             {descripteur.avertissement !== undefined ? <div className="carte compacte" style={{ marginBottom: 'var(--espace-md)' }}><Encart ton="avert">{descripteur.avertissement}</Encart></div> : null}
             {reste === null ? (
-                <div className="carte"><ListeDeRessource descripteur={descripteur} lienDe={(ligne) => `${chemin}/${cleVersUrl(descripteur, ligne)}${params.size > 0 ? `?${params.toString()}` : ''}`} /></div>
+                <div className="carte"><ListeDeRessource descripteur={descripteur} lienDe={descripteur.ouvrable === false ? undefined : (ligne) => `${chemin}/${cleVersUrl(descripteur, ligne)}${params.size > 0 ? `?${params.toString()}` : ''}`} /></div>
             ) : reste === NOUVEAU ? (
                 <Formulaire descripteur={descripteur} existante={null} apercu={apercu} etat={etatDeLigne} titreDePage onEnregistre={apresEcriture} onSupprime={retourALaListe} onAnnule={retourALaListe} />
             ) : (

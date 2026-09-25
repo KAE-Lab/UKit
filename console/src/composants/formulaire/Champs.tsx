@@ -17,9 +17,18 @@ export interface ChampsProps {
     readonly valeurs: Ligne;
     readonly etablissements: readonly EtablissementConnu[];
     readonly codes: readonly string[] | null;
+    /** Les campus d'un redacteur borne : les autres se voient sans se cocher (7-H). */
+    readonly borne: readonly string[] | null;
     readonly poserAutre: (nom: string, saisie: Saisies[string]) => void;
     readonly desactiver: (champ: Champ) => boolean;
     readonly signalerLigne: (nom: string, ligne: number) => void;
+}
+
+/** Pour un redacteur borne, « aucune case cochee : tous les campus » serait faux : la base le refuse (7-H). */
+const AIDE_DES_CAMPUS_BORNES = 'Tes campus seulement : coche au moins l’un d’eux. Une annonce pour tous les campus est un geste d’admin.';
+
+function pourLaBorne(champ: Champ, borne: readonly string[] | null): Champ {
+    return borne === null || champ.type.type !== 'etablissements' ? champ : { ...champ, aide: AIDE_DES_CAMPUS_BORNES };
 }
 
 interface Groupe {
@@ -38,7 +47,7 @@ function grouper(champs: readonly Champ[]): readonly Groupe[] {
     return groupes;
 }
 
-export function Champs({ champs, control, valeurs, etablissements, codes, poserAutre, desactiver, signalerLigne }: ChampsProps) {
+export function Champs({ champs, control, valeurs, etablissements, codes, borne, poserAutre, desactiver, signalerLigne }: ChampsProps) {
     const rendre = (champ: Champ) => (
         <Controller
             key={champ.nom}
@@ -46,13 +55,14 @@ export function Champs({ champs, control, valeurs, etablissements, codes, poserA
             name={champ.nom}
             render={({ field, fieldState }) => (
                 <ChampEditeur
-                    champ={champ}
+                    champ={pourLaBorne(champ, borne)}
                     saisie={field.value ?? ''}
                     onChange={field.onChange}
                     poserAutre={poserAutre}
                     ligne={valeurs}
                     etablissements={etablissements}
                     codesConnus={codes}
+                    borne={borne}
                     erreur={fieldState.error?.message}
                     enErreur={fieldState.error !== undefined}
                     desactive={desactiver(champ)}

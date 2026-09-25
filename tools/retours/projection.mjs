@@ -5,7 +5,8 @@
  * dix-huit colonnes dont la plupart sont vides pour une reponse donnee. La projection rend ce qui
  * se lit et se trie (la nature, le campus, l'appareil, un texte assemble) et garde la reponse
  * entiere, question par question, dans `reponses` : rien n'est perdu, et une question ajoutee au
- * formulaire arrive sans rien changer ici.
+ * formulaire arrive sans rien changer ici. Sauf l'adresse : elle a sa colonne, `contact`, et
+ * n'est recopiee nulle part ailleurs (jalon 7-H).
  *
  * Les questions sont reconnues par leur libelle exact, tel que Google l'ecrit en en-tete. Une
  * question attendue mais absente — le contact et le volontariat n'existent pas encore dans les
@@ -185,14 +186,17 @@ export function projeter(entetes, ligne, numero, fuseauFeuille = 'Europe/Paris')
     const nature = natureDe(brut('pourquoi'));
     const colonnesDeContact = new Set(QUESTIONS_DE_CONTACT.flatMap((cle) => indexDesColonnes(entetes, QUESTIONS[cle])));
     const contact = QUESTIONS_DE_CONTACT.map(brut).find((valeur) => valeur !== '') ?? '';
-    // Une question a plusieurs colonnes garde la premiere valeur non vide, sous le premier libelle.
+    // Une question a plusieurs colonnes garde la premiere valeur non vide, sous le premier libelle. Les
+    // questions de contact n'y entrent pas : l'adresse vit dans sa colonne, que seul un admin lit
+    // (jalon 7-H) ; recopiee ici, elle se lisait par quiconque lit les retours.
     const reponses = new Map();
     entetes.forEach((entete, index) => {
+        if (colonnesDeContact.has(index)) return;
         const libelle = entete.trim();
         const valeur = normaliserCellule(ligne[index] ?? '');
         if (COLONNE_SANS_ENTETE.test(libelle) && valeur === '') return;
         if (reponses.has(libelle) && valeur === '') return;
-        reponses.set(libelle, colonnesDeContact.has(index) ? valeur : masquer(valeur));
+        reponses.set(libelle, masquer(valeur));
     });
     const volontaire = brut('volontaire');
 

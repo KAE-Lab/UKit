@@ -11,6 +11,7 @@
  * table, dans docs/backend.md et supabase/schema.sql, que chaque descripteur cite.
  */
 
+import type { DroitsDeSession } from '../auth/droits';
 import type { Ligne } from '../supabase';
 
 export interface Option {
@@ -95,11 +96,30 @@ export interface Champ {
     readonly forme?: { readonly motif: RegExp; readonly message: string };
 }
 
+/**
+ * Un secret a montrer une seule fois, et nulle part ailleurs : le mot de passe provisoire d'un membre de
+ * l'equipe (7-H). Il ne va ni dans l'URL, ni dans un cache, ni dans le journal.
+ */
+export interface Secret {
+    readonly titre: string;
+    readonly valeur: string;
+    readonly consigne: string;
+}
+
 /** Ce qu'une action rend quand elle a touche une ligne : la phrase, et la ligne que le formulaire doit suivre. */
 export interface ResultatDAction {
+    /** Le ton de la phrase ; un geste qui n'a pas abouti peut rendre la ligne quand meme (notifier, 7-H). */
+    readonly ton?: 'ok' | 'erreur';
     readonly texte: string;
     /** La ligne telle que la base l'a ecrite — la meme, modifiee (archiver), ou une autre (dupliquer). */
     readonly ligne?: Ligne;
+    readonly secret?: Secret;
+}
+
+/** Ce que les gestes savent du compte qui les fait : de quoi ne pas proposer a un admin de se revoquer lui-meme. */
+export interface CompteQuiAgit {
+    readonly email: string;
+    readonly droits: DroitsDeSession;
 }
 
 /**
@@ -112,10 +132,23 @@ export interface ActionDeLigne {
     readonly libelle: string;
     /** Une confirmation avant d'agir, pour un geste qui ne se rejoue pas. */
     readonly confirmation?: string;
-    readonly disponible?: (ligne: Ligne) => boolean;
+    readonly disponible?: (ligne: Ligne, compte: CompteQuiAgit) => boolean;
     /** L'icone du bouton, nommee : le descripteur reste une donnee, sans composant a l'import. */
-    readonly icone?: 'copier' | 'telephone' | 'tous' | 'archiver' | 'envoyer';
-    readonly executer: (ligne: Ligne) => Promise<string | ResultatDAction>;
+    readonly icone?: 'copier' | 'telephone' | 'tous' | 'archiver' | 'envoyer' | 'cle';
+    /**
+     * Ce que le geste ecrit, pour savoir qui peut le faire (7-H) : la ligne elle-meme — le droit de la
+     * modifier —, ou une copie — le droit de creer, pas celui de modifier l'original.
+     */
+    readonly ecrit?: 'ligne' | 'copie';
+    readonly executer: (ligne: Ligne, compte: CompteQuiAgit) => Promise<string | ResultatDAction>;
+}
+
+/** Retirer une ligne autrement qu'en la supprimant : revoquer un membre de l'equipe (7-H), avec son compte. */
+export interface Retrait {
+    readonly libelle: string;
+    readonly confirmation: string;
+    readonly disponible?: (ligne: Ligne, compte: CompteQuiAgit) => boolean;
+    readonly executer: (ligne: Ligne) => Promise<string>;
 }
 
 /** Ce qu'une colonne calculee montre : une pastille, et la phrase qui l'explique au survol. */
@@ -173,8 +206,24 @@ export interface Descripteur {
     readonly avertissement?: string;
     readonly creation?: boolean;
     readonly suppression?: boolean;
-    /** Ou la page se range dans la navigation : ce qu'on suit (les retours) ou ce qu'on publie. */
-    readonly section?: 'suivre' | 'publier';
+    /**
+     * Les colonnes que la console lit, quand la base en retient une a tous ses comptes — l'adresse d'un
+     * retour, le jeton d'un appareil (7-H) : `select *` y serait refuse en entier. Par defaut, toutes.
+     */
+    readonly colonnes?: string;
+    /** Une ligne ne s'ouvre pas : la table se lit en liste, sans cle lisible (les jetons push, depuis 7-H). */
+    readonly ouvrable?: false;
+    /**
+     * La version de la ligne, tenue par la base (7-H) : un enregistrement ne passe que si elle n'a pas
+     * bouge depuis la lecture, sinon la ligne a ete modifiee entre-temps et la console le dit.
+     */
+    readonly verrou?: string;
+    /** Creer par une fonction plutot que par la table : un membre de l'equipe a besoin d'un compte (7-H). */
+    readonly creer?: (valeurs: Ligne) => Promise<ResultatDAction>;
+    /** Le geste qui remplace « Supprimer », quand retirer une ligne est plus qu'une suppression. */
+    readonly retrait?: Retrait;
+    /** Ou la page se range dans la navigation : ce qu'on suit (les retours), ce qu'on publie, l'equipe. */
+    readonly section?: 'suivre' | 'publier' | 'equipe';
     /** Le message d'une liste vide, quand « la premiere se cree avec le bouton » serait faux. */
     readonly vide?: string;
     /** Une regle qui ne tient pas dans un champ : rend le message d'erreur, ou `null`. */
@@ -240,6 +289,11 @@ export function cleDeLigne(descripteur: Descripteur, ligne: Ligne): string {
 /** La cle telle qu'elle voyage dans l'URL : chaque colonne encodee a part, `/` reste le separateur. */
 export function cleVersUrl(descripteur: Descripteur, ligne: Ligne): string {
     return descripteur.cle.map((colonne) => encodeURIComponent(String(ligne[colonne] ?? ''))).join('/');
+}
+
+/** Ce que la console lit d'une table : les colonnes que la base lui laisse, ou toutes. */
+export function colonnesLues(descripteur: Descripteur): string {
+    return descripteur.colonnes ?? '*';
 }
 
 /** L'inverse : le filtre d'une ligne depuis le segment d'URL, ou `null` si la forme ne colle pas. */

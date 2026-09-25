@@ -6,7 +6,7 @@
 
 import { useMemo } from 'react';
 
-import { LectureSeule } from '../../composants/LectureSeule';
+import { BandeauDeDroits } from '../../composants/BandeauDeDroits';
 import { ListeDeRessource } from '../../composants/liste/ListeDeRessource';
 import { etatDepuisParams, paramsDepuisEtat, type Defauts } from '../../composants/liste/etatUrl';
 import { Encart } from '../../composants/ui/Encart';
@@ -41,7 +41,7 @@ export function Retours({ reste }: { readonly reste: string | null }) {
             <div className="entete-page">
                 <div><h1>Retours</h1><p className="sous-titre">{RETOURS.description}</p></div>
             </div>
-            <LectureSeule />
+            <BandeauDeDroits table="retours" />
             {reste !== null ? <FicheDeRetour id={reste} retour={() => naviguer('/retours', params)} /> : (
                 <>
                     <div className="carte">

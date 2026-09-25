@@ -4,11 +4,13 @@
  */
 
 import { Menu } from '@base-ui/react/menu';
-import { Menu as IconeMenu } from 'lucide-react';
+import { BookOpen, Menu as IconeMenu } from 'lucide-react';
 
-import { estActif, iconeDe, NAVIGATION } from './Coque';
+import type { DroitsDeSession } from '../auth/droits';
+import { GUIDE_DE_LA_CONSOLE } from '../lib/liens';
+import { entreesDuCompte, estActif, iconeDe, NAVIGATION } from './Coque';
 
-export function NavigationMobile({ chemin }: { readonly chemin: string }) {
+export function NavigationMobile({ chemin, droits }: { readonly chemin: string; readonly droits: DroitsDeSession }) {
     return (
         <Menu.Root>
             <Menu.Trigger className="bouton discret icone-seule menu-mobile" aria-label="Menu de navigation">
@@ -31,6 +33,15 @@ export function NavigationMobile({ chemin }: { readonly chemin: string }) {
                             </Menu.Group>
                         ))}
                         <Menu.Separator className="menu-separateur" />
+                        {entreesDuCompte(droits).map((entree) => {
+                            const Icone = iconeDe(entree.vers);
+                            return (
+                                <Menu.LinkItem key={entree.vers} href={`#${entree.vers}`} className="menu-item" aria-current={estActif(entree.vers, chemin) ? 'page' : undefined}>
+                                    {Icone === undefined ? null : <Icone className="icone" aria-hidden="true" />}{entree.libelle}
+                                </Menu.LinkItem>
+                            );
+                        })}
+                        <Menu.LinkItem href={GUIDE_DE_LA_CONSOLE} target="_blank" rel="noreferrer" className="menu-item"><BookOpen className="icone" aria-hidden="true" />Guide</Menu.LinkItem>
                         <Menu.LinkItem href="#/compte" className="menu-item">Compte</Menu.LinkItem>
                     </Menu.Popup>
                 </Menu.Positioner>

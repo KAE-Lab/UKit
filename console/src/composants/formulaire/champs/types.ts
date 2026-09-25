@@ -14,6 +14,8 @@ export interface ChampProps {
     readonly ligne: Ligne;
     readonly etablissements: readonly EtablissementConnu[];
     readonly codesConnus: readonly string[] | null;
+    /** Les campus d'un redacteur borne (7-H) ; `null` pour tout autre compte. */
+    readonly borne?: readonly string[] | null;
     readonly desactive: boolean;
     readonly enErreur: boolean;
     /** Dit au formulaire la ligne ou est le curseur, pour un apercu qui s'y cale (la description). */

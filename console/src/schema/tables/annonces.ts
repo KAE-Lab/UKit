@@ -76,6 +76,7 @@ export const ANNONCES: Descripteur = {
     description: 'La vie étudiante : une carte dans Campus, une fiche au toucher — composées ici en voyant ce qu’elles donneront sur un téléphone.',
     nouvelle: 'Nouvelle annonce',
     cle: ['id'],
+    verrou: 'maj_le',
     tri: { colonne: 'publiee_le', desc: true },
     // L'etat que les telephones voient, pas le statut editorial : une annonce publiee mais decochee,
     // programmee ou expiree n'est visible de personne, et la liste le dit.
@@ -111,6 +112,7 @@ export const ANNONCES: Descripteur = {
         { nom: 'expire_le', libelle: 'Expire le', type: { type: 'date' }, groupe: GROUPE_PUBLICATION },
         { nom: 'active', libelle: 'Active', type: { type: 'booleen' }, defaut: true, groupe: GROUPE_PUBLICATION },
         ...CIBLAGE.map((champ) => ({ ...champ, groupe: GROUPE_CIBLAGE })),
+        { nom: 'maj_le', libelle: 'Modifiée le', type: { type: 'date' }, lectureSeule: true, aide: 'La version de l’annonce : un enregistrement ne passe que si personne ne l’a modifiée depuis son ouverture.' },
         { nom: 'id', libelle: 'Identifiant', type: { type: 'uuid' }, lectureSeule: true, aide: 'Attribué par la base ; c’est la clé d’un visuel de domaine « annonce ».' },
     ],
     valider,
@@ -123,7 +125,9 @@ export const ANNONCES: Descripteur = {
         {
             libelle: 'Dupliquer',
             icone: 'copier',
-            executer: async (ligne) => (await import('./gestesDAnnonce')).dupliquer(ligne),
+            // Une copie : le droit de creer suffit, et un redacteur la recoit sur ses campus.
+            ecrit: 'copie',
+            executer: async (ligne, compte) => (await import('./gestesDAnnonce')).dupliquer(ligne, compte.droits),
         },
         {
             libelle: 'Voir sur mon téléphone',

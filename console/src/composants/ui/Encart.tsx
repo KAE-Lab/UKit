@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react';
 
+import type { Secret } from '../../schema/descripteurs';
+
 export type TonDEncart = 'ok' | 'erreur' | 'avert' | 'info';
 
 const ICONES = { ok: CircleCheck, erreur: CircleAlert, avert: TriangleAlert, info: Info } as const;
@@ -19,6 +21,11 @@ export function Encart({ ton, children }: { readonly ton: TonDEncart; readonly c
 export interface RetourDeGeste {
     readonly ton: TonDEncart;
     readonly texte: string;
+    /**
+     * Le secret que le geste rend, a montrer une seule fois (7-H) : il voyage avec la phrase quand le
+     * geste change l'adresse — une invitation ouvre la ligne neuve —, et ne s'affiche jamais dans l'encart.
+     */
+    readonly secret?: Secret;
 }
 
 /**

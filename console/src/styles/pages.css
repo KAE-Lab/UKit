@@ -16,6 +16,12 @@ details pre { margin: var(--espace-sm) 0 0; padding: var(--espace-sm); border-ra
 .question { display: grid; gap: 2px; padding: var(--espace-sm) var(--espace-md); background: var(--fond); border-radius: var(--rayon-md); }
 .question .intitule { font-size: var(--taille-xs); color: var(--texte-2); font-weight: 600; }
 .question .reponse { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* L'adresse d'un retour (7-H) : de la famille des reponses, et elle ne s'affiche qu'au clic d'un admin. */
+.contact-du-retour { display: grid; gap: 2px; margin-top: var(--espace-sm); padding: var(--espace-sm) var(--espace-md); background: var(--fond); border-radius: var(--rayon-md); }
+.contact-du-retour .intitule { font-size: var(--taille-xs); color: var(--texte-2); font-weight: 600; }
+.contact-du-retour .valeur { display: flex; align-items: center; gap: var(--espace-sm); flex-wrap: wrap; min-height: 32px; overflow-wrap: anywhere; }
+.contact-du-retour .valeur a { display: inline-flex; align-items: center; gap: var(--espace-xs); }
+.contact-du-retour .erreur-en-ligne { color: var(--danger); font-size: var(--taille-xs); }
 
 /* Le tableau de bord. */
 .bord { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--espace-md); align-items: start; }

@@ -21,11 +21,12 @@ function nonVide(valeur: unknown): string | null {
 }
 
 /**
- * Le titre d'un formulaire : le titre ou le nom que la saisie porte, a mesure qu'on l'ecrit ; sinon
- * « Nouvelle annonce » pour une ligne neuve, « Modifier » pour une ligne qui n'a ni l'un ni l'autre.
+ * Le titre d'un formulaire : le titre, le nom ou l'adresse que la saisie porte — un membre de l'equipe
+ * n'a que son adresse (7-H) —, a mesure qu'on l'ecrit ; sinon « Nouvelle annonce » pour une ligne neuve,
+ * « Modifier » pour une ligne qui n'a rien de tout cela.
  */
 export function libelleDeLigne(valeurs: Readonly<Record<string, unknown>>, existante: unknown, nouvelle: string | undefined): string {
-    const nomme = nonVide(valeurs.titre) ?? nonVide(valeurs.nom);
+    const nomme = nonVide(valeurs.titre) ?? nonVide(valeurs.nom) ?? nonVide(valeurs.email);
     if (nomme !== null) return nomme;
     return existante === null ? (nouvelle ?? 'Nouvelle ligne') : 'Modifier';
 }

@@ -14,6 +14,7 @@ export const MESSAGES: Descripteur = {
     titre: 'Messages de service',
     description: 'Parler aux utilisateurs : une information en bandeau, un avertissement ou un incident en feuille.',
     cle: ['id'],
+    verrou: 'maj_le',
     tri: { colonne: 'publie_le', desc: true },
     liste: ['titre', 'niveau', 'actif', 'audience', 'etablissements', 'plateformes', 'version_min', 'version_max', 'publie_le', 'notifie_le'],
     filtres: ['niveau', 'actif', 'audience'],
@@ -31,6 +32,7 @@ export const MESSAGES: Descripteur = {
         ...CIBLAGE,
         { nom: 'notifie_le', libelle: 'Notifié le', type: { type: 'date' }, lectureSeule: true, aide: 'Posé par la fonction d’envoi. Un message ne se notifie qu’une fois.' },
         { nom: 'notifies', libelle: 'Appareils visés', type: { type: 'nombre' }, lectureSeule: true },
+        { nom: 'maj_le', libelle: 'Modifié le', type: { type: 'date' }, lectureSeule: true, aide: 'La version de la ligne : un enregistrement ne passe que si personne ne l’a modifiée depuis son ouverture.' },
         { nom: 'id', libelle: 'Identifiant', type: { type: 'uuid' }, lectureSeule: true },
     ],
     avantEcriture: (ligne, existante) => {
@@ -55,9 +57,13 @@ export const JETONS: Descripteur = {
     chemin: 'jetons',
     table: 'jetons_push',
     titre: 'Jetons push',
-    description: 'Les appareils qui recevront les messages en notification, et ce qu’il faut pour les cibler. Déposés par l’application, retirés par son interrupteur ou par un envoi qui les trouve morts.',
+    description: 'Les appareils qui recevront les messages en notification, et ce qu’il faut pour les cibler. Déposés par l’application, retirés par son interrupteur ou par un envoi qui les trouve morts. Le jeton lui-même ne se lit pas ici : il suffirait à notifier l’appareil.',
     section: 'suivre',
-    cle: ['jeton'],
+    // Aucune cle lisible : le jeton lui-meme ne se lit par aucun compte de la console depuis 7-H — qui le
+    // lit peut notifier l'appareil sans passer par elle. La liste se lit, et ne s'ouvre pas.
+    cle: [],
+    colonnes: 'plateforme,etablissement,version,testeur,maj_le',
+    ouvrable: false,
     tri: { colonne: 'maj_le', desc: true },
     liste: ['plateforme', 'etablissement', 'version', 'testeur', 'maj_le'],
     filtres: ['plateforme', 'testeur'],
@@ -67,7 +73,6 @@ export const JETONS: Descripteur = {
     suppression: false,
     vide: 'Aucun appareil n’a encore déposé de jeton : il faut un build (pas Expo Go), la permission de notifications, et l’interrupteur des Réglages allumé.',
     champs: [
-        { nom: 'jeton', libelle: 'Jeton', type: { type: 'texte' }, lectureSeule: true },
         { nom: 'plateforme', libelle: 'Plateforme', type: { type: 'choix', options: PLATEFORMES_D_APPAREIL }, lectureSeule: true },
         { nom: 'etablissement', libelle: 'Campus', type: { type: 'texte' }, lectureSeule: true },
         { nom: 'version', libelle: 'Version', type: { type: 'texte' }, lectureSeule: true },

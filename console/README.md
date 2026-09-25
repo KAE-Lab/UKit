@@ -8,8 +8,12 @@ sources, les retours ouverts, les annonces actives et programmées. Depuis
 [7-F](../docs/phase-7/7-f-console-annonces.md), **une annonce se compose en voyant ce qu'elle
 donnera sur un téléphone** : l'aperçu de la carte et de la fiche dans les deux thèmes, le point focal
 choisi sur l'image, la galerie réordonnée, et un panneau « ordre du carrousel » qui rend l'ordre
-qu'un téléphone montre à l'heure dite. Ce qu'elle est et ce qu'elle n'est pas :
-[docs/pilotage.md](../docs/pilotage.md).
+qu'un téléphone montre à l'heure dite. Depuis [7-H](../docs/phase-7/7-h-console-roles.md), **elle
+s'ouvre à une équipe** : trois rôles — admin, rédacteur borné ou non à ses campus, lecteur — que la
+base applique et que chaque page reflète, une page Équipe pour inviter et révoquer, et un verrou
+contre l'écrasement quand deux personnes ouvrent la même ligne. Ce qu'elle est et ce qu'elle n'est pas :
+[docs/pilotage.md](../docs/pilotage.md) ; comment on s'en sert sans être développeur :
+[docs/guide-console.md](../docs/guide-console.md).
 
 **Les Blueprints n'y sont pas**, et c'est une décision : ils se versionnent dans le dépôt, se
 valident avec le moteur, se rejouent par la parité et se publient par `npm run blueprints:publish`.
@@ -27,23 +31,30 @@ npm run console:build            # construit console/dist (typage compris)
 ```
 
 La console n'embarque que la clé publiable, publique par conception. Ce qui lui permet d'écrire est
-la **session** d'un compte dont l'e-mail figure dans la table `editeurs` ; un compte qui n'y est pas
-se connecte, lit ce que la console montre, voit **« Lecture seule »** en tête de chaque page qui
-écrit, et ses boutons d'écriture désactivés.
+la **session** d'un compte dont l'e-mail figure dans la table `editeurs`, **selon son rôle** : un admin
+écrit tout, un rédacteur les annonces de ses campus, un lecteur rien. Chaque page qui écrit dit en tête
+ce que le rôle y permet — « Lecture seule », et pourquoi —, ses boutons désactivés.
 
-## Le compte
+## L'équipe et les comptes
 
 Pas d'inscription (désactivée dans le projet : *Authentication → Providers → Email → Allow new users
-to sign up*, à décocher une fois) et pas de courriel sortant. Le compte se crée et se répare depuis
-le poste du publieur, avec la clé de service :
+to sign up*, à décocher une fois) et pas de courriel sortant. **Un compte naît dans la console** : un
+admin l'invite depuis la page **Équipe**, avec un rôle et, pour un rédacteur, ses campus ; la fonction
+`editeurs` de la base crée le compte avec un **mot de passe provisoire**, montré une seule fois dans un
+dialogue, à transmettre de vive voix. À la première connexion, la console n'affiche que le choix d'un
+mot de passe. La même page change un rôle, redonne un mot de passe provisoire, et révoque — les droits
+d'abord, puis le compte.
+
+Le script du poste reste pour réparer un compte **admin**, avec la clé de service :
 
 ```bash
 CONSOLE_MOT_DE_PASSE='…' npm run console:editeur -- --email kylian.mltre@gmail.com
-CONSOLE_MOT_DE_PASSE='…' npm run console:editeur -- --email … --mot-de-passe   # mot de passe oublié
+CONSOLE_MOT_DE_PASSE='…' npm run console:editeur -- --email … --mot-de-passe   # mot de passe oublié du dernier admin
 CONSOLE_MOT_DE_PASSE='…' npm run console:editeur -- --email … --sans-droits    # pour vérifier le refus
 ```
 
-Changer son mot de passe se fait ensuite dans la console, page Compte.
+Changer son mot de passe se fait ensuite dans la console, page Compte : douze caractères au moins, et
+un mot de passe connu des fuites est refusé — par l'authentification du projet, pas par la console.
 
 ## Déployer
 
@@ -88,7 +99,12 @@ champ réel, ou une colonne calculée de la liste. La liste et le formulaire son
 génériques ; les pages qui méritent mieux ont la leur — le tableau de bord, les retours (compteurs par
 état, nature, campus et semaine ; les réponses question par question), le journal, les sources — ou
 la **complètent** : les annonces ([`src/pages/Annonces/`](src/pages/Annonces/)) ajoutent à la page
-générique l'état d'une annonce sous son titre, un aperçu à côté du formulaire, et le panneau d'ordre.
+générique l'état d'une annonce sous son titre, un aperçu à côté du formulaire, et le panneau d'ordre. Depuis
+7-H, un descripteur dit aussi les colonnes qu'il lit quand la base en retient une, une table qui ne
+s'ouvre pas (les jetons, sans clé lisible), la colonne de son verrou, et une création ou un retrait qui
+passent par une fonction plutôt que par la table : c'est ainsi que la page Équipe
+([`src/pages/Equipe.tsx`](src/pages/Equipe.tsx)) invite et révoque, sur la liste et le formulaire
+génériques, un secret montré une seule fois en plus ([`SecretUnique.tsx`](src/composants/ui/SecretUnique.tsx)).
 
 **Le formulaire** ([`src/composants/formulaire/`](src/composants/formulaire/)) a la même forme sur
 toutes les pages, depuis la passe d'ergonomie de 7-F : **en haut**, ce qu'on édite — le titre de la
@@ -114,6 +130,22 @@ strict. Vite les transforme avec le tsconfig de la console (`tsconfig` de
 [`vite.config.ts`](vite.config.ts)) : le plus proche d'eux est celui de l'application, qui étend un
 paquet que l'intégration continue n'installe pas pour la console.
 
+**Les rôles** vivent dans la base ([`supabase/policies.sql`](../supabase/policies.sql)) ; la console
+en tient une copie, [`src/auth/droits.ts`](src/auth/droits.ts), pure et testée sur les cas du plan de
+test de 7-H, pour **le dire avant d'essayer** : le bandeau d'une page, un bouton inerte, un formulaire
+en lecture seule — une annonce d'un autre campus se lit sans se modifier, et se duplique sur les
+campus du rédacteur. Un geste déclare ce qu'il écrit (`ecrit` : la ligne, ou une copie), et la
+suppression est un geste d'admin partout. La copie ne protège rien : si elle se trompait, la console
+montrerait un bouton que la base refuse, jamais l'inverse. Et la console ne lit que ce que la base lui
+laisse : l'adresse d'un retour et le jeton d'un appareil ne sont lisibles par aucun de ses comptes, et
+les descripteurs de ces tables nomment leurs colonnes (`colonnes`), puisque `select *` y serait refusé.
+
+**Le verrou contre l'écrasement** : une annonce ou un message s'enregistre avec la version que le
+formulaire a chargée (`maj_le`, tenue par la base). Une écriture qui ne touche aucune ligne se relit
+([`src/lib/verrou.ts`](src/lib/verrou.ts), pur) : modifiée entre-temps — le dialogue dit par qui et
+quand, d'après le journal, et propose de recharger ; supprimée ; ou refusée par la politique, qui
+filtre sans lever d'erreur. « Notifier » rend la ligne relue, puisque la fonction d'envoi la modifie.
+
 **L'URL porte l'état** : `#/annonces/<clé>` ouvre une ligne, `#/annonces/nouveau` une ligne neuve,
 `#/annonces?q=…&page=2&tri=titre.desc&f.audience=testeurs` retient la recherche, la page, le tri et
 les filtres ([`src/routeur.ts`](src/routeur.ts)). Le **filtre global par campus** de la barre se
@@ -134,7 +166,9 @@ d'objet unique, les dimensions de compression, les compteurs des retours, le par
 annonces — et, depuis 7-F, les schémas des saisies structurées (focale, créneaux, galerie,
 partenaire), leurs résumés, l'état d'une annonce et sa phrase de programmation, le modèle de
 l'aperçu, l'ordre vu à une heure, l'insertion d'un marqueur, le pas du clavier sur la focale, le
-bilan d'un lot d'images ; et, depuis sa passe d'ergonomie, la zone qu'un cadre garde d'une image et le
+bilan d'un lot d'images ; depuis 7-H, les droits d'un rôle, l'issue d'une écriture vide et la phrase
+d'un conflit, la borne d'un rédacteur dans le champ des campus, et la cohérence des colonnes lues et du
+verrou ; et, depuis sa passe d'ergonomie de 7-F, la zone qu'un cadre garde d'une image et le
 point sous le pointeur ([`src/lib/cadrage.ts`](src/lib/cadrage.ts)), les coordonnées collées d'une carte
 ([`src/lib/coordonnees.ts`](src/lib/coordonnees.ts)), le titre du formulaire et l'état de sa saisie, le
 raccourci d'enregistrement, la ligne du curseur, le nom de fichier d'une adresse, la vue et l'endroit
@@ -156,3 +190,10 @@ fera, sur un écran de portable, en clair et en sombre, chaque promesse mesurée
 l'aperçu qui tient dans la fenêtre, la fiche calée sur la section du curseur, Ctrl+S, la garde des liens.
 **Une recette ne publie qu'en audience `testeurs`** : la politique de lecture ne regarde pas
 l'audience, et rien de ce qu'elle crée ne doit paraître sur le parc.
+
+La recette du jalon 7-H s'est jouée en trois temps, avec des comptes jetables — un admin créé par le
+script, un rédacteur borné et un lecteur invités par la page Équipe elle-même : cinquante-six cas en
+SQL dans une transaction annulée sur la production, avant la poussée ; quarante-six par l'API avec la
+clé publiable, après ; vingt-cinq dans la console locale par un navigateur piloté, dont la première
+connexion, le rédacteur face à l'annonce d'un autre campus et le conflit de deux éditeurs sur la même
+annonce ([spécification](../docs/phase-7/7-h-console-roles.md#plan-de-test)).

@@ -24,6 +24,7 @@ if (import.meta.env.DEV) (window as unknown as { __requetes?: QueryClient }).__r
 /** Les cles de cache. Une table entiere s'invalide par `table(nom)`. */
 export const cles = {
     droits: (email: string) => ['droits', email] as const,
+    toutesLesDroits: ['droits'] as const,
     etablissements: ['etablissements'] as const,
     table: (nom: string) => ['table', nom] as const,
     liste: (nom: string, spec: string) => ['table', nom, 'liste', spec] as const,
