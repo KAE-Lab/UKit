@@ -255,8 +255,9 @@ du manifeste, puisque la 6.2.2 les embarque.
 
 - [x] Le manifeste réduit publié et vérifié dans le bucket, la table et à l'adresse servie.
 - [x] La règle écrite, testée, et la sonde adaptée.
-- [ ] `@aetherius/react-native` 0.5.10 sorti.
-- [ ] UKit monté sur 0.5.10, premier commit de `v6.3`.
+- [x] `@aetherius/react-native` 0.5.10 sorti — *le 2026-09-21, tag `v0.5.10`, PyPI et npm publiés par le
+  workflow*.
+- [x] UKit monté sur 0.5.10, premier commit de `v6.3` — *le 2026-09-21, portes et parité vertes*.
 - [ ] L'egress quotidien du bucket `blueprints` divisé par au moins dix dans les journaux, relevé le
   2026-09-23 et le 2026-09-30 ; la case du lot 1 se referme avec lui.
 

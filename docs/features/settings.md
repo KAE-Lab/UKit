@@ -16,7 +16,7 @@ L'écran est une suite de sections empilées, sous un titre qui s'efface au déf
 | **Affichage** | langue (modale de choix), filtres d'UE (écran dédié) |
 | **Thème** | interrupteur mode sombre |
 | **Notifications** | interrupteur des messages de service en notification (6.1.x-E — le couper retire le jeton de la base), interrupteur des rappels de cours, curseur de délai. Les deux sont **actifs par défaut**, et c'est l'entretien qui demande la permission une fois ([plateforme.md](../plateforme.md#permissions)) |
-
+| **Confidentialité** | interrupteur « Statistiques anonymes » (7-D), **actif par défaut** : le couper arrête le comptage et vide la file locale ; « Réinitialiser l'application » le remet actif ([mesure.md](../mesure.md)) |
 | **Lancement** | ouvrir sur le groupe favori, réinitialiser l'application |
 | **Calendrier** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué, et un toast le dit quand c'est le geste « Forcer » qui a échoué (6.1-C) — et, depuis 6.1.x-D, la rangée **Calendriers du téléphone** vers l'écran de choix de ceux que le Planning affiche |
 
@@ -462,6 +462,22 @@ Changer de calendrier cible **supprime d'abord** tous les événements précéde
 > **Capture attendue** — `reglages-calendrier.png` : la modale de choix du calendrier, montrant le
 > calendrier UKit dédié et les calendriers existants.
 
+## Les statistiques anonymes
+
+Depuis [7-D](../phase-7/7-d-la-mesure.md), une section **Confidentialité** porte un seul interrupteur,
+« Statistiques anonymes », actif par défaut. Ce qu'il gouverne est écrit dans [mesure.md](../mesure.md)
+et au point 4 quinquies de [PRIVACY.md](../../PRIVACY.md) : des nombres par jour et par campus, jamais
+un identifiant ni un texte saisi, envoyés quand l'application passe en arrière-plan. Le couper arrête
+le comptage **et vide la file locale** — rien de ce qui a été compté avant ne part —, et « Réinitialiser
+l'application » le remet actif.
+
+*Décision de mise en œuvre* : le réglage vit dans le module de mesure
+([`shared/mesure/reglage.ts`](../../src/shared/mesure/reglage.ts)), pas dans `SettingsManager`, et la
+section ([`ConfidentialiteSection`](../../src/features/Settings/components/SettingsSections.tsx)) le lit
+par son hook `useMesureActive` : `AppCore.tsx` est à la limite de ses quatre cents lignes, et un module
+qui porte sa donnée, son réglage et sa purge se retire d'un bloc. `resetSettings` n'y ajoute qu'une
+ligne, et l'écran n'y ajoute qu'une section.
+
 ## Les calendriers du téléphone
 
 Depuis [6.1.x-D](../phase-6/6-1-x-d-calendriers-du-telephone.md), la section Calendrier porte une
@@ -574,6 +590,10 @@ réinitialiser serait un résidu, pas un service.
 
 - Changer la langue : l'interface **et** les dates doivent basculer immédiatement.
 - Basculer le mode sombre et parcourir les quatre onglets.
+- Couper « Statistiques anonymes » : le bloc Mesure du panneau Testeur (menu de développement) montre
+  une file à zéro, et rien n'arrive dans `mesures` après un passage en arrière-plan ; rallumer : le
+  comptage reprend. Réinitialiser l'application : l'interrupteur revient actif (le protocole complet est
+  celui de [7-D](../phase-7/7-d-la-mesure.md#plan-de-test)).
 - Ajouter un filtre d'UE, revenir au planning favori : les cours correspondants doivent disparaître ;
   le retirer depuis la fiche d'un cours doit les faire réapparaître.
 - Synchronisation active, un groupe favori à plusieurs UE (`4TRN901S`) : filtrer une UE puis « Forcer
@@ -655,7 +675,7 @@ réinitialiser serait un résidu, pas un service.
 | [`screens/FiltersScreen.tsx`](../../src/features/Settings/screens/FiltersScreen.tsx) | l'écran des filtres d'UE : filtres actifs et leur croix, recherche, suggestions, saisie de code |
 | [`screens/CalendriersAffichesScreen.tsx`](../../src/features/Settings/screens/CalendriersAffichesScreen.tsx) | l'écran des calendriers du téléphone affichés dans le Planning : par source, couleur, interrupteur, cible de synchronisation écartée (6.1.x-D) |
 | [`shared/services/CalendarSyncHelpers.ts`](../../src/shared/services/CalendarSyncHelpers.ts) | les pièces sans état de la synchronisation : projection d'un cours vers un événement, création du calendrier `UKit`, écriture d'un passage, retrait de ce qu'un passage a écrit |
-| [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les six sections : établissement, affichage, thème, notifications, lancement, calendrier |
+| [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les sept sections : établissement, affichage, thème, notifications, confidentialité (7-D — autonome : elle lit le réglage de la mesure par son hook), lancement, calendrier |
 | [`components/SettingsModals.tsx`](../../src/features/Settings/components/SettingsModals.tsx) | la modale de choix générique (`SettingsChoicePopup`), ses habillages langue et calendrier, réinitialisation, extinction de la synchronisation |
 | [`shared/ui/ChoixEtablissement.tsx`](../../src/shared/ui/ChoixEtablissement.tsx) | la modale d'établissement : la liste, puis la confirmation de ce qui sera effacé — partagée avec le formulaire de connexion depuis 6.1-A |
 | [`shared/etablissements/bascule.ts`](../../src/shared/etablissements/bascule.ts) | la bascule d'établissement — purge, adoucissement, sélection — la même depuis les Réglages, l'accueil et le formulaire |

@@ -60,7 +60,7 @@ function Bouton({ theme, libelle, onPress, occupe }: { theme: AppThemeType; libe
 
 function decrireBilan(bilan: BilanEntretien | null): string {
     if (bilan === null) return '—';
-    return `${bilan.origine} · synchro ${bilan.synchro} · rappels ${bilan.rappels} · ${moment(bilan.at).format('HH:mm:ss')}`;
+    return `${bilan.origine} · synchro ${bilan.synchro} · rappels ${bilan.rappels} · mesure ${bilan.mesure} · ${moment(bilan.at).format('HH:mm:ss')}`;
 }
 
 export default function ModMenuEntretien({ theme }: ModMenuEntretienProps) {

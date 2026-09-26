@@ -7,6 +7,7 @@ import Translator from '../../../shared/i18n/Translator';
 import type { BdeAnnonce } from '../services/BdeService';
 import { useBdeAnnonces } from '../hooks/useBdeAnnonces';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
+import { useImpressionsDAnnonces } from '../../../shared/mesure/impressions';
 
 import { CampusListLayout } from '../components/CampusListLayout';
 import { BdeAnnonceCard } from './BdeAnnonceCard';
@@ -27,6 +28,8 @@ function BdeScreen({ navigation, onAnimatedScroll }: BdeScreenProps) {
 
     const { annonces, failure, loading, retry } = useBdeAnnonces();
     const [recherche, setRecherche] = useState('');
+    // Les impressions (7-D) : chaque affiche visible a moitie une seconde, une fois par session.
+    const visibilite = useImpressionsDAnnonces<BdeAnnonce>();
 
     // La recherche porte sur ce que l'oeil connait d'une carte : le titre, l'emetteur, l'accroche.
     const visibles = useMemo(() => {
@@ -69,6 +72,7 @@ function BdeScreen({ navigation, onAnimatedScroll }: BdeScreenProps) {
             emptyMessage={Translator.get('NO_RESULTS')}
             failure={failure}
             onRetry={retry}
+            {...visibilite}
         />
     );
 }

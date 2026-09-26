@@ -23,6 +23,7 @@ import { dernierRapportMessages, messagesConnus, oublierVus, rafraichirMessages,
 import { estTesteur, lireIdentifiant, rafraichirStatutTesteur, type SourceDIdentifiant } from '../testeur';
 import { deposerLeJeton, etatDuPush, retirerLeJeton, type EtatDepot, type MemoireDeDepot } from '../push';
 import { tokens, type AppThemeType } from '../theme/Theme';
+import ModMenuMesure from './ModMenuMesure';
 
 export interface ModMenuTesteurProps {
     readonly theme: AppThemeType;
@@ -167,6 +168,9 @@ export default function ModMenuTesteur({ theme }: ModMenuTesteurProps) {
                 <Bouton theme={theme} libelle="Déposer le jeton" onPress={deposer} />
                 <Bouton theme={theme} libelle="Retirer le jeton" onPress={retirer} />
             </View>
+
+            {/* La mesure (7-D) : l'autre chose que l'appareil ecrit vers la base. */}
+            <ModMenuMesure theme={theme} />
         </View>
     );
 }

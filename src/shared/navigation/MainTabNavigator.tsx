@@ -22,6 +22,7 @@ import { ModaleBientot } from '../ui/ModaleBientot';
 import { lienDuFormulaire, ouvrirLeFormulaire } from './formulaireDeRetours';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { useGlissementDeBarre } from './glissementDOnglets';
+import { compterOnglet } from '../mesure';
 
 export type MainTabParamList = {
     PlanningTab: undefined;
@@ -357,6 +358,8 @@ export default function MainTabNavigator() {
                 // Le retour visuel du glissement, le meme qu'un appui : un fondu et un leger decalage.
                 animation: 'shift',
             }}
+            // La mesure (7-D) : l'onglet affiche, au premier focus comme aux suivants.
+            screenListeners={({ route }) => ({ focus: () => compterOnglet(route.name) })}
         >
             <Tab.Screen
                 name="PlanningTab"

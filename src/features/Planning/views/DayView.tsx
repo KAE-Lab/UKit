@@ -11,6 +11,7 @@ import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
 import { onRetourAuPremierPlan } from '../../../shared/services/premierPlan';
+import { compter } from '../../../shared/mesure';
 import { DayViewHeader } from '../components/DayViewHeader';
 import { calendrierOuEcrire, ouvrirEditeurDeCreation } from '../services/TelephoneSource';
 
@@ -115,6 +116,8 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 	}
 
 	componentDidMount() {
+		// La vue affichee compte (7-D) : le jour au montage, puis chaque bascule.
+		compter('planning.jour');
 		this.scrollToSelection(false);
 		this.mockListener = DeviceEventEmitter.addListener('timeMockChanged', () => {
 			this.reinitializeDates();
@@ -350,8 +353,8 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		}
 	};
 
-	onSwitchToWeek = () => this.setState({ mode: 'week' }, () => this.scrollToSelection(false));
-	onSwitchToDay = () => this.setState({ mode: 'day' }, () => this.scrollToSelection(false));
+	onSwitchToWeek = () => { compter('planning.semaine'); this.setState({ mode: 'week' }, () => this.scrollToSelection(false)); };
+	onSwitchToDay = () => { compter('planning.jour'); this.setState({ mode: 'day' }, () => this.scrollToSelection(false)); };
 
 	onDayScrollToIndexFailed = (info: { index: number; highestMeasuredFrameIndex: number; averageItemLength: number }) => {
 		this.scrollTimeout = setTimeout(() => {

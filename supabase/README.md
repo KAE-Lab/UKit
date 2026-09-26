@@ -6,7 +6,7 @@ ce qu'elle n'est pas, et comment on publie : [docs/backend.md](../docs/backend.m
 | Fichier | Contenu |
 |---|---|
 | [`schema.sql`](schema.sql) | tables, index, contraintes, **et les deux buckets** |
-| [`fonctions.sql`](fonctions.sql) | les gardes : qui est éditeur, et depuis 7-H qui peut quoi et où ; le journal par déclencheurs ; la version d'une ligne contre l'écrasement ; la porte de l'adresse d'un retour — dans un schéma `private` que l'API n'expose pas, sauf cette porte |
+| [`fonctions.sql`](fonctions.sql) | les gardes : qui est éditeur, et depuis 7-H qui peut quoi et où ; le journal par déclencheurs ; la version d'une ligne contre l'écrasement ; la porte de l'adresse d'un retour — dans un schéma `private` que l'API n'expose pas, sauf cette porte — et les portes d'écriture de l'application : `deposer_jeton`, `retirer_jeton` (6.1.x-E), `compter` (7-D) |
 | [`policies.sql`](policies.sql) | RLS : lecture publique restreinte, écriture selon le rôle de l'éditeur authentifié (7-H) et par la clé de service |
 | [`functions/`](functions/) | les deux fonctions de la base : `notifier` (un message en notification push) et `editeurs` (l'équipe : inviter, mot de passe provisoire, révoquer), et ce qu'elles partagent (`_shared/`) |
 | [`etablissements.sql`](etablissements.sql) | le catalogue des universités : une ligne par établissement, `on conflict do update` |
@@ -94,6 +94,13 @@ européenne — les utilisateurs sont en France.
    # Les testeurs : la colonne `id` seule est lisible, la table entiere ne l'est pas.
    curl -s "$SUPABASE_URL/rest/v1/testeurs?select=id" -H "apikey: $SUPABASE_ANON_KEY"   # attendu : []
    curl -s "$SUPABASE_URL/rest/v1/testeurs"           -H "apikey: $SUPABASE_ANON_KEY"   # attendu : 42501
+
+   # La mesure (7-D) : les compteurs ne se lisent pas, et un evenement inconnu est ignore, pas ecrit.
+   curl -s "$SUPABASE_URL/rest/v1/mesures?select=*" -H "apikey: $SUPABASE_ANON_KEY"     # attendu : 42501
+   curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/compter" \
+     -H "apikey: $SUPABASE_ANON_KEY" -H "Content-Type: application/json" \
+     -d "{\"p_lots\":[{\"jour\":\"$(date +%F)\",\"evenement\":\"inconnu\",\"version\":\"0.0.1\",\"plateforme\":\"ios\",\"n\":1}]}"
+   # attendu : {"comptes": 0, "rejetes": 1}
    ```
 
    Et la même chose pour un compte **authentifié sans ligne dans `editeurs`** (créé par
@@ -148,6 +155,22 @@ seul ne se relit pas :
 ```sql
 delete from public.journal where quand < now() - interval '1 year';
 ```
+
+## La purge de la mesure
+
+La table `mesures` ([docs/mesure.md](../docs/mesure.md)) grossit de quelques centaines à quelques
+milliers de lignes par jour à l'échelle du parc. Les nombres sont conservés **treize mois**
+([PRIVACY.md](../PRIVACY.md), point 4 quinquies), et la purge n'est pas automatisée, pour la même
+raison que celle du journal :
+
+```sql
+delete from public.mesures where jour < current_date - interval '13 months';
+```
+
+Une ligne d'`evenements_connus` ne se supprime jamais tant que des versions installées peuvent encore
+envoyer l'événement : la fonction `compter` l'ignorerait alors en le comptant dans `rejetes`, ce qui
+est le comportement voulu — un vieux client doit pouvoir vider sa file. Retirer un événement commence
+par le vocabulaire de l'application ([docs/mesure.md](../docs/mesure.md#la-règle--une-mesure-sajoute-avec-son-pourquoi-et-son-lecteur)).
 
 ## Effacer un retour
 
@@ -213,6 +236,13 @@ Ce qui a été mesuré en le faisant :
   donnée qui accompagne un changement de droits, lui, y a sa place, et `schema.sql` ne le recopie pas :
   la migration des rôles retire l'adresse de `reponses` dans la même transaction que les privilèges
   qui la ferment (7-H) ;
+- la migration `20260921233000_mesures.sql` ([7-D](../docs/phase-7/7-d-la-mesure.md)) est la première
+  jouée par `db push` de bout en bout, le 2026-09-21 : `migration list` la voit locale et non distante,
+  le `--dry-run` la propose seule, le `push` la joue dans sa transaction, et la fonction se sonde
+  ensuite par `curl` avec la clé publiable (étape 6 ci-dessus). Une table de référence — ici le
+  vocabulaire d'`evenements_connus` — s'insère dans la migration **et** dans `schema.sql`, en
+  `on conflict do update`, et un test compare les deux
+  ([`migration.test.ts`](../src/shared/mesure/migration.test.ts)).
 - **une migration s'essaie sur la production elle-même, dans une transaction annulée**, avant
   `--dry-run` : `begin`, la migration, puis chaque cas du plan de test joué comme un compte le jouerait
   — `set local role authenticated` et `request.jwt.claims` posés à la main —, puis `rollback`. C'est
@@ -237,8 +267,10 @@ npx --yes supabase@2.117.0 migration list --project-ref $REF --workdir $TMP -p "
 npx --yes supabase@2.117.0 db push --project-ref $REF --workdir $TMP --dry-run -p "$SUPABASE_DB_PASSWORD"
 ```
 
-La fusion de `main` dans la branche de version remet ensuite les deux registres d'accord, et les
-conflits des trois fichiers de la vue lisible se résolvent en gardant les deux côtés.
+La fusion de `main` dans la branche de version remet ensuite les deux registres d'accord ; à
+l'ouverture de [7-I](../docs/phase-7/7-i-releve-et-vocabulaire.md), le 2026-09-26, seule `policies.sql`
+est entrée en conflit (le bloc de la mesure contre le commentaire du journal de 7-H), résolu en gardant
+les deux côtés — `schema.sql` et `fonctions.sql` ont fusionné seuls.
 
 Une règle qui n'a l'air de rien : **ajouter avant de retirer, toujours.** Le parc d'applications
 installées ne se vide pas d'un coup — une colonne supprimée trop tôt casse des installations qu'on

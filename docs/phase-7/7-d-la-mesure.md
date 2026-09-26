@@ -1,13 +1,26 @@
 # 7-D — La mesure
 
-> **Spécification, ouverte le 2026-09-14, pas encore livrée.** Publication : **6.3**, décidé le 2026-09-21
-> à la sortie de la 6.2.2 — la 6.2.3 n'existe plus ([README de la phase](README.md#les-publications)).
-> Des compteurs anonymes, joués **en premier sur la branche `v6.3`**, avant les lots du mouvement
-> ([7-I](7-i-releve-et-vocabulaire.md), [7-J](7-j-ecrans.md)), pour que l'équipe qui arrive —
-> communication, partenariats, subventions — ait des chiffres à la sortie. La refonte n'a donc **pas de
-> ligne de base** : la mesure commence avec elle, et ses premiers chiffres sont ceux auxquels la 6.4 et
-> les campus se compareront. Le document de référence durable est [mesure.md](../mesure.md) ; celui-ci
-> dit comment on le livre.
+> **Jalon livré (code, base, documentation) le 2026-09-21, sur la branche `v6.3`**, en premier, avant
+> les lots du mouvement ([7-I](7-i-releve-et-vocabulaire.md), [7-J](7-j-ecrans.md)). La migration
+> `20260921233000_mesures.sql` est **poussée en production** et la RPC **sondée par l'API anonyme** :
+> un événement inconnu est ignoré et compté (`rejetes: 1`, aucune ligne), un lot de 201 est refusé,
+> un lot qui n'est pas un tableau aussi, `mesures` et `evenements_connus` ne se lisent pas (42501), un
+> lot valide rejoué incrémente `n` sans ligne en double, un jour à J−15, un `n` nul et une version
+> illisible sont rejetés dans un lot dont la ligne valide passe ; les lignes de sonde ont été effacées.
+> Portes : `tsc` vert, ESLint à zéro, 790 tests (quatre fichiers de plus). **Protocole joué sur les deux
+> appareils le 2026-09-22**, Metro lu en direct et la base interrogée après chaque envoi : les huit
+> points passent sur l'iPhone, et l'Android a trouvé un défaut, corrigé le jour même — la file
+> soustraite après un lot accepté ne s'écrivait qu'une seconde plus tard, et une fermeture depuis les
+> applications récentes dans cette seconde la faisait repartir. **Reste** : les fiches *App Privacy* et
+> *Data safety* dans les consoles, avant la sortie. Ce que la mise en œuvre et le protocole ont corrigé
+> est en fin de document.
+>
+> Publication : **6.3**, décidé le 2026-09-21 à la sortie de la 6.2.2 — la 6.2.3 n'existe plus
+> ([README de la phase](README.md#les-publications)). Des compteurs anonymes, pour que l'équipe qui
+> arrive — communication, partenariats, subventions — ait des chiffres à la sortie. La refonte n'a donc
+> **pas de ligne de base** : la mesure commence avec elle, et ses premiers chiffres sont ceux auxquels la
+> 6.4 et les campus se compareront. Le document de référence durable est [mesure.md](../mesure.md) ;
+> celui-ci dit comment on l'a livré.
 >
 > **La seconde écriture de l'application vers la base**, après le jeton de notification de
 > [6.1.x-E](../phase-6/6-1-x-e-notifications-push.md). Comme elle, c'est d'abord une décision de vie privée,
@@ -35,7 +48,7 @@ fin que l'heure.
 | Granularité | le **jour**, l'**heure** pour les sessions, les onglets et les échecs de source ; le campus, la version, la plateforme | assez pour lire un usage, pas assez pour suivre quelqu'un |
 | Envoi | **groupé**, au passage en arrière-plan et à l'entretien ; **jamais au démarrage** | le démarrage ne dépend pas de la base ([backend.md](../backend.md#le-client-applicatif)) |
 
-## Ce qui est à faire
+## Ce qui est fait
 
 ### La base
 
@@ -242,6 +255,80 @@ Sur un build de développement, les deux appareils.
    ligne ; un lot de 201 est refusé ; un `select` sur `mesures` est refusé.
 7. **Les testeurs.** Sur un appareil enregistré testeur, les lignes portent `testeur = true`.
 8. **L'egress.** Le coût d'un envoi, quelques kilo-octets, ne se voit pas dans le tableau Usage.
+
+## Ce que la mise en œuvre a corrigé (2026-09-21)
+
+Le texte ci-dessus est celui de la spécification ; la réalité l'a corrigé en huit endroits, et le code
+fait foi.
+
+1. **La RPC s'appelle `compter(p_lots jsonb)`**, avec le préfixe `p_` de `deposer_jeton` — la
+   spécification écrivait `lots`. En `plpgsql`, chaque élément est jugé dans son propre sous-bloc
+   `begin … exception when others` : une date illisible ou un `n` non entier ne fait pas échouer le
+   lot, l'élément est compté dans `rejetes`.
+2. **Les impressions passent par un hook**, `useImpressionsDAnnonces()` de
+   [`impressions.ts`](../../src/shared/mesure/impressions.ts), et non par un simple couple de props :
+   React Native ne rappelle pas `onViewableItemsChanged` quand l'ensemble visible n'a pas changé, donc
+   « retour au premier plan : les impressions recomptent » (plan de test, point 2) serait faux sans un
+   registre de ce que chaque liste **focalisée** montre, recompté à chaque session. `CarrouselDeSection`
+   et `CampusListLayout` gagnent les deux props, comme prévu ; `BdeSection` et `BdeScreen` les
+   reçoivent du hook. Limite écrite : sur le tableau de bord, la visibilité se juge dans le carrousel,
+   pas dans la page ([mesure.md](../mesure.md#limites-connues)).
+3. **`reinitialiserLaMesure()` vit dans `reglage.ts`**, et `AppCore` l'importe de là, jamais de
+   l'index — l'index importe `AppCore` pour lire les quatre réglages, l'inverse bouclerait. AppCore
+   passe de 398 à **400** lignes effectives, la limite incluse. Réinitialiser remet l'interrupteur
+   actif ; la file n'est pas vidée — elle l'a été si l'interrupteur était coupé.
+4. **La section Confidentialité est autonome** : `ConfidentialiteSection` lit et écrit le réglage par
+   le hook `useMesureActive()` ; `SettingsScreen`, à 373 lignes effectives, ne gagne qu'une ligne de
+   JSX. Placée après Notifications, avant Lancement — décision de Kylian, à côté de l'autre chose qui
+   quitte l'appareil.
+5. **Le panneau du menu de développement est un bloc**, `ModMenuMesure.tsx`, au bas de l'onglet
+   Testeur, à côté du jeton push : la barre n'a pas la place d'un sixième onglet.
+6. **`migration.test.ts` vérifie un sous-ensemble, pas une égalité** : chaque clé d'`EVENEMENTS` est
+   insérée par une migration, et la vue lisible `schema.sql` porte le même ensemble que l'union des
+   migrations — parce qu'un événement retiré du vocabulaire garde sa ligne (règle de
+   [mesure.md](../mesure.md#la-règle--une-mesure-sajoute-avec-son-pourquoi-et-son-lecteur)). Le
+   format est contraint : un tuple `('evenement', 'description'),` par ligne.
+7. **Les routes des onglets** sont `PlanningTab`, `CampusTab`, `ScolariteTab`, `SettingsTab` ; la table
+   `ONGLETS` de `vocabulaire.ts` les traduit en `planning`, `campus`, `scolarite`, `reglages`, et le
+   focus initial compte l'onglet du lancement. `LOGIN_FAILED` n'est pas un événement du flux mais un
+   échec nommé : `echec` se compte dans `jouer()` par `demandeUneRessaisie(run.failure)`.
+8. **L'envoi est sérialisé** — un seul en cours, comme l'entretien —, par lots dans l'ordre, arrêt au
+   premier échec, et la file est soustraite à chaque lot accepté, **lignes rejetées comprises** : une
+   ligne que la base refuse ne se représente pas. Une réponse perdue après un lot accepté compte deux
+   fois — pas d'idempotence côté base, par choix de simplicité ; limite écrite. L'horloge est la
+   réelle, pas l'heure simulable : une mesure est une trace (règle de `Temps.ts`).
+
+Et deux précisions sans écart : `package.json` reste en 6.2.2 sur la branche, le numéro se pose à la
+sortie — les lignes de test portent `6.2.2` et `testeur = true` ; la file s'écrit sur le disque au plus
+une fois par seconde, pas seulement au passage en arrière-plan, parce qu'Android peut tuer sans lui.
+
+## Ce que le protocole sur appareil a corrigé (2026-09-22)
+
+Joué avec Metro lu depuis le poste et la base interrogée après chaque envoi, iPhone 13 Pro puis
+Galaxy A8, huit annonces de test ciblées `testeurs` insérées le temps du protocole puis supprimées.
+
+- **L'iPhone, huit points sur huit.** Le lancement compte la session, les quatre réglages, `planning.jour`
+  et `onglet.vu planning`, sans envoi ; les impressions comptent une fois par carte et par session, et
+  se recomptent au retour au premier plan pour les cartes encore à l'écran — mais pas quand on revient
+  sur un autre onglet, la garde de focus tient ; les fiches, le bouton d'action et les vues du Planning
+  comptent ; l'arrière-plan envoie, l'entretien du retour envoie, la base agrège sans doublon ;
+  l'interrupteur coupé vide la file, `envoi inactif`, rien n'arrive, et rallumé le comptage reprend ;
+  hors ligne (`SUPABASE_URL=https://127.0.0.1:1`), `envoi echec`, la file grossit, survit à une
+  fermeture (11 lignes avant et après, les comptés de 20 à 29 par fusion), et part d'un coup quand la
+  base revient. La seconde carte d'un carrousel, visible à un tiers, ne compte pas : le seuil de 50 %
+  fait ce qu'il dit.
+- **L'Android, et son défaut.** Le `background` d'Android 9 est émis même à la fermeture depuis les
+  applications récentes ; `source.echec` a compté de lui-même l'expiration du widget du dossier
+  (`ukit.portail.bordeaux-inp.dossier:blocked`, le nom du Blueprint tenant lieu d'hôte). Mais après
+  l'envoi de trois lignes à cette fermeture, la relance en montrait treize au lieu de dix : la file
+  soustraite en mémoire ne s'écrivait sur le disque qu'une seconde plus tard, et la fermeture est tombée
+  dans cette seconde. **Corrigé** : après un lot accepté, la file s'écrit tout de suite
+  ([`index.ts`](../../src/shared/mesure/index.ts)). La fenêtre qui reste est celle de l'écriture
+  elle-même, quelques millisecondes.
+- **La clé des salles libres** est l'identifiant du référentiel, `bat_a28`, pas le code affiché ;
+  [mesure.md](../mesure.md#le-vocabulaire) le dit.
+- **Les lignes du protocole**, toutes en version `6.2.2`, ont été effacées à la fin : seuls les builds
+  de développement envoient sous ce numéro, et les premiers chiffres doivent être ceux de la 6.3.
 
 ## Limites écrites
 

@@ -21,28 +21,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { isRunningInExpoGo } from 'expo';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { contexteDeCiblage } from '../ciblage';
 import { SettingsManager } from '../services/AppCore';
 import { notificationsNatives } from '../services/notificationsNatives';
-import { getSupabase } from '../supabase';
-import type { Database } from '../supabase/types';
+import { appeler, getSupabase } from '../supabase';
 import { doitDeposer, estUnJeton, lireMemoire, type Inscription, type MemoireDeDepot } from './inscription';
-
-type Fonctions = Database['public']['Functions'];
-
-/**
- * L'appel d'une fonction SQL, type par `Args` de `types.ts`.
- *
- * Le client type par `Database` ne sait pas typer `rpc` : le schema du depot ne satisfait pas la
- * contrainte `GenericSchema` de supabase-js 2.109 — des `interface` de lignes sans signature d'index
- * —, et `from` y accepte deja n'importe quelle chaine (mesure le 2026-09-08, docs/backend.md,
- * limites). On garde le typage des arguments ici, et le client nu pour l'appel.
- */
-function appeler<F extends keyof Fonctions>(client: SupabaseClient, fonction: F, args: Fonctions[F]['Args']) {
-    return client.rpc(fonction, args);
-}
 
 const CLE_MEMOIRE = 'push@1';
 

@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Animated, FlatList, View } from 'react-native';
+import { Animated, FlatList, View, type FlatListProps } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 
@@ -68,6 +68,10 @@ export interface CampusListLayoutProps<T> {
 
     // Navigation for setting header filter icon
     navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
+
+    /** La mesure des impressions (shared/mesure/impressions) : un couple a identite stable, ou rien. */
+    onViewableItemsChanged?: FlatListProps<T>['onViewableItemsChanged'];
+    viewabilityConfig?: FlatListProps<T>['viewabilityConfig'];
 }
 
 /**
@@ -223,8 +227,7 @@ export function CampusListLayout<T>({
     onRetry,
     partial = false,
     numColumns = 1,
-    navigation
-}: CampusListLayoutProps<T>) {
+    navigation, onViewableItemsChanged, viewabilityConfig }: CampusListLayoutProps<T>) {
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const theme = style.Theme[AppContextValues.themeName ?? 'light'];
     const insets = useSafeAreaInsets();
@@ -314,6 +317,8 @@ export function CampusListLayout<T>({
                         ? { paddingHorizontal: tokens.space.sm, gap: tokens.space.md }
                         : undefined}
                     ListHeaderComponent={partial ? <CampusPartialNotice theme={theme} onRetry={onRetry} /> : null}
+                    onViewableItemsChanged={onViewableItemsChanged}
+                    viewabilityConfig={viewabilityConfig}
                 />
             </View>
 

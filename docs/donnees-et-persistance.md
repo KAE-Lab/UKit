@@ -76,6 +76,8 @@ Un contexte ne serait pas accessible depuis ces points.
 | `calendarSyncAttempt` | `SettingsManager.syncCalendar` | la dernière tentative, réussie ou non : `{ at, ok, origine }` ([features/settings.md](features/settings.md#la-dernière-tentative-est-persistée-et-linterrupteur-lefface)) | effacée par l'interrupteur quand elle est un échec |
 | `entretien@1` | [`entretien.ts`](../src/shared/services/entretien.ts) | horodatage du dernier entretien joué, qui décide du suivant (douze heures) | permanent |
 | `push@1` | [`shared/push`](../src/shared/push/index.ts) | la dernière inscription déposée pour les notifications — jeton, campus, version, plateforme, testeur — et sa date : ce qui décide si la base est à réécrire (6.1.x-E) | effacée par l'interrupteur ; redéposée tous les sept jours |
+| `mesures@1` | [`shared/mesure`](../src/shared/mesure/index.ts) | la file des compteurs anonymes qui attendent de partir (7-D) : des lignes `{ jour, heure, evenement, cle, campus, version, plateforme, testeur, n }`, bornée à 500 — les jours les plus anciens partent d'abord —, écrite au plus une fois par seconde après un comptage, et tout de suite après un lot accepté | soustraite à chaque lot que la base accepte ; vidée par l'interrupteur « Statistiques anonymes » |
+| `mesure-reglage@1` | [`shared/mesure/reglage.ts`](../src/shared/mesure/reglage.ts) | l'interrupteur « Statistiques anonymes » : `{ actif }` ; absent ou illisible, actif | remis à actif par « Réinitialiser l'application » |
 | `crous_favorites` | [`useFavorites`](../src/features/Campus/hooks/useFavorites.ts) | identifiants de restaurants favoris | permanent |
 | `library_favorites` | `useFavorites` | identifiants de BU favorites | permanent |
 | `freeroom_favorites` | `useFavorites` | identifiants de bâtiments favoris | permanent |
@@ -119,6 +121,9 @@ que la Phase 6 existe pour supprimer. `purgerDonneesEtablissement()`
 `batiments@1`, **tous** les caches de planning (`…@Week…` et `…@AAAA/MM/JJ`), ainsi que les deux clés
 `SecureStore` de la session universitaire. Les réglages — groupes favoris, filtres d'UE — sont remis à
 zéro par `SettingsManager` dans le même geste.
+
+La file de la mesure, `mesures@1`, reste elle aussi : chaque ligne porte le campus sous lequel elle a
+été comptée, et elle part telle quelle (7-D).
 
 `crous_favorites`, `library_favorites` et leurs filtres **restent**, et c'est une décision : ils
 pointent Croustillant et Affluences, deux sources **nationales**. Un étudiant qui passe d'une fac

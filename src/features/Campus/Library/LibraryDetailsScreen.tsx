@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { View, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -10,6 +10,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { useLibraryTimetableData } from './hooks/useLibraryTimetableData';
 import { PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
 import { PiedDAction } from '../../../shared/ui/PiedDAction';
+import { compter } from '../../../shared/mesure';
 import { CampusFailureNotice } from '../components/CampusLayoutComponents';
 import { CampusMapSection } from '../components/CampusMapSection';
 import { LibraryLiveAttendance, LibraryDatesHeader, LibraryOpeningHoursList } from './components/LibraryDetailsComponents';
@@ -32,6 +33,11 @@ export default function LibraryDetailsScreen({ route }: { route: { params: { lib
         scrollTimeoutRef,
         retry
     } = useLibraryTimetableData(library);
+
+    // La fiche ouverte compte (7-D), par l'identifiant Affluences de la bibliotheque.
+    useEffect(() => {
+        compter('bu.ouverture', library.id);
+    }, []);
 
     // Le titre vient du navigateur (« Details », neutre) : l'ecran surchargeait le sien en violet,
     // et le nom de la bibliotheque vit deja dans le bandeau.

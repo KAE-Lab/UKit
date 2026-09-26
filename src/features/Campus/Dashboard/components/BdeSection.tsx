@@ -12,6 +12,7 @@ import { SectionEtatVide } from './SectionEtatVide';
 import { useChargementDeSection, useRevisionDuTableauDeBord } from '../rafraichissement';
 import type { BdeAnnonce } from '../../services/BdeService';
 import { CarrouselDeSection } from './CarrouselDeSection';
+import { useImpressionsDAnnonces } from '../../../../shared/mesure/impressions';
 
 const { width } = Dimensions.get('window');
 // Une affiche 1:1 a 85 % de largeur serait plus haute que large d'ecran : a 60 %, la carte reste
@@ -26,6 +27,8 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
     const { annonces, failure, loading, enCours, retry } = useBdeAnnonces(revision);
     useChargementDeSection('annonces', enCours);
     const enEchec = failure !== undefined && failure.silent !== true;
+    // Les impressions (7-D) : le couple de visibilite, stable, declare avant le retour conditionnel.
+    const visibilite = useImpressionsDAnnonces<BdeAnnonce>();
 
     // Une absence d'annonces ne merite pas de section : rien a montrer, rien a dire. Un echec, si —
     // disparaitre en silence est precisement ce qui rendait « la source est morte » indiscernable de
@@ -63,7 +66,7 @@ export function BdeSection({ navigation }: { navigation: import('@react-navigati
                     onOuvrir={() => navigation.navigate('Bde')}
                 />
             ) : (
-                <CarrouselDeSection data={annonces} renderItem={renderCard} keyExtractor={item => item.id} largeurCarte={CARD_WIDTH} />
+                <CarrouselDeSection data={annonces} renderItem={renderCard} keyExtractor={item => item.id} largeurCarte={CARD_WIDTH} {...visibilite} />
             )}
         </View>
     );

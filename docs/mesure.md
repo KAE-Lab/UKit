@@ -1,9 +1,11 @@
 # La mesure
 
-> **Prévu : le jalon [7-D](phase-7/7-d-la-mesure.md), publié en 6.3, le livre** — en 6.2.3 jusqu'au
-> 2026-09-21, jour où la version courte a été retirée du plan. Ce document décrit la cible, décidée le
-> 2026-09-14 ([mise à plat de la phase 7](phase-7/7-mise-a-plat.md)) ; il s'amende à la livraison, puis à
-> chaque événement ajouté.
+> **Livré par le jalon [7-D](phase-7/7-d-la-mesure.md) le 2026-09-21, sur la branche `v6.3`, publié en
+> 6.3.** Décidé le 2026-09-14 ([mise à plat de la phase 7](phase-7/7-mise-a-plat.md)), prévu en 6.2.3
+> jusqu'au 2026-09-21, jour où la version courte a été retirée du plan. Le code vit dans
+> [`src/shared/mesure/`](../src/shared/mesure/index.ts), la base dans
+> [`supabase/schema.sql`](../supabase/schema.sql) et [`fonctions.sql`](../supabase/fonctions.sql) ; ce
+> document s'amende à chaque événement ajouté.
 
 Ce que UKit compte de son usage, pourquoi, et ce qu'il refuse de compter. La mesure sert trois
 lecteurs, et un compteur qui n'en sert aucun n'a pas sa place ici.
@@ -58,7 +60,7 @@ Retirer un événement se fait dans l'autre sens : le vocabulaire de l'applicati
 | `annonce.action` | l'`id` | jour | le bouton d'action touché | équipe |
 | `resto.ouverture` | le code Croustillant | jour | la fiche d'un restaurant | équipe, 6.3 |
 | `bu.ouverture` | l'identifiant Affluences | jour | la fiche d'une bibliothèque | équipe, 6.3 |
-| `salles.ouverture` | le code du bâtiment | jour | la fiche des salles libres | 6.3 |
+| `salles.ouverture` | l'identifiant du bâtiment dans le référentiel des lieux (`bat_a28`, pas le code affiché `A28`) | jour | la fiche des salles libres | 6.3 |
 | `planning.jour`, `planning.semaine` | — | jour | la vue affichée | 6.3 |
 | `scolarite.connexion` | `ok`, `echec` | jour | une connexion universitaire aboutie ou refusée | pilotage |
 | `source.echec` | `<hôte>:<famille>` | heure | une source qui n'a pas répondu, par famille d'échec | pilotage |
@@ -137,7 +139,19 @@ file locale ; rien de ce qui a été compté avant ne part. [PRIVACY.md](../PRIV
 
 - **Rien avant la 6.3** : les versions antérieures ne comptent rien, et la refonte n'a donc pas de ligne
   de base ; ses chiffres sont la première.
-- **La file se perd** si Android tue l'application sans passer par l'arrière-plan.
+- **La file se perd** si Android tue l'application sans passer par l'arrière-plan — et le Galaxy A8,
+  sous Android 9, passe bien par `background` même à une fermeture depuis les applications récentes
+  (protocole du 2026-09-22). Après un lot accepté, la file s'écrit tout de suite sur le disque ; une
+  fermeture dans les quelques millisecondes de cette écriture ferait repartir le lot une fois.
 - **Le statut de testeur est auto-déclaré**, comme celui du jeton de notification.
 - **Ce n'est pas un rapport de plantage** : un échec de source n'est pas un plantage, et un plantage ne
   laisse aucune ligne ici.
+- **Une impression se juge dans sa liste, pas dans la page.** Sur le tableau de bord Campus, le
+  carrousel des annonces est une liste horizontale dans une page qui défile : une carte compte quand
+  elle est dans la fenêtre du carrousel, même si la page est défilée plus bas. La section est la
+  première de la page ; l'écart est borné, et la grille de l'écran Annonces, elle, est exacte.
+- **Une réponse perdue peut compter deux fois.** La file n'est soustraite qu'à la réponse de la base,
+  et la base ne porte pas d'idempotence par lot, par choix de simplicité : un lot accepté dont la
+  réponse n'est jamais revenue est renvoyé.
+- **Un compteur au-delà de mille en un seul envoi est rejeté** par la base, et il ne se représente
+  pas : la ligne est perdue, comptée dans `rejetes`. Aucun geste ne l'atteint en pratique.
