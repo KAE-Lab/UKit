@@ -494,7 +494,7 @@ avant la 6.3**, et invisibles pour l'application installée.
 | `type` | `text not null default 'evenement'`, check `evenement`, `info`, `bon_plan`, `partenaire` | la nature de la carte, et ses badges en 6.3 |
 | `emplacements` | `text[] not null default '{annonces}'`, check inclus dans `annonces`, `restaurants`, `bibliotheques`, `salles` | les carrousels où la carte s'insère |
 | `ajustement` | `text not null default 'couvrir'`, check `couvrir`, `contenir` | l'image couvre le cadre 4:5 autour de sa focale, ou s'y contient sur fond flou |
-| `focale` | `jsonb not null default '{"x": 0.5, "y": 0.3}'` | le point gardé au centre du recadrage, en fractions de l'image |
+| `focale` | `jsonb not null default '{"x": 0.5, "y": 0.3}'` | le point gardé au centre du recadrage, en fractions de l'image. *Précisé le 2026-09-23 ([7-F](7-f-console-annonces.md#la-passe-dergonomie-le-2026-09-23)) : le point que le recadrage garde visible, à la même place relative — `object-position` en pourcentages ; il n'est au centre que pour 50 %.* |
 | `priorite` | `integer not null default 0` | le poids dans l'ordre |
 | `epinglee` | `boolean not null default false` | en tête, avant toute rotation |
 | `creneaux` | `jsonb`, nul | les plages de mise en avant : `[{"jours": [1, 2, 3], "de": "11:00", "a": "14:00"}]` |

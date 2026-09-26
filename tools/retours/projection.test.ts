@@ -80,7 +80,9 @@ describe('projeter', () => {
         }, entetes), 2);
         expect(oui.contact).toBe('quelqu.un@u-bordeaux.fr');
         expect(oui.volontaire).toBe(true);
-        expect(oui.reponses[QUESTIONS.contact]).toBe('quelqu.un@u-bordeaux.fr');
+        // L'adresse vit dans sa colonne, que seul un admin lit : la reponse entiere ne la recopie pas.
+        expect(QUESTIONS.contact in oui.reponses).toBe(false);
+        expect(oui.reponses[QUESTIONS.campus]).toBe('Carreire');
 
         const non = projeter(entetes, ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Demander un campus', volontaire: 'Non merci' }, entetes), 2);
         expect(non.volontaire).toBe(false);
@@ -122,17 +124,28 @@ describe('projeter', () => {
         const entetes = [...ENTETES, QUESTIONS.contact, QUESTIONS.contact];
         const seconde = projeter(entetes, [...ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Rien' }), '', 'b@exemple.fr'], 2);
         expect(seconde.contact).toBe('b@exemple.fr');
-        expect(seconde.reponses[QUESTIONS.contact]).toBe('b@exemple.fr');
+        expect(QUESTIONS.contact in seconde.reponses).toBe(false);
         const premiere = projeter(entetes, [...ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Rien' }), 'a@exemple.fr', ''], 2);
         expect(premiere.contact).toBe('a@exemple.fr');
-        expect(premiere.reponses[QUESTIONS.contact]).toBe('a@exemple.fr');
+        expect(QUESTIONS.contact in premiere.reponses).toBe(false);
     });
 
     it('lit l adresse obligatoire de la branche du volontaire, sans la masquer', () => {
         const entetes = [...ENTETES, QUESTIONS.contact, QUESTIONS.contactObligatoire];
         const retour = projeter(entetes, [...ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Demander un campus' }), '', 'v@exemple.fr'], 2);
         expect(retour.contact).toBe('v@exemple.fr');
-        expect(retour.reponses[QUESTIONS.contactObligatoire]).toBe('v@exemple.fr');
+        expect(QUESTIONS.contactObligatoire in retour.reponses).toBe(false);
+    });
+
+    it('ne recopie l adresse sous aucun libelle, meme suivi d un complement, ni son identite', () => {
+        const avecComplement = `${QUESTIONS.contactObligatoire} (voir la page d'engagement)`;
+        const entetes = [...ENTETES, QUESTIONS.contact, avecComplement];
+        const cellules = [...ligne({ horodatage: '9/8/2026 10:00:00', pourquoi: 'Demander un campus' }), '', 'w@exemple.fr'];
+        const retour = projeter(entetes, cellules, 2);
+        expect(retour.contact).toBe('w@exemple.fr');
+        expect(Object.values(retour.reponses).some((valeur) => valeur.includes('@'))).toBe(false);
+        // L'empreinte se calcule sur la ligne telle qu'ecrite, adresse comprise : rien ne se recree a l'import.
+        expect(retour.id).toBe(identifiantDe(retour.recu_le, entetes, cellules));
     });
 
     it('refuse un horodatage illisible, avec le numero de ligne', () => {

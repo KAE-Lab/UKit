@@ -1,20 +1,24 @@
 #!/usr/bin/env node
 /**
- * Le compte editeur de la console : le creer, remplacer son mot de passe, lui donner ou retirer les
- * droits.
+ * Reparer un compte admin de la console depuis le poste du publieur : le creer, remplacer son mot de
+ * passe, lui rendre le role d'admin — ou lui retirer tout droit.
  *
  *     CONSOLE_MOT_DE_PASSE='…' npm run console:editeur -- --email kylian.mltre@gmail.com
  *     CONSOLE_MOT_DE_PASSE='…' npm run console:editeur -- --email … --mot-de-passe    # remplace le mot de passe
  *     CONSOLE_MOT_DE_PASSE='…' npm run console:editeur -- --email … --sans-droits     # un compte qui ne peut rien ecrire
  *
+ * Depuis le jalon 7-H, l'equipe se gere dans la console — page Equipe, fonction `editeurs` : inviter
+ * un redacteur ou un lecteur, changer un role, revoquer. Ce script reste pour le jour ou plus aucun
+ * admin ne peut se connecter : il ne connait que le role d'admin, et le pose explicitement — un admin
+ * retrograde se repare ici. La base garde toujours au moins un admin : `--sans-droits` sur le dernier
+ * est refuse (supabase/fonctions.sql).
+ *
  * Le mot de passe vient de l'environnement, jamais d'un argument : un argument reste dans
  * l'historique du terminal. La cle `service_role` est requise (l'API d'administration), donc le
  * script ne tourne que sur le poste du publieur — comme la publication des Blueprints, et pour la
- * meme raison : c'est un acces de production.
- *
- * Il n'y a pas d'inscription libre (desactivee dans le projet) ni de courriel sortant : c'est ici
- * que le compte nait et se repare. `--sans-droits` sert a une seule chose, verifier que les
- * politiques refusent un compte authentifie ordinaire (supabase/README.md).
+ * meme raison : c'est un acces de production. Ses ecritures sont journalisees au nom de
+ * `service_role`. `--sans-droits` sert a verifier que les politiques refusent un compte authentifie
+ * ordinaire (supabase/README.md).
  *
  * Voir docs/pilotage.md.
  */
@@ -91,9 +95,9 @@ async function main() {
         await rest(base, 'editeurs', {
             method: 'POST',
             headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-            body: JSON.stringify({ email: args.email }),
+            body: JSON.stringify({ email: args.email, role: 'admin', etablissements: null }),
         });
-        console.log('droits : editeur (table editeurs, ecriture journalisee)');
+        console.log('droits : admin (table editeurs, ecriture journalisee au nom de service_role)');
     }
 }
 

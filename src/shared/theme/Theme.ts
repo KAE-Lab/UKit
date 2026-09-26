@@ -2,6 +2,7 @@
 import { Platform } from 'react-native';
 
 import { tokens as primitives } from './tokens';
+import { PALETTES } from './palettes';
 import { resoudreOmbre, type SpecOmbre } from './ombres';
 
 /**
@@ -62,11 +63,11 @@ const AppTheme = {
 
 const Theme = {
     light: {
-        primary:       '#007AFF',
+        // Les couleurs de base viennent de palettes.ts, pur, que la console lit aussi (7-F).
+        ...PALETTES.light,
         primarySoft:   '#007AFF15',
         secondary:     '#5856D6',
         selection:     '#F2F2F7',
-        accent:        '#007AFF',
         accentFont:    '#FF3B30',
         // L'echelle semantique. Elle reprend les teintes que `sectionsHeaders` portait deja, plutot
         // que les verts et oranges Material qui trainaient en dur dans les composants : la palette
@@ -80,26 +81,18 @@ const Theme = {
         dangerSoft:    '#FF3B3015',
         neutral:       '#8E8E93',
         neutralSoft:   '#8E8E9315',
-        font:          '#1C1C1E',
-        fontSecondary: '#8E8E93',
         lightFont:     '#FFFFFF',
         link:          '#007AFF',
         icon:          '#1C1C1E',
-        border:        '#E5E5EA',
         // Anterieure a la palette, et laissee a sa valeur : la nommer supprime le litteral d'AppUI
         // sans changer un pixel de la barre de statut.
         statusBarBackground: '#006F9F',
-        background:            '#F2F2F7',
-        cardBackground:        '#FFFFFF',
-        greyBackground:        '#E5E5EA',
         collapsableBackground: '#00000008',
         field:                 '#F2F2F7',
         fieldBorder:           '#E5E5EA',
         courseBackground: '#F2F2F7',
         eventBackground:  '#FFFFFF',
         eventBorder:      '#E5E5EA',
-        sections:       ['#007AFF10', '#34C75910', '#FF950010', '#FF3B3010', '#5856D610', '#5AC8FA10'],
-        sectionsHeaders: ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#5856D6', '#5AC8FA'],
         calendar: {
             selection: '#007AFF',
             currentDay: '#007AFF15',
@@ -399,9 +392,8 @@ const Theme = {
         },
     },
     dark: {
-        primary:       '#5E5CE6',
+        ...PALETTES.dark,
         primarySoft:   '#0A84FF20',
-        accent:        '#5E5CE6',
         secondary:     '#30D158',
         selection:     '#2C2C2E',
         accentFont:    '#FF453A',
@@ -414,25 +406,16 @@ const Theme = {
         dangerSoft:    '#FF453A15',
         neutral:       '#8E8E93',
         neutralSoft:   '#8E8E9315',
-        font:          '#FFFFFF',
-        fontSecondary: '#8E8E93',
         lightFont:     '#FFFFFF',
         link:          '#64D2FF',
         icon:          '#FFFFFF',
-        border:        '#38383A',
         statusBarBackground: '#000000',
-        background:            '#000000',
-        cardBackground:        '#1C1C1E',
-        greyBackground:        '#121212',
         collapsableBackground: '#FFFFFF0A',
         field:                 '#2C2C2E',
         fieldBorder:           '#38383A',
         courseBackground: '#000000',
         eventBackground:  '#1C1C1E',
         eventBorder:      '#2C2C2E',
-        sections:        ['#0A84FF15', '#30D15815', '#FF9F0A15', '#FF453A15', '#5E5CE615', '#64D2FF15'],
-        // L'index 0 portait `#5E5CE6`, la valeur du 4 : cinq teintes au lieu de six en sombre, corrige en 6.1-C.
-        sectionsHeaders: ['#0A84FF', '#30D158', '#FF9F0A', '#FF453A', '#5E5CE6', '#64D2FF'],
         calendar: {
             selection: '#5E5CE6',
             currentDay: '#1C1C1E',

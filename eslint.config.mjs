@@ -68,6 +68,7 @@ export default [
       "src/shared/theme/Theme.ts",
       "src/shared/theme/tokens.ts",
       "src/shared/theme/ombres.ts",
+      "src/shared/theme/palettes.ts",
       "app.config.ts",
       "**/*.test.ts",
       "**/*.test.tsx",

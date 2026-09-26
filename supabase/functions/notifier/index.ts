@@ -1,22 +1,24 @@
 /**
  * La fonction d'envoi des messages de service en notification push (jalon 6.1.x-E).
  *
- * Appelee par la console, avec la session d'un editeur : elle cible les jetons deposes par les
- * appareils (la meme regle que sur l'appareil, `regles.ts`), envoie par lots de cent a l'API push
- * d'Expo, lit les tickets, elague les jetons que le service declare morts, et marque le message
- * notifie — une fois, jamais deux. Elle tourne avec la cle de service, qui ne sort jamais d'ici.
+ * Appelee par la console, avec la session d'un admin — notifier le parc est un geste d'admin depuis
+ * le jalon 7-H : elle cible les jetons deposes par les appareils (la meme regle que sur l'appareil,
+ * `regles.ts`), envoie par lots de cent a l'API push d'Expo, lit les tickets, elague les jetons que le
+ * service declare morts, et marque le message notifie — une fois, jamais deux. Elle tourne avec la cle
+ * de service, qui ne sort jamais d'ici ; aucun compte de la console ne lit un jeton.
  *
  * Elle vit ici et non dans la console parce que l'API d'Expo ne repond pas aux navigateurs (pas
  * d'en-tete CORS, mesure le 2026-09-08), et parce que les jetons n'ont pas a transiter par un
  * onglet de navigateur.
  *
- *     npx supabase functions deploy notifier --project-ref <ref>
+ *     npx --yes supabase functions deploy notifier --project-ref <ref> --use-api
  *
  * Voir docs/pilotage.md et supabase/README.md.
  */
 
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
+import { appelant, CORS, reponse, service as clientDeService } from '../_shared/index.ts';
 import { estCible, projeterCiblage, type Appareil } from './regles.ts';
 
 const EXPO_PUSH = 'https://exp.host/--/api/v2/push/send';
@@ -25,16 +27,6 @@ const TAILLE_DE_LOT = 100;
  *  de ce nombre n'aurait jamais ete notifie, **en silence**. */
 const TAILLE_DE_PAGE = 1000;
 const LONGUEUR_CORPS = 180;
-
-const CORS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
-function reponse(statut: number, corps: Record<string, unknown>): Response {
-    return new Response(JSON.stringify(corps), { status: statut, headers: { ...CORS, 'Content-Type': 'application/json' } });
-}
 
 interface Jeton {
     jeton: string;
@@ -48,15 +40,6 @@ interface Ticket {
     status: 'ok' | 'error';
     message?: string;
     details?: { error?: string };
-}
-
-/** L'e-mail de la session appelante est-il un editeur ? La table ne lui rend que sa propre ligne (policies.sql). */
-async function estEditeur(autorisation: string): Promise<boolean> {
-    const client = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
-        global: { headers: { Authorization: autorisation } },
-    });
-    const { data, error } = await client.from('editeurs').select('email').limit(1);
-    return error === null && Array.isArray(data) && data.length === 1;
 }
 
 function appareil(jeton: Jeton): Appareil {
@@ -75,7 +58,7 @@ function appareil(jeton: Jeton): Appareil {
  * erreur ni indication : au-dela, une partie du parc n'aurait simplement jamais recu la notification.
  * L'ordre explicite est ce qui garantit qu'aucune ligne n'est sautee entre deux pages.
  */
-async function tousLesJetons(service: ReturnType<typeof createClient>): Promise<Jeton[]> {
+async function tousLesJetons(service: SupabaseClient): Promise<Jeton[]> {
     const tous: Jeton[] = [];
     for (let debut = 0; ; debut += TAILLE_DE_PAGE) {
         const { data, error } = await service
@@ -121,13 +104,18 @@ Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
     if (req.method !== 'POST') return reponse(405, { erreur: 'POST attendu' });
 
-    const autorisation = req.headers.get('Authorization') ?? '';
-    if (!(await estEditeur(autorisation))) return reponse(403, { erreur: 'Réservé aux éditeurs.' });
+    let qui: Awaited<ReturnType<typeof appelant>>;
+    try {
+        qui = await appelant(req.headers.get('Authorization') ?? '');
+    } catch (erreur) {
+        return reponse(500, { erreur: erreur instanceof Error ? erreur.message : String(erreur) });
+    }
+    if (qui === null || qui.role !== 'admin') return reponse(403, { erreur: 'Réservé aux admins.' });
 
     const { id } = await req.json().catch(() => ({})) as { id?: unknown };
     if (typeof id !== 'string' || id === '') return reponse(400, { erreur: 'Identifiant de message manquant.' });
 
-    const service = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+    const service = clientDeService();
 
     const { data: message, error: erreurMessage } = await service.from('service_messages').select('*').eq('id', id).maybeSingle();
     if (erreurMessage !== null) return reponse(500, { erreur: erreurMessage.message });

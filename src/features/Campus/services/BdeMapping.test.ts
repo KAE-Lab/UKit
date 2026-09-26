@@ -35,6 +35,16 @@ const LIGNE: AnnonceRow = {
     version_min: null,
     version_max: null,
     plateformes: null,
+    type: 'evenement',
+    emplacements: ['annonces'],
+    ajustement: 'couvrir',
+    focale: { x: 0.5, y: 0.3 },
+    priorite: 0,
+    epinglee: false,
+    creneaux: null,
+    statut: 'publiee',
+    blurhash: null,
+    partenaire: null,
 };
 
 function annonce(patch: Partial<BdeAnnonce>): BdeAnnonce {

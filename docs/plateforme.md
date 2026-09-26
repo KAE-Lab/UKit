@@ -306,7 +306,7 @@ en interne.
 
 > **Ce que ça change pour la vérification, et c'est le vrai gain.** Expo Go est un bac à sable
 > générique : le code y tourne avec *ses* droits et *ses* limites. Un build de développement porte le
-> runtime natif d'UKit — son identifiant, ses permissions, ses droits, ses modules. Deviennent donc
+> runtime natif de UKit — son identifiant, ses permissions, ses droits, ses modules. Deviennent donc
 > testables des choses qui ne l'étaient pas, à commencer par **les notifications push**, retirées
 > d'Expo Go depuis le SDK 53 : les rappels de cours, capacité livrée de l'application, n'y étaient pas
 > vérifiables. `__DEV__` reste vrai, donc le chrono des runs

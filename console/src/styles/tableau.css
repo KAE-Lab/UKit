@@ -1,0 +1,59 @@
+/*
+ * Les listes : une table a hauteur de ligne fixe, des squelettes a la meme hauteur, une erreur qui
+ * prend la place des lignes — la mise en page ne bouge pas quoi qu'il arrive au reseau.
+ */
+
+.outils-liste { display: flex; gap: var(--espace-sm); flex-wrap: wrap; align-items: center; margin-bottom: var(--espace-md); }
+.outils-liste .espace { flex: 1; }
+.recherche { position: relative; min-width: 220px; flex: 1; max-width: 360px; }
+.recherche .icone { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--texte-2); }
+.outils-liste .recherche input { padding-left: 32px; }
+.filtre { display: inline-flex; align-items: center; gap: 6px; }
+.filtre label { font-size: var(--taille-xs); color: var(--texte-2); white-space: nowrap; }
+.outils-liste select, .outils-liste input, .filtres select, .filtres input {
+    font: inherit; height: 36px; padding: 0 10px; border-radius: var(--rayon-md); border: 1px solid var(--bordure); background: var(--surface); color: var(--texte);
+}
+.total { font-size: var(--taille-xs); color: var(--texte-2); white-space: nowrap; }
+
+.defilable { overflow-x: auto; }
+.tableau { width: 100%; border-collapse: collapse; font-size: var(--taille-sm); table-layout: auto; }
+.tableau th { text-align: left; font-weight: 600; font-size: var(--taille-xs); letter-spacing: 0.04em; text-transform: uppercase; color: var(--texte-2); padding: 0 var(--espace-md); height: 40px; border-bottom: 1px solid var(--bordure); white-space: nowrap; }
+.tableau th .tri { appearance: none; border: 0; background: none; font: inherit; color: inherit; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: var(--espace-xs); letter-spacing: inherit; text-transform: inherit; border-radius: var(--rayon-sm); }
+.tableau th .tri .icone { width: 14px; height: 14px; opacity: 0.5; }
+.tableau th .tri[aria-pressed="true"] .icone, .tableau th[aria-sort] .tri .icone { opacity: 1; color: var(--accent); }
+.tableau td { padding: 0 var(--espace-md); height: var(--hauteur-ligne); border-bottom: 1px solid var(--bordure); vertical-align: middle; }
+.tableau tr:last-child td { border-bottom: 0; }
+.tableau tbody tr.cliquable { cursor: pointer; }
+.tableau tbody tr.cliquable:hover td { background: var(--surface-2); }
+.tableau tbody tr.cliquable:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 0; }
+.tableau td.tronque { max-width: 320px; }
+.tableau td.date { white-space: nowrap; }
+.tableau .vignette { width: 36px; height: 36px; object-fit: cover; border-radius: var(--rayon-sm); background: var(--surface-2); display: block; }
+.tableau tbody.perime { opacity: 0.6; transition: opacity var(--duree-courte); }
+.tableau td .squelette { height: 14px; width: 70%; }
+
+/* L'erreur d'une liste prend la place des lignes, a la hauteur qu'elles auraient eue. */
+.corps-liste { min-height: calc(var(--hauteur-ligne) * 5); display: grid; align-content: start; }
+.erreur-lecture { display: grid; place-items: center; gap: var(--espace-sm); padding: var(--espace-xl); text-align: center; color: var(--texte-2); }
+.erreur-lecture .icone { width: 28px; height: 28px; color: var(--danger); }
+.erreur-lecture strong { color: var(--texte); }
+
+.pagination { display: flex; align-items: center; gap: var(--espace-sm); flex-wrap: wrap; margin-top: var(--espace-md); font-size: var(--taille-xs); color: var(--texte-2); }
+.pagination .espace { flex: 1; }
+.pagination select { height: 32px; padding: 0 var(--espace-sm); border-radius: var(--rayon-sm); border: 1px solid var(--bordure); background: var(--surface); color: var(--texte); font: inherit; }
+
+/* ---- Compteurs (retours, tableau de bord) ------------------------------------------------- */
+.compteurs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--espace-sm); }
+.compteur { background: var(--fond); border-radius: var(--rayon-md); padding: var(--espace-md); display: grid; gap: 2px; min-height: 76px; }
+.compteur .valeur { font-size: var(--taille-xl); font-weight: 700; letter-spacing: -0.01em; }
+.compteur .libelle { font-size: var(--taille-xs); color: var(--texte-2); }
+.compteur.actif { outline: 2px solid var(--accent); }
+.compteur button { appearance: none; border: 0; background: none; font: inherit; color: inherit; text-align: left; padding: 0; cursor: pointer; display: grid; gap: 2px; }
+.barres { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--espace-xs); align-items: end; height: 64px; }
+.barres .barre-semaine { background: var(--accent-doux); border-radius: var(--rayon-sm) var(--rayon-sm) 0 0; position: relative; min-height: 2px; }
+.barres .barre-semaine span { position: absolute; top: -18px; left: 0; right: 0; text-align: center; font-size: 11px; color: var(--texte-2); }
+.legende-semaines { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--espace-xs); font-size: 11px; color: var(--texte-2); text-align: center; margin-top: var(--espace-xs); }
+.tableau-compact { width: 100%; border-collapse: collapse; font-size: var(--taille-sm); }
+.tableau-compact td, .tableau-compact th { padding: 6px var(--espace-sm); border-bottom: 1px solid var(--bordure); text-align: left; }
+.tableau-compact td.nombre, .tableau-compact th.nombre { text-align: right; font-variant-numeric: tabular-nums; }
+.tableau-compact tr:last-child td { border-bottom: 0; }

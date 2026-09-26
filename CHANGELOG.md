@@ -46,6 +46,155 @@ compteurs anonymes, sans identifiant, avec un interrupteur, et jamais de réseau
 - **`CarrouselDeSection` et `CampusListLayout` acceptent le couple de visibilité** d'une `FlatList`,
   que les deux listes d'annonces leur passent.
 
+Le jalon [7-H](docs/phase-7/7-h-console-roles.md), les rôles et l'équipe, sur `main` et sans release :
+la console s'ouvre à une équipe sans lui donner les clés de la production.
+
+### Ajouté
+
+- **Trois rôles, décidés par la base** : un admin écrit tout, l'équipe comprise ; un rédacteur crée,
+  modifie, programme et archive les annonces des campus qui lui sont confiés — et ne publie pas pour
+  tous les campus s'il est borné ; un lecteur lit. La console reflète chaque rôle : un bandeau en tête
+  de page, des boutons inertes, une annonce d'un autre campus en lecture seule, les campus d'un
+  rédacteur cochés d'avance et les autres grisés.
+- **La page Équipe**, pour un admin : inviter — le compte naît avec un mot de passe provisoire, montré
+  une seule fois, à transmettre de vive voix —, changer un rôle ou des campus, redonner un mot de passe
+  provisoire, révoquer — les droits d'abord, puis le compte. Une fonction de la base, `editeurs`, fait
+  ce qui demande la clé de service, et écrit l'équipe au nom de l'admin qui agit.
+- **La première connexion** d'un compte invité ne montre que le choix de son mot de passe.
+- **Le verrou contre l'écrasement** : une annonce ou un message s'enregistre avec la version que le
+  formulaire a chargée ; quand quelqu'un a enregistré entre-temps, un dialogue dit par qui et quand, et
+  propose de recharger.
+- **Le guide de la console** ([docs/guide-console.md](docs/guide-console.md)), pour l'équipe : se
+  connecter, qui peut quoi, publier et programmer, vérifier sur son téléphone, travailler à plusieurs,
+  lire ses chiffres, ce qui ne se fait jamais.
+- **Des tests** : la copie des droits sur les cas du plan de test, l'issue d'une écriture qui ne touche
+  aucune ligne, les règles de la fonction `editeurs`, la borne d'un rédacteur dans le champ des campus,
+  la cohérence des colonnes lues et du verrou ; et la recette elle-même, jouée en SQL, par l'API et dans
+  la console.
+
+### Modifié
+
+- **L'adresse laissée dans un retour ne se lit que par un admin**, au clic, et ne vit plus qu'à un
+  endroit : l'importeur ne la recopie plus dans la réponse entière, où la fiche d'un retour la montrait
+  à quiconque lisait les retours, et les lignes du journal qui copient un retour sont réservées à
+  l'admin. [PRIVACY.md](PRIVACY.md) le dit.
+- **Le jeton d'un appareil ne se lit plus par aucun compte de la console**, admin compris : il suffit à
+  notifier l'appareil, et le parc se compte sans lui. La page des jetons se lit, sans s'ouvrir.
+- **« Notifier » est un geste d'admin**, comme tout message de service ; reclasser un retour aussi ;
+  supprimer, partout.
+- **L'authentification** impose douze caractères et refuse un mot de passe connu des fuites.
+- **L'équipe entre au journal** : qui a donné quel rôle à qui, qui a révoqué qui. La base garde toujours
+  au moins un admin, et « tous les campus » ne s'écrit plus qu'une façon.
+- **Le script du poste** (`npm run console:editeur`) ne sert plus qu'à réparer un compte admin, et pose
+  explicitement le rôle d'admin.
+- **Le bouton de création** d'une page porte son nom : « Nouvelle annonce », « Inviter quelqu'un ».
+
+### Corrigé
+
+- **Le second champ du mot de passe était décalé** et étiré, page Compte, depuis 7-E : dans une grille à
+  deux colonnes, un champ sans aide s'étirait à la hauteur de sa voisine.
+- **L'adresse du compte se brisait au milieu des mots** en bas de la navigation : elle tient sur une
+  ligne, entière au survol.
+
+Le jalon [7-F](docs/phase-7/7-f-console-annonces.md), les annonces dans la console, sur `main` et sans
+release : une annonce se compose en voyant ce qu'elle donnera sur un téléphone.
+
+### Ajouté
+
+- **L'éditeur d'annonces avec l'aperçu du téléphone** : la carte aux deux largeurs — carrousel et
+  grille — et la fiche, dans le thème clair ou sombre au choix, qui suivent la saisie ; la carte v2
+  (cadre 4:5, image couverte autour du point focal ou contenue sur fond flou, badge du type, logo du
+  partenaire) y est dessinée pour la première fois, et c'est la référence que la 6.3 reproduit.
+- **Le point focal** se pose d'un clic ou d'un glisser sur l'image, se règle aux flèches, et un voile
+  montre la partie que le cadre de la carte gardera ; une bascule dit si l'image couvre ou se contient.
+- **Les champs de la publication** que la base portait depuis 7-C : le type, les emplacements, la
+  priorité, l'épinglage, les créneaux de mise en avant (jours et heures de Paris), le partenaire, le
+  statut avec sa programmation lisible (« Programmée, publiée le 3 octobre à 11 h »).
+- **La description aidée** : une barre insère les marqueurs du mini-langage, l'aperçu les rend — par la
+  grammaire de l'application elle-même, sortie dans un module pur partagé.
+- **La galerie** se téléverse en plusieurs fichiers d'un coup et se réordonne par glisser-déposer, à la
+  souris ou au clavier, à la place du tableau JSON.
+- **Le panneau « ordre du carrousel »** : une heure, un campus, une plateforme, un appareil testeur ou
+  non, et l'ordre qu'un téléphone montrerait — par le module pur `ordre.ts`, écrit et testé ici, que
+  la 6.3 branche dans l'application.
+- **Trois gestes** : dupliquer (une copie en brouillon, ouverte), archiver, voir sur mon téléphone (et
+  son inverse), chacun tracé au journal.
+- **Une couleur choisie sur un nuancier**, chaque teinte montrée en clair et en sombre, à la place d'un
+  index de 0 à 5.
+- **Un lieu collé d'une carte** : le clic droit de Google Maps, l'adresse d'une fiche Google Maps ou
+  d'OpenStreetMap remplissent la latitude et la longitude, avec un lien pour vérifier le point.
+- **Ctrl+S** ou **Cmd+S** enregistre tout formulaire de la console.
+- **Des tests** : la grammaire et la section d'une ligne, l'ordre, les schémas des saisies structurées,
+  l'état d'une annonce, l'ordre vu à une heure, le modèle de l'aperçu, le cadrage, les coordonnées
+  collées, l'état du formulaire, le raccourci d'enregistrement.
+
+### Modifié
+
+- **Le formulaire générique** range ses champs par groupe, accueille un aperçu, suit la ligne qu'une
+  action rend, tient ses actions inertes tant qu'une saisie n'est pas enregistrée (« Notifier »
+  compris), et la phrase d'une écriture qui change l'adresse d'une ligne survit au rechargement du
+  formulaire — « Enregistré. » d'une ligne neuve disparaissait depuis 7-E.
+- **L'éditeur se regarde en écrivant** (passe d'ergonomie du 2026-09-23, après la recette sur
+  appareils) : l'aperçu est un panneau à la hauteur de la fenêtre, avec son propre défilement et deux
+  onglets, qui suit le champ édité et se cale sur la section de la description où est le curseur ; la
+  description grandit avec le texte, en police de lecture ; le titre de la ligne, son état et les gestes
+  sont en haut, et la barre d'enregistrement reste au bas de la fenêtre, avec l'état de la saisie.
+- **Côté application, sans effet visible** : le découpage de la description sort de
+  `DescriptionAnnonce.tsx` vers `shared/annonces/grammaire.ts` ; les couleurs de base des deux thèmes
+  sortent de `Theme.ts` vers `shared/theme/palettes.ts` ; `AnnonceRow` porte enfin les colonnes de 7-C ;
+  deux indexations de `versions.ts` et `rendu.ts` sont typées strictement.
+
+### Corrigé
+
+- **Le repère du point focal tombait à droite du clic** : il se dessinait en proportion d'un cadre plus
+  large que l'image. La valeur enregistrée, elle, était juste.
+- **Un clic dans la navigation perdait une saisie non enregistrée** sans rien demander, depuis 7-E : tout
+  lien de la console demande désormais.
+- **Le dialogue de confirmation se vidait pendant qu'il s'effaçait**, depuis 7-E.
+- **Sur la largeur d'un téléphone, le formulaire d'une annonce débordait de la page**, par le champ
+  d'image, depuis 7-E.
+- **La liste des annonces disait « Publiée », en vert, d'une annonce que personne ne voit** —
+  décochée, programmée ou expirée —, depuis que 7-F avait retiré la colonne « Active » de 7-E : une
+  colonne « État » dit désormais ce que voient les téléphones, par la règle de la pastille de
+  l'éditeur, que le tableau de bord emploie aussi.
+
+Le jalon [7-E](docs/phase-7/7-e-console-socle.md), le socle de la console, sur `main` et sans release :
+la console de pilotage refondue sur un socle standard, pour devenir l'outil d'une équipe.
+
+### Ajouté
+
+- **Un tableau de bord d'arrivée** dans la console : le parc actif par campus, version et plateforme
+  (compté sur `jetons_push`, jamais une case sous cinq), l'état des sources, les retours ouverts et
+  les plus récents, les annonces actives et programmées — quatre cartes indépendantes.
+- **Des listes qui aident à travailler** : tri, filtres par page, recherche sur les champs texte,
+  pagination avec le total, côté base ; un **filtre global par campus** dans la barre, retenu d'une
+  page à l'autre ; l'URL qui porte l'état, pour que le retour à la liste garde ses filtres et qu'une
+  ligne ait une adresse.
+- **La page Retours** : les retours ouverts par défaut, des compteurs par état, nature, campus et
+  semaine, et les réponses rendues question par question à la place du JSON brut.
+- **Le téléversement terminé** : un nom d'objet unique (`<dossier>/<identifiant>-<slug>.webp`) — deux
+  annonces qui téléversent `affiche.jpg` n'écrasent plus le même objet —, le blurhash calculé et posé
+  dans la ligne, un aperçu au ratio réel.
+- **Une valeur inconnue se voit et se corrige** : une énumération ou un code de campus posés hors
+  console s'affichent marqués, et l'enregistrement les refuse en les nommant.
+- **Le clavier** : toute la console se parcourt à la tabulation, focus visible, une ligne s'ouvre à
+  « Entrée » ; sous 800 px, la navigation devient un menu.
+- **Des tests de la console** : la cohérence des descripteurs, les schémas, la requête d'une liste,
+  l'état dans l'URL, la traduction des erreurs, le nom d'objet, les compteurs, le parc.
+
+### Modifié
+
+- **La console ne ment plus** : une lecture en échec montre l'erreur à la place des lignes avec
+  « Réessayer » — plus jamais « Lecture… » pour toujours —, la vérification de session montre la coque
+  et un squelette — plus jamais une page blanche —, un compte sans droits lit « Lecture seule » en
+  tête de chaque page qui écrit, seul le bouton pressé passe en attente, à largeur fixe, un formulaire
+  modifié qu'on quitte demande confirmation, les encarts ont une place réservée qui ne pousse rien, le
+  filtre du journal propose toutes les tables journalisées.
+- **Une seule politique de reprise** pour les lectures de la console : celle de `postgrest-js` est
+  coupée, une base coupée se dit en deux secondes au lieu de quinze.
+- **L'intégration continue** installe la console dans le job « application », dont les tests jouent
+  aussi ceux de la console.
+
 ## [6.2.2] - 2026-09-21
 
 Le jalon [7-C](docs/phase-7/7-c-economie-et-socle.md), économie et socle : une version courte, rendue

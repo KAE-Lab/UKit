@@ -176,7 +176,7 @@ Mesurés le 2026-09-07. Le texte ci-dessus est laissé tel qu'il a été écrit.
 - **Le `CHANGELOG` avait déjà sa section « Non publié »** (R5), rouverte par 6.1.x-B.
 - **La page d'engagement va sur le site**, `ukit-bordeaux.fr`, pas sur les GitHub Pages de la
   console ; `adaptation-campus.md` est amendé. Le dépôt du site est mis au niveau documentaire
-  d'UKit dans le même mouvement, sans toucher à son style.
+  de UKit dans le même mouvement, sans toucher à son style.
 - **`main` est avancé en avance rapide sur `v6.1.x`** le jour même — un workflow planifié ne tourne
   que sur la branche par défaut, et la console ne se déploie que depuis elle. La spec disait « aucune
   release » ; c'est vrai, mais il fallait une fusion.

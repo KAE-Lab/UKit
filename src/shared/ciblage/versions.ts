@@ -33,9 +33,12 @@ export function comparerVersions(a: string, b: string): -1 | 0 | 1 | null {
     const va = lireVersion(a);
     const vb = lireVersion(b);
     if (va === null || vb === null) return null;
+    // `?? 0` : le triplet est complet, mais la console compile ce module sous `noUncheckedIndexedAccess`.
     for (let rang = 0; rang < 3; rang++) {
-        if (va[rang] < vb[rang]) return -1;
-        if (va[rang] > vb[rang]) return 1;
+        const a = va[rang] ?? 0;
+        const b = vb[rang] ?? 0;
+        if (a < b) return -1;
+        if (a > b) return 1;
     }
     return 0;
 }

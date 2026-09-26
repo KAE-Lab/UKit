@@ -1,8 +1,12 @@
-# La configuration de la CLI Supabase, reduite a ce que le depot en attend : la fonction d'envoi des
-# notifications (jalon 6.1.x-E). Tout le reste — schema, fonctions SQL, politiques — s'applique par
-# psql depuis les fichiers voisins (README.md). Le JWT est verifie par la passerelle, et la fonction
-# verifie en plus que la session est celle d'un editeur.
+# La configuration de la CLI Supabase, reduite a ce que le depot en attend : les deux fonctions de la
+# base — l'envoi des notifications (jalon 6.1.x-E) et l'equipe de la console (jalon 7-H). Tout le reste
+# — schema, fonctions SQL, politiques — s'applique par les migrations et les fichiers voisins
+# (README.md). Le JWT est verifie par la passerelle, et chaque fonction verifie en plus que la session
+# est celle d'un admin (functions/_shared/).
 project_id = "owiksddeqcyyifnmpyqm"
 
 [functions.notifier]
+verify_jwt = true
+
+[functions.editeurs]
 verify_jwt = true

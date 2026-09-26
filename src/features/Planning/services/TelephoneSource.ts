@@ -29,7 +29,7 @@ import { calendriersLisibles, CLE_JOUR, projeterEvenementsDuTelephone, type Cale
 
 const MARGE_JOURS = 7;
 
-/** Les identifiants des evenements qu'UKit a ecrits lui-meme : ils ne se relisent pas. */
+/** Les identifiants des evenements que UKit a ecrits lui-meme : ils ne se relisent pas. */
 async function identifiantsEcritsParUkit(): Promise<Set<string>> {
     try {
         const brut = await AsyncStorage.getItem('previousSyncData');

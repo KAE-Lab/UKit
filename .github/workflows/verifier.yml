@@ -1,8 +1,9 @@
 # Les verifications du code, sur chaque branche et chaque pull request (docs/qualite.md).
 #
-# Trois taches, une par langage du depot : l'application (typage, ESLint a zero, tests), la console
-# (elle se construit, avec les deux variables que console.yml embarque deja) et les sondes (les tests
-# du verdict, sans moteur — leurs modules ne dependent que de la bibliotheque standard).
+# Trois taches, une par langage du depot : l'application (typage, ESLint a zero, tests — ceux de la
+# console compris), la console (elle se construit, avec les deux variables que console.yml embarque
+# deja) et les sondes (les tests du verdict, sans moteur — leurs modules ne dependent que de la
+# bibliotheque standard).
 #
 # `push` sur TOUTES les branches, et pas seulement les pull requests : `main` avance en avance rapide
 # depuis les branches de version, et la regle de protection de `main` exige les trois verifications
@@ -34,15 +35,22 @@ jobs:
     env:
       HUSKY: 0
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            console/package-lock.json
 
-      # `ci` et non `install` : la verification porte sur le lockfile exact.
+      # `ci` et non `install` : la verification porte sur le lockfile exact. La console aussi : ses
+      # tests sont joues par le vitest de la racine, et ses modules purs importent ses propres
+      # dependances (zod), qui ne se resolvent que depuis console/node_modules (jalon 7-E).
       - run: npm ci
+
+      - run: npm ci --prefix console
 
       - run: npm run typecheck
 
@@ -56,9 +64,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -78,9 +86,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
