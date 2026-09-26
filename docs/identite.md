@@ -213,17 +213,21 @@ L'Épure ne s'applique pas pareil partout : elle se dose selon le support.
 | Présentation, affiche, visuel de communication | pleine | tout : cadre, figures, traces, deux tons, logo en verre |
 | Site ([7-M](phase-7/7-m-le-site.md)) | forte | le logo en verre et une figure en ouverture, les deux tons, le cadre ; des traces plus rares |
 | Carte d'annonce, format 4:5 du carrousel | réduite | une figure, un titre en deux tons ; des traces rares et plus épaisses, les traits fins disparaissant à cette taille |
-| Application ([7-I](phase-7/7-i-releve-et-vocabulaire.md)) | signature | des moments : l'accueil, les états vides, les cartes d'erreur illustrées, les fonds par écran, le tirer-pour-rafraîchir, où l'écho est déjà un mouvement ; aucune trace sur les écrans de travail, qui restent natifs |
+| Application ([7-I](phase-7/7-i-releve-et-vocabulaire.md)) | signature | des moments : l'accueil, les états vides, les cartes d'erreur illustrées, les fonds par écran ; aucune trace sur les écrans de travail, qui restent natifs. *Le tirer-pour-rafraîchir en faisait partie ; retiré le 2026-09-26, à l'ouverture de 7-I : le spinner du système reste, le geste maison coûtait plus qu'il ne disait* |
 | Console | minimale | la palette et le logo ; la console reste un outil |
 
 ## Ce qui reste à trancher
 
 1. **La police de l'application.** [theme.md](theme.md#les-décisions-durables) tient une règle : une seule
    police, celle du système. Le penchant : la garder dans l'application — rendu natif, taille de texte
-   réglable, listes denses — et réserver Geist au site et à la communication. Tranché en 7-I.
+   réglable, listes denses — et réserver Geist au site et à la communication. **Tranché le 2026-09-26, à
+   l'ouverture de [7-I](phase-7/7-i-releve-et-vocabulaire.md) : la police du système reste celle de
+   l'application ; Geist et Geist Mono sont celles du site et de la communication.**
 2. **Les formes rondes.** L'application n'en a pas, tout y est carré arrondi ; l'Épure a des stations et des
    nœuds ronds. Pour un seul système, la marque adopterait plutôt le carré arrondi de l'application. À
-   essayer en planches à l'ouverture de 7-M.
+   essayer en planches à l'ouverture de 7-M. **Tranché pour l'application le 2026-09-26 : elle reste en carré arrondi,
+   l'Épure s'y plie ; les stations et les nœuds ronds restent aux supports de communication, et le site
+   choisit son camp à l'ouverture de 7-M.**
 3. **Le thème clair.** L'Épure n'existe qu'en sombre ; l'application tient les deux thèmes à égalité, et le
    site devrait suivre. Une version claire se dessine et se valide avant que l'Épure s'étende au-delà des
    supports sombres.

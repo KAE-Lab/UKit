@@ -17,6 +17,10 @@ sert le propos. Ce fichier ne porte que la convention et l'inventaire de suivi.
 - **Format** : PNG, appareil en **mode portrait**, thème **clair** par défaut. Une variante sombre se
   suffixe `-dark`.
 - **Largeur** : celle de l'appareil, sans redimensionnement ; pas de cadre de téléphone ajouté.
+- **Avant / après** : quand une refonte change un écran, la capture prise avant tout code se suffixe
+  `-avant`, celle prise à la fin `-apres`, chacune avec sa variante `-dark` ; une capture prise sur le
+  Galaxy A8 se suffixe `-android`. Les deux se déposent ensemble et le document les montre côte à côte.
+  Une fois la refonte livrée, `-apres` devient la capture courante de l'écran, sous son nom sans suffixe.
 - **Contenu** : données réalistes mais **anonymes**. Aucune capture ne doit montrer un nom, un numéro
   étudiant, un INE, une adresse mail ou un contenu de messagerie réels — l'onglet Scolarité se
   photographie avec un compte de test ou après floutage.
@@ -97,6 +101,9 @@ peuvent attendre.
 | Fichier | Contenu | Priorité |
 |---|---|---|
 | `campus-dashboard.png` | tableau de bord, quatre sections | essentielle — la comparaison avant / après du jalon 6-K a été faite **hors dépôt** ; le fichier reste à déposer |
+| `campus-dashboard-avant.png` · `-avant-dark.png` · `-avant-android.png` · `-avant-android-dark.png` | le tableau de bord **avant** le jalon [7-I](../phase-7/7-i-releve-et-vocabulaire.md), sur les deux appareils et dans les deux thèmes : la ligne de base du relevé du mouvement | attendues — à prendre avant tout code du jalon |
+| `campus-dashboard-apres.png` · `-apres-dark.png` · `-apres-android.png` · `-apres-android-dark.png` | le même écran à la livraison de 7-I | attendues |
+| `annonces-liste-avant.png` · `annonces-liste-apres.png` | la grille des annonces, du 1:1 au 4:5 | attendues |
 | `campus-liste-filtres.png` | modale de filtres du socle de liste | complémentaire |
 | `campus-liste-vide.png` | état vide d'une liste filtrée | complémentaire |
 

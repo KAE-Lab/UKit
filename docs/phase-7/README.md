@@ -79,7 +79,7 @@ est tenu en un seul endroit : [backend.md](../backend.md#ce-qui-est-prévu-et-pa
 | Publication | Contenu | Jalons | Condition de sortie |
 |---|---|---|---|
 | **6.2.2** | **économie et socle**, sortie le 2026-09-21 : une version courte, rendue économe envers la base et envers Celcat, et le dépôt rendu sûr pour la suite | [7-C](7-c-economie-et-socle.md) | des builds de développement neufs sur les deux appareils, l'egress mesuré avant et après, l'intégration continue verte sur `main` |
-| **6.3** | **la mesure, puis le mouvement de l'interface** — la mesure : des compteurs anonymes, sans identifiant, avec un interrupteur, dans cette version depuis le 2026-09-21 ; le mouvement, décidé le 2026-09-04, cadré le 2026-09-06, complété le 2026-09-14 : squelettes, ressorts, transitions, fonds par écran, cartes d'annonce v2, cartes d'erreur au gabarit, mini-jeu de la connexion, tirer-pour-rafraîchir, les deux thèmes à égalité. Visée : **octobre 2026** | [7-D](7-d-la-mesure.md), [7-I](7-i-releve-et-vocabulaire.md), [7-J](7-j-ecrans.md), [7-K](7-k-sortie-6-3.md) | le relevé final contre le relevé initial ; `mesures` se remplit en production, `PRIVACY.md` et les fiches des stores à jour |
+| **6.3** | **la mesure, puis le mouvement de l'interface** — la mesure : des compteurs anonymes, sans identifiant, avec un interrupteur, dans cette version depuis le 2026-09-21 ; le mouvement, décidé le 2026-09-04, cadré le 2026-09-06, complété le 2026-09-14 : squelettes, ressorts, transitions, fonds par écran, cartes d'annonce v2, cartes d'erreur au gabarit, mini-jeu de la connexion, tirer-pour-rafraîchir, les deux thèmes à égalité | [7-D](7-d-la-mesure.md), [7-I](7-i-releve-et-vocabulaire.md), [7-J](7-j-ecrans.md), [7-K](7-k-sortie-6-3.md) | le relevé final contre le relevé initial ; `mesures` se remplit en production, `PRIVACY.md` et les fiches des stores à jour |
 | **6.4** | **la boucle** : un formulaire de retour natif, les annonces en notification sur consentement, le partage d'une annonce et les liens universels, les pages du site dans l'application ; et les sujets reportés, à trancher à l'ouverture | [7-L](7-l-la-boucle.md) | la 6.3 sortie ; le contenu existe et permet de vérifier |
 
 > **Amendé le 2026-09-21, à la sortie de la 6.2.2 : la 6.2.3 n'existe plus.** La mesure
@@ -91,9 +91,12 @@ est tenu en un seul endroit : [backend.md](../backend.md#ce-qui-est-prévu-et-pa
 > et des campus. Ce que la version courte protégeait se garde autrement : les fiches *App Privacy* et
 > *Data safety* se remplissent dans les consoles avant la sortie, sans build ; la RPC de la mesure se
 > révoque en SQL si le tableau Usage bouge ; [7-G](7-g-console-statistiques.md) s'ouvre deux semaines
-> après la 6.3. La 6.3 vise **octobre 2026** : 7-D se joue en premier sur `v6.3`, une **date de gel** se
-> pose à l'ouverture de 7-I, et ce qui n'est pas prêt ce jour-là sort du périmètre plutôt que de
-> repousser la version. Le numéro 6.2.3 reste libre pour un correctif urgent de la 6.2.2, sans la mesure.
+> après la 6.3. 7-D se joue en premier sur `v6.3`. *La 6.3 visait octobre 2026, et une date de gel
+> devait se poser à l'ouverture de 7-I ; **retiré le 2026-09-26, à cette ouverture** : aucune publication
+> ne porte plus de date visée ni de gel. Une version sort quand ses jalons sont livrés ; une date promise
+> n'en fait avancer aucun, et elle ajoute une charge que personne ne porte quand une seule personne code.
+> Les seules dates qui restent dans cette documentation sont constatées — « livré le », « sortie le ».*
+> Le numéro 6.2.3 reste libre pour un correctif urgent de la 6.2.2, sans la mesure.
 
 > **Une phase n'est plus une version.** La phase 6 portait la version 6, puis l'a sortie en plusieurs
 > publications. La phase 7 commence sur la ligne 6 : ses publications gardent les numéros décidés le
@@ -198,7 +201,7 @@ Les lots de campus avancent ensuite au rythme des comptes prêtés.
 | 7-F Les annonces dans la console | **livré le 2026-09-22, repris et clos le 2026-09-23** — sur `main`, sans release : deux modules purs partagés (`grammaire.ts`, `ordre.ts`) et les palettes du thème extraites ; l'éditeur avec l'aperçu du téléphone dans les deux thèmes, le point focal, les nouveaux champs, la galerie multi-fichiers réordonnable, le panneau « ordre du carrousel », dupliquer / archiver / voir sur mon téléphone ; **la carte v2 est dessinée ici, 7-I la reproduit**. Joué sur les deux appareils le 2026-09-23 : aperçu fidèle, programmation et archivage conformes. Le même jour, une **passe d'ergonomie** : le repère du point focal sous le clic et la zone gardée, la description qui grandit, l'aperçu en panneau qui suit le champ édité, la barre d'enregistrement et Ctrl+S, l'en-tête de la ligne, le nuancier, le lieu collé d'une carte, la garde des liens ; recette 34 points et séance d'usage réel 38 points, en audience `testeurs` désormais ; puis la liste dit l'état que voient les téléphones, par la règle de l'éditeur. La galerie réordonnée se ferme par construction ; la focale et l'ordre sur téléphone se ferment en 7-I |
 | 7-G Les statistiques | à ouvrir |
 | 7-H Les rôles et l'équipe | **livré le 2026-09-25** — sur `main`, sans release : trois rôles décidés par la base (admin, rédacteur borné aux annonces de ses campus, lecteur), que la console reflète ; la page Équipe et la fonction `editeurs` — inviter avec un mot de passe provisoire, révoquer —, la première connexion ; le verrou contre l'écrasement ; le guide de l'équipe. La lecture du code et de la production a fermé trois chemins que la spécification laissait ouverts : l'adresse d'un retour recopiée dans `reponses` et le journal, les jetons push lisibles par tout éditeur, le tableau de campus vide qui vaut « tous ». Deux migrations poussées, deux fonctions déployées, l'authentification durcie ; recette en SQL (56 cas, transaction annulée), par l'API (46) et dans la console (25) ; la préproduction évaluée et écartée |
-| 7-I Le relevé et le vocabulaire du mouvement | à ouvrir |
+| 7-I Le relevé et le vocabulaire du mouvement | **ouvert le 2026-09-26** — `main` fusionnée dans `v6.3` le jour même (huit conflits, documentation et `policies.sql`, les deux côtés gardés) ; les dates de publication retirées de la phase |
 | 7-J, lot 1 : le Planning | à ouvrir |
 | 7-J, lot 2 : la Scolarité | à ouvrir |
 | 7-J, lot 3 : les Réglages | à ouvrir |
@@ -250,10 +253,11 @@ La branche `v6.3`, qui ne portait que les documents de cette phase, a été reno
 [7-D](7-d-la-mesure.md), que `main` n'a pas. À l'ouverture de 7-I, **`main` y est fusionnée** — la
 console de 7-E à 7-H, et les modules partagés dont 7-I a besoin — ; elle ne se recrée plus. Les deux
 branches migrent la même base : `v6.3` porte la migration `mesures`, `main` celles des rôles de 7-H. La
-fusion rend les deux registres de `supabase/migrations/` d'accord, et les trois fichiers de la vue
-lisible (`schema.sql`, `fonctions.sql`, `policies.sql`) y entrent en conflit : garder les deux côtés.
-D'ici là, une migration poussée depuis l'une des deux branches passe par un dossier qui porte l'union
-des deux registres ([`supabase/README.md`](../../supabase/README.md#migrations)).
+fusion rend les deux registres de `supabase/migrations/` d'accord, et les fichiers de la vue lisible
+qui entrent en conflit se résolvent en gardant les deux côtés. *Fait le 2026-09-26 : huit conflits,
+tous de documentation sauf `policies.sql` — `schema.sql` et `fonctions.sql` ont fusionné seuls, et
+`package.json` aussi.* D'ici là, une migration poussée depuis l'une des deux branches passe par un
+dossier qui porte l'union des deux registres ([`supabase/README.md`](../../supabase/README.md#migrations)).
 
 ## La clôture
 
