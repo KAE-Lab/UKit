@@ -12,8 +12,8 @@
 import { Crosshair } from 'lucide-react';
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 
+import { FOCALE_PAR_DEFAUT, lireFocale, type Focale } from '../../../../../src/shared/annonces/carte';
 import { focaleDepuisPointeur, zoneGardee } from '../../../lib/cadrage';
-import { FOCALE_PAR_DEFAUT, lireFocale, type FocaleSaisie } from '../../../schema/schemas';
 import type { ChampProps } from './types';
 
 const PAS_CLAVIER = 0.05;
@@ -32,7 +32,7 @@ function pourcent(fraction: number): string {
 }
 
 /** La focale deplacee d'une fleche ; `null` si la touche n'en est pas une. */
-export function deplacer(focale: FocaleSaisie, touche: string): FocaleSaisie | null {
+export function deplacer(focale: Focale, touche: string): Focale | null {
     switch (touche) {
         case 'ArrowLeft': return { ...focale, x: borner(focale.x - PAS_CLAVIER) };
         case 'ArrowRight': return { ...focale, x: borner(focale.x + PAS_CLAVIER) };
@@ -43,7 +43,7 @@ export function deplacer(focale: FocaleSaisie, touche: string): FocaleSaisie | n
 }
 
 /** Poser et glisser le point sur l'image : un pointeur capture, mesure dans la boite de l'image. */
-function useGlisser(image: React.RefObject<HTMLImageElement | null>, repere: React.RefObject<HTMLButtonElement | null>, poser: (focale: FocaleSaisie) => void, desactive: boolean) {
+function useGlisser(image: React.RefObject<HTMLImageElement | null>, repere: React.RefObject<HTMLButtonElement | null>, poser: (focale: Focale) => void, desactive: boolean) {
     const [enGlisse, setEnGlisse] = useState(false);
     const poserSous = (x: number, y: number) => {
         const boite = image.current?.getBoundingClientRect();
@@ -80,10 +80,10 @@ function reglages(champ: ChampProps['champ'], ligne: ChampProps['ligne']) {
 
 /** Sous l'image : la position lue, « Recentrer », et la bascule couvrir / contenir. */
 function Commandes({ focale, ajustement, desactive, onChange, poserAjustement }: {
-    readonly focale: FocaleSaisie;
+    readonly focale: Focale;
     readonly ajustement: string;
     readonly desactive: boolean;
-    readonly onChange: (focale: FocaleSaisie) => void;
+    readonly onChange: (focale: Focale) => void;
     readonly poserAjustement: (valeur: string) => void;
 }) {
     const auDefaut = focale.x === FOCALE_PAR_DEFAUT.x && focale.y === FOCALE_PAR_DEFAUT.y;

@@ -1,18 +1,14 @@
 /**
- * Le cadrage par la focale : la position CSS, la zone que le cadre 4:5 garde, le point sous le
- * pointeur mesure dans la boite de l'image.
+ * Le cadrage par la focale : la zone que le cadre 4:5 garde, le point sous le pointeur mesure dans
+ * la boite de l'image. La position CSS se verifie avec la focale, dans src/shared/annonces/carte.test.ts.
  *
  *     npm test   (a la racine du depot)
  */
 
 import { expect, test } from 'vitest';
 
-import { focaleDepuisPointeur, positionDeFocale, RATIO_CARTE, zoneGardee } from './cadrage';
-
-test('la focale devient une position CSS', () => {
-    expect(positionDeFocale({ x: 0.5, y: 0.3 })).toBe('50% 30%');
-    expect(positionDeFocale({ x: 0.797, y: 0.898 })).toBe('80% 90%');
-});
+import { RATIO_CARTE } from '../../../src/shared/annonces/carte';
+import { focaleDepuisPointeur, zoneGardee } from './cadrage';
 
 test('une image plus large que le cadre perd ses bords, selon la focale', () => {
     // Un carre dans un cadre 4:5 : on garde 80 % de la largeur.

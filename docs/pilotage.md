@@ -166,6 +166,11 @@ regarde sur son téléphone avant de passer l'audience à `tous` ; une annonce c
 n'apparaît pas chez un étudiant de Bordeaux. Rien ne change pour les écrans
 ([campus-vie-etudiante.md](features/campus-vie-etudiante.md)).
 
+Depuis la 6.3, il ordonne ensuite ce qui reste, par le module du panneau « ordre du carrousel »
+([`ordre.ts`](../src/shared/annonces/ordre.ts)) et après les mêmes filtres : ce que le panneau montre
+pour une heure et un appareil — campus, plateforme, version, testeur ou non — est ce qu'un tel
+téléphone rend quand il lit à cette heure.
+
 ## Les messages en notification push
 
 Depuis [6.1.x-E](phase-6/6-1-x-e-notifications-push.md), un message de service peut **réveiller le

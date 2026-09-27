@@ -1,6 +1,6 @@
-import { RATIO_CARTE } from '../../lib/cadrage';
+import { CODES_D_EMPLACEMENT, CODES_DE_TYPE, RATIO_CARTE, type Emplacement, type TypeDAnnonce } from '../../../../src/shared/annonces/carte';
 import { lirePartenaire } from '../schemas';
-import { CAMPUS_PAR_CIBLAGE, CIBLAGE, type Descripteur } from '../descripteurs';
+import { CAMPUS_PAR_CIBLAGE, CIBLAGE, type Descripteur, type Option } from '../descripteurs';
 import type { Ligne } from '../../supabase';
 import { MAINTENANT } from './commun';
 import { etatDAnnonce } from './etatDAnnonce';
@@ -15,21 +15,27 @@ const STATUTS = [
     { valeur: 'archivee', libelle: 'Archivée' },
 ];
 
-/** La nature de la carte (7-C) ; ses badges se rendent dans l'application a partir de la 6.3. */
-export const TYPES_D_ANNONCE = [
-    { valeur: 'evenement', libelle: 'Événement' },
-    { valeur: 'info', libelle: 'Information', ton: 'accent' as const },
-    { valeur: 'bon_plan', libelle: 'Bon plan', ton: 'ok' as const },
-    { valeur: 'partenaire', libelle: 'Partenaire', ton: 'avert' as const },
-];
+/**
+ * La nature de la carte (7-C) ; ses badges se rendent dans l'application a partir de la 6.3. Les
+ * codes sont ceux du module partage avec l'application : un type qu'il gagne demande ici son libelle,
+ * et la compilation le rappelle.
+ */
+const LIBELLES_DE_TYPE: Readonly<Record<TypeDAnnonce, Omit<Option, 'valeur'>>> = {
+    evenement: { libelle: 'Événement' },
+    info: { libelle: 'Information', ton: 'accent' },
+    bon_plan: { libelle: 'Bon plan', ton: 'ok' },
+    partenaire: { libelle: 'Partenaire', ton: 'avert' },
+};
+const TYPES_D_ANNONCE: readonly Option[] = CODES_DE_TYPE.map((valeur) => ({ valeur, ...LIBELLES_DE_TYPE[valeur] }));
 
 /** Les carrousels ou la carte s'insere ; « annonces » est le sien, les autres sont les cartes speciales. */
-export const EMPLACEMENTS = [
-    { valeur: 'annonces', libelle: 'Annonces' },
-    { valeur: 'restaurants', libelle: 'Restaurants' },
-    { valeur: 'bibliotheques', libelle: 'Bibliothèques' },
-    { valeur: 'salles', libelle: 'Salles libres' },
-];
+const LIBELLES_D_EMPLACEMENT: Readonly<Record<Emplacement, string>> = {
+    annonces: 'Annonces',
+    restaurants: 'Restaurants',
+    bibliotheques: 'Bibliothèques',
+    salles: 'Salles libres',
+};
+export const EMPLACEMENTS: readonly Option[] = CODES_D_EMPLACEMENT.map((valeur) => ({ valeur, libelle: LIBELLES_D_EMPLACEMENT[valeur] }));
 
 const AJUSTEMENTS = [
     { valeur: 'couvrir', libelle: 'Couvrir' },

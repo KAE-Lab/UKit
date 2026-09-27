@@ -3,8 +3,12 @@
  *
  * Separe de `BdeService` parce que ce module ne doit **rien** importer de plateforme : le service,
  * lui, tire la porte d'entree de la base et le socle Aetherius, et n'est donc pas jouable sous Node.
- * Ce qui est risque ici — les `null`, l'absence d'expiration, la peremption — le devient
- * (BdeMapping.test.ts).
+ * Ce qui est risque ici — les `null`, l'absence d'expiration, la peremption, les colonnes de la carte
+ * v2 et leurs replis — le devient (BdeMapping.test.ts).
+ *
+ * Les colonnes de la carte v2 se lisent par les regles partagees avec la console
+ * (`shared/annonces/carte.ts` et `ordre.ts`) : l'apercu de la console et le telephone lisent une
+ * ligne de la meme facon, ou l'apercu cesserait d'etre la reference.
  *
  * L'import de type vise `shared/supabase/types` et non la porte d'entree du module : celle-ci
  * re-exporte le client, qui tire `expo-constants`. Un `import type` est efface a la compilation, mais
@@ -16,6 +20,19 @@
 import type { AnnonceRow } from '../../../shared/supabase/types';
 // Le module pur du ciblage, et non sa porte d'entree, qui tire `expo-constants` pour la version.
 import { projeterCiblage, type Ciblage } from '../../../shared/ciblage/ciblage';
+import {
+    lireAjustement,
+    lireEmplacements,
+    lireFocale,
+    lireType,
+    partenaireDeCarte,
+    type Ajustement,
+    type Emplacement,
+    type Focale,
+    type Partenaire,
+    type TypeDAnnonce,
+} from '../../../shared/annonces/carte';
+import { projeterOrdre, type ParametresDOrdre } from '../../../shared/annonces/ordre';
 
 /**
  * Ce qu'un ecran manipule.
@@ -43,6 +60,20 @@ export interface BdeAnnonce {
     cta_link?: string;
     /** A qui l'annonce s'adresse (jalon 6.1-B). Le service filtre ; l'ecran n'en sait rien. */
     ciblage: Ciblage;
+    /** La nature de la carte (7-C) : un type que le parc ne connait pas encore se rend comme un evenement, sans badge. */
+    type: TypeDAnnonce;
+    /** Les carrousels ou la carte s'insere ; hors « annonces », elle y est une carte speciale. */
+    emplacements: Emplacement[];
+    /** Couvrir le cadre autour de la focale, ou contenir l'affiche entiere sur son fond flou. */
+    ajustement: Ajustement;
+    /** Le point que le recadrage garde visible, a la meme place relative : pas un centre (shared/annonces/carte.ts). */
+    focale: Focale;
+    /** Le placeholder d'expo-image, calcule par la console au televersement. Omis sans calcul, ou quand l'image a change. */
+    blurhash?: string;
+    /** Le partenaire d'une carte partenaire ou bon plan. Omis sans nom. */
+    partenaire?: Partenaire;
+    /** Ce que l'ordre lit de la ligne (shared/annonces/ordre.ts). Le service ordonne ; l'ecran n'en sait rien. */
+    ordre: ParametresDOrdre;
 }
 
 /** Une colonne nullable rend `null` ; le contrat applicatif, lui, omet ce qu'il n'a pas. */
@@ -96,7 +127,23 @@ export function projeterAnnonce(row: AnnonceRow): BdeAnnonce {
         cta_text: texte(row.cta_texte),
         cta_link: texte(row.cta_lien),
         ciblage: projeterCiblage(row),
+        type: lireType(row.type),
+        emplacements: lireEmplacements(row.emplacements),
+        ajustement: lireAjustement(row.ajustement),
+        focale: lireFocale(row.focale),
+        blurhash: texte(row.blurhash),
+        partenaire: partenaireDeCarte(row.partenaire) ?? undefined,
+        ordre: projeterOrdre(row),
     };
+}
+
+/**
+ * L'annonce avec l'image que les ecrans montreront — celle de la table `visuels` quand elle en
+ * publie une. Le blurhash a ete calcule sur l'image de la ligne : si elle est remplacee ou retiree,
+ * il ne vaut plus, et un placeholder qui ne ressemble pas a l'image qui arrive est pire qu'aucun.
+ */
+export function avecImage(annonce: BdeAnnonce, image: string | undefined): BdeAnnonce {
+    return { ...annonce, image_url: image, blurhash: image === annonce.image_url ? annonce.blurhash : undefined };
 }
 
 /**

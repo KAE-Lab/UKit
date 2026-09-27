@@ -6,14 +6,28 @@
  * d'ecran ; BdeScreen : deux cellules par rangee moins la gouttiere ; BdeDetailsScreen : un ratio
  * borne entre 3:4 et 16:9), sur un ecran de la largeur de l'iPhone 13 Pro. La carte v2 (4:5,
  * couvrir autour de la focale, badge de type) est celle que la 6.3 rend (7-I) : l'apercu la dessine
- * en premier, et c'est lui la reference.
+ * en premier, et c'est lui la reference. Ses regles — la focale, l'ajustement, le badge, le partenaire,
+ * les emplacements speciaux — viennent du module partage avec l'application
+ * (`src/shared/annonces/carte.ts`) ; leurs libelles restent ici, la console n'etant pas traduite.
  *
  * Pur : joue par `npm test` a la racine du depot (modele.test.ts).
  */
 
+import {
+    emplacementsSpeciaux,
+    estTypeDAnnonce,
+    lireAjustement,
+    lireFocale,
+    partenaireDeCarte,
+    typeDeBadge,
+    type Ajustement,
+    type Focale,
+    type Partenaire,
+    type TypeDeBadge,
+} from '../../../../../src/shared/annonces/carte';
 import type { PaletteDeBase } from '../../../../../src/shared/theme/palettes';
 import { tokens } from '../../../../../src/shared/theme/tokens';
-import { lireFocale, lirePartenaire, type FocaleSaisie } from '../../../schema/schemas';
+import { EMPLACEMENTS } from '../../../schema/tables/annonces';
 
 /** Les deux vues de l'apercu : la carte, dans ses carrousels, et la fiche qu'elle ouvre. */
 export type Vue = 'carte' | 'fiche';
@@ -32,14 +46,6 @@ export const LARGEUR_VISUEL = LARGEUR_TELEPHONE - 2 * tokens.space.md;
 /** La hauteur logique de l'iPhone 13 Pro : la fiche n'en montre pas plus qu'un telephone. */
 export const HAUTEUR_TELEPHONE = 844;
 
-export type Ajustement = 'couvrir' | 'contenir';
-
-export interface PartenaireApercu {
-    readonly nom: string;
-    readonly logoUrl: string | null;
-    readonly lien: string | null;
-}
-
 export interface AnnonceApercu {
     readonly titre: string;
     readonly emetteur: string;
@@ -52,8 +58,8 @@ export interface AnnonceApercu {
     readonly ctaLien: string | null;
     readonly type: string;
     readonly ajustement: Ajustement;
-    readonly focale: FocaleSaisie;
-    readonly partenaire: PartenaireApercu | null;
+    readonly focale: Focale;
+    readonly partenaire: Partenaire | null;
     readonly emplacements: readonly string[];
     readonly aUnLieu: boolean;
 }
@@ -74,7 +80,6 @@ function nombre(valeur: unknown): number | null {
 /** La ligne telle que le formulaire la tient — saisies, pas colonnes — projetee sur ce que l'apercu dessine. */
 export function annonceDApercu(valeurs: Readonly<Record<string, unknown>>): AnnonceApercu {
     const couleur = nombre(valeurs.couleur);
-    const partenaire = lirePartenaire(valeurs.partenaire);
     return {
         titre: texte(valeurs.titre) ?? 'Titre de l’annonce',
         emetteur: texte(valeurs.emetteur) ?? 'Émetteur',
@@ -86,9 +91,9 @@ export function annonceDApercu(valeurs: Readonly<Record<string, unknown>>): Anno
         ctaTexte: texte(valeurs.cta_texte),
         ctaLien: texte(valeurs.cta_lien),
         type: texte(valeurs.type) ?? 'evenement',
-        ajustement: valeurs.ajustement === 'contenir' ? 'contenir' : 'couvrir',
+        ajustement: lireAjustement(valeurs.ajustement),
         focale: lireFocale(valeurs.focale),
-        partenaire: partenaire.nom.trim() === '' ? null : { nom: partenaire.nom.trim(), logoUrl: texte(partenaire.logo_url), lien: texte(partenaire.lien) },
+        partenaire: partenaireDeCarte(valeurs.partenaire),
         emplacements: Array.isArray(valeurs.emplacements) ? valeurs.emplacements.filter((e): e is string => typeof e === 'string') : ['annonces'],
         aUnLieu: nombre(valeurs.lat) !== null && nombre(valeurs.lng) !== null,
     };
@@ -105,18 +110,19 @@ export function ratioDeCadre(largeur: number, hauteur: number): number {
     return Math.min(Math.max(largeur / hauteur, 3 / 4), 16 / 9);
 }
 
-const LIBELLES_DE_TYPE: Readonly<Record<string, string>> = { evenement: 'Événement', info: 'Info', bon_plan: 'Bon plan', partenaire: 'Partenaire' };
+/** Le libelle d'un badge, plus court que celui du choix de type : « Info », pas « Information ». */
+const LIBELLES_DE_BADGE: Readonly<Record<TypeDeBadge, string>> = { info: 'Info', bon_plan: 'Bon plan', partenaire: 'Partenaire' };
 
-/** Le badge d'une carte : rien pour un evenement — la norme ne s'etiquette pas —, le type sinon. */
+/** Le badge d'une carte, par la regle partagee ; une valeur hors liste se montre telle quelle, pour qu'on la voie. */
 export function badgeDeType(type: string): string | null {
-    return type === 'evenement' ? null : (LIBELLES_DE_TYPE[type] ?? type);
+    if (!estTypeDAnnonce(type)) return type;
+    const badge = typeDeBadge(type);
+    return badge === null ? null : LIBELLES_DE_BADGE[badge];
 }
 
-const LIBELLES_D_EMPLACEMENT: Readonly<Record<string, string>> = { annonces: 'Annonces', restaurants: 'Restaurants', bibliotheques: 'Bibliothèques', salles: 'Salles libres' };
-
-/** Les carrousels ou la carte est speciale : tous les emplacements sauf le sien. */
-export function emplacementsSpeciaux(emplacements: readonly string[]): readonly { readonly code: string; readonly libelle: string }[] {
-    return emplacements.filter((code) => code !== 'annonces').map((code) => ({ code, libelle: LIBELLES_D_EMPLACEMENT[code] ?? code }));
+/** Les carrousels a dessiner ou la carte est speciale, avec le libelle de chacun. */
+export function carrouselsSpeciaux(emplacements: readonly string[]): readonly { readonly code: string; readonly libelle: string }[] {
+    return emplacementsSpeciaux(emplacements).map((code) => ({ code, libelle: EMPLACEMENTS.find((emplacement) => emplacement.valeur === code)?.libelle ?? code }));
 }
 
 /**
