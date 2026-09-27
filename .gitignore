@@ -38,3 +38,6 @@ tools/epure/fig01-u.svg
 tools/epure/fig02-question.svg
 tools/epure/ukit-logo-verre.svg
 tools/epure/polices/Geist-600-titre.ttf
+
+# Environnements Python locaux (tools/epure)
+.venv/
