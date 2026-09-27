@@ -5,7 +5,8 @@
  * Pur : joue par `npm test` a la racine du depot (resumes.test.ts).
  */
 
-import { lireCreneauxSaisis, lireFocale, lirePartenaire } from './schemas';
+import { lireFocale } from '../../../src/shared/annonces/carte';
+import { lireCreneauxSaisis, lirePartenaire } from './schemas';
 
 /** Les jours ISO, en abrege, 1 = lundi. */
 export const JOURS: readonly { readonly numero: number; readonly court: string; readonly long: string }[] = [

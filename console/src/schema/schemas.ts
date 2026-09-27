@@ -15,16 +15,11 @@
 
 import { z } from 'zod';
 
+import { lireFocale, type Focale } from '../../../src/shared/annonces/carte';
 import { PALETTE } from '../../../src/shared/annonces/grammaire';
 import { minutesDe } from '../../../src/shared/annonces/ordre';
 import { depuisSaisie, versSaisie } from '../lib/dates';
 import type { Champ, Descripteur } from './descripteurs';
-
-/** `{ x, y }` en fractions de l'image : le point que le recadrage garde visible, a la meme place relative (lib/cadrage.ts). */
-export interface FocaleSaisie {
-    readonly x: number;
-    readonly y: number;
-}
 
 /** Une plage de mise en avant, telle que le formulaire la tient : les jours ISO, `HH:MM` de Paris. */
 export interface CreneauSaisi {
@@ -39,30 +34,16 @@ export interface PartenaireSaisi {
     readonly lien: string;
 }
 
-export type Saisie = string | boolean | readonly string[] | FocaleSaisie | readonly CreneauSaisi[] | PartenaireSaisi;
+export type Saisie = string | boolean | readonly string[] | Focale | readonly CreneauSaisi[] | PartenaireSaisi;
 export type Saisies = Record<string, Saisie>;
 export type SchemaDeChamp = z.ZodType<unknown, Saisie>;
 
-export const FOCALE_PAR_DEFAUT: FocaleSaisie = { x: 0.5, y: 0.3 };
 export const PARTENAIRE_VIDE: PartenaireSaisi = { nom: '', logo_url: '', lien: '' };
 
 const FORME_VERSION = /^\d+\.\d+\.\d+$/;
 const FORME_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FORME_LIEN = /^https?:\/\/\S+$/;
 const OBLIGATOIRE = 'Obligatoire.';
-
-function fraction(valeur: unknown): number | null {
-    return typeof valeur === 'number' && Number.isFinite(valeur) && valeur >= 0 && valeur <= 1 ? valeur : null;
-}
-
-/** La focale d'une ligne, ou le defaut de la base quand la colonne ne porte rien de lisible. */
-export function lireFocale(valeur: unknown): FocaleSaisie {
-    if (typeof valeur !== 'object' || valeur === null) return FOCALE_PAR_DEFAUT;
-    const brut = valeur as { readonly x?: unknown; readonly y?: unknown };
-    const x = fraction(brut.x);
-    const y = fraction(brut.y);
-    return x === null || y === null ? FOCALE_PAR_DEFAUT : { x, y };
-}
 
 /** Les creneaux d'une ligne, tels qu'ils se saisissent : chaque plage lisible garde ses jours et ses heures. */
 export function lireCreneauxSaisis(valeur: unknown): CreneauSaisi[] {
@@ -75,6 +56,10 @@ export function lireCreneauxSaisis(valeur: unknown): CreneauSaisi[] {
     });
 }
 
+/**
+ * Le partenaire tel qu'il se saisit : chaque champ reste une chaine a editer. Une carte a sa propre
+ * lecture, ou un partenaire sans nom n'existe pas (`partenaireDeCarte`, src/shared/annonces/carte.ts).
+ */
 export function lirePartenaire(valeur: unknown): PartenaireSaisi {
     if (typeof valeur !== 'object' || valeur === null) return PARTENAIRE_VIDE;
     const brut = valeur as { readonly nom?: unknown; readonly logo_url?: unknown; readonly lien?: unknown };

@@ -10,7 +10,7 @@
 
 import { expect, test } from 'vitest';
 
-import { estValide, projeterAnnonce, type BdeAnnonce } from './BdeMapping';
+import { avecImage, estValide, projeterAnnonce, type BdeAnnonce } from './BdeMapping';
 import type { AnnonceRow } from '../../../shared/supabase/types';
 
 const LIGNE: AnnonceRow = {
@@ -49,6 +49,11 @@ const LIGNE: AnnonceRow = {
 
 function annonce(patch: Partial<BdeAnnonce>): BdeAnnonce {
     return { ...projeterAnnonce(LIGNE), ...patch };
+}
+
+/** Une ligne d'un cache ou d'une base d'avant ces colonnes : elles manquent, au lieu d'etre nulles. */
+function sans(colonnes: readonly string[]): AnnonceRow {
+    return Object.fromEntries(Object.entries(LIGNE).filter(([cle]) => !colonnes.includes(cle))) as AnnonceRow;
 }
 
 test('les colonnes de la base arrivent sur les champs que les ecrans lisent', () => {
@@ -150,6 +155,65 @@ test('le ciblage est projete avec la ligne, et une ligne d avant les colonnes vi
     expect(projeterAnnonce({ ...LIGNE, audience: 'testeurs', etablissements: ['bordeaux-inp'], version_max: '6.0.0' }).ciblage)
         .toEqual({ audience: 'testeurs', etablissements: ['bordeaux-inp'], version_min: null, version_max: '6.0.0', plateformes: null });
     // Un cache ou une base d'avant le jalon : les colonnes manquent, l'annonce reste visible.
-    const ancienne = Object.fromEntries(Object.entries(LIGNE).filter(([cle]) => cle !== 'audience')) as AnnonceRow;
-    expect(projeterAnnonce(ancienne).ciblage.audience).toBe('tous');
+    expect(projeterAnnonce(sans(['audience'])).ciblage.audience).toBe('tous');
+});
+
+test('le type arrive tel quel, et un type que le parc ne connait pas se rend comme un evenement', () => {
+    expect(projeterAnnonce({ ...LIGNE, type: 'bon_plan' }).type).toBe('bon_plan');
+    expect(projeterAnnonce({ ...LIGNE, type: 'agenda' }).type).toBe('evenement');
+    expect(projeterAnnonce(sans(['type'])).type).toBe('evenement');
+});
+
+test('les emplacements gardent les carrousels connus, et une ligne d avant la colonne va aux annonces', () => {
+    expect(projeterAnnonce(LIGNE).emplacements).toEqual(['annonces']);
+    expect(projeterAnnonce({ ...LIGNE, emplacements: ['restaurants', 'annonces', 'restaurants'] }).emplacements).toEqual(['annonces', 'restaurants']);
+    // Un carrousel ouvert en base avant que le parc ne le connaisse : la carte n'y va pas.
+    expect(projeterAnnonce({ ...LIGNE, emplacements: ['agenda'] }).emplacements).toEqual([]);
+    expect(projeterAnnonce(sans(['emplacements'])).emplacements).toEqual(['annonces']);
+});
+
+test('contenir n est retenu que si la colonne le dit', () => {
+    expect(projeterAnnonce({ ...LIGNE, ajustement: 'contenir' }).ajustement).toBe('contenir');
+    expect(projeterAnnonce(LIGNE).ajustement).toBe('couvrir');
+    expect(projeterAnnonce({ ...LIGNE, ajustement: 'etirer' }).ajustement).toBe('couvrir');
+    expect(projeterAnnonce(sans(['ajustement'])).ajustement).toBe('couvrir');
+});
+
+test('la focale se lit bornee a l image, et retombe sur le defaut de la base', () => {
+    expect(projeterAnnonce({ ...LIGNE, focale: { x: 0.2, y: 0.9 } }).focale).toEqual({ x: 0.2, y: 0.9 });
+    expect(projeterAnnonce({ ...LIGNE, focale: { x: 2, y: 0.9 } }).focale).toEqual({ x: 0.5, y: 0.3 });
+    expect(projeterAnnonce({ ...LIGNE, focale: null }).focale).toEqual({ x: 0.5, y: 0.3 });
+    expect(projeterAnnonce(sans(['focale'])).focale).toEqual({ x: 0.5, y: 0.3 });
+});
+
+test('le blurhash arrive quand la console l a calcule, et s omet sinon', () => {
+    expect(projeterAnnonce({ ...LIGNE, blurhash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj' }).blurhash).toBe('LEHV6nWB2yk8pyo0adR*.7kCMdnj');
+    expect(projeterAnnonce(LIGNE).blurhash).toBeUndefined();
+    expect(projeterAnnonce({ ...LIGNE, blurhash: '' }).blurhash).toBeUndefined();
+});
+
+test('le partenaire s omet sans nom ; son logo et son lien vides valent une absence', () => {
+    expect(projeterAnnonce({ ...LIGNE, partenaire: { nom: ' Crous ', logo_url: '', lien: 'https://exemple.test/crous' } }).partenaire)
+        .toEqual({ nom: 'Crous', logoUrl: null, lien: 'https://exemple.test/crous' });
+    expect(projeterAnnonce({ ...LIGNE, partenaire: { nom: '', logo_url: 'https://exemple.test/logo.png', lien: null } }).partenaire).toBeUndefined();
+    expect(projeterAnnonce(LIGNE).partenaire).toBeUndefined();
+});
+
+test('l ordre est projete avec la ligne, et une ligne d avant les colonnes n est ni epinglee ni prioritaire', () => {
+    const midi = [{ jours: [1, 2, 3, 4, 5], de: '11:00', a: '14:00' }];
+    expect(projeterAnnonce({ ...LIGNE, epinglee: true, priorite: 3, creneaux: midi }).ordre)
+        .toEqual({ id: LIGNE.id, epinglee: true, priorite: 3, creneaux: midi });
+    expect(projeterAnnonce(sans(['epinglee', 'priorite', 'creneaux'])).ordre)
+        .toEqual({ id: LIGNE.id, epinglee: false, priorite: 0, creneaux: [] });
+});
+
+test('le blurhash ne suit que l image sur laquelle il a ete calcule', () => {
+    const avecPlaceholder = annonce({ blurhash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj' });
+    // La table `visuels` ne publie rien pour l'annonce : l'image et son placeholder restent.
+    expect(avecImage(avecPlaceholder, avecPlaceholder.image_url).blurhash).toBe('LEHV6nWB2yk8pyo0adR*.7kCMdnj');
+    // Une autre image publiee, ou l'image retiree : le placeholder de l'ancienne ne vaut plus.
+    const remplacee = avecImage(avecPlaceholder, 'https://exemple.test/autre.jpg');
+    expect(remplacee.image_url).toBe('https://exemple.test/autre.jpg');
+    expect(remplacee.blurhash).toBeUndefined();
+    expect(avecImage(avecPlaceholder, undefined).blurhash).toBeUndefined();
 });

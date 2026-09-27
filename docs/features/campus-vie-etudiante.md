@@ -37,12 +37,13 @@ BdeSection (tableau de bord) / BdeScreen (liste)
   └─ useBdeAnnonces()                     le chargement, l'echec, le nouvel essai
        └─ BdeService.fetchAnnonces()
             ├─ getSupabase()              null si l'application est construite sans cle
-            ├─ select(colonnes) sur `annonces`
-            │    ├─ la politique de lecture ecarte deja l'inactif et l'expire
-            │    └─ order publiee_le desc, puis id asc
+            ├─ select(colonnes) sur `annonces`, sans tri
+            │    └─ la politique de lecture ecarte l'inactif, l'expire, le non publie, le programme
             ├─ si erreur → describeSupabaseFailure → { ok: false, failure }
             ├─ projection : colonnes de la table → contrat BdeAnnonce (BdeMapping)
-            └─ filtre applicatif : expires_at > maintenant, ou pas d'expiration
+            ├─ visuel publie (table `visuels`) : le blurhash ne suit que l'image de la ligne
+            ├─ filtre applicatif : expires_at > maintenant, ou pas d'expiration ; ciblage
+            └─ ordonner(annonces, maintenant, a => a.ordre) : la regle du panneau de la console
   └─ succes → BdeAnnonceCard → navigation vers BdeDetail
   └─ echec  → message de la famille + bouton Reessayer
 
@@ -55,12 +56,13 @@ BdeDetailsScreen (params : annonce)
 La fiche ne recharge rien : l'annonce complète transite par les paramètres de navigation. C'est
 possible parce que la charge utile est petite et déjà entièrement chargée par la liste.
 
-**Où passe la frontière.** La base porte le contenu et la règle de publication (`active`,
-`expire_le`) ; l'application porte la projection sur `BdeAnnonce`, le **filtre d'expiration** et le
-tri. Le filtre est volontairement doublé : la politique protège la **donnée** — ce qui n'a pas à être
-lu n'est pas envoyé — et le filtre applicatif protégera l'**affichage** le jour où la donnée viendra
-d'un cache local. C'est aussi lui qui permettra un jour d'afficher une annonce expirée en grisé
-plutôt que de la masquer, ce qu'un filtre côté base interdit.
+**Où passe la frontière.** La base porte le contenu et la règle de publication (`active`, `statut`,
+`publiee_le`, `expire_le`) ; l'application porte la projection sur `BdeAnnonce`, le **filtre
+d'expiration**, le ciblage et l'**ordre** du carrousel. Le filtre est volontairement doublé : la
+politique protège la **donnée** — ce qui n'a pas à être lu n'est pas envoyé — et le filtre applicatif
+protégera l'**affichage** le jour où la donnée viendra d'un cache local. C'est aussi lui qui permettra
+un jour d'afficher une annonce expirée en grisé plutôt que de la masquer, ce qu'un filtre côté base
+interdit.
 
 **Pourquoi pas un Blueprint, alors qu'il en existait un.** Un Blueprint sert à parler à une source
 **tierce** dont on ne contrôle ni le format ni la disponibilité, et qu'on veut pouvoir corriger sans
@@ -89,12 +91,29 @@ en même temps qu'on change de source aurait mélangé deux changements dont un 
 | `description` | `long_desc` | la description longue de la fiche |
 | `cta_texte` | `cta_text` | libellé du bouton d'action |
 | `cta_lien` | `cta_link` | URL ouverte au clic — dans le **navigateur intégré** pour un lien web, vers le système sinon (mailto, tel) |
-| `publiee_le` | — | jamais affiché ; c'est le tri |
+| `type` | `type` | la nature de la carte — `evenement`, `info`, `bon_plan`, `partenaire` ; un type que le parc ne connaît pas encore se rend comme un événement, sans badge |
+| `emplacements` | `emplacements` | les carrousels où la carte s'insère — `annonces`, `restaurants`, `bibliotheques`, `salles` —, dans cet ordre et sans doublon ; un code inconnu s'ignore, une ligne d'avant la colonne va aux annonces |
+| `ajustement` | `ajustement` | `couvrir` ou `contenir` — `contenir` **seulement** si la colonne le dit : l'exception, gardée pour les affiches déjà composées |
+| `focale` | `focale` | `{ x, y }` en fractions de l'image, bornées ; illisible, le défaut de la base `{ x: 0.5, y: 0.3 }`. Le point que le recadrage garde visible, **pas un centre** |
+| `blurhash` | `blurhash` | le placeholder calculé par la console au téléversement ; omis quand il manque, **et quand la table `visuels` remplace ou retire l'image** : il a été calculé sur celle de la ligne |
+| `partenaire` | `partenaire` | `{ nom, logoUrl, lien }` ; omis sans nom, un logo ou un lien vide vaut `null` |
+| `epinglee`, `priorite`, `creneaux` | `ordre` | ce que l'ordre lit, projeté avec la ligne comme le ciblage ; une ligne d'avant les colonnes n'est ni épinglée ni prioritaire |
+| `publiee_le` | — | jamais affiché ; il ordonnait la liste jusqu'à la 6.3, l'ordre du carrousel l'a remplacé |
+| `statut` | — | **pas lu** : la politique de lecture ne laisse sortir que ce qui est publié et déjà daté ([`policies.sql`](../../supabase/policies.sql)) |
 
 Un champ nul ou vide en base est **omis** du contrat, jamais rendu chaîne vide : la fiche n'affiche
 son bouton que si le libellé et le lien sont tous deux présents, et un libellé vide donnerait un
 bouton muet. La conversion est dans
 [`BdeMapping.ts`](../../src/features/Campus/services/BdeMapping.ts) et elle est testée.
+
+**Les colonnes de la carte v2 se lisent comme la console les lit** (6.3). Le type, les
+emplacements, l'ajustement, la focale et le partenaire passent par
+[`shared/annonces/carte.ts`](../../src/shared/annonces/carte.ts), le module pur que l'aperçu de
+l'éditeur lit lui aussi ; l'épinglage, la priorité et les créneaux, par
+[`projeterOrdre`](../../src/shared/annonces/ordre.ts). Une ligne lue de deux façons ferait de l'aperçu
+une carte que le téléphone ne rend pas — c'est lui la référence
+([7-F](../phase-7/7-f-console-annonces.md#la-carte-v2-dessinée-ici)). Les libellés restent de chaque
+côté : l'application traduit, la console ne l'est pas.
 
 ## Publier une annonce
 
@@ -108,6 +127,11 @@ téléphone avant tout le monde —, `etablissements` — les codes des campus q
 tous — et une fenêtre de versions de l'application, `version_min` / `version_max`. Le tri se fait sur
 l'appareil, dans `BdeService`, et les écrans n'en savent rien. Les versions antérieures à la 6.1
 ignorent ces colonnes et voient tout.
+
+**Une annonce s'ordonne** (6.3) : `epinglee` la met en tête, un de ses `creneaux` actif — en heure de
+Paris — la fait passer devant, `priorite` pèse ensuite, et une rotation par heure départage le reste.
+Le panneau « ordre du carrousel » de la console montre l'ordre qu'un téléphone rendra à une heure
+donnée, sur un campus ([pilotage.md](../pilotage.md)).
 
 **Remplacer une image publiée exige de changer son adresse** : les appareils mettent les images en
 cache par URL, et le fichier seul ne change rien à ceux qui sont déjà passés. La règle est un
@@ -239,9 +263,18 @@ borné entre 3:4 et 16:9 pour qu'un format extrême — story verticale, banniè
 n'écrase l'écran. Et **sans visuel, pas de cadre** : la fiche omet ce qui manque au lieu d'afficher
 un rectangle gris qui se lirait comme une image cassée.
 
-**Le tri est explicite.** Une table n'a pas d'ordre : s'en remettre à celui que la base rend ferait
-varier l'affichage sans raison. `publiee_le` décroissant, `id` pour départager à horodatage égal, de
-sorte que deux lectures successives donnent la même liste.
+**L'ordre est celui du carrousel, et c'est celui de la console** (6.3). `BdeService` ordonne ce qui
+reste après la péremption et le ciblage par
+[`ordonner()`](../../src/shared/annonces/ordre.ts), au même instant — `maintenant()`, que la simulation
+temporelle déplace. Le panneau « ordre du carrousel » de la console applique le même module après la
+même visibilité et le même ciblage
+([`visibles.ts`](../../console/src/pages/Annonces/visibles.ts)), et l'ordre des deux gestes compte :
+la rotation tourne chaque groupe de « l'heure modulo sa taille », si bien qu'ordonner avant de filtrer
+changerait la taille des groupes, donc la liste. La requête ne trie plus : à rang égal, l'identifiant
+départage avant la rotation, et le résultat ne dépend pas de l'ordre où la base rend les lignes —
+c'est aussi ce qui laisse la console les lire sans tri. L'ordre porte sur **toutes** les annonces
+visibles, emplacements confondus, comme dans le panneau : un carrousel qui ne garde que les siennes
+garde leur ordre relatif.
 
 **Une annonce sans expiration ne disparaît pas.** `expire_le` est nullable et la politique laisse
 passer `expire_le is null`. Le code d'avant la base comparait `new Date('')`, toujours faux, ce qui
@@ -271,7 +304,7 @@ rien est pire qu'aucun bouton.
 ## Vérifier
 
 ```bash
-npm test                      # la projection, l'expiration, la table d'erreurs
+npm test                      # la projection, l'expiration, la carte v2, l'ordre, la table d'erreurs
 ```
 
 Le harnais de parité n'a plus de cas pour cette source : il comparait le Blueprint à l'ancien chemin
@@ -294,6 +327,9 @@ Sur appareil, le parcours nominal :
   son ratio, et la carte « S'y rendre » en pied, centrée au bon endroit.
 - Une image paysage (ancien format) doit rester correcte : entière sur son fond flou sur les
   cartes, bornée à 16:9 sur la fiche — jamais tronquée.
+- Épingler une annonce, ou en rendre deux prioritaires, en audience `testeurs` : le carrousel et la
+  liste les montrent dans l'ordre du panneau « ordre du carrousel » de la console, réglé sur la même
+  heure, le même campus, la même plateforme et « appareil testeur ».
 
 Puis les chemins dégradés, qui doivent produire des écrans **différents** :
 
@@ -340,15 +376,18 @@ message ni bouton.*
 - **`expires_at` est comparé en heure locale de l'appareil**, sans fuseau explicite.
 - **La fiche n'a pas d'état d'erreur** : un paramètre manquant produit un écran vide. Elle ne charge
   rien, donc elle ne peut pas échouer — mais elle ne peut pas non plus le dire.
-- **Le tri se fait sur `publiee_le`**, pas sur un ordre éditorial choisi. Deux annonces publiées à la
-  même seconde sont départagées par leur identifiant, ce qui est déterministe mais arbitraire.
-  L'ordre éditorial existe depuis [7-F](../phase-7/7-f-console-annonces.md) — un module pur,
-  [`shared/annonces/ordre.ts`](../../src/shared/annonces/ordre.ts) : les épinglées, puis un créneau
-  actif (`creneaux`, jours ISO et heures de Paris), puis la priorité, puis une rotation par heure —,
-  la console le montre déjà (« ordre du carrousel »), et c'est la 6.3
-  ([7-I](../phase-7/7-i-releve-et-vocabulaire.md)) qui le branche ici. De même pour la carte v2 (4:5,
-  focale, badge de type, cartes spéciales) : composée dans la console, dessinée par son aperçu, rendue
-  par l'application à partir de la 6.3.
+- **L'ordre change à l'heure pleine**, mais une liste déjà affichée garde celui de l'heure où elle a
+  été lue : elle relit au retour au premier plan et au tirer
+  ([`useBdeAnnonces`](../../src/features/Campus/hooks/useBdeAnnonces.ts)). L'heure de Paris se lit par
+  `Intl`, avec repli sur l'heure locale de l'appareil
+  ([`ordre.ts`](../../src/shared/annonces/ordre.ts)) : sous Hermes, la lecture du fuseau reste à
+  vérifier sur appareil ([7-I](../phase-7/7-i-releve-et-vocabulaire.md#plan-de-test)).
+- **Le contrat porte la carte v2, la carte pas encore.** Le type, les emplacements, l'ajustement, la
+  focale, le blurhash et le partenaire sont lus et projetés, mais
+  [`BdeAnnonceCard`](../../src/features/Campus/Bde/BdeAnnonceCard.tsx) rend toujours l'affiche 1:1
+  entière décrite plus haut, et aucune carte spéciale ne paraît encore dans les autres carrousels :
+  c'est le rendu de [7-I](../phase-7/7-i-releve-et-vocabulaire.md) qui les reproduit d'après l'aperçu
+  de la console. `positionPourExpoImage` y est prête, sans consommateur jusque-là.
 
 ## Carte des fichiers
 
@@ -360,7 +399,7 @@ message ni bouton.*
 | [`Bde/DescriptionAnnonce.tsx`](../../src/features/Campus/Bde/DescriptionAnnonce.tsx) | dessine la description : têtes de section colorées, puces, exergue, transition, signature, marque de fin — le découpage est celui de [`shared/annonces/grammaire.ts`](../../src/shared/annonces/grammaire.ts), partagé avec la console (7-F) |
 | [`Bde/PastilleEmetteur.tsx`](../../src/features/Campus/Bde/PastilleEmetteur.tsx) | la pastille d'émetteur teintée par l'identité, et `teinteDAnnonce` — partagées par les cartes et la fiche |
 | [`hooks/useBdeAnnonces.ts`](../../src/features/Campus/hooks/useBdeAnnonces.ts) | le chargement, l'échec retenu, le nouvel essai — partagé par les deux surfaces |
-| [`services/BdeService.ts`](../../src/features/Campus/services/BdeService.ts) | lit la table, rend une liste ou un échec traduit |
-| [`services/BdeMapping.ts`](../../src/features/Campus/services/BdeMapping.ts) | le contrat `BdeAnnonce`, la projection depuis la ligne de base, la péremption, le ciblage projeté avec la ligne |
+| [`services/BdeService.ts`](../../src/features/Campus/services/BdeService.ts) | lit la table, rend une liste dans l'ordre du carrousel, ou un échec traduit |
+| [`services/BdeMapping.ts`](../../src/features/Campus/services/BdeMapping.ts) | le contrat `BdeAnnonce`, la projection depuis la ligne de base — le ciblage, les colonnes de la carte v2 et les paramètres d'ordre projetés avec la ligne —, la péremption, le blurhash qui ne suit que son image |
 | [`Dashboard/components/BdeSection.tsx`](../../src/features/Campus/Dashboard/components/BdeSection.tsx) | le carrousel du tableau de bord. Sa carte vivait dans un `BdeSectionParts.tsx` voisin ; devenue commune à la grille, elle est remontée dans `Bde/` et le fichier a disparu |
 | [`blueprints/ukit-campus-annonces.blueprint.json`](../../blueprints/ukit-campus-annonces.blueprint.json) | témoin du format : le pilote du jalon 6-A, plus joué en production |

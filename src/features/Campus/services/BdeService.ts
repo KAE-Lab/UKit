@@ -23,17 +23,22 @@ import {
 } from '../../../shared/supabase';
 
 import type { UkitFailure } from '../../../shared/aetherius';
+import { ordonner } from '../../../shared/annonces/ordre';
 import { contexteDeCiblage, estCible } from '../../../shared/ciblage';
 import { maintenant } from '../../../shared/services/Temps';
 import { appliquerVisuel } from '../../../shared/visuels';
-import { estValide, projeterAnnonce, type BdeAnnonce } from './BdeMapping';
+import { avecImage, estValide, projeterAnnonce, type BdeAnnonce } from './BdeMapping';
 
 export type { BdeAnnonce } from './BdeMapping';
 
 const TABLE = 'annonces';
 
-/** Les colonnes que les ecrans lisent, nommees plutot que `*` : le schema peut grossir sans cout. */
-const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,publiee_le,expire_le,active,creee_le,audience,etablissements,version_min,version_max,plateformes';
+/**
+ * Les colonnes que les ecrans lisent, nommees plutot que `*` : le schema peut grossir sans cout.
+ * `statut` n'y est pas, ni rien de la programmation : la politique de lecture ne laisse sortir que
+ * ce qui est publie et deja date (supabase/policies.sql), l'application n'a rien a en decider.
+ */
+const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,publiee_le,expire_le,active,creee_le,audience,etablissements,version_min,version_max,plateformes,type,emplacements,ajustement,focale,priorite,epinglee,creneaux,blurhash,partenaire';
 
 /**
  * Ce qu'un ecran recoit : une liste, ou un echec deja traduit.
@@ -56,11 +61,12 @@ function echec(failure: UkitFailure): BdeAnnoncesResult {
 
 const BdeService = {
     /**
-     * Les annonces publiees, les plus recentes d'abord.
+     * Les annonces publiees, dans l'ordre ou le carrousel les montre a cet instant.
      *
-     * Le tri est explicite : une table n'a pas d'ordre, et s'en remettre a celui que la base rend
-     * ferait varier l'affichage sans raison. `id` departage a horodatage egal, pour que deux lectures
-     * successives donnent la meme liste.
+     * L'ordre est celui de `shared/annonces/ordre.ts` — les epinglees, un creneau actif, la priorite,
+     * une rotation par heure —, le module avec lequel la console montre « l'ordre vu a telle heure ».
+     * Il ne depend pas de l'ordre ou la base rend les lignes : a rang egal, l'identifiant departage
+     * avant la rotation. La requete ne trie donc pas.
      *
      * La peremption est filtree deux fois — par la politique de lecture, qui protege la donnee, et
      * par `estValide`, qui protegera l'affichage le jour ou la donnee viendra d'un cache local.
@@ -75,11 +81,7 @@ const BdeService = {
             return echec(baseNonConfiguree());
         }
 
-        const { data, error } = await supabase
-            .from(TABLE)
-            .select(COLONNES)
-            .order('publiee_le', { ascending: false })
-            .order('id', { ascending: true });
+        const { data, error } = await supabase.from(TABLE).select(COLONNES);
 
         if (error) {
             return echec(describeSupabaseFailure(error));
@@ -91,16 +93,15 @@ const BdeService = {
         // verifiable sans attendre son echeance (docs/qualite.md).
         const now = maintenant();
         const contexte = contexteDeCiblage();
-        return {
-            ok: true,
-            annonces: (data ?? [])
-                .map(projeterAnnonce)
-                .map((annonce) => ({
-                    ...annonce,
-                    image_url: appliquerVisuel('annonce', annonce.id, annonce.image_url),
-                }))
-                .filter((annonce) => estValide(annonce, now) && estCible(annonce.ciblage, contexte)),
-        };
+        const visibles = (data ?? [])
+            .map(projeterAnnonce)
+            .map((annonce) => avecImage(annonce, appliquerVisuel('annonce', annonce.id, annonce.image_url)))
+            .filter((annonce) => estValide(annonce, now) && estCible(annonce.ciblage, contexte));
+        // Ordonner apres les filtres, et au meme instant : la rotation tourne chaque groupe de
+        // « l'heure modulo sa taille », et le panneau de la console (console/src/pages/Annonces/
+        // visibles.ts) ordonne lui aussi ce qui reste une fois la visibilite et le ciblage appliques.
+        // Ordonner avant changerait la taille des groupes, donc l'ordre.
+        return { ok: true, annonces: ordonner(visibles, now, (annonce) => annonce.ordre) };
     },
 };
 

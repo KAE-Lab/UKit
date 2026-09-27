@@ -6,8 +6,8 @@
  * non plus, le pictogramme teinte. Un seul gabarit, deux largeurs : le carrousel et la grille.
  */
 
+import { positionDeFocale } from '../../../../../src/shared/annonces/carte';
 import { urlDeRendu } from '../../../../../src/shared/visuels/rendu';
-import { positionDeFocale } from '../../../lib/cadrage';
 import { badgeDeType, type AnnonceApercu } from './modele';
 
 /** La densite de l'ecran de reference : un rendu deux fois plus large que ses points. */

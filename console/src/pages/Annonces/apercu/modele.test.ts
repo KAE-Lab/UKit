@@ -7,7 +7,7 @@
 import { expect, test } from 'vitest';
 
 import { PALETTES } from '../../../../../src/shared/theme/palettes';
-import { annonceDApercu, badgeDeType, emplacementsSpeciaux, LARGEUR_CARROUSEL, LARGEUR_CELLULE, LARGEUR_VISUEL, ratioDeCadre, teinteDe, vueDuChamp, zoneDuChamp } from './modele';
+import { annonceDApercu, badgeDeType, carrouselsSpeciaux, LARGEUR_CARROUSEL, LARGEUR_CELLULE, LARGEUR_VISUEL, ratioDeCadre, teinteDe, vueDuChamp, zoneDuChamp } from './modele';
 
 test('les largeurs sont celles que l application calcule sur un iPhone 13 Pro', () => {
     expect(LARGEUR_CARROUSEL).toBe(234);
@@ -42,11 +42,15 @@ test('le ratio de la fiche se borne', () => {
     expect(ratioDeCadre(0, 10)).toBe(1);
 });
 
-test('un evenement ne porte pas de badge ; les autres types, oui ; les emplacements speciaux excluent le sien', () => {
+// La regle — pas de badge pour un evenement, les emplacements speciaux hors de celui des annonces —
+// se verifie avec l'application, dans src/shared/annonces/carte.test.ts ; ici, les libelles de la console.
+test('le badge et les carrousels speciaux portent les libelles de la console, et une valeur hors liste reste visible', () => {
     expect(badgeDeType('evenement')).toBeNull();
+    expect(badgeDeType('info')).toBe('Info');
     expect(badgeDeType('bon_plan')).toBe('Bon plan');
     expect(badgeDeType('autre')).toBe('autre');
-    expect(emplacementsSpeciaux(['annonces', 'restaurants'])).toEqual([{ code: 'restaurants', libelle: 'Restaurants' }]);
+    expect(carrouselsSpeciaux(['annonces', 'restaurants'])).toEqual([{ code: 'restaurants', libelle: 'Restaurants' }]);
+    expect(carrouselsSpeciaux(['bibliotheques', 'agenda'])).toEqual([{ code: 'bibliotheques', libelle: 'Bibliothèques' }, { code: 'agenda', libelle: 'agenda' }]);
 });
 
 test('l apercu montre la vue de ce qu on edite, et laisse la vue la ou elle est pour le reste', () => {

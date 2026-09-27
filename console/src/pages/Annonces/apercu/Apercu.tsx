@@ -23,7 +23,7 @@ import type { Activite } from '../../../composants/formulaire/Formulaire';
 import type { Ligne } from '../../../supabase';
 import { Carte, CarteVoisine } from './Carte';
 import { Fiche } from './Fiche';
-import { annonceDApercu, emplacementsSpeciaux, LARGEUR_CARROUSEL, LARGEUR_CELLULE, teinteDe, vueDuChamp, zoneDuChamp, type Vue } from './modele';
+import { annonceDApercu, carrouselsSpeciaux, LARGEUR_CARROUSEL, LARGEUR_CELLULE, teinteDe, vueDuChamp, zoneDuChamp, type Vue } from './modele';
 import { paletteDe, variablesDApercu, type ThemeDApercu } from './palette';
 
 function Ecran({ titre, children }: { readonly titre: string; readonly children: React.ReactNode }) {
@@ -48,7 +48,7 @@ export function Apercu({ valeurs, activite }: { readonly valeurs: Ligne; readonl
     const [vue, setVue] = useVue(activite.champ);
     const annonce = annonceDApercu(valeurs);
     const teinte = teinteDe(annonce.couleur, paletteDe(theme));
-    const speciaux = emplacementsSpeciaux(annonce.emplacements);
+    const speciaux = carrouselsSpeciaux(annonce.emplacements);
     const zone = activite.champ === null ? null : zoneDuChamp(activite.champ);
     const sectionActive = zone === 'description' && activite.ligne !== null && annonce.description !== null
         ? blocDeLaLigne(String(valeurs.description ?? ''), activite.ligne)

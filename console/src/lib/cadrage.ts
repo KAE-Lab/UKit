@@ -1,22 +1,15 @@
 /**
- * Le cadrage d'une image par sa focale : ce que le champ qui la choisit et l'apercu qui la montre
- * doivent dire de la meme facon.
+ * Le cadrage d'une image par sa focale, du cote de l'editeur : la partie que le cadre garde, pour le
+ * voile du champ, et le point sous le pointeur, pour le poser.
  *
- * **La focale n'est pas un centre.** Elle s'applique comme `object-position` en pourcentages :
- * `80% 90%` aligne le point situe a 80 % de l'image sur le point situe a 80 % du cadre. Le point
- * choisi reste donc toujours visible, a la meme place relative, et il n'est au centre du cadre que
- * pour 50 %. C'est la semantique de `contentPosition` d'expo-image, « l'equivalent de
- * `object-position` », celle que l'application appliquera en 6.3 : la console et le telephone
- * recadrent a l'identique.
+ * La focale elle-meme — sa forme, son defaut, sa position CSS, le ratio du cadre — vit dans le
+ * module partage avec l'application (`src/shared/annonces/carte.ts`), qui dit pourquoi elle n'est
+ * pas un centre : la console et le telephone recadrent a l'identique.
  *
  * Pur : joue par `npm test` a la racine du depot (cadrage.test.ts).
  */
 
-/** Un point de l'image, en fractions de sa largeur et de sa hauteur. */
-export interface Focale {
-    readonly x: number;
-    readonly y: number;
-}
+import type { Focale } from '../../../src/shared/annonces/carte';
 
 /** Une zone de l'image, en fractions : ce que le cadre en montre. */
 export interface Zone {
@@ -26,15 +19,7 @@ export interface Zone {
     readonly hauteur: number;
 }
 
-/** Le cadre de la carte d'annonce v2 : quatre de large pour cinq de haut. */
-export const RATIO_CARTE = 4 / 5;
-
 const TOUTE_L_IMAGE: Zone = { gauche: 0, haut: 0, largeur: 1, hauteur: 1 };
-
-/** La focale en `object-position`, comme l'apercu et l'application l'appliquent. */
-export function positionDeFocale(focale: Focale): string {
-    return `${Math.round(focale.x * 100)}% ${Math.round(focale.y * 100)}%`;
-}
 
 /**
  * La partie d'une image qu'un cadre garde quand l'image le couvre : l'image est mise a l'echelle

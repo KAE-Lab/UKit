@@ -123,8 +123,10 @@ curseur. Il dessine la carte v2 — celle que la 6.3 rend — et la fiche avec l
 avec l'application**,
 importés par chemin relatif : la grammaire de la description
 ([`src/shared/annonces/grammaire.ts`](../src/shared/annonces/grammaire.ts)), l'ordre
-([`ordre.ts`](../src/shared/annonces/ordre.ts)), le ciblage, les adresses de rendu, les tokens et
-les palettes du thème. Vite remonte à la racine du dépôt pour les servir (`server.fs.allow`), et la
+([`ordre.ts`](../src/shared/annonces/ordre.ts)), la carte v2 — son cadre, sa focale, son type et
+son badge, ses emplacements, son partenaire ([`carte.ts`](../src/shared/annonces/carte.ts)), dont la
+console ne garde que les libellés —, le ciblage, les adresses de rendu, les tokens et les palettes du
+thème. Vite remonte à la racine du dépôt pour les servir (`server.fs.allow`), et la
 console les compile en `strict` : ce que la console importe de l'application doit être pur **et**
 strict. Vite les transforme avec le tsconfig de la console (`tsconfig` de
 [`vite.config.ts`](vite.config.ts)) : le plus proche d'eux est celui de l'application, qui étend un
