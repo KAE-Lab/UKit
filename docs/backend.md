@@ -82,7 +82,7 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `annonces` | contenu éditorial de vie étudiante ; depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives) : `type`, `emplacements`, `ajustement`, `focale`, `priorite`, `epinglee`, `creneaux`, `statut`, `blurhash`, `partenaire`, `check (couleur <> 4)`, et la politique de lecture filtre `statut = 'publiee' and publiee_le <= now()` — invisibles pour l'application jusqu'à la 6.3, **écrites par la console depuis [7-F](phase-7/7-f-console-annonces.md)**, qui tient les formes des `jsonb` : `focale` `{ x, y }` en fractions de l'image, le point que le recadrage garde visible — `object-position` en pourcentages, pas un centre ; `creneaux` `[{ jours, de, a }]` avec les jours en ISO (1 = lundi, 7 = dimanche) et les heures `HH:MM` de Paris, début inclus, fin exclue, une plage qui passe minuit acceptée ; `partenaire` `{ nom, logo_url, lien }`, nul quand tout est vide, le logo dans `partenaires/` du bucket à 400 px, exposées par la console en 7-F ; depuis [7-H](phase-7/7-h-console-roles.md) : `maj_le`, la version de la ligne tenue par un déclencheur — le verrou contre l'écrasement —, et « tous les campus » ne s'écrit plus que `null` (`check` : jamais un tableau vide ni une chaîne vide) | [`BdeService`](../src/features/Campus/services/BdeService.ts) | **6-B** | — |
 | `batiments` | coordonnées, horaires, accès libre, visuel | [`shared/locations`](../src/shared/locations/index.ts) | **6-D** | [`assets/locations.json`](../assets/locations.json) |
 | `visuels` | la photo d'un contenu, quand celle de sa source est fausse ou absente | [`shared/visuels`](../src/shared/visuels/index.ts) | passe de finition | *aucun* — le socle, c'est l'image de la source |
-| `etablissements` | catalogue des universités et de leurs portails ; depuis 7-C : `credits`, `campus`, `alias` (portés par la base et `etablissements.sql`, lus en 6.3), et les gabarits `services.formulaire` / `services.formulaire_campus` | l'onboarding et les réglages | **6-G** | les lignes publiées à la date de la release — une copie, vérifiée par un test (6.1-A) |
+| `etablissements` | catalogue des universités et de leurs portails ; depuis 7-C : `credits` (`[{ nom, role, lien }]`), `campus` (le libellé qui regroupe, « Talence ») et `alias` (`text[] not null`, les mots des étudiants), portés par la base et `etablissements.sql`, **lus depuis [7-I](phase-7/7-i-releve-et-vocabulaire.md)** — `campus` par [`campusActif()`](../src/shared/etablissements/catalogue.ts), qui remplace le « Talence » écrit en dur des bâtiments ; `alias` et `credits` projetés, que l'écran lira en [7-J](phase-7/7-j-ecrans.md) — et écrits par la console, qui refuse un crédit que l'application ignorerait ([`credits.ts`](../src/shared/etablissements/credits.ts)) ; et les gabarits `services.formulaire` / `services.formulaire_campus` | l'onboarding, les réglages et le campus des bâtiments | **6-G** | les lignes publiées à la date de la release — une copie, vérifiée par un test (6.1-A) |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | les messages de service — information, avertissement, incident — et leur ciblage ; depuis 7-H, `maj_le` et « tous les campus » en `null`, comme les annonces | [`shared/messages`](../src/shared/messages/index.ts) | **6.1-B** | *aucun* — un cache (`messages@1`) |
 | `jetons_push` | **écrite par l'application** (6.1.x-E) : un jeton push par appareil, campus, version, plateforme, testeur — par `deposer_jeton` / `retirer_jeton`, jamais par la table | la fonction `notifier` (service) ; la console compte le parc sans lire le jeton lui-même, retiré à tous ses comptes depuis 7-H | **6.1.x-E** | — |
@@ -228,6 +228,14 @@ que des nombres.
 > rafraîchi dans cette fenêtre a mis en cache un établissement dont le champ vaut `null` — une entrée
 > de surcouche **remplace** le socle, donc le socle correct ne reprenait jamais la main. Le symptôme
 > ne ressemblait pas à sa cause : « pas de source publiée ici » sur l'établissement qui en publie une.
+>
+> **Les trois gestes peuvent se scinder, jamais s'inverser.** `credits`, `campus` et `alias` l'ont été
+> en deux temps, et c'était voulu : la colonne et ses valeurs dans les trois lignes en
+> [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives) (`db push`, puis `psql -f`) ; ce
+> qui les lit en [7-I](phase-7/7-i-releve-et-vocabulaire.md) — `COLONNES`, le type de ligne, la
+> projection, le socle — et la clé de cache passée à `etablissements@5` **après** avoir vérifié en
+> lecture, le 2026-09-26, que la production portait les colonnes et leurs valeurs. Les trois gestes
+> sont complets pour ces colonnes depuis.
 
 `edt.abonnement` ne nomme **aucun** Blueprint, et c'est délibéré : le fichier qui le joue est unique,
 embarqué, et le même pour tout le monde. Le catalogue dit que l'abonnement existe, le code relu sait
@@ -569,7 +577,8 @@ Le tableau d'origine, relevé le 2026-08-08 :
 > écrivent pas plusieurs versions. Chaque ligne rejoint le tableau du schéma, plus haut, le jour où
 > son jalon l'applique — et sort d'ici : les colonnes d'`annonces`, d'`editeurs` et d'`etablissements`
 > sont en base depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), le 2026-09-17,
-> les tables de la mesure depuis [7-D](phase-7/7-d-la-mesure.md), le 2026-09-21.
+> les tables de la mesure depuis [7-D](phase-7/7-d-la-mesure.md), le 2026-09-21, et l'application lit
+> celles d'`etablissements` depuis [7-I](phase-7/7-i-releve-et-vocabulaire.md), le 2026-09-26.
 
 Tout est **additif** et s'applique par **migrations numérotées**
 ([7-C](phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt)) : aucune colonne ne se retire avant
@@ -578,7 +587,6 @@ que le parc ait migré.
 | Table | Colonnes et objets | Jalon |
 |---|---|---|
 | `annonces` | `notifiee_le` et `notifies` | [7-L](phase-7/7-l-la-boucle.md) |
-| `etablissements` | ce qui **lit** `credits`, `campus` et `alias` — `COLONNES`, `types.ts`, `catalogue.ts`, `socle.ts` et la version du cache —, une fois que la base porte colonne **et** valeurs (elles y sont depuis 7-C) | [7-I](phase-7/7-i-releve-et-vocabulaire.md) |
 | `jetons_push` | `annonces boolean` (défaut faux) : l'accord pour les annonces en notification | [7-L](phase-7/7-l-la-boucle.md) |
 | `retours` | `source` (`formulaire` ou `app` ; défaut `formulaire`), `installation` (nul sauf accord) ; RPC `deposer_retour` | [7-L](phase-7/7-l-la-boucle.md) |
 | `soutien` | `(campus, jour, montant, repas)`, agrégée, lecture publique | [7-N](phase-7/7-n-le-soutien.md) |

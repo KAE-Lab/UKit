@@ -3,6 +3,8 @@
  * batiments, version publiee. Chaque avertissement reprend une regle ecrite dans docs/backend.md.
  */
 
+import { projeterCredits } from '../../../../src/shared/etablissements/credits';
+import type { Ligne } from '../../supabase';
 import type { Descripteur } from '../descripteurs';
 import { PLATEFORMES_D_APPAREIL } from './commun';
 
@@ -44,6 +46,24 @@ export const VISUELS: Descripteur = {
     ],
 };
 
+/**
+ * Ce que la base accepterait et que le telephone jetterait sans rien dire : un alias qui n'est pas un
+ * mot, un credit sans nom. La regle des credits est celle de la projection de l'application
+ * (src/shared/etablissements/credits.ts), importee et non recopiee : les deux ne peuvent pas diverger.
+ */
+function validerEtablissement(ligne: Ligne): string | null {
+    const alias = ligne.alias;
+    if (!Array.isArray(alias) || alias.some((mot) => typeof mot !== 'string' || mot === '')) {
+        return 'Les alias sont une liste de mots entre guillemets — ["UB", "Talence"] —, ou [] pour aucun.';
+    }
+    const credits = ligne.credits;
+    if (credits === null || credits === undefined) return null;
+    if (!Array.isArray(credits) || projeterCredits(credits).length !== credits.length) {
+        return 'Chaque crédit nomme quelqu’un : [{"nom": "…", "role": "…", "lien": "https://…"}], ou rien pour personne.';
+    }
+    return null;
+}
+
 export const ETABLISSEMENTS: Descripteur = {
     chemin: 'etablissements',
     table: 'etablissements',
@@ -51,15 +71,16 @@ export const ETABLISSEMENTS: Descripteur = {
     description: 'Le catalogue des universités et de leurs portails : ce qui existe chez chacune.',
     cle: ['code'],
     tri: { colonne: 'ordre' },
-    liste: ['logo_url', 'code', 'nom', 'nom_court', 'ville', 'actif', 'ordre'],
+    liste: ['logo_url', 'code', 'nom', 'nom_court', 'ville', 'campus', 'actif', 'ordre'],
     filtres: ['actif'],
-    recherche: ['code', 'nom', 'nom_court', 'ville'],
+    recherche: ['code', 'nom', 'nom_court', 'ville', 'campus'],
     avertissement: 'Une ligne s’écrit ENTIÈRE : un champ vide veut dire « ce service n’existe pas ici », et il gagne sur le socle embarqué. Publier un Blueprint avant la ligne qui le nomme. Retirer « actif » fait disparaître l’établissement de la liste ; les téléphones qui l’avaient choisi le disent.',
     champs: [
         { nom: 'code', libelle: 'Code', type: { type: 'texte' }, obligatoire: true, aide: 'Stable : c’est la clé du cloisonnement sur les téléphones.' },
         { nom: 'nom', libelle: 'Nom', type: { type: 'texte' }, obligatoire: true },
         { nom: 'nom_court', libelle: 'Nom court', type: { type: 'texte' } },
         { nom: 'ville', libelle: 'Ville', type: { type: 'texte' } },
+        { nom: 'campus', libelle: 'Campus', type: { type: 'texte' }, aide: 'Le libellé qui regroupe les établissements d’un même lieu (« Talence »), et celui d’un bâtiment dont le référentiel ne nomme pas le sien. Vide : aucun, et l’application dit « Campus ».' },
         { nom: 'logo_url', libelle: 'Logo', type: { type: 'image', dossier: 'etablissements' } },
         { nom: 'actif', libelle: 'Actif', type: { type: 'booleen' }, defaut: true },
         { nom: 'ordre', libelle: 'Ordre', type: { type: 'nombre' }, defaut: 0 },
@@ -76,7 +97,10 @@ export const ETABLISSEMENTS: Descripteur = {
         { nom: 'services', libelle: 'Services', type: { type: 'json' } },
         { nom: 'libelles', libelle: 'Libelles', type: { type: 'json' } },
         { nom: 'crous_region', libelle: 'Région CROUS', type: { type: 'texte' } },
+        { nom: 'alias', libelle: 'Alias', type: { type: 'json' }, obligatoire: true, defaut: [], aide: '["UB", "Collège ST"] — les mots que tapent les étudiants pour trouver l’établissement. Aucun : [].' },
+        { nom: 'credits', libelle: 'Crédits', type: { type: 'json' }, aide: '[{"nom": "Camille", "role": "compte prêté", "lien": "https://…"}] — le nom seul est obligatoire. Vide : personne à créditer.' },
     ],
+    valider: validerEtablissement,
 };
 
 export const SALUTATIONS: Descripteur = {

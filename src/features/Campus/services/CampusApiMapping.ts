@@ -30,7 +30,11 @@ export interface CelcatBuilding {
     imageUrl?: string;
     lat?: number;
     lng?: number;
-    campus?: string;
+    /**
+     * Le campus du batiment : celui du referentiel, sinon celui de l'etablissement selectionne, sinon
+     * `null` — et l'ecran dit alors « Campus », traduit. Le repli d'un libelle vit dans le rendu.
+     */
+    campus?: string | null;
     /**
      * Les horaires d'ouverture du batiment, indexes par jour ISO.
      *
@@ -128,8 +132,12 @@ export function occupationDuJour(brutes: OccupationExtraite[], date: string): Ca
  * accessibles librement aux etudiants. C'est le referentiel — socle embarque et surcouche publiee
  * confondus — qui decide : un batiment ouvert en acces libre, un horaire corrige ou un visuel
  * remplace arrive ici sans release (docs/blueprints.md).
+ *
+ * `campusParDefaut` est le campus de l'etablissement, que l'appelant lit dans le catalogue : il
+ * remplace le « Talence » ecrit ici en dur jusqu'a la 6.3, et le passer en parametre garde ce module
+ * sans dependance au catalogue, donc jouable sous Node.
  */
-export function extractBuildingsFromRooms(rooms: CelcatRoom[]): CelcatBuilding[] {
+export function extractBuildingsFromRooms(rooms: CelcatRoom[], campusParDefaut: string | null): CelcatBuilding[] {
     const locationsData = allBuildingRefs();
 
     const freeAccessBuildings = Object.keys(locationsData).filter((key) => locationsData[key].freeAccess === true);
@@ -145,7 +153,7 @@ export function extractBuildingsFromRooms(rooms: CelcatRoom[]): CelcatBuilding[]
             imageUrl: loc.image,
             lat: loc.lat,
             lng: loc.lng,
-            campus: loc.campus || 'Talence',
+            campus: loc.campus || campusParDefaut,
             schedule: loc.schedule,
         });
     }

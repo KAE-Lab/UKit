@@ -12,7 +12,8 @@ export interface BuildingInfo {
     rooms: RoomInfo[];
     imageUrl?: string;
     distance?: number;
-    campus?: string;
+    /** `null` quand ni le referentiel ni l'etablissement ne nomment de campus (CampusApiMapping.ts). */
+    campus?: string | null;
     lat?: number;
     lng?: number;
     schedule?: CampusEvent[];

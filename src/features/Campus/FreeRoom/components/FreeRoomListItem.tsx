@@ -42,7 +42,7 @@ export function FreeRoomListItem({ item, isFavorite, onToggleFavorite, onPress }
             <MetaRow
                 theme={theme}
                 icon={{ family: 'material', name: 'location-on' }}
-                label={item.campus || 'Talence'}
+                label={item.campus ?? Translator.get('CAMPUS')}
                 numberOfLines={1}
                 marginBottom={tokens.space.xs}
                 trailing={item.distance !== undefined ? (

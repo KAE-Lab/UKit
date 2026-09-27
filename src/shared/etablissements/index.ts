@@ -42,6 +42,7 @@ import { purgerDonneesEtablissement } from './purge';
 
 export {
     ETABLISSEMENT_DEFAUT,
+    campusActif,
     crousRegionActive,
     documentsPublies,
     etablissementRetire,
@@ -118,8 +119,12 @@ const TABLE = 'etablissements';
  *
  * La regle complete, desormais : **la version de cache s'incremente APRES que la base porte la
  * colonne ET ses valeurs** — jamais entre les deux.
+ *
+ * @5, le 2026-09-26 : `credits`, `campus` et `alias`, lus pour la premiere fois (7-I). La base
+ * portait les trois colonnes ET leurs valeurs depuis 7-C — verifie en lecture en production ce
+ * jour-la, avant d'incrementer : la regle ci-dessus, appliquee dans l'ordre.
  */
-const CLE_CACHE = 'etablissements@4';
+const CLE_CACHE = 'etablissements@5';
 /**
  * Les colonnes lues, nommees une par une.
  *
@@ -139,7 +144,7 @@ const CLE_CACHE = 'etablissements@4';
  * decrite dans docs/backend.md.
  */
 const COLONNES =
-    'code,nom,nom_court,ville,logo_url,actif,portail_dossier,portail_messagerie,portail_widgets,portail_documents,celcat_domaine,celcat_res_types,edt,salles,salles_libres,bibliotheques_points,services,libelles,crous_region,ordre';
+    'code,nom,nom_court,ville,logo_url,actif,portail_dossier,portail_messagerie,portail_widgets,portail_documents,celcat_domaine,celcat_res_types,edt,salles,salles_libres,bibliotheques_points,services,libelles,crous_region,ordre,credits,campus,alias';
 
 /** Ce que rend un rafraichissement : un resultat, jamais une exception. */
 export interface EtablissementsReport {

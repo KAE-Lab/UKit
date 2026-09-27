@@ -6,8 +6,9 @@
  * vacances, qui n'a pas d'heure de fin et qui est pourtant ce qui declare un batiment ferme.
  */
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
+import { appliquerSurcouche } from '../../../shared/locations/referentiel';
 import { extractBuildingsFromRooms, occupationDuJour, projeterOccupation, projeterSalles } from './CampusApiMapping';
 
 /** Des salles reelles, recopiees d'une reponse du serveur de l'universite. */
@@ -71,13 +72,15 @@ describe('occupationDuJour', () => {
 });
 
 describe('extractBuildingsFromRooms', () => {
+    afterEach(() => appliquerSurcouche(null));
+
     it('rattache les salles au batiment et ne garde que le numero', () => {
         // `A28` est la seule cle du referentiel portant `freeAccess: true` — voir
         // docs/features/campus-salles-libres.md.
         const batiments = extractBuildingsFromRooms([
             { id: '1', name: 'CREMI - Bât. A28 Salle 005 (Informatique)' },
             { id: '2', name: 'A1/ Salle 25' },
-        ]);
+        ], 'Talence');
 
         expect(batiments).toHaveLength(1);
         expect(batiments[0].name).toBe('A28');
@@ -89,16 +92,27 @@ describe('extractBuildingsFromRooms', () => {
     });
 
     it('ignore les salles « en attente » et les batiments sans salle', () => {
-        expect(extractBuildingsFromRooms([{ id: '1', name: 'A28 - en attente' }])).toHaveLength(0);
-        expect(extractBuildingsFromRooms([])).toHaveLength(0);
+        expect(extractBuildingsFromRooms([{ id: '1', name: 'A28 - en attente' }], 'Talence')).toHaveLength(0);
+        expect(extractBuildingsFromRooms([], 'Talence')).toHaveLength(0);
     });
 
     it('porte les horaires du referentiel, indexes par jour', () => {
-        const batiment = extractBuildingsFromRooms([{ id: '1', name: 'CREMI - Bât. A28 Salle 005' }])[0];
+        const batiment = extractBuildingsFromRooms([{ id: '1', name: 'CREMI - Bât. A28 Salle 005' }], 'Talence')[0];
 
         // Le champ etait declare `string | null` et ne l'a jamais ete : l'ecran le lit comme un
         // dictionnaire. Le type ment moins depuis le jalon 6-E.
         expect(batiment.schedule).toBeTypeOf('object');
-        expect(batiment.campus).toBeTypeOf('string');
+    });
+
+    it('prend le campus du referentiel, sinon celui de l etablissement, sinon aucun', () => {
+        const salle = [{ id: '1', name: 'CREMI - Bât. A28 Salle 005' }];
+
+        // Le fichier embarque ne nomme pas le campus de l'A28 : c'est l'etablissement qui parle, et
+        // plus aucun « Talence » ecrit en dur. Sans campus, l'ecran dit « Campus », traduit.
+        expect(extractBuildingsFromRooms(salle, 'Talence')[0].campus).toBe('Talence');
+        expect(extractBuildingsFromRooms(salle, null)[0].campus).toBeNull();
+
+        appliquerSurcouche({ A28: { campus: 'Pessac' } });
+        expect(extractBuildingsFromRooms(salle, 'Talence')[0].campus).toBe('Pessac');
     });
 });

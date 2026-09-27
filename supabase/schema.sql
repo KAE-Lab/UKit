@@ -376,9 +376,10 @@ create table if not exists public.etablissements (
 
 -- Trois colonnes pour les campus a venir (jalon 7-C, migration
 -- 20260916222139_etablissements_credits_campus_alias.sql) : `credits` ([{"nom", "role", "lien"}]),
--- `campus` (le libelle qui regroupe, et qui remplacera les « Talence » ecrits en dur) et `alias` (les
--- mots des etudiants, pour la recherche). La base et etablissements.sql les portent depuis la 6.2.2 ;
--- l'application ne les lit qu'en 6.3 — la regle des trois gestes est scindee, voir docs/backend.md.
+-- `campus` (le libelle qui regroupe, et qui remplace depuis la 6.3 les « Talence » ecrits en dur) et
+-- `alias` (les mots des etudiants, pour la recherche). La base et etablissements.sql les portent
+-- depuis la 6.2.2, l'application les lit depuis la 6.3 (jalon 7-I) : la regle des trois gestes, scindee
+-- en deux temps, est complete — voir docs/backend.md.
 alter table public.etablissements add column if not exists credits jsonb;
 alter table public.etablissements add column if not exists campus text;
 alter table public.etablissements add column if not exists alias text[] not null default '{}';

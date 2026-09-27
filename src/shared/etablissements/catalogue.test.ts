@@ -20,6 +20,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
     ETABLISSEMENT_DEFAUT,
     appliquerCatalogue,
+    campusActif,
     etablissementRetire,
     getEtablissement,
     getEtablissementActif,
@@ -54,6 +55,9 @@ function ligne(partial: Partial<EtablissementRow>): EtablissementRow {
         libelles: null,
         crous_region: null,
         ordre: 0,
+        credits: null,
+        campus: null,
+        alias: [],
         ...partial,
     };
 }
@@ -354,6 +358,70 @@ describe('crousRegion', () => {
 
     it('lit la region publiee', () => {
         expect(projeterEtablissement(ligne({ crous_region: '1' })).crousRegion).toBe('1');
+    });
+});
+
+/**
+ * Les trois colonnes des campus a venir (7-C), lues depuis la 6.3. Elles sont libres cote base comme
+ * leurs voisines : une entree mal formee se perd seule, sans emporter la ligne.
+ */
+describe('les colonnes des campus a venir', () => {
+    it('lit un campus absent ou vide comme aucun, sans repli bordelais', () => {
+        expect(projeterEtablissement(ligne({})).campus).toBeNull();
+        expect(projeterEtablissement(ligne({ campus: '' })).campus).toBeNull();
+        expect(projeterEtablissement(ligne({ campus: 'Talence' })).campus).toBe('Talence');
+    });
+
+    it('ne garde des alias que les chaines non vides', () => {
+        const alias = projeterEtablissement(ligne({ alias: ['UB', '', null, 3, 'Collège ST'] as unknown as string[] })).alias;
+        expect(alias).toEqual(['UB', 'Collège ST']);
+        expect(projeterEtablissement(ligne({ alias: null })).alias).toEqual([]);
+        expect(projeterEtablissement(ligne({ alias: '{UB}' as unknown as string[] })).alias).toEqual([]);
+    });
+
+    it('ne garde que les credits qui nomment quelqu un, role et lien facultatifs', () => {
+        const credits = projeterEtablissement(ligne({
+            credits: [
+                { nom: 'Camille', role: 'compte prete', lien: 'https://exemple.fr' },
+                { nom: 'Sacha' },
+                { role: 'releve des salles' },
+                { nom: '', lien: 'https://exemple.fr' },
+                'Alex',
+                null,
+                ['Alex'],
+            ],
+        })).credits;
+        expect(credits).toEqual([
+            { nom: 'Camille', role: 'compte prete', lien: 'https://exemple.fr' },
+            { nom: 'Sacha', role: null, lien: null },
+        ]);
+    });
+
+    it('lit une colonne de credits nulle ou d une autre forme comme personne', () => {
+        expect(projeterEtablissement(ligne({})).credits).toEqual([]);
+        expect(projeterEtablissement(ligne({ credits: { nom: 'Camille' } })).credits).toEqual([]);
+    });
+});
+
+describe('campusActif', () => {
+    it('rend le campus de l etablissement selectionne', () => {
+        appliquerCatalogue({ essai: etablissement({ code: 'essai', campus: 'Pessac' }) });
+        setCodeEtablissementActif('essai');
+        expect(campusActif()).toBe('Pessac');
+    });
+
+    it('rend null quand l etablissement n en nomme pas, et quand un vieux cache ne porte pas le champ', () => {
+        appliquerCatalogue({ essai: etablissement({ code: 'essai', campus: null }) });
+        setCodeEtablissementActif('essai');
+        expect(campusActif()).toBeNull();
+
+        // Un cache ecrit avant le champ : `undefined`, que l'appelant ne doit jamais recevoir.
+        const ancien = Object.fromEntries(
+            Object.entries(etablissement({ code: 'ancien' })).filter(([champ]) => champ !== 'campus'),
+        ) as unknown as Etablissement;
+        appliquerCatalogue({ ancien });
+        setCodeEtablissementActif('ancien');
+        expect(campusActif()).toBeNull();
     });
 });
 
