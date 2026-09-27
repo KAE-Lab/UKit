@@ -9,7 +9,9 @@ export default [
     // commande — mais pas ce qu'elle construit.
     // Le point d'entree d'une fonction Supabase tourne sous Deno (imports `jsr:`, global `Deno`) : hors
     // du typage et du lint de la racine. Ses regles pures, elles, sont testees par `npm test`.
-    ignores: ["console/dist/**", "supabase/functions/*/index.ts"],
+    // Un environnement Python local (celui du kit de l'Epure, tools/epure/README.md) embarque le
+    // pilote JavaScript de Playwright : Git l'ignore deja, le lint aussi.
+    ignores: ["console/dist/**", "supabase/functions/*/index.ts", "**/.venv/**"],
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
