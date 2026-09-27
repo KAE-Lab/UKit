@@ -22,9 +22,11 @@ const DEBUT_INSERT = /insert\s+into\s+public\.etablissements\s*\(/g;
 /**
  * Un element de tableau Postgres, virgule ou fin comprise : entre guillemets, ou nu. Un element nu
  * n'admet ni guillemet, ni accolade, ni barre oblique inverse — ce serait un tableau imbrique ou un
- * echappement que ce lecteur ne sait pas lire, et il le refuse plutot que de le lire faux.
+ * echappement que ce lecteur ne sait pas lire, et il le refuse plutot que de le lire faux. Il commence
+ * et finit par un caractere visible : fait de blancs seuls, Postgres le refuse (« malformed array
+ * literal »), et le lire ici laisserait passer au test du socle un fichier qui ne se rejoue plus.
  */
-const ELEMENT_DE_TABLEAU = /\s*(?:"((?:[^"\\]|\\.)*)"|([^",{}\\]+?))\s*(,|$)/ys;
+const ELEMENT_DE_TABLEAU = /\s*(?:"((?:[^"\\]|\\.)*)"|([^",{}\\\s](?:[^",{}\\]*[^",{}\\\s])?))\s*(,|$)/ys;
 
 /**
  * Un litteral de tableau a une dimension — `{}`, `{"UB","Bordeaux INP"}`, `{UB, Talence}` —, tel que

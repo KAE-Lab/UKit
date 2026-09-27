@@ -77,8 +77,12 @@ Celcat expose des salles, pas des bâtiments. `extractBuildingsFromRooms` recons
    [`CampusApiService`](../../src/features/Campus/services/CampusApiService.ts), pour que
    [`CampusApiMapping`](../../src/features/Campus/services/CampusApiMapping.ts) reste pur ; à défaut
    encore, aucun, et les deux cartes disent « Campus », traduit. Le repli d'un libellé vit dans le
-   rendu, jamais dans le service. Il se résout à la reconstruction, donc se fige avec la liste en
-   cache sept jours, comme la photo du référentiel ; une bascule d'établissement purge la liste.
+   rendu, jamais dans le service. Il se résout à la reconstruction, donc se fige avec la liste tant
+   qu'elle est en cache (sept jours), comme la photo du référentiel. Une bascule d'établissement efface
+   ce cache sur le disque ([`purge.ts`](../../src/shared/etablissements/purge.ts)), pas la liste en
+   mémoire : [`CampusDataManager`](../../src/features/Campus/services/CampusDataManager.ts) n'écoute
+   pas la bascule, et la liste n'est reconstruite qu'au prochain lancement ou au prochain
+   tirer-pour-rafraîchir du tableau de bord.
 
 ## Calcul des créneaux libres
 
@@ -286,8 +290,8 @@ Deux conséquences à connaître avant d'y toucher :
   le repli écrit en dur dans `extractBuildingsFromRooms` et dans les deux cartes est devenu le campus
   de l'établissement, puis « Campus » traduit. Dans les faits, la table `batiments` porte `Talence`
   sur ses 73 lignes, importées avec cette valeur ([`import-ukit-data.mjs`](../../tools/import-ukit-data.mjs)),
-  et le fichier embarqué n'en nomme aucun : le repli ne parle qu'avant le premier rafraîchissement du
-  référentiel.
+  et le fichier embarqué n'en nomme aucun : le repli ne parle que dans une liste reconstruite avant
+  l'arrivée de la surcouche des bâtiments, et il y reste tant que cette liste est en cache.
 - ~~**Le jour est lu via `new Date()`**, que le mock temporel ne modifie pas.~~ **Corrigé au jalon
   [6-E](../phase-6/6-e-planning.md)** : le hook et les deux cartes qui affichent les horaires lisent
   désormais `moment()`, donc la simulation les atteint. C'était la seule fonctionnalité dont le mock

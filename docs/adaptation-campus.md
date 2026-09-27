@@ -62,7 +62,9 @@ couverts là où l'établissement se choisit.
 
 Depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), la ligne porte aussi
 `alias` — les mots que les étudiants tapent pour chercher leur campus — et `campus`, le libellé qui
-regroupe ; l'application les lit à partir de la 6.3 ([7-J](phase-7/7-j-ecrans.md)).
+regroupe ; l'application les lit depuis [7-I](phase-7/7-i-releve-et-vocabulaire.md), et la liste
+regroupée par campus comme la recherche par alias arrivent avec le lot 3 de
+[7-J](phase-7/7-j-ecrans.md).
 
 Et rendre visible ce qui existe déjà : la ligne `autre` porte `edt.abonnement`, donc **n'importe qui
 peut coller son lien iCal** dans [`LienEdtForm`](../src/features/Planning/components/LienEdtForm.tsx)
