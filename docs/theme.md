@@ -39,6 +39,8 @@ tokens.radius     sm 8 · md 12 · lg 16 · xl 24 · pill 999
 tokens.fontSize   xs 12 · sm 14 · md 16 · lg 18 · xl 22 · xxl 28 · title 34
 tokens.fontWeight regular 400 · medium 500 · semibold 600 · bold 700
 tokens.shadow     sm · md · lg   (objet prêt à étaler : ...tokens.shadow.sm)
+tokens.mouvement  couture 200 · structure 220 · cascade 40 × 4 rangs · balayage 1600 / 0,6
+                  pression 0,97 · ressort (amortissement 100, masse 4, raideur 900)
 ```
 
 Les ombres sont des objets prêts à étaler, **résolus par plateforme** dans `Theme.ts` depuis 6.2.x :
@@ -59,6 +61,13 @@ la main ; la règle ESLint refuse `elevation` (sauf 0, la négation).
 Deux pas ont été **nommés** au jalon 6-K, jamais inventés : `space.xxs` valait 2 en dur dans
 26 endroits, et le grand titre de page valait 34 dans quatre écrans. Ce dernier a pris la place de
 `fontSize.hero: 36`, qui n'était référencé nulle part.
+
+`tokens.mouvement` est né au jalon [7-I](phase-7/7-i-releve-et-vocabulaire.md), du même geste :
+huit durées vivaient chacune dans son fichier, et deux fondus de la même couture n'avaient pas la même
+([inventaire-mouvement.md](inventaire-mouvement.md)). Les nombres vivent ici ; les animations qu'on en
+tire — l'entrée en cascade, le reflux, la sortie — vivent dans [`mouvement.ts`](../src/shared/ui/mouvement.ts),
+pour qu'elles ne s'écrivent qu'une fois. Une durée n'est pas une propriété de style : la règle ESLint
+ne la voit pas, et une durée nouvelle se prend ici par convention, pas sous la contrainte d'un outil.
 
 Ce que les tokens ne couvrent **pas**, volontairement : les `width`, `height` et **tailles d'icône**.
 Le dépôt en porte treize distinctes, sans échelle, et en inventer une dépasserait le mandat du jalon
@@ -205,14 +214,17 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 
 | Composant | Ce qu'il rend | Relevé |
 |---|---|---|
-| [`Card`](../src/shared/ui/Card.tsx) | la surface d'une carte : fond, rayon `xl`, ombre `md`, apparition animée. **Ni largeur ni marges** — elles arrivent par `style` | 6 fois |
+| [`Card`](../src/shared/ui/Card.tsx) | la surface d'une carte : fond, rayon `xl`, ombre `md` ; son entrée en cascade (`rang`), son reflux au ressort, son échelle sous le doigt (7-I). **Ni largeur ni marges** — elles arrivent par `style` | 6 fois |
 | [`SectionHeader`](../src/shared/ui/SectionHeader.tsx) | titre de section, chevron, destination | 4 fois |
 | [`Badge`](../src/shared/ui/Badge.tsx) | pastille icône + libellé, teinte d'action ou `tone` sémantique | 8 fois |
 | [`MetaRow`](../src/shared/ui/MetaRow.tsx) | ligne « icône + texte secondaire (+ contenu à droite) » | 9 fois |
 | [`EmptyState`](../src/shared/ui/EmptyState.tsx) | icône, message, action facultative — **le même bloc** pour une liste vide et pour une source en panne | 2 fois |
-| [`LoadingState`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** : un carrousel, une section, une étape d'accueil. Sa phrase reste optionnelle | 6 fois |
+| [`LoadingState`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** quand sa forme n'est pas connue : une étape d'accueil, une liste qui peut être vide. Sa phrase reste optionnelle. Là où la forme est connue, c'est un `Squelette` | 6 fois |
+| [`Squelette`](../src/shared/ui/Squelette.tsx) | la forme d'un contenu qui charge, et `Balayage`, le reflet qui la parcourt. **Il ne dessine pas la forme** : elle vient de l'appelant, construite avec les composants du contenu en mode `masque` (`Card`, `MetaRow`, `Badge`, le titre d'une carte). Il annonce son attente aux lecteurs d'écran par sa phrase | posé au 7-I |
+| [`TexteMasque`](../src/shared/ui/TexteMasque.tsx) | une ligne de texte masquée : la hauteur exacte de sa police, une barre à sa place, **aucun caractère rendu** | 2 fois, remonté au 7-I |
+| [`mouvement.ts`](../src/shared/ui/mouvement.ts) | les animations partagées, tirées de `tokens.mouvement` : `REFLUX`, `SORTIE`, `entreeEnCascade(rang)` | posé au 7-I |
 | [`ChargementPleinePage`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran**, sa phrase **obligatoire**, et une seconde ligne après quatre secondes | 5 fois |
-| [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu : 200 ms d'opacité, un fondu seul | 3 fois |
+| [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu : un fondu seul, de la durée `tokens.mouvement.couture` | 3 fois |
 | [`Interrupteur`](../src/shared/ui/Interrupteur.tsx) | l'interrupteur du dépôt, dessiné, identique sur les deux plateformes | 4 fois |
 | [`Curseur`](../src/shared/ui/Curseur.tsx) | le curseur du dépôt, dessiné — son arithmétique est [testée à part](../src/shared/ui/echelleDeCurseur.ts) | 1 fois |
 | [`ProgressBar`](../src/shared/ui/ProgressBar.tsx) | jauge, **rayon calculé** (`height / 2`) | 3 fois |
@@ -252,7 +264,8 @@ La liste que **toute session de refonte d'écran vérifie**. Elle est le pendant
    `tokens.space.sm` de plus. Ne pas mélanger `paddingHorizontal` sur le conteneur et `marginHorizontal`
    sur les enfants dans un même écran.
 3. **Quatre états, et ils sont différents.** Chargement (`ChargementPleinePage` quand il occupe
-   l'écran, `LoadingState` dans le flux), vide (`EmptyState`), erreur
+   l'écran ; dans le flux, un `Squelette` quand la forme du contenu est connue, `LoadingState`
+   sinon), vide (`EmptyState`), erreur
    (`SourceFailureNotice`), et **couverture partielle** quand la source est interrogée en plusieurs
    points (`CampusPartialNotice`). S'ils se ressemblent, l'écran ment : une liste vide n'est pas une
    panne. C'est la thèse de la [Phase 6](phase-6/README.md) tout entière.
@@ -280,6 +293,10 @@ La liste que **toute session de refonte d'écran vérifie**. Elle est le pendant
    une deuxième fois remonte.
 11. **Une capture**, dans [`docs/screenshots/`](screenshots/README.md), et la comparaison avec
     l'ancienne si l'écran en avait une.
+12. **Le mouvement** ([les décisions du 7-I](#le-mouvement)). Rien ne change de hauteur entre le
+    squelette, le contenu et la panne ; le contenu entre en cascade, jamais en reflux ; tout nouveau
+    mouvement s'écrit en Reanimated avec `tokens.mouvement` ; et l'écran se reparcourt avec
+    « réduire les animations » activé dans le système.
 
 ## Les décisions durables
 
@@ -332,6 +349,9 @@ Acquises, et qui ont coûté à être trouvées :
   moderne ». Deux éléments ont dû être ramenés à cette règle après coup, la surface d'icône d'un état
   vide et la barre de recherche Campus : c'est le genre d'écart qui coûte un aller-retour à chaque
   fois qu'il est refait.
+
+  **L'Épure s'y plie dans l'application** (7-I) : ses stations rondes restent aux supports de
+  communication ; ici, le carré arrondi tient ([identite.md](identite.md)).
 - **Un bandeau est une carte flottante en haut, par-dessus le contenu — jamais insérée dans
   l'écran, et jamais permanente.** Décision du jalon 6.1-B pour les messages de service, et elle
   vaut pour tout bandeau à venir : une carte sous la barre d'état, largeur écran moins les marges,
@@ -477,6 +497,10 @@ Acquises, et qui ont coûté à être trouvées :
 
   Une identité typographique reste possible — mais alors partout, corps compris, et en vérifiant la
   lisibilité des listes denses. Le mélange, lui, est tranché.
+
+  **L'Épure ne l'a pas rouverte** (7-I) : Geist reste la police du site et de la communication, et
+  l'application garde celle du système — rendu natif, taille réglable par l'utilisateur, listes denses
+  ([identite.md](identite.md)).
 - **Un état plein écran s'ancre en haut, jamais au centre.** Il se pose à une distance fixe
   (`space.xxl`) sous l'en-tête, la même sur les huit écrans qui en portent un. C'est le rôle de
   [`ScreenState`](../src/shared/ui/ScreenState.tsx), et **aucun écran ne calcule plus le sien**.
@@ -652,7 +676,9 @@ Acquises, et qui ont coûté à être trouvées :
 
   > **Capture attendue** — `chargement-parlant.png` : un chargement pleine page avec sa phrase, et sa
   > seconde ligne après quatre secondes.
-- **Un chargement bref ne montre rien** (6.1-E, retour d'appareil). Aucun indicateur pendant les
+- **Un chargement bref ne montre rien** (6.1-E, retour d'appareil ; **restreint au 7-I** aux
+  indicateurs sans forme — `ChargementPleinePage`, `LoadingState` —, voir
+  [« un chargement annonce sa forme »](#le-mouvement)). Aucun indicateur pendant les
   **300 premières millisecondes** d'attente : passer d'un jour à l'autre dans le Planning prend
   quelques dizaines de millisecondes, et l'indicateur y apparaissait puis disparaissait aussitôt — un
   clignotement qui se lit **moins bien que rien**, parce que l'œil enregistre un accroc là où il
@@ -672,8 +698,8 @@ Acquises, et qui ont coûté à être trouvées :
   [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) : 200 ms d'opacité, un fondu seul
   (plus bas, pourquoi le glissement est parti). Il se pose **là où rien ne fond déjà** — les valeurs de widgets, le premier rendu du
   Planning — et **pas** sur les listes ni les sections Campus, dont les cartes passent par
-  [`Card`](../src/shared/ui/Card.tsx), qui fond à l'entrée depuis 6-K : deux animations sur les mêmes
-  pixels ne valent pas mieux qu'aucune. Et jamais sur un changement **à l'intérieur** du contenu — une
+  [`Card`](../src/shared/ui/Card.tsx), qui fond à l'entrée depuis 6-K — en cascade, et à la durée de
+  la couture, depuis 7-I : deux animations sur les mêmes pixels ne valent pas mieux qu'aucune. Et jamais sur un changement **à l'intérieur** du contenu — une
   liste qui se refiltre — sinon l'écran clignote à chaque geste. C'est aussi pourquoi ce n'est pas un
   interrupteur global : `LayoutAnimation`
   ([`transitions.ts`](../src/shared/ui/transitions.ts)) anime tout le commit suivant, et reste
@@ -747,6 +773,67 @@ Acquises, et qui ont coûté à être trouvées :
   `Theme.ts` depuis les spécifications de `tokens.ombres` ; les ombres plus marquées que l'échelle
   passent par `ombre({ y, flou, opacite })`. Les deux facteurs Android d'[`ombres.ts`](../src/shared/theme/ombres.ts)
   sont une calibration, à doser côte à côte avec l'iPhone ; en dessous de l'API 28, pas d'ombre.
+
+### Le mouvement
+
+> Posé au jalon [7-I](phase-7/7-i-releve-et-vocabulaire.md) sur l'écran fondateur, le tableau de bord
+> Campus, et règle pour les lots de [7-J](phase-7/7-j-ecrans.md). Le relevé de départ, daté, est
+> [inventaire-mouvement.md](inventaire-mouvement.md) ; les nombres sont dans `tokens.mouvement`.
+
+- **Un chargement annonce sa forme.** Dans le flux, quand la forme du contenu est connue, un
+  [`Squelette`](../src/shared/ui/Squelette.tsx) au gabarit exact paraît **tout de suite**, sans le seuil
+  de 300 ms : il occupe la place que le contenu prendra, et rien ne clignote là où rien ne change de
+  forme. Il se construit **avec les composants du contenu**, en mode `masque` — `Card`, le titre d'une
+  carte, `MetaRow`, `Badge`, [`TexteMasque`](../src/shared/ui/TexteMasque.tsx) : la hauteur est égale par
+  construction, dans toutes les tailles de texte et sur les deux plateformes, sans constante à tenir à
+  jour. Un reflet le balaie — `theme.reflet`, de la couleur de la carte en clair, si bien qu'il ne
+  passe que sur les barres grises ; il sort en fondu pendant que le contenu entre, et il dit son
+  attente aux lecteurs d'écran. La pulsation d'opacité a été essayée sur planche et écartée. Le seuil
+  de 300 ms reste celui des indicateurs sans forme.
+- **Une section garde sa hauteur quoi qu'il arrive à sa source.** Le squelette, les cartes et la panne
+  ont le même gabarit : la panne est une carte, qui se pose sur le corps masqué d'une vraie carte rendu
+  invisible ([`CarteEnPanne`](../src/features/Campus/Dashboard/components/CarteEnPanne.tsx)). Le filtre
+  qui masque tout et l'absence légitime restent une ligne : l'un est un geste de l'utilisateur, l'autre
+  la géographie, et une carte à leur place annoncerait un contenu qui ne viendra pas. C'est la règle
+  des tuiles de la Scolarité, plus haut, étendue aux carrousels.
+- **Les données sont prêtes avant le premier rendu.** Une section reste en squelette tant que sa
+  source, ses favoris et son filtre n'ont pas été lus : trier après coup faisait glisser les cartes à
+  chaque retour sur l'onglet. Le reflux animé (`REFLUX`) est réservé aux réordonnancements **voulus** —
+  une étoile touchée, une section voisine qui se replie.
+- **Les entrées se cascadent.** Les cartes d'une liste qui arrive d'un coup entrent en fondu, décalées
+  de 40 ms par rang, sur quatre rangs au plus : au-delà, la fin d'une liste se ferait attendre. Une
+  carte seule entre sans attendre.
+- **Un ressort, une configuration.** `tokens.mouvement.ressort`, un rapport d'amortissement d'environ
+  0,83 : un soupçon de rebond. Le défaut de Reanimated 4 n'en a aucun et se lit comme une glissière, et
+  deux ressorts différents dans un même écran se liraient comme une erreur.
+- **Une carte pressée se réduit, elle ne pâlit pas.** Une échelle de 0,97, au ressort. L'opacité d'appui
+  s'applique vue par vue sur Android — c'est elle qui faisait transparaître le repli d'une image, plus
+  haut ; une échelle ne traverse rien, et elle se sent au lieu de se voir.
+- **L'étoile de favori acquitte le geste** par le retour haptique de sélection, comme un interrupteur :
+  le geste est acquitté tout de suite, la liste montre ensuite le résultat.
+- **Une panne porte le filigrane.** La carte en panne pose la silhouette du nuage barré à six pour
+  cent, rognée par le coin de son visuel ([`GlypheFiligrane`](../src/shared/ui/GlypheFiligrane.tsx)),
+  puis le titre de la famille d'échec, sa phrase, et son geste à la place de l'étoile : Réessayer si
+  [`failures.ts`](../src/shared/aetherius/failures.ts) le justifie, sinon Voir tout. La carte entière
+  est le geste. Choisi sur planche contre l'écho de l'icône, un cadre en traces et le bloc d'état vide
+  posé dans la carte : c'est le geste que l'application porte déjà sur ses surfaces d'identité.
+- **Le mouvement respecte le réglage du système.** Reanimated applique « réduire les animations » de
+  lui-même à une animation finie : entrée, sortie et reflux deviennent immédiats. Une boucle, il la
+  ferait sauter à sa valeur finale ; le reflet d'un squelette lit donc le réglage lui-même, et le
+  squelette reste une forme immobile.
+- **Tout nouveau mouvement s'écrit en Reanimated**, sur le fil de l'interface, avec `tokens.mouvement`.
+  L'`Animated` historique est toléré dans l'existant jusqu'à la reprise de l'écran : le tableau de bord
+  Campus a convergé au 7-I ; [`NavHelpers`](../src/shared/navigation/NavHelpers.tsx) et ses onze écrans
+  convergent avec les lots de 7-J — le toucher seul casserait tous les en-têtes pour rien.
+- **Les transitions d'écran sont celles de la pile.** Mesuré le 2026-09-26 : Reanimated 4.5 livre encore
+  l'élément partagé, mais derrière un drapeau natif désactivé par défaut, et notre pile de navigation
+  est en JavaScript. Rien n'est promis de ce côté.
+- **Le tirer-pour-rafraîchir reste celui du système** (2026-09-26). Sur Android, le contrôle natif
+  intercepte le geste sans en donner la progression ; un geste maison sur les deux plateformes était le
+  point le plus risqué du jalon, pour un moment que l'Épure porte déjà ailleurs.
+- **Une image annonce sa couleur.** Quand la base porte un blurhash — les annonces, calculé par la
+  console au téléversement —, il tient la place de l'image pendant son chargement, cadré comme elle.
+  Sans lui, le gris du conteneur : les lieux n'en ont pas.
 
 ## Vérifier
 

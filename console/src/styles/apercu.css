@@ -38,8 +38,9 @@
 .ap-cadre .ap-contient { object-fit: contain; }
 .ap-affiche-typo { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: var(--app-espace-md); font-size: var(--app-taille-lg); font-weight: 700; line-height: 26px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; }
 .ap-picto { font-size: 48px; }
-.ap-badge { position: absolute; top: var(--app-espace-sm); left: var(--app-espace-sm); display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: var(--app-rayon-sm); background: var(--app-carte); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; box-shadow: var(--app-ombre); }
-.ap-badge img { position: static; width: 16px; height: 16px; object-fit: contain; border-radius: 3px; }
+/* Sur l'echelle des tokens, comme le badge de l'application (BdeAnnonceCard, 7-I) : 11 px et 3 px n'y existent pas. */
+.ap-badge { position: absolute; top: var(--app-espace-sm); left: var(--app-espace-sm); display: inline-flex; align-items: center; gap: var(--app-espace-xs); padding: var(--app-espace-xxs) var(--app-espace-sm); border-radius: var(--app-rayon-sm); background: var(--app-carte); font-size: var(--app-taille-xs); font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; box-shadow: var(--app-ombre); }
+.ap-badge img { position: static; width: 16px; height: 16px; object-fit: contain; }
 .ap-pied { padding: var(--app-espace-sm) var(--app-espace-md); }
 .ap-kicker { font-size: var(--app-taille-xs); font-weight: 600; color: var(--app-texte-2); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: var(--app-espace-xxs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ap-titre { font-size: var(--app-taille-md); font-weight: 700; color: var(--app-texte); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

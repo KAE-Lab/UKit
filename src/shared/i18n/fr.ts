@@ -284,6 +284,10 @@ const fr: TranslationDict = {
 	// « Annonces » et non « Vie étudiante » : le nom administratif ne disait pas le contenu, et
 	// toute la grammaire de la section — recherche, etats vides, fiches — parle deja d'annonces.
 	ANNOUNCEMENTS: "Annonces",
+	// Le badge du type d'une carte d'annonce (7-I) ; un evenement n'en porte pas.
+	ANNONCE_TYPE_INFO: "Info",
+	ANNONCE_TYPE_BON_PLAN: "Bon plan",
+	ANNONCE_TYPE_PARTENAIRE: "Partenaire",
 	SEE_ALL: "Voir tout",
 	UNIVERSITY_LIBRARY: "Bibliothèques",
 	FREE_ROOMS: "Salles libres",

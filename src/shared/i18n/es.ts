@@ -281,6 +281,10 @@ const es: TranslationDict = {
 	NO_RU_NEARBY: 'No hay ningún restaurante universitario a tu alrededor.',
 	SCOLARITY: "Escolaridad",
 	ANNOUNCEMENTS: "Anuncios",
+	// Le badge du type d'une carte d'annonce (7-I) ; un evenement n'en porte pas.
+	ANNONCE_TYPE_INFO: "Info",
+	ANNONCE_TYPE_BON_PLAN: "Oferta",
+	ANNONCE_TYPE_PARTENAIRE: "Colaborador",
 	SEE_ALL: "Ver todo",
 	UNIVERSITY_LIBRARY: "Bibliotecas",
 	FREE_ROOMS: "Salas Libres",

@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Dimensions } from 'react-native';
+import { View } from 'react-native';
 import moment from 'moment';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
@@ -11,18 +11,20 @@ import { CardTitleRow, DistanceBadge } from '../../components/CampusCardParts';
 import { BuildingInfo } from '../../services/FreeRoomService';
 import { VisuelAvecRepli } from '../../../../shared/ui/VisuelAvecRepli';
 
+import { HAUTEUR_VISUEL_CARTE, LARGEUR_CARTE_LIEU } from './gabarits';
+
 const defaultImage = require('../../../../../assets/images/default_resto.png');
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.85;
 
 interface FreeRoomSectionCardProps {
     item: BuildingInfo;
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
     isFavorite: boolean;
     onToggleFavorite: (id: string) => void;
+    /** Le rang dans le carrousel : l'entree des premieres cartes s'echelonne (Card). */
+    rang?: number;
 }
 
-export function FreeRoomSectionCard({ item, navigation, isFavorite, onToggleFavorite }: FreeRoomSectionCardProps) {
+export function FreeRoomSectionCard({ item, navigation, isFavorite, onToggleFavorite, rang }: FreeRoomSectionCardProps) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
@@ -43,9 +45,10 @@ export function FreeRoomSectionCard({ item, navigation, isFavorite, onToggleFavo
         <Card
             theme={theme}
             onPress={() => navigation.navigate('FreeRoomDetails', { building: item })}
-            style={{ width: CARD_WIDTH, marginRight: tokens.space.md }}
+            rang={rang}
+            style={{ width: LARGEUR_CARTE_LIEU, marginRight: tokens.space.md }}
         >
-            <VisuelAvecRepli uri={item.imageUrl} repli={defaultImage} style={{ width: '100%', height: 160, backgroundColor: theme.greyBackground }} contentFit="cover" largeur={CARD_WIDTH} />
+            <VisuelAvecRepli uri={item.imageUrl} repli={defaultImage} style={{ width: '100%', height: HAUTEUR_VISUEL_CARTE, backgroundColor: theme.greyBackground }} contentFit="cover" largeur={LARGEUR_CARTE_LIEU} />
 
             <View style={{ padding: tokens.space.md }}>
                 <CardTitleRow

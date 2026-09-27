@@ -1,29 +1,30 @@
 import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
-import { View, Dimensions } from 'react-native';
 
-import style, { tokens } from '../../../../shared/theme/Theme';
+import style from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
 import { SectionHeader } from '../../../../shared/ui/SectionHeader';
-import { LoadingState } from '../../../../shared/ui/LoadingState';
 import { CampusDataManager as DataManager } from '../../services/CampusDataManager';
 import type { BuildingInfo } from '../../services/FreeRoomService';
 import { getDistanceInKm } from '../../services/distance';
 import type { UkitFailure } from '../../../../shared/aetherius';
 import { useFavorites } from '../../hooks/useFavorites';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.85;
-
 import { FreeRoomSectionCard } from './FreeRoomSectionCard';
+import { SqueletteDeCarrouselDeLieux } from './SqueletteDeCarrousel';
 import { SectionEtatVide } from './SectionEtatVide';
 import { useChargementDeSection, useRevisionDuTableauDeBord } from '../rafraichissement';
-import { CarrouselDeSection } from './CarrouselDeSection';
+import { useAnnoncesLues } from '../annonces';
+import { CarrouselDeLieux } from './CarrouselDeLieux';
+import { SectionDuTableau } from './SectionDuTableau';
 
-export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
-    const { themeName } = useContext(AppContext);
-    const theme = style.Theme[themeName];
-    
+const identifiant = (batiment: BuildingInfo) => batiment.id;
+
+/**
+ * Les batiments proches et l'etat de leur lecture. Sorti de la section au jalon 7-I, quand l'attente
+ * des annonces l'a fait deborder : la lecture est un sujet, le rendu en est un autre.
+ */
+function useBatimentsDuTableau(userLat: number | undefined, userLon: number | undefined) {
     const [buildings, setBuildings] = useState<BuildingInfo[]>([]);
     const [failure, setFailure] = useState<UkitFailure | undefined>(undefined);
     const [loading, setLoading] = useState(true);
@@ -34,8 +35,6 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
     const revision = useRevisionDuTableauDeBord();
     useChargementDeSection('salles', enCours);
     const mountedRef = useRef(true);
-
-    const { favorites: favBuildings, toggleFavorite: toggleFavBuilding } = useFavorites('freeroom_favorites');
 
     useEffect(() => {
         mountedRef.current = true;
@@ -81,6 +80,21 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
         return () => { mountedRef.current = false; };
     }, [userLat, userLon, essai, revision]);
 
+    return { buildings, failure, loading, relire: () => setEssai((n) => n + 1) };
+}
+
+export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
+    const { themeName } = useContext(AppContext);
+    const theme = style.Theme[themeName];
+    
+    const { buildings, failure, loading, relire } = useBatimentsDuTableau(userLat, userLon);
+
+    const { favorites: favBuildings, toggleFavorite: toggleFavBuilding, pret: favorisLus } = useFavorites('freeroom_favorites');
+    // Les cartes attendent aussi les favoris : triees sans eux, elles se retrieraient sous les yeux.
+    // Et les annonces, pour les cartes speciales (annonces.tsx).
+    const annoncesLues = useAnnoncesLues();
+    const enAttente = loading || !favorisLus || !annoncesLues;
+
     const sortedBuildings = useMemo(() => {
         return [...buildings].sort((a, b) => {
             const aFav = favBuildings.includes(a.id);
@@ -91,10 +105,11 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
         });
     }, [buildings, favBuildings]);
 
-    const renderCard = ({ item }: { item: BuildingInfo }) => {
+    const renderCard = (item: BuildingInfo, rang: number) => {
         return (
             <FreeRoomSectionCard 
                 item={item} 
+                rang={rang}
                 navigation={navigation} 
                 isFavorite={favBuildings.includes(item.id)} 
                 onToggleFavorite={toggleFavBuilding} 
@@ -103,27 +118,34 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
     };
 
     return (
-        <View style={{ marginTop: tokens.space.md }}>
+        <SectionDuTableau>
             <SectionHeader
                 title={Translator.get('FREE_ROOMS')}
                 theme={theme}
                 onPress={() => navigation.navigate('FreeRoomScreen')}
             />
 
-            {loading ? (
-                <LoadingState theme={theme} />
+            {enAttente ? (
+                <SqueletteDeCarrouselDeLieux theme={theme} libelle={Translator.get('LOADING_FREE_ROOMS')} />
             ) : sortedBuildings.length === 0 ? (
                 <SectionEtatVide
                     theme={theme}
                     failure={failure}
                     masquesParFiltre={false}
                     messageVide={Translator.get('NO_BUILDING_FOUND')}
-                    onRetry={() => setEssai((n) => n + 1)}
+                    onRetry={relire}
                     onOuvrir={() => navigation.navigate('FreeRoomScreen')}
                 />
             ) : (
-                <CarrouselDeSection data={sortedBuildings} renderItem={renderCard} keyExtractor={item => item.id} largeurCarte={CARD_WIDTH} />
+                <CarrouselDeLieux
+                    emplacement="salles"
+                    lieux={sortedBuildings}
+                    cleDuLieu={identifiant}
+                    rendreLieu={renderCard}
+                    theme={theme}
+                    navigation={navigation}
+                />
             )}
-        </View>
+        </SectionDuTableau>
     );
 }

@@ -333,16 +333,19 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/AppUI.tsx`](../src/shared/ui/AppUI.tsx) | `StatusBar` (thème) et `UpdateAlert` (contrôle de version, non rendu) |
 | [`shared/ui/Button.tsx`](../src/shared/ui/Button.tsx) | boutons partagés : retour, accueil, tiroir, ligne de réglage |
 | [`shared/ui/Alerts.ts`](../src/shared/ui/Alerts.ts) | `ErrorAlert` (messages éphémères) |
-| [`shared/ui/Card.tsx`](../src/shared/ui/Card.tsx) | la surface d'une carte — fond, rayon, ombre, apparition animée ([theme.md](theme.md#le-vocabulaire-partagé)) |
+| [`shared/ui/Card.tsx`](../src/shared/ui/Card.tsx) | la surface d'une carte — fond, rayon, ombre ; son entrée en cascade, son reflux, son échelle sous le doigt ([theme.md](theme.md#le-vocabulaire-partagé)) |
+| [`shared/ui/mouvement.ts`](../src/shared/ui/mouvement.ts) | les animations partagées, tirées de `tokens.mouvement` : l'entrée en cascade, le reflux au ressort, la sortie ([theme.md](theme.md#le-mouvement)) |
+| [`shared/ui/Squelette.tsx`](../src/shared/ui/Squelette.tsx) | l'enveloppe d'un squelette — son attente dite aux lecteurs d'écran, sa sortie en fondu — et le reflet qui le balaie ([theme.md](theme.md#le-mouvement)) |
+| [`shared/ui/TexteMasque.tsx`](../src/shared/ui/TexteMasque.tsx) | une ligne de texte masquée : la hauteur de sa police et une barre, aucun caractère rendu |
 | [`shared/ui/SectionHeader.tsx`](../src/shared/ui/SectionHeader.tsx) | l'en-tête d'une section de tableau de bord : titre, chevron, destination |
 | [`shared/ui/Badge.tsx`](../src/shared/ui/Badge.tsx) | une pastille icône + libellé, teinte d'action ou ton sémantique |
 | [`shared/ui/MetaRow.tsx`](../src/shared/ui/MetaRow.tsx) | une ligne « icône + texte secondaire », avec de quoi poser un contenu à droite |
 | [`shared/ui/EmptyState.tsx`](../src/shared/ui/EmptyState.tsx) | icône, titre, message, action facultative — le bloc commun à « rien à afficher » et « source en panne » |
 | [`shared/ui/ScreenState.tsx`](../src/shared/ui/ScreenState.tsx) | **où** un état plein écran se pose : le centrage sur la surface libre, et les hauteurs `HEADER_OFFSET` et `TAB_BAR_HEIGHT` ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/ActionButton.tsx`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` ([theme.md](theme.md#les-décisions-durables)) |
-| [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** — un carrousel, une section — et sa phrase, optionnelle |
+| [`shared/ui/LoadingState.tsx`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** quand sa forme n'est pas connue, et sa phrase, optionnelle ; sinon, un squelette |
 | [`shared/ui/ChargementPleinePage.tsx`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran** : sa phrase est obligatoire, et une seconde ligne paraît après quatre secondes ([theme.md](theme.md#les-décisions-durables)) |
-| [`shared/ui/ApparitionEnFondu.tsx`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu, posée une par une : jamais un interrupteur global ; exporte `DUREE_FONDU_MS`, que les images reprennent |
+| [`shared/ui/ApparitionEnFondu.tsx`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu, posée une par une : jamais un interrupteur global ; exporte `DUREE_FONDU_MS`, la couture de `tokens.mouvement`, que les images reprennent |
 | [`shared/ui/useSourceRendue.ts`](../src/shared/ui/useSourceRendue.ts) | la source d'une image distante en trois temps — rendue, origine, repli — et la densité de l'écran, la seule chose que `rendu.ts` ne sait pas |
 | [`shared/ui/VisuelAvecRepli.tsx`](../src/shared/ui/VisuelAvecRepli.tsx) | une image distante et son repli local, par `expo-image` : le repli remplace, jamais dessous ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/indicateurRetarde.ts`](../src/shared/ui/indicateurRetarde.ts) | le seuil sous lequel une attente ne montre **rien**, et ce qu'on a décidé de ne pas faire ([theme.md](theme.md#les-décisions-durables)) |
@@ -367,7 +370,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/mesure/session.ts`](../src/shared/mesure/session.ts) · [`session.test.ts`](../src/shared/mesure/session.test.ts) | une session, et le dédoublonnage de ses impressions — pur, testé |
 | [`shared/mesure/migration.test.ts`](../src/shared/mesure/migration.test.ts) | chaque événement du vocabulaire est inséré dans `evenements_connus` par une migration, et `schema.sql` porte le même ensemble — joué par `npm test` |
 | [`shared/mesure/reglage.ts`](../src/shared/mesure/reglage.ts) | l'interrupteur « Statistiques anonymes » (`mesure-reglage@1`), ses abonnés, sa réinitialisation et le hook de la section Confidentialité — le seul fichier du module qu'`AppCore` importe |
-| [`shared/mesure/impressions.ts`](../src/shared/mesure/impressions.ts) | les impressions d'annonces : le couple de visibilité à identité stable d'une `FlatList`, le registre des listes focalisées, recompté à chaque session |
+| [`shared/mesure/impressions.ts`](../src/shared/mesure/impressions.ts) | les impressions d'annonces : le couple de visibilité à identité stable d'une `FlatList`, le registre des listes focalisées, recompté à chaque session ; l'annonce qu'un élément montre, rien pour un lieu d'un carrousel mixte (7-I) |
 | [`shared/mesure/index.ts`](../src/shared/mesure/index.ts) | sa couture de plateforme : `compter`, la file en mémoire et sa persistance différée, la session, l'envoi par lots à la fonction `compter` de la base, l'armement — la seconde écriture de l'application vers la base ([mesure.md](mesure.md)) |
 | [`shared/ui/GlypheFiligrane.tsx`](../src/shared/ui/GlypheFiligrane.tsx) | le filigrane d'identité : une grande silhouette en transparence sur une surface unique — le geste de signature, règles d'usage dans son en-tête ([theme.md](theme.md#les-décisions-durables)) |
 | [`shared/ui/PiedFlottant.tsx`](../src/shared/ui/PiedFlottant.tsx) | le pied d'action flottant : le vocabulaire de la barre de recherche — dégradé d'amortissement, bande du fond de page — et le dégagement que l'écran doit lui laisser ([theme.md](theme.md#les-décisions-durables)) |

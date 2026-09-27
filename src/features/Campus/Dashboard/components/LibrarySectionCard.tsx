@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Dimensions } from 'react-native';
+import { View } from 'react-native';
 
 import style, { tokens } from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
@@ -9,9 +9,9 @@ import { CardTitleRow, DistanceBadge, LibraryStatusRow } from '../../components/
 import { LibraryInfo, AffluencesData, getLibraryStatus } from '../../services/LibraryService';
 import { VisuelAvecRepli } from '../../../../shared/ui/VisuelAvecRepli';
 
+import { HAUTEUR_VISUEL_CARTE, LARGEUR_CARTE_LIEU } from './gabarits';
+
 const defaultBuImage = require('../../../../../assets/images/default_resto.png');
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.85;
 
 interface LibrarySectionCardProps {
     item: LibraryInfo;
@@ -19,9 +19,11 @@ interface LibrarySectionCardProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
     isFavorite: boolean;
     onToggleFavorite: (id: string) => void;
+    /** Le rang dans le carrousel : l'entree des premieres cartes s'echelonne (Card). */
+    rang?: number;
 }
 
-export function LibrarySectionCard({ item, affluenceData, navigation, isFavorite, onToggleFavorite }: LibrarySectionCardProps) {
+export function LibrarySectionCard({ item, affluenceData, navigation, isFavorite, onToggleFavorite, rang }: LibrarySectionCardProps) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
 
@@ -32,9 +34,10 @@ export function LibrarySectionCard({ item, affluenceData, navigation, isFavorite
         <Card
             theme={theme}
             onPress={() => navigation.navigate('LibraryDetails', { library: item, affluence: affluenceData })}
-            style={{ width: CARD_WIDTH, marginRight: tokens.space.md }}
+            rang={rang}
+            style={{ width: LARGEUR_CARTE_LIEU, marginRight: tokens.space.md }}
         >
-            <VisuelAvecRepli uri={item.imageUrl} repli={defaultBuImage} style={{ width: '100%', height: 160, backgroundColor: theme.greyBackground }} contentFit="cover" largeur={CARD_WIDTH} />
+            <VisuelAvecRepli uri={item.imageUrl} repli={defaultBuImage} style={{ width: '100%', height: HAUTEUR_VISUEL_CARTE, backgroundColor: theme.greyBackground }} contentFit="cover" largeur={LARGEUR_CARTE_LIEU} />
 
             <View style={{ padding: tokens.space.md }}>
                 <CardTitleRow
