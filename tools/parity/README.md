@@ -163,7 +163,7 @@ ailleurs, par la mesure directe consignée dans
 | [`celcat-jour`](celcat-jour.parity.mjs) | Celcat — jour ordinaire, jour de vacances, jour sans cours, agrégé à deux et trois groupes | [6-E](../../docs/phase-6/6-e-planning.md) |
 | [`celcat-semaine`](celcat-semaine.parity.mjs) | Celcat — semaine complète, semaine de vacances, semaine à cheval sur deux mois | [6-E](../../docs/phase-6/6-e-planning.md) |
 | [`celcat-annee`](celcat-annee.parity.mjs) | Celcat — les deux positions de la bascule d'année scolaire | [6-E](../../docs/phase-6/6-e-planning.md) |
-| [`celcat-occupation`](celcat-occupation.parity.mjs) | Celcat — trois salles du CREMI, jour ordinaire et jour de vacances | [6-E](../../docs/phase-6/6-e-planning.md) |
+| [`celcat-occupation`](celcat-occupation.parity.mjs) | Celcat — trois salles du CREMI, jour ordinaire et jour de vacances, une salle par run **et** en un run groupé réattribué par le nom, contre un appel par salle | [6-E](../../docs/phase-6/6-e-planning.md), [7-I](../../docs/phase-7/7-i-releve-et-vocabulaire.md) |
 | [`ical-inp`](ical-inp.parity.mjs) | ADE — jour ordinaire, jour sans cours, semaine complète, agrégat à deux ressources | [6-I](../../docs/phase-6/6-i-planning-universel.md) |
 | [`ical-abonnement`](ical-abonnement.parity.mjs) | un lien collé **sans bornes**, filtré par l'application, contre la même source bornée par le serveur | [6-J](../../docs/phase-6/6-j-compte-et-sources-par-etablissement.md) |
 

@@ -62,9 +62,9 @@ export function useFreeRoomsData(building: BuildingInfo) {
         setLoading(true);
         const today = moment().format('YYYY-MM-DD');
 
-        // Un run par salle, derriere un cache de dix minutes par batiment et par jour
-        // (OccupationService). Une salle en echec reste comptee libre, comme avant : chaque echec
-        // reste isole et ne vide pas tout le batiment.
+        // Un run pour tout le batiment, derriere un cache de dix minutes par batiment et par jour
+        // (OccupationService, jalon 7-I). L'echec est donc tout ou rien : un run en echec laisse
+        // toutes les salles comptees libres, le defaut ecrit dans docs/defauts-fonctionnels.md.
         const results = await occupationDuBatiment(building, today);
 
         if (!mountedRef.current) return;

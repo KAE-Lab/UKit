@@ -10,12 +10,13 @@
  * La regle : **trois** echecs `unavailable` consecutifs sur un hote l'ouvrent pour 30 s ; un echec
  * **apres** ce refroidissement — la sonde du circuit a demi ouvert — le rouvre au palier suivant,
  * 2 min puis 10 min, plafonne ; un succes le referme. Un echec **pendant** le refroidissement — un
- * geste, ou les dix-sept runs paralleles d'une fiche de batiment — rearme la fenetre sans monter :
- * sans cette nuance, une seule fiche qui echoue sauterait d'un coup au dernier palier (mesure en
- * preparant le protocole du 2026-09-21). Un echec d'une autre famille — `rejected`, `data` — ne
- * compte pas : ce n'est pas une panne de transport. Pendant l'ouverture, un run **automatique** rend
- * un echec `unavailable` ordinaire sans requete ; un geste de l'utilisateur — « Reessayer », un autre
- * jour — passe toujours (runBlueprint.ts).
+ * geste, ou des runs lances ensemble, comme les releves d'affluence des bibliotheques proches —
+ * rearme la fenetre sans monter : sans cette nuance, un seul ecran qui echoue sauterait d'un coup au
+ * dernier palier (mesure en preparant le protocole du 2026-09-21, sur les dix-sept runs paralleles
+ * qu'une fiche de batiment jouait avant le jalon 7-I). Un echec d'une autre famille — `rejected`,
+ * `data` — ne compte pas : ce n'est pas une panne de transport. Pendant l'ouverture, un run
+ * **automatique** rend un echec `unavailable` ordinaire sans requete ; un geste de l'utilisateur —
+ * « Reessayer », un autre jour — passe toujours (runBlueprint.ts).
  *
  * L'hote se deduit du run, dans cet ordre : `inputs.domaine` (les six Celcat), `inputs.lien` (un
  * abonnement iCalendar), `vars.domaine`, `vars.api` (Affluences), l'adresse **litterale** du premier

@@ -81,11 +81,12 @@ class CampusApiServiceClass {
     /**
      * L'occupation d'une journee pour une ou plusieurs salles.
      *
-     * L'application interroge **une salle par run**, derriere un cache de dix minutes par batiment et
-     * par jour (OccupationService, jalon 7-C) : la reponse ne porte pas l'identifiant de la ressource
-     * interrogee, donc un run groupe ne permettrait pas de reattribuer les evenements a leur salle —
-     * ce que la sonde `sondes/mesures/occupation_groupee.py` mesure, pour decider de la requete groupee.
-     * Le decoupage laisse aussi un echec isole ne pas vider tout le batiment.
+     * L'application interroge **toutes les salles d'un batiment en un run** (OccupationService, jalon
+     * 7-I), derriere un cache de dix minutes par batiment et par jour. La reponse ne porte pas
+     * l'identifiant de la ressource interrogee, mais la description de chaque evenement nomme sa
+     * salle : attributionOccupation.ts les reattribue par ce nom, la regle que la sonde
+     * `sondes/mesures/occupation_groupee.py` a mesuree juste. Les evenements rendus ici restent ceux du
+     * lot entier.
      */
     fetchRoomsScheduleDay = async (roomIds: string[], date: string, options: CampusRunOptions = {}): Promise<RoomsScheduleResult> => {
         const celcat = entreesCelcat('salles');

@@ -1,19 +1,25 @@
 /**
  * L'occupation d'un batiment pour une journee : la couture entre le cache pur (occupationCache.ts) et
- * les runs de `ukit.celcat.occupation`.
+ * `ukit.celcat.occupation`.
  *
- * Memoire d'abord, puis le magasin si le lot est frais, sinon les runs — **une salle par run**, comme
- * avant (CampusApiService), lances en parallele — et l'ecriture. Dans la fenetre, seules les salles
- * absentes ou en echec sont rejouees. La cle porte le jour affiche : une date simulee ne relit jamais
- * l'occupation reelle, et TimeMockService purge le prefixe au changement de date.
+ * Memoire d'abord, puis le magasin si le lot est frais, sinon **un run pour tout le batiment** (jalon
+ * 7-I) — ses evenements rendus a leurs salles par attributionOccupation.ts — et l'ecriture. Dans la
+ * fenetre, les salles absentes ou en echec sont rejouees, en un run sur ce seul sous-ensemble. La cle
+ * porte le jour affiche : une date simulee ne relit jamais l'occupation reelle, et TimeMockService
+ * purge le prefixe au changement de date.
  *
- * Ouvrir la fiche d'un batiment est un geste : les runs gardent l'origine `utilisateur`.
+ * L'echec est tout ou rien : un run en echec vaut pour toutes ses salles, n'est pas mis en cache
+ * (estCachable) et se rejoue a l'ouverture suivante. Un run par salle en laissait reussir quelques-unes ;
+ * c'est une limite ecrite (docs/features/campus-salles-libres.md), pas un defaut a contourner ici.
+ *
+ * Ouvrir la fiche d'un batiment est un geste : le run garde l'origine `utilisateur`.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { attribuerOccupation } from './attributionOccupation';
 import { CampusApiService } from './CampusApiService';
-import type { BuildingInfo } from './FreeRoomService';
+import type { BuildingInfo, RoomInfo } from './FreeRoomService';
 import {
     cleOccupation,
     estCachable,
@@ -48,11 +54,17 @@ async function ecrire(cle: string, cache: CacheOccupation): Promise<void> {
     }
 }
 
-async function jouerLesSalles(roomIds: readonly string[], jour: string): Promise<OccupationSalle[]> {
-    return Promise.all(roomIds.map(async (roomId) => {
-        const resultat = await CampusApiService.fetchRoomsScheduleDay([roomId], jour);
-        return resultat.ok === false ? { roomId, ok: false, events: [] } : { roomId, ok: true, events: resultat.events };
-    }));
+async function jouerLesSalles(batiment: string, salles: readonly RoomInfo[], jour: string): Promise<OccupationSalle[]> {
+    // Sans salle, le corps n'en nommerait aucune : il n'y a rien a demander au serveur.
+    if (salles.length === 0) return [];
+    const resultat = await CampusApiService.fetchRoomsScheduleDay(salles.map((salle) => salle.id), jour);
+    if (resultat.ok === false) return salles.map((salle) => ({ roomId: salle.id, ok: false, events: [] }));
+
+    const attribution = attribuerOccupation(salles, resultat.events);
+    if (__DEV__) {
+        console.info(`[salles] occupation ${batiment} ${jour} : un run pour ${salles.length} salle(s), ${attribution.ecartes} evenement(s) sans salle ecarte(s)`);
+    }
+    return attribution.salles;
 }
 
 export async function occupationDuBatiment(batiment: BuildingInfo, jour: string): Promise<readonly OccupationSalle[]> {
@@ -65,13 +77,13 @@ export async function occupationDuBatiment(batiment: BuildingInfo, jour: string)
         const aRelire = sallesARelire(cache, roomIds);
         if (__DEV__) console.info(`[salles] occupation ${batiment.name} ${jour} : cache, ${aRelire.length} salle(s) rejouee(s)`);
         if (aRelire.length === 0) return cache.salles;
-        const rejouees = await jouerLesSalles(aRelire, jour);
+        const rejouees = await jouerLesSalles(batiment.name, batiment.rooms.filter((room) => aRelire.includes(room.id)), jour);
         const fusion = fusionner(cache, rejouees);
         if (estCachable(rejouees)) await ecrire(cle, fusion);
         return fusion.salles;
     }
 
-    const salles = await jouerLesSalles(roomIds, jour);
+    const salles = await jouerLesSalles(batiment.name, batiment.rooms, jour);
     if (estCachable(salles)) await ecrire(cle, { horodatage: maintenant, salles });
     return salles;
 }

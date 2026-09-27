@@ -1,7 +1,7 @@
 /**
  * Le cache d'occupation des salles, par batiment et par jour : pur et teste.
  *
- * La fiche d'un batiment jouait une requete d'occupation **par salle a chaque ouverture** — dix-huit
+ * La fiche d'un batiment jouait une requete d'occupation **par salle a chaque ouverture** — dix-sept
  * pour l'A28 —, et le gaspillage mesure est le va-et-vient tableau de bord, fiche, retour, fiche,
  * dans la meme minute (jalon 7-C). Dix minutes, parce que l'occupation d'une salle est editoriale —
  * elle ne bouge pas dans l'heure — et que le plus petit creneau affiche dure quinze minutes.
@@ -9,7 +9,8 @@
  * Chaque salle porte son `ok` : un lot ou une salle a echoue est mis en cache, mais cette salle-la
  * est rejouee a l'ouverture suivante, dans la fenetre — sans quoi elle passerait pour libre toute la
  * journee pendant dix minutes. Un lot ou **toutes** les salles echouent n'est pas mis en cache : un
- * cache vide masquerait une panne.
+ * cache vide masquerait une panne. Depuis le run groupe du jalon 7-I, un run rend le meme `ok` a
+ * toutes ses salles ; le verdict par salle sert encore au rejeu d'un sous-ensemble.
  *
  * La cle porte le jour affiche (l'horloge simulee, comme le reste de l'ecran) ; l'horodatage est
  * l'horloge reelle, comme tout horodatage de cache (groupListCache.ts). Sur le modele de ce dernier :

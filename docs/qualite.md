@@ -138,6 +138,7 @@ ne dépend d'aucune plateforme.** Le jalon 6-A avait borné le harnais à
 | [`features/Planning/components/CourseAnnotations.ts`](../src/features/Planning/components/CourseAnnotations.ts) | l'icône déduite du contenu et non du rang, sur les deux formes de description — le défaut trouvé sur appareil au jalon 6-I |
 | [`features/Planning/services/PlanningAssembly.ts`](../src/features/Planning/services/PlanningAssembly.ts) | un code d'UE contient une lettre : une année de titre ADE n'en est pas un |
 | [`features/Campus/services/CampusApiMapping.ts`](../src/features/Campus/services/CampusApiMapping.ts) | la correspondance textuelle salle vers bâtiment, la détection des vacances, le refiltrage sur la date, et le campus d'un bâtiment — le référentiel, puis l'établissement, sinon aucun |
+| [`features/Campus/services/attributionOccupation.ts`](../src/features/Campus/services/attributionOccupation.ts) | la requête d'occupation groupée ([7-I](phase-7/7-i-releve-et-vocabulaire.md)) : la salle reconnue dans une description réelle aux entités HTML, le libellé lu entier ou sans sa parenthèse, un cours multi-salles rendu à chacune, les vacances à toutes — sans quoi un bâtiment ne fermerait plus —, et le compte des événements écartés |
 | [`features/Scolarite/services/ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) | la casse de l'identité criée par la source, le compteur `null` contre `0`, la table des échecs nommés **et la règle des codes en `_INDISPONIBLE`** — un code inconnu ne doit plus dire « connexion interrompue » —, et — depuis le 2026-08-25 — **l'arité asymétrique des deux portails** (une lecture obligatoire rend une chaîne, une lecture bonus rend une liste) plus le **glyphe d'icône** que la source colle au libellé de la formation |
 | [`features/Scolarite/widgets/presentation.ts`](../src/features/Scolarite/widgets/presentation.ts) | les six états d'une rangée, et — depuis 6.1-A — les deux mots d'une **tuile en échec** et le geste de sa feuille : ressaisie, relance, ou rien pour `engine` |
 | [`shared/etablissements/socle.ts`](../src/shared/etablissements/socle.ts) · [`tools/catalogue/etablissementsSql.ts`](../tools/catalogue/etablissementsSql.ts) | le socle embarqué est **exactement** ce que la projection rend des lignes de `supabase/etablissements.sql` — lues par un petit lecteur de littéraux SQL, lui-même testé, qui connaît `::jsonb` et, depuis 7-I, les tableaux `::text[]` des alias —, qu'il porte les colonnes des campus, et que tout Blueprint qu'il nomme est embarqué. Une divergence dans un sens comme dans l'autre a été vue le premier jour de la rentrée 2026 |
@@ -369,11 +370,12 @@ le chemin du lancement), ou faire réveiller la tâche par le système (build de
 synchro ne part jamais » avait quatre causes indiscernables à l'écran ; depuis [7-C](phase-7/7-c-economie-et-socle.md),
 le bloc **Disjoncteur** ([`ModMenuDisjoncteur.tsx`](../src/shared/ui/ModMenuDisjoncteur.tsx)) : les
 hôtes que le disjoncteur connaît, leurs échecs `unavailable` consécutifs, leur palier et « ouvert
-jusqu'à », et le geste « Réarmer » — le protocole est HORS LIGNE, la fiche d'un bâtiment (ses dix-sept
-runs ouvrent l'hôte de Celcat : `[disjoncteur] … ouvert 30 s` dans Metro, l'hôte dans le bloc), puis
-« Oublier l'échéance » du bloc Entretien et un retour au premier plan : le run automatique de
-l'entretien **ne part pas** (`[disjoncteur] ukit.celcat.semaine non joué`) ; rouvrir la fiche, un geste,
-part quand même ; réseau rendu, un geste réussi referme ([blueprints.md](blueprints.md#le-disjoncteur)).
+jusqu'à », et le geste « Réarmer » — le protocole est HORS LIGNE, la fiche d'un bâtiment ouverte trois
+fois (un run par ouverture depuis [7-I](features/campus-salles-libres.md#décisions-de-conception), et un
+run en échec n'est pas mis en cache : le troisième ouvre l'hôte de Celcat, `[disjoncteur] … ouvert 30 s`
+dans Metro, l'hôte dans le bloc), puis « Oublier l'échéance » du bloc Entretien et un retour au premier
+plan : le run automatique de l'entretien **ne part pas** (`[disjoncteur] ukit.celcat.semaine non joué`) ;
+rouvrir la fiche, un geste, part quand même ; réseau rendu, un geste réussi referme ([blueprints.md](blueprints.md#le-disjoncteur)).
 Un retour au premier plan seul ne joue aucun run de l'Act I — l'entretien n'est dû que toutes les douze
 heures, et le Planning hors ligne sert son cache sans run — d'où l'échéance à oublier. Le bloc **Images**
 ([`ModMenuImages.tsx`](../src/shared/ui/ModMenuImages.tsx)) vide le cache d'`expo-image`, que ni la
