@@ -20,7 +20,7 @@
 import type { AbortSignalLike } from '@aetherius/engine';
 
 import { BLUEPRINT, reportFailure, runBlueprint, type Origine, type UkitFailure } from '../../../shared/aetherius';
-import { entreesCelcat, planningAbsent } from '../../../shared/etablissements';
+import { campusActif, entreesCelcat, planningAbsent } from '../../../shared/etablissements';
 import {
     extractBuildingsFromRooms,
     occupationDuJour,
@@ -72,8 +72,11 @@ class CampusApiServiceClass {
         return { ok: true, rooms: projeterSalles(commeListe(run.outputs.salles) as SalleExtraite[]) };
     };
 
-    /** La reconstruction des batiments reste exposee ici : les appelants l'appellent apres la liste. */
-    extractBuildingsFromRooms = (rooms: CelcatRoom[]): CelcatBuilding[] => extractBuildingsFromRooms(rooms);
+    /**
+     * La reconstruction des batiments reste exposee ici : les appelants l'appellent apres la liste.
+     * Le campus par defaut se lit ici, dans le catalogue, pour que le mapping reste pur.
+     */
+    extractBuildingsFromRooms = (rooms: CelcatRoom[]): CelcatBuilding[] => extractBuildingsFromRooms(rooms, campusActif());
 
     /**
      * L'occupation d'une journee pour une ou plusieurs salles.

@@ -18,6 +18,7 @@
  */
 
 import type { EtablissementRow } from '../supabase/types';
+import { projeterCredits, type Credit } from './credits';
 import { ETABLISSEMENT_DEFAUT, RES_TYPES_PAR_DEFAUT, SALLES_PAR_DEFAUT, SOCLE } from './socle';
 
 // Le socle est une **donnee** et vit dans son propre fichier ; ce module ne porte que la logique.
@@ -243,6 +244,18 @@ export interface Etablissement {
     /** Les intitules propres a l'etablissement, indexes par role (voir `libelleEtablissement`). */
     readonly libelles: Readonly<Record<string, string>>;
     readonly ordre: number;
+    /** Les personnes que UKit remercie sur la ligne de ce campus (credits.ts). */
+    readonly credits: readonly Credit[];
+    /**
+     * Le libelle qui regroupe les etablissements d'un meme lieu — « Talence » pour le College ST et
+     * pour Bordeaux INP. `null` : cet etablissement ne nomme pas de campus.
+     *
+     * Un **libelle**, pas un code : il s'affiche tel quel, comme la ville, et c'est lui qui remplace les
+     * « Talence » que le code ecrivait en dur (voir `campusActif`).
+     */
+    readonly campus: string | null;
+    /** Les mots que tapent les etudiants pour trouver cet etablissement : « UB », « ENSEIRB ». */
+    readonly alias: readonly string[];
 }
 
 /**
@@ -450,6 +463,17 @@ function projeterWidgetsPublies(valeur: unknown): Readonly<Record<string, Widget
 }
 
 /**
+ * Les alias d'une ligne, reduits aux chaines non vides.
+ *
+ * La base les porte en `text[] not null`, mais un element vide y reste possible et ne sert a aucune
+ * recherche. Une colonne absente rend une liste vide : aucun alias, et rien n'est en panne.
+ */
+function projeterAlias(valeur: unknown): readonly string[] {
+    if (!Array.isArray(valeur)) return [];
+    return valeur.filter((alias): alias is string => typeof alias === 'string' && alias !== '');
+}
+
+/**
  * Traduit une ligne de la table vers le contrat applicatif.
  *
  * **Une ligne remplace, elle ne corrige pas** — l'inverse exact de `projeterBatiment`, et la
@@ -484,6 +508,9 @@ export function projeterEtablissement(row: EtablissementRow): Etablissement {
         services: projeterTableDeChaines(row.services),
         libelles: projeterTableDeChaines(row.libelles),
         ordre: typeof row.ordre === 'number' && Number.isFinite(row.ordre) ? row.ordre : 0,
+        credits: projeterCredits(row.credits),
+        campus: texteOuNull(row.campus),
+        alias: projeterAlias(row.alias),
     };
 }
 
@@ -647,6 +674,19 @@ export function crousRegionActive(): string | null {
     // appareil au jalon 6-J. La version de la clé de cache est la première ceinture (index.ts), cette
     // normalisation est la seconde — et c'est elle qui tient si quelqu'un oublie la première.
     return getEtablissementActif().crousRegion ?? null;
+}
+
+/**
+ * Le campus de l'etablissement selectionne, ou `null` s'il n'en nomme pas.
+ *
+ * Il remplace le « Talence » ecrit en dur dans la reconstruction des batiments : un etablissement
+ * d'ailleurs aurait vu ses batiments sans campus propre ranges a Talence. `null` laisse l'ecran dire
+ * « Campus », traduit — le repli d'un libelle vit dans le rendu, jamais dans le service.
+ */
+export function campusActif(): string | null {
+    // `?? null` pour la meme raison que `crousRegionActive` : un cache ecrit avant ce champ rend
+    // `undefined`. La version de la cle de cache (index.ts) est la premiere ceinture, ceci la seconde.
+    return getEtablissementActif().campus ?? null;
 }
 
 /**

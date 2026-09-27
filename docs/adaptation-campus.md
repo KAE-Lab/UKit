@@ -161,10 +161,16 @@ release** — plus les crédits du `README.md` et l'écran À propos. Prénom ou
 > [`src/shared/etablissements/index.ts`](../src/shared/etablissements/index.ts). En oublier un
 > efface des données en silence.
 >
-> **Planifié le 2026-09-14** : `credits` — avec `campus` et `alias` — arrive en base par une migration de
-> [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), valeurs comprises dans
-> `etablissements.sql` ; `COLONNES`, les types, le catalogue et le socle la lisent en 6.3, une fois la
-> base à jour. Les trois gestes sont donc scindés en deux temps, et c'est voulu.
+> **Planifié le 2026-09-14, fait en deux temps** : `credits` — avec `campus` et `alias` — est arrivé en
+> base par une migration de [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), valeurs
+> comprises dans `etablissements.sql` ; `COLONNES`, les types, le catalogue et le socle la lisent
+> depuis [7-I](phase-7/7-i-releve-et-vocabulaire.md), une fois la base vérifiée — la clé de cache est
+> passée à `etablissements@5` ([backend.md](backend.md#le-schéma)). Les trois gestes sont donc complets
+> pour ces trois colonnes : un campus qui arrive n'a plus de colonne à créer, il remplit les trois
+> valeurs de sa ligne — `credits` au format `[{"nom", "role", "lien"}]`, le nom seul obligatoire
+> ([`credits.ts`](../src/shared/etablissements/credits.ts)), `campus` pour le regrouper, et `alias`,
+> écrit `'{…}'::text[]`. La liste regroupée, la recherche par alias et les crédits à l'écran viennent
+> avec le lot 3 de [7-J](phase-7/7-j-ecrans.md).
 
 ### 7. Publier, dans l'ordre
 

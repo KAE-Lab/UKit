@@ -53,6 +53,21 @@ describe('le socle embarque', () => {
         },
     );
 
+    it('embarque les colonnes des campus a venir, telles que les lignes les publient', () => {
+        // L'egalite ci-dessus ne dit rien si les deux cotes ont perdu une colonne ensemble : une ligne
+        // sans `alias` lu en tableau et un socle sans alias se projettent tous deux en liste vide.
+        for (const ligne of LIGNES) {
+            expect(ligne, ligne.code).toHaveProperty('credits');
+            expect(ligne, ligne.code).toHaveProperty('campus');
+            expect(Array.isArray(ligne.alias), `alias de ${ligne.code}`).toBe(true);
+        }
+
+        appliquerCatalogue(null);
+        const embarques = listeEtablissements();
+        expect(embarques.some((etablissement) => etablissement.campus !== null)).toBe(true);
+        expect(embarques.some((etablissement) => etablissement.alias.length > 0)).toBe(true);
+    });
+
     it('n embarque que des lignes actives : une ligne retiree ne doit pas survivre dans un binaire', () => {
         for (const ligne of LIGNES) expect(ligne.actif).toBe(true);
     });

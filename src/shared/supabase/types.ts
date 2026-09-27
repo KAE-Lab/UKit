@@ -141,6 +141,15 @@ export interface EtablissementRow {
     /** La region Croustillant des restaurants CROUS. `null` : pas de restaurants (jalon 6-J). */
     readonly crous_region: string | null;
     readonly ordre: number;
+    /**
+     * Les colonnes des campus a venir (jalon 7-C, lues depuis la 6.3) : les personnes a crediter,
+     * `[{ nom, role, lien }]` ; le libelle qui regroupe les etablissements d'un meme lieu ; les mots
+     * que tapent les etudiants. `credits` reste `unknown` : c'est la projection qui valide sa forme
+     * (shared/etablissements/credits.ts), jamais le type.
+     */
+    readonly credits: unknown;
+    readonly campus: string | null;
+    readonly alias: string[] | null;
 }
 
 /**

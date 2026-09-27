@@ -162,6 +162,9 @@ export const SOCLE: Readonly<Record<string, Etablissement>> = {
         },
         libelles: {},
         ordre: 0,
+        credits: [],
+        campus: 'Talence',
+        alias: ['UB', 'Université de Bordeaux', 'Collège ST', 'Sciences et Technologies', 'Talence', 'Peixotto'],
     },
     'bordeaux-inp': {
         code: 'bordeaux-inp',
@@ -216,6 +219,9 @@ export const SOCLE: Readonly<Record<string, Etablissement>> = {
         },
         libelles: { moodle: 'Moodle Bordeaux INP' },
         ordre: 1,
+        credits: [],
+        campus: 'Talence',
+        alias: ['INP', 'Bordeaux INP', 'ENSEIRB', 'ENSEIRB-MATMECA', 'ENSC', 'ENSCBP', 'ENSEGID', 'ENSPIMA', 'ENSTBB'],
     },
     // « Mon universite n'est pas dans la liste » : l'absence d'universite portee, rendue utilisable
     // par un lien d'abonnement colle a la main (jalon 6-J). Les colonnes de campus sont celles du
@@ -249,5 +255,10 @@ export const SOCLE: Readonly<Record<string, Etablissement>> = {
         },
         libelles: {},
         ordre: 99,
+        credits: [],
+        // Aucun campus : l'ecran dit « Campus » plutot que de ranger a Talence une fac qu'on ne
+        // connait pas.
+        campus: null,
+        alias: [],
     },
 };

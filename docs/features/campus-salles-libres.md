@@ -72,6 +72,13 @@ Celcat expose des salles, pas des bâtiments. `extractBuildingsFromRooms` recons
    `fullName`.
 4. Les salles contenant « en attente » sont ignorées ; les bâtiments sans salle sont écartés ; le
    résultat est trié alphabétiquement.
+5. Le **campus** du bâtiment est celui du référentiel ; à défaut, celui de l'établissement sélectionné
+   — la colonne `campus` du catalogue, lue par `campusActif()` et passée au mapping par
+   [`CampusApiService`](../../src/features/Campus/services/CampusApiService.ts), pour que
+   [`CampusApiMapping`](../../src/features/Campus/services/CampusApiMapping.ts) reste pur ; à défaut
+   encore, aucun, et les deux cartes disent « Campus », traduit. Le repli d'un libellé vit dans le
+   rendu, jamais dans le service. Il se résout à la reconstruction, donc se fige avec la liste en
+   cache sept jours, comme la photo du référentiel ; une bascule d'établissement purge la liste.
 
 ## Calcul des créneaux libres
 
@@ -219,6 +226,9 @@ nomme, il n'agit pas.
 - Sans base joignable (`SUPABASE_URL` sur un hôte `.invalid`) : la fiche du bâtiment doit rester
   **complète** — visuel, horaires, coordonnées. C'est la promesse du socle embarqué : si l'écran se
   vide, la surcouche est devenue une dépendance, ce qu'elle ne doit jamais être.
+- Sur une installation neuve, sans base joignable : la carte d'un bâtiment dit « Talence » au Collège
+  ST comme à Bordeaux INP — le campus du socle embarqué, puisque le fichier des lieux n'en nomme
+  aucun — et « Campus » sous « Autre campus », qui n'en déclare pas.
 
 ## Quand l'établissement n'a pas d'inventaire de salles
 
@@ -254,7 +264,8 @@ Deux conséquences à connaître avant d'y toucher :
   `salles_libres` sont deux colonnes distinctes : la première dit comment lire un code de bâtiment
   dans un libellé de cours, la seconde d'où vient l'inventaire. La reconstruction, elle, passe par
   `freeAccess` du référentiel et une correspondance textuelle — elle est donc insensible à
-  l'établissement actif.
+  l'établissement actif, à une exception près depuis [7-I](../phase-7/7-i-releve-et-vocabulaire.md) :
+  le campus affiché d'un bâtiment que le référentiel ne situe pas est celui de l'établissement.
 
 ## Limites connues
 
@@ -271,8 +282,12 @@ Deux conséquences à connaître avant d'y toucher :
   ([`referentiel.ts`](../../src/shared/locations/referentiel.ts)). Le contrat jumeau `CelcatBuilding`
   a été corrigé au jalon [6-E](../phase-6/6-e-planning.md) — le mensonge n'y était invisible que parce
   que la table intermédiaire n'était pas typée ; `BuildingInfo`, lui, porte encore l'erreur.
-- **`campus` vaut toujours `'Talence'`** : `extractBuildingsFromRooms` lit `loc.campus || 'Talence'`,
-  et la colonne `campus` de la table porte cette même valeur par défaut pour les 73 lignes.
+- ~~**`campus` vaut toujours `'Talence'`**~~ **Corrigé en [7-I](../phase-7/7-i-releve-et-vocabulaire.md)** :
+  le repli écrit en dur dans `extractBuildingsFromRooms` et dans les deux cartes est devenu le campus
+  de l'établissement, puis « Campus » traduit. Dans les faits, la table `batiments` porte `Talence`
+  sur ses 73 lignes, importées avec cette valeur ([`import-ukit-data.mjs`](../../tools/import-ukit-data.mjs)),
+  et le fichier embarqué n'en nomme aucun : le repli ne parle qu'avant le premier rafraîchissement du
+  référentiel.
 - ~~**Le jour est lu via `new Date()`**, que le mock temporel ne modifie pas.~~ **Corrigé au jalon
   [6-E](../phase-6/6-e-planning.md)** : le hook et les deux cartes qui affichent les horaires lisent
   désormais `moment()`, donc la simulation les atteint. C'était la seule fonctionnalité dont le mock

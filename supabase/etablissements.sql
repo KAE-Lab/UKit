@@ -130,12 +130,14 @@ insert into public.etablissements (
     -- etablissement peut ne pas en avoir.
     '1',
     0,
-    -- `credits`, `campus`, `alias` (7-C) : la base et ce fichier les portent, l'application ne les lit
-    -- qu'en 6.3. Les credits se rempliront depuis la console ; `campus` est le libelle qui regroupe
-    -- (Talence pour les deux universites du campus) ; `alias`, les mots que tapent les etudiants.
+    -- `credits`, `campus`, `alias` (7-C), lus par l'application depuis la 6.3 (7-I). Les credits se
+    -- rempliront depuis la console ; `campus` est le libelle qui regroupe (Talence pour les deux
+    -- universites du campus), et celui que prend un batiment dont le referentiel ne nomme pas le sien ;
+    -- `alias`, les mots que tapent les etudiants. Le cast `::text[]` ne change rien pour la base, qui
+    -- le deduisait de la colonne : il dit au lecteur du test du socle que la valeur est un tableau.
     null,
     'Talence',
-    '{"UB","Université de Bordeaux","Collège ST","Sciences et Technologies","Talence","Peixotto"}'
+    '{"UB","Université de Bordeaux","Collège ST","Sciences et Technologies","Talence","Peixotto"}'::text[]
 ) on conflict (code) do update set
     nom                  = excluded.nom,
     nom_court            = excluded.nom_court,
@@ -310,7 +312,7 @@ insert into public.etablissements (
     1,
     null,
     'Talence',
-    '{"INP","Bordeaux INP","ENSEIRB","ENSEIRB-MATMECA","ENSC","ENSCBP","ENSEGID","ENSPIMA","ENSTBB"}'
+    '{"INP","Bordeaux INP","ENSEIRB","ENSEIRB-MATMECA","ENSC","ENSCBP","ENSEGID","ENSPIMA","ENSTBB"}'::text[]
 ) on conflict (code) do update set
     nom                  = excluded.nom,
     nom_court            = excluded.nom_court,
@@ -426,7 +428,7 @@ insert into public.etablissements (
     99,
     null,
     null,
-    '{}'
+    '{}'::text[]
 ) on conflict (code) do update set
     nom                  = excluded.nom,
     nom_court            = excluded.nom_court,

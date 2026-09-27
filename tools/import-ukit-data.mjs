@@ -48,7 +48,10 @@ const VISUELS = [
     { source: 'images/cremi.jpg', cible: 'batiments/cremi.jpg', type: 'image/jpeg' },
 ];
 
-/** Le campus par defaut, tel que l'application le suppose deja (CampusApiService.extractBuildingsFromRooms). */
+/**
+ * Le campus des batiments importes sans le leur : celui du College ST et de Bordeaux INP, que leur
+ * ligne de catalogue nomme aussi (colonne `campus`).
+ */
 const CAMPUS_PAR_DEFAUT = 'Talence';
 
 function entetes(extra = {}) {
