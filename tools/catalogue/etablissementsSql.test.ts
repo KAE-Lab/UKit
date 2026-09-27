@@ -98,4 +98,10 @@ describe('un litteral de tableau sous ::text[]', () => {
         expect(() => alias("'{UB,}'")).toThrow(/illisible/);
         expect(() => alias(`'{"UB"x}'`)).toThrow(/illisible/);
     });
+
+    it('refuse un element nu fait de blancs seuls, que Postgres refuse aussi', () => {
+        expect(() => alias("'{ , UB}'")).toThrow(/illisible/);
+        expect(() => alias("'{UB, ,x}'")).toThrow(/illisible/);
+        expect(() => alias("'{UB,  }'")).toThrow(/illisible/);
+    });
 });

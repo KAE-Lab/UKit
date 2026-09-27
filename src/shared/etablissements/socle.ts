@@ -256,8 +256,9 @@ export const SOCLE: Readonly<Record<string, Etablissement>> = {
         libelles: {},
         ordre: 99,
         credits: [],
-        // Aucun campus : l'ecran dit « Campus » plutot que de ranger a Talence une fac qu'on ne
-        // connait pas.
+        // Aucun campus : la ligne ne nomme pas celui d'une fac qu'on ne connait pas. C'est aussi le
+        // repli des batiments qu'elle emprunte a l'Universite de Bordeaux, qui sont a Talence : tant
+        // que le referentiel ne situe pas un batiment, sa carte dit « Campus », et non « Talence ».
         campus: null,
         alias: [],
     },
