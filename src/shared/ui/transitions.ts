@@ -15,8 +15,14 @@
 
 import { LayoutAnimation } from 'react-native';
 
+import { tokens } from '../theme/tokens';
+
 export function adoucirLaTransition() {
     LayoutAnimation.configureNext(
-        LayoutAnimation.create(220, LayoutAnimation.Types.easeInEaseOut, LayoutAnimation.Properties.opacity),
+        LayoutAnimation.create(
+            tokens.mouvement.structure,
+            LayoutAnimation.Types.easeInEaseOut,
+            LayoutAnimation.Properties.opacity,
+        ),
     );
 }

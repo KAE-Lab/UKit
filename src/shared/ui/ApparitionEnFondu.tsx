@@ -39,11 +39,14 @@ import React from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
 import Reanimated, { FadeIn } from 'react-native-reanimated';
 
+import { tokens } from '../theme/tokens';
+
 /**
  * Court : la couture doit se percevoir sans se regarder. Exportee depuis 7-C : la transition des
- * images d'`expo-image` est la meme couture, et elle dure le meme temps.
+ * images d'`expo-image` est la meme couture, et elle dure le meme temps. Sa valeur vit depuis 7-I
+ * dans `tokens.mouvement.couture`, avec les autres durees ; le nom reste, cinq fichiers le lisent.
  */
-export const DUREE_FONDU_MS = 200;
+export const DUREE_FONDU_MS = tokens.mouvement.couture;
 
 export interface ApparitionEnFonduProps {
     children: React.ReactNode;

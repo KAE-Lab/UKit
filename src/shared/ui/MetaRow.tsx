@@ -22,6 +22,7 @@ import { StyleProp, Text, TextStyle, View } from 'react-native';
 
 import { tokens, AppThemeType } from '../theme/Theme';
 import { Icon, type IconSpec } from './Icon';
+import { TexteMasque } from './TexteMasque';
 
 export interface MetaRowProps {
     label: string;
@@ -37,7 +38,15 @@ export interface MetaRowProps {
     numberOfLines?: number;
     marginBottom?: number;
     textStyle?: StyleProp<TextStyle>;
+    /**
+     * La ligne d'un squelette (7-I) : la meme icone et la meme hauteur, le texte remplace par une barre.
+     * `label` y est ignore — un squelette n'a rien a dire.
+     */
+    masque?: boolean;
 }
+
+/** La longueur de la barre d'une ligne masquee : moins que la ligne, pour qu'elle se lise comme du texte. */
+const LARGEUR_MASQUE = '72%';
 
 export function MetaRow({
     label,
@@ -50,24 +59,34 @@ export function MetaRow({
     numberOfLines,
     marginBottom = 0,
     textStyle,
+    masque = false,
 }: MetaRowProps) {
     return (
         <View style={{ flexDirection: 'row', alignItems: align, marginBottom }}>
             <Icon
                 icon={icon}
                 size={16}
-                color={theme.fontSecondary}
+                color={masque ? theme.border : theme.fontSecondary}
                 style={iconOffset > 0 ? { marginTop: iconOffset } : undefined}
             />
-            <Text
-                numberOfLines={numberOfLines}
-                style={[
-                    { fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: gap, flex: 1 },
-                    textStyle,
-                ]}
-            >
-                {label}
-            </Text>
+            {masque ? (
+                <TexteMasque
+                    style={[{ fontSize: tokens.fontSize.sm }, textStyle]}
+                    largeur={LARGEUR_MASQUE}
+                    couleur={theme.border}
+                    boite={{ marginLeft: gap, flex: 1 }}
+                />
+            ) : (
+                <Text
+                    numberOfLines={numberOfLines}
+                    style={[
+                        { fontSize: tokens.fontSize.sm, color: theme.fontSecondary, marginLeft: gap, flex: 1 },
+                        textStyle,
+                    ]}
+                >
+                    {label}
+                </Text>
+            )}
             {trailing}
         </View>
     );

@@ -16,6 +16,7 @@ import { Text, View } from 'react-native';
 
 import { tokens, AppThemeType, SemanticTone, toneColor, toneSoftColor } from '../theme/Theme';
 import { Icon, type IconSpec } from './Icon';
+import { TexteMasque } from './TexteMasque';
 
 export interface BadgeProps {
     label: string;
@@ -23,11 +24,24 @@ export interface BadgeProps {
     icon?: IconSpec;
     /** Absent, la pastille prend la couleur d'action. Present, elle dit un etat. */
     tone?: SemanticTone;
+    /**
+     * La pastille d'un squelette (7-I) : un bloc plein de sa taille exacte, sans couleur d'action —
+     * une pastille coloree qui attend attirerait l'oeil sur ce qui n'est pas encore la.
+     */
+    masque?: boolean;
 }
 
-export function Badge({ label, theme, icon, tone }: BadgeProps) {
-    const couleur = tone !== undefined ? toneColor(theme, tone) : theme.primary;
-    const fond = tone !== undefined ? toneSoftColor(theme, tone) : `${theme.primary}15`;
+/** La largeur d'un libelle court, celle d'une distance : un squelette n'en connait pas d'autre. */
+const LARGEUR_LIBELLE_MASQUE = 36;
+
+export function Badge({ label, theme, icon, tone, masque = false }: BadgeProps) {
+    const couleur = masque ? theme.border : tone !== undefined ? toneColor(theme, tone) : theme.primary;
+    const fond = masque ? theme.border : tone !== undefined ? toneSoftColor(theme, tone) : `${theme.primary}15`;
+    const styleDuLibelle = {
+        fontSize: tokens.fontSize.sm,
+        fontWeight: tokens.fontWeight.bold,
+        marginLeft: icon !== undefined ? tokens.space.xs : 0,
+    };
 
     return (
         <View style={{
@@ -43,18 +57,18 @@ export function Badge({ label, theme, icon, tone }: BadgeProps) {
             ) : null}
             {/* Un libelle long — un nom d'emetteur — se tronque au lieu de deborder de la carte.
                 Sans effet sur les usages courts : une distance ne remplit jamais la pastille. */}
-            <Text
-                numberOfLines={1}
-                style={{
-                    fontSize: tokens.fontSize.sm,
-                    fontWeight: tokens.fontWeight.bold,
-                    color: couleur,
-                    marginLeft: icon !== undefined ? tokens.space.xs : 0,
-                    flexShrink: 1,
-                }}
-            >
-                {label}
-            </Text>
+            {masque ? (
+                <TexteMasque
+                    style={styleDuLibelle}
+                    largeur="100%"
+                    couleur={fond}
+                    boite={{ width: LARGEUR_LIBELLE_MASQUE }}
+                />
+            ) : (
+                <Text numberOfLines={1} style={[styleDuLibelle, { color: couleur, flexShrink: 1 }]}>
+                    {label}
+                </Text>
+            )}
         </View>
     );
 }

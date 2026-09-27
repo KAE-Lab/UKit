@@ -26,6 +26,12 @@ export interface PaletteDeBase {
     readonly cardBackground: string;
     readonly greyBackground: string;
     /**
+     * Le reflet qui balaie un squelette (7-I, `Balayage`). En clair, un blanc a 70 % : sur la carte
+     * blanche il ne se voit pas, et il ne passe que sur les barres grises. En sombre, un voile de 8 %,
+     * qui effleure aussi la carte : un reflet plus sombre que la carte se lirait comme une ombre.
+     */
+    readonly reflet: string;
+    /**
      * Les six teintes pleines des sections, indexees cycliquement ; l'index 4 est interdit aux
      * annonces (il a double le 0 en sombre jusqu'en 6.1-C). `sections` en est la version a 6 %.
      */
@@ -43,6 +49,7 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
         background:     '#F2F2F7',
         cardBackground: '#FFFFFF',
         greyBackground: '#E5E5EA',
+        reflet:         '#FFFFFFB3',
         sections:        ['#007AFF10', '#34C75910', '#FF950010', '#FF3B3010', '#5856D610', '#5AC8FA10'],
         sectionsHeaders: ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#5856D6', '#5AC8FA'],
     },
@@ -55,6 +62,7 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
         background:     '#000000',
         cardBackground: '#1C1C1E',
         greyBackground: '#121212',
+        reflet:         '#FFFFFF14',
         sections:        ['#0A84FF15', '#30D15815', '#FF9F0A15', '#FF453A15', '#5E5CE615', '#64D2FF15'],
         // L'index 0 portait `#5E5CE6`, la valeur du 4 : cinq teintes au lieu de six en sombre, corrige en 6.1-C.
         sectionsHeaders: ['#0A84FF', '#30D158', '#FF9F0A', '#FF453A', '#5E5CE6', '#64D2FF'],

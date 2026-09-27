@@ -10,11 +10,13 @@
 
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 import { tokens, AppThemeType, toneColor, type SemanticTone } from '../../../shared/theme/Theme';
 import { Badge } from '../../../shared/ui/Badge';
 import { Icon, type IconSpec } from '../../../shared/ui/Icon';
 import { ProgressBar } from '../../../shared/ui/ProgressBar';
+import { TexteMasque } from '../../../shared/ui/TexteMasque';
 
 interface CardTitleRowProps {
     title: string;
@@ -24,7 +26,12 @@ interface CardTitleRowProps {
     numberOfLines?: number;
     /** Le releve pose 4 px sous le titre des cartes de liste, et rien sous celui des cartes de carrousel. */
     titleMarginBottom?: number;
+    /** Le titre d'un squelette (7-I) : sa hauteur et son etoile, sans texte ni geste. */
+    masque?: boolean;
 }
+
+/** Plus courte que la carte, comme un nom de lieu l'est presque toujours. */
+const LARGEUR_TITRE_MASQUE = '62%';
 
 /**
  * Le titre d'une carte et son etoile de favori.
@@ -40,25 +47,40 @@ export function CardTitleRow({
     onToggleFavorite,
     numberOfLines,
     titleMarginBottom = 0,
+    masque = false,
 }: CardTitleRowProps) {
+    const styleDuTitre = {
+        fontSize: tokens.fontSize.lg,
+        fontWeight: tokens.fontWeight.bold,
+        marginBottom: titleMarginBottom,
+    };
+
+    if (masque) {
+        return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
+                <TexteMasque style={styleDuTitre} largeur={LARGEUR_TITRE_MASQUE} couleur={theme.border} boite={{ flex: 1 }} />
+                <Icon icon={{ name: 'star-outline' }} size={22} color={theme.border} style={{ marginLeft: tokens.space.xs }} />
+            </View>
+        );
+    }
+
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
             <Text
                 numberOfLines={numberOfLines}
-                style={{
-                    fontSize: tokens.fontSize.lg,
-                    fontWeight: tokens.fontWeight.bold,
-                    color: theme.font,
-                    flexShrink: 1,
-                    marginBottom: titleMarginBottom,
-                }}
+                style={[styleDuTitre, { color: theme.font, flexShrink: 1 }]}
             >
                 {title}
             </Text>
 
             {onToggleFavorite !== undefined ? (
                 <TouchableOpacity
-                    onPress={onToggleFavorite}
+                    onPress={() => {
+                        // Le geste s'acquitte tout de suite, comme un interrupteur : la liste se
+                        // reordonne ensuite, et c'est elle qui montre le resultat (7-I).
+                        void Haptics.selectionAsync();
+                        onToggleFavorite();
+                    }}
                     hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }}
                     // 6 en dur jusqu'a 6.1-E : `space.xs` (4), la valeur que portent deja les trois
                     // cartes voisines (inventaire visuel 3.5).
@@ -83,12 +105,14 @@ export function CardTitleRow({
  * `directions-walk`, deux familles d'icones differentes) : il reste donc une prop, sans quoi remonter
  * le composant changerait le rendu d'un ecran de reference.
  */
-export function DistanceBadge({ distance, theme, icon }: { distance: number; theme: AppThemeType; icon: IconSpec }) {
+export function DistanceBadge({ distance, theme, icon, masque = false }: {
+    distance: number; theme: AppThemeType; icon: IconSpec; masque?: boolean;
+}) {
     const libelle = distance < 1
         ? `${Math.round(distance * 1000)} m`
         : `${distance.toFixed(1)} km`;
 
-    return <Badge label={libelle} theme={theme} icon={icon} />;
+    return <Badge label={libelle} theme={theme} icon={icon} masque={masque} />;
 }
 
 interface LibraryStatusRowProps {
