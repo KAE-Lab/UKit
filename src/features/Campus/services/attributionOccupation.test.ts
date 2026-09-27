@@ -39,7 +39,9 @@ describe('attribuerOccupation', () => {
     it('lit le libelle entier comme sans sa parenthese, aux blancs et a la casse pres', () => {
         const a101 = { id: '1', fullName: 'A28 - Salle 101 (CREMI)' };
         const a102 = { id: '2', fullName: 'A28 - Salle 102' };
-        const salleDoubleEspace = { id: '3', fullName: 'A1/ Salle 25 (A1/ Salle 25  - Cours/TD)' };
+        // La double espace hors de la parenthese : dedans, elle serait retiree avec elle et la
+        // normalisation du libelle ne serait pas eprouvee.
+        const salleDoubleEspace = { id: '3', fullName: 'A1/  Salle 25 (A1/ Salle 25 - Cours/TD)' };
 
         const resultat = attribuerOccupation(
             [a101, a102, salleDoubleEspace],
