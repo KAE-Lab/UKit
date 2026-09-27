@@ -21,10 +21,11 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { Icon, type IconSpec } from '../../../shared/ui/Icon';
+import { TexteMasque } from '../../../shared/ui/TexteMasque';
 
 export interface GroupeScolariteProps {
     theme: AppThemeType;
@@ -90,25 +91,10 @@ export interface LigneScolariteProps {
     masque?: boolean;
 }
 
-/**
- * Une ligne de texte masquee : sa hauteur, et rien d'autre.
- *
- * **Le texte n'est pas rendu du tout**, et c'est la seule facon d'etre sur. Le poser en couleur
- * `transparent` sous une barre laissait voir ce qui depassait de la barre sur Android (mesure le
- * 2026-09-08) : un caractere qui existe finit toujours par se montrer quelque part. Ici il n'y a
- * qu'une espace, qui ne dessine rien mais donne au `Text` la hauteur exacte de sa police — la
- * rangee garde donc le gabarit de ses voisines sans porter un seul caractere lisible.
- */
-function BarreDeMasque({ style, largeur, theme }: {
-    style: TextStyle; largeur: ViewStyle; theme: AppThemeType;
-}) {
-    return (
-        <View>
-            <Text style={style} numberOfLines={1}> </Text>
-            <View style={[styles.barre, largeur, { backgroundColor: theme.border }]} />
-        </View>
-    );
-}
+// Deux longueurs differentes, comme deux vraies lignes de texte — une paire de barres egales se lit
+// comme un gabarit de chargement, pas comme du contenu tenu au secret.
+const LARGEUR_BARRE_TITRE = '62%';
+const LARGEUR_BARRE_SOUS_TITRE = '84%';
 
 export function LigneScolarite({
     theme, icon, teinte, titre, sousTitre, droite, onPress, attenue = false, chevron = false, masque = false,
@@ -132,7 +118,7 @@ export function LigneScolarite({
                 {/* Sous masque, le texte tient toujours sa place mais n'apparait pas, et la barre
                     posee par-dessus sa boite dit qu'il y a bien quelque chose la. Le titre garde
                     `numberOfLines={2}` : masquer ne doit pas changer la hauteur de la rangee. */}
-                {masque ? <BarreDeMasque style={styles.titre} largeur={styles.barreTitre} theme={theme} /> : (
+                {masque ? <TexteMasque style={styles.titre} largeur={LARGEUR_BARRE_TITRE} couleur={theme.border} /> : (
                     <Text
                         style={[styles.titre, { color: attenue ? theme.fontSecondary : theme.font }]}
                         numberOfLines={2}
@@ -141,7 +127,7 @@ export function LigneScolarite({
                     </Text>
                 )}
                 {sousTitre === null || sousTitre === undefined ? null : (masque
-                    ? <BarreDeMasque style={styles.sousTitre} largeur={styles.barreSousTitre} theme={theme} />
+                    ? <TexteMasque style={styles.sousTitre} largeur={LARGEUR_BARRE_SOUS_TITRE} couleur={theme.border} />
                     : (
                         <Text style={[styles.sousTitre, { color: theme.fontSecondary }]} numberOfLines={1}>
                             {sousTitre}
@@ -213,25 +199,6 @@ const styles = StyleSheet.create({
     },
     sousTitre: {
         fontSize: tokens.fontSize.sm,
-    },
-    /*
-     * La barre du masque occupe la boite du texte, moins trois points en haut et en bas : a pleine
-     * hauteur elle touche sa voisine et la paire se lit comme un aplat, pas comme deux lignes.
-     */
-    barre: {
-        position: 'absolute',
-        top: 3,
-        bottom: 3,
-        left: 0,
-        borderRadius: tokens.radius.pill,
-    },
-    // Deux longueurs differentes, comme deux vraies lignes de texte — une paire de barres egales se
-    // lit comme un gabarit de chargement, pas comme du contenu tenu au secret.
-    barreTitre: {
-        width: '62%',
-    },
-    barreSousTitre: {
-        width: '84%',
     },
     compteur: {
         borderRadius: tokens.radius.pill,

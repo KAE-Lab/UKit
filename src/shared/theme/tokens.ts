@@ -60,6 +60,39 @@ export const tokens = {
         md: { y: 6, flou: 14, opacite: 0.06 },
         lg: { y: 10, flou: 24, opacite: 0.08 },
     },
+    /**
+     * Le mouvement (jalon 7-I) : les durees et le ressort que les animations se partagent.
+     *
+     * Releves avant d'etre nommes (docs/inventaire-mouvement.md) : huit durees vivaient chacune dans
+     * son fichier, et deux fondus de la meme couture n'avaient pas la meme. Ce ne sont pas des
+     * proprietes de style, `ukit/no-style-literals` ne les voit donc pas : la regle est une
+     * convention, et une duree nouvelle se prend ici plutot que de s'ecrire dans son composant.
+     */
+    mouvement: {
+        /** La couture chargement → contenu, et l'arrivee d'une image : se percevoir sans se regarder. */
+        couture: 200,
+        /** Une bascule de structure, le commit entier fondu par `LayoutAnimation`. */
+        structure: 220,
+        /**
+         * L'entree echelonnee des cartes d'une liste qui arrive d'un coup : l'ecart entre deux rangs,
+         * et le nombre de rangs echelonnes — au-dela, les cartes entrent avec la derniere, sinon la
+         * fin d'une longue liste se ferait attendre.
+         */
+        cascade: { pas: 40, rangs: 4 },
+        /**
+         * Le reflet qui balaie un squelette : la duree d'un passage, et la largeur de la bande, en
+         * fraction de la surface balayee. Celui de la planche C du labo, choisi le 2026-09-27.
+         */
+        balayage: { duree: 1600, bande: 0.6 },
+        /** L'echelle d'une carte sous le doigt : assez pour se sentir, pas assez pour se voir de loin. */
+        pression: 0.97,
+        /**
+         * Le ressort unique de l'application : reflux d'une liste, retour d'une carte pressee. Un
+         * rapport d'amortissement d'environ 0,83 — un soupcon de rebond, la ou le defaut de
+         * Reanimated 4 (`GentleSpringConfig`, 120) n'en a aucun et se lit comme une glissiere.
+         */
+        ressort: { damping: 100, mass: 4, stiffness: 900 },
+    },
 };
 
 export default tokens;
