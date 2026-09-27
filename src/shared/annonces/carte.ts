@@ -132,6 +132,17 @@ export function lireAjustement(valeur: unknown): Ajustement {
     return valeur === 'contenir' ? 'contenir' : 'couvrir';
 }
 
+/** Les types dont la carte montre un partenaire, son logo devant le libelle du badge (7-F). */
+const TYPES_AVEC_PARTENAIRE: readonly TypeDAnnonce[] = ['partenaire', 'bon_plan'];
+
+/**
+ * Un type dont la carte montre le partenaire. Ouvert a toute valeur : la console le demande sur une
+ * saisie, dont le type n'est pas encore lu.
+ */
+export function montreLePartenaire(type: unknown): boolean {
+    return TYPES_AVEC_PARTENAIRE.some((code) => code === type);
+}
+
 /** Le partenaire tel qu'une carte le montre : un nom, un logo et un lien quand ils existent. */
 export interface Partenaire {
     readonly nom: string;
@@ -146,12 +157,14 @@ function texte(valeur: unknown): string | null {
 }
 
 /**
- * Le partenaire d'une ligne, pour l'affichage : rien sans nom, et un logo ou un lien vide vaut une
- * absence. La saisie de la console a sa propre lecture, ou chaque champ reste une chaine a editer
- * (`lirePartenaire`, console/src/schema/schemas.ts) : les deux semantiques ne se confondent pas.
+ * Le partenaire qu'une carte de ce type montre : rien hors des types qui le portent — la console
+ * garde la valeur quand le type change, pour qu'on puisse la retirer —, rien sans nom, et un logo ou
+ * un lien vide vaut une absence. La saisie de la console a sa propre lecture, ou chaque champ reste
+ * une chaine a editer (`lirePartenaire`, console/src/schema/schemas.ts) : les deux semantiques ne se
+ * confondent pas.
  */
-export function partenaireDeCarte(valeur: unknown): Partenaire | null {
-    if (typeof valeur !== 'object' || valeur === null) return null;
+export function partenaireDeCarte(type: unknown, valeur: unknown): Partenaire | null {
+    if (!montreLePartenaire(type) || typeof valeur !== 'object' || valeur === null) return null;
     const brut = valeur as { readonly nom?: unknown; readonly logo_url?: unknown; readonly lien?: unknown };
     const nom = texte(brut.nom);
     return nom === null ? null : { nom, logoUrl: texte(brut.logo_url), lien: texte(brut.lien) };

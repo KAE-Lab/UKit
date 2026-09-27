@@ -34,11 +34,12 @@ export type { BdeAnnonce } from './BdeMapping';
 const TABLE = 'annonces';
 
 /**
- * Les colonnes que les ecrans lisent, nommees plutot que `*` : le schema peut grossir sans cout.
- * `statut` n'y est pas, ni rien de la programmation : la politique de lecture ne laisse sortir que
- * ce qui est publie et deja date (supabase/policies.sql), l'application n'a rien a en decider.
+ * Les colonnes que la projection lit, nommees plutot que `*` : le schema peut grossir sans cout.
+ * `statut` et `publiee_le` n'y sont pas : la politique de lecture ne laisse sortir que ce qui est
+ * publie et deja date (supabase/policies.sql), l'application n'a rien a en decider — et l'ordre du
+ * carrousel a remplace celui de la date de publication.
  */
-const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,publiee_le,expire_le,active,creee_le,audience,etablissements,version_min,version_max,plateformes,type,emplacements,ajustement,focale,priorite,epinglee,creneaux,blurhash,partenaire';
+const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,expire_le,active,audience,etablissements,version_min,version_max,plateformes,type,emplacements,ajustement,focale,priorite,epinglee,creneaux,blurhash,partenaire';
 
 /**
  * Ce qu'un ecran recoit : une liste, ou un echec deja traduit.
