@@ -91,7 +91,8 @@ describe('apresEchec et estOuvert', () => {
     });
 
     it('un echec pendant le refroidissement rearme la fenetre sans monter ni rejournaliser', () => {
-        // Les dix-sept runs paralleles d'une fiche de batiment : un seul palier, pas dix-sept.
+        // Des runs paralleles qui echouent ensemble — les dix-sept d'une fiche de batiment avant le
+        // jalon 7-I : un seul palier, pas dix-sept.
         let verdict = apresEchec(undefined, 'h', T0);
         verdict = apresEchec(verdict.etat, 'h', T0);
         verdict = apresEchec(verdict.etat, 'h', T0);

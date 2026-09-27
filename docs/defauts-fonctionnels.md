@@ -86,6 +86,12 @@ panne. À corriger avec l'écran des salles libres de la 6.3 ([7-J](phase-7/7-j-
 sans aucune salle lue devient l'écran d'échec de la source, et une salle isolée en échec reste comptée
 libre.
 
+*Le 2026-09-27, avec la requête groupée de [7-I](phase-7/7-i-releve-et-vocabulaire.md#décisions-du-2026-09-26)* :
+la fiche joue un seul run pour tout le bâtiment, et son échec est **tout ou rien**. Le cas entier
+devient le seul cas ordinaire — une salle isolée en échec ne se voit plus qu'au rejeu d'une salle
+absente du cache, dans sa fenêtre de dix minutes. Le défaut et son correctif ne changent pas
+([campus-salles-libres.md](features/campus-salles-libres.md#limites-connues)).
+
 ### Les intitulés de cours d'un iCalendar collé sont parfois bizarres — constaté le 2026-09-16
 
 Trouvé en vérifiant le lien d'abonnement de **Bordeaux Montaigne**, servi par PRONOTE Campus, collé

@@ -175,6 +175,21 @@ Trois pièges mesurés sur une année complète de données :
   salle » devenait le nom de l'enseignant. C'est la seconde cause des cartes manquantes, et `sites`
   la rend sans objet.
 
+### L'occupation d'un bâtiment, en un appel
+
+Depuis [7-I](phase-7/7-i-releve-et-vocabulaire.md#décisions-du-2026-09-26), `ukit.celcat.occupation`
+interroge toutes les salles d'un bâtiment en **un** appel, `federationIds[]` répété — la fiche de
+l'A28 en jouait dix-sept. **La réponse ne dit pas pour quelle ressource interrogée elle rend un
+événement** : c'est la description qui nomme la salle, en entités HTML
+(`CREMI - B&#226;t. A28 Salle 005`), et qui les nomme toutes pour un cours multi-salles. Mesuré par la
+sonde du 2026-09-17 sur trois journées
+([`occupation_groupee.py`](../sondes/mesures/occupation_groupee.py)) : les mêmes identifiants
+d'événement qu'en dix-sept appels, et une attribution par le nom juste à 100 % — 109 attributions,
+aucune fausse. Les événements `Vacances` ne nomment aucune salle, et le serveur les rend pour chaque
+salle interrogée. L'attribution est applicative (point 10 plus bas), et sa fragilité est celle du
+texte : une description qui cesserait de nommer sa salle ferait écarter l'événement, et la salle
+passerait pour libre ([features/campus-salles-libres.md](features/campus-salles-libres.md#limites-connues)).
+
 ### Ce qui reste applicatif, et ce n'est pas rien
 
 La frontière est celle de [blueprints.md](blueprints.md#ce-qui-descend-dans-un-blueprint-et-ce-qui-ny-descend-pas) :
@@ -210,6 +225,10 @@ le Blueprint décrit la requête et ce qu'on en retient, le reste est du calcul.
    référentiel ([features/campus-salles-libres.md](features/campus-salles-libres.md)).
 9. La réduction d'un `sites` (`Bâtiment A28`) à un code du référentiel, par le format de salle de
    l'établissement ([cartographie.md](cartographie.md#extraction-dun-lieu-depuis-un-cours)).
+10. L'attribution des événements d'un appel d'occupation groupé à leurs salles, par le nom que la
+    description porte, les `Vacances` à toutes
+    ([`attributionOccupation.ts`](../src/features/Campus/services/attributionOccupation.ts),
+    [features/campus-salles-libres.md](features/campus-salles-libres.md#décisions-de-conception)).
 
 ### Gestion d'erreur
 
