@@ -212,7 +212,7 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`EmptyState`](../src/shared/ui/EmptyState.tsx) | icône, message, action facultative — **le même bloc** pour une liste vide et pour une source en panne | 2 fois |
 | [`LoadingState`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** : un carrousel, une section, une étape d'accueil. Sa phrase reste optionnelle | 6 fois |
 | [`ChargementPleinePage`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran**, sa phrase **obligatoire**, et une seconde ligne après quatre secondes | 5 fois |
-| [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu : 200 ms d'opacité et un léger glissement | 3 fois |
+| [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu : 200 ms d'opacité, un fondu seul | 3 fois |
 | [`Interrupteur`](../src/shared/ui/Interrupteur.tsx) | l'interrupteur du dépôt, dessiné, identique sur les deux plateformes | 4 fois |
 | [`Curseur`](../src/shared/ui/Curseur.tsx) | le curseur du dépôt, dessiné — son arithmétique est [testée à part](../src/shared/ui/echelleDeCurseur.ts) | 1 fois |
 | [`ProgressBar`](../src/shared/ui/ProgressBar.tsx) | jauge, **rayon calculé** (`height / 2`) | 3 fois |
@@ -230,8 +230,10 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 `ScreenState` a été remonté pour une raison que le jalon 6-K n'avait pas vue : le **bloc** était
 partagé, son **hôte** ne l'était pas, et c'est l'hôte qui décide de la hauteur. Six écrans calaient le
 leur différemment, d'où des états vides qui flottaient tantôt trop haut, tantôt trop bas. Il exporte
-aussi `HEADER_OFFSET` et `TAB_BAR_HEIGHT` : les deux seuls endroits du dépôt où ces hauteurs sont
-écrites, `NavHelpers` et `MainTabNavigator` les important de là.
+aussi `HEADER_OFFSET` et `TAB_BAR_HEIGHT`, les deux hauteurs que les écrans se partagent ;
+`MainTabNavigator` importe la seconde. *Relevé le 2026-09-26 ([inventaire-mouvement.md](inventaire-mouvement.md#61-trois-hauteurs-den-tête-quatre-compensations)) :
+`NavHelpers` recopie la première en littéral, et quatre bandeaux posent 65, trois en-têtes d'onglet
+60 — la convergence se fait écran par écran, avec 7-I et 7-J.*
 
 **`Icon` existe pour une raison précise** : le dépôt mélange `MaterialIcons` et
 `MaterialCommunityIcons`, et les glyphes ne se correspondent pas — la punaise de lieu est
@@ -512,7 +514,8 @@ Acquises, et qui ont coûté à être trouvées :
   plusieurs secondes et ne s'annule pas une fois lancé. Il a donc sa confirmation, et elle porte
   l'explication du geste — au moment de décider, plutôt qu'en ligne d'aide sous le bouton, que
   personne ne lit et qui cassait le rythme des trois actions de l'écran.
-- **Un état vide a une masse, pas seulement un message.** Un glyphe dans un **disque** de 72, un
+- **Un état vide a une masse, pas seulement un message.** Un glyphe dans un **carré arrondi** de 72
+  (`radius.lg`), un
   **titre obligatoire** en `theme.font`, un message en `fontSecondary` à mesure courte (300), puis
   l'action. Avant, c'était un glyphe gris de 48 et une ligne unique étirée sur la largeur : ce n'est
   pas l'espace qui donnait à ces écrans leur air de vide bizarre, c'est l'absence de hiérarchie. Le
@@ -666,8 +669,8 @@ Acquises, et qui ont coûté à être trouvées :
   fondu**, donc s'il n'a vécu que cinquante millisecondes il n'aura jamais atteint sa pleine opacité.
   On perçoit une nuance, pas un accroc.
 - **Le passage chargement → contenu se fond, une fois** (6.1-E).
-  [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) : 200 ms d'opacité et un glissement
-  de `space.sm`. Il se pose **là où rien ne fond déjà** — les valeurs de widgets, le premier rendu du
+  [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) : 200 ms d'opacité, un fondu seul
+  (plus bas, pourquoi le glissement est parti). Il se pose **là où rien ne fond déjà** — les valeurs de widgets, le premier rendu du
   Planning — et **pas** sur les listes ni les sections Campus, dont les cartes passent par
   [`Card`](../src/shared/ui/Card.tsx), qui fond à l'entrée depuis 6-K : deux animations sur les mêmes
   pixels ne valent pas mieux qu'aucune. Et jamais sur un changement **à l'intérieur** du contenu — une

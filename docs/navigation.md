@@ -19,7 +19,7 @@ RootContainer                       rootContainer.tsx
                 │    ├─ CampusTab    → CampusDashboard
                 │    ├─ ScolariteTab → ScolariteDashboard
                 │    └─ SettingsTab  → SettingsScreen
-                └─ 20 écrans empilés (détail ci-dessous)
+                └─ 21 écrans empilés (détail ci-dessous)
 ```
 
 Deux points à connaître avant de toucher à cette structure :
@@ -79,15 +79,21 @@ contenu), arrondie, ombrée, posée sur la **fumée** des flottants du bas
 ([`FondDePiedFlottant`](../src/shared/ui/PiedFlottant.tsx) — elle survole le contenu, elle parle
 donc comme les pieds d'action), et **décalée sur la gauche** par une marge droite (`tokens.space.xl`)
 qui libère la place d'un **bouton d'action contextuel** rendu à côté d'elle par `TabBarActionItem`
-(un seul composant `BoutonDAction`, quatre contenus) :
+(un seul composant `BoutonDAction`, six contenus) :
 
 | Onglet actif | Bouton affiché | Destination |
 |---|---|---|
 | `PlanningTab` | Recherche de groupes | `GroupSearch` |
+| `PlanningTab` **sans inventaire de groupes** (campus non relié) | Groupes, voilé : le teaser | la demande de campus |
 | `CampusTab` | **Le bouton mystère** : contenu flouté, cadenas — le teaser des rangées Scolarité | la modale « Bientôt disponible » |
 | `SettingsTab` | À propos | `About` |
 | `ScolariteTab` **et session ouverte** | Compte | `CredentialsSettings` |
-| `ScolariteTab` sans session | Aucun (un `View` invisible de 65 × 75 conserve la largeur) | — |
+| `ScolariteTab` sans session, campus relié | Se connecter (6.1.x-B) | `CredentialsSettings`, qui porte le formulaire |
+| `ScolariteTab` sans portail publié | Compte, voilé : le teaser | la demande de campus |
+
+Un `View` invisible de 65 × 75 ne sert plus que de repli, quand aucune branche ne s'applique.
+*Corrigé le 2026-09-26 par [le relevé du mouvement](inventaire-mouvement.md) : ce tableau disait qu'un
+onglet Scolarité sans session n'avait aucun bouton, ce qui n'était plus vrai depuis 6.1.x-B.*
 
 Conséquence pratique : tout écran de la pile principale doit prévoir un rembourrage bas suffisant
 pour ne pas passer sous la barre. L'usage établi est `tokens.space.xxl + 80` dans
