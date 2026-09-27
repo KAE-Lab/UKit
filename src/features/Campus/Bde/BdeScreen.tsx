@@ -22,6 +22,8 @@ const { width } = Dimensions.get('window');
 // poses par le socle de liste quand il passe en grille.
 const CELL_WIDTH = Math.floor((width - tokens.space.sm * 2 - tokens.space.md) / 2);
 
+const identifiant = (annonce: BdeAnnonce) => annonce.id;
+
 function BdeScreen({ navigation, onAnimatedScroll }: BdeScreenProps) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
@@ -29,7 +31,7 @@ function BdeScreen({ navigation, onAnimatedScroll }: BdeScreenProps) {
     const { annonces, failure, loading, retry } = useBdeAnnonces();
     const [recherche, setRecherche] = useState('');
     // Les impressions (7-D) : chaque affiche visible a moitie une seconde, une fois par session.
-    const visibilite = useImpressionsDAnnonces<BdeAnnonce>();
+    const visibilite = useImpressionsDAnnonces<BdeAnnonce>(identifiant);
 
     // La recherche porte sur ce que l'oeil connait d'une carte : le titre, l'emetteur, l'accroche.
     const visibles = useMemo(() => {

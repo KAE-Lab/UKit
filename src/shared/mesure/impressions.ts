@@ -29,11 +29,7 @@ import { compterImpressions, onNouvelleSession } from './index';
 /** A moitie visible, une seconde durant. Constante de module : l'identite ne doit pas changer. */
 export const VISIBILITE_IMPRESSION: ViewabilityConfig = { itemVisiblePercentThreshold: 50, minimumViewTime: 1000 };
 
-interface CarteVisible {
-    readonly id: string;
-}
-
-export interface PropsDeVisibilite<T extends CarteVisible> {
+export interface PropsDeVisibilite<T> {
     readonly viewabilityConfig: ViewabilityConfig;
     readonly onViewableItemsChanged: (info: { viewableItems: ViewToken<T>[] }) => void;
 }
@@ -48,13 +44,20 @@ export function recompterLesImpressionsVisibles(): void {
 
 onNouvelleSession(recompterLesImpressionsVisibles);
 
-/** Le couple a etaler sur une liste d'annonces ; stable pour la vie du composant. `T` est le type des cartes de la liste. */
-export function useImpressionsDAnnonces<T extends CarteVisible>(): PropsDeVisibilite<T> {
+/**
+ * Le couple a etaler sur une liste qui montre des annonces ; stable pour la vie du composant. `T` est
+ * le type des elements de la liste, et `annonceDe` dit quelle annonce un element montre — rien pour un
+ * lieu d'un carrousel mixte (7-I), dont une carte speciale seule compte.
+ */
+export function useImpressionsDAnnonces<T>(annonceDe: (element: T) => string | null): PropsDeVisibilite<T> {
     const focalisee = useIsFocused();
     const cle = useRef(Symbol('liste')).current;
     const focaliseeRef = useRef(focalisee);
     focaliseeRef.current = focalisee;
     const visibles = useRef<readonly string[]>([]);
+    // La derniere fonction recue : le couple rendu ne doit pas changer d'identite, elle si.
+    const annonceDeRef = useRef(annonceDe);
+    annonceDeRef.current = annonceDe;
 
     useEffect(() => {
         if (!focalisee) return;
@@ -69,7 +72,10 @@ export function useImpressionsDAnnonces<T extends CarteVisible>(): PropsDeVisibi
     return useMemo((): PropsDeVisibilite<T> => ({
         viewabilityConfig: VISIBILITE_IMPRESSION,
         onViewableItemsChanged: ({ viewableItems }) => {
-            visibles.current = viewableItems.filter((jeton) => jeton.isViewable).map((jeton) => jeton.item.id);
+            visibles.current = viewableItems
+                .filter((jeton) => jeton.isViewable)
+                .map((jeton) => annonceDeRef.current(jeton.item))
+                .filter((id): id is string => id !== null);
             if (!focaliseeRef.current) return;
             listes.set(cle, visibles.current);
             compterImpressions(visibles.current);

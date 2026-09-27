@@ -105,7 +105,10 @@ select evenement, sum(n) as total
 
 Le taux d'ouverture est `annonce.ouverture` sur `annonce.impression`, le taux d'action `annonce.action`
 sur `annonce.ouverture`. Une impression se compte une fois par session : deux passages devant la carte
-dans la même session n'en font qu'une.
+dans la même session n'en font qu'une. Depuis 7-I, une **carte spéciale** — une annonce placée dans un
+carrousel de lieux — compte comme une carte d'annonce : la liste dit quelle annonce chaque élément
+montre, et un lieu n'en montre aucune ([campus.md](features/campus.md#les-cartes-spéciales)). Aucun
+événement nouveau : l'emplacement ne se distingue pas dans le compteur.
 
 **Les sessions**, par jour et par campus :
 
@@ -149,7 +152,9 @@ file locale ; rien de ce qui a été compté avant ne part. [PRIVACY.md](../PRIV
 - **Une impression se juge dans sa liste, pas dans la page.** Sur le tableau de bord Campus, le
   carrousel des annonces est une liste horizontale dans une page qui défile : une carte compte quand
   elle est dans la fenêtre du carrousel, même si la page est défilée plus bas. La section est la
-  première de la page ; l'écart est borné, et la grille de l'écran Annonces, elle, est exacte.
+  première de la page ; l'écart est borné, et la grille de l'écran Annonces, elle, est exacte. Une
+  carte spéciale, placée en tête d'un carrousel de lieux plus bas dans la page, en hérite davantage :
+  elle compte dès que son carrousel est monté, même hors de l'écran.
 - **Une réponse perdue peut compter deux fois.** La file n'est soustraite qu'à la réponse de la base,
   et la base ne porte pas d'idempotence par lot, par choix de simplicité : un lot accepté dont la
   réponse n'est jamais revenue est renvoyé.

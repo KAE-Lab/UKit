@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Dimensions } from 'react-native';
+import { View } from 'react-native';
 import { tokens } from '../../../../shared/theme/Theme';
 import style from '../../../../shared/theme/Theme';
 import Translator from '../../../../shared/i18n/Translator';
@@ -9,9 +9,9 @@ import { CardTitleRow, DistanceBadge } from '../../components/CampusCardParts';
 import { CrousRestaurant } from '../../services/CrousService';
 import { VisuelAvecRepli } from '../../../../shared/ui/VisuelAvecRepli';
 
+import { HAUTEUR_VISUEL_CARTE, LARGEUR_CARTE_LIEU } from './gabarits';
+
 const defaultRuImage = require('../../../../../assets/images/default_resto.png');
-const { width } = Dimensions.get('window');
-export const CARD_WIDTH = width * 0.85;
 
 interface CrousSectionCardProps {
     item: CrousRestaurant;
@@ -19,17 +19,20 @@ interface CrousSectionCardProps {
     isFavorite: boolean;
     onToggleFavorite: (id: string) => void;
     onPress: () => void;
+    /** Le rang dans le carrousel : l'entree des premieres cartes s'echelonne (Card). */
+    rang?: number;
 }
 
-export function CrousSectionCard({ item, theme, isFavorite, onToggleFavorite, onPress }: CrousSectionCardProps) {
+export function CrousSectionCard({ item, theme, isFavorite, onToggleFavorite, onPress, rang }: CrousSectionCardProps) {
     return (
         <Card
             theme={theme}
             onPress={onPress}
-            style={{ width: CARD_WIDTH, marginRight: tokens.space.md }}
+            rang={rang}
+            style={{ width: LARGEUR_CARTE_LIEU, marginRight: tokens.space.md }}
         >
-            <View style={{ width: '100%', height: 160, backgroundColor: theme.greyBackground }}>
-                <VisuelAvecRepli uri={item.image_url} repli={defaultRuImage} style={{ position: 'absolute', width: '100%', height: '100%' }} contentFit="cover" largeur={CARD_WIDTH} />
+            <View style={{ width: '100%', height: HAUTEUR_VISUEL_CARTE, backgroundColor: theme.greyBackground }}>
+                <VisuelAvecRepli uri={item.image_url} repli={defaultRuImage} style={{ position: 'absolute', width: '100%', height: '100%' }} contentFit="cover" largeur={LARGEUR_CARTE_LIEU} />
             </View>
 
             <View style={{ padding: tokens.space.md }}>

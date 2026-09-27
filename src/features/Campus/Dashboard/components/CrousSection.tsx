@@ -1,19 +1,22 @@
 import React, { useContext, useMemo } from 'react';
-import { View } from 'react-native';
 
-import style, { tokens } from '../../../../shared/theme/Theme';
+import style from '../../../../shared/theme/Theme';
 import { AppContext } from '../../../../shared/services/AppCore';
 import Translator from '../../../../shared/i18n/Translator';
 import { SectionHeader } from '../../../../shared/ui/SectionHeader';
-import { LoadingState } from '../../../../shared/ui/LoadingState';
 import type { CrousRestaurant } from '../../services/CrousService';
 import { useCrousRestaurants } from '../../hooks/useCrousRestaurants';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useSavedFilter } from '../../hooks/useSavedFilter';
-import { CrousSectionCard, CARD_WIDTH } from './CrousSectionCard';
+import { CrousSectionCard } from './CrousSectionCard';
+import { SqueletteDeCarrouselDeLieux } from './SqueletteDeCarrousel';
 import { SectionEtatVide } from './SectionEtatVide';
 import { useChargementDeSection, useRevisionDuTableauDeBord } from '../rafraichissement';
-import { CarrouselDeSection } from './CarrouselDeSection';
+import { useAnnoncesLues } from '../annonces';
+import { CarrouselDeLieux } from './CarrouselDeLieux';
+import { SectionDuTableau } from './SectionDuTableau';
+
+const identifiant = (restaurant: CrousRestaurant) => restaurant.id;
 
 export function CrousSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
     const { themeName } = useContext(AppContext);
@@ -26,8 +29,13 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
     const { restaurants, failure, loading, enCours, retry } = useCrousRestaurants(userLat, userLon, revision);
     useChargementDeSection('restaurants', enCours);
 
-    const { favorites: favRu, toggleFavorite: toggleFavRu } = useFavorites('crous_favorites');
-    const [crousFilter, setFiltre] = useSavedFilter('crous_filter', 'all');
+    const { favorites: favRu, toggleFavorite: toggleFavRu, pret: favorisLus } = useFavorites('crous_favorites');
+    const [crousFilter, setFiltre, filtreLu] = useSavedFilter('crous_filter', 'all');
+    // Les cartes attendent aussi les favoris et le filtre : triees sans eux, elles se retrieraient
+    // une fraction de seconde plus tard, sous les yeux (useFavorites.ts). Et les annonces : une carte
+    // speciale arrivee apres coup pousserait tout le carrousel (annonces.tsx).
+    const annoncesLues = useAnnoncesLues();
+    const enAttente = loading || !favorisLus || !filtreLu || !annoncesLues;
 
     const filteredRestaurants = useMemo(() => {
         return [...restaurants].filter(item => {
@@ -49,9 +57,10 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
         });
     }, [restaurants, favRu, crousFilter]);
 
-    const renderCard = ({ item }: { item: CrousRestaurant }) => (
+    const renderCard = (item: CrousRestaurant, rang: number) => (
         <CrousSectionCard
             item={item}
+            rang={rang}
             theme={theme}
             isFavorite={favRu.includes(item.id)}
             onToggleFavorite={toggleFavRu}
@@ -66,15 +75,15 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
     );
 
     return (
-        <View style={{ marginTop: tokens.space.md }}>
+        <SectionDuTableau>
             <SectionHeader
                 title={Translator.get('RESTAURANTS_U')}
                 theme={theme}
                 onPress={() => navigation.navigate('Crous')}
             />
 
-            {loading ? (
-                <LoadingState theme={theme} />
+            {enAttente ? (
+                <SqueletteDeCarrouselDeLieux theme={theme} libelle={Translator.get('LOADING_CAMPUS_OPEN')} />
             ) : (
                 filteredRestaurants.length === 0 ? (
                     <SectionEtatVide
@@ -87,9 +96,16 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
                         onOuvrir={() => navigation.navigate('Crous')}
                     />
                 ) : (
-                <CarrouselDeSection data={filteredRestaurants} renderItem={renderCard} keyExtractor={item => item.id} largeurCarte={CARD_WIDTH} />
+                <CarrouselDeLieux
+                    emplacement="restaurants"
+                    lieux={filteredRestaurants}
+                    cleDuLieu={identifiant}
+                    rendreLieu={renderCard}
+                    theme={theme}
+                    navigation={navigation}
+                />
                 )
             )}
-        </View>
+        </SectionDuTableau>
     );
 }

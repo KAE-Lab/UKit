@@ -279,6 +279,10 @@ const en = {
 	NO_RU_NEARBY: 'No university restaurant around you.',
 	SCOLARITY: "Academics",
 	ANNOUNCEMENTS: "Announcements",
+	// Le badge du type d'une carte d'annonce (7-I) ; un evenement n'en porte pas.
+	ANNONCE_TYPE_INFO: "Info",
+	ANNONCE_TYPE_BON_PLAN: "Deal",
+	ANNONCE_TYPE_PARTENAIRE: "Partner",
 	SEE_ALL: "See all",
 	UNIVERSITY_LIBRARY: "Libraries",
 	FREE_ROOMS: "Free Rooms",

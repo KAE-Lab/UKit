@@ -26,22 +26,27 @@ depuis l'en-tête, mise en favori, tri automatique (favoris d'abord, puis par di
 
 [`CampusDashboard.tsx`](../../src/features/Campus/Dashboard/CampusDashboard.tsx) est délibérément
 mince : il pose l'en-tête animé, résout **une seule fois** la position de l'utilisateur, transmet les
-coordonnées à ses sections, et porte le tirer-pour-rafraîchir.
+coordonnées à ses sections, lit **une seule fois** les annonces, et porte le tirer-pour-rafraîchir.
 
 ```text
 CampusDashboard
   ├─ useCampusPosition()                      la position, partagée avec les listes
   ├─ useRafraichissementTableauDeBord()       le tirer : une revision, un spinner (rafraichissement.tsx)
-  └─ Animated.ScrollView + RefreshControl
-       ├─ BdeSection                          useBdeAnnonces()
-       ├─ CrousSection      (lat, lon)        useCrousRestaurants()
-       ├─ LibrarySection    (lat, lon)        useNearbyLibraries()   + bandeau si partiel
-       └─ FreeRoomSection   (lat, lon)        CampusDataManager.getBuildingList()
+  ├─ EnTeteCampus                             le titre et sa pastille, effacés au défilement (Reanimated)
+  └─ Reanimated.ScrollView + RefreshControl
+       └─ AnnoncesDuTableauProvider           useBdeAnnonces(), lu une fois (annonces.tsx)
+            ├─ BdeSection                     les annonces du contexte
+            ├─ CrousSection      (lat, lon)   useCrousRestaurants()     + cartes spéciales
+            ├─ LibrarySection    (lat, lon)   useNearbyLibraries()      + cartes spéciales, bandeau si partiel
+            └─ FreeRoomSection   (lat, lon)   CampusDataManager         + cartes spéciales
 ```
 
 **Chaque section charge ses propres données.** C'est une entorse assumée au principe « un composant
 ne va pas chercher ses données » ([conventions.md](../conventions.md)) : elle rend les sections
-indépendantes et permet à l'une d'échouer sans priver l'utilisateur des trois autres. La position,
+indépendantes et permet à l'une d'échouer sans priver l'utilisateur des trois autres. **Les annonces
+font exception depuis 7-I** : elles vivent aussi dans les carrousels de lieux, en cartes spéciales, et
+le tableau de bord les lit une fois pour les quatre sections
+([`annonces.tsx`](../../src/features/Campus/Dashboard/annonces.tsx)). La position,
 elle, est mutualisée — c'est la ressource coûteuse et intrusive, on ne la demande qu'une fois, et
 depuis 6.1-C une fois **pour tout le Campus** : les listes lisent la même résolution que le tableau de
 bord ([`useCampusLocation`](#usecampuslocation)).
@@ -72,7 +77,7 @@ fois évite qu'ils divergent : c'est le motif posé par `useBdeAnnonces` en
 disparaît, le journal dit pourquoi — et **explicite** sur l'écran dédié, qui a la place de le dire.
 
 Chaque section suit le même gabarit : un titre, un bouton « voir tout », une liste horizontale de
-cartes, et un état de chargement propre.
+cartes, et un squelette à la forme de ses cartes pendant qu'elle charge.
 
 > **Capture attendue** — `campus-dashboard.png` : le tableau de bord, les quatre sections peuplées.
 
@@ -87,7 +92,7 @@ trois causes, et surtout trois **gestes** :
 | Cause | Ce qui s'affiche | Le geste |
 |---|---|---|
 | le filtre masque tout | « Tout est masqué par ton filtre. » | **Tout afficher**, ici même |
-| la source a échoué | le **titre** de la famille d'échec, « Service indisponible » | **Réessayer** si la famille le justifie, sinon **Voir tout** vers l'écran dédié |
+| la source a échoué | une **carte en panne**, au gabarit des cartes de la section : le titre de la famille d'échec, « Service indisponible », et sa phrase | **Réessayer** si la famille le justifie, sinon **Voir tout** vers l'écran dédié |
 | il n'y a légitimement rien | « Aucun restaurant à proximité. » | aucun — il n'y en a pas |
 
 La décision du tableau de bord ne change pas : **ce n'est pas ici qu'on explique une panne**, c'est
@@ -98,11 +103,61 @@ trouve.
 Le bouton Réessayer n'apparaît que si la famille d'échec est réessayable : c'est la table de
 [`failures.ts`](../../src/shared/aetherius/failures.ts) qui décide, pas la section.
 
-Le bloc est une [`CampusNotice`](../../src/features/Campus/components/CampusLayoutComponents.tsx) —
-le bandeau de couverture partielle, généralisé quand ce second usage est apparu. Il en existait en
-réalité **trois copies** : celle-ci, le bandeau partiel, et une ligne d'échec propre aux annonces avec
-son propre rayon et son propre rembourrage. Les quatre sections partagent maintenant la même. C'est une **ligne**,
+Le filtre et l'absence sont une [`CampusNotice`](../../src/features/Campus/components/CampusLayoutComponents.tsx) —
+le bandeau de couverture partielle, généralisé quand ce second usage est apparu. C'est une **ligne**,
 pas un état plein écran : elle laisse la place à la donnée, alors qu'un `EmptyState` **est** l'écran.
+
+**La panne, elle, est une carte depuis 7-I**
+([`CarteEnPanne`](../../src/features/Campus/Dashboard/components/CarteEnPanne.tsx)). Une ligne de
+36 points à la place d'un carrousel de 260 faisait remonter tout ce qui était dessous, puis
+redescendre au Réessayer. La carte en panne prend le gabarit de la carte qu'elle remplace — une
+carte de lieu, ou une affiche pour les annonces — en se posant sur le corps masqué de la vraie
+carte, rendu invisible : la hauteur est la même par construction. Son visuel porte le filigrane du
+nuage barré, à six pour cent ; la carte entière est le geste, et son libellé s'écrit à la place de
+l'étoile. Un filtre et une absence restent une ligne : l'un est un geste de l'utilisateur, l'autre
+la géographie ([theme.md](../theme.md#le-mouvement)).
+
+## Le mouvement du tableau de bord
+
+L'écran fondateur du vocabulaire du mouvement ([7-I](../phase-7/7-i-releve-et-vocabulaire.md)) : ce
+qui y est décidé fait règle pour les autres écrans ([theme.md](../theme.md#le-mouvement)). Le relevé
+de ce qui sautait, avant, est dans [inventaire-mouvement.md](../inventaire-mouvement.md#5-le-tableau-de-bord-campus--ce-qui-saute).
+
+- **Une section garde sa hauteur.** Elle attend sous un squelette à la forme exacte de ses cartes
+  ([`SqueletteDeCarrousel`](../../src/features/Campus/Dashboard/components/SqueletteDeCarrousel.tsx)),
+  bâti avec les composants des vraies cartes en mode masque et balayé d'un reflet ; ses cartes le
+  remplacent, et une panne prend le même gabarit.
+- **Les données sont prêtes avant le premier rendu.** Une section de lieux attend sa source, ses
+  favoris, son filtre et la première lecture des annonces : triées sans les favoris, ses cartes se
+  retriaient sous les yeux ; une carte spéciale arrivée après coup poussait tout le carrousel.
+- **Les cartes entrent en cascade**, décalées de 40 ms par rang, et **une section qui change de
+  hauteur fait glisser les suivantes** au ressort de l'application
+  ([`SectionDuTableau`](../../src/features/Campus/Dashboard/components/SectionDuTableau.tsx)). La
+  section des annonces, quand la base n'a rien, se retire en fondu au lieu de disparaître d'un coup.
+- **L'en-tête et le défilement sont en Reanimated**
+  ([`EnTeteCampus`](../../src/features/Campus/Dashboard/components/EnTeteCampus.tsx)) : l'opacité du
+  titre se calcule sur le fil de l'interface. Le calage iOS du tirer-pour-rafraîchir — l'en-tête en
+  retrait de contenu — et le spinner du système sont gardés tels quels.
+
+## Les cartes spéciales
+
+Une annonce choisit ses carrousels dans la console, par ses `emplacements`
+([campus-vie-etudiante.md](campus-vie-etudiante.md)). Dans un carrousel de lieux, elle est une
+**carte spéciale** : placée **en tête**, dans l'ordre que `ordonner()` a donné aux annonces, et rendue
+**au gabarit de ses voisines** — la largeur d'une carte de lieu et son visuel de 160 points, l'image en
+« couvrir » autour de sa focale, le badge de son type, le kicker et le titre. Les cartes d'une section
+ont la même hauteur, et c'est ce qui a tranché contre le cadre 4:5 de l'aperçu de la console
+(décision du 2026-09-26).
+
+- Elle ouvre la **fiche** de l'annonce, comme partout ; c'est la fiche qui porte le lien d'un partenaire.
+- Elle compte une **impression**, un lieu jamais : la mesure lit l'annonce d'un élément, et rien pour
+  un lieu ([`carrouselMixte.ts`](../../src/features/Campus/Dashboard/carrouselMixte.ts)).
+- Elle n'est **jamais seule** : une section sans lieu à montrer dit pourquoi, et une annonce à la place
+  ferait croire à un contenu de la section.
+
+La composition vit une fois, dans
+[`CarrouselDeLieux`](../../src/features/Campus/Dashboard/components/CarrouselDeLieux.tsx) ; la section
+garde ses lieux, filtrés et triés, et la carte d'un lieu.
 
 ## Le socle de liste
 
@@ -285,16 +340,24 @@ temps de chargement.
 
 | Fichier | Rôle |
 |---|---|
-| [`Dashboard/CampusDashboard.tsx`](../../src/features/Campus/Dashboard/CampusDashboard.tsx) | écran d'onglet : en-tête animé, position partagée, tirer-pour-rafraîchir, empilement des sections |
+| [`Dashboard/CampusDashboard.tsx`](../../src/features/Campus/Dashboard/CampusDashboard.tsx) | écran d'onglet : défilement Reanimated, position partagée, tirer-pour-rafraîchir, empilement des sections |
+| [`Dashboard/annonces.tsx`](../../src/features/Campus/Dashboard/annonces.tsx) | les annonces du tableau de bord, lues une fois pour leur section et les cartes spéciales ; si leur première lecture est faite (7-I) |
+| [`Dashboard/carrouselMixte.ts`](../../src/features/Campus/Dashboard/carrouselMixte.ts) · [`carrouselMixte.test.ts`](../../src/features/Campus/Dashboard/carrouselMixte.test.ts) | pur : les cartes spéciales d'un carrousel, leur place en tête, jamais seules, et l'annonce qu'un élément montre (7-I) |
+| [`Dashboard/components/EnTeteCampus.tsx`](../../src/features/Campus/Dashboard/components/EnTeteCampus.tsx) | le grand titre et sa pastille, effacés au défilement sur le fil de l'interface (7-I) |
+| [`Dashboard/components/SectionDuTableau.tsx`](../../src/features/Campus/Dashboard/components/SectionDuTableau.tsx) | l'enveloppe d'une section : son reflux au ressort quand une voisine change de hauteur, sa sortie en fondu (7-I) |
+| [`Dashboard/components/gabarits.ts`](../../src/features/Campus/Dashboard/components/gabarits.ts) | les mesures des cartes du tableau de bord, en un seul endroit : largeurs d'une carte de lieu et d'une affiche, hauteur du visuel (7-I) |
+| [`Dashboard/components/SqueletteDeCarrousel.tsx`](../../src/features/Campus/Dashboard/components/SqueletteDeCarrousel.tsx) | les squelettes des deux carrousels, lieux et affiches, bâtis avec les briques des vraies cartes ; le corps masqué d'une carte de lieu (7-I) |
+| [`Dashboard/components/CarteEnPanne.tsx`](../../src/features/Campus/Dashboard/components/CarteEnPanne.tsx) | la panne d'une section, au gabarit de ses cartes : filigrane, titre de la famille, phrase, geste (7-I) |
+| [`Dashboard/components/CarrouselDeLieux.tsx`](../../src/features/Campus/Dashboard/components/CarrouselDeLieux.tsx) | le carrousel d'une section de lieux et ses cartes spéciales en tête, avec leurs impressions (7-I) |
 | [`Dashboard/rafraichissement.tsx`](../../src/features/Campus/Dashboard/rafraichissement.tsx) | le tirer-pour-rafraîchir : la révision que les sections prennent en dépendance, les lectures en vol qu'elles déclarent, le spinner qui les attend |
-| [`Dashboard/components/BdeSection.tsx`](../../src/features/Campus/Dashboard/components/BdeSection.tsx) | section annonces : chargement, liste horizontale, accès à la liste complète |
+| [`Dashboard/components/BdeSection.tsx`](../../src/features/Campus/Dashboard/components/BdeSection.tsx) | section annonces : le carrousel d'affiches 4:5, son squelette, sa panne, son retrait quand la base n'a rien |
 | [`Dashboard/components/CrousSection.tsx`](../../src/features/Campus/Dashboard/components/CrousSection.tsx) | section restaurants |
 | [`Dashboard/components/CrousSectionCard.tsx`](../../src/features/Campus/Dashboard/components/CrousSectionCard.tsx) | carte large d'un restaurant dans le carrousel du tableau de bord |
 | [`Dashboard/components/LibrarySection.tsx`](../../src/features/Campus/Dashboard/components/LibrarySection.tsx) | section bibliothèques : liste + affluence par site |
 | [`Dashboard/components/LibrarySectionCard.tsx`](../../src/features/Campus/Dashboard/components/LibrarySectionCard.tsx) | carte d'une BU avec son indicateur d'affluence |
 | [`Dashboard/components/FreeRoomSection.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSection.tsx) | section salles libres : déclenche le chargement des bâtiments si le cache est vide, ou au tirer ; « Réessayer » relit la source |
 | [`Dashboard/components/FreeRoomSectionCard.tsx`](../../src/features/Campus/Dashboard/components/FreeRoomSectionCard.tsx) | carte d'un bâtiment |
-| [`Dashboard/components/SectionEtatVide.tsx`](../../src/features/Campus/Dashboard/components/SectionEtatVide.tsx) | ce qu'une section montre quand son carrousel n'a rien : filtre, panne, ou absence |
+| [`Dashboard/components/SectionEtatVide.tsx`](../../src/features/Campus/Dashboard/components/SectionEtatVide.tsx) | ce qu'une section montre quand son carrousel n'a rien : une ligne pour un filtre ou une absence, une carte pour une panne |
 | [`Dashboard/components/CarrouselDeSection.tsx`](../../src/features/Campus/Dashboard/components/CarrouselDeSection.tsx) | le carrousel des quatre sections, aimanté au pas des cartes — le même bloc était écrit quatre fois (6.2.x) ; depuis 7-D, il passe à sa liste le couple de visibilité de la mesure des impressions |
 | [`components/CampusListLayout.tsx`](../../src/features/Campus/components/CampusListLayout.tsx) | socle générique des écrans de liste : liste, recherche, filtres, états, et depuis 7-D le couple de visibilité de la mesure |
 | [`components/CampusLayoutComponents.tsx`](../../src/features/Campus/components/CampusLayoutComponents.tsx) | `CampusSearchBar`, `CampusFilterModal`, `CampusListEmptyState`, `CampusFailureNotice`, `CampusPartialNotice` |
