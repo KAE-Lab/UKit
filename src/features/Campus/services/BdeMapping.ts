@@ -7,8 +7,11 @@
  * v2 et leurs replis — le devient (BdeMapping.test.ts).
  *
  * Les colonnes de la carte v2 se lisent par les regles partagees avec la console
- * (`shared/annonces/carte.ts` et `ordre.ts`) : l'apercu de la console et le telephone lisent une
- * ligne de la meme facon, ou l'apercu cesserait d'etre la reference.
+ * (`shared/annonces/carte.ts` et `ordre.ts`). L'ajustement, la focale et le partenaire se lisent
+ * comme l'apercu les lit, ou il cesserait d'etre la reference. Le type et les emplacements different
+ * a dessein, sur ce que le telephone ne sait pas rendre : l'apercu garde une valeur hors liste pour
+ * qu'on la voie, et les emplacements tels que saisis ; le telephone rend un type inconnu comme un
+ * evenement et ne garde que les carrousels qu'il connait, dans leur ordre.
  *
  * L'import de type vise `shared/supabase/types` et non la porte d'entree du module : celle-ci
  * re-exporte le client, qui tire `expo-constants`. Un `import type` est efface a la compilation, mais
@@ -70,7 +73,7 @@ export interface BdeAnnonce {
     focale: Focale;
     /** Le placeholder d'expo-image, calcule par la console au televersement. Omis sans calcul, ou quand l'image a change. */
     blurhash?: string;
-    /** Le partenaire d'une carte partenaire ou bon plan. Omis sans nom. */
+    /** Le partenaire que la carte montre : pour les types partenaire et bon plan seulement, omis sans nom. */
     partenaire?: Partenaire;
     /** Ce que l'ordre lit de la ligne (shared/annonces/ordre.ts). Le service ordonne ; l'ecran n'en sait rien. */
     ordre: ParametresDOrdre;
@@ -112,6 +115,7 @@ function identite(couleur: unknown): number | undefined {
  * une supposition le jour ou la politique changera.
  */
 export function projeterAnnonce(row: AnnonceRow): BdeAnnonce {
+    const type = lireType(row.type);
     return {
         id: String(row.id ?? ''),
         is_active: row.active === true,
@@ -127,12 +131,12 @@ export function projeterAnnonce(row: AnnonceRow): BdeAnnonce {
         cta_text: texte(row.cta_texte),
         cta_link: texte(row.cta_lien),
         ciblage: projeterCiblage(row),
-        type: lireType(row.type),
+        type,
         emplacements: lireEmplacements(row.emplacements),
         ajustement: lireAjustement(row.ajustement),
         focale: lireFocale(row.focale),
         blurhash: texte(row.blurhash),
-        partenaire: partenaireDeCarte(row.partenaire) ?? undefined,
+        partenaire: partenaireDeCarte(type, row.partenaire) ?? undefined,
         ordre: projeterOrdre(row),
     };
 }

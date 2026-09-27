@@ -23,7 +23,10 @@ test('la saisie du formulaire se projette avec des replis lisibles', () => {
     expect(annonce.type).toBe('evenement');
     expect(annonce.images).toEqual(['a']);
     expect(annonce.focale).toEqual({ x: 0.2, y: 0.9 });
-    expect(annonce.partenaire).toEqual({ nom: 'Crous', logoUrl: null, lien: 'https://x' });
+    // Un evenement ne montre pas le partenaire reste saisi : l'apercu ne dessine que ce que le telephone rend.
+    expect(annonce.partenaire).toBeNull();
+    expect(annonceDApercu({ type: 'bon_plan', partenaire: { nom: ' Crous ', logo_url: '', lien: 'https://x' } }).partenaire)
+        .toEqual({ nom: 'Crous', logoUrl: null, lien: 'https://x' });
     expect(annonce.aUnLieu).toBe(true);
     expect(annonce.ajustement).toBe('couvrir');
     expect(annonce.emplacements).toEqual(['annonces']);

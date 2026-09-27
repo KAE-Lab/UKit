@@ -96,24 +96,29 @@ en même temps qu'on change de source aurait mélangé deux changements dont un 
 | `ajustement` | `ajustement` | `couvrir` ou `contenir` — `contenir` **seulement** si la colonne le dit : l'exception, gardée pour les affiches déjà composées |
 | `focale` | `focale` | `{ x, y }` en fractions de l'image, bornées ; illisible, le défaut de la base `{ x: 0.5, y: 0.3 }`. Le point que le recadrage garde visible, **pas un centre** |
 | `blurhash` | `blurhash` | le placeholder calculé par la console au téléversement ; omis quand il manque, **et quand la table `visuels` remplace ou retire l'image** : il a été calculé sur celle de la ligne |
-| `partenaire` | `partenaire` | `{ nom, logoUrl, lien }` ; omis sans nom, un logo ou un lien vide vaut `null` |
+| `partenaire` | `partenaire` | `{ nom, logoUrl, lien }`, pour une carte `partenaire` ou `bon_plan` **seulement** : la console garde la valeur quand le type change, pour qu'on puisse la retirer, et la carte ne la montre pas. Omis sans nom, un logo ou un lien vide vaut `null` |
 | `epinglee`, `priorite`, `creneaux` | `ordre` | ce que l'ordre lit, projeté avec la ligne comme le ciblage ; une ligne d'avant les colonnes n'est ni épinglée ni prioritaire |
-| `publiee_le` | — | jamais affiché ; il ordonnait la liste jusqu'à la 6.3, l'ordre du carrousel l'a remplacé |
-| `statut` | — | **pas lu** : la politique de lecture ne laisse sortir que ce qui est publié et déjà daté ([`policies.sql`](../../supabase/policies.sql)) |
+| `statut`, `publiee_le` | — | **pas lus** : la politique de lecture ne laisse sortir que ce qui est publié et déjà daté ([`policies.sql`](../../supabase/policies.sql)). `publiee_le` ordonnait la liste jusqu'à la 6.3 ; l'ordre du carrousel l'a remplacé |
 
 Un champ nul ou vide en base est **omis** du contrat, jamais rendu chaîne vide : la fiche n'affiche
 son bouton que si le libellé et le lien sont tous deux présents, et un libellé vide donnerait un
 bouton muet. La conversion est dans
 [`BdeMapping.ts`](../../src/features/Campus/services/BdeMapping.ts) et elle est testée.
 
-**Les colonnes de la carte v2 se lisent comme la console les lit** (6.3). Le type, les
+**Les colonnes de la carte v2 se lisent par les règles de la console** (6.3). Le type, les
 emplacements, l'ajustement, la focale et le partenaire passent par
 [`shared/annonces/carte.ts`](../../src/shared/annonces/carte.ts), le module pur que l'aperçu de
 l'éditeur lit lui aussi ; l'épinglage, la priorité et les créneaux, par
-[`projeterOrdre`](../../src/shared/annonces/ordre.ts). Une ligne lue de deux façons ferait de l'aperçu
-une carte que le téléphone ne rend pas — c'est lui la référence
-([7-F](../phase-7/7-f-console-annonces.md#la-carte-v2-dessinée-ici)). Les libellés restent de chaque
-côté : l'application traduit, la console ne l'est pas.
+[`projeterOrdre`](../../src/shared/annonces/ordre.ts). L'ajustement, la focale et le partenaire se
+lisent à l'identique des deux côtés : une ligne lue de deux façons ferait de l'aperçu une carte que le
+téléphone ne rend pas — c'est lui la référence
+([7-F](../phase-7/7-f-console-annonces.md#la-carte-v2-dessinée-ici)). Le type et les emplacements
+diffèrent à dessein, sur ce que le téléphone ne sait pas rendre : l'aperçu garde une valeur hors liste
+pour qu'on la voie — un type inconnu en badge brut, un emplacement inconnu sous son code — et les
+emplacements tels que saisis
+([`modele.ts`](../../console/src/pages/Annonces/apercu/modele.ts)) ; le téléphone rend un type
+inconnu comme un événement et ne garde que les carrousels qu'il connaît, dans leur ordre, sans
+doublon. Les libellés restent de chaque côté : l'application traduit, la console ne l'est pas.
 
 ## Publier une annonce
 
@@ -387,7 +392,8 @@ message ni bouton.*
   [`BdeAnnonceCard`](../../src/features/Campus/Bde/BdeAnnonceCard.tsx) rend toujours l'affiche 1:1
   entière décrite plus haut, et aucune carte spéciale ne paraît encore dans les autres carrousels :
   c'est le rendu de [7-I](../phase-7/7-i-releve-et-vocabulaire.md) qui les reproduit d'après l'aperçu
-  de la console. `positionPourExpoImage` y est prête, sans consommateur jusque-là.
+  de la console. `positionPourExpoImage` est écrite pour ce rendu, qui l'appellera ; jusque-là, seul
+  son test l'appelle.
 
 ## Carte des fichiers
 

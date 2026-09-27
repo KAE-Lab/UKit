@@ -21,6 +21,7 @@ import {
     lireEmplacements,
     lireFocale,
     lireType,
+    montreLePartenaire,
     partenaireDeCarte,
     positionDeFocale,
     positionPourExpoImage,
@@ -93,10 +94,20 @@ test('contenir n est choisi que si la colonne le dit', () => {
 });
 
 test('un partenaire sans nom n existe pas ; un logo ou un lien vide vaut une absence', () => {
-    expect(partenaireDeCarte({ nom: ' Crous ', logo_url: '', lien: 'https://x' })).toEqual({ nom: 'Crous', logoUrl: null, lien: 'https://x' });
-    expect(partenaireDeCarte({ nom: 'Crous', logo_url: 'https://l', lien: null })).toEqual({ nom: 'Crous', logoUrl: 'https://l', lien: null });
-    expect(partenaireDeCarte({ nom: '  ', logo_url: 'https://l', lien: 'https://x' })).toBeNull();
-    expect(partenaireDeCarte({ logo_url: 'https://l' })).toBeNull();
-    expect(partenaireDeCarte(null)).toBeNull();
-    expect(partenaireDeCarte('Crous')).toBeNull();
+    expect(partenaireDeCarte('partenaire', { nom: ' Crous ', logo_url: '', lien: 'https://x' })).toEqual({ nom: 'Crous', logoUrl: null, lien: 'https://x' });
+    expect(partenaireDeCarte('bon_plan', { nom: 'Crous', logo_url: 'https://l', lien: null })).toEqual({ nom: 'Crous', logoUrl: 'https://l', lien: null });
+    expect(partenaireDeCarte('partenaire', { nom: '  ', logo_url: 'https://l', lien: 'https://x' })).toBeNull();
+    expect(partenaireDeCarte('partenaire', { logo_url: 'https://l' })).toBeNull();
+    expect(partenaireDeCarte('partenaire', null)).toBeNull();
+    expect(partenaireDeCarte('partenaire', 'Crous')).toBeNull();
+});
+
+test('seuls une carte partenaire et un bon plan montrent le partenaire, meme reste en place sur un autre type', () => {
+    expect(montreLePartenaire('partenaire')).toBe(true);
+    expect(montreLePartenaire('bon_plan')).toBe(true);
+    expect(montreLePartenaire('info')).toBe(false);
+    expect(montreLePartenaire('evenement')).toBe(false);
+    expect(montreLePartenaire(undefined)).toBe(false);
+    // La console garde la valeur quand le type change, pour qu'on puisse la retirer : la carte ne la montre pas.
+    expect(partenaireDeCarte('info', { nom: 'Crous', logo_url: 'https://l', lien: 'https://x' })).toBeNull();
 });

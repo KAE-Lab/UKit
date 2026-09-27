@@ -1,4 +1,4 @@
-import { CODES_D_EMPLACEMENT, CODES_DE_TYPE, RATIO_CARTE, type Emplacement, type TypeDAnnonce } from '../../../../src/shared/annonces/carte';
+import { CODES_D_EMPLACEMENT, CODES_DE_TYPE, montreLePartenaire, RATIO_CARTE, type Emplacement, type TypeDAnnonce } from '../../../../src/shared/annonces/carte';
 import { lirePartenaire } from '../schemas';
 import { CAMPUS_PAR_CIBLAGE, CIBLAGE, type Descripteur, type Option } from '../descripteurs';
 import type { Ligne } from '../../supabase';
@@ -54,7 +54,7 @@ const FORME_DU_LIEN = { motif: /^(https?:\/\/|mailto:|tel:)\S+$/, message: 'Le l
 
 /** Le partenaire ne se propose qu'aux cartes qui le montrent — ou quand il porte deja une valeur, pour qu'on puisse la retirer. */
 function partenaireAPropos(valeurs: Ligne): boolean {
-    if (valeurs.type === 'partenaire' || valeurs.type === 'bon_plan') return true;
+    if (montreLePartenaire(valeurs.type)) return true;
     const partenaire = lirePartenaire(valeurs.partenaire);
     return partenaire.nom !== '' || partenaire.logo_url !== '' || partenaire.lien !== '';
 }

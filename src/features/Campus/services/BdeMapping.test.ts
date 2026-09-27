@@ -193,10 +193,18 @@ test('le blurhash arrive quand la console l a calcule, et s omet sinon', () => {
 });
 
 test('le partenaire s omet sans nom ; son logo et son lien vides valent une absence', () => {
-    expect(projeterAnnonce({ ...LIGNE, partenaire: { nom: ' Crous ', logo_url: '', lien: 'https://exemple.test/crous' } }).partenaire)
+    expect(projeterAnnonce({ ...LIGNE, type: 'partenaire', partenaire: { nom: ' Crous ', logo_url: '', lien: 'https://exemple.test/crous' } }).partenaire)
         .toEqual({ nom: 'Crous', logoUrl: null, lien: 'https://exemple.test/crous' });
-    expect(projeterAnnonce({ ...LIGNE, partenaire: { nom: '', logo_url: 'https://exemple.test/logo.png', lien: null } }).partenaire).toBeUndefined();
+    expect(projeterAnnonce({ ...LIGNE, type: 'bon_plan', partenaire: { nom: '', logo_url: 'https://exemple.test/logo.png', lien: null } }).partenaire).toBeUndefined();
     expect(projeterAnnonce(LIGNE).partenaire).toBeUndefined();
+});
+
+test('le partenaire ne suit que les types qui le montrent, meme reste en place sur un autre', () => {
+    const crous = { nom: 'Crous', logo_url: 'https://exemple.test/logo.png', lien: 'https://exemple.test/crous' };
+    expect(projeterAnnonce({ ...LIGNE, type: 'bon_plan', partenaire: crous }).partenaire?.nom).toBe('Crous');
+    expect(projeterAnnonce({ ...LIGNE, type: 'info', partenaire: crous }).partenaire).toBeUndefined();
+    // Un type que le parc ne connait pas se rend comme un evenement : pas de partenaire non plus.
+    expect(projeterAnnonce({ ...LIGNE, type: 'agenda', partenaire: crous }).partenaire).toBeUndefined();
 });
 
 test('l ordre est projete avec la ligne, et une ligne d avant les colonnes n est ni epinglee ni prioritaire', () => {

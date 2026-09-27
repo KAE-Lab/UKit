@@ -80,6 +80,7 @@ function nombre(valeur: unknown): number | null {
 /** La ligne telle que le formulaire la tient — saisies, pas colonnes — projetee sur ce que l'apercu dessine. */
 export function annonceDApercu(valeurs: Readonly<Record<string, unknown>>): AnnonceApercu {
     const couleur = nombre(valeurs.couleur);
+    const type = texte(valeurs.type) ?? 'evenement';
     return {
         titre: texte(valeurs.titre) ?? 'Titre de l’annonce',
         emetteur: texte(valeurs.emetteur) ?? 'Émetteur',
@@ -90,10 +91,10 @@ export function annonceDApercu(valeurs: Readonly<Record<string, unknown>>): Anno
         couleur: couleur === null || !Number.isInteger(couleur) || couleur < 0 ? undefined : couleur,
         ctaTexte: texte(valeurs.cta_texte),
         ctaLien: texte(valeurs.cta_lien),
-        type: texte(valeurs.type) ?? 'evenement',
+        type,
         ajustement: lireAjustement(valeurs.ajustement),
         focale: lireFocale(valeurs.focale),
-        partenaire: partenaireDeCarte(valeurs.partenaire),
+        partenaire: partenaireDeCarte(type, valeurs.partenaire),
         emplacements: Array.isArray(valeurs.emplacements) ? valeurs.emplacements.filter((e): e is string => typeof e === 'string') : ['annonces'],
         aUnLieu: nombre(valeurs.lat) !== null && nombre(valeurs.lng) !== null,
     };

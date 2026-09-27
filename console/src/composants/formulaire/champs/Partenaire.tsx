@@ -1,18 +1,18 @@
 /**
  * Le partenaire d'une annonce : son nom, son logo televerse, son lien. Propose pour les cartes de
  * type partenaire ou bon plan ; sur un autre type, le champ reste saisissable mais le dit, parce que
- * la carte ne le rendra pas.
+ * la carte ne le rendra pas — la regle est celle de la carte, partagee avec l'application
+ * (`montreLePartenaire`, src/shared/annonces/carte.ts).
  */
 
 import { Upload, X } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
 
+import { montreLePartenaire } from '../../../../../src/shared/annonces/carte';
 import { messageDErreur } from '../../../lib/erreurs';
 import { lirePartenaire, type PartenaireSaisi } from '../../../schema/schemas';
 import { Bouton } from '../../ui/Bouton';
 import type { ChampProps } from './types';
-
-const TYPES_AVEC_PARTENAIRE: readonly string[] = ['partenaire', 'bon_plan'];
 
 export function ChampPartenaire({ champ, id, saisie, onChange, ligne, desactive }: ChampProps) {
     const [enCours, setEnCours] = useState(false);
@@ -20,7 +20,7 @@ export function ChampPartenaire({ champ, id, saisie, onChange, ligne, desactive 
     const partenaire = lirePartenaire(saisie);
     const dossier = champ.type.type === 'partenaire' ? champ.type.dossier : 'partenaires';
     const poser = (partiel: Partial<PartenaireSaisi>) => onChange({ ...partenaire, ...partiel });
-    const horsType = !TYPES_AVEC_PARTENAIRE.includes(String(ligne.type ?? ''));
+    const horsType = !montreLePartenaire(ligne.type);
 
     const televerserLogo = async (evenement: ChangeEvent<HTMLInputElement>) => {
         const fichier = evenement.target.files?.[0];
