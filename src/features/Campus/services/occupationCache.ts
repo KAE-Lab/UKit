@@ -6,11 +6,12 @@
  * dans la meme minute (jalon 7-C). Dix minutes, parce que l'occupation d'une salle est editoriale —
  * elle ne bouge pas dans l'heure — et que le plus petit creneau affiche dure quinze minutes.
  *
- * Chaque salle porte son `ok` : un lot ou une salle a echoue est mis en cache, mais cette salle-la
- * est rejouee a l'ouverture suivante, dans la fenetre — sans quoi elle passerait pour libre toute la
- * journee pendant dix minutes. Un lot ou **toutes** les salles echouent n'est pas mis en cache : un
- * cache vide masquerait une panne. Depuis le run groupe du jalon 7-I, un run rend le meme `ok` a
- * toutes ses salles ; le verdict par salle sert encore au rejeu d'un sous-ensemble.
+ * Chaque salle porte son `ok`, et un lot ou **toutes** les salles echouent n'est pas mis en cache :
+ * un cache vide masquerait une panne. Depuis le run groupe du jalon 7-I, un run rend le meme `ok` a
+ * toutes ses salles : un cache ne contient donc que des salles lues, et le rejeu d'un sous-ensemble
+ * ne vise plus que les salles absentes du lot. Le verdict par salle ne se lit plus que dans un cache
+ * ecrit par la 6.2.2, ou chaque salle avait son run : une salle en echec y est rejouee dans la
+ * fenetre, sans quoi elle passerait pour libre toute la journee pendant dix minutes.
  *
  * La cle porte le jour affiche (l'horloge simulee, comme le reste de l'ecran) ; l'horodatage est
  * l'horloge reelle, comme tout horodatage de cache (groupListCache.ts). Sur le modele de ce dernier :
@@ -26,7 +27,7 @@ export const PREFIXE_OCCUPATION = 'occupation@1:';
 
 export interface OccupationSalle {
     readonly roomId: string;
-    /** Faux quand le run de cette salle a echoue : elle sera rejouee dans la fenetre. */
+    /** Faux quand le run qui portait cette salle a echoue : elle est rejouee a l'ouverture suivante. */
     readonly ok: boolean;
     readonly events: CampusEvent[];
 }

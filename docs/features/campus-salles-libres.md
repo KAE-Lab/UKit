@@ -182,13 +182,14 @@ appareils le 2026-09-21.* Dix minutes, parce que l'occupation d'une salle est **
 ne bouge pas dans l'heure — et que le plus petit créneau affiché dure quinze minutes. Clé
 `occupation@1:<bâtiment>:<jour>` : le jour est celui de l'écran (l'horloge simulée), l'horodatage
 celui de l'horloge réelle, et `TimeMockService` purge le préfixe à chaque changement de date. Chaque
-salle porte son `ok` : un lot partiel est mis en cache, mais les salles en échec sont rejouées à
-l'ouverture suivante dans la fenêtre — sinon elles passeraient pour libres toute la journée pendant
-dix minutes — ; un lot où **toutes** les salles échouent n'est pas mis en cache, un cache vide
-masquerait une panne. Depuis le run groupé, un run rend le même `ok` à toutes ses salles :
-un run en échec n'est donc jamais mis en cache, et l'ouverture suivante le rejoue. Le verdict par
-salle sert encore quand la fenêtre voit une salle absente du lot — la liste des bâtiments rafraîchie
-entre deux ouvertures — : seules celles-là sont rejouées, en un run sur ce sous-ensemble.
+salle porte son `ok`, et un lot où **toutes** les salles échouent n'est pas mis en cache : un cache
+vide masquerait une panne. Depuis le run groupé de 7-I, un run rend le même `ok` à toutes ses
+salles : un cache ne contient donc que des salles lues, un run en échec n'est jamais mis en cache,
+et l'ouverture suivante le rejoue. Le rejeu d'un sous-ensemble ne vise plus que les salles
+**absentes** du lot — la liste des bâtiments rafraîchie entre deux ouvertures — : seules celles-là
+sont rejouées, en un run sur ce sous-ensemble. Le verdict par salle ne se lit plus que dans un cache
+écrit par la 6.2.2, où chaque salle avait son run : une salle en échec y est rejouée dans la
+fenêtre, sinon elle passerait pour libre toute la journée pendant dix minutes.
 
 **La sonde de la requête groupée**, jouée le 2026-09-17
 ([`sondes/mesures/occupation_groupee.py`](../../sondes/mesures/occupation_groupee.py)) sur les dix-sept
