@@ -1,7 +1,7 @@
 # La mesure
 
-> **Livré par le jalon [7-D](phase-7/7-d-la-mesure.md) le 2026-09-21, sur la branche `v6.3`, publié en
-> 6.3.** Décidé le 2026-09-14 ([mise à plat de la phase 7](phase-7/7-mise-a-plat.md)), prévu en 6.2.3
+> **Livré par le jalon 7-D le 2026-09-21, sur la branche `v6.3`, publié en
+> 6.3.** Décidé le 2026-09-14 (mise à plat de la phase 7), prévu en 6.2.3
 > jusqu'au 2026-09-21, jour où la version courte a été retirée du plan. Le code vit dans
 > [`src/shared/mesure/`](../src/shared/mesure/index.ts), la base dans
 > [`supabase/schema.sql`](../supabase/schema.sql) et [`fonctions.sql`](../supabase/fonctions.sql) ; ce
@@ -15,7 +15,7 @@ lecteurs, et un compteur qui n'en sert aucun n'a pas sa place ici.
 Ce qui part de l'appareil est un **compteur** : un événement, une clé courte, un jour — ou une heure —,
 un campus, une version, une plateforme, un booléen « testeur », et un nombre. Rien d'autre.
 
-- **Aucun identifiant** : ni celui de l'installation ([pilotage.md](pilotage.md#laudience-testeurs)),
+- **Aucun identifiant** : ni celui de l'installation (pilotage.md),
   ni le jeton de notification, ni le compte universitaire.
 - **Aucun contenu saisi** : pas une recherche, pas un nom de groupe, pas un texte.
 - **Aucun horodatage plus fin que l'heure**, et le jour seulement pour ce qui touche un contenu précis,
@@ -23,15 +23,15 @@ un campus, une version, une plateforme, un booléen « testeur », et un nombre.
 - **Aucun recoupement** : une ligne de `mesures` ne se relie à aucune autre table qui décrirait un
   appareil.
 
-C'est la promesse de la [base de publication](backend.md#ce-que-la-base-est-et-ce-quelle-nest-pas),
+C'est la promesse de la base de publication,
 étendue : la base apprend combien, jamais qui.
 
 ## Les trois lecteurs
 
 | Lecteur | Ce qu'il lit | Où |
 |---|---|---|
-| **La 6.3** | les sessions, les onglets, les ouvertures, les thèmes, avant et après la refonte | la sortie de la 6.3, [7-K](phase-7/7-k-sortie-6-3.md) |
-| **L'équipe** | l'entonnoir d'une annonce — vue, ouverte, action —, par campus et par période | la console, [7-G](phase-7/7-g-console-statistiques.md), et le rapport partenaire |
+| **La 6.3** | les sessions, les onglets, les ouvertures, les thèmes, avant et après la refonte | la sortie de la 6.3, 7-K |
+| **L'équipe** | l'entonnoir d'une annonce — vue, ouverte, action —, par campus et par période | la console, 7-G, et le rapport partenaire |
 | **Le pilotage** | les échecs de source dans le temps, face aux sondes du matin | la page Sources de la console |
 
 ## La règle : une mesure s'ajoute avec son pourquoi et son lecteur
@@ -107,7 +107,7 @@ Le taux d'ouverture est `annonce.ouverture` sur `annonce.impression`, le taux d'
 sur `annonce.ouverture`. Une impression se compte une fois par session : deux passages devant la carte
 dans la même session n'en font qu'une. Depuis 7-I, une **carte spéciale** — une annonce placée dans un
 carrousel de lieux — compte comme une carte d'annonce : la liste dit quelle annonce chaque élément
-montre, et un lieu n'en montre aucune ([campus.md](features/campus.md#les-cartes-spéciales)). Aucun
+montre, et un lieu n'en montre aucune (campus.md). Aucun
 événement nouveau : l'emplacement ne se distingue pas dans le compteur.
 
 **Les sessions**, par jour et par campus :

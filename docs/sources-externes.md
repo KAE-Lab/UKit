@@ -1,1077 +1,289 @@
 # Sources de données externes
 
-Inventaire complet de ce que UKit va chercher à l'extérieur. C'est la surface la plus fragile du
-projet : ces sources appartiennent à des tiers, aucune n'offre de contrat versionné, et plusieurs
-sont consommées par extraction de page plutôt que par API. Ce document doit contenir assez de détail
-pour rejouer chaque appel sans lire le code.
+Inventaire de ce que UKit va chercher à l'extérieur : la surface la plus fragile du projet. Ces sources appartiennent à des tiers, aucune n'offre de contrat
+versionné, plusieurs sont consommées par extraction de page plutôt que par API. À lire avant toute intervention réseau. Chaque source est jointe **directement
+depuis l'appareil** par un Blueprint de `blueprints/` (tous embarqués ; la version publiée l'emporte si elle est strictement supérieure). Le fichier dit l'hôte,
+les en-têtes, les sélecteurs et les durées ; ce document garde ce qu'il ne dit pas : mesures, pièges, ce qui reste applicatif. Notre base de publication est
+hors périmètre.
 
-**Il n'existe aucun intermédiaire entre l'application et ces sources** : chacune est jointe
-directement depuis l'appareil. Voir [donnees-et-persistance.md](donnees-et-persistance.md) pour ce
-qui est conservé localement.
-
-Notre [base de publication](backend.md) n'est pas dans cet inventaire, et c'est délibéré : elle
-porte notre propre contenu, elle ne relaie aucune de ces sources, et rien de ce qui est écrit ici —
-fragilité, extraction, contrat non versionné — ne s'y applique. Ce document reste celui des sources
-**tierces**.
-
-> **Migration en cours.** La [Phase 6](phase-6/README.md) déplace la façon d'atteindre ces sources
-> depuis le code vers des [Blueprints](blueprints.md) : ce document reste **le** document à lire
-> avant toute intervention réseau, et il gagne, source par source, le nom du Blueprint qui la porte
-> et ce qui est resté applicatif. Ce qui est décrit ci-dessous est l'état du code ; chaque jalon de
-> migration met à jour la section concernée.
-
-## Vue d'ensemble
-
-| # | Source | Rôle | Authentification | Fragilité |
-|---|---|---|---|---|
-| 1 | Celcat (`celcat.u-bordeaux.fr`) | emplois du temps, groupes, salles | aucune | moyenne — API interne non documentée. **Six Blueprints** depuis [6-E](phase-6/6-e-planning.md), et le relais `ukit.kbdev.io` est sorti de l'architecture |
-| 2 | CAS / ENT Université de Bordeaux | identité étudiant, formation, messagerie | identifiants universitaires | **moyenne** — extraction de pages HTML, mais **ancrées par libellé** depuis le 2026-08-25 : les sélecteurs positionnels ont disparu. **Deux Blueprints** depuis [6-F](phase-6/6-f-scolarite.md) |
-| 3 | Affluences | bibliothèques, affluence, horaires | aucune (en-têtes imités) | moyenne — API privée d'une application web. **Trois Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
-| 4 | Croustillant | restaurants CROUS et menus | aucune | faible — API publique documentée. **Deux Blueprints** depuis [6-D](phase-6/6-d-campus.md) |
-| 5 | ~~jsDelivr / `ukit-data`~~ | ~~annonces de vie étudiante~~ | — | **sortie de l'inventaire** — passée en base au jalon [6-B](phase-6/6-b-supabase.md) |
-| 6 | GitHub raw | fichier de version applicative | aucune | faible |
-| 7 | CDN de rendu de carte | tuiles OpenFreeMap, bibliothèque MapLibre GL | aucune | faible |
-| 8 | ADE (`ade.bordeaux-inp.fr`) | emploi du temps, par export iCalendar | aucune | moyenne — export anonyme, mais **index de ressource positionnels et projet annuel**. **Deux Blueprints** depuis [6-I](phase-6/6-i-planning-universel.md) |
-| 9 | **N'importe quel export iCalendar**, à l'adresse que l'étudiant colle | emploi du temps | le lien **est** le secret (trousseau) | inconnue par construction — c'est le [repli universel](phase-6/6-j-compte-et-sources-par-etablissement.md) de 6-J. Un Blueprint unique, [`ukit.edt.abonnement`](../blueprints/ukit-edt-abonnement.blueprint.json), demande le lien **verbatim et sans bornes** ; le découpage par date est applicatif, parce que tous les produits n'acceptent pas de paramètres de plage |
+Sources, authentification et fragilité : Celcat (sans authentification ; API interne non documentée), CAS / ENT de l'Université de Bordeaux et de Bordeaux INP
+(identifiants universitaires ; pages HTML ancrées par libellé), Affluences (sans authentification, en-têtes imités ; API privée d'une application web),
+Croustillant (sans authentification ; API publique, version dans le chemin, la plus saine), ADE (export anonyme ; index positionnels et projet annuel),
+n'importe quel export iCalendar (le lien est le secret, gardé dans le trousseau ; fragilité inconnue par construction). S'y ajoutent le rendu cartographique
+(section 7) et deux anciennes sources sorties de l'inventaire, jsDelivr et GitHub raw (section 8).
 
 ## 1. Celcat — emplois du temps
 
-Serveur de planning de l'université, joint **directement** sur `https://celcat.u-bordeaux.fr/calendar`
-depuis le jalon [6-E](phase-6/6-e-planning.md). Six [Blueprints](blueprints.md) le portent, un par
-appel réellement joué :
+`https://celcat.u-bordeaux.fr/calendar`, six Blueprints : `ukit.celcat.groupes` et `.salles` (listes), `.jour`, `.semaine`, `.annee` (plage annuelle de la
+synchronisation calendrier), `.occupation`. L'hôte et les `resType` sont des entrées du catalogue (`celcat_domaine`, `celcat_res_types`), Bordeaux par défaut.
 
-| Blueprint | Appel | Consommateur |
-|---|---|---|
-| `ukit.celcat.groupes` | la liste des groupes d'étudiants (`resType` 103) | [`PlanningApiService`](../src/features/Planning/services/PlanningApiService.ts) |
-| `ukit.celcat.jour` | les cours d'une journée, pour un ou plusieurs groupes | idem |
-| `ukit.celcat.semaine` | les cours d'une semaine | idem |
-| `ukit.celcat.annee` | la plage annuelle de la synchronisation calendrier | idem |
-| `ukit.celcat.salles` | la liste des salles (`resType` 102) | [`CampusApiService`](../src/features/Campus/services/CampusApiService.ts) |
-| `ukit.celcat.occupation` | l'occupation de salles sur une journée | idem |
+**Pas de relais, mesuré le 2026-08-09.** Le relais `ukit.kbdev.io` n'existait que parce qu'une page web ne peut pas appeler un autre domaine ; une requête
+native n'y est pas soumise. Trois conditions, qu'un changement côté université invaliderait sans prévenir : le serveur ne filtre **ni sur `Origin`, ni sur
+`Referer`, ni sur l'`User-Agent`** (envoyés faux ou vides, toujours `200`) ; il répond en **0,6 s** sur une liste et **2,3 s** pour une année entière (216 Ko,
+334 événements) ; il accepte `federationIds[]` répété. Les Blueprints envoient `User-Agent: UKit (+https://github.com/KAE-Lab/UKit; contact@kaelab.dev)` (sans
+version), pour que l'administrateur puisse nous écrire ; que le `fetch` natif d'Expo le laisse partir se vérifie sur chaque build dans le panneau Blueprints du
+menu de développement ([`echo.ts`](../src/shared/aetherius/echo.ts)). Repli si l'université filtre : republier les Blueprints avec un autre `domaine`. Aucun
+contrat : un changement se traduira plutôt par une réponse vide que par une erreur explicite.
 
-### Le relais est sorti de l'architecture
+Liste : `GET /Home/ReadResourceListItems?searchTerm=_&pageSize=10000&resType=<103|102>` (**103 = groupes d'étudiants, 102 = salles**), réponse `{ results: [{
+id, text, … }] }`, environ 2 945 groupes et 283 salles ; un `assert` sur `results` évite qu'une clé disparue rende un succès à liste vide. Calendrier : `POST
+/Home/GetCalendarData`, corps `start=YYYY-MM-DD&end=YYYY-MM-DD&resType=103&calView=agendaDay&federationIds[]=<id>&colourScheme=3` (`Content-Type:
+application/x-www-form-urlencoded; charset=UTF-8`).
 
-L'application passait par `https://ukit.kbdev.io/Home/`, un point d'entrée dédié. Il existait pour
-une seule raison : une page web ne peut pas appeler un autre domaine sans son accord, et
-l'application était une WebView. **Une requête émise nativement depuis l'appareil n'y est pas
-soumise**, donc le relais n'a plus d'objet — un serveur à héberger, à payer et à surveiller en moins.
+- Corps **encodé en formulaire**, jamais en JSON. `federationIds[]` est une clé littérale **répétable** (plusieurs groupes favoris, ou plusieurs salles),
+  répétée par l'encodeur du moteur. Celui-ci encode l'espace en `+`, l'ancien `qs` en `%20` : sans effet, les deux formes postées le 2026-08-09 sur un
+  identifiant de salle à espaces, accents, point et barre oblique ont donné même réponse au SHA-256 près ([harnais de parité](../tools/parity/README.md)).
+- `calView` vaut `agendaDay` (jour, occupation) ou `agendaWeek` (semaine, année) ; `colourScheme=3` fixe `backgroundColor`. `end` est **exclusif** : une journée
+  envoie le lendemain, une semaine lundi + 6, soit le dimanche (six jours affichés, du lundi au samedi). **Le serveur déborde** : une journée demandée un
+  dimanche renvoie les cours du lundi, et un événement de vacances s'étale sur plusieurs jours.
 
-Trois conditions ont été mesurées avant de basculer, le **2026-08-09**, et elles sont notées ici
-parce qu'un changement côté université les invaliderait sans prévenir :
+Un événement porte `id`, `eventCategory` (`Cours`, `TD`, `TP`, `Examen`, `Vacances`…), `start` et `end` (ISO sans fuseau), `backgroundColor`, `description`
+(HTML échappé), `modules` (`null` sur les vacances) et `sites` (`["Bâtiment A28"]`). **`sites` est la donnée fiable pour placer un cours sur une carte** : la
+fiche le lit avant toute heuristique sur la description, qui échouait en silence quand elle était vide ou décalée. Pièges mesurés sur une année complète :
 
-- le serveur ne filtre **ni sur `Origin`, ni sur `Referer`, ni sur l'`User-Agent`** : les trois ont
-  été envoyés faux ou vides, la réponse reste `200` ;
-- il répond en **0,6 s** sur une liste, **2,3 s** pour une année entière (216 Ko, 334 événements) ;
-- il accepte `federationIds[]` répété, donc l'interrogation multi-ressources en une requête.
+- **`end` est nul** sur les `Vacances` : `moment(null)` est invalide, `moment(undefined)` vaudrait *maintenant*.
+- **`modules` et `sites` traversent l'arité de l'extraction** : zéro correspondance rend `null`, une seule rend **la valeur**, plusieurs la liste. Un cours à un
+  module ou un bâtiment (cas dominant) rend donc une chaîne, jamais un tableau ; `sitesDuCours` et `modulesDuCours` normalisent.
+- **`modules` et la description ne s'écrivent pas pareil** (2026-08-22) : `"4TIN606U  Histoire…"` a **deux espaces** là où la description n'en a qu'une. La
+  ligne n'était pas reconnue comme répétition du sujet et tout glissait d'un rang (la « ligne de salle » devenait l'enseignant).
+- **Certains groupes servent le code nu** (2026-09-08, master Génie Logiciel : `4TGL902U`) et mettent l'intitulé dans la description. Sans code d'UE, les
+  filtres d'UE ne filtraient rien : `completerLesModules` reprend la ligne de description qui commence par le code.
+- **La description est formatée à l'identique en vue jour et en vue semaine** (`\r\n\r\n<br />\r\n\r\n`, réduit à des `;` par `formatDescription`). Le
+  séparateur est donc `;` partout : découper la semaine sur `\n` ne rendait qu'un champ, écarté en entier (ni salle, ni enseignant, ni semaines).
 
-Depuis [7-C](phase-7/7-c-economie-et-socle.md#3-létiquette-envers-celcat), les six Blueprints se
-**nomment** : `vars.user_agent` vaut `UKit (+https://github.com/KAE-Lab/UKit; contact@kaelab.dev)`,
-posé en en-tête `User-Agent` de chaque appel, sans numéro de version — un fichier publié se
-périmerait. Le serveur ne filtre pas dessus (mesuré ci-dessus) ; c'est une politesse envers un
-service public, et l'adresse à laquelle son administrateur peut nous écrire. Le moteur passe les
-en-têtes tels quels ; que le `fetch` natif d'Expo laisse partir celui-là se vérifie sur chaque build
-par l'écho du panneau Blueprints du menu de développement ([`echo.ts`](../src/shared/aetherius/echo.ts)).
+**Occupation d'un bâtiment en un appel.** `ukit.celcat.occupation` interroge toutes les salles d'un bâtiment, mais **la réponse ne dit pas pour quelle ressource
+elle rend un événement** : la description nomme la salle, en entités HTML (`CREMI - B&#226;t. A28 Salle 005`), et toutes celles d'un cours multi-salles. Sonde
+du 2026-09-17 ([`occupation_groupee.py`](../sondes/mesures/occupation_groupee.py)) : mêmes identifiants d'événement qu'en dix-sept appels, attribution par le
+nom juste à 100 % (109 attributions). Les `Vacances` ne nomment aucune salle et sont rendues pour chaque salle interrogée. Fragilité : une description qui
+cesserait de nommer sa salle la ferait passer pour libre.
 
-> **Le relais était déjà tombé au moment de la bascule.** Les trois sondes de ce jour-là ont reçu un
-> **522 (Cloudflare)** après vingt secondes, à chaque essai. Le planning des utilisateurs sans cache
-> était donc en panne, et le jalon 6-E est autant une réparation qu'une migration.
+**Ce qui reste applicatif** (`PlanningApiMapping`, `PlanningAssembly`, `CampusApiMapping`, `attributionOccupation`), parce qu'un calcul dans un Blueprint serait
+à réimplémenter dans les deux moteurs et que l'heure courante le rendrait non rejouable :
 
-Le repli reste gratuit et n'exige pas de release : `vars.domaine` peut redevenir le relais par une
-**publication de Blueprint**. L'extinction définitive du relais est une décision de
-[6-Z](phase-6/6-z-livraison-finale.md), après observation.
-
-### Lister des ressources
-
-```http
-GET https://celcat.u-bordeaux.fr/calendar/Home/ReadResourceListItems
-    ?searchTerm=_&pageSize=10000&resType=<103|102>
-```
-
-`resType` sélectionne la famille de ressources : **103 = groupes d'étudiants**, **102 = salles**.
-Réponse : `{ results: [{ id, text, ... }] }`. Environ 2 945 groupes et 283 salles.
-
-Les deux Blueprints portent un `assert` sur la présence du tableau `results` : sans lui, une réponse
-dont la clé aurait disparu rendrait un **succès à liste vide**, indistinguable d'une liste
-légitimement vide ([blueprints.md](blueprints.md#affirmer-la-forme-pour-que--rien-trouvé--ne-se-confonde-pas-avec--rien-à-trouver-)).
-
-### Récupérer un calendrier
-
-```http
-POST https://celcat.u-bordeaux.fr/calendar/Home/GetCalendarData
-Pragma: no-cache
-Cache-Control: no-cache
-Accept: application/json
-Content-Type: application/x-www-form-urlencoded; charset=UTF-8
-
-start=YYYY-MM-DD&end=YYYY-MM-DD&resType=103&calView=agendaDay
-&federationIds[]=<identifiant>&colourScheme=3
-```
-
-Points à respecter, tous appris à l'usage :
-
-- Le corps est **encodé en formulaire**, jamais en JSON. `federationIds[]` est une clé littérale
-  **répétable** : `federationIds[]=A&federationIds[]=B` interroge deux ressources en une requête
-  (plusieurs groupes favoris, ou plusieurs salles). Le Blueprint le déclare en entrée `array`, et
-  l'encodeur du moteur répète la clé — c'est ce que faisait `qs.stringify(data, { arrayFormat: 'repeat' })`.
-- **Une nuance d'encodage subsiste, et elle est sans effet.** `qs` sortait en RFC3986 (une espace
-  devient `%20`), l'encodeur du moteur reproduit `quote_plus` de Python (une espace devient `+`).
-  Partout ailleurs les deux coïncident au caractère près, `!'()*~` compris. Les deux formes ont été
-  postées le 2026-08-09 sur un identifiant de salle porteur d'espaces, d'accents, d'un point et d'une
-  barre oblique : même statut, même réponse au SHA-256 près. Le
-  [harnais de parité](../tools/parity/README.md) compare le corps réellement émis, cet écart
-  normalisé et lui seul.
-- `Connection: keep-alive` figurait dans les en-têtes du code d'origine ; c'est un en-tête **interdit
-  à `fetch`**, il n'a jamais traversé, et il a été retiré.
-- `calView` vaut `agendaDay` ou `agendaWeek` selon la fenêtre demandée. `resType` doit correspondre à
-  la famille des identifiants passés.
-- `colourScheme=3` détermine la palette renvoyée dans `backgroundColor` ; c'est cette couleur qui
-  colore les cartes de cours dans l'application.
-- `end` est **exclusif**. Une journée envoie donc le lendemain (`{{ inputs.jour | add_days(1) }}`), et
-  une semaine envoie le **samedi** (`add_days(6)`) : l'application n'affiche que six jours, du lundi
-  au samedi.
-- **Le serveur déborde.** Une journée demandée un dimanche renvoie les cours du lundi ; un événement
-  de vacances s'étale sur plusieurs jours. Le refiltrage sur la date exacte reste donc applicatif.
-
-### Forme d'un événement
-
-```ts
-interface EvenementCelcat {
-    id: string;
-    eventCategory: string;      // "Cours", "TD", "TP", "Examen", "Vacances"…
-    start: string;              // ISO, sans fuseau
-    end: string | null;         // null sur les evenements en journee entiere
-    backgroundColor: string;
-    description: string;        // HTML echappe, multi-lignes
-    modules: string[] | null;   // intitules de matiere, null sur les vacances
-    sites: string[] | null;     // batiments declares : ["Bâtiment A28"]
-}
-```
-
-**`sites` est la donnée fiable pour placer un cours sur une carte**, et elle a longtemps été ignorée :
-la fiche de cours devinait le bâtiment en cherchant un code de salle dans la description, ce qui
-échouait silencieusement dès que la description était vide ou décalée d'une ligne. Le champ est
-extrait depuis la correction du 2026-08-22 (`$.sites[*]`) et la fiche le lit **avant** toute
-heuristique. Il porte le libellé complet — `Bâtiment A28` — que la reconnaissance de salle réduit au
-code par le motif de l'établissement, sans qu'aucune règle nouvelle soit inventée pour lui.
-
-Trois pièges mesurés sur une année complète de données :
-
-- **`end` est nul** sur les événements `Vacances`, servis en journée entière. La valeur descend telle
-  quelle jusqu'à `moment(null)`, qui est une date **invalide** — et non `moment(undefined)`, qui
-  vaudrait *maintenant*.
-- **`modules` traverse l'arité de l'extraction.** Un chemin `$.modules[*]` qui ne correspond à rien
-  rend `null`, une seule correspondance rend **la valeur**, plusieurs rendent la liste. Un cours à un
-  module rend donc une chaîne, jamais un tableau d'un élément. Corollaire : un `modules: []` serait
-  indistinguable d'un `modules: null` — le cas n'existe pas dans une année de données, et le sujet
-  retombe sur la catégorie plutôt que de rester indéfini.
-- **`sites` traverse la même arité**, et c'est le cas dominant : un cours nomme presque toujours un
-  seul bâtiment, donc `$.sites[*]` rend presque toujours une **chaîne**. Un code écrit « évidemment »
-  pour une liste ne traiterait donc jamais le cas normal. `sitesDuCours` ramène les deux formes à une
-  liste, et le harnais de parité compare l'extraction à une lecture directe du champ brut.
-- **`modules` et la description ne s'écrivent pas pareil.** Mesuré le 2026-08-22 :
-  `modules` rend `"4TIN606U  Histoire et Epistémologie de l'Optimisation"` avec **deux espaces**, là
-  où la description n'en a qu'une. La ligne du module n'était donc pas reconnue comme une répétition
-  du sujet, elle restait dans la description, et tout le reste glissait d'un rang : la « ligne de
-  salle » devenait le nom de l'enseignant. C'est la seconde cause des cartes manquantes, et `sites`
-  la rend sans objet.
-
-### L'occupation d'un bâtiment, en un appel
-
-Depuis [7-I](phase-7/7-i-releve-et-vocabulaire.md#décisions-du-2026-09-26), `ukit.celcat.occupation`
-interroge toutes les salles d'un bâtiment en **un** appel, `federationIds[]` répété — la fiche de
-l'A28 en jouait dix-sept. **La réponse ne dit pas pour quelle ressource interrogée elle rend un
-événement** : c'est la description qui nomme la salle, en entités HTML
-(`CREMI - B&#226;t. A28 Salle 005`), et qui les nomme toutes pour un cours multi-salles. Mesuré par la
-sonde du 2026-09-17 sur trois journées
-([`occupation_groupee.py`](../sondes/mesures/occupation_groupee.py)) : les mêmes identifiants
-d'événement qu'en dix-sept appels, et une attribution par le nom juste à 100 % — 109 attributions,
-aucune fausse. Les événements `Vacances` ne nomment aucune salle, et le serveur les rend pour chaque
-salle interrogée. L'attribution est applicative (point 10 plus bas), et sa fragilité est celle du
-texte : une description qui cesserait de nommer sa salle ferait écarter l'événement, et la salle
-passerait pour libre ([features/campus-salles-libres.md](features/campus-salles-libres.md#limites-connues)).
-
-### Ce qui reste applicatif, et ce n'est pas rien
-
-La frontière est celle de [blueprints.md](blueprints.md#ce-qui-descend-dans-un-blueprint-et-ce-qui-ny-descend-pas) :
-le Blueprint décrit la requête et ce qu'on en retient, le reste est du calcul. Vit donc dans
-[`PlanningApiMapping`](../src/features/Planning/services/PlanningApiMapping.ts) et
-[`CampusApiMapping`](../src/features/Campus/services/CampusApiMapping.ts) :
-
-1. Le rejet des événements `Vacances` **et** le refiltrage sur la date exacte. Le fichier de
-   référence d'Aetherius filtrait `Vacances` dans le Blueprint ; on ne l'a pas suivi. **Un filtre, un
-   endroit** — et surtout, la recherche de salles libres a *besoin* des `Vacances` : ce sont elles qui
-   déclarent un bâtiment fermé.
-2. Le sujet, tiré du premier `modules`, avec repli sur `eventCategory`. **La liste entière est
-   conservée** (`PlanningEvent.modules`) depuis le 2026-09-06 : un cours peut porter plusieurs codes
-   d'UE — dix-neuf événements de `MI601A` sur une année, le même cours sous son code français et son
-   code anglais — et le filtre d'UE a besoin de tous ([planning.md](features/planning.md#contrats)).
-3. Le nettoyage de la description par [`formatDescription`](../src/shared/utils/formatUtils.ts) :
-   suppression des `\r` et des `<br />`, remplacement de quatre sauts de ligne consécutifs par `;`,
-   décodage des entités HTML, puis retrait des lignes qui répètent la catégorie ou **l'un des
-   modules**, aux espaces près — le doublon à deux espaces mesuré le 2026-08-22 n'échappe plus.
-4. Le séparateur de description est `;` pour **toutes** les vues. Il a longtemps été `\n` pour la
-   semaine, au nom d'un formatage différent selon `calView` — justification mesurée fausse au jalon
-   6-E, puis conservée parce que la corriger déplaçait des pixels. Elle l'est depuis le 2026-08-22 :
-   le serveur formate à l'identique dans les deux vues, `formatDescription` réduit cela à des `;`, et
-   découper sur `\n` ne rendait qu'un champ — porteur de la catégorie, donc écarté en entier. La vue
-   semaine n'affichait donc **ni salle, ni enseignant, ni semaines**.
-5. Le code d'UE, extrait du sujet par `([0-9][A-Z0-9]+) (.+)` : `4TIN301U Algorithmique` devient
-   `UE = "4TIN301U"`, `subject = "Algorithmique"`. C'est lui qui alimente les filtres.
-6. Le tri double : heure de début, puis sujet alphabétique **après retrait du code d'UE**.
-7. Le découpage de la semaine en six jours et le calcul des horodatages ; le calcul du lundi depuis un
-   numéro de semaine ISO et la bascule d'année scolaire au 1er août, qui ont besoin de l'heure
-   courante et n'ont donc rien à faire dans un fichier rejouable.
-8. La reconstruction des bâtiments à partir des salles, par correspondance textuelle avec le
-   référentiel ([features/campus-salles-libres.md](features/campus-salles-libres.md)).
-9. La réduction d'un `sites` (`Bâtiment A28`) à un code du référentiel, par le format de salle de
-   l'établissement ([cartographie.md](cartographie.md#extraction-dun-lieu-depuis-un-cours)).
-10. L'attribution des événements d'un appel d'occupation groupé à leurs salles, par le nom que la
-    description porte, les `Vacances` à toutes
-    ([`attributionOccupation.ts`](../src/features/Campus/services/attributionOccupation.ts),
-    [features/campus-salles-libres.md](features/campus-salles-libres.md#décisions-de-conception)).
-
-### Gestion d'erreur
-
-Les six appels rendent désormais `{ ok: true, … }` ou `{ ok: false, failure }`, et la famille d'échec
-décide de l'écran ([blueprints.md](blueprints.md#les-erreurs-cessent-dêtre-avalées)). Une source
-injoignable, une réponse au statut inattendu et une journée légitimement vide produisent **trois
-écrans différents** — ce n'était pas le cas avant, où tout rendait `null`.
-
-Le cache de repli hors ligne, lui, n'a pas bougé : il enveloppe l'appel, avant comme après.
-
-### Fragilité
-
-L'API n'est pas documentée publiquement et n'offre aucun contrat. `resType`, `calView` et
-`colourScheme` sont désormais des `vars` nommées, en un seul endroit et corrigeables sans release —
-elles ne sont pas devenues **garanties** pour autant. Un changement côté Celcat se traduira toujours
-par une réponse vide plutôt que par une erreur explicite ; `expect` transforme au moins un statut
-inattendu en échec nommé, et l'`assert` des deux listes rattrape une clé disparue.
+- Le rejet des `Vacances` et le refiltrage sur la date, en un seul endroit : la recherche de salles libres a *besoin* des `Vacances` (bâtiment fermé).
+- Le sujet (premier `modules`, repli sur `eventCategory`) ; la liste entière est conservée (`PlanningEvent.modules`), un cours pouvant porter plusieurs codes
+  d'UE (français et anglais) que le filtre utilise tous.
+- Le nettoyage de la description (lignes répétant la catégorie ou **l'un des modules** retirées) et le code d'UE, motif `[0-9][A-Z0-9]*[A-Z][A-Z0-9]*` suivi
+  d'une espace : **au moins une lettre**, sinon `2025-2026 - …` devient une UE `2026` (titres ADE, seize matières d'un groupe, 2026-08-15).
+- Le tri (heure, puis sujet **sans le code d'UE**), la semaine en six jours, le lundi d'un numéro ISO, la bascule d'année scolaire au 1er août.
 
 ## 2. CAS / ENT Université de Bordeaux — identité et messagerie
 
-La source la plus fragile : il n'y a **pas d'API**. UKit ouvre une WebView cachée, se connecte au
-CAS, puis extrait les informations des pages rendues.
-
-**Migrée en Blueprints** au jalon [6-F](phase-6/6-f-scolarite.md) : les 323 lignes de WebView pilotée
-par du JavaScript injecté ont disparu, et deux fichiers portent les deux parcours que l'application
-joue réellement.
-
-| Parcours | Blueprint | Ce qui est resté applicatif |
-|---|---|---|
-| froid — premier login | [`ukit.portail.bordeaux.dossier`](../blueprints/ukit-portail-bordeaux-dossier.blueprint.json) | le trousseau, le choix froid/chaud, la projection `identité → prénom`, l'affichage |
-| chaud — chaque lancement | [`ukit.portail.bordeaux.messagerie`](../blueprints/ukit-portail-bordeaux-messagerie.blueprint.json) | la décision « pas de parenthèse = zéro non lu », le verrou biométrique |
-
-**Namespacés au jalon [6-G](phase-6/6-g-etablissements.md)** : le nom porte désormais le code de
-l'établissement, parce que rien de ce fichier n'est générique. Les noms à jouer viennent du catalogue,
-et un second établissement apporte les siens — voir la section 8.
-
-Implémentation applicative : [`ScolariteSession.ts`](../src/features/Scolarite/services/ScolariteSession.ts)
-(la séquence), [`CredentialsContext.tsx`](../src/features/Scolarite/services/CredentialsContext.tsx)
-(l'état), [`ScolariteMapping.ts`](../src/features/Scolarite/services/ScolariteMapping.ts) (la
-projection). Parcours utilisateur détaillé dans [features/scolarite.md](features/scolarite.md).
-
-### Hôtes traversés
-
-| Hôte | Rôle |
-|---|---|
-| `cas.u-bordeaux.fr` | authentification centralisée |
-| `ent.u-bordeaux.fr` / `intranet.u-bordeaux.fr` | portail — prénom de l'étudiant |
-| `mondossierweb.u-bordeaux.fr` | dossier administratif — numéro étudiant, INE, mail, date de naissance |
-| `webmel.u-bordeaux.fr` | messagerie — nombre de messages non lus |
-| `apogee.u-bordeaux.fr` | notes et résultats — atteignable via le navigateur intégré, non extrait. Deux services nommés par l'intranet : `?srv=RE01` (résultats) et `?srv=RE02` (calendrier des examens) |
-| `moodle.u-bordeaux.fr` | plateforme pédagogique — **chronologie extraite** depuis le 2026-08-28. Entrée par `/login/index.php`, qui mène au WAYF de `idp-ubx`, lequel délègue au CAS |
-
-`ent.u-bordeaux.fr` **n'est plus traversé par la session** : chaque Blueprint ouvre directement son
-service, qui rebondit lui-même sur le CAS avec son paramètre `service=`. Le portail reste une
-destination du navigateur intégré, rien de plus. C'est ce qui rend le parcours plus court, et ce qui
-le fait survivre à une refonte de la page d'accueil.
-
-### Enchaînement, tel que les fichiers le décrivent
-
-Les deux Blueprints ont la même forme, et chaque step y est une décision qu'on peut relire :
-
-```text
-navigate <service>                        le service redirige vers le CAS
-wait_for "#username, <cible>"  20 s       « le formulaire, ou la page utile » — fail:CAS_INDISPONIBLE
-extract  #username as: count              y a-t-il un formulaire ? `count` ne leve jamais
-fill     #username / #password            secrets portail_user / portail_pass
-click    input[type=submit]                (Bordeaux ; l'INP sert un #submitBtn)
-wait     4 s (dossier) / 5 s (messagerie)    laisser la cascade d'authentification arriver
-wait_for #loginErrorsPanel  detached, 2 s    fail:LOGIN_FAILED
-wait_for <cible CSS>      30 s            fail:LOGIN_FAILED | MESSAGERIE_INDISPONIBLE
-emit     LOGIN_SUCCESS                    c'est ce qui autorise a ecrire les identifiants
-extract  … par libelle     5 s            une lecture n'a rien a attendre
-assert   les champs critiques ne sont pas vides    dossier seulement
-
-  puis, pour le dossier seul — des BONUS qui ne doivent jamais emporter la connexion :
-
-click/navigate <vue>                      Inscriptions (Bordeaux) | /acces et /inscriptions (INP)
-wait     1,5 a 6 s                        `wait` et non `wait_for` : un timeout ferait echouer le run
-extract  … as: list                       zero correspondance rend [], jamais une levee
-```
-
-Les durées de ce schéma sont celles du jalon [6.1-D](phase-6/6-1-d-publication.md), qui les a
-**mesurées** au lieu de les supposer : voir [Ce que coûte une attente](#ce-que-coûte-une-attente--mesures-du-2026-09-04)
-plus bas.
-
-Cinq de ces lignes sont contre-intuitives et **mesurées**, pas supposées :
-
-- **la pause après le clic.** L'authentification unifiée enchaîne plusieurs sauts, puis le client pose
-  son propre fragment ; une opération émise pendant cette cascade **se perd en silence** sur un
-  appareil. C'est une limite du moteur, écrite chez lui, et le contournement est visible dans le
-  fichier plutôt que déguisé en délai généreux. Depuis le 2026-09-04 elle porte **sa mesure** : la
-  cascade complète tient en 0,5 à 1,3 s au poste, et la pause laisse trois à quatre fois cela à un
-  téléphone en cellulaire — au lieu des 8 à 15 s calées sur un pire cas supposé ;
-- **la garde `#loginErrorsPanel`.** Ce panneau est **absent** de la page de connexion propre et
-  **présent** dès que le CAS refuse (mesuré le 2026-08-09). `#msg2` et `.errors`, eux, existent déjà
-  vides avec une boîte de hauteur nulle : ils ne discriminent rien. Sans cette garde, un mot de passe
-  faux coûte le plafond entier du sélecteur suivant — **41 s mesurées, contre 13 s avec** ;
-- **le `timeout_ms` court de l'`extract`.** Un `extract` réarme sa propre auto-attente ; sur un
-  téléphone, les minuteurs d'une WebView hors écran sont ralentis alors que l'appelant compte en temps
-  réel. Un budget court garantit que la page réponde avant l'appelant, donc qu'un échec soit lisible
-  au lieu d'être un silence rapporté comme « la page a changé ».
-
-- **`wait_for` porte un sélecteur CSS, jamais un XPath.** Le moteur embarqué lit `selector_type` sur
-  cette action, le moteur Python **non** : il passe le sélecteur à `page.locator()` tel quel. Un
-  XPath y marcherait donc sur un poste et nulle part ailleurs — la même classe de piège que les
-  pseudo-classes Playwright du jalon 6-G ;
-- **une lecture facultative descend en `as: "list"`, jamais derrière un `when`.** Un step gardé par
-  `when` est *sauté*, et un step sauté **n'enregistre aucune sortie** : le bloc `outputs` qui le
-  référence lève alors en `StrictUndefined`, ce qui fait échouer le run entier — exactement ce que la
-  garde prétendait éviter. `as: "list"` rend `[]` et ne lève jamais.
-
-Et un garde-fou qui vaut pour toute action d'interaction : **le moteur embarqué refuse un clic
-ambigu** là où Playwright prend le premier. Tout sélecteur de `click` doit matcher **exactement un**
-élément, et ça se mesure avant d'écrire le fichier.
-
-Au passage, la migration a trouvé du **code mort** dans le script d'origine : il testait `#msg.success`
-et `#msg.errors`, or **il n'existe aucun `#msg`** sur ce CAS. Ces deux branches ne matchaient plus
-rien, et personne ne pouvait le savoir.
-
-### Ce que coûte une attente — mesures du 2026-09-04
-
-Les attentes de ces fichiers avaient été calées à la main, chacune sur le pire cas du jour où elle a
-été écrite. Le jalon [6.1-D](phase-6/6-1-d-publication.md) les a **chronométrées** avant de les
-toucher : neuf Blueprints de portail portaient à eux seuls **60 s de pauses aveugles**, et le travail
-réel de chacun tient en une à deux secondes.
-
-Conditions : poste filaire, moteur Python (Playwright), comptes réels des deux établissements, une
-passe par fichier. Le total est celui du run complet, pas la somme des pauses.
-
-| Blueprint | Avant | Après | Ce qui a changé |
-|---|---:|---:|---|
-| `ukit.portail.verification` | 12,9 s | 8,0 s | pause de soumission 8 s → 4 s |
-| `ukit.portail.deconnexion` | 3,5 s | 2,1 s | marge de sortie 2,5 s → 1 s |
-| `ukit.portail.bordeaux.dossier` | 30,1 s | 11,9 s | ouverture conditionnelle · 8 s → 4 s · bonus 6 s → 2 s et 1,5 s |
-| `ukit.portail.bordeaux.messagerie` | 23,9 s | 7,9 s | ouverture conditionnelle · 15 s → 5 s |
-| `ukit.portail.bordeaux.moodle` | 28,8 s | 7,7 s | ouverture conditionnelle · 15 s → 5 s · AJAX 5 s → conditionnelle |
-| `ukit.portail.bordeaux.documents` | 19,7 s | 11,4 s | ouverture conditionnelle · 9 s → 4 s |
-| `ukit.portail.bordeaux-inp.dossier` | 36,4 s | 22,8 s | ouverture conditionnelle · 8 s → 4 s · bonus « Accès » 6 s → 2,5 s |
-| `ukit.portail.bordeaux-inp.messagerie` | 24,9 s | 12,9 s | ouverture conditionnelle · 12 s → 5 s · consentement 10 s → 5 s |
-| `ukit.portail.bordeaux-inp.documents` | 19,1 s | 8,9 s | ouverture conditionnelle · 8 s → 4 s |
-
-**Le parcours froid de Bordeaux passe de 43,0 s à 19,9 s** au poste — c'est la somme de ses deux
-Blueprints, `verification` puis `dossier`, et elle encadre le « ~46 s » que ce document portait
-jusqu'ici.
-
-#### Les temps réels, ceux qui ont décidé des valeurs
-
-| Ce qu'on attendait | Mesure | Ce qui a été retenu |
-|---|---:|---|
-| Navigation d'ouverture, jusqu'à la page servie | 0,6 à 1,9 s | un `wait_for` conditionnel, plafond 20 s |
-| Cascade d'authentification, du clic à la cible | 0,5 à 1,3 s | 4 s, ou 5 s là où un client Zimbra pose son fragment |
-| Chronologie Moodle (requête AJAX séparée) | 1,299 s puis 1,301 s | un `wait_for` sur la disparition du gabarit d'attente |
-| Formation Bordeaux, aller-retour Vaadin 8 | 189 puis 285 ms | 2 s |
-| Annuaire Bordeaux | 23 ms — **servi avec le document** | 1,5 s de marge de réseau |
-| INP, vue *Accès* | 306 ms | 2,5 s |
-| INP, vue *Parcours* | 2,318 s | **6 s inchangé** — la marge n'est que de 2,6× |
-| INP, arbre ADE (GWT) | 2,816 s | **6 s inchangé** — la plus lente des trois vues |
-
-Trois de ces lignes ont coûté une sonde ratée chacune, et elles valent d'être retenues :
-
-- **`wait_for` attend `visible` par défaut, et une donnée repliée n'est jamais visible.** L'annuaire
-  de Bordeaux vit dans un accordéon fermé : une sonde en `visible` a expiré au bout de 25 s sur des
-  éléments pourtant présents. En `attached`, elle répond en 23 ms. C'est aussi ce qui **interdit** d'y
-  mettre un `wait_for` : il ne pourrait pas voir ce que l'extraction, elle, lit très bien ;
-- **un sélecteur qui ne matche rien rend `detached` vrai immédiatement.** Sonder la disparition du
-  gabarit d'attente de Moodle par sa *classe* répondait en 10 ms et ne prouvait rien :
-  `event-list-loading-placeholder` est une valeur de `data-region`, pas une classe. Une sonde qui
-  réussit trop vite est une sonde à revérifier ;
-- **une union doit énumérer les états *possibles* de la page, pas les deux auxquels on pense.**
-  `ukit.portail.bordeaux-inp.messagerie` en a **trois** : ce portail passe par SAML, qui interpose une
-  page de consentement entre le CAS et Zimbra. Écrite avec deux issues, l'attente d'ouverture a brûlé
-  ses 20 000 ms sur une page pourtant présente — et là encore le chiffre le disait, `20 014 ms` étant
-  *son* plafond et non l'échéance de l'appelant. Seul des neuf fichiers dans ce cas ;
-- **une lecture bonus perdue ne fait aucun bruit.** À 500 ms, la vue *Parcours* de l'INP rendait
-  `formation_libelle` vide et l'arbre ADE `edt_ressource` vide, **et le run se déclarait réussi**.
-  L'application aurait alors cessé de proposer l'emploi du temps personnel sans que rien ne le dise.
-  C'est la raison pour laquelle ces deux pauses-là n'ont pas bougé.
-
-#### Ce que l'appareil a démenti — Android, wifi eduroam, 2026-09-04
-
-Le poste ne peut pas tout dire, et la vérification sur appareil l'a prouvé en un run. L'attente
-d'ouverture avait d'abord été posée **sans pause** : le `wait_for` partait juste après le `navigate`.
-Au poste, impeccable. Sur un Android en conditions réelles, `ukit.portail.bordeaux.dossier` a échoué
-en **31 990 ms** — et ce chiffre est le diagnostic à lui seul : le plafond écrit était 20 000 ms, donc
-ce n'est pas lui qui a expiré, c'est **l'échéance de l'appelant** (`20 000 + 2 000 + 50 %`). La page
-n'a jamais répondu : l'opération s'était perdue.
-
-La cause se lit en comparant deux runs du **même** parcours, à trente secondes d'écart :
-
-| | `verification` | `dossier` |
-|---|---|---|
-| Ce qu'il vise | `cas.u-bordeaux.fr/login?service=…` — **le CAS en propre** | `mondossierweb.u-bordeaux.fr` — **un service, qui rebondit** |
-| `navigate` | 671 ms | 1 266 ms |
-| Le `wait_for` qui suit | **11 ms** | **perdu** |
-
-Le premier atterrit sur son document final : l'agent s'y installe, rien ne le remplacera, l'opération
-est sûre. Le second atterrit sur un document **intermédiaire** : l'agent s'y installe, l'opération
-part, puis la redirection remplace le document sans que la vue le signale — et le host ne rejoue donc
-pas l'opération comme il le ferait pour un `DocumentLostError`.
-
-D'où la règle, plus fine que « une pause après une soumission », et écrite dans
-[`blueprints.md`](blueprints.md#attendre--quatre-cas-et-un-seul-reste-une-pause) :
-
-> **Une opération injectée n'est sûre après un `navigate` que si celui-ci atterrit sur son document
-> final.** Une URL qui rebondit demande une pause avant la première opération.
-
-C'est aussi ce qui explique, rétrospectivement, pourquoi tous les fichiers d'origine posaient une
-pause après un `navigate` vers un service, alors que `ukit.portail.verification` n'en avait jamais eu
-besoin. La raison n'était écrite nulle part ; elle l'est maintenant.
-
-La valeur retenue est **4 000 ms**, et elle n'est pas prudentielle : c'est celle qui venait de prouver,
-sur le même appareil et dans le même parcours, qu'elle couvre la cascade d'authentification complète
-après soumission — laquelle enchaîne plus de sauts qu'une simple redirection de service. Vérifiée
-ensuite sur trois Blueprints : pause de 4 007, 4 004 et 4 015 ms, suivie d'un `wait_for` qui répond en
-**13, 20 et 24 ms**. La marge est donc large, et elle est mesurée.
-
-La passe complète, après une réinitialisation totale de l'appareil — un parcours froid puis les
-quatre widgets, dans l'ordre où l'application les joue :
-
-| Blueprint | Au poste, avant | Sur appareil, après |
-|---|---:|---:|
-| `ukit.portail.verification` | 12,9 s | **4,8 s** |
-| `ukit.portail.bordeaux.dossier` | 30,1 s | **9,2 s** |
-| `ukit.portail.bordeaux.messagerie` | 23,9 s | **4,4 s** |
-| `ukit.portail.bordeaux.moodle` | 28,8 s | **4,8 s** |
-| `ukit.portail.bordeaux.documents` | 19,7 s | **5,8 s** |
-| `ukit.portail.bordeaux-inp.dossier` | 36,4 s | **20,4 s** |
-| `ukit.portail.bordeaux-inp.messagerie` | 24,9 s | **9,8 s** |
-| `ukit.portail.bordeaux-inp.documents` | 19,1 s | **6,8 s** |
-
-**Le parcours froid tient en 14,1 s à Bordeaux et 25,3 s à Bordeaux INP** — `verification` puis
-`dossier` — là où la spécification du jalon visait « sous 30 s », et **un widget entre 4,4 et 9,8 s**
-là où elle visait 12 à 15 s. Les deux chemins dégradés ont été joués aussi : un mot de passe faux se
-dit en **7,2 s** (contre une vingtaine), une source injoignable en **24 s** (contre ~36), et dans les
-deux cas avec l'écran et le geste attendus. Au
-relancement suivant, les widgets ne rejouent rien : le cache répond en 691 ms et la page s'ouvre
-pleine.
-
-Deux constructions se sont validées là et nulle part ailleurs :
-
-- **l'attente AJAX de Moodle**, celle qui remplace une pause de 5 s par la disparition du gabarit de
-  chargement : 18 ms puis 15 ms pour les deux `wait_for` du bloc. C'est le plus gros gain du jalon —
-  28,8 s à 4,8 s pour ce widget ;
-- **les lectures bonus du dossier**, dont la perte aurait été silencieuse : `extract formation` en
-  14 ms, `extract annuaire` en 14 ms, et les sept UE d'inscription remontées jusqu'à l'application.
-
-**Conditions, et leur limite** : Android, Expo Go, **wifi eduroam sur le campus** — pas de mesure en
-données cellulaires, contrairement à ce que la spécification du jalon demandait. Un réseau de campus
-n'est pas un poste filaire, mais il n'est pas non plus une connexion mobile : ces chiffres sont à
-lire comme un intermédiaire, et la marge de 4 s sur les pauses est ce qui les rend robustes au cas
-qu'on n'a pas pu jouer.
-
-**Ce que ce compte ne peut pas mesurer** : la chronologie Moodle de ce dossier ne porte **aucune
-échéance**, donc le gabarit d'attente cède immédiatement et aucune valeur ne le contraint vraiment.
-L'attente conditionnelle qui l'a remplacé est sûre pour une autre raison — `state: "hidden"` est vrai
-pour un élément **absent**, donc une version de Moodle sans ce marqueur n'attendrait rien au lieu
-d'échouer.
-
-### Le dossier administratif
-
-**Le portail est un Vaadin 8** (thème Valo), et non « une application GWT » comme ce document
-l'affirmait : le moteur *client* de Vaadin 8 est compilé par GWT, ce qui explique les `gwt-uid-NN` —
-mais le produit, sa structure et ses libellés sont ceux de Vaadin. La confusion masquait sa symétrie
-avec le portail de l'INP, qui est un Vaadin d'une génération plus récente.
-
-**Les champs sont ancrés par leur libellé** depuis le 2026-08-25. Chaque couple vit dans une ligne de
-`v-formlayout` qui porte sa légende :
-
-```
-//tr[contains(@class,'v-formlayout-row')]
-   [td[contains(@class,'v-formlayout-captioncell')][normalize-space()="NNE"]]
-   /td[contains(@class,'v-formlayout-contentcell')]
-```
-
-| Libellé d'ancrage | Donnée |
-|---|---|
-| `Dossier` | numéro étudiant |
-| `NNE` | INE |
-| `Prénom et Nom` | identité complète |
-| `Email` | adresse mail |
-| `Date de naissance` | date de naissance |
-
-> **La fragilité la plus sérieuse du projet a disparu.** Les cinq `#gwt-uid-41/43/45/47/51` étaient
-> attribués selon l'ordre de construction du DOM : une refonte de page les décalait *silencieusement*,
-> et l'application affichait alors des champs mélangés. L'ancrage par libellé a été vérifié hors
-> ligne sur le DOM capturé — **11 libellés testés, 11 nœuds uniques** — et un décalage ne peut plus
-> rendre la mauvaise valeur : il ne rend plus rien, et l'extraction échoue bruyamment.
-
-**Le piège, avant de « simplifier » ces XPath** : une ligne de `v-formlayout` porte **trois** cellules
-— légende, **erreur**, contenu. Un `following-sibling::td[1]` tombe sur la cellule d'erreur, vide.
-
-L'`assert` a maigri en conséquence : les libellés n'ont plus à être lus puisqu'ils *sont* les
-sélecteurs. Il ne garde que ce que l'ancrage ne couvre pas — un libellé présent au-dessus d'une
-valeur **vide**, qui écrirait un dossier creux dans le trousseau. Le libellé `Prénom et Nom` sert
-toujours deux fois : il ancre l'extraction, et c'est lui qui autorise à prendre le premier mot de
-l'identité comme prénom.
-
-### La formation
-
-Le menu du portail porte six entrées, ancrables **par leur libellé** — ce ne sont pas des liens mais
-des `div[role=button]` d'une application à état serveur, donc on les **clique** :
-
-| Entrée | Ce qu'elle porte | Extraite ? |
-|---|---|---|
-| Etat-civil | l'identité, la nationalité, le bac | **oui** |
-| Informations annuelles | boursier, salarié, aménagement d'étude | non — les trois champs sont vides sur le compte sondé |
-| Adresses | adresse annuelle et fixe | non — sans usage sur un tableau de bord |
-| **Inscriptions** | `Année · Composante · Filière`, une ligne par année | **oui**, la première ligne |
-| **Notes & résultats** | diplômes et étapes, puis le détail par UE derrière un clic | pas encore — session à part |
-| Aide | — | non |
-
-Trois mesures gouvernent l'extraction de la formation :
-
-- **la première ligne est l'inscription courante** : la source trie par année décroissante ;
-- **le tableau est virtualisé** — 3 à 5 lignes rendues selon la hauteur de la fenêtre. On ne lit donc
-  que la première, la seule dont la présence soit acquise ;
-- **la ligne courante porte un glyphe FontAwesome collé à son libellé** (`M1 Informatique\uf002`). Il
-  vit dans la zone d'usage privé d'Unicode et se retire applicativement, où rien de légitime ne
-  s'écrit.
-
-Corollaire de « partir du service » : la lecture du prénom sur l'ENT — cinq sélecteurs en cascade plus
-une expression régulière — **n'a plus de page où se faire**, et n'existe plus. L'identité vient du
-dossier.
-
-### La messagerie
-
-Lecture de `#zti__main_Mail__2_textCell`, dont le texte a la forme `Réception (789)`. L'expression
-régulière `/\((\d+)\)/` a disparu : `as: "number"` extrait le premier nombre du libellé et rend un
-**entier**, identiquement sur les deux moteurs. Le libellé brut descend en sortie à côté du nombre,
-parce que c'est lui qui permet de distinguer une boîte sans parenthèse (zéro non lu) d'une lecture qui
-n'a rien trouvé.
-
-Le **user-agent de Chrome desktop** est déclaré dans les deux fichiers (`options.stealth.user_agent`)
-et il est porteur : avec un UA mobile, ce service rend `/modern/`, un DOM entièrement différent où le
-sélecteur du compteur **n'existe pas**. C'est la seule bribe de discrétion du périmètre embarqué, et
-elle est passée d'une constante compilée à une ligne de donnée corrigeable.
-
-### Ce que l'application distingue désormais
-
-| Ce qui s'est passé | Famille | Ce que l'écran affiche |
-|---|---|---|
-| CAS injoignable, réseau coupé | `unavailable` | « Service indisponible », avec Réessayer |
-| `fail:CAS_INDISPONIBLE` | `blocked` | « Le portail de l'université ne répond pas » |
-| `fail:LOGIN_FAILED` | `blocked` | « Identifiants incorrects » |
-| `fail:MESSAGERIE_INDISPONIBLE` | `blocked` | « La messagerie n'a pas répondu » — distinct de l'échec de login |
-| libellés décalés (`assert`) | `rejected` | « Réponse inattendue » — **et rien n'est écrit** |
-| sélecteur introuvable | `data` | « Contenu introuvable » — Blueprint à corriger |
-
-### Ce qui n'est jamais fait
-
-Les identifiants ne sont **jamais** envoyés ailleurs qu'au CAS de l'université, ne transitent par
-aucun serveur tiers, et sont stockés uniquement en SecureStore chiffré. Ils ne traversent pas non plus
-la **source d'un script** : le moteur les encode en JSON et les transmet par une communication
-corrélée avec l'agent injecté, ce qui rend impossible par construction la classe de bug où un mot de
-passe contenant une apostrophe casse le remplissage.
+La source la plus fragile : **pas d'API**. Un navigateur masqué (Blueprints de portail, acte `continuum`) se connecte au CAS puis extrait les pages rendues.
+Quatre Blueprints `ukit.portail.bordeaux.*` (noms fournis par le catalogue) : `.dossier` (parcours froid), `.messagerie`, `.moodle` (chronologie), `.documents`
+(ReNARD), plus `ukit.portail.verification` (preuve du couple par `renew=true`) et `.deconnexion`, génériques. Messagerie, Moodle et documents sont des widgets
+rafraîchis à part (`rafraichirWidgets`) ; il n'y a plus de parcours « chaud », le parcours froid joue le dossier, précédé de la vérification quand le couple
+vient d'être saisi. Restent applicatifs : le trousseau, la projection `identité → prénom`, « pas de parenthèse = zéro non lu », le verrou biométrique
+(`CredentialsContext`, `ScolariteMapping`). Les widgets rendent `repere` / `nombre` / `detail` ; la messagerie émet aussi `boite_de_reception` / `non_lus`
+(versions installées).
+
+Hôtes, tous en `u-bordeaux.fr` : `cas.`, `mondossierweb.`, `intranet.` (annuaire), `webmel.` (Zimbra), `idp-ubx.` puis `moodle.`, `renard.` (documents) et
+`apogee.` (notes `?srv=RE01`, examens `RE02` : navigateur intégré seulement, non extrait). `ent.` n'est plus traversé : chaque Blueprint ouvre directement son
+service, qui rebondit sur le CAS avec son paramètre `service=`. Chacun attend « le formulaire ou la page utile » (échec nommé `CAS_INDISPONIBLE` et ses
+variantes), demande par `extract #username as: count` s'il y a un formulaire et ne joue la connexion (`fill`, clic, pause, garde `#loginErrorsPanel`, `emit
+LOGIN_SUCCESS` qui autorise l'écriture des identifiants) que dans ce cas : la connexion est **persistante** (`persist: true`, le ticket CAS va dans le magasin
+partagé de la plateforme, le navigateur intégré s'ouvre authentifié, `ukit.portail.deconnexion` doit invalider le CAS), et avec un ticket vivant le CAS renvoie
+droit au service, sans formulaire. Les identifiants ne vont qu'au CAS de l'université, sont stockés en SecureStore et transmis au moteur par message corrélé,
+jamais dans un script.
+
+**Ce que l'enchaînement a de contre-intuitif.**
+
+- **Une opération injectée n'est sûre après un `navigate` que si celui-ci atterrit sur son document final.** Un service qui rebondit demande une pause (4 s)
+  avant la première opération. Mesuré sur Android le 2026-09-04 : sans pause, `bordeaux.dossier` a échoué en 31 990 ms, soit l'échéance de l'appelant (20 000 +
+  2 000 + 50 %) et non le plafond du `wait_for` : l'opération s'était perdue, le document intermédiaire étant remplacé sans que la vue le signale.
+  `verification`, qui navigue droit sur le CAS, n'en a jamais eu besoin.
+- **La pause après le clic** (4 s, 5 s pour Zimbra et Moodle) : une opération émise pendant la cascade d'authentification se perd en silence (limite du moteur).
+  La cascade tient en 0,5 à 1,3 s au poste ; 4 s en laissent trois à quatre fois autant à un téléphone en cellulaire.
+- **`#loginErrorsPanel`** est **absent** de la page propre et **présent** dès que le CAS refuse (2026-08-09) ; `#msg2` et `.errors` existent vides et ne
+  discriminent rien. Sans cette garde, un mot de passe faux coûte le plafond du sélecteur suivant : 41 s mesurées contre 13 s.
+- **`wait_for` attend `visible` par défaut**, or une donnée repliée n'est jamais visible (l'annuaire, accordéon fermé, a expiré à 25 s en `visible`, contre 23
+  ms en `attached`). Un sélecteur qui ne matche rien rend `detached` vrai immédiatement : sonder le gabarit de chargement de Moodle par sa *classe* répondait en
+  10 ms sans rien prouver (c'est une valeur de `data-region`).
+- **Une union d'attente doit énumérer tous les états de la page** : `bordeaux-inp.messagerie` en a trois (formulaire, consentement Shibboleth, boîte) ; avec
+  deux, elle a brûlé ses 20 000 ms.
+- **`wait_for` porte un sélecteur CSS, jamais un XPath** : le moteur embarqué lit `selector_type` sur cette action, le moteur Python non. Même piège pour les
+  pseudo-classes Playwright (`:text-is()`, `:nth-match()`). Le moteur embarqué refuse aussi un clic ambigu : un sélecteur de `click` doit matcher exactement un
+  élément.
+- **Une lecture facultative descend en `as: "list"` ou dans un bloc `optional`, jamais derrière un `when`** : un step sauté n'enregistre aucune sortie et le
+  `outputs` qui le référence lève en `StrictUndefined`. Les bonus utilisent `wait` et non `wait_for` (un timeout ferait céder le bloc), et **une lecture bonus
+  perdue ne fait aucun bruit** : à 500 ms, *Parcours* de l'INP rendait `formation_libelle` vide et le run se déclarait réussi, d'où les pauses de 6 s conservées
+  (*Parcours* rend en 2,3 s, l'arbre ADE en 2,8 s).
+
+**Mesures du 2026-09-04** (pauses aveugles de 60 s en tout, calées sur un pire cas supposé). Parcours froid de Bordeaux au poste filaire : 43,0 s avant, 19,9 s
+après. Sur Android (Expo Go, wifi eduroam du campus) : **14,1 s à Bordeaux et 25,3 s à Bordeaux INP**, widgets entre 4,4 et 9,8 s, mot de passe faux en 7,2 s
+(~20 avant), source injoignable en 24 s (~36 avant), relancement servi par le cache en 691 ms. Pas de mesure en cellulaire (la marge de 4 s couvre ce cas).
+
+**Dossier de Bordeaux.** Le portail est un **Vaadin 8** (thème Valo ; client compilé par GWT, d'où les `gwt-uid-NN`). Les champs sont ancrés par leur libellé en
+XPath (`Dossier`, `NNE` pour l'INE, `Prénom et Nom`, `Email`, `Date de naissance`) depuis le 2026-08-25 (11 libellés testés, 11 nœuds uniques) : un décalage du
+DOM ne rend plus la mauvaise valeur, il fait échouer l'extraction. **Piège** : une ligne de `v-formlayout` porte **trois** cellules (légende, erreur, contenu),
+donc `following-sibling::td[1]` tombe sur la cellule d'erreur, vide. L'`assert` ne garde que le cas non couvert, un libellé au-dessus d'une valeur vide. La
+formation vient de la vue *Inscriptions*, dont le menu est fait de `div[role=button]` qu'on **clique** (application à état serveur) : la première ligne est
+l'inscription courante, le tableau est virtualisé (seule la première ligne est acquise) et elle porte un glyphe FontAwesome collé au libellé (`M1
+Informatique\uf002`, zone d'usage privé Unicode) que la projection retire.
+
+**Messagerie.** `#zti__main_Mail__2_textCell` rend `Réception (789)` ; `as: "number"` en extrait le premier nombre et le libellé brut descend aussi, car il
+distingue une boîte sans parenthèse (zéro non lu) d'une lecture qui n'a rien trouvé. Le **user-agent de Chrome desktop** (`options.stealth.user_agent`) est
+porteur : avec un UA mobile, le service rend `/modern/`, où le compteur n'existe pas.
+
+**Moodle.** Le chemin par `/login/index.php` (SP, page de découverte) tuait la WebView Android en production (2026-08-31) alors qu'il passait au poste. L'entrée
+est le SSO initié par l'IdP, dont `target` désigne `/auth/shibboleth/index.php`, la page qui transforme l'assertion en connexion Moodle (sans elle : authentifié
+côté SP, déconnecté côté Moodle). `/Shibboleth.sso/Login?entityID=` reste mort (2026-08-28). Chronologie : sélecteurs du gabarit Moodle (4.5 et 5.0).
+
+**Documents** (mesures du 2026-08-29). L'adresse d'une pièce ReNARD est déterministe (`/document/<base64>/lang`, sans UUID ni horodatage), l'identité vient du
+cookie, la pièce est un vrai PDF servi par une simple requête. La requête part de la page (`evaluate`) ; le contenu revient en base64 par le pont, ce qui borne
+la pièce à 4 Mo. On navigue d'abord sur la racine : le retour du CAS OAuth y pointe.
+
+**Ce que l'application distingue.** CAS injoignable : `unavailable`, avec Réessayer. Échec nommé par le Blueprint : `blocked`, avec un libellé précis pour
+`CAS_INDISPONIBLE`, `MESSAGERIE_INDISPONIBLE` et tout code en `_INDISPONIBLE(S)` (`estCodeDeServiceIndisponible`, née de `MOODLE_INDISPONIBLE` affiché «
+Connexion interrompue »), `LOGIN_FAILED` n'étant pas réessayable. Libellés décalés (`assert`) : `rejected`, rien n'est écrit. Sélecteur introuvable : `data`.
 
 ## 3. Affluences — bibliothèques universitaires
 
-API privée de l'application web `affluences.com`. **Migrée en Blueprints** au jalon
-[6-D](phase-6/6-d-campus.md) : [`LibraryService.ts`](../src/features/Campus/services/LibraryService.ts)
-n'émet plus de requête, il joue trois Blueprints et travaille la donnée reçue.
+API privée de l'application web `affluences.com`, trois Blueprints (`LibraryService`) : `ukit.campus.bibliotheques`, `.bibliotheque-affluence`,
+`.bibliotheque-horaires`. Les en-têtes (`x-service-name: website`, `Origin` et `Referer` à `https://affluences.com`, `Accept-Language: fr`, `User-Agent`
+Mozilla) imitent le client web : observés, pas documentés. Aucun contrat.
 
-| Appel | Blueprint | Ce qui est resté applicatif |
-|---|---|---|
-| découverte des sites autour d'**un** point | [`ukit.campus.bibliotheques`](../blueprints/ukit-campus-bibliotheques.blueprint.json) | le balayage en douze points, le dédoublonnage, le filtre de catégorie, Haversine, le tri |
-| affluence en direct | [`ukit.campus.bibliotheque-affluence`](../blueprints/ukit-campus-bibliotheque-affluence.blueprint.json) | le choix entre `percentage` et `occupancy`, la couleur et le libellé d'état |
-| horaires d'une semaine | [`ukit.campus.bibliotheque-horaires`](../blueprints/ukit-campus-bibliotheque-horaires.blueprint.json) | la sélection du jour affiché, le défilement |
-
-Tous les appels portent les mêmes en-têtes, qui imitent le client web officiel :
-
-```http
-Accept: application/json, text/plain, */*
-Accept-Language: fr
-x-service-name: website
-Origin: https://affluences.com
-Referer: https://affluences.com/
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
-```
-
-### Découverte des sites
-
-```http
-POST https://api.affluences.com/app/v3/sites/map
-Content-Type: application/json
-
-{ "latitude": <lat>, "longitude": <lng> }
-```
-
-L'endpoint ne renvoie que les sites proches du point demandé. Pour couvrir toute la région, le service
-joue **douze runs concurrents** : la position réelle de l'utilisateur, plus onze points fixes
-(Bordeaux centre, campus Talence/Pessac/Gradignan, Pau, La Rochelle, Limoges, Poitiers,
-Bayonne/Anglet, Périgueux, Agen, Angoulême, Niort). Les résultats sont dédoublonnés par `site.id`.
-
-De tout cela, **une seule chose est descendue dans le Blueprint** : la requête. La liste des douze
-points est une décision produit (quelles villes on couvre), pas une propriété de la source ; le filtre
-de catégorie demanderait d'indexer une liste dans un prédicat, ce que la grammaire refuse des deux
-côtés et volontairement ; et Haversine est du calcul, qui n'entre pas dans un Blueprint.
-
-Seuls les sites dont `categories` contient l'identifiant **1** ou **20** sont retenus : ce sont les
-catégories de bibliothèques classiques et universitaires. Le Blueprint extrait donc
-`$.categories[*].id`, et l'application filtre.
-
-> **Piège d'arité.** Un chemin d'extraction qui ne correspond à rien rend `null`, une seule
-> correspondance rend **la valeur**, plusieurs rendent **la liste**. Tous les sites de la région
-> n'ayant qu'une catégorie, l'extraction rend `20` et **jamais** `[20]` : c'est le cas nominal, pas
-> le cas limite. `commeListe`
-> ([`LibraryMapping.ts`](../src/features/Campus/services/LibraryMapping.ts)) normalise, et un test
-> le verrouille.
-
-La distance renvoyée par l'API (`estimated_distance`, relative au point de balayage) est **recalculée**
-depuis la position réelle par une formule de Haversine ; elle ne sert de repli que si les coordonnées
-du site manquent.
-
-**Un point de balayage muet n'emporte plus les autres.** Les onze qui ont répondu s'affichent, et un
-bandeau dit que la couverture est incomplète. Zéro réponse reste un échec plein.
-
-### Affluence en temps réel
-
-```http
-GET https://api.affluences.com/app/v4/sites/{slug}/live-data
-```
-
-On en extrait `status.isOpen`, `status.closingAt`, `status.openingText`, et **les deux** chemins de
-taux d'occupation — `liveAttendance.percentage` et `liveAttendance.occupancy`, dont les deux formes
-existent selon les sites. Le choix de l'un ou de l'autre reste applicatif : un `??` n'est pas
-exprimable dans une spécification d'extraction.
-
-Un site fermé rend `liveAttendance: null` : les deux chemins ne correspondent alors à rien, et
-l'extraction rend `null`. C'est un **résultat**, pas une absence de réponse. Un slug inconnu, lui,
-rend un statut 404 que `expect` refuse : l'échec est rangé en `rejected`.
-
-### Horaires
-
-```http
-GET https://api.affluences.com/app/v4/sites/{slug}/timetables?weekOffset=<n>
-```
-
-`weekOffset` vaut 0 pour la semaine courante, et se décale pour naviguer — un **entier signé**, passé
-par `params` et donc encodé par le moteur. La réponse est utilisée telle quelle (`data.entries`), sous
-le contrat `TimetableEntry` : le Blueprint fait descendre le sous-arbre `openingHours` sans le mettre
-à plat, parce qu'une journée porte des **paires** ouverture/fermeture et que `fields` ne sait rendre
-que des champs plats.
-
-### Fragilité
-
-API non publique : ni contrat, ni versionnement annoncé, ni garantie de disponibilité pour un client
-tiers. Les identifiants de catégorie (1 et 20) restent une **constante applicative**. Le nom d'en-tête
-`x-service-name`, l'`Origin`, le `Referer` et l'agent utilisateur sont des valeurs observées, pas
-documentées — et c'est exactement pourquoi elles ont désormais leur place dans un fichier corrigeable
-à distance plutôt que dans un binaire en attente de publication.
+- **Découverte** : `POST https://api.affluences.com/app/v3/sites/map` avec `{ "latitude", "longitude" }`, qui ne renvoie que les sites proches du point. Le
+  service joue **un run concurrent par point de balayage** : la position de l'utilisateur (toujours le premier) plus les `bibliotheques_points` du catalogue,
+  deux pour Bordeaux depuis le 2026-09-03 (onze avant : mesure du 2026-08-08, Bordeaux Centre et Talence/Pessac voient les mêmes 8 sites, cinq points n'en
+  rendaient aucun, quatre villes portaient six sites que personne d'autre ne voyait). Un point muet n'emporte pas les autres (bandeau de couverture incomplète)
+  ; zéro réponse = échec.
+- **Reste applicatif** : le balayage (décision produit), le filtre de catégorie (la grammaire refuse d'indexer une liste dans un prédicat), Haversine et le tri.
+  Sont retenus les sites dont `categories` contient **1** ou **20** (`CATEGORIES_BU`). Son `estimated_distance` (relative au point de balayage) n'est qu'un
+  repli.
+- **Piège d'arité** : chaque site de la région n'ayant qu'une catégorie, `$.categories[*].id` rend `20` et jamais `[20]` : c'est le cas nominal. `commeListe`
+  (`LibraryMapping`) normalise, un test le verrouille.
+- **Affluence** (`GET /app/v4/sites/{slug}/live-data`) : le taux existe sous deux chemins selon les sites, `liveAttendance.percentage` et `.occupancy`, au choix
+  applicatif. Un site fermé rend `liveAttendance: null`, un **résultat** et non une absence de réponse ; un slug inconnu rend 404, refusé par `expect`.
+- **Horaires** (`GET /app/v4/sites/{slug}/timetables?weekOffset=<n>`, entier signé, 0 = semaine courante) : le sous-arbre `openingHours` descend tel quel, car
+  une journée porte des **paires** ouverture/fermeture que `fields`, plat, ne sait pas rendre.
 
 ## 4. Croustillant — restaurants CROUS
 
-API publique communautaire (`https://api.croustillant.menu/v1`). C'est la source la plus saine du
-lot : publique, stable, versionnée dans son chemin. **Migrée en Blueprints** au jalon
-[6-D](phase-6/6-d-campus.md) : [`CrousService.ts`](../src/features/Campus/services/CrousService.ts)
-n'émet plus de requête.
+API publique communautaire, `https://api.croustillant.menu/v1`, la source la plus saine. Deux Blueprints (`CrousService`) : `ukit.campus.restaurants` (`GET
+/regions/{region}/restaurants`) et `ukit.campus.restaurant-menu` (`GET /restaurants/{code}/menu`) ; `/restaurants/{code}/preview` n'en a pas, c'est une URL
+posée dans une balise image. La région vient du catalogue (`crous_region`, `1` pour Bordeaux) ; `null` n'est pas une panne.
 
-| Appel | Blueprint | Ce qui est resté applicatif |
-|---|---|---|
-| `GET /regions/{region}/restaurants` | [`ukit.campus.restaurants`](../blueprints/ukit-campus-restaurants.blueprint.json) | Haversine, le tri, la lecture des horaires, l'URL de visuel. **La région vient du catalogue** depuis [6-J](phase-6/6-j-compte-et-sources-par-etablissement.md) (colonne `crous_region`) : elle vaut toujours 1, mais c'est une donnée corrigeable et non plus une constante de fichier |
-| `GET /restaurants/{code}/menu` | [`ukit.campus.restaurant-menu`](../blueprints/ukit-campus-restaurant-menu.blueprint.json) | la relecture de la date, le regroupement midi/soir, les libellés de repli |
-| `GET /restaurants/{code}/preview` | *aucun* — c'est une URL construite, posée dans une balise image, jamais une requête que le service émet |
+- Les établissements de `type.code === 4` sont écartés par un `where` du Blueprint (12 des 41 de la région).
+- **`horaires` est une chaîne JSON** (`"[\"du lundi au vendredi\", \"12h-13h45\"]"`) et non un tableau : le test `Array.isArray` d'origine affichait « horaires
+  non spécifiés » pour les 41. Les deux formes sont acceptées, une troisième retombe sur `UNSPECIFIED_HOURS`.
+- **La date reçue est `DD-MM-YYYY`**, l'application manipule `YYYY-MM-DD` : conversion applicative (les filtres de date du moteur produisent un format attendu
+  par une source, ils n'en interprètent pas). Restent aussi applicatifs : Haversine et tri, regroupement des repas par `type` (`midi` / `soir`) ; `repas`
+  descend tel quel (`fields` est plat).
+- **Plus de la moitié des restaurants rendent `404` sur `/menu`** (24 des 41, dont 8 affichés) : « ce restaurant ne publie pas de menu », pas une panne. Le
+  Blueprint n'a donc pas d'`expect` : un `assert` accepte 200 **ou** 404, sinon un état vide fréquent deviendrait un message d'erreur.
 
-Traitement appliqué :
+## 5. Bordeaux INP — le second portail
 
-- les établissements de `type.code === 4` sont écartés par un **prédicat `where`** dans le Blueprint
-  (catégorie non pertinente pour l'application) — 12 des 41 établissements de la région ;
-- `horaires` est aplati en une chaîne jointe par ` | `, avec repli sur `UNSPECIFIED_HOURS` ;
-- la distance est calculée par Haversine quand la position de l'utilisateur est connue, puis la liste
-  est triée du plus proche au plus lointain ;
-- **la date reçue est convertie** : l'API renvoie `DD-MM-YYYY`, l'application manipule `YYYY-MM-DD`.
-  Cette conversion-là reste applicative, et ce n'est pas un oubli : les filtres de date du moteur
-  **produisent** un format attendu par une source, ils refusent d'en interpréter un ;
-- les repas sont regroupés par `type` (`midi` / `soir`), chaque catégorie devenant
-  `{ name: libelle, dishes: [libelle…] }`. Le sous-arbre `repas` descend du Blueprint **tel quel** :
-  un jour porte des services, qui portent des catégories, qui portent des plats, et la grammaire de
-  `fields` est plate.
+Ajouté sans release (une ligne dans `etablissements`, Blueprints sous le préfixe réservé `ukit.portail.`), aujourd'hui embarqué : `.dossier`, `.messagerie`,
+`.documents` ([`blueprints/portails/`](../blueprints/portails/)), plus les deux d'ADE. Mêmes sorties que Bordeaux (la sortie est le contrat).
 
-> **`horaires` n'est plus un tableau.** La source le sert désormais comme une **chaîne JSON**
-> (`"[\"du lundi au vendredi\", \"12h-13h45\"]"`). Le test `Array.isArray` d'origine était donc faux
-> pour les 41 restaurants, et l'application affichait « horaires non spécifiés » partout. Mesuré et
-> corrigé au jalon [6-D](phase-6/6-d-campus.md) : les deux formes sont acceptées, une troisième
-> retombe sur le libellé.
-
-> **Plus de la moitié des restaurants rendent `404` sur `/menu`.** 24 des 41, dont 8 que
-> l'application affiche. Ce n'est pas une panne, c'est « ce restaurant ne publie pas de menu » — donc
-> le Blueprint ne porte **pas** d'`expect`, et un step `assert` accepte 200 **ou** 404 en refusant
-> tout le reste. Un `expect: {status: 200}` aurait transformé un état vide fréquent en message
-> d'erreur.
-
-Le site du fournisseur est crédité dans l'écran À propos (`URL.CROUSTILLANT_WEBSITE`).
-
-## 5. jsDelivr — données éditoriales (sortie de l'inventaire)
-
-> **Cette source n'en est plus une.** Les annonces de vie étudiante sont lues dans la table
-> `annonces` de notre [base de publication](backend.md) depuis le jalon
-> [6-B](phase-6/6-b-supabase.md), et le dépôt `KAE-Lab/ukit-data` **cesse d'être écrit**. Le contrat,
-> la façon de publier et les chemins dégradés sont décrits dans
-> [features/campus-vie-etudiante.md](features/campus-vie-etudiante.md).
->
-> La section est conservée parce que le dépôt n'est **pas supprimé** : il continue de servir les
-> visuels référencés par les versions de l'application déjà installées, qui ne se mettent pas à jour
-> toutes seules.
-
-Ce que le dépôt sert encore, et qui n'est plus lu par le code actuel :
-
-```http
-GET https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/annonces.json
-GET https://cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/images/…
-```
-
-> **Le dernier lien est coupé.** Le champ `image` de [`locations.json`](../assets/locations.json)
-> pointait encore vers ce dépôt ; il est repointé sur le bucket `media` au jalon
-> [6-D](phase-6/6-d-campus.md), avec la table `batiments` qui surcouche désormais le fichier. Le
-> fichier embarqué reste le socle hors ligne du référentiel — c'est le distant qui le met à jour, et
-> jamais l'inverse.
-
-Le Blueprint [`ukit.campus.annonces`](../blueprints/ukit-campus-annonces.blueprint.json), qui portait
-cette source au jalon [6-A](phase-6/6-a-socle.md), reste dans le dépôt comme témoin du format. Il
-n'est plus joué.
-
-## 6. GitHub raw — version applicative
-
-```http
-GET https://raw.githubusercontent.com/KAE-Lab/UKit/master/VERSION
-```
-
-Comparée à la version du manifeste Expo par `UpdateAlert`
-([`AppUI.tsx`](../src/shared/ui/AppUI.tsx)) pour proposer une mise à jour vers le store. Voir
-[plateforme.md](plateforme.md) — ce mécanisme est actuellement inactif.
-
-## 6 bis. Bordeaux INP — le second portail
-
-Ajouté au jalon [6-G](phase-6/6-g-etablissements.md), **sans release** : une ligne dans
-`etablissements` et un Blueprint publié sous le préfixe réservé.
-
-| Hôte | Rôle |
-|---|---|
-| `cas.bordeaux-inp.fr` | authentification centralisée |
-| `mondossierweb.bordeaux-inp.fr` | dossier administratif — nom, prénom, date de naissance, numéro étudiant |
-| `mondossierweb.bordeaux-inp.fr/coordonnees` | adresse électronique de l'établissement |
-| `mondossierweb.bordeaux-inp.fr/acces` | le bac, les primo-inscriptions, et **l'INE** |
-| `mondossierweb.bordeaux-inp.fr/inscriptions` | l'onglet « Parcours » — **la formation courante**, une carte par année |
-| `ade.bordeaux-inp.fr/direct/myplanning.jsp` | l'arbre de ressources **sous authentification** — il présélectionne la fiche de l'étudiant, donc son emploi du temps personnel (section 8) |
-| `sso.bordeaux-inp.fr` | SAML — son IdP **délègue au CAS**, mesuré le 2026-08-28 |
-| `partage.bordeaux-inp.fr/mail` | messagerie (Zimbra « Partage ») — **le même produit que `webmel`**, donc le même sélecteur ; une page de consentement Shibboleth s'intercale à la première autorisation |
-| `ade.bordeaux-inp.fr` | emploi du temps, par export iCalendar — **porté** au jalon [6-I](phase-6/6-i-planning-universel.md), section 8 |
-
-Un seul Blueprint,
-[`ukit.portail.bordeaux-inp.dossier`](../blueprints/portails/ukit-portail-bordeaux-inp-dossier.blueprint.json),
-et il n'est **pas embarqué** dans le binaire : il arrive par le manifeste.
-
-### Ce qui diverge de Bordeaux, et qui est mesuré
-
-| | Université de Bordeaux | Bordeaux INP |
-|---|---|---|
-| Produit CAS | Apereo, thème classique | Apereo, thème MDC |
-| Soumission | `input[type=submit]` | **`<button id="submitBtn">`** |
-| Panneau d'erreur | `#loginErrorsPanel` | **le même** |
-| Produit du dossier | `mondossierweb` **Vaadin 8** (thème Valo) | `mondossierweb` **Vaadin 14+** (PC-Scol) |
-| Ancrage des champs | **par libellé**, en XPath *(depuis le 2026-08-25)* | **par libellé**, en XPath |
-| Navigation entre vues | on **clique** un menu à état serveur | de vraies routes (`/acces`, `/inscriptions`) |
-| Identité | `PRÉNOM NOM` en un champ | nom et prénom séparés |
-| INE | état civil | **onglet Accès** — voir ci-dessous |
-| Formation | vue *Inscriptions*, un tableau | vue *Parcours*, une carte par année |
-| Messagerie | derrière le CAS | derrière SAML, **qui délègue au CAS** — même Zimbra, un consentement en plus |
-| Durée du parcours froid | **43,0 s → 14,1 s** | **48,2 s → 25,3 s** |
-| Durée du parcours froid *(chiffres antérieurs)* | ~46 s | ~24 s |
-
-Les deux premières valeurs sont mesurées au poste le 2026-09-04, avant puis après le jalon
-[6.1-D](phase-6/6-1-d-publication.md) — le parcours froid est la somme de `verification` et de
-`dossier`. La ligne des chiffres antérieurs est conservée parce qu'elle a servi de référence pendant
-un mois, mais elle n'est plus comparable : celui de l'INP est **antérieur aux trois vues bonus**
-(*Accès*, *Parcours*, arbre ADE) que la sonde du 2026-08-25 a ajoutées, chacune avec sa pause.
-
-**Fragilité connue** : le numéro étudiant est lu par position dans le bandeau latéral
-(`:nth-match(vaadin-vertical-layout[slot=drawer] label, 2)`), faute d'un libellé pour l'ancrer. Le
-filet est l'`assert` sur les trois libellés de l'état-civil — un décalage du bandeau accompagnerait une
-refonte de la page, donc de ces libellés.
-
-**Piège de sélecteur, mesuré le 2026-08-10** : `:text-is()` correspond au texte **source**
-(`Nom de famille`), alors que l'extraction rend le texte **affiché**, mis en capitales par la feuille
-de style (`NOM DE FAMILLE`). Le même fichier compare donc aux deux formes, et ce n'est pas une
-étourderie.
-
-### Ce que la sonde du 2026-08-25 a ajouté, et corrigé
-
-Deux vues du menu n'avaient jamais été ouvertes. Elles portent chacune une donnée que ce document
-déclarait absente :
-
-| Vue | Route | Ce qu'on en lit |
-|---|---|---|
-| **Accès** | `/acces` | `Code INE`, l'année et la mention du bac, les primo-inscriptions |
-| **Parcours** | `/inscriptions` | une carte par année : `Formation`, `Période`, `Régime d'inscription`, `Statut de l'inscription`, `Statut du paiement`, `Statut des pièces justificatives` |
-
-> **« Bordeaux INP ne rend pas d'INE » était faux.** Il n'est pas dans l'état civil mais sous
-> l'onglet *Accès*, que le Blueprint ne visitait pas. Le champ est désormais rempli des deux côtés.
-
-> **« Documentation » n'est pas un onglet de documents.** C'est un **lien externe** vers une page
-> d'aide de l'ENT. Les vrais PDF — certificat de scolarité, attestation de paiement, relevés de notes
-> — sont des liens dans les cartes de *Parcours*, mais leur URL porte un UUID **et** un horodatage
-> régénérés à chaque rendu de page : ils ne sont pas rejouables, donc pas stockables. Ce sont des
-> portes, jamais des données.
-
-Trois précautions, mesurées et non supposées :
-
-- **la première carte de *Parcours* est l'année courante**, et les libellés apparaissent autant de
-  fois qu'il y a d'années. Un XPath par libellé seul rendrait deux nœuds : l'indexation `[1]` est
-  donc nécessaire, et elle vise la carte et non le libellé ;
-- **les libellés se lisent dans leur casse source** (`Code INE`, `Régime d'inscription`), alors que
-  l'extraction rend le texte affiché en capitales — le même piège qu'en 2026-08-10, sur de nouvelles
-  vues ;
-- **plusieurs libellés portent une apostrophe**, donc le XPath s'écrit en **guillemets doubles**,
-  sans quoi il ne compile pas.
-
-**Les deux lectures sont des bonus, et elles descendent en `as: "list"`.** C'est ce qui les empêche
-d'emporter la connexion : une liste vide ne lève jamais, là où un `as: "text"` sur un nœud absent
-fait échouer le run — et perdre l'identité pour un INE serait un mauvais marché. Un `when` aurait été
-pire : **un step sauté n'enregistre aucune sortie**, donc le bloc `outputs` qui le référence lèverait
-en `StrictUndefined`.
+- `cas.bordeaux-inp.fr` : Apereo thème MDC, soumission par **`<button id="submitBtn">`** (Bordeaux : `input[type=submit]`), `#loginErrorsPanel` identique.
+  `sso.bordeaux-inp.fr` : SAML, son IdP **délègue au CAS** (2026-08-28). `partage.bordeaux-inp.fr/mail` : Zimbra, **le même produit que `webmel`**, même
+  sélecteur, avec une page de consentement Shibboleth à la première autorisation.
+- `mondossierweb.bordeaux-inp.fr` : **Vaadin 14+ (PC-Scol)**, vraies routes, ancrage par libellé. `/` : nom et prénom séparés, naissance, numéro étudiant ;
+  `/coordonnees` : mail ; `/acces` : bac, primo-inscriptions et **INE** (pas dans l'état-civil) ; `/inscriptions` : onglet *Parcours*, une carte par année (la
+  formation). `ade.bordeaux-inp.fr/direct/myplanning.jsp` : arbre de ressources **sous authentification** (section 6).
+- **Fragilité** : le numéro étudiant est lu par position dans le bandeau latéral (`(//vaadin-vertical-layout[@slot='drawer']//label)[2]`), faute de libellé.
+  Filet : l'`assert` sur les trois libellés de l'état-civil.
+- **Casse** (mesuré le 2026-08-10) : XPath lit le texte **source** (`Nom de famille`), l'extraction rend le texte **affiché**, mis en capitales par la feuille
+  de style (`NOM DE FAMILLE`) : sélecteur et `assert` comparent donc deux formes, volontairement. Dans *Parcours*, les libellés apparaissent autant de fois que
+  d'années : l'indexation `[1]` vise la carte (la première est l'année courante).
+- **Ce qu'on ne porte pas** (sonde du 2026-08-25) : l'onglet *Documentation* est un lien externe vers une aide de l'ENT. Les PDF des cartes *Parcours*
+  (certificat, attestation de paiement, relevés) ont une URL à UUID **et** horodatage régénérés à chaque rendu : des portes, jamais des données stockables.
+- Les lectures *Accès*, *Parcours* et arbre ADE sont des bonus en blocs `optional` : leur échec laisse le run en `partial`, identité lue (2026-09-04 : une
+  identité perdue pour un INE).
 
 ## Ce que les sondes surveillent
 
-Depuis le jalon [6.1-B](phase-6/6-1-b-pilotage-a-distance.md), un workflow joue chaque matin une sonde
-par source **sans identifiant** et ouvre une issue GitHub quand une source tombe
-([`sondes/README.md`](../sondes/README.md), [pilotage.md](pilotage.md)). Ce qu'il surveille, et ce
-qu'il ne surveille pas :
+Un workflow joue chaque matin (05:00 UTC) une sonde par source **sans identifiant** et ouvre une issue GitHub quand une source tombe
+([`sondes/README.md`](../sondes/README.md), [`sondes.json`](../sondes/sondes.json)) ; les entrées qui changent (CAS, projet ADE) sont lues au catalogue.
 
 | Source | Sonde | Ce qu'elle prouve |
 |---|---|---|
-| Celcat | le Blueprint `ukit.celcat.groupes` de l'application | la liste des groupes rend plus de zéro entrée |
-| CAS de Bordeaux, CAS de Bordeaux INP | `ukit.sonde.cas` | la page de connexion sert son formulaire (`renew=true`) |
-| Moodle de Bordeaux, chaîne SSO | `ukit.sonde.moodle` | l'adresse Unsolicited SSO de l'IdP atteint le formulaire du CAS |
-| ADE de Bordeaux INP | le Blueprint `ukit.portail.bordeaux-inp.edt` de l'application | l'export d'une ressource se lit comme un calendrier |
-| La base de publication | native | le manifeste se lit et ses empreintes correspondent |
-| Affluences, Croustillant, OpenFreeMap | **aucune** | ces sources ont un écran qui dit leur panne, et aucune ne porte de session ; en ajouter une est une ligne dans `sondes/sondes.json` |
+| Celcat | `ukit.celcat.groupes` de l'application | la liste des groupes rend plus de zéro entrée |
+| CAS de Bordeaux et de Bordeaux INP | `ukit.sonde.cas` | la page de connexion sert son formulaire (`renew=true`) |
+| Moodle de Bordeaux | `ukit.sonde.moodle` | l'adresse Unsolicited SSO de l'IdP atteint le formulaire du CAS |
+| ADE de Bordeaux INP | `ukit.portail.bordeaux-inp.edt` de l'application | l'export d'une ressource se lit comme un calendrier |
+| Base de publication | native | le manifeste se lit et ses empreintes correspondent (vide, il est sain) |
+| Affluences, Croustillant, OpenFreeMap | **aucune** | un écran dit leur panne et aucune ne porte de connexion ; en ajouter une est une ligne de `sondes.json` |
 
-Les sondes prouvent qu'un formulaire est atteignable, pas qu'il se passe — le dossier d'un étudiant
-peut casser derrière un CAS qui répond. Elles voient une panne, pas une lenteur.
+Elles prouvent qu'un formulaire est atteignable, pas que le dossier derrière marche ; elles voient une panne, pas une lenteur.
+
+## 6. ADE — emploi du temps par export iCalendar
+
+Export d'abonnement du produit ADE : sur vingt universités sondées, aucune instance Celcat anonyme hors Bordeaux, alors que presque tous les produits exportent
+en iCal (RFC 5545).
+
+`https://ade.bordeaux-inp.fr/jsp/custom/modules/plannings/anonymous_cal.jsp?resources=<index>[,<index>…]&projectId=<n>&calType=ical&firstDate=AAAA-MM-JJ&lastDate=AAAA-MM-JJ`,
+`Accept: text/calendar`.
+
+Deux Blueprints (`PlanningIcalSource`) : `ukit.portail.bordeaux-inp.edt` (plage, vues jour et semaine) et `.edt.annee` (même requête sur l'année, `timeout_ms`
+60 s). Ils exigent un moteur ≥ 0.5.4 (`versions.json` : l'extraction `from: "text"` n'existe pas avant). `resources` (**index positionnels** dans l'arbre des
+ressources du projet) vient du référentiel de la colonne `edt` du catalogue ; `projectId` (le projet ADE, c'est-à-dire l'**année universitaire**) de
+`edt.params.projet` ; `firstDate` / `lastDate` sont **inclusives** et calculées par le service.
+
+**Mesures du 2026-08-15.**
+
+- **`resources` est un index, pas un identifiant ADE** : `resources=1` rend la racine (tout l'établissement, cinq écoles, 3156 événements sur l'année) et
+  l'identifiant interne lu dans un UID ne rend rien. L'index est stable à l'intérieur d'un projet, et un projet est annuel : plusieurs coexistent (`2025-2026`
+  est le vivant, `projectId=1`). `resources` accepte une liste : le planning agrégé des favoris tient en **une** requête.
+- **`DTSTART` est en UTC honnête** (un même créneau est servi `07:30Z` en septembre, `08:30Z` en novembre : 09:30 à Paris). `(Exporté le:…)` porte l'horodatage
+  de la requête et change à chaque appel (retiré par la projection). `LOCATION` porte parfois plusieurs salles (virgule échappée), souvent aucune.
+- La description suit `[commentaire…] <CODE-MODULE> <TYPE> <GROUPE…> [MATIÈRE] <ENSEIGNANT…> (Exporté le:…)`, **sans position fixe** (le commentaire de tête
+  tient zéro à deux lignes). L'ancre est le **code de module** (`^[A-Z]{3}\d-[A-Z0-9]{5}$`), le type est la ligne qui le suit.
+
+Reste applicatif : dépliage RFC 5545 par **`ical.js`**, projection sur `PlanningEvent` (`IcsMapping`), référentiel des groupes, plages, tri. **Fragilité** : le
+format est normalisé, le point faible est le **référentiel** (rien dans la source ne nomme un index), relevé par
+[`tools/releve-ade.mjs`](../tools/releve-ade.mjs), publié dans la colonne `edt` et à rejouer à chaque rentrée. Un favori qui ne résout plus produit un message
+dédié, pas une journée vide.
+
+**Accès anonyme coupé du 2026-08-25 au 2026-08-28.** L'export répondait `HTTP 500` (`com.adesoft.errors.InvalidLogin`) alors que le serveur était debout (racine
+`200`, `myplanning.jsp` `302` vers le CAS) : le compte anonyme d'ADE avait été désactivé ou son mot de passe expiré au changement de projet. Ni les dates ni le
+projet n'étaient en cause (quatre `projectId` sur trois plages : douze `500`). Rétabli sans intervention de notre part ; le harnais de parité l'avait signalé
+(deux cas rouges, cause externe : ne pas « réparer » en déplaçant les dates).
+
+**L'arbre authentifié (2026-08-24).** `myplanning.jsp`, ouvert sous le CAS, rend un arbre portant les **vrais identifiants** ADE (`Direct Planning Tree_2467`
+ENSEIRB-MATMECA, `2475` ENSMAC…), dans le même espace que `resources` : l'export anonyme les accepte.
+
+- ADE présélectionne **la fiche de l'étudiant connecté** : son identifiant personnel se lit sans recherche et l'export anonyme rend **son** emploi du temps. Cet
+  identifiant est aussi sensible qu'un lien d'abonnement nominatif.
+- Tous les nœuds ne portent pas d'événements (chez ENSEIRB, les cours sont accrochés aux étudiants et aux groupes, pas aux promotions) : un nœud publié sans
+  sondage resterait vide toute l'année. Une seule semaine ne prouve rien : `2469` (IIETE3) rend 0 événement la semaine du 12 janvier et 47 sur trois semaines
+  réparties dans l'année (d'où trois semaines au relevé).
+- L'arbre donne des noms d'école, le balayage anonyme des index sans école. `tools/releve-ade.mjs --ecoles 2467=ENSEIRB-MATMECA,…` les relie **par mesure**
+  (identifiants d'événements) et rend la **part** de cours de chaque index dans l'école : l'index `61` n'a que 2 de ses 11 cours chez ENSEIRB, une mutualisation
+  et non une appartenance. Préfixer sans cette mesure publierait l'emploi du temps d'une école sous le nom d'une autre.
+
+**Export iCalendar libre.** Repli universel : `ukit.edt.abonnement` (hors préfixe `ukit.portail.`, il n'appartient à aucun établissement) joue le lien que
+l'étudiant colle, **verbatim et sans bornes** (30 s). Le lien est le secret et vit dans le trousseau. Le découpage par date est applicatif.
 
 ## 7. Rendu cartographique
 
-[`EmbeddedMap`](../src/shared/map/EmbeddedMap.tsx) charge dans une WebView une page HTML qui
-référence :
+[`EmbeddedMap`](../src/shared/map/EmbeddedMap.tsx) charge dans une WebView une page qui référence
+`https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.{css,js}` et le style `https://tiles.openfreemap.org/styles/positron` (données OpenStreetMap, sans clé,
+autorisé en production). L'attribution reste affichée : la politique d'usage des données l'exige.
 
-- `https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css` et `maplibre-gl.js` ;
-- le style vectoriel `https://tiles.openfreemap.org/styles/positron` (OpenFreeMap : données
-  OpenStreetMap, sans clé, autorisé en production ; attribution affichée — la politique d'usage des
-  données l'exige).
+## 8. Anciennes sources : jsDelivr / `ukit-data` et GitHub raw
 
-Détails et raison de ce choix dans [cartographie.md](cartographie.md).
-
-## 8. ADE — emploi du temps par export iCalendar
-
-L'export d'abonnement du produit ADE, joint **directement** depuis l'appareil. C'est la réponse au
-constat qui a ouvert le jalon [6-I](phase-6/6-i-planning-universel.md) : un balayage de vingt
-universités françaises n'a trouvé **aucune** instance Celcat interrogeable sans authentification hors
-Bordeaux, alors que presque tous les produits savent exporter en iCal (RFC 5545).
-
-```
-GET https://ade.bordeaux-inp.fr/jsp/custom/modules/plannings/anonymous_cal.jsp
-    ?resources=<index>[,<index>…]
-    &projectId=<n>
-    &calType=ical
-    &firstDate=AAAA-MM-JJ
-    &lastDate=AAAA-MM-JJ
-Accept: text/calendar
-```
-
-| Blueprint | Ce qu'il joue | Consommé par |
-|---|---|---|
-| [`ukit.portail.bordeaux-inp.edt`](../blueprints/portails/ukit-portail-bordeaux-inp-edt.blueprint.json) | une plage de dates : la vue jour et la vue semaine | [`PlanningIcalSource`](../src/features/Planning/services/PlanningIcalSource.ts) |
-| [`ukit.portail.bordeaux-inp.edt.annee`](../blueprints/portails/ukit-portail-bordeaux-inp-edt-annee.blueprint.json) | la même requête sur l'année, `timeout_ms` à 60 s | idem |
-
-Ni l'un ni l'autre n'est **embarqué** : ils vivent sous le préfixe réservé `ukit.portail.` et arrivent
-par le manifeste, comme le portail du même établissement. Ils déclarent `min_engine: "0.5.4"` — leur
-extraction `from: "text"` n'existe pas avant.
-
-### Les constantes, et leur signification
-
-| Paramètre | Sens | D'où il vient |
-|---|---|---|
-| `resources` | **index positionnels** dans l'arbre des ressources du projet, séparés par des virgules | le référentiel de la colonne `edt` du catalogue |
-| `projectId` | le projet ADE, c'est-à-dire l'**année universitaire** | `edt.params.projet` du catalogue |
-| `calType` | `ical` — le seul format qui nous intéresse | `vars` du Blueprint |
-| `firstDate` / `lastDate` | les bornes, **inclusives** | calculées par le service (heure courante) |
-
-### Ce que la mesure du 2026-08-15 a établi
-
-- **`resources` n'est pas un identifiant ADE mais un index.** `resources=1` rend la racine de l'arbre
-  — tout l'établissement, cinq écoles, 3156 événements sur l'année — et l'identifiant interne lu dans
-  un UID ne rend rien. L'index est stable *à l'intérieur* d'un projet, et un projet est annuel ;
-- **plusieurs projets coexistent**, et leurs noms sont lisibles dans les UID : `2025-2026` (le vivant,
-  `projectId=1`), `NEPASTOUCHER2526_SAUV`, `2526_POUR_ESUP`, `TMP2526`. `projectId=2` est une
-  quasi-coquille vide — 54 événements sur l'année ;
-- **les bornes sont inclusives** et `resources` accepte une liste : le planning agrégé des favoris
-  tient en **une** requête, comme `federationIds[]` chez Celcat ;
-- **`DTSTART` est en UTC honnête** : le même créneau hebdomadaire est servi `07:30Z` en septembre et
-  `08:30Z` en novembre, soit 09:30 à Paris les deux fois ;
-- **`(Exporté le:…)` porte l'horodatage de la requête** et change à chaque appel. Il est retiré par la
-  projection ;
-- **`LOCATION` peut porter plusieurs salles**, séparées par une virgule échappée RFC 5545, et est
-  souvent vide.
-
-### La forme du corps
-
-```
-BEGIN:VEVENT
-DTSTART:20251118T083000Z
-DTEND:20251118T095000Z
-SUMMARY:Traitement du signal
-LOCATION:CC-S112
-DESCRIPTION:\n\nCOG7-SCFTS\nTD\n2A GR1\nTraitement du signal\nFARR
- ELL Flora\n(Exporté le:15/08/2026 17:12)\n
-UID:ADE60323032352d323032362d3831392d302d3132
-END:VEVENT
-```
-
-La description suit la forme
-`[commentaire…] <CODE-MODULE> <TYPE> <GROUPE…> [MATIÈRE] <ENSEIGNANT…> (Exporté le:…)`, et **les
-champs ne sont pas à position fixe** : le bloc de commentaire de tête tient zéro, une ou deux lignes.
-L'ancre est le **code de module** (`^[A-Z]{3}\d-[A-Z0-9]{5}$`) ; le type est la ligne qui le suit.
-
-### Ce qui reste applicatif
-
-Le dépliage de lignes et le déshabillage RFC 5545 sont confiés à **`ical.js`** ; la projection sur
-`PlanningEvent` vit dans [`IcsMapping`](../src/features/Planning/services/IcsMapping.ts). Le
-référentiel des groupes, le calcul des plages, le tri et le découpage de la semaine restent
-applicatifs — ce sont des calculs, et un calcul dans un Blueprint devrait être réimplémenté à
-l'identique dans les deux moteurs.
-
-### L'accès anonyme a été coupé quelques jours — mesuré les 2026-08-25 et 2026-08-28
-
-```
-GET .../anonymous_cal.jsp?resources=7&projectId=1&calType=ical&firstDate=…&lastDate=…
-→ HTTP 500
-   org.apache.jasper.JasperException: com.adesoft.errors.InvalidLogin: Invalid login.
-```
-
-**Le serveur est debout** — sa racine rend `200`, `myplanning.jsp` rend `302` vers le CAS. C'est
-l'export **anonyme** qui refuse, et le message ne laisse pas de doute sur la cause : le compte
-anonyme d'ADE a été désactivé, ou son mot de passe a expiré au changement de projet.
-
-Ce n'est **pas** une question de dates ni de projet : les quatre `projectId` connus ont été essayés
-sur trois plages, dont l'année écoulée qui fonctionnait en août — **douze combinaisons, douze `500`**.
-
-> **Rétabli le 2026-08-28**, sans intervention de notre part : les deux cas de parité iCal sont
-> repassés au vert d'eux-mêmes. La panne aura duré quelques jours.
-
-Ce que l'épisode a établi, et qui vaut d'être gardé :
-
-- **le harnais de parité a fait exactement son travail.** Deux cas rouges, une cause externe, et
-  l'information est arrivée avant que des utilisateurs la remontent : *« un cas peut échouer parce
-  que la source est en panne. C'est une information »*
-  ([tools/parity/README.md](../tools/parity/README.md)). La tentation était de « réparer » les cas en
-  déplaçant leurs dates — ça aurait masqué la panne ;
-- **ce n'était ni les dates ni le projet.** Les quatre `projectId` connus ont été essayés sur trois
-  plages, dont l'année écoulée qui fonctionnait la veille : **douze combinaisons, douze `500`**. Le
-  message d'erreur, lui, nommait la cause sans ambiguïté ;
-- **le remède appartenait à l'établissement**, et il a été appliqué chez lui. Si ça recommence, la
-  piste sérieuse est `myplanning.jsp` sous CAS, que le Blueprint de dossier traverse déjà.
-
-### Fragilité connue
-
-Le point faible n'est pas le format, qui est normalisé, mais **le référentiel** : rien dans la source
-ne nomme un index. Il est relevé par [`tools/releve-ade.mjs`](../tools/releve-ade.mjs), publié dans la
-colonne `edt`, et se rejoue à chaque rentrée. Un groupe favori qui ne résout plus produit un message
-dédié plutôt qu'une journée vide.
-
-### L'arbre authentifié, et ce qu'il change au relevé (2026-08-24)
-
-`myplanning.jsp`, ouvert **sous le CAS**, rend un arbre de ressources qui porte les **vrais
-identifiants** ADE et leurs noms : `Direct Planning Tree_2467` pour ENSEIRB-MATMECA, `2475` pour
-ENSMAC, `2492` pour ENSTBB… Ces identifiants vivent dans le même espace que `resources` — l'export
-anonyme les accepte tels quels.
-
-Trois choses en découlent, et aucune n'est théorique :
-
-- **ADE présélectionne la fiche de l'étudiant connecté.** Son identifiant personnel se lit donc sans
-  aucune recherche, et l'export anonyme rend **son** emploi du temps. C'est ce qui rend l'identifiant
-  aussi sensible qu'un lien d'abonnement nominatif
-  ([scolarite.md](features/scolarite.md#lidentifiant-ade-vaut-un-secret)) ;
-- **tous les nœuds de l'arbre ne portent pas d'événements.** Chez ENSEIRB, les cours sont accrochés
-  aux étudiants et aux groupes, pas aux promotions. Publier un nœud d'arbre sans l'avoir sondé
-  donnerait un groupe qui s'affiche, se choisit, et reste vide toute l'année ;
-- **une seule semaine ne prouve rien.** `2469` (IIETE3) rend 0 événement sur la semaine du 12 janvier
-  et 47 sur trois semaines réparties dans l'année. C'était déjà la raison d'être des trois semaines
-  du relevé ; c'est mesuré une seconde fois, sur un autre cas.
-
-L'arbre donne des **noms d'école**, le balayage anonyme donne des **index de groupe** sans nom d'école
-(`1A GR3`, `T2`, `MAT-1A`). `tools/releve-ade.mjs --ecoles 2467=ENSEIRB-MATMECA,…` relie les deux par
-**mesure** : il compare les identifiants d'événements et rend, pour chaque index, l'école qui porte
-ses cours et la **part** que ça représente. La part compte — l'index `61` n'a que 2 de ses 11 cours
-dans ENSEIRB, ce qui est une mutualisation et non une appartenance. Préfixer un groupe sans cette
-mesure publierait l'emploi du temps d'une école sous le nom d'une autre.
+Les annonces sont lues dans la table `annonces` de notre base de publication ; le code ne lit plus jsDelivr, sans repli (il servirait du contenu périmé et
+masquerait les pannes). Le dépôt `KAE-Lab/ukit-data` n'est plus écrit mais n'est pas supprimé : il sert encore les visuels
+(`cdn.jsdelivr.net/gh/KAE-Lab/ukit-data@main/images/…`) des versions déjà installées.
+[`ukit.campus.annonces`](../blueprints/ukit-campus-annonces.blueprint.json) reste embarqué comme témoin du format, sans être joué. De même, `UpdateAlert` ne lit
+plus le fichier `VERSION` de GitHub raw mais la table `app_release` : l'ancienne adresse visait une branche `master` renommée depuis, et le contrôle échouait en
+silence.
 
 ## Modèle d'erreur commun
 
-Les services non migrés ne propagent aucune exception. Les conventions de repli sont :
-
-| Service | Valeur en cas d'échec |
-|---|---|
-| `PlanningApiService`, `CampusApiService` | `null` |
-
-C'est un choix cohérent avec le fonctionnement hors ligne (l'appelant retombe sur le cache ou sur un
-état vide), mais il a une conséquence : **une panne du fournisseur et une réponse légitimement vide
-sont indistinguables**. Un écran affichant « aucun résultat » peut donc masquer une source
-indisponible. Toute évolution de ce modèle doit être décidée globalement, pas service par service.
-
-C'est exactement ce que fait la [Phase 6](phase-6/README.md), et c'est son changement le plus
-structurant : un échec devient **typé** et rangé dans une famille d'écran — source en panne, réponse
-inattendue, contenu introuvable, identifiants manquants, échec nommé par le Blueprint — et une liste
-vide redevient une liste vide. Le tableau ci-dessus rétrécit source par source, au rythme de la
-migration ([blueprints.md](blueprints.md#les-erreurs-cessent-dêtre-avalées)).
-
-**`BdeService` en est sorti pour de bon** au jalon [6-B](phase-6/6-b-supabase.md), et il sert de
-gabarit aux suivants. Son échec n'est plus seulement journalisé : il est **rendu** à l'appelant
-(`{ ok: false, failure }`), et l'écran de vie étudiante l'affiche — message de la famille, et bouton
-Réessayer quand réessayer peut réparer quelque chose. Le repli qui masquait tout a été retiré en même
-temps ; c'est lui qui rendait la distinction invisible.
-
-**`CrousService` et `LibraryService` en sont sortis** au jalon [6-D](phase-6/6-d-campus.md), sur le
-même gabarit. Leurs cinq méthodes rendent une union `{ ok: true, … } | { ok: false, failure }` ; les
-types de données (`CrousRestaurant`, `CrousDayMenu`, `LibraryInfo`, `AffluencesData`,
-`TimetableEntry`) n'ont **pas** bougé. Une nuance de plus y apparaît, propre au balayage en douze
-points : une couverture **partielle** n'est ni un succès muet ni un échec, elle se dit par un bandeau
-au-dessus de la liste.
-
-La forme du résultat est calquée sur `BlueprintRun` du socle, délibérément : qu'une donnée vienne
-d'un Blueprint ou d'une table, l'écran voit la même grammaire d'échec.
+Tous les services de données rendent `{ ok: true, … }` ou `{ ok: false, failure }` (on teste `resultat.ok === false`). L'échec est **typé** et rangé dans une
+famille d'écran (source en panne, réponse inattendue, contenu introuvable, identifiants manquants, échec nommé par le Blueprint) : source injoignable, statut
+inattendu et journée vide légitime donnent trois écrans différents. Une **couverture partielle** (point de balayage muet, favori ADE périmé) n'est ni un succès
+muet ni un échec : elle se dit par un bandeau au-dessus de la liste. Les défauts connus sont dans [`defauts-fonctionnels.md`](defauts-fonctionnels.md).
 
 ## Vérifier
 
-Pour chaque source touchée par un changement, jouer le chemin nominal **et** le chemin dégradé :
+Pour chaque source touchée, jouer le chemin nominal **et** le chemin dégradé : mode avion (cache daté du planning, état explicite de Campus), réseau coupé après
+le lancement, portail avec un mot de passe erroné (`LOGIN_FAILED` attendu) puis avec un compte valide sans données froides (parcours froid complet). Modifier un
+fichier de [`blueprints/`](../blueprints/) (hôte en `.invalid`, `expect` impossible, chemin d'extraction faux) produit chaque famille d'échec sans toucher à la
+connectivité. `npm run parity` couvre le nominal sur les vraies sources ; le chemin dégradé mérite l'appareil.
 
-- Mode avion : l'écran doit afficher le cache daté (planning) ou un état explicite (Campus).
-- Source injoignable : couper le réseau après le lancement, naviguer, vérifier l'absence de plantage.
-- Session universitaire : tester un mot de passe erroné (`LOGIN_FAILED` attendu) et un compte valide
-  sans données froides (parcours `cold` complet).
-
-Pour une source **migrée en Blueprint**, il y a mieux que le mode avion, et c'est la démonstration du
-dispositif : modifier le fichier de [`blueprints/`](../blueprints/) — un hôte en `.invalid`, un
-`expect` impossible, un chemin d'extraction faux — produit chacune des familles d'échec à la demande,
-sans toucher à la connectivité de l'appareil ni casser Metro. `npm run parity` couvre le nominal en
-quelques secondes et sur les vraies sources ; c'est le chemin dégradé qui mérite l'appareil.

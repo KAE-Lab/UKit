@@ -10,7 +10,7 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
-Le jalon [7-D](docs/phase-7/7-d-la-mesure.md), la mesure, en premier sur la branche `v6.3` : des
+Le jalon 7-D, la mesure, en premier sur la branche `v6.3` : des
 compteurs anonymes, sans identifiant, avec un interrupteur, et jamais de réseau au démarrage.
 
 ### Ajouté
@@ -19,7 +19,7 @@ compteurs anonymes, sans identifiant, avec un interrupteur, et jamais de réseau
   vue, ouverte ou dont le bouton est touché, un restaurant, une bibliothèque ou un bâtiment consulté,
   la vue du Planning, une connexion universitaire aboutie ou refusée, une source qui n'a pas répondu,
   et l'état des quatre réglages à chaque session : seize événements, un vocabulaire fermé
-  ([docs/mesure.md](docs/mesure.md)). Ce qui part vers la base est un **nombre** par jour — par
+  (docs/mesure.md). Ce qui part vers la base est un **nombre** par jour — par
   heure pour les sessions, les onglets et les échecs de source —, par campus, version, plateforme et
   statut de testeur. Aucun identifiant, aucun contenu saisi.
 - **Une file locale, et un envoi groupé.** Les compteurs s'accumulent dans `mesures@1`, bornée à
@@ -46,7 +46,7 @@ compteurs anonymes, sans identifiant, avec un interrupteur, et jamais de réseau
 - **`CarrouselDeSection` et `CampusListLayout` acceptent le couple de visibilité** d'une `FlatList`,
   que les deux listes d'annonces leur passent.
 
-Le jalon [7-H](docs/phase-7/7-h-console-roles.md), les rôles et l'équipe, sur `main` et sans release :
+Le jalon 7-H, les rôles et l'équipe, sur `main` et sans release :
 la console s'ouvre à une équipe sans lui donner les clés de la production.
 
 ### Ajouté
@@ -96,7 +96,7 @@ la console s'ouvre à une équipe sans lui donner les clés de la production.
 - **L'adresse du compte se brisait au milieu des mots** en bas de la navigation : elle tient sur une
   ligne, entière au survol.
 
-Le jalon [7-F](docs/phase-7/7-f-console-annonces.md), les annonces dans la console, sur `main` et sans
+Le jalon 7-F, les annonces dans la console, sur `main` et sans
 release : une annonce se compose en voyant ce qu'elle donnera sur un téléphone.
 
 ### Ajouté
@@ -158,7 +158,7 @@ release : une annonce se compose en voyant ce qu'elle donnera sur un téléphone
   colonne « État » dit désormais ce que voient les téléphones, par la règle de la pastille de
   l'éditeur, que le tableau de bord emploie aussi.
 
-Le jalon [7-E](docs/phase-7/7-e-console-socle.md), le socle de la console, sur `main` et sans release :
+Le jalon 7-E, le socle de la console, sur `main` et sans release :
 la console de pilotage refondue sur un socle standard, pour devenir l'outil d'une équipe.
 
 ### Ajouté
@@ -197,7 +197,7 @@ la console de pilotage refondue sur un socle standard, pour devenir l'outil d'un
 
 ## [6.2.2] - 2026-09-21
 
-Le jalon [7-C](docs/phase-7/7-c-economie-et-socle.md), économie et socle : une version courte, rendue
+Le jalon 7-C, économie et socle : une version courte, rendue
 économe envers la base de publication et envers les serveurs des universités, avec un dépôt prêt pour
 les jalons qui suivent.
 
@@ -206,7 +206,7 @@ les jalons qui suivent.
 - **Le formulaire de retours s'ouvre pré-rempli.** Depuis la pastille grise d'un onglet, la section du
   bug, l'appareil, le système et la version de l'application sont déjà écrits ; depuis un campus que
   l'application ne porte pas encore, « Demander un campus » est déjà coché. Les numéros de question
-  vivent dans le catalogue publié, pas dans l'application ([7-C](docs/phase-7/7-c-economie-et-socle.md)).
+  vivent dans le catalogue publié, pas dans l'application (7-C).
 - **Un disjoncteur par source.** Quand un serveur universitaire tombe, les relectures que personne n'a
   demandées — le retour sur l'onglet Planning, le retour au premier plan des widgets, un cache expiré —
   s'arrêtent après trois échecs, pour 30 secondes, puis 2 puis 10 minutes ; un geste — « Réessayer »,
@@ -238,7 +238,7 @@ les jalons qui suivent.
   sécurité transitifs appliqués : 35 vulnérabilités signalées deviennent 15, toutes modérées et
   épinglées par le SDK, qui attendent la prochaine montée du socle.
 - **Les visuels publiés sont servis avec un cache d'un an, et pèsent quatre fois moins.** Rien à
-  installer : le jalon [7-A](docs/phase-7/7-a-bande-passante.md) s'est joué sur le bucket et la base,
+  installer : le jalon 7-A s'est joué sur le bucket et la base,
   et les versions déjà installées en profitent au prochain retour au premier plan. Les visuels
   étaient servis en `no-cache`, à 400 ou 500 Ko l'unité, ce qui avait porté la bande passante à deux
   fois le quota du plan : 1 268 892 octets sont devenus 299 000. Un outil du dépôt
@@ -247,7 +247,7 @@ les jalons qui suivent.
 
 ## [6.2.1] - 2026-09-13
 
-Les ajustements d'après sortie, en un seul jalon ([docs/phase-6/6-2-x-ajustements.md](docs/phase-6/6-2-x-ajustements.md)) : ce que la production a confirmé, ce que le formulaire et un Galaxy A8 de 2018 ont montré, et un second appareil de test permanent.
+Les ajustements d'après sortie, en un seul jalon (docs/phase-6/6-2-x-ajustements.md) : ce que la production a confirmé, ce que le formulaire et un Galaxy A8 de 2018 ont montré, et un second appareil de test permanent.
 
 ### Ajouté
 
@@ -308,8 +308,8 @@ Les ajustements d'après sortie, en un seul jalon ([docs/phase-6/6-2-x-ajustemen
 
 Le socle monte, ce qui a été signalé se corrige, et trois capacités arrivent au passage. Développée
 sur la branche `v6.1.x`, elle devait s'appeler 6.1.1 : ce qu'elle a fini par porter en fait une
-mineure ([docs/phase-6/6-2-mise-a-plat.md](docs/phase-6/6-2-mise-a-plat.md),
-[docs/phase-6/6-1-x-z-sortie.md](docs/phase-6/6-1-x-z-sortie.md)).
+mineure (docs/phase-6/6-2-mise-a-plat.md,
+docs/phase-6/6-1-x-z-sortie.md).
 
 ### Ajouté
 
@@ -448,7 +448,7 @@ mineure ([docs/phase-6/6-2-mise-a-plat.md](docs/phase-6/6-2-mise-a-plat.md),
 
 ## [6.1.0] - 2026-09-06
 
-La consolidation de la v6 ([docs/phase-6/6-1-mise-a-plat.md](docs/phase-6/6-1-mise-a-plat.md)) : ce que
+La consolidation de la v6 (docs/phase-6/6-1-mise-a-plat.md) : ce que
 la première soirée en production a montré de fragile, réparé avant tout contenu nouveau.
 
 ### Ajouté
@@ -719,7 +719,7 @@ réparations rapides.
 
 - **Les dialogues, les états et les boutons ne parlent plus qu'une langue.** Neuf modales, six écrans
   d'état vide ou d'erreur et quatre formes de bouton se sont alignés sur un vocabulaire unique. Le
-  détail est dans [docs/theme.md](docs/theme.md) ; ce qui change à l'usage :
+  détail est dans docs/theme.md ; ce qui change à l'usage :
 
   - **les dialogues sont recadrés.** Le conteneur était trop rond et trop serré (`radius.xl`,
     `space.md`), les boutons trop gros pour leur libellé — 150 de large et 52 de haut sous un texte de
@@ -822,7 +822,7 @@ réparations rapides.
   fausse, n'en montre aucune » et rend la main au visuel embarqué, et retirer la ligne rend son image à
   la source. Elle n'a **aucun socle embarqué**, et c'est ce qui la rend intégralement retirable : sans
   ligne, l'application affiche exactement ce qu'elle affichait avant. Voir
-  [docs/backend.md](docs/backend.md).
+  docs/backend.md.
 
 - **Une section vide du tableau de bord Campus dit pourquoi, et propose un geste.** Un carrousel sans
   carte n'affichait rien du tout sous son en-tête, ce qui se lit comme une application cassée. Il
@@ -990,7 +990,7 @@ réparations rapides.
   annonçait que tout avait été effacé. La confirmation de changement d'établissement le dit désormais
   dans les trois langues.
 
-- **L'emploi du temps universel** (jalon [6-I](docs/phase-6/6-i-planning-universel.md)).
+- **L'emploi du temps universel** (jalon 6-I).
   **Bordeaux INP a un emploi du temps**, par l'**export iCalendar** de son serveur ADE — et l'écran est
   celui de Bordeaux au pixel près : aucun composant n'a été modifié pour ça.
 
@@ -1034,9 +1034,9 @@ réparations rapides.
   établissement n'avait pas d'emploi du temps ; dès qu'il en a eu un, l'onglet Planning annonçait
   « ce groupe n'existe plus » pour un groupe qui existe, à l'université qu'on venait de quitter.
 
-- **Le multi-établissement** (jalon [6-G](docs/phase-6/6-g-etablissements.md)). UKit n'est plus une
+- **Le multi-établissement** (jalon 6-G). UKit n'est plus une
   application mono-université : le **catalogue des établissements** vit dans la
-  [base de publication](docs/backend.md) et pilote l'interface. Ajouter une université est désormais
+  base de publication et pilote l'interface. Ajouter une université est désormais
   **une ligne en base et un fichier publié** — pas une release, pas une revue de store.
 
   **Bordeaux INP est en ligne, et il est arrivé sans release.** Son portail a été écrit et joué contre
@@ -1073,7 +1073,7 @@ réparations rapides.
   d'emploi du temps.
 
 - **La phase 6 gagne un second volet : la refonte visuelle**
-  ([6-K](docs/phase-6/6-k-socle-visuel.md)). Une phase correspond à une version, et rien ne part sur
+  (6-K). Une phase correspond à une version, et rien ne part sur
   les stores tant que l'application n'est pas présentable : le volet 1 l'a rendue **corrigeable**, le
   volet 2 la rend **montrable**. Le socle visuel y est **extrait** des écrans qui font déjà référence
   — Planning, la barre d'onglets, le tableau de bord Campus, les listes CROUS et bibliothèques — et
@@ -1084,16 +1084,16 @@ réparations rapides.
   le nombre de jalons ajoutés, et un dossier trié par nom se lit alors dans l'ordre d'exécution.
 
 - **Une spécification ouverte pour l'emploi du temps universel**
-  ([6-I](docs/phase-6/6-i-planning-universel.md)). Le second établissement n'a pas de planning dans
+  (6-I). Le second établissement n'a pas de planning dans
   UKit, et ce n'est pas un oubli : presque aucune université française n'expose un Celcat ouvert. La
   voie mesurée est l'export **iCal**, qui existe partout — elle demande une capacité que le moteur n'a
   pas encore, et le document dit laquelle et pourquoi elle ne se contourne pas ici.
 
 - **La session universitaire jouée par le moteur** (jalon
-  [6-F](docs/phase-6/6-f-scolarite.md)). `ScolariteWebSession.tsx` est **supprimé** : 323 lignes de
+  6-F). `ScolariteWebSession.tsx` est **supprimé** : 323 lignes de
   WebView cachée pilotée par du JavaScript en gabarits de chaîne, quatre scripts déclenchés selon
   l'URL de fin de chargement, trois `MutationObserver` avec trois plafonds différents et un garde-fou
-  global de 60 s deviennent deux [Blueprints](docs/blueprints.md) — `ukit.scolarite.dossier` pour le
+  global de 60 s deviennent deux Blueprints — `ukit.scolarite.dossier` pour le
   parcours froid, `ukit.scolarite.messagerie` pour le parcours chaud.
 
   **Les identifiants ne traversent plus la source d'un script.** Ils sont encodés en JSON et
@@ -1137,8 +1137,8 @@ réparations rapides.
   distinction froid/chaud, et la promesse que les identifiants ne vont qu'au CAS de l'université.
 
 - **L'emploi du temps joué par le moteur, et un serveur en moins** (jalon
-  [6-E](docs/phase-6/6-e-planning.md)). `PlanningApiService` et `CampusApiService` n'émettent plus
-  aucune requête : six [Blueprints](docs/blueprints.md) portent les six appels que l'application joue
+  6-E). `PlanningApiService` et `CampusApiService` n'émettent plus
+  aucune requête : six Blueprints portent les six appels que l'application joue
   réellement — la liste des groupes, une journée, une semaine, la plage annuelle de synchronisation,
   la liste des salles, l'occupation d'un bâtiment. `axios` et `qs` disparaissent des deux services et
   de `ScheduleList`.
@@ -1157,9 +1157,9 @@ réparations rapides.
 
   Vérifié sur iPhone : vue jour et semaine identiques, planning agrégé, synchronisation calendrier
   sans doublon, et les trois familles d'échec produisant trois écrans distincts. Captures dans
-  [docs/features/planning.md](docs/features/planning.md). Deux points restent **non vérifiés** et sont
+  docs/features/planning.md. Deux points restent **non vérifiés** et sont
   écrits comme tels : la tâche de fond application fermée, et le réseau Wi-Fi (les sondes ont été
-  jouées en 4G) — voir [6-e-planning.md](docs/phase-6/6-e-planning.md).
+  jouées en 4G) — voir 6-e-planning.md.
 
   **Le cache n'a pas bougé d'un octet.** Il enveloppe l'appel, avant comme après — c'est ce qui rend
   la bascule invisible sur la seule fonctionnalité que l'application promet de faire marcher hors
@@ -1176,17 +1176,17 @@ réparations rapides.
   finissait par ne pas tester le chemin dégradé, celui qui décide de l'expérience réelle. Les deux
   volets sont nécessaires — sans le second, les écrans Campus ne verraient rien, ils ne consultent
   pas `NetInfo`. Ne couvre pas la WebView de l'Act II, ce qui est écrit.
-  [docs/qualite.md](docs/qualite.md)
+  docs/qualite.md
 
-- **Le planning distingue enfin ses échecs** (jalon [6-E](docs/phase-6/6-e-planning.md)). Une source
+- **Le planning distingue enfin ses échecs** (jalon 6-E). Une source
   injoignable affiche « Service indisponible » avec Réessayer, une réponse inattendue le dit sans
   proposer de rejouer, et une journée légitimement vide garde sa carte « pas de cours ». Un échec
   réseau sans cache **laissait auparavant l'indicateur de chargement tourner indéfiniment** ; il
   produit désormais un écran nommé. Le bandeau de cache daté, lui, est inchangé.
 
-- **Les sources de campus jouées par le moteur** (jalon [6-D](docs/phase-6/6-d-campus.md)).
+- **Les sources de campus jouées par le moteur** (jalon 6-D).
   `CrousService` et `LibraryService` n'émettent plus aucune requête : cinq
-  [Blueprints](docs/blueprints.md) portent les cinq appels que l'application joue réellement —
+  Blueprints portent les cinq appels que l'application joue réellement —
   restaurants, menu d'un restaurant, sites d'un point de balayage, affluence, horaires d'une semaine.
   Les URLs, les en-têtes imités du client web Affluences et les constantes de protocole deviennent des
   fichiers corrigeables à distance ; `axios`, `qs` et `fetch` disparaissent des deux services.
@@ -1206,15 +1206,15 @@ réparations rapides.
   bandeau qui signale qu'elle est peut-être incomplète.
 
 - **Le référentiel des bâtiments gagne sa surcouche distante** (jalon
-  [6-D](docs/phase-6/6-d-campus.md)). `assets/locations.json` reste le socle embarqué — l'application
+  6-D). `assets/locations.json` reste le socle embarqué — l'application
   doit être complète hors ligne et au premier lancement — et la table `batiments` le corrige **champ
   par champ**, sans jamais écraser une valeur avec du vide. Un horaire faux, une coordonnée décalée ou
   un visuel à remplacer se corrigent désormais sans release, ce qui est le défaut le plus banal de ce
   référentiel.
 
-- **La livraison des Blueprints** (jalon [6-C](docs/phase-6/6-c-livraison.md)). C'est le jalon où la
+- **La livraison des Blueprints** (jalon 6-C). C'est le jalon où la
   phase commence à payer : **corriger une source devient une publication de fichier, pas une
-  release**. Le registre résout chaque [Blueprint](docs/blueprints.md) entre le socle embarqué dans
+  release**. Le registre résout chaque Blueprint entre le socle embarqué dans
   le binaire et une surcouche publiée sur la base ; `npm run blueprints:publish` valide, téléverse,
   calcule les empreintes et régénère le manifeste, et la correction atteint les appareils au retour
   au premier plan suivant.
@@ -1235,7 +1235,7 @@ réparations rapides.
   rafraîchissement — la question « pourquoi ma correction n'arrive pas » se répond en trois secondes.
 
 - **La base de publication, et les annonces qui y passent** (jalon
-  [6-B](docs/phase-6/6-b-supabase.md)). UKit a désormais un dos : un projet Supabase mince, dont le
+  6-B). UKit a désormais un dos : un projet Supabase mince, dont le
   schéma et les politiques d'accès vivent dans [`supabase/`](supabase/) et s'appliquent depuis ces
   fichiers. Les annonces de vie étudiante y sont lues, visuels compris ; le dépôt `ukit-data` servi
   par jsDelivr cesse d'être écrit, et son repli est retiré. Le référentiel des 73 bâtiments y est
@@ -1254,8 +1254,8 @@ réparations rapides.
   masquait.
 
 - **Le socle du moteur Aetherius et la première source migrée** (jalon
-  [6-A](docs/phase-6/6-a-socle.md)). L'application embarque `@aetherius/engine` et
-  `@aetherius/react-native`, sait jouer un [Blueprint](docs/blueprints.md) depuis n'importe quel
+  6-A). L'application embarque `@aetherius/engine` et
+  `@aetherius/react-native`, sait jouer un Blueprint depuis n'importe quel
   service, et **les annonces de vie étudiante y passent déjà**, derrière la signature inchangée de
   `BdeService.fetchAnnonces` — l'ancien chemin reste en repli jusqu'au jalon 6-Z. Rien ne change
   pour l'utilisateur : c'est la fondation des sept jalons suivants.
@@ -1269,43 +1269,43 @@ réparations rapides.
 - **Un premier harnais de test automatisé**, borné au socle du moteur : `npm test`
   ([vitest](https://vitest.dev)) couvre la résolution des secrets, le registre de Blueprints et la
   table du modèle d'erreur. `npm run parity` rejoue le Blueprint des annonces contre la vraie source
-  et le compare au service historique. [docs/qualite.md](docs/qualite.md)
+  et le compare au service historique. docs/qualite.md
 - **Cadrage et squelette de la Phase 6** — la façon d'atteindre les sources distantes va quitter le
-  binaire pour devenir des [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué,
+  binaire pour devenir des Blueprints joués par le moteur Aetherius embarqué,
   publiés depuis une base et corrigeables sans release. Ce changement pose la documentation de phase
-  ([docs/phase-6/](docs/phase-6/README.md), huit jalons spécifiés), les deux documents transverses
-  ([blueprints.md](docs/blueprints.md), [backend.md](docs/backend.md)), le socle de code
+  (docs/phase-6/, huit jalons spécifiés), les deux documents transverses
+  (blueprints.md, backend.md), le socle de code
   (`src/shared/aetherius/`, `src/shared/supabase/`), les six Blueprints de référence dans
   [`blueprints/`](blueprints/), le schéma et les politiques de la base ([`supabase/`](supabase/)) et
   le [harnais de parité](tools/parity/README.md).
 - **Onglet Campus et son tableau de bord** — quatre sections indépendantes (annonces, restaurants,
   bibliothèques, salles libres) au-dessus d'un socle de liste commun : recherche, filtres persistés,
   favoris, tri par distance, états vides. La position de l'utilisateur est résolue une seule fois pour
-  tout l'onglet. [docs/features/campus.md](docs/features/campus.md)
+  tout l'onglet. docs/features/campus.md
 - **Détecteur de salles libres** — reconstruction des bâtiments depuis les salles Celcat, croisement
   avec les horaires d'ouverture déclarés dans `locations.json`, et calcul des créneaux libres par
   heure avec leur durée de disponibilité.
-  [docs/features/campus-salles-libres.md](docs/features/campus-salles-libres.md)
+  docs/features/campus-salles-libres.md
 - **Recherche et filtres** sur les listes de restaurants et de bibliothèques, avec persistance du
   filtre choisi, propagée aux sections du tableau de bord.
 - **Annonces de vie étudiante** — contenu éditorial publiable sans mise à jour de l'application, avec
   activation et date d'expiration. Servi à l'origine depuis le dépôt `ukit-data` via jsDelivr, puis
-  depuis la [base de publication](docs/backend.md) au jalon 6-B.
-  [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
+  depuis la base de publication au jalon 6-B.
+  docs/features/campus-vie-etudiante.md
 - **Onglet Scolarité** — connexion au compte universitaire par CAS dans une WebView invisible,
   récupération de l'identité de l'étudiant au premier login puis rafraîchissement léger de la
   messagerie aux lancements suivants, verrou biométrique, et navigateur intégré avec remplissage
   automatique du formulaire de connexion. Identifiants et données personnelles stockés chiffrés, sans
-  jamais quitter l'appareil. [docs/features/scolarite.md](docs/features/scolarite.md)
+  jamais quitter l'appareil. docs/features/scolarite.md
 - **Rappels de cours** — notification programmée avant chaque cours du planning favori, avec délai
   réglable, reconstruction complète à chaque planification et plafond de vingt rappels pour rester
-  sous la limite du système. [docs/features/settings.md](docs/features/settings.md)
+  sous la limite du système. docs/features/settings.md
 - **Nouvelle navigation** — quatre onglets avec barre personnalisée, bouton d'action contextuel selon
   l'onglet actif, et animation d'en-tête au défilement centralisée dans des helpers partagés.
-  [docs/navigation.md](docs/navigation.md)
+  docs/navigation.md
 - **Nouveau parcours de planning** — fusion des vues jour et semaine dans un écran unique avec bascule
   de mode, curseur de dates couvrant l'année scolaire, et carrousel pour les cours simultanés.
-  [docs/features/planning.md](docs/features/planning.md)
+  docs/features/planning.md
 - **Écran Réglages refondu** — sections thématiques, modales de langue, de filtres d'UE, de choix de
   calendrier et de réinitialisation.
 - **Socle de documentation** — [README](README.md) comme document maître,
@@ -1533,7 +1533,7 @@ réparations rapides.
   `couleur` donne à l'annonce son **identité** — la pastille d'émetteur (sur la fiche comme sur les
   cartes du campus), l'accroche en pastille assortie multi-ligne, et le départ du cycle des couleurs
   de sections. Un BDE structure et colore son annonce sans release.
-  [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
+  docs/features/campus-vie-etudiante.md
 
 - **La fiche d'un bâtiment porte sa carte.** La section « S'y rendre » arrive aussi dans les salles
   libres, en pied de liste, avec la tête de section verte de la disponibilité — et toutes les pages
@@ -1561,7 +1561,7 @@ réparations rapides.
   s'estompe continûment, sans jamais avoir de bord — sous un léger voile de lisibilité (~35 %). Cinq
   formes essayées (bande opaque, bande floue, flou par tranches, voile de teinte, flou masqué) :
   seule la dernière montre le contenu flouté sans frontière ni nuage. Android, qui ne sait pas
-  masquer un flou natif, reçoit le flou plein sous le voile. [docs/theme.md](docs/theme.md)
+  masquer un flou natif, reçoit le flou plein sous le voile. docs/theme.md
 
 - **Les cartes retrouvent un beau fond, réellement gratuit.** CARTO a mis ses fonds sans clé sous
   filigrane « API key required » ; les tuiles standard d'OSM, publiques, sont trop chargées pour une
@@ -1569,13 +1569,13 @@ réparations rapides.
   passé en open source), sans clé, autorisé en production — rendu par MapLibre GL à la place de
   Leaflet, marqueurs identiques, et l'attribution redevient visible : la politique d'usage des
   données OSM l'exige. OpenFreeMap rejoint les crédits de l'écran À propos.
-  [docs/cartographie.md](docs/cartographie.md)
+  docs/cartographie.md
 
 - **Les groupes favoris ne disparaissent plus au hasard des redémarrages.** La restauration des
   réglages notifiait en chemin (la langue avant les favoris), et la sauvegarde déclenchée écrasait
   alors le stockage avec des favoris vides — perdus au démarrage suivant si aucun réglage ne
   notifiait ensuite. L'écriture des réglages est désormais verrouillée jusqu'à la fin du chargement.
-  [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md)
+  docs/donnees-et-persistance.md
 
 ### Modifié
 
@@ -1599,7 +1599,7 @@ réparations rapides.
   « Bientôt disponible », qui garde un lien discret vers le service quand l'établissement en déclare
   un. Le déclencheur est la donnée — un widget sans Blueprint publié — donc le jour où la partie 2 de
   la v6 publie la source, le flou tombe sans mise à jour.
-  [docs/features/scolarite.md](docs/features/scolarite.md)
+  docs/features/scolarite.md
 
 - **Le logo de l'établissement devient un filigrane.** Monochrome, sans fond ni filet — l'usage
   « niveaux de gris » d'un kit de marque —, plus grand que l'ancienne vignette sur carré blanc qui
@@ -1619,7 +1619,7 @@ réparations rapides.
   de la grille Scolarité, au lieu d'un accent employé partout. L'écran des filtres efface son titre
   au défilement, comme les autres. Et une journée sans cours s'illustre de **confettis** : c'est une
   bonne nouvelle, l'icône sourit, le texte ne change pas.
-  [docs/theme.md](docs/theme.md), [docs/features/campus-crous.md](docs/features/campus-crous.md)
+  docs/theme.md, docs/features/campus-crous.md
 
 - **Les filtres d'UE ont leur écran, et les modales de choix parlent la langue de l'application.**
   Les filtres quittent leur modale plein écran — une sous-page qui ne disait pas son nom — pour un
@@ -1630,7 +1630,7 @@ réparations rapides.
   teinté une fois choisie — suivies d'un bouton Confirmer : toucher prépare, Confirmer applique.
   L'établissement garde son avertissement de purge, après Confirmer seulement. La modale des
   propositions d'après-connexion aligne ses espacements au passage.
-  [docs/features/settings.md](docs/features/settings.md)
+  docs/features/settings.md
 
 - **La page Scolarité respire.** Deux intertitres en petites capitales — « En un coup d'œil », « Tes
   services » — séparent les flux des portes, le chiffre d'une tuile et son unité partagent une même
@@ -1640,7 +1640,7 @@ réparations rapides.
   d'établissement gagne un filet qui l'ancre en thème sombre, et la salutation revient à
   l'essentiel : « Bonjour » de 4 h à 19 h, « Bonsoir » ensuite, l'anniversaire par-dessus tout — les
   variantes de circonstance restent possibles par une règle publiée.
-  [docs/features/scolarite.md](docs/features/scolarite.md)
+  docs/features/scolarite.md
 
 - **La carte d'un restaurant ou d'une BU vit dans sa fiche.** Elle était un écran à part, derrière un
   bouton d'en-tête facile à ne jamais découvrir ; elle est désormais une section « S'y rendre » en
@@ -1648,7 +1648,7 @@ réparations rapides.
   ses boutons disparaissent — le plan externe s'ouvre depuis le bouton posé sur la carte. Au passage,
   le rendu Leaflet écrit deux fois (fiche de cours, écran carte) devient un composant unique, et la
   fiche d'un restaurant ne charge plus son menu deux fois à l'ouverture.
-  [docs/cartographie.md](docs/cartographie.md)
+  docs/cartographie.md
 
 - **Les annonces prennent le format de leurs visuels : l'affiche.** Les communications associatives
   sont des carrés 1:1, pas des photos paysage — les cartes affichent désormais le visuel carré et
@@ -1658,7 +1658,7 @@ réparations rapides.
   carré. Le carrousel du tableau de bord montre environ deux affiches au lieu d'une, la liste
   complète devient une **grille de deux colonnes**, et la fiche épouse le ratio du visuel au lieu de
   le réduire dans un bandeau paysage.
-  [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
+  docs/features/campus-vie-etudiante.md
 
 - **Les Blueprints de portail sont renommés** `ukit.portail.bordeaux.*`, et leurs secrets deviennent
   `portail_user` / `portail_pass` — neutres vis-à-vis de l'établissement, sans quoi chaque nouvelle
@@ -1672,7 +1672,7 @@ réparations rapides.
 - **Nouvelle architecture de dossiers** — découpage par **domaine de navigation** (`src/features/`)
   au lieu du découpage par type technique, avec un `src/shared/` réservé au réellement transverse.
   Chaque feature porte ses écrans, composants, hooks et services.
-  [docs/architecture.md](docs/architecture.md)
+  docs/architecture.md
 - **`DataService` éclaté** en services dédiés par domaine : accès Celcat côté planning et côté salles,
   managers observables séparés pour les groupes et les bâtiments.
 - **Le rendu d'un échec de source est remonté dans `shared/ui/`** sous le nom `SourceFailureNotice` :
@@ -1684,7 +1684,7 @@ réparations rapides.
   limite de 400 lignes que le projet s'impose, et ce sont deux fonctions sans état.
 - **Règles ESLint d'architecture** ajoutées comme garde-fous : taille de fichier, taille de fonction,
   profondeur d'imbrication, complexité cyclomatique, interdiction de `any`.
-  [docs/qualite.md](docs/qualite.md)
+  docs/qualite.md
 - **Suppression de tous les types `any`** hérités de la migration, hors onze occurrences résiduelles
   signalées en avertissement.
 - **Les salles libres sont sectionnées par étage**, du plus bas au plus haut : la question qu'on se
@@ -1793,7 +1793,7 @@ réparations rapides.
 
 ### Corrigé
 
-- **La spécification du jalon [6-C](docs/phase-6/6-c-livraison.md) décrivait moins que ce qui avait
+- **La spécification du jalon 6-C décrivait moins que ce qui avait
   été livré.** Son commit de livraison ne l'avait pas touchée : le panneau de diagnostic y était
   attribué au mauvais fichier, annoncé avec deux boutons au lieu de trois — celui qui joue un
   Blueprint manquait, alors que c'est lui qui rend le parcours de correction vérifiable — et la table
@@ -1816,7 +1816,7 @@ réparations rapides.
   `moment.now`, donc tout ce qui date par `new Date()` lui échappait : les salles libres retenaient le
   vrai jour d'ouverture — un bâtiment restait fermé quel que soit le jour simulé — et la péremption
   des annonces ignorait l'heure simulée. Les cinq sites concernés datent désormais par `moment()`. La
-  règle est écrite dans [qualite.md](docs/qualite.md) : le code applicatif date par `moment()`, jamais
+  règle est écrite dans qualite.md : le code applicatif date par `moment()`, jamais
   par `new Date()`.
 - **Le jeton d'annulation du planning n'annulait rien.** `ScheduleList` créait un
   `axios.CancelToken`, le stockait et l'annulait au démontage — sans jamais le transmettre à un

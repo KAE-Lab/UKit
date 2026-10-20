@@ -2,7 +2,7 @@
 
 > D'où vient l'application, tournant par tournant. Ce qui change d'une version à l'autre est dans le
 > [CHANGELOG](../CHANGELOG.md), et la façon dont le travail se mène, dans les phases
-> ([phase 6](phase-6/README.md), [phase 7](phase-7/README.md)) : un chapitre s'ajoute ici à un tournant, pas
+> (phase 6, phase 7) : un chapitre s'ajoute ici à un tournant, pas
 > à une version. Les dates viennent de l'historique Git, des stores et des archives du web ; quand une
 > archive ne donne qu'une date au plus tard, c'est écrit.
 
@@ -85,7 +85,7 @@ de la **version 6**, qui s'appuie dessus : les sources de l'application devienne
 le moteur embarqué et publiés depuis une base. Corriger une source ou ajouter une université devient une
 publication de données, plus une mise à jour : Bordeaux INP entre ainsi dans l'application sans release. La
 **6.0** sort le 31 août 2026, et quatre publications la prolongent en septembre
-([phase 6](phase-6/README.md)).
+(phase 6).
 
 En parallèle, après un jury en juin, nous obtenons le **statut national d'étudiant-entrepreneur** pour
 l'année 2026-2027, auprès de l'[UBee Lab](https://ubeelab.u-bordeaux.fr/), l'incubateur étudiant de
@@ -98,11 +98,11 @@ Ce statut nous ouvre le programme
 de l'université de Bordeaux, avec le soutien de l'UBee Lab : de janvier à juin 2027, une équipe
 d'étudiants de master travaille sur le modèle économique de UKit, son cadre légal et son acquisition. Pour
 présenter le projet aux étudiants du programme, le 24 septembre, naît **l'Épure**, la première identité
-visuelle de UKit ([identite.md](identite.md)).
+visuelle de UKit (identite.md).
 
 À cette rentrée, **plus de 2 000 étudiants** utilisent l'application, dans deux établissements — le
 Collège Sciences et Technologies de l'université de Bordeaux et Bordeaux INP —, et trois autres campus sont
-en préparation ([phase 7](phase-7/README.md)).
+en préparation (phase 7).
 
 La suite s'écrira ici, au fil de l'année.
 

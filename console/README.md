@@ -3,16 +3,16 @@
 Publier sans requête SQL, avec un compte, en laissant une trace : annonces, messages de service,
 testeurs, visuels, établissements, salutations, bâtiments, version publiée — et lire l'état des
 sources, le journal, **les retours du formulaire** et, depuis le jalon
-[7-E](../docs/phase-7/7-e-console-socle.md), un **tableau de bord** d'arrivée : le parc actif, les
+7-E, un **tableau de bord** d'arrivée : le parc actif, les
 sources, les retours ouverts, les annonces actives et programmées. Depuis
-[7-F](../docs/phase-7/7-f-console-annonces.md), **une annonce se compose en voyant ce qu'elle
+7-F, **une annonce se compose en voyant ce qu'elle
 donnera sur un téléphone** : l'aperçu de la carte et de la fiche dans les deux thèmes, le point focal
 choisi sur l'image, la galerie réordonnée, et un panneau « ordre du carrousel » qui rend l'ordre
-qu'un téléphone montre à l'heure dite. Depuis [7-H](../docs/phase-7/7-h-console-roles.md), **elle
+qu'un téléphone montre à l'heure dite. Depuis 7-H, **elle
 s'ouvre à une équipe** : trois rôles — admin, rédacteur borné ou non à ses campus, lecteur — que la
 base applique et que chaque page reflète, une page Équipe pour inviter et révoquer, et un verrou
 contre l'écrasement quand deux personnes ouvrent la même ligne. Ce qu'elle est et ce qu'elle n'est pas :
-[docs/pilotage.md](../docs/pilotage.md) ; comment on s'en sert sans être développeur :
+[docs/decisions.md](../docs/decisions.md) (`pilotage-console`, `console-socle`, `roles-dans-la-base`) ; comment on s'en sert sans être développeur :
 [docs/guide-console.md](../docs/guide-console.md).
 
 **Les Blueprints n'y sont pas**, et c'est une décision : ils se versionnent dans le dépôt, se
@@ -182,10 +182,10 @@ La recette du jalon 7-E s'est jouée sur la console locale par un navigateur pil
 les deux thèmes, avec deux comptes jetables créés par `console:editeur`), puis sur la console
 déployée : les états réseau, le compte sans droits, les listes, la valeur inconnue, le téléversement,
 le clavier. Le détail et les mesures sont dans la
-[spécification](../docs/phase-7/7-e-console-socle.md#plan-de-test) ; les captures dans
+spécification (`git show doc-v1:docs/phase-7/7-e-console-socle.md`) ; les captures dans
 [`docs/screenshots/console/`](../docs/screenshots/console/). La recette du jalon 7-F s'est jouée de
 la même façon : trente-trois points sur l'éditeur, la focale, la galerie, la programmation, les gestes
-et le panneau d'ordre ([spécification](../docs/phase-7/7-f-console-annonces.md#plan-de-test)) ; ce
+et le panneau d'ordre (spécification) ; ce
 qui touche le téléphone se joue en audience « testeurs » sur les deux appareils. Sa passe d'ergonomie
 s'est vérifiée par une **séance d'usage réel** : deux annonces complètes composées comme l'équipe le
 fera, sur un écran de portable, en clair et en sombre, chaque promesse mesurée — le repère sous le clic,
@@ -198,4 +198,4 @@ script, un rédacteur borné et un lecteur invités par la page Équipe elle-mê
 SQL dans une transaction annulée sur la production, avant la poussée ; quarante-six par l'API avec la
 clé publiable, après ; vingt-cinq dans la console locale par un navigateur piloté, dont la première
 connexion, le rédacteur face à l'annonce d'un autre campus et le conflit de deux éditeurs sur la même
-annonce ([spécification](../docs/phase-7/7-h-console-roles.md#plan-de-test)).
+annonce (spécification).

@@ -2,14 +2,14 @@
 
 Comment UKit passe d'une demande — *« mon campus n'est pas dans la liste »* — à un établissement qui
 marche. **Ce travail est hors version** : rien de ce qui suit n'exige de release, et Bordeaux INP a
-été mis en ligne comme ça, sans en passer par une ([6-G](phase-6/6-g-etablissements.md)).
+été mis en ligne comme ça, sans en passer par une (6-G).
 
 Ce document répond à la première demande des utilisateurs. Sur les seize premières réponses du
-formulaire, **neuf demandent un campus** — voir la [mise à plat](phase-6/6-2-mise-a-plat.md) § 2.3.
+formulaire, **neuf demandent un campus** — voir la mise à plat § 2.3.
 
 > **Depuis le 2026-09-14** : trois comptes vont être prêtés — IUT de Bordeaux, campus Victoire,
 > Université Bordeaux Montaigne —, une équipe arrive pour collecter la moitié publique d'un campus, et
-> le travail en cours est le jalon [7-B](phase-7/7-b-nouveaux-campus.md), les fiches se rangent dans
+> le travail en cours est le jalon 7-B, les fiches se rangent dans
 > [campus/](campus/README.md), avec un [kit d'adaptation](campus/kit-d-adaptation.md) pour l'équipe. Ce
 > document reste la méthode.
 
@@ -35,7 +35,7 @@ ligne `bordeaux` les décrit déjà.
 > **Et ça ne vaut pas vérification.** Bordeaux INP avait un compte réel, et il a quand même fallu
 > **huit défauts trouvés sur appareil** pour que son portail marche — dont deux `mondossierweb`
 > différents sous le même nom. Un intranet partagé ne dit rien des écrans. La règle de
-> [6-G](phase-6/6-g-etablissements.md) tient : *« ajouter un établissement reste un travail
+> 6-G tient : *« ajouter un établissement reste un travail
 > d'auteur. Le mécanisme supprime la release, pas l'écriture des Blueprints ni leur vérification sur
 > un compte réel. »*
 
@@ -60,16 +60,16 @@ couverts là où l'établissement se choisit.
 > **Le code `bordeaux` ne bouge pas.** Il partitionne le trousseau, les réglages et les favoris : le
 > renommer déconnecterait tout le parc installé. Seul le libellé change.
 
-Depuis [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), la ligne porte aussi
+Depuis 7-C, la ligne porte aussi
 `alias` — les mots que les étudiants tapent pour chercher leur campus — et `campus`, le libellé qui
-regroupe ; l'application les lit depuis [7-I](phase-7/7-i-releve-et-vocabulaire.md), et la liste
+regroupe ; l'application les lit depuis 7-I, et la liste
 regroupée par campus comme la recherche par alias arrivent avec le lot 3 de
-[7-J](phase-7/7-j-ecrans.md).
+7-J.
 
 Et rendre visible ce qui existe déjà : la ligne `autre` porte `edt.abonnement`, donc **n'importe qui
 peut coller son lien iCal** dans [`LienEdtForm`](../src/features/Planning/components/LienEdtForm.tsx)
 et avoir son emploi du temps aujourd'hui. Presque tous les produits de planning savent exporter en
-iCal — c'est le constat qui a ouvert [6-I](phase-6/6-i-planning-universel.md). C'est la réponse
+iCal — c'est le constat qui a ouvert 6-I. C'est la réponse
 immédiate à qui vient de demander son campus.
 
 ### 2. Recruter *(immédiat, hors code)*
@@ -95,9 +95,9 @@ est construit depuis le 2026-09-07.
 
 Tout est déjà câblé : la pastille d'état de service, `ModaleCampusNonRelie` et le bouton
 « Demander » d'un état vide pointent **tous** sur ce formulaire, par `services.adaptation` du
-catalogue. Voir [6.1.x-C](phase-6/6-1-x-c-retours.md).
+catalogue. Voir 6.1.x-C.
 
-> **Prévu en [7-C](phase-7/7-c-economie-et-socle.md#4-le-formulaire-pré-rempli)** :
+> **Prévu en 7-C** :
 > l'application ouvrira le formulaire **pré-rempli** — version, plateforme, campus —, ce qui ajoute
 > au catalogue deux gabarits sur l'adresse longue du formulaire, `services.formulaire` et
 > `services.formulaire_campus` — un lien court `forms.gle` ne se pré-remplit pas ;
@@ -131,7 +131,7 @@ Elle dit, en toutes lettres :
 ### 4. Le prêt
 
 `PORTAIL_<CODE>_USER` et `PORTAIL_<CODE>_PASS` dans le `.env` **gitignoré**, exactement comme
-`PORTAIL_BORDEAUX_INP_*`. Rappel de [blueprints.md](blueprints.md) : un seul couple peut porter les
+`PORTAIL_BORDEAUX_INP_*`. Rappel de blueprints.md : un seul couple peut porter les
 noms `portail_user` / `portail_pass` à la fois, et les identifiants se passent explicitement à
 `aetherius run`.
 
@@ -164,15 +164,15 @@ release** — plus les crédits du `README.md` et l'écran À propos. Prénom ou
 > efface des données en silence.
 >
 > **Planifié le 2026-09-14, fait en deux temps** : `credits` — avec `campus` et `alias` — est arrivé en
-> base par une migration de [7-C](phase-7/7-c-economie-et-socle.md#6-les-colonnes-additives), valeurs
+> base par une migration de 7-C, valeurs
 > comprises dans `etablissements.sql` ; `COLONNES`, les types, le catalogue et le socle la lisent
-> depuis [7-I](phase-7/7-i-releve-et-vocabulaire.md), une fois la base vérifiée — la clé de cache est
-> passée à `etablissements@5` ([backend.md](backend.md#le-schéma)). Les trois gestes sont donc complets
+> depuis 7-I, une fois la base vérifiée — la clé de cache est
+> passée à `etablissements@5` (backend.md). Les trois gestes sont donc complets
 > pour ces trois colonnes : un campus qui arrive n'a plus de colonne à créer, il remplit les trois
 > valeurs de sa ligne — `credits` au format `[{"nom", "role", "lien"}]`, le nom seul obligatoire
 > ([`credits.ts`](../src/shared/etablissements/credits.ts)), `campus` pour le regrouper, et `alias`,
 > écrit `'{…}'::text[]`. La liste regroupée, la recherche par alias et les crédits à l'écran viennent
-> avec le lot 3 de [7-J](phase-7/7-j-ecrans.md).
+> avec le lot 3 de 7-J.
 
 ### 7. Publier, dans l'ordre
 
@@ -204,8 +204,8 @@ le binaire n'embarque un établissement que s'il embarque de quoi le jouer.
 - **Écrire quoi que ce soit vers la base depuis l'application** : `PRIVACY.md` affirme que la base
   *« ne reçoit aucune écriture de l'application, par construction »*, et rien de ce travail ne
   l'entame. *Note du 2026-09-14 : la phrase citée n'est plus exacte — l'application dépose un jeton
-  de notification depuis [6.1.x-E](phase-6/6-1-x-e-notifications-push.md), et comptera son usage
-  depuis la 6.3 ([7-D](phase-7/7-d-la-mesure.md)), deux écritures bornées que `PRIVACY.md` décrit. Le
+  de notification depuis 6.1.x-E, et comptera son usage
+  depuis la 6.3 (7-D), deux écritures bornées que `PRIVACY.md` décrit. Le
   travail sur les campus, lui, n'écrit toujours rien depuis l'application.*
 - **Publier un campus « en cours d'adaptation »** — une ligne dont les colonnes `portail_*` sont
   nulles, qui tomberait sur le teaser déjà en place. **Possible, mais pas retenu pour l'instant** :
@@ -223,4 +223,4 @@ le binaire n'embarque un établissement que s'il embarque de quoi le jouer.
 | Université Bordeaux Montaigne | **le seul établissement réellement nouveau** demandé : CAS distinct, ENT distinct, Blueprints à écrire de zéro — **tout confirmé le 2026-09-16** ; emploi du temps **HyperPlanning derrière le CAS** ; **un compte prêté annoncé le 2026-09-14** ([fiche](campus/bordeaux-montaigne.md)) |
 
 Les codes proposés, les lots et les fiches de chaque campus sont dans le jalon
-[7-B](phase-7/7-b-nouveaux-campus.md#les-trois-campus).
+7-B.

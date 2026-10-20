@@ -1,271 +1,140 @@
 # Contribuer à UKit
 
-Merci de contribuer. Ce document résume le workflow de développement et les conventions à suivre. Le
-cadrage produit est dans le [README](README.md), l'architecture dans
-[docs/architecture.md](docs/architecture.md).
+Ce document dit comment proposer un changement. Le cadrage produit est dans le [README](README.md) ;
+le pourquoi des choix non évidents dans [docs/decisions.md](docs/decisions.md), à chercher par mot-clé
+avant de refaire un choix ; les défauts connus dans [docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md).
 
 ## Mise en place
 
-Prérequis : Node.js 22 (`.nvmrc` ; 20.19 minimum, c'est celui du SDK), npm, et un build de
-développement ou l'application Expo Go.
+Prérequis : Node.js 22 (`.nvmrc` ; 20.19.4 au minimum), npm, et un build de développement EAS :
+Expo Go ne suffit pas (ni notifications distantes, ni tâche de fond, ni biométrie, et un seul SDK).
 
 ```bash
-npm install
-npx expo start        # puis a (Android), i (iOS), ou scan du QR code
+npm install           # installe aussi le hook commit-msg
+cp .env.example .env  # puis renseigner SUPABASE_URL et SUPABASE_ANON_KEY (clé publiable)
+npx expo start        # puis a (Android), i (iOS) ou le QR code ; ajouter -c après tout changement du .env
 ```
+
+La console de pilotage se lance à part : [console/README.md](console/README.md). Les sondes sont en
+Python 3.12 : `python -m unittest discover -s sondes`.
 
 ## Workflow
 
-1. Ouvrir une branche par changement : `type/description-courte`
-   (`feat/notifications-recurrentes`, `fix/cache-planning`).
-2. Découper en commits lisibles, au format **Conventional Commits**.
-3. Garder les portes de qualité au vert (voir ci-dessous).
-4. Ouvrir une Pull Request.
-
-### Convention de commit
-
-Vérifiée à l'écriture par un hook `commit-msg` (commitlint) : un message hors convention est refusé
-localement, et rien ne le rattrapera côté CI.
+1. Partir de la bonne branche : la branche de la version en cours (`v6.3`) pour l'application ; `main`
+   pour la console, le catalogue des campus et le bucket.
+2. Ouvrir une branche par changement : `type/description-courte` (`feat/notifications-recurrentes`,
+   `fix/cache-planning`).
+3. Découper en commits lisibles, au format **Conventional Commits**, en français : `type: description`.
+   Le hook `commit-msg` (commitlint, `@commitlint/config-conventional`) refuse un message hors
+   convention, et rien ne le rattrape côté CI. `npm run commit` ouvre un assistant.
+4. Garder les vérifications au vert (plus bas), puis ouvrir une Pull Request vers la branche de départ.
 
 | Préfixe | Usage |
 |---|---|
 | `feat` | nouvelle capacité utilisateur |
 | `fix` | correction d'un défaut |
+| `perf` | performance, sans changement de comportement |
 | `refactor` | changement de structure sans changement de comportement |
 | `style` | formatage, sans effet sur le sens du code |
+| `test` | tests seuls |
 | `docs` | documentation seule |
-| `chore` | dépendances, configuration, outillage |
-
-`npm run commit` ouvre un assistant si l'on préfère être guidé.
+| `build`, `ci`, `chore` | construction, intégration continue, dépendances, outillage |
 
 ## Définition de « terminé »
 
-Une capacité utilisateur — un écran, une source de données, une option — n'est terminée que lorsque
-**tout** ceci est vrai. On ne saute pas une étape en attendant qu'on la réclame.
+Une capacité utilisateur (un écran, une source de données, une option) n'est terminée que lorsque tout
+ceci est vrai :
 
-1. **Documentation à jour dans le même changement.** Jamais « plus tard ». Voir
-   [Documentation](#documentation).
-2. **Chaînes localisées** dans les trois dictionnaires `fr`, `en`, `es`. Aucune chaîne visible en
-   dur. Voir [docs/i18n.md](docs/i18n.md).
-3. **Tokens de thème** pour tout style. Aucune couleur, aucun espacement, aucun rayon littéral. Voir
-   [docs/theme.md](docs/theme.md). Cette règle est **applicable** depuis le jalon
-   [6-K](docs/phase-6/6-k-socle-visuel.md) : `ukit/no-style-literals` la signale et nomme le token de
-   remplacement. Pour un écran, dérouler aussi la
-   **[recette d'écran](docs/theme.md#la-recette-décran)** — en-tête animé, marges, les quatre états,
-   cibles tactiles.
+1. **Textes** : `Translator.get('CLE')`, clé présente dans les trois dictionnaires `fr`, `en`, `es` ;
+   aucune chaîne visible en dur.
+2. **Style** : tokens du thème pour toute valeur (la règle ESLint `ukit/no-style-literals` nomme le
+   token), surfaces en carrés arrondis (`radius.pill` réservé aux points, compteurs et jauges), police
+   du système. Un écran suit la recette : en-tête par `withHeaderAnimation` ou `withStaticHeader`,
+   quatre états distincts (chargement, vide, erreur, couverture partielle), cibles tactiles de 44 pt.
+3. **Portes** : typage, ESLint à zéro avertissement et tests verts (plus bas).
+4. **Vérifié à la main** sur l'application réelle, sur iPhone et sur Android (parc de référence :
+   iPhone 13 Pro et Galaxy A8 sous Android 9), chemin nominal et chemin dégradé (hors ligne, source
+   injoignable, réponse vide) : ces chemins produisent des écrans différents. Jamais le mode avion, qui
+   coupe aussi Metro : casser la source (par exemple une adresse `https://127.0.0.1:1/`). Pour ce qui
+   dépend de l'heure, le menu de développement simule l'heure.
+5. **Parité verte** (`npm run parity`) pour toute source servie par un Blueprint.
+6. **Décision non évidente** consignée dans `docs/decisions.md`. Un défaut de comportement rencontré
+   en chemin s'inscrit dans `docs/defauts-fonctionnels.md` et ne se corrige pas au passage.
+7. **Capture** : un écran visiblement modifié reprend sa capture dans `docs/screenshots/`, sous le même
+   nom (`<domaine>-<ecran>.png`, `-dark` pour le thème sombre) ; jamais de donnée personnelle réelle,
+   le dépôt est public.
+8. **Vie privée** : toute nouvelle collecte, écriture vers la base ou service tiers s'écrit dans
+   [PRIVACY.md](PRIVACY.md) avant le code.
 
-   > **Un token bien utilisé ne suffit pas : la forme aussi est une règle.** Les surfaces de UKit sont
-   > des **carrés arrondis** — `radius.md` par défaut, `radius.lg` pour un conteneur, `radius.xl` pour
-   > une carte. `radius.pill` est réservé aux points d'état, aux compteurs et aux jauges. Un bouton
-   > rond, un champ en pilule ou une icône dans un disque **dénotent**, et la règle ESLint ne les voit
-   > pas — elle refuse une valeur en dur, pas une mauvaise forme. C'est la première chose à vérifier
-   > sur un rendu ([docs/theme.md](docs/theme.md#les-décisions-durables)).
-4. **`npx tsc --noEmit` et `npx eslint .` sans régression** — zéro nouvelle erreur, zéro nouveau
-   warning. La base de référence est **zéro** — `tsc` verte, `npx eslint .` sans un seul avertissement
-   depuis la passe de code [6.1-C](docs/phase-6/6-1-c-passe-de-code.md) — et elle le reste : un
-   avertissement nouveau se corrige, ou se désactive localement avec sa justification écrite
-   ([docs/qualite.md](docs/qualite.md)). **`npm test` vert**, sans exception : lui l'est déjà.
-5. **Flux vérifié à la main au moins une fois** sur l'application réelle, pas seulement relu, **sur les
-   deux plateformes**. Le parc de test permanent est un iPhone 13 Pro et un Galaxy A8 de 2018 sous
-   Android 9 ([docs/qualite.md](docs/qualite.md#vérification-manuelle)) : le rendu et le réseau sont
-   les deux domaines où une plateforme ne dit rien de l'autre, et un petit écran ancien révèle ce
-   qu'un grand récent cache. Chaque
-   documentation de partie porte une section « Vérifier » décrivant le parcours attendu. Pour toute
-   capacité touchant une source distante, jouer **aussi le chemin dégradé** — hors ligne, source
-   injoignable, réponse vide. Un échec propre et explicable est un résultat valide ; un comportement
-   surprenant est un correctif à faire, ou une limite à écrire dans la doc avant de clore.
-   Ces chemins doivent produire des écrans **différents** : s'ils affichent tous « aucun résultat »,
-   la vérification n'a rien vérifié.
-6. **Parité verte** pour toute source migrée vers un Blueprint : `npm run parity`. C'est la seule
-   preuve rejouable que la bascule ne change rien pour l'utilisateur, et c'est ce qui autorise à
-   retirer un repli ([tools/parity/README.md](tools/parity/README.md)).
-7. **Prise en main visuelle** pour une capacité liée à l'interface et non triviale : une capture
-   ajoutée dans [`docs/screenshots/`](docs/screenshots/README.md) et intégrée à la documentation
-   concernée. **Uniquement si l'outillage disponible le permet** — un appareil, un émulateur Android
-   ou un simulateur iOS accessible ; pour le propriétaire du produit, il le permet toujours, les deux
-   appareils sont sur le poste. Un contributeur sans appareil le signale dans la Pull Request plutôt
-   que de l'inventer : la capacité reste livrable, la capture se rattrape. Une interaction rudimentaire
-   (ajouter une ligne à une liste existante) n'en a pas besoin.
-8. **Commits conformes** à la convention.
+Le `CHANGELOG.md` ne s'écrit pas à la main : il se génère depuis les commits à la publication.
 
 ## Principes de code
 
-- **Un fichier de logique reste sous 400 lignes**, une fonction sous 100, la profondeur sous 4, la
-  complexité sous 15. Ce sont des garde-fous d'architecture, pas du confort : au-delà, on découpe en
-  sous-modules. Un dépassement justifié se signale par une désactivation locale **et commentée**.
-- **Composants fonctionnels et hooks.** Les composants à classe existants sont conservés tels quels —
-  ils fonctionnent, on ne les réécrit pas sans raison — mais tout nouveau composant est une fonction.
-- **La logique vit dans un hook ou un service**, pas dans un écran. Un écran compose, branche la
-  navigation, lit le thème.
-- **Le réseau est confiné aux services** de `features/*/services/` ou `shared/services/`. Un
-  composant n'appelle jamais `axios` ni `fetch` — et, depuis la
-  [Phase 6](docs/phase-6/README.md), un service n'en appelle plus non plus : il joue un
-  [Blueprint](docs/blueprints.md). La base de publication se lit avec la même règle.
-- **Pas de `any`** sans justification écrite.
-- **Aucun code mort.** Import inutilisé, variable jamais lue, composant jamais monté, export que rien
-  n'atteint : `@typescript-eslint/no-unused-vars` signale les premiers, la relecture doit attraper les
-  derniers. Un export mort fait croire à une capacité, et il faut l'enquêter avant d'oser le supprimer
-  — c'est son vrai coût. Une erreur qu'on n'utilise pas s'écrit `catch {`, pas `catch (e)`.
-- **Pas de dépendance cartographique propriétaire.** Les cartes passent par MapLibre et OpenFreeMap
-  dans une WebView ([docs/cartographie.md](docs/cartographie.md)).
-- **Commentaires sobres, orientés « pourquoi ».** Un commentaire qui paraphrase la ligne suivante est
-  du bruit. **Aucun emoji** dans le code, les commentaires ou les logs.
-
-Détail des conventions, du nommage et de l'anatomie d'un module :
-[docs/conventions.md](docs/conventions.md).
+- Un fichier de logique vise 300 lignes ; ESLint avertit à 400 (garde-fou transitoire), à 100 lignes
+  par fonction, à une profondeur de 4 et une complexité de 15. Un dépassement justifié se signale par
+  une désactivation locale commentée.
+- Composants fonctionnels et hooks ; la logique vit dans un hook ou un service, pas dans un écran. Le
+  réseau est confiné aux services : une source tierce se joue par un Blueprint, nos tables se lisent
+  par le client unique de `src/shared/supabase/`.
+- L'heure de la logique métier se lit par `maintenant()` ou `moment()`, jamais `new Date()`.
+- Pas de `any` sans justification, aucun code mort, aucune dépendance cartographique propriétaire
+  (MapLibre et OpenFreeMap).
+- Commentaires en français, sobres, qui disent le pourquoi ; aucun emoji.
 
 ## Ajouter une source de données
 
-Une source distante est la surface la plus fragile du projet. Depuis la
-[Phase 6](docs/phase-6/README.md), on n'écrit plus le code qui l'atteint : on écrit un
-**[Blueprint](docs/blueprints.md)**, joué par le moteur embarqué. Le chemin attendu :
+Une source distante est la surface la plus fragile du projet : on n'écrit pas le code qui l'atteint,
+on écrit un Blueprint, joué par le moteur embarqué.
 
-1. **Inventorier la source d'abord**, dans [docs/sources-externes.md](docs/sources-externes.md) :
-   endpoint, méthode, en-têtes indispensables, charge utile, constantes **et leur signification**,
-   forme de la réponse, transformation appliquée, **fragilité connue**. L'écrire révèle déjà la
-   moitié du travail.
-2. **Écrire le Blueprint** dans [`blueprints/`](blueprints/) — un par appel réellement joué, pas un
-   par source — et le jouer depuis un poste avant de toucher à l'application.
-3. **Écrire le service** dans `features/<Domaine>/services/`, avec ses interfaces de contrat. Il
-   orchestre le Blueprint et travaille la donnée reçue ; il n'émet pas de requête.
-4. **Gérer l'échec par famille**, pas par valeur de repli : une source en panne et une réponse
-   légitimement vide doivent produire deux écrans différents
-   ([docs/blueprints.md](docs/blueprints.md#les-erreurs-cessent-dêtre-avalées)).
-5. **Ajouter le cas de parité** dans [`tools/parity/`](tools/parity/README.md) et le rendre vert.
-6. Décider de la stratégie de cache et la documenter dans
-   [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md). Le cache reste applicatif : il
-   ne descend jamais dans un Blueprint.
-7. Créditer le fournisseur dans l'écran À propos si la source est publique.
+1. Inventorier la source dans [docs/sources-externes.md](docs/sources-externes.md) : hôte, en-têtes
+   indispensables, constantes et leur sens, forme de la réponse, fragilité connue.
+2. Écrire le Blueprint dans `blueprints/` (un par appel réellement joué) et le jouer depuis un poste
+   avant de toucher à l'application.
+3. Écrire le service dans `src/features/<Domaine>/services/` : il joue le Blueprint et travaille la
+   donnée reçue.
+4. Gérer l'échec par famille, pas par valeur de repli : une source en panne et une réponse vide donnent
+   deux écrans différents.
+5. Ajouter le cas de parité dans `tools/parity/` et le rendre vert.
+6. Décider la stratégie de cache (applicative, jamais dans un Blueprint) et créditer le fournisseur
+   dans l'écran À propos si la source est publique.
 
-Ce qui descend dans un Blueprint et ce qui n'y descend jamais — le calcul, l'heure courante, la
-position, l'internationalisation — est écrit dans [docs/blueprints.md](docs/blueprints.md).
+## Un retour d'utilisateur
 
-**Une exception, et une seule : notre propre base.** Ce qui vient de la
-[base de publication](docs/backend.md) se lit avec son client, pas avec un Blueprint. Un Blueprint
-sert à parler à une source **tierce** dont on ne contrôle ni le format ni la disponibilité ; pour nos
-propres tables, l'indirection n'achèterait rien — le schéma et l'application changent dans le même
-commit — et coûterait un aller-retour de plus à chaque correction. La règle de couche ne change pas
-pour autant : la base se lit **depuis un service**, jamais depuis un composant, et par le client
-unique de `shared/supabase/`.
-
-## Documentation
-
-La documentation évolue **avec** le code, dans le même changement — jamais « plus tard ». Un autre
-contributeur doit pouvoir reprendre à partir de la seule documentation, sans contexte oral.
-
-À chaque contribution, mettre à jour :
-
-- **la documentation de la partie concernée** (`docs/features/<domaine>.md` ou le document transverse
-  correspondant) : décrire le *comment* et les **limites connues**, pas seulement le *quoi* ; noter
-  les décisions de conception non évidentes, pour qu'on ne les « corrige » pas par erreur plus tard ;
-- **la section « État des lieux » du [README](README.md)** : c'est la source de vérité du périmètre
-  livré ;
-- **la carte des fichiers** du document concerné si un fichier est ajouté, déplacé ou supprimé —
-  chaque fichier de `src/` doit y apparaître exactement une fois ;
-- **[CHANGELOG.md](CHANGELOG.md)**, sous « Non publié » ;
-- tout **document transverse réellement touché** (navigation, thème, i18n, sources externes,
-  persistance, plateforme). Ne pas dupliquer : laisser un pointeur là où c'est utile.
-
-Style : sobre, en français, orienté « pourquoi », sans emoji — comme le code. Toute affirmation
-technique renvoie au fichier source par un lien relatif, pour rester vérifiable.
-
-### Un travail visuel n'est pas documenté au même endroit
-
-Une décision qui vaut au-delà de l'écran où elle a été prise — un rayon, une ombre, la forme d'un état
-vide — va dans **« Les décisions durables »** de [docs/theme.md](docs/theme.md), pas dans le document
-de la fonctionnalité. C'est ce qui évite que la session suivante la défasse.
-
-Et une distinction à ne pas aplatir : un **défaut fonctionnel** rencontré en refaisant un écran — une
-impasse, un état manquant — n'est pas du goût. Il se corrige, se teste et se coche comme n'importe quel
-correctif ; le confondre avec de l'esthétique rend le travail invérifiable. Il s'inscrit dans
-[docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md) et **ne se corrige pas au passage**, sauf
-s'il tombe exactement dans le périmètre de la session.
-
-### Un retour d'utilisateur
-
-Ce que les utilisateurs écrivent dans le formulaire arrive dans la table `retours` de la base,
-importé toutes les 72 heures, et se lit dans la page **Retours** de la console
-([docs/pilotage.md](docs/pilotage.md#les-retours)). Trois gestes, et un interdit :
-
-- un retour qui décrit un **défaut** devient une entrée de
-  [docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md), **écrite à la main**, avec la date de
-  réception. Le registre des retours enregistre ce qui a été dit, pas ce qu'on en a compris ;
-- la ligne passe en `traité` — ou `en attente`, ou `refusé` — avec une **note** qui renvoie à
-  l'entrée du registre, au commit, ou à la raison du refus ; la nature se reclasse si la case cochée
-  ne dit pas ce que le texte dit. Reclasser est un geste d'admin, comme lire l'adresse laissée
-  ([7-H](docs/phase-7/7-h-console-roles.md)) ;
-- une demande de campus rejoint [docs/adaptation-campus.md](docs/adaptation-campus.md).
-
-**On ne retouche jamais la feuille de réponses.** La clé d'un retour est une empreinte de la réponse :
-corriger une cellule recréerait la ligne, avec l'état « nouveau ». Et les exports bruts restent hors
-du dépôt (`tools/retours/exports/`, ignoré) : ce sont des textes libres, dans un dépôt public.
-
-### Captures d'écran
-
-Les captures sont prises à la main : le projet ne dispose d'aucun outillage de capture automatique.
-Les emplacements attendus sont marqués **dans les documents eux-mêmes**, au point où l'illustration
-sert le propos, par une ligne `> **Capture attendue** — <nom>.png : …`. Déposer le fichier dans
-[`docs/screenshots/`](docs/screenshots/README.md) et remplacer la ligne par l'image.
-
-Convention de nommage, inventaire de suivi et procédure de prise de vue :
-[`docs/screenshots/README.md`](docs/screenshots/README.md). Ne jamais publier de capture montrant des
-données personnelles réelles.
-
-Un nouvel écran arrive avec **son emplacement marqué**, même si la capture est différée : c'est ce qui
-évite de l'oublier.
+Les réponses au formulaire arrivent dans la table `retours`, importées toutes les 72 heures, et se
+lisent dans la page Retours de la console. Un retour qui décrit un défaut devient une entrée de
+`docs/defauts-fonctionnels.md`, écrite à la main avec sa date de réception ; la ligne passe en
+`traité`, `en attente` ou `refusé` avec une note qui renvoie à cette entrée, au commit ou à la raison.
+Une demande de campus rejoint [docs/adaptation-campus.md](docs/adaptation-campus.md). On ne retouche
+jamais la feuille de réponses : la clé d'un retour est une empreinte, corriger une cellule recréerait
+la ligne.
 
 ## Vérification
 
-L'intégration continue rejoue le typage, ESLint à zéro avertissement, les tests et la construction
-de la console sur chaque poussée, sur toutes les branches
-([`.github/workflows/verifier.yml`](.github/workflows/verifier.yml)) ; les commandes de qualité se
-jouent quand même en local avant de pousser, et deux d'entre elles n'existent qu'en local.
+L'intégration continue ([`.github/workflows/verifier.yml`](.github/workflows/verifier.yml)) rejoue
+sur chaque poussée et chaque Pull Request : typage, ESLint à zéro avertissement, tests, construction
+de la console et tests des sondes. Les mêmes commandes se jouent en local avant de pousser, plus deux
+portes qui n'existent qu'en local :
 
 ```bash
-npx tsc --noEmit
-npx eslint . --max-warnings=0
-npm test              # tests unitaires du socle Aetherius (voir docs/qualite.md)
-npm run parity        # sources migrees vers un Blueprint (voir tools/parity/README.md) — local seulement
-npx expo export --platform ios && npx expo export --platform android   # a chaque dependance native qui bouge — local seulement
+npm run typecheck
+npm run lint -- --max-warnings=0
+npm test
+npm run parity                      # sources servies par un Blueprint, sur les vraies sources
+npx expo export --platform ios      # puis --platform android, à chaque dépendance native qui bouge
 ```
-
-Les tests automatiques couvrent ce qui porte de la logique UKit **et ne dépend d'aucune plateforme** :
-le socle Aetherius, la lecture de la base, les projections de contrat, et l'outillage pur de
-`tools/` — dont l'importeur des retours. Il n'y a **aucun test
-d'écran ni de composant**, et la vérification manuelle sur l'application réelle reste la porte
-principale. Périmètre exact : [docs/qualite.md](docs/qualite.md#les-tests-unitaires).
-
-`npm run parity` **réussit sans aucun cas** : le harnais est légitimement vide entre deux jalons de
-migration.
-
-Pour les comportements dépendant de l'heure — notifications, salles libres, menus du jour, horaires —
-utiliser le menu flottant de simulation temporelle décrit dans [docs/qualite.md](docs/qualite.md)
-plutôt que d'attendre le bon moment.
 
 ## Publication
 
-Les versions sont construites et publiées par
-[`.github/workflows/release.yml`](.github/workflows/release.yml), déclenché par un tag `v*` ou
-manuellement. Avant de poser un tag, vérifier la cohérence de `package.json`, `app.config.ts` et
-`VERSION` — le workflow ne met pas tout à jour automatiquement. Détail et pièges :
-[docs/plateforme.md](docs/plateforme.md).
+Réservée aux mainteneurs. Un tag `v*` lance [`.github/workflows/release.yml`](.github/workflows/release.yml),
+qui construit l'APK de préversion et publie la Release GitHub ; la construction de production et la
+soumission aux stores ne partent que par un lancement manuel du même workflow (`build_production`).
+Avant le tag, aligner `package.json`, la `version` d'`app.config.ts` et `VERSION`.
 
 ## Checklist avant Pull Request
 
-* [ ] `npx tsc --noEmit` sans nouvelle erreur.
-* [ ] `npx eslint .` sans nouveau warning.
-* [ ] `npm test` vert.
-* [ ] `npm run parity` vert, si une source migrée est touchée.
-* [ ] Aucune chaîne en dur ; les trois dictionnaires sont à jour.
-* [ ] Aucune valeur de style en dur ; tokens utilisés.
-* [ ] Aucun `any` ajouté sans justification.
-* [ ] Parcours vérifié à la main, chemin nominal **et** chemin dégradé, **sur iPhone et sur Android**
-  (le Galaxy A8 pour Android).
-* [ ] Documentation de la partie, « État des lieux » du README et CHANGELOG mis à jour.
-* [ ] Pour un jalon de phase : sa **spécification** porte la bannière « Jalon livré » et ses écarts
-  constatés. Le vérifier par `git diff --stat docs/phase-6/` **avant** de commiter, jamais de
-  mémoire : une spécification restée intacte est indiscernable d'une spécification dont l'amendement
-  a été écrasé, et le cas s'est présenté (voir l'en-tête de
-  [6-c-livraison.md](docs/phase-6/6-c-livraison.md)).
-* [ ] Capture ajoutée si la capacité est visuelle **et** que l'outillage le permettait.
+* [ ] `npm run typecheck`, `npm run lint -- --max-warnings=0`, `npm test` verts.
+* [ ] `npm run parity` vert, si une source servie par un Blueprint est touchée.
+* [ ] Aucune chaîne ni valeur de style en dur ; aucun `any` ajouté sans justification.
+* [ ] Parcours vérifié à la main, nominal et dégradé, sur iPhone et sur Android.
+* [ ] Décision non évidente consignée dans `docs/decisions.md`, capture reprise si l'écran a changé.
 * [ ] Commits conformes à la convention.

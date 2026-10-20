@@ -1,0 +1,22 @@
+---
+paths:
+  - "src/features/Scolarite/**"
+  - "src/shared/biometrie/**"
+  - "src/shared/etablissements/{comptes,edtPersonnel}.ts"
+  - "blueprints/ukit-portail-*.blueprint.json"
+  - "blueprints/portails/**"
+  - "assets/pdfjs/**"
+---
+# Scolarité (compte universitaire)
+
+- Un seul run navigateur à la fois (`MoteurNavigateur`) : refus bruyant, jamais de file ; `session` prend la main sur `arriere-plan`, un geste (actualiser, valider) remplace la session de fond ; test et réservation dans le MÊME tour de boucle ; tout run touchant la WebView y passe (sinon un faux `LOGIN_FAILED` accuse l'utilisateur) ; rien d'appliqué après un abandon ; annuler sur `background` seulement.
+- `LOGIN_SUCCESS` n'est émis que dans la branche formulaire, les identifiants s'écrivent à ce signal, les données froides si le run va au bout. La preuve d'identifiants est `ukit.portail.verification` (`renew=true`), jamais déduite d'un formulaire (un ticket vivant enregistrerait un mot de passe faux). Ne renommer aucune clé de trousseau (`UKIT_CAS_CREDENTIALS`) : le parc serait déconnecté ; tout nouveau champ de données froides est facultatif dans le type ; l'heure vient de l'appelant, jamais de `ScolariteMapping`.
+- Session de portail persistée (`session.persist: true`, cookies partagés dans `WebBrowserScreen`) : ouvrir l'ENT, Moodle ou le webmail ne retombe plus sur un formulaire. Déconnexion = local d'abord, puis `/logout` du CAS sans lever ; `logout` et `validateAndSave` arrêtent le run en cours et ATTENDENT sa mort (le verrou ne se rend qu'au `finally`) ; fermer le CAS ne ferme pas les services déjà ouverts (assumé). `WebBrowserScreen` n'est pas un Blueprint.
+- Un Blueprint par parcours ou service (pas par page ni par portail), la SORTIE est le contrat ; service absent = rangée sautée, jamais un échec ; campus sans portail (`PORTAIL_ABSENT`, famille `config`) = état vide + action `services.adaptation`, jamais Réessayer, testé AVANT l'absence de compte (`EncartSession`). Lecture bonus = bloc `optional` : elle n'emporte jamais la connexion.
+- Pause de protection après tout `navigate` qui traverse le CAS (4000 ms mesurés) puis `wait_for` ; garde `#loginErrorsPanel` APRÈS la pause ; ancrer les extractions sur le libellé ; un `click` = exactement un élément ; `select` exige un élément visible ; `urlencode` absent du moteur embarqué ; UA Chrome desktop pour le webmail.
+- WebView occultée = figée par WebKit : vue cachée DANS la fenêtre, au-dessus du rendu, opacité 0,02, insensible au toucher (Aetherius ≥ 0.5.7). Navigateur intégré : le script injecté est un filet (identifiants par `JSON.stringify`), la mémorisation va dans `UKIT_CAS_AUTOFILL`, jamais une session UKit.
+- `LOGIN_FAILED` n'est pas réessayable mais porte l'action « Ressaisir mes identifiants » (ressaisir ≠ se déconnecter) ; `*_INDISPONIBLE` est réessayable ; une source qui refuse la connexion n'est jamais `unavailable` (limite du moteur, correctif chez Aetherius, d'où `CAS_INDISPONIBLE` forcé réessayable).
+- Une tuile ne change jamais de taille : échec en deux mots (`echecDeTuile`) + feuille (`FeuilleDeWidget`) ; compteur `null` (boîte absente) ≠ `0` ; grille identique partout (forme = rôle, jamais donnée). Un widget de plus = une publication (`portail_widgets`). La page se transforme, ne se remplace pas : écran plein seulement pour un parcours froid sans dossier ; la progression se rend là où le geste est fait ; annoncer le réessai dans le `onPress`, jamais dans `retrySession`. Sans compte : même page que connecté, notes et examens floutés ; masquer = retirer du rendu.
+- Documents : répertoire privé par établissement (jamais le trousseau, pas d'effacement à la bascule), écriture vérifiée par relecture (`ecrireEtVerifier` : le natif d'Expo Go écrivait 0 octet sans lever), signature `%PDF`. Lecteur : `file://` d'abord, pdf.js d'emblée sur Android (assets `.txt`), plus de 6 Mo → partage.
+- Verrou biométrique d'INTERFACE (drapeau au niveau du module, deux temps) : appareil sans verrou = porte ouverte ; `NSFaceIDUsageDescription` dans `app.config.ts` ; à rouvrir si `requireAuthentication` est posé. Compte : actualiser et ressaisir (tonal, confirmation), se déconnecter (destructive, confirmation) ; l'explication vit dans le dialogue.
+- Parcours froid INP lent : mesurer d'abord (`[chrono]`), effacer la session avant chaque essai, jamais sur un compte utilisé par un tiers. Captures de l'onglet sur compte de test ou floutées. Le titre de l'onglet est « Scolarité » (salutation-titre défaite : casse au prénom composé) ; salutation = table de règles publiable.

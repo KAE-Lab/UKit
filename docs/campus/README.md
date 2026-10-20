@@ -4,12 +4,12 @@
 > [modèle du kit](kit-d-adaptation.md#le-modèle-de-fiche), et le [kit d'adaptation](kit-d-adaptation.md)
 > qui sert à collecter la moitié publique d'un campus. La méthode est celle
 > d'[adaptation-campus.md](../adaptation-campus.md) ; le travail en cours, trois nouveaux campus, est le
-> jalon [7-B](../phase-7/7-b-nouveaux-campus.md).
+> jalon 7-B.
 
 ## Le principe
 
 - **Un campus à la fois**, au rythme des comptes prêtés : chaque portail universitaire a des défauts que son
-  voisin n'a pas — Bordeaux INP en a trouvé huit, sur appareil ([6-G](../phase-6/6-g-etablissements.md)).
+  voisin n'a pas — Bordeaux INP en a trouvé huit, sur appareil (6-G).
 - **Une ligne de catalogue par campus, même quand le portail est partagé.** La ligne est l'unité de
   ciblage, de source d'emploi du temps, de géographie et de trousseau ; les Blueprints, eux, se référencent
   par leur nom, donc un campus qui partage le portail de l'Université de Bordeaux nomme
@@ -26,7 +26,7 @@
 ## Comment se nomme un campus
 
 > **Tranché le 2026-09-16**, au relevé public du lot 1 de
-> [7-B](../phase-7/7-b-nouveaux-campus.md). La règle existe parce que son absence coûte cher : deux
+> 7-B. La règle existe parce que son absence coûte cher : deux
 > des neuf premières demandes de campus portaient sur un campus **déjà servi**, que son libellé
 > rendait méconnaissable ([adaptation-campus.md](../adaptation-campus.md#ce-que-la-mesure-du-2026-09-06-a-établi)).
 
@@ -73,4 +73,4 @@ Tout le reste se publie.
 | écrire et vérifier les Blueprints, publier, sonder, créditer | le développeur |
 
 Jusqu'à l'arrivée de l'équipe, en janvier 2027, la collecte de la moitié publique se fait par le relevé
-public et par le lot de chaque campus, dans le jalon [7-B](../phase-7/7-b-nouveaux-campus.md).
+public et par le lot de chaque campus, dans le jalon 7-B.

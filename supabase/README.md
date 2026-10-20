@@ -1,7 +1,7 @@
 # La base, côté dépôt
 
 Ce dossier porte le schéma et les politiques d'accès du projet Supabase de UKit. Ce que la base est,
-ce qu'elle n'est pas, et comment on publie : [docs/backend.md](../docs/backend.md).
+ce qu'elle n'est pas, et comment on publie : docs/backend.md.
 
 | Fichier | Contenu |
 |---|---|
@@ -30,7 +30,7 @@ pour de vrai, les trois se jouent **à blanc** dans une transaction annulée :
 
 ## Créer le projet
 
-Joué au jalon [6-B](../docs/phase-6/6-b-supabase.md), le 2026-08-08. Le projet est en région
+Joué au jalon 6-B, le 2026-08-08. Le projet est en région
 européenne — les utilisateurs sont en France.
 
 1. Créer le projet (plan gratuit, région européenne).
@@ -45,7 +45,7 @@ européenne — les utilisateurs sont en France.
    ```
 
    `plaintext` est volontaire : la clé publiable est publique par conception, et la ranger en secret
-   contredirait ce que dit [backend.md](../docs/backend.md). `eas secret:create`, qu'on trouve encore
+   contredirait ce que dit backend.md. `eas secret:create`, qu'on trouve encore
    dans d'anciennes documentations, est **déprécié** au profit de `eas env:set`.
 3. Appliquer `schema.sql`, `fonctions.sql` puis `policies.sql`, **dans cet ordre** — les
    déclencheurs visent des tables, et les politiques appellent `private.est_editeur()` :
@@ -80,7 +80,7 @@ européenne — les utilisateurs sont en France.
    ([`tools/import-ukit-data.mjs`](../tools/import-ukit-data.mjs)), puis publier les Blueprints :
    `npm run blueprints:publish` ([`tools/publish-blueprints.mjs`](../tools/publish-blueprints.mjs)).
    Le second est rejouable à volonté ; rejoué à vide, il ne change rien. Les retours du formulaire
-   s'importent par `npm run retours:import` ([docs/pilotage.md](../docs/pilotage.md#les-retours)),
+   s'importent par `npm run retours:import` (docs/pilotage.md),
    rejouable de la même façon.
 6. Vérifier, en le jouant plutôt qu'en le supposant : une insertion avec la clé publiable doit
    **échouer**.
@@ -109,9 +109,9 @@ européenne — les utilisateurs sont en France.
 
 ## La console et son équipe
 
-La [console web](../docs/pilotage.md) écrit avec un compte Supabase Auth (e-mail et mot de passe)
+La console web écrit avec un compte Supabase Auth (e-mail et mot de passe)
 dont l'e-mail figure dans la table `editeurs`, **selon le rôle que la table lui donne** depuis le jalon
-[7-H](../docs/phase-7/7-h-console-roles.md) : `admin`, `redacteur` — borné ou non à des campus — ou
+7-H : `admin`, `redacteur` — borné ou non à des campus — ou
 `lecteur`. Il n'y a pas d'inscription libre — elle est désactivée dans *Authentication → Providers →
 Email* du projet — et pas de courriel sortant tant que le projet n'a pas de serveur d'envoi à lui.
 
@@ -158,7 +158,7 @@ delete from public.journal where quand < now() - interval '1 year';
 
 ## La purge de la mesure
 
-La table `mesures` ([docs/mesure.md](../docs/mesure.md)) grossit de quelques centaines à quelques
+La table `mesures` (docs/mesure.md) grossit de quelques centaines à quelques
 milliers de lignes par jour à l'échelle du parc. Les nombres sont conservés **treize mois**
 ([PRIVACY.md](../PRIVACY.md), point 4 quinquies), et la purge n'est pas automatisée, pour la même
 raison que celle du journal :
@@ -170,7 +170,7 @@ delete from public.mesures where jour < current_date - interval '13 months';
 Une ligne d'`evenements_connus` ne se supprime jamais tant que des versions installées peuvent encore
 envoyer l'événement : la fonction `compter` l'ignorerait alors en le comptant dans `rejetes`, ce qui
 est le comportement voulu — un vieux client doit pouvoir vider sa file. Retirer un événement commence
-par le vocabulaire de l'application ([docs/mesure.md](../docs/mesure.md#la-règle--une-mesure-sajoute-avec-son-pourquoi-et-son-lecteur)).
+par le vocabulaire de l'application (docs/mesure.md).
 
 ## Effacer un retour
 
@@ -193,7 +193,7 @@ retoucher.
 
 ## Migrations
 
-Depuis le jalon [7-C](../docs/phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt), le schéma évolue
+Depuis le jalon 7-C, le schéma évolue
 par les **migrations numérotées** du CLI de Supabase, par `npx --yes supabase@2.117.0` — jamais en
 dépendance du projet. **La source de vérité est [`migrations/`](migrations/)** : c'est le registre de
 ce que la production porte, et la base le prouve par sa table d'historique
@@ -236,7 +236,7 @@ Ce qui a été mesuré en le faisant :
   donnée qui accompagne un changement de droits, lui, y a sa place, et `schema.sql` ne le recopie pas :
   la migration des rôles retire l'adresse de `reponses` dans la même transaction que les privilèges
   qui la ferment (7-H) ;
-- la migration `20260921233000_mesures.sql` ([7-D](../docs/phase-7/7-d-la-mesure.md)) est la première
+- la migration `20260921233000_mesures.sql` (7-D) est la première
   jouée par `db push` de bout en bout, le 2026-09-21 : `migration list` la voit locale et non distante,
   le `--dry-run` la propose seule, le `push` la joue dans sa transaction, et la fonction se sonde
   ensuite par `curl` avec la clé publiable (étape 6 ci-dessus). Une table de référence — ici le
@@ -268,7 +268,7 @@ npx --yes supabase@2.117.0 db push --project-ref $REF --workdir $TMP --dry-run -
 ```
 
 La fusion de `main` dans la branche de version remet ensuite les deux registres d'accord ; à
-l'ouverture de [7-I](../docs/phase-7/7-i-releve-et-vocabulaire.md), le 2026-09-26, seule `policies.sql`
+l'ouverture de 7-I, le 2026-09-26, seule `policies.sql`
 est entrée en conflit (le bloc de la mesure contre le commentaire du journal de 7-H), résolu en gardant
 les deux côtés — `schema.sql` et `fonctions.sql` ont fusionné seuls.
 
@@ -294,7 +294,7 @@ photo reste celle de la source, exactement comme avant qu'elle n'existe.
    `etablissements/` ou `annonces/`, **avec un `cache-control` d'un an** (`max-age=31536000`), et
    copier son URL publique. La console le fait d'elle-même et compresse l'image au passage ; depuis le
    Studio, c'est un champ à remplir. Sans cet en-tête, l'objet recrée le gaspillage d'egress que le
-   jalon [7-A](../docs/phase-7/7-a-bande-passante.md) a corrigé — et `npm run media:compresser`
+   jalon 7-A a corrigé — et `npm run media:compresser`
    rattrape ce qui aurait été posé sans lui.
 2. Écrire la ligne. La clé est l'identifiant du contenu **chez sa source**, et elle ne se devine pas
    de la même façon selon le domaine :
@@ -338,9 +338,9 @@ qui ne corrige rien, et rien à l'écran ne le dirait.
 [`functions/`](functions/) porte les deux fonctions du projet, qui partagent
 [`_shared/`](functions/_shared/) — les en-têtes, la réponse, et **qui appelle** : le compte de la
 session, vérifié auprès du service d'authentification, et son rôle lu dans `editeurs`. Chacune est
-réservée aux admins depuis le jalon [7-H](../docs/phase-7/7-h-console-roles.md), et répond 403 sinon.
+réservée aux admins depuis le jalon 7-H, et répond 403 sinon.
 
-- [`notifier/`](functions/notifier/) ([6.1.x-E](../docs/phase-6/6-1-x-e-notifications-push.md))
+- [`notifier/`](functions/notifier/) (6.1.x-E)
   envoie un message de service en notification push, avec la clé de service : aucun compte de la
   console ne lit les jetons, elle seule. Après un changement de `regles.ts`, le test `regles.test.ts`
   de la racine doit rester vert **avant** de redéployer : c'est lui qui garantit que la fonction cible
@@ -376,7 +376,7 @@ déjà dans l'équipe, ou que la révocation retirerait le dernier admin.
 Pas de fonction métier, pas de vue qui calcule. La base porte de la donnée ; ce qui se calcule se
 calcule dans l'application, où c'est typé, relu et vérifié.
 
-Elle porte **des gardes**, depuis le jalon [6.1-B](../docs/phase-6/6-1-b-pilotage-a-distance.md), et
+Elle porte **des gardes**, depuis le jalon 6.1-B, et
 la phrase ci-dessus tient toujours : `private.est_editeur()` dit qui a le droit d'écrire — et depuis
 7-H, `private.role_editeur()`, `private.est_admin()` et `private.peut_publier()` disent quoi et où —,
 le déclencheur `journal` trace ce qui a été écrit, `maj_le` tient la version d'une ligne contre

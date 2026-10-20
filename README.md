@@ -20,584 +20,49 @@
 
 ## La vision
 
-Les informations dont un étudiant a besoin chaque jour sont dispersées : l'emploi du temps sur un
-serveur de planning, les menus des restaurants sur un site associatif, l'affluence des bibliothèques
-sur une application tierce, l'identité et la messagerie derrière un portail universitaire. Chacune
-demande une application, un compte ou une recherche.
+Les informations dont un étudiant a besoin chaque jour sont dispersées : l'emploi du temps sur un serveur de planning, les menus des restaurants sur un site associatif, l'affluence des bibliothèques sur une application tierce, l'identité et la messagerie derrière un portail universitaire. **UKit rassemble ces sources dans une seule application** : rapide, sobre, et qui fonctionne hors ligne pour ce qui compte le plus, l'emploi du temps.
 
-**UKit rassemble ces sources dans une seule application** — le kit de survie pour l'étudiant
-bordelais : rapide, sobre, et qui fonctionne hors ligne pour ce qui compte le plus, l'emploi du temps.
-
-### Le périmètre, parce qu'il décide de tout le reste
-
-**UKit vise les établissements du secteur bordelais, pas la France.** L'objectif est d'être *le* kit
-qu'un étudiant qui arrive à Bordeaux installe sans se poser la question — l'outil par défaut des
-étudiants bordelais — donc de couvrir **toutes les facs de Bordeaux**. Sortir de la région est un très
-long terme, pas un objectif.
-
-Cette phrase est écrite ici parce que son absence coûte cher : sans elle, on conçoit spontanément pour
-la France entière et on paie des généralisations que personne n'a demandées. Concrètement, elle
-autorise trois choses à rester bordelaises — la région CROUS, les points de balayage des
-bibliothèques, l'inventaire des salles libres — **tout en étant des données de catalogue** et non des
-constantes de code. La différence n'est pas cosmétique : une donnée se corrige par une publication le
-jour où l'hypothèse tombe, une constante demande une release. C'est la leçon des onze constantes
-bordelaises que le jalon [6-G](docs/phase-6/6-g-etablissements.md) a dû déterrer une par une.
+**UKit vise les établissements du secteur bordelais, pas la France.** L'objectif est d'être l'outil par défaut des étudiants bordelais, donc de couvrir toutes les facs de Bordeaux. Ce qui est bordelais est une donnée de catalogue, jamais une constante de code : une donnée se corrige par publication, une constante demande une release.
 
 Trois principes portent le projet :
 
-- **Souveraineté.** Aucune dépendance à un service propriétaire payant. Les cartes sont rendues par
-  MapLibre sur des données OpenStreetMap, jamais par un fournisseur qui trace l'utilisateur.
-- **Rien de vous ne transite.** Aucun compte UKit n'est requis, aucune donnée personnelle ne quitte
-  l'appareil : l'application interroge les sources **directement depuis l'appareil**, avec la
-  connexion de l'utilisateur, et conserve tout localement. Ce qui relève du compte universitaire est
-  chiffré par le trousseau de l'appareil et ne le quitte jamais — c'est d'ailleurs la raison pour
-  laquelle le moteur d'automatisation est *embarqué* plutôt qu'hébergé.
+- **Souveraineté.** Aucune dépendance à un service propriétaire payant ; les cartes sont rendues par MapLibre sur des données OpenStreetMap.
+- **Rien de vous ne transite.** Aucun compte UKit, aucune donnée personnelle ne quitte l'appareil : l'application interroge les sources directement depuis l'appareil et conserve tout localement ; ce qui relève du compte universitaire est chiffré par le trousseau de l'appareil. La base distante porte ce que nous publions (annonces, référentiels, instructions), jamais ce qui appartient à l'utilisateur, et l'application fonctionne sans jamais la joindre. Deux choses remontent de l'appareil, chacune avec son interrupteur : le jeton de notification et des compteurs anonymes (des nombres par jour et par campus, jamais qui). Voir [PRIVACY.md](PRIVACY.md).
+- **Le comportement est de la donnée.** Ce qu'il faut demander à une source et en retenir vit dans des Blueprints versionnés, joués par le moteur Aetherius embarqué : une source qui change se corrige par une publication de fichier, pas par une release.
 
-  UKit a bien une base distante, et il faut dire laquelle : elle porte **ce que nous publions** —
-  annonces, référentiels, fichiers d'instructions — jamais ce qui appartient à l'utilisateur. Les
-  requêtes qui l'atteignent sont anonymes et en lecture seule, et l'application **fonctionne sans
-  jamais la joindre** : tout ce qu'elle publie existe déjà dans le binaire, et n'y est que mis à
-  jour. C'est un point de publication, pas une dorsale. Deux choses remontent de l'appareil, et
-  chacune se coupe d'un interrupteur : le jeton de notification (6.1.x-E), avec le campus, la version
-  et la plateforme qu'il faut pour ne notifier que les appareils concernés ; et, depuis 7-D, des
-  **nombres** — combien d'ouvertures, d'onglets vus, d'annonces ouvertes, par jour et par campus —,
-  jamais qui. Les deux sont dits dans [PRIVACY.md](PRIVACY.md).
-  → [docs/backend.md](docs/backend.md)
-- **Un socle lisible.** Découpage par domaine de navigation, TypeScript partout, tokens de design,
-  aucune chaîne en dur : le code doit pouvoir être repris sans contexte oral.
-- **Le comportement est de la donnée.** Ce qu'il faut demander à une source, et ce qu'il faut en
-  retenir, vit dans des [Blueprints](docs/blueprints.md) versionnés — pas dans le binaire. Une source
-  qui change se corrige par une publication de fichier, pas par une release.
+## Ce que fait l'application
 
-<p align="center"><sub>· · ·</sub></p>
-
-## Le périmètre fonctionnel
-
-L'application s'organise en quatre onglets.
-
-**Planning** — l'emploi du temps universitaire, en vue jour ou semaine, pour un groupe donné ou pour
-l'agrégation des groupes favoris. Curseur de dates couvrant l'année scolaire, fiche détaillée par
-cours avec sa salle et sa carte, filtres par UE, ajout au calendrier du système, rappels avant les
-cours. La dernière consultation reste disponible hors ligne, datée.
-→ [docs/features/planning.md](docs/features/planning.md)
-
-**Campus** — un tableau de bord et quatre sous-domaines : les annonces de la vie étudiante, les
-restaurants universitaires et leurs menus, les bibliothèques avec leur affluence en temps réel et
-leurs horaires, et les salles libres des bâtiments en accès libre. Tout est trié par distance, avec
-recherche, filtres et favoris.
-→ [docs/features/campus.md](docs/features/campus.md)
-
-**Scolarité** — trois sections qui n'ont pas la même nature : **ton dossier** (formation courante,
-numéro étudiant, fraîcheur de la lecture), **tes services** (webmail avec son compteur de non-lus,
-ENT, Moodle, Apogée — tous issus du catalogue), et **tes documents**, des pièces rangées sur
-l'appareil qui fonctionnent sans compte. Protégé par authentification biométrique, identifiants
-stockés chiffrés.
-→ [docs/features/scolarite.md](docs/features/scolarite.md)
-
-**Réglages** — langue, thème, filtres d'UE, rappels de cours, synchronisation avec le calendrier du
-système, réinitialisation, et écran À propos.
-→ [docs/features/settings.md](docs/features/settings.md)
-
-Au premier lancement, un [parcours d'accueil](docs/features/onboarding.md) en cinq étapes règle le
-thème, la langue, l'établissement et le premier groupe favori.
-
-<p align="center"><sub>· · ·</sub></p>
+Quatre onglets : **Planning** (emploi du temps en vue jour ou semaine, filtres par UE, rappels, ajout au calendrier du système, lecture hors ligne), **Campus** (annonces de la vie étudiante, restaurants universitaires et menus, bibliothèques avec affluence en temps réel, salles libres), **Scolarité** (dossier, services de l'université, documents, protégés par biométrie) et **Réglages**. Un parcours d'accueil de trois à six étapes (selon l'établissement) règle le thème, la langue, l'établissement et le premier groupe favori.
 
 ## Les sources de données
-
-Les données universitaires proviennent de systèmes **tiers**, interrogés directement par
-l'application — sans intermédiaire.
 
 | Source | Ce qu'elle fournit | Accès |
 |---|---|---|
 | Celcat (`celcat.u-bordeaux.fr`) | emplois du temps, groupes, salles et leur occupation | API interne, sans authentification |
 | CAS / ENT Université de Bordeaux | identité étudiant, formation, messagerie | identifiants universitaires, extraction de pages |
 | CAS / mondossierweb Bordeaux INP | identité étudiant, formation | identifiants universitaires, extraction de pages |
-| ADE Bordeaux INP | emploi du temps | export iCalendar anonyme, aucune authentification |
+| ADE Bordeaux INP | emploi du temps | export iCalendar anonyme |
 | Affluences | bibliothèques, affluence temps réel, horaires | API privée |
 | Croustillant | restaurants CROUS et menus | API publique |
-| OpenFreeMap | fonds de carte (style Positron, données OpenStreetMap) | tuiles vectorielles publiques, sans clé, attribution affichée |
+| OpenFreeMap | fonds de carte (données OpenStreetMap) | tuiles vectorielles publiques, attribution affichée |
 
-Endpoints, charges utiles, transformations et fragilités connues sont détaillés dans
-**[docs/sources-externes.md](docs/sources-externes.md)** — le document à lire avant toute
-intervention touchant au réseau.
-
-À côté de ces sources tierces, et à ne pas confondre avec elles, UKit a sa propre **base de
-publication** (Supabase) : elle porte ce que l'équipe publie — les [Blueprints](docs/blueprints.md),
-les annonces de vie étudiante, le référentiel des bâtiments, le catalogue des établissements. Elle ne
-relaie aucune de ces sources et ne voit passer aucune donnée personnelle ; l'application fonctionne
-sans elle, sur son socle embarqué. Les annonces y sont lues depuis le jalon 6-B ; le dépôt
-`ukit-data` qui les servait par jsDelivr cesse d'être écrit. Depuis le jalon 6-G, c'est aussi elle qui
-porte **les universités** : ajouter un établissement est une ligne en base et un fichier publié.
-→ [docs/backend.md](docs/backend.md)
-
-<p align="center"><sub>· · ·</sub></p>
-
-## Architecture du dépôt
-
-```text
-App.tsx              amorçage : ressources, managers, splash animé
-app.config.ts        configuration Expo : identité, permissions, plugins
-metro.config.js      celle d'Expo, plus une extension d'asset pour servir pdf.js à la WebView
-src/
-  features/          un dossier par domaine de navigation
-    Planning/          emploi du temps
-    Campus/            vie de campus (dashboard, CROUS, BU, salles libres, annonces)
-    Scolarite/         session universitaire
-    Settings/          réglages et à propos
-    Onboarding/        premier lancement
-  shared/            socle transverse
-    aetherius/         le moteur : façade, registre de Blueprints, secrets, modèle d'erreur
-    supabase/          la base de publication : client anonyme et types du schéma
-    etablissements/    le catalogue des universités : socle, surcouche publiée, purge
-    navigation/        conteneur racine, navigateurs, helpers d'en-tête
-    services/          contexte et réglages, notifications, stockage chiffré, mock temporel
-    theme/             tokens de design et thèmes clair / sombre
-    i18n/              Translator et dictionnaires fr / en / es
-    map/               carte embarquée (MapLibre + OpenFreeMap)
-    ui/                composants atomiques
-    constants/         URLs externes
-    utils/             utilitaires de formatage
-blueprints/          les fichiers d'instructions embarqués (le socle hors ligne)
-  portails/            les portails d'établissements, publiés d'abord, embarqués à la release suivante
-supabase/            schéma, gardes et politiques d'accès de la base de publication
-console/             la console de pilotage : publier sans SQL, avec un compte et un rôle, en laissant une trace
-sondes/              les sondes du matin : chaque source jouée sans identifiant, une issue au changement
-tools/               publication des Blueprints, réparation d'un compte admin de la console, harnais de parité, import des retours, compression des visuels, le kit de l'Épure
-assets/              icônes, visuels, référentiel des bâtiments du campus, pdf.js vendorisé
-docs/                cette documentation
-```
-
-Chaque dossier de `features/` est autonome : ses écrans, ses composants, ses hooks et ses services
-distants. Reprendre une fonctionnalité, c'est ouvrir un seul dossier.
-
-Les principes que le code respecte :
-
-- un fichier de logique reste **sous 400 lignes**, une fonction sous 100 (règles ESLint) ;
-- **100 % TypeScript**, pas de `any` sans justification ;
-- **aucune valeur de style en dur** : tout vient des tokens de `shared/theme` ;
-- **aucune chaîne visible en dur** : tout passe par `Translator`, dans les trois langues ;
-- **le réseau vit dans les services**, jamais dans un composant ;
-- **pas de dépendance cartographique propriétaire.**
-
-Détail des couches, de la séquence de démarrage et des invariants :
-[docs/architecture.md](docs/architecture.md).
-
-<p align="center"><sub>· · ·</sub></p>
+Endpoints, fragilités et mesures : [docs/sources-externes.md](docs/sources-externes.md).
 
 ## Développement local
 
-Prérequis : Node.js 22 (`.nvmrc` ; 20.19 minimum, c'est celui du SDK), npm, et un build de
-développement ou l'application Expo Go.
+Prérequis : Node.js 22 (`.nvmrc`, 20.19 minimum), npm, un build de développement EAS (Expo Go ne suffit pas).
 
 ```bash
 npm install
-npx expo start        # puis a (Android), i (iOS), ou scan du QR code
+npx expo start
+npx tsc --noEmit && npx eslint . --max-warnings=0 && npm test
 ```
 
-Avant de proposer un changement :
-
-```bash
-npx tsc --noEmit      # typage
-npx eslint .          # règles d'architecture
-npm test              # socle du moteur
-npm run parity        # sources migrées, comparées aux services historiques
-```
-
-Les quatre sont vertes, et la base de référence — zéro erreur, zéro avertissement — est décrite dans
-[docs/qualite.md](docs/qualite.md) ; l'intégration continue rejoue les trois premières sur chaque
-poussée. Aucune ne couvre l'interface : **la vérification manuelle sur l'application réelle fait
-partie de la définition de « terminé »** ([CONTRIBUTING.md](CONTRIBUTING.md)).
-
-<p align="center"><sub>· · ·</sub></p>
-
-## État des lieux
-
-Ce que l'application fait réellement aujourd'hui. Cette section est la source de vérité du périmètre
-livré ; elle est mise à jour à chaque contribution.
-
-### Socle
-
-- [x] **Architecture par domaine de navigation** — `features/` autonomes + `shared/` transverse,
-  migration TypeScript intégrale, règles ESLint d'architecture en place.
-  [docs/architecture.md](docs/architecture.md), [docs/conventions.md](docs/conventions.md)
-- [x] **Navigation** — pile principale de 20 écrans, quatre onglets, barre d'onglets personnalisée
-  avec bouton d'action contextuel, animation d'en-tête au défilement centralisée.
-  [docs/navigation.md](docs/navigation.md)
-- [x] **Thème** — tokens de design (espacements, rayons, typographie, ombres), **échelle de couleurs
-  sémantiques** dans les deux thèmes, thèmes clair et sombre complets, alignement sur la préférence
-  système au premier lancement. [docs/theme.md](docs/theme.md)
-- [x] **Socle visuel** — le vocabulaire visuel est **extrait** des écrans qui font référence, pas
-  inventé : neuf composants partagés dans [`shared/ui/`](src/shared/ui/), chacun relevé au moins deux
-  fois avant d'être remonté, et une **règle ESLint qui refuse les valeurs de style en dur** en nommant
-  le token de remplacement. La consigne existait depuis toujours dans ce README et n'était appliquée
-  par rien — le dépôt portait 53 couleurs et 142 valeurs en dur, mesurées dans
-  [docs/inventaire-visuel.md](docs/inventaire-visuel.md). Une
-  [recette d'écran](docs/theme.md#la-recette-décran) donne à chaque refonte sa liste à cocher.
-  L'application n'a **qu'une police, celle du système** : la hiérarchie tient à la taille et à la
-  graisse, et rien ne dénote entre iOS et Android.
-
-  Une **passe de finition** a suivi : les neuf dialogues, les six états plein écran et les quatre
-  formes de bouton parlent désormais une seule langue. Ce qu'elle a trouvé vaut d'être retenu — le
-  *bloc* d'état vide était partagé depuis 6-K, son **hôte** ne l'était pas, et c'est l'hôte qui décide
-  de la hauteur : six écrans calaient le leur différemment, d'où des messages qui flottaient tantôt
-  trop haut, tantôt trop bas. Un [`ScreenState`](src/shared/ui/ScreenState.tsx) décide maintenant, et
-  il **ancre le bloc sous l'en-tête** plutôt que de le centrer : centrer demanderait de connaître ce
-  qui occupe le bas de chaque écran. L'application **tutoie** partout, et les avertissements ESLint
-  sont passés de 79 à 53.
-- [x] **Internationalisation** — français, anglais, espagnol ; 424 clés par dictionnaire, typage de
-  la clé, locale des dates alignée. **Plus aucune chaîne visible en dur ni clé manquante** : les
-  treize libellés Campus qui manquaient sont traduits, et les casts qui les masquaient au compilateur
-  sont retirés. [docs/i18n.md](docs/i18n.md)
-- [x] **Persistance locale** — managers observables, caches à expiration pour les listes de
-  référence, cache de repli hors ligne pour l'emploi du temps, stockage chiffré pour le compte
-  universitaire. [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md)
-- [x] **Cartographie libre** — MapLibre et OpenFreeMap (données OpenStreetMap) en WebView, marqueur au thème de
-  l'application, carte **embarquée dans les fiches** (cours, restaurant, BU) plutôt que sur un écran
-  à part, référentiel de 73 bâtiments embarqué dans le binaire et corrigeable à distance. Où se
-  donne un cours **se lit** désormais dans un champ que la source déclare, au lieu d'être deviné dans
-  du texte libre : deux causes indépendantes faisaient disparaître la carte d'une fiche de cours, sans
-  jamais afficher d'erreur. [docs/cartographie.md](docs/cartographie.md)
-- [x] **Publication** — profils EAS (développement, aperçu, production) et chaîne de release GitHub
-  Actions vers les deux stores. [docs/plateforme.md](docs/plateforme.md)
-- [ ] **Tests automatisés** — un premier harnais existe, borné : `npm test` couvre le socle du moteur
-  (résolution des secrets, livraison des Blueprints et ses gardes, modèle d'erreur, disjoncteur), les
-  modules purs des fonctionnalités et l'outillage, et le
-  [harnais de parité](tools/parity/README.md) rejoue les sources migrées contre les vraies. Aucun
-  test d'écran ni de composant. **`npx tsc --noEmit` est vert** depuis le 2026-08-16 — il ne l'avait
-  jamais été — et **`npx eslint .` est à zéro** depuis la passe de code 6.1-C, trente-cinq
-  avertissements traités un par un ; `npm test` joue 1 020 tests au jalon 7-H, dont 224 pour la console. Depuis le jalon
-  [7-C](docs/phase-7/7-c-economie-et-socle.md), **l'intégration continue rejoue le typage, ESLint,
-  les tests et la construction de la console sur chaque poussée**, Dependabot groupe les mises à jour
-  hors de ce que le SDK épingle, et le schéma de la base s'applique par des migrations numérotées.
-  [docs/qualite.md](docs/qualite.md)
-- [ ] **Le comportement en données** — l'accès aux sources migre vers des
-  [Blueprints](docs/blueprints.md) joués par le moteur Aetherius embarqué, publiés depuis une base
-  et corrigeables sans release. Le socle est en place (6-A), **la base de publication existe** (6-B),
-  et **le canal de correction est branché** (6-C) : une source qui change se répare par une
-  publication de fichier, reçue au retour au premier plan, avec trois interrupteurs d'arrêt. **Les
-  deux sources de campus sont migrées** (6-D) — restaurants et bibliothèques, cinq Blueprints, cinq
-  cas de parité sur données réelles —, **l'emploi du temps aussi** (6-E) : six Blueprints, la
-  bascule directe sur Celcat, et **un serveur retiré de l'architecture** —, puis **la session
-  universitaire** (6-F), le morceau qui justifiait la phase. Depuis 6-G, **l'application n'est plus
-  mono-université** : le catalogue vit en base, et **Bordeaux INP a été ajouté sans release** — une
-  ligne en base, un Blueprint publié. Depuis 6-I, **il a aussi son emploi du temps**, par l'export
-  iCalendar de son serveur ADE : une seconde source de planning, choisie par le catalogue, sans qu'un
-  seul écran apprenne qu'il en existe deux. Depuis 6-J, **le compte se propose dès l'accueil** et
-  l'application accepte un **lien d'abonnement collé** : une fac qu'on n'a pas portée devient
-  utilisable sans écrire une ligne. Le volet 1 est clos ; **le socle visuel est posé** (6-K), **la session
-  Scolarité est faite** — elle a commencé par une sonde des deux portails et en a rapporté la
-  formation, les documents locaux et la fin des sélecteurs positionnels — **la session annonces
-  aussi** (cartes au format affiche 1:1, liste en grille) ; la session des réglages est rangée dans
-  la 6.3. La clôture (6-Z) a sorti la **v6.0 le 2026-08-31**, et la version est ensuite partie en
-  plusieurs publications : la **6.1** le 2026-09-06 (la consolidation), la **6.2.0** le 2026-09-08
-  (le socle et les demandes), la **6.2.1** le 2026-09-13 (les ajustements d'après sortie), la
-  **6.2.2** le 2026-09-21 (économie et socle). La suite — la mesure et le mouvement de l'interface
-  dans une seule **6.3**, puis la boucle en 6.4 — est la [phase 7](docs/phase-7/README.md), découpée
-  en jalons.
-- [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
-  les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
-  et l'application démarre et s'utilise sans jamais la joindre. Elle porte aussi, depuis la passe de
-  finition, **les visuels** : la photo d'un restaurant, d'une bibliothèque, d'un bâtiment ou d'une
-  annonce se remplace par une ligne, pour tout le monde, sans release — ces images venaient jusque-là
-  d'une source tierce et n'étaient corrigeables par rien. Ces visuels sont **servis avec un cache d'un
-  an et pèsent quatre fois moins** depuis le jalon [7-A](docs/phase-7/7-a-bande-passante.md) : ils
-  partaient en `no-cache`, à 400 ou 500 Ko l'unité, ce qui avait porté la bande passante à deux fois
-  le quota du plan. C'est une passe sur le bucket, pas une release : les versions déjà installées en
-  profitent. [docs/backend.md](docs/backend.md)
-- [x] **Économie et socle** ([7-C](docs/phase-7/7-c-economie-et-socle.md), 6.2.2) — l'application coûte
-  moins cher dans deux directions qui ne se voyaient pas à l'écran. **Vers notre base** : les images
-  distantes passent par `expo-image`, avec un cache disque et un fondu, et demandent un **rendu** aux
-  dimensions de la carte plutôt que le fichier d'origine (une photo de restaurant : 52 Ko au lieu de
-  157), avec un repli sur l'origine. **Vers les universités** : l'occupation des salles d'un bâtiment
-  est en cache dix minutes (dix-huit requêtes par ouverture de fiche jusque-là), le Planning ne se
-  relit pas dans la minute au retour sur l'onglet, un **disjoncteur** par hôte tait les runs que
-  personne n'a demandés quand une source tombe — trois échecs, 30 s, 2 min, 10 min, un geste passe
-  toujours —, et les six Blueprints Celcat se nomment (`User-Agent`). Une sonde a mesuré que la
-  requête d'occupation groupée est viable pour la 6.3. Le **formulaire de retours s'ouvre pré-rempli**
-  — onglet, appareil, système, version, « Demander un campus » —, les numéros de question vivant dans
-  le catalogue. Et le dépôt est prêt pour la suite : intégration continue sur chaque branche,
-  Dependabot, migrations numérotées, et les colonnes que la console et la 6.3 attendent (type et
-  emplacements d'annonce, cadrage, statut et programmation, rôles d'éditeur, campus et alias).
-- [x] **Livraison des Blueprints** — le registre résout entre le socle embarqué et une surcouche
-  publiée, vérifiée à l'empreinte à chaque lecture ; le rafraîchissement est hors du chemin d'un run,
-  et un panneau de diagnostic dit d'où vient chaque Blueprint.
-  [docs/blueprints.md](docs/blueprints.md)
-- [x] **Pilotage à distance** (6.1-B) — le propriétaire du produit parle aux utilisateurs sans
-  release : des **messages de service** — information en bandeau, avertissement et incident en
-  feuille, l'incident rappelé tant qu'il dure par une **pastille d'état de service** en tête de chaque
-  onglet, grise quand tout va bien et qui mène alors au formulaire — lus au démarrage et au retour au premier
-  plan, mémorisés « vus » par appareil, mis en cache pour se montrer dès le lancement. Messages et
-  annonces se **ciblent** par campus, par fenêtre de versions et par **audience** : un appareil
-  enregistré comme testeur — par un identifiant d'installation qui ne quitte jamais le téléphone —
-  voit un contenu avant tout le monde. Chaque écriture dans la base laisse une trace dans un
-  **journal** que rien ne contourne. Et une **console web** sur GitHub Pages — une liste et un
-  formulaire génériques par table, l'état des sources, le journal exportable — publie tout cela sans
-  requête SQL, avec un compte dont chaque geste est tracé. Et chaque matin, des **sondes** jouent
-  chaque source sans identifiant depuis un runner GitHub et ouvrent une issue quand une source tombe —
-  ce qui manquait l'été où le relais est mort sans que personne ne le sache. Depuis le jalon
-  [7-F](docs/phase-7/7-f-console-annonces.md), **une annonce se compose en voyant ce qu'elle donnera
-  sur un téléphone** : l'aperçu de la carte et de la fiche dans les deux thèmes, le point focal choisi
-  sur l'image, la galerie réordonnée, les créneaux, et un panneau qui rend l'ordre qu'un téléphone
-  montre à l'heure dite — par les mêmes modules purs que l'application (la grammaire de la
-  description, l'ordre), extraits pour être partagés. L'aperçu se regarde en écrivant : il suit le
-  champ édité et se cale sur la section du curseur. Et depuis le jalon
-  [7-H](docs/phase-7/7-h-console-roles.md), **la console s'ouvre à une équipe sans lui donner les
-  clés de la production** : trois rôles décidés par la base — un admin, un rédacteur borné aux annonces
-  de ses campus, un lecteur —, une page Équipe qui invite avec un mot de passe provisoire et révoque, un
-  verrou quand deux personnes ouvrent la même annonce, et un [guide](docs/guide-console.md) écrit pour
-  qui publie sans être développeur. La lecture du code et de la production y a fermé trois chemins que
-  le rôle seul aurait laissés ouverts : l'adresse d'un retour, recopiée en clair dans la réponse
-  entière et dans le journal, n'a plus qu'une copie, que seul un admin lit ; le jeton d'un appareil, qui
-  suffit à le notifier, ne se lit plus par aucun compte de la console ; et « tous les campus » n'a plus
-  qu'une écriture. Depuis 6.1.x-D, un
-  contenu se cible aussi **par plateforme** : un défaut qui n'existe que sur Android, ou que sur iOS,
-  se dit à la moitié du parc concernée. Et depuis 6.1.x-E, un message **réveille le téléphone** :
-  une notification push, envoyée depuis la console par une fonction de la base qui cible par la même
-  règle que l'appareil, application fermée. C'est la première écriture de l'application vers la
-  base — un jeton, et de quoi le cibler, rien d'autre —, et un interrupteur la retire.
-  [docs/pilotage.md](docs/pilotage.md)
-- [x] **La mesure, sans suivre personne** (7-D) — l'application compte son usage : une ouverture, un
-  onglet vu, une annonce vue, ouverte ou dont le bouton est touché, un restaurant, une bibliothèque ou
-  un bâtiment consulté, la vue du Planning, une connexion universitaire aboutie ou refusée, une source
-  qui n'a pas répondu, et l'état des réglages à chaque session. Ce qui part est un **nombre** par jour —
-  par heure pour les sessions —, par campus, par version et par plateforme, jamais un identifiant ni
-  un texte saisi ; la file part au passage en arrière-plan et à l'entretien, jamais au démarrage, vers
-  une fonction de la base qui agrège et rejette ce qui sort du vocabulaire. Un interrupteur
-  « Statistiques anonymes », actif par défaut, arrête le comptage et vide la file. C'est la seconde
-  écriture de l'application vers la base, et ses premiers chiffres sont la ligne de base de la 6.3.
-  [docs/mesure.md](docs/mesure.md)
-- [x] **Les attentes des portails, mesurées** (6.1-D) — neuf Blueprints de portail portaient **60 s
-  de pauses aveugles**, calées à la main sur le pire cas du jour où elles avaient été écrites, alors
-  que le travail réel de chacun tient en une à deux secondes. Elles sont désormais **chronométrées**,
-  cascade par cascade : l'attente d'ouverture — celle que *chaque* lancement paie — est devenue un
-  `wait_for` sur l'union « le formulaire, ou la page utile », la chronologie Moodle attend que son
-  gabarit de chargement cède, et les pauses qui restent portent leur mesure et sa date. Sur appareil,
-  **un widget passe de 24-29 s à 4,4-9,8 s**, le parcours froid de Bordeaux **de 43,0 s à 14,1 s** et
-  celui de Bordeaux INP **de 48,2 s à 25,3 s** ; un mot de passe faux se dit en 7,2 s au lieu d'une
-  vingtaine. Deux pauses n'ont **pas** bougé, et c'est une décision mesurée : les vues lentes de l'INP
-  rendent en 2,3 et 2,8 s, et les raccourcir vidait silencieusement des lectures — sans le moindre
-  échec, ce qui est exactement ce qui rend une lecture bonus dangereuse à resserrer. La vérification
-  sur appareil a d'ailleurs **corrigé deux décisions que le poste validait**, dont la règle qui les
-  résume : une opération injectée n'est sûre après un `navigate` que si celui-ci atterrit sur son
-  document final. C'est une **publication**, pas une release : les appareils déjà en 6.0 en profitent
-  au prochain manifeste.
-  [docs/phase-6/6-1-d-publication.md](docs/phase-6/6-1-d-publication.md)
-- [x] **Finitions d'interface** (6.1-E) — les détails qui séparent « ça bugue » de « ça charge ».
-  **Un chargement pleine page dit ce qu'il attend**, et une seconde ligne paraît après quatre secondes
-  quand un serveur d'université traîne : la phrase existait depuis 6.1-A, facultative, et **aucun** des
-  trois écrans pleine page ne la passait — elle est maintenant obligatoire dans le type. Le passage de
-  l'attente au contenu se **fond**, là où rien ne fondait déjà : les valeurs de widgets, le premier
-  rendu du Planning ; les cartes Campus, elles, fondaient depuis 6-K, et empiler deux animations sur
-  les mêmes pixels n'aurait rien ajouté. **Les interrupteurs et le curseur sont dessinés** — une seule
-  apparence sur les deux plateformes au lieu de celle d'Android à côté de celle d'iOS, avec retour
-  haptique, état désactivé et accessibilité ; deux dépendances sortent. Et **les onglets se
-  glissaient** : un pager sous la barre flottante inchangée — **retiré au jalon 6.1.x-B**, parce
-  qu'il cassait les listes horizontales du Planning sur Android, et que le propriétaire du produit
-  n'y tenait pas ; **puis de retour en 6.2.x, sur la barre d'onglets elle-même** — la seule
-  surface du bas sans liste horizontale ([docs/navigation.md](docs/navigation.md)).
-
-  Trois défauts trouvés le 2026-09-04 sont corrigés au passage, parce qu'ils vivaient dans les mêmes
-  fichiers. Deux avaient la même cause de fond — 6.1-A avait donné un **second hôte** à un geste sans
-  rendre observable l'état autour : le réessai ramenait l'écran de chargement plein, la tuile
-  d'établissement des Réglages restait sur l'ancien campus. Le troisième est plus profond : **« Se
-  déconnecter » ne fermait pas la session distante** quand un widget tournait, et le ticket restait
-  valide côté serveur. La cause tenait à une frontière d'`await` dans le verrou du moteur — le test et
-  la réservation ne partageaient pas le même tour — et un test le verrouille désormais.
-  [docs/phase-6/6-1-e-finitions-interface.md](docs/phase-6/6-1-e-finitions-interface.md)
-- [x] **Montée du socle** (6.1.x-A) — Expo **54 → 57**, React Native 0.81 → 0.86, React 19.2, et la
-  dette d'outillage soldée au même endroit : Node écrit une fois (`.nvmrc`, `engines`), TypeScript
-  déclaré, trois dépendances mortes retirées, la branche principale renommée `main`. Rien de visible,
-  et pourtant c'est ce qui casse le plus : quatre ruptures de bibliothèques ne se voyaient qu'à
-  l'exécution — dont une copie de fichier devenue asynchrone sans que le compilateur le dise — et
-  TypeScript 6 a déplacé la porte de typage en silence. La procédure est écrite pour le prochain saut.
-  **Vérifié le 2026-09-06 sous l'Expo Go du store, sur iPhone et sur Android** — la boucle courte
-  est restaurée sur les deux plateformes.
-  [docs/plateforme.md](docs/plateforme.md#monter-de-sdk)
-- [x] **Passe de code** (6.1-C) — ce que la documentation portait comme limites connues, fermé ou
-  décidé : un **retour au premier plan** partagé, qui distingue le retour d'arrière-plan d'une invite
-  système — les annonces se relisent, le Planning recalcule « Aujourd'hui » après minuit, les widgets
-  ne se rejouent plus deux fois après Face ID ; un **tirer-pour-rafraîchir** sur le tableau de bord
-  Campus, seule relecture des sources tierces ; la synchronisation calendrier porte le **planning
-  agrégé** et dit ses échecs, la permission calendrier ne bascule plus rien, la réinitialisation
-  efface aussi le Campus ; un seul cache de groupes, une position résolue une fois pour tout le
-  Campus, trois requêtes de découverte des BU au lieu de douze, l'accueil qui explique une liste vide ;
-  et l'outillage à zéro écart — ESLint, `expo-doctor`, `setup-java@v5`.
-  [docs/phase-6/6-1-c-passe-de-code.md](docs/phase-6/6-1-c-passe-de-code.md)
-- [x] **Les retours entrent quelque part** (6.1.x-C) — le formulaire existait depuis la sortie de la
-  6.0, avait produit ses premières réponses, et rien dans le projet ne savait les recevoir. Google
-  notifie déjà et remplit une feuille ; la plus-value n'est donc pas la notification mais **l'état et
-  la trace** : les réponses sont importées toutes les 72 heures dans une table `retours` de la base,
-  lues et **reclassées** dans la console — une nature, un état, une note — et chaque geste laisse une
-  ligne de journal. La clé d'un retour est une **empreinte de la réponse**, parce que ni la feuille
-  ni le formulaire n'exposent d'identifiant : un import se rejoue sans rien dupliquer, et une ligne
-  reclassée garde son état. Aucune lecture publique, un privilège de colonne qui borne la console à
-  ce qu'elle a à écrire, un masquage des adresses dans les textes libres — et deux mesures qui ont
-  façonné l'importeur : les deux exports de Google ne s'accordent pas à la seconde près, et le
-  journal d'un workflow public est public. Livré par publication, sans build.
-  [docs/pilotage.md](docs/pilotage.md#les-retours)
-
-### Fonctionnalités
-
-- [x] **Planning** — vues jour et semaine, planning agrégé des groupes favoris, curseur couvrant
-  l'année scolaire, recherche de groupes par sections, fiche de cours avec carte, filtres d'UE,
-  carrousel des cours simultanés, repli hors ligne daté. Source jouée par quatre
-  [Blueprints](docs/blueprints.md) visant l'université **sans relais** ; une panne, une source qui a
-  changé et une journée sans cours produisent trois écrans différents. **Un cours peut porter
-  plusieurs UE** (6.1.x-B) — le même TP sous son code français et son code anglais, mesuré sur
-  Celcat — et il reste affiché tant qu'une seule n'est pas filtrée ; la projection ne gardait que le
-  premier code. **Et l'agenda se lit dans l'autre sens** (6.1.x-D) : l'application y écrivait ses
-  cours depuis toujours sans jamais le lire. Les calendriers du téléphone que l'on coche apparaissent
-  mêlés aux cours, dans leur couleur, une journée entière en bandeau ; leur fiche ouvre l'agenda du
-  système, et un « + » ouvre son éditeur sur le jour affiché — pas d'éditeur maison, rien de stocké.
-  La fusion se joue après les filtres, l'indexation des UE et les rappels, jamais avant : un
-  rendez-vous n'est pas une UE et ne se notifie pas.
-  [docs/features/planning.md](docs/features/planning.md)
-- [x] **Campus — tableau de bord** — quatre sections indépendantes, position résolue une seule fois
-  pour tout l'onglet, socle de liste commun (recherche, filtres persistés, favoris, états vides). Depuis
-  la 6.1, un **tirer-pour-rafraîchir** relit les quatre sources sans faire clignoter les carrousels,
-  et les annonces se relisent d'elles-mêmes au retour au premier plan.
-  [docs/features/campus.md](docs/features/campus.md)
-- [x] **Campus — restaurants** — liste régionale triée par distance, filtres par type, menus du jour
-  et des jours suivants par service. Source jouée par deux [Blueprints](docs/blueprints.md) : une
-  panne, une source qui a changé et un restaurant qui ne publie rien produisent trois écrans
-  différents. [docs/features/campus-crous.md](docs/features/campus-crous.md)
-- [x] **Campus — bibliothèques** — découverte régionale par balayage géographique, affluence en temps
-  réel, horaires semaine par semaine. Trois [Blueprints](docs/blueprints.md), et une couverture
-  partielle du balayage se **dit** au lieu d'amputer la liste en silence.
-  [docs/features/campus-bibliotheques.md](docs/features/campus-bibliotheques.md)
-- [x] **Campus — salles libres** — reconstruction des bâtiments depuis les salles Celcat, croisement
-  avec les horaires d'ouverture, créneaux libres par heure. Un seul bâtiment est déclaré en accès
-  libre à ce jour. [docs/features/campus-salles-libres.md](docs/features/campus-salles-libres.md)
-- [x] **Campus — vie étudiante** — annonces éditoriales publiées depuis la
-  [base](docs/backend.md) sans mise à jour de l'application, avec activation et expiration. Premier
-  écran où une panne de la source **se dit** au lieu d'afficher une liste vide. Les cartes sont au
-  **format affiche** — visuel 1:1 plein cadre, jamais recadré, pied minimal avec l'émetteur en
-  pastille — et la liste complète est une grille de deux colonnes ; la fiche épouse le ratio du
-  visuel. Depuis la 6.1, une annonce se **cible** — un campus, une fenêtre de versions, les seuls
-  testeurs — et le tri se fait sur l'appareil.
-  [docs/features/campus-vie-etudiante.md](docs/features/campus-vie-etudiante.md)
-- [x] **Scolarité** — connexion CAS, récupération de l'identité au premier login puis rafraîchissement
-  léger, compteur de messages non lus, verrou biométrique, navigateur intégré avec remplissage
-  automatique du formulaire. Les 323 lignes de WebView cachée pilotée par du JavaScript injecté sont
-  devenues **deux [Blueprints](docs/blueprints.md)** (6-F) : les identifiants ne traversent plus la
-  source d'un script, et chaque attente porte un délai déclaré et un échec nommé. Le portail n'est
-  plus le seul : **celui de Bordeaux INP est arrivé sans release** (6-G), et une université qui n'a
-  pas de messagerie extractible ne montre simplement pas la carte.
-  Une connexion **propose** ce qu'elle trouve en chemin — les UE non suivies en filtres, à
-  Bordeaux ; l'emploi du temps personnel en groupe, à l'INP — derrière une confirmation, parce que
-  deviner juste dans le dos de quelqu'un reste deviner dans son dos.
-
-  **Et l'onglet vit sans compte** (6.1.x-B) : un enseignant-chercheur à qui l'application avait été
-  imposée cherchait la page courriel, et ne trouvait qu'un formulaire étudiant. La page sans compte
-  est désormais **la même** que la page connectée — la grille en portes, les documents, l'invitation
-  à se connecter en encart — parce que les portes des services viennent du catalogue et n'ont jamais
-  eu besoin d'une session. Les identifiants tapés dans le navigateur intégré peuvent être mémorisés
-  pour remplir la connexion, sans ouvrir de session dans l'application.
-
-  **La première session d'écran du volet 2 a refait cet onglet** (2026-08-25), et elle a commencé par
-  une sonde des deux dossiers plutôt que par un habillage : la page n'avait rien à dire, et aucun
-  travail visuel n'y répondait. La page porte désormais **trois sections de natures différentes** —
-  ce que l'application sait, ce qu'on peut ouvrir, ce qu'on a rangé — dont **la formation courante**,
-  lue des deux côtés. Ses états ne prennent plus l'écran : ce sont des encarts, et **les documents
-  restent atteignables sans compte** — ce qui rend l'onglet vivant pour « Autre université », où il
-  était jusqu'ici entièrement mort. Deux exports morts sont supprimés au passage.
-
-  La sonde a aussi supprimé **la fragilité que cette phase désignait comme la plus sérieuse du
-  projet** : les cinq identifiants DOM positionnels de Bordeaux ont un libellé voisin, vérifié hors
-  ligne sur le DOM capturé — 11 libellés, 11 nœuds uniques — et sont devenus des ancrages par
-  libellé. Un décalage ne peut plus rendre *la mauvaise valeur*, il ne rend plus *rien*. Elle a
-  corrigé trois affirmations fausses de la documentation au passage, dont **l'INE de Bordeaux INP**,
-  qui existe.
-
-  **La 6.1 rend l'écran indifférent à la panne** ([6.1-A](docs/phase-6/6-1-a-robustesse-scolarite.md)) :
-  la première soirée en production avait montré qu'une panne de widget cassait la grille, qu'un code
-  inconnu affichait un message faux, et qu'une connexion depuis l'onglet changeait de page en plein
-  run. Une tuile en échec **garde sa taille** et dit deux mots — la phrase, et le geste (relancer ce
-  seul widget, ou ressaisir), sont dans une feuille au toucher ; tout code de Blueprint en
-  `_INDISPONIBLE` se présente comme un service injoignable, réessayable, par une règle et non par une
-  table qu'on oublie d'étendre ; et le formulaire garde la page jusqu'au dernier pas. Un lien discret
-  sous le bouton de connexion — « Tu es d'un autre campus ? » — ouvre le choix d'établissement, et un campus non
-  relié a sa propre page dans l'onglet. Et sur Android, **un PDF s'affiche dans l'application**,
-  dessiné par pdf.js embarqué dans la vue.
-  [docs/features/scolarite.md](docs/features/scolarite.md)
-- [x] **Multi-établissement** — le catalogue des universités vit en
-  [base](docs/backend.md) et pilote l'interface : choix à l'accueil, changement dans les réglages,
-  purge de ce qui appartenait à l'université quittée. Les Blueprints de portail sont namespacés sous
-  `ukit.portail.`, **le seul préfixe qu'un manifeste a le droit d'étendre** — et un service qu'un
-  établissement ne publie pas se **dit** au lieu d'échouer. Depuis la 6.1, **le socle embarque tous
-  les établissements publiés à la date de la release** — Blueprints compris, un test le garantit —,
-  l'accueil se réabonne à l'arrivée du catalogue et sait attendre sa première réponse : le premier
-  jour de la rentrée 2026, une installation neuve n'avait vu que le Collège ST.
-  [docs/phase-6/6-g-etablissements.md](docs/phase-6/6-g-etablissements.md)
-- [x] **Le compte à l'accueil, et l'emploi du temps par lien collé** — la connexion au compte
-  universitaire est proposée dès le parcours d'accueil, **sautable et rappelée**, et omise chez un
-  établissement qui ne publie aucun portail. Pour l'emploi du temps, un **lien d'abonnement iCal collé
-  à la main** devient le repli universel : un seul Blueprint embarqué, aucune écriture par
-  établissement, et **« Mon université n'est pas dans la liste »** rend l'application utilisable pour
-  une fac bordelaise qu'on n'a pas portée — planning, restaurants, bibliothèques et salles libres
-  compris. [docs/phase-6/6-j-compte-et-sources-par-etablissement.md](docs/phase-6/6-j-compte-et-sources-par-etablissement.md)
-- [x] **Réglages** — langue, thème, filtres d'UE, rappels de cours avec délai réglable au **curseur
-  dessiné du dépôt** (comme les quatre interrupteurs, depuis 6.1-E) et titres traduits, synchronisation idempotente du **planning agrégé** avec le calendrier système, réinitialisation complète, À propos.
-  **La synchronisation part enfin d'elle-même** (6.1.x-B) : deux utilisateurs l'avaient signalée
-  muette, et elle l'était — la tâche de fond n'était jamais réarmée au lancement, et son module ne
-  tournait pas dans l'Expo Go d'iOS. Un **entretien** joue désormais au lancement, au retour au
-  premier plan et quand les favoris changent — synchronisation si la dernière date de plus de douze
-  heures, rappels de cours replanifiés — et la tâche de fond (`expo-background-task`) n'est plus qu'un
-  bonus. La dernière tentative est persistée et datée, sous la date du dernier succès, et l'interrupteur
-  l'efface. Depuis 6.1.x-D, la section Calendrier porte aussi **les calendriers du téléphone** à
-  afficher dans le Planning, choisis un par un, avec leur couleur — la cible de la synchronisation
-  n'est pas proposée. [docs/features/settings.md](docs/features/settings.md)
-- [x] **Premier lancement** — parcours en cinq étapes : thème et langue, puis l'**établissement**,
-  puis les groupes qu'il conditionne. Valeurs par défaut issues de l'appareil, sélection de groupes
-  filtrée par année et semestre — étape omise quand l'université ne publie pas d'emploi du temps, et
-  qui dit pourquoi sa liste est vide quand la source n'a pas répondu.
-  [docs/features/onboarding.md](docs/features/onboarding.md)
-
-Les limites connues de chaque partie sont documentées dans la section « Limites connues » de son
-document.
-
-<p align="center"><sub>· · ·</sub></p>
-
-## Documentation
-
-| Document | Contenu |
-|---|---|
-| [docs/architecture.md](docs/architecture.md) | couches, séquence de démarrage, invariants, carte des fichiers du socle |
-| [docs/conventions.md](docs/conventions.md) | anatomie d'un module, style de code, ajout d'un écran ou d'une source |
-| [docs/navigation.md](docs/navigation.md) | navigateurs, routes et paramètres, en-têtes animés |
-| [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md) | managers observables, clés de stockage, stratégies de cache |
-| [docs/sources-externes.md](docs/sources-externes.md) | inventaire complet des sources distantes, endpoints et fragilités |
-| [docs/blueprints.md](docs/blueprints.md) | les fichiers d'instructions : frontière, écriture, publication d'une correction |
-| [docs/backend.md](docs/backend.md) | la base de publication : schéma, politiques, clés, limites |
-| [docs/pilotage.md](docs/pilotage.md) | le pilotage à distance : messages de service, audience testeurs, ciblage, journal, console, rôles, sondes |
-| [docs/guide-console.md](docs/guide-console.md) | **le guide de la console**, pour l'équipe : se connecter, qui peut quoi, publier et programmer une annonce, la vérifier sur son téléphone, ce qui ne se fait jamais |
-| [docs/mesure.md](docs/mesure.md) | la mesure anonyme : le principe, les trois lecteurs, le vocabulaire et sa règle, lire les chiffres, les petites cases |
-| [docs/adaptation-campus.md](docs/adaptation-campus.md) | adapter un nouveau campus : ce qui se mesure sans compte, le compte prêté et son engagement, l'ordre de publication |
-| [docs/phase-6/](docs/phase-6/README.md) | le cadrage de la migration vers les Blueprints, jalon par jalon |
-| [docs/phase-7/](docs/phase-7/README.md) | de l'application au produit : les décisions d'après la 6.2.1, les publications 6.2.2 à 6.4, les jalons et leur état |
-| [docs/theme.md](docs/theme.md) | tokens, palettes, composants partagés, **recette d'écran** |
-| [docs/identite.md](docs/identite.md) | **l'Épure**, l'identité visuelle : son idée, le logo mesuré, la palette, la typographie, les composants, les règles et les intensités selon le support |
-| [docs/inventaire-visuel.md](docs/inventaire-visuel.md) | l'état visuel mesuré du dépôt, avant le socle : littéraux, divergences, manques |
-| [docs/defauts-fonctionnels.md](docs/defauts-fonctionnels.md) | les défauts de comportement connus, tenus **à part** de l'esthétique |
-| [docs/i18n.md](docs/i18n.md) | Translator, dictionnaires, ajout d'une chaîne |
-| [docs/cartographie.md](docs/cartographie.md) | MapLibre et OpenFreeMap, `locations.json` |
-| [docs/plateforme.md](docs/plateforme.md) | configuration Expo, permissions, build EAS, release, **monter de SDK** |
-| [docs/qualite.md](docs/qualite.md) | portes de qualité, vérification manuelle, simulation temporelle |
-| [docs/features/](docs/features/) | une documentation par domaine fonctionnel |
-| [docs/screenshots/](docs/screenshots/README.md) | captures attendues et convention |
-| [docs/histoire.md](docs/histoire.md) | l'histoire de UKit, tournant par tournant, de son premier site en 2012 à aujourd'hui |
-| [docs-aetherius/](docs-aetherius/) | Aetherius, le moteur d'automatisation — doc complète sur son dépôt |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | workflow, définition de « terminé », principes de code |
-| [CHANGELOG.md](CHANGELOG.md) | évolutions notables, version par version |
-| [PRIVACY.md](PRIVACY.md) | politique de confidentialité |
-
-<p align="center"><sub>· · ·</sub></p>
+Pour contribuer (mise en place, workflow, conventions, vérifications) : [CONTRIBUTING.md](CONTRIBUTING.md). Le pourquoi des choix non évidents : [docs/decisions.md](docs/decisions.md). Guide de l'équipe pour la console : [docs/guide-console.md](docs/guide-console.md). L'histoire du projet : [docs/histoire.md](docs/histoire.md).
 
 ## Crédits
 
-UKit a été initialement pensé et développé par ses créateurs originaux. Un grand merci à eux pour leur
-travail sur les premières versions de l'application :
+UKit a été initialement pensé et développé par ses créateurs originaux. Un grand merci à eux pour leur travail sur les premières versions de l'application :
 
 * [Jean](https://github.com/HackJack-101)
 * [Thomas](https://github.com/thclmnt)
@@ -605,20 +70,14 @@ travail sur les premières versions de l'application :
 * [Gogotron](https://github.com/Gogotron)
 * [Clément](https://github.com/Shapeqs)
 
-Le projet est aujourd'hui repris, maintenu et développé par l'organisation KAE Lab. Un remerciement
-particulier à Jean pour sa confiance et pour nous avoir transmis les clés de l'application. Leur
-histoire, et celle de l'application depuis 2012, est dans [docs/histoire.md](docs/histoire.md).
+Le projet est aujourd'hui repris, maintenu et développé par l'organisation KAE Lab. Un remerciement particulier à Jean pour sa confiance et pour nous avoir transmis les clés de l'application.
 
-L'application s'appuie sur deux services tiers que nous remercions : **Affluences** pour les données
-d'affluence des bibliothèques, et **[Croustillant](https://croustillant.menu)** pour les menus des
-restaurants universitaires.
+L'application s'appuie sur deux services tiers que nous remercions : **Affluences** pour les données d'affluence des bibliothèques, et **[Croustillant](https://croustillant.menu)** pour les menus des restaurants universitaires.
 
 ## Contact
 
 * **Email** : contact@kaelab.dev
 * **GitHub Issues** : ouvrir un ticket sur le dépôt pour un suivi public.
-
-L'organisation KAE Lab centralise la maintenance et les retours techniques.
 
 ## Licence
 

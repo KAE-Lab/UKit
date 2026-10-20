@@ -4,10 +4,10 @@ Chaque matin à 7 h (heure de Paris ; 6 h en hiver — le cron de GitHub est en 
 installe le moteur Aetherius et Chromium, joue une sonde par source tierce **sans aucun identifiant**,
 écrit l'état dans la table `sondes`, et ouvre — ou ferme — une issue GitHub quand il change. La
 notification arrive sur le téléphone par l'application GitHub, sans autre service. La console
-([`console/`](../console/README.md)) montre la même chose en page Sources.
+(`console/`) montre la même chose en page Sources.
 
 C'est ce qui manquait le 18 août 2026 : le relais Celcat est mort un été entier sans que personne ne
-le sache, et Moodle a cassé le soir de la sortie de la 6.0. Voir [docs/pilotage.md](../docs/pilotage.md).
+le sache, et Moodle a cassé le soir de la sortie de la 6.0. Voir docs/pilotage.md.
 
 | Source | Sonde | Ce qu'elle prouve, sans identifiant |
 |---|---|---|
@@ -41,7 +41,7 @@ python -m unittest discover -s sondes                        # le verdict, sans 
 s'écrit dans la documentation plutôt que dans une table — la première,
 [`occupation_groupee.py`](mesures/occupation_groupee.py) (jalon 7-C), compare un run d'occupation
 groupé aux runs par salle pour décider de la requête groupée
-([campus-salles-libres.md](../docs/features/campus-salles-libres.md#décisions-de-conception)). La
+(campus-salles-libres.md). La
 partie qui décide est pure et testée par `python -m unittest discover -s sondes` ; la partie qui joue
 le moteur l'importe paresseusement, comme [`sonde/moteur.py`](sonde/moteur.py) :
 

@@ -1,12 +1,12 @@
 # Université Bordeaux Montaigne
 
 > Fiche ouverte le 2026-09-16, par le relevé public du lot 1 de
-> [7-B](../phase-7/7-b-nouveaux-campus.md). Compte prêté : annoncé le 2026-09-14, **pas encore reçu**.
+> 7-B. Compte prêté : annoncé le 2026-09-14, **pas encore reçu**.
 > Volontaire crédité : à demander.
 >
 > **Verdict : sans code pour l'emploi du temps — vérifié de bout en bout le 2026-09-16.** L'adresse
 > d'abonnement iCalendar de PRONOTE Campus, collée dans « Mon université n'est pas dans la liste »
-> ([6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md)), **affiche les cours dans le
+> (6-J), **affiche les cours dans le
 > Planning**, sur l'appareil. Aucune release, aucune ligne de code. Le **portail** (dossier,
 > messagerie), lui, reste à écrire de zéro : c'est le seul **établissement entier** des trois.
 
@@ -47,7 +47,7 @@ PRONOTE y propose une boîte **« Export au format iCal »** offrant deux choses
   QR Code.
 
 C'est exactement ce que l'application sait déjà jouer : le **lien d'abonnement collé**
-([6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md)), un seul Blueprint embarqué, aucune
+(6-J), un seul Blueprint embarqué, aucune
 écriture par établissement.
 
 **Et ça a été joué, pas seulement supposé.** Le 2026-09-16, l'adresse collée dans « Mon université
@@ -55,7 +55,7 @@ n'est pas dans la liste » rend le Planning **rempli et correct** sur l'appareil
 
 > **Une réserve, relevée à cette occasion et volontairement non corrigée ici** : certains **intitulés
 > de cours s'affichent bizarrement**. PRONOTE n'écrit pas son `SUMMARY` comme l'export ADE de Bordeaux
-> INP, sur lequel la projection a été réglée ([6-I](../phase-6/6-i-planning-universel.md)). Ce n'est
+> INP, sur lequel la projection a été réglée (6-I). Ce n'est
 > pas un défaut du campus mais de l'**adaptation d'un nouvel émetteur d'iCalendar** : il s'inscrit au
 > [registre des défauts](../defauts-fonctionnels.md) et se traite à part, avec des exemples réels sous
 > les yeux — pas au passage d'un relevé.
@@ -108,7 +108,7 @@ en dernier.
 
 1. **Trancher la voie**, comme pour l'IUT : l'adresse ICS personnelle qu'HyperPlanning donne à un
    étudiant rendrait le campus utilisable par le **lien collé** déjà livré
-   ([6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md)), sans une ligne de code. Sinon,
+   (6-J), sans une ligne de code. Sinon,
    HyperPlanning est un troisième type de source et exige une release
    ([README](README.md#ce-qui-exige-une-release)).
 2. Écrire les Blueprints du portail **de zéro**, sous le préfixe `ukit.portail.`, et les vérifier sur

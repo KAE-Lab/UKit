@@ -1,7 +1,7 @@
 # Campus Victoire
 
 > Fiche ouverte le 2026-09-16, par le relevé public du lot 1 de
-> [7-B](../phase-7/7-b-nouveaux-campus.md). Compte prêté : annoncé le 2026-09-14, **pas encore reçu**.
+> 7-B. Compte prêté : annoncé le 2026-09-14, **pas encore reçu**.
 > Volontaire crédité : à demander.
 >
 > **Verdict : indéterminé sans compte.** C'est le seul honnête : le relevé public établit **où
@@ -81,7 +81,7 @@ géographie.
 1. **Chercher d'abord une adresse d'abonnement iCalendar**, une fois connecté — c'est ce qui a réglé
    les deux autres campus. L'ADE d'ADESOFT en propose une, comme PRONOTE : si l'ENT ou l'ADE en donne
    une, le campus est utilisable **aujourd'hui**, par le
-   [lien collé](../phase-6/6-j-compte-et-sources-par-etablissement.md), sans une ligne de code ni
+   lien collé, sans une ligne de code ni
    release.
 2. **Sinon, identifier la source**, dans cet ordre de probabilité : l'**ADE** derrière le CAS
    (`planning.u-bordeaux.fr`) ; un autre logiciel propre à une composante.

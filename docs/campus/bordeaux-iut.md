@@ -1,7 +1,7 @@
 # IUT de Bordeaux
 
 > Fiche ouverte le 2026-09-16, par le relevé public du lot 1 de
-> [7-B](../phase-7/7-b-nouveaux-campus.md). Compte prêté : annoncé le 2026-09-14, **pas encore reçu**.
+> 7-B. Compte prêté : annoncé le 2026-09-14, **pas encore reçu**.
 > Volontaire crédité : à demander.
 >
 > **Verdict : sans code, sous réserve d'une vérification.** L'emploi du temps est **PRONOTE Campus** —
@@ -71,7 +71,7 @@ Trois noms de salle copiés de l'emploi du temps :
 **L'IUT partage le portail de l'Université de Bordeaux.** Mesuré : `intranet.iut.u-bordeaux.fr`
 répond `302` vers `https://cas.u-bordeaux.fr/cas/login?service=…&gateway=true`. La ligne de catalogue
 pourra donc référencer `ukit.portail.bordeaux.*` sans rien dupliquer — sous réserve de la
-vérification sur compte réel, que [6-G](../phase-6/6-g-etablissements.md) a rendue obligatoire.
+vérification sur compte réel, que 6-G a rendue obligatoire.
 
 ## Ce que la mesure du 2026-09-16 a établi
 

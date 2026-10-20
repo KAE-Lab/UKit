@@ -2,7 +2,7 @@
 
 Le code qui produit l'Épure, l'identité visuelle de UKit : le logo redessiné en géométrie exacte, et les
 deux slides qui ont présenté UKit au programme Disrupt Campus, ses premiers témoins. L'identité elle-même,
-ses règles et son histoire sont dans [docs/identite.md](../../docs/identite.md).
+ses règles et son histoire sont dans docs/identite.md.
 
 Le kit reproduit les témoins **au pixel près** : `python exporter.py` redonne exactement
 [docs/identite/temoin-slide-1.png](../../docs/identite/temoin-slide-1.png) et
@@ -43,4 +43,4 @@ les écarte.
 Une nouvelle composition — une affiche, une slide, un visuel pour le site — s'écrit comme `diapo1.py` :
 elle prend la grille et les couleurs dans `charte.py`, dessine ses traces avec un `Calque` de `traces.py`
 en rangeant le décor dans `with calque.decor():`, et pose ses figures depuis `figures.py`. Les règles à
-tenir sont celles de [docs/identite.md](../../docs/identite.md#les-règles-de-facture).
+tenir sont celles de docs/identite.md.

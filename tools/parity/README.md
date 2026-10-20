@@ -9,7 +9,7 @@ npm run parity                 # tous les cas
 npm run parity -- annonces     # un seul
 ```
 
-C'est ce qui autorise à retirer un repli ([6-Z](../../docs/phase-6/6-z-livraison-finale.md)). Sans
+C'est ce qui autorise à retirer un repli (6-Z). Sans
 lui, « ça marche » veut dire « je n'ai pas vu la différence ».
 
 ## Pourquoi sous Node, et pas dans l'application
@@ -51,7 +51,7 @@ une clé renommée qui n'a jamais atteint personne.
 
 ### Comparer aussi ce qu'on envoie
 
-Depuis le jalon [6-E](../../docs/phase-6/6-e-planning.md), un cas peut comparer le **corps de la
+Depuis le jalon 6-E, un cas peut comparer le **corps de la
 requête** en plus de la sortie. `jouerEnCapturant()` rejoue le Blueprint avec le `fetch` de l'hôte
 remplacé par un espion, et `comparerCorps()` confronte l'octet réellement émis à ce que produisait
 `qs.stringify(data, { arrayFormat: 'repeat' })`.
@@ -101,7 +101,7 @@ cours. Ce qu'il ne prouve pas : que n'importe quel export iCal marche — il jou
 réelle dont nous disposions.
 
 `ical-inp` est le premier cas dont la source **n'avait jamais été portée** : il n'y a pas d'« avant »
-à comparer. Le second chemin est donc ce que la spécification [6-I](../../docs/phase-6/6-i-planning-universel.md)
+à comparer. Le second chemin est donc ce que la spécification 6-I
 demande — *le même jour, lu par l'iCal et lu par l'export brut*. Les deux lectures vivent côte à côte
 dans le fichier : `viaBlueprint` joue le Blueprint puis lit avec **`ical.js`**, `viaLegacy` va
 chercher la même réponse et la lit avec un analyseur **écrit à la main**, sans partager une ligne.
@@ -118,7 +118,7 @@ le second dépend du groupe demandé. Les comparer ne confronterait qu'une empre
 
 ## Ce qui n'a pas de cas de parité
 
-Le parcours universitaire ([6-F](../../docs/phase-6/6-f-scolarite.md)). Il demanderait des
+Le parcours universitaire (6-F). Il demanderait des
 identifiants réels dans un harnais, et on ne met pas d'identifiants réels dans un harnais. Sa
 vérification est manuelle, sur appareil, avec un compte de test, et son plan est écrit dans sa
 spécification.
@@ -135,7 +135,7 @@ justification écrite est un défaut caché ; un champ comparé alors qu'on l'a 
 une porte rouge qu'on apprendra à ignorer.
 
 Un seul champ est dans ce cas aujourd'hui : `opening` de `crous-restaurants` — voir
-[campus-crous.md](../../docs/features/campus-crous.md).
+campus-crous.md.
 
 ## Un hôte peut changer, et celui-là a changé
 
@@ -153,19 +153,19 @@ ailleurs, par la mesure directe consignée dans
 
 | Cas | Source | Jalon |
 |---|---|---|
-| [`crous-restaurants`](crous-restaurants.parity.mjs) | Croustillant — la liste régionale | [6-D](../../docs/phase-6/6-d-campus.md) |
-| [`crous-menu`](crous-menu.parity.mjs) | Croustillant — les menus, dont deux restaurants en `404` | [6-D](../../docs/phase-6/6-d-campus.md) |
-| [`bu-sites`](bu-sites.parity.mjs) | Affluences — un point de balayage | [6-D](../../docs/phase-6/6-d-campus.md) |
-| [`bu-affluence`](bu-affluence.parity.mjs) | Affluences — deux sites, ouvert et fermé | [6-D](../../docs/phase-6/6-d-campus.md) |
-| [`bu-horaires`](bu-horaires.parity.mjs) | Affluences — semaine courante et semaine décalée | [6-D](../../docs/phase-6/6-d-campus.md) |
-| [`celcat-groupes`](celcat-groupes.parity.mjs) | Celcat — les ~2 900 groupes, élément par élément | [6-E](../../docs/phase-6/6-e-planning.md) |
-| [`celcat-salles`](celcat-salles.parity.mjs) | Celcat — les 283 salles, **et** les bâtiments reconstruits | [6-E](../../docs/phase-6/6-e-planning.md) |
-| [`celcat-jour`](celcat-jour.parity.mjs) | Celcat — jour ordinaire, jour de vacances, jour sans cours, agrégé à deux et trois groupes | [6-E](../../docs/phase-6/6-e-planning.md) |
-| [`celcat-semaine`](celcat-semaine.parity.mjs) | Celcat — semaine complète, semaine de vacances, semaine à cheval sur deux mois | [6-E](../../docs/phase-6/6-e-planning.md) |
-| [`celcat-annee`](celcat-annee.parity.mjs) | Celcat — les deux positions de la bascule d'année scolaire | [6-E](../../docs/phase-6/6-e-planning.md) |
-| [`celcat-occupation`](celcat-occupation.parity.mjs) | Celcat — trois salles du CREMI, jour ordinaire et jour de vacances, une salle par run **et** en un run groupé réattribué par le nom, contre un appel par salle | [6-E](../../docs/phase-6/6-e-planning.md), [7-I](../../docs/phase-7/7-i-releve-et-vocabulaire.md) |
-| [`ical-inp`](ical-inp.parity.mjs) | ADE — jour ordinaire, jour sans cours, semaine complète, agrégat à deux ressources | [6-I](../../docs/phase-6/6-i-planning-universel.md) |
-| [`ical-abonnement`](ical-abonnement.parity.mjs) | un lien collé **sans bornes**, filtré par l'application, contre la même source bornée par le serveur | [6-J](../../docs/phase-6/6-j-compte-et-sources-par-etablissement.md) |
+| [`crous-restaurants`](crous-restaurants.parity.mjs) | Croustillant — la liste régionale | 6-D |
+| [`crous-menu`](crous-menu.parity.mjs) | Croustillant — les menus, dont deux restaurants en `404` | 6-D |
+| [`bu-sites`](bu-sites.parity.mjs) | Affluences — un point de balayage | 6-D |
+| [`bu-affluence`](bu-affluence.parity.mjs) | Affluences — deux sites, ouvert et fermé | 6-D |
+| [`bu-horaires`](bu-horaires.parity.mjs) | Affluences — semaine courante et semaine décalée | 6-D |
+| [`celcat-groupes`](celcat-groupes.parity.mjs) | Celcat — les ~2 900 groupes, élément par élément | 6-E |
+| [`celcat-salles`](celcat-salles.parity.mjs) | Celcat — les 283 salles, **et** les bâtiments reconstruits | 6-E |
+| [`celcat-jour`](celcat-jour.parity.mjs) | Celcat — jour ordinaire, jour de vacances, jour sans cours, agrégé à deux et trois groupes | 6-E |
+| [`celcat-semaine`](celcat-semaine.parity.mjs) | Celcat — semaine complète, semaine de vacances, semaine à cheval sur deux mois | 6-E |
+| [`celcat-annee`](celcat-annee.parity.mjs) | Celcat — les deux positions de la bascule d'année scolaire | 6-E |
+| [`celcat-occupation`](celcat-occupation.parity.mjs) | Celcat — trois salles du CREMI, jour ordinaire et jour de vacances, une salle par run **et** en un run groupé réattribué par le nom, contre un appel par salle | 6-E, 7-I |
+| [`ical-inp`](ical-inp.parity.mjs) | ADE — jour ordinaire, jour sans cours, semaine complète, agrégat à deux ressources | 6-I |
+| [`ical-abonnement`](ical-abonnement.parity.mjs) | un lien collé **sans bornes**, filtré par l'application, contre la même source bornée par le serveur | 6-J |
 
 [`commun.mjs`](commun.mjs) n'est pas un cas : il porte le harnais partagé — jouer un Blueprint avec le
 moteur nu, capturer ce qu'il a émis, les en-têtes imités du chemin historique, les libellés de repli.
@@ -178,9 +178,9 @@ les évolutions du code qu'il vérifie ne vérifie plus rien. Ici les deux copie
 elles sont figées, et les recopier trois fois n'aurait fait que trois occasions de n'en corriger
 qu'une.
 
-Le harnais a été posé au jalon [6-A](../../docs/phase-6/6-a-socle.md) avec le cas `annonces`, qui a
-servi de gabarit ; ce cas est sorti au jalon [6-B](../../docs/phase-6/6-b-supabase.md) avec la
-bascule de la source vers la [base de publication](../../docs/backend.md). Il est récupérable par
+Le harnais a été posé au jalon 6-A avec le cas `annonces`, qui a
+servi de gabarit ; ce cas est sorti au jalon 6-B avec la
+bascule de la source vers la base de publication. Il est récupérable par
 `git show f9e4a9b:tools/parity/annonces.parity.mjs`.
 
 `npm run parity` sans aucun cas **réussit** en le disant : un harnais vide entre deux jalons de

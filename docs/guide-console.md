@@ -3,7 +3,7 @@
 La console, c'est l'endroit où l'on publie dans UKit sans passer par une mise à jour de
 l'application : les annonces de la vie étudiante, les messages de service, et tout ce que les
 téléphones relisent chaque fois qu'on ouvre l'application. Ce guide est écrit pour celles et ceux qui
-publient sans être développeurs. La référence technique, elle, est [pilotage.md](pilotage.md).
+publient sans être développeurs. La référence technique, elle, est [console/README.md](../console/README.md).
 
 Adresse : **https://kae-lab.github.io/UKit/**, sur un ordinateur. La console se lit sur un téléphone,
 mais une annonce se compose sur un écran d'ordinateur.

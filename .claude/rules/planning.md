@@ -1,0 +1,19 @@
+---
+paths:
+  - "src/features/Planning/**"
+  - "src/shared/etablissements/{edt,edtPersonnel,lienEdt,celcat}.ts"
+  - "blueprints/ukit-celcat-*.blueprint.json"
+  - "blueprints/ukit-edt-abonnement.blueprint.json"
+---
+# Planning
+
+- `sourceEdt()` rend une union totale `celcat > ical > abonnement > lien-attendu > aucun`, jamais `null` ; tester « pas d'emploi du temps » AVANT « aucun favori ». `planningDisponible()` ≠ `sallesDisponibles()` (les fondre rallume des salles libres cassées pour l'INP). L'emploi du temps personnel ADE se fusionne dans `sourceEdt()` et nulle part ailleurs ; son identifiant et le lien collé sont des secrets du trousseau, cloisonnés par établissement.
+- Lien d'abonnement demandé verbatim sans bornes de dates (filtrage dans `IcsMapping`), cache mémoire de 5 min seulement. Hôte Celcat, codes d'inventaire et format de salle sont des données de catalogue, entrées du Blueprint.
+- Ne pas toucher au cache du Planning : `groupName` tableau = planning agrégé (`Array.isArray`), clé de cache, `federationIds[]`, notifications et filtres en dépendent. Cache par vue (`@AAAA/MM/JJ`, `@Week<n>`), jamais assemblé jour par jour (bandeau hors ligne = UNE date). Une requête pour tous les favoris, pas N (charge du serveur universitaire).
+- La vue semaine n'affiche aucune description (comportement d'origine, décision produit, verrouillé par un test) : ce n'est pas un oubli. Le carrousel de cours simultanés porte trois formes essayées puis défaites : index mémorisé (`MemoireCarrousel`), hauteur par gabarit, une ligne par texte tronquée, pas de spacer sous le contenu. `DayView`, `CourseScreen` et `GroupSelectionScreen` sont des classes : `this.context` se type par un accesseur privé, jamais `declare`.
+- Filtres d'UE : planning des favoris seulement ; un cours reste tant qu'UNE de ses UE n'est pas filtrée, un cours sans UE ne disparaît jamais ; comparaison verbatim ; un code d'UE contient au moins une lettre (`separerCodeUE` : `2025-2026 - …` devenait l'UE `2026`). La fiche d'un cours n'affiche que sa première UE. `completerLesModules` ne rend un intitulé que si la description commence par le code + espace : on ne devine pas.
+- Lieu d'un cours = `sites` lu AVANT toute heuristique ; l'icône de ligne se déduit du contenu, code de module avant salle. Favori absent du référentiel : partiel = bandeau des manquants, tous = « ce groupe n'existe plus » sans Réessayer ; pas de Réessayer pour `rejected`. Quatre écrans distincts dans le même `ScreenState` : échec de source, journée libre, aucun favori, pas d'emploi du temps.
+- Au focus : pas de relecture sous 60 s (`fraicheur.ts`), mode jour seulement ; `schedule: null` seulement si la clé change ; « Aujourd'hui » recalculé au vrai retour au premier plan (`retourAuPremierPlan`) ; la position consultée est statique et non persistée, par choix.
+- iCalendar : dates UTC sans `VTIMEZONE`, couleur par empreinte FNV-1a sur 8 teintes vives (teinte neutre = couleur manquante), catégorie ancrée sur le code de module, sans l'horodatage `(Exporté le:…)`. Plafond de 20 rappels conservé ; Réinitialiser efface favoris et filtres Campus.
+- Calendriers du téléphone (lecture seule, opt-in) : fusion APRÈS `preparerPourAffichage` (il mute le sujet), jamais en cache, rappels ni filtres d'UE, favoris seulement ; exclure le calendrier cible ET les ids de `previousSyncData` ; `startNewActivityTask: false` pour le « + » ; « journée entière » iOS local, Android UTC à fin exclusive ; fiche sans lieu résolu au référentiel (un « Chez Marie » matcherait un bâtiment) ; un jour sans cours mais avec rendez-vous montre le rendez-vous. Fenêtre ±7 jours : un événement plus long peut manquer sur Android.
+- Vérifier hors ligne : l'entrée `inputs.domaine` de `ukit-celcat-jour.blueprint.json` sur un hôte injoignable (échec en 20 s) ; `expect.status` 418 → « Réponse inattendue » sans Réessayer ; groupe `4TRN901S` pour les multi-UE.
