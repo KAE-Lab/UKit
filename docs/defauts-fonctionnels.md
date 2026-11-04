@@ -19,6 +19,27 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Le parcours d'accueil s'ouvre en anglais sur un Android en français — constaté le 2026-11-04
+
+Sur le banc Android (Android 9, système en `fr-FR`), une installation neuve ouvre le parcours en
+anglais, « English » présélectionné, alors que [onboarding.md](features/onboarding.md) promet la
+langue du téléphone. La cause est mesurée par un journal posé dans
+[`deviceLanguage()`](../src/shared/services/AppCore.tsx) : sous la nouvelle architecture,
+`NativeModules.I18nManager` n'expose plus que `getConstants()`, `localeIdentifier` vaut `undefined`,
+et la fonction retombe sur `'en_US'`. Tout nouvel utilisateur Android est touché ; les appareils déjà
+installés gardent la langue choisie. La branche iOS lit `NativeModules.SettingsManager` de la même
+façon et a sans doute le même défaut, non vérifié faute de simulateur.
+
+### La barre d'état est invisible au premier lancement en sombre, sur Android — constaté le 2026-11-04
+
+Sur le banc Android (Android 9), installation neuve (`pm clear`), système en sombre : l'accueil se
+rend en sombre, comme promis, mais la barre d'état est noire sur noir. La capture n'y compte qu'une
+couleur, alors que l'heure est bien dans l'arbre d'écran. Toucher « Clair » puis « Sombre » dans le
+parcours la fait réapparaître, icônes blanches. Seul l'état initial est donc faux ; la cause n'est pas
+établie ([`StatusBar`](../src/shared/ui/AppUI.tsx) lit `themeName` du contexte racine, et
+`androidStatusBar` impose `light-content` dans [`app.config.ts`](../app.config.ts)). À confirmer
+sur l'A8 avant la correction.
+
 ### Le parcours froid de l'INP dépasse ses attentes sur un appareil lent — mesuré le 2026-09-21
 
 Sur le Galaxy A8 (Android 9) derrière un partage de connexion 5G, la connexion à Bordeaux INP échoue
