@@ -64,7 +64,7 @@ export function FondDOnglet({ theme, onglet }: FondDOngletProps) {
     }, [affiche, mouvementReduit, glissement]);
 
     const incline = useAnimatedStyle(() => ({
-        transform: [{ rotate: `${inclinaison}deg` }, { translateX: glissement.value }],
+        transform: [{ rotate: `${inclinaison}deg` }, { translateX: glissement.value }] as const,
     }));
 
     const [teinteA, teinteB] = theme.fondDOnglet[onglet];
