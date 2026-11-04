@@ -39,3 +39,14 @@ fcm-service-account.json
 
 # Les residus de la CLI Supabase (projet lie, version du binaire) : de l'etat de poste.
 supabase/.temp/
+
+# Les exports locaux et le labo de l'Epure (environnement Python, sorties, polices) : 725 Mo qui
+# partaient dans l'archive de chaque build, faute d'avoir ete recopies ici depuis `.gitignore`.
+dist/
+tools/epure/sortie/
+tools/epure/slide-*.html
+tools/epure/fig01-u.svg
+tools/epure/fig02-question.svg
+tools/epure/ukit-logo-verre.svg
+tools/epure/polices/Geist-600-titre.ttf
+.venv/
