@@ -3,6 +3,10 @@
 > **Publication : 6.3.** Ce jalon s'est appelé 6.2-A, puis 6.3-A après le renumérotage du 2026-09-08
 > ([README de la phase 6](../phase-6/README.md)) ; il rejoint la phase 7 le 2026-09-15.
 
+> **Jalon clos le 2026-11-04, sans son protocole sur appareil.** Le code et la documentation sont
+> livrés sur `v6.3`, l'intégration continue est verte ; le plan de test n'a été joué que pour le fond,
+> sur l'iPhone. Il est reporté à la reprise : voir [la clôture](#la-clôture-du-2026-11-04).
+
 > **Jalon ouvert le 2026-09-26.** Ce document était un cadre ; il est devenu spécification ce jour-là,
 > après la lecture du code et des documents qu'il cite : les [décisions du 2026-09-26](#décisions-du-2026-09-26),
 > la [définition de « terminé »](#définition-de--terminé-), le [plan de test](#plan-de-test) et ce que
@@ -254,8 +258,9 @@ rien à afficher. *Les trois sont livrés le 2026-09-26, et `main` est fusionné
    du chargement réécrite, les trois composants dans le tableau du vocabulaire partagé ;
    `tokens.mouvement` existe et est lu par les composants qui animaient déjà.
 4. Le tableau de bord Campus : aucune section ne change de hauteur entre son squelette, son contenu et
-   sa panne ; le contenu entre en cascade ; aucun reflux au premier rendu ; le fond est posé et
-   s'efface au défilement ; les deux thèmes, les deux appareils.
+   sa panne ; le contenu entre en cascade ; aucun reflux au premier rendu ; le fond est posé ~~et
+   s'efface au défilement~~ *(amendé le 2026-11-04 : le contenu passe dessus)* ; les deux thèmes, les
+   deux appareils.
 5. La carte v2 rend **comme l'aperçu de la console** — cadre, focale, contenir, badge, partenaire,
    blurhash — par un module pur partagé avec elle ; `BdeService` lit les colonnes et applique
    `ordonner()` ; une carte spéciale paraît en tête du carrousel de son emplacement, au gabarit de
@@ -281,8 +286,10 @@ Sur l'iPhone 13 Pro et le Galaxy A8, dans les deux thèmes, Metro lu depuis le p
 1. **Ouverture à froid de Campus** : les quatre squelettes paraissent tout de suite, à la hauteur des
    cartes ; le contenu entre en cascade ; aucun changement de hauteur de section ; aucun reflux au
    premier rendu quand des favoris existent.
-2. **Le fond** : derrière le titre, il s'efface au défilement et revient ; il ne concurrence pas la
-   fumée de la barre d'onglets.
+2. **Le fond** : derrière le titre de Campus, de la Scolarité et des Réglages, il glisse lentement,
+   sans bande ni coin découvert ni saut en fin de cycle ; le contenu passe dessus au défilement ; il
+   reste immobile sous « réduire les animations » ; il ne concurrence pas la fumée de la barre
+   d'onglets.
 3. **Panne par section** : l'interrupteur HORS LIGNE du menu flottant pour les trois sources tierces ;
    `SUPABASE_URL` sur `.invalid` et `expo start -c` pour les annonces. Chaque section montre sa carte
    en panne à la hauteur d'une carte, Réessayer ou Voir tout selon la famille.
@@ -322,3 +329,55 @@ Sur l'iPhone 13 Pro et le Galaxy A8, dans les deux thèmes, Metro lu depuis le p
   runs en laissaient réussir quelques-uns ; le cache ne garde rien et l'ouverture suivante rejoue.
 - **L'ordre des annonces change à l'heure pleine**, mais un tableau de bord laissé ouvert garde l'ordre
   de l'heure où il a lu : il relit au retour au premier plan et au tirer.
+
+## La clôture du 2026-11-04
+
+Le jalon se ferme sur ce qui est livré, pour que la suite reparte d'un état net. Ce qui n'a pas été
+vérifié est écrit comme tel, et passe à la reprise.
+
+### Ce qui est livré
+
+| Point de « terminé » | État |
+|---|---|
+| 1. Le relevé | [inventaire-mouvement.md](../inventaire-mouvement.md), daté du 2026-09-27 |
+| 2. Les captures | **avant** prises sur l'iPhone, clair et sombre, et la grille des annonces ; **pas de capture Android ni de capture après** |
+| 3. Le vocabulaire | [theme.md](../theme.md), « Le mouvement », et `tokens.mouvement` |
+| 4. L'écran fondateur | codé : squelettes, cartes en panne, cascade, données prêtes avant le rendu, fond ; **non vérifié sur appareil**, sauf le fond sur l'iPhone |
+| 5. La carte v2 | codée, avec le module pur partagé avec la console, l'ordre et les cartes spéciales ; non vérifiée sur appareil |
+| 6. Le catalogue | `credits`, `campus` et `alias` lus, le cache en `etablissements@5` |
+| 7. L'occupation | un run par bâtiment, l'attribution pure et testée, le Blueprint en version 4 ; non vérifiée sur appareil |
+| 8. Le mouvement réduit | codé dans le reflet des squelettes, la cascade et le fond ; non vérifié sur appareil |
+| 9. Les portes | `tsc`, ESLint, la suite de tests (1 091) et l'intégration continue, verts le 2026-11-04 ; **`npm run parity` et `npx expo export` non rejoués à la clôture** |
+| 10. La documentation | ce document, [theme.md](../theme.md), les documents de Campus, [backend.md](../backend.md), [identite.md](../identite.md), le CHANGELOG, l'état du [README de la phase](README.md#létat) |
+
+### Les écarts à ce document
+
+- **Le fond n'est pas une image** mais un dégradé vivant : deux teintes proches de la section qui
+  glissent lentement, choisies sur planche le 2026-11-04 (variante K1, dosage affirmé). La 3D des
+  tours 3 et 4 du labo a été abandonnée : trop lourde pour une touche discrète. Le fond ne s'efface
+  pas au défilement.
+- **Trois onglets au lieu d'un** : Campus, la Scolarité et les Réglages portent leur fond. Planning
+  attend la reprise de son en-tête de pile en [7-J](7-j-ecrans.md) ; ses couleurs sont déjà dans la
+  palette. Dans la Scolarité, les états qui occupent l'écran gardent leur fond plein.
+- **En sombre, les couleurs du fond sont celles vues au labo**, sur le noir teinté `#0B0B12` ; calculées
+  depuis le noir pur de l'application, elles tombaient presque au noir.
+
+### Ce qui passe à la reprise
+
+- **Le plan de test**, en entier, sur les deux appareils et dans les deux thèmes, avec les captures
+  « après » et les deux vidéos ; puis `npm run parity` et `npx expo export`. Un défaut trouvé là se
+  corrige dans 7-I avant d'ouvrir 7-J.
+- **Le « cran au-dessus » de l'interface**, vu sur les maquettes du labo et retenu le 2026-11-04 : le
+  noir teinté `#0B0B12` et ses cartes `#15151E`, un texte secondaire plus contrasté (`#BCBCCB` en
+  sombre, `#6C6C70` en clair), une ombre de carte plus marquée, les icônes des Réglages dans un carré
+  teinté. Il n'est dans aucun jalon : à placer avant 7-J, puisqu'il change les couleurs dont 7-J
+  hérite. Les teintes sombres du fond se recalculent alors sur le nouveau noir.
+- **Le SDK 58** : Expo Go sur iPhone ne lit plus le SDK 57 ; l'essai sur iOS passe par le build de
+  développement (reconstruit le 2026-11-04).
+- **Un `.easignore`** : l'archive envoyée au build pèse 550 Mo, parce que les dossiers ignorés par Git
+  ne le sont pas par EAS.
+- **`tools/epure/sortie/` hors de `tsc` et d'ESLint** : les fichiers du labo, ignorés par Git, font
+  échouer les deux outils en local, et une erreur de syntaxe y arrête `tsc` avant le contrôle des
+  types du reste — l'intégration continue, qui ne les a pas, a vu ce que le poste ne voyait plus.
+- **`InteractionManager`**, que React Native annonce retiré : un avertissement au lancement, hors du
+  mouvement.
