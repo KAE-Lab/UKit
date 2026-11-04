@@ -225,7 +225,9 @@ Un jalon se traite en suivant sa **spécification** et la
   vérifiées. L'ouverture et la livraison s'écrivent dans [l'état](#létat).
 - **Les dépendances sont la seule contrainte d'ordre.** L'ordre des lettres est une recommandation.
 - **Les deux appareils sont permanents** : tout ce qui touche l'application se vérifie sur l'iPhone 13 Pro
-  et sur le Galaxy A8.
+  et sur le Galaxy A8. *Amendé le 2026-11-04 : un jalon avance sur le
+  [banc Android](../qualite.md#le-banc-android) sans attendre les appareils, qui jugent avant chaque
+  publication ; le protocole d'un jalon se joue sur le banc.*
 - **Un jalon se termine par l'amendement de sa spécification** : la bannière de livraison, les endroits où
   la réalité a corrigé le texte, et la ligne de l'état. Se vérifie par `git diff --stat docs/phase-7/`
   avant de commiter.

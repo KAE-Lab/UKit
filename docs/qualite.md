@@ -322,6 +322,53 @@ et la lenteur : une liste qui saccade sur l'A8 saccadera ailleurs. Jusqu'à la 6
 vu qu'en fin de version, par le second testeur ; la passe du 2026-09-08 avait trouvé sept défauts
 d'un coup ([6.1.x-Z](phase-6/6-1-x-z-sortie.md#limites-écrites)).
 
+**Depuis le 2026-11-04, le travail avance sur le banc Android, et les deux appareils jugent avant
+chaque publication.** Les défauts constatés entre les deux plateformes allaient toujours dans le même
+sens : ce qui marche sur Android marche sur iOS, l'inverse non. Un lot se vérifie donc sur le
+[banc](#le-banc-android) sans attendre un téléphone, et l'iPhone et l'A8 passent avant chaque
+publication, au protocole de sortie.
+
+### Le banc Android
+
+Deux émulateurs sur le poste, pilotés sans fenêtre par
+[`tools/appareil/banc.sh`](../tools/appareil/banc.sh) : **`ukit-a8`**, Android 9 au format de l'A8
+(1080×2220 à 480 dpi, 360×740 dp), avec le vieux magasin d'autorités ; **`ukit`**, Android 15 au
+format Pixel 6. Le build de développement s'installe une fois ; le code arrive ensuite par Metro, et
+un nouveau build n'est nécessaire que si une dépendance native change.
+
+```bash
+tools/appareil/banc.sh demarrer ukit-a8
+npx expo start --dev-client --port 8081      # à part, depuis la racine
+tools/appareil/banc.sh ouvrir
+tools/appareil/banc.sh capture /tmp/ecran.png
+tools/appareil/banc.sh theme sombre          # format, police, animations non, reseau non
+```
+
+Les gestes passent par l'Android CLI des SDK récents, qui vise un élément par son texte dans l'arbre
+d'accessibilité : `android input tap 'text=/^Réessayer$/'`, `android layout --flat` pour l'arbre en
+JSON. Un sélecteur `text=` simple est une sous-chaîne sans casse : `text=Start` trouve aussi
+« …before you start. » et refuse l'ambiguïté, d'où la forme exacte.
+
+Deux comportements de l'application à connaître sur le banc. Le thème du système (`theme`) n'est lu
+qu'au premier lancement ; ensuite, l'application suit son propre réglage, et `pm clear` sur
+`com.bordeaux1.emplois` rejoue une installation neuve. La coupure `reseau non` est celle du système,
+WebView et Supabase compris, et Metro continue d'arriver par le tunnel d'adb : c'est le chemin
+dégradé réel sans perdre la session, vérifié le 2026-11-04.
+
+Ce que le banc ne dit pas, et qui reste aux deux appareils :
+
+- **iOS** : le simulateur exige macOS. Les familles où iOS casse quand Android passe se relisent dans
+  le diff avant la publication : une ombre écrite en `elevation` seule, les zones sûres et le clavier,
+  les cookies de la WebView (WKWebView les tient autrement) ;
+- **la lenteur de l'A8** : l'émulateur tourne sur seize cœurs ;
+- **la WebView récente de l'A8** : celle de `ukit-a8` est figée en version 69, de 2018, quand l'A8 se
+  met à jour par le Play Store. Un parcours de WebView (Scolarité, connexion universitaire) se juge sur
+  `ukit` ;
+- l'haptique, les notifications push, la biométrie, le calendrier du système.
+
+L'émulateur pèse 3,5 Go : il tourne dans un service systemd plafonné à 4 Go, pour que le manque de
+mémoire le tue lui et pas la session, et un seul à la fois.
+
 ```bash
 npm install
 npx expo start        # puis a pour Android, i pour iOS, ou scan du QR avec Expo Go
@@ -330,8 +377,8 @@ npx expo start        # puis a pour Android, i pour iOS, ou scan du QR avec Expo
 Chaque documentation de feature porte une section **« Vérifier »** décrivant le parcours attendu. Au
 minimum, pour tout changement touchant une source distante, jouer aussi le chemin dégradé :
 
-- **hors ligne** — mode avion : le planning doit servir le cache daté, les écrans Campus un état vide
-  explicite ;
+- **hors ligne** — `banc.sh reseau non` sur le banc, le mode avion sur un appareil (il coupe aussi
+  Metro) : le planning doit servir le cache daté, les écrans Campus un état vide explicite ;
 - **source injoignable** — couper le réseau après le lancement puis naviguer : aucun plantage ;
 - **réponse vide** — un groupe sans cours, un restaurant sans menu du jour, une BU fermée.
 

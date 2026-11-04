@@ -69,7 +69,9 @@ Une capacité utilisateur — un écran, une source de données, une option — 
    deux plateformes**. Le parc de test permanent est un iPhone 13 Pro et un Galaxy A8 de 2018 sous
    Android 9 ([docs/qualite.md](docs/qualite.md#vérification-manuelle)) : le rendu et le réseau sont
    les deux domaines où une plateforme ne dit rien de l'autre, et un petit écran ancien révèle ce
-   qu'un grand récent cache. Chaque
+   qu'un grand récent cache. Depuis le 2026-11-04, un lot avance sur le **banc Android** du poste,
+   deux émulateurs dont un au format et au système de l'A8, et les deux appareils jugent avant chaque
+   publication ([docs/qualite.md](docs/qualite.md#le-banc-android)). Chaque
    documentation de partie porte une section « Vérifier » décrivant le parcours attendu. Pour toute
    capacité touchant une source distante, jouer **aussi le chemin dégradé** — hors ligne, source
    injoignable, réponse vide. Un échec propre et explicable est un résultat valide ; un comportement
@@ -259,8 +261,8 @@ manuellement. Avant de poser un tag, vérifier la cohérence de `package.json`, 
 * [ ] Aucune chaîne en dur ; les trois dictionnaires sont à jour.
 * [ ] Aucune valeur de style en dur ; tokens utilisés.
 * [ ] Aucun `any` ajouté sans justification.
-* [ ] Parcours vérifié à la main, chemin nominal **et** chemin dégradé, **sur iPhone et sur Android**
-  (le Galaxy A8 pour Android).
+* [ ] Parcours vérifié à la main, chemin nominal **et** chemin dégradé, sur le banc Android ; **sur
+  iPhone et sur le Galaxy A8** avant une publication.
 * [ ] Documentation de la partie, « État des lieux » du README et CHANGELOG mis à jour.
 * [ ] Pour un jalon de phase : sa **spécification** porte la bannière « Jalon livré » et ses écarts
   constatés. Le vérifier par `git diff --stat docs/phase-6/` **avant** de commiter, jamais de
