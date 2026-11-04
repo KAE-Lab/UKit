@@ -29,6 +29,7 @@ import {
     SettingsCalendarPopup
 } from '../components/SettingsModals';
 import { ChoixEtablissement } from '../../../shared/ui/ChoixEtablissement';
+import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
 
 import {
     DisplaySection,
@@ -478,6 +479,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             <SafeAreaInsetsContext.Consumer>
                 {(insets) => (
                     <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
+                        <FondDOnglet theme={theme} onglet="reglages" />
                         <EnTeteReglages theme={theme} insets={insets} scrollY={this.scrollY} />
                         {renderScrollContent(insets)}
                     </SafeAreaView>

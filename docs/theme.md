@@ -222,6 +222,7 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`LoadingState`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** quand sa forme n'est pas connue : une étape d'accueil, une liste qui peut être vide. Sa phrase reste optionnelle. Là où la forme est connue, c'est un `Squelette` | 6 fois |
 | [`Squelette`](../src/shared/ui/Squelette.tsx) | la forme d'un contenu qui charge, et `Balayage`, le reflet qui la parcourt. **Il ne dessine pas la forme** : elle vient de l'appelant, construite avec les composants du contenu en mode `masque` (`Card`, `MetaRow`, `Badge`, le titre d'une carte). Il annonce son attente aux lecteurs d'écran par sa phrase | posé au 7-I |
 | [`TexteMasque`](../src/shared/ui/TexteMasque.tsx) | une ligne de texte masquée : la hauteur exacte de sa police, une barre à sa place, **aucun caractère rendu** | 2 fois, remonté au 7-I |
+| [`FondDOnglet`](../src/shared/ui/FondDOnglet.tsx) | le fond d'un onglet : deux teintes proches de la section qui glissent lentement en haut de l'écran, puis se fondent dans la page. Premier enfant de la vue racine, sous l'en-tête et le contenu. Ses couleurs sont `theme.fondDOnglet`, sa géométrie [`fondDOnglet.ts`](../src/shared/ui/fondDOnglet.ts) | 3 fois, posé au 7-I |
 | [`mouvement.ts`](../src/shared/ui/mouvement.ts) | les animations partagées, tirées de `tokens.mouvement` : `REFLUX`, `SORTIE`, `entreeEnCascade(rang)` | posé au 7-I |
 | [`ChargementPleinePage`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran**, sa phrase **obligatoire**, et une seconde ligne après quatre secondes | 5 fois |
 | [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu : un fondu seul, de la durée `tokens.mouvement.couture` | 3 fois |
@@ -831,6 +832,16 @@ Acquises, et qui ont coûté à être trouvées :
 - **Le tirer-pour-rafraîchir reste celui du système** (2026-09-26). Sur Android, le contrôle natif
   intercepte le geste sans en donner la progression ; un geste maison sur les deux plateformes était le
   point le plus risqué du jalon, pour un moment que l'Épure porte déjà ailleurs.
+- **Le fond d'un onglet est une touche, pas un décor.** Un voile oblique de deux teintes proches de la
+  section — Planning bleu, Campus cyan, Scolarité violet, Réglages presque neutre — séparées par des
+  respirations où la page reparaît, glisse d'une période par minute en haut de l'écran, puis se fond
+  dans la page avant le contenu (`FondDOnglet`). Il ne vole aucun toucher, ne bouge que quand l'onglet
+  est affiché, et reste immobile sous « réduire les animations ». Il ne s'efface pas au défilement :
+  le contenu passe dessus. Choisi sur planche le 2026-11-04 (variante K1, dosage affirmé), après que
+  la 3D (rendus Blender, fonds trouvés) a été jugée trop lourde pour ce qu'elle apportait, et un
+  premier dégradé en deux taches, trop « arc-en-ciel » : les deux teintes sont à 15 degrés l'une de
+  l'autre. Les couleurs sont celles vues au labo, posées telles quelles : en sombre, calculées depuis
+  le noir pur, elles tombaient presque au noir.
 - **Une image annonce sa couleur.** Quand la base porte un blurhash — les annonces, calculé par la
   console au téléversement —, il tient la place de l'image pendant son chargement, cadré comme elle.
   Sans lui, le gris du conteneur : les lieux n'en ont pas.

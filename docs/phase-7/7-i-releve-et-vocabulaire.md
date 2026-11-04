@@ -58,7 +58,7 @@ Posé dans [theme.md](../theme.md), section « Les décisions durables » : sque
 états pressés, transitions, fond d'écran, mouvement réduit. Les durées et le ressort deviennent un
 sous-arbre **`tokens.mouvement`** de [`tokens.ts`](../../src/shared/theme/tokens.ts), pur et testable ;
 le tableau du vocabulaire partagé gagne les trois composants du jalon, `Squelette`, `CarteEnPanne`,
-`FondDEcran`. Une règle existante **est réécrite** :
+`FondDOnglet`. Une règle existante **est réécrite** :
 
 > *« Un chargement bref ne montre rien »* (seuil de 300 ms,
 > [`indicateurRetarde.ts`](../../src/shared/ui/indicateurRetarde.ts)) — les squelettes de contenu la
@@ -125,9 +125,12 @@ Le tableau de bord porte désormais aussi :
 - **Les cartes d'erreur illustrées**, au gabarit **exact** des cartes qu'elles remplacent —
   `CarteEnPanne`, une par section, illustration monochrome dans la grammaire de l'Épure. Une
   section garde sa hauteur quoi qu'il arrive à sa source.
-- **Les fonds par écran** sont des **images statiques pré-rendues, une par onglet et par thème**,
-  derrière la zone d'en-tête, estompées au défilement, servies par `expo-image`
-  (`shared/ui/FondDEcran.tsx`, zéro coût de rendu). Elles s'accordent à la fumée de
+- **Les fonds par écran** ~~sont des images statiques pré-rendues, une par onglet et par thème,
+  estompées au défilement~~ *sont un dégradé vivant, choisi sur planche le 2026-11-04 : deux teintes
+  proches de la section qui glissent lentement derrière la zone d'en-tête
+  ([`FondDOnglet`](../../src/shared/ui/FondDOnglet.tsx), un `LinearGradient` incliné que Reanimated
+  déplace ; ni image ni vidéo). Il ne s'efface pas au défilement. Les tours 3 et 4 du labo (rendus
+  Blender, fonds trouvés en ligne) ont été abandonnés : trop lourds pour une touche discrète.* Elles s'accordent à la fumée de
   [`PiedFlottant`](../../src/shared/ui/PiedFlottant.tsx), elles ne la concurrencent pas. *La « veine du
   visuel aurora de la v6 » écrite le 2026-09-14 n'existe nulle part dans le dépôt : la veine est celle
   de l'Épure, choisie sur planche.*
@@ -156,7 +159,7 @@ Le tableau de bord porte désormais aussi :
 | La police | **Celle du système**, tranchée ; Geist reste au site et à la communication ([identite.md](../identite.md#ce-qui-reste-à-trancher)). |
 | La rondeur | **Le carré arrondi**, tranché pour l'application ; l'Épure s'y plie ici. |
 | Les moteurs d'animation | **Converger l'écran fondateur seul** — son en-tête, son défilement, ses cartes — et écrire la règle : tout nouveau mouvement s'écrit en Reanimated ; l'`Animated` legacy est toléré dans l'existant jusqu'à la reprise de l'écran. [`NavHelpers`](../../src/shared/navigation/NavHelpers.tsx) et ses onze écrans convergent dans les lots de [7-J](7-j-ecrans.md) : le toucher sans reprendre ses écrans casserait tous les en-têtes pour rien. |
-| Les fonds par écran | **Campus seul dans ce jalon**, le composant prêt pour les trois autres onglets en 7-J. L'image est **pré-estompée** — Android n'a pas de masque — et s'efface au défilement par son opacité. Les deux thèmes se dessinent sur planche : l'Épure claire n'existe pas encore. |
+| Les fonds par écran | **Un fond par section, dans les deux thèmes** (décision du 2026-09-30) : **Campus, Scolarité et Réglages dans ce jalon**, Planning avec la reprise de son en-tête de pile en 7-J — ses couleurs sont déjà dans la palette. Le dégradé se dessine au rendu : un voile vertical de seize arrêts le fond dans la page, sans masque, sur les deux plateformes. Dans la Scolarité, les états qui occupent tout l'écran (chargement, compte à relier) gardent leur fond plein. |
 | Les transitions d'écran | **Celles de la pile**, écrites comme telles. Mesuré : Reanimated 4.5 livre encore `SharedTransition`, mais derrière un drapeau natif désactivé par défaut, et la pile de navigation est en JavaScript ; rien de promis pour la 6.3. |
 | Le catalogue | **La lecture** dans ce jalon : le type de ligne, la projection, le socle embarqué, `COLONNES`, la version de cache `@5` après vérification des valeurs en production, un accesseur `campusActif()` ; et le repli « Talence » du mapping des bâtiments et des deux cartes de salles, parce qu'ils vivent dans l'écran fondateur. La liste regroupée par campus, la recherche par alias et les crédits à l'écran restent au **lot 3 de 7-J**. |
 | Le blurhash des lieux | **Hors 6.3** : seule la table `annonces` porte la colonne ; restaurants, bibliothèques et bâtiments gardent le gris du conteneur pendant le chargement. |

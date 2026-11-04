@@ -37,6 +37,15 @@ export interface PaletteDeBase {
      */
     readonly sectionsHeaders: string[];
     readonly sections: string[];
+    /**
+     * Les deux teintes du fond de chaque onglet (7-I, `FondDOnglet`) : la teinte de la section et sa
+     * voisine a 15 degres, Planning bleu, Campus cyan, Scolarite violet, Reglages presque neutre.
+     * Ce sont les couleurs vues et choisies au labo (variante K1, dosage affirme, 2026-11-04), au
+     * sommet du voile ; en sombre, celles du noir teinte #0B0B12 du labo. Calculees depuis le noir pur
+     * de l'application, elles tombaient presque au noir et ne se voyaient plus : on garde ce qui a
+     * ete vu plutot qu'un calcul.
+     */
+    readonly fondDOnglet: Readonly<Record<'planning' | 'campus' | 'scolarite' | 'reglages', readonly [string, string]>>;
 }
 
 export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDeBase } = {
@@ -52,6 +61,12 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
         reflet:         '#FFFFFFB3',
         sections:        ['#007AFF10', '#34C75910', '#FF950010', '#FF3B3010', '#5856D610', '#5AC8FA10'],
         sectionsHeaders: ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#5856D6', '#5AC8FA'],
+        fondDOnglet: {
+            planning:  ['#C0E5FF', '#CEE0FF'],
+            campus:    ['#A4F2F6', '#A6EFFF'],
+            scolarite: ['#EDD6FF', '#F9D2FF'],
+            reglages:  ['#E0E0EE', '#E0E0EE'],
+        },
     },
     dark: {
         primary:        '#5E5CE6',
@@ -66,5 +81,11 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
         sections:        ['#0A84FF15', '#30D15815', '#FF9F0A15', '#FF453A15', '#5E5CE615', '#64D2FF15'],
         // L'index 0 portait `#5E5CE6`, la valeur du 4 : cinq teintes au lieu de six en sombre, corrige en 6.1-C.
         sectionsHeaders: ['#0A84FF', '#30D158', '#FF9F0A', '#FF453A', '#5E5CE6', '#64D2FF'],
+        fondDOnglet: {
+            planning:  ['#00184E', '#0C124F'],
+            campus:    ['#002931', '#00263C'],
+            scolarite: ['#290445', '#32003C'],
+            reglages:  ['#1C1B29', '#1C1B29'],
+        },
     },
 };
