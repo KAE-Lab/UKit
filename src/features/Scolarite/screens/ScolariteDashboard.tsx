@@ -54,6 +54,7 @@ import { PageScolarite } from '../components/PageScolarite';
 import { CampusNonRelie } from '../components/CampusNonRelie';
 import { EnteteScolarite } from '../components/EnteteScolarite';
 import { serviceDuPoint, type PointWidget } from '../widgets/definitions';
+import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
 
 /**
  * Le titre de l'onglet **sans bandeau** : le gabarit de Campus et des Reglages, a l'identique.
@@ -297,6 +298,7 @@ const ScolariteDashboard = ({ navigation }) => {
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
+                    <FondDOnglet theme={theme} onglet="scolarite" />
                     {renderHeader(insets)}
                     {credentials
                         ? <BiometryGate theme={theme}>{corps(insets)}</BiometryGate>

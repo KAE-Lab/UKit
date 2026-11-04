@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import style from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
+import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
 import { useCampusPosition } from '../hooks/useCampusPosition';
 import { RafraichissementProvider, useRafraichissementTableauDeBord } from './rafraichissement';
 
@@ -51,6 +52,7 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
+            <FondDOnglet theme={theme} onglet="campus" />
             <EnTeteCampus theme={theme} defilement={defilement} repos={reposY} hautSur={insets.top} />
 
             <Reanimated.ScrollView
