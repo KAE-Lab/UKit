@@ -46,6 +46,34 @@ compteurs anonymes, sans identifiant, avec un interrupteur, et jamais de réseau
 - **`CarrouselDeSection` et `CampusListLayout` acceptent le couple de visibilité** d'une `FlatList`,
   que les deux listes d'annonces leur passent.
 
+Le jalon [7-I](docs/phase-7/7-i-releve-et-vocabulaire.md), le vocabulaire du mouvement, sur `v6.3` :
+l'interface ne saute plus pendant qu'elle charge. Clos le 2026-11-04, son plan de test sur appareil
+reste à jouer.
+
+### Ajouté
+
+- **Un chargement annonce sa forme.** Les sections du tableau de bord Campus montrent tout de suite
+  un squelette au gabarit exact de leurs cartes, qu'un reflet balaie, puis le contenu entre en
+  cascade sans rien déplacer.
+- **Une source en panne garde la place de sa carte** : une carte au même gabarit, le nuage barré en
+  filigrane, le titre de l'échec et son geste, Réessayer ou Voir tout.
+- **La carte d'annonce v2**, rendue comme l'aperçu de la console : le cadre, le point focal, le
+  blurhash pendant le chargement, le badge du type, le partenaire, et l'ordre des annonces.
+- **Les cartes spéciales** : un bon plan ou un partenaire paraît en tête du carrousel de son
+  emplacement (restaurants, bibliothèques, salles), au gabarit de ses voisines.
+- **Le fond des onglets** Campus, Scolarité et Réglages : deux teintes proches de la section qui
+  glissent lentement en haut de l'écran, puis se fondent dans la page.
+- **Le catalogue lit les crédits, le campus et les alias** des établissements ; le cache passe en
+  `etablissements@5`.
+
+### Modifié
+
+- **Les durées et le ressort sont partagés** (`tokens.mouvement`), et une carte pressée se réduit au
+  lieu de pâlir ; l'étoile de favori acquitte le geste par un retour haptique.
+- **L'occupation d'un bâtiment part en un seul run** au lieu d'un par salle ; le Blueprint
+  `ukit.celcat.occupation` passe en version 4, embarqué par la release.
+- **« Réduire les animations »** fige le reflet des squelettes, la cascade et le fond.
+
 Le jalon [7-H](docs/phase-7/7-h-console-roles.md), les rôles et l'équipe, sur `main` et sans release :
 la console s'ouvre à une équipe sans lui donner les clés de la production.
 
