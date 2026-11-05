@@ -27,7 +27,7 @@ const LANGUAGE_LIST = {
  */
 export const SettingsTextHeader = ({ theme, text }: { theme: AppThemeType['settings']; text: string }) => {
     if (!theme?.separationText) return null;
-    return <Text style={theme.separationText as never}>{text.toUpperCase()}</Text>;
+    return <Text style={theme.separationText as never}>{text}</Text>;
 };
 
 interface InstitutionSectionProps {

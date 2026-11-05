@@ -23,7 +23,7 @@ export function LibraryLiveAttendance({ affluence, theme }: LibraryLiveAttendanc
     return (
         <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.md, marginBottom: tokens.space.xl, borderRadius: tokens.radius.lg, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.contourDeCarte }}>
             {/* En casse de phrase : les petites capitales espacees sont un tic (deuxieme passe de 7-J). */}
-            <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold as never, color: theme.fontSecondary, marginBottom: tokens.space.sm }}>
+            <Text style={{ ...tokens.texte.intertitre, color: theme.fontSecondary, marginBottom: tokens.space.sm }}>
                 {Translator.get('ATTENDANCE')}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: rate !== null ? tokens.space.md : 0 }}>

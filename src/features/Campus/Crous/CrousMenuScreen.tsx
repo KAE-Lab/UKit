@@ -60,9 +60,8 @@ function LigneDHoraire({ ligne, theme }: { ligne: LigneHoraire; theme: AppThemeT
     if (ligne.kind === 'periode') {
         return (
             <Text style={{
+                ...tokens.texte.intertitre,
                 color: theme.fontSecondary,
-                fontSize: tokens.fontSize.sm,
-                fontWeight: tokens.fontWeight.semibold,
                 paddingHorizontal: tokens.space.md,
                 paddingTop: tokens.space.md,
                 paddingBottom: tokens.space.xs,

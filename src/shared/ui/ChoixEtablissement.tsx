@@ -76,7 +76,7 @@ function ListeDesEtablissements({ groupes, intertitres, choisi, theme, onChoisir
             {groupes.map((groupe) => (
                 <View key={groupe.campus ?? '-'}>
                     {intertitres && groupe.campus !== null ? (
-                        <Text style={[theme.popup.textDescription, { marginTop: tokens.space.md, marginBottom: 0, fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.semibold, textTransform: 'uppercase', letterSpacing: 0.8 }] as never}>
+                        <Text style={[theme.popup.textDescription, { marginTop: tokens.space.md, marginBottom: 0, ...tokens.texte.intertitre }] as never}>
                             {groupe.campus}
                         </Text>
                     ) : null}

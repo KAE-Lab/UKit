@@ -116,8 +116,6 @@ const Theme = {
                 fontWeight: tokens.fontWeight.semibold,
                 marginTop:  tokens.space.lg,
                 marginLeft: tokens.space.md,
-                letterSpacing: 0.8,
-                textTransform: 'uppercase',
             },
             button: {
                 backgroundColor: '#FFFFFF',
@@ -439,8 +437,6 @@ const Theme = {
                 fontWeight: tokens.fontWeight.semibold,
                 marginTop:  tokens.space.lg,
                 marginLeft: tokens.space.md,
-                letterSpacing: 0.8,
-                textTransform: 'uppercase',
             },
             button: {
                 backgroundColor: '#15151E',

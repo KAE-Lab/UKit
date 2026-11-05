@@ -74,6 +74,13 @@ export const tokens = {
         heure: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, letterSpacing: -0.3, fontVariant: ['tabular-nums' as const] },
         /** Des chiffres qui ne dansent pas d'une ligne a l'autre. */
         chiffres: { fontVariant: ['tabular-nums' as const] },
+        /**
+         * L'intertitre gris d'un groupe : une categorie de menu, un etage, un groupe de reglages. En
+         * casse de phrase depuis la deuxieme passe de 7-J : les petites capitales espacees qu'il
+         * portait sont un tic des interfaces generees (~/.claude/rules/design.md). La couleur reste a
+         * l'appelant, `theme.fontSecondary`.
+         */
+        intertitre: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
     },
     /**
      * Les ombres, en **specifications** : decalage, flou, opacite, au sens d'iOS. `Theme.ts` les

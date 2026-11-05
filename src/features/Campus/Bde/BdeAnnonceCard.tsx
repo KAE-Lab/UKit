@@ -234,8 +234,6 @@ const styles = StyleSheet.create({
     kicker: {
         fontSize: tokens.fontSize.xs,
         fontWeight: tokens.fontWeight.semibold,
-        letterSpacing: 0.8,
-        textTransform: 'uppercase',
     },
     boiteDuKicker: {
         marginBottom: tokens.space.xxs,

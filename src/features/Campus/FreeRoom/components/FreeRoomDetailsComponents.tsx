@@ -64,8 +64,7 @@ export function FreeRoomsList({ freeRooms, theme, pied }: FreeRoomsListProps) {
                 grouperParEtage(freeRooms).map((groupe, indexGroupe) => (
                     <View key={groupe.etage ?? 'autres'}>
                         <Text style={{
-                            fontSize: tokens.fontSize.sm,
-                            fontWeight: tokens.fontWeight.semibold,
+                            ...tokens.texte.intertitre,
                             color: theme.fontSecondary,
                             marginTop: indexGroupe === 0 ? tokens.space.xs : tokens.space.lg,
                             marginBottom: tokens.space.sm,
