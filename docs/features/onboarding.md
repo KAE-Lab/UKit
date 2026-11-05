@@ -25,12 +25,12 @@ remis à vrai par la réinitialisation depuis [Réglages](settings.md).
 
 | Étape | Contenu | Effet |
 |---|---|---|
-| 1 | Fig. 01, le U du logo en écho, le logo vectoriel et le mot de bienvenue (7-J) | — |
+| 1 | Le U du logo et « Bienvenue sur UKit » (7-J, deuxième passe) | — |
 | 2 | Choix du thème (clair / sombre) et de la langue (fr / en / es) | `SettingsManager.setTheme` / `setLanguage`, appliqués **en direct** |
 | 3 | **Choix de l'établissement**, lu dans le catalogue — après un chargement parlant, le temps que le premier rafraîchissement réponde (quatre secondes au plus) | `basculerEtablissement(code)` ([`bascule.ts`](../../src/shared/etablissements/bascule.ts)), la même que les Réglages |
-| 4 | **Compte universitaire**, proposé et sautable — avec le bouton « Tu es d'un autre campus ? » sous celui de connexion, qui ramène à l'étape 3 ; **« Suivant » et le retour sont bloqués tant que la connexion tourne** | `validateAndSave` du contexte de scolarité, ou « Plus tard » |
+| 4 | **Compte universitaire**, proposé et sautable — avec le bouton « Tu es d'un autre campus ? » sous celui de connexion, qui ramène à l'étape 3 ; **« Suivant » et le retour sont bloqués tant que la connexion tourne** | `validateAndSave` du contexte de scolarité, ou « Suivant » |
 | 5 | **L'emploi du temps** : groupes (l'étape porte son cadre clavier), ou lien d'abonnement | favoris, ou `enregistrerLienEdt` |
-| 6 | Confirmation : un cercle et une coche qui se tracent dans le dégradé du logo ([`TraitDeValidation`](../../src/features/Onboarding/components/TraitDeValidation.tsx), 7-J), la réponse à Fig. 01 de l'étape 1 | `setFirstLoad(false)` sur « Terminer » |
+| 6 | Confirmation : un cercle et une coche qui se tracent dans le dégradé du logo ([`TraitDeValidation`](../../src/features/Onboarding/components/TraitDeValidation.tsx), 7-J), la réponse au U de l'étape 1 | `setFirstLoad(false)` sur « Terminer » |
 
 **Deux étapes disparaissent selon l'établissement**, et la règle est la même pour les deux : *on ne
 pose pas une question sans réponse.* L'étape du compte s'efface chez une université qui ne publie
@@ -46,8 +46,9 @@ encore choisie** met la charge au mauvais endroit. Mesuré en jouant le parcours
 [6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md)). L'ordre a été décidé **pour les autres
 facs, pas pour Bordeaux** : ici le compte ne sert pas à obtenir l'emploi du temps, mais chez beaucoup
 d'universités il *est* la porte, et le demander après aurait posé la question dans le mauvais sens.
-C'est le formulaire de l'onglet Scolarité, tel quel, avec une sortie « Plus tard » — un lien discret
-et non un second bouton, parce que les deux gestes n'ont pas le même poids. Il se résout dès que le CAS
+C'est le formulaire de l'onglet Scolarité, tel quel. Il portait une sortie « Plus tard », un lien
+discret ; la deuxième passe de 7-J l'a retirée, parce qu'elle doublait le « Suivant » du pied du
+parcours, qui avance de même (review du 2026-11-05). Il se résout dès que le CAS
 accepte (~13 s à Bordeaux) ; la lecture du dossier continue derrière, sans bloquer le parcours.
 
 **L'étape de l'emploi du temps a deux contenus**, et c'est la **source** qui tranche, jamais
@@ -79,14 +80,14 @@ répondent, parce que la cause avait trois étages :
 
 Un bouton retour apparaît à partir de l'étape 2 ; une pagination en bas indique la progression.
 
-![L'étape 1 : Fig. 01, le U en écho, le logo et le mot de bienvenue, sur le banc Android](../screenshots/onboarding-bienvenue-android.png)
+![L'étape 1 : le U du logo et « Bienvenue sur UKit », sur le banc Android](../screenshots/onboarding-bienvenue-android.png)
 
-**L'étape 1 est le moment de l'Épure** ([7-J](../phase-7/7-j-ecrans.md)) : la figure en écho de
-l'identité ([`FigureEnEcho`](../../src/shared/ui/epure/FigureEnEcho.tsx)), quarante copies du contour du
-U aux nombres du kit, qui paraissent du fond vers l'avant en un peu plus d'une seconde, puis le logo
-vectoriel ([`LogoUKit`](../../src/shared/ui/epure/LogoUKit.tsx)) et le mot de bienvenue, qui entrent
-une fois la figure construite. Sous « réduire les animations », tout est là d'emblée. C'était le PNG
-du logo au-dessus d'un titre.
+**L'étape 1 ouvre sur le U du logo** ([`LogoUKit`](../../src/shared/ui/epure/LogoUKit.tsx),
+`glyphe="u"`), bleu comme dans le logo (le dégradé ne quitte le bleu qu'après le U), qui monte en
+fondu ; le titre, « Bienvenue sur UKit », suit. Fig. 01,
+le U en écho, a tenu cette place pendant la première passe de 7-J : trop complexe pour un écran de
+téléphone, elle reste au site (review du 2026-11-05). Sous « réduire les animations », tout est là
+d'emblée.
 
 > **Capture attendue** — `onboarding-preferences.png` : l'étape 2, sélection du thème et de la langue.
 >
@@ -200,7 +201,7 @@ l'application**, ou réinstaller l'application.
   sont désactivés tant que la carte du formulaire montre une session — soumission, barre,
   confirmation — parce qu'un échec doit se lire sur place et qu'un succès avance tout seul. Le prix
   est l'attente du parcours froid, une quarantaine de secondes à Bordeaux ; avant, un étudiant qui
-  s'était trompé de mot de passe ne l'apprenait qu'en ouvrant l'onglet Scolarité. « Plus tard » reste
+  s'était trompé de mot de passe ne l'apprenait qu'en ouvrant l'onglet Scolarité. « Suivant » reste
   la sortie, tant que rien n'est lancé.
 
 ## Carte des fichiers

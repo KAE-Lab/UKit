@@ -224,7 +224,7 @@ const fr: TranslationDict = {
 	YOUR_THEME: "Choisis un thème pour l'application",
 	YOUR_YEAR: 'Quelle est ton année ?',
 	WEBSITE: 'Site web',
-	WELCOME: 'Bienvenue !',
+	WELCOME: 'Bienvenue sur UKit',
 	WELL_DONE: 'Bravo !',
 	WEEK: 'Semaine',
 	WEB_BROWSER: 'Navigateur web',

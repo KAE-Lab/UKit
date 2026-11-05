@@ -169,7 +169,6 @@ export default function WelcomeScreen() {
                 {etape === 'compte' && (
                     <StepCompte
                         themeObj={themeObj}
-                        onSuivant={() => allerA(index_ + 1)}
                         onAutreCampus={() => allerA(etapes.indexOf('etablissement'))}
                         onEnSession={setFormulaireEnSession}
                         onConnecte={() => {

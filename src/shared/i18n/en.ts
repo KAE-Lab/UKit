@@ -221,7 +221,7 @@ const en = {
 	YOUR_THEME: 'Choose a theme for the application',
 	YOUR_YEAR: 'What is your year?',
 	WEBSITE: 'Website',
-	WELCOME: 'Welcome!',
+	WELCOME: 'Welcome to UKit',
 	WELL_DONE: 'Well done!',
 	WEEK: 'Week',
 	WEB_BROWSER: 'Web browser',

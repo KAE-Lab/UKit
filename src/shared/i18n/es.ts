@@ -223,7 +223,7 @@ const es: TranslationDict = {
 	YOUR_THEME: 'Elige un tema para la aplicación',
 	YOUR_YEAR: '¿En que año estás?',
 	WEBSITE: 'Página web',
-	WELCOME: '¡Bienvenido!',
+	WELCOME: 'Bienvenido a UKit',
 	WELL_DONE: '¡Muy bien!',
 	WEEK: 'Semana',
 	WEB_BROWSER: 'Navegador web',

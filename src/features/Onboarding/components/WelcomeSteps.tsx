@@ -10,13 +10,12 @@
  */
 
 import React from 'react';
-import { ScrollView, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
-import Reanimated, { FadeIn } from 'react-native-reanimated';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import Reanimated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import Translator from '../../../shared/i18n/Translator';
 import { tokens } from '../../../shared/theme/Theme';
 import { LoadingState } from '../../../shared/ui/LoadingState';
-import { FigureEnEcho } from '../../../shared/ui/epure/FigureEnEcho';
 import { LogoUKit } from '../../../shared/ui/epure/LogoUKit';
 import { TraitDeValidation } from './TraitDeValidation';
 import type { Etablissement } from '../../../shared/etablissements';
@@ -55,21 +54,21 @@ export const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
 );
 
 /**
- * L'ouverture de l'application : le moment ou l'Epure entre a pleine voix (7-J). Fig. 01, le U en
- * echo, en heros — un seul element enorme par surface —, le logo vectoriel a la place du nom, puis le
- * mot d'accueil, qui entre une fois la figure construite. C'etait le PNG du logo au-dessus d'un titre.
+ * L'ouverture de l'application : le U du logo, puis le mot d'accueil (7-J). Fig. 01, le U en echo, a
+ * tenu cette place pendant la premiere passe ; trop complexe pour un ecran de telephone, elle reste au
+ * site (review du 2026-11-05). Le U monte en fondu, le texte le suit ; sous « reduire les animations »,
+ * tout est la d'emblee. Le mot entier du logo n'y figure plus : c'est le titre qui nomme l'application.
  */
+const TAILLE_DU_U = 96;
+
 export const StepIntro = ({ themeObj }) => {
-    const { width } = useWindowDimensions();
     const degagement = useDegagementDuPied();
-    const largeurDeLaFigure = Math.min(width * 0.7, 300);
     return (
         <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: degagement }}>
-            <FigureEnEcho theme={themeObj} largeur={largeurDeLaFigure} />
-            <Reanimated.View entering={FadeIn.delay(650).duration(tokens.mouvement.couture * 2)} style={{ alignItems: 'center', alignSelf: 'stretch' }}>
-                <View style={{ marginTop: tokens.space.xl, marginBottom: tokens.space.lg }}>
-                    <LogoUKit theme={themeObj} largeur={104} />
-                </View>
+            <Reanimated.View entering={FadeInDown.duration(tokens.mouvement.couture * 3)}>
+                <LogoUKit theme={themeObj} largeur={TAILLE_DU_U} glyphe="u" />
+            </Reanimated.View>
+            <Reanimated.View entering={FadeIn.delay(tokens.mouvement.couture).duration(tokens.mouvement.couture * 2)} style={{ alignItems: 'center', alignSelf: 'stretch', marginTop: tokens.space.xl }}>
                 <Text style={[tokens.texte.grandTitre, { alignSelf: 'stretch', color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }]}>{Translator.get('WELCOME')}</Text>
                 <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
             </Reanimated.View>
@@ -172,7 +171,7 @@ export const StepPreferences = ({ themeObj, navigatorState, themeList, languageL
  * correction, et c'est precisement pour rendre ce partage possible que `CredentialsProvider` a remonte
  * au-dessus des deux branches (`rootContainer.tsx`).
  */
-export const StepCompte = ({ themeObj, onSuivant, onConnecte, onAutreCampus, onEnSession }) => {
+export const StepCompte = ({ themeObj, onConnecte, onAutreCampus, onEnSession }) => {
     const degagement = useDegagementDuPied();
     return (
     /*
@@ -182,7 +181,9 @@ export const StepCompte = ({ themeObj, onSuivant, onConnecte, onAutreCampus, onE
      */
     <View style={{ flex: 1 }}>
         {/*
-          * `onSkip` avance simplement ; `onConnecte` est distinct depuis le 2026-08-31, parce
+          * Pas de « Plus tard » ici (deuxieme passe de 7-J) : il doublait le « Suivant » du pied du
+          * parcours, qui avance de meme, et la review du 2026-11-05 l'a retire. `onConnecte` est
+          * distinct depuis le 2026-08-31, parce
           * qu'une connexion reussie a pu **regler l'emploi du temps au passage** — les propositions
           * du dossier posent les favoris pendant le parcours froid — et l'ecran d'accueil decide
           * alors de sauter l'etape EDT devenue sans question. Sans `onSuccess`, le bouton restait
@@ -192,7 +193,6 @@ export const StepCompte = ({ themeObj, onSuivant, onConnecte, onAutreCampus, onE
             theme={themeObj}
             color={themeObj.primary}
             topPadding={tokens.space.xxl}
-            onSkip={onSuivant}
             onSuccess={onConnecte}
             onAutreCampus={onAutreCampus}
             onEnSession={onEnSession}
