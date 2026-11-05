@@ -761,6 +761,7 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`components/DayViewHeader.tsx`](../../src/features/Planning/components/DayViewHeader.tsx) | bandeau collant : titre, le « + » vers l'éditeur du système quand il a lieu d'être, boutons de navigation, curseurs jour et semaine |
 | [`components/CalendarDay.tsx`](../../src/features/Planning/components/CalendarDay.tsx) | un jour dans le curseur, et le retour haptique de son choix |
 | [`components/CalendarWeek.tsx`](../../src/features/Planning/components/CalendarWeek.tsx) | une semaine dans le curseur, légendée par son lundi |
+| [`components/FicheDuCours.tsx`](../../src/features/Planning/components/FicheDuCours.tsx) | le haut de la fiche d'un cours : le type, le titre, l'heure en grand et sa durée, la salle d'abord (7-J) |
 | [`components/CaseDuRuban.tsx`](../../src/features/Planning/components/CaseDuRuban.tsx) | la case commune aux deux : pleine si choisie, un point pour aujourd'hui (7-J) |
 | [`components/Frise.tsx`](../../src/features/Planning/components/Frise.tsx) | la vue jour en frise : la pause cotée, le repère de l'heure et sa respiration, la minute relue (7-J) |
 | [`services/frise.ts`](../../src/features/Planning/services/frise.ts) · [`frise.test.ts`](../../src/features/Planning/services/frise.test.ts) | pur : les éléments de la frise, l'état d'un cours à l'instant donné, les durées et les heures écrites (7-J) |

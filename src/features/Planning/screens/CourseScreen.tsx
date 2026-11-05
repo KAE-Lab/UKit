@@ -1,6 +1,5 @@
 import React from 'react';
-import { Linking, Platform, Text, View } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { Linking, Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // `/legacy`, jamais la racine : ses souches levent a l'appel (shared/services/CalendarSyncHelpers.ts).
 import * as Calendar from 'expo-calendar/legacy';
@@ -17,8 +16,8 @@ import { withStaticHeader } from '../../../shared/navigation/NavHelpers';
 import { ActionButton } from '../../../shared/ui/ActionButton';
 import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { CourseData } from '../components/CourseCard';
-import { iconeDAnnotation } from '../components/CourseAnnotations';
-import { couleurDeCours } from '../services/couleurDeCours';
+import { couleurDeCours, encreDeCours } from '../services/couleurDeCours';
+import { FicheDuCours } from '../components/FicheDuCours';
 
 export interface CourseProps {
 	route: { params: { data: CourseData } };
@@ -166,96 +165,22 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 		return <EmbeddedMap markers={markers} theme={theme} zoom={17} />;
 	}
 
-	renderCourseAnnotations(theme: import('../../../shared/theme/Theme').AppThemeType) {
-		return (this.state.data.description || '').split('\n').map((line, index) => {
-			const trimmedLine = line.trim();
-			if (!trimmedLine) return null;
-
-			// L'icone se deduit du contenu de la ligne, jamais de son rang (CourseAnnotations.ts).
-			const iconName = iconeDAnnotation(trimmedLine);
-
-			return (
-				<View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
-					{/* eslint-disable-next-line ukit/no-style-literals -- 1 : un calage optique de l'icone sur la ligne de base du texte, et non un espacement. Examine et **conserve** par le jalon 6.1-E : aucun pas d'echelle ne lui correspond, et l'arrondir a 0 ou a 4 decalerait l'icone visiblement. */}
-					<MaterialIcons name={iconName} size={16} color={theme.fontSecondary} style={{ marginRight: tokens.space.md, marginTop: 1 }} />
-					<Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, flex: 1 }}>{trimmedLine}</Text>
-				</View>
-			);
-		});
-	}
-
-	renderCourseDetails(theme: import('../../../shared/theme/Theme').AppThemeType, lineColor: string) {
+	/** Les gestes d'un evenement du telephone : on lit, on ouvre l'editeur du systeme, on ne modifie rien (6.1.x-D). */
+	renderActions(theme: import('../../../shared/theme/Theme').AppThemeType) {
+		if (!this.duTelephone()) return null;
 		return (
-			<View
-				style={{
-					flex: 0,
-					marginTop: tokens.space.md,
-					marginBottom: this.state.locations.length > 0 ? tokens.space.sm : tokens.space.md,
-					marginHorizontal: tokens.space.sm,
-					backgroundColor: theme.cardBackground,
-					borderRadius: tokens.radius.xl,
-					borderTopWidth: 5,
-					borderTopColor: lineColor,
-					borderWidth: 1,
-					borderColor: theme.border,
-					padding: tokens.space.md,
-					...tokens.shadow.sm as object as object,
-					zIndex: 10,
-				}}>
-
-				<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.space.sm }}>
-					<Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as never, color: theme.font, flex: 1, marginRight: tokens.space.md }}>
-						{this.state.data.subject !== 'N/C' ? this.state.data.subject.trim() : Translator.get('UNKNOWN_SUBJECT')}
-					</Text>
-					{this.state.data.category !== '' && this.state.data.category !== this.state.data.subject && (
-						<View style={{ backgroundColor: `${lineColor}22`, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, paddingVertical: tokens.space.xxs }}>
-							<Text style={{ fontSize: tokens.fontSize.xs, color: lineColor, fontWeight: tokens.fontWeight.bold as never }}>
-								{this.state.data.category}
-							</Text>
-						</View>
-					)}
-				</View>
-
-				<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.sm }}>
-					<MaterialCommunityIcons name={this.state.data.journeeEntiere ? 'calendar-blank' : 'clock-outline'} size={18} color={lineColor} style={{ marginRight: tokens.space.sm }} />
-					<Text style={{ fontSize: tokens.fontSize.sm, color: lineColor, fontWeight: tokens.fontWeight.semibold as never }}>
-						{this.state.data.journeeEntiere ? Translator.get('ALL_DAY') : `${this.state.data.starttime} - ${this.state.data.endtime}`}
-					</Text>
-				</View>
-
-				<View style={{ height: 1, backgroundColor: theme.border, marginBottom: tokens.space.sm }} />
-
-				{this.state.data.UE && (
-					<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: tokens.space.xs }}>
-						<MaterialIcons name="code" size={16} color={theme.fontSecondary} style={{ marginRight: tokens.space.md }} />
-						<Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontWeight: '600' }}>{this.state.data.UE}</Text>
-					</View>
-				)}
-
-				{/* Le lieu d'un rendez-vous, tel quel : il ne se resout pas, il se lit — et s'ouvre plus bas (6.2.x). */}
-				{this.state.data.lieu && (
-					<View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
-						<MaterialIcons name="room" size={16} color={theme.fontSecondary} style={{ marginRight: tokens.space.md }} />
-						<Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, flex: 1 }}>{this.state.data.lieu}</Text>
-					</View>
-				)}
-
-				{this.renderCourseAnnotations(theme)}
-
-				{/* On lit, on ouvre l'editeur du systeme, on ne modifie rien soi-meme (6.1.x-D). */}
-				{this.duTelephone() && (
-					<ActionButton
-						theme={theme}
-						variant="tonal"
-						label={Translator.get('OPEN_IN_CALENDAR')}
-						icon={{ name: 'calendar-export' }}
-						onPress={this.ouvrirDansCalendrier}
-						style={{ marginTop: tokens.space.md }}
-					/>
-				)}
+			<>
+				<ActionButton
+					theme={theme}
+					variant="tonal"
+					label={Translator.get('OPEN_IN_CALENDAR')}
+					icon={{ name: 'calendar-export' }}
+					onPress={this.ouvrirDansCalendrier}
+					style={{ marginTop: tokens.space.sm }}
+				/>
 				{/* Seulement sans carte : situee, la carte porte deja son bouton vers les plans. Empile sous le
 				    premier, pas a cote : deux libelles avec icone ne tiennent pas sur 360 dp. */}
-				{this.duTelephone() && this.state.data.lieu && this.state.locations.length === 0 && (
+				{this.state.data.lieu && this.state.locations.length === 0 && (
 					<ActionButton
 						theme={theme}
 						variant="tonal"
@@ -265,31 +190,36 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 						style={{ marginTop: tokens.space.sm }}
 					/>
 				)}
-			</View>
+			</>
 		);
 	}
 
 	render() {
 		const theme = style.Theme[this.app.themeName];
-		const lineColor = couleurDeCours(theme.courses, this.state.data.color);
+		const couleur = couleurDeCours(theme.courses, this.state.data.color);
 
 		const map = this.renderMap(theme);
-		const courseDetails = this.renderCourseDetails(theme, lineColor);
 
 		return (
 			<SafeAreaView
 				edges={['bottom', 'left', 'right']}
 				style={[{ flex: 1, backgroundColor: theme.courseBackground }, this.props.headerPadding]}
 			>
-				{/* ── CARTE DE DÉTAILS DÉDIÉE ── */}
-				{courseDetails}
+				<FicheDuCours
+					data={this.state.data}
+					theme={theme}
+					couleur={couleur}
+					encre={encreDeCours(couleur, theme.cardBackground)}
+					actions={this.renderActions(theme)}
+				/>
 
 				{/* ── CARTE GÉOGRAPHIQUE ── */}
 				{map && (
 					<View
 						style={{
 							flex: 1,
-							marginHorizontal: tokens.space.sm,
+							marginHorizontal: tokens.space.md,
+							marginTop: tokens.space.md,
 							marginBottom: tokens.space.md,
 							borderRadius: tokens.radius.xl,
 							overflow: 'hidden',
