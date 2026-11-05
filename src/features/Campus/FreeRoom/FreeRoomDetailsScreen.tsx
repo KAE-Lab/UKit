@@ -1,6 +1,6 @@
-import React, { useEffect, useContext, useRef } from 'react';
-import { FlatList } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useEffect, useContext } from 'react';
+import { View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
@@ -12,13 +12,15 @@ import { BuildingInfo } from '../services/FreeRoomService';
 import { compter } from '../../../shared/mesure';
 import { useFreeRoomsData } from './hooks/useFreeRoomsData';
 import { CampusMapSection } from '../components/CampusMapSection';
-import { FreeRoomHoursHeader, FreeRoomsList } from './components/FreeRoomDetailsComponents';
+import { FreeRoomsList } from './components/FreeRoomDetailsComponents';
+import { BandeauDeCases, caseDHeure } from '../../../shared/ui/BandeauDeCases';
+import { maintenant } from '../../../shared/services/Temps';
+import { FonduDeBord } from '../../../shared/ui/FonduDeBord';
 
 export default function FreeRoomDetailsScreen({ route, navigation }: { route: { params: { building: BuildingInfo } }; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) {
     const { building } = route.params;
     const AppContextValues = useContext(AppContext);
     const theme = style.Theme[AppContextValues.themeName];
-    const insets = useSafeAreaInsets();
 
     const { loading, isClosed, hoursList, selectedIndex, setSelectedIndex, freeRooms } = useFreeRoomsData(building);
 
@@ -27,29 +29,8 @@ export default function FreeRoomDetailsScreen({ route, navigation }: { route: { 
         compter('salles.ouverture', building.id);
     }, []);
 
-    const flatListRef = useRef<FlatList>(null);
-    const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    useEffect(() => {
-        return () => {
-            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-        };
-    }, []);
-
-    // Le titre vient du navigateur (« Details », neutre) : l'ecran surchargeait le sien en violet,
-    // comme les fiches de restaurant et de BU avant lui.
-    useEffect(() => {
-        if (hoursList.length > 0 && flatListRef.current && !loading) {
-            const timerId = setTimeout(() => {
-                flatListRef.current?.scrollToIndex({
-                    index: selectedIndex,
-                    animated: true,
-                    viewPosition: 0.5
-                });
-            }, 100);
-            return () => clearTimeout(timerId);
-        }
-    }, [selectedIndex, loading, hoursList.length]);
+    // Le titre de la barre est le nom du batiment (StackNavigator) ; le bandeau ne porte que les
+    // heures, et recentre lui-meme la case choisie (`BandeauDeCases`).
 
     if (loading) {
         return (
@@ -82,30 +63,30 @@ export default function FreeRoomDetailsScreen({ route, navigation }: { route: { 
                 </ScreenState>
             ) : (
                 <>
-                    <FreeRoomHoursHeader 
-                        building={building} 
-                        hoursList={hoursList} 
-                        selectedIndex={selectedIndex} 
-                        setSelectedIndex={setSelectedIndex} 
-                        flatListRef={flatListRef} 
-                        scrollTimeoutRef={scrollTimeoutRef} 
-                        theme={theme} 
-                        insets={insets} 
-                    />
-                    <FreeRoomsList
-                        freeRooms={freeRooms}
+                    <BandeauDeCases
                         theme={theme}
-                        // En pied, comme les fiches de restaurant et de BU : le lieu ne depend pas
-                        // du creneau selectionne.
-                        pied={(
-                            <CampusMapSection
-                                location={{ lat: building.lat, lng: building.lng }}
-                                markerTitle={building.name}
-                                theme={theme}
-                                style={{ marginTop: tokens.space.lg, marginBottom: tokens.space.sm }}
-                            />
-                        )}
+                        fond={theme.courseBackground}
+                        cases={hoursList.map((creneau) => caseDHeure(creneau, maintenant()))}
+                        choisie={selectedIndex}
+                        onChoisir={setSelectedIndex}
                     />
+                    <View style={{ flex: 1 }}>
+                        <FreeRoomsList
+                            freeRooms={freeRooms}
+                            theme={theme}
+                            // En pied, comme les fiches de restaurant et de BU : le lieu ne depend pas
+                            // du creneau selectionne.
+                            pied={(
+                                <CampusMapSection
+                                    location={{ lat: building.lat, lng: building.lng }}
+                                    markerTitle={building.name}
+                                    theme={theme}
+                                    style={{ marginTop: tokens.space.lg, marginBottom: tokens.space.sm }}
+                                />
+                            )}
+                        />
+                        <FonduDeBord fond={theme.courseBackground} />
+                    </View>
                 </>
             )}
         </SafeAreaView>

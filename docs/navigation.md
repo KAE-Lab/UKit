@@ -115,13 +115,13 @@ Déclarés dans [`StackNavigator.tsx`](../src/shared/navigation/StackNavigator.t
 | `Day` | [`DayView`](../src/features/Planning/views/DayView.tsx) | — | `DAY` |
 | `Course` | [`CourseScreen`](../src/features/Planning/screens/CourseScreen.tsx) | `{ title?, data? }` | titre du cours, bouton de retrait de filtre |
 | `Crous` | [`CrousScreen`](../src/features/Campus/Crous/CrousScreen.tsx) | — | `RESTAURANTS`, filtre à droite |
-| `CrousMenu` | [`CrousMenuScreen`](../src/features/Campus/Crous/CrousMenuScreen.tsx) | `{ restaurantId, restaurantName, location?, openingLines? }` | `DETAILS` — comme toutes les fiches, le nom du lieu vit dans le bandeau |
+| `CrousMenu` | [`CrousMenuScreen`](../src/features/Campus/Crous/CrousMenuScreen.tsx) | `{ restaurantId, restaurantName, location?, openingLines? }` | nom du restaurant — une fiche porte le nom de ce qu'elle montre depuis la deuxième passe de 7-J, `DETAILS` en repli (`nomOuDetails`, [StackNavigator](../src/shared/navigation/StackNavigator.tsx)) |
 | `Library` | [`LibraryScreen`](../src/features/Campus/Library/LibraryScreen.tsx) | — | `LIBRARIES`, filtre à droite |
 | `LibraryDetails` | [`LibraryDetailsScreen`](../src/features/Campus/Library/LibraryDetailsScreen.tsx) | `{ library, affluence }` | nom de la BU |
 | `FreeRoomScreen` | [`FreeRoomScreen`](../src/features/Campus/FreeRoom/FreeRoomScreen.tsx) | — | `FREE_ROOMS` |
-| `FreeRoomDetails` | [`FreeRoomDetailsScreen`](../src/features/Campus/FreeRoom/FreeRoomDetailsScreen.tsx) | `{ building }` | `DETAILS` |
+| `FreeRoomDetails` | [`FreeRoomDetailsScreen`](../src/features/Campus/FreeRoom/FreeRoomDetailsScreen.tsx) | `{ building }` | nom du bâtiment, `DETAILS` en repli |
 | `Bde` | [`BdeScreen`](../src/features/Campus/Bde/BdeScreen.tsx) | — | `STUDENT_LIFE` |
-| `BdeDetail` | [`BdeDetailsScreen`](../src/features/Campus/Bde/BdeDetailsScreen.tsx) | `{ annonce }` | `DETAILS` |
+| `BdeDetail` | [`BdeDetailsScreen`](../src/features/Campus/Bde/BdeDetailsScreen.tsx) | `{ annonce }` | l'émetteur de l'annonce, `DETAILS` en repli |
 | `WebBrowser` | [`WebBrowserScreen`](../src/features/Scolarite/screens/WebBrowserScreen.tsx) | `{ entrypoint?, href?, domainesInternes? }` — `href` pour un lien nu (le bouton d'une annonce, la réservation d'une BU depuis 6.2.x : **plus aucun lien web de l'application ne part dans le navigateur du système**, sauf le bouton explicite de cet écran) ; `domainesInternes` n'est posé que par les appelants du **formulaire de retours** ([`liensDuFormulaire.ts`](../src/shared/navigation/liensDuFormulaire.ts)) : un lien qui en sort s'ouvre par-dessus, dans une seconde instance de l'écran, et le formulaire reste tel quel en dessous | masqué (barre flottante propre) |
 | `CredentialsSettings` | [`CredentialsSettingsScreen`](../src/features/Scolarite/screens/CredentialsSettingsScreen.tsx) | `{ ressaisie? }` | `ACCOUNT` |
 | `Documents` | [`DocumentsScreen`](../src/features/Scolarite/screens/DocumentsScreen.tsx) | — | `MY_DOCUMENTS` |

@@ -164,7 +164,6 @@ export function DescriptionAnnonce({ texte, couleurDepart, theme }: DescriptionA
                         <CampusSectionHeader
                             icone={(bloc.icone ?? ICONE_PAR_DEFAUT) as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
                             titre={bloc.titre}
-                            couleur={couleur}
                             theme={theme}
                             style={{ marginBottom: tokens.space.sm }}
                         />

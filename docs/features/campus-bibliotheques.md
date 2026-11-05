@@ -15,10 +15,11 @@ Socle commun : [campus.md](campus.md). Source de données : Affluences, section 
    horaires du jour sélectionné.
 4. La fiche se termine par la carte de la bibliothèque — la section « S'y rendre »
    ([`CampusMapSection`](../../src/features/Campus/components/CampusMapSection.tsx)), dans la page et
-   non derrière un bouton d'en-tête, comme sur une fiche de cours. Sa tête de section est verte
-   ([`CampusSectionHeader`](../../src/features/Campus/components/CampusSectionHeader.tsx),
-   [campus-crous.md](campus-crous.md)), et le titre de l'en-tête (« Détails ») est neutre comme toute
-   sous-page.
+   non derrière un bouton d'en-tête, comme sur une fiche de cours. Depuis la deuxième passe de 7-J, la
+   fiche porte le nom de la BU dans sa barre, les jours dans les cases du ruban du Planning
+   ([`BandeauDeCases`](../../src/shared/ui/BandeauDeCases.tsx)), les créneaux du jour sur une seule
+   carte, et les intertitres communs des fiches, sans couleur de section
+   ([campus-crous.md](campus-crous.md)).
 5. « Réserver » est **l'action principale de la fiche** depuis 6.2.x : un pied d'action rempli en
    primaire ([`PiedDAction`](../../src/shared/ui/PiedDAction.tsx), le même que le bouton d'une
    annonce), flottant sur la fumée ([`PiedFlottant`](../../src/shared/ui/PiedFlottant.tsx)) ; l'écran

@@ -113,7 +113,7 @@ peuvent attendre.
 | Fichier | Contenu | Priorité |
 |---|---|---|
 | `crous-liste.png` | liste des restaurants avec distances **et horaires** | **livrée** |
-| `crous-menu.png` | menu d'un restaurant, midi et soir | **à reprendre** (6-K : icône végétarien) |
+| `crous-menu.png` | menu d'un restaurant, midi et soir | **livrée** (reprise au banc Android, deuxième passe de 7-J) |
 | `crous-menu-absent.png` | restaurant qui ne publie pas de menu — l'état vide, à contraster avec l'état d'échec | **livrée** |
 
 ### Campus — bibliothèques · [features/campus-bibliotheques.md](../features/campus-bibliotheques.md)

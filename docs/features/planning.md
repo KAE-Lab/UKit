@@ -769,7 +769,7 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`components/CalendarDay.tsx`](../../src/features/Planning/components/CalendarDay.tsx) | un jour dans le curseur, et le retour haptique de son choix |
 | [`components/CalendarWeek.tsx`](../../src/features/Planning/components/CalendarWeek.tsx) | une semaine dans le curseur, légendée par son lundi |
 | [`components/FicheDuCours.tsx`](../../src/features/Planning/components/FicheDuCours.tsx) | le haut de la fiche d'un cours : le type, le titre, l'heure en grand et sa durée, la salle d'abord (7-J) |
-| [`components/CaseDuRuban.tsx`](../../src/features/Planning/components/CaseDuRuban.tsx) | la case commune aux deux : pleine si choisie, un point pour aujourd'hui (7-J) |
+| [`shared/ui/CaseDuRuban.tsx`](../../src/shared/ui/CaseDuRuban.tsx) | la case commune aux deux : pleine si choisie, un point pour aujourd'hui (7-J) ; partagée depuis la deuxième passe avec les bandeaux des fiches Campus (`BandeauDeCases`) |
 | [`components/Frise.tsx`](../../src/features/Planning/components/Frise.tsx) | la vue jour en frise : la pause cotée, le repère de l'heure et sa respiration, la minute relue (7-J) |
 | [`services/frise.ts`](../../src/features/Planning/services/frise.ts) · [`frise.test.ts`](../../src/features/Planning/services/frise.test.ts) | pur : les éléments de la frise, l'état d'un cours à l'instant donné, les durées et les heures écrites (7-J) |
 | [`components/CourseCard.tsx`](../../src/features/Planning/components/CourseCard.tsx) | point d'entrée du module carte : type `CourseData` et réexports |

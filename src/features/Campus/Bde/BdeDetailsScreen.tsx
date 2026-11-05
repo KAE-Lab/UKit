@@ -30,8 +30,6 @@ import { DUREE_FONDU_MS } from '../../../shared/ui/ApparitionEnFondu';
 import { useSourceRendue } from '../../../shared/ui/useSourceRendue';
 import { CampusMapSection } from '../components/CampusMapSection';
 import { DescriptionAnnonce } from './DescriptionAnnonce';
-import { GlypheFiligrane } from '../../../shared/ui/GlypheFiligrane';
-import { teinteDAnnonce } from './PastilleEmetteur';
 import { BdeAnnonce } from '../services/BdeService';
 import { compter } from '../../../shared/mesure';
 
@@ -124,10 +122,6 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
 
     if (!annonce) return null;
 
-    // L'identite de l'annonce : sa couleur de palette, l'accent en repli — c'est elle qui teinte la
-    // pastille d'emetteur, l'accroche, et le point de depart des sections.
-    const teinte = teinteDAnnonce(annonce.couleur, theme);
-
     // Tous les visuels de la fiche dans une seule visionneuse balayable : le principal en tete,
     // la galerie a la suite — l'index ouvert est celui du visuel touche. Dedoublonne : une annonce
     // peut publier le meme visuel en principal ET en galerie, et la visionneuse le montrerait deux
@@ -174,25 +168,14 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                             ceux du bouton. */}
                         <View style={{ paddingHorizontal: tokens.space.md, paddingTop: tokens.space.lg }}>
                             {/*
-                              * Le heros, en grammaire d'article : kicker (l'emetteur, petites
-                              * capitales grises), titre en corps d'affiche, chapeau teinte — et le
-                              * filigrane signature du depot, permis ici parce que la fiche est une
-                              * surface unique, jamais dans les listes. La pastille d'emetteur a
-                              * vecu ici et a ete defaite (2026-08-31) : sous le titre, elle
-                              * s'empilait avec l'accroche en deux capsules jumelles.
+                              * Le heros, en grammaire d'article : titre en corps d'affiche, puis
+                              * le chapeau teinte. L'emetteur le surtitrait en petites capitales
+                              * grises, sur le filigrane d'un porte-voix ; il est monte dans la barre
+                              * (deuxieme passe de 7-J), et le filigrane, qui decorait, est parti.
+                              * La pastille d'emetteur avait vecu ici et ete defaite (2026-08-31) :
+                              * sous le titre, elle s'empilait avec l'accroche.
                               */}
                             <View style={{ marginBottom: tokens.space.lg }}>
-                                <GlypheFiligrane icone={{ name: 'bullhorn' }} couleur={teinte} rayon={0} />
-                                <Text style={{
-                                    fontSize: tokens.fontSize.xs,
-                                    fontWeight: tokens.fontWeight.semibold,
-                                    color: theme.fontSecondary,
-                                    letterSpacing: 0.8,
-                                    textTransform: 'uppercase',
-                                    marginBottom: tokens.space.xs,
-                                }}>
-                                    {annonce.issuer_name}
-                                </Text>
                                 <Text style={{
                                     fontSize: tokens.fontSize.xxl,
                                     fontWeight: tokens.fontWeight.bold,

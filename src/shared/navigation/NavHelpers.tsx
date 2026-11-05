@@ -304,6 +304,12 @@ export class FilterRemoveButton extends React.Component<FilterRemoveButtonProps,
     }
 }
 
+/**
+ * La hauteur de la barre d'un ecran pousse, sous la zone sure : ce que son contenu degage en haut.
+ * Les bandeaux fixes des fiches (`BandeauDeCases`) s'y alignent aussi ; ils posaient 65 en dur.
+ */
+export const HAUTEUR_DE_BARRE_POUSSEE = 70;
+
 // ENGLOBEUR D'ANIMATION (HOC) CENTRALISÉ
 export const withHeaderAnimation = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
     return function AnimatedHeaderWrapper(props: P & { target?: unknown }) {
@@ -338,7 +344,7 @@ export const withHeaderAnimation = <P extends object>(WrappedComponent: React.Co
             )
         ).current;
 
-        const headerPadding = { paddingTop: (insets.top || 0) + 70, paddingBottom: tokens.space.sm };
+        const headerPadding = { paddingTop: (insets.top || 0) + HAUTEUR_DE_BARRE_POUSSEE, paddingBottom: tokens.space.sm };
 
         return <WrappedComponent {...props} onAnimatedScroll={onAnimatedScroll} headerPadding={headerPadding} />;
     };
@@ -349,7 +355,7 @@ export const withStaticHeader = <P extends object>(WrappedComponent: React.Compo
     return function StaticHeaderWrapper(props: P) {
         const insets = useSafeAreaInsets();
         // On renvoie exactement le même espacement que l'animation, mais sans la logique de défilement
-        const headerPadding = { paddingTop: (insets.top || 0) + 70, paddingBottom: tokens.space.sm };
+        const headerPadding = { paddingTop: (insets.top || 0) + HAUTEUR_DE_BARRE_POUSSEE, paddingBottom: tokens.space.sm };
         return <WrappedComponent {...props} headerPadding={headerPadding} />;
     };
 };

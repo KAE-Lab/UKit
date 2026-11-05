@@ -11,12 +11,12 @@
  */
 
 import React from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { EmbeddedMap } from '../../../shared/map/EmbeddedMap';
-import { CampusSectionHeader } from './CampusSectionHeader';
+import { SectionHeader } from '../../../shared/ui/SectionHeader';
 
 interface CampusMapSectionProps {
     /** Absentes ou incompletes, la section ne se rend pas : pas de carte vide. */
@@ -32,21 +32,15 @@ export function CampusMapSection({ location, markerTitle, theme, style }: Campus
 
     return (
         <View style={style}>
-            {/* La grammaire d'une section de fiche — et le vert (1) : aller quelque part. */}
-            <CampusSectionHeader
-                icone="map-marker-radius"
-                titre={Translator.get('GETTING_THERE')}
-                couleur={1}
-                theme={theme}
-                style={{ marginBottom: tokens.space.md }}
-            />
+            {/* L'intertitre d'une fiche ; le conteneur porte deja le retrait de la page. */}
+            <SectionHeader title={Translator.get('GETTING_THERE')} theme={theme} style={{ paddingHorizontal: 0 }} />
 
             {/* Une banniere, pas une pleine page : la carte situe, l'itineraire se fait ailleurs. */}
             <View style={{
                 height: 180,
                 borderRadius: tokens.radius.lg,
-                borderWidth: 1,
-                borderColor: theme.border,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: theme.contourDeCarte,
                 overflow: 'hidden',
                 backgroundColor: theme.greyBackground,
             }}>

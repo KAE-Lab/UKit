@@ -252,6 +252,18 @@ function projeterService(repas: RepasBrut | undefined, repliCategorie: string) {
  * categories, qui portent des plats, et la grammaire de `fields` est plate. Le regroupement par
  * service (midi, soir) est donc applicatif — il l'etait deja.
  */
+/**
+ * Le sous-titre qu'un restaurant glisse dans sa liste de plats : une ligne qui finit par deux-points
+ * (« Autre plat : ») annonce les suivantes (« Pad thai »). Rendue comme un plat, elle se lisait comme
+ * un plat. Rend le sous-titre sans ses deux-points, ou `null` pour un vrai plat.
+ */
+export function sousTitreDePlat(plat: string): string | null {
+    const net = plat.trim();
+    if (!net.endsWith(':')) return null;
+    const sousTitre = net.slice(0, -1).trim();
+    return sousTitre === '' ? null : sousTitre;
+}
+
 export function projeterJourMenu(brut: JourExtrait, repliCategorie: string): CrousDayMenu {
     const repas: RepasBrut[] = Array.isArray(brut.repas) ? (brut.repas as RepasBrut[]) : [];
 
