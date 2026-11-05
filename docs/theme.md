@@ -114,6 +114,7 @@ annonce dans les couleurs de l'application, et `Theme.ts` importe `react-native`
 | `fontTertiary` | ce qui se lit en retrait : onglet inactif, chevron, légende (sombre : `#8A8A98`) | `#8E8E93` |
 | `contourDeCarte` | le filet d'une carte ; en sombre, c'est lui qui la détache (`#FFFFFF12`) | `#0000000A` |
 | `teinteDOnglet` | la teinte franche de chaque onglet : l'onglet actif et son bouton d'action | objet |
+| `logo` | les deux couleurs du logo, `#007AFF` et `#5E5CE6`, les mêmes dans les deux thèmes | objet |
 | `lightFont` | texte sur fond coloré | `#FFFFFF` |
 | `link`, `icon`, `border` | liens, icônes, filets | — |
 | `background` | fond d'écran | `#F2F2F7` |
@@ -238,6 +239,8 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`Squelette`](../src/shared/ui/Squelette.tsx) | la forme d'un contenu qui charge, et `Balayage`, le reflet qui la parcourt. **Il ne dessine pas la forme** : elle vient de l'appelant, construite avec les composants du contenu en mode `masque` (`Card`, `MetaRow`, `Badge`, le titre d'une carte). Il annonce son attente aux lecteurs d'écran par sa phrase | posé au 7-I |
 | [`TexteMasque`](../src/shared/ui/TexteMasque.tsx) | une ligne de texte masquée : la hauteur exacte de sa police, une barre à sa place, **aucun caractère rendu** | 2 fois, remonté au 7-I |
 | [`EnTeteDOnglet`](../src/shared/ui/EnTeteDOnglet.tsx) | l'en-tête d'un onglet qui défile : le grand titre part avec le contenu, rogné sous la zone sûre, puis une barre compacte — le fond de l'onglet, un filet, le titre au centre — protège la barre d'état ; l'élément de droite ne bouge pas | posé au 7-J |
+| [`FigureEnEcho`](../src/shared/ui/epure/FigureEnEcho.tsx), [`LogoUKit`](../src/shared/ui/epure/LogoUKit.tsx) | Fig. 01 de l'Épure et le logo vectoriel, aux nombres du kit ([`geometrie.ts`](../src/shared/ui/epure/geometrie.ts), pur et testé) ; les couleurs du logo sont `theme.logo`. Réservés aux moments : l'accueil | posés au 7-J |
+| [`JeuDuPoint`](../src/shared/ui/jeu/JeuDuPoint.tsx) | le jeu du point, pendant la connexion universitaire : physique pure et testée ([`physique.ts`](../src/shared/ui/jeu/physique.ts)), boucle d'images active seulement en partie, absent sous « réduire les animations » | posé au 7-J |
 | [`useEnfoncement`](../src/shared/ui/useEnfoncement.ts) | l'échelle d'une surface sous le doigt, au ressort : `Card` et la carte de cours | 2 fois, remonté au 7-J |
 | [`FondDOnglet`](../src/shared/ui/FondDOnglet.tsx) | le fond d'un onglet : deux teintes proches de la section qui glissent lentement en haut de l'écran, puis se fondent dans la page. Premier enfant de la vue racine, sous l'en-tête et le contenu. Ses couleurs sont `theme.fondDOnglet`, sa géométrie [`fondDOnglet.ts`](../src/shared/ui/fondDOnglet.ts) | 3 fois, posé au 7-I |
 | [`mouvement.ts`](../src/shared/ui/mouvement.ts) | les animations partagées, tirées de `tokens.mouvement` : `REFLUX`, `SORTIE`, `entreeEnCascade(rang)` | posé au 7-I |
