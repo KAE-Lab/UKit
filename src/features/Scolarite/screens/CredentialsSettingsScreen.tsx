@@ -11,7 +11,6 @@ import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { AppContext } from '../../../shared/services/AppCore';
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
-import { ActionButton } from '../../../shared/ui/ActionButton';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import { useCredentials } from '../services/CredentialsContext';
@@ -100,16 +99,34 @@ const fraicheur = (cold) => {
     return lecture.isValid() ? lecture.format('LL') : Translator.get('RECORD_NEVER_READ');
 };
 
+// Le groupe des Reglages, a l'identique (7-J, deuxieme passe) : l'intertitre gris en casse de phrase,
+// aligne sur le texte des rangees, la carte bordee du filet des cartes. Il portait des petites
+// capitales espacees et une bordure pleine, seul de son espece.
 const SectionCard = ({ title, children, theme }) => (
     <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.fontSecondary }]}>
-            {title.toUpperCase()}
+        <Text style={[tokens.texte.intertitre, styles.sectionTitle, { color: theme.fontSecondary }]}>
+            {title}
         </Text>
-        <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+        <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
             {children}
         </View>
     </View>
 );
+
+/**
+ * Une action du compte, en rangee : l'icone et le libelle a l'accent, le rouge pour la deconnexion.
+ * Les trois actions etaient trois gros boutons gris empiles, du meme poids que la fiche qu'ils
+ * suivent ; rangees comme une action des Reglages, elles se lisent comme la suite de la page.
+ */
+const RangeeDAction = ({ theme, icone, libelle, onPress, destructive = false }) => {
+    const couleur = destructive ? theme.danger : (theme.accent ?? theme.primary);
+    return (
+        <TouchableOpacity onPress={onPress} accessibilityRole="button" activeOpacity={0.6} style={styles.rangeeDAction}>
+            <Icon icon={icone} size={20} color={couleur} />
+            <Text style={[styles.libelleDAction, { color: couleur }]}>{libelle}</Text>
+        </TouchableOpacity>
+    );
+};
 
 /** Les identifiants enregistres, dont le mot de passe que la biometrie seule devoile. */
 const IdentifiantsSection = ({ theme, credentials, passwordVisible, onTogglePassword }) => (
@@ -239,7 +256,7 @@ const ActionsDuCompte = ({ theme, onRafraichir, onRessaisir, onDeconnecter, prog
          * la page : *une page se transforme, elle ne se remplace pas*.
          */
         <View style={[styles.card, styles.carteProgression, {
-            backgroundColor: theme.cardBackground, borderColor: theme.border,
+            backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte,
         }]}>
             <BlocProgression
                 scrapeProgress={scrapeProgress}
@@ -249,43 +266,24 @@ const ActionsDuCompte = ({ theme, onRafraichir, onRessaisir, onDeconnecter, prog
             />
         </View>
     ) : (
-    <>
+    <View style={styles.actions}>
         {/*
           * Redemander un parcours froid, sans se deconnecter : le mode se deduisait de la presence des
           * donnees froides, sans aucun moyen de forcer (jalon 6-K, docs/defauts-fonctionnels.md).
-          */}
-        <ActionButton
-            theme={theme}
-            variant="tonal"
-            icon={{ name: 'refresh' }}
-            label={Translator.get('REFRESH_RECORD')}
-            onPress={onRafraichir}
-            style={{ marginTop: tokens.space.sm }}
-        />
-
-        {/*
           * Ressaisir sans deconnecter : un mot de passe change a l'universite n'invalide pas le compte,
           * et passer par la deconnexion effacerait aussi l'identite deja lue.
           */}
-        <ActionButton
-            theme={theme}
-            variant="tonal"
-            icon={{ name: 'account-key-outline' }}
-            label={Translator.get('REENTER_CREDENTIALS')}
-            onPress={onRessaisir}
-            style={{ marginTop: tokens.space.sm }}
-        />
+        <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
+            <RangeeDAction theme={theme} icone={{ name: 'refresh' }} libelle={Translator.get('REFRESH_RECORD')} onPress={onRafraichir} />
+            <View style={[styles.filetDAction, { backgroundColor: theme.border }]} />
+            <RangeeDAction theme={theme} icone={{ name: 'account-key-outline' }} libelle={Translator.get('REENTER_CREDENTIALS')} onPress={onRessaisir} />
+        </View>
 
-        {/* Destructif : la deconnexion efface le trousseau **et** l'identite deja lue. */}
-        <ActionButton
-            theme={theme}
-            variant="destructive"
-            icon={{ name: 'logout' }}
-            label={Translator.get('LOGOUT')}
-            onPress={onDeconnecter}
-            style={{ marginTop: tokens.space.sm }}
-        />
-    </>
+        {/* Destructif, et a part : la deconnexion efface le trousseau **et** l'identite deja lue. */}
+        <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
+            <RangeeDAction theme={theme} icone={{ name: 'logout' }} libelle={Translator.get('LOGOUT')} onPress={onDeconnecter} destructive />
+        </View>
+    </View>
     )
 );
 
@@ -520,18 +518,36 @@ const CredentialsSettingsScreen = ({ headerPadding, onAnimatedScroll }: {
 
 const styles = StyleSheet.create({
     section: {
-        gap: tokens.space.xs,
+        marginTop: tokens.space.md,
+        gap: tokens.space.sm,
     },
     sectionTitle: {
-        fontSize: tokens.fontSize.xs,
-        letterSpacing: 0.8,
-        marginLeft: tokens.space.sm,
-        marginBottom: tokens.space.xxs,
+        marginLeft: tokens.space.md,
     },
     card: {
         borderRadius: tokens.radius.lg,
-        borderWidth: 1,
+        borderWidth: StyleSheet.hairlineWidth,
         overflow: 'hidden',
+        ...tokens.shadow.sm,
+    },
+    actions: {
+        marginTop: tokens.space.lg,
+        gap: tokens.space.lg,
+    },
+    rangeeDAction: {
+        minHeight: 52,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: tokens.space.md,
+        paddingHorizontal: tokens.space.md,
+    },
+    libelleDAction: {
+        fontSize: tokens.fontSize.md,
+        fontWeight: tokens.fontWeight.medium,
+    },
+    filetDAction: {
+        height: StyleSheet.hairlineWidth,
+        marginLeft: tokens.space.md + 20 + tokens.space.md,
     },
     /*
      * La progression prend la **meme surface** que les fiches au-dessus d'elle : sans encadre ni

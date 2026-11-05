@@ -13,7 +13,8 @@ import Translator from '../../../shared/i18n/Translator';
 import { AppContext, isConnected } from '../../../shared/services/AppCore'
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
 import { formeAffichee } from '../services/groupListCache';
-import { NavBarHelper, SaveGroupButton } from '../../../shared/navigation/NavHelpers';
+import { HAUTEUR_DE_BARRE_POUSSEE, NavBarHelper, SaveGroupButton } from '../../../shared/navigation/NavHelpers';
+import { FonduDeBord, HAUTEUR_DU_FONDU } from '../../../shared/ui/FonduDeBord';
 import { SectionListHeader, GroupRow } from '../components/GroupSelectionComponents';
 import { Icon } from '../../../shared/ui/Icon';
 
@@ -206,7 +207,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                 paddingHorizontal: tokens.space.md,
                 marginHorizontal: tokens.space.md,
                 marginTop: tokens.space.xs,
-                marginBottom: tokens.space.md,
+                marginBottom: tokens.space.sm,
                 // Le gabarit commun des champs de recherche (50, comme la barre des listes Campus) :
                 // a 40, celle-ci etait la seule naine de l'application.
                 height: 50,
@@ -250,14 +251,13 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     renderCacheDate(theme: import('../../../shared/theme/Theme').AppThemeType) {
         if (!this.state.cacheDate) return null;
         return (
+            // Une ligne sous le champ, et non plus une bande grise bordee : le bandeau est sur le fond
+            // de la page depuis la deuxieme passe de 7-J.
             <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: theme.greyBackground,
-                paddingHorizontal: tokens.space.md,
-                paddingVertical: tokens.space.sm,
-                borderBottomWidth: 1,
-                borderBottomColor: theme.border,
+                paddingHorizontal: tokens.space.lg,
+                paddingBottom: tokens.space.xs,
             }}>
                 <Icon
                     icon={{ name: 'clock-outline' }}
@@ -307,7 +307,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                     { useNativeDriver: false }
                 )}
                 scrollEventThrottle={16}
-                contentContainerStyle={{ paddingTop: 0, paddingBottom: tokens.space.xxl }}
+                contentContainerStyle={{ paddingTop: HAUTEUR_DU_FONDU, paddingBottom: tokens.space.xxl }}
                 scrollIndicatorInsets={{ top: 0 }}
                 renderItem={({ item, index, section }: { item: GroupItem; index: number; section: { data: GroupItem[] } }) => (
                     <GroupRow
@@ -328,7 +328,9 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                 style={{ flex: 0, backgroundColor: theme.background }}
                 onRefresh={this.refreshList}
                 refreshing={this.state.refreshing}
-                stickySectionHeadersEnabled={true}
+                // Pas d'intertitre colle : la liste passe sous le bandeau en fondu, qui delaverait
+                // un intertitre arrete en haut (deuxieme passe de 7-J).
+                stickySectionHeadersEnabled={false}
                 showsVerticalScrollIndicator={false}
             />
         );
@@ -351,19 +353,22 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
             <SafeAreaInsetsContext.Consumer>
                 {(insets) => (
                     <View style={[style.list.homeView as never, { backgroundColor: theme.background }]}>
-                        <View style={{ 
-                            paddingTop: (insets?.top || 0) + 65,
-                            backgroundColor: theme.cardBackground,
-                            borderBottomWidth: 1,
-                            borderBottomColor: theme.border,
-                            // Meme regle que le bandeau du Planning : sous l'en-tete transparent, une ombre
-                            // sans elevation (6.2.x, en-tete invisible sur un Android 9).
-                            ...tokens.shadow.sm as object,
+                        {/*
+                          * Le bandeau de recherche est sur le fond de la page, et la liste passe
+                          * dessous en fondu (7-J, deuxieme passe) : c'etait une dalle blanche bordee
+                          * et ombree, posee sur une liste grise, et la liste s'y coupait net.
+                          */}
+                        <View style={{
+                            paddingTop: (insets?.top || 0) + HAUTEUR_DE_BARRE_POUSSEE,
+                            backgroundColor: theme.background,
                         }}>
                             {this.renderSearchInput(theme)}
                             {this.renderCacheDate(theme)}
                         </View>
-                        {this.renderContent(theme)}
+                        <View style={{ flex: 1 }}>
+                            {this.renderContent(theme)}
+                            <FonduDeBord fond={theme.background} />
+                        </View>
                     </View>
                 )}
             </SafeAreaInsetsContext.Consumer>
