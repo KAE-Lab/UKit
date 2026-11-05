@@ -131,6 +131,12 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
     }
 
     expandMenu = () => {
+        // Le panneau s'ouvre la ou etait la bulle, et la bulle vit au bord droit : sans borne, il
+        // debordait de sa largeur moins celle de la bulle, boutons compris (defauts-fonctionnels.md,
+        // constate le 2026-11-05). La borne du relacher s'applique donc aussi a l'ouverture.
+        const x = (this.pan.x as unknown as { _value: number })._value;
+        const y = (this.pan.y as unknown as { _value: number })._value;
+        this.pan.setValue({ x: Math.max(0, Math.min(x, width - MENU_WIDTH)), y });
         this.setState({ isExpanded: true, selectedDate: TimeMockService.getFakeDate() });
     }
 

@@ -28,12 +28,13 @@ projection et sa parité. La carte de cours ne l'affiche plus depuis 7-J (une he
 mais le champ reste faux pour tout ce qui le lit : la fiche du cours, le créneau `schedule`, les
 rappels. La correction se fait dans la projection, avec un cas de parité.
 
-### Le menu de développement s'ouvre en partie hors de l'écran à 360 points — constaté le 2026-11-05
+### ~~Le menu de développement s'ouvre en partie hors de l'écran~~ — constaté le 2026-11-05, corrigé le même jour
 
-Sur `ukit-a8` (360 × 740 dp), le panneau de [`ModMenu`](../src/shared/ui/ModMenu.tsx) s'ouvre à la
-position de sa bulle (`largeur - 80`) avec sa largeur de 300 : il déborde de deux cents points à droite,
-et seul un glissement de son en-tête le ramène. La borne n'est appliquée qu'au relâcher d'un
-glissement. Outil de développement seulement ; il gêne le banc, dont c'est l'instrument.
+*Corrigé pendant le plan de test du 7-I, qu'il bloquait :* le panneau de
+[`ModMenu`](../src/shared/ui/ModMenu.tsx) s'ouvrait à la position de sa bulle (`largeur - 80`) avec sa
+largeur de 300, et la borne n'était appliquée qu'au relâcher d'un glissement. Il débordait à 360 points
+comme à 411 (`ukit`), boutons de repli et de fermeture compris. La même borne s'applique désormais à
+l'ouverture. Vérifié sur `ukit` : le panneau s'ouvre entier, ses deux boutons à portée.
 
 ### ~~Le parcours d'accueil s'ouvre en anglais sur un Android en français~~ — constaté le 2026-11-04, corrigé le 2026-11-05
 
