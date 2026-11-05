@@ -55,6 +55,8 @@ une application qui donne l'heure des choses d'un regard.
   de sa famille, l'explication en pied de groupe, le mode sombre rangé dans l'affichage ; la barre
   compacte au défilement. Ouvrir l'onglet ne demande plus l'accès à l'agenda : une rangée
   « Autoriser l'agenda » le demande quand on veut s'en servir.
+- **Les distances s'écrivent pour être lues** : « 280 m », « 1,2 km », « 9 045 km », aux séparateurs
+  de la langue, au lieu de « 9045.4 km ».
 - **L'en-tête de la Scolarité** se pose sur le fond violet de l'onglet au lieu d'un aplat blanc, et le
   prénom de la salutation prend la couleur du texte.
 - **La recherche de groupes et la fiche d'un cours** prennent la même écriture : liste groupée à

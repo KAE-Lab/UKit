@@ -21,3 +21,26 @@ export function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return RAYON_TERRE_KM * c;
 }
+
+/** Les separateurs d'un nombre, par langue de l'application. */
+const SEPARATEURS: Readonly<Record<string, { decimal: string; milliers: string }>> = {
+    fr: { decimal: ',', milliers: ' ' },
+    es: { decimal: ',', milliers: '.' },
+    en: { decimal: '.', milliers: ',' },
+};
+
+/**
+ * Une distance ecrite pour etre lue d'un coup (7-J) : `277 m`, `1,2 km`, `9 045 km`.
+ *
+ * La decimale ne sert qu'en dessous de dix kilometres : au-dela, elle ne change aucune decision et
+ * s'ecrivait « 9045.4 km », point anglais compris dans une interface en francais. Les metres
+ * s'arrondissent a la dizaine, comme un pas. Ecrit a la main plutot que par `Intl`, que Hermes ne
+ * porte pas pareil sur toutes les versions d'Android. L'espace avant l'unite est insecable.
+ */
+export function formaterDistance(km: number, langue: string): string {
+    const { decimal, milliers } = SEPARATEURS[langue] ?? SEPARATEURS.en;
+    if (km < 1) return `${Math.max(10, Math.round((km * 1000) / 10) * 10)} m`;
+    if (km < 10) return `${km.toFixed(1).replace('.', decimal)} km`;
+    const entier = String(Math.round(km)).replace(/\B(?=(\d{3})+(?!\d))/g, milliers);
+    return `${entier} km`;
+}
