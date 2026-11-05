@@ -27,7 +27,8 @@ une application qui donne l'heure des choses d'un regard.
   cours remplit son rail et dit le temps qui reste, et un cours passé s'estompe.
 - **Le week-end parle** : « C'est le week-end », « Aucun cours avant lundi ».
 - **L'accueil ouvre sur la figure de l'Épure** : le U du logo en écho, quarante contours qui se
-  construisent du fond vers l'avant, puis le logo vectoriel et le mot de bienvenue.
+  construisent du fond vers l'avant, puis le logo vectoriel et le mot de bienvenue. Il se ferme sur un
+  cercle et une coche qui se tracent dans le même dégradé.
 - **Le jeu du point pendant la connexion universitaire.** Quatorze à vingt-six secondes d'attente,
   occupées : le point du « i » du logo saute les cotes qui défilent sur l'horizon, au pouce, avec
   son record. Il s'efface à l'arrivée du dossier et ne paraît pas sous « réduire les animations ».
