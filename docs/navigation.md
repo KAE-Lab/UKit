@@ -138,13 +138,15 @@ Trois helpers de [`NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx) por
 cohérence visuelle des en-têtes. Ne pas configurer un en-tête à la main.
 
 - **`NavBarHelper({ title, themeName, route, headerLeft, headerRight, gestureEnabled })`** produit les
-  `StackNavigationOptions` d'un écran : titre stylé, transparence, et **animation du titre au
-  défilement**. Il lit la valeur de défilement de l'écran dans le registre `globalScrollValues`,
-  indexé par `route.key`. **Le titre est neutre** (`theme.font`, 2026-08-30) : le violet est la
+  `StackNavigationOptions` d'un écran : titre stylé, et **une barre qui prend son fond au
+  défilement** (7-J) — transparente au bord du contenu, fond de l'écran et filet dès que le contenu
+  passe dessous, comme la barre compacte des onglets. Le titre s'effaçait au défilement parce que la
+  barre n'avait pas de fond ; il reste désormais. Il lit la valeur de défilement de l'écran dans le
+  registre `globalScrollValues`, indexé par `route.key`. **Le titre est neutre** (`theme.font`, 2026-08-30) : le violet est la
   couleur d'action, et un titre en couleur d'action se lit comme un bouton — deux fiches
   surchargeaient d'ailleurs le leur en violet à la main, elles ne le font plus. **Toute sous-page
-  défilante transmet son défilement** (`withHeaderAnimation` + `onAnimatedScroll`) : sans ça, le
-  contenu passe derrière un titre qui ne s'efface jamais — c'est arrivé à l'écran des filtres à sa
+  défilante transmet son défilement** (`withHeaderAnimation` + `onAnimatedScroll`) : sans ça, la barre
+  reste transparente et le contenu passe sous le titre — c'est arrivé à l'écran des filtres à sa
   création.
 - **`withHeaderAnimation(Composant)`** est le pendant côté écran. Le HOC crée une `Animated.Value`,
   l'enregistre dans `globalScrollValues[route.key]`, injecte `onAnimatedScroll` et `headerPadding`

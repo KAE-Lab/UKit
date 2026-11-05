@@ -70,6 +70,9 @@ une application qui donne l'heure des choses d'un regard.
   prénom de la salutation prend la couleur du texte.
 - **La recherche de groupes et la fiche d'un cours** prennent la même écriture : liste groupée à
   intertitres gris, heures en grand et salle d'abord.
+- **Les écrans poussés ont une barre qui prend son fond au défilement**, avec son filet, comme les
+  onglets : le contenu ne passe plus sous la barre d'état ni sous un bouton de retour flottant, et le
+  titre ne s'efface plus.
 - **L'en-tête du Planning** porte le fond bleu de l'onglet ; le jour choisi est une case pleine,
   aujourd'hui a son point, le choix d'un jour s'acquitte au doigt, et la case d'une semaine dit son
   lundi. Le ruban se recentre sur le jour choisi à sa première mesure.
