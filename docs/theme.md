@@ -39,7 +39,7 @@ tokens.radius     sm 8 · md 12 · lg 16 · xl 24 · pill 999
 tokens.fontSize   xs 12 · sm 14 · md 16 · lg 18 · xl 22 · xxl 28 · title 34
 tokens.fontWeight regular 400 · medium 500 · semibold 600 · bold 700
 tokens.shadow     sm · md · lg   (objet prêt à étaler : ...tokens.shadow.sm)
-tokens.texte      grandTitre · titreDeSection · titreDeCarte · titreDeBarre · heure · chiffres
+tokens.texte      grandTitre · titreDeSection · titreDeCarte · titreDeBarre · heure · chiffres · intertitre
 tokens.mouvement  couture 200 · structure 220 · cascade 40 × 4 rangs · balayage 1600 / 0,6
                   pression 0,97 · ressort (amortissement 100, masse 4, raideur 900)
 ```
@@ -58,6 +58,11 @@ dessinait une ombre dure et décidait de l'ordre de dessin. Une ombre hors éche
 écrites une fois. La police reste celle du système ; une approche resserrée sur les grands corps et
 des **chiffres tabulaires** pour toute heure, durée ou distance (`tokens.texte.chiffres`) la rendent
 précise. Un style s'étale (`style={[tokens.texte.grandTitre, { color }]}`), la couleur reste au thème.
+`intertitre` est le gris d'un groupe (catégorie de menu, étage, groupe de réglages, section de la
+Scolarité, campus d'un établissement) : 14 points demi-gras, **en casse de phrase**. Ces intertitres
+portaient des petites capitales espacées, recopiées dans sept fichiers ; la deuxième passe de 7-J les
+a réunis ici. Les capitales ne restent qu'aux légendes de jour du ruban (« JEU »), comme sur un
+calendrier, et à l'étiquette des badges posés sur une image.
 
 > **`tokens` vit dans son propre fichier**, [`tokens.ts`](../src/shared/theme/tokens.ts), et non par
 > commodité : `Theme.ts` importe `react-native` pour une branche `Platform.OS`, ce qui le rend

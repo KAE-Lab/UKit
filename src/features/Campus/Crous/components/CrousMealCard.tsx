@@ -35,11 +35,11 @@ export function CrousMealCard({ mealTitle, categories, theme }: CrousMealCardPro
                         {index > 0 ? <View style={[styles.filet, { backgroundColor: theme.border }]} /> : null}
                         <View style={styles.categorie}>
                             {/* Le gris du texte secondaire : une categorie nomme, elle n'agit pas. */}
-                            <Text style={[styles.nom, { color: theme.fontSecondary }]}>{categorie.name}</Text>
+                            <Text style={[tokens.texte.intertitre, { color: theme.fontSecondary }]}>{categorie.name}</Text>
                             {categorie.dishes.length > 0 ? categorie.dishes.map((plat, rang) => {
                                 const sousTitre = sousTitreDePlat(plat);
                                 return sousTitre !== null ? (
-                                    <Text key={rang} style={[styles.nom, styles.sousTitre, { color: theme.fontSecondary }]}>{sousTitre}</Text>
+                                    <Text key={rang} style={[tokens.texte.intertitre, styles.sousTitre, { color: theme.fontSecondary }]}>{sousTitre}</Text>
                                 ) : (
                                     <Text key={rang} style={[styles.plat, { color: theme.font }]}>{plat}</Text>
                                 );
@@ -68,10 +68,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: tokens.space.md,
         paddingVertical: tokens.space.md,
         gap: tokens.space.sm,
-    },
-    nom: {
-        fontSize: tokens.fontSize.sm,
-        fontWeight: tokens.fontWeight.semibold,
     },
     // « Autre plat : » et ses pareils, que la source glisse parmi les plats (`sousTitreDePlat`).
     sousTitre: {

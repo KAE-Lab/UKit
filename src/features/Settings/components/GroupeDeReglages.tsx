@@ -45,7 +45,7 @@ export function GroupeDeReglages({ theme, titre, pied, children }: GroupeDeRegla
     if (rangees.length === 0) return null;
     return (
         <View style={styles.groupe}>
-            {titre !== undefined ? <Text style={[styles.titre, { color: theme.fontSecondary }]}>{titre}</Text> : null}
+            {titre !== undefined ? <Text style={[tokens.texte.intertitre, styles.titre, { color: theme.fontSecondary }]}>{titre}</Text> : null}
             <View style={[styles.carte, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
                 {rangees.map((rangee, index) => (
                     <View key={index}>
@@ -152,10 +152,6 @@ const styles = StyleSheet.create({
     titre: {
         marginLeft: tokens.space.xl,
         marginBottom: tokens.space.sm,
-        fontSize: tokens.fontSize.xs,
-        fontWeight: tokens.fontWeight.semibold,
-        letterSpacing: 0.8,
-        textTransform: 'uppercase',
     },
     carte: {
         marginHorizontal: tokens.space.md,

@@ -18,7 +18,7 @@ export function SectionListHeader({ title, theme }: { title: string; theme: AppT
     return (
         // Fond plein : l'intertitre colle en haut de la liste, et ce qui defile passe dessous.
         <View style={[styles.intertitre, { backgroundColor: theme.background }]}>
-            <Text style={[styles.texteIntertitre, { color: theme.fontSecondary }]}>{title}</Text>
+            <Text style={[tokens.texte.intertitre, { color: theme.fontSecondary }]}>{title}</Text>
         </View>
     );
 }
@@ -60,12 +60,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: tokens.space.xl,
         paddingTop: tokens.space.lg,
         paddingBottom: tokens.space.sm,
-    },
-    texteIntertitre: {
-        fontSize: tokens.fontSize.xs,
-        fontWeight: tokens.fontWeight.semibold,
-        letterSpacing: 0.8,
-        textTransform: 'uppercase',
     },
     rangee: {
         flexDirection: 'row',

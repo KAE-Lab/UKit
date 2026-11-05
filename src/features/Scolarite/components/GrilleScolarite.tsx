@@ -244,7 +244,7 @@ function derniereLecture(valeurs: ValeursWidgets): string | null {
 function Intertitre({ texte, detail, theme }: { texte: string; detail?: string | null; theme: AppThemeType }) {
     return (
         <View style={styles.ligneIntertitre}>
-            <Text style={[styles.intertitre, { color: theme.fontSecondary }]}>
+            <Text style={[tokens.texte.intertitre, { color: theme.fontSecondary }]}>
                 {texte}
             </Text>
             {detail ? (
@@ -419,13 +419,6 @@ const styles = StyleSheet.create({
         gap: tokens.space.sm,
         marginHorizontal: tokens.space.md,
         paddingHorizontal: tokens.space.xxs,
-    },
-    intertitre: {
-        // Le style des periodes du CROUS et des sections de Reglages : petites capitales espacees.
-        fontSize: tokens.fontSize.xs,
-        fontWeight: tokens.fontWeight.semibold,
-        letterSpacing: 0.8,
-        textTransform: 'uppercase',
     },
     detailIntertitre: {
         // En bas de casse, sans espacement de capitales : la fraicheur est une note, pas un titre.
