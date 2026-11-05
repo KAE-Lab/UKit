@@ -115,7 +115,7 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
             {/* La graisse ne change pas avec la selection : passer en gras elargissait le libelle
                 d'un ou deux points et tout le rang tressaillait a chaque changement d'onglet. La
                 couleur porte l'etat a elle seule, comme sur le bouton d'action a cote. */}
-            <Text numberOfLines={1} style={[styles.tabLabel, { color, fontWeight: '500' }]}>
+            <Text numberOfLines={1} maxFontSizeMultiplier={CROISSANCE_DES_LIBELLES} style={[styles.tabLabel, { color, fontWeight: '500' }]}>
                 {label}
             </Text>
         </TouchableOpacity>
@@ -198,11 +198,11 @@ function BoutonDAction({ icone, libelle, onPress, theme, teinte, masque = false 
                 Campus n'affichait rien sous son cadenas. */}
             {masque ? (
                 <View style={styles.boiteDuLibelle}>
-                    <Text numberOfLines={1} style={[styles.tabLabel, { marginTop: tokens.space.xxs }]}> </Text>
+                    <Text numberOfLines={1} maxFontSizeMultiplier={CROISSANCE_DES_LIBELLES} style={[styles.tabLabel, { marginTop: tokens.space.xxs }]}> </Text>
                     <View style={[styles.barreDeMasque, { backgroundColor: theme.border }]} />
                 </View>
             ) : (
-                <Text numberOfLines={1} style={[styles.tabLabel, { color: teinte, fontWeight: '500', marginTop: tokens.space.xxs }]}>
+                <Text numberOfLines={1} maxFontSizeMultiplier={CROISSANCE_DES_LIBELLES} style={[styles.tabLabel, { color: teinte, fontWeight: '500', marginTop: tokens.space.xxs }]}>
                     {libelle}
                 </Text>
             )}
@@ -417,6 +417,13 @@ export default function MainTabNavigator() {
 
 /** L'ombre de la barre et de son bouton d'action, plus marquee que `shadow.md` : elle flotte sur tout. */
 const OMBRE_DE_LA_BARRE = { y: 4, flou: 8, opacite: 0.15 };
+
+/**
+ * La croissance permise aux libelles de la barre avec la police du systeme. Ceux d'iOS ne la suivent
+ * pas du tout (Apple renvoie a l'agrandisseur de contenu) ; ici ils la suivent un peu. Sans plafond, a
+ * 1,3 et sur 360 points (A8), « Reglages » devenait « Reglag… » (7-J, constate sur le banc).
+ */
+const CROISSANCE_DES_LIBELLES = 1.15;
 
 const styles = StyleSheet.create({
     tabBarWrapper: {

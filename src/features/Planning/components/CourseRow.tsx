@@ -20,7 +20,7 @@
  */
 
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import Reanimated from 'react-native-reanimated';
@@ -105,10 +105,19 @@ function LigneDInfo({ ligne, theme, couleur, uneLigne, cedeALIndicateur }: {
 }
 
 /** La colonne des heures : le debut en grand, la fin, et pendant le cours le temps qui reste. */
+/**
+ * La place du texte de la gouttiere a la taille par defaut. Elle grandit avec la police du systeme :
+ * fixe, a 1,3 sur 360 points (A8), « 09:30 » se cassait en « 09:3 » / « 0 » (7-J). La frise s'aligne
+ * sur le rail, pas sur la gouttiere : elle ne bouge pas.
+ */
+const TEXTE_DES_HEURES = 56;
+
 function ColonneDesHeures({ data, theme, resteMinutes }: { data: CourseData; theme: AppThemeType; resteMinutes: number | null }) {
+    const { fontScale } = useWindowDimensions();
+    const largeur = tokens.space.md - RAIL + Math.ceil(TEXTE_DES_HEURES * Math.max(1, fontScale));
     return (
-        <View style={styles.heures}>
-            <Text style={[tokens.texte.heure, { color: theme.font }]}>{data.starttime}</Text>
+        <View style={[styles.heures, { width: largeur }]}>
+            <Text numberOfLines={1} style={[tokens.texte.heure, { color: theme.font }]}>{data.starttime}</Text>
             {/* Une heure de fin que la source n'a pas su ecrire (« Invalid date ») ne s'affiche pas :
                 la carte dit ce qu'elle sait (defauts-fonctionnels.md). */}
             {minutesDe(data.endtime) !== null ? (
@@ -272,7 +281,6 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     heures: {
-        width: 68,
         paddingLeft: tokens.space.md - RAIL,
         paddingVertical: tokens.space.md,
     },
