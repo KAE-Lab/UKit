@@ -1,11 +1,12 @@
 import React from 'react';
-import { Appearance, Platform, NativeModules } from 'react-native';
+import { Appearance } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Calendar from 'expo-calendar/legacy';
 import moment from 'moment';
 import NetInfo from '@react-native-community/netinfo';
 
 import { ErrorAlert } from '../ui/Alerts';
+import { langueDuSysteme } from '../i18n/langueDuSysteme';
 // Les modules purs, et non les portes d'entree `../locations` et `../etablissements` : celles-ci
 // tirent AsyncStorage et la base, que ce fichier — charge avant le premier rendu — n'a aucune raison
 // de mettre sur son chemin.
@@ -56,20 +57,8 @@ export const AppContext = React.createContext<{
 }>({ themeName: 'light' });
 export const AppContextProvider = AppContext.Provider;
 
-export function deviceLanguage(): string {
-    if (Platform.OS === 'ios') {
-        const settings = NativeModules.SettingsManager?.settings;
-        return settings?.AppleLocale || settings?.AppleLanguages[0] || 'en_US';
-    } 
-    return NativeModules.I18nManager?.localeIdentifier || 'en_US';
-}
-
-export function languageFromDevice(): string {
-    const lang = deviceLanguage();
-    if (lang.startsWith('fr')) return 'fr';
-    if (lang.startsWith('es')) return 'es';
-    return 'en';
-}
+/** La langue du telephone, lue par `getConstants()` sous la nouvelle architecture (langueDuSysteme.ts). */
+export const languageFromDevice = langueDuSysteme;
 
 export async function isConnected(): Promise<boolean | null> {
     // L'interrupteur du menu de developpement gagne : couper le reseau de l'application sans couper

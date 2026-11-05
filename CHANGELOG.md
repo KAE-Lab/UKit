@@ -34,6 +34,11 @@ une application qui donne l'heure des choses d'un regard.
 - **« Soutenir UKit »** dans les Réglages, quand le catalogue publie l'adresse du don : elle s'ouvre
   dans le navigateur du système.
 
+### Corrigé
+
+- **L'accueil s'ouvre dans la langue du téléphone sur Android** : sous la nouvelle architecture, la
+  lecture de la locale retombait sur l'anglais pour tout nouvel utilisateur.
+
 ### Modifié
 
 - **La barre du parcours froid ne se fige plus vers 30 %** : ses paliers suivent les durées mesurées,
