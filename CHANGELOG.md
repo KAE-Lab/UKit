@@ -26,6 +26,9 @@ une application qui donne l'heure des choses d'un regard.
   le repère de l'heure se pose à sa place avec le temps avant le cours suivant, la carte du cours en
   cours remplit son rail et dit le temps qui reste, et un cours passé s'estompe.
 - **Le week-end parle** : « C'est le week-end », « Aucun cours avant lundi ».
+- **Le jeu du point pendant la connexion universitaire.** Quatorze à vingt-six secondes d'attente,
+  occupées : le point du « i » du logo saute les cotes qui défilent sur l'horizon, au pouce, avec
+  son record. Il s'efface à l'arrivée du dossier et ne paraît pas sous « réduire les animations ».
 - **La liste des établissements se regroupe par campus et se cherche par alias** (« UB »,
   « ENSEIRB »), dès qu'elle compte six établissements ; le cas des trois campus qui arrivent.
 - **« Soutenir UKit »** dans les Réglages, quand le catalogue publie l'adresse du don : elle s'ouvre
@@ -33,6 +36,8 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Modifié
 
+- **La barre du parcours froid ne se fige plus vers 30 %** : ses paliers suivent les durées mesurées,
+  et elle s'approche de chacun sans jamais s'y arrêter avant la fin réelle de l'étape.
 - **Une seule accentuation, celle du logo** : le bleu-indigo du milieu de son dégradé, `#3B5FE5` en
   clair et `#6381F8` en sombre, à la place du bleu d'iOS et de l'indigo.
 - **Le « cran au-dessus » retenu au labo le 2026-11-04** : le noir teinté `#0B0B12` et ses cartes

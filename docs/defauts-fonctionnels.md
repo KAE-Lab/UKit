@@ -806,7 +806,15 @@ qui ne se distingue pas d'une panne — et le remède existe déjà à côté : 
 [`EncartSession`](../src/features/Scolarite/components/EncartSession.tsx), en `variant="card"` au-dessus
 de la fiche.
 
-### La barre du parcours froid paraît se figer vers 30 %
+### ~~La barre du parcours froid paraît se figer vers 30 %~~ — corrigé le 2026-11-05
+
+*Corrigé par [7-J](phase-7/7-j-ecrans.md), lot de la Scolarité :* les paliers suivent désormais les
+durées mesurées après 6.1-D (connexion à 40 % en sept secondes, dossier à 97 % en onze), et la courbe
+n'est plus un amortissement qui touche son plafond puis s'arrête : chaque palier s'approche en
+`Easing.out(Easing.exp)` sur le triple de sa durée, neuf dixièmes du chemin à la durée annoncée, puis
+une avance qui ralentit sans jamais s'immobiliser avant la fin réelle de l'étape. Vu sur le banc le
+2026-11-05 : de 1 à 38 % en dix secondes de connexion, sans un arrêt. Et l'attente s'occupe : le jeu du
+point paraît sous la barre.
 
 Constaté le 2026-09-06, et il a coûté un faux diagnostic : le parcours a été interrompu parce qu'il
 semblait bloqué, alors qu'il se déroulait normalement.

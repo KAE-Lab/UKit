@@ -31,6 +31,10 @@ const en = {
 		'Calendar access lets UKit write your classes and show your appointments in the Planning.',
 	CALENDAR_ALLOW: 'Allow calendar access',
 	INSTITUTION_SEARCH: 'Search a school or an acronym…',
+	// Le jeu du point, pendant la connexion universitaire (7-J).
+	JEU_CONSIGNE: 'Tap to jump',
+	JEU_RECORD: 'best $-',
+	JEU_ACCESSIBILITE: 'Mini-game: tap to make the dot jump',
 	SUPPORT_UKIT: 'Support UKit',
 	ENGLISH: 'English',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
