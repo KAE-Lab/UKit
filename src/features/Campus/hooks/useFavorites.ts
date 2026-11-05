@@ -17,9 +17,20 @@ import { useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 
+/**
+ * Le lieu qu'on vient de mettre en favori, et le rang de ce geste : une carte etoilee remonte en tete
+ * du tri, et le carrousel du tableau de bord la suit (`CarrouselDeLieux`, 7-J, deuxieme passe). Le
+ * rang distingue deux ajouts du meme lieu, retire puis remis.
+ */
+export interface DernierFavori {
+    id: string;
+    rang: number;
+}
+
 export function useFavorites(storageKey: string) {
     const [favorites, setFavorites] = useState<string[]>([]);
     const [pret, setPret] = useState(false);
+    const [dernierAjout, setDernierAjout] = useState<DernierFavori | null>(null);
 
     useFocusEffect(
         useCallback(() => {
@@ -47,6 +58,7 @@ export function useFavorites(storageKey: string) {
                 newFavs = newFavs.filter(favId => favId !== id);
             } else {
                 newFavs.push(id);
+                setDernierAjout((precedent) => ({ id, rang: (precedent?.rang ?? 0) + 1 }));
             }
             setFavorites(newFavs);
             await AsyncStorage.setItem(storageKey, JSON.stringify(newFavs));
@@ -55,5 +67,5 @@ export function useFavorites(storageKey: string) {
         }
     };
 
-    return { favorites, toggleFavorite, pret };
+    return { favorites, toggleFavorite, pret, dernierAjout };
 }

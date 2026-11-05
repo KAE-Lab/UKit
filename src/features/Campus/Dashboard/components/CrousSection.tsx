@@ -29,7 +29,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
     const { restaurants, failure, loading, enCours, retry } = useCrousRestaurants(userLat, userLon, revision);
     useChargementDeSection('restaurants', enCours);
 
-    const { favorites: favRu, toggleFavorite: toggleFavRu, pret: favorisLus } = useFavorites('crous_favorites');
+    const { favorites: favRu, toggleFavorite: toggleFavRu, pret: favorisLus, dernierAjout } = useFavorites('crous_favorites');
     const [crousFilter, setFiltre, filtreLu] = useSavedFilter('crous_filter', 'all');
     // Les cartes attendent aussi les favoris et le filtre : triees sans eux, elles se retrieraient
     // une fraction de seconde plus tard, sous les yeux (useFavorites.ts). Et les annonces : une carte
@@ -100,6 +100,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
                     emplacement="restaurants"
                     lieux={filteredRestaurants}
                     cleDuLieu={identifiant}
+                    suivre={dernierAjout}
                     rendreLieu={renderCard}
                     theme={theme}
                     navigation={navigation}

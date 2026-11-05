@@ -6,7 +6,7 @@
 
 import { expect, test } from 'vitest';
 
-import { annonceDElement, cartesSpeciales, composerCarrousel } from './carrouselMixte';
+import { annonceDElement, cartesSpeciales, composerCarrousel, rangDuLieu } from './carrouselMixte';
 import type { BdeAnnonce } from '../services/BdeMapping';
 
 /** Le strict necessaire d'une annonce : ce module ne lit que l'identifiant et les emplacements. */
@@ -48,4 +48,12 @@ test('seule une annonce compte pour les impressions', () => {
     const [speciale, lieu] = composerCarrousel([annonce('x', ['restaurants'])], lieux, cle);
     expect(annonceDElement(speciale)).toBe('x');
     expect(annonceDElement(lieu)).toBeNull();
+});
+
+test('rangDuLieu compte les cartes speciales en tete, et rend -1 pour un lieu absent', () => {
+    const elements = composerCarrousel([{ id: 'a1' } as BdeAnnonce], ['ru1', 'ru2'], (lieu) => lieu);
+    expect(rangDuLieu(elements, 'ru2')).toBe(2);
+    expect(rangDuLieu(elements, 'ru1')).toBe(1);
+    expect(rangDuLieu(elements, 'a1')).toBe(-1);
+    expect(rangDuLieu(elements, 'absent')).toBe(-1);
 });
