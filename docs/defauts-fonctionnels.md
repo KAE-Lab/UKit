@@ -65,7 +65,18 @@ icônes sombres. Tracé sur le banc (journal du style posé : `dark-content` seu
 `dumpsys window` (`apr=LIGHT_STATUS_BARS`). La racine relit désormais le thème et la langue au moment
 de s'abonner ([`rootContainer`](../src/shared/navigation/rootContainer.tsx)). Vérifié sur `ukit`,
 installation neuve en sombre : plus de `LIGHT_STATUS_BARS`, l'heure blanche. Le défaut ne tenait pas à
-Android 9, il se reproduisait sur Android 15 ; à revoir sur l'A8 avec le reste.
+Android 9, il se reproduisait sur Android 15. Revu sur `ukit-a8` (Android 9) le même jour, installation
+neuve en sombre : l'heure blanche sur `#0B0B12`.
+
+### La barre de navigation d'Android 9 reste claire sous l'application sombre — constaté le 2026-11-05
+
+Sur `ukit-a8` (Android 9, trois boutons), la barre de navigation du système garde son gris clair
+(`#E6E6E6` mesuré) quand l'application est en sombre ; sur Android 15, en navigation par gestes, elle
+est transparente. **Ce n'est pas une régression** : la capture « avant » de 7-J mesure la même teinte.
+L'application ne règle que la barre d'état ; la barre de navigation se règle en natif
+(`androidNavigationBar` de la configuration Expo, ou `expo-navigation-bar` pour la suivre au
+changement de thème), donc avec le prochain build de développement. Le Galaxy A8 est le premier
+concerné.
 
 
 Sur le banc Android (Android 9), installation neuve (`pm clear`), système en sombre : l'accueil se

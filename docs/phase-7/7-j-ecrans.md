@@ -1,6 +1,7 @@
 # 7-J — Les écrans, et la refonte de l'interface
 
-> **Ouvert le 2026-11-05, en spécification.** Publication : **6.3**. Ce document était un cadre de trois
+> **Livré le 2026-11-05 sur `v6.3`**, vérifié sur le banc Android ; reste le passage sur l'iPhone
+> ([la livraison](#la-livraison-du-2026-11-05)). Ouvert le même jour. Publication : **6.3**. Ce document était un cadre de trois
 > lots (le Planning, la Scolarité, les Réglages), chacun à mener en session avec le propriétaire du
 > produit. Le 2026-11-05, celui-ci a élargi le jalon à **toute l'interface** (« la hisser au rang des
 > meilleures ») et **délégué le jugement de design** : pas de planche ni de labo, les décisions se
@@ -114,6 +115,48 @@ le suivant.
 - **Le mouvement et le jeu se jugent à l'œil** ; seuls leur arithmétique (collisions, compte à rebours,
   pauses) se teste.
 - **Les captures des stores** se refont avec l'équipe ([7-K](7-k-sortie-6-3.md)).
+
+## La livraison du 2026-11-05
+
+**Le relevé, ligne à ligne** (définition de « terminé », point 1) :
+
+| Constat | Issue |
+|---|---|
+| Le contenu passe sous la barre d'état | corrigé : `EnTeteDOnglet` sur les onglets ; sur les onze écrans poussés, une barre qui prend son fond et son filet au défilement (`NavBarHelper`) |
+| Les libellés se coupent à 360 dp | corrigé, vérifié en français, en anglais et en espagnol ; à police 1,3, les libellés d'onglets plafonnent leur croissance à 1,15 |
+| « Suivant » chevauche la carte de connexion | corrigé : le dégagement du parcours compte la marge système du bas (`useDegagementDuPied`) |
+| Une carte par réglage | corrigé : les groupes encadrés, aussi sur « À propos » |
+| Une carte géante par section | corrigé : la carte voisine se laisse voir |
+| La salle en quatrième ligne | corrigé : sous le titre, en demi-gras, l'enseignant et le groupe ensuite |
+| L'ombre absente sur iPhone | corrigé dans le code (`boxShadow`) ; **à voir sur l'iPhone** |
+
+**Les écarts à ce document.** Ajoutés en chemin, parce que le banc les a montrés : la barre des
+écrans poussés et l'écran « À propos » au gabarit des Réglages ; la fin de l'accueil, un cercle et une
+coche qui se tracent dans le dégradé du logo, en réponse à Fig. 01 ; la gouttière des heures, le mois
+et les libellés d'onglets à police 1,3 ; la barre de statut au premier lancement en sombre, dont la
+cause était la racine qui manquait le thème posé par l'accueil. Laissés : la convergence en Reanimated
+des en-têtes poussés (ils gardent `Animated`, sur le fil JavaScript), les écrans des filtres et des
+calendriers du téléphone, encore sur l'ancien bouton, et la classe des Réglages, restée une classe.
+
+**Le plan de test**, joué sur `ukit` et `ukit-a8` : le socle, les onglets défilés dans les deux
+thèmes ; le Planning, avec la frise, ses pauses cotées, le temps restant d'un cours en cours, le repère
+de fin de journée, une journée libre, un groupe cherché — le repère de l'heure **entre** deux cours,
+par la simulation temporelle, n'a pas été vu ; la Scolarité, connexion réelle sur `ukit` en une
+vingtaine de secondes, la barre continue, le jeu jouable (saut, chute, record) ; les Réglages, le
+dialogue de langue et le mode sombre ; Campus, le plan de
+[7-I](7-i-releve-et-vocabulaire.md#le-plan-de-test-joué-le-2026-11-05) ; l'accueil, installation
+neuve dans les deux thèmes, sur les deux émulateurs. Les captures « après »
+(`-apres-android`, `-apres-android-dark`) sont dans [screenshots/](../screenshots/README.md).
+
+**Ce qui reste, hors du banc :**
+
+- **l'iPhone** : les ombres, les zones sûres, la barre d'état, le jeu et le tracé de l'accueil ;
+- **trois propositions**, à trancher : une carte étoilée rejoint la tête de son carrousel et sort du
+  champ, quand le carrousel pourrait la suivre ; les fiches poussées titrent « Détails » au-dessus du
+  nom qu'elles montrent, quand la barre pourrait porter ce nom ; à l'accueil, « Plus tard » double
+  « Suivant » ;
+- la barre de navigation d'Android 9, claire sous l'application sombre, consignée dans les
+  [défauts](../defauts-fonctionnels.md) : sa couleur se règle en natif, donc au prochain build.
 
 ## Ce qui reste de l'ancien cadre
 

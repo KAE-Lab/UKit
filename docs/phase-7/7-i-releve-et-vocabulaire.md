@@ -311,6 +311,27 @@ Sur l'iPhone 13 Pro et le Galaxy A8, dans les deux thèmes, Metro lu depuis le p
     temporelle, ferme le bâtiment.
 12. Les captures « après » et les deux vidéos.
 
+## Le plan de test, joué le 2026-11-05
+
+Sur le banc Android (`ukit`, Android 15, puis `ukit-a8`), avec 7-J posé par-dessus. Ce que le banc
+n'atteint pas est dit tel quel.
+
+| Point | Issue |
+|---|---|
+| 1. Ouverture à froid | conforme : les squelettes tout de suite, à la hauteur des cartes, le flou puis l'image, aucune section qui change de hauteur |
+| 2. Le fond | glisse (près de 200 000 pixels changent en cinq secondes), **immobile** sous « réduire les animations » (zéro), après une relance du processus : Reanimated ne relit le réglage qu'au lancement ([qualite.md](../qualite.md#le-banc-android)) |
+| 3. Panne par section | conforme pour les restaurants et les bibliothèques (hors ligne du menu) : la carte en panne à la hauteur d'une carte, « Réessayer ». Les annonces par `SUPABASE_URL` en `.invalid` : non jouées |
+| 4. Le filtre qui masque tout | non joué : à 13 h 30, aucune donnée réelle ne le produit (les bibliothèques sont ouvertes, et la simulation d'heure ne touche pas l'état en direct d'Affluences). À rejouer un soir, « Ouvertes maintenant » posé |
+| 5 à 7. Carte v2, carte spéciale, ordre | non joués : ils demandent une publication depuis la console, un geste du propriétaire |
+| 8. L'étoile | conforme : le reflux animé, la carte en tête, rien ne bouge au retour sur l'onglet ; l'haptique ne se sent pas sur un émulateur |
+| 9. Mouvement réduit | conforme après relance (voir le point 2) |
+| 10. Le tirer | conforme : le cercle du système, le contenu gardé dessous |
+| 11. L'occupation | conforme : une seule ligne `[chrono] ukit.celcat.occupation` (2,3 s) ; dix-sept salles libres, rangées par étage ; le dimanche soir simulé ferme l'A28. Une journée de vacances : non jouée |
+| 12. Les captures | `campus-dashboard-apres-android` et sa variante sombre, avec 7-J |
+
+Joué en chemin : le panneau du menu de test s'ouvrait hors de l'écran, boutons compris, ce qui
+bloquait le point 3 ; corrigé ([défauts](../defauts-fonctionnels.md)).
+
 ## Limites écrites
 
 - **Ce qui se vérifie devient un jalon, ce qui se juge se tranche en session.** Le relevé, le
