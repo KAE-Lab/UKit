@@ -13,8 +13,15 @@ import style, { propsLibelleBouton, tokens } from '../theme/Theme';
 
 // GESTIONNAIRE DE HEADER
 export type ScrollValueWithInterps = Animated.Value & {
-    _titleOpacity?: Animated.AnimatedInterpolation<number | string>;
+    _fondOpacity?: Animated.AnimatedInterpolation<number | string>;
 };
+
+/**
+ * La course de defilement sur laquelle la barre prend son fond. Courte : sur un ecran pousse, le
+ * contenu passe sous la barre des le premier point. La barre compacte des onglets (`EnTeteDOnglet`)
+ * attend, elle, que son grand titre soit parti.
+ */
+const COURSE_DU_FOND = 24;
 
 export const globalScrollValues: Record<string, ScrollValueWithInterps> = {};
 
@@ -33,18 +40,39 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
     // La variable est lue depuis le dictionnaire externe pour survivre aux mises à jour
     const safeScrollY = (route && globalScrollValues[route.key]) ? globalScrollValues[route.key] : new Animated.Value(0);
 
-    if (!(safeScrollY as ScrollValueWithInterps)._titleOpacity) {
-        (safeScrollY as ScrollValueWithInterps)._titleOpacity = safeScrollY.interpolate({
-            inputRange: [0, 60],
-            outputRange: [1, 0],
+    if (!(safeScrollY as ScrollValueWithInterps)._fondOpacity) {
+        (safeScrollY as ScrollValueWithInterps)._fondOpacity = safeScrollY.interpolate({
+            inputRange: [0, COURSE_DU_FOND],
+            outputRange: [0, 1],
             extrapolate: 'clamp',
         });
     }
 
     const options: StackNavigationOptions = {
+        /*
+         * **La barre prend son fond au defilement** (7-J), comme la barre compacte des onglets et
+         * comme les barres du systeme depuis iOS 15 : transparente au bord du contenu, pleine — fond
+         * de l'ecran et filet — des que le contenu passe dessous. Le titre, lui, ne s'efface plus. Il
+         * s'effacait **parce que** la barre n'avait pas de fond : le contenu passait sous la barre
+         * d'etat et sous un bouton de retour flottant, et la barre defilee ne nommait plus l'ecran.
+         * Un ecran qui ne transmet pas son defilement garde la barre transparente, comme avant.
+         */
+        headerBackground: () => (
+            <Animated.View
+                pointerEvents="none"
+                style={[
+                    StyleSheet.absoluteFill,
+                    {
+                        opacity: (safeScrollY as ScrollValueWithInterps)._fondOpacity,
+                        backgroundColor: theme.background,
+                        borderBottomWidth: StyleSheet.hairlineWidth,
+                        borderBottomColor: theme.border,
+                    },
+                ]}
+            />
+        ),
         headerTitle: () => (
-            <Animated.View style={{ 
-                opacity: (safeScrollY as ScrollValueWithInterps)._titleOpacity,  
+            <View style={{
                 paddingHorizontal: tokens.space.lg, 
                 height: HEADER_BUTTON_SIZE, // On fige la hauteur pour correspondre aux boutons latéraux
                 justifyContent: 'center',
@@ -60,7 +88,7 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
                 <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: theme.font, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.semibold }}>
                     {title}
                 </Text>
-            </Animated.View>
+            </View>
         ),
         headerTransparent: true, 
         headerStyle: {
