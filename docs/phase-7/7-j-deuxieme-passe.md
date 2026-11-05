@@ -65,5 +65,10 @@ Tenu ici, lot par lot, pour qu'une reprise sache où en est la passe.
   « Bientôt disponible ») ; le parcours froid (pourcentage en grand, étapes cochées, jeu en grand) ;
   le jeu (le « i » et son corps, décor en parallaxe, quatre obstacles, appui n'importe où). À revoir
   en passe F : le formulaire en session, au format de l'A8.
-- [ ] E
+- [ ] E — fait : l'accueil sur le U du logo, sans « Plus tard » (`5b9f574`) ; les fiches Campus
+  (bandeau de cases partagé, nom du lieu dans la barre, menu sur une carte par repas, salles par étage,
+  intertitres sans couleur, `4655ae6`) ; le carrousel qui suit l'étoile (`b08caf2`), et en chemin la
+  bande morte au-dessus de la barre d'onglets (`6daac3d`). Reste : les listes, le compte, les
+  documents, les filtres, les calendriers, le lien d'emploi du temps, les modales, le surtitre en
+  petites capitales des cartes d'annonce.
 - [ ] F
