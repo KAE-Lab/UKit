@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { dateIso, horairesEnLignes, horairesLisibles, projeterJourMenu, projeterRestaurant, structurerHoraires } from './CrousMapping';
+import { dateIso, horairesEnLignes, horairesLisibles, projeterJourMenu, projeterRestaurant, sousTitreDePlat, structurerHoraires } from './CrousMapping';
 
 const REPLI_HORAIRES = 'Horaires non specifies';
 const REPLI_CATEGORIE = 'Categorie';
@@ -129,6 +129,19 @@ describe('projeterRestaurant', () => {
     it('retombe sur l adresse quand la zone manque', () => {
         const restaurant = projeterRestaurant({ code: 1, nom: 'Cap Sud', adresse: 'Talence' }, REPLI_HORAIRES);
         expect(restaurant.short_desc).toBe('Talence');
+    });
+});
+
+describe('sousTitreDePlat', () => {
+    it('reconnait une ligne qui annonce les plats suivants', () => {
+        expect(sousTitreDePlat('Autre plat :')).toBe('Autre plat');
+        expect(sousTitreDePlat('  Au choix:  ')).toBe('Au choix');
+    });
+
+    it('laisse un vrai plat, et des deux-points seuls, pour ce qu ils sont', () => {
+        expect(sousTitreDePlat('Pad thaï')).toBeNull();
+        expect(sousTitreDePlat('Salade : tomates, mais')).toBeNull();
+        expect(sousTitreDePlat(' : ')).toBeNull();
     });
 });
 

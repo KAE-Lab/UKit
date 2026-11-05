@@ -1,13 +1,13 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { EdgeInsets } from 'react-native-safe-area-context';
+import { StyleSheet, Text, View } from 'react-native';
 
 import Translator from '../../../../shared/i18n/Translator';
-import style, { tokens, toneColor, AppThemeType } from '../../../../shared/theme/Theme';
+import { tokens, toneColor, AppThemeType } from '../../../../shared/theme/Theme';
 import { ProgressBar } from '../../../../shared/ui/ProgressBar';
 import { LoadingState } from '../../../../shared/ui/LoadingState';
-import { LibraryInfo, TimetableEntry, AffluencesData, getLibraryStatus } from '../../services/LibraryService';
+import { TimetableEntry, AffluencesData, getLibraryStatus } from '../../services/LibraryService';
 import { Icon } from '../../../../shared/ui/Icon';
+import { SectionHeader } from '../../../../shared/ui/SectionHeader';
 
 interface LibraryLiveAttendanceProps {
     affluence: AffluencesData | null;
@@ -21,8 +21,9 @@ export function LibraryLiveAttendance({ affluence, theme }: LibraryLiveAttendanc
     const statusColor = toneColor(theme, statusTone);
 
     return (
-        <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.md, marginBottom: tokens.space.lg, borderRadius: tokens.radius.lg, borderWidth: 1, borderColor: theme.border }}>
-            <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.bold as never, color: theme.fontSecondary, marginBottom: tokens.space.sm, textTransform: 'uppercase' }}>
+        <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.md, marginBottom: tokens.space.xl, borderRadius: tokens.radius.lg, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.contourDeCarte }}>
+            {/* En casse de phrase : les petites capitales espacees sont un tic (deuxieme passe de 7-J). */}
+            <Text style={{ fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold as never, color: theme.fontSecondary, marginBottom: tokens.space.sm }}>
                 {Translator.get('ATTENDANCE')}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: rate !== null ? tokens.space.md : 0 }}>
@@ -54,87 +55,6 @@ export function LibraryLiveAttendance({ affluence, theme }: LibraryLiveAttendanc
     );
 }
 
-interface LibraryDatesHeaderProps {
-    library: LibraryInfo;
-    timetable: TimetableEntry[];
-    selectedIndex: number;
-    setSelectedIndex: (index: number) => void;
-    flatListRef: React.RefObject<FlatList>;
-    scrollTimeoutRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
-    theme: AppThemeType;
-    insets: EdgeInsets;
-}
-
-export function LibraryDatesHeader({ library, timetable, selectedIndex, setSelectedIndex, flatListRef, scrollTimeoutRef, theme, insets }: LibraryDatesHeaderProps) {
-    const formatDate = (dateString: string) => {
-        if (!dateString) return Translator.get('UNKNOWN');
-        const d = new Date(dateString);
-        if (isNaN(d.getTime())) return dateString;
-        const dayKeys = ['DAY_SUN', 'DAY_MON', 'DAY_TUE', 'DAY_WED', 'DAY_THU', 'DAY_FRI', 'DAY_SAT'];
-        const translatedDay = Translator.get(dayKeys[d.getDay()] as Parameters<typeof Translator.get>[0]);
-        return `${translatedDay} ${d.getDate()}`;
-    };
-
-    return (
-        <View style={{ backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.border, paddingVertical: tokens.space.sm, paddingTop: (insets.top || 0) + 65 }}>
-            <Text 
-                style={{
-                    fontSize: tokens.fontSize.xl,
-                    fontWeight: tokens.fontWeight.bold as never,
-                    color: theme.fontSecondary,
-                    textAlign: 'left',
-                    paddingHorizontal: tokens.space.md,
-                    marginBottom: tokens.space.md,
-                }} 
-                numberOfLines={2}
-            >
-                {library.name || Translator.get('LIBRARY')}
-            </Text>
-            
-            <FlatList
-                ref={flatListRef}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={timetable}
-                keyExtractor={(item) => item.day}
-                contentContainerStyle={{ paddingHorizontal: tokens.space.sm }}
-                onScrollToIndexFailed={(info) => {
-                    scrollTimeoutRef.current = setTimeout(() => {
-                        flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
-                    }, 500);
-                }}
-                renderItem={({ item, index }) => {
-                    const isSelected = index === selectedIndex;
-                    const primaryColor = theme.accent ?? theme.primary;
-
-                    return (
-                        <TouchableOpacity 
-                            onPress={() => setSelectedIndex(index)}
-                            style={{
-                                paddingHorizontal: tokens.space.md,
-                                paddingVertical: tokens.space.sm,
-                                marginHorizontal: tokens.space.xs,
-                                borderRadius: tokens.radius.md,
-                                backgroundColor: theme.greyBackground,
-                                borderWidth: 2,
-                                borderColor: isSelected ? primaryColor : 'transparent',
-                            }}
-                        >
-                            <Text style={{ 
-                                color: isSelected ? primaryColor : theme.fontSecondary,
-                                fontWeight: isSelected ? (tokens.fontWeight.bold as never) : (tokens.fontWeight.medium as never),
-                                fontSize: tokens.fontSize.sm
-                            }}>
-                                {formatDate(item.day)}
-                            </Text>
-                        </TouchableOpacity>
-                    );
-                }}
-            />
-        </View>
-    );
-}
-
 interface LibraryOpeningHoursListProps {
     loading: boolean;
     currentDay: TimetableEntry | undefined;
@@ -149,44 +69,34 @@ export function LibraryOpeningHoursList({ loading, currentDay, theme }: LibraryO
 
     return (
         <>
-            <Text style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold as never, color: theme.font, marginBottom: tokens.space.md }}>
-                {Translator.get('OPENING_HOURS')}
-            </Text>
+            {/* L'intertitre commun des fiches, celui de « S'y rendre » juste dessous. */}
+            <SectionHeader title={Translator.get('OPENING_HOURS')} theme={theme} style={{ paddingHorizontal: 0 }} />
 
             {loading ? (
                 <LoadingState theme={theme} message={Translator.get('LOADING_OPENING_HOURS')} />
             ) : (
                 currentDay && currentDay.openingHours.length > 0 ? (
-                    currentDay.openingHours.map((slot, index) => (
-                        <View key={index} style={[style.course.card, {
-                            backgroundColor: theme.cardBackground,
-                            borderColor: theme.border,
-                            borderWidth: 1,
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            // `course.card` porte des marges cachees (md de chaque cote) qui
-                            // s'ajoutaient au padding de l'ecran : la case d'horaire etait rentree
-                            // de 32 points la ou toute l'application se tient a 16. Meme correction
-                            // que les cases de salles libres.
-                            marginHorizontal: 0,
-                            marginVertical: 0,
-                            marginBottom: tokens.space.sm
-                        }]}>
-                            <Icon icon={{ family: 'material', name: 'schedule' }} size={24} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.md }} />
-                            <Text style={{ fontSize: tokens.fontSize.md, color: theme.font, fontWeight: tokens.fontWeight.medium as never }}>
-                                {formatTime(slot.openingHour)} - {formatTime(slot.closingHour)}
-                            </Text>
-                        </View>
-                    ))
+                    // Une carte pour les creneaux du jour, un filet entre deux (7-J, deuxieme passe) :
+                    // chaque creneau etait une carte, avec une horloge a l'accent qui ne menait nulle part.
+                    <View style={[styles.carte, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
+                        {currentDay.openingHours.map((slot, index) => (
+                            <View key={index}>
+                                {index > 0 ? <View style={[styles.filet, { backgroundColor: theme.border }]} /> : null}
+                                <Text style={[styles.creneau, tokens.texte.chiffres, { color: theme.font }]}>
+                                    {formatTime(slot.openingHour)} – {formatTime(slot.closingHour)}
+                                </Text>
+                            </View>
+                        ))}
+                    </View>
                 ) : (
                     <View style={{ 
                         alignItems: 'center', 
                         paddingVertical: tokens.space.xl, 
                         paddingHorizontal: tokens.space.lg,
-                        backgroundColor: theme.cardBackground, 
-                        borderRadius: tokens.radius.lg, 
-                        borderWidth: 1, 
-                        borderColor: theme.border 
+                        backgroundColor: theme.cardBackground,
+                        borderRadius: tokens.radius.lg,
+                        borderWidth: StyleSheet.hairlineWidth,
+                        borderColor: theme.contourDeCarte,
                     }}>
                         <Icon icon={{ name: 'door-closed-lock' }} size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.sm }} />
                         <Text style={{ 
@@ -204,3 +114,21 @@ export function LibraryOpeningHoursList({ loading, currentDay, theme }: LibraryO
         </>
     );
 }
+
+const styles = StyleSheet.create({
+    carte: {
+        borderRadius: tokens.radius.lg,
+        borderWidth: StyleSheet.hairlineWidth,
+        overflow: 'hidden',
+    },
+    creneau: {
+        fontSize: tokens.fontSize.md,
+        fontWeight: tokens.fontWeight.semibold,
+        paddingHorizontal: tokens.space.md,
+        paddingVertical: tokens.space.sm + tokens.space.xs,
+    },
+    filet: {
+        height: StyleSheet.hairlineWidth,
+        marginLeft: tokens.space.md,
+    },
+});

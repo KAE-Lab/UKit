@@ -230,7 +230,7 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | Composant | Ce qu'il rend | Relevé |
 |---|---|---|
 | [`Card`](../src/shared/ui/Card.tsx) | la surface d'une carte : fond, rayon `xl`, ombre `md` ; son entrée en cascade (`rang`), son reflux au ressort, son échelle sous le doigt (7-I). **Ni largeur ni marges** — elles arrivent par `style` | 6 fois |
-| [`SectionHeader`](../src/shared/ui/SectionHeader.tsx) | titre de section, chevron, destination | 4 fois |
+| [`SectionHeader`](../src/shared/ui/SectionHeader.tsx) | titre de section, chevron, destination ; aussi l'intertitre des fiches (un `style` pour leur retrait) | 4 fois au tableau Campus, et les fiches |
 | [`Badge`](../src/shared/ui/Badge.tsx) | pastille icône + libellé, teinte d'action ou `tone` sémantique | 8 fois |
 | [`MetaRow`](../src/shared/ui/MetaRow.tsx) | ligne « icône + texte secondaire (+ contenu à droite) » | 9 fois |
 | [`EmptyState`](../src/shared/ui/EmptyState.tsx) | icône, message, action facultative — **le même bloc** pour une liste vide et pour une source en panne | 2 fois |
@@ -238,6 +238,7 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`Squelette`](../src/shared/ui/Squelette.tsx) | la forme d'un contenu qui charge, et `Balayage`, le reflet qui la parcourt. **Il ne dessine pas la forme** : elle vient de l'appelant, construite avec les composants du contenu en mode `masque` (`Card`, `MetaRow`, `Badge`, le titre d'une carte). Il annonce son attente aux lecteurs d'écran par sa phrase | posé au 7-I |
 | [`TexteMasque`](../src/shared/ui/TexteMasque.tsx) | une ligne de texte masquée : la hauteur exacte de sa police, une barre à sa place, **aucun caractère rendu** | 2 fois, remonté au 7-I |
 | [`EnTeteDOnglet`](../src/shared/ui/EnTeteDOnglet.tsx) | l'en-tête d'un onglet : **fixe**, le titre à sa place, la teinte de la section dedans, et le contenu qui passe dessous en fondu (`FonduDeBord`), dès le premier point de défilement. `hauteurDeLEnTete(hautSur)` donne le retrait du contenu | posé au 7-J, fixe depuis la deuxième passe |
+| [`BandeauDeCases`](../src/shared/ui/BandeauDeCases.tsx), [`CaseDuRuban`](../src/shared/ui/CaseDuRuban.tsx) | le bandeau fixe d'une fiche (jours d'un menu ou d'une BU, heures d'un bâtiment) dans les cases du ruban du Planning, sur le fond de la page, le fondu en dessous ; le nom du lieu est le titre de la barre. Ce que les cases lisent (dates en heure locale, heures) vit dans `bandeauDeCases.ts`, testé | posé à la deuxième passe de 7-J |
 | [`FonduDeBord`](../src/shared/ui/FonduDeBord.tsx) | le fondu du bord haut d'une zone qui défile sous un en-tête fixe : la couleur unie de la page, pleine en haut, transparente en bas, sur 24 points. Visible au défilement sous un en-tête qui le lit ; toujours visible sur une liste qui lui laisse sa hauteur en rembourrage (le Planning). Il se dessine **dans les bords** de son parent | posé à la deuxième passe de 7-J |
 | [`LogoUKit`](../src/shared/ui/epure/LogoUKit.tsx) | le logo vectoriel, entier ou son U seul (`glyphe="u"`), aux nombres du kit ([`geometrie.ts`](../src/shared/ui/epure/geometrie.ts), pur et testé) ; les couleurs du logo sont `theme.logo`. Fig. 01, le U en écho, n'entre pas dans l'application | posé au 7-J |
 | [`JeuDuPoint`](../src/shared/ui/jeu/JeuDuPoint.tsx) | le jeu du point, pendant la connexion universitaire : physique pure et testée ([`physique.ts`](../src/shared/ui/jeu/physique.ts)), boucle d'images active seulement en partie, absent sous « réduire les animations » | posé au 7-J |
@@ -406,11 +407,11 @@ Acquises, et qui ont coûté à être trouvées :
   à « corriger » vers le second : ce serait changer huit endroits en silence.
 - **La couleur d'action ne titre pas et ne nomme pas** (2026-08-30). Le violet dit « on peut me
   toucher » : les titres de sous-pages (`NavBarHelper`) sont en `theme.font`, et une catégorie de
-  contenu — « Entrées » dans un menu — est un intertitre en petites capitales grises, pas un libellé
-  accentué. Les icônes de section, elles, prennent **une couleur par section** via
-  `theme.sectionsHeaders` (le motif du Planning et de la grille Scolarité, étendu aux fiches par
-  [`CampusSectionHeader`](../src/features/Campus/components/CampusSectionHeader.tsx)) — l'accent y
-  était employé partout, ce qui le banalisait.
+  contenu — « Entrées » dans un menu — est un intertitre gris, pas un libellé accentué. Les icônes de
+  section ont pris ensuite **une couleur par section** (`theme.sectionsHeaders`), défaite à la
+  deuxième passe de 7-J : ces couleurs étrangères à l'identité faisaient « cheap » (review du
+  2026-11-05). Une fiche s'intertitre comme le tableau Campus (`SectionHeader`), et un intertitre
+  gris s'écrit en casse de phrase, plus en petites capitales espacées.
 - **L'identité se pose en filigrane, jamais en ornement qui crie** (2026-08-30). Le logo
   d'établissement de l'en-tête Scolarité — et du formulaire de connexion, en plus grand — est une
   silhouette monochrome sans fond ; les tuiles de la

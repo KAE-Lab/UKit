@@ -241,6 +241,8 @@ const en = {
 	DAY_THU: 'Thu',
 	DAY_FRI: 'Fri',
 	DAY_SAT: 'Sat',
+	// La legende d'une case d'heure (salles libres) : « 14 » au-dessus de « h ».
+	CASE_HEURE: ':00',
 	DAY_SUN: 'Sun',
 	BU_OPEN: "Open",
 	BU_CLOSED: "Closed",

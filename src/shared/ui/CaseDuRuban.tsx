@@ -13,7 +13,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import { tokens, type AppThemeType } from '../theme/Theme';
 
 /** La case est carree : `getItemLayout` du ruban (DayView) en depend. */
 export const TAILLE_DE_CASE = 64;
@@ -27,11 +27,13 @@ export interface CaseDuRubanProps {
     choisie: boolean;
     courante: boolean;
     estompee?: boolean;
+    /** La legende en capitales (« JEU. ») ; faux pour une unite qui s'ecrit en bas de casse (« h »). */
+    basEnCapitales?: boolean;
     onPress: () => void;
     accessibilityLabel?: string;
 }
 
-export function CaseDuRuban({ theme, haut, bas, choisie, courante, estompee = false, onPress, accessibilityLabel }: CaseDuRubanProps) {
+export function CaseDuRuban({ theme, haut, bas, choisie, courante, estompee = false, basEnCapitales = true, onPress, accessibilityLabel }: CaseDuRubanProps) {
     const couleurHaut = choisie ? theme.lightFont : courante ? theme.accent : estompee ? theme.fontTertiary : theme.font;
     const couleurBas = choisie ? theme.lightFont : courante ? theme.accent : theme.fontTertiary;
     return (
@@ -51,7 +53,7 @@ export function CaseDuRuban({ theme, haut, bas, choisie, courante, estompee = fa
             >
                 {haut}
             </Text>
-            <Text style={[styles.bas, { color: couleurBas }]}>{bas}</Text>
+            <Text style={[styles.bas, !basEnCapitales && styles.basEnMinuscules, { color: couleurBas }]}>{bas}</Text>
             {courante && !choisie ? <View style={[styles.point, { backgroundColor: theme.accent }]} /> : null}
         </Pressable>
     );
@@ -80,6 +82,10 @@ const styles = StyleSheet.create({
         fontWeight: tokens.fontWeight.semibold,
         textTransform: 'uppercase',
         letterSpacing: 0.4,
+    },
+    basEnMinuscules: {
+        textTransform: 'none',
+        letterSpacing: 0,
     },
     // Le point d'un etat : rond, comme les points d'etat du depot.
     point: {

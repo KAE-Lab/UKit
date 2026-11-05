@@ -4,7 +4,7 @@ import moment from 'moment';
 
 import * as Haptics from 'expo-haptics';
 
-import { CaseDuRuban } from './CaseDuRuban';
+import { CaseDuRuban } from '../../../shared/ui/CaseDuRuban';
 
 export interface CalendarDayProps {
     currentDay: moment.Moment;

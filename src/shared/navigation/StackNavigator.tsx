@@ -62,6 +62,11 @@ export type RootStackParamList = {
 
 const Stack = createStackNavigator<RootStackParamList>();
 
+/** Le titre d'une fiche : le nom de ce qu'elle montre, « Details » s'il manque. */
+function nomOuDetails(nom: unknown): string {
+    return typeof nom === 'string' && nom.trim() !== '' ? nom : Translator.get('DETAILS');
+}
+
 export default function StackNavigator() {
     return (
         <AppContext.Consumer>
@@ -147,21 +152,21 @@ export default function StackNavigator() {
 
                             {/* La carte du lieu vit dans la fiche (`CampusMapSection`), plus derriere
                                 un bouton d'en-tete : l'ecran plein-page a disparu avec elle. */}
-                            {/* « Details », comme les fiches de BU, de batiment et d'annonce : toutes
-                                les pages de detail portent le meme titre — le nom du lieu vit dans
-                                leur bandeau. */}
-                            <Stack.Screen name="CrousMenu" component={CrousMenuScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route })} />
+                            {/* Une fiche porte le nom de ce qu'elle montre (deuxieme passe de 7-J, accepte
+                                a la review du 2026-11-05) : « Details » ne nommait rien, et le bandeau de
+                                la fiche repetait le nom en gris. Il en est sorti ; « Details » reste le
+                                repli d'un nom absent. */}
+                            <Stack.Screen name="CrousMenu" component={CrousMenuScreen} options={({ route }) => NavBarHelper({ title: nomOuDetails(route.params?.restaurantName), themeName, route })} />
 
-                            {/* « Details » et non le nom de la BU : il vit deja dans le bandeau de la
-                                fiche, et un titre double est un titre de trop. */}
-                            <Stack.Screen name="LibraryDetails" component={LibraryDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route })} />
+                            <Stack.Screen name="LibraryDetails" component={LibraryDetailsScreen} options={({ route }) => NavBarHelper({ title: nomOuDetails(route.params?.library?.name), themeName, route })} />
 
                             <Stack.Screen name="Bde" component={BdeScreen} options={({ route }) => NavBarHelper({ title: Translator.get('ANNOUNCEMENTS'), themeName, route, gestureEnabled: true })} />
 
-                            <Stack.Screen name="BdeDetail" component={BdeDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route, gestureEnabled: true })} />
+                            {/* L'emetteur : il surtitrait l'annonce en petites capitales grises. */}
+                            <Stack.Screen name="BdeDetail" component={BdeDetailsScreen} options={({ route }) => NavBarHelper({ title: nomOuDetails(route.params?.annonce?.issuer_name), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="FreeRoomScreen" component={FreeRoomScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FREE_ROOMS'), themeName, route, gestureEnabled: true })} />
-                            <Stack.Screen name="FreeRoomDetails" component={FreeRoomDetailsScreen} options={({ route }) => NavBarHelper({ title: Translator.get('DETAILS'), themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="FreeRoomDetails" component={FreeRoomDetailsScreen} options={({ route }) => NavBarHelper({ title: nomOuDetails(route.params?.building?.name), themeName, route, gestureEnabled: true })} />
 
                             {/* Pas de bouton de filtre sur un evenement du telephone : il n'a pas d'UE (6.1.x-D). */}
                             <Stack.Screen name="Course" component={CourseScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => route.params?.data?.source === 'telephone' ? null : <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />

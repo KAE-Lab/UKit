@@ -1,121 +1,88 @@
+/**
+ * Un repas du jour, midi ou soir, sur une seule carte (7-J, deuxieme passe).
+ *
+ * La carte se lit comme celle qu'un restaurant affiche a l'entree : le nom du repas, puis chaque
+ * categorie suivie de ses plats, un filet entre deux categories. Elle posait une carte par categorie,
+ * un intertitre en petites capitales et, devant chaque plat, une icone devinee d'apres son nom :
+ * « Steak ou poisson » prenait l'icone d'information pour son « ou », des carottes rapees la feuille
+ * verte du vegetarien, et tout plat inconnu un rond. La typographie suffit, et elle ne se trompe pas.
+ * La review du 2026-11-05 trouvait l'ecran identique a celui d'avant la refonte.
+ */
+
 import React from 'react';
-import { View, Text } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import style, { tokens } from '../../../../shared/theme/Theme';
+import { StyleSheet, Text, View } from 'react-native';
+
+import { tokens, type AppThemeType } from '../../../../shared/theme/Theme';
 import Translator from '../../../../shared/i18n/Translator';
-import { CampusSectionHeader } from '../../components/CampusSectionHeader';
-import { Icon } from '../../../../shared/ui/Icon';
-
-export const getDishIcon = (dishName: string): React.ComponentProps<typeof MaterialCommunityIcons>['name'] => {
-    const str = dishName.toLowerCase();
-
-    const iconMap = [
-        { regex: 'fermé|ferme|fermée|non communiqué|modification|ou|structure|réserve|exceptionnel|formule|le menu', icon: 'information-outline' },
-        { regex: 'bretonne|sans viande|sans porc|végé|veggie|vegan|steak végétal|tofu|soja|falafel', icon: 'leaf' },
-        { regex: 'boisson|soda|coca|fanta|sprite|eau|jus|thé|the|café|cafe', icon: 'bottle-soda' },
-        { regex: 'pizza|pasta box', icon: 'pizza' },
-        { regex: 'frite|chips|snack', icon: 'french-fries' },
-        { regex: 'burger|hamburger', icon: 'hamburger' },
-        { regex: 'tacos|fajita', icon: 'taco' },
-        { regex: 'sandwich|baguette|panini|wrap|croque|hot-dog', icon: 'baguette' },
-        { regex: 'poulet|boeuf|bœuf|porc|veau|agneau|saucisse|viande|steak|lardon|chorizo|dinde|canard|merguez|filet|rôti|haché|kebab|jambon|bacon|cordon bleu|boulette|escalope|pâté|charcuterie', icon: 'food-drumstick' },
-        { regex: 'poisson|saumon|cabillaud|colin|merlu|crevette|calamar|thon|truite|lieu|moule|fruit de mer|hoki|encornet|surimi', icon: 'fish' },
-        { regex: 'oeuf|œuf|omelette', icon: 'egg' },
-        { regex: 'entrée|soupe|potage|velouté|bouillon|gaspacho|crudité|hors d', icon: 'bowl-mix' },
-        { regex: 'fromage|brie|camembert|chèvre|chevre|mozza|emmental|cantal|gruyère|parmesan|kiri|roquefort', icon: 'cheese' },
-        { regex: 'viennoiserie|croissant|chocolatine|brioche', icon: 'food-croissant' },
-        { regex: 'yaourt|lacté|petit suisse|fromage blanc|skyr|faisselle|glace|crème', icon: 'silverware-spoon' },
-        { regex: 'dessert|tarte|pâtisserie|gâteau|cookie|muffin|brownie|entremet|flan|caramel|vanille|chocolat|bonbon|barre|confiserie|macaron|gaufre|crêpe', icon: 'cupcake' },
-        { regex: 'salade|légume|haricot|lentille|pois|carotte|brocoli|chou|courgette|aubergine|épinard|poireau|champignon|céleri|ratatouille|tomate|concombre|maïs', icon: 'leaf' },
-        { regex: 'coquillette|riz|pâte|spaghetti|macaroni|penne|ravioli|semoule|boulgour|blé|quinoa|pomme de terre|purée|gnocchi|nouille', icon: 'pasta' }
-    ];
-
-    const hasPomme = new RegExp(`(^|[\\s'’\\-])(fruit|pomme|banane|orange|kiwi|ananas|poire|fraise|framboise|pêche|abricot|raisin|mangue|melon|pastèque|citron|clémentine|compote)(s|x)?([\\s'’.,;!?:\\-]|$)`, 'i').test(str);
-    const hasPommeDeTerre = new RegExp(`(^|[\\s'’\\-])(pomme de terre)(s|x)?([\\s'’.,;!?:\\-]|$)`, 'i').test(str);
-    if (hasPomme && !hasPommeDeTerre) return 'food-apple';
-
-    for (const item of iconMap) {
-        const regex = new RegExp(`(^|[\\s'’\\-])(${item.regex})(s|x)?([\\s'’.,;!?:\\-]|$)`, 'i');
-        if (regex.test(str)) {
-            return item.icon as React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-        }
-    }
-
-    return 'circle-medium';
-};
+import { SectionHeader } from '../../../../shared/ui/SectionHeader';
+import { sousTitreDePlat } from '../../services/CrousMapping';
 
 interface CrousMealCardProps {
     mealTitle: string;
-    categories: { name: string, dishes: string[] }[];
-    mealType: 'midi' | 'soir';
-    theme: typeof style.Theme['light'];
+    categories: { name: string; dishes: string[] }[] | undefined;
+    theme: AppThemeType;
 }
 
-export function CrousMealCard({ mealTitle, categories, mealType, theme }: CrousMealCardProps) {
+export function CrousMealCard({ mealTitle, categories, theme }: CrousMealCardProps) {
     if (!categories || categories.length === 0) return null;
 
-    // Le soleil pour le midi, la lune pour le soir — et leur couleur suit : orange solaire, bleu
-    // clair nocturne. Les index de `sectionsHeaders`, comme la grille Scolarite (le 4 reste inemploye :
-    // il doublait le 0 en sombre jusqu'en 6.1-C, et les teintes n'ont pas bouge apres le correctif).
-    const iconHeader = mealType === 'midi' ? 'white-balance-sunny' : 'moon-waning-crescent';
-    const couleur = mealType === 'midi' ? 2 : 5;
-
     return (
-        // `md` et non `lg` : les cartes de categories portent deja 8 points de marge basse
-        // (`course.card`), et l'ecart commun des fiches vaut 32 — 8 + 16 + la marge haute de la
-        // tete suivante. A `lg`, ce repas etait la seule section a 40.
-        <View style={{ marginBottom: tokens.space.md }}>
-            <CampusSectionHeader
-                icone={iconHeader}
-                titre={mealTitle}
-                couleur={couleur}
-                theme={theme}
-                style={{ marginTop: tokens.space.sm, marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}
-            />
-
-            {/* Liste des catégories */}
-            {categories.map((cat, index) => (
-                <View key={index} style={[style.course.card, {
-                    backgroundColor: theme.cardBackground,
-                    borderColor: theme.border,
-                    borderWidth: 1
-                }]}>
-                    {/* L'intertitre des Reglages et des horaires : une categorie nomme, elle n'agit
-                        pas — l'accent la faisait passer pour un lien. */}
-                    <Text style={{
-                        fontSize: tokens.fontSize.xs,
-                        fontWeight: tokens.fontWeight.semibold,
-                        color: theme.fontSecondary,
-                        letterSpacing: 0.8,
-                        textTransform: 'uppercase',
-                        marginBottom: tokens.space.sm,
-                    }}>
-                        {cat.name}
-                    </Text>
-                    
-                    {cat.dishes.length > 0 ? cat.dishes.map((dish: string, dIdx: number) => {
-                        const icon = getDishIcon(dish);
-                        return (
-                            // 6 en dur jusqu'a 6.1-E, deux fois dans cette carte : `space.xs` (4)
-                            // pour l'interligne des plats et pour l'ecart icone -> texte (inventaire
-                            // visuel 3.5, ou les deux valeurs 4 et 6 coexistaient sans raison).
-                            <View key={dIdx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
-                                {/* Le vegetarien est le seul plat qui porte une couleur : c'est un etat, donc
-                                    un ton du theme et non un vert Material en dur (jalon 6-K). */}
-                                <Icon
-                                    icon={{ name: icon }}
-                                    size={16}
-                                    color={icon === 'leaf' ? theme.success : theme.fontSecondary}
-                                    style={{ marginRight: tokens.space.xs, marginTop: tokens.space.xxs }}
-                                />
-                                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, flex: 1, lineHeight: 20 }}>{dish}</Text>
-                            </View>
-                        );
-                    }) : (
-                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontStyle: 'italic' }}>{Translator.get('NOT_SPECIFIED')}</Text>
-                    )}
-                </View>
-            ))}
+        <View style={styles.repas}>
+            <SectionHeader title={mealTitle} theme={theme} />
+            <View style={[styles.carte, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
+                {categories.map((categorie, index) => (
+                    <View key={index}>
+                        {index > 0 ? <View style={[styles.filet, { backgroundColor: theme.border }]} /> : null}
+                        <View style={styles.categorie}>
+                            {/* Le gris du texte secondaire : une categorie nomme, elle n'agit pas. */}
+                            <Text style={[styles.nom, { color: theme.fontSecondary }]}>{categorie.name}</Text>
+                            {categorie.dishes.length > 0 ? categorie.dishes.map((plat, rang) => {
+                                const sousTitre = sousTitreDePlat(plat);
+                                return sousTitre !== null ? (
+                                    <Text key={rang} style={[styles.nom, styles.sousTitre, { color: theme.fontSecondary }]}>{sousTitre}</Text>
+                                ) : (
+                                    <Text key={rang} style={[styles.plat, { color: theme.font }]}>{plat}</Text>
+                                );
+                            }) : (
+                                <Text style={[styles.plat, { color: theme.fontTertiary }]}>{Translator.get('NOT_SPECIFIED')}</Text>
+                            )}
+                        </View>
+                    </View>
+                ))}
+            </View>
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    repas: {
+        marginBottom: tokens.space.xl,
+    },
+    carte: {
+        marginHorizontal: tokens.space.md,
+        borderRadius: tokens.radius.lg,
+        borderWidth: StyleSheet.hairlineWidth,
+        overflow: 'hidden',
+    },
+    categorie: {
+        paddingHorizontal: tokens.space.md,
+        paddingVertical: tokens.space.md,
+        gap: tokens.space.sm,
+    },
+    nom: {
+        fontSize: tokens.fontSize.sm,
+        fontWeight: tokens.fontWeight.semibold,
+    },
+    // « Autre plat : » et ses pareils, que la source glisse parmi les plats (`sousTitreDePlat`).
+    sousTitre: {
+        marginTop: tokens.space.xs,
+    },
+    plat: {
+        fontSize: tokens.fontSize.md,
+        lineHeight: 22,
+    },
+    filet: {
+        height: StyleSheet.hairlineWidth,
+        marginLeft: tokens.space.md,
+    },
+});

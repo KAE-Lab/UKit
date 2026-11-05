@@ -69,19 +69,27 @@ Trois décisions, et chacune corrige un essai précédent :
   carte du restaurant a suivi la même règle depuis : elle était un bouton d'en-tête, elle est devenue
   la section « S'y rendre » en pied de page.
 
-La grammaire est celle d'un repas juste au-dessus : une icône dans son carré teinté, un titre, puis
-une carte. Les filets séparent les lignes **sauf autour d'un intertitre** : un titre touche ce qu'il
-annonce.
+La grammaire est celle d'un repas juste au-dessus : un intertitre, puis une carte. Les filets
+séparent les lignes **sauf autour d'un intertitre** : un titre touche ce qu'il annonce.
 
-**Chaque section de la fiche porte sa couleur** depuis le 2026-08-30
-([`CampusSectionHeader`](../../src/features/Campus/components/CampusSectionHeader.tsx)) : déjeuner en
-orange solaire, dîner en bleu nocturne, horaires en bleu, « S'y rendre » en vert — les index de
-`theme.sectionsHeaders`, la palette du Planning et de la grille Scolarité. Tout était à l'accent, qui
-est la couleur d'action : employé partout, il ne disait plus rien. Les **catégories** d'un menu
-(« Entrées »…) cessent pour la même raison d'être accentuées : ce sont des intertitres en petites
-capitales grises — une catégorie nomme, elle n'agit pas. Et le titre de l'en-tête est « Détails »,
-comme toutes les fiches — le nom du restaurant vit dans le bandeau
-([navigation.md](../navigation.md)).
+**La fiche a été refaite à la deuxième passe de 7-J** : la review du 2026-11-05 la trouvait identique
+à celle d'avant la refonte.
+
+- Le nom du restaurant est le **titre de la barre** ; « Détails » ne nommait rien. Le bandeau ne porte
+  plus que les jours, dans les cases du ruban du Planning
+  ([`BandeauDeCases`](../../src/shared/ui/BandeauDeCases.tsx)), et le contenu passe dessous en fondu.
+- Un repas est **une seule carte** ([`CrousMealCard`](../../src/features/Campus/Crous/components/CrousMealCard.tsx)) :
+  chaque catégorie en gris, suivie de ses plats, un filet entre deux catégories. Elle posait une carte
+  par catégorie et, devant chaque plat, une icône devinée d'après son nom, qui se trompait :
+  « Steak ou poisson » prenait l'icône d'information pour son « ou », des carottes râpées la feuille
+  du végétarien.
+- Une ligne de plat qui finit par deux-points (« Autre plat : ») annonce les suivantes : elle se rend
+  en sous-titre ([`sousTitreDePlat`](../../src/features/Campus/services/CrousMapping.ts)).
+- Les intertitres (midi, soir, horaires, « S'y rendre ») sont ceux du tableau Campus
+  ([`SectionHeader`](../../src/shared/ui/SectionHeader.tsx)). Ils portaient depuis le 2026-08-30 un
+  carré teinté d'une couleur par section (orange, bleu, vert), étrangère à l'identité : la review les
+  trouvait « cheap ». Catégories et périodes d'horaires passent des petites capitales à la casse de
+  phrase.
 
 ![Le menu d'un restaurant un jour de service, bandeau de dates et plats par catégorie](../screenshots/crous-menu.png)
 
@@ -106,7 +114,7 @@ CrousScreen
 CrousMenuScreen  (params : restaurantId, restaurantName, location)
   ├─ CrousService.fetchRestaurantMenu(restaurantId)
   │     └─ Blueprint ukit.campus.restaurant-menu
-  ├─ CrousDateHeader     sélection du jour
+  ├─ BandeauDeCases      sélection du jour (shared/ui, commun aux fiches)
   └─ CrousMealCard       une carte par service (midi, soir)
 ```
 
@@ -266,8 +274,7 @@ de parité ([tools/parity/README.md](../../tools/parity/README.md)).
 | [`Crous/CrousScreen.tsx`](../../src/features/Campus/Crous/CrousScreen.tsx) | liste des restaurants : composition, tri, filtres, recherche |
 | [`Crous/CrousMenuScreen.tsx`](../../src/features/Campus/Crous/CrousMenuScreen.tsx) | fiche d'un restaurant : menus par jour et par service, horaires, carte « S'y rendre », état vide, état d'échec |
 | [`Crous/components/CrousRestaurantListItem.tsx`](../../src/features/Campus/Crous/components/CrousRestaurantListItem.tsx) | ligne de liste d'un restaurant |
-| [`Crous/components/CrousDateHeader.tsx`](../../src/features/Campus/Crous/components/CrousDateHeader.tsx) | bandeau de sélection du jour dans la fiche |
-| [`Crous/components/CrousMealCard.tsx`](../../src/features/Campus/Crous/components/CrousMealCard.tsx) | carte d'un service (midi ou soir), catégories et plats |
+| [`Crous/components/CrousMealCard.tsx`](../../src/features/Campus/Crous/components/CrousMealCard.tsx) | carte d'un service (midi ou soir) : catégories, plats, sous-titres de plats |
 | [`hooks/useCrousRestaurants.ts`](../../src/features/Campus/hooks/useCrousRestaurants.ts) | chargement, échec et nouvel essai, partagés par la liste et le carrousel |
 | [`services/CrousService.ts`](../../src/features/Campus/services/CrousService.ts) | orchestration des deux Blueprints, distances et tri |
 | [`services/CrousMapping.ts`](../../src/features/Campus/services/CrousMapping.ts) | le contrat et la projection : date, horaires, services — sans plateforme |

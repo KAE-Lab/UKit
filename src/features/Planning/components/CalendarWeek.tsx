@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import moment from 'moment';
 
 import Translator from '../../../shared/i18n/Translator';
-import { CaseDuRuban } from './CaseDuRuban';
+import { CaseDuRuban } from '../../../shared/ui/CaseDuRuban';
 
 export interface CalendarWeekProps {
     currentWeek: { week: number; year: number };

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from 'react';
 import { View, ScrollView } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import style, { tokens } from '../../../shared/theme/Theme';
@@ -13,14 +13,16 @@ import { PiedDAction } from '../../../shared/ui/PiedDAction';
 import { compter } from '../../../shared/mesure';
 import { CampusFailureNotice } from '../components/CampusLayoutComponents';
 import { CampusMapSection } from '../components/CampusMapSection';
-import { LibraryLiveAttendance, LibraryDatesHeader, LibraryOpeningHoursList } from './components/LibraryDetailsComponents';
+import { LibraryLiveAttendance, LibraryOpeningHoursList } from './components/LibraryDetailsComponents';
+import { BandeauDeCases, caseDeDate } from '../../../shared/ui/BandeauDeCases';
+import { FonduDeBord, HAUTEUR_DU_FONDU } from '../../../shared/ui/FonduDeBord';
+import { maintenant } from '../../../shared/services/Temps';
 
 export default function LibraryDetailsScreen({ route }: { route: { params: { library: import('../services/LibraryService').LibraryInfo; affluence: import('../services/LibraryService').AffluencesData | null } } }) {
     const { library, affluence } = route.params;
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
-    const insets = useSafeAreaInsets();
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
     const {
@@ -29,8 +31,6 @@ export default function LibraryDetailsScreen({ route }: { route: { params: { lib
         loading,
         selectedIndex,
         setSelectedIndex,
-        flatListRef,
-        scrollTimeoutRef,
         retry
     } = useLibraryTimetableData(library);
 
@@ -46,18 +46,18 @@ export default function LibraryDetailsScreen({ route }: { route: { params: { lib
     return (
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             
-            <LibraryDatesHeader 
-                library={library} 
-                timetable={timetable} 
-                selectedIndex={selectedIndex} 
-                setSelectedIndex={setSelectedIndex} 
-                flatListRef={flatListRef} 
-                scrollTimeoutRef={scrollTimeoutRef} 
-                theme={theme} 
-                insets={insets} 
+            {/* Le nom de la bibliotheque est le titre de la barre ; le bandeau ne porte que les jours. */}
+            <BandeauDeCases
+                theme={theme}
+                fond={theme.courseBackground}
+                // « Aujourd'hui » vient de la source, comme avant : Affluences le dit, l'appareil ne le devine pas.
+                cases={timetable.map((entree) => ({ ...caseDeDate(entree.day, entree.day, maintenant()), courante: entree.isToday === true }))}
+                choisie={selectedIndex}
+                onChoisir={setSelectedIndex}
             />
 
-            <ScrollView style={{ flex: 1, padding: tokens.space.md }}>
+            <View style={{ flex: 1 }}>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingTop: HAUTEUR_DU_FONDU }}>
                 
                 <LibraryLiveAttendance affluence={affluence} theme={theme} />
 
@@ -74,12 +74,14 @@ export default function LibraryDetailsScreen({ route }: { route: { params: { lib
                     location={{ lat: library.lat, lng: library.lng }}
                     markerTitle={library.name}
                     theme={theme}
-                    style={{ marginTop: tokens.space.lg }}
+                    style={{ marginTop: tokens.space.xl }}
                 />
 
                 {/* La barre de reservation est flottante : le defilement degage sa hauteur. */}
                 <View style={{ height: PIED_FLOTTANT_DEGAGEMENT }} />
             </ScrollView>
+            <FonduDeBord fond={theme.courseBackground} />
+            </View>
 
             {/* L'action principale de la fiche, remplie : un retour du formulaire demandait une reservation
                 qui existait — discrete, elle ne se voyait pas (6.2.x). Et dans la vue integree : c'etait

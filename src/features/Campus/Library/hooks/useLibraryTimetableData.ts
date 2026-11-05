@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { FlatList } from 'react-native';
 import LibraryService, { TimetableEntry, LibraryInfo } from '../../services/LibraryService';
 import type { UkitFailure } from '../../../../shared/aetherius';
 
@@ -12,14 +11,11 @@ export function useLibraryTimetableData(library: LibraryInfo) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [weekOffset, setWeekOffset] = useState(0);
     
-    const flatListRef = useRef<FlatList>(null);
     const mountedRef = useRef(true);
-    const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         return () => {
             mountedRef.current = false;
-            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
         };
     }, []);
 
@@ -56,18 +52,7 @@ export function useLibraryTimetableData(library: LibraryInfo) {
         setLoading(false);
     };
 
-    useEffect(() => {
-        if (timetable.length > 0 && flatListRef.current) {
-            const timerId = setTimeout(() => {
-                flatListRef.current?.scrollToIndex({
-                    index: selectedIndex,
-                    animated: true,
-                    viewPosition: 0.5
-                });
-            }, 100);
-            return () => clearTimeout(timerId);
-        }
-    }, [selectedIndex, timetable]);
+    // Le recentrage de la case choisie vit dans le bandeau partage des fiches (`BandeauDeCases`).
 
     return {
         timetable,
@@ -77,8 +62,6 @@ export function useLibraryTimetableData(library: LibraryInfo) {
         setSelectedIndex,
         weekOffset,
         setWeekOffset,
-        flatListRef,
-        scrollTimeoutRef,
         retry: () => loadTimetable(weekOffset)
     };
 }

@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { Text, TouchableOpacity, type StyleProp, type ViewStyle } from 'react-native';
 
 import { tokens, AppThemeType } from '../theme/Theme';
 import { Icon } from './Icon';
@@ -20,17 +20,22 @@ export interface SectionHeaderProps {
     theme: AppThemeType;
     /** Absent, l'en-tete n'est plus tactile et le chevron disparait : on n'annonce pas une destination qui n'existe pas. */
     onPress?: () => void;
+    /**
+     * Les marges d'un intertitre de fiche (7-J, deuxieme passe) : une fiche s'intertitre comme le
+     * tableau Campus, mais dans un conteneur souvent deja en retrait.
+     */
+    style?: StyleProp<ViewStyle>;
 }
 
-export function SectionHeader({ title, theme, onPress }: SectionHeaderProps) {
+export function SectionHeader({ title, theme, onPress, style }: SectionHeaderProps) {
     return (
         <TouchableOpacity
-            style={{
+            style={[{
                 flexDirection: 'row',
                 alignItems: 'center',
                 paddingHorizontal: tokens.space.md,
                 marginBottom: tokens.space.sm,
-            }}
+            }, style]}
             onPress={onPress}
             disabled={onPress === undefined}
             activeOpacity={0.7}

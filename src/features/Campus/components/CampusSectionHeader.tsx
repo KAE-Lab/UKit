@@ -1,18 +1,16 @@
 /**
- * La tete d'une section de fiche : une icone dans son carre teinte, puis le titre.
+ * La tete d'un chapitre d'annonce : son icone dans le gris du texte secondaire, puis le titre.
  *
- * Les fiches de restaurant et de bibliotheque posaient toutes leurs icones de section a l'accent —
- * dejeuner, diner, horaires, carte, tout violet — et le violet est deja la couleur d'action de
- * l'application. La grille Scolarite avait pose la reponse : **une couleur par section**, prise dans
- * `theme.sectionsHeaders` — la palette categorielle que le Planning emploie depuis toujours — et
- * portee par un carre arrondi, jamais un disque (docs/theme.md).
- *
- * L'index et non une couleur ecrite : la palette est du theme, donc elle suit le mode sombre. Meme
- * piege que chez les widgets : en sombre, les index 0 et 4 portent la meme valeur — eviter le 4.
+ * Elle titrait toutes les sections des fiches, chacune dans un carre teinte d'une couleur de
+ * `theme.sectionsHeaders` : orange pour le midi, bleu pour le soir, vert pour s'y rendre. La review du
+ * 2026-11-05 trouvait ces couleurs etrangeres a l'identite, et « cheap » (deuxieme passe de 7-J). Les
+ * fiches s'intertitrent depuis comme le tableau Campus (`SectionHeader`) ; il ne reste ici que les
+ * chapitres d'une annonce, dont l'icone vient du texte de l'annonce et dit quelque chose (un lieu, une
+ * date). L'icone reste, la couleur part.
  */
 
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
@@ -21,33 +19,18 @@ import { Icon } from '../../../shared/ui/Icon';
 export interface CampusSectionHeaderProps {
     icone: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
     titre: string;
-    /** L'index dans `theme.sectionsHeaders`. Le repli sur l'accent couvre un index hors palette. */
-    couleur: number;
     theme: AppThemeType;
-    style?: import('react-native').StyleProp<import('react-native').ViewStyle>;
+    style?: StyleProp<ViewStyle>;
 }
 
-export function CampusSectionHeader({ icone, titre, couleur, theme, style }: CampusSectionHeaderProps) {
-    const teinte = theme.sectionsHeaders[couleur] ?? theme.accent ?? theme.primary;
-
+export function CampusSectionHeader({ icone, titre, theme, style }: CampusSectionHeaderProps) {
     return (
-        <View style={[{ flexDirection: 'row', alignItems: 'center' }, style]}>
-            {/* `1A` = 10 % d'opacite, le fond des surfaces d'icone de toute l'application. */}
-            <View style={{
-                width: 32,
-                height: 32,
-                borderRadius: tokens.radius.md,
-                backgroundColor: `${teinte}1A`,
-                justifyContent: 'center',
-                alignItems: 'center',
-            }}>
-                <Icon icon={{ name: icone }} size={18} color={teinte} />
-            </View>
+        <View style={[{ flexDirection: 'row', alignItems: 'center', gap: tokens.space.sm }, style]}>
+            <Icon icon={{ name: icone }} size={20} color={theme.fontSecondary} />
             <Text style={{
                 fontSize: tokens.fontSize.lg,
                 fontWeight: tokens.fontWeight.bold,
                 color: theme.font,
-                marginLeft: tokens.space.sm,
                 flexShrink: 1,
             }}>
                 {titre}

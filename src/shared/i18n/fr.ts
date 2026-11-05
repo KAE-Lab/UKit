@@ -246,6 +246,8 @@ const fr: TranslationDict = {
 	DAY_THU: 'Jeu',
 	DAY_FRI: 'Ven',
 	DAY_SAT: 'Sam',
+	// La legende d'une case d'heure (salles libres) : « 14 » au-dessus de « h ».
+	CASE_HEURE: 'h',
 	DAY_SUN: 'Dim',
 	BU_OPEN: "Ouverte",
 	BU_CLOSED: "Fermée",

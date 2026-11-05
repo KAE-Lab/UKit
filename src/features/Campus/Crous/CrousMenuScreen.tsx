@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CrousService, CrousDayMenu } from '../services/CrousService';
 import { structurerHoraires, type LigneHoraire } from '../services/CrousMapping';
@@ -12,12 +12,14 @@ import type { UkitFailure } from '../../../shared/aetherius';
 import { compter } from '../../../shared/mesure';
 import { CampusFailureNotice } from '../components/CampusLayoutComponents';
 import { CampusMapSection } from '../components/CampusMapSection';
-import { CampusSectionHeader } from '../components/CampusSectionHeader';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { CrousMealCard } from './components/CrousMealCard';
-import { CrousDateHeader } from './components/CrousDateHeader';
+import { BandeauDeCases, caseDeDate } from '../../../shared/ui/BandeauDeCases';
+import { FonduDeBord, HAUTEUR_DU_FONDU } from '../../../shared/ui/FonduDeBord';
+import { SectionHeader } from '../../../shared/ui/SectionHeader';
+import { maintenant } from '../../../shared/services/Temps';
 import { Icon } from '../../../shared/ui/Icon';
 
 /**
@@ -51,18 +53,16 @@ function Filet({ theme }: { theme: AppThemeType }) {
  * il alignait des lignes brutes.
  */
 function LigneDHoraire({ ligne, theme }: { ligne: LigneHoraire; theme: AppThemeType }) {
-    // Une **periode** cadre un groupe de lignes : c'est l'intertitre des Reglages, a l'identique
-    // (`theme.settings.separationText`). Un **guichet**, lui, se lit comme un nom de comptoir — donc
+    // Une **periode** cadre un groupe de lignes : l'intertitre gris des categories du menu, en
+    // casse de phrase depuis la deuxieme passe de 7-J (les petites capitales espacees sont un tic). Un **guichet**, lui, se lit comme un nom de comptoir — donc
     // comme la colonne gauche d'un service, en gras : les deux etaient rendus a l'identique et un
     // guichet passait pour une plage de jours.
     if (ligne.kind === 'periode') {
         return (
             <Text style={{
                 color: theme.fontSecondary,
-                fontSize: tokens.fontSize.xs,
+                fontSize: tokens.fontSize.sm,
                 fontWeight: tokens.fontWeight.semibold,
-                letterSpacing: 0.8,
-                textTransform: 'uppercase',
                 paddingHorizontal: tokens.space.md,
                 paddingTop: tokens.space.md,
                 paddingBottom: tokens.space.xs,
@@ -144,29 +144,22 @@ function LigneDHoraire({ ligne, theme }: { ligne: LigneHoraire; theme: AppThemeT
  *   La carte du restaurant a suivi la meme regle depuis : elle etait un bouton d'en-tete, elle est
  *   devenue la section « S'y rendre » en pied de page (`CampusMapSection`).
  *
- * La grammaire est celle d'un repas juste au-dessus : une icone d'accent, un titre, puis une carte.
+ * La grammaire est celle d'un repas juste au-dessus : un intertitre, puis une carte.
  */
 function HorairesDuRestaurant({ theme, lignes }: { theme: AppThemeType; lignes?: string[] }) {
     const structurees = structurerHoraires(lignes ?? []);
     if (structurees.length === 0) return null;
 
     return (
-        // `lg` et non `xl` : l'ecart commun des fiches — voir CrousMealCard.
-        <View style={{ marginBottom: tokens.space.lg }}>
-            {/* Le bleu (0) : la section de reference de la fiche, comme la messagerie chez Scolarite. */}
-            <CampusSectionHeader
-                icone="calendar-clock"
-                titre={Translator.get('OPENING_HOURS')}
-                couleur={0}
-                theme={theme}
-                style={{ marginTop: tokens.space.sm, marginBottom: tokens.space.md, paddingHorizontal: tokens.space.md }}
-            />
+        // `xl` : l'ecart commun des sections d'une fiche, celui des repas (CrousMealCard).
+        <View style={{ marginBottom: tokens.space.xl }}>
+            <SectionHeader title={Translator.get('OPENING_HOURS')} theme={theme} />
 
             <View style={{
                 backgroundColor: theme.cardBackground,
                 borderRadius: tokens.radius.lg,
-                borderWidth: 1,
-                borderColor: theme.border,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: theme.contourDeCarte,
                 marginHorizontal: tokens.space.md,
                 overflow: 'hidden',
                 paddingBottom: tokens.space.xs,
@@ -196,7 +189,7 @@ function HorairesDuRestaurant({ theme, lignes }: { theme: AppThemeType; lignes?:
 function PlatsDuJour({ menu, theme }: { menu: CrousDayMenu; theme: AppThemeType }) {
     if (menu.midi?.length === 0 && menu.soir?.length === 0) {
         return (
-            <Text style={{ textAlign: 'center', color: theme.fontSecondary, marginTop: tokens.space.xl }}>
+            <Text style={{ textAlign: 'center', color: theme.fontSecondary, marginTop: tokens.space.lg, marginBottom: tokens.space.xl, paddingHorizontal: tokens.space.xl }}>
                 {Translator.get('NO_DISH_INFO')}
             </Text>
         );
@@ -204,29 +197,16 @@ function PlatsDuJour({ menu, theme }: { menu: CrousDayMenu; theme: AppThemeType 
 
     return (
         <>
-            <CrousMealCard mealTitle={Translator.get('LUNCH')} categories={menu.midi} mealType="midi" theme={theme} />
-            <CrousMealCard mealTitle={Translator.get('DINNER')} categories={menu.soir} mealType="soir" theme={theme} />
+            <CrousMealCard mealTitle={Translator.get('LUNCH')} categories={menu.midi} theme={theme} />
+            <CrousMealCard mealTitle={Translator.get('DINNER')} categories={menu.soir} theme={theme} />
         </>
     );
 }
-
-// "2024-03-25" -> "Lun 25"
-const formatDate = (dateString: string | null) => {
-    if (!dateString) return Translator.get('UNKNOWN');
-
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return dateString;
-
-    const dayKeys = ['DAY_SUN', 'DAY_MON', 'DAY_TUE', 'DAY_WED', 'DAY_THU', 'DAY_FRI', 'DAY_SAT'];
-    const translatedDay = Translator.get(dayKeys[d.getDay()] as Parameters<typeof Translator.get>[0]);
-    return `${translatedDay} ${d.getDate()}`;
-};
 
 export default function CrousMenuScreen({ route }: { route: { params: { restaurantId: string; restaurantName: string; location?: { lat: number; lng: number }; openingLines?: string[] } } }) {
     const { restaurantId, restaurantName, location, openingLines } = route.params;
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const theme = style.Theme[AppContextValues.themeName];
-    const insets = useSafeAreaInsets();
 
     const [menus, setMenus] = useState<CrousDayMenu[]>([]);
     const [failure, setFailure] = useState<UkitFailure | undefined>(undefined);
@@ -240,8 +220,8 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
         };
     }, []);
 
-    // Le titre vient du navigateur (« Menu », neutre, comme toute sous-page) : l'ecran surchargeait
-    // le sien en violet, seul de la pile — le nom du restaurant, lui, vit dans le bandeau.
+    // Le titre de la barre est le nom du restaurant (StackNavigator, deuxieme passe de 7-J) : « Details »
+    // ne nommait rien, et le bandeau le repetait en gris au-dessus des jours.
     useEffect(() => {
         // La fiche ouverte compte (7-D), par le code Croustillant du restaurant.
         compter('resto.ouverture', restaurantId);
@@ -305,36 +285,31 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
     return (
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             
-            {/* ── Bandeau des dates défilant horizontalement ── */}
-            <CrousDateHeader
-                menus={menus}
-                selectedIndex={selectedIndex}
-                setSelectedIndex={setSelectedIndex}
+            <BandeauDeCases
                 theme={theme}
-                restaurantName={restaurantName}
-                insets={insets}
-                formatDate={formatDate}
+                fond={theme.courseBackground}
+                cases={menus.map((menu, index) => caseDeDate(menu.date ?? String(index), menu.date, maintenant()))}
+                choisie={selectedIndex}
+                onChoisir={setSelectedIndex}
             />
 
-            {/* ── Affichage des plats ── */}
-            <ScrollView style={{ flex: 1, paddingTop: tokens.space.md }}>
+            <View style={{ flex: 1 }}>
+                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: HAUTEUR_DU_FONDU }}>
+                    <PlatsDuJour menu={currentMenu} theme={theme} />
+                    <HorairesDuRestaurant theme={theme} lignes={openingLines} />
 
-                <PlatsDuJour menu={currentMenu} theme={theme} />
-                <HorairesDuRestaurant theme={theme} lignes={openingLines} />
+                    {/* En pied, comme les horaires : le lieu ne depend pas du jour selectionne. */}
+                    <CampusMapSection
+                        location={location}
+                        markerTitle={restaurantName}
+                        theme={theme}
+                        style={{ paddingHorizontal: tokens.space.md, marginBottom: tokens.space.xl }}
+                    />
 
-                {/* En pied, comme les horaires : le lieu ne depend pas du jour selectionne. Le
-                    `marginTop: sm` est celui que les tetes de section portent : sans lui, l'ecart
-                    horaires -> carte valait huit points de moins que plats -> horaires. */}
-                <CampusMapSection
-                    location={location}
-                    markerTitle={restaurantName}
-                    theme={theme}
-                    style={{ paddingHorizontal: tokens.space.md, marginTop: tokens.space.sm, marginBottom: tokens.space.xl }}
-                />
-
-                <View style={{ height: tokens.space.xxl }} />
-            </ScrollView>
-
+                    <View style={{ height: tokens.space.xxl }} />
+                </ScrollView>
+                <FonduDeBord fond={theme.courseBackground} />
+            </View>
         </SafeAreaView>
     );
 }
