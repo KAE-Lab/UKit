@@ -17,6 +17,8 @@ import { Badge } from '../../../shared/ui/Badge';
 import { Icon, type IconSpec } from '../../../shared/ui/Icon';
 import { ProgressBar } from '../../../shared/ui/ProgressBar';
 import { TexteMasque } from '../../../shared/ui/TexteMasque';
+import Translator from '../../../shared/i18n/Translator';
+import { formaterDistance } from '../services/distance';
 
 interface CardTitleRowProps {
     title: string;
@@ -108,9 +110,8 @@ export function CardTitleRow({
 export function DistanceBadge({ distance, theme, icon, masque = false }: {
     distance: number; theme: AppThemeType; icon: IconSpec; masque?: boolean;
 }) {
-    const libelle = distance < 1
-        ? `${Math.round(distance * 1000)} m`
-        : `${distance.toFixed(1)} km`;
+    // Ecrite pour etre lue d'un coup, dans la langue de l'application (distance.ts, 7-J).
+    const libelle = formaterDistance(distance, Translator.getLanguage());
 
     return <Badge label={libelle} theme={theme} icon={icon} masque={masque} />;
 }
