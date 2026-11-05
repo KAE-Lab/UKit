@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
         paddingBottom: tokens.space.sm,
     },
     version: {
-        borderRadius: tokens.radius.pill,
+        borderRadius: tokens.radius.md,
         paddingHorizontal: tokens.space.md,
         paddingVertical: tokens.space.xs,
         marginTop: tokens.space.md,

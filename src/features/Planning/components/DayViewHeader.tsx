@@ -115,14 +115,21 @@ const renderNavigation = (
                 </Text>
             </TouchableOpacity>
 
-            {/* Label central */}
-            <Text style={{
-                fontSize: tokens.fontSize.md,
-                fontWeight: tokens.fontWeight.semibold as never,
-                color: theme.fontSecondary,
-                flex: 1,
-                textAlign: 'center',
-            }}>
+            {/* Label central. Il se reduit plutot que de se couper : a 1,3 sur 360 points, les deux
+                boutons grandissent et « Novembre » se cassait en « Nove » / « mbre » (7-J). */}
+            <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                style={{
+                    fontSize: tokens.fontSize.md,
+                    fontWeight: tokens.fontWeight.semibold as never,
+                    color: theme.fontSecondary,
+                    flex: 1,
+                    textAlign: 'center',
+                    marginHorizontal: tokens.space.xs,
+                }}
+            >
                 {centerLabel}
             </Text>
 
