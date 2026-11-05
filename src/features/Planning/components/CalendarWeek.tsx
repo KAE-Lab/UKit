@@ -1,8 +1,9 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
-import Translator from '../../../shared/i18n/Translator';
+import * as Haptics from 'expo-haptics';
+import moment from 'moment';
 
-import { tokens } from '../../../shared/theme/Theme';
+import Translator from '../../../shared/i18n/Translator';
+import { CaseDuRuban } from './CaseDuRuban';
 
 export interface CalendarWeekProps {
     currentWeek: { week: number; year: number };
@@ -14,6 +15,7 @@ export interface CalendarWeekProps {
 
 class CalendarWeek extends React.Component<CalendarWeekProps> {
     _onPress = () => {
+        void Haptics.selectionAsync().catch(() => undefined);
         if (this.props.onPressItem) {
             requestAnimationFrame(() => {
                 this.props.onPressItem(this.props.week);
@@ -21,9 +23,9 @@ class CalendarWeek extends React.Component<CalendarWeekProps> {
         }
     };
 
-    static getBackgroundColor(props: CalendarWeekProps) {
-        if (props.week.week === props.currentWeek.week && props.week.year === props.currentWeek.year) return props.theme.primary + '26';
-        return 'transparent';
+    /** Ce qui change l'apparence d'une case hors de la selection : la semaine courante et le theme. */
+    static apparence(props: CalendarWeekProps) {
+        return `${props.week.week === props.currentWeek.week && props.week.year === props.currentWeek.year}-${props.theme.accent}`;
     }
 
     static isSelected(props: CalendarWeekProps) {
@@ -35,59 +37,24 @@ class CalendarWeek extends React.Component<CalendarWeekProps> {
 
     shouldComponentUpdate(nextProps: CalendarWeekProps) {
         return (
-            CalendarWeek.getBackgroundColor(nextProps) !== CalendarWeek.getBackgroundColor(this.props) ||
+            CalendarWeek.apparence(nextProps) !== CalendarWeek.apparence(this.props) ||
             CalendarWeek.isSelected(nextProps) !== CalendarWeek.isSelected(this.props)
         );
     }
 
     render() {
-        const { theme } = this.props;
-        const selected = CalendarWeek.isSelected(this.props);
-        const bgColor  = CalendarWeek.getBackgroundColor(this.props);
-        const color    = selected ? theme.primary : theme.font;
-
         return (
-            <TouchableOpacity
+            <CaseDuRuban
+                theme={this.props.theme}
+                haut={this.props.week.week}
+                // Le lundi de la semaine, et non « S.45 » sous « 45 » : la case disait deux fois son
+                // numero, elle dit maintenant ou il tombe (7-J).
+                bas={moment().year(this.props.week.year).isoWeek(this.props.week.week).isoWeekday(1).format('D MMM')}
+                accessibilityLabel={`${Translator.get('WEEK_SHORT')}${this.props.week.week}`}
+                choisie={CalendarWeek.isSelected(this.props)}
+                courante={this.props.week.week === this.props.currentWeek.week && this.props.week.year === this.props.currentWeek.year}
                 onPress={this._onPress}
-                style={{
-                    width: 64,
-                    height: 64,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: tokens.radius.md,
-                    backgroundColor: bgColor,
-                    borderWidth: selected ? 2 : 0,
-                    borderColor: selected ? theme.primary : 'transparent',
-                }}>
-                {/* Numéro de semaine */}
-                <Text style={{
-                    textAlign: 'center',
-                    // Le parent a une largeur ferme : l'etirement mord, et Android cesse de tronquer.
-                    alignSelf: 'stretch',
-                    fontSize: tokens.fontSize.xl,
-                    fontWeight: selected
-                        ? tokens.fontWeight.bold
-                        : tokens.fontWeight.regular,
-                    color,
-                    marginBottom: tokens.space.xs,
-                }}>
-                    {this.props.week.week}
-                </Text>
-                {/* Label "S.XX" */}
-                <Text style={{
-                    textAlign: 'center',
-                    // Le parent a une largeur ferme : l'etirement mord, et Android cesse de tronquer.
-                    alignSelf: 'stretch',
-                    fontSize: tokens.fontSize.xs,
-                    fontWeight: tokens.fontWeight.medium,
-                    color,
-                    opacity: selected ? 1 : 0.6,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.5,
-                }}>
-                    {`${Translator.get('WEEK_SHORT')}${this.props.week.week}`}
-                </Text>
-            </TouchableOpacity>
+            />
         );
     }
 }

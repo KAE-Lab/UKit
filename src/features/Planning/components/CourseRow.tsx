@@ -1,21 +1,37 @@
-import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+/**
+ * La carte d'un cours : un creneau de la journee (jalon 7-J, 2026-11-05).
+ *
+ * **Ce qu'on cherche d'abord est en haut.** L'heure, en chiffres tabulaires, dans sa colonne ; puis le
+ * titre ; puis la **salle**, au poids du texte principal. Le reste suit par importance (enseignant,
+ * groupe, code d'UE) dans le gris secondaire. Avant la refonte, la salle tombait en quatrieme ligne
+ * sur six, au meme poids que le code d'UE ; les semaines du cours, qu'on ne consulte que dans la
+ * fiche, y restent seules ; et une ligne que la source sert deux fois ne s'affiche qu'une
+ * (`lignesDuCreneau`).
+ *
+ * **Le rail dit l'etat.** La couleur du cours borde la carte a gauche, comme avant ; pendant le cours,
+ * le rail se remplit de haut en bas avec le temps ecoule, et le temps qui reste s'ecrit sous l'heure
+ * de fin. Un cours passe s'efface a moitie : on le lit encore, il ne retient plus le regard. La carte
+ * tire son etat de ses propres heures (`etatDuCours`), aujourd'hui seulement ; hors vue jour, elle est
+ * toujours « a venir ».
+ *
+ * **Le carrousel des cours superposes** garde ses trois formes essayees puis defaites : en carrousel,
+ * le titre et chaque ligne tiennent sur une ligne, la derniere laisse le coin bas droit a l'indicateur
+ * de pages, et la carte s'etire a la hauteur de la rangee.
+ */
+
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import Reanimated from 'react-native-reanimated';
 
-import style, { tokens } from '../../../shared/theme/Theme';
+import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import { useEnfoncement } from '../../../shared/ui/useEnfoncement';
 import { CourseData } from './CourseCard';
-import { iconeDAnnotation, type IconeAnnotation } from './CourseAnnotations';
+import { lignesDuCreneau, type LigneDeCreneau } from './CourseAnnotations';
 import { CalendarNewEventPrompt } from './CalendarNewEventPrompt';
-import { couleurDeCours } from '../services/couleurDeCours';
-
-export interface CourseRowProps {
-	data: CourseData;
-	theme: import('../../../shared/theme/Theme').AppThemeType;
-	readOnly?: boolean;
-	navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
-	carouselMode?: boolean;
-}
+import { couleurDeCours, encreDeCours } from '../services/couleurDeCours';
+import { etatDuCours, formaterDuree } from '../services/frise';
 
 /**
  * La place laissee a l'indicateur de pages du carrousel par la derniere ligne d'infos.
@@ -27,309 +43,286 @@ export interface CourseRowProps {
  */
 const RESERVE_INDICATEUR = 72;
 
-export interface CourseRowState {
-	backgroundColor: string;
-	borderColor: string;
-	lineColor: string;
-	popupVisible: boolean;
+/** La largeur du rail de couleur, a gauche de la carte. */
+const RAIL = 4;
+/** La taille des icones des lignes d'infos : celle du corps de la ligne. */
+const ICONE_LIGNE = 15;
+
+export interface CourseRowProps {
+    data: CourseData;
+    theme: AppThemeType;
+    navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
+    carouselMode?: boolean;
+    /**
+     * L'heure du jour affiche, en minutes depuis minuit, quand ce jour est aujourd'hui (frise.ts) :
+     * la carte en tire son etat, a ses propres heures. Absente — un autre jour, la vue semaine — la
+     * carte est « a venir ».
+     */
+    minute?: number | null;
 }
 
-export class CourseRow extends React.Component<CourseRowProps, CourseRowState> {
-	constructor(props: CourseRowProps) {
-		super(props);
-		const lineColor = couleurDeCours(props.theme.courses, props.data?.color);
+/** Le rail de couleur : plein, ou qui se remplit avec le temps ecoule d'un cours en cours. */
+function Rail({ couleur, progression }: { couleur: string; progression: number | null }) {
+    if (progression === null) {
+        return <View style={[styles.rail, { backgroundColor: couleur }]} />;
+    }
+    return (
+        <View style={[styles.rail, { backgroundColor: `${couleur}4D` }]}>
+            <View style={{ height: `${Math.round(Math.min(1, Math.max(0, progression)) * 100)}%`, backgroundColor: couleur }} />
+        </View>
+    );
+}
 
-		this.state = {
-			backgroundColor: props.theme.eventBackground,
-			borderColor: props.theme.eventBorder,
-			lineColor,
-			popupVisible: false,
-		};
-	}
+function LigneDInfo({ ligne, theme, couleur, uneLigne, cedeALIndicateur }: {
+    ligne: LigneDeCreneau | { texte: string; icone: 'code' };
+    theme: AppThemeType;
+    couleur: string;
+    uneLigne: boolean;
+    cedeALIndicateur: boolean;
+}) {
+    const salle = ligne.icone === 'room';
+    const tertiaire = ligne.icone === 'code';
+    return (
+        <View style={[styles.ligne, cedeALIndicateur && { marginRight: RESERVE_INDICATEUR }]}>
+            <MaterialIcons
+                name={ligne.icone}
+                size={ICONE_LIGNE}
+                color={salle ? couleur : theme.fontTertiary}
+                style={styles.iconeLigne}
+            />
+            <Text
+                numberOfLines={uneLigne ? 1 : undefined}
+                style={[
+                    styles.texteLigne,
+                    salle ? styles.texteSalle : null,
+                    { color: salle ? theme.font : tertiaire ? theme.fontTertiary : theme.fontSecondary },
+                ]}
+            >
+                {ligne.texte}
+            </Text>
+        </View>
+    );
+}
 
-	static getDerivedStateFromProps(nextProps: CourseRowProps, prevState: CourseRowState) {
-		const lineColor = couleurDeCours(nextProps.theme.courses, nextProps.data?.color);
+/** La colonne des heures : le debut en grand, la fin, et pendant le cours le temps qui reste. */
+function ColonneDesHeures({ data, theme, resteMinutes }: { data: CourseData; theme: AppThemeType; resteMinutes: number | null }) {
+    return (
+        <View style={styles.heures}>
+            <Text style={[tokens.texte.heure, { color: theme.font }]}>{data.starttime}</Text>
+            <Text style={[styles.heureDeFin, tokens.texte.chiffres, { color: theme.fontSecondary }]}>{data.endtime}</Text>
+            {resteMinutes !== null ? (
+                <View style={styles.reste}>
+                    <MaterialCommunityIcons name="timer-sand" size={12} color={theme.accent} />
+                    <Text style={[styles.texteReste, tokens.texte.chiffres, { color: theme.accent }]}>
+                        {formaterDuree(resteMinutes)}
+                    </Text>
+                </View>
+            ) : null}
+        </View>
+    );
+}
 
-		const backgroundColor = nextProps.theme.eventBackground;
-		const borderColor = nextProps.theme.eventBorder;
+/** Le titre et le badge du type ; en carrousel, le titre tient sur une ligne. */
+function RangeeDuTitre({ data, theme, encre, unSeulRang }: { data: CourseData; theme: AppThemeType; encre: string; unSeulRang: boolean }) {
+    const badge = data.category !== '' && data.category !== data.subject;
+    return (
+        <View style={styles.rangeeDuTitre}>
+            {data.subject !== 'N/C' ? (
+                <Text
+                    // En carrousel le titre tient sur **une** ligne : c'est lui qui creusait les ecarts
+                    // de hauteur entre cours superposes, et la fiche porte l'intitule entier.
+                    numberOfLines={unSeulRang ? 1 : undefined}
+                    style={[tokens.texte.titreDeCarte, styles.titre, { color: theme.font }]}
+                >
+                    {data.subject.trim()}
+                </Text>
+            ) : <View style={styles.titre} />}
+            {badge ? (
+                <View style={[styles.badge, { backgroundColor: `${encre}1F` }]}>
+                    <Text style={[styles.texteBadge, { color: encre }]}>{data.category}</Text>
+                </View>
+            ) : null}
+        </View>
+    );
+}
 
-		if (
-			lineColor !== prevState.lineColor ||
-			backgroundColor !== prevState.backgroundColor ||
-			borderColor !== prevState.borderColor
-		) {
-			return { lineColor, backgroundColor, borderColor };
-		}
+export function CourseRow({ data, theme, navigation, carouselMode = false, minute = null }: CourseRowProps) {
+    const [popupVisible, setPopupVisible] = useState(false);
+    const enfoncement = useEnfoncement();
 
-		return null;
-	}
+    if (data.category === 'masked') return null;
 
-	closePopup = () => this.setState({ popupVisible: false });
-	openPopup = () => this.setState({ popupVisible: true });
+    const couleur = couleurDeCours(theme.courses, data.color);
+    // La teinte du cours borde et teinte ; quand elle ecrit (le badge, l'icone de la salle), c'est
+    // son encre, lisible sur la carte quel que soit le cours.
+    const encre = encreDeCours(couleur, theme.eventBackground);
+    // Les semaines du cours ne se lisent que dans la fiche : sur la carte, elles ne disaient rien de
+    // la journee affichee.
+    const lignes: (LigneDeCreneau | { texte: string; icone: 'code' })[] = lignesDuCreneau(data.description, data.lieu)
+        .filter((ligne) => ligne.icone !== 'date-range');
+    if (data.UE) lignes.push({ texte: data.UE, icone: 'code' });
 
-	_onPress = () => {
-		if (!this.props.navigation) return;
-		requestAnimationFrame(() => {
-			this.props.navigation.navigate('Course', { data: this.props.data });
-		});
-	};
+    const { etat, progression, resteMinutes } = etatDuCours(data, minute);
+    const enCours = etat === 'en-cours';
+    const duTelephone = data.source === 'telephone';
+    const salle = lignes.find((ligne) => ligne.icone === 'room')?.texte;
 
-	renderUE(theme: import('../../../shared/theme/Theme').AppThemeType) {
-		if (!this.props.data.UE) return null;
-		return (
-			<View style={[style.schedule.course.line as never, { alignItems: 'center' }]}>
-				<MaterialIcons
-					name="code"
-					size={14}
-					color={theme.fontSecondary}
-					style={{ marginRight: tokens.space.xs }}
-				/>
-				<Text
-					style={{
-						fontSize: tokens.fontSize.xs,
-						color: theme.fontSecondary,
-						fontWeight: tokens.fontWeight.medium as never,
-					}}>
-					{this.props.data.UE}
-				</Text>
-			</View>
-		);
-	}
+    const ouvrir = () => {
+        if (!navigation) return;
+        requestAnimationFrame(() => navigation.navigate('Course', { data }));
+    };
 
-	renderSubject(theme: import('../../../shared/theme/Theme').AppThemeType) {
-		if (this.props.data.subject === 'N/C') return null;
-		return (
-			// En carrousel le titre tient sur **une** ligne, coupe en points de suspension : c'est
-			// lui qui creusait les ecarts de hauteur entre cours superposes, et l'UE puis le detail
-			// portent l'intitule complet. Deux lignes reservees ont ete essayees et defaites — deux
-			// fois : bornees sans etirement, il restait une ligne d'ecart ; etirees, le titre court
-			// trainait un blanc entier sous lui, lu comme un trou.
-			<Text
-				numberOfLines={this.props.carouselMode ? 1 : undefined}
-				style={[style.schedule.course.title as never, { color: theme.font, flex: 1 }]}>
-				{this.props.data.subject.trim()}
-			</Text>
-		);
-	}
+    const carte = (
+        <Reanimated.View
+            style={[
+                styles.carte,
+                {
+                    backgroundColor: theme.eventBackground,
+                    borderColor: theme.contourDeCarte,
+                },
+                carouselMode && styles.etiree,
+                etat === 'passe' && styles.passe,
+                enfoncement.style,
+            ]}
+            // Un cours passe s'efface d'un bloc : sans composition hors ecran, Android applique
+            // l'opacite a chaque vue, et le fond transparaitrait sous le texte.
+            needsOffscreenAlphaCompositing={etat === 'passe'}
+        >
+            <Rail couleur={couleur} progression={enCours ? progression : null} />
 
-	renderAnnotationsLine(line: string, index: number, theme: import('../../../shared/theme/Theme').AppThemeType, isLargeMode: boolean, estDerniere = false, icone?: IconeAnnotation) {
-		const trimmedLine = line.trim();
-		if (!trimmedLine) return null;
+            <ColonneDesHeures data={data} theme={theme} resteMinutes={enCours ? resteMinutes : null} />
 
-		// L'icone se deduit du contenu de la ligne, jamais de son rang : avec deux sources d'emploi
-		// du temps, le rang ne veut plus rien dire (CourseAnnotations.ts). Sauf quand la donnee la
-		// connait deja : le lieu d'un rendez-vous du telephone est un lieu, quoi qu'il dise.
-		const iconName = icone ?? iconeDAnnotation(trimmedLine);
+            <View style={[styles.contenu, carouselMode && styles.etiree]}>
+                <RangeeDuTitre data={data} theme={theme} encre={encre} unSeulRang={carouselMode} />
 
-		// En carrousel, chaque ligne d'infos tient sur une seule ligne : avec le titre borne, les
-		// cours superposes convergent vers la meme hauteur au lieu de dependre de qui wrappe. La
-		// derniere partage en plus son rang avec l'indicateur de pages : elle lui laisse le coin
-		// droit et se coupe en points de suspension plutot que de passer dessous.
-		const cedeALIndicateur = this.props.carouselMode && estDerniere;
+                {lignes.map((ligne, index) => (
+                    <LigneDInfo
+                        key={`${ligne.icone}-${ligne.texte}`}
+                        ligne={ligne}
+                        theme={theme}
+                        couleur={encre}
+                        uneLigne={carouselMode}
+                        cedeALIndicateur={carouselMode && index === lignes.length - 1}
+                    />
+                ))}
+            </View>
+        </Reanimated.View>
+    );
 
-		return (
-			<View
-				key={index}
-				style={[
-					style.schedule.course.line as never,
-					{ alignItems: 'flex-start', marginTop: isLargeMode ? 0 : tokens.space.xs },
-					cedeALIndicateur && { marginRight: RESERVE_INDICATEUR },
-				]}>
-				<MaterialIcons
-					name={iconName}
-					size={isLargeMode ? 14 : 12}
-					color={theme.fontSecondary}
-					style={{
-						marginRight: tokens.space.xs,
-						marginTop: isLargeMode ? 2 : 1,
-					}}
-				/>
-				<Text
-					numberOfLines={this.props.carouselMode ? 1 : undefined}
-					style={{
-						fontSize: isLargeMode ? tokens.fontSize.sm : tokens.fontSize.xs,
-						color: theme.fontSecondary,
-						flex: 1,
-					}}>
-					{trimmedLine}
-				</Text>
-			</View>
-		);
-	}
-
-	renderAnnotations(theme: import('../../../shared/theme/Theme').AppThemeType, isLargeMode: boolean) {
-		// Le lieu d'un rendez-vous du telephone d'abord (6.2.x) : il etait la premiere ligne de la
-		// description avant d'avoir son champ, la rangee le montrait, elle doit continuer.
-		const lieu = this.props.data.lieu ?? '';
-		if (!this.props.data.description && lieu === '') return null;
-
-		const lines = [...(lieu === '' ? [] : [lieu]), ...(this.props.data.description ?? '').split('\n')];
-		const iconeDe = (index: number): IconeAnnotation | undefined => (lieu !== '' && index === 0 ? 'room' : undefined);
-		// La derniere ligne **rendue** : une description peut finir par des lignes vides, que le
-		// rendu ecarte — c'est la derniere non vide qui cotoie l'indicateur du carrousel.
-		let derniere = -1;
-		for (let i = 0; i < lines.length; i++) {
-			if (lines[i].trim()) derniere = i;
-		}
-		if (isLargeMode) {
-			return (
-				<View style={{ marginTop: tokens.space.sm }}>
-					{lines.map((line, index) => this.renderAnnotationsLine(line, index, theme, true, false, iconeDe(index)))}
-				</View>
-			);
-		} else if (lines.length > 0) {
-			return lines.map((line, index) => this.renderAnnotationsLine(line, index, theme, false, index === derniere, iconeDe(index)));
-		}
-		return null;
-	}
-
-	renderContent(
-		theme: import('../../../shared/theme/Theme').AppThemeType, 
-		isLargeMode: boolean, 
-		ue: React.ReactNode, 
-		subject: React.ReactNode, 
-		annotations: React.ReactNode
-	) {
-		return (
-			<View
-				style={[
-					style.schedule.course.root as never,
-					{
-						// En carrousel les hauteurs convergent d'abord par le **gabarit** — titre a
-						// deux lignes, une ligne par info — et l'etirement sur la rangee n'absorbe
-						// que le reliquat. L'etirement seul a ete essaye et defait : sans gabarit
-						// borne, la carte courte s'etirait de tout l'ecart de contenu et le vide en
-						// fond de carte etait aussi laid que l'ancien trou de fond de page.
-						flex: this.props.carouselMode ? 1 : 0,
-						minHeight: 120,
-						backgroundColor: this.state.backgroundColor,
-						marginHorizontal: tokens.space.sm,
-						marginVertical: tokens.space.xs,
-						borderRadius: tokens.radius.lg,
-						borderLeftWidth: 4,
-						borderLeftColor: this.state.lineColor,
-						borderWidth: 1,
-						borderColor: this.state.borderColor,
-						overflow: 'hidden',
-						...tokens.shadow.sm as object as object,
-					},
-				]}>
-				<View style={style.schedule.course.row as never}>
-					<View
-						style={[
-							style.schedule.course.hours as never,
-							{
-								backgroundColor: `${this.state.lineColor}18`,
-								borderRightWidth: 1,
-								borderRightColor: `${this.state.lineColor}44`,
-							},
-						]}>
-						<Text style={[style.schedule.course.hoursText as never, { color: theme.font }]}>
-							{this.props.data.starttime}
-						</Text>
-						<View
-							style={{
-								width: 4,
-								height: 4,
-								borderRadius: tokens.radius.md,
-								backgroundColor: this.state.lineColor,
-								opacity: 0.6,
-								marginVertical: tokens.space.xs,
-							}}
-						/>
-						<Text
-							style={[
-								style.schedule.course.hoursText as never,
-								{ color: theme.fontSecondary },
-							]}>
-							{this.props.data.endtime}
-						</Text>
-					</View>
-
-					<View
-						style={[style.schedule.course.contentBlock as never, { paddingLeft: tokens.space.sm }]}>
-						<View style={style.schedule.course.contentType as never}>
-							{subject}
-							{this.props.data.category !== '' && this.props.data.category !== this.props.data.subject && (
-								<View
-									style={{
-										backgroundColor: `${this.state.lineColor}22`,
-										borderRadius: tokens.radius.md,
-										paddingHorizontal: tokens.space.sm,
-										paddingVertical: tokens.space.xxs,
-										marginLeft: tokens.space.xs,
-									}}>
-									<Text
-										style={{
-											fontSize: tokens.fontSize.xs,
-											color: this.state.lineColor,
-											fontWeight: tokens.fontWeight.semibold as never,
-										}}>
-										{this.props.data.category}
-									</Text>
-								</View>
-							)}
-						</View>
-
-						{ue}
-						{annotations}
-					</View>
-				</View>
-			</View>
-		);
-	}
-
-	render() {
-		const { theme } = this.props;
-
-		if (this.props.data.category === 'masked') {
-			return null;
-		}
-
-		const isLargeMode = this.props.readOnly === true;
-
-		const ue = this.renderUE(theme);
-		const subject = this.renderSubject(theme);
-		const annotations = this.renderAnnotations(theme, isLargeMode);
-
-		const content = this.renderContent(theme, isLargeMode, ue, subject, annotations);
-
-		if (isLargeMode) {
-			return (
-				<View style={{ flex: 0, width: '100%' }}>
-					{content}
-				</View>
-			);
-		}
-
-		// Un evenement qui vient du calendrier ne s'y ajoute pas : pas d'appui long dessus (6.1.x-D).
-		const duTelephone = this.props.data.source === 'telephone';
-		return (
-			// La chaine de `flex: 1` ne vit qu'en carrousel : elle porte l'etirement de la carte
-			// jusqu'a la racine de la page (voir renderContent). Hors carrousel, rien ne change.
-			<View style={this.props.carouselMode ? { flex: 1 } : undefined}>
-				<TouchableOpacity
-					style={this.props.carouselMode ? { flex: 1 } : undefined}
-					onPress={this._onPress}
-					onLongPress={duTelephone ? undefined : this.openPopup}
-					activeOpacity={0.7}>
-					{content}
-				</TouchableOpacity>
-				{!duTelephone && (
-					<CalendarNewEventPrompt
-						popupVisible={this.state.popupVisible}
-						closePopup={this.closePopup}
-						openPopup={this.openPopup}
-						theme={theme}
-						data={this.props.data}
-					/>
-				)}
-			</View>
-		);
-	}
+    return (
+        // La chaine de `flex: 1` ne vit qu'en carrousel : elle porte l'etirement de la carte jusqu'a
+        // la racine de la page. Hors carrousel, rien ne change.
+        <View style={carouselMode ? styles.etiree : undefined}>
+            <Pressable
+                style={carouselMode ? styles.etiree : undefined}
+                onPress={ouvrir}
+                onPressIn={enfoncement.onPressIn}
+                onPressOut={enfoncement.onPressOut}
+                // Un evenement qui vient du calendrier ne s'y ajoute pas : pas d'appui long dessus (6.1.x-D).
+                onLongPress={duTelephone ? undefined : () => setPopupVisible(true)}
+                accessibilityRole="button"
+                accessibilityLabel={[data.subject, `${data.starttime} – ${data.endtime}`, salle].filter(Boolean).join(', ')}
+            >
+                {carte}
+            </Pressable>
+            {!duTelephone && (
+                <CalendarNewEventPrompt
+                    popupVisible={popupVisible}
+                    closePopup={() => setPopupVisible(false)}
+                    openPopup={() => setPopupVisible(true)}
+                    theme={theme}
+                    data={data}
+                />
+            )}
+        </View>
+    );
 }
 
 export function CourseRowWithNavigation(props: Omit<CourseRowProps, 'navigation'>) {
-	const navigation = useNavigation();
-	return <CourseRow {...props} navigation={navigation} />;
+    const navigation = useNavigation();
+    return <CourseRow {...props} navigation={navigation as CourseRowProps['navigation']} />;
 }
+
+const styles = StyleSheet.create({
+    carte: {
+        flexDirection: 'row',
+        // Les marges de page de l'application (`md`), comme le titre et le ruban au-dessus : la carte
+        // et l'en-tete partagent un bord gauche. Elles valaient `sm` jusqu'en 7-J.
+        marginHorizontal: tokens.space.md,
+        marginVertical: tokens.space.xs,
+        minHeight: 96,
+        borderRadius: tokens.radius.lg,
+        borderWidth: StyleSheet.hairlineWidth,
+        overflow: 'hidden',
+        ...tokens.shadow.sm,
+    },
+    etiree: {
+        flex: 1,
+    },
+    passe: {
+        opacity: 0.5,
+    },
+    rail: {
+        width: RAIL,
+        alignSelf: 'stretch',
+        overflow: 'hidden',
+    },
+    heures: {
+        width: 68,
+        paddingLeft: tokens.space.md - RAIL,
+        paddingVertical: tokens.space.md,
+    },
+    heureDeFin: {
+        fontSize: tokens.fontSize.sm,
+        marginTop: tokens.space.xxs,
+    },
+    reste: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: tokens.space.sm,
+        gap: tokens.space.xxs,
+    },
+    texteReste: {
+        fontSize: tokens.fontSize.xs,
+        fontWeight: tokens.fontWeight.semibold,
+    },
+    contenu: {
+        flex: 1,
+        paddingVertical: tokens.space.md,
+        paddingRight: tokens.space.md,
+    },
+    rangeeDuTitre: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: tokens.space.xs,
+        gap: tokens.space.sm,
+    },
+    titre: {
+        flex: 1,
+    },
+    badge: {
+        borderRadius: tokens.radius.md,
+        paddingHorizontal: tokens.space.sm,
+        paddingVertical: tokens.space.xxs,
+    },
+    texteBadge: {
+        fontSize: tokens.fontSize.xs,
+        fontWeight: tokens.fontWeight.semibold,
+    },
+    ligne: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginTop: tokens.space.xs,
+    },
+    iconeLigne: {
+        marginRight: tokens.space.xs,
+        marginTop: tokens.space.xxs,
+    },
+    texteLigne: {
+        flex: 1,
+        fontSize: tokens.fontSize.sm,
+    },
+    texteSalle: {
+        fontWeight: tokens.fontWeight.semibold,
+    },
+});

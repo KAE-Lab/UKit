@@ -1,9 +1,10 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 
-import { tokens } from '../../../shared/theme/Theme';
+import * as Haptics from 'expo-haptics';
+
+import { CaseDuRuban } from './CaseDuRuban';
 
 export interface CalendarDayProps {
     currentDay: moment.Moment;
@@ -23,6 +24,8 @@ class CalendarDay extends React.Component<CalendarDayProps> {
     };
 
     _onPress = () => {
+        // Le choix d'un jour s'acquitte au doigt, comme un interrupteur (docs/theme.md, 7-J).
+        void Haptics.selectionAsync().catch(() => undefined);
         if (this.props.onPressItem) {
             requestAnimationFrame(() => {
                 this.props.onPressItem(this.props.item);
@@ -30,10 +33,9 @@ class CalendarDay extends React.Component<CalendarDayProps> {
         }
     };
 
-    static getBackgroundColor(props: CalendarDayProps) {
-        if (props.item.isSame(props.currentDay, 'day')) return props.theme.primary + '26';
-        if (props.item.day() === 0) return props.theme.greyBackground + '80';
-        return 'transparent';
+    /** Ce qui change l'apparence d'une case hors de la selection : le jour courant et le theme. */
+    static apparence(props: CalendarDayProps) {
+        return `${props.item.isSame(props.currentDay, 'day')}-${props.theme.accent}`;
     }
 
     static isSelected(props: CalendarDayProps) {
@@ -42,57 +44,23 @@ class CalendarDay extends React.Component<CalendarDayProps> {
 
     shouldComponentUpdate(nextProps: CalendarDayProps) {
         return (
-            CalendarDay.getBackgroundColor(nextProps) !== CalendarDay.getBackgroundColor(this.props) ||
+            CalendarDay.apparence(nextProps) !== CalendarDay.apparence(this.props) ||
             CalendarDay.isSelected(nextProps) !== CalendarDay.isSelected(this.props)
         );
     }
 
     render() {
-        const { theme } = this.props;
-        const selected = CalendarDay.isSelected(this.props);
-        const bgColor  = CalendarDay.getBackgroundColor(this.props);
-        const color    = selected ? theme.primary : theme.font;
-
         return (
-            <TouchableOpacity
+            <CaseDuRuban
+                theme={this.props.theme}
+                haut={this.props.item.date()}
+                bas={this.props.item.format('ddd')}
+                choisie={CalendarDay.isSelected(this.props)}
+                courante={this.props.item.isSame(this.props.currentDay, 'day')}
+                estompee={this.props.item.day() === 0}
                 onPress={this._onPress}
-                style={{
-                    width: 64,
-                    height: 64,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: tokens.radius.md,
-                    backgroundColor: bgColor,
-                    borderWidth: selected ? 2 : 0, 
-                    borderColor: selected ? theme.primary : 'transparent', 
-                }}>
-                <Text style={{
-                    textAlign: 'center',
-                    // Le parent a une largeur ferme : l'etirement mord, et Android cesse de tronquer.
-                    alignSelf: 'stretch',
-                    fontSize: tokens.fontSize.xl,
-                    fontWeight: selected
-                        ? tokens.fontWeight.bold
-                        : tokens.fontWeight.regular,
-                    color,
-                    marginBottom: tokens.space.xs,
-                }}>
-                    {this.props.item.date()}
-                </Text>
-                <Text style={{
-                    textAlign: 'center',
-                    // Le parent a une largeur ferme : l'etirement mord, et Android cesse de tronquer.
-                    alignSelf: 'stretch',
-                    fontSize: tokens.fontSize.xs,
-                    fontWeight: tokens.fontWeight.medium,
-                    color,
-                    opacity: selected ? 1 : 0.6,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.5,
-                }}>
-                    {this.props.item.format('ddd')}
-                </Text>
-            </TouchableOpacity>
+                accessibilityLabel={this.props.item.format('dddd D MMMM')}
+            />
         );
     }
 }

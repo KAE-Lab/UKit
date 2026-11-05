@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { GEOMETRIE_DU_FOND, motifDuFond, voileDuFond } from './fondDOnglet';
+import { fondDeHauteur, GEOMETRIE_DU_FOND, motifDuFond, voileDuFond } from './fondDOnglet';
 import { PALETTES } from '../theme/palettes';
 
 describe('fond d un onglet', () => {
@@ -13,6 +13,13 @@ describe('fond d un onglet', () => {
         expect(locations[0]).toBeCloseTo(GEOMETRIE_DU_FOND.voile.debut / GEOMETRIE_DU_FOND.hauteur);
         expect(locations[locations.length - 1]).toBe(1);
         locations.slice(1).forEach((l, i) => expect(l).toBeGreaterThan(locations[i]));
+    });
+
+    it('ferme le voile au bas d un fond ramene a une hauteur donnee', () => {
+        const geometrie = fondDeHauteur(235);
+        const { locations } = voileDuFond('#000000', geometrie);
+        expect(locations[locations.length - 1]).toBe(1);
+        expect(locations[0]).toBeCloseTo(GEOMETRIE_DU_FOND.voile.debut / GEOMETRIE_DU_FOND.hauteur);
     });
 
     it('repete le motif a l identique d une periode a l autre, pour que le glissement boucle', () => {

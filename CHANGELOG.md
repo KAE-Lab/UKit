@@ -22,6 +22,10 @@ une application qui donne l'heure des choses d'un regard.
   de leur section, la même que leur fond.
 - **Des styles de texte composés** (`tokens.texte`) : grands titres à l'approche resserrée, chiffres
   tabulaires pour les heures, les durées et les distances.
+- **Le Planning en frise.** Entre deux cours, la pause se cote (« Pause de 1 h 40 ») ; aujourd'hui,
+  le repère de l'heure se pose à sa place avec le temps avant le cours suivant, la carte du cours en
+  cours remplit son rail et dit le temps qui reste, et un cours passé s'estompe.
+- **Le week-end parle** : « C'est le week-end », « Aucun cours avant lundi ».
 
 ### Modifié
 
@@ -35,6 +39,12 @@ une application qui donne l'heure des choses d'un regard.
   un filet borde les cartes.
 - **Les libellés de la barre d'onglets tiennent à 360 points** : « Réglages », « Connexion », et en
   espagnol « Estudios », « Acerca de » ; l'écart entre la barre et son bouton passe de 32 à 8 points.
+- **La carte d'un cours met la salle en avant**, sous le titre, puis l'enseignant et le groupe ; une
+  ligne servie deux fois par la source ne s'affiche qu'une fois, les semaines restent dans la fiche,
+  et la couleur d'un cours devient lisible quand elle écrit.
+- **L'en-tête du Planning** porte le fond bleu de l'onglet ; le jour choisi est une case pleine,
+  aujourd'hui a son point, le choix d'un jour s'acquitte au doigt, et la case d'une semaine dit son
+  lundi. Le ruban se recentre sur le jour choisi à sa première mesure.
 
 Le jalon [7-D](docs/phase-7/7-d-la-mesure.md), la mesure, en premier sur la branche `v6.3` : des
 compteurs anonymes, sans identifiant, avec un interrupteur, et jamais de réseau au démarrage.

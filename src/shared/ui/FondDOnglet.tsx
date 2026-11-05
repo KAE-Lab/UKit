@@ -30,18 +30,23 @@ import Reanimated, {
 } from 'react-native-reanimated';
 
 import { tokens, type AppThemeType } from '../theme/Theme';
-import { GEOMETRIE_DU_FOND, motifDuFond, voileDuFond, type OngletAFond } from './fondDOnglet';
+import { fondDeHauteur, GEOMETRIE_DU_FOND, motifDuFond, voileDuFond, type OngletAFond } from './fondDOnglet';
 
-const { hauteur, periode, periodes, inclinaison } = GEOMETRIE_DU_FOND;
+const { periode, periodes, inclinaison } = GEOMETRIE_DU_FOND;
 /** La hauteur du motif incline : assez pour couvrir le fond quel que soit l'angle. */
 const EPAISSEUR_DU_MOTIF = 1200;
 
 export interface FondDOngletProps {
     theme: AppThemeType;
     onglet: OngletAFond;
+    /**
+     * Une hauteur plus courte que celle d'un onglet qui defile : l'en-tete collant du Planning. Le
+     * voile s'y recale et se ferme au bas du fond (`fondDeHauteur`).
+     */
+    hauteur?: number;
 }
 
-export function FondDOnglet({ theme, onglet }: FondDOngletProps) {
+export function FondDOnglet({ theme, onglet, hauteur: hauteurVoulue }: FondDOngletProps) {
     const { width: largeur } = useWindowDimensions();
     const affiche = useIsFocused();
     const mouvementReduit = useReducedMotion();
@@ -69,11 +74,12 @@ export function FondDOnglet({ theme, onglet }: FondDOngletProps) {
 
     const [teinteA, teinteB] = theme.fondDOnglet[onglet];
     const motif = motifDuFond(teinteA, teinteB, theme.background);
-    const voile = voileDuFond(theme.background);
+    const geometrie = hauteurVoulue !== undefined ? fondDeHauteur(hauteurVoulue) : GEOMETRIE_DU_FOND;
+    const voile = voileDuFond(theme.background, geometrie);
     const longueur = periode * periodes;
 
     return (
-        <View pointerEvents="none" style={[styles.fond, { height: hauteur }]}>
+        <View pointerEvents="none" style={[styles.fond, { height: geometrie.hauteur }]}>
             <Reanimated.View
                 style={[
                     styles.motif,
@@ -82,7 +88,7 @@ export function FondDOnglet({ theme, onglet }: FondDOngletProps) {
                         height: EPAISSEUR_DU_MOTIF,
                         // Centre sur l'ecran : la rotation tourne autour du centre de la vue.
                         left: largeur / 2 - longueur / 2,
-                        top: hauteur / 2 - EPAISSEUR_DU_MOTIF / 2,
+                        top: geometrie.hauteur / 2 - EPAISSEUR_DU_MOTIF / 2,
                     },
                     incline,
                 ]}

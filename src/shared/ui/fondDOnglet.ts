@@ -47,12 +47,27 @@ function avecAlpha(couleur: string, alpha: number): string {
     return `${couleur.slice(0, 7)}${octet}`;
 }
 
+export interface HauteurDuFond {
+    readonly hauteur: number;
+    readonly voile: { readonly debut: number; readonly fin: number };
+}
+
+/**
+ * La geometrie d'un fond ramene a une hauteur donnee (7-J) : celle de l'en-tete collant du Planning,
+ * plus court que les 470 points d'un onglet qui defile. Le voile garde ses proportions et se ferme
+ * exactement au bas du fond, pour que la page reprenne sans arete sous l'en-tete.
+ */
+export function fondDeHauteur(hauteur: number): HauteurDuFond {
+    const { voile } = GEOMETRIE_DU_FOND;
+    return { hauteur, voile: { debut: hauteur * (voile.debut / GEOMETRIE_DU_FOND.hauteur), fin: hauteur } };
+}
+
 /**
  * Le voile vertical qui ramene le fond a la page : `fond` transparent jusqu'a `voile.debut`, plein
  * a partir de `voile.fin`, sur la hauteur du fond.
  */
-export function voileDuFond(fond: string): Degrade {
-    const { hauteur, voile } = GEOMETRIE_DU_FOND;
+export function voileDuFond(fond: string, geometrie: HauteurDuFond = GEOMETRIE_DU_FOND): Degrade {
+    const { hauteur, voile } = geometrie;
     const colors = ALPHAS_DU_VOILE.map((a) => avecAlpha(fond, a));
     const locations = ALPHAS_DU_VOILE.map((_, i) => (voile.debut + ((voile.fin - voile.debut) * i) / 15) / hauteur);
     return { colors, locations } as Degrade;
