@@ -35,7 +35,15 @@ position de sa bulle (`largeur - 80`) avec sa largeur de 300 : il déborde de de
 et seul un glissement de son en-tête le ramène. La borne n'est appliquée qu'au relâcher d'un
 glissement. Outil de développement seulement ; il gêne le banc, dont c'est l'instrument.
 
-### Le parcours d'accueil s'ouvre en anglais sur un Android en français — constaté le 2026-11-04
+### ~~Le parcours d'accueil s'ouvre en anglais sur un Android en français~~ — constaté le 2026-11-04, corrigé le 2026-11-05
+
+*Corrigé par [7-J](phase-7/7-j-ecrans.md) :* la langue du système se lit désormais par `getConstants()`
+d'abord, puis par les propriétés historiques, puis par la locale qu'`Intl` tient du système
+([`langueDuSysteme`](../src/shared/i18n/langueDuSysteme.ts) ; le choix, pur, dans
+[`langues.ts`](../src/shared/i18n/langues.ts), testé). Vérifié sur le banc le 2026-11-05, installation
+neuve sur `ukit` (Android 15, `fr-FR`) : « Bienvenue ! », « Commencer ». La branche iOS lit
+`SettingsManager` de la même façon, par `getConstants()` d'abord ; elle se vérifie sur l'iPhone.
+
 
 Sur le banc Android (Android 9, système en `fr-FR`), une installation neuve ouvre le parcours en
 anglais, « English » présélectionné, alors que [onboarding.md](features/onboarding.md) promet la
