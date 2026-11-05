@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { dateIso, horairesEnLignes, horairesLisibles, projeterJourMenu, projeterRestaurant, sousTitreDePlat, structurerHoraires } from './CrousMapping';
+import { dateIso, horairesEnLignes, horairesLisibles, libelleLisible, projeterJourMenu, projeterRestaurant, sousTitreDePlat, structurerHoraires } from './CrousMapping';
 
 const REPLI_HORAIRES = 'Horaires non specifies';
 const REPLI_CATEGORIE = 'Categorie';
@@ -129,6 +129,22 @@ describe('projeterRestaurant', () => {
     it('retombe sur l adresse quand la zone manque', () => {
         const restaurant = projeterRestaurant({ code: 1, nom: 'Cap Sud', adresse: 'Talence' }, REPLI_HORAIRES);
         expect(restaurant.short_desc).toBe('Talence');
+    });
+});
+
+describe('libelleLisible', () => {
+    it('decode les entites numeriques que publient certains restaurants', () => {
+        expect(libelleLisible('&#x2906; menu file 1')).toBe('\u2906 menu file 1');
+        expect(libelleLisible('Entr&#233;es')).toBe('Entrées');
+    });
+
+    it('decode les entites nommees courantes et resserre les espaces', () => {
+        expect(libelleLisible('Poulet &amp; frites')).toBe('Poulet & frites');
+        expect(libelleLisible(' Entrées   desserts ')).toBe('Entrées desserts');
+    });
+
+    it('laisse une entite inconnue ou hors d Unicode telle quelle', () => {
+        expect(libelleLisible('&foo; et &#x110000;')).toBe('&foo; et &#x110000;');
     });
 });
 
