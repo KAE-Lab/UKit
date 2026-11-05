@@ -6,6 +6,8 @@
  * 6.1-C : l'accueil ne l'importait plus depuis 6-G, et son dernier consommateur n'etait jamais monte.
  */
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { tokens } from '../../../shared/theme/Theme';
 import { PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
 
@@ -13,8 +15,17 @@ export type ThemeObj = Record<string, string>;
 
 export const MAXIMUM_NUMBER_ITEMS_GROUPLIST = 10;
 
-/** Ce qu'une etape laisse sous elle pour le pied du parcours : le degagement du pied flottant des listes. */
-export const DEGAGEMENT_PIED_PARCOURS = PIED_FLOTTANT_DEGAGEMENT;
+/**
+ * Ce qu'une etape laisse sous elle pour le pied du parcours : le degagement du pied flottant des
+ * listes, **plus la marge du systeme en bas**. Le pied pose `paddingBottom: insets.bottom`
+ * (WelcomeScreen), et le contenu defile sous lui jusqu'au bas de l'ecran, barre de navigation
+ * comprise : sans la marge, la fin d'une etape restait derriere « Suivant ». Mesure sur le banc au
+ * format de l'A8 le 2026-11-05 : le pied commencait a 146 points du bas, le degagement en laissait
+ * 112, et « Plus tard » ne remontait jamais au-dessus du bouton (7-J).
+ */
+export function useDegagementDuPied(): number {
+    return PIED_FLOTTANT_DEGAGEMENT + useSafeAreaInsets().bottom;
+}
 
 /** La carte qui enveloppe chaque groupe de choix. Une seule definition, cinq usages. */
 export const carte = (themeObj: ThemeObj) => ({

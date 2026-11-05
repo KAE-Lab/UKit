@@ -21,7 +21,7 @@ import { FigureEnEcho } from '../../../shared/ui/epure/FigureEnEcho';
 import { LogoUKit } from '../../../shared/ui/epure/LogoUKit';
 import { TraitDeValidation } from './TraitDeValidation';
 import type { Etablissement } from '../../../shared/etablissements';
-import { DEGAGEMENT_PIED_PARCOURS, carte, pastille, texteDePastille, titreDeCarte } from './stylesDuParcours';
+import { carte, pastille, texteDePastille, titreDeCarte, useDegagementDuPied } from './stylesDuParcours';
 // Deux dependances croisees entre features, et elles sont volontaires — voir la section
 // « Dependances entre features » de docs/architecture.md. L'accueil propose depuis le jalon 6-J deux
 // gestes qui appartiennent a d'autres domaines : se connecter au compte universitaire, et coller un
@@ -61,9 +61,10 @@ export const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
  */
 export const StepIntro = ({ themeObj }) => {
     const { width } = useWindowDimensions();
+    const degagement = useDegagementDuPied();
     const largeurDeLaFigure = Math.min(width * 0.7, 300);
     return (
-        <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: DEGAGEMENT_PIED_PARCOURS }}>
+        <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: degagement }}>
             <FigureEnEcho theme={themeObj} largeur={largeurDeLaFigure} />
             <Reanimated.View entering={FadeIn.delay(650).duration(tokens.mouvement.couture * 2)} style={{ alignItems: 'center', alignSelf: 'stretch' }}>
                 <View style={{ marginTop: tokens.space.xl, marginBottom: tokens.space.lg }}>
@@ -86,8 +87,10 @@ export const StepIntro = ({ themeObj }) => {
  * plutot que d'afficher une liste qu'elle sait peut-etre en retard — plafonne a quelques secondes
  * par l'appelant, apres quoi la liste connue s'affiche et se complete si le reseau revient (6.1-A).
  */
-export const StepEtablissement = ({ themeObj, etablissements, codeActif, selectEtablissement, chargement }) => (
-    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: DEGAGEMENT_PIED_PARCOURS }} showsVerticalScrollIndicator={false}>
+export const StepEtablissement = ({ themeObj, etablissements, codeActif, selectEtablissement, chargement }) => {
+    const degagement = useDegagementDuPied();
+    return (
+    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: degagement }} showsVerticalScrollIndicator={false}>
         <View style={carte(themeObj)}>
             <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_INSTITUTION')}</Text>
             {chargement ? (
@@ -127,7 +130,8 @@ export const StepEtablissement = ({ themeObj, etablissements, codeActif, selectE
             })}
         </View>
     </ScrollView>
-);
+    );
+};
 
 export const StepPreferences = ({ themeObj, navigatorState, themeList, languageList, selectTheme, selectLanguage }) => (
     <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2 }} showsVerticalScrollIndicator={false}>
@@ -168,7 +172,9 @@ export const StepPreferences = ({ themeObj, navigatorState, themeList, languageL
  * correction, et c'est precisement pour rendre ce partage possible que `CredentialsProvider` a remonte
  * au-dessus des deux branches (`rootContainer.tsx`).
  */
-export const StepCompte = ({ themeObj, onSuivant, onConnecte, onAutreCampus, onEnSession }) => (
+export const StepCompte = ({ themeObj, onSuivant, onConnecte, onAutreCampus, onEnSession }) => {
+    const degagement = useDegagementDuPied();
+    return (
     /*
      * Le degagement du haut vit dans `topPadding` — DANS le contenu defilant — et pas sur ce
      * conteneur : pose ici, il decoupait le defilement a sa ligne et le contenu disparaissait
@@ -191,9 +197,11 @@ export const StepCompte = ({ themeObj, onSuivant, onConnecte, onAutreCampus, onE
             onAutreCampus={onAutreCampus}
             onEnSession={onEnSession}
             compact
+            degagementBas={degagement}
         />
     </View>
-);
+    );
+};
 
 /**
  * L'etape « colle ton lien », pour un etablissement qui publie un abonnement (jalon 6-J).
@@ -216,12 +224,15 @@ export const StepLienEdt = ({ onDone }) => (
 );
 
 /** La fin du parcours : elle repond a l'ouverture, dans le meme degrade (TraitDeValidation). */
-export const StepFin = ({ themeObj }) => (
-    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: DEGAGEMENT_PIED_PARCOURS }}>
+export const StepFin = ({ themeObj }) => {
+    const degagement = useDegagementDuPied();
+    return (
+    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: degagement }}>
         <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
             <TraitDeValidation theme={themeObj} />
         </View>
         <Text style={[tokens.texte.grandTitre, { alignSelf: 'stretch', color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }]}>{Translator.get('WELL_DONE')}</Text>
         <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
     </View>
-);
+    );
+};

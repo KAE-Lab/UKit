@@ -41,6 +41,8 @@ une application qui donne l'heure des choses d'un regard.
 
 - **L'accueil s'ouvre dans la langue du téléphone sur Android** : sous la nouvelle architecture, la
   lecture de la locale retombait sur l'anglais pour tout nouvel utilisateur.
+- **L'étape du compte de l'accueil défile jusqu'au bout sur un petit écran** : au format de l'A8, la
+  fin de la carte de connexion restait derrière « Suivant ».
 - **La barre de statut est lisible au premier lancement en sombre** : le conteneur racine manquait le
   thème posé par l'accueil, et gardait des icônes sombres sur fond sombre.
 
