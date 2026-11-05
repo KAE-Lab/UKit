@@ -44,6 +44,9 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Les touchers juste au-dessus de la barre d'onglets répondent** : sur 32 points, le conteneur de la
+  barre les avalait, et l'étoile ou le titre d'une carte posés là ne répondaient pas (depuis 6.0).
+  L'étoile a aussi un nom pour les lecteurs d'écran.
 - **L'accueil s'ouvre dans la langue du téléphone sur Android** : sous la nouvelle architecture, la
   lecture de la locale retombait sur l'anglais pour tout nouvel utilisateur.
 - **Le Planning et la barre d'onglets tiennent avec une grande police** : à 1,3 sur un écran de 360

@@ -28,6 +28,16 @@ projection et sa parité. La carte de cours ne l'affiche plus depuis 7-J (une he
 mais le champ reste faux pour tout ce qui le lit : la fiche du cours, le créneau `schedule`, les
 rappels. La correction se fait dans la projection, avec un cas de parité.
 
+### ~~Les touchers juste au-dessus de la barre d'onglets ne répondent pas~~ — constaté le 2026-11-05, corrigé le même jour
+
+*Corrigé pendant la deuxième passe de 7-J, qu'il bloquait :* le conteneur de la barre d'onglets
+([`MainTabNavigator`](../src/shared/navigation/MainTabNavigator.tsx)) monte de `VOILE_PIED` (32 points)
+au-dessus de la barre pour porter sa fumée, et ce rembourrage transparent avalait les touchers. Sur le
+tableau Campus, l'étoile et le titre d'une carte posés dans cette bande ne répondaient pas. Présent
+depuis le 2026-08-30, donc en 6.0 et 6.1. Le conteneur passe en `pointerEvents="box-none"` : ses
+enfants (onglets, bouton de verrou) restent touchables, et le glissement entre onglets passe toujours.
+Vérifié sur `ukit` : l'étoile répond, les onglets aussi, le glissement change d'onglet.
+
 ### ~~Le menu de développement s'ouvre en partie hors de l'écran~~ — constaté le 2026-11-05, corrigé le même jour
 
 *Corrigé pendant le plan de test du 7-I, qu'il bloquait :* le panneau de

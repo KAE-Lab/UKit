@@ -245,6 +245,9 @@ const es: TranslationDict = {
 	DAY_SAT: 'Sáb',
 	// La legende d'une case d'heure (salles libres) : « 14 » au-dessus de « h ».
 	CASE_HEURE: 'h',
+	// Le libelle de l'etoile d'une carte Campus, pour un lecteur d'ecran.
+	FAVORI_AJOUTER: 'Añadir a favoritos',
+	FAVORI_RETIRER: 'Quitar de favoritos',
 	DAY_SUN: 'Dom',
 	BU_OPEN: "Abierta",
 	BU_CLOSED: "Cerrada",
