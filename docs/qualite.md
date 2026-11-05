@@ -360,7 +360,11 @@ relit pas. Mesuré le 2026-11-05 sur le fond de Campus : il glissait encore apr�
 plus un pixel ne bougeait en cinq secondes après `am force-stop` et relance. Un utilisateur qui change
 le réglage en cours de route attend donc, lui aussi, la relance suivante. Sur `ukit`, le bouton
 flottant « Tools » du build de développement recouvre le bouton droit des en-têtes : il se coupe dans le
-menu de développement (« Tools button »).
+menu de développement (« Tools button »). Le rendu de l'émulateur est **ANGLE sur SwiftShader**
+(`swangle_indirect`) depuis le 2026-11-05 : SwiftShader en direct le faisait tomber (SEGV, sans trace)
+cinq fois en une heure sous des en-têtes à dégradé, et ANGLE a tenu le même essai, ouverture,
+quarante-deux défilements et deux relances. `BANC_GPU=swiftshader_indirect` pour comparer. La saisie
+par `android input text` a précédé deux de ces chutes : `adb shell input text` la remplace.
 
 Ce que le banc ne dit pas, et qui reste aux deux appareils :
 
