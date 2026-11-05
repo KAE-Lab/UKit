@@ -107,6 +107,11 @@ function LigneDInfo({ ligne, theme, couleur, uneLigne, cedeALIndicateur }: {
 
 /** La colonne des heures : le debut en grand, la fin, et pendant le cours le temps qui reste. */
 /**
+ * La gouttiere des heures : le debut en haut, la fin **en bas de la carte**, et pendant un cours le
+ * temps qui reste entre les deux. La fin etait collee sous le debut, et les deux heures se lisaient
+ * comme un seul bloc (review du 2026-11-05) ; posees aux deux bords, elles disent la duree par la
+ * hauteur meme de la carte.
+ *
  * La place du texte de la gouttiere a la taille par defaut. Elle grandit avec la police du systeme :
  * fixe, a 1,3 sur 360 points (A8), « 09:30 » se cassait en « 09:3 » / « 0 » (7-J). La frise s'aligne
  * sur le rail, pas sur la gouttiere : elle ne bouge pas.
@@ -119,11 +124,6 @@ function ColonneDesHeures({ data, theme, resteMinutes }: { data: CourseData; the
     return (
         <View style={[styles.heures, { width: largeur }]}>
             <Text numberOfLines={1} style={[tokens.texte.heure, { color: theme.font }]}>{data.starttime}</Text>
-            {/* Une heure de fin que la source n'a pas su ecrire (« Invalid date ») ne s'affiche pas :
-                la carte dit ce qu'elle sait (defauts-fonctionnels.md). */}
-            {minutesDe(data.endtime) !== null ? (
-                <Text style={[styles.heureDeFin, tokens.texte.chiffres, { color: theme.fontSecondary }]}>{data.endtime}</Text>
-            ) : null}
             {resteMinutes !== null ? (
                 <View style={styles.reste}>
                     <Icon icon={{ name: 'timer-sand' }} size={12} color={theme.accent} />
@@ -131,6 +131,11 @@ function ColonneDesHeures({ data, theme, resteMinutes }: { data: CourseData; the
                         {formaterDuree(resteMinutes)}
                     </Text>
                 </View>
+            ) : null}
+            {/* Une heure de fin que la source n'a pas su ecrire (« Invalid date ») ne s'affiche pas :
+                la carte dit ce qu'elle sait (defauts-fonctionnels.md). */}
+            {minutesDe(data.endtime) !== null ? (
+                <Text numberOfLines={1} style={[styles.heureDeFin, tokens.texte.chiffres, { color: theme.fontSecondary }]}>{data.endtime}</Text>
             ) : null}
         </View>
     );
@@ -284,15 +289,14 @@ const styles = StyleSheet.create({
     heures: {
         paddingLeft: tokens.space.md - RAIL,
         paddingVertical: tokens.space.md,
+        justifyContent: 'space-between',
     },
     heureDeFin: {
         fontSize: tokens.fontSize.sm,
-        marginTop: tokens.space.xxs,
     },
     reste: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: tokens.space.sm,
         gap: tokens.space.xxs,
     },
     texteReste: {

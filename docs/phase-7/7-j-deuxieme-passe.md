@@ -59,7 +59,8 @@ Tenu ici, lot par lot, pour qu'une reprise sache où en est la passe.
   bandeaux fixes des fiches (menu, salles) suivent avec les lots D et E.
 - [x] B — `Icon` dessine en Lucide par une table de 133 noms, le trait constant ; plus aucun emploi
   direct de Material ; les Réglages sans carrés de couleur ; la mention de licence suit (ISC).
-- [ ] C
+- [x] C — l'heure de fin en bas de la carte ; la vue semaine en agenda (`AgendaDeLaSemaine`,
+  `agenda.ts` testé), les jours repliables et `react-native-collapsible` retirés.
 - [ ] D
 - [ ] E
 - [ ] F

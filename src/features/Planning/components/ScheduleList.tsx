@@ -6,7 +6,7 @@ import moment from 'moment';
 import { tokens } from '../../../shared/theme/Theme';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { JourneeEnFrise } from './Frise';
-import { DayWeek } from './DayWeekCollapsible';
+import { AgendaDeLaSemaine } from './AgendaDeLaSemaine';
 import { HAUTEUR_DU_FONDU } from '../../../shared/ui/FonduDeBord';
 import { BandeauJourneeEntiere } from './BandeauJourneeEntiere';
 import { groupOverlappingCourses } from './ScheduleListUtils';
@@ -443,18 +443,12 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                 scrollEventThrottle={16}
             >
                 {listHeader}
-                {weekSchedule.map((scheduleItem, index) => {
-                    const fallbackDate = moment().year(targetYear).isoWeek(targetWeek).isoWeekday(index + 1);
-                    return (
-                        <DayWeek
-                            key={index}
-                            schedule={scheduleItem}
-                            navigation={navigation}
-                            theme={theme}
-                            fallbackDate={fallbackDate}
-                        />
-                    );
-                })}
+                <AgendaDeLaSemaine
+                    jours={weekSchedule}
+                    repli={(rang) => moment().year(targetYear).isoWeek(targetWeek).isoWeekday(rang + 1)}
+                    theme={theme}
+                    navigation={navigation as { navigate: (route: string, params?: object) => void } | undefined}
+                />
             </Animated.ScrollView>
         );
     }

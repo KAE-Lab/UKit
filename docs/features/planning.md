@@ -16,7 +16,13 @@ seul composant.
 2. Le bandeau supérieur porte un curseur horizontal de dates. Une année scolaire entière est
    parcourable (365 jours à partir du 1er août).
 3. Le bouton de droite bascule **jour / semaine**. Le bouton de gauche revient à aujourd'hui ou à la
-   semaine courante.
+   semaine courante. La semaine se lit **en agenda** depuis la deuxième passe de 7-J
+   ([`AgendaDeLaSemaine`](../../src/features/Planning/components/AgendaDeLaSemaine.tsx), ses décisions
+   dans [`agenda.ts`](../../src/features/Planning/services/agenda.ts)) : chaque jour ouvert d'emblée,
+   ses cours en rangées compactes sur une carte — début et fin, couleur, intitulé, salle, type ; un
+   jour libre tient en une ligne, le week-end n'apparaît que s'il porte un cours, les jours passés
+   s'estompent. Chaque jour se repliait derrière un bandeau et dépliait les grandes cartes du
+   carrousel : « éclatée », pas pratique (review du 2026-11-05).
 4. Toucher un cours ouvre sa fiche : matière, code d'UE, horaires, salle, carte du bâtiment, ajout au
    calendrier système.
 5. Le bouton d'action à côté de la barre d'onglets ouvre la **recherche de groupes** : liste complète,
@@ -29,7 +35,7 @@ seul composant.
 
 ![La vue jour : curseur de dates en bandeau, cartes de cours colorées par catégorie, salle et enseignant en description](../screenshots/planning-jour.png)
 
-> **Capture attendue** — `planning-semaine.png` : la vue semaine, avec ses sections repliables.
+> **Capture attendue** — `planning-semaine.png` : la vue semaine, en agenda.
 >
 > **Capture attendue** — `planning-groupes.png` : la recherche de groupes et ses sections
 > alphabétiques colorées.
