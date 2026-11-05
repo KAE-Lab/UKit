@@ -769,7 +769,7 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`components/CourseGroupCarousel.tsx`](../../src/features/Planning/components/CourseGroupCarousel.tsx) | carrousel paginé des cours simultanés, avec mémorisation de l'index |
 | [`components/CalendarNewEventPrompt.tsx`](../../src/features/Planning/components/CalendarNewEventPrompt.tsx) | modale d'ajout d'un cours au calendrier système (permissions, calendrier par défaut) |
 | [`components/DayWeekCollapsible.tsx`](../../src/features/Planning/components/DayWeekCollapsible.tsx) | section repliable d'un jour dans la vue semaine, avec résolution tolérante de la date |
-| [`components/GroupSelectionComponents.tsx`](../../src/features/Planning/components/GroupSelectionComponents.tsx) | en-tête de section et ligne de groupe de l'écran de recherche |
+| [`components/GroupSelectionComponents.tsx`](../../src/features/Planning/components/GroupSelectionComponents.tsx) | l'intertitre gris et la rangée de la recherche, en liste groupée (7-J) |
 | [`services/PlanningApiService.ts`](../../src/features/Planning/services/PlanningApiService.ts) | les quatre signatures publiques : choisit la source déclarée, joue le Blueprint, calcule les plages qui dépendent de l'heure courante |
 | [`services/PlanningApiMapping.ts`](../../src/features/Planning/services/PlanningApiMapping.ts) | la projection **Celcat** : sujet, description, filtre `Vacances`, refiltrage sur la date |
 | [`services/PlanningApiMapping.test.ts`](../../src/features/Planning/services/PlanningApiMapping.test.ts) | ses tests, joués par `npm test` |
