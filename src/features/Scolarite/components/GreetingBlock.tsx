@@ -26,11 +26,10 @@ import { salutationsActives } from '../salutations';
 
 export interface GreetingBlockProps {
     coldData: ScolariteColdData | null;
-    color: string;
     theme: AppThemeType;
 }
 
-const GreetingBlock = ({ coldData, color, theme }: GreetingBlockProps) => {
+const GreetingBlock = ({ coldData, theme }: GreetingBlockProps) => {
     const prenom = coldData?.firstName ?? '';
 
     /*
@@ -65,7 +64,9 @@ const GreetingBlock = ({ coldData, color, theme }: GreetingBlockProps) => {
                 minimumFontScale={0.75}
             >
                 {salutation}
-                {prenom !== '' ? <Text style={{ color }}>{` ${prenom}`}</Text> : null}
+                {/* Le prenom dans la couleur du texte (7-J) : un mot isole en couleur dans un titre est un
+                    tic d'interface generee, et rien ne l'avait choisi par ecrit. */}
+                {prenom !== '' ? ` ${prenom}` : null}
                 {' !'}
             </Text>
             <Text style={[styles.date, { color: theme.fontSecondary }]} numberOfLines={1}>
