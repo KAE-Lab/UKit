@@ -297,6 +297,13 @@ trois services concernés, à partir de la position réelle.
 **Le tri est uniforme** sur les trois listes : favoris d'abord, puis distance croissante. Il est
 appliqué dans un `useMemo` avant le filtrage, jamais dans le rendu.
 
+**Le carrousel suit la carte qu'on étoile** (deuxième passe de 7-J) : elle remonte en tête du tri, et
+le carrousel, resté où il était, la perdait de vue. `useFavorites` retient le dernier ajout
+(`dernierAjout`, avec un rang pour distinguer deux ajouts du même lieu), et
+[`CarrouselDeLieux`](../../src/features/Campus/Dashboard/components/CarrouselDeLieux.tsx) défile
+jusqu'à son rang (`rangDuLieu`, cartes spéciales comprises), une fois par geste. Retirer un favori ne
+déplace pas le carrousel.
+
 **Aucune donnée Campus n'est mise en cache**, à l'exception de la liste des bâtiments. Affluence,
 menus, annonces et occupation sont rechargés à chaque montage : une valeur périmée serait pire qu'un
 temps de chargement.

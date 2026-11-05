@@ -31,6 +31,11 @@ export function cartesSpeciales(annonces: readonly BdeAnnonce[], emplacement: Em
  * Les elements d'un carrousel : les speciales, puis les lieux. Les cles sont prefixees par la nature,
  * pour qu'une annonce et un lieu de meme identifiant ne se confondent jamais dans la liste.
  */
+/** Le rang d'un lieu dans le carrousel compose, cartes speciales comprises ; -1 s'il n'y est pas. */
+export function rangDuLieu<T>(elements: readonly ElementDeCarrousel<T>[], cle: string): number {
+    return elements.findIndex((element) => element.nature === 'lieu' && element.cle === `lieu:${cle}`);
+}
+
 export function composerCarrousel<T>(
     speciales: readonly BdeAnnonce[],
     lieux: readonly T[],

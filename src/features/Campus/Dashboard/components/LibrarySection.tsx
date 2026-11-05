@@ -31,7 +31,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
     const { libraries, affluences, failure, secteursMuets, loading, enCours, retry } = useNearbyLibraries(userLat, userLon, revision);
     useChargementDeSection('bibliotheques', enCours);
 
-    const { favorites: favBu, toggleFavorite: toggleFavBu, pret: favorisLus } = useFavorites('library_favorites');
+    const { favorites: favBu, toggleFavorite: toggleFavBu, pret: favorisLus, dernierAjout } = useFavorites('library_favorites');
     const [libraryFilter, setFiltre, filtreLu] = useSavedFilter('library_filter', 'all');
     // Les cartes attendent les favoris et le filtre (useFavorites.ts) — et, sous le filtre « ouvertes »,
     // les affluences : c'est elles qui disent qu'une bibliotheque est fermee, et une carte montree
@@ -98,6 +98,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
                     emplacement="bibliotheques"
                     lieux={filteredLibraries}
                     cleDuLieu={identifiant}
+                    suivre={dernierAjout}
                     rendreLieu={renderCard}
                     theme={theme}
                     navigation={navigation}

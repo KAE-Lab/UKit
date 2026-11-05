@@ -89,7 +89,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
     
     const { buildings, failure, loading, relire } = useBatimentsDuTableau(userLat, userLon);
 
-    const { favorites: favBuildings, toggleFavorite: toggleFavBuilding, pret: favorisLus } = useFavorites('freeroom_favorites');
+    const { favorites: favBuildings, toggleFavorite: toggleFavBuilding, pret: favorisLus, dernierAjout } = useFavorites('freeroom_favorites');
     // Les cartes attendent aussi les favoris : triees sans eux, elles se retrieraient sous les yeux.
     // Et les annonces, pour les cartes speciales (annonces.tsx).
     const annoncesLues = useAnnoncesLues();
@@ -141,6 +141,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
                     emplacement="salles"
                     lieux={sortedBuildings}
                     cleDuLieu={identifiant}
+                    suivre={dernierAjout}
                     rendreLieu={renderCard}
                     theme={theme}
                     navigation={navigation}

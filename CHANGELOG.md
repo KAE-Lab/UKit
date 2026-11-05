@@ -34,6 +34,7 @@ une application qui donne l'heure des choses d'un regard.
   contenu passe sous le bandeau en fondu. Un repas tient sur une carte, ses catégories en gris, sans
   les icônes devinées devant chaque plat ; les salles libres se rangent par étage, une carte par
   étage. Plus de couleur par section : les intertitres sont ceux du tableau Campus.
+- **Le carrousel suit la carte qu'on étoile** : elle remonte en tête, et le carrousel la garde en vue.
 - **Le jeu du point pendant la connexion universitaire.** Quatorze à vingt-six secondes d'attente,
   occupées : le point du « i » du logo saute les cotes qui défilent sur l'horizon, au pouce, avec
   son record. Il s'efface à l'arrivée du dossier et ne paraît pas sous « réduire les animations ».

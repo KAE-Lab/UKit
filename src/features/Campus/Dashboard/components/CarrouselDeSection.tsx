@@ -18,11 +18,14 @@ export interface CarrouselDeSectionProps<T> {
     /** La mesure des impressions (shared/mesure/impressions) : un couple a identite stable, ou rien. */
     onViewableItemsChanged?: FlatListProps<T>['onViewableItemsChanged'];
     viewabilityConfig?: FlatListProps<T>['viewabilityConfig'];
+    /** La liste elle-meme, pour qui doit la faire defiler (le suivi d'une carte etoilee). */
+    listeRef?: React.Ref<FlatList<T>>;
 }
 
-export function CarrouselDeSection<T>({ data, renderItem, keyExtractor, largeurCarte, onViewableItemsChanged, viewabilityConfig }: CarrouselDeSectionProps<T>) {
+export function CarrouselDeSection<T>({ data, renderItem, keyExtractor, largeurCarte, onViewableItemsChanged, viewabilityConfig, listeRef }: CarrouselDeSectionProps<T>) {
     return (
         <FlatList
+            ref={listeRef}
             horizontal
             data={data}
             renderItem={renderItem}
