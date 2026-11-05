@@ -353,7 +353,14 @@ Deux comportements de l'application à connaître sur le banc. Le thème du syst
 qu'au premier lancement ; ensuite, l'application suit son propre réglage, et `pm clear` sur
 `com.bordeaux1.emplois` rejoue une installation neuve. La coupure `reseau non` est celle du système,
 WebView et Supabase compris, et Metro continue d'arriver par le tunnel d'adb : c'est le chemin
-dégradé réel sans perdre la session, vérifié le 2026-11-04.
+dégradé réel sans perdre la session, vérifié le 2026-11-04. Enfin, `animations non` ne vaut
+« réduire les animations » qu'**après un arrêt forcé** de l'application : Reanimated lit le réglage du
+système (`transition_animation_scale`) au lancement du processus, et un rechargement de Metro ne le
+relit pas. Mesuré le 2026-11-05 sur le fond de Campus : il glissait encore après un rechargement, et
+plus un pixel ne bougeait en cinq secondes après `am force-stop` et relance. Un utilisateur qui change
+le réglage en cours de route attend donc, lui aussi, la relance suivante. Sur `ukit`, le bouton
+flottant « Tools » du build de développement recouvre le bouton droit des en-têtes : il se coupe dans le
+menu de développement (« Tools button »).
 
 Ce que le banc ne dit pas, et qui reste aux deux appareils :
 
