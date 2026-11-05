@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getEtablissementActif } from '../../../shared/etablissements';
 import { LogoEtablissement } from './LogoEtablissement';
 import { BlocProgression } from './ScolariteLoadingScreen';
+import { JeuDuPoint } from '../../../shared/ui/jeu/JeuDuPoint';
 import { franchirLaPorte } from './BiometryGate';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 
@@ -61,6 +62,17 @@ const EnTeteDuFormulaire = ({ theme, color, compact }) => (
 );
 
 /**
+ * Le jeu du point sous la carte, le temps de la connexion (7-J) : quatorze a vingt-six secondes, la
+ * plus longue attente de l'application, et celle que vit chaque nouvel utilisateur. Il part avec la
+ * session ; sous « reduire les animations », il ne parait pas.
+ */
+const JeuDeLaConnexion = ({ theme }) => (
+    <View style={styles.jeu}>
+        <JeuDuPoint theme={theme} />
+    </View>
+);
+
+/**
  * La carte du formulaire : les champs, l'erreur, le bouton — ou la progression a leur place.
  *
  * Sortie du composant pour le garder sous la limite de lignes, comme `EnTeteDuFormulaire`.
@@ -76,6 +88,7 @@ const CarteDuFormulaire = ({
     const champMotDePasse = useRef<TextInput>(null);
 
     return (
+        <>
             <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
                 {enSession ? (
                     /*
@@ -201,6 +214,8 @@ const CarteDuFormulaire = ({
                     </>
                 )}
             </View>
+            {enSession ? <JeuDeLaConnexion theme={theme} /> : null}
+        </>
     );
 };
 
@@ -406,6 +421,10 @@ const styles = StyleSheet.create({
         padding: tokens.space.md,
         borderRadius: tokens.radius.lg,
         borderWidth: 1,
+    },
+    jeu: {
+        marginHorizontal: tokens.space.md,
+        marginTop: tokens.space.md,
     },
     input: {
         height: 50,

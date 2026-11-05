@@ -38,6 +38,7 @@ import { View, Text, Animated, Easing, StyleSheet } from 'react-native';
 import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { ProgressBar } from '../../../shared/ui/ProgressBar';
+import { JeuDuPoint } from '../../../shared/ui/jeu/JeuDuPoint';
 
 /**
  * `plafond` : ou la barre tend pendant cette etape, sans jamais l'atteindre.
@@ -58,10 +59,13 @@ const STEPS = [
     // Le run n'a pas encore annonce d'etape : `scrapeProgress` vaut `null` pendant la navigation
     // initiale et la cascade SSO, ce qui laissait la ligne **vide** — la barre avancait sous un
     // texte absent. Une phase nommee vaut mieux qu'un blanc.
-    { key: '__demarrage', labelKey: 'LOADING_STARTING', plafond: 9, duree: 4000 },
-    { key: 'connecting', labelKey: 'LOADING_CONNECTING', plafond: 34, duree: 18000 },
-    { key: 'profile', labelKey: 'LOADING_PROFILE', plafond: 46, duree: 3000 },
-    { key: 'dossier', labelKey: 'LOADING_DOSSIER', plafond: 97, duree: 24000 },
+    // Les durees sont celles mesurees apres 6.1-D (parcours froid de 14 s a Bordeaux, 25 s a l'INP),
+    // et non plus celles d'un parcours de 46 s : la connexion annoncait dix-huit secondes pour un
+    // plafond de 34 %, et la barre paraissait figee vers 30 % (defauts-fonctionnels.md, 7-J).
+    { key: '__demarrage', labelKey: 'LOADING_STARTING', plafond: 8, duree: 2000 },
+    { key: 'connecting', labelKey: 'LOADING_CONNECTING', plafond: 40, duree: 7000 },
+    { key: 'profile', labelKey: 'LOADING_PROFILE', plafond: 52, duree: 2000 },
+    { key: 'dossier', labelKey: 'LOADING_DOSSIER', plafond: 97, duree: 11000 },
     // La fin. Elle n'est jamais annoncee par le run : c'est l'appelant qui la pose, quand la session
     // s'acheve. Sans elle, la barre restait la ou elle en etait et l'ecran cedait la place d'un coup.
     { key: '__fin', labelKey: 'LOADING_FINISHING', plafond: 100, duree: 420 },
@@ -113,12 +117,15 @@ function useProgression(indice: number) {
         // l'ecran avance (constate sur le College ST le 2026-08-31). Une cible plus basse que
         // l'acquis est donc ignoree : le libelle continue de raconter la phase, la barre tient.
         if (etape.plafond <= atteint.current) return;
-        // `Easing.out` : rapide au debut, de plus en plus lent en approchant du plafond. C'est ce qui
-        // donne l'impression d'une progression qui « travaille » plutot que d'un compte a rebours.
+        // Une approche **asymptotique** (7-J) : rapide au debut, puis de plus en plus lente, sans
+        // jamais s'arreter avant la fin reelle de l'etape. `duree` est le temps pour couvrir neuf
+        // dixiemes du chemin ; la course entiere en prend le triple. L'ancienne courbe touchait son
+        // plafond a `duree` puis s'immobilisait si l'etape durait davantage — c'est cet arret que
+        // l'oeil lisait comme un blocage.
         const animation = Animated.timing(valeur, {
             toValue: etape.plafond,
-            duration: etape.duree,
-            easing: Easing.out(Easing.quad),
+            duration: etape.duree * 3,
+            easing: Easing.out(Easing.exp),
             // La largeur d'une vue n'est pas animable par le pilote natif.
             useNativeDriver: false,
         });
@@ -190,12 +197,18 @@ export function BlocProgression({ scrapeProgress, terminee = false, theme, color
                 >
                     {Translator.get(STEPS[indice].labelKey)}
                 </Animated.Text>
-                <Text style={[styles.pourcent, { color: theme.font }]}>{`${entier} %`}</Text>
+                <Text style={[styles.pourcent, tokens.texte.chiffres, { color: theme.font }]}>{`${entier} %`}</Text>
             </View>
         </View>
     );
 }
 
+/**
+ * L'ecran du parcours froid : le titre, la progression, et le jeu du point dessous (7-J). Quatorze a
+ * vingt-six secondes d'attente par nature, sur le seul ecran ou elle est longue : le jeu les occupe, et
+ * l'ecran entier s'efface a l'arrivee du dossier. Sous « reduire les animations », le jeu ne s'affiche
+ * pas et l'ecran redevient celui d'avant.
+ */
 const ScolariteLoadingScreen = ({ scrapeProgress, terminee = false, theme, color }) => (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
         <Text style={[styles.title, { color: theme.font }]}>
@@ -207,6 +220,7 @@ const ScolariteLoadingScreen = ({ scrapeProgress, terminee = false, theme, color
             theme={theme}
             color={color}
         />
+        <JeuDuPoint theme={theme} />
     </View>
 );
 
@@ -222,8 +236,7 @@ const styles = StyleSheet.create({
         // Pleine largeur : un texte libre dans un parent qui centre se tronque sur Android (docs/theme.md).
         alignSelf: 'stretch',
         textAlign: 'center',
-        fontSize: tokens.fontSize.xxl,
-        fontWeight: tokens.fontWeight.semibold,
+        ...tokens.texte.titreDeSection,
     },
     bloc: {
         width: '100%',

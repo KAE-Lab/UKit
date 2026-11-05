@@ -23,7 +23,13 @@ section 2 de [sources-externes.md](../sources-externes.md).
 2. **Première connexion** (parcours « froid ») : un écran de progression détaille les étapes —
    connexion, profil, dossier. Les pauses déclarées ne sont pas du confort, elles sont la condition
    pour que les cascades d'authentification arrivent avant qu'on interroge la page (voir
-   [Décisions de conception](#décisions-de-conception)).
+   [Décisions de conception](#décisions-de-conception)). Depuis [7-J](../phase-7/7-j-ecrans.md), le
+   **jeu du point** occupe ces quatorze à vingt-six secondes, sous la barre, dans le formulaire
+   comme dans l'écran plein ([`JeuDuPoint`](../../src/shared/ui/jeu/JeuDuPoint.tsx)) : le point du
+   « i » du logo saute les cotes qui défilent sur l'horizon de l'Épure, un toucher par saut, le
+   record gardé sur l'appareil. Il s'efface avec la session et ne paraît pas sous « réduire les
+   animations ». La barre est recalée sur les durées mesurées après 6.1-D et s'approche de chaque
+   palier sans jamais s'y arrêter avant la fin réelle de l'étape.
 3. **Lancements suivants** : plus aucun run au démarrage. Les données d'identité sont stockées, et
    les [widgets](#les-widgets) s'ouvrent sur leur dernière valeur connue, puis se rafraîchissent
    **dans la page** si elle est périmée.

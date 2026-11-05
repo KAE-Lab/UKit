@@ -34,6 +34,10 @@ const fr: TranslationDict = {
 	CALENDAR_ALLOW: 'Autoriser l’agenda',
 	// Le don, ouvert dans le navigateur du systeme quand le catalogue en publie l'adresse (7-N).
 	INSTITUTION_SEARCH: 'Cherche un établissement, un sigle…',
+	// Le jeu du point, pendant la connexion universitaire (7-J).
+	JEU_CONSIGNE: 'Touche pour sauter',
+	JEU_RECORD: 'record $-',
+	JEU_ACCESSIBILITE: 'Mini-jeu : touche pour faire sauter le point',
 	SUPPORT_UKIT: 'Soutenir UKit',
 	ENGLISH: 'Anglais',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).

@@ -33,6 +33,10 @@ const es: TranslationDict = {
 		'El acceso al calendario permite escribir tus clases y ver tus citas en el horario.',
 	CALENDAR_ALLOW: 'Permitir el calendario',
 	INSTITUTION_SEARCH: 'Busca un centro o una sigla…',
+	// Le jeu du point, pendant la connexion universitaire (7-J).
+	JEU_CONSIGNE: 'Toca para saltar',
+	JEU_RECORD: 'récord $-',
+	JEU_ACCESSIBILITE: 'Minijuego: toca para que salte el punto',
 	SUPPORT_UKIT: 'Apoyar UKit',
 	ENGLISH: 'Inglés',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
