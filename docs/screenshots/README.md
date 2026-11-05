@@ -64,7 +64,7 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `onboarding-bienvenue.png` | étape 1, logo et accroche | essentielle |
+| `onboarding-bienvenue-android.png` | étape 1, Fig. 01 en écho, le logo et le mot de bienvenue (7-J), sur le banc Android | **prise** |
 | `onboarding-etablissement.png` | étape 3, la liste des universités | **prise** |
 | `onboarding-compte.png` | étape 4, le compte universitaire et sa sortie « Plus tard » (jalon 6-J) | attendue |
 | `onboarding-preferences.png` | étape 2, choix du thème et de la langue | essentielle |
@@ -102,7 +102,8 @@ peuvent attendre.
 |---|---|---|
 | `campus-dashboard.png` | tableau de bord, quatre sections | essentielle — la comparaison avant / après du jalon 6-K a été faite **hors dépôt** ; le fichier reste à déposer |
 | `campus-dashboard-avant.png` · `-avant-dark.png` · `-avant-android.png` · `-avant-android-dark.png` | le tableau de bord **avant** le jalon [7-I](../phase-7/7-i-releve-et-vocabulaire.md), sur les deux appareils et dans les deux thèmes : la ligne de base du relevé du mouvement | attendues — à prendre avant tout code du jalon |
-| `campus-dashboard-apres.png` · `-apres-dark.png` · `-apres-android.png` · `-apres-android-dark.png` | le même écran à la livraison de 7-I | attendues |
+| `campus-dashboard-apres.png` · `-apres-dark.png` · `-apres-android.png` · `-apres-android-dark.png` | le même écran à la livraison de 7-I | les deux `-android` **prises** le 2026-11-05 au format de l'A8, avec 7-J ; celles de l'iPhone attendues |
+| `planning-jour-`, `scolarite-dashboard-`, `reglages-` · `avant-android` · `apres-android`, et leurs `-dark` | les trois autres onglets avant et après [7-J](../phase-7/7-j-ecrans.md), au format de l'A8, noms d'enseignants floutés | **prises** le 2026-11-05 ; à la sortie, `-apres` devient la capture courante de chaque écran |
 | `annonces-liste-avant.png` · `annonces-liste-apres.png` | la grille des annonces, du 1:1 au 4:5 | attendues |
 | `campus-liste-filtres.png` | modale de filtres du socle de liste | complémentaire |
 | `campus-liste-vide.png` | état vide d'une liste filtrée | complémentaire |
@@ -163,7 +164,7 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 | Fichier | Contenu | Priorité |
 |---|---|---|
 | `reglages.png` | écran complet, sections déployées | essentielle |
-| `reglages-apropos.png` | écran À propos | essentielle |
+| `reglages-apropos-android.png` | écran À propos, au gabarit des Réglages (7-J), sur le banc Android | **prise** |
 | `reglages-filtres.png` | modale de gestion des filtres d'UE | complémentaire |
 | `reglages-calendrier.png` | modale de choix du calendrier | complémentaire |
 | `reglages-langue.png` | modale de langue | complémentaire |
