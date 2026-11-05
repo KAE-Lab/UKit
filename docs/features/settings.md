@@ -8,13 +8,18 @@ Tout l'état de cet onglet est porté par `SettingsManager`
 
 ## Parcours utilisateur
 
-L'écran est une suite de sections empilées, sous un titre qui s'efface au défilement :
+L'écran est une suite de **groupes encadrés** ([7-J](../phase-7/7-j-ecrans.md), 2026-11-05) : une
+carte par section, des rangées de 52 points séparées par un filet indenté sous le libellé, l'icône
+blanche dans un carré de la couleur de sa famille, l'explication d'un réglage en pied de groupe
+([`GroupeDeReglages`](../../src/features/Settings/components/GroupeDeReglages.tsx)). Chaque réglage
+était sa propre carte : la pile d'objets sans rapport que [theme.md](../theme.md) interdit. Le grand
+titre part avec le contenu, et une barre compacte prend le relais
+([`PageDesReglages`](../../src/features/Settings/components/PageDesReglages.tsx), `EnTeteDOnglet`).
 
 | Section | Contenu |
 |---|---|
-| **Établissement** | l'université sélectionnée (modale de choix, avec confirmation) |
-| **Affichage** | langue (modale de choix), filtres d'UE (écran dédié) |
-| **Thème** | interrupteur mode sombre |
+| **Établissement** | l'université sélectionnée (modale de choix, avec confirmation ; regroupée par campus et cherchée par alias dès six établissements), le compte, le lien d'emploi du temps, et **Soutenir UKit** quand le catalogue publie `services.soutien` — le don s'ouvre dans le navigateur du système, règle des stores |
+| **Affichage** | langue (modale de choix), mode sombre, filtres d'UE (écran dédié) |
 | **Notifications** | interrupteur des messages de service en notification (6.1.x-E — le couper retire le jeton de la base), interrupteur des rappels de cours, curseur de délai. Les deux sont **actifs par défaut**, et c'est l'entretien qui demande la permission une fois ([plateforme.md](../plateforme.md#permissions)) |
 | **Confidentialité** | interrupteur « Statistiques anonymes » (7-D), **actif par défaut** : le couper arrête le comptage et vide la file locale ; « Réinitialiser l'application » le remet actif ([mesure.md](../mesure.md)) |
 | **Lancement** | ouvrir sur le groupe favori, réinitialiser l'application |
@@ -393,10 +398,13 @@ bloc le dit, l'entretien à l'ouverture reste jouable, et la tâche se vérifie 
 
 **Ouvrir l'écran sans permission ne bascule plus rien** (6.1-C). Le montage appelait la fonction de
 l'interrupteur quand la permission manquait : elle la demandait, puis basculait la synchronisation
-si elle était accordée — et ouvrait la modale d'extinction si elle était déjà active. La permission
-est demandée une fois au montage, seulement relue à chaque retour sur l'écran, et l'état de
-synchronisation reste ce qu'il était ; accorder la permission dans les réglages du système puis
-revenir remplace la carte « permission » par l'interrupteur.
+si elle était accordée — et ouvrait la modale d'extinction si elle était déjà active.
+
+**Et il ne demande plus rien** ([7-J](../phase-7/7-j-ecrans.md)) : la permission est **lue** au
+montage et à chaque retour, jamais demandée. Sans elle, la section n'a qu'une rangée, « Autoriser
+l'agenda », qui la demande ; refusée pour de bon, le système ne redemande plus et ses réglages
+s'ouvrent. La demande au montage ouvrait la boîte du système sans contexte, à chaque installation
+neuve, à qui ne venait que changer de langue (relevé sur le banc le 2026-11-05).
 
 La fenêtre synchronisée est l'**année universitaire** : du 1er août courant au 1er août suivant, avec
 recul d'un an si l'on est avant août. Ses deux bornes sont **calculées par le service** et passées en
@@ -635,6 +643,9 @@ réinitialiser serait un résidu, pas un service.
   leur couleur, **sans** le calendrier cible de la synchronisation ; cocher deux calendriers, tuer
   l'application, revenir : la rangée dit « 2 choisis » et les deux sont cochés. Retirer la
   permission dans les réglages du système : l'écran montre l'encart et le bouton vers les réglages.
+- Installation neuve : ouvrir les Réglages **n'ouvre aucune boîte du système** ; la section du
+  calendrier n'a qu'une rangée, « Autoriser l'agenda », qui la demande ; la refuser deux fois ouvre
+  les réglages du système.
 - Ouvrir les Réglages avec un compte connecté puis se déconnecter et revenir : la ligne « Compte
   universitaire » doit passer de **Connecté** à **Non connecté** sans relancer l'application.
 - Sur un établissement à lien d'abonnement, coller un lien puis revenir aux Réglages : la ligne « Lien
@@ -675,7 +686,10 @@ réinitialiser serait un résidu, pas un service.
 | [`screens/FiltersScreen.tsx`](../../src/features/Settings/screens/FiltersScreen.tsx) | l'écran des filtres d'UE : filtres actifs et leur croix, recherche, suggestions, saisie de code |
 | [`screens/CalendriersAffichesScreen.tsx`](../../src/features/Settings/screens/CalendriersAffichesScreen.tsx) | l'écran des calendriers du téléphone affichés dans le Planning : par source, couleur, interrupteur, cible de synchronisation écartée (6.1.x-D) |
 | [`shared/services/CalendarSyncHelpers.ts`](../../src/shared/services/CalendarSyncHelpers.ts) | les pièces sans état de la synchronisation : projection d'un cours vers un événement, création du calendrier `UKit`, écriture d'un passage, retrait de ce qu'un passage a écrit |
-| [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les sept sections : établissement, affichage, thème, notifications, confidentialité (7-D — autonome : elle lit le réglage de la mesure par son hook), lancement, calendrier |
+| [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les six groupes : établissement, affichage (le thème y est entré en 7-J), notifications, calendrier, confidentialité (7-D — autonome : elle lit le réglage de la mesure par son hook), lancement |
+| [`components/GroupeDeReglages.tsx`](../../src/features/Settings/components/GroupeDeReglages.tsx) | le groupe encadré et sa rangée : carré teinté, valeur qui cède, interrupteur, filets indentés (7-J) |
+| [`components/PageDesReglages.tsx`](../../src/features/Settings/components/PageDesReglages.tsx) | le fond, l'en-tête d'onglet et la vue défilante, en Reanimated (7-J) |
+| [`shared/etablissements/regroupement.ts`](../../src/shared/etablissements/regroupement.ts) · [`regroupement.test.ts`](../../src/shared/etablissements/regroupement.test.ts) | pur : la liste des établissements regroupée par campus, la recherche par nom, code, campus et alias (7-J) |
 | [`components/SettingsModals.tsx`](../../src/features/Settings/components/SettingsModals.tsx) | la modale de choix générique (`SettingsChoicePopup`), ses habillages langue et calendrier, réinitialisation, extinction de la synchronisation |
 | [`shared/ui/ChoixEtablissement.tsx`](../../src/shared/ui/ChoixEtablissement.tsx) | la modale d'établissement : la liste, puis la confirmation de ce qui sera effacé — partagée avec le formulaire de connexion depuis 6.1-A |
 | [`shared/etablissements/bascule.ts`](../../src/shared/etablissements/bascule.ts) | la bascule d'établissement — purge, adoucissement, sélection — la même depuis les Réglages, l'accueil et le formulaire |

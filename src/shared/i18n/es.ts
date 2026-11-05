@@ -30,7 +30,10 @@ const es: TranslationDict = {
 	DETAILS: 'Detalles',
 	DISPLAY: 'Mostrar',
 	ENABLE_CALENDAR_PERMISSION_DESCRIPTION:
-		'Permita que la aplicación acceda a sus calendarios a través de los Ajustes del sistema antes de utilizar esta función.',
+		'El acceso al calendario permite escribir tus clases y ver tus citas en el horario.',
+	CALENDAR_ALLOW: 'Permitir el calendario',
+	INSTITUTION_SEARCH: 'Busca un centro o una sigla…',
+	SUPPORT_UKIT: 'Apoyar UKit',
 	ENGLISH: 'Inglés',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
 	ERROR_SERVICE_UNAVAILABLE_TITLE: 'Servicio no disponible',
@@ -189,7 +192,6 @@ const es: TranslationDict = {
 	INSTITUTION_CHANGE_WARNING: 'Tus grupos favoritos, tu horario en caché, tu sesión universitaria y los cursos añadidos a tu calendario se borrarán.\nLos datos de dos universidades no se mezclan.',
 	INSTITUTION_UNAVAILABLE: 'Tu centro ya no aparece en la lista. UKit sigue con lo que sabe de él.',
 	// Le compte a l'accueil et le lien d'abonnement (jalon 6-J).
-	UNIVERSITY_ACCOUNT: 'Cuenta universitaria',
 	ACCOUNT_CONNECTED: 'Conectada',
 	ACCOUNT_NOT_CONNECTED: 'Sin conectar',
 	CONNECT_ACCOUNT_TITLE: 'Conecta tu cuenta universitaria',

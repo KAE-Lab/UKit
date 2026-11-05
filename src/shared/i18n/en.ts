@@ -28,7 +28,10 @@ const en = {
 	DETAILS: 'Details',
 	DISPLAY: 'Display',
 	ENABLE_CALENDAR_PERMISSION_DESCRIPTION:
-		'Please allow Ukit to access to your calendars in system Settings to use this feature.',
+		'Calendar access lets UKit write your classes and show your appointments in the Planning.',
+	CALENDAR_ALLOW: 'Allow calendar access',
+	INSTITUTION_SEARCH: 'Search a school or an acronym…',
+	SUPPORT_UKIT: 'Support UKit',
 	ENGLISH: 'English',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
 	ERROR_SERVICE_UNAVAILABLE_TITLE: 'Service unavailable',
@@ -187,7 +190,6 @@ const en = {
 	INSTITUTION_CHANGE_WARNING: 'Your favourite groups, cached timetable, university session and the courses added to your calendar will be erased.\nData from two universities does not mix.',
 	INSTITUTION_UNAVAILABLE: 'Your institution is no longer listed. UKit carries on with what it knows.',
 	// Le compte a l'accueil et le lien d'abonnement (jalon 6-J).
-	UNIVERSITY_ACCOUNT: 'University account',
 	ACCOUNT_CONNECTED: 'Signed in',
 	ACCOUNT_NOT_CONNECTED: 'Not signed in',
 	CONNECT_ACCOUNT_TITLE: 'Sign in to your university account',

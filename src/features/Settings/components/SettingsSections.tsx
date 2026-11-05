@@ -1,13 +1,21 @@
+/**
+ * Les sections de l'ecran Reglages, chacune un groupe encadre (jalon 7-J, `GroupeDeReglages`).
+ *
+ * Chaque rangee porte la teinte de sa famille dans le carre de son icone, prise dans les couleurs du
+ * systeme (`sectionsHeaders`) : l'etablissement en indigo, ce qui touche au compte en bleu, l'agenda et
+ * les messages en rouge, les rappels et les filtres en orange, la confidentialite en vert.
+ */
+
 import React from 'react';
-import { View, Text, Linking } from 'react-native';
+import { View, Text } from 'react-native';
 import moment from 'moment';
-import Button from '../../../shared/ui/Button';
+
 import Translator from '../../../shared/i18n/Translator';
 import { Curseur } from '../../../shared/ui/Curseur';
-import { tokens } from '../../../shared/theme/Theme';
-import { AppThemeType } from '../../../shared/theme/Theme';
-import { PointDeCouleur, POINT_DE_COULEUR } from '../../../shared/ui/PointDeCouleur';
+import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { useMesureActive } from '../../../shared/mesure';
+import { GroupeDeReglages, RangeeDeReglage } from './GroupeDeReglages';
 
 const LANGUAGE_LIST = {
     fr: 'FRENCH',
@@ -15,21 +23,22 @@ const LANGUAGE_LIST = {
     es: 'SPANISH',
 };
 
+/** Les teintes des carres d'icone, par famille : les couleurs du systeme du theme courant. */
+function teintes(theme: AppThemeType) {
+    const [bleu, vert, orange, rouge, indigo, cyan] = theme.sectionsHeaders;
+    return { bleu, vert, orange, rouge, indigo, cyan, gris: theme.neutral };
+}
+
+/**
+ * L'intertitre d'un groupe de reglages, pour les ecrans pousses qui composent encore leurs rangees a
+ * la main (les filtres, les calendriers du telephone).
+ */
 export const SettingsTextHeader = ({ theme, text }: { theme: AppThemeType['settings']; text: string }) => {
     if (!theme?.separationText) return null;
     return <Text style={theme.separationText as never}>{text.toUpperCase()}</Text>;
 };
 
-interface DisplaySectionProps {
-    themeSettings: AppThemeType['settings'];
-    language: string;
-    openLanguageDialog: () => void;
-    /** Les filtres sont un ecran pousse, plus une modale : la rangee navigue. */
-    openFilters: () => void;
-}
-
 interface InstitutionSectionProps {
-    themeSettings: AppThemeType['settings'];
     theme: AppThemeType;
     /** Le nom de l'etablissement selectionne, tel que le catalogue le porte. Jamais traduit. */
     institutionName: string;
@@ -45,110 +54,93 @@ interface InstitutionSectionProps {
     lienEdtPossible: boolean;
     lienEdtPose: boolean;
     openLienEdt: () => void;
+    /** Le don, quand le catalogue en publie l'adresse : il s'ouvre dans le navigateur du systeme. */
+    soutien?: () => void;
 }
 
 /**
- * L'etablissement, en premiere position de l'ecran (jalon 6-G).
- *
- * En premier parce que c'est le reglage dont tous les autres dependent : les groupes, le planning, la
- * session universitaire. Le nom affiche a droite vient du **catalogue** et n'est pas traduit — c'est
- * une donnee, comme le nom d'un calendrier du systeme juste en dessous.
- *
- * L'avertissement de retrait est **une phrase, pas une bascule** : l'application continue sur ce
- * qu'elle sait de l'etablissement plutot que de renvoyer quelqu'un ailleurs au milieu de son annee.
+ * L'etablissement, en premiere position de l'ecran (jalon 6-G) : c'est le reglage dont tous les autres
+ * dependent. Le nom a droite vient du **catalogue** et n'est pas traduit. Le rappel du compte (6-J) vit
+ * ici, avec le reglage dont il depend, et disparait chez un etablissement sans portail. L'avertissement
+ * de retrait est une phrase, pas une bascule.
  */
 export const InstitutionSection = ({
-    themeSettings, theme, institutionName, institutionRetiree, openInstitutionDialog,
-    comptePossible, compteConnecte, openCompte, lienEdtPossible, lienEdtPose, openLienEdt,
-}: InstitutionSectionProps) => (
-    <>
-        <SettingsTextHeader theme={themeSettings} text={Translator.get('INSTITUTION')} />
-        <Button
-            theme={themeSettings}
-            onPress={openInstitutionDialog}
-            leftIcon="school"
-            leftText={Translator.get('INSTITUTION')}
-            rightText={institutionName}
-        />
-        {/*
-          * Le rappel du compte (jalon 6-J). L'etape de l'accueil se saute, et la specification
-          * demandait « une etape sautable **et rappelee** » : c'est ici que le rappel vit, avec le
-          * reglage dont il depend. Il disparait chez un etablissement sans portail — un compte qu'on
-          * ne peut pas connecter n'est pas un reglage, c'est une promesse en l'air.
-          */}
-        {comptePossible && (
-            <Button
-                theme={themeSettings}
-                onPress={openCompte}
-                leftIcon="account-circle"
-                leftText={Translator.get('UNIVERSITY_ACCOUNT')}
-                rightText={Translator.get(compteConnecte ? 'ACCOUNT_CONNECTED' : 'ACCOUNT_NOT_CONNECTED')}
-            />
-        )}
-        {/* Le lien d'abonnement, la ou il y en a un a poser — et nulle part ailleurs. */}
-        {lienEdtPossible && (
-            <Button
-                theme={themeSettings}
-                onPress={openLienEdt}
-                leftIcon="calendar-import"
-                leftText={Translator.get('TIMETABLE_LINK')}
-                rightText={Translator.get(lienEdtPose ? 'ACCOUNT_CONNECTED' : 'ACCOUNT_NOT_CONNECTED')}
-            />
-        )}
-        {institutionRetiree && (
-            <Text style={{
-                color: theme.fontSecondary,
-                fontSize: tokens.fontSize.xs,
-                paddingHorizontal: tokens.space.md,
-                marginTop: tokens.space.xs,
-            }}>
-                {Translator.get('INSTITUTION_UNAVAILABLE')}
-            </Text>
-        )}
-    </>
-);
+    theme, institutionName, institutionRetiree, openInstitutionDialog,
+    comptePossible, compteConnecte, openCompte, lienEdtPossible, lienEdtPose, openLienEdt, soutien,
+}: InstitutionSectionProps) => {
+    const t = teintes(theme);
+    return (
+        <GroupeDeReglages
+            theme={theme}
+            titre={Translator.get('INSTITUTION')}
+            pied={institutionRetiree ? Translator.get('INSTITUTION_UNAVAILABLE') : undefined}
+        >
+            <RangeeDeReglage theme={theme} icone="school" teinte={t.indigo} libelle={Translator.get('INSTITUTION')} valeur={institutionName} onPress={openInstitutionDialog} />
+            {comptePossible && (
+                <RangeeDeReglage
+                    theme={theme}
+                    icone="account-circle"
+                    teinte={t.bleu}
+                    // « Compte » et non « Compte universitaire » : le groupe « Etablissement » le situe deja,
+                    // et a 360 points la valeur ne gardait que « Non … » (7-J).
+                    libelle={Translator.get('ACCOUNT')}
+                    valeur={Translator.get(compteConnecte ? 'ACCOUNT_CONNECTED' : 'ACCOUNT_NOT_CONNECTED')}
+                    onPress={openCompte}
+                />
+            )}
+            {lienEdtPossible && (
+                <RangeeDeReglage
+                    theme={theme}
+                    icone="calendar-import"
+                    teinte={t.cyan}
+                    libelle={Translator.get('TIMETABLE_LINK')}
+                    valeur={Translator.get(lienEdtPose ? 'ACCOUNT_CONNECTED' : 'ACCOUNT_NOT_CONNECTED')}
+                    onPress={openLienEdt}
+                />
+            )}
+            {soutien !== undefined && (
+                <RangeeDeReglage theme={theme} icone="hand-heart-outline" teinte={t.rouge} libelle={Translator.get('SUPPORT_UKIT')} onPress={soutien} />
+            )}
+        </GroupeDeReglages>
+    );
+};
 
-export const DisplaySection = ({ themeSettings, language, openLanguageDialog, openFilters }: DisplaySectionProps) => (
-    <>
-        <SettingsTextHeader theme={themeSettings} text={Translator.get('DISPLAY')} />
-        <Button
-            theme={themeSettings}
-            onPress={openLanguageDialog}
-            leftIcon="language"
-            leftText={Translator.get('LANGUAGE')}
-            rightText={Translator.get(LANGUAGE_LIST[language as keyof typeof LANGUAGE_LIST] as Parameters<typeof Translator.get>[0])}
-        />
-        <Button
-            theme={themeSettings}
-            onPress={openFilters}
-            leftIcon="filter-list"
-            leftText={Translator.get('FILTERS')}
-            rightText="..."
-        />
-    </>
-);
-
-interface ThemeSectionProps {
-    themeSettings: AppThemeType['settings'];
+interface DisplaySectionProps {
+    theme: AppThemeType;
+    language: string;
+    openLanguageDialog: () => void;
+    /** Les filtres sont un ecran pousse, plus une modale : la rangee navigue. */
+    openFilters: () => void;
     isDarkMode: boolean;
     toggleTheme: () => void;
 }
 
-export const ThemeSection = ({ themeSettings, isDarkMode, toggleTheme }: ThemeSectionProps) => (
-    <>
-        <SettingsTextHeader theme={themeSettings} text={Translator.get('THEME')} />
-        <Button
-            theme={themeSettings}
-            leftIcon="theme-light-dark"
-            leftText={Translator.get('DARK_MODE')}
-            onSwitchToggle={toggleTheme}
-            switchValue={isDarkMode}
-        />
-    </>
-);
+/** L'affichage : la langue, le theme et les filtres, ensemble — ce qui change ce que l'on voit. */
+export const DisplaySection = ({ theme, language, openLanguageDialog, openFilters, isDarkMode, toggleTheme }: DisplaySectionProps) => {
+    const t = teintes(theme);
+    return (
+        <GroupeDeReglages theme={theme} titre={Translator.get('DISPLAY')}>
+            <RangeeDeReglage
+                theme={theme}
+                icone={{ mi: 'language' }}
+                teinte={t.bleu}
+                libelle={Translator.get('LANGUAGE')}
+                valeur={Translator.get(LANGUAGE_LIST[language as keyof typeof LANGUAGE_LIST] as Parameters<typeof Translator.get>[0])}
+                onPress={openLanguageDialog}
+            />
+            <RangeeDeReglage
+                theme={theme}
+                icone="theme-light-dark"
+                teinte={t.gris}
+                libelle={Translator.get('DARK_MODE')}
+                interrupteur={{ valeur: isDarkMode, onChange: toggleTheme }}
+            />
+            <RangeeDeReglage theme={theme} icone={{ mi: 'filter-list' }} teinte={t.orange} libelle={Translator.get('FILTERS')} onPress={openFilters} />
+        </GroupeDeReglages>
+    );
+};
 
 interface NotificationsSectionProps {
-    themeSettings: AppThemeType['settings'];
     theme: AppThemeType;
     courseNotificationsEnabled: boolean;
     toggleCourseNotifications: () => void;
@@ -160,118 +152,105 @@ interface NotificationsSectionProps {
     toggleMessagesEnNotification: () => void;
 }
 
-export const NotificationsSection = ({ themeSettings, theme, courseNotificationsEnabled, toggleCourseNotifications, courseNotificationDelay, onNotificationDelayChange, onNotificationDelaySlidingComplete, messagesEnNotification, toggleMessagesEnNotification }: NotificationsSectionProps) => (
-    <>
-        <SettingsTextHeader theme={themeSettings} text={Translator.get('NOTIFICATIONS')} />
-        <Button
-            theme={themeSettings}
-            leftIcon="bullhorn-outline"
-            leftText={Translator.get('PUSH_MESSAGES')}
-            onSwitchToggle={toggleMessagesEnNotification}
-            switchValue={messagesEnNotification}
-        />
-        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginHorizontal: tokens.space.md, marginTop: tokens.space.xs }}>
-            {Translator.get('PUSH_MESSAGES_DESC')}
-        </Text>
-        <Button
-            theme={themeSettings}
-            leftIcon="bell-outline"
-            leftText={Translator.get('COURSE_NOTIFICATIONS')}
-            onSwitchToggle={toggleCourseNotifications}
-            switchValue={courseNotificationsEnabled}
-        />
-        {courseNotificationsEnabled && (
-            <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.sm }}>
-                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: tokens.fontWeight.semibold }}>
-                        {Translator.get('NOTIFICATION_DELAY')}
-                    </Text>
-                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.primary, fontWeight: tokens.fontWeight.bold }}>
-                        {Translator.get('NOTIFICATION_DELAY_VALUE', courseNotificationDelay)}
-                    </Text>
-                </View>
-                <Curseur
-                    theme={themeSettings}
-                    valeur={courseNotificationDelay}
-                    min={5}
-                    max={60}
-                    pas={5}
-                    onChange={onNotificationDelayChange}
-                    onFin={onNotificationDelaySlidingComplete}
-                    accessibilityLabel={Translator.get('NOTIFICATION_DELAY')}
-                    libelleValeur={(v) => Translator.get('NOTIFICATION_DELAY_VALUE', v)}
-                />
-                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginTop: tokens.space.xs }}>
-                    {Translator.get('NOTIFICATION_DELAY_DESC')}
-                </Text>
-                {/* Le plafond de vingt (NotificationService) est une decision, et une decision se dit. */}
-                <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginTop: tokens.space.xs }}>
-                    {Translator.get('NOTIFICATION_CAP_DESC')}
+/** Le delai des rappels de cours, sous leur interrupteur quand ils sont actifs. */
+function DelaiDesRappels({ theme, valeur, onChange, onFin }: { theme: AppThemeType; valeur: number; onChange: (v: number) => void; onFin: (v: number) => void }) {
+    return (
+        <View style={{ paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.md }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.sm }}>
+                <Text style={{ fontSize: tokens.fontSize.md, color: theme.font }}>{Translator.get('NOTIFICATION_DELAY')}</Text>
+                <Text style={[tokens.texte.chiffres, { fontSize: tokens.fontSize.md, color: theme.accent, fontWeight: tokens.fontWeight.semibold }]}>
+                    {Translator.get('NOTIFICATION_DELAY_VALUE', valeur)}
                 </Text>
             </View>
-        )}
-    </>
-);
-
-interface ConfidentialiteSectionProps {
-    themeSettings: AppThemeType['settings'];
-    theme: AppThemeType;
+            <Curseur
+                theme={theme.settings}
+                valeur={valeur}
+                min={5}
+                max={60}
+                pas={5}
+                onChange={onChange}
+                onFin={onFin}
+                accessibilityLabel={Translator.get('NOTIFICATION_DELAY')}
+                libelleValeur={(v) => Translator.get('NOTIFICATION_DELAY_VALUE', v)}
+            />
+        </View>
+    );
 }
 
+export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggleCourseNotifications, courseNotificationDelay, onNotificationDelayChange, onNotificationDelaySlidingComplete, messagesEnNotification, toggleMessagesEnNotification }: NotificationsSectionProps) => {
+    const t = teintes(theme);
+    // Le plafond de vingt rappels (NotificationService) est une decision, et une decision se dit.
+    const pied = [Translator.get('PUSH_MESSAGES_DESC'), courseNotificationsEnabled ? `${Translator.get('NOTIFICATION_DELAY_DESC')} ${Translator.get('NOTIFICATION_CAP_DESC')}` : null]
+        .filter(Boolean)
+        .join('\n\n');
+    return (
+        <GroupeDeReglages theme={theme} titre={Translator.get('NOTIFICATIONS')} pied={pied}>
+            <RangeeDeReglage
+                theme={theme}
+                icone="bullhorn-outline"
+                teinte={t.rouge}
+                libelle={Translator.get('PUSH_MESSAGES')}
+                interrupteur={{ valeur: messagesEnNotification, onChange: toggleMessagesEnNotification }}
+            />
+            <RangeeDeReglage
+                theme={theme}
+                icone="bell-outline"
+                teinte={t.orange}
+                libelle={Translator.get('COURSE_NOTIFICATIONS')}
+                interrupteur={{ valeur: courseNotificationsEnabled, onChange: toggleCourseNotifications }}
+            />
+            {courseNotificationsEnabled && (
+                <DelaiDesRappels theme={theme} valeur={courseNotificationDelay} onChange={onNotificationDelayChange} onFin={onNotificationDelaySlidingComplete} />
+            )}
+        </GroupeDeReglages>
+    );
+};
+
 /**
- * La section Confidentialite (7-D) porte son propre etat : le reglage vit dans le module de mesure,
- * pas dans `SettingsManager`, et la rangee le lit par son hook — l'ecran n'a rien a porter. Couper
- * l'interrupteur vide la file locale : rien de ce qui a ete compte avant ne part.
+ * La section Confidentialite (7-D) porte son propre etat : le reglage vit dans le module de mesure, et
+ * la rangee le lit par son hook. Couper l'interrupteur vide la file locale.
  */
-export const ConfidentialiteSection = ({ themeSettings, theme }: ConfidentialiteSectionProps) => {
+export const ConfidentialiteSection = ({ theme }: { theme: AppThemeType }) => {
     const [active, activer] = useMesureActive();
     return (
-        <>
-            <SettingsTextHeader theme={themeSettings} text={Translator.get('PRIVACY_SECTION')} />
-            <Button
-                theme={themeSettings}
-                leftIcon="shield-check-outline"
-                leftText={Translator.get('ANONYMOUS_STATS')}
-                onSwitchToggle={activer}
-                switchValue={active}
+        <GroupeDeReglages theme={theme} titre={Translator.get('PRIVACY_SECTION')} pied={Translator.get('ANONYMOUS_STATS_DESC')}>
+            <RangeeDeReglage
+                theme={theme}
+                icone="shield-check-outline"
+                teinte={teintes(theme).vert}
+                libelle={Translator.get('ANONYMOUS_STATS')}
+                interrupteur={{ valeur: active, onChange: activer }}
             />
-            <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, marginHorizontal: tokens.space.md, marginTop: tokens.space.xs }}>
-                {Translator.get('ANONYMOUS_STATS_DESC')}
-            </Text>
-        </>
+        </GroupeDeReglages>
     );
 };
 
 interface AppLaunchingSectionProps {
-    themeSettings: AppThemeType['settings'];
+    theme: AppThemeType;
     openFavSwitchValue: boolean;
     toggleOpenFavSwitchValue: () => void;
     openResetDialog: () => void;
 }
 
-export const AppLaunchingSection = ({ themeSettings, openFavSwitchValue, toggleOpenFavSwitchValue, openResetDialog }: AppLaunchingSectionProps) => (
-    <>
-        <SettingsTextHeader theme={themeSettings} text={Translator.get('APP_LAUNCHING')} />
-        <Button
-            theme={themeSettings}
-            leftIcon="star"
-            leftText={Translator.get('OPEN_ON_FAVOURITE_GROUP')}
-            onSwitchToggle={toggleOpenFavSwitchValue}
-            switchValue={openFavSwitchValue}
+export const AppLaunchingSection = ({ theme, openFavSwitchValue, toggleOpenFavSwitchValue, openResetDialog }: AppLaunchingSectionProps) => (
+    <GroupeDeReglages theme={theme} titre={Translator.get('APP_LAUNCHING')}>
+        <RangeeDeReglage
+            theme={theme}
+            icone="star"
+            teinte={teintes(theme).orange}
+            libelle={Translator.get('OPEN_ON_FAVOURITE_GROUP')}
+            interrupteur={{ valeur: openFavSwitchValue, onChange: toggleOpenFavSwitchValue }}
         />
-        <Button
-            theme={themeSettings}
-            onPress={openResetDialog}
-            leftIcon="autorenew"
-            leftText={Translator.get('RESET_APP')}
-        />
-    </>
+        {/* Une action qui retire tout : son libelle en rouge, et la confirmation suit (SettingsModals). */}
+        <RangeeDeReglage theme={theme} icone="autorenew" teinte={theme.danger} libelle={Translator.get('RESET_APP')} onPress={openResetDialog} destructive />
+    </GroupeDeReglages>
 );
 
 interface CalendarSectionProps {
-    themeSettings: AppThemeType['settings'];
     theme: AppThemeType;
     hasCalendarPermission: boolean;
+    /** Demander l'acces a l'agenda ; refuse pour de bon, le systeme ne redemande plus : ses reglages s'ouvrent. */
+    demanderPermission: () => void;
     lastSyncDate: import('moment').Moment | null;
     /** La derniere tentative, reussie ou non ; `null` quand rien n'a jamais ete tente, ou apres effacement. */
     derniereTentative: import('../../../shared/services/calendrier/tentative').TentativeSynchro | null;
@@ -288,85 +267,70 @@ interface CalendarSectionProps {
     openCalendriersAffiches: () => void;
 }
 
-export const CalendarSection = ({ themeSettings, theme, hasCalendarPermission, lastSyncDate, derniereTentative, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar, calendriersAffiches, openCalendriersAffiches }: CalendarSectionProps) => {
-    const lastSyncFailed = derniereTentative !== null && !derniereTentative.ok;
+/**
+ * L'etat de la synchronisation, en tete du groupe. Le point passe en `warning` sur un echec, pas en
+ * rouge : la synchronisation reessaie d'elle-meme. Les deux informations ensemble, ce qui a reussi et
+ * quand, ce qui a echoue et depuis : l'echec seul se lisait comme « rien ne marche » (6.1.x-B).
+ */
+function EtatDeLaSynchro({ theme, lastSyncDate, derniereTentative }: Pick<CalendarSectionProps, 'theme' | 'lastSyncDate' | 'derniereTentative'>) {
+    const echec = derniereTentative !== null && !derniereTentative.ok;
     return (
-    <>
-        <SettingsTextHeader theme={themeSettings} text={Translator.get('CALENDAR_SYNCHRONIZATION')} />
-        {hasCalendarPermission ? (
-            <>
-                <View style={{ backgroundColor: theme.cardBackground, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.border }}>
-                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginBottom: tokens.space.xs }}>
-                        {Translator.get('AUTO_SYNC_DESCRIPTION')}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: tokens.space.xs }}>
-                        {/* Une pastille ronde : le rayon se calcule, il ne s'ecrit pas (docs/theme.md).
-                            L'echec passe en `warning`, pas en rouge : la synchronisation reessaie
-                            d'elle-meme, rien n'est perdu — mais sans cette pastille, un echec etait
-                            indiscernable d'un bouton casse. */}
-                        <PointDeCouleur couleur={lastSyncFailed ? theme.warning : lastSyncDate ? theme.success : theme.neutral} style={{ marginRight: tokens.space.sm }} />
-                        {/* `flex: 1` : sans lui, Android coupe net le texte au bord de la rangee au
-                            lieu de le plier — constate sur appareil le 2026-08-31. */}
-                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, flex: 1 }}>
-                            {lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}
-                        </Text>
-                    </View>
-                    {/* Les deux informations ensemble, et non l'une a la place de l'autre : ce qui a
-                        reussi, quand ; ce qui a echoue, depuis. L'echec seul cachait la date du dernier
-                        succes, et se lisait comme « rien ne marche » (6.1.x-B). */}
-                    {lastSyncFailed && derniereTentative !== null ? (
-                        <Text style={{ fontSize: tokens.fontSize.xs, color: theme.warning, marginTop: tokens.space.xxs, marginLeft: POINT_DE_COULEUR + tokens.space.sm }}>
-                            {Translator.get('LAST_ATTEMPT_FAILED_AT', moment(derniereTentative.at).fromNow())}
-                        </Text>
-                    ) : null}
-                </View>
-                <Button
-                    theme={themeSettings}
-                    leftIcon="sync-disabled"
-                    leftText={Translator.get('SYNC_ENABLED')}
-                    onSwitchToggle={toggleCalendarSync}
-                    switchValue={calendarSyncEnabled}
-                />
-                <Button
-                    theme={themeSettings}
-                    onPress={openCalendarDialog}
-                    leftIcon="calendar-today"
-                    leftText={Translator.get('CALENDAR')}
-                    rightText={calendarName}
-                />
-                <Button
-                    theme={themeSettings}
-                    onPress={onForceSync}
-                    disabled={selectedCalendar !== -1 && isSynchronizingCalendar}
-                    leftIconAnimation={isSynchronizingCalendar ? 'rotate' : ''}
-                    leftIcon="sync"
-                    leftText={isSynchronizingCalendar ? Translator.get('SYNCHRONIZING') : Translator.get('FORCE_SYNC')}
-                />
-                {/* L'autre sens : ce que le Planning lit dans l'agenda. Une rangee qui navigue, comme les
-                    filtres — un choix multiple n'a pas sa place dans la modale mono-selection. */}
-                <Button
-                    theme={themeSettings}
-                    onPress={openCalendriersAffiches}
-                    leftIcon="calendar-multiple"
-                    leftText={Translator.get('PHONE_CALENDARS')}
-                    rightText={calendriersAffiches > 0 ? Translator.get('PHONE_CALENDARS_COUNT', String(calendriersAffiches)) : Translator.get('PHONE_CALENDARS_NONE')}
-                />
-            </>
-        ) : (
-            <>
-                <View style={{ backgroundColor: theme.warningSoft, borderRadius: tokens.radius.lg, marginHorizontal: tokens.space.md, marginTop: tokens.space.sm, padding: tokens.space.md, borderWidth: 1, borderColor: theme.warning, flexDirection: 'row', alignItems: 'flex-start' }}>
-                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, lineHeight: 20, flex: 1 }}>
-                        {Translator.get('ENABLE_CALENDAR_PERMISSION_DESCRIPTION')}
-                    </Text>
-                </View>
-                <Button
-                    theme={themeSettings}
-                    onPress={() => Linking.openSettings()}
-                    leftIcon="settings"
-                    leftText={Translator.get('OPEN_SYSTEM_SETTINGS')}
-                />
-            </>
-        )}
-    </>
+        <View style={{ paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <PointDeCouleur couleur={echec ? theme.warning : lastSyncDate ? theme.success : theme.neutral} style={{ marginRight: tokens.space.sm }} />
+                {/* `flex: 1` : sans lui, Android coupe net le texte au bord de la rangee (2026-08-31). */}
+                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, flex: 1 }}>
+                    {lastSyncDate ? `${Translator.get('LAST_SYNCHRONIZATION')} : ${lastSyncDate.format('LLL')}` : Translator.get('NO_SYNCHRONIZATION_DONE')}
+                </Text>
+            </View>
+            {echec && derniereTentative !== null ? (
+                <Text style={{ fontSize: tokens.fontSize.sm, color: theme.warning, marginTop: tokens.space.xxs, marginLeft: tokens.space.md }}>
+                    {Translator.get('LAST_ATTEMPT_FAILED_AT', moment(derniereTentative.at).fromNow())}
+                </Text>
+            ) : null}
+        </View>
+    );
+}
+
+export const CalendarSection = (props: CalendarSectionProps) => {
+    const { theme, hasCalendarPermission, demanderPermission, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar, calendriersAffiches, openCalendriersAffiches } = props;
+    const t = teintes(theme);
+    if (!hasCalendarPermission) {
+        return (
+            <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')} pied={Translator.get('ENABLE_CALENDAR_PERMISSION_DESCRIPTION')}>
+                <RangeeDeReglage theme={theme} icone="calendar-lock-open-outline" teinte={t.rouge} libelle={Translator.get('CALENDAR_ALLOW')} onPress={demanderPermission} />
+            </GroupeDeReglages>
+        );
+    }
+    return (
+        <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')} pied={Translator.get('AUTO_SYNC_DESCRIPTION')}>
+            <EtatDeLaSynchro theme={theme} lastSyncDate={props.lastSyncDate} derniereTentative={props.derniereTentative} />
+            <RangeeDeReglage
+                theme={theme}
+                icone="calendar-sync-outline"
+                teinte={t.rouge}
+                libelle={Translator.get('SYNC_ENABLED')}
+                interrupteur={{ valeur: calendarSyncEnabled, onChange: toggleCalendarSync }}
+            />
+            <RangeeDeReglage theme={theme} icone="calendar-today" teinte={t.rouge} libelle={Translator.get('CALENDAR')} valeur={calendarName} onPress={openCalendarDialog} />
+            <RangeeDeReglage
+                theme={theme}
+                icone={{ mi: 'sync' }}
+                teinte={t.bleu}
+                libelle={isSynchronizingCalendar ? Translator.get('SYNCHRONIZING') : Translator.get('FORCE_SYNC')}
+                onPress={onForceSync}
+                enCours={isSynchronizingCalendar}
+                desactivee={selectedCalendar !== -1 && isSynchronizingCalendar}
+            />
+            {/* L'autre sens : ce que le Planning lit dans l'agenda (6.1.x-D). */}
+            <RangeeDeReglage
+                theme={theme}
+                icone="calendar-multiple"
+                teinte={t.orange}
+                libelle={Translator.get('PHONE_CALENDARS')}
+                valeur={calendriersAffiches > 0 ? Translator.get('PHONE_CALENDARS_COUNT', String(calendriersAffiches)) : Translator.get('PHONE_CALENDARS_NONE')}
+                onPress={openCalendriersAffiches}
+            />
+        </GroupeDeReglages>
     );
 };

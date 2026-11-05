@@ -29,7 +29,12 @@ const fr: TranslationDict = {
 	DAY: 'Jour',
 	DETAILS: 'Détails',
 	DISPLAY: 'Affichage',
-	ENABLE_CALENDAR_PERMISSION_DESCRIPTION: 'Autorise l’accès aux calendriers dans les réglages du système pour activer la synchronisation.',
+	ENABLE_CALENDAR_PERMISSION_DESCRIPTION: 'L’accès à l’agenda permet d’y écrire tes cours et de lire tes rendez-vous dans le Planning.',
+	// La rangee qui demande l'acces, la ou l'ecran le demandait a son ouverture (7-J).
+	CALENDAR_ALLOW: 'Autoriser l’agenda',
+	// Le don, ouvert dans le navigateur du systeme quand le catalogue en publie l'adresse (7-N).
+	INSTITUTION_SEARCH: 'Cherche un établissement, un sigle…',
+	SUPPORT_UKIT: 'Soutenir UKit',
 	ENGLISH: 'Anglais',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).
 	ERROR_SERVICE_UNAVAILABLE_TITLE: 'Service indisponible',
@@ -188,7 +193,6 @@ const fr: TranslationDict = {
 	INSTITUTION_CHANGE_WARNING: 'Groupes favoris, planning en cache, session universitaire et cours ajoutés au calendrier seront effacés.\nLes données de deux établissements ne se mélangent pas.',
 	INSTITUTION_UNAVAILABLE: 'Cette université n’est plus proposée. UKit garde ce qu’il en sait en attendant.',
 	// Le compte a l'accueil et le lien d'abonnement (jalon 6-J).
-	UNIVERSITY_ACCOUNT: 'Compte universitaire',
 	ACCOUNT_CONNECTED: 'Connecté',
 	ACCOUNT_NOT_CONNECTED: 'Non connecté',
 	CONNECT_ACCOUNT_TITLE: 'Connecte ton compte universitaire',

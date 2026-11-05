@@ -16,12 +16,18 @@
  */
 
 import React, { useState } from 'react';
-import { Modal, ScrollView, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Modal, ScrollView, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../i18n/Translator';
 import { propsLibelleBouton, tokens, type AppThemeType } from '../theme/Theme';
-import { listeEtablissements, type Etablissement } from '../etablissements';
+import { listeEtablissements, regrouperParCampus, type Etablissement, type GroupeDEtablissements } from '../etablissements';
+
+/**
+ * Au-dela de cinq etablissements, la liste se cherche (7-J) : un etudiant tape « UB » ou « ENSEIRB ».
+ * En deca, un champ de recherche au-dessus de trois lignes serait du bruit.
+ */
+const SEUIL_DE_RECHERCHE = 6;
 
 export interface ChoixEtablissementProps {
     readonly theme: AppThemeType;
@@ -57,21 +63,60 @@ function OptionEtablissement({ etablissement, selectionne, theme, onPress }: { e
     );
 }
 
+/** La liste, groupe par groupe ; l'intertitre d'un campus n'a de sens qu'a partir de deux. */
+function ListeDesEtablissements({ groupes, intertitres, choisi, theme, onChoisir }: {
+    groupes: readonly GroupeDEtablissements[];
+    intertitres: boolean;
+    choisi: string;
+    theme: AppThemeType['settings'];
+    onChoisir: (code: string) => void;
+}) {
+    return (
+        <ScrollView style={{ marginBottom: tokens.space.sm }}>
+            {groupes.map((groupe) => (
+                <View key={groupe.campus ?? '-'}>
+                    {intertitres && groupe.campus !== null ? (
+                        <Text style={[theme.popup.textDescription, { marginTop: tokens.space.md, marginBottom: 0, fontSize: tokens.fontSize.xs, fontWeight: tokens.fontWeight.semibold, textTransform: 'uppercase', letterSpacing: 0.8 }] as never}>
+                            {groupe.campus}
+                        </Text>
+                    ) : null}
+                    {groupe.etablissements.map((etablissement) => (
+                        <OptionEtablissement
+                            key={etablissement.code}
+                            etablissement={etablissement}
+                            selectionne={etablissement.code === choisi}
+                            theme={theme}
+                            onPress={() => onChoisir(etablissement.code)}
+                        />
+                    ))}
+                </View>
+            ))}
+        </ScrollView>
+    );
+}
+
 export function ChoixEtablissement({ theme: themeComplet, visible, fermer: fermerDemande, codeActif, onConfirmer }: ChoixEtablissementProps) {
     const theme = themeComplet.settings;
     /** L'etablissement touche, en attente du bouton Confirmer. */
     const [candidat, setCandidat] = useState<string | null>(null);
     /** Le second temps : l'avertissement de purge, apres Confirmer sur un autre etablissement. */
     const [avertissement, setAvertissement] = useState(false);
+    const [recherche, setRecherche] = useState('');
     const choisi = candidat ?? codeActif;
 
     // La liste est relue a chaque ouverture plutot que memorisee : un rafraichissement du catalogue
     // peut avoir eu lieu entre deux visites de cet ecran.
     const etablissements: readonly Etablissement[] = visible ? listeEtablissements() : [];
 
+    // Regroupes par campus (7-J) : les intertitres ne paraissent qu'a partir de deux campus nommes,
+    // sinon ils repeteraient le seul qu'il y a.
+    const groupes = regrouperParCampus(etablissements, recherche);
+    const intertitres = groupes.filter((groupe) => groupe.campus !== null).length >= 2;
+
     const fermer = () => {
         setCandidat(null);
         setAvertissement(false);
+        setRecherche('');
         fermerDemande();
     };
 
@@ -104,17 +149,17 @@ export function ChoixEtablissement({ theme: themeComplet, visible, fermer: ferme
                                 </View>
                                 <Text style={theme.popup.textDescription}>{Translator.get('YOUR_INSTITUTION')}</Text>
                                 {/* Marge basse : l'ecart options -> boutons vaut 16, comme partout. */}
-                                <ScrollView style={{ marginBottom: tokens.space.sm }}>
-                                    {etablissements.map((etablissement) => (
-                                        <OptionEtablissement
-                                            key={etablissement.code}
-                                            etablissement={etablissement}
-                                            selectionne={etablissement.code === choisi}
-                                            theme={theme}
-                                            onPress={() => setCandidat(etablissement.code)}
-                                        />
-                                    ))}
-                                </ScrollView>
+                                {etablissements.length >= SEUIL_DE_RECHERCHE ? (
+                                    <TextInput
+                                        value={recherche}
+                                        onChangeText={setRecherche}
+                                        placeholder={Translator.get('INSTITUTION_SEARCH')}
+                                        placeholderTextColor={theme.popup.textInputPlaceholderColor}
+                                        autoCorrect={false}
+                                        style={[theme.popup.textInput, { flex: 0, marginTop: tokens.space.sm }] as never}
+                                    />
+                                ) : null}
+                                <ListeDesEtablissements groupes={groupes} intertitres={intertitres} choisi={choisi} theme={theme} onChoisir={setCandidat} />
                                 <View style={theme.popup.buttonContainer as never}>
                                     <TouchableOpacity style={theme.popup.buttonSecondary as never} onPress={fermer}>
                                         <Text {...propsLibelleBouton} style={theme.popup.buttonTextSecondary as never}>{Translator.get('CANCEL')}</Text>
