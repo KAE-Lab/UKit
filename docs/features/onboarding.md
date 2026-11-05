@@ -30,7 +30,7 @@ remis à vrai par la réinitialisation depuis [Réglages](settings.md).
 | 3 | **Choix de l'établissement**, lu dans le catalogue — après un chargement parlant, le temps que le premier rafraîchissement réponde (quatre secondes au plus) | `basculerEtablissement(code)` ([`bascule.ts`](../../src/shared/etablissements/bascule.ts)), la même que les Réglages |
 | 4 | **Compte universitaire**, proposé et sautable — avec le bouton « Tu es d'un autre campus ? » sous celui de connexion, qui ramène à l'étape 3 ; **« Suivant » et le retour sont bloqués tant que la connexion tourne** | `validateAndSave` du contexte de scolarité, ou « Plus tard » |
 | 5 | **L'emploi du temps** : groupes (l'étape porte son cadre clavier), ou lien d'abonnement | favoris, ou `enregistrerLienEdt` |
-| 6 | Confirmation | `setFirstLoad(false)` sur « Terminer » |
+| 6 | Confirmation : un cercle et une coche qui se tracent dans le dégradé du logo ([`TraitDeValidation`](../../src/features/Onboarding/components/TraitDeValidation.tsx), 7-J), la réponse à Fig. 01 de l'étape 1 | `setFirstLoad(false)` sur « Terminer » |
 
 **Deux étapes disparaissent selon l'établissement**, et la règle est la même pour les deux : *on ne
 pose pas une question sans réponse.* L'étape du compte s'efface chez une université qui ne publie

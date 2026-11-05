@@ -19,6 +19,7 @@ import { tokens } from '../../../shared/theme/Theme';
 import { LoadingState } from '../../../shared/ui/LoadingState';
 import { FigureEnEcho } from '../../../shared/ui/epure/FigureEnEcho';
 import { LogoUKit } from '../../../shared/ui/epure/LogoUKit';
+import { TraitDeValidation } from './TraitDeValidation';
 import type { Etablissement } from '../../../shared/etablissements';
 import { DEGAGEMENT_PIED_PARCOURS, carte, pastille, texteDePastille, titreDeCarte } from './stylesDuParcours';
 // Deux dependances croisees entre features, et elles sont volontaires — voir la section
@@ -214,12 +215,13 @@ export const StepLienEdt = ({ onDone }) => (
     </View>
 );
 
+/** La fin du parcours : elle repond a l'ouverture, dans le meme degrade (TraitDeValidation). */
 export const StepFin = ({ themeObj }) => (
     <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: DEGAGEMENT_PIED_PARCOURS }}>
         <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
-            <MaterialCommunityIcons name="check-circle-outline" size={100} color={themeObj.primary} />
+            <TraitDeValidation theme={themeObj} />
         </View>
-        <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELL_DONE')}</Text>
+        <Text style={[tokens.texte.grandTitre, { alignSelf: 'stretch', color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }]}>{Translator.get('WELL_DONE')}</Text>
         <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
     </View>
 );
