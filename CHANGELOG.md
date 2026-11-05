@@ -26,6 +26,10 @@ une application qui donne l'heure des choses d'un regard.
   le repère de l'heure se pose à sa place avec le temps avant le cours suivant, la carte du cours en
   cours remplit son rail et dit le temps qui reste, et un cours passé s'estompe.
 - **Le week-end parle** : « C'est le week-end », « Aucun cours avant lundi ».
+- **La liste des établissements se regroupe par campus et se cherche par alias** (« UB »,
+  « ENSEIRB »), dès qu'elle compte six établissements ; le cas des trois campus qui arrivent.
+- **« Soutenir UKit »** dans les Réglages, quand le catalogue publie l'adresse du don : elle s'ouvre
+  dans le navigateur du système.
 
 ### Modifié
 
@@ -42,6 +46,12 @@ une application qui donne l'heure des choses d'un regard.
 - **La carte d'un cours met la salle en avant**, sous le titre, puis l'enseignant et le groupe ; une
   ligne servie deux fois par la source ne s'affiche qu'une fois, les semaines restent dans la fiche,
   et la couleur d'un cours devient lisible quand elle écrit.
+- **Les Réglages en groupes encadrés** : une carte par section, l'icône dans un carré de la couleur
+  de sa famille, l'explication en pied de groupe, le mode sombre rangé dans l'affichage ; la barre
+  compacte au défilement. Ouvrir l'onglet ne demande plus l'accès à l'agenda : une rangée
+  « Autoriser l'agenda » le demande quand on veut s'en servir.
+- **La recherche de groupes et la fiche d'un cours** prennent la même écriture : liste groupée à
+  intertitres gris, heures en grand et salle d'abord.
 - **L'en-tête du Planning** porte le fond bleu de l'onglet ; le jour choisi est une case pleine,
   aujourd'hui a son point, le choix d'un jour s'acquitte au doigt, et la case d'une semaine dit son
   lundi. Le ruban se recentre sur le jour choisi à sa première mesure.

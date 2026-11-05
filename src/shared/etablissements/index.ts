@@ -81,6 +81,7 @@ export {
 } from './edt';
 export type { SourceEdt } from './edt';
 export { edtPersonnelActif } from './edtPersonnel';
+export { regrouperParCampus, type GroupeDEtablissements } from './regroupement';
 export type { EdtsPersonnels } from './edtPersonnel';
 export { lienEdtActif } from './lienEdt';
 export { purgerDonneesEtablissement, purgerTrousseau } from './purge';

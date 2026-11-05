@@ -1,6 +1,5 @@
 import React from 'react';
-import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { Linking, Text, View, Animated, StyleSheet } from 'react-native';
+import { Linking } from 'react-native';
 import * as Calendar from 'expo-calendar/legacy';
 import { NotificationManager } from '../../../shared/services/NotificationService';
 
@@ -11,15 +10,15 @@ import {
     nomCourtEtablissement,
     lienEdtActif,
     portailPublie,
+    serviceEtablissement,
     sourceEdt,
 } from '../../../shared/etablissements';
 import { basculerEtablissement } from '../../../shared/etablissements/bascule';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
-import { PastilleService } from '../../../shared/messages/PastilleService';
 import { adoucirLaTransition } from '../../../shared/ui/transitions';
 import { ErrorAlert } from '../../../shared/ui/Alerts';
-import style, { tokens } from '../../../shared/theme/Theme';
+import style from '../../../shared/theme/Theme';
 
 
 import {
@@ -29,12 +28,11 @@ import {
     SettingsCalendarPopup
 } from '../components/SettingsModals';
 import { ChoixEtablissement } from '../../../shared/ui/ChoixEtablissement';
-import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
+import { PageDesReglages } from '../components/PageDesReglages';
 
 import {
     DisplaySection,
     InstitutionSection,
-    ThemeSection,
     NotificationsSection,
     ConfidentialiteSection,
     AppLaunchingSection,
@@ -69,34 +67,10 @@ export interface SettingsState {
     messagesEnNotification: boolean;
 }
 
-/**
- * L'en-tete de l'onglet : le grand titre qui s'efface au defilement, et a sa droite la pastille d'etat de
- * service (shared/messages/PastilleService). Sorti de `render` pour le garder sous la
- * limite de lignes.
- */
-function EnTeteReglages({ theme, insets, scrollY }: {
-    theme: import('../../../shared/theme/Theme').AppThemeType;
-    insets: import('react-native-safe-area-context').EdgeInsets | null;
-    scrollY: Animated.Value;
-}) {
-    const opacity = scrollY.interpolate({ inputRange: [0, 50], outputRange: [1, 0], extrapolate: 'clamp' });
-    return (
-        <Animated.View style={[styles.headerContainer, { paddingTop: insets?.top || 0, backgroundColor: 'transparent', opacity }]}>
-            <View style={[styles.headerContent, { paddingHorizontal: tokens.space.md }]}>
-                <Text style={[styles.greetingText, { color: theme.font }]}>
-                    {Translator.get('SETTINGS')}
-                </Text>
-                <PastilleService theme={theme} onglet="Settings" style={styles.rappel} />
-            </View>
-        </Animated.View>
-    );
-}
-
 class Settings extends React.Component<SettingsProps, SettingsState> {
     static contextType = AppContext;
     // @ts-ignore
     context!: React.ContextType<typeof AppContext>;
-    scrollY: Animated.Value;
     _unsubscribeFocus?: () => void;
 
     constructor(props: SettingsProps) {
@@ -122,7 +96,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             calendriersAffiches: SettingsManager.getCalendriersAffiches().length,
             messagesEnNotification: SettingsManager.getMessagesEnNotification(),
         };
-        this.scrollY = new Animated.Value(0);
 
     }
 
@@ -243,24 +216,28 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     };
 
     /**
-     * La permission calendrier, lue et au besoin demandee — **sans toucher a la synchronisation**.
+     * La permission calendrier, **lue** — sans toucher a la synchronisation, et sans la demander.
      *
-     * Le montage appelait `toggleCalendarSync()` quand la permission manquait : la fonction de
-     * l'interrupteur, qui basculait donc la synchronisation des que la permission etait accordee, et
-     * ouvrait la modale d'extinction si elle etait deja active (limite ecrite depuis 6-K, corrigee en
-     * 6.1-C). Elle est demandee une fois, au montage ; au retour de focus elle est seulement relue,
-     * pour qu'un octroi dans les reglages du systeme remplace la carte « permission » par
-     * l'interrupteur — Android redemanderait sinon a chaque retour.
+     * Le montage appelait `toggleCalendarSync()` quand la permission manquait, qui basculait la
+     * synchronisation des que la permission etait accordee (corrige en 6.1-C) ; puis il la demandait
+     * une fois, au montage. Depuis 7-J il ne fait que la lire, au montage et au retour de focus — un
+     * octroi dans les reglages du systeme remplace alors la rangee « Autoriser l'agenda » par les
+     * reglages de la synchronisation. La demande vit dans cette rangee.
      */
-    verifierPermissionCalendrier = async (demander: boolean) => {
-        let { status } = await Calendar.getCalendarPermissionsAsync();
-        if (status !== 'granted' && demander) {
-            ({ status } = await Calendar.requestCalendarPermissionsAsync());
-        }
+    relirePermissionCalendrier = async () => {
+        const { status } = await Calendar.getCalendarPermissionsAsync();
         this.setState({ hasCalendarPermission: status === 'granted' });
     };
 
-    openSystemAppSettings = () => Linking.openSettings();
+    /**
+     * La rangee « Autoriser l'agenda » : le systeme demande, et s'il ne peut plus demander — refus
+     * definitif sur Android, deuxieme refus sur iOS — ses reglages s'ouvrent, ou l'acces se donne.
+     */
+    demanderPermissionCalendrier = async () => {
+        const { status, canAskAgain } = await Calendar.requestCalendarPermissionsAsync();
+        if (status !== 'granted' && !canAskAgain) void Linking.openSettings();
+        this.setState({ hasCalendarPermission: status === 'granted' });
+    };
     setIsSynchronizingCalendar = (newState: boolean) => this.setState({ isSynchronizingCalendar: newState });
 
     openLanguageDialog = () => this.setState({ languageDialogVisible: true });
@@ -343,10 +320,13 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     componentDidMount = async () => {
         this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
             void this.refreshCompte();
-            void this.verifierPermissionCalendrier(false);
+            void this.relirePermissionCalendrier();
         });
         void this.refreshCompte();
-        void this.verifierPermissionCalendrier(true);
+        // Lue, jamais demandee a l'ouverture de l'onglet (7-J) : la rangee « Autoriser l'agenda » la
+        // demande quand on veut s'en servir. La demander au montage ouvrait la boite du systeme sans
+        // contexte, a chaque installation neuve, a qui ne venait que changer de langue.
+        void this.relirePermissionCalendrier();
         SettingsManager.on('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
         // La tentative change aussi sans synchronisation — l'interrupteur efface un echec — et
         // l'ecran ne la lisait qu'au rendu provoque par l'evenement du dessus (6.1.x-B).
@@ -383,38 +363,20 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     render() {
         const themeName = this.context.themeName ?? 'light';
         const theme = style.Theme[themeName];
-        const themeSettings = theme.settings;
         const calendar = this.state.calendars.find((cal) => this.state.selectedCalendar === cal.id);
         const calendarName = !!calendar ? calendar.title : this.state.selectedCalendar === 'UKit' ? 'UKit' : Translator.get('NOT_FOUND');
+        // Le don se collecte hors de l'application, dans le navigateur du systeme (regle des stores,
+        // 7-N) ; la rangee n'existe que si le catalogue en publie l'adresse.
+        const adresseDuSoutien = serviceEtablissement('soutien');
 
-        const renderScrollContent = (insets: import('react-native-safe-area-context').EdgeInsets | null) => (
-            <Animated.ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ paddingTop: (insets?.top || 0) + 60, paddingBottom: tokens.space.xxl + 80 }}
-                showsVerticalScrollIndicator={false}
-                onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: this.scrollY } } }],
-                    { useNativeDriver: true }
-                )}
-                scrollEventThrottle={16}
-            >
+        return (
+            <PageDesReglages theme={theme}>
                 <InstitutionSection
-                    themeSettings={themeSettings}
                     theme={theme}
                     /*
-                     * Lu au rendu, jamais tenu en etat — correctif du 2026-09-04.
-                     *
-                     * Il l'etait, pose une fois au constructeur et rafraichi par `setInstitution`
-                     * seul : une bascule declenchee **ailleurs** — le « Tu es d'un autre campus ? »
-                     * de la Scolarite, depuis 6.1-A — ne le rejoignait donc jamais, et cet onglet,
-                     * qui ne se demonte pas, affichait le campus quitte. L'ecran suit deja
-                     * `AppContext.etablissement` (rootContainer), donc il se rend a nouveau a chaque
-                     * bascule : tout ce qui se calcule ici est juste par construction, et c'etait
-                     * deja le cas de ses trois voisins (`etablissementRetire`, `sourceEdt`,
-                     * `lienEdtActif`). Un abonnement de plus aurait re-cree le meme risque ailleurs.
-                     *
-                     * Le nom **court** : cette ligne est un espace contraint. Le nom entier reste
-                     * dans l'ecran de choix, seul endroit ou il faut reconnaitre une fac inconnue.
+                     * Lu au rendu, jamais tenu en etat (correctif du 2026-09-04) : une bascule declenchee
+                     * ailleurs ne rejoignait pas cet onglet, qui ne se demonte pas. Le nom **court** :
+                     * cette ligne est un espace contraint ; le nom entier vit dans l'ecran de choix.
                      */
                     institutionName={nomCourtEtablissement()}
                     institutionRetiree={etablissementRetire()}
@@ -425,20 +387,17 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     lienEdtPossible={sourceEdt().kind === 'abonnement' || sourceEdt().kind === 'lien-attendu'}
                     lienEdtPose={lienEdtActif() !== null}
                     openLienEdt={() => this.props.navigation.navigate('LienEdt')}
+                    soutien={adresseDuSoutien !== null ? () => { void Linking.openURL(adresseDuSoutien); } : undefined}
                 />
                 <DisplaySection
-                    themeSettings={themeSettings}
+                    theme={theme}
                     language={this.state.language}
                     openLanguageDialog={this.openLanguageDialog}
                     openFilters={() => this.props.navigation.navigate('Filters')}
-                />
-                <ThemeSection
-                    themeSettings={themeSettings}
                     isDarkMode={this.state.isDarkMode}
                     toggleTheme={this.toggleTheme}
                 />
                 <NotificationsSection
-                    themeSettings={themeSettings}
                     theme={theme}
                     courseNotificationsEnabled={this.state.courseNotificationsEnabled}
                     toggleCourseNotifications={this.toggleCourseNotifications}
@@ -448,17 +407,10 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     messagesEnNotification={this.state.messagesEnNotification}
                     toggleMessagesEnNotification={this.toggleMessagesEnNotification}
                 />
-                <ConfidentialiteSection themeSettings={themeSettings} theme={theme} />
-                <AppLaunchingSection
-                    themeSettings={themeSettings}
-                    openFavSwitchValue={this.state.openFavSwitchValue}
-                    toggleOpenFavSwitchValue={this.toggleOpenFavSwitchValue}
-                    openResetDialog={this.openResetDialog}
-                />
                 <CalendarSection
-                    themeSettings={themeSettings}
                     theme={theme}
                     hasCalendarPermission={this.state.hasCalendarPermission}
+                    demanderPermission={() => { void this.demanderPermissionCalendrier(); }}
                     lastSyncDate={SettingsManager.getLastSyncDate()}
                     derniereTentative={SettingsManager.getDerniereTentativeSynchro()}
                     calendarSyncEnabled={this.state.calendarSyncEnabled}
@@ -471,47 +423,17 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     calendriersAffiches={this.state.calendriersAffiches}
                     openCalendriersAffiches={() => this.props.navigation.navigate('CalendriersAffiches')}
                 />
+                <ConfidentialiteSection theme={theme} />
+                <AppLaunchingSection
+                    theme={theme}
+                    openFavSwitchValue={this.state.openFavSwitchValue}
+                    toggleOpenFavSwitchValue={this.toggleOpenFavSwitchValue}
+                    openResetDialog={this.openResetDialog}
+                />
                 {this.renderPopups(theme)}
-            </Animated.ScrollView>
-        );
-
-        return (
-            <SafeAreaInsetsContext.Consumer>
-                {(insets) => (
-                    <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
-                        <FondDOnglet theme={theme} onglet="reglages" />
-                        <EnTeteReglages theme={theme} insets={insets} scrollY={this.scrollY} />
-                        {renderScrollContent(insets)}
-                    </SafeAreaView>
-                )}
-            </SafeAreaInsetsContext.Consumer>
+            </PageDesReglages>
         );
     }
 }
-
-const styles = StyleSheet.create({
-    headerContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        paddingBottom: tokens.space.sm,
-    },
-    headerContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    greetingText: {
-        fontSize: tokens.fontSize.title,
-        fontWeight: tokens.fontWeight.bold,
-        marginBottom: tokens.space.md,
-    },
-    // Pousse a droite, et la meme marge basse que le titre : la pastille s'aligne sur sa ligne.
-    rappel: {
-        marginLeft: 'auto',
-        marginBottom: tokens.space.md,
-    },
-});
 
 export default Settings;
