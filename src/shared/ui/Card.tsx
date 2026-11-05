@@ -2,7 +2,8 @@
  * La surface d'une carte.
  *
  * Elle n'est pas dessinee ici : elle est **relevee**. La meme declaration — fond `cardBackground`,
- * rayon `radius.xl`, ombre `shadow.md`, `overflow: 'hidden'` — etait recopiee six fois au caractere
+ * rayon `radius.xl`, ombre `shadow.md`, `overflow: 'hidden'`, et depuis 7-J le filet
+ * `contourDeCarte` — etait recopiee six fois au caractere
  * pres (inventaire visuel, divergence 3.1), avec la meme enveloppe `Reanimated` dans quatre d'entre
  * elles. C'est le motif le plus recopie du depot, et donc le premier a remonter.
  *
@@ -32,7 +33,7 @@
  */
 
 import React from 'react';
-import { Pressable, StyleProp, ViewStyle } from 'react-native';
+import { Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import Reanimated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { tokens, AppThemeType } from '../theme/Theme';
@@ -91,6 +92,10 @@ export function Card({ theme, children, style, onPress, animated = true, rang, a
     const surface: ViewStyle = {
         backgroundColor: theme.cardBackground,
         borderRadius: tokens.radius.xl,
+        // Le filet de la carte (7-J) : en sombre, c'est lui qui la detache du fond, l'ombre ne se
+        // voyant pas sur le noir. A l'interieur de la boite, il ne deplace rien.
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: theme.contourDeCarte,
         ...tokens.shadow.md,
         overflow: 'hidden',
     };

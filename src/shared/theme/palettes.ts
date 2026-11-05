@@ -21,10 +21,22 @@ export interface PaletteDeBase {
     readonly accent: string;
     readonly font: string;
     readonly fontSecondary: string;
+    /**
+     * Le troisieme niveau (7-J) : ce qui se lit en retrait sans porter d'information propre — un
+     * onglet inactif, un chevron, une legende. Le texte secondaire est monte d'un cran le 2026-11-04 ;
+     * sans ce niveau, un onglet inactif pesait presque autant que l'actif.
+     */
+    readonly fontTertiary: string;
     readonly border: string;
     readonly background: string;
     readonly cardBackground: string;
     readonly greyBackground: string;
+    /**
+     * Le filet qui borde une carte (7-J) : en sombre, une ombre ne se voit pas sur le noir, et la
+     * carte ne se detache que par sa teinte, a deux pas du fond ; un blanc a 7 % en dessine le bord.
+     * En clair, un noir a 4 %, qui affermit le bord la ou l'ombre d'Android reste plus douce.
+     */
+    readonly contourDeCarte: string;
     /**
      * Le reflet qui balaie un squelette (7-I, `Balayage`). En clair, un blanc a 70 % : sur la carte
      * blanche il ne se voit pas, et il ne passe que sur les barres grises. En sombre, un voile de 8 %,
@@ -46,18 +58,26 @@ export interface PaletteDeBase {
      * ete vu plutot qu'un calcul.
      */
     readonly fondDOnglet: Readonly<Record<'planning' | 'campus' | 'scolarite' | 'reglages', readonly [string, string]>>;
+    /**
+     * La teinte franche de chaque onglet (7-J, 2026-11-05) : l'icone et le libelle de l'onglet actif,
+     * de la meme teinte que son fond. Calculees en OKLCH sur la teinte du fond, a 5:1 au moins sur la
+     * barre d'onglets ; les Reglages, dont le fond est presque neutre, prennent l'accentuation.
+     */
+    readonly teinteDOnglet: Readonly<Record<'planning' | 'campus' | 'scolarite' | 'reglages', string>>;
 }
 
 export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDeBase } = {
     light: {
-        primary:        '#007AFF',
-        accent:         '#007AFF',
+        primary:        '#3B5FE5',
+        accent:         '#3B5FE5',
         font:           '#1C1C1E',
-        fontSecondary:  '#8E8E93',
+        fontSecondary:  '#6C6C70',
+        fontTertiary:   '#8E8E93',
         border:         '#E5E5EA',
         background:     '#F2F2F7',
         cardBackground: '#FFFFFF',
         greyBackground: '#E5E5EA',
+        contourDeCarte: '#0000000A',
         reflet:         '#FFFFFFB3',
         sections:        ['#007AFF10', '#34C75910', '#FF950010', '#FF3B3010', '#5856D610', '#5AC8FA10'],
         sectionsHeaders: ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#5856D6', '#5AC8FA'],
@@ -67,16 +87,24 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
             scolarite: ['#EDD6FF', '#F9D2FF'],
             reglages:  ['#E0E0EE', '#E0E0EE'],
         },
+        teinteDOnglet: {
+            planning:  '#0071B9',
+            campus:    '#007B87',
+            scolarite: '#8548AC',
+            reglages:  '#3B5FE5',
+        },
     },
     dark: {
-        primary:        '#5E5CE6',
-        accent:         '#5E5CE6',
+        primary:        '#6381F8',
+        accent:         '#6381F8',
         font:           '#FFFFFF',
-        fontSecondary:  '#8E8E93',
-        border:         '#38383A',
-        background:     '#000000',
-        cardBackground: '#1C1C1E',
-        greyBackground: '#121212',
+        fontSecondary:  '#BCBCCB',
+        fontTertiary:   '#8A8A98',
+        border:         '#2A2A37',
+        background:     '#0B0B12',
+        cardBackground: '#15151E',
+        greyBackground: '#22222E',
+        contourDeCarte: '#FFFFFF12',
         reflet:         '#FFFFFF14',
         sections:        ['#0A84FF15', '#30D15815', '#FF9F0A15', '#FF453A15', '#5E5CE615', '#64D2FF15'],
         // L'index 0 portait `#5E5CE6`, la valeur du 4 : cinq teintes au lieu de six en sombre, corrige en 6.1-C.
@@ -86,6 +114,12 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
             campus:    ['#002931', '#00263C'],
             scolarite: ['#290445', '#32003C'],
             reglages:  ['#1C1B29', '#1C1B29'],
+        },
+        teinteDOnglet: {
+            planning:  '#4FB5F3',
+            campus:    '#00BEC7',
+            scolarite: '#C493E8',
+            reglages:  '#6381F8',
         },
     },
 };

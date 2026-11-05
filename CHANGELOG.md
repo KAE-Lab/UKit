@@ -10,6 +10,32 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
+Le jalon [7-J](docs/phase-7/7-j-ecrans.md), la refonte de l'interface, sur `v6.3` : l'heure juste,
+une application qui donne l'heure des choses d'un regard.
+
+### Ajouté
+
+- **Un en-tête d'onglet qui protège la barre d'état.** Le grand titre part avec le contenu, puis une
+  barre compacte, sur le fond de l'onglet, prend le relais avec le titre au centre : plus rien ne
+  s'écrit sous l'heure du téléphone. Campus d'abord.
+- **Chaque onglet a sa teinte dans la barre** : l'onglet actif et son bouton d'action prennent celle
+  de leur section, la même que leur fond.
+- **Des styles de texte composés** (`tokens.texte`) : grands titres à l'approche resserrée, chiffres
+  tabulaires pour les heures, les durées et les distances.
+
+### Modifié
+
+- **Une seule accentuation, celle du logo** : le bleu-indigo du milieu de son dégradé, `#3B5FE5` en
+  clair et `#6381F8` en sombre, à la place du bleu d'iOS et de l'indigo.
+- **Le « cran au-dessus » retenu au labo le 2026-11-04** : le noir teinté `#0B0B12` et ses cartes
+  `#15151E`, un texte secondaire plus contrasté (`#6C6C70`, `#BCBCCB`), un troisième niveau de texte
+  pour ce qui se lit en retrait.
+- **Les ombres sont des `boxShadow` en deux couches sur les deux plateformes** : sur iPhone, l'ombre
+  native était coupée par le `overflow: hidden` des cartes, qui n'en avaient donc aucune. En sombre,
+  un filet borde les cartes.
+- **Les libellés de la barre d'onglets tiennent à 360 points** : « Réglages », « Connexion », et en
+  espagnol « Estudios », « Acerca de » ; l'écart entre la barre et son bouton passe de 32 à 8 points.
+
 Le jalon [7-D](docs/phase-7/7-d-la-mesure.md), la mesure, en premier sur la branche `v6.3` : des
 compteurs anonymes, sans identifiant, avec un interrupteur, et jamais de réseau au démarrage.
 

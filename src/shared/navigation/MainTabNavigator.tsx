@@ -33,6 +33,23 @@ export type MainTabParamList = {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+/**
+ * La section de chaque onglet : sa teinte habille l'onglet actif et le bouton d'action, la meme que
+ * son fond (7-J). En changeant d'onglet, la barre change de couleur avec la page.
+ */
+const SECTION_DE_L_ONGLET: Record<keyof MainTabParamList, keyof AppThemeType['teinteDOnglet']> = {
+    PlanningTab: 'planning',
+    CampusTab: 'campus',
+    ScolariteTab: 'scolarite',
+    SettingsTab: 'reglages',
+};
+
+/** La teinte de l'onglet affiche, ou l'accentuation pour une route inconnue. */
+function teinteDeLaRoute(theme: AppThemeType, routeName: string): string {
+    const section = SECTION_DE_L_ONGLET[routeName as keyof MainTabParamList];
+    return section !== undefined ? theme.teinteDOnglet[section] : theme.accent;
+}
+
 export interface CustomTabBarProps extends BottomTabBarProps {
     theme: AppThemeType;
 }
@@ -75,7 +92,8 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
         });
     };
 
-    const color = isFocused ? (theme.accent ?? theme.primary) : theme.fontSecondary;
+    const teinte = teinteDeLaRoute(theme, route.name);
+    const color = isFocused ? teinte : theme.fontTertiary;
 
     return (
         <TouchableOpacity
@@ -90,7 +108,7 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
         >
             <View style={[
                 styles.iconContainer,
-                isFocused && { backgroundColor: `${theme.primary}15` }
+                isFocused && { backgroundColor: `${teinte}1F` }
             ]}>
                 {options.tabBarIcon && options.tabBarIcon({ color, size: 24, focused: isFocused })}
             </View>
@@ -153,8 +171,7 @@ interface TabBarActionItemProps {
  * (`LigneScolarite`, prop `masque`), et pour la meme raison : un flou ou un voile ne rend illisible
  * que sur la plateforme qui le porte.
  */
-function BoutonDAction({ icone, libelle, onPress, theme, masque = false }: { icone: React.ComponentProps<typeof MaterialCommunityIcons>['name']; libelle: string; onPress: () => void; theme: AppThemeType; masque?: boolean }) {
-    const teinte = theme.accent ?? theme.primary;
+function BoutonDAction({ icone, libelle, onPress, theme, teinte, masque = false }: { icone: React.ComponentProps<typeof MaterialCommunityIcons>['name']; libelle: string; onPress: () => void; theme: AppThemeType; teinte: string; masque?: boolean }) {
     return (
         <TouchableOpacity
             onPress={onPress}
@@ -196,6 +213,7 @@ function BoutonDAction({ icone, libelle, onPress, theme, masque = false }: { ico
 function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: TabBarActionItemProps) {
     /** Le teaser du bouton Campus — et celui des Groupes sur un campus sans inventaire. */
     const [teaser, setTeaser] = useState(false);
+    const teinte = teinteDeLaRoute(theme, currentRouteName);
 
     if (currentRouteName === 'PlanningTab') {
         // Sans inventaire de groupes — l'emploi du temps passe par un lien personnel — la recherche
@@ -205,7 +223,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
         if (!groupesRequis()) {
             return (
                 <>
-                    <BoutonDAction icone="account-search-outline" libelle={Translator.get('GROUPS')} onPress={() => setTeaser(true)} theme={theme} masque />
+                    <BoutonDAction icone="account-search-outline" libelle={Translator.get('GROUPS')} onPress={() => setTeaser(true)} theme={theme} teinte={teinte} masque />
                     <ModaleCampusNonRelie
                         theme={theme}
                         visible={teaser}
@@ -218,18 +236,18 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
                 </>
             );
         }
-        return <BoutonDAction icone="account-search-outline" libelle={Translator.get('GROUPS')} onPress={() => navigation.navigate('GroupSearch' as never)} theme={theme} />;
+        return <BoutonDAction icone="account-search-outline" libelle={Translator.get('GROUPS')} onPress={() => navigation.navigate('GroupSearch' as never)} theme={theme} teinte={teinte} />;
     }
 
     if (currentRouteName === 'SettingsTab') {
-        return <BoutonDAction icone="information-outline" libelle={Translator.get('ABOUT')} onPress={() => navigation.navigate('About' as never)} theme={theme} />;
+        return <BoutonDAction icone="information-outline" libelle={Translator.get('ABOUT')} onPress={() => navigation.navigate('About' as never)} theme={theme} teinte={teinte} />;
     }
 
     // « Compte » et non « Deconnexion », depuis le 2026-08-25 : cet ecran ne sert plus a partir. Il
     // porte l'etat civil, l'INE, les identifiants et trois gestes dont un seul deconnecte — le
     // nommer par le plus destructeur des trois dissuadait d'y aller pour consulter.
     if (currentRouteName === 'ScolariteTab' && credentials) {
-        return <BoutonDAction icone="account-circle-outline" libelle={Translator.get('ACCOUNT')} onPress={() => navigation.navigate('CredentialsSettings' as never)} theme={theme} />;
+        return <BoutonDAction icone="account-circle-outline" libelle={Translator.get('ACCOUNT')} onPress={() => navigation.navigate('CredentialsSettings' as never)} theme={theme} teinte={teinte} />;
     }
 
     // Sans compte, sur un campus relie : « Se connecter », et c'est ici que l'invitation vit (6.1.x-B).
@@ -237,7 +255,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
     // la gachait pour quelqu'un qui n'a que faire d'un compte — un enseignant qui veut son webmail.
     // Le bouton mene a l'ecran du compte, qui porte le formulaire.
     if (currentRouteName === 'ScolariteTab' && portailPublie()) {
-        return <BoutonDAction icone="login-variant" libelle={Translator.get('CONNECT')} onPress={() => navigation.navigate('CredentialsSettings' as never)} theme={theme} />;
+        return <BoutonDAction icone="login-variant" libelle={Translator.get('CONNECT_SHORT')} onPress={() => navigation.navigate('CredentialsSettings' as never)} theme={theme} teinte={teinte} />;
     }
 
     // Sur un campus dont aucun portail n'est publie, c'est le bouton Compte qui porte le teaser —
@@ -247,7 +265,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
     if (currentRouteName === 'ScolariteTab' && !portailPublie()) {
         return (
             <>
-                <BoutonDAction icone="account-circle-outline" libelle={Translator.get('ACCOUNT')} onPress={() => setTeaser(true)} theme={theme} masque />
+                <BoutonDAction icone="account-circle-outline" libelle={Translator.get('ACCOUNT')} onPress={() => setTeaser(true)} theme={theme} teinte={teinte} masque />
                 <ModaleCampusNonRelie
                     theme={theme}
                     visible={teaser}
@@ -269,7 +287,7 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
     if (currentRouteName === 'CampusTab') {
         return (
             <>
-                <BoutonDAction icone="compass-outline" libelle={Translator.get('CAMPUS')} onPress={() => setTeaser(true)} theme={theme} masque />
+                <BoutonDAction icone="compass-outline" libelle={Translator.get('CAMPUS')} onPress={() => setTeaser(true)} theme={theme} teinte={teinte} masque />
                 <ModaleBientot theme={theme} visible={teaser} fermer={() => setTeaser(false)} />
             </>
         );
@@ -421,7 +439,9 @@ const styles = StyleSheet.create({
         // Les deux ombres de la barre sont plus marquees que les tokens (docs/theme.md § limites) : la
         // meme resolution par plateforme, avec leurs propres valeurs.
         ...ombre(OMBRE_DE_LA_BARRE),
-        marginRight: tokens.space.xl, // C'est ici qu'on recrée le décalage sur la gauche
+        // L'ecart avec le bouton d'action : `xl` (32) jusqu'en 7-J, qui prenait aux quatre onglets la
+        // place de leurs libelles — « Paramet… » a 360 points. Le decalage se lit tout aussi bien a 8.
+        marginRight: tokens.space.sm,
     },
     groupButton: {
         width: 65,

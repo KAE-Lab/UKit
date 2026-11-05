@@ -39,17 +39,25 @@ tokens.radius     sm 8 · md 12 · lg 16 · xl 24 · pill 999
 tokens.fontSize   xs 12 · sm 14 · md 16 · lg 18 · xl 22 · xxl 28 · title 34
 tokens.fontWeight regular 400 · medium 500 · semibold 600 · bold 700
 tokens.shadow     sm · md · lg   (objet prêt à étaler : ...tokens.shadow.sm)
+tokens.texte      grandTitre · titreDeSection · titreDeCarte · titreDeBarre · heure · chiffres
 tokens.mouvement  couture 200 · structure 220 · cascade 40 × 4 rangs · balayage 1600 / 0,6
                   pression 0,97 · ressort (amortissement 100, masse 4, raideur 900)
 ```
 
-Les ombres sont des objets prêts à étaler, **résolus par plateforme** dans `Theme.ts` depuis 6.2.x :
-iOS garde `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius` ; Android reçoit un
-`boxShadow` calibré sur les mêmes valeurs ([`ombres.ts`](../src/shared/theme/ombres.ts), pur et
-testé ; `tokens.ts` ne porte que les trois nombres de chaque ombre, `ombres.{sm,md,lg}`). Et **plus
-aucune `elevation`, nulle part** — elle dessinait une ombre dure, grossière à côté de celle d'iOS, et
-décidait de l'ordre de dessin. Une ombre hors échelle s'écrit `ombre({ y, flou, opacite })`, jamais à
-la main ; la règle ESLint refuse `elevation` (sauf 0, la négation).
+Les ombres sont des objets prêts à étaler, **un `boxShadow` sur les deux plateformes** depuis
+[7-J](phase-7/7-j-ecrans.md) ([`ombres.ts`](../src/shared/theme/ombres.ts), pur et testé), chacune en
+deux couches : un contact net et une portée douce (`tokens.ombres.{sm,md,lg}`, des listes de
+spécifications). Jusque-là, iOS recevait ses quatre propriétés natives (`shadowOpacity`…) : React
+Native les pose sur le calque de la vue, que `overflow: hidden` coupe, et toute carte rogne son image ;
+les cartes n'avaient donc **aucune ombre sur iPhone**. `boxShadow`, lui, se dessine hors du masque
+(`RCTViewComponentView.mm`, React Native 0.86). Et **plus aucune `elevation`, nulle part** — elle
+dessinait une ombre dure et décidait de l'ordre de dessin. Une ombre hors échelle s'écrit
+`ombre({ y, flou, opacite })`, jamais à la main ; la règle ESLint refuse `elevation` (sauf 0).
+
+`tokens.texte` porte les **styles de texte composés** (7-J) : taille, graisse et approche d'un rôle,
+écrites une fois. La police reste celle du système ; une approche resserrée sur les grands corps et
+des **chiffres tabulaires** pour toute heure, durée ou distance (`tokens.texte.chiffres`) la rendent
+précise. Un style s'étale (`style={[tokens.texte.grandTitre, { color }]}`), la couleur reste au thème.
 
 > **`tokens` vit dans son propre fichier**, [`tokens.ts`](../src/shared/theme/tokens.ts), et non par
 > commodité : `Theme.ts` importe `react-native` pour une branche `Platform.OS`, ce qui le rend
@@ -76,9 +84,11 @@ signale pas.
 
 ## Les palettes
 
-Chaque thème expose le même jeu de clés — c'est ce qui rend `AppThemeType` fiable. La palette suit
-les couleurs système d'Apple, choix assumé pour que l'application paraisse native sur iOS sans
-dénoter sur Android.
+Chaque thème expose le même jeu de clés — c'est ce qui rend `AppThemeType` fiable. Les teintes
+sémantiques suivent les couleurs système d'Apple, pour que l'application paraisse native sur iOS sans
+dénoter sur Android ; **l'accentuation, elle, est celle du logo** depuis
+[7-J](phase-7/7-j-ecrans.md) : le bleu-indigo du milieu de son dégradé, réglé par thème pour le
+contraste (voir [les décisions durables](#les-décisions-durables)).
 
 Depuis le jalon [7-F](phase-7/7-f-console-annonces.md), les **couleurs de base** — `primary`,
 `accent`, `font`, `fontSecondary`, `border`, `background`, `cardBackground`, `greyBackground`,
@@ -89,10 +99,10 @@ annonce dans les couleurs de l'application, et `Theme.ts` importe `react-native`
 
 | Clé | Rôle | Clair |
 |---|---|---|
-| `primary` | couleur d'action principale | `#007AFF` |
-| `primarySoft` | même teinte à 8 % pour les fonds d'état actif | `#007AFF15` |
+| `primary` | couleur d'action principale, le bleu-indigo du logo (sombre : `#6381F8`) | `#3B5FE5` |
+| `primarySoft` | même teinte à 8 % pour les fonds d'état actif | `#3B5FE515` |
 | `secondary` | accent secondaire | `#5856D6` |
-| `accent` | couleur d'accentuation (souvent égale à `primary`) | `#007AFF` |
+| `accent` | couleur d'accentuation (égale à `primary`) | `#3B5FE5` |
 | `accentFont` | texte d'alerte ou de suppression | `#FF3B30` |
 | `success` / `successSoft` | « valide », « ouvert », « peu fréquenté » | `#34C759` / `#34C75915` |
 | `warning` / `warningSoft` | « attention », « chargé » | `#FF9500` / `#FF950015` |
@@ -100,7 +110,10 @@ annonce dans les couleurs de l'application, et `Theme.ts` importe `react-native`
 | `neutral` / `neutralSoft` | état sans jugement, donnée absente | `#8E8E93` / `#8E8E9315` |
 | `statusBarBackground` | fond de la barre de statut | `#006F9F` |
 | `font` | texte principal | `#1C1C1E` |
-| `fontSecondary` | texte secondaire, libellés, icônes inactives | `#8E8E93` |
+| `fontSecondary` | texte secondaire, libellés (sombre : `#BCBCCB`) | `#6C6C70` |
+| `fontTertiary` | ce qui se lit en retrait : onglet inactif, chevron, légende (sombre : `#8A8A98`) | `#8E8E93` |
+| `contourDeCarte` | le filet d'une carte ; en sombre, c'est lui qui la détache (`#FFFFFF12`) | `#0000000A` |
+| `teinteDOnglet` | la teinte franche de chaque onglet : l'onglet actif et son bouton d'action | objet |
 | `lightFont` | texte sur fond coloré | `#FFFFFF` |
 | `link`, `icon`, `border` | liens, icônes, filets | — |
 | `background` | fond d'écran | `#F2F2F7` |
@@ -222,6 +235,7 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`LoadingState`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** quand sa forme n'est pas connue : une étape d'accueil, une liste qui peut être vide. Sa phrase reste optionnelle. Là où la forme est connue, c'est un `Squelette` | 6 fois |
 | [`Squelette`](../src/shared/ui/Squelette.tsx) | la forme d'un contenu qui charge, et `Balayage`, le reflet qui la parcourt. **Il ne dessine pas la forme** : elle vient de l'appelant, construite avec les composants du contenu en mode `masque` (`Card`, `MetaRow`, `Badge`, le titre d'une carte). Il annonce son attente aux lecteurs d'écran par sa phrase | posé au 7-I |
 | [`TexteMasque`](../src/shared/ui/TexteMasque.tsx) | une ligne de texte masquée : la hauteur exacte de sa police, une barre à sa place, **aucun caractère rendu** | 2 fois, remonté au 7-I |
+| [`EnTeteDOnglet`](../src/shared/ui/EnTeteDOnglet.tsx) | l'en-tête d'un onglet qui défile : le grand titre part avec le contenu, rogné sous la zone sûre, puis une barre compacte — le fond de l'onglet, un filet, le titre au centre — protège la barre d'état ; l'élément de droite ne bouge pas | posé au 7-J |
 | [`FondDOnglet`](../src/shared/ui/FondDOnglet.tsx) | le fond d'un onglet : deux teintes proches de la section qui glissent lentement en haut de l'écran, puis se fondent dans la page. Premier enfant de la vue racine, sous l'en-tête et le contenu. Ses couleurs sont `theme.fondDOnglet`, sa géométrie [`fondDOnglet.ts`](../src/shared/ui/fondDOnglet.ts) | 3 fois, posé au 7-I |
 | [`mouvement.ts`](../src/shared/ui/mouvement.ts) | les animations partagées, tirées de `tokens.mouvement` : `REFLUX`, `SORTIE`, `entreeEnCascade(rang)` | posé au 7-I |
 | [`ChargementPleinePage`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran**, sa phrase **obligatoire**, et une seconde ligne après quatre secondes | 5 fois |
@@ -258,7 +272,8 @@ famille aurait obligé ses appelants à **changer de glyphe** pour l'utiliser.
 La liste que **toute session de refonte d'écran vérifie**. Elle est le pendant visuel de la
 « définition de terminé » du [CONTRIBUTING](../CONTRIBUTING.md#définition-de--terminé-).
 
-1. **En-tête animé.** L'écran passe par `withHeaderAnimation` (s'il défile) ou `withStaticHeader`
+1. **En-tête animé.** Un onglet qui défile pose [`EnTeteDOnglet`](../src/shared/ui/EnTeteDOnglet.tsx)
+   (7-J) : rien ne s'écrit jamais sous la barre d'état. Un écran poussé passe par `withHeaderAnimation` (s'il défile) ou `withStaticHeader`
    (sinon), tous deux dans [`NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx). Ils donnent le
    même `headerPadding` : `paddingTop = insets.top + 70`. Un écran qui calcule le sien dérive.
 2. **Marges de page identiques.** Le contenu respire de `tokens.space.md` sur les côtés, les cartes de
@@ -774,6 +789,28 @@ Acquises, et qui ont coûté à être trouvées :
   `Theme.ts` depuis les spécifications de `tokens.ombres` ; les ombres plus marquées que l'échelle
   passent par `ombre({ y, flou, opacite })`. Les deux facteurs Android d'[`ombres.ts`](../src/shared/theme/ombres.ts)
   sont une calibration, à doser côte à côte avec l'iPhone ; en dessous de l'API 28, pas d'ombre.
+
+- **L'accentuation est celle du logo, une seule** (7-J, 2026-11-05). Elle valait le bleu d'iOS
+  (`#007AFF`) en clair et l'indigo (`#5E5CE6`) en sombre : deux accents pour une application, et un
+  bleu qui faisait « bouton par défaut ». C'est désormais le bleu-indigo du milieu du dégradé du logo
+  (`#456BF2` dans l'[Épure](identite.md), teinte 268° en OKLCH), réglé par thème pour le contraste :
+  `#3B5FE5` en clair (5,3:1 sur blanc, 4,8:1 sur le fond), `#6381F8` en sombre (5,2:1 sur la carte),
+  au même rapport d'un libellé blanc qu'Apple tient pour son bleu sombre. Les teintes sémantiques et
+  celles des cours restent celles du système.
+- **Chaque onglet a sa teinte, et la barre la porte** (7-J). Le fond d'un onglet disait déjà sa
+  section ; l'onglet actif et son bouton d'action en prennent la teinte franche (`teinteDOnglet`,
+  calculée sur la teinte du fond, à 5:1 au moins sur la barre). Les Réglages, au fond presque neutre,
+  prennent l'accentuation. Un onglet inactif est en `fontTertiary` : en `fontSecondary`, monté d'un
+  cran le 2026-11-04, il pesait presque autant que l'actif.
+- **Une ombre est un `boxShadow`, en deux couches, sur les deux plateformes** (7-J). Voir
+  [les tokens](#les-tokens) : l'ombre native d'iOS était coupée par le `overflow: hidden` de toute
+  carte. En sombre, une ombre ne se voit pas : la carte se détache par sa teinte et par son filet,
+  `contourDeCarte`.
+- **Les libellés de la barre d'onglets tiennent à 360 points, dans les trois langues** (7-J).
+  « Paramètres » et « Se connecter » se coupaient ; ils deviennent « Réglages » et « Connexion », et
+  l'espagnol « Estudios » et « Acerca de ». L'écart entre la barre et son bouton d'action passe de 32
+  à 8 points, qui rendent la place aux libellés. C'est la première règle du dépôt pour un libellé qui
+  ne tient pas : le raccourcir.
 
 ### Le mouvement
 

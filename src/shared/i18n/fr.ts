@@ -147,7 +147,7 @@ const fr: TranslationDict = {
 	RESET_APP: "Réinitialiser l'application",
 	RESET_APP_CONFIRMATION: 'Réinitialiser l’application ? C’est définitif.',
 	SAVE: 'Sauvegarder',
-	SETTINGS: 'Paramètres',
+	SETTINGS: 'Réglages',
 	SETTINGS_TO_MAKE: 'Quelques réglages avant de commencer.',
 	SEARCH: "Rechercher",
 	SPANISH: 'Espagnol',
@@ -322,6 +322,8 @@ const fr: TranslationDict = {
 	REFRESH_RECORD: 'Actualiser',
 	REFRESH_RECORD_DESC: 'Une nouvelle connexion au portail va remettre le dossier à jour. Ça prend quelques secondes.',
 	CONNECT: "Se connecter",
+	// La forme courte, pour le bouton d'action de la barre d'onglets : 65 points de large (7-J).
+	CONNECT_SHORT: "Connexion",
 	CONNECTING: 'Connexion…',
 	LOGIN_FAILED_TITLE: 'Identifiants refusés',
 	LOGIN_FAILED: 'Vérifie le nom d’utilisateur et le mot de passe.',

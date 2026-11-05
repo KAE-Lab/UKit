@@ -316,6 +316,7 @@ const en = {
 	REFRESH_RECORD: 'Refresh',
 	REFRESH_RECORD_DESC: 'Connecting to the portal again will bring the record up to date. It takes a few seconds.',
 	CONNECT: "Log in",
+	CONNECT_SHORT: "Log in",
 	CONNECTING: 'Signing in…',
 	LOGIN_FAILED_TITLE: 'Credentials refused',
 	LOGIN_FAILED: 'Check your username and password.',

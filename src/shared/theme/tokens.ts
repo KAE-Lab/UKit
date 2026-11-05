@@ -12,6 +12,28 @@
  * marcher partout, et rien n'a eu a changer.
  */
 
+import type { SpecOmbre } from './ombres';
+
+const fontSize = {
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 18,
+    xl: 22,
+    xxl: 28,
+    // `title` remplace un `hero: 36` qui n'etait reference nulle part : le grand titre de page
+    // reellement utilise vaut 34, dans quatre ecrans dont Planning et le tableau de bord Campus.
+    // Nommer la valeur qui est la plutot que garder celle que personne n'appelle (jalon 6-K).
+    title: 34,
+};
+
+const fontWeight = {
+    regular: '400' as const,
+    medium: '500' as const,
+    semibold: '600' as const,
+    bold: '700' as const,
+};
+
 export const tokens = {
     space: {
         // `xxs` nomme le pas que l'echelle n'avait pas : 26 espacements valaient 2 en dur, sous le
@@ -31,34 +53,42 @@ export const tokens = {
         xl: 24,
         pill: 999,
     },
-    fontSize: {
-        xs: 12,
-        sm: 14,
-        md: 16,
-        lg: 18,
-        xl: 22,
-        xxl: 28,
-        // `title` remplace un `hero: 36` qui n'etait reference nulle part : le grand titre de page
-        // reellement utilise vaut 34, dans quatre ecrans dont Planning et le tableau de bord Campus.
-        // Nommer la valeur qui est la plutot que garder celle que personne n'appelle (jalon 6-K).
-        title: 34,
-    },
-    fontWeight: {
-        regular: '400' as const,
-        medium: '500' as const,
-        semibold: '600' as const,
-        bold: '700' as const,
+    fontSize,
+    fontWeight,
+    /**
+     * Les styles de texte composes (7-J, 2026-11-05) : la taille, la graisse et l'approche d'un role,
+     * ecrites une fois. La police reste celle du systeme ; ce qui la rend precise, c'est une approche
+     * resserree sur les grands corps — Roboto et San Francisco s'y relachent — et des chiffres
+     * tabulaires partout ou un nombre se compare a son voisin : une heure, une duree, une distance.
+     */
+    texte: {
+        /** Le grand titre d'un onglet. */
+        grandTitre: { fontSize: fontSize.title, fontWeight: fontWeight.bold, letterSpacing: -0.6 },
+        /** Le titre d'une section de tableau de bord, d'une fiche. */
+        titreDeSection: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, letterSpacing: -0.35 },
+        /** Le titre d'une carte ou d'une rangee importante. */
+        titreDeCarte: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, letterSpacing: -0.2 },
+        /** Le titre de la barre compacte d'un onglet defile. */
+        titreDeBarre: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, letterSpacing: -0.2 },
+        /** Une heure affichee en grand : le debut d'un cours, un compte a rebours. */
+        heure: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, letterSpacing: -0.3, fontVariant: ['tabular-nums' as const] },
+        /** Des chiffres qui ne dansent pas d'une ligne a l'autre. */
+        chiffres: { fontVariant: ['tabular-nums' as const] },
     },
     /**
      * Les ombres, en **specifications** : decalage, flou, opacite, au sens d'iOS. `Theme.ts` les
-     * resout pour la plateforme en `tokens.shadow.{sm,md,lg}`, prets a etaler — iOS garde ses quatre
-     * proprietes, Android recoit un `boxShadow` (ombres.ts). Elles portaient une `elevation`
-     * jusqu'en 6.2.x : ombre dure, et ordre de dessin change sur les vieux Android.
+     * resout en `tokens.shadow.{sm,md,lg}`, prets a etaler : un `boxShadow` sur les deux plateformes
+     * depuis 7-J (ombres.ts). Elles portaient une `elevation` jusqu'en 6.2.x : ombre dure, et ordre
+     * de dessin change sur les vieux Android.
      */
     ombres: {
-        sm: { y: 2, flou: 6, opacite: 0.04 },
-        md: { y: 6, flou: 14, opacite: 0.06 },
-        lg: { y: 10, flou: 24, opacite: 0.08 },
+        // Deux couches par ombre (7-J, 2026-11-05) : un contact net, au ras de la surface, et une
+        // portee douce. Une seule couche floue se lisait comme une tache grise sous la carte ; le
+        // contact pose l'objet, la portee l'eleve. Plus marquees que celles de 6-K : le « cran
+        // au-dessus » du labo les voulait, et l'iPhone n'en avait aucune sous les cartes.
+        sm: [{ y: 1, flou: 1, opacite: 0.04 }, { y: 2, flou: 6, opacite: 0.05 }] as readonly SpecOmbre[],
+        md: [{ y: 1, flou: 2, opacite: 0.05 }, { y: 8, flou: 12, opacite: 0.08 }] as readonly SpecOmbre[],
+        lg: [{ y: 2, flou: 3, opacite: 0.06 }, { y: 16, flou: 20, opacite: 0.12 }] as readonly SpecOmbre[],
     },
     /**
      * Le mouvement (jalon 7-I) : les durees et le ressort que les animations se partagent.
