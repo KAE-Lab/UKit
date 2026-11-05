@@ -38,6 +38,8 @@ une application qui donne l'heure des choses d'un regard.
 
 - **L'accueil s'ouvre dans la langue du téléphone sur Android** : sous la nouvelle architecture, la
   lecture de la locale retombait sur l'anglais pour tout nouvel utilisateur.
+- **La barre de statut est lisible au premier lancement en sombre** : le conteneur racine manquait le
+  thème posé par l'accueil, et gardait des icônes sombres sur fond sombre.
 
 ### Modifié
 
