@@ -103,7 +103,8 @@ export default function StackNavigator() {
                                     title: Array.isArray(route.params.name) ? (Translator.get('MY_PLANNING')) : treatTitle(route.params.name),
                                     themeName,
                                     route,
-                                    gestureEnabled: true
+                                    gestureEnabled: true,
+                                    fondAuDefilement: false,
                                 })}
                             />
 
@@ -142,7 +143,7 @@ export default function StackNavigator() {
                                 ecran qui ne s'empile qu'une fois. */}
                             <Stack.Screen name="WebBrowser" component={WebBrowser} options={{ headerShown: false, gestureEnabled: true, detachPreviousScreen: false }} />
 
-                            <Stack.Screen name="Day" component={DayView} options={({ route }) => NavBarHelper({ title: Translator.get('DAY'), themeName, route })} />
+                            <Stack.Screen name="Day" component={DayView} options={({ route }) => NavBarHelper({ title: Translator.get('DAY'), themeName, route, fondAuDefilement: false })} />
 
                             {/* La carte du lieu vit dans la fiche (`CampusMapSection`), plus derriere
                                 un bouton d'en-tete : l'ecran plein-page a disparu avec elle. */}

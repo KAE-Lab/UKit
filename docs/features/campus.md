@@ -32,7 +32,7 @@ coordonnées à ses sections, lit **une seule fois** les annonces, et porte le t
 CampusDashboard
   ├─ useCampusPosition()                      la position, partagée avec les listes
   ├─ useRafraichissementTableauDeBord()       le tirer : une revision, un spinner (rafraichissement.tsx)
-  ├─ EnTeteDOnglet                            le grand titre qui part avec le contenu, la barre compacte (7-J)
+  ├─ EnTeteDOnglet                            l'en-tête fixe, la teinte de Campus, le fondu du contenu (7-J)
   └─ Reanimated.ScrollView + RefreshControl
        └─ AnnoncesDuTableauProvider           useBdeAnnonces(), lu une fois (annonces.tsx)
             ├─ BdeSection                     les annonces du contexte
@@ -135,9 +135,8 @@ de ce qui sautait, avant, est dans [inventaire-mouvement.md](../inventaire-mouve
   ([`SectionDuTableau`](../../src/features/Campus/Dashboard/components/SectionDuTableau.tsx)). La
   section des annonces, quand la base n'a rien, se retire en fondu au lieu de disparaître d'un coup.
 - **L'en-tête et le défilement sont en Reanimated**, sur le fil de l'interface. Depuis 7-J, c'est
-  l'en-tête partagé des onglets ([`EnTeteDOnglet`](../../src/shared/ui/EnTeteDOnglet.tsx)) : le grand
-  titre part avec le contenu, puis une barre compacte, sur le fond de l'onglet, protège la barre
-  d'état ; le contenu s'écrivait sous l'heure du téléphone. Le calage iOS du tirer-pour-rafraîchir —
+  l'en-tête partagé des onglets ([`EnTeteDOnglet`](../../src/shared/ui/EnTeteDOnglet.tsx)) : fixe,
+  et le contenu passe dessous en fondu (deuxième passe) ; il s'écrivait sous l'heure du téléphone. Le calage iOS du tirer-pour-rafraîchir —
   l'en-tête en retrait de contenu — et le spinner du système sont gardés tels quels.
 
 ## Les cartes spéciales

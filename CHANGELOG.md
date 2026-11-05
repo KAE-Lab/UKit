@@ -54,7 +54,12 @@ une application qui donne l'heure des choses d'un regard.
 - **La barre du parcours froid ne se fige plus vers 30 %** : ses paliers suivent les durées mesurées,
   et elle s'approche de chacun sans jamais s'y arrêter avant la fin réelle de l'étape.
 - **Une seule accentuation, celle du logo** : le bleu-indigo du milieu de son dégradé, `#3B5FE5` en
-  clair et `#6381F8` en sombre, à la place du bleu d'iOS et de l'indigo.
+  clair et `#6381F8` en sombre, à la place du bleu d'iOS et de l'indigo. La barre d'onglets ne porte
+  plus qu'elle, et la teinte de chaque section se prend le long du dégradé du logo.
+- **Un seul en-tête dans toute l'application** : fixe, le titre à sa place, et le contenu qui passe
+  dessous en fondu au lieu d'une coupe sèche, sur les onglets, les écrans poussés et le Planning. Le
+  grand titre qui partait au défilement et sa barre compacte disparaissent, et le fond de la section
+  ne vit plus que dans l'en-tête, fixe.
 - **Le « cran au-dessus » retenu au labo le 2026-11-04** : le noir teinté `#0B0B12` et ses cartes
   `#15151E`, un texte secondaire plus contrasté (`#6C6C70`, `#BCBCCB`), un troisième niveau de texte
   pour ce qui se lit en retrait.
@@ -67,21 +72,18 @@ une application qui donne l'heure des choses d'un regard.
   ligne servie deux fois par la source ne s'affiche qu'une fois, les semaines restent dans la fiche,
   et la couleur d'un cours devient lisible quand elle écrit.
 - **Les Réglages en groupes encadrés** : une carte par section, l'icône dans un carré de la couleur
-  de sa famille, l'explication en pied de groupe, le mode sombre rangé dans l'affichage ; la barre
-  compacte au défilement. Ouvrir l'onglet ne demande plus l'accès à l'agenda : une rangée
+  de sa famille, l'explication en pied de groupe, le mode sombre rangé dans l'affichage. Ouvrir
+  l'onglet ne demande plus l'accès à l'agenda : une rangée
   « Autoriser l'agenda » le demande quand on veut s'en servir.
 - **Les distances s'écrivent pour être lues** : « 280 m », « 1,2 km », « 9 045 km », aux séparateurs
   de la langue, au lieu de « 9045.4 km ».
-- **L'en-tête de la Scolarité** se pose sur le fond violet de l'onglet au lieu d'un aplat blanc, et le
+- **L'en-tête de la Scolarité** se pose sur le fond de l'onglet au lieu d'un aplat blanc, et le
   prénom de la salutation prend la couleur du texte.
 - **La recherche de groupes et la fiche d'un cours** prennent la même écriture : liste groupée à
   intertitres gris, heures en grand et salle d'abord.
-- **Les écrans poussés ont une barre qui prend son fond au défilement**, avec son filet, comme les
-  onglets : le contenu ne passe plus sous la barre d'état ni sous un bouton de retour flottant, et le
-  titre ne s'efface plus.
 - **À propos prend le gabarit des Réglages** et le logo vectoriel ; la mention « Propulsé par React
   Navigation 6 », périmée depuis le passage à la version 7, est retirée.
-- **L'en-tête du Planning** porte le fond bleu de l'onglet ; le jour choisi est une case pleine,
+- **L'en-tête du Planning** porte le fond de l'onglet ; le jour choisi est une case pleine,
   aujourd'hui a son point, le choix d'un jour s'acquitte au doigt, et la case d'une semaine dit son
   lundi. Le ruban se recentre sur le jour choisi à sa première mesure.
 

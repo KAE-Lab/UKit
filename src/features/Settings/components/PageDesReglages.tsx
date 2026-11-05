@@ -13,14 +13,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
-import { EnTeteDOnglet, HAUTEUR_DE_LA_BARRE } from '../../../shared/ui/EnTeteDOnglet';
+import { EnTeteDOnglet, hauteurDeLEnTete } from '../../../shared/ui/EnTeteDOnglet';
 import { PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
 import { PastilleService } from '../../../shared/messages/PastilleService';
 
 export function PageDesReglages({ theme, children }: { theme: AppThemeType; children: React.ReactNode }) {
     const insets = useSafeAreaInsets();
-    const hauteurEnTete = insets.top + HAUTEUR_DE_LA_BARRE;
+    const hauteurEnTete = hauteurDeLEnTete(insets.top);
     // Sur iOS l'en-tete est un retrait du contenu, et le defilement au repos vaut sa hauteur negative ;
     // Android ignore `contentInset` et garde un rembourrage (meme calage que Campus).
     const surIos = Platform.OS === 'ios';
@@ -32,7 +31,6 @@ export function PageDesReglages({ theme, children }: { theme: AppThemeType; chil
 
     return (
         <View style={[styles.page, { backgroundColor: theme.background }]}>
-            <FondDOnglet theme={theme} onglet="reglages" />
             <EnTeteDOnglet
                 theme={theme}
                 onglet="reglages"

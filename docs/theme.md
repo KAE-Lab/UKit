@@ -113,7 +113,6 @@ annonce dans les couleurs de l'application, et `Theme.ts` importe `react-native`
 | `fontSecondary` | texte secondaire, libellés (sombre : `#BCBCCB`) | `#6C6C70` |
 | `fontTertiary` | ce qui se lit en retrait : onglet inactif, chevron, légende (sombre : `#8A8A98`) | `#8E8E93` |
 | `contourDeCarte` | le filet d'une carte ; en sombre, c'est lui qui la détache (`#FFFFFF12`) | `#0000000A` |
-| `teinteDOnglet` | la teinte franche de chaque onglet : l'onglet actif et son bouton d'action | objet |
 | `logo` | les deux couleurs du logo, `#007AFF` et `#5E5CE6`, les mêmes dans les deux thèmes | objet |
 | `lightFont` | texte sur fond coloré | `#FFFFFF` |
 | `link`, `icon`, `border` | liens, icônes, filets | — |
@@ -238,11 +237,12 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`LoadingState`](../src/shared/ui/LoadingState.tsx) | l'attente **dans le flux** quand sa forme n'est pas connue : une étape d'accueil, une liste qui peut être vide. Sa phrase reste optionnelle. Là où la forme est connue, c'est un `Squelette` | 6 fois |
 | [`Squelette`](../src/shared/ui/Squelette.tsx) | la forme d'un contenu qui charge, et `Balayage`, le reflet qui la parcourt. **Il ne dessine pas la forme** : elle vient de l'appelant, construite avec les composants du contenu en mode `masque` (`Card`, `MetaRow`, `Badge`, le titre d'une carte). Il annonce son attente aux lecteurs d'écran par sa phrase | posé au 7-I |
 | [`TexteMasque`](../src/shared/ui/TexteMasque.tsx) | une ligne de texte masquée : la hauteur exacte de sa police, une barre à sa place, **aucun caractère rendu** | 2 fois, remonté au 7-I |
-| [`EnTeteDOnglet`](../src/shared/ui/EnTeteDOnglet.tsx) | l'en-tête d'un onglet qui défile : le grand titre part avec le contenu, rogné sous la zone sûre, puis une barre compacte — le fond de l'onglet, un filet, le titre au centre — protège la barre d'état ; l'élément de droite ne bouge pas | posé au 7-J |
+| [`EnTeteDOnglet`](../src/shared/ui/EnTeteDOnglet.tsx) | l'en-tête d'un onglet : **fixe**, le titre à sa place, la teinte de la section dedans, et le contenu qui passe dessous en fondu (`FonduDeBord`), dès le premier point de défilement. `hauteurDeLEnTete(hautSur)` donne le retrait du contenu | posé au 7-J, fixe depuis la deuxième passe |
+| [`FonduDeBord`](../src/shared/ui/FonduDeBord.tsx) | le fondu du bord haut d'une zone qui défile sous un en-tête fixe : la couleur unie de la page, pleine en haut, transparente en bas, sur 24 points. Visible au défilement sous un en-tête qui le lit ; toujours visible sur une liste qui lui laisse sa hauteur en rembourrage (le Planning). Il se dessine **dans les bords** de son parent | posé à la deuxième passe de 7-J |
 | [`FigureEnEcho`](../src/shared/ui/epure/FigureEnEcho.tsx), [`LogoUKit`](../src/shared/ui/epure/LogoUKit.tsx) | Fig. 01 de l'Épure et le logo vectoriel, aux nombres du kit ([`geometrie.ts`](../src/shared/ui/epure/geometrie.ts), pur et testé) ; les couleurs du logo sont `theme.logo`. Réservés aux moments : l'accueil | posés au 7-J |
 | [`JeuDuPoint`](../src/shared/ui/jeu/JeuDuPoint.tsx) | le jeu du point, pendant la connexion universitaire : physique pure et testée ([`physique.ts`](../src/shared/ui/jeu/physique.ts)), boucle d'images active seulement en partie, absent sous « réduire les animations » | posé au 7-J |
 | [`useEnfoncement`](../src/shared/ui/useEnfoncement.ts) | l'échelle d'une surface sous le doigt, au ressort : `Card` et la carte de cours | 2 fois, remonté au 7-J |
-| [`FondDOnglet`](../src/shared/ui/FondDOnglet.tsx) | le fond d'un onglet : deux teintes proches de la section qui glissent lentement en haut de l'écran, puis se fondent dans la page. Premier enfant de la vue racine, sous l'en-tête et le contenu. Ses couleurs sont `theme.fondDOnglet`, sa géométrie [`fondDOnglet.ts`](../src/shared/ui/fondDOnglet.ts) | 3 fois, posé au 7-I |
+| [`FondDOnglet`](../src/shared/ui/FondDOnglet.tsx) | le fond d'un onglet : un dégradé fixe des deux teintes de la section, ramené à la hauteur de l'en-tête qui le porte et fermé à son bas sur la couleur de la page. Ses couleurs sont `theme.fondDOnglet`, son voile [`fondDOnglet.ts`](../src/shared/ui/fondDOnglet.ts) | posé au 7-I, dans l'en-tête depuis la deuxième passe de 7-J |
 | [`mouvement.ts`](../src/shared/ui/mouvement.ts) | les animations partagées, tirées de `tokens.mouvement` : `REFLUX`, `SORTIE`, `entreeEnCascade(rang)` | posé au 7-I |
 | [`ChargementPleinePage`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran**, sa phrase **obligatoire**, et une seconde ligne après quatre secondes | 5 fois |
 | [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu : un fondu seul, de la durée `tokens.mouvement.couture` | 3 fois |
@@ -278,8 +278,10 @@ famille aurait obligé ses appelants à **changer de glyphe** pour l'utiliser.
 La liste que **toute session de refonte d'écran vérifie**. Elle est le pendant visuel de la
 « définition de terminé » du [CONTRIBUTING](../CONTRIBUTING.md#définition-de--terminé-).
 
-1. **En-tête animé.** Un onglet qui défile pose [`EnTeteDOnglet`](../src/shared/ui/EnTeteDOnglet.tsx)
-   (7-J) : rien ne s'écrit jamais sous la barre d'état. Un écran poussé passe par `withHeaderAnimation` (s'il défile) ou `withStaticHeader`
+1. **En-tête fixe, contenu fondu.** Un onglet pose [`EnTeteDOnglet`](../src/shared/ui/EnTeteDOnglet.tsx)
+   (7-J) : rien ne s'écrit jamais sous la barre d'état, et le contenu passe sous l'en-tête en fondu,
+   jamais en coupe sèche. Un en-tête maison (le Planning, une fiche à bandeau fixe) pose
+   [`FonduDeBord`](../src/shared/ui/FonduDeBord.tsx) au bord haut de sa liste. Un écran poussé passe par `withHeaderAnimation` (s'il défile) ou `withStaticHeader`
    (sinon), tous deux dans [`NavHelpers.tsx`](../src/shared/navigation/NavHelpers.tsx). Ils donnent le
    même `headerPadding` : `paddingTop = insets.top + 70`. Un écran qui calcule le sien dérive.
 2. **Marges de page identiques.** Le contenu respire de `tokens.space.md` sur les côtés, les cartes de
@@ -803,11 +805,13 @@ Acquises, et qui ont coûté à être trouvées :
   `#3B5FE5` en clair (5,3:1 sur blanc, 4,8:1 sur le fond), `#6381F8` en sombre (5,2:1 sur la carte),
   au même rapport d'un libellé blanc qu'Apple tient pour son bleu sombre. Les teintes sémantiques et
   celles des cours restent celles du système.
-- **Chaque onglet a sa teinte, et la barre la porte** (7-J). Le fond d'un onglet disait déjà sa
-  section ; l'onglet actif et son bouton d'action en prennent la teinte franche (`teinteDOnglet`,
-  calculée sur la teinte du fond, à 5:1 au moins sur la barre). Les Réglages, au fond presque neutre,
-  prennent l'accentuation. Un onglet inactif est en `fontTertiary` : en `fontSecondary`, monté d'un
-  cran le 2026-11-04, il pesait presque autant que l'actif.
+- **Les couleurs de l'identité, seulement** (7-J, deuxième passe). La barre d'onglets porte
+  l'accentuation seule, pour l'onglet actif comme pour son bouton d'action ; la première passe lui
+  donnait la teinte de chaque section — bleu, turquoise, violet —, et quatre couleurs hors de
+  l'identité faisaient « prototype » (review du 2026-11-05). Un onglet inactif est en `fontTertiary`.
+  Les teintes des sections se prennent le long du dégradé du logo (voir le fond d'un onglet, plus bas).
+  Restent hors de cette règle les couleurs qui disent quelque chose : l'état (ouvert, fermé, erreur)
+  et celles des cours, qui viennent de la source.
 - **Une ombre est un `boxShadow`, en deux couches, sur les deux plateformes** (7-J). Voir
   [les tokens](#les-tokens) : l'ombre native d'iOS était coupée par le `overflow: hidden` de toute
   carte. En sombre, une ombre ne se voit pas : la carte se détache par sa teinte et par son filet,
@@ -879,16 +883,15 @@ Acquises, et qui ont coûté à être trouvées :
 - **Le tirer-pour-rafraîchir reste celui du système** (2026-09-26). Sur Android, le contrôle natif
   intercepte le geste sans en donner la progression ; un geste maison sur les deux plateformes était le
   point le plus risqué du jalon, pour un moment que l'Épure porte déjà ailleurs.
-- **Le fond d'un onglet est une touche, pas un décor.** Un voile oblique de deux teintes proches de la
-  section — Planning bleu, Campus cyan, Scolarité violet, Réglages presque neutre — séparées par des
-  respirations où la page reparaît, glisse d'une période par minute en haut de l'écran, puis se fond
-  dans la page avant le contenu (`FondDOnglet`). Il ne vole aucun toucher, ne bouge que quand l'onglet
-  est affiché, et reste immobile sous « réduire les animations ». Il ne s'efface pas au défilement :
-  le contenu passe dessus. Choisi sur planche le 2026-11-04 (variante K1, dosage affirmé), après que
-  la 3D (rendus Blender, fonds trouvés) a été jugée trop lourde pour ce qu'elle apportait, et un
-  premier dégradé en deux taches, trop « arc-en-ciel » : les deux teintes sont à 15 degrés l'une de
-  l'autre. Les couleurs sont celles vues au labo, posées telles quelles : en sombre, calculées depuis
-  le noir pur, elles tombaient presque au noir.
+- **Le fond d'un onglet est une touche, pas un décor, et il vit dans l'en-tête.** Deux teintes
+  voisines de la section, en dégradé fixe, ramenées à la hauteur de l'en-tête et fermées à son bas sur
+  la couleur unie de la page (`FondDOnglet`) ; le contenu passe dessous en fondu. Les teintes suivent
+  **le dégradé du logo** : le Planning au bout bleu (257° en OKLCH), Campus au milieu (268°), la
+  Scolarité au bout indigo (278°), à clarté et saturation égales, les Réglages presque neutres.
+  Historique : choisi sur planche le 2026-11-04 (variante K1), le fond couvrait le haut de la page et
+  glissait d'une période par minute, en bleu ciel, turquoise et violet rosé. La deuxième passe de 7-J
+  l'a confiné à l'en-tête, où le glissement ne se voyait plus, l'a fixé, et l'a ramené à l'identité
+  (review du 2026-11-05).
 - **Une image annonce sa couleur.** Quand la base porte un blurhash — les annonces, calculé par la
   console au téléversement —, il tient la place de l'image pendant son chargement, cadré comme elle.
   Sans lui, le gris du conteneur : les lieux n'en ont pas.

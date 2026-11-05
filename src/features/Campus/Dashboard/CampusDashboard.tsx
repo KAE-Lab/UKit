@@ -6,8 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import style from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
-import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
-import { EnTeteDOnglet } from '../../../shared/ui/EnTeteDOnglet';
+import { EnTeteDOnglet, hauteurDeLEnTete } from '../../../shared/ui/EnTeteDOnglet';
 import { PastilleService } from '../../../shared/messages/PastilleService';
 import Translator from '../../../shared/i18n/Translator';
 import { useCampusPosition } from '../hooks/useCampusPosition';
@@ -20,14 +19,11 @@ import { FreeRoomSection } from './components/FreeRoomSection';
 import { AnnoncesDuTableauProvider } from './annonces';
 import { crousRegionActive, sallesDisponibles } from '../../../shared/etablissements';
 
-/** La hauteur du grand titre et de sa marge, sous l'encoche : ce que le contenu laisse a l'en-tete. */
-const HAUTEUR_TITRE = 60;
-
 const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) => {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     const insets = useSafeAreaInsets();
-    const hauteurEnTete = insets.top + HAUTEUR_TITRE;
+    const hauteurEnTete = hauteurDeLEnTete(insets.top);
 
     // La meme position que les listes, resolue une fois pour tout le Campus (useCampusLocation).
     const location = useCampusPosition();
@@ -54,7 +50,6 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <FondDOnglet theme={theme} onglet="campus" />
             <EnTeteDOnglet
                 theme={theme}
                 onglet="campus"

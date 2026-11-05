@@ -34,20 +34,13 @@ export type MainTabParamList = {
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 /**
- * La section de chaque onglet : sa teinte habille l'onglet actif et le bouton d'action, la meme que
- * son fond (7-J). En changeant d'onglet, la barre change de couleur avec la page.
+ * La couleur de l'onglet actif et du bouton d'action : **l'accentuation, la seule** (7-J, deuxieme
+ * passe). La premiere passe donnait a chaque onglet la teinte de sa section — bleu, turquoise, violet
+ * —, et quatre couleurs hors de l'identite faisaient « prototype » (review du 2026-11-05). La barre ne
+ * change plus de couleur avec la page.
  */
-const SECTION_DE_L_ONGLET: Record<keyof MainTabParamList, keyof AppThemeType['teinteDOnglet']> = {
-    PlanningTab: 'planning',
-    CampusTab: 'campus',
-    ScolariteTab: 'scolarite',
-    SettingsTab: 'reglages',
-};
-
-/** La teinte de l'onglet affiche, ou l'accentuation pour une route inconnue. */
-function teinteDeLaRoute(theme: AppThemeType, routeName: string): string {
-    const section = SECTION_DE_L_ONGLET[routeName as keyof MainTabParamList];
-    return section !== undefined ? theme.teinteDOnglet[section] : theme.accent;
+function teinteDeLaRoute(theme: AppThemeType): string {
+    return theme.accent;
 }
 
 export interface CustomTabBarProps extends BottomTabBarProps {
@@ -92,7 +85,7 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
         });
     };
 
-    const teinte = teinteDeLaRoute(theme, route.name);
+    const teinte = teinteDeLaRoute(theme);
     const color = isFocused ? teinte : theme.fontTertiary;
 
     return (
@@ -213,7 +206,7 @@ function BoutonDAction({ icone, libelle, onPress, theme, teinte, masque = false 
 function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: TabBarActionItemProps) {
     /** Le teaser du bouton Campus — et celui des Groupes sur un campus sans inventaire. */
     const [teaser, setTeaser] = useState(false);
-    const teinte = teinteDeLaRoute(theme, currentRouteName);
+    const teinte = teinteDeLaRoute(theme);
 
     if (currentRouteName === 'PlanningTab') {
         // Sans inventaire de groupes — l'emploi du temps passe par un lien personnel — la recherche

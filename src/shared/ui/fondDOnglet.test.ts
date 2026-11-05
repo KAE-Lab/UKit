@@ -1,8 +1,8 @@
-/** Ce que le fond d'un onglet doit tenir : un voile qui part transparent, un motif qui boucle sans saut. */
+/** Ce que le fond d'un onglet doit tenir : un voile qui part transparent, un fondu qui part plein. */
 
 import { describe, expect, it } from 'vitest';
 
-import { fondDeHauteur, GEOMETRIE_DU_FOND, motifDuFond, voileDuFond } from './fondDOnglet';
+import { fondDeHauteur, fonduDuBord, GEOMETRIE_DU_FOND, voileDuFond } from './fondDOnglet';
 import { PALETTES } from '../theme/palettes';
 
 describe('fond d un onglet', () => {
@@ -22,15 +22,14 @@ describe('fond d un onglet', () => {
         expect(locations[0]).toBeCloseTo(GEOMETRIE_DU_FOND.voile.debut / GEOMETRIE_DU_FOND.hauteur);
     });
 
-    it('repete le motif a l identique d une periode a l autre, pour que le glissement boucle', () => {
-        const { colors, locations } = motifDuFond('#AAAAAA', '#BBBBBB', '#000000');
-        const parPeriode = 4;
-        expect(colors).toHaveLength(GEOMETRIE_DU_FOND.periodes * parPeriode + 1);
-        for (let i = 0; i + parPeriode < colors.length; i += 1) {
-            expect(colors[i + parPeriode]).toBe(colors[i]);
-            expect(locations[i + parPeriode] - locations[i]).toBeCloseTo(1 / GEOMETRIE_DU_FOND.periodes);
-        }
-        expect(colors[colors.length - 1]).toBe(colors[0]);
+    it('fond le bord d une zone qui defile : plein en haut, transparent en bas, sans saut', () => {
+        const { colors, locations } = fonduDuBord('#0B0B12');
+        expect(colors[0]).toBe('#0B0B12FF');
+        expect(colors[colors.length - 1]).toBe('#0B0B1200');
+        expect(locations[0]).toBe(0);
+        expect(locations[locations.length - 1]).toBe(1);
+        const alphas = colors.map((c) => parseInt(c.slice(7), 16));
+        alphas.slice(1).forEach((a, i) => expect(a).toBeLessThanOrEqual(alphas[i]));
     });
 
     it('donne deux teintes a chaque onglet, dans les deux themes', () => {
