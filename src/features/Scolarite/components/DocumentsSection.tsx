@@ -17,7 +17,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import * as DocumentPicker from 'expo-document-picker';
@@ -32,7 +32,7 @@ import type { DocumentScolarite } from '../services/DocumentsService';
 import { useDocuments } from '../hooks/useDocuments';
 import { GroupeScolarite, LigneScolarite } from './LigneScolarite';
 import { ConfirmationScolarite } from './ConfirmationScolarite';
-import type { IconSpec } from '../../../shared/ui/Icon';
+import { Icon, type IconSpec } from '../../../shared/ui/Icon';
 import type { RootStackParamList } from '../../../shared/navigation/StackNavigator';
 
 /** L'extension d'un nom de fichier, en minuscules et sans le point. Vide s'il n'y en a pas. */
@@ -137,14 +137,18 @@ export function DocumentsSection({ theme, teinte }: DocumentsSectionProps) {
                                 sousTitre={sousTitre(document)}
                                 onPress={() => ouvrir(document)}
                                 droite={
-                                    <ActionButton
-                                        theme={theme}
-                                        variant="destructive"
-                                        icon={{ name: 'trash-can-outline' }}
-                                        label=""
+                                    // Une corbeille grise, pas un bouton rouge (7-J, deuxieme passe) :
+                                    // le rouge sur fond gris annoncait une destruction au repos, sur
+                                    // chaque ligne. La confirmation qui suit dit, elle, ce qui part.
+                                    <TouchableOpacity
                                         onPress={() => setASupprimer(document.nom)}
+                                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={Translator.get('DELETE_DOCUMENT')}
                                         style={styles.supprimer}
-                                    />
+                                    >
+                                        <Icon icon={{ name: 'trash-can-outline' }} size={20} color={theme.fontSecondary} />
+                                    </TouchableOpacity>
                                 }
                             />
                         ))}
@@ -181,12 +185,9 @@ export function DocumentsSection({ theme, teinte }: DocumentsSectionProps) {
 
 const styles = StyleSheet.create({
     supprimer: {
-        // Un carre : le bouton n'a pas de libelle, donc rien ne doit l'etirer dans un sens plutot que
-        // dans l'autre. `minHeight: 0` seul le laissait plus large que haut.
         width: 36,
         height: 36,
-        minHeight: 0,
-        paddingHorizontal: 0,
-        paddingVertical: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
