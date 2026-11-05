@@ -151,11 +151,13 @@ C'est ce qui a permis de trouver, en le déplaçant, que `LibraryService` distin
 
 ### `sections` et `sectionsHeaders`
 
-Deux tableaux de six couleurs, indexés cycliquement (`index % 6`). Ils colorent les en-têtes de
-sections dans la recherche de groupes et servent d'accents ailleurs — par exemple
+Deux tableaux de six couleurs, indexés cycliquement (`index % 6`). Ils servent d'accents — par exemple
 `theme.sectionsHeaders[5]` pour la ligne de messagerie du dashboard Scolarité. Les deux tableaux sont
 alignés : `sections[i]` est la version translucide de `sectionsHeaders[i]`. En sombre, l'index 0 a
 porté `#5E5CE6` — la valeur du 4 — jusqu'en 6.1-C : cinq teintes au lieu de six, corrigé en `#0A84FF`.
+Ils coloraient les en-têtes de la recherche de groupes jusqu'en [7-J](phase-7/7-j-ecrans.md) : six
+pastilles saturées sur des rangées teintées, qui ne disaient rien du contenu ; la recherche est
+désormais une liste groupée à intertitres gris.
 
 ### Le sous-arbre `settings`
 
@@ -918,8 +920,8 @@ Acquises, et qui ont coûté à être trouvées :
   depuis 6.1-C. Ils sont consignés dans
   [inventaire-visuel.md](inventaire-visuel.md#3-les-divergences-mesurées), et chaque site porte une
   désactivation locale de la règle qui dit pourquoi : la base ESLint est à zéro, et le reste.
-- **Deux jeux de couleurs hérités subsistent en tête de fichier** : `colors` (encore référencé, dans
-  `style.list`, la couleur du calendrier système et le retour de notification — le pouce du `Switch`
+- **Deux jeux de couleurs hérités subsistent en tête de fichier** : `colors` (encore référencé par
+  la couleur du calendrier système et le retour de notification — le pouce du `Switch`
   des réglages est sorti avec le contrôle natif en 6.1-E — `StyleWelcome`, son dernier gros consommateur, est sorti du fichier en 6.1-C) et
   `hintColors` (exposé par `style.hintColors`). `colors50` et `colors200`, deux palettes Material
   entières que plus rien ne lisait, ont été **supprimées** le 2026-08-16.

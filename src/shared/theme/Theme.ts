@@ -923,62 +923,9 @@ const style = {
     },
 
     list: {
-        searchInputView: { flex: 0 },
-        searchInput: {
-            height:    40,
-            paddingLeft: tokens.space.sm,
-            color:     'white',
-        },
-        sectionList: { flex: 0 },
-
-        sections: [
-            { backgroundColor: 'rgba(0, 122, 255, 0.1)' },
-            { backgroundColor: 'rgba(52, 199, 89, 0.1)' },
-            { backgroundColor: 'rgba(255, 149, 0, 0.1)' },
-            { backgroundColor: 'rgba(255, 59, 48, 0.1)' },
-            { backgroundColor: 'rgba(88, 86, 214, 0.1)' },
-            { backgroundColor: 'rgba(90, 200, 250, 0.1)' },
-        ],
-        sectionHeaders: [
-            { backgroundColor: '#007AFF' },
-            { backgroundColor: '#34C759' },
-            { backgroundColor: '#FF9500' },
-            { backgroundColor: '#FF3B30' },
-            { backgroundColor: '#5856D6' },
-            { backgroundColor: '#5AC8FA' },
-        ],
-
         homeView: {
             flex:            1,
             backgroundColor: 'transparent',
-        },
-        view: {
-            backgroundColor:  'transparent',
-            borderWidth:      0,
-            borderBottomColor: colors.gray,
-            paddingHorizontal: tokens.space.lg,
-            paddingVertical:  tokens.space.sm,
-            justifyContent:   'space-between',
-        },
-        sectionHeaderView: {
-            height:          40,
-            flex:            1,
-            flexDirection:   'column',
-            justifyContent:  'space-around',
-            alignItems:      'center',
-            alignContent:    'center',
-            borderBottomColor: colors.gray,
-            borderRadius:    tokens.radius.sm,
-            marginHorizontal: tokens.space.sm,
-            marginTop:       tokens.space.sm,
-            ...tokens.shadow.sm,
-        },
-        sectionHeaderTitle: {
-            fontWeight: tokens.fontWeight.bold,
-            fontSize:   tokens.fontSize.md,
-            // Le conteneur de section centre ses enfants : sans cette largeur, Android tronque
-            // la fin d'un nom de section (docs/theme.md).
-            alignSelf: 'stretch' as const,
         },
     },
 

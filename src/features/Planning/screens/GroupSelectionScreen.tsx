@@ -22,14 +22,11 @@ export interface HomeScreenProps {
 
 export interface GroupItem {
     name: string;
-    cleanName?: string;
-    colorIndex?: number;
-    sectionStyle?: Record<string, unknown>;
 }
 
 export interface HomeScreenState {
     completeList: GroupItem[] | null;
-    sections: { key: string; data: GroupItem[]; sectionIndex: number; colorIndex: number }[] | null;
+    sections: { key: string; data: GroupItem[] }[] | null;
     list: GroupItem[] | null;
     emptySearchResults: boolean;
     refreshing: boolean;
@@ -86,30 +83,20 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     }
 
     generateSections(list: GroupItem[], save = false) {
-        let sections: { key: string; data: GroupItem[]; sectionIndex: number; colorIndex: number }[] = [];
-        let sectionContent: { key: string; data: GroupItem[]; sectionIndex: number; colorIndex: number } | null = null;
+        const sections: { key: string; data: GroupItem[] }[] = [];
+        let sectionContent: { key: string; data: GroupItem[] } | null = null;
         let previousSection: string | null = null;
-        let sectionIndex = -1;
 
         list.forEach((e) => {
-            let splitName = e.name.substring(0, 3);
-            e.cleanName = e.name;
+            const splitName = e.name.substring(0, 3);
 
             if (splitName !== previousSection) {
-                if (previousSection !== null) {
+                if (sectionContent !== null) {
                     sections.push(sectionContent);
                 }
                 previousSection = splitName;
-                sectionContent = {
-                    key: previousSection,
-                    data: [],
-                    sectionIndex: ++sectionIndex,
-                    colorIndex: sectionIndex % style.Theme[this.app.themeName].sections.length,
-                };
+                sectionContent = { key: previousSection, data: [] };
             }
-
-            e.colorIndex = sectionContent.colorIndex;
-            e.sectionStyle = style.list.sections[sectionIndex % style.list.sections.length];
             sectionContent.data.push(e);
         });
 
@@ -321,17 +308,23 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                 scrollEventThrottle={16}
                 contentContainerStyle={{ paddingTop: 0, paddingBottom: tokens.space.xxl }}
                 scrollIndicatorInsets={{ top: 0 }}
-                renderItem={({ item, index }: { item: GroupItem; index: number }) => (
-                    <GroupRow name={item.name} cleanName={item.cleanName!} sectionStyle={item.sectionStyle!} key={index} color={theme.sections[item.colorIndex!]} fontColor={theme.font} openGroup={this.openGroup} />
+                renderItem={({ item, index, section }: { item: GroupItem; index: number; section: { data: GroupItem[] } }) => (
+                    <GroupRow
+                        name={item.name}
+                        theme={theme}
+                        premier={index === 0}
+                        dernier={index === section.data.length - 1}
+                        openGroup={this.openGroup}
+                    />
                 )}
-                renderSectionHeader={({ section }: { section: { key: string; sectionIndex: number; colorIndex: number } }) => (
-                    <SectionListHeader title={section.key} key={section.key} sectionIndex={section.sectionIndex} color={theme.sections[section.colorIndex]} headerColor={theme.sectionsHeaders[section.colorIndex]} />
+                renderSectionHeader={({ section }: { section: { key?: string } }) => (
+                    <SectionListHeader title={section.key ?? ''} theme={theme} />
                 )}
                 sections={this.state.sections}
                 keyExtractor={(item, index) => index.toString()}
                 initialNumToRender={20}
                 onEndReachedThreshold={0.1}
-                style={[style.list.sectionList as never, { backgroundColor: theme.greyBackground }]}
+                style={{ flex: 0, backgroundColor: theme.background }}
                 onRefresh={this.refreshList}
                 refreshing={this.state.refreshing}
                 stickySectionHeadersEnabled={true}

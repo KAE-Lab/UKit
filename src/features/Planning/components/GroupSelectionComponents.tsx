@@ -1,136 +1,102 @@
+/**
+ * L'intertitre et la rangee de la recherche de groupes (jalon 7-J, 2026-11-05).
+ *
+ * Une **liste groupee** a la maniere des reglages du systeme : un intertitre en petites capitales
+ * grises par prefixe, puis les groupes sur une carte, separes par un filet fin indente. Les sections
+ * etaient des pastilles saturees — bleu, vert, orange — sur des rangees teintees de la meme couleur :
+ * six couleurs qui ne disaient rien du contenu, et la regle du depot veut qu'une categorie de contenu
+ * soit un intertitre gris (docs/theme.md, « La couleur d'action ne titre pas et ne nomme pas »).
+ */
+
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import PropTypes from 'prop-types';
 
-import style, { tokens } from '../../../shared/theme/Theme';
+import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 
-export interface SectionListHeaderProps {
-    color: string;
-    headerColor: string;
-    sectionIndex: number;
-    title: string;
-}
-
-export class SectionListHeader extends React.PureComponent<SectionListHeaderProps> {
-    static propTypes = {
-        color: PropTypes.string,
-        headerColor: PropTypes.string,
-        sectionIndex: PropTypes.number.isRequired,
-        title: PropTypes.string,
-    };
-
-    getBackgroundSectionStyle() {
-        let indexStyle = this.props.sectionIndex % style.list.sectionHeaders.length;
-        return style.list.sections[indexStyle];
-    }
-
-    getSectionStyle() {
-        let indexStyle = this.props.sectionIndex % style.list.sectionHeaders.length;
-        return style.list.sectionHeaders[indexStyle];
-    }
-
-    render() {
-        return (
-            <View style={[
-                this.getBackgroundSectionStyle(),
-                {
-                    backgroundColor: this.props.color,
-                    paddingHorizontal: tokens.space.md,
-                    paddingVertical: tokens.space.xs,
-                },
-            ]}>
-                <View style={[
-                    (style.list.sectionHeaderView as never),
-                    this.getSectionStyle(),
-                    {
-                        backgroundColor: this.props.headerColor,
-                        borderRadius: tokens.radius.md,
-                        paddingHorizontal: tokens.space.md,
-                        paddingVertical: tokens.space.sm,
-                        ...tokens.shadow.sm,
-                    },
-                ]}>
-                    <Text style={[
-                        style.list.sectionHeaderTitle,
-                        {
-                            fontSize: tokens.fontSize.sm,
-                            fontWeight: tokens.fontWeight.bold,
-                            letterSpacing: 0.5,
-                            // Un libelle sur fond `sectionsHeaders` : `lightFont`, blanc dans les deux
-                            // themes, et surtout pas `accentFont` qui est le rouge destructif.
-                            color: style.Theme.light.lightFont,
-                        },
-                    ]}>
-                        {this.props.title}
-                    </Text>
-                </View>
-            </View>
-        );
-    }
+export function SectionListHeader({ title, theme }: { title: string; theme: AppThemeType }) {
+    return (
+        // Fond plein : l'intertitre colle en haut de la liste, et ce qui defile passe dessous.
+        <View style={[styles.intertitre, { backgroundColor: theme.background }]}>
+            <Text style={[styles.texteIntertitre, { color: theme.fontSecondary }]}>{title}</Text>
+        </View>
+    );
 }
 
 export interface GroupRowProps {
-    cleanName: string;
-    color: string;
-    fontColor: string;
     name: string;
-    sectionStyle: Record<string, unknown>;
+    theme: AppThemeType;
+    /** La premiere et la derniere rangee de leur section arrondissent la carte. */
+    premier: boolean;
+    dernier: boolean;
     openGroup: (name: string) => void;
 }
 
-export class GroupRow extends React.PureComponent<GroupRowProps> {
-    static propTypes = {
-        cleanName: PropTypes.string.isRequired,
-        color: PropTypes.string,
-        fontColor: PropTypes.string,
-        name: PropTypes.string.isRequired,
-        sectionStyle: PropTypes.object,
-        openGroup: PropTypes.func.isRequired,
-    };
-
-    _onPress = () => {
-        requestAnimationFrame(() => {
-            this.props.openGroup(this.props.name);
-        });
-    };
-
-    render() {
-        return (
-            <TouchableOpacity
-                onPress={this._onPress}
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: tokens.space.md,
-                    paddingVertical: tokens.space.md,
-                    backgroundColor: this.props.color,
-                    borderBottomWidth: 1,
-                    borderBottomColor: `${this.props.color}44`,
-                }}>
-                <View style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: tokens.radius.md,
-                    backgroundColor: this.props.fontColor,
-                    opacity: 0.5,
-                    marginRight: tokens.space.md,
-                }} />
-                <Text style={{
-                    flex: 1,
-                    color: this.props.fontColor,
-                    fontSize: tokens.fontSize.md,
-                    fontWeight: tokens.fontWeight.medium,
-                }}>
-                    {this.props.cleanName}
-                </Text>
-                <MaterialCommunityIcons
-                    name="chevron-right"
-                    size={20}
-                    color={this.props.fontColor}
-                    style={{ opacity: 0.6 }}
-                />
-            </TouchableOpacity>
-        );
-    }
+export function GroupRow({ name, theme, premier, dernier, openGroup }: GroupRowProps) {
+    return (
+        <Pressable
+            onPress={() => requestAnimationFrame(() => openGroup(name))}
+            accessibilityRole="button"
+            style={({ pressed }) => [
+                styles.rangee,
+                {
+                    backgroundColor: pressed ? theme.selection : theme.cardBackground,
+                    borderColor: theme.contourDeCarte,
+                },
+                premier && styles.premiere,
+                dernier && styles.derniere,
+            ]}
+        >
+            <Text numberOfLines={2} style={[styles.nom, { color: theme.font }]}>{name}</Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={theme.fontTertiary} />
+            {/* Le filet separe, il n'encadre pas : aucun sous la derniere rangee, et il part sous le texte. */}
+            {!dernier ? <View style={[styles.filet, { backgroundColor: theme.border }]} /> : null}
+        </Pressable>
+    );
 }
+
+const styles = StyleSheet.create({
+    intertitre: {
+        paddingHorizontal: tokens.space.xl,
+        paddingTop: tokens.space.lg,
+        paddingBottom: tokens.space.sm,
+    },
+    texteIntertitre: {
+        fontSize: tokens.fontSize.xs,
+        fontWeight: tokens.fontWeight.semibold,
+        letterSpacing: 0.8,
+        textTransform: 'uppercase',
+    },
+    rangee: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        minHeight: 52,
+        marginHorizontal: tokens.space.md,
+        paddingHorizontal: tokens.space.md,
+        paddingVertical: tokens.space.sm,
+        borderLeftWidth: StyleSheet.hairlineWidth,
+        borderRightWidth: StyleSheet.hairlineWidth,
+    },
+    premiere: {
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopLeftRadius: tokens.radius.lg,
+        borderTopRightRadius: tokens.radius.lg,
+    },
+    derniere: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomLeftRadius: tokens.radius.lg,
+        borderBottomRightRadius: tokens.radius.lg,
+    },
+    nom: {
+        flex: 1,
+        fontSize: tokens.fontSize.md,
+        fontWeight: tokens.fontWeight.medium,
+    },
+    filet: {
+        position: 'absolute',
+        left: tokens.space.md,
+        right: 0,
+        bottom: 0,
+        height: StyleSheet.hairlineWidth,
+    },
+});
