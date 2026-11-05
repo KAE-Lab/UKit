@@ -304,7 +304,11 @@ function CustomTabBar({ state, descriptors, navigation, theme }: CustomTabBarPro
 
                 return (
                     <GestureDetector gesture={glissement}>
-                    <View style={[styles.tabBarWrapper, { paddingBottom: bottomPadding }]}>
+                    {/* `box-none` : le rembourrage du haut porte la fumee, et ce conteneur transparent
+                        avalait les touchers sur toute sa hauteur — l'etoile ou le titre d'une carte
+                        juste au-dessus de la barre ne repondaient pas (constate le 2026-11-05). Les
+                        onglets restent touchables, et le glissement entre onglets passe par eux. */}
+                    <View pointerEvents="box-none" style={[styles.tabBarWrapper, { paddingBottom: bottomPadding }]}>
                         {/* La fumee des flottants du bas (PiedFlottant) : la barre d'onglets survole
                             le contenu comme les pieds d'action, elle parle donc pareil. Les quatre
                             onglets partagent `theme.background` — `courseBackground` lui est

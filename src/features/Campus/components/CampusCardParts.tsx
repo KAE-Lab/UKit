@@ -84,6 +84,10 @@ export function CardTitleRow({
                         onToggleFavorite();
                     }}
                     hitSlop={{ top: 15, bottom: 15, left: 10, right: 15 }}
+                    // L'etoile n'avait pas de nom : un lecteur d'ecran annoncait un bouton muet.
+                    accessibilityRole="button"
+                    accessibilityLabel={Translator.get(isFavorite ? 'FAVORI_RETIRER' : 'FAVORI_AJOUTER')}
+                    accessibilityState={{ selected: isFavorite }}
                     // 6 en dur jusqu'a 6.1-E : `space.xs` (4), la valeur que portent deja les trois
                     // cartes voisines (inventaire visuel 3.5).
                     style={{ marginLeft: tokens.space.xs }}

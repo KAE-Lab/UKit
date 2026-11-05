@@ -243,6 +243,9 @@ const en = {
 	DAY_SAT: 'Sat',
 	// La legende d'une case d'heure (salles libres) : « 14 » au-dessus de « h ».
 	CASE_HEURE: ':00',
+	// Le libelle de l'etoile d'une carte Campus, pour un lecteur d'ecran.
+	FAVORI_AJOUTER: 'Add to favorites',
+	FAVORI_RETIRER: 'Remove from favorites',
 	DAY_SUN: 'Sun',
 	BU_OPEN: "Open",
 	BU_CLOSED: "Closed",
