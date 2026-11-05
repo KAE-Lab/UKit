@@ -6,7 +6,7 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, ombre } from '../../../shared/theme/Theme';
 import { assiseDuFlottant } from '../../../shared/ui/PiedFlottant';
-import { Icon } from '../../../shared/ui/Icon';
+import { Icon, type IconSpec } from '../../../shared/ui/Icon';
 
 interface FloatingActionBarProps {
     theme: import('../../../shared/theme/Theme').AppThemeType;
@@ -70,17 +70,20 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
         iconName: React.ComponentProps<typeof MaterialIcons>['name'] | React.ComponentProps<typeof MaterialCommunityIcons>['name'] | string;
         iconLib?: 'material' | 'community';
         size?: number;
-        colorOverride?: string;
     }
 
-    const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24, colorOverride }: NavButtonProps) => {
-        const color = disabled ? theme.primary + '44' : (colorOverride || theme.primary);
-        const Icon = iconLib === 'community' ? MaterialCommunityIcons : MaterialIcons;
+    // Des icones neutres, sans fond teinte (7-J, deuxieme passe) : chaque bouton prenait un carre de sa
+    // couleur, rouge pour sortir comme pour une destruction, bleu pour le reste. Elles passent aussi par
+    // `Icon`, qu'un composant local masquait encore, et se dessinent donc au trait comme ailleurs.
+    const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24 }: NavButtonProps) => {
+        const couleur = disabled ? theme.fontTertiary : theme.font;
+        const icone = (iconLib === 'community' ? { name: iconName } : { family: 'material', name: iconName }) as IconSpec;
 
         return (
             <TouchableOpacity
                 onPress={onPress}
                 disabled={disabled}
+                accessibilityRole="button"
                 style={{
                     width: 44,
                     height: 44,
@@ -89,9 +92,8 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
                     alignItems: 'center',
                     // 5 en dur jusqu'a 6.1-E : `space.xs` (4) rapproche les boutons d'un point.
                     marginHorizontal: tokens.space.xs,
-                    backgroundColor: disabled ? 'transparent' : `${color}15`,
                 }}>
-                <Icon name={iconName as never} size={size} color={color} />
+                <Icon icon={icone} size={size} color={couleur} />
             </TouchableOpacity>
         );
     };
@@ -114,7 +116,7 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
                 </TouchableOpacity>
 
                 <View style={styles.buttonsContainer}>
-                    <NavButton onPress={onQuit} iconName="door-open" iconLib="community" size={26} colorOverride={theme.danger} />
+                    <NavButton onPress={onQuit} iconName="door-open" iconLib="community" size={26} />
                     <NavButton onPress={onBack} disabled={!canGoBack} iconName="navigate-before" size={28} />
                     <NavButton onPress={onForward} disabled={!canGoForward} iconName="navigate-next" size={28} />
                     <NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
