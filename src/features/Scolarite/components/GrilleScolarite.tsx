@@ -16,6 +16,15 @@
  * le seul chiffre qu'on pourrait en tirer serait un nombre d'actualites que personne ne lit. Il ferme
  * la liste plutot que de l'ouvrir — ce qui porte une information passe devant.
  *
+ * ## L'instrument, puis les rangees (deuxieme passe de 7-J)
+ *
+ * Moodle, la messagerie et les documents se lisent desormais sur **un instrument** : une carte, trois
+ * colonnes de chiffres, et la prochaine echeance de Moodle en pied (`InstrumentScolarite`). Les
+ * rangees, les services et l'ENT suivent, au gabarit des Reglages, icones neutres. La premiere passe
+ * gardait un heros et deux tuiles a carres de couleur et glyphes en filigrane : trois objets generiques
+ * la ou il y a trois nombres a lire (review du 2026-11-05). Ce qui suit dit pourquoi les formes etaient
+ * ce qu'elles etaient ; le role de chacune n'a pas change.
+ *
  * ## Trois formes, et la forme veut dire quelque chose
  *
  * Un **heros** pleine largeur : Moodle. Une chronologie ne porte pas qu'un chiffre, elle nomme la
@@ -70,8 +79,9 @@ import { View, Text, StyleSheet } from 'react-native';
 import moment from 'moment';
 
 import Translator from '../../../shared/i18n/Translator';
-import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
-import { serviceEtablissement, widgetPublie } from '../../../shared/etablissements';
+import { tokens, toneColor, type AppThemeType } from '../../../shared/theme/Theme';
+import { libelleEtablissement, serviceEtablissement, widgetPublie } from '../../../shared/etablissements';
+import { Icon } from '../../../shared/ui/Icon';
 import { ModaleBientot } from '../../../shared/ui/ModaleBientot';
 import type { ScolariteColdData } from '../services/ScolariteMapping';
 import { serviceDuPoint, widgetsDeForme, type DefinitionWidget, type PointWidget } from '../widgets/definitions';
@@ -80,9 +90,9 @@ import type { ValeursWidgets } from '../widgets/runner';
 import type { EchecsWidgets } from '../widgets/useWidgets';
 import { FeuilleDeWidget } from './FeuilleDeWidget';
 import { GroupeScolarite, LigneScolarite } from './LigneScolarite';
+import { InstrumentScolarite, type ColonneInstrument } from './InstrumentScolarite';
 import { RangeeMysterieuse } from './RangeeMysterieuse';
 import WidgetRow from './WidgetRow';
-import WidgetTile from './WidgetTile';
 
 /** Ce que `preparer` rend pour chaque widget : son etat, sa couleur, et ou il mene. */
 interface RangeePreparee {
@@ -93,18 +103,44 @@ interface RangeePreparee {
     couleur: string;
 }
 
-/** Le pendant carre de `RangeeDeWidget` : une tuile preparee, sans logique propre. */
-function TuileDeWidget({ rangee, theme }: { rangee: RangeePreparee; theme: AppThemeType }) {
-    const { definition, etat, action, contexte, couleur } = rangee;
+/**
+ * La colonne de l'instrument d'un widget : les regles de l'ancienne tuile, telles quelles. Un compte
+ * ecrit son chiffre et son unite — ou la phrase du zero ; un echec, ses deux mots dans le ton de
+ * l'echec, a la place du chiffre ; tout le reste — une porte sans session, une attente, un service que
+ * l'etablissement ne porte pas — nomme le service.
+ */
+function colonneDuWidget({ definition, etat, action }: RangeePreparee, theme: AppThemeType): ColonneInstrument {
+    const nom = libelleEtablissement(definition.point, Translator.get(definition.nom));
+    const commun = { cle: definition.point, chargement: etat.chargement, onPress: action };
+    if (etat.nature === 'echec' && etat.echec !== null) {
+        const mots = Translator.get(echecDeTuile(etat.echec).libelleKey);
+        return { ...commun, icone: definition.iconeEchec, chiffre: null, texte: mots, couleurDuTexte: toneColor(theme, etat.echec.tone), accessibilite: `${nom}, ${mots}` };
+    }
+    if (etat.nature === 'compte') {
+        const nombre = etat.nombre ?? 0;
+        const texte = nombre > 0 && definition.unite !== undefined
+            ? Translator.get(nombre === 1 && definition.uniteUn !== undefined ? definition.uniteUn : definition.unite)
+            : Translator.get(definition.zero);
+        return { ...commun, icone: definition.icone, chiffre: nombre, texte, accessibilite: `${nom}, ${nombre > 0 ? `${nombre} ${texte}` : texte}` };
+    }
+    const absent = etat.nature === 'absent';
+    return {
+        ...commun,
+        icone: definition.icone,
+        chiffre: null,
+        texte: absent ? Translator.get('WIDGET_NOT_CARRIED') : nom,
+        attenuee: absent,
+        accessibilite: nom,
+    };
+}
+
+/** Le pied de l'instrument : la prochaine echeance de Moodle, quand la source en nomme une. */
+function PiedDeMoodle({ detail, theme }: { detail: string; theme: AppThemeType }) {
     return (
-        <WidgetTile
-            definition={definition}
-            etat={etat}
-            contexte={contexte}
-            teinte={couleur}
-            theme={theme}
-            onPress={action}
-        />
+        <View style={styles.pied}>
+            <Icon icon={{ name: 'calendar-clock' }} size={18} color={theme.fontSecondary} />
+            <Text style={[styles.texteDuPied, { color: theme.font }]} numberOfLines={2}>{detail}</Text>
+        </View>
     );
 }
 
@@ -237,20 +273,20 @@ export interface GrilleScolariteProps {
     /** Ouvre le formulaire de demande, pour un service que l'etablissement ne porte pas. */
     onDemande: (adresse: string) => void;
     /**
-     * La tuile des documents, montee par l'appelant.
+     * La colonne des documents, preparee par l'appelant (`useColonneDocuments`).
      *
      * Un emplacement plutot qu'un import : les documents sont **locaux**, leur valeur ne vient pas
      * d'un run. Les faire entrer dans la machinerie de widgets — qui ne connait que des Blueprints —
      * l'aurait obligee a porter un cas qui n'est pas le sien.
      */
-    tuileDocuments?: React.ReactNode;
+    colonneDocuments?: ColonneInstrument;
     /** Aucune session : les rangees sont des portes, la fraicheur ne se dit pas. */
     sansSession?: boolean;
 }
 
 export function GrilleScolarite({
     theme, teinte, valeurs, echecs, pointEnCours, coldData,
-    onWidget, onRelancer, onRessaisir, onPorte, onDemande, tuileDocuments, sansSession = false,
+    onWidget, onRelancer, onRessaisir, onPorte, onDemande, colonneDocuments, sansSession = false,
 }: GrilleScolariteProps) {
     const ent = serviceEtablissement('ent');
     const demande = serviceEtablissement('adaptation');
@@ -281,10 +317,9 @@ export function GrilleScolarite({
                 : () => onWidget(definition.point);
         const contexte = definition.point === 'messagerie' ? coldData?.emailAddress ?? null : null;
 
-        // La couleur du service, du theme donc suivant le mode sombre. Le repli sur l'accent couvre
-        // un index hors palette — une definition mal ecrite ne doit pas rendre une teinte `undefined`,
-        // qui ferait disparaitre l'icone au lieu de la colorer.
-        const couleur = theme.sectionsHeaders[definition.couleur] ?? teinte;
+        // Le glyphe d'une rangee est neutre depuis la deuxieme passe de 7-J : la couleur de chaque
+        // service (`definition.couleur`) ne sert plus a l'ecran, l'echec prend le sien (WidgetRow).
+        const couleur = theme.fontSecondary;
 
         return { definition, etat, action, contexte, couleur };
     };
@@ -292,6 +327,10 @@ export function GrilleScolarite({
     const heros = widgetsDeForme('heros').map(preparer);
     const tuiles = widgetsDeForme('tuile').map(preparer);
     const rangees = widgetsDeForme('rangee').map(preparer);
+
+    // La prochaine echeance : seulement sur un compte, ou elle est la phrase de la source.
+    const moodle = heros[0];
+    const detailDeMoodle = moodle !== undefined && moodle.etat.nature === 'compte' ? moodle.etat.detail : null;
 
     const rendreRangee = (rangee: RangeePreparee) => (
         <RangeeDeWidget key={rangee.definition.point} rangee={rangee} theme={theme} onTeaser={setTeaser} />
@@ -309,18 +348,14 @@ export function GrilleScolarite({
                 theme={theme}
             />
 
-            {heros.map((rangee) => (
-                <View key={rangee.definition.point} style={styles.pleineLargeur}>
-                    <TuileDeWidget rangee={rangee} theme={theme} />
-                </View>
-            ))}
-
-            <View style={styles.grille}>
-                {tuiles.map((rangee) => (
-                    <TuileDeWidget key={rangee.definition.point} rangee={rangee} theme={theme} />
-                ))}
-                {tuileDocuments}
-            </View>
+            <InstrumentScolarite
+                theme={theme}
+                colonnes={[
+                    ...[...heros, ...tuiles].map((rangee) => colonneDuWidget(rangee, theme)),
+                    ...(colonneDocuments !== undefined ? [colonneDocuments] : []),
+                ]}
+                pied={detailDeMoodle !== null ? <PiedDeMoodle detail={detailDeMoodle} theme={theme} /> : null}
+            />
 
             <View style={styles.sectionServices}>
                 <Intertitre texte={Translator.get('SCOLARITE_SECTION_SERVICES')} theme={theme} />
@@ -329,20 +364,14 @@ export function GrilleScolarite({
             <GroupeScolarite theme={theme}>
                 {rangees.map(rendreRangee)}
 
-                {/*
-                  * L'ENT garde **l'accent de l'application**, seul de la liste.
-                  *
-                  * Ce n'est pas un oubli : c'est le portail generique, la porte qui mene a tout le
-                  * reste, et rien n'y est compte. Lui donner une couleur de service l'aurait pose au
-                  * meme rang que les quatre qui rapportent quelque chose. Et il n'en restait de toute
-                  * facon aucune de libre — en theme sombre, la palette ne porte que cinq teintes
-                  * distinctes (les index 0 et 4 y sont identiques).
-                  */}
+                {/* L'ENT, le portail generique, ferme la liste : rien n'y est compte. Il portait
+                    l'accent, seul de la liste, pour ne pas etre mis au rang des services colores ;
+                    toutes les icones sont neutres depuis la deuxieme passe de 7-J. */}
                 {ent !== null ? (
                     <LigneScolarite
                         theme={theme}
                         icon={{ name: 'school' }}
-                        teinte={teinte}
+                        teinte={theme.fontSecondary}
                         titre={Translator.get('SERVICE_ENT')}
                         sousTitre={Translator.get('SERVICE_ENT_SUBTITLE')}
                         chevron
@@ -407,16 +436,14 @@ const styles = StyleSheet.create({
         // entre deux sections que leurs intertitres viennent justement de separer.
         marginTop: tokens.space.md,
     },
-    pleineLargeur: {
-        // Le heros porte sa marge ici plutot que dans la tuile : `TuileScolarite` ne connait pas la
-        // page qui l'accueille, et deux composants qui posent la meme marge finissent par diverger.
-        marginHorizontal: tokens.space.md,
-    },
-    grille: {
+    pied: {
         flexDirection: 'row',
-        // La meme marge laterale que `GroupeScolarite`, pour que les tuiles et le groupe de rangees
-        // partagent exactement le meme bord. Un decalage d'un point se voit.
-        marginHorizontal: tokens.space.md,
-        gap: tokens.space.md,
+        alignItems: 'center',
+        gap: tokens.space.sm,
+    },
+    texteDuPied: {
+        flex: 1,
+        fontSize: tokens.fontSize.sm,
+        fontWeight: tokens.fontWeight.medium,
     },
 });

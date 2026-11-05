@@ -23,10 +23,18 @@
  * demande ou etait le webmail : il ne pouvait pas le trouver, la page ne montrait qu'un formulaire
  * etudiant. Les portes des services n'ont pourtant jamais eu besoin d'une session — elles viennent
  * du catalogue. La page sans compte est donc **la meme** que la page connectee : le bandeau avec la
- * salutation sans prenom, l'encart qui invite a se connecter, la grille en portes, les documents.
+ * salutation sans prenom, la grille en portes, les documents.
  * Le formulaire vit dans l'ecran du compte, ou l'encart mene. « Autre campus », lui, ne bouge pas.
  *
- * ## Le verrou biometrique ne garde que ce qui merite d'etre garde
+ * ## Un seul en-tete, celui de tous les onglets (7-J, deuxieme passe)
+
+L'onglet portait deux gabarits a lui : un titre flottant qui s'effacait au defilement tant qu'il n'y
+avait pas de dossier a saluer, et un bandeau collant — titre, salutation, filigrane, filet — des qu'il
+y en avait un. Il porte desormais l'en-tete fixe des autres onglets (`EnTeteDOnglet`), et la
+salutation ouvre la page (`SalutationScolarite`), dans les memes cas qu'avant : avec un dossier, ou
+sans compte ; jamais sur un compte sans dossier, ou il n'y a rien a saluer (2026-09-04).
+
+## Le verrou biometrique ne garde que ce qui merite d'etre garde
  *
  * Il ne s'arme que lorsqu'un compte est enregistre. Sans compte il n'y a **rien a proteger** dans cet
  * onglet — l'identite n'a pas ete lue — et demander une empreinte pour atteindre ses propres fichiers
@@ -34,11 +42,13 @@
  * pas d'authentification (docs/features/scolarite.md).
  */
 
-import React, { useContext, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useContext } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+import { useAnimatedScrollHandler, useSharedValue, type SharedValue } from 'react-native-reanimated';
 
-import style, { tokens } from '../../../shared/theme/Theme';
+import style, { type AppThemeType } from '../../../shared/theme/Theme';
+import type { EdgeInsets } from 'react-native-safe-area-context';
 import Translator from '../../../shared/i18n/Translator';
 import { PastilleService } from '../../../shared/messages/PastilleService';
 import { ouvrirLeFormulaire } from '../../../shared/navigation/formulaireDeRetours';
@@ -52,64 +62,20 @@ import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 import { useSessionDemandeeIci } from '../hooks/useSessionDemandeeIci';
 import { PageScolarite } from '../components/PageScolarite';
 import { CampusNonRelie } from '../components/CampusNonRelie';
-import { EnteteScolarite } from '../components/EnteteScolarite';
 import { serviceDuPoint, type PointWidget } from '../widgets/definitions';
-import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
+import { EnTeteDOnglet, hauteurDeLEnTete } from '../../../shared/ui/EnTeteDOnglet';
 
-/**
- * Le titre de l'onglet **sans bandeau** : le gabarit de Campus et des Reglages, a l'identique.
- *
- * Il sert partout ou la page n'a **pas de dossier a saluer** — le formulaire de connexion, le
- * parcours froid en cours, l'echec qui propose de reessayer. Le bandeau collant
- * ([`EnteteScolarite`](../components/EnteteScolarite.tsx)) appartient au tableau de bord garni, et la
- * raison tient en une phrase : **la salutation EST le titre de cette page-la**. Sans dossier, il n'y
- * a rien a saluer, et un bandeau se refermait sur un titre pose dans le vide — signale sur appareil
- * le 2026-09-04, sur l'ecran de reessai.
- *
- * `box-none` sur la rangee et `none` sur le titre : ce qu'il y a dessous garde ses touchers, seule la
- * pastille d'etat de service prend les siens.
- */
-const TitreFlottant = ({ theme, defilement, insets }) => (
-    <Animated.View
-        style={[styles.titreDOnglet, {
-            paddingTop: insets?.top || 0,
-            opacity: defilement.interpolate({
-                inputRange: [0, 50],
-                outputRange: [1, 0],
-                extrapolate: 'clamp',
-            }),
-        }]}
-        pointerEvents="box-none"
-    >
-        <View style={styles.rangeeDuTitre} pointerEvents="box-none">
-            <Text style={[styles.titreDOngletTexte, { color: theme.font }]} pointerEvents="none">
-                {Translator.get('SCOLARITY')}
-            </Text>
-            <PastilleService theme={theme} onglet="Scolarité" style={styles.rappel} />
-        </View>
-    </Animated.View>
-);
-
-/**
- * L'en-tete de l'onglet : **un bandeau seulement quand il y a un dossier a saluer**.
- *
- * `EnteteScolarite` porte un filet et une ombre, et il se justifie parce que la **salutation est le
- * titre** de la page garnie. Sans dossier, il n'y a rien a saluer : le bandeau se refermait alors sur
- * un titre pose dans le vide, avec trois objets sur une meme ligne — le titre, la pastille d'etat et
- * le filigrane de l'etablissement — ce qui se lisait comme une collision (signale sur appareil le
- * 2026-09-04, sur l'ecran de reessai).
- *
- * Le titre **flotte** donc tant qu'il n'y a pas de dossier, exactement comme sur le formulaire de
- * connexion, sur Campus et sur les Reglages ; il devient un bandeau au moment ou la lecture aboutit,
- * c'est-a-dire au moment ou il a quelque chose a dire.
- */
-const EnTeteDeLOnglet = ({ theme, accent, coldData, sansCompte, defilement, insets }) => (
-    // Sans compte, le bandeau quand meme (6.1.x-B) : la page doit ressembler a la page connectee, et
-    // la salutation se fait sans prenom. Le titre flottant reste pour le compte SANS dossier — le
-    // parcours froid, l'echec —, ou il n'y a rien a saluer.
-    coldData === null && !sansCompte
-        ? <TitreFlottant theme={theme} defilement={defilement} insets={insets} />
-        : <EnteteScolarite theme={theme} teinte={accent} insets={insets} coldData={coldData} />
+/** L'en-tete de l'onglet : celui de Campus et des Reglages, fixe, dans tous les etats. */
+const EnTeteDeLOnglet = ({ theme, defilement, insets }: { theme: AppThemeType; defilement: SharedValue<number>; insets: EdgeInsets | null }) => (
+    <EnTeteDOnglet
+        theme={theme}
+        onglet="scolarite"
+        titre={Translator.get('SCOLARITY')}
+        defilement={defilement}
+        repos={0}
+        hautSur={insets?.top ?? 0}
+        droite={<PastilleService theme={theme} onglet="Scolarité" />}
+    />
 );
 
 /**
@@ -161,17 +127,15 @@ const ScolariteDashboard = ({ navigation }) => {
         scrapeStatus, scrapeProgress, sessionMode, sessionFailure, retrySession,
     } = useCredentials();
 
-    /** Le defilement de la page sans dossier : son titre flotte, donc il s'efface au defilement. */
-    const defilementSansDossier = useRef(new Animated.Value(0)).current;
+    /** Le defilement de la page, que l'en-tete lit pour faire paraitre son fondu. */
+    const defilement = useSharedValue(0);
+    const surDefilement = useAnimatedScrollHandler((evenement) => {
+        defilement.value = evenement.contentOffset.y;
+    });
 
     const sansCompte = !credentials;
-    /** Voir `EnTeteDeLOnglet` : sans dossier, le titre flotte et la page lui laisse la place. */
-    const titreFlotte = coldData === null && !sansCompte;
-    const renderHeader = (insets) => (
-        <EnTeteDeLOnglet
-            theme={theme} accent={accent} coldData={coldData} sansCompte={sansCompte}
-            defilement={defilementSansDossier} insets={insets}
-        />
+    const renderHeader = (insets: EdgeInsets | null) => (
+        <EnTeteDeLOnglet theme={theme} defilement={defilement} insets={insets} />
     );
 
     // `useEcranDeProgression` et non un test direct : l'ecran doit **survivre** quelques centaines de
@@ -264,15 +228,9 @@ const ScolariteDashboard = ({ navigation }) => {
 
     const corps = (insets) => (
         <PageScolarite
-            {...(titreFlotte ? {
-                // Le gabarit de Campus et des Reglages : le titre flotte au-dessus, la page se pose
-                // dessous et lui transmet son defilement pour qu'il s'efface.
-                paddingHaut: (insets?.top || 0) + HAUTEUR_TITRE_FLOTTANT,
-                onScroll: Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: defilementSansDossier } } }],
-                    { useNativeDriver: true },
-                ),
-            } : {})}
+            paddingHaut={hauteurDeLEnTete(insets?.top ?? 0)}
+            onScroll={surDefilement}
+            salutation={coldData !== null || sansCompte}
             certificatEnCours={certificatEnCours}
             theme={theme}
             teinte={accent}
@@ -298,7 +256,6 @@ const ScolariteDashboard = ({ navigation }) => {
         <SafeAreaInsetsContext.Consumer>
             {(insets) => (
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
-                    <FondDOnglet theme={theme} onglet="scolarite" />
                     {renderHeader(insets)}
                     {credentials
                         ? <BiometryGate theme={theme}>{corps(insets)}</BiometryGate>
@@ -309,36 +266,9 @@ const ScolariteDashboard = ({ navigation }) => {
     );
 };
 
-/** Ce qu'un grand titre flottant occupe, hors encoche. La valeur de Campus et des Reglages. */
-const HAUTEUR_TITRE_FLOTTANT = 60;
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    // Le gabarit du titre de Campus et des Reglages, a l'identique : meme position, meme corps.
-    titreDOnglet: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        paddingBottom: tokens.space.sm,
-    },
-    rangeeDuTitre: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingRight: tokens.space.md,
-    },
-    titreDOngletTexte: {
-        ...tokens.texte.grandTitre,
-        marginBottom: tokens.space.md,
-        paddingHorizontal: tokens.space.md,
-    },
-    // Pousse a droite, et la meme marge basse que le titre : la pastille s'aligne sur sa ligne.
-    rappel: {
-        marginLeft: 'auto',
-        marginBottom: tokens.space.md,
     },
 });
 

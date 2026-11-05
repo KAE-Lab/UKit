@@ -69,6 +69,26 @@ d'identifiants se corrige en retapant son mot de passe, un portail muet se corri
 > elle, l'onglet ne montrait qu'une salutation et une ligne de messagerie — le reste était vide, et
 > chez un établissement sans portail publié il n'y avait *rien du tout*.
 
+### La deuxième passe de 7-J : un instrument, des services, l'en-tête de tous
+
+Repris le 2026-11-05 ([la deuxième passe](../phase-7/7-j-deuxieme-passe.md)), sur une review qui
+trouvait l'onglet inchangé et « pas du tout satisfaisant ». Le rendu change ; les règles de ce qui
+suit, non.
+
+- **L'en-tête fixe des autres onglets** (`EnTeteDOnglet`), dans tous les états. Le titre flottant
+  sans dossier et le bandeau collant avec dossier sont partis ; la salutation et le logo de
+  l'établissement ouvrent la page
+  ([`SalutationScolarite`](../../src/features/Scolarite/components/SalutationScolarite.tsx)), dans
+  les mêmes cas qu'avant.
+- **Un instrument** ([`InstrumentScolarite`](../../src/features/Scolarite/components/InstrumentScolarite.tsx)) :
+  Moodle, la messagerie et les documents en trois colonnes de chiffres sur une carte, un zéro
+  estompé, la prochaine échéance de Moodle en pied. Ils étaient un héros et deux tuiles à carrés de
+  couleur et glyphes en filigrane. Les règles des tuiles valent pour les colonnes : la forme vient du
+  rôle, un échec tient en deux mots à la place du chiffre, une lecture se montre par-dessus.
+- **Les rangées au gabarit des Réglages**, icônes neutres ; une rangée tenue au secret dit
+  « Bientôt disponible » sous un cadenas, au lieu de deux barres grises qui se lisaient comme un
+  chargement figé.
+
 ### Trois natures, trois sections — et ne pas les mélanger
 
 L'erreur qui guettait cet écran était d'aligner six tuiles qui se ressemblent alors qu'elles ne font
@@ -283,7 +303,8 @@ le bas pour un contenu qu'on consulte le jour où l'on en a besoin, un certifica
 
 Leur valeur ne vient **pas d'un run** : elle compte des fichiers présents sur l'appareil. La tuile
 passe donc à côté de la machinerie de widgets — péremption, cache, verrou du moteur — dont rien ne lui
-servirait, et emprunte seulement le châssis visuel (`TuileScolarite`). Faire entrer un cas local dans
+servirait ; depuis la deuxième passe de 7-J, elle est une colonne de l'instrument
+([`useColonneDocuments`](../../src/features/Scolarite/hooks/useColonneDocuments.ts)). Faire entrer un cas local dans
 une machinerie qui ne connaît que des Blueprints l'aurait alourdie pour un seul appelant.
 
 **La salutation est le titre de la page**, et la grille suit — sous deux **intertitres** en petites
@@ -583,9 +604,8 @@ d'œil », en petit texte gris, au ras de ce qu'elle mesure. Elle prend **la plu
 lectures, pas la plus ancienne : chaque widget a sa propre péremption, donc la plus ancienne serait
 toujours celle du widget au rythme le plus lent. Elle n'apparaît qu'une fois quelque chose lu.
 
-Le composant vit dans [`EnteteScolarite`](../../src/features/Scolarite/components/EnteteScolarite.tsx),
-sorti de l'écran comme `PageScolarite` avant lui — la limite de lignes du dépôt, et un en-tête qui a
-maintenant une vraie structure.
+Ce bandeau vivait dans `EnteteScolarite`, retiré par la deuxième passe de 7-J : l'onglet porte
+l'en-tête fixe des autres, et la salutation ouvre la page (`SalutationScolarite`).
 
 Deux conséquences dans le code, et la seconde est un piège :
 
@@ -1204,14 +1224,14 @@ ScolariteDashboard                      consomme useCredentials()
   ├─ campus sans portail     → CampusNonRelie               (sa page : demande, filigrane UKit)
   ├─ parcours froid en cours → ScolariteLoadingScreen        (le seul etat plein ecran, compte sans dossier)
   └─ sinon                   → [BiometryGate si compte] > PageScolarite   (avec OU sans compte)
-                                  ├─ GreetingBlock          (sans prenom tant qu'aucune identite n'est lue)
+                                  ├─ SalutationScolarite    (sans prenom tant qu'aucune identite n'est lue)
                                   ├─ EncartSession          (pas de compte → l'ecran du compte / echec)
                                   └─ GrilleScolarite        (4 widgets, les documents, la porte ENT ;
                                        │                     en PORTES tant qu'aucun dossier n'est lu)
-                                       ├─ WidgetTile × 2    (moodle en héros, messagerie — des flux ;
-                                       │                     un échec : deux mots, même taille, et
-                                       │                     la FeuilleDeWidget au toucher)
-                                       ├─ DocumentsTile     (local — compte les pièces rangées)
+                                       ├─ InstrumentScolarite (moodle, messagerie — des flux ; les
+                                       │                     documents, locaux (useColonneDocuments) ;
+                                       │                     un échec : deux mots, et la
+                                       │                     FeuilleDeWidget au toucher)
                                        └─ WidgetRow × 2     (notes, examens — des événements,
                                             ⤷ masqués en teaser tant que leur source n'est pas
                                               publiée — état décidé par widgets/presentation)
