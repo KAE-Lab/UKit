@@ -39,7 +39,6 @@ import { tracerPropositions } from '../../../shared/services/PropositionsTrace';
 import { edtPersonnelActif, enregistrerEdtPersonnel } from '../../../shared/etablissements';
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
 import { PlanningApiService } from '../../Planning/services/PlanningApiService';
-import { Badge } from '../../../shared/ui/Badge';
 import { useCredentials } from '../services/CredentialsContext';
 import { decider, type Proposition } from '../services/PropositionsDecision';
 import type { PropositionsDossier } from '../services/PropositionsDossier';
@@ -127,8 +126,12 @@ function ListeUes({ theme, ues }: { theme: AppThemeType; ues: readonly string[] 
             {ues.map((code) => {
                 const nom = DataManager.nomDUE(code);
                 return (
-                    <View key={code} style={{ flexDirection: 'row', alignItems: 'center', gap: tokens.space.sm }}>
-                        <Badge label={code} theme={theme} />
+                    <View key={code} style={{ flexDirection: 'row', alignItems: 'baseline', gap: tokens.space.sm }}>
+                        {/* Le code en texte, plus en pastille a l'accent : une donnee ne prend pas la
+                            couleur d'action (docs/theme.md), et dix pastilles bleues criaient. */}
+                        <Text style={[tokens.texte.chiffres, { fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold, color: theme.font }]}>
+                            {code}
+                        </Text>
                         {nom !== null ? (
                             <Text
                                 numberOfLines={1}
@@ -260,8 +263,11 @@ export function PropositionsModal() {
                                 titre={Translator.get('PROPOSALS_EDT_LABEL')}
                                 aide={Translator.get('PROPOSALS_EDT_HINT')}
                             >
-                                {/* Le libelle vient d'ADE : c'est une donnee, pas un libelle traduit. */}
-                                <Badge label={proposition.edt.libelle} theme={theme} icon={{ name: 'calendar-blank' }} />
+                                {/* Le libelle vient d'ADE : c'est une donnee, pas un libelle traduit, et
+                                    il s'ecrit comme tel, sans pastille a l'accent. */}
+                                <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold, color: theme.font }}>
+                                    {proposition.edt.libelle}
+                                </Text>
                             </Section>
                         ) : null}
 
