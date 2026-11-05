@@ -85,6 +85,9 @@ séparent les lignes **sauf autour d'un intertitre** : un titre touche ce qu'il 
   du végétarien.
 - Une ligne de plat qui finit par deux-points (« Autre plat : ») annonce les suivantes : elle se rend
   en sous-titre ([`sousTitreDePlat`](../../src/features/Campus/services/CrousMapping.ts)).
+- Des restaurants publient des entités HTML que la source ne décode pas (« &#x2906; menu file 1 » à la
+  Bastide) : catégories et plats passent par `libelleLisible` **à l'affichage**. Pas à la projection,
+  que le harnais de parité compare au code d'origine, qui ne décodait pas.
 - Les intertitres (midi, soir, horaires, « S'y rendre ») sont ceux du tableau Campus
   ([`SectionHeader`](../../src/shared/ui/SectionHeader.tsx)). Ils portaient depuis le 2026-08-30 un
   carré teinté d'une couleur par section (orange, bleu, vert), étrangère à l'identité : la review les

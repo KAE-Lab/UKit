@@ -15,7 +15,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { tokens, type AppThemeType } from '../../../../shared/theme/Theme';
 import Translator from '../../../../shared/i18n/Translator';
 import { SectionHeader } from '../../../../shared/ui/SectionHeader';
-import { sousTitreDePlat } from '../../services/CrousMapping';
+import { libelleLisible, sousTitreDePlat } from '../../services/CrousMapping';
 
 interface CrousMealCardProps {
     mealTitle: string;
@@ -35,8 +35,9 @@ export function CrousMealCard({ mealTitle, categories, theme }: CrousMealCardPro
                         {index > 0 ? <View style={[styles.filet, { backgroundColor: theme.border }]} /> : null}
                         <View style={styles.categorie}>
                             {/* Le gris du texte secondaire : une categorie nomme, elle n'agit pas. */}
-                            <Text style={[tokens.texte.intertitre, { color: theme.fontSecondary }]}>{categorie.name}</Text>
-                            {categorie.dishes.length > 0 ? categorie.dishes.map((plat, rang) => {
+                            <Text style={[tokens.texte.intertitre, { color: theme.fontSecondary }]}>{libelleLisible(categorie.name)}</Text>
+                            {categorie.dishes.length > 0 ? categorie.dishes.map((brut, rang) => {
+                                const plat = libelleLisible(brut);
                                 const sousTitre = sousTitreDePlat(plat);
                                 return sousTitre !== null ? (
                                     <Text key={rang} style={[tokens.texte.intertitre, styles.sousTitre, { color: theme.fontSecondary }]}>{sousTitre}</Text>

@@ -53,6 +53,8 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Les menus des restaurants ne montrent plus d'entités HTML** : « &#x2906; menu file 1 » se lit
+  « ⤆ menu file 1 », et les espaces en série se resserrent.
 - **Les touchers juste au-dessus de la barre d'onglets répondent** : sur 32 points, le conteneur de la
   barre les avalait, et l'étoile ou le titre d'une carte posés là ne répondaient pas (depuis 6.0).
   L'étoile a aussi un nom pour les lecteurs d'écran.

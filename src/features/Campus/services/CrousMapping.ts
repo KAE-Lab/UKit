@@ -252,6 +252,25 @@ function projeterService(repas: RepasBrut | undefined, repliCategorie: string) {
  * categories, qui portent des plats, et la grammaire de `fields` est plate. Le regroupement par
  * service (midi, soir) est donc applicatif — il l'etait deja.
  */
+const ENTITES_NOMMEES: Readonly<Record<string, string>> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+
+/**
+ * Un libelle de menu tel qu'il doit se lire : des restaurants publient des entites HTML que personne
+ * ne decode (« &#x2906; menu file 1 », constate a la Bastide le 2026-11-05), et des espaces en
+ * serie. Decode a l'affichage, pas a la projection : le harnais de parite compare la projection au
+ * code d'origine, qui ne decodait pas. Une entite inconnue ou hors d'Unicode reste telle quelle.
+ */
+export function libelleLisible(brut: string): string {
+    return brut
+        .replace(/&#(x[0-9a-f]+|\d+);/gi, (entite, code: string) => {
+            const point = code[0] === 'x' || code[0] === 'X' ? Number.parseInt(code.slice(1), 16) : Number.parseInt(code, 10);
+            return point > 0 && point <= 0x10ffff ? String.fromCodePoint(point) : entite;
+        })
+        .replace(/&([a-z]+);/gi, (entite, nom: string) => ENTITES_NOMMEES[nom.toLowerCase()] ?? entite)
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+}
+
 /**
  * Le sous-titre qu'un restaurant glisse dans sa liste de plats : une ligne qui finit par deux-points
  * (« Autre plat : ») annonce les suivantes (« Pad thai »). Rendue comme un plat, elle se lisait comme
