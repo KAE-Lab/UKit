@@ -1,10 +1,11 @@
 import React, { useContext } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View, Pressable } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { AppContext } from '../services/AppCore';
 import style, { tokens, AppThemeType } from '../theme/Theme';
 import { Interrupteur } from './Interrupteur';
+import { Icon } from './Icon';
 
 // ── Bouton de Retour ───────────────────────────────────────────
 export interface BackButtonProps {
@@ -21,11 +22,7 @@ export const BackButton = ({ backAction }: BackButtonProps) => {
         <GHTouchableOpacity onPress={_onPress} style={[style.backButton as never, { paddingLeft: tokens.space.md }]}>
             <View style={{ backgroundColor: theme.primary, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', borderRadius: tokens.radius.md, flexShrink: 0 }}>
                 {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif (docs/theme.md). */}
-                <Ionicons
-                    name="arrow-back"
-                    size={22}
-                    color={theme.lightFont}
-                />
+                <Icon icon={{ family: 'material', name: 'arrow-back' }} size={22} color={theme.lightFont} />
             </View>
         </GHTouchableOpacity>
     );
@@ -47,7 +44,7 @@ export const DrawerButton = (props: DrawerButtonProps) => {
     const theme = style.Theme[AppContextValues.themeName];
 
     let icon = props.icon ? (
-        <MaterialIcons name={props.icon} size={props.size} style={{ color: props.color }} />
+        <Icon icon={{ family: 'material', name: props.icon }} size={props.size} color={props.color} />
     ) : (
         <View />
     );
@@ -187,7 +184,7 @@ export const SettingsButton = ({ theme, onPress, leftIcon, leftIconAnimation, le
                 </Text>
             )}
             {!onSwitchToggle && (
-                <MaterialCommunityIcons name="chevron-right" size={22} style={theme.rightIcon as import('react-native').TextStyle} />
+                <Icon icon={{ name: 'chevron-right' }} size={22} color={(theme.rightIcon as import('react-native').TextStyle).color as string} />
             )}
         </TouchableOpacity>
     );

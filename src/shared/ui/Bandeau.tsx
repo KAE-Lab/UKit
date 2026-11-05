@@ -20,11 +20,11 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Translator from '../i18n/Translator';
 import { tokens, type AppThemeType } from '../theme/Theme';
 import { HEADER_BUTTON_ICON, HEADER_BUTTON_SIZE } from './HeaderButton';
+import { Icon } from './Icon';
 
 export interface BandeauProps {
     theme: AppThemeType;
@@ -68,7 +68,7 @@ export function Bandeau({ theme, titre, onPress, onFermer }: BandeauProps) {
                     onPress={onPress}
                     style={styles.contenu}
                 >
-                    <MaterialCommunityIcons name="information-outline" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                    <Icon icon={{ name: 'information-outline' }} size={HEADER_BUTTON_ICON} color={theme.primary} />
                     <Text numberOfLines={2} style={[styles.titre, { color: theme.font }]}>
                         {titre}
                     </Text>
@@ -80,7 +80,7 @@ export function Bandeau({ theme, titre, onPress, onFermer }: BandeauProps) {
                     onPress={onFermer}
                     style={styles.croix}
                 >
-                    <MaterialCommunityIcons name="close" size={CROIX_SIZE} color={theme.fontSecondary} />
+                    <Icon icon={{ name: 'close' }} size={CROIX_SIZE} color={theme.fontSecondary} />
                 </TouchableOpacity>
             </Animated.View>
         </View>

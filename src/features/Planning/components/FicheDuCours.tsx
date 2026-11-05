@@ -12,19 +12,19 @@
 
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { CourseData } from './CourseCard';
 import { lignesDuCreneau, type LigneDeCreneau } from './CourseAnnotations';
 import { formaterDuree, minutesDe } from '../services/frise';
+import { Icon } from '../../../shared/ui/Icon';
 
 function Ligne({ ligne, theme, encre }: { ligne: LigneDeCreneau | { texte: string; icone: 'code' }; theme: AppThemeType; encre: string }) {
     const salle = ligne.icone === 'room';
     return (
         <View style={styles.ligne}>
-            <MaterialIcons name={ligne.icone} size={18} color={salle ? encre : theme.fontTertiary} style={styles.iconeLigne} />
+            <Icon icon={{ family: 'material', name: ligne.icone }} size={18} color={salle ? encre : theme.fontTertiary} style={styles.iconeLigne} />
             <Text style={[styles.texteLigne, { color: salle ? theme.font : theme.fontSecondary }, salle && styles.texteSalle]}>
                 {ligne.texte}
             </Text>
@@ -36,7 +36,7 @@ function Horaire({ data, theme }: { data: CourseData; theme: AppThemeType }) {
     if (data.journeeEntiere) {
         return (
             <View style={styles.horaire}>
-                <MaterialCommunityIcons name="calendar-blank" size={20} color={theme.fontSecondary} />
+                <Icon icon={{ name: 'calendar-blank' }} size={20} color={theme.fontSecondary} />
                 <Text style={[styles.heure, { color: theme.font }]}>{Translator.get('ALL_DAY')}</Text>
             </View>
         );
@@ -48,7 +48,7 @@ function Horaire({ data, theme }: { data: CourseData; theme: AppThemeType }) {
             <Text style={[styles.heure, tokens.texte.chiffres, { color: theme.font }]}>{data.starttime}</Text>
             {fin !== null ? (
                 <>
-                    <MaterialCommunityIcons name="arrow-right" size={18} color={theme.fontTertiary} />
+                    <Icon icon={{ name: 'arrow-right' }} size={18} color={theme.fontTertiary} />
                     <Text style={[styles.heure, tokens.texte.chiffres, { color: theme.font }]}>{data.endtime}</Text>
                 </>
             ) : null}

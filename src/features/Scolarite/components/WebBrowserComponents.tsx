@@ -6,6 +6,7 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, ombre } from '../../../shared/theme/Theme';
 import { assiseDuFlottant } from '../../../shared/ui/PiedFlottant';
+import { Icon } from '../../../shared/ui/Icon';
 
 interface FloatingActionBarProps {
     theme: import('../../../shared/theme/Theme').AppThemeType;
@@ -108,7 +109,7 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
             ]}>
                 <TouchableOpacity onPress={toggleOpen} style={styles.handle}>
                     <Animated.View style={chevronStyle}>
-                        <MaterialCommunityIcons name="chevron-left" size={28} color={theme.fontSecondary} />
+                        <Icon icon={{ name: 'chevron-left' }} size={28} color={theme.fontSecondary} />
                     </Animated.View>
                 </TouchableOpacity>
 
@@ -133,7 +134,7 @@ export const SaveCredentialsModal = ({ theme, visible, onClose, onSave }: { them
     >
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <View style={{ backgroundColor: theme.cardBackground, padding: tokens.space.lg, borderRadius: tokens.radius.lg, width: '85%', alignItems: 'center', ...tokens.shadow.lg }}>
-                <MaterialCommunityIcons name="shield-check" size={48} color={theme.primary} style={{ marginBottom: tokens.space.md }} />
+                <Icon icon={{ name: 'shield-check' }} size={48} color={theme.primary} style={{ marginBottom: tokens.space.md }} />
                 <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: theme.font, textAlign: 'center', marginBottom: tokens.space.lg }}>
                     {Translator.get('SAVE_CREDENTIALS_PROMPT')}
                 </Text>

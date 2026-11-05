@@ -249,7 +249,7 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`Interrupteur`](../src/shared/ui/Interrupteur.tsx) | l'interrupteur du dépôt, dessiné, identique sur les deux plateformes | 4 fois |
 | [`Curseur`](../src/shared/ui/Curseur.tsx) | le curseur du dépôt, dessiné — son arithmétique est [testée à part](../src/shared/ui/echelleDeCurseur.ts) | 1 fois |
 | [`ProgressBar`](../src/shared/ui/ProgressBar.tsx) | jauge, **rayon calculé** (`height / 2`) | 3 fois |
-| [`Icon`](../src/shared/ui/Icon.tsx) | une icône de l'une ou l'autre famille, typée | — |
+| [`Icon`](../src/shared/ui/Icon.tsx) | **la seule entrée des icônes** : un nom de Material Design, vérifié par le compilateur, dessiné au trait par Lucide ([`tableDesIcones.ts`](../src/shared/ui/tableDesIcones.ts)), d'une épaisseur constante (1,75, et 1,5 aux petites et aux grandes tailles). Un nom absent de la table, venu des données, retombe sur Material. Plus aucun `MaterialCommunityIcons` ni `MaterialIcons` direct dans un écran | toute l'application, depuis la deuxième passe de 7-J |
 | [`SourceFailureNotice`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, bâti sur `EmptyState` | — |
 | [`ScreenState`](../src/shared/ui/ScreenState.tsx) | **l'hôte** d'un état plein écran : il décide où le bloc se pose, pas de quoi il est fait | 6 fois |
 | [`ActionButton`](../src/shared/ui/ActionButton.tsx) | une action hors dialogue : `filled`, `tonal`, `destructive` | 4 fois |
@@ -883,6 +883,11 @@ Acquises, et qui ont coûté à être trouvées :
 - **Le tirer-pour-rafraîchir reste celui du système** (2026-09-26). Sur Android, le contrôle natif
   intercepte le geste sans en donner la progression ; un geste maison sur les deux plateformes était le
   point le plus risqué du jalon, pour un moment que l'Épure porte déjà ailleurs.
+- **Des icônes au trait, d'une seule famille** (7-J, deuxième passe). Lucide, par `Icon`, à la place
+  des deux familles de Material Design, dont la review du 2026-11-05 trouvait le rendu « moins premium »
+  que celui des applications de référence : un glyphe pensé pour Android, des pleins et des contours
+  mêlés, une épaisseur qui suivait la taille. Le trait est désormais constant, et les icônes des
+  Réglages ont perdu leurs carrés de couleur : neutres, dans une colonne qui aligne les libellés.
 - **Le fond d'un onglet est une touche, pas un décor, et il vit dans l'en-tête.** Deux teintes
   voisines de la section, en dégradé fixe, ramenées à la hauteur de l'en-tête et fermées à son bas sur
   la couleur unie de la page (`FondDOnglet`) ; le contenu passe dessous en fondu. Les teintes suivent

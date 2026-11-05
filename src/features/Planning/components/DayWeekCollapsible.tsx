@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Collapsible from 'react-native-collapsible';
 import moment from 'moment';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import PropTypes from 'prop-types';
 
 import { tokens } from '../../../shared/theme/Theme';
@@ -12,6 +12,7 @@ import { CourseGroupCarousel } from './CourseCard';
 import { BandeauJourneeEntiere } from './BandeauJourneeEntiere';
 import { groupOverlappingCourses } from './ScheduleListUtils';
 import { separerJourneeEntiere } from '../services/FusionTelephone';
+import { Icon } from '../../../shared/ui/Icon';
 
 export interface DayWeekProps {
 	/** Un jour de semaine deja derive par `ScheduleList` ; les quatre noms de date sont ceux des formes historiques du cache. */
@@ -112,7 +113,7 @@ export class DayWeek extends React.Component<DayWeekProps, DayWeekState> {
 						</View>
 					)}
 				</View>
-				<MaterialCommunityIcons name={this.state.expand ? 'chevron-up' : 'chevron-down'} size={24} color={theme.fontSecondary} />
+				<Icon icon={{ name: this.state.expand ? 'chevron-up' : 'chevron-down' }} size={24} color={theme.fontSecondary} />
 			</TouchableOpacity>
 		);
 	}

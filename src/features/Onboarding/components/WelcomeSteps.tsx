@@ -12,7 +12,6 @@
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Reanimated, { FadeIn } from 'react-native-reanimated';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
 import { tokens } from '../../../shared/theme/Theme';
@@ -29,6 +28,7 @@ import { carte, pastille, texteDePastille, titreDeCarte, useDegagementDuPied } f
 // divergeraient a la premiere correction — exactement ce que le partage evite.
 import ScolariteLoginView from '../../Scolarite/components/ScolariteLoginView';
 import LienEdtForm from '../../Planning/components/LienEdtForm';
+import { Icon } from '../../../shared/ui/Icon';
 
 export const WelcomePagination = ({ pageNumber, maxPage, themeObj }) => (
     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: tokens.space.md }}>
@@ -50,7 +50,7 @@ export const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
             padding: tokens.space.xs
         }}
     >
-        <MaterialIcons name="arrow-back" size={28} color={themeObj.font} />
+        <Icon icon={{ family: 'material', name: 'arrow-back' }} size={28} color={themeObj.font} />
     </TouchableOpacity>
 );
 
@@ -124,7 +124,7 @@ export const StepEtablissement = ({ themeObj, etablissements, codeActif, selectE
                                 </Text>
                             )}
                         </View>
-                        {selected && <MaterialCommunityIcons name="check-circle" size={20} color={themeObj.primary} />}
+                        {selected && <Icon icon={{ name: 'check-circle' }} size={20} color={themeObj.primary} />}
                     </TouchableOpacity>
                 );
             })}

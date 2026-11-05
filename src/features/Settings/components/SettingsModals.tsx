@@ -15,11 +15,11 @@
 
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback, ScrollView } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
 import { propsLibelleBouton, tokens } from '../../../shared/theme/Theme';
 import { SettingsManager } from '../../../shared/services/AppCore';
+import { Icon } from '../../../shared/ui/Icon';
 
 type ThemeSettings = import('../../../shared/theme/Theme').AppThemeType['settings'];
 
@@ -76,7 +76,7 @@ export const SettingsChoicePopup = ({ theme, titre, description, options, select
                             <View style={theme.popup.header as never}>
                                 <Text style={theme.popup.textHeader}>{titre}</Text>
                                 <TouchableOpacity onPress={fermer} hitSlop={12}>
-                                    <MaterialIcons name="close" size={24} style={theme.popup.closeIcon} />
+                                    <Icon icon={{ family: 'material', name: 'close' }} size={24} color={theme.popup.closeIcon.color as string} />
                                 </TouchableOpacity>
                             </View>
 
@@ -106,7 +106,7 @@ export const SettingsChoicePopup = ({ theme, titre, description, options, select
                                                 et un nom long sautait sur deux lignes en alternance. */}
                                             <View style={{ width: 20, marginLeft: tokens.space.sm, alignItems: 'flex-end' }}>
                                                 {selectionne ? (
-                                                    <MaterialIcons name="check" size={20} color={theme.popup.optionCheckColor} />
+                                                    <Icon icon={{ family: 'material', name: 'check' }} size={20} color={theme.popup.optionCheckColor} />
                                                 ) : null}
                                             </View>
                                         </TouchableOpacity>

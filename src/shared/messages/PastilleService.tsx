@@ -25,7 +25,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { useNavigation, type NavigationProp, type ParamListBase } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { contexteDeCiblage } from '../ciblage';
 import Translator from '../i18n/Translator';
@@ -37,6 +36,7 @@ import { messagesConnus, onMessages } from './index';
 import { choisirPresentation } from './presentation';
 import { vusConnus } from './vus';
 import { lienDuFormulaire, ouvrirLeFormulaire, type SectionDuFormulaire } from '../navigation/formulaireDeRetours';
+import { Icon } from '../ui/Icon';
 
 export interface PastilleServiceProps {
     readonly theme: AppThemeType;
@@ -64,8 +64,8 @@ export function PastilleService({ theme, onglet, style }: PastilleServiceProps) 
     return (
         <View style={style}>
             <HeaderButton theme={theme} onPress={() => setOuverte(true)}>
-                <MaterialCommunityIcons
-                    name="information"
+                <Icon
+                    icon={{ name: 'information' }}
                     size={HEADER_BUTTON_ICON}
                     color={rappel !== null ? theme.danger : theme.fontSecondary}
                 />

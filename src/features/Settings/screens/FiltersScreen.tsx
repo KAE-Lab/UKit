@@ -20,7 +20,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Animated, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
@@ -30,6 +29,7 @@ import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { SettingsTextHeader } from '../components/SettingsSections';
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
 import type { UeRencontree } from '../../Planning/services/PlanningAssembly';
+import { Icon } from '../../../shared/ui/Icon';
 
 type ThemeSettings = import('../../../shared/theme/Theme').AppThemeType['settings'];
 
@@ -52,7 +52,7 @@ function RangeeDeFiltre({ code, themeSettings, couleurNom, onRetirer }: { code: 
             </View>
             {/* Un vrai geste de retrait, a la place de l'appui long qu'aucun signe n'annoncait. */}
             <TouchableOpacity onPress={onRetirer} hitSlop={12} style={{ paddingHorizontal: tokens.space.md }}>
-                <MaterialIcons name="close" size={20} color={couleurNom} />
+                <Icon icon={{ family: 'material', name: 'close' }} size={20} color={couleurNom} />
             </TouchableOpacity>
         </View>
     );
@@ -153,7 +153,7 @@ function CarteAjout({ theme, themeSettings, ues, filtres }: { theme: import('../
                     onSubmitEditing={ajouterLeCodeManuel}
                 />
                 <TouchableOpacity onPress={ajouterLeCodeManuel} hitSlop={8}>
-                    <MaterialIcons name="add" size={28} color={themeSettings.popup.textInputIconColor} />
+                    <Icon icon={{ family: 'material', name: 'add' }} size={28} color={themeSettings.popup.textInputIconColor} />
                 </TouchableOpacity>
             </View>
         </View>

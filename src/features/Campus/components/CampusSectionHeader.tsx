@@ -16,6 +16,7 @@ import { Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import { Icon } from '../../../shared/ui/Icon';
 
 export interface CampusSectionHeaderProps {
     icone: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -40,7 +41,7 @@ export function CampusSectionHeader({ icone, titre, couleur, theme, style }: Cam
                 justifyContent: 'center',
                 alignItems: 'center',
             }}>
-                <MaterialCommunityIcons name={icone} size={18} color={teinte} />
+                <Icon icon={{ name: icone }} size={18} color={teinte} />
             </View>
             <Text style={{
                 fontSize: tokens.fontSize.lg,

@@ -30,7 +30,7 @@
 
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
 import style, { propsLibelleBouton, tokens, type AppThemeType } from '../../../shared/theme/Theme';
@@ -43,6 +43,7 @@ import { Badge } from '../../../shared/ui/Badge';
 import { useCredentials } from '../services/CredentialsContext';
 import { decider, type Proposition } from '../services/PropositionsDecision';
 import type { PropositionsDossier } from '../services/PropositionsDossier';
+import { Icon } from '../../../shared/ui/Icon';
 
 /** L'etat que la decision consulte, relu a chaque fois plutot que memorise. */
 function etatCourant() {
@@ -158,7 +159,7 @@ function Section({ theme, icone, titre, aide, children }: SectionProps) {
         // de trois ecarts differents.
         <View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: tokens.space.sm }}>
-                <MaterialCommunityIcons name={icone} size={20} color={theme.primary} />
+                <Icon icon={{ name: icone }} size={20} color={theme.primary} />
                 <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, color: theme.font }}>
                     {titre}
                 </Text>
@@ -246,7 +247,7 @@ export function PropositionsModal() {
                     <View style={popup.header as never}>
                         <Text style={popup.textHeader}>{Translator.get('PROPOSALS_TITLE')}</Text>
                         <TouchableOpacity onPress={oublierPropositions} hitSlop={12}>
-                            <MaterialIcons name="close" size={24} style={popup.closeIcon} />
+                            <Icon icon={{ family: 'material', name: 'close' }} size={24} color={popup.closeIcon.color as string} />
                         </TouchableOpacity>
                     </View>
                     <Text style={popup.textDescription}>{Translator.get('PROPOSALS_INTRO')}</Text>

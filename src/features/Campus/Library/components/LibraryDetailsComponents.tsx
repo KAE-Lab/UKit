@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { EdgeInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+
 import Translator from '../../../../shared/i18n/Translator';
 import style, { tokens, toneColor, AppThemeType } from '../../../../shared/theme/Theme';
 import { ProgressBar } from '../../../../shared/ui/ProgressBar';
 import { LoadingState } from '../../../../shared/ui/LoadingState';
 import { LibraryInfo, TimetableEntry, AffluencesData, getLibraryStatus } from '../../services/LibraryService';
+import { Icon } from '../../../../shared/ui/Icon';
 
 interface LibraryLiveAttendanceProps {
     affluence: AffluencesData | null;
@@ -25,7 +26,7 @@ export function LibraryLiveAttendance({ affluence, theme }: LibraryLiveAttendanc
                 {Translator.get('ATTENDANCE')}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: rate !== null ? tokens.space.md : 0 }}>
-                <MaterialCommunityIcons name={isOpen ? 'door-open' : 'door-closed'} size={24} color={statusColor} />
+                <Icon icon={{ name: isOpen ? 'door-open' : 'door-closed' }} size={24} color={statusColor} />
                 <Text style={{ fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as never, color: statusColor, marginLeft: tokens.space.sm }}>
                     {statusText}
                 </Text>
@@ -171,7 +172,7 @@ export function LibraryOpeningHoursList({ loading, currentDay, theme }: LibraryO
                             marginVertical: 0,
                             marginBottom: tokens.space.sm
                         }]}>
-                            <MaterialIcons name="schedule" size={24} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.md }} />
+                            <Icon icon={{ family: 'material', name: 'schedule' }} size={24} color={theme.accent ?? theme.primary} style={{ marginRight: tokens.space.md }} />
                             <Text style={{ fontSize: tokens.fontSize.md, color: theme.font, fontWeight: tokens.fontWeight.medium as never }}>
                                 {formatTime(slot.openingHour)} - {formatTime(slot.closingHour)}
                             </Text>
@@ -187,7 +188,7 @@ export function LibraryOpeningHoursList({ loading, currentDay, theme }: LibraryO
                         borderWidth: 1, 
                         borderColor: theme.border 
                     }}>
-                        <MaterialCommunityIcons name="door-closed-lock" size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.sm }} />
+                        <Icon icon={{ name: 'door-closed-lock' }} size={48} color={theme.fontSecondary} style={{ marginBottom: tokens.space.sm }} />
                         <Text style={{ 
                             color: theme.fontSecondary, 
                             fontSize: tokens.fontSize.md,

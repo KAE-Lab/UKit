@@ -3,7 +3,6 @@ import {
     View, Text, TextInput, TouchableOpacity, ActivityIndicator,
     StyleSheet, KeyboardAvoidingView, Animated,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { getEtablissementActif } from '../../../shared/etablissements';
 import { LogoEtablissement } from './LogoEtablissement';
@@ -16,6 +15,7 @@ import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { ActionButton } from '../../../shared/ui/ActionButton';
 import { useCredentials } from '../services/CredentialsContext';
+import { Icon } from '../../../shared/ui/Icon';
 
 /**
  * Le formulaire de connexion au compte universitaire.
@@ -154,7 +154,7 @@ const CarteDuFormulaire = ({
 
                     {error ? (
                         <View style={styles.errorRow}>
-                            <MaterialCommunityIcons name="alert-circle-outline" size={16} color={theme.accentFont} />
+                            <Icon icon={{ name: 'alert-circle-outline' }} size={16} color={theme.accentFont} />
                             <Text style={[styles.errorText, { color: theme.accentFont }]}>{error}</Text>
                         </View>
                     ) : null}
@@ -344,7 +344,6 @@ const ScolariteLoginView = ({
         setSubmitting(false);
         setReussi(true);
     }, [username, password, submitting, validateAndSave]);
-
 
     return (
         <KeyboardAvoidingView

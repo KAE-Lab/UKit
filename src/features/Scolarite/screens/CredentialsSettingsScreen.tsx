@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import * as Clipboard from 'expo-clipboard';
 import moment from 'moment';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -24,6 +24,7 @@ import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 import { useSessionDemandeeIci } from '../hooks/useSessionDemandeeIci';
 import { ConfirmationScolarite } from '../components/ConfirmationScolarite';
 import { CompteADemander } from '../components/CompteADemander';
+import { Icon } from '../../../shared/ui/Icon';
 
 /** Combien de temps la coche reste, en millisecondes. Assez pour etre vue, trop court pour rester. */
 const DUREE_DE_LA_COCHE = 1600;
@@ -74,8 +75,8 @@ const InfoRow = ({ label, value, theme, copiable = false }) => {
                         hitSlop={12}
                         accessibilityLabel={Translator.get(copie ? 'COPIED_TO_CLIPBOARD' : 'COPY')}
                     >
-                        <MaterialCommunityIcons
-                            name={copie ? 'check' : 'content-copy'}
+                        <Icon
+                            icon={{ name: copie ? 'check' : 'content-copy' }}
                             size={18}
                             color={copie ? theme.success : theme.fontSecondary}
                         />
@@ -124,8 +125,8 @@ const IdentifiantsSection = ({ theme, credentials, passwordVisible, onTogglePass
                     {passwordVisible ? credentials?.password : '••••••••'}
                 </Text>
                 <TouchableOpacity onPress={onTogglePassword} hitSlop={8}>
-                    <MaterialCommunityIcons
-                        name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
+                    <Icon
+                        icon={{ name: passwordVisible ? 'eye-off-outline' : 'eye-outline' }}
                         size={20}
                         color={theme.fontSecondary}
                     />
@@ -147,7 +148,6 @@ const PortailAbsent = ({ theme }) => (
         <SourceFailureNotice failure={portailAbsent()} theme={theme} variant="plain" />
     </ScreenState>
 );
-
 
 /**
  * Les reglages du compte universitaire : ce qui est enregistre, et la deconnexion.

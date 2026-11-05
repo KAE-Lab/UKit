@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Animated, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,7 +12,7 @@ import style, { propsLibelleBouton, tokens } from '../theme/Theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { fonduDuBord } from '../ui/fondDOnglet';
 import { HAUTEUR_DU_FONDU } from '../ui/FonduDeBord';
-
+import { Icon } from '../ui/Icon';
 
 // GESTIONNAIRE DE HEADER
 export type ScrollValueWithInterps = Animated.Value & {
@@ -197,7 +197,7 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
                 <View>
                     <TouchableOpacity onPress={() => this.setState({ modalVisible: true })} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                         <HeaderButton theme={theme}>
-                            <MaterialCommunityIcons name="filter-variant-remove" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                            <Icon icon={{ name: 'filter-variant-remove' }} size={HEADER_BUTTON_ICON} color={theme.primary} />
                         </HeaderButton>
                     </TouchableOpacity>
                     <Modal animationType="fade" transparent={true} visible={this.state.modalVisible} onRequestClose={() => this.setState({ modalVisible: false })}>
@@ -207,7 +207,7 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
                                     <View style={theme.settings.popup.header}>
                                         <Text style={theme.settings.popup.textHeader}>{Translator.get('MY_PLANNING')}</Text>
                                         <TouchableOpacity onPress={() => this.setState({ modalVisible: false })} hitSlop={12}>
-                                            <MaterialIcons name="close" size={24} style={theme.settings.popup.closeIcon} />
+                                            <Icon icon={{ family: 'material', name: 'close' }} size={24} color={theme.settings.popup.closeIcon.color as string} />
                                         </TouchableOpacity>
                                     </View>
                                     
@@ -225,7 +225,7 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
                                             <View key={group} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.greyBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginBottom: tokens.space.sm }}>
                                                 <Text style={{ color: theme.font, fontSize: tokens.fontSize.md, flex: 1 }}>{group.replace(/_/g, ' ')}</Text>
                                                 <TouchableOpacity onPress={() => SettingsManager.removeFavoriteGroup(group)} style={{ padding: tokens.space.xs, paddingHorizontal: tokens.space.sm }} hitSlop={8}>
-                                                    <MaterialIcons name="delete" size={24} color={theme.danger} />
+                                                    <Icon icon={{ family: 'material', name: 'delete' }} size={24} color={theme.danger} />
                                                 </TouchableOpacity>
                                             </View>
                                         ))}
@@ -242,7 +242,7 @@ export class SaveGroupButton extends React.Component<SaveGroupButtonProps, SaveG
             <TouchableOpacity onPress={() => this.saveGroup()} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                 <HeaderButton theme={theme} fond={theme.primary}>
                     {/* `lightFont` et non `accentFont` : ce dernier est le rouge destructif (docs/theme.md). */}
-                    <MaterialIcons name={this.isSaved() ? 'star' : 'star-border'} size={HEADER_BUTTON_ICON} color={theme.lightFont} />
+                    <Icon icon={{ family: 'material', name: this.isSaved() ? 'star' : 'star-border' }} size={HEADER_BUTTON_ICON} color={theme.lightFont} />
                 </HeaderButton>
             </TouchableOpacity>
         );
@@ -279,7 +279,7 @@ export class FilterRemoveButton extends React.Component<FilterRemoveButtonProps,
         return (
             <View>
                 <HeaderButton theme={theme} onPress={this.openPopup}>
-                    <MaterialCommunityIcons name="filter-variant-remove" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                    <Icon icon={{ name: 'filter-variant-remove' }} size={HEADER_BUTTON_ICON} color={theme.primary} />
                 </HeaderButton>
                 <Modal animationType="fade" transparent={true} visible={this.state.popupVisible} onRequestClose={this.popupClose}>
                     <View style={popupTheme.background}>

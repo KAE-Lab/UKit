@@ -1,7 +1,6 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity, View } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import MainTabNavigator from './MainTabNavigator';
 import GroupSearch from '../../features/Planning/screens/GroupSelectionScreen';
@@ -31,6 +30,7 @@ import { AppContext, treatTitle } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { HeaderButton, HEADER_BUTTON_ICON } from '../ui/HeaderButton';
 import { NavBarHelper, SaveGroupButton as SaveButton, FilterRemoveButton } from './NavHelpers';
+import { Icon } from '../ui/Icon';
 
 export type RootStackParamList = {
     MainTabs: undefined;
@@ -85,7 +85,7 @@ export default function StackNavigator() {
                                                 glyphe plus leger qu'une icone pleine, et elle parait
                                                 plus petite a taille egale. C'est un ecart **optique**,
                                                 mesure a l'oeil, pas une divergence oubliee. */}
-                                            <MaterialIcons name="arrow-back" size={28} color={theme.primary} />
+                                            <Icon icon={{ family: 'material', name: 'arrow-back' }} size={28} color={theme.primary} />
                                         </HeaderButton>
                                     </TouchableOpacity>
                                 ) : undefined,
@@ -125,7 +125,7 @@ export default function StackNavigator() {
                             <Stack.Screen name="DocumentViewer" component={DocumentViewerScreen} options={({ route }) => NavBarHelper({ headerRight: () => (
                                 <TouchableOpacity onPress={() => { void partagerDocument(route.params?.uri ?? ''); }} style={{ paddingRight: tokens.space.md }}>
                                     <HeaderButton theme={theme}>
-                                        <MaterialCommunityIcons name="export-variant" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                                        <Icon icon={{ name: 'export-variant' }} size={HEADER_BUTTON_ICON} color={theme.primary} />
                                     </HeaderButton>
                                 </TouchableOpacity>
                             ), title: route.params?.nom ?? Translator.get('MY_DOCUMENTS'), themeName, route, gestureEnabled: true })} />

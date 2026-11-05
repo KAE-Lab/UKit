@@ -23,6 +23,7 @@ import { lienDuFormulaire, ouvrirLeFormulaire } from './formulaireDeRetours';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { useGlissementDeBarre } from './glissementDOnglets';
 import { compterOnglet } from '../mesure';
+import { Icon } from '../ui/Icon';
 
 export type MainTabParamList = {
     PlanningTab: undefined;
@@ -176,8 +177,8 @@ function BoutonDAction({ icone, libelle, onPress, theme, teinte, masque = false 
             accessibilityRole="button"
             style={[styles.groupButton, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
         >
-            <MaterialCommunityIcons
-                name={masque ? 'lock' : icone}
+            <Icon
+                icon={{ name: masque ? 'lock' : icone }}
                 size={24}
                 color={masque ? theme.fontSecondary : teinte}
             />
@@ -377,7 +378,7 @@ export default function MainTabNavigator() {
                 component={PlanningStackScreen}
                 options={{
                     tabBarLabel: Translator.get('MY_PLANNING'),
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="calendar-month-outline" size={24} color={color} />,
+                    tabBarIcon: ({ color }) => <Icon icon={{ name: 'calendar-month-outline' }} size={24} color={color} />,
                 }}
             />
             <Tab.Screen
@@ -385,7 +386,7 @@ export default function MainTabNavigator() {
                 component={CampusDashboard}
                 options={{
                     tabBarLabel: Translator.get('CAMPUS'),
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="domain" size={24} color={color} />
+                    tabBarIcon: ({ color }) => <Icon icon={{ name: 'domain' }} size={24} color={color} />
                 }}
             />
             <Tab.Screen
@@ -393,7 +394,7 @@ export default function MainTabNavigator() {
                 component={ScolariteDashboard}
                 options={{
                     tabBarLabel: Translator.get('SCOLARITY'),
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="toolbox-outline" size={24} color={color} />
+                    tabBarIcon: ({ color }) => <Icon icon={{ name: 'toolbox-outline' }} size={24} color={color} />
                 }}
             />
             <Tab.Screen
@@ -401,7 +402,7 @@ export default function MainTabNavigator() {
                 component={SettingsScreen}
                 options={{
                     tabBarLabel: Translator.get('SETTINGS'),
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name="cog-outline" size={24} color={color} />
+                    tabBarIcon: ({ color }) => <Icon icon={{ name: 'cog-outline' }} size={24} color={color} />
                 }}
             />
         </Tab.Navigator>

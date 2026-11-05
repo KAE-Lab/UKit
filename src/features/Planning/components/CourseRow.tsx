@@ -21,7 +21,7 @@
 
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+
 import { useNavigation } from '@react-navigation/native';
 import Reanimated from 'react-native-reanimated';
 
@@ -32,6 +32,7 @@ import { lignesDuCreneau, type LigneDeCreneau } from './CourseAnnotations';
 import { CalendarNewEventPrompt } from './CalendarNewEventPrompt';
 import { couleurDeCours, encreDeCours } from '../services/couleurDeCours';
 import { etatDuCours, formaterDuree, minutesDe } from '../services/frise';
+import { Icon } from '../../../shared/ui/Icon';
 
 /**
  * La place laissee a l'indicateur de pages du carrousel par la derniere ligne d'infos.
@@ -84,8 +85,8 @@ function LigneDInfo({ ligne, theme, couleur, uneLigne, cedeALIndicateur }: {
     const tertiaire = ligne.icone === 'code';
     return (
         <View style={[styles.ligne, cedeALIndicateur && { marginRight: RESERVE_INDICATEUR }]}>
-            <MaterialIcons
-                name={ligne.icone}
+            <Icon
+                icon={{ family: 'material', name: ligne.icone }}
                 size={ICONE_LIGNE}
                 color={salle ? couleur : theme.fontTertiary}
                 style={styles.iconeLigne}
@@ -125,7 +126,7 @@ function ColonneDesHeures({ data, theme, resteMinutes }: { data: CourseData; the
             ) : null}
             {resteMinutes !== null ? (
                 <View style={styles.reste}>
-                    <MaterialCommunityIcons name="timer-sand" size={12} color={theme.accent} />
+                    <Icon icon={{ name: 'timer-sand' }} size={12} color={theme.accent} />
                     <Text style={[styles.texteReste, tokens.texte.chiffres, { color: theme.accent }]}>
                         {formaterDuree(resteMinutes)}
                     </Text>

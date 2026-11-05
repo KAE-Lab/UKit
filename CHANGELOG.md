@@ -56,6 +56,9 @@ une application qui donne l'heure des choses d'un regard.
 - **Une seule accentuation, celle du logo** : le bleu-indigo du milieu de son dégradé, `#3B5FE5` en
   clair et `#6381F8` en sombre, à la place du bleu d'iOS et de l'indigo. La barre d'onglets ne porte
   plus qu'elle, et la teinte de chaque section se prend le long du dégradé du logo.
+- **Des icônes au trait, d'une seule famille** : Lucide remplace les deux familles de Material Design,
+  d'une épaisseur constante à toutes les tailles ; les icônes des Réglages perdent leurs carrés de
+  couleur. Dépendance ajoutée : `lucide-react-native` (ISC), chaque icône importée seule.
 - **Un seul en-tête dans toute l'application** : fixe, le titre à sa place, et le contenu qui passe
   dessous en fondu au lieu d'une coupe sèche, sur les onglets, les écrans poussés et le Planning. Le
   grand titre qui partait au défilement et sa barre compacte disparaissent, et le fond de la section

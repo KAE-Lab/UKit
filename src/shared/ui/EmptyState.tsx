@@ -44,6 +44,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens, toneColor, toneSoftColor, type AppThemeType, type SemanticTone } from '../theme/Theme';
 import { ActionButton } from './ActionButton';
+import { Icon } from './Icon';
 
 /** La largeur de lecture du message. Au-dela, une seule ligne s'etire et le bloc se dilue. */
 const MESURE = 300;
@@ -127,7 +128,7 @@ export function EmptyState({ icon, title, message, theme, action, variant = 'car
                 justifyContent: 'center',
                 marginBottom: tokens.space.md,
             }}>
-                <MaterialCommunityIcons name={icon} size={32} color={glyphe} />
+                <Icon icon={{ name: icon }} size={32} color={glyphe} />
             </View>
 
             <Text style={{

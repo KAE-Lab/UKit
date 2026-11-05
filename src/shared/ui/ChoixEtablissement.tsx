@@ -17,11 +17,11 @@
 
 import React, { useState } from 'react';
 import { Modal, ScrollView, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../i18n/Translator';
 import { propsLibelleBouton, tokens, type AppThemeType } from '../theme/Theme';
 import { listeEtablissements, regrouperParCampus, type Etablissement, type GroupeDEtablissements } from '../etablissements';
+import { Icon } from './Icon';
 
 /**
  * Au-dela de cinq etablissements, la liste se cherche (7-J) : un etudiant tape « UB » ou « ENSEIRB ».
@@ -56,7 +56,7 @@ function OptionEtablissement({ etablissement, selectionne, theme, onPress }: { e
                 long sautait sur deux lignes a chaque selection. */}
             <View style={{ width: 20, marginLeft: tokens.space.sm, alignItems: 'flex-end' }}>
                 {selectionne ? (
-                    <MaterialIcons name="check" size={20} color={theme.popup.optionCheckColor} />
+                    <Icon icon={{ family: 'material', name: 'check' }} size={20} color={theme.popup.optionCheckColor} />
                 ) : null}
             </View>
         </TouchableOpacity>
@@ -144,7 +144,7 @@ export function ChoixEtablissement({ theme: themeComplet, visible, fermer: ferme
                                 <View style={theme.popup.header as never}>
                                     <Text style={theme.popup.textHeader}>{Translator.get('INSTITUTION')}</Text>
                                     <TouchableOpacity onPress={fermer} hitSlop={12}>
-                                        <MaterialIcons name="close" size={24} style={theme.popup.closeIcon} />
+                                        <Icon icon={{ family: 'material', name: 'close' }} size={24} color={theme.popup.closeIcon.color as string} />
                                     </TouchableOpacity>
                                 </View>
                                 <Text style={theme.popup.textDescription}>{Translator.get('YOUR_INSTITUTION')}</Text>
