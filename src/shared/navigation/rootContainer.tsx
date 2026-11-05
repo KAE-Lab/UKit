@@ -113,6 +113,13 @@ export default function RootContainer() {
 		SettingsManager.on('language', onLanguage);
 		SettingsManager.on('filter', onFilter);
 		SettingsManager.on('etablissement', onEtablissement);
+		// **Rattraper ce qui a change avant l'abonnement** (7-J). React joue les effets des enfants
+		// avant ceux du parent : au premier lancement, l'accueil pose le theme et la langue du
+		// telephone avant que cet effet ne s'abonne, et l'evenement se perdait. La racine restait en
+		// clair sous un accueil sombre — la barre de statut avec elle, heure noire sur fond noir
+		// (defauts-fonctionnels.md, constate le 2026-11-04, cause etablie le 2026-11-05).
+		setThemeName(SettingsManager.getTheme());
+		setLanguage(SettingsManager.getLanguage());
 
 		const eventSubscription = AppState.addEventListener('change', onAppStateChange);
 		const desabonnerRetour = onRetourAuPremierPlan(rafraichirLaDonneePubliee);

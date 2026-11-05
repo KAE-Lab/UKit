@@ -54,7 +54,18 @@ et la fonction retombe sur `'en_US'`. Tout nouvel utilisateur Android est touch�
 installés gardent la langue choisie. La branche iOS lit `NativeModules.SettingsManager` de la même
 façon et a sans doute le même défaut, non vérifié faute de simulateur.
 
-### La barre d'état est invisible au premier lancement en sombre, sur Android — constaté le 2026-11-04
+### ~~La barre d'état est invisible au premier lancement en sombre, sur Android~~ — constaté le 2026-11-04, corrigé le 2026-11-05
+
+*Cause établie et corrigée par [7-J](phase-7/7-j-ecrans.md) :* React joue les effets des enfants avant
+ceux du parent. Au premier lancement, l'accueil pose le thème du téléphone (`setTheme`) avant que le
+conteneur racine ne s'abonne à l'événement `theme` : l'événement se perdait, la racine restait en clair
+sous un accueil qui lit le thème lui-même, et la barre de statut, rendue par la racine, gardait ses
+icônes sombres. Tracé sur le banc (journal du style posé : `dark-content` seulement), puis mesuré par
+`dumpsys window` (`apr=LIGHT_STATUS_BARS`). La racine relit désormais le thème et la langue au moment
+de s'abonner ([`rootContainer`](../src/shared/navigation/rootContainer.tsx)). Vérifié sur `ukit`,
+installation neuve en sombre : plus de `LIGHT_STATUS_BARS`, l'heure blanche. Le défaut ne tenait pas à
+Android 9, il se reproduisait sur Android 15 ; à revoir sur l'A8 avec le reste.
+
 
 Sur le banc Android (Android 9), installation neuve (`pm clear`), système en sombre : l'accueil se
 rend en sombre, comme promis, mais la barre d'état est noire sur noir. La capture n'y compte qu'une
