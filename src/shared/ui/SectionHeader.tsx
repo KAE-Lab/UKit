@@ -35,19 +35,17 @@ export function SectionHeader({ title, theme, onPress }: SectionHeaderProps) {
             disabled={onPress === undefined}
             activeOpacity={0.7}
         >
-            <Text style={{
-                fontSize: tokens.fontSize.xl,
-                fontWeight: tokens.fontWeight.bold,
-                color: theme.font,
-            }}>
+            <Text style={[tokens.texte.titreDeSection, { color: theme.font }]}>
                 {title}
             </Text>
 
+            {/* Le chevron en retrait (7-J) : il dit qu'il y a une suite, il ne doit pas peser comme
+                le titre qu'il prolonge. */}
             {onPress !== undefined ? (
                 <MaterialIcons
                     name="chevron-right"
-                    size={26}
-                    color={theme.fontSecondary}
+                    size={24}
+                    color={theme.fontTertiary}
                     style={{ marginLeft: tokens.space.xxs }}
                 />
             ) : null}

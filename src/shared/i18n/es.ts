@@ -2,7 +2,7 @@
 import type { TranslationDict } from './Translator';
 
 const es: TranslationDict = {
-	ABOUT: 'Acerca de la aplicación',
+	ABOUT: 'Acerca de',
 	ADD_TO_CALENDAR: 'Añadir el evento al calendario',
 	ADD_TO_CALENDAR_DESCRIPTION: '¿Quieres añadir el evento "$-" al calendario?',
 	ADD_TO_CALENDAR_DONE: '¡Evento añadido!',
@@ -279,7 +279,7 @@ const es: TranslationDict = {
 	SETTINGS_LOAD_ERROR: 'No se han podido cargar los ajustes',
 	NO_RU_NEARBY_TITLE: 'Ningún restaurante',
 	NO_RU_NEARBY: 'No hay ningún restaurante universitario a tu alrededor.',
-	SCOLARITY: "Escolaridad",
+	SCOLARITY: "Estudios",
 	ANNOUNCEMENTS: "Anuncios",
 	// Le badge du type d'une carte d'annonce (7-I) ; un evenement n'en porte pas.
 	ANNONCE_TYPE_INFO: "Info",
@@ -318,6 +318,7 @@ const es: TranslationDict = {
 	REFRESH_RECORD: 'Actualizar',
 	REFRESH_RECORD_DESC: 'Una nueva conexión con el portal actualizará el expediente. Tarda unos segundos.',
 	CONNECT: "Iniciar sesión",
+	CONNECT_SHORT: "Entrar",
 	CONNECTING: 'Conectando…',
 	LOGIN_FAILED_TITLE: 'Credenciales rechazadas',
 	LOGIN_FAILED: 'Comprueba tu usuario y tu contraseña.',

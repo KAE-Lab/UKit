@@ -7,6 +7,9 @@ import style from '../../../shared/theme/Theme';
 import { AppContext } from '../../../shared/services/AppCore';
 import { PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
 import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
+import { EnTeteDOnglet } from '../../../shared/ui/EnTeteDOnglet';
+import { PastilleService } from '../../../shared/messages/PastilleService';
+import Translator from '../../../shared/i18n/Translator';
 import { useCampusPosition } from '../hooks/useCampusPosition';
 import { RafraichissementProvider, useRafraichissementTableauDeBord } from './rafraichissement';
 
@@ -14,7 +17,6 @@ import { BdeSection } from './components/BdeSection';
 import { CrousSection } from './components/CrousSection';
 import { LibrarySection } from './components/LibrarySection';
 import { FreeRoomSection } from './components/FreeRoomSection';
-import { EnTeteCampus } from './components/EnTeteCampus';
 import { AnnoncesDuTableauProvider } from './annonces';
 import { crousRegionActive, sallesDisponibles } from '../../../shared/etablissements';
 
@@ -53,7 +55,15 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             <FondDOnglet theme={theme} onglet="campus" />
-            <EnTeteCampus theme={theme} defilement={defilement} repos={reposY} hautSur={insets.top} />
+            <EnTeteDOnglet
+                theme={theme}
+                onglet="campus"
+                titre={Translator.get('CAMPUS')}
+                defilement={defilement}
+                repos={reposY}
+                hautSur={insets.top}
+                droite={<PastilleService theme={theme} onglet="Campus" />}
+            />
 
             <Reanimated.ScrollView
                 onScroll={surDefilement}

@@ -32,7 +32,7 @@ coordonnées à ses sections, lit **une seule fois** les annonces, et porte le t
 CampusDashboard
   ├─ useCampusPosition()                      la position, partagée avec les listes
   ├─ useRafraichissementTableauDeBord()       le tirer : une revision, un spinner (rafraichissement.tsx)
-  ├─ EnTeteCampus                             le titre et sa pastille, effacés au défilement (Reanimated)
+  ├─ EnTeteDOnglet                            le grand titre qui part avec le contenu, la barre compacte (7-J)
   └─ Reanimated.ScrollView + RefreshControl
        └─ AnnoncesDuTableauProvider           useBdeAnnonces(), lu une fois (annonces.tsx)
             ├─ BdeSection                     les annonces du contexte
@@ -134,10 +134,11 @@ de ce qui sautait, avant, est dans [inventaire-mouvement.md](../inventaire-mouve
   hauteur fait glisser les suivantes** au ressort de l'application
   ([`SectionDuTableau`](../../src/features/Campus/Dashboard/components/SectionDuTableau.tsx)). La
   section des annonces, quand la base n'a rien, se retire en fondu au lieu de disparaître d'un coup.
-- **L'en-tête et le défilement sont en Reanimated**
-  ([`EnTeteCampus`](../../src/features/Campus/Dashboard/components/EnTeteCampus.tsx)) : l'opacité du
-  titre se calcule sur le fil de l'interface. Le calage iOS du tirer-pour-rafraîchir — l'en-tête en
-  retrait de contenu — et le spinner du système sont gardés tels quels.
+- **L'en-tête et le défilement sont en Reanimated**, sur le fil de l'interface. Depuis 7-J, c'est
+  l'en-tête partagé des onglets ([`EnTeteDOnglet`](../../src/shared/ui/EnTeteDOnglet.tsx)) : le grand
+  titre part avec le contenu, puis une barre compacte, sur le fond de l'onglet, protège la barre
+  d'état ; le contenu s'écrivait sous l'heure du téléphone. Le calage iOS du tirer-pour-rafraîchir —
+  l'en-tête en retrait de contenu — et le spinner du système sont gardés tels quels.
 
 ## Les cartes spéciales
 
@@ -343,7 +344,6 @@ temps de chargement.
 | [`Dashboard/CampusDashboard.tsx`](../../src/features/Campus/Dashboard/CampusDashboard.tsx) | écran d'onglet : défilement Reanimated, position partagée, tirer-pour-rafraîchir, empilement des sections |
 | [`Dashboard/annonces.tsx`](../../src/features/Campus/Dashboard/annonces.tsx) | les annonces du tableau de bord, lues une fois pour leur section et les cartes spéciales ; si leur première lecture est faite (7-I) |
 | [`Dashboard/carrouselMixte.ts`](../../src/features/Campus/Dashboard/carrouselMixte.ts) · [`carrouselMixte.test.ts`](../../src/features/Campus/Dashboard/carrouselMixte.test.ts) | pur : les cartes spéciales d'un carrousel, leur place en tête, jamais seules, et l'annonce qu'un élément montre (7-I) |
-| [`Dashboard/components/EnTeteCampus.tsx`](../../src/features/Campus/Dashboard/components/EnTeteCampus.tsx) | le grand titre et sa pastille, effacés au défilement sur le fil de l'interface (7-I) |
 | [`Dashboard/components/SectionDuTableau.tsx`](../../src/features/Campus/Dashboard/components/SectionDuTableau.tsx) | l'enveloppe d'une section : son reflux au ressort quand une voisine change de hauteur, sa sortie en fondu (7-I) |
 | [`Dashboard/components/gabarits.ts`](../../src/features/Campus/Dashboard/components/gabarits.ts) | les mesures des cartes du tableau de bord, en un seul endroit : largeurs d'une carte de lieu et d'une affiche, hauteur du visuel (7-I) |
 | [`Dashboard/components/SqueletteDeCarrousel.tsx`](../../src/features/Campus/Dashboard/components/SqueletteDeCarrousel.tsx) | les squelettes des deux carrousels, lieux et affiches, bâtis avec les briques des vraies cartes ; le corps masqué d'une carte de lieu (7-I) |

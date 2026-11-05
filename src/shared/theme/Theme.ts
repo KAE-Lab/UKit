@@ -6,14 +6,12 @@ import { PALETTES } from './palettes';
 import { resoudreOmbre, type SpecOmbre } from './ombres';
 
 /**
- * Une ombre, resolue pour la plateforme : iOS garde ses quatre proprietes natives, Android recoit un
- * `boxShadow` (React Native 0.86, nouvelle architecture, rendu des l'API 28) — un flou dose comme
- * celui d'iOS, la ou `elevation` dessinait une ombre dure et, pire, decidait de l'ordre de dessin :
- * sur un Android 9, un bandeau eleve recouvrait l'en-tete transparent de navigation (6.2.x). Les
- * ombres ecrites a la main hors echelle passent par ici aussi, avec leurs propres valeurs.
+ * Une ombre, en `boxShadow` sur les deux plateformes depuis 7-J (ombres.ts) : sur iPhone, l'ombre
+ * native etait coupee par le `overflow: hidden` de toute carte. Les ombres ecrites a la main hors
+ * echelle passent par ici aussi, avec leurs propres valeurs.
  */
-export function ombre(spec: SpecOmbre) {
-    return resoudreOmbre(spec, Platform.OS);
+export function ombre(spec: SpecOmbre | readonly SpecOmbre[]) {
+    return resoudreOmbre(spec);
 }
 
 /** Les tokens, ombres resolues : `...tokens.shadow.sm` s'etale comme avant, sur les deux plateformes. */
@@ -65,7 +63,7 @@ const Theme = {
     light: {
         // Les couleurs de base viennent de palettes.ts, pur, que la console lit aussi (7-F).
         ...PALETTES.light,
-        primarySoft:   '#007AFF15',
+        primarySoft:   '#3B5FE515',
         secondary:     '#5856D6',
         selection:     '#F2F2F7',
         accentFont:    '#FF3B30',
@@ -82,7 +80,7 @@ const Theme = {
         neutral:       '#8E8E93',
         neutralSoft:   '#8E8E9315',
         lightFont:     '#FFFFFF',
-        link:          '#007AFF',
+        link:          '#3B5FE5',
         icon:          '#1C1C1E',
         // Anterieure a la palette, et laissee a sa valeur : la nommer supprime le litteral d'AppUI
         // sans changer un pixel de la barre de statut.
@@ -94,14 +92,14 @@ const Theme = {
         eventBackground:  '#FFFFFF',
         eventBorder:      '#E5E5EA',
         calendar: {
-            selection: '#007AFF',
-            currentDay: '#007AFF15',
+            selection: '#3B5FE5',
+            currentDay: '#3B5FE515',
             sunday: '#FF3B3010'
         },
         settings: {
             switchTrack: {
                 false: '#E5E5EA',
-                true:  '#007AFF',
+                true:  '#3B5FE5',
             },
             // La poignee des deux controles dessines (Interrupteur, Curseur). Blanche dans les
             // deux themes, comme celle d'iOS : sur une piste qui porte la valeur, c'est le contraste
@@ -113,7 +111,7 @@ const Theme = {
                 backgroundColor: '#F2F2F7',
             },
             separationText: {
-                color:      '#8E8E93',
+                color:      '#6C6C70',
                 fontSize:   tokens.fontSize.sm,
                 fontWeight: tokens.fontWeight.semibold,
                 marginTop:  tokens.space.lg,
@@ -140,14 +138,14 @@ const Theme = {
             },
             buttonSecondaryText: {
                 fontWeight: tokens.fontWeight.regular,
-                color:      '#8E8E93',
+                color:      '#6C6C70',
                 fontSize:   tokens.fontSize.md,
                 marginLeft: 'auto',
                 alignSelf:  'center',
             },
             leftIcon: {
                 marginLeft: tokens.space.md,
-                color:      '#007AFF',
+                color:      '#3B5FE5',
                 alignSelf:  'center',
             },
             rightIcon: {
@@ -194,7 +192,7 @@ const Theme = {
                         marginTop:      tokens.space.sm,
                     },
                     button: {
-                        backgroundColor: '#007AFF15',
+                        backgroundColor: '#3B5FE515',
                         padding:         tokens.space.sm,
                         borderRadius:    tokens.radius.lg,
                         margin:          tokens.space.sm,
@@ -204,9 +202,9 @@ const Theme = {
                     buttonText: {
                         fontSize:   tokens.fontSize.lg,
                         fontWeight: tokens.fontWeight.bold,
-                        color:      '#007AFF',
+                        color:      '#3B5FE5',
                     },
-                    iconColor: '#007AFF',
+                    iconColor: '#3B5FE5',
                     footer: {
                         marginTop:      tokens.space.md,
                         justifyContent: 'flex-end',
@@ -247,7 +245,7 @@ const Theme = {
                     marginBottom:   tokens.space.sm,
                     lineHeight:     22,
                     fontSize:       tokens.fontSize.md,
-                    color:          '#8E8E93',
+                    color:          '#6C6C70',
                 },
                 buttonContainer: {
                     flexDirection: 'row',
@@ -265,7 +263,7 @@ const Theme = {
                     justifyContent: 'center',
                 },
                 buttonMain: {
-                    backgroundColor: '#007AFF',
+                    backgroundColor: '#3B5FE5',
                     flex: 1,
                     minHeight: 48,
                     paddingVertical: tokens.space.sm,
@@ -285,7 +283,7 @@ const Theme = {
                     justifyContent: 'center',
                 },
                 buttonTextSecondary: {
-                    color: '#8E8E93',
+                    color: '#6C6C70',
                     fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
@@ -321,8 +319,8 @@ const Theme = {
                     marginTop:       tokens.space.sm,
                 },
                 optionSelected: {
-                    borderColor:     '#007AFF',
-                    backgroundColor: '#007AFF15',
+                    borderColor:     '#3B5FE5',
+                    backgroundColor: '#3B5FE515',
                 },
                 optionText: {
                     fontSize:   tokens.fontSize.md,
@@ -331,9 +329,9 @@ const Theme = {
                     flexShrink: 1,
                 },
                 optionTextSelected: {
-                    color: '#007AFF',
+                    color: '#3B5FE5',
                 },
-                optionCheckColor: '#007AFF',
+                optionCheckColor: '#3B5FE5',
                 filterListContainer: {
                     flex:           1,
                     flexDirection:  'row',
@@ -357,7 +355,7 @@ const Theme = {
                     color:        '#1C1C1E',
                     backgroundColor: '#F8F9FA',
                 },
-                textInputIconColor:        '#007AFF',
+                textInputIconColor:        '#3B5FE5',
                 textInputPlaceholderColor: '#C7C7CC',
             },
         },
@@ -393,9 +391,9 @@ const Theme = {
     },
     dark: {
         ...PALETTES.dark,
-        primarySoft:   '#0A84FF20',
+        primarySoft:   '#6381F822',
         secondary:     '#30D158',
-        selection:     '#2C2C2E',
+        selection:     '#252532',
         accentFont:    '#FF453A',
         // Les variantes sombres des memes couleurs systeme, deja presentes dans `sectionsHeaders`.
         success:       '#30D158',
@@ -407,24 +405,24 @@ const Theme = {
         neutral:       '#8E8E93',
         neutralSoft:   '#8E8E9315',
         lightFont:     '#FFFFFF',
-        link:          '#64D2FF',
+        link:          '#6381F8',
         icon:          '#FFFFFF',
-        statusBarBackground: '#000000',
+        statusBarBackground: '#0B0B12',
         collapsableBackground: '#FFFFFF0A',
-        field:                 '#2C2C2E',
-        fieldBorder:           '#38383A',
-        courseBackground: '#000000',
-        eventBackground:  '#1C1C1E',
-        eventBorder:      '#2C2C2E',
+        field:                 '#252532',
+        fieldBorder:           '#30303E',
+        courseBackground: '#0B0B12',
+        eventBackground:  '#15151E',
+        eventBorder:      '#252532',
         calendar: {
-            selection: '#5E5CE6',
-            currentDay: '#1C1C1E',
+            selection: '#6381F8',
+            currentDay: '#15151E',
             sunday: '#FF453A15',
         },
         settings: {
             switchTrack: {
-                false: '#38383A',
-                true:  '#5E5CE6',
+                false: '#30303E',
+                true:  '#6381F8',
             },
             // La poignee des deux controles dessines (Interrupteur, Curseur). Blanche dans les
             // deux themes, comme celle d'iOS : sur une piste qui porte la valeur, c'est le contraste
@@ -433,10 +431,10 @@ const Theme = {
             switchThumb: '#FFFFFF',
             background: {
                 flex: 1,
-                backgroundColor: '#000000',
+                backgroundColor: '#0B0B12',
             },
             separationText: {
-                color:      '#8E8E93',
+                color:      '#BCBCCB',
                 fontSize:   tokens.fontSize.sm,
                 fontWeight: tokens.fontWeight.semibold,
                 marginTop:  tokens.space.lg,
@@ -445,7 +443,7 @@ const Theme = {
                 textTransform: 'uppercase',
             },
             button: {
-                backgroundColor: '#1C1C1E',
+                backgroundColor: '#15151E',
                 borderRadius:    tokens.radius.lg,
                 marginHorizontal: tokens.space.md,
                 marginTop:       tokens.space.sm,
@@ -463,19 +461,19 @@ const Theme = {
             },
             buttonSecondaryText: {
                 fontWeight: tokens.fontWeight.regular,
-                color:      '#8E8E93',
+                color:      '#BCBCCB',
                 fontSize:   tokens.fontSize.md,
                 marginLeft: 'auto',
                 alignSelf:  'center',
             },
             leftIcon: {
                 marginLeft: tokens.space.md,
-                color:      '#5E5CE6',
+                color:      '#6381F8',
                 alignSelf:  'center',
             },
             rightIcon: {
                 alignSelf:        'center',
-                color:            '#8E8E93',
+                color:            '#BCBCCB',
                 marginHorizontal: tokens.space.xs,
             },
             popup: {
@@ -483,7 +481,7 @@ const Theme = {
                     container: {
                         flex:            1,
                         flexGrow:        1,
-                        backgroundColor: '#1C1C1E',
+                        backgroundColor: '#15151E',
                         padding:         tokens.space.md,
                         justifyContent:  'space-between',
                     },
@@ -494,7 +492,7 @@ const Theme = {
                         marginTop:      tokens.space.sm,
                     },
                     button: {
-                        backgroundColor: '#2C2C2E',
+                        backgroundColor: '#252532',
                         padding:         tokens.space.sm,
                         borderRadius:    tokens.radius.lg,
                         margin:          tokens.space.sm,
@@ -504,9 +502,9 @@ const Theme = {
                     buttonText: {
                         fontSize:   tokens.fontSize.lg,
                         fontWeight: tokens.fontWeight.bold,
-                        color:      '#5E5CE6',
+                        color:      '#6381F8',
                     },
-                    iconColor: '#5E5CE6',
+                    iconColor: '#6381F8',
                     footer: {
                         marginTop:      tokens.space.md,
                         justifyContent: 'flex-end',
@@ -519,7 +517,7 @@ const Theme = {
                     backgroundColor: '#00000080',
                 },
                 container: {
-                    backgroundColor: '#1C1C1E',
+                    backgroundColor: '#15151E',
                     borderRadius:    tokens.radius.lg,
                     padding:         tokens.space.lg,
                     marginHorizontal: tokens.space.lg,
@@ -547,7 +545,7 @@ const Theme = {
                     marginBottom:   tokens.space.sm,
                     lineHeight:     22,
                     fontSize:       tokens.fontSize.md,
-                    color:          '#8E8E93',
+                    color:          '#BCBCCB',
                 },
                 buttonContainer: {
                     flexDirection: 'row',
@@ -555,7 +553,7 @@ const Theme = {
                     marginTop:     tokens.space.sm,
                 },
                 buttonSecondary: {
-                    backgroundColor: '#121212',
+                    backgroundColor: '#22222E',
                     flex: 1,
                     minHeight: 48,
                     paddingVertical: tokens.space.sm,
@@ -565,7 +563,7 @@ const Theme = {
                     justifyContent: 'center',
                 },
                 buttonMain: {
-                    backgroundColor: '#5E5CE6',
+                    backgroundColor: '#6381F8',
                     flex: 1,
                     minHeight: 48,
                     paddingVertical: tokens.space.sm,
@@ -585,7 +583,7 @@ const Theme = {
                     justifyContent: 'center',
                 },
                 buttonTextSecondary: {
-                    color: '#8E8E93',
+                    color: '#BCBCCB',
                     fontWeight: tokens.fontWeight.semibold,
                     fontSize: tokens.fontSize.md,
                 },
@@ -600,7 +598,7 @@ const Theme = {
                     fontSize: tokens.fontSize.md,
                 },
                 closeIcon: {
-                    color: '#8E8E93',
+                    color: '#BCBCCB',
                 },
                 /* Le jumeau du bloc clair : memes valeurs, seules les couleurs different. */
                 option: {
@@ -608,7 +606,7 @@ const Theme = {
                     alignItems:      'center',
                     justifyContent:  'space-between',
                     borderWidth:     1.5,
-                    borderColor:     '#38383A',
+                    borderColor:     '#30303E',
                     borderRadius:    tokens.radius.md,
                     minHeight:       48,
                     paddingVertical: tokens.space.sm,
@@ -616,8 +614,8 @@ const Theme = {
                     marginTop:       tokens.space.sm,
                 },
                 optionSelected: {
-                    borderColor:     '#5E5CE6',
-                    backgroundColor: '#5E5CE615',
+                    borderColor:     '#6381F8',
+                    backgroundColor: '#6381F81F',
                 },
                 optionText: {
                     fontSize:   tokens.fontSize.md,
@@ -626,9 +624,9 @@ const Theme = {
                     flexShrink: 1,
                 },
                 optionTextSelected: {
-                    color: '#5E5CE6',
+                    color: '#6381F8',
                 },
-                optionCheckColor: '#5E5CE6',
+                optionCheckColor: '#6381F8',
                 filterListContainer: {
                     flex:           1,
                     flexDirection:  'row',
@@ -643,17 +641,17 @@ const Theme = {
                 },
                 textInput: {
                     borderWidth:  1.5,
-                    borderColor:  '#38383A',
+                    borderColor:  '#30303E',
                     borderRadius: tokens.radius.md,
                     padding:      tokens.space.sm,
                     paddingVertical: Platform.OS === 'ios' ? tokens.space.sm : tokens.space.xs,
                     flex:         1,
                     marginRight:  tokens.space.xs,
                     color:        '#FFFFFF',
-                    backgroundColor: '#2C2C2E',
+                    backgroundColor: '#252532',
                 },
-                textInputIconColor:        '#5E5CE6',
-                textInputPlaceholderColor: '#8E8E93',
+                textInputIconColor:        '#6381F8',
+                textInputPlaceholderColor: '#7C7C8A',
             },
         },
         courses: {
