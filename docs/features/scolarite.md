@@ -532,9 +532,11 @@ Le titre et la salutation restaient à moitié effacés, l'un par-dessus l'autre
 d'interpolation ne rattrape ça** — c'était la disposition qu'il fallait changer, pas la courbe.
 
 Le bloc occupe donc une vraie place, comme celui du Planning : le contenu commence dessous et défile
-dessous. **Et il en prend l'habillage** — fond `cardBackground`, filet bas, ombre douce. Transparent,
-il laissait voir le contenu passer *derrière* la date et se couper net sur le bord haut de la vue
-défilante : on lisait un contenu tronqué plutôt qu'un contenu qui glisse sous une barre.
+dessous. **Et il en prend l'habillage** — le fond violet de l'onglet derrière lui et un filet bas,
+depuis [7-J](../phase-7/7-j-ecrans.md) : il était un aplat `cardBackground` à ombre douce, quand le
+contenu glissait encore derrière la date, et cet aplat coupait le fond de la section, seul onglet à
+l'interrompre. Le prénom de la salutation est dans la couleur du texte : un mot isolé en couleur dans
+un titre est un tic d'interface générée, que rien n'avait choisi par écrit.
 
 ```text
 ┌──────────────────────────────────────┐

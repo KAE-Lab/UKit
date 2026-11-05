@@ -331,8 +331,7 @@ const styles = StyleSheet.create({
         paddingRight: tokens.space.md,
     },
     titreDOngletTexte: {
-        fontSize: tokens.fontSize.title,
-        fontWeight: tokens.fontWeight.bold as '700',
+        ...tokens.texte.grandTitre,
         marginBottom: tokens.space.md,
         paddingHorizontal: tokens.space.md,
     },

@@ -8,10 +8,10 @@
  * effaces, l'un par-dessus l'autre, et aucun reglage d'interpolation ne rattrape ca — c'etait la
  * disposition qu'il fallait changer, pas la courbe.
  *
- * Il occupe donc une vraie place, comme celui du Planning, **et il en prend l'habillage** : fond
- * `cardBackground`, filet bas, ombre douce. Transparent, il laissait voir le contenu passer derriere
- * la date et se couper net sur le bord haut de la vue defilante — on lisait un contenu tronque
- * plutot qu'un contenu qui glisse sous une barre.
+ * Il occupe donc une vraie place, comme celui du Planning, **et il en prend l'habillage** : le fond
+ * de l'onglet derriere lui (7-J) et un filet bas. Il etait un aplat de carte avec une ombre, quand le
+ * contenu glissait encore derriere la date ; collant, il n'a plus rien a cacher, et l'aplat coupait le
+ * fond violet de la section.
  *
  * ## Ce qui le remplit
  *
@@ -81,7 +81,6 @@ export function EnteteScolarite({ theme, teinte, insets, coldData }: EnteteScola
                 styles.conteneur,
                 {
                     paddingTop: insets?.top ?? 0,
-                    backgroundColor: theme.cardBackground,
                     borderBottomColor: theme.border,
                 },
             ]}
@@ -104,7 +103,7 @@ export function EnteteScolarite({ theme, teinte, insets, coldData }: EnteteScola
             </View>
             <View style={styles.corpsEntete}>
                 <View style={styles.colonne}>
-                    <GreetingBlock coldData={coldData} color={teinte} theme={theme} />
+                    <GreetingBlock coldData={coldData} theme={theme} />
                 </View>
                 {logo !== null ? (
                     <LogoEtablissement logo={logo} theme={theme} teinte={teinte} filigrane style={styles.filigrane} />
@@ -131,10 +130,10 @@ const styles = StyleSheet.create({
         // C'est ce qui le rend collant.
         paddingHorizontal: tokens.space.md,
         paddingBottom: tokens.space.md,
-        // Le filet et l'ombre du meme vocabulaire que l'en-tete du Planning : ils separent le bloc du
-        // contenu qui defile dessous, ce qu'un fond seul ne fait pas sur un theme sombre.
-        borderBottomWidth: 1,
-        ...tokens.shadow.sm,
+        // Transparent sur le fond de l'onglet depuis 7-J, comme l'en-tete du Planning : le violet de
+        // la section commencait sous un aplat blanc, seul onglet a l'interrompre. Le filet reste, et
+        // c'est lui qui separe le bloc du contenu qui defile dessous.
+        borderBottomWidth: StyleSheet.hairlineWidth,
     },
     // La ligne du titre quand la salutation est en dessous : le titre prend la largeur, la pastille
     // du rappel d'incident se pose a droite.
@@ -161,8 +160,7 @@ const styles = StyleSheet.create({
         marginBottom: tokens.space.xxs,
     },
     titre: {
-        fontSize: tokens.fontSize.title,
-        fontWeight: tokens.fontWeight.bold,
+        ...tokens.texte.grandTitre,
     },
     contexte: {
         flexDirection: 'row',
