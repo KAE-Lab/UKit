@@ -57,7 +57,8 @@ Tenu ici, lot par lot, pour qu'une reprise sache où en est la passe.
 - [x] A — l'en-tête fixe et son fondu sur les onglets, le Planning et les écrans poussés ; la barre
   d'onglets à l'accent ; les teintes le long du dégradé ; le repère sans point. La Scolarité et les
   bandeaux fixes des fiches (menu, salles) suivent avec les lots D et E.
-- [ ] B
+- [x] B — `Icon` dessine en Lucide par une table de 133 noms, le trait constant ; plus aucun emploi
+  direct de Material ; les Réglages sans carrés de couleur ; la mention de licence suit (ISC).
 - [ ] C
 - [ ] D
 - [ ] E

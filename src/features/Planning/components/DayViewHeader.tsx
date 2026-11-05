@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View, ViewabilityConfig, ViewToken, ListRenderItemInfo } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import moment from 'moment';
 
 import { tokens } from '../../../shared/theme/Theme';
@@ -9,6 +9,7 @@ import { PastilleService } from '../../../shared/messages/PastilleService';
 import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 import { HeaderButton, HEADER_BUTTON_ICON } from '../../../shared/ui/HeaderButton';
 import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
+import { Icon } from '../../../shared/ui/Icon';
 
 export interface DayViewHeaderProps {
     insets: { top: number } | null;
@@ -71,7 +72,7 @@ const renderTitle = (groupName: string | string[], theme: import('../../../share
             <View style={{ marginLeft: 'auto', marginBottom: tokens.space.md, flexDirection: 'row', alignItems: 'center' }}>
                 {onAjouterEvenement !== undefined && (
                     <HeaderButton theme={theme} onPress={onAjouterEvenement} accessibilityLabel={Translator.get('ADD_EVENT')} style={{ marginRight: tokens.space.sm }}>
-                        <MaterialCommunityIcons name="plus" size={HEADER_BUTTON_ICON} color={theme.primary} />
+                        <Icon icon={{ name: 'plus' }} size={HEADER_BUTTON_ICON} color={theme.primary} />
                     </HeaderButton>
                 )}
                 <PastilleService theme={theme} onglet="Planning" />
@@ -104,7 +105,7 @@ const renderNavigation = (
             <TouchableOpacity
                 onPress={onTodayPress}
                 style={[styles.bouton, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
-                <MaterialIcons name="event-note" size={16} color={primaryColor} />
+                <Icon icon={{ family: 'material', name: 'event-note' }} size={16} color={primaryColor} />
                 <Text style={{
                     fontSize: tokens.fontSize.sm,
                     marginLeft: tokens.space.xs,
@@ -138,8 +139,8 @@ const renderNavigation = (
                 onPress={onRightPress}
                 style={[styles.bouton, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
                 {mode === 'week' && (
-                    <MaterialCommunityIcons
-                        name={rightIcon}
+                    <Icon
+                        icon={{ name: rightIcon }}
                         size={16}
                         color={primaryColor}
                         style={{ marginRight: tokens.space.xs }}
@@ -154,7 +155,7 @@ const renderNavigation = (
                     {rightLabel}
                 </Text>
                 {mode === 'day' && (
-                    <MaterialCommunityIcons name={rightIcon} size={16} color={primaryColor} />
+                    <Icon icon={{ name: rightIcon }} size={16} color={primaryColor} />
                 )}
             </TouchableOpacity>
         </View>

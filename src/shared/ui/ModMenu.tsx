@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { View, Text, TouchableOpacity, PanResponder, Animated, Dimensions, Image, Platform, DeviceEventEmitter, ScrollView } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import moment from 'moment';
 
@@ -17,6 +17,7 @@ import ModMenuEntretien from './ModMenuEntretien';
 import ModMenuDisjoncteur from './ModMenuDisjoncteur';
 import ModMenuImages from './ModMenuImages';
 import ModMenuTesteur from './ModMenuTesteur';
+import { Icon } from './Icon';
 
 /**
  * Les panneaux du menu, et leur libelle d'onglet.
@@ -221,10 +222,10 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             </View>
             <View style={{ flexDirection: 'row' }}>
                 <TouchableOpacity onPress={this.minimizeMenu} style={{ padding: tokens.space.xs, marginRight: tokens.space.sm }}>
-                    <MaterialCommunityIcons name="minus" size={20} color={theme.fontSecondary} />
+                    <Icon icon={{ name: 'minus' }} size={20} color={theme.fontSecondary} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={this.closeMenu} style={{ padding: tokens.space.xs }}>
-                    <MaterialCommunityIcons name="close" size={20} color={theme.fontSecondary} />
+                    <Icon icon={{ name: 'close' }} size={20} color={theme.fontSecondary} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -255,7 +256,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     onPress={() => this.showPicker('date')}
                     style={{ flex: 1, backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginRight: tokens.space.xs, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
                 >
-                    <MaterialCommunityIcons name="calendar" size={20} color={theme.primary} style={{ marginBottom: tokens.space.xs }} />
+                    <Icon icon={{ name: 'calendar' }} size={20} color={theme.primary} style={{ marginBottom: tokens.space.xs }} />
                     <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{moment(selectedDate).format('DD/MM/YYYY')}</Text>
                 </TouchableOpacity>
 
@@ -263,7 +264,7 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
                     onPress={() => this.showPicker('time')}
                     style={{ flex: 1, backgroundColor: theme.cardBackground, padding: tokens.space.sm, borderRadius: tokens.radius.md, marginLeft: tokens.space.xs, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
                 >
-                    <MaterialCommunityIcons name="clock" size={20} color={theme.primary} style={{ marginBottom: tokens.space.xs }} />
+                    <Icon icon={{ name: 'clock' }} size={20} color={theme.primary} style={{ marginBottom: tokens.space.xs }} />
                     <Text style={{ color: theme.font, fontSize: tokens.fontSize.sm }}>{moment(selectedDate).format('HH:mm')}</Text>
                 </TouchableOpacity>
             </View>
@@ -289,8 +290,8 @@ export default class ModMenu extends Component<ModMenuProps, ModMenuState> {
             }}
         >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <MaterialCommunityIcons
-                    name={isOffline ? 'wifi-off' : 'wifi'}
+                <Icon
+                    icon={{ name: isOffline ? 'wifi-off' : 'wifi' }}
                     size={20}
                     color={isOffline ? theme.danger : theme.primary}
                     style={{ marginRight: tokens.space.sm }}

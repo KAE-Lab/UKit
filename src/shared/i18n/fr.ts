@@ -267,7 +267,7 @@ const fr: TranslationDict = {
 	COURSES: 'Cours',
 	DATA_SOURCE_TITLE: 'Source des données',
 	DATA_SOURCE_TEXT: "Les emplois du temps proviennent des services de l'établissement, ou d'un lien d'abonnement fourni par l'étudiant. UKit est un projet indépendant, sans affiliation officielle avec les établissements.",
-	LEGAL_MENTION: 'Ce projet est distribué sous licence libre. Les dépendances utilisent les licences MIT et Apache 2.0.',
+	LEGAL_MENTION: 'Ce projet est distribué sous licence libre. Les dépendances utilisent les licences MIT, ISC et Apache 2.0.',
 	CREDITS_API: 'Crédits & API',
 	THIRD_PARTY_DESC: 'UKit s’appuie sur des services tiers pour ses données en temps réel :',
 	API_AFFLUENCES: '• API Affluences',

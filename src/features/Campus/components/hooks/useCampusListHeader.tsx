@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import { tokens } from '../../../../shared/theme/Theme';
 import { HeaderButton, HEADER_BUTTON_ICON, HEADER_BUTTON_SIZE } from '../../../../shared/ui/HeaderButton';
 import { FilterOption } from '../CampusListLayout';
+import { Icon } from '../../../../shared/ui/Icon';
 
 export function useCampusListHeader({
     navigation,
@@ -33,8 +34,8 @@ export function useCampusListHeader({
                 <View style={{ height: HEADER_BUTTON_SIZE, justifyContent: 'center' }}>
                     <TouchableOpacity onPress={() => setFilterVisible(true)} style={{ paddingRight: tokens.space.md }}>
                         <HeaderButton theme={theme}>
-                            <MaterialCommunityIcons
-                                name="filter-variant"
+                            <Icon
+                                icon={{ name: 'filter-variant' }}
                                 size={HEADER_BUTTON_ICON}
                                 color={selectedFilter !== 'all' && selectedFilter !== undefined ? theme.primary : theme.fontSecondary}
                             />

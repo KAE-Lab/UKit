@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import style, { tokens } from '../../../../shared/theme/Theme';
 import Translator from '../../../../shared/i18n/Translator';
 import { CampusSectionHeader } from '../../components/CampusSectionHeader';
+import { Icon } from '../../../../shared/ui/Icon';
 
 export const getDishIcon = (dishName: string): React.ComponentProps<typeof MaterialCommunityIcons>['name'] => {
     const str = dishName.toLowerCase();
@@ -101,8 +102,8 @@ export function CrousMealCard({ mealTitle, categories, mealType, theme }: CrousM
                             <View key={dIdx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.space.xs }}>
                                 {/* Le vegetarien est le seul plat qui porte une couleur : c'est un etat, donc
                                     un ton du theme et non un vert Material en dur (jalon 6-K). */}
-                                <MaterialCommunityIcons
-                                    name={icon}
+                                <Icon
+                                    icon={{ name: icon }}
                                     size={16}
                                     color={icon === 'leaf' ? theme.success : theme.fontSecondary}
                                     style={{ marginRight: tokens.space.xs, marginTop: tokens.space.xxs }}

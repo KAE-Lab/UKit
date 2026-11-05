@@ -10,9 +10,9 @@
 
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import { Icon } from '../../../shared/ui/Icon';
 
 export function SectionListHeader({ title, theme }: { title: string; theme: AppThemeType }) {
     return (
@@ -48,7 +48,7 @@ export function GroupRow({ name, theme, premier, dernier, openGroup }: GroupRowP
             ]}
         >
             <Text numberOfLines={2} style={[styles.nom, { color: theme.font }]}>{name}</Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color={theme.fontTertiary} />
+            <Icon icon={{ name: 'chevron-right' }} size={20} color={theme.fontTertiary} />
             {/* Le filet separe, il n'encadre pas : aucun sous la derniere rangee, et il part sous le texte. */}
             {!dernier ? <View style={[styles.filet, { backgroundColor: theme.border }]} /> : null}
         </Pressable>

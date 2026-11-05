@@ -11,9 +11,9 @@
 
 import React from 'react';
 import { Text, TouchableOpacity } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 
 import { tokens, AppThemeType } from '../theme/Theme';
+import { Icon } from './Icon';
 
 export interface SectionHeaderProps {
     title: string;
@@ -42,8 +42,8 @@ export function SectionHeader({ title, theme, onPress }: SectionHeaderProps) {
             {/* Le chevron en retrait (7-J) : il dit qu'il y a une suite, il ne doit pas peser comme
                 le titre qu'il prolonge. */}
             {onPress !== undefined ? (
-                <MaterialIcons
-                    name="chevron-right"
+                <Icon
+                    icon={{ family: 'material', name: 'chevron-right' }}
                     size={24}
                     color={theme.fontTertiary}
                     style={{ marginLeft: tokens.space.xxs }}

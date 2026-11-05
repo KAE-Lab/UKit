@@ -1,19 +1,28 @@
 /**
- * Une icone, quelle que soit sa famille.
+ * Une icone, dessinee au trait par Lucide depuis la deuxieme passe de 7-J.
  *
- * Le depot melange `MaterialIcons` et `MaterialCommunityIcons`, et les deux ne portent pas les memes
- * glyphes : la punaise de lieu est `location-on` chez l'un et n'existe pas chez l'autre, le
- * pieton est `directions-walk` ici et `walk` la. Un composant partage qui n'aurait connu qu'une
- * famille aurait donc oblige ses appelants a **changer de glyphe** pour l'utiliser — c'est-a-dire a
- * changer le rendu d'ecrans de reference pour un gain de facade.
+ * **Pourquoi Lucide.** L'application dessinait ses icones avec les deux familles de Material Design.
+ * La review du 2026-11-05 les trouvait « moins premium » que celles des applications de reference, sans
+ * savoir dire pourquoi. Trois raisons, relevees ecran par ecran : le glyphe de Material, pense pour
+ * Android et ses formes pleines ; des pleins et des contours meles dans un meme ecran ; et une
+ * epaisseur de trait qui suivait la taille, si bien qu'une icone de 14 et une de 24 n'avaient pas la
+ * meme graisse. Lucide est une seule famille au trait, d'une seule main.
  *
- * Le type est une union discriminee plutot qu'une chaine libre : le nom d'un glyphe reste verifie
- * par le compilateur dans les deux cas.
+ * **Le trait est le meme a toutes les tailles** (`nonScalingStroke`) : 1,75 point, comme la graisse
+ * d'un texte ne change pas avec sa taille ; les petites icones de detail et les grandes
+ * d'illustration descendent a 1,5, ou 1,75 epaississait les unes et alourdissait les autres.
+ *
+ * **Les noms restent ceux de Material**, verifies par le compilateur : l'union discriminee ci-dessous
+ * garde chaque glyphe dans sa famille, et `tableDesIcones.ts` dit lequel de Lucide le dessine. Un nom
+ * que la table ignore, un nom venu des donnees publiees, retombe sur sa famille Material plutot que de
+ * ne rien afficher.
  */
 
 import React from 'react';
-import { StyleProp, TextStyle } from 'react-native';
+import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+
+import { ICONES_COMMUNITY, ICONES_MATERIAL } from './tableDesIcones';
 
 export type IconSpec =
     | { readonly family?: 'community'; readonly name: keyof typeof MaterialCommunityIcons.glyphMap }
@@ -26,7 +35,26 @@ export interface IconProps {
     style?: StyleProp<TextStyle>;
 }
 
+/** L'epaisseur du trait pour une taille d'icone, en points d'ecran. */
+export function traitPour(taille: number): number {
+    return taille <= 14 || taille >= 40 ? 1.5 : 1.75;
+}
+
 export function Icon({ icon, size, color, style }: IconProps) {
+    const entree = icon.family === 'material' ? ICONES_MATERIAL[icon.name] : ICONES_COMMUNITY[icon.name];
+    if (entree !== undefined) {
+        const Composant = entree.composant;
+        return (
+            <Composant
+                size={size}
+                color={color}
+                strokeWidth={traitPour(size)}
+                nonScalingStroke
+                fill={entree.plein ? color : 'none'}
+                style={style as StyleProp<ViewStyle>}
+            />
+        );
+    }
     if (icon.family === 'material') {
         return <MaterialIcons name={icon.name} size={size} color={color} style={style} />;
     }

@@ -261,7 +261,7 @@ const en = {
 	COURSES: 'Courses',
 	DATA_SOURCE_TITLE: 'Data source',
 	DATA_SOURCE_TEXT: "Schedules are retrieved from your institution's ENT. This application is an independent project and is not officially affiliated with the institution.",
-	LEGAL_MENTION: 'This project is distributed under free license. Dependencies use MIT and Apache 2.0 licenses.',
+	LEGAL_MENTION: 'This project is distributed under free license. Dependencies use MIT, ISC and Apache 2.0 licenses.',
 	CREDITS_API: 'Credits & API',
 	THIRD_PARTY_DESC: 'This application uses third-party services to provide real-time data to students:',
 	API_AFFLUENCES: '• API Affluences',

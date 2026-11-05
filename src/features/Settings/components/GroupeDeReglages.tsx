@@ -6,9 +6,11 @@
  * rapport. Une section est desormais **une** carte ; ses rangees sont separees par un filet fin,
  * indente sous le libelle, et aucun filet ne double le bord bas.
  *
- * **L'icone dans un carre teinte**, blanche : le « cran au-dessus » retenu au labo le 2026-11-04. La
- * teinte dit la famille du reglage — une par rangee, prise dans les couleurs du systeme — et fait
- * trouver une rangee d'un coup d'oeil, la ou six icones de l'accentuation se ressemblaient toutes.
+ * **L'icone au trait, neutre, sans carre** (deuxieme passe de 7-J). La premiere passe la posait,
+ * blanche, dans un carre de la couleur de sa famille, comme les reglages du systeme : six couleurs
+ * hors de l'identite sur un seul ecran, que la review du 2026-11-05 a jugees « prototype ». Le glyphe
+ * de Lucide, dans une colonne fixe qui aligne les libelles, dit la rangee sans la colorer ; seule une
+ * action qui retire quelque chose prend le rouge.
  *
  * L'intertitre s'aligne sur le texte des rangees, et la phrase qui explique un reglage vit sous son
  * groupe, en pied, comme dans les reglages du systeme.
@@ -20,11 +22,12 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { Interrupteur } from '../../../shared/ui/Interrupteur';
+import { Icon } from '../../../shared/ui/Icon';
 
-/** Le carre de l'icone : 30 points, comme celui des reglages du systeme. */
-const CARRE = 30;
-/** Le retrait du filet : il part sous le libelle, apres le carre de l'icone. */
-const RETRAIT = tokens.space.md + CARRE + tokens.space.md;
+/** La colonne de l'icone : sa largeur aligne les libelles d'une rangee a l'autre. */
+const COLONNE = 24;
+/** Le retrait du filet : il part sous le libelle, apres la colonne de l'icone. */
+const RETRAIT = tokens.space.md + COLONNE + tokens.space.md;
 
 type IconeMCI = keyof typeof MaterialCommunityIcons.glyphMap;
 type IconeMI = keyof typeof MaterialIcons.glyphMap;
@@ -62,8 +65,6 @@ export interface RangeeDeReglageProps {
     theme: AppThemeType;
     /** L'icone, d'une famille ou de l'autre : MaterialIcons pour les glyphes qui n'existent que la. */
     icone: IconeMCI | { mi: IconeMI };
-    /** La couleur du carre de l'icone. */
-    teinte: string;
     libelle: string;
     /** La valeur a droite ; elle cede avant le libelle. */
     valeur?: string;
@@ -76,21 +77,22 @@ export interface RangeeDeReglageProps {
     destructive?: boolean;
 }
 
-function IconeDeRangee({ icone, teinte, enCours, theme }: Pick<RangeeDeReglageProps, 'icone' | 'teinte' | 'enCours' | 'theme'>) {
+function IconeDeRangee({ icone, enCours, destructive, theme }: Pick<RangeeDeReglageProps, 'icone' | 'enCours' | 'destructive' | 'theme'>) {
+    const couleur = destructive ? theme.danger : theme.fontSecondary;
     return (
-        <View style={[styles.carre, { backgroundColor: teinte }]}>
+        <View style={styles.colonneIcone}>
             {enCours ? (
-                <ActivityIndicator size="small" color={theme.lightFont} />
+                <ActivityIndicator size="small" color={theme.fontSecondary} />
             ) : typeof icone === 'string' ? (
-                <MaterialCommunityIcons name={icone} size={18} color={theme.lightFont} />
+                <Icon icon={{ name: icone }} size={22} color={couleur} />
             ) : (
-                <MaterialIcons name={icone.mi} size={18} color={theme.lightFont} />
+                <Icon icon={{ family: 'material', name: icone.mi }} size={22} color={couleur} />
             )}
         </View>
     );
 }
 
-export function RangeeDeReglage({ theme, icone, teinte, libelle, valeur, onPress, interrupteur, enCours = false, desactivee = false, destructive = false }: RangeeDeReglageProps) {
+export function RangeeDeReglage({ theme, icone, libelle, valeur, onPress, interrupteur, enCours = false, desactivee = false, destructive = false }: RangeeDeReglageProps) {
     const aInterrupteur = interrupteur !== undefined;
     return (
         <Pressable
@@ -106,7 +108,7 @@ export function RangeeDeReglage({ theme, icone, teinte, libelle, valeur, onPress
                 desactivee && styles.desactivee,
             ]}
         >
-            <IconeDeRangee icone={icone} teinte={teinte} enCours={enCours} theme={theme} />
+            <IconeDeRangee icone={icone} enCours={enCours} destructive={destructive} theme={theme} />
             {/*
               * Face a une valeur texte, le libelle ne cede jamais : une valeur longue ecrasait
               * « Institution » jusqu'a une lettre par ligne. Face a un interrupteur, il prend l'espace
@@ -135,7 +137,7 @@ export function RangeeDeReglage({ theme, icone, teinte, libelle, valeur, onPress
                         <Text numberOfLines={1} style={[styles.valeur, { color: theme.fontSecondary }]}>{valeur}</Text>
                     ) : <View style={styles.vide} />}
                     {!destructive && onPress !== undefined ? (
-                        <MaterialCommunityIcons name="chevron-right" size={20} color={theme.fontTertiary} />
+                        <Icon icon={{ name: 'chevron-right' }} size={20} color={theme.fontTertiary} />
                     ) : null}
                 </>
             )}
@@ -183,10 +185,8 @@ const styles = StyleSheet.create({
     desactivee: {
         opacity: 0.5,
     },
-    carre: {
-        width: CARRE,
-        height: CARRE,
-        borderRadius: tokens.radius.sm,
+    colonneIcone: {
+        width: COLONNE,
         alignItems: 'center',
         justifyContent: 'center',
     },

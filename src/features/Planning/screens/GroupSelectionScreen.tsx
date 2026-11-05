@@ -1,7 +1,7 @@
 import React from 'react';
 import { Animated, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import moment from 'moment';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import Toast from 'react-native-root-toast';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
@@ -15,6 +15,7 @@ import { PlanningDataManager as DataManager } from '../services/PlanningDataMana
 import { formeAffichee } from '../services/groupListCache';
 import { NavBarHelper, SaveGroupButton } from '../../../shared/navigation/NavHelpers';
 import { SectionListHeader, GroupRow } from '../components/GroupSelectionComponents';
+import { Icon } from '../../../shared/ui/Icon';
 
 export interface HomeScreenProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
@@ -210,8 +211,8 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                 // a 40, celle-ci etait la seule naine de l'application.
                 height: 50,
             }}>
-                <MaterialCommunityIcons
-                    name="magnify"
+                <Icon
+                    icon={{ name: 'magnify' }}
                     size={22}
                     color={theme.fontSecondary}
                     style={{ marginRight: tokens.space.sm }}
@@ -239,7 +240,7 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                         }}
                         style={{ padding: tokens.space.xs }}
                     >
-                        <MaterialCommunityIcons name="close-circle" size={18} color={theme.fontSecondary} />
+                        <Icon icon={{ name: 'close-circle' }} size={18} color={theme.fontSecondary} />
                     </TouchableOpacity>
                 )}
             </View>
@@ -258,8 +259,8 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
                 borderBottomWidth: 1,
                 borderBottomColor: theme.border,
             }}>
-                <MaterialCommunityIcons
-                    name="clock-outline"
+                <Icon
+                    icon={{ name: 'clock-outline' }}
                     size={14}
                     color={theme.fontSecondary}
                     style={{ marginRight: tokens.space.xs }}

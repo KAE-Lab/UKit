@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CrousService, CrousDayMenu } from '../services/CrousService';
@@ -18,6 +18,7 @@ import { ScreenState } from '../../../shared/ui/ScreenState';
 import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { CrousMealCard } from './components/CrousMealCard';
 import { CrousDateHeader } from './components/CrousDateHeader';
+import { Icon } from '../../../shared/ui/Icon';
 
 /**
  * Un ecran de menu qui n'a rien a lister : un etat, centre comme partout ailleurs.
@@ -121,7 +122,7 @@ function LigneDHoraire({ ligne, theme }: { ligne: LigneHoraire; theme: AppThemeT
 
     return (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: tokens.space.sm, paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm }}>
-            <MaterialCommunityIcons name="information-outline" size={16} color={theme.fontSecondary} style={{ marginTop: tokens.space.xxs }} />
+            <Icon icon={{ name: 'information-outline' }} size={16} color={theme.fontSecondary} style={{ marginTop: tokens.space.xxs }} />
             <Text style={{ color: theme.fontSecondary, fontSize: tokens.fontSize.sm, lineHeight: 20, flex: 1 }}>
                 {ligne.texte}
             </Text>

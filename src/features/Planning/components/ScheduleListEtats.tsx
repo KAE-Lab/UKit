@@ -12,13 +12,13 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import moment from 'moment';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { ScreenState } from '../../../shared/ui/ScreenState';
+import { Icon } from '../../../shared/ui/Icon';
 
 /**
  * L'hote des etats plein ecran du planning.
@@ -49,7 +49,7 @@ function Notice({ texte, icone, theme }: { texte: string; icone: boolean; theme:
             paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.sm,
             borderRadius: tokens.radius.md, marginBottom: tokens.space.md, marginHorizontal: tokens.space.md
         }}>
-            {icone && <MaterialCommunityIcons name="clock-outline" size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
+            {icone && <Icon icon={{ name: 'clock-outline' }} size={14} color={theme.fontSecondary} style={{ marginRight: tokens.space.xs }} />}
             <Text style={{ fontSize: tokens.fontSize.xs, color: theme.fontSecondary, flex: 1 }}>{texte}</Text>
         </View>
     );

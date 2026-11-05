@@ -21,7 +21,6 @@ import {
     ActivityIndicator, KeyboardAvoidingView, ScrollView,
     StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
 import style, { tokens } from '../../../shared/theme/Theme';
@@ -29,6 +28,7 @@ import { AppContext } from '../../../shared/services/AppCore';
 import { enregistrerLienEdt, lienEdtActif, sourceEdt } from '../../../shared/etablissements';
 import { verifierLienEdt } from '../services/PlanningIcalSource';
 import { ActionButton } from '../../../shared/ui/ActionButton';
+import { Icon } from '../../../shared/ui/Icon';
 
 interface LienEdtFormProps {
     /**
@@ -83,7 +83,7 @@ const VerdictLigne = ({ theme, verdict }: { theme; verdict: Verdict }) => {
     if (verdict.etat === 'refuse') {
         return (
             <View style={styles.errorRow}>
-                <MaterialCommunityIcons name="alert-circle-outline" size={16} color={theme.accentFont} />
+                <Icon icon={{ name: 'alert-circle-outline' }} size={16} color={theme.accentFont} />
                 <Text style={[styles.errorText, { color: theme.accentFont }]}>{verdict.message}</Text>
             </View>
         );
@@ -93,8 +93,8 @@ const VerdictLigne = ({ theme, verdict }: { theme; verdict: Verdict }) => {
     const trouve = verdict.cours > 0;
     return (
         <View style={styles.errorRow}>
-            <MaterialCommunityIcons
-                name={trouve ? 'check-circle-outline' : 'information-outline'}
+            <Icon
+                icon={{ name: trouve ? 'check-circle-outline' : 'information-outline' }}
                 size={16}
                 color={trouve ? theme.primary : theme.fontSecondary}
             />
@@ -183,7 +183,7 @@ export default function LienEdtForm({ onDone, topPadding = 0 }: LienEdtFormProps
         >
             <View style={styles.hero}>
                 <View style={[styles.iconWrap, { backgroundColor: `${theme.primary}1A` }]}>
-                    <MaterialCommunityIcons name="calendar-import" size={36} color={theme.primary} />
+                    <Icon icon={{ name: 'calendar-import' }} size={36} color={theme.primary} />
                 </View>
                 <Text style={[styles.title, { color: theme.font }]}>
                     {Translator.get('TIMETABLE_LINK_TITLE')}

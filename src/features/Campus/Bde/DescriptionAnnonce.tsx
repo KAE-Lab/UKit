@@ -28,6 +28,7 @@ import {
     type NiveauDePuce,
 } from '../../../shared/annonces/grammaire';
 import { CampusSectionHeader } from '../components/CampusSectionHeader';
+import { Icon } from '../../../shared/ui/Icon';
 
 /** Le gras en ligne : les `Text` imbriques heritent du style parent, seule la graisse change. */
 function TexteRiche({ texte, style }: { texte: string; style: import('react-native').TextStyle }) {
@@ -125,7 +126,7 @@ function Puce({ texte, niveau, teinte, theme }: { texte: string; niveau: NiveauD
     const glyphe = niveau === 1 ? 'circle-medium' : niveau === 2 ? 'circle-small' : 'minus';
     return (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginLeft: (niveau - 1) * tokens.space.lg }}>
-            <MaterialCommunityIcons name={glyphe} size={20} color={teinte} style={{ marginTop: tokens.space.xxs, opacity: niveau === 1 ? 1 : 0.7 }} />
+            <Icon icon={{ name: glyphe }} size={20} color={teinte} style={{ marginTop: tokens.space.xxs, opacity: niveau === 1 ? 1 : 0.7 }} />
             {/* `md`, comme le corps : une puce d'article est du texte de lecture, pas une ligne de
                 menu — en `sm` il fallait plisser les yeux. */}
             <TexteRiche

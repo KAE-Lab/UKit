@@ -21,10 +21,10 @@
 import React from 'react';
 import { Linking, TouchableOpacity, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens, type AppThemeType } from '../theme/Theme';
 import { lienVersLePlan } from './lienVersLePlan';
+import { Icon } from '../ui/Icon';
 
 export interface MapMarker {
     lat: number;
@@ -152,7 +152,7 @@ export function EmbeddedMap({ markers, theme, zoom = 16 }: EmbeddedMapProps) {
                         padding: tokens.space.sm,
                         ...tokens.shadow.md,
                     }}>
-                    <MaterialCommunityIcons name="map-search-outline" size={28} color={theme.accent ?? theme.primary} />
+                    <Icon icon={{ name: 'map-search-outline' }} size={28} color={theme.accent ?? theme.primary} />
                 </TouchableOpacity>
             </View>
         </View>

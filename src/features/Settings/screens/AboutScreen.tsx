@@ -19,7 +19,6 @@ import { URL } from '../../../shared/constants/urls';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { LogoUKit } from '../../../shared/ui/epure/LogoUKit';
 import { GroupeDeReglages, RangeeDeReglage } from '../components/GroupeDeReglages';
-import { teintes } from '../components/SettingsSections';
 
 function ouvrirLien(url: string) {
     Linking.canOpenURL(url).then((supported) => {
@@ -76,7 +75,6 @@ class AboutScreen extends React.Component<AboutScreenProps> {
 	render() {
         const themeName = (this.context as { themeName: string }).themeName;
         const theme = style.Theme[themeName];
-        const t = teintes(theme);
         const appVersion = Constants.expoConfig?.version || (Constants.manifest as unknown as { version?: string })?.version || '?';
 
         return (
@@ -115,9 +113,9 @@ class AboutScreen extends React.Component<AboutScreenProps> {
                     </GroupeDeReglages>
 
                     <GroupeDeReglages theme={theme} titre={Translator.get('CONTACT_US')}>
-                        <RangeeDeReglage theme={theme} icone="email-outline" teinte={t.bleu} libelle="contact@kaelab.dev" onPress={() => ouvrirLien(URL.CONTACT_EMAIL)} />
-                        <RangeeDeReglage theme={theme} icone="web" teinte={t.indigo} libelle={Translator.get('WEBSITE')} onPress={() => ouvrirLien(URL.UKIT_WEBSITE)} />
-                        <RangeeDeReglage theme={theme} icone="domain" teinte={t.gris} libelle={Translator.get('COMPANY_WEBSITE')} onPress={() => ouvrirLien(URL.KAELAB_WEBSITE)} />
+                        <RangeeDeReglage theme={theme} icone="email-outline" libelle="contact@kaelab.dev" onPress={() => ouvrirLien(URL.CONTACT_EMAIL)} />
+                        <RangeeDeReglage theme={theme} icone="web" libelle={Translator.get('WEBSITE')} onPress={() => ouvrirLien(URL.UKIT_WEBSITE)} />
+                        <RangeeDeReglage theme={theme} icone="domain" libelle={Translator.get('COMPANY_WEBSITE')} onPress={() => ouvrirLien(URL.KAELAB_WEBSITE)} />
                     </GroupeDeReglages>
 
                     {/* Une carte d'un seul tenant : trois credits separes par des filets indentes
@@ -135,7 +133,7 @@ class AboutScreen extends React.Component<AboutScreenProps> {
 
                     {/* La mention de licence passe en pied, comme l'explication d'un groupe de reglages. */}
                     <GroupeDeReglages theme={theme} titre={Translator.get('LEGAL_NOTICE')} pied={Translator.get('LEGAL_MENTION')}>
-                        <RangeeDeReglage theme={theme} icone="shield-check-outline" teinte={t.vert} libelle={Translator.get('CONFIDENTIALITY_POLITIC')} onPress={() => ouvrirLien(URL.LEGAL_NOTICE)} />
+                        <RangeeDeReglage theme={theme} icone="shield-check-outline" libelle={Translator.get('CONFIDENTIALITY_POLITIC')} onPress={() => ouvrirLien(URL.LEGAL_NOTICE)} />
                     </GroupeDeReglages>
 
                 </Animated.ScrollView>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { EdgeInsets } from 'react-native-safe-area-context';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, AppThemeType } from '../../../shared/theme/Theme';
@@ -8,6 +8,7 @@ import { assiseDuFlottant, FondDePiedFlottant, VOILE_PIED } from '../../../share
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import type { UkitFailure } from '../../../shared/aetherius';
+import { Icon } from '../../../shared/ui/Icon';
 
 interface CampusSearchBarProps {
     searchText: string;
@@ -130,8 +131,8 @@ export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder,
                     height: 50,
                     ...tokens.shadow.md,
                 }}>
-                    <MaterialCommunityIcons
-                        name="magnify"
+                    <Icon
+                        icon={{ name: 'magnify' }}
                         size={20}
                         color={theme.fontSecondary}
                         style={{ marginRight: tokens.space.sm }}
@@ -151,7 +152,7 @@ export function CampusSearchBar({ searchText, onSearchChange, searchPlaceholder,
                     />
                     {searchText.length > 0 ? (
                         <TouchableOpacity onPress={() => onSearchChange('')} hitSlop={12}>
-                            <MaterialCommunityIcons name="close-circle" size={20} color={theme.fontSecondary} />
+                            <Icon icon={{ name: 'close-circle' }} size={20} color={theme.fontSecondary} />
                         </TouchableOpacity>
                     ) : null}
                 </View>
@@ -195,7 +196,7 @@ export function CampusFilterModal({ visible, setVisible, filterOptions, selected
                                     {Translator.get('FILTERS')}
                                 </Text>
                                 <TouchableOpacity onPress={() => setVisible(false)} hitSlop={12}>
-                                    <MaterialIcons name="close" size={24} color={theme.fontSecondary} />
+                                    <Icon icon={{ family: 'material', name: 'close' }} size={24} color={theme.fontSecondary} />
                                 </TouchableOpacity>
                             </View>
 
@@ -226,7 +227,7 @@ export function CampusFilterModal({ visible, setVisible, filterOptions, selected
                                             comme aux Reglages : choisir ne retrecit pas le libelle. */}
                                         <View style={{ width: 20, marginLeft: tokens.space.sm, alignItems: 'flex-end' }}>
                                             {selectionne ? (
-                                                <MaterialIcons name="check" size={20} color={popup.optionCheckColor as string} />
+                                                <Icon icon={{ family: 'material', name: 'check' }} size={20} color={popup.optionCheckColor as string} />
                                             ) : null}
                                         </View>
                                     </TouchableOpacity>
@@ -339,7 +340,7 @@ export function CampusNotice({ theme, icon, message, actionLabel, onAction }: Ca
             borderWidth: 1,
             borderColor: theme.border,
         }}>
-            <MaterialCommunityIcons name={icon} size={18} color={theme.fontSecondary} />
+            <Icon icon={{ name: icon }} size={18} color={theme.fontSecondary} />
             <Text style={{ flex: 1, marginLeft: tokens.space.sm, color: theme.fontSecondary, fontSize: tokens.fontSize.sm }}>
                 {message}
             </Text>

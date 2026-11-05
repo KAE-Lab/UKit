@@ -1,9 +1,7 @@
 /**
- * Les sections de l'ecran Reglages, chacune un groupe encadre (jalon 7-J, `GroupeDeReglages`).
- *
- * Chaque rangee porte la teinte de sa famille dans le carre de son icone, prise dans les couleurs du
- * systeme (`sectionsHeaders`) : l'etablissement en indigo, ce qui touche au compte en bleu, l'agenda et
- * les messages en rouge, les rappels et les filtres en orange, la confidentialite en vert.
+ * Les sections de l'ecran Reglages, chacune un groupe encadre (jalon 7-J, `GroupeDeReglages`). Les
+ * icones sont neutres depuis la deuxieme passe : les six couleurs du systeme qui disaient la famille
+ * d'une rangee sont parties avec la review du 2026-11-05.
  */
 
 import React from 'react';
@@ -22,12 +20,6 @@ const LANGUAGE_LIST = {
     en: 'ENGLISH',
     es: 'SPANISH',
 };
-
-/** Les teintes des carres d'icone, par famille : les couleurs du systeme du theme courant. */
-export function teintes(theme: AppThemeType) {
-    const [bleu, vert, orange, rouge, indigo, cyan] = theme.sectionsHeaders;
-    return { bleu, vert, orange, rouge, indigo, cyan, gris: theme.neutral };
-}
 
 /**
  * L'intertitre d'un groupe de reglages, pour les ecrans pousses qui composent encore leurs rangees a
@@ -68,19 +60,17 @@ export const InstitutionSection = ({
     theme, institutionName, institutionRetiree, openInstitutionDialog,
     comptePossible, compteConnecte, openCompte, lienEdtPossible, lienEdtPose, openLienEdt, soutien,
 }: InstitutionSectionProps) => {
-    const t = teintes(theme);
     return (
         <GroupeDeReglages
             theme={theme}
             titre={Translator.get('INSTITUTION')}
             pied={institutionRetiree ? Translator.get('INSTITUTION_UNAVAILABLE') : undefined}
         >
-            <RangeeDeReglage theme={theme} icone="school" teinte={t.indigo} libelle={Translator.get('INSTITUTION')} valeur={institutionName} onPress={openInstitutionDialog} />
+            <RangeeDeReglage theme={theme} icone="school" libelle={Translator.get('INSTITUTION')} valeur={institutionName} onPress={openInstitutionDialog} />
             {comptePossible && (
                 <RangeeDeReglage
                     theme={theme}
                     icone="account-circle"
-                    teinte={t.bleu}
                     // « Compte » et non « Compte universitaire » : le groupe « Etablissement » le situe deja,
                     // et a 360 points la valeur ne gardait que « Non … » (7-J).
                     libelle={Translator.get('ACCOUNT')}
@@ -92,14 +82,13 @@ export const InstitutionSection = ({
                 <RangeeDeReglage
                     theme={theme}
                     icone="calendar-import"
-                    teinte={t.cyan}
                     libelle={Translator.get('TIMETABLE_LINK')}
                     valeur={Translator.get(lienEdtPose ? 'ACCOUNT_CONNECTED' : 'ACCOUNT_NOT_CONNECTED')}
                     onPress={openLienEdt}
                 />
             )}
             {soutien !== undefined && (
-                <RangeeDeReglage theme={theme} icone="hand-heart-outline" teinte={t.rouge} libelle={Translator.get('SUPPORT_UKIT')} onPress={soutien} />
+                <RangeeDeReglage theme={theme} icone="hand-heart-outline" libelle={Translator.get('SUPPORT_UKIT')} onPress={soutien} />
             )}
         </GroupeDeReglages>
     );
@@ -117,13 +106,11 @@ interface DisplaySectionProps {
 
 /** L'affichage : la langue, le theme et les filtres, ensemble — ce qui change ce que l'on voit. */
 export const DisplaySection = ({ theme, language, openLanguageDialog, openFilters, isDarkMode, toggleTheme }: DisplaySectionProps) => {
-    const t = teintes(theme);
     return (
         <GroupeDeReglages theme={theme} titre={Translator.get('DISPLAY')}>
             <RangeeDeReglage
                 theme={theme}
                 icone={{ mi: 'language' }}
-                teinte={t.bleu}
                 libelle={Translator.get('LANGUAGE')}
                 valeur={Translator.get(LANGUAGE_LIST[language as keyof typeof LANGUAGE_LIST] as Parameters<typeof Translator.get>[0])}
                 onPress={openLanguageDialog}
@@ -131,11 +118,10 @@ export const DisplaySection = ({ theme, language, openLanguageDialog, openFilter
             <RangeeDeReglage
                 theme={theme}
                 icone="theme-light-dark"
-                teinte={t.gris}
                 libelle={Translator.get('DARK_MODE')}
                 interrupteur={{ valeur: isDarkMode, onChange: toggleTheme }}
             />
-            <RangeeDeReglage theme={theme} icone={{ mi: 'filter-list' }} teinte={t.orange} libelle={Translator.get('FILTERS')} onPress={openFilters} />
+            <RangeeDeReglage theme={theme} icone={{ mi: 'filter-list' }} libelle={Translator.get('FILTERS')} onPress={openFilters} />
         </GroupeDeReglages>
     );
 };
@@ -178,7 +164,6 @@ function DelaiDesRappels({ theme, valeur, onChange, onFin }: { theme: AppThemeTy
 }
 
 export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggleCourseNotifications, courseNotificationDelay, onNotificationDelayChange, onNotificationDelaySlidingComplete, messagesEnNotification, toggleMessagesEnNotification }: NotificationsSectionProps) => {
-    const t = teintes(theme);
     // Le plafond de vingt rappels (NotificationService) est une decision, et une decision se dit.
     const pied = [Translator.get('PUSH_MESSAGES_DESC'), courseNotificationsEnabled ? `${Translator.get('NOTIFICATION_DELAY_DESC')} ${Translator.get('NOTIFICATION_CAP_DESC')}` : null]
         .filter(Boolean)
@@ -188,14 +173,12 @@ export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggle
             <RangeeDeReglage
                 theme={theme}
                 icone="bullhorn-outline"
-                teinte={t.rouge}
                 libelle={Translator.get('PUSH_MESSAGES')}
                 interrupteur={{ valeur: messagesEnNotification, onChange: toggleMessagesEnNotification }}
             />
             <RangeeDeReglage
                 theme={theme}
                 icone="bell-outline"
-                teinte={t.orange}
                 libelle={Translator.get('COURSE_NOTIFICATIONS')}
                 interrupteur={{ valeur: courseNotificationsEnabled, onChange: toggleCourseNotifications }}
             />
@@ -217,7 +200,6 @@ export const ConfidentialiteSection = ({ theme }: { theme: AppThemeType }) => {
             <RangeeDeReglage
                 theme={theme}
                 icone="shield-check-outline"
-                teinte={teintes(theme).vert}
                 libelle={Translator.get('ANONYMOUS_STATS')}
                 interrupteur={{ valeur: active, onChange: activer }}
             />
@@ -237,12 +219,11 @@ export const AppLaunchingSection = ({ theme, openFavSwitchValue, toggleOpenFavSw
         <RangeeDeReglage
             theme={theme}
             icone="star"
-            teinte={teintes(theme).orange}
             libelle={Translator.get('OPEN_ON_FAVOURITE_GROUP')}
             interrupteur={{ valeur: openFavSwitchValue, onChange: toggleOpenFavSwitchValue }}
         />
         {/* Une action qui retire tout : son libelle en rouge, et la confirmation suit (SettingsModals). */}
-        <RangeeDeReglage theme={theme} icone="autorenew" teinte={theme.danger} libelle={Translator.get('RESET_APP')} onPress={openResetDialog} destructive />
+        <RangeeDeReglage theme={theme} icone="autorenew" libelle={Translator.get('RESET_APP')} onPress={openResetDialog} destructive />
     </GroupeDeReglages>
 );
 
@@ -294,11 +275,10 @@ function EtatDeLaSynchro({ theme, lastSyncDate, derniereTentative }: Pick<Calend
 
 export const CalendarSection = (props: CalendarSectionProps) => {
     const { theme, hasCalendarPermission, demanderPermission, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar, calendriersAffiches, openCalendriersAffiches } = props;
-    const t = teintes(theme);
     if (!hasCalendarPermission) {
         return (
             <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')} pied={Translator.get('ENABLE_CALENDAR_PERMISSION_DESCRIPTION')}>
-                <RangeeDeReglage theme={theme} icone="calendar-lock-open-outline" teinte={t.rouge} libelle={Translator.get('CALENDAR_ALLOW')} onPress={demanderPermission} />
+                <RangeeDeReglage theme={theme} icone="calendar-lock-open-outline" libelle={Translator.get('CALENDAR_ALLOW')} onPress={demanderPermission} />
             </GroupeDeReglages>
         );
     }
@@ -308,15 +288,13 @@ export const CalendarSection = (props: CalendarSectionProps) => {
             <RangeeDeReglage
                 theme={theme}
                 icone="calendar-sync-outline"
-                teinte={t.rouge}
                 libelle={Translator.get('SYNC_ENABLED')}
                 interrupteur={{ valeur: calendarSyncEnabled, onChange: toggleCalendarSync }}
             />
-            <RangeeDeReglage theme={theme} icone="calendar-today" teinte={t.rouge} libelle={Translator.get('CALENDAR')} valeur={calendarName} onPress={openCalendarDialog} />
+            <RangeeDeReglage theme={theme} icone="calendar-today" libelle={Translator.get('CALENDAR')} valeur={calendarName} onPress={openCalendarDialog} />
             <RangeeDeReglage
                 theme={theme}
                 icone={{ mi: 'sync' }}
-                teinte={t.bleu}
                 libelle={isSynchronizingCalendar ? Translator.get('SYNCHRONIZING') : Translator.get('FORCE_SYNC')}
                 onPress={onForceSync}
                 enCours={isSynchronizingCalendar}
@@ -326,7 +304,6 @@ export const CalendarSection = (props: CalendarSectionProps) => {
             <RangeeDeReglage
                 theme={theme}
                 icone="calendar-multiple"
-                teinte={t.orange}
                 libelle={Translator.get('PHONE_CALENDARS')}
                 valeur={calendriersAffiches > 0 ? Translator.get('PHONE_CALENDARS_COUNT', String(calendriersAffiches)) : Translator.get('PHONE_CALENDARS_NONE')}
                 onPress={openCalendriersAffiches}

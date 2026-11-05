@@ -263,7 +263,7 @@ const es: TranslationDict = {
 	COURSES: 'Cursos',
 	DATA_SOURCE_TITLE: 'Fuente de los datos',
 	DATA_SOURCE_TEXT: "Los horarios se recuperan desde el ENT de tu centro. Esta aplicación es un proyecto independiente y no está afiliada oficialmente a la institución.",
-	LEGAL_MENTION: 'Este proyecto se distribuye bajo licencia libre. Las dependencias utilizan las licencias MIT y Apache 2.0.',
+	LEGAL_MENTION: 'Este proyecto se distribuye bajo licencia libre. Las dependencias utilizan las licencias MIT, ISC y Apache 2.0.',
 	CREDITS_API: 'Créditos y API',
 	THIRD_PARTY_DESC: 'Esta aplicación utiliza servicios de terceros para proporcionar datos en tiempo real a los estudiantes:',
 	API_AFFLUENCES: '• API Affluences',

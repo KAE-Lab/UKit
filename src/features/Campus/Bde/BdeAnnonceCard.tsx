@@ -28,7 +28,6 @@
 import React from 'react';
 import { View, Text, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator, { type TranslationKey } from '../../../shared/i18n/Translator';
@@ -39,6 +38,7 @@ import { positionPourExpoImage, RATIO_CARTE, typeDeBadge, type TypeDeBadge } fro
 import { HAUTEUR_VISUEL_CARTE } from '../Dashboard/components/gabarits';
 import { teinteDAnnonce } from './PastilleEmetteur';
 import type { BdeAnnonce } from '../services/BdeService';
+import { Icon } from '../../../shared/ui/Icon';
 
 const { couture } = tokens.mouvement;
 
@@ -141,7 +141,7 @@ function VisuelDAnnonce({ annonce, cadre, largeur, teinte, theme }: {
                     </Text>
                 </View>
             ) : (
-                <MaterialCommunityIcons name="party-popper" size={48} color={teinte} />
+                <Icon icon={{ name: 'party-popper' }} size={48} color={teinte} />
             )}
             <BadgeDeType annonce={annonce} teinte={teinte} theme={theme} />
         </View>

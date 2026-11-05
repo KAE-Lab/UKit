@@ -9,13 +9,14 @@
 
 import React from 'react';
 import { Text, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { couleurDeCours } from '../services/couleurDeCours';
 import type { CourseData } from './CourseCard';
+import { Icon } from '../../../shared/ui/Icon';
 
 export function BandeauJourneeEntiere({ evenement, theme }: { evenement: CourseData; theme: AppThemeType }) {
     const navigation = useNavigation<NavigationProp<Record<string, unknown>>>();
@@ -40,7 +41,7 @@ export function BandeauJourneeEntiere({ evenement, theme }: { evenement: CourseD
                 ...tokens.shadow.sm as object,
             }}
         >
-            <MaterialCommunityIcons name="calendar-blank" size={18} color={couleur} style={{ marginRight: tokens.space.sm }} />
+            <Icon icon={{ name: 'calendar-blank' }} size={18} color={couleur} style={{ marginRight: tokens.space.sm }} />
             <Text numberOfLines={1} style={{ flex: 1, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.semibold as never, color: theme.font }}>
                 {evenement.subject}
             </Text>

@@ -10,7 +10,6 @@
 import React from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
 import { tokens } from '../../../shared/theme/Theme';
@@ -24,6 +23,7 @@ import {
     useDegagementDuPied,
     titreDeCarte,
 } from './stylesDuParcours';
+import { Icon } from '../../../shared/ui/Icon';
 
 /**
  * Le pied de la liste de groupes : ce qu'on ne montre pas, et pourquoi.
@@ -124,7 +124,7 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
 
             <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_GROUP')}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
-                <MaterialCommunityIcons name="magnify" size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
+                <Icon icon={{ name: 'magnify' }} size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
                 <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.OS === 'ios' ? tokens.space.md : tokens.space.sm, color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
             </View>
 
