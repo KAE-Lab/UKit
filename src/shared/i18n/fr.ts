@@ -12,7 +12,7 @@ const fr: TranslationDict = {
 	APP_READY: 'Tout est prêt. Ton emploi du temps t’attend.',
 	APPLICATION: 'Application',
 	APPLICATION_HISTORY:
-		"UKit est un fork de la version 4.1.2 d’origine, modernisé et activement maintenu par l’équipe KAE-Lab.\n\nPropulsé par React Navigation 6.",
+		"UKit est un fork de la version 4.1.2 d’origine, modernisé et activement maintenu par l’équipe KAE-Lab.",
 	AUTO_SYNC_DESCRIPTION:
 		'La synchronisation repasse d’elle-même environ toutes les 12 heures, quand le système le permet, et à l’ouverture de l’application si la dernière date de plus de 12 heures.',
 	AUTUMN: 'Automne',

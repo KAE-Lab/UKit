@@ -555,7 +555,13 @@ tierces (Affluences, Croustillant), et mentions légales pointant vers
 
 C'est l'endroit où créditer une nouvelle source de données tierce.
 
-> **Capture attendue** — `reglages-apropos.png` : l'écran À propos, sections déroulées.
+**Au gabarit des Réglages depuis [7-J](../phase-7/7-j-ecrans.md)** : les mêmes groupes encadrés
+(`GroupeDeReglages`), les liens en rangées à icône teintée, la mention de licence en pied de groupe, et
+le logo vectoriel ([`LogoUKit`](../../src/shared/ui/epure/LogoUKit.tsx)) au lieu du PNG dans un carré
+blanc. L'écran avait son propre gabarit, une bande grise d'en-tête par carte : une troisième manière de
+titrer un groupe. La version garde ses sept tapes, qui ouvrent le menu de test.
+
+![L'écran À propos, au gabarit des Réglages, sur le banc Android](../screenshots/reglages-apropos-android.png)
 
 ## Décisions de conception
 

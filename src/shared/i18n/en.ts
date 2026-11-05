@@ -10,7 +10,7 @@ const en = {
 	APP_READY: 'The app is now ready, you can now check your class schedule!',
 	APPLICATION: 'Application',
 	APPLICATION_HISTORY:
-		'This application is a fork of UKit v4.1.2, modernized and maintained by the KAE-Lab team.\n\nPowered by React Navigation 6.',
+		'This application is a fork of UKit v4.1.2, modernized and maintained by the KAE-Lab team.',
 	AUTO_SYNC_DESCRIPTION:
 		'Sync runs on its own about every 12 hours, when the system allows it, and when the app opens if the last one is more than 12 hours old.',
 	AUTUMN: 'Autumn',
