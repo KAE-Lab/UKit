@@ -15,11 +15,6 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Ajouté
 
-- **Un en-tête d'onglet qui protège la barre d'état.** Le grand titre part avec le contenu, puis une
-  barre compacte, sur le fond de l'onglet, prend le relais avec le titre au centre : plus rien ne
-  s'écrit sous l'heure du téléphone. Campus d'abord.
-- **Chaque onglet a sa teinte dans la barre** : l'onglet actif et son bouton d'action prennent celle
-  de leur section, la même que leur fond.
 - **Des styles de texte composés** (`tokens.texte`) : grands titres à l'approche resserrée, chiffres
   tabulaires pour les heures, les durées et les distances.
 - **Le Planning en frise.** Entre deux cours, la pause se cote (« Pause de 1 h 40 ») ; aujourd'hui,

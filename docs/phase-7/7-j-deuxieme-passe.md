@@ -65,10 +65,25 @@ Tenu ici, lot par lot, pour qu'une reprise sache où en est la passe.
   « Bientôt disponible ») ; le parcours froid (pourcentage en grand, étapes cochées, jeu en grand) ;
   le jeu (le « i » et son corps, décor en parallaxe, quatre obstacles, appui n'importe où). À revoir
   en passe F : le formulaire en session, au format de l'A8.
-- [ ] E — fait : l'accueil sur le U du logo, sans « Plus tard » (`5b9f574`) ; les fiches Campus
-  (bandeau de cases partagé, nom du lieu dans la barre, menu sur une carte par repas, salles par étage,
-  intertitres sans couleur, `4655ae6`) ; le carrousel qui suit l'étoile (`b08caf2`), et en chemin la
-  bande morte au-dessus de la barre d'onglets (`6daac3d`). Reste : les listes, le compte, les
-  documents, les filtres, les calendriers, le lien d'emploi du temps, les modales, le surtitre en
-  petites capitales des cartes d'annonce.
-- [ ] F
+- [x] E — l'accueil sur le U du logo, sans « Plus tard » (`5b9f574`) ; les fiches Campus (bandeau
+  de cases partagé, nom du lieu dans la barre, menu sur une carte par repas, salles par étage,
+  intertitres sans couleur, `4655ae6`), et leurs entités HTML décodées (`6bb55ea`) ; le carrousel qui
+  suit l'étoile (`b08caf2`), et en chemin la bande morte au-dessus de la barre d'onglets (`6daac3d`) ;
+  les intertitres en casse de phrase, d'un seul style (`e3dd7cb`) ; le compte, la recherche de
+  groupes, les documents (`eb23a06`) ; les propositions et le navigateur intégré (`e817917`). Non vus
+  au banc : le choix des calendriers du téléphone (permission d'agenda), le lien d'emploi du temps
+  (absent pour le Collège ST), la visionneuse, la modale « Bientôt » et celle des propositions (code
+  relu, menu de développement absent du banc).
+- [x] F — revu au banc (`ukit`, Android 15) en clair puis en sombre, police 1,3 : onglets, fiches,
+  compte, groupes, documents, navigateur. Portes : `tsc`, ESLint sans avertissement, 116 fichiers et
+  1 163 tests, parité 13/13, export Android et iOS. Non refait à cette passe : le format de l'A8
+  (360 points), l'anglais et l'espagnol au banc (clés présentes et typées), l'iPhone.
+
+## Ce qui a été tranché sans planche
+
+- **Les deux services « Bientôt disponible » restent deux rangées** : leur nom est tenu secret, mais
+  chacune ouvre son propre service en attendant ; les fusionner perdrait ce geste.
+- **Les légendes de jour du ruban gardent leurs capitales** (« JEU »), comme un calendrier, et les
+  badges posés sur une image aussi : ce ne sont pas des intertitres.
+- **La bande morte au-dessus de la barre d'onglets est corrigée hors lot** : elle bloquait le geste du
+  lot E3, et c'est un défaut d'interface du périmètre de la passe.
