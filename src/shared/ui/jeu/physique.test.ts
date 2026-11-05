@@ -1,4 +1,4 @@
-/** Le jeu du point : un saut qui retombe, des cotes qui se comptent, une chute qui remet a zero. */
+/** Le jeu du point : un saut qui retombe, des obstacles qui se comptent, une chute qui remet a zero. */
 
 import { describe, expect, it } from 'vitest';
 
@@ -8,7 +8,8 @@ import {
     GRAVITE,
     IMPULSION,
     PAUSE_DE_CHUTE,
-    RAYON_DU_POINT,
+    DEMI_LARGEUR,
+    nouvelleCote,
     sauter,
     touche,
     VITESSE_INITIALE,
@@ -66,33 +67,40 @@ describe('les cotes', () => {
     const course: EtatDuJeu = { ...etatDeDepart(LARGEUR), phase: 'course' };
 
     it('touche une cote sur le passage du point, au sol', () => {
-        expect(touche(0, { x: X_DU_POINT - 5, hauteur: 30, largeur: 10, comptee: false })).toBe(true);
+        expect(touche(0, { genre: 'cote', x: X_DU_POINT - 5, hauteur: 30, largeur: 10, comptee: false })).toBe(true);
     });
 
     it('ne touche pas une cote survolee', () => {
-        expect(touche(40, { x: X_DU_POINT - 5, hauteur: 30, largeur: 10, comptee: false })).toBe(false);
+        expect(touche(40, { genre: 'cote', x: X_DU_POINT - 5, hauteur: 30, largeur: 10, comptee: false })).toBe(false);
     });
 
     it('pardonne un frolement', () => {
-        expect(touche(0, { x: X_DU_POINT + RAYON_DU_POINT - 1, hauteur: 30, largeur: 10, comptee: false })).toBe(false);
+        expect(touche(0, { genre: 'cote', x: X_DU_POINT + DEMI_LARGEUR - 1, hauteur: 30, largeur: 10, comptee: false })).toBe(false);
     });
 
     it('compte une cote franchie et accelere', () => {
-        const juste: EtatDuJeu = { ...course, y: 80, cotes: [{ x: X_DU_POINT - RAYON_DU_POINT - 11, hauteur: 20, largeur: 10, comptee: false }] };
+        const juste: EtatDuJeu = { ...course, y: 80, cotes: [{ genre: 'cote', x: X_DU_POINT - DEMI_LARGEUR - 11, hauteur: 20, largeur: 10, comptee: false }] };
         const apres = avancer(juste, IMAGE, LARGEUR, 0.5);
         expect(apres.score).toBe(1);
         expect(apres.vitesse).toBeGreaterThan(VITESSE_INITIALE);
     });
 
+    it('tire les quatre genres d obstacles, tous franchissables d un saut', () => {
+        const genres = [0.1, 0.3, 0.55, 0.7, 0.8, 0.95].map((tirage) => nouvelleCote(0, tirage));
+        expect(new Set(genres.map((c) => c.genre))).toEqual(new Set(['plot', 'gobelet', 'livres', 'cote']));
+        const sommet = (IMPULSION * IMPULSION) / (2 * GRAVITE);
+        genres.forEach((c) => expect(c.hauteur).toBeLessThan(sommet - 15));
+    });
+
     it('fait renaitre a droite une cote sortie a gauche', () => {
-        const sortie: EtatDuJeu = { ...course, y: 80, cotes: [{ x: -30, hauteur: 20, largeur: 10, comptee: true }] };
+        const sortie: EtatDuJeu = { ...course, y: 80, cotes: [{ genre: 'cote', x: -30, hauteur: 20, largeur: 10, comptee: true }] };
         expect(avancer(sortie, IMAGE, LARGEUR, 0.5).cotes[0].x).toBeGreaterThan(LARGEUR);
     });
 });
 
 describe('la chute', () => {
     it('tombe sur une cote, attend, puis revient au depart sans perdre la largeur', () => {
-        const face: EtatDuJeu = { ...etatDeDepart(LARGEUR), phase: 'course', score: 7, cotes: [{ x: X_DU_POINT, hauteur: 30, largeur: 10, comptee: false }] };
+        const face: EtatDuJeu = { ...etatDeDepart(LARGEUR), phase: 'course', score: 7, cotes: [{ genre: 'cote', x: X_DU_POINT, hauteur: 30, largeur: 10, comptee: false }] };
         const tombe = avancer(face, IMAGE, LARGEUR, 0.5);
         expect(tombe.phase).toBe('chute');
         expect(tombe.score).toBe(7);

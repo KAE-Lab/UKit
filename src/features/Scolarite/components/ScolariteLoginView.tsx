@@ -7,7 +7,7 @@ import {
 import { getEtablissementActif } from '../../../shared/etablissements';
 import { LogoEtablissement } from './LogoEtablissement';
 import { BlocProgression } from './ScolariteLoadingScreen';
-import { JeuDuPoint } from '../../../shared/ui/jeu/JeuDuPoint';
+import { JeuDuPoint, type CommandeDuJeu } from '../../../shared/ui/jeu/JeuDuPoint';
 import { franchirLaPorte } from './BiometryGate';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 
@@ -66,9 +66,9 @@ const EnTeteDuFormulaire = ({ theme, color, compact }) => (
  * plus longue attente de l'application, et celle que vit chaque nouvel utilisateur. Il part avec la
  * session ; sous « reduire les animations », il ne parait pas.
  */
-const JeuDeLaConnexion = ({ theme }) => (
+const JeuDeLaConnexion = ({ theme, commande }: { theme: import('../../../shared/theme/Theme').AppThemeType; commande: React.RefObject<CommandeDuJeu | null> }) => (
     <View style={styles.jeu}>
-        <JeuDuPoint theme={theme} />
+        <JeuDuPoint ref={commande} theme={theme} />
     </View>
 );
 
@@ -79,7 +79,7 @@ const JeuDeLaConnexion = ({ theme }) => (
  */
 const CarteDuFormulaire = ({
     theme, color, submitting, enSession, terminee, scrapeProgress,
-    username, setUsername, password, setPassword, error, onSubmit, onSkip, onAutreCampus,
+    username, setUsername, password, setPassword, error, onSubmit, onSkip, onAutreCampus, commandeDuJeu,
 }) => {
     /** Le bouton ne part pas sans ses deux champs, et pas deux fois. */
     const disabled = !username || !password || submitting;
@@ -214,7 +214,7 @@ const CarteDuFormulaire = ({
                     </>
                 )}
             </View>
-            {enSession ? <JeuDeLaConnexion theme={theme} /> : null}
+            {enSession ? <JeuDeLaConnexion theme={theme} commande={commandeDuJeu} /> : null}
         </>
     );
 };
@@ -250,6 +250,8 @@ const ScolariteLoginView = ({
     // l'effet plus bas), la carte remontrait les champs REMPLIS une fraction de seconde avant que
     // l'appelant avance (constate a l'accueil le 2026-08-31).
     const enSession = submitting || progression.visible || reussi;
+    /** La poignee du jeu, pour qu'un appui n'importe ou le fasse sauter (deuxieme passe de 7-J). */
+    const commandeDuJeu = useRef<CommandeDuJeu>(null);
 
     // L'hote apprend que la carte montre une session, du premier au dernier instant — soumission,
     // barre, confirmation. L'accueil s'en sert pour bloquer « Suivant » et le retour : une connexion
@@ -377,18 +379,27 @@ const ScolariteLoginView = ({
                 onScroll={onScroll}
                 scrollEventThrottle={16}
             >
-                <EnTeteDuFormulaire theme={theme} color={color} compact={compact} />
+                {/* Pendant la session, un appui n'importe ou fait sauter le jeu — hors des boutons, qui
+                    gardent leur toucher : cette vue ne le prend que si aucun enfant ne l'a pris, et
+                    seulement en session, pour que le clavier se ferme comme avant hors session. */}
+                <View
+                    onStartShouldSetResponder={() => enSession}
+                    onResponderGrant={() => commandeDuJeu.current?.sauter()}
+                >
+                    <EnTeteDuFormulaire theme={theme} color={color} compact={compact} />
 
-                <CarteDuFormulaire
-                    theme={theme} color={color} submitting={submitting} enSession={enSession}
-                    terminee={progression.terminee} scrapeProgress={scrapeProgress}
-                    username={username} setUsername={setUsername} password={password} setPassword={setPassword}
-                    error={error} onSubmit={onSubmit} onSkip={onSkip} onAutreCampus={onAutreCampus}
-                />
-                {/* Un emplacement sous la carte, monte par l'hote : la fiche du compte y pose les
-                    identifiants memorises par le navigateur (6.1.x-B). Le formulaire ne les connait
-                    pas — ils n'ouvrent aucune session. */}
-                {pied}
+                    <CarteDuFormulaire
+                        theme={theme} color={color} submitting={submitting} enSession={enSession}
+                        terminee={progression.terminee} scrapeProgress={scrapeProgress}
+                        username={username} setUsername={setUsername} password={password} setPassword={setPassword}
+                        error={error} onSubmit={onSubmit} onSkip={onSkip} onAutreCampus={onAutreCampus}
+                        commandeDuJeu={commandeDuJeu}
+                    />
+                    {/* Un emplacement sous la carte, monte par l'hote : la fiche du compte y pose les
+                        identifiants memorises par le navigateur (6.1.x-B). Le formulaire ne les connait
+                        pas — ils n'ouvrent aucune session. */}
+                    {pied}
+                </View>
             </Animated.ScrollView>
         </KeyboardAvoidingView>
     );

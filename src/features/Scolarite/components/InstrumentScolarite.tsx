@@ -36,6 +36,8 @@ export interface ColonneInstrument {
     couleurDuTexte?: string;
     /** Un service que l'etablissement ne porte pas : la colonne s'efface. */
     attenuee?: boolean;
+    /** Sous un nom de service, ce que fait le toucher : la porte s'annonce, et la colonne garde sa hauteur. */
+    invite?: string;
     chargement?: boolean;
     onPress?: () => void;
     accessibilite: string;
@@ -43,7 +45,7 @@ export interface ColonneInstrument {
 
 function Colonne({ colonne, theme }: { colonne: ColonneInstrument; theme: AppThemeType }) {
     const enfoncement = useEnfoncement();
-    const { icone, chiffre, texte, couleurDuTexte, attenuee = false, chargement = false, onPress, accessibilite } = colonne;
+    const { icone, chiffre, texte, couleurDuTexte, attenuee = false, invite, chargement = false, onPress, accessibilite } = colonne;
     const nombre = chiffre === null ? null : chiffre.toLocaleString();
     return (
         <Pressable
@@ -68,6 +70,7 @@ function Colonne({ colonne, theme }: { colonne: ColonneInstrument; theme: AppThe
                 <Text numberOfLines={2} style={[nombre === null ? styles.motSeul : styles.texte, { color: couleurDuTexte ?? (nombre === null ? theme.font : theme.fontSecondary) }]}>
                     {texte}
                 </Text>
+                {invite !== undefined ? <Text style={[styles.texte, { color: theme.fontTertiary }]}>{invite}</Text> : null}
             </Reanimated.View>
         </Pressable>
     );

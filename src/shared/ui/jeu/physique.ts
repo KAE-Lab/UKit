@@ -1,10 +1,13 @@
 /**
  * La physique du jeu du point (jalon 7-J) : le saut, le defilement, le compte, la chute.
  *
- * Le jeu occupe l'attente de la connexion universitaire, quatorze a vingt-six secondes. Le point du
- * « i » du logo court sur l'horizon de l'Epure et saute les **cotes** qui defilent — les traits de
- * construction d'un plan, une barre et ses deux butees. Un pouce, aucun ecran de fin : une chute
- * remet le compteur a zero, le record se garde.
+ * Le jeu occupe l'attente de la connexion universitaire, quatorze a vingt-six secondes. Le « i » du
+ * logo — son point, et depuis la deuxieme passe de 7-J son corps — court sur l'horizon et saute ce que
+ * le campus pose sur son chemin : un plot, un gobelet, une pile de livres, la cote d'un plan. Un pouce,
+ * aucun ecran de fin : une chute remet le compteur a zero, le record se garde.
+ *
+ * **La collision est celle d'un rectangle** depuis que le personnage a un corps : sa largeur, posee
+ * sur sa hauteur au-dessus de l'horizon. Seul le bas compte, puisque tout obstacle est au sol.
  *
  * Tout est en points et en secondes, et en **hauteur au-dessus de l'horizon** : la physique ne connait
  * pas la taille du dessin. Les fonctions sont des worklets — Reanimated les joue sur le fil de
@@ -14,7 +17,8 @@
 
 /** La position du point, depuis le bord gauche du dessin. */
 export const X_DU_POINT = 44;
-export const RAYON_DU_POINT = 7;
+/** La demi-largeur du personnage : le corps du « i », sa tete comprise. */
+export const DEMI_LARGEUR = 6;
 /** Points par seconde au carre : le saut culmine a une soixantaine de points. */
 export const GRAVITE = 2600;
 export const IMPULSION = 568;
@@ -30,7 +34,11 @@ const NOMBRE_DE_COTES = 3;
 /** Un pas d'image ne depasse jamais cette duree : une saccade ne fait pas traverser une cote. */
 const PAS_MAXIMAL = 50;
 
+/** Ce que le campus pose sur l'horizon : la forme seule change, la collision est celle de la boite. */
+export type GenreDObstacle = 'plot' | 'gobelet' | 'livres' | 'cote';
+
 export interface Cote {
+    readonly genre: GenreDObstacle;
     /** Le bord gauche, en points depuis le bord gauche du dessin. */
     readonly x: number;
     readonly hauteur: number;
@@ -58,11 +66,13 @@ export interface EtatDuJeu {
 /** Une cote, simple ou double, de hauteur tiree au hasard. */
 export function nouvelleCote(x: number, tirage: number): Cote {
     'worklet';
-    const double = tirage > 0.72;
-    return { x, hauteur: 18 + Math.round(tirage * 16), largeur: double ? 22 : 10, comptee: false };
+    // Un quart pour chaque genre ; la cote garde la hauteur variable et la largeur double d'avant.
+    if (tirage < 0.25) return { genre: 'plot', x, hauteur: 24, largeur: 18, comptee: false };
+    if (tirage < 0.5) return { genre: 'gobelet', x, hauteur: 20, largeur: 14, comptee: false };
+    if (tirage < 0.75) return { genre: 'livres', x, hauteur: tirage < 0.62 ? 22 : 33, largeur: 24, comptee: false };
+    return { genre: 'cote', x, hauteur: 18 + Math.round((tirage - 0.75) * 64), largeur: tirage > 0.9 ? 22 : 10, comptee: false };
 }
 
-/** L'ecart jusqu'a la cote suivante : entre 0,8 et 1,5 seconde de course a la vitesse donnee. */
 export function ecartSuivant(vitesse: number, tirage: number): number {
     'worklet';
     return vitesse * (0.8 + tirage * 0.7);
@@ -92,16 +102,12 @@ export function sauter(etat: EtatDuJeu, largeur: number): EtatDuJeu {
 /** Le point touche-t-il la cote ? Un cercle contre un rectangle pose sur l'horizon. */
 export function touche(y: number, cote: Cote): boolean {
     'worklet';
-    const cx = X_DU_POINT;
-    const cy = RAYON_DU_POINT + y;
-    const px = Math.min(Math.max(cx, cote.x + TOLERANCE), cote.x + cote.largeur - TOLERANCE);
-    const py = Math.min(Math.max(cy, 0), cote.hauteur - TOLERANCE);
-    const dx = cx - px;
-    const dy = cy - py;
-    return dx * dx + dy * dy < RAYON_DU_POINT * RAYON_DU_POINT;
+    const gauche = X_DU_POINT - DEMI_LARGEUR;
+    const droite = X_DU_POINT + DEMI_LARGEUR;
+    const chevauche = cote.x + TOLERANCE < droite && cote.x + cote.largeur - TOLERANCE > gauche;
+    return chevauche && y < cote.hauteur - TOLERANCE;
 }
 
-/** Une image de jeu : `dtMs` ecoulees, `tirage` pour la cote qui renait a droite. */
 export function avancer(etat: EtatDuJeu, dtMs: number, largeur: number, tirage: number): EtatDuJeu {
     'worklet';
     if (etat.phase === 'attente') return etat;
@@ -123,7 +129,7 @@ export function avancer(etat: EtatDuJeu, dtMs: number, largeur: number, tirage: 
     const avancees = etat.cotes.map((cote) => ({ ...cote, x: cote.x - vitesse * dt }));
     const plusLoin = Math.max(...avancees.map((cote) => cote.x));
     const cotes = avancees.map((cote) => {
-        if (!cote.comptee && cote.x + cote.largeur < X_DU_POINT - RAYON_DU_POINT) {
+        if (!cote.comptee && cote.x + cote.largeur < X_DU_POINT - DEMI_LARGEUR) {
             score += 1;
             vitesse = Math.min(VITESSE_MAXIMALE, vitesse + ACCELERATION);
             return { ...cote, comptee: true };

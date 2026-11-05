@@ -483,6 +483,11 @@ const en = {
 	RECORD_READ_LABEL: 'Last updated',
 	LOADING_STARTING: "Opening the portal…",
 	LOADING_FINISHING: "Almost done…",
+	ETAPE_CONNEXION: "Portal sign-in",
+	ETAPE_PROFIL: "Profile",
+	ETAPE_DOSSIER: "Student record",
+	JEU_ATTENTE: "While the university answers…",
+	INSTRUMENT_OUVRIR: 'Open',
 	CREDENTIALS_UNVERIFIED: "Could not verify your credentials. Please try again.",
 };
 

@@ -485,6 +485,11 @@ const es: TranslationDict = {
 	RECORD_READ_LABEL: 'Última actualización',
 	LOADING_STARTING: "Abriendo el portal…",
 	LOADING_FINISHING: "Casi listo…",
+	ETAPE_CONNEXION: "Conexión al portal",
+	ETAPE_PROFIL: "Perfil",
+	ETAPE_DOSSIER: "Expediente",
+	JEU_ATTENTE: "Mientras la universidad responde…",
+	INSTRUMENT_OUVRIR: 'Abrir',
 	CREDENTIALS_UNVERIFIED: "No se pudieron verificar tus credenciales. Inténtalo de nuevo.",
 };
 

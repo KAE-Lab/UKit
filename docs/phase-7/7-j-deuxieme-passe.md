@@ -61,6 +61,9 @@ Tenu ici, lot par lot, pour qu'une reprise sache où en est la passe.
   direct de Material ; les Réglages sans carrés de couleur ; la mention de licence suit (ISC).
 - [x] C — l'heure de fin en bas de la carte ; la vue semaine en agenda (`AgendaDeLaSemaine`,
   `agenda.ts` testé), les jours repliables et `react-native-collapsible` retirés.
-- [ ] D
+- [x] D — l'onglet (en-tête fixe, salutation en page, instrument à trois chiffres, rangées neutres,
+  « Bientôt disponible ») ; le parcours froid (pourcentage en grand, étapes cochées, jeu en grand) ;
+  le jeu (le « i » et son corps, décor en parallaxe, quatre obstacles, appui n'importe où). À revoir
+  en passe F : le formulaire en session, au format de l'A8.
 - [ ] E
 - [ ] F

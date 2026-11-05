@@ -25,9 +25,14 @@ section 2 de [sources-externes.md](../sources-externes.md).
    pour que les cascades d'authentification arrivent avant qu'on interroge la page (voir
    [Décisions de conception](#décisions-de-conception)). Depuis [7-J](../phase-7/7-j-ecrans.md), le
    **jeu du point** occupe ces quatorze à vingt-six secondes, sous la barre, dans le formulaire
-   comme dans l'écran plein ([`JeuDuPoint`](../../src/shared/ui/jeu/JeuDuPoint.tsx)) : le point du
-   « i » du logo saute les cotes qui défilent sur l'horizon de l'Épure, un toucher par saut, le
-   record gardé sur l'appareil. Il s'efface avec la session et ne paraît pas sous « réduire les
+   comme dans l'écran plein ([`JeuDuPoint`](../../src/shared/ui/jeu/JeuDuPoint.tsx)) : le « i » du
+   logo — son point, et depuis la deuxième passe de 7-J son corps, deux yeux, le dégradé du logo
+   ([`PersonnageDuJeu`](../../src/shared/ui/jeu/PersonnageDuJeu.tsx)) — saute ce que le campus pose
+   sur l'horizon, un plot, un gobelet, une pile de livres, la cote d'un plan, devant la silhouette
+   des bâtiments qui défile au loin ([`DecorDuJeu`](../../src/shared/ui/jeu/DecorDuJeu.tsx)). **Un
+   appui n'importe où fait sauter**, hors des boutons, et non plus sur la seule carte du jeu. Le
+   record se garde sur l'appareil. L'écran plein met la progression en sujet : le pourcentage en
+   grand, l'étape en cours, les trois étapes cochées à mesure, et le jeu prend la hauteur qui reste. Il s'efface avec la session et ne paraît pas sous « réduire les
    animations ». La barre est recalée sur les durées mesurées après 6.1-D et s'approche de chaque
    palier sans jamais s'y arrêter avant la fin réelle de l'étape.
 3. **Lancements suivants** : plus aucun run au démarrage. Les données d'identité sont stockées, et
