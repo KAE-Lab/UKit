@@ -53,11 +53,14 @@ demarrer() {
 		[ "$actuel" = "$avd" ] && { echo "$avd tourne deja"; relier; return; }
 		arreter
 	fi
+	# Le rendu : ANGLE sur SwiftShader. SwiftShader en direct faisait tomber l'emulateur (SEGV) cinq
+	# fois en une heure le 2026-11-05, sous des en-tetes a degrade ; ANGLE a tenu le meme essai.
+	# BANC_GPU=swiftshader_indirect pour comparer.
 	systemd-run --user --unit="$SERVICE" --collect \
 		-p MemoryMax=4G -p MemorySwapMax=512M -p OOMPolicy=kill \
 		--setenv=ANDROID_HOME="$SDK" \
 		"$EMULATEUR" -avd "$avd" -no-window -no-audio -no-boot-anim \
-		-gpu swiftshader_indirect -no-snapshot-save >/dev/null
+		-gpu "${BANC_GPU:-swangle_indirect}" -no-snapshot-save >/dev/null
 	attendre_le_boot
 	franciser
 	relier
