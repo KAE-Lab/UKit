@@ -56,6 +56,9 @@ une application qui donne l'heure des choses d'un regard.
 - **Une seule accentuation, celle du logo** : le bleu-indigo du milieu de son dégradé, `#3B5FE5` en
   clair et `#6381F8` en sombre, à la place du bleu d'iOS et de l'indigo. La barre d'onglets ne porte
   plus qu'elle, et la teinte de chaque section se prend le long du dégradé du logo.
+- **Le parcours froid et son jeu refaits** : le pourcentage en grand et les trois étapes cochées à
+  mesure ; dans le jeu, le « i » de UKit gagne un corps et deux yeux, saute plots, gobelets et piles de
+  livres devant la silhouette du campus, et un appui n'importe où sur l'écran le fait sauter.
 - **La Scolarité refaite** : l'en-tête fixe des autres onglets, la salutation en tête de page, un
   instrument à trois chiffres — Moodle, la messagerie, les documents — à la place d'un héros et de
   deux tuiles, et les services au gabarit des Réglages ; un service à venir dit « Bientôt

@@ -33,12 +33,16 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Animated, Easing, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, Text, Animated, Easing, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { ProgressBar } from '../../../shared/ui/ProgressBar';
-import { JeuDuPoint } from '../../../shared/ui/jeu/JeuDuPoint';
+import { JeuDuPoint, type CommandeDuJeu } from '../../../shared/ui/jeu/JeuDuPoint';
+import { Icon } from '../../../shared/ui/Icon';
+import { hauteurDeLEnTete } from '../../../shared/ui/EnTeteDOnglet';
+import { TAB_BAR_HEIGHT } from '../../../shared/ui/ScreenState';
 
 /**
  * `plafond` : ou la barre tend pendant cette etape, sans jamais l'atteindre.
@@ -188,11 +192,11 @@ export function BlocProgression({ scrapeProgress, terminee = false, theme, color
                 percent={valeur}
                 color={color}
                 trackColor={theme.greyBackground}
-                height={6}
+                height={4}
             />
             <View style={styles.legende}>
                 <Animated.Text
-                    style={[styles.etape, { color: theme.fontSecondary, opacity: opacite }]}
+                    style={[styles.etapeDeLaCarte, { color: theme.fontSecondary, opacity: opacite }]}
                     numberOfLines={1}
                 >
                     {Translator.get(STEPS[indice].labelKey)}
@@ -209,34 +213,96 @@ export function BlocProgression({ scrapeProgress, terminee = false, theme, color
  * l'ecran entier s'efface a l'arrivee du dossier. Sous « reduire les animations », le jeu ne s'affiche
  * pas et l'ecran redevient celui d'avant.
  */
-const ScolariteLoadingScreen = ({ scrapeProgress, terminee = false, theme, color }) => (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <Text style={[styles.title, { color: theme.font }]}>
-            {Translator.get('SCOLARITY')}
-        </Text>
-        <BlocProgression
-            scrapeProgress={scrapeProgress}
-            terminee={terminee}
-            theme={theme}
-            color={color}
-        />
-        <JeuDuPoint theme={theme} />
-    </View>
-);
+/** Les trois etapes que la liste nomme : le demarrage et la fin sont des moments, pas des etapes. */
+const ETAPES_NOMMEES = [
+    { indice: 1, labelKey: 'ETAPE_CONNEXION' },
+    { indice: 2, labelKey: 'ETAPE_PROFIL' },
+    { indice: 3, labelKey: 'ETAPE_DOSSIER' },
+] as const;
+
+/**
+ * La progression de l'ecran plein (deuxieme passe de 7-J) : le pourcentage en grand, l'etape en cours,
+ * une barre fine, et les trois etapes cochees a mesure. La carte du formulaire garde `BlocProgression`,
+ * plus court ; ici la page n'a que cela a dire, et le chiffre en est le titre.
+ */
+function ProgressionPleinEcran({ indice, theme, color }) {
+    const { valeur, entier } = useProgression(indice);
+    const opacite = useFondu(indice);
+    return (
+        <View style={styles.progression}>
+            <Text style={[styles.grandPourcent, tokens.texte.chiffres, { color: theme.font }]}>{`${entier} %`}</Text>
+            <Animated.Text style={[styles.etapeCourante, { color: theme.fontSecondary, opacity: opacite }]} numberOfLines={1}>
+                {Translator.get(STEPS[indice].labelKey)}
+            </Animated.Text>
+            <ProgressBar percent={valeur} color={color} trackColor={theme.greyBackground} height={4} />
+            <View style={styles.etapes}>
+                {ETAPES_NOMMEES.map((etape) => {
+                    const faite = indice > etape.indice;
+                    const enCours = indice === etape.indice;
+                    return (
+                        <View key={etape.labelKey} style={styles.etape}>
+                            <View style={styles.marqueDEtape}>
+                                {faite ? <Icon icon={{ name: 'check' }} size={18} color={color} /> : null}
+                                {enCours ? <ActivityIndicator size="small" color={theme.fontSecondary} /> : null}
+                                {!faite && !enCours ? <Icon icon={{ name: 'minus' }} size={18} color={theme.fontTertiary} /> : null}
+                            </View>
+                            <Text style={[styles.nomDEtape, { color: faite || enCours ? theme.font : theme.fontTertiary }]}>
+                                {Translator.get(etape.labelKey)}
+                            </Text>
+                        </View>
+                    );
+                })}
+            </View>
+        </View>
+    );
+}
+
+/**
+ * L'ecran plein du parcours froid (deuxieme passe de 7-J).
+ *
+ * Il etait un titre, une barre et la carte du jeu, centres dans le vide sous le titre flottant de
+ * l'onglet : le meme ecran qu'avant le jeu, le jeu en plus (review du 2026-11-05). Il pose desormais
+ * la progression comme le sujet de la page, sous l'en-tete fixe de l'onglet, et le jeu en grand,
+ * dessous, avec ce qu'il occupe : l'attente. **Un appui n'importe ou fait sauter** : la vue racine ne
+ * prend que les touchers qu'aucun enfant n'a pris.
+ */
+const ScolariteLoadingScreen = ({ scrapeProgress, terminee = false, theme, color }) => {
+    const insets = useSafeAreaInsets();
+    const jeu = useRef<CommandeDuJeu>(null);
+    const indice = terminee ? INDICE_FIN : indiceDeLEtape(scrapeProgress);
+    // Le jeu prend la hauteur qui reste sous la progression : un tiers d'ecran vide sous lui se lisait
+    // comme une page inachevee. Borne, pour qu'il ne s'etire pas en tour sur une tablette.
+    const [hauteurDuJeu, setHauteurDuJeu] = useState<number>(JEU.minimum);
+    return (
+        <View
+            style={[styles.container, {
+                backgroundColor: theme.background,
+                paddingTop: hauteurDeLEnTete(insets.top) + tokens.space.md,
+                paddingBottom: TAB_BAR_HEIGHT + tokens.space.lg,
+            }]}
+            onStartShouldSetResponder={() => true}
+            onResponderGrant={() => jeu.current?.sauter()}
+        >
+            <ProgressionPleinEcran indice={indice} theme={theme} color={color} />
+            <View
+                style={styles.zoneDuJeu}
+                onLayout={(e) => setHauteurDuJeu(Math.max(JEU.minimum, Math.min(JEU.maximum, Math.round(e.nativeEvent.layout.height - JEU.legende))))}
+            >
+                <Text style={[styles.legendeDuJeu, { color: theme.fontTertiary }]}>{Translator.get('JEU_ATTENTE')}</Text>
+                <JeuDuPoint ref={jeu} theme={theme} hauteur={hauteurDuJeu} />
+            </View>
+        </View>
+    );
+};
+
+/** La hauteur du jeu de l'ecran plein, bornee, et ce que la legende prend au-dessus de lui. */
+const JEU = { minimum: 180, maximum: 320, legende: 28 } as const;
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: tokens.space.xl,
+        paddingHorizontal: tokens.space.md,
         gap: tokens.space.xl,
-    },
-    title: {
-        // Pleine largeur : un texte libre dans un parent qui centre se tronque sur Android (docs/theme.md).
-        alignSelf: 'stretch',
-        textAlign: 'center',
-        ...tokens.texte.titreDeSection,
     },
     bloc: {
         width: '100%',
@@ -247,16 +313,51 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: tokens.space.md,
     },
-    etape: {
+    etapeDeLaCarte: {
         flex: 1,
         fontSize: tokens.fontSize.md,
     },
     pourcent: {
         fontSize: tokens.fontSize.md,
         fontWeight: tokens.fontWeight.semibold,
-        // Tabulaire par la largeur : sans elle, le nombre fait bouger le libelle a chaque unite.
         minWidth: 52,
         textAlign: 'right',
+    },
+    progression: {
+        gap: tokens.space.sm,
+        paddingHorizontal: tokens.space.xs,
+    },
+    grandPourcent: {
+        ...tokens.texte.grandTitre,
+    },
+    etapeCourante: {
+        fontSize: tokens.fontSize.md,
+        marginBottom: tokens.space.xs,
+    },
+    etapes: {
+        marginTop: tokens.space.md,
+        gap: tokens.space.sm,
+    },
+    etape: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: tokens.space.md,
+    },
+    marqueDEtape: {
+        width: tokens.space.lg,
+        alignItems: 'center',
+    },
+    nomDEtape: {
+        fontSize: tokens.fontSize.md,
+        fontWeight: tokens.fontWeight.medium,
+    },
+    zoneDuJeu: {
+        flex: 1,
+        gap: tokens.space.sm,
+    },
+    legendeDuJeu: {
+        fontSize: tokens.fontSize.sm,
+        paddingHorizontal: tokens.space.xs,
     },
 });
 

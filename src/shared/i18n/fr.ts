@@ -497,6 +497,11 @@ const fr: TranslationDict = {
 	RECORD_READ_LABEL: 'Dernière mise à jour',
 	LOADING_STARTING: "Ouverture du portail…",
 	LOADING_FINISHING: "Presque terminé…",
+	ETAPE_CONNEXION: "Connexion au portail",
+	ETAPE_PROFIL: "Profil",
+	ETAPE_DOSSIER: "Dossier étudiant",
+	JEU_ATTENTE: "Pendant que l’université répond…",
+	INSTRUMENT_OUVRIR: 'Ouvrir',
 	CREDENTIALS_UNVERIFIED: "Impossible de vérifier les identifiants. Réessaie.",
 };
 

@@ -130,6 +130,7 @@ function colonneDuWidget({ definition, etat, action }: RangeePreparee, theme: Ap
         chiffre: null,
         texte: absent ? Translator.get('WIDGET_NOT_CARRIED') : nom,
         attenuee: absent,
+        invite: !absent && action !== undefined ? Translator.get('INSTRUMENT_OUVRIR') : undefined,
         accessibilite: nom,
     };
 }
