@@ -138,7 +138,7 @@ son compte est prêté, un écran quand sa session est close — se découpe en 
 
                     7-D compteurs anonymes, interrupteur, jamais de reseau au demarrage   (en premier sur la branche)
                     7-I releve, vocabulaire, ecran fondateur : le tableau de bord Campus
-                    7-J les ecrans, un lot par ecran : 1 Planning  2 Scolarite  3 Reglages
+                    7-J la refonte : 0 socle  1 Planning  2 Scolarite  3 Reglages  4 Campus  5 moments
                     7-K sortie : releve final contre releve initial, les premiers chiffres poses
 
    LES CAMPUS, QUAND L'APPLICATION SAIT LES ACCUEILLIR (apres la 6.3)
@@ -170,7 +170,7 @@ son compte est prêté, un écran quand sa session est close — se découpe en 
 | 7-G | [7-g-console-statistiques.md](7-g-console-statistiques.md) | aucune | 7-E ; 7-D en production depuis deux semaines | Les tableaux de la mesure, l'entonnoir d'une annonce, le rapport partenaire. |
 | 7-H | [7-h-console-roles.md](7-h-console-roles.md) | aucune | 7-E, 7-F ; les colonnes de 7-C | Qui peut quoi, par campus ; l'invitation sans script ; le verrou contre l'écrasement. Prêt avant janvier 2027. |
 | 7-I | [7-i-releve-et-vocabulaire.md](7-i-releve-et-vocabulaire.md) | 6.3 | 7-C, 7-D, 7-F | Le relevé de ce qui saute, le vocabulaire du mouvement, et l'écran fondateur : le tableau de bord Campus. |
-| 7-J | [7-j-ecrans.md](7-j-ecrans.md) | 6.3 | 7-I | Le Planning, la Scolarité, les Réglages : un lot par écran, mené en session. |
+| 7-J | [7-j-ecrans.md](7-j-ecrans.md) | 6.3 | 7-I | La refonte de l'interface, élargie le 2026-11-05 : le socle (accent, ombres, texte, en-têtes, barre d'onglets), le Planning, la Scolarité et son mini-jeu, les Réglages, Campus, les moments. |
 | 7-K | [7-k-sortie-6-3.md](7-k-sortie-6-3.md) | 6.3 | 7-I, 7-J | Le relevé final contre le relevé initial, les captures dans les deux thèmes, les premiers chiffres de la mesure posés en ligne de base. |
 | 7-L | [7-l-la-boucle.md](7-l-la-boucle.md) | 6.4 | 7-K ; 7-M ; 7-F et 7-H | Le formulaire natif, les annonces en notification, le partage, les pages du site dans l'application. |
 | 7-M | [7-m-le-site.md](7-m-le-site.md) | aucune ; dépôt `UKit-website` | 7-I | Le site refondu sur les tokens de l'application, sa confidentialité générée, ses pages et ses liens universels. |
@@ -202,9 +202,7 @@ Les lots de campus avancent ensuite au rythme des comptes prêtés.
 | 7-G Les statistiques | à ouvrir |
 | 7-H Les rôles et l'équipe | **livré le 2026-09-25** — sur `main`, sans release : trois rôles décidés par la base (admin, rédacteur borné aux annonces de ses campus, lecteur), que la console reflète ; la page Équipe et la fonction `editeurs` — inviter avec un mot de passe provisoire, révoquer —, la première connexion ; le verrou contre l'écrasement ; le guide de l'équipe. La lecture du code et de la production a fermé trois chemins que la spécification laissait ouverts : l'adresse d'un retour recopiée dans `reponses` et le journal, les jetons push lisibles par tout éditeur, le tableau de campus vide qui vaut « tous ». Deux migrations poussées, deux fonctions déployées, l'authentification durcie ; recette en SQL (56 cas, transaction annulée), par l'API (46) et dans la console (25) ; la préproduction évaluée et écartée |
 | 7-I Le relevé et le vocabulaire du mouvement | **ouvert le 2026-09-26, clos le 2026-11-04 sans son protocole sur appareil** — `main` fusionnée dans `v6.3` à l'ouverture (huit conflits, documentation et `policies.sql`, les deux côtés gardés) ; les dates de publication retirées de la phase. Livrés sur `v6.3` : le relevé, le vocabulaire (squelettes, cartes en panne, cascade, ressort, carte pressée), l'écran fondateur Campus, la carte v2 et les cartes spéciales, le catalogue en `@5`, l'occupation en un run, le fond des onglets (Campus, Scolarité, Réglages). Le plan de test, les captures après, et le « cran au-dessus » de l'interface passent à la reprise ([la clôture](7-i-releve-et-vocabulaire.md#la-clôture-du-2026-11-04)) |
-| 7-J, lot 1 : le Planning | à ouvrir |
-| 7-J, lot 2 : la Scolarité | à ouvrir |
-| 7-J, lot 3 : les Réglages | à ouvrir |
+| 7-J Les écrans, et la refonte de l'interface | **ouvert le 2026-11-05**, élargi ce jour-là à toute l'interface par le propriétaire du produit, qui délègue le jugement de design ; six lots, menés sur le banc Android ([la spécification](7-j-ecrans.md#les-lots)) |
 | 7-K Sortie de la 6.3 | à ouvrir |
 | 7-L La boucle | à ouvrir |
 | 7-M Le site | à ouvrir |
@@ -240,7 +238,9 @@ Un jalon se traite en suivant sa **spécification** et la
   publication.
 - **Ce qui se juge se tranche en session.** Les lots d'écran de 7-J se mènent comme les sessions du volet 2
   de la phase 6 ([ce qui n'est pas un jalon](../phase-6/README.md#ce-qui-nest-pas-un-jalon-et-pourquoi)) :
-  un lot se coche quand sa session est close.
+  un lot se coche quand sa session est close. *Amendé le 2026-11-05 : le propriétaire du produit délègue
+  le jugement de design de 7-J ; les lots se tranchent sur le banc et leurs décisions s'écrivent dans
+  [la spécification](7-j-ecrans.md#les-décisions-du-2026-11-05).*
 
 ## Les branches
 
