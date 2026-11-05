@@ -9,15 +9,15 @@
  * l'ecran du compte : c'est une information d'etat civil, on la consulte, on n'agit pas dessus — et la
  * garder ici obligeait a poser un en-tete de section au-dessus d'une rangee unique.
  *
- * **La salutation vit dans l'en-tete, qui est COLLANT** (ScolariteDashboard). Il a d'abord glisse sous
- * le contenu en s'effacant au defilement, et ca ne pouvait pas marcher ici : la page est courte, donc
- * il n'y a pas assez de course pour mener la disparition a son terme — titre et salutation restaient
- * a moitie effaces, l'un par-dessus l'autre. C'est la disposition qu'il fallait changer, pas la
- * courbe. Cette page n'a donc plus ni valeur de defilement ni compensation d'en-tete.
+ * **La salutation ouvre la page, sous l'en-tete fixe de tous les onglets** (deuxieme passe de 7-J).
+ * Elle a vecu dans un en-tete qui s'effacait au defilement (titre et salutation restaient a moitie
+ * effaces, la page etant trop courte pour finir la course), puis dans un bandeau collant propre a
+ * l'onglet. Le titre ne s'efface plus nulle part : la page passe dessous en fondu, et lui transmet son
+ * defilement pour que le fondu paraisse.
  *
  * **Les documents ont rejoint la grille.** Ils occupaient le bas de la page avec leur propre en-tete
  * et leur liste entiere, pour un contenu qu'on consulte le jour ou l'on en a besoin — un certificat.
- * Ils sont desormais une **tuile** a cote de la messagerie, et leur detail a son ecran. La page ne
+ * Ils sont desormais une **colonne de l'instrument**, et leur detail a son ecran. La page ne
  * porte donc plus que deux choses : l'etat de la session, et la grille (GrilleScolarite).
  *
  * **Une actualisation du dossier se pose en encart** (6.1-A) : la meme barre que le formulaire et la
@@ -34,7 +34,8 @@
  */
 
 import React from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import Reanimated from 'react-native-reanimated';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { TAB_BAR_HEIGHT } from '../../../shared/ui/ScreenState';
@@ -45,7 +46,8 @@ import type { EtatDesWidgets } from '../widgets/useWidgets';
 import type { EtatProgression } from '../hooks/useEcranDeProgression';
 import { EncartSession } from './EncartSession';
 import { GrilleScolarite } from './GrilleScolarite';
-import { DocumentsTile } from './DocumentsTile';
+import { SalutationScolarite } from './SalutationScolarite';
+import { useColonneDocuments } from '../hooks/useColonneDocuments';
 import { BlocProgression } from './ScolariteLoadingScreen';
 
 export interface PageScolariteProps {
@@ -69,43 +71,34 @@ export interface PageScolariteProps {
     onWidget: (point: PointWidget) => void;
     onPorte: (point: string) => void;
     onDocuments: () => void;
-    /**
-     * Ce que le titre occupe au-dessus, **quand il flotte** — c'est-a-dire quand il n'y a pas de
-     * dossier a saluer et donc pas d'en-tete collant (voir `ScolariteDashboard`). Avec le bandeau, il
-     * occupe sa propre place et la page n'a rien a compenser.
-     */
-    paddingHaut?: number;
-    /** Le defilement, pour que le titre flottant s'efface — le gabarit de Campus et des Reglages. */
-    onScroll?: (evenement: unknown) => void;
+    /** Le retrait de l'en-tete fixe, zone sure comprise (`hauteurDeLEnTete`). */
+    paddingHaut: number;
+    /** Le defilement, que l'en-tete lit pour faire paraitre le fondu (`useAnimatedScrollHandler`). */
+    onScroll: React.ComponentProps<typeof Reanimated.ScrollView>['onScroll'];
+    /** La salutation en tete : avec un dossier, ou sans compte ; jamais sur un compte sans dossier. */
+    salutation: boolean;
 }
 
 export function PageScolarite({
     theme, teinte, coldData, widgets, certificatEnCours, progression, scrapeProgress, credentials, portailDisponible,
-    sessionFailure, echecBloquant, paddingHaut, onScroll,
+    sessionFailure, echecBloquant, paddingHaut, onScroll, salutation,
     onRetry, onRessaisir, onConnecter, onDemanderCampus, onWidget, onPorte, onDocuments,
 }: PageScolariteProps) {
+    const colonneDocuments = useColonneDocuments({ chargement: certificatEnCours, onPress: onDocuments });
     return (
-        <Animated.ScrollView
-            {...(onScroll !== undefined ? { onScroll, scrollEventThrottle: 16 } : {})}
-            // `flex: 1` est **obligatoire** depuis que l'en-tete est collant : il occupe une vraie
-            // place, donc cette vue doit s'etirer sur ce qui reste. Sans lui, une vue defilante prend
-            // la hauteur de son contenu — elle deborde de l'ecran au lieu de defiler.
+        <Reanimated.ScrollView
+            onScroll={onScroll}
+            scrollEventThrottle={16}
             style={styles.corps}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
-                // Plus de compensation d'en-tete : il est **collant** et occupe sa propre place
-                // au-dessus (ScolariteDashboard), encoche comprise. Cette page n'a donc plus besoin
-                // de connaitre les marges de securite.
-                //
-                // `lg` (24) : l'ecart entre les deux sections de la grille — 8 de `bloc` + 16 de
-                // l'intertitre « Tes services ». Depuis que la page ouvre sur un intertitre, c'est
-                // lui la reference : a 8, le premier titre collait au filet de l'en-tete la ou le
-                // second respirait.
-                paddingTop: (paddingHaut ?? 0) + tokens.space.lg,
+                paddingTop: paddingHaut + tokens.space.sm,
                 paddingBottom: tokens.space.xxl + TAB_BAR_HEIGHT,
                 gap: tokens.space.lg,
             }}
         >
+            {salutation ? <SalutationScolarite theme={theme} teinte={teinte} coldData={coldData} /> : null}
+
             {progression.visible ? (
                 // Le gabarit de la carte du formulaire, ou la meme barre remplace les champs : une
                 // seule facon de dire « ca se relit » dans tout l'onglet.
@@ -147,11 +140,11 @@ export function PageScolarite({
                     onRessaisir={onRessaisir}
                     onPorte={onPorte}
                     onDemande={onDemanderCampus}
-                    tuileDocuments={<DocumentsTile theme={theme} teinte={teinte} chargement={certificatEnCours} onPress={onDocuments} />}
+                    colonneDocuments={colonneDocuments}
                 />
             ) : null}
 
-        </Animated.ScrollView>
+        </Reanimated.ScrollView>
     );
 }
 

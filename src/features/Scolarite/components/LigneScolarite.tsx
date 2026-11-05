@@ -24,8 +24,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import Translator from '../../../shared/i18n/Translator';
 import { Icon, type IconSpec } from '../../../shared/ui/Icon';
-import { TexteMasque } from '../../../shared/ui/TexteMasque';
 
 export interface GroupeScolariteProps {
     theme: AppThemeType;
@@ -59,7 +59,11 @@ export function GroupeScolarite({ theme, children }: GroupeScolariteProps) {
 export interface LigneScolariteProps {
     theme: AppThemeType;
     icon: IconSpec;
-    /** La teinte de l'icone et de sa surface. Un ton semantique passe par `toneColor` chez l'appelant. */
+    /**
+     * La couleur du glyphe : le gris secondaire d'ordinaire, un ton semantique (`toneColor`) pour un
+     * echec. Il n'y a plus de surface teintee depuis la deuxieme passe de 7-J : six carres de six
+     * couleurs hors de l'identite faisaient « prototype » (review du 2026-11-05).
+     */
     teinte: string;
     titre: string;
     sousTitre?: string | null;
@@ -78,23 +82,19 @@ export interface LigneScolariteProps {
     /** Le titre en gris : une rangee qui porte un echec ne crie pas, elle s'efface. */
     attenue?: boolean;
     /**
-     * Le masque du teaser : l'icone devient un cadenas, et les deux textes **ne sont pas rendus** —
-     * une barre prend la boite de chacun.
+     * Le teaser : un cadenas et « Bientot disponible », sans le nom du service, qui reste au secret.
      *
-     * C'est la troisieme tentative, et la seule qui tienne sur les deux plateformes. Le flou natif
-     * d'`expo-blur` n'existe pas sur Android au SDK 57 sans cible (`blurTarget`), et sur iOS il
-     * laissait lire le texte a toutes les intensites essayees ; baisser l'opacite du contenu donne
-     * du gris pale qui se lit encore. Ici il n'y a plus rien a lire : la couleur du texte est
-     * `transparent`. La boite du `Text`, elle, se pose normalement — la rangee garde donc exactement
-     * la hauteur, les alignements et le rythme des rangees voisines, ce qu'un aplat opaque perdrait.
+     * Le service ne se nommait deja pas : ses deux textes etaient remplaces par des barres grises
+     * (troisieme tentative, apres le flou d'`expo-blur` et l'opacite, qui laissaient lire). Ces barres
+     * se lisaient pourtant comme un chargement fige, et la moitie de la section avait l'air cassee
+     * (review du 2026-11-05). Un mot dit la meme chose franchement : il y a bien quelque chose ici, et
+     * ca arrive.
      */
     masque?: boolean;
 }
 
-// Deux longueurs differentes, comme deux vraies lignes de texte — une paire de barres egales se lit
-// comme un gabarit de chargement, pas comme du contenu tenu au secret.
-const LARGEUR_BARRE_TITRE = '62%';
-const LARGEUR_BARRE_SOUS_TITRE = '84%';
+/** La colonne de l'icone : sa largeur aligne les titres d'une rangee a l'autre, comme aux Reglages. */
+const COLONNE = 24;
 
 export function LigneScolarite({
     theme, icon, teinte, titre, sousTitre, droite, onPress, attenue = false, chevron = false, masque = false,
@@ -106,11 +106,11 @@ export function LigneScolarite({
             {/* Sous masque, la surface garde sa teinte — c'est le rythme de couleur de la pile, et
                 l'effacer rendrait la rangee grise — mais le glyphe du service cede la place au
                 cadenas : « pas encore ouvert » plutot que « voici ce que c'est ». */}
-            <View style={[styles.surfaceIcone, { backgroundColor: `${teinte}1A` }]}>
+            <View style={styles.colonneIcone}>
                 <Icon
                     icon={masque ? { family: 'material', name: 'lock' } : icon}
                     size={22}
-                    color={masque ? theme.fontSecondary : teinte}
+                    color={masque ? theme.fontTertiary : teinte}
                 />
             </View>
 
@@ -118,21 +118,17 @@ export function LigneScolarite({
                 {/* Sous masque, le texte tient toujours sa place mais n'apparait pas, et la barre
                     posee par-dessus sa boite dit qu'il y a bien quelque chose la. Le titre garde
                     `numberOfLines={2}` : masquer ne doit pas changer la hauteur de la rangee. */}
-                {masque ? <TexteMasque style={styles.titre} largeur={LARGEUR_BARRE_TITRE} couleur={theme.border} /> : (
-                    <Text
-                        style={[styles.titre, { color: attenue ? theme.fontSecondary : theme.font }]}
-                        numberOfLines={2}
-                    >
-                        {titre}
+                <Text
+                    style={[styles.titre, { color: masque || attenue ? theme.fontSecondary : theme.font }]}
+                    numberOfLines={2}
+                >
+                    {masque ? Translator.get('COMING_SOON_TITLE') : titre}
+                </Text>
+                {masque || sousTitre === null || sousTitre === undefined ? null : (
+                    <Text style={[styles.sousTitre, { color: theme.fontSecondary }]} numberOfLines={1}>
+                        {sousTitre}
                     </Text>
                 )}
-                {sousTitre === null || sousTitre === undefined ? null : (masque
-                    ? <TexteMasque style={styles.sousTitre} largeur={LARGEUR_BARRE_SOUS_TITRE} couleur={theme.border} />
-                    : (
-                        <Text style={[styles.sousTitre, { color: theme.fontSecondary }]} numberOfLines={1}>
-                            {sousTitre}
-                        </Text>
-                    ))}
             </View>
 
             {droite}
@@ -173,7 +169,7 @@ const styles = StyleSheet.create({
     },
     filet: {
         height: StyleSheet.hairlineWidth,
-        marginLeft: tokens.space.md + 40 + tokens.space.md,
+        marginLeft: tokens.space.md + COLONNE + tokens.space.md,
     },
     ligne: {
         flexDirection: 'row',
@@ -182,11 +178,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: tokens.space.md,
         gap: tokens.space.md,
     },
-    surfaceIcone: {
-        width: 40,
-        height: 40,
-        borderRadius: tokens.radius.md,
-        justifyContent: 'center',
+    colonneIcone: {
+        width: COLONNE,
         alignItems: 'center',
     },
     textes: {

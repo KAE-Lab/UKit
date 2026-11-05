@@ -97,11 +97,11 @@ export function WidgetRow({ definition, etat, contexte = null, teinte, theme, on
             // Le compteur arrive en fondu, comme la valeur d'une tuile — et pour la meme raison, cle
             // sur la **nature** : une relecture qui rend le meme etat ne rejoue rien.
             droite={etat.chargement
-                ? <ActivityIndicator size="small" color={teinte} />
+                ? <ActivityIndicator size="small" color={theme.fontTertiary} />
                 : (compteVisible
                     ? (
                         <ApparitionEnFondu key={etat.nature}>
-                            <CompteurScolarite valeur={etat.nombre as number} teinte={teinte} theme={theme} />
+                            <CompteurScolarite valeur={etat.nombre as number} teinte={theme.accent} theme={theme} />
                         </ApparitionEnFondu>
                     )
                     : null)}
