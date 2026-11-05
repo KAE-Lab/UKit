@@ -11,7 +11,9 @@ export default [
     // du typage et du lint de la racine. Ses regles pures, elles, sont testees par `npm test`.
     // Un environnement Python local (celui du kit de l'Epure, tools/epure/README.md) embarque le
     // pilote JavaScript de Playwright : Git l'ignore deja, le lint aussi.
-    ignores: ["console/dist/**", "supabase/functions/*/index.ts", "**/.venv/**"],
+    // Les sorties du labo de l'Epure (tools/epure/sortie/), ignorees par Git, faisaient echouer le
+    // lint en local seulement (cloture de 7-I).
+    ignores: ["console/dist/**", "supabase/functions/*/index.ts", "**/.venv/**", "tools/epure/sortie/**"],
   },
   {
     files: ["**/*.ts", "**/*.tsx"],

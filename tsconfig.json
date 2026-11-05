@@ -7,5 +7,8 @@
     "strict": false
   },
   "extends": "expo/tsconfig.base",
-  "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js", "android", "ios", "console", "supabase/functions/*/index.ts"]
+  // `tools/epure/sortie/` porte les fichiers du labo, ignores par Git : en local, une erreur de
+  // syntaxe y arretait `tsc` avant le controle des types du reste, que l'integration continue, qui
+  // ne les a pas, voyait seule (cloture de 7-I).
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js", "android", "ios", "console", "supabase/functions/*/index.ts", "tools/epure/sortie"]
 }
