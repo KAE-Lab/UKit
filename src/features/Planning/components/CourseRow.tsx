@@ -31,7 +31,7 @@ import { CourseData } from './CourseCard';
 import { lignesDuCreneau, type LigneDeCreneau } from './CourseAnnotations';
 import { CalendarNewEventPrompt } from './CalendarNewEventPrompt';
 import { couleurDeCours, encreDeCours } from '../services/couleurDeCours';
-import { etatDuCours, formaterDuree } from '../services/frise';
+import { etatDuCours, formaterDuree, minutesDe } from '../services/frise';
 
 /**
  * La place laissee a l'indicateur de pages du carrousel par la derniere ligne d'infos.
@@ -109,7 +109,11 @@ function ColonneDesHeures({ data, theme, resteMinutes }: { data: CourseData; the
     return (
         <View style={styles.heures}>
             <Text style={[tokens.texte.heure, { color: theme.font }]}>{data.starttime}</Text>
-            <Text style={[styles.heureDeFin, tokens.texte.chiffres, { color: theme.fontSecondary }]}>{data.endtime}</Text>
+            {/* Une heure de fin que la source n'a pas su ecrire (« Invalid date ») ne s'affiche pas :
+                la carte dit ce qu'elle sait (defauts-fonctionnels.md). */}
+            {minutesDe(data.endtime) !== null ? (
+                <Text style={[styles.heureDeFin, tokens.texte.chiffres, { color: theme.fontSecondary }]}>{data.endtime}</Text>
+            ) : null}
             {resteMinutes !== null ? (
                 <View style={styles.reste}>
                     <MaterialCommunityIcons name="timer-sand" size={12} color={theme.accent} />

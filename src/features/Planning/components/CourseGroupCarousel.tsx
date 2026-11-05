@@ -96,6 +96,9 @@ export function CourseGroupCarousel({ coursesGroup, theme, minute = null }: {
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
 				data={coursesGroup}
+				// Les pages sont des cellules memorisees : sans la minute ici, une carte gardait l'etat
+				// de sa premiere heure — le temps qui reste d'un cours en cours ne bougeait plus (7-J).
+				extraData={minute}
 				keyExtractor={(item, index) => (item.schedule || '') + String(index)}
 				initialScrollIndex={initialIndex}
 				getItemLayout={(data, index) => ({

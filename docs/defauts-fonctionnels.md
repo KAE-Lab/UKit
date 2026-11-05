@@ -19,6 +19,22 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Un cours sans heure de fin s'écrit « Invalid date » — constaté le 2026-11-05
+
+Sur le banc, le groupe `31BI701S` (stage du jeudi 5 novembre) : Celcat sert l'événement « Stage » avec
+une fin nulle, et [`projeterCours`](../src/features/Planning/services/PlanningApiMapping.ts) en fait
+`endtime: 'Invalid date'` — la forme que le code d'origine produisait, gardée à dessein par la
+projection et sa parité. La carte de cours ne l'affiche plus depuis 7-J (une heure illisible se tait),
+mais le champ reste faux pour tout ce qui le lit : la fiche du cours, le créneau `schedule`, les
+rappels. La correction se fait dans la projection, avec un cas de parité.
+
+### Le menu de développement s'ouvre en partie hors de l'écran à 360 points — constaté le 2026-11-05
+
+Sur `ukit-a8` (360 × 740 dp), le panneau de [`ModMenu`](../src/shared/ui/ModMenu.tsx) s'ouvre à la
+position de sa bulle (`largeur - 80`) avec sa largeur de 300 : il déborde de deux cents points à droite,
+et seul un glissement de son en-tête le ramène. La borne n'est appliquée qu'au relâcher d'un
+glissement. Outil de développement seulement ; il gêne le banc, dont c'est l'instrument.
+
 ### Le parcours d'accueil s'ouvre en anglais sur un Android en français — constaté le 2026-11-04
 
 Sur le banc Android (Android 9, système en `fr-FR`), une installation neuve ouvre le parcours en
