@@ -1,11 +1,10 @@
 /**
- * La geometrie et les couleurs du fond d'un onglet (jalon 7-I) : ce que `FondDOnglet` dessine, sans
- * React, pour se tester hors appareil.
+ * La geometrie et les couleurs du fond d'un onglet (jalon 7-I, repris en 7-J) : ce que `FondDOnglet`
+ * et le fondu du bord dessinent, sans React, pour se tester hors appareil.
  *
- * Le fond est la variante K1 du labo, choisie le 2026-11-04 : un voile oblique de deux teintes
- * proches de la section, separees par des respirations ou la page reparait, qui glisse lentement
- * sur le haut de l'ecran et se fond dans la page avant le contenu. La 3D (tours 3 et 4) a ete
- * abandonnee la meme semaine : trop lourde pour ce qu'elle apportait.
+ * Le fond etait la variante K1 du labo, choisie le 2026-11-04 : un motif oblique qui glissait
+ * lentement. La deuxieme passe de 7-J l'a fixe et confine a l'en-tete (`FondDOnglet`) ; restent ici
+ * le voile qui le ramene a la page, et le fondu du contenu qui passe dessous.
  */
 
 /** Les onglets qui portent un fond ; Planning attend la reprise de son en-tete (7-J). */
@@ -16,16 +15,6 @@ export const GEOMETRIE_DU_FOND = {
     hauteur: 470,
     /** Le voile qui ramene a la page : transparent a `debut`, plein a `fin` (points). */
     voile: { debut: 150, fin: 470 },
-    /**
-     * La periode du motif, le long de son axe : une teinte, la page, l'autre teinte, la page. Le
-     * motif glisse d'une periode par cycle, si bien que la fin d'un cycle retombe exactement sur
-     * son debut ; un glissement d'une autre longueur sautait a chaque tour (labo, tour 5).
-     */
-    periode: 780,
-    /** Le nombre de periodes dessinees : de quoi couvrir l'ecran incline, pendant tout le glissement. */
-    periodes: 4,
-    /** L'inclinaison du motif, en degres : celle du labo (115 degres CSS). */
-    inclinaison: 25,
 } as const;
 
 /**
@@ -74,21 +63,14 @@ export function voileDuFond(fond: string, geometrie: HauteurDuFond = GEOMETRIE_D
 }
 
 /**
- * Le motif horizontal (avant inclinaison) : `periodes` fois la suite teinte A, page, teinte B,
- * page, et la teinte A pour finir. La page est opaque : le fond se pose sur elle, et un transparent
- * s'interpolerait par le noir sur iOS.
+ * Le fondu du bord haut d'une zone qui defile sous un en-tete fixe (7-J, deuxieme passe) : `fond`
+ * plein en haut, transparent en bas, sur la courbe adoucie du voile. Il part d'une couleur unie, celle
+ * de la page, sur laquelle l'en-tete se ferme deja : le raccord est exact, sans bande.
  */
-export function motifDuFond(teinteA: string, teinteB: string, fond: string): Degrade {
-    const { periodes } = GEOMETRIE_DU_FOND;
-    const colors: string[] = [];
-    const locations: number[] = [];
-    for (let p = 0; p < periodes; p += 1) {
-        [teinteA, fond, teinteB, fond].forEach((couleur, i) => {
-            colors.push(couleur);
-            locations.push((p + i / 4) / periodes);
-        });
-    }
-    colors.push(teinteA);
-    locations.push(1);
-    return { colors, locations } as Degrade;
+export function fonduDuBord(fond: string): Degrade {
+    const alphas = [...ALPHAS_DU_VOILE].reverse();
+    return {
+        colors: alphas.map((a) => avecAlpha(fond, a)),
+        locations: alphas.map((_, i) => i / (alphas.length - 1)),
+    } as Degrade;
 }

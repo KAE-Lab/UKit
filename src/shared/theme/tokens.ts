@@ -122,11 +122,6 @@ export const tokens = {
          * Reanimated 4 (`GentleSpringConfig`, 120) n'en a aucun et se lit comme une glissiere.
          */
         ressort: { damping: 100, mass: 4, stiffness: 900 },
-        /**
-         * Le glissement du fond d'un onglet : une periode du motif par cycle. Assez lent pour se
-         * remarquer au bout d'un moment plutot qu'au premier regard (labo, tours 5 et 6).
-         */
-        fond: { cycle: 60000 },
     },
 };
 

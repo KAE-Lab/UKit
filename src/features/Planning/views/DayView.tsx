@@ -13,6 +13,7 @@ import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
 import { onRetourAuPremierPlan } from '../../../shared/services/premierPlan';
 import { compter } from '../../../shared/mesure';
 import { DayViewHeader } from '../components/DayViewHeader';
+import { FonduDeBord } from '../../../shared/ui/FonduDeBord';
 import { calendrierOuEcrire, ouvrirEditeurDeCreation } from '../services/TelephoneSource';
 
 function capitalize(str: string) {
@@ -420,7 +421,8 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
                             extraData={this.state}
                         />
 
-						{/* Contenu principal */}
+						{/* Contenu principal. La liste se fond sous l'en-tete : le fondu couvre le
+						    rembourrage haut de la liste au repos, et le contenu qui y remonte. */}
 						<View style={{ flex: 1 }}>
 							{mode === 'day' ? (
 								<DayComponent
@@ -443,6 +445,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 									revisionTelephone={this.state.revisionTelephone}
 								/>
 							)}
+							<FonduDeBord fond={theme.courseBackground} />
 						</View>
 					</View>
 				)}

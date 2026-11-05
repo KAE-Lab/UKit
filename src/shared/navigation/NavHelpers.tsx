@@ -9,6 +9,9 @@ import { SettingsManager } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { HeaderButton, HEADER_BUTTON_ICON, HEADER_BUTTON_SIZE } from '../ui/HeaderButton';
 import style, { propsLibelleBouton, tokens } from '../theme/Theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { fonduDuBord } from '../ui/fondDOnglet';
+import { HAUTEUR_DU_FONDU } from '../ui/FonduDeBord';
 
 
 // GESTIONNAIRE DE HEADER
@@ -32,9 +35,16 @@ export interface NavBarHelperProps {
     themeName: string;
     route?: RouteProp<Record<string, object | undefined>, string>;
     gestureEnabled?: boolean;
+    /**
+     * Faux pour un ecran qui porte son propre en-tete fixe sous la barre : le Planning d'un groupe.
+     * Sa liste transmet son defilement, et le fond de la barre recouvrait alors le haut de cet
+     * en-tete, teinte comprise, en rognant la rangee « Aujourd'hui / Semaine » (constate sur le banc,
+     * deuxieme passe de 7-J). L'ecran pose lui-meme le fondu de sa liste.
+     */
+    fondAuDefilement?: boolean;
 }
 
-export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route, gestureEnabled }: NavBarHelperProps): StackNavigationOptions => {
+export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route, gestureEnabled, fondAuDefilement = true }: NavBarHelperProps): StackNavigationOptions => {
     const theme = style.Theme[themeName];
     
     // La variable est lue depuis le dictionnaire externe pour survivre aux mises à jour
@@ -50,27 +60,26 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
 
     const options: StackNavigationOptions = {
         /*
-         * **La barre prend son fond au defilement** (7-J), comme la barre compacte des onglets et
-         * comme les barres du systeme depuis iOS 15 : transparente au bord du contenu, pleine — fond
-         * de l'ecran et filet — des que le contenu passe dessous. Le titre, lui, ne s'efface plus. Il
-         * s'effacait **parce que** la barre n'avait pas de fond : le contenu passait sous la barre
-         * d'etat et sous un bouton de retour flottant, et la barre defilee ne nommait plus l'ecran.
-         * Un ecran qui ne transmet pas son defilement garde la barre transparente, comme avant.
+         * **La barre se pose sur le fond de l'ecran, et le contenu s'y fond** (7-J), comme sous
+         * l'en-tete des onglets : le meme systeme partout (review du 2026-11-05). Des que le contenu
+         * passe dessous, la barre prend la couleur de la page et un fondu la prolonge vers le bas ; la
+         * premiere passe y posait un filet, une coupe seche de plus. Le titre ne s'efface plus : il
+         * s'effacait parce que la barre n'avait pas de fond. Un ecran qui ne transmet pas son
+         * defilement garde la barre transparente, comme avant.
          */
-        headerBackground: () => (
+        headerBackground: () => (!fondAuDefilement ? null : (
             <Animated.View
                 pointerEvents="none"
-                style={[
-                    StyleSheet.absoluteFill,
-                    {
-                        opacity: (safeScrollY as ScrollValueWithInterps)._fondOpacity,
-                        backgroundColor: theme.background,
-                        borderBottomWidth: StyleSheet.hairlineWidth,
-                        borderBottomColor: theme.border,
-                    },
-                ]}
-            />
-        ),
+                style={[StyleSheet.absoluteFill, { opacity: (safeScrollY as ScrollValueWithInterps)._fondOpacity }]}
+            >
+                <View style={[styles.fondDeLaBarre, { backgroundColor: theme.background }]} />
+                <LinearGradient
+                    colors={fonduDuBord(theme.background).colors}
+                    locations={fonduDuBord(theme.background).locations}
+                    style={styles.fonduSousLaBarre}
+                />
+            </Animated.View>
+        )),
         headerTitle: () => (
             <View style={{
                 paddingHorizontal: tokens.space.lg, 
@@ -359,5 +368,22 @@ const styles = StyleSheet.create({
     boutonEnTete: {
         height: HEADER_BUTTON_SIZE,
         justifyContent: 'center',
+    },
+    // Le fond plein s'arrete au-dessus du fondu, qui occupe le bas de la barre, sous les boutons et
+    // le titre. Dans ses bords : un degrade dessine hors des bords de son parent faisait planter le
+    // rendu logiciel de l'emulateur (SwiftShader), trois fois sur le banc.
+    fondDeLaBarre: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: HAUTEUR_DU_FONDU,
+    },
+    fonduSousLaBarre: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: HAUTEUR_DU_FONDU,
     },
 });

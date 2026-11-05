@@ -13,7 +13,7 @@ carte par section, des rangées de 52 points séparées par un filet indenté so
 blanche dans un carré de la couleur de sa famille, l'explication d'un réglage en pied de groupe
 ([`GroupeDeReglages`](../../src/features/Settings/components/GroupeDeReglages.tsx)). Chaque réglage
 était sa propre carte : la pile d'objets sans rapport que [theme.md](../theme.md) interdit. Le grand
-titre part avec le contenu, et une barre compacte prend le relais
+titre reste fixe, et le contenu passe dessous en fondu
 ([`PageDesReglages`](../../src/features/Settings/components/PageDesReglages.tsx), `EnTeteDOnglet`).
 
 | Section | Contenu |

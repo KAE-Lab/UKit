@@ -7,6 +7,7 @@ import { tokens } from '../../../shared/theme/Theme';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { JourneeEnFrise } from './Frise';
 import { DayWeek } from './DayWeekCollapsible';
+import { HAUTEUR_DU_FONDU } from '../../../shared/ui/FonduDeBord';
 import { BandeauJourneeEntiere } from './BandeauJourneeEntiere';
 import { groupOverlappingCourses } from './ScheduleListUtils';
 
@@ -437,7 +438,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             <Animated.ScrollView 
                 showsVerticalScrollIndicator={false} 
                 style={{ flex: 1, backgroundColor: theme.courseBackground }}
-                contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.xxl + 80 }}
+                contentContainerStyle={{ paddingTop: HAUTEUR_DU_FONDU, paddingBottom: tokens.space.xxl + 80 }}
                 onScroll={this.props.onAnimatedScroll}
                 scrollEventThrottle={16}
             >

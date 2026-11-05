@@ -1,106 +1,46 @@
 /**
- * Le fond d'un onglet : deux teintes proches de la section qui glissent lentement en haut de
- * l'ecran, puis se fondent dans la page avant le contenu (jalon 7-I, variante K1 du labo).
+ * Le fond d'un onglet : la teinte de la section, en haut de l'en-tete, qui se ferme a son bas sur la
+ * couleur de la page (jalon 7-I, repris dans la deuxieme passe de 7-J).
  *
- * **Une petite touche, pas un decor.** Le fond se pose derriere le grand titre et le haut du
- * contenu, ne vole aucun toucher, et ne bouge que lentement : une periode du motif par minute
- * (`tokens.mouvement.fond`). Il ne glisse que quand l'onglet est affiche, et reste immobile sous
- * « reduire les animations ».
+ * **Un degrade fixe**, en diagonale, de la teinte de la section a sa voisine puis a la page. Il
+ * glissait lentement depuis 7-I, un motif incline de 3 000 points qui faisait le tour d'une periode
+ * par minute. La deuxieme passe a confine la teinte a l'en-tete, un bandeau d'une centaine de points
+ * ou ce glissement ne se percevait plus ; et cette couche tournee, posee au-dessus d'une liste qui
+ * defile, faisait tomber le rendu logiciel de l'emulateur au premier defilement (isole sur le banc le
+ * 2026-11-05) : un cout de composition que l'A8 payait aussi, pour un mouvement invisible.
  *
- * Le motif est un `LinearGradient` horizontal, incline par une rotation : un degrade incline par
- * ses seuls points de depart et d'arrivee change d'angle avec les proportions de la vue, et ne se
- * repete plus d'une longueur connue. Ici la periode est mesuree le long de l'axe du motif, et le
- * glissement d'une periode retombe exactement sur son depart.
- *
- * A poser en premier enfant de la vue racine de l'onglet, sous l'en-tete et le contenu.
+ * A poser en premier enfant de l'en-tete, sous le titre.
  */
 
-import React, { useEffect } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useIsFocused } from '@react-navigation/native';
-import Reanimated, {
-    cancelAnimation,
-    Easing,
-    useAnimatedStyle,
-    useReducedMotion,
-    useSharedValue,
-    withRepeat,
-    withTiming,
-} from 'react-native-reanimated';
 
-import { tokens, type AppThemeType } from '../theme/Theme';
-import { fondDeHauteur, GEOMETRIE_DU_FOND, motifDuFond, voileDuFond, type OngletAFond } from './fondDOnglet';
-
-const { periode, periodes, inclinaison } = GEOMETRIE_DU_FOND;
-/** La hauteur du motif incline : assez pour couvrir le fond quel que soit l'angle. */
-const EPAISSEUR_DU_MOTIF = 1200;
+import { type AppThemeType } from '../theme/Theme';
+import { fondDeHauteur, GEOMETRIE_DU_FOND, voileDuFond, type OngletAFond } from './fondDOnglet';
 
 export interface FondDOngletProps {
     theme: AppThemeType;
     onglet: OngletAFond;
-    /**
-     * Une hauteur plus courte que celle d'un onglet qui defile : l'en-tete collant du Planning. Le
-     * voile s'y recale et se ferme au bas du fond (`fondDeHauteur`).
-     */
+    /** La hauteur de l'en-tete qui le porte ; le voile s'y recale et se ferme au bas du fond. */
     hauteur?: number;
 }
 
-export function FondDOnglet({ theme, onglet, hauteur: hauteurVoulue }: FondDOngletProps) {
-    const { width: largeur } = useWindowDimensions();
-    const affiche = useIsFocused();
-    const mouvementReduit = useReducedMotion();
-    const glissement = useSharedValue(0);
-
-    useEffect(() => {
-        if (!affiche || mouvementReduit) return undefined;
-        // Reprend ou il s'etait arrete : le motif ne saute pas au retour sur l'onglet.
-        const reste = (periode + glissement.value) / periode;
-        glissement.value = withTiming(-periode, { duration: tokens.mouvement.fond.cycle * reste, easing: Easing.linear }, (fini) => {
-            if (!fini) return;
-            glissement.value = 0;
-            glissement.value = withRepeat(
-                withTiming(-periode, { duration: tokens.mouvement.fond.cycle, easing: Easing.linear }),
-                -1,
-                false,
-            );
-        });
-        return () => cancelAnimation(glissement);
-    }, [affiche, mouvementReduit, glissement]);
-
-    const incline = useAnimatedStyle(() => ({
-        transform: [{ rotate: `${inclinaison}deg` }, { translateX: glissement.value }] as const,
-    }));
-
+export function FondDOnglet({ theme, onglet, hauteur }: FondDOngletProps) {
     const [teinteA, teinteB] = theme.fondDOnglet[onglet];
-    const motif = motifDuFond(teinteA, teinteB, theme.background);
-    const geometrie = hauteurVoulue !== undefined ? fondDeHauteur(hauteurVoulue) : GEOMETRIE_DU_FOND;
+    const geometrie = hauteur !== undefined ? fondDeHauteur(hauteur) : GEOMETRIE_DU_FOND;
     const voile = voileDuFond(theme.background, geometrie);
-    const longueur = periode * periodes;
 
     return (
-        <View pointerEvents="none" style={[styles.fond, { height: geometrie.hauteur }]}>
-            <Reanimated.View
-                style={[
-                    styles.motif,
-                    {
-                        width: longueur,
-                        height: EPAISSEUR_DU_MOTIF,
-                        // Centre sur l'ecran : la rotation tourne autour du centre de la vue.
-                        left: largeur / 2 - longueur / 2,
-                        top: geometrie.hauteur / 2 - EPAISSEUR_DU_MOTIF / 2,
-                    },
-                    incline,
-                ]}
-            >
-                <LinearGradient
-                    colors={motif.colors}
-                    locations={motif.locations}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={StyleSheet.absoluteFill}
-                />
-            </Reanimated.View>
+        <View pointerEvents="none" style={[styles.fond, { height: geometrie.hauteur, backgroundColor: theme.background }]}>
+            {/* La page reparait a droite : une teinte pleine sur toute la largeur se lisait comme un aplat. */}
+            <LinearGradient
+                colors={[teinteA, teinteB, theme.background]}
+                locations={[0, 0.55, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0.8 }}
+                style={StyleSheet.absoluteFill}
+            />
             <LinearGradient colors={voile.colors} locations={voile.locations} style={StyleSheet.absoluteFill} />
         </View>
     );
@@ -113,8 +53,5 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         overflow: 'hidden',
-    },
-    motif: {
-        position: 'absolute',
     },
 });

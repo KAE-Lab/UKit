@@ -1,44 +1,42 @@
 /**
- * L'en-tete d'un onglet qui defile : le grand titre part avec le contenu, et une barre compacte prend
- * le relais quand il a disparu (jalon 7-J, 2026-11-05).
+ * L'en-tete d'un onglet : fixe, pose sur le fond de la page (7-J, deuxieme passe).
  *
- * **Le defaut qu'il corrige.** Le grand titre de Campus et des Reglages s'effacait sur place, et plus
- * rien ne protegeait ensuite la barre d'etat : le contenu s'ecrivait sous l'heure du telephone
- * (« 11:25 » sur « Restaurants », releve du 2026-11-05). La barre compacte porte desormais un fond, un
- * filet et le titre au centre, comme celle d'iOS.
+ * **Un seul systeme d'en-tete dans l'application** (review du 2026-11-05). La premiere passe faisait
+ * partir le grand titre avec le contenu, puis paraitre une barre compacte, titre au centre : un
+ * deuxieme gabarit a cote de l'en-tete fixe du Planning. Le titre reste desormais a sa place, et le
+ * contenu passe dessous **en fondu** (`FonduDeBord`), qui parait des le premier point de defilement.
  *
- * **Le fond de la barre est le fond de l'onglet**, pas un aplat : une copie de `FondDOnglet` rognee a
- * sa hauteur. Le haut de l'ecran ne change donc pas de couleur quand la barre parait ; le contenu
- * disparait simplement dessous. Les deux copies montent ensemble et glissent du meme pas.
- *
- * **Le titre suit le contenu au lieu de s'effacer sur place** : c'est ce qui permet a une page courte
- * de defiler un peu sans laisser un titre a moitie efface par-dessus le contenu, la raison pour
- * laquelle la Scolarite avait du rendre son en-tete collant.
+ * **La teinte de la section vit dans l'en-tete**, et seulement la : le fond de l'onglet, ramene a sa
+ * hauteur, se ferme a son bas sur la couleur unie de la page. Le fondu part de cette meme couleur, si
+ * bien que le raccord ne se voit pas. Elle couvrait le haut de la page entiere, sous le contenu, ou
+ * aucun fondu ne pouvait la suivre sans masque.
  *
  * **Ce qui ne bouge pas** : l'element de droite (la pastille d'etat de service), centre sur la ligne
- * du grand titre comme sur celle de la barre — les deux ont la meme hauteur, si bien qu'il n'a pas a
- * changer de place.
+ * du titre.
  */
 
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Reanimated, { Extrapolation, interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
+import { Extrapolation, interpolate, useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
 import { tokens, type AppThemeType } from '../theme/Theme';
 import { FondDOnglet } from './FondDOnglet';
+import { FonduDeBord, HAUTEUR_DU_FONDU } from './FonduDeBord';
 import type { OngletAFond } from './fondDOnglet';
 
-/** La hauteur de la rangee du grand titre, et celle de la barre compacte : la meme. */
+/** La hauteur de la rangee du titre. */
 export const HAUTEUR_DE_LA_BARRE = 56;
 
-/** Le defilement, en points, au bout duquel le grand titre a disparu et la barre est pleine. */
-const COURSE = { titre: 30, barre: [22, 46], titreCompact: [34, 52] } as const;
+/** La hauteur de l'en-tete, zone sure comprise : le retrait du contenu qui defile dessous. */
+export function hauteurDeLEnTete(hautSur: number): number {
+    return hautSur + HAUTEUR_DE_LA_BARRE;
+}
 
 export interface EnTeteDOngletProps {
     theme: AppThemeType;
     onglet: OngletAFond;
     titre: string;
-    /** Le defilement de la page, lu sur le fil de l'interface. */
+    /** Le defilement de la page, lu sur le fil de l'interface : il fait paraitre le fondu. */
     defilement: SharedValue<number>;
     /**
      * Sa valeur au repos : `-hauteur de l'en-tete` sur iOS, ou l'en-tete est un retrait du contenu
@@ -47,59 +45,28 @@ export interface EnTeteDOngletProps {
     repos: number;
     /** La zone sure du haut. */
     hautSur: number;
-    /** Ce qui se pose a droite et ne bouge pas : la pastille d'etat de service. */
+    /** Ce qui se pose a droite : la pastille d'etat de service. */
     droite?: React.ReactNode;
 }
 
 export function EnTeteDOnglet({ theme, onglet, titre, defilement, repos, hautSur, droite }: EnTeteDOngletProps) {
-    const grandTitre = useAnimatedStyle(() => {
-        const course = defilement.value - repos;
-        return {
-            opacity: interpolate(course, [0, COURSE.titre], [1, 0], Extrapolation.CLAMP),
-            transform: [{ translateY: -course }],
-        };
-    });
-    const barre = useAnimatedStyle(() => ({
-        opacity: interpolate(defilement.value - repos, COURSE.barre, [0, 1], Extrapolation.CLAMP),
-    }));
-    const titreCompact = useAnimatedStyle(() => ({
-        opacity: interpolate(defilement.value - repos, COURSE.titreCompact, [0, 1], Extrapolation.CLAMP),
-    }));
-
-    const hauteur = hautSur + HAUTEUR_DE_LA_BARRE;
+    const hauteur = hauteurDeLEnTete(hautSur);
+    const opacite = useDerivedValue(() => interpolate(
+        defilement.value - repos, [0, HAUTEUR_DU_FONDU / 2], [0, 1], Extrapolation.CLAMP,
+    ));
 
     return (
-        <View pointerEvents="box-none" style={[styles.enTete, { height: hauteur }]}>
-            {/* La barre : le fond de l'onglet rogne, et son filet. Elle ne vole aucun toucher. */}
-            <Reanimated.View pointerEvents="none" style={[StyleSheet.absoluteFill, barre]}>
-                <View style={[StyleSheet.absoluteFill, styles.rognage]}>
-                    <FondDOnglet theme={theme} onglet={onglet} />
-                </View>
-                <View style={[styles.filet, { backgroundColor: theme.border }]} />
-            </Reanimated.View>
-
-            <Reanimated.View pointerEvents="none" style={[styles.rangee, { top: hautSur }, titreCompact]}>
-                <Text numberOfLines={1} style={[tokens.texte.titreDeBarre, styles.titreCompact, { color: theme.font }]}>
+        // Le conteneur englobe le fondu : un degrade dessine hors des bords de son parent faisait
+        // planter le rendu logiciel de l'emulateur (SwiftShader), trois fois sur le banc.
+        <View pointerEvents="box-none" style={[styles.enTete, { height: hauteur + HAUTEUR_DU_FONDU }]}>
+            <FondDOnglet theme={theme} onglet={onglet} hauteur={hauteur} />
+            <View pointerEvents="box-none" style={[styles.rangee, { top: hautSur }]}>
+                <Text numberOfLines={1} style={[tokens.texte.grandTitre, styles.titre, { color: theme.font }]}>
                     {titre}
                 </Text>
-            </Reanimated.View>
-
-            {/* Le grand titre glisse sous le bord haut de sa rangee, jamais sous l'heure du telephone :
-                la boite qui le rogne commence sous la zone sure, et descend assez pour que le rebond
-                du tirer ne le coupe pas par le bas. */}
-            <View pointerEvents="none" style={[styles.rognageDuGrandTitre, { top: hautSur }]}>
-                <Reanimated.View style={[styles.rangee, styles.rangeeDuGrandTitre, grandTitre]}>
-                    <Text numberOfLines={1} style={[tokens.texte.grandTitre, { color: theme.font }]}>
-                        {titre}
-                    </Text>
-                </Reanimated.View>
+                {droite}
             </View>
-
-            {droite !== undefined ? (
-                <View pointerEvents="box-none" style={[styles.rangee, styles.droite, { top: hautSur }]}>
-                    {droite}
-                </View>
-            ) : null}
+            <FonduDeBord fond={theme.background} haut={hauteur} opacite={opacite} />
         </View>
     );
 }
@@ -112,16 +79,6 @@ const styles = StyleSheet.create({
         right: 0,
         zIndex: 10,
     },
-    rognage: {
-        overflow: 'hidden',
-    },
-    filet: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: StyleSheet.hairlineWidth,
-    },
     rangee: {
         position: 'absolute',
         left: 0,
@@ -129,25 +86,9 @@ const styles = StyleSheet.create({
         height: HAUTEUR_DE_LA_BARRE,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
         paddingHorizontal: tokens.space.md,
     },
-    rognageDuGrandTitre: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        height: HAUTEUR_DE_LA_BARRE * 4,
-        overflow: 'hidden',
-    },
-    rangeeDuGrandTitre: {
-        top: 0,
-        justifyContent: 'flex-start',
-    },
-    droite: {
-        justifyContent: 'flex-end',
-    },
-    titreCompact: {
-        // Le titre compact laisse la place de la pastille de chaque cote : centre, il ne la touche pas.
-        marginHorizontal: tokens.space.xxl,
+    titre: {
+        flex: 1,
     },
 });

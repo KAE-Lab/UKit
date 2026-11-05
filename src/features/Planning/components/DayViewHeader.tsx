@@ -205,12 +205,14 @@ const renderSliders = (props: DayViewHeaderProps) => {
 };
 
 /**
- * L'en-tete collant du Planning : le titre, la navigation, le ruban.
+ * L'en-tete fixe du Planning : le titre, la navigation, le ruban.
  *
- * **Il porte le fond de l'onglet** (7-J), comme Campus, la Scolarite et les Reglages : le bleu du
- * Planning, ramene a la hauteur de l'en-tete pour se fondre dans la page juste au-dessus du filet.
- * Il etait un aplat de carte avec une ombre ; la liste qui defile dessous s'en separe desormais par
- * le seul filet. La hauteur se mesure au premier rendu, le fond attend d'en connaitre la valeur.
+ * **Il porte le fond de l'onglet** (7-J), comme Campus, la Scolarite et les Reglages : la teinte du
+ * Planning, ramenee a la hauteur de l'en-tete pour se fermer a son bas sur la couleur de la page. Il
+ * etait un aplat de carte avec une ombre, puis un fond separe de la liste par un filet ; la liste s'y
+ * fond desormais (`FonduDeBord`, pose par `DayView`), et le filet est parti avec la coupe seche qu'il
+ * soulignait (review du 2026-11-05). La hauteur se mesure au premier rendu, le fond attend d'en
+ * connaitre la valeur.
  */
 export const DayViewHeader: React.FC<DayViewHeaderProps> = (props) => {
     const [hauteur, setHauteur] = useState<number | null>(null);
@@ -219,7 +221,6 @@ export const DayViewHeader: React.FC<DayViewHeaderProps> = (props) => {
             onLayout={(evenement) => setHauteur(Math.round(evenement.nativeEvent.layout.height))}
             style={[styles.enTete, {
                 backgroundColor: props.theme.background,
-                borderBottomColor: props.theme.border,
                 paddingTop: (props.insets?.top || 0),
             }]}
         >
@@ -237,7 +238,6 @@ export const DayViewHeader: React.FC<DayViewHeaderProps> = (props) => {
 const styles = StyleSheet.create({
     enTete: {
         paddingBottom: tokens.space.sm,
-        borderBottomWidth: StyleSheet.hairlineWidth,
     },
     // Les deux boutons de la navigation : une surface de carte posee sur le fond de l'onglet, au
     // filet des cartes ; le gris de bouton s'y lisait comme une tache.

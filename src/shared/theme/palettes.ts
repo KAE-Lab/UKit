@@ -50,20 +50,14 @@ export interface PaletteDeBase {
     readonly sectionsHeaders: string[];
     readonly sections: string[];
     /**
-     * Les deux teintes du fond de chaque onglet (7-I, `FondDOnglet`) : la teinte de la section et sa
-     * voisine a 15 degres, Planning bleu, Campus cyan, Scolarite violet, Reglages presque neutre.
-     * Ce sont les couleurs vues et choisies au labo (variante K1, dosage affirme, 2026-11-04), au
-     * sommet du voile ; en sombre, celles du noir teinte #0B0B12 du labo. Calculees depuis le noir pur
-     * de l'application, elles tombaient presque au noir et ne se voyaient plus : on garde ce qui a
-     * ete vu plutot qu'un calcul.
+     * Les deux teintes du fond de chaque onglet (`FondDOnglet`), **le long du degrade du logo**
+     * (7-J, deuxieme passe) : le Planning au bout bleu (257 degres en OKLCH), Campus au milieu (268),
+     * la Scolarite au bout indigo (278), chacune avec sa voisine a dix degres ; les Reglages presque
+     * neutres. Meme clarte et meme saturation pour les trois, par theme (L 0,905 et C 0,06 en clair,
+     * L 0,235 et C 0,105 en sombre). C'etaient le bleu ciel, le turquoise et le violet rose du labo
+     * (7-I) : trois familles hors de l'identite, que la review du 2026-11-05 a jugees « prototype ».
      */
     readonly fondDOnglet: Readonly<Record<'planning' | 'campus' | 'scolarite' | 'reglages', readonly [string, string]>>;
-    /**
-     * La teinte franche de chaque onglet (7-J, 2026-11-05) : l'icone et le libelle de l'onglet actif,
-     * de la meme teinte que son fond. Calculees en OKLCH sur la teinte du fond, a 5:1 au moins sur la
-     * barre d'onglets ; les Reglages, dont le fond est presque neutre, prennent l'accentuation.
-     */
-    readonly teinteDOnglet: Readonly<Record<'planning' | 'campus' | 'scolarite' | 'reglages', string>>;
     /**
      * Les deux couleurs du logo, les memes dans les deux themes : le bleu et l'indigo de son degrade
      * (docs/identite.md). Le logo vectoriel et la figure en echo de l'accueil les lisent ici (7-J).
@@ -87,16 +81,10 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
         sections:        ['#007AFF10', '#34C75910', '#FF950010', '#FF3B3010', '#5856D610', '#5AC8FA10'],
         sectionsHeaders: ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#5856D6', '#5AC8FA'],
         fondDOnglet: {
-            planning:  ['#C0E5FF', '#CEE0FF'],
-            campus:    ['#A4F2F6', '#A6EFFF'],
-            scolarite: ['#EDD6FF', '#F9D2FF'],
+            planning:  ['#C4E3FF', '#CADFFF'],
+            campus:    ['#CBE0FF', '#D1DCFF'],
+            scolarite: ['#D3DEFF', '#D8D9FF'],
             reglages:  ['#E0E0EE', '#E0E0EE'],
-        },
-        teinteDOnglet: {
-            planning:  '#0071B9',
-            campus:    '#007B87',
-            scolarite: '#8548AC',
-            reglages:  '#3B5FE5',
         },
         logo: { bleu: '#007AFF', indigo: '#5E5CE6' },
     },
@@ -116,16 +104,10 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
         // L'index 0 portait `#5E5CE6`, la valeur du 4 : cinq teintes au lieu de six en sombre, corrige en 6.1-C.
         sectionsHeaders: ['#0A84FF', '#30D158', '#FF9F0A', '#FF453A', '#5E5CE6', '#64D2FF'],
         fondDOnglet: {
-            planning:  ['#00184E', '#0C124F'],
-            campus:    ['#002931', '#00263C'],
-            scolarite: ['#290445', '#32003C'],
+            planning:  ['#001B4D', '#02164D'],
+            campus:    ['#03174E', '#11124D'],
+            scolarite: ['#12134E', '#1B0E4B'],
             reglages:  ['#1C1B29', '#1C1B29'],
-        },
-        teinteDOnglet: {
-            planning:  '#4FB5F3',
-            campus:    '#00BEC7',
-            scolarite: '#C493E8',
-            reglages:  '#6381F8',
         },
         logo: { bleu: '#007AFF', indigo: '#5E5CE6' },
     },

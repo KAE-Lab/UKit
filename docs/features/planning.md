@@ -188,8 +188,9 @@ tournait indéfiniment.
 
 **La journée est une frise** ([7-J](../phase-7/7-j-ecrans.md), 2026-11-05). Entre deux cours séparés
 d'un quart d'heure ou plus, la pause se cote : des pointillés dans l'axe du rail des cartes, et sa
-durée (« Pause de 1 h 40 »). Aujourd'hui, le repère de l'heure se pose à sa place — un point de
-l'accentuation qui respire, l'heure, et le temps avant le cours suivant ; pendant un cours, c'est sa
+durée (« Pause de 1 h 40 »). Aujourd'hui, le repère de l'heure se pose à sa place — l'heure en
+chiffres, un trait de l'accentuation, et le temps avant le cours suivant, sans point lumineux (review
+du 2026-11-05) ; pendant un cours, c'est sa
 carte qui porte le temps qui reste, et son rail se remplit avec le temps écoulé. Un cours passé
 s'estompe. L'état se calcule **par cours**, à ses propres heures, jamais par groupe : deux cours
 superposés ne finissent pas ensemble, et la première version annonçait sur l'un le reste de l'autre
