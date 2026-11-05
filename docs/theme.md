@@ -236,6 +236,7 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`Squelette`](../src/shared/ui/Squelette.tsx) | la forme d'un contenu qui charge, et `Balayage`, le reflet qui la parcourt. **Il ne dessine pas la forme** : elle vient de l'appelant, construite avec les composants du contenu en mode `masque` (`Card`, `MetaRow`, `Badge`, le titre d'une carte). Il annonce son attente aux lecteurs d'écran par sa phrase | posé au 7-I |
 | [`TexteMasque`](../src/shared/ui/TexteMasque.tsx) | une ligne de texte masquée : la hauteur exacte de sa police, une barre à sa place, **aucun caractère rendu** | 2 fois, remonté au 7-I |
 | [`EnTeteDOnglet`](../src/shared/ui/EnTeteDOnglet.tsx) | l'en-tête d'un onglet qui défile : le grand titre part avec le contenu, rogné sous la zone sûre, puis une barre compacte — le fond de l'onglet, un filet, le titre au centre — protège la barre d'état ; l'élément de droite ne bouge pas | posé au 7-J |
+| [`useEnfoncement`](../src/shared/ui/useEnfoncement.ts) | l'échelle d'une surface sous le doigt, au ressort : `Card` et la carte de cours | 2 fois, remonté au 7-J |
 | [`FondDOnglet`](../src/shared/ui/FondDOnglet.tsx) | le fond d'un onglet : deux teintes proches de la section qui glissent lentement en haut de l'écran, puis se fondent dans la page. Premier enfant de la vue racine, sous l'en-tête et le contenu. Ses couleurs sont `theme.fondDOnglet`, sa géométrie [`fondDOnglet.ts`](../src/shared/ui/fondDOnglet.ts) | 3 fois, posé au 7-I |
 | [`mouvement.ts`](../src/shared/ui/mouvement.ts) | les animations partagées, tirées de `tokens.mouvement` : `REFLUX`, `SORTIE`, `entreeEnCascade(rang)` | posé au 7-I |
 | [`ChargementPleinePage`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran**, sa phrase **obligatoire**, et une seconde ligne après quatre secondes | 5 fois |
@@ -806,6 +807,10 @@ Acquises, et qui ont coûté à être trouvées :
   [les tokens](#les-tokens) : l'ombre native d'iOS était coupée par le `overflow: hidden` de toute
   carte. En sombre, une ombre ne se voit pas : la carte se détache par sa teinte et par son filet,
   `contourDeCarte`.
+- **Sur un écran de travail, une seule trace de l'Épure : la cote** (7-J). Une pause du Planning est
+  une mesure de la journée, et l'Épure la dessine comme une cote, en pointillés 3/5 dans l'axe du rail
+  des cartes. Rien d'autre de l'Épure n'entre sur un écran où l'on travaille : une trace qui ne porte
+  pas de mesure y serait un décor ([identite.md](identite.md#les-intensités)).
 - **Les libellés de la barre d'onglets tiennent à 360 points, dans les trois langues** (7-J).
   « Paramètres » et « Se connecter » se coupaient ; ils deviennent « Réglages » et « Connexion », et
   l'espagnol « Estudios » et « Acerca de ». L'écart entre la barre et son bouton d'action passe de 32

@@ -62,7 +62,9 @@ DayView (état : jour/semaine sélectionnés, mode)
             ├─ TelephoneSource.lireEvenementsDuTelephone          (expo-calendar : calendriers cochés, jamais en cache)
             │      └─ TelephoneMapping → FusionTelephone            projection pure, fusion APRES la dérivation
             ├─ separerJourneeEntiere → BandeauJourneeEntiere        (journées entières, en tête du jour)
-            └─ groupOverlappingCourses → CourseGroupCarousel → CourseRow
+            └─ groupOverlappingCourses → JourneeEnFrise (Frise.tsx)
+                   └─ construireFrise          pauses cotées, repère de l'heure (frise.ts, pur)
+                   └─ CourseGroupCarousel → CourseRow   état de chaque cours à ses heures
 ```
 
 Depuis le jalon [6-E](../phase-6/6-e-planning.md), le service n'émet plus aucune requête : il joue
@@ -183,6 +185,29 @@ tournait indéfiniment.
 > **Capture attendue** — `planning-vide.png` : l'état vide quand aucun groupe n'est en favori.
 
 ## Décisions de conception
+
+**La journée est une frise** ([7-J](../phase-7/7-j-ecrans.md), 2026-11-05). Entre deux cours séparés
+d'un quart d'heure ou plus, la pause se cote : des pointillés dans l'axe du rail des cartes, et sa
+durée (« Pause de 1 h 40 »). Aujourd'hui, le repère de l'heure se pose à sa place — un point de
+l'accentuation qui respire, l'heure, et le temps avant le cours suivant ; pendant un cours, c'est sa
+carte qui porte le temps qui reste, et son rail se remplit avec le temps écoulé. Un cours passé
+s'estompe. L'état se calcule **par cours**, à ses propres heures, jamais par groupe : deux cours
+superposés ne finissent pas ensemble, et la première version annonçait sur l'un le reste de l'autre
+([`frise.ts`](../../src/features/Planning/services/frise.ts), pur et testé). L'heure se relit toutes
+les trente secondes par `maintenant()`, que la simulation temporelle déplace.
+
+**Dans la carte, la salle passe avant tout le reste.** Elle tombait en quatrième ligne sur six, au même
+poids que le code d'UE ; elle vient désormais sous le titre, au poids du texte principal, puis
+l'enseignant, le groupe et le code d'UE en retrait (`lignesDuCreneau`). Une ligne que la source sert
+deux fois — Celcat répète l'enseignant quand il est aussi le responsable — ne s'affiche qu'une fois,
+et les semaines du cours ne se lisent plus que dans la fiche. La couleur d'un cours, quand elle
+écrit (le badge, l'icône de la salle), passe par son **encre** (`encreDeCours`) : le cyan et le jaune
+des palettes, écrits tels quels, ne se lisaient pas sur une carte blanche.
+
+**L'en-tête porte le fond de l'onglet**, le bleu du Planning, ramené à sa hauteur pour se fondre dans
+la page au-dessus du filet. Le jour choisi est une case pleine de l'accentuation ; aujourd'hui prend
+l'accentuation et un point ; le dimanche s'estompe ; choisir un jour s'acquitte au doigt. Dans la vue
+semaine, la case dit le lundi de la semaine (« 2 nov. ») et non plus son numéro une seconde fois.
 
 **Où se donne un cours se lit, ça ne se devine plus.** Celcat publie un champ `sites`
 (`["Bâtiment A28"]`) que rien n'extrayait ; la fiche de cours cherchait donc un code de salle dans la
@@ -318,8 +343,13 @@ se voit à l'écran, appartient au lot Planning de [7-J](../phase-7/7-j-ecrans.m
   cochés et leurs événements** — ce sont ceux du téléphone, pas d'une université — là où les cours
   écrits dans l'agenda, eux, sont retirés et réécrits.
 - Un dimanche, ou un jour sans cours **et sans rendez-vous** : la carte « pas de cours » doit s'afficher — avec ses
-  **confettis** : une journée libre est une bonne nouvelle, et c'est l'icône qui sourit, jamais le
-  texte.
+  **confettis** : une journée libre est une bonne nouvelle, et c'est l'icône qui sourit. Depuis 7-J,
+  le samedi et le dimanche disent « C'est le week-end » et « Aucun cours avant lundi » — le seul
+  rebondissement de l'écran — et un jour libre qui est aujourd'hui dit « aujourd'hui ».
+- **La frise** : aujourd'hui, le repère de l'heure entre les bons cours et le temps avant le suivant ;
+  pendant un cours, son rail rempli et le temps qui reste, à ses propres heures même en carrousel ;
+  une pause de quinze minutes ou plus cotée, une plus courte non. La simulation temporelle du menu de
+  développement déplace tout cela sans attendre l'heure.
 
 ## Les quatre états de l'emploi du temps
 
@@ -729,10 +759,13 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`components/CourseAnnotations.ts`](../../src/features/Planning/components/CourseAnnotations.ts) | l'icône d'une ligne de description, déduite de son contenu — partagée par la carte et la fiche |
 | [`components/CourseAnnotations.test.ts`](../../src/features/Planning/components/CourseAnnotations.test.ts) | ses tests, sur les deux formes réelles de description |
 | [`components/DayViewHeader.tsx`](../../src/features/Planning/components/DayViewHeader.tsx) | bandeau collant : titre, le « + » vers l'éditeur du système quand il a lieu d'être, boutons de navigation, curseurs jour et semaine |
-| [`components/CalendarDay.tsx`](../../src/features/Planning/components/CalendarDay.tsx) | pastille d'un jour dans le curseur |
-| [`components/CalendarWeek.tsx`](../../src/features/Planning/components/CalendarWeek.tsx) | pastille d'une semaine dans le curseur |
+| [`components/CalendarDay.tsx`](../../src/features/Planning/components/CalendarDay.tsx) | un jour dans le curseur, et le retour haptique de son choix |
+| [`components/CalendarWeek.tsx`](../../src/features/Planning/components/CalendarWeek.tsx) | une semaine dans le curseur, légendée par son lundi |
+| [`components/CaseDuRuban.tsx`](../../src/features/Planning/components/CaseDuRuban.tsx) | la case commune aux deux : pleine si choisie, un point pour aujourd'hui (7-J) |
+| [`components/Frise.tsx`](../../src/features/Planning/components/Frise.tsx) | la vue jour en frise : la pause cotée, le repère de l'heure et sa respiration, la minute relue (7-J) |
+| [`services/frise.ts`](../../src/features/Planning/services/frise.ts) · [`frise.test.ts`](../../src/features/Planning/services/frise.test.ts) | pur : les éléments de la frise, l'état d'un cours à l'instant donné, les durées et les heures écrites (7-J) |
 | [`components/CourseCard.tsx`](../../src/features/Planning/components/CourseCard.tsx) | point d'entrée du module carte : type `CourseData` et réexports |
-| [`components/CourseRow.tsx`](../../src/features/Planning/components/CourseRow.tsx) | carte d'un cours : couleur, matière, UE, horaires, description — sans appui long sur ce qui vient du téléphone |
+| [`components/CourseRow.tsx`](../../src/features/Planning/components/CourseRow.tsx) | carte d'un cours : le rail de sa couleur, les heures, le titre et son type, la salle d'abord ; son état à ses heures — sans appui long sur ce qui vient du téléphone |
 | [`components/CourseGroupCarousel.tsx`](../../src/features/Planning/components/CourseGroupCarousel.tsx) | carrousel paginé des cours simultanés, avec mémorisation de l'index |
 | [`components/CalendarNewEventPrompt.tsx`](../../src/features/Planning/components/CalendarNewEventPrompt.tsx) | modale d'ajout d'un cours au calendrier système (permissions, calendrier par défaut) |
 | [`components/DayWeekCollapsible.tsx`](../../src/features/Planning/components/DayWeekCollapsible.tsx) | section repliable d'un jour dans la vue semaine, avec résolution tolérante de la date |
@@ -747,7 +780,7 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`services/FusionTelephone.ts`](../../src/features/Planning/services/FusionTelephone.ts) | la fusion du téléphone avec les cours, jour et semaine, et la mise à part des journées entières — pure |
 | [`services/FusionTelephone.test.ts`](../../src/features/Planning/services/FusionTelephone.test.ts) | ses tests : le tri, les colonnes par index, les bandeaux |
 | [`services/TelephoneSource.ts`](../../src/features/Planning/services/TelephoneSource.ts) | la lecture : calendriers cochés qui existent encore, cible de synchronisation écartée, `previousSyncData`, fenêtre ±7 jours, et le calendrier où le « + » écrit — la seule pièce de plateforme du jalon |
-| [`services/couleurDeCours.ts`](../../src/features/Planning/services/couleurDeCours.ts) | la couleur d'une ligne : clé de palette, hexadécimale d'un calendrier, ou `default` — pure |
+| [`services/couleurDeCours.ts`](../../src/features/Planning/services/couleurDeCours.ts) | la couleur d'une ligne : clé de palette, hexadécimale d'un calendrier, ou `default` ; et son encre, lisible sur la carte (7-J) — pure |
 | [`services/couleurDeCours.test.ts`](../../src/features/Planning/services/couleurDeCours.test.ts) | ses tests |
 | [`services/PlanningIcalSource.ts`](../../src/features/Planning/services/PlanningIcalSource.ts) | la branche iCalendar : résolution des ressources par le référentiel, les deux runs bornés, le run d'abonnement et son cache, la vérification d'un lien collé |
 | [`components/LienEdtForm.tsx`](../../src/features/Planning/components/LienEdtForm.tsx) | la saisie d'un lien d'abonnement : vérification par un run réel, enregistrement, oubli. Un composant et non un écran — l'accueil le rend en place |

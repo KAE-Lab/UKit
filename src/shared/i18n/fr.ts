@@ -111,6 +111,10 @@ const fr: TranslationDict = {
 	NOT_FOUND: 'Non trouvé',
 	NO_CLASS_THIS_DAY_TITLE: 'Journée libre',
 	NO_CLASS_THIS_DAY: 'Aucun cours ce jour-là.',
+	NO_CLASS_TODAY: 'Aucun cours aujourd\'hui.',
+	// Le samedi et le dimanche sans cours (7-J) : le seul rebondissement de l'ecran.
+	WEEKEND_TITLE: 'C\'est le week-end',
+	WEEKEND_MESSAGE: 'Aucun cours avant lundi.',
 	NO_CONNECTION: 'Pas de connexion',
 	NO_FILTER: 'Aucun filtre pour le moment',
 	NO_GROUP_FOUND_WITH_THIS_SEARCH_TITLE: 'Aucun groupe',
@@ -324,6 +328,11 @@ const fr: TranslationDict = {
 	CONNECT: "Se connecter",
 	// La forme courte, pour le bouton d'action de la barre d'onglets : 65 points de large (7-J).
 	CONNECT_SHORT: "Connexion",
+	// La frise du jour (7-J) : la pause cotee et le repere de l'heure.
+	FRISE_PAUSE: "Pause de $-",
+	FRISE_PROCHAIN: "prochain cours dans $-",
+	FRISE_PREMIER: "premier cours dans $-",
+	FRISE_FIN: "Plus de cours aujourd'hui",
 	CONNECTING: 'Connexion…',
 	LOGIN_FAILED_TITLE: 'Identifiants refusés',
 	LOGIN_FAILED: 'Vérifie le nom d’utilisateur et le mot de passe.',

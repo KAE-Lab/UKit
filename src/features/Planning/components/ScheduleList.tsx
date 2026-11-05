@@ -5,7 +5,7 @@ import moment from 'moment';
 
 import { tokens } from '../../../shared/theme/Theme';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
-import { CourseGroupCarousel } from './CourseCard';
+import { JourneeEnFrise } from './Frise';
 import { DayWeek } from './DayWeekCollapsible';
 import { BandeauJourneeEntiere } from './BandeauJourneeEntiere';
 import { groupOverlappingCourses } from './ScheduleListUtils';
@@ -383,7 +383,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     }
 
     renderEmptyDay(listHeader: React.ReactNode) {
-        return <JourneeVide theme={this.props.theme} listHeader={listHeader} />;
+        return <JourneeVide theme={this.props.theme} listHeader={listHeader} jour={this.state.target as moment.MomentInput} />;
     }
 
     renderDayMode(listHeader: React.ReactNode) {
@@ -414,18 +414,14 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             </>
         );
 
+        // La frise : les cartes, les pauses cotees et, aujourd'hui, le repere de l'heure (Frise.tsx, 7-J).
         return (
-            <Animated.FlatList
-                data={groupedDaySchedule}
-                extraData={this.state}
-                ListHeaderComponent={enTete as never}
-                renderItem={({ item }) => <CourseGroupCarousel coursesGroup={item as import('../services/PlanningApiService').PlanningEvent[]} theme={theme} />}
-                keyExtractor={(item, index) => String(index)}
-                style={{ backgroundColor: theme.courseBackground }}
-                contentContainerStyle={{ paddingTop: tokens.space.sm, paddingBottom: tokens.space.xxl + 80 }}
-                showsVerticalScrollIndicator={false}
+            <JourneeEnFrise
+                groupes={groupedDaySchedule}
+                jour={this.state.target as moment.MomentInput}
+                theme={theme}
+                enTete={enTete}
                 onScroll={this.props.onAnimatedScroll}
-                scrollEventThrottle={16}
             />
         );
     }

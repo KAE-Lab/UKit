@@ -34,12 +34,12 @@
 
 import React from 'react';
 import { Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
-import Reanimated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Reanimated from 'react-native-reanimated';
 
 import { tokens, AppThemeType } from '../theme/Theme';
 import { entreeEnCascade, REFLUX } from './mouvement';
+import { useEnfoncement } from './useEnfoncement';
 
-const { pression, ressort } = tokens.mouvement;
 
 export interface CardProps {
     theme: AppThemeType;
@@ -69,21 +69,20 @@ function SurfacePressable({ surface, style, onPress, accessibilityLabel, childre
     accessibilityLabel?: string;
     children: React.ReactNode;
 }) {
-    const echelle = useSharedValue(1);
-    const enfonce = useAnimatedStyle(() => ({ transform: [{ scale: echelle.value }] }));
+    const enfoncement = useEnfoncement();
 
     // Le style de placement va au `Pressable` : la zone qui repond au doigt est la carte, jamais la
     // gouttiere qui la separe de sa voisine.
     return (
         <Pressable
             onPress={onPress}
-            onPressIn={() => { echelle.value = withSpring(pression, ressort); }}
-            onPressOut={() => { echelle.value = withSpring(1, ressort); }}
+            onPressIn={enfoncement.onPressIn}
+            onPressOut={enfoncement.onPressOut}
             accessibilityRole="button"
             accessibilityLabel={accessibilityLabel}
             style={style}
         >
-            <Reanimated.View style={[surface, enfonce]}>{children}</Reanimated.View>
+            <Reanimated.View style={[surface, enfoncement.style]}>{children}</Reanimated.View>
         </Pressable>
     );
 }

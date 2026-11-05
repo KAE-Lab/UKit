@@ -52,7 +52,12 @@ export function indexConsulte(groupe: readonly CoursDeGroupe[]): number {
     return indexDuSouvenir(groupe, memoire.get(cleDeGroupe(groupe)));
 }
 
-export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: CourseData[], theme: import('../../../shared/theme/Theme').AppThemeType }) {
+export function CourseGroupCarousel({ coursesGroup, theme, minute = null }: {
+	coursesGroup: CourseData[];
+	theme: import('../../../shared/theme/Theme').AppThemeType;
+	/** L'heure du jour affiche quand c'est aujourd'hui : chaque carte en tire son etat (frise.ts). */
+	minute?: number | null;
+}) {
 	const initialIndex = indexConsulte(coursesGroup ?? []);
 
 	// Seul le setter sert : l'index vit dans la memoire du module, qui survit au demontage. L'etat
@@ -79,7 +84,7 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 	if (!coursesGroup || coursesGroup.length === 0) return null;
 
 	if (coursesGroup.length === 1) {
-		return <CourseRowWithNavigation data={coursesGroup[0]} theme={theme} />;
+		return <CourseRowWithNavigation data={coursesGroup[0]} theme={theme} minute={minute} />;
 	}
 
 	return (
@@ -112,7 +117,7 @@ export function CourseGroupCarousel({ coursesGroup, theme }: { coursesGroup: Cou
 					  */
 					<View style={{ width: screenWidth }}>
 						<View style={{ flex: 1, width: '100%' }}>
-							<CourseRowWithNavigation data={item} theme={theme} carouselMode={true} />
+							<CourseRowWithNavigation data={item} theme={theme} carouselMode={true} minute={minute} />
 
 							<View
 								style={{

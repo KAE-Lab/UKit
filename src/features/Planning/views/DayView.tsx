@@ -222,6 +222,13 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		}, 50);
 	};
 
+	/**
+	 * Le ruban se recentre sur le jour choisi a sa premiere mesure (7-J) : la minuterie du montage
+	 * pouvait partir avant que la liste ait une largeur, et le jour restait colle au bord gauche, la
+	 * ou `initialScrollIndex` le pose.
+	 */
+	recentrerRuban = () => this.scrollToSelection(false);
+
 	componentWillUnmount() {
 		this.demonte = true;
 		if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
@@ -409,6 +416,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
                             renderCalendarWeekItem={this.renderCalendarWeekItem}
                             onWeekScrollToIndexFailed={this.onDayScrollToIndexFailed}
                             setWeekListRef={(list) => { this.calendarList = list; }}
+                            onRubanMesure={this.recentrerRuban}
                             extraData={this.state}
                         />
 

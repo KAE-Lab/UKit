@@ -1,5 +1,5 @@
-import React from 'react';
-import { FlatList, Text, TouchableOpacity, View, ViewabilityConfig, ViewToken, ListRenderItemInfo } from 'react-native';
+import React, { useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View, ViewabilityConfig, ViewToken, ListRenderItemInfo } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 
@@ -8,6 +8,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { PastilleService } from '../../../shared/messages/PastilleService';
 import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 import { HeaderButton, HEADER_BUTTON_ICON } from '../../../shared/ui/HeaderButton';
+import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
 
 export interface DayViewHeaderProps {
     insets: { top: number } | null;
@@ -45,6 +46,8 @@ export interface DayViewHeaderProps {
     renderCalendarWeekItem: (info: ListRenderItemInfo<{ week: number; year: number }>) => React.ReactElement;
     onWeekScrollToIndexFailed: (info: { index: number; highestMeasuredFrameIndex: number; averageItemLength: number }) => void;
     setWeekListRef: (ref: FlatList<{ week: number; year: number }> | null) => void;
+    /** Le ruban vient d'etre mesure : le moment de le recentrer sur la selection. */
+    onRubanMesure?: () => void;
 
     extraData: unknown;
 }
@@ -62,12 +65,7 @@ const renderTitle = (groupName: string | string[], theme: import('../../../share
         // d'etat de service (shared/messages/PastilleService), alignes sur la ligne du titre par la
         // meme marge basse.
         <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.space.md }}>
-            <Text style={{
-                fontSize: tokens.fontSize.title,
-                fontWeight: tokens.fontWeight.bold as never,
-                color: theme.font,
-                marginBottom: tokens.space.md,
-            }}>
+            <Text style={[tokens.texte.grandTitre, { color: theme.font, marginBottom: tokens.space.md }]}>
                 {Translator.get('MY_PLANNING')}
             </Text>
             <View style={{ marginLeft: 'auto', marginBottom: tokens.space.md, flexDirection: 'row', alignItems: 'center' }}>
@@ -105,14 +103,7 @@ const renderNavigation = (
             {/* Bouton gauche */}
             <TouchableOpacity
                 onPress={onTodayPress}
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: tokens.space.md,
-                    paddingVertical: tokens.space.sm,
-                    borderRadius: tokens.radius.md,
-                    backgroundColor: theme.greyBackground,
-                }}>
+                style={[styles.bouton, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
                 <MaterialIcons name="event-note" size={16} color={primaryColor} />
                 <Text style={{
                     fontSize: tokens.fontSize.sm,
@@ -138,14 +129,7 @@ const renderNavigation = (
             {/* Bouton droit : switch mode */}
             <TouchableOpacity
                 onPress={onRightPress}
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: tokens.space.md,
-                    paddingVertical: tokens.space.sm,
-                    borderRadius: tokens.radius.md,
-                    backgroundColor: theme.greyBackground,
-                }}>
+                style={[styles.bouton, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
                 {mode === 'week' && (
                     <MaterialCommunityIcons
                         name={rightIcon}
@@ -189,6 +173,7 @@ const renderSliders = (props: DayViewHeaderProps) => {
                 renderItem={props.renderCalendarDayItem}
                 contentContainerStyle={{ paddingHorizontal: tokens.space.md }}
                 onScrollToIndexFailed={props.onDayScrollToIndexFailed}
+                onLayout={props.onRubanMesure}
             />
         );
     }
@@ -207,22 +192,31 @@ const renderSliders = (props: DayViewHeaderProps) => {
             renderItem={props.renderCalendarWeekItem}
             contentContainerStyle={{ paddingHorizontal: tokens.space.md }}
             onScrollToIndexFailed={props.onWeekScrollToIndexFailed}
+            onLayout={props.onRubanMesure}
         />
     );
 };
 
+/**
+ * L'en-tete collant du Planning : le titre, la navigation, le ruban.
+ *
+ * **Il porte le fond de l'onglet** (7-J), comme Campus, la Scolarite et les Reglages : le bleu du
+ * Planning, ramene a la hauteur de l'en-tete pour se fondre dans la page juste au-dessus du filet.
+ * Il etait un aplat de carte avec une ombre ; la liste qui defile dessous s'en separe desormais par
+ * le seul filet. La hauteur se mesure au premier rendu, le fond attend d'en connaitre la valeur.
+ */
 export const DayViewHeader: React.FC<DayViewHeaderProps> = (props) => {
+    const [hauteur, setHauteur] = useState<number | null>(null);
     return (
-        <View style={{
-            backgroundColor: props.theme.cardBackground,
-            borderBottomWidth: 1,
-            borderBottomColor: props.theme.border,
-            paddingTop: (props.insets?.top || 0),
-            paddingBottom: tokens.space.sm,
-            // Sous un en-tete de navigation transparent (le planning d'un groupe) : une ombre sans
-            // elevation, sinon le bandeau recouvre les boutons de l'en-tete sur un Android 9 (6.2.x).
-            ...tokens.shadow.sm as object,
-        }}>
+        <View
+            onLayout={(evenement) => setHauteur(Math.round(evenement.nativeEvent.layout.height))}
+            style={[styles.enTete, {
+                backgroundColor: props.theme.background,
+                borderBottomColor: props.theme.border,
+                paddingTop: (props.insets?.top || 0),
+            }]}
+        >
+            {hauteur !== null ? <FondDOnglet theme={props.theme} onglet="planning" hauteur={hauteur} /> : null}
             {renderTitle(props.groupName, props.theme, props.onAjouterEvenement)}
             {renderNavigation(
                 props.theme, props.mode, props.leftLabel, props.centerLabel, 
@@ -232,3 +226,20 @@ export const DayViewHeader: React.FC<DayViewHeaderProps> = (props) => {
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    enTete: {
+        paddingBottom: tokens.space.sm,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+    },
+    // Les deux boutons de la navigation : une surface de carte posee sur le fond de l'onglet, au
+    // filet des cartes ; le gris de bouton s'y lisait comme une tache.
+    bouton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: tokens.space.md,
+        paddingVertical: tokens.space.sm,
+        borderRadius: tokens.radius.md,
+        borderWidth: StyleSheet.hairlineWidth,
+    },
+});

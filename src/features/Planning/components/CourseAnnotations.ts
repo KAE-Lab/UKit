@@ -82,3 +82,45 @@ export function iconeDAnnotation(ligne: string): IconeAnnotation {
     if (ENSEIGNANT.test(texte)) return 'person';
     return 'group';
 }
+
+/**
+ * L'ordre dans lequel une carte de cours montre ses lignes (7-J) : ce qu'on cherche d'abord vient en
+ * premier. La salle, puis l'enseignant, puis le groupe, puis le reste ; les semaines ferment la
+ * marche. La source sert ses lignes dans son ordre a elle, et la salle tombait en quatrieme position
+ * sur six, au meme poids que le code d'UE (releve du 2026-11-05).
+ */
+const PRIORITE: Readonly<Record<IconeAnnotation, number>> = {
+    room: 0,
+    person: 1,
+    group: 2,
+    'info-outline': 3,
+    'date-range': 4,
+};
+
+export interface LigneDeCreneau {
+    readonly texte: string;
+    readonly icone: IconeAnnotation;
+}
+
+/**
+ * Les lignes d'un cours, rangees par importance et sans doublon.
+ *
+ * Le lieu d'un rendez-vous du telephone d'abord, s'il en a un : c'est un lieu, quoi qu'il dise. Une
+ * ligne servie deux fois par la source — Celcat repete l'enseignant quand il est aussi le
+ * responsable — ne s'affiche qu'une fois. A priorite egale, l'ordre de la source tient.
+ */
+export function lignesDuCreneau(description: string | undefined, lieu?: string): LigneDeCreneau[] {
+    const vues = new Set<string>();
+    const lignes: { texte: string; icone: IconeAnnotation; rang: number }[] = [];
+    const ajouter = (brut: string, icone?: IconeAnnotation) => {
+        const texte = brut.trim();
+        if (texte === '' || vues.has(texte)) return;
+        vues.add(texte);
+        lignes.push({ texte, icone: icone ?? iconeDAnnotation(texte), rang: lignes.length });
+    };
+    if (lieu !== undefined) ajouter(lieu, 'room');
+    for (const ligne of (description ?? '').split('\n')) ajouter(ligne);
+    return lignes
+        .sort((a, b) => PRIORITE[a.icone] - PRIORITE[b.icone] || a.rang - b.rang)
+        .map(({ texte, icone }) => ({ texte, icone }));
+}

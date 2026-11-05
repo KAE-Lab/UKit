@@ -90,18 +90,26 @@ export function FavorisVides({ theme, onChercher }: { theme: AppThemeType; onChe
 }
 
 /** Une journee sans cours : ce n'est ni une panne ni une absence de favori, c'est une journee libre. */
-export function JourneeVide({ theme, listHeader }: { theme: AppThemeType; listHeader: React.ReactNode }) {
+/**
+ * La journee sans cours. Des confettis, pas un calendrier vide : une journee libre est une bonne
+ * nouvelle. La passe « voix » (7-J) lui donne **un** rebondissement, le week-end, et dit
+ * « aujourd'hui » quand c'est aujourd'hui ; le reste ne change pas, pour tenir a la dixieme lecture.
+ * Le dimanche n'a jamais de cours, et un samedi vide ne precede jamais un cours le dimanche : « avant
+ * lundi » est toujours vrai.
+ */
+export function JourneeVide({ theme, listHeader, jour }: { theme: AppThemeType; listHeader: React.ReactNode; jour: moment.MomentInput }) {
+    const date = moment(jour);
+    const weekEnd = date.isoWeekday() >= 6;
+    const aujourdhui = date.isSame(moment(), 'day');
     return (
         <View style={{ flex: 1 }}>
             {listHeader}
             <EtatPlanning theme={theme}>
                 <EmptyState
                     variant="plain"
-                    // Des confettis, pas un calendrier vide : une journee libre est une bonne
-                    // nouvelle, et c'est l'icone qui sourit — le texte, lui, ne change pas.
-                    icon="party-popper"
-                    title={Translator.get('NO_CLASS_THIS_DAY_TITLE')}
-                    message={Translator.get('NO_CLASS_THIS_DAY')}
+                    icon={weekEnd ? 'sofa-outline' : 'party-popper'}
+                    title={Translator.get(weekEnd ? 'WEEKEND_TITLE' : 'NO_CLASS_THIS_DAY_TITLE')}
+                    message={Translator.get(weekEnd ? 'WEEKEND_MESSAGE' : aujourdhui ? 'NO_CLASS_TODAY' : 'NO_CLASS_THIS_DAY')}
                     theme={theme}
                 />
             </EtatPlanning>

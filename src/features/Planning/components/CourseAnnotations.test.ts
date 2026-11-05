@@ -9,7 +9,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { iconeDAnnotation } from './CourseAnnotations';
+import { iconeDAnnotation, lignesDuCreneau } from './CourseAnnotations';
 import { appliquerSurcouche } from '../../../shared/locations/referentiel';
 import {
     ETABLISSEMENT_DEFAUT,
@@ -73,5 +73,30 @@ describe('iconeDAnnotation, description iCalendar', () => {
     it('ne prend pas un libelle de groupe pour un code de module', () => {
         expect(iconeDAnnotation('2A FISE-G1')).toBe('group');
         expect(iconeDAnnotation('ENSEGID 2A')).toBe('group');
+    });
+});
+
+describe('lignesDuCreneau', () => {
+    // La description Celcat telle que servie (2026-11-05) : groupes, enseignant, salle, semaines, et
+    // l'enseignant repete en fin de liste.
+    const description = 'CMI OSIA501A, INF501A\nDUPONT Marie\nA21/ Salle 253\n38-43,45-49\nDUPONT Marie';
+
+    it('met la salle en premier, l enseignant ensuite, les semaines en dernier', () => {
+        expect(lignesDuCreneau(description).map((l) => l.icone)).toEqual(['room', 'person', 'group', 'date-range']);
+        expect(lignesDuCreneau(description)[0].texte).toBe('A21/ Salle 253');
+    });
+
+    it('ne montre qu une fois une ligne servie deux fois', () => {
+        expect(lignesDuCreneau(description).filter((l) => l.texte === 'DUPONT Marie')).toHaveLength(1);
+    });
+
+    it('tient le lieu d un rendez-vous du telephone pour un lieu, en tete', () => {
+        const lignes = lignesDuCreneau('Apporter le rapport', 'Cafeteria');
+        expect(lignes[0]).toEqual({ texte: 'Cafeteria', icone: 'room' });
+    });
+
+    it('ignore les lignes vides et une description absente', () => {
+        expect(lignesDuCreneau('\n  \n')).toEqual([]);
+        expect(lignesDuCreneau(undefined)).toEqual([]);
     });
 });
