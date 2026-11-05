@@ -213,7 +213,7 @@ L'Épure ne s'applique pas pareil partout : elle se dose selon le support.
 | Présentation, affiche, visuel de communication | pleine | tout : cadre, figures, traces, deux tons, logo en verre |
 | Site ([7-M](phase-7/7-m-le-site.md)) | forte | le logo en verre et une figure en ouverture, les deux tons, le cadre ; des traces plus rares |
 | Carte d'annonce, format 4:5 du carrousel | réduite | une figure, un titre en deux tons ; des traces rares et plus épaisses, les traits fins disparaissant à cette taille |
-| Application ([7-I](phase-7/7-i-releve-et-vocabulaire.md)) | signature | des moments : l'accueil, les états vides, les cartes d'erreur illustrées, les fonds par écran ; aucune trace sur les écrans de travail, qui restent natifs. *Le tirer-pour-rafraîchir en faisait partie ; retiré le 2026-09-26, à l'ouverture de 7-I : le spinner du système reste, le geste maison coûtait plus qu'il ne disait* |
+| Application ([7-I](phase-7/7-i-releve-et-vocabulaire.md), [7-J](phase-7/7-j-ecrans.md)) | signature | des moments : l'accueil — Fig. 01 en écho et le logo vectoriel depuis 7-J —, les états vides, les cartes d'erreur illustrées, les fonds par écran, le jeu du point pendant la connexion ; sur les écrans de travail, une seule trace, la cote d'une pause du Planning, parce qu'elle porte une mesure. *Le tirer-pour-rafraîchir en faisait partie ; retiré le 2026-09-26, à l'ouverture de 7-I : le spinner du système reste, le geste maison coûtait plus qu'il ne disait* |
 | Console | minimale | la palette et le logo ; la console reste un outil |
 
 ## Ce qui reste à trancher

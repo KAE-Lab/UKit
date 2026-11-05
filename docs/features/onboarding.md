@@ -25,7 +25,7 @@ remis à vrai par la réinitialisation depuis [Réglages](settings.md).
 
 | Étape | Contenu | Effet |
 |---|---|---|
-| 1 | Logo, souhait de bienvenue | — |
+| 1 | Fig. 01, le U du logo en écho, le logo vectoriel et le mot de bienvenue (7-J) | — |
 | 2 | Choix du thème (clair / sombre) et de la langue (fr / en / es) | `SettingsManager.setTheme` / `setLanguage`, appliqués **en direct** |
 | 3 | **Choix de l'établissement**, lu dans le catalogue — après un chargement parlant, le temps que le premier rafraîchissement réponde (quatre secondes au plus) | `basculerEtablissement(code)` ([`bascule.ts`](../../src/shared/etablissements/bascule.ts)), la même que les Réglages |
 | 4 | **Compte universitaire**, proposé et sautable — avec le bouton « Tu es d'un autre campus ? » sous celui de connexion, qui ramène à l'étape 3 ; **« Suivant » et le retour sont bloqués tant que la connexion tourne** | `validateAndSave` du contexte de scolarité, ou « Plus tard » |
@@ -79,8 +79,15 @@ répondent, parce que la cause avait trois étages :
 
 Un bouton retour apparaît à partir de l'étape 2 ; une pagination en bas indique la progression.
 
-> **Capture attendue** — `onboarding-bienvenue.png` : l'étape 1, logo et accroche.
->
+![L'étape 1 : Fig. 01, le U en écho, le logo et le mot de bienvenue, sur le banc Android](../screenshots/onboarding-bienvenue-android.png)
+
+**L'étape 1 est le moment de l'Épure** ([7-J](../phase-7/7-j-ecrans.md)) : la figure en écho de
+l'identité ([`FigureEnEcho`](../../src/shared/ui/epure/FigureEnEcho.tsx)), quarante copies du contour du
+U aux nombres du kit, qui paraissent du fond vers l'avant en un peu plus d'une seconde, puis le logo
+vectoriel ([`LogoUKit`](../../src/shared/ui/epure/LogoUKit.tsx)) et le mot de bienvenue, qui entrent
+une fois la figure construite. Sous « réduire les animations », tout est là d'emblée. C'était le PNG
+du logo au-dessus d'un titre.
+
 > **Capture attendue** — `onboarding-preferences.png` : l'étape 2, sélection du thème et de la langue.
 >
 > **Capture attendue** — `onboarding-fin.png` : l'étape 5, confirmation avant l'entrée dans l'application.

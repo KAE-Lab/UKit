@@ -10,12 +10,15 @@
  */
 
 import React from 'react';
-import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import Reanimated, { FadeIn } from 'react-native-reanimated';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
 import { tokens } from '../../../shared/theme/Theme';
 import { LoadingState } from '../../../shared/ui/LoadingState';
+import { FigureEnEcho } from '../../../shared/ui/epure/FigureEnEcho';
+import { LogoUKit } from '../../../shared/ui/epure/LogoUKit';
 import type { Etablissement } from '../../../shared/etablissements';
 import { DEGAGEMENT_PIED_PARCOURS, carte, pastille, texteDePastille, titreDeCarte } from './stylesDuParcours';
 // Deux dependances croisees entre features, et elles sont volontaires — voir la section
@@ -50,13 +53,27 @@ export const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
     </TouchableOpacity>
 );
 
-export const StepIntro = ({ themeObj }) => (
-    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: DEGAGEMENT_PIED_PARCOURS }}>
-        <Image source={require('../../../../assets/icons/logo.png')} style={{ width: 200, height: 100, resizeMode: 'contain', marginBottom: tokens.space.xl }} />
-        <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }}>{Translator.get('WELCOME')}</Text>
-        <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
-    </View>
-);
+/**
+ * L'ouverture de l'application : le moment ou l'Epure entre a pleine voix (7-J). Fig. 01, le U en
+ * echo, en heros — un seul element enorme par surface —, le logo vectoriel a la place du nom, puis le
+ * mot d'accueil, qui entre une fois la figure construite. C'etait le PNG du logo au-dessus d'un titre.
+ */
+export const StepIntro = ({ themeObj }) => {
+    const { width } = useWindowDimensions();
+    const largeurDeLaFigure = Math.min(width * 0.7, 300);
+    return (
+        <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: DEGAGEMENT_PIED_PARCOURS }}>
+            <FigureEnEcho theme={themeObj} largeur={largeurDeLaFigure} />
+            <Reanimated.View entering={FadeIn.delay(650).duration(tokens.mouvement.couture * 2)} style={{ alignItems: 'center', alignSelf: 'stretch' }}>
+                <View style={{ marginTop: tokens.space.xl, marginBottom: tokens.space.lg }}>
+                    <LogoUKit theme={themeObj} largeur={104} />
+                </View>
+                <Text style={[tokens.texte.grandTitre, { alignSelf: 'stretch', color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }]}>{Translator.get('WELCOME')}</Text>
+                <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
+            </Reanimated.View>
+        </View>
+    );
+};
 
 /**
  * Le choix de l'etablissement, juste avant les groupes qu'il conditionne (jalon 6-G).

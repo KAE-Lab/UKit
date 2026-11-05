@@ -64,6 +64,11 @@ export interface PaletteDeBase {
      * barre d'onglets ; les Reglages, dont le fond est presque neutre, prennent l'accentuation.
      */
     readonly teinteDOnglet: Readonly<Record<'planning' | 'campus' | 'scolarite' | 'reglages', string>>;
+    /**
+     * Les deux couleurs du logo, les memes dans les deux themes : le bleu et l'indigo de son degrade
+     * (docs/identite.md). Le logo vectoriel et la figure en echo de l'accueil les lisent ici (7-J).
+     */
+    readonly logo: { readonly bleu: string; readonly indigo: string };
 }
 
 export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDeBase } = {
@@ -93,6 +98,7 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
             scolarite: '#8548AC',
             reglages:  '#3B5FE5',
         },
+        logo: { bleu: '#007AFF', indigo: '#5E5CE6' },
     },
     dark: {
         primary:        '#6381F8',
@@ -121,5 +127,6 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
             scolarite: '#C493E8',
             reglages:  '#6381F8',
         },
+        logo: { bleu: '#007AFF', indigo: '#5E5CE6' },
     },
 };
