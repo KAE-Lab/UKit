@@ -222,6 +222,7 @@ const CarteDuFormulaire = ({
 const ScolariteLoginView = ({
     theme, color, topPadding, onSkip = null, onDebut = null, onSuccess = null, onAutreCampus = null,
     onEnSession = null, compact = false, onScroll = undefined, pied = null,
+    degagementBas = tokens.space.xxl,
 }) => {
     const { validateAndSave, scrapeProgress, scrapeStatus, sessionMode } = useCredentials();
 
@@ -369,7 +370,9 @@ const ScolariteLoginView = ({
             {/* `Animated.ScrollView` pour `onScroll` : l'onglet deconnecte fond son grand titre
                 sur le defilement du formulaire (ScolariteDashboard). Sans rapporteur, identique. */}
             <Animated.ScrollView
-                contentContainerStyle={{ paddingTop: topPadding + 70, paddingBottom: tokens.space.xxl }}
+                // `degagementBas` : l'accueil pose un pied flottant sur le formulaire, et sur 740 points
+                // de haut (A8) la fin de la carte restait dessous, sans pouvoir remonter (7-J).
+                contentContainerStyle={{ paddingTop: topPadding + 70, paddingBottom: degagementBas }}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
                 onScroll={onScroll}

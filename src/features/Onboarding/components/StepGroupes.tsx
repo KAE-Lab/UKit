@@ -17,11 +17,11 @@ import { tokens } from '../../../shared/theme/Theme';
 import { LoadingState } from '../../../shared/ui/LoadingState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 import {
-    DEGAGEMENT_PIED_PARCOURS,
     MAXIMUM_NUMBER_ITEMS_GROUPLIST,
     carte,
     pastille,
     texteDePastille,
+    useDegagementDuPied,
     titreDeCarte,
 } from './stylesDuParcours';
 
@@ -66,6 +66,7 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
     // manager porte l'etat de sa lecture ; l'etape ne fait que le montrer, comme l'etablissement.
     const listeVide = navigatorState.groupList.length === 0;
     const { chargement, echec } = navigatorState.groupesEtat;
+    const degagement = useDegagementDuPied();
     return (
     /*
      * Le cadre clavier vit DANS l'etape, comme pour le compte et le lien iCal (voir WelcomeScreen) :
@@ -74,7 +75,7 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
      * `padding` sur les deux plateformes, le comportement valide sur le formulaire de connexion.
      */
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: DEGAGEMENT_PIED_PARCOURS }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: degagement }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {listeVide && chargement ? (
             <LoadingState theme={themeObj} message={Translator.get('GROUPS_LOADING')} />
         ) : listeVide && echec !== null ? (

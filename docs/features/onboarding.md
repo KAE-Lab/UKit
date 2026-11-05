@@ -163,6 +163,13 @@ n'est pas un contrat : c'est une heuristique locale (voir les limites).
 **Plusieurs groupes sélectionnables dès l'accueil.** L'étape 3 ajoute ou retire des favoris, elle
 n'en choisit pas un seul : le planning agrégé est disponible immédiatement après l'accueil.
 
+**Le contenu défile sous le pied, jusqu'au bas de l'écran.** Le pied (« Suivant » et la pagination)
+flotte, et chaque étape laisse sous elle de quoi remonter au-dessus de lui :
+`useDegagementDuPied()` ([`stylesDuParcours.ts`](../../src/features/Onboarding/components/stylesDuParcours.ts)),
+le dégagement des listes **plus la marge système du bas**, que le pied s'applique à lui-même. Sans
+elle, au format de l'A8, la fin de la carte de connexion restait derrière « Suivant », « Plus tard »
+compris (constaté sur le banc le 2026-11-05, 7-J).
+
 ## Vérifier
 
 Le parcours ne se rejoue pas spontanément. Deux moyens de le retrouver : **Réglages → Réinitialiser
