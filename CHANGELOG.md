@@ -56,6 +56,11 @@ une application qui donne l'heure des choses d'un regard.
 - **Une seule accentuation, celle du logo** : le bleu-indigo du milieu de son dégradé, `#3B5FE5` en
   clair et `#6381F8` en sombre, à la place du bleu d'iOS et de l'indigo. La barre d'onglets ne porte
   plus qu'elle, et la teinte de chaque section se prend le long du dégradé du logo.
+- **La vue semaine se lit en agenda** : chaque jour ouvert d'emblée, ses cours en rangées compactes
+  — l'heure de début et de fin, la couleur, l'intitulé, la salle, le type —, au lieu de jours repliés
+  qui dépliaient les grandes cartes de la vue jour. Le week-end n'apparaît que s'il porte un cours.
+- **L'heure de fin d'un cours se pose en bas de sa carte**, et le temps qui reste entre les deux
+  pendant le cours : collées, les deux heures se lisaient comme un seul bloc.
 - **Des icônes au trait, d'une seule famille** : Lucide remplace les deux familles de Material Design,
   d'une épaisseur constante à toutes les tailles ; les icônes des Réglages perdent leurs carrés de
   couleur. Dépendance ajoutée : `lucide-react-native` (ISC), chaque icône importée seule.

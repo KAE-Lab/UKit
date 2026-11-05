@@ -338,6 +338,9 @@ const fr: TranslationDict = {
 	CONNECT_SHORT: "Connexion",
 	// La frise du jour (7-J) : la pause cotee et le repere de l'heure.
 	FRISE_PAUSE: "Pause de $-",
+	AGENDA_LIBRE: 'Libre',
+	AGENDA_UN_COURS: '1 cours',
+	AGENDA_N_COURS: '$- cours',
 	FRISE_PROCHAIN: "prochain cours dans $-",
 	FRISE_PREMIER: "premier cours dans $-",
 	FRISE_FIN: "Plus de cours aujourd'hui",
