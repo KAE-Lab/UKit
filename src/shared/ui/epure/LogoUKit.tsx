@@ -10,20 +10,25 @@ import React from 'react';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import type { AppThemeType } from '../../theme/Theme';
-import { BOITE_DU_LOGO, DEGRADE_DU_LOGO, TRACE_DU_LOGO } from './geometrie';
+import { BOITE_DU_LOGO, BOITE_DU_U, DEGRADE_DU_LOGO, TRACE_DU_LOGO, TRACE_DU_U } from './geometrie';
 
-export function LogoUKit({ theme, largeur }: { theme: AppThemeType; largeur: number }) {
-    const hauteur = (largeur * BOITE_DU_LOGO.hauteur) / BOITE_DU_LOGO.largeur;
+/**
+ * `glyphe="u"` dessine le U seul, le premier glyphe du logo, a sa place dans le degrade : l'accueil
+ * l'emploie a la place de Fig. 01 depuis la deuxieme passe de 7-J.
+ */
+export function LogoUKit({ theme, largeur, glyphe = 'logo' }: { theme: AppThemeType; largeur: number; glyphe?: 'logo' | 'u' }) {
+    const boite = glyphe === 'u' ? BOITE_DU_U : { x: 0, y: 0, ...BOITE_DU_LOGO };
+    const hauteur = (largeur * boite.hauteur) / boite.largeur;
     const { debut, fin, arrets } = DEGRADE_DU_LOGO;
     return (
-        <Svg width={largeur} height={hauteur} viewBox={`0 0 ${BOITE_DU_LOGO.largeur} ${BOITE_DU_LOGO.hauteur}`} accessibilityLabel="UKit">
+        <Svg width={largeur} height={hauteur} viewBox={`${boite.x} ${boite.y} ${boite.largeur} ${boite.hauteur}`} accessibilityLabel="UKit">
             <Defs>
                 <LinearGradient id="degradeDuLogo" gradientUnits="userSpaceOnUse" x1={debut.x} y1={debut.y} x2={fin.x} y2={fin.y}>
                     <Stop offset={arrets.bleu} stopColor={theme.logo.bleu} />
                     <Stop offset={arrets.indigo} stopColor={theme.logo.indigo} />
                 </LinearGradient>
             </Defs>
-            <Path d={TRACE_DU_LOGO} fill="url(#degradeDuLogo)" transform="translate(0.5 0.5)" />
+            <Path d={glyphe === 'u' ? TRACE_DU_U : TRACE_DU_LOGO} fill="url(#degradeDuLogo)" transform="translate(0.5 0.5)" />
         </Svg>
     );
 }
