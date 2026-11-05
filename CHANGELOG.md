@@ -73,6 +73,8 @@ une application qui donne l'heure des choses d'un regard.
 - **Les écrans poussés ont une barre qui prend son fond au défilement**, avec son filet, comme les
   onglets : le contenu ne passe plus sous la barre d'état ni sous un bouton de retour flottant, et le
   titre ne s'efface plus.
+- **À propos prend le gabarit des Réglages** et le logo vectoriel ; la mention « Propulsé par React
+  Navigation 6 », périmée depuis le passage à la version 7, est retirée.
 - **L'en-tête du Planning** porte le fond bleu de l'onglet ; le jour choisi est une case pleine,
   aujourd'hui a son point, le choix d'un jour s'acquitte au doigt, et la case d'une semaine dit son
   lundi. Le ruban se recentre sur le jour choisi à sa première mesure.

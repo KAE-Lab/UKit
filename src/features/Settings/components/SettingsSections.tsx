@@ -24,7 +24,7 @@ const LANGUAGE_LIST = {
 };
 
 /** Les teintes des carres d'icone, par famille : les couleurs du systeme du theme courant. */
-function teintes(theme: AppThemeType) {
+export function teintes(theme: AppThemeType) {
     const [bleu, vert, orange, rouge, indigo, cyan] = theme.sectionsHeaders;
     return { bleu, vert, orange, rouge, indigo, cyan, gris: theme.neutral };
 }

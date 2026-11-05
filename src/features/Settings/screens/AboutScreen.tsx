@@ -1,112 +1,52 @@
+/**
+ * L'ecran A propos.
+ *
+ * **Au gabarit des Reglages depuis 7-J** : les groupes encadres de `GroupeDeReglages`, l'intertitre
+ * dehors et le contenu sur une carte, les liens en rangees a icone teintee. L'ecran avait son propre
+ * gabarit — une bande grise d'en-tete et son icone sur chaque carte, des liens soulignes d'un filet —,
+ * une troisieme maniere de titrer un groupe dans l'application. Le logo est vectoriel, dans son degrade.
+ */
+
 import React from 'react';
-import { Text, View, Image, TouchableOpacity, Linking, Animated, DeviceEventEmitter } from 'react-native';
+import { Text, View, TouchableOpacity, Linking, Animated, DeviceEventEmitter, StyleSheet } from 'react-native';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import style, { tokens } from '../../../shared/theme/Theme';
+import style, { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { AppContext } from '../../../shared/services/AppCore';
 import { URL } from '../../../shared/constants/urls';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
+import { LogoUKit } from '../../../shared/ui/epure/LogoUKit';
+import { GroupeDeReglages, RangeeDeReglage } from '../components/GroupeDeReglages';
+import { teintes } from '../components/SettingsSections';
 
-export interface SectionProps {
-    title: string;
-    icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-    theme: Record<string, string>;
-    children: React.ReactNode;
+function ouvrirLien(url: string) {
+    Linking.canOpenURL(url).then((supported) => {
+        if (supported) void Linking.openURL(url);
+    }).catch(() => undefined);
 }
 
-const Section = ({ title, icon, theme, children }: SectionProps) => (
-	<View style={{
-		backgroundColor: theme.cardBackground,
-		borderRadius: tokens.radius.lg,
-		marginHorizontal: tokens.space.sm,
-		marginBottom: tokens.space.md,
-		overflow: 'hidden',
-		borderWidth: 1,
-		borderColor: theme.border,
-		...tokens.shadow.sm,
-	}}>
-		<View style={{
-			flexDirection: 'row',
-			alignItems: 'center',
-			paddingHorizontal: tokens.space.md,
-			paddingVertical: tokens.space.sm,
-			borderBottomWidth: 1,
-			borderBottomColor: theme.border,
-			backgroundColor: theme.greyBackground,
-		}}>
-			<MaterialCommunityIcons name={icon} size={18} color={theme.font} style={{ marginRight: tokens.space.sm }} />
-			<Text style={{
-				fontSize: tokens.fontSize.sm,
-				fontWeight: tokens.fontWeight.semibold,
-				color: theme.font,
-				letterSpacing: 0.5,
-			}}>
-				{title}
-			</Text>
-		</View>
-		<View style={{ 
-            paddingHorizontal: tokens.space.md, 
-            paddingBottom: tokens.space.sm + 2, 
-            paddingTop: tokens.space.sm + 1
-         }}>
-			{children}
-		</View>
-	</View>
-);
-
-export interface URLButtonProps {
-    url: string;
-    title: string;
-    theme: Record<string, string>;
-}
-
-const URLButton = ({ url, title, theme }: URLButtonProps) => {
-    const openURL = () => {
-        Linking.canOpenURL(url).then((supported) => {
-            if (supported) Linking.openURL(url);
-        });
-    };
-
+/** Un paragraphe pose sur la carte d'un groupe. */
+function Paragraphe({ theme, children }: { theme: AppThemeType; children: React.ReactNode }) {
     return (
-        <TouchableOpacity onPress={openURL} style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingVertical: tokens.space.sm,
-            borderBottomWidth: 1,
-            borderBottomColor: theme.border + '44', 
-        }}>
-            <Text style={{
-                flex: 1,
-                fontSize: tokens.fontSize.md,
-                color: theme.font,
-                fontWeight: tokens.fontWeight.medium,
-            }}>
-                {title}
-            </Text>
-            <MaterialCommunityIcons name="open-in-new" size={20} color={theme.fontSecondary} />
-        </TouchableOpacity>
+        <View style={styles.encart}>
+            <Text style={[styles.paragraphe, { color: theme.fontSecondary }]}>{children}</Text>
+        </View>
     );
-};
+}
 
-/** Un credit de fournisseur : le nom en tete de puce, la description, un lien facultatif. */
-function CreditTiers({ nom, description, lien, lienTitre, theme }: { nom: string; description: string; lien?: string; lienTitre?: string; theme: import('../../../shared/theme/Theme').AppThemeType }) {
+/** Un credit de fournisseur : son nom, ce qu'il apporte, et un lien facultatif. */
+function CreditTiers({ nom, description, lien, lienTitre, theme }: { nom: string; description: string; lien?: string; lienTitre?: string; theme: AppThemeType }) {
     return (
-        <View style={{ marginTop: tokens.space.sm }}>
-            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.font, fontWeight: 'bold' }}>
-                {`• ${nom}`}
-            </Text>
-            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginLeft: tokens.space.sm }}>
+        <View style={styles.credit}>
+            <Text style={[styles.nomDuCredit, { color: theme.font }]}>{nom}</Text>
+            <Text style={[styles.paragraphe, { color: theme.fontSecondary }]}>
                 {description}
                 {lien !== undefined && lienTitre !== undefined ? (
                     <>
                         {' '}
-                        <Text
-                            style={{ color: theme.primary, textDecorationLine: 'underline' }}
-                            onPress={() => Linking.openURL(lien)}
-                        >
+                        <Text style={{ color: theme.primary }} onPress={() => ouvrirLien(lien)}>
                             {lienTitre}
                         </Text>
                     </>
@@ -136,84 +76,67 @@ class AboutScreen extends React.Component<AboutScreenProps> {
 	render() {
         const themeName = (this.context as { themeName: string }).themeName;
         const theme = style.Theme[themeName];
+        const t = teintes(theme);
         const appVersion = Constants.expoConfig?.version || (Constants.manifest as unknown as { version?: string })?.version || '?';
 
         return (
             <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.background }}>
                 <SafeAreaInsetsContext.Consumer>
                     {(insets) => (
-                        <Animated.ScrollView 
-                            contentContainerStyle={[this.props.headerPadding, { paddingTop: (insets?.top || 0) + 50 }]}
+                        <Animated.ScrollView
+                            // Le calage de l'en-tete tel que le HOC le donne : l'ecran posait 50 par-dessus
+                            // les 70 recus (inventaire-mouvement.md, 6.1).
+                            contentContainerStyle={[this.props.headerPadding, { paddingBottom: (insets?.bottom || 0) + tokens.space.xl }]}
                             onScroll={this.props.onAnimatedScroll}
                             scrollEventThrottle={16}
                             showsVerticalScrollIndicator={false}
                         >
 
-                    <View style={{ alignItems: 'center', paddingVertical: tokens.space.lg }}>
-						<View style={{
-							width: 90, height: 90, borderRadius: tokens.radius.lg, overflow: 'hidden',
-							marginBottom: tokens.space.md, backgroundColor: theme.lightFont,
-                            justifyContent: 'center', alignItems: 'center'
-						}}>
-                            <Image
-                                source={require('../../../../assets/icons/logo.png')}
-                                style={{ width: 70, height: 70, resizeMode: 'contain' }}
-                            />
-						</View>
-                        <Text style={{ fontSize: tokens.fontSize.xxl, fontWeight: tokens.fontWeight.bold, color: theme.font }}>
-                            UKit
-                        </Text>
-                        <TouchableOpacity 
-                            activeOpacity={1} 
+                    {/* Le logo et sa version. La version garde ses sept tapes, qui ouvrent le menu de test. */}
+                    <View style={styles.tete}>
+                        <LogoUKit theme={theme} largeur={156} />
+                        <TouchableOpacity
+                            activeOpacity={1}
                             onPress={this.handleVersionTap}
-                            style={{
-                                backgroundColor: theme.greyBackground, borderRadius: tokens.radius.md,
-                                paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.xs, marginTop: tokens.space.xs,
-                            }}
+                            style={[styles.version, { backgroundColor: theme.greyBackground }]}
                         >
-                            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, fontWeight: tokens.fontWeight.medium }}>
+                            <Text style={[tokens.texte.chiffres, styles.texteDeVersion, { color: theme.fontSecondary }]}>
                                 v{appVersion}
                             </Text>
                         </TouchableOpacity>
                     </View>
 
-                    {/* Sections */}
-                    <Section title={Translator.get('ABOUT')} icon="information-outline" theme={theme}>
-                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 22 }}>
-                            {Translator.get('APPLICATION_HISTORY')}
-                        </Text>
-                    </Section>
+                    <GroupeDeReglages theme={theme} titre={Translator.get('ABOUT')}>
+                        <Paragraphe theme={theme}>{Translator.get('APPLICATION_HISTORY')}</Paragraphe>
+                    </GroupeDeReglages>
 
-                    <Section title={Translator.get('DATA_SOURCE_TITLE')} icon="database-outline" theme={theme}>
-                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 22 }}>
-                            {Translator.get('DATA_SOURCE_TEXT')}
-                        </Text>
-                    </Section>
+                    <GroupeDeReglages theme={theme} titre={Translator.get('DATA_SOURCE_TITLE')}>
+                        <Paragraphe theme={theme}>{Translator.get('DATA_SOURCE_TEXT')}</Paragraphe>
+                    </GroupeDeReglages>
 
-                    <Section title={Translator.get('CONTACT_US')} icon="email-outline" theme={theme}>
-                        <URLButton url={URL.CONTACT_EMAIL} title="contact@kaelab.dev" theme={theme} />
-                        <URLButton url={URL.UKIT_WEBSITE} title={Translator.get('WEBSITE')} theme={theme} />
-                        <URLButton url={URL.KAELAB_WEBSITE} title={Translator.get('COMPANY_WEBSITE')} theme={theme} />
-                    </Section>
+                    <GroupeDeReglages theme={theme} titre={Translator.get('CONTACT_US')}>
+                        <RangeeDeReglage theme={theme} icone="email-outline" teinte={t.bleu} libelle="contact@kaelab.dev" onPress={() => ouvrirLien(URL.CONTACT_EMAIL)} />
+                        <RangeeDeReglage theme={theme} icone="web" teinte={t.indigo} libelle={Translator.get('WEBSITE')} onPress={() => ouvrirLien(URL.UKIT_WEBSITE)} />
+                        <RangeeDeReglage theme={theme} icone="domain" teinte={t.gris} libelle={Translator.get('COMPANY_WEBSITE')} onPress={() => ouvrirLien(URL.KAELAB_WEBSITE)} />
+                    </GroupeDeReglages>
 
-                    <Section title={Translator.get('CREDITS_API')} icon="api" theme={theme}>
-                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 22 }}>
-                            {Translator.get('THIRD_PARTY_DESC')}
-                        </Text>
-                        
-                        <CreditTiers nom="API Affluences" description={Translator.get('AFFLUENCES_DESC')} theme={theme} />
-                        <CreditTiers nom="API CROUStillant" description={Translator.get('CROUSTILLANT_DESC')} lien={URL.CROUSTILLANT_WEBSITE} lienTitre="CROUStillant.menu" theme={theme} />
-                        {/* Le fond de carte : credite comme les deux autres — la regle du depot pour
-                            toute source publique (CONTRIBUTING). */}
-                        <CreditTiers nom="OpenFreeMap" description={Translator.get('OPENFREEMAP_DESC')} theme={theme} />
-                    </Section>
+                    {/* Une carte d'un seul tenant : trois credits separes par des filets indentes
+                        pour des icones absentes se liraient comme des rangees cassees. */}
+                    <GroupeDeReglages theme={theme} titre={Translator.get('CREDITS_API')}>
+                        <View style={styles.encart}>
+                            <Text style={[styles.paragraphe, { color: theme.fontSecondary }]}>{Translator.get('THIRD_PARTY_DESC')}</Text>
+                            <CreditTiers nom="API Affluences" description={Translator.get('AFFLUENCES_DESC')} theme={theme} />
+                            <CreditTiers nom="API CROUStillant" description={Translator.get('CROUSTILLANT_DESC')} lien={URL.CROUSTILLANT_WEBSITE} lienTitre="CROUStillant.menu" theme={theme} />
+                            {/* Le fond de carte : credite comme les deux autres — la regle du depot pour
+                                toute source publique (CONTRIBUTING). */}
+                            <CreditTiers nom="OpenFreeMap" description={Translator.get('OPENFREEMAP_DESC')} theme={theme} />
+                        </View>
+                    </GroupeDeReglages>
 
-                    <Section title={Translator.get('LEGAL_NOTICE')} icon="shield-outline" theme={theme}>
-                        <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 22, marginBottom: tokens.space.sm }}>
-                            {Translator.get('LEGAL_MENTION')}
-                        </Text>
-                        <URLButton url={URL.LEGAL_NOTICE} title={Translator.get('CONFIDENTIALITY_POLITIC')} theme={theme} />
-                    </Section>
+                    {/* La mention de licence passe en pied, comme l'explication d'un groupe de reglages. */}
+                    <GroupeDeReglages theme={theme} titre={Translator.get('LEGAL_NOTICE')} pied={Translator.get('LEGAL_MENTION')}>
+                        <RangeeDeReglage theme={theme} icone="shield-check-outline" teinte={t.vert} libelle={Translator.get('CONFIDENTIALITY_POLITIC')} onPress={() => ouvrirLien(URL.LEGAL_NOTICE)} />
+                    </GroupeDeReglages>
 
                 </Animated.ScrollView>
                     )}
@@ -222,5 +145,39 @@ class AboutScreen extends React.Component<AboutScreenProps> {
         );
     }
 }
+
+const styles = StyleSheet.create({
+    tete: {
+        alignItems: 'center',
+        paddingTop: tokens.space.sm,
+        paddingBottom: tokens.space.sm,
+    },
+    version: {
+        borderRadius: tokens.radius.pill,
+        paddingHorizontal: tokens.space.md,
+        paddingVertical: tokens.space.xs,
+        marginTop: tokens.space.md,
+    },
+    texteDeVersion: {
+        fontSize: tokens.fontSize.sm,
+        fontWeight: tokens.fontWeight.medium,
+    },
+    encart: {
+        paddingHorizontal: tokens.space.md,
+        paddingVertical: tokens.space.md,
+    },
+    paragraphe: {
+        fontSize: tokens.fontSize.sm,
+        lineHeight: 21,
+    },
+    credit: {
+        marginTop: tokens.space.md,
+    },
+    nomDuCredit: {
+        fontSize: tokens.fontSize.sm,
+        fontWeight: tokens.fontWeight.semibold,
+        marginBottom: tokens.space.xxs,
+    },
+});
 
 export default withHeaderAnimation(AboutScreen);

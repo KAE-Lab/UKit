@@ -12,7 +12,7 @@ const es: TranslationDict = {
 	APP_READY: '¡La aplicación está ahora lista, puedes ahora consultar tu horario!',
 	APPLICATION: 'Aplicación',
 	APPLICATION_HISTORY:
-		'Esta aplicación es un fork de UKit v4.1.2, modernizada y mantenida por el equipo KAE-Lab.\n\nImpulsado por React Navigation 6.',
+		'Esta aplicación es un fork de UKit v4.1.2, modernizada y mantenida por el equipo KAE-Lab.',
 	AUTO_SYNC_DESCRIPTION:
 		'La sincronización se repite por sí sola cada 12 horas aproximadamente, cuando el sistema lo permite, y al abrir la aplicación si la última tiene más de 12 horas.',
 	AUTUMN: 'Otoño',
