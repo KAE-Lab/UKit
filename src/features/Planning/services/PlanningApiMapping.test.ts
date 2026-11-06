@@ -15,6 +15,8 @@ import {
     decouperSemaine,
     modulesDuCours,
     projeterAnnee,
+    creneauCompose,
+    heureOuVide,
     projeterCours,
     projeterGroupes,
     projeterJour,
@@ -70,7 +72,26 @@ describe('sujetDuCours', () => {
     });
 });
 
+describe('heureOuVide et creneauCompose', () => {
+    it('rendent une heure lisible et un creneau a deux bornes', () => {
+        expect(heureOuVide(moment('2026-11-09T09:30:00'))).toBe('09:30');
+        expect(creneauCompose('09:30', '10:50')).toBe('09:30-10:50');
+    });
+
+    it('taisent une fin illisible au lieu d ecrire Invalid date', () => {
+        expect(heureOuVide(moment(null))).toBe('');
+        expect(creneauCompose('08:00', '')).toBe('08:00');
+    });
+});
+
 describe('projeterCours', () => {
+    it('projette un cours sans fin sans « Invalid date » nulle part', () => {
+        const projete = projeterCours({ ...COURS, fin: null }, 'INF601A', ';');
+        expect(projete.endtime).toBe('');
+        expect(projete.schedule).toBe('09:30 Cours');
+        expect(JSON.stringify(projete)).not.toContain('Invalid date');
+    });
+
     it('nettoie la description et retire les lignes qui repetent la categorie ou le sujet', () => {
         const projete = projeterCours(COURS, 'INF601A', ';');
 
@@ -112,10 +133,11 @@ describe('projeterCours', () => {
 
     it('traite une fin nulle comme une date invalide, pas comme maintenant', () => {
         // `moment(undefined)` vaut *maintenant* : un evenement de vacances se retrouverait a l'heure
-        // courante. `moment(null)` est invalide, ce que le code d'origine produisait deja.
+        // courante. `moment(null)` est invalide, et depuis le 2026-11-06 l'heure invalide s'ecrit vide
+        // au lieu de « Invalid date » (docs/defauts-fonctionnels.md) : ni maintenant, ni texte faux.
         const projete = projeterCours(VACANCES, 'INF601A', ';');
 
-        expect(projete.endtime).toBe('Invalid date');
+        expect(projete.endtime).toBe('');
         expect(projete.date.end).toBeNull();
         expect(projete.date.start).not.toBeNull();
     });

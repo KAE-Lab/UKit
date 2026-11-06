@@ -147,13 +147,27 @@ export function completerLesModules(modules: readonly string[], lignes: readonly
  * enseignant et sans carte. Le parametre reste, pour qu'un futur format n'ait pas a rouvrir la
  * signature.
  */
+/**
+ * L'heure d'un instant (« 09:30 »), ou rien quand il ne se lit pas : une fin nulle donnait
+ * « Invalid date », que la carte taisait mais que la fiche, le creneau et les rappels lisaient
+ * (corrige le 2026-11-06, docs/defauts-fonctionnels.md). Partagee avec la projection iCal.
+ */
+export function heureOuVide(instant: moment.Moment): string {
+    return instant.isValid() ? instant.format('HH:mm') : '';
+}
+
+/** Le creneau compose (« 09:30-10:50 »), sans tiret orphelin quand la fin manque. */
+export function creneauCompose(starttime: string, endtime: string): string {
+    return endtime === '' ? starttime : `${starttime}-${endtime}`;
+}
+
 export function projeterCours(brut: CoursExtrait, groupe: CibleGroupe, separateur: string = ';'): PlanningEvent {
     // `?? null` et non `?? undefined` : `moment(undefined)` vaut *maintenant*, `moment(null)` est une
-    // date invalide. C'est cette seconde forme que le code d'origine produisait sur une fin nulle.
+    // date invalide, que `heureOuVide` rend vide (le code d'origine en ecrivait « Invalid date »).
     const debut = moment(brut.debut ?? null);
     const fin = moment(brut.fin ?? null);
-    const starttime = debut.format('HH:mm');
-    const endtime = fin.format('HH:mm');
+    const starttime = heureOuVide(debut);
+    const endtime = heureOuVide(fin);
 
     const categorie = texte(brut.categorie);
 
@@ -191,7 +205,7 @@ export function projeterCours(brut: CoursExtrait, groupe: CibleGroupe, separateu
         id: texte(brut.id),
         style: 'style="background-color:' + texte(brut.couleur) + '"',
         color: texte(brut.couleur),
-        schedule: starttime + '-' + endtime + ' ' + categorie,
+        schedule: creneauCompose(starttime, endtime) + ' ' + categorie,
         starttime,
         endtime,
         date: { start: debut.toISOString(), end: fin.toISOString() },

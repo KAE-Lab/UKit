@@ -19,14 +19,15 @@ de la leur laisser en travers.
 
 ## Ouverts
 
-### Un cours sans heure de fin s'écrit « Invalid date » — constaté le 2026-11-05
+### ~~Un cours sans heure de fin s'écrit « Invalid date »~~ — constaté le 2026-11-05, corrigé le 2026-11-06
 
 Sur le banc, le groupe `31BI701S` (stage du jeudi 5 novembre) : Celcat sert l'événement « Stage » avec
-une fin nulle, et [`projeterCours`](../src/features/Planning/services/PlanningApiMapping.ts) en fait
-`endtime: 'Invalid date'` — la forme que le code d'origine produisait, gardée à dessein par la
-projection et sa parité. La carte de cours ne l'affiche plus depuis 7-J (une heure illisible se tait),
-mais le champ reste faux pour tout ce qui le lit : la fiche du cours, le créneau `schedule`, les
-rappels. La correction se fait dans la projection, avec un cas de parité.
+une fin nulle, et la projection en faisait `endtime: 'Invalid date'`, la forme du code d'origine. La
+carte de cours le taisait déjà, mais la fiche, le créneau composé et les rappels le lisaient. Une
+heure illisible s'écrit désormais vide, et le créneau ne garde pas de tiret orphelin
+([`heureOuVide`, `creneauCompose`](../src/features/Planning/services/PlanningApiMapping.ts), testés),
+dans la projection Celcat comme dans l'iCal. La fonction commune du harnais de parité suit la même
+règle des deux côtés : la parité Celcat reste égale.
 
 ### ~~« Ouvrir sur le groupe favori » n'a aucun effet~~ — constaté le 2026-11-06, retiré le même jour
 
