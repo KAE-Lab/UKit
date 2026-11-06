@@ -43,8 +43,8 @@ une application qui donne l'heure des choses d'un regard.
 - **Des menus qui se lisent d'un coup d'œil** : la catégorie en demi-gras, chaque plat derrière sa
   puce, un filet entre deux catégories ; ni couleur décorative ni icône devinée.
 - **Le fondu des écrans poussés sous le titre** : la barre d'un écran poussé couvre son titre et ses
-  boutons, et le contenu se fond juste en dessous, comme sous un grand titre ; il les coupait à
-  mi-hauteur.
+  boutons, et le contenu se fond un peu en dessous, avec de l'air sous les boutons, comme sous un
+  grand titre ; il les coupait à mi-hauteur.
 - **Le repère de l'heure ancré** : l'heure du Planning se pose dans une pastille pleine, d'où part le
   trait ; le ruban ne marque plus aujourd'hui d'un point, la couleur suffit.
 - **Des contrôles qui répondent au doigt** : les boutons d'action s'enfoncent sur un ressort, le
