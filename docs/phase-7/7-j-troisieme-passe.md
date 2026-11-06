@@ -86,6 +86,9 @@ le site, les deux défauts consignés corrigés, trois règles ajoutées à `~/.
   seulement sur l'en-tête et la carte, dont la hauteur laissait le vide autour sans réponse (« faut
   appuyer dans le petit rectangle »). Vérifié au banc : un appui tout en bas de l'écran, pendant une
   vraie session, lance la partie
+- [x] partie en cours, le formulaire ne défile plus : glisser vers le bas baisse le renard au lieu de
+  faire défiler la page et son rebond. Vérifié au banc (session forcée le temps du test) : la page
+  reste en place, le renard se baisse. Au repos, la page défile comme avant
 - [x] le délai des rappels au pas, « − 15 min + » (`fef2625`) ; les barres flottantes de l'iPhone
   décollées du bord (`46f139a`)
 
