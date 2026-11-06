@@ -100,6 +100,14 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
             </View>
         ),
         headerTransparent: true, 
+        /*
+         * Le conteneur du fond descend de la hauteur du fondu sous la barre (troisieme passe de 7-J) :
+         * le fond plein couvre toute la barre, et le fondu commence **sous** le titre, comme sous un
+         * grand titre. Il occupait les 24 derniers points de la barre et coupait le titre et les
+         * boutons a mi-hauteur (review du 2026-11-06). Le degrade reste dans les bords de son parent,
+         * ce conteneur, la condition que le rendu logiciel de l'emulateur imposait.
+         */
+        headerBackgroundContainerStyle: fondAuDefilement ? { bottom: -HAUTEUR_DU_FONDU } : undefined,
         headerStyle: {
             backgroundColor: 'transparent',
             elevation: 0, 
@@ -375,8 +383,8 @@ const styles = StyleSheet.create({
         height: HEADER_BUTTON_SIZE,
         justifyContent: 'center',
     },
-    // Le fond plein s'arrete au-dessus du fondu, qui occupe le bas de la barre, sous les boutons et
-    // le titre. Dans ses bords : un degrade dessine hors des bords de son parent faisait planter le
+    // Le fond plein couvre la barre, le fondu vit dans le prolongement du conteneur, sous elle. Dans
+    // les bords de ce conteneur : un degrade dessine hors des bords de son parent faisait planter le
     // rendu logiciel de l'emulateur (SwiftShader), trois fois sur le banc.
     fondDeLaBarre: {
         position: 'absolute',

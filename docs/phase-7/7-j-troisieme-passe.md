@@ -32,7 +32,10 @@ parcours froid, chargements.
   ruban (et des bandeaux des fiches, qui partagent la case). Vérifié sur `ukit` à 12 h 40 simulées,
   pendant une pause : « 12:40 », puis « prochain cours dans 50 min ». Le menu de développement remet
   l'heure réelle à sa fermeture : pour garder une heure simulée, on le réduit.
-- [ ] T4
+- [x] T4 — le conteneur du fond de la barre poussée descend de la hauteur du fondu
+  (`headerBackgroundContainerStyle`) : fond plein sur toute la barre, fondu dessous, le dégradé
+  toujours dans les bords de son parent. Vérifié sur `ukit`, liste des restaurants : la photo se fond
+  sous les boutons, le titre reste entier.
 - [ ] T5
 - [ ] T6
 - [ ] T7
