@@ -57,9 +57,6 @@ const EnTeteDuFormulaire = ({ theme, color, compact }) => (
         <Text style={[styles.title, { color: theme.font }]}>
             {Translator.get(compact ? 'CONNECT_ACCOUNT_TITLE' : 'SCOLARITY')}
         </Text>
-        <Text style={[styles.subtitle, { color: theme.fontSecondary }]}>
-            {Translator.get(compact ? 'CONNECT_ACCOUNT_DESC' : 'ENTER_CREDENTIALS_DESC')}
-        </Text>
     </View>
 );
 
@@ -424,15 +421,9 @@ const styles = StyleSheet.create({
         fontSize: tokens.fontSize.xl,
         fontWeight: '600',
         marginBottom: tokens.space.xs,
-        // Comme le sous-titre : sur un ecran etroit le titre passe sur deux lignes, et sans
-        // centrage la seconde se calait a gauche du bloc — l'ensemble paraissait decentre.
+        // Sur un ecran etroit le titre passe sur deux lignes, et sans centrage la seconde se
+        // calait a gauche du bloc : l'ensemble paraissait decentre.
         textAlign: 'center',
-    },
-    subtitle: {
-        alignSelf: 'stretch',
-        fontSize: tokens.fontSize.sm,
-        textAlign: 'center',
-        lineHeight: 20,
     },
     card: {
         marginHorizontal: tokens.space.md,

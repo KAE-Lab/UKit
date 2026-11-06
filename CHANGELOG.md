@@ -47,8 +47,8 @@ une application qui donne l'heure des choses d'un regard.
   grand titre ; il les coupait à mi-hauteur.
 - **Le repère de l'heure ancré** : l'heure du Planning se pose dans une pastille pleine, d'où part le
   trait ; le ruban ne marque plus aujourd'hui d'un point, la couleur suffit.
-- **Le petit jeu, jouable quand on veut** : au fond de « À propos », le jeu du parcours froid en
-  grand, avec le même record ; toucher n'importe où fait sauter.
+- **Une partie, quand on veut** : au fond de « À propos », une rangée « Une partie ? » ouvre le jeu du
+  parcours froid en grand, avec le même record ; toucher n'importe où fait sauter.
 - **On glisse entre les onglets depuis la page** : un glissement franc n'importe où passe à l'onglet
   voisin, et les listes horizontales (carrousels, rubans) gardent la main quand on les fait défiler.
 - **Des contrôles qui répondent au doigt** : les boutons d'action s'enfoncent sur un ressort, le
@@ -96,6 +96,11 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Modifié
 
+- **Plus de mode d'emploi sous les contrôles** : les textes qui expliquaient un réglage, une section ou
+  le jeu sont retirés partout (pieds des Réglages, licence et introduction des crédits dans « À
+  propos », sous-titres des formulaires de connexion et du lien iCal, aides de la fenêtre des
+  propositions, paragraphe des calendriers du téléphone, consignes de recherche et de filtres). Restent
+  les messages d'état, d'erreur et de confirmation.
 - **La barre du parcours froid ne se fige plus vers 30 %** : ses paliers suivent les durées mesurées,
   et elle s'approche de chacun sans jamais s'y arrêter avant la fin réelle de l'étape.
 - **Une seule accentuation, celle du logo** : le bleu-indigo du milieu de son dégradé, `#3B5FE5` en
@@ -131,7 +136,7 @@ une application qui donne l'heure des choses d'un regard.
   ligne servie deux fois par la source ne s'affiche qu'une fois, les semaines restent dans la fiche,
   et la couleur d'un cours devient lisible quand elle écrit.
 - **Les Réglages en groupes encadrés** : une carte par section, l'icône dans un carré de la couleur
-  de sa famille, l'explication en pied de groupe, le mode sombre rangé dans l'affichage. Ouvrir
+  de sa famille, le mode sombre rangé dans l'affichage. Ouvrir
   l'onglet ne demande plus l'accès à l'agenda : une rangée
   « Autoriser l'agenda » le demande quand on veut s'en servir.
 - **Les distances s'écrivent pour être lues** : « 280 m », « 1,2 km », « 9 045 km », aux séparateurs

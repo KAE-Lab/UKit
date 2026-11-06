@@ -38,7 +38,7 @@ function Paragraphe({ theme, children }: { theme: AppThemeType; children: React.
 /** Un credit de fournisseur : son nom, ce qu'il apporte, et un lien facultatif. */
 function CreditTiers({ nom, description, lien, lienTitre, theme }: { nom: string; description: string; lien?: string; lienTitre?: string; theme: AppThemeType }) {
     return (
-        <View style={styles.credit}>
+        <View>
             <Text style={[styles.nomDuCredit, { color: theme.font }]}>{nom}</Text>
             <Text style={[styles.paragraphe, { color: theme.fontSecondary }]}>
                 {description}
@@ -123,8 +123,7 @@ class AboutScreen extends React.Component<AboutScreenProps> {
                     {/* Une carte d'un seul tenant : trois credits separes par des filets indentes
                         pour des icones absentes se liraient comme des rangees cassees. */}
                     <GroupeDeReglages theme={theme} titre={Translator.get('CREDITS_API')}>
-                        <View style={styles.encart}>
-                            <Text style={[styles.paragraphe, { color: theme.fontSecondary }]}>{Translator.get('THIRD_PARTY_DESC')}</Text>
+                        <View style={[styles.encart, styles.credits]}>
                             <CreditTiers nom="API Affluences" description={Translator.get('AFFLUENCES_DESC')} theme={theme} />
                             <CreditTiers nom="API CROUStillant" description={Translator.get('CROUSTILLANT_DESC')} lien={URL.CROUSTILLANT_WEBSITE} lienTitre="CROUStillant.menu" theme={theme} />
                             {/* Le fond de carte : credite comme les deux autres — la regle du depot pour
@@ -133,8 +132,7 @@ class AboutScreen extends React.Component<AboutScreenProps> {
                         </View>
                     </GroupeDeReglages>
 
-                    {/* La mention de licence passe en pied, comme l'explication d'un groupe de reglages. */}
-                    <GroupeDeReglages theme={theme} titre={Translator.get('LEGAL_NOTICE')} pied={Translator.get('LEGAL_MENTION')}>
+                    <GroupeDeReglages theme={theme} titre={Translator.get('LEGAL_NOTICE')}>
                         <RangeeDeReglage theme={theme} icone="shield-check-outline" libelle={Translator.get('CONFIDENTIALITY_POLITIC')} onPress={() => ouvrirLien(URL.LEGAL_NOTICE)} />
                     </GroupeDeReglages>
 
@@ -176,8 +174,10 @@ const styles = StyleSheet.create({
         fontSize: tokens.fontSize.sm,
         lineHeight: 21,
     },
-    credit: {
-        marginTop: tokens.space.md,
+    // L'ecart entre credits vit sur la carte : chacun portait une marge haute, pensee pour suivre
+    // une phrase d'introduction retiree depuis (review du 2026-11-06).
+    credits: {
+        gap: tokens.space.md,
     },
     nomDuCredit: {
         fontSize: tokens.fontSize.sm,

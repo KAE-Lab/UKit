@@ -151,11 +151,10 @@ interface SectionProps {
     readonly theme: AppThemeType;
     readonly icone: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
     readonly titre: string;
-    readonly aide: string;
     readonly children: React.ReactNode;
 }
 
-function Section({ theme, icone, titre, aide, children }: SectionProps) {
+function Section({ theme, icone, titre, children }: SectionProps) {
     return (
         // Pas de marge propre : c'est le `gap` du conteneur qui espace les sections, d'un seul pas.
         // Chacune posait la sienne, et l'intro, les sections et les boutons se retrouvaient separes
@@ -168,9 +167,6 @@ function Section({ theme, icone, titre, aide, children }: SectionProps) {
                 </Text>
             </View>
             <View style={{ marginTop: tokens.space.sm }}>{children}</View>
-            <Text style={{ marginTop: tokens.space.sm, fontSize: tokens.fontSize.sm, color: theme.fontSecondary }}>
-                {aide}
-            </Text>
         </View>
     );
 }
@@ -253,7 +249,6 @@ export function PropositionsModal() {
                             <Icon icon={{ family: 'material', name: 'close' }} size={24} color={popup.closeIcon.color as string} />
                         </TouchableOpacity>
                     </View>
-                    <Text style={popup.textDescription}>{Translator.get('PROPOSALS_INTRO')}</Text>
 
                     <ScrollView contentContainerStyle={{ gap: tokens.space.lg, paddingVertical: tokens.space.xs }}>
                         {proposition.edt !== null ? (
@@ -261,7 +256,6 @@ export function PropositionsModal() {
                                 theme={theme}
                                 icone="calendar-account"
                                 titre={Translator.get('PROPOSALS_EDT_LABEL')}
-                                aide={Translator.get('PROPOSALS_EDT_HINT')}
                             >
                                 {/* Le libelle vient d'ADE : c'est une donnee, pas un libelle traduit, et
                                     il s'ecrit comme tel, sans pastille a l'accent. */}
@@ -276,7 +270,6 @@ export function PropositionsModal() {
                                 theme={theme}
                                 icone="filter-variant"
                                 titre={Translator.get('PROPOSALS_UES_LABEL')}
-                                aide={Translator.get('PROPOSALS_UES_HINT')}
                             >
                                 <ListeUes theme={theme} ues={proposition.ues} />
                             </Section>

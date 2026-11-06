@@ -123,7 +123,7 @@ export default function StackNavigator() {
 
                             <Stack.Screen name="About" component={About} options={({ route }) => NavBarHelper({ title: Translator.get('ABOUT'), themeName, route, gestureEnabled: true })} />
                             {/* Le jeu du parcours froid, jouable quand on veut, depuis le fond de « A propos ». */}
-                            <Stack.Screen name="Jeu" component={EcranDuJeuAvecEnTete} options={({ route }) => NavBarHelper({ title: Translator.get('JEU_TITRE'), themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="Jeu" component={EcranDuJeuAvecEnTete} options={({ route }) => NavBarHelper({ title: '', themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Settings" component={Settings} options={({ route }) => NavBarHelper({ title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: true })} />
                             {/* Une page de detail des Reglages, servie par l'ecran des Reglages lui-meme (7-J, troisieme passe). */}

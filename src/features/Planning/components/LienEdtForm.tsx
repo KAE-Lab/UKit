@@ -188,9 +188,6 @@ export default function LienEdtForm({ onDone, topPadding = 0 }: LienEdtFormProps
                 <Text style={[styles.title, { color: theme.font }]}>
                     {Translator.get('TIMETABLE_LINK_TITLE')}
                 </Text>
-                <Text style={[styles.subtitle, { color: theme.fontSecondary }]}>
-                    {Translator.get('TIMETABLE_LINK_DESC')}
-                </Text>
             </View>
 
             <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
@@ -269,12 +266,6 @@ const styles = StyleSheet.create({
         fontWeight: tokens.fontWeight.semibold,
         marginBottom: tokens.space.xs,
         textAlign: 'center',
-    },
-    subtitle: {
-        alignSelf: 'stretch',
-        fontSize: tokens.fontSize.sm,
-        textAlign: 'center',
-        lineHeight: 20,
     },
     card: {
         marginHorizontal: tokens.space.md,

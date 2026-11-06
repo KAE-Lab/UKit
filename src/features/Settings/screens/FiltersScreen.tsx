@@ -91,10 +91,6 @@ function CarteAjout({ theme, themeSettings, ues, filtres }: { theme: import('../
 
     return (
         <View style={[themeSettings.button, { flexDirection: 'column', alignItems: 'stretch', padding: tokens.space.md }] as never}>
-            <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginBottom: tokens.space.sm }}>
-                {Translator.get('FILTERS_ENTER_CODE')}
-            </Text>
-
             {/* La recherche n'a de sens que si un planning a deja rapporte des UE. */}
             {ues.length > 0 ? (
                 <TextInput
