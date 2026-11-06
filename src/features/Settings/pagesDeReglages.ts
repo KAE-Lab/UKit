@@ -7,7 +7,7 @@
  * l'ecran des Reglages lui-meme, qui en garde les gestes (permissions, confirmations).
  */
 
-export type PageDeReglage = 'notifications' | 'apparence' | 'agenda' | 'confidentialite' | 'demarrage';
+export type PageDeReglage = 'notifications' | 'apparence' | 'agenda' | 'confidentialite';
 
 /** Le titre de la barre de chaque page, en cle de traduction. */
 export const TITRE_DE_PAGE = {
@@ -15,7 +15,6 @@ export const TITRE_DE_PAGE = {
     apparence: 'APPEARANCE',
     agenda: 'AGENDA_SETTINGS',
     confidentialite: 'PRIVACY_SECTION',
-    demarrage: 'APP_LAUNCHING',
 } as const satisfies Record<PageDeReglage, string>;
 
 /** Les delais de rappel proposes, en minutes : ceux qu'on choisit, plutot qu'un curseur de 5 en 5. */

@@ -134,7 +134,6 @@ class SettingsManagerService {
     _theme: ThemeKey;
     _favoriteGroups: string[];
     _language: string;
-    _openAppOnFavoriteGroup: boolean;
     _filters: string[];
     _subscribers: Record<string, Function[]>;
     _calendarSyncEnabled: boolean;
@@ -171,7 +170,6 @@ class SettingsManagerService {
         this._theme = 'light';
         this._favoriteGroups = [];
         this._language = 'fr';
-        this._openAppOnFavoriteGroup = true;
         this._filters = [];
         this._subscribers = {};
         this._calendarSyncEnabled = false;
@@ -533,8 +531,6 @@ class SettingsManagerService {
         this.notify('lastSyncDate', this._lastSyncDate);
     };
 
-    getOpenAppOnFavoriteGroup = () => this._openAppOnFavoriteGroup;
-    setOpenAppOnFavoriteGroup = (newOpenAppBool: boolean) => { this._openAppOnFavoriteGroup = newOpenAppBool; this.saveSettings(); };
 
     getMessagesEnNotification = (): boolean => this._messagesEnNotification;
     setMessagesEnNotification = (actif: boolean) => {
@@ -587,7 +583,6 @@ class SettingsManagerService {
     resetSettings = async () => {
         this.setTheme('light');
         this.setLanguage('fr');
-        this.setOpenAppOnFavoriteGroup(true);
         this.purgerReglagesEtablissement();
         // Les memes donnees qu'un changement d'etablissement, et par le meme chemin : deux gestes qui
         // effacent la meme chose ne doivent pas avoir deux definitions de « la meme chose ».
@@ -629,7 +624,9 @@ class SettingsManagerService {
         AsyncStorage.setItem('firstload', JSON.stringify(this._firstload));
         AsyncStorage.setItem('settings', JSON.stringify({
             calendar: this._calendar, theme: this._theme, favoriteGroups: this._favorisParEtablissement,
-            language: this._language, openAppOnFavoriteGroup: this._openAppOnFavoriteGroup,
+            // `openAppOnFavoriteGroup` n'est plus ecrit (2026-11-06) : le reglage n'avait aucun effet, il
+            // est retire. Une valeur deja enregistree reste dans le fichier, sans lecteur.
+            language: this._language,
             filters: this._filtresParEtablissement, calendarSyncEnabled: this._calendarSyncEnabled,
             courseNotificationsEnabled: this._courseNotificationsEnabled, courseNotificationDelay: this._courseNotificationDelay,
             etablissement: getCodeEtablissementActif(), calendriersAffiches: this._calendriersAffiches,
@@ -672,9 +669,6 @@ class SettingsManagerService {
         this._favorisParEtablissement = restaures.favorisParEtablissement;
         this._filtresParEtablissement = restaures.filtresParEtablissement;
 
-        if (settings.openAppOnFavoriteGroup !== null && settings.openAppOnFavoriteGroup !== undefined) {
-            this._openAppOnFavoriteGroup = settings.openAppOnFavoriteGroup as boolean;
-        }
         if (settings.calendar !== undefined) this._calendar = settings.calendar as string | number;
         if (settings.calendarSyncEnabled) this._calendarSyncEnabled = true;
         if (settings.courseNotificationsEnabled !== undefined) {

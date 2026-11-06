@@ -28,7 +28,7 @@ au retour sur l'accueil (`relireLesReglages`).
 |---|---|
 | **Établissement** | l'université sélectionnée (modale de choix, avec confirmation ; regroupée par campus et cherchée par alias dès six établissements), le compte, le lien d'emploi du temps, et **Soutenir UKit** quand le catalogue publie `services.soutien` — le don s'ouvre dans le navigateur du système, règle des stores |
 | **Affichage** | langue (modale de choix), **Apparence** (page : Clair ou Sombre, coché), filtres d'UE (écran dédié) |
-| **Préférences** | **Notifications** (valeur : le délai des rappels, ou Oui/Non), **Agenda** (Oui/Non), **Confidentialité**, **Démarrage** : une page chacune |
+| **Préférences** | **Notifications** (valeur : le délai des rappels, ou Oui/Non), **Agenda** (Oui/Non), **Confidentialité** : une page chacune |
 | *(seule)* | « Réinitialiser l'application », en rouge, avec confirmation |
 
 | Page | Contenu |
@@ -36,7 +36,6 @@ au retour sur l'accueil (`relireLesReglages`).
 | **Notifications** | interrupteur des messages de service en notification (6.1.x-E — le couper retire le jeton de la base), interrupteur des rappels de cours, et **le délai en liste cochée** ([`delaisAProposer`](../../src/features/Settings/pagesDeReglages.ts) : 5 à 60 minutes, plus le délai en cours s'il n'en est pas). Les deux interrupteurs sont **actifs par défaut**, et c'est l'entretien qui demande la permission une fois ([plateforme.md](../plateforme.md#permissions)) |
 | **Agenda** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué, et un toast le dit quand c'est le geste « Forcer » qui a échoué (6.1-C) — et, depuis 6.1.x-D, la rangée **Calendriers du téléphone** vers l'écran de choix de ceux que le Planning affiche |
 | **Confidentialité** | interrupteur « Statistiques anonymes » (7-D), **actif par défaut** : le couper arrête le comptage et vide la file locale ; « Réinitialiser l'application » le remet actif ([mesure.md](../mesure.md)) |
-| **Démarrage** | ouvrir sur le groupe favori — sans effet aujourd'hui ([défauts](../defauts-fonctionnels.md)) |
 
 Le bouton d'action de la barre d'onglets mène à **À propos**.
 

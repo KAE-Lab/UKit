@@ -35,7 +35,6 @@ import {
     ApparenceSection,
     CalendarSection,
     ConfidentialiteSection,
-    DemarrageSection,
     DisplaySection,
     InstitutionSection,
     NotificationsSection,
@@ -62,7 +61,6 @@ export interface SettingsState {
     isSynchronizingCalendar: boolean;
     language: string;
     languageDialogVisible: boolean;
-    openFavSwitchValue: boolean;
     resetDialogVisible: boolean;
     syncOffDialogVisible: boolean;
     selectedCalendar: string | number;
@@ -94,7 +92,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             isSynchronizingCalendar: SettingsManager.isSynchronizingCalendar(),
             language: SettingsManager.getLanguage(),
             languageDialogVisible: false,
-            openFavSwitchValue: SettingsManager.getOpenAppOnFavoriteGroup(),
             resetDialogVisible: false,
             syncOffDialogVisible: false,
             selectedCalendar: SettingsManager.getSyncCalendar(),
@@ -126,11 +123,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         SettingsManager.setLanguage(newLang);
     };
 
-    toggleOpenFavSwitchValue = () => {
-        this.setState({ openFavSwitchValue: !this.state.openFavSwitchValue }, () => {
-            SettingsManager.setOpenAppOnFavoriteGroup(this.state.openFavSwitchValue);
-        });
-    };
 
     toggleTheme = () => {
         SettingsManager.switchTheme();
@@ -188,7 +180,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             courseNotificationDelay: SettingsManager.getCourseNotificationDelay(),
             messagesEnNotification: SettingsManager.getMessagesEnNotification(),
             calendarSyncEnabled: SettingsManager.getCalendarSyncEnabled(),
-            openFavSwitchValue: SettingsManager.getOpenAppOnFavoriteGroup(),
             language: SettingsManager.getLanguage(),
         });
     };
@@ -430,8 +421,6 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                 );
             case 'confidentialite':
                 return <ConfidentialiteSection theme={theme} />;
-            case 'demarrage':
-                return <DemarrageSection theme={theme} openFavSwitchValue={this.state.openFavSwitchValue} toggleOpenFavSwitchValue={this.toggleOpenFavSwitchValue} />;
         }
     }
 
