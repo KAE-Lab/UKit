@@ -33,7 +33,7 @@ au retour sur l'accueil (`relireLesReglages`).
 
 | Page | Contenu |
 |---|---|
-| **Notifications** | interrupteur des messages de service en notification (6.1.x-E — le couper retire le jeton de la base), interrupteur des rappels de cours, et **le délai en liste cochée** ([`delaisAProposer`](../../src/features/Settings/pagesDeReglages.ts) : 5 à 60 minutes, plus le délai en cours s'il n'en est pas). Les deux interrupteurs sont **actifs par défaut**, et c'est l'entretien qui demande la permission une fois ([plateforme.md](../plateforme.md#permissions)) |
+| **Notifications** | interrupteur des messages de service en notification (6.1.x-E — le couper retire le jeton de la base), interrupteur des rappels de cours, et **le délai au pas, « − 15 min + »** ([`delaiVoisin`](../../src/features/Settings/pagesDeReglages.ts) : 5 à 60 minutes de 5 en 5, un ancien délai hors pas calé sur le voisin ; appui long pour défiler, enregistrement à la fin du geste). Les deux interrupteurs sont **actifs par défaut**, et c'est l'entretien qui demande la permission une fois ([plateforme.md](../plateforme.md#permissions)) |
 | **Agenda** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué, et un toast le dit quand c'est le geste « Forcer » qui a échoué (6.1-C) — et, depuis 6.1.x-D, la rangée **Calendriers du téléphone** vers l'écran de choix de ceux que le Planning affiche |
 | **Confidentialité** | interrupteur « Statistiques anonymes » (7-D), **actif par défaut** : le couper arrête le comptage et vide la file locale ; « Réinitialiser l'application » le remet actif ([mesure.md](../mesure.md)) |
 
@@ -184,8 +184,9 @@ couvre **les deux causes** : reporté, ou irrésoluble. Le repli reste possible 
 
 Depuis le jalon [6.1-E](../phase-6/6-1-e-finitions-interface.md), les interrupteurs ne sont plus les
 contrôles **du système** mais celui du dépôt ([`Interrupteur`](../../src/shared/ui/Interrupteur.tsx)).
-Le curseur de délai, dessiné aussi, est sorti à la troisième passe de 7-J : un délai se choisit dans
-une liste cochée, qui dit « 15 min avant » sans glisser.
+Le curseur de délai, dessiné aussi, est sorti à la troisième passe de 7-J ; la liste cochée de sept
+durées qui l'a remplacé un temps (« dix boutons », review du 2026-11-06) a cédé la place à un réglage
+au pas, deux boutons de part et d'autre de la valeur.
 
 **Le contrôle est piloté** : la poignée suit la valeur passée, jamais l'appui. C'est ce qui rend
 correct le cas de la synchronisation calendrier, où éteindre **ouvre une confirmation** au lieu de

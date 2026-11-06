@@ -37,7 +37,7 @@ une application qui donne l'heure des choses d'un regard.
   passe dessous en fondu ; une corbeille grise au lieu d'un bouton rouge sur chaque document.
 - **Les Réglages en pages** : l'accueil ne porte plus que des rangées qui mènent, leur valeur à
   droite ; chaque préférence (notifications, agenda, confidentialité, apparence) a sa page,
-  qui explique et qui bascule. Le délai des rappels se choisit dans une liste cochée, plus au curseur.
+  qui explique et qui bascule. Le délai des rappels se règle au pas, « − 15 min + », plus au curseur.
 - **Des cartes de lieux plus calmes** : un restaurant résume ses horaires (« Self : 11h30-13h45 ») au
   lieu du texte brut tronqué, et la distance passe en gris neutre, plus en pastille d'accent.
 - **Des menus qui se lisent d'un coup d'œil** : la catégorie en demi-gras, chaque plat derrière sa

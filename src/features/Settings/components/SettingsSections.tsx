@@ -4,8 +4,9 @@
  * d'une rangee sont parties avec la review du 2026-11-05.
  */
 
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import moment from 'moment';
 
 import Translator from '../../../shared/i18n/Translator';
@@ -13,7 +14,8 @@ import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { useMesureActive } from '../../../shared/mesure';
 import { GroupeDeReglages, RangeeDeReglage } from './GroupeDeReglages';
-import { delaisAProposer, type PageDeReglage } from '../pagesDeReglages';
+import { Icon } from '../../../shared/ui/Icon';
+import { DELAI, delaiVoisin, type PageDeReglage } from '../pagesDeReglages';
 
 const LANGUAGE_LIST = {
     fr: 'FRENCH',
@@ -156,6 +158,65 @@ export const ApparenceSection = ({ theme, isDarkMode, choisirSombre }: { theme: 
     </GroupeDeReglages>
 );
 
+/** L'attente avant d'enregistrer un delai : le geste fini, pas chaque pas (la replanification coute). */
+const ENREGISTREMENT_MS = 600;
+/** La cible d'un bouton de pas : les 44 points des Human Interface Guidelines. */
+const BOUTON_DE_PAS = 44;
+/** Le rythme d'un appui long sur un bouton de pas. */
+const REPETITION_MS = 120;
+
+/** Un bouton de pas, rond, qui repete sous un appui long. */
+function BoutonDePas({ theme, icone, desactive, onPas, libelle }: {
+    theme: AppThemeType; icone: 'minus' | 'plus'; desactive: boolean; onPas: () => void; libelle: string;
+}) {
+    const repetition = useRef<ReturnType<typeof setInterval> | null>(null);
+    const arreter = () => { if (repetition.current) clearInterval(repetition.current); repetition.current = null; };
+    useEffect(() => arreter, []);
+    return (
+        <Pressable
+            onPress={onPas}
+            onLongPress={() => { arreter(); repetition.current = setInterval(onPas, REPETITION_MS); }}
+            onPressOut={arreter}
+            disabled={desactive}
+            accessibilityRole="button"
+            accessibilityLabel={libelle}
+            hitSlop={tokens.space.xs}
+            style={({ pressed }) => [styles.boutonDePas, { backgroundColor: pressed ? theme.selection : theme.greyBackground }, desactive && styles.boutonEteint]}
+        >
+            <Icon icon={{ name: icone }} size={22} color={desactive ? theme.fontTertiary : theme.accent} />
+        </Pressable>
+    );
+}
+
+/**
+ * Le delai des rappels en une rangee, « − 15 min + » : la valeur en grand au milieu, un pas de cinq
+ * minutes de chaque cote. La valeur suit le doigt ; l'enregistrement attend la fin du geste.
+ */
+function ReglageDuDelai({ theme, valeur, onChoisir }: { theme: AppThemeType; valeur: number; onChoisir: (minutes: number) => void }) {
+    const [affiche, setAffiche] = useState(valeur);
+    const enregistrement = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => { setAffiche(valeur); }, [valeur]);
+    useEffect(() => () => { if (enregistrement.current) clearTimeout(enregistrement.current); }, []);
+    const pas = (sens: -1 | 1) => {
+        setAffiche((avant) => {
+            const apres = delaiVoisin(avant, sens);
+            if (apres !== avant) void Haptics.selectionAsync().catch(() => undefined);
+            if (enregistrement.current) clearTimeout(enregistrement.current);
+            enregistrement.current = setTimeout(() => onChoisir(apres), ENREGISTREMENT_MS);
+            return apres;
+        });
+    };
+    return (
+        <View style={styles.delai} accessible={false}>
+            <BoutonDePas theme={theme} icone="minus" desactive={affiche <= DELAI.minimum} onPas={() => pas(-1)} libelle={Translator.get('NOTIFICATION_DELAY_LESS')} />
+            <Text style={[styles.valeurDuDelai, tokens.texte.chiffres, { color: theme.font }]} accessibilityLiveRegion="polite">
+                {Translator.get('NOTIFICATION_DELAY_VALUE', affiche)}
+            </Text>
+            <BoutonDePas theme={theme} icone="plus" desactive={affiche >= DELAI.maximum} onPas={() => pas(1)} libelle={Translator.get('NOTIFICATION_DELAY_MORE')} />
+        </View>
+    );
+}
+
 interface NotificationsSectionProps {
     theme: AppThemeType;
     courseNotificationsEnabled: boolean;
@@ -195,16 +256,8 @@ export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggle
             />
         </GroupeDeReglages>
         {courseNotificationsEnabled ? (
-            <GroupeDeReglages theme={theme} titre={Translator.get('NOTIFICATION_DELAY')} filetCourt>
-                {delaisAProposer(courseNotificationDelay).map((minutes) => (
-                    <RangeeDeReglage
-                        key={minutes}
-                        theme={theme}
-                        libelle={Translator.get('NOTIFICATION_DELAY_BEFORE', minutes)}
-                        coche={minutes === courseNotificationDelay}
-                        onPress={() => choisirDelai(minutes)}
-                    />
-                ))}
+            <GroupeDeReglages theme={theme} titre={Translator.get('NOTIFICATION_DELAY')}>
+                <ReglageDuDelai theme={theme} valeur={courseNotificationDelay} onChoisir={choisirDelai} />
             </GroupeDeReglages>
         ) : null}
     </>
@@ -312,3 +365,27 @@ export const CalendarSection = (props: CalendarSectionProps) => {
         </GroupeDeReglages>
     );
 };
+
+const styles = StyleSheet.create({
+    delai: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: tokens.space.md,
+        paddingVertical: tokens.space.md,
+    },
+    boutonDePas: {
+        width: BOUTON_DE_PAS,
+        height: BOUTON_DE_PAS,
+        borderRadius: BOUTON_DE_PAS / 2,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    boutonEteint: {
+        opacity: 0.5,
+    },
+    valeurDuDelai: {
+        fontSize: tokens.fontSize.xl,
+        fontWeight: tokens.fontWeight.semibold,
+    },
+});
