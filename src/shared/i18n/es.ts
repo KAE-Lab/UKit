@@ -248,6 +248,14 @@ const es: TranslationDict = {
 	// Le libelle de l'etoile d'une carte Campus, pour un lecteur d'ecran.
 	FAVORI_AJOUTER: 'Añadir a favoritos',
 	FAVORI_RETIRER: 'Quitar de favoritos',
+	// Les pages de detail des Reglages (7-J, troisieme passe).
+	APPEARANCE: 'Apariencia',
+	AGENDA_SETTINGS: 'Calendario',
+	PREFERENCES: 'Preferencias',
+	COURSE_REMINDERS: 'Recordatorios de clase',
+	SETTING_ON: 'Sí',
+	SETTING_OFF: 'No',
+	NOTIFICATION_DELAY_BEFORE: '$- min antes',
 	DAY_SUN: 'Dom',
 	BU_OPEN: "Abierta",
 	BU_CLOSED: "Cerrada",
@@ -398,7 +406,6 @@ const es: TranslationDict = {
 	COURSE_NOTIFICATIONS: "Notificaciones de cursos",
 	NOTIFICATION_DELAY: "Retraso de la notificación",
 	NOTIFICATION_DELAY_VALUE: '$- min',
-	NOTIFICATION_DELAY_DESC: "Ajusta cuántos minutos antes del inicio del curso deseas ser notificado.",
 	NOTIFICATION_CAP_DESC: "Se cubren las 20 próximas clases de la semana consultada.",
 	PUSH_MESSAGES: 'Mensajes de servicio',
 	PUSH_MESSAGES_DESC: 'Una incidencia o una noticia importante te llega incluso con la app cerrada. Para ello, la app deposita un token de notificación con lo necesario para dirigirse a ti: campus, versión, plataforma. Apagarlo lo retira.',

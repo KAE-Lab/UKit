@@ -246,6 +246,14 @@ const en = {
 	// Le libelle de l'etoile d'une carte Campus, pour un lecteur d'ecran.
 	FAVORI_AJOUTER: 'Add to favorites',
 	FAVORI_RETIRER: 'Remove from favorites',
+	// Les pages de detail des Reglages (7-J, troisieme passe).
+	APPEARANCE: 'Appearance',
+	AGENDA_SETTINGS: 'Calendar',
+	PREFERENCES: 'Preferences',
+	COURSE_REMINDERS: 'Class reminders',
+	SETTING_ON: 'On',
+	SETTING_OFF: 'Off',
+	NOTIFICATION_DELAY_BEFORE: '$- min before',
 	DAY_SUN: 'Sun',
 	BU_OPEN: "Open",
 	BU_CLOSED: "Closed",
@@ -396,7 +404,6 @@ const en = {
 	COURSE_NOTIFICATIONS: "Course Notifications",
 	NOTIFICATION_DELAY: "Notification delay",
 	NOTIFICATION_DELAY_VALUE: '$- min',
-	NOTIFICATION_DELAY_DESC: "Adjust how many minutes before the start of the course you want to be notified.",
 	NOTIFICATION_CAP_DESC: "The next 20 classes of the week last opened are covered.",
 	PUSH_MESSAGES: 'Service messages',
 	PUSH_MESSAGES_DESC: 'An incident or important news reaches you even when the app is closed. To do so, the app deposits a push token with what it takes to target you: campus, version, platform. Turning this off removes it.',

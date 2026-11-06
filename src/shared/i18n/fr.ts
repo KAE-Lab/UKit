@@ -251,6 +251,14 @@ const fr: TranslationDict = {
 	// Le libelle de l'etoile d'une carte Campus, pour un lecteur d'ecran.
 	FAVORI_AJOUTER: 'Ajouter aux favoris',
 	FAVORI_RETIRER: 'Retirer des favoris',
+	// Les pages de detail des Reglages (7-J, troisieme passe).
+	APPEARANCE: 'Apparence',
+	AGENDA_SETTINGS: 'Agenda',
+	PREFERENCES: 'Préférences',
+	COURSE_REMINDERS: 'Rappels de cours',
+	SETTING_ON: 'Oui',
+	SETTING_OFF: 'Non',
+	NOTIFICATION_DELAY_BEFORE: '$- min avant',
 	DAY_SUN: 'Dim',
 	BU_OPEN: "Ouverte",
 	BU_CLOSED: "Fermée",
@@ -407,7 +415,6 @@ const fr: TranslationDict = {
 	COURSE_NOTIFICATIONS: "Notifications de cours",
 	NOTIFICATION_DELAY: "Délai avant le cours",
 	NOTIFICATION_DELAY_VALUE: '$- min',
-	NOTIFICATION_DELAY_DESC: 'Le nombre de minutes entre la notification et le début du cours.',
 	NOTIFICATION_CAP_DESC: 'Les 20 prochains cours de la semaine consultée sont couverts.',
 	PUSH_MESSAGES: 'Messages de service',
 	PUSH_MESSAGES_DESC: 'Un incident ou une information importante t’atteint même application fermée. Pour cela, l’application dépose un jeton de notification avec ce qu’il faut pour te cibler : campus, version, plateforme. Couper l’interrupteur le retire.',

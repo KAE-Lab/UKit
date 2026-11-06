@@ -7,6 +7,7 @@ import GroupSearch from '../../features/Planning/screens/GroupSelectionScreen';
 import Group from '../../features/Planning/screens/ScheduleScreen';
 import About from '../../features/Settings/screens/AboutScreen';
 import Settings from '../../features/Settings/screens/SettingsScreen';
+import { TITRE_DE_PAGE, type PageDeReglage } from '../../features/Settings/pagesDeReglages';
 import FiltersScreen from '../../features/Settings/screens/FiltersScreen';
 import CalendriersAffichesScreen from '../../features/Settings/screens/CalendriersAffichesScreen';
 import CredentialsSettingsScreen from '../../features/Scolarite/screens/CredentialsSettingsScreen';
@@ -29,10 +30,11 @@ import style, { tokens } from '../theme/Theme';
 import { AppContext, treatTitle } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { HeaderButton, HEADER_BUTTON_ICON } from '../ui/HeaderButton';
-import { NavBarHelper, SaveGroupButton as SaveButton, FilterRemoveButton } from './NavHelpers';
+import { NavBarHelper, SaveGroupButton as SaveButton, FilterRemoveButton, withHeaderAnimation } from './NavHelpers';
 import { Icon } from '../ui/Icon';
 
 export type RootStackParamList = {
+    Reglage: { page: PageDeReglage };
     MainTabs: undefined;
     GroupSearch: undefined;
     Group: { name: string | string[] };
@@ -61,6 +63,9 @@ export type RootStackParamList = {
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
+
+/** L'ecran des Reglages pousse sur une page : la barre suit son defilement, comme les autres sous-pages. */
+const PageDeReglageEcran = withHeaderAnimation(Settings);
 
 /** Le titre d'une fiche : le nom de ce qu'elle montre, « Details » s'il manque. */
 function nomOuDetails(nom: unknown): string {
@@ -116,6 +121,8 @@ export default function StackNavigator() {
                             <Stack.Screen name="About" component={About} options={({ route }) => NavBarHelper({ title: Translator.get('ABOUT'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Settings" component={Settings} options={({ route }) => NavBarHelper({ title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: true })} />
+                            {/* Une page de detail des Reglages, servie par l'ecran des Reglages lui-meme (7-J, troisieme passe). */}
+                            <Stack.Screen name="Reglage" component={PageDeReglageEcran} options={({ route }) => NavBarHelper({ title: Translator.get(TITRE_DE_PAGE[route.params.page]), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Filters" component={FiltersScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FILTERS'), themeName, route, gestureEnabled: true })} />
 
