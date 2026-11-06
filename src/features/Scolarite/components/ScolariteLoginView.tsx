@@ -381,6 +381,10 @@ const ScolariteLoginView = ({
             {/* `Animated.ScrollView` pour `onScroll` : l'onglet deconnecte fond son grand titre
                 sur le defilement du formulaire (ScolariteDashboard). Sans rapporteur, identique. */}
             <Animated.ScrollView
+                // Partie en cours, la page ne defile plus : glisser vers le bas baisse le renard, et
+                // le defilement (avec son rebond) prenait le geste a sa place (retour du 2026-11-06).
+                // Au repos, elle defile, pour ce qui depasse sur un petit ecran.
+                scrollEnabled={partieDuJeu.phase === 'attente'}
                 // `degagementBas` : l'accueil pose un pied flottant sur le formulaire, et sur 740 points
                 // de haut (A8) la fin de la carte restait dessous, sans pouvoir remonter (7-J).
                 contentContainerStyle={{ paddingTop: topPadding + 70, paddingBottom: degagementBas }}
