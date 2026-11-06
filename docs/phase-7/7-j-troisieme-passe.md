@@ -60,8 +60,15 @@ le site, les deux défauts consignés corrigés, trois règles ajoutées à `~/.
 - [x] le glissement entre onglets depuis la page, les listes gardant la main (`8afda2f`), vérifié sur
   Android ; reste à juger sur iPhone
 - [x] le petit jeu jouable au fond de « À propos », même record (`8295656`)
-- [ ] le jeu en pixel art : planche de trois directions montrée (Encre recommandée, Pastel,
-  l'identité UKit), en attente du choix
+- [x] le jeu en pixel art : planche de trois directions montrée, **Encre** choisie (« plus beau que
+  la planche… une version améliorée du jeu du dino, pas une version éco+ »). Un renard à l'écharpe
+  bleue, trois plans de décor, la nuit en sombre, la secousse et « Nouveau record » ; la scène
+  s'agrandit avec le plateau, bornée pour qu'un obstacle mette plus d'une seconde à traverser.
+  Vérifié au banc en clair et en sombre, en attente, en course, en saut et à la chute ; non vus :
+  « Nouveau record » (une partie au doigt), le plateau de 150 points de la connexion (dossier en
+  cache), l'iPhone
+- [x] le délai des rappels au pas, « − 15 min + » (`fef2625`) ; les barres flottantes de l'iPhone
+  décollées du bord (`46f139a`)
 
 Portes de la passe : `tsc`, ESLint sans avertissement, 1 158 tests, parité 13/13, export Android et
 iOS. Non refait à cette passe : le format de l'A8, l'anglais et l'espagnol au banc, l'iPhone.
@@ -70,8 +77,12 @@ iOS. Non refait à cette passe : le format de l'A8, l'anglais et l'espagnol au b
 
 - **Les pages des Réglages sont servies par l'écran des Réglages** plutôt que par cinq écrans neufs :
   ses gestes (permissions, confirmations, relecture) restent écrits une fois.
-- **Le délai des rappels en liste cochée**, pas en contrôle segmenté : sept valeurs se lisent mieux
-  en « 15 min avant » qu'en chiffres serrés, et la liste garde un délai réglé autrefois au curseur.
+- **Le délai des rappels au pas, « − 15 min + »**, après une liste cochée de sept valeurs que le
+  propriétaire trouvait trop chargée : une rangée, la valeur au milieu, et un ancien délai hors pas
+  calé sur le voisin.
+- **La scène d'Encre s'agrandit d'un bloc** (une échelle sur la vue) plutôt que de redessiner chaque
+  sprite à la taille du plateau : la physique compte en points de scène et ne change pas. Sur iPhone,
+  l'agrandissement d'une vue peut adoucir les bords des pixels : à regarder au passage iPhone.
 - **La matière du bouton plein est d'une seule teinte** (l'accent vers `accentProfond`) : le dégradé
   violet-bleu reste un tic ; celui-ci donne de la profondeur sans seconde couleur.
 - **« Les barres » s'entendent comme les barres de progression.**

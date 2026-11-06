@@ -35,7 +35,8 @@ const en = {
 	JEU_TITRE: 'The little game',
 	JEU_PARTOUT: 'Tap anywhere to jump.',
 	JEU_RECORD: 'best $-',
-	JEU_ACCESSIBILITE: 'Mini-game: tap to make the dot jump',
+	JEU_ACCESSIBILITE: 'Mini-game: tap to make the fox jump',
+	JEU_NOUVEAU_RECORD: 'New best',
 	SUPPORT_UKIT: 'Support UKit',
 	ENGLISH: 'English',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).

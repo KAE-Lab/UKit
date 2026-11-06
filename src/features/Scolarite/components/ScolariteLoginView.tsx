@@ -7,7 +7,7 @@ import {
 import { getEtablissementActif } from '../../../shared/etablissements';
 import { LogoEtablissement } from './LogoEtablissement';
 import { BlocProgression } from './ScolariteLoadingScreen';
-import { JeuDuPoint, type CommandeDuJeu } from '../../../shared/ui/jeu/JeuDuPoint';
+import { JeuDuRenard, type CommandeDuJeu } from '../../../shared/ui/jeu/JeuDuRenard';
 import { franchirLaPorte } from './BiometryGate';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 
@@ -68,7 +68,7 @@ const EnTeteDuFormulaire = ({ theme, color, compact }) => (
  */
 const JeuDeLaConnexion = ({ theme, commande }: { theme: import('../../../shared/theme/Theme').AppThemeType; commande: React.RefObject<CommandeDuJeu | null> }) => (
     <View style={styles.jeu}>
-        <JeuDuPoint ref={commande} theme={theme} />
+        <JeuDuRenard ref={commande} theme={theme} />
     </View>
 );
 
