@@ -32,6 +32,8 @@ const en = {
 	INSTITUTION_SEARCH: 'Search a school or an acronym…',
 	// Le jeu du point, pendant la connexion universitaire (7-J).
 	JEU_CONSIGNE: 'Tap to jump',
+	JEU_TITRE: 'The little game',
+	JEU_PARTOUT: 'Tap anywhere to jump.',
 	JEU_RECORD: 'best $-',
 	JEU_ACCESSIBILITE: 'Mini-game: tap to make the dot jump',
 	SUPPORT_UKIT: 'Support UKit',

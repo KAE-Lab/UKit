@@ -64,6 +64,7 @@ import Folder from 'lucide-react-native/icons/folder';
 import Footprints from 'lucide-react-native/icons/footprints';
 import Funnel from 'lucide-react-native/icons/funnel';
 import FunnelX from 'lucide-react-native/icons/funnel-x';
+import Gamepad2 from 'lucide-react-native/icons/gamepad-2';
 import Globe from 'lucide-react-native/icons/globe';
 import GraduationCap from 'lucide-react-native/icons/graduation-cap';
 import Hamburger from 'lucide-react-native/icons/hamburger';
@@ -190,6 +191,7 @@ export const ICONES_COMMUNITY: Partial<Record<keyof typeof MaterialCommunityIcon
     'file-pdf-box': entree(FileText),
     'filter-outline': entree(Funnel),
     'filter-remove-outline': entree(FunnelX),
+    'gamepad-variant-outline': entree(Gamepad2),
     'filter-variant': entree(ListFilter),
     'filter-variant-remove': entree(FunnelX),
     'fish': entree(Fish),

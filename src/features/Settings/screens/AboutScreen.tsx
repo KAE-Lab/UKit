@@ -58,6 +58,8 @@ function CreditTiers({ nom, description, lien, lienTitre, theme }: { nom: string
 export interface AboutScreenProps {
     headerPadding?: Record<string, unknown>;
     onAnimatedScroll?: (event: unknown) => void;
+    /** Pour la rangee du jeu, au fond de l'ecran. */
+    navigation?: { navigate: (route: string) => void };
 }
 
 class AboutScreen extends React.Component<AboutScreenProps> {
@@ -134,6 +136,12 @@ class AboutScreen extends React.Component<AboutScreenProps> {
                     {/* La mention de licence passe en pied, comme l'explication d'un groupe de reglages. */}
                     <GroupeDeReglages theme={theme} titre={Translator.get('LEGAL_NOTICE')} pied={Translator.get('LEGAL_MENTION')}>
                         <RangeeDeReglage theme={theme} icone="shield-check-outline" libelle={Translator.get('CONFIDENTIALITY_POLITIC')} onPress={() => ouvrirLien(URL.LEGAL_NOTICE)} />
+                    </GroupeDeReglages>
+
+                    {/* Au fond, sans titre : le jeu du parcours froid, jouable quand on veut. Un coin
+                        qu'on trouve en allant au bout, pas une fonction qu'on annonce. */}
+                    <GroupeDeReglages theme={theme}>
+                        <RangeeDeReglage theme={theme} icone="gamepad-variant-outline" libelle={Translator.get('JEU_TITRE')} onPress={() => this.props.navigation?.navigate('Jeu')} />
                     </GroupeDeReglages>
 
                 </Animated.ScrollView>
