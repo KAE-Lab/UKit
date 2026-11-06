@@ -10,8 +10,10 @@ Tout l'état de cet onglet est porté par `SettingsManager`
 
 L'écran est une suite de **groupes encadrés** ([7-J](../phase-7/7-j-ecrans.md), 2026-11-05) : une
 carte par section, des rangées de 52 points séparées par un filet indenté sous le libellé, l'icône
-blanche dans un carré de la couleur de sa famille, l'explication d'un réglage en pied de groupe
-([`GroupeDeReglages`](../../src/features/Settings/components/GroupeDeReglages.tsx)). Chaque réglage
+blanche dans un carré de la couleur de sa famille
+([`GroupeDeReglages`](../../src/features/Settings/components/GroupeDeReglages.tsx)). **Aucun texte
+d'explication sous un réglage** : un libellé juste suffit (review du 2026-11-06). Le pied de groupe ne
+porte plus qu'un état, comme l'établissement que le catalogue a retiré. Chaque réglage
 était sa propre carte : la pile d'objets sans rapport que [theme.md](../theme.md) interdit. Le grand
 titre reste fixe, et le contenu passe dessous en fondu
 ([`PageDesReglages`](../../src/features/Settings/components/PageDesReglages.tsx), `EnTeteDOnglet`).
@@ -555,7 +557,7 @@ tierces (Affluences, Croustillant), et mentions légales pointant vers
 C'est l'endroit où créditer une nouvelle source de données tierce.
 
 **Au gabarit des Réglages depuis [7-J](../phase-7/7-j-ecrans.md)** : les mêmes groupes encadrés
-(`GroupeDeReglages`), les liens en rangées à icône teintée, la mention de licence en pied de groupe, et
+(`GroupeDeReglages`), les liens en rangées à icône teintée, et
 le logo vectoriel ([`LogoUKit`](../../src/shared/ui/epure/LogoUKit.tsx)) au lieu du PNG dans un carré
 blanc. L'écran avait son propre gabarit, une bande grise d'en-tête par carte : une troisième manière de
 titrer un groupe. La version garde ses sept tapes, qui ouvrent le menu de test.

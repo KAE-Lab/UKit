@@ -52,7 +52,7 @@ export function IdentifiantsNavigateur({ theme, teinte }: IdentifiantsNavigateur
                     icon={{ name: 'form-textbox-password' }}
                     teinte={teinte}
                     titre={Translator.get('BROWSER_AUTOFILL_TITLE')}
-                    sousTitre={`${identifiant} · ${Translator.get('BROWSER_AUTOFILL_DESC')}`}
+                    sousTitre={identifiant}
                     chevron
                     onPress={() => setConfirmation(true)}
                 />

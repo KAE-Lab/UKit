@@ -26,29 +26,26 @@ import {
 import { Icon } from '../../../shared/ui/Icon';
 
 /**
- * Le pied de la liste de groupes : ce qu'on ne montre pas, et pourquoi.
+ * Le pied de la liste de groupes : ce qu'on ne montre pas.
  *
- * Trois etats, et ils disent trois choses differentes — des resultats caches, aucun resultat, ou
- * simplement l'invitation a affiner. Les confondre ferait croire a une liste vide la ou il y a
- * seulement trop de monde.
+ * Deux etats, des resultats caches ou aucun resultat : les confondre ferait croire a une liste vide
+ * la ou il y a seulement trop de monde. L'invitation a « utiliser la barre de recherche » est
+ * retiree, la barre est juste au-dessus (review du 2026-11-06).
  */
 export const WelcomeGroupFooter = ({ themeObj, textFilter, filtres }) => {
     const style = { color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.sm, textAlign: 'center' as const };
 
     if (textFilter && filtres.length > MAXIMUM_NUMBER_ITEMS_GROUPLIST) {
         return (
-            <View style={{ marginTop: tokens.space.sm }}>
-                <Text style={{ ...style, marginTop: 0 }}>
-                    {Translator.get('HIDDEN_RESULT', filtres.length - MAXIMUM_NUMBER_ITEMS_GROUPLIST)}
-                </Text>
-                <Text style={{ ...style, marginTop: tokens.space.xs }}>{Translator.get('USE_SEARCH_BAR')}</Text>
-            </View>
+            <Text style={style}>
+                {Translator.get('HIDDEN_RESULT', filtres.length - MAXIMUM_NUMBER_ITEMS_GROUPLIST)}
+            </Text>
         );
     }
     if (textFilter && filtres.length === 0) {
         return <Text style={style}>{Translator.get('NO_GROUP_FOUND_WITH_THIS_SEARCH')}</Text>;
     }
-    return <Text style={style}>{Translator.get('USE_SEARCH_BAR')}</Text>;
+    return null;
 };
 
 /**

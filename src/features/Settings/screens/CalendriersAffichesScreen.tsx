@@ -145,9 +145,6 @@ function CalendriersAffichesScreen({ onAnimatedScroll }: { onAnimatedScroll?: (e
                     scrollEventThrottle={16}
                     contentContainerStyle={{ paddingTop: (insets?.top ?? 0) + HEADER_OFFSET, paddingBottom: tokens.space.xxl }}
                 >
-                    <Text style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary, lineHeight: 20, marginHorizontal: tokens.space.md }}>
-                        {Translator.get('PHONE_CALENDARS_DESCRIPTION')}
-                    </Text>
                     {renderContenu()}
                 </Animated.ScrollView>
             )}

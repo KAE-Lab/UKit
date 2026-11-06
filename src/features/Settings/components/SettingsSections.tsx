@@ -228,13 +228,13 @@ interface NotificationsSectionProps {
 }
 
 /**
- * La page Notifications : chaque interrupteur dans son groupe, son explication en pied, et le delai
- * des rappels en liste cochee. Le delai se reglait au curseur, de 5 en 5, sous un paragraphe qui
- * melait les deux reglages (review du 2026-11-06).
+ * La page Notifications : chaque interrupteur dans son groupe, et le delai des rappels au pas. Aucun
+ * texte d'explication en pied : un libelle juste suffit, et les pieds qui expliquaient chaque
+ * interrupteur se lisaient comme une interface generee (review du 2026-11-06).
  */
 export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggleCourseNotifications, courseNotificationDelay, choisirDelai, messagesEnNotification, toggleMessagesEnNotification }: NotificationsSectionProps) => (
     <>
-        <GroupeDeReglages theme={theme} pied={Translator.get('PUSH_MESSAGES_DESC')}>
+        <GroupeDeReglages theme={theme}>
             <RangeeDeReglage
                 theme={theme}
                 icone="bullhorn-outline"
@@ -242,12 +242,7 @@ export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggle
                 interrupteur={{ valeur: messagesEnNotification, onChange: toggleMessagesEnNotification }}
             />
         </GroupeDeReglages>
-        <GroupeDeReglages
-            theme={theme}
-            titre={Translator.get('COURSE_REMINDERS')}
-            // La couverture seulement : « le nombre de minutes avant le cours » redisait la liste des delais.
-            pied={courseNotificationsEnabled ? Translator.get('NOTIFICATION_CAP_DESC') : undefined}
-        >
+        <GroupeDeReglages theme={theme} titre={Translator.get('COURSE_REMINDERS')}>
             <RangeeDeReglage
                 theme={theme}
                 icone="bell-outline"
@@ -270,7 +265,7 @@ export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggle
 export const ConfidentialiteSection = ({ theme }: { theme: AppThemeType }) => {
     const [active, activer] = useMesureActive();
     return (
-        <GroupeDeReglages theme={theme} pied={Translator.get('ANONYMOUS_STATS_DESC')}>
+        <GroupeDeReglages theme={theme}>
             <RangeeDeReglage
                 theme={theme}
                 icone="shield-check-outline"
@@ -331,13 +326,13 @@ export const CalendarSection = (props: CalendarSectionProps) => {
     const { theme, hasCalendarPermission, demanderPermission, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar, calendriersAffiches, openCalendriersAffiches } = props;
     if (!hasCalendarPermission) {
         return (
-            <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')} pied={Translator.get('ENABLE_CALENDAR_PERMISSION_DESCRIPTION')}>
+            <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')}>
                 <RangeeDeReglage theme={theme} icone="calendar-lock-open-outline" libelle={Translator.get('CALENDAR_ALLOW')} onPress={demanderPermission} />
             </GroupeDeReglages>
         );
     }
     return (
-        <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')} pied={Translator.get('AUTO_SYNC_DESCRIPTION')}>
+        <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')}>
             <EtatDeLaSynchro theme={theme} lastSyncDate={props.lastSyncDate} derniereTentative={props.derniereTentative} />
             <RangeeDeReglage
                 theme={theme}

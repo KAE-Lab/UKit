@@ -73,6 +73,12 @@ le site, les deux défauts consignés corrigés, trois règles ajoutées à `~/.
   course, saut, accroupi, relevé au lever du doigt, record. La cadence du banc (rendu logiciel, 37 à
   42 ms par image selon les passes, avant comme après) ne départage pas les versions : le retard se
   juge sur l'iPhone
+- [x] les textes d'explication retirés partout, pas seulement sous les réglages (« ce défaut c'est
+  partout ») : le paragraphe sous le jeu, la licence sous « Confidentialité », l'introduction des
+  crédits, les pieds des Réglages, les sous-titres des formulaires de connexion et du lien iCal, les
+  aides des propositions (leurs libellés portent l'action : « Groupe à ajouter », « UE à masquer »),
+  le paragraphe des calendriers, les consignes de recherche et de filtres. Gardés : états, erreurs,
+  confirmations, états vides. Le jeu s'ouvre sur « Une partie ? », sans titre d'écran
 - [x] le délai des rappels au pas, « − 15 min + » (`fef2625`) ; les barres flottantes de l'iPhone
   décollées du bord (`46f139a`)
 
