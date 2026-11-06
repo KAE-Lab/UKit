@@ -54,7 +54,7 @@ function RangeeDeCours({ cours, theme, navigation, largeurDesHeures }: {
             onPressIn={enfoncement.onPressIn}
             onPressOut={enfoncement.onPressOut}
             accessibilityRole="button"
-            accessibilityLabel={[cours.subject, `${cours.starttime} – ${cours.endtime}`, salle].filter(Boolean).join(', ')}
+            accessibilityLabel={[cours.subject, cours.endtime === '' ? cours.starttime : `${cours.starttime} – ${cours.endtime}`, salle].filter(Boolean).join(', ')}
         >
             <Reanimated.View style={[styles.rangee, enfoncement.style]}>
                 <View style={[styles.heures, { width: largeurDesHeures }]}>

@@ -147,8 +147,10 @@ export function projeterDepuisLegacy(event, groupe, separateur) {
 function composer({ id, debut, fin, categorie, couleur, description, sites, modules, sujet, groupe, separateur }) {
     const debutMoment = moment(debut ?? null);
     const finMoment = moment(fin ?? null);
-    const starttime = debutMoment.format('HH:mm');
-    const endtime = finMoment.format('HH:mm');
+    // Une heure illisible (une fin nulle, servie sur les journees entieres) devient vide des deux
+    // cotes, comme dans l'application (`heureOuVide`, 2026-11-06) : elle valait « Invalid date ».
+    const starttime = debutMoment.isValid() ? debutMoment.format('HH:mm') : '';
+    const endtime = finMoment.isValid() ? finMoment.format('HH:mm') : '';
 
     const lignes = formatDescription(description).split(separateur);
     const retenues = [];
@@ -166,7 +168,7 @@ function composer({ id, debut, fin, categorie, couleur, description, sites, modu
     return {
         id,
         color: couleur,
-        schedule: starttime + '-' + endtime + ' ' + categorie,
+        schedule: (endtime === '' ? starttime : starttime + '-' + endtime) + ' ' + categorie,
         starttime,
         endtime,
         date: { start: debutMoment.toISOString(), end: finMoment.toISOString() },

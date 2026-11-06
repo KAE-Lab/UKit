@@ -20,6 +20,7 @@ import ICAL from 'ical.js';
 import moment from 'moment';
 
 import { assemblerAnnee, assemblerJour, assemblerSemaine } from './PlanningAssembly';
+import { creneauCompose, heureOuVide } from './PlanningApiMapping';
 import type { CibleGroupe, PlanningEvent, PlanningWeekDay } from './PlanningAssembly';
 
 /**
@@ -174,8 +175,8 @@ export function projeterEvenement(evenement: ICAL.Component, groupe: CibleGroupe
 
     const debut = moment(dateDe(evenement, 'dtstart'));
     const fin = moment(dateDe(evenement, 'dtend'));
-    const starttime = debut.format('HH:mm');
-    const endtime = fin.format('HH:mm');
+    const starttime = heureOuVide(debut);
+    const endtime = heureOuVide(fin);
 
     const categorie = typeDuCours(description);
     const lignes = lignesUtiles(description, salle, matiere, categorie);
@@ -187,7 +188,7 @@ export function projeterEvenement(evenement: ICAL.Component, groupe: CibleGroupe
         // aucun ecran ne le lit (docs/features/planning.md).
         style: 'style="background-color:' + couleur + '"',
         color: couleur,
-        schedule: starttime + '-' + endtime + (categorie === '' ? '' : ' ' + categorie),
+        schedule: creneauCompose(starttime, endtime) + (categorie === '' ? '' : ' ' + categorie),
         starttime,
         endtime,
         date: { start: debut.toISOString(), end: fin.toISOString() },

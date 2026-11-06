@@ -63,6 +63,8 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Un cours sans heure de fin n'écrit plus « Invalid date »** : la fiche, le créneau et les rappels
+  lisaient ce texte quand Celcat sert une fin nulle ; l'heure manquante se tait désormais.
 - **« Ouvrir sur le groupe favori » retiré** : le réglage s'enregistrait sans que rien ne le lise,
   l'application s'ouvrant de toute façon sur le Planning des favoris.
 
