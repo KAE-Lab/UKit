@@ -35,7 +35,7 @@ const es: TranslationDict = {
 	// Le jeu du point, pendant la connexion universitaire (7-J).
 	JEU_CONSIGNE: 'Toca para saltar',
 	JEU_TITRE: 'El pequeño juego',
-	JEU_PARTOUT: 'Toca en cualquier sitio para saltar.',
+	JEU_PARTOUT: 'Toca en cualquier sitio para saltar, mantén el dedo para saltar más alto, desliza hacia abajo para agacharte.',
 	JEU_RECORD: 'récord $-',
 	JEU_ACCESSIBILITE: 'Minijuego: toca para que salte el zorro',
 	JEU_NOUVEAU_RECORD: 'Nuevo récord',

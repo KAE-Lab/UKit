@@ -33,7 +33,7 @@ const en = {
 	// Le jeu du point, pendant la connexion universitaire (7-J).
 	JEU_CONSIGNE: 'Tap to jump',
 	JEU_TITRE: 'The little game',
-	JEU_PARTOUT: 'Tap anywhere to jump.',
+	JEU_PARTOUT: 'Tap anywhere to jump, hold to jump higher, swipe down to duck.',
 	JEU_RECORD: 'best $-',
 	JEU_ACCESSIBILITE: 'Mini-game: tap to make the fox jump',
 	JEU_NOUVEAU_RECORD: 'New best',

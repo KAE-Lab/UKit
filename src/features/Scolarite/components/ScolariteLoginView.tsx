@@ -7,7 +7,9 @@ import {
 import { getEtablissementActif } from '../../../shared/etablissements';
 import { LogoEtablissement } from './LogoEtablissement';
 import { BlocProgression } from './ScolariteLoadingScreen';
-import { JeuDuRenard, type CommandeDuJeu } from '../../../shared/ui/jeu/JeuDuRenard';
+import { GestureDetector } from 'react-native-gesture-handler';
+import { JeuDuRenard } from '../../../shared/ui/jeu/JeuDuRenard';
+import { usePartieDuRenard, type PartieDuRenard } from '../../../shared/ui/jeu/usePartieDuRenard';
 import { franchirLaPorte } from './BiometryGate';
 import { useEcranDeProgression } from '../hooks/useEcranDeProgression';
 
@@ -62,13 +64,13 @@ const EnTeteDuFormulaire = ({ theme, color, compact }) => (
 );
 
 /**
- * Le jeu du point sous la carte, le temps de la connexion (7-J) : quatorze a vingt-six secondes, la
+ * Le petit jeu sous la carte, le temps de la connexion (7-J) : quatorze a vingt-six secondes, la
  * plus longue attente de l'application, et celle que vit chaque nouvel utilisateur. Il part avec la
  * session ; sous « reduire les animations », il ne parait pas.
  */
-const JeuDeLaConnexion = ({ theme, commande }: { theme: import('../../../shared/theme/Theme').AppThemeType; commande: React.RefObject<CommandeDuJeu | null> }) => (
+const JeuDeLaConnexion = ({ theme, partie }: { theme: import('../../../shared/theme/Theme').AppThemeType; partie: PartieDuRenard }) => (
     <View style={styles.jeu}>
-        <JeuDuRenard ref={commande} theme={theme} />
+        <JeuDuRenard partie={partie} theme={theme} />
     </View>
 );
 
@@ -79,7 +81,7 @@ const JeuDeLaConnexion = ({ theme, commande }: { theme: import('../../../shared/
  */
 const CarteDuFormulaire = ({
     theme, color, submitting, enSession, terminee, scrapeProgress,
-    username, setUsername, password, setPassword, error, onSubmit, onSkip, onAutreCampus, commandeDuJeu,
+    username, setUsername, password, setPassword, error, onSubmit, onSkip, onAutreCampus, partieDuJeu,
 }) => {
     /** Le bouton ne part pas sans ses deux champs, et pas deux fois. */
     const disabled = !username || !password || submitting;
@@ -214,7 +216,7 @@ const CarteDuFormulaire = ({
                     </>
                 )}
             </View>
-            {enSession ? <JeuDeLaConnexion theme={theme} commande={commandeDuJeu} /> : null}
+            {enSession ? <JeuDeLaConnexion theme={theme} partie={partieDuJeu} /> : null}
         </>
     );
 };
@@ -250,8 +252,12 @@ const ScolariteLoginView = ({
     // l'effet plus bas), la carte remontrait les champs REMPLIS une fraction de seconde avant que
     // l'appelant avance (constate a l'accueil le 2026-08-31).
     const enSession = submitting || progression.visible || reussi;
-    /** La poignee du jeu, pour qu'un appui n'importe ou le fasse sauter (deuxieme passe de 7-J). */
-    const commandeDuJeu = useRef<CommandeDuJeu>(null);
+    /**
+     * La partie du jeu, et son geste : pendant la session, un appui n'importe ou fait sauter
+     * (deuxieme passe de 7-J), traite sur le fil de l'interface (troisieme passe). Hors session, le
+     * geste est eteint.
+     */
+    const partieDuJeu = usePartieDuRenard({ actif: enSession });
 
     // L'hote apprend que la carte montre une session, du premier au dernier instant — soumission,
     // barre, confirmation. L'accueil s'en sert pour bloquer « Suivant » et le retour : une connexion
@@ -379,13 +385,11 @@ const ScolariteLoginView = ({
                 onScroll={onScroll}
                 scrollEventThrottle={16}
             >
-                {/* Pendant la session, un appui n'importe ou fait sauter le jeu — hors des boutons, qui
-                    gardent leur toucher : cette vue ne le prend que si aucun enfant ne l'a pris, et
-                    seulement en session, pour que le clavier se ferme comme avant hors session. */}
-                <View
-                    onStartShouldSetResponder={() => enSession}
-                    onResponderGrant={() => commandeDuJeu.current?.sauter()}
-                >
+                {/* Pendant la session, un appui n'importe ou fait sauter le jeu. Le geste ecoute sans
+                    jamais prendre la main : le defilement et les boutons gardent leur toucher, et hors
+                    session il est eteint, pour que le clavier se ferme comme avant. */}
+                <GestureDetector gesture={partieDuJeu.geste}>
+                <View>
                     <EnTeteDuFormulaire theme={theme} color={color} compact={compact} />
 
                     <CarteDuFormulaire
@@ -393,13 +397,14 @@ const ScolariteLoginView = ({
                         terminee={progression.terminee} scrapeProgress={scrapeProgress}
                         username={username} setUsername={setUsername} password={password} setPassword={setPassword}
                         error={error} onSubmit={onSubmit} onSkip={onSkip} onAutreCampus={onAutreCampus}
-                        commandeDuJeu={commandeDuJeu}
+                        partieDuJeu={partieDuJeu}
                     />
                     {/* Un emplacement sous la carte, monte par l'hote : la fiche du compte y pose les
                         identifiants memorises par le navigateur (6.1.x-B). Le formulaire ne les connait
                         pas — ils n'ouvrent aucune session. */}
                     {pied}
                 </View>
+                </GestureDetector>
             </Animated.ScrollView>
         </KeyboardAvoidingView>
     );

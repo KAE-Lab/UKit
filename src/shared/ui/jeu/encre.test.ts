@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CAILLOU, COURSE_1, LIGNE_DU_SOL, LUNE, NUAGE, SOLEIL, profilDeCollines, profilDeMontagnes, SAPIN, SAUT, SYMBOLES, tailleDe, TOUFFE, traceDuSymbole, TUILE_DU_SOL, type Grille } from './encre';
+import { ASSIS, BAISSE_1, BAISSE_2, CAILLOU, CHUTE, COURSE_1, COURSE_2, COURSE_3, COURSE_4, LIGNE_DU_SOL, LUNE, NUAGE, SOLEIL, profilDeCollines, profilDeMontagnes, SAPIN, SAUT, SYMBOLES, tailleDe, TOUFFE, traceDuSymbole, TUILE_DU_SOL, type Grille } from './encre';
 
 describe('traceDuSymbole', () => {
     it('fusionne une suite de pixels en un seul rectangle', () => {
@@ -14,7 +14,7 @@ describe('traceDuSymbole', () => {
 });
 
 describe('les grilles', () => {
-    const toutes: Grille[] = [COURSE_1, SAUT, CAILLOU, SAPIN, NUAGE, TOUFFE, TUILE_DU_SOL, LUNE, SOLEIL];
+    const toutes: Grille[] = [COURSE_1, COURSE_2, COURSE_3, COURSE_4, SAUT, CHUTE, ASSIS, BAISSE_1, BAISSE_2, CAILLOU, SAPIN, NUAGE, TOUFFE, TUILE_DU_SOL, LUNE, SOLEIL];
 
     it('sont rectangulaires', () => {
         for (const grille of toutes) {
@@ -27,6 +27,12 @@ describe('les grilles', () => {
         const connus = new Set(['.', ...SYMBOLES]);
         for (const grille of toutes) {
             expect([...grille.join('')].every((c) => connus.has(c))).toBe(true);
+        }
+    });
+
+    it('donnent au renard la meme taille dans toutes ses images, pour qu elles se superposent', () => {
+        for (const grille of [COURSE_2, COURSE_3, COURSE_4, SAUT, CHUTE, ASSIS, BAISSE_1, BAISSE_2]) {
+            expect(tailleDe(grille)).toEqual(tailleDe(COURSE_1));
         }
     });
 

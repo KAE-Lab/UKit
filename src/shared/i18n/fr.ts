@@ -36,7 +36,7 @@ const fr: TranslationDict = {
 	// Le jeu du point, pendant la connexion universitaire (7-J).
 	JEU_CONSIGNE: 'Touche pour sauter',
 	JEU_TITRE: 'Le petit jeu',
-	JEU_PARTOUT: "Touche n'importe où pour sauter.",
+	JEU_PARTOUT: "Touche n'importe où pour sauter, garde le doigt pour sauter plus haut, glisse vers le bas pour te baisser.",
 	JEU_RECORD: 'record $-',
 	JEU_ACCESSIBILITE: 'Mini-jeu : touche pour faire sauter le renard',
 	JEU_NOUVEAU_RECORD: 'Nouveau record',

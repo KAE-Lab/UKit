@@ -10,7 +10,7 @@
  * de l'interface : React ne redessine rien pendant la course.
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import Reanimated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
@@ -43,9 +43,17 @@ function copiesPour(largeur: number, periode: number): number {
     return Math.ceil(largeur / periode) + 1;
 }
 
-/** Une encre unie pour tous les symboles : la silhouette d'un plan lointain. */
+const UNIES = new Map<string, Encres>();
+/**
+ * Une encre unie pour tous les symboles : la silhouette d'un plan lointain. Gardee par couleur, pour
+ * que les sprites memorises ne se redessinent pas a chaque rendu.
+ */
 function unie(couleur: string): Encres {
-    return { '#': couleur, '+': couleur, o: couleur, s: couleur };
+    const connue = UNIES.get(couleur);
+    if (connue !== undefined) return connue;
+    const encres = { '#': couleur, '+': couleur, o: couleur, s: couleur };
+    UNIES.set(couleur, encres);
+    return encres;
 }
 
 function Plan({ etat, facteur, periode, largeur, bas, children }: {
@@ -101,7 +109,7 @@ export interface EncresDuDecor {
     sapins: string;
 }
 
-export function DecorEncre({ etat, largeur, hauteur, sol, sombre, encres }: {
+export const DecorEncre = memo(function DecorEncre({ etat, largeur, hauteur, sol, sombre, encres }: {
     etat: SharedValue<EtatDuJeu>; largeur: number; hauteur: number; sol: number; sombre: boolean; encres: EncresDuDecor;
 }) {
     const nuages = unie(encres.ciel);
@@ -133,7 +141,7 @@ export function DecorEncre({ etat, largeur, hauteur, sol, sombre, encres }: {
             <View pointerEvents="none" style={[styles.ligne, { bottom: sol - PIXEL, backgroundColor: encres.trait['#'] }]} />
         </>
     );
-}
+});
 
 const VARIANTES: readonly { cle: string; genre: GenreDObstacle; grilles: readonly Grille[]; aile?: 0 | 1 }[] = [
     { cle: 'caillou', genre: 'caillou', grilles: [CAILLOU] },
@@ -166,23 +174,27 @@ function Variante({ etat, rang, variante, encres }: { etat: SharedValue<EtatDuJe
     );
 }
 
-export function ObstacleEncre({ etat, rang, sol, encres }: { etat: SharedValue<EtatDuJeu>; rang: number; sol: number; encres: Encres }) {
+/**
+ * Un emplacement d'obstacle porte toutes les variantes, une seule visible. Sa largeur est fixe, celle
+ * de la plus large : Reanimated renvoie le style entier des qu'une valeur change, et la position
+ * change a chaque image ; une largeur dans ce style relancait la mise en page soixante fois par
+ * seconde (review du 2026-11-06, « un petit input lag »).
+ */
+export const ObstacleEncre = memo(function ObstacleEncre({ etat, rang, sol, encres }: { etat: SharedValue<EtatDuJeu>; rang: number; sol: number; encres: Encres }) {
     const place = useAnimatedStyle(() => {
         const obstacle = etat.value.obstacles[rang];
         if (obstacle === undefined) return { opacity: 0 };
-        return {
-            opacity: 1,
-            width: FORMES[obstacle.genre].sprite * PIXEL,
-            transform: [{ translateX: obstacle.x }, { translateY: -obstacle.base * PIXEL }] as const,
-        };
+        return { opacity: 1, transform: [{ translateX: obstacle.x }, { translateY: -obstacle.base * PIXEL }] as const };
     });
     return (
         <Reanimated.View pointerEvents="none" style={[styles.obstacle, { bottom: sol }, place]}>
             {VARIANTES.map((variante) => <Variante key={variante.cle} etat={etat} rang={rang} variante={variante} encres={encres} />)}
         </Reanimated.View>
     );
-}
+});
 
+/** La largeur d'un emplacement : celle du plus large sprite, la double souche. */
+const CASE = Math.max(...Object.values(FORMES).map((forme) => forme.sprite)) * PIXEL;
 const PLUS_HAUT = Math.max(...VARIANTES.flatMap((v) => v.grilles.map((g) => tailleDe(g).hauteur)));
 
 const styles = StyleSheet.create({
@@ -223,6 +235,7 @@ const styles = StyleSheet.create({
     obstacle: {
         position: 'absolute',
         left: 0,
+        width: CASE,
         height: PLUS_HAUT * PIXEL,
     },
     posee: {

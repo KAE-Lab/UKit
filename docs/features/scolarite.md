@@ -33,8 +33,12 @@ section 2 de [sources-externes.md](../sources-externes.md).
    dinosaure de Chrome, les dessins sont les nôtres ([`encre.ts`](../../src/shared/ui/jeu/encre.ts)),
    la course est pure et testée ([`physique.ts`](../../src/shared/ui/jeu/physique.ts)). Il remplace
    le jeu du point, trop proche d'une version au rabais (review du 2026-11-06). **Un appui n'importe
-   où fait sauter**, hors des boutons. Le record se garde sur l'appareil, sous une clé neuve : les
-   scores du jeu du point ne se comparent pas. L'écran plein met la progression en sujet : le pourcentage en
+   où fait sauter, plus haut si le doigt reste posé ; glisser vers le bas fait se baisser** (sous
+   les chouettes à mi-hauteur) ou plonger en l'air. Le geste est traité sur le fil de l'interface
+   ([`usePartieDuRenard`](../../src/shared/ui/jeu/usePartieDuRenard.ts)), sans passer par
+   JavaScript, et n'interrompt ni les boutons ni le défilement ; dans le formulaire, il ne joue qu'en
+   session. Le record se garde sur l'appareil, sous une clé neuve : les scores du jeu du point ne se
+   comparent pas. L'écran plein met la progression en sujet : le pourcentage en
    grand, l'étape en cours, les trois étapes cochées à mesure, et le jeu prend la hauteur qui reste. Il s'efface avec la session et ne paraît pas sous « réduire les
    animations ». Il se joue aussi quand on veut, au fond de « À propos »
    ([`EcranDuJeu`](../../src/shared/ui/jeu/EcranDuJeu.tsx), route `Jeu`, troisième passe de 7-J),
