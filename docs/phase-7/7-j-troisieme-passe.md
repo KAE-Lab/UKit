@@ -43,4 +43,20 @@ parcours froid, chargements.
   qui ne tenait pas, c'était l'horaire brut tronqué d'un restaurant, désormais résumé
   (`resumeDHoraires`, testé), et la distance en pastille d'accent sur chaque carte, passée au ton
   neutre.
-- [ ] T7
+- [ ] T7 — en attente du propriétaire : la copie du jeu du dinosaure de Chrome n'est pas faite (le
+  personnage, le décor et les graphismes appartiennent à un jeu existant de Google). Trois options
+  lui sont proposées : un coureur en pixel art avec nos propres personnage et décor, la mécanique
+  restant la même ; le jeu actuel poli ; ou plus de jeu, une attente sobre.
+
+Portes de la passe : `tsc`, ESLint sans avertissement, 1 158 tests, parité 13/13, export Android et
+iOS. Non refait à cette passe : le format de l'A8, l'anglais et l'espagnol au banc, l'iPhone.
+
+## Ce qui a été tranché sans planche
+
+- **Les pages des Réglages sont servies par l'écran des Réglages** plutôt que par cinq écrans neufs :
+  ses gestes (permissions, confirmations, relecture) restent écrits une fois.
+- **Le délai des rappels en liste cochée**, pas en contrôle segmenté : sept valeurs se lisent mieux
+  en « 15 min avant » qu'en chiffres serrés, et la liste garde un délai réglé autrefois au curseur.
+- **La matière du bouton plein est d'une seule teinte** (l'accent vers `accentProfond`) : le dégradé
+  violet-bleu reste un tic ; celui-ci donne de la profondeur sans seconde couleur.
+- **« Les barres » s'entendent comme les barres de progression.**
