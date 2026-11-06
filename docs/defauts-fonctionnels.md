@@ -19,6 +19,22 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Un portail lent s'annonce « Le problème vient de UKit » — constaté le 2026-11-06
+
+Au banc, juste après un effacement des données (WebView à froid), la vérification des identifiants à
+l'accueil a attendu 12 s le chargement de la page de l'université (« Un moment SVP… »), puis
+`ukit.portail.verification` a échoué sur `engine` : la page ne s'est pas déclarée prête dans les 2 s
+de `wait_for`. La carte a affiché « Cette opération n'a pas pu aboutir. Le problème vient de UKit. »,
+alors que c'est le portail qui traînait. Un second essai a réussi. À trancher : le délai de
+`wait_for` après une navigation lente, et la cause annoncée (un échec `engine` après une navigation
+qui a pris plus de 10 s se lit plutôt comme un portail lent).
+
+### La liste des groupes de l'accueil passe sous le bouton « Suivant » — constaté le 2026-11-06
+
+À l'étape des groupes (Master 1, automne, Collège ST), les pastilles de la liste continuent sous le
+bouton flottant et sous la pagination, sans dégagement ni fondu : la dernière rangée se lit à travers
+le bouton. À traiter avec la refonte de l'accueil, dans son périmètre.
+
 ### ~~Un cours sans heure de fin s'écrit « Invalid date »~~ — constaté le 2026-11-05, corrigé le 2026-11-06
 
 Sur le banc, le groupe `31BI701S` (stage du jeudi 5 novembre) : Celcat sert l'événement « Stage » avec
