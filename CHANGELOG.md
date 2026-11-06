@@ -38,6 +38,9 @@ une application qui donne l'heure des choses d'un regard.
 - **Les Réglages en pages** : l'accueil ne porte plus que des rangées qui mènent, leur valeur à
   droite ; chaque préférence (notifications, agenda, confidentialité, démarrage, apparence) a sa page,
   qui explique et qui bascule. Le délai des rappels se choisit dans une liste cochée, plus au curseur.
+- **Le fondu des écrans poussés sous le titre** : la barre d'un écran poussé couvre son titre et ses
+  boutons, et le contenu se fond juste en dessous, comme sous un grand titre ; il les coupait à
+  mi-hauteur.
 - **Le repère de l'heure ancré** : l'heure du Planning se pose dans une pastille pleine, d'où part le
   trait ; le ruban ne marque plus aujourd'hui d'un point, la couleur suffit.
 - **Des contrôles qui répondent au doigt** : les boutons d'action s'enfoncent sur un ressort, le
