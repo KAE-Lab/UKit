@@ -39,7 +39,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { ProgressBar } from '../../../shared/ui/ProgressBar';
-import { JeuDuRenard, type CommandeDuJeu } from '../../../shared/ui/jeu/JeuDuRenard';
+import { GestureDetector } from 'react-native-gesture-handler';
+import { JeuDuRenard } from '../../../shared/ui/jeu/JeuDuRenard';
+import { usePartieDuRenard } from '../../../shared/ui/jeu/usePartieDuRenard';
 import { Icon } from '../../../shared/ui/Icon';
 import { hauteurDeLEnTete } from '../../../shared/ui/EnTeteDOnglet';
 import { TAB_BAR_HEIGHT } from '../../../shared/ui/ScreenState';
@@ -210,7 +212,7 @@ export function BlocProgression({ scrapeProgress, terminee = false, theme, color
 }
 
 /**
- * L'ecran du parcours froid : le titre, la progression, et le jeu du point dessous (7-J). Quatorze a
+ * L'ecran du parcours froid : le titre, la progression, et le petit jeu dessous (7-J). Quatorze a
  * vingt-six secondes d'attente par nature, sur le seul ecran ou elle est longue : le jeu les occupe, et
  * l'ecran entier s'efface a l'arrivee du dossier. Sous « reduire les animations », le jeu ne s'affiche
  * pas et l'ecran redevient celui d'avant.
@@ -270,20 +272,19 @@ function ProgressionPleinEcran({ indice, theme, color }) {
  */
 const ScolariteLoadingScreen = ({ scrapeProgress, terminee = false, theme, color }) => {
     const insets = useSafeAreaInsets();
-    const jeu = useRef<CommandeDuJeu>(null);
+    const partie = usePartieDuRenard();
     const indice = terminee ? INDICE_FIN : indiceDeLEtape(scrapeProgress);
     // Le jeu prend la hauteur qui reste sous la progression : un tiers d'ecran vide sous lui se lisait
     // comme une page inachevee. Borne, pour qu'il ne s'etire pas en tour sur une tablette.
     const [hauteurDuJeu, setHauteurDuJeu] = useState<number>(JEU.minimum);
     return (
+        <GestureDetector gesture={partie.geste}>
         <View
             style={[styles.container, {
                 backgroundColor: theme.background,
                 paddingTop: hauteurDeLEnTete(insets.top) + tokens.space.md,
                 paddingBottom: TAB_BAR_HEIGHT + tokens.space.lg,
             }]}
-            onStartShouldSetResponder={() => true}
-            onResponderGrant={() => jeu.current?.sauter()}
         >
             <ProgressionPleinEcran indice={indice} theme={theme} color={color} />
             <View
@@ -291,9 +292,10 @@ const ScolariteLoadingScreen = ({ scrapeProgress, terminee = false, theme, color
                 onLayout={(e) => setHauteurDuJeu(Math.max(JEU.minimum, Math.min(JEU.maximum, Math.round(e.nativeEvent.layout.height - JEU.legende))))}
             >
                 <Text style={[styles.legendeDuJeu, { color: theme.fontTertiary }]}>{Translator.get('JEU_ATTENTE')}</Text>
-                <JeuDuRenard ref={jeu} theme={theme} hauteur={hauteurDuJeu} />
+                <JeuDuRenard partie={partie} theme={theme} hauteur={hauteurDuJeu} />
             </View>
         </View>
+        </GestureDetector>
     );
 };
 

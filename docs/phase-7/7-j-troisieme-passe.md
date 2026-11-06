@@ -67,6 +67,12 @@ le site, les deux défauts consignés corrigés, trois règles ajoutées à `~/.
   Vérifié au banc en clair et en sombre, en attente, en course, en saut et à la chute ; non vus :
   « Nouveau record » (une partie au doigt), le plateau de 150 points de la connexion (dossier en
   cache), l'iPhone
+- [x] le jeu repris après l'essai sur iPhone : le renard réduit de 26 × 16 à 20 × 13 pixels, un
+  galop en quatre temps avec le rebond du corps, le saut dosé au doigt, se baisser en glissant vers
+  le bas (chouettes à mi-hauteur), et le toucher lu sur le fil de l'interface. Vérifié au banc :
+  course, saut, accroupi, relevé au lever du doigt, record. La cadence du banc (rendu logiciel, 37 à
+  42 ms par image selon les passes, avant comme après) ne départage pas les versions : le retard se
+  juge sur l'iPhone
 - [x] le délai des rappels au pas, « − 15 min + » (`fef2625`) ; les barres flottantes de l'iPhone
   décollées du bord (`46f139a`)
 

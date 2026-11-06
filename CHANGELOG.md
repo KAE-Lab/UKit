@@ -60,7 +60,9 @@ une application qui donne l'heure des choses d'un regard.
 - **Encre, le petit jeu de la connexion universitaire.** Quatorze à vingt-six secondes d'attente,
   occupées : un renard en pixel art, écharpe bleue, saute cailloux, rochers et souches et esquive des
   chouettes devant trois plans de montagnes, de collines et de sapins ; la nuit en thème sombre, une
-  secousse à la chute, « Nouveau record » quand il tombe. Il s'efface à l'arrivée du dossier et ne
+  secousse à la chute, « Nouveau record » quand il tombe. Le saut se dose au doigt (un appui tenu
+  monte deux fois plus haut), glisser vers le bas fait se baisser, et le toucher est lu sur le fil de
+  l'interface, sans délai. Il s'efface à l'arrivée du dossier et ne
   paraît pas sous « réduire les animations ».
 - **La liste des établissements se regroupe par campus et se cherche par alias** (« UB »,
   « ENSEIRB »), dès qu'elle compte six établissements ; le cas des trois campus qui arrivent.
