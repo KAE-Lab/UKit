@@ -45,7 +45,12 @@ export interface CommandeDuJeu {
     sauter: () => void;
 }
 
-export const JeuDuPoint = forwardRef<CommandeDuJeu, { theme: AppThemeType; hauteur?: number }>(function JeuDuPoint({ theme, hauteur = 150 }, poignee) {
+export const JeuDuPoint = forwardRef<CommandeDuJeu, {
+    theme: AppThemeType;
+    hauteur?: number;
+    /** Ouvert expres (l'ecran du jeu) : il s'affiche meme sous « reduire les animations ». */
+    toujours?: boolean;
+}>(function JeuDuPoint({ theme, hauteur = 150, toujours = false }, poignee) {
     const mouvementReduit = useReducedMotion();
     const largeur = useSharedValue(320);
     const etat = useSharedValue<EtatDuJeu>(etatDeDepart(320));
@@ -110,7 +115,7 @@ export const JeuDuPoint = forwardRef<CommandeDuJeu, { theme: AppThemeType; haute
         setGraduations(Math.ceil(l / PAS_DE_GRADUATION) + 2);
     };
 
-    if (mouvementReduit) return null;
+    if (mouvementReduit && !toujours) return null;
 
     const trait = theme.fontSecondary;
     return (

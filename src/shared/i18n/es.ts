@@ -34,6 +34,8 @@ const es: TranslationDict = {
 	INSTITUTION_SEARCH: 'Busca un centro o una sigla…',
 	// Le jeu du point, pendant la connexion universitaire (7-J).
 	JEU_CONSIGNE: 'Toca para saltar',
+	JEU_TITRE: 'El pequeño juego',
+	JEU_PARTOUT: 'Toca en cualquier sitio para saltar.',
 	JEU_RECORD: 'récord $-',
 	JEU_ACCESSIBILITE: 'Minijuego: toca para que salte el punto',
 	SUPPORT_UKIT: 'Apoyar UKit',

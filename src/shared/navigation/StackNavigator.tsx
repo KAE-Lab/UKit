@@ -30,10 +30,12 @@ import style, { tokens } from '../theme/Theme';
 import { AppContext, treatTitle } from '../services/AppCore';
 import Translator from '../i18n/Translator';
 import { HeaderButton, HEADER_BUTTON_ICON } from '../ui/HeaderButton';
-import { NavBarHelper, SaveGroupButton as SaveButton, FilterRemoveButton, withHeaderAnimation } from './NavHelpers';
+import { NavBarHelper, SaveGroupButton as SaveButton, FilterRemoveButton, withHeaderAnimation, withStaticHeader } from './NavHelpers';
+import { EcranDuJeu } from '../ui/jeu/EcranDuJeu';
 import { Icon } from '../ui/Icon';
 
 export type RootStackParamList = {
+    Jeu: undefined;
     Reglage: { page: PageDeReglage };
     MainTabs: undefined;
     GroupSearch: undefined;
@@ -66,6 +68,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 /** L'ecran des Reglages pousse sur une page : la barre suit son defilement, comme les autres sous-pages. */
 const PageDeReglageEcran = withHeaderAnimation(Settings);
+const EcranDuJeuAvecEnTete = withStaticHeader(EcranDuJeu);
 
 /** Le titre d'une fiche : le nom de ce qu'elle montre, « Details » s'il manque. */
 function nomOuDetails(nom: unknown): string {
@@ -119,6 +122,8 @@ export default function StackNavigator() {
                             />
 
                             <Stack.Screen name="About" component={About} options={({ route }) => NavBarHelper({ title: Translator.get('ABOUT'), themeName, route, gestureEnabled: true })} />
+                            {/* Le jeu du parcours froid, jouable quand on veut, depuis le fond de « A propos ». */}
+                            <Stack.Screen name="Jeu" component={EcranDuJeuAvecEnTete} options={({ route }) => NavBarHelper({ title: Translator.get('JEU_TITRE'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Settings" component={Settings} options={({ route }) => NavBarHelper({ title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: true })} />
                             {/* Une page de detail des Reglages, servie par l'ecran des Reglages lui-meme (7-J, troisieme passe). */}

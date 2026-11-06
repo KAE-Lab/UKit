@@ -35,6 +35,8 @@ const fr: TranslationDict = {
 	INSTITUTION_SEARCH: 'Cherche un établissement, un sigle…',
 	// Le jeu du point, pendant la connexion universitaire (7-J).
 	JEU_CONSIGNE: 'Touche pour sauter',
+	JEU_TITRE: 'Le petit jeu',
+	JEU_PARTOUT: "Touche n'importe où pour sauter.",
 	JEU_RECORD: 'record $-',
 	JEU_ACCESSIBILITE: 'Mini-jeu : touche pour faire sauter le point',
 	SUPPORT_UKIT: 'Soutenir UKit',

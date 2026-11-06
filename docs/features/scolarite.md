@@ -33,7 +33,10 @@ section 2 de [sources-externes.md](../sources-externes.md).
    appui n'importe où fait sauter**, hors des boutons, et non plus sur la seule carte du jeu. Le
    record se garde sur l'appareil. L'écran plein met la progression en sujet : le pourcentage en
    grand, l'étape en cours, les trois étapes cochées à mesure, et le jeu prend la hauteur qui reste. Il s'efface avec la session et ne paraît pas sous « réduire les
-   animations ». La barre est recalée sur les durées mesurées après 6.1-D et s'approche de chaque
+   animations ». Il se joue aussi quand on veut, au fond de « À propos »
+   ([`EcranDuJeu`](../../src/shared/ui/jeu/EcranDuJeu.tsx), route `Jeu`, troisième passe de 7-J),
+   avec le même record : le temps d'une connexion était trop court pour qu'un record compte. Ouvert
+   exprès, il s'affiche même sous « réduire les animations ». La barre est recalée sur les durées mesurées après 6.1-D et s'approche de chaque
    palier sans jamais s'y arrêter avant la fin réelle de l'étape.
 3. **Lancements suivants** : plus aucun run au démarrage. Les données d'identité sont stockées, et
    les [widgets](#les-widgets) s'ouvrent sur leur dernière valeur connue, puis se rafraîchissent
