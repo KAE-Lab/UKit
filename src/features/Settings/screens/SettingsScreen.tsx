@@ -4,6 +4,7 @@ import * as Calendar from 'expo-calendar/legacy';
 import { NotificationManager } from '../../../shared/services/NotificationService';
 
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
+import { useCredentials } from '../../Scolarite/services/CredentialsContext';
 import { replanifierDepuisLeCache } from '../../../shared/services/entretien';
 import {
     etablissementRetire,
@@ -51,6 +52,8 @@ export interface SettingsProps {
     route?: { params?: { page?: PageDeReglage } };
     onAnimatedScroll?: (event: unknown) => void;
     headerPadding?: Record<string, unknown>;
+    /** La deconnexion du compte universitaire, que la reinitialisation emprunte d'abord. */
+    deconnecter?: () => Promise<void>;
 }
 
 export interface SettingsState {
@@ -320,6 +323,21 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
      */
     resetApp = async () => {
         this.closeResetDialog();
+        /*
+         * **Le compte d'abord, par le chemin de la deconnexion** (corrige le 2026-11-06) : arreter la
+         * session et les widgets, effacer le trousseau, et fermer le ticket CAS cote serveur. La
+         * reinitialisation n'effacait que le local, et la WebView cachee d'Aetherius gardait la
+         * derniere page chargee (la messagerie) et une session encore valide. La fermeture distante
+         * la ramene d'ailleurs sur la page de deconnexion du portail. Elle ne leve pas ; le reste,
+         * s'il levait, ne doit pas empecher de reinitialiser.
+         */
+        if (this.state.compteConnecte && this.props.deconnecter !== undefined) {
+            try {
+                await this.props.deconnecter();
+            } catch (erreur) {
+                console.warn(`[reglages] deconnexion avant reinitialisation : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+            }
+        }
         await SettingsManager.resetSettings();
     };
 
@@ -493,4 +511,14 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
     }
 }
 
-export default Settings;
+/**
+ * L'ecran des Reglages avec la deconnexion du compte, qu'une classe ne lit pas par un hook : la
+ * reinitialisation l'emprunte (2026-11-06). L'onglet, la route `Settings` et les pages `Reglage`
+ * passent tous par lui.
+ */
+function SettingsAvecCompte(props: SettingsProps) {
+    const { logout } = useCredentials();
+    return <Settings {...props} deconnecter={logout} />;
+}
+
+export default SettingsAvecCompte;
