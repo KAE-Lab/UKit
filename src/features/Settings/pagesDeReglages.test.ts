@@ -1,18 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import { delaisAProposer, DELAIS_PROPOSES } from './pagesDeReglages';
+import { DELAI, delaiVoisin } from './pagesDeReglages';
 
-describe('delaisAProposer', () => {
-    it('propose les delais usuels quand le delai en cours en fait partie', () => {
-        expect(delaisAProposer(15)).toEqual([...DELAIS_PROPOSES]);
+describe('delaiVoisin', () => {
+    it('avance et recule d un pas de cinq minutes', () => {
+        expect(delaiVoisin(15, 1)).toBe(20);
+        expect(delaiVoisin(15, -1)).toBe(10);
     });
 
-    it('garde un delai regle au curseur, a sa place dans l ordre', () => {
-        expect(delaisAProposer(25)).toEqual([5, 10, 15, 20, 25, 30, 45, 60]);
+    it('reste dans les bornes', () => {
+        expect(delaiVoisin(DELAI.minimum, -1)).toBe(DELAI.minimum);
+        expect(delaiVoisin(DELAI.maximum, 1)).toBe(DELAI.maximum);
     });
 
-    it('ignore un delai illisible', () => {
-        expect(delaisAProposer(Number.NaN)).toEqual([...DELAIS_PROPOSES]);
-        expect(delaisAProposer(0)).toEqual([...DELAIS_PROPOSES]);
+    it('cale un delai hors pas sur le pas voisin dans le sens demande', () => {
+        expect(delaiVoisin(23, 1)).toBe(25);
+        expect(delaiVoisin(23, -1)).toBe(20);
+        expect(delaiVoisin(Number.NaN, 1)).toBe(20);
     });
 });
