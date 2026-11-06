@@ -195,8 +195,10 @@ tournait indéfiniment.
 **La journée est une frise** ([7-J](../phase-7/7-j-ecrans.md), 2026-11-05). Entre deux cours séparés
 d'un quart d'heure ou plus, la pause se cote : des pointillés dans l'axe du rail des cartes, et sa
 durée (« Pause de 1 h 40 »). Aujourd'hui, le repère de l'heure se pose à sa place — l'heure en
-chiffres, un trait de l'accentuation, et le temps avant le cours suivant, sans point lumineux (review
-du 2026-11-05) ; pendant un cours, c'est sa
+chiffres dans une pastille pleine de l'accentuation, le trait qui en part, et le temps avant le cours
+suivant, sans point lumineux (review du 2026-11-05) ; sans la pastille, l'heure flottait seule au
+bord (review du 2026-11-06). Le ruban ne marque plus aujourd'hui que par la couleur : le point sous
+la case est parti à la troisième passe. Pendant un cours, c'est sa
 carte qui porte le temps qui reste, et son rail se remplit avec le temps écoulé. Un cours passé
 s'estompe. L'état se calcule **par cours**, à ses propres heures, jamais par groupe : deux cours
 superposés ne finissent pas ensemble, et la première version annonçait sur l'un le reste de l'autre
@@ -770,7 +772,7 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`components/CalendarWeek.tsx`](../../src/features/Planning/components/CalendarWeek.tsx) | une semaine dans le curseur, légendée par son lundi |
 | [`components/FicheDuCours.tsx`](../../src/features/Planning/components/FicheDuCours.tsx) | le haut de la fiche d'un cours : le type, le titre, l'heure en grand et sa durée, la salle d'abord (7-J) |
 | [`shared/ui/CaseDuRuban.tsx`](../../src/shared/ui/CaseDuRuban.tsx) | la case commune aux deux : pleine si choisie, un point pour aujourd'hui (7-J) ; partagée depuis la deuxième passe avec les bandeaux des fiches Campus (`BandeauDeCases`) |
-| [`components/Frise.tsx`](../../src/features/Planning/components/Frise.tsx) | la vue jour en frise : la pause cotée, le repère de l'heure et sa respiration, la minute relue (7-J) |
+| [`components/Frise.tsx`](../../src/features/Planning/components/Frise.tsx) | la vue jour en frise : la pause cotée, le repère de l'heure dans sa pastille, la minute relue (7-J) |
 | [`services/frise.ts`](../../src/features/Planning/services/frise.ts) · [`frise.test.ts`](../../src/features/Planning/services/frise.test.ts) | pur : les éléments de la frise, l'état d'un cours à l'instant donné, les durées et les heures écrites (7-J) |
 | [`components/CourseCard.tsx`](../../src/features/Planning/components/CourseCard.tsx) | point d'entrée du module carte : type `CourseData` et réexports |
 | [`components/CourseRow.tsx`](../../src/features/Planning/components/CourseRow.tsx) | carte d'un cours : le rail de sa couleur, les heures, le titre et son type, la salle d'abord ; son état à ses heures — sans appui long sur ce qui vient du téléphone |

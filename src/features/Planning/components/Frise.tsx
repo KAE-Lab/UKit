@@ -7,10 +7,11 @@
  * de l'Epure, 3 de trait pour 5 de vide — et la duree, en chiffres. C'est la seule trace qui entre sur
  * un ecran de travail, parce qu'elle porte une mesure.
  *
- * **Le repere de l'heure** se pose a sa place dans la journee : l'heure en chiffres, un trait de
- * l'accentuation, et le temps avant le cours suivant. **Aucun point lumineux** : la premiere passe y
- * posait un point qui respirait, le tic le plus reconnaissable d'une interface generee (review du
- * 2026-11-05, et la regle de design qui en est nee). Un repere se dit par un trait et un chiffre.
+ * **Le repere de l'heure** se pose a sa place dans la journee : l'heure en chiffres dans une pastille
+ * pleine de l'accentuation, le trait qui en part, et le temps avant le cours suivant. **Aucun point
+ * lumineux** : la premiere passe y posait un point qui respirait, le tic le plus reconnaissable d'une
+ * interface generee (review du 2026-11-05, et la regle de design qui en est nee). Sans lui, l'heure
+ * flottait seule au bord (review du 2026-11-06) : la pastille l'ancre, forme pleine et immobile.
  * L'heure se relit toutes les trente secondes, par `maintenant()` que le menu de developpement
  * simule.
  */
@@ -72,7 +73,9 @@ function RepereDeLHeure({ element, theme }: { element: Extract<ElementDeFrise<un
         : Translator.get(element.avantLePremier ? 'FRISE_PREMIER' : 'FRISE_PROCHAIN', formaterDuree(element.prochainDans));
     return (
         <View style={styles.repere} accessible accessibilityLabel={`${formaterHeure(element.minutes)}, ${suite}`}>
-            <Text style={[styles.heureRepere, tokens.texte.chiffres, { color: theme.accent }]}>{formaterHeure(element.minutes)}</Text>
+            <View style={[styles.pastilleRepere, { backgroundColor: theme.accent }]}>
+                <Text style={[styles.heureRepere, tokens.texte.chiffres, { color: theme.lightFont }]}>{formaterHeure(element.minutes)}</Text>
+            </View>
             <View style={[styles.filet, { backgroundColor: theme.accent }]} />
             <Text numberOfLines={1} style={[styles.suite, tokens.texte.chiffres, { color: theme.fontSecondary }]}>{suite}</Text>
         </View>
@@ -147,17 +150,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingRight: tokens.space.md,
     },
-    // L'heure s'aligne sur le bord des cartes, la ou commencent leurs heures.
-    heureRepere: {
+    // La pastille s'aligne sur le bord des cartes ; le trait en part sans jour, comme d'une epingle.
+    pastilleRepere: {
         marginLeft: tokens.space.md,
+        paddingHorizontal: tokens.space.sm,
+        paddingVertical: tokens.space.xxs,
+        borderRadius: tokens.radius.sm,
+    },
+    heureRepere: {
         fontSize: tokens.fontSize.sm,
         fontWeight: tokens.fontWeight.bold,
     },
     filet: {
         flex: 1,
         height: StyleSheet.hairlineWidth * 2,
-        marginHorizontal: tokens.space.sm,
-        opacity: 0.5,
+        marginRight: tokens.space.sm,
+        opacity: 0.6,
     },
     suite: {
         flexShrink: 1,
