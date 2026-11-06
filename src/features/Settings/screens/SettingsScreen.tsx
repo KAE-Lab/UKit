@@ -1,5 +1,5 @@
 import React from 'react';
-import { Linking } from 'react-native';
+import { Animated, Linking, View } from 'react-native';
 import * as Calendar from 'expo-calendar/legacy';
 import { NotificationManager } from '../../../shared/services/NotificationService';
 
@@ -18,7 +18,8 @@ import SecureStoreService from '../../../shared/services/SecureStoreService';
 import Translator from '../../../shared/i18n/Translator';
 import { adoucirLaTransition } from '../../../shared/ui/transitions';
 import { ErrorAlert } from '../../../shared/ui/Alerts';
-import style from '../../../shared/theme/Theme';
+import style, { tokens } from '../../../shared/theme/Theme';
+import type { PageDeReglage } from '../pagesDeReglages';
 
 
 import {
@@ -31,16 +32,26 @@ import { ChoixEtablissement } from '../../../shared/ui/ChoixEtablissement';
 import { PageDesReglages } from '../components/PageDesReglages';
 
 import {
+    ApparenceSection,
+    CalendarSection,
+    ConfidentialiteSection,
+    DemarrageSection,
     DisplaySection,
     InstitutionSection,
     NotificationsSection,
-    ConfidentialiteSection,
-    AppLaunchingSection,
-    CalendarSection
+    PreferencesSection,
+    ReinitialisationSection,
 } from '../components/SettingsSections';
 
 export interface SettingsProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
+    /**
+     * Une page de detail (7-J, troisieme passe) : l'ecran poussé par la route `Reglage` sert cette
+     * page au lieu de l'accueil, avec les memes gestes. Sans elle, c'est l'onglet.
+     */
+    route?: { params?: { page?: PageDeReglage } };
+    onAnimatedScroll?: (event: unknown) => void;
+    headerPadding?: Record<string, unknown>;
 }
 
 export interface SettingsState {
@@ -155,14 +166,34 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         });
     };
 
-    onNotificationDelayChange = (value: number) => {
-        this.setState({ courseNotificationDelay: value });
-    };
-
-    onNotificationDelaySlidingComplete = async (value: number) => {
-        SettingsManager.setCourseNotificationDelay(value);
+    /** Un delai coche : enregistre, et les rappels deja poses se replanifient a ce delai. */
+    choisirDelai = (minutes: number) => {
+        this.setState({ courseNotificationDelay: minutes });
+        SettingsManager.setCourseNotificationDelay(minutes);
         if (this.state.courseNotificationsEnabled) void replanifierDepuisLeCache();
     };
+
+    choisirSombre = (sombre: boolean) => {
+        if (sombre !== this.state.isDarkMode) this.toggleTheme();
+    };
+
+    /**
+     * L'accueil relit ses valeurs au retour d'une page : chaque page est sa propre instance, et
+     * `SettingsManager` fait foi entre les deux.
+     */
+    relireLesReglages = () => {
+        this.setState({
+            isDarkMode: SettingsManager.getTheme() === 'dark',
+            courseNotificationsEnabled: SettingsManager.getCourseNotificationsEnabled(),
+            courseNotificationDelay: SettingsManager.getCourseNotificationDelay(),
+            messagesEnNotification: SettingsManager.getMessagesEnNotification(),
+            calendarSyncEnabled: SettingsManager.getCalendarSyncEnabled(),
+            openFavSwitchValue: SettingsManager.getOpenAppOnFavoriteGroup(),
+            language: SettingsManager.getLanguage(),
+        });
+    };
+
+    ouvrirPage = (page: PageDeReglage) => this.props.navigation.navigate('Reglage', { page });
 
     /**
      * L'extinction passe par une confirmation, l'allumage non.
@@ -319,6 +350,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
     componentDidMount = async () => {
         this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
+            this.relireLesReglages();
             void this.refreshCompte();
             void this.relirePermissionCalendrier();
         });
@@ -360,6 +392,49 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         );
     }
 
+    /** La page de detail demandee par la route `Reglage`. */
+    renderPage(page: PageDeReglage, theme: import('../../../shared/theme/Theme').AppThemeType, calendarName: string) {
+        switch (page) {
+            case 'notifications':
+                return (
+                    <NotificationsSection
+                        theme={theme}
+                        courseNotificationsEnabled={this.state.courseNotificationsEnabled}
+                        toggleCourseNotifications={this.toggleCourseNotifications}
+                        courseNotificationDelay={this.state.courseNotificationDelay}
+                        choisirDelai={this.choisirDelai}
+                        messagesEnNotification={this.state.messagesEnNotification}
+                        toggleMessagesEnNotification={this.toggleMessagesEnNotification}
+                    />
+                );
+            case 'apparence':
+                return <ApparenceSection theme={theme} isDarkMode={this.state.isDarkMode} choisirSombre={this.choisirSombre} />;
+            case 'agenda':
+                return (
+                    <CalendarSection
+                        theme={theme}
+                        hasCalendarPermission={this.state.hasCalendarPermission}
+                        demanderPermission={() => { void this.demanderPermissionCalendrier(); }}
+                        lastSyncDate={SettingsManager.getLastSyncDate()}
+                        derniereTentative={SettingsManager.getDerniereTentativeSynchro()}
+                        calendarSyncEnabled={this.state.calendarSyncEnabled}
+                        toggleCalendarSync={this.toggleCalendarSync}
+                        onForceSync={this.forcerSynchronisation}
+                        calendarName={calendarName}
+                        openCalendarDialog={this.openCalendarDialog}
+                        isSynchronizingCalendar={this.state.isSynchronizingCalendar}
+                        selectedCalendar={this.state.selectedCalendar}
+                        calendriersAffiches={this.state.calendriersAffiches}
+                        openCalendriersAffiches={() => this.props.navigation.navigate('CalendriersAffiches')}
+                    />
+                );
+            case 'confidentialite':
+                return <ConfidentialiteSection theme={theme} />;
+            case 'demarrage':
+                return <DemarrageSection theme={theme} openFavSwitchValue={this.state.openFavSwitchValue} toggleOpenFavSwitchValue={this.toggleOpenFavSwitchValue} />;
+        }
+    }
+
     render() {
         const themeName = this.context.themeName ?? 'light';
         const theme = style.Theme[themeName];
@@ -368,6 +443,30 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         // Le don se collecte hors de l'application, dans le navigateur du systeme (regle des stores,
         // 7-N) ; la rangee n'existe que si le catalogue en publie l'adresse.
         const adresseDuSoutien = serviceEtablissement('soutien');
+
+        const page = this.props.route?.params?.page;
+        if (page !== undefined) {
+            return (
+                <View style={{ flex: 1, backgroundColor: theme.background }}>
+                    <Animated.ScrollView
+                        contentContainerStyle={[this.props.headerPadding, { paddingBottom: tokens.space.xxl }]}
+                        onScroll={this.props.onAnimatedScroll as never}
+                        scrollEventThrottle={16}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {this.renderPage(page, theme, calendarName)}
+                    </Animated.ScrollView>
+                    {this.renderPopups(theme)}
+                </View>
+            );
+        }
+
+        // L'accueil : des rangees qui menent, leur valeur a droite, ni interrupteur ni texte d'aide
+        // (7-J, troisieme passe). Le pied de l'etablissement reste : il dit un etat, il n'explique pas.
+        const valeurNotifications = this.state.courseNotificationsEnabled
+            ? Translator.get('NOTIFICATION_DELAY_BEFORE', this.state.courseNotificationDelay)
+            : Translator.get(this.state.messagesEnNotification ? 'SETTING_ON' : 'SETTING_OFF');
+        const valeurAgenda = Translator.get(this.state.hasCalendarPermission && this.state.calendarSyncEnabled ? 'SETTING_ON' : 'SETTING_OFF');
 
         return (
             <PageDesReglages theme={theme}>
@@ -395,41 +494,10 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     openLanguageDialog={this.openLanguageDialog}
                     openFilters={() => this.props.navigation.navigate('Filters')}
                     isDarkMode={this.state.isDarkMode}
-                    toggleTheme={this.toggleTheme}
+                    openApparence={() => this.ouvrirPage('apparence')}
                 />
-                <NotificationsSection
-                    theme={theme}
-                    courseNotificationsEnabled={this.state.courseNotificationsEnabled}
-                    toggleCourseNotifications={this.toggleCourseNotifications}
-                    courseNotificationDelay={this.state.courseNotificationDelay}
-                    onNotificationDelayChange={this.onNotificationDelayChange}
-                    onNotificationDelaySlidingComplete={this.onNotificationDelaySlidingComplete}
-                    messagesEnNotification={this.state.messagesEnNotification}
-                    toggleMessagesEnNotification={this.toggleMessagesEnNotification}
-                />
-                <CalendarSection
-                    theme={theme}
-                    hasCalendarPermission={this.state.hasCalendarPermission}
-                    demanderPermission={() => { void this.demanderPermissionCalendrier(); }}
-                    lastSyncDate={SettingsManager.getLastSyncDate()}
-                    derniereTentative={SettingsManager.getDerniereTentativeSynchro()}
-                    calendarSyncEnabled={this.state.calendarSyncEnabled}
-                    toggleCalendarSync={this.toggleCalendarSync}
-                    onForceSync={this.forcerSynchronisation}
-                    calendarName={calendarName}
-                    openCalendarDialog={this.openCalendarDialog}
-                    isSynchronizingCalendar={this.state.isSynchronizingCalendar}
-                    selectedCalendar={this.state.selectedCalendar}
-                    calendriersAffiches={this.state.calendriersAffiches}
-                    openCalendriersAffiches={() => this.props.navigation.navigate('CalendriersAffiches')}
-                />
-                <ConfidentialiteSection theme={theme} />
-                <AppLaunchingSection
-                    theme={theme}
-                    openFavSwitchValue={this.state.openFavSwitchValue}
-                    toggleOpenFavSwitchValue={this.toggleOpenFavSwitchValue}
-                    openResetDialog={this.openResetDialog}
-                />
+                <PreferencesSection theme={theme} valeurNotifications={valeurNotifications} valeurAgenda={valeurAgenda} ouvrir={this.ouvrirPage} />
+                <ReinitialisationSection theme={theme} openResetDialog={this.openResetDialog} />
                 {this.renderPopups(theme)}
             </PageDesReglages>
         );

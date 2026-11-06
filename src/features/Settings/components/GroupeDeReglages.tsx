@@ -37,10 +37,12 @@ export interface GroupeDeReglagesProps {
     titre?: string;
     /** La phrase qui explique le groupe, posee dessous. */
     pied?: string;
+    /** Des rangees sans icone (une liste de choix) : le filet part du bord du texte. */
+    filetCourt?: boolean;
     children: React.ReactNode;
 }
 
-export function GroupeDeReglages({ theme, titre, pied, children }: GroupeDeReglagesProps) {
+export function GroupeDeReglages({ theme, titre, pied, filetCourt = false, children }: GroupeDeReglagesProps) {
     const rangees = React.Children.toArray(children).filter(Boolean);
     if (rangees.length === 0) return null;
     return (
@@ -51,7 +53,7 @@ export function GroupeDeReglages({ theme, titre, pied, children }: GroupeDeRegla
                     <View key={index}>
                         {rangee}
                         {index < rangees.length - 1 ? (
-                            <View style={[styles.filet, { backgroundColor: theme.border }]} />
+                            <View style={[styles.filet, filetCourt && styles.filetCourt, { backgroundColor: theme.border }]} />
                         ) : null}
                     </View>
                 ))}
@@ -64,7 +66,8 @@ export function GroupeDeReglages({ theme, titre, pied, children }: GroupeDeRegla
 export interface RangeeDeReglageProps {
     theme: AppThemeType;
     /** L'icone, d'une famille ou de l'autre : MaterialIcons pour les glyphes qui n'existent que la. */
-    icone: IconeMCI | { mi: IconeMI };
+    /** Absente, la rangee n'a pas de colonne d'icone : une liste de choix se lit sans. */
+    icone?: IconeMCI | { mi: IconeMI };
     libelle: string;
     /** La valeur a droite ; elle cede avant le libelle. */
     valeur?: string;
@@ -75,6 +78,11 @@ export interface RangeeDeReglageProps {
     desactivee?: boolean;
     /** Une action qui retire quelque chose : son libelle en rouge, sans chevron. */
     destructive?: boolean;
+    /**
+     * Une rangee de choix (un delai, un theme) : la coche a l'accent quand elle est choisie, rien
+     * sinon, et pas de chevron, puisqu'elle ne mene nulle part (7-J, troisieme passe).
+     */
+    coche?: boolean;
 }
 
 function IconeDeRangee({ icone, enCours, destructive, theme }: Pick<RangeeDeReglageProps, 'icone' | 'enCours' | 'destructive' | 'theme'>) {
@@ -83,7 +91,7 @@ function IconeDeRangee({ icone, enCours, destructive, theme }: Pick<RangeeDeRegl
         <View style={styles.colonneIcone}>
             {enCours ? (
                 <ActivityIndicator size="small" color={theme.fontSecondary} />
-            ) : typeof icone === 'string' ? (
+            ) : icone === undefined ? null : typeof icone === 'string' ? (
                 <Icon icon={{ name: icone }} size={22} color={couleur} />
             ) : (
                 <Icon icon={{ family: 'material', name: icone.mi }} size={22} color={couleur} />
@@ -92,8 +100,34 @@ function IconeDeRangee({ icone, enCours, destructive, theme }: Pick<RangeeDeRegl
     );
 }
 
-export function RangeeDeReglage({ theme, icone, libelle, valeur, onPress, interrupteur, enCours = false, desactivee = false, destructive = false }: RangeeDeReglageProps) {
+/** Ce que la rangee porte a droite : son interrupteur, sa coche, ou sa valeur et le chevron qui mene. */
+function AccessoireDeRangee({ theme, libelle, valeur, onPress, interrupteur, destructive, coche }: Pick<RangeeDeReglageProps, 'theme' | 'libelle' | 'valeur' | 'onPress' | 'interrupteur' | 'destructive' | 'coche'>) {
+    if (interrupteur !== undefined) {
+        return (
+            <Interrupteur
+                theme={theme.settings}
+                valeur={interrupteur.valeur}
+                onChange={interrupteur.onChange}
+                accessibilityLabel={libelle}
+                style={styles.interrupteur}
+            />
+        );
+    }
+    const chevron = coche === undefined && !destructive && onPress !== undefined;
+    return (
+        <>
+            {valeur !== undefined ? (
+                <Text numberOfLines={1} style={[styles.valeur, { color: theme.fontSecondary }]}>{valeur}</Text>
+            ) : <View style={styles.vide} />}
+            {coche === true ? <Icon icon={{ name: 'check' }} size={20} color={theme.accent} /> : null}
+            {chevron ? <Icon icon={{ name: 'chevron-right' }} size={20} color={theme.fontTertiary} /> : null}
+        </>
+    );
+}
+
+export function RangeeDeReglage({ theme, icone, libelle, valeur, onPress, interrupteur, enCours = false, desactivee = false, destructive = false, coche }: RangeeDeReglageProps) {
     const aInterrupteur = interrupteur !== undefined;
+    const deChoix = coche !== undefined;
     return (
         <Pressable
             // Une rangee a interrupteur ne se touche pas elle-meme : l'interrupteur s'actionne par son
@@ -101,14 +135,14 @@ export function RangeeDeReglage({ theme, icone, libelle, valeur, onPress, interr
             onPress={aInterrupteur ? undefined : onPress}
             disabled={desactivee || aInterrupteur || onPress === undefined}
             accessibilityRole={aInterrupteur ? undefined : 'button'}
-            accessibilityState={aInterrupteur ? undefined : { disabled: desactivee }}
+            accessibilityState={aInterrupteur ? undefined : { disabled: desactivee, selected: deChoix ? coche : undefined }}
             style={({ pressed }) => [
                 styles.rangee,
                 pressed && !aInterrupteur ? { backgroundColor: theme.selection } : null,
                 desactivee && styles.desactivee,
             ]}
         >
-            <IconeDeRangee icone={icone} enCours={enCours} destructive={destructive} theme={theme} />
+            {icone !== undefined || enCours ? <IconeDeRangee icone={icone} enCours={enCours} destructive={destructive} theme={theme} /> : null}
             {/*
               * Face a une valeur texte, le libelle ne cede jamais : une valeur longue ecrasait
               * « Institution » jusqu'a une lettre par ligne. Face a un interrupteur, il prend l'espace
@@ -123,24 +157,7 @@ export function RangeeDeReglage({ theme, icone, libelle, valeur, onPress, interr
             >
                 {libelle}
             </Text>
-            {aInterrupteur ? (
-                <Interrupteur
-                    theme={theme.settings}
-                    valeur={interrupteur.valeur}
-                    onChange={interrupteur.onChange}
-                    accessibilityLabel={libelle}
-                    style={styles.interrupteur}
-                />
-            ) : (
-                <>
-                    {valeur !== undefined ? (
-                        <Text numberOfLines={1} style={[styles.valeur, { color: theme.fontSecondary }]}>{valeur}</Text>
-                    ) : <View style={styles.vide} />}
-                    {!destructive && onPress !== undefined ? (
-                        <Icon icon={{ name: 'chevron-right' }} size={20} color={theme.fontTertiary} />
-                    ) : null}
-                </>
-            )}
+            <AccessoireDeRangee theme={theme} libelle={libelle} valeur={valeur} onPress={onPress} interrupteur={interrupteur} destructive={destructive} coche={coche} />
         </Pressable>
     );
 }
@@ -163,6 +180,9 @@ const styles = StyleSheet.create({
     filet: {
         height: StyleSheet.hairlineWidth,
         marginLeft: RETRAIT,
+    },
+    filetCourt: {
+        marginLeft: tokens.space.md,
     },
     pied: {
         marginHorizontal: tokens.space.xl,

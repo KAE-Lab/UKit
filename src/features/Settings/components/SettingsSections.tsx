@@ -9,11 +9,11 @@ import { View, Text } from 'react-native';
 import moment from 'moment';
 
 import Translator from '../../../shared/i18n/Translator';
-import { Curseur } from '../../../shared/ui/Curseur';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { useMesureActive } from '../../../shared/mesure';
 import { GroupeDeReglages, RangeeDeReglage } from './GroupeDeReglages';
+import { delaisAProposer, type PageDeReglage } from '../pagesDeReglages';
 
 const LANGUAGE_LIST = {
     fr: 'FRENCH',
@@ -98,96 +98,118 @@ interface DisplaySectionProps {
     theme: AppThemeType;
     language: string;
     openLanguageDialog: () => void;
-    /** Les filtres sont un ecran pousse, plus une modale : la rangee navigue. */
     openFilters: () => void;
     isDarkMode: boolean;
-    toggleTheme: () => void;
+    openApparence: () => void;
 }
 
-/** L'affichage : la langue, le theme et les filtres, ensemble — ce qui change ce que l'on voit. */
-export const DisplaySection = ({ theme, language, openLanguageDialog, openFilters, isDarkMode, toggleTheme }: DisplaySectionProps) => {
-    return (
-        <GroupeDeReglages theme={theme} titre={Translator.get('DISPLAY')}>
-            <RangeeDeReglage
-                theme={theme}
-                icone={{ mi: 'language' }}
-                libelle={Translator.get('LANGUAGE')}
-                valeur={Translator.get(LANGUAGE_LIST[language as keyof typeof LANGUAGE_LIST] as Parameters<typeof Translator.get>[0])}
-                onPress={openLanguageDialog}
-            />
-            <RangeeDeReglage
-                theme={theme}
-                icone="theme-light-dark"
-                libelle={Translator.get('DARK_MODE')}
-                interrupteur={{ valeur: isDarkMode, onChange: toggleTheme }}
-            />
-            <RangeeDeReglage theme={theme} icone={{ mi: 'filter-list' }} libelle={Translator.get('FILTERS')} onPress={openFilters} />
-        </GroupeDeReglages>
-    );
-};
+/** L'affichage, a l'accueil : trois rangees qui menent, plus d'interrupteur (7-J, troisieme passe). */
+export const DisplaySection = ({ theme, language, openLanguageDialog, openFilters, isDarkMode, openApparence }: DisplaySectionProps) => (
+    <GroupeDeReglages theme={theme} titre={Translator.get('DISPLAY')}>
+        <RangeeDeReglage
+            theme={theme}
+            icone={{ mi: 'language' }}
+            libelle={Translator.get('LANGUAGE')}
+            valeur={Translator.get(LANGUAGE_LIST[language as keyof typeof LANGUAGE_LIST] as Parameters<typeof Translator.get>[0])}
+            onPress={openLanguageDialog}
+        />
+        <RangeeDeReglage
+            theme={theme}
+            icone="theme-light-dark"
+            libelle={Translator.get('APPEARANCE')}
+            valeur={Translator.get(isDarkMode ? 'DARK_THEME' : 'LIGHT_THEME')}
+            onPress={openApparence}
+        />
+        <RangeeDeReglage theme={theme} icone={{ mi: 'filter-list' }} libelle={Translator.get('FILTERS')} onPress={openFilters} />
+    </GroupeDeReglages>
+);
+
+/**
+ * Les preferences, a l'accueil : une rangee par page, sa valeur a droite quand elle se dit en un mot.
+ * Les interrupteurs et les textes d'aide vivent dans les pages.
+ */
+export const PreferencesSection = ({ theme, valeurNotifications, valeurAgenda, ouvrir }: {
+    theme: AppThemeType;
+    valeurNotifications: string;
+    valeurAgenda: string;
+    ouvrir: (page: PageDeReglage) => void;
+}) => (
+    <GroupeDeReglages theme={theme} titre={Translator.get('PREFERENCES')}>
+        <RangeeDeReglage theme={theme} icone="bell-outline" libelle={Translator.get('NOTIFICATIONS')} valeur={valeurNotifications} onPress={() => ouvrir('notifications')} />
+        <RangeeDeReglage theme={theme} icone="calendar-sync-outline" libelle={Translator.get('AGENDA_SETTINGS')} valeur={valeurAgenda} onPress={() => ouvrir('agenda')} />
+        <RangeeDeReglage theme={theme} icone="shield-check-outline" libelle={Translator.get('PRIVACY_SECTION')} onPress={() => ouvrir('confidentialite')} />
+        <RangeeDeReglage theme={theme} icone="star-outline" libelle={Translator.get('APP_LAUNCHING')} onPress={() => ouvrir('demarrage')} />
+    </GroupeDeReglages>
+);
+
+/** Une action qui retire tout : seule en bas, son libelle en rouge, et la confirmation suit (SettingsModals). */
+export const ReinitialisationSection = ({ theme, openResetDialog }: { theme: AppThemeType; openResetDialog: () => void }) => (
+    <GroupeDeReglages theme={theme}>
+        <RangeeDeReglage theme={theme} icone="autorenew" libelle={Translator.get('RESET_APP')} onPress={openResetDialog} destructive />
+    </GroupeDeReglages>
+);
+
+/** La page Apparence : deux choix coches, comme les reglages d'affichage du systeme. */
+export const ApparenceSection = ({ theme, isDarkMode, choisirSombre }: { theme: AppThemeType; isDarkMode: boolean; choisirSombre: (sombre: boolean) => void }) => (
+    <GroupeDeReglages theme={theme} filetCourt>
+        <RangeeDeReglage theme={theme} libelle={Translator.get('LIGHT_THEME')} coche={!isDarkMode} onPress={() => choisirSombre(false)} />
+        <RangeeDeReglage theme={theme} libelle={Translator.get('DARK_THEME')} coche={isDarkMode} onPress={() => choisirSombre(true)} />
+    </GroupeDeReglages>
+);
 
 interface NotificationsSectionProps {
     theme: AppThemeType;
     courseNotificationsEnabled: boolean;
     toggleCourseNotifications: () => void;
     courseNotificationDelay: number;
-    onNotificationDelayChange: (value: number) => void;
-    onNotificationDelaySlidingComplete: (value: number) => void;
-    /** Les messages de service en notification push (6.1.x-E) : couper retire le jeton de la base. */
+    choisirDelai: (minutes: number) => void;
     messagesEnNotification: boolean;
     toggleMessagesEnNotification: () => void;
 }
 
-/** Le delai des rappels de cours, sous leur interrupteur quand ils sont actifs. */
-function DelaiDesRappels({ theme, valeur, onChange, onFin }: { theme: AppThemeType; valeur: number; onChange: (v: number) => void; onFin: (v: number) => void }) {
-    return (
-        <View style={{ paddingHorizontal: tokens.space.md, paddingVertical: tokens.space.md }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.space.sm }}>
-                <Text style={{ fontSize: tokens.fontSize.md, color: theme.font }}>{Translator.get('NOTIFICATION_DELAY')}</Text>
-                <Text style={[tokens.texte.chiffres, { fontSize: tokens.fontSize.md, color: theme.accent, fontWeight: tokens.fontWeight.semibold }]}>
-                    {Translator.get('NOTIFICATION_DELAY_VALUE', valeur)}
-                </Text>
-            </View>
-            <Curseur
-                theme={theme.settings}
-                valeur={valeur}
-                min={5}
-                max={60}
-                pas={5}
-                onChange={onChange}
-                onFin={onFin}
-                accessibilityLabel={Translator.get('NOTIFICATION_DELAY')}
-                libelleValeur={(v) => Translator.get('NOTIFICATION_DELAY_VALUE', v)}
-            />
-        </View>
-    );
-}
-
-export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggleCourseNotifications, courseNotificationDelay, onNotificationDelayChange, onNotificationDelaySlidingComplete, messagesEnNotification, toggleMessagesEnNotification }: NotificationsSectionProps) => {
-    // Le plafond de vingt rappels (NotificationService) est une decision, et une decision se dit.
-    const pied = [Translator.get('PUSH_MESSAGES_DESC'), courseNotificationsEnabled ? `${Translator.get('NOTIFICATION_DELAY_DESC')} ${Translator.get('NOTIFICATION_CAP_DESC')}` : null]
-        .filter(Boolean)
-        .join('\n\n');
-    return (
-        <GroupeDeReglages theme={theme} titre={Translator.get('NOTIFICATIONS')} pied={pied}>
+/**
+ * La page Notifications : chaque interrupteur dans son groupe, son explication en pied, et le delai
+ * des rappels en liste cochee. Le delai se reglait au curseur, de 5 en 5, sous un paragraphe qui
+ * melait les deux reglages (review du 2026-11-06).
+ */
+export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggleCourseNotifications, courseNotificationDelay, choisirDelai, messagesEnNotification, toggleMessagesEnNotification }: NotificationsSectionProps) => (
+    <>
+        <GroupeDeReglages theme={theme} pied={Translator.get('PUSH_MESSAGES_DESC')}>
             <RangeeDeReglage
                 theme={theme}
                 icone="bullhorn-outline"
                 libelle={Translator.get('PUSH_MESSAGES')}
                 interrupteur={{ valeur: messagesEnNotification, onChange: toggleMessagesEnNotification }}
             />
+        </GroupeDeReglages>
+        <GroupeDeReglages
+            theme={theme}
+            titre={Translator.get('COURSE_REMINDERS')}
+            // La couverture seulement : « le nombre de minutes avant le cours » redisait la liste des delais.
+            pied={courseNotificationsEnabled ? Translator.get('NOTIFICATION_CAP_DESC') : undefined}
+        >
             <RangeeDeReglage
                 theme={theme}
                 icone="bell-outline"
                 libelle={Translator.get('COURSE_NOTIFICATIONS')}
                 interrupteur={{ valeur: courseNotificationsEnabled, onChange: toggleCourseNotifications }}
             />
-            {courseNotificationsEnabled && (
-                <DelaiDesRappels theme={theme} valeur={courseNotificationDelay} onChange={onNotificationDelayChange} onFin={onNotificationDelaySlidingComplete} />
-            )}
         </GroupeDeReglages>
-    );
-};
+        {courseNotificationsEnabled ? (
+            <GroupeDeReglages theme={theme} titre={Translator.get('NOTIFICATION_DELAY')} filetCourt>
+                {delaisAProposer(courseNotificationDelay).map((minutes) => (
+                    <RangeeDeReglage
+                        key={minutes}
+                        theme={theme}
+                        libelle={Translator.get('NOTIFICATION_DELAY_BEFORE', minutes)}
+                        coche={minutes === courseNotificationDelay}
+                        onPress={() => choisirDelai(minutes)}
+                    />
+                ))}
+            </GroupeDeReglages>
+        ) : null}
+    </>
+);
 
 /**
  * La section Confidentialite (7-D) porte son propre etat : le reglage vit dans le module de mesure, et
@@ -196,7 +218,7 @@ export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggle
 export const ConfidentialiteSection = ({ theme }: { theme: AppThemeType }) => {
     const [active, activer] = useMesureActive();
     return (
-        <GroupeDeReglages theme={theme} titre={Translator.get('PRIVACY_SECTION')} pied={Translator.get('ANONYMOUS_STATS_DESC')}>
+        <GroupeDeReglages theme={theme} pied={Translator.get('ANONYMOUS_STATS_DESC')}>
             <RangeeDeReglage
                 theme={theme}
                 icone="shield-check-outline"
@@ -207,23 +229,15 @@ export const ConfidentialiteSection = ({ theme }: { theme: AppThemeType }) => {
     );
 };
 
-interface AppLaunchingSectionProps {
-    theme: AppThemeType;
-    openFavSwitchValue: boolean;
-    toggleOpenFavSwitchValue: () => void;
-    openResetDialog: () => void;
-}
-
-export const AppLaunchingSection = ({ theme, openFavSwitchValue, toggleOpenFavSwitchValue, openResetDialog }: AppLaunchingSectionProps) => (
-    <GroupeDeReglages theme={theme} titre={Translator.get('APP_LAUNCHING')}>
+/** La page Demarrage. La reinitialisation, qui y vivait, est descendue seule au bas de l'accueil. */
+export const DemarrageSection = ({ theme, openFavSwitchValue, toggleOpenFavSwitchValue }: { theme: AppThemeType; openFavSwitchValue: boolean; toggleOpenFavSwitchValue: () => void }) => (
+    <GroupeDeReglages theme={theme}>
         <RangeeDeReglage
             theme={theme}
-            icone="star"
+            icone="star-outline"
             libelle={Translator.get('OPEN_ON_FAVOURITE_GROUP')}
             interrupteur={{ valeur: openFavSwitchValue, onChange: toggleOpenFavSwitchValue }}
         />
-        {/* Une action qui retire tout : son libelle en rouge, et la confirmation suit (SettingsModals). */}
-        <RangeeDeReglage theme={theme} icone="autorenew" libelle={Translator.get('RESET_APP')} onPress={openResetDialog} destructive />
     </GroupeDeReglages>
 );
 

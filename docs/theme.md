@@ -253,7 +253,6 @@ l'identique dans au moins deux endroits ([inventaire-visuel.md](inventaire-visue
 | [`ChargementPleinePage`](../src/shared/ui/ChargementPleinePage.tsx) | l'attente **qui occupe l'écran**, sa phrase **obligatoire**, et une seconde ligne après quatre secondes | 5 fois |
 | [`ApparitionEnFondu`](../src/shared/ui/ApparitionEnFondu.tsx) | la couture chargement → contenu : un fondu seul, de la durée `tokens.mouvement.couture` | 3 fois |
 | [`Interrupteur`](../src/shared/ui/Interrupteur.tsx) | l'interrupteur du dépôt, dessiné, identique sur les deux plateformes | 4 fois |
-| [`Curseur`](../src/shared/ui/Curseur.tsx) | le curseur du dépôt, dessiné — son arithmétique est [testée à part](../src/shared/ui/echelleDeCurseur.ts) | 1 fois |
 | [`ProgressBar`](../src/shared/ui/ProgressBar.tsx) | jauge, **rayon calculé** (`height / 2`) | 3 fois |
 | [`Icon`](../src/shared/ui/Icon.tsx) | **la seule entrée des icônes** : un nom de Material Design, vérifié par le compilateur, dessiné au trait par Lucide ([`tableDesIcones.ts`](../src/shared/ui/tableDesIcones.ts)), d'une épaisseur constante (1,75, et 1,5 aux petites et aux grandes tailles). Un nom absent de la table, venu des données, retombe sur Material. Plus aucun `MaterialCommunityIcons` ni `MaterialIcons` direct dans un écran | toute l'application, depuis la deuxième passe de 7-J |
 | [`SourceFailureNotice`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, bâti sur `EmptyState` | — |
@@ -746,8 +745,9 @@ Acquises, et qui ont coûté à être trouvées :
   imposée par Reanimated 4.5) a fait perdre son texte à un jour libre sur iPhone.
 - **Nos contrôles sont dessinés, et leur piste est une pilule** (6.1-E). Le `Switch` et le `Slider`
   natifs rendent l'apparence de **chaque** plateforme, et celle d'Android a l'air d'un autre âge à
-  côté de celle d'iOS : [`Interrupteur`](../src/shared/ui/Interrupteur.tsx) et
-  [`Curseur`](../src/shared/ui/Curseur.tsx) donnent une seule apparence aux deux.
+  côté de celle d'iOS : [`Interrupteur`](../src/shared/ui/Interrupteur.tsx) donne une seule apparence
+  aux deux. Le `Curseur` du dépôt est sorti à la troisième passe de 7-J : le seul réglage qui s'en
+  servait, le délai des rappels, se choisit dans une liste cochée.
 
   **L'exception de forme est écrite pour qu'on ne la « corrige » pas** : la règle des carrés arrondis
   vise les **surfaces**, et un contrôle glissant n'en est pas une — il n'héberge aucun contenu, sa

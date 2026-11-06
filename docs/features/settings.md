@@ -16,14 +16,27 @@ blanche dans un carré de la couleur de sa famille, l'explication d'un réglage 
 titre reste fixe, et le contenu passe dessous en fondu
 ([`PageDesReglages`](../../src/features/Settings/components/PageDesReglages.tsx), `EnTeteDOnglet`).
 
-| Section | Contenu |
+**L'accueil ne bascule rien et n'explique rien** depuis la troisième passe de 7-J : des rangées qui
+mènent, leur valeur à droite quand elle se dit en un mot. Il alignait interrupteurs, curseur et
+paragraphes d'aide sous chaque groupe, une manie d'interface générée selon la review du 2026-11-06.
+Chaque rangée de préférence ouvre sa page ([`pagesDeReglages.ts`](../../src/features/Settings/pagesDeReglages.ts)),
+et c'est la page qui explique et qui bascule. Une page est servie par l'écran des Réglages lui-même
+(route `Reglage`, paramètre `page`), qui en garde les gestes : permissions, confirmations, relecture
+au retour sur l'accueil (`relireLesReglages`).
+
+| Accueil | Contenu |
 |---|---|
 | **Établissement** | l'université sélectionnée (modale de choix, avec confirmation ; regroupée par campus et cherchée par alias dès six établissements), le compte, le lien d'emploi du temps, et **Soutenir UKit** quand le catalogue publie `services.soutien` — le don s'ouvre dans le navigateur du système, règle des stores |
-| **Affichage** | langue (modale de choix), mode sombre, filtres d'UE (écran dédié) |
-| **Notifications** | interrupteur des messages de service en notification (6.1.x-E — le couper retire le jeton de la base), interrupteur des rappels de cours, curseur de délai. Les deux sont **actifs par défaut**, et c'est l'entretien qui demande la permission une fois ([plateforme.md](../plateforme.md#permissions)) |
+| **Affichage** | langue (modale de choix), **Apparence** (page : Clair ou Sombre, coché), filtres d'UE (écran dédié) |
+| **Préférences** | **Notifications** (valeur : le délai des rappels, ou Oui/Non), **Agenda** (Oui/Non), **Confidentialité**, **Démarrage** : une page chacune |
+| *(seule)* | « Réinitialiser l'application », en rouge, avec confirmation |
+
+| Page | Contenu |
+|---|---|
+| **Notifications** | interrupteur des messages de service en notification (6.1.x-E — le couper retire le jeton de la base), interrupteur des rappels de cours, et **le délai en liste cochée** ([`delaisAProposer`](../../src/features/Settings/pagesDeReglages.ts) : 5 à 60 minutes, plus le délai en cours s'il n'en est pas). Les deux interrupteurs sont **actifs par défaut**, et c'est l'entretien qui demande la permission une fois ([plateforme.md](../plateforme.md#permissions)) |
+| **Agenda** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué, et un toast le dit quand c'est le geste « Forcer » qui a échoué (6.1-C) — et, depuis 6.1.x-D, la rangée **Calendriers du téléphone** vers l'écran de choix de ceux que le Planning affiche |
 | **Confidentialité** | interrupteur « Statistiques anonymes » (7-D), **actif par défaut** : le couper arrête le comptage et vide la file locale ; « Réinitialiser l'application » le remet actif ([mesure.md](../mesure.md)) |
-| **Lancement** | ouvrir sur le groupe favori, réinitialiser l'application |
-| **Calendrier** | interrupteur de synchronisation, choix du calendrier cible, date de dernière synchronisation — la pastille passe en avertissement quand le dernier passage a échoué, et un toast le dit quand c'est le geste « Forcer » qui a échoué (6.1-C) — et, depuis 6.1.x-D, la rangée **Calendriers du téléphone** vers l'écran de choix de ceux que le Planning affiche |
+| **Démarrage** | ouvrir sur le groupe favori — sans effet aujourd'hui ([défauts](../defauts-fonctionnels.md)) |
 
 Le bouton d'action de la barre d'onglets mène à **À propos**.
 
@@ -168,29 +181,16 @@ l'application retombait sur l'établissement historique — une bascule silencie
 appareil. Le report ne pouvant rien quand le cache a perdu l'entrée (réinstallation), l'avertissement
 couvre **les deux causes** : reporté, ou irrésoluble. Le repli reste possible ; il n'est plus muet.
 
-## Les interrupteurs et le curseur sont dessinés
+## Les interrupteurs sont dessinés
 
-Depuis le jalon [6.1-E](../phase-6/6-1-e-finitions-interface.md), les quatre interrupteurs de cet
-écran et le curseur de délai ne sont plus les contrôles **du système** mais ceux du dépôt
-([`Interrupteur`](../../src/shared/ui/Interrupteur.tsx),
-[`Curseur`](../../src/shared/ui/Curseur.tsx)). La dépendance `@react-native-community/slider` est
-sortie avec le second.
+Depuis le jalon [6.1-E](../phase-6/6-1-e-finitions-interface.md), les interrupteurs ne sont plus les
+contrôles **du système** mais celui du dépôt ([`Interrupteur`](../../src/shared/ui/Interrupteur.tsx)).
+Le curseur de délai, dessiné aussi, est sorti à la troisième passe de 7-J : un délai se choisit dans
+une liste cochée, qui dit « 15 min avant » sans glisser.
 
-Deux conséquences pour qui touche à cet écran :
-
-- **le contrôle est piloté** : la poignée suit la valeur passée, jamais l'appui. C'est ce qui rend
-  correct le cas de la synchronisation calendrier, où éteindre **ouvre une confirmation** au lieu de
-  basculer — l'interrupteur ne bouge qu'après `disableCalendarSync` ;
-- **le curseur émet deux fois** : à chaque cran franchi pour le libellé (« 15 min »), et **au
-  relâcher seulement** pour ce qui coûte. `SettingsManager.notify` persiste les réglages à chaque
-  émission : écrire sur le premier réécrirait le fichier douze fois par glissement. C'est le partage
-  que faisait déjà le slider natif entre `onValueChange` et `onSlidingComplete`, et il est conservé.
-
-L'unité « min » passe par une clé (`NOTIFICATION_DELAY_VALUE`) : elle était en dur à côté du curseur,
-et un lecteur d'écran la lit.
-
-> **Capture attendue** — `reglages-controles.png` : la section Notifications, interrupteur et curseur
-> dessinés, dans les deux thèmes.
+**Le contrôle est piloté** : la poignée suit la valeur passée, jamais l'appui. C'est ce qui rend
+correct le cas de la synchronisation calendrier, où éteindre **ouvre une confirmation** au lieu de
+basculer — l'interrupteur ne bouge qu'après `disableCalendarSync`.
 
 ## Les filtres d'UE
 
@@ -263,8 +263,7 @@ Interrupteur activé
        └─ NotificationManager.scheduleCourseNotifications(data)
 ```
 
-Le curseur de délai (`courseNotificationDelay`, en minutes) replanifie de la même façon à la fin du
-geste, pas pendant.
+Le délai coché (`courseNotificationDelay`, en minutes) replanifie de la même façon (`choisirDelai`).
 
 `scheduleCourseNotifications`
 ([`NotificationService.ts`](../../src/shared/services/NotificationService.ts)) :

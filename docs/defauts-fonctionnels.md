@@ -28,6 +28,14 @@ projection et sa parité. La carte de cours ne l'affiche plus depuis 7-J (une he
 mais le champ reste faux pour tout ce qui le lit : la fiche du cours, le créneau `schedule`, les
 rappels. La correction se fait dans la projection, avec un cas de parité.
 
+### « Ouvrir sur le groupe favori » n'a aucun effet — constaté le 2026-11-06
+
+Le réglage s'enregistre et se relit au démarrage
+([`AppCore`](../src/shared/services/AppCore.tsx), `_openAppOnFavoriteGroup`), mais rien ne le lit pour
+décider de l'écran d'ouverture : l'interrupteur de la page Démarrage ne change rien. Relevé en
+découpant les Réglages en pages, pendant la troisième passe de 7-J ; ni rebranché ni retiré, la
+décision revient au propriétaire du produit.
+
 ### ~~Les touchers juste au-dessus de la barre d'onglets ne répondent pas~~ — constaté le 2026-11-05, corrigé le même jour
 
 *Corrigé pendant la deuxième passe de 7-J, qu'il bloquait :* le conteneur de la barre d'onglets
