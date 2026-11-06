@@ -24,7 +24,10 @@ parcours froid, chargements.
 - [x] T1 — `166df3a` : l'accueil en rangées, cinq pages (notifications, apparence, agenda,
   confidentialité, démarrage) servies par l'écran des Réglages, le délai en liste cochée, le curseur
   retiré. Consigné en chemin : « Ouvrir sur le groupe favori » n'a aucun effet.
-- [ ] T2
+- [x] T2 — les boutons d'action (ressort, haptique, matière d'une teinte, `accentProfond`),
+  l'interrupteur (poignée étirée, ressort), les jauges (remplissage animé, dégradé du logo pour le
+  parcours froid). Vérifié sur `ukit` après rechargement complet : un rafraîchissement à chaud ne
+  propage pas une couleur ajoutée à la palette.
 - [ ] T3
 - [ ] T4
 - [ ] T5
