@@ -38,6 +38,9 @@ une application qui donne l'heure des choses d'un regard.
 - **Les Réglages en pages** : l'accueil ne porte plus que des rangées qui mènent, leur valeur à
   droite ; chaque préférence (notifications, agenda, confidentialité, démarrage, apparence) a sa page,
   qui explique et qui bascule. Le délai des rappels se choisit dans une liste cochée, plus au curseur.
+- **Des contrôles qui répondent au doigt** : les boutons d'action s'enfoncent sur un ressort, le
+  bouton plein vibre et prend une matière d'une seule teinte ; la poignée des interrupteurs s'étire
+  à l'appui ; les jauges se remplissent, et la barre du parcours froid prend le dégradé du logo.
 - **Moins de couleur d'action sur les données** : les UE et le groupe proposés après le parcours froid
   s'écrivent en texte, plus en pastilles ; le pied du navigateur intégré passe en icônes neutres, la
   sortie n'est plus rouge.

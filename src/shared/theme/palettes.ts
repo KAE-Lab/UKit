@@ -19,6 +19,11 @@ export interface PaletteDeBase {
     /** La couleur d'action principale, et l'accent qui lui est souvent egal. */
     readonly primary: string;
     readonly accent: string;
+    /**
+     * L'accent un cran plus profond : le bas du bouton plein, qui prend ainsi une matiere au lieu d'un
+     * aplat (7-J, troisieme passe). La meme teinte, jamais une seconde couleur.
+     */
+    readonly accentProfond: string;
     readonly font: string;
     readonly fontSecondary: string;
     /**
@@ -69,6 +74,7 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
     light: {
         primary:        '#3B5FE5',
         accent:         '#3B5FE5',
+        accentProfond:  '#3454CA',
         font:           '#1C1C1E',
         fontSecondary:  '#6C6C70',
         fontTertiary:   '#8E8E93',
@@ -91,6 +97,7 @@ export const PALETTES: { readonly light: PaletteDeBase; readonly dark: PaletteDe
     dark: {
         primary:        '#6381F8',
         accent:         '#6381F8',
+        accentProfond:  '#5974DF',
         font:           '#FFFFFF',
         fontSecondary:  '#BCBCCB',
         fontTertiary:   '#8A8A98',

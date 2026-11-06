@@ -34,10 +34,14 @@
  */
 
 import React from 'react';
-import { StyleProp, Text, TouchableOpacity, ViewStyle } from 'react-native';
+import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import Reanimated from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
 import { tokens, AppThemeType } from '../theme/Theme';
 import { Icon, type IconSpec } from './Icon';
+import { useEnfoncement } from './useEnfoncement';
 
 export type ActionButtonVariant = 'filled' | 'tonal' | 'destructive';
 
@@ -60,59 +64,97 @@ function habillage(theme: AppThemeType, variant: ActionButtonVariant): { fond: s
     return { fond: theme.primary, teinte: theme.lightFont };
 }
 
+const PressableAnime = Reanimated.createAnimatedComponent(Pressable);
+
+/**
+ * Le bouton repond au doigt (7-J, troisieme passe) : il s'enfonce sur un ressort, et le bouton plein
+ * donne un retour haptique. Il s'assombrissait d'un voile, la reponse d'un lien plus que d'un bouton
+ * (review du 2026-11-06 : « un peu trop simple »). Le bouton plein prend aussi une matiere : l'accent
+ * qui descend vers l'accent profond, la meme teinte, et un liseré de lumiere en haut. Le style passe
+ * par l'appelant (marges, hauteur, ombre, `flex`) reste sur le bouton lui-meme.
+ */
 export function ActionButton({
     theme, label, onPress, variant = 'filled', icon, style, disabled = false,
 }: ActionButtonProps) {
     const { fond, teinte } = habillage(theme, variant);
-
+    const enfoncement = useEnfoncement();
+    const plein = variant === 'filled';
     return (
-        <TouchableOpacity
-            onPress={onPress}
+        <PressableAnime
+            onPress={() => {
+                if (plein) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+                onPress();
+            }}
+            onPressIn={enfoncement.onPressIn}
+            onPressOut={enfoncement.onPressOut}
             disabled={disabled}
-            activeOpacity={0.8}
-            style={[
-                {
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: tokens.space.sm,
-                    minHeight: 48,
-                    paddingVertical: tokens.space.sm,
-                    paddingHorizontal: tokens.space.lg,
-                    // `radius.md`, comme toute surface carree de l'application. Voir docs/theme.md,
-                    // « les surfaces sont des carres arrondis ».
-                    borderRadius: tokens.radius.md,
-                    backgroundColor: fond,
-                },
-                disabled ? { opacity: 0.5 } : null,
-                style,
-            ]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled }}
+            style={[styles.bouton, { backgroundColor: fond }, disabled ? styles.desactive : null, style, enfoncement.style]}
         >
+            {plein ? (
+                <>
+                    <LinearGradient colors={[theme.accent, theme.accentProfond]} style={styles.matiere} pointerEvents="none" />
+                    <View style={[styles.lisere, { backgroundColor: `${theme.lightFont}38` }]} pointerEvents="none" />
+                </>
+            ) : null}
             {icon !== undefined ? <Icon icon={icon} size={20} color={teinte} /> : null}
             {/*
-              * **Rien du tout quand le libelle est vide**, et pas un `<Text>` vide.
-              *
-              * Le conteneur pose un `gap` entre ses enfants : un second enfant de largeur nulle
-              * consomme quand meme cet espacement, donc l'icone se retrouvait decalee vers la gauche
-              * de la moitie du gap. Le bouton de suppression d'un document, qui n'a qu'une icone, le
-              * montrait a l'oeil (signale le 2026-08-29). Un bouton sans libelle est un cas legitime
-              * — c'est la forme compacte d'une action dans une rangee.
+              * **Rien du tout quand le libelle est vide**, et pas un `<Text>` vide. Le conteneur pose
+              * un `gap` entre ses enfants : un second enfant de largeur nulle consomme quand meme cet
+              * espacement, et l'icone se retrouvait decalee de la moitie du gap (signale le
+              * 2026-08-29). Un bouton sans libelle est la forme compacte d'une action dans une rangee.
               */}
             {label !== '' ? (
                 /*
-                 * **Une ligne, toujours.** Un libelle qui passe a la ligne deforme le bouton et
-                 * pousse tout ce qui l'entoure — vu sur Android le 2026-09-08 avec « Se deconnecter ».
-                 * `flexShrink` le laisse ceder plutot que deborder, et la troncature est le dernier
-                 * recours : un libelle qui s'y prend est un libelle **trop long**, a raccourcir dans
-                 * les trois dictionnaires (docs/theme.md, « ce qu'un bouton peut dire »).
+                 * **Une ligne, toujours.** Un libelle qui passe a la ligne deforme le bouton et pousse
+                 * tout ce qui l'entoure (Android, 2026-09-08, « Se deconnecter »). `flexShrink` le
+                 * laisse ceder plutot que deborder ; un libelle qui se tronque est trop long, a
+                 * raccourcir dans les trois dictionnaires (docs/theme.md).
                  */
-                <Text
-                    numberOfLines={1}
-                    style={{ color: teinte, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, flexShrink: 1 }}
-                >
+                <Text numberOfLines={1} style={[styles.libelle, { color: teinte }]}>
                     {label}
                 </Text>
             ) : null}
-        </TouchableOpacity>
+        </PressableAnime>
     );
 }
+
+const styles = StyleSheet.create({
+    bouton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: tokens.space.sm,
+        minHeight: 50,
+        paddingVertical: tokens.space.sm,
+        paddingHorizontal: tokens.space.lg,
+        // `radius.lg`, celui des cartes, depuis la troisieme passe de 7-J : a `md`, le bouton paraissait
+        // un champ de saisie a cote des cartes qu'il suit.
+        borderRadius: tokens.radius.lg,
+    },
+    desactive: {
+        opacity: 0.5,
+    },
+    matiere: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        borderRadius: tokens.radius.lg,
+    },
+    lisere: {
+        position: 'absolute',
+        top: 0,
+        left: tokens.radius.lg,
+        right: tokens.radius.lg,
+        height: StyleSheet.hairlineWidth * 2,
+    },
+    libelle: {
+        fontSize: tokens.fontSize.md,
+        fontWeight: tokens.fontWeight.bold,
+        letterSpacing: -0.2,
+        flexShrink: 1,
+    },
+});

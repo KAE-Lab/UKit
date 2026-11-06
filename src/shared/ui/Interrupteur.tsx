@@ -45,7 +45,9 @@ import Reanimated, {
     Easing,
     interpolateColor,
     useAnimatedStyle,
+    useReducedMotion,
     useSharedValue,
+    withSpring,
     withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -63,6 +65,14 @@ const COURSE = LARGEUR_PISTE - POIGNEE - MARGE * 2;
 /** La duree des transitions du depot : `transitions.ts` en pose 220, le fondu 200. */
 const DUREE_MS = 200;
 
+/**
+ * L'etirement de la poignee sous le doigt, comme celle d'iOS : elle s'allonge vers le centre pendant
+ * l'appui, puis glisse et se pose sur un ressort (7-J, troisieme passe). Sans lui, l'interrupteur
+ * basculait comme une image, et la review du 2026-11-06 lui trouvait « un petit truc en moins ».
+ */
+const ETIREMENT = 6;
+const RESSORT = { damping: 18, stiffness: 260, mass: 0.6 } as const;
+
 export interface InterrupteurProps {
     valeur: boolean;
     onChange: (valeur: boolean) => void;
@@ -77,14 +87,15 @@ export interface InterrupteurProps {
 export function Interrupteur({
     valeur, onChange, theme, desactive = false, accessibilityLabel, style,
 }: InterrupteurProps) {
+    const mouvementReduit = useReducedMotion();
     const progression = useSharedValue(valeur ? 1 : 0);
+    const appui = useSharedValue(0);
 
     useEffect(() => {
-        progression.value = withTiming(valeur ? 1 : 0, {
-            duration: DUREE_MS,
-            easing: Easing.out(Easing.cubic),
-        });
-    }, [progression, valeur]);
+        progression.value = mouvementReduit
+            ? withTiming(valeur ? 1 : 0, { duration: DUREE_MS, easing: Easing.out(Easing.cubic) })
+            : withSpring(valeur ? 1 : 0, RESSORT);
+    }, [progression, valeur, mouvementReduit]);
 
     const piste = useAnimatedStyle(() => ({
         backgroundColor: interpolateColor(
@@ -94,8 +105,10 @@ export function Interrupteur({
         ),
     }));
 
+    // Allumee, la poignee s'etire vers la gauche : elle garde son bord droit contre la piste.
     const poignee = useAnimatedStyle(() => ({
-        transform: [{ translateX: progression.value * COURSE }],
+        width: POIGNEE + appui.value * ETIREMENT,
+        transform: [{ translateX: progression.value * (COURSE - appui.value * ETIREMENT) }],
     }));
 
     return (
@@ -106,6 +119,8 @@ export function Interrupteur({
                 void Haptics.selectionAsync();
                 onChange(!valeur);
             }}
+            onPressIn={() => { if (!mouvementReduit) appui.value = withTiming(1, { duration: DUREE_MS / 2 }); }}
+            onPressOut={() => { appui.value = withTiming(0, { duration: DUREE_MS }); }}
             disabled={desactive}
             // Une piste de 31 points de haut n'est pas une cible de 44 : le debord la complete.
             hitSlop={{ top: tokens.space.sm, bottom: tokens.space.sm, left: tokens.space.sm, right: tokens.space.sm }}

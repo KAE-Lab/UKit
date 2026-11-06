@@ -193,6 +193,8 @@ export function BlocProgression({ scrapeProgress, terminee = false, theme, color
                 color={color}
                 trackColor={theme.greyBackground}
                 height={4}
+                // Le degrade du logo : une progression neutre, la seule de l'application a le porter.
+                degrade={[theme.logo.bleu, theme.logo.indigo]}
             />
             <View style={styles.legende}>
                 <Animated.Text
@@ -234,7 +236,7 @@ function ProgressionPleinEcran({ indice, theme, color }) {
             <Animated.Text style={[styles.etapeCourante, { color: theme.fontSecondary, opacity: opacite }]} numberOfLines={1}>
                 {Translator.get(STEPS[indice].labelKey)}
             </Animated.Text>
-            <ProgressBar percent={valeur} color={color} trackColor={theme.greyBackground} height={4} />
+            <ProgressBar percent={valeur} color={color} trackColor={theme.greyBackground} height={6} degrade={[theme.logo.bleu, theme.logo.indigo]} />
             <View style={styles.etapes}>
                 {ETAPES_NOMMEES.map((etape) => {
                     const faite = indice > etape.indice;

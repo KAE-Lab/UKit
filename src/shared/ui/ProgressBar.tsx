@@ -10,51 +10,74 @@
  * deux litteraux de rayon disparaissent sans qu'aucun arbitrage visuel n'ait ete pris.
  */
 
-import React from 'react';
-import { Animated, StyleProp, View, ViewStyle } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, StyleProp, View, ViewStyle } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+
+import { tokens } from '../theme/tokens';
 
 export interface ProgressBarProps {
-    /**
-     * Entre 0 et 100. Au-dela, la barre sature — une source peut annoncer 110 %.
-     *
-     * Une `Animated.Value` est acceptee pour une barre qui **progresse** : elle est alors interpolee
-     * et rendue sans repasser par un rendu React, donc a la frequence de l'ecran plutot qu'a celle
-     * des mises a jour d'etat. Une jauge qui affiche une mesure — l'affluence d'une bibliotheque —
-     * garde un nombre : il n'y a rien a animer.
-     */
     percent: number | Animated.Value;
     color: string;
     trackColor: string;
     height: number;
-    /**
-     * Comment la barre prend sa place. Elle ne le decide pas : dans une ligne elle porte un `flex: 1`
-     * et des marges laterales, dans un bloc elle s'etire d'elle-meme.
-     */
     style?: StyleProp<ViewStyle>;
+    /**
+     * Le remplissage dans un degrade (les deux couleurs du logo, pour une progression neutre comme le
+     * parcours froid) : il couvre toute la piste et le remplissage le revele, au lieu de s'etirer
+     * avec lui. Une jauge d'etat (l'affluence) garde sa couleur, qui porte l'information.
+     */
+    degrade?: readonly [string, string];
 }
 
-export function ProgressBar({ percent, color, trackColor, height, style }: ProgressBarProps) {
-    const largeur = typeof percent === 'number'
-        ? (`${Math.max(0, Math.min(100, percent))}%` as const)
-        : percent.interpolate({
-            inputRange: [0, 100],
-            outputRange: ['0%', '100%'],
-            extrapolate: 'clamp',
-        });
+/** La duree du remplissage d'une valeur chiffree : se voir sans se faire attendre. */
+const REMPLISSAGE_MS = tokens.mouvement.couture * 3;
+
+/**
+ * Une valeur chiffree se remplit au lieu d'apparaitre (7-J, troisieme passe) : depuis zero a
+ * l'arrivee, puis d'une valeur a l'autre. Une valeur deja animee (le parcours froid) passe telle
+ * quelle. Sous « reduire les animations », la barre se pose d'emblee.
+ */
+export function ProgressBar({ percent, color, trackColor, height, style, degrade }: ProgressBarProps) {
+    const mouvementReduit = useReducedMotion();
+    const anime = useRef(new Animated.Value(0)).current;
+    const [largeurPiste, setLargeurPiste] = useState(0);
+
+    useEffect(() => {
+        if (typeof percent !== 'number') return;
+        const cible = Math.max(0, Math.min(100, percent));
+        if (mouvementReduit) {
+            anime.setValue(cible);
+            return;
+        }
+        Animated.timing(anime, { toValue: cible, duration: REMPLISSAGE_MS, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+    }, [percent, anime, mouvementReduit]);
+
+    const source = typeof percent === 'number' ? anime : percent;
+    const largeur = source.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'], extrapolate: 'clamp' });
 
     return (
-        <View style={[{
-            height,
-            backgroundColor: trackColor,
-            borderRadius: height / 2,
-            overflow: 'hidden',
-        }, style]}>
+        <View
+            onLayout={degrade !== undefined ? (evenement) => setLargeurPiste(evenement.nativeEvent.layout.width) : undefined}
+            style={[{ height, backgroundColor: trackColor, borderRadius: height / 2, overflow: 'hidden' }, style]}
+        >
             <Animated.View style={{
                 width: largeur,
                 height: '100%',
-                backgroundColor: color,
+                backgroundColor: degrade !== undefined ? undefined : color,
                 borderRadius: height / 2,
-            }} />
+                overflow: 'hidden',
+            }}>
+                {degrade !== undefined ? (
+                    <LinearGradient
+                        colors={degrade}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: largeurPiste }}
+                    />
+                ) : null}
+            </Animated.View>
         </View>
     );
 }
