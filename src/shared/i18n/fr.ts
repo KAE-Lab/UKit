@@ -38,7 +38,8 @@ const fr: TranslationDict = {
 	JEU_TITRE: 'Le petit jeu',
 	JEU_PARTOUT: "Touche n'importe où pour sauter.",
 	JEU_RECORD: 'record $-',
-	JEU_ACCESSIBILITE: 'Mini-jeu : touche pour faire sauter le point',
+	JEU_ACCESSIBILITE: 'Mini-jeu : touche pour faire sauter le renard',
+	JEU_NOUVEAU_RECORD: 'Nouveau record',
 	SUPPORT_UKIT: 'Soutenir UKit',
 	ENGLISH: 'Anglais',
 	// Le modele d'erreur du moteur : une famille d'echec, un message (shared/aetherius/failures.ts).

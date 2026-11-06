@@ -39,7 +39,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { ProgressBar } from '../../../shared/ui/ProgressBar';
-import { JeuDuPoint, type CommandeDuJeu } from '../../../shared/ui/jeu/JeuDuPoint';
+import { JeuDuRenard, type CommandeDuJeu } from '../../../shared/ui/jeu/JeuDuRenard';
 import { Icon } from '../../../shared/ui/Icon';
 import { hauteurDeLEnTete } from '../../../shared/ui/EnTeteDOnglet';
 import { TAB_BAR_HEIGHT } from '../../../shared/ui/ScreenState';
@@ -291,7 +291,7 @@ const ScolariteLoadingScreen = ({ scrapeProgress, terminee = false, theme, color
                 onLayout={(e) => setHauteurDuJeu(Math.max(JEU.minimum, Math.min(JEU.maximum, Math.round(e.nativeEvent.layout.height - JEU.legende))))}
             >
                 <Text style={[styles.legendeDuJeu, { color: theme.fontTertiary }]}>{Translator.get('JEU_ATTENTE')}</Text>
-                <JeuDuPoint ref={jeu} theme={theme} hauteur={hauteurDuJeu} />
+                <JeuDuRenard ref={jeu} theme={theme} hauteur={hauteurDuJeu} />
             </View>
         </View>
     );

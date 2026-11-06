@@ -57,9 +57,11 @@ une application qui donne l'heure des choses d'un regard.
 - **Moins de couleur d'action sur les données** : les UE et le groupe proposés après le parcours froid
   s'écrivent en texte, plus en pastilles ; le pied du navigateur intégré passe en icônes neutres, la
   sortie n'est plus rouge.
-- **Le jeu du point pendant la connexion universitaire.** Quatorze à vingt-six secondes d'attente,
-  occupées : le point du « i » du logo saute les cotes qui défilent sur l'horizon, au pouce, avec
-  son record. Il s'efface à l'arrivée du dossier et ne paraît pas sous « réduire les animations ».
+- **Encre, le petit jeu de la connexion universitaire.** Quatorze à vingt-six secondes d'attente,
+  occupées : un renard en pixel art, écharpe bleue, saute cailloux, rochers et souches et esquive des
+  chouettes devant trois plans de montagnes, de collines et de sapins ; la nuit en thème sombre, une
+  secousse à la chute, « Nouveau record » quand il tombe. Il s'efface à l'arrivée du dossier et ne
+  paraît pas sous « réduire les animations ».
 - **La liste des établissements se regroupe par campus et se cherche par alias** (« UB »,
   « ENSEIRB »), dès qu'elle compte six établissements ; le cas des trois campus qui arrivent.
 - **« Soutenir UKit »** dans les Réglages, quand le catalogue publie l'adresse du don : elle s'ouvre
@@ -97,9 +99,8 @@ une application qui donne l'heure des choses d'un regard.
 - **Une seule accentuation, celle du logo** : le bleu-indigo du milieu de son dégradé, `#3B5FE5` en
   clair et `#6381F8` en sombre, à la place du bleu d'iOS et de l'indigo. La barre d'onglets ne porte
   plus qu'elle, et la teinte de chaque section se prend le long du dégradé du logo.
-- **Le parcours froid et son jeu refaits** : le pourcentage en grand et les trois étapes cochées à
-  mesure ; dans le jeu, le « i » de UKit gagne un corps et deux yeux, saute plots, gobelets et piles de
-  livres devant la silhouette du campus, et un appui n'importe où sur l'écran le fait sauter.
+- **Le parcours froid refait** : le pourcentage en grand et les trois étapes cochées à mesure ; un
+  appui n'importe où sur l'écran fait sauter le renard du jeu.
 - **La Scolarité refaite** : l'en-tête fixe des autres onglets, la salutation en tête de page, un
   instrument à trois chiffres — Moodle, la messagerie, les documents — à la place d'un héros et de
   deux tuiles, et les services au gabarit des Réglages ; un service à venir dit « Bientôt
