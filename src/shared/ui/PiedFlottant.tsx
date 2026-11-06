@@ -124,15 +124,20 @@ export interface PiedFlottantProps {
  * **Les deux plateformes ne mesurent pas la meme chose**, et c'est pour ca qu'une seule formule ne
  * peut pas convenir. Sur iPhone, la zone sure du bas est celle de l'indicateur d'accueil : elle est
  * genereuse et surtout **vide**, si bien qu'en la respectant entierement les objets remontaient trop
- * et laissaient un trou dessous — on lui reprend donc quinze points, un reglage juge parfait sur
- * appareil et qui fait loi. Sur Android, la meme zone est la barre systeme elle-meme, gestes ou trois
+ * et laissaient un trou dessous. On lui reprenait quinze points ; sur l'iPhone, la barre d'onglets et
+ * les boutons du bas paraissaient alors colles au bord a cote des autres applications (review du
+ * 2026-11-06), et on ne lui en reprend plus que quatre : l'objet s'assoit a trente points du bord,
+ * nettement au-dessus de l'indicateur d'accueil. Sur Android, la meme zone est la barre systeme elle-meme, gestes ou trois
  * boutons : elle est occupee, et lui reprendre quoi que ce soit colle la carte contre elle (mesure le
  * 2026-09-08). On la respecte donc entiere, avec un degagement d'au moins `md` quand elle est nulle.
  */
+/** Ce qu'on reprend a la zone sure du bas d'un iPhone, vide sous l'indicateur d'accueil. */
+const REPRISE_IOS = 4;
+
 export function assiseDuFlottant(insets: { bottom: number } | null | undefined): number {
     const bas = insets?.bottom ?? 0;
     return Platform.OS === 'ios'
-        ? Math.max(tokens.space.sm, bas - 15)
+        ? Math.max(tokens.space.sm, bas - REPRISE_IOS)
         : Math.max(tokens.space.md, bas);
 }
 
