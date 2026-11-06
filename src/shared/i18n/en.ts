@@ -29,7 +29,7 @@ const en = {
 	CALENDAR_ALLOW: 'Allow calendar access',
 	INSTITUTION_SEARCH: 'Search a school or an acronym…',
 	// Le jeu du point, pendant la connexion universitaire (7-J).
-	JEU_CONSIGNE: 'Tap to jump',
+	JEU_CONSIGNE: "Tap to start",
 	JEU_TITRE: "Fancy a game?",
 	JEU_RECORD: 'best $-',
 	JEU_ACCESSIBILITE: 'Mini-game: tap to make the fox jump',
@@ -85,6 +85,7 @@ const en = {
 	FILTERS: 'Filters',
 	FILTERS_CONFIRMATION:
 		'Would you like to filter out this UE? You can always revert this action in the settings.',
+	INTRO_FILTRES: "Courses added here are hidden from the timetable until you remove them.",
 	FILTERS_ACTIVE: 'Active filters',
 	FILTERS_ADD: 'Add a filter',
 	FILTERS_UE: 'Filter out the UE',
@@ -134,6 +135,7 @@ const en = {
 	OPEN_SYSTEM_SETTINGS: 'Open system settings',
 	// Les calendriers du telephone dans le Planning (jalon 6.1.x-D).
 	PHONE_CALENDARS: 'Phone calendars',
+	PHONE_CALENDARS_DESCRIPTION: "Their events appear with your classes, in the day and week views, in the color of their calendar. The calendar used for synchronization is not offered: it already holds your classes.",
 	PHONE_CALENDARS_COUNT: '$- selected',
 	PHONE_CALENDARS_NONE: 'None',
 	PHONE_CALENDARS_EMPTY: 'This phone has no calendar.',
@@ -266,6 +268,7 @@ const en = {
 	COURSES: 'Courses',
 	DATA_SOURCE_TITLE: 'Data source',
 	DATA_SOURCE_TEXT: "Schedules are retrieved from your institution's ENT. This application is an independent project and is not officially affiliated with the institution.",
+	LEGAL_MENTION: "UKit is distributed under a free license. Its dependencies use the MIT, ISC and Apache 2.0 licenses.",
 	CREDITS_API: 'Credits & API',
 	API_AFFLUENCES: '• API Affluences',
 	AFFLUENCES_DESC: 'Real-time schedules and attendance for libraries (BU).',
@@ -396,6 +399,9 @@ const en = {
 	NOTIFICATION_DELAY_MORE: 'Longer delay',
 	NOTIFICATION_DELAY_BEFORE: '$- min before',
 	PUSH_MESSAGES: 'Service messages',
+	INTRO_NOTIFICATIONS: "Service messages reach you even when the app is closed, for an incident or important news. They use a push token (campus, version, platform), removed when you turn them off. Reminders cover the next 20 classes of the week last opened.",
+	INTRO_AGENDA: "Sync runs on its own about every 12 hours, when the system allows it, and when the app opens if the last one is more than 12 hours old.",
+	INTRO_CONFIDENTIALITE: "To learn what is useful, the app counts a few gestures: an opening, a tab, an announcement seen. Numbers per day and per campus, never an identifier nor anything you type, sent when the app goes to the background. Turning this off erases what was waiting.",
 	PRIVACY_SECTION: 'Privacy',
 	ANONYMOUS_STATS: 'Anonymous statistics',
 	NOTIFICATION_COURSE_IN: "Class in $- min",

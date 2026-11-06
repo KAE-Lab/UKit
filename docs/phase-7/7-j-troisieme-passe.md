@@ -79,6 +79,9 @@ le site, les deux défauts consignés corrigés, trois règles ajoutées à `~/.
   aides des propositions (leurs libellés portent l'action : « Groupe à ajouter », « UE à masquer »),
   le paragraphe des calendriers, les consignes de recherche et de filtres. Gardés : états, erreurs,
   confirmations, états vides. Le jeu s'ouvre sur « Une partie ? », sans titre d'écran
+- [x] l'information gardée, mieux placée (« pas faire disparaître l'information ») : un court
+  paragraphe en tête des pages de détail des Réglages (`IntroDePage`), la licence au-dessus du lien ;
+  le jeu dit « Toucher pour commencer », et son départ prend son élan (500 ms, sans saut)
 - [x] le délai des rappels au pas, « − 15 min + » (`fef2625`) ; les barres flottantes de l'iPhone
   décollées du bord (`46f139a`)
 

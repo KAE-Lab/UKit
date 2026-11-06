@@ -31,6 +31,7 @@ import { Interrupteur } from '../../../shared/ui/Interrupteur';
 import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { SettingsTextHeader } from '../components/SettingsSections';
+import { IntroDePage } from '../components/GroupeDeReglages';
 import { couleurDeCours } from '../../Planning/services/couleurDeCours';
 import { calendriersLisibles } from '../../Planning/services/TelephoneMapping';
 
@@ -145,6 +146,7 @@ function CalendriersAffichesScreen({ onAnimatedScroll }: { onAnimatedScroll?: (e
                     scrollEventThrottle={16}
                     contentContainerStyle={{ paddingTop: (insets?.top ?? 0) + HEADER_OFFSET, paddingBottom: tokens.space.xxl }}
                 >
+                    <IntroDePage theme={theme}>{Translator.get('PHONE_CALENDARS_DESCRIPTION')}</IntroDePage>
                     {renderContenu()}
                 </Animated.ScrollView>
             )}

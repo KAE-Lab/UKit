@@ -32,7 +32,7 @@ const fr: TranslationDict = {
 	// Le don, ouvert dans le navigateur du systeme quand le catalogue en publie l'adresse (7-N).
 	INSTITUTION_SEARCH: 'Cherche un établissement, un sigle…',
 	// Le jeu du point, pendant la connexion universitaire (7-J).
-	JEU_CONSIGNE: 'Touche pour sauter',
+	JEU_CONSIGNE: "Toucher pour commencer",
 	JEU_TITRE: "Une partie ?",
 	JEU_RECORD: 'record $-',
 	JEU_ACCESSIBILITE: 'Mini-jeu : touche pour faire sauter le renard',
@@ -87,6 +87,7 @@ const fr: TranslationDict = {
 	EXISTING_CALENDARS: 'Calendriers existants :',
 	FILTERS: 'Filtres',
 	FILTERS_CONFIRMATION: 'Filtrer cette UE ? Ça s’annule à tout moment dans les réglages.',
+	INTRO_FILTRES: "Les UE ajoutées ici sont masquées du planning, jusqu’à ce que tu les retires.",
 	FILTERS_ACTIVE: 'Filtres actifs',
 	FILTERS_ADD: 'Ajouter un filtre',
 	FILTERS_UE: 'Filtrer une UE',
@@ -137,6 +138,7 @@ const fr: TranslationDict = {
 	OPEN_SYSTEM_SETTINGS: 'Ouvrir les réglages du système',
 	// Les calendriers du telephone dans le Planning (jalon 6.1.x-D).
 	PHONE_CALENDARS: 'Calendriers du téléphone',
+	PHONE_CALENDARS_DESCRIPTION: "Leurs événements apparaissent avec tes cours, en vue jour et semaine, dans la couleur de leur calendrier. Le calendrier de la synchronisation n’est pas proposé : il porte déjà tes cours.",
 	PHONE_CALENDARS_COUNT: '$- choisis',
 	PHONE_CALENDARS_NONE: 'Aucun',
 	PHONE_CALENDARS_EMPTY: 'Ce téléphone n’a aucun calendrier.',
@@ -272,6 +274,7 @@ const fr: TranslationDict = {
 	COURSES: 'Cours',
 	DATA_SOURCE_TITLE: 'Source des données',
 	DATA_SOURCE_TEXT: "Les emplois du temps proviennent des services de l'établissement, ou d'un lien d'abonnement fourni par l'étudiant. UKit est un projet indépendant, sans affiliation officielle avec les établissements.",
+	LEGAL_MENTION: "UKit est distribué sous licence libre. Ses dépendances utilisent les licences MIT, ISC et Apache 2.0.",
 	CREDITS_API: 'Crédits & API',
 	API_AFFLUENCES: '• API Affluences',
 	AFFLUENCES_DESC: 'Horaires et affluence en temps réel des bibliothèques (BU).',
@@ -407,6 +410,9 @@ const fr: TranslationDict = {
 	NOTIFICATION_DELAY_MORE: 'Un délai plus long',
 	NOTIFICATION_DELAY_BEFORE: '$- min avant',
 	PUSH_MESSAGES: 'Messages de service',
+	INTRO_NOTIFICATIONS: "Les messages de service t’atteignent même application fermée, en cas d’incident ou d’information importante. Ils passent par un jeton de notification (campus, version, plateforme), retiré quand tu les coupes. Les rappels couvrent les 20 prochains cours de la semaine consultée.",
+	INTRO_AGENDA: "La synchronisation repasse d’elle-même environ toutes les 12 heures, quand le système le permet, et à l’ouverture de l’application si la dernière date de plus de 12 heures.",
+	INTRO_CONFIDENTIALITE: "Pour savoir ce qui sert, l’application compte quelques gestes : une ouverture, un onglet, une annonce vue. Des nombres par jour et par campus, jamais d’identifiant ni de texte saisi, envoyés quand elle passe en arrière-plan. Couper l’interrupteur efface ce qui attendait.",
 	PRIVACY_SECTION: 'Confidentialité',
 	ANONYMOUS_STATS: 'Statistiques anonymes',
 	NOTIFICATION_COURSE_IN: 'Cours dans $- min',

@@ -27,6 +27,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { SettingsTextHeader } from '../components/SettingsSections';
+import { IntroDePage } from '../components/GroupeDeReglages';
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
 import type { UeRencontree } from '../../Planning/services/PlanningAssembly';
 import { Icon } from '../../../shared/ui/Icon';
@@ -198,6 +199,7 @@ function FiltersScreen({ onAnimatedScroll }: { onAnimatedScroll?: (event: unknow
                             paddingBottom: tokens.space.xxl,
                         }}
                     >
+                        <IntroDePage theme={theme}>{Translator.get('INTRO_FILTRES')}</IntroDePage>
                         <SettingsTextHeader theme={themeSettings} text={Translator.get('FILTERS_ACTIVE')} />
 
                         {filtres.length === 0 ? (

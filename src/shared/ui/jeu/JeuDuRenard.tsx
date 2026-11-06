@@ -7,8 +7,8 @@
  * le rendu). Ce composant ne fait que dessiner : la partie, son geste et son record vivent dans
  * `usePartieDuRenard`, que l'ecran hote cree pour poser le geste sur la zone qu'il rend jouable.
  *
- * La consigne tient en une ligne, « Touche pour sauter » ; tenir le doigt fait sauter plus haut,
- * glisser vers le bas fait se baisser (l'ecran du jeu le dit sous le plateau). Une chute secoue le
+ * Au repos, une seule ligne dans le plateau, « Toucher pour commencer » ; le reste se decouvre en
+ * jouant (toucher saute, tenir saute plus haut, glisser vers le bas baisse). Une chute secoue le
  * plateau et remet le compteur a zero apres une courte pause.
  *
  * Sous « reduire les animations », le jeu ne s'affiche pas pendant la connexion ; ouvert expres, il

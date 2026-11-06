@@ -12,8 +12,11 @@ L'écran est une suite de **groupes encadrés** ([7-J](../phase-7/7-j-ecrans.md)
 carte par section, des rangées de 52 points séparées par un filet indenté sous le libellé, l'icône
 blanche dans un carré de la couleur de sa famille
 ([`GroupeDeReglages`](../../src/features/Settings/components/GroupeDeReglages.tsx)). **Aucun texte
-d'explication sous un réglage** : un libellé juste suffit (review du 2026-11-06). Le pied de groupe ne
-porte plus qu'un état, comme l'établissement que le catalogue a retiré. Chaque réglage
+d'explication sous un réglage** (review du 2026-11-06) : ce qu'il faut savoir d'une page de détail
+tient en un court paragraphe en tête, au-dessus des groupes
+([`IntroDePage`](../../src/features/Settings/components/GroupeDeReglages.tsx)) ; l'accueil, qui ne
+porte que des rangées qui mènent, n'en a pas. Le pied de groupe ne dit plus qu'un état, comme
+l'établissement que le catalogue a retiré. Chaque réglage
 était sa propre carte : la pile d'objets sans rapport que [theme.md](../theme.md) interdit. Le grand
 titre reste fixe, et le contenu passe dessous en fondu
 ([`PageDesReglages`](../../src/features/Settings/components/PageDesReglages.tsx), `EnTeteDOnglet`).

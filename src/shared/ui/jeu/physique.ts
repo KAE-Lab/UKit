@@ -11,6 +11,10 @@
  * monte a 43 points, un appui tenu a 82. **Glisser vers le bas baisse le renard** : au sol, sa boite
  * tombe a six pixels de haut ; en l'air, il plonge.
  *
+ * **Le depart prend son elan** : le toucher qui lance la partie ne fait pas sauter, et le renard
+ * passe de l'arret a sa vitesse de course en `DEMARRAGE_MS`. Partir d'un coup a pleine vitesse, en
+ * plein saut, se voyait comme une image sautee (review du 2026-11-06).
+ *
  * **Tout obstacle tire est franchissable** a la vitesse ou il apparait, et le test le verifie. La
  * double souche, trop large pour un saut bref, n'arrive qu'a partir de `VITESSE_DES_SOUCHES` et
  * demande un saut tenu ; les chouettes, apres `SCORE_DES_CHOUETTES` obstacles, volent basses (a
@@ -35,6 +39,8 @@ export const MAINTIEN_MAX = 200;
 /** La vitesse de la plongee, quand on glisse vers le bas en l'air. */
 export const PLONGEE = 900;
 export const VITESSE_INITIALE = 230;
+/** Le temps que met le renard a passer de l'arret a sa vitesse de course, en millisecondes. */
+export const DEMARRAGE_MS = 500;
 export const VITESSE_MAXIMALE = 470;
 export const ACCELERATION = 7;
 export const PAUSE_DE_CHUTE = 750;
@@ -127,13 +133,13 @@ export function etatDeDepart(largeur: number): EtatDuJeu {
     };
 }
 
-/** Le doigt se pose : le depart d'une partie, ou un saut si le renard est au sol et debout. */
+/** Le doigt se pose : le depart d'une partie, depuis l'arret et sans saut, ou un saut si le renard est au sol et debout. */
 export function appuyer(etat: EtatDuJeu, largeur: number): EtatDuJeu {
     'worklet';
     if (etat.phase === 'chute') return etat;
-    const depart = etat.phase === 'attente' ? { ...etatDeDepart(largeur), phase: 'course' as const } : etat;
-    if (depart.y > 0 || depart.baisse) return depart;
-    return { ...depart, vy: IMPULSION, maintenu: true, depuisLeSaut: 0 };
+    if (etat.phase === 'attente') return { ...etatDeDepart(largeur), phase: 'course', vitesse: 0 };
+    if (etat.y > 0 || etat.baisse) return etat;
+    return { ...etat, vy: IMPULSION, maintenu: true, depuisLeSaut: 0 };
 }
 
 /** Le doigt se leve : le saut cesse d'etre tenu, le renard se releve. */
@@ -190,7 +196,10 @@ export function avancer(etat: EtatDuJeu, dtMs: number, largeur: number, tirage: 
         vy = 0;
     }
     let score = etat.score;
-    let vitesse = etat.vitesse;
+    // L'elan du depart : une acceleration constante jusqu'a la vitesse de course.
+    let vitesse = etat.vitesse < VITESSE_INITIALE
+        ? Math.min(VITESSE_INITIALE, etat.vitesse + (VITESSE_INITIALE * pasMs) / DEMARRAGE_MS)
+        : etat.vitesse;
     const avances = etat.obstacles.map((obstacle) => ({ ...obstacle, x: obstacle.x - vitesse * dt }));
     const plusLoin = Math.max(...avances.map((obstacle) => obstacle.x + FORMES[obstacle.genre].sprite * PIXEL));
     const obstacles = avances.map((obstacle) => {
