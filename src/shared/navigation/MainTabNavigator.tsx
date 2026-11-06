@@ -21,7 +21,7 @@ import { Dialogue } from '../ui/Dialogue';
 import { ModaleBientot } from '../ui/ModaleBientot';
 import { lienDuFormulaire, ouvrirLeFormulaire } from './formulaireDeRetours';
 import { GestureDetector } from 'react-native-gesture-handler';
-import { useGlissementDeBarre } from './glissementDOnglets';
+import { GlissementDePage, useGlissementDeBarre } from './glissementDOnglets';
 import { compterOnglet } from '../mesure';
 import { Icon } from '../ui/Icon';
 
@@ -367,6 +367,9 @@ export default function MainTabNavigator() {
         <Tab.Navigator
             id="MainTabs"
             tabBar={props => <CustomTabBar {...props} theme={theme} />}
+            // Le glissement entre onglets depuis la page aussi (troisieme passe de 7-J) : voir
+            // `GlissementDePage`, et pourquoi les listes horizontales gardent la main.
+            screenLayout={({ children, navigation }) => <GlissementDePage navigation={navigation}>{children}</GlissementDePage>}
             screenOptions={{
                 headerShown: false,
                 // Le montage paresseux : un onglet ne se monte qu'a sa premiere ouverture.

@@ -6,6 +6,7 @@ import { tokens } from '../../../shared/theme/Theme';
 import { cleDeGroupe, empreinteDeCours, indexDuSouvenir, type CoursDeGroupe } from '../services/MemoireCarrousel';
 import { CourseData } from './CourseCard';
 import { CourseRowWithNavigation } from './CourseRow';
+import { SIGNAL_DE_GLISSEMENT } from '../../../shared/navigation/listesEnGlissement';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -106,6 +107,8 @@ export function CourseGroupCarousel({ coursesGroup, theme, minute = null }: {
 					offset: screenWidth * index,
 					index,
 				})}
+				// Le glissement entre onglets cede a ce carrousel quand on le fait defiler.
+				{...SIGNAL_DE_GLISSEMENT}
 				onMomentumScrollEnd={(event) => {
 					const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
 					setCurrentIndex(index);

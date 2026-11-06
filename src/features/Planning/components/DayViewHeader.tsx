@@ -10,6 +10,7 @@ import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 import { HeaderButton, HEADER_BUTTON_ICON } from '../../../shared/ui/HeaderButton';
 import { FondDOnglet } from '../../../shared/ui/FondDOnglet';
 import { Icon } from '../../../shared/ui/Icon';
+import { SIGNAL_DE_GLISSEMENT } from '../../../shared/navigation/listesEnGlissement';
 
 export interface DayViewHeaderProps {
     insets: { top: number } | null;
@@ -169,6 +170,8 @@ const renderSliders = (props: DayViewHeaderProps) => {
             <FlatList
                 key="slider-day"
                 ref={props.setDayListRef}
+                // Le glissement entre onglets cede au ruban qu'on fait defiler.
+                {...SIGNAL_DE_GLISSEMENT}
                 showsHorizontalScrollIndicator={false}
                 data={props.days}
                 horizontal
@@ -189,6 +192,7 @@ const renderSliders = (props: DayViewHeaderProps) => {
         <FlatList
             key="slider-week"
             ref={props.setWeekListRef}
+            {...SIGNAL_DE_GLISSEMENT}
             showsHorizontalScrollIndicator={false}
             data={props.weeks}
             horizontal
