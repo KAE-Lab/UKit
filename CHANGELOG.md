@@ -67,6 +67,9 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **« Réinitialiser l'application » déconnecte vraiment le compte** : elle effaçait le local mais
+  laissait la session universitaire ouverte et la dernière page de la messagerie en mémoire ; elle
+  passe désormais par la déconnexion, qui ferme le ticket côté serveur.
 - **Un cours sans heure de fin n'écrit plus « Invalid date »** : la fiche, le créneau et les rappels
   lisaient ce texte quand Celcat sert une fin nulle ; l'heure manquante se tait désormais.
 - **« Ouvrir sur le groupe favori » retiré** : le réglage s'enregistrait sans que rien ne le lise,

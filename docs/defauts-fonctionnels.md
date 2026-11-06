@@ -88,17 +88,18 @@ installation neuve en sombre : plus de `LIGHT_STATUS_BARS`, l'heure blanche. Le 
 Android 9, il se reproduisait sur Android 15. Revu sur `ukit-a8` (Android 9) le même jour, installation
 neuve en sombre : l'heure blanche sur `#0B0B12`.
 
-### La réinitialisation laisse la dernière page du navigateur caché en mémoire — constaté le 2026-11-05
+### ~~La réinitialisation laisse la dernière page du navigateur caché en mémoire~~ — constaté le 2026-11-05, corrigé le 2026-11-06
 
-Sur le banc (`ukit`, Android 15), juste après « Réinitialiser l'application » : l'arbre d'accessibilité
-liste encore la boîte de réception de l'ENT du compte effacé (expéditeurs, objets), dans la WebView
-cachée d'Aetherius ([`AetheriusWebView`](../src/shared/navigation/rootContainer.tsx), hors écran, au
-format bureau). Elle vit avec l'application par conception, et
-[`ReinitialisationComplete`](../src/shared/services/ReinitialisationComplete.ts) purge le trousseau,
-les réglages et les données, mais ni la page chargée dans cette vue ni ses cookies. Rien ne l'affiche,
-mais un service d'accessibilité la lit. Non vérifié : qu'une session de l'ENT survive par les cookies.
-La correction se fait dans la réinitialisation (ramener la vue sur une page vide, vider son magasin de
-cookies), selon ce que le paquet Aetherius expose.
+Juste après « Réinitialiser l'application », l'arbre d'accessibilité listait encore la boîte de
+réception de l'ENT du compte effacé, dans la WebView cachée d'Aetherius
+([`AetheriusWebView`](../src/shared/navigation/rootContainer.tsx)) : la réinitialisation des Réglages
+n'effaçait que le local, sans arrêter la session ni fermer le ticket CAS. Elle emprunte désormais le
+chemin de la déconnexion du compte quand un compte est connecté
+([`SettingsScreen.resetApp`](../src/features/Settings/screens/SettingsScreen.tsx)) : session et
+widgets arrêtés, trousseau effacé, ticket CAS fermé côté serveur, ce qui ramène la vue cachée sur la
+page de connexion du portail. Vérifié sur `ukit` : `ukit.portail.deconnexion success` au journal,
+aucun nœud de messagerie après, la vue cachée sur « Connexion - Université de Bordeaux ». La
+réinitialisation complète du menu de développement recharge l'application, ce qui détruit la vue.
 
 ### La barre de navigation d'Android 9 reste claire sous l'application sombre — constaté le 2026-11-05
 
