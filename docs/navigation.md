@@ -45,7 +45,7 @@ chaque `focus`, le premier compris — c'est `onglet.vu` de la mesure ([mesure.m
 | `ScolariteTab` | [`ScolariteDashboard`](../src/features/Scolarite/screens/ScolariteDashboard.tsx) | `SCOLARITY` | `toolbox-outline` |
 | `SettingsTab` | [`SettingsScreen`](../src/features/Settings/screens/SettingsScreen.tsx) | `SETTINGS` | `cog-outline` |
 
-### On glisse entre les onglets — sur la barre, et c'est la troisième version
+### On glisse entre les onglets — sur la barre et sur la page, et c'est la quatrième version
 
 Le jalon [6.1-E](phase-6/6-1-e-finitions-interface.md) avait remplacé `createBottomTabNavigator` par
 un `createMaterialTopTabNavigator` posé en bas : même barre, mais on passait d'un onglet à l'autre au
@@ -69,8 +69,22 @@ proposition du propriétaire du produit ([`glissementDOnglets.tsx`](../src/share
 relâcher ([`directionDuGlissement`](../src/shared/navigation/directionDuGlissement.ts), pur et
 testé : assez de chemin ou assez de vitesse, pas de bouclage aux extrémités), avec la transition
 `shift` des onglets — celle d'un appui. Un appui reste un appui : le geste ne s'active qu'après dix
-points de course horizontale. Les pages ne portent aucun geste ; leurs listes horizontales, le
-curseur des Réglages et les interrupteurs n'ont plus de concurrent.
+points de course horizontale.
+
+**La quatrième version remet le geste sur la page, sans inscrire les listes** (troisième passe de
+7-J, 2026-11-06, demande du propriétaire du produit) : `GlissementDePage`, posé autour de chaque
+écran d'onglet par `screenLayout`. Les deux essais précédents arbitraient en donnant la priorité aux
+listes dans le système de gestes, ce qui les rendait actives dès le toucher. Ici elles restent
+natives. Sur Android, une liste qui commence à défiler demande à ses parents de lâcher le toucher,
+et le gestionnaire de gestes annule alors le sien ; le geste de page ne s'active qu'après 25 points
+horizontaux (une liste prend la main dès 8) et échoue dès 10 points verticaux. Pour iOS, où rien ne
+garantit cette annulation, chaque liste horizontale d'onglet signale son glissement
+([`listesEnGlissement`](../src/shared/navigation/listesEnGlissement.ts), testé), et la page ne change
+pas d'onglet si une liste a glissé pendant le geste. Vérifié sur le banc Android (`ukit`) : un
+intertitre de Campus et la journée du Planning changent d'onglet, un carrousel défile sans changer
+d'onglet, un glissement vertical commencé sur un carrousel fait défiler la page. **Reste à juger sur
+iPhone.** Un ruban qui tient entier à l'écran (les sept jours) ne défile pas : glisser dessus change
+d'onglet.
 
 ### La barre d'onglets personnalisée
 
@@ -175,9 +189,8 @@ carte sont définis directement dans `StackNavigator`.
 
 ## Limites connues
 
-- **Le glissement entre onglets se fait sur la barre, et la page bascule au relâcher.** Glisser sur
-  le contenu ne change pas d'onglet : deux essais l'ont montré, un pager puis un geste par page, les
-  listes horizontales du Planning et du Campus ne le tolèrent pas sur Android.
+- **Le glissement entre onglets bascule au relâcher**, sans suivre le doigt : la page change avec la
+  transition d'un appui. Le geste de page n'est pas encore jugé sur iPhone.
 - **`RootStackParamList` est incomplet pour deux routes.** `CrousMenu` ne déclare pas `restaurantId`
   alors que l'écran le lit et que l'appelant le passe ; `LibraryDetails` ne déclare pas `affluence`,
   dans le même cas. Le typage des paramètres est donc plus permissif que la réalité sur ces deux

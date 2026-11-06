@@ -8,6 +8,7 @@ import React from 'react';
 import { FlatList, type FlatListProps, type ListRenderItem } from 'react-native';
 
 import { tokens } from '../../../../shared/theme/Theme';
+import { SIGNAL_DE_GLISSEMENT } from '../../../../shared/navigation/listesEnGlissement';
 
 export interface CarrouselDeSectionProps<T> {
     data: readonly T[];
@@ -36,6 +37,8 @@ export function CarrouselDeSection<T>({ data, renderItem, keyExtractor, largeurC
             contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingBottom: tokens.space.lg }}
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={viewabilityConfig}
+            // Le glissement entre onglets cede a la liste qu'on fait defiler (listesEnGlissement.ts).
+            {...SIGNAL_DE_GLISSEMENT}
         />
     );
 }

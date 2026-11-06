@@ -47,6 +47,8 @@ une application qui donne l'heure des choses d'un regard.
   grand titre ; il les coupait à mi-hauteur.
 - **Le repère de l'heure ancré** : l'heure du Planning se pose dans une pastille pleine, d'où part le
   trait ; le ruban ne marque plus aujourd'hui d'un point, la couleur suffit.
+- **On glisse entre les onglets depuis la page** : un glissement franc n'importe où passe à l'onglet
+  voisin, et les listes horizontales (carrousels, rubans) gardent la main quand on les fait défiler.
 - **Des contrôles qui répondent au doigt** : les boutons d'action s'enfoncent sur un ressort, le
   bouton plein vibre et prend une matière d'une seule teinte ; la poignée des interrupteurs s'étire
   à l'appui ; les jauges se remplissent, et la barre du parcours froid prend le dégradé du logo.
