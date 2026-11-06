@@ -78,8 +78,11 @@ séparent les lignes **sauf autour d'un intertitre** : un titre touche ce qu'il 
 - Le nom du restaurant est le **titre de la barre** ; « Détails » ne nommait rien. Le bandeau ne porte
   plus que les jours, dans les cases du ruban du Planning
   ([`BandeauDeCases`](../../src/shared/ui/BandeauDeCases.tsx)), et le contenu passe dessous en fondu.
-- Un repas est **une seule carte** ([`CrousMealCard`](../../src/features/Campus/Crous/components/CrousMealCard.tsx)) :
-  chaque catégorie en gris, suivie de ses plats, un filet entre deux catégories. Elle posait une carte
+- Un repas est **une seule carte** ([`CrousMealCard`](../../src/features/Campus/Crous/components/CrousMealCard.tsx)),
+  et sa hiérarchie est typographique : la catégorie en demi-gras, couleur du texte, ses plats derrière
+  une puce dont le retour à la ligne s'aligne sur le texte, un filet et de l'air entre deux
+  catégories. La deuxième passe posait la catégorie en petit gris sur des plats nus : la review du
+  2026-11-06 n'y lisait plus qu'« une suite de lignes de texte ». Elle posait une carte
   par catégorie et, devant chaque plat, une icône devinée d'après son nom, qui se trompait :
   « Steak ou poisson » prenait l'icône d'information pour son « ou », des carottes râpées la feuille
   du végétarien.

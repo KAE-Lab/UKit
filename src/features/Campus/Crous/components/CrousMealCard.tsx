@@ -23,6 +23,25 @@ interface CrousMealCardProps {
     theme: AppThemeType;
 }
 
+/**
+ * Un plat derriere sa puce : le retour a la ligne s'aligne sur le texte, pas sur la puce, si bien
+ * qu'un plat sur deux lignes ne se confond plus avec deux plats (7-J, troisieme passe).
+ */
+function Plat({ texte, theme, absent = false }: { texte: string; theme: AppThemeType; absent?: boolean }) {
+    return (
+        <View style={styles.plat}>
+            <View style={[styles.puce, { backgroundColor: theme.fontTertiary }]} />
+            <Text style={[styles.texteDuPlat, { color: absent ? theme.fontTertiary : theme.font }]}>{texte}</Text>
+        </View>
+    );
+}
+
+/**
+ * La hierarchie est typographique (review du 2026-11-06, « une suite de lignes de texte ») : la
+ * categorie en demi-gras, couleur du texte, au-dessus de ses plats a puce ; un filet et de l'air entre
+ * deux categories ; les sous-titres de la source (« Autre plat ») en gris. Ni couleur decorative ni
+ * icone devinee : la premiere decorait, la seconde se trompait.
+ */
 export function CrousMealCard({ mealTitle, categories, theme }: CrousMealCardProps) {
     if (!categories || categories.length === 0) return null;
 
@@ -34,18 +53,17 @@ export function CrousMealCard({ mealTitle, categories, theme }: CrousMealCardPro
                     <View key={index}>
                         {index > 0 ? <View style={[styles.filet, { backgroundColor: theme.border }]} /> : null}
                         <View style={styles.categorie}>
-                            {/* Le gris du texte secondaire : une categorie nomme, elle n'agit pas. */}
-                            <Text style={[tokens.texte.intertitre, { color: theme.fontSecondary }]}>{libelleLisible(categorie.name)}</Text>
+                            <Text style={[tokens.texte.titreDeCarte, { color: theme.font }]}>{libelleLisible(categorie.name)}</Text>
                             {categorie.dishes.length > 0 ? categorie.dishes.map((brut, rang) => {
                                 const plat = libelleLisible(brut);
                                 const sousTitre = sousTitreDePlat(plat);
                                 return sousTitre !== null ? (
                                     <Text key={rang} style={[tokens.texte.intertitre, styles.sousTitre, { color: theme.fontSecondary }]}>{sousTitre}</Text>
                                 ) : (
-                                    <Text key={rang} style={[styles.plat, { color: theme.font }]}>{plat}</Text>
+                                    <Plat key={rang} texte={plat} theme={theme} />
                                 );
                             }) : (
-                                <Text style={[styles.plat, { color: theme.fontTertiary }]}>{Translator.get('NOT_SPECIFIED')}</Text>
+                                <Plat texte={Translator.get('NOT_SPECIFIED')} theme={theme} absent />
                             )}
                         </View>
                     </View>
@@ -54,6 +72,10 @@ export function CrousMealCard({ mealTitle, categories, theme }: CrousMealCardPro
         </View>
     );
 }
+
+const PUCE = 5;
+/** La hauteur de ligne du plat : la puce se centre sur la premiere ligne, pas sur le bloc. */
+const LIGNE = 22;
 
 const styles = StyleSheet.create({
     repas: {
@@ -67,16 +89,29 @@ const styles = StyleSheet.create({
     },
     categorie: {
         paddingHorizontal: tokens.space.md,
-        paddingVertical: tokens.space.md,
+        paddingTop: tokens.space.md,
+        paddingBottom: tokens.space.md + tokens.space.xxs,
         gap: tokens.space.sm,
     },
-    // « Autre plat : » et ses pareils, que la source glisse parmi les plats (`sousTitreDePlat`).
     sousTitre: {
         marginTop: tokens.space.xs,
     },
     plat: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: tokens.space.sm + tokens.space.xxs,
+    },
+    puce: {
+        width: PUCE,
+        height: PUCE,
+        borderRadius: PUCE / 2,
+        marginTop: (LIGNE - PUCE) / 2,
+        marginLeft: tokens.space.xxs,
+    },
+    texteDuPlat: {
+        flex: 1,
         fontSize: tokens.fontSize.md,
-        lineHeight: 22,
+        lineHeight: LIGNE,
     },
     filet: {
         height: StyleSheet.hairlineWidth,

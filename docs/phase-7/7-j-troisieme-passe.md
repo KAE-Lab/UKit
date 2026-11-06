@@ -36,6 +36,8 @@ parcours froid, chargements.
   (`headerBackgroundContainerStyle`) : fond plein sur toute la barre, fondu dessous, le dégradé
   toujours dans les bords de son parent. Vérifié sur `ukit`, liste des restaurants : la photo se fond
   sous les boutons, le titre reste entier.
-- [ ] T5
+- [x] T5 — la catégorie en demi-gras couleur du texte, les plats derrière une puce (retour à la ligne
+  aligné sur le texte), les sous-titres de la source en gris. Vérifié en sombre et en clair ; capture
+  de la doc remplacée.
 - [ ] T6
 - [ ] T7
