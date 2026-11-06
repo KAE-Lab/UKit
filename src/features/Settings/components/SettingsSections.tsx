@@ -138,7 +138,6 @@ export const PreferencesSection = ({ theme, valeurNotifications, valeurAgenda, o
         <RangeeDeReglage theme={theme} icone="bell-outline" libelle={Translator.get('NOTIFICATIONS')} valeur={valeurNotifications} onPress={() => ouvrir('notifications')} />
         <RangeeDeReglage theme={theme} icone="calendar-sync-outline" libelle={Translator.get('AGENDA_SETTINGS')} valeur={valeurAgenda} onPress={() => ouvrir('agenda')} />
         <RangeeDeReglage theme={theme} icone="shield-check-outline" libelle={Translator.get('PRIVACY_SECTION')} onPress={() => ouvrir('confidentialite')} />
-        <RangeeDeReglage theme={theme} icone="star-outline" libelle={Translator.get('APP_LAUNCHING')} onPress={() => ouvrir('demarrage')} />
     </GroupeDeReglages>
 );
 
@@ -228,18 +227,6 @@ export const ConfidentialiteSection = ({ theme }: { theme: AppThemeType }) => {
         </GroupeDeReglages>
     );
 };
-
-/** La page Demarrage. La reinitialisation, qui y vivait, est descendue seule au bas de l'accueil. */
-export const DemarrageSection = ({ theme, openFavSwitchValue, toggleOpenFavSwitchValue }: { theme: AppThemeType; openFavSwitchValue: boolean; toggleOpenFavSwitchValue: () => void }) => (
-    <GroupeDeReglages theme={theme}>
-        <RangeeDeReglage
-            theme={theme}
-            icone="star-outline"
-            libelle={Translator.get('OPEN_ON_FAVOURITE_GROUP')}
-            interrupteur={{ valeur: openFavSwitchValue, onChange: toggleOpenFavSwitchValue }}
-        />
-    </GroupeDeReglages>
-);
 
 interface CalendarSectionProps {
     theme: AppThemeType;

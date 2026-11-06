@@ -8,7 +8,6 @@ const fr: TranslationDict = {
 	ADD_TO_CALENDAR_DONE: 'Événement ajouté !',
 	ADD_TO_CALENDAR_PERMISSIONS:
 		'UKit a besoin d’accéder à ton calendrier pour y ajouter des cours.',
-	APP_LAUNCHING: 'Démarrage',
 	APP_READY: 'Tout est prêt. Ton emploi du temps t’attend.',
 	APPLICATION: 'Application',
 	APPLICATION_HISTORY:
@@ -136,7 +135,6 @@ const fr: TranslationDict = {
 	SYNC_NEEDS_FAVORITES: 'Ajoute un groupe favori : c’est lui qui remplit l’agenda.',
 	NOTIFICATIONS_REFUSEES: 'Les notifications sont refusées pour UKit. Autorise-les dans les réglages de ton téléphone.',
 	OFFLINE_DISPLAY_FROM_DATE: 'Hors ligne — données du $-',
-	OPEN_ON_FAVOURITE_GROUP: 'Ouvrir sur le groupe favori',
 	OPEN_SYSTEM_SETTINGS: 'Ouvrir les réglages du système',
 	// Les calendriers du telephone dans le Planning (jalon 6.1.x-D).
 	PHONE_CALENDARS: 'Calendriers du téléphone',

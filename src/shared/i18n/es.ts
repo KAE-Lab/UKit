@@ -8,7 +8,6 @@ const es: TranslationDict = {
 	ADD_TO_CALENDAR_DONE: '¡Evento añadido!',
 	ADD_TO_CALENDAR_PERMISSIONS:
 		'La aplicación necesita permisos para añadir eventos al calendario',
-	APP_LAUNCHING: 'Puesta en marcha',
 	APP_READY: '¡La aplicación está ahora lista, puedes ahora consultar tu horario!',
 	APPLICATION: 'Aplicación',
 	APPLICATION_HISTORY:
@@ -135,7 +134,6 @@ const es: TranslationDict = {
 	SYNC_NEEDS_FAVORITES: 'Añade un grupo favorito: es lo que llena el calendario.',
 	NOTIFICATIONS_REFUSEES: 'Las notificaciones están desactivadas para UKit. Actívalas en los ajustes del teléfono.',
 	OFFLINE_DISPLAY_FROM_DATE: 'Muestra fuera de linea de $-',
-	OPEN_ON_FAVOURITE_GROUP: 'Abrir en el grupo favorito',
 	OPEN_SYSTEM_SETTINGS: 'Abrir los ajustes del sistema',
 	// Les calendriers du telephone dans le Planning (jalon 6.1.x-D).
 	PHONE_CALENDARS: 'Calendarios del teléfono',

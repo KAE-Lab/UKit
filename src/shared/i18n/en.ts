@@ -6,7 +6,6 @@ const en = {
 	ADD_TO_CALENDAR_DONE: 'Event added!',
 	ADD_TO_CALENDAR_PERMISSIONS:
 		'This application needs permissions in order to add events to calendar',
-	APP_LAUNCHING: 'Start-up',
 	APP_READY: 'The app is now ready, you can now check your class schedule!',
 	APPLICATION: 'Application',
 	APPLICATION_HISTORY:
@@ -145,7 +144,6 @@ const en = {
 	OPEN_IN_CALENDAR_FAILED: 'Couldn’t open the event in the calendar',
 	GETTING_THERE_FAILED: 'Couldn’t open the map',
 	ADD_EVENT: 'Add an event',
-	OPEN_ON_FAVOURITE_GROUP: 'Open on favourite group',
 	OTHER: 'Other',
 	RESET: 'Reset',
 	// Bouton d'un ecran en echec, quand la famille est reessayable (shared/aetherius/failures.ts).

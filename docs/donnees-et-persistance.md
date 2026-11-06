@@ -63,7 +63,7 @@ Un contexte ne serait pas accessible depuis ces points.
 | Clé | Écrite par | Contenu | Durée de vie |
 |---|---|---|---|
 | `firstload` | `SettingsManager.saveSettings` | booléen : parcours d'accueil non terminé | jusqu'à la fin de l'onboarding ou une réinitialisation |
-| `settings` | `SettingsManager.saveSettings` | objet unique : `calendar`, `theme`, `favoriteGroups`, `language`, `openAppOnFavoriteGroup`, `filters`, `calendarSyncEnabled`, `courseNotificationsEnabled`, `courseNotificationDelay`, **`etablissement`**, `calendriersAffiches` (les calendriers du téléphone affichés dans le Planning, 6.1.x-D — survit à une bascule d'établissement, pas à une réinitialisation), `messagesEnNotification` (6.1.x-E, vrai par défaut) | permanent |
+| `settings` | `SettingsManager.saveSettings` | objet unique : `calendar`, `theme`, `favoriteGroups`, `language`, `filters`, `calendarSyncEnabled`, `courseNotificationsEnabled`, `courseNotificationDelay`, **`etablissement`**, `calendriersAffiches` (les calendriers du téléphone affichés dans le Planning, 6.1.x-D — survit à une bascule d'établissement, pas à une réinitialisation), `messagesEnNotification` (6.1.x-E, vrai par défaut) | permanent |
 | `groupList` | `PlanningDataManager` | liste complète des groupes Celcat — **le seul cache** depuis 6.1-C : l'écran de recherche tenait le sien (`groups`), effacé une fois au démarrage ([planning.md](features/planning.md#un-seul-cache-pour-la-liste-des-groupes)) | 7 jours (`groupListTimestamp`), servie datée en repli hors ligne |
 | `groupListTimestamp` | `PlanningDataManager` | horodatage du dernier rafraîchissement | — |
 | `buildingList` | `CampusDataManager` | bâtiments en accès libre et leurs salles | 7 jours (`buildingListTimestamp`) |
