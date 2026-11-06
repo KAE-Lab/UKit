@@ -26,6 +26,13 @@ export type ScrollValueWithInterps = Animated.Value & {
  */
 const COURSE_DU_FOND = 24;
 
+/**
+ * L'air entre les boutons de la barre et l'endroit ou le contenu disparait : le fond plein descend
+ * d'autant sous la barre avant le fondu. A zero, le contenu s'effacait au ras de la fleche de retour
+ * (review du 2026-11-06, « un peu trop colle »).
+ */
+const AIR_SOUS_LA_BARRE = tokens.space.md;
+
 export const globalScrollValues: Record<string, ScrollValueWithInterps> = {};
 
 export interface NavBarHelperProps {
@@ -107,7 +114,7 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
          * boutons a mi-hauteur (review du 2026-11-06). Le degrade reste dans les bords de son parent,
          * ce conteneur, la condition que le rendu logiciel de l'emulateur imposait.
          */
-        headerBackgroundContainerStyle: fondAuDefilement ? { bottom: -HAUTEUR_DU_FONDU } : undefined,
+        headerBackgroundContainerStyle: fondAuDefilement ? { bottom: -(HAUTEUR_DU_FONDU + AIR_SOUS_LA_BARRE) } : undefined,
         headerStyle: {
             backgroundColor: 'transparent',
             elevation: 0, 
