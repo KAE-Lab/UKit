@@ -48,6 +48,21 @@ parcours froid, chargements.
   lui sont proposées : un coureur en pixel art avec nos propres personnage et décor, la mécanique
   restant la même ; le jeu actuel poli ; ou plus de jeu, une attente sobre.
 
+## Les retouches après la review du 2026-11-06
+
+Décisions du propriétaire : le jeu en pixel art (option A de la passe), « Ouvrir sur le groupe
+favori » retiré, la barre d'Android 9 laissée au prochain build natif, le U en trait fin gardé pour
+le site, les deux défauts consignés corrigés, trois règles ajoutées à `~/.claude/rules/design.md`.
+
+- [x] le réglage mort retiré (`e90259b`) ; « Invalid date » corrigé (`89d8c1d`) ; la réinitialisation
+  passe par la déconnexion (`fde2460`), vérifiée au banc
+- [x] de l'air sous la barre des écrans poussés (`b26fffb`)
+- [x] le glissement entre onglets depuis la page, les listes gardant la main (`8afda2f`), vérifié sur
+  Android ; reste à juger sur iPhone
+- [x] le petit jeu jouable au fond de « À propos », même record (`8295656`)
+- [ ] le jeu en pixel art : planche de trois directions montrée (Encre recommandée, Pastel,
+  l'identité UKit), en attente du choix
+
 Portes de la passe : `tsc`, ESLint sans avertissement, 1 158 tests, parité 13/13, export Android et
 iOS. Non refait à cette passe : le format de l'A8, l'anglais et l'espagnol au banc, l'iPhone.
 
