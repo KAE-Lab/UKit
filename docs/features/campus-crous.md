@@ -88,6 +88,10 @@ séparent les lignes **sauf autour d'un intertitre** : un titre touche ce qu'il 
   du végétarien.
 - Une ligne de plat qui finit par deux-points (« Autre plat : ») annonce les suivantes : elle se rend
   en sous-titre ([`sousTitreDePlat`](../../src/features/Campus/services/CrousMapping.ts)).
+- La carte d'un restaurant (liste et tableau de bord) résume ses horaires : le premier service
+  (« Self : 11h30-13h45, 18h30-19h45 ») ou, à défaut, les créneaux nus
+  ([`resumeDHoraires`](../../src/features/Campus/services/CrousMapping.ts)), le texte brut en repli.
+  Elle affichait le texte brut de la source, tronqué au milieu d'un créneau.
 - Des restaurants publient des entités HTML que la source ne décode pas (« &#x2906; menu file 1 » à la
   Bastide) : catégories et plats passent par `libelleLisible` **à l'affichage**. Pas à la projection,
   que le harnais de parité compare au code d'origine, qui ne décodait pas.

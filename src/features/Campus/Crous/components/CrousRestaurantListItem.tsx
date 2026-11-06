@@ -5,6 +5,7 @@ import { MetaRow } from '../../../../shared/ui/MetaRow';
 import { CrousRestaurant } from '../../services/CrousService';
 import { CampusCard } from '../../components/CampusCard';
 import { DistanceBadge } from '../../components/CampusCardParts';
+import { resumeDHoraires } from '../../services/CrousMapping';
 
 interface CrousRestaurantListItemProps {
     item: CrousRestaurant;
@@ -37,12 +38,13 @@ export function CrousRestaurantListItem({ item, theme, isFavorite, onToggleFavor
               * **Une ligne, toujours.** Les horaires du fournisseur sont une phrase libre, parfois
               * longue : sur deux lignes, la carte d'un restaurant devenait plus haute que celle d'une
               * bibliotheque, et les sections cessaient d'etre alignees. La phrase est donc coupee ici,
-              * et l'ecran de detail la donne en entier — c'est lui qui a la place.
+              * et l'ecran de detail la donne en entier — c'est lui qui a la place. Depuis la troisieme
+              * passe de 7-J, la carte en montre le resume (`resumeDHoraires`), le texte brut en repli.
               */}
             <MetaRow
                 theme={theme}
                 icon={{ name: 'calendar-clock' }}
-                label={item.opening}
+                label={resumeDHoraires(item.openingLines) ?? item.opening}
                 gap={6}
                 numberOfLines={1}
             />

@@ -10,6 +10,7 @@ import { CrousRestaurant } from '../../services/CrousService';
 import { VisuelAvecRepli } from '../../../../shared/ui/VisuelAvecRepli';
 
 import { HAUTEUR_VISUEL_CARTE, LARGEUR_CARTE_LIEU } from './gabarits';
+import { resumeDHoraires } from '../../services/CrousMapping';
 
 const defaultRuImage = require('../../../../../assets/images/default_resto.png');
 
@@ -55,11 +56,12 @@ export function CrousSectionCard({ item, theme, isFavorite, onToggleFavorite, on
                     ) : undefined}
                 />
 
-                {/* Une ligne, comme dans la liste : c'est ce qui garde toutes les sections alignees. */}
+                {/* Une ligne, comme dans la liste : c'est ce qui garde toutes les sections alignees. Le
+                    resume plutot que le texte brut, qui se tronquait (troisieme passe de 7-J). */}
                 <MetaRow
                     theme={theme}
                     icon={{ name: 'calendar-clock' }}
-                    label={item.opening || Translator.get('UNKNOWN')}
+                    label={resumeDHoraires(item.openingLines) ?? (item.opening || Translator.get('UNKNOWN'))}
                     numberOfLines={1}
                 />
             </View>
