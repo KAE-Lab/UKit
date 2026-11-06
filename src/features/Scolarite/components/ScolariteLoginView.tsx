@@ -371,6 +371,13 @@ const ScolariteLoginView = ({
               * clignoter le clavier. Un rebond sur une page courte est le comportement natif attendu ;
               * c'est le remede qui faisait plus de bruit que le mal.
               */}
+            {/* Pendant la session, un appui n'importe ou fait sauter le jeu : le geste couvre toute la
+                zone du formulaire, pas seulement son contenu, dont la hauteur laissait le vide autour
+                sans reponse (retour du 2026-11-06, « faut appuyer dans le petit rectangle »). Il
+                ecoute sans jamais prendre la main : le defilement et les boutons gardent leur
+                toucher, et hors session il est eteint, pour que le clavier se ferme comme avant. */}
+            <GestureDetector gesture={partieDuJeu.geste}>
+            <View style={styles.zoneJouable}>
             {/* `Animated.ScrollView` pour `onScroll` : l'onglet deconnecte fond son grand titre
                 sur le defilement du formulaire (ScolariteDashboard). Sans rapporteur, identique. */}
             <Animated.ScrollView
@@ -382,10 +389,6 @@ const ScolariteLoginView = ({
                 onScroll={onScroll}
                 scrollEventThrottle={16}
             >
-                {/* Pendant la session, un appui n'importe ou fait sauter le jeu. Le geste ecoute sans
-                    jamais prendre la main : le defilement et les boutons gardent leur toucher, et hors
-                    session il est eteint, pour que le clavier se ferme comme avant. */}
-                <GestureDetector gesture={partieDuJeu.geste}>
                 <View>
                     <EnTeteDuFormulaire theme={theme} color={color} compact={compact} />
 
@@ -401,13 +404,17 @@ const ScolariteLoginView = ({
                         pas — ils n'ouvrent aucune session. */}
                     {pied}
                 </View>
-                </GestureDetector>
             </Animated.ScrollView>
+            </View>
+            </GestureDetector>
         </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
+    zoneJouable: {
+        flex: 1,
+    },
     hero: {
         alignItems: 'center',
         paddingHorizontal: tokens.space.lg,

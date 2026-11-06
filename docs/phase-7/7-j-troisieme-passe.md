@@ -82,6 +82,10 @@ le site, les deux défauts consignés corrigés, trois règles ajoutées à `~/.
 - [x] l'information gardée, mieux placée (« pas faire disparaître l'information ») : un court
   paragraphe en tête des pages de détail des Réglages (`IntroDePage`), la licence au-dessus du lien ;
   le jeu dit « Toucher pour commencer », et son départ prend son élan (500 ms, sans saut)
+- [x] pendant la connexion, le jeu répond à un appui n'importe où dans la zone du formulaire, et plus
+  seulement sur l'en-tête et la carte, dont la hauteur laissait le vide autour sans réponse (« faut
+  appuyer dans le petit rectangle »). Vérifié au banc : un appui tout en bas de l'écran, pendant une
+  vraie session, lance la partie
 - [x] le délai des rappels au pas, « − 15 min + » (`fef2625`) ; les barres flottantes de l'iPhone
   décollées du bord (`46f139a`)
 
