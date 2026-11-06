@@ -109,7 +109,9 @@ est transparente. **Ce n'est pas une régression** : la capture « avant » de 7
 L'application ne règle que la barre d'état ; la barre de navigation se règle en natif
 (`androidNavigationBar` de la configuration Expo, ou `expo-navigation-bar` pour la suivre au
 changement de thème), donc avec le prochain build de développement. Le Galaxy A8 est le premier
-concerné.
+concerné. **Décision du 2026-11-06** : pas dans la 6.3. Le corriger demande une dépendance native et
+deux builds pour un défaut d'apparence des seuls Android à trois boutons ; il se fera avec le
+prochain build natif, par `expo-navigation-bar` qui suit le thème.
 
 
 Sur le banc Android (Android 9), installation neuve (`pm clear`), système en sombre : l'accueil se
