@@ -13,7 +13,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { useMesureActive } from '../../../shared/mesure';
-import { GroupeDeReglages, RangeeDeReglage } from './GroupeDeReglages';
+import { GroupeDeReglages, IntroDePage, RangeeDeReglage } from './GroupeDeReglages';
 import { Icon } from '../../../shared/ui/Icon';
 import { DELAI, delaiVoisin, type PageDeReglage } from '../pagesDeReglages';
 
@@ -228,12 +228,13 @@ interface NotificationsSectionProps {
 }
 
 /**
- * La page Notifications : chaque interrupteur dans son groupe, et le delai des rappels au pas. Aucun
- * texte d'explication en pied : un libelle juste suffit, et les pieds qui expliquaient chaque
- * interrupteur se lisaient comme une interface generee (review du 2026-11-06).
+ * La page Notifications : ce qu'il faut savoir en tete (`IntroDePage`), puis chaque interrupteur
+ * dans son groupe, et le delai des rappels au pas. Les pieds qui expliquaient chaque interrupteur se
+ * lisaient comme une interface generee (review du 2026-11-06) ; l'information reste, en un paragraphe.
  */
 export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggleCourseNotifications, courseNotificationDelay, choisirDelai, messagesEnNotification, toggleMessagesEnNotification }: NotificationsSectionProps) => (
     <>
+        <IntroDePage theme={theme}>{Translator.get('INTRO_NOTIFICATIONS')}</IntroDePage>
         <GroupeDeReglages theme={theme}>
             <RangeeDeReglage
                 theme={theme}
@@ -265,14 +266,17 @@ export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggle
 export const ConfidentialiteSection = ({ theme }: { theme: AppThemeType }) => {
     const [active, activer] = useMesureActive();
     return (
-        <GroupeDeReglages theme={theme}>
-            <RangeeDeReglage
-                theme={theme}
-                icone="shield-check-outline"
-                libelle={Translator.get('ANONYMOUS_STATS')}
-                interrupteur={{ valeur: active, onChange: activer }}
-            />
-        </GroupeDeReglages>
+        <>
+            <IntroDePage theme={theme}>{Translator.get('INTRO_CONFIDENTIALITE')}</IntroDePage>
+            <GroupeDeReglages theme={theme}>
+                <RangeeDeReglage
+                    theme={theme}
+                    icone="shield-check-outline"
+                    libelle={Translator.get('ANONYMOUS_STATS')}
+                    interrupteur={{ valeur: active, onChange: activer }}
+                />
+            </GroupeDeReglages>
+        </>
     );
 };
 
@@ -326,38 +330,44 @@ export const CalendarSection = (props: CalendarSectionProps) => {
     const { theme, hasCalendarPermission, demanderPermission, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar, calendriersAffiches, openCalendriersAffiches } = props;
     if (!hasCalendarPermission) {
         return (
-            <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')}>
-                <RangeeDeReglage theme={theme} icone="calendar-lock-open-outline" libelle={Translator.get('CALENDAR_ALLOW')} onPress={demanderPermission} />
-            </GroupeDeReglages>
+            <>
+                <IntroDePage theme={theme}>{Translator.get('ENABLE_CALENDAR_PERMISSION_DESCRIPTION')}</IntroDePage>
+                <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')}>
+                    <RangeeDeReglage theme={theme} icone="calendar-lock-open-outline" libelle={Translator.get('CALENDAR_ALLOW')} onPress={demanderPermission} />
+                </GroupeDeReglages>
+            </>
         );
     }
     return (
-        <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')}>
-            <EtatDeLaSynchro theme={theme} lastSyncDate={props.lastSyncDate} derniereTentative={props.derniereTentative} />
-            <RangeeDeReglage
-                theme={theme}
-                icone="calendar-sync-outline"
-                libelle={Translator.get('SYNC_ENABLED')}
-                interrupteur={{ valeur: calendarSyncEnabled, onChange: toggleCalendarSync }}
-            />
-            <RangeeDeReglage theme={theme} icone="calendar-today" libelle={Translator.get('CALENDAR')} valeur={calendarName} onPress={openCalendarDialog} />
-            <RangeeDeReglage
-                theme={theme}
-                icone={{ mi: 'sync' }}
-                libelle={isSynchronizingCalendar ? Translator.get('SYNCHRONIZING') : Translator.get('FORCE_SYNC')}
-                onPress={onForceSync}
-                enCours={isSynchronizingCalendar}
-                desactivee={selectedCalendar !== -1 && isSynchronizingCalendar}
-            />
-            {/* L'autre sens : ce que le Planning lit dans l'agenda (6.1.x-D). */}
-            <RangeeDeReglage
-                theme={theme}
-                icone="calendar-multiple"
-                libelle={Translator.get('PHONE_CALENDARS')}
-                valeur={calendriersAffiches > 0 ? Translator.get('PHONE_CALENDARS_COUNT', String(calendriersAffiches)) : Translator.get('PHONE_CALENDARS_NONE')}
-                onPress={openCalendriersAffiches}
-            />
-        </GroupeDeReglages>
+        <>
+            <IntroDePage theme={theme}>{Translator.get('INTRO_AGENDA')}</IntroDePage>
+            <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')}>
+                <EtatDeLaSynchro theme={theme} lastSyncDate={props.lastSyncDate} derniereTentative={props.derniereTentative} />
+                <RangeeDeReglage
+                    theme={theme}
+                    icone="calendar-sync-outline"
+                    libelle={Translator.get('SYNC_ENABLED')}
+                    interrupteur={{ valeur: calendarSyncEnabled, onChange: toggleCalendarSync }}
+                />
+                <RangeeDeReglage theme={theme} icone="calendar-today" libelle={Translator.get('CALENDAR')} valeur={calendarName} onPress={openCalendarDialog} />
+                <RangeeDeReglage
+                    theme={theme}
+                    icone={{ mi: 'sync' }}
+                    libelle={isSynchronizingCalendar ? Translator.get('SYNCHRONIZING') : Translator.get('FORCE_SYNC')}
+                    onPress={onForceSync}
+                    enCours={isSynchronizingCalendar}
+                    desactivee={selectedCalendar !== -1 && isSynchronizingCalendar}
+                />
+                {/* L'autre sens : ce que le Planning lit dans l'agenda (6.1.x-D). */}
+                <RangeeDeReglage
+                    theme={theme}
+                    icone="calendar-multiple"
+                    libelle={Translator.get('PHONE_CALENDARS')}
+                    valeur={calendriersAffiches > 0 ? Translator.get('PHONE_CALENDARS_COUNT', String(calendriersAffiches)) : Translator.get('PHONE_CALENDARS_NONE')}
+                    onPress={openCalendriersAffiches}
+                />
+            </GroupeDeReglages>
+        </>
     );
 };
 

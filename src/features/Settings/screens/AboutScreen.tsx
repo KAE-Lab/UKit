@@ -132,7 +132,10 @@ class AboutScreen extends React.Component<AboutScreenProps> {
                         </View>
                     </GroupeDeReglages>
 
+                    {/* La licence au-dessus du lien, en paragraphe de la carte : sous la rangee, en pied,
+                        elle se lisait comme une explication du bouton (review du 2026-11-06). */}
                     <GroupeDeReglages theme={theme} titre={Translator.get('LEGAL_NOTICE')}>
+                        <Paragraphe theme={theme}>{Translator.get('LEGAL_MENTION')}</Paragraphe>
                         <RangeeDeReglage theme={theme} icone="shield-check-outline" libelle={Translator.get('CONFIDENTIALITY_POLITIC')} onPress={() => ouvrirLien(URL.LEGAL_NOTICE)} />
                     </GroupeDeReglages>
 

@@ -31,7 +31,7 @@ const es: TranslationDict = {
 	CALENDAR_ALLOW: 'Permitir el calendario',
 	INSTITUTION_SEARCH: 'Busca un centro o una sigla…',
 	// Le jeu du point, pendant la connexion universitaire (7-J).
-	JEU_CONSIGNE: 'Toca para saltar',
+	JEU_CONSIGNE: "Toca para empezar",
 	JEU_TITRE: "¿Una partida?",
 	JEU_RECORD: 'récord $-',
 	JEU_ACCESSIBILITE: 'Minijuego: toca para que salte el zorro',
@@ -87,6 +87,7 @@ const es: TranslationDict = {
 	FILTERS: 'Filtros',
 	FILTERS_CONFIRMATION:
 		'Quieres filtrar esta UE ? Siempre puedes cancelar esta acción en los ajustes.',
+	INTRO_FILTRES: "Las UE añadidas aquí se ocultan del horario hasta que las quites.",
 	FILTERS_ACTIVE: 'Filtros activos',
 	FILTERS_ADD: 'Añadir un filtro',
 	FILTERS_UE: 'Filtrar una UE',
@@ -136,6 +137,7 @@ const es: TranslationDict = {
 	OPEN_SYSTEM_SETTINGS: 'Abrir los ajustes del sistema',
 	// Les calendriers du telephone dans le Planning (jalon 6.1.x-D).
 	PHONE_CALENDARS: 'Calendarios del teléfono',
+	PHONE_CALENDARS_DESCRIPTION: "Sus eventos aparecen junto a tus clases, en las vistas de día y de semana, con el color de su calendario. El calendario de la sincronización no se ofrece: ya contiene tus clases.",
 	PHONE_CALENDARS_COUNT: '$- elegidos',
 	PHONE_CALENDARS_NONE: 'Ninguno',
 	PHONE_CALENDARS_EMPTY: 'Este teléfono no tiene ningún calendario.',
@@ -268,6 +270,7 @@ const es: TranslationDict = {
 	COURSES: 'Cursos',
 	DATA_SOURCE_TITLE: 'Fuente de los datos',
 	DATA_SOURCE_TEXT: "Los horarios se recuperan desde el ENT de tu centro. Esta aplicación es un proyecto independiente y no está afiliada oficialmente a la institución.",
+	LEGAL_MENTION: "UKit se distribuye bajo licencia libre. Sus dependencias utilizan las licencias MIT, ISC y Apache 2.0.",
 	CREDITS_API: 'Créditos y API',
 	API_AFFLUENCES: '• API Affluences',
 	AFFLUENCES_DESC: 'Horarios y afluencia en tiempo real de las bibliotecas (BU).',
@@ -398,6 +401,9 @@ const es: TranslationDict = {
 	NOTIFICATION_DELAY_MORE: 'Un aviso más largo',
 	NOTIFICATION_DELAY_BEFORE: '$- min antes',
 	PUSH_MESSAGES: 'Mensajes de servicio',
+	INTRO_NOTIFICATIONS: "Los mensajes de servicio te llegan incluso con la app cerrada, ante una incidencia o una noticia importante. Usan un token de notificación (campus, versión, plataforma), que se retira al apagarlos. Los recordatorios cubren las 20 próximas clases de la semana consultada.",
+	INTRO_AGENDA: "La sincronización se repite por sí sola cada 12 horas aproximadamente, cuando el sistema lo permite, y al abrir la aplicación si la última tiene más de 12 horas.",
+	INTRO_CONFIDENTIALITE: "Para saber qué sirve, la app cuenta algunos gestos: una apertura, una pestaña, un anuncio visto. Números por día y por campus, nunca un identificador ni lo que escribes, enviados cuando la app pasa a segundo plano. Apagarlo borra lo que esperaba.",
 	PRIVACY_SECTION: 'Privacidad',
 	ANONYMOUS_STATS: 'Estadísticas anónimas',
 	NOTIFICATION_COURSE_IN: "Clase en $- min",

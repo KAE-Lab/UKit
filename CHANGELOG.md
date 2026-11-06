@@ -96,11 +96,14 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Modifié
 
-- **Plus de mode d'emploi sous les contrôles** : les textes qui expliquaient un réglage, une section ou
-  le jeu sont retirés partout (pieds des Réglages, licence et introduction des crédits dans « À
-  propos », sous-titres des formulaires de connexion et du lien iCal, aides de la fenêtre des
-  propositions, paragraphe des calendriers du téléphone, consignes de recherche et de filtres). Restent
-  les messages d'état, d'erreur et de confirmation.
+- **Plus de mode d'emploi sous les contrôles** : ce qu'il faut savoir d'une page des Réglages
+  (Notifications, Agenda, Confidentialité, calendriers du téléphone, filtres) tient en un court
+  paragraphe en tête de page, et la licence passe au-dessus du lien de « À propos ». Les textes qui
+  ne disaient rien de plus que l'interface sortent : le paragraphe sous le jeu, l'introduction des
+  crédits, les sous-titres des formulaires de connexion et du lien iCal, les aides de la fenêtre des
+  propositions, les consignes de recherche.
+- **Le jeu démarre en douceur** : « Toucher pour commencer », et le renard prend son élan en une
+  demi-seconde au lieu de partir d'un coup à pleine vitesse, en plein saut.
 - **La barre du parcours froid ne se fige plus vers 30 %** : ses paliers suivent les durées mesurées,
   et elle s'approche de chacun sans jamais s'y arrêter avant la fin réelle de l'étape.
 - **Une seule accentuation, celle du logo** : le bleu-indigo du milieu de son dégradé, `#3B5FE5` en

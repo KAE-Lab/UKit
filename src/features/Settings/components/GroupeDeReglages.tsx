@@ -12,8 +12,9 @@
  * de Lucide, dans une colonne fixe qui aligne les libelles, dit la rangee sans la colorer ; seule une
  * action qui retire quelque chose prend le rouge.
  *
- * L'intertitre s'aligne sur le texte des rangees, et la phrase qui explique un reglage vit sous son
- * groupe, en pied, comme dans les reglages du systeme.
+ * L'intertitre s'aligne sur le texte des rangees. Ce qu'il faut savoir d'une page tient en un court
+ * paragraphe en tete (`IntroDePage`), au-dessus des groupes : sous chaque reglage, en pied, il se
+ * lisait comme une interface generee (review du 2026-11-06). Le pied ne dit plus qu'un etat.
  */
 
 import React from 'react';
@@ -162,7 +163,22 @@ export function RangeeDeReglage({ theme, icone, libelle, valeur, onPress, interr
     );
 }
 
+/**
+ * Le paragraphe qui ouvre une page de reglage : ce que la page fait, une fois, au-dessus des groupes
+ * et aligne sur leurs intertitres. Une page de detail peut se le permettre ; l'accueil des Reglages,
+ * qui ne porte que des rangees qui menent, jamais.
+ */
+export function IntroDePage({ theme, children }: { theme: AppThemeType; children: string }) {
+    return <Text style={[styles.intro, { color: theme.fontSecondary }]}>{children}</Text>;
+}
+
 const styles = StyleSheet.create({
+    intro: {
+        marginHorizontal: tokens.space.xl,
+        marginTop: tokens.space.md,
+        fontSize: tokens.fontSize.sm,
+        lineHeight: 20,
+    },
     groupe: {
         marginTop: tokens.space.lg,
     },

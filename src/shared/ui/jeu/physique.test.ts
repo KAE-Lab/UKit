@@ -10,6 +10,7 @@ import {
     appuyer,
     avancer,
     baisser,
+    DEMARRAGE_MS,
     etatDeDepart,
     MAINTIEN_MAX,
     nouvelObstacle,
@@ -43,6 +44,13 @@ function seul(obstacle: Obstacle, vitesse: number): EtatDuJeu {
     return { ...etatDeDepart(LARGEUR), phase: 'course', vitesse, obstacles: [obstacle, loin(5000), loin(6000)] };
 }
 
+/** Une partie lancee, a sa vitesse de course, la piste degagee : le point de depart d'un saut. */
+function enCourse(): EtatDuJeu {
+    const lancee = jouer(appuyer(etatDeDepart(LARGEUR), LARGEUR), Math.ceil(DEMARRAGE_MS / IMAGE) + 2);
+    const loin = (x: number): Obstacle => ({ genre: 'caillou', x, base: 0, comptee: true });
+    return { ...lancee, obstacles: [loin(5000), loin(6000), loin(7000)] };
+}
+
 /** Le geste du joueur : un appui bref, un appui tenu, se baisser, ou ne rien faire. */
 type Geste = 'bref' | 'tenu' | 'baisse' | 'rien';
 
@@ -74,7 +82,7 @@ function franchissable(obstacle: Obstacle, vitesse: number, choisi: Geste): bool
 
 /** Le sommet d'un saut tenu `tenuMs` millisecondes. */
 function sommet(tenuMs: number): number {
-    let etat = appuyer(etatDeDepart(LARGEUR), LARGEUR);
+    let etat = appuyer(enCourse(), LARGEUR);
     let haut = 0;
     for (let i = 0; i < 80; i += 1) {
         if (i * IMAGE >= tenuMs) etat = relacher(etat);
@@ -93,11 +101,29 @@ describe('le depart', () => {
         expect(jouer(depart, 10)).toEqual(depart);
     });
 
-    it('lance la course et le saut au premier toucher', () => {
+    it('lance la course au premier toucher, sans sauter, depuis l arret', () => {
         const lance = appuyer(etatDeDepart(LARGEUR), LARGEUR);
         expect(lance.phase).toBe('course');
-        expect(lance.vy).toBeGreaterThan(0);
-        expect(lance.maintenu).toBe(true);
+        expect(lance.vy).toBe(0);
+        expect(lance.vitesse).toBe(0);
+    });
+
+    it('prend son elan sans a-coup jusqu a la vitesse de course', () => {
+        let etat = appuyer(etatDeDepart(LARGEUR), LARGEUR);
+        let avant = etat.vitesse;
+        for (let i = 0; i < Math.ceil(DEMARRAGE_MS / IMAGE); i += 1) {
+            etat = avancer(etat, IMAGE, LARGEUR, 0.5);
+            expect(etat.vitesse).toBeGreaterThan(avant);
+            expect(etat.vitesse - avant).toBeLessThanOrEqual((VITESSE_INITIALE * IMAGE) / DEMARRAGE_MS + 1e-9);
+            avant = etat.vitesse;
+        }
+        expect(etat.vitesse).toBe(VITESSE_INITIALE);
+    });
+
+    it('saute au toucher suivant, une fois lance', () => {
+        const saut = appuyer(enCourse(), LARGEUR);
+        expect(saut.vy).toBeGreaterThan(0);
+        expect(saut.maintenu).toBe(true);
     });
 });
 
@@ -116,7 +142,7 @@ describe('le saut', () => {
     });
 
     it('retombe sur l horizon, ne saute pas une seconde fois en l air, et note l atterrissage', () => {
-        let etat = jouer(appuyer(etatDeDepart(LARGEUR), LARGEUR), 5);
+        let etat = jouer(appuyer(enCourse(), LARGEUR), 5);
         expect(appuyer(etat, LARGEUR).vy).toBe(etat.vy);
         etat = jouer(relacher(etat), 40);
         expect(etat.y).toBe(0);
@@ -126,14 +152,14 @@ describe('le saut', () => {
 
 describe('se baisser', () => {
     it('plonge en l air et retombe plus vite', () => {
-        const enLAir = jouer(relacher(appuyer(etatDeDepart(LARGEUR), LARGEUR)), 8);
+        const enLAir = jouer(relacher(appuyer(enCourse(), LARGEUR)), 8);
         const plonge = avancer(baisser(enLAir), IMAGE, LARGEUR, 0.5);
         const libre = avancer(enLAir, IMAGE, LARGEUR, 0.5);
         expect(plonge.y).toBeLessThan(libre.y);
     });
 
     it('ne saute pas baisse, et se releve au relache', () => {
-        const baisse = baisser(jouer(relacher(appuyer(etatDeDepart(LARGEUR), LARGEUR)), 40));
+        const baisse = baisser(jouer(relacher(appuyer(enCourse(), LARGEUR)), 40));
         expect(appuyer(baisse, LARGEUR).vy).toBe(0);
         expect(relacher(baisse).baisse).toBe(false);
     });
