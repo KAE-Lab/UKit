@@ -28,7 +28,10 @@ parcours froid, chargements.
   l'interrupteur (poignée étirée, ressort), les jauges (remplissage animé, dégradé du logo pour le
   parcours froid). Vérifié sur `ukit` après rechargement complet : un rafraîchissement à chaud ne
   propage pas une couleur ajoutée à la palette.
-- [ ] T3
+- [x] T3 — l'heure dans une pastille pleine d'où part le trait ; le point sous aujourd'hui retiré du
+  ruban (et des bandeaux des fiches, qui partagent la case). Vérifié sur `ukit` à 12 h 40 simulées,
+  pendant une pause : « 12:40 », puis « prochain cours dans 50 min ». Le menu de développement remet
+  l'heure réelle à sa fermeture : pour garder une heure simulée, on le réduit.
 - [ ] T4
 - [ ] T5
 - [ ] T6

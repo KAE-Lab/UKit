@@ -6,12 +6,13 @@
  *
  * **La case choisie est pleine**, de l'accentuation, son texte en blanc : un cadre de deux points se
  * perdait dans le ruban, et c'est la case qu'on cherche du regard. **Aujourd'hui** (ou cette semaine)
- * prend l'accentuation dans son texte et un point dessous, sans fond. Le dimanche s'estompe : il n'a
- * jamais de cours.
+ * prend l'accentuation dans son texte, sans fond ; le point qu'elle portait dessous est parti a la
+ * troisieme passe de 7-J, de trop a cote de la couleur (review du 2026-11-06). Le dimanche
+ * s'estompe : il n'a jamais de cours.
  */
 
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { tokens, type AppThemeType } from '../theme/Theme';
 
@@ -54,7 +55,6 @@ export function CaseDuRuban({ theme, haut, bas, choisie, courante, estompee = fa
                 {haut}
             </Text>
             <Text style={[styles.bas, !basEnCapitales && styles.basEnMinuscules, { color: couleurBas }]}>{bas}</Text>
-            {courante && !choisie ? <View style={[styles.point, { backgroundColor: theme.accent }]} /> : null}
         </Pressable>
     );
 }
@@ -86,13 +86,5 @@ const styles = StyleSheet.create({
     basEnMinuscules: {
         textTransform: 'none',
         letterSpacing: 0,
-    },
-    // Le point d'un etat : rond, comme les points d'etat du depot.
-    point: {
-        position: 'absolute',
-        bottom: tokens.space.xs,
-        width: 4,
-        height: 4,
-        borderRadius: tokens.radius.pill,
     },
 });
