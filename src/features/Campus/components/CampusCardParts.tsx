@@ -117,7 +117,9 @@ export function DistanceBadge({ distance, theme, icon, masque = false }: {
     // Ecrite pour etre lue d'un coup, dans la langue de l'application (distance.ts, 7-J).
     const libelle = formaterDistance(distance, Translator.getLanguage());
 
-    return <Badge label={libelle} theme={theme} icon={icon} masque={masque} />;
+    // Le ton neutre, plus l'accent (troisieme passe de 7-J) : une distance est une donnee, et la couleur
+    // d'action ne nomme pas (docs/theme.md). Une pastille d'accent sur chaque carte criait.
+    return <Badge label={libelle} theme={theme} icon={icon} masque={masque} tone="neutral" />;
 }
 
 interface LibraryStatusRowProps {

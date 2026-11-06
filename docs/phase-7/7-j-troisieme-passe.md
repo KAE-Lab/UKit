@@ -39,5 +39,8 @@ parcours froid, chargements.
 - [x] T5 — la catégorie en demi-gras couleur du texte, les plats derrière une puce (retour à la ligne
   aligné sur le texte), les sous-titres de la source en gris. Vérifié en sombre et en clair ; capture
   de la doc remplacée.
-- [ ] T6
+- [x] T6 — les cartes revues : leur structure (photo, nom, étoile, lieu, distance, état) tient ; ce
+  qui ne tenait pas, c'était l'horaire brut tronqué d'un restaurant, désormais résumé
+  (`resumeDHoraires`, testé), et la distance en pastille d'accent sur chaque carte, passée au ton
+  neutre.
 - [ ] T7

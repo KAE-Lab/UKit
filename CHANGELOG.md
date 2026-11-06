@@ -38,6 +38,8 @@ une application qui donne l'heure des choses d'un regard.
 - **Les Réglages en pages** : l'accueil ne porte plus que des rangées qui mènent, leur valeur à
   droite ; chaque préférence (notifications, agenda, confidentialité, démarrage, apparence) a sa page,
   qui explique et qui bascule. Le délai des rappels se choisit dans une liste cochée, plus au curseur.
+- **Des cartes de lieux plus calmes** : un restaurant résume ses horaires (« Self : 11h30-13h45 ») au
+  lieu du texte brut tronqué, et la distance passe en gris neutre, plus en pastille d'accent.
 - **Des menus qui se lisent d'un coup d'œil** : la catégorie en demi-gras, chaque plat derrière sa
   puce, un filet entre deux catégories ; ni couleur décorative ni icône devinée.
 - **Le fondu des écrans poussés sous le titre** : la barre d'un écran poussé couvre son titre et ses

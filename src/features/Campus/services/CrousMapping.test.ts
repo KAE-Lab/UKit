@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { dateIso, horairesEnLignes, horairesLisibles, libelleLisible, projeterJourMenu, projeterRestaurant, sousTitreDePlat, structurerHoraires } from './CrousMapping';
+import { dateIso, horairesEnLignes, horairesLisibles, libelleLisible, projeterJourMenu, projeterRestaurant, resumeDHoraires, sousTitreDePlat, structurerHoraires } from './CrousMapping';
 
 const REPLI_HORAIRES = 'Horaires non specifies';
 const REPLI_CATEGORIE = 'Categorie';
@@ -129,6 +129,22 @@ describe('projeterRestaurant', () => {
     it('retombe sur l adresse quand la zone manque', () => {
         const restaurant = projeterRestaurant({ code: 1, nom: 'Cap Sud', adresse: 'Talence' }, REPLI_HORAIRES);
         expect(restaurant.short_desc).toBe('Talence');
+    });
+});
+
+describe('resumeDHoraires', () => {
+    it('resume par le premier service, ses creneaux separes par des virgules', () => {
+        expect(resumeDHoraires(['du lundi au vendredi', 'SELF : 11h30-13h45 | 18h30-19h45', "CROUS MARKET' : 10h - 18h"]))
+            .toBe('Self : 11h30-13h45, 18h30-19h45');
+    });
+
+    it('retombe sur les creneaux nus quand aucun service n est nomme', () => {
+        expect(resumeDHoraires(['du lundi au vendredi', '7h45-10h | 11h30-13h45'])).toBe('7h45-10h, 11h30-13h45');
+    });
+
+    it('rend null quand rien ne se resume', () => {
+        expect(resumeDHoraires([])).toBeNull();
+        expect(resumeDHoraires(['Ferme pour travaux jusqu a nouvel ordre, merci de votre comprehension'])).toBeNull();
     });
 });
 

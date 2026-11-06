@@ -252,6 +252,31 @@ function projeterService(repas: RepasBrut | undefined, repliCategorie: string) {
  * categories, qui portent des plats, et la grammaire de `fields` est plate. Le regroupement par
  * service (midi, soir) est donc applicatif — il l'etait deja.
  */
+/** Des creneaux separes par la source en « | » : separes par des virgules, comme on les dit. */
+function creneauxLisibles(texte: string): string {
+    return texte.split('|').map((creneau) => creneau.trim()).filter((creneau) => creneau !== '').join(', ');
+}
+
+/** Un nom de guichet tout en capitales (« SELF ») : en casse de phrase, comme le reste de la carte. */
+function nomDeGuichet(nom: string): string {
+    return nom === nom.toUpperCase() && /\p{Lu}/u.test(nom) ? nom.charAt(0) + nom.slice(1).toLowerCase() : nom;
+}
+
+/**
+ * La ligne d'horaires d'une carte de restaurant (7-J, troisieme passe) : le premier service
+ * (« Self : 11h30-13h45, 18h30-19h45 ») ou, a defaut, les creneaux nus. La carte affichait le texte
+ * brut de la source, tronque (« du lundi au vendredi | SELF : 11h30-13h45 | 18… »). La portee de
+ * jours tombe : la fiche la donne. `null` quand rien ne se resume, et la carte garde le texte brut.
+ */
+export function resumeDHoraires(lignes: readonly string[]): string | null {
+    const structurees = structurerHoraires(lignes);
+    for (const ligne of structurees) {
+        if (ligne.kind === 'service') return `${nomDeGuichet(ligne.nom)} : ${creneauxLisibles(ligne.horaire)}`;
+    }
+    const creneaux = structurees.flatMap((ligne) => (ligne.kind === 'horaire' ? [creneauxLisibles(ligne.texte)] : []));
+    return creneaux.length > 0 ? creneaux.join(', ') : null;
+}
+
 const ENTITES_NOMMEES: Readonly<Record<string, string>> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 
 /**
