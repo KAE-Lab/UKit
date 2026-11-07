@@ -1,17 +1,16 @@
 /**
  * Le vocabulaire visuel du parcours d'accueil, partage par ses etapes.
  *
- * Tout vient des tokens et du theme courant : le parcours n'a pas de jeu de styles a lui.
+ * Tout vient des tokens et du theme courant : le parcours n'a pas de jeu de styles a lui. Ses carte et
+ * pastille sont parties avec l'accueil refait (7-J) : les etapes posent leurs reponses en tuiles
+ * (`EtapesDeChoix`).
  * `StyleWelcome` — un second jeu de couleurs, hors des deux themes — est sorti de `Theme.ts` en
  * 6.1-C : l'accueil ne l'importait plus depuis 6-G, et son dernier consommateur n'etait jamais monte.
  */
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { tokens } from '../../../shared/theme/Theme';
 import { PIED_FLOTTANT_DEGAGEMENT } from '../../../shared/ui/PiedFlottant';
-
-export type ThemeObj = Record<string, string>;
 
 export const MAXIMUM_NUMBER_ITEMS_GROUPLIST = 10;
 
@@ -26,43 +25,3 @@ export const MAXIMUM_NUMBER_ITEMS_GROUPLIST = 10;
 export function useDegagementDuPied(): number {
     return PIED_FLOTTANT_DEGAGEMENT + useSafeAreaInsets().bottom;
 }
-
-/** La carte qui enveloppe chaque groupe de choix. Une seule definition, cinq usages. */
-export const carte = (themeObj: ThemeObj) => ({
-    backgroundColor: themeObj.cardBackground,
-    borderRadius: tokens.radius.lg,
-    padding: tokens.space.md,
-    marginBottom: tokens.space.md,
-    borderWidth: 1,
-    borderColor: themeObj.border,
-    ...tokens.shadow.sm,
-});
-
-export const titreDeCarte = (themeObj: ThemeObj) => ({
-    fontSize: tokens.fontSize.md,
-    fontWeight: tokens.fontWeight.bold,
-    color: themeObj.font,
-    marginBottom: tokens.space.md,
-});
-
-/** Une pastille de choix : le motif visuel de tout le parcours, factorise plutot que recopie. */
-export const pastille = (themeObj: ThemeObj, selected: boolean) => ({
-    backgroundColor: themeObj.greyBackground,
-    borderWidth: 2,
-    borderColor: selected ? themeObj.primary : 'transparent',
-    paddingVertical: tokens.space.sm,
-    paddingHorizontal: tokens.space.md,
-    borderRadius: tokens.radius.md,
-    marginRight: tokens.space.sm,
-    marginBottom: tokens.space.sm,
-});
-
-export const texteDePastille = (themeObj: ThemeObj, selected: boolean) => ({
-    color: selected ? themeObj.primary : themeObj.fontSecondary,
-    fontWeight: selected ? tokens.fontWeight.bold : tokens.fontWeight.medium,
-    fontSize: tokens.fontSize.sm,
-    // La pastille selectionnee passe en gras, et un gras libre dans un parent qui centre se tronque
-    // sur Android. Sans effet la ou la pastille s'auto-dimensionne (docs/theme.md).
-    alignSelf: 'stretch' as const,
-    textAlign: 'center' as const,
-});

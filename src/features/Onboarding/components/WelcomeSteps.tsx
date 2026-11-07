@@ -10,13 +10,12 @@
  */
 
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Reanimated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
-import { TraitDeValidation } from './TraitDeValidation';
 import { useDegagementDuPied } from './stylesDuParcours';
 // Deux dependances croisees entre features, et elles sont volontaires — voir la section
 // « Dependances entre features » de docs/architecture.md. L'accueil propose depuis le jalon 6-J deux
@@ -133,6 +132,7 @@ export const StepCompte = ({ themeObj, onConnecte, onAutreCampus, onEnSession })
             onAutreCampus={onAutreCampus}
             onEnSession={onEnSession}
             compact
+            intro={Translator.get('ACCOUNT_TRUST')}
             degagementBas={degagement}
         />
     </View>
@@ -158,17 +158,3 @@ export const StepLienEdt = ({ onDone }) => (
         <LienEdtForm onDone={onDone} topPadding={tokens.space.xxl + tokens.space.md} />
     </View>
 );
-
-/** La fin du parcours : elle repond a l'ouverture, dans le meme degrade (TraitDeValidation). */
-export const StepFin = ({ themeObj }) => {
-    const degagement = useDegagementDuPied();
-    return (
-    <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: degagement }}>
-        <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: tokens.space.xl }}>
-            <TraitDeValidation theme={themeObj} />
-        </View>
-        <Text style={[tokens.texte.grandTitre, { alignSelf: 'stretch', color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }]}>{Translator.get('WELL_DONE')}</Text>
-        <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('APP_READY')}</Text>
-    </View>
-    );
-};

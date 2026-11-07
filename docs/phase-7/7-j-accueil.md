@@ -28,9 +28,10 @@ immédiate, session bloquante, contenu sous le pied).
 - [x] l'arrivée, la vitrine
 - [x] le thème et la langue, avec l'aperçu
 - [x] l'établissement
-- [ ] le compte, et sa session (barre, jeu)
-- [ ] l'emploi du temps : les groupes (et la liste qui passait sous le bouton), le lien iCal
-- [ ] la fin, le planning qui se construit
+- [x] le compte, et sa session (barre, jeu)
+- [x] l'emploi du temps : les groupes (et la liste qui passait sous le bouton)
+- [ ] le lien iCal
+- [x] la fin, le planning qui se construit
 
 Chaque lot se vérifie au banc dans les deux thèmes avant son commit ; l'accueil se rejoue par
 `pm clear` sur le banc (données de test).

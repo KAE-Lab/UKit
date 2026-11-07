@@ -33,7 +33,7 @@ export const HAUT_D_ETAPE = tokens.space.xxl * 2;
  */
 const AUTONYMES: Readonly<Record<string, string>> = { fr: 'Français', en: 'English', es: 'Español' };
 
-function vibrer() {
+export function vibrer() {
     void Haptics.selectionAsync().catch(() => undefined);
 }
 
@@ -42,10 +42,38 @@ export function TitreDEtape({ theme, children }: { theme: AppThemeType; children
 }
 
 /** Une reponse choisie : le contour d'accent, et la coche ronde. */
-function Coche({ theme, choisie }: { theme: AppThemeType; choisie: boolean }) {
+export function Coche({ theme, choisie }: { theme: AppThemeType; choisie: boolean }) {
     return (
         <View style={[styles.coche, { borderColor: choisie ? theme.accent : theme.fontTertiary, backgroundColor: choisie ? theme.accent : 'transparent' }]}>
             {choisie ? <Icon icon={{ family: 'material', name: 'check' }} size={14} color={theme.lightFont} /> : null}
+        </View>
+    );
+}
+
+/** Un choix court parmi quelques-uns : la langue, le semestre. Le choisi se pose en relief. */
+export function Segments<T extends { id: string }>({ theme, options, choisie, libelle, onChoisir }: {
+    theme: AppThemeType;
+    options: readonly T[];
+    choisie: string | null | undefined;
+    libelle: (option: T) => string;
+    onChoisir: (option: T) => void;
+}) {
+    return (
+        <View style={[styles.segments, { backgroundColor: theme.greyBackground }]} accessibilityRole="radiogroup">
+            {options.map((option) => {
+                const estChoisie = choisie === option.id;
+                return (
+                    <Pressable
+                        key={option.id}
+                        onPress={() => { vibrer(); onChoisir(option); }}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: estChoisie }}
+                        style={[styles.segment, estChoisie ? [styles.segmentChoisi, { backgroundColor: theme.cardBackground }] : null]}
+                    >
+                        <Text style={[styles.texteDeSegment, { color: estChoisie ? theme.font : theme.fontSecondary }]}>{libelle(option)}</Text>
+                    </Pressable>
+                );
+            })}
         </View>
     );
 }
@@ -109,24 +137,13 @@ export function StepPreferences({ themeObj, navigatorState, themeList, languageL
             </View>
 
             <Text style={[tokens.texte.intertitre, styles.intertitre, { color: themeObj.fontSecondary }]}>{Translator.get('LANGUAGE')}</Text>
-            <View style={[styles.segments, { backgroundColor: themeObj.greyBackground }]} accessibilityRole="radiogroup">
-                {languageList.map((entree) => {
-                    const choisie = navigatorState.language === entree.id;
-                    return (
-                        <Pressable
-                            key={entree.id}
-                            onPress={() => { vibrer(); selectLanguage(entree); }}
-                            accessibilityRole="radio"
-                            accessibilityState={{ checked: choisie }}
-                            style={[styles.segment, choisie ? [styles.segmentChoisi, { backgroundColor: themeObj.cardBackground }] : null]}
-                        >
-                            <Text style={[styles.texteDeSegment, { color: choisie ? themeObj.font : themeObj.fontSecondary }]}>
-                                {AUTONYMES[entree.id] ?? Translator.get(entree.title)}
-                            </Text>
-                        </Pressable>
-                    );
-                })}
-            </View>
+            <Segments
+                theme={themeObj}
+                options={languageList}
+                choisie={navigatorState.language}
+                libelle={(entree) => AUTONYMES[entree.id] ?? Translator.get(entree.title)}
+                onChoisir={selectLanguage}
+            />
         </ScrollView>
     );
 }

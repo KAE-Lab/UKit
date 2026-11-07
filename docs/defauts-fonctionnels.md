@@ -29,11 +29,12 @@ alors que c'est le portail qui traînait. Un second essai a réussi. À trancher
 `wait_for` après une navigation lente, et la cause annoncée (un échec `engine` après une navigation
 qui a pris plus de 10 s se lit plutôt comme un portail lent).
 
-### La liste des groupes de l'accueil passe sous le bouton « Suivant » — constaté le 2026-11-06
+### ~~La liste des groupes de l'accueil passe sous le bouton « Suivant »~~ — constaté le 2026-11-06, corrigé le 2026-11-07
 
 À l'étape des groupes (Master 1, automne, Collège ST), les pastilles de la liste continuent sous le
 bouton flottant et sous la pagination, sans dégagement ni fondu : la dernière rangée se lit à travers
-le bouton. À traiter avec la refonte de l'accueil, dans son périmètre.
+le bouton. Corrigé avec l'accueil refait : le pied pose un fondu de la couleur de la page, sous
+lequel le contenu s'efface ([`WelcomeScreen`](../src/features/Onboarding/WelcomeScreen.tsx)).
 
 ### ~~Un cours sans heure de fin s'écrit « Invalid date »~~ — constaté le 2026-11-05, corrigé le 2026-11-06
 
