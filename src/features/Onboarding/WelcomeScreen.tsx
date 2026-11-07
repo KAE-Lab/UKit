@@ -14,7 +14,8 @@
  */
 
 import React, { useState } from 'react';
-import { Text, View, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SettingsManager } from '../../shared/services/AppCore';
@@ -23,17 +24,18 @@ import { useCredentials } from '../Scolarite/services/CredentialsContext';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
 import { adoucirLaTransition } from '../../shared/ui/transitions';
-import { filtrageParAnnee, useWelcomeState, type OptionTheme } from './hooks/useWelcomeState';
+import { filtrageParAnnee, useWelcomeState, type OptionListee, type OptionTheme } from './hooks/useWelcomeState';
 import {
+    EnTeteDuParcours,
     StepCompte,
-    StepEtablissement,
     StepFin,
-    StepIntro,
     StepLienEdt,
-    StepPreferences,
-    WelcomeBackButton,
-    WelcomePagination,
 } from './components/WelcomeSteps';
+import { StepEtablissement, StepPreferences } from './components/EtapesDeChoix';
+import { VitrineDAccueil } from './components/VitrineDAccueil';
+import { useDegagementDuPied } from './components/stylesDuParcours';
+import { ActionButton } from '../../shared/ui/ActionButton';
+import { HAUTEUR_DU_FONDU } from '../../shared/ui/FonduDeBord';
 import { StepGroupes } from './components/StepGroupes';
 
 const THEME_LIST: readonly OptionTheme[] = [
@@ -41,13 +43,13 @@ const THEME_LIST: readonly OptionTheme[] = [
     { id: 'dark', title: 'DARK_THEME' },
 ];
 
-const LANGUAGE_LIST = [
+const LANGUAGE_LIST: readonly OptionListee[] = [
     { id: 'fr', title: 'FRENCH' },
     { id: 'en', title: 'ENGLISH' },
     { id: 'es', title: 'SPANISH' },
 ];
 
-const UNIVERSITY_YEARS_LIST = [
+const UNIVERSITY_YEARS_LIST: readonly OptionListee[] = [
     { id: 'L1', title: 'BACHELORS', suffix: '1' },
     { id: 'L2', title: 'BACHELORS', suffix: '2' },
     { id: 'L3', title: 'BACHELORS', suffix: '3' },
@@ -56,7 +58,7 @@ const UNIVERSITY_YEARS_LIST = [
     { id: 'AUTRE', title: 'OTHER', suffix: '' },
 ];
 
-const UNIVERSITY_SEASON_LIST = [
+const UNIVERSITY_SEASON_LIST: readonly OptionListee[] = [
     { id: 'autumn', title: 'AUTUMN' },
     { id: 'spring', title: 'SPRING' },
 ];
@@ -111,6 +113,7 @@ export default function WelcomeScreen() {
     const [formulaireEnSession, setFormulaireEnSession] = useState(false);
 
     const themeObj = style.Theme[state.theme];
+    const degagement = useDegagementDuPied();
 
     // La liste se recalcule a chaque rendu : changer d'etablissement doit ajouter ou retirer une etape
     // tout de suite, pas au rendu suivant.
@@ -128,7 +131,6 @@ export default function WelcomeScreen() {
             themeObj={themeObj}
             derniere={derniere}
             index={index_}
-            total={etapes.length}
             basInset={insets.bottom || 0}
             desactive={formulaireEnSession}
             onSuivant={() => allerA(index_ + 1)}
@@ -144,9 +146,15 @@ export default function WelcomeScreen() {
                 pas la saisie (constate le 2026-08-31, dans les deux sens). */}
             <View style={{ flex: 1 }}>
 
-                <WelcomeBackButton onPress={() => allerA(index_ - 1)} visible={index_ > 0 && !formulaireEnSession} themeObj={themeObj} topInset={insets.top} />
+                <EnTeteDuParcours
+                    themeObj={themeObj}
+                    haut={insets.top || 0}
+                    progression={index_ === 0 ? 0 : index_ / (etapes.length - 1)}
+                    retourVisible={index_ > 0 && !formulaireEnSession}
+                    onRetour={() => allerA(index_ - 1)}
+                />
 
-                {etape === 'intro' && <StepIntro themeObj={themeObj} />}
+                {etape === 'intro' && <VitrineDAccueil theme={themeObj} sombre={state.theme === 'dark'} degagement={degagement} />}
                 {etape === 'etablissement' && (
                     <StepEtablissement
                         themeObj={themeObj}
@@ -209,39 +217,33 @@ export default function WelcomeScreen() {
     );
 }
 
-/** Le pied du parcours : le bouton d'avancement et la pagination. */
-function PiedDuParcours({ themeObj, derniere, index, total, basInset, desactive, onSuivant }: {
+/**
+ * Le pied du parcours : le bouton plein de l'application, sur un fondu de la couleur de la page
+ * (accueil refait, 7-J). Le contenu qui defile dessous s'y efface au lieu de se lire a travers le
+ * bouton : la liste des groupes passait sous « Suivant », nette (constate le 2026-11-06). La
+ * progression est montee en haut (`EnTeteDuParcours`).
+ */
+function PiedDuParcours({ themeObj, derniere, index, basInset, desactive, onSuivant }: {
     themeObj: (typeof style.Theme)['light'];
     derniere: boolean;
     index: number;
-    total: number;
     basInset: number;
-    /** Une connexion tourne : le bouton attend qu'elle finisse, comme le lien « Plus tard ». */
+    /** Une connexion tourne : le bouton attend qu'elle finisse. */
     desactive: boolean;
     onSuivant: () => void;
 }) {
+    const fond = themeObj.background;
     return (
-        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: basInset }}>
-            <View style={{ paddingHorizontal: tokens.space.xl, marginBottom: tokens.space.xs }}>
-                <TouchableOpacity
+        <View pointerEvents="box-none" style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+            <LinearGradient pointerEvents="none" colors={[`${fond}00`, fond]} style={{ height: HAUTEUR_DU_FONDU * 2 }} />
+            <View style={{ backgroundColor: fond, paddingHorizontal: tokens.space.xl, paddingBottom: basInset + tokens.space.md }}>
+                <ActionButton
+                    theme={themeObj}
+                    label={derniere ? Translator.get('FINISH') : (index === 0 ? Translator.get('START') : Translator.get('NEXT'))}
                     onPress={derniere ? () => SettingsManager.setFirstLoad(false) : onSuivant}
                     disabled={desactive}
-                    style={{
-                        backgroundColor: themeObj.primary,
-                        borderRadius: tokens.radius.md,
-                        paddingVertical: tokens.space.md,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: desactive ? 0.5 : 1,
-                    }}
-                >
-                    <Text style={{ color: themeObj.lightFont, fontSize: tokens.fontSize.md, fontWeight: tokens.fontWeight.bold, alignSelf: 'stretch', textAlign: 'center' }}>
-                        {derniere ? Translator.get('FINISH') : (index === 0 ? Translator.get('START') : Translator.get('NEXT'))}
-                    </Text>
-                </TouchableOpacity>
+                />
             </View>
-
-            <WelcomePagination pageNumber={index + 1} maxPage={total} themeObj={themeObj} />
         </View>
     );
 }

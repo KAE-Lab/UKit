@@ -9,17 +9,15 @@
  * Voir docs/features/onboarding.md.
  */
 
-import React from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import Reanimated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import React, { useEffect } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Reanimated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import Translator from '../../../shared/i18n/Translator';
-import { tokens } from '../../../shared/theme/Theme';
-import { LoadingState } from '../../../shared/ui/LoadingState';
-import { LogoUKit } from '../../../shared/ui/epure/LogoUKit';
+import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { TraitDeValidation } from './TraitDeValidation';
-import type { Etablissement } from '../../../shared/etablissements';
-import { carte, pastille, texteDePastille, titreDeCarte, useDegagementDuPied } from './stylesDuParcours';
+import { useDegagementDuPied } from './stylesDuParcours';
 // Deux dependances croisees entre features, et elles sont volontaires — voir la section
 // « Dependances entre features » de docs/architecture.md. L'accueil propose depuis le jalon 6-J deux
 // gestes qui appartiennent a d'autres domaines : se connecter au compte universitaire, et coller un
@@ -29,139 +27,77 @@ import ScolariteLoginView from '../../Scolarite/components/ScolariteLoginView';
 import LienEdtForm from '../../Planning/components/LienEdtForm';
 import { Icon } from '../../../shared/ui/Icon';
 
-export const WelcomePagination = ({ pageNumber, maxPage, themeObj }) => (
-    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: tokens.space.md }}>
-        {Array.from({ length: pageNumber }).map((_, i) => <View key={`f-${i}`} style={{ width: 24, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.md, backgroundColor: themeObj.primary }} />)}
-        {Array.from({ length: maxPage - pageNumber }).map((_, i) => <View key={`e-${i}`} style={{ width: 8, height: 8, marginHorizontal: tokens.space.xs, borderRadius: tokens.radius.md, backgroundColor: themeObj.greyBackground }} />)}
-    </View>
-);
-
-export const WelcomeBackButton = ({ onPress, visible, themeObj, topInset }) => (
-    <TouchableOpacity
-        onPress={onPress}
-        disabled={!visible}
-        style={{
-            position: 'absolute',
-            top: (topInset || 0),
-            left: tokens.space.md,
-            zIndex: 10,
-            opacity: visible ? 1 : 0,
-            padding: tokens.space.xs
-        }}
-    >
-        <Icon icon={{ family: 'material', name: 'arrow-back' }} size={28} color={themeObj.font} />
-    </TouchableOpacity>
-);
-
 /**
- * L'ouverture de l'application : le U du logo, puis le mot d'accueil (7-J). Fig. 01, le U en echo, a
- * tenu cette place pendant la premiere passe ; trop complexe pour un ecran de telephone, elle reste au
- * site (review du 2026-11-05). Le U monte en fondu, le texte le suit ; sous « reduire les animations »,
- * tout est la d'emblee. Le mot entier du logo n'y figure plus : c'est le titre qui nomme l'application.
+ * L'en-tete du parcours : le retour, et une ligne de progression fine au degrade du logo (accueil
+ * refait, 7-J). Elle remplace les points du bas, qui disaient « ou j'en suis » au mauvais endroit,
+ * colles au bouton. L'arrivee n'en a pas : elle n'est pas encore une etape.
  */
-const TAILLE_DU_U = 96;
-
-export const StepIntro = ({ themeObj }) => {
-    const degagement = useDegagementDuPied();
+export function EnTeteDuParcours({ themeObj, haut, progression, retourVisible, onRetour }: {
+    themeObj: AppThemeType;
+    haut: number;
+    /** De 0 a 1 ; nulle, la ligne s'efface. */
+    progression: number;
+    retourVisible: boolean;
+    onRetour: () => void;
+}) {
+    const avance = useSharedValue(progression);
+    const mouvementReduit = useReducedMotion();
+    useEffect(() => {
+        avance.value = mouvementReduit ? progression : withSpring(progression, tokens.mouvement.ressort);
+    }, [avance, progression, mouvementReduit]);
+    const remplissage = useAnimatedStyle(() => ({ width: `${Math.max(0, Math.min(1, avance.value)) * 100}%` }));
     return (
-        <View style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: tokens.space.xl, paddingBottom: degagement }}>
-            <Reanimated.View entering={FadeInDown.duration(tokens.mouvement.couture * 3)}>
-                <LogoUKit theme={themeObj} largeur={TAILLE_DU_U} glyphe="u" />
-            </Reanimated.View>
-            <Reanimated.View entering={FadeIn.delay(tokens.mouvement.couture).duration(tokens.mouvement.couture * 2)} style={{ alignItems: 'center', alignSelf: 'stretch', marginTop: tokens.space.xl }}>
-                <Text style={[tokens.texte.grandTitre, { alignSelf: 'stretch', color: themeObj.font, textAlign: 'center', marginBottom: tokens.space.sm }]}>{Translator.get('WELCOME')}</Text>
-                <Text style={{ alignSelf: 'stretch', fontSize: tokens.fontSize.md, color: themeObj.fontSecondary, textAlign: 'center', lineHeight: 24 }}>{Translator.get('SETTINGS_TO_MAKE')}</Text>
-            </Reanimated.View>
-        </View>
-    );
-};
-
-/**
- * Le choix de l'etablissement, juste avant les groupes qu'il conditionne (jalon 6-G).
- *
- * Les universites sont des **lignes pleine largeur** et non des pastilles : un nom d'universite ne
- * tient pas sur une puce, et le tronquer donnerait trois libelles indiscernables.
- *
- * `chargement` : le premier rafraichissement du catalogue n'a pas encore repondu. L'etape le dit
- * plutot que d'afficher une liste qu'elle sait peut-etre en retard — plafonne a quelques secondes
- * par l'appelant, apres quoi la liste connue s'affiche et se complete si le reseau revient (6.1-A).
- */
-export const StepEtablissement = ({ themeObj, etablissements, codeActif, selectEtablissement, chargement }) => {
-    const degagement = useDegagementDuPied();
-    return (
-    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: degagement }} showsVerticalScrollIndicator={false}>
-        <View style={carte(themeObj)}>
-            <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_INSTITUTION')}</Text>
-            {chargement ? (
-                <LoadingState theme={themeObj} message={Translator.get('INSTITUTIONS_LOADING')} />
-            ) : etablissements.map((etablissement: Etablissement) => {
-                const selected = etablissement.code === codeActif;
-                return (
-                    <TouchableOpacity
-                        key={etablissement.code}
-                        onPress={() => selectEtablissement(etablissement.code)}
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            backgroundColor: themeObj.greyBackground,
-                            borderWidth: 2,
-                            borderColor: selected ? themeObj.primary : 'transparent',
-                            paddingVertical: tokens.space.md,
-                            paddingHorizontal: tokens.space.md,
-                            borderRadius: tokens.radius.md,
-                            marginBottom: tokens.space.sm,
-                        }}
-                    >
-                        <View style={{ flex: 1 }}>
-                            {/* Le nom vient du catalogue : c'est une donnee, pas un libelle traduit. */}
-                            <Text style={{ color: selected ? themeObj.primary : themeObj.font, fontWeight: tokens.fontWeight.bold, fontSize: tokens.fontSize.sm }}>
-                                {etablissement.nom}
-                            </Text>
-                            {etablissement.ville !== null && (
-                                <Text style={{ color: themeObj.fontSecondary, fontSize: tokens.fontSize.xs, marginTop: tokens.space.xxs }}>
-                                    {etablissement.ville}
-                                </Text>
-                            )}
-                        </View>
-                        {selected && <Icon icon={{ name: 'check-circle' }} size={20} color={themeObj.primary} />}
-                    </TouchableOpacity>
-                );
-            })}
-        </View>
-    </ScrollView>
-    );
-};
-
-export const StepPreferences = ({ themeObj, navigatorState, themeList, languageList, selectTheme, selectLanguage }) => (
-    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2 }} showsVerticalScrollIndicator={false}>
-        <View style={carte(themeObj)}>
-            <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_THEME')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                {themeList.map((themeEntry) => {
-                    const selected = navigatorState.theme === themeEntry.id;
-                    return (
-                        <TouchableOpacity key={themeEntry.id} onPress={() => selectTheme(themeEntry)} style={pastille(themeObj, selected)}>
-                            <Text style={texteDePastille(themeObj, selected)}>{Translator.get(themeEntry.title)}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
+        <View style={[enTete.rangee, { top: haut }]} pointerEvents="box-none">
+            <TouchableOpacity
+                onPress={onRetour}
+                disabled={!retourVisible}
+                accessibilityRole="button"
+                accessibilityLabel={Translator.get('RETOUR')}
+                style={[enTete.retour, { opacity: retourVisible ? 1 : 0 }]}
+            >
+                <Icon icon={{ family: 'material', name: 'arrow-back-ios-new' }} size={20} color={themeObj.font} />
+            </TouchableOpacity>
+            <View style={[enTete.piste, { backgroundColor: themeObj.greyBackground, opacity: progression > 0 ? 1 : 0 }]}>
+                <Reanimated.View style={[enTete.remplissage, remplissage]}>
+                    <LinearGradient colors={[themeObj.accent, themeObj.accentProfond]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+                </Reanimated.View>
             </View>
         </View>
-        <View style={carte(themeObj)}>
-            <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_LANGUAGE')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                {languageList.map((langEntry) => {
-                    const selected = navigatorState.language === langEntry.id;
-                    return (
-                        <TouchableOpacity key={langEntry.id} onPress={() => selectLanguage(langEntry)} style={pastille(themeObj, selected)}>
-                            <Text style={texteDePastille(themeObj, selected)}>{Translator.get(langEntry.title)}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
-        </View>
-    </ScrollView>
-);
+    );
+}
+
+const PISTE = 4;
+const RETOUR = 44;
+
+const enTete = StyleSheet.create({
+    rangee: {
+        position: 'absolute',
+        left: tokens.space.sm,
+        right: tokens.space.xl,
+        height: RETOUR,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: tokens.space.sm,
+        zIndex: 10,
+    },
+    retour: {
+        width: RETOUR,
+        height: RETOUR,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    piste: {
+        flex: 1,
+        height: PISTE,
+        borderRadius: PISTE / 2,
+        overflow: 'hidden',
+    },
+    remplissage: {
+        height: '100%',
+        borderRadius: PISTE / 2,
+        overflow: 'hidden',
+    },
+});
 
 /**
  * L'etape du compte universitaire (jalon 6-J).

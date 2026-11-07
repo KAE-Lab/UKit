@@ -16,6 +16,7 @@ import { useContext, useEffect, useState } from 'react';
 
 import { AppContext, SettingsManager, languageFromDevice } from '../../../shared/services/AppCore';
 import type { ThemeKey } from '../../../shared/theme/Theme';
+import type { TranslationKey } from '../../../shared/i18n/Translator';
 import {
     attendrePremierRafraichissement,
     getCodeEtablissementActif,
@@ -59,7 +60,8 @@ const FILTRE_SAISON: Record<string, Record<string, string[]>> = {
 
 export interface OptionListee {
     readonly id: string;
-    readonly title: string;
+    /** Une cle de traduction : le libelle se lit dans la langue choisie. */
+    readonly title: TranslationKey;
     readonly suffix?: string;
 }
 

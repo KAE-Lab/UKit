@@ -64,8 +64,8 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `onboarding-bienvenue-android.png` | étape 1, Fig. 01 en écho, le logo et le mot de bienvenue (7-J), sur le banc Android | **prise** |
-| `onboarding-etablissement.png` | étape 3, la liste des universités | **prise** |
+| `onboarding-bienvenue-android.png` | étape 1, la vitrine (7-J, accueil refait), en sombre, sur le banc Android | **prise** |
+| `onboarding-etablissement.png` | étape 3, les tuiles des universités, en clair (7-J, accueil refait) | **prise** |
 | `onboarding-compte.png` | étape 4, le compte universitaire et sa sortie « Plus tard » (jalon 6-J) | attendue |
 | `onboarding-preferences.png` | étape 2, choix du thème et de la langue | essentielle |
 | `onboarding-groupes.png` | étape 4, année, semestre et recherche de groupe | essentielle |

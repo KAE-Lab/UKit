@@ -1,0 +1,36 @@
+# 7-J, l'accueil refait : la vitrine vivante
+
+Demande du propriétaire (2026-11-06) : l'accueil « est passé à la trappe » alors que c'est le moment
+d'en mettre plein les yeux et de mettre en confiance. Trois directions montrées en planche (A la
+vitrine vivante, B l'Épure en mouvement, C la typographie expressive) ; **A choisie le 2026-11-07**.
+
+## La direction
+
+L'accueil montre l'app avant de poser une question, et chaque réponse se voit tout de suite.
+
+- **L'arrivée** : de vraies cartes de UKit (prochain cours, restaurant, bibliothèque) flottent en
+  relief sur une lueur aux couleurs du logo ; un titre en deux tons ; une ligne d'origine vraie.
+- **Les questions** : la question en grand titre, à gauche, sans carte qui l'enveloppe ; les
+  réponses en tuiles qu'on touche ; un aperçu qui suit la réponse (le thème repeint un vrai planning).
+- **Le compte** : ce que deviennent les identifiants, dit en tête, une fois.
+- **La fin** : le planning du jour du groupe choisi se construit sous les yeux.
+- **Le cadre** : une ligne de progression fine en haut, au dégradé du logo, à la place des points du
+  bas ; le bouton plein de l'app (`ActionButton`) ; un fondu sous le pied.
+
+Références : Revolut (une carte d'interface réelle qui flotte), Apple Météo (le fond vit, les cartes
+passent dessus), Flighty (les heures en gros chiffres). Ce qui ne bouge pas : les décisions de
+[onboarding.md](../features/onboarding.md#décisions-de-conception) (hors navigation, application
+immédiate, session bloquante, contenu sous le pied).
+
+## Les écrans
+
+- [x] le cadre : progression en haut, bouton plein, fondu du pied, retour
+- [x] l'arrivée, la vitrine
+- [x] le thème et la langue, avec l'aperçu
+- [x] l'établissement
+- [ ] le compte, et sa session (barre, jeu)
+- [ ] l'emploi du temps : les groupes (et la liste qui passait sous le bouton), le lien iCal
+- [ ] la fin, le planning qui se construit
+
+Chaque lot se vérifie au banc dans les deux thèmes avant son commit ; l'accueil se rejoue par
+`pm clear` sur le banc (données de test).
