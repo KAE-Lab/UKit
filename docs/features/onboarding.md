@@ -25,8 +25,8 @@ remis à vrai par la réinitialisation depuis [Réglages](settings.md).
 
 | Étape | Contenu | Effet |
 |---|---|---|
-| 1 | Le U du logo et « Bienvenue sur UKit » (7-J, deuxième passe) | — |
-| 2 | Choix du thème (clair / sombre) et de la langue (fr / en / es) | `SettingsManager.setTheme` / `setLanguage`, appliqués **en direct** |
+| 1 | La vitrine : trois vraies cartes de UKit en relief, « Ton campus, en une seule app. » (7-J, accueil refait) | — |
+| 2 | « Clair ou sombre ? » sur deux aperçus d'une vraie journée, puis la langue, écrite dans sa propre langue | `SettingsManager.setTheme` / `setLanguage`, appliqués **en direct** |
 | 3 | **Choix de l'établissement**, lu dans le catalogue — après un chargement parlant, le temps que le premier rafraîchissement réponde (quatre secondes au plus) | `basculerEtablissement(code)` ([`bascule.ts`](../../src/shared/etablissements/bascule.ts)), la même que les Réglages |
 | 4 | **Compte universitaire**, proposé et sautable — avec le bouton « Tu es d'un autre campus ? » sous celui de connexion, qui ramène à l'étape 3 ; **« Suivant » et le retour sont bloqués tant que la connexion tourne** | `validateAndSave` du contexte de scolarité, ou « Suivant » |
 | 5 | **L'emploi du temps** : groupes (l'étape porte son cadre clavier), ou lien d'abonnement | favoris, ou `enregistrerLienEdt` |
@@ -56,7 +56,7 @@ l'établissement : un choix de groupe quand il y en a à choisir, un champ de li
 (voir [planning.md](planning.md#les-quatre-états-de-lemploi-du-temps)). Le formulaire de lien est rendu
 **en place** : l'accueil vit hors de toute navigation, il n'a nulle part où pousser un écran.
 
-La pagination suit — quatre à six points — et le recalcul se fait à chaque rendu, pour qu'un changement
+La ligne de progression suit le nombre d'étapes — quatre à six —, recalculé à chaque rendu, pour qu'un changement
 d'établissement à l'étape 3 ajoute ou retire une étape **tout de suite**.
 
 La liste des établissements se rafraîchit **après** l'affichage : sa lecture est hors du chemin de
@@ -78,22 +78,32 @@ répondent, parce que la cause avait trois étages :
   canal « le catalogue a changé » existait, mais un premier rafraîchissement qui aboutit sans
   changement ne bouscule rien, et rien ne distinguait « pas encore répondu » de « répondu, rien de neuf ».
 
-Un bouton retour apparaît à partir de l'étape 2 ; une pagination en bas indique la progression.
+Le retour et la ligne de progression apparaissent à partir de l'étape 2, en haut.
 
-![L'étape 1 : le U du logo et « Bienvenue sur UKit », sur le banc Android](../screenshots/onboarding-bienvenue-android.png)
+![L'étape 1, la vitrine : un cours, un restaurant et une bibliothèque en relief, en thème sombre, sur le banc Android](../screenshots/onboarding-bienvenue-android.png)
 
-**L'étape 1 ouvre sur le U du logo** ([`LogoUKit`](../../src/shared/ui/epure/LogoUKit.tsx),
-`glyphe="u"`), bleu comme dans le logo (le dégradé ne quitte le bleu qu'après le U), qui monte en
-fondu ; le titre, « Bienvenue sur UKit », suit. Fig. 01,
-le U en écho, a tenu cette place pendant la première passe de 7-J : trop complexe pour un écran de
-téléphone, elle reste au site (review du 2026-11-05). Sous « réduire les animations », tout est là
-d'emblée.
+**L'étape 1 montre l'application avant de lui poser une question**
+([`VitrineDAccueil`](../../src/features/Onboarding/components/VitrineDAccueil.tsx), direction A de
+l'[accueil refait](../phase-7/7-j-accueil.md)) : un cours, un restaurant et une bibliothèque flottent
+en relief sur une lueur aux couleurs du logo. Le cours est la vraie carte du Planning (`CourseRow`) ;
+les lieux sont faits des briques des cartes Campus, sans photo, parce que les cartes des onglets
+montraient en grand le visuel de repli du Crous, sur la bibliothèque aussi. Les exemples sont
+génériques là où un lieu réel n'est pas vérifié. Les cartes montent l'une après l'autre puis la pile
+respire ; sous « réduire les animations », tout est là d'emblée et rien ne bouge. Le U seul, puis
+Fig. 01 avant lui, ont tenu cette place : un écran vide qui ne disait pas ce que fait l'application.
+
+**Les questions sont posées en grand titre**, leurs réponses en tuiles
+([`EtapesDeChoix.tsx`](../../src/features/Onboarding/components/EtapesDeChoix.tsx)) : le thème se
+choisit sur deux aperçus d'une vraie journée de cours, dessinée à la largeur d'un téléphone puis
+réduite à la tuile ; l'établissement, sur des tuiles qui portent le logo du catalogue. La
+progression est une ligne fine en haut, à côté du retour ; le bouton est celui de l'application,
+posé sur un fondu de la couleur de la page sous lequel le contenu s'efface.
 
 > **Capture attendue** — `onboarding-preferences.png` : l'étape 2, sélection du thème et de la langue.
 >
 > **Capture attendue** — `onboarding-fin.png` : l'étape 5, confirmation avant l'entrée dans l'application.
 
-![L'étape du choix de l'université : l'établissement historique sélectionné par défaut, et le second arrivé par publication. Cinq points de pagination — l'étape des groupes est encore là, l'établissement sélectionné en publiant un](../screenshots/onboarding-etablissement.png)
+![L'étape du choix de l'université : une tuile par établissement, son logo en filigrane, en thème clair](../screenshots/onboarding-etablissement.png)
 
 Chaque choix est appliqué **immédiatement**, pas à la fin : sélectionner le mode sombre à l'étape 2
 repeint l'écran en cours. L'utilisateur voit ce qu'il choisit. Il n'y a donc pas d'état à valider —
@@ -164,7 +174,7 @@ n'est pas un contrat : c'est une heuristique locale (voir les limites).
 **Plusieurs groupes sélectionnables dès l'accueil.** L'étape 3 ajoute ou retire des favoris, elle
 n'en choisit pas un seul : le planning agrégé est disponible immédiatement après l'accueil.
 
-**Le contenu défile sous le pied, jusqu'au bas de l'écran.** Le pied (« Suivant » et la pagination)
+**Le contenu défile sous le pied, jusqu'au bas de l'écran.** Le pied (le bouton « Suivant »)
 flotte, et chaque étape laisse sous elle de quoi remonter au-dessus de lui :
 `useDegagementDuPied()` ([`stylesDuParcours.ts`](../../src/features/Onboarding/components/stylesDuParcours.ts)),
 le dégagement des listes **plus la marge système du bas**, que le pied s'applique à lui-même. Sans
@@ -210,6 +220,6 @@ l'application**, ou réinstaller l'application.
 |---|---|
 | [`WelcomeScreen.tsx`](../../src/features/Onboarding/WelcomeScreen.tsx) | l'enchaînement des étapes, leur nombre selon l'établissement, la bascule de `firstload` |
 | [`hooks/useWelcomeState.ts`](../../src/features/Onboarding/hooks/useWelcomeState.ts) | l'état, les abonnements — résiliés au démontage depuis 6.1-C ; dont la révision du catalogue, l'attente plafonnée du premier rafraîchissement et l'état de la liste des groupes —, les valeurs par défaut système, le filtrage des groupes et les six gestes |
-| [`components/WelcomeSteps.tsx`](../../src/features/Onboarding/components/WelcomeSteps.tsx) | les mises en page, la pagination et le bouton retour. Rend deux composants venus d'autres domaines — `ScolariteLoginView` et `LienEdtForm` — plutôt que d'en recopier une seconde version ([architecture.md](../architecture.md#dépendances-entre-features)) |
+| [`components/WelcomeSteps.tsx`](../../src/features/Onboarding/components/WelcomeSteps.tsx) | l'en-tête du parcours (retour et progression), le compte, le lien iCal et la fin. Rend deux composants venus d'autres domaines — `ScolariteLoginView` et `LienEdtForm` — plutôt que d'en recopier une seconde version ([architecture.md](../architecture.md#dépendances-entre-features)) |
 | [`components/StepGroupes.tsx`](../../src/features/Onboarding/components/StepGroupes.tsx) | l'étape des groupes et son pied : l'attente et l'échec de la liste — « Réessayer » relit la source —, puis le tri et la recherche (6.1-C) |
 | [`components/stylesDuParcours.ts`](../../src/features/Onboarding/components/stylesDuParcours.ts) | le vocabulaire visuel du parcours — carte, pastille, dégagement du pied — sur les tokens et le thème courant |
