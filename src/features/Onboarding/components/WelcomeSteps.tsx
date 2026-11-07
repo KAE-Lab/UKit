@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { useDegagementDuPied } from './stylesDuParcours';
+import { HAUT_D_ETAPE } from './EtapesDeChoix';
 // Deux dependances croisees entre features, et elles sont volontaires — voir la section
 // « Dependances entre features » de docs/architecture.md. L'accueil propose depuis le jalon 6-J deux
 // gestes qui appartiennent a d'autres domaines : se connecter au compte universitaire, et coller un
@@ -155,6 +156,8 @@ export const StepLienEdt = ({ onDone }) => (
           * pile, et un bouton mort au milieu d'un parcours d'accueil est pire que pas de bouton.
           */}
         {/* Aucun en-tete ici : le parcours d'accueil est rendu hors de la navigation. */}
-        <LienEdtForm onDone={onDone} topPadding={tokens.space.xxl + tokens.space.md} />
+        {/* Le haut des autres etapes : sous l'en-tete du parcours, l'icone du formulaire chevauchait
+            la ligne de progression (constate au banc, accueil refait). */}
+        <LienEdtForm onDone={onDone} topPadding={HAUT_D_ETAPE} />
     </View>
 );
