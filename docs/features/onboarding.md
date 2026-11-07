@@ -29,8 +29,8 @@ remis à vrai par la réinitialisation depuis [Réglages](settings.md).
 | 2 | « Clair ou sombre ? » sur deux aperçus d'une vraie journée, puis la langue, écrite dans sa propre langue | `SettingsManager.setTheme` / `setLanguage`, appliqués **en direct** |
 | 3 | **Choix de l'établissement**, lu dans le catalogue — après un chargement parlant, le temps que le premier rafraîchissement réponde (quatre secondes au plus) | `basculerEtablissement(code)` ([`bascule.ts`](../../src/shared/etablissements/bascule.ts)), la même que les Réglages |
 | 4 | **Compte universitaire**, proposé et sautable — avec le bouton « Tu es d'un autre campus ? » sous celui de connexion, qui ramène à l'étape 3 ; **« Suivant » et le retour sont bloqués tant que la connexion tourne** | `validateAndSave` du contexte de scolarité, ou « Suivant » |
-| 5 | **L'emploi du temps** : groupes (l'étape porte son cadre clavier), ou lien d'abonnement | favoris, ou `enregistrerLienEdt` |
-| 6 | Confirmation : un cercle et une coche qui se tracent dans le dégradé du logo ([`TraitDeValidation`](../../src/features/Onboarding/components/TraitDeValidation.tsx), 7-J), la réponse au U de l'étape 1 | `setFirstLoad(false)` sur « Terminer » |
+| 5 | **L'emploi du temps** : groupes en rangées, le libellé en clair et le code dessous ([`partiesDuGroupe`](../../src/features/Onboarding/components/groupes.ts)), l'étape portant son cadre clavier ; ou lien d'abonnement | favoris, ou `enregistrerLienEdt` |
+| 6 | « C'est prêt. » et la première journée de cours des favoris, qui arrive carte par carte ([`FinDuParcours`](../../src/features/Onboarding/components/FinDuParcours.tsx)) ; sans favori ou sans réponse de la source, le cercle qui se trace ([`TraitDeValidation`](../../src/features/Onboarding/components/TraitDeValidation.tsx)) | `setFirstLoad(false)` sur « Ouvrir mon planning » |
 
 **Deux étapes disparaissent selon l'établissement**, et la règle est la même pour les deux : *on ne
 pose pas une question sans réponse.* L'étape du compte s'efface chez une université qui ne publie
@@ -98,6 +98,16 @@ choisit sur deux aperçus d'une vraie journée de cours, dessinée à la largeur
 réduite à la tuile ; l'établissement, sur des tuiles qui portent le logo du catalogue. La
 progression est une ligne fine en haut, à côté du retour ; le bouton est celui de l'application,
 posé sur un fondu de la couleur de la page sous lequel le contenu s'efface.
+
+**Le compte dit en tête ce que deviennent les identifiants** (`intro` de `ScolariteLoginView`, que
+seul l'accueil passe) : chiffrés sur le téléphone, envoyés au seul service de connexion de
+l'université — le fait de [PRIVACY.md](../../PRIVACY.md), pas une promesse de plus.
+
+**La fin montre la première journée de cours**, aujourd'hui ou dans les six jours qui suivent : une
+requête `fetchCalendarDay` par jour, l'une après l'autre, arrêtée au premier jour trouvé ou au premier
+échec. On installe souvent l'application le week-end, et « aucun cours aujourd'hui » sur un écran vide
+était la pire fin possible. Constaté au banc le samedi 7 novembre : un groupe de M1 en stage
+(« Aucun cours cette semaine. », confirmé par le Planning), un groupe de L3 (« Lundi, 4 cours. »).
 
 > **Capture attendue** — `onboarding-preferences.png` : l'étape 2, sélection du thème et de la langue.
 >

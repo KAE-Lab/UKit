@@ -15,6 +15,11 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Ajouté
 
+- **L'accueil refait, la vitrine** : l'arrivée montre l'application (un cours, un restaurant, une
+  bibliothèque en relief) avant de poser une question ; le thème se choisit sur l'aperçu d'une vraie
+  journée, l'établissement sur son logo, le groupe sur des rangées lisibles ; le compte dit ce que
+  deviennent les identifiants ; la fin construit la première journée de cours sous les yeux. Une
+  ligne de progression en haut remplace les points, et la liste ne passe plus nette sous le bouton.
 - **Des styles de texte composés** (`tokens.texte`) : grands titres à l'approche resserrée, chiffres
   tabulaires pour les heures, les durées et les distances.
 - **Le Planning en frise.** Entre deux cours, la pause se cote (« Pause de 1 h 40 ») ; aujourd'hui,

@@ -39,7 +39,7 @@ import { Icon } from '../../../shared/ui/Icon';
  * nommer une destination qu'il ne connait pas n'explique rien. Le corps du formulaire, lui, est
  * identique dans les deux cas.
  */
-const EnTeteDuFormulaire = ({ theme, color, compact }) => (
+const EnTeteDuFormulaire = ({ theme, color, compact, intro = null }) => (
     <View style={styles.hero}>
         {/*
           * Filigrane, comme l'en-tete du tableau de bord : la vignette blanche a filet detonnait
@@ -57,6 +57,15 @@ const EnTeteDuFormulaire = ({ theme, color, compact }) => (
         <Text style={[styles.title, { color: theme.font }]}>
             {Translator.get(compact ? 'CONNECT_ACCOUNT_TITLE' : 'SCOLARITY')}
         </Text>
+        {/* Ce que deviennent les identifiants, dit une fois, en tete (l'accueil le passe, 7-J). Le
+            fait est celui de PRIVACY.md : chiffres par le trousseau, envoyes au seul service
+            d'authentification de l'universite. */}
+        {intro !== null ? (
+            <View style={styles.intro}>
+                <Icon icon={{ name: 'lock-outline' }} size={16} color={theme.fontSecondary} />
+                <Text style={[styles.texteIntro, { color: theme.fontSecondary }]}>{intro}</Text>
+            </View>
+        ) : null}
     </View>
 );
 
@@ -220,7 +229,7 @@ const CarteDuFormulaire = ({
 
 const ScolariteLoginView = ({
     theme, color, topPadding, onSkip = null, onDebut = null, onSuccess = null, onAutreCampus = null,
-    onEnSession = null, compact = false, onScroll = undefined, pied = null,
+    onEnSession = null, compact = false, onScroll = undefined, pied = null, intro = null,
     degagementBas = tokens.space.xxl,
 }) => {
     const { validateAndSave, scrapeProgress, scrapeStatus, sessionMode } = useCredentials();
@@ -394,7 +403,7 @@ const ScolariteLoginView = ({
                 scrollEventThrottle={16}
             >
                 <View>
-                    <EnTeteDuFormulaire theme={theme} color={color} compact={compact} />
+                    <EnTeteDuFormulaire theme={theme} color={color} compact={compact} intro={intro} />
 
                     <CarteDuFormulaire
                         theme={theme} color={color} submitting={submitting} enSession={enSession}
@@ -418,6 +427,18 @@ const ScolariteLoginView = ({
 const styles = StyleSheet.create({
     zoneJouable: {
         flex: 1,
+    },
+    intro: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: tokens.space.sm,
+        marginTop: tokens.space.sm,
+        alignSelf: 'stretch',
+    },
+    texteIntro: {
+        flex: 1,
+        fontSize: tokens.fontSize.sm,
+        lineHeight: 20,
     },
     hero: {
         alignItems: 'center',

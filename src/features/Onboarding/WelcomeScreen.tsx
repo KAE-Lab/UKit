@@ -28,9 +28,9 @@ import { filtrageParAnnee, useWelcomeState, type OptionListee, type OptionTheme 
 import {
     EnTeteDuParcours,
     StepCompte,
-    StepFin,
     StepLienEdt,
 } from './components/WelcomeSteps';
+import { StepFin } from './components/FinDuParcours';
 import { StepEtablissement, StepPreferences } from './components/EtapesDeChoix';
 import { VitrineDAccueil } from './components/VitrineDAccueil';
 import { useDegagementDuPied } from './components/stylesDuParcours';
@@ -239,7 +239,7 @@ function PiedDuParcours({ themeObj, derniere, index, basInset, desactive, onSuiv
             <View style={{ backgroundColor: fond, paddingHorizontal: tokens.space.xl, paddingBottom: basInset + tokens.space.md }}>
                 <ActionButton
                     theme={themeObj}
-                    label={derniere ? Translator.get('FINISH') : (index === 0 ? Translator.get('START') : Translator.get('NEXT'))}
+                    label={derniere ? Translator.get('OUVRIR_PLANNING') : (index === 0 ? Translator.get('START') : Translator.get('NEXT'))}
                     onPress={derniere ? () => SettingsManager.setFirstLoad(false) : onSuivant}
                     disabled={desactive}
                 />

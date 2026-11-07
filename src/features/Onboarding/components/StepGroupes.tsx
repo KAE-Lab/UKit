@@ -8,21 +8,17 @@
  */
 
 import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 
 import Translator from '../../../shared/i18n/Translator';
-import { tokens } from '../../../shared/theme/Theme';
+import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { LoadingState } from '../../../shared/ui/LoadingState';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
-import {
-    MAXIMUM_NUMBER_ITEMS_GROUPLIST,
-    carte,
-    pastille,
-    texteDePastille,
-    useDegagementDuPied,
-    titreDeCarte,
-} from './stylesDuParcours';
+import { MAXIMUM_NUMBER_ITEMS_GROUPLIST, useDegagementDuPied } from './stylesDuParcours';
+import { Coche, HAUT_D_ETAPE, Segments, TitreDEtape, vibrer } from './EtapesDeChoix';
+import type { OptionListee } from '../hooks/useWelcomeState';
+import { partiesDuGroupe } from './groupes';
 import { Icon } from '../../../shared/ui/Icon';
 
 /**
@@ -57,6 +53,25 @@ export const WelcomeGroupFooter = ({ themeObj, textFilter, filtres }) => {
  * fragments propre au nommage bordelais — les afficher ailleurs proposait un tri qui ne triait rien
  * (jalon 6-J).
  */
+function RangeeDeGroupe({ nom, choisie, themeObj, onPress }: { nom: string; choisie: boolean; themeObj: AppThemeType; onPress: () => void }) {
+    const { libelle, code } = partiesDuGroupe(nom);
+    return (
+        <Pressable
+            onPress={() => { vibrer(); onPress(); }}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: choisie }}
+            accessibilityLabel={nom}
+            style={[styles.rangee, { backgroundColor: themeObj.cardBackground, borderColor: choisie ? themeObj.accent : themeObj.contourDeCarte }]}
+        >
+            <View style={styles.nom}>
+                <Text style={[styles.libelle, { color: themeObj.font }]} numberOfLines={2}>{libelle}</Text>
+                {code !== null ? <Text style={[tokens.texte.chiffres, styles.code, { color: themeObj.fontSecondary }]}>{code}</Text> : null}
+            </View>
+            <Coche theme={themeObj} choisie={choisie} />
+        </Pressable>
+    );
+}
+
 export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, filterList, selectGroup, relancerGroupes, parAnnee = true }) => {
     // Une liste vide se dit : une installation hors ligne restait sur une carte muette qui invitait a
     // « affiner » une liste qui n'existait pas (limite ecrite depuis 6-G, corrigee en 6.1-C). Le
@@ -72,78 +87,127 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
      * `padding` sur les deux plateformes, le comportement valide sur le formulaire de connexion.
      */
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-    <ScrollView style={{ flexGrow: 1, paddingHorizontal: tokens.space.md }} contentContainerStyle={{ paddingTop: tokens.space.xxl * 2, paddingBottom: degagement }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={[styles.etape, { paddingBottom: degagement }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <TitreDEtape theme={themeObj}>{Translator.get('YOUR_GROUP')}</TitreDEtape>
         {listeVide && chargement ? (
             <LoadingState theme={themeObj} message={Translator.get('GROUPS_LOADING')} />
         ) : listeVide && echec !== null ? (
             <SourceFailureNotice failure={echec} theme={themeObj} onRetry={relancerGroupes} variant="card" />
         ) : (
-        <View style={{ ...carte(themeObj), marginBottom: 0 }}>
+        <>
             {parAnnee && (
                 <>
-                    <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_YEAR')}</Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: tokens.space.lg }}>
+                    <Text style={[tokens.texte.intertitre, styles.intertitre, { color: themeObj.fontSecondary }]}>{Translator.get('YOUR_YEAR')}</Text>
+                    <View style={styles.annees}>
                         {yearList.map((yearEntry) => {
-                            const selected = navigatorState.year?.id === yearEntry.id;
+                            const choisie = navigatorState.year?.id === yearEntry.id;
                             return (
-                                <TouchableOpacity
+                                <Pressable
                                     key={yearEntry.id}
-                                    onPress={() => filterList(yearEntry, navigatorState.season, navigatorState.textFilter)}
-                                    style={{
-                                        ...pastille(themeObj, selected),
-                                        width: '48%',
-                                        alignItems: 'center',
-                                        paddingHorizontal: 0,
-                                        marginRight: 0,
-                                    }}
+                                    onPress={() => { vibrer(); filterList(yearEntry, navigatorState.season, navigatorState.textFilter); }}
+                                    accessibilityRole="radio"
+                                    accessibilityState={{ checked: choisie }}
+                                    style={[styles.annee, { backgroundColor: choisie ? themeObj.accent : themeObj.greyBackground }]}
                                 >
-                                    <Text style={texteDePastille(themeObj, selected)}>
+                                    <Text style={[styles.texteDAnnee, { color: choisie ? themeObj.lightFont : themeObj.font }]}>
                                         {Translator.get(yearEntry.title)} {yearEntry.suffix}
                                     </Text>
-                                </TouchableOpacity>
+                                </Pressable>
                             );
                         })}
                     </View>
 
-                    <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_SEMESTER')}</Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: tokens.space.lg }}>
-                        {seasonList.map((seasonEntry) => {
-                            const selected = navigatorState.season?.id === seasonEntry.id;
-                            return (
-                                <TouchableOpacity key={seasonEntry.id} onPress={() => filterList(navigatorState.year, seasonEntry, navigatorState.textFilter)} style={pastille(themeObj, selected)}>
-                                    <Text style={texteDePastille(themeObj, selected)}>{Translator.get(seasonEntry.title)}</Text>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
+                    <Text style={[tokens.texte.intertitre, styles.intertitre, { color: themeObj.fontSecondary }]}>{Translator.get('YOUR_SEMESTER')}</Text>
+                    <Segments<OptionListee>
+                        theme={themeObj}
+                        options={seasonList}
+                        choisie={navigatorState.season?.id}
+                        libelle={(entree) => Translator.get(entree.title)}
+                        onChoisir={(entree) => filterList(navigatorState.year, entree, navigatorState.textFilter)}
+                    />
                 </>
             )}
 
-            <Text style={titreDeCarte(themeObj)}>{Translator.get('YOUR_GROUP')}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: themeObj.greyBackground, borderRadius: tokens.radius.md, paddingHorizontal: tokens.space.sm, marginBottom: tokens.space.md }}>
-                <Icon icon={{ name: 'magnify' }} size={20} color={themeObj.fontSecondary} style={{ marginRight: tokens.space.xs }} />
-                <TextInput autoCorrect={false} style={{ flex: 1, paddingVertical: Platform.OS === 'ios' ? tokens.space.md : tokens.space.sm, color: themeObj.font, fontSize: tokens.fontSize.sm }} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
+            <View style={[styles.recherche, { backgroundColor: themeObj.greyBackground }]}>
+                <Icon icon={{ name: 'magnify' }} size={20} color={themeObj.fontSecondary} />
+                <TextInput autoCorrect={false} style={[styles.champ, { color: themeObj.font }]} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
             </View>
 
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item: string) => {
-                    const selected = navigatorState.groups.includes(item);
-                    return (
-                        <TouchableOpacity key={item} onPress={() => selectGroup(item)} style={pastille(themeObj, selected)}>
-                            <Text style={texteDePastille(themeObj, selected)}>{item}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
+            {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item: string) => (
+                <RangeeDeGroupe key={item} nom={item} choisie={navigatorState.groups.includes(item)} themeObj={themeObj} onPress={() => selectGroup(item)} />
+            ))}
             <WelcomeGroupFooter
                 themeObj={themeObj}
                 textFilter={navigatorState.textFilter}
                 filtres={navigatorState.groupListFiltered}
             />
-        </View>
+        </>
         )}
     </ScrollView>
     </KeyboardAvoidingView>
     );
 };
 
+const styles = StyleSheet.create({
+    etape: {
+        paddingTop: HAUT_D_ETAPE,
+        paddingHorizontal: tokens.space.lg,
+    },
+    intertitre: {
+        marginTop: tokens.space.md,
+        marginBottom: tokens.space.sm,
+        marginLeft: tokens.space.xs,
+    },
+    annees: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: tokens.space.sm,
+    },
+    annee: {
+        width: '31.5%',
+        alignItems: 'center',
+        paddingVertical: tokens.space.md,
+        borderRadius: tokens.radius.lg,
+    },
+    texteDAnnee: {
+        alignSelf: 'stretch',
+        textAlign: 'center',
+        fontSize: tokens.fontSize.md,
+        fontWeight: tokens.fontWeight.semibold,
+    },
+    recherche: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: tokens.space.sm,
+        borderRadius: tokens.radius.lg,
+        paddingHorizontal: tokens.space.md,
+        marginTop: tokens.space.xl,
+        marginBottom: tokens.space.md,
+    },
+    champ: {
+        flex: 1,
+        paddingVertical: Platform.OS === 'ios' ? tokens.space.md : tokens.space.sm,
+        fontSize: tokens.fontSize.md,
+    },
+    rangee: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: tokens.space.md,
+        borderRadius: tokens.radius.xl,
+        borderWidth: 2,
+        paddingVertical: tokens.space.md,
+        paddingHorizontal: tokens.space.md,
+        marginBottom: tokens.space.sm,
+    },
+    nom: {
+        flex: 1,
+    },
+    libelle: {
+        fontSize: tokens.fontSize.md,
+        fontWeight: tokens.fontWeight.semibold,
+    },
+    code: {
+        fontSize: tokens.fontSize.sm,
+        marginTop: tokens.space.xxs,
+    },
+});
