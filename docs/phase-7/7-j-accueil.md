@@ -30,7 +30,7 @@ immédiate, session bloquante, contenu sous le pied).
 - [x] l'établissement
 - [x] le compte, et sa session (barre, jeu)
 - [x] l'emploi du temps : les groupes (et la liste qui passait sous le bouton)
-- [ ] le lien iCal
+- [x] le lien iCal : le formulaire partagé, descendu sous l'en-tête du parcours
 - [x] la fin, le planning qui se construit
 
 Chaque lot se vérifie au banc dans les deux thèmes avant son commit ; l'accueil se rejoue par
