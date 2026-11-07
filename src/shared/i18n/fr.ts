@@ -229,7 +229,7 @@ const fr: TranslationDict = {
 	THEME_QUESTION: "Clair ou sombre ?",
 	VITRINE_COURS_2: "Anglais",
 	VITRINE_COURS_3: "Réseaux",
-	VITRINE_CM: "Cours magistral",
+	VITRINE_CM: "CM",
 	VITRINE_TD: "TD",
 	VITRINE_TP: "TP",
 	ACCOUNT_TRUST: "Tes identifiants restent chiffrés sur ce téléphone et ne partent qu’au service de connexion de ton université.",

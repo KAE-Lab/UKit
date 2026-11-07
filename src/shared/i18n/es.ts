@@ -228,7 +228,7 @@ const es: TranslationDict = {
 	THEME_QUESTION: "¿Claro u oscuro?",
 	VITRINE_COURS_2: "Inglés",
 	VITRINE_COURS_3: "Redes",
-	VITRINE_CM: "Clase magistral",
+	VITRINE_CM: "Teoría",
 	VITRINE_TD: "Seminario",
 	VITRINE_TP: "Prácticas",
 	ACCOUNT_TRUST: "Tus credenciales se guardan cifradas en este teléfono y solo se envían al servicio de acceso de tu universidad.",

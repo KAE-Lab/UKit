@@ -35,3 +35,9 @@ immédiate, session bloquante, contenu sous le pied).
 
 Chaque lot se vérifie au banc dans les deux thèmes avant son commit ; l'accueil se rejoue par
 `pm clear` sur le banc (données de test).
+
+Vérifié au banc le 2026-11-07 : chaque écran en sombre et en clair sur `ukit`, l'arrivée, le thème
+et l'établissement au format de l'A8 (`ukit-a8`), où le badge « Cours magistral » de la vitrine
+coupait « Algorithmique » en plein mot (passé à « CM »). Piège du banc : `pm clear` efface aussi les
+réglages du client de développement, et le rechargement à chaud s'y retrouve coupé ; relancer
+l'application à froid après chaque changement. Non vu : l'iPhone.
