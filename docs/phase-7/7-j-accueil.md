@@ -39,7 +39,8 @@ Chaque lot se vérifie au banc dans les deux thèmes avant son commit ; l'accuei
 Retouches après l'essai sur iPhone (2026-11-08) : le slogan à la place de la ligne d'origine ; le
 contenu passe sous la ligne de progression en fondu, comme sous les titres (`FonduDeBord`, la ligne
 remontée juste sous la barre d'état) ; les exemples sont de vraies données des sources, dans les
-cartes simplifiées. Vérifié en sombre et en clair, au format de l'iPhone 15 du banc et de l'A8.
+cartes simplifiées. Vérifié au banc Android : en sombre sur `ukit` et `ukit-a8`, en clair sur
+`ukit-a8`. Non vu : l'iPhone.
 
 Vérifié au banc le 2026-11-07 : chaque écran en sombre et en clair sur `ukit`, l'arrivée, le thème
 et l'établissement au format de l'A8 (`ukit-a8`), où le badge « Cours magistral » de la vitrine
