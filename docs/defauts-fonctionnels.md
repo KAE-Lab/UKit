@@ -19,6 +19,12 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### À l'accueil, une année sans semestre laisse la liste des groupes vide, sans rien dire — constaté le 2026-11-08
+
+Collège ST, « Master 1 » touché, aucun semestre : la liste disparaît sous le champ de recherche, et
+rien n'indique qu'il manque le semestre. Choisir « Automne » la remplit. À trancher : présélectionner
+le semestre en cours, ou ne pas filtrer tant qu'il n'est pas choisi.
+
 ### Un portail lent s'annonce « Le problème vient de UKit » — constaté le 2026-11-06
 
 Au banc, juste après un effacement des données (WebView à froid), la vérification des identifiants à

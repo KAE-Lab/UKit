@@ -23,8 +23,11 @@ import { coursDExemple, MINUTE_D_EXEMPLE } from './exemples';
 import { useDegagementDuPied } from './stylesDuParcours';
 import type { OptionListee, OptionTheme } from '../hooks/useWelcomeState';
 
-/** Le haut du contenu d'une etape : sous l'en-tete du parcours (retour et progression). */
-export const HAUT_D_ETAPE = tokens.space.xxl * 2;
+/**
+ * Le haut du contenu d'une etape : sous l'en-tete du parcours et son fondu (`EnTeteDuParcours`), pour
+ * qu'au repos rien ne s'y efface.
+ */
+export const HAUT_D_ETAPE = tokens.space.xxl * 2 + tokens.space.md;
 
 /**
  * Les langues s'ecrivent dans leur propre langue, comme dans tout selecteur de langue : on doit

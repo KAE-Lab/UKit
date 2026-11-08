@@ -36,6 +36,11 @@ immédiate, session bloquante, contenu sous le pied).
 Chaque lot se vérifie au banc dans les deux thèmes avant son commit ; l'accueil se rejoue par
 `pm clear` sur le banc (données de test).
 
+Retouches après l'essai sur iPhone (2026-11-08) : le slogan à la place de la ligne d'origine ; le
+contenu passe sous la ligne de progression en fondu, comme sous les titres (`FonduDeBord`, la ligne
+remontée juste sous la barre d'état) ; les exemples sont de vraies données des sources, dans les
+cartes simplifiées. Vérifié en sombre et en clair, au format de l'iPhone 15 du banc et de l'A8.
+
 Vérifié au banc le 2026-11-07 : chaque écran en sombre et en clair sur `ukit`, l'arrivée, le thème
 et l'établissement au format de l'A8 (`ukit-a8`), où le badge « Cours magistral » de la vitrine
 coupait « Algorithmique » en plein mot (passé à « CM »). Piège du banc : `pm clear` efface aussi les
