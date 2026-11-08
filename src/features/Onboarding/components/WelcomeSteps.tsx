@@ -26,11 +26,16 @@ import { HAUT_D_ETAPE } from './EtapesDeChoix';
 import ScolariteLoginView from '../../Scolarite/components/ScolariteLoginView';
 import LienEdtForm from '../../Planning/components/LienEdtForm';
 import { Icon } from '../../../shared/ui/Icon';
+import { FonduDeBord, HAUTEUR_DU_FONDU } from '../../../shared/ui/FonduDeBord';
 
 /**
  * L'en-tete du parcours : le retour, et une ligne de progression fine au degrade du logo (accueil
  * refait, 7-J). Elle remplace les points du bas, qui disaient « ou j'en suis » au mauvais endroit,
  * colles au bouton. L'arrivee n'en a pas : elle n'est pas encore une etape.
+ *
+ * Le contenu qui defile passe dessous en fondu, comme sous les titres de l'application : un voile de la
+ * couleur de la page jusqu'a un peu sous la ligne, puis `FonduDeBord`. Il passait net derriere la
+ * ligne (review du 2026-11-07).
  */
 export function EnTeteDuParcours({ themeObj, haut, progression, retourVisible, onRetour }: {
     themeObj: AppThemeType;
@@ -46,7 +51,15 @@ export function EnTeteDuParcours({ themeObj, haut, progression, retourVisible, o
         avance.value = mouvementReduit ? progression : withSpring(progression, tokens.mouvement.ressort);
     }, [avance, progression, mouvementReduit]);
     const remplissage = useAnimatedStyle(() => ({ width: `${Math.max(0, Math.min(1, avance.value)) * 100}%` }));
+    const basDuVoile = haut + RETOUR + tokens.space.md;
     return (
+        <>
+        {progression > 0 ? (
+            <View pointerEvents="none" style={[enTete.voile, { height: basDuVoile + HAUTEUR_DU_FONDU }]}>
+                <View style={{ height: basDuVoile, backgroundColor: themeObj.background }} />
+                <FonduDeBord fond={themeObj.background} haut={basDuVoile} />
+            </View>
+        ) : null}
         <View style={[enTete.rangee, { top: haut }]} pointerEvents="box-none">
             <TouchableOpacity
                 onPress={onRetour}
@@ -63,6 +76,7 @@ export function EnTeteDuParcours({ themeObj, haut, progression, retourVisible, o
                 </Reanimated.View>
             </View>
         </View>
+        </>
     );
 }
 
@@ -70,6 +84,13 @@ const PISTE = 4;
 const RETOUR = 44;
 
 const enTete = StyleSheet.create({
+    voile: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9,
+    },
     rangee: {
         position: 'absolute',
         left: tokens.space.sm,

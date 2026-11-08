@@ -11,8 +11,8 @@
  * Sous « reduire les animations », tout est la d'emblee et rien ne bouge. Les cartes ne se touchent
  * pas : la pile est un decor, le bouton du pied est la seule action.
  *
- * Les exemples sont generiques la ou un lieu reel n'est pas verifie (le restaurant), et vrais la ou
- * il l'est (la bibliotheque Sciences et Techniques de Talence).
+ * Les exemples sont de vraies donnees des sources de l'application (`exemples.ts`). Sous le titre, le
+ * slogan de UKit, celui du site.
  */
 
 import React, { useEffect } from 'react';
@@ -112,7 +112,7 @@ export function VitrineDAccueil({ theme, sombre, degagement }: { theme: AppTheme
                     {'\n'}
                     <Text style={{ color: theme.fontTertiary }}>{Translator.get('VITRINE_TITRE_SUITE')}</Text>
                 </Text>
-                <Text style={[styles.origine, { color: theme.fontSecondary }]}>{Translator.get('VITRINE_ORIGINE')}</Text>
+                <Text style={[styles.origine, { color: theme.fontSecondary }]}>{Translator.get('SLOGAN')}</Text>
             </Reanimated.View>
         </View>
     );

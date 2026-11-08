@@ -25,7 +25,7 @@ remis à vrai par la réinitialisation depuis [Réglages](settings.md).
 
 | Étape | Contenu | Effet |
 |---|---|---|
-| 1 | La vitrine : trois vraies cartes de UKit en relief, « Ton campus, en une seule app. » (7-J, accueil refait) | — |
+| 1 | La vitrine : trois vraies cartes de UKit en relief, « Ton campus, en une seule app. » et le slogan de UKit (7-J, accueil refait) | — |
 | 2 | « Clair ou sombre ? » sur deux aperçus d'une vraie journée, puis la langue, écrite dans sa propre langue | `SettingsManager.setTheme` / `setLanguage`, appliqués **en direct** |
 | 3 | **Choix de l'établissement**, lu dans le catalogue — après un chargement parlant, le temps que le premier rafraîchissement réponde (quatre secondes au plus) | `basculerEtablissement(code)` ([`bascule.ts`](../../src/shared/etablissements/bascule.ts)), la même que les Réglages |
 | 4 | **Compte universitaire**, proposé et sautable — avec le bouton « Tu es d'un autre campus ? » sous celui de connexion, qui ramène à l'étape 3 ; **« Suivant » et le retour sont bloqués tant que la connexion tourne** | `validateAndSave` du contexte de scolarité, ou « Suivant » |
@@ -87,8 +87,9 @@ Le retour et la ligne de progression apparaissent à partir de l'étape 2, en ha
 l'[accueil refait](../phase-7/7-j-accueil.md)) : un cours, un restaurant et une bibliothèque flottent
 en relief sur une lueur aux couleurs du logo. Le cours est la vraie carte du Planning (`CourseRow`) ;
 les lieux sont faits des briques des cartes Campus, sans photo, parce que les cartes des onglets
-montraient en grand le visuel de repli du Crous, sur la bibliothèque aussi. Les exemples sont
-génériques là où un lieu réel n'est pas vérifié. Les cartes montent l'une après l'autre puis la pile
+montraient en grand le visuel de repli du Crous, sur la bibliothèque aussi. Les exemples sont de
+vraies données des sources ([`exemples.ts`](../../src/features/Onboarding/components/exemples.ts)) :
+une journée de Licence d'informatique, un restaurant et une bibliothèque de Talence. Les cartes montent l'une après l'autre puis la pile
 respire ; sous « réduire les animations », tout est là d'emblée et rien ne bouge. Le U seul, puis
 Fig. 01 avant lui, ont tenu cette place : un écran vide qui ne disait pas ce que fait l'application.
 
@@ -96,7 +97,8 @@ Fig. 01 avant lui, ont tenu cette place : un écran vide qui ne disait pas ce qu
 ([`EtapesDeChoix.tsx`](../../src/features/Onboarding/components/EtapesDeChoix.tsx)) : le thème se
 choisit sur deux aperçus d'une vraie journée de cours, dessinée à la largeur d'un téléphone puis
 réduite à la tuile ; l'établissement, sur des tuiles qui portent le logo du catalogue. La
-progression est une ligne fine en haut, à côté du retour ; le bouton est celui de l'application,
+progression est une ligne fine en haut, à côté du retour, et le contenu passe dessous en fondu, comme
+sous les titres de l'application ; le bouton est celui de l'application,
 posé sur un fondu de la couleur de la page sous lequel le contenu s'efface.
 
 **Le compte dit en tête ce que deviennent les identifiants** (`intro` de `ScolariteLoginView`, que

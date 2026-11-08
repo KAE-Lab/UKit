@@ -148,7 +148,9 @@ export default function WelcomeScreen() {
 
                 <EnTeteDuParcours
                     themeObj={themeObj}
-                    haut={insets.top || 0}
+                    // La page commence deja a `insets.top - lg` : ce decalage pose la ligne juste sous la
+                    // barre d'etat. `insets.top` ici la comptait deux fois, et plus bas sur iPhone.
+                    haut={tokens.space.lg}
                     progression={index_ === 0 ? 0 : index_ / (etapes.length - 1)}
                     retourVisible={index_ > 0 && !formulaireEnSession}
                     onRetour={() => allerA(index_ - 1)}
