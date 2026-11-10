@@ -257,6 +257,19 @@ describe('requalifierLenteur', () => {
         expect(lent.detail).toContain('12000 ms');
     });
 
+    it('dit un portail lent quand la page ne s est pas chargee a temps, meme apres une navigation rapide', () => {
+        // Le texte exact du moteur, releve au banc le 2026-11-10 : la redirection du CAS apres le clic.
+        const pasPrete: UkitFailure = {
+            kind: 'engine',
+            detail: 'the page did not become ready within 2000 ms (no agent announced itself: the document may have failed to load)',
+            ...FAILURE_PRESENTATION.engine,
+        };
+        const lent = presenterEchec(requalifierLenteur(pasPrete, 2_072));
+        expect(lent.code).toBe('PORTAIL_LENT');
+        expect(lent.retryable).toBe(true);
+        expect(lent.detail).toContain('no agent announced itself');
+    });
+
     it('laisse un engine apres une navigation rapide : c est alors bien un defaut', () => {
         expect(requalifierLenteur(engine, 3_000)).toBe(engine);
         expect(cleDeMessage(requalifierLenteur(engine, 0))).toBe('ERROR_INTERNAL');

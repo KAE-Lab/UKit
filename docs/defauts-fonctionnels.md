@@ -19,6 +19,30 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Une redirection lente après le clic de connexion s'annonce « Le problème vient de UKit »~~ — constaté le 2026-11-10, corrigé le même jour
+
+Reproduit au banc pendant le lot 2 (`ukit`, compte de Bordeaux) : la vérification des identifiants a
+échoué en 9,6 s sur `engine` — « the page did not become ready within 2000 ms (no agent announced
+itself) » —, et la carte a dit « Le problème vient de UKit », alors que la WebView cachée avait bien
+fini sur l'accueil de l'intranet. Le détail des étapes montre où : navigation 2,1 s, clic, attente
+fixe de 4,1 s, puis `wait_for` de 2 s sur une page encore en redirection. La requalification du lot 1
+ne mesurait que les étapes `navigate`, sous les dix secondes ici. Un second essai a réussi en 7,8 s,
+le `wait_for` répondant en 0,2 s. Corrigé : cet échec précis devient « Portail lent », réessayable
+([`requalifierLenteur`](../src/features/Scolarite/services/ScolariteMapping.ts), testé sur le texte
+exact du moteur). **Non corrigé, et à trancher** : la patience du Blueprint de vérification après le
+clic (4 s fixes puis 2 s) ; l'allonger demande une publication du Blueprint, et une mesure de plus
+d'un essai.
+
+### Hors ligne, l'actualisation du dossier accuse le portail — constaté le 2026-11-10
+
+Vu au banc pendant le lot 2 (`ukit`, réseau coupé, espagnol) : « Actualiser » rend « Portail
+injoignable — Le portail de ton université ne répond pas », `blocked [CAS_INDISPONIBLE]`, alors que
+c'est le téléphone qui n'a pas de réseau. La WebView sert sa page d'erreur et l'attente du formulaire
+du CAS expire. **Non corrigé** : distinguer « pas de réseau » d'un portail muet demande de croiser
+l'état du réseau (`@react-native-community/netinfo`, déjà au projet) avec la famille d'échec, à un
+endroit commun à toutes les sources ; c'est une décision de conception, pas un correctif local. Le
+message reste vrai à moitié (rien ne répond) et propose de réessayer.
+
 ### ~~Un filtre saisi à la main accepte n'importe quel texte, et ses rangées sont décalées~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc en jouant l'ajout manuel d'un filtre (audit du lot 1, `ukit`, sombre) : « bonjour »

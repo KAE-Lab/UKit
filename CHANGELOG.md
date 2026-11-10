@@ -79,6 +79,10 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+### Corrigé
+
+- **Une page de connexion lente à se charger dit « Portail lent »**, réessayable, et plus « Le
+  problème vient de UKit » : la redirection après le clic échappait à la mesure.
 - **Un filtre saisi à la main doit être un code d'UE** : « bonjour » devenait un filtre qui ne
   masquait rien. La rangée d'un filtre aligne son code sur son intitulé.
 - **Un groupe trouvé s'ouvre au premier toucher**, clavier encore ouvert.

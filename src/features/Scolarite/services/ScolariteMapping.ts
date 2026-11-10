@@ -187,6 +187,9 @@ export function estServiceIndisponible(failure: Pick<UkitFailure, 'kind' | 'code
 /** Au-dela, une navigation est celle d'un portail lent (constat du banc, 2026-11-06 : douze secondes). */
 export const NAVIGATION_LENTE_MS = 10_000;
 
+/** Le texte du moteur pour une page qui ne s'est pas declaree prete a temps (voir `requalifierLenteur`). */
+const PAGE_PAS_PRETE = /did not become ready/;
+
 /**
  * Un echec sans nom apres une navigation lente se dit « le portail est lent », pas « le probleme
  * vient de UKit ».
@@ -199,9 +202,19 @@ export const NAVIGATION_LENTE_MS = 10_000;
  * Seul `engine` **sans code** est requalifie : un code nomme par le Blueprint (`CAS_INDISPONIBLE`,
  * `LOGIN_FAILED`) dit deja ce qui s'est passe. La famille devient `unavailable`, la seule qui porte
  * un bouton Reessayer, et le detail garde la mesure pour le menu de developpement.
+ *
+ * **Une page qui ne s'est pas chargee a temps** se dit pareil, quelle que soit la navigation mesuree.
+ * Reproduit au banc le 2026-11-10 (audit du lot 1, `ukit`) : la verification des identifiants a
+ * navigue en 2,1 s, puis apres le clic la redirection du CAS vers l'intranet a depasse l'attente fixe
+ * de 4 s et les 2 s du `wait_for` suivant. Le moteur a rendu `engine` — « the page did not become
+ * ready (no agent announced itself) » —, alors que l'intranet s'est bien charge ensuite. La mesure
+ * ne voit que les etapes `navigate` : la redirection qui suit un clic lui echappe. Le moteur ne rend
+ * ce cas qu'en texte (`waitForReady`, @aetherius/react-native 0.5.10, dist/webview/rpc.js) ; le
+ * detail le porte, d'ou le motif, verrouille par le test.
  */
 export function requalifierLenteur(failure: UkitFailure, navigationMs: number): UkitFailure {
-    if (failure.kind !== 'engine' || failure.code !== undefined || navigationMs < NAVIGATION_LENTE_MS) return failure;
+    if (failure.kind !== 'engine' || failure.code !== undefined) return failure;
+    if (navigationMs < NAVIGATION_LENTE_MS && !PAGE_PAS_PRETE.test(failure.detail ?? '')) return failure;
     return ukitFailure('unavailable', `${failure.detail ?? 'engine'} (navigation de ${Math.round(navigationMs)} ms)`, 'PORTAIL_LENT');
 }
 

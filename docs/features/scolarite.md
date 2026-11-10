@@ -2311,6 +2311,12 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   université met du temps à répondre », réessayable. La règle vaut pour la session et pour les
   widgets ; un `engine` après une navigation rapide garde son message, c'est alors un défaut à voir.
   Le seuil ne regarde pas la durée totale : une vérification nominale dure déjà 9,9 s sur `ukit`.
+  Depuis le lot 2, un `engine` qui dit qu'**une page ne s'est pas chargée à temps** (« did not become
+  ready … no agent announced itself ») se requalifie de même, quelle que soit la navigation mesurée :
+  au banc, la vérification a navigué en 2,1 s, puis la redirection du CAS vers l'intranet, après le
+  clic, a dépassé l'attente fixe de 4 s et le `wait_for` de 2 s qui la suit — une étape que la mesure
+  des `navigate` ne voit pas. Le moteur ne rend ce cas qu'en texte : le motif est verrouillé par le
+  test, et une montée de version du moteur doit le revérifier.
 - **La feuille d'échec ne diagnostique pas.** Elle montre le titre et le message de l'échec ; le
   `detail` du moteur reste dans le journal, et un `engine` reste « un problème de notre côté », sans
   bouton — le distinguer d'une source morte se traite chez Aetherius (ci-dessus).
