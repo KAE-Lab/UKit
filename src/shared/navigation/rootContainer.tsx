@@ -218,7 +218,15 @@ export default function RootContainer() {
  */
 function WebViewDuMoteur() {
     return (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        // `collapsable={false}` : sans lui, la nouvelle architecture aplatit une vue qui ne dessine rien,
+        // et l'interdiction d'accessibilite disparaissait avec elle (constate au banc le 2026-11-10).
+        <View
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+            collapsable={false}
+            importantForAccessibility="no-hide-descendants"
+            accessibilityElementsHidden
+        >
             <AetheriusWebView />
         </View>
     );

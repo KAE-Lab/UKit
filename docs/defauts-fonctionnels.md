@@ -99,9 +99,13 @@ les dossiers de la messagerie — à un lecteur d'écran ; les rangées des Rég
 des dialogues de choix et de la proposition d'UE, et l'œil du mot de passe, étaient des boutons sans
 nom. Corrigé : la WebView est enveloppée d'une vue retirée de l'accessibilité, au même endroit
 ([`rootContainer`](../src/shared/navigation/rootContainer.tsx)) ; une icône de police est un décor
-([`Icon`](../src/shared/ui/Icon.tsx)) ; les trois boutons portent leur nom. Vérifié sur `ukit` : plus
-aucun nœud de la WebView dans l'arbre, « Langue, Français », et le dossier, la messagerie et Moodle
-se lisent toujours par la WebView enveloppée. Le passage VoiceOver reste à faire sur l'iPhone.
+([`Icon`](../src/shared/ui/Icon.tsx)) ; les trois boutons portent leur nom. **La première vérification
+était fausse** : elle était tombée sur une page sans contenu. Moodle rechargé, ses nœuds étaient
+encore là — la nouvelle architecture aplatissait l'enveloppe, qui ne dessine rien, et son
+interdiction avec elle. `collapsable={false}` la garde. Vérifié ensuite sur `ukit` après le dossier,
+la messagerie, Moodle et les documents : aucun nœud de la WebView dans l'arbre, « Langue,
+Français », et les quatre lectures en succès par la WebView enveloppée. Le passage VoiceOver reste à
+faire sur l'iPhone.
 
 ### ~~Trois chaînes fautives : un « 2 » en trop en espagnol, une apostrophe parasite, un toast en anglais en dur~~ — constaté le 2026-11-10, corrigé le même jour
 
