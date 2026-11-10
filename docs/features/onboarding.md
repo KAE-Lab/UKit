@@ -148,6 +148,10 @@ liste restait vide sauf en choisissant « AUTRE ». La vraie question n'était p
 filtrage* mais **cette liste est-elle trop longue pour être parcourue** : Celcat publie plusieurs
 centaines de groupes, un référentiel iCalendar en compte treize, qui tiennent à l'écran.
 
+Le semestre en cours est présélectionné ([`semestreDe`](../../src/features/Onboarding/hooks/semestres.ts)),
+au départ comme après un changement d'établissement : sans lui, la liste restait vide après le choix
+de l'année, sans rien dire.
+
 Le filtrage combine trois critères : **année**, **semestre** et **texte saisi**. Année et semestre
 sont traduits en fragments d'identifiants par une table locale :
 
@@ -205,7 +209,8 @@ l'application**, ou réinstaller l'application.
   puis `expo start -c`) : les trois choix, tout de suite, depuis le socle.
 - À l'étape du compte, toucher « Tu es d'un autre campus ? » : retour à l'étape établissement.
 - À l'étape 2, changer thème et langue : l'écran doit se mettre à jour immédiatement.
-- À l'étape 3, choisir une année et un semestre : la liste doit se réduire ; saisir du texte : elle
+- À l'étape des groupes, le semestre en cours est déjà choisi ; toucher une année suffit à remplir la
+  liste. Changer de semestre : elle doit se réduire ; saisir du texte : elle
   doit se réduire encore ; dépasser 10 résultats : le message de résultats masqués doit apparaître.
 - Sélectionner deux groupes puis terminer : le planning doit s'ouvrir sur l'agrégation des deux.
 - Terminer sans choisir de groupe : le planning doit afficher son état vide, sans blocage.

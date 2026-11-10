@@ -33,6 +33,7 @@ import {
 import { StepFin } from './components/FinDuParcours';
 import { StepEtablissement, StepPreferences } from './components/EtapesDeChoix';
 import { VitrineDAccueil } from './components/VitrineDAccueil';
+import { SEMESTRES } from './hooks/semestres';
 import { useDegagementDuPied } from './components/stylesDuParcours';
 import { ActionButton } from '../../shared/ui/ActionButton';
 import { HAUTEUR_DU_FONDU } from '../../shared/ui/FonduDeBord';
@@ -56,11 +57,6 @@ const UNIVERSITY_YEARS_LIST: readonly OptionListee[] = [
     { id: 'M1', title: 'MASTERS', suffix: '1' },
     { id: 'M2', title: 'MASTERS', suffix: '2' },
     { id: 'AUTRE', title: 'OTHER', suffix: '' },
-];
-
-const UNIVERSITY_SEASON_LIST: readonly OptionListee[] = [
-    { id: 'autumn', title: 'AUTUMN' },
-    { id: 'spring', title: 'SPRING' },
 ];
 
 /**
@@ -198,7 +194,7 @@ export default function WelcomeScreen() {
                         themeObj={themeObj}
                         navigatorState={state}
                         yearList={UNIVERSITY_YEARS_LIST}
-                        seasonList={UNIVERSITY_SEASON_LIST}
+                        seasonList={SEMESTRES}
                         filterList={actions.filterList}
                         selectGroup={actions.selectGroup}
                         relancerGroupes={actions.relancerGroupes}
