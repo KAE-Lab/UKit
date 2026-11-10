@@ -82,6 +82,7 @@ const fr: TranslationDict = {
 	// n'existe, ici il manque un geste. Deux phrases, deux ecrans, deux gestes attendus.
 	ERROR_TIMETABLE_LINK_MISSING_TITLE: 'Un lien à coller',
 	ERROR_TIMETABLE_LINK_MISSING: 'L’emploi du temps arrive ici par un lien d’abonnement (iCal). Colle le tien pour l’afficher.',
+	ERROR_TIMETABLE_ACCOUNT: 'L’emploi du temps de ce campus arrive avec ton compte : UKit y lit ton lien d’abonnement, sans rien à coller.',
 	TIMETABLE_GROUPS_MISSING: 'Groupes introuvables : $-',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.

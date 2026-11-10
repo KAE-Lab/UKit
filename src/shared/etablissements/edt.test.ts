@@ -9,7 +9,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { groupesRequis, planningDisponible, resoudreRessources, sourceEdt } from './edt';
+import { groupesRequis, lienParLeCompte, planningDisponible, resoudreRessources, sourceEdt } from './edt';
 import { appliquerCatalogue, projeterEtablissement, setCodeEtablissementActif, ETABLISSEMENT_DEFAUT } from './catalogue';
 import type { EdtIcal } from './catalogue';
 import { appliquerEdtsPersonnels } from './edtPersonnel';
@@ -149,6 +149,24 @@ describe('groupesRequis', () => {
 
         publier({ edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [] } });
         expect(groupesRequis()).toBe(true);
+    });
+});
+
+describe('lienParLeCompte', () => {
+    it('est vrai quand le lien manque et que le compte sait le lire', () => {
+        publier({ edt: { abonnement: { blueprint_lien: 'ukit.portail.essai.edt.lien' } } });
+        expect(lienParLeCompte()).toBe(true);
+    });
+
+    it('est faux des que le lien est la : il n y a plus rien a attendre du compte', () => {
+        publier({ edt: { abonnement: { blueprint_lien: 'ukit.portail.essai.edt.lien' } } });
+        appliquerLiensEdt({ essai: 'https://exemple.fr/agenda.ics' });
+        expect(lienParLeCompte()).toBe(false);
+    });
+
+    it('est faux sans Blueprint de lecture : le collage reste le geste', () => {
+        publier({ edt: { abonnement: {} } });
+        expect(lienParLeCompte()).toBe(false);
     });
 });
 

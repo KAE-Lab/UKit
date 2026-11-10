@@ -187,6 +187,36 @@ export function lienEdtAttendu(): UkitFailure {
 }
 
 /**
+ * Le lien manquant se lira-t-il **sur le compte** plutot qu'il ne se colle ?
+ *
+ * Vrai quand l'emploi du temps attend un lien (`lien-attendu`) et que le catalogue nomme le Blueprint
+ * qui le lit (`edt.abonnement.blueprint_lien`, lot 3). C'est une troisieme reponse a « il te manque un
+ * geste », et elle change le geste : se connecter, et non coller. L'accueil s'en sert pour taire son
+ * etape de lien — celle du compte y repond deja —, et le Planning pour inviter a se connecter.
+ */
+export function lienParLeCompte(): boolean {
+    const source = sourceEdt();
+    // `?? null` : un cache ecrit avant le champ rend `undefined`, que `!== null` accepterait.
+    return source.kind === 'lien-attendu' && (source.config.blueprintLien ?? null) !== null;
+}
+
+/**
+ * L'echec d'un emploi du temps qui n'attend que le compte universitaire.
+ *
+ * Meme famille que `lienEdtAttendu()` — rien n'est en panne, reessayer ne servirait a rien — mais pas
+ * le meme geste : l'ecran qui l'affiche mene a la connexion, et l'adresse se lit toute seule ensuite.
+ * Le titre est celui de l'encart de connexion de la Scolarite : c'est la meme invitation.
+ */
+export function lienEdtParLeCompte(): UkitFailure {
+    return serviceAbsent(
+        'ERROR_TIMETABLE_ACCOUNT',
+        'EDT_COMPTE_ATTENDU',
+        'l etablissement publie un abonnement que le compte sait lire, aucun compte connecte',
+        'CONNECT_ACCOUNT_TITLE',
+    );
+}
+
+/**
  * L'echec d'un groupe que le referentiel de l'etablissement ne connait pas.
  *
  * Distinct de `planningAbsent()` et d'une panne, et c'est le point : un export iCalendar prend des

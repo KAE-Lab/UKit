@@ -1,5 +1,5 @@
 import React from 'react';
-import { Animated, View } from 'react-native';
+import { Animated, DeviceEventEmitter, View, type EmitterSubscription } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 
@@ -14,11 +14,12 @@ import { groupOverlappingCourses } from './ScheduleListUtils';
 import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { ApparitionEnFondu } from '../../../shared/ui/ApparitionEnFondu';
 import { ChargementPlanning, EtatPlanning, FavorisVides, JourneeVide, NoticesPlanning } from './ScheduleListEtats';
+import { LienAttendu } from './LienAttendu';
 import { SourceFailureNotice, type NoticeAction } from '../../../shared/ui/SourceFailureNotice';
 import Translator from '../../../shared/i18n/Translator';
 import { isConnected } from '../../../shared/services/AppCore'
 import { ukitFailure, type Origine, type UkitFailure } from '../../../shared/aetherius';
-import { groupesRequis, lienEdtAttendu, planningAbsent, sourceEdt } from '../../../shared/etablissements';
+import { EVENEMENT_LIEN_EDT, groupesRequis, planningAbsent, sourceEdt } from '../../../shared/etablissements';
 import { PlanningApiService as FetchManager, type PlanningEvent, type PlanningWeekDay } from '../services/PlanningApiService';
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
 import { CourseManager, isArraysEquals, SettingsManager } from '../../../shared/services/AppCore';
@@ -85,6 +86,8 @@ interface ScheduleIssue {
 
 export class ScheduleList extends React.Component<ScheduleListProps, ScheduleListState> {
     _unsubscribe?: () => void;
+    /** Le lien d'abonnement qui change sous l'ecran — lu sur le compte, ou colle (EVENEMENT_LIEN_EDT). */
+    private abonnementLien: EmitterSubscription | null = null;
     /** La derniere issue appliquee : ce que le telephone se remele a sa relecture. */
     private derniereIssue: ScheduleIssue | null = null;
     /** La derniere reponse fraiche, cle et heure reelle : la fenetre de fraicheur des runs automatiques (fraicheur.ts). */
@@ -108,6 +111,9 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
     componentDidMount() {
         this.fetchSchedule();
+        // Dans les deux vues : la semaine n'a pas de relecture au focus, et elle afficherait sinon
+        // « colle ton lien » a cote d'une journee deja remplie.
+        this.abonnementLien = DeviceEventEmitter.addListener(EVENEMENT_LIEN_EDT, () => this.fetchSchedule('automatique'));
         if (this.props.mode === 'day' && this.props.navigation) {
             this._unsubscribe = this.props.navigation.addListener('focus', () => {
                 this.fetchSchedule('automatique');
@@ -157,6 +163,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         this.demonte = true;
         if (this.state.controller) this.state.controller.abort();
         if (this._unsubscribe) this._unsubscribe();
+        this.abonnementLien?.remove();
     }
 
     getCache = async (id: string) => {
@@ -527,11 +534,15 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             return this.renderFailure(planningAbsent());
         }
         if (source.kind === 'lien-attendu') {
-            return this.renderFailure(lienEdtAttendu(), {
-                label: Translator.get('TIMETABLE_LINK_ADD'),
-                onPress: () => this.props.navigation?.navigate('LienEdt'),
-                icon: 'link-variant-plus',
-            });
+            // Coller, se connecter, ou attendre la lecture en cours : c'est le compte qui tranche,
+            // et il vit dans un contexte que cette classe ne lit pas (LienAttendu.tsx).
+            return this.renderEtat(
+                <LienAttendu
+                    theme={this.props.theme}
+                    onColler={() => this.props.navigation?.navigate('LienEdt')}
+                    onConnecter={() => this.props.navigation?.navigate('ScolariteTab')}
+                />
+            );
         }
         // Un abonnement colle **est** l'emploi du temps de cet etudiant-la : il n'y a pas de groupe a
         // choisir, donc pas d'etat « aucun favori » a afficher. Sans cette garde, l'ecran inviterait a

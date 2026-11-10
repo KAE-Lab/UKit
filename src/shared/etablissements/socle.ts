@@ -241,6 +241,8 @@ export const SOCLE: Readonly<Record<string, Etablissement>> = {
         edt: null,
         edtAbonnement: {
             aide: "l'espace emploi du temps de ton ENT, rubrique « exporter » ou « s'abonner »",
+            // On ne connait pas son ENT : il n'y a rien a lire sur un compte qu'on ne sait pas ouvrir.
+            blueprintLien: null,
         },
         // Pas de referentiel de lieux : le motif bordelais capturerait un code qui existe chez nous
         // et poserait un marqueur a Talence pour une salle qui n'y est pas.

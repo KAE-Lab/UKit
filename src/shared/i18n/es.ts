@@ -81,6 +81,7 @@ const es: TranslationDict = {
 	// n'existe, ici il manque un geste. Deux phrases, deux ecrans, deux gestes attendus.
 	ERROR_TIMETABLE_LINK_MISSING_TITLE: 'Un enlace por pegar',
 	ERROR_TIMETABLE_LINK_MISSING: 'El horario llega aquí mediante un enlace de suscripción (iCal). Pega el tuyo para verlo.',
+	ERROR_TIMETABLE_ACCOUNT: 'El horario de este campus llega con tu cuenta: UKit lee ahí tu enlace de suscripción, sin nada que pegar.',
 	TIMETABLE_GROUPS_MISSING: 'Grupos no encontrados: $-',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.

@@ -220,6 +220,12 @@ d'autres domaines** :
   `PlanningDataManager`. Celle-ci **est antérieure** à 6-J et n'était pas documentée ; elle l'est
   maintenant, parce qu'une dépendance tue est plus dangereuse qu'une dépendance assumée.
 
+Une dernière est venue avec le lot 3 de la prochaine version, pour la même règle :
+[`Planning/components/LienAttendu.tsx`](../src/features/Planning/components/LienAttendu.tsx) lit
+`useCredentials` (Scolarité). Chez un campus dont le lien d'abonnement se lit sur le compte, le
+Planning doit dire « connecte-toi » ou « ça arrive » selon que le compte existe et qu'une session
+tourne ; recopier cet état ferait un second chemin vers la même session.
+
 Toute autre dépendance croisée entre deux dossiers de `features/` est à éviter : passer par
 `shared/` ou par les paramètres de navigation.
 

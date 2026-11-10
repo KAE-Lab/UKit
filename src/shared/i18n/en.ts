@@ -79,6 +79,7 @@ const en = {
 	// n'existe, ici il manque un geste. Deux phrases, deux ecrans, deux gestes attendus.
 	ERROR_TIMETABLE_LINK_MISSING_TITLE: 'A link to paste',
 	ERROR_TIMETABLE_LINK_MISSING: 'The timetable shows up here from a subscription link (iCal). Paste yours to display it.',
+	ERROR_TIMETABLE_ACCOUNT: 'This campus’s timetable comes with your account: UKit reads your subscription link there, nothing to paste.',
 	TIMETABLE_GROUPS_MISSING: 'Groups not found: $-',
 	// Une donnee presente mais incomplete : une source interrogee en plusieurs points n'a pas
 	// repondu partout. Ce n'est pas un echec, c'est une reserve sur ce qui est affiche.

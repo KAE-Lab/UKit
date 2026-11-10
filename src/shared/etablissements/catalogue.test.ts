@@ -325,7 +325,8 @@ describe('projeterEdtAbonnement', () => {
     });
 
     it('suffit a etre declare par un objet vide : ce qui compte est le fait', () => {
-        expect(projeterEtablissement(ligne({ edt: { abonnement: {} } })).edtAbonnement).toEqual({ aide: null });
+        expect(projeterEtablissement(ligne({ edt: { abonnement: {} } })).edtAbonnement)
+            .toEqual({ aide: null, blueprintLien: null });
     });
 
     it('porte l aide du catalogue, telle quelle', () => {
@@ -335,7 +336,19 @@ describe('projeterEdtAbonnement', () => {
             ligne({ edt: { abonnement: { aide: 'ADE → Exporter mon agenda' } } }),
         ).edtAbonnement;
 
-        expect(abonnement).toEqual({ aide: 'ADE → Exporter mon agenda' });
+        expect(abonnement).toEqual({ aide: 'ADE → Exporter mon agenda', blueprintLien: null });
+    });
+
+    it('porte le Blueprint qui lit le lien sur le compte, et rien quand la valeur est inexploitable', () => {
+        const declare = projeterEtablissement(
+            ligne({ edt: { abonnement: { blueprint_lien: 'ukit.portail.x.edt.lien' } } }),
+        ).edtAbonnement;
+        const vide = projeterEtablissement(ligne({ edt: { abonnement: { blueprint_lien: '' } } })).edtAbonnement;
+        const nombre = projeterEtablissement(ligne({ edt: { abonnement: { blueprint_lien: 3 } } })).edtAbonnement;
+
+        expect(declare?.blueprintLien).toBe('ukit.portail.x.edt.lien');
+        expect(vide?.blueprintLien).toBeNull();
+        expect(nombre?.blueprintLien).toBeNull();
     });
 
     it('coexiste avec un referentiel iCalendar dans la meme colonne', () => {
@@ -344,7 +357,7 @@ describe('projeterEdtAbonnement', () => {
         );
 
         expect(etablissement.edt?.blueprint).toBe('a');
-        expect(etablissement.edtAbonnement).toEqual({ aide: null });
+        expect(etablissement.edtAbonnement).toEqual({ aide: null, blueprintLien: null });
     });
 });
 

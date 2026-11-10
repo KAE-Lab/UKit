@@ -379,6 +379,7 @@ la laisser tomber dans un `else` :
 | `edt` avec son référentiel | `ical` | `ukit.portail.<code>.edt` et son frère `.annee` | le **référentiel du catalogue**, sans réseau |
 | `edt.abonnement`, lien collé | `abonnement` | `ukit.edt.abonnement` — un seul fichier, embarqué | **aucun** : le lien est déjà le planning de cet étudiant |
 | `edt.abonnement`, aucun lien | `lien-attendu` | aucune — `EDT_LIEN_ATTENDU`, et l'écran propose le geste | — |
+| `edt.abonnement.blueprint_lien`, aucun lien | `lien-attendu` | aucune tant que le compte n'a pas lu le lien — `EDT_COMPTE_ATTENDU` sans compte connecté | — |
 | rien | `aucun` | aucune — `PLANNING_ABSENT`, aucun run ne part | — |
 
 **Les deux derniers ne se confondent pas**, et c'est tout l'objet de 6-J : *« cette université n'a pas
@@ -418,6 +419,37 @@ sans quoi ils inviteraient à chercher un groupe dans une liste qui n'existe pas
 
 Ce n'est **pas** une branche par établissement — aucun `if (etablissement === …)` n'apparaît nulle
 part — c'est une lecture de données, exactement comme l'hôte Celcat depuis le jalon 6-G.
+
+### Le lien lu sur le compte
+
+Coller un lien est le geste que personne n'a envie de faire, et chez un campus comme l'IUT de
+Bordeaux — PRONOTE Campus, sans surface publique — c'était pourtant le seul chemin. Le catalogue
+nomme désormais un Blueprint de portail qui **lit** l'adresse d'abonnement dans l'espace de
+l'étudiant connecté (`edt.abonnement.blueprint_lien`, la suite réservée par
+[6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md)). L'adresse lue se range par
+`enregistrerLienEdt`, exactement comme une adresse collée : le service, le cache et les écrans ne
+savent pas d'où elle vient.
+
+- **Quand** : dans la session universitaire, après le dossier, dans le mode froid **et** le mode chaud,
+  seulement si le lien manque ([`LienDuCompte.ts`](../../src/features/Scolarite/services/LienDuCompte.ts)).
+  Un étudiant servi ne paie jamais ce run ; une lecture qui a échoué un soir se retente au lancement
+  suivant. L'adresse PRONOTE est stable d'une session à l'autre (mesuré), la relire n'apporterait rien.
+- **Jamais un échec de session** : un lien illisible laisse l'étudiant là où il était — l'invitation à
+  coller —, et sa Scolarité ne s'affiche pas en erreur pour un emploi du temps.
+- **Ce que voit le Planning** ([`LienAttendu.tsx`](../../src/features/Planning/components/LienAttendu.tsx)) :
+  sans compte, une invitation à se connecter, et non à coller ; pendant une session, un chargement ;
+  connecté et sans lien, le collage, qui reste le repli. Le compte vit dans un contexte React, d'où un
+  composant fonction plutôt qu'une branche de `ScheduleList`.
+- **À l'accueil**, l'étape « colle ton lien » disparaît pour ces campus : l'étape du compte y répond.
+  Une connexion qui a lu le lien saute directement à la fin, comme les favoris posés par le dossier de
+  l'INP.
+- **Un écran déjà monté l'apprend** par `EVENEMENT_LIEN_EDT`, émis à chaque lien rangé : au lancement,
+  la session chaude peut lire le lien pendant que l'onglet est ouvert.
+
+Le mécanisme ne connaît aucun produit : seul le Blueprint sait où l'adresse se trouve. Celui de l'IUT
+([`ukit.portail.bordeaux-iut.edt.lien`](../../blueprints/portails/ukit-portail-bordeaux-iut-edt-lien.blueprint.json))
+porte dans sa description les mesures qui l'expliquent — un clic synthétique que PRONOTE ignore, une
+adresse posée en propriété et non en attribut — et ce qu'un second campus PRONOTE en réutilise.
 
 ### Deux prédicats, et les confondre casserait le Campus
 
@@ -888,6 +920,7 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`services/couleurDeCours.ts`](../../src/features/Planning/services/couleurDeCours.ts) | la couleur d'une ligne : clé de palette, hexadécimale d'un calendrier, ou `default` ; et son encre, lisible sur la carte (7-J) — pure |
 | [`services/couleurDeCours.test.ts`](../../src/features/Planning/services/couleurDeCours.test.ts) | ses tests |
 | [`services/PlanningIcalSource.ts`](../../src/features/Planning/services/PlanningIcalSource.ts) | la branche iCalendar : résolution des ressources par le référentiel, les deux runs bornés, le run d'abonnement et son cache, la vérification d'un lien collé |
+| [`components/LienAttendu.tsx`](../../src/features/Planning/components/LienAttendu.tsx) | l'état « lien attendu » : se connecter, attendre la lecture, ou coller — le compte tranche |
 | [`components/LienEdtForm.tsx`](../../src/features/Planning/components/LienEdtForm.tsx) | la saisie d'un lien d'abonnement : vérification par un run réel, enregistrement, oubli. Un composant et non un écran — l'accueil le rend en place |
 | [`screens/LienEdtScreen.tsx`](../../src/features/Planning/screens/LienEdtScreen.tsx) | l'écran de pile qui porte ce formulaire, atteint depuis l'état vide du Planning et depuis les Réglages |
 | [`services/PlanningAssembly.ts`](../../src/features/Planning/services/PlanningAssembly.ts) | le contrat `PlanningEvent`, la lecture d'un code d'UE, le tri et le découpage en six jours — **communs aux deux sources** |

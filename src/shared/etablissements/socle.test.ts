@@ -88,6 +88,10 @@ describe('les Blueprints que le socle nomme', () => {
                 nommes.add(etablissement.edt.blueprint);
                 nommes.add(etablissement.edt.blueprintAnnee);
             }
+            // Le Blueprint qui lit le lien d'abonnement sur le compte (lot 3) : un binaire qui nomme la
+            // lecture sans l'embarquer ferait recoller son lien a l'etudiant au premier lancement.
+            const lecture = etablissement.edtAbonnement?.blueprintLien ?? null;
+            if (lecture !== null) nommes.add(lecture);
         }
 
         expect(nommes.size).toBeGreaterThan(0);

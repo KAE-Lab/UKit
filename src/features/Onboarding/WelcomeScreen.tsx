@@ -19,7 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SettingsManager } from '../../shared/services/AppCore';
-import { planningDisponible, sourceEdt } from '../../shared/etablissements';
+import { lienParLeCompte, planningDisponible, sourceEdt } from '../../shared/etablissements';
 import { useCredentials } from '../Scolarite/services/CredentialsContext';
 import Translator from '../../shared/i18n/Translator';
 import style, { tokens } from '../../shared/theme/Theme';
@@ -113,7 +113,11 @@ export default function WelcomeScreen() {
 
     // La liste se recalcule a chaque rendu : changer d'etablissement doit ajouter ou retirer une etape
     // tout de suite, pas au rendu suivant.
-    const etapes = etapesPour(portailDisponible, planningDisponible());
+    //
+    // Un lien qui se lit sur le compte (lot 3) n'a pas d'etape a lui : l'etape du compte y repond, et
+    // qui la passe trouvera au Planning l'invitation a se connecter, pas un champ ou coller ce que son
+    // compte sait lire. L'etape revient quand le lien est la — `onConnecte` la saute alors.
+    const etapes = etapesPour(portailDisponible, planningDisponible() && !lienParLeCompte());
     const index_ = Math.min(index, etapes.length - 1);
     const etape = etapes[index_];
     const derniere = index_ >= etapes.length - 1;
@@ -181,8 +185,11 @@ export default function WelcomeScreen() {
                             /* Le parcours froid a pu regler l'emploi du temps (les propositions du
                                dossier posent les favoris) : l'etape EDT n'a alors plus de question
                                a poser — demander un groupe que le dossier vient de choisir etait
-                               un non-sens, constate sur l'accueil INP (2026-08-31). */
-                            const edtDejaRegle = SettingsManager.getFavoriteGroups().length > 0;
+                               un non-sens, constate sur l'accueil INP (2026-08-31). Meme chose pour
+                               un lien d'abonnement lu sur le compte (l'IUT, lot 3) : proposer de
+                               coller ce que l'application vient de trouver serait le meme non-sens. */
+                            const edtDejaRegle = SettingsManager.getFavoriteGroups().length > 0
+                                || sourceEdt().kind === 'abonnement';
                             allerA(index_ + (edtDejaRegle ? 2 : 1));
                         }}
                     />

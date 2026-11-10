@@ -18,6 +18,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceEventEmitter } from 'react-native';
 
 import SecureStoreService from '../services/SecureStoreService';
 import { getSupabase } from '../supabase';
@@ -74,6 +75,8 @@ export {
     groupeInconnu,
     groupesRequis,
     lienEdtAttendu,
+    lienEdtParLeCompte,
+    lienParLeCompte,
     planningAbsent,
     planningDisponible,
     resoudreRessources,
@@ -124,8 +127,15 @@ const TABLE = 'etablissements';
  * @5, le 2026-09-26 : `credits`, `campus` et `alias`, lus pour la premiere fois (7-I). La base
  * portait les trois colonnes ET leurs valeurs depuis 7-C — verifie en lecture en production ce
  * jour-la, avant d'incrementer : la regle ci-dessus, appliquee dans l'ordre.
+ *
+ * @6, le 2026-11-10 : `edtAbonnement.blueprintLien` (lot 3 de la prochaine version, l'IUT de
+ * Bordeaux). Aucune colonne nouvelle — la valeur vit dans `edt`, deja lue — donc la regle d'ordre ne
+ * mord pas : une base qui ne porte pas encore `blueprint_lien` se projette en `null`, c'est-a-dire
+ * « colle ton lien », le comportement d'avant. Incrementer sert le cas inverse : un cache ecrit par un
+ * binaire qui ne connaissait pas le champ n'en porte pas, et l'etudiant de l'IUT recollerait un lien
+ * que son compte sait lire jusqu'au rafraichissement suivant.
  */
-const CLE_CACHE = 'etablissements@5';
+const CLE_CACHE = 'etablissements@6';
 /**
  * Les colonnes lues, nommees une par une.
  *
@@ -208,6 +218,16 @@ export async function loadLiensEdt(): Promise<void> {
 }
 
 /**
+ * Le lien de l'etablissement selectionne vient de changer : un ecran deja monte relit sa source.
+ *
+ * Il n'en avait pas besoin tant que le seul chemin etait la saisie, qui ramene au Planning par une
+ * navigation — donc par un `focus` qui relit. Le lien lu sur le compte, lui, arrive **pendant** qu'on
+ * regarde le Planning : au lancement, la session chaude le lit pendant que l'onglet est ouvert, et
+ * l'ecran resterait sur « colle ton lien » jusqu'au prochain geste.
+ */
+export const EVENEMENT_LIEN_EDT = 'ukit:lienEdt';
+
+/**
  * Enregistre — ou retire, avec `null` — le lien de l'etablissement selectionne.
  *
  * La memoire est posee **avant** l'ecriture : un ecran qui vient d'enregistrer doit voir son planning
@@ -218,6 +238,7 @@ export async function loadLiensEdt(): Promise<void> {
 export async function enregistrerLienEdt(lien: string | null): Promise<void> {
     const table = fusionnerLiens(liensEdt(), getCodeEtablissementActif(), lien);
     appliquerLiensEdt(table);
+    DeviceEventEmitter.emit(EVENEMENT_LIEN_EDT);
     await SecureStoreService.saveEdtLiens(table);
 }
 

@@ -97,9 +97,17 @@ export interface EdtIcal {
  * `aide` est un **libelle**, pas une instruction : « ADE → Exporter mon agenda ». Il s'affiche tel
  * quel, comme le nom de l'universite, et pour la meme raison — le chemin exact vers un lien
  * d'abonnement est propre a chaque etablissement, et le traduire n'aurait aucun sens.
+ *
+ * `blueprintLien` est la suite que 6-J avait reservee : le Blueprint de portail qui **lit** ce lien
+ * dans l'espace de l'etudiant connecte, pour qu'il n'ait rien a coller. Il rend l'adresse, et elle se
+ * range exactement la ou la saisie manuelle la rangeait (`enregistrerLienEdt`) : tout ce qui est en aval
+ * — `ukit.edt.abonnement`, le cache, les ecrans — ignore d'ou elle vient. `null` : personne n'a ecrit
+ * ce Blueprint pour cet etablissement, et le collage reste le seul chemin. Mesure et premier usage :
+ * l'IUT de Bordeaux, sous PRONOTE Campus (docs/campus/bordeaux-iut.md).
  */
 export interface EdtAbonnement {
     readonly aide: string | null;
+    readonly blueprintLien: string | null;
 }
 
 /**
@@ -372,11 +380,17 @@ function projeterEdt(valeur: unknown): EdtIcal | null {
  * Un objet vide suffit a le declarer : ce qui compte est **le fait**, pas ses details. `aide` est
  * facultative parce qu'un etablissement peut publier un export sans qu'on sache dire ou l'etudiant le
  * trouve — et une aide inventee serait pire qu'une aide absente.
+ *
+ * `blueprint_lien` est facultatif pour la meme raison : sans lui, l'etudiant colle son lien, comme
+ * avant. Le prefixe du nom n'est **pas** verifie ici mais au moment de jouer
+ * (features/Scolarite/services/LienDuCompte.ts), comme pour les autres Blueprints de portail : ce
+ * module projette une ligne, il ne decide pas de ce qui est jouable.
  */
 function projeterEdtAbonnement(valeur: unknown): EdtAbonnement | null {
     if (valeur === null || typeof valeur !== 'object' || Array.isArray(valeur)) return null;
 
-    return { aide: texteOuNull((valeur as Record<string, unknown>).aide) };
+    const source = valeur as Record<string, unknown>;
+    return { aide: texteOuNull(source.aide), blueprintLien: texteOuNull(source.blueprint_lien) };
 }
 
 /**

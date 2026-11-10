@@ -4,7 +4,7 @@ import { AppState } from 'react-native';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import { marquer } from '../../../shared/services/Chrono';
 import { SettingsManager } from '../../../shared/services/AppCore';
-import { getCodeEtablissementActif, portailPublie } from '../../../shared/etablissements';
+import { enregistrerLienEdt, getCodeEtablissementActif, portailPublie } from '../../../shared/etablissements';
 import Translator from '../../../shared/i18n/Translator';
 import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { adoucirLaTransition } from '../../../shared/ui/transitions';
@@ -549,6 +549,13 @@ const appliquerResultat = useCallback((resultat: ResultatSession) => {
     // Ni appliquees ni oubliees : c'est la modale qui demande, et l'etudiant qui tranche. Elles
     // sont en revanche **gardees** jusqu'a sa reponse (voir `usePropositions`).
     if (resultat.propositions !== undefined) poserPropositions(resultat.propositions);
+    /*
+     * Le lien lu sur le compte se range comme un lien colle, sans rien demander : c'est l'adresse
+     * que l'espace de l'etudiant lui donne a lui, pas une supposition (a la difference des
+     * propositions). La memoire est posee avant toute attente (`enregistrerLienEdt`), donc AVANT
+     * l'etat final ci-dessous : l'accueil, qui avance sur cet etat, voit deja un emploi du temps regle.
+     */
+    if (resultat.lienEdt !== undefined) void enregistrerLienEdt(resultat.lienEdt);
     /*
      * **Une validation en attente se solde TOUJOURS a la fin du run.**
      *

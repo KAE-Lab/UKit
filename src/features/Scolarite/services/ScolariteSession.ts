@@ -40,6 +40,7 @@ import {
 } from '../../../shared/services/PropositionsTrace';
 import { maintenant } from '../../../shared/services/Temps';
 import { compter } from '../../../shared/mesure';
+import { blueprintDuLienALire, projeterLienLu } from './LienDuCompte';
 import { surLeNavigateur, TOURS_DE_SESSION } from './MoteurNavigateur';
 import { projeterPropositions, type PropositionsDossier } from './PropositionsDossier';
 import { demandeUneRessaisie, projeterDossier, requalifierLenteur, type ScolariteColdData } from './ScolariteMapping';
@@ -341,9 +342,40 @@ async function jouerVerification(options: OptionsSession): Promise<UkitFailure |
     return run.ok === false ? run.failure : null;
 }
 
+/**
+ * L'adresse d'abonnement de l'emploi du temps, lue sur le compte quand il y a lieu (LienDuCompte.ts).
+ *
+ * **Jamais un echec de session.** Un lien qui n'a pas pu se lire laisse l'etudiant dans l'etat qu'il
+ * avait avant ce mecanisme — l'invitation a coller son lien — et la session, elle, a reussi : son
+ * dossier, ses widgets et ses documents ne doivent pas s'afficher en erreur pour un emploi du temps.
+ * L'echec se trace (`reportFailure`) et la lecture se retente a la session suivante, puisque le lien
+ * manque toujours.
+ *
+ * Seuls les identifiants et l'annulation passent : ni l'etape d'ecran, que le dossier vient de poser,
+ * ni `onLoginSuccess` — ce fichier ne prouve rien, et le laisser reecrire le trousseau serait donner a
+ * une lecture d'emploi du temps le role de `ukit.portail.verification`.
+ */
+async function lireLienEdt(options: OptionsSession): Promise<string | null> {
+    const nom = blueprintDuLienALire();
+    if (nom === null) return null;
+
+    const run = await jouer(nom, 'dossier', {
+        ...(options.secrets !== undefined ? { secrets: options.secrets } : {}),
+        ...(options.signal !== undefined ? { signal: options.signal } : {}),
+    });
+    if (run.ok === false) return null;
+
+    const lien = projeterLienLu(run.outputs);
+    // L'adresse vaut un secret : la trace dit seulement si on l'a, jamais ce qu'elle est.
+    console.log(`[lienEdt] lien lu sur le compte : ${lien === null ? 'inexploitable' : 'oui'}`);
+    return lien;
+}
+
 /** Ce qu'une session complete a obtenu. Les champs sont independants. */
 export interface ResultatSession {
     readonly cold?: ScolariteColdData;
+    /** L'adresse d'abonnement lue sur le compte, a ranger comme un lien colle. */
+    readonly lienEdt?: string;
     /**
      * Ce que le dossier a livre **en plus** de l'identite, et qu'un ecran proposera d'appliquer.
      *
@@ -418,8 +450,21 @@ export async function deroulerSession(
         propositions = dossier.propositions;
     }
 
+    /*
+     * **Le lien, apres le dossier et dans les deux modes.** Apres, parce que la session CAS que le
+     * dossier vient d'ouvrir est persistee : la lecture la traverse sans formulaire. Dans les deux
+     * modes, parce qu'un lien qui n'a pas pu se lire a la connexion — un portail en panne ce soir-la —
+     * doit se retenter seul au lancement suivant, qui est un parcours chaud ; `blueprintDuLienALire`
+     * ne rend un nom que si le lien manque, donc un etudiant servi ne paie jamais ce run.
+     *
+     * Jamais apres un echec : la fonction est deja sortie. Un `LOGIN_FAILED` du dossier suivi d'une
+     * lecture du lien ferait deux refus d'affilee sur un CAS qui verrouille les comptes.
+     */
+    const lienEdt = await lireLienEdt(options);
+
     return {
         ...(cold !== undefined ? { cold } : {}),
         ...(propositions !== undefined ? { propositions } : {}),
+        ...(lienEdt !== null ? { lienEdt } : {}),
     };
 }
