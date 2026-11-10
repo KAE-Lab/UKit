@@ -19,6 +19,14 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Les boutons de pas du délai des rappels sont des disques~~ — constaté le 2026-11-10, harmonisé le même jour
+
+Vu au banc pendant l'audit du lot 1 : « − » et « + » de la page Notifications étaient ronds, forme que
+[CONTRIBUTING](../CONTRIBUTING.md) réserve aux points d'état, aux compteurs et aux jauges (« un bouton
+rond dénote »). Harmonisés en carré arrondi de `radius.md`, comme le bouton de retour et le bouton de
+filtre ([`SettingsSections`](../src/features/Settings/components/SettingsSections.tsx)) ; la phrase de
+[theme.md](theme.md) qui disait le délai choisi « dans une liste cochée » était aussi périmée.
+
 ### ~~Dans la recherche de groupes, le premier toucher sur un résultat ne l'ouvre pas~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc pendant l'audit du lot 1, sur `ukit` : `INF601A1` tapé, le premier toucher sur le résultat

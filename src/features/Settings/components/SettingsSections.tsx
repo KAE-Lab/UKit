@@ -174,7 +174,7 @@ const BOUTON_DE_PAS = 44;
 /** Le rythme d'un appui long sur un bouton de pas. */
 const REPETITION_MS = 120;
 
-/** Un bouton de pas, rond, qui repete sous un appui long. */
+/** Un bouton de pas, carre arrondi comme les autres boutons, qui repete sous un appui long. */
 function BoutonDePas({ theme, icone, desactive, onPas, libelle }: {
     theme: AppThemeType; icone: 'minus' | 'plus'; desactive: boolean; onPas: () => void; libelle: string;
 }) {
@@ -408,7 +408,9 @@ const styles = StyleSheet.create({
     boutonDePas: {
         width: BOUTON_DE_PAS,
         height: BOUTON_DE_PAS,
-        borderRadius: BOUTON_DE_PAS / 2,
+        // Un carre arrondi, pas un disque : un bouton rond denote (CONTRIBUTING, docs/theme.md),
+        // harmonise a l'audit du lot 1 (2026-11-10).
+        borderRadius: tokens.radius.md,
         alignItems: 'center',
         justifyContent: 'center',
     },

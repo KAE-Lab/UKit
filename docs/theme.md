@@ -747,7 +747,8 @@ Acquises, et qui ont coûté à être trouvées :
   natifs rendent l'apparence de **chaque** plateforme, et celle d'Android a l'air d'un autre âge à
   côté de celle d'iOS : [`Interrupteur`](../src/shared/ui/Interrupteur.tsx) donne une seule apparence
   aux deux. Le `Curseur` du dépôt est sorti à la troisième passe de 7-J : le seul réglage qui s'en
-  servait, le délai des rappels, se choisit dans une liste cochée.
+  servait, le délai des rappels, se règle par deux boutons de pas — en carré arrondi de `radius.md`
+  depuis l'audit du lot 1 (2026-11-10), ils étaient des disques.
 
   **L'exception de forme est écrite pour qu'on ne la « corrige » pas** : la règle des carrés arrondis
   vise les **surfaces**, et un contrôle glissant n'en est pas une — il n'héberge aucun contenu, sa
