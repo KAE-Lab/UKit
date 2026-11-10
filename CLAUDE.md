@@ -13,6 +13,7 @@ Application Expo (SDK 57, React Native 0.86) pour iOS et Android ; la console d'
 ```bash
 npx tsc --noEmit && npx eslint . && npm test
 npm run parity                                       # si un Blueprint ou une source bouge
+npm --prefix console run build                       # si src/shared bouge : la console le partage
 npx expo export --platform android && npx expo export --platform ios   # si une dépendance native bouge
 ```
 
