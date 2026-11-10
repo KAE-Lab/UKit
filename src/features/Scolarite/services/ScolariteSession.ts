@@ -40,8 +40,8 @@ import {
 } from '../../../shared/services/PropositionsTrace';
 import { maintenant } from '../../../shared/services/Temps';
 import { compter } from '../../../shared/mesure';
-import { blueprintDuLienALire, projeterLienLu } from './LienDuCompte';
-import { surLeNavigateur, TOURS_DE_SESSION } from './MoteurNavigateur';
+import { blueprintDuLienALire, lienDuMemeCompte, projeterLienLu } from './LienDuCompte';
+import { surLeNavigateur, TOURS_DE_SESSION, type PrioriteMoteur } from './MoteurNavigateur';
 import { projeterPropositions, type PropositionsDossier } from './PropositionsDossier';
 import { demandeUneRessaisie, projeterDossier, requalifierLenteur, type ScolariteColdData } from './ScolariteMapping';
 
@@ -55,7 +55,13 @@ import { demandeUneRessaisie, projeterDossier, requalifierLenteur, type Scolarit
 export type EtapeSession = 'connecting' | 'profile' | 'dossier';
 
 export type DossierResultat =
-    | { readonly ok: true; readonly cold: ScolariteColdData; readonly propositions: PropositionsDossier }
+    | {
+        readonly ok: true;
+        readonly cold: ScolariteColdData;
+        readonly propositions: PropositionsDossier;
+        /** L'identite complete du dossier, « Prenom et Nom » : la lecture du lien s'y confronte. */
+        readonly identite: string;
+    }
     | { readonly ok: false; readonly failure: UkitFailure };
 
 export interface OptionsSession {
@@ -147,6 +153,7 @@ async function jouer(
     nom: RunnableBlueprintName,
     depart: EtapeSession,
     options: OptionsSession,
+    priorite: PrioriteMoteur = 'session',
 ): Promise<{ ok: true; outputs: Readonly<Record<string, unknown>> } | { ok: false; failure: UkitFailure }> {
     // `priorite: 'session'` : un geste de l'utilisateur prend la main sur les lectures d'arriere-plan,
     // qui sont abandonnees. Il n'est refuse que par **une autre session** — deux sessions concurrentes
@@ -158,7 +165,7 @@ async function jouer(
         signal,
         onEvent: suivreProgression(depart, options),
     }), {
-        priorite: 'session',
+        priorite,
         ...(options.signal !== undefined ? { signal: options.signal } : {}),
     });
 
@@ -217,7 +224,8 @@ export async function jouerDossier(options: OptionsSession = {}): Promise<Dossie
 
     // L'horodatage se pose ICI et non dans la projection : celle-ci ne doit connaitre ni
     // l'heure ni la plateforme, c'est ce qui la rend rejouable sous vitest.
-    return { ok: true, cold: projeterDossier(run.outputs, maintenant().toISOString()), propositions };
+    const identite = typeof run.outputs.identite === 'string' ? run.outputs.identite : '';
+    return { ok: true, cold: projeterDossier(run.outputs, maintenant().toISOString()), propositions, identite };
 }
 
 /**
@@ -345,38 +353,58 @@ async function jouerVerification(options: OptionsSession): Promise<UkitFailure |
 /**
  * L'adresse d'abonnement de l'emploi du temps, lue sur le compte quand il y a lieu (LienDuCompte.ts).
  *
+ * Rend une adresse a ranger, `null` pour **effacer** celle qui est rangee, ou `undefined` pour ne rien
+ * toucher.
+ *
  * **Jamais un echec de session.** Un lien qui n'a pas pu se lire laisse l'etudiant dans l'etat qu'il
  * avait avant ce mecanisme — l'invitation a coller son lien — et la session, elle, a reussi : son
  * dossier, ses widgets et ses documents ne doivent pas s'afficher en erreur pour un emploi du temps.
- * L'echec se trace (`reportFailure`) et la lecture se retente a la session suivante, puisque le lien
- * manque toujours.
+ * L'echec se trace (`reportFailure`) et la lecture se retente a la session suivante.
+ *
+ * Deux lectures, et elles ne se jouent pas pareil :
+ *
+ *   - **apres une connexion ou un dossier** (`connecter: oui`, priorite d'un geste) : le compte vient
+ *     d'etre prouve, son formulaire peut se remplir. Des identifiants **saisis** relisent meme un lien
+ *     range, que le compte a pu changer ; si cette relecture echoue ou contredit l'identite du dossier
+ *     (`lienDuMemeCompte`), l'ancien lien s'efface — il est peut-etre celui d'un autre ;
+ *   - **au lancement**, en mode chaud (`connecter: non`, arriere-plan) : personne n'a rien saisi. Le
+ *     Blueprint ne soumet aucun mot de passe — un mot de passe change le ferait refuser a chaque
+ *     lancement par un CAS qui verrouille les comptes — et la lecture attend son tour derriere les
+ *     widgets au lieu de les interrompre.
  *
  * Seuls les identifiants et l'annulation passent : ni l'etape d'ecran, que le dossier vient de poser,
  * ni `onLoginSuccess` — ce fichier ne prouve rien, et le laisser reecrire le trousseau serait donner a
  * une lecture d'emploi du temps le role de `ukit.portail.verification`.
  */
-async function lireLienEdt(options: OptionsSession): Promise<string | null> {
-    // Des identifiants fournis a l'appel sont une connexion : le compte a pu changer, le lien se relit.
-    const nom = blueprintDuLienALire({ forcer: options.secrets !== undefined });
-    if (nom === null) return null;
+async function lireLienEdt(
+    options: OptionsSession,
+    mode: 'cold' | 'hot',
+    identite: string,
+): Promise<string | null | undefined> {
+    const saisis = options.secrets !== undefined;
+    const nom = blueprintDuLienALire({ forcer: saisis });
+    if (nom === null) return undefined;
 
+    const automatique = mode === 'hot' && !saisis;
     const run = await jouer(nom, 'dossier', {
+        inputs: { connecter: automatique ? 'non' : 'oui' },
         ...(options.secrets !== undefined ? { secrets: options.secrets } : {}),
         ...(options.signal !== undefined ? { signal: options.signal } : {}),
-    });
-    if (run.ok === false) return null;
+    }, automatique ? 'arriere-plan' : 'session');
 
-    const lien = projeterLienLu(run.outputs);
-    // L'adresse vaut un secret : la trace dit seulement si on l'a, jamais ce qu'elle est.
-    console.log(`[lienEdt] lien lu sur le compte : ${lien === null ? 'inexploitable' : 'oui'}`);
-    return lien;
+    const lu = run.ok === false ? null : projeterLienLu(run.outputs);
+    const juste = lu !== null && lienDuMemeCompte(lu, identite);
+    // L'adresse vaut un secret : la trace dit seulement ce qu'on en fait, jamais ce qu'elle est.
+    console.log(`[lienEdt] lien lu sur le compte : ${juste ? 'oui' : lu === null ? 'non' : 'autre compte, refuse'}`);
+    if (juste) return lu;
+    return saisis ? null : undefined;
 }
 
 /** Ce qu'une session complete a obtenu. Les champs sont independants. */
 export interface ResultatSession {
     readonly cold?: ScolariteColdData;
-    /** L'adresse d'abonnement lue sur le compte, a ranger comme un lien colle. */
-    readonly lienEdt?: string;
+    /** L'adresse d'abonnement lue sur le compte, a ranger comme un lien colle ; `null` l'efface. */
+    readonly lienEdt?: string | null;
     /**
      * Ce que le dossier a livre **en plus** de l'identite, et qu'un ecran proposera d'appliquer.
      *
@@ -443,12 +471,14 @@ export async function deroulerSession(
 
     let cold: ScolariteColdData | undefined;
     let propositions: PropositionsDossier | undefined;
+    let identite = '';
 
     if (mode === 'cold' && dossierPublie) {
         const dossier = await jouerDossier(options);
         if (dossier.ok === false) return { failure: dossier.failure };
         cold = dossier.cold;
         propositions = dossier.propositions;
+        identite = dossier.identite;
     }
 
     /*
@@ -461,11 +491,11 @@ export async function deroulerSession(
      * Jamais apres un echec : la fonction est deja sortie. Un `LOGIN_FAILED` du dossier suivi d'une
      * lecture du lien ferait deux refus d'affilee sur un CAS qui verrouille les comptes.
      */
-    const lienEdt = await lireLienEdt(options);
+    const lienEdt = await lireLienEdt(options, mode, identite);
 
     return {
         ...(cold !== undefined ? { cold } : {}),
         ...(propositions !== undefined ? { propositions } : {}),
-        ...(lienEdt !== null ? { lienEdt } : {}),
+        ...(lienEdt !== undefined ? { lienEdt } : {}),
     };
 }

@@ -437,9 +437,16 @@ savent pas d'où elle vient.
   sait le lire : une lecture qui a échoué un soir se reprend ainsi toute seule (vérifié au banc, en
   oubliant le lien puis en relançant). Un étudiant servi ne paie jamais ce run : l'adresse PRONOTE est
   stable d'une session à l'autre (mesuré).
-- **Le lien appartient au compte** : la déconnexion l'oublie, comme le dossier et les widgets — sinon
-  un téléphone prêté montrerait l'emploi du temps du précédent —, et une connexion avec des identifiants
-  saisis le relit même présent, parce que le compte a pu changer.
+- **La lecture automatique ne soumet aucun mot de passe** (entrée `connecter: non` du Blueprint) et
+  attend son tour derrière les widgets : un mot de passe changé se ferait sinon refuser à chaque
+  lancement par un CAS qui verrouille les comptes. Si le CAS demande le formulaire, elle échoue en
+  silence, et la prochaine connexion lit le lien. Au banc, la session du CAS survivait à la relance.
+- **Le lien appartient au compte** : la déconnexion l'oublie, avec les jours mis en cache — leur clé
+  ne nomme ni le lien ni le compte —, sinon un téléphone prêté montrerait l'emploi du temps du
+  précédent ; une connexion avec des identifiants saisis le relit même présent, parce que le compte a
+  pu changer, et l'efface si la relecture échoue. L'adresse lue doit porter le nom de famille du
+  dossier qui vient d'être lu (`Edt_<NOM>.ics`, `lienDuMemeCompte`) : la déconnexion ferme la session
+  du CAS, pas forcément celle de PRONOTE.
 - **Jamais un échec de session** : un lien illisible laisse l'étudiant là où il était — l'invitation à
   coller —, et sa Scolarité ne s'affiche pas en erreur pour un emploi du temps.
 - **Ce que voit le Planning** ([`LienAttendu.tsx`](../../src/features/Planning/components/LienAttendu.tsx)) :

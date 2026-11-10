@@ -7,6 +7,14 @@
     "portail_user",
     "portail_pass"
   ],
+  "inputs": {
+    "connecter": {
+      "type": "string",
+      "required": false,
+      "default": "oui",
+      "description": "« oui » : le formulaire du CAS, s'il paraît, se remplit avec les identifiants. « non » : il fait échouer le run, sans rien soumettre. L'application passe « non » pour la lecture AUTOMATIQUE du lancement : elle ne doit jamais présenter un mot de passe que personne n'a saisi — s'il a changé, chaque lancement le ferait refuser par un CAS qui verrouille les comptes. La lecture qui suit une connexion ou le dossier passe « oui »."
+    }
+  },
   "vars": {
     "espace": "https://pronote.iut.u-bordeaux.fr/etudiant",
     "racine": "https://pronote.iut.u-bordeaux.fr"
@@ -50,31 +58,36 @@
       }
     },
     {
+      "action": "assert",
+      "condition": "{{ steps.porte.formulaire == 0 or inputs.connecter == 'oui' }}",
+      "message": "session CAS expiree : la lecture automatique ne soumet pas de mot de passe, elle attend la prochaine connexion"
+    },
+    {
       "action": "fill",
-      "when": "{{ steps.porte.formulaire > 0 }}",
+      "when": "{{ steps.porte.formulaire > 0 and inputs.connecter == 'oui' }}",
       "selector": "#username",
       "value": "{{ secrets.portail_user }}"
     },
     {
       "action": "fill",
-      "when": "{{ steps.porte.formulaire > 0 }}",
+      "when": "{{ steps.porte.formulaire > 0 and inputs.connecter == 'oui' }}",
       "selector": "#password",
       "value": "{{ secrets.portail_pass }}"
     },
     {
       "action": "click",
-      "when": "{{ steps.porte.formulaire > 0 }}",
+      "when": "{{ steps.porte.formulaire > 0 and inputs.connecter == 'oui' }}",
       "selector": "input[type=submit]"
     },
     {
       "action": "wait",
-      "when": "{{ steps.porte.formulaire > 0 }}",
+      "when": "{{ steps.porte.formulaire > 0 and inputs.connecter == 'oui' }}",
       "ms": 4000,
       "note": "La cascade d'authentification : une operation emise pendant ces sauts se perd en silence sur un appareil. Payee seulement si l'on s'est reellement authentifie."
     },
     {
       "action": "wait_for",
-      "when": "{{ steps.porte.formulaire > 0 }}",
+      "when": "{{ steps.porte.formulaire > 0 and inputs.connecter == 'oui' }}",
       "selector": "#loginErrorsPanel",
       "state": "detached",
       "timeout_ms": 2000,

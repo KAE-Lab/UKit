@@ -60,6 +60,9 @@ export function blueprintDuLienALire(options: { readonly forcer?: boolean } = {}
  */
 const ADRESSE = /^https:\/\/[^\s/?#{}]+\/[^\s{}]+$/;
 
+/** Ce qu'une valeur absente devient en traversant un gabarit : `None` (moteur Python), `undefined`, `null`. */
+const VALEUR_ABSENTE = /\/(None|undefined|null)(\/|\?|$)/;
+
 /**
  * L'adresse rendue par le run, ou `null` si elle n'est pas exploitable.
  *
@@ -71,7 +74,37 @@ export function projeterLienLu(outputs: Readonly<Record<string, unknown>>): stri
     if (typeof lien !== 'string') return null;
 
     const nettoye = lien.trim();
-    return ADRESSE.test(nettoye) ? nettoye : null;
+    return ADRESSE.test(nettoye) && !VALEUR_ABSENTE.test(nettoye) ? nettoye : null;
+}
+
+/** Une chaine reduite a ses mots en capitales, sans accents : « Belharet-Dupré » → [BELHARET, DUPRE]. */
+function mots(texte: string): string[] {
+    return texte
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .split(/[^A-Z]+/)
+        .filter((mot) => mot !== '');
+}
+
+/**
+ * L'adresse lue est-elle bien celle du compte dont le dossier vient d'etre lu ?
+ *
+ * Le nom du fichier PRONOTE porte le nom de famille de l'etudiant (`Edt_<NOM>.ics`, mesure du
+ * 2026-11-10). La question se pose parce qu'une deconnexion ferme la session du CAS, pas celle des
+ * services (docs/features/scolarite.md) : si PRONOTE gardait la sienne, le compte qui se connecte
+ * apres un autre pourrait lire l'adresse du precedent, et la ranger sous son nom.
+ *
+ * Vrai quand on ne peut pas trancher — un fichier d'une autre forme, une identite inconnue — : ce
+ * controle refuse une contradiction, il n'exige pas une preuve. Le nom de famille doit figurer, mot
+ * pour mot, dans l'identite (« Prenom et Nom » du dossier).
+ */
+export function lienDuMemeCompte(lien: string, identite: string): boolean {
+    const fichier = /\/ical\/Edt_([^/?]+)\.ics/.exec(lien);
+    const nom = fichier === null ? [] : mots(decodeURIComponent(fichier[1]));
+    const personne = new Set(mots(identite));
+    if (nom.length === 0 || personne.size === 0) return true;
+    return nom.every((mot) => personne.has(mot));
 }
 
 /**

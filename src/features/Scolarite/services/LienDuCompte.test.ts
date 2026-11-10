@@ -20,7 +20,7 @@ import {
 } from '../../../shared/etablissements/catalogue';
 import { appliquerLiensEdt } from '../../../shared/etablissements/lienEdt';
 import type { EtablissementRow } from '../../../shared/supabase/types';
-import { blueprintDuLienALire, lienLuSurLeCompte, projeterLienLu } from './LienDuCompte';
+import { blueprintDuLienALire, lienDuMemeCompte, lienLuSurLeCompte, projeterLienLu } from './LienDuCompte';
 
 const LIEN = 'https://pronote.exemple.fr/Telechargements/ical/Edt_ESSAI.ics?version=2026.4.7&icalsecurise=ABC&param=66'
     + '6f6f';
@@ -115,9 +115,26 @@ describe('projeterLienLu', () => {
         ['non textuelle', { lien: 42 }],
         ['en clair', { lien: LIEN.replace('https', 'http') }],
         ['sans chemin', { lien: 'https://pronote.exemple.fr' }],
-        ['venue d une valeur absente', { lien: 'https://pronote.exemple.fr/None' + ' x' }],
+        ['venue d une valeur absente', { lien: 'https://pronote.exemple.fr/None' }],
+        ['venue d une valeur absente, au milieu', { lien: 'https://pronote.exemple.fr/undefined?a=1' }],
         ['au gabarit non resolu', { lien: 'https://pronote.exemple.fr/{{ steps.export.relatif }}' }],
     ])('refuse une adresse %s', (_cas, outputs) => {
         expect(projeterLienLu(outputs)).toBeNull();
+    });
+});
+
+describe('lienDuMemeCompte', () => {
+    it('reconnait le nom de famille du dossier dans le nom du fichier', () => {
+        expect(lienDuMemeCompte(LIEN, 'Camille ESSAI')).toBe(true);
+        expect(lienDuMemeCompte(LIEN.replace('Edt_ESSAI', 'Edt_DUPR%C3%89'), 'Jean Dupré')).toBe(true);
+    });
+
+    it('refuse l adresse d un autre compte', () => {
+        expect(lienDuMemeCompte(LIEN, 'Jean DUPONT')).toBe(false);
+    });
+
+    it('ne tranche pas sans identite ni fichier reconnaissable', () => {
+        expect(lienDuMemeCompte(LIEN, '')).toBe(true);
+        expect(lienDuMemeCompte('https://ade.exemple.fr/anonymous_cal.jsp?resources=7', 'Jean DUPONT')).toBe(true);
     });
 });
