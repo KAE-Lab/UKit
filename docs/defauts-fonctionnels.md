@@ -558,7 +558,15 @@ ne s'applique donc pas. La lecture demande une session authentifiée sur Celcat,
 Blueprint de portail, et pour l'écrire **un compte prêté de L1** ([adaptation-campus.md](adaptation-campus.md)) :
 rien ne se construit à l'aveugle. Sans compte, la limite s'écrit : le premier semestre de L1 attend.
 
-### Un étudiant de Bordeaux INP sans emploi du temps personnel, sans que rien ne le dise — rapporté le 2026-09-21
+### ~~Un étudiant de Bordeaux INP sans emploi du temps personnel, sans que rien ne le dise~~ — rapporté le 2026-09-21, corrigé le 2026-11-10
+
+*Corrigé dans la passe d'avant Montaigne, sur décision du propriétaire du produit* : la rangée
+« Emploi du temps personnel introuvable » le dit, sous la salutation, et sa relance relit le dossier
+([`EdtIntrouvable`](../src/features/Scolarite/components/EdtIntrouvable.tsx), la règle testée dans
+`ScolariteMapping.test.ts`). Provoqué au banc sans toucher au compte : la lecture de la fiche rendue
+impossible en local, puis rétablie pour la relance
+([scolarite.md](features/scolarite.md#lemploi-du-temps-personnel-introuvable-se-dit)).
+La cause chez l'étudiant reste inconnue ; ce qu'il faut lui demander ne change pas.
 
 *Lot 1, 2026-11-10 — reste ouvert, faute du cas.* Le compte prêté de l'INP lit son emploi du temps
 (ressource lue, proposée, appliquée, planning affiché en 0,8 s) : l'absence ne se reproduit pas. Dire

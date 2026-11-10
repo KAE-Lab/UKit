@@ -165,6 +165,8 @@ entrée.
   (décision du propriétaire, [campus.md](features/campus.md#usecampuslocation) amendé). Croisés au
   passage : les distances écrites dans le cache partagé des bâtiments, un nom entre parenthèses rangé
   en tête.
+- **L'emploi du temps personnel introuvable de l'INP se dit**, par une rangée et sa relance (décision
+  du propriétaire).
 
 **À publier, avec le reste** : `ukit.portail.verification` 3, depuis `main` (étape 3 ci-dessous ; le
 manifeste publié est vide, lu le 2026-11-10 : la version 3 bat le socle du dernier tag et sera
@@ -175,6 +177,7 @@ annoncée). Sans publication, la correction arrive avec la release.
 - la première connexion sur un iPhone neuf (WKWebView, la page de succès du CAS) ;
 - la permission de position refusée puis accordée dans Réglages (iOS ne repose jamais la question),
   et un nom de lieu entre parenthèses trié sous Hermes iOS ;
+- la rangée de l'emploi du temps introuvable et sa confirmation.
 
 **Pour Bordeaux Montaigne**, même produit : le mécanisme et la projection des intitulés PRONOTE servent
 tels quels. Il reste à écrire son portail de zéro (CAS distinct), et dans une copie du Blueprint

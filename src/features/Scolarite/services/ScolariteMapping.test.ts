@@ -139,6 +139,25 @@ describe('projeterDossier', () => {
         expect(inp.formation).toBe('Année 2 - Ingénieur Télécommunications');
         expect(inp.formationAnnee).toBe('2026-2027');
     });
+
+    describe('edtPersonnelIntrouvable', () => {
+        it('se pose quand le portail declare la ressource et la rend vide', () => {
+            expect(projeterDossier({ edt_ressource: [], edt_libelle: [] }, LU_LE).edtPersonnelIntrouvable).toBe(true);
+        });
+
+        it('se pose aussi sur une ressource illisible, que la proposition aurait ecartee', () => {
+            expect(projeterDossier({ edt_ressource: ['Direct Planning Tree_abc'] }, LU_LE).edtPersonnelIntrouvable).toBe(true);
+        });
+
+        it('reste absent quand la ressource est lue', () => {
+            const dossier = projeterDossier({ edt_ressource: ['Direct Planning Tree_4087'], edt_libelle: ['Promo'] }, LU_LE);
+            expect(dossier).not.toHaveProperty('edtPersonnelIntrouvable');
+        });
+
+        it('reste absent quand le portail ne declare aucune ressource : il n a rien promis', () => {
+            expect(projeterDossier({ numero_etudiant: '21000001' }, LU_LE)).not.toHaveProperty('edtPersonnelIntrouvable');
+        });
+    });
 });
 
 describe('cleDeMessage', () => {

@@ -368,6 +368,8 @@ const fr: TranslationDict = {
 	REENTER_CREDENTIALS: 'Ressaisir',
 	REFRESH_RECORD: 'Actualiser',
 	REFRESH_RECORD_DESC: 'Une nouvelle connexion au portail va remettre le dossier à jour. Ça prend quelques secondes.',
+	EDT_PERSONNEL_INTROUVABLE: 'Emploi du temps personnel introuvable',
+	EDT_PERSONNEL_INTROUVABLE_DETAIL: 'Relire le dossier',
 	CONNECT: "Se connecter",
 	// La forme courte, pour le bouton d'action de la barre d'onglets : 65 points de large (7-J).
 	CONNECT_SHORT: "Connexion",

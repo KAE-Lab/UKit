@@ -11,6 +11,7 @@
 
 import { ukitFailure, type UkitFailure } from '../../../shared/aetherius/failures';
 import type { TranslationKey } from '../../../shared/i18n/Translator';
+import { projeterEdt } from './PropositionsDossier';
 
 /**
  * Les donnees froides, telles que `SecureStore` les porte. Les cinq cles historiques ne changent pas.
@@ -34,6 +35,15 @@ export interface ScolariteColdData {
     readonly formationDetail?: string;
     /** Quand le dossier a ete lu, en ISO. Pose par l'appelant : l'heure ne se lit pas ici. */
     readonly luLe?: string;
+    /**
+     * Le dossier lit un emploi du temps personnel, et cette lecture n'en a rendu aucun.
+     *
+     * Vrai seulement quand le Blueprint **declare** la sortie `edt_ressource` (Bordeaux INP) et qu'elle
+     * revient vide ou illisible : un portail qui ne la declare pas n'a rien promis. Garde avec le
+     * dossier, parce que les lancements suivants ne le relisent pas : l'absence doit se dire jusqu'a
+     * la prochaine lecture (EdtIntrouvable.tsx). Absent d'un dossier range avant le 2026-11-10.
+     */
+    readonly edtPersonnelIntrouvable?: boolean;
 }
 
 function texte(valeur: unknown): string {
@@ -119,7 +129,14 @@ export function projeterDossier(
         // Pose par l'appelant, jamais lu ici : ce module ne connait pas l'heure courante, c'est ce
         // qui le garde rejouable sous vitest (docs/blueprints.md).
         luLe,
+        ...(edtAttenduSansReponse(outputs) ? { edtPersonnelIntrouvable: true } : {}),
     };
+}
+
+/** La sortie de l'emploi du temps est declaree par le portail, et elle ne designe rien d'exploitable. */
+function edtAttenduSansReponse(outputs: Readonly<Record<string, unknown>>): boolean {
+    return Object.prototype.hasOwnProperty.call(outputs, 'edt_ressource')
+        && projeterEdt(outputs.edt_ressource, outputs.edt_libelle) === null;
 }
 
 /**

@@ -44,6 +44,7 @@ import type { ScolariteColdData } from '../services/ScolariteMapping';
 import type { PointWidget } from '../widgets/definitions';
 import type { EtatDesWidgets } from '../widgets/useWidgets';
 import type { EtatProgression } from '../hooks/useEcranDeProgression';
+import { EdtIntrouvable } from './EdtIntrouvable';
 import { EncartSession } from './EncartSession';
 import { GrilleScolarite } from './GrilleScolarite';
 import { SalutationScolarite } from './SalutationScolarite';
@@ -71,6 +72,8 @@ export interface PageScolariteProps {
     onWidget: (point: PointWidget) => void;
     onPorte: (point: string) => void;
     onDocuments: () => void;
+    /** Relit le dossier, depuis la rangee de l'emploi du temps personnel introuvable. */
+    onActualiserDossier: () => void;
     /** Le retrait de l'en-tete fixe, zone sure comprise (`hauteurDeLEnTete`). */
     paddingHaut: number;
     /** Le defilement, que l'en-tete lit pour faire paraitre le fondu (`useAnimatedScrollHandler`). */
@@ -82,7 +85,7 @@ export interface PageScolariteProps {
 export function PageScolarite({
     theme, teinte, coldData, widgets, certificatEnCours, progression, scrapeProgress, credentials, portailDisponible,
     sessionFailure, echecBloquant, paddingHaut, onScroll, salutation,
-    onRetry, onRessaisir, onConnecter, onDemanderCampus, onWidget, onPorte, onDocuments,
+    onRetry, onRessaisir, onConnecter, onDemanderCampus, onWidget, onPorte, onDocuments, onActualiserDossier,
 }: PageScolariteProps) {
     const colonneDocuments = useColonneDocuments({ chargement: certificatEnCours, onPress: onDocuments });
     return (
@@ -120,6 +123,12 @@ export function PageScolarite({
                     onRessaisir={onRessaisir}
                     onConnecter={onConnecter}
                 />
+            ) : null}
+
+            {/* Le dernier dossier n'a pas designe l'emploi du temps personnel : la rangee le dit, et
+                se tait pendant qu'une actualisation le relit (EdtIntrouvable). */}
+            {credentials && !progression.visible ? (
+                <EdtIntrouvable theme={theme} coldData={coldData} onActualiser={onActualiserDossier} />
             ) : null}
 
             {/* La grille se rend toujours (6.1.x-B). Sans dossier lu — pas de compte, parcours froid

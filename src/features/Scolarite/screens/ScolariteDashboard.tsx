@@ -124,7 +124,7 @@ const ScolariteDashboard = ({ navigation }) => {
 
     const {
         credentials, credentialsLoaded, coldData, widgets, certificatEnCours, portailDisponible,
-        scrapeStatus, scrapeProgress, sessionMode, sessionFailure, retrySession,
+        scrapeStatus, scrapeProgress, sessionMode, sessionFailure, retrySession, rafraichirDossier,
     } = useCredentials();
 
     /** Le defilement de la page, que l'en-tete lit pour faire paraitre son fondu. */
@@ -249,6 +249,7 @@ const ScolariteDashboard = ({ navigation }) => {
             onWidget={ouvrirWidget}
             onPorte={ouvrirPorte}
             onDocuments={ouvrirDocuments}
+            onActualiserDossier={rafraichirDossier}
         />
     );
 

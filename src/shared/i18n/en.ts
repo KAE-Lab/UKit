@@ -361,6 +361,8 @@ const en = {
 	REENTER_CREDENTIALS: 'Re-enter',
 	REFRESH_RECORD: 'Refresh',
 	REFRESH_RECORD_DESC: 'Connecting to the portal again will bring the record up to date. It takes a few seconds.',
+	EDT_PERSONNEL_INTROUVABLE: 'Personal timetable not found',
+	EDT_PERSONNEL_INTROUVABLE_DETAIL: 'Read the record again',
 	CONNECT: "Log in",
 	CONNECT_SHORT: "Log in",
 	FRISE_PAUSE: "$- break",

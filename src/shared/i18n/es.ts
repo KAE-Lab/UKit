@@ -361,6 +361,8 @@ const es: TranslationDict = {
 	REENTER_CREDENTIALS: 'Reintroducir',
 	REFRESH_RECORD: 'Actualizar',
 	REFRESH_RECORD_DESC: 'Una nueva conexión con el portal actualizará el expediente. Tarda unos segundos.',
+	EDT_PERSONNEL_INTROUVABLE: 'Horario personal no encontrado',
+	EDT_PERSONNEL_INTROUVABLE_DETAIL: 'Volver a leer el expediente',
 	CONNECT: "Iniciar sesión",
 	CONNECT_SHORT: "Entrar",
 	FRISE_PAUSE: "Pausa de $-",

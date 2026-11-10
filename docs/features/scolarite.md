@@ -2055,6 +2055,31 @@ Il est ensuite **fusionné au référentiel du catalogue** par `sourceEdt()`, en
 groupe personnel se résout alors comme un autre, et ni les services, ni les écrans, ni les favoris
 n'apprennent qu'il existe ([planning.md](planning.md#lemploi-du-temps-personnel)).
 
+### L'emploi du temps personnel introuvable se dit
+
+La lecture de la fiche est une lecture **bonus** : l'arbre ADE est rendu par GWT après une pause de
+six secondes, et quand il n'est pas prêt — ou ne présélectionne pas la fiche —, `edt_ressource`
+revient vide et le run réussit quand même. Un étudiant de l'INP l'a vécu (registre, 2026-09-21) :
+aucune proposition, et rien pour le dire. Décision du propriétaire du produit, le 2026-11-10 : dire
+l'absence.
+
+Le dossier projeté le retient (`edtPersonnelIntrouvable`,
+[`ScolariteMapping`](../../src/features/Scolarite/services/ScolariteMapping.ts)) quand le Blueprint
+**déclare** la sortie et qu'elle ne désigne rien d'exploitable ; un portail qui ne la déclare pas
+(Bordeaux, l'IUT) n'a rien promis. Le drapeau voyage avec le dossier au trousseau, parce que les
+lancements suivants ne relisent pas le dossier : l'absence se dit jusqu'à la prochaine lecture.
+[`EdtIntrouvable`](../../src/features/Scolarite/components/EdtIntrouvable.tsx) la montre en rangée,
+sous la salutation, dans le vocabulaire des rangées de l'onglet, et se tait si un emploi du temps
+personnel est déjà enregistré (celui d'une lecture précédente marche toujours) ou pendant une
+actualisation. Son toucher ouvre la confirmation « Actualiser » de la fiche du compte : c'est le même
+geste, une nouvelle connexion au portail. Une relecture qui trouve la fiche efface la rangée et
+repropose l'emploi du temps.
+
+Vérifié au banc le 2026-11-10 (`ukit`, sombre et clair) sans toucher au compte prêté : la lecture de
+la fiche a été rendue impossible **localement** (sélecteur XPath altéré, jamais commité), la rangée
+est apparue, a survécu à une relance de l'application, puis la relance par la rangée, Blueprint
+rétabli, a relu la fiche et reproposé l'emploi du temps.
+
 ### Le portail de l'INP est embarqué depuis la 6.1 — et il ne l'a pas toujours été
 
 `ukit.portail.bordeaux-inp.dossier` est arrivé **par le manifeste seul**, sous le préfixe réservé
@@ -2184,6 +2209,10 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
   passe, à Bordeaux comme à l'INP. Dans le journal, `ukit.portail.verification` : `#4 click` sous la
   seconde, `#6` et `#7` en quelques millisecondes. Un `#6` qui échoue en « did not become ready »
   voudrait dire que la soumission a de nouveau quitté le CAS.
+- **Emploi du temps personnel introuvable** (INP) : rendre la lecture de la fiche impossible en local
+  (le sélecteur `aria-selected` de l'étape `planning`), se connecter : la rangée apparaît sous la
+  salutation et survit à une relance. Rétablir le fichier, toucher la rangée, confirmer : la rangée
+  s'efface et la proposition d'emploi du temps revient.
 - **Relancer l'application** : affichage immédiat, **aucun run** — les rangées portent déjà leur
   valeur, relue du trousseau. Attendre la péremption (20 min pour la messagerie) et revenir de
   l'arrière-plan : la rangée garde sa valeur et pose un indicateur à côté, elle ne se vide pas.
@@ -2435,6 +2464,7 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`components/GreetingBlock.tsx`](../../src/features/Scolarite/components/GreetingBlock.tsx) | la salutation — le **titre** de la page dès qu'un dossier est lu — et la date du jour |
 | [`components/PageScolarite.tsx`](../../src/features/Scolarite/components/PageScolarite.tsx) | le corps défilant : l'encart d'état, puis les trois sections |
 | [`components/EncartSession.tsx`](../../src/features/Scolarite/components/EncartSession.tsx) | l'état de la session **en tête de page** : pas de compte, échec — sur l'onglet et sur la fiche du compte |
+| [`components/EdtIntrouvable.tsx`](../../src/features/Scolarite/components/EdtIntrouvable.tsx) | la rangée « Emploi du temps personnel introuvable » et sa relance, sous la salutation |
 | [`components/CampusNonRelie.tsx`](../../src/features/Scolarite/components/CampusNonRelie.tsx) | la page d'un campus sans portail : l'état vide du vocabulaire partagé, la demande, le bouton pour corriger son choix |
 | [`components/DocumentsSection.tsx`](../../src/features/Scolarite/components/DocumentsSection.tsx) | « Tes documents » : la liste locale, l'ajout, la suppression |
 | [`components/LigneScolarite.tsx`](../../src/features/Scolarite/components/LigneScolarite.tsx) | le vocabulaire de rangées de l'onglet : un groupe encadré, ses lignes, son compteur — et le `masque` du teaser, qui ne peint pas les textes |
