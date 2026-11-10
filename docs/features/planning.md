@@ -759,6 +759,7 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`services/groupListCache.ts`](../../src/features/Planning/services/groupListCache.ts) | la politique du cache de la liste des groupes — expiration, lecture défensive, repli daté — pure |
 | [`services/groupListCache.test.ts`](../../src/features/Planning/services/groupListCache.test.ts) | ses tests, écrits avant la fusion des deux caches (6.1-C), joués par `npm test` |
 | [`services/fraicheur.ts`](../../src/features/Planning/services/fraicheur.ts) | la fenêtre de fraîcheur de 60 s des runs automatiques — pure |
+| [`services/anneeDesFavoris.ts`](../../src/features/Planning/services/anneeDesFavoris.ts) | l'année scolaire des favoris, lue une fois et gardée six heures en mémoire, partagée entre la proposition d'UE du dossier et le Planning |
 | [`services/fraicheur.test.ts`](../../src/features/Planning/services/fraicheur.test.ts) | ses tests, joués par `npm test` |
 | [`screens/CourseScreen.tsx`](../../src/features/Planning/screens/CourseScreen.tsx) | fiche d'un cours : détails, extraction de la salle, carte intégrée ([`EmbeddedMap`](../../src/shared/map/EmbeddedMap.tsx), [cartographie.md](../cartographie.md)) ; pour un événement du téléphone, ni lieu ni UE, et « Ouvrir dans le calendrier » |
 | [`components/ScheduleList.tsx`](../../src/features/Planning/components/ScheduleList.tsx) | chargement et rendu d'un planning (jour ou semaine), cache, filtres — appliqués au chargement, jamais au rendu —, notifications, et la fusion du téléphone **après** tout cela |

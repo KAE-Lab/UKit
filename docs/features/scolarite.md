@@ -1963,7 +1963,7 @@ s'applique toute seule** :
 
 | Établissement | Ce que la page porte | Ce qu'on en fait |
 |---|---|---|
-| Université de Bordeaux | les **appartenances** de l'annuaire, dont les UE inscrites | pré-remplir les filtres |
+| Université de Bordeaux | les **appartenances** de l'annuaire, dont les UE inscrites | proposer des filtres, UE par UE |
 | Bordeaux INP | la fiche que **ADE présélectionne**, c'est-à-dire l'emploi du temps personnel | le proposer comme groupe |
 
 ### Le piège du filtre, et pourquoi on pré-remplit le complément
@@ -1978,6 +1978,30 @@ Inverser le filtre en liste positive a été envisagé puis écarté. Il y a deu
 ne veux pas la voir »*, qui est une décision personnelle — et une liste unique ne peut pas porter les
 deux. Pré-remplir garde le geste manuel identique dans les deux sens, ne migre aucune donnée
 persistée, et laisse la refonte des réglages libre de ses choix.
+
+### Le choix se fait UE par UE, et rien n'est coché d'office
+
+La première version proposait le complément **en lot** : « Appliquer » masquait toutes les UE du
+planning absentes de l'annuaire. Deux retours du formulaire (23 septembre et 3 novembre) en disent
+le coût, un TP réel masqué sans que rien ne le montre. Le complément n'est pas une certitude :
+l'annuaire liste les inscriptions **pédagogiques**, qui arrivent souvent après la rentrée et ne
+portent pas les options prises en cours de semestre, et un même cours peut vivre sous deux codes
+([`filtresUe.ts`](../../src/features/Planning/services/filtresUe.ts)). Aucune UE n'est donc cochée
+d'office ([`PropositionsChoix`](../../src/features/Scolarite/services/PropositionsChoix.ts)) : la
+modale dit la raison en une phrase, en tête, et chaque UE est une rangée à cocher avec la coche de
+l'accueil. « Appliquer » reste inactif tant que rien n'est coché ; les UE non cochées sont
+refusées et ne reviennent qu'à la prochaine lecture du dossier.
+
+Après coup, un dialogue dit combien d'UE ont été masquées et où les retrouver (Réglages, Filtres,
+dont la rangée porte désormais le nombre de filtres actifs), et porte « Annuler », qui retire les
+filtres posés par ce geste et eux seuls.
+
+La comparaison se fait sur **l'année des favoris** et non plus sur les UE rencontrées : cette
+liste-là s'accumule sur tous les plannings affichés, et consulter le groupe d'un ami y versait ses
+UE, que la modale proposait ensuite de masquer. L'année se lit une fois et se partage avec le
+Planning ([`anneeDesFavoris.ts`](../../src/features/Planning/services/anneeDesFavoris.ts)) ; tant
+qu'elle court, la proposition attend, et un échec retombe sur la liste accumulée — rien n'y étant
+coché, une proposition de trop ne masque rien.
 
 ### Le moment, qui n'appartient à aucun écran
 
@@ -2350,7 +2374,9 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
 | [`services/ScolariteMapping.test.ts`](../../src/features/Scolarite/services/ScolariteMapping.test.ts) | ce que cette projection doit tenir |
 | [`services/PropositionsDossier.ts`](../../src/features/Scolarite/services/PropositionsDossier.ts) | ce que le dossier a livré en plus de l'identité : UE inscrites, emploi du temps personnel |
 | [`services/PropositionsDecision.ts`](../../src/features/Scolarite/services/PropositionsDecision.ts) | ce qu'on en demande, et **quand** — le complément des UE, jamais les UE inscrites |
-| [`components/PropositionsModal.tsx`](../../src/features/Scolarite/components/PropositionsModal.tsx) | la confirmation, rendue par `rootContainer` pour exister aussi pendant l'accueil |
+| [`services/PropositionsChoix.ts`](../../src/features/Scolarite/services/PropositionsChoix.ts) · [`PropositionsChoix.test.ts`](../../src/features/Scolarite/services/PropositionsChoix.test.ts) | le choix UE par UE — rien de coché d'office, seules les cochées partent — et la liste comparée au dossier, purs |
+| [`hooks/usePropositionsADemander.ts`](../../src/features/Scolarite/hooks/usePropositionsADemander.ts) | la décision du moment, relue quand le planning, les filtres, les favoris ou l'année des favoris bougent, et sa trace |
+| [`components/PropositionsModal.tsx`](../../src/features/Scolarite/components/PropositionsModal.tsx) | la confirmation, rendue par `rootContainer` pour exister aussi pendant l'accueil, et le dialogue qui suit l'acceptation, avec « Annuler » |
 | [`components/RangeeMysterieuse.tsx`](../../src/features/Scolarite/components/RangeeMysterieuse.tsx) | le teaser d'un widget sans source publiée : le cadenas et le toucher — le masque du texte, lui, est posé par `LigneScolarite` ; la modale « Bientôt » qu'elle ouvre vit dans `shared/ui` |
 | [`components/FeuilleDeWidget.tsx`](../../src/features/Scolarite/components/FeuilleDeWidget.tsx) | la feuille d'un widget en échec : la phrase que la tuile ne dit pas, « Relancer » ce seul widget, ou la ressaisie |
 | [`hooks/useSessionDemandeeIci.ts`](../../src/features/Scolarite/hooks/useSessionDemandeeIci.ts) | une session lancée par un geste fait **sur cet écran** lui laisse la page jusqu'à son terme, et dit **de quel geste** — la garde partagée par l'onglet et la fiche du compte |

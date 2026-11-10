@@ -7,16 +7,18 @@
  * qu'elle existe.
  *
  * **Elle attend son moment.** Le parcours d'accueil demande le compte **avant** le groupe : a la fin
- * de la lecture du dossier, il n'y a pas encore de planning, donc pas d'UE a comparer. La modale
- * s'abonne donc aux trois choses qui peuvent rendre la question complete — les UE rencontrees, les
+ * de la lecture du dossier, il n'y a pas encore de planning, donc pas d'UE a comparer. Son hook
+ * (`usePropositionsADemander`) s'abonne donc aux trois choses qui peuvent rendre la question complete — les UE rencontrees, les
  * filtres poses, les groupes favoris — et se montre des que `decider` le dit. C'est
  * `PropositionsDecision` qui tranche ; ce fichier ne fait qu'afficher et appliquer.
  *
  * **Ce que « appliquer » veut dire, precisement** :
  *
- *   - les UE deviennent des **filtres**, qui masquent. Ce sont celles auxquelles l'etudiant n'est pas
- *     inscrit, jamais les siennes — voir le module de decision, ou cette inversion est le premier
- *     test ;
+ *   - les UE **cochees** deviennent des **filtres**, qui masquent. Ce sont des UE auxquelles le dossier
+ *     ne l'inscrit pas, jamais les siennes — voir le module de decision, ou cette inversion est le
+ *     premier test — et aucune n'est cochee d'office : le complement n'est pas une certitude
+ *     (`PropositionsChoix`). Apres coup, un dialogue dit combien ont ete masquees, ou les retrouver,
+ *     et permet d'annuler ;
  *   - l'emploi du temps devient une **entree de referentiel** au trousseau, fusionnee au catalogue
  *     par `sourceEdt()`, plus un favori. Le groupe personnel se resout ensuite comme un autre.
  *
@@ -28,119 +30,64 @@
  * Voir docs/features/scolarite.md.
  */
 
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Translator from '../../../shared/i18n/Translator';
 import style, { propsLibelleBouton, tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { AppContext, SettingsManager } from '../../../shared/services/AppCore';
-import { tracerPropositions } from '../../../shared/services/PropositionsTrace';
-import { edtPersonnelActif, enregistrerEdtPersonnel } from '../../../shared/etablissements';
+import { enregistrerEdtPersonnel } from '../../../shared/etablissements';
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
-import { PlanningApiService } from '../../Planning/services/PlanningApiService';
 import { useCredentials } from '../services/CredentialsContext';
-import { decider, type Proposition } from '../services/PropositionsDecision';
-import type { PropositionsDossier } from '../services/PropositionsDossier';
+import type { Proposition } from '../services/PropositionsDecision';
+import { aAppliquer, basculer, choixInitial, estVide } from '../services/PropositionsChoix';
+import { usePropositionsADemander } from '../hooks/usePropositionsADemander';
 import { Icon } from '../../../shared/ui/Icon';
-
-/** L'etat que la decision consulte, relu a chaque fois plutot que memorise. */
-function etatCourant() {
-    const personnel = edtPersonnelActif();
-    return {
-        uesDuPlanning: DataManager.getAvailableUEs(),
-        filtresActuels: SettingsManager.getFilters(),
-        favoris: SettingsManager.getFavoriteGroups(),
-        ressourceEnregistree: personnel === null ? null : personnel.ressource,
-    };
-}
+import { Dialogue } from '../../../shared/ui/Dialogue';
+import { Coche } from '../../Onboarding/components/EtapesDeChoix';
 
 /**
- * Ce qui peut rendre la question complete, ou la rendre sans objet.
- *
- * Un compteur plutot qu'une copie de l'etat : ces trois valeurs sont lues au moment de decider, et
- * les recopier dans un `useState` creerait un second endroit ou elles peuvent diverger.
- */
-function useRevision(): number {
-    const [revision, setRevision] = useState(0);
-
-    useEffect(() => {
-        const rafraichir = () => setRevision((precedente) => precedente + 1);
-        DataManager.on('availableUEs', rafraichir);
-        SettingsManager.on('filter', rafraichir);
-        SettingsManager.on('favoriteGroups', rafraichir);
-        return () => {
-            DataManager.unsubscribe('availableUEs', rafraichir);
-            SettingsManager.unsubscribe('filter', rafraichir);
-            SettingsManager.unsubscribe('favoriteGroups', rafraichir);
-        };
-    }, []);
-
-    return revision;
-}
-
-/**
- * Les UE de **toute l'annee**, demandees une fois quand une proposition attend.
- *
- * Sans ca, la proposition est **partielle par construction** : la liste des UE rencontrees ne se
- * remplit qu'a mesure qu'on affiche des journees, si bien qu'on proposerait de masquer une UE
- * etrangere aujourd'hui et une autre la semaine prochaine. Masquer un tiers de ce qu'il fallait est
- * pire que ne rien masquer — l'etudiant croit le menage fait.
- *
- * Le run existe deja et sert la synchronisation calendrier : il rend l'annee scolaire entiere du
- * groupe. Il part **une seule fois par session**, seulement s'il y a une proposition d'UE en attente,
- * et son resultat entre par la porte ordinaire (`extractUEsFromCourses`) — ce qui profite aussi a la
- * liste de suggestions des reglages. Un echec ne se dit pas : on retombe simplement sur ce que
- * l'ecran a deja charge.
- */
-function useUesDeLAnnee(propositions: PropositionsDossier | null, revision: number): void {
-    const demande = useRef(false);
-
-    useEffect(() => {
-        if (demande.current || propositions === null || propositions.ues.length === 0) return;
-
-        const favoris = SettingsManager.getFavoriteGroups();
-        // Aucun favori : rien a demander, et surtout pas de quoi consommer l'unique tentative — le
-        // groupe se choisit souvent **apres** la connexion.
-        if (favoris.length === 0) return;
-
-        demande.current = true;
-        void PlanningApiService.fetchCalendarForSynchronization(favoris).then((resultat) => {
-            if (resultat.ok === false) return;
-            DataManager.extractUEsFromCourses(resultat.courses);
-        });
-        // `revision` remet l'effet en jeu quand les favoris changent : le groupe se choisit souvent
-        // apres la connexion, et sans ca la demande n'aurait jamais lieu pour un premier login.
-    }, [propositions, revision]);
-}
-
-/**
- * Les UE proposees, une par ligne : le code, et son intitule quand le planning le connait.
+ * Les UE proposees, une rangee a cocher chacune : le code, et son intitule quand le planning le connait.
  *
  * L'intitule n'est pas un ornement — sans lui, il faudrait ouvrir son emploi du temps pour savoir ce
- * qu'on accepte de masquer, ce qui vide la confirmation de son sens.
+ * qu'on accepte de masquer, ce qui vide la confirmation de son sens. La coche est celle de l'accueil
+ * (`Coche`), la seule forme de choix multiple de l'application.
  */
-function ListeUes({ theme, ues }: { theme: AppThemeType; ues: readonly string[] }) {
+function ListeUes({ theme, ues, choix, onBasculer }: {
+    theme: AppThemeType;
+    ues: readonly string[];
+    choix: ReadonlySet<string>;
+    onBasculer: (code: string) => void;
+}) {
     return (
-        <View style={{ gap: tokens.space.xs }}>
+        <View>
             {ues.map((code) => {
                 const nom = DataManager.nomDUE(code);
+                const cochee = choix.has(code);
                 return (
-                    <View key={code} style={{ flexDirection: 'row', alignItems: 'baseline', gap: tokens.space.sm }}>
-                        {/* Le code en texte, plus en pastille a l'accent : une donnee ne prend pas la
-                            couleur d'action (docs/theme.md), et dix pastilles bleues criaient. */}
-                        <Text style={[tokens.texte.chiffres, { fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold, color: theme.font }]}>
-                            {code}
-                        </Text>
-                        {nom !== null ? (
-                            <Text
-                                numberOfLines={1}
-                                style={{ flexShrink: 1, fontSize: tokens.fontSize.sm, color: theme.fontSecondary }}
-                            >
-                                {nom}
+                    <Pressable
+                        key={code}
+                        onPress={() => onBasculer(code)}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: cochee }}
+                        accessibilityLabel={nom !== null ? `${code} ${nom}` : code}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: tokens.space.sm, paddingVertical: tokens.space.sm }}
+                    >
+                        <View style={{ flex: 1 }}>
+                            {/* Le code en texte, plus en pastille a l'accent : une donnee ne prend pas la
+                                couleur d'action (docs/theme.md), et dix pastilles bleues criaient. */}
+                            <Text style={[tokens.texte.chiffres, { fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold, color: theme.font }]}>
+                                {code}
                             </Text>
-                        ) : null}
-                    </View>
+                            {nom !== null ? (
+                                <Text numberOfLines={1} style={{ fontSize: tokens.fontSize.sm, color: theme.fontSecondary }}>
+                                    {nom}
+                                </Text>
+                            ) : null}
+                        </View>
+                        <Coche theme={theme} choisie={cochee} />
+                    </Pressable>
                 );
             })}
         </View>
@@ -190,53 +137,55 @@ async function appliquer(proposition: Proposition): Promise<void> {
     void DataManager.fetchGroupList();
 }
 
+/**
+ * Apres coup : combien d'UE ont ete masquees, ou les retrouver, et le moyen d'annuler.
+ *
+ * Le dialogue informatif du depot (`Dialogue`) : « Annuler » en lien discret, la fermeture en bouton
+ * plein. Annuler retire les filtres poses par ce geste, et eux seuls — ceux d'avant ne figuraient pas
+ * dans la proposition (`complement`).
+ */
+function ConfirmationDeMasquage({ theme, masquees, fermer }: { theme: AppThemeType; masquees: readonly string[]; fermer: () => void }) {
+    const annuler = () => {
+        for (const code of masquees) SettingsManager.removeFilters(code);
+        fermer();
+    };
+    return (
+        <Dialogue
+            theme={theme}
+            visible={true}
+            fermer={fermer}
+            titre={masquees.length === 1 ? Translator.get('PROPOSALS_DONE_ONE') : Translator.get('PROPOSALS_DONE_MANY', masquees.length)}
+            corps={Translator.get(masquees.length === 1 ? 'PROPOSALS_DONE_BODY_ONE' : 'PROPOSALS_DONE_BODY')}
+            lien={{ libelle: Translator.get('PROPOSALS_UNDO'), onPress: annuler }}
+        />
+    );
+}
+
+/** La meme que les rangees desactivees des reglages (`GroupeDeReglages`). */
+const OPACITE_INACTIVE = 0.5;
+
 export function PropositionsModal() {
     const { propositions, oublierPropositions } = useCredentials();
     const { themeName } = useContext(AppContext);
     const theme: AppThemeType = style.Theme[themeName];
-    const revision = useRevision();
-    useUesDeLAnnee(propositions, revision);
+    const decision = usePropositionsADemander(propositions);
+    const [choix, setChoix] = useState(choixInitial);
+    const [masquees, setMasquees] = useState<readonly string[] | null>(null);
 
-    const decision = useMemo(
-        () => {
-            if (propositions === null) return { kind: 'rien' as const };
-            const etat = etatCourant();
-            const prise = decider(propositions, etat);
-            // Tracee a **chaque** calcul, y compris quand il n'y a rien a demander : sans ca, « aucun
-            // dialogue » ne dit pas s'il n'y avait rien a proposer ou si la lecture avait echoue.
-            tracerPropositions({
-                heure: new Date().toLocaleTimeString(),
-                uesInscrites: propositions.ues,
-                edtLu: propositions.edt === null ? null : `${propositions.edt.libelle} (${propositions.edt.ressource})`,
-                uesDuPlanning: etat.uesDuPlanning.length,
-                filtres: etat.filtresActuels.length,
-                decision: prise.kind,
-                complement: prise.kind === 'demander' ? prise.proposition.ues : [],
-                edtRetenu: prise.kind === 'demander' && prise.proposition.edt !== null
-                    ? `${prise.proposition.edt.libelle} (${prise.proposition.edt.ressource})`
-                    : null,
-            });
-            // La meme ligne que la lecture, du cote de la decision : ensemble, les deux racontent toute
-            // l'histoire dans le terminal, sans avoir a ouvrir le panneau de sonde.
-            console.log(
-                `[propositions] decision : ${prise.kind} — ${etat.uesDuPlanning.length} UE au planning, ` +
-                `${propositions.ues.length} inscrite(s), ${prise.kind === 'demander' ? prise.proposition.ues.length : 0} a masquer`,
-            );
-            return prise;
-        },
-        // `revision` n'est pas lue dans le corps : elle est ce qui redemande la decision quand le
-        // planning, les filtres ou les favoris ont bouge.
-        [propositions, revision],
-    );
-
+    if (masquees !== null) {
+        return <ConfirmationDeMasquage theme={theme} masquees={masquees} fermer={() => setMasquees(null)} />;
+    }
     if (decision.kind !== 'demander') return null;
     const { proposition } = decision;
+    const retenue = aAppliquer(proposition, choix);
     const popup = theme.settings.popup;
 
     /** Oublier **d'abord** : la modale disparait, et ce qui suit ne repeint rien derriere elle. */
     const confirmer = () => {
         oublierPropositions();
-        void appliquer(proposition);
+        setChoix(choixInitial());
+        if (retenue.ues.length > 0) setMasquees(retenue.ues);
+        void appliquer(retenue);
     };
 
     return (
@@ -271,7 +220,10 @@ export function PropositionsModal() {
                                 icone="filter-variant"
                                 titre={Translator.get('PROPOSALS_UES_LABEL')}
                             >
-                                <ListeUes theme={theme} ues={proposition.ues} />
+                                {/* La raison de la proposition, une fois, en tete : pas de texte sous
+                                    les rangees (docs/theme.md). */}
+                                <Text style={[popup.textDescription, { marginTop: 0 }]}>{Translator.get('PROPOSALS_UES_REASON')}</Text>
+                                <ListeUes theme={theme} ues={proposition.ues} choix={choix} onBasculer={(code) => setChoix((avant) => basculer(avant, code))} />
                             </Section>
                         ) : null}
                     </ScrollView>
@@ -280,7 +232,12 @@ export function PropositionsModal() {
                         <TouchableOpacity style={popup.buttonSecondary as never} onPress={oublierPropositions}>
                             <Text {...propsLibelleBouton} style={popup.buttonTextSecondary as never}>{Translator.get('PROPOSALS_SKIP')}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={popup.buttonMain as never} onPress={confirmer}>
+                        <TouchableOpacity
+                            style={[popup.buttonMain, estVide(retenue) ? { opacity: OPACITE_INACTIVE } : null] as never}
+                            onPress={confirmer}
+                            disabled={estVide(retenue)}
+                            accessibilityState={{ disabled: estVide(retenue) }}
+                        >
                             <Text {...propsLibelleBouton} style={popup.buttonTextMain as never}>{Translator.get('PROPOSALS_APPLY')}</Text>
                         </TouchableOpacity>
                     </View>

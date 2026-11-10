@@ -251,9 +251,11 @@ Un filtre se retire aussi depuis la fiche d'un cours, via le bouton d'en-tête `
 **Une troisième origine depuis le 2026-08-24, et elle demande d'abord.** Si le dossier universitaire
 a livré les UE auxquelles l'étudiant est inscrit, un dialogue propose de masquer **celles qu'il ne
 suit pas** — le complément, jamais ses propres UE : un filtre masque, et pré-remplir avec les siennes
-aurait vidé son planning sans rien expliquer. Ce qui arrive par là n'a rien de particulier ensuite :
-ce sont des filtres comme les autres, retirables des deux endroits habituels
-([scolarite.md](scolarite.md#ce-que-la-connexion-trouve-en-plus-et-quelle-propose)).
+aurait vidé son planning sans rien expliquer. Depuis le 2026-11-10, l'étudiant coche UE par UE,
+rien ne l'est d'office ([scolarite.md](scolarite.md#le-choix-se-fait-ue-par-ue-et-rien-nest-coché-doffice)).
+Ce qui arrive par là n'a rien de particulier ensuite : ce sont des filtres comme les autres,
+retirables des deux endroits habituels. La rangée Filtres de l'accueil des Réglages porte le nombre
+de filtres actifs : ce qui est masqué du planning se retrouve sans avoir à s'en souvenir.
 
 > **Capture attendue** — `reglages-filtres.png` : l'écran des filtres d'UE, avec des filtres actifs
 > et la liste des UE suggérées.

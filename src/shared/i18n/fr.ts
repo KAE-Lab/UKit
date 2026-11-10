@@ -432,6 +432,12 @@ const fr: TranslationDict = {
 	PROPOSALS_UES_LABEL: "UE à masquer",
 	PROPOSALS_APPLY: 'Appliquer',
 	PROPOSALS_SKIP: 'Non merci',
+	PROPOSALS_UES_REASON: "Ton inscription à l’université ne mentionne pas ces UE, qui sont pourtant au planning de ton groupe : coche celles que tu ne suis pas pour les masquer.",
+	PROPOSALS_DONE_ONE: '1 UE masquée',
+	PROPOSALS_DONE_MANY: '$- UE masquées',
+	PROPOSALS_DONE_BODY: "Tu les retrouves dans Réglages, Filtres, d’où tu peux les rétablir.",
+	PROPOSALS_DONE_BODY_ONE: "Tu la retrouves dans Réglages, Filtres, d’où tu peux la rétablir.",
+	PROPOSALS_UNDO: 'Annuler',
 
 	// Onglet Scolarite : les trois sections de la refonte, et ce qu'elles portent.
 	MY_DOCUMENTS: 'Documents',

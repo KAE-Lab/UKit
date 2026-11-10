@@ -101,12 +101,14 @@ interface DisplaySectionProps {
     language: string;
     openLanguageDialog: () => void;
     openFilters: () => void;
+    /** Le nombre de filtres actifs : ce qui est masque du planning se retrouve d'ici (lot 1, 2026-11-10). */
+    nombreDeFiltres: number;
     isDarkMode: boolean;
     openApparence: () => void;
 }
 
 /** L'affichage, a l'accueil : trois rangees qui menent, plus d'interrupteur (7-J, troisieme passe). */
-export const DisplaySection = ({ theme, language, openLanguageDialog, openFilters, isDarkMode, openApparence }: DisplaySectionProps) => (
+export const DisplaySection = ({ theme, language, openLanguageDialog, openFilters, nombreDeFiltres, isDarkMode, openApparence }: DisplaySectionProps) => (
     <GroupeDeReglages theme={theme} titre={Translator.get('DISPLAY')}>
         <RangeeDeReglage
             theme={theme}
@@ -122,7 +124,13 @@ export const DisplaySection = ({ theme, language, openLanguageDialog, openFilter
             valeur={Translator.get(isDarkMode ? 'DARK_THEME' : 'LIGHT_THEME')}
             onPress={openApparence}
         />
-        <RangeeDeReglage theme={theme} icone={{ mi: 'filter-list' }} libelle={Translator.get('FILTERS')} onPress={openFilters} />
+        <RangeeDeReglage
+            theme={theme}
+            icone={{ mi: 'filter-list' }}
+            libelle={Translator.get('FILTERS')}
+            valeur={nombreDeFiltres > 0 ? String(nombreDeFiltres) : undefined}
+            onPress={openFilters}
+        />
     </GroupeDeReglages>
 );
 

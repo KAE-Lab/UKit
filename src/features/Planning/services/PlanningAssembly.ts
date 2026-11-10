@@ -176,6 +176,30 @@ export function indexerUes(sujets: readonly string[], connues: readonly UeRencon
         .sort((gauche, droite) => (gauche.code < droite.code ? -1 : gauche.code > droite.code ? 1 : 0));
 }
 
+/** Ce qu'il faut d'un cours pour en indexer les UE : son sujet, et les modules que la source declare. */
+export interface CoursIndexable {
+    subject?: string;
+    modules?: string[];
+}
+
+/**
+ * Les sujets ou lire les UE d'une liste de cours, a plat ou rangee par jours (`{ courses }`).
+ *
+ * Les modules d'abord : un cours a plusieurs UE n'en montre qu'une dans son sujet, et la seconde
+ * n'etait jamais proposee comme filtre (2026-09-06). Sorti du manager pour que la modale des
+ * propositions lise les UE de l'annee des favoris **sans** les verser dans la liste accumulee.
+ */
+export function sujetsDesCours(cours: ReadonlyArray<{ courses?: CoursIndexable[] } & CoursIndexable>): string[] {
+    const sujets: string[] = [];
+    for (const item of Array.isArray(cours) ? cours : []) {
+        for (const course of item.courses ? item.courses : [item]) {
+            if (Array.isArray(course?.modules)) sujets.push(...course.modules);
+            if (typeof course?.subject === 'string') sujets.push(course.subject);
+        }
+    }
+    return sujets;
+}
+
 /**
  * Le tri d'affichage : heure de debut, puis sujet alphabetique **apres retrait du code d'UE**.
  *

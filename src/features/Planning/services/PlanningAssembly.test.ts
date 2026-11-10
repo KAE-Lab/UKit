@@ -12,7 +12,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { indexerUes, separerCodeUE, trierCours } from './PlanningAssembly';
+import { indexerUes, separerCodeUE, sujetsDesCours, trierCours } from './PlanningAssembly';
 
 describe('separerCodeUE, codes Celcat', () => {
     it('separe un code d UE de son intitule, comme avant', () => {
@@ -111,5 +111,18 @@ describe('indexerUes', () => {
     it('trie par code, pour que l ecran ne depende pas de l ordre des cours', () => {
         const codes = indexerUes(['4TIN615U Logique', '4TIN602U Techn']).map((ue) => ue.code);
         expect(codes).toEqual(['4TIN602U', '4TIN615U']);
+    });
+});
+
+describe('sujetsDesCours', () => {
+    it('lit les modules puis le sujet, a plat comme ranges par jours', () => {
+        const cours = { subject: '4TTV417U Artificial intelligence', modules: ['4TTV417U Artificial intelligence', '4TTI607U Artificial Intelligence'] };
+        expect(sujetsDesCours([cours])).toEqual([...cours.modules, cours.subject]);
+        expect(sujetsDesCours([{ courses: [cours] }])).toEqual([...cours.modules, cours.subject]);
+    });
+
+    it('ignore un cours sans sujet ni modules, et une entree qui n est pas une liste', () => {
+        expect(sujetsDesCours([{}])).toEqual([]);
+        expect(sujetsDesCours(null as never)).toEqual([]);
     });
 });

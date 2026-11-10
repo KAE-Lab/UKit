@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SettingsManager } from '../../../shared/services/AppCore';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { doitRafraichir, lireCache } from './groupListCache';
-import { indexerUes, type UeRencontree } from './PlanningAssembly';
+import { indexerUes, sujetsDesCours, type CoursIndexable, type UeRencontree } from './PlanningAssembly';
 import { PlanningApiService, type GroupListResult, type PlanningRunOptions } from './PlanningApiService';
 
 /**
@@ -19,12 +19,6 @@ import { PlanningApiService, type GroupListResult, type PlanningRunOptions } fro
  * l'etape des groupes est vide (une installation hors ligne restait muette), et la recherche de
  * groupes, qui date son bandeau hors ligne avec l'horodatage du seul cache qui reste.
  */
-/** Ce qu'il faut d'un cours pour en indexer les UE : son sujet, et les modules que la source declare. */
-interface CoursIndexable {
-    subject?: string;
-    modules?: string[];
-}
-
 export interface EtatListeGroupes {
     readonly chargement: boolean;
     readonly echec: UkitFailure | null;
@@ -139,17 +133,7 @@ class PlanningDataManagerService {
      * qu'une : celle-ci gardait la regle d'avant le jalon 6-I et fabriquait des UE `2026`.
      */
     extractUEsFromCourses = (courses: Array<{ courses?: CoursIndexable[] } & CoursIndexable>) => {
-        const sujets: string[] = [];
-        for (const item of Array.isArray(courses) ? courses : []) {
-            for (const course of item.courses ? item.courses : [item]) {
-                // Les modules d'abord : un cours a plusieurs UE n'en montre qu'une dans son sujet, et
-                // la seconde n'etait jamais proposee comme filtre (2026-09-06).
-                if (Array.isArray(course?.modules)) sujets.push(...course.modules);
-                if (typeof course?.subject === 'string') sujets.push(course.subject);
-            }
-        }
-
-        this._availableUEs = indexerUes(sujets, this._availableUEs);
+        this._availableUEs = indexerUes(sujetsDesCours(courses), this._availableUEs);
         this.notify('availableUEs', this._availableUEs);
     };
 

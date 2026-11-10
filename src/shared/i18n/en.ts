@@ -421,6 +421,12 @@ const en = {
 	PROPOSALS_UES_LABEL: "Courses to hide",
 	PROPOSALS_APPLY: "Apply",
 	PROPOSALS_SKIP: "No thanks",
+	PROPOSALS_UES_REASON: "Your university registration doesn’t list these courses, yet they’re on your group’s timetable: tick the ones you don’t take to hide them.",
+	PROPOSALS_DONE_ONE: '1 course hidden',
+	PROPOSALS_DONE_MANY: '$- courses hidden',
+	PROPOSALS_DONE_BODY: "You’ll find them in Settings, Filters, where you can bring them back.",
+	PROPOSALS_DONE_BODY_ONE: "You’ll find it in Settings, Filters, where you can bring it back.",
+	PROPOSALS_UNDO: 'Undo',
 
 	// Academics tab: the three sections of the redesign, and what they carry.
 	MY_DOCUMENTS: 'Documents',

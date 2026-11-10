@@ -76,6 +76,11 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Les « UE non suivies » se choisissent une par une** : la proposition faite à la connexion masquait
+  en lot toutes les UE absentes de l'inscription, et pouvait cacher un vrai cours. Rien n'est coché
+  d'office, la raison est dite, et un dialogue permet d'annuler juste après ; la rangée Filtres des
+  Réglages dit combien d'UE sont masquées. Les UE d'un groupe consulté en passant ne sont plus
+  proposées.
 - **« Réinitialiser l'application » déconnecte vraiment le compte** : elle effaçait le local mais
   laissait la session universitaire ouverte et la dernière page de la messagerie en mémoire ; elle
   passe désormais par la déconnexion, qui ferme le ticket côté serveur.

@@ -19,6 +19,21 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Les « UE non suivies » s'acceptent en lot et peuvent masquer un vrai cours~~ — rapporté le 2026-09-23, corrigé le 2026-11-10
+
+Deux retours du formulaire (23 septembre, puis des TP absents le 3 novembre) : « Appliquer » posait
+en filtre toutes les UE du planning absentes des inscriptions de l'annuaire, et une inscription
+pédagogique en retard ou un cours sous deux codes suffisaient à masquer un vrai TP, sans que rien
+ne le montre ensuite. Un second défaut, trouvé en le corrigeant : la liste comparée était celle des
+UE rencontrées, qui s'accumule sur **tous** les plannings affichés, si bien que consulter le groupe
+d'un ami faisait proposer ses UE. Corrigé : chaque UE se coche, rien ne l'est d'office, la raison
+est dite en tête ; la comparaison porte sur l'année des favoris
+([`PropositionsChoix`](../src/features/Scolarite/services/PropositionsChoix.ts), testé) ; après
+l'acceptation, un dialogue dit combien d'UE sont masquées, où les retrouver, et porte « Annuler » ;
+la rangée Filtres des Réglages porte leur nombre. Vérifié sur `ukit` avec un compte réel : 21 UE
+proposées sans aucune cochée, deux cochées masquées puis visibles dans Filtres (« 2 »), une
+troisième posée puis annulée sans toucher aux deux premières.
+
 ### ~~À l'accueil, une année sans semestre laisse la liste des groupes vide, sans rien dire~~ — constaté le 2026-11-08, corrigé le 2026-11-10
 
 Collège ST, « Master 1 » touché, aucun semestre : la liste disparaît sous le champ de recherche, et

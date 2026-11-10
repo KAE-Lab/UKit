@@ -423,6 +423,12 @@ const es: TranslationDict = {
 	PROPOSALS_UES_LABEL: "UE para ocultar",
 	PROPOSALS_APPLY: "Aplicar",
 	PROPOSALS_SKIP: "No, gracias",
+	PROPOSALS_UES_REASON: "Tu matrícula en la universidad no incluye estas UE, aunque están en el horario de tu grupo: marca las que no cursas para ocultarlas.",
+	PROPOSALS_DONE_ONE: '1 UE oculta',
+	PROPOSALS_DONE_MANY: '$- UE ocultas',
+	PROPOSALS_DONE_BODY: "Las encontrarás en Ajustes, Filtros, donde puedes volver a mostrarlas.",
+	PROPOSALS_DONE_BODY_ONE: "La encontrarás en Ajustes, Filtros, donde puedes volver a mostrarla.",
+	PROPOSALS_UNDO: 'Deshacer',
 
 	// Pestana Academico: las tres secciones del rediseno, y lo que llevan.
 	MY_DOCUMENTS: 'Documentos',

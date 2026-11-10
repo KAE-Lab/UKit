@@ -500,6 +500,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     language={this.state.language}
                     openLanguageDialog={this.openLanguageDialog}
                     openFilters={() => this.props.navigation.navigate('Filters')}
+                    nombreDeFiltres={Array.isArray(this.context.filters) ? this.context.filters.length : 0}
                     isDarkMode={this.state.isDarkMode}
                     openApparence={() => this.ouvrirPage('apparence')}
                 />
