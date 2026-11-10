@@ -19,6 +19,13 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Sur 360 points, la recherche des restaurants et des bibliothèques coupe son texte indicatif~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc pendant le lot 2 (`ukit-a8`) : « Rechercher une bibliothèque ou une vi », « Rechercher un
+restaurant ou une ville. » ; un texte indicatif ne s'abrège pas sur Android, il se coupe. Raccourcis
+dans les trois langues (« Bibliothèque ou ville… », « Restaurant ou ville… ») : la loupe dit déjà
+« rechercher ». Vérifié sur `ukit-a8` en français, la langue la plus longue.
+
 ### ~~Sur 360 points, un titre d'en-tête long passe sous les boutons~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc pendant le lot 2 (`ukit-a8`, fiche de la BU ST) : « BU ST Bordeaux-Talence » commençait

@@ -332,8 +332,8 @@ const es: TranslationDict = {
 	FREE_ROOMS: "Salas Libres",
 	// Etiquetas de las pantallas Campus. Faltaban en los tres diccionarios hasta el hito 6-K: ocho de
 	// ellas se mostraban como clave en bruto en pantalla, incluido el mensaje de estado vacio.
-	SEARCH_BU_CITY: 'Buscar una biblioteca o una ciudad...',
-	SEARCH_RESTO_CITY: 'Buscar un restaurante o una ciudad...',
+	SEARCH_BU_CITY: 'Biblioteca o ciudad...',
+	SEARCH_RESTO_CITY: 'Restaurante o ciudad...',
 	SEARCH_BUILDING: 'Buscar un edificio...',
 	ALL_LIBRARIES: 'Todas las bibliotecas',
 	OPEN_LIBRARIES: 'Abiertas ahora',

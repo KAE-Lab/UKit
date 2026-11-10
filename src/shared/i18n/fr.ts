@@ -338,8 +338,8 @@ const fr: TranslationDict = {
 	FREE_ROOMS: "Salles libres",
 	// Libelles des ecrans Campus. Ils manquaient aux trois dictionnaires jusqu'au jalon 6-K : huit
 	// d'entre eux s'affichaient en cle brute a l'ecran, dont le message d'etat vide.
-	SEARCH_BU_CITY: 'Rechercher une bibliothèque ou une ville…',
-	SEARCH_RESTO_CITY: 'Rechercher un restaurant ou une ville…',
+	SEARCH_BU_CITY: 'Bibliothèque ou ville…',
+	SEARCH_RESTO_CITY: 'Restaurant ou ville…',
 	SEARCH_BUILDING: 'Rechercher un bâtiment…',
 	ALL_LIBRARIES: 'Toutes les bibliothèques',
 	OPEN_LIBRARIES: 'Ouvertes maintenant',

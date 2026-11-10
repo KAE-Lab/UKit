@@ -332,8 +332,8 @@ const en = {
 	FREE_ROOMS: "Free Rooms",
 	// Campus screen labels. They were missing from all three dictionaries until milestone 6-K: eight
 	// of them were rendered as raw keys on screen, including the empty-state message.
-	SEARCH_BU_CITY: 'Search for a library or a city...',
-	SEARCH_RESTO_CITY: 'Search for a restaurant or a city...',
+	SEARCH_BU_CITY: 'Library or city...',
+	SEARCH_RESTO_CITY: 'Restaurant or city...',
 	SEARCH_BUILDING: 'Search for a building...',
 	ALL_LIBRARIES: 'All libraries',
 	OPEN_LIBRARIES: 'Open now',

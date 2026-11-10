@@ -79,6 +79,7 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **La recherche des restaurants et des bibliothèques ne coupe plus son texte** sur un petit écran.
 - **Sur un petit écran, un titre d'en-tête long tient entre ses boutons**, au lieu de passer dessous.
 - **Après une déconnexion, les Réglages disent « Non connecté »** tout de suite, plus au changement
   d'onglet suivant.
