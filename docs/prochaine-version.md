@@ -13,7 +13,7 @@ Le code de la 6.3 tel qu'il est sur `main`, plus trois lots. Les grosses fonctio
 |---|---|---|
 | 1. Zéro défaut | les défauts signalés par le formulaire, le registre ouvert, puis un audit par parcours au banc | joué le 2026-11-10 : 18 entrées corrigées au registre, 9 restent ouvertes avec leur raison ; les quatre parcours restants joués au lot 2, le même jour (liste ci-dessous) |
 | 2. Petites fonctions | ce qui s'ajoute sans décision d'architecture | joué le 2026-11-10 : « il reste N TD » livré, Appliphase reporté (raison ci-dessous), 7 entrées corrigées au registre (11 défauts croisés en jouant l'audit), 1 consignée |
-| 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | IUT joué le 2026-11-10 : vérifié au banc, publication préparée, non publiée ([fiche](campus/bordeaux-iut.md)) ; Montaigne à ouvrir |
+| 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | IUT joué le 2026-11-10 : vérifié au banc, publication préparée, non publiée ([fiche](campus/bordeaux-iut.md)) ; passe de corrections jouée le même soir ([ci-dessous](#la-passe-de-corrections-davant-montaigne)) ; Montaigne à ouvrir |
 
 ## Ce que « zéro défaut » veut dire ici
 
@@ -153,6 +153,23 @@ Le protocole est celui d'[adaptation-campus.md](adaptation-campus.md), les fiche
 Mesures, vérification au banc et verdict « avec ou sans compte » : [la fiche](campus/bordeaux-iut.md).
 Le mécanisme du lien lu sur le compte : [planning.md](features/planning.md#le-lien-lu-sur-le-compte).
 
+### La passe de corrections d'avant Montaigne
+
+Jouée le 2026-11-10 au soir : des défauts du registre, chacun prouvé au banc et décrit dans son
+entrée.
+
+- **La première connexion universitaire** cédait en « Portail lent » sur une WebView froide :
+  `ukit.portail.verification` version 3 lit sa preuve sur la page du CAS, sans `service`. Première
+  tentative réussie au Collège ST, à l'IUT et à l'INP.
+
+**À publier, avec le reste** : `ukit.portail.verification` 3, depuis `main` (étape 3 ci-dessous ; le
+manifeste publié est vide, lu le 2026-11-10 : la version 3 bat le socle du dernier tag et sera
+annoncée). Sans publication, la correction arrive avec la release.
+
+**À juger sur l'iPhone** :
+
+- la première connexion sur un iPhone neuf (WKWebView, la page de succès du CAS) ;
+
 **Pour Bordeaux Montaigne**, même produit : le mécanisme et la projection des intitulés PRONOTE servent
 tels quels. Il reste à écrire son portail de zéro (CAS distinct), et dans une copie du Blueprint
 `ukit.portail.bordeaux-iut.edt.lien`, le bloc de connexion et les `vars` (`flaubert2`) ; puis à nommer
@@ -165,7 +182,8 @@ ce Blueprint dans `edt.abonnement.blueprint_lien` de sa ligne.
    le commit qui les ajoute : un manifeste se publie depuis `main`
    ([blueprints.md](blueprints.md#ce-que-le-manifeste-annonce)) ;
 3. depuis `main`, `npm run blueprints:publish -- --dry-run`, qui doit annoncer
-   `ukit.portail.bordeaux-iut.edt.lien` 1 (hors socle), puis `npm run blueprints:publish` ;
+   `ukit.portail.bordeaux-iut.edt.lien` 1 (hors socle) et `ukit.portail.verification` 3, puis
+   `npm run blueprints:publish` ;
 4. la ligne de catalogue **seule**, jamais le fichier entier, qui réécrirait les trois autres lignes
    et ce que la console y a changé :
    ```bash

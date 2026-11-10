@@ -84,6 +84,9 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **La première connexion universitaire passe**, même quand l'intranet met dix secondes à charger :
+  la vérification des identifiants se lit sur la page du service de connexion, et ne suit plus
+  l'intranet. Elle échouait en « Portail lent » au premier essai sur une installation neuve.
 - **Les cours d'un abonnement PRONOTE ont leur vrai titre** : la matière, et non « Matière - Type -
   Enseignants - Mémo » ; le type en pastille sans sa durée, la salle, un enseignant par ligne, et le
   compte des séances restantes, que ce calendrier personnel rend sûr.
@@ -97,8 +100,6 @@ une application qui donne l'heure des choses d'un regard.
   d'onglet suivant.
 - **La Scolarité parle la typographie de sa langue** : « Good evening, Kylian! », « ¡Buenas noches,
   Kylian! », une date sans capitale au mois, et « KB » plutôt que « Ko » hors du français.
-### Corrigé
-
 - **Une page de connexion lente à se charger dit « Portail lent »**, réessayable, et plus « Le
   problème vient de UKit » : la redirection après le clic échappait à la mesure.
 - **Un filtre saisi à la main doit être un code d'UE** : « bonjour » devenait un filtre qui ne

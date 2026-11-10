@@ -101,6 +101,20 @@ refus d'un mot de passe ; ou une vérification **sans** `service`, qui s'arrête
 du CAS au lieu de suivre l'intranet. Non corrigé ici : c'est la preuve d'identité, partagée par trois
 établissements, et chaque essai coûte une connexion réelle.
 
+*Corrigé à la source le 2026-11-10, passe d'avant Montaigne* : la cause est dans le moteur, qui compte
+l'attente de la page **dans** le budget de l'étape (`waitForReady`, `dist/webview/rpc.js`) — 2 s pour
+une page qui en met dix. La seconde piste est retenue : `ukit.portail.verification` version 3 ne passe
+plus de `service`, et la soumission atterrit sur la page de succès du CAS lui-même, qui ne dépend
+d'aucun service tiers ; la première aurait laissé la preuve suspendue à la vitesse de l'intranet. Les
+deux CAS servent leur formulaire sans `service` (mesuré sans identifiants). Au banc (`ukit`, données
+effacées), **première tentative réussie** : Collège ST deux fois (15,2 et 14,0 s), IUT (13,6 s), INP
+(9,7 s) ; la page de succès en 0,3 à 0,9 s après le clic, `#6` et `#7` sous 25 ms ; un identifiant
+inexistant rend toujours `LOGIN_FAILED`. Le dossier, la messagerie, Moodle, les documents et le lien
+PRONOTE de l'IUT passent ensuite par la session CAS ainsi posée
+([scolarite.md](features/scolarite.md#prouver-un-couple-didentifiants-ne-se-déduit-pas-ça-se-demande)).
+**À publier** : le manifeste est vide, la version 3 n'atteint les binaires installés que par
+`npm run blueprints:publish` depuis `main`, ou par la release suivante.
+
 ### Hors ligne, l'actualisation du dossier accuse le portail — constaté le 2026-11-10
 
 Vu au banc pendant le lot 2 (`ukit`, réseau coupé, espagnol) : « Actualiser » rend « Portail

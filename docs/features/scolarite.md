@@ -1623,11 +1623,25 @@ Vérifié contre le portail réel, les deux cas, **avec une session vivante** : 
 `LOGIN_SUCCESS` ; mauvais → `LOGIN_FAILED`, aucun émis.
 
 Le fichier est **générique et embarqué** : `/login` est le chemin d'Apereo — Bordeaux le sert sous
-`/cas` et y redirige en 308, l'INP à la racine — et les deux entrées viennent du catalogue. Une
-précaution y est écrite : le `service` arrive **déjà encodé**, parce que le filtre `urlencode` existe
-côté moteur Python et **pas** côté moteur embarqué. L'employer dans le fichier marcherait depuis un
-poste et nulle part ailleurs — la même classe de piège que les pseudo-classes de Playwright au jalon
-6-G.
+`/cas` et y redirige (301 le 2026-11-10), l'INP à la racine — et son entrée vient du catalogue.
+
+**La preuve se lit sur la page du CAS, sans `service`** (version 3, 2026-11-10). Jusque-là, le
+fichier passait l'ENT de l'établissement en `service` : après le clic, le CAS renvoyait vers
+l'intranet, et la garde suivante (`#loginErrorsPanel` détaché, 2 s) attendait qu'un agent s'annonce
+sur une page encore en chargement. Le moteur compte l'attente de la page **dans** le budget de
+l'étape (`waitForReady`, `@aetherius/react-native`, `dist/webview/rpc.js`) : l'intranet de Bordeaux
+mettant 9,8 à 12 s à charger dans une WebView froide, la **première** connexion d'un étudiant cédait
+en `engine`, à chaque fois, sur les trois comptes bordelais joués ; la seconde passait. Allonger
+l'attente aurait gardé la preuve dépendante d'un service tiers, et ralenti le refus d'un mot de passe.
+Sans `service`, Apereo rend sa propre page « connexion réussie » : la soumission atterrit sur son
+document final, comme la navigation, ce qui est la règle de
+[blueprints.md](../blueprints.md#attendre--quatre-cas-et-un-seul-reste-une-pause). La session CAS est
+posée de la même façon, et le dossier puis les widgets la retrouvent en rebondissant par le CAS (leurs
+étapes de connexion sont sautées). Mesuré au banc (`ukit`, données effacées) : première tentative
+réussie au Collège ST (deux fois), à l'IUT et à l'INP, la page de succès en 0,3 à 0,9 s après le clic
+et les deux gardes en moins de 25 ms ; un identifiant inconnu rend toujours `LOGIN_FAILED`. Le
+moteur laisse passer une entrée non déclarée : un binaire qui passe encore `service` joue la version 3
+sans erreur.
 
 ### Le pendant obligatoire : la déconnexion ferme la session distante
 
@@ -2166,6 +2180,10 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
 
 - **Premier login** : l'écran de progression parcourt les **trois** étapes ; la page apparaît avec
   l'identité, puis les quatre rangées de service se remplissent **dedans**, une par une.
+- **Premier login, WebView froide** (données de l'application effacées) : la **première** tentative
+  passe, à Bordeaux comme à l'INP. Dans le journal, `ukit.portail.verification` : `#4 click` sous la
+  seconde, `#6` et `#7` en quelques millisecondes. Un `#6` qui échoue en « did not become ready »
+  voudrait dire que la soumission a de nouveau quitté le CAS.
 - **Relancer l'application** : affichage immédiat, **aucun run** — les rangées portent déjà leur
   valeur, relue du trousseau. Attendre la péremption (20 min pour la messagerie) et revenir de
   l'arrière-plan : la rangée garde sa valeur et pose un indicateur à côté, elle ne se vide pas.
@@ -2316,7 +2334,9 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   au banc, la vérification a navigué en 2,1 s, puis la redirection du CAS vers l'intranet, après le
   clic, a dépassé l'attente fixe de 4 s et le `wait_for` de 2 s qui la suit — une étape que la mesure
   des `navigate` ne voit pas. Le moteur ne rend ce cas qu'en texte : le motif est verrouillé par le
-  test, et une montée de version du moteur doit le revérifier.
+  test, et une montée de version du moteur doit le revérifier. La vérification des identifiants ne
+  suit plus l'intranet depuis sa version 3 (plus haut) ; la requalification reste pour les autres
+  portails.
 - **La feuille d'échec ne diagnostique pas.** Elle montre le titre et le message de l'échec ; le
   `detail` du moteur reste dans le journal, et un `engine` reste « un problème de notre côté », sans
   bouton — le distinguer d'une source morte se traite chez Aetherius (ci-dessus).

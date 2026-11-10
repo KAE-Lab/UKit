@@ -1,7 +1,7 @@
 {
   "aetherius": "1.0",
   "name": "ukit.portail.verification",
-  "description": "Verifie un couple d'identifiants aupres du CAS, et rien d'autre. Il ne lit aucune donnee : il prouve. Ce fichier existe parce qu'une mesure a demoli la methode d'avant. On croyait pouvoir forcer l'apparition du formulaire en fermant la session distante ; sonde du 2026-08-27 : le CAS confirme « Logout successful » et pourtant revenir sur mondossierweb passe SANS formulaire, parce que le SERVICE garde son propre cookie de session, que la deconnexion du CAS ne touche pas. Un parcours lance apres une fermeture traversait donc sans que le CAS se prononce, LOGIN_SUCCESS n'etait pas emis, et l'application soldait la validation en « impossible de verifier tes identifiants » — sur des identifiants pourtant justes. La reponse est un parametre du protocole et non un contournement : `renew=true` demande a Apereo de REDEMANDER les identifiants meme si un ticket vit. Mesure le meme jour : formulaire present malgre une session ouverte. Le fichier est GENERIQUE et embarque, comme la deconnexion : `/login` est le chemin d'Apereo — Bordeaux le sert sous /cas et y redirige en 308, l'INP le sert a la racine — et les deux entrees viennent du catalogue. Le `service` doit etre une adresse que le CAS connait, d'ou l'ENT de l'etablissement plutot qu'une URL inventee. Il ne rend AUCUNE sortie : la preuve, c'est l'evenement. Le parametre `service` arrive DEJA ENCODE : `urlencode` n'existe pas dans le moteur embarque, et s'en servir ici ne marcherait que depuis un poste.",
+  "description": "Verifie un couple d'identifiants aupres du CAS, et rien d'autre. Il ne lit aucune donnee : il prouve. Ce fichier existe parce qu'une mesure a demoli la methode d'avant. On croyait pouvoir forcer l'apparition du formulaire en fermant la session distante ; sonde du 2026-08-27 : le CAS confirme « Logout successful » et pourtant revenir sur mondossierweb passe SANS formulaire, parce que le SERVICE garde son propre cookie de session, que la deconnexion du CAS ne touche pas. Un parcours lance apres une fermeture traversait donc sans que le CAS se prononce, LOGIN_SUCCESS n'etait pas emis, et l'application soldait la validation en « impossible de verifier tes identifiants » — sur des identifiants pourtant justes. La reponse est un parametre du protocole et non un contournement : `renew=true` demande a Apereo de REDEMANDER les identifiants meme si un ticket vit. Mesure le meme jour : formulaire present malgre une session ouverte. Version 3, 2026-11-10 : plus de `service`. Avec lui, le CAS renvoyait apres succes vers l'ENT, et l'intranet de Bordeaux met jusqu'a douze secondes a charger dans une WebView froide : la garde qui suit la soumission attendait 2 s qu'un agent s'annonce sur une page encore en chargement, et la premiere connexion d'un etudiant cedait en `engine` (puis « portail lent »). Sans `service`, Apereo rend sa propre page « connexion reussie » : la soumission atterrit sur son document final, comme le `navigate`, et la preuve ne depend plus de la vitesse d'un service tiers. La session CAS (TGC) est posee de la meme facon, et les Blueprints suivants l'utilisent en rebondissant par le CAS. Le fichier est GENERIQUE et embarque, comme la deconnexion : `/login` est le chemin d'Apereo — Bordeaux le sert sous /cas et y redirige en 308, l'INP le sert a la racine — et l'entree vient du catalogue. Il ne rend AUCUNE sortie : la preuve, c'est l'evenement.",
   "act": "continuum",
   "secrets": [
     "portail_user",
@@ -12,11 +12,6 @@
       "type": "string",
       "required": true,
       "description": "La racine du CAS de l'etablissement, telle que le catalogue la publie."
-    },
-    "service": {
-      "type": "string",
-      "required": true,
-      "description": "Une adresse que ce CAS connait — l'ENT de l'etablissement — **deja encodee** pour tenir dans une chaine de requete."
     }
   },
   "options": {
@@ -32,8 +27,8 @@
   "steps": [
     {
       "action": "navigate",
-      "url": "{{ inputs.cas }}/login?service={{ inputs.service }}&renew=true",
-      "note": "`service` arrive **deja encode** : le filtre `urlencode` existe cote moteur Python et PAS cote moteur embarque, donc l'employer ici marcherait depuis un poste et nulle part ailleurs. C'est la meme classe de piege que les pseudo-classes de Playwright au jalon 6-G. Encoder une URL est du calcul : ca reste applicatif."
+      "url": "{{ inputs.cas }}/login?renew=true",
+      "note": "Sans `service` : la page de succes est celle du CAS lui-meme, servie en quelques centaines de millisecondes, et non l'ENT de l'etablissement. Mesure du 2026-11-10 : avec `service`, l'intranet de Bordeaux mettait 9,8 a 12 s a charger apres le CAS dans une WebView froide, et la premiere connexion echouait a chaque fois. Les deux CAS servent leur formulaire sans `service` (mesure le meme jour, 200 et `#username`)."
     },
     {
       "action": "wait_for",
@@ -76,7 +71,7 @@
       "state": "detached",
       "timeout_ms": 20000,
       "on_timeout": "fail:LOGIN_FAILED",
-      "note": "La preuve positive : le formulaire a disparu, donc le CAS a redirige vers le service. La garde precedente attrape le refus explicite, celle-ci le refus muet."
+      "note": "La preuve positive : le formulaire a disparu, donc le CAS a accepte et rendu sa page de succes. La garde precedente attrape le refus explicite, celle-ci le refus muet."
     },
     {
       "action": "emit",

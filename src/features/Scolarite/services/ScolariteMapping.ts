@@ -210,7 +210,8 @@ const PAGE_PAS_PRETE = /did not become ready/;
  * ready (no agent announced itself) » —, alors que l'intranet s'est bien charge ensuite. La mesure
  * ne voit que les etapes `navigate` : la redirection qui suit un clic lui echappe. Le moteur ne rend
  * ce cas qu'en texte (`waitForReady`, @aetherius/react-native 0.5.10, dist/webview/rpc.js) ; le
- * detail le porte, d'ou le motif, verrouille par le test.
+ * detail le porte, d'ou le motif, verrouille par le test. La verification des identifiants ne suit plus
+ * l'intranet depuis sa version 3 (2026-11-10) ; la requalification reste pour les autres portails.
  */
 export function requalifierLenteur(failure: UkitFailure, navigationMs: number): UkitFailure {
     if (failure.kind !== 'engine' || failure.code !== undefined) return failure;

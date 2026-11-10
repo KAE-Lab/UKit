@@ -332,20 +332,20 @@ export async function fermerSessionDistante(): Promise<IssueDeFermeture> {
  * `renew=true` est la reponse du protocole : Apereo redemande les identifiants meme si un ticket vit.
  * La preuve cesse d'etre deduite d'une absence de session pour devenir **demandee**.
  *
- * L'encodage du `service` est fait **ici** : le filtre `urlencode` n'existe pas dans le moteur
- * embarque, donc l'employer dans le fichier marcherait depuis un poste et nulle part ailleurs.
+ * **Aucun `service` depuis la version 3 du Blueprint.** Le CAS renvoyait apres succes vers l'ENT, et
+ * l'intranet de Bordeaux, lent a froid, faisait echouer la premiere connexion : la preuve se lit
+ * desormais sur la page de succes du CAS lui-meme (defauts-fonctionnels.md, 2026-11-10).
  */
 async function jouerVerification(options: OptionsSession): Promise<UkitFailure | null> {
     const cas = serviceEtablissement('cas');
-    const service = serviceEtablissement('ent');
-    // Sans CAS ni service connus, on ne sait pas ou prouver quoi que ce soit. On laisse alors le
-    // parcours suivre son cours : c'est ce qu'il faisait avant, et le dire ici serait un echec de
-    // configuration deguise en echec d'identifiants.
-    if (cas === null || service === null) return null;
+    // Sans CAS connu, on ne sait pas ou prouver quoi que ce soit. On laisse alors le parcours suivre
+    // son cours : c'est ce qu'il faisait avant, et le dire ici serait un echec de configuration
+    // deguise en echec d'identifiants.
+    if (cas === null) return null;
 
     const run = await jouer(BLUEPRINT.PORTAIL_VERIFICATION, 'connecting', {
         ...options,
-        inputs: { cas, service: encodeURIComponent(service) },
+        inputs: { cas },
     });
     return run.ok === false ? run.failure : null;
 }
