@@ -1,0 +1,174 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux-iut.edt.lien",
+  "description": "L'ADRESSE D'ABONNEMENT de l'emploi du temps de l'etudiant de l'IUT DE BORDEAUX, lue dans son espace PRONOTE Campus une fois connecte. C'est la suite que le jalon 6-J avait reservee (edt.abonnement.blueprint_lien) : l'application range l'adresse exactement la ou la saisie manuelle la rangeait, et `ukit.edt.abonnement` la joue ensuite comme n'importe quel lien colle. Ce fichier ne rend que l'adresse — jamais le calendrier — et elle vaut un secret : elle ouvre un emploi du temps nominatif sans authentification. Mesures du 2026-11-10 sur le compte prete, qui expliquent chaque step. (1) La racine de PRONOTE est une page publique de choix d'espace ; `/etudiant` rebondit sur le CAS de l'Universite de Bordeaux (le meme que `ukit.portail.bordeaux.*`, theme identique : input[type=submit], #loginErrorsPanel) et revient sur l'espace. (2) L'export est un bouton de bandeau, `i.icon_ical`. UN CLIC SYNTHETIQUE NE L'OUVRE PAS : ni la sequence du moteur embarque (pointerdown, mousedown, pointerup, mouseup, click()) ni un `click()` seul — PRONOTE n'y reagit pas, alors qu'un vrai clic souris l'ouvre. La touche Entree, envoyee EXACTEMENT comme le moteur l'envoie (keydown puis keyup, keyCode 13), l'ouvre a tous les essais. D'ou `press` et non `click`. (3) La boite « Export au format iCal » porte l'adresse d'abonnement dans un champ texte (`…_lien_permanent`) dont la VALEUR est posee en propriete et jamais en attribut : l'extraction embarquee, qui ne lit que texte, HTML ou attribut, ne la voit pas. Le lien voisin « Exporter l'emploi du temps au format iCal » (`a[id$=\"_lien\"]`) porte, lui, un `href` RELATIF qui, resolu contre la page, est EXACTEMENT l'adresse d'abonnement — empreintes comparees, egales caractere pour caractere. Le fichier lit donc cet attribut et recompose l'adresse sur `vars.racine`. (4) L'ancre apparait avant son adresse : son `href` est pose 0,27 s plus tard. L'attente porte donc sur `[href^=\"Telechargements/ical/\"]`, qui ne correspond qu'une fois l'adresse ecrite. (5) L'adresse est STABLE d'une session a l'autre (meme empreinte a deux connexions) : la lire une fois suffit, l'application ne la relit que si elle n'en a pas. Forme : https://pronote.iut.u-bordeaux.fr/Telechargements/ical/<nom>.ics?version=…&icalsecurise=…&param=… — le nom du fichier porte le NOM de l'etudiant. (6) Un bandeau « Information » (cookies de fonctionnement, bouton « Fermer ») s'affiche a certaines premieres visites ; il n'a pas pu etre reproduit a la demande, et il est donc traite comme une issue possible et non comme une etape. POUR BORDEAUX MONTAIGNE, meme produit : tout ce qui suit la connexion vaut tel quel ; `vars.espace`, `vars.racine` et le bloc de connexion (son CAS est distinct) sont ce qui change.",
+  "act": "continuum",
+  "secrets": [
+    "portail_user",
+    "portail_pass"
+  ],
+  "vars": {
+    "espace": "https://pronote.iut.u-bordeaux.fr/etudiant",
+    "racine": "https://pronote.iut.u-bordeaux.fr"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "session": {
+      "persist": true
+    }
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ vars.espace }}"
+    },
+    {
+      "action": "wait",
+      "ms": 4000,
+      "note": "La pause qui protege la premiere operation apres un `navigate` qui REBONDIT : l'espace etudiant renvoie au CAS quand aucune session n'est ouverte. Meme valeur et meme raison que les parcours de `ukit.portail.bordeaux.*` (docs/blueprints.md, « Attendre »)."
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username, i.icon_ical",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:CAS_INDISPONIBLE",
+      "note": "L'union des deux issues : le formulaire du CAS, ou l'espace deja ouvert. Dans le parcours froid de l'application ce fichier passe APRES le dossier, sur la meme session CAS persistee : la seconde issue est la reguliere."
+    },
+    {
+      "id": "porte",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formulaire": {
+          "selector": "#username",
+          "as": "count"
+        }
+      }
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#username",
+      "value": "{{ secrets.portail_user }}"
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#password",
+      "value": "{{ secrets.portail_pass }}"
+    },
+    {
+      "action": "click",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "input[type=submit]"
+    },
+    {
+      "action": "wait",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "ms": 4000,
+      "note": "La cascade d'authentification : une operation emise pendant ces sauts se perd en silence sur un appareil. Payee seulement si l'on s'est reellement authentifie."
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "Le meme panneau que sur les autres parcours de ce CAS : absent de la page propre, present des que le mot de passe est refuse. Pas d'evenement LOGIN_SUCCESS ici, volontairement : ce fichier n'est jamais celui qui prouve des identifiants (`ukit.portail.verification` le fait), et l'emettre ferait reecrire le trousseau par une lecture d'emploi du temps."
+    },
+    {
+      "action": "wait_for",
+      "selector": "i.icon_ical",
+      "timeout_ms": 45000,
+      "on_timeout": "fail:PRONOTE_INDISPONIBLE",
+      "note": "Le bouton d'export, visible : c'est la preuve que l'espace etudiant est charge. Mesure : 0,2 s apres le document sur une session ouverte, mais 23,7 s apres une vraie connexion (poste en filaire, 2026-11-10) — PRONOTE construit l'espace apres le retour du CAS. D'ou un plafond large : un telephone en cellulaire ne doit pas echouer sur une page qui finit par rendre."
+    },
+    {
+      "action": "wait",
+      "ms": 1000,
+      "note": "Une marge, pas une garde : le bouton a reagi des qu'il etait visible a tous les essais du poste. Elle couvre un telephone plus lent a brancher ses gestionnaires que le poste."
+    },
+    {
+      "id": "bandeau",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "fermer": {
+          "selector": "//div[@role='dialog']//button[normalize-space()='Fermer']",
+          "selector_type": "xpath",
+          "as": "count",
+          "note": "Le bandeau « Information » des premieres visites. A cette etape, aucune autre boite n'est ouverte : un « Fermer » ne peut etre que le sien."
+        }
+      }
+    },
+    {
+      "action": "press",
+      "when": "{{ steps.bandeau.fermer > 0 }}",
+      "selector": "//div[@role='dialog']//button[normalize-space()='Fermer']",
+      "selector_type": "xpath",
+      "key": "Enter",
+      "note": "Entree et non un clic, pour la raison qui vaut pour le bouton d'export : c'est le geste synthetique que PRONOTE accepte."
+    },
+    {
+      "action": "press",
+      "selector": "i.icon_ical",
+      "key": "Enter"
+    },
+    {
+      "action": "wait",
+      "ms": 1500,
+      "note": "La boite s'ouvre en moins d'une demi-seconde au poste ; la sonde qui suit decide s'il faut redemander."
+    },
+    {
+      "id": "boite",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "ouverte": {
+          "selector": "a[id$=\"_lien\"]",
+          "as": "count"
+        }
+      }
+    },
+    {
+      "action": "press",
+      "when": "{{ steps.boite.ouverte == 0 }}",
+      "selector": "i.icon_ical",
+      "key": "Enter",
+      "note": "Une seconde demande si la premiere est arrivee avant que l'espace ne soit pret. Une seule : au-dela, l'echec nomme qui suit dit mieux ce qui se passe qu'une boucle."
+    },
+    {
+      "action": "wait_for",
+      "selector": "a[id$=\"_lien\"][href^=\"Telechargements/ical/\"]",
+      "state": "attached",
+      "timeout_ms": 15000,
+      "on_timeout": "fail:EDT_LIEN_INTROUVABLE",
+      "note": "L'ancre ET son adresse : le `href` est pose apres l'ancre (mesure 3 et 4 de la description). `attached` et non `visible` : seule la presence de l'attribut compte."
+    },
+    {
+      "id": "export",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "relatif": {
+          "selector": "a[id$=\"_lien\"][href^=\"Telechargements/ical/\"]",
+          "as": "attr",
+          "attr": "href"
+        }
+      }
+    },
+    {
+      "action": "assert",
+      "condition": "{{ '.ics?' in steps.export.relatif and 'icalsecurise=' in steps.export.relatif }}",
+      "message": "le lien lu n'a pas la forme d'un abonnement PRONOTE : la boite d'export a change"
+    }
+  ],
+  "outputs": {
+    "lien": "{{ vars.racine }}/{{ steps.export.relatif }}"
+  }
+}

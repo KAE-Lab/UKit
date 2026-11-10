@@ -137,8 +137,8 @@ describe('appliquerCatalogue', () => {
         appliquerCatalogue({ inp: etablissement({ code: 'inp', nom: 'INP' }) });
         appliquerCatalogue(null);
 
-        // Les trois lignes publiees a la date de la release, dans l'ordre de la liste (6.1-A).
-        expect(listeEtablissements().map((e) => e.code)).toEqual([ETABLISSEMENT_DEFAUT, 'bordeaux-inp', 'autre']);
+        // Les lignes de etablissements.sql a la date de la release, dans l'ordre de la liste (6.1-A).
+        expect(listeEtablissements().map((e) => e.code)).toEqual([ETABLISSEMENT_DEFAUT, 'bordeaux-inp', 'bordeaux-iut', 'autre']);
         expect(getEtablissement(ETABLISSEMENT_DEFAUT)?.celcatDomaine).toBe('https://celcat.u-bordeaux.fr/calendar');
     });
 });
@@ -152,8 +152,8 @@ describe('listeEtablissements', () => {
         });
 
         // Le socle s'intercale a sa place : « Bordeaux INP » entre « Alpha » et « Zenith » au meme
-        // ordre, « Autre universite » a 99 ferme la liste.
-        expect(listeEtablissements().map((e) => e.code)).toEqual(['a', 'bordeaux', 'b', 'bordeaux-inp', 'c', 'autre']);
+        // ordre, l'IUT a 2 apres eux, « Autre universite » a 99 ferme la liste.
+        expect(listeEtablissements().map((e) => e.code)).toEqual(['a', 'bordeaux', 'b', 'bordeaux-inp', 'c', 'bordeaux-iut', 'autre']);
     });
 });
 

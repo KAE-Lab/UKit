@@ -33,6 +33,7 @@ fragilité, extraction, contrat non versionné — ne s'y applique. Ce document 
 | 7 | CDN de rendu de carte | tuiles OpenFreeMap, bibliothèque MapLibre GL | aucune | faible |
 | 8 | ADE (`ade.bordeaux-inp.fr`) | emploi du temps, par export iCalendar | aucune | moyenne — export anonyme, mais **index de ressource positionnels et projet annuel**. **Deux Blueprints** depuis [6-I](phase-6/6-i-planning-universel.md) |
 | 9 | **N'importe quel export iCalendar**, à l'adresse que l'étudiant colle | emploi du temps | le lien **est** le secret (trousseau) | inconnue par construction — c'est le [repli universel](phase-6/6-j-compte-et-sources-par-etablissement.md) de 6-J. Un Blueprint unique, [`ukit.edt.abonnement`](../blueprints/ukit-edt-abonnement.blueprint.json), demande le lien **verbatim et sans bornes** ; le découpage par date est applicatif, parce que tous les produits n'acceptent pas de paramètres de plage |
+| 10 | PRONOTE Campus de l'IUT de Bordeaux (`pronote.iut.u-bordeaux.fr`) | **l'adresse** d'abonnement de l'étudiant, lue dans son espace | identifiants universitaires (CAS de Bordeaux) | **moyenne** — une application web dont l'export n'est atteignable que par une touche clavier. **Un Blueprint**, [`ukit.portail.bordeaux-iut.edt.lien`](../blueprints/portails/ukit-portail-bordeaux-iut-edt-lien.blueprint.json) ; le calendrier lui-même passe ensuite par la source 9 |
 
 ## 1. Celcat — emplois du temps
 
@@ -864,6 +865,7 @@ qu'il ne surveille pas :
 | CAS de Bordeaux, CAS de Bordeaux INP | `ukit.sonde.cas` | la page de connexion sert son formulaire (`renew=true`) |
 | Moodle de Bordeaux, chaîne SSO | `ukit.sonde.moodle` | l'adresse Unsolicited SSO de l'IdP atteint le formulaire du CAS |
 | ADE de Bordeaux INP | le Blueprint `ukit.portail.bordeaux-inp.edt` de l'application | l'export d'une ressource se lit comme un calendrier |
+| PRONOTE de l'IUT de Bordeaux | `ukit.sonde.pronote` | la page publique mène à l'espace Étudiants ; l'export, lui, est derrière le CAS, que `cas-bordeaux` sonde déjà |
 | La base de publication | native | le manifeste se lit et ses empreintes correspondent |
 | Affluences, Croustillant, OpenFreeMap | **aucune** | ces sources ont un écran qui dit leur panne, et aucune ne porte de session ; en ajouter une est une ligne dans `sondes/sondes.json` |
 
@@ -1025,6 +1027,44 @@ L'arbre donne des **noms d'école**, le balayage anonyme donne des **index de gr
 ses cours et la **part** que ça représente. La part compte — l'index `61` n'a que 2 de ses 11 cours
 dans ENSEIRB, ce qui est une mutualisation et non une appartenance. Préfixer un groupe sans cette
 mesure publierait l'emploi du temps d'une école sous le nom d'une autre.
+
+## 10. PRONOTE Campus — l'adresse d'abonnement, lue sur le compte
+
+Mesuré le 2026-11-10 sur le compte prêté de l'IUT de Bordeaux, PRONOTE Campus 2026.4.7.2
+([fiche](campus/bordeaux-iut.md)). La source n'est **pas** le calendrier — il passe par le repli
+universel, source 9 du tableau — mais **l'adresse** que l'espace étudiant donne pour s'y abonner.
+La lire évite à l'étudiant de la coller ([planning.md](features/planning.md#le-lien-lu-sur-le-compte)).
+
+| Étape | Ce qui se passe |
+|---|---|
+| `GET /` | une page publique « Choix des espaces », construite par script ; le lien de l'espace étudiant est `/etudiant` |
+| `GET /etudiant` | sans session, `302` vers `cas.u-bordeaux.fr/cas/login?service=…` ; avec, l'espace `…/etudiant?identifiant=<16 caractères>` |
+| bouton `i.icon_ical` | ouvre la boîte « Export au format iCal » — **seulement** sur un vrai clic ou sur la touche Entrée ; un clic synthétique (`click()`, la séquence du moteur embarqué) est ignoré |
+| `a[id$="_lien"]` | « Exporter l'emploi du temps au format iCal » : son `href` relatif, posé 0,27 s après l'ancre, **est** l'adresse d'abonnement une fois résolu contre la page |
+| `input[id$="_lien_permanent"]` | la même adresse, à copier — mais en **propriété** et non en attribut : l'extraction embarquée ne la voit pas |
+
+**La forme de l'adresse** : `https://pronote.iut.u-bordeaux.fr/Telechargements/ical/<nom>.ics?version=<10>&icalsecurise=<96>&param=<36>`.
+Le nom du fichier porte le **nom** de l'étudiant ; l'adresse est **stable** d'une session à l'autre.
+Elle vaut un secret : sans authentification, elle rend l'emploi du temps de son porteur.
+
+**Ce que rend l'export**, et ce qui en reste applicatif : l'année entière (267 événements du
+1er septembre au 24 juillet), en UTC, catégorie constante `HYPERPLANNING`. Un `SUMMARY` qui empile
+« Matière - Type - Enseignants - Mémo », une description dont chaque ligne est nommée (`Matière`,
+`Type`, `Salle(s)`, `Enseignant(s)`, `Mémo`), une salle **sans code de bâtiment** (`203  BUT3B`,
+`Amphi 2`), onze journées entières (vacances, fériés). L'en-tête `X-WR-CALNAME` porte le nom **et la
+date de naissance** du porteur : aucun écran ne le lit, et rien ne doit le faire. La projection de ces
+champs est dans [planning.md](features/planning.md#ce-que-licalendar-donne-et-ce-quil-ne-donne-pas).
+
+### Fragilité
+
+- l'export s'ouvre par une **touche** et non par un clic : si PRONOTE change son gestionnaire, la boîte
+  ne s'ouvre plus et le run échoue sur `EDT_LIEN_INTROUVABLE`, nommé ;
+- l'adresse se lit dans un `href` **relatif** : un `href` absolu ferait échouer l'attente
+  `[href^="Telechargements/ical/"]`, nommée elle aussi ;
+- l'espace met **23,7 s** à se construire après une vraie connexion (poste en filaire) ; le plafond est
+  de 45 s ;
+- un bandeau « Information » paraît à certaines premières visites, sans qu'on sache le reproduire :
+  il est fermé s'il est là.
 
 ## Modèle d'erreur commun
 

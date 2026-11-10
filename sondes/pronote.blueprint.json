@@ -1,0 +1,32 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.sonde.pronote",
+  "description": "Prouve qu'un PRONOTE Campus sert sa page publique et le lien vers l'espace Etudiants, et rien d'autre : aucun identifiant, aucune lecture. C'est la seule moitie de l'emploi du temps de l'IUT de Bordeaux qui se sonde sans compte — l'export d'abonnement est derriere le CAS, et le CAS a deja sa sonde (cas-bordeaux, le meme). Elle voit donc ce qui casserait la lecture du lien sans toucher a un compte : un serveur muet, ou une page d'accueil changee au point de ne plus mener a l'espace etudiant (mesure du 2026-11-10 : la racine est une page « Choix des espaces », et le lien est `/etudiant`). La page est construite par le script de PRONOTE, d'ou l'Act II et l'attente du lien plutot qu'une requete HTTP.",
+  "act": "continuum",
+  "inputs": {
+    "racine": {
+      "type": "string",
+      "required": true,
+      "description": "La racine du serveur PRONOTE, sans barre finale (https://pronote.iut.u-bordeaux.fr)."
+    }
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ inputs.racine }}/"
+    },
+    {
+      "action": "wait_for",
+      "selector": "a[href=\"/etudiant\"]",
+      "state": "attached",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:PRONOTE_INDISPONIBLE",
+      "note": "Le lien de l'espace Etudiants, celui que le Blueprint de lecture du lien ouvre. `attached` : un bandeau d'information peut le recouvrir, il n'en est pas moins la."
+    }
+  ],
+  "outputs": {}
+}

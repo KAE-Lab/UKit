@@ -338,6 +338,115 @@ insert into public.etablissements (
     alias                = excluded.alias;
 
 -- =============================================================================
+-- IUT de Bordeaux — une composante sur le portail de l'universite, un emploi du temps a elle
+-- =============================================================================
+--
+-- Lot 3 de la prochaine version, mesure le 2026-11-10 sur un compte prete (docs/campus/bordeaux-iut.md).
+-- **A publier apres ses Blueprints** : `ukit.portail.bordeaux-iut.edt.lien` d'abord, cette ligne
+-- ensuite (en-tete de ce fichier, regle 2).
+--
+-- Le portail est celui de l'Universite de Bordeaux, mesure et non suppose : meme CAS, meme
+-- `mondossierweb` aux memes libelles, meme annuaire, meme ReNARD, meme Moodle. La ligne NOMME donc
+-- `ukit.portail.bordeaux.*` sans rien dupliquer (decision du 2026-09-14, campus/README.md) ; seul son
+-- code la separe, et c'est lui qui cloisonne le trousseau : un etudiant de l'IUT ne voit jamais la
+-- session d'un compte du College ST, et l'inverse.
+--
+-- L'emploi du temps est **PRONOTE Campus**, sans surface publique : il arrive par l'adresse
+-- d'abonnement que l'espace etudiant donne. `blueprint_lien` la lit une fois l'etudiant connecte, et
+-- elle se range la ou la saisie manuelle la rangeait. `aide` reste pour le repli — un etudiant dont la
+-- lecture a echoue peut encore la coller —, et nomme le chemin mesure.
+--
+-- Trois `null` qui sont des decisions :
+--
+--   * `celcat_domaine` — les 96 groupes `BUTD*` du Celcat de l'universite ne portent que des vacances
+--     (mesure du 2026-09-16) : l'IUT n'y est pas ;
+--   * `salles` avec `reconnaissance: false` — PRONOTE ecrit ses salles SANS code de batiment
+--     (« 203  BUT3B », « 107 », « Amphi 2 », « Salle de Controle GC ») : aucun motif ne peut en tirer
+--     un batiment, et quatre sites portent des salles « 107 ». Une carte fausse est pire qu'une carte
+--     vide (jalon 6-I) ;
+--   * `salles_libres` — aucun inventaire d'occupation public pour l'IUT, et emprunter celui du College
+--     ST montrerait des salles de Talence a un etudiant de Gradignan, d'Agen ou de Perigueux.
+--
+-- `bibliotheques_points` reprend ceux de Bordeaux : le point « Talence / Pessac / Gradignan » couvre le
+-- siege, « Bordeaux Centre » la Bastide, et la position de l'etudiant est toujours balayee en plus
+-- (Agen et Perigueux ne rendaient aucun site sur Affluences, mesure du 2026-08-08). `logo_url` attend
+-- l'accord du service communication ; `credits` attend la reponse du preteur.
+insert into public.etablissements (
+    code, nom, nom_court, ville, logo_url, actif,
+    portail_dossier, portail_messagerie, portail_widgets, portail_documents,
+    celcat_domaine, celcat_res_types, edt, salles, salles_libres,
+    bibliotheques_points, services, libelles, crous_region, ordre,
+    credits, campus, alias
+) values (
+    'bordeaux-iut',
+    'IUT de Bordeaux',
+    'IUT Bordeaux',
+    -- Le siege, 15 rue Naudet. L'IUT a quatre sites ; la commune sert la ou une seule tient.
+    'Gradignan',
+    null,
+    true,
+    'ukit.portail.bordeaux.dossier',
+    'ukit.portail.bordeaux.messagerie',
+    '{"messagerie": {"blueprint": "ukit.portail.bordeaux.messagerie"},
+      "moodle":     {"blueprint": "ukit.portail.bordeaux.moodle"}}'::jsonb,
+    'ukit.portail.bordeaux.documents',
+    null,
+    null,
+    '{"abonnement": {"aide": "PRONOTE, espace Étudiants : le bouton iCal en haut à droite, puis « Copier l’adresse »",
+                     "blueprint_lien": "ukit.portail.bordeaux-iut.edt.lien"}}'::jsonb,
+    '{"reconnaissance": false}'::jsonb,
+    null,
+    '[{"lat": 44.8377, "lng": -0.5791},
+      {"lat": 44.7963, "lng": -0.6277}]'::jsonb,
+    -- Les portes de l'universite, les memes que `bordeaux` : un etudiant de l'IUT est inscrit a
+    -- l'Universite de Bordeaux, son ENT, sa messagerie et son Moodle sont les siens (mesure du
+    -- 2026-11-10 sur le compte prete). Apogee etait en maintenance ce jour-la : `notes` et `examens`
+    -- n'ont pas pu etre ouverts, ils restent ceux du College ST jusqu'a preuve du contraire.
+    '{"ent":     "https://intranet.u-bordeaux.fr",
+      "email":   "https://webmel.u-bordeaux.fr",
+      "cas":     "https://cas.u-bordeaux.fr",
+      "apogee":  "https://apogee.u-bordeaux.fr",
+      "moodle":  "https://idp-ubx.u-bordeaux.fr/idp/profile/SAML2/Unsolicited/SSO?providerId=https%3A%2F%2Fmoodle.u-bordeaux.fr%2Fauth%2Fshibboleth&target=https%3A%2F%2Fmoodle.u-bordeaux.fr%2Fauth%2Fshibboleth%2Findex.php",
+      "notes":   "https://apogee.u-bordeaux.fr/index.php?srv=RE01",
+      "examens": "https://apogee.u-bordeaux.fr/index.php?srv=RE02",
+      "adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
+      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}&entry.278485196={etablissement}",
+      "formulaire_campus": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.82564016=Demander%20un%20campus",
+      "idp_shibboleth": "https://idp-ubx.u-bordeaux.fr/idp/shibboleth"}'::jsonb,
+    '{}'::jsonb,
+    -- Le Crous de Bordeaux : son point « Crous market' de l'iut » est dans la region 1.
+    '1',
+    2,
+    null,
+    -- Le campus qui regroupe : celui du siege. Les trois autres sites sont dans `alias`, ou les
+    -- etudiants les cherchent.
+    'Gradignan',
+    '{"IUT","IUT Bordeaux","IUT de Bordeaux","BUT","DUT","Gradignan","Bastide","Bordeaux-Bastide","Agen","Périgueux"}'::text[]
+) on conflict (code) do update set
+    nom                  = excluded.nom,
+    nom_court            = excluded.nom_court,
+    ville                = excluded.ville,
+    logo_url             = excluded.logo_url,
+    actif                = excluded.actif,
+    portail_dossier      = excluded.portail_dossier,
+    portail_messagerie   = excluded.portail_messagerie,
+    portail_widgets      = excluded.portail_widgets,
+    portail_documents    = excluded.portail_documents,
+    celcat_domaine       = excluded.celcat_domaine,
+    celcat_res_types     = excluded.celcat_res_types,
+    edt                  = excluded.edt,
+    salles               = excluded.salles,
+    salles_libres        = excluded.salles_libres,
+    bibliotheques_points = excluded.bibliotheques_points,
+    services             = excluded.services,
+    libelles             = excluded.libelles,
+    crous_region         = excluded.crous_region,
+    ordre                = excluded.ordre,
+    credits              = excluded.credits,
+    campus               = excluded.campus,
+    alias                = excluded.alias;
+
+-- =============================================================================
 -- « Mon universite n'est pas dans la liste » — l'etablissement ouvert (jalon 6-J)
 -- =============================================================================
 --

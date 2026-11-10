@@ -76,6 +76,11 @@ une application qui donne l'heure des choses d'un regard.
 - **« Il reste 3 séances de TD ce semestre »** sur la fiche d'un cours, ou « Dernière séance » : le
   compte se fait sur l'année déjà lue, sans requête de plus, et se tait quand un autre sous-groupe ou
   un rattrapage rendrait le chiffre incertain.
+- **L'IUT de Bordeaux**, quatrième établissement : le portail de l'université (dossier, messagerie,
+  Moodle, documents), et l'emploi du temps PRONOTE **sans rien coller**. Une fois l'étudiant connecté,
+  UKit lit son lien d'abonnement dans son espace PRONOTE et le range comme un lien collé ; sans compte,
+  le Planning invite à se connecter plutôt qu'à coller. Le mécanisme sert tout campus dont le catalogue
+  sait lire le lien (`edt.abonnement.blueprint_lien`).
 
 ### Corrigé
 

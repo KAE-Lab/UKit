@@ -68,7 +68,7 @@ export const REGION_CROUS_BORDEAUX = '1';
 export const SALLES_PAR_DEFAUT: FormatSalles = { separateurs: [' | ', '/'], motif: '([A-Z][0-9]+)', depuis: 2 };
 
 /**
- * Les trois lignes publiees a la date de la release, dans l'ordre de la liste.
+ * Les lignes de `supabase/etablissements.sql` a la date de la release, dans l'ordre de la liste.
  *
  * Chaque commentaire de valeur vit dans `supabase/etablissements.sql`, qui reste la reference : ici
  * on ne raconte pas deux fois, on recopie.
@@ -222,6 +222,52 @@ export const SOCLE: Readonly<Record<string, Etablissement>> = {
         credits: [],
         campus: 'Talence',
         alias: ['INP', 'Bordeaux INP', 'ENSEIRB', 'ENSEIRB-MATMECA', 'ENSC', 'ENSCBP', 'ENSEGID', 'ENSPIMA', 'ENSTBB'],
+    },
+    // L'IUT de Bordeaux (lot 3 de la prochaine version) : une composante de l'universite, sur le meme
+    // CAS et le meme dossier, avec un emploi du temps a lui — PRONOTE Campus, lu par abonnement. Les
+    // raisons de chaque valeur sont dans supabase/etablissements.sql et docs/campus/bordeaux-iut.md.
+    'bordeaux-iut': {
+        code: 'bordeaux-iut',
+        nom: 'IUT de Bordeaux',
+        nomCourt: 'IUT Bordeaux',
+        ville: 'Gradignan',
+        logo: null,
+        portailDossier: 'ukit.portail.bordeaux.dossier',
+        portailMessagerie: 'ukit.portail.bordeaux.messagerie',
+        portailDocuments: 'ukit.portail.bordeaux.documents',
+        portailWidgets: {
+            messagerie: { blueprint: 'ukit.portail.bordeaux.messagerie', peremptionMin: null },
+            moodle: { blueprint: 'ukit.portail.bordeaux.moodle', peremptionMin: null },
+        },
+        celcatDomaine: null,
+        celcatResTypes: RES_TYPES_PAR_DEFAUT,
+        edt: null,
+        edtAbonnement: {
+            aide: 'PRONOTE, espace Étudiants : le bouton iCal en haut à droite, puis « Copier l’adresse »',
+            blueprintLien: 'ukit.portail.bordeaux-iut.edt.lien',
+        },
+        salles: null,
+        sallesLibres: null,
+        bibliothequesPoints: POINTS_BORDEAUX,
+        crousRegion: REGION_CROUS_BORDEAUX,
+        services: {
+            ent: 'https://intranet.u-bordeaux.fr',
+            email: 'https://webmel.u-bordeaux.fr',
+            cas: 'https://cas.u-bordeaux.fr',
+            apogee: 'https://apogee.u-bordeaux.fr',
+            moodle: 'https://idp-ubx.u-bordeaux.fr/idp/profile/SAML2/Unsolicited/SSO?providerId=https%3A%2F%2Fmoodle.u-bordeaux.fr%2Fauth%2Fshibboleth&target=https%3A%2F%2Fmoodle.u-bordeaux.fr%2Fauth%2Fshibboleth%2Findex.php',
+            notes: 'https://apogee.u-bordeaux.fr/index.php?srv=RE01',
+            examens: 'https://apogee.u-bordeaux.fr/index.php?srv=RE02',
+            adaptation: 'https://forms.gle/c8vpwBu1QpowkAKC8',
+            formulaire: FORMULAIRE_PASTILLE,
+            formulaire_campus: FORMULAIRE_CAMPUS,
+            idp_shibboleth: 'https://idp-ubx.u-bordeaux.fr/idp/shibboleth',
+        },
+        libelles: {},
+        ordre: 2,
+        credits: [],
+        campus: 'Gradignan',
+        alias: ['IUT', 'IUT Bordeaux', 'IUT de Bordeaux', 'BUT', 'DUT', 'Gradignan', 'Bastide', 'Bordeaux-Bastide', 'Agen', 'Périgueux'],
     },
     // « Mon universite n'est pas dans la liste » : l'absence d'universite portee, rendue utilisable
     // par un lien d'abonnement colle a la main (jalon 6-J). Les colonnes de campus sont celles du

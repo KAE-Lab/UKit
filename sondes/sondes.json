@@ -43,6 +43,14 @@
       "casser": "domaine"
     },
     {
+      "source": "pronote-bordeaux-iut",
+      "libelle": "PRONOTE de l’IUT de Bordeaux — page publique",
+      "blueprint": "sondes/pronote.blueprint.json",
+      "entrees": { "racine": "https://pronote.iut.u-bordeaux.fr" },
+      "preuve": "la page publique mène à l’espace Étudiants, où se lit le lien d’abonnement",
+      "casser": "racine"
+    },
+    {
       "source": "publication",
       "libelle": "Base de publication — manifeste des Blueprints",
       "natif": "manifeste",

@@ -1,102 +1,120 @@
 # IUT de Bordeaux
 
-> Fiche ouverte le 2026-09-16, par le relevé public du lot 1 de
-> [7-B](../phase-7/7-b-nouveaux-campus.md). Compte prêté : annoncé le 2026-09-14, **pas encore reçu**.
-> Volontaire crédité : à demander.
+> Fiche ouverte le 2026-09-16 par le relevé public du lot 1 de
+> [7-B](../phase-7/7-b-nouveaux-campus.md) ; moitié authentifiée mesurée le 2026-11-10 sur le compte
+> prêté (`.env`), au lot 3 de la [prochaine version](../prochaine-version.md). Volontaire crédité : à
+> demander (`credits` reste vide d'ici là).
 >
-> **Verdict : sans code, sous réserve d'une vérification.** L'emploi du temps est **PRONOTE Campus** —
-> ni Celcat, ni export iCalendar *public*. Mais PRONOTE donne à l'étudiant connecté une **adresse
-> d'abonnement iCalendar**, et ce chemin est **prouvé de bout en bout** : sur
-> [Bordeaux Montaigne](bordeaux-montaigne.md#lexport-icalendar-existe-et-il-change-le-verdict), **même
-> produit**, l'adresse collée dans l'application affiche les cours sur l'appareil, le 2026-09-16.
-> **Il ne reste donc qu'une chose à confirmer ici** : que l'IUT n'a pas désactivé l'export — c'est un
-> réglage d'établissement, et le seul écart possible entre deux serveurs du même produit.
+> **Verdict : publiable en données, servi sans rien coller par la release qui suit.** L'export iCal
+> existe ici aussi, et il ne demande aucun type de source nouveau. Publiée seule, la ligne sert déjà les
+> versions installées : l'étudiant y colle son lien, guidé par l'aide du catalogue. La release qui suit
+> ajoute la lecture du lien sur le compte et des intitulés de cours lisibles ; ces deux morceaux sont du
+> code, et c'est pour eux seuls qu'il faut une release.
 
 ## Identité
-- Nom complet : **IUT de Bordeaux**
-- Nom court : **IUT Bordeaux**
-- Commune : **Gradignan** (siège, 15 rue Naudet, 33175) — l'IUT a **quatre sites** : Agen
-  (Campus Michel Serres), Bordeaux-Bastide, Gradignan, Périgueux (Campus Périgord)
-- Logo : à demander au service communication
-- Mots des étudiants : *à collecter* — proposés : « IUT », « IUT Bordeaux », « Gradignan », « BUT »
-- Code proposé : **`bordeaux-iut`** — **confirmé**, aucun conflit avec le catalogue publié
-  (`bordeaux`, `bordeaux-inp`, `autre`)
-
-En quelques chiffres, d'après son site : 16 départements de formation, 4 sites, environ 4 000
-étudiants.
+- Nom complet : **IUT de Bordeaux** ; nom court : **IUT Bordeaux** (12 caractères)
+- Code : **`bordeaux-iut`**, définitif (il cloisonne le trousseau et les réglages)
+- Commune : **Gradignan** (siège, 15 rue Naudet) ; campus de regroupement : `Gradignan`
+- Alias : IUT, IUT Bordeaux, IUT de Bordeaux, BUT, DUT, Gradignan, Bastide, Bordeaux-Bastide, Agen,
+  Périgueux — proposés, pas encore confrontés à un sondage d'étudiants
+- Logo : à demander au service communication (`logo_url` nul : l'écran prend son repli)
 
 ## Emploi du temps
-- Page publique : **aucune**
-- Logiciel : **PRONOTE Campus** — `https://pronote.iut.u-bordeaux.fr`, titre de page
-  « PRONOTE Campus - IUT de BORDEAUX »
-- Export iCalendar public : **non**
-- Ancienne adresse : `hyperplanning.iut.u-bordeaux.fr` **redirige en 301** vers `pronote.iut…` —
-  l'IUT a changé de logiciel et gardé l'ancien nom en résidu DNS
+- **PRONOTE Campus 2026.4.7.2**, `https://pronote.iut.u-bordeaux.fr`. La racine est une page publique
+  « Choix des espaces » ; `/etudiant` passe par le CAS de l'université.
+- **Export iCal présent** : un bouton du bandeau de l'espace étudiant ouvre « Export au format iCal »,
+  avec un téléchargement ponctuel et une **adresse d'abonnement** « mise à jour en temps réel ».
+- Forme de l'adresse : `https://pronote.iut.u-bordeaux.fr/Telechargements/ical/<nom>.ics?version=…&icalsecurise=…&param=…`.
+  Le nom du fichier porte le nom de l'étudiant ; l'adresse est **stable** d'une session à l'autre. Elle
+  ne s'écrit nulle part, seule sa forme.
+- Le calendrier : l'année entière, un `SUMMARY` qui empile « Matière - Type - Enseignants - Mémo », une
+  description à champs nommés, onze journées entières ; `X-WR-CALNAME` porte le nom et la **date de
+  naissance** du porteur. Détail et fragilités : [sources-externes.md](../sources-externes.md#10-pronote-campus--ladresse-dabonnement-lue-sur-le-compte).
+- Le Celcat de l'université déclare 96 groupes `BUTD*` qui ne portent que des vacances (2026-09-16) :
+  l'IUT n'y est pas.
 
 ## Bâtiments
+**Aucun code de bâtiment ne se lit.** PRONOTE écrit `203  BUT3B`, `107`, `Amphi 2`, `SC GMP`,
+`Salle de Controle GC` : un numéro, parfois un nom de promotion, jamais un bâtiment, et les quatre
+sites ont des salles du même numéro. La ligne déclare donc `salles: {"reconnaissance": false}` — pas de
+carte sur la fiche d'un cours plutôt qu'une carte fausse — et `salles_libres` nul : aucun inventaire
+d'occupation public, et celui du Collège ST montrerait Talence à un étudiant d'Agen.
 
-*Non collectés : sans emploi du temps lisible, on ne sait pas encore **comment** une salle s'écrit,
-et c'est cette écriture qui décide du code d'un bâtiment.* Les quatre sites, pour la suite :
+| Site | Adresse | Latitude | Longitude | Source |
+|---|---|---|---|---|
+| Gradignan (siège) | 15 rue Naudet, 33175 Gradignan | 44.79124 | -0.60930 | relevé du 2026-09-16 |
+| Bordeaux-Bastide | avenue Abadie, 33100 Bordeaux | 44.84477 | -0.55777 | OpenStreetMap, nœud « IUT », 2026-11-10 |
+| Agen | avenue Michel Serres, 47000 Agen | 44.18395 | 0.62560 | OpenStreetMap, **la voie** et non le bâtiment, 2026-11-10 |
+| Périgueux | rond-point Suzanne Noël, 24019 Périgueux | 45.19608 | 0.71867 | relevé du 2026-09-16 |
 
-| Site | Adresse | Latitude | Longitude |
-|---|---|---|---|
-| Gradignan (siège) | 15 rue Naudet, 33175 Gradignan | 44.79124 | -0.60930 |
-| Périgueux | Rond-point Suzanne Noël, 24019 Périgueux | 45.19608 | 0.71867 |
-| Agen | Avenue Michel Serres, 47000 Agen | *à relever* | *à relever* |
-| Bordeaux-Bastide | *à relever* | *à relever* | *à relever* |
+Ces coordonnées ne servent à rien dans l'application tant que les salles ne nomment pas leur site ;
+elles sont là pour le jour où un référentiel de salles existera.
 
-Trois noms de salle copiés de l'emploi du temps :
-- *à relever avec le compte prêté*
-
-## Bibliothèques
-- Point central : **44.79124, -0.60930** (Gradignan)
-- Sur Affluences : **aucune bibliothèque universitaire de l'IUT** dans le jeu régional rendu par
-  `sites/map`. La *Médiathèque Jean Vautrin* de Gradignan y figure, mais elle est **municipale** et
-  n'a pas sa place dans une liste de BU
-- Absentes d'Affluences : la ou les bibliothèques de l'IUT, s'il en existe — **à dire au campus**
-
-## Restaurants
-- Sur Croustillant : **oui**
-- Région CROUS : **1 (Bordeaux)** — le point de l'IUT y est nommé `23 | Crous market' de l'iut`
+## Bibliothèques et restaurants
+- Bibliothèques : les deux points de balayage de Bordeaux (le point « Talence / Pessac / Gradignan »
+  couvre le siège, « Bordeaux Centre » la Bastide), et la position de l'étudiant en plus. Aucune
+  bibliothèque de l'IUT sur Affluences (2026-09-16) ; Agen et Périgueux ne rendaient aucun site
+  (2026-08-08).
+- Restaurants : Croustillant, région CROUS **1**, qui porte « Crous market' de l'iut ».
 
 ## Services de l'ENT
-- ENT : `https://intranet.u-bordeaux.fr` — **l'intranet unifié de l'université**
-- Intranet historique de l'IUT : `https://intranet.iut.u-bordeaux.fr/main/doku.php`, un DokuWiki
-  toujours en ligne, derrière le même CAS
-- Messagerie : `https://webmel.u-bordeaux.fr` *(celle de l'Université de Bordeaux, à confirmer)*
-- Page de connexion : **`https://cas.u-bordeaux.fr`** — **la même que `bordeaux`**
-- Moodle : `https://moodle.u-bordeaux.fr` *(à confirmer)*
-- Scolarité, notes, examens : `https://apogee.u-bordeaux.fr` *(à confirmer)*
+**Le portail de l'Université de Bordeaux, mesuré et non supposé**, sur le compte prêté : même CAS,
+même `mondossierweb` aux mêmes libellés, même annuaire (six UE déclarées, au format `9aaa999a`), même
+ReNARD (trois certificats), même chronologie Moodle par le SSO de l'IdP. La ligne nomme donc
+`ukit.portail.bordeaux.*` et les portes de `bordeaux`.
 
-**L'IUT partage le portail de l'Université de Bordeaux.** Mesuré : `intranet.iut.u-bordeaux.fr`
-répond `302` vers `https://cas.u-bordeaux.fr/cas/login?service=…&gateway=true`. La ligne de catalogue
-pourra donc référencer `ukit.portail.bordeaux.*` sans rien dupliquer — sous réserve de la
-vérification sur compte réel, que [6-G](../phase-6/6-g-etablissements.md) a rendue obligatoire.
+Deux réserves :
+- **Apogée était en maintenance** le 2026-11-10 : `notes` et `examens` n'ont pas pu être ouverts ;
+- **le webmail du compte prêté s'ouvre sur l'interface moderne de Zimbra** (`/modern/`), où le
+  Blueprint de la messagerie ne trouve pas son compteur ; `?client=advanced` rend l'interface classique
+  quand la session est ouverte, mais le paramètre se perd au rebond par le CAS. Préférence du compte ou
+  détection de l'écran : c'est l'appareil qui tranche.
 
-## Ce que la mesure du 2026-09-16 a établi
+## Ce qui a été écrit
+- [`ukit.portail.bordeaux-iut.edt.lien`](../../blueprints/portails/ukit-portail-bordeaux-iut-edt-lien.blueprint.json),
+  qui lit l'adresse d'abonnement dans l'espace étudiant (la touche Entrée et non un clic, un `href`
+  relatif et non le champ à copier : sa description dit pourquoi) ;
+- le mécanisme qui la range comme un lien collé, et le Planning qui invite à se connecter
+  ([planning.md](../features/planning.md#le-lien-lu-sur-le-compte)) ;
+- la projection des descriptions à champs nommés, qui clôt le défaut des intitulés d'un iCalendar collé
+  ([defauts-fonctionnels.md](../defauts-fonctionnels.md)) ;
+- la ligne de catalogue (`supabase/etablissements.sql`), recopiée dans le socle, son Blueprint dans
+  `BUNDLED`, et la sonde `pronote-bordeaux-iut` (page publique, sans compte).
 
-**L'emploi du temps n'est pas dans le Celcat de Bordeaux, et la preuve est plus fine qu'une absence.**
-Les 96 groupes `BUTD*` (`BUTD1A1` … `BUTD2F8`) **existent** dans l'inventaire public
-(`ReadResourceListItems`, `resType=103`, 2 958 groupes). Mais interrogés sur tout le semestre
-(`GetCalendarData`, 2026-09-01 → 2026-12-20), ils rendent **8 événements chacun, tous de catégorie
-`Vacances`**, sans salle et sans site — là où le témoin `INF1CIA1`, du Collège ST, rend **32
-événements réels**, avec leurs salles (`A22/Salle 109`, `CREMI - Bât. A28`).
+**Ce que Bordeaux Montaigne en réutilise**, même produit : le mécanisme entier, sans une ligne ; la
+projection des champs nommés ; dans le Blueprint, tout ce qui suit la connexion. Restent à écrire son
+bloc de connexion (CAS distinct, `sso.u-bordeaux-montaigne.fr`) et ses `vars` (`flaubert2`), puis
+`edt.abonnement.blueprint_lien` sur sa ligne.
 
-Autrement dit : **le Celcat déclare les groupes de l'IUT et ne publie que leur calendrier de
-vacances.** C'est un piège de méthode à retenir — lire l'inventaire des groupes aurait fait conclure
-que l'IUT est couvert.
+## Ce qui se fait sans compte, et ce qui ne se fait pas
 
-L'inventaire des salles le confirme : 286 salles, préfixes `A21`, `A22`, `CREMI`, `IMA`, `A29`… —
-**la géographie de Talence**, avec une seule mention hors campus (un amphithéâtre de Carreire).
+Le verdict demandé : élément par élément, ce qui aurait pu se faire à l'aveugle.
 
-## Ce qui reste (rempli par le développeur)
+| Élément | Sans compte ? | Pourquoi |
+|---|---|---|
+| Nom, code, commune, sites, adresses | oui | site de l'IUT, OpenStreetMap |
+| Le logiciel d'emploi du temps | oui | la page publique de PRONOTE se nomme |
+| Le piège des groupes `BUTD*` du Celcat | oui | l'inventaire et le calendrier Celcat sont publics |
+| Bibliothèques, restaurants, sonde | oui | Affluences, Croustillant et la page publique de PRONOTE |
+| Le portail partagé | **présumé** sans, **prouvé** avec | le rebond vers `cas.u-bordeaux.fr` se voit sans compte ; que le dossier, ReNARD et Moodle d'un étudiant de l'IUT répondent comme ceux du Collège ST, non |
+| L'existence de l'export iCal | non | c'est un réglage d'établissement, derrière le CAS ; Montaigne ne prouvait rien pour l'IUT |
+| La façon de lire l'adresse | non | qu'un clic soit ignoré et la touche acceptée, que l'adresse soit une propriété et non un attribut, que l'espace mette 24 s à se construire : rien de cela ne se lit sans piloter la page |
+| La forme du calendrier | non | intitulés empilés, champs nommés, salles sans bâtiment, date de naissance dans l'en-tête : tout est dans un fichier personnel |
+| Les bâtiments et le motif de salle | non | c'est la forme du calendrier qui a montré qu'il n'y en a pas |
+| Le défaut du webmail moderne | non | il dépend du compte, ou de l'écran qui l'ouvre |
 
-1. **Confirmer l'export iCal sur le compte prêté** — le premier geste, et le seul qui décide du coût
-   de ce campus. Sur Montaigne, même produit, la boîte « Export au format iCal » de l'espace étudiant
-   donne une adresse d'abonnement. Si elle est là ici aussi, l'IUT est utilisable **sans une ligne de
-   code** ; si l'établissement l'a désactivée, PRONOTE redevient un troisième type de source, qui
-   exige une release ([README](README.md#ce-qui-exige-une-release)).
-2. Relever les bâtiments, leurs codes **tels que PRONOTE les écrit**, et le motif de reconnaissance.
-3. Les coordonnées des sites d'Agen et de Bordeaux-Bastide.
-4. Confirmer les adresses de services, et la réutilisation des Blueprints `ukit.portail.bordeaux.*`.
+**Ce qu'il faut donc demander aux volontaires des autres campus.** Quand l'emploi du temps est derrière
+l'authentification, le compte prêté est **indispensable** pour lire le lien tout seul : la mécanique de
+la page ne se devine pas. Sans compte, on peut encore publier le campus en lien collé, à condition que le
+volontaire fasse deux gestes qu'il peut faire seul et sans rien transmettre de secret : dire si son
+espace propose « Export au format iCal » (une capture de la boîte, l'adresse masquée), et recopier trois
+intitulés de cours et trois salles tels qu'ils s'affichent. C'est ce qui décide du motif de salle et de
+la projection des intitulés. Quand le campus partage le portail de l'université, le compte ne sert plus
+à écrire, il sert à **vérifier** — et cette vérification a trouvé ici la réserve du webmail.
+
+## Ce qui reste
+1. Publier, dans l'ordre : le Blueprint, puis la ligne ([prochaine-version.md](../prochaine-version.md#lot-3--les-deux-campus)).
+2. Rouvrir `notes` et `examens` quand Apogée sortira de maintenance, sur le compte prêté.
+3. Demander le logo au service communication, et au prêteur s'il veut être crédité.
+4. Confronter les alias à quelques étudiants de l'IUT.
 5. Demander au campus si ses bibliothèques peuvent rejoindre Affluences.

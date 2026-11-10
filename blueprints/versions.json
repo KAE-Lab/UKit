@@ -70,6 +70,9 @@
         "version": "1",
         "min_engine": "0.5.4"
     },
+    "ukit.portail.bordeaux-iut.edt.lien": {
+        "version": "1"
+    },
     "ukit.portail.deconnexion": {
         "version": "2"
     },

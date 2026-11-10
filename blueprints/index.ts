@@ -36,6 +36,7 @@ import portailBordeauxInpDossier from './portails/ukit-portail-bordeaux-inp-doss
 import portailBordeauxInpEdt from './portails/ukit-portail-bordeaux-inp-edt.blueprint.json';
 import portailBordeauxInpEdtAnnee from './portails/ukit-portail-bordeaux-inp-edt-annee.blueprint.json';
 import portailBordeauxInpMessagerie from './portails/ukit-portail-bordeaux-inp-messagerie.blueprint.json';
+import portailBordeauxIutEdtLien from './portails/ukit-portail-bordeaux-iut-edt-lien.blueprint.json';
 import portailDeconnexion from './ukit-portail-deconnexion.blueprint.json';
 import portailVerification from './ukit-portail-verification.blueprint.json';
 import versions from './versions.json';
@@ -83,6 +84,11 @@ export const BLUEPRINT = {
     PORTAIL_BORDEAUX_INP_DOCUMENTS: 'ukit.portail.bordeaux-inp.documents',
     PORTAIL_BORDEAUX_INP_EDT: 'ukit.portail.bordeaux-inp.edt',
     PORTAIL_BORDEAUX_INP_EDT_ANNEE: 'ukit.portail.bordeaux-inp.edt.annee',
+    // L'IUT de Bordeaux partage le portail de l'universite (il nomme `ukit.portail.bordeaux.*`) ; ce
+    // fichier est le seul qui lui soit propre : il lit l'adresse d'abonnement dans son PRONOTE, pour
+    // que l'etudiant n'ait rien a coller (edt.abonnement.blueprint_lien, docs/campus/bordeaux-iut.md).
+    // Embarque des la release qui embarque la ligne, par la regle du depot.
+    PORTAIL_BORDEAUX_IUT_EDT_LIEN: 'ukit.portail.bordeaux-iut.edt.lien',
     // Le premier Blueprint du depot qui rapporte un FICHIER et non une donnee. Embarque pour la meme
     // raison que les autres : Bordeaux est l'etablissement du socle, et le binaire n'embarque un
     // etablissement que s'il embarque de quoi le jouer.
@@ -211,6 +217,10 @@ export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
     [BLUEPRINT.PORTAIL_BORDEAUX_INP_EDT_ANNEE]: {
         version: versions[BLUEPRINT.PORTAIL_BORDEAUX_INP_EDT_ANNEE].version,
         document: portailBordeauxInpEdtAnnee,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_IUT_EDT_LIEN]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_IUT_EDT_LIEN].version,
+        document: portailBordeauxIutEdtLien,
     },
     [BLUEPRINT.PORTAIL_DECONNEXION]: {
         version: versions[BLUEPRINT.PORTAIL_DECONNEXION].version,
