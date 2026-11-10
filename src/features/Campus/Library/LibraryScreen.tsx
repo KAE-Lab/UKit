@@ -10,24 +10,19 @@ import { useFavorites } from '../hooks/useFavorites';
 import { useCampusPosition } from '../hooks/useCampusPosition';
 import { useNearbyLibraries } from '../hooks/useNearbyLibraries';
 import { useSavedFilter } from '../hooks/useSavedFilter';
+import { ordreDesLieux } from '../services/ordreDesLieux';
 
 function LibraryScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>; onAnimatedScroll?: (event: unknown) => void }) {
 
-    const { lat, lon } = useCampusPosition();
+    const position = useCampusPosition();
     const { favorites, toggleFavorite } = useFavorites('library_favorites');
     const [selectedFilter, setSelectedFilter] = useSavedFilter('library_filter', 'all');
 
     const [searchText, setSearchText] = useState('');
-    const { libraries, affluences, failure, secteursMuets, loading, retry } = useNearbyLibraries(lat, lon);
+    const { libraries, affluences, failure, secteursMuets, loading, retry } = useNearbyLibraries(position);
 
     const filteredData = useMemo(() => {
-        let result = [...libraries].sort((a, b) => {
-            const aFav = favorites.includes(a.id);
-            const bFav = favorites.includes(b.id);
-            if (aFav && !bFav) return -1;
-            if (!aFav && bFav) return 1;
-            return (a.distance || 0) - (b.distance || 0);
-        });
+        let result = [...libraries].sort(ordreDesLieux<LibraryInfo>(favorites, (bibliotheque) => bibliotheque.name));
 
         return result.filter(item => {
             if (selectedFilter === 'open') {

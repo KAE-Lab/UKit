@@ -140,7 +140,9 @@ propriété qui a compté au jalon [6-J](../phase-6/6-j-compte-et-sources-par-et
 signifie que cette fonctionnalité marche **partout**, sans rien déclarer. Un étudiant d'une université
 que nous n'avons pas portée obtient les bibliothèques réelles autour de lui — le fournisseur est
 national. C'est la seule des quatre sections du Campus qui n'a demandé aucune adaptation pour
-l'établissement ouvert.
+l'établissement ouvert. Sans position (permission refusée), le balayage part des seuls points du
+catalogue : la liste reste peuplée, sans distance et rangée par nom
+([campus.md](campus.md#usecampuslocation), décision du 2026-11-10).
 
 **Trois points de balayage plutôt qu'un.** L'endpoint de découverte ne renvoie que les sites proches
 du point interrogé. Une seule requête depuis la position de l'étudiant masquerait les BU de l'autre
@@ -173,7 +175,8 @@ pour une liste aurait rendu une liste vide sur des données parfaitement normale
 `commeListe` normalise en un endroit, et un test le verrouille.
 
 **La distance renvoyée par l'API est ignorée** quand les coordonnées du site sont disponibles :
-`estimated_distance` est relative au point de balayage, pas à l'étudiant. Elle ne sert que de repli.
+`estimated_distance` est relative au point de balayage, pas à l'étudiant. Elle ne sert que de repli,
+et seulement quand la position de l'étudiant est connue : sans elle, aucune distance ne s'affiche.
 
 **Le taux d'occupation est lu à deux emplacements** (`liveAttendance.percentage` puis
 `liveAttendance.occupancy`) : les deux formes coexistent selon les sites. Le Blueprint extrait les
@@ -206,7 +209,7 @@ bibliothèque parce que son affluence n'a pas encore été chargée serait un fa
 ## Limites connues
 
 - **Trois requêtes de découverte à chaque ouverture** — la position de l'étudiant et les deux points
-  du catalogue —, plus une requête d'affluence par BU trouvée. C'est encore le chargement le plus
+  du catalogue ; deux sans position —, plus une requête d'affluence par BU trouvée. C'est encore le chargement le plus
   lourd de l'application. Il en comptait **douze** jusqu'en 6.1-C, et la décision de le réduire a été
   prise sur des mesures, prises le 2026-08-08 en vérifiant la couverture partielle sur appareil :
 

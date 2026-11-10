@@ -369,7 +369,7 @@ Deux conséquences à connaître avant d'y toucher :
 | [`services/OccupationService.ts`](../../src/features/Campus/services/OccupationService.ts) | sa couture : mémoire, `AsyncStorage`, le run groupé du bâtiment et l'écriture |
 | [`services/attributionOccupation.ts`](../../src/features/Campus/services/attributionOccupation.ts) | la règle qui rend les événements d'un run groupé à leurs salles — par le nom que la description porte, les vacances à toutes — pure |
 | [`services/attributionOccupation.test.ts`](../../src/features/Campus/services/attributionOccupation.test.ts) | ses tests, joués par `npm test` |
-| [`services/FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) | contrats `RoomInfo` / `BuildingInfo` / `FreeRoomSlot`, `etageDeSalle` et `grouperParEtage` |
+| [`services/FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) | contrats `RoomInfo` / `BuildingInfo` / `FreeRoomSlot`, `etageDeSalle`, `grouperParEtage`, et `avecDistances` (la distance de chaque bâtiment, ou aucune sans position) |
 | [`services/CampusApiService.ts`](../../src/features/Campus/services/CampusApiService.ts) | joue les deux Blueprints Celcat : la liste des salles, l'occupation d'une journée pour une ou plusieurs salles ; ses options portent l'origine du run pour le disjoncteur |
 | [`services/CampusApiMapping.ts`](../../src/features/Campus/services/CampusApiMapping.ts) | contrats `CelcatRoom` / `CelcatBuilding` / `CampusEvent`, projection, reconstruction des bâtiments |
 | [`services/CampusApiMapping.test.ts`](../../src/features/Campus/services/CampusApiMapping.test.ts) | ses tests, joués par `npm test` |

@@ -87,6 +87,9 @@ une application qui donne l'heure des choses d'un regard.
 - **La première connexion universitaire passe**, même quand l'intranet met dix secondes à charger :
   la vérification des identifiants se lit sur la page du service de connexion, et ne suit plus
   l'intranet. Elle échouait en « Portail lent » au premier essai sur une installation neuve.
+- **Sans position, le Campus n'affiche aucune distance** : elles étaient comptées depuis Talence et
+  affichées comme vraies. Les lieux se rangent alors par nom, et la permission refusée ne se
+  redemande plus à chaque visite.
 - **Les cours d'un abonnement PRONOTE ont leur vrai titre** : la matière, et non « Matière - Type -
   Enseignants - Mémo » ; le type en pastille sans sa durée, la salle, un enseignant par ligne, et le
   compte des séances restantes, que ce calendrier personnel rend sûr.

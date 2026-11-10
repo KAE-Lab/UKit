@@ -6,6 +6,8 @@ import Translator from '../../../../shared/i18n/Translator';
 import { SectionHeader } from '../../../../shared/ui/SectionHeader';
 import type { CrousRestaurant } from '../../services/CrousService';
 import { useCrousRestaurants } from '../../hooks/useCrousRestaurants';
+import type { CampusPosition } from '../../hooks/useCampusPosition';
+import { ordreDesLieux } from '../../services/ordreDesLieux';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useSavedFilter } from '../../hooks/useSavedFilter';
 import { CrousSectionCard } from './CrousSectionCard';
@@ -18,7 +20,7 @@ import { SectionDuTableau } from './SectionDuTableau';
 
 const identifiant = (restaurant: CrousRestaurant) => restaurant.id;
 
-export function CrousSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
+export function CrousSection({ navigation, position }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, position: CampusPosition }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
@@ -26,7 +28,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
     // de journal du service dit pourquoi. Le tableau de bord n'est pas l'endroit ou l'on explique une
     // panne, l'ecran dedie l'est.
     const revision = useRevisionDuTableauDeBord();
-    const { restaurants, failure, loading, enCours, retry } = useCrousRestaurants(userLat, userLon, revision);
+    const { restaurants, failure, loading, enCours, retry } = useCrousRestaurants(position, revision);
     useChargementDeSection('restaurants', enCours);
 
     const { favorites: favRu, toggleFavorite: toggleFavRu, pret: favorisLus, dernierAjout } = useFavorites('crous_favorites');
@@ -48,13 +50,7 @@ export function CrousSection({ navigation, userLat, userLon }: { navigation: imp
                 if (crousFilter === 'market' && !isMarket) return false;
             }
             return true;
-        }).sort((a, b) => {
-            const aFav = favRu.includes(a.id);
-            const bFav = favRu.includes(b.id);
-            if (aFav && !bFav) return -1;
-            if (!aFav && bFav) return 1;
-            return (a.distance || 0) - (b.distance || 0);
-        });
+        }).sort(ordreDesLieux<CrousRestaurant>(favRu, (restaurant) => restaurant.title));
     }, [restaurants, favRu, crousFilter]);
 
     const renderCard = (item: CrousRestaurant, rang: number) => (

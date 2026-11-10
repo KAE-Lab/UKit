@@ -246,22 +246,36 @@ socle : celui-ci n'a aucune raison de connaître les bibliothèques.
 [`useCampusLocation.ts`](../../src/features/Campus/hooks/useCampusLocation.ts) — obtient la position
 de l'utilisateur, avec une stratégie en trois temps :
 
-1. demande de permission d'accès en avant-plan ;
+1. la permission en avant-plan se **lit** (`getForegroundPermissionsAsync`), et ne se **demande** que
+   si personne n'a encore répondu (`undetermined`) ;
 2. `getLastKnownPositionAsync()` d'abord — instantané, suffisant pour calculer une distance à
    quelques centaines de mètres près ;
 3. `getCurrentPositionAsync({ accuracy: Balanced })` seulement si aucune position récente n'existe.
 
-**Repli systématique sur Talence (44.8048, −0.5954)** si la permission est refusée ou si la
-localisation échoue. C'est ce qui permet de tester sur émulateur et de garder l'écran utile pour un
-étudiant qui refuse la géolocalisation : les distances sont alors calculées depuis le campus
-principal, et l'écran reste exploitable au lieu d'être vide.
+**Sans position, aucune position** — décision du propriétaire du produit, le 2026-11-10. Une
+permission refusée ou une lecture qui échoue rendent `null`, et rien ne s'affiche à la place d'une
+distance. Jusque-là, le repli était le centre de Talence (44.8048, −0.5954), choisi pour garder les
+listes triées sur un émulateur ou sans permission ; mais la distance comptée depuis lui s'affichait
+comme celle de l'étudiant (« 360 m » de l'A28, vu à l'audit du lot 1), ce qui est faux pour quiconque
+n'est pas au milieu de Talence. Les listes restent peuplées : seuls la distance et l'ordre de proximité
+disparaissent ([`ordreDesLieux`](../../src/features/Campus/services/ordreDesLieux.ts)).
 
+**Un refus ne se redemande pas.** La permission était redemandée à chaque visite du Campus, et
+Android 9 reposait la question tant que « Ne plus demander » n'était pas coché. Expo retient qu'une
+demande a eu lieu (`denied` et non plus `undetermined`), ce qui donne la règle sans clé de stockage à
+nous ; iOS ne repose jamais la question de lui-même. Une permission accordée ensuite dans les réglages
+du système se lit à la visite suivante.
 
 **La résolution est partagée** depuis 6.1-C : la dernière position vaut cinq minutes pour toutes
 les instances du hook — tableau de bord et listes —, et une résolution en vol est rendue telle quelle
 à qui la demande en même temps. Chaque écran de liste demandait la sienne à l'ouverture : une
-permission vérifiée et une lecture GPS par écran, pour une valeur qui n'avait pas bougé. Un repli
-n'est jamais gardé — la prochaine demande retente la permission.
+permission vérifiée et une lecture GPS par écran, pour une valeur qui n'avait pas bougé. Une absence
+n'est jamais gardée : la visite suivante relit la permission et la position, sans les redemander.
+
+[`useCampusPosition.ts`](../../src/features/Campus/hooks/useCampusPosition.ts) rend trois états :
+non résolue (les lectures attendent), résolue sans coordonnées (elles partent sans distance), résolue
+avec. Un hook de données qui attendait des coordonnées attendrait pour toujours un étudiant sans
+position : c'est la raison de l'indicateur `resolue`.
 ### `useFavorites`
 
 [`useFavorites.ts`](../../src/features/Campus/hooks/useFavorites.ts) — liste d'identifiants persistée
@@ -287,15 +301,21 @@ adoption transparente.
 | [`FreeRoomService.ts`](../../src/features/Campus/services/FreeRoomService.ts) | contrats des salles libres |
 | [`distance.ts`](../../src/features/Campus/services/distance.ts) | la distance à vol d'oiseau (Haversine), pure — partagée par les restaurants, les bibliothèques et les salles libres |
 | [`distance.test.ts`](../../src/features/Campus/services/distance.test.ts) | ses tests, joués par `npm test` |
+| [`ordreDesLieux.ts`](../../src/features/Campus/services/ordreDesLieux.ts) · [`ordreDesLieux.test.ts`](../../src/features/Campus/services/ordreDesLieux.test.ts) | pur : l'ordre des listes et des carrousels — favoris, distance connue, nom |
 
 ## Décisions de conception
 
 **La distance est toujours recalculée localement.** Les fournisseurs renvoient parfois une distance,
 mais relative à leur propre point de référence. Une formule de Haversine locale est appliquée dans les
-trois services concernés, à partir de la position réelle.
+trois services concernés, à partir de la position réelle. Sans position, aucune distance, pas même
+celle du fournisseur, qui ne sert de repli que pour un site sans coordonnées.
 
-**Le tri est uniforme** sur les trois listes : favoris d'abord, puis distance croissante. Il est
-appliqué dans un `useMemo` avant le filtrage, jamais dans le rendu.
+**Le tri est uniforme** sur les trois listes et les trois carrousels
+([`ordreDesLieux`](../../src/features/Campus/services/ordreDesLieux.ts)) : favoris d'abord, puis les
+distances connues du plus proche au plus lointain, puis le nom. Sans position, c'est l'ordre
+alphabétique, qui ne prétend rien. Une distance inconnue comptait pour zéro jusqu'au 2026-11-10, et un
+lieu sans coordonnées passait devant le plus proche. Le tri est appliqué dans un `useMemo` avant le
+filtrage, jamais dans le rendu.
 
 **Le carrousel suit la carte qu'on étoile** (deuxième passe de 7-J) : elle remonte en tête du tri, et
 le carrousel, resté où il était, la perdait de vue. `useFavorites` retient le dernier ajout
@@ -312,8 +332,10 @@ temps de chargement.
 
 - Ouvrir l'onglet Campus avec la géolocalisation autorisée : les quatre sections doivent se remplir,
   les distances être plausibles.
-- Refuser la géolocalisation : les listes doivent rester peuplées, les distances calculées depuis
-  Talence.
+- Refuser la géolocalisation : les listes doivent rester peuplées, **sans aucune pastille de
+  distance**, rangées par nom après les favoris. Quitter le Campus et y revenir : la permission ne se
+  redemande pas (Android 9 compris). L'accorder dans les réglages du système : les distances
+  reviennent à la visite suivante.
 - Mettre un élément en favori depuis la liste, revenir au tableau de bord : l'étoile doit être à jour.
 - Appliquer un filtre, quitter l'écran, y revenir : le filtre doit être conservé.
 - **Appliquer un filtre qui ne laisse rien, puis revenir au tableau de bord** : la section doit dire
@@ -372,8 +394,8 @@ temps de chargement.
 | [`components/CampusMapSection.tsx`](../../src/features/Campus/components/CampusMapSection.tsx) | la section « S'y rendre » d'une fiche : la carte du lieu en bannière, partagée par les fiches de restaurant et de BU ([cartographie.md](../cartographie.md)) |
 | [`components/CampusSectionHeader.tsx`](../../src/features/Campus/components/CampusSectionHeader.tsx) | la tête d'un chapitre d'annonce : son icône en gris, puis le titre. Elle titrait toutes les sections de fiche dans un carré teinté, une couleur par section, jusqu'à la deuxième passe de 7-J ; les fiches prennent depuis l'intertitre commun (`SectionHeader`) |
 | [`components/hooks/useCampusListHeader.tsx`](../../src/features/Campus/components/hooks/useCampusListHeader.tsx) | installe l'icône de filtre animée dans l'en-tête de l'écran |
-| [`hooks/useCampusLocation.ts`](../../src/features/Campus/hooks/useCampusLocation.ts) | position de l'utilisateur, avec repli sur Talence — résolue une fois et partagée par tout le Campus pendant cinq minutes |
-| [`hooks/useCampusPosition.ts`](../../src/features/Campus/hooks/useCampusPosition.ts) | la même position, rendue en état, pour le tableau de bord et les trois listes |
+| [`hooks/useCampusLocation.ts`](../../src/features/Campus/hooks/useCampusLocation.ts) · [`useCampusLocation.test.ts`](../../src/features/Campus/hooks/useCampusLocation.test.ts) | position de l'utilisateur, ou aucune — résolue une fois et partagée par tout le Campus pendant cinq minutes ; la permission demandée une seule fois |
+| [`hooks/useCampusPosition.ts`](../../src/features/Campus/hooks/useCampusPosition.ts) | la même position, rendue en état (non résolue, absente, connue), pour le tableau de bord et les trois listes |
 | [`hooks/useCrousRestaurants.ts`](../../src/features/Campus/hooks/useCrousRestaurants.ts) | restaurants : chargement, échec, nouvel essai — partagés par la liste et le carrousel |
 | [`hooks/useNearbyLibraries.ts`](../../src/features/Campus/hooks/useNearbyLibraries.ts) | bibliothèques et affluences, plus la couverture du balayage |
 | [`hooks/useFavorites.ts`](../../src/features/Campus/hooks/useFavorites.ts) | favoris persistés, rechargés au focus |

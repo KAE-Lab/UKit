@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 import Translator from '../../../shared/i18n/Translator';
 import { CampusDataManager as DataManager } from '../services/CampusDataManager';
-import type { BuildingInfo } from '../services/FreeRoomService';
-import { getDistanceInKm } from '../services/distance';
+import { avecDistances, type BuildingInfo } from '../services/FreeRoomService';
+import { ordreDesLieux } from '../services/ordreDesLieux';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 
@@ -14,7 +14,7 @@ import { useCampusPosition } from '../hooks/useCampusPosition';
 
 function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, onAnimatedScroll?: (event: unknown) => void }) {
     // La meme position que le tableau de bord, resolue une fois pour tout le Campus.
-    const { lat, lon } = useCampusPosition();
+    const { resolue, lat, lon } = useCampusPosition();
     const { favorites, toggleFavorite } = useFavorites('freeroom_favorites');
     
     const [buildings, setBuildings] = useState<BuildingInfo[]>([]);
@@ -32,7 +32,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
 
     useEffect(() => {
         let mounted = true;
-        if (lat === undefined || lon === undefined) {
+        if (!resolue) {
             return () => { mounted = false; };
         }
         const loadBuildings = async () => {
@@ -46,16 +46,7 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
                 }
 
                 if (mounted) {
-                    if (bList) {
-                        bList = bList.map((b: BuildingInfo) => {
-                            if (lat !== undefined && lon !== undefined && b.lat && b.lng) {
-                                b.distance = getDistanceInKm(lat, lon, b.lat, b.lng);
-                            }
-                            return b;
-                        });
-                    }
-
-                    setBuildings(bList || []);
+                    setBuildings(avecDistances(bList || [], lat, lon));
                     setFailure(bList && bList.length > 0 ? null : echec);
                 }
             } catch (error) {
@@ -67,16 +58,10 @@ function FreeRoomScreen({ navigation, onAnimatedScroll }: { navigation: import('
 
         loadBuildings();
         return () => { mounted = false; };
-    }, [lat, lon, essai]);
+    }, [resolue, lat, lon, essai]);
 
     const filteredData = useMemo(() => {
-        let result = [...buildings].sort((a, b) => {
-            const aFav = favorites.includes(a.id);
-            const bFav = favorites.includes(b.id);
-            if (aFav && !bFav) return -1;
-            if (!aFav && bFav) return 1;
-            return (a.distance || 0) - (b.distance || 0);
-        });
+        let result = [...buildings].sort(ordreDesLieux<BuildingInfo>(favorites, (batiment) => batiment.name));
         
         if (searchText.trim().length > 0) {
             const query = searchText.toLowerCase().trim();

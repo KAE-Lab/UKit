@@ -7,6 +7,8 @@ import { SectionHeader } from '../../../../shared/ui/SectionHeader';
 import type { LibraryInfo } from '../../services/LibraryService';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useNearbyLibraries } from '../../hooks/useNearbyLibraries';
+import type { CampusPosition } from '../../hooks/useCampusPosition';
+import { ordreDesLieux } from '../../services/ordreDesLieux';
 import { useSavedFilter } from '../../hooks/useSavedFilter';
 import { CampusPartialNotice } from '../../components/CampusLayoutComponents';
 
@@ -20,7 +22,7 @@ import { SectionDuTableau } from './SectionDuTableau';
 
 const identifiant = (bibliotheque: LibraryInfo) => bibliotheque.id;
 
-export function LibrarySection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
+export function LibrarySection({ navigation, position }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, position: CampusPosition }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
@@ -28,7 +30,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
     // ligne de journal du service dit pourquoi, et l'ecran dedie explique. Une couverture partielle,
     // elle, se dit : le carrousel montre une donnee reelle mais incomplete, ce qui ne se devine pas.
     const revision = useRevisionDuTableauDeBord();
-    const { libraries, affluences, failure, secteursMuets, loading, enCours, retry } = useNearbyLibraries(userLat, userLon, revision);
+    const { libraries, affluences, failure, secteursMuets, loading, enCours, retry } = useNearbyLibraries(position, revision);
     useChargementDeSection('bibliotheques', enCours);
 
     const { favorites: favBu, toggleFavorite: toggleFavBu, pret: favorisLus, dernierAjout } = useFavorites('library_favorites');
@@ -48,13 +50,7 @@ export function LibrarySection({ navigation, userLat, userLon }: { navigation: i
                 if (!isOpen) return false;
             }
             return true;
-        }).sort((a, b) => {
-            const aFav = favBu.includes(a.id);
-            const bFav = favBu.includes(b.id);
-            if (aFav && !bFav) return -1;
-            if (!aFav && bFav) return 1;
-            return (a.distance || 0) - (b.distance || 0);
-        });
+        }).sort(ordreDesLieux<LibraryInfo>(favBu, (bibliotheque) => bibliotheque.name));
     }, [libraries, favBu, libraryFilter, affluences]);
 
     const renderCard = (item: LibraryInfo, rang: number) => {

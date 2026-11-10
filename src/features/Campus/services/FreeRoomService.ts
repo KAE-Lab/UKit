@@ -1,4 +1,5 @@
 import type { CampusEvent } from './CampusApiService';
+import { getDistanceInKm } from './distance';
 
 export interface RoomInfo {
     id: string;
@@ -17,6 +18,22 @@ export interface BuildingInfo {
     lat?: number;
     lng?: number;
     schedule?: CampusEvent[];
+}
+
+/**
+ * Les batiments, chacun avec sa distance a l'etudiant **ou sans distance**.
+ *
+ * Des copies, et non les objets du cache : la liste ecrivait `b.distance` dans le referentiel partage
+ * (`CampusDataManager`), et une distance calculee un jour restait collee au batiment le jour ou la
+ * position manquait. Sans position, aucune distance (decision du 2026-11-10, docs/features/campus.md).
+ */
+export function avecDistances(batiments: readonly BuildingInfo[], lat?: number, lon?: number): BuildingInfo[] {
+    return batiments.map((batiment) => {
+        const distance = lat !== undefined && lon !== undefined && batiment.lat && batiment.lng
+            ? getDistanceInKm(lat, lon, batiment.lat, batiment.lng)
+            : undefined;
+        return { ...batiment, distance };
+    });
 }
 
 export interface FreeRoomSlot {

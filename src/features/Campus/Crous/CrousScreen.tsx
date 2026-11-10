@@ -12,27 +12,22 @@ import { useFavorites } from '../hooks/useFavorites';
 import { useCampusPosition } from '../hooks/useCampusPosition';
 import { useCrousRestaurants } from '../hooks/useCrousRestaurants';
 import { useSavedFilter } from '../hooks/useSavedFilter';
+import { ordreDesLieux } from '../services/ordreDesLieux';
 
 function CrousScreen({ navigation, onAnimatedScroll }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>; onAnimatedScroll?: (event: unknown) => void }) {
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
     const themeName = AppContextValues.themeName ?? 'light';
     const theme = style.Theme[themeName];
 
-    const { lat, lon } = useCampusPosition();
+    const position = useCampusPosition();
     const { favorites, toggleFavorite } = useFavorites('crous_favorites');
     const [selectedFilter, setSelectedFilter] = useSavedFilter('crous_filter', 'all');
 
     const [searchText, setSearchText] = useState('');
-    const { restaurants, failure, loading, retry } = useCrousRestaurants(lat, lon);
+    const { restaurants, failure, loading, retry } = useCrousRestaurants(position);
 
     const filteredData = useMemo(() => {
-        let result = [...restaurants].sort((a, b) => {
-            const aFav = favorites.includes(a.id);
-            const bFav = favorites.includes(b.id);
-            if (aFav && !bFav) return -1;
-            if (!aFav && bFav) return 1;
-            return (a.distance || 0) - (b.distance || 0);
-        });
+        let result = [...restaurants].sort(ordreDesLieux<CrousRestaurant>(favorites, (restaurant) => restaurant.title));
 
         return result.filter(item => {
             if (selectedFilter !== 'all') {

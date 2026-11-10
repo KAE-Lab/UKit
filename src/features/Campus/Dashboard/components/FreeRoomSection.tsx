@@ -6,9 +6,11 @@ import Translator from '../../../../shared/i18n/Translator';
 import { SectionHeader } from '../../../../shared/ui/SectionHeader';
 import { CampusDataManager as DataManager } from '../../services/CampusDataManager';
 import type { BuildingInfo } from '../../services/FreeRoomService';
-import { getDistanceInKm } from '../../services/distance';
 import type { UkitFailure } from '../../../../shared/aetherius';
 import { useFavorites } from '../../hooks/useFavorites';
+import type { CampusPosition } from '../../hooks/useCampusPosition';
+import { ordreDesLieux } from '../../services/ordreDesLieux';
+import { avecDistances } from '../../services/FreeRoomService';
 
 import { FreeRoomSectionCard } from './FreeRoomSectionCard';
 import { SqueletteDeCarrouselDeLieux } from './SqueletteDeCarrousel';
@@ -24,7 +26,8 @@ const identifiant = (batiment: BuildingInfo) => batiment.id;
  * Les batiments proches et l'etat de leur lecture. Sorti de la section au jalon 7-I, quand l'attente
  * des annonces l'a fait deborder : la lecture est un sujet, le rendu en est un autre.
  */
-function useBatimentsDuTableau(userLat: number | undefined, userLon: number | undefined) {
+function useBatimentsDuTableau(position: CampusPosition) {
+    const { resolue, lat, lon } = position;
     const [buildings, setBuildings] = useState<BuildingInfo[]>([]);
     const [failure, setFailure] = useState<UkitFailure | undefined>(undefined);
     const [loading, setLoading] = useState(true);
@@ -38,7 +41,7 @@ function useBatimentsDuTableau(userLat: number | undefined, userLon: number | un
 
     useEffect(() => {
         mountedRef.current = true;
-        if (userLat === undefined || userLon === undefined) return;
+        if (!resolue) return;
 
         const loadBuildings = async () => {
             setEnCours(true);
@@ -56,15 +59,7 @@ function useBatimentsDuTableau(userLat: number | undefined, userLon: number | un
                     setFailure(echec !== null && (!bList || bList.length === 0) ? echec : undefined);
                 }
                 if (mountedRef.current) {
-                    if (bList) {
-                        bList = bList.map(b => {
-                            if (userLat !== undefined && userLon !== undefined && b.lat && b.lng) {
-                                b.distance = getDistanceInKm(userLat, userLon, b.lat, b.lng);
-                            }
-                            return b;
-                        });
-                    }
-                    setBuildings(bList || []);
+                    setBuildings(avecDistances(bList || [], lat, lon));
                     setLoading(false);
                     setEnCours(false);
                 }
@@ -78,16 +73,16 @@ function useBatimentsDuTableau(userLat: number | undefined, userLon: number | un
 
         loadBuildings();
         return () => { mountedRef.current = false; };
-    }, [userLat, userLon, essai, revision]);
+    }, [resolue, lat, lon, essai, revision]);
 
     return { buildings, failure, loading, relire: () => setEssai((n) => n + 1) };
 }
 
-export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, userLat?: number, userLon?: number }) {
+export function FreeRoomSection({ navigation, position }: { navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>, position: CampusPosition }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName];
     
-    const { buildings, failure, loading, relire } = useBatimentsDuTableau(userLat, userLon);
+    const { buildings, failure, loading, relire } = useBatimentsDuTableau(position);
 
     const { favorites: favBuildings, toggleFavorite: toggleFavBuilding, pret: favorisLus, dernierAjout } = useFavorites('freeroom_favorites');
     // Les cartes attendent aussi les favoris : triees sans eux, elles se retrieraient sous les yeux.
@@ -96,13 +91,7 @@ export function FreeRoomSection({ navigation, userLat, userLon }: { navigation: 
     const enAttente = loading || !favorisLus || !annoncesLues;
 
     const sortedBuildings = useMemo(() => {
-        return [...buildings].sort((a, b) => {
-            const aFav = favBuildings.includes(a.id);
-            const bFav = favBuildings.includes(b.id);
-            if (aFav && !bFav) return -1;
-            if (!aFav && bFav) return 1;
-            return (a.distance || 0) - (b.distance || 0);
-        });
+        return [...buildings].sort(ordreDesLieux<BuildingInfo>(favBuildings, (batiment) => batiment.name));
     }, [buildings, favBuildings]);
 
     const renderCard = (item: BuildingInfo, rang: number) => {

@@ -17,6 +17,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { CrousService, type CrousRestaurant } from '../services/CrousService';
 import type { UkitFailure } from '../../../shared/aetherius';
+import type { CampusPosition } from './useCampusPosition';
 
 export interface CrousRestaurantsState {
     readonly restaurants: CrousRestaurant[];
@@ -30,10 +31,11 @@ export interface CrousRestaurantsState {
 }
 
 /**
- * Une position `undefined` veut dire « pas encore prete » : le chargement attend, sans se declarer
- * termine. C'est deja la semantique des sections du tableau de bord.
+ * Une position non resolue veut dire « pas encore prete » : le chargement attend, sans se declarer
+ * termine. Resolue sans coordonnees, la liste se charge sans distance (useCampusPosition).
  */
-export function useCrousRestaurants(lat?: number, lon?: number, revision = 0): CrousRestaurantsState {
+export function useCrousRestaurants(position: CampusPosition, revision = 0): CrousRestaurantsState {
+    const { resolue, lat, lon } = position;
     const [restaurants, setRestaurants] = useState<CrousRestaurant[]>([]);
     const [failure, setFailure] = useState<UkitFailure | undefined>(undefined);
     const [loading, setLoading] = useState<boolean>(true);
@@ -46,7 +48,7 @@ export function useCrousRestaurants(lat?: number, lon?: number, revision = 0): C
 
     useEffect(() => {
         monte.current = true;
-        if (lat === undefined || lon === undefined) {
+        if (!resolue) {
             return () => {
                 monte.current = false;
             };
@@ -84,7 +86,7 @@ export function useCrousRestaurants(lat?: number, lon?: number, revision = 0): C
         return () => {
             monte.current = false;
         };
-    }, [lat, lon, essai, revision]);
+    }, [resolue, lat, lon, essai, revision]);
 
     const retry = useCallback(() => setEssai((n) => n + 1), []);
 

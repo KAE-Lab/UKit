@@ -38,6 +38,7 @@ import {
     type TimetableEntry,
 } from './LibraryMapping';
 import { getDistanceInKm } from './distance';
+import { ordreDesLieux } from './ordreDesLieux';
 
 export type { AffluencesData, LibraryInfo, TimetableEntry } from './LibraryMapping';
 
@@ -116,33 +117,44 @@ function commeListe(valeur: unknown): unknown[] {
     return Array.isArray(valeur) ? valeur : [];
 }
 
+/** La position de l'etudiant, quand il y en a une. */
+export interface PositionEtudiant {
+    readonly lat: number;
+    readonly lon: number;
+}
+
 /**
  * La distance reellement affichee.
  *
  * Celle du fournisseur est relative au **point de balayage**, pas a l'etudiant : elle ne sert que de
- * repli quand le site ne porte pas ses coordonnees.
+ * repli quand le site ne porte pas ses coordonnees. Sans position, il n'y a **aucune** distance a
+ * dire, pas meme celle-la (decision du 2026-11-10, docs/features/campus.md).
  */
-function distanceDepuis(site: SiteProjete, userLat: number, userLng: number): number | undefined {
-    if (site.lat !== undefined && site.lng !== undefined && userLat !== undefined && userLng !== undefined) {
-        return getDistanceInKm(userLat, userLng, site.lat, site.lng);
+function distanceDepuis(site: SiteProjete, position: PositionEtudiant | null): number | undefined {
+    if (position === null) return undefined;
+    if (site.lat !== undefined && site.lng !== undefined) {
+        return getDistanceInKm(position.lat, position.lon, site.lat, site.lng);
     }
     return site.distanceEstimee === undefined ? undefined : site.distanceEstimee / 1000;
 }
 
 export default class LibraryService {
     /**
-     * Les bibliotheques de la region, dedoublonnees et triees par distance reelle.
+     * Les bibliotheques de la region, dedoublonnees et triees par distance reelle, ou par nom sans
+     * position (`ordreDesLieux`).
      *
      * Autant de runs concurrents que de points — les runs Act I n'ont aucun etat partage. Un point
      * muet n'emporte pas les autres : on garde ce qui a repondu et on compte le reste. Zero reponse,
      * en revanche, est un echec plein, avec la famille du premier run en erreur.
      *
-     * La position de l'etudiant est **toujours** le premier point, quels que soient ceux du
-     * catalogue : c'est le seul qui garantit qu'une bibliotheque a cote de lui remonte, y compris
-     * s'il est loin de sa fac.
+     * La position de l'etudiant, quand elle est connue, est **toujours** le premier point, quels que
+     * soient ceux du catalogue : c'est le seul qui garantit qu'une bibliotheque a cote de lui remonte,
+     * y compris s'il est loin de sa fac. Sans elle, les points du catalogue suffisent a remplir la
+     * liste.
      */
-    static async fetchNearbyLibraries(userLat: number, userLng: number): Promise<LibrariesResult> {
-        const points = [{ lat: userLat, lng: userLng }, ...getEtablissementActif().bibliothequesPoints];
+    static async fetchNearbyLibraries(position: PositionEtudiant | null): Promise<LibrariesResult> {
+        const catalogue = getEtablissementActif().bibliothequesPoints;
+        const points = position === null ? [...catalogue] : [{ lat: position.lat, lng: position.lon }, ...catalogue];
 
         const runs = await Promise.all(
             points.map((point) =>
@@ -188,9 +200,9 @@ export default class LibraryService {
                 // d'Affluences illustre parfois un site avec le hall d'un autre, et rien dans
                 // l'application ne permettait de le corriger (docs/backend.md).
                 imageUrl: appliquerVisuel('bibliotheque', site.id, site.imageUrl),
-                distance: distanceDepuis(site, userLat, userLng),
+                distance: distanceDepuis(site, position),
             }))
-            .sort((gauche, droite) => (gauche.distance || 0) - (droite.distance || 0));
+            .sort(ordreDesLieux<LibraryInfo>([], (bibliotheque) => bibliotheque.name));
 
         return { ok: true, libraries, secteursMuets: echecs.length, secteurs: runs.length };
     }

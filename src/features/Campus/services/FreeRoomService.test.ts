@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { etageDeSalle, grouperParEtage, type FreeRoomSlot } from './FreeRoomService';
+import { avecDistances, etageDeSalle, grouperParEtage, type BuildingInfo, type FreeRoomSlot } from './FreeRoomService';
 
 const creneau = (name: string, durationMinutes: number): FreeRoomSlot => ({
     room: { id: name, name, fullName: `A28 - ${name}` },
@@ -57,5 +57,27 @@ describe('grouperParEtage', () => {
 
     it('rend une liste vide pour une liste vide', () => {
         expect(grouperParEtage([])).toEqual([]);
+    });
+});
+
+describe('avecDistances', () => {
+    const cache: BuildingInfo[] = [
+        { id: 'A28', name: 'A28', rooms: [], lat: 44.8066, lng: -0.6053, distance: 0.36 },
+        { id: 'sans', name: 'Sans coordonnees', rooms: [] },
+    ];
+
+    it('ne laisse aucune distance sans position, meme celle qu un calcul precedent avait posee', () => {
+        expect(avecDistances(cache).map((batiment) => batiment.distance)).toEqual([undefined, undefined]);
+    });
+
+    it('calcule depuis la position, et laisse sans distance un batiment sans coordonnees', () => {
+        const [a28, sans] = avecDistances(cache, 44.8066, -0.6053);
+        expect(a28.distance).toBe(0);
+        expect(sans.distance).toBeUndefined();
+    });
+
+    it('rend des copies : le referentiel partage ne change pas', () => {
+        avecDistances(cache, 44.9, -0.5);
+        expect(cache[0].distance).toBe(0.36);
     });
 });

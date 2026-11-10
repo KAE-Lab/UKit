@@ -7,7 +7,7 @@
  *     pastilles d'affluence se remplissent ensuite. C'etait deja le comportement, et il tient a un
  *     fait simple : une requete d'affluence par bibliotheque trouvee ;
  *   - **la couverture peut etre partielle.** Le balayage joue plusieurs points (trois depuis 6.1-C :
- *     la position de l'etudiant et les deux du catalogue) ; un point muet ne doit pas emporter les
+ *     la position de l'etudiant, quand elle est connue, et les deux du catalogue) ; un point muet ne doit pas emporter les
  *     autres, mais l'utilisateur doit le savoir. `secteursMuets` porte cette information jusqu'a
  *     l'ecran.
  *
@@ -24,6 +24,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import LibraryService, { type AffluencesData, type LibraryInfo } from '../services/LibraryService';
 import type { UkitFailure } from '../../../shared/aetherius';
+import type { CampusPosition } from './useCampusPosition';
 
 export interface NearbyLibrariesState {
     readonly libraries: LibraryInfo[];
@@ -38,7 +39,8 @@ export interface NearbyLibrariesState {
     readonly retry: () => void;
 }
 
-export function useNearbyLibraries(lat?: number, lon?: number, revision = 0): NearbyLibrariesState {
+export function useNearbyLibraries(position: CampusPosition, revision = 0): NearbyLibrariesState {
+    const { resolue, lat, lon } = position;
     const [libraries, setLibraries] = useState<LibraryInfo[]>([]);
     const [affluences, setAffluences] = useState<Record<string, AffluencesData>>({});
     const [failure, setFailure] = useState<UkitFailure | undefined>(undefined);
@@ -51,7 +53,7 @@ export function useNearbyLibraries(lat?: number, lon?: number, revision = 0): Ne
 
     useEffect(() => {
         monte.current = true;
-        if (lat === undefined || lon === undefined) {
+        if (!resolue) {
             return () => {
                 monte.current = false;
             };
@@ -60,7 +62,9 @@ export function useNearbyLibraries(lat?: number, lon?: number, revision = 0): Ne
         const charger = async () => {
             setLoading(!aQuelqueChose.current);
             setEnCours(true);
-            const resultat = await LibraryService.fetchNearbyLibraries(lat, lon);
+            const resultat = await LibraryService.fetchNearbyLibraries(
+                lat !== undefined && lon !== undefined ? { lat, lon } : null,
+            );
             if (!monte.current) return;
 
             if (resultat.ok === false) {
@@ -108,7 +112,7 @@ export function useNearbyLibraries(lat?: number, lon?: number, revision = 0): Ne
         return () => {
             monte.current = false;
         };
-    }, [lat, lon, essai, revision]);
+    }, [resolue, lat, lon, essai, revision]);
 
     const retry = useCallback(() => setEssai((n) => n + 1), []);
 

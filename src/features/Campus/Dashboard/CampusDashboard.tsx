@@ -98,9 +98,9 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
                   * balayage part de la position de l'etudiant.
                   */}
                 {crousRegionActive() !== null && (
-                    <CrousSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                    <CrousSection navigation={navigation} position={location} />
                 )}
-                <LibrarySection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                <LibrarySection navigation={navigation} position={location} />
                 {/*
                   * Les salles libres se reconstruisent depuis les salles du serveur
                   * d'emplois du temps : une universite qui n'en publie pas n'a rien a
@@ -109,7 +109,7 @@ const CampusDashboard = ({ navigation }: { navigation: import('@react-navigation
                   * etablissement sans webmail extractible (jalon 6-G).
                   */}
                 {sallesDisponibles() && (
-                    <FreeRoomSection navigation={navigation} userLat={location.lat} userLon={location.lon} />
+                    <FreeRoomSection navigation={navigation} position={location} />
                 )}
                 </AnnoncesDuTableauProvider>
                 </RafraichissementProvider>

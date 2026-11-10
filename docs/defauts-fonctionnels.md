@@ -205,7 +205,19 @@ message** contredirait toutefois le correctif du 2026-11-08 (une liste vide se d
 demander** : l'écran exact (un message, ou une liste vide sans rien), l'établissement, et si
 Campus et la Scolarité répondent sur ce téléphone.
 
-### La position refusée donne des distances comptées depuis Talence, affichées comme vraies — constaté le 2026-11-10
+### ~~La position refusée donne des distances comptées depuis Talence, affichées comme vraies~~ — constaté le 2026-11-10, corrigé le même jour
+
+*Corrigé dans la passe d'avant Montaigne, sur décision du propriétaire du produit* : sans position,
+aucune distance. Le repli sur Talence disparaît, la position est `null`, les listes et les carrousels
+se rangent favoris, distance connue, puis nom ([`ordreDesLieux`](../src/features/Campus/services/ordreDesLieux.ts)),
+et la distance estimée d'Affluences se tait aussi. La permission se lit d'abord et ne se demande que si
+personne n'a répondu ([`useCampusLocation`](../src/features/Campus/hooks/useCampusLocation.ts), testé).
+Vu en corrigeant : les salles libres écrivaient la distance dans le référentiel partagé du cache, où
+elle restait collée ; elles travaillent désormais sur des copies (`avecDistances`). Le texte de
+[campus.md](features/campus.md#usecampuslocation) est amendé. Vérifié sur `ukit-a8`, sombre et clair :
+refus, aucune pastille ni redemande, à la visite d'une liste, après un rechargement, après une
+relance ; permission accordée dans le système, les distances et le tri par proximité reviennent ; un
+nom entre parenthèses (« (S)pace' Campus ») se range à sa lettre.
 
 Vu au banc pendant l'audit du lot 1 : localisation refusée, la carte de l'A28 affiche « 360 m ».
 C'est une décision écrite ([campus.md](features/campus.md)) — le repli sur le centre de Talence garde
