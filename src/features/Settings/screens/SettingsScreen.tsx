@@ -55,6 +55,8 @@ export interface SettingsProps {
     headerPadding?: Record<string, unknown>;
     /** La deconnexion du compte universitaire, que la reinitialisation emprunte d'abord. */
     deconnecter?: () => Promise<void>;
+    /** Le contexte des identifiants en tient-il ? Il se vide apres le trousseau, a la deconnexion. */
+    identifiantsEnMemoire?: boolean;
 }
 
 export interface SettingsState {
@@ -381,6 +383,16 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
 
     surCalendriersAffiches = (identifiants: string[]) => this.setState({ calendriersAffiches: identifiants.length });
 
+    /**
+     * La deconnexion depuis la fiche du compte revient ici **avant** de vider le trousseau
+     * (CredentialsSettingsScreen.confirmLogout) : la relecture du focus lisait encore les identifiants,
+     * et la rangee restait « Connecte » jusqu'au changement d'onglet suivant (audit du lot 1). Le
+     * contexte, lui, se vide apres le trousseau : son changement est le bon signal pour relire.
+     */
+    componentDidUpdate = (precedentes: SettingsProps) => {
+        if (precedentes.identifiantsEnMemoire !== this.props.identifiantsEnMemoire) void this.refreshCompte();
+    };
+
     componentWillUnmount = () => {
         if (this._unsubscribeFocus) this._unsubscribeFocus();
         SettingsManager.unsubscribe('isSynchronizingCalendar', this.setIsSynchronizingCalendar);
@@ -526,8 +538,8 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
  * passent tous par lui.
  */
 function SettingsAvecCompte(props: SettingsProps) {
-    const { logout } = useCredentials();
-    return <Settings {...props} deconnecter={logout} />;
+    const { logout, credentials } = useCredentials();
+    return <Settings {...props} deconnecter={logout} identifiantsEnMemoire={credentials !== null} />;
 }
 
 export default SettingsAvecCompte;

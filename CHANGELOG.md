@@ -79,6 +79,8 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Après une déconnexion, les Réglages disent « Non connecté »** tout de suite, plus au changement
+  d'onglet suivant.
 - **La Scolarité parle la typographie de sa langue** : « Good evening, Kylian! », « ¡Buenas noches,
   Kylian! », une date sans capitale au mois, et « KB » plutôt que « Ko » hors du français.
 ### Corrigé

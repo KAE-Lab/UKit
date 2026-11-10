@@ -19,6 +19,15 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Après une déconnexion, la rangée « Compte » des Réglages reste « Connecté »~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc pendant le lot 2 (`ukit`) : déconnecté depuis la fiche du compte, on revient aux Réglages
+sur « Compte, Connecté », jusqu'au changement d'onglet suivant. La fiche revient **avant** de vider le
+trousseau, à dessein (`confirmLogout`), et la relecture au focus des Réglages lisait encore les
+identifiants. Les Réglages relisent désormais le compte quand le contexte des identifiants change, ce
+qui arrive après le trousseau ([`SettingsScreen`](../src/features/Settings/screens/SettingsScreen.tsx)).
+Vérifié sur `ukit` : connexion, déconnexion, « Non connecté » au retour.
+
 ### ~~La Scolarité garde la typographie française en anglais et en espagnol~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc en jouant la Scolarité en anglais et en espagnol (lot 2, `ukit`) : la salutation collait
