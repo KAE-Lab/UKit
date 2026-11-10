@@ -199,7 +199,7 @@ const es: TranslationDict = {
 	LOADING_PATIENCE_UNIVERSITY: 'El servidor de la universidad está lento hoy…',
 	INSTITUTION: 'Centro',
 	INSTITUTION_CHANGE_TITLE: '¿Cambiar de centro?',
-	INSTITUTION_CHANGE_WARNING: 'Tus grupos favoritos, tu horario en caché, tu sesión universitaria y los cursos añadidos a tu calendario se borrarán.\nLos datos de dos universidades no se mezclan.',
+	INSTITUTION_CHANGE_WARNING: 'Se borrarán tu horario en caché y los cursos añadidos a tu calendario.\nTus grupos favoritos, tus filtros y tu sesión universitaria se quedan guardados con esta universidad y vuelven si regresas a ella.',
 	INSTITUTION_UNAVAILABLE: 'Tu centro ya no aparece en la lista. UKit sigue con lo que sabe de él.',
 	// Le compte a l'accueil et le lien d'abonnement (jalon 6-J).
 	ACCOUNT_CONNECTED: 'Conectada',

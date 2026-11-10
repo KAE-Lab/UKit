@@ -101,7 +101,7 @@ confondre a coûté un défaut :
 | **le lien d'abonnement à l'emploi du temps** | *rien — cloisonné, comme les favoris* | même règle, et voir ci-dessous |
 | les caches de planning (`…@Week…`, `…@AAAA/MM/JJ`) | `purge.ts` | un planning gardé s'afficherait sous une autre fac sans que rien ne le dise |
 | `buildingList`, `buildingListTimestamp`, la surcouche `batiments@1`, les favoris de salles libres | `purge.ts` | les bâtiments sont reconstruits depuis les salles de **cette** université |
-| les identifiants et les données froides du trousseau | `purge.ts` | ils appartiennent au portail quitté |
+| **les identifiants et les données froides du trousseau** | *rien — cloisonnés par établissement depuis le 2026-08-22* | un retour retrouve sa session ; rien ne se mélange, on ne lit que l'entrée de l'établissement actif ([`purge.ts`](../../src/shared/etablissements/purge.ts)) |
 | **les cours écrits dans le calendrier système** | [`SettingsManager.purgeCalendarEvents()`](../../src/shared/services/AppCore.tsx) | ils sont ceux de l'université quittée, et **personne ne viendrait les chercher** : les favoris venant d'être purgés, plus aucune synchronisation ne peut tourner |
 
 ### Des favoris par établissement

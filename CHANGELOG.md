@@ -76,6 +76,8 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Le changement d'établissement dit ce qu'il garde** : il annonçait effacer les groupes favoris et
+  la session universitaire, qui restent rangés avec l'établissement et reviennent au retour.
 - **Un bâtiment dont l'occupation n'a pas pu être lue ne s'affiche plus entièrement libre** : la
   fiche dit que le service est indisponible et propose de réessayer.
 - **Les lecteurs d'écran ne lisent plus la page cachée de la Scolarité ni les glyphes des icônes**,

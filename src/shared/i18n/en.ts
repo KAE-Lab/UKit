@@ -197,7 +197,7 @@ const en = {
 	LOADING_PATIENCE_UNIVERSITY: 'The university server is slow today…',
 	INSTITUTION: 'Institution',
 	INSTITUTION_CHANGE_TITLE: 'Switch institution?',
-	INSTITUTION_CHANGE_WARNING: 'Your favourite groups, cached timetable, university session and the courses added to your calendar will be erased.\nData from two universities does not mix.',
+	INSTITUTION_CHANGE_WARNING: 'Your cached timetable and the courses added to your calendar will be erased.\nYour favourite groups, filters and university session stay with this institution, and come back if you return to it.',
 	INSTITUTION_UNAVAILABLE: 'Your institution is no longer listed. UKit carries on with what it knows.',
 	// Le compte a l'accueil et le lien d'abonnement (jalon 6-J).
 	ACCOUNT_CONNECTED: 'Signed in',

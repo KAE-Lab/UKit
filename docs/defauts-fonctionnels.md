@@ -19,6 +19,17 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Le changement d'établissement annonce effacer les favoris et la session, qu'il garde~~ — constaté le 2026-11-10, corrigé le même jour
+
+Trouvé au banc pendant l'audit du lot 1 : la confirmation disait « Groupes favoris, planning en
+cache, session universitaire et cours ajoutés au calendrier seront effacés ». Les favoris, les
+filtres et la session sont **rangés** par établissement depuis le 2026-08-22, et reviennent au
+retour — vérifié sur `ukit` : Collège ST, puis Bordeaux INP avec son compte, puis retour au Collège
+ST, compte « Connecté », deux filtres et le favori retrouvés. Quelqu'un renonçait donc à changer
+d'établissement de peur de perdre ce qu'il ne perdait pas. Le texte dit désormais ce qui part (le
+planning en cache, les cours de l'agenda) et ce qui reste ; la ligne du tableau de
+[settings.md](features/settings.md#changer-détablissement), restée sur l'état d'avant, aussi.
+
 ### ~~Les lecteurs d'écran lisent la WebView cachée, des glyphes d'icônes et des boutons muets~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu dans l'arbre d'accessibilité au banc pendant l'audit du lot 1, sur `ukit` : la WebView d'Aetherius,
