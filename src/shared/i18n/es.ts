@@ -221,6 +221,7 @@ const es: TranslationDict = {
 	TIMETABLE_LINK_TITLE: 'Pega tu enlace del horario',
 	TIMETABLE_LINK_PLACEHOLDER: 'https://…',
 	TIMETABLE_LINK_ADD: 'Pegar mi enlace',
+	TIMETABLE_LINK_SHORT: 'Enlace',
 	TIMETABLE_LINK_CHECK: 'Comprobar y guardar',
 	TIMETABLE_LINK_CHECKING: 'Comprobando…',
 	TIMETABLE_LINK_OK: 'Calendario reconocido: $- clases.',

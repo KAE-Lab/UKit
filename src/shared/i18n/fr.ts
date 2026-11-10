@@ -222,6 +222,7 @@ const fr: TranslationDict = {
 	TIMETABLE_LINK_TITLE: 'Colle le lien de l’emploi du temps',
 	TIMETABLE_LINK_PLACEHOLDER: 'https://…',
 	TIMETABLE_LINK_ADD: 'Coller mon lien',
+	TIMETABLE_LINK_SHORT: 'Lien',
 	TIMETABLE_LINK_CHECK: 'Vérifier et enregistrer',
 	TIMETABLE_LINK_CHECKING: 'Vérification…',
 	TIMETABLE_LINK_OK: 'Calendrier reconnu : $- cours.',

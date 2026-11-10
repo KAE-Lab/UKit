@@ -15,7 +15,7 @@ import { TAB_BAR_HEIGHT } from '../ui/ScreenState';
 import { assiseDuFlottant, FondDePiedFlottant, VOILE_PIED } from '../ui/PiedFlottant';
 import { AppContext } from '../services/AppCore';
 import Translator from '../i18n/Translator';
-import { groupesRequis, portailPublie } from '../etablissements';
+import { groupesRequis, planningDisponible, portailPublie } from '../etablissements';
 import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
 import { Dialogue } from '../ui/Dialogue';
 import { ModaleBientot } from '../ui/ModaleBientot';
@@ -211,9 +211,15 @@ function TabBarActionItem({ currentRouteName, theme, navigation, credentials }: 
 
     if (currentRouteName === 'PlanningTab') {
         // Sans inventaire de groupes — l'emploi du temps passe par un lien personnel — la recherche
-        // n'a rien a chercher : le bouton passe sous le voile. Le seul cas actuel est le campus non
-        // relie, d'ou la modale de demande ; un etablissement relie par abonnement demandera un
-        // autre contenu le jour ou il existera.
+        // n'a rien a chercher. Deux cas, et ils ne se ressemblent pas :
+        //
+        //   - un campus RELIE par abonnement (l'IUT de Bordeaux, lot 3) : le bouton mene au lien, ce
+        //     qui tient lieu de groupe — le voir, l'oublier, le coller si la lecture a echoue. Il
+        //     ouvrait jusque-la la modale « campus non relie », fausse pour un campus qui l'est ;
+        //   - le campus non relie (« Autre campus ») : le voile, et la modale de demande.
+        if (!groupesRequis() && portailPublie() && planningDisponible()) {
+            return <BoutonDAction icone="calendar-import" libelle={Translator.get('TIMETABLE_LINK_SHORT')} onPress={() => navigation.navigate('LienEdt' as never)} theme={theme} teinte={teinte} />;
+        }
         if (!groupesRequis()) {
             return (
                 <>

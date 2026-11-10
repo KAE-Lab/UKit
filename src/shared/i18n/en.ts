@@ -221,6 +221,7 @@ const en = {
 	TIMETABLE_LINK_TITLE: 'Paste your timetable link',
 	TIMETABLE_LINK_PLACEHOLDER: 'https://…',
 	TIMETABLE_LINK_ADD: 'Paste my link',
+	TIMETABLE_LINK_SHORT: 'Link',
 	TIMETABLE_LINK_CHECK: 'Check and save',
 	TIMETABLE_LINK_CHECKING: 'Checking…',
 	TIMETABLE_LINK_OK: 'Calendar recognised: $- classes.',

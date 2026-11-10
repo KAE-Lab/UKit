@@ -445,7 +445,10 @@ savent pas d'où elle vient.
 - **Ce que voit le Planning** ([`LienAttendu.tsx`](../../src/features/Planning/components/LienAttendu.tsx)) :
   sans compte, une invitation à se connecter, qui mène droit au formulaire du compte, et non à coller ;
   pendant une session, un chargement ; connecté et sans lien, le collage, qui reste le repli. Le compte
-  vit dans un contexte React, d'où un composant fonction plutôt qu'une branche de `ScheduleList`.
+  vit dans un contexte React, d'où un composant fonction plutôt qu'une branche de `ScheduleList`. Le
+  bouton de droite de la barre, qui cherche des groupes ailleurs, devient « Lien » : l'écran où le lien
+  se voit, s'oublie ou se colle. Il ouvrait la modale « campus non relié », fausse pour un campus qui
+  l'est ; elle reste à « Autre campus ».
 - **À l'accueil**, l'étape « colle ton lien » disparaît pour ces campus : l'étape du compte y répond.
   Une connexion qui a lu le lien saute directement à la fin, comme les favoris posés par le dossier de
   l'INP.
