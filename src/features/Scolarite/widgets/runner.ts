@@ -29,6 +29,7 @@ import {
     type UkitFailure,
 } from '../../../shared/aetherius';
 import { surLeNavigateur } from '../services/MoteurNavigateur';
+import { requalifierLenteur } from '../services/ScolariteMapping';
 import { WIDGETS, type PointWidget } from './definitions';
 import { projeterWidget, valeurFraiche, type ValeurWidget } from './projection';
 
@@ -199,10 +200,12 @@ async function lireUnWidget(
 
     const run = reserve.valeur;
     if (run.ok === false) {
-        reportFailure(blueprint, run.failure);
+        // Une messagerie lente n'est pas un defaut de UKit (registre, 2026-11-06 ; deux retours).
+        const failure = requalifierLenteur(run.failure, run.navigationMs);
+        reportFailure(blueprint, failure);
         // Un run annule — l'utilisateur est parti, l'application est passee en arriere-plan — n'a
         // rien a dire non plus : `silent` porte deja cette distinction.
-        return { ok: false, echec: run.failure.silent === true ? null : run.failure };
+        return { ok: false, echec: failure.silent === true ? null : failure };
     }
 
     return { ok: true, valeur: projeterWidget(run.outputs, maintenant().toISOString()) };

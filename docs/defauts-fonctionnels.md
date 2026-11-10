@@ -40,7 +40,18 @@ Collège ST, « Master 1 » touché, aucun semestre : la liste disparaît sous l
 rien n'indique qu'il manque le semestre. Le semestre en cours est désormais présélectionné, au départ
 comme après un changement d'établissement ([`semestreDe`](../src/features/Onboarding/hooks/semestres.ts)).
 
-### Un portail lent s'annonce « Le problème vient de UKit » — constaté le 2026-11-06
+### ~~Un portail lent s'annonce « Le problème vient de UKit »~~ — constaté le 2026-11-06, corrigé le 2026-11-10
+
+*Corrigé au lot 1 de la [prochaine version](prochaine-version.md) :* un run porte la durée de sa plus
+longue navigation, et un `engine` sans code après plus de dix secondes de navigation devient
+`unavailable [PORTAIL_LENT]`, « Le portail de ton université met du temps à répondre », réessayable,
+pour la session comme pour les widgets — la messagerie lente des deux retours du 29 septembre passe
+par le même chemin ([`requalifierLenteur`](../src/features/Scolarite/services/ScolariteMapping.ts),
+testé). **Non reproduit au banc** : sous le réseau bridé de l'émulateur (EDGE, latence UMTS), la
+navigation vers le CAS n'a pris que 3,2 s et la vérification a réussi ; une seule tentative, pour ne
+pas solliciter le portail. Le délai de `wait_for` n'est pas allongé : sans mesure de l'étape qui a
+cédé, l'allonger serait deviner.
+
 
 Au banc, juste après un effacement des données (WebView à froid), la vérification des identifiants à
 l'accueil a attendu 12 s le chargement de la page de l'université (« Un moment SVP… »), puis

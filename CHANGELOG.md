@@ -76,6 +76,10 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Un portail lent ne s'annonce plus « Le problème vient de UKit »** : quand la page de
+  l'université a mis plus de dix secondes à charger avant l'échec, l'application dit que le portail
+  met du temps à répondre et propose de réessayer. Vaut aussi pour la messagerie et les autres
+  services de la Scolarité.
 - **Un groupe qui n'a plus de cours ne s'affiche plus « Journée libre » tout le semestre** : quand
   le groupe favori n'a aucun cours quatre semaines autour du jour affiché, le Planning le dit et mène
   à la liste des groupes.

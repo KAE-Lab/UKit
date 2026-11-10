@@ -22,6 +22,7 @@ import {
     prenomDepuisIdentite,
     presenterEchec,
     projeterDossier,
+    requalifierLenteur,
 } from './ScolariteMapping';
 
 describe('prenomDepuisIdentite', () => {
@@ -239,5 +240,32 @@ describe('estServiceIndisponible', () => {
         expect(estServiceIndisponible(echec('blocked', 'CAS_INDISPONIBLE'))).toBe(true);
         expect(estServiceIndisponible(echec('blocked', 'LOGIN_FAILED'))).toBe(false);
         expect(estServiceIndisponible(echec('data'))).toBe(false);
+    });
+});
+
+describe('requalifierLenteur', () => {
+    const engine: UkitFailure = { kind: 'engine', detail: 'wait_for : page pas prete', ...FAILURE_PRESENTATION.engine };
+
+    it('dit un portail lent apres une navigation de plus de dix secondes, pas « le probleme vient de UKit »', () => {
+        // Le constat du banc du 2026-11-06 : douze secondes sur « Un moment SVP… », puis `engine`.
+        const lent = presenterEchec(requalifierLenteur(engine, 12_000));
+        expect(lent.kind).toBe('unavailable');
+        expect(lent.code).toBe('PORTAIL_LENT');
+        expect(lent.messageKey).toBe('ERROR_PORTAL_SLOW');
+        expect(lent.titleKey).toBe('ERROR_PORTAL_SLOW_TITLE');
+        expect(lent.retryable).toBe(true);
+        expect(lent.detail).toContain('12000 ms');
+    });
+
+    it('laisse un engine apres une navigation rapide : c est alors bien un defaut', () => {
+        expect(requalifierLenteur(engine, 3_000)).toBe(engine);
+        expect(cleDeMessage(requalifierLenteur(engine, 0))).toBe('ERROR_INTERNAL');
+    });
+
+    it('ne touche ni un code nomme par le Blueprint, ni une autre famille', () => {
+        const cas: UkitFailure = { ...engine, kind: 'blocked', code: 'CAS_INDISPONIBLE', ...FAILURE_PRESENTATION.blocked };
+        expect(requalifierLenteur(cas, 30_000)).toBe(cas);
+        const nomme: UkitFailure = { ...engine, code: 'AUTRE' };
+        expect(requalifierLenteur(nomme, 30_000)).toBe(nomme);
     });
 });

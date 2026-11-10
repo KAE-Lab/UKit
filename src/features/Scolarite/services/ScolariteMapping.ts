@@ -9,7 +9,7 @@
  * Voir docs/features/scolarite.md et docs/phase-6/6-f-scolarite.md.
  */
 
-import type { UkitFailure } from '../../../shared/aetherius/failures';
+import { ukitFailure, type UkitFailure } from '../../../shared/aetherius/failures';
 import type { TranslationKey } from '../../../shared/i18n/Translator';
 
 /**
@@ -139,6 +139,7 @@ export function projeterDossier(
 const CLE_PAR_CODE: Readonly<Record<string, { readonly titre: TranslationKey; readonly message: TranslationKey }>> = {
     LOGIN_FAILED: { titre: 'LOGIN_FAILED_TITLE', message: 'LOGIN_FAILED' },
     CAS_INDISPONIBLE: { titre: 'ERROR_CAS_UNAVAILABLE_TITLE', message: 'ERROR_CAS_UNAVAILABLE' },
+    PORTAIL_LENT: { titre: 'ERROR_PORTAL_SLOW_TITLE', message: 'ERROR_PORTAL_SLOW' },
     MESSAGERIE_INDISPONIBLE: { titre: 'ERROR_MAILBOX_UNAVAILABLE_TITLE', message: 'ERROR_MAILBOX_UNAVAILABLE' },
 };
 
@@ -181,6 +182,27 @@ export function estCodeDeServiceIndisponible(code: string | undefined): boolean 
  */
 export function estServiceIndisponible(failure: Pick<UkitFailure, 'kind' | 'code'>): boolean {
     return failure.kind === 'unavailable' || estCodeDeServiceIndisponible(failure.code);
+}
+
+/** Au-dela, une navigation est celle d'un portail lent (constat du banc, 2026-11-06 : douze secondes). */
+export const NAVIGATION_LENTE_MS = 10_000;
+
+/**
+ * Un echec sans nom apres une navigation lente se dit « le portail est lent », pas « le probleme
+ * vient de UKit ».
+ *
+ * Constate au banc le 2026-11-06 : WebView a froid, la page de connexion de l'universite a mis douze
+ * secondes a charger (« Un moment SVP… »), puis le moteur a rendu `engine` — une attente posee sur
+ * une page pas encore prete. L'ecran accusait l'application, et un second essai a reussi. `engine`
+ * reste `engine` quand la navigation a ete rapide : c'est alors bien un defaut, et il faut le voir.
+ *
+ * Seul `engine` **sans code** est requalifie : un code nomme par le Blueprint (`CAS_INDISPONIBLE`,
+ * `LOGIN_FAILED`) dit deja ce qui s'est passe. La famille devient `unavailable`, la seule qui porte
+ * un bouton Reessayer, et le detail garde la mesure pour le menu de developpement.
+ */
+export function requalifierLenteur(failure: UkitFailure, navigationMs: number): UkitFailure {
+    if (failure.kind !== 'engine' || failure.code !== undefined || navigationMs < NAVIGATION_LENTE_MS) return failure;
+    return ukitFailure('unavailable', `${failure.detail ?? 'engine'} (navigation de ${Math.round(navigationMs)} ms)`, 'PORTAIL_LENT');
 }
 
 /**

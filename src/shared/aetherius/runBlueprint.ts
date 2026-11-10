@@ -28,7 +28,7 @@
 
 import { describeFailure, type AbortSignalLike, type RunEventHandler } from '@aetherius/engine';
 
-import { chronometrer, debutDeRun } from './chrono';
+import { chronometrer, debutDeRun, plusLongueNavigation } from './chrono';
 import { getAetheriusClient } from './client';
 import { hoteDuRun, hoteOuvert, noterEchec, noterSucces, refroidissementLisible, type Origine } from './disjoncteur';
 import { describeUkitFailure, ukitFailure, type UkitFailure } from './failures';
@@ -58,7 +58,13 @@ export type BlueprintRun =
           readonly origin: BlueprintOrigin;
           readonly dureeMs: number;
       }
-    | { readonly ok: false; readonly failure: UkitFailure; readonly dureeMs: number };
+    | {
+          readonly ok: false;
+          readonly failure: UkitFailure;
+          readonly dureeMs: number;
+          /** La plus longue navigation du run (chrono.ts) : un portail lent se lit la, pas dans la duree totale. */
+          readonly navigationMs: number;
+      };
 
 export interface RunBlueprintOptions {
     readonly inputs?: RunInputs;
@@ -137,21 +143,21 @@ export async function runBlueprint(
         // Le verdict vient du moteur, pas d'une comparaison de statut : `describeFailure` rend
         // `undefined` exactement quand il n'y a rien a traduire.
         if (describeFailure(result) !== undefined) {
-            return { ok: false, failure: constater(name, hote, origine, describeUkitFailure(result)), dureeMs };
+            return { ok: false, failure: constater(name, hote, origine, describeUkitFailure(result)), dureeMs, navigationMs: plusLongueNavigation(result) };
         }
         if (noterSucces(hote)) console.warn(`[disjoncteur] ${hote} referme`);
         return { ok: true, outputs: result.outputs, origin: resolved.origin, dureeMs };
     } catch (error) {
         const dureeMs = debutDeRun() - debut;
         chronometrer(name, dureeMs);
-        return { ok: false, failure: constater(name, hote, origine, describeUkitFailure(error)), dureeMs };
+        return { ok: false, failure: constater(name, hote, origine, describeUkitFailure(error)), dureeMs, navigationMs: 0 };
     }
 }
 
 /** Un run automatique sur un hote ouvert : l'echec ordinaire d'une source en panne, sans requete ni `[chrono]`. */
 function courtCircuit(name: RunnableBlueprintName, hote: string): BlueprintRun {
     if (__DEV__) console.info(`[disjoncteur] ${name} non joue : ${hote} ouvert`);
-    return { ok: false, failure: ukitFailure('unavailable', `disjoncteur ouvert : ${hote}`), dureeMs: 0 };
+    return { ok: false, failure: ukitFailure('unavailable', `disjoncteur ouvert : ${hote}`), dureeMs: 0, navigationMs: 0 };
 }
 
 /**

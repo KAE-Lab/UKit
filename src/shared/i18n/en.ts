@@ -53,6 +53,8 @@ const en = {
 	// manque (features/Scolarite/services/ScolariteMapping.ts).
 	ERROR_CAS_UNAVAILABLE_TITLE: 'Portal unreachable',
 	ERROR_CAS_UNAVAILABLE: 'Your university portal is not responding. Try again in a moment.',
+	ERROR_PORTAL_SLOW_TITLE: 'Slow portal',
+	ERROR_PORTAL_SLOW: "Your university’s portal is taking a long time to respond. Try again in a moment.",
 	ERROR_MAILBOX_UNAVAILABLE_TITLE: 'Mailbox unreachable',
 	ERROR_MAILBOX_UNAVAILABLE: 'The mailbox did not respond, but your sign-in worked.',
 	// Tout code de Blueprint en `_INDISPONIBLE` que la table ne nomme pas precisement : la regle

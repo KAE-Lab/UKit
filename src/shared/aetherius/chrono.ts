@@ -49,6 +49,23 @@ export function chronometrer(nom: string, dureeMs: number, resultat?: Result): v
     });
 }
 
+/**
+ * La plus longue navigation d'un run, en millisecondes ; 0 sans navigation ni resultat.
+ *
+ * C'est ce qui distingue un portail lent d'un defaut de l'application quand le moteur rend un echec
+ * sans nom (`engine`) : constate au banc le 2026-11-06, une page de connexion de douze secondes
+ * suivie d'un `engine` s'affichait « Le probleme vient de UKit » (ScolariteMapping.requalifierLenteur).
+ */
+export function plusLongueNavigation(
+    resultat: { readonly step_results: ReadonlyArray<{ readonly action: string; readonly duration_ms: number }> } | undefined,
+): number {
+    if (resultat === undefined) return 0;
+    return resultat.step_results.reduce(
+        (plus, step) => (step.action === 'navigate' && step.duration_ms > plus ? step.duration_ms : plus),
+        0,
+    );
+}
+
 /** Une duree lisible d'un coup d'oeil sur un telephone : `8,4 s`. */
 export function dureeLisible(dureeMs: number): string {
     return `${(dureeMs / 1000).toFixed(1).replace('.', ',')} s`;

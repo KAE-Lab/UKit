@@ -2297,6 +2297,16 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   ouvert et documenté chez Aetherius, avec sa reproduction et sa direction de correctif, dans la
   section « Limites connues » de `docs/embedded.md` — il se corrigera par une **release du moteur**,
   pas par une publication de Blueprint.
+
+  Un cas `engine` se requalifie pourtant côté application depuis le 2026-11-10 : celui qui suit une
+  **navigation de plus de dix secondes** (`requalifierLenteur`). Au banc, une page de connexion
+  restée douze secondes sur « Un moment SVP… » suivie d'un `engine` affichait « Le problème vient de
+  UKit », et un second essai réussissait. Le run porte désormais la durée de sa plus longue
+  navigation (`BlueprintRun.navigationMs`, [`chrono.ts`](../../src/shared/aetherius/chrono.ts)) ;
+  au-delà du seuil, l'échec devient `unavailable` avec le code `PORTAIL_LENT` — « Le portail de ton
+  université met du temps à répondre », réessayable. La règle vaut pour la session et pour les
+  widgets ; un `engine` après une navigation rapide garde son message, c'est alors un défaut à voir.
+  Le seuil ne regarde pas la durée totale : une vérification nominale dure déjà 9,9 s sur `ukit`.
 - **La feuille d'échec ne diagnostique pas.** Elle montre le titre et le message de l'échec ; le
   `detail` du moteur reste dans le journal, et un `engine` reste « un problème de notre côté », sans
   bouton — le distinguer d'une source morte se traite chez Aetherius (ci-dessus).
