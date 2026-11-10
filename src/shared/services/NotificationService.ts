@@ -97,6 +97,9 @@ function getFutureCourses(courses: PlanningEvent[], delayInMinutes: number, now:
     const futureCourses: Array<{ course: PlanningEvent, triggerTime: Date }> = [];
     for (const course of courses) {
         if (!course.date || !course.date.start) continue;
+        // Une journee entiere — vacances, ferie, d'un export iCalendar — n'a pas d'heure : son debut est
+        // minuit, et la rappeler annoncerait un « cours dans 15 min » la veille a 23 h 45.
+        if (course.journeeEntiere === true) continue;
 
         const courseStart = moment(course.date.start);
         const triggerTime = courseStart.clone().subtract(delayInMinutes, 'minutes');

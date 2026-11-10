@@ -256,6 +256,30 @@ describe('description a champs nommes (PRONOTE)', () => {
         expect(vacances.description).toBe('');
     });
 
+    it('marque une journee entiere : ni heure ni creneau, et le bandeau la prend', () => {
+        const [vacances] = lireCalendrier(calendrier(VACANCES_PRONOTE), 'lien');
+        expect(vacances.journeeEntiere).toBe(true);
+        expect(vacances.starttime).toBe('');
+        expect(vacances.schedule).toBe('');
+    });
+
+    it('etale des vacances de neuf jours sur chacun d eux, en vue jour comme en vue semaine', () => {
+        const ics = calendrier(VACANCES_PRONOTE, COURS_PRONOTE);
+        const mercredi = projeterJourIcs(ics, 'lien', moment('2026-10-28'));
+        expect(mercredi.map((cours) => cours.subject)).toEqual(['Vacances']);
+        expect(projeterJourIcs(ics, 'lien', moment('2026-11-02'))).toEqual([]);
+
+        const semaine = decouperSemaineIcs(ics, 'lien', moment('2026-10-26'));
+        expect(semaine.map((jour) => jour.courses.length)).toEqual([1, 1, 1, 1, 1, 1]);
+        const ids = semaine.flatMap((jour) => jour.courses.map((cours) => cours.id));
+        expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it('garde un evenement unique dans la plage annuelle, celle de la synchronisation', () => {
+        const annee = projeterAnneeIcs(calendrier(VACANCES_PRONOTE), 'lien');
+        expect(annee).toHaveLength(1);
+    });
+
     it('ne change rien a une description ADE', () => {
         // La garde de la forme : une seule ligne sans cle suffit a rester sur la projection d'ADE.
         const [cours] = lireCalendrier(calendrier(COURS), '2A GR1');

@@ -503,6 +503,13 @@ sujet distinct — ils ne sont pas en accès libre, et le référentiel les publ
   affiche **déjà** en titre et en pastille. Les deux dernières ont été trouvées sur appareil — la
   fiche portait un `TD` en pastille et un `TD` en ligne.
 
+**Les journées entières** — un `DTSTART` de type date — portent `journeeEntiere` et prennent le
+bandeau des calendriers du téléphone. Elles s'affichaient « 00:00 - 00:00 » dans le fil, la limite
+écrite en 6-J, que l'export PRONOTE rend courante (onze vacances et fériés dans l'année de l'IUT).
+Une journée de plusieurs jours s'étale en un événement par jour dans les vues jour et semaine ; la
+plage annuelle, celle de la synchronisation de l'agenda, la garde entière. Elle ne fait pas de
+rappel de cours, et l'en-tête d'un jour ne la compte pas comme un cours.
+
 **PRONOTE écrit autrement**, et c'est le défaut des « intitulés bizarres » constaté chez Bordeaux
 Montaigne, réglé sur l'export de l'IUT (mesure du 2026-11-10). Son `SUMMARY` empile tout —
 `R5.03 Animation de réunion - TD_2h - M. DUPONT, Mme MARTIN - Mémo` — mais sa description nomme chaque

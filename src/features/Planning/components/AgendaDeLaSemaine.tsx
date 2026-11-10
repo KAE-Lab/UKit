@@ -85,9 +85,11 @@ function JourDeLAgenda({ date, etat, cours, theme, navigation, largeurDesHeures 
     largeurDesHeures: number;
 }) {
     const { bandeaux, horaires } = coursDuJour(cours);
-    const nombre = horaires.length + bandeaux.length;
-    if (!jourAffiche(date, nombre)) return null;
+    // Le jour s'affiche s'il porte quoi que ce soit — un bandeau compris —, mais le compte ne dit que
+    // les cours : un jour ferie (export PRONOTE) ou un anniversaire du telephone disait « 1 cours ».
+    if (!jourAffiche(date, horaires.length + bandeaux.length)) return null;
     const titre = date.isValid() ? upperCaseFirstLetter(date.format('dddd D MMMM')) : '';
+    const nombre = horaires.length;
     const compte = nombre === 0
         ? Translator.get('AGENDA_LIBRE')
         : nombre === 1 ? Translator.get('AGENDA_UN_COURS') : Translator.get('AGENDA_N_COURS', nombre);

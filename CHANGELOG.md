@@ -87,6 +87,9 @@ une application qui donne l'heure des choses d'un regard.
 - **Les cours d'un abonnement PRONOTE ont leur vrai titre** : la matière, et non « Matière - Type -
   Enseignants - Mémo » ; le type en pastille sans sa durée, la salle, un enseignant par ligne, et le
   compte des séances restantes, que ce calendrier personnel rend sûr.
+- **Une journée entière d'un iCalendar se lit en bandeau** — vacances, jour férié —, sur chacun de ses
+  jours, au lieu d'un cours « 00:00 - 00:00 » le premier jour seulement ; elle ne déclenche plus de
+  rappel la veille à 23 h 45, et l'en-tête d'un jour ne la compte plus comme un cours.
 - **À l'accueil, les groupes trouvés restent visibles clavier ouvert**, sur un petit écran aussi.
 - **La recherche des restaurants et des bibliothèques ne coupe plus son texte** sur un petit écran.
 - **Sur un petit écran, un titre d'en-tête long tient entre ses boutons**, au lieu de passer dessous.

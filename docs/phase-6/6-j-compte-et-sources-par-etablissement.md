@@ -374,7 +374,9 @@ formule.
   la sonde 19 en a affiché 209. C'est lisible et ce n'est pas faux, mais ça se lit mal, et **c'est le
   seul point de la campagne qui appelle un correctif plutôt qu'une phrase**. Il n'est pas fait ici :
   aucun établissement porté n'émet ce cas, et le traiter demande une décision d'affichage qui appartient
-  au volet visuel ([6-K](6-k-socle-visuel.md)).
+  au volet visuel ([6-K](6-k-socle-visuel.md)). *Levée le 2026-11-10, au lot 3 de la prochaine
+  version : la projection marque la journée entière, qui prend le bandeau des calendriers du
+  téléphone ([planning.md](../features/planning.md#ce-que-licalendar-donne-et-ce-quil-ne-donne-pas)).*
 - **L'icône d'une ligne de description retombe sur son défaut chez une source inconnue.**
   `CourseAnnotations` déduit l'icône du contenu — une salle contre le référentiel, un code de module
   contre son motif — et une source étrangère ne correspond à aucun des deux. « Jour férié » hérite donc

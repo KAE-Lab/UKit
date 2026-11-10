@@ -61,6 +61,19 @@ function dateDe(evenement: ICAL.Component, nom: string): Date | null {
 }
 
 /**
+ * L'evenement est-il une **journee entiere** — un `DTSTART` de type date, sans heure (RFC 5545) ?
+ *
+ * C'est la forme des vacances et des jours feries de l'export PRONOTE (onze dans l'annee de l'IUT,
+ * mesure du 2026-11-10). Projetes comme un cours, ils s'affichaient « 00:00 - 00:00 » dans le fil de
+ * la journee (limite ecrite au jalon 6-J) ; marques, ils prennent le bandeau que le Planning dessine
+ * deja pour les calendriers du telephone.
+ */
+function estJourneeEntiere(evenement: ICAL.Component): boolean {
+    const valeur = evenement.getFirstPropertyValue('dtstart');
+    return valeur !== null && typeof valeur === 'object' && 'isDate' in valeur && valeur.isDate === true;
+}
+
+/**
  * La couleur d'un cours, derivee de sa matiere.
  *
  * Un export iCalendar ne porte **aucune** couleur, la ou Celcat en donne une par cours. Trois
@@ -271,8 +284,9 @@ export function projeterEvenement(evenement: ICAL.Component, groupe: CibleGroupe
 
     const debut = moment(dateDe(evenement, 'dtstart'));
     const fin = moment(dateDe(evenement, 'dtend'));
-    const starttime = heureOuVide(debut);
-    const endtime = heureOuVide(fin);
+    const journeeEntiere = estJourneeEntiere(evenement);
+    const starttime = journeeEntiere ? '' : heureOuVide(debut);
+    const endtime = journeeEntiere ? '' : heureOuVide(fin);
 
     const categorie = nommes === null ? typeDuCours(description) : typeNomme(nommes.type);
     const lignes = nommes === null
@@ -286,7 +300,7 @@ export function projeterEvenement(evenement: ICAL.Component, groupe: CibleGroupe
         // aucun ecran ne le lit (docs/features/planning.md).
         style: 'style="background-color:' + couleur + '"',
         color: couleur,
-        schedule: creneauCompose(starttime, endtime) + (categorie === '' ? '' : ' ' + categorie),
+        schedule: journeeEntiere ? '' : creneauCompose(starttime, endtime) + (categorie === '' ? '' : ' ' + categorie),
         starttime,
         endtime,
         date: { start: debut.toISOString(), end: fin.toISOString() },
@@ -296,7 +310,40 @@ export function projeterEvenement(evenement: ICAL.Component, groupe: CibleGroupe
         // Verbatim, comme chez Celcat, y compris la liste du planning agrege.
         group: groupe as string,
         toFilter: sousGroupe(lignes, groupe),
+        ...(journeeEntiere ? { journeeEntiere } : {}),
     };
+}
+
+/** Au-dela, une fin est aberrante : une journee entiere ne s'etale pas sur plus d'une annee. */
+const JOURS_MAX = 366;
+
+/**
+ * Une journee entiere de plusieurs jours, etalee en un evenement par jour.
+ *
+ * Les vacances de la Toussaint sont **un** evenement de neuf jours (`DTEND` exclusif, a minuit). Le
+ * Planning range un evenement au jour de son debut : sans cet etalement, le bandeau ne paraissait que
+ * le premier samedi. Chaque copie porte un identifiant a elle, que les listes exigent uniques.
+ *
+ * Applique aux vues jour et semaine seulement : la plage annuelle, qui sert la synchronisation de
+ * l'agenda, garde l'evenement tel que la source le donne.
+ */
+export function etalerJourneesEntieres(evenements: readonly PlanningEvent[]): PlanningEvent[] {
+    return evenements.flatMap((evenement) => {
+        if (evenement.journeeEntiere !== true) return [evenement];
+        const debut = moment(evenement.date.start ?? null).startOf('day');
+        const fin = moment(evenement.date.end ?? null);
+        if (!debut.isValid() || !fin.isValid()) return [evenement];
+
+        const jours: PlanningEvent[] = [];
+        for (const jour = debut.clone(); jour.isBefore(fin) && jours.length < JOURS_MAX; jour.add(1, 'day')) {
+            jours.push({
+                ...evenement,
+                id: `${evenement.id}@${jour.format('YYYY-MM-DD')}`,
+                date: { start: jour.toISOString(), end: jour.clone().add(1, 'day').toISOString() },
+            });
+        }
+        return jours.length > 1 ? jours : [evenement];
+    });
 }
 
 /**
@@ -345,7 +392,9 @@ function duJour(evenements: PlanningEvent[], jour: moment.Moment): PlanningEvent
  */
 export function projeterJourIcs(ics: unknown, groupe: CibleGroupe, jour?: moment.Moment): PlanningEvent[] {
     const evenements = lireCalendrier(ics, groupe);
-    return assemblerJour(jour === undefined ? evenements : duJour(evenements, jour));
+    // L'etalement suit le filtrage : sans jour, la source a deja borne, et etaler ferait paraitre ici
+    // les autres jours d'une journee entiere a cheval.
+    return assemblerJour(jour === undefined ? evenements : duJour(etalerJourneesEntieres(evenements), jour));
 }
 
 /**
@@ -358,7 +407,7 @@ export function projeterJourIcs(ics: unknown, groupe: CibleGroupe, jour?: moment
  * plage est donc fait ici, en amont, et il est sans effet sur une reponse deja bornee.
  */
 export function decouperSemaineIcs(ics: unknown, groupe: CibleGroupe, lundi: moment.Moment): PlanningWeekDay[] {
-    const evenements = lireCalendrier(ics, groupe).filter((evenement) =>
+    const evenements = etalerJourneesEntieres(lireCalendrier(ics, groupe)).filter((evenement) =>
         moment(evenement.date.start ?? null).isSame(lundi, 'isoWeek'),
     );
     return assemblerSemaine(evenements, lundi);
