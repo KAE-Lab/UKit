@@ -24,6 +24,7 @@ import { describeFailure, type FailureKind } from '@aetherius/engine';
 
 import type { BlueprintName, PortailBlueprintName } from '../../../blueprints';
 import type { TranslationKey } from '../i18n/Translator';
+import { sansAdresses } from '../utils/journal';
 // Import **de type seulement** : `Theme.ts` importe `react-native` et n'est pas jouable sous Node,
 // alors que ce module l'est et doit le rester (failures.test.ts). Un `import type` est efface a la
 // compilation, il n'introduit donc aucune dependance a l'execution.
@@ -193,10 +194,12 @@ export function serviceAbsent(
  * (jalon 6-A : la chaine est prouvee, l'experience ne change pas). La ligne nomme le Blueprint et
  * la famille, ce qui suffit a distinguer les chemins degrades les uns des autres sur un appareil.
  *
- * Les valeurs de secrets sont deja masquees par la facade quand elle rend l'echec : ce qui arrive
- * ici est publiable dans un journal.
+ * Les valeurs de secrets sont deja masquees par la facade quand elle rend l'echec. Les adresses, non :
+ * le detail d'un echec http porte l'URL de la requete, lien d'abonnement compris, et seule son
+ * origine part dans le journal (`sansAdresses`). L'echec garde son detail entier pour le menu de
+ * developpement.
  */
 export function reportFailure(name: BlueprintName | PortailBlueprintName, failure: UkitFailure): void {
     const code = failure.code !== undefined ? ` [${failure.code}]` : '';
-    console.warn(`[aetherius] ${name} : ${failure.kind}${code} — ${failure.detail ?? 'sans detail'}`);
+    console.warn(`[aetherius] ${name} : ${failure.kind}${code} — ${sansAdresses(failure.detail ?? 'sans detail')}`);
 }

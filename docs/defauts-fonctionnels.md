@@ -19,6 +19,17 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Un lien d'abonnement et les adresses du navigateur intégré s'écrivent en entier dans le journal de l'appareil~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc pendant l'audit du lot 1, en collant un lien de travers : `[aetherius] ukit.edt.abonnement
+: rejected — Expected HTTP 200, got 400 — https://…` portait le lien d'abonnement entier, qui rend le
+planning de quelqu'un sans authentification. Le détail d'un échec http contient l'URL de la requête,
+et `reportFailure` l'écrivait tel quel ; deux traces du navigateur intégré écrivaient aussi des
+adresses complètes, qui peuvent porter un ticket CAS. La console de production part dans le journal
+du système. Corrigé : ces trois lignes ne gardent que l'origine
+([`sansAdresses`](../src/shared/utils/journal.ts), testé) ; l'échec garde son détail entier en mémoire
+pour le menu de développement.
+
 ### ~~Des identifiants que le trousseau refuse d'écrire laissent croire à une connexion durable~~ — constaté le 2026-11-10, corrigé le même jour
 
 Trouvé par la relecture du code de l'audit du lot 1, non reproduit au banc (le trousseau de

@@ -13,6 +13,7 @@ import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { destinationReelle, resteDansLaVue } from '../../../shared/navigation/liensDuFormulaire';
 
 import { FloatingActionBar, SaveCredentialsModal, getPortalInjectedScript } from '../components/WebBrowserComponents';
+import { sansAdresses } from '../../../shared/utils/journal';
 
 /**
  * L'adresse d'un point d'entree, telle que **l'etablissement selectionne** la declare.
@@ -169,7 +170,7 @@ const useWebBrowser = (route, onDismiss, navigation) => {
         // La destination reelle, et non le redirecteur : la seconde vue s'ouvre directement sur la
         // page, sans garder un saut dans son historique que « precedent » rejouerait.
         const destination = destinationReelle(adresse);
-        console.log(`[navigateur] lien hors du formulaire, ouvert par-dessus : ${destination}`);
+        console.log(`[navigateur] lien hors du formulaire, ouvert par-dessus : ${sansAdresses(destination)}`);
         (navigation as unknown as { push: (name: string, params: object) => void }).push('WebBrowser', { href: destination });
     };
     /*

@@ -2031,7 +2031,11 @@ le planning nominatif d'un étudiant. Deux conséquences, et les deux sont écri
   douteuse — un identifiant mal lu afficherait, sans la moindre erreur, le planning de quelqu'un
   d'autre ;
 - il vit au **trousseau**, cloisonné par établissement comme le lien d'abonnement et la session, et
-  la réinitialisation seule l'efface.
+  la réinitialisation seule l'efface ;
+- il n'entre dans **aucun journal**, pas plus qu'un lien d'abonnement ou une adresse du navigateur
+  intégré : le journal de l'appareil n'en garde que l'origine
+  ([`sansAdresses`](../../src/shared/utils/journal.ts)). Jusqu'au 2026-11-10, l'échec d'un Blueprint
+  écrivait l'URL complète de sa requête.
 
 Il est ensuite **fusionné au référentiel du catalogue** par `sourceEdt()`, en tête de liste : le
 groupe personnel se résout alors comme un autre, et ni les services, ni les écrans, ni les favoris

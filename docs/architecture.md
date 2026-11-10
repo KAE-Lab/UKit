@@ -383,6 +383,7 @@ racine et de [`src/shared/`](../src/shared/).
 | [`shared/ui/SourceFailureNotice.tsx`](../src/shared/ui/SourceFailureNotice.tsx) | l'échec d'une source, tel qu'un écran le montre : message de la famille, bouton Réessayer seulement s'il répare, ou l'**action** qui remplirait l'écran ([blueprints.md](blueprints.md)) |
 | [`shared/constants/urls.ts`](../src/shared/constants/urls.ts) | URLs externes : liens applicatifs (`URL`). Les points d'entrée Celcat en sont sortis au jalon [6-E](phase-6/6-e-planning.md) — ils vivent dans les Blueprints |
 | [`shared/utils/formatUtils.ts`](../src/shared/utils/formatUtils.ts) | `upperCaseFirstLetter` et `formatDescription` (nettoyage des descriptions Celcat) |
+| [`shared/utils/journal.ts`](../src/shared/utils/journal.ts) · [`journal.test.ts`](../src/shared/utils/journal.test.ts) | `sansAdresses` : ce qu'un journal garde d'une adresse, son origine — un lien d'abonnement ou un ticket CAS n'y entre pas |
 
 ## Documentation associée
 

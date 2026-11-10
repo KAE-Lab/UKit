@@ -29,6 +29,7 @@ import {
     type PiecesDuLecteur,
 } from '../services/LecteurPdfPage';
 import { useLecteurPdfJs } from './useLecteurPdfJs';
+import { sansAdresses } from '../../../shared/utils/journal';
 
 export type Strategie = 'fichier' | 'inline' | 'pdfjs';
 
@@ -186,7 +187,7 @@ export function useLectureDuDocument(uri: string, nom: string, fond: string): Le
      * chargement de la page ne dit rien du rendu : c'est son message qui conclut.
      */
     const surFinDeChargement = (url: string) => {
-        console.log(`[lecteur] chargement fini : ${url === '' ? '(vide)' : url}`);
+        console.log(`[lecteur] chargement fini : ${url === '' ? '(vide)' : sansAdresses(url)}`);
         if (strategie === 'pdfjs') return;
         if (strategie === 'fichier' && !url.startsWith('file:')) {
             console.warn('[lecteur] le fichier n\'a pas charge (page vide) : bascule sur le rendu inline');
