@@ -8,6 +8,7 @@
 import type { CSSProperties } from 'react';
 
 import { PALETTES, type PaletteDeBase } from '../../../../../src/shared/theme/palettes';
+import { resoudreOmbre } from '../../../../../src/shared/theme/ombres';
 import { tokens } from '../../../../../src/shared/theme/tokens';
 
 export type ThemeDApercu = 'light' | 'dark';
@@ -20,10 +21,11 @@ function px(valeur: number): string {
     return `${valeur}px`;
 }
 
-/** L'ombre `md` de l'application, en CSS : le flou d'iOS double (ombres.ts), l'opacite telle quelle. */
+/** L'ombre `md` de l'application, en CSS : ses couches, resolues par la fonction du telephone. */
 function ombre(): string {
-    const { y, flou, opacite } = tokens.ombres.md;
-    return `0 ${y}px ${flou * 2}px rgba(0, 0, 0, ${opacite})`;
+    return resoudreOmbre(tokens.ombres.md).boxShadow
+        .map((couche) => `${couche.offsetX}px ${couche.offsetY}px ${couche.blurRadius}px ${couche.color}`)
+        .join(', ');
 }
 
 /** Les variables du theme d'apercu, a poser en `style` sur le conteneur. */
