@@ -19,6 +19,49 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Des cours du matin absents le jour même — rapporté deux fois, Android 16, le 2026-09-30
+
+Deux retours : l'un avec un lien d'abonnement collé, l'autre sur Celcat. **Non reproduit** au lot 1,
+le 2026-11-10. Essayé sur `ukit-a8` (Android 9) puis `ukit` (Android 15, le plus proche d'Android 16
+au banc), en déplaçant l'horloge du **système** et non la seule simulation du menu, pour que
+`Date.now()` bouge aussi :
+
+- Celcat, groupe `INF501A1` : la veille au soir, puis saut de nuit l'application en arrière-plan, puis
+  12 h 30, puis 13 h 30 réseau coupé (cache du jour) : le cours de 9 h 30 reste affiché à chaque fois,
+  « Aujourd'hui » passe au bon jour ;
+- lien d'abonnement ADE (`nbWeeks=4`, groupe ENSC 2A), à 14 h : les cours de 8 h et 10 h 20 du jour
+  sont là. L'export d'ADE commence bien au début du jour courant (vérifié sur la réponse brute) ;
+- minuit passé l'application ouverte : « Aujourd'hui » menait à la veille — défaut réel, corrigé
+  (entrée du 2026-11-10), mais il montre la veille entière, pas un jour amputé de son matin.
+
+La lecture du code ne trouve pas de filtre sur l'heure : la journée Celcat se refiltre sur sa date
+locale, celle de l'abonnement sur le jour local, et la frise n'efface pas un cours passé, elle
+l'estompe. **Ce qu'il faut demander aux deux utilisateurs** : à quelle heure ils regardent ; si les
+cours du matin reviennent en tirant l'écran ou en fermant l'application ; une capture de l'écran au
+moment où ils manquent ; pour le lien collé, le site qui le fournit (une source qui exporterait « à
+partir de maintenant » expliquerait tout et ne serait pas dans UKit) ; et pour les deux, le fuseau
+du téléphone (Réglages, Date et heure).
+
+### La liste des groupes est vide sur un Android 8.0 — rapporté le 2026-09-30
+
+Un retour. **Non reproduit** au lot 1, le 2026-11-10, sur `ukit-a8` (Android 9, le plus proche au
+banc) : installation neuve, Collège ST, Licence 3 automne, la liste se remplit
+(`ukit.celcat.groupes` en 1,2 s). Android 8.0 a un magasin d'autorités plus vieux encore que celui
+de l'A8, et c'est la piste la plus probable : les serveurs des facs échouaient déjà en erreur réseau
+sur les vieux Android (corrigé le 2026-09-08 en embarquant les racines). Une liste vide **sans
+message** contredirait toutefois le correctif du 2026-11-08 (une liste vide se dit). **Ce qu'il faut
+demander** : l'écran exact (un message, ou une liste vide sans rien), l'établissement, et si
+Campus et la Scolarité répondent sur ce téléphone.
+
+### La position refusée donne des distances comptées depuis Talence, affichées comme vraies — constaté le 2026-11-10
+
+Vu au banc pendant l'audit du lot 1 : localisation refusée, la carte de l'A28 affiche « 360 m ».
+C'est une décision écrite ([campus.md](features/campus.md)) — le repli sur le centre de Talence garde
+les listes triées et utiles sur un émulateur ou sans permission — mais la distance affichée se lit
+comme celle de l'étudiant. **Non corrigé, parce que c'est défaire une décision écrite** : la
+correction recommandée garde le tri depuis Talence et retire le badge de distance quand la position
+est celle du repli (`PositionResolue.error` existe déjà). Soumis au propriétaire du produit.
+
 ### ~~Le titre d'un cours commence parfois par une espace~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc pendant l'audit du lot 1 : « ␣Histoire et Epistémologie de l'Optimisation ». Celcat sert
@@ -283,6 +326,10 @@ réinitialisation complète du menu de développement recharge l'application, ce
 
 ### La barre de navigation d'Android 9 reste claire sous l'application sombre — constaté le 2026-11-05
 
+*Lot 1, 2026-11-10 — reste ouvert, par décision.* La correction demande une dépendance native
+(`expo-navigation-bar`) et un build de développement puis de production ; ce lot n'en lance aucun.
+Elle se fera avec le prochain build natif, comme décidé le 2026-11-06.
+
 Sur `ukit-a8` (Android 9, trois boutons), la barre de navigation du système garde son gris clair
 (`#E6E6E6` mesuré) quand l'application est en sombre ; sur Android 15, en navigation par gestes, elle
 est transparente. **Ce n'est pas une régression** : la capture « avant » de 7-J mesure la même teinte.
@@ -304,6 +351,14 @@ sur l'A8 avant la correction.
 
 ### Le parcours froid de l'INP dépasse ses attentes sur un appareil lent — mesuré le 2026-09-21
 
+*Lot 1, 2026-11-10 — reste ouvert, faute d'appareil lent.* Sur `ukit`, le même compte se connecte
+en 15,9 s (vérification) puis 31,1 s (dossier) : l'émulateur tourne sur seize cœurs et ne reproduit
+pas la lenteur de l'A8. Allonger les attentes du Blueprint sans mesure serait deviner ; le Blueprint
+est embarqué et publié, donc un délai changé ici demanderait aussi une publication. Ce qui a changé :
+un échec sans nom après une navigation de plus de dix secondes se dit désormais « le portail met du
+temps à répondre » (`PORTAIL_LENT`, voir l'entrée du portail lent). Reste à mesurer sur l'A8 réel,
+au protocole de sortie : la durée de chaque étape du dossier (`[chrono]`), et si 30 s → 45 s suffit.
+
 Sur le Galaxy A8 (Android 9) derrière un partage de connexion 5G, la connexion à Bordeaux INP échoue
 trois fois de suite, de deux façons : `blocked [CAS_INDISPONIBLE]`, le champ `#username` ou le
 dossier n'apparaissant pas en 20 s, puis `unavailable`, la page du dossier ne finissant pas de charger
@@ -318,6 +373,9 @@ met du temps » plutôt que « CAS indisponible », et mesurer sur l'A8 si un d�
 
 ### L'emploi du temps nominatif du premier semestre de L1 n'est pas porté — constaté le 2026-09-07, relevé le 2026-09-21
 
+*Lot 1, 2026-11-10 — reste ouvert, faute de compte.* Aucun compte de L1 n'est dans le `.env` ; rien
+ne se construit à l'aveugle.
+
 Deux retours le disent, et le propriétaire du produit le confirme : au Collège Sciences et
 Technologies, le premier semestre de L1 n'a pas d'emploi du temps **par groupe** — il est
 **nominatif**, servi par Celcat une fois connecté avec les identifiants de l'ENT. L'application, qui
@@ -329,6 +387,13 @@ Blueprint de portail, et pour l'écrire **un compte prêté de L1** ([adaptation
 rien ne se construit à l'aveugle. Sans compte, la limite s'écrit : le premier semestre de L1 attend.
 
 ### Un étudiant de Bordeaux INP sans emploi du temps personnel, sans que rien ne le dise — rapporté le 2026-09-21
+
+*Lot 1, 2026-11-10 — reste ouvert, faute du cas.* Le compte prêté de l'INP lit son emploi du temps
+(ressource lue, proposée, appliquée, planning affiché en 0,8 s) : l'absence ne se reproduit pas. Dire
+l'absence demande un écran qui n'existe pas — une rangée « emploi du temps personnel introuvable »
+avec sa relance, à placer dans la Scolarité — donc une décision de design, soumise au propriétaire du
+produit. À obtenir de l'étudiant concerné : son école et son année, et s'il voit son emploi du temps
+dans ADE en se connectant lui-même.
 
 Rapporté par le relais de l'INP : le parcours froid d'un étudiant se joue **sans erreur**, mais son
 emploi du temps personnel n'est proposé nulle part ; tous les autres étudiants de l'INP l'ont. Sans
@@ -393,6 +458,11 @@ absente du cache, dans sa fenêtre de dix minutes. Le défaut et son correctif n
 ([campus-salles-libres.md](features/campus-salles-libres.md#limites-connues)).
 
 ### Les intitulés de cours d'un iCalendar collé sont parfois bizarres — constaté le 2026-09-16
+
+*Lot 1, 2026-11-10 — reste ouvert, faute d'exemples.* La source qui l'a montré est PRONOTE, chez
+Bordeaux Montaigne, dont le compte prêté appartient au lot 3 : le lien s'y lira, et ses `SUMMARY`,
+`DESCRIPTION` et `LOCATION` réels avec lui. Les corriger avant serait régler la projection sur un
+émetteur imaginé.
 
 Trouvé en vérifiant le lien d'abonnement de **Bordeaux Montaigne**, servi par PRONOTE Campus, collé
 dans « Mon université n'est pas dans la liste » ([7-B lot 1](phase-7/7-b-nouveaux-campus.md)). Le
@@ -623,6 +693,14 @@ gardent inemployé : redistribuer les teintes n'était pas le sujet.
 ![Après : la première section en bleu système, la couleur que sa version translucide portait déjà](screenshots/planning-groupes-sombre-apres.png)
 
 ### Les styles composés du thème ne sont pas typés
+
+*Lot 1, 2026-11-10 — reste ouvert, et l'entrée sous-estimait le défaut.* Le contournement n'est pas
+unique : la relecture du code de l'audit compte **105** `as never` dans `src/`, presque tous sur un
+style composé du thème passé à un composant (`popup.background as never`). Aucun ne masque un défaut
+vu à l'écran ; ensemble, ils retirent le contrôle de type de tous les dialogues. Le correctif reste
+celui qui est écrit — typer `Theme.ts` à la source, puis retirer les transtypages un à un — et c'est
+une session à part entière : 1 100 lignes de données et une centaine d'appelants, hors de ce qu'un lot
+de défauts peut vérifier écran par écran.
 
 [`Theme.ts`](../src/shared/theme/Theme.ts) n'emploie pas `StyleSheet.create` : ses styles composés
 sont des objets littéraux, donc TypeScript élargit `justifyContent: 'center'` en `string`, qui n'est
