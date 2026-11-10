@@ -11,8 +11,8 @@ Le code de la 6.3 tel qu'il est sur `main`, plus trois lots. Les grosses fonctio
 
 | Lot | Contenu | État |
 |---|---|---|
-| 1. Zéro défaut | les défauts signalés par le formulaire, le registre ouvert, puis un audit par parcours au banc | joué le 2026-11-10 : 18 entrées corrigées au registre, 9 restent ouvertes avec leur raison, quatre parcours non joués (liste ci-dessous) |
-| 2. Petites fonctions | ce qui s'ajoute sans décision d'architecture | à ouvrir |
+| 1. Zéro défaut | les défauts signalés par le formulaire, le registre ouvert, puis un audit par parcours au banc | joué le 2026-11-10 : 18 entrées corrigées au registre, 9 restent ouvertes avec leur raison ; les quatre parcours restants joués au lot 2, le même jour (liste ci-dessous) |
+| 2. Petites fonctions | ce qui s'ajoute sans décision d'architecture | joué le 2026-11-10 : « il reste N TD » livré, Appliphase reporté (raison ci-dessous), 7 entrées corrigées au registre (11 défauts croisés en jouant l'audit), 1 consignée |
 | 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | à ouvrir |
 
 ## Ce que « zéro défaut » veut dire ici
@@ -65,7 +65,7 @@ daté du 2026-11-10 ; ce que le banc ne joue pas est en fin de section.
 - [x] compte : connexion Bordeaux — `ukit` S ; passer sans compte — `ukit-a8` S
 - [x] groupes : année, semestre, recherche sans année — `ukit` S, `ukit-a8` S (après réinitialisation)
 - [x] fin du parcours, permission de notification — `ukit` S, `ukit-a8` C
-- [ ] liste des groupes vide hors ligne : non rejouée au lot 1 (vérifiée le 2026-11-08)
+- [x] liste des groupes vide hors ligne : « Service indisponible » et Réessayer, puis la liste au retour du réseau — `ukit-a8` S, au lot 2
 
 **Planning**
 - [x] jour : frise, pause, repère de l'heure, jour vide — `ukit` S C fr en es, `ukit-a8` S C fr es
@@ -85,13 +85,13 @@ daté du 2026-11-10 ; ce que le banc ne joue pas est en fin de section.
 - [x] fiche du compte, révélation du mot de passe — S
 - [x] ENT dans le navigateur intégré, liste des documents, lecteur — C
 - [x] déconnexion — C
-- [ ] Scolarité en anglais et en espagnol : non jouée
+- [x] Scolarité en anglais et en espagnol : connexion, tableau, documents, fiche du compte, actualisation hors ligne — S, au lot 2
 
 **Campus**
 - [x] tableau de bord, position refusée puis accordée — `ukit` S C, `ukit-a8` C es
 - [x] restaurants et menu du jour — `ukit` C, `ukit-a8` C
-- [x] bibliothèques et fiche — `ukit` C ; `ukit-a8` : tableau de bord seulement
-- [x] annonces et fiche — `ukit` C ; `ukit-a8` : tableau de bord seulement
+- [x] bibliothèques et fiche — `ukit` C ; `ukit-a8` C, liste et fiche, au lot 2 (la carte de la fiche reste grise : WebView de 2018)
+- [x] annonces et fiche — `ukit` C ; `ukit-a8` C, liste et fiche jusqu'au bas du texte, au lot 2
 - [x] salles libres, fiche d'un bâtiment, hors ligne — `ukit` S
 
 **Réglages**
@@ -102,7 +102,7 @@ daté du 2026-11-10 ; ce que le banc ne joue pas est en fin de section.
 - [x] notifications — `ukit` C
 - [x] à propos, menu de développement — `ukit-a8` S
 - [x] réinitialisation — `ukit-a8` C es
-- [ ] calendriers du téléphone : la rangée seulement, l'écran de choix n'a pas été ouvert
+- [x] calendriers du téléphone : écran de choix, un calendrier coché puis décoché, son événement au Planning et sa fiche — `ukit` S, au lot 2
 
 **Ce que le banc ne joue pas, à juger sur l'iPhone** : VoiceOver sur la WebView enveloppée, les
 icônes devenues décor et les boutons nommés ; la modale des propositions et son dialogue d'annulation
@@ -118,9 +118,21 @@ bascule de langue à chaud sur le ruban des jours.
   2026-11-10 ; ce qui identifie un enseignement, et quand la ligne se tait :
   [planning.md](features/planning.md#les-séances-restantes-sur-la-fiche-dun-cours). Vérifié sur
   `ukit` contre le champ des semaines de Celcat, S et C, fr en es.
-- Un raccourci vers Appliphase parmi les services de la Scolarité, si le catalogue le porte sans
-  toucher au code d'un établissement.
-- Ce que le lot 1 aura fait remonter et qui relève d'une fonction plutôt que d'un défaut.
+- [ ] Un raccourci vers Appliphase parmi les services de la Scolarité, si le catalogue le porte sans
+  toucher au code d'un établissement — **reporté le 2026-11-10**, pour deux raisons. L'adresse
+  officielle n'a pas été trouvée : aucune page publique de l'université ne nomme Appliphase (recherche
+  du 2026-11-10 ; les documents de la cellule PHASE citent le service et ses recrutements, pas l'outil),
+  et une adresse ne se devine pas. Et ce n'est pas qu'une ligne de catalogue : la grille de la
+  Scolarité n'affiche pas les `services` de l'établissement en liste, ses rangées (ENT, Moodle,
+  messagerie, notes, examens) sont écrites dans
+  [`GrilleScolarite`](../src/features/Scolarite/components/GrilleScolarite.tsx) ; une porte de plus
+  demande une rangée, un libellé et une icône. Ce qu'il faut obtenir : l'adresse exacte, d'un étudiant
+  recruté par PHASE ou de la cellule ; elle atterrira dans `services` de `bordeaux`
+  ([`socle.ts`](../src/shared/etablissements/socle.ts) et la ligne publiée du catalogue), et la rangée
+  dans la grille.
+- Ce que le lot 1 aura fait remonter et qui relève d'une fonction plutôt que d'un défaut : rien
+  au-delà du registre. Les défauts croisés en jouant les quatre derniers parcours sont au
+  [registre](defauts-fonctionnels.md), datés du 2026-11-10 « pendant le lot 2 ».
 
 Écarté de cette version : les créneaux communs avec un ami et l'alerte de cours déplacé, qui
 demandent chacun un écran à dessiner ; la synchronisation en arrière-plan.
