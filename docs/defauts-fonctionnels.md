@@ -90,7 +90,10 @@ C'est une décision écrite ([campus.md](features/campus.md)) — le repli sur l
 les listes triées et utiles sur un émulateur ou sans permission — mais la distance affichée se lit
 comme celle de l'étudiant. **Non corrigé, parce que c'est défaire une décision écrite** : la
 correction recommandée garde le tri depuis Talence et retire le badge de distance quand la position
-est celle du repli (`PositionResolue.error` existe déjà). Soumis au propriétaire du produit.
+est celle du repli (`PositionResolue.error` existe déjà). Soumis au propriétaire du produit. Vu au
+même moment sur `ukit-a8` : le repli n'étant pas gardé, chaque visite du Campus après un refus
+redemande la permission, et Android 9 la repose tant que « Ne plus demander » n'est pas coché — à
+trancher avec le badge.
 
 ### ~~Le titre d'un cours commence parfois par une espace~~ — constaté le 2026-11-10, corrigé le même jour
 

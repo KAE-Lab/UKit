@@ -11,7 +11,7 @@ Le code de la 6.3 tel qu'il est sur `main`, plus trois lots. Les grosses fonctio
 
 | Lot | Contenu | État |
 |---|---|---|
-| 1. Zéro défaut | les défauts signalés par le formulaire, le registre ouvert, puis un audit par parcours au banc | ouvert le 2026-11-10 |
+| 1. Zéro défaut | les défauts signalés par le formulaire, le registre ouvert, puis un audit par parcours au banc | joué le 2026-11-10 : 18 entrées corrigées au registre, 9 restent ouvertes avec leur raison, quatre parcours non joués (liste ci-dessous) |
 | 2. Petites fonctions | ce qui s'ajoute sans décision d'architecture | à ouvrir |
 | 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | à ouvrir |
 
@@ -50,6 +50,67 @@ Venus des retours du formulaire, triés le 2026-11-10 :
    échoue affiché libre, les intitulés d'un iCalendar collé.
 
 Ne peut pas se corriger sans compte : l'emploi du temps nominatif du premier semestre de L1.
+
+### La liste d'audit
+
+Chaque parcours se joue au banc, sur `ukit` (Android 15) et sur `ukit-a8` (Android 9) sauf ceux de
+la WebView, que `ukit` juge seul (la WebView de `ukit-a8` date de 2018). Coché : joué, avec
+l'appareil, le thème (S sombre, C clair) et la langue (fr, en, es) de la passe. Non coché : pas joué
+au 2026-11-10, avec ce qui manque. Ce que la passe a révélé est au [registre](defauts-fonctionnels.md),
+daté du 2026-11-10 ; ce que le banc ne joue pas est en fin de section.
+
+**Premier lancement et accueil**
+- [x] installation neuve, langue et thème du système lus — `ukit` S fr, `ukit-a8` S fr
+- [x] vitrine, préférences, établissement (Collège ST, INP, Autre campus) — `ukit` S, `ukit-a8` S
+- [x] compte : connexion Bordeaux — `ukit` S ; passer sans compte — `ukit-a8` S
+- [x] groupes : année, semestre, recherche sans année — `ukit` S, `ukit-a8` S (après réinitialisation)
+- [x] fin du parcours, permission de notification — `ukit` S, `ukit-a8` C
+- [ ] liste des groupes vide hors ligne : non rejouée au lot 1 (vérifiée le 2026-11-08)
+
+**Planning**
+- [x] jour : frise, pause, repère de l'heure, jour vide — `ukit` S C fr en es, `ukit-a8` S C fr es
+- [x] semaine, dont la 53e de 2026 — `ukit` S
+- [x] « Aujourd'hui » après un saut de nuit, en arrière-plan (`ukit-a8`, `ukit`) et au premier plan (`ukit`)
+- [x] groupe éteint (« Rien depuis des semaines ») et jour férié — `ukit` S
+- [x] hors ligne avec cache — `ukit-a8` S
+- [x] lien d'abonnement collé, lien de travers — `ukit-a8` S
+- [x] emploi du temps personnel de l'INP — `ukit` S
+- [x] fiche d'un cours — `ukit` C ; le bouton de filtre de la fiche n'a pas été touché (caché par le bouton « Tools » du build de développement)
+- [x] recherche de groupes, planning d'un autre groupe — `ukit` S C
+
+**Scolarité** (WebView : `ukit` seul)
+- [x] connexion, parcours froid, dossier, widgets — Bordeaux et INP, S
+- [x] propositions : UE une par une, annulation, emploi du temps de l'INP — S
+- [x] actualiser le dossier, ressaisir, réseau bridé — S
+- [x] fiche du compte, révélation du mot de passe — S
+- [x] ENT dans le navigateur intégré, liste des documents, lecteur — C
+- [x] déconnexion — C
+- [ ] Scolarité en anglais et en espagnol : non jouée
+
+**Campus**
+- [x] tableau de bord, position refusée puis accordée — `ukit` S C, `ukit-a8` C es
+- [x] restaurants et menu du jour — `ukit` C, `ukit-a8` C
+- [x] bibliothèques et fiche — `ukit` C ; `ukit-a8` : tableau de bord seulement
+- [x] annonces et fiche — `ukit` C ; `ukit-a8` : tableau de bord seulement
+- [x] salles libres, fiche d'un bâtiment, hors ligne — `ukit` S
+
+**Réglages**
+- [x] établissement : bascule et retour (favoris, filtres, session retrouvés) — `ukit` S
+- [x] langue (fr, en, es) et apparence (clair, sombre), à chaud — `ukit`, `ukit-a8`
+- [x] filtres : liste, compteur, ajout et retrait par la proposition — `ukit` S ; [ ] ajout manuel d'un code : non joué
+- [x] agenda : permission, cible, lecture seule, UKit supprimé, échec dit — `ukit` S
+- [x] notifications — `ukit` C
+- [x] à propos, menu de développement — `ukit-a8` S
+- [x] réinitialisation — `ukit-a8` C es
+- [ ] calendriers du téléphone : la rangée seulement, l'écran de choix n'a pas été ouvert
+
+**Ce que le banc ne joue pas, à juger sur l'iPhone** : VoiceOver sur la WebView enveloppée, les
+icônes devenues décor et les boutons nommés ; la modale des propositions et son dialogue d'annulation
+(zones sûres, clavier) ; la synchronisation vers un calendrier iCloud ou Google en lecture seule,
+et la recréation du calendrier « UKit » (iOS exige une source) ; le toast du trousseau qui refuse
+l'écriture (Keychain) ; la WebView enveloppée de `pointerEvents="none"` sur WKWebView, qui doit
+toujours jouer les parcours (connexion, widgets) ; le passage de minuit l'application ouverte ; la
+bascule de langue à chaud sur le ruban des jours.
 
 ## Lot 2 : les petites fonctions retenues
 
