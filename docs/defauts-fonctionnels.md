@@ -19,6 +19,16 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Sur 360 points, un titre d'en-tête long passe sous les boutons~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc pendant le lot 2 (`ukit-a8`, fiche de la BU ST) : « BU ST Bordeaux-Talence » commençait
+dans le carré du bouton retour et finissait sous le bouton de droite. React Navigation borne le titre
+en supposant un bouton retour à libellé, et la vue du titre portait un plafond fixe de 300 points avec
+sa propre marge intérieure. Le titre est désormais borné à l'espace libre entre les deux boutons, et
+un titre trop long rétrécit jusqu'à 80 % avant de s'abréger
+([`NavBarHelper`](../src/shared/navigation/NavHelpers.tsx)). Vérifié sur `ukit-a8` : la fiche de la
+BU tient entre ses boutons, « L'équipe UKit » n'a pas bougé.
+
 ### ~~Après une déconnexion, la rangée « Compte » des Réglages reste « Connecté »~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc pendant le lot 2 (`ukit`) : déconnecté depuis la fiche du compte, on revient aux Réglages

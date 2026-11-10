@@ -79,6 +79,7 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Sur un petit écran, un titre d'en-tête long tient entre ses boutons**, au lieu de passer dessous.
 - **Après une déconnexion, les Réglages disent « Non connecté »** tout de suite, plus au changement
   d'onglet suivant.
 - **La Scolarité parle la typographie de sa langue** : « Good evening, Kylian! », « ¡Buenas noches,

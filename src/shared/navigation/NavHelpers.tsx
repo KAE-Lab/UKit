@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Animated, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Animated, Dimensions, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
@@ -89,19 +89,17 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
         )),
         headerTitle: () => (
             <View style={{
-                paddingHorizontal: tokens.space.lg, 
                 height: HEADER_BUTTON_SIZE, // On fige la hauteur pour correspondre aux boutons latéraux
                 justifyContent: 'center',
                 alignItems: 'center',
-                borderRadius: tokens.radius.md, 
-                maxWidth: 300 
             }}>
                 {/* `font` et non `primary` : le violet est la couleur d'action, et un titre en couleur
                     d'action se lit comme un bouton — a cote d'une fleche de retour qui, elle, en est
                     un. Le titre nomme, il ne se touche pas. Et `xl` demi-gras : le gras claquait seul
                     au milieu du vide, mais le 18 essaye ensuite disparaissait entre deux boutons de
                     40 — le 22 demi-gras est l'equilibre, juge sur appareil. On n'y touche plus. */}
-                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: theme.font, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.semibold }}>
+                {/* Un titre long (« BU ST Bordeaux-Talence ») retrecit un peu avant de s'abreger. */}
+                <Text numberOfLines={1} ellipsizeMode="tail" adjustsFontSizeToFit minimumFontScale={0.8} style={{ color: theme.font, fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.semibold }}>
                     {title}
                 </Text>
             </View>
@@ -125,7 +123,18 @@ export const NavBarHelper = ({ title, headerLeft, headerRight, themeName, route,
         // sur un pas. Deux points de moins sur un en-tete de 70 ne deplacent pas le titre a l'oeil,
         // et c'est ce qui a decide l'arbitrage (6.1-E) — la valeur unique vaut mieux que la valeur
         // exacte quand l'ecart n'est pas perceptible.
-        headerTitleContainerStyle: { paddingTop: tokens.space.sm },
+        /*
+         * Le titre tient **entre** les deux boutons. React Navigation le borne en supposant un bouton
+         * retour a libelle, et la vue du titre portait un plafond fixe de 300 points : sur les 360
+         * points de l'A8, un nom de lieu passait sous le bouton retour et sous celui de droite (audit
+         * du lot 1, fiche de la BU ST). L'espace libre est la fenetre moins, de chaque cote, la marge
+         * du bord, le bouton et un pas d'air. L'application est en portrait : la largeur ne bouge pas.
+         */
+        headerTitleContainerStyle: {
+            paddingTop: tokens.space.sm,
+            marginHorizontal: 0,
+            maxWidth: Dimensions.get('window').width - 2 * (tokens.space.md + HEADER_BUTTON_SIZE + tokens.space.sm),
+        },
         headerLeftContainerStyle: { paddingTop: tokens.space.sm },
         headerRightContainerStyle: { paddingTop: tokens.space.sm },
         headerTitleAlign: 'center',
