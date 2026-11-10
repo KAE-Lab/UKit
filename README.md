@@ -114,6 +114,7 @@ l'application — sans intermédiaire.
 | CAS / ENT Université de Bordeaux | identité étudiant, formation, messagerie | identifiants universitaires, extraction de pages |
 | CAS / mondossierweb Bordeaux INP | identité étudiant, formation | identifiants universitaires, extraction de pages |
 | ADE Bordeaux INP | emploi du temps | export iCalendar anonyme, aucune authentification |
+| PRONOTE Campus IUT de Bordeaux | l'adresse d'abonnement de l'emploi du temps | identifiants universitaires, lue dans l'espace étudiant |
 | Affluences | bibliothèques, affluence temps réel, horaires | API privée |
 | Croustillant | restaurants CROUS et menus | API publique |
 | OpenFreeMap | fonds de carte (style Positron, données OpenStreetMap) | tuiles vectorielles publiques, sans clé, attribution affichée |

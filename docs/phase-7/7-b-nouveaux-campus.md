@@ -147,6 +147,10 @@ sociologie, anthropologie, STAPS et santé y cohabitent, et aucune n'est dans le
 
 ### Lot 2 — IUT de Bordeaux
 
+> **Joué le 2026-11-10**, au lot 3 de la [prochaine version](../prochaine-version.md#lot-3--les-deux-campus),
+> qui remplace ces lots : mesuré, écrit, vérifié au banc ; publication préparée, pas faite. Le
+> verdict de la mesure publique tenait, et la réserve est levée — l'export existe ([fiche](../campus/bordeaux-iut.md)).
+
 La [marche à suivre](../adaptation-campus.md#la-marche-à-suivre), de la mesure à la publication, sur la
 fiche ouverte au lot 1. Ce qui est propre au campus : le portail est probablement celui de l'Université de
 Bordeaux, et la ligne de catalogue référence alors `ukit.portail.bordeaux.*` sans rien dupliquer ; la

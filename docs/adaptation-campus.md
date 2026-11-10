@@ -217,7 +217,7 @@ le binaire n'embarque un établissement que s'il embarque de quoi le jouer.
 | Campus | Statut |
 |---|---|
 | Talence, Enseirb-Matmeca | **déjà couverts** — étape 1 |
-| IUT de Bordeaux | composante de l'Université de Bordeaux, **même CAS confirmé** ; **un compte prêté annoncé le 2026-09-14** ; emploi du temps mesuré le 2026-09-16 : **PRONOTE**, sans surface publique ([fiche](campus/bordeaux-iut.md)) |
+| IUT de Bordeaux | **joué le 2026-11-10** sur le compte prêté : portail de l'université vérifié, emploi du temps PRONOTE **lu sur le compte** sans rien coller, vérifié au banc ; **publication préparée, non faite** ([fiche](campus/bordeaux-iut.md), [prochaine-version.md](prochaine-version.md#lot-3--les-deux-campus)) |
 | Victoire | composante de l'Université de Bordeaux, portail déjà écrit, **absence du Celcat confirmée** ; **un compte prêté annoncé le 2026-09-14** ; source d'emploi du temps **indéterminée sans compte** ([fiche](campus/bordeaux-victoire.md)) |
 | Carreire, AES, Droit, INSPE | composantes de l'Université de Bordeaux : portail déjà écrit, emploi du temps et géographie à mesurer, **vérification par un compte de cette composante à obtenir** |
 | Université Bordeaux Montaigne | **le seul établissement réellement nouveau** demandé : CAS distinct, ENT distinct, Blueprints à écrire de zéro — **tout confirmé le 2026-09-16** ; emploi du temps **HyperPlanning derrière le CAS** ; **un compte prêté annoncé le 2026-09-14** ([fiche](campus/bordeaux-montaigne.md)) |

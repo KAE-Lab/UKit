@@ -81,6 +81,16 @@ exact du moteur). **Non corrigé, et à trancher** : la patience du Blueprint de
 clic (4 s fixes puis 2 s) ; l'allonger demande une publication du Blueprint, et une mesure de plus
 d'un essai.
 
+*Mesuré de nouveau au lot 3, le 2026-11-10 au soir* : la **première** connexion a échoué ainsi sur les
+deux comptes bordelais joués — l'IUT puis le Collège ST —, l'intranet mettant 9,8 à 10,6 s à charger
+après le CAS, et la seconde a réussi chaque fois (7,7 et 7,8 s). L'INP, dont le service de retour est
+rapide, est passé du premier coup. La cause est la même étape (#6, `#loginErrorsPanel` détaché sous
+2 s) : la page de retour n'a pas encore d'agent. Deux pistes, à mesurer sur les deux CAS avant d'en
+publier une : une attente `attached` de `body` sous 20 s avant l'étape #6, qui ne change rien au
+refus d'un mot de passe ; ou une vérification **sans** `service`, qui s'arrête sur la page de succès
+du CAS au lieu de suivre l'intranet. Non corrigé ici : c'est la preuve d'identité, partagée par trois
+établissements, et chaque essai coûte une connexion réelle.
+
 ### Hors ligne, l'actualisation du dossier accuse le portail — constaté le 2026-11-10
 
 Vu au banc pendant le lot 2 (`ukit`, réseau coupé, espagnol) : « Actualiser » rend « Portail

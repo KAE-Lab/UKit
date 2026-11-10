@@ -13,7 +13,7 @@ Le code de la 6.3 tel qu'il est sur `main`, plus trois lots. Les grosses fonctio
 |---|---|---|
 | 1. Zéro défaut | les défauts signalés par le formulaire, le registre ouvert, puis un audit par parcours au banc | joué le 2026-11-10 : 18 entrées corrigées au registre, 9 restent ouvertes avec leur raison ; les quatre parcours restants joués au lot 2, le même jour (liste ci-dessous) |
 | 2. Petites fonctions | ce qui s'ajoute sans décision d'architecture | joué le 2026-11-10 : « il reste N TD » livré, Appliphase reporté (raison ci-dessous), 7 entrées corrigées au registre (11 défauts croisés en jouant l'audit), 1 consignée |
-| 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | à ouvrir |
+| 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | IUT joué le 2026-11-10 : vérifié au banc, publication préparée, non publiée ([fiche](campus/bordeaux-iut.md)) ; Montaigne à ouvrir |
 
 ## Ce que « zéro défaut » veut dire ici
 
@@ -147,3 +147,34 @@ Le protocole est celui d'[adaptation-campus.md](adaptation-campus.md), les fiche
   [6-J](phase-6/6-j-compte-et-sources-par-etablissement.md)) ;
 - **un verdict à rendre pour l'IUT** : ce qui aurait pu se faire sans le compte prêté, et ce qui
   ne le pouvait pas. Il décide de ce qu'on demande aux volontaires des autres campus.
+
+### L'IUT de Bordeaux, joué le 2026-11-10
+
+Mesures, vérification au banc et verdict « avec ou sans compte » : [la fiche](campus/bordeaux-iut.md).
+Le mécanisme du lien lu sur le compte : [planning.md](features/planning.md#le-lien-lu-sur-le-compte).
+
+**Pour Bordeaux Montaigne**, même produit : le mécanisme et la projection des intitulés PRONOTE servent
+tels quels. Il reste à écrire son portail de zéro (CAS distinct), et dans une copie du Blueprint
+`ukit.portail.bordeaux-iut.edt.lien`, le bloc de connexion et les `vars` (`flaubert2`) ; puis à nommer
+ce Blueprint dans `edt.abonnement.blueprint_lien` de sa ligne.
+
+**La publication, préparée et non faite.** Elle se fait après relecture, dans cet ordre :
+
+1. juger sur l'iPhone la touche Entrée de l'agent dans WKWebView (le seul geste propre au Blueprint) ;
+2. amener sur `main` le Blueprint et son entrée de `versions.json` — la fusion de cette branche, ou
+   le commit qui les ajoute : un manifeste se publie depuis `main`
+   ([blueprints.md](blueprints.md#ce-que-le-manifeste-annonce)) ;
+3. depuis `main`, `npm run blueprints:publish -- --dry-run`, qui doit annoncer
+   `ukit.portail.bordeaux-iut.edt.lien` 1 (hors socle), puis `npm run blueprints:publish` ;
+4. la ligne de catalogue **seule**, jamais le fichier entier, qui réécrirait les trois autres lignes
+   et ce que la console y a changé :
+   ```bash
+   awk '/^-- IUT de Bordeaux/{f=1} f; f && /alias *= excluded.alias;/{exit}' supabase/etablissements.sql > /tmp/bordeaux-iut.sql
+   psql -h aws-0-eu-west-2.pooler.supabase.com -p 5432 -U postgres.$REF -d postgres -v ON_ERROR_STOP=1 -f /tmp/bordeaux-iut.sql
+   ```
+5. vérifier la lecture : `select code, edt from etablissements where code = 'bordeaux-iut';` ;
+6. la sonde `pronote-bordeaux-iut` part avec `main`, rien à faire de plus.
+
+Les binaires installés liront la ligne sans lire le lien (`blueprint_lien` leur est inconnu) : ils
+proposeront de coller, avec l'aide du catalogue, et afficheront les intitulés PRONOTE empilés. La
+lecture du lien, les intitulés et les journées entières arrivent avec la release qui suit.

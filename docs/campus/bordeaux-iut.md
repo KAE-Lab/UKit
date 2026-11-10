@@ -63,12 +63,12 @@ même `mondossierweb` aux mêmes libellés, même annuaire (six UE déclarées, 
 ReNARD (trois certificats), même chronologie Moodle par le SSO de l'IdP. La ligne nomme donc
 `ukit.portail.bordeaux.*` et les portes de `bordeaux`.
 
-Deux réserves :
-- **Apogée était en maintenance** le 2026-11-10 : `notes` et `examens` n'ont pas pu être ouverts ;
-- **le webmail du compte prêté s'ouvre sur l'interface moderne de Zimbra** (`/modern/`), où le
-  Blueprint de la messagerie ne trouve pas son compteur ; `?client=advanced` rend l'interface classique
-  quand la session est ouverte, mais le paramètre se perd au rebond par le CAS. Préférence du compte ou
-  détection de l'écran : c'est l'appareil qui tranche.
+Une réserve, et une fausse alerte :
+- **Apogée était en maintenance** le 2026-11-10 : `notes` et `examens` n'ont pas pu être ouverts. Ils
+  sont verrouillés « Bientôt disponible » dans la grille, exactement comme au Collège ST ;
+- au poste, le webmail du compte prêté s'ouvrait sur l'interface moderne de Zimbra (`/modern/`), où le
+  Blueprint de la messagerie ne trouve pas son compteur. **Sur l'appareil, il passe** (1 135 non lus,
+  9 s) : c'était le navigateur sans fenêtre de la mesure, pas le compte. Rien à corriger.
 
 ## Ce qui a été écrit
 - [`ukit.portail.bordeaux-iut.edt.lien`](../../blueprints/portails/ukit-portail-bordeaux-iut-edt-lien.blueprint.json),
@@ -78,6 +78,9 @@ Deux réserves :
   ([planning.md](../features/planning.md#le-lien-lu-sur-le-compte)) ;
 - la projection des descriptions à champs nommés, qui clôt le défaut des intitulés d'un iCalendar collé
   ([defauts-fonctionnels.md](../defauts-fonctionnels.md)) ;
+- ce que le banc a fait corriger : les journées entières en bandeau, la fin de l'accueil qui montre
+  la journée d'un abonnement, le bouton « Lien » de la barre, la relecture du lien au lancement, son
+  oubli à la déconnexion ;
 - la ligne de catalogue (`supabase/etablissements.sql`), recopiée dans le socle, son Blueprint dans
   `BUNDLED`, et la sonde `pronote-bordeaux-iut` (page publique, sans compte).
 
@@ -85,6 +88,33 @@ Deux réserves :
 projection des champs nommés ; dans le Blueprint, tout ce qui suit la connexion. Restent à écrire son
 bloc de connexion (CAS distinct, `sso.u-bordeaux-montaigne.fr`) et ses `vars` (`flaubert2`), puis
 `edt.abonnement.blueprint_lien` sur sa ligne.
+
+## Vérifié au banc
+
+Le 2026-11-10, sur `ukit` (Android 15), compte prêté, sans rien publier (la ligne est au socle) :
+
+| Parcours | Résultat |
+|---|---|
+| Accueil, compte passé | l'étape « colle ton lien » n'existe pas ; le Planning invite à se connecter et mène au formulaire |
+| Connexion depuis le Planning | vérification, dossier, lien lu en 20 s par le moteur embarqué (`press` Entrée, pas de bandeau), calendrier en 3 s |
+| Accueil, connexion à l'étape du compte | l'étape du lien sautée ; la fin montre « Aujourd'hui, un cours. » |
+| Journée, semaine | la matière en titre, `TD` / `DS` en pastille, `Salle 203 BUT3B`, un enseignant par ligne ; fériés et vacances en bandeau, sur chaque jour |
+| Fiche d'un cours | « Il reste 11 séances de TD », « Il reste 4 séances de DS » : recomptés sur l'export, égaux |
+| Scolarité | prénom, Moodle, messagerie, le certificat de scolarité rangé seul, ENT |
+| Campus | annonces, restaurants (région 1), bibliothèques ; pas de salles libres, comme décidé |
+| Lien oublié puis relance | la session chaude du lancement relit le lien (10,7 s), le Planning se remplit seul |
+| Bascule IUT → Collège ST → IUT | compte et lien cloisonnés, retrouvés sans ressaisie, aucun run de portail |
+| Déconnexion | session CAS fermée ; compte et lien « Non connecté » ; le Planning réinvite à se connecter |
+| Hors ligne | cache daté avec son bandeau ; un jour non lu dit « Service indisponible » et Réessayer |
+| Thèmes | sombre et clair |
+
+Rejoués ensuite sans régression : le Collège ST par l'accueil (groupe `INF501A1`, propositions d'UE,
+Planning, fiche et séances restantes, semaine, Scolarité) et Bordeaux INP (connexion, emploi du temps
+personnel proposé, Planning ADE, fiche et carte), puis « Autre campus ».
+
+Ce que le banc ne joue pas, à juger sur l'iPhone : la touche Entrée envoyée par l'agent dans
+WKWebView (le seul geste propre à ce Blueprint) ; le bandeau « Information » de PRONOTE, jamais vu au
+banc ; la relecture du lien au lancement sur iOS, où l'arrière-plan coupe les sessions plus tôt.
 
 ## Ce qui se fait sans compte, et ce qui ne se fait pas
 
@@ -101,7 +131,6 @@ Le verdict demandé : élément par élément, ce qui aurait pu se faire à l'av
 | La façon de lire l'adresse | non | qu'un clic soit ignoré et la touche acceptée, que l'adresse soit une propriété et non un attribut, que l'espace mette 24 s à se construire : rien de cela ne se lit sans piloter la page |
 | La forme du calendrier | non | intitulés empilés, champs nommés, salles sans bâtiment, date de naissance dans l'en-tête : tout est dans un fichier personnel |
 | Les bâtiments et le motif de salle | non | c'est la forme du calendrier qui a montré qu'il n'y en a pas |
-| Le défaut du webmail moderne | non | il dépend du compte, ou de l'écran qui l'ouvre |
 
 **Ce qu'il faut donc demander aux volontaires des autres campus.** Quand l'emploi du temps est derrière
 l'authentification, le compte prêté est **indispensable** pour lire le lien tout seul : la mécanique de
@@ -110,10 +139,12 @@ volontaire fasse deux gestes qu'il peut faire seul et sans rien transmettre de s
 espace propose « Export au format iCal » (une capture de la boîte, l'adresse masquée), et recopier trois
 intitulés de cours et trois salles tels qu'ils s'affichent. C'est ce qui décide du motif de salle et de
 la projection des intitulés. Quand le campus partage le portail de l'université, le compte ne sert plus
-à écrire, il sert à **vérifier** — et cette vérification a trouvé ici la réserve du webmail.
+à écrire, il sert à **vérifier** : ici, que dossier, ReNARD, Moodle et messagerie d'un étudiant de l'IUT répondent comme
+ceux du Collège ST, ce qu'aucune mesure publique ne disait.
 
 ## Ce qui reste
 1. Publier, dans l'ordre : le Blueprint, puis la ligne ([prochaine-version.md](../prochaine-version.md#lot-3--les-deux-campus)).
+   Juger d'abord sur l'iPhone la touche Entrée dans WKWebView.
 2. Rouvrir `notes` et `examens` quand Apogée sortira de maintenance, sur le compte prêté.
 3. Demander le logo au service communication, et au prêteur s'il veut être crédité.
 4. Confronter les alias à quelques étudiants de l'IUT.
