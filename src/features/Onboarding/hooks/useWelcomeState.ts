@@ -19,6 +19,7 @@ import type { ThemeKey } from '../../../shared/theme/Theme';
 import type { TranslationKey } from '../../../shared/i18n/Translator';
 import { maintenant } from '../../../shared/services/Temps';
 import { semestreDe } from './semestres';
+import { groupesProposes } from './groupesProposes';
 import {
     attendrePremierRafraichissement,
     getCodeEtablissementActif,
@@ -38,27 +39,6 @@ import { basculerEtablissement } from '../../../shared/etablissements/bascule';
  */
 const PLAFOND_CATALOGUE_MS = 4000;
 import { PlanningDataManager as DataManager, type EtatListeGroupes } from '../../Planning/services/PlanningDataManager';
-
-/**
- * Les fragments d'identifiant de groupe par annee et par semestre.
- *
- * **C'est une convention de nommage de Celcat Bordeaux, et de rien d'autre.** Elle existe parce que ce
- * serveur publie plusieurs centaines de groupes et qu'il faut bien les reduire ; elle n'a aucun sens
- * ailleurs. Depuis le jalon 6-I, Bordeaux INP a lui aussi un emploi du temps, et ses treize groupes
- * s'appellent `ENSC 2A GR1` : aucune pastille ne les atteint, et l'etape restait vide sauf en
- * choisissant « AUTRE ». C'est pourquoi les pastilles ne s'affichent plus que pour la source qui les
- * justifie (`filtrageParAnnee`) — le probleme n'etait pas la table, c'etait de la croire generale.
- */
-const FILTRE_SAISON: Record<string, Record<string, string[]>> = {
-    autumn: {
-        L1: ['10', 'MIASHS1'], L2: ['30', 'MIASHS3'], L3: ['50', 'MIASHS5'],
-        M1: ['M1', '70'], M2: ['M2', '90'], AUTRE: [''],
-    },
-    spring: {
-        L1: ['20', 'MIASHS2'], L2: ['40', 'MIASHS4'], L3: ['60', 'MIASHS6'],
-        M1: ['M1', '80'], M2: ['M2', '000', '001', '002', '003', '004'], AUTRE: [''],
-    },
-};
 
 export interface OptionListee {
     readonly id: string;
@@ -100,41 +80,6 @@ export interface WelcomeState {
  */
 export function filtrageParAnnee(): boolean {
     return sourceEdt().kind === 'celcat';
-}
-
-/**
- * Les groupes a proposer, selon ce que l'etudiant a choisi et ce que la source permet.
- *
- * Deux regimes, et c'est la seule difference entre les sources a cette etape :
- *
- *   - **avec tri par annee** (Celcat) : rien tant qu'annee et semestre ne sont pas choisis. La liste
- *     complete serait illisible, et l'afficher inviterait a la parcourir ;
- *   - **sans** (referentiel iCalendar) : la liste entiere, reduite par le texte saisi. Treize entrees
- *     se lisent d'un coup d'oeil.
- *
- * Extrait pour etre appele **aussi** a l'arrivee de la liste : elle est chargee hors du chemin de
- * demarrage, donc elle peut arriver apres que l'etudiant a saisi son filtre, et la version d'origine
- * ne recalculait qu'au geste suivant — une liste qui reste vide sans raison visible.
- */
-function filtrer(
-    groupList: string[],
-    year: OptionListee | null,
-    season: OptionListee | null,
-    textFilter: string,
-): string[] {
-    const recherche = textFilter.toUpperCase();
-
-    if (!filtrageParAnnee()) {
-        return groupList.filter((groupe) => groupe.toUpperCase().includes(recherche));
-    }
-
-    const filtres = year && season ? FILTRE_SAISON[season.id][year.id] : null;
-    if (filtres === null) return [];
-
-    return groupList.filter((groupe) => {
-        const majuscules = groupe.toUpperCase();
-        return filtres.some((fragment) => majuscules.includes(fragment.toUpperCase()) && majuscules.includes(recherche));
-    });
 }
 
 export interface WelcomeActions {
@@ -213,7 +158,7 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
         const surListe = (groupList: string[]) => setState((prev) => ({
             ...prev,
             groupList,
-            groupListFiltered: filtrer(groupList, prev.year, prev.season, prev.textFilter),
+            groupListFiltered: groupesProposes(groupList, prev.year, prev.season, prev.textFilter, filtrageParAnnee()),
         }));
         const surEtatListe = (groupesEtat: EtatListeGroupes) => changer({ groupesEtat });
 
@@ -250,7 +195,7 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
     }, []);
 
     const filterList: WelcomeActions['filterList'] = (year, season, textFilter) => {
-        changer({ groupListFiltered: filtrer(state.groupList, year, season, textFilter), year, season, textFilter });
+        changer({ groupListFiltered: groupesProposes(state.groupList, year, season, textFilter, filtrageParAnnee()), year, season, textFilter });
     };
 
     return {

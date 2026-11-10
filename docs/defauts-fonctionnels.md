@@ -19,6 +19,19 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~À l'accueil, un groupe cherché par son nom reste introuvable tant que l'année n'est pas choisie~~ — constaté le 2026-11-10, corrigé le même jour
+
+Trouvé au banc pendant l'audit du lot 1, sur `ukit` : `INF501A1` tapé dans la recherche, sans année
+choisie, affichait « Aucun groupe ne correspond à cette recherche ». Le tri par année rendait une
+liste vide par construction tant que l'année manquait. Mesuré au même moment sur la liste réelle
+de Celcat (2 982 groupes), deux défauts de la table de fragments, qui compare des sous-chaînes :
+`31ST750U M1 Professionnalisation` paraissait en Licence 3 (`50` dans `750`), sept `M2 … S10` en
+Licence 1, et les quatorze `L3 IMSAT S5/S6` n'apparaissaient qu'en « Autre ». Corrigé : une
+recherche sans année porte sur toute la liste, et un nom qui écrit son niveau (`L1` à `M2`) et son
+semestre (`S5`, `S10`) est rangé par eux avant les fragments
+([`groupesProposes`](../src/features/Onboarding/hooks/groupesProposes.ts), testé sur des noms réels).
+Un groupe au niveau écrit sans semestre écrit paraît aux deux semestres, comme avant.
+
 ### ~~L'échec d'une synchronisation de l'agenda ne dit pas sa raison~~ — rapporté le 2026-09-17, corrigé le 2026-11-10
 
 Deux retours du formulaire, dont un Pixel 6a vers Google Agenda : « la synchronisation a échoué »,

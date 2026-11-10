@@ -76,6 +76,9 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **À l'accueil, un groupe se trouve par son nom avant de choisir l'année**, et les groupes qui
+  écrivent leur niveau (`M1`, `L3 … S5`) paraissent dans la bonne année : des groupes de master
+  paraissaient en licence, et certains groupes de licence n'apparaissaient qu'en « Autre ».
 - **L'échec d'une synchronisation de l'agenda dit sa raison** : la source qui ne répond pas, la
   permission retirée, le calendrier disparu ou en lecture seule. Un calendrier en lecture seule
   (jours fériés, anniversaires) n'est plus proposé, et le calendrier « UKit » supprimé du téléphone

@@ -152,20 +152,19 @@ Le semestre en cours est présélectionné ([`semestreDe`](../../src/features/On
 au départ comme après un changement d'établissement : sans lui, la liste restait vide après le choix
 de l'année, sans rien dire.
 
-Le filtrage combine trois critères : **année**, **semestre** et **texte saisi**. Année et semestre
-sont traduits en fragments d'identifiants par une table locale :
+Le filtrage combine trois critères : **année**, **semestre** et **texte saisi**
+([`groupesProposes`](../../src/features/Onboarding/hooks/groupesProposes.ts), testé sur des noms
+réels). Un nom qui **écrit son niveau** (`L1` à `M2`) est rangé par lui, et par la parité d'un
+semestre écrit (`S5` en automne, `S10` au printemps) ; sans semestre écrit, il paraît aux deux. Les
+autres passent par la table de fragments d'identifiants (`50` pour la Licence 3 d'automne, etc.),
+qui est une convention de sous-chaînes : mesuré le 2026-11-10 sur les 2 982 groupes de Celcat, elle
+mettait `31ST750U M1 Professionnalisation` en Licence 3 (`50` dans `750`) et des `M2 … S10` en
+Licence 1, et ne montrait `L3 IMSAT S5 - GR1` qu'en « Autre ». Le choix `AUTRE` ne filtre que sur le
+texte.
 
-```ts
-filterSeason = {
-  autumn: { L1: ['10', 'MIASHS1'], L2: ['30', 'MIASHS3'], L3: ['50', 'MIASHS5'],
-            M1: ['M1', '70'],      M2: ['M2', '90'],      AUTRE: [''] },
-  spring: { L1: ['20', 'MIASHS2'], L2: ['40', 'MIASHS4'], L3: ['60', 'MIASHS6'],
-            M1: ['M1', '80'],      M2: ['M2', '000', '001', '002', '003', '004'], AUTRE: [''] },
-}
-```
-
-Un groupe est retenu si son nom contient **l'un** des fragments de la combinaison choisie **et** le
-texte saisi. Le choix `AUTRE` porte le fragment vide, donc ne filtre que sur le texte.
+**Une recherche ne demande pas l'année.** Sans année choisie, la liste reste vide — sauf si un texte
+est saisi, qui cherche alors dans toute la liste : taper le nom exact de son groupe avant de choisir
+l'année affichait « Aucun groupe ne correspond à cette recherche ».
 
 L'affichage est plafonné à **10 résultats** ; au-delà, un message indique combien sont masqués et
 invite à préciser la recherche.
@@ -236,7 +235,8 @@ l'application**, ou réinstaller l'application.
 | Fichier | Rôle |
 |---|---|
 | [`WelcomeScreen.tsx`](../../src/features/Onboarding/WelcomeScreen.tsx) | l'enchaînement des étapes, leur nombre selon l'établissement, la bascule de `firstload` |
-| [`hooks/useWelcomeState.ts`](../../src/features/Onboarding/hooks/useWelcomeState.ts) | l'état, les abonnements — résiliés au démontage depuis 6.1-C ; dont la révision du catalogue, l'attente plafonnée du premier rafraîchissement et l'état de la liste des groupes —, les valeurs par défaut système, le filtrage des groupes et les six gestes |
+| [`hooks/useWelcomeState.ts`](../../src/features/Onboarding/hooks/useWelcomeState.ts) | l'état, les abonnements — résiliés au démontage depuis 6.1-C ; dont la révision du catalogue, l'attente plafonnée du premier rafraîchissement et l'état de la liste des groupes —, les valeurs par défaut système et les six gestes |
+| [`hooks/groupesProposes.ts`](../../src/features/Onboarding/hooks/groupesProposes.ts) · [`groupesProposes.test.ts`](../../src/features/Onboarding/hooks/groupesProposes.test.ts) | les groupes proposés selon l'année, le semestre et le texte : le niveau écrit d'abord, les fragments ensuite, la recherche sans année — pur |
 | [`components/WelcomeSteps.tsx`](../../src/features/Onboarding/components/WelcomeSteps.tsx) | l'en-tête du parcours (retour et progression), le compte, le lien iCal et la fin. Rend deux composants venus d'autres domaines — `ScolariteLoginView` et `LienEdtForm` — plutôt que d'en recopier une seconde version ([architecture.md](../architecture.md#dépendances-entre-features)) |
 | [`components/StepGroupes.tsx`](../../src/features/Onboarding/components/StepGroupes.tsx) | l'étape des groupes et son pied : l'attente et l'échec de la liste — « Réessayer » relit la source —, puis le tri et la recherche (6.1-C) |
 | [`components/stylesDuParcours.ts`](../../src/features/Onboarding/components/stylesDuParcours.ts) | le vocabulaire visuel du parcours — carte, pastille, dégagement du pied — sur les tokens et le thème courant |
