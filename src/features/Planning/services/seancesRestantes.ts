@@ -31,6 +31,14 @@
  * meme enseignant —, et l'enseignement, le code de module et le type. Un lien d'une autre forme n'a
  * pas de code de module : rien ne s'affiche.
  *
+ * **Sauf l'abonnement PRONOTE** (lot 3, IUT de Bordeaux). Sa description nomme la matiere et le type
+ * (IcsMapping.ts, « champs nommes ») : le cours en porte un, sans code de module. Et ce lien est
+ * l'emploi du temps **personnel** de l'etudiant — PRONOTE n'exporte que celui de la personne connectee
+ * —, donc il ne porte aucun creneau d'un autre sous-groupe : chaque seance de la meme matiere et du meme
+ * type est la sienne. L'enseignement y est la matiere et le type, et la serie se confond avec lui. Un
+ * lien colle d'une autre forme n'a ni code de module ni type (`typeDuCours` rend `''`) : il se tait
+ * toujours.
+ *
  * ## Le semestre
  *
  * Le decoupage de l'accueil (`semestreDe`, Onboarding/hooks/semestres.ts) : l'automne d'aout a janvier,
@@ -89,7 +97,10 @@ export function enseignementDe(cours: CoursCompte, source: SourceDuCompte): stri
     }
     const lignes = lignesDe(cours.description);
     const rang = rangDuCodeDeModule(lignes);
-    return rang < 0 ? null : `${lignes[rang].split(',')[0].trim()}|${type}`;
+    if (rang >= 0) return `${lignes[rang].split(',')[0].trim()}|${type}`;
+    // Un type sans code de module : seule la projection PRONOTE en produit un (voir l'en-tete).
+    const matiere = (cours.subject ?? '').trim();
+    return source === 'abonnement' && matiere !== '' ? `${matiere}|${type}` : null;
 }
 
 /** La serie d'un cours : l'evenement Celcat de son identifiant, ou la description qui suit le code de module. */
@@ -100,7 +111,9 @@ export function serieDe(cours: CoursCompte, source: SourceDuCompte): string | nu
     }
     const lignes = lignesDe(cours.description);
     const rang = rangDuCodeDeModule(lignes);
-    return rang < 0 ? null : lignes.slice(rang).join('\n');
+    if (rang >= 0) return lignes.slice(rang).join('\n');
+    // L'abonnement PRONOTE est personnel : toutes ses seances d'un enseignement sont une seule serie.
+    return source === 'abonnement' ? enseignementDe(cours, source) : null;
 }
 
 function instantDe(cours: { readonly date: { readonly start: string } }): number {

@@ -583,9 +583,21 @@ devient le seul cas ordinaire — une salle isolée en échec ne se voit plus qu
 absente du cache, dans sa fenêtre de dix minutes. Le défaut et son correctif ne changent pas
 ([campus-salles-libres.md](features/campus-salles-libres.md#limites-connues)).
 
-### Les intitulés de cours d'un iCalendar collé sont parfois bizarres — constaté le 2026-09-16
+### ~~Les intitulés de cours d'un iCalendar collé sont parfois bizarres~~ — constaté le 2026-09-16, corrigé le 2026-11-10
 
-*Lot 1, 2026-11-10 — reste ouvert, faute d'exemples.* La source qui l'a montré est PRONOTE, chez
+*Corrigé au lot 3, sur des exemples réels* : l'export d'abonnement PRONOTE de l'IUT de Bordeaux, lu
+sur le compte prêté le 2026-11-10 (même produit que Bordeaux Montaigne). Le `SUMMARY` y empile
+« Matière - Type - Enseignants - Mémo », mais la description **nomme** chaque champ (`Matière : …`,
+`Type : TD_2h`, `Salle : …`, `Enseignants : …`, `Mémo : …`). La projection les lit par leur nom quand
+toutes les lignes en ont un ([`IcsMapping.ts`](../src/features/Planning/services/IcsMapping.ts)) : la
+matière en titre, le type sans sa durée en pastille, la salle nommée, un enseignant par ligne ; la fiche
+reconnaît « M. NOM » et le champ nommé ([`CourseAnnotations.ts`](../src/features/Planning/components/CourseAnnotations.ts)).
+C'est la première des deux réponses envisagées ci-dessous — une ancre tolérante, reconnue par sa forme —
+et non une donnée de catalogue : elle sert aussi le campus « autre », qui n'a pas de ligne à lui. La
+projection d'ADE ne change pas, les tests le verrouillent. Le motif de salle reste sans objet pour
+l'IUT : ses salles n'ont pas de code de bâtiment (`salles: null`).
+
+*Lot 1, 2026-11-10 — restait ouvert, faute d'exemples.* La source qui l'a montré est PRONOTE, chez
 Bordeaux Montaigne, dont le compte prêté appartient au lot 3 : le lien s'y lira, et ses `SUMMARY`,
 `DESCRIPTION` et `LOCATION` réels avec lui. Les corriger avant serait régler la projection sur un
 émetteur imaginé.

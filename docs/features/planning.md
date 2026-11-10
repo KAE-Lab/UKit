@@ -471,6 +471,17 @@ sujet distinct — ils ne sont pas en accès libre, et le référentiel les publ
   affiche **déjà** en titre et en pastille. Les deux dernières ont été trouvées sur appareil — la
   fiche portait un `TD` en pastille et un `TD` en ligne.
 
+**PRONOTE écrit autrement**, et c'est le défaut des « intitulés bizarres » constaté chez Bordeaux
+Montaigne, réglé sur l'export de l'IUT (mesure du 2026-11-10). Son `SUMMARY` empile tout —
+`R5.03 Animation de réunion - TD_2h - M. DUPONT, Mme MARTIN - Mémo` — mais sa description nomme chaque
+champ : `Matière : …`, `Type : TD_2h`, `Salle : 203  BUT3B`, `Enseignants : …`, `Mémo : …`. Quand
+**toutes** les lignes ont une clé et que la matière est là, la projection lit les champs par leur nom :
+la matière en titre, le type sans sa durée en pastille (`TD_2h` → `TD`), puis la salle — précédée du
+mot de la source si sa valeur ne nomme pas déjà un lieu (`Salle 203 BUT3B`, mais `Amphi 2`) —, un
+enseignant par ligne, et les autres champs avec leur clé. Une seule ligne sans clé suffit à rester sur
+la projection d'ADE, qui ne change pas. Les salles de l'IUT n'ont pas de code de bâtiment : pas de
+carte, et c'est voulu (`salles: null`).
+
 ### L'icône d'une ligne se déduit de son contenu, pas de son rang
 
 C'était une règle positionnelle — première ligne un groupe, deuxième un enseignant, troisième une
@@ -485,6 +496,10 @@ donnée d'établissement introduite par ce jalon : une ligne qui désigne un bâ
 ligne de salle. L'ordre des tests compte, et un test le verrouille : le code de module passe **avant**
 la salle, parce que le motif bordelais `([A-Z][0-9]+)` trouve `B1` dans `JPB1-OPTIQ` — et `B1` est un
 vrai bâtiment.
+
+Deux formes s'y sont ajoutées avec PRONOTE : l'enseignant nommé par sa civilité (`M. DUPONT`,
+`Mme MARTIN`), et le champ nommé que la projection n'interprète pas (`Mémo : …`), qui prend l'icône
+d'information — testé avant la salle, pour qu'un mémo qui parle d'une salle n'en devienne pas une.
 
 Les dates, elles, sont **en UTC honnête** : le même créneau hebdomadaire est servi `07:30Z` en
 septembre et `08:30Z` en novembre, soit 09:30 à Paris les deux fois. Il n'y a pas de `VTIMEZONE` à
@@ -611,6 +626,12 @@ code de module — groupes et enseignant, salle exclue — et l'enseignement, le
 Un lien sans code de module ne dit rien. Un lien collé ne compte que s'il porte un événement au-delà
 de la fin du semestre : `nbWeeks` d'ADE peut le borner à quatre semaines, et rien ne dirait alors que
 le semestre est entier.
+
+L'abonnement PRONOTE fait exception, et c'est une propriété de la source : il n'exporte que l'emploi du
+temps **de la personne connectée**, donc aucun créneau d'un autre sous-groupe n'y figure. L'enseignement
+y est la matière et le type que la projection a lus (voir plus haut), et la série se confond avec lui :
+une séance déplacée compte, puisqu'elle est la sienne. Un référentiel ADE sans code de module, lui,
+continue de se taire.
 
 Le semestre est celui de l'accueil (`semestreDe` : l'automne d'août à janvier, le printemps de février
 à juillet). Un enseignement qui continue au-delà fait taire la ligne plutôt que d'arrêter le compte
@@ -857,8 +878,8 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`services/PlanningApiService.ts`](../../src/features/Planning/services/PlanningApiService.ts) | les quatre signatures publiques : choisit la source déclarée, joue le Blueprint, calcule les plages qui dépendent de l'heure courante |
 | [`services/PlanningApiMapping.ts`](../../src/features/Planning/services/PlanningApiMapping.ts) | la projection **Celcat** : sujet, description, filtre `Vacances`, refiltrage sur la date |
 | [`services/PlanningApiMapping.test.ts`](../../src/features/Planning/services/PlanningApiMapping.test.ts) | ses tests, joués par `npm test` |
-| [`services/IcsMapping.ts`](../../src/features/Planning/services/IcsMapping.ts) | la projection **iCalendar** : type ancré sur le code de module, salle en tête, couleur dérivée |
-| [`services/IcsMapping.test.ts`](../../src/features/Planning/services/IcsMapping.test.ts) | ses tests, sur des corps mesurés contre ADE |
+| [`services/IcsMapping.ts`](../../src/features/Planning/services/IcsMapping.ts) | la projection **iCalendar** : type ancré sur le code de module, ou lu dans une description à champs nommés (PRONOTE) ; salle en tête, couleur dérivée |
+| [`services/IcsMapping.test.ts`](../../src/features/Planning/services/IcsMapping.test.ts) | ses tests, sur des corps mesurés contre ADE et à la forme de PRONOTE |
 | [`services/TelephoneMapping.ts`](../../src/features/Planning/services/TelephoneMapping.ts) | la projection des **calendriers du téléphone** : la journée locale, minuit, la journée entière selon la plateforme, les exclusions — pure, sans `expo-calendar` |
 | [`services/TelephoneMapping.test.ts`](../../src/features/Planning/services/TelephoneMapping.test.ts) | ses tests, sur les formes que le type d'expo-calendar annonce et que ses sources natives produisent |
 | [`services/FusionTelephone.ts`](../../src/features/Planning/services/FusionTelephone.ts) | la fusion du téléphone avec les cours, jour et semaine, et la mise à part des journées entières — pure |

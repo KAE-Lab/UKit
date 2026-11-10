@@ -45,6 +45,20 @@ const CODE_MODULE = /^[A-Z]{3}\d-[A-Z0-9]{5}$/;
  */
 const ENSEIGNANT = /^[A-ZÀ-Ý][A-ZÀ-Ý'\- ]+\s+[A-ZÀ-Ý][a-zà-ÿ]/;
 
+/**
+ * Un enseignant nomme par sa civilite : `M. DUPONT`, `Mme MARTIN`. C'est la forme de PRONOTE, mesuree
+ * le 2026-11-10 sur l'export de l'IUT de Bordeaux — un patronyme sans prenom, que le motif precedent
+ * ne reconnait pas.
+ */
+const ENSEIGNANT_CIVILITE = /^(M\.|Mme|Mlle|Dr)\s+[A-ZÀ-Ý]/;
+
+/**
+ * Un champ que la source nomme et que la projection n'interprete pas (`Mémo : DS R5.real.09`,
+ * IcsMapping.ts) : une information, pas un groupe. Une cle courte, puis ` : ` — les semaines, qui ont
+ * la meme forme, sont reconnues avant.
+ */
+const CHAMP_NOMME = /^[^:]{2,24}\s:\s/;
+
 /** Les mots qui trahissent une salle quand le referentiel ne la connait pas. */
 function nommeUnLieu(ligne: string): boolean {
     const bas = ligne.toLowerCase();
@@ -65,7 +79,8 @@ function nommeUnLieu(ligne: string): boolean {
  *   1. une enumeration de semaines, qui ne ressemble a rien d'autre ;
  *   2. le **code de module**, avant la salle — le motif de salle d'un etablissement peut le
  *      reconnaitre par accident. Celui de Bordeaux, `([A-Z][0-9]+)`, trouve `B1` dans `JPB1-OPTIQ`,
- *      et `B1` est un vrai batiment bordelais : la ligne aurait porte l'icone d'un lieu ;
+ *      et `B1` est un vrai batiment bordelais : la ligne aurait porte l'icone d'un lieu. Le champ
+ *      nomme d'une description PRONOTE suit, pour la meme raison (`Mémo : rendu en salle 101`) ;
  *   3. la salle, verifiee contre le referentiel lui-meme — c'est la seule forme qu'on sache confirmer
  *      contre une donnee plutot que contre une expression ;
  *   4. l'enseignant ;
@@ -78,8 +93,9 @@ export function iconeDAnnotation(ligne: string): IconeAnnotation {
 
     if (SEMAINES.test(texte)) return 'date-range';
     if (CODE_MODULE.test(texte)) return 'info-outline';
+    if (CHAMP_NOMME.test(texte)) return 'info-outline';
     if (getLocations(texte).length > 0 || nommeUnLieu(texte)) return 'room';
-    if (ENSEIGNANT.test(texte)) return 'person';
+    if (ENSEIGNANT.test(texte) || ENSEIGNANT_CIVILITE.test(texte)) return 'person';
     return 'group';
 }
 

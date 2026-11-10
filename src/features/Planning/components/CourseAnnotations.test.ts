@@ -76,6 +76,48 @@ describe('iconeDAnnotation, description iCalendar', () => {
     });
 });
 
+describe('iconeDAnnotation, description PRONOTE', () => {
+    // Les lignes telles que la projection les ecrit pour l'export de l'IUT de Bordeaux (IcsMapping.ts),
+    // chez un etablissement SANS referentiel de lieux : la salle doit se reconnaitre a ses mots. Noms
+    // fabriques, formes mesurees le 2026-11-10.
+    beforeAll(() => {
+        appliquerCatalogue({
+            iut: projeterEtablissement({
+                code: 'iut',
+                nom: 'IUT',
+                salles: { reconnaissance: false },
+            } as unknown as EtablissementRow),
+        });
+        setCodeEtablissementActif('iut');
+    });
+    afterAll(() => {
+        appliquerCatalogue(null);
+        setCodeEtablissementActif(ETABLISSEMENT_DEFAUT);
+    });
+
+    it('reconnait la salle, ecrite avec le mot de la source ou deja nommee', () => {
+        expect(iconeDAnnotation('Salle 203 BUT3B')).toBe('room');
+        expect(iconeDAnnotation('Salles 107, 201 BUT3A')).toBe('room');
+        expect(iconeDAnnotation('Amphi 2')).toBe('room');
+    });
+
+    it('reconnait l enseignant nomme par sa civilite', () => {
+        expect(iconeDAnnotation('M. DUPONT')).toBe('person');
+        expect(iconeDAnnotation('Mme MARTIN')).toBe('person');
+        expect(iconeDAnnotation('Mme DE LA FONTAINE')).toBe('person');
+    });
+
+    it('tient un champ nomme pour une information, meme s il parle d une salle', () => {
+        expect(iconeDAnnotation('Mémo : DS R5.real.09')).toBe('info-outline');
+        expect(iconeDAnnotation('Mémo : rendu en salle 101')).toBe('info-outline');
+    });
+
+    it('ne prend pas un groupe commencant par M pour un enseignant', () => {
+        expect(iconeDAnnotation('M1 INFO')).toBe('group');
+        expect(iconeDAnnotation('MIASHS L2')).toBe('group');
+    });
+});
+
 describe('lignesDuCreneau', () => {
     // La description Celcat telle que servie (2026-11-05) : groupes, enseignant, salle, semaines, et
     // l'enseignant repete en fin de liste.

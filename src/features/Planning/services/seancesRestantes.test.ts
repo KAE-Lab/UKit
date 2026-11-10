@@ -149,6 +149,54 @@ describe('seancesRestantes, sur un export iCalendar', () => {
     });
 });
 
+/**
+ * Un cours PRONOTE projete (IcsMapping.ts, « champs nommes ») : la matiere en sujet, le type sans sa
+ * duree, la salle puis les enseignants, aucun code de module. Matieres et noms fabriques.
+ */
+function pronote(uid: string, debut: string, options: Partial<{ matiere: string; type: string; description: string }> = {}): CoursCompte {
+    const fin = new Date(Date.parse(debut) + 120 * 60 * 1000).toISOString();
+    return {
+        id: uid,
+        subject: options.matiere ?? 'R5.03 Animation de réunion',
+        category: options.type ?? 'TD',
+        description: options.description ?? 'Salle 203 BUT3B\nM. DUPONT',
+        date: { start: new Date(debut).toISOString(), end: fin },
+    };
+}
+
+describe('seancesRestantes, sur un abonnement PRONOTE', () => {
+    // L'annee entiere, comme l'export la sert : sans evenement au-dela de la borne, un lien colle se tait.
+    const printemps = pronote('uid-printemps', '2027-02-10T10:00:00', { matiere: 'R6.01 Autre' });
+    const vendredis = ['2026-11-06', '2026-11-13', '2026-11-20', '2026-11-27', '2026-12-04']
+        .map((jour, rang) => pronote(`uid-${rang}`, `${jour}T14:00:00`, rang === 3 ? { description: 'Salle 107\nMme MARTIN' } : {}));
+    const annee = [...vendredis, printemps];
+
+    it('compte les seances de la meme matiere et du meme type, quels que soient salle et enseignant', () => {
+        // Le 13 novembre : restent le 20, le 27 et le 4 decembre.
+        expect(seancesRestantes(demande(vendredis[1], annee, { source: 'abonnement' }))).toBe(3);
+    });
+
+    it('compte aussi une seance deplacee : le calendrier est celui de l etudiant', () => {
+        const deplacee = pronote('uid-deplacee', '2026-11-25T08:00:00');
+        expect(seancesRestantes(demande(vendredis[1], [...annee, deplacee], { source: 'abonnement' }))).toBe(4);
+    });
+
+    it('ne compte ni un autre type ni une autre matiere', () => {
+        const ds = pronote('uid-ds', '2026-11-26T10:00:00', { type: 'DS' });
+        const autre = pronote('uid-autre', '2026-11-26T16:00:00', { matiere: 'R5.04 Qualité' });
+        expect(seancesRestantes(demande(vendredis[1], [...annee, ds, autre], { source: 'abonnement' }))).toBe(3);
+    });
+
+    it('se tait quand la matiere continue au semestre suivant', () => {
+        const fevrier = pronote('uid-fevrier', '2027-02-05T14:00:00');
+        expect(seancesRestantes(demande(vendredis[1], [...annee, fevrier], { source: 'abonnement' }))).toBeNull();
+    });
+
+    it('reste muet pour un referentiel iCalendar sans code de module : ses groupes ne sont pas personnels', () => {
+        expect(seancesRestantes(demande(vendredis[1], annee, { source: 'ical' }))).toBeNull();
+    });
+});
+
 describe('finDuSemestre', () => {
     it('suit le decoupage de l accueil, mois par mois', () => {
         for (let mois = 0; mois < 12; mois += 1) {

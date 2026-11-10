@@ -182,6 +182,88 @@ describe('lireCalendrier', () => {
     });
 });
 
+/**
+ * Un cours PRONOTE Campus, a la forme de l'export d'abonnement de l'IUT de Bordeaux, mesuree le
+ * 2026-11-10. Les noms et l'intitule sont **fabriques** : seule la forme est recopiee — un `SUMMARY`
+ * qui empile matiere, type, enseignants et memo ; une description dont chaque ligne porte sa cle ; une
+ * salle sans code de batiment, a double espace ; deux enseignants separes par une virgule echappee.
+ */
+const COURS_PRONOTE = [
+    'BEGIN:VEVENT',
+    'CATEGORIES;LANGUAGE=fr:HYPERPLANNING',
+    'DTSTART:20261016T120000Z',
+    'DTEND:20261016T140000Z',
+    'SUMMARY;LANGUAGE=fr:R5.03 Animation de réunion - TD_2h - M. DUPONT\\, Mme MARTIN - Rendu du livrable',
+    'LOCATION;LANGUAGE=fr:203  BUT3B',
+    'DESCRIPTION;LANGUAGE=fr:Matière : R5.03 Animation de réunion\\nType : TD_2h\\nEnseignants : M. DUPONT\\, Mme MARTIN\\nSalle : 203  BUT3B\\nMémo : Rendu du livrable\\n',
+    'UID:Cours-111111-0-FR-Index-Education.fr',
+    'END:VEVENT',
+].join('\r\n');
+
+/** Plusieurs salles, dont un amphithéâtre : la ligne nomme deja un lieu, elle reste telle quelle. */
+const COURS_PRONOTE_SALLES = [
+    'BEGIN:VEVENT',
+    'DTSTART:20260903T140000Z',
+    'DTEND:20260903T160000Z',
+    'SUMMARY;LANGUAGE=fr:S5.A.01 Projet - Cours_2h - M. DUPONT',
+    'LOCATION;LANGUAGE=fr:201  BUT3A\\, Amphi 2',
+    'DESCRIPTION;LANGUAGE=fr:Matière : S5.A.01 Projet\\nType : Cours_2h\\nEnseignant : M. DUPONT\\nSalles : 201  BUT3A\\, Amphi 2\\n',
+    'UID:Cours-222222-0-FR-Index-Education.fr',
+    'END:VEVENT',
+].join('\r\n');
+
+/** Une journee de vacances : ni description ni salle. Le `SUMMARY` reste le titre. */
+const VACANCES_PRONOTE = [
+    'BEGIN:VEVENT',
+    'DTSTART;VALUE=DATE:20261024',
+    'DTEND;VALUE=DATE:20261102',
+    'SUMMARY;LANGUAGE=fr:Vacances',
+    'UID:Vacances-1-FR-Index-Education.fr',
+    'END:VEVENT',
+].join('\r\n');
+
+describe('description a champs nommes (PRONOTE)', () => {
+    it('prend la matiere pour titre, et non le SUMMARY qui empile tout', () => {
+        const [cours] = lireCalendrier(calendrier(COURS_PRONOTE), 'lien');
+        expect(cours.subject).toBe('R5.03 Animation de réunion');
+    });
+
+    it('prend le type sans sa duree, en pastille et sur le creneau', () => {
+        const [cours] = lireCalendrier(calendrier(COURS_PRONOTE), 'lien');
+        expect(cours.category).toBe('TD');
+        expect(cours.schedule.endsWith(' TD')).toBe(true);
+    });
+
+    it('rend la salle en tete, nommee, puis un enseignant par ligne, puis le memo garde avec sa cle', () => {
+        const [cours] = lireCalendrier(calendrier(COURS_PRONOTE), 'lien');
+        expect(cours.description.split('\n')).toEqual([
+            'Salle 203 BUT3B',
+            'M. DUPONT',
+            'Mme MARTIN',
+            'Mémo : Rendu du livrable',
+        ]);
+    });
+
+    it('laisse telle quelle une liste de salles qui nomme deja un lieu', () => {
+        const [cours] = lireCalendrier(calendrier(COURS_PRONOTE_SALLES), 'lien');
+        expect(cours.description.split('\n')[0]).toBe('201 BUT3A, Amphi 2');
+        expect(cours.category).toBe('Cours');
+    });
+
+    it('garde le SUMMARY d un evenement sans description', () => {
+        const [vacances] = lireCalendrier(calendrier(VACANCES_PRONOTE), 'lien');
+        expect(vacances.subject).toBe('Vacances');
+        expect(vacances.description).toBe('');
+    });
+
+    it('ne change rien a une description ADE', () => {
+        // La garde de la forme : une seule ligne sans cle suffit a rester sur la projection d'ADE.
+        const [cours] = lireCalendrier(calendrier(COURS), '2A GR1');
+        expect(cours.subject).toBe('Traitement du signal');
+        expect(cours.category).toBe('TD');
+    });
+});
+
 describe('typeDuCours', () => {
     it('ancre le type sur le code de module, quelle que soit la longueur du commentaire', () => {
         expect(typeDuCours('\n\nCOG7-SCFTS\nTD\n2A GR1\nTraitement du signal\n')).toBe('TD');
