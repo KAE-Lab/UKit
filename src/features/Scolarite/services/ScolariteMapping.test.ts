@@ -3,8 +3,8 @@
  *
  * Trois defauts sont verrouilles ici, et aucun ne se voit a la relecture :
  *
- *   - la source **crie** l'identite (`KYLIAN MALARTRE`, mesure le 2026-08-09) ; l'afficher telle
- *     quelle donnerait « Bonjour KYLIAN ! » sur le tableau de bord ;
+ *   - la source **crie** l'identite (`CAMILLE MARTIN`, mesure le 2026-08-09) ; l'afficher telle
+ *     quelle donnerait « Bonjour CAMILLE ! » sur le tableau de bord ;
  *   - le compteur de messages passe d'une chaine a un entier, et un libelle sans parenthese doit
  *     rester `0` — le confondre avec « on ne sait pas » afficherait « aucun message non lu » sur une
  *     lecture qui a echoue, ce qui est exactement l'erreur avalee que la Phase 6 supprime ;
@@ -27,7 +27,7 @@ import {
 
 describe('prenomDepuisIdentite', () => {
     it('prend le premier mot et refait la casse que la source a perdue', () => {
-        expect(prenomDepuisIdentite('KYLIAN MALARTRE')).toBe('Kylian');
+        expect(prenomDepuisIdentite('CAMILLE MARTIN')).toBe('Camille');
     });
 
     it('capitalise segment par segment un prenom compose', () => {
@@ -41,7 +41,7 @@ describe('prenomDepuisIdentite', () => {
     });
 
     it('accepte une identite deja correctement casee', () => {
-        expect(prenomDepuisIdentite('Kylian Malartre')).toBe('Kylian');
+        expect(prenomDepuisIdentite('Camille Martin')).toBe('Camille');
     });
 
     it('rend une chaine vide plutot que d inventer', () => {
@@ -58,18 +58,18 @@ describe('projeterDossier', () => {
     it('projette les sorties du Blueprint sur les cles du trousseau', () => {
         expect(
             projeterDossier({
-                numero_etudiant: '22301734',
-                ine: '090640171CE',
-                identite: 'KYLIAN MALARTRE',
-                email: 'kylian.malartre@etu.u-bordeaux.fr',
-                naissance: '07/11/2005',
+                numero_etudiant: '21000001',
+                ine: '012345678AB',
+                identite: 'CAMILLE MARTIN',
+                email: 'camille.martin@etu.u-bordeaux.fr',
+                naissance: '01/02/2003',
             }, LU_LE),
         ).toEqual({
-            firstName: 'Kylian',
-            studentNumber: '22301734',
-            ine: '090640171CE',
-            emailAddress: 'kylian.malartre@etu.u-bordeaux.fr',
-            dateOfBirth: '07/11/2005',
+            firstName: 'Camille',
+            studentNumber: '21000001',
+            ine: '012345678AB',
+            emailAddress: 'camille.martin@etu.u-bordeaux.fr',
+            dateOfBirth: '01/02/2003',
             formation: '',
             formationAnnee: '',
             formationDetail: '',
@@ -78,7 +78,7 @@ describe('projeterDossier', () => {
     });
 
     it('laisse la date de naissance telle quelle : GreetingBlock la decoupe sur des barres obliques', () => {
-        expect(projeterDossier({ naissance: '07/11/2005' }, LU_LE).dateOfBirth).toBe('07/11/2005');
+        expect(projeterDossier({ naissance: '01/02/2003' }, LU_LE).dateOfBirth).toBe('01/02/2003');
     });
 
     it('ne remplit rien qu il n a pas recu', () => {
@@ -102,7 +102,7 @@ describe('projeterDossier', () => {
      */
     it('accepte une sortie en liste comme une sortie en chaine', () => {
         expect(projeterDossier({ ine: ['080014278FC'] }, LU_LE).ine).toBe('080014278FC');
-        expect(projeterDossier({ ine: '090640171CE' }, LU_LE).ine).toBe('090640171CE');
+        expect(projeterDossier({ ine: '012345678AB' }, LU_LE).ine).toBe('012345678AB');
     });
 
     it('rend une chaine vide sur une liste vide, jamais undefined', () => {

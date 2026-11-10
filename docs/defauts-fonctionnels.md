@@ -19,6 +19,16 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Une identité réelle dans un test du dépôt public~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu en ajoutant un cas à [`ScolariteMapping.test.ts`](../src/features/Scolarite/services/ScolariteMapping.test.ts)
+(passe de corrections avant Bordeaux Montaigne) : les cas de `projeterDossier` et de
+`prenomDepuisIdentite` portaient le nom, le numéro d'étudiant, l'INE, l'adresse et la date de
+naissance d'un compte réel. Remplacés par une identité synthétique, de même forme. **Reste à faire
+par le propriétaire du produit** : les valeurs sont dans l'historique git de la branche et de `main` ;
+les en retirer demande une réécriture de l'historique et une poussée forcée, qu'aucune session ne
+fait seule.
+
 ### ~~À l'accueil, sur un petit écran, les groupes trouvés restent sous le clavier~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc pendant le lot 2 (`ukit-a8`, 360 × 740 points) : à l'étape des groupes, le cadre clavier
