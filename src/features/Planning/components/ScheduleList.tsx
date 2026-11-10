@@ -171,7 +171,10 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         if (this.props.mode === 'day') {
             return `${groupPrefix}@${moment(this.state.target).format('YYYY/MM/DD')}`;
         }
-        return `${groupPrefix}@Week${(this.state.target as { week: number }).week}`;
+        // L'annee ISO dans la cle : sans elle, la semaine 1 de 2027 resservait hors ligne le cache de
+        // la semaine 1 de 2026 comme s'il etait d'hier (audit du lot 1, 2026-11-10).
+        const { week, year } = this.state.target as { week: number; year: number };
+        return `${groupPrefix}@Week${year}-${week}`;
     }
 
     fetchSchedule = (origine: Origine = 'utilisateur') => {
@@ -463,9 +466,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
     renderWeekMode(listHeader: React.ReactNode) {
         const { theme, navigation } = this.props;
-        const targetObject = this.state.target as { week: number; year: number };
-        const targetYear = targetObject.year || moment().year();
-        const targetWeek = targetObject.week;
+        const lundi = joursDeLaSemaine(this.state.target as { week: number; year: number })[0];
         const weekSchedule = this.state.schedule as PlanningWeekDay[];
 
         return (
@@ -479,7 +480,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                 {listHeader}
                 <AgendaDeLaSemaine
                     jours={weekSchedule}
-                    repli={(rang) => moment().year(targetYear).isoWeek(targetWeek).isoWeekday(rang + 1)}
+                    repli={(rang) => lundi.clone().add(rang, 'days')}
                     theme={theme}
                     navigation={navigation as { navigate: (route: string, params?: object) => void } | undefined}
                 />

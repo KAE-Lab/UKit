@@ -1,9 +1,9 @@
 import React from 'react';
 import * as Haptics from 'expo-haptics';
-import moment from 'moment';
 
 import Translator from '../../../shared/i18n/Translator';
 import { CaseDuRuban } from '../../../shared/ui/CaseDuRuban';
+import { lundiDeSemaineIso } from '../services/PlanningAssembly';
 
 export interface CalendarWeekProps {
     currentWeek: { week: number; year: number };
@@ -49,7 +49,7 @@ class CalendarWeek extends React.Component<CalendarWeekProps> {
                 haut={this.props.week.week}
                 // Le lundi de la semaine, et non « S.45 » sous « 45 » : la case disait deux fois son
                 // numero, elle dit maintenant ou il tombe (7-J).
-                bas={moment().year(this.props.week.year).isoWeek(this.props.week.week).isoWeekday(1).format('D MMM')}
+                bas={lundiDeSemaineIso(this.props.week).format('D MMM')}
                 accessibilityLabel={`${Translator.get('WEEK_SHORT')}${this.props.week.week}`}
                 choisie={CalendarWeek.isSelected(this.props)}
                 courante={this.props.week.week === this.props.currentWeek.week && this.props.week.year === this.props.currentWeek.year}

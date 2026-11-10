@@ -60,7 +60,7 @@ DayView (état : jour/semaine sélectionnés, mode)
             │      └─ Blueprint ukit.portail.<code>.edt                  (moteur embarqué)
             │             └─ IcsMapping           projection iCalendar (ical.js)
             │      └─ PlanningAssembly            tri, découpage en six jours — commun aux deux
-            ├─ AsyncStorage  <groupes>@date | <groupes>@Week<n>   (écriture si succès, lecture si échec)
+            ├─ AsyncStorage  <groupes>@date | <groupes>@Week<année ISO>-<n>   (écriture si succès, lecture si échec)
             ├─ SourceFailureNotice                                (si ni réponse ni cache)
             ├─ PlanningDataManager.extractUEsFromCourses          (alimente les filtres, modules compris)
             ├─ CourseManager.preparerPourAffichage → filtresUe     (UE posées, filtre des favoris — jour et semaine)
@@ -173,7 +173,7 @@ discriminant ([qualite.md](../qualite.md)). La famille de l'échec décide de l'
 | Clé | Contenu | Expiration |
 |---|---|---|
 | `<groupes>@YYYY/MM/DD` | `{ data, date }` — planning d'un jour | aucune, repli hors ligne |
-| `<groupes>@Week<n>` | `{ data, date }` — planning d'une semaine | aucune, repli hors ligne |
+| `<groupes>@Week<année ISO>-<n>` | `{ data, date }` — planning d'une semaine | aucune, repli hors ligne |
 | `groups` | `{ list, date }` — liste pour l'écran de recherche | aucune |
 | `groupList` + `groupListTimestamp` | liste pour `PlanningDataManager` | 7 jours |
 
@@ -550,6 +550,16 @@ demande une capacité que le moteur n'a pas encore, et le sujet a sa propre spé
 L'hôte et les codes d'inventaire des six Blueprints `ukit.celcat.*` viennent eux aussi du catalogue
 depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par défaut. Aucun
 `if (etablissement === …)` n'apparaît dans un service — ce qui varie est une donnée.
+
+## Une semaine se nomme par son année ISO
+
+Une semaine du Planning est `{ week, year }`, et l'année est **l'année ISO**
+([`semaineIsoDe`, `lundiDeSemaineIso`](../../src/features/Planning/services/PlanningAssembly.ts),
+testés). Jusqu'au 2026-11-10 c'était l'année civile : la semaine du lundi 28 décembre 2026 — la 53e
+de 2026 — s'étiquetait `{ 53, 2027 }` quand son jour représentatif tombait en janvier, et
+`moment().year(2027).isoWeek(53)` débordait sur janvier 2028 ; la semaine 1 de 2027, elle,
+partageait sa clé de cache avec la semaine 1 de 2026. Le lundi d'une semaine se calcule depuis le
+4 janvier de son année ISO, jamais depuis l'heure courante.
 
 ## Une journée vide n'est pas toujours une journée libre
 

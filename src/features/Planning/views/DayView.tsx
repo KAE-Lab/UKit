@@ -15,20 +15,17 @@ import { compter } from '../../../shared/mesure';
 import { DayViewHeader } from '../components/DayViewHeader';
 import { FonduDeBord } from '../../../shared/ui/FonduDeBord';
 import { calendrierOuEcrire, ouvrirEditeurDeCreation } from '../services/TelephoneSource';
+import { lundiDeSemaineIso, semaineIsoDe, type SemaineIso } from '../services/PlanningAssembly';
 
 function capitalize(str: string) {
 	return `${str.charAt(0).toUpperCase()}${str.substr(1)}`;
 }
 
-const isEqualsObject = (obj1: Record<string, unknown>, obj2: Record<string, unknown>) =>
-	Object.entries(obj1).toString() === Object.entries(obj2).toString();
-
-const findIndexOfObject = (objectList: Record<string, unknown>[], object: Record<string, unknown>) => {
-	for (let i = 0; i < objectList.length; i++) {
-		if (isEqualsObject(objectList[i], object)) return i;
-	}
-	return -1;
-};
+// Par le numero et l'annee ISO, et non par l'ordre des cles d'un objet : la comparaison d'avant
+// passait par `Object.entries(...).toString()`, qui dependait de l'ordre dans lequel chaque appelant
+// construisait son objet.
+const findIndexOfObject = (objectList: readonly SemaineIso[], object: SemaineIso) =>
+	objectList.findIndex((semaine) => semaine.week === object.week && semaine.year === object.year);
 
 export interface DayViewProps {
     navigation?: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
@@ -83,7 +80,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		const currentDay = moment();
 		const days = DayView.generateDays();
 
-		const currentWeek = { week: currentDay.isoWeek(), year: currentDay.year() };
+		const currentWeek = semaineIsoDe(currentDay);
 		const weeks = DayView.generateWeeks();
 
 		const selectedDay = DayView.lastSelectedDay || currentDay;
@@ -158,7 +155,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		const { week, year } = this.state.selectedWeek;
 		const courante = this.state.currentWeek;
 		// `moment()`, jamais `new Date()` : le simulateur de date ne deplace que `moment.now`.
-		return week === courante.week && year === courante.year ? moment() : moment().year(year).isoWeek(week).isoWeekday(1);
+		return week === courante.week && year === courante.year ? moment() : lundiDeSemaineIso({ week, year });
 	}
 
 	/**
@@ -181,7 +178,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 	reinitializeDates = () => {
 		const currentDay = moment();
 		const days = DayView.generateDays();
-		const currentWeek = { week: currentDay.isoWeek(), year: currentDay.year() };
+		const currentWeek = semaineIsoDe(currentDay);
 		const weeks = DayView.generateWeeks();
 
 		const selectedDayIndex = days.findIndex((e) => e.isSame(currentDay, 'day'));
@@ -264,8 +261,9 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		let firstWeek = null;
 		for (let i = 0; i < 365; i += 7) {
 			const date = moment(start).add(i, 'd');
-			const week = date.isoWeek();
-			const year = date.year();
+			// L'annee ISO, pas l'annee civile : la semaine du 28 decembre 2026 est la 53e de 2026, meme
+			// le samedi 2 janvier qui la represente ici (PlanningAssembly.semaineIsoDe).
+			const { week, year } = semaineIsoDe(date);
 			if (week !== firstWeek) {
 				if (firstWeek === null) firstWeek = week;
 				weeks.push({ week, year });

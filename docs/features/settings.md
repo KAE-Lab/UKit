@@ -266,7 +266,7 @@ de filtres actifs : ce qui est masqué du planning se retrouve sans avoir à s'e
 Interrupteur activé
   └─ NotificationManager.requestPermissionsAsync()
   └─ SettingsManager.setCourseNotificationsEnabled(true)
-  └─ relecture du cache de la semaine courante  (<favoris>@Week<n>)
+  └─ relecture du cache de la semaine courante  (<favoris>@Week<année ISO>-<n>)
        └─ NotificationManager.scheduleCourseNotifications(data)
 ```
 

@@ -56,7 +56,7 @@ import { onRetourAuPremierPlan } from './premierPlan';
 import { maintenantMs } from './Temps';
 import { INTERVALLE_ENTRETIEN_MS, estDu, type OrigineSynchro, origineDuRun } from './calendrier/tentative';
 import { PlanningApiService } from '../../features/Planning/services/PlanningApiService';
-import type { PlanningEvent } from '../../features/Planning/services/PlanningAssembly';
+import { semaineIsoDe, type PlanningEvent } from '../../features/Planning/services/PlanningAssembly';
 
 /** Le nom de la tache aupres du systeme. Il change avec le module : l'ancienne (`background-fetch`) est morte avec lui. */
 export const TACHE_ENTRETIEN = 'ukit-entretien';
@@ -178,7 +178,9 @@ async function replanifierLesRappels(origine: OrigineEntretien): Promise<BilanEn
 export async function replanifierDepuisLeCache(): Promise<void> {
     const favoris = SettingsManager.getFavoriteGroups();
     if (favoris.length === 0) return;
-    const brut = await AsyncStorage.getItem(`${favoris.join('+')}@Week${moment().isoWeek()}`);
+    // La cle de `ScheduleList.cacheId`, annee ISO comprise.
+    const { week, year } = semaineIsoDe(moment());
+    const brut = await AsyncStorage.getItem(`${favoris.join('+')}@Week${year}-${week}`);
     if (brut === null) return;
     try {
         const cache: unknown = JSON.parse(brut);

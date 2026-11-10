@@ -11,7 +11,7 @@
 
 import moment from 'moment';
 
-import { assemblerJour, type PlanningEvent, type PlanningWeekDay } from './PlanningAssembly';
+import { assemblerJour, lundiDeSemaineIso, type PlanningEvent, type PlanningWeekDay } from './PlanningAssembly';
 import { CLE_JOUR, SOURCE_TELEPHONE } from './TelephoneMapping';
 
 /** Les evenements du telephone, par jour `YYYY-MM-DD`. */
@@ -31,8 +31,8 @@ export function estDuTelephone(evenement: { source?: string }): boolean {
  * de semaine, et toutes n'en portent pas un.
  */
 export function joursDeLaSemaine(cible: { week: number; year?: number }): moment.Moment[] {
-    const annee = cible.year || moment().year();
-    return Array.from({ length: 6 }, (_, index) => moment().year(annee).isoWeek(cible.week).isoWeekday(index + 1).startOf('day'));
+    const lundi = lundiDeSemaineIso({ week: cible.week, year: cible.year || moment().isoWeekYear() });
+    return Array.from({ length: 6 }, (_, index) => lundi.clone().add(index, 'days'));
 }
 
 /** Une journee : les cours, puis le telephone, tries ensemble par le tri d'affichage. */

@@ -45,7 +45,7 @@ import {
     plageSemaine,
     type IcsRun,
 } from './PlanningIcalSource';
-import type { CibleGroupe, PlanningEvent, PlanningWeekDay } from './PlanningAssembly';
+import { lundiDeSemaineIso, type CibleGroupe, type PlanningEvent, type PlanningWeekDay } from './PlanningAssembly';
 
 export type { CibleGroupe, CoursExtrait, PlanningEvent, PlanningWeekDay } from './PlanningApiMapping';
 
@@ -208,9 +208,10 @@ class PlanningApiServiceClass {
         const edt = source();
         if ('failure' in edt) return { ok: false, failure: edt.failure };
 
-        // `startOf('week')` suit la locale : lundi en francais. Le calcul reste ici parce qu'il a
-        // besoin de l'heure courante, qu'un Blueprint n'a pas et ne doit pas avoir.
-        const lundi = moment().year(week.year).isoWeek(week.week).startOf('week');
+        // Le lundi de la semaine ISO, annee ISO comprise (PlanningAssembly.lundiDeSemaineIso) : il
+        // partait de l'heure courante et de `startOf('week')`, qui suit la locale, et debordait d'une
+        // annee sur une semaine 53.
+        const lundi = lundiDeSemaineIso(week);
 
         if (edt.kind === 'abonnement') {
             const run = await jouerAbonnement(edt.lien, options);

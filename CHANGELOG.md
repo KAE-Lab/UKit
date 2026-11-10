@@ -76,6 +76,9 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **La semaine du 28 décembre 2026 au 3 janvier 2027 s'affiche** : la 53e semaine de 2026 était
+  prise pour une semaine de 2027, et le Planning en demandait une de janvier 2028. Une semaine d'une
+  année ne ressert plus non plus, hors ligne, le cache de la même semaine de l'année précédente.
 - **À l'accueil, un groupe se trouve par son nom avant de choisir l'année**, et les groupes qui
   écrivent leur niveau (`M1`, `L3 … S5`) paraissent dans la bonne année : des groupes de master
   paraissaient en licence, et certains groupes de licence n'apparaissaient qu'en « Autre ».

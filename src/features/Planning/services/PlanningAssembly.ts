@@ -176,6 +176,34 @@ export function indexerUes(sujets: readonly string[], connues: readonly UeRencon
         .sort((gauche, droite) => (gauche.code < droite.code ? -1 : gauche.code > droite.code ? 1 : 0));
 }
 
+/** Une semaine ISO : son numero, et l'annee **ISO** a laquelle il appartient. */
+export interface SemaineIso {
+    readonly week: number;
+    readonly year: number;
+}
+
+/**
+ * La semaine ISO d'une date, annee ISO comprise.
+ *
+ * `year()` et non `isoWeekYear()` etiquetait mal les jours de frontiere : le vendredi 1er janvier
+ * 2027 est dans la semaine 53 de **2026**, et `{ 53, 2027 }` designait une semaine qui n'existe pas —
+ * que `isoWeek(53)` faisait deborder sur janvier 2028 (audit du lot 1, 2026-11-10).
+ */
+export function semaineIsoDe(date: moment.MomentInput): SemaineIso {
+    const jour = moment(date);
+    return { week: jour.isoWeek(), year: jour.isoWeekYear() };
+}
+
+/**
+ * Le lundi d'une semaine ISO, a minuit local.
+ *
+ * Depuis le 4 janvier, toujours dans la semaine 1 de son annee ISO, et non depuis l'heure courante :
+ * `moment().year(a).isoWeek(s)` partait de la semaine du jour et pouvait deborder d'une annee.
+ */
+export function lundiDeSemaineIso(semaine: SemaineIso): moment.Moment {
+    return moment([semaine.year, 0, 4]).isoWeek(semaine.week).isoWeekday(1).startOf('day');
+}
+
 /** Ce qu'il faut d'un cours pour en indexer les UE : son sujet, et les modules que la source declare. */
 export interface CoursIndexable {
     subject?: string;

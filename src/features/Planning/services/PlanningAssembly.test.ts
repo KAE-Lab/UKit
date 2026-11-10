@@ -11,8 +11,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import moment from 'moment';
 
-import { indexerUes, separerCodeUE, sujetsDesCours, trierCours } from './PlanningAssembly';
+import { indexerUes, lundiDeSemaineIso, semaineIsoDe, separerCodeUE, sujetsDesCours, trierCours } from './PlanningAssembly';
 
 describe('separerCodeUE, codes Celcat', () => {
     it('separe un code d UE de son intitule, comme avant', () => {
@@ -124,5 +125,27 @@ describe('sujetsDesCours', () => {
     it('ignore un cours sans sujet ni modules, et une entree qui n est pas une liste', () => {
         expect(sujetsDesCours([{}])).toEqual([]);
         expect(sujetsDesCours(null as never)).toEqual([]);
+    });
+});
+
+describe('les semaines ISO, aux frontieres d annee', () => {
+    it('etiquette un jour de semaine 53 de son annee ISO, pas de son annee civile', () => {
+        // Le vendredi 1er janvier 2027 est dans la semaine 53 de 2026.
+        expect(semaineIsoDe('2027-01-01')).toEqual({ week: 53, year: 2026 });
+        // Le lundi 30 decembre 2024 est dans la semaine 1 de 2025.
+        expect(semaineIsoDe('2024-12-30')).toEqual({ week: 1, year: 2025 });
+        expect(semaineIsoDe('2026-11-10')).toEqual({ week: 46, year: 2026 });
+    });
+
+    it('rend le lundi de la semaine, sans deborder d une annee', () => {
+        expect(lundiDeSemaineIso({ week: 53, year: 2026 }).format('YYYY-MM-DD')).toBe('2026-12-28');
+        expect(lundiDeSemaineIso({ week: 1, year: 2025 }).format('YYYY-MM-DD')).toBe('2024-12-30');
+        expect(lundiDeSemaineIso({ week: 46, year: 2026 }).format('YYYY-MM-DD HH:mm')).toBe('2026-11-09 00:00');
+    });
+
+    it('fait l aller-retour pour chaque semaine d une annee scolaire', () => {
+        for (let jour = moment('2026-08-01'); jour.isBefore('2027-08-01'); jour.add(1, 'day')) {
+            expect(lundiDeSemaineIso(semaineIsoDe(jour)).isSame(jour.clone().startOf('isoWeek'), 'day')).toBe(true);
+        }
     });
 });

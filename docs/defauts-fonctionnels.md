@@ -19,6 +19,19 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~La semaine du 28 décembre 2026 s'affiche à la place d'une semaine de 2028~~ — constaté le 2026-11-10, corrigé le même jour
+
+Trouvé par la relecture du code de l'audit du lot 1. Une semaine du Planning se nommait par son
+numéro ISO et son année **civile** : les jours de frontière se trompaient d'année. Le vendredi
+1er janvier 2027 est dans la semaine 53 de 2026 ; la liste des semaines l'étiquetait `{ 53, 2027 }`,
+et `moment().year(2027).isoWeek(53)` débordait sur janvier 2028 — la vue semaine, la date de repli
+des colonnes et l'en-tête du ruban demandaient une semaine inexistante. Et la clé de cache d'une
+semaine ne portait pas l'année : hors ligne, la semaine 1 de 2027 aurait resservi celle de 2026
+comme d'hier, rappels de l'entretien compris. Corrigé : l'année ISO partout, le lundi calculé depuis
+le 4 janvier de son année ([`semaineIsoDe`, `lundiDeSemaineIso`](../src/features/Planning/services/PlanningAssembly.ts),
+testés sur chaque semaine d'une année scolaire), l'année dans la clé (`@Week2026-53`). Vérifié sur
+`ukit`, horloge au 1er janvier 2027 : « Semaine 53 », colonne du 28 décembre, clé `@Week2026-53`.
+
 ### ~~À l'accueil, un groupe cherché par son nom reste introuvable tant que l'année n'est pas choisie~~ — constaté le 2026-11-10, corrigé le même jour
 
 Trouvé au banc pendant l'audit du lot 1, sur `ukit` : `INF501A1` tapé dans la recherche, sans année
