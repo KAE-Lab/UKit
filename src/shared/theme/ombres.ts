@@ -19,10 +19,16 @@
  *
  * Le flou se donne au sens d'iOS (`shadowRadius`, un ecart-type) et se convertit en `blurRadius` CSS,
  * qui en vaut deux : les specifications ecrites avant 7-J gardent leur sens. Pur : `Theme.ts` appelle
- * `resoudreOmbre`, ce fichier-ci se teste hors appareil.
+ * `resoudreOmbre`, ce fichier-ci se teste hors appareil, et la console le lit sans `react-native`.
  */
 
-import type { BoxShadowValue } from 'react-native';
+/** Une couche, dans la forme du `boxShadow` de React Native : le type est local, le module reste pur. */
+export interface CoucheDOmbre {
+    readonly offsetX: number;
+    readonly offsetY: number;
+    readonly blurRadius: number;
+    readonly color: string;
+}
 
 export interface SpecOmbre {
     /** Le decalage vertical, en points. */
@@ -34,13 +40,13 @@ export interface SpecOmbre {
 }
 
 export interface Ombre {
-    readonly boxShadow: readonly BoxShadowValue[];
+    readonly boxShadow: readonly CoucheDOmbre[];
 }
 
 /** `blur-radius` CSS pour un `shadowRadius` iOS : deux ecarts-types. */
 export const FLOU_CSS = 2;
 
-function couche(spec: SpecOmbre): BoxShadowValue {
+function couche(spec: SpecOmbre): CoucheDOmbre {
     return {
         offsetX: 0,
         offsetY: spec.y,
