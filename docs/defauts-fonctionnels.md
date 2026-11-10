@@ -354,10 +354,11 @@ sur l'A8 avant la correction.
 *Lot 1, 2026-11-10 — reste ouvert, faute d'appareil lent.* Sur `ukit`, le même compte se connecte
 en 15,9 s (vérification) puis 31,1 s (dossier) : l'émulateur tourne sur seize cœurs et ne reproduit
 pas la lenteur de l'A8. Allonger les attentes du Blueprint sans mesure serait deviner ; le Blueprint
-est embarqué et publié, donc un délai changé ici demanderait aussi une publication. Ce qui a changé :
-un échec sans nom après une navigation de plus de dix secondes se dit désormais « le portail met du
-temps à répondre » (`PORTAIL_LENT`, voir l'entrée du portail lent). Reste à mesurer sur l'A8 réel,
-au protocole de sortie : la durée de chaque étape du dossier (`[chrono]`), et si 30 s → 45 s suffit.
+est embarqué et publié, donc un délai changé ici demanderait aussi une publication. La
+requalification `PORTAIL_LENT` du lot 1 ne touche **pas** ces deux échecs : elle ne vise qu'un
+`engine` sans code, et ceux de l'A8 étaient `blocked [CAS_INDISPONIBLE]` (« Le portail de
+l'université ne répond pas », réessayable) et `unavailable`. Reste à mesurer sur l'A8 réel, au
+protocole de sortie : la durée de chaque étape du dossier (`[chrono]`), et si 30 s → 45 s suffit.
 
 Sur le Galaxy A8 (Android 9) derrière un partage de connexion 5G, la connexion à Bordeaux INP échoue
 trois fois de suite, de deux façons : `blocked [CAS_INDISPONIBLE]`, le champ `#username` ou le
