@@ -73,6 +73,9 @@ une application qui donne l'heure des choses d'un regard.
   « ENSEIRB »), dès qu'elle compte six établissements ; le cas des trois campus qui arrivent.
 - **« Soutenir UKit »** dans les Réglages, quand le catalogue publie l'adresse du don : elle s'ouvre
   dans le navigateur du système.
+- **« Il reste 3 séances de TD ce semestre »** sur la fiche d'un cours, ou « Dernière séance » : le
+  compte se fait sur l'année déjà lue, sans requête de plus, et se tait quand un autre sous-groupe ou
+  un rattrapage rendrait le chiffre incertain.
 
 ### Corrigé
 

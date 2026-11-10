@@ -1,4 +1,6 @@
 export interface CourseData {
+	/** L'identifiant de la source ; la fiche y retrouve la seance dans l'annee lue (seancesRestantes.ts). */
+	id?: string;
 	subject: string;
 	date: { start: string; end: string };
 	schedule: string;

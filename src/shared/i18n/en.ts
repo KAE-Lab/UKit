@@ -153,6 +153,14 @@ const en = {
 	OPEN_IN_CALENDAR: 'Open in calendar',
 	OPEN_IN_CALENDAR_FAILED: 'Couldn’t open the event in the calendar',
 	GETTING_THERE_FAILED: 'Couldn’t open the map',
+	// La fiche d'un cours : les seances restantes du meme enseignement (seancesRestantes.ts). Les
+	// variantes `_ELISION` servent le francais devant une voyelle ; ici, le meme texte.
+	SESSIONS_LEFT: '$- more $- sessions this semester',
+	SESSIONS_LEFT_ELISION: '$- more $- sessions this semester',
+	SESSIONS_LEFT_ONE: '1 more $- session this semester',
+	SESSIONS_LEFT_ONE_ELISION: '1 more $- session this semester',
+	SESSIONS_LAST: 'Last $- session this semester',
+	SESSIONS_LAST_ELISION: 'Last $- session this semester',
 	ADD_EVENT: 'Add an event',
 	OTHER: 'Other',
 	RESET: 'Reset',

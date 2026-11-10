@@ -1,11 +1,12 @@
 /**
  * L'annee scolaire des favoris, lue une fois et partagee.
  *
- * Deux lecteurs la demandent sans rapport l'un avec l'autre : la proposition d'UE du dossier, qui
- * compare les inscriptions a tout ce que le groupe porte, et le Planning, qui regarde autour d'une
- * journee vide si le groupe n'est pas eteint (`groupeInactif`). C'est le meme run que la
- * synchronisation de l'agenda ; le jouer deux fois de suite aurait deux fois sollicite la source pour
- * la meme reponse.
+ * Trois lecteurs la demandent sans rapport l'un avec l'autre : la proposition d'UE du dossier, qui
+ * compare les inscriptions a tout ce que le groupe porte, le Planning, qui regarde autour d'une
+ * journee vide si le groupe n'est pas eteint (`groupeInactif`), et la fiche d'un cours, qui compte
+ * les seances restantes (`seancesRestantes`). Les jouer chacun a part aurait sollicite la source
+ * plusieurs fois pour la meme reponse. C'est la requete de la synchronisation de l'agenda, qui la joue
+ * de son cote, sans ce partage : elle veut une reponse fraiche.
  *
  * Gardee six heures par etablissement et jeu de favoris, en memoire seulement : un echec n'est pas
  * garde, la demande suivante rejoue. L'horloge est la vraie, comme tout horodatage de cache.

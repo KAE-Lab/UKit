@@ -355,6 +355,11 @@ se voit à l'écran, appartient au lot Planning de [7-J](../phase-7/7-j-ecrans.m
   **confettis** : une journée libre est une bonne nouvelle, et c'est l'icône qui sourit. Depuis 7-J,
   le samedi et le dimanche disent « C'est le week-end » et « Aucun cours avant lundi » — le seul
   rebondissement de l'écran — et un jour libre qui est aujourd'hui dit « aujourd'hui ».
+- **Les séances restantes** : la fiche d'un TD à venir d'une série unique dit « Il reste N séances
+  de TD ce semestre », N égal au nombre de semaines où il revient d'ici décembre ; la dernière dit
+  « Dernière séance » ; un TD terminé, un cours d'un autre groupe que les favoris et un événement du
+  téléphone n'en disent rien. La ligne paraît après la lecture de l'année, sans requête de plus à la
+  deuxième fiche (`[chrono]` du journal).
 - **La frise** : aujourd'hui, le repère de l'heure entre les bons cours et le temps avant le suivant ;
   pendant un cours, son rail rempli et le temps qui reste, à ses propres heures même en carrousel ;
   une pause de quinze minutes ou plus cotée, une plus courte non. La simulation temporelle du menu de
@@ -578,6 +583,44 @@ filtre d'UE existe, le groupe n'a pas changé pour autant. Le dimanche, un éche
 source sans groupe (un lien collé) laissent « Journée libre », qui reste vrai pour ce jour-là. La vue
 semaine n'a pas cet état : elle montre six colonnes vides, ce qui se lit déjà.
 
+## Les séances restantes, sur la fiche d'un cours
+
+Sous le code d'UE, la fiche dit combien de séances du même enseignement restent après celle-ci dans
+le semestre (« Il reste 3 séances de TD ce semestre »), ou que c'est la dernière
+([`seancesRestantes.ts`](../../src/features/Planning/services/seancesRestantes.ts),
+[`useSeancesRestantes.ts`](../../src/features/Planning/hooks/useSeancesRestantes.ts)). Le compte se
+fait sur l'année des favoris de [`anneeDesFavoris.ts`](../../src/features/Planning/services/anneeDesFavoris.ts) :
+un run `automatique` au plus toutes les six heures, partagé avec la journée vide et les propositions,
+jamais un par fiche. Un chiffre faux étant pire qu'une absence, la ligne se tait dès que le compte
+n'est pas sûr.
+
+**Ce qu'est « le même enseignement », mesuré le 2026-11-10** sur l'année de `INF501A1` (356
+événements). Les codes d'UE et le type ne suffisent pas : le planning d'un groupe porte aussi les
+créneaux de ses sous-groupes, notés en texte libre (`4TIN511U` en `Cours/TD` : deux séries le jeudi,
+deux le vendredi). L'identifiant Celcat, `<préfixe>:<événement>:<occurrence>`, nomme la **série**
+(95 séries pour 316 événements), et c'est elle qu'on compte, par instants distincts : l'anglais sert
+trois séries parallèles au même instant, une par enseignant. Si une autre séance du même
+enseignement (mêmes codes, même type) tombe d'ici la fin du semestre à un instant que la série
+n'occupe pas — un rattrapage pour tous, ou le créneau d'un autre sous-groupe, rien ne les distingue —
+la ligne se tait. Sur cette année-là, les TD à série unique comptent de bout en bout ; un CM suivi de
+séances ponctuelles se tait jusqu'à la dernière d'entre elles ; deux sous-groupes en alternance ne
+disent que la toute dernière séance.
+
+Sur un export iCalendar (ADE, ou un lien collé de la même forme), la série est le texte qui suit le
+code de module — groupes et enseignant, salle exclue — et l'enseignement, le code de module et le type.
+Un lien sans code de module ne dit rien. Un lien collé ne compte que s'il porte un événement au-delà
+de la fin du semestre : `nbWeeks` d'ADE peut le borner à quatre semaines, et rien ne dirait alors que
+le semestre est entier.
+
+Le semestre est celui de l'accueil (`semestreDe` : l'automne d'août à janvier, le printemps de février
+à juillet). Un enseignement qui continue au-delà fait taire la ligne plutôt que d'arrêter le compte
+à la borne : un cours de printemps commencé mi-janvier aurait dit « dernière séance » fin janvier. La
+ligne se tait aussi sur une séance terminée (« il reste » se lit au présent), sur un cours masqué par
+un filtre d'UE, sur le planning d'un autre groupe (la séance n'est pas dans l'année des favoris), et
+sur un événement du téléphone. Le type s'écrit tel que la source le donne (`TD Machine`, `Cours/TD`) :
+la phrase dit « séances de TD » plutôt que « 3 TD », parce que « 2 Soutenance » ne s'accorde pas, et
+le français élide devant une voyelle (« séances d'Examen »).
+
 ## Un seul cache pour la liste des groupes
 
 L'écran de recherche tenait son propre cache (`groups`, sans expiration, avec sa date embarquée) à
@@ -787,7 +830,9 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`services/groupListCache.test.ts`](../../src/features/Planning/services/groupListCache.test.ts) | ses tests, écrits avant la fusion des deux caches (6.1-C), joués par `npm test` |
 | [`services/fraicheur.ts`](../../src/features/Planning/services/fraicheur.ts) | la fenêtre de fraîcheur de 60 s des runs automatiques — pure |
 | [`services/groupeInactif.ts`](../../src/features/Planning/services/groupeInactif.ts) · [`groupeInactif.test.ts`](../../src/features/Planning/services/groupeInactif.test.ts) | un groupe sans cours quatre semaines autour d'une journée vide — pur |
-| [`services/anneeDesFavoris.ts`](../../src/features/Planning/services/anneeDesFavoris.ts) | l'année scolaire des favoris, lue une fois et gardée six heures en mémoire, partagée entre la proposition d'UE du dossier et le Planning |
+| [`services/anneeDesFavoris.ts`](../../src/features/Planning/services/anneeDesFavoris.ts) | l'année scolaire des favoris, lue une fois et gardée six heures en mémoire, partagée entre la proposition d'UE du dossier, la journée vide et la fiche d'un cours |
+| [`services/seancesRestantes.ts`](../../src/features/Planning/services/seancesRestantes.ts) · [`seancesRestantes.test.ts`](../../src/features/Planning/services/seancesRestantes.test.ts) | les séances restantes d'une série dans le semestre, ou rien quand le compte n'est pas sûr, et la phrase qui le dit — pur |
+| [`hooks/useSeancesRestantes.ts`](../../src/features/Planning/hooks/useSeancesRestantes.ts) | le compte pour la fiche : la source, les favoris, les filtres, l'année partagée |
 | [`services/fraicheur.test.ts`](../../src/features/Planning/services/fraicheur.test.ts) | ses tests, joués par `npm test` |
 | [`screens/CourseScreen.tsx`](../../src/features/Planning/screens/CourseScreen.tsx) | fiche d'un cours : détails, extraction de la salle, carte intégrée ([`EmbeddedMap`](../../src/shared/map/EmbeddedMap.tsx), [cartographie.md](../cartographie.md)) ; pour un événement du téléphone, ni lieu ni UE, et « Ouvrir dans le calendrier » |
 | [`components/ScheduleList.tsx`](../../src/features/Planning/components/ScheduleList.tsx) | chargement et rendu d'un planning (jour ou semaine), cache, filtres — appliqués au chargement, jamais au rendu —, notifications, et la fusion du téléphone **après** tout cela |
@@ -799,7 +844,7 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`components/DayViewHeader.tsx`](../../src/features/Planning/components/DayViewHeader.tsx) | bandeau collant : titre, le « + » vers l'éditeur du système quand il a lieu d'être, boutons de navigation, curseurs jour et semaine |
 | [`components/CalendarDay.tsx`](../../src/features/Planning/components/CalendarDay.tsx) | un jour dans le curseur, et le retour haptique de son choix |
 | [`components/CalendarWeek.tsx`](../../src/features/Planning/components/CalendarWeek.tsx) | une semaine dans le curseur, légendée par son lundi |
-| [`components/FicheDuCours.tsx`](../../src/features/Planning/components/FicheDuCours.tsx) | le haut de la fiche d'un cours : le type, le titre, l'heure en grand et sa durée, la salle d'abord (7-J) |
+| [`components/FicheDuCours.tsx`](../../src/features/Planning/components/FicheDuCours.tsx) | le haut de la fiche d'un cours : le type, le titre, l'heure en grand et sa durée, la salle d'abord (7-J), et les séances restantes |
 | [`shared/ui/CaseDuRuban.tsx`](../../src/shared/ui/CaseDuRuban.tsx) | la case commune aux deux : pleine si choisie, un point pour aujourd'hui (7-J) ; partagée depuis la deuxième passe avec les bandeaux des fiches Campus (`BandeauDeCases`) |
 | [`components/Frise.tsx`](../../src/features/Planning/components/Frise.tsx) | la vue jour en frise : la pause cotée, le repère de l'heure dans sa pastille, la minute relue (7-J) |
 | [`services/frise.ts`](../../src/features/Planning/services/frise.ts) · [`frise.test.ts`](../../src/features/Planning/services/frise.test.ts) | pur : les éléments de la frise, l'état d'un cours à l'instant donné, les durées et les heures écrites (7-J) |

@@ -18,9 +18,13 @@ import Translator from '../../../shared/i18n/Translator';
 import { CourseData } from './CourseCard';
 import { lignesDuCreneau, type LigneDeCreneau } from './CourseAnnotations';
 import { formaterDuree, minutesDe } from '../services/frise';
+import { phraseDuCompte } from '../services/seancesRestantes';
+import { useSeancesRestantes } from '../hooks/useSeancesRestantes';
 import { Icon } from '../../../shared/ui/Icon';
 
-function Ligne({ ligne, theme, encre }: { ligne: LigneDeCreneau | { texte: string; icone: 'code' }; theme: AppThemeType; encre: string }) {
+type LigneDeFiche = LigneDeCreneau | { texte: string; icone: 'code' | 'repeat' };
+
+function Ligne({ ligne, theme, encre }: { ligne: LigneDeFiche; theme: AppThemeType; encre: string }) {
     const salle = ligne.icone === 'room';
     return (
         <View style={styles.ligne}>
@@ -59,6 +63,17 @@ function Horaire({ data, theme }: { data: CourseData; theme: AppThemeType }) {
     );
 }
 
+/**
+ * Les seances restantes du meme enseignement, sous le code d'UE : une ligne de plus, au poids des
+ * autres, ou rien quand le compte n'est pas sur (useSeancesRestantes).
+ */
+function LigneSeancesRestantes({ data, theme, encre }: { data: CourseData; theme: AppThemeType; encre: string }) {
+    const restantes = useSeancesRestantes(data);
+    if (restantes === null) return null;
+    const { cle, args } = phraseDuCompte(restantes, data.category);
+    return <Ligne ligne={{ texte: Translator.get(cle, ...args), icone: 'repeat' }} theme={theme} encre={encre} />;
+}
+
 export interface FicheDuCoursProps {
     data: CourseData;
     theme: AppThemeType;
@@ -70,7 +85,7 @@ export interface FicheDuCoursProps {
 }
 
 export function FicheDuCours({ data, theme, couleur, encre, actions }: FicheDuCoursProps) {
-    const lignes: (LigneDeCreneau | { texte: string; icone: 'code' })[] = lignesDuCreneau(data.description, data.lieu);
+    const lignes: LigneDeFiche[] = lignesDuCreneau(data.description, data.lieu);
     if (data.UE) lignes.push({ texte: data.UE, icone: 'code' });
     const badge = data.category !== '' && data.category !== data.subject;
 
@@ -88,6 +103,7 @@ export function FicheDuCours({ data, theme, couleur, encre, actions }: FicheDuCo
             <Horaire data={data} theme={theme} />
             <View style={[styles.filet, { backgroundColor: theme.border }]} />
             {lignes.map((ligne) => <Ligne key={`${ligne.icone}-${ligne.texte}`} ligne={ligne} theme={theme} encre={encre} />)}
+            <LigneSeancesRestantes data={data} theme={theme} encre={encre} />
             {actions}
         </View>
     );

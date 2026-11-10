@@ -114,7 +114,10 @@ bascule de langue à chaud sur le ruban des jours.
 
 ## Lot 2 : les petites fonctions retenues
 
-- « Il reste N TD ce semestre » sur la fiche d'un cours, calculé sur l'année déjà lue.
+- [x] « Il reste N TD ce semestre » sur la fiche d'un cours, calculé sur l'année déjà lue — livré le
+  2026-11-10 ; ce qui identifie un enseignement, et quand la ligne se tait :
+  [planning.md](features/planning.md#les-séances-restantes-sur-la-fiche-dun-cours). Vérifié sur
+  `ukit` contre le champ des semaines de Celcat, S et C, fr en es.
 - Un raccourci vers Appliphase parmi les services de la Scolarité, si le catalogue le porte sans
   toucher au code d'un établissement.
 - Ce que le lot 1 aura fait remonter et qui relève d'une fonction plutôt que d'un défaut.

@@ -93,6 +93,7 @@ import Plus from 'lucide-react-native/icons/plus';
 import Popcorn from 'lucide-react-native/icons/popcorn';
 import RectangleEllipsis from 'lucide-react-native/icons/rectangle-ellipsis';
 import RefreshCw from 'lucide-react-native/icons/refresh-cw';
+import Repeat from 'lucide-react-native/icons/repeat';
 import Sandwich from 'lucide-react-native/icons/sandwich';
 import School from 'lucide-react-native/icons/school';
 import Search from 'lucide-react-native/icons/search';
@@ -258,6 +259,7 @@ export const ICONES_MATERIAL: Partial<Record<keyof typeof MaterialIcons.glyphMap
     'navigate-before': entree(ChevronLeft),
     'navigate-next': entree(ChevronRight),
     'person': entree(User),
+    'repeat': entree(Repeat),
     'room': entree(MapPin),
     'schedule': entree(Clock),
     'star': entree(Star, true),

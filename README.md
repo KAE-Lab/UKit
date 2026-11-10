@@ -441,7 +441,8 @@ livré ; elle est mise à jour à chaque contribution.
 
 - [x] **Planning** — vues jour et semaine, planning agrégé des groupes favoris, curseur couvrant
   l'année scolaire, recherche de groupes par sections, fiche de cours avec carte, filtres d'UE,
-  carrousel des cours simultanés, repli hors ligne daté. Source jouée par quatre
+  carrousel des cours simultanés, repli hors ligne daté. La fiche dit combien de séances du même
+  enseignement restent dans le semestre, et se tait quand elle ne peut pas compter juste. Source jouée par quatre
   [Blueprints](docs/blueprints.md) visant l'université **sans relais** ; une panne, une source qui a
   changé et une journée sans cours produisent trois écrans différents. **Un cours peut porter
   plusieurs UE** (6.1.x-B) — le même TP sous son code français et son code anglais, mesuré sur

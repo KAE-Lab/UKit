@@ -96,6 +96,15 @@ function champs(description: string): string[] {
 }
 
 /**
+ * Le rang de la ligne qui porte le code de module, ou -1. Une ligne peut en nommer plusieurs, separes
+ * par une virgule : le premier suffit a la reconnaitre. Partage avec le compte des seances restantes
+ * (seancesRestantes.ts), qui y ancre l'identite d'un enseignement.
+ */
+export function rangDuCodeDeModule(lignes: readonly string[]): number {
+    return lignes.findIndex((ligne) => CODE_MODULE.test(ligne.split(',')[0].trim()));
+}
+
+/**
  * Le type du cours — `CM`, `TD`, `TP`, `CI`, `DS`, `TDM`, `Examen` — ou une chaine vide.
  *
  * La chaine vide est un resultat, pas un echec : certains evenements n'ont pas de code de module, et
@@ -105,7 +114,7 @@ function champs(description: string): string[] {
  */
 export function typeDuCours(description: string): string {
     const lignes = champs(description);
-    const module = lignes.findIndex((ligne) => CODE_MODULE.test(ligne.split(',')[0].trim()));
+    const module = rangDuCodeDeModule(lignes);
     if (module < 0) return '';
 
     return lignes[module + 1] ?? '';
