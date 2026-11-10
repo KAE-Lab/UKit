@@ -58,7 +58,8 @@ function icone(nom: string): IconSpec {
 function sousTitre(document: DocumentScolarite): string | null {
     const morceaux: string[] = [];
     if (document.ajouteLe !== null) morceaux.push(moment(document.ajouteLe).format('LL'));
-    if (document.taille !== null) morceaux.push(`${Math.max(1, Math.round(document.taille / 1024))} Ko`);
+    // L'unite par la langue : « Ko » restait ecrit en dur en anglais et en espagnol (audit du lot 1).
+    if (document.taille !== null) morceaux.push(Translator.get('DOCUMENT_SIZE_KB', Math.max(1, Math.round(document.taille / 1024))));
     return morceaux.length > 0 ? morceaux.join(' · ') : null;
 }
 

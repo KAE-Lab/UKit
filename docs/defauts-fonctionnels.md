@@ -19,6 +19,19 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~La Scolarité garde la typographie française en anglais et en espagnol~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc en jouant la Scolarité en anglais et en espagnol (lot 2, `ukit`) : la salutation collait
+un « ! » précédé d'une espace, en dur — « Good evening Kylian ! », « Buenas noches Kylian ! » sans
+« ¡ » —, la date prenait une capitale à chaque mot (`textTransform: 'capitalize'` : « Mardi 10
+Novembre », « Martes 10 Noviembre »), et la taille d'un document s'écrivait « 171 Ko » dans les trois
+langues, chaîne en dur. La salutation se compose désormais par une clé (`GREETING_NAMED`,
+`GREETING_ALONE` : « Good evening, Kylian! », « ¡Buenas noches, Kylian! », « Bonsoir Kylian ! »
+inchangé), la date ne capitalise que sa première lettre
+([`GreetingBlock`](../src/features/Scolarite/components/GreetingBlock.tsx)), et l'unité passe par
+`DOCUMENT_SIZE_KB` ([`DocumentsSection`](../src/features/Scolarite/components/DocumentsSection.tsx)).
+Vérifié sur `ukit` dans les trois langues.
+
 ### ~~Une redirection lente après le clic de connexion s'annonce « Le problème vient de UKit »~~ — constaté le 2026-11-10, corrigé le même jour
 
 Reproduit au banc pendant le lot 2 (`ukit`, compte de Bordeaux) : la vérification des identifiants a

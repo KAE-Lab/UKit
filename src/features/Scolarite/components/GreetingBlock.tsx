@@ -20,6 +20,7 @@ import moment from 'moment';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { maintenant } from '../../../shared/services/Temps';
+import { upperCaseFirstLetter } from '../../../shared/utils/formatUtils';
 import type { ScolariteColdData } from '../services/ScolariteMapping';
 import { choisirSalutation } from '../salutations/regles';
 import { salutationsActives } from '../salutations';
@@ -63,16 +64,15 @@ const GreetingBlock = ({ coldData, theme }: GreetingBlockProps) => {
                 adjustsFontSizeToFit
                 minimumFontScale={0.75}
             >
-                {salutation}
-                {/* Le prenom dans la couleur du texte (7-J) : un mot isole en couleur dans un titre est un
-                    tic d'interface generee, et rien ne l'avait choisi par ecrit. */}
-                {prenom !== '' ? ` ${prenom}` : null}
-                {' !'}
+                {/* La ponctuation est celle de la langue, par la cle : un « ! » colle en dur gardait
+                    l'espace francaise en anglais et oubliait le « ¡ » espagnol (audit du lot 1). */}
+                {prenom !== '' ? Translator.get('GREETING_NAMED', salutation, prenom) : Translator.get('GREETING_ALONE', salutation)}
             </Text>
             <Text style={[styles.date, { color: theme.fontSecondary }]} numberOfLines={1}>
                 {/* `dddd D MMMM` dans la locale de l'application : `moment.locale` est pose par
-                    `Translator`, et suit donc la langue choisie dans les reglages. */}
-                {moment().format('dddd D MMMM')}
+                    `Translator`, et suit donc la langue choisie dans les reglages. La premiere lettre
+                    seule : `textTransform: 'capitalize'` ecrivait « Mardi 10 Novembre ». */}
+                {upperCaseFirstLetter(moment().format('dddd D MMMM'))}
             </Text>
         </View>
     );
@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
     date: {
         fontSize: tokens.fontSize.sm,
         marginTop: tokens.space.xxs,
-        textTransform: 'capitalize',
     },
 });
 

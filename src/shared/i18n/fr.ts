@@ -412,6 +412,8 @@ const fr: TranslationDict = {
 	GREETING_DAY: "Bonjour",
 	GREETING_EVENING: "Bonsoir",
 	HAPPY_BIRTHDAY: "Joyeux anniversaire",
+	GREETING_NAMED: '$- $- !',
+	GREETING_ALONE: '$- !',
 	LOADING_CONNECTING: 'Connexion au portail…',
 	LOADING_PROFILE: 'Lecture du profil…',
 	LOADING_DOSSIER: 'Lecture du dossier étudiant…',
@@ -509,6 +511,7 @@ const fr: TranslationDict = {
 	NO_DOCUMENTS: 'Certificats de scolarité et attestations se rangent ici. Ils restent sur l’appareil, et s’ouvrent même sans connexion.',
 	DOCUMENTS_UNIT: 'documents',
 	DOCUMENT_UNIT_ONE: 'document',
+	DOCUMENT_SIZE_KB: '$- Ko',
 	DOCUMENTS_SUBTITLE: 'Sur cet appareil',
 	// Le nom sous lequel le certificat de scolarite est range quand l'application va le chercher
 	// elle-meme. C'est un LIBELLE D'ECRAN, donc traduit : le portail, lui, nomme sa piece dans sa

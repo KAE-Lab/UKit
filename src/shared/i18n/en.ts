@@ -403,6 +403,8 @@ const en = {
 	GREETING_DAY: "Hello",
 	GREETING_EVENING: "Good evening",
 	HAPPY_BIRTHDAY: "Happy birthday",
+	GREETING_NAMED: '$-, $-!',
+	GREETING_ALONE: '$-!',
 	LOADING_CONNECTING: 'Connecting to the portal…',
 	LOADING_PROFILE: 'Reading the profile…',
 	LOADING_DOSSIER: 'Reading the student record…',
@@ -498,6 +500,7 @@ const en = {
 	NO_DOCUMENTS: 'Keep your enrolment certificates and statements here. They stay on your device, and open even without a connection.',
 	DOCUMENTS_UNIT: "files stored",
 	DOCUMENT_UNIT_ONE: "file stored",
+	DOCUMENT_SIZE_KB: '$- KB',
 	DOCUMENTS_SUBTITLE: 'On this device',
 	// Le nom sous lequel le certificat de scolarite est range quand l'application va le chercher
 	// elle-meme. C'est un LIBELLE D'ECRAN, donc traduit : le portail, lui, nomme sa piece dans sa

@@ -403,6 +403,8 @@ const es: TranslationDict = {
 	GREETING_DAY: "Hola",
 	GREETING_EVENING: "Buenas noches",
 	HAPPY_BIRTHDAY: "Feliz cumpleaños",
+	GREETING_NAMED: '¡$-, $-!',
+	GREETING_ALONE: '¡$-!',
 	LOADING_CONNECTING: 'Conectando con el portal…',
 	LOADING_PROFILE: 'Leyendo el perfil…',
 	LOADING_DOSSIER: 'Leyendo el expediente…',
@@ -498,6 +500,7 @@ const es: TranslationDict = {
 	NO_DOCUMENTS: 'Guarda aquí tus certificados de matrícula y tus justificantes. Se quedan en tu dispositivo y se abren incluso sin conexión.',
 	DOCUMENTS_UNIT: "archivos guardados",
 	DOCUMENT_UNIT_ONE: "archivo guardado",
+	DOCUMENT_SIZE_KB: '$- KB',
 	DOCUMENTS_SUBTITLE: 'En este dispositivo',
 	// Le nom sous lequel le certificat de scolarite est range quand l'application va le chercher
 	// elle-meme. C'est un LIBELLE D'ECRAN, donc traduit : le portail, lui, nomme sa piece dans sa
