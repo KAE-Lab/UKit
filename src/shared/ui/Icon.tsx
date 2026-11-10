@@ -40,6 +40,8 @@ export function traitPour(taille: number): number {
     return taille <= 14 || taille >= 40 ? 1.5 : 1.75;
 }
 
+const DECOR = { accessible: false, importantForAccessibility: 'no', accessibilityElementsHidden: true } as const;
+
 export function Icon({ icon, size, color, style }: IconProps) {
     const entree = icon.family === 'material' ? ICONES_MATERIAL[icon.name] : ICONES_COMMUNITY[icon.name];
     if (entree !== undefined) {
@@ -55,8 +57,11 @@ export function Icon({ icon, size, color, style }: IconProps) {
             />
         );
     }
+    // Une police d'icones est un caractere de la zone privee : un lecteur d'ecran le lisait, et les
+    // rangees des Reglages s'annoncaient « , Langue » (audit du lot 1, 2026-11-10). Une icone est un
+    // decor ; ce qu'elle veut dire porte sur le bouton qui la contient.
     if (icon.family === 'material') {
-        return <MaterialIcons name={icon.name} size={size} color={color} style={style} />;
+        return <MaterialIcons name={icon.name} size={size} color={color} style={style} {...DECOR} />;
     }
-    return <MaterialCommunityIcons name={icon.name} size={size} color={color} style={style} />;
+    return <MaterialCommunityIcons name={icon.name} size={size} color={color} style={style} {...DECOR} />;
 }

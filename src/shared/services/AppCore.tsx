@@ -732,7 +732,12 @@ class SettingsManagerService {
             // par-dessus lui reviendrait a repondre a sa place.
             this.applySettingsData(settings, this._firstload);
         } catch {
-            new ErrorAlert("Settings couldn't be loaded").show();
+            // Traduit, et charge a la demande : `Translator` importe ce module, et l'importer d'ici a
+            // l'evaluation creerait un cycle. A cet instant les deux sont charges. Le toast etait en
+            // anglais, en dur, sur toutes les langues (audit du lot 1, 2026-11-10).
+            void import('../i18n/Translator').then(({ default: Translator }) => {
+                new ErrorAlert(Translator.get('SETTINGS_LOAD_ERROR')).show();
+            });
         } finally {
             // Meme un chargement echoue rouvre l'ecriture, sinon plus rien ne se sauvegarderait.
             this._chargementTermine = true;

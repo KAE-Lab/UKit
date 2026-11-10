@@ -141,7 +141,12 @@ const IdentifiantsSection = ({ theme, credentials, passwordVisible, onTogglePass
                 <Text style={[styles.infoValue, { color: theme.font, flex: 1 }]} numberOfLines={1}>
                     {passwordVisible ? credentials?.password : '••••••••'}
                 </Text>
-                <TouchableOpacity onPress={onTogglePassword} hitSlop={8}>
+                <TouchableOpacity
+                    onPress={onTogglePassword}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={Translator.get(passwordVisible ? 'HIDE_PASSWORD' : 'SHOW_PASSWORD')}
+                >
                     <Icon
                         icon={{ name: passwordVisible ? 'eye-off-outline' : 'eye-outline' }}
                         size={20}

@@ -76,6 +76,10 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Les lecteurs d'écran ne lisent plus la page cachée de la Scolarité ni les glyphes des icônes**,
+  et la croix des dialogues et l'œil du mot de passe disent leur nom.
+- **Trois chaînes corrigées** : « Hay 2 … resultados ocultos » en espagnol, l'apostrophe de
+  « Crous Market », et l'échec de lecture des réglages, qui s'affichait en anglais.
 - **Des identifiants que le téléphone refuse d'enregistrer se signalent** : la connexion marche le
   temps de la session, et un message dit qu'il faudra se reconnecter au prochain lancement.
 - **La semaine du 28 décembre 2026 au 3 janvier 2027 s'affiche** : la 53e semaine de 2026 était

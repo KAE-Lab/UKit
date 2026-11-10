@@ -194,7 +194,7 @@ export function PropositionsModal() {
                 <View style={popup.container as never}>
                     <View style={popup.header as never}>
                         <Text style={popup.textHeader}>{Translator.get('PROPOSALS_TITLE')}</Text>
-                        <TouchableOpacity onPress={oublierPropositions} hitSlop={12}>
+                        <TouchableOpacity onPress={oublierPropositions} hitSlop={12} accessibilityRole="button" accessibilityLabel={Translator.get('CLOSE')}>
                             <Icon icon={{ family: 'material', name: 'close' }} size={24} color={popup.closeIcon.color as string} />
                         </TouchableOpacity>
                     </View>

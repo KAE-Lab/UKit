@@ -76,7 +76,7 @@ export const SettingsChoicePopup = ({ theme, titre, description, options, select
                         <View style={theme.popup.container as never}>
                             <View style={theme.popup.header as never}>
                                 <Text style={theme.popup.textHeader}>{titre}</Text>
-                                <TouchableOpacity onPress={fermer} hitSlop={12}>
+                                <TouchableOpacity onPress={fermer} hitSlop={12} accessibilityRole="button" accessibilityLabel={Translator.get('CLOSE')}>
                                     <Icon icon={{ family: 'material', name: 'close' }} size={24} color={theme.popup.closeIcon.color as string} />
                                 </TouchableOpacity>
                             </View>

@@ -339,7 +339,7 @@ const fr: TranslationDict = {
 	ALL_ESTABLISHMENTS: 'Tous les établissements',
 	RESTO_U: 'Restaurants',
 	// Le nom de l'enseigne, invariable — pas de pluriel a inventer.
-	CROUS_MARKET: 'Crous Market’',
+	CROUS_MARKET: 'Crous Market',
 	ROOMS: 'salles',
 	NO_RESULTS_TITLE: 'Rien à l’affiche',
 	NO_RESULTS: 'Aucune annonce pour le moment.',
@@ -413,6 +413,7 @@ const fr: TranslationDict = {
 	BIOMETRY_FALLBACK: "Utiliser le code de l'appareil",
 	BIOMETRY_RETRY: "Réessayer",
 	SHOW_PASSWORD: "Afficher le mot de passe",
+	HIDE_PASSWORD: "Masquer le mot de passe",
 	STUDENT_NUMBER: "Numéro étudiant",
 	STUDENT_INE: "INE",
 	FIRST_NAME: 'Prénom',

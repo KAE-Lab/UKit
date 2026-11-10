@@ -19,6 +19,27 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Les lecteurs d'écran lisent la WebView cachée, des glyphes d'icônes et des boutons muets~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu dans l'arbre d'accessibilité au banc pendant l'audit du lot 1, sur `ukit` : la WebView d'Aetherius,
+transparente et posée par-dessus l'application, y exposait ses pages — le tableau de bord Moodle,
+les dossiers de la messagerie — à un lecteur d'écran ; les rangées des Réglages s'annonçaient
+« , Langue » ou « , Filtres », le glyphe de la police d'icônes étant lu comme un caractère ; la croix
+des dialogues de choix et de la proposition d'UE, et l'œil du mot de passe, étaient des boutons sans
+nom. Corrigé : la WebView est enveloppée d'une vue retirée de l'accessibilité, au même endroit
+([`rootContainer`](../src/shared/navigation/rootContainer.tsx)) ; une icône de police est un décor
+([`Icon`](../src/shared/ui/Icon.tsx)) ; les trois boutons portent leur nom. Vérifié sur `ukit` : plus
+aucun nœud de la WebView dans l'arbre, « Langue, Français », et le dossier, la messagerie et Moodle
+se lisent toujours par la WebView enveloppée. Le passage VoiceOver reste à faire sur l'iPhone.
+
+### ~~Trois chaînes fautives : un « 2 » en trop en espagnol, une apostrophe parasite, un toast en anglais en dur~~ — constaté le 2026-11-10, corrigé le même jour
+
+Relecture des dictionnaires à l'audit du lot 1 : `HIDDEN_RESULT` en espagnol disait « Hay 12 2
+resultados ocultos », `CROUS_MARKET` finissait par une apostrophe typographique dans les trois
+langues, et l'échec de lecture des réglages s'affichait « Settings couldn't be loaded » en dur, alors
+que la clé traduite existait. Corrigés ; le toast charge le traducteur à la demande, `Translator`
+important `AppCore`.
+
 ### ~~Un lien d'abonnement et les adresses du navigateur intégré s'écrivent en entier dans le journal de l'appareil~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc pendant l'audit du lot 1, en collant un lien de travers : `[aetherius] ukit.edt.abonnement

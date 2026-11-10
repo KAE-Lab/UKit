@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AppState, DeviceEventEmitter, View } from 'react-native';
+import { AppState, DeviceEventEmitter, StyleSheet, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { AetheriusConfirm, AetheriusWebView } from '@aetherius/react-native';
 
@@ -198,7 +198,7 @@ export default function RootContainer() {
                   * La WebView ne cree sa vue native qu'au premier run navigateur, jamais au montage :
                   * le demarrage n'en porte rien.
                   */}
-                <AetheriusWebView />
+                <WebViewDuMoteur />
                 <AetheriusConfirm
                     approveLabel={Translator.get('CONFIRM')}
                     rejectLabel={Translator.get('CANCEL')}
@@ -207,3 +207,19 @@ export default function RootContainer() {
 		</View>
 	);
 };
+
+/**
+ * La WebView du moteur, retiree des lecteurs d'ecran sans etre deplacee.
+ *
+ * Elle est posee par-dessus l'application, transparente — le paquet explique pourquoi elle ne peut
+ * etre ni derriere ni hors de l'ecran — et ses pages, la boite de reception ou Moodle, etaient dans
+ * l'arbre d'accessibilite (audit du lot 1, 2026-11-10). L'enveloppe couvre la fenetre a la meme
+ * origine que son conteneur et ne prend aucun toucher.
+ */
+function WebViewDuMoteur() {
+    return (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+            <AetheriusWebView />
+        </View>
+    );
+}
