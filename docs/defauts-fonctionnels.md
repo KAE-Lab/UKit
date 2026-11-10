@@ -19,6 +19,15 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~À l'accueil, sur un petit écran, les groupes trouvés restent sous le clavier~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc pendant le lot 2 (`ukit-a8`, 360 × 740 points) : à l'étape des groupes, le cadre clavier
+laissait le champ de recherche collé au clavier, les groupes trouvés dessous ; on tapait sans rien voir
+changer tant qu'on ne faisait pas défiler. Le champ monte désormais juste sous la barre de progression
+quand il prend le focus, et quand le clavier se rouvre sur un champ qui l'a gardé
+([`StepGroupes`](../src/features/Onboarding/components/StepGroupes.tsx)). Vérifié sur `ukit-a8` : trois
+groupes visibles au-dessus du clavier, dans les deux cas.
+
 ### ~~Sur 360 points, la recherche des restaurants et des bibliothèques coupe son texte indicatif~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc pendant le lot 2 (`ukit-a8`) : « Rechercher une bibliothèque ou une vi », « Rechercher un

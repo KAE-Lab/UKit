@@ -7,8 +7,8 @@
  * Voir docs/features/onboarding.md.
  */
 
-import React from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 
 import Translator from '../../../shared/i18n/Translator';
@@ -79,6 +79,20 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
     const listeVide = navigatorState.groupList.length === 0;
     const { chargement, echec } = navigatorState.groupesEtat;
     const degagement = useDegagementDuPied();
+    // Le champ monte en haut de la zone visible quand il prend le focus : sur les 360 points de l'A8,
+    // le cadre clavier le laissait colle au clavier, et les groupes trouves restaient dessous tant
+    // qu'on ne faisait pas defiler (lot 2, audit de l'accueil).
+    const defilement = useRef<ScrollView>(null);
+    const hautDuChamp = useRef(0);
+    const champActif = useRef(false);
+    // Le haut de l'etape (`HAUT_D_ETAPE`) est sous la barre de progression : le champ s'arrete juste dessous.
+    const monterLeChamp = () => defilement.current?.scrollTo({ y: Math.max(0, hautDuChamp.current - HAUT_D_ETAPE), animated: true });
+    // Aussi a l'ouverture du clavier : ferme puis rouvert d'un toucher, le champ garde son focus et
+    // `onFocus` ne repart pas. Une image plus tard, apres le defilement natif vers le champ focalise.
+    useEffect(() => {
+        const abonnement = Keyboard.addListener('keyboardDidShow', () => { if (champActif.current) requestAnimationFrame(monterLeChamp); });
+        return () => abonnement.remove();
+    }, []);
     return (
     /*
      * Le cadre clavier vit DANS l'etape, comme pour le compte et le lien iCal (voir WelcomeScreen) :
@@ -87,7 +101,7 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
      * `padding` sur les deux plateformes, le comportement valide sur le formulaire de connexion.
      */
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-    <ScrollView contentContainerStyle={[styles.etape, { paddingBottom: degagement }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <ScrollView ref={defilement} contentContainerStyle={[styles.etape, { paddingBottom: degagement }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <TitreDEtape theme={themeObj}>{Translator.get('YOUR_GROUP')}</TitreDEtape>
         {listeVide && chargement ? (
             <LoadingState theme={themeObj} message={Translator.get('GROUPS_LOADING')} />
@@ -128,9 +142,9 @@ export const StepGroupes = ({ themeObj, navigatorState, yearList, seasonList, fi
                 </>
             )}
 
-            <View style={[styles.recherche, { backgroundColor: themeObj.greyBackground }]}>
+            <View style={[styles.recherche, { backgroundColor: themeObj.greyBackground }]} onLayout={(e) => { hautDuChamp.current = e.nativeEvent.layout.y; }}>
                 <Icon icon={{ name: 'magnify' }} size={20} color={themeObj.fontSecondary} />
-                <TextInput autoCorrect={false} style={[styles.champ, { color: themeObj.font }]} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} />
+                <TextInput autoCorrect={false} style={[styles.champ, { color: themeObj.font }]} defaultValue={navigatorState.textFilter} placeholder={Translator.get('GROUP_NAME')} placeholderTextColor={themeObj.fontSecondary} onChangeText={(t) => filterList(navigatorState.year, navigatorState.season, t)} onFocus={() => { champActif.current = true; monterLeChamp(); }} onBlur={() => { champActif.current = false; }} />
             </View>
 
             {navigatorState.groupListFiltered.slice(0, MAXIMUM_NUMBER_ITEMS_GROUPLIST + 1).map((item: string) => (
