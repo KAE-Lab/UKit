@@ -19,6 +19,17 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Des identifiants que le trousseau refuse d'écrire laissent croire à une connexion durable~~ — constaté le 2026-11-10, corrigé le même jour
+
+Trouvé par la relecture du code de l'audit du lot 1, non reproduit au banc (le trousseau de
+l'émulateur ne refuse rien). `saveCredentials` rend `false` quand le magasin sécurisé refuse
+l'écriture — un magasin de clés Android corrompu le fait —, et la connexion ne lisait pas ce
+résultat : l'étudiant se croyait connecté, et ne l'était plus au lancement suivant, sans un mot.
+Corrigé : la session en cours garde les identifiants en mémoire et continue, et un toast dit qu'il
+faudra se reconnecter au prochain lancement
+([`CredentialsContext`](../src/features/Scolarite/services/CredentialsContext.tsx)). Le dossier non
+enregistré, lui, se relit de lui-même : des identifiants sans dossier relancent le parcours froid.
+
 ### ~~Après un changement d'établissement, une lecture partie avant peut remettre les groupes ou les bâtiments de l'ancien~~ — constaté le 2026-11-10, corrigé le même jour
 
 Trouvé par la relecture du code de l'audit du lot 1, non reproduit au banc (il faut qu'une lecture

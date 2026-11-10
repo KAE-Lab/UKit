@@ -76,6 +76,8 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Des identifiants que le téléphone refuse d'enregistrer se signalent** : la connexion marche le
+  temps de la session, et un message dit qu'il faudra se reconnecter au prochain lancement.
 - **La semaine du 28 décembre 2026 au 3 janvier 2027 s'affiche** : la 53e semaine de 2026 était
   prise pour une semaine de 2027, et le Planning en demandait une de janvier 2028. Une semaine d'une
   année ne ressert plus non plus, hors ligne, le cache de la même semaine de l'année précédente.

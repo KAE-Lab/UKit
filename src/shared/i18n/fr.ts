@@ -58,6 +58,7 @@ const fr: TranslationDict = {
 	ERROR_CAS_UNAVAILABLE: 'Le portail de l’université ne répond pas. Réessaie dans un moment.',
 	ERROR_PORTAL_SLOW_TITLE: 'Portail lent',
 	ERROR_PORTAL_SLOW: 'Le portail de ton université met du temps à répondre. Réessaie dans un moment.',
+	CREDENTIALS_NOT_SAVED: "Tes identifiants n’ont pas pu être enregistrés sur ce téléphone : il faudra te reconnecter au prochain lancement.",
 	ERROR_MAILBOX_UNAVAILABLE_TITLE: 'Messagerie injoignable',
 	ERROR_MAILBOX_UNAVAILABLE: 'La messagerie ne répond pas, mais la connexion au compte a réussi.',
 	// Tout code de Blueprint en `_INDISPONIBLE` que la table ne nomme pas precisement : la regle

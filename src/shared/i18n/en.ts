@@ -55,6 +55,7 @@ const en = {
 	ERROR_CAS_UNAVAILABLE: 'Your university portal is not responding. Try again in a moment.',
 	ERROR_PORTAL_SLOW_TITLE: 'Slow portal',
 	ERROR_PORTAL_SLOW: "Your university’s portal is taking a long time to respond. Try again in a moment.",
+	CREDENTIALS_NOT_SAVED: "Your credentials couldn’t be saved on this phone: you’ll need to sign in again next time you open the app.",
 	ERROR_MAILBOX_UNAVAILABLE_TITLE: 'Mailbox unreachable',
 	ERROR_MAILBOX_UNAVAILABLE: 'The mailbox did not respond, but your sign-in worked.',
 	// Tout code de Blueprint en `_INDISPONIBLE` que la table ne nomme pas precisement : la regle

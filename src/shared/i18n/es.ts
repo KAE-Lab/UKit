@@ -57,6 +57,7 @@ const es: TranslationDict = {
 	ERROR_CAS_UNAVAILABLE: 'El portal de tu universidad no responde. Inténtalo más tarde.',
 	ERROR_PORTAL_SLOW_TITLE: 'Portal lento',
 	ERROR_PORTAL_SLOW: 'El portal de tu universidad tarda en responder. Vuelve a intentarlo en un momento.',
+	CREDENTIALS_NOT_SAVED: "No se han podido guardar tus credenciales en este teléfono: tendrás que volver a iniciar sesión la próxima vez.",
 	ERROR_MAILBOX_UNAVAILABLE_TITLE: 'Buzón inaccesible',
 	ERROR_MAILBOX_UNAVAILABLE: 'El buzón no ha respondido, pero tu conexión sí ha funcionado.',
 	// Tout code de Blueprint en `_INDISPONIBLE` que la table ne nomme pas precisement : la regle

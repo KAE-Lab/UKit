@@ -6,6 +6,7 @@ import { marquer } from '../../../shared/services/Chrono';
 import { SettingsManager } from '../../../shared/services/AppCore';
 import { getCodeEtablissementActif, portailPublie } from '../../../shared/etablissements';
 import Translator from '../../../shared/i18n/Translator';
+import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { adoucirLaTransition } from '../../../shared/ui/transitions';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { rangerCertificat } from './CertificatService';
@@ -497,8 +498,13 @@ function useReactionsDeSession(
 const surLoginReussi = useCallback((candidat: Identifiants | null) => {
     setEtat((precedent) => ({ ...precedent, status: 'scraping' }));
     if (candidat === null) return;
-    void SecureStoreService.saveCredentials(candidat.username, candidat.password).then(() => {
+    // Le trousseau peut refuser l'ecriture (un magasin de cles Android corrompu le fait) : la session
+    // en cours marche quand meme, les identifiants restent en memoire, mais l'etudiant doit savoir
+    // qu'ils ne survivront pas a une relance — sinon il se croit connecte et ne l'est plus au
+    // lancement suivant, sans un mot (audit du lot 1, 2026-11-10).
+    void SecureStoreService.saveCredentials(candidat.username, candidat.password).then((ecrits) => {
         setCredentials(candidat);
+        if (!ecrits) new ErrorAlert(Translator.get('CREDENTIALS_NOT_SAVED')).show();
     });
     finirValidation({ success: true });
 }, [finirValidation]);
