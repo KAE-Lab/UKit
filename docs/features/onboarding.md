@@ -30,11 +30,14 @@ remis à vrai par la réinitialisation depuis [Réglages](settings.md).
 | 3 | **Choix de l'établissement**, lu dans le catalogue — après un chargement parlant, le temps que le premier rafraîchissement réponde (quatre secondes au plus) | `basculerEtablissement(code)` ([`bascule.ts`](../../src/shared/etablissements/bascule.ts)), la même que les Réglages |
 | 4 | **Compte universitaire**, proposé et sautable — avec le bouton « Tu es d'un autre campus ? » sous celui de connexion, qui ramène à l'étape 3 ; **« Suivant » et le retour sont bloqués tant que la connexion tourne** | `validateAndSave` du contexte de scolarité, ou « Suivant » |
 | 5 | **L'emploi du temps** : groupes en rangées, le libellé en clair et le code dessous ([`partiesDuGroupe`](../../src/features/Onboarding/components/groupes.ts)), l'étape portant son cadre clavier, et le champ de recherche montant sous la barre de progression quand le clavier s'ouvre ; ou lien d'abonnement | favoris, ou `enregistrerLienEdt` |
-| 6 | « C'est prêt. » et la première journée de cours des favoris, qui arrive carte par carte ([`FinDuParcours`](../../src/features/Onboarding/components/FinDuParcours.tsx)) ; sans favori ou sans réponse de la source, le cercle qui se trace ([`TraitDeValidation`](../../src/features/Onboarding/components/TraitDeValidation.tsx)) | `setFirstLoad(false)` sur « Ouvrir mon planning » |
+| 6 | « C'est prêt. » et la première journée de cours des favoris — ou du lien d'abonnement, qui n'a pas de groupe —, qui arrive carte par carte ([`FinDuParcours`](../../src/features/Onboarding/components/FinDuParcours.tsx)) ; sans favori ou sans réponse de la source, le cercle qui se trace ([`TraitDeValidation`](../../src/features/Onboarding/components/TraitDeValidation.tsx)) | `setFirstLoad(false)` sur « Ouvrir mon planning » |
 
 **Deux étapes disparaissent selon l'établissement**, et la règle est la même pour les deux : *on ne
 pose pas une question sans réponse.* L'étape du compte s'efface chez une université qui ne publie
-aucun portail ; celle de l'emploi du temps, chez une université qui n'en publie pas.
+aucun portail ; celle de l'emploi du temps, chez une université qui n'en publie pas — et chez celle
+dont le compte lit le lien d'abonnement (l'IUT de Bordeaux, lot 3) : l'étape du compte y répond, et
+qui la passe trouve au Planning l'invitation à se connecter
+([planning.md](planning.md#le-lien-lu-sur-le-compte)).
 
 **L'établissement vient juste avant les groupes**, et l'ordre a été corrigé après coup : la
 spécification du jalon [6-G](../phase-6/6-g-etablissements.md) le plaçait en première position, au
@@ -110,6 +113,9 @@ requête `fetchCalendarDay` par jour, l'une après l'autre, arrêtée au premier
 échec. On installe souvent l'application le week-end, et « aucun cours aujourd'hui » sur un écran vide
 était la pire fin possible. Constaté au banc le samedi 7 novembre : un groupe de M1 en stage
 (« Aucun cours cette semaine. », confirmé par le Planning), un groupe de L3 (« Lundi, 4 cours. »).
+Un lien d'abonnement se demande sans groupe, et une journée entière (un jour férié) ne compte pas
+pour un cours ; constaté au banc pour l'IUT le 2026-11-10 (« Aujourd'hui, un cours. »), où la fin
+montrait jusque-là le cercle seul.
 
 > **Capture attendue** — `onboarding-preferences.png` : l'étape 2, sélection du thème et de la langue.
 >

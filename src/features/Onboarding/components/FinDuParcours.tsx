@@ -6,9 +6,14 @@
  * Les cours sont les vrais : la journee des groupes choisis, demandee a la source comme le Planning
  * le fera juste apres (`fetchCalendarDay`), et rendue par sa carte (`CourseRow`). Ils arrivent l'un
  * apres l'autre. Un jour sans cours (on installe souvent l'application le week-end), la fin montre
- * le premier jour de la semaine qui en a, plutot qu'un « aucun cours » sur un ecran vide. Sans groupe (un lien iCal, l'etape passee), ou si la source ne repond pas, la fin
+ * le premier jour de la semaine qui en a, plutot qu'un « aucun cours » sur un ecran vide. Sans groupe (l'etape passee), ou si la source ne repond pas, la fin
  * garde le cercle qui se trace dans le degrade du logo : il n'y a pas de journee a montrer, et un
  * echec ici ne dit rien que le Planning ne dira mieux en s'ouvrant.
+ *
+ * Un lien d'abonnement, lui, est une source sans groupe (`groupesRequis`) : la journee se demande
+ * quand meme. C'est le cas de l'IUT de Bordeaux, dont la connexion vient de lire le lien (lot 3) ; il
+ * voyait le cercle seul la ou le College ST voyait sa journee. Une journee entiere — un jour ferie —
+ * n'est pas un cours : elle ne compte pas.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -19,6 +24,7 @@ import moment from 'moment';
 import Translator from '../../../shared/i18n/Translator';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { SettingsManager } from '../../../shared/services/AppCore';
+import { groupesRequis } from '../../../shared/etablissements';
 import { maintenant } from '../../../shared/services/Temps';
 import { PlanningApiService } from '../../Planning/services/PlanningApiService';
 import type { PlanningEvent } from '../../Planning/services/PlanningAssembly';
@@ -59,7 +65,7 @@ function useJourneeDesFavoris(): Journee {
     const [journee, setJournee] = useState<Journee>({ etat: 'attente' });
     useEffect(() => {
         const groupes = SettingsManager.getFavoriteGroups();
-        if (groupes.length === 0) {
+        if (groupes.length === 0 && groupesRequis()) {
             setJournee({ etat: 'sans' });
             return undefined;
         }
@@ -73,8 +79,9 @@ function useJourneeDesFavoris(): Journee {
                     setJournee({ etat: 'sans' });
                     return;
                 }
-                if (resultat.courses.length > 0 || dans === JOURS_CHERCHES - 1) {
-                    const cours = [...resultat.courses].sort((a, b) => a.starttime.localeCompare(b.starttime)).map(enCarte);
+                const horaires = resultat.courses.filter((evenement) => evenement.journeeEntiere !== true);
+                if (horaires.length > 0 || dans === JOURS_CHERCHES - 1) {
+                    const cours = [...horaires].sort((a, b) => a.starttime.localeCompare(b.starttime)).map(enCarte);
                     setJournee({ etat: 'prete', cours, dans });
                     return;
                 }
