@@ -430,16 +430,22 @@ l'étudiant connecté (`edt.abonnement.blueprint_lien`, la suite réservée par
 `enregistrerLienEdt`, exactement comme une adresse collée : le service, le cache et les écrans ne
 savent pas d'où elle vient.
 
-- **Quand** : dans la session universitaire, après le dossier, dans le mode froid **et** le mode chaud,
-  seulement si le lien manque ([`LienDuCompte.ts`](../../src/features/Scolarite/services/LienDuCompte.ts)).
-  Un étudiant servi ne paie jamais ce run ; une lecture qui a échoué un soir se retente au lancement
-  suivant. L'adresse PRONOTE est stable d'une session à l'autre (mesuré), la relire n'apporterait rien.
+- **Quand** : dans la session universitaire, après le dossier, seulement si le lien manque
+  ([`LienDuCompte.ts`](../../src/features/Scolarite/services/LienDuCompte.ts)). Le lancement de
+  l'application, comme le retour sur l'établissement, ne joue plus de session quand le dossier est en
+  cache ; il en joue une **chaude** — sans dossier, le lien seul — quand le lien manque et que le compte
+  sait le lire : une lecture qui a échoué un soir se reprend ainsi toute seule (vérifié au banc, en
+  oubliant le lien puis en relançant). Un étudiant servi ne paie jamais ce run : l'adresse PRONOTE est
+  stable d'une session à l'autre (mesuré).
+- **Le lien appartient au compte** : la déconnexion l'oublie, comme le dossier et les widgets — sinon
+  un téléphone prêté montrerait l'emploi du temps du précédent —, et une connexion avec des identifiants
+  saisis le relit même présent, parce que le compte a pu changer.
 - **Jamais un échec de session** : un lien illisible laisse l'étudiant là où il était — l'invitation à
   coller —, et sa Scolarité ne s'affiche pas en erreur pour un emploi du temps.
 - **Ce que voit le Planning** ([`LienAttendu.tsx`](../../src/features/Planning/components/LienAttendu.tsx)) :
-  sans compte, une invitation à se connecter, et non à coller ; pendant une session, un chargement ;
-  connecté et sans lien, le collage, qui reste le repli. Le compte vit dans un contexte React, d'où un
-  composant fonction plutôt qu'une branche de `ScheduleList`.
+  sans compte, une invitation à se connecter, qui mène droit au formulaire du compte, et non à coller ;
+  pendant une session, un chargement ; connecté et sans lien, le collage, qui reste le repli. Le compte
+  vit dans un contexte React, d'où un composant fonction plutôt qu'une branche de `ScheduleList`.
 - **À l'accueil**, l'étape « colle ton lien » disparaît pour ces campus : l'étape du compte y répond.
   Une connexion qui a lu le lien saute directement à la fin, comme les favoris posés par le dossier de
   l'INP.

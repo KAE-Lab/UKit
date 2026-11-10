@@ -14,6 +14,7 @@ import { cleDeMessage, type ScolariteColdData } from './ScolariteMapping';
 import { useWidgets, type EtatDesWidgets, type IssueDeSerie } from '../widgets/useWidgets';
 import type { PropositionsDossier } from './PropositionsDossier';
 import { lirePropositionsEnAttente, propositionsDe } from './PropositionsEnAttente';
+import { blueprintDuLienALire, lienLuSurLeCompte } from './LienDuCompte';
 import {
     deroulerSession,
     fermerSessionDistante,
@@ -202,6 +203,13 @@ async function chargerSessionDuTrousseau(
         ? 'scolarite : aucun identifiant, aucune session'
         : cold === null ? 'scolarite : parcours froid lance' : 'scolarite : dossier en cache, aucune session');
     if (creds && cold === null) lancerSession('cold');
+    /*
+     * **Sauf un lien d'abonnement qui manque et que le compte sait lire** (lot 3) : la session chaude
+     * ne joue que lui — `deroulerSession` saute le dossier en mode chaud. C'est ce qui reprend une
+     * lecture qui a echoue a la connexion, au lancement suivant ou au retour sur l'etablissement, sans
+     * rien demander ; un etudiant dont le lien est range ne la paie jamais.
+     */
+    else if (creds && blueprintDuLienALire() !== null) lancerSession('hot');
 }
 
 /**
@@ -307,6 +315,9 @@ function useDeconnexion(
         // Ce qui attendait une reponse appartenait a ce compte : le garder ferait poser la question
         // au suivant, avec les UE du precedent.
         await ecrireEnAttente(null);
+        // Un lien d'abonnement lu sur le compte appartenait a ce compte, pour la meme raison : le garder
+        // afficherait son emploi du temps au suivant (LienDuCompte.ts).
+        if (lienLuSurLeCompte()) await enregistrerLienEdt(null);
         oublier();
 
         /*

@@ -33,9 +33,12 @@ import { sourceEdt } from '../../../shared/etablissements/edt';
  *   - le nom est sous le **prefixe reserve**. Une ligne mal ecrite nommerait un Blueprint que le registre
  *     refuserait d'ajouter, et l'echec arriverait au milieu d'une session ; le refuser ici le rend lisible.
  */
-export function blueprintDuLienALire(): PortailBlueprintName | null {
+export function blueprintDuLienALire(options: { readonly forcer?: boolean } = {}): PortailBlueprintName | null {
     const source = sourceEdt();
-    if (source.kind !== 'lien-attendu') return null;
+    // `forcer` : des identifiants viennent d'etre saisis, et le compte a pu changer. Le lien range est
+    // peut-etre celui d'un autre, il se relit (voir `lienLuSurLeCompte`).
+    const aLire = source.kind === 'lien-attendu' || (options.forcer === true && source.kind === 'abonnement');
+    if (!aLire) return null;
 
     // `?? null` : un cache de catalogue ecrit avant que le champ n'existe rend `undefined`.
     const nom = source.config.blueprintLien ?? null;
@@ -69,4 +72,19 @@ export function projeterLienLu(outputs: Readonly<Record<string, unknown>>): stri
 
     const nettoye = lien.trim();
     return ADRESSE.test(nettoye) ? nettoye : null;
+}
+
+/**
+ * Le lien de cet etablissement vient-il du compte ? Alors il **appartient au compte**, comme le
+ * dossier et les widgets.
+ *
+ * Deux consequences, que la deconnexion et la connexion tirent : se deconnecter l'oublie — sinon le
+ * telephone prete montrerait l'emploi du temps du precedent —, et une connexion avec des identifiants
+ * saisis le relit, meme present, parce que le compte a pu changer. Un lien colle chez un etablissement
+ * qui ne sait pas le lire, lui, n'appartient a aucun compte et ne bouge pas.
+ */
+export function lienLuSurLeCompte(): boolean {
+    const source = sourceEdt();
+    if (source.kind !== 'abonnement' && source.kind !== 'lien-attendu') return false;
+    return (source.config.blueprintLien ?? null) !== null;
 }

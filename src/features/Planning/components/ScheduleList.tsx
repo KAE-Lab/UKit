@@ -540,7 +540,9 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
                 <LienAttendu
                     theme={this.props.theme}
                     onColler={() => this.props.navigation?.navigate('LienEdt')}
-                    onConnecter={() => this.props.navigation?.navigate('ScolariteTab')}
+                    // L'ecran du compte et son formulaire, comme le bouton « Connexion » de la Scolarite :
+                    // l'onglet seul laissait l'etudiant chercher ou se connecter.
+                    onConnecter={() => this.props.navigation?.navigate('CredentialsSettings')}
                 />
             );
         }

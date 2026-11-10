@@ -20,7 +20,7 @@ import {
 } from '../../../shared/etablissements/catalogue';
 import { appliquerLiensEdt } from '../../../shared/etablissements/lienEdt';
 import type { EtablissementRow } from '../../../shared/supabase/types';
-import { blueprintDuLienALire, projeterLienLu } from './LienDuCompte';
+import { blueprintDuLienALire, lienLuSurLeCompte, projeterLienLu } from './LienDuCompte';
 
 const LIEN = 'https://pronote.exemple.fr/Telechargements/ical/Edt_ESSAI.ics?version=2026.4.7&icalsecurise=ABC&param=66'
     + '6f6f';
@@ -70,9 +70,37 @@ describe('blueprintDuLienALire', () => {
         expect(blueprintDuLienALire()).toBeNull();
     });
 
+    it('relit un lien deja range quand des identifiants viennent d etre saisis', () => {
+        // Le compte a pu changer : garder le lien du precedent montrerait son emploi du temps.
+        publier({ edt: { abonnement: { blueprint_lien: 'ukit.portail.essai.edt.lien' } } });
+        appliquerLiensEdt({ essai: LIEN });
+        expect(blueprintDuLienALire({ forcer: true })).toBe('ukit.portail.essai.edt.lien');
+    });
+
+    it('ne force rien chez un etablissement qui ne sait pas lire le lien', () => {
+        publier({ edt: { abonnement: {} } });
+        appliquerLiensEdt({ essai: LIEN });
+        expect(blueprintDuLienALire({ forcer: true })).toBeNull();
+    });
+
     it('refuse un nom hors du prefixe reserve', () => {
         publier({ edt: { abonnement: { blueprint_lien: 'ukit.celcat.jour' } } });
         expect(blueprintDuLienALire()).toBeNull();
+    });
+});
+
+describe('lienLuSurLeCompte', () => {
+    it('dit qu un lien appartient au compte quand l etablissement le lit, range ou non', () => {
+        publier({ edt: { abonnement: { blueprint_lien: 'ukit.portail.essai.edt.lien' } } });
+        expect(lienLuSurLeCompte()).toBe(true);
+        appliquerLiensEdt({ essai: LIEN });
+        expect(lienLuSurLeCompte()).toBe(true);
+    });
+
+    it('laisse a lui-meme un lien colle chez un etablissement qui ne le lit pas', () => {
+        publier({ edt: { abonnement: {} } });
+        appliquerLiensEdt({ essai: LIEN });
+        expect(lienLuSurLeCompte()).toBe(false);
     });
 });
 

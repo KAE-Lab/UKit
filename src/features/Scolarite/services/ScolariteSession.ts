@@ -356,7 +356,8 @@ async function jouerVerification(options: OptionsSession): Promise<UkitFailure |
  * une lecture d'emploi du temps le role de `ukit.portail.verification`.
  */
 async function lireLienEdt(options: OptionsSession): Promise<string | null> {
-    const nom = blueprintDuLienALire();
+    // Des identifiants fournis a l'appel sont une connexion : le compte a pu changer, le lien se relit.
+    const nom = blueprintDuLienALire({ forcer: options.secrets !== undefined });
     if (nom === null) return null;
 
     const run = await jouer(nom, 'dossier', {
