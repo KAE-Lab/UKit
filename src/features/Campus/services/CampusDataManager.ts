@@ -2,16 +2,29 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CampusApiService, type CampusRunOptions } from './CampusApiService';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { appliquerVisuel } from '../../../shared/visuels';
+import { SettingsManager } from '../../../shared/services/AppCore';
 
 class CampusDataManagerService {
     _buildingList: import('./CampusApiService').CelcatBuilding[];
     _subscribers: Record<string, Function[]>;
     _cacheTimeLimit: number;
 
+    /** Change a chaque bascule d'etablissement : une reponse d'une autre generation est perimee. */
+    _generation = 0;
+
     constructor() {
         this._buildingList = [];
         this._subscribers = {};
         this._cacheTimeLimit = 7 * 24 * 60 * 60 * 1000;
+
+        // Les batiments appartiennent a **un** etablissement, comme les groupes (PlanningDataManager) :
+        // la bascule effacait bien la cle disque (`purgerDonneesEtablissement`) mais pas la liste en
+        // memoire, que les ecrans resservaient jusqu'au lancement suivant. Videe, elle se relit a la
+        // premiere visite, ou les deux ecrans la redemandent d'eux-memes (audit du lot 1, 2026-11-10).
+        SettingsManager.on('etablissement', () => {
+            this._generation += 1;
+            this.setBuildingList([]);
+        });
     }
 
     on = (event: string, callback: Function) => {
@@ -63,7 +76,10 @@ class CampusDataManagerService {
     fetchBuildingList = async (options: CampusRunOptions = {}): Promise<UkitFailure | null> => {
         // `resultat.ok === false` et non `!resultat.ok` : sans `strictNullChecks`, TypeScript ne
         // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
+        const generation = this._generation;
         const resultat = await CampusApiService.fetchRoomList(options);
+        // Partie avant une bascule d'etablissement : sa reponse appartient a l'ancien.
+        if (generation !== this._generation) return null;
         if (resultat.ok === false) return resultat.failure;
 
         const buildings = CampusApiService.extractBuildingsFromRooms(resultat.rooms);

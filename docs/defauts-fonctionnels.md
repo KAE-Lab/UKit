@@ -19,6 +19,19 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Après un changement d'établissement, une lecture partie avant peut remettre les groupes ou les bâtiments de l'ancien~~ — constaté le 2026-11-10, corrigé le même jour
+
+Trouvé par la relecture du code de l'audit du lot 1, non reproduit au banc (il faut qu'une lecture
+lente croise la bascule). La liste des groupes se vidait bien à la bascule, mais une lecture partie
+avant — le rafraîchissement automatique du démarrage — écrivait sa réponse à l'arrivée, dans la
+liste du nouvel établissement. Les bâtiments, eux, n'étaient pas vidés du tout en mémoire : la clé
+disque était purgée, la liste restait servie jusqu'au lancement suivant. Sans effet visible tant que
+tous les établissements partagent le Celcat de Bordeaux ; le lot 3 en ajoute qui ne le partagent
+pas. Corrigé : chaque bascule ouvre une génération, une réponse d'une autre génération ne touche plus
+à la liste ([`PlanningDataManager`](../src/features/Planning/services/PlanningDataManager.ts),
+[`CampusDataManager`](../src/features/Campus/services/CampusDataManager.ts)), et la liste des
+bâtiments se vide comme celle des groupes.
+
 ### ~~La semaine du 28 décembre 2026 s'affiche à la place d'une semaine de 2028~~ — constaté le 2026-11-10, corrigé le même jour
 
 Trouvé par la relecture du code de l'audit du lot 1. Une semaine du Planning se nommait par son

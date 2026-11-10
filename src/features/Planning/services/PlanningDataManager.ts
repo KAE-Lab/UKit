@@ -33,6 +33,8 @@ class PlanningDataManagerService {
     /** Les UE rencontrees, **avec leur intitule** : l'ecran des filtres n'affichait qu'un code. */
     _availableUEs: UeRencontree[];
     _subscribers: Record<string, Function[]>;
+    /** Change a chaque bascule d'etablissement : une reponse d'une autre generation est perimee. */
+    _generation = 0;
 
     constructor() {
         this._groupList = [];
@@ -60,6 +62,7 @@ class PlanningDataManagerService {
      * vaut une liste vide qu'une liste fausse.
      */
     rechargerPourEtablissement = async () => {
+        this._generation += 1;
         this.setGroupList([]);
         this._availableUEs = [];
         await this.fetchGroupList();
@@ -145,9 +148,15 @@ class PlanningDataManagerService {
      */
     fetchGroupList = async (options: PlanningRunOptions = {}): Promise<GroupListResult> => {
         this.poserEtat({ chargement: true });
+        // La reponse d'une lecture partie avant un changement d'etablissement appartient a l'ancien :
+        // l'ecrire remettrait ses groupes dans la liste du nouveau, celle que le changement vient de
+        // vider (audit du lot 1, 2026-11-10 : le rafraichissement automatique du demarrage et la
+        // bascule peuvent se croiser). Elle se rend a l'appelant, mais ne touche plus a la liste.
+        const generation = this._generation;
         // `resultat.ok === false` et non `!resultat.ok` : sans `strictNullChecks`, TypeScript ne
         // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
         const resultat = await PlanningApiService.fetchGroupList(options);
+        if (generation !== this._generation) return resultat;
         if (resultat.ok === false) {
             this.poserEtat({ chargement: false, echec: resultat.failure });
             return resultat;
