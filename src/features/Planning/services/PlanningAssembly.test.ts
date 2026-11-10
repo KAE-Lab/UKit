@@ -149,3 +149,12 @@ describe('les semaines ISO, aux frontieres d annee', () => {
         }
     });
 });
+
+describe('separerCodeUE, espaces de Celcat', () => {
+    it('ne laisse pas d espace en tete du titre quand Celcat en sert deux apres le code', () => {
+        expect(separerCodeUE("4TIN606U  Histoire et Epistémologie de l'Optimisation")).toEqual({
+            code: '4TIN606U',
+            reste: "Histoire et Epistémologie de l'Optimisation",
+        });
+    });
+});

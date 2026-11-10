@@ -132,7 +132,9 @@ export function estUnCodeDUE(valeur: string): boolean {
  */
 export function separerCodeUE(sujet: string): { code: string; reste: string } | null {
     const trouve = CODE_UE.exec(sujet);
-    return trouve !== null && trouve.length === 3 ? { code: trouve[1], reste: trouve[2] } : null;
+    // `trim` : Celcat sert parfois deux espaces apres le code (`4TIN606U  Histoire…`), et le titre du
+    // cours commencait alors par une espace a l'ecran (audit du lot 1, 2026-11-10).
+    return trouve !== null && trouve.length === 3 ? { code: trouve[1], reste: trouve[2].trim() } : null;
 }
 
 /** Une unite d'enseignement rencontree dans un planning : son code, et son intitule. */

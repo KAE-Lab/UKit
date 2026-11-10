@@ -19,6 +19,14 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Le titre d'un cours commence parfois par une espace~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc pendant l'audit du lot 1 : « ␣Histoire et Epistémologie de l'Optimisation ». Celcat sert
+parfois deux espaces après le code d'UE (`4TIN606U  Histoire…`, déjà mesuré au jalon 6-K pour les
+intitulés des filtres, qui les retiraient), et le titre gardait la seconde. Corrigé à la source :
+[`separerCodeUE`](../src/features/Planning/services/PlanningAssembly.ts) rend un reste sans espace en
+tête, testé ; la parité reste verte.
+
 ### ~~Minuit passé l'application ouverte, « Aujourd'hui » mène à la veille~~ — constaté le 2026-11-10, corrigé le même jour
 
 Joué au banc pendant la recherche des cours du matin absents (audit du lot 1) : horloge du système
