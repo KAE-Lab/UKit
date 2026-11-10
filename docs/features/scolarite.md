@@ -2209,6 +2209,9 @@ plus précis — ça distingue `unavailable` de `rejected` et de `data`.
   passe, à Bordeaux comme à l'INP. Dans le journal, `ukit.portail.verification` : `#4 click` sous la
   seconde, `#6` et `#7` en quelques millisecondes. Un `#6` qui échoue en « did not become ready »
   voudrait dire que la soumission a de nouveau quitté le CAS.
+- **Hors ligne** (`banc.sh reseau non`), « Actualiser » depuis la fiche du compte : « Pas de
+  connexion », réessayable, et non « Portail injoignable » ; le réseau rendu, « Réessayer » relit le
+  dossier.
 - **Emploi du temps personnel introuvable** (INP) : rendre la lecture de la fiche impossible en local
   (le sélecteur `aria-selected` de l'étape `planning`), se connecter : la rangée apparaît sous la
   salutation et survit à une relance. Rétablir le fichier, toucher la rangée, confirmer : la rangée
@@ -2366,6 +2369,16 @@ Les deux sont consignées dans [defauts-fonctionnels.md](../defauts-fonctionnels
   test, et une montée de version du moteur doit le revérifier. La vérification des identifiants ne
   suit plus l'intranet depuis sa version 3 (plus haut) ; la requalification reste pour les autres
   portails.
+
+  **Sans réseau, l'échec se dit « Pas de connexion »** (`requalifierHorsLigne`, 2026-11-10). Un
+  téléphone hors ligne faisait dire « Portail injoignable » à « Actualiser » : la WebView sert sa page
+  d'erreur, l'agent s'y annonce, et l'attente du formulaire expire sous le code du Blueprint
+  (`CAS_INDISPONIBLE`). Le run ne peut pas distinguer un téléphone hors ligne d'un CAS muet ; l'état
+  du réseau, lu après l'échec (`isConnected`, qui suit aussi l'interrupteur du menu de développement),
+  le peut. Hors ligne, tout échec de session ou de widget devient `unavailable [HORS_LIGNE]`, avec le
+  vocabulaire que le Planning et la connexion employaient déjà : « Pas de connexion », « Impossible de
+  joindre le portail. Vérifie ta connexion. », réessayable. Un état réseau inconnu (`null`) laisse
+  l'échec tel quel, de même qu'un run annulé ou un échec de configuration.
 - **La feuille d'échec ne diagnostique pas.** Elle montre le titre et le message de l'échec ; le
   `detail` du moteur reste dans le journal, et un `engine` reste « un problème de notre côté », sans
   bouton — le distinguer d'une source morte se traite chez Aetherius (ci-dessus).

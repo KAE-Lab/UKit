@@ -115,7 +115,17 @@ PRONOTE de l'IUT passent ensuite par la session CAS ainsi posée
 **À publier** : le manifeste est vide, la version 3 n'atteint les binaires installés que par
 `npm run blueprints:publish` depuis `main`, ou par la release suivante.
 
-### Hors ligne, l'actualisation du dossier accuse le portail — constaté le 2026-11-10
+### ~~Hors ligne, l'actualisation du dossier accuse le portail~~ — constaté le 2026-11-10, corrigé le même jour
+
+*Corrigé dans la passe d'avant Montaigne* : un échec de session ou de widget survenu sans réseau
+devient `unavailable [HORS_LIGNE]`, avec le vocabulaire existant — « Pas de connexion », « Impossible
+de joindre le portail. Vérifie ta connexion. », réessayable
+([`requalifierHorsLigne`](../src/features/Scolarite/services/ScolariteMapping.ts), testé). L'état du
+réseau est lu par l'appelant après l'échec (`isConnected`, l'interrupteur du menu compris), à l'endroit
+commun à toute la Scolarité : `jouer` pour la session, le lanceur des widgets. Vérifié sur `ukit`,
+réseau coupé : la fiche du compte et la page disent « Pas de connexion », et le réseau rendu,
+« Réessayer » relit le dossier. Au passage, « Compruebe su conexión » passe au tutoiement du reste de
+l'espagnol. Non joué au banc : un widget qui échoue hors ligne (même fonction, couverte par le test).
 
 Vu au banc pendant le lot 2 (`ukit`, réseau coupé, espagnol) : « Actualiser » rend « Portail
 injoignable — Le portail de ton université ne répond pas », `blocked [CAS_INDISPONIBLE]`, alors que

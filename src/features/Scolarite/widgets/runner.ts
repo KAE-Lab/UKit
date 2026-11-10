@@ -29,7 +29,8 @@ import {
     type UkitFailure,
 } from '../../../shared/aetherius';
 import { surLeNavigateur } from '../services/MoteurNavigateur';
-import { requalifierLenteur } from '../services/ScolariteMapping';
+import { requalifierHorsLigne, requalifierLenteur } from '../services/ScolariteMapping';
+import { isConnected } from '../../../shared/services/AppCore';
 import { WIDGETS, type PointWidget } from './definitions';
 import { projeterWidget, valeurFraiche, type ValeurWidget } from './projection';
 
@@ -200,8 +201,9 @@ async function lireUnWidget(
 
     const run = reserve.valeur;
     if (run.ok === false) {
-        // Une messagerie lente n'est pas un defaut de UKit (registre, 2026-11-06 ; deux retours).
-        const failure = requalifierLenteur(run.failure, run.navigationMs);
+        // Une messagerie lente n'est pas un defaut de UKit (registre, 2026-11-06 ; deux retours), et
+        // un telephone sans reseau n'est pas un service en panne (registre, 2026-11-10).
+        const failure = requalifierHorsLigne(requalifierLenteur(run.failure, run.navigationMs), await isConnected());
         reportFailure(blueprint, failure);
         // Un run annule — l'utilisateur est parti, l'application est passee en arriere-plan — n'a
         // rien a dire non plus : `silent` porte deja cette distinction.

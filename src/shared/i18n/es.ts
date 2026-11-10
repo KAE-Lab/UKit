@@ -375,7 +375,7 @@ const es: TranslationDict = {
 	CONNECTING: 'Conectando…',
 	LOGIN_FAILED_TITLE: 'Credenciales rechazadas',
 	LOGIN_FAILED: 'Comprueba tu usuario y tu contraseña.',
-	LOGIN_NETWORK_ERROR: "No se puede acceder al portal. Compruebe su conexión.",
+	LOGIN_NETWORK_ERROR: "No se puede acceder al portal. Comprueba tu conexión.",
 	CONFIRM_LOGOUT: "¿Seguro que quiere cerrar sesión?",
 	CONNECTED_AS: "Conectado como",
 	MESSAGING: "Buzón",

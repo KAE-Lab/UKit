@@ -157,6 +157,8 @@ const CLE_PAR_CODE: Readonly<Record<string, { readonly titre: TranslationKey; re
     LOGIN_FAILED: { titre: 'LOGIN_FAILED_TITLE', message: 'LOGIN_FAILED' },
     CAS_INDISPONIBLE: { titre: 'ERROR_CAS_UNAVAILABLE_TITLE', message: 'ERROR_CAS_UNAVAILABLE' },
     PORTAIL_LENT: { titre: 'ERROR_PORTAL_SLOW_TITLE', message: 'ERROR_PORTAL_SLOW' },
+    // Le vocabulaire du telephone sans reseau, celui de la connexion et du Planning (requalifierHorsLigne).
+    HORS_LIGNE: { titre: 'NO_CONNECTION', message: 'LOGIN_NETWORK_ERROR' },
     MESSAGERIE_INDISPONIBLE: { titre: 'ERROR_MAILBOX_UNAVAILABLE_TITLE', message: 'ERROR_MAILBOX_UNAVAILABLE' },
 };
 
@@ -234,6 +236,25 @@ export function requalifierLenteur(failure: UkitFailure, navigationMs: number): 
     if (failure.kind !== 'engine' || failure.code !== undefined) return failure;
     if (navigationMs < NAVIGATION_LENTE_MS && !PAGE_PAS_PRETE.test(failure.detail ?? '')) return failure;
     return ukitFailure('unavailable', `${failure.detail ?? 'engine'} (navigation de ${Math.round(navigationMs)} ms)`, 'PORTAIL_LENT');
+}
+
+/**
+ * Un echec survenu **sans reseau** se dit « pas de connexion », pas « le portail ne repond pas ».
+ *
+ * Constate au banc pendant le lot 2 (`ukit`, reseau coupe) : « Actualiser » rendait « Portail
+ * injoignable », `blocked [CAS_INDISPONIBLE]`. La WebView sert sa page d'erreur, l'agent s'y annonce,
+ * et c'est l'attente du formulaire qui expire, avec le nom que le Blueprint lui donne. Le run ne peut
+ * pas distinguer un telephone hors ligne d'un CAS muet ; l'etat du reseau, lu par l'appelant apres
+ * l'echec, le peut. `connecte` vaut `null` quand le systeme ne sait pas : l'echec reste alors tel quel.
+ *
+ * Ni un run annule (`silent`), ni un echec de configuration, ou aucun run n'est parti, ne sont
+ * requalifies : le reseau n'y est pour rien. La famille devient `unavailable`, reessayable, et le
+ * detail garde l'echec d'origine pour le menu de developpement.
+ */
+export function requalifierHorsLigne(failure: UkitFailure, connecte: boolean | null): UkitFailure {
+    if (connecte !== false || failure.silent === true || failure.kind === 'config') return failure;
+    const origine = `${failure.kind}${failure.code !== undefined ? ` [${failure.code}]` : ''}`;
+    return ukitFailure('unavailable', `${failure.detail ?? origine} (hors ligne, ${origine})`, 'HORS_LIGNE');
 }
 
 /**

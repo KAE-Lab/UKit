@@ -43,7 +43,8 @@ import { compter } from '../../../shared/mesure';
 import { blueprintDuLienALire, lienDuMemeCompte, projeterLienLu } from './LienDuCompte';
 import { surLeNavigateur, TOURS_DE_SESSION, type PrioriteMoteur } from './MoteurNavigateur';
 import { projeterPropositions, type PropositionsDossier } from './PropositionsDossier';
-import { demandeUneRessaisie, projeterDossier, requalifierLenteur, type ScolariteColdData } from './ScolariteMapping';
+import { demandeUneRessaisie, projeterDossier, requalifierHorsLigne, requalifierLenteur, type ScolariteColdData } from './ScolariteMapping';
+import { isConnected } from '../../../shared/services/AppCore';
 
 /**
  * Les trois etapes que l'ecran de progression affiche.
@@ -180,8 +181,9 @@ async function jouer(
 
     const run = reserve.valeur;
     if (run.ok === false) {
-        // Un portail lent n'est pas un defaut de UKit (registre, 2026-11-06).
-        const failure = requalifierLenteur(run.failure, run.navigationMs);
+        // Un portail lent n'est pas un defaut de UKit (registre, 2026-11-06), et un telephone sans
+        // reseau n'est pas un portail en panne (registre, 2026-11-10).
+        const failure = requalifierHorsLigne(requalifierLenteur(run.failure, run.navigationMs), await isConnected());
         // Une connexion refusee compte (7-D) : un mot de passe perime est un echec nomme, pas une panne.
         if (demandeUneRessaisie(failure)) compter('scolarite.connexion', 'echec');
         reportFailure(nom, failure);

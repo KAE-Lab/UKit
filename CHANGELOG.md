@@ -92,6 +92,7 @@ une application qui donne l'heure des choses d'un regard.
   redemande plus à chaque visite.
 - **Un emploi du temps personnel introuvable se dit** (Bordeaux INP) : une rangée de la Scolarité
   l'annonce et relit le dossier, au lieu de se taire.
+- **Hors ligne, la Scolarité dit « Pas de connexion »**, et non plus que le portail ne répond pas.
 - **Les cours d'un abonnement PRONOTE ont leur vrai titre** : la matière, et non « Matière - Type -
   Enseignants - Mémo » ; le type en pastille sans sa durée, la salle, un enseignant par ligne, et le
   compte des séances restantes, que ce calendrier personnel rend sûr.

@@ -22,6 +22,7 @@ import {
     prenomDepuisIdentite,
     presenterEchec,
     projeterDossier,
+    requalifierHorsLigne,
     requalifierLenteur,
 } from './ScolariteMapping';
 
@@ -299,5 +300,35 @@ describe('requalifierLenteur', () => {
         expect(requalifierLenteur(cas, 30_000)).toBe(cas);
         const nomme: UkitFailure = { ...engine, code: 'AUTRE' };
         expect(requalifierLenteur(nomme, 30_000)).toBe(nomme);
+    });
+});
+
+describe('requalifierHorsLigne', () => {
+    // Le constat du banc du lot 2 : reseau coupe, « Actualiser » rendait le CAS injoignable.
+    const casMuet: UkitFailure = {
+        kind: 'blocked', code: 'CAS_INDISPONIBLE', detail: 'wait_for timed out for selector "#username"', ...FAILURE_PRESENTATION.blocked,
+    };
+
+    it('dit « pas de connexion » quand le telephone est hors ligne, et propose de reessayer', () => {
+        const horsLigne = presenterEchec(requalifierHorsLigne(casMuet, false));
+        expect(horsLigne.kind).toBe('unavailable');
+        expect(horsLigne.code).toBe('HORS_LIGNE');
+        expect(horsLigne.titleKey).toBe('NO_CONNECTION');
+        expect(horsLigne.messageKey).toBe('LOGIN_NETWORK_ERROR');
+        expect(horsLigne.retryable).toBe(true);
+        expect(horsLigne.detail).toContain('CAS_INDISPONIBLE');
+    });
+
+    it('laisse l echec du portail tel quel avec du reseau, ou quand le systeme ne sait pas', () => {
+        expect(requalifierHorsLigne(casMuet, true)).toBe(casMuet);
+        expect(requalifierHorsLigne(casMuet, null)).toBe(casMuet);
+        expect(cleDeTitre(requalifierHorsLigne(casMuet, true))).toBe('ERROR_CAS_UNAVAILABLE_TITLE');
+    });
+
+    it('ne touche ni un run annule ni un echec de configuration : le reseau n y est pour rien', () => {
+        const annule: UkitFailure = { kind: 'cancelled', detail: 'abandon', ...FAILURE_PRESENTATION.cancelled };
+        expect(requalifierHorsLigne(annule, false)).toBe(annule);
+        const config: UkitFailure = { kind: 'config', detail: 'pas de portail', ...FAILURE_PRESENTATION.config };
+        expect(requalifierHorsLigne(config, false)).toBe(config);
     });
 });
