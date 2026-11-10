@@ -19,11 +19,11 @@ de la leur laisser en travers.
 
 ## Ouverts
 
-### À l'accueil, une année sans semestre laisse la liste des groupes vide, sans rien dire — constaté le 2026-11-08
+### ~~À l'accueil, une année sans semestre laisse la liste des groupes vide, sans rien dire~~ — constaté le 2026-11-08, corrigé le 2026-11-10
 
 Collège ST, « Master 1 » touché, aucun semestre : la liste disparaît sous le champ de recherche, et
-rien n'indique qu'il manque le semestre. Choisir « Automne » la remplit. À trancher : présélectionner
-le semestre en cours, ou ne pas filtrer tant qu'il n'est pas choisi.
+rien n'indique qu'il manque le semestre. Le semestre en cours est désormais présélectionné, au départ
+comme après un changement d'établissement ([`semestreDe`](../src/features/Onboarding/hooks/semestres.ts)).
 
 ### Un portail lent s'annonce « Le problème vient de UKit » — constaté le 2026-11-06
 

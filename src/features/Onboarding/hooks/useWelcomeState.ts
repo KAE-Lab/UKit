@@ -17,6 +17,8 @@ import { useContext, useEffect, useState } from 'react';
 import { AppContext, SettingsManager, languageFromDevice } from '../../../shared/services/AppCore';
 import type { ThemeKey } from '../../../shared/theme/Theme';
 import type { TranslationKey } from '../../../shared/i18n/Translator';
+import { maintenant } from '../../../shared/services/Temps';
+import { semestreDe } from './semestres';
 import {
     attendrePremierRafraichissement,
     getCodeEtablissementActif,
@@ -159,7 +161,7 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
         etablissements: listeEtablissements(),
         catalogueEnAttente: !premierRafraichissementRepondu(),
         year: null,
-        season: null,
+        season: semestreDe(maintenant()),
         groups: [],
         groupList: DataManager.getGroupList(),
         groupesEtat: DataManager.getGroupListEtat(),
@@ -200,7 +202,7 @@ export function useWelcomeState(): { state: WelcomeState; actions: WelcomeAction
             etablissement: code,
             etablissements: listeEtablissements(),
             year: null,
-            season: null,
+            season: semestreDe(maintenant()),
             textFilter: '',
             groupListFiltered: [],
         });
