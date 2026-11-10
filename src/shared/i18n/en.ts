@@ -90,6 +90,7 @@ const en = {
 	INTRO_FILTRES: "Courses added here are hidden from the timetable until you remove them.",
 	FILTERS_ACTIVE: 'Active filters',
 	FILTERS_ADD: 'Add a filter',
+	FILTER_CODE_REFUSED: '“$-” isn’t a course unit code',
 	FILTERS_UE: 'Filter out the UE',
 	FILTER_MODE_EXCLUDE: 'Hide',
 	FILTER_MODE_INCLUDE: 'Show only',

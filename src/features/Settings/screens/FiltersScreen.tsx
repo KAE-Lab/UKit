@@ -17,8 +17,8 @@
  * Voir docs/features/settings.md.
  */
 
-import React, { useContext, useEffect, useState } from 'react';
-import { Animated, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { Animated, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import style, { tokens } from '../../../shared/theme/Theme';
@@ -30,6 +30,7 @@ import { SettingsTextHeader } from '../components/SettingsSections';
 import { IntroDePage } from '../components/GroupeDeReglages';
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
 import type { UeRencontree } from '../../Planning/services/PlanningAssembly';
+import { codeDeFiltreSaisi } from '../../Planning/services/filtresUe';
 import { Icon } from '../../../shared/ui/Icon';
 
 type ThemeSettings = import('../../../shared/theme/Theme').AppThemeType['settings'];
@@ -41,7 +42,9 @@ function RangeeDeFiltre({ code, themeSettings, couleurNom, onRetirer }: { code: 
     return (
         <View style={[themeSettings.button, { alignItems: 'center' }] as never}>
             <View style={{ flex: 1 }}>
-                <Text style={themeSettings.buttonMainText as never}>{code}</Text>
+                {/* `buttonMainText` se centre (`alignSelf`), fait pour une rangee a un seul texte :
+                    au-dessus d'un intitule cale a gauche, le code paraissait decale (audit du lot 1). */}
+                <Text style={[themeSettings.buttonMainText, { alignSelf: 'flex-start' }] as never}>{code}</Text>
                 {nom !== null ? (
                     <Text
                         numberOfLines={2}
@@ -66,9 +69,15 @@ function RangeeDeFiltre({ code, themeSettings, couleurNom, onRetirer }: { code: 
  * se vident quand il aboutit — un code qui reste dans le champ apres l'ajout se lit comme un ajout
  * qui n'a pas pris.
  */
-function CarteAjout({ theme, themeSettings, ues, filtres }: { theme: import('../../../shared/theme/Theme').AppThemeType; themeSettings: ThemeSettings; ues: UeRencontree[]; filtres: string[] }) {
+function CarteAjout({ theme, themeSettings, ues, filtres, onRefus }: { theme: import('../../../shared/theme/Theme').AppThemeType; themeSettings: ThemeSettings; ues: UeRencontree[]; filtres: string[]; onRefus: () => void }) {
     const [recherche, setRecherche] = useState('');
     const [codeManuel, setCodeManuel] = useState('');
+    const [refuse, setRefuse] = useState<string | null>(null);
+
+    // L'erreur se pose sous le champ, la ou le clavier ouvert la cachait : l'ecran descend jusqu'a elle.
+    useEffect(() => {
+        if (refuse !== null) onRefus();
+    }, [refuse, onRefus]);
 
     // La recherche porte sur le code **et** sur l'intitule : personne ne retient `4TIN606U`, tout le
     // monde retient « Histoire ».
@@ -83,11 +92,15 @@ function CarteAjout({ theme, themeSettings, ues, filtres }: { theme: import('../
         SettingsManager.addFilters(code.toUpperCase());
         setRecherche('');
         setCodeManuel('');
+        setRefuse(null);
     };
 
+    // Le texte reste dans le champ quand il est refuse : c'est lui qu'il faut corriger.
     const ajouterLeCodeManuel = () => {
-        const code = codeManuel.trim();
-        if (code !== '') ajouter(code);
+        if (codeManuel.trim() === '') return;
+        const code = codeDeFiltreSaisi(codeManuel);
+        if (code === null) setRefuse(codeManuel.trim());
+        else ajouter(code);
     };
 
     return (
@@ -141,7 +154,7 @@ function CarteAjout({ theme, themeSettings, ues, filtres }: { theme: import('../
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TextInput
                     style={themeSettings.popup.textInput as never}
-                    onChangeText={(texte) => setCodeManuel(texte.toUpperCase())}
+                    onChangeText={(texte) => { setCodeManuel(texte.toUpperCase()); setRefuse(null); }}
                     value={codeManuel}
                     placeholder="4TIN603U"
                     placeholderTextColor={themeSettings.popup.textInputPlaceholderColor}
@@ -153,6 +166,12 @@ function CarteAjout({ theme, themeSettings, ues, filtres }: { theme: import('../
                     <Icon icon={{ family: 'material', name: 'add' }} size={28} color={themeSettings.popup.textInputIconColor} />
                 </TouchableOpacity>
             </View>
+
+            {refuse !== null ? (
+                <Text accessibilityLiveRegion="polite" style={{ fontSize: tokens.fontSize.xs, color: theme.danger, marginTop: tokens.space.sm }}>
+                    {Translator.get('FILTER_CODE_REFUSED', refuse)}
+                </Text>
+            ) : null}
         </View>
     );
 }
@@ -164,6 +183,10 @@ function FiltersScreen({ onAnimatedScroll }: { onAnimatedScroll?: (event: unknow
 
     const [filtres, setFiltres] = useState<string[]>(SettingsManager.getFilters());
     const [ues, setUes] = useState<UeRencontree[]>(DataManager.getUEs());
+    const defilement = useRef<ScrollView>(null);
+    const montrerLaFin = useCallback(() => {
+        requestAnimationFrame(() => defilement.current?.scrollToEnd({ animated: true }));
+    }, []);
 
     useEffect(() => {
         const relireFiltres = () => setFiltres([...SettingsManager.getFilters()]);
@@ -190,6 +213,7 @@ function FiltersScreen({ onAnimatedScroll }: { onAnimatedScroll?: (event: unknow
                     {/* Le defilement nourrit l'animation d'en-tete : le titre s'efface quand le
                         contenu monte, au lieu de le laisser passer derriere. */}
                     <Animated.ScrollView
+                        ref={defilement}
                         keyboardShouldPersistTaps="handled"
                         showsVerticalScrollIndicator={false}
                         onScroll={onAnimatedScroll}
@@ -225,7 +249,7 @@ function FiltersScreen({ onAnimatedScroll }: { onAnimatedScroll?: (event: unknow
 
                         <SettingsTextHeader theme={themeSettings} text={Translator.get('FILTERS_ADD')} />
 
-                        <CarteAjout theme={theme} themeSettings={themeSettings} ues={ues} filtres={filtres} />
+                        <CarteAjout theme={theme} themeSettings={themeSettings} ues={ues} filtres={filtres} onRefus={montrerLaFin} />
                     </Animated.ScrollView>
                 </KeyboardAvoidingView>
             )}

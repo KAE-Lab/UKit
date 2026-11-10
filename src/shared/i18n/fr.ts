@@ -92,6 +92,7 @@ const fr: TranslationDict = {
 	INTRO_FILTRES: "Les UE ajoutées ici sont masquées du planning, jusqu’à ce que tu les retires.",
 	FILTERS_ACTIVE: 'Filtres actifs',
 	FILTERS_ADD: 'Ajouter un filtre',
+	FILTER_CODE_REFUSED: '« $- » n’est pas un code d’UE',
 	FILTERS_UE: 'Filtrer une UE',
 	FILTER_MODE_EXCLUDE: 'Masquer',
 	FILTER_MODE_INCLUDE: 'Afficher uniquement',

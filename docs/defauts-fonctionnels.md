@@ -19,6 +19,20 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Un filtre saisi à la main accepte n'importe quel texte, et ses rangées sont décalées~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc en jouant l'ajout manuel d'un filtre (audit du lot 1, `ukit`, sombre) : « bonjour »
+s'enregistrait en filtre « BONJOUR », compté dans la rangée des Réglages, alors qu'un filtre se
+compare à des codes d'UE et ne pouvait rien masquer. Refusé désormais, avec la raison sous le champ
+et le texte gardé pour qu'on le corrige ; l'écran descend jusqu'à la phrase, que le clavier ouvert
+cachait ([`codeDeFiltreSaisi`](../src/features/Planning/services/filtresUe.ts),
+[`FiltersScreen`](../src/features/Settings/screens/FiltersScreen.tsx)). Vu au même moment : dans une
+rangée de filtre, le code se centrait (`alignSelf` du style partagé `buttonMainText`) au-dessus d'un
+intitulé calé à gauche. Calé à gauche lui aussi. Un filtre déjà enregistré qui n'est pas un code reste
+où il est, retirable par sa croix : il ne masquait rien, il ne masque toujours rien. Vérifié sur
+`ukit` : minuscules remises en majuscules, doublon sans effet, texte libre refusé, ajout par la touche
+Entrée du clavier.
+
 ### ~~Les boutons de pas du délai des rappels sont des disques~~ — constaté le 2026-11-10, harmonisé le même jour
 
 Vu au banc pendant l'audit du lot 1 : « − » et « + » de la page Notifications étaient ronds, forme que

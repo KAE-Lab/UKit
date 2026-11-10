@@ -227,7 +227,12 @@ mesurés de la modale :
 
 Deux moyens d'ajouter un filtre, inchangés :
 
-- **saisie libre** d'un code, mis en majuscules automatiquement ;
+- **saisie libre** d'un code, mis en majuscules automatiquement ; ce qui n'a pas la forme d'un code
+  d'UE est refusé sur place, le texte gardé dans le champ
+  ([`codeDeFiltreSaisi`](../../src/features/Planning/services/filtresUe.ts)) : un filtre se compare à
+  des codes, et « BONJOUR » s'enregistrait comme un filtre actif qui ne masquait jamais rien. Une
+  faute de frappe qui garde la forme d'un code passe encore, rien ne la distingue d'une UE pas encore
+  vue ;
 - **sélection dans la liste** des UE réellement rencontrées, alimentée par
   `PlanningDataManager.getUEs()` — celle-ci se remplit à mesure que des plannings sont chargés, par
   extraction du code d'UE des matières.

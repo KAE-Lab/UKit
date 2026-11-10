@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { codesDUE, coursASynchroniser, estMasque, poserLesUE, preparerPourAffichage, type CoursAvecUE } from './filtresUe';
+import { codeDeFiltreSaisi, codesDUE, coursASynchroniser, estMasque, poserLesUE, preparerPourAffichage, type CoursAvecUE } from './filtresUe';
 
 /** Le cours d'intelligence artificielle, sous son code francais et son code anglais. */
 const IA: CoursAvecUE = {
@@ -109,5 +109,25 @@ describe('preparerPourAffichage', () => {
     it('accepte une liste de filtres absente ou malformee', () => {
         expect(preparerPourAffichage([{ ...ALGO }], true, undefined)).toHaveLength(1);
         expect(preparerPourAffichage([{ ...ALGO }], true, 'pas une liste')).toHaveLength(1);
+    });
+});
+
+describe('codeDeFiltreSaisi', () => {
+    it('normalise un code saisi a la main', () => {
+        expect(codeDeFiltreSaisi(' 4tin612u ')).toBe('4TIN612U');
+        expect(codeDeFiltreSaisi('4TTVA35U')).toBe('4TTVA35U');
+    });
+
+    it('refuse ce qui ne peut jamais masquer un cours', () => {
+        expect(codeDeFiltreSaisi('bonjour')).toBeNull();
+        expect(codeDeFiltreSaisi('2026')).toBeNull();
+        expect(codeDeFiltreSaisi('4TIN 612U')).toBeNull();
+        expect(codeDeFiltreSaisi('   ')).toBeNull();
+    });
+
+    it('accepte exactement ce que la lecture des cours reconnait comme un code', () => {
+        const code = codeDeFiltreSaisi('4tin612u');
+        expect(code).not.toBeNull();
+        expect(estMasque({ subject: '4TIN612U Projets', modules: ['4TIN612U Projets'] }, [code as string])).toBe(true);
     });
 });

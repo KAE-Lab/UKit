@@ -79,6 +79,8 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Un filtre saisi à la main doit être un code d'UE** : « bonjour » devenait un filtre qui ne
+  masquait rien. La rangée d'un filtre aligne son code sur son intitulé.
 - **Un groupe trouvé s'ouvre au premier toucher**, clavier encore ouvert.
 - **Le Planning suit tout de suite un changement de langue** (le mois et les jours restaient dans
   l'ancienne jusqu'à la relance), et le choix de langue des Réglages écrit chaque langue dans la

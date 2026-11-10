@@ -97,7 +97,7 @@ daté du 2026-11-10 ; ce que le banc ne joue pas est en fin de section.
 **Réglages**
 - [x] établissement : bascule et retour (favoris, filtres, session retrouvés) — `ukit` S
 - [x] langue (fr, en, es) et apparence (clair, sombre), à chaud — `ukit`, `ukit-a8`
-- [x] filtres : liste, compteur, ajout et retrait par la proposition — `ukit` S ; [ ] ajout manuel d'un code : non joué
+- [x] filtres : liste, compteur, ajout et retrait par la proposition — `ukit` S ; ajout manuel d'un code (minuscules, doublon, texte libre, touche Entrée) — `ukit` S, le 2026-11-10 au lot 2
 - [x] agenda : permission, cible, lecture seule, UKit supprimé, échec dit — `ukit` S
 - [x] notifications — `ukit` C
 - [x] à propos, menu de développement — `ukit-a8` S

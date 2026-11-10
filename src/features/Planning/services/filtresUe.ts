@@ -15,7 +15,19 @@
  * Voir docs/features/planning.md.
  */
 
-import { separerCodeUE } from './PlanningAssembly';
+import { estUnCodeDUE, separerCodeUE } from './PlanningAssembly';
+
+/**
+ * Le code d'un filtre saisi a la main, normalise, ou `null` quand ce n'est pas un code d'UE.
+ *
+ * Un filtre se compare a des codes (`estMasque`) : « BONJOUR » s'enregistrait et ne masquait jamais
+ * rien, en se presentant comme un filtre actif (audit du lot 1, 2026-11-10). Une faute de frappe qui
+ * garde la forme d'un code (`4TIN6O6U`) passe encore : rien ne la distingue d'une UE pas encore vue.
+ */
+export function codeDeFiltreSaisi(saisie: string): string | null {
+    const code = saisie.trim().toUpperCase();
+    return estUnCodeDUE(code) ? code : null;
+}
 
 /** Ce qu'il faut d'un cours pour en lire les UE : le sujet, les modules declares, et ou les deposer. */
 export interface CoursAvecUE {

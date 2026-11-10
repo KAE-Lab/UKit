@@ -92,6 +92,7 @@ const es: TranslationDict = {
 	INTRO_FILTRES: "Las UE añadidas aquí se ocultan del horario hasta que las quites.",
 	FILTERS_ACTIVE: 'Filtros activos',
 	FILTERS_ADD: 'Añadir un filtro',
+	FILTER_CODE_REFUSED: '«$-» no es un código de UE',
 	FILTERS_UE: 'Filtrar una UE',
 	FILTER_MODE_EXCLUDE: 'Ocultar',
 	FILTER_MODE_INCLUDE: 'Mostrar solo',
