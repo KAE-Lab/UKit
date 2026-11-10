@@ -19,6 +19,14 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~L'identifiant ADE d'un étudiant s'écrit dans le journal de l'appareil~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc en jouant l'INP (passe d'avant Montaigne) : la trace de lecture du dossier écrivait
+`[propositions] dossier lu : … edt <identifiant>`, par `console.log`, que rien ne retire en production.
+Cet identifiant vaut un secret : l'export anonyme d'ADE rend l'emploi du temps de quiconque le connaît
+([scolarite.md](features/scolarite.md#lidentifiant-ade-vaut-un-secret)). La ligne dit désormais `lu` ou
+`absent` ([`ScolariteSession`](../src/features/Scolarite/services/ScolariteSession.ts)).
+
 ### ~~Une identité réelle dans un test du dépôt public~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu en ajoutant un cas à [`ScolariteMapping.test.ts`](../src/features/Scolarite/services/ScolariteMapping.test.ts)

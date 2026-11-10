@@ -168,6 +168,8 @@ entrée.
 - **L'emploi du temps personnel introuvable de l'INP se dit**, par une rangée et sa relance (décision
   du propriétaire).
 - **Hors ligne, « Pas de connexion »** au lieu de « Portail injoignable ».
+- Croisés en chemin et corrigés : l'identifiant ADE écrit dans le journal, une identité réelle dans un
+  test du dépôt (elle reste dans l'historique git, que seul le propriétaire peut réécrire).
 
 **À publier, avec le reste** : `ukit.portail.verification` 3, depuis `main` (étape 3 ci-dessous ; le
 manifeste publié est vide, lu le 2026-11-10 : la version 3 bat le socle du dernier tag et sera

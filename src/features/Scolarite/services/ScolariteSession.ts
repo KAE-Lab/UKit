@@ -221,7 +221,9 @@ export async function jouerDossier(options: OptionsSession = {}): Promise<Dossie
     });
     console.log(
         `[propositions] dossier lu : ${propositions.ues.length} UE inscrite(s), ` +
-        `edt ${propositions.edt === null ? 'absent' : propositions.edt.ressource}`,
+        // L'identifiant ADE vaut un secret (edtPersonnel.ts) : le journal dit s'il a ete lu, jamais
+        // lequel. `console.log` part aussi en production.
+        `edt ${propositions.edt === null ? 'absent' : 'lu'}`,
     );
 
     // L'horodatage se pose ICI et non dans la projection : celle-ci ne doit connaitre ni
