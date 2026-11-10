@@ -90,6 +90,22 @@ export async function purgerDonneesEtablissement(): Promise<void> {
 }
 
 /**
+ * Efface les seuls caches de planning, sans rien d'autre de l'etablissement.
+ *
+ * Pour la deconnexion d'un compte dont le lien d'abonnement venait du compte (lot 3) : les jours
+ * mis en cache sont les siens, et leur cle ne porte ni le lien ni le compte — un abonnement n'a pas de
+ * groupe. Les garder servirait hors ligne la journee du precedent au compte suivant. Ne leve pas.
+ */
+export async function purgerCachesDePlanning(): Promise<void> {
+    try {
+        const toutes = await AsyncStorage.getAllKeys();
+        await AsyncStorage.multiRemove(toutes.filter(estCacheDePlanning));
+    } catch (erreur) {
+        console.warn(`[etablissements] purge des caches de planning incomplete : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+    }
+}
+
+/**
  * Efface les favoris et les filtres du Campus. Reservee a la reinitialisation (voir
  * `CLES_CAMPUS_NATIONALES`). Ne leve pas, pour la meme raison que la purge d'etablissement.
  */

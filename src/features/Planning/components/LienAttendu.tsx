@@ -37,9 +37,12 @@ interface LienAttenduProps {
 }
 
 export function LienAttendu({ theme, onColler, onConnecter }: LienAttenduProps) {
-    const { credentials, scrapeStatus } = useCredentials();
+    const { credentials, credentialsLoaded, scrapeStatus } = useCredentials();
 
     if (lienParLeCompte()) {
+        // Le trousseau n'a pas encore repondu : « connecte-toi » serait faux une seconde pour un
+        // etudiant deja connecte, puis remplace par le chargement.
+        if (!credentialsLoaded) return <ChargementPlanning theme={theme} />;
         if (credentials === null) {
             return (
                 <SourceFailureNotice

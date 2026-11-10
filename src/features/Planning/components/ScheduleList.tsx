@@ -113,7 +113,12 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         this.fetchSchedule();
         // Dans les deux vues : la semaine n'a pas de relecture au focus, et elle afficherait sinon
         // « colle ton lien » a cote d'une journee deja remplie.
-        this.abonnementLien = DeviceEventEmitter.addListener(EVENEMENT_LIEN_EDT, () => this.fetchSchedule('automatique'));
+        // La fenetre de fraicheur ne vaut plus : la source elle-meme a change, et un chargement saute
+        // laissait a l'ecran la journee du lien precedent.
+        this.abonnementLien = DeviceEventEmitter.addListener(EVENEMENT_LIEN_EDT, () => {
+            this.derniereLecture = null;
+            this.fetchSchedule('automatique');
+        });
         if (this.props.mode === 'day' && this.props.navigation) {
             this._unsubscribe = this.props.navigation.addListener('focus', () => {
                 this.fetchSchedule('automatique');
@@ -536,15 +541,12 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         if (source.kind === 'lien-attendu') {
             // Coller, se connecter, ou attendre la lecture en cours : c'est le compte qui tranche,
             // et il vit dans un contexte que cette classe ne lit pas (LienAttendu.tsx).
-            return this.renderEtat(
-                <LienAttendu
-                    theme={this.props.theme}
-                    onColler={() => this.props.navigation?.navigate('LienEdt')}
-                    // L'ecran du compte et son formulaire, comme le bouton « Connexion » de la Scolarite :
-                    // l'onglet seul laissait l'etudiant chercher ou se connecter.
-                    onConnecter={() => this.props.navigation?.navigate('CredentialsSettings')}
-                />
-            );
+            // `onConnecter` : l'ecran du compte et son formulaire, comme le bouton « Connexion » de la
+            // Scolarite — l'onglet seul laissait l'etudiant chercher ou se connecter.
+            return this.renderEtat(<LienAttendu
+                theme={this.props.theme}
+                onColler={() => this.props.navigation?.navigate('LienEdt')}
+                onConnecter={() => this.props.navigation?.navigate('CredentialsSettings')} />);
         }
         // Un abonnement colle **est** l'emploi du temps de cet etudiant-la : il n'y a pas de groupe a
         // choisir, donc pas d'etat « aucun favori » a afficher. Sans cette garde, l'ecran inviterait a

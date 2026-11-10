@@ -4,7 +4,7 @@ import { AppState } from 'react-native';
 import SecureStoreService from '../../../shared/services/SecureStoreService';
 import { marquer } from '../../../shared/services/Chrono';
 import { SettingsManager } from '../../../shared/services/AppCore';
-import { enregistrerLienEdt, getCodeEtablissementActif, portailPublie } from '../../../shared/etablissements';
+import { enregistrerLienEdt, getCodeEtablissementActif, portailPublie, purgerCachesDePlanning } from '../../../shared/etablissements';
 import Translator from '../../../shared/i18n/Translator';
 import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { adoucirLaTransition } from '../../../shared/ui/transitions';
@@ -317,7 +317,11 @@ function useDeconnexion(
         await ecrireEnAttente(null);
         // Un lien d'abonnement lu sur le compte appartenait a ce compte, pour la meme raison : le garder
         // afficherait son emploi du temps au suivant (LienDuCompte.ts).
-        if (lienLuSurLeCompte()) await enregistrerLienEdt(null);
+        // Les jours mis en cache avec lui aussi : leur cle ne nomme ni le lien ni le compte.
+        if (lienLuSurLeCompte()) {
+            await purgerCachesDePlanning();
+            await enregistrerLienEdt(null);
+        }
         oublier();
 
         /*
@@ -376,6 +380,9 @@ function useBasculerAuChangementDEtablissement(
         let monte = true;
         const surChangement = () => {
             sessionRef.current?.abort();
+            // A `null` tout de suite, comme `libererLeMoteur` : sans quoi la session de l'etablissement
+            // d'arrivee, lancee sans remplacement, se faisait refuser par celle qu'on vient d'annuler.
+            sessionRef.current = null;
             oublierRef.current();
             void chargerSessionDuTrousseau(
                 (mode) => lancerRef.current(mode),
@@ -807,7 +814,10 @@ const useCredentialsSession = (): CredentialsValue => {
                 // deconnexion pendant la session remettrait dans le trousseau l'identite que
                 // `logout` vient d'effacer.
                 if (controleur.signal.aborted) {
-                    setEtat(AU_REPOS);
+                    // Seulement si personne n'a pris la suite : une session qui en remplace une autre a
+                    // deja pose son etat, et le repos de l'annulee l'ecrasait — l'ecran perdait sa
+                    // progression pendant tout le parcours froid (relecture du lot 3).
+                    if (sessionRef.current === null || sessionRef.current === controleur) setEtat(AU_REPOS);
                     return;
                 }
                 appliquerResultat(resultat);
