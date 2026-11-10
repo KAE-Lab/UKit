@@ -75,6 +75,17 @@ export function estCachable(salles: readonly OccupationSalle[]): boolean {
     return salles.some((salle) => salle.ok);
 }
 
+/**
+ * Aucune salle n'a pu etre lue : le batiment n'est pas libre, sa source est en panne.
+ *
+ * Une salle en echec reste comptee libre quand les autres ont repondu ; un lot entierement en echec,
+ * lui, affichait le batiment entier libre pendant la panne (registre, 2026-09-21). Un lot vide — un
+ * batiment sans salle — n'est pas un echec.
+ */
+export function aucuneSalleLue(salles: readonly OccupationSalle[]): boolean {
+    return salles.length > 0 && salles.every((salle) => !salle.ok);
+}
+
 /** Les salles a rejouer malgre un cache frais : absentes, ou en echec. */
 export function sallesARelire(cache: CacheOccupation, roomIds: readonly string[]): string[] {
     return roomIds.filter((roomId) => {

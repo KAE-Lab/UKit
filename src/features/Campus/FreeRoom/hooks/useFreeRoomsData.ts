@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import moment from 'moment';
 import { BuildingInfo, FreeRoomSlot } from '../../services/FreeRoomService';
 import { occupationDuBatiment } from '../../services/OccupationService';
+import { aucuneSalleLue } from '../../services/occupationCache';
+import type { UkitFailure } from '../../../../shared/aetherius';
 
 export function useFreeRoomsData(building: BuildingInfo) {
     const [loading, setLoading] = useState(true);
@@ -10,6 +12,8 @@ export function useFreeRoomsData(building: BuildingInfo) {
     const [allEvents, setAllEvents] = useState<{ roomId: string, events: import('../../services/CampusApiService').CampusEvent[] }[]>([]);
     
     const [isClosed, setIsClosed] = useState(false);
+    /** L'echec de la lecture, quand aucune salle n'a ete lue : la fiche le dit au lieu de tout montrer libre. */
+    const [echec, setEchec] = useState<UkitFailure | null>(null);
     const [hoursList, setHoursList] = useState<string[]>([]);
     const [buildingCloseTime, setBuildingCloseTime] = useState('20:00');
 
@@ -63,12 +67,13 @@ export function useFreeRoomsData(building: BuildingInfo) {
         const today = moment().format('YYYY-MM-DD');
 
         // Un run pour tout le batiment, derriere un cache de dix minutes par batiment et par jour
-        // (OccupationService, jalon 7-I). L'echec est donc tout ou rien : un run en echec laisse
-        // toutes les salles comptees libres, le defaut ecrit dans docs/defauts-fonctionnels.md.
-        const results = await occupationDuBatiment(building, today);
+        // (OccupationService, jalon 7-I). L'echec est donc tout ou rien, et il se dit : un lot sans
+        // aucune salle lue montrait le batiment entier libre pendant la panne (registre, 2026-09-21).
+        const lues = await occupationDuBatiment(building, today);
 
         if (!mountedRef.current) return;
-        setAllEvents(results.map(({ roomId, events }) => ({ roomId, events })));
+        setEchec(lues.echec !== null && aucuneSalleLue(lues.salles) ? lues.echec : null);
+        setAllEvents(lues.salles.map(({ roomId, events }) => ({ roomId, events })));
         setLoading(false);
     };
 
@@ -97,7 +102,9 @@ export function useFreeRoomsData(building: BuildingInfo) {
         hoursList,
         selectedIndex,
         setSelectedIndex,
-        freeRooms
+        freeRooms,
+        echec,
+        relancer: () => { void loadSchedules(); },
     };
 }
 

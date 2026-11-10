@@ -343,10 +343,11 @@ Deux conséquences à connaître avant d'y toucher :
   est éditoriale, l'écart est accepté.
 - **Un run d'occupation en échec vide tout le bâtiment pour cette ouverture** (7-I). Dix-sept runs en
   laissaient réussir quelques-uns ; le run groupé réussit ou échoue pour toutes les salles à la fois.
-  Rien n'est mis en cache, et l'ouverture suivante rejoue. Pendant la panne, la fiche montre toutes
-  les salles libres : c'est le défaut ouvert du
-  [registre](../defauts-fonctionnels.md#un-bâtiment-dont-loccupation-échoue-saffiche-entièrement-libre--constaté-le-2026-09-21),
-  que le run groupé ne crée pas mais qu'il étend à tout le bâtiment.
+  Rien n'est mis en cache, et l'ouverture suivante rejoue. Depuis le 2026-11-10, la fiche ne montre
+  plus toutes les salles libres pendant la panne : un lot sans aucune salle lue
+  ([`aucuneSalleLue`](../../src/features/Campus/services/occupationCache.ts)) devient l'écran d'échec
+  de la source, avec « Réessayer », et `occupationDuBatiment` rend l'échec avec les salles. Une salle
+  isolée en échec — au rejeu d'une salle absente du cache — reste comptée libre.
 - **L'attribution d'un événement à sa salle est une inclusion textuelle.** Un libellé qui serait le
   début d'un autre — une « Salle 10 » à côté d'une « Salle 101 » — recevrait aussi les cours de
   l'autre, et un cours dont la description tairait sa salle serait écarté. Aucun des deux cas n'existe

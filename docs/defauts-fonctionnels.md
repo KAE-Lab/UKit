@@ -332,7 +332,15 @@ qui n'a **aucun cours sur des semaines** : elle montre le même état. À faire 
 6.3 ([7-I](phase-7/7-i-releve-et-vocabulaire.md), la voix éditoriale) : quand aucun cours n'existe sur
 la fenêtre déjà lue, dire « ton groupe a peut-être changé » et mener à la recherche de groupes.
 
-### Un bâtiment dont l'occupation échoue s'affiche entièrement libre — constaté le 2026-09-21
+### ~~Un bâtiment dont l'occupation échoue s'affiche entièrement libre~~ — constaté le 2026-09-21, corrigé le 2026-11-10
+
+*Corrigé au lot 1 de la [prochaine version](prochaine-version.md) :* la lecture rend son échec avec
+les salles ([`OccupationService`](../src/features/Campus/services/OccupationService.ts)), et un lot
+sans aucune salle lue devient l'écran d'échec de la source, avec « Réessayer »
+([`aucuneSalleLue`](../src/features/Campus/services/occupationCache.ts), testé). Une salle isolée en
+échec reste comptée libre. Vérifié sur `ukit` : réseau coupé, la fiche de l'A28 dit « Service
+indisponible » ; réseau rendu, « Réessayer » rend les créneaux.
+
 
 Trouvé en jouant le protocole du disjoncteur de [7-C](phase-7/7-c-economie-et-socle.md), réseau coupé
 par l'interrupteur HORS LIGNE : la fiche de l'A28 s'ouvre normalement et **toutes ses salles sont

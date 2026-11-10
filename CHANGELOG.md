@@ -76,6 +76,8 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Un bâtiment dont l'occupation n'a pas pu être lue ne s'affiche plus entièrement libre** : la
+  fiche dit que le service est indisponible et propose de réessayer.
 - **Les lecteurs d'écran ne lisent plus la page cachée de la Scolarité ni les glyphes des icônes**,
   et la croix des dialogues et l'œil du mot de passe disent leur nom.
 - **Trois chaînes corrigées** : « Hay 2 … resultados ocultos » en espagnol, l'apostrophe de

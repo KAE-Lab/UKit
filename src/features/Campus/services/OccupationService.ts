@@ -20,6 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { attribuerOccupation } from './attributionOccupation';
 import { CampusApiService } from './CampusApiService';
 import type { BuildingInfo, RoomInfo } from './FreeRoomService';
+import type { UkitFailure } from '../../../shared/aetherius';
 import {
     cleOccupation,
     estCachable,
@@ -54,20 +55,28 @@ async function ecrire(cle: string, cache: CacheOccupation): Promise<void> {
     }
 }
 
-async function jouerLesSalles(batiment: string, salles: readonly RoomInfo[], jour: string): Promise<OccupationSalle[]> {
+/** Ce qu'une lecture rend : les salles, et l'echec du run quand il y en a eu un, pour que l'ecran le dise. */
+export interface OccupationLue {
+    readonly salles: readonly OccupationSalle[];
+    readonly echec: UkitFailure | null;
+}
+
+async function jouerLesSalles(batiment: string, salles: readonly RoomInfo[], jour: string): Promise<OccupationLue> {
     // Sans salle, le corps n'en nommerait aucune : il n'y a rien a demander au serveur.
-    if (salles.length === 0) return [];
+    if (salles.length === 0) return { salles: [], echec: null };
     const resultat = await CampusApiService.fetchRoomsScheduleDay(salles.map((salle) => salle.id), jour);
-    if (resultat.ok === false) return salles.map((salle) => ({ roomId: salle.id, ok: false, events: [] }));
+    if (resultat.ok === false) {
+        return { salles: salles.map((salle) => ({ roomId: salle.id, ok: false, events: [] })), echec: resultat.failure };
+    }
 
     const attribution = attribuerOccupation(salles, resultat.events);
     if (__DEV__) {
         console.info(`[salles] occupation ${batiment} ${jour} : un run pour ${salles.length} salle(s), ${attribution.ecartes} evenement(s) sans salle ecarte(s)`);
     }
-    return attribution.salles;
+    return { salles: attribution.salles, echec: null };
 }
 
-export async function occupationDuBatiment(batiment: BuildingInfo, jour: string): Promise<readonly OccupationSalle[]> {
+export async function occupationDuBatiment(batiment: BuildingInfo, jour: string): Promise<OccupationLue> {
     const cle = cleOccupation(batiment.name, jour);
     const roomIds = batiment.rooms.map((room) => room.id);
     const cache = await lireLeMagasin(cle);
@@ -76,14 +85,14 @@ export async function occupationDuBatiment(batiment: BuildingInfo, jour: string)
     if (cache !== null && estFraiche(cache, maintenant)) {
         const aRelire = sallesARelire(cache, roomIds);
         if (__DEV__) console.info(`[salles] occupation ${batiment.name} ${jour} : cache, ${aRelire.length} salle(s) rejouee(s)`);
-        if (aRelire.length === 0) return cache.salles;
+        if (aRelire.length === 0) return { salles: cache.salles, echec: null };
         const rejouees = await jouerLesSalles(batiment.name, batiment.rooms.filter((room) => aRelire.includes(room.id)), jour);
-        const fusion = fusionner(cache, rejouees);
-        if (estCachable(rejouees)) await ecrire(cle, fusion);
-        return fusion.salles;
+        const fusion = fusionner(cache, rejouees.salles);
+        if (estCachable(rejouees.salles)) await ecrire(cle, fusion);
+        return { salles: fusion.salles, echec: rejouees.echec };
     }
 
-    const salles = await jouerLesSalles(batiment.name, batiment.rooms, jour);
-    if (estCachable(salles)) await ecrire(cle, { horodatage: maintenant, salles });
-    return salles;
+    const lues = await jouerLesSalles(batiment.name, batiment.rooms, jour);
+    if (estCachable(lues.salles)) await ecrire(cle, { horodatage: maintenant, salles: lues.salles });
+    return lues;
 }

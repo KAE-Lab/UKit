@@ -16,13 +16,14 @@ import { FreeRoomsList } from './components/FreeRoomDetailsComponents';
 import { BandeauDeCases, caseDHeure } from '../../../shared/ui/BandeauDeCases';
 import { maintenant } from '../../../shared/services/Temps';
 import { FonduDeBord } from '../../../shared/ui/FonduDeBord';
+import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
 
 export default function FreeRoomDetailsScreen({ route, navigation }: { route: { params: { building: BuildingInfo } }; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) {
     const { building } = route.params;
     const AppContextValues = useContext(AppContext);
     const theme = style.Theme[AppContextValues.themeName];
 
-    const { loading, isClosed, hoursList, selectedIndex, setSelectedIndex, freeRooms } = useFreeRoomsData(building);
+    const { loading, isClosed, hoursList, selectedIndex, setSelectedIndex, freeRooms, echec, relancer } = useFreeRoomsData(building);
 
     // La fiche ouverte compte (7-D), par le code du batiment.
     useEffect(() => {
@@ -42,6 +43,17 @@ export default function FreeRoomDetailsScreen({ route, navigation }: { route: { 
                     message={Translator.get('LOADING_FREE_ROOMS')}
                     background={theme.courseBackground}
                 />
+            </SafeAreaView>
+        );
+    }
+
+    // Aucune salle lue : la panne de la source, et non un batiment libre (registre, 2026-09-21).
+    if (echec !== null && !isClosed) {
+        return (
+            <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
+                <ScreenState theme={theme} background={theme.courseBackground}>
+                    <SourceFailureNotice variant="plain" failure={echec} theme={theme} onRetry={relancer} />
+                </ScreenState>
             </SafeAreaView>
         );
     }

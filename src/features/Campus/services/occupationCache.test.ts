@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    aucuneSalleLue,
     TTL_OCCUPATION_MS,
     cleOccupation,
     estCachable,
@@ -69,5 +70,21 @@ describe('fusionner', () => {
         const fusion = fusionner(CACHE, [salle('s2'), salle('s3')]);
         expect(fusion.horodatage).toBe(CACHE.horodatage);
         expect(fusion.salles.map((s) => [s.roomId, s.ok])).toEqual([['s1', true], ['s2', true], ['s3', true]]);
+    });
+});
+
+describe('aucuneSalleLue', () => {
+    const salle = (roomId: string, ok: boolean) => ({ roomId, ok, events: [] });
+
+    it('dit la panne quand aucune salle n a ete lue', () => {
+        expect(aucuneSalleLue([salle('a', false), salle('b', false)])).toBe(true);
+    });
+
+    it('garde libre une salle isolee en echec quand les autres ont repondu', () => {
+        expect(aucuneSalleLue([salle('a', false), salle('b', true)])).toBe(false);
+    });
+
+    it('ne voit pas d echec dans un batiment sans salle', () => {
+        expect(aucuneSalleLue([])).toBe(false);
     });
 });
