@@ -37,6 +37,7 @@ import {
     CalendarSection,
     ConfidentialiteSection,
     DisplaySection,
+    messageDeCause,
     InstitutionSection,
     NotificationsSection,
     PreferencesSection,
@@ -237,7 +238,10 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
             return;
         }
         const aboutie = await SettingsManager.syncCalendar();
-        if (!aboutie) new ErrorAlert(Translator.get('CALENDAR_SYNC_FAILED_TOAST')).show();
+        if (aboutie) return;
+        // La cause, quand la tentative en porte une : « a echoue » seul ne dit pas quoi changer.
+        const cause = SettingsManager.getDerniereTentativeSynchro()?.cause;
+        new ErrorAlert(cause !== undefined ? messageDeCause(cause) : Translator.get('CALENDAR_SYNC_FAILED_TOAST')).show();
     };
 
     /**
@@ -446,7 +450,11 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
         const themeName = this.context.themeName ?? 'light';
         const theme = style.Theme[themeName];
         const calendar = this.state.calendars.find((cal) => this.state.selectedCalendar === cal.id);
-        const calendarName = !!calendar ? calendar.title : this.state.selectedCalendar === 'UKit' ? 'UKit' : Translator.get('NOT_FOUND');
+        // Aucune cible choisie se dit « Aucun » ; « Non trouve » reste pour une cible qui a disparu.
+        const calendarName = !!calendar ? calendar.title
+            : this.state.selectedCalendar === 'UKit' ? 'UKit'
+            : this.state.selectedCalendar === -1 ? Translator.get('PHONE_CALENDARS_NONE')
+            : Translator.get('NOT_FOUND');
         // Le don se collecte hors de l'application, dans le navigateur du systeme (regle des stores,
         // 7-N) ; la rangee n'existe que si le catalogue en publie l'adresse.
         const adresseDuSoutien = serviceEtablissement('soutien');

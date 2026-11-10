@@ -19,6 +19,7 @@ import { Text, TouchableOpacity, View, Modal, TouchableWithoutFeedback, ScrollVi
 import Translator from '../../../shared/i18n/Translator';
 import { propsLibelleBouton, tokens } from '../../../shared/theme/Theme';
 import { SettingsManager } from '../../../shared/services/AppCore';
+import { calendriersChoisissables } from '../../../shared/services/calendrier/cible';
 import { Icon } from '../../../shared/ui/Icon';
 
 type ThemeSettings = import('../../../shared/theme/Theme').AppThemeType['settings'];
@@ -150,7 +151,9 @@ export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, languag
 
 // ── Popup Calendrier ────────────────────────────────────────────────────
 export const SettingsCalendarPopup = ({ theme, popupVisible, popupClose, selectedCalendar, setCalendar }: { theme: ThemeSettings; popupVisible: boolean; popupClose: () => void; selectedCalendar: string | number; setCalendar: (cal: import('expo-calendar/legacy').Calendar | 'UKit') => void }) => {
-    const calendars = SettingsManager.getCalendars().filter((cal) => cal.title !== 'UKit');
+    // Un calendrier en lecture seule (jours feries, anniversaires, agenda partage) ne se propose pas :
+    // chaque ecriture y aurait leve une erreur native (cible.ts). UKit est propose a part, en tete.
+    const calendars = calendriersChoisissables(SettingsManager.getCalendars());
     const ukitCalendar = SettingsManager.getCalendars().find((cal) => cal.title === 'UKit');
 
     // Le calendrier dedie a deux identites — la cible symbolique `'UKit'` et l'id du calendrier reel

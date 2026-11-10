@@ -15,6 +15,7 @@
  */
 
 import type { Origine } from '../../aetherius/disjoncteur';
+import { lireCause, type CauseEchecSynchro } from './cible';
 
 /**
  * D'ou vient une tentative. Le menu de developpement l'affiche, la ligne d'etat non.
@@ -34,6 +35,11 @@ export interface TentativeSynchro {
      * desormais dans le menu de developpement, sur l'appareil qui l'a rencontree.
      */
     readonly raison?: string;
+    /**
+     * La famille de l'echec, celle que les reglages disent en une phrase (cible.ts). Absente d'une
+     * tentative ecrite avant le 2026-11-10 : l'ecran dit alors l'echec sans sa cause.
+     */
+    readonly cause?: CauseEchecSynchro;
 }
 
 /** Ce que la description des reglages promet : « environ toutes les 12 heures ». */
@@ -63,7 +69,12 @@ export function lireTentative(brut: string | null): TentativeSynchro | null {
         const { at, ok, origine, raison } = valeur as Record<string, unknown>;
         if (typeof at !== 'number' || !Number.isFinite(at) || typeof ok !== 'boolean') return null;
         if (typeof origine !== 'string' || !ORIGINES.includes(origine as OrigineSynchro)) return null;
-        return { at, ok, origine: origine as OrigineSynchro, ...(typeof raison === 'string' && raison !== '' ? { raison } : {}) };
+        const cause = ok ? undefined : lireCause((valeur as Record<string, unknown>).cause);
+        return {
+            at, ok, origine: origine as OrigineSynchro,
+            ...(typeof raison === 'string' && raison !== '' ? { raison } : {}),
+            ...(cause !== undefined ? { cause } : {}),
+        };
     } catch {
         return null;
     }

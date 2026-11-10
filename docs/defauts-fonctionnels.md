@@ -19,6 +19,27 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~L'échec d'une synchronisation de l'agenda ne dit pas sa raison~~ — rapporté le 2026-09-17, corrigé le 2026-11-10
+
+Deux retours du formulaire, dont un Pixel 6a vers Google Agenda : « la synchronisation a échoué »,
+sans rien d'autre, et c'est tout ce que l'écran montrait — la raison n'était lisible que dans le
+menu de développement. Trois défauts voisins, trouvés en le corrigeant : un calendrier **en lecture
+seule** se laissait choisir et chaque écriture levait une exception native ; le calendrier « UKit »,
+une fois créé, était désigné par son identifiant, si bien que le supprimer du téléphone faisait
+viser pour toujours un identifiant mort ; et `syncCalendar` n'était pas protégé contre deux
+passages parallèles — au banc, après un rechargement à chaud, chaque cours a été écrit deux fois et
+la purge n'en a retiré qu'un. Corrigé : la tentative porte une cause que la ligne d'état et le toast
+disent en une phrase ; la cible se résout avant toute lecture
+([`calendrier/cible.ts`](../src/shared/services/calendrier/cible.ts), testé), un calendrier en
+lecture seule n'est plus proposé et est refusé s'il l'est devenu ; « UKit » garde sa valeur
+symbolique et se recrée ; un second passage rejoint le premier. Vérifié sur `ukit` avec des
+calendriers créés par le fournisseur d'Android : le calendrier en lecture seule absent du choix ;
+« Perso banc » passé en lecture seule, puis « Forcer » : « Le calendrier choisi n'accepte pas de
+nouveaux événements : choisis-en un autre, ou « UKit » » dans le toast et la ligne d'état ; « UKit »
+supprimé du système, puis « Forcer » : recréé avec ses 263 cours. La synchronisation vers un compte
+Google réel n'est pas au banc (aucun compte sur l'émulateur) : la cause du Pixel 6a reste à lire
+dans sa ligne d'état.
+
 ### ~~Les « UE non suivies » s'acceptent en lot et peuvent masquer un vrai cours~~ — rapporté le 2026-09-23, corrigé le 2026-11-10
 
 Deux retours du formulaire (23 septembre, puis des TP absents le 3 novembre) : « Appliquer » posait

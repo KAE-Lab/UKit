@@ -9,6 +9,12 @@ describe('lireTentative', () => {
         expect(lireTentative(JSON.stringify({ at: 10, ok: false, origine: 'manuel', raison: 7 }))).toEqual({ at: 10, ok: false, origine: 'manuel' });
     });
 
+    it('relit la cause d un echec, et ignore une cause inconnue ou portee par une reussite', () => {
+        expect(lireTentative(JSON.stringify({ at: 10, ok: false, origine: 'manuel', cause: 'calendrier-lecture-seule' }))?.cause).toBe('calendrier-lecture-seule');
+        expect(lireTentative(JSON.stringify({ at: 10, ok: false, origine: 'manuel', cause: 'martienne' }))).toEqual({ at: 10, ok: false, origine: 'manuel' });
+        expect(lireTentative(JSON.stringify({ at: 10, ok: true, origine: 'manuel', cause: 'ecriture' }))).toEqual({ at: 10, ok: true, origine: 'manuel' });
+    });
+
     it('rend null pour un magasin vide, illisible ou d une autre forme', () => {
         expect(lireTentative(null)).toBeNull();
         expect(lireTentative('')).toBeNull();

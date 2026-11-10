@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import style from '../theme/Theme';
 import type { PlanningEvent } from '../../features/Planning/services/PlanningApiService';
+import { resoudreCible, type CauseEchecSynchro } from './calendrier/cible';
 
 /** Un cours, tel que le calendrier systeme l'attend. */
 export function formatCalendarEventData(event: PlanningEvent): Record<string, unknown> {
@@ -80,6 +81,26 @@ export async function createUKitCalendar(calendars: Calendar.Calendar[]): Promis
         };
     }
     return await Calendar.createCalendarAsync(calendar as Calendar.Calendar);
+}
+
+/**
+ * La cible d'un passage, resolue **avant** de lire l'emploi du temps et sur la liste relue : un
+ * calendrier supprime, passe en lecture seule ou une permission retiree depuis le lancement se disent
+ * par leur cause, au lieu d'une exception native au milieu de l'ecriture (calendrier/cible.ts).
+ *
+ * `recree` : le calendrier UKit vient d'etre (re)cree, il est vide. `ukit` : la cible est lui.
+ * `calendriers` : la liste relue, que l'appelant garde.
+ */
+export async function preparerCibleDeSynchro(cible: string | number): Promise<
+    | { readonly kind: 'refus'; readonly cause: CauseEchecSynchro }
+    | { readonly kind: 'prete'; readonly id: string; readonly recree: boolean; readonly ukit: boolean; readonly calendriers: Calendar.Calendar[] }
+> {
+    if ((await Calendar.getCalendarPermissionsAsync()).status !== 'granted') return { kind: 'refus', cause: 'permission' };
+    const calendriers = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+    const resolue = resoudreCible(cible, calendriers);
+    if (resolue.kind === 'refus') return resolue;
+    if (resolue.kind === 'ecrire') return { kind: 'prete', id: resolue.id, recree: false, ukit: resolue.ukit, calendriers };
+    return { kind: 'prete', id: await createUKitCalendar(calendriers), recree: true, ukit: true, calendriers };
 }
 
 /**

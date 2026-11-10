@@ -302,15 +302,17 @@ Activation
   ├─ l'échec précédent est effacé, et l'entretien arme la tâche de fond (entretien.ts)
   └─ choix de la cible : un calendrier existant, ou un calendrier "UKit" dédié
 
-syncCalendar(origine)
-  ├─ crée le calendrier "UKit" au premier passage si c'est la cible
+syncCalendar(origine)        un passage à la fois : un second appel rejoint le premier
+  ├─ la cible résolue avant toute lecture (preparerCibleDeSynchro, calendrier/cible.ts) :
+  │     permission, calendrier disparu ou en lecture seule → refus avec sa cause, rien n'est écrit ;
+  │     « UKit » retrouvé par son titre, ou (re)créé s'il a été supprimé du téléphone
   ├─ PlanningApiService.fetchCalendarForSynchronization(les groupes favoris, agrégés)
   │     └─ Blueprint ukit.celcat.annee, année universitaire complète (août → août)
   ├─ les filtres d'UE appliqués (coursASynchroniser : un cours reste tant qu'une UE n'est pas filtrée)
   ├─ pour chaque événement : mise à jour si connu, création sinon
   ├─ suppression des événements devenus obsolètes
   ├─ écriture de previousSyncData / previousSyncTime
-  └─ écriture de la tentative (calendarSyncAttempt) : date, issue, origine — réussie ou non
+  └─ écriture de la tentative (calendarSyncAttempt) : date, issue, origine, cause — réussie ou non
 ```
 
 La table `previousSyncData` associe l'identifiant Celcat à l'identifiant de l'événement système :
@@ -326,9 +328,33 @@ sorti d'`AppCore.tsx` quand il a frôlé ses 400 lignes.
 un cours commun n'existe pas — la source rend un cours par identifiant Celcat, et c'est cet
 identifiant qui indexe `previousSyncData` : il n'est écrit qu'une fois.
 
-**Un échec se dit deux fois.** La pastille sous l'interrupteur passe en avertissement, et quand c'est
-le geste « Forcer une synchronisation » qui a échoué, un toast le dit sur place : le service rend son
-verdict (`syncCalendar` rend `false`), l'écran décide du retour.
+**Un échec se dit deux fois, avec sa cause.** La pastille sous l'interrupteur passe en
+avertissement, et quand c'est le geste « Forcer une synchronisation » qui a échoué, un toast le dit
+sur place : le service rend son verdict (`syncCalendar` rend `false`), l'écran décide du retour.
+Depuis le 2026-11-10, les deux disent **pourquoi** : la tentative porte une cause
+([`calendrier/cible.ts`](../../src/shared/services/calendrier/cible.ts)) — source injoignable, autre
+échec de la source, permission retirée, calendrier disparu, calendrier en lecture seule, écriture
+refusée par le téléphone — que la ligne d'état ajoute à « Dernière tentative échouée… » en une
+phrase qui dit quoi changer. Deux retours du formulaire ne disaient que « la synchronisation a
+échoué », et c'était tout ce que l'écran leur montrait ; la raison brute, elle, reste dans le menu
+de développement.
+
+**Un calendrier en lecture seule est refusé avant d'écrire.** Les jours fériés, les anniversaires,
+un agenda partagé en lecture se laissaient choisir, et chaque écriture levait une exception native.
+Ils ne sont plus proposés au choix, et une cible devenue non modifiable depuis — ou choisie par une
+version antérieure — est refusée au passage suivant avec sa cause, avant toute lecture de
+l'emploi du temps.
+
+**« UKit » reste le repli, et garde son nom.** La cible symbolique `'UKit'` était remplacée par
+l'identifiant du calendrier créé au premier passage : supprimé depuis le téléphone, il laissait la
+synchronisation viser pour toujours un identifiant mort. La valeur symbolique reste désormais, et le
+calendrier se recrée s'il manque (vide : la table `previousSyncData` repart de zéro). Un ancien
+identifiant qui désigne un calendrier titré « UKit » est reconnu et ramené à la valeur symbolique.
+
+**Un passage à la fois.** L'entretien coalesçait déjà ses appels, mais `syncCalendar` ne se
+protégeait pas lui-même : au banc, deux passages parallèles (deux entretiens réabonnés par un
+rechargement à chaud) ont lu la même table vide et écrit chaque cours deux fois, puis la purge n'a
+retiré qu'un exemplaire. Un second appel rejoint désormais le passage en cours.
 
 **« Rien à faire » se dit aussi**, depuis le 2026-09-08. Sans cible ou sans groupe favori, la
 synchronisation n'a rien à écrire : elle ne rend pas d'échec — ce n'en est pas un — donc aucun toast
@@ -697,7 +723,8 @@ réinitialiser serait un résidu, pas un service.
 | [`screens/AboutScreen.tsx`](../../src/features/Settings/screens/AboutScreen.tsx) | À propos : historique, sources, contact, crédits, mentions légales |
 | [`screens/FiltersScreen.tsx`](../../src/features/Settings/screens/FiltersScreen.tsx) | l'écran des filtres d'UE : filtres actifs et leur croix, recherche, suggestions, saisie de code |
 | [`screens/CalendriersAffichesScreen.tsx`](../../src/features/Settings/screens/CalendriersAffichesScreen.tsx) | l'écran des calendriers du téléphone affichés dans le Planning : par source, couleur, interrupteur, cible de synchronisation écartée (6.1.x-D) |
-| [`shared/services/CalendarSyncHelpers.ts`](../../src/shared/services/CalendarSyncHelpers.ts) | les pièces sans état de la synchronisation : projection d'un cours vers un événement, création du calendrier `UKit`, écriture d'un passage, retrait de ce qu'un passage a écrit |
+| [`shared/services/CalendarSyncHelpers.ts`](../../src/shared/services/CalendarSyncHelpers.ts) | les pièces sans état de la synchronisation : projection d'un cours vers un événement, création du calendrier `UKit`, résolution de la cible avant un passage, écriture d'un passage, retrait de ce qu'un passage a écrit |
+| [`shared/services/calendrier/cible.ts`](../../src/shared/services/calendrier/cible.ts) · [`cible.test.ts`](../../src/shared/services/calendrier/cible.test.ts) | où écrire — calendrier en lecture seule ou disparu refusé, UKit en repli — et la cause d'un échec, purs |
 | [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les six groupes : établissement, affichage (le thème y est entré en 7-J), notifications, calendrier, confidentialité (7-D — autonome : elle lit le réglage de la mesure par son hook), lancement |
 | [`components/GroupeDeReglages.tsx`](../../src/features/Settings/components/GroupeDeReglages.tsx) | le groupe encadré et sa rangée : carré teinté, valeur qui cède, interrupteur, filets indentés (7-J) |
 | [`components/PageDesReglages.tsx`](../../src/features/Settings/components/PageDesReglages.tsx) | le fond, l'en-tête d'onglet et la vue défilante, en Reanimated (7-J) |

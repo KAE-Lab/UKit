@@ -76,6 +76,10 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **L'échec d'une synchronisation de l'agenda dit sa raison** : la source qui ne répond pas, la
+  permission retirée, le calendrier disparu ou en lecture seule. Un calendrier en lecture seule
+  (jours fériés, anniversaires) n'est plus proposé, et le calendrier « UKit » supprimé du téléphone
+  se recrée au passage suivant. Le calendrier non choisi se dit « Aucun » et non « Non trouvé ».
 - **Un portail lent ne s'annonce plus « Le problème vient de UKit »** : quand la page de
   l'université a mis plus de dix secondes à charger avant l'échec, l'application dit que le portail
   met du temps à répondre et propose de réessayer. Vaut aussi pour la messagerie et les autres

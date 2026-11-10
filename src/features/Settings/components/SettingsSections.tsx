@@ -9,7 +9,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import moment from 'moment';
 
-import Translator from '../../../shared/i18n/Translator';
+import Translator, { type TranslationKey } from '../../../shared/i18n/Translator';
+import type { CauseEchecSynchro } from '../../../shared/services/calendrier/cible';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { useMesureActive } from '../../../shared/mesure';
@@ -309,6 +310,20 @@ interface CalendarSectionProps {
     openCalendriersAffiches: () => void;
 }
 
+const CLE_DE_CAUSE: Readonly<Record<CauseEchecSynchro, TranslationKey>> = {
+    'source-injoignable': 'SYNC_CAUSE_SOURCE_UNAVAILABLE',
+    'source-autre': 'SYNC_CAUSE_SOURCE_OTHER',
+    permission: 'SYNC_CAUSE_PERMISSION',
+    'calendrier-introuvable': 'SYNC_CAUSE_CALENDAR_MISSING',
+    'calendrier-lecture-seule': 'SYNC_CAUSE_CALENDAR_READ_ONLY',
+    ecriture: 'SYNC_CAUSE_WRITE',
+};
+
+/** La phrase d'une cause d'echec, pour la ligne d'etat et le toast du geste « forcer ». */
+export function messageDeCause(cause: CauseEchecSynchro): string {
+    return Translator.get(CLE_DE_CAUSE[cause]);
+}
+
 /**
  * L'etat de la synchronisation, en tete du groupe. Le point passe en `warning` sur un echec, pas en
  * rouge : la synchronisation reessaie d'elle-meme. Les deux informations ensemble, ce qui a reussi et
@@ -328,6 +343,9 @@ function EtatDeLaSynchro({ theme, lastSyncDate, derniereTentative }: Pick<Calend
             {echec && derniereTentative !== null ? (
                 <Text style={{ fontSize: tokens.fontSize.sm, color: theme.warning, marginTop: tokens.space.xxs, marginLeft: tokens.space.md }}>
                     {Translator.get('LAST_ATTEMPT_FAILED_AT', moment(derniereTentative.at).fromNow())}
+                    {/* La cause, dans la meme phrase d'etat : elle ne se lisait que dans le menu de
+                        developpement (lot 1, 2026-11-10). Une tentative d'avant n'en porte pas. */}
+                    {derniereTentative.cause !== undefined ? `. ${messageDeCause(derniereTentative.cause)}` : null}
                 </Text>
             ) : null}
         </View>

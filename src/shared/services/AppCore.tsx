@@ -23,8 +23,9 @@ import { oublierVus } from '../messages/vus';
 // Le reglage seul, et non l'index de la mesure : l'index importe ce fichier (7-D).
 import { reinitialiserLaMesure } from '../mesure/reglage';
 import { restaurerReglages } from './reglagesParEtablissement';
-import { createUKitCalendar, ecrireEvenementsDansCalendrier, retirerEvenementsSynchronises } from './CalendarSyncHelpers';
+import { ecrireEvenementsDansCalendrier, preparerCibleDeSynchro, retirerEvenementsSynchronises } from './CalendarSyncHelpers';
 import { lireTentative, origineDuRun, type OrigineSynchro, type TentativeSynchro } from './calendrier/tentative';
+import { CALENDRIER_UKIT, causeDeLaSource, type CauseEchecSynchro } from './calendrier/cible';
 import { NetworkMockService } from './NetworkMockService';
 import { PlanningApiService as FetchManager } from '../../features/Planning/services/PlanningApiService';
 import { coursASynchroniser, estMasque, poserLesUE, preparerPourAffichage, type CoursAvecUE } from '../../features/Planning/services/filtresUe';
@@ -356,6 +357,13 @@ class SettingsManagerService {
         this.notify('synchroCalendrier', tentative);
     };
 
+    /** Un refus avant lecture : rien n'a ete ecrit, la cause dit quoi changer (cible.ts). */
+    refuserSynchro = (origine: OrigineSynchro, cause: CauseEchecSynchro): false => {
+        console.warn(`[calendrier] cible ${String(this._calendar)} refusee : ${cause}`);
+        this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine, raison: `cible : ${cause}`, cause });
+        return false;
+    };
+
     /** L'echec s'efface ; une reussite reste, elle date la derniere synchronisation. */
     effacerEchecSynchro = () => {
         if (this._derniereTentative !== null && !this._derniereTentative.ok) this.enregistrerTentativeSynchro(null);
@@ -393,7 +401,19 @@ class SettingsManagerService {
      *
      * `origine` dit qui l'a demandee ; la tentative la garde pour le menu de developpement.
      */
-    syncCalendar = async (origine: OrigineSynchro = 'manuel'): Promise<boolean> => {
+    syncCalendar = (origine: OrigineSynchro = 'manuel'): Promise<boolean> => {
+        // Un passage a la fois : deux passages paralleles lisent la meme table `previousSyncData` et
+        // ecrivent chacun tous les cours — l'agenda les recevait en double, et la purge ne retirait
+        // ensuite qu'un exemplaire. Vu au banc le 2026-11-10 (deux entretiens apres un rechargement
+        // a chaud) ; l'entretien les coalesce deja, mais le service ne s'en protegeait pas lui-meme.
+        if (this._synchroEnCours !== null) return this._synchroEnCours;
+        this._synchroEnCours = this.jouerSynchro(origine).finally(() => { this._synchroEnCours = null; });
+        return this._synchroEnCours;
+    };
+
+    private _synchroEnCours: Promise<boolean> | null = null;
+
+    private jouerSynchro = async (origine: OrigineSynchro): Promise<boolean> => {
         if (this._calendar === -1 || this._favoriteGroups.length === 0) {
             this.effacerEchecSynchro();
             return true;
@@ -409,10 +429,12 @@ class SettingsManagerService {
          * d'etat des reglages : un echec silencieux etait indiscernable d'un bouton casse.
          */
         try {
-        if (this._calendar === 'UKit') {
-            const ukitCalendar = this._calendars.find((cal) => cal.title === 'UKit');
-            this._calendar = !ukitCalendar ? await createUKitCalendar(this._calendars) : ukitCalendar.id;
-        }
+        const cible = await preparerCibleDeSynchro(this._calendar);
+        if (cible.kind === 'refus') return this.refuserSynchro(origine, cible.cause);
+        this._calendars = cible.calendriers;
+        // UKit garde sa valeur symbolique : resolu en identifiant, il visait pour toujours un
+        // calendrier que l'utilisateur pouvait avoir supprime, au lieu de se recreer.
+        if (cible.ukit) this._calendar = CALENDRIER_UKIT;
 
         // `resultat.ok === false` et non `!resultat.ok` : sans `strictNullChecks`, TypeScript ne
         // restreint pas une union sur la veracite du discriminant (shared/aetherius/runBlueprint.ts).
@@ -425,22 +447,28 @@ class SettingsManagerService {
         // qu'une fois.
         const resultat = await FetchManager.fetchCalendarForSynchronization(this._favoriteGroups, { origine: origineDuRun(origine) });
         if (resultat.ok === false) {
-            this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine, raison: `source : ${resultat.failure.kind}` });
+            this.enregistrerTentativeSynchro({
+                at: Date.now(), ok: false, origine, raison: `source : ${resultat.failure.kind}`, cause: causeDeLaSource(resultat.failure.kind),
+            });
             return false;
         }
 
         let existingCalendarEvents: Record<string, string> = {};
 
-        try {
-            const data = await AsyncStorage.getItem('previousSyncData');
-            existingCalendarEvents = data === null ? {} : JSON.parse(data) || {};
-        } catch { existingCalendarEvents = {}; }
+        // Un calendrier UKit recree est vide : ses anciens evenements sont partis avec lui, et les
+        // supprimer un par un viserait des identifiants morts.
+        if (!cible.recree) {
+            try {
+                const data = await AsyncStorage.getItem('previousSyncData');
+                existingCalendarEvents = data === null ? {} : JSON.parse(data) || {};
+            } catch { existingCalendarEvents = {}; }
+        }
 
         // L'ecriture vit dans CalendarSyncHelpers, comme les autres pieces sans etat du calendrier.
         // Les filtres d'UE s'appliquent ici comme a l'ecran (6.2.x) : la purge finale de l'ecriture
         // retire d'elle-meme, au passage suivant, les cours qu'un filtre vient de masquer.
         const nextExistingCalendarEvents = await ecrireEvenementsDansCalendrier(
-            this._calendar as string, coursASynchroniser(resultat.courses, this._filters), existingCalendarEvents,
+            cible.id, coursASynchroniser(resultat.courses, this._filters), existingCalendarEvents,
         );
 
         await AsyncStorage.setItem('previousSyncData', JSON.stringify(nextExistingCalendarEvents));
@@ -452,7 +480,7 @@ class SettingsManagerService {
         } catch (erreur) {
             const raison = erreur instanceof Error ? erreur.message : String(erreur);
             console.warn(`[calendrier] synchronisation interrompue : ${raison}`);
-            this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine, raison });
+            this.enregistrerTentativeSynchro({ at: Date.now(), ok: false, origine, raison, cause: 'ecriture' });
             return false;
         } finally {
             this._isSynchronizingCalendar = false;
