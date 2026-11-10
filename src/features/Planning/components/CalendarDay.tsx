@@ -33,9 +33,12 @@ class CalendarDay extends React.Component<CalendarDayProps> {
         }
     };
 
-    /** Ce qui change l'apparence d'une case hors de la selection : le jour courant et le theme. */
+    /**
+     * Ce qui change l'apparence d'une case hors de la selection : le jour courant, le theme, et la
+     * langue — sans elle, une case relocalisee gardait son « SAT » (audit du lot 1, 2026-11-10).
+     */
     static apparence(props: CalendarDayProps) {
-        return `${props.item.isSame(props.currentDay, 'day')}-${props.theme.accent}`;
+        return `${props.item.isSame(props.currentDay, 'day')}-${props.theme.accent}-${props.item.locale()}`;
     }
 
     static isSelected(props: CalendarDayProps) {

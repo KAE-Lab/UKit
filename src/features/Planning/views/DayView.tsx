@@ -134,8 +134,24 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		// celle-ci ne lit que le telephone, et cede a un chargement en cours.
 		this.desabonnerFocus = this.props.navigation?.addListener('focus', this.relireTelephone) ?? null;
 		SettingsManager.on('calendriersAffiches', this.surCalendriersAffiches);
+		SettingsManager.on('language', this.relocaliser);
 		void this.relireCalendrierPourAjout();
 	}
+
+	/**
+	 * Une instance `moment` garde la locale de sa creation : les jours du ruban, crees au montage,
+	 * restaient en francais apres un passage a l'anglais — « Novembre », « SAM. » — jusqu'au
+	 * lancement suivant (constate au banc, audit du lot 1, 2026-11-10). La selection ne bouge pas.
+	 */
+	relocaliser = (langue: string) => {
+		const selectedDay = moment(this.state.selectedDay).locale(langue);
+		this.setState({
+			days: this.state.days.map((jour) => moment(jour).locale(langue)),
+			currentDay: moment(this.state.currentDay).locale(langue),
+			selectedDay,
+			shownMonth: { number: selectedDay.month(), string: capitalize(selectedDay.format('MMMM')) },
+		});
+	};
 
 	relireTelephone = () => this.setState((etat) => ({ revisionTelephone: etat.revisionTelephone + 1 }));
 
@@ -234,6 +250,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		if (this.desabonnerRetour) this.desabonnerRetour();
 		if (this.desabonnerFocus) this.desabonnerFocus();
 		SettingsManager.unsubscribe('calendriersAffiches', this.surCalendriersAffiches);
+		SettingsManager.unsubscribe('language', this.relocaliser);
 	}
 
 	static getCalendarListItemLayout = (data: unknown[] | null | undefined, index: number) => ({

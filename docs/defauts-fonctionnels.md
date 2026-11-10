@@ -19,6 +19,20 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Après un changement de langue, le ruban des jours reste dans l'ancienne, et le choix de langue des Réglages traduit les noms de langue~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc pendant l'audit du lot 1, sur `ukit` : passé en anglais depuis les Réglages, le Planning
+gardait « Novembre » et « SAM., DIM. » jusqu'au lancement suivant. Une instance `moment` garde la
+locale de sa création, et les jours du ruban sont créés au montage ; les cases ne se redessinaient
+pas non plus, la langue n'entrant pas dans leur clé d'apparence. Corrigé : le Planning relocalise
+ses jours au changement de langue sans toucher à la sélection
+([`DayView.relocaliser`](../src/features/Planning/views/DayView.tsx)), et la locale entre dans la clé
+des cases ([`CalendarDay`](../src/features/Planning/components/CalendarDay.tsx)). Vu au même moment :
+le choix de langue des Réglages proposait « Anglais », « Espagnol », traduits dans la langue courante,
+quand l'accueil écrit chaque langue dans la sienne pour qu'on reconnaisse la sienne ; la table des
+autonymes est désormais partagée ([`langues.ts`](../src/shared/i18n/langues.ts)). Vérifié sur `ukit` :
+français → anglais → espagnol → français, le ruban suit à chaque fois sans relance.
+
 ### Des cours du matin absents le jour même — rapporté deux fois, Android 16, le 2026-09-30
 
 Deux retours : l'un avec un lien d'abonnement collé, l'autre sur Celcat. **Non reproduit** au lot 1,

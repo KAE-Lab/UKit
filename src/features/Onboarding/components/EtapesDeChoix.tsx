@@ -13,6 +13,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
 import Translator from '../../../shared/i18n/Translator';
+import { AUTONYMES, type LangueProposee } from '../../../shared/i18n/langues';
 import style, { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { LoadingState } from '../../../shared/ui/LoadingState';
 import { Icon } from '../../../shared/ui/Icon';
@@ -29,12 +30,6 @@ import type { OptionListee, OptionTheme } from '../hooks/useWelcomeState';
  */
 export const HAUT_D_ETAPE = tokens.space.xxl * 2 + tokens.space.md;
 
-/**
- * Les langues s'ecrivent dans leur propre langue, comme dans tout selecteur de langue : on doit
- * reconnaitre la sienne meme quand l'ecran est dans une autre. Ce ne sont donc pas des libelles a
- * traduire.
- */
-const AUTONYMES: Readonly<Record<string, string>> = { fr: 'Français', en: 'English', es: 'Español' };
 
 export function vibrer() {
     void Haptics.selectionAsync().catch(() => undefined);
@@ -144,7 +139,7 @@ export function StepPreferences({ themeObj, navigatorState, themeList, languageL
                 theme={themeObj}
                 options={languageList}
                 choisie={navigatorState.language}
-                libelle={(entree) => AUTONYMES[entree.id] ?? Translator.get(entree.title)}
+                libelle={(entree) => AUTONYMES[entree.id as LangueProposee] ?? Translator.get(entree.title)}
                 onChoisir={selectLanguage}
             />
         </ScrollView>

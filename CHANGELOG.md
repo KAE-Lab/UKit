@@ -76,6 +76,9 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Le Planning suit tout de suite un changement de langue** (le mois et les jours restaient dans
+  l'ancienne jusqu'à la relance), et le choix de langue des Réglages écrit chaque langue dans la
+  sienne, comme l'accueil.
 - **« Aujourd'hui » mène au bon jour après minuit**, même quand l'application est restée ouverte.
 - **Le changement d'établissement dit ce qu'il garde** : il annonçait effacer les groupes favoris et
   la session universitaire, qui restent rangés avec l'établissement et reviennent au retour.

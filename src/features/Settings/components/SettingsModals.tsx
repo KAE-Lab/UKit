@@ -20,6 +20,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { propsLibelleBouton, tokens } from '../../../shared/theme/Theme';
 import { SettingsManager } from '../../../shared/services/AppCore';
 import { calendriersChoisissables } from '../../../shared/services/calendrier/cible';
+import { AUTONYMES } from '../../../shared/i18n/langues';
 import { Icon } from '../../../shared/ui/Icon';
 
 type ThemeSettings = import('../../../shared/theme/Theme').AppThemeType['settings'];
@@ -137,10 +138,11 @@ export const SettingsLanguagePopup = ({ theme, popupVisible, popupClose, languag
         theme={theme}
         titre={Translator.get('LANGUAGE')}
         description={Translator.get('YOUR_LANGUAGE')}
+        // Chaque langue dans la sienne, comme a l'accueil (shared/i18n/langues.ts).
         options={[
-            { cle: 'fr', libelle: Translator.get('FRENCH') },
-            { cle: 'en', libelle: Translator.get('ENGLISH') },
-            { cle: 'es', libelle: Translator.get('SPANISH') },
+            { cle: 'fr', libelle: AUTONYMES.fr },
+            { cle: 'en', libelle: AUTONYMES.en },
+            { cle: 'es', libelle: AUTONYMES.es },
         ]}
         selection={language}
         popupVisible={popupVisible}
