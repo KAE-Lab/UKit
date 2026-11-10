@@ -57,7 +57,9 @@ function RangeeDeCalendrier({ calendrier, theme, themeSettings, affiche, onChang
             {/* La couleur telle que le Planning la rendra : la meme resolution que CourseRow. */}
             <PointDeCouleur couleur={couleurDeCours(theme.courses, calendrier.color ?? undefined)} taille={12} style={{ marginLeft: tokens.space.md }} />
             <View style={{ flex: 1 }}>
-                <Text style={themeSettings.buttonMainText as never} numberOfLines={2}>{calendrier.title}</Text>
+                {/* Cale a gauche : `buttonMainText` se centre (`alignSelf`), ce qui dans une colonne
+                    centrait le nom entre la pastille et l'interrupteur (audit du lot 1). */}
+                <Text style={[themeSettings.buttonMainText, { alignSelf: 'flex-start' }] as never} numberOfLines={2}>{calendrier.title}</Text>
             </View>
             <Interrupteur valeur={affiche} onChange={onChange} theme={themeSettings} accessibilityLabel={calendrier.title} style={{ marginRight: tokens.space.md }} />
         </View>

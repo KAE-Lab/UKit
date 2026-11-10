@@ -52,7 +52,9 @@ et le texte gardé pour qu'on le corrige ; l'écran descend jusqu'à la phrase, 
 cachait ([`codeDeFiltreSaisi`](../src/features/Planning/services/filtresUe.ts),
 [`FiltersScreen`](../src/features/Settings/screens/FiltersScreen.tsx)). Vu au même moment : dans une
 rangée de filtre, le code se centrait (`alignSelf` du style partagé `buttonMainText`) au-dessus d'un
-intitulé calé à gauche. Calé à gauche lui aussi. Un filtre déjà enregistré qui n'est pas un code reste
+intitulé calé à gauche. Calé à gauche lui aussi, comme le nom d'un calendrier dans l'écran des
+calendriers du téléphone, centré entre sa pastille et son interrupteur pour la même raison
+([`CalendriersAffichesScreen`](../src/features/Settings/screens/CalendriersAffichesScreen.tsx)). Un filtre déjà enregistré qui n'est pas un code reste
 où il est, retirable par sa croix : il ne masquait rien, il ne masque toujours rien. Vérifié sur
 `ukit` : minuscules remises en majuscules, doublon sans effet, texte libre refusé, ajout par la touche
 Entrée du clavier.
