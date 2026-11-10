@@ -76,6 +76,7 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **« Aujourd'hui » mène au bon jour après minuit**, même quand l'application est restée ouverte.
 - **Le changement d'établissement dit ce qu'il garde** : il annonçait effacer les groupes favoris et
   la session universitaire, qui restent rangés avec l'établissement et reviennent au retour.
 - **Un bâtiment dont l'occupation n'a pas pu être lue ne s'affiche plus entièrement libre** : la

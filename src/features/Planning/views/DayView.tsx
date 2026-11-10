@@ -344,6 +344,13 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 	};
 
 	onTodayPress = () => {
+		// Minuit passe l'ecran allume, sans aller-retour en arriere-plan : le jour courant n'avait pas
+		// ete recalcule, et « Aujourd'hui » menait a la veille (constate au banc, audit du lot 1,
+		// 2026-11-10). Le geste recalcule tout, comme le retour au premier plan.
+		if (!moment().isSame(this.state.currentDay, 'day')) {
+			this.reinitializeDates();
+			return;
+		}
 		if (this.state.mode === 'day') {
 			const index = this.state.currentDayIndex;
 			DayView.lastSelectedDay = this.state.currentDay;

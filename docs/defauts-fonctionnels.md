@@ -19,6 +19,15 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Minuit passé l'application ouverte, « Aujourd'hui » mène à la veille~~ — constaté le 2026-11-10, corrigé le même jour
+
+Joué au banc pendant la recherche des cours du matin absents (audit du lot 1) : horloge du système
+avancée au jeudi 7 h 50 avec le Planning au premier plan, « Aujourd'hui » ramenait au mardi. Le jour
+courant n'est recalculé qu'au retour au premier plan (correctif du 2026-09-02) ; minuit passé l'écran
+allumé, sans aller-retour, ne le recalculait pas. Corrigé : le geste vérifie la date et recalcule
+tout s'il le faut ([`DayView.onTodayPress`](../src/features/Planning/views/DayView.tsx)). Vérifié sur
+`ukit` : même saut, « Aujourd'hui » charge le jeudi 12 et ses quatre cours.
+
 ### ~~Le changement d'établissement annonce effacer les favoris et la session, qu'il garde~~ — constaté le 2026-11-10, corrigé le même jour
 
 Trouvé au banc pendant l'audit du lot 1 : la confirmation disait « Groupes favoris, planning en
