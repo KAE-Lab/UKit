@@ -19,6 +19,14 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Dans la recherche de groupes, le premier toucher sur un résultat ne l'ouvre pas~~ — constaté le 2026-11-10, corrigé le même jour
+
+Vu au banc pendant l'audit du lot 1, sur `ukit` : `INF601A1` tapé, le premier toucher sur le résultat
+ne faisait que fermer le clavier, et il fallait toucher une seconde fois. La liste n'avait pas
+`keyboardShouldPersistTaps`, que l'écran des filtres et l'étape des groupes de l'accueil portent déjà.
+Corrigé ([`GroupSelectionScreen`](../src/features/Planning/screens/GroupSelectionScreen.tsx)) ; vérifié
+sur `ukit`, clavier ouvert, le planning du groupe s'ouvre au premier toucher.
+
 ### ~~Après un changement de langue, le ruban des jours reste dans l'ancienne, et le choix de langue des Réglages traduit les noms de langue~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc pendant l'audit du lot 1, sur `ukit` : passé en anglais depuis les Réglages, le Planning

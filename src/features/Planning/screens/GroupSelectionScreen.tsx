@@ -302,6 +302,10 @@ class HomeScreen extends React.Component<HomeScreenProps, HomeScreenState> {
     renderList(theme: import('../../../shared/theme/Theme').AppThemeType) {
         return (
             <Animated.SectionList
+                // Un resultat se touche du premier coup, clavier ouvert : sans `handled`, le premier
+                // toucher ne faisait que fermer le clavier (constate au banc, audit du lot 1,
+                // 2026-11-10). La meme regle que l'ecran des filtres et l'etape des groupes.
+                keyboardShouldPersistTaps="handled"
                 onScroll={Animated.event(
                     [{ nativeEvent: { contentOffset: { y: this.scrollY } } }],
                     { useNativeDriver: false }
