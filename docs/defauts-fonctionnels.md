@@ -200,7 +200,16 @@ se déconnecter puis se reconnecter sur une bonne connexion, et s'il manque enco
 année ; et, au lot Scolarité de [7-J](phase-7/7-j-ecrans.md), **dire l'absence** — une rangée « emploi
 du temps personnel introuvable » avec sa relance — plutôt que de se taire.
 
-### « Journée libre » tout le semestre quand le groupe favori n'a plus de cours — rapporté le 2026-09-17
+### ~~« Journée libre » tout le semestre quand le groupe favori n'a plus de cours~~ — rapporté le 2026-09-17, corrigé le 2026-11-10
+
+*Corrigé au lot 1 de la [prochaine version](prochaine-version.md) :* sur une journée de semaine vide
+des favoris, l'année des favoris est lue une fois et, sans aucun cours quatre semaines avant ni
+après, l'écran dit « Rien depuis des semaines » et mène à la liste des groupes
+([`groupeInactif`](../src/features/Planning/services/groupeInactif.ts), testé ;
+[planning.md](features/planning.md#une-journée-vide-nest-pas-toujours-une-journée-libre)). Vérifié
+sur `ukit` en avançant l'horloge du système au 15 juillet 2027 : l'état et son bouton, après un seul
+`ukit.celcat.annee` ; le 11 novembre, férié, reste « Journée libre ».
+
 
 Un retour d'un utilisateur de l'an dernier : « le planning affiche journée libre tout le semestre ».
 Son groupe favori est celui de l'année passée ; à la rentrée, Celcat en publie de nouveaux, et

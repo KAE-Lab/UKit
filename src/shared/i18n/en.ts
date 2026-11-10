@@ -116,6 +116,8 @@ const en = {
 	NO_CLASS_THIS_DAY_TITLE: 'Free day',
 	NO_CLASS_THIS_DAY: 'No class on this day.',
 	NO_CLASS_TODAY: 'No class today.',
+	GROUP_INACTIVE_TITLE: 'Nothing for weeks',
+	GROUP_INACTIVE_MESSAGE: "Your group has no classes for four weeks before or after this day. It may have changed.",
 	WEEKEND_TITLE: 'It\'s the weekend',
 	WEEKEND_MESSAGE: 'No class until Monday.',
 	NO_CONNECTION: 'No connection',

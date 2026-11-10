@@ -551,6 +551,23 @@ L'hôte et les codes d'inventaire des six Blueprints `ukit.celcat.*` viennent eu
 depuis 6-G : ils sont passés en **entrées**, avec les valeurs de Bordeaux par défaut. Aucun
 `if (etablissement === …)` n'apparaît dans un service — ce qui varie est une donnée.
 
+## Une journée vide n'est pas toujours une journée libre
+
+Retour du 2026-09-17 : « le planning affiche journée libre tout le semestre ». Le favori était le
+groupe de l'année passée ; Celcat en publie de nouveaux à la rentrée et l'ancien ne porte plus rien.
+Une journée vide ne se distingue pas, seule, d'un groupe éteint. Sur une journée de semaine vide des
+favoris, l'écran lit donc l'année des favoris
+([`anneeDesFavoris.ts`](../../src/features/Planning/services/anneeDesFavoris.ts), une fois pour six
+heures et partagée avec la proposition d'UE) et, si aucun cours n'existe quatre semaines avant ni
+quatre semaines après ([`groupeInactif.ts`](../../src/features/Planning/services/groupeInactif.ts)),
+remplace « Journée libre » par « Rien depuis des semaines » et un bouton vers la recherche de groupes.
+
+La fenêtre de quatre semaines est un choix : deux semaines de vacances ne la déclenchent pas, un été
+entier oui, et la phrase dit « peut-être ». L'année se lit **non filtrée** — un cours masqué par un
+filtre d'UE existe, le groupe n'a pas changé pour autant. Le dimanche, un échec de lecture et une
+source sans groupe (un lien collé) laissent « Journée libre », qui reste vrai pour ce jour-là. La vue
+semaine n'a pas cet état : elle montre six colonnes vides, ce qui se lit déjà.
+
 ## Un seul cache pour la liste des groupes
 
 L'écran de recherche tenait son propre cache (`groups`, sans expiration, avec sa date embarquée) à
@@ -759,6 +776,7 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`services/groupListCache.ts`](../../src/features/Planning/services/groupListCache.ts) | la politique du cache de la liste des groupes — expiration, lecture défensive, repli daté — pure |
 | [`services/groupListCache.test.ts`](../../src/features/Planning/services/groupListCache.test.ts) | ses tests, écrits avant la fusion des deux caches (6.1-C), joués par `npm test` |
 | [`services/fraicheur.ts`](../../src/features/Planning/services/fraicheur.ts) | la fenêtre de fraîcheur de 60 s des runs automatiques — pure |
+| [`services/groupeInactif.ts`](../../src/features/Planning/services/groupeInactif.ts) · [`groupeInactif.test.ts`](../../src/features/Planning/services/groupeInactif.test.ts) | un groupe sans cours quatre semaines autour d'une journée vide — pur |
 | [`services/anneeDesFavoris.ts`](../../src/features/Planning/services/anneeDesFavoris.ts) | l'année scolaire des favoris, lue une fois et gardée six heures en mémoire, partagée entre la proposition d'UE du dossier et le Planning |
 | [`services/fraicheur.test.ts`](../../src/features/Planning/services/fraicheur.test.ts) | ses tests, joués par `npm test` |
 | [`screens/CourseScreen.tsx`](../../src/features/Planning/screens/CourseScreen.tsx) | fiche d'un cours : détails, extraction de la salle, carte intégrée ([`EmbeddedMap`](../../src/shared/map/EmbeddedMap.tsx), [cartographie.md](../cartographie.md)) ; pour un événement du téléphone, ni lieu ni UE, et « Ouvrir dans le calendrier » |

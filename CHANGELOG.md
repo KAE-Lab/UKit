@@ -76,6 +76,9 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Un groupe qui n'a plus de cours ne s'affiche plus « Journée libre » tout le semestre** : quand
+  le groupe favori n'a aucun cours quatre semaines autour du jour affiché, le Planning le dit et mène
+  à la liste des groupes.
 - **Les « UE non suivies » se choisissent une par une** : la proposition faite à la connexion masquait
   en lot toutes les UE absentes de l'inscription, et pouvait cacher un vrai cours. Rien n'est coché
   d'office, la raison est dite, et un dialogue permet d'annuler juste après ; la rangée Filtres des

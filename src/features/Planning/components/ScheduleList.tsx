@@ -28,6 +28,8 @@ import { assemblerSemaine } from '../services/PlanningAssembly';
 import { lireEvenementsDuTelephone } from '../services/TelephoneSource';
 import { CLE_JOUR } from '../services/TelephoneMapping';
 import { relectureInutile, type DerniereLecture } from '../services/fraicheur';
+import { lireAnneeDesFavoris } from '../services/anneeDesFavoris';
+import { estGroupeInactif } from '../services/groupeInactif';
 
 export interface ScheduleListProps {
     groupName: string | string[];
@@ -59,6 +61,8 @@ export interface ScheduleListState {
     /** L'echec a afficher quand il n'y a ni reponse ni cache. `null` le reste du temps. */
     failure: UkitFailure | null;
     loading: boolean;
+    /** La journee vide des favoris tombe dans un groupe sans cours depuis des semaines (groupeInactif.ts). */
+    groupeInactif: boolean;
 }
 
 type ScheduleData =
@@ -98,6 +102,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             manquants: [],
             failure: null,
             loading: false,
+            groupeInactif: false,
         };
     }
 
@@ -365,8 +370,30 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
         this.setState({
             schedule: affiche, loading: false, controller: null,
-            cacheDate: issue.cacheDate, manquants: issue.manquants ?? [], failure: null,
+            cacheDate: issue.cacheDate, manquants: issue.manquants ?? [], failure: null, groupeInactif: false,
         });
+        if (this.props.mode === 'day' && affiche.length === 0) void this.verifierGroupeInactif();
+    }
+
+    /**
+     * Une journee vide des favoris : le groupe est-il eteint autour d'elle ? (retour du 2026-09-17)
+     *
+     * L'annee des favoris se lit une fois et se partage (`anneeDesFavoris`) ; un echec laisse
+     * « Journee libre », qui reste vrai pour ce jour-la. Le dimanche n'a jamais de cours, il ne dit
+     * rien du groupe.
+     */
+    async verifierGroupeInactif() {
+        const groupes = this.state.groupName;
+        if (!Array.isArray(groupes) || groupes.length === 0 || !groupesRequis()) return;
+        if (moment(this.state.target).isoWeekday() === 7) return;
+        const affiche = this.idAffiche;
+        try {
+            const annee = await lireAnneeDesFavoris(groupes, { origine: 'automatique' });
+            if (annee.ok === false || this.demonte || this.idAffiche !== affiche) return;
+            if (estGroupeInactif(annee.courses, this.state.target as moment.MomentInput)) this.setState({ groupeInactif: true });
+        } catch (erreur) {
+            console.warn('[planning] annee des favoris en erreur', erreur);
+        }
     }
 
     computeScheduleDay(schedule: PlanningEvent[], isFavorite: boolean): PlanningEvent[] {
@@ -384,7 +411,14 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
     }
 
     renderEmptyDay(listHeader: React.ReactNode) {
-        return <JourneeVide theme={this.props.theme} listHeader={listHeader} jour={this.state.target as moment.MomentInput} />;
+        return (
+            <JourneeVide
+                theme={this.props.theme}
+                listHeader={listHeader}
+                jour={this.state.target as moment.MomentInput}
+                groupeInactif={this.state.groupeInactif ? () => this.props.navigation?.navigate('GroupSearch') : undefined}
+            />
+        );
     }
 
     renderDayMode(listHeader: React.ReactNode) {

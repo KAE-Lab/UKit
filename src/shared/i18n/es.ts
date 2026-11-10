@@ -119,6 +119,8 @@ const es: TranslationDict = {
 	NO_CLASS_THIS_DAY_TITLE: 'Día libre',
 	NO_CLASS_THIS_DAY: 'Ninguna clase este día.',
 	NO_CLASS_TODAY: 'Ninguna clase hoy.',
+	GROUP_INACTIVE_TITLE: 'Nada desde hace semanas',
+	GROUP_INACTIVE_MESSAGE: "Tu grupo no tiene clases cuatro semanas antes ni después de este día. Puede que haya cambiado.",
 	WEEKEND_TITLE: 'Es fin de semana',
 	WEEKEND_MESSAGE: 'Ninguna clase hasta el lunes.',
 	NO_CONNECTION: 'Sin conexión',

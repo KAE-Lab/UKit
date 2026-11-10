@@ -89,7 +89,6 @@ export function FavorisVides({ theme, onChercher }: { theme: AppThemeType; onChe
     );
 }
 
-/** Une journee sans cours : ce n'est ni une panne ni une absence de favori, c'est une journee libre. */
 /**
  * La journee sans cours. Des confettis, pas un calendrier vide : une journee libre est une bonne
  * nouvelle. La passe « voix » (7-J) lui donne **un** rebondissement, le week-end, et dit
@@ -97,10 +96,37 @@ export function FavorisVides({ theme, onChercher }: { theme: AppThemeType; onChe
  * Le dimanche n'a jamais de cours, et un samedi vide ne precede jamais un cours le dimanche : « avant
  * lundi » est toujours vrai.
  */
-export function JourneeVide({ theme, listHeader, jour }: { theme: AppThemeType; listHeader: React.ReactNode; jour: moment.MomentInput }) {
+export function JourneeVide({ theme, listHeader, jour, groupeInactif }: {
+    theme: AppThemeType;
+    listHeader: React.ReactNode;
+    jour: moment.MomentInput;
+    /**
+     * Present quand le groupe favori n'a aucun cours sur des semaines autour de ce jour : l'etat le
+     * dit et mene a la recherche de groupes, au lieu d'une journee libre de plus (retour du
+     * 2026-09-17, groupeInactif.ts).
+     */
+    groupeInactif?: () => void;
+}) {
     const date = moment(jour);
     const weekEnd = date.isoWeekday() >= 6;
     const aujourdhui = date.isSame(moment(), 'day');
+    if (groupeInactif !== undefined) {
+        return (
+            <View style={{ flex: 1 }}>
+                {listHeader}
+                <EtatPlanning theme={theme}>
+                    <EmptyState
+                        variant="plain"
+                        icon="calendar-question"
+                        title={Translator.get('GROUP_INACTIVE_TITLE')}
+                        message={Translator.get('GROUP_INACTIVE_MESSAGE')}
+                        theme={theme}
+                        action={{ label: Translator.get('GROUPS_LIST'), onPress: groupeInactif, icon: 'magnify' }}
+                    />
+                </EtatPlanning>
+            </View>
+        );
+    }
     return (
         <View style={{ flex: 1 }}>
             {listHeader}
